@@ -204,7 +204,6 @@ static var _super_call_regex: RegEx = null
 # fresh inside the function that used it, and those functions run per row, per line, or per word of
 # a rebuild - compiling the pattern was costing far more than matching it. Shared statics are safe
 # here: a RegEx is read-only once compiled, and the row build runs on the main thread.
-static var _word_regex: RegEx = null
 static var _identifier_regex: RegEx = null
 static var _host_bind_regex: RegEx = null
 static var _func_header_regex: RegEx = null
@@ -5629,16 +5628,6 @@ static func call_parts(code: String) -> Dictionary:
 	}
 
 
-## The leading identifier word of a line (`if`, `var`, `return`, or an assignment target's first
-## word). Matching the WORD rather than a begins_with prefix is what keeps `elsewhere = 1` from
-## reading as an `else` and being refused.
-static func _leading_word(text: String) -> String:
-	if _word_regex == null:
-		_word_regex = RegEx.create_from_string("^[A-Za-z_][A-Za-z0-9_]*")
-	var found: RegExMatch = _word_regex.search(text)
-	return found.get_string(0) if found != null else ""
-
-
 ## True when `text` is a plain identifier - the only thing a "Let <name>" sentence may name.
 static func _is_identifier(text: String) -> bool:
 	if _identifier_regex == null:
@@ -7842,42 +7831,8 @@ func _build_named_getter_row(variable: LocalVariable, object_name: String, funct
 	row.row_type = EventRowData.RowType.EVENT
 	row.row_uid = "property_named_get_%s" % uid_base
 	row.line_count = 1
-	var badge_colors: Array = _define_role_colors("expression")
-	row.spans.append(_make_span("ƒ", SemanticSpan.SpanType.KEYWORD, {
-		"editable": false,
-		"badge": true,
-		"badge_style": "scope",
-		"badge_bg": badge_colors[0],
-		"badge_fg": badge_colors[1],
-		"lane": "condition",
-		"line_index": 0
-	}))
-	row.spans.append(_make_span(variable.name.replace("_", " "), SemanticSpan.SpanType.OBJECT, {
-		"editable": false,
-		"kind": "property_getter",
-		"lane": "condition",
-		"line_index": 0,
-		"chip": true,
-		"object_label": object_name,
-		"text_color": _define_role_name_color("expression")
-	}))
-	row.spans.append(_make_span(EventSheetL10n.translate("expression"), SemanticSpan.SpanType.COMMENT, {
-		"editable": false,
-		"lane": "condition",
-		"line_index": 0,
-		"natural_width": true,
-		"text_color": _viewport._get_reading_style().muted_text_color
-	}))
-	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
-	row.spans.append(_make_span(function_name, SemanticSpan.SpanType.ACTION, {
-		"lane": "action",
-		"kind": "property_accessor_function",
-		"ace_index": 0,
-		"editable": false,
-		"hoverable": false,
-		"line_index": 0,
-		"object_label": object_name
-	}.merged(action_style, true)))
+	row.spans.append_array(_getter_head_spans(variable, object_name))
+	row.spans.append(_accessor_function_span(function_name, object_name))
 	return row
 
 
@@ -7889,15 +7844,27 @@ func _build_named_accessor_row(variable: LocalVariable, object_name: String, kin
 	row.row_type = EventRowData.RowType.EVENT
 	row.row_uid = "property_named_%s_%s" % [kind, uid_base]
 	row.line_count = 1
+	row.spans.append_array(_plain_trigger_spans(sentence % variable.name.replace("_", " "), object_name))
+	# The function goes in the RIGHT lane, where a thing that runs belongs - the trigger asks and the
+	# action does, which is the sheet's whole grammar. It also gives the row a right half: a trigger
+	# row with nothing on its right keeps the condition lane at its minimum, and the sentence is then
+	# cut off after two characters.
+	row.spans.append(_accessor_function_span(function_name, object_name))
+	return row
+
+
+## The two cells that open a plain trigger row: the tempo badge, then `<Object> <sentence>` in a
+## trigger cell on the row's first line. "trigger", not "condition": a trigger cell sizes to its words
+## and leaves room for the payload chips beside it, exactly as a declared handler's trigger row does.
+func _plain_trigger_spans(sentence: String, object_name: String) -> Array[SemanticSpan]:
 	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
 	var badge_glyph: String = _apply_trigger_tempo(badge_meta, _viewport._get_event_style(), "")
 	badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
 	badge_meta["line_index"] = 0
 	badge_meta["badge_style"] = "trigger"
-	row.spans.append(_make_span(badge_glyph, SemanticSpan.SpanType.KEYWORD, badge_meta))
-	row.spans.append(_make_span(sentence % variable.name.replace("_", " "),
-		SemanticSpan.SpanType.CONDITION, {
+	return [_make_span(badge_glyph, SemanticSpan.SpanType.KEYWORD, badge_meta),
+		_make_span(sentence, SemanticSpan.SpanType.CONDITION, {
 			"lane": "condition",
 			"kind": "trigger",
 			"ace_index": -1,
@@ -7906,13 +7873,13 @@ func _build_named_accessor_row(variable: LocalVariable, object_name: String, kin
 			"hoverable": false,
 			"line_index": 0,
 			"object_label": object_name
-		}.merged(condition_style_meta, true)))
-	# The function goes in the RIGHT lane, where a thing that runs belongs - the trigger asks and the
-	# action does, which is the sheet's whole grammar. It also gives the row a right half: a trigger
-	# row with nothing on its right keeps the condition lane at its minimum, and the sentence is then
-	# cut off after two characters.
+		}.merged(condition_style_meta, true))]
+
+
+## A named accessor's function, in the RIGHT lane where a thing that runs belongs.
+func _accessor_function_span(function_name: String, object_name: String) -> SemanticSpan:
 	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
-	row.spans.append(_make_span(function_name, SemanticSpan.SpanType.ACTION, {
+	return _make_span(function_name, SemanticSpan.SpanType.ACTION, {
 		"lane": "action",
 		"kind": "property_accessor_function",
 		"ace_index": 0,
@@ -7920,8 +7887,36 @@ func _build_named_accessor_row(variable: LocalVariable, object_name: String, kin
 		"hoverable": false,
 		"line_index": 0,
 		"object_label": object_name
-	}.merged(action_style, true)))
-	return row
+	}.merged(action_style, true))
+
+
+## A getter's header, the one an expression function reads with: the ƒ scope badge, the property's
+## name and the muted word `expression`.
+func _getter_head_spans(variable: LocalVariable, object_name: String) -> Array[SemanticSpan]:
+	var badge_colors: Array = _define_role_colors("expression")
+	return [_make_span("ƒ", SemanticSpan.SpanType.KEYWORD, {
+		"editable": false,
+		"badge": true,
+		"badge_style": "scope",
+		"badge_bg": badge_colors[0],
+		"badge_fg": badge_colors[1],
+		"lane": "condition",
+		"line_index": 0
+	}), _make_span(variable.name.replace("_", " "), SemanticSpan.SpanType.OBJECT, {
+		"editable": false,
+		"kind": "property_getter",
+		"lane": "condition",
+		"line_index": 0,
+		"chip": true,
+		"object_label": object_name,
+		"text_color": _define_role_name_color("expression")
+	}), _make_span(EventSheetL10n.translate("expression"), SemanticSpan.SpanType.COMMENT, {
+		"editable": false,
+		"lane": "condition",
+		"line_index": 0,
+		"natural_width": true,
+		"text_color": _viewport._get_reading_style().muted_text_color
+	})]
 
 
 ## A property's accessors, read as the events they are instead of as code under the variable row.
@@ -7963,24 +7958,8 @@ func _build_property_setter_row(variable: LocalVariable, object_name: String, pa
 	row.row_type = EventRowData.RowType.EVENT
 	row.row_uid = "property_setter_%s" % uid_base
 	row.line_count = 1
-	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
-	var badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
-	var badge_glyph: String = _apply_trigger_tempo(badge_meta, _viewport._get_event_style(), "")
-	badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
-	badge_meta["line_index"] = 0
-	badge_meta["badge_style"] = "trigger"
-	row.spans.append(_make_span(badge_glyph, SemanticSpan.SpanType.KEYWORD, badge_meta))
-	row.spans.append(_make_span(EventSheetL10n.translate("On %s set") % variable.name.replace("_", " "),
-		SemanticSpan.SpanType.CONDITION, {
-			"lane": "condition",
-			"kind": "trigger",
-			"ace_index": -1,
-			"chip": true,
-			"editable": false,
-			"hoverable": false,
-			"line_index": 0,
-			"object_label": object_name
-		}.merged(condition_style_meta, true)))
+	row.spans.append_array(_plain_trigger_spans(EventSheetL10n.translate("On %s set") % variable.name.replace("_", " "),
+		object_name))
 	row.spans.append(_trigger_payload_span(param.replace("_", " "), 0, 0))
 	if not _append_property_body_rows(row, variable.setter_body, indent, row.row_uid,
 			EventSheetSentence.VerbKind.ACTION):
@@ -7999,32 +7978,7 @@ func _build_property_getter_row(variable: LocalVariable, object_name: String, in
 	row.row_type = EventRowData.RowType.EVENT
 	row.row_uid = "property_getter_%s" % uid_base
 	row.line_count = 1
-	var badge_colors: Array = _define_role_colors("expression")
-	row.spans.append(_make_span("ƒ", SemanticSpan.SpanType.KEYWORD, {
-		"editable": false,
-		"badge": true,
-		"badge_style": "scope",
-		"badge_bg": badge_colors[0],
-		"badge_fg": badge_colors[1],
-		"lane": "condition",
-		"line_index": 0
-	}))
-	row.spans.append(_make_span(variable.name.replace("_", " "), SemanticSpan.SpanType.OBJECT, {
-		"editable": false,
-		"kind": "property_getter",
-		"lane": "condition",
-		"line_index": 0,
-		"chip": true,
-		"object_label": object_name,
-		"text_color": _define_role_name_color("expression")
-	}))
-	row.spans.append(_make_span(EventSheetL10n.translate("expression"), SemanticSpan.SpanType.COMMENT, {
-		"editable": false,
-		"lane": "condition",
-		"line_index": 0,
-		"natural_width": true,
-		"text_color": _viewport._get_reading_style().muted_text_color
-	}))
+	row.spans.append_array(_getter_head_spans(variable, object_name))
 	if not _append_property_body_rows(row, variable.getter_body, indent, row.row_uid,
 			EventSheetSentence.VerbKind.EXPRESSION):
 		return null
@@ -8057,24 +8011,28 @@ func _append_property_body_rows(row: EventRowData, body: String, indent: int, ui
 	return true
 
 
+## Builds a lifted row's cells while the lifted stand-in is still what it points at, then drops the
+## offers to edit a row a reading does not have: the "Every Tick" placeholder and the "+ Add" cells.
+func _keep_reading_spans(row_data: EventRowData) -> void:
+	_ensure_event_spans(row_data)
+	var kept: Array[SemanticSpan] = []
+	var lines: int = 1
+	for span: SemanticSpan in row_data.spans:
+		if bool(span.metadata.get("placeholder", false)) or str(span.metadata.get("kind", "")) in ["add_action", "add_condition"]:
+			continue
+		kept.append(span)
+		lines = maxi(lines, int(span.metadata.get("line_index", 0)) + 1)
+	row_data.spans = kept
+	row_data.line_count = lines
+
+
 ## Stamps a lifted accessor body row (and everything under it) as a pure READING: its cells are
 ## resolved while the lifted stand-in is still what it points at, the offers to edit a row it does not
 ## have are dropped, and its resource is released so no mutation can reach the property's text.
 func _mark_property_reading(row_data: EventRowData, uid: String) -> void:
 	if row_data == null:
 		return
-	_ensure_event_spans(row_data)
-	var kept: Array[SemanticSpan] = []
-	var lines: int = 1
-	for span: SemanticSpan in row_data.spans:
-		if bool(span.metadata.get("placeholder", false)):
-			continue
-		if str(span.metadata.get("kind", "")) in ["add_action", "add_condition"]:
-			continue
-		kept.append(span)
-		lines = maxi(lines, int(span.metadata.get("line_index", 0)) + 1)
-	row_data.spans = kept
-	row_data.line_count = lines
+	_keep_reading_spans(row_data)
 	row_data.source_resource = null
 	row_data.row_uid = uid
 	for child_index in range(row_data.children.size()):
@@ -8629,6 +8587,21 @@ func _combo_of_match(match_row: MatchRow) -> Dictionary:
 	}
 
 
+## A badge in the plain trigger colours wearing `glyph` (➜, or ◆ for a state) on `line_index`, with
+## the condition lane's extra width when one is given and placed in that lane when `in_lane` is set.
+func _trigger_badge_span(glyph: String, line_index: int, extra_width: Variant, in_lane: bool) -> SemanticSpan:
+	var badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
+	badge_meta["badge_bg"] = _viewport._get_event_style().trigger_badge_background_color
+	badge_meta["badge_fg"] = _viewport._get_event_style().trigger_badge_foreground_color
+	if extra_width != null:
+		badge_meta["badge_extra_width"] = extra_width
+	badge_meta["line_index"] = line_index
+	badge_meta["badge_style"] = "trigger"
+	if in_lane:
+		badge_meta["lane"] = "condition"
+	return _make_span(glyph, SemanticSpan.SpanType.KEYWORD, badge_meta)
+
+
 ## One arm of a combo match, in the condition lane as the TRIGGER it is: the move the inputs
 ## spell, with the window the player had to press them in as the muted note. The catch-all arm gets
 ## no spans at all, so a `_` keeps reading as the plain Else it is.
@@ -8639,14 +8612,7 @@ func _combo_arm_condition_spans(combo: Dictionary, pattern_text: String) -> Arra
 	if words.is_empty():
 		return spans
 	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
-	var badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
-	badge_meta["badge_bg"] = _viewport._get_event_style().trigger_badge_background_color
-	badge_meta["badge_fg"] = _viewport._get_event_style().trigger_badge_foreground_color
-	badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
-	badge_meta["line_index"] = 0
-	badge_meta["badge_style"] = "trigger"
-	badge_meta["lane"] = "condition"
-	spans.append(_make_span("➜", SemanticSpan.SpanType.KEYWORD, badge_meta))
+	spans.append(_trigger_badge_span("➜", 0, condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH), true))
 	var arm_meta: Dictionary = {
 		"lane": "condition",
 		"kind": "trigger",
@@ -8676,14 +8642,7 @@ func _menu_arm_condition_spans(menu: Dictionary, pattern_text: String) -> Array[
 	if words.is_empty():
 		return spans
 	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
-	var badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
-	badge_meta["badge_bg"] = _viewport._get_event_style().trigger_badge_background_color
-	badge_meta["badge_fg"] = _viewport._get_event_style().trigger_badge_foreground_color
-	badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
-	badge_meta["line_index"] = 0
-	badge_meta["badge_style"] = "trigger"
-	badge_meta["lane"] = "condition"
-	spans.append(_make_span("➜", SemanticSpan.SpanType.KEYWORD, badge_meta))
+	spans.append(_trigger_badge_span("➜", 0, condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH), true))
 	var arm_meta: Dictionary = {
 		"lane": "condition",
 		"kind": "trigger",
@@ -8943,13 +8902,7 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 			for transition_child: EventRowData in transition_children:
 				case_row.children.append(transition_child)
 			if state_shaped and pattern_text != "_" and not case_row.spans.is_empty():
-				var case_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
-				case_badge_meta["badge_bg"] = _viewport._get_event_style().trigger_badge_background_color
-				case_badge_meta["badge_fg"] = _viewport._get_event_style().trigger_badge_foreground_color
-				case_badge_meta["line_index"] = 0
-				case_badge_meta["badge_style"] = "trigger"
-				case_badge_meta["lane"] = "condition"
-				case_row.spans.insert(0, _make_span("◆", SemanticSpan.SpanType.KEYWORD, case_badge_meta))
+				case_row.spans.insert(0, _trigger_badge_span("◆", 0, null, true))
 			rows.append(case_row)
 	return rows
 
@@ -10312,12 +10265,6 @@ func _created_property_words(action_resource: Variant, alias: String) -> String:
 		return ""
 	return "%s = %s" % [property_name.replace("_", " "),
 		_reading_sentence(EventSheetSentence.expression_text(str(params.get("value", ""))))]
-
-
-## True when the action is the `add_child(b)` / `add_sibling(b)` (on this node or on a named parent)
-## that puts the freshly made object into the tree.
-func _plants_node(action_resource: Variant, alias: String) -> bool:
-	return not _plant_placement_word(action_resource, alias).is_empty()
 
 
 ## WHERE the freshly made object was planted, in the sheet's words - "next to it" for a sibling
@@ -13724,13 +13671,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		condition_line_index += 1
 	elif input_reading.is_empty() and event_row.else_mode == EventRow.ElseMode.NONE and inline_trigger_condition_index >= 0 and inline_trigger_condition_index < event_row.conditions.size():
 		var inline_trigger: ACECondition = event_row.conditions[inline_trigger_condition_index]
-		var inline_trigger_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
-		inline_trigger_badge_meta["badge_bg"] = event_style.trigger_badge_background_color
-		inline_trigger_badge_meta["badge_fg"] = event_style.trigger_badge_foreground_color
-		inline_trigger_badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
-		inline_trigger_badge_meta["line_index"] = condition_line_index
-		inline_trigger_badge_meta["badge_style"] = "trigger"
-		spans.append(_make_span("➜", SemanticSpan.SpanType.KEYWORD, inline_trigger_badge_meta))
+		spans.append(_trigger_badge_span("➜", condition_line_index,
+			condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH), false))
 		spans.append(
 			_make_span(
 				_format_condition_descriptor(inline_trigger),
@@ -13802,13 +13744,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			# and tempo icons use - never inline in the text (an icon glued into a sentence reads
 			# as clutter next to rows whose icons sit in the column).
 			if _is_state_header_condition(condition):
-				var state_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
-				state_badge_meta["badge_bg"] = event_style.trigger_badge_background_color
-				state_badge_meta["badge_fg"] = event_style.trigger_badge_foreground_color
-				state_badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
-				state_badge_meta["line_index"] = line_index
-				state_badge_meta["badge_style"] = "trigger"
-				spans.append(_make_span("◆", SemanticSpan.SpanType.KEYWORD, state_badge_meta))
+				spans.append(_trigger_badge_span("◆", line_index,
+					condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH), false))
 			var joined_lead: Dictionary = (joined_conditions.get("leads", {}) as Dictionary).get(
 				condition_index, {})
 			var condition_text: String = str(joined_lead.get("text", "")) if not joined_lead.is_empty() \
@@ -15174,25 +15111,7 @@ func _build_connect_trigger_row(event_row: EventRow, parts: Dictionary, anchor: 
 	trigger_row.ternary_lead = true
 	trigger_row.ternary_action_index = action_index
 	trigger_row.line_count = 1
-	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
-	var badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
-	var badge_glyph: String = _apply_trigger_tempo(badge_meta, _viewport._get_event_style(), "")
-	badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
-	badge_meta["line_index"] = 0
-	badge_meta["badge_style"] = "trigger"
-	trigger_row.spans.append(_make_span(badge_glyph, SemanticSpan.SpanType.KEYWORD, badge_meta))
-	# "trigger", not "condition": a trigger cell sizes to its words and leaves room for the payload
-	# chips beside it, exactly as a declared handler's trigger row does.
-	trigger_row.spans.append(_make_span(str(parts.get("trigger", "")), SemanticSpan.SpanType.CONDITION, {
-		"lane": "condition",
-		"kind": "trigger",
-		"ace_index": -1,
-		"chip": true,
-		"editable": false,
-		"hoverable": false,
-		"line_index": 0,
-		"object_label": str(parts.get("object", ""))
-	}.merged(condition_style_meta, true)))
+	trigger_row.spans.append_array(_plain_trigger_spans(str(parts.get("trigger", "")), str(parts.get("object", ""))))
 	var payload: PackedStringArray = payload_names(parts)
 	for payload_index in range(payload.size()):
 		trigger_row.spans.append(_trigger_payload_span(payload[payload_index].replace("_", " "), payload_index, 0))
@@ -15210,21 +15129,9 @@ func _mark_connect_reading(row_data: EventRowData, event_row: EventRow, anchor: 
 	# the event the file holds rather than the lifted stand-in it was read from - so its cells are
 	# built here, while the stand-in is still what it points at. A row that already has spans is
 	# never rebuilt, which is exactly what keeps the reading and the routing from fighting.
-	_ensure_event_spans(row_data)
-	# A reading invites nothing: the "Every Tick" placeholder and the "+ Add" affordances are offers
-	# to edit a row, and there is no row here to edit - only one connect statement, which is what a
-	# double-click anywhere on this reading opens.
-	var kept: Array[SemanticSpan] = []
-	var lines: int = 1
-	for span: SemanticSpan in row_data.spans:
-		if bool(span.metadata.get("placeholder", false)):
-			continue
-		if str(span.metadata.get("kind", "")) in ["add_action", "add_condition"]:
-			continue
-		kept.append(span)
-		lines = maxi(lines, int(span.metadata.get("line_index", 0)) + 1)
-	row_data.spans = kept
-	row_data.line_count = lines
+	# A reading invites nothing: there is no row here to edit - only one connect statement, which is
+	# what a double-click anywhere on this reading opens.
+	_keep_reading_spans(row_data)
 	row_data.source_resource = event_row
 	row_data.row_uid = "%s_%s" % [anchor, row_data.row_uid]
 	row_data.ternary_view = true
@@ -16881,24 +16788,6 @@ static func compiled_line_count(action: ACEAction) -> int:
 	if template.is_empty():
 		return 0
 	return template.count("\n") + 1
-
-
-## Friendly one-line summaries of a structured match case's action-lane body, for the switch read view: an
-## ACEAction reads as its descriptor text (the same friendly sentence an action cell shows), a RawCodeRow as
-## its verbatim code lines, a CommentRow as `# text`. Empty when the case has no body (the caller shows
-## `pass`). Read-only rendering - it does not touch the resources.
-func _match_case_summary_lines(events: Array) -> PackedStringArray:
-	var out: PackedStringArray = PackedStringArray()
-	for item: Variant in events:
-		if item is ACEAction:
-			out.append(_format_action_descriptor(item as ACEAction))
-		elif item is RawCodeRow:
-			for code_line: String in (item as RawCodeRow).code.split("\n"):
-				out.append(code_line)
-		elif item is CommentRow:
-			for comment_line: String in (item as CommentRow).text.split("\n"):
-				out.append("# " + comment_line)
-	return out
 
 
 func _format_action_descriptor(action: ACEAction) -> String:
@@ -20108,17 +19997,6 @@ static func _rich_capability_declared(rich_param: String, rich_value: String, pa
 	if not rich_param.is_empty() and str(params.get(rich_param, "")) == rich_value:
 		return true
 	return param_hints.has("bbcode_text")
-
-
-## True when an ACE's display TEMPLATE (not the substituted text) carries BBCode markup - the author opted
-## into styling via @ace_display_template. Built-in/custom descriptors resolve their template the same way
-## format_display does.
-func _display_template_has_markup(provider_id: String, ace_id: String) -> bool:
-	var definition: ACEDefinition = _viewport._find_definition(provider_id, ace_id)
-	if definition != null:
-		return EventSheetBBCodeLite.has_markup(str(definition.metadata.get("display_template", definition.display_name)))
-	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, ace_id)
-	return descriptor != null and EventSheetBBCodeLite.has_markup(descriptor.get_display_text())
 
 
 func _get_variable_metadata_for_row(row_data: EventRowData) -> Dictionary:
