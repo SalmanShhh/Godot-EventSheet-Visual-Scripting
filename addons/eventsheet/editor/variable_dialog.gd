@@ -1509,7 +1509,9 @@ func _on_confirmed() -> void:
 	# Keep this defensive check in case stale UI state emits a checked const flag
 	# for a type that does not support const.
 	var is_constant: bool = _const_check.button_pressed and _supports_constant(type_name)
-	var exported: bool = _exported_check.button_pressed and _scope == "global"
+	# Every member can be an Inspector property - a sheet-level one ("global") and one placed among
+	# the events ("tree") alike. Only a Local, which lives inside one event, cannot.
+	var exported: bool = _exported_check.button_pressed and _scope != "local"
 	var attributes: Dictionary = {}
 	if not _attr_tooltip_edit.text.strip_edges().is_empty():
 		attributes["tooltip"] = _attr_tooltip_edit.text.strip_edges()

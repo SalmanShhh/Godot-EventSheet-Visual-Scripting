@@ -151,8 +151,25 @@ static func run() -> bool:
 	ok = _check("opening on Local still files a local", _confirmed_scope(host, "local"), "local") and ok
 
 	ok = _test_the_strip_is_the_only_explanation(dialog) and ok
+	ok = _check("a variable placed among the events keeps its Inspector tick through OK",
+		_confirmed_export(host, "tree"), true) and ok
+	ok = _check("so does a sheet-level one", _confirmed_export(host, "global"), true) and ok
 	host.free()
 	return ok
+
+
+## Whether a confirm files the variable as an Inspector property when the dialog is EDITING one that
+## already is (opened with `scope`, exported ticked) and OK is pressed with nothing changed.
+static func _confirmed_export(host: Node, scope: String) -> bool:
+	var dialog: VariableDialog = VariableDialog.new()
+	dialog.init_dialog(host)
+	dialog.set_sheet_provider(func() -> Variant: return null)
+	var seen: Dictionary = {}
+	dialog.variable_confirmed.connect(func(_n: String, _t: String, _d: Variant, _s: String, _c: Dictionary, _ic: bool, exported: bool, _o: PackedStringArray, _a: Dictionary, _r: bool, _st: bool) -> void:
+		seen["exported"] = exported)
+	dialog.open_for_edit(scope, {"editing": true}, "move_speed", "float", 200.0, false, "Edit Variable", false, true)
+	dialog._on_confirmed()
+	return bool(seen.get("exported", false))
 
 
 ## The storage a confirm files its answer under when the dialog is opened on `opened_scope`. A fresh
