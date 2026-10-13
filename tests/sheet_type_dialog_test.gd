@@ -46,7 +46,7 @@ static func _test_ok_waits_for_a_valid_identity() -> bool:
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(sheet)
 	editor.set_undo_redo_manager(NoopUndoManager.new())
-	var dialog: EventSheetSheetTypeDialog = editor._sheet_type
+	var dialog: EventSheetSheetTypeDialog = editor._sheet_type as EventSheetSheetTypeDialog
 	dialog._ensure_sheet_type_dialog()
 	dialog._select_type(1)
 	dialog._sheet_type_host_edit.text = "Node2D"
