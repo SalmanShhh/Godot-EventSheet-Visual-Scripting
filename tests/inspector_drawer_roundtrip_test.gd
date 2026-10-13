@@ -95,17 +95,14 @@ static func run() -> bool:
 		all_passed = _eq("a min_max var re-emits byte-identically",
 			SheetCompiler._emit_tree_variable_line(mm), mm_line) and all_passed
 
-	# --- Dialog: the per-type picker offers exactly the drawers each host type can use. ---
-	all_passed = _eq("int hosts the progress_bar drawer", VariableDialog._drawer_kinds_for_type("int"), PackedStringArray(["progress_bar"])) and all_passed
-	all_passed = _eq("float hosts the progress_bar drawer", VariableDialog._drawer_kinds_for_type("float"), PackedStringArray(["progress_bar"])) and all_passed
-	all_passed = _eq("Vector2 hosts the dial AND the min-max slider", VariableDialog._drawer_kinds_for_type("Vector2"), PackedStringArray(["vector_dial", "min_max"])) and all_passed
-	all_passed = _eq("Color hosts the swatch_row drawer", VariableDialog._drawer_kinds_for_type("Color"), PackedStringArray(["swatch_row"])) and all_passed
-	all_passed = _eq("Texture2D hosts the texture_preview drawer", VariableDialog._drawer_kinds_for_type("Texture2D"), PackedStringArray(["texture_preview"])) and all_passed
-	all_passed = _eq("Curve hosts the curve_editor drawer", VariableDialog._drawer_kinds_for_type("Curve"), PackedStringArray(["curve_editor"])) and all_passed
-	all_passed = _eq("String hosts the toggle_row drawer", VariableDialog._drawer_kinds_for_type("String"), PackedStringArray(["toggle_row"])) and all_passed
-	all_passed = _eq("Dictionary hosts no drawer", VariableDialog._drawer_kinds_for_type("Dictionary"), PackedStringArray()) and all_passed
-	all_passed = _eq("the min-max drawer label reads 'Min-max range'",
-		VariableDialog._drawer_label_for_kind("min_max"), "Min-max range") and all_passed
+	# --- Dialog: each drawer is an Inspector look of exactly the types that can host it. ---
+	for hosted: Array in [["int", "progress_bar"], ["float", "progress_bar"], ["Vector2", "vector_dial"], ["Vector2", "min_max"],
+			["Color", "swatch_row"], ["Texture2D", "texture_preview"], ["Curve", "curve_editor"], ["String", "toggle_row"]]:
+		all_passed = _eq("%s offers the %s look" % hosted, _look_ids_for(str(hosted[0])).has(hosted[1]), true) and all_passed
+	all_passed = _eq("Dictionary offers no drawer look", _look_ids_for("Dictionary").filter(func(id: String) -> bool:
+		return not id in ["custom", "storage"]), []) and all_passed
+	all_passed = _eq("the min-max look reads 'Min-max range'",
+		str(EventSheetInspectorLooks.by_id("min_max").get("label")), "Min-max range") and all_passed
 
 	# Dialog default-field round-trip: the EXACT text the dialog displays for a value must parse back to that
 	# value. This drives _default_display_text → _parse_default (the real edit cycle). Before the fix the
@@ -229,8 +226,7 @@ static func run() -> bool:
 	all_passed = _eq("the editor-side column parse matches (unknown types fall back to String)",
 		EventSheetAttributeDrawers.parse_table_columns("item=String,count=int,odd=Vector2,=int"),
 		[{"name": "item", "type": "String"}, {"name": "count", "type": "int"}, {"name": "odd", "type": "String"}]) and all_passed
-	all_passed = _eq("Array hosts the table drawer",
-		VariableDialog._drawer_kinds_for_type("Array"), PackedStringArray(["table"])) and all_passed
+	all_passed = _eq("Array offers the table look", _look_ids_for("Array").has("table"), true) and all_passed
 
 	# --- A TYPED row list (Array[Dictionary]) hosts the grid exactly as the untyped one does. It reaches
 	# the drawer as TYPE_ARRAY either way, so the marker, the lift and the re-emission all match; a list
@@ -256,10 +252,8 @@ static func run() -> bool:
 	if typed_table_lifted != null:
 		all_passed = _eq("a typed table var re-emits byte-identically",
 			SheetCompiler._emit_tree_variable_line(typed_table_lifted), typed_table_expected) and all_passed
-	all_passed = _eq("Array[Dictionary] hosts the table drawer",
-		VariableDialog._drawer_kinds_for_type("Array[Dictionary]"), PackedStringArray(["table"])) and all_passed
-	all_passed = _eq("a scalar typed list hosts no drawer",
-		VariableDialog._drawer_kinds_for_type("Array[int]"), PackedStringArray()) and all_passed
+	all_passed = _eq("Array[Dictionary] offers the table look", _look_ids_for("Array[Dictionary]").has("table"), true) and all_passed
+	all_passed = _eq("a scalar typed list offers no table", _look_ids_for("Array[int]").has("table"), false) and all_passed
 
 	# Plain typed lists round-trip byte-exact, and carry Inspector grouping like any other exported var.
 	all_passed = _type_roundtrip("Array[int]", "@export var scores: Array[int] = []", "scores") and all_passed
@@ -537,29 +531,15 @@ static func run() -> bool:
 	# apply previously gated range on is_numeric, dropping it for Vector2 and resetting the dial to max 100.
 	all_passed = _vector_dial_range_persists() and all_passed
 
-	# Forgiving Range parse (progressive disclosure): a bare max, min+max, or min+max+step all parse; a
-	# blank max or >3 parts error. Shared by the apply and the live preview so they never disagree.
-	all_passed = _eq("Range '150' parses as max 150 (min 0, step 1)",
-		VariableDialog._parse_range_parts(PackedStringArray(["150"])), {"min": "0", "max": "150", "step": "1"}) and all_passed
-	all_passed = _eq("Range '0, 200' parses min + max",
-		VariableDialog._parse_range_parts(PackedStringArray(["0", "200"])), {"min": "0", "max": "200", "step": "1"}) and all_passed
-	all_passed = _eq("Range '0, 100, 5' parses min + max + step",
-		VariableDialog._parse_range_parts(PackedStringArray(["0", "100", "5"])), {"min": "0", "max": "100", "step": "5"}) and all_passed
-	all_passed = _eq("Range with a blank max errors",
-		VariableDialog._parse_range_parts(PackedStringArray([""])), {}) and all_passed
-	all_passed = _eq("Range with 4 parts errors",
-		VariableDialog._parse_range_parts(PackedStringArray(["1", "2", "3", "4"])), {}) and all_passed
-	all_passed = _eq("the curve drawer label reads 'Curve preview' (it doesn't edit in place)",
-		VariableDialog._drawer_label_for_kind("curve_editor"), "Curve preview") and all_passed
-	# Exercise the REAL split path (allow_empty), not just explicit arrays: positions must be preserved so a
-	# blank/trailing/middle empty field is caught, not silently shifted. (split(",", false) dropped empties and
-	# read "0,,5" as max 5.)
-	all_passed = _eq("Range '0,,5' (blank max slot) errors via the real split",
-		VariableDialog._parse_range_parts("0,,5".split(",")), {}) and all_passed
-	all_passed = _eq("Range '0,' (trailing comma = blank max) errors via the real split",
-		VariableDialog._parse_range_parts("0,".split(",")), {}) and all_passed
-	all_passed = _eq("Range '0, 100, 5' parses via the real split",
-		VariableDialog._parse_range_parts("0, 100, 5".split(",")), {"min": "0", "max": "100", "step": "5"}) and all_passed
+	# A slider's fields left blank fall back to 0, 100 and a step of 1, so a half-filled look still
+	# writes a working range rather than an error about a field the reader never touched.
+	all_passed = _eq("a slider with only a max reads min 0, step 1",
+		EventSheetInspectorLooks.fold("slider", {"max": "150"}, "int"), {"range": {"min": "0", "max": "150", "step": "1"}}) and all_passed
+	all_passed = _eq("a dial keeps its reach as the range max",
+		EventSheetInspectorLooks.fold("vector_dial", {"max": "150"}, "Vector2"),
+		{"drawer": "vector_dial", "range": {"min": "0", "max": "150", "step": "1"}}) and all_passed
+	all_passed = _eq("the curve look reads 'Curve preview' (it doesn't edit in place)",
+		str(EventSheetInspectorLooks.by_id("curve_editor").get("label")), "Curve preview") and all_passed
 
 	all_passed = _unit_drawer() and all_passed
 	all_passed = _toggle_icons() and all_passed
@@ -700,15 +680,15 @@ static func _unit_drawer() -> bool:
 	passed = _eq("int does not offer the unit look (the stored number is a float)",
 		_look_ids_for("int").has("unit"), false) and passed
 	passed = _eq("the look's field parses the marker's own spelling",
-		VariableDialog._parse_unit_detail("kinds=s|ms|frames, store=s"),
+		EventSheetInspectorLooks.parse_units("kinds=s|ms|frames, store=s"),
 		{"units": ["s", "ms", "frames"], "store": "s"}) and passed
 	passed = _eq("the look's field parses the shorthand a designer types",
-		VariableDialog._parse_unit_detail("deg|turn|rad, store=deg"),
+		EventSheetInspectorLooks.parse_units("deg|turn|rad, store=deg"),
 		{"units": ["deg", "turn", "rad"], "store": "deg"}) and passed
 	passed = _eq("an empty field lands the length units",
-		VariableDialog._parse_unit_detail(""), {"units": ["px", "world", "screen"], "store": "world"}) and passed
+		EventSheetInspectorLooks.parse_units(""), {"units": ["px", "world", "screen"], "store": "world"}) and passed
 	passed = _eq("the field rebuilds from a lifted variable's attributes",
-		VariableDialog._unit_detail_text({"unit_kinds": ["px", "world", "screen"], "unit_store": "world"}),
+		EventSheetInspectorLooks.unit_text({"unit_kinds": ["px", "world", "screen"], "unit_store": "world"}),
 		"kinds=px|world|screen, store=world") and passed
 
 	# The gallery tile draws the real field, so the picture cannot drift from the drawer.

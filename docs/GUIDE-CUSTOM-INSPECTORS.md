@@ -40,24 +40,24 @@ Make your event-sheet variables show up as **rich, designer-friendly controls in
 - **The parity covenant.** Every custom drawer compiles to an `@export_custom(PROPERTY_HINT_NONE, "eventsheet:<drawer>...")` marker. With the EventSheets editor plugin installed, the Inspector swaps in the rich control. **Without** the plugin, or in an **exported game**, the property quietly degrades to a plain field. Your shipped game never depends on the plugin and never breaks.
 - **It is just GDScript.** Everything you author becomes a normal `@export` line (or a small generated setter / `_validate_property`). Open the `.gd` in Godot's script editor and it reads like hand-written code. Nothing is locked inside a proprietary format.
 - **Lossless round-trip.** Reopening the `.gd` as a sheet recovers your choices. The drawers, ranges, and the no-alpha flag come back as **editable dialog fields** (re-tick them, they survive editing). The rest round-trips byte-for-byte even when it stays a verbatim annotation.
-- **Inspector options apply to exported variables.** A control only matters for a value the Inspector shows, so the options appear once you tick **"Editable in the Inspector (a designer property)"**.
+- **Inspector options apply to exported variables.** A control only matters for a value the Inspector shows, so the looks appear once you tick **"Editable in the Inspector"**.
 
 **Key concepts at a glance:**
 
 | Term | What it means |
 |---|---|
 | **Variable** | A value your sheet owns (a global or a sheet-level variable). Exporting it puts it on the Inspector. |
-| **Drawer** | A rich Inspector control (slider / range / dial / swatches / texture / curve), picked under "Show as". |
+| **Drawer** | A rich Inspector control (slider / range / dial / swatches / texture / curve), picked as an **Inspector look**. |
 | **Export option** | A native Godot `@export_*` flavour (range, multiline, dropdown, colour-no-alpha, group, read-only). |
 | **Behaviour** | A generated setter or property rule (clamp, on-changed callback, show-if, lock-unless). |
 | **Parity** | The rule that generated games run identically with or without the editor plugin. |
 
 ## 3. Getting Started
 
-1. In the EventSheets dock, add or edit a **variable** (the sheet's Variables area, then "Edit").
-2. Tick **"Editable in the Inspector (a designer property)"** under **Access**. This is what makes the value an `@export` and unlocks the options.
-3. Click **"More options (tooltip, range, drawer...)"** to expand the disclosure.
-4. Fill in a **Tooltip**, set a **Range**, choose a drawer under **"Show as"**, and watch the live preview update.
+1. In the EventSheets dock, add or edit a **variable** (double-click its row, or right-click it and pick "Edit Variable").
+2. In the **Variable** card, pick the **Type** - every GDScript type is listed under its own name, with the plain words beside it ("int · Whole number") and a sentence on hover.
+3. Tick **"Editable in the Inspector"** at the top of the **In the Inspector** card. This is what makes the value an `@export` and unlocks the looks.
+4. Pick an **Inspector look** (a slider, a dropdown, a layers grid, a drawer...), fill in its details, and watch the live column update: the row it reads as, the code it writes, and a picture of the Inspector.
 
 ![The Variable dialog authoring an inspector-rich int](images/variable-dialog.png)
 
@@ -70,42 +70,44 @@ The variable above compiles to exactly this:
 
 The `##` line becomes the Inspector's hover tooltip, and the `eventsheet:progress_bar` marker is what the editor plugin turns into the draggable bar. In an exported game that same line is just an `int` with a plain spin box.
 
-## 3b. Choosing by Picture (the Look Gallery + the Inspector preview)
-
-<img src="images/look-gallery.png" alt="The Look Gallery: one picture tile per Inspector look - checkbox flags, a numbered dropdown, and the 2D/3D physics, render, and navigation layer grids - each with a one-line plain-language explanation." width="620">
+## 3b. Choosing a look (the Inspector look dropdown + the Inspector preview)
 
 You do not need to know any of the vocabulary below to design a property:
 
-1. In the Variable dialog, tick **Editable in the Inspector** and open **More options**.
-2. Press **Browse...** next to *Inspector look*. A gallery of picture tiles opens - each tile
-   is a miniature of the real Inspector widget (checkbox flags, a layers grid, a file picker,
-   an easing curve...) with a one-line explanation. Click the one that looks right.
-3. Looks that need details (flag names, file filters) drop you straight into the **Details**
-   field with an example placeholder.
-4. Watch the **Inspector preview** card: it mocks the final Inspector live - the group
-   heading, the sub-heading indent, the property name, and the chosen widget - and states
-   your choices as one sentence ("A whole number, from 0 to 100, shown as a progress bar,
-   grouped under Combat > Defense."). The **Ships as:** line under it shows the exact
-   GDScript annotation the choice compiles to.
+1. In the Variable window, tick **Editable in the Inspector**.
+2. Open **Inspector look**. It lists only the looks the variable's type can wear, and every choice
+   says on hover what the Inspector will show and the annotation it writes. The chosen look's
+   annotation sits muted beside the dropdown.
+3. The look's details appear under it - min, max and step for a slider, the choices for a
+   dropdown, the filters for a file picker - each with an example in the empty field.
+4. Watch the **Inspector preview** card on the right: it mocks the final Inspector live - the
+   category band, the group heading, the property name as the Inspector shortens it, and the chosen
+   widget - and states your choices as one sentence ("A whole number, from 0 to 100, shown as a
+   progress bar, grouped under Combat > Defense."). The **In code** lines above it show the exact
+   GDScript the choices compile to.
 
-In **Simple Mode** the dialog hides the Advanced tier entirely (show-if, lock-unless,
-on-changed, clamp, read-only, and the grouping text fields) - the gallery, the preview card,
-and the common options stay. Attributes already set on a variable keep round-tripping
-untouched; the tier returns when Simple Mode is turned off.
+**Where it sits in the Inspector** holds the Category, the Group (with **Only names starting** for a
+prefix group - Godot then shows `bullet_speed` as *Speed* under *Bullet*, and the window says so when
+a name would fall outside it) and the Subgroup. **When it changes** folds away the wiring: on changed,
+show if, lock unless, clamp, read-only, the decor fields, and the setter and getter bodies.
 
-Grouping without the drag gesture: right-click a variable row (or a multi-selection of them)
+In **Simple Mode** the window hides **When it changes** entirely - the looks, the sections and the
+preview card stay. Options already set on a variable keep round-tripping untouched; the card returns
+when Simple Mode is turned off.
+
+Grouping without the window: right-click a variable row (or a multi-selection of them)
 and pick **Group Under a Heading...** - the same folder the drag creates, with the same
 naming popup.
 
 ## 4. The Drawers (the rich controls)
 
-A **drawer** replaces a variable's plain Inspector field with a richer control, offered in the **"Show as"** dropdown for the types that can host one (the default is always "Default field", so a drawer is opt-in). Most types host one drawer; `Vector2` hosts two (the dial and the min-max range). There are eleven in total, each documented below; the image at the top of this guide shows a representative set, not all of them.
+A **drawer** replaces a variable's plain Inspector field with a richer control, offered in the **Inspector look** dropdown for the types that can host one (the default is always the type's own editor, so a drawer is opt-in). Most types host one drawer; `Vector2` hosts two (the dial and the min-max range). There are eleven in total, each documented below; the image at the top of this guide shows a representative set, not all of them.
 
 ### Progress bar (int / float)
 
-**What it does.** Shows a horizontal bar you drag to set the value, bounded by the variable's **Range**. Ideal for any 0-to-N stat.
+**What it does.** Shows a horizontal bar you drag to set the value, bounded by the look's **Min** and **Max**. Ideal for any 0-to-N stat.
 
-**How to use it.** Set a **Range** (for example `0, 100, 1`), then choose **Show as: Progress bar**. The bar reads its min and max from the Range.
+**How to use it.** Choose **Inspector look: Progress bar** and fill in its **Min** and **Max** (for example `0` and `100`).
 
 **Emits** (the min and max ride inside the marker, so there is no separate `@export_range`):
 ```gdscript
@@ -118,7 +120,7 @@ A **drawer** replaces a variable's plain Inspector field with a richer control, 
 
 **What it does.** One track with two draggable handles: the variable's `x` is the low end and `y` the high end. One control for "a range", instead of two disconnected number fields.
 
-**How to use it.** Choose **Show as: Min-max range** on a `Vector2`. The slider's track bounds come from the **Range** (for example `0, 60`).
+**How to use it.** Choose **Inspector look: Min-max range** on a `Vector2`. The slider's track bounds are the look's **Min** and **Max** (for example `0` and `60`).
 
 **Emits:**
 ```gdscript
@@ -149,7 +151,7 @@ A **drawer** replaces a variable's plain Inspector field with a richer control, 
 
 **What it does.** Turns an `Array` of `Dictionary` rows into an **editable grid**: one row per element, one typed cell per column (text, number, checkbox), with add / remove / move-up controls. The single most painful data-editing surface in Godot - loot tables, wave definitions, dialogue lines - becomes a spreadsheet.
 
-**How to use it.** On an `Array` variable choose **Show as: Editable table**, then define the columns in the **Table columns** field as `name:type` pairs (`item:String, count:int, rare:bool`; types: String, int, float, bool, and `color` for a swatch cell that stores `"#rrggbb"`). A column typed `enum(a|b|c)` renders as a **dropdown** limited to those choices - e.g. `kind:enum(circle|ring|rect)` - instead of a free-text field; the stored value stays the plain String, so nothing downstream changes.
+**How to use it.** On an `Array` variable choose **Inspector look: Editable table**, then define the columns in the look's **Columns** field as `name:type` pairs (`item:String, count:int, rare:bool`; types: String, int, float, bool, and `color` for a swatch cell that stores `"#rrggbb"`). A column typed `enum(a|b|c)` renders as a **dropdown** limited to those choices - e.g. `kind:enum(circle|ring|rect)` - instead of a free-text field; the stored value stays the plain String, so nothing downstream changes.
 
 A choice can also carry a **label**, written `key=Label`: the dropdown READS the label while the cell STORES the short key, so `op:enum(gte=>= (at least)|lt=< (less than))` shows ">= (at least)" to the designer and keeps `gte` in the data. An unlabelled choice is its own label, so every column authored before labels existed stores exactly what it always did. Four characters cannot stand literally in a label, because the marker splits on them: write a comma as `~2C`, a pipe as `~7C`, a colon as `~3A` and a double quote as `~22`. The tilde itself is never escaped, so `~` is an ordinary character in a label.
 
@@ -238,7 +240,7 @@ Three details of that schema are worth copying when you derive one of your own. 
 
 **What it does.** Shows a String's fixed choices as **one row of toggle buttons** instead of a dropdown - every option visible at a glance, one click to switch. The pressed button is the value.
 
-**How to use it.** Fill **Options** (`easy, normal, hard`), then choose **Show as: Toggle buttons**. The choices ride the drawer marker instead of `@export_enum` (one annotation slot), so without the plugin the field degrades to plain text - editor convenience only, like every drawer.
+**How to use it.** Choose **Inspector look: Toggle buttons** and fill its **Choices** (`easy, normal, hard`). The choices ride the drawer marker instead of `@export_enum` (one annotation slot), so without the plugin the field degrades to plain text - editor convenience only, like every drawer.
 
 **Emits:**
 ```gdscript
@@ -271,7 +273,7 @@ EventSheets.unregister_toggle_icon_provider("shapes_dash")
 
 **What it does.** A round dial with a draggable handle. The handle's angle sets the direction and its distance from the centre sets the magnitude, so one gesture sets both components.
 
-**How to use it.** Choose **Show as: Direction dial**. The dial's reach (the magnitude at the rim) comes from the **Range** max (a bare number like `150` works).
+**How to use it.** Choose **Inspector look: Direction dial**. The dial's reach (the magnitude at the rim) is the look's **Reach** field (for example `150`).
 
 **Emits:**
 ```gdscript
@@ -297,7 +299,7 @@ EventSheets.unregister_toggle_icon_provider("shapes_dash")
 
 **What it does.** A row of one-click colour presets plus the full Godot colour picker, so common colours are a single click and custom ones are still one click away.
 
-**How to use it.** Choose **Show as: Swatch row** on a `Color` variable.
+**How to use it.** Choose **Inspector look: Swatch row** on a `Color` variable.
 
 **Emits:**
 ```gdscript
@@ -310,7 +312,7 @@ EventSheets.unregister_toggle_icon_provider("shapes_dash")
 
 **What it does.** Shows a thumbnail of the assigned texture right in the Inspector instead of just a resource slot, so you can confirm the art at a glance.
 
-**How to use it.** Choose **Show as: Texture preview** on a `Texture2D` variable.
+**How to use it.** Choose **Inspector look: Texture preview** on a `Texture2D` variable.
 
 **Emits:**
 ```gdscript
@@ -323,7 +325,7 @@ EventSheets.unregister_toggle_icon_provider("shapes_dash")
 
 **What it does.** Renders the shape of a `Curve` resource inline. You read the ramp directly; you still shape its points in Godot's stock Curve editor after assigning.
 
-**How to use it.** Choose **Show as: Curve preview** on a `Curve` variable.
+**How to use it.** Choose **Inspector look: Curve preview** on a `Curve` variable.
 
 **Emits:**
 ```gdscript
@@ -381,11 +383,11 @@ Holding **Ctrl** while dragging snaps to the editor's own Configure Snap default
 
 ## 5. The Export Options
 
-These are native Godot `@export_*` flavours, picked from the same "More options" disclosure. They work with or without the editor plugin because they are stock Godot annotations.
+These are native Godot `@export_*` flavours, picked from the same **Inspector look** dropdown. They work with or without the editor plugin because they are stock Godot annotations.
 
 ### Tooltip
 
-A short hover description. Type it in the **Tooltip** field; it becomes a `##` doc comment above the variable, which Godot shows as the Inspector tooltip.
+A short hover description. Type it in the **Description** field; it becomes a `##` doc comment above the variable, which Godot shows as the Inspector tooltip.
 
 ```gdscript
 ## How hard the screen shakes on a hit.
@@ -394,7 +396,7 @@ A short hover description. Type it in the **Tooltip** field; it becomes a `##` d
 
 ### Range (slider bounds)
 
-Min, max, and step for a numeric variable. Type `min, max, step` (a bare `max` is also accepted). Drives both the Inspector slider and the progress-bar / dial drawers.
+Min, max, and step for a numeric variable. Pick the **Slider** look and fill in its **Min**, **Max** and **Step** (left empty they are 0, 100 and 1). Drives both the Inspector slider and the progress-bar / dial drawers.
 
 ```gdscript
 @export_range(0, 100, 1) var health: int = 100
@@ -458,11 +460,11 @@ A solid RGB swatch with the alpha slider hidden, for colours that should never b
 @export_color_no_alpha var team_colour: Color = Color(1, 1, 1, 1)
 ```
 
-This one round-trips **structured**: reopen the `.gd` and the "No alpha" tick is still checked, so you can untick it later. Note that "No alpha" and the swatch-row drawer are mutually exclusive on emit (leave "Show as" on "Default field" to use No alpha).
+This one round-trips **structured**: reopen the `.gd` and the "No alpha" tick is still checked, so you can untick it later. Note that "No alpha" and the swatch-row drawer are mutually exclusive on emit (pick the **Solid colour, no alpha** look to use No alpha).
 
 ### Section header and Info note (decor)
 
-Editor-only decoration drawn **above** a property: a **Section header** is an accent-colored label (end it with a `#rrggbb` to tint it, e.g. `Combat #e06666`), and an **Info note** is a quiet panel for a sentence the designer must read ("Shared resource - edits affect every user."). Fill either field under **Advanced**; they compose with any drawer.
+Editor-only decoration drawn **above** a property: a **Section header** is an accent-colored label (end it with a `#rrggbb` to tint it, e.g. `Combat #e06666`), and an **Info note** is a quiet panel for a sentence the designer must read ("Shared resource - edits affect every user."). Fill either field under **When it changes**; they compose with any drawer.
 
 ```gdscript
 # @inspector_header Combat #e06666
@@ -474,7 +476,7 @@ They emit as plain `#` comments (never `##`, which would merge into the hover to
 
 ### Required
 
-A red "⚠ Required - assign a value" badge above the field until it is set - for the Resource slot or String that must never ship empty. Tick **"Required"** under **Advanced**. Zero is a value, not missing; the badge watches for null resources and blank text.
+A red "⚠ Required - assign a value" badge above the field until it is set - for the Resource slot or String that must never ship empty. Tick **"Required"** under **When it changes**. Zero is a value, not missing; the badge watches for null resources and blank text.
 
 ```gdscript
 # @inspector_required
@@ -489,7 +491,7 @@ The **Project Doctor** enforces it project-wide: every scene node and saved reso
 
 ### Read-only
 
-Shows the value in the Inspector but greys it out so nobody can edit it, for computed or status fields. Tick **"Read-only"** (Advanced).
+Shows the value in the Inspector but greys it out so nobody can edit it, for computed or status fields. Tick **"Read-only"** (When it changes).
 
 ```gdscript
 @export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY) var current_score: int = 0
@@ -497,7 +499,7 @@ Shows the value in the Inspector but greys it out so nobody can edit it, for com
 
 ### Group and Sub-heading
 
-Collapsible Inspector sections so related variables sit together. Fill **"Group under heading"** and optionally **"Sub-heading"** (Advanced).
+Collapsible Inspector sections so related variables sit together. Fill **Group** and optionally **Subgroup** under **Where it sits in the Inspector**.
 
 ```gdscript
 @export_group("Combat")
@@ -507,7 +509,7 @@ Collapsible Inspector sections so related variables sit together. Fill **"Group 
 
 ### Show if, on a whole group
 
-"Tick Dashed and seven fields appear" is the shape a long Inspector wants, and a group is the natural unit for it. Fill **"Show group if"** (Advanced) on the variables of a group and the **whole group** hides with the named bool, instead of hiding one field at a time.
+"Tick Dashed and seven fields appear" is the shape a long Inspector wants, and a group is the natural unit for it. Fill **"Show group if"** (When it changes) on the variables of a group and the **whole group** hides with the named bool, instead of hiding one field at a time.
 
 ```gdscript
 # @inspector_show_if dashed
@@ -519,7 +521,7 @@ The comment above the group line is the **round-trip carrier** and nothing more:
 
 ### Link two numbers (the equals button)
 
-Two neighbouring numbers that should stay in proportion - a dash count and its spacing, a width and a height - get an **equals button** between them. Press it and the pair remembers the ratio it has at that moment; while it stays pressed, editing either one moves the other to keep that ratio. Fill **"Link with"** (Advanced) with the neighbour's name.
+Two neighbouring numbers that should stay in proportion - a dash count and its spacing, a width and a height - get an **equals button** between them. Press it and the pair remembers the ratio it has at that moment; while it stays pressed, editing either one moves the other to keep that ratio. Fill **"Link with"** (When it changes) with the neighbour's name.
 
 ```gdscript
 # @inspector_link dash_count dash_spacing
@@ -530,7 +532,7 @@ The line names **both** fields, this one first, so a reader of the file sees the
 
 ## 6. The Behaviours (Tier-2 setters)
 
-These add a little generated logic to a variable. They live under **Advanced** and apply to exported variables.
+These add a little generated logic to a variable. They live under **When it changes** and apply to exported variables.
 
 ### Clamp to range
 
@@ -559,7 +561,7 @@ Calls a sheet function every time the value is assigned, for keeping UI or deriv
 
 ### Validate with (inline validation)
 
-The Inspector calls a sheet function **while the property is edited** and shows the returned warning above the field ("" = valid). Fill **"Validate with"** (Advanced) with the function's name; the sheet needs to be a `@tool` sheet for the check to run in-editor (it stays silent otherwise - never a false alarm).
+The Inspector calls a sheet function **while the property is edited** and shows the returned warning above the field ("" = valid). Fill **"Validate with"** (When it changes) with the function's name; the sheet needs to be a `@tool` sheet for the check to run in-editor (it stays silent otherwise - never a false alarm).
 
 ```gdscript
 # @inspector_validate check_spawn_gap
@@ -574,7 +576,7 @@ func check_spawn_gap() -> String:
 
 ### Field button
 
-A small button rendered **with the property** that calls a sheet function on click - "Reroll" next to the seed, "Refresh preview" next to the path. Fill **"Field button"** (Advanced) with the function name and an optional label (`reroll_stats Reroll`). Needs a `@tool` sheet to act in-editor (the button disables itself with the reason otherwise). Unlike a [Tool button](#7-reference-every-option-and-the-gdscript-it-emits) - which is its own Inspector entry generated from a function - the field button sits with the variable it concerns.
+A small button rendered **with the property** that calls a sheet function on click - "Reroll" next to the seed, "Refresh preview" next to the path. Fill **"Field button"** (When it changes) with the function name and an optional label (`reroll_stats Reroll`). Needs a `@tool` sheet to act in-editor (the button disables itself with the reason otherwise). Unlike a [Tool button](#7-reference-every-option-and-the-gdscript-it-emits) - which is its own Inspector entry generated from a function - the field button sits with the variable it concerns.
 
 ```gdscript
 # @inspector_action reroll_stats Reroll
@@ -598,42 +600,42 @@ func _validate_property(property: Dictionary) -> void:
 
 | Option | Where | Applies to | Emits |
 |---|---|---|---|
-| Editable in the Inspector | Access | any | `@export` |
-| Tooltip | More options | any | `## doc comment` |
-| Range | More options | int / float / Vector2 | `@export_range(min, max, step)` |
-| Multiline | More options | String | `@export_multiline` |
-| Options (combo) | More options | String | `@export_enum("a", "b")` |
+| Editable in the Inspector | In the Inspector | any | `@export` |
+| Description | Variable | any | `## doc comment` |
+| Slider | Inspector look | int / float / Vector2 | `@export_range(min, max, step)` |
+| Big text box | Inspector look | String | `@export_multiline` |
+| Dropdown | Inspector look | String | `@export_enum("a", "b")` |
 | Suggestions (free typing) | Inspector look | String | `@export_custom(PROPERTY_HINT_ENUM_SUGGESTION, "a,b")` |
-| No alpha | More options | Color | `@export_color_no_alpha` |
-| Easing curve | More options | float | `@export_exp_easing` |
-| Placeholder | More options | String | `@export_placeholder("hint")` |
-| Show as: Progress bar | More options | int / float | `@export_custom(... "eventsheet:progress_bar:min:max")` |
-| Show as: Min-max range | More options | Vector2 | `@export_custom(... "eventsheet:min_max:min:max")` |
-| Show as: Editable table | More options | Array | `@export_custom(... "eventsheet:table:name=type,...")` |
+| Solid colour, no alpha | Inspector look | Color | `@export_color_no_alpha` |
+| Easing curve | Inspector look | float | `@export_exp_easing` |
+| Hint inside the box | Inspector look | String | `@export_placeholder("hint")` |
+| Inspector look: Progress bar | Inspector look | int / float | `@export_custom(... "eventsheet:progress_bar:min:max")` |
+| Inspector look: Min-max range | Inspector look | Vector2 | `@export_custom(... "eventsheet:min_max:min:max")` |
+| Inspector look: Editable table | Inspector look | Array | `@export_custom(... "eventsheet:table:name=type,...")` |
 | Card list | authored on the export | Array of Dictionary | `@export_custom(... "eventsheet:cards:kind=<k>,schema=<n>,stripes=<k>")` |
-| Show as: Toggle buttons | More options | String + Options | `@export_custom(... "eventsheet:toggle_row:a,b,c")` |
+| Inspector look: Toggle buttons | Inspector look | String + Options | `@export_custom(... "eventsheet:toggle_row:a,b,c")` |
 | Toggle buttons, equal widths | authored on the export | String / int + Options | `...:toggle_row:a,b,c:segmented` |
 | Toggle buttons, with pictures | authored on the export | String / int + Options | `...:toggle_row:a,b,c:icons=<pattern or provider>` |
-| Show as: Number with its unit | Inspector look | float | `@export_custom(... "eventsheet:unit:kinds=a\|b,store=a")` |
-| Show as: Four corners | Inspector look | Vector4 | `@export_custom(... "eventsheet:corners")` |
-| Show as: Direction dial | More options | Vector2 | `@export_custom(... "eventsheet:vector_dial:reach")` |
-| Show as: Swatch row | More options | Color | `@export_custom(... "eventsheet:swatch_row")` |
-| Show as: Texture preview | More options | Texture2D | `@export_custom(... "eventsheet:texture_preview")` |
-| Show as: Curve preview | More options | Curve | `@export_custom(... "eventsheet:curve_editor")` |
-| Section header | Advanced | any | `# @inspector_header Title #rrggbb` (editor decor comment) |
-| Info note | Advanced | any | `# @inspector_info text` (editor decor comment) |
-| Required | Advanced | any | `# @inspector_required` (editor decor comment) |
-| Validate with | Advanced | any (@tool sheet) | `# @inspector_validate function_name` (editor decor comment) |
-| Field button | Advanced | any (@tool sheet) | `# @inspector_action function_name Label` (editor decor comment) |
-| Read-only | Advanced | any | `@export_custom(..., PROPERTY_USAGE_READ_ONLY)` |
-| Link with | Advanced | two neighbouring numbers | `# @inspector_link a b` (editor decor comment) |
-| Group / Sub-heading | Advanced | any | `@export_group("...")` / `@export_subgroup("...")` |
-| Show group if | Advanced | any in a group | `# @inspector_show_if bool_var` above the group, plus the usual `_validate_property` |
+| Inspector look: Number with its unit | Inspector look | float | `@export_custom(... "eventsheet:unit:kinds=a\|b,store=a")` |
+| Inspector look: Four corners | Inspector look | Vector4 | `@export_custom(... "eventsheet:corners")` |
+| Inspector look: Direction dial | Inspector look | Vector2 | `@export_custom(... "eventsheet:vector_dial:reach")` |
+| Inspector look: Swatch row | Inspector look | Color | `@export_custom(... "eventsheet:swatch_row")` |
+| Inspector look: Texture preview | Inspector look | Texture2D | `@export_custom(... "eventsheet:texture_preview")` |
+| Inspector look: Curve preview | Inspector look | Curve | `@export_custom(... "eventsheet:curve_editor")` |
+| Section header | When it changes | any | `# @inspector_header Title #rrggbb` (editor decor comment) |
+| Info note | When it changes | any | `# @inspector_info text` (editor decor comment) |
+| Required | When it changes | any | `# @inspector_required` (editor decor comment) |
+| Validate with | When it changes | any (@tool sheet) | `# @inspector_validate function_name` (editor decor comment) |
+| Field button | When it changes | any (@tool sheet) | `# @inspector_action function_name Label` (editor decor comment) |
+| Read-only | When it changes | any | `@export_custom(..., PROPERTY_USAGE_READ_ONLY)` |
+| Link with | When it changes | two neighbouring numbers | `# @inspector_link a b` (editor decor comment) |
+| Group / Subgroup | Where it sits | any | `@export_group("...")` / `@export_subgroup("...")` |
+| Show group if | When it changes | any in a group | `# @inspector_show_if bool_var` above the group, plus the usual `_validate_property` |
 | Preview card | object decor | any node / resource | `# @inspector_preview` (editor decor comment) |
 | Viewport handle | object decor | any node | `# @inspector_handle <property> <kind> [from <property>]` (editor decor comment) |
-| Clamp to range | Advanced | int / float + Range | a `set(value)` with `clampi` / `clampf` |
-| On changed | Advanced | any | a `set(value)` that calls your function |
-| Show if / Lock unless | Advanced | any (driven by a bool) | a generated `_validate_property` |
+| Clamp to range | When it changes | int / float + Range | a `set(value)` with `clampi` / `clampf` |
+| On changed | When it changes | any | a `set(value)` that calls your function |
+| Show if / Lock unless | When it changes | any (driven by a bool) | a generated `_validate_property` |
 | Constant | Flags | any non-Variant | `const` (a green "const" pill on the row) |
 
 ## 8. Use Cases
@@ -646,7 +648,7 @@ func _validate_property(property: Dictionary) -> void:
 Variable: health  (Number, Whole numbers only)
   Editable in the Inspector: on
   Range: 0, 100, 1
-  Show as: Progress bar
+  Inspector look: Progress bar
   Clamp to range: on
 ```
 
@@ -660,7 +662,7 @@ Designers drag the bar in the Inspector; the clamp guarantees buffs never push i
 Variable: wind  (Vector2)
   Editable in the Inspector: on
   Range: 150           // the dial's reach
-  Show as: Direction dial
+  Inspector look: Direction dial
 ```
 
 Set the arrow with one drag instead of typing X and Y.
@@ -672,9 +674,9 @@ Set the arrow with one drag instead of typing X and Y.
 ```
 Variable: team_colour  (Color)
   Editable in the Inspector: on
-  Show as: Swatch row
+  Inspector look: Swatch row
   // OR, for a guaranteed-opaque colour with no alpha slider:
-  No alpha: on         (leave Show as on Default field)
+  No alpha: on         (the Solid colour, no alpha look)
 ```
 
 ### Use case 4: a score that repaints its HUD
@@ -722,7 +724,7 @@ Related variables under the same Group collapse into one tidy "Combat / Defense"
 ```
 Variable: damage_falloff  (Curve)
   Editable in the Inspector: on
-  Show as: Curve preview
+  Inspector look: Curve preview
 ```
 
 The Inspector shows the curve's shape inline; shape the points in Godot's curve editor after assigning.
@@ -745,7 +747,7 @@ Variable: current_combo  (Number)
 Variable: spawn_gap  (Vector2)
   Editable in the Inspector: on
   Range: 0, 60          // the slider's track
-  Show as: Min-max range
+  Inspector look: Min-max range
 ```
 
 One track, two handles; `spawn_gap.x` is the low end and `.y` the high end - `randf_range(spawn_gap.x, spawn_gap.y)` in the sheet.
@@ -758,7 +760,7 @@ One track, two handles; `spawn_gap.x` is the low end and `.y` the high end - `ra
 Variable: zoom_bounds  (Vector2)
   Editable in the Inspector: on
   Range: 0.5, 4
-  Show as: Min-max range
+  Inspector look: Min-max range
 ```
 
 The handles can meet but never cross, so min <= max holds by construction.
@@ -812,7 +814,7 @@ Hover each exported variable row in the sheet: a live preview card pops up with 
 ```
 Variable: loot  (Array)
   Editable in the Inspector: on
-  Show as: Editable table
+  Inspector look: Editable table
   Table columns: item:String, weight:int, rare:bool
 ```
 
@@ -826,7 +828,7 @@ Each Dictionary row becomes a labelled grid line with add / remove / move-up con
 Variable: difficulty  (Text)
   Editable in the Inspector: on
   Options: easy, normal, hard
-  Show as: Toggle buttons
+  Inspector look: Toggle buttons
 ```
 
 All three sit as one row of buttons - the pressed one is the value - so switching is a single click with nothing hidden. Without the plugin it degrades to a plain text field, so nothing runtime depends on it.
@@ -839,7 +841,7 @@ All three sit as one row of buttons - the pressed one is the value - so switchin
 Variable: portrait  (Resource type: Texture2D)
   Editable in the Inspector: on
   Required: on
-  Show as: Texture preview
+  Inspector look: Texture preview
 ```
 
 The red "Required - assign a value" badge sits above the field until it is set, and the **Project Doctor** scans every scene and saved resource using the script, naming any file that left the portrait unset - so the gap surfaces before ship, not after a bug report.
@@ -954,9 +956,9 @@ and every drawer degrades to the plain field for its type.
 
   <img src="images/hover-inspector-preview.png" alt="Hovering an exported variable row pops a live Inspector preview: the Combat accent header, an info note panel, the Stats group, and the progress-bar widget, with the plain-language sentence beneath." width="420">
 - **Tick "Editable in the Inspector" first.** The drawers and most options only appear for an exported variable; they have no effect on a private value.
-- **A drawer needs its type.** Each drawer is offered only for the type it fits (progress bar for numbers, dial or min-max range for Vector2, swatch for Color, and so on). Change the type and the "Show as" list updates.
-- **Range feeds the drawers.** The progress bar and the min-max slider read their bounds, and the dial its reach, from the **Range**, so set the Range before (or alongside) the drawer.
-- **No alpha vs the swatch drawer.** They both target Color and are mutually exclusive on emit. To use **No alpha**, leave "Show as" on **Default field**; to use the **Swatch row**, leave No alpha unticked.
+- **A drawer needs its type.** Each drawer is offered only for the type it fits (progress bar for numbers, dial or min-max range for Vector2, swatch for Color, and so on). Change the type and the Inspector look list updates.
+- **A drawer carries its own bounds.** The progress bar and the min-max slider take a Min and a Max, and the dial a Reach, as details of the look itself.
+- **No alpha vs the swatch drawer.** They both target Color and are mutually exclusive on emit. Each is its own look, so pick one or the other.
 - **Drawers degrade, they never break.** Without the editor plugin (or in an exported game) every drawer becomes a plain field. Do not rely on a drawer for runtime behaviour; it is an editor convenience only.
 - **Clamp needs a Range.** "Clamp to range" only generates its setter when the variable is numeric and has a Range; without one it is ignored.
 - **On changed names a sheet function.** The function must exist in the sheet, or the compiler warns that the target is unknown.

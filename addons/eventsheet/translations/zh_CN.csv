@@ -7449,19 +7449,23 @@ Add Button,添加按钮
 "Added the Inspector button ""%s"" for %s.","已添加检查器按钮 ""%s""(用于 %s)。"
 (turn on Tool in the Sheet Type dialog for it to run in the editor.),"(在“工作表类型”对话框中打开 Tool,它才会在编辑器中运行。)"
 Add An Inspector Button For It…,为它添加检查器按钮…
-%s - a category,
-A heavy band in the Inspector that starts a new chapter of properties.,
-%s - a subgroup of %s,
-A folder inside the %s folder in the Inspector.,
-%s - an export group,
-"The exported variables under it share one folder in the Inspector, until the group ends.",
-%s - a prefix group,
-Only variables whose names start with %s join it; the Inspector shows them without that start.,
-1 subgroup,
-%d subgroups,
-Not in %s: that group only takes names starting %s.,
-%s ends here,
-Double-click to rename it.,
-Only names starting %s join this group.,
-"%s (inferred) - no type is written in the code, so Godot takes it from the default value. Properties... can write it.",
-%s - the type written in the code.,
+%s - a category,%s - 分类
+A heavy band in the Inspector that starts a new chapter of properties.,检查器中开始一组新属性的粗横条。
+%s - a subgroup of %s,%s - %s 的子组
+A folder inside the %s folder in the Inspector.,检查器中 %s 文件夹内的文件夹。
+%s - an export group,%s - 导出组
+"The exported variables under it share one folder in the Inspector, until the group ends.",其下的导出变量共用检查器中的一个文件夹，直到该组结束。
+%s - a prefix group,%s - 前缀组
+Only variables whose names start with %s join it; the Inspector shows them without that start.,只有名称以 %s 开头的变量会加入；检查器显示时会去掉这个开头。
+1 subgroup,1 个子组
+%d subgroups,%d 个子组
+Not in %s: that group only takes names starting %s.,不在 %s 中：该组只接受以 %s 开头的名称。
+%s ends here,%s 到此结束
+Double-click to rename it.,双击可重命名。
+Only names starting %s join this group.,只有以 %s 开头的名称会加入此组。
+"%s (inferred) - no type is written in the code, so Godot takes it from the default value. Properties... can write it.",%s（推断）- 代码中没有写类型，所以 Godot 从默认值推断。“属性...”可以把它写出来。
+%s - the type written in the code.,%s - 代码中写明的类型。
+"The editor has no icon called %s, so the button would show none.",编辑器中没有名为 %s 的图标，所以按钮不会显示图标。
+"%s does not start with %s, so Godot leaves it outside %s. Rename it, or turn off the prefix.",%s 不以 %s 开头，所以 Godot 会把它放在 %s 之外。请重命名，或关闭前缀。
+automatic: %s tells it when it changes,自动：%s 改变时会通知它
+nothing to refresh,无需刷新

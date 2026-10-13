@@ -6,6 +6,204 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Changed: the variable window is four cards, every look a described choice
+
+- **Variable** asks for the row in the order it reads: scope, name, type, initial value,
+  description, flags. **The type list names every GDScript type** as the code writes it, grouped
+  (Basic, Text, Vectors and maths, Colour, Nodes and resources, Collections, Packed arrays,
+  Special), with the plain words beside it (\"int · Whole number\") and a sentence on hover. The
+  sheet's own enums are types of their own. A node or resource slot takes any class in a **Class**
+  field beside it (Sprite2D, EnemyStats), and a type the list does not name is kept, never lost.
+  The Number / Text / Boolean aliases and their \"Whole numbers only\" tick are gone - int and float
+  are listed as what they are. Change Type Everywhere offers the same list.
+- **The initial value is edited the way the Inspector would**: a tick for a bool, a swatch for a
+  colour, one coloured field per axis for a vector, `&\"` / `^\"` before a StringName or NodePath,
+  an enum's members or the sheet's functions offered as you type, and \"Edit items…\" for a list.
+  A value written as code (`Kind.ROUND`, `&\"jump\"`, `_bake`) reaches the file as code on both of
+  the sheet's stores; an empty node slot starts at `null`.
+- **Write the type in code** is a tick on every row placed among the events: ticked the line names
+  its type, unticked it is written as `var damage = 3`.
+- **In the Inspector** carries the \"Editable in the Inspector\" tick on its heading and one
+  **Inspector look** dropdown, which lists only the looks the type can wear - slider, angle in
+  degrees, exponential slider, slider with no handle, dropdown of numbers, checkbox flags, layers
+  grid (which layers is a detail), easing curve (either flag or both), file and folder pickers with
+  their reach, big text box, hint inside the box, dropdown, dropdown with free typing, password
+  dots, expression field, solid colour, linked axes, node path filtered, Inspector button (label
+  and editor icon, checked against the editor's own icons), every drawer, your own hint
+  (`@export_custom(hint, \"text\", usage)`) and saved but hidden. Every option says on hover what the
+  Inspector will show and the annotation it writes, the chosen one's annotation sits muted beside
+  the dropdown, and its details sit under it.
+- **Where it sits in the Inspector** has the Category, Group and Subgroup, each completing from the
+  sections the sheet already has, and **Only names starting** for a prefix group: ticking it offers
+  the start the group's names share, and a name that would fall outside the group says so.
+- **When it changes** folds away on changed (with Wait for ready), show if, lock unless, link
+  with, clamp, read-only, the decor fields and the setter and getter bodies, and says how the
+  Inspector is refreshed. Simple Mode hides it.
+- **The live column** shows the row the window writes, the whole block of code it compiles to -
+  category, group, description and declaration - and the Inspector preview card, which now draws
+  the category band and an Inspector button.
+- The Look Gallery window is gone: the described dropdown and the preview card do its job.
+
+### Fixed: what the variable window sends is what a row keeps
+
+- **Editing a variable the file opened no longer drops its look.** A row placed among the events
+  kept only its sections through a save; a range, file picker, flags, layers grid, enum values and
+  the rest were thrown away. Every attribute the window sends is kept now, and anything it has no
+  field for (a group's end line, which side of the sections its `##` sat) rides through untouched.
+- **Editing a sheet-level variable keeps its attributes, choices and Inspector tick**; the window
+  used to open it with none of them and save it back without them.
+- **A Big text box compiles from a row** (`@export_multiline`), and one a file wrote reopens on that
+  look.
+- **The help strip and the preview card read in the light editor theme**: their text takes the
+  theme's own colour instead of a fixed pale one.
+
+### Added: every Inspector export option opens as the variable it belongs to
+
+- **A group with a name prefix** - `@export_group(\"Bullet\", \"bullet\")` - and a subgroup with one
+  open as grouped variables instead of a block of code above them, and save back unchanged. The
+  prefix is the variable's `group_prefix` / `subgroup_prefix` attribute.
+- **The end of a group** - `@export_group(\"\")` - is a fact of the variable after it
+  (`group_end`), and the sheet's settings folder now closes there instead of running on.
+- **An untyped variable** (`@export var damage = 3`, `var _cooldown = 0.0`, `const GRAVITY = 900`)
+  opens as a variable row whose type is the one its value implies (int, float, ...), and saves
+  back with no type written, exactly as it was. The new `untyped` field says so; clearing it writes
+  the type in the code.
+- **`@export_file_path`** opens as a file picker that keeps the path as typed (`plain_path` on the
+  file spec), and **a free-form `@export_custom(hint, \"text\", usage)`** opens as the variable's own
+  `custom_hint` {hint, text, usage} instead of a line of code. Both compile from the same fields.
+- The hand-written-project round trip gained `turret.gd`, a script using every one of these next to
+  the category, NodePath, range-extra and easing-flag spellings that already lifted.
+
+### Changed: export groups read on the sheet the way the Inspector shows them
+
+- **`@export_category` is a heavy centred band**, and **`@export_subgroup` is its own tinted,
+  foldable strip inside its group**, holding its own variables. A group strip names itself in bold,
+  and its outline now wraps every variable in the group, not just the first.
+- **`@export_group(\"\")` draws as the line the group ends on** (\"Gun ends here\"), inside the strip, so
+  where a group stops is never a guess.
+- **Prefix groups** (`@export_group(\"Bullet\", \"bullet\")`) show their prefix (`bullet*`) beside the
+  name, and each member's matching start is tinted. The first exported name that does not start with
+  the prefix is outside the group, as the Inspector has it - and selecting it says why in the help
+  strip under the sheet (\"Not in Bullet: that group only takes names starting bullet.\"), never inside
+  the row. A section line the importer leaves as a script line still reads this way, and a
+  double-click on it still edits the line.
+- **Hovering a group's name** says what kind of section it is, what it holds and the line that
+  declares it. The hover is on the name only.
+- **A type the code does not write** (`var hp := 100`) reads in grey italics, its hover says Godot
+  takes it from the value, and **Properties offers \"Write the type in code (: int)\"**, which turns the
+  line into `var hp: int = 100` in one undo step. Saving such a variable from Properties untouched now
+  keeps its value exactly as written (`5.0` stays `5.0`), and keeps the category it opens.
+- **The badge tiles' hovers end with the code that earns them** - `@export`, `@export_range(0, 600)`,
+  the `##` line.
+### Added: a tool sheet's variables, written both ways
+
+- **Show if and Lock unless work on a `.gd` sheet.** A sheet variable (the rows a `.gd` sheet keeps
+  its variables in) with a Show if or a Lock unless now compiles exactly as on a `.tres` sheet: one
+  generated `_validate_property` straight after the last variable, and the variable it reads gets a
+  setter that calls `notify_property_list_changed()`, so the field appears or locks the moment the
+  box is ticked instead of after the node is selected again. Before, the dialog's fields were
+  dropped on a sheet variable without a word.
+- **On changed, and Wait for ready.** A sheet variable's On changed calls its function from the
+  setter. The new `wait_for_ready` option puts that call behind `if is_node_ready():`, because a
+  tool script's setters also run while the scene loads, before the children the function reaches
+  exist. It works on dictionary variables too.
+- **A sheet-written file reopens as the options that wrote it.** The generated `_validate_property`
+  goes back onto the variables as their Show if / Lock unless, and the setters that only refresh the
+  Inspector go with it; the file still saves byte for byte. A hand-edited function stays the
+  function, and a file that writes its own `_validate_property` keeps it: the generated one stands
+  aside (with a warning naming the variables it leaves to it) instead of writing a second.
+- **Add An Inspector Button For It...** on a function's row asks what the button should say (the
+  function's name, read as words, to start with) and shows the `@export_tool_button` line it adds.
+  Ctrl+Z removes it again.
+- **Saved but hidden survives an edit.** Editing a sheet variable that is `@export_storage`, or an
+  Inspector button row, through the Variable dialog no longer turns it back into a plain export.
+- A group show-if comment (`# @inspector_show_if`) in a file with no `_validate_property` of its
+  own now stays the comment it is, rather than becoming an option whose save would write a function
+  the file never had.
+
+### Changed: the first sheet opens with less to compile
+
+- **Six scripts the first open never uses are compiled when they are first asked for instead.**
+  The Doctor's Files section (asked for one sentence when a scene-trust note is selected), the
+  translation scanner and the grid file codec (a pseudo column, a project walk), the Inspector mock
+  a hover over an exported variable shows, the Project bar (off unless the project asks for it) and
+  the Hierarchy pane. The workspace's first open compiles 14 fewer files and 7,255 fewer lines
+  (337 files and 165,891 lines before, 323 and 158,636 after). Measured interleaved against the previous build on the same machine (three
+  runs each, medians): loading the workspace editor 12.3 s -> 11.5 s, building it 15.1 s -> 14.3 s;
+  those six scripts cost about 1.4 s to compile once something does ask for them.
+- **The compiler stays on the first open, on purpose.** Opening a `.gd` as a sheet re-emits every
+  lifted row and the whole sheet to prove the bytes come back unchanged, and that proof is the
+  compiler, so loading it later would only move the same wait into the open's background job.
+
+### Changed: quick questions take one plain shape
+
+- **A quick question now reads the same everywhere.** Its title is the question, one plain sentence
+  says what happens, a short list shows what it touches, and a muted last line says whether Ctrl+Z
+  undoes it. The safe answer is the blue button Enter presses; Esc and the close box always cancel;
+  a risky answer (delete, discard, use the other version) is its own red-outlined button on the
+  left, so neither Enter nor Esc can take it.
+- **Keep this event?** - taking the last condition off a top-level event asks in those words, with
+  Keep it as the blue answer and Delete the event on the left.
+- **A file changed outside the editor** - on a tab with no unsaved edits the question offers Reload
+  as the safe answer; with unsaved edits, Keep mine is the safe answer and Use the file on disk is
+  the red one. Taking the file on disk first keeps the version in the editor, unsaved edits and all,
+  as a backup in Sheet Backups, and the prompt says so (Ctrl+Z still cannot bring the edits back).
+  Refocusing the editor while the question is open no longer asks it a second time.
+- **Rename (a variable) asks Rename health?** and keeps Rename greyed, saying why, until the name
+  typed is one the sheet accepts. Afterwards a short receipt - **Renamed health to hit_points** -
+  lists the places it changed: this sheet with its count, each sheet that includes it (saved), and
+  any hand-written script that still calls the old name (not changed - check it).
+- **Rename class asks Rename Player to Hero?** as you type, lists every file it will change with
+  its count before it changes any, and refuses a name another class already has, saying so. The
+  question shows at once and fills that list a moment later, so a big project does not stall the
+  click. Its note says what Ctrl+Z reaches: this sheet only - other open tabs change and stay
+  unsaved, and closed files are saved, each with a backup in Sheet Backups.
+- **The question's badge and red button read in a light editor theme too**, and its sentence wraps
+  at the display's scale, so a 2x screen no longer wraps it at half the width.
+- **Keep old events working?** (the providers panel's forwarding stand-in) shows the exact lines
+  it would add to the script as you type the old name, and the button stays greyed until there is
+  one to add.
+- **Save before closing?**, **Clear every bookmark?**, **Make a variable local to one event?** and
+  **Rename the translation key too?** take the same shape: Save and Keep Bookmarks stay the Enter answers, Discard and Clear all are
+  the red buttons on the left.
+
+### Added: the window kit's dropdown, result card and state note
+
+- **A dropdown says what each choice means.** Every choice carries its sentence as Godot's own item
+  tooltip, so the open list explains a choice as the pointer rests on it, and the closed dropdown's
+  tooltip is the chosen one's sentence. The variable dialog's Scope and Type, the retype dialog's
+  type, the function dialog's \"What kind of value?\", and the Save studio's Format and export
+  dropdowns all read this way (the last three gained their sentences with it, in all nine
+  languages).
+- **A result card says what just happened**: a titled panel with a short flow of figures and one
+  line per outcome, led by a green, amber or red mark and closed by a chip naming the file it
+  touched. The grid CSV and language-variants windows answer in it instead of a bare label, and the
+  language-variants warning about a preloading script now reads as its own amber line.
+- **A state note** is one sentence with a coloured edge under the field it is about, hidden when
+  there is nothing to say. The variable dialog's name clash and the New Behaviour Addon dialog's
+  name problem use it in place of hand-tinted labels.
+
+### Tests: a real-editor boot budget, and scripts from a project the plugin has never touched
+
+- **`tools/measure_editor_boot.gd` times the two waits a person meets inside a real editor**:
+  enabling the plugin (`EditorInterface.set_plugin_enabled`, on an editor that booted without it)
+  and opening the first sheet through the plugin's own door until its lift lands. Measured three
+  times at this commit: a visible editor enables in 443-465 ms (median 447) and opens the first
+  sheet in 23.5-26.6 s (median 26.5); headless, 446-497 ms (median 460) and 27.3-29.3 s (median
+  27.6). `editor_boot_budget_test` runs it as a subprocess in the serial tail and fails past
+  1,500 ms or 85 s - about three times the medians, so it catches a regression in kind without
+  flapping on a shared runner.
+- **`existing_project_round_trip_test`** opens five hand-written scripts of the kind an existing
+  project already holds (a player with `@export` categories and groups, an autoload with an inner
+  class, a `Resource` with `class_name`, a `@tool` script, an enum state machine in a `match`) and
+  asks each the standing contracts `tools/verify_sheets.gd` asks. All five re-emit byte for byte
+  today; a file that ever does not is listed as expected to degrade, with its reason, instead of
+  being quietly weakened.
+- **A tighter WARN line beside each budget**: about 1.5 times the medians (690 ms and 41.4 s). Past
+  one the test prints a loud `[boot] WARN` line and still passes. The parallel launcher repeats
+  every `[boot]` line under its verdict, and CI writes them into the tail job's summary and keeps
+  the tail log with the run, so the numbers can be compared from run to run.
+
 ### Removed: the Addon manager - a pack is a folder, as everywhere else in Godot
 
 - **Tools ▸ Addon manager… is gone**, and with it the pack Update… and Restore… windows and the
@@ -24,6 +222,9 @@ What changed in the build you have installed (v0.18.0), in the words the release
 - **For scripts that called the catalog:** `EventSheetPackCatalog.disabled_packs()`,
   `is_enabled()`, `set_enabled()` and `is_disabled_path()` keep their shapes and are deprecated
   no-ops (empty, true, nothing, false). `publish_pack` and every `EventSheets` method are unchanged.
+- **Follow-up:** the Tools menu no longer raises an index error in the Output each time it is built
+  (the manager's old tooltip outlived its item), and the README and the guide index describe taking
+  a pack's new version as replacing its folder instead of the removed update window.
 
 ### Fixed: what the review of the window fixes found
 

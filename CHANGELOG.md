@@ -2,6 +2,57 @@
 
 ## [Unreleased]
 
+### Changed: the variable window is four cards, every look a described choice
+
+- **Variable** asks for the row in the order it reads: scope, name, type, initial value,
+  description, flags. **The type list names every GDScript type** as the code writes it, grouped
+  (Basic, Text, Vectors and maths, Colour, Nodes and resources, Collections, Packed arrays,
+  Special), with the plain words beside it ("int · Whole number") and a sentence on hover. The
+  sheet's own enums are types of their own. A node or resource slot takes any class in a **Class**
+  field beside it (Sprite2D, EnemyStats), and a type the list does not name is kept, never lost.
+  The Number / Text / Boolean aliases and their "Whole numbers only" tick are gone - int and float
+  are listed as what they are. Change Type Everywhere offers the same list.
+- **The initial value is edited the way the Inspector would**: a tick for a bool, a swatch for a
+  colour, one coloured field per axis for a vector, `&"` / `^"` before a StringName or NodePath,
+  an enum's members or the sheet's functions offered as you type, and "Edit items…" for a list.
+  A value written as code (`Kind.ROUND`, `&"jump"`, `_bake`) reaches the file as code on both of
+  the sheet's stores; an empty node slot starts at `null`.
+- **Write the type in code** is a tick on every row placed among the events: ticked the line names
+  its type, unticked it is written as `var damage = 3`.
+- **In the Inspector** carries the "Editable in the Inspector" tick on its heading and one
+  **Inspector look** dropdown, which lists only the looks the type can wear - slider, angle in
+  degrees, exponential slider, slider with no handle, dropdown of numbers, checkbox flags, layers
+  grid (which layers is a detail), easing curve (either flag or both), file and folder pickers with
+  their reach, big text box, hint inside the box, dropdown, dropdown with free typing, password
+  dots, expression field, solid colour, linked axes, node path filtered, Inspector button (label
+  and editor icon, checked against the editor's own icons), every drawer, your own hint
+  (`@export_custom(hint, "text", usage)`) and saved but hidden. Every option says on hover what the
+  Inspector will show and the annotation it writes, the chosen one's annotation sits muted beside
+  the dropdown, and its details sit under it.
+- **Where it sits in the Inspector** has the Category, Group and Subgroup, each completing from the
+  sections the sheet already has, and **Only names starting** for a prefix group: ticking it offers
+  the start the group's names share, and a name that would fall outside the group says so.
+- **When it changes** folds away on changed (with Wait for ready), show if, lock unless, link
+  with, clamp, read-only, the decor fields and the setter and getter bodies, and says how the
+  Inspector is refreshed. Simple Mode hides it.
+- **The live column** shows the row the window writes, the whole block of code it compiles to -
+  category, group, description and declaration - and the Inspector preview card, which now draws
+  the category band and an Inspector button.
+- The Look Gallery window is gone: the described dropdown and the preview card do its job.
+
+### Fixed: what the variable window sends is what a row keeps
+
+- **Editing a variable the file opened no longer drops its look.** A row placed among the events
+  kept only its sections through a save; a range, file picker, flags, layers grid, enum values and
+  the rest were thrown away. Every attribute the window sends is kept now, and anything it has no
+  field for (a group's end line, which side of the sections its `##` sat) rides through untouched.
+- **Editing a sheet-level variable keeps its attributes, choices and Inspector tick**; the window
+  used to open it with none of them and save it back without them.
+- **A Big text box compiles from a row** (`@export_multiline`), and one a file wrote reopens on that
+  look.
+- **The help strip and the preview card read in the light editor theme**: their text takes the
+  theme's own colour instead of a fixed pale one.
+
 ### Added: every Inspector export option opens as the variable it belongs to
 
 - **A group with a name prefix** - `@export_group("Bullet", "bullet")` - and a subgroup with one

@@ -453,13 +453,9 @@ func _create_variable_quickfix(variable_name: String) -> bool:
 		return true)
 
 
-## The Inspector attributes a tree-placed LocalVariable round-trips (tooltip + group/subgroup + a Tier 3
-## drawer with its bounds) - the subset the tree-var emission supports. Keeps a reopened variable editable:
-## the dialog populates these (via the edit context) and this stores back what the user changes, so they
-## aren't stuck or cleared.
 ## Copies the setter/getter accessor bodies from the dialog's `attributes` payload onto the variable's
-## first-class property fields (they ride the attributes dict from the dialog but are NOT serialized into
-## `attributes` - the whitelist in _tree_group_attributes drops them). A blank body clears the accessor.
+## first-class property fields (they ride the attributes dict from the dialog but are NOT kept in
+## `attributes` - _tree_group_attributes drops them). A blank body clears the accessor.
 static func _apply_property_accessors(variable: LocalVariable, source: Dictionary) -> void:
 	variable.setter_body = str(source.get("setter_body", "")).strip_edges()
 	variable.getter_body = str(source.get("getter_body", "")).strip_edges()
@@ -467,33 +463,13 @@ static func _apply_property_accessors(variable: LocalVariable, source: Dictionar
 	variable.setter_param = param if not param.is_empty() else "value"
 
 
+## The attributes a tree-placed variable keeps from the dialog: all of them - every look, section and
+## change option compiles from a row the way it does from the sheet's dictionary - except the property
+## accessors, which live on the variable's own fields (_apply_property_accessors).
 static func _tree_group_attributes(source: Dictionary) -> Dictionary:
-	var result: Dictionary = {}
-	# Show if / Lock unless / On changed compile on a sheet variable exactly as on a dictionary one (one
-	# generated _validate_property, a setter that reacts), so they ride along too.
-	for attr_key: String in ["tooltip", "group", "subgroup", "drawer", "header", "header_color", "info", "validate", "action", "action_label",
-			"show_if", "group_show_if", "lock_unless", "on_changed"]:
-		var attr_value: String = str(source.get(attr_key, "")).strip_edges()
-		if not attr_value.is_empty():
-			result[attr_key] = attr_value
-	# Required, Wait for ready and Saved but hidden (@export_storage) are bool flags, not strings - copied
-	# as-is so the emitter's bool() read stays typed.
-	for flag_key: String in ["required", "wait_for_ready", "storage"]:
-		if source.get(flag_key, false) == true:
-			result[flag_key] = true
-	# An Inspector button's own arguments (label, editor icon), which no field of the dialog edits.
-	if source.get("tool_button") is Dictionary:
-		result["tool_button"] = (source.get("tool_button") as Dictionary).duplicate()
-	# A Tier 3 drawer's numeric bounds (progress_bar/min_max/vector_dial) ride along as the range dict so the
-	# @export_custom marker can re-emit them.
-	if result.has("drawer") and source.get("range") is Dictionary and not (source.get("range") as Dictionary).is_empty():
-		result["range"] = (source.get("range") as Dictionary).duplicate()
-	# The table drawer's column schema rides along the same way (an Array of {name, type} entries).
-	if result.has("drawer") and source.get("table_columns") is Array and not (source.get("table_columns") as Array).is_empty():
-		result["table_columns"] = (source.get("table_columns") as Array).duplicate(true)
-	# So do the toggle-button choices (an Array of Strings on the toggle_row drawer).
-	if result.has("drawer") and source.get("toggle_options") is Array and not (source.get("toggle_options") as Array).is_empty():
-		result["toggle_options"] = (source.get("toggle_options") as Array).duplicate(true)
+	var result: Dictionary = source.duplicate(true)
+	for accessor_key: String in ["setter_body", "getter_body", "setter_param"]:
+		result.erase(accessor_key)
 	return result
 
 
@@ -557,17 +533,13 @@ func _on_variable_dialog_confirmed(
 						existing.expression_default = true
 				else:
 					existing.default_value = default_value
+					existing.expression_default = bool(context.get("value_is_code", existing.expression_default))
+					# "Write the type in code" puts the `: int` in, or (unticked) leaves it out.
+					existing.untyped = bool(context.get("untyped", existing.untyped)) and not bool(context.get("write_type", false))
+				existing.export_hint = str(context.get("export_hint", existing.export_hint))
 				existing.is_constant = resolved_constant
 				existing.exported = exported
-				# What the dialog has no field for - the category the variable opens, a section's name
-				# prefix or end line, which side of its section lines the `##` doc was written on, an
-				# Inspector button, a free-form @export_custom - is kept by a save.
-				var unseen: Dictionary = existing.attributes if existing.attributes is Dictionary else {}
 				existing.attributes = _tree_group_attributes(attributes)
-				for key: String in ["category", "group_prefix", "group_end", "subgroup_prefix", "doc_after_group",
-						"tool_button", "custom_hint"]:
-					if unseen.has(key) and not existing.attributes.has(key):
-						existing.attributes[key] = unseen[key]
 				existing.onready = onready
 				existing.is_static = is_static and not resolved_constant
 				_apply_property_accessors(existing, attributes)
@@ -578,6 +550,8 @@ func _on_variable_dialog_confirmed(
 			tree_var.name = var_name
 			tree_var.type_name = type_name
 			tree_var.default_value = default_value
+			tree_var.expression_default = bool(context.get("value_is_code", false))
+			tree_var.untyped = bool(context.get("untyped", false))
 			tree_var.is_constant = resolved_constant
 			tree_var.exported = exported
 			tree_var.attributes = _tree_group_attributes(attributes)
@@ -607,6 +581,9 @@ func _on_variable_dialog_confirmed(
 				"options": Array(combo_options),
 				"attributes": attributes
 			}
+			# A value written as code (`Kind.ROUND`, `&"jump"`, `_bake`) is written as it stands.
+			if bool(context.get("value_is_code", false)):
+				_dock._current_sheet.variables[var_name]["expression"] = true
 			# A promoted Local: the declaration it was dragged out of goes in the same undo step
 			# that wrote the variable it became, so the value is never declared in two places at once.
 			var promoted_from: EventRow = context.get("promote_from_event") as EventRow
@@ -708,6 +685,8 @@ func _context_variable_entry_from_metadata(row_data: EventRowData, metadata: Dic
 	var is_constant: bool = false
 	var static_local: bool = false
 	var attributes: Dictionary = {}
+	var exported: bool = true
+	var options: Array = []
 	var index: int = int(metadata.get("variable_index", -1))
 	var owner_event: EventRow = null
 	# A Local declared by a GROUP is addressed through the group, not through an event: the row
@@ -761,7 +740,11 @@ func _context_variable_entry_from_metadata(row_data: EventRowData, metadata: Dic
 		is_constant = bool(descriptor.get("const", descriptor.get("is_constant", false)))
 		if descriptor.get("attributes") is Dictionary:
 			attributes = (descriptor.get("attributes") as Dictionary).duplicate(true)
+		exported = bool(descriptor.get("exported", true))
+		options = descriptor.get("options") if descriptor.get("options") is Array else []
 	return {
+		"exported": exported,
+		"options": options,
 		"scope": scope,
 		"name": var_name,
 		"type": type_name,
@@ -805,12 +788,14 @@ func _edit_context_variable() -> void:
 			edit_attributes["getter_body"] = tree_var.getter_body
 			edit_attributes["setter_param"] = tree_var.setter_param
 		# A `var hp := 100` is offered the one tick that writes the type Godot infers for it.
+		# So is an untyped `@export var damage = 3`, which already knows the type its value implies.
 		var inferred_type: String = NativeVariableMarks.gdscript_type_word(tree_var.type_name,
-			tree_var.default_value, true) if tree_var.inferred_type else ""
+			tree_var.default_value, true) if tree_var.inferred_type else (tree_var.type_name if tree_var.untyped else "")
 		_dock._variable_dlg.open_for_edit(
 			"tree",
 			{"editing": true, "variable_resource": tree_var, "attributes": edit_attributes,
-				"inferred_type": inferred_type if inferred_type != "Variant" else ""},
+				"inferred_type": inferred_type if inferred_type != "Variant" else "",
+				"export_hint": tree_var.export_hint, "options": tree_var.options},
 			tree_var.name,
 			tree_var.type_name,
 			tree_var.default_value,
@@ -866,7 +851,8 @@ func _edit_context_variable() -> void:
 	var global_name: String = str(_context_variable.get("name", ""))
 	_dock._variable_dlg.open_for_edit(
 		"global",
-		{"editing": true, "original_name": global_name},
+		{"editing": true, "original_name": global_name, "attributes": _context_variable.get("attributes", {}),
+			"options": _context_variable.get("options", [])},
 		global_name,
 		str(_context_variable.get("type", "Variant")),
 		_context_variable.get("default", null),

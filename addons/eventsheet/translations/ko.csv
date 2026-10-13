@@ -7449,19 +7449,23 @@ Add Button,버튼 추가
 "Added the Inspector button ""%s"" for %s.","Inspector 버튼 ""%s""을(를) 추가했습니다 (%s)."
 (turn on Tool in the Sheet Type dialog for it to run in the editor.),(에디터에서 실행되게 하려면 시트 유형 대화 상자에서 Tool을 켜세요.)
 Add An Inspector Button For It…,이 함수의 Inspector 버튼 추가…
-%s - a category,
-A heavy band in the Inspector that starts a new chapter of properties.,
-%s - a subgroup of %s,
-A folder inside the %s folder in the Inspector.,
-%s - an export group,
-"The exported variables under it share one folder in the Inspector, until the group ends.",
-%s - a prefix group,
-Only variables whose names start with %s join it; the Inspector shows them without that start.,
-1 subgroup,
-%d subgroups,
-Not in %s: that group only takes names starting %s.,
-%s ends here,
-Double-click to rename it.,
-Only names starting %s join this group.,
-"%s (inferred) - no type is written in the code, so Godot takes it from the default value. Properties... can write it.",
-%s - the type written in the code.,
+%s - a category,%s - 카테고리
+A heavy band in the Inspector that starts a new chapter of properties.,인스펙터에서 속성의 새 장을 시작하는 굵은 띠입니다.
+%s - a subgroup of %s,%s - %s의 하위 그룹
+A folder inside the %s folder in the Inspector.,인스펙터의 %s 폴더 안에 있는 폴더입니다.
+%s - an export group,%s - 내보내기 그룹
+"The exported variables under it share one folder in the Inspector, until the group ends.",그 아래의 내보낸 변수들은 그룹이 끝날 때까지 인스펙터의 한 폴더를 함께 씁니다.
+%s - a prefix group,%s - 접두사 그룹
+Only variables whose names start with %s join it; the Inspector shows them without that start.,"이름이 %s(으)로 시작하는 변수만 들어가며, 인스펙터는 그 시작 부분을 빼고 보여 줍니다."
+1 subgroup,하위 그룹 1개
+%d subgroups,하위 그룹 %d개
+Not in %s: that group only takes names starting %s.,%s에 들어가지 않습니다. 그 그룹은 %s(으)로 시작하는 이름만 받습니다.
+%s ends here,%s 여기서 끝남
+Double-click to rename it.,두 번 클릭하면 이름을 바꿉니다.
+Only names starting %s join this group.,%s(으)로 시작하는 이름만 이 그룹에 들어갑니다.
+"%s (inferred) - no type is written in the code, so Godot takes it from the default value. Properties... can write it.",%s (추론) - 코드에 타입이 적혀 있지 않아 Godot이 기본값에서 타입을 정합니다. 속성...에서 적을 수 있습니다.
+%s - the type written in the code.,%s - 코드에 적힌 타입입니다.
+"The editor has no icon called %s, so the button would show none.",편집기에 %s라는 아이콘이 없어서 버튼에 아이콘이 표시되지 않습니다.
+"%s does not start with %s, so Godot leaves it outside %s. Rename it, or turn off the prefix.",%s은(는) %s(으)로 시작하지 않아 Godot이 %s 밖에 둡니다. 이름을 바꾸거나 접두사를 끄세요.
+automatic: %s tells it when it changes,자동: %s이(가) 바뀌면 알려 줍니다
+nothing to refresh,새로 고칠 것이 없습니다

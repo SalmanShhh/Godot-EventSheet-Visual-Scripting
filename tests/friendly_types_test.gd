@@ -1,48 +1,41 @@
 @tool
 class_name FriendlyTypesTest
 extends RefCounted
-# The variable dialog shows friendly type labels (Number / Text / Yes-No) that map to real Godot
-# types, with a "Whole numbers only" tick splitting int vs float. The STORED type stays a real Godot
-# type (so the .gd round-trip is unchanged) - only the dialog's display is friendlier. These pin the
-# display ↔ stored-type mapping in both directions.
+# The variable dialog's type list names every type as GDScript writes it, with the plain words beside
+# it ("int · Whole number"), and stores the type itself as the item's metadata - so the .gd round
+# trip never depends on the words. These pin the selection in both directions: a stored type lands
+# on its own entry, a node or resource class lands on its slot entry with the class typed beside
+# it, and a type the list does not name is added rather than lost.
 
 
 const SUPPORT := preload("res://tests/support.gd")
 
 
 static func run() -> bool:
-	var all_passed: bool = true
 	var host: Node = Node.new()
 	var dlg: VariableDialog = VariableDialog.new()
 	dlg.init_dialog(host)
-
-	# Display → stored: Number + whole-numbers tick → int; Number alone → float.
-	dlg._select_stored_type("int")
-	all_passed = _check("int → Number, whole-numbers ticked", dlg._selected_stored_type(), "int") and all_passed
-	all_passed = _check("the whole-numbers tick is on for int", dlg._whole_numbers_check.button_pressed, true) and all_passed
-	dlg._whole_numbers_check.button_pressed = false
-	all_passed = _check("Number without the tick → float", dlg._selected_stored_type(), "float") and all_passed
-
-	dlg._select_stored_type("String")
-	all_passed = _check("Text → String", dlg._selected_stored_type(), "String") and all_passed
-	dlg._select_stored_type("bool")
-	all_passed = _check("Yes-No → bool", dlg._selected_stored_type(), "bool") and all_passed
-
-	# Advanced Godot types stay literal (no friendly alias).
-	dlg._select_stored_type("Vector2")
-	all_passed = _check("advanced types stay literal", dlg._selected_stored_type(), "Vector2") and all_passed
-
-	# Stored → display: editing an existing float var shows Number with the tick OFF.
+	var rows: Array = []
+	for type_name: String in ["int", "float", "String", "bool", "Vector3i", "StringName"]:
+		dlg._select_stored_type(type_name)
+		rows.append(["%s is stored as itself" % type_name, dlg._selected_stored_type(), type_name])
 	dlg.open_for_edit("global", {}, "speed", "float", "200.0", false, "Edit", false, false)
-	all_passed = _check("editing a float shows the whole-numbers tick off", dlg._whole_numbers_check.button_pressed, false) and all_passed
-	all_passed = _check("editing a float still stores float", dlg._selected_stored_type(), "float") and all_passed
-	# ...and an existing int var shows Number with the tick ON.
-	dlg.open_for_edit("global", {}, "score", "int", "0", false, "Edit", false, false)
-	all_passed = _check("editing an int shows the whole-numbers tick on", dlg._whole_numbers_check.button_pressed, true) and all_passed
-
+	rows.append(["editing a float lands on float", dlg._type_option.get_item_text(dlg._type_option.selected), "float · Number with decimals"])
+	dlg.open_for_edit("global", {}, "body", "Sprite2D", "", false, "Edit", false, true)
+	rows.append(["a node class lands on the node entry", str(dlg._type_option.get_item_metadata(dlg._type_option.selected)), "Node2D"])
+	rows.append(["…with the class typed beside it", dlg._class_edit.text, "Sprite2D"])
+	rows.append(["…and the class is what is stored", dlg._selected_stored_type(), "Sprite2D"])
+	dlg.open_for_edit("global", {}, "spots", "Array[Vector2i]", "[]", false, "Edit", false, true)
+	rows.append(["a type the list does not name is kept", dlg._selected_stored_type(), "Array[Vector2i]"])
+	rows.append(["every type option says what it holds", _undescribed(dlg._type_option), PackedStringArray()])
 	host.free()
-	return all_passed
+	return SUPPORT.pins("friendly_types_test", rows)
 
 
-static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	return SUPPORT.check("friendly_types_test", label, actual, expected)
+## The options of a dropdown that carry no hover sentence, by their words (separators excepted).
+static func _undescribed(option: OptionButton) -> PackedStringArray:
+	var bare: PackedStringArray = PackedStringArray()
+	for index: int in range(option.item_count):
+		if not option.is_item_separator(index) and option.get_item_tooltip(index).strip_edges().is_empty():
+			bare.append(option.get_item_text(index))
+	return bare

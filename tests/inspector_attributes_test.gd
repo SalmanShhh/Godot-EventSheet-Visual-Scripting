@@ -82,7 +82,9 @@ static func run() -> bool:
 	prefill_dialog.init_dialog(prefill_host)
 	prefill_dialog.open_for_edit("global", {"attributes": {"tooltip": "Hi", "group": "Combat", "range": {"min": "0", "max": "9", "step": "1"}, "multiline": false}}, "hp", "int", 5)
 	all_passed = _check("edit prefills tooltip", prefill_dialog._attr_tooltip_edit.text, "Hi") and all_passed
-	all_passed = _check("edit prefills range as min, max, step", prefill_dialog._attr_range_edit.text, "0, 9, 1") and all_passed
+	all_passed = _check("edit prefills the slider look", prefill_dialog._selected_look_id(), "slider") and all_passed
+	all_passed = _check("…with its min, max and step", [prefill_dialog._look_values.get("slider|min"),
+		prefill_dialog._look_values.get("slider|max"), prefill_dialog._look_values.get("slider|step")], ["0", "9", "1"]) and all_passed
 	prefill_host.free()
 
 	# Data/state steering: a NEW variable defaults to internal state (NOT exported), so it doesn't leak
@@ -92,13 +94,11 @@ static func run() -> bool:
 	split_dialog.init_dialog(split_host)
 	split_dialog.open("global")
 	all_passed = _check("a new global is NOT exported by default", split_dialog._exported_check.button_pressed, false) and all_passed
-	# The Inspector checkbox lives inside the disclosure now, so the disclosure itself is offered
-	# wherever the variable COULD be a property; what waits for the tick is everything under it.
-	all_passed = _check("attr disclosure is offered wherever the variable could be a property",
-		split_dialog._attr_toggle.visible, true) and all_passed
+	# The look and the sections wait for the Inspector tick.
+	all_passed = _check("the look waits for the Inspector tick", split_dialog._look_option.get_parent().get_parent().visible, false) and all_passed
 	split_dialog._exported_check.button_pressed = true
 	split_dialog._update_attr_gating()
-	all_passed = _check("attr disclosure appears once designer-tweakable", split_dialog._attr_toggle.visible, true) and all_passed
+	all_passed = _check("the look appears once designer-tweakable", split_dialog._look_option.get_parent().get_parent().visible, true) and all_passed
 	split_dialog.open_for_edit("global", {}, "hp", "int", 5, false, "Edit", false, true)
 	all_passed = _check("an existing exported variable stays exported (sheets untouched)", split_dialog._exported_check.button_pressed, true) and all_passed
 	split_host.free()

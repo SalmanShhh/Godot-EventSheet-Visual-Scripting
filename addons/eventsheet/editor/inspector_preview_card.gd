@@ -67,6 +67,12 @@ func update_preview(variable_name: String, type_name: String, default_text: Stri
 		_rows.add_child(EventSheetDrawerWidgets.ActionButton.new(null, str(attributes.get("action")), str(attributes.get("action_label", ""))))
 	var group_name: String = str(attributes.get("group", ""))
 	var subgroup_name: String = str(attributes.get("subgroup", ""))
+	# A category is the Inspector's heavy band, its name centred, above every group in it.
+	if not str(attributes.get("category", "")).is_empty():
+		var band := Label.new()
+		band.text = str(attributes.get("category"))
+		band.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_rows.add_child(band)
 	if not group_name.is_empty():
 		var group_label := Label.new()
 		# The chip the Inspector Designer shows on a group header: the whole section hides with this
@@ -74,7 +80,6 @@ func update_preview(variable_name: String, type_name: String, default_text: Stri
 		var group_predicate: String = str(attributes.get("group_show_if", ""))
 		group_label.text = "%s   (shown while %s)" % [group_name, group_predicate] if not group_predicate.is_empty() else group_name
 		group_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(12))
-		group_label.add_theme_color_override("font_color", Color(0.85, 0.87, 0.92))
 		_rows.add_child(group_label)
 	if not subgroup_name.is_empty():
 		var subgroup_label := Label.new()
@@ -231,6 +236,10 @@ static func _widget_phrase(attributes: Dictionary) -> String:
 ## gallery's builders so the two previews can't diverge), then a slider for
 ## ranges, then per-type defaults.
 func _build_widget(type_name: String, default_text: String, attributes: Dictionary) -> Control:
+	if attributes.get("tool_button") is Dictionary:
+		var button := Button.new()
+		button.text = str((attributes.get("tool_button") as Dictionary).get("label", ""))
+		return _ignored(button)
 	var drawer_kind: String = str(attributes.get("drawer", ""))
 	if drawer_kind == "progress_bar":
 		var progress := ProgressBar.new()
@@ -300,10 +309,11 @@ func _build_widget(type_name: String, default_text: String, attributes: Dictiona
 	if not drawer_kind.is_empty():
 		# Remaining drawer kinds are curve-shaped (curve preview); the gallery's
 		# ease miniature is the honest picture for them.
-		return _ignored(EventSheetInspectorLooks.build_preview("easing_positive"))
+		return _ignored(EventSheetInspectorLooks.build_preview("easing"))
 	var look_id: String = _look_id_from_attributes(attributes)
-	if not look_id.is_empty():
-		return _ignored(EventSheetInspectorLooks.build_preview(look_id))
+	var look_preview: Control = EventSheetInspectorLooks.build_preview(look_id) if not look_id.is_empty() else null
+	if look_preview != null:
+		return _ignored(look_preview)
 	if attributes.get("range") is Dictionary and (type_name == "int" or type_name == "float"):
 		var slider := HSlider.new()
 		slider.min_value = 0.0
@@ -333,35 +343,10 @@ func _build_widget(type_name: String, default_text: String, attributes: Dictiona
 	return _ignored(field)
 
 
-## Maps the folded attribute families back to a gallery look id, so the card's
-## widget and the gallery tile for the same choice are literally the same control.
+## The look the folded attributes wear, through the same table the dialog's dropdown reads, so the
+## card's widget and the chosen look are literally the same control.
 static func _look_id_from_attributes(attributes: Dictionary) -> String:
-	if attributes.get("file") is Dictionary:
-		var file_spec: Dictionary = attributes.get("file")
-		return "dir" if str(file_spec.get("mode", "")) == "dir" else "file"
-	if attributes.has("flags"):
-		return "flags"
-	if attributes.has("enum_values"):
-		return "enum_values"
-	if attributes.has("layers"):
-		return "layers_%s" % str(attributes.get("layers"))
-	if attributes.has("node_path_types"):
-		return "node_path"
-	if attributes.has("suggestions"):
-		return "suggestions"
-	match str(attributes.get("custom_preset", "")):
-		"password":
-			return "preset_password"
-		"expression":
-			return "preset_expression"
-		"link":
-			return "preset_link"
-	if bool(attributes.get("exp_easing", false)):
-		var easing_flags: Array = attributes.get("exp_easing_flags", [])
-		return "easing_attenuation" if easing_flags.has("attenuation") else "easing_positive"
-	if bool(attributes.get("storage", false)):
-		return "storage"
-	return ""
+	return str(EventSheetInspectorLooks.unfold(attributes)[0])
 
 
 func _ignored(widget: Control) -> Control:

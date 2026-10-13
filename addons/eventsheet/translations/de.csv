@@ -7449,19 +7449,23 @@ Add Button,Schaltfläche hinzufügen
 "Added the Inspector button ""%s"" for %s.","Inspector-Schaltfläche ""%s"" für %s hinzugefügt."
 (turn on Tool in the Sheet Type dialog for it to run in the editor.),"(Schalte Tool im Sheet-Typ-Dialog ein, damit sie im Editor läuft.)"
 Add An Inspector Button For It…,Inspector-Schaltfläche dafür hinzufügen…
-%s - a category,
-A heavy band in the Inspector that starts a new chapter of properties.,
-%s - a subgroup of %s,
-A folder inside the %s folder in the Inspector.,
-%s - an export group,
-"The exported variables under it share one folder in the Inspector, until the group ends.",
-%s - a prefix group,
-Only variables whose names start with %s join it; the Inspector shows them without that start.,
-1 subgroup,
-%d subgroups,
-Not in %s: that group only takes names starting %s.,
-%s ends here,
-Double-click to rename it.,
-Only names starting %s join this group.,
-"%s (inferred) - no type is written in the code, so Godot takes it from the default value. Properties... can write it.",
-%s - the type written in the code.,
+%s - a category,%s - eine Kategorie
+A heavy band in the Inspector that starts a new chapter of properties.,"Ein kräftiges Band im Inspektor, das ein neues Kapitel von Eigenschaften beginnt."
+%s - a subgroup of %s,%s - eine Untergruppe von %s
+A folder inside the %s folder in the Inspector.,Ein Ordner im Ordner %s im Inspektor.
+%s - an export group,%s - eine Exportgruppe
+"The exported variables under it share one folder in the Inspector, until the group ends.","Die exportierten Variablen darunter teilen sich einen Ordner im Inspektor, bis die Gruppe endet."
+%s - a prefix group,%s - eine Präfixgruppe
+Only variables whose names start with %s join it; the Inspector shows them without that start.,"Nur Variablen, deren Namen mit %s beginnen, gehören dazu; der Inspektor zeigt sie ohne diesen Anfang."
+1 subgroup,1 Untergruppe
+%d subgroups,%d Untergruppen
+Not in %s: that group only takes names starting %s.,"Nicht in %s: Diese Gruppe nimmt nur Namen auf, die mit %s beginnen."
+%s ends here,%s endet hier
+Double-click to rename it.,Doppelklicken zum Umbenennen.
+Only names starting %s join this group.,"Nur Namen, die mit %s beginnen, gehören zu dieser Gruppe."
+"%s (inferred) - no type is written in the code, so Godot takes it from the default value. Properties... can write it.","%s (abgeleitet) - im Code steht kein Typ, daher nimmt Godot ihn aus dem Standardwert. Eigenschaften... kann ihn schreiben."
+%s - the type written in the code.,%s - der im Code geschriebene Typ.
+"The editor has no icon called %s, so the button would show none.","Der Editor hat kein Symbol namens %s, daher würde die Schaltfläche keines zeigen."
+"%s does not start with %s, so Godot leaves it outside %s. Rename it, or turn off the prefix.","%s beginnt nicht mit %s, daher lässt Godot es außerhalb von %s. Benennen Sie es um oder schalten Sie das Präfix aus."
+automatic: %s tells it when it changes,"automatisch: %s meldet es, wenn es sich ändert"
+nothing to refresh,nichts zu aktualisieren

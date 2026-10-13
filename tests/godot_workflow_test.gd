@@ -506,31 +506,25 @@ static func run() -> bool:
 		and str(vector_dialog._extract_value(vector_field)) == "Vector2(4, 8)", true) and all_passed
 	vector_host.free()
 
-	# ── Variable dialog: progressive disclosure + enum→combo fill ─────────────────
+	# ── Variable dialog: the sections wait for the Inspector, sheet enums are types ──────
 	var variable_dialog: VariableDialog = VariableDialog.new()
 	var variable_host: Node = Node.new()
 	variable_dialog.init_dialog(variable_host)
 	variable_dialog.set_enum_provider(func() -> Array:
 		return [{"name": "State", "members": PackedStringArray(["IDLE", "RUN", "HURT = 4"])}])
-	# NOT exported: the Inspector checkbox now lives INSIDE the card, so an already-exported variable
-	# opens with the card unfurled. A plain variable is the one that starts collapsed.
 	variable_dialog.open_for_edit("global", {}, "speed", "float", "1.0", false, "Edit Variable", false, false)
-	all_passed = _check("inspector options start collapsed for plain variables",
-		variable_dialog._attr_section_card.visible, false) and all_passed
-	all_passed = _check("combo options hide for non-String types",
-		variable_dialog._options_row.visible, false) and all_passed
+	all_passed = _check("a plain variable has no Inspector sections to show",
+		variable_dialog._sections_card.visible, false) and all_passed
+	all_passed = _check("the Dropdown look is a text look only",
+		_look_option_ids(variable_dialog).has("choices"), false) and all_passed
 	variable_dialog.open_for_edit("global", {"attributes": {"group": "Combat"}}, "title", "String", "\"x\"", false, "Edit Variable", false, true)
-	all_passed = _check("existing (advanced) attributes auto-expand the section",
-		variable_dialog._attr_section_card.visible and variable_dialog._options_row.visible, true) and all_passed
-	# Description (the promoted tooltip field) is always visible now, so a description-only variable
-	# must NOT unfurl More options - only genuinely-advanced attributes do.
+	all_passed = _check("an exported variable's group comes back in its field",
+		[variable_dialog._sections_card.visible, variable_dialog._group_edit.text], [true, "Combat"]) and all_passed
 	variable_dialog.open_for_edit("global", {"attributes": {"tooltip": "hi"}}, "note", "String", "\"x\"", false, "Edit Variable", false, false)
-	all_passed = _check("a description-only variable keeps More options collapsed",
-		variable_dialog._attr_section_card.visible, false) and all_passed
-	variable_dialog._populate_enum_fill_menu()
-	var enum_popup: PopupMenu = variable_dialog._enum_fill_menu.get_popup()
-	all_passed = _check("sheet enums fill the combo with member names (values stripped)",
-		enum_popup.item_count == 1 and str(enum_popup.get_item_metadata(0)) == "IDLE, RUN, HURT", true) and all_passed
+	all_passed = _check("a description-only variable keeps When it changes folded",
+		variable_dialog._changes_fold.folded, true) and all_passed
+	all_passed = _check("the sheet's enums are types of their own",
+		variable_dialog._type_index("State") >= 0, true) and all_passed
 	variable_host.free()
 
 	# ── Function dialog: expanding params, auto-unique names, duplicate guard ─────
@@ -645,12 +639,9 @@ static func run() -> bool:
 	var leftover_dialog: VariableDialog = VariableDialog.new()
 	var leftover_host: Node = Node.new()
 	leftover_dialog.init_dialog(leftover_host)
-	leftover_dialog.open_for_edit("global", {}, "label", "float", "1.0", false, "Edit Variable", false, true)
-	leftover_dialog._attr_range_edit.text = "0, 100, 1"
-	leftover_dialog._attr_clamp_check.button_pressed = true
-	# "Text" is the friendly dropdown label that stores the String type (Number/Text/Yes-No aliases).
+	leftover_dialog.open_for_edit("global", {"attributes": {"range": {"min": "0", "max": "100", "step": "1"}, "clamp": true}},
+		"label", "float", "1.0", false, "Edit Variable", false, true)
 	leftover_dialog._select_stored_type("String")
-	leftover_dialog._refresh_contextual_rows()
 	leftover_dialog._default_edit.text = "\"hi\""
 	var captured_attrs: Array = [null]
 	leftover_dialog.variable_confirmed.connect(func(_n, _t, _d, _s, _c, _ic, _ex, _co, attrs, _r, _st) -> void: captured_attrs[0] = attrs)
@@ -809,3 +800,11 @@ static func _capture_button(dialog: EventSheetShortcutsDialog, action: String) -
 				and (row.get_child(0) as Label).text == EventSheetShortcuts.label_for(action):
 			return row.get_child(1) as Button
 	return null
+
+
+## The look ids the dialog's Inspector look dropdown offers right now.
+static func _look_option_ids(dialog: VariableDialog) -> Array:
+	var ids: Array = []
+	for index: int in range(dialog._look_option.item_count):
+		ids.append(str(dialog._look_option.get_item_metadata(index)))
+	return ids

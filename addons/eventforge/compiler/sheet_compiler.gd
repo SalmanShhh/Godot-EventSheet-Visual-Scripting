@@ -3478,6 +3478,8 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 			var default_value: Variant = descriptor.get("default", "null")
 			var exported: bool = bool(descriptor.get("exported", true))
 			var combo_options: PackedStringArray = PackedStringArray(descriptor.get("options", []))
+			# A value the dialog took as code (`Kind.ROUND`, `&"jump"`, `_bake`) is written as it stands.
+			var default_code: String = str(default_value) if bool(descriptor.get("expression", false)) else _to_code_literal(default_value)
 			# Inspector attributes (Tier 1):
 			# canonical order is tooltip doc-comment, group, then the export line. The
 			# doc comment is Godot's native Inspector tooltip.
@@ -3538,8 +3540,12 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 				for unsupported_key: String in ["clamp", "on_changed", "read_only", "show_if", "lock_unless", "drawer"]:
 					if attributes.has(unsupported_key):
 						warnings.append("Variable \"%s\": combo variables don't support the %s attribute yet - ignored." % [var_name, unsupported_key])
-				lines.append("%s var %s: String = %s" % [_export_enum_prefix(combo_options), var_name, _to_code_literal(default_value)])
+				lines.append("%s var %s: String = %s" % [_export_enum_prefix(combo_options), var_name, default_code])
 				_append_inspector_refresh_setter(lines, var_name, controllers)
+				continue
+			# An Inspector button: Godot's own spelling annotates no type, the value is the function it runs.
+			if exported and attributes.get("tool_button") is Dictionary:
+				lines.append("@export_tool_button(%s) var %s = %s" % [str((attributes["tool_button"] as Dictionary).get("args", "")), var_name, default_code])
 				continue
 			var export_prefix: String = "@export " if exported else ""
 			# Structured hint families (range + its modifier tail / flags / layers / file /
@@ -3574,7 +3580,7 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 			if not on_changed.is_empty() and not function_names.has(on_changed):
 				warnings.append("Variable \"%s\": On Changed targets unknown function \"%s\" - check the spelling." % [var_name, on_changed])
 			if not on_changed.is_empty() or clamp_enabled:
-				lines.append("%svar %s: %s = %s:" % [export_prefix, var_name, type_name, _to_code_literal(default_value)])
+				lines.append("%svar %s: %s = %s:" % [export_prefix, var_name, type_name, default_code])
 				var assignment: String = "%s = value" % var_name
 				if clamp_enabled:
 					var clamp_range: Dictionary = attributes.get("range")
@@ -3582,7 +3588,7 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 					assignment = "%s = %s(value, %s, %s)" % [var_name, clamp_call, str(clamp_range.get("min", "0")), str(clamp_range.get("max", "100"))]
 				lines.append_array(_reaction_setter_lines(assignment, attributes, controllers.has(var_name)))
 			else:
-				lines.append("%svar %s: %s = %s" % [export_prefix, var_name, type_name, _to_code_literal(default_value)])
+				lines.append("%svar %s: %s = %s" % [export_prefix, var_name, type_name, default_code])
 				_append_inspector_refresh_setter(lines, var_name, controllers)
 		else:
 			lines.append("@export var %s: Variant = %s" % [var_name, _to_code_literal(descriptor)])
@@ -4367,6 +4373,9 @@ static func _emit_tree_variable_line(local_var: LocalVariable, refresh_inspector
 	# Structured (from attributes) so it round-trips into the dialog tick, not a verbatim hint.
 	elif local_var.exported and local_var.attributes is Dictionary and bool((local_var.attributes as Dictionary).get("no_alpha", false)) and local_var.type_name == "Color":
 		var_line = "@export_color_no_alpha var %s: %s = %s" % [local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
+	# String "multiline" → @export_multiline (a tall text box in the Inspector).
+	elif local_var.exported and local_var.attributes is Dictionary and bool((local_var.attributes as Dictionary).get("multiline", false)) and local_var.type_name == "String":
+		var_line = "@export_multiline var %s: %s = %s" % [local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
 	# float "exponential easing" → @export_exp_easing (a curve handle in the Inspector for attenuation values).
 	elif local_var.exported and local_var.attributes is Dictionary and bool((local_var.attributes as Dictionary).get("exp_easing", false)) and local_var.type_name == "float":
 		var_line = "@export_exp_easing var %s: %s = %s" % [local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]

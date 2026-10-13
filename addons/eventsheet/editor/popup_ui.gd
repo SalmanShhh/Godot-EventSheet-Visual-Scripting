@@ -484,7 +484,6 @@ class HelpStrip extends PanelContainer:
 		body_label = Label.new()
 		body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		body_label.custom_minimum_size = Vector2(wrap_width, 0.0)
-		body_label.add_theme_color_override("font_color", EventSheetPalette.TEXT_PRIMARY)
 		box.add_child(body_label)
 		fixes_row = HBoxContainer.new()
 		fixes_row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
@@ -514,7 +513,6 @@ class HelpStrip extends PanelContainer:
 		row.add_child(label)
 		var value: Label = Label.new()
 		value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		value.add_theme_color_override("font_color", EventSheetPalette.TEXT_PRIMARY)
 		row.add_child(value)
 		return row
 

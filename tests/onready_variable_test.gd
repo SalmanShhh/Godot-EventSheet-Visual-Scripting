@@ -35,7 +35,7 @@ static func _test_dialog_onready_typed_freetext() -> bool:
 	dlg.open_for_edit("tree", {}, "hp", "int", "", false, "Add Variable")
 	dlg._onready_check.set_pressed_no_signal(true)
 	dlg._on_onready_toggled_interactive(true)
-	dlg._onready_type_edit.text = "ProgressBar"
+	dlg._class_edit.text = "ProgressBar"
 	dlg._default_edit.text = "$HP"
 	dlg._on_confirmed()
 	parent.free()

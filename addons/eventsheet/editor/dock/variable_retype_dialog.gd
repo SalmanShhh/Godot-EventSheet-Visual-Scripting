@@ -11,8 +11,8 @@ extends RefCounted
 #
 # The dialog owns no rules: the whole preview comes from EventSheetVariableRetype.plan and the
 # commit from .apply, so what is shown and what happens are the same scan. The type list is the
-# variable dialog's own (Number + "Whole numbers only", Text, Yes-No, then the advanced Godot
-# types), so retyping offers exactly the types creating offered.
+# variable dialog's own (VariableDialog.add_type_items), so retyping offers exactly the types
+# creating offered, each with the sentence that says what it holds.
 #
 # Headless-safe by construction: everything except the popup itself runs without a tree, and
 # `preview_lines()` is the tested surface - the suite reads the very strings the list shows.
@@ -20,7 +20,6 @@ extends RefCounted
 var _dock: Control = null
 var _dialog: AcceptDialog = null
 var _type_option: OptionButton = null
-var _whole_numbers_check: CheckBox = null
 var _summary_label: Label = null
 var _preview_list: ItemList = null
 var _variable_name: String = ""
@@ -60,26 +59,9 @@ func _build_dialog() -> void:
 	content.add_child(EventSheetPopupUI.hint_label("Changes the variable's type AND every row that sets or compares it, in one step you can undo. Values it cannot convert on its own are listed below rather than guessed at."))
 	var type_box: VBoxContainer = EventSheetPopupUI.form_box()
 	_type_option = EventSheetPopupUI.described_option()
-	# The variable dialog's own list: the three everyday types first, then the advanced Godot ones
-	# (int/float collapse into Number + the tick below, bool into Yes-No, String into Text).
-	for friendly: String in ["number", "text", "boolean"]:
-		EventSheetPopupUI.add_described_item(_type_option, friendly, str(VariableDialog.TYPE_HINTS[friendly]))
-	_type_option.add_separator("Advanced types")
-	for option: String in VariableDialog.TYPE_OPTIONS:
-		if option in ["int", "float", "bool", "String"]:
-			continue
-		EventSheetPopupUI.add_described_item(_type_option, option, str(VariableDialog.TYPE_HINTS.get(option, "")))
-	# The tick belongs to "number" alone, so picking a type from the dropdown has to show or hide it -
-	# without this the only UI route to a numeric type leaves the tick hidden and `int` unreachable.
-	_type_option.item_selected.connect(func(_index: int) -> void:
-		refresh_whole_numbers_row()
-		refresh_preview())
+	VariableDialog.add_type_items(_type_option)
+	_type_option.item_selected.connect(func(_index: int) -> void: refresh_preview())
 	type_box.add_child(EventSheetPopupUI.form_row("New type", _type_option))
-	_whole_numbers_check = CheckBox.new()
-	_whole_numbers_check.text = "Whole numbers only"
-	_whole_numbers_check.tooltip_text = "A whole number (no decimals) - stored as an int. Unticked stores a float."
-	_whole_numbers_check.toggled.connect(func(_pressed: bool) -> void: refresh_preview())
-	type_box.add_child(_whole_numbers_check)
 	content.add_child(EventSheetPopupUI.titled_card("Make it a…", type_box))
 	var preview_box: VBoxContainer = EventSheetPopupUI.form_box()
 	_summary_label = EventSheetPopupUI.hint_label("")
@@ -93,48 +75,24 @@ func _build_dialog() -> void:
 	_dock.add_child(_dialog)
 
 
-## The stored Godot type the dropdown currently means ("number" + the tick -> int).
+## The Godot type the dropdown currently means.
 func selected_type() -> String:
 	if _type_option == null or _type_option.selected < 0:
 		return "Variant"
-	var label: String = _type_option.get_item_text(_type_option.selected)
-	match label:
-		"number":
-			return "int" if _whole_numbers_check != null and _whole_numbers_check.button_pressed else "float"
-		"text":
-			return "String"
-		"boolean":
-			return "bool"
-	return label
+	return str(_type_option.get_item_metadata(_type_option.selected))
 
 
-## Points the dropdown (and the whole-numbers tick) at a stored type - the reverse of selected_type.
+## Points the dropdown at a stored type - the reverse of selected_type. A type the list does not
+## name is added at its foot, so the variable's own type is always the one shown.
 func select_type(type_name: String) -> void:
 	if _type_option == null:
 		return
-	var wanted: String = type_name
-	match type_name:
-		"int", "float":
-			wanted = "number"
-		"String":
-			wanted = "text"
-		"bool":
-			wanted = "boolean"
 	for index: int in range(_type_option.item_count):
-		if _type_option.get_item_text(index) == wanted:
+		if not _type_option.is_item_separator(index) and str(_type_option.get_item_metadata(index)) == type_name:
 			_type_option.select(index)
-			break
-	if _whole_numbers_check != null:
-		_whole_numbers_check.button_pressed = type_name == "int"
-	refresh_whole_numbers_row()
-
-
-## Shows the whole-numbers tick only under "number" - it is the one thing that tells int from float,
-## and it has to follow the dropdown however the dropdown was changed (opened at a type, or picked).
-func refresh_whole_numbers_row() -> void:
-	if _whole_numbers_check == null or _type_option == null:
-		return
-	_whole_numbers_check.visible = _type_option.selected >= 0 and _type_option.get_item_text(_type_option.selected) == "number"
+			return
+	EventSheetPopupUI.add_described_item(_type_option, type_name, "The type this variable already has.", type_name)
+	_type_option.select(_type_option.item_count - 1)
 
 
 ## The preview, exactly as the list shows it: the declaration line, then one line per rewritten

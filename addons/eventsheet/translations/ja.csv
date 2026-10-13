@@ -7449,19 +7449,23 @@ Add Button,ボタンを追加
 "Added the Inspector button ""%s"" for %s.","Inspector ボタン ""%s"" を追加しました (%s)。"
 (turn on Tool in the Sheet Type dialog for it to run in the editor.),(エディタで実行するには、シートタイプダイアログで Tool をオンにしてください。)
 Add An Inspector Button For It…,この関数の Inspector ボタンを追加…
-%s - a category,
-A heavy band in the Inspector that starts a new chapter of properties.,
-%s - a subgroup of %s,
-A folder inside the %s folder in the Inspector.,
-%s - an export group,
-"The exported variables under it share one folder in the Inspector, until the group ends.",
-%s - a prefix group,
-Only variables whose names start with %s join it; the Inspector shows them without that start.,
-1 subgroup,
-%d subgroups,
-Not in %s: that group only takes names starting %s.,
-%s ends here,
-Double-click to rename it.,
-Only names starting %s join this group.,
-"%s (inferred) - no type is written in the code, so Godot takes it from the default value. Properties... can write it.",
-%s - the type written in the code.,
+%s - a category,%s - カテゴリ
+A heavy band in the Inspector that starts a new chapter of properties.,インスペクターでプロパティの新しい章を始める太い帯です。
+%s - a subgroup of %s,%s - %s のサブグループ
+A folder inside the %s folder in the Inspector.,インスペクターの %s フォルダー内のフォルダーです。
+%s - an export group,%s - エクスポートグループ
+"The exported variables under it share one folder in the Inspector, until the group ends.",その下のエクスポート変数は、グループが終わるまでインスペクターの 1 つのフォルダーにまとまります。
+%s - a prefix group,%s - 接頭辞グループ
+Only variables whose names start with %s join it; the Inspector shows them without that start.,名前が %s で始まる変数だけが入り、インスペクターはその部分を除いて表示します。
+1 subgroup,サブグループ 1 個
+%d subgroups,サブグループ %d 個
+Not in %s: that group only takes names starting %s.,%s には入りません。そのグループは %s で始まる名前だけを受け付けます。
+%s ends here,%s はここで終わり
+Double-click to rename it.,ダブルクリックで名前を変更します。
+Only names starting %s join this group.,%s で始まる名前だけがこのグループに入ります。
+"%s (inferred) - no type is written in the code, so Godot takes it from the default value. Properties... can write it.",%s (推論) - コードに型が書かれていないため、Godot は既定値から型を決めます。プロパティ... で書き込めます。
+%s - the type written in the code.,%s - コードに書かれた型です。
+"The editor has no icon called %s, so the button would show none.",エディターに %s という名前のアイコンがないため、ボタンにはアイコンが表示されません。
+"%s does not start with %s, so Godot leaves it outside %s. Rename it, or turn off the prefix.",%s は %s で始まらないため、Godot は %s の外に置きます。名前を変えるか、接頭辞をオフにしてください。
+automatic: %s tells it when it changes,自動: %s が変わると知らせます
+nothing to refresh,更新するものはありません

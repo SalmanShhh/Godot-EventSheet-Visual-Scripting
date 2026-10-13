@@ -131,13 +131,13 @@ static func run() -> bool:
 		all_passed = _check("an @ace annotation is not absorbed as a tooltip",
 			(dmg.attributes as Dictionary).has("tooltip"), false) and all_passed
 
-	# Editability: the dialog's apply keeps tooltip/group/subgroup on a tree variable (the attributes the
-	# tree path round-trips), dropping the rest - so a reopened variable stays editable, not stuck or cleared.
-	all_passed = _check("tree-var apply keeps tooltip + group + subgroup",
+	# Editability: the dialog's apply keeps every attribute on a tree variable - the tree path compiles
+	# looks as well as sections now - and only the accessor bodies move to the variable's own fields.
+	all_passed = _check("tree-var apply keeps tooltip + group + subgroup + the look",
 		EventSheetDock._tree_group_attributes({"tooltip": "HP", "group": "Combat", "subgroup": "Melee", "range": {"min": "0"}}),
-		{"tooltip": "HP", "group": "Combat", "subgroup": "Melee"}) and all_passed
-	all_passed = _check("a non-grouping attribute (range) is dropped from the tree subset",
-		EventSheetDock._tree_group_attributes({"range": {"min": "0"}}), {}) and all_passed
+		{"tooltip": "HP", "group": "Combat", "subgroup": "Melee", "range": {"min": "0"}}) and all_passed
+	all_passed = _check("the accessor bodies are not attributes",
+		EventSheetDock._tree_group_attributes({"setter_body": "hp = value", "setter_param": "value"}), {}) and all_passed
 
 	# Description-as-Inspector-tooltip: a variable's plain description compiles to a `## ` doc comment
 	# above the @export var (Godot's Inspector-description convention), so a comment typed on a variable

@@ -129,7 +129,7 @@ static func _test_writing_the_type() -> bool:
 	dock._variable_dlg.init_dialog(dock)
 	dock._variable_dlg.set_sheet_provider(func() -> EventSheetResource: return dock._current_sheet)
 	_edit(dock, "walk_speed")
-	var typed_offer: bool = dock._variable_dlg._write_type_check.visible
+	var typed_offer: Array = [dock._variable_dlg._write_type_check.visible, dock._variable_dlg._write_type_check.button_pressed]
 	_edit(dock, "recoil")
 	dock._variable_dlg._on_confirmed()
 	var untouched: String = str(SheetCompiler.compile(dock._current_sheet).get("output", ""))
@@ -139,7 +139,7 @@ static func _test_writing_the_type() -> bool:
 	dock._variable_dlg._on_confirmed()
 	var written: String = str(SheetCompiler.compile(dock._current_sheet).get("output", ""))
 	var ok: bool = SUPPORT.pins("export_sections_test", [
-		["a written type is offered nothing", typed_offer, false],
+		["a written type is offered the tick, already ticked", typed_offer, [true, true]],
 		["an untouched save keeps the file's own words", untouched, SOURCE],
 		["an inferred member is offered the type Godot infers", offer, "Write the type in code (: int)"],
 		["ticked, the line writes it - and nothing else moves", written,

@@ -37,8 +37,10 @@ static func run() -> bool:
 
 	# ── The field order the dialog pins ──
 	ok = _check("the fields read in the row's own order", Array(dialog.field_order()), [
-		"Scope", "Write into", "Name", "Type", "Whole numbers only", "Initial value",
-		"Options (combo)", "Description", "Flags", "On ready"
+		"Scope", "Write into", "Name", "Type", "Class", "Initial value", "Description", "Flags", "Keep in step",
+		"Inspector look", "Category", "Group", "Only names starting", "Subgroup", "On changed", "Show if",
+		"Show group if", "Lock unless", "Link with", "Validate with", "Field button", "Section header", "Info note",
+		"Also", "Refresh the Inspector", "Setter body", "Setter parameter", "Getter body"
 	]) and ok
 	# ── No hint text sits under a checkbox: the strip is the one place that explains. The row holds
 	# only checkboxes, and only the flags the scope in front of you can actually wear are on screen ──
@@ -46,8 +48,8 @@ static func run() -> bool:
 		_flag_row_classes(dialog), ["CheckBox", "CheckBox", "CheckBox", "CheckBox"]) and ok
 	ok = _check("a member variable is offered Static and Constant",
 		_visible_flags(dialog), ["Static", "Constant"]) and ok
-	ok = _check("the Inspector checkbox lives behind More options",
-		dialog._exported_check.get_parent().get_parent() == dialog._attr_section, true) and ok
+	ok = _check("the Inspector tick heads its own card",
+		dialog._exported_check.get_parent().get_parent().get_parent() == dialog._inspector_card, true) and ok
 	dialog.open_for_edit("global", {}, "hp", "int", "100", false, "Add variable")
 	ok = _check("an instance variable is not asked which autoload it lands on",
 		Array(dialog.field_order(true)).has("Write into"), false) and ok
@@ -62,18 +64,13 @@ static func run() -> bool:
 
 	# ── The type list: the three everybody needs, a divider, then the rest - stored types as
 	# METADATA, so the words can read plainly while the .gd round-trip is unchanged ──
-	ok = _check("the type list leads with the three plain kinds", _type_labels(dialog, 3),
-		["Number", "Text", "Boolean"]) and ok
-	ok = _check("Number stores a real Godot type", dialog._selected_stored_type(), "int") and ok
-	ok = _check("Text is described with its GDScript spelling",
-		VariableDialog.type_description("String"), "words in quotes, \"hello\" · String") and ok
-	ok = _check("the GDScript spelling sits muted beside the field",
-		(dialog._type_option.get_meta("code_note") as Label).text, "int") and ok
-	dialog._whole_numbers_check.button_pressed = false
-	dialog._refresh_type_code_note()
-	ok = _check("…and follows the whole-numbers tick",
-		(dialog._type_option.get_meta("code_note") as Label).text, "float") and ok
-	dialog._whole_numbers_check.button_pressed = true
+	ok = _check("the type list leads with the basic types, each named as GDScript writes it", _type_labels(dialog, 3),
+		["bool · True or false", "int · Whole number", "float · Number with decimals"]) and ok
+	ok = _check("int stores a real Godot type", dialog._selected_stored_type(), "int") and ok
+	ok = _check("Text says what it holds",
+		VariableDialog.type_description("String"), "Text: names, messages, file paths. File and folder pickers, big text boxes and dropdowns are its looks.") and ok
+	ok = _check("the chosen type shows its own name",
+		dialog._type_option.get_item_text(dialog._type_option.selected), "int · Whole number") and ok
 
 	# ── What each scope does to the rest of the form ──
 	dialog._apply_scope_key(EventSheetVariableSentence.SCOPE_LOCAL)
@@ -115,17 +112,16 @@ static func run() -> bool:
 		dialog._help_strip.in_code_value.text, "@export var hp: int = 100") and ok
 	dialog._name_edit.focus_entered.emit()
 	ok = _check("focusing the name field swaps the strip", dialog._help_strip.heading_label.text, "NAME") and ok
-	var typed: Dictionary = dialog._describe_type_index(1)
-	ok = _check("a type describes itself before it is picked", str(typed.get("heading", "")), "Type · Text") and ok
+	var typed: Dictionary = dialog._describe_type_index(dialog._type_index("String"))
+	ok = _check("a type describes itself before it is picked", str(typed.get("heading", "")), "Type · String · Text") and ok
+	ok = _check("a group heading in the list says nothing", dialog._describe_type_index(0), {}) and ok
 
 	# ── "Initial value", not "Default"; the Inspector polish stays behind "More options" ──
 	ok = _check("the value field is the Initial value",
 		Array(dialog.field_order()).has("Initial value"), true) and ok
-	ok = _check("the section names what is inside it",
-		dialog._attr_toggle.text, "▾  More options (Inspector, range, drawer, group…)") and ok
-	# An ALREADY-exported variable opens with the card unfurled: the Inspector tick lives inside it,
-	# and a ticked box the reader cannot see would be a silent fact.
-	ok = _check("an exported variable opens with it unfurled", dialog._attr_section_card.visible, true) and ok
+	ok = _check("the wiring folds under what it is about", dialog._changes_fold.title, "When it changes") and ok
+	# An exported variable shows where it sits in the Inspector; an unexported one has nowhere to sit.
+	ok = _check("an exported variable shows its sections card", dialog._sections_card.visible, true) and ok
 
 	# ── V re-opens with the last scope; an edit never moves ──
 	dialog._apply_scope_key(EventSheetVariableSentence.SCOPE_LOCAL)
@@ -229,7 +225,7 @@ static func _test_the_strip_is_the_only_explanation(dialog: VariableDialog) -> b
 static func _loose_labels(dialog: VariableDialog) -> PackedStringArray:
 	var known: Dictionary = {dialog._owner_label: "owner line"}
 	var found: PackedStringArray = PackedStringArray()
-	for child: Node in (dialog._scope_option.get_parent().get_parent() as Node).get_children():
+	for child: Node in (dialog._owner_label.get_parent() as Node).get_children():
 		if child is Label:
 			found.append(str(known.get(child, "hint: %s" % (child as Label).text)))
 	return found
@@ -263,8 +259,9 @@ static func _scope_keys(dialog: VariableDialog) -> Array:
 ## The first `count` type labels.
 static func _type_labels(dialog: VariableDialog, count: int) -> Array:
 	var labels: Array = []
-	for index: int in range(mini(count, dialog._type_option.item_count)):
-		labels.append(dialog._type_option.get_item_text(index))
+	for index: int in range(dialog._type_option.item_count):
+		if not dialog._type_option.is_item_separator(index) and labels.size() < count:
+			labels.append(dialog._type_option.get_item_text(index))
 	return labels
 
 

@@ -19,23 +19,23 @@ static func run() -> bool:
 	var dialog: VariableDialog = dock._variable_dlg
 	ok = _check("dock wires the provider", dialog.simple_mode_provider.is_valid(), true) and ok
 
-	# Exported variable, expert mode: the Advanced toggle is offered.
+	# Exported variable, expert mode: "When it changes" is offered.
 	dock._simple_mode = false
 	dialog._exported_check.button_pressed = true
 	dialog._update_attr_gating()
-	ok = _check("expert mode offers the Advanced tier", dialog._attr_advanced_toggle.visible, true) and ok
+	ok = _check("expert mode offers When it changes", dialog._changes_fold.visible, true) and ok
 
-	# Simple Mode: the whole Advanced tier disappears, even if it was expanded.
+	# Simple Mode: the whole card disappears, and folds, even if it was open.
 	dock._simple_mode = true
-	dialog._attr_advanced_section.visible = true
+	dialog._changes_fold.folded = false
 	dialog._update_attr_gating()
-	ok = _check("Simple Mode hides the Advanced toggle", dialog._attr_advanced_toggle.visible, false) and ok
-	ok = _check("Simple Mode collapses the Advanced section", dialog._attr_advanced_section.visible, false) and ok
+	ok = _check("Simple Mode hides When it changes", dialog._changes_fold.visible, false) and ok
+	ok = _check("Simple Mode folds it", dialog._changes_fold.folded, true) and ok
 
-	# Turning Simple Mode off brings the tier straight back.
+	# Turning Simple Mode off brings it straight back.
 	dock._simple_mode = false
 	dialog._update_attr_gating()
-	ok = _check("the tier returns when Simple Mode ends", dialog._attr_advanced_toggle.visible, true) and ok
+	ok = _check("it returns when Simple Mode ends", dialog._changes_fold.visible, true) and ok
 
 	dock.free()
 	return ok

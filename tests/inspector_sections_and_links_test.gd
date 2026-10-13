@@ -238,7 +238,7 @@ static func _corners_drawer() -> bool:
 		["the hint reads back as the drawer",
 			EventSheetAttributeDrawers.parse_drawer_hint("eventsheet:corners").get("drawer", ""), "corners"],
 		["the look knows which type it is for",
-			EventSheetInspectorLooks.preset_by_id("corners").get("types", []), ["Vector4"]]
+			EventSheetInspectorLooks.by_id("corners").get("types", []), ["Vector4"]]
 	])
 
 	# Read and write: one number is four corners; four different corners open the four boxes and

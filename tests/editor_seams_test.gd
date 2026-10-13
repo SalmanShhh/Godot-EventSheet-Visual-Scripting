@@ -124,20 +124,15 @@ static func _run_change_type() -> bool:
 	# ---- the preview the dialog shows ----
 	var dialog: EventSheetVariableRetypeDialog = editor._variable_retype_dialog
 	dialog.open({"name": "score", "scope": "global", "type": "String", "default": "0"})
-	# The REAL UI route to a numeric type is the dropdown, and int is only reachable through the
-	# tick beside it - which is hidden until "number" is picked. Driven exactly as a click does:
-	# select the item, emit the signal the OptionButton emits, then tick the box.
-	all_passed = _check("the tick is hidden while the type is Text", dialog._whole_numbers_check.visible, false) and all_passed
-	var number_index: int = -1
+	# The REAL UI route to a type is the dropdown: select the item and emit the signal it emits.
+	all_passed = _check("it opens on the variable's own type", dialog.selected_type(), "String") and all_passed
+	var int_index: int = -1
 	for index: int in range(dialog._type_option.item_count):
-		if dialog._type_option.get_item_text(index) == "number":
-			number_index = index
-	dialog._type_option.select(number_index)
-	dialog._type_option.item_selected.emit(number_index)
-	all_passed = _check("picking Number from the dropdown reveals the tick", dialog._whole_numbers_check.visible, true) and all_passed
-	all_passed = _check("and without it the dropdown means float", dialog.selected_type(), "float") and all_passed
-	dialog._whole_numbers_check.button_pressed = true
-	all_passed = _check("the dropdown means int once Whole numbers is ticked", dialog.selected_type(), "int") and all_passed
+		if str(dialog._type_option.get_item_metadata(index)) == "int":
+			int_index = index
+	dialog._type_option.select(int_index)
+	dialog._type_option.item_selected.emit(int_index)
+	all_passed = _check("picking int from the dropdown means int", dialog.selected_type(), "int") and all_passed
 	var lines: PackedStringArray = dialog.preview_lines()
 	all_passed = _check("the preview leads with the declaration", lines[0] if not lines.is_empty() else "",
 		"Declaration: score is String, becomes int") and all_passed
