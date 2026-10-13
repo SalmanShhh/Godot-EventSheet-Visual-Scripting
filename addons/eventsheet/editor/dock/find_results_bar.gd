@@ -19,6 +19,10 @@ extends RefCounted
 # Widgets are built lazily and mounted under the sheet in the dock's content host, so the bar
 # shares the canvas's width and pushes nothing else around.
 
+## The list the public API keeps its lifecycle listeners on, in a file that names nothing:
+## asking the API itself here would compile it, and everything it names, into the first open.
+const DOCK_REGISTRY := preload("res://addons/eventsheet/api/dock_registry.gd")
+
 const RESULT_ROW_META := "find_result"
 
 var _dock: Control = null
@@ -120,8 +124,9 @@ func _ensure_landing_hook() -> void:
 	if _landing_hook_registered:
 		return
 	_landing_hook_registered = true
-	EventSheets.on_sheet_opened(func(_payload: Dictionary) -> void:
-		_land_pending())
+	# A bound method rather than a closure: it holds this helper by id, not by reference, so a
+	# workspace that is closed takes the helper with it and the listener simply stops answering.
+	DOCK_REGISTRY.on_lifecycle("opened", _land_pending.unbind(1))
 
 
 ## "event 12" for a row the open sheet numbers, "" for anything the margin does not number.

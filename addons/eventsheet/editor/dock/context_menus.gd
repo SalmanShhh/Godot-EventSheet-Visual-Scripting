@@ -13,6 +13,18 @@ extends RefCounted
 # event_sheet_dock.gd to keep that file maintainable; the dock keeps thin delegates so the
 # context-menu sites and the tests don't change.
 
+## The files this helper reaches BY PATH, at the moment something asks: naming one of these
+## classes here would compile it, and everything it names, into the first open of a sheet.
+const GRID_CSV_DIALOG_PATH := "res://addons/eventsheet/editor/dock/grid_csv_dialog.gd"
+const MOMENT_FILE_DOOR_PATH := "res://addons/eventsheet/editor/dock/moment_file_door.gd"
+const PATTERN_ADOPT_PATH := "res://addons/eventsheet/editor/dock/pattern_adopt.gd"
+const PATTERN_FACTS_PATH := "res://addons/eventsheet/editor/interaction/pattern_facts.gd"
+const REFACTOR_PATH := "res://addons/eventforge/sheet_refactor.gd"
+const REFACTOR_MENU_PATH := "res://addons/eventsheet/editor/dock/refactor_menu.gd"
+## The list the public API keeps the extension row items on, in a file that names nothing: asking
+## the API itself here would compile it, and everything it names, into the first open.
+const DOCK_REGISTRY := preload("res://addons/eventsheet/api/dock_registry.gd")
+
 ## The row-menu id for "Why didn't this fire?" (appended seam - see build_all). Deliberately far
 ## above the 900+ extension range so the shared dispatcher recognises it as neither.
 const ROW_MENU_WHY_DIDNT_FIRE := 9700
@@ -51,7 +63,7 @@ const FIND_ALL_REFERENCES_TOOLTIP := "Every place this name is used, across the 
 
 var _dock: Control = null
 ## The moment file form, built once and kept: one dialog serves both directions.
-var _moment_door: EventSheetMomentFileDoor = null
+var _moment_door: RefCounted = null
 
 
 func init(dock: Control) -> void:
@@ -60,9 +72,9 @@ func init(dock: Control) -> void:
 
 ## The moment file door, made the first time it is asked for so a sheet that never holds a
 ## Moment block never builds a dialog.
-func moment_door() -> EventSheetMomentFileDoor:
+func moment_door() -> RefCounted:
 	if _moment_door == null:
-		_moment_door = EventSheetMomentFileDoor.new()
+		_moment_door = load(MOMENT_FILE_DOOR_PATH).new()
 		_moment_door.init(_dock)
 	return _moment_door
 
@@ -265,16 +277,16 @@ func build_all() -> void:
 	# The reverse gestures - Wrap, Unwrap, Inline, Duplicate as Variant. The submenu owns its own
 	# id_pressed (like New Function ▸ above), so its ids never meet the dock's ROW_MENU_* numbering,
 	# and it is found by NAME per right-click rather than stored on the dock.
-	_dock._row_context_menu.add_child(EventSheetRefactorMenu.build_submenu(_dock))
+	_dock._row_context_menu.add_child(load(REFACTOR_MENU_PATH).build_submenu(_dock))
 	# Inline This Call sits on an ACTION's own menu, beside Extract All Actions to Function… - the
 	# same gesture with the other direction. The dock's action dispatcher matches its own ids and
 	# ignores anything else, so this second listener on one popup cannot collide with it.
-	_dock._action_context_menu.add_item("Inline This Call", EventSheetRefactorMenu.ACTION_MENU_INLINE_CALL)
+	_dock._action_context_menu.add_item("Inline This Call", load(REFACTOR_MENU_PATH).ACTION_MENU_INLINE_CALL)
 	_dock._action_context_menu.set_item_tooltip(_dock._action_context_menu.item_count - 1,
 		"Replace this call with the function's own rows (the inverse of Extract to Function).")
 	_dock._action_context_menu.id_pressed.connect(func(id: int) -> void:
-		if id == EventSheetRefactorMenu.ACTION_MENU_INLINE_CALL:
-			EventSheetRefactorMenu.inline_call_requested(_dock))
+		if id == load(REFACTOR_MENU_PATH).ACTION_MENU_INLINE_CALL:
+			load(REFACTOR_MENU_PATH).inline_call_requested(_dock))
 	# ── "Why didn't this fire?" (appended block - keep together) ───────────────────────────────
 	# Its own handler on the row menu, so the item costs the shared dispatcher nothing: id 9700 is
 	# far above the 900+ extension range, where that dispatcher finds no extension item and returns.
@@ -346,7 +358,7 @@ func _remove_context_moment_step() -> void:
 		return
 	var gone: bool = _dock._perform_undoable_sheet_edit("Delete Moment Step",
 		func() -> bool:
-			return EventSheetMomentFileDoor.step_removed(block, step))
+			return load(MOMENT_FILE_DOOR_PATH).step_removed(block, step))
 	_dock._set_status("Step deleted." if gone else "That step is no longer in the sheet.", not gone)
 
 
@@ -490,7 +502,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		# offered nothing to convert.
 		if _dock._context_group() != null:
 			menu.add_item("Turn Into Region", _dock.ROW_MENU_GROUP_TO_REGION)
-			var region_problem: String = EventSheetRefactor.group_to_region_problem(_dock._context_group())
+			var region_problem: String = load(REFACTOR_PATH).group_to_region_problem(_dock._context_group())
 			if not region_problem.is_empty():
 				menu.set_item_text(menu.item_count - 1, "%s - %s" % [
 					menu.get_item_text(menu.item_count - 1), region_problem
@@ -548,7 +560,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	menu.add_item("Delete", _dock.ROW_MENU_DELETE)
 	# Extension seam (EventSheets.register_row_menu_item): registered items whose filter accepts
 	# this row append at the end, ids 900+ in registration order (dispatched by dock_input_dispatch).
-	var extension_items: Array[Dictionary] = EventSheets.row_menu_items_for(row_data.source_resource if row_data != null else null)
+	var extension_items: Array[Dictionary] = DOCK_REGISTRY.row_menu_items_for(row_data.source_resource if row_data != null else null)
 	if not extension_items.is_empty():
 		menu.add_separator()
 		for extension_index: int in range(extension_items.size()):
@@ -568,25 +580,25 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	# behavior could take the shape over and this build knows how - offer to do it, preview first.
 	var pattern_row: EventRow = row_data.source_resource as EventRow if row_data != null else null
 	if is_event and pattern_row != null and _dock._current_sheet != null:
-		var claims: Array = EventSheetPatternFacts.claims_for_row(_dock._current_sheet, pattern_row.event_uid)
+		var claims: Array = load(PATTERN_FACTS_PATH).claims_for_row(_dock._current_sheet, pattern_row.event_uid)
 		if not claims.is_empty():
 			menu.add_separator()
 			menu.add_item("Explain this reading", ROW_MENU_EXPLAIN_READING)
 			for entry: Variant in claims:
-				if not EventSheetPatternAdopt.is_adoptable(entry as Dictionary):
+				if not load(PATTERN_ADOPT_PATH).is_adoptable(entry as Dictionary):
 					continue
 				# Formatted here rather than left as a literal, because the behavior's NAME is part of
 				# the offer: an item reading "Adopt behavior:" with nothing after it says nothing.
 				menu.add_item(EventSheetL10n.translate("Adopt behavior: %s…") % EventSheetPatternVocabulary.pack_label(
-					EventSheetPatternAdopt.adoptable_of(entry as Dictionary)), ROW_MENU_ADOPT_BEHAVIOR)
+					load(PATTERN_ADOPT_PATH).adoptable_of(entry as Dictionary)), ROW_MENU_ADOPT_BEHAVIOR)
 				break
 	# ── Refactor ▸ (appended block - keep together; dock/refactor_menu.gd) ─────────────────────
 	# The reverse gestures, grouped: Wrap in Condition…, Unwrap Event, Inline Everywhere and
 	# Remove, Duplicate as Variant…. Each lands ordinary rows in ONE undo step; an item that cannot
 	# apply to THIS row shows disabled with the reason as its tooltip.
-	if EventSheetRefactorMenu.configure_submenu(_dock, row_data):
+	if load(REFACTOR_MENU_PATH).configure_submenu(_dock, row_data):
 		menu.add_separator()
-		menu.add_submenu_item("Refactor", EventSheetRefactorMenu.SUBMENU_NAME, 882)
+		menu.add_submenu_item("Refactor", load(REFACTOR_MENU_PATH).SUBMENU_NAME, 882)
 
 
 ## THE data-class resolver - the ONE answer to "which RawCodeRow does this context click
@@ -811,7 +823,7 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 		var copy_index: int = menu.get_item_index(_dock.VARIABLE_MENU_COPY_EXPRESSION)
 		if copy_index >= 0:
 			menu.set_item_disabled(copy_index, not has_variable)
-		var grid_variable: bool = has_variable and EventSheetGridCSVDialog.is_grid_variable(_dock._variables._context_variable)
+		var grid_variable: bool = has_variable and load(GRID_CSV_DIALOG_PATH).is_grid_variable(_dock._variables._context_variable)
 		for grid_id: int in [_dock.VARIABLE_MENU_GRID_EXPORT, _dock.VARIABLE_MENU_GRID_IMPORT,
 				_dock.VARIABLE_MENU_TEXT_EXPORT, _dock.VARIABLE_MENU_TEXT_IMPORT]:
 			var grid_index: int = menu.get_item_index(grid_id)

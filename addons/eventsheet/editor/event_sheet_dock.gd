@@ -11,6 +11,71 @@ const EVENT_SHEET_FILTERS: Array[String] = ["*.gd ; GDScript EventSheet", "*.tsc
 const TAUGHT_PROVIDERS_SETTING := "eventsheets/vocabulary/taught_provider_scripts"
 ## The help strip's door, when what it shows is the pattern an event was read as rather than a finding.
 const PATTERN_HINT_FAMILY := "pattern_hint"
+## Where the workspace announces itself and keeps its palette commands and row menu items: the
+## storage the public API reads, in a file that names nothing, so building this dock never compiles
+## the API (and everything the API names) on the way.
+const DOCK_REGISTRY := preload("res://addons/eventsheet/api/dock_registry.gd")
+## The files this dock reaches BY PATH, at the moment something asks. Naming one of these classes
+## anywhere in this file would compile it - and everything it names - into the first open of a
+## sheet, for a window, a scan or a write that most sessions never ask for.
+const EVENTSHEETS_API_PATH := "res://addons/eventsheet/api/eventsheets.gd"
+const DOC_EXPLAIN_PATH := "res://addons/eventsheet/editor/docs/doc_explain.gd"
+const PROJECT_DOCTOR_PATH := "res://addons/eventforge/project_doctor.gd"
+const SHEET_COMPILER_PATH := "res://addons/eventforge/compiler/sheet_compiler.gd"
+const GDSCRIPT_IMPORTER_PATH := "res://addons/eventforge/importer/gdscript_importer.gd"
+const ACE_PICKER_PATH := "res://addons/eventsheet/editor/ace_picker.gd"
+const VARIABLE_OWNERS_PATH := "res://addons/eventsheet/editor/interaction/variable_owners.gd"
+const BLEND_MODE_FIELD_PATH := "res://addons/eventsheet/editor/blend_mode_field.gd"
+const LANGUAGE_VARIANTS_DIALOG_PATH := "res://addons/eventsheet/editor/dock/language_variants_dialog.gd"
+const COMPLETIONS_PATH := "res://addons/eventsheet/editor/autocomplete/completion_sources.gd"
+const STATE_TRAIL_PATH := "res://addons/eventsheet/editor/state_trail.gd"
+const ACE_APPLY_PATH := "res://addons/eventsheet/editor/dock/ace_apply.gd"
+const ADDON_MANAGER_DIALOG_PATH := "res://addons/eventsheet/editor/addon_manager_dialog.gd"
+const ADD_BEHAVIOR_DIALOG_PATH := "res://addons/eventsheet/editor/add_behavior_dialog.gd"
+const ADD_BEHAVIOR_PATH := "res://addons/eventsheet/editor/add_behavior.gd"
+const AUTHOR_LOOP_PATH := "res://addons/eventsheet/editor/dock/author_loop.gd"
+const BOOKMARKS_PANEL_PATH := "res://addons/eventsheet/editor/dock/bookmarks_panel.gd"
+const COMMAND_PALETTE_PATH := "res://addons/eventsheet/editor/dock/command_palette.gd"
+const DEBUGGER_WINDOW_PATH := "res://addons/eventsheet/editor/dock/debugger_window.gd"
+const DIAGNOSTICS_PATH := "res://addons/eventsheet/ace/diagnostics.gd"
+const DOCS_HOUSEKEEPING_DIALOG_PATH := "res://addons/eventsheet/editor/docs/docs_housekeeping_dialog.gd"
+const DOC_DOCK_PATH := "res://addons/eventsheet/editor/docs/doc_dock.gd"
+const DOC_HELP_TARGET_PATH := "res://addons/eventsheet/editor/docs/doc_help_target.gd"
+const DUPLICATE_EVENTS_PATH := "res://addons/eventsheet/editor/dock/duplicate_events.gd"
+const EXTRACT_OPS_PATH := "res://addons/eventsheet/editor/dock/extract_ops.gd"
+const FIND_REFERENCES_PATH := "res://addons/eventsheet/editor/dock/find_references.gd"
+const GAME_CATALOG_PATH := "res://addons/eventsheet/editor/game_catalog.gd"
+const HEALTH_CARD_PATH := "res://addons/eventsheet/editor/sheet_health.gd"
+const HISTORY_PANEL_PATH := "res://addons/eventsheet/editor/dock/history_panel.gd"
+const INSPECTOR_DESIGNER_DIALOG_PATH := "res://addons/eventsheet/editor/inspector_designer_dialog.gd"
+const LIVE_VALUES_DEBUGGER_PATH := "res://addons/eventsheet/editor/live_values_debugger.gd"
+const LIVE_VALUES_PANEL_PATH := "res://addons/eventsheet/editor/dock/live_values_panel.gd"
+const LOOSE_ENDS_PANEL_PATH := "res://addons/eventsheet/editor/dock/loose_ends_panel.gd"
+const MCP_SERVER_PATH := "res://addons/eventsheet/mcp/mcp_server.gd"
+const MODES_DIALOG_PATH := "res://addons/eventsheet/editor/dock/modes_dialog.gd"
+const OBJECT_PROPERTIES_PATH := "res://addons/eventsheet/editor/dock/object_properties_popup.gd"
+const OPTIMISE_DIALOG_PATH := "res://addons/eventsheet/editor/dock/optimise_dialog.gd"
+const OUTLINE_PANEL_PATH := "res://addons/eventsheet/editor/dock/outline_panel.gd"
+const PATTERN_ADOPT_PATH := "res://addons/eventsheet/editor/dock/pattern_adopt.gd"
+const PATTERN_FACTS_PATH := "res://addons/eventsheet/editor/interaction/pattern_facts.gd"
+const PATTERN_MANUAL_PATH := "res://addons/eventsheet/editor/docs/doc_patterns.gd"
+const PROJECT_FIND_PATH := "res://addons/eventsheet/editor/dock/project_find.gd"
+const PROJECT_OUTLINE_PATH := "res://addons/eventsheet/editor/interaction/project_outline_facts.gd"
+const PROJECT_VIEW_PANEL_PATH := "res://addons/eventsheet/editor/self_doc/project_view_panel.gd"
+const QUICK_PROMPT_DIALOGS_PATH := "res://addons/eventsheet/editor/dock/quick_prompt_dialogs.gd"
+const REFACTOR_PATH := "res://addons/eventforge/sheet_refactor.gd"
+const REPLACE_OBJECT_PATH := "res://addons/eventsheet/editor/dock/replace_object.gd"
+const SAVED_VIEWS_PATH := "res://addons/eventsheet/editor/dock/saved_views.gd"
+const SCENE_SHEET_PATH := "res://addons/eventforge/importer/scene_sheet.gd"
+const SHEET_MAP_PANEL_PATH := "res://addons/eventsheet/editor/dock/sheet_map_panel.gd"
+const STARTER_EVENTS_PATH := "res://addons/eventsheet/editor/dock/starter_events.gd"
+const STATES_DIALOG_PATH := "res://addons/eventsheet/editor/dock/states_dialog.gd"
+const TEMPLATES_PATH := "res://addons/eventforge/sheet_templates.gd"
+const TRANSLATION_SCAN_PATH := "res://addons/eventsheet/editor/translation_scan.gd"
+const VARIABLES_MANAGER_PATH := "res://addons/eventsheet/editor/dock/variables_manager.gd"
+const VERB_PROPERTIES_PATH := "res://addons/eventsheet/editor/dock/verb_properties_popup.gd"
+const VOCABULARY_DOC_PATH := "res://addons/eventforge/vocabulary_doc.gd"
+const WORDS_SETTINGS_DIALOG_PATH := "res://addons/eventsheet/editor/words_settings_dialog.gd"
 const CONDITION_MENU_EDIT := 1
 const CONDITION_MENU_ADD := 2
 const CONDITION_MENU_REPLACE := 3
@@ -295,43 +360,258 @@ var _manual_ace_sources: Array[Object] = []  # externally supplied (caller-owned
 var _undo_redo_adapter: EventSheetUndoRedoAdapter = EventSheetUndoRedoAdapter.new()
 
 # ── Extracted sub-components ─────────────────────────────────────────────────
-var _ace_picker: ACEPickerDialog = ACEPickerDialog.new()
-var _ace_params: ACEParamsDialog = ACEParamsDialog.new()
-var _variable_dlg: VariableDialog = VariableDialog.new()
-var _new_addon_panel: EventSheetNewAddonPanel = EventSheetNewAddonPanel.new()  # Sheet ▸ New Behaviour Addon… (dock/new_addon_panel.gd)
-var _new_resource_wizard: EventSheetNewResourceWizard = EventSheetNewResourceWizard.new()  # Sheet ▸ New Custom Resource… (dock/new_resource_wizard.gd)
-var _import_sheet_wizard: EventSheetImportSheetWizard = EventSheetImportSheetWizard.new()  # Sheet ▸ Import event sheet… (dock/import_sheet_wizard.gd)
-var _inspector_designer_dialog: EventSheetInspectorDesignerDialog = null  # Sheet ▸ Inspector Designer… (lazy; added to the dock on first open)
-var _welcome: EventSheetWelcomeWindow = EventSheetWelcomeWindow.new()  # Tools ▸ Welcome… onboarding window (dock/welcome_window.gd)
-var _tour: EventSheetTourWindow = EventSheetTourWindow.new()  # Tools ▸ Start the Tour… first-time walkthrough (dock/tour_window.gd)
-var _behavior_preview: EventSheetBehaviorPreview = EventSheetBehaviorPreview.new()  # Tools ▸ Preview Behaviors on Selected Node (behavior_preview.gd)
-var _starter: EventSheetStarterTemplates = EventSheetStarterTemplates.new()  # New-from-template starters (dock/starter_templates.gd)
-var _comments: EventSheetCommentAndScopeDialogs = EventSheetCommentAndScopeDialogs.new()  # comment/with-node dialogs (dock/comment_and_scope_dialogs.gd)
-var _struct_rows: EventSheetStructRowDialogs = EventSheetStructRowDialogs.new()  # enum/signal/match row editors (dock/struct_row_dialogs.gd)
-var _inline_params: EventSheetInlineParamEditor = EventSheetInlineParamEditor.new()  # double-click value / swatch / node-drop editors (dock/inline_param_editor.gd)
-var _doctor: EventSheetProjectDoctorPanel = EventSheetProjectDoctorPanel.new()  # Tools ▸ Project Doctor health-audit window (dock/project_doctor_panel.gd)
-var _includes: EventSheetIncludeManager = EventSheetIncludeManager.new()  # Sheet ▸ Manage Includes… window (dock/include_manager.gd)
-var _find_refs: EventSheetFindReferencesPanel = EventSheetFindReferencesPanel.new()  # Edit ▸ Find References… window (dock/find_references_panel.gd)
-var _pick: EventSheetPickFilterDialog = EventSheetPickFilterDialog.new()  # "For Each" pick-filter dialog (dock/pick_filter_dialog.gd)
-var _compare: EventSheetCompareConditionDialog = EventSheetCompareConditionDialog.new()  # the one Compare dialog (dock/compare_condition_dialog.gd)
-var _ai: EventSheetAIGenerateWindow = EventSheetAIGenerateWindow.new()  # Edit ▸ Generate from Description… window (dock/ai_generate_window.gd)
-var _ask: EventSheetAskWindow = EventSheetAskWindow.new()  # View ▸ Ask… proposed-events window (dock/ask_window.gd)
-var _sheet_type: EventSheetSheetTypeDialog = EventSheetSheetTypeDialog.new()  # Sheet ▸ Sheet Type… dialog shell (dock/sheet_type_dialog.gd)
+# A delegate the first paint does not draw (a dialog, a window, a studio, the row and ACE edit ops)
+# is a loosely typed field with a getter: the getter loads its file BY PATH, builds it, wires its
+# back-reference and connects what the old eager wiring connected, the first time anything asks for
+# it - and is the only place that builds it. Every use site goes through the getter by reading the
+# field, so a click that never comes never compiles the file, or anything the file names. The field
+# is typed loosely on purpose: a class name here, even as a type, would compile the class with
+# this file, which is the cost the getter exists to avoid.
+var _ace_picker: RefCounted = null:
+	get:
+		if _ace_picker == null:
+			_ace_picker = load("res://addons/eventsheet/editor/ace_picker.gd").new()
+			_ace_picker.init_dialog(self, _ace_registry)
+			_ace_picker.set_simple_mode_provider(func() -> bool: return _simple_mode)
+			_ace_picker.set_reflect_class_provider(func() -> String: return _current_sheet.host_class if _current_sheet != null else "")
+			_ace_picker.set_behavior_mode_provider(func() -> bool: return _current_sheet != null and _current_sheet.behavior_mode)
+			# The Editor object is offered on a sheet that runs in the editor and nowhere else.
+			_ace_picker.set_tool_mode_provider(func() -> bool: return _current_sheet != null and _current_sheet.tool_mode)
+			# The Variables group names the variables each verb can take, and describes the one under the
+			# cursor in the sentence its row reads with - both out of the sheet's own catalog.
+			_ace_picker.set_variable_catalog_provider(
+				func() -> Array: return load(VARIABLE_OWNERS_PATH).catalog(_current_sheet))
+			_ace_picker.ace_selected.connect(_on_ace_picker_selected)
+			# The rail's Picker preview answers "how will these verbs read in the picker", so it is on
+			# offer while the picker is open and gone the rest of the time. The dialog's own visibility is
+			# the only honest source for that.
+			var picker_window: Window = _ace_picker.window()
+			if picker_window != null and not picker_window.visibility_changed.is_connected(_refresh_rail_census):
+				picker_window.visibility_changed.connect(_refresh_rail_census)
+			# A greyed entry's one-line reason IS the fix: pressing Add on it lands here instead, the dock
+			# performs the fix, and the ordinary selected path runs after it.
+			_ace_picker.gate_fix_requested.connect(_on_picker_gate_fix_requested)
+			# The empty-result shelf's recipes insert as real rows through the snippet path.
+			_ace_picker.recipe_insert_requested.connect(_on_picker_recipe_requested)
+			# The Add event dialog's first entry, "(none - runs every tick)": a real event with no
+			# condition of its own, made where the dialog was opened.
+			_ace_picker.blank_event_selected.connect(_on_picker_blank_event_selected)
+			# The figure's "read more" affordance, filled in: the label is DERIVED from the verb's pack
+			# (provider -> pack directory -> guide name), so a pack that ships tomorrow gets the button
+			# with no wiring, and a verb with no pack shows no button at all.
+			_ace_picker.set_guide_label_provider(func(definition: ACEDefinition) -> String:
+				return str(load(DOC_EXPLAIN_PATH).guide_label(definition.provider_id)) if definition != null else "")
+			_ace_picker.guide_requested.connect(_on_picker_guide_requested)
+			_ace_picker.help_requested.connect(_on_picker_help_requested)
+		return _ace_picker
+var _ace_params: RefCounted = null:
+	get:
+		if _ace_params == null:
+			_ace_params = load("res://addons/eventsheet/editor/ace_params_dialog.gd").new()
+			_ace_params.init_dialog(self, _ace_registry, _collect_sheet_variable_names)
+			_ace_params.set_lint_context_provider(func() -> EventSheetResource: return _current_sheet)
+			_ace_params.set_variable_creator(_create_variable_quickfix)
+			_ace_params.set_variable_adder(_variables.open_add_variable_named)
+			_ace_params.set_group_toggle_requester(_make_group_switchable)
+			_ace_params.params_confirmed.connect(_on_ace_params_confirmed)
+			_ace_params.back_requested.connect(_on_ace_params_back_requested)
+		return _ace_params
+var _variable_dlg: RefCounted = null:
+	get:
+		if _variable_dlg == null:
+			_variable_dlg = load("res://addons/eventsheet/editor/variable_dialog.gd").new()
+			_variable_dlg.simple_mode_provider = func() -> bool: return _simple_mode
+			_variable_dlg.init_dialog(self)
+			# Feed the active sheet so the name field can flag host-member shadowing (live + blocking).
+			_variable_dlg.set_sheet_provider(func() -> EventSheetResource: return _current_sheet)
+			_variable_dlg.variable_confirmed.connect(_on_variable_dialog_confirmed)
+			# Scope ▸ Global writes into the autoload the dialog's "Write into" picker named, through the
+			# same writer the Add global variable dialog uses, rather than into this file.
+			_variable_dlg.project_global_requested.connect(_on_variable_dialog_global_requested)
+			# Sheet enums feed the variable dialog's one-click combo fill.
+			_variable_dlg.set_enum_provider(func() -> Array:
+				var sheet_enums: Array = []
+				if _current_sheet != null:
+					for row: Variant in _current_sheet.events:
+						if row is EnumRow and (row as EnumRow).enabled:
+							sheet_enums.append({"name": (row as EnumRow).enum_name, "members": (row as EnumRow).members})
+				return sheet_enums)
+		return _variable_dlg
+var _new_addon_panel: RefCounted = null:  # Sheet ▸ New Behaviour Addon… (dock/new_addon_panel.gd)
+	get:
+		if _new_addon_panel == null:
+			_new_addon_panel = load("res://addons/eventsheet/editor/dock/new_addon_panel.gd").new()
+			_new_addon_panel.init(self)
+		return _new_addon_panel
+var _new_resource_wizard: RefCounted = null:  # Sheet ▸ New Custom Resource… (dock/new_resource_wizard.gd)
+	get:
+		if _new_resource_wizard == null:
+			_new_resource_wizard = load("res://addons/eventsheet/editor/dock/new_resource_wizard.gd").new()
+			_new_resource_wizard.init(self)
+		return _new_resource_wizard
+var _import_sheet_wizard: RefCounted = null:  # Sheet ▸ Import event sheet… (dock/import_sheet_wizard.gd)
+	get:
+		if _import_sheet_wizard == null:
+			_import_sheet_wizard = load("res://addons/eventsheet/editor/dock/import_sheet_wizard.gd").new()
+			_import_sheet_wizard.init(self)
+		return _import_sheet_wizard
+var _inspector_designer_dialog: AcceptDialog = null  # Sheet ▸ Inspector Designer… (lazy; added to the dock on first open)
+var _welcome: RefCounted = null:  # Tools ▸ Welcome… onboarding window (dock/welcome_window.gd)
+	get:
+		if _welcome == null:
+			_welcome = load("res://addons/eventsheet/editor/dock/welcome_window.gd").new()
+			_welcome.init(self)
+		return _welcome
+var _tour: RefCounted = null:  # Tools ▸ Start the Tour… first-time walkthrough (dock/tour_window.gd)
+	get:
+		if _tour == null:
+			_tour = load("res://addons/eventsheet/editor/dock/tour_window.gd").new()
+			_tour.init(self)
+		return _tour
+var _behavior_preview: RefCounted = null:  # Tools ▸ Preview Behaviors on Selected Node (behavior_preview.gd)
+	get:
+		if _behavior_preview == null:
+			_behavior_preview = load("res://addons/eventsheet/editor/behavior_preview.gd").new()
+			_behavior_preview.init(self)
+		return _behavior_preview
+var _starter: RefCounted = null:  # New-from-template starters (dock/starter_templates.gd)
+	get:
+		if _starter == null:
+			_starter = load("res://addons/eventsheet/editor/dock/starter_templates.gd").new()
+			_starter.init(self)
+		return _starter
+var _comments: RefCounted = null:  # comment/with-node dialogs (dock/comment_and_scope_dialogs.gd)
+	get:
+		if _comments == null:
+			_comments = load("res://addons/eventsheet/editor/dock/comment_and_scope_dialogs.gd").new()
+			_comments.init(self)
+		return _comments
+var _struct_rows: RefCounted = null:  # enum/signal/match row editors (dock/struct_row_dialogs.gd)
+	get:
+		if _struct_rows == null:
+			_struct_rows = load("res://addons/eventsheet/editor/dock/struct_row_dialogs.gd").new()
+			_struct_rows.init(self)
+		return _struct_rows
+var _inline_params: RefCounted = null:  # double-click value / swatch / node-drop editors (dock/inline_param_editor.gd)
+	get:
+		if _inline_params == null:
+			_inline_params = load("res://addons/eventsheet/editor/dock/inline_param_editor.gd").new()
+			_inline_params.init(self)
+		return _inline_params
+var _doctor: RefCounted = null:  # Tools ▸ Project Doctor health-audit window (dock/project_doctor_panel.gd)
+	get:
+		if _doctor == null:
+			_doctor = load("res://addons/eventsheet/editor/dock/project_doctor_panel.gd").new()
+			_doctor.init(self)
+		return _doctor
+var _includes: RefCounted = null:  # Sheet ▸ Manage Includes… window (dock/include_manager.gd)
+	get:
+		if _includes == null:
+			_includes = load("res://addons/eventsheet/editor/dock/include_manager.gd").new()
+			_includes.init(self)
+		return _includes
+var _find_refs: RefCounted = null:  # Edit ▸ Find References… window (dock/find_references_panel.gd)
+	get:
+		if _find_refs == null:
+			_find_refs = load("res://addons/eventsheet/editor/dock/find_references_panel.gd").new()
+			_find_refs.init(self)
+		return _find_refs
+var _pick: RefCounted = null:  # "For Each" pick-filter dialog (dock/pick_filter_dialog.gd)
+	get:
+		if _pick == null:
+			_pick = load("res://addons/eventsheet/editor/dock/pick_filter_dialog.gd").new()
+			_pick.init(self)
+		return _pick
+var _compare: RefCounted = null:  # the one Compare dialog (dock/compare_condition_dialog.gd)
+	get:
+		if _compare == null:
+			_compare = load("res://addons/eventsheet/editor/dock/compare_condition_dialog.gd").new()
+			_compare.init(self)
+			_compare.compare_confirmed.connect(_on_compare_confirmed)
+		return _compare
+var _ai: RefCounted = null:  # Edit ▸ Generate from Description… window (dock/ai_generate_window.gd)
+	get:
+		if _ai == null:
+			_ai = load("res://addons/eventsheet/editor/dock/ai_generate_window.gd").new()
+			_ai.init(self)
+		return _ai
+var _ask: RefCounted = null:  # View ▸ Ask… proposed-events window (dock/ask_window.gd)
+	get:
+		if _ask == null:
+			_ask = load("res://addons/eventsheet/editor/dock/ask_window.gd").new()
+			_ask.init(self)
+		return _ask
+var _sheet_type: RefCounted = null:  # Sheet ▸ Sheet Type… dialog shell (dock/sheet_type_dialog.gd)
+	get:
+		if _sheet_type == null:
+			_sheet_type = load("res://addons/eventsheet/editor/dock/sheet_type_dialog.gd").new()
+			_sheet_type.init(self)
+		return _sheet_type
 var _session: EventSheetSessionStore = EventSheetSessionStore.new()  # open-tabs restore across restarts (event_sheet_session_store.gd)
-var _shortcuts: EventSheetShortcutsDialog = EventSheetShortcutsDialog.new()  # Tools ▸ Keyboard Shortcuts editor (event_sheet_shortcuts_dialog.gd)
-var _docs: EventSheetDocWindow = EventSheetDocWindow.new()  # Tools ▸ Documentation… / F1 / "What does this do?" (docs/doc_window.gd)
-var _rename: EventSheetRenameRefactor = EventSheetRenameRefactor.new()  # variable rename engine + "Rename Everywhere" dialog (event_sheet_rename_refactor.gd)
-var _head_actions: EventSheetHeadActions = EventSheetHeadActions.new()  # the gestures on the sheet's head bands (dock/sheet_head_actions.gd)
-var _variables: EventSheetVariablesManager = EventSheetVariablesManager.new()  # global/local/tree variable authoring + usage scan (dock/variables_manager.gd)
-var _multi_view: EventSheetMultiViewManager = EventSheetMultiViewManager.new()  # split-view subsystem: second pane over the same sheet (dock/multi_view_manager.gd)
-var _command_palette: EventSheetCommandPalette = EventSheetCommandPalette.new()  # Ctrl+P command palette: list + fuzzy filter + popup shell (dock/command_palette.gd)
-var _sheet_diff: EventSheetSheetDiff = EventSheetSheetDiff.new()  # "What Changed Since Save" - rows a save would touch (dock/sheet_diff.gd)
-var _variable_grouping: EventSheetVariableGrouping = EventSheetVariableGrouping.new()  # drag-onto-variable folders + rename popup (dock/variable_grouping.gd)
+var _shortcuts: RefCounted = null:  # Tools ▸ Keyboard Shortcuts editor (event_sheet_shortcuts_dialog.gd)
+	get:
+		if _shortcuts == null:
+			_shortcuts = load("res://addons/eventsheet/editor/event_sheet_shortcuts_dialog.gd").new()
+			_shortcuts.init(self)
+		return _shortcuts
+var _docs: RefCounted = null:  # Tools ▸ Documentation… / F1 / "What does this do?" (docs/doc_window.gd)
+	get:
+		if _docs == null:
+			_docs = load("res://addons/eventsheet/editor/docs/doc_window.gd").new()
+			_docs.init(self)
+		return _docs
+var _rename: RefCounted = null:  # variable rename engine + "Rename Everywhere" dialog (event_sheet_rename_refactor.gd)
+	get:
+		if _rename == null:
+			_rename = load("res://addons/eventsheet/editor/event_sheet_rename_refactor.gd").new()
+			_rename.init(self)
+		return _rename
+var _head_actions: RefCounted = null:  # the gestures on the sheet's head bands (dock/sheet_head_actions.gd)
+	get:
+		if _head_actions == null:
+			_head_actions = load("res://addons/eventsheet/editor/dock/sheet_head_actions.gd").new()
+			_head_actions.init(self)
+		return _head_actions
+var _variables: RefCounted = null:  # global/local/tree variable authoring + usage scan (dock/variables_manager.gd)
+	get:
+		if _variables == null:
+			_variables = load("res://addons/eventsheet/editor/dock/variables_manager.gd").new()
+			_variables.init(self)
+		return _variables
+var _multi_view: RefCounted = null:  # split-view subsystem: second pane over the same sheet (dock/multi_view_manager.gd)
+	get:
+		if _multi_view == null:
+			_multi_view = load("res://addons/eventsheet/editor/dock/multi_view_manager.gd").new()
+			_multi_view.init(self)
+		return _multi_view
+var _command_palette: RefCounted = null:  # Ctrl+P command palette: list + fuzzy filter + popup shell (dock/command_palette.gd)
+	get:
+		if _command_palette == null:
+			_command_palette = load("res://addons/eventsheet/editor/dock/command_palette.gd").new()
+			_command_palette.init(self)
+		return _command_palette
+var _sheet_diff: RefCounted = null:  # "What Changed Since Save" - rows a save would touch (dock/sheet_diff.gd)
+	get:
+		if _sheet_diff == null:
+			_sheet_diff = load("res://addons/eventsheet/editor/dock/sheet_diff.gd").new()
+			_sheet_diff.init(self)
+		return _sheet_diff
+var _variable_grouping: RefCounted = null:  # drag-onto-variable folders + rename popup (dock/variable_grouping.gd)
+	get:
+		if _variable_grouping == null:
+			_variable_grouping = load("res://addons/eventsheet/editor/dock/variable_grouping.gd").new()
+			_variable_grouping.init(self)
+		return _variable_grouping
 var _menu_bar: EventSheetMenuBar = EventSheetMenuBar.new()  # top toolbar + the one cascading Menu (Sheet/Add/Edit/View/Tools) + quick-add (dock/menu_bar.gd)
 var _project_bar_glue: EventSheetProjectBarGlue = EventSheetProjectBarGlue.new()  # The Project bar (the Object bar's other tab): when it shows, and where each entry goes (dock/project_bar_glue.gd)
 var _run_controls: EventSheetRunControls = EventSheetRunControls.new()  # Preview layout / Preview project / Debug layout, routed to the editor's own run commands (dock/run_controls.gd)
 var _beginner_toolbar: EventSheetBeginnerToolbar = EventSheetBeginnerToolbar.new()  # The eight Add gestures as buttons above the canvas, on in Simple mode (dock/beginner_toolbar.gd)
-var _optimiser: EventSheetOptimiser = EventSheetOptimiser.new()  # the performance findings' fixes, as ordinary undoable row edits (dock/optimiser.gd)
+var _optimiser: RefCounted = null:  # the performance findings' fixes, as ordinary undoable row edits (dock/optimiser.gd)
+	get:
+		if _optimiser == null:
+			_optimiser = load("res://addons/eventsheet/editor/dock/optimiser.gd").new()
+			_optimiser.init(self)
+		return _optimiser
 ## The Start page. Loaded BY PATH on first open: it names the Manual's tutorials, and the dock is
 ## constructed at every editor boot - naming it here would pull the whole help corpus into that boot.
 var _start_page: RefCounted = null
@@ -340,36 +620,116 @@ var _external_watcher: EventSheetExternalWatcher = EventSheetExternalWatcher.new
 var _sheet_io: EventSheetSheetIO = EventSheetSheetIO.new()  # sheet FILE-IO: open-from-disk + every write-back path (Save/Save As/Export/Save-as-.gd) (dock/sheet_io.gd)
 var _tab_state: EventSheetTabState = EventSheetTabState.new()  # what an open tab keeps while another is on screen: its reading, undo log, vocabulary and compiled output, and the stamp each is held against (dock/tab_state.gd)
 var _live_edit_bar: EventSheetLiveEditBar = EventSheetLiveEditBar.new()  # ⟳ Apply to running game on the status strip (dock/live_edit_bar.gd)
-var _shared_sheets: EventSheetSharedSheetDialogs = EventSheetSharedSheetDialogs.new()  # New shared sheet… + Include sheet… (dock/shared_sheet_dialogs.gd)
+var _shared_sheets: RefCounted = null:  # New shared sheet… + Include sheet… (dock/shared_sheet_dialogs.gd)
+	get:
+		if _shared_sheets == null:
+			_shared_sheets = load("res://addons/eventsheet/editor/dock/shared_sheet_dialogs.gd").new()
+			_shared_sheets.init(self)
+		return _shared_sheets
 var _ui_builder: EventSheetDockUIBuilder = EventSheetDockUIBuilder.new()
 var _input_dispatch: EventSheetDockInputDispatch = EventSheetDockInputDispatch.new()
 var _code_panel_glue: EventSheetCodePanelGlue = EventSheetCodePanelGlue.new()
 var _providers_glue: EventSheetProviderRegistryGlue = EventSheetProviderRegistryGlue.new()  # dock/provider_registry_glue.gd
 var _sheet_type_glue: EventSheetTypeGlue = EventSheetTypeGlue.new()  # dock/sheet_type_glue.gd
 var _queries: EventSheetDockQueries = EventSheetDockQueries.new()  # dock/sheet_queries.gd
-var _add_rows: EventSheetAddRowRequests = EventSheetAddRowRequests.new()
-var _extract_ops: EventSheetExtractOps = EventSheetExtractOps.new()  # extract-to-function / extract-to-include (dock/extract_ops.gd)  # dock/add_row_requests.gd  # code/provenance + open-sheets panel behavior (dock/code_panel_glue.gd)  # menu/shortcut routing (dock/dock_input_dispatch.gd)  # UI construction pass (dock/dock_ui_builder.gd)
-var _ace_apply: EventSheetACEApply = EventSheetACEApply.new()  # ACE application (condition/action/trigger baking + insert) + row/ACE drag-drop reorder (dock/ace_apply.gd)
-var _picker_gate_fixes: EventSheetPickerGateFixes = EventSheetPickerGateFixes.new()  # the picker's greyed-entry fixes: add the missing node, switch Tool on, open Sheet Type (dock/picker_gate_fixes.gd)
+var _add_rows: RefCounted = null:
+	get:
+		if _add_rows == null:
+			_add_rows = load("res://addons/eventsheet/editor/dock/add_row_requests.gd").new()
+			_add_rows.init(self)
+		return _add_rows
+var _extract_ops: RefCounted = null:  # extract-to-function / extract-to-include (dock/extract_ops.gd)  # dock/add_row_requests.gd  # code/provenance + open-sheets panel behavior (dock/code_panel_glue.gd)  # menu/shortcut routing (dock/dock_input_dispatch.gd)  # UI construction pass (dock/dock_ui_builder.gd)
+	get:
+		if _extract_ops == null:
+			_extract_ops = load("res://addons/eventsheet/editor/dock/extract_ops.gd").new()
+			_extract_ops.init(self)
+		return _extract_ops
+var _ace_apply: RefCounted = null:  # ACE application (condition/action/trigger baking + insert) + row/ACE drag-drop reorder (dock/ace_apply.gd)
+	get:
+		if _ace_apply == null:
+			_ace_apply = load("res://addons/eventsheet/editor/dock/ace_apply.gd").new()
+			_ace_apply.init(self)
+		return _ace_apply
+var _picker_gate_fixes: RefCounted = null:  # the picker's greyed-entry fixes: add the missing node, switch Tool on, open Sheet Type (dock/picker_gate_fixes.gd)
+	get:
+		if _picker_gate_fixes == null:
+			_picker_gate_fixes = load("res://addons/eventsheet/editor/dock/picker_gate_fixes.gd").new()
+			_picker_gate_fixes.init(self)
+		return _picker_gate_fixes
 var _editor_tool_bar: EventSheetEditorToolBar = EventSheetEditorToolBar.new()  # Run now / Reload / Output / Enable plugin on a tool sheet's Include bar (dock/editor_tool_bar.gd)
 var _pending_built_here: Dictionary = {}  # A recorded "show the events behind this" waiting for its file to finish opening
 var _this_editor_bar: EventSheetThisEditorBar = EventSheetThisEditorBar.new()  # Enabled / Reload / Output / plugin.cfg + the read-only guard on a sheet that is part of the running editor (dock/this_editor_bar.gd)
-var _row_edit_ops: EventSheetRowEditOps = EventSheetRowEditOps.new()  # context-menu row/ACE edit ops: enable/disable, delete, indent/outdent, else, insert, bulk-selection, invert/OR-AND (dock/row_edit_ops.gd)
+var _row_edit_ops: RefCounted = null:  # context-menu row/ACE edit ops: enable/disable, delete, indent/outdent, else, insert, bulk-selection, invert/OR-AND (dock/row_edit_ops.gd)
+	get:
+		if _row_edit_ops == null:
+			_row_edit_ops = load("res://addons/eventsheet/editor/dock/row_edit_ops.gd").new()
+			_row_edit_ops.init(self)
+		return _row_edit_ops
 var _preview_glue: EventSheetPreviewGlue = EventSheetPreviewGlue.new()  # .gd-preview banner + "Edit Events" unlock + Open-in-Godot script-editor glue + lift-report window (dock/preview_glue.gd)
-var _author_actions: EventSheetAuthorActions = EventSheetAuthorActions.new()  # author quick-actions: quick-add match+apply + Run Scene + Save/Insert row snippets (dock/author_actions.gd)
-var _verb_properties: EventSheetVerbProperties = EventSheetVerbProperties.new()  # a published verb's header click: the ACE properties popup (kind, category, inputs, inserts) (dock/verb_properties_popup.gd)
-var _object_properties: EventSheetObjectProperties = EventSheetObjectProperties.new()  # a row's object-name click: the object popup (type, path, rows, signals) (dock/object_properties_popup.gd)
-var _instance_variables: EventSheetInstanceVariableTable = EventSheetInstanceVariableTable.new()  # the object's variables as an editable table on Object properties and the Properties bar (dock/instance_variable_table.gd)
-var _hierarchy_edits: EventSheetHierarchyEdits = EventSheetHierarchyEdits.new()  # What the Hierarchy pane's gestures write - Add child + flags dialog, Remove from parent (dock/hierarchy_edits.gd)
-var _global_variables: EventSheetGlobalVariables = EventSheetGlobalVariables.new()  # Add ▸ Global variable…: one value the project shares, written into an autoload (dock/global_variables.gd)
+var _author_actions: RefCounted = null:  # author quick-actions: quick-add match+apply + Run Scene + Save/Insert row snippets (dock/author_actions.gd)
+	get:
+		if _author_actions == null:
+			_author_actions = load("res://addons/eventsheet/editor/dock/author_actions.gd").new()
+			_author_actions.init(self)
+		return _author_actions
+var _verb_properties: RefCounted = null:  # a published verb's header click: the ACE properties popup (kind, category, inputs, inserts) (dock/verb_properties_popup.gd)
+	get:
+		if _verb_properties == null:
+			_verb_properties = load("res://addons/eventsheet/editor/dock/verb_properties_popup.gd").new()
+			_verb_properties.init(self)
+		return _verb_properties
+var _object_properties: RefCounted = null:  # a row's object-name click: the object popup (type, path, rows, signals) (dock/object_properties_popup.gd)
+	get:
+		if _object_properties == null:
+			_object_properties = load("res://addons/eventsheet/editor/dock/object_properties_popup.gd").new()
+			_object_properties.init(self)
+		return _object_properties
+var _instance_variables: RefCounted = null:  # the object's variables as an editable table on Object properties and the Properties bar (dock/instance_variable_table.gd)
+	get:
+		if _instance_variables == null:
+			_instance_variables = load("res://addons/eventsheet/editor/dock/instance_variable_table.gd").new()
+			_instance_variables.init(self)
+		return _instance_variables
+var _hierarchy_edits: RefCounted = null:  # What the Hierarchy pane's gestures write - Add child + flags dialog, Remove from parent (dock/hierarchy_edits.gd)
+	get:
+		if _hierarchy_edits == null:
+			_hierarchy_edits = load("res://addons/eventsheet/editor/dock/hierarchy_edits.gd").new()
+			_hierarchy_edits.init(self)
+		return _hierarchy_edits
+var _global_variables: RefCounted = null:  # Add ▸ Global variable…: one value the project shares, written into an autoload (dock/global_variables.gd)
+	get:
+		if _global_variables == null:
+			_global_variables = load("res://addons/eventsheet/editor/dock/global_variables.gd").new()
+			_global_variables.init(self)
+		return _global_variables
 var _find_results: EventSheetFindResultsBar = EventSheetFindResultsBar.new()  # Find all references: the results bar under the sheet, grouped by sheet with event numbers (dock/find_results_bar.gd)
 var _properties_bar: EventSheetPropertiesBar = EventSheetPropertiesBar.new()  # the selected condition/action/object/group as fields edited in place, beside the canvas (dock/properties_bar.gd)
 var _moment_segment: EventSheetMomentSegment = null  # the strip's contextual Moment segment, assigned by the toolbar build (dock/toolbar_moment_segment.gd)
 var _objects_panel: EventSheetObjectsPanel = null  # left-rail Objects section: every object the open file uses (editor/objects_panel.gd)
-var _ghost_row: EventSheetGhostRow = EventSheetGhostRow.new()  # zero-dialog add: E/C/A open a type-a-sentence popup at the selected row (dock/ghost_row.gd)
-var _navigate: EventSheetNavigate = EventSheetNavigate.new()  # Ctrl+Click go-to-definition: addon verbs open their behaviour as a sheet (dock/navigate.gd)
-var _export_pack: EventSheetExportPack = EventSheetExportPack.new()  # Sheet ▸ Export Addon Pack: writes eventsheet_addons/<class>/ (.tres + .gd + README, bundles includes) (dock/export_pack.gd)
-var _save_studio: EventSheetSaveStudio = EventSheetSaveStudio.new()  # Tools ▸ Save Studio: format preview + slot browser/export + save_state generator (dock/save_studio.gd)
+var _ghost_row: RefCounted = null:  # zero-dialog add: E/C/A open a type-a-sentence popup at the selected row (dock/ghost_row.gd)
+	get:
+		if _ghost_row == null:
+			_ghost_row = load("res://addons/eventsheet/editor/dock/ghost_row.gd").new()
+			_ghost_row.init(self)
+		return _ghost_row
+var _navigate: RefCounted = null:  # Ctrl+Click go-to-definition: addon verbs open their behaviour as a sheet (dock/navigate.gd)
+	get:
+		if _navigate == null:
+			_navigate = load("res://addons/eventsheet/editor/dock/navigate.gd").new()
+			_navigate.init(self)
+		return _navigate
+var _export_pack: RefCounted = null:  # Sheet ▸ Export Addon Pack: writes eventsheet_addons/<class>/ (.tres + .gd + README, bundles includes) (dock/export_pack.gd)
+	get:
+		if _export_pack == null:
+			_export_pack = load("res://addons/eventsheet/editor/dock/export_pack.gd").new()
+			_export_pack.init(self)
+		return _export_pack
+var _save_studio: RefCounted = null:  # Tools ▸ Save Studio: format preview + slot browser/export + save_state generator (dock/save_studio.gd)
+	get:
+		if _save_studio == null:
+			_save_studio = load("res://addons/eventsheet/editor/dock/save_studio.gd").new()
+			_save_studio.init(self)
+		return _save_studio
 ## Tools ▸ Lift Workbench (dock/lift_workbench.gd). Null until somebody asks for it: a developer tool
 ## nobody opens should not cost a window, and loading it by path keeps it off the boot path.
 var _lift_workbench: RefCounted = null
@@ -381,25 +741,116 @@ var _chunk_tools_dialog: RefCounted = null
 ## project that never ships mod support should not cost a window, and loading it by path keeps it
 ## off the boot path.
 var _mod_template_dialog: RefCounted = null
-var _translation_studio: EventSheetTranslationStudio = EventSheetTranslationStudio.new()  # Tools ▸ Translation Studio: extract / notes+orphans / import+register+coverage (dock/translation_studio.gd)
-var _function_dialog_glue: EventSheetFunctionDialogGlue = EventSheetFunctionDialogGlue.new()  # Add ▾ ▸ Function… dialog wiring + apply-to-sheet (dock/function_dialog_glue.gd)
+var _translation_studio: RefCounted = null:  # Tools ▸ Translation Studio: extract / notes+orphans / import+register+coverage (dock/translation_studio.gd)
+	get:
+		if _translation_studio == null:
+			_translation_studio = load("res://addons/eventsheet/editor/dock/translation_studio.gd").new()
+			_translation_studio.init(self)
+		return _translation_studio
+var _function_dialog_glue: RefCounted = null:  # Add ▾ ▸ Function… dialog wiring + apply-to-sheet (dock/function_dialog_glue.gd)
+	get:
+		if _function_dialog_glue == null:
+			_function_dialog_glue = load("res://addons/eventsheet/editor/dock/function_dialog_glue.gd").new()
+			_function_dialog_glue.init(self)
+		return _function_dialog_glue
 var _theme_manager: EventSheetThemeManager = EventSheetThemeManager.new()  # editor theme: load/apply/pick style + theme file dialog + theme editor + live-reload binding to the active .tres (dock/theme_manager.gd)
-var _find_bar_glue: EventSheetFindBar = EventSheetFindBar.new()  # Ctrl+F find bar + Replace-All across the sheet + _replace_in_rows recursion (dock/find_bar.gd)
-var _clipboard_glue: EventSheetClipboard = EventSheetClipboard.new()  # copy/paste: internal clipboard + portable snippets + raw-GDScript paste (owns _clipboard state) (dock/clipboard.gd)
-var _messages: EventSheetMessageDialog = EventSheetMessageDialog.new()  # Make it a message… (the @rpc words) + the Send dialog whose To dropdown picks the Send ACE (dock/message_dialog.gd)
-var _quick_prompts: EventSheetQuickPromptDialogs = EventSheetQuickPromptDialogs.new()  # one-field prompt popups: Extract-to-Function name + Conditional Breakpoint + Group editor (dock/quick_prompt_dialogs.gd)
-var _custom_block_dialog: EventSheetCustomBlockDialog = EventSheetCustomBlockDialog.new()  # Custom Block API: schema-driven add/edit dialog for registered kinds (dock/custom_block_dialog.gd)
-var _raw_call_namer: EventSheetRawCallNamer = EventSheetRawCallNamer.new()  # Sheet ▸ Name Raw Calls: binds raw one-call code rows to existing vocabulary, byte-gated (dock/raw_call_namer.gd)
-var _variable_retype_dialog: EventSheetVariableRetypeDialog = EventSheetVariableRetypeDialog.new()  # variable ▸ Change Type Everywhere…: preview + one-undo-step retype (dock/variable_retype_dialog.gd)
-var _pattern_adopt_dialog: EventSheetPatternAdoptDialog = EventSheetPatternAdoptDialog.new()  # row ▸ Adopt behavior…: preview-first swap of a hand-written pattern for the shipped one (dock/pattern_adopt_dialog.gd)
-var _keep_as_code_dialog: EventSheetKeepAsCodeDialog = EventSheetKeepAsCodeDialog.new()  # the gone-verb strip's second door: the row held as the verbatim block, receipt and byte gate first (dock/keep_as_code_dialog.gd)
-var _rename_receipt: EventSheetRenameReceipt = EventSheetRenameReceipt.new()  # Rename on a function's own row, and the outside-rename door: every row and file listed before anything moves (dock/rename_receipt.gd)
-var _migrate_dialog: EventSheetMigrateDialog = EventSheetMigrateDialog.new()  # the head band's migration count: the receipt for every row with a newer spelling, and the one place Apply exists (dock/migrate_dialog.gd)
-var _remint_receipt: EventSheetRemintReceipt = EventSheetRemintReceipt.new()  # the Doctor's Re-mint chip: the two names shown before either of them moves (dock/remint_receipt.gd)
-var _grid_csv_dialog: EventSheetGridCSVDialog = EventSheetGridCSVDialog.new()  # variable ▸ Export/Import Grid …CSV: the data-asset grid round trip (dock/grid_csv_dialog.gd)
-var _paste_special_dialog: EventSheetPasteSpecialDialog = EventSheetPasteSpecialDialog.new()  # row ▸ More ▸ Paste Special…: snippet paste, retargeted (dock/paste_special_dialog.gd)
-var _language_variants_dialog: EventSheetLanguageVariantsDialog = EventSheetLanguageVariantsDialog.new()  # row ▸ Language Variants…: writes Godot's own per-locale asset remap table, and names the preloads that would ignore it (dock/language_variants_dialog.gd)
-var _translation_key_dialog: EventSheetTranslationKeyDialog = EventSheetTranslationKeyDialog.new()  # the offer after editing a globe-marked value: rename the key in every catalog (dock/translation_key_dialog.gd)
+var _find_bar_glue: RefCounted = null:  # Ctrl+F find bar + Replace-All across the sheet + _replace_in_rows recursion (dock/find_bar.gd)
+	get:
+		if _find_bar_glue == null:
+			_find_bar_glue = load("res://addons/eventsheet/editor/dock/find_bar.gd").new()
+			_find_bar_glue.init(self)
+		return _find_bar_glue
+var _clipboard_glue: RefCounted = null:  # copy/paste: internal clipboard + portable snippets + raw-GDScript paste (owns _clipboard state) (dock/clipboard.gd)
+	get:
+		if _clipboard_glue == null:
+			_clipboard_glue = load("res://addons/eventsheet/editor/dock/clipboard.gd").new()
+			_clipboard_glue.init(self)
+		return _clipboard_glue
+var _messages: RefCounted = null:  # Make it a message… (the @rpc words) + the Send dialog whose To dropdown picks the Send ACE (dock/message_dialog.gd)
+	get:
+		if _messages == null:
+			_messages = load("res://addons/eventsheet/editor/dock/message_dialog.gd").new()
+			_messages.init(self)
+			_messages.send_confirmed.connect(_on_send_message_confirmed)
+		return _messages
+var _quick_prompts: RefCounted = null:  # one-field prompt popups: Extract-to-Function name + Conditional Breakpoint + Group editor (dock/quick_prompt_dialogs.gd)
+	get:
+		if _quick_prompts == null:
+			_quick_prompts = load("res://addons/eventsheet/editor/dock/quick_prompt_dialogs.gd").new()
+			_quick_prompts.init(self)
+		return _quick_prompts
+var _custom_block_dialog: RefCounted = null:  # Custom Block API: schema-driven add/edit dialog for registered kinds (dock/custom_block_dialog.gd)
+	get:
+		if _custom_block_dialog == null:
+			_custom_block_dialog = load("res://addons/eventsheet/editor/dock/custom_block_dialog.gd").new()
+			_custom_block_dialog.init(self)
+		return _custom_block_dialog
+var _raw_call_namer: RefCounted = null:  # Sheet ▸ Name Raw Calls: binds raw one-call code rows to existing vocabulary, byte-gated (dock/raw_call_namer.gd)
+	get:
+		if _raw_call_namer == null:
+			_raw_call_namer = load("res://addons/eventsheet/editor/dock/raw_call_namer.gd").new()
+			_raw_call_namer.init(self)
+		return _raw_call_namer
+var _variable_retype_dialog: RefCounted = null:  # variable ▸ Change Type Everywhere…: preview + one-undo-step retype (dock/variable_retype_dialog.gd)
+	get:
+		if _variable_retype_dialog == null:
+			_variable_retype_dialog = load("res://addons/eventsheet/editor/dock/variable_retype_dialog.gd").new()
+			_variable_retype_dialog.init(self)
+		return _variable_retype_dialog
+var _pattern_adopt_dialog: RefCounted = null:  # row ▸ Adopt behavior…: preview-first swap of a hand-written pattern for the shipped one (dock/pattern_adopt_dialog.gd)
+	get:
+		if _pattern_adopt_dialog == null:
+			_pattern_adopt_dialog = load("res://addons/eventsheet/editor/dock/pattern_adopt_dialog.gd").new()
+			_pattern_adopt_dialog.init(self)
+		return _pattern_adopt_dialog
+var _keep_as_code_dialog: RefCounted = null:  # the gone-verb strip's second door: the row held as the verbatim block, receipt and byte gate first (dock/keep_as_code_dialog.gd)
+	get:
+		if _keep_as_code_dialog == null:
+			_keep_as_code_dialog = load("res://addons/eventsheet/editor/dock/keep_as_code_dialog.gd").new()
+			_keep_as_code_dialog.init(self)
+		return _keep_as_code_dialog
+var _rename_receipt: RefCounted = null:  # Rename on a function's own row, and the outside-rename door: every row and file listed before anything moves (dock/rename_receipt.gd)
+	get:
+		if _rename_receipt == null:
+			_rename_receipt = load("res://addons/eventsheet/editor/dock/rename_receipt.gd").new()
+			_rename_receipt.init(self)
+		return _rename_receipt
+var _migrate_dialog: RefCounted = null:  # the head band's migration count: the receipt for every row with a newer spelling, and the one place Apply exists (dock/migrate_dialog.gd)
+	get:
+		if _migrate_dialog == null:
+			_migrate_dialog = load("res://addons/eventsheet/editor/dock/migrate_dialog.gd").new()
+			_migrate_dialog.init(self)
+		return _migrate_dialog
+var _remint_receipt: RefCounted = null:  # the Doctor's Re-mint chip: the two names shown before either of them moves (dock/remint_receipt.gd)
+	get:
+		if _remint_receipt == null:
+			_remint_receipt = load("res://addons/eventsheet/editor/dock/remint_receipt.gd").new()
+			_remint_receipt.init(self)
+		return _remint_receipt
+var _grid_csv_dialog: RefCounted = null:  # variable ▸ Export/Import Grid …CSV: the data-asset grid round trip (dock/grid_csv_dialog.gd)
+	get:
+		if _grid_csv_dialog == null:
+			_grid_csv_dialog = load("res://addons/eventsheet/editor/dock/grid_csv_dialog.gd").new()
+			_grid_csv_dialog.init(self)
+		return _grid_csv_dialog
+var _paste_special_dialog: RefCounted = null:  # row ▸ More ▸ Paste Special…: snippet paste, retargeted (dock/paste_special_dialog.gd)
+	get:
+		if _paste_special_dialog == null:
+			_paste_special_dialog = load("res://addons/eventsheet/editor/dock/paste_special_dialog.gd").new()
+			_paste_special_dialog.init(self)
+		return _paste_special_dialog
+var _language_variants_dialog: RefCounted = null:  # row ▸ Language Variants…: writes Godot's own per-locale asset remap table, and names the preloads that would ignore it (dock/language_variants_dialog.gd)
+	get:
+		if _language_variants_dialog == null:
+			_language_variants_dialog = load("res://addons/eventsheet/editor/dock/language_variants_dialog.gd").new()
+			_language_variants_dialog.init(self)
+		return _language_variants_dialog
+var _translation_key_dialog: RefCounted = null:  # the offer after editing a globe-marked value: rename the key in every catalog (dock/translation_key_dialog.gd)
+	get:
+		if _translation_key_dialog == null:
+			_translation_key_dialog = load("res://addons/eventsheet/editor/dock/translation_key_dialog.gd").new()
+			_translation_key_dialog.init(self)
+		return _translation_key_dialog
 var _condition_context_menu: PopupMenu = null
 var _action_context_menu: PopupMenu = null
 var _row_context_menu: PopupMenu = null
@@ -451,61 +902,53 @@ func _init() -> void:
 	_tab_state.init(self)
 	# Same reason as _sheet_io: a test may apply an ACE (or exercise drag-drop) on a fresh .new()
 	# editor before _ready. init() only stores _dock, so wiring it here (and again in the cluster) is safe.
+	# The helpers a click reaches and the first paint does not (the row ops, the ACE apply, the
+	# dialogs and studios) are not wired here: each is built and wired by its own getter the first
+	# time anything asks for it, which is also what a test on a fresh .new() editor gets.
 	_ui_builder.init(self)
 	_input_dispatch.init(self)
 	_code_panel_glue.init(self)
 	_providers_glue.init(self)
 	_sheet_type_glue.init(self)
-	_head_actions.init(self)
 	_queries.init(self)
-	_add_rows.init(self)
-	_extract_ops.init(self)
-	_picker_gate_fixes.init(self)
-	# The quick-add field's answers. Wired here with the other init-only helpers so a test can ask
-	# what a query answers on a fresh .new() editor, before any toolbar has been built.
-	_ask_field.init(self)
-	# And where a door clicked in a comment leads - the same init-only shape, for the same reason.
-	_comment_door_open.init(self)
-	# The public extension API (addons/eventsheet/api/eventsheets.gd) fronts this dock;
-	# the region fold commands register through it as living proof the extension point
-	# works - delete these four lines and only extensions lose their entries.
-	EventSheets._register_dock(self)
-	# The blend-mode strip registers through the same public seam a pack's own field would
-	# (EventSheets.register_param_editor), rather than through the dialog's private hint table: a
-	# parameter whose words nobody can picture is exactly the case that seam exists for, and using it
-	# here is what keeps it working.
-	EventSheetBlendModeField.ensure_registered()
-	EventSheets.register_palette_command("Collapse All Regions", func() -> void: _viewport.set_region_folds(true))
-	EventSheets.register_palette_command("Expand All Regions", func() -> void: _viewport.set_region_folds(false))
+	# The workspace announces itself where the public extension API (addons/eventsheet/api/
+	# eventsheets.gd) reads it, and the region fold commands register on the list the API keeps as
+	# living proof the extension point works - delete these lines and only extensions lose their
+	# entries. Both are written through the API's storage file rather than through the API: naming
+	# the API here would compile everything it names into the first open of a sheet.
+	DOCK_REGISTRY.register_dock(self)
+	# The blend-mode strip registers through the same public seam a pack's own field would (the
+	# param-editor registry EventSheets.register_param_editor writes), rather than through the
+	# dialog's private hint table: a parameter whose words nobody can picture is exactly the case
+	# that seam exists for, and using it here is what keeps it working.
+	load(BLEND_MODE_FIELD_PATH).ensure_registered()
+	DOCK_REGISTRY.register_palette_command("Collapse All Regions", func() -> void: _viewport.set_region_folds(true))
+	DOCK_REGISTRY.register_palette_command("Expand All Regions", func() -> void: _viewport.set_region_folds(false))
 	# The global "don't offer tips" switch for the once-per-session rescue offers (the profiler on
 	# the first stutter, Ask-why on the first silent trigger - see EventSheetRescueTips).
-	EventSheets.register_palette_command("Toggle Rescue Tips", func() -> void:
+	DOCK_REGISTRY.register_palette_command("Toggle Rescue Tips", func() -> void:
 		EventSheetRescueTips.set_offers_enabled(not EventSheetRescueTips.offers_enabled())
 		_set_status("Rescue tips on - one quiet offer per moment, per session."
 			if EventSheetRescueTips.offers_enabled() else "Rescue tips off - nothing will be offered."))
-	EventSheets.register_palette_command("Collapse Everything (regions + groups)", func() -> void: _viewport.set_region_folds(true, true))
-	EventSheets.register_palette_command("Expand Everything", func() -> void: _viewport.set_region_folds(false, true))
-	EventSheets.register_palette_command("Collapse All", func() -> void: _viewport.collapse_all())
-	EventSheets.register_palette_command("Expand All", func() -> void: _viewport.expand_all())
-	EventSheets.register_palette_command("Expand To Level 1", func() -> void: _viewport.expand_to_level(1))
-	EventSheets.register_palette_command("Expand To Level 2", func() -> void: _viewport.expand_to_level(2))
-	EventSheets.register_palette_command("Expand To Level 3", func() -> void: _viewport.expand_to_level(3))
-	EventSheets.register_palette_command("Save Studio", func() -> void: _open_save_studio())
-	EventSheets.register_palette_command("Translation Studio", func() -> void: _open_translation_studio(), "Translation")
+	DOCK_REGISTRY.register_palette_command("Collapse Everything (regions + groups)", func() -> void: _viewport.set_region_folds(true, true))
+	DOCK_REGISTRY.register_palette_command("Expand Everything", func() -> void: _viewport.set_region_folds(false, true))
+	DOCK_REGISTRY.register_palette_command("Collapse All", func() -> void: _viewport.collapse_all())
+	DOCK_REGISTRY.register_palette_command("Expand All", func() -> void: _viewport.expand_all())
+	DOCK_REGISTRY.register_palette_command("Expand To Level 1", func() -> void: _viewport.expand_to_level(1))
+	DOCK_REGISTRY.register_palette_command("Expand To Level 2", func() -> void: _viewport.expand_to_level(2))
+	DOCK_REGISTRY.register_palette_command("Expand To Level 3", func() -> void: _viewport.expand_to_level(3))
+	DOCK_REGISTRY.register_palette_command("Save Studio", func() -> void: _open_save_studio())
+	DOCK_REGISTRY.register_palette_command("Translation Studio", func() -> void: _open_translation_studio(), "Translation")
 	# The two chunk tools the Streamer packs ship with. They live on the palette rather than in a
 	# menu because they are a world-building errand somebody runs twice in a project's life, and the
 	# palette is where this editor already keeps those - the same door the guide tells a reader about.
-	EventSheets.register_palette_command("Split Scene Into Chunks", func() -> void: _open_chunk_tools(true), "Streaming")
-	EventSheets.register_palette_command("Merge Chunks", func() -> void: _open_chunk_tools(false), "Streaming")
+	DOCK_REGISTRY.register_palette_command("Split Scene Into Chunks", func() -> void: _open_chunk_tools(true), "Streaming")
+	DOCK_REGISTRY.register_palette_command("Merge Chunks", func() -> void: _open_chunk_tools(false), "Streaming")
 	# The starter folder the Mods pack's guide tells a game to hand its modders. Same reasoning as
 	# the two above: an errand run once per project, on the door this editor already keeps those on.
-	EventSheets.register_palette_command("Export Mod Template", func() -> void: _open_mod_template(), "Mods")
-	_ace_apply.init(self)
+	DOCK_REGISTRY.register_palette_command("Export Mod Template", func() -> void: _open_mod_template(), "Mods")
 	_editor_tool_bar.init(self)
 	_this_editor_bar.init(self)
-	# Row/ACE edit-ops helper: same fresh-.new()-before-_ready reasoning - tests exercise ops like
-	# _bulk_set_enabled_on / _toggle_selected_enabled / _indent_selected_event before the tree init runs.
-	_row_edit_ops.init(self)
 	# Preview-glue helper MUST be wired before _build_ui(): _build_ui calls
 	# _preview_glue.build_preview_banner(), which assigns _preview_banner/_preview_label back on the dock.
 	_preview_glue.init(self)
@@ -515,12 +958,6 @@ func _init() -> void:
 	_project_bar_glue.init(self)
 	_run_controls.init(self)
 	_beginner_toolbar.init(self)
-	_optimiser.init(self)
-	_verb_properties.init(self)
-	_object_properties.init(self)
-	_instance_variables.init(self)
-	_hierarchy_edits.init(self)
-	_global_variables.init(self)
 	_find_results.init(self)
 	_properties_bar.init(self)
 	# Same rule as _preview_glue: _build_ui() calls _open_progress.build(), so the back-reference
@@ -529,37 +966,21 @@ func _init() -> void:
 	# Theme-manager MUST be wired before _build_ui() too: _build_ui() calls
 	# _theme_manager.build_theme_file_dialog() (via the dock delegate). init() only stores _dock.
 	_theme_manager.init(self)
-	_raw_call_namer.init(self)
-	# The three retarget/round-trip dialogs: init() only stores _dock (nothing tree-bound), and the
-	# suite drives them on a fresh .new() editor before _ready, so they are wired here with the rest.
-	_variable_retype_dialog.init(self)
-	_pattern_adopt_dialog.init(self)
-	_keep_as_code_dialog.init(self)
-	_rename_receipt.init(self)
-	_migrate_dialog.init(self)
-	_remint_receipt.init(self)
-	_grid_csv_dialog.init(self)
-	_paste_special_dialog.init(self)
-	# The translation seams follow the same rule: init() only stores _dock, and the suite drives the
-	# Studio's buttons and the key-rename offer on a fresh .new() editor before _ready.
-	_translation_studio.init(self)
-	_translation_key_dialog.init(self)
-	_language_variants_dialog.init(self)
 	# The row item rides the shipped extension seam rather than a new menu const: the context-menu
-	# builder already appends every registered item whose filter accepts the clicked row.
-	EventSheets.register_row_menu_item("Language Variants…",
+	# builder already appends every registered item whose filter accepts the clicked row. The filter
+	# asks the dialog's file by path, so the dialog is only built when the item is clicked.
+	DOCK_REGISTRY.register_row_menu_item("Language Variants…",
 		func(resource: Resource) -> bool:
-			return EventSheetLanguageVariantsDialog.names_an_asset(resource),
+			return bool(load(LANGUAGE_VARIANTS_DIALOG_PATH).names_an_asset(resource)),
 		func(resource: Resource) -> void:
 			_language_variants_dialog.open(resource))
 	# "What does this do?" rides the same seam: the reference panel is a caller of the public
 	# extension point, not a new hard-wired menu const, so the seam stays dogfooded. The filter
 	# keeps the entry off a comment or an empty group - a row that names no verb has nothing to
 	# explain, and an entry that opens a blank page is worse than no entry.
-	_docs.init(self)
-	EventSheets.register_row_menu_item("What does this do?",
+	DOCK_REGISTRY.register_row_menu_item("What does this do?",
 		func(resource: Resource) -> bool:
-			return EventSheetDocExplain.can_explain(resource),
+			return bool(load(DOC_EXPLAIN_PATH).can_explain(resource)),
 		func(resource: Resource) -> void:
 			explain_row(resource))
 	_build_ui()
@@ -632,7 +1053,8 @@ func _on_translations_maybe_changed() -> void:
 	EventSheetObjectThumbnails.clear_cache()
 	# The picker's row icons are the same kind of read - a res:// path resolved to a texture - so an
 	# icon dropped in, replaced or removed is picked up on the next open rather than after a restart.
-	ACEPickerDialog.clear_icon_cache()
+	# A picker never loaded this session has no cache to drop, and loading it here would compile it.
+	_clear_if_loaded(ACE_PICKER_PATH, "clear_icon_cache")
 	# And the warm asks for them again during idle, rather than leaving the next open to pay for
 	# everything this ping just dropped.
 	EventSheetPickerWarmup.rearm()
@@ -671,8 +1093,9 @@ func _on_translations_maybe_changed() -> void:
 	# file stamps with it, which is what makes every by-file reader re-stat rather than trust a saved
 	# identity from before the change.
 	EventSheetSceneConnections.clear_cache()
-	# And the listing of the project's own scripts, which every health check walks.
-	EventSheetProjectDoctor.clear_project_scripts()
+	# And the listing of the project's own scripts, which every health check walks (held by the
+	# Doctor, so there is nothing to drop until something has loaded it).
+	_clear_if_loaded(PROJECT_DOCTOR_PATH, "clear_project_scripts")
 	# And the tokens those scripts already hold, which the next `{uid}` mint draws against. A file
 	# that arrived from a pull holds tokens this session never minted, and a mint that answered from
 	# the listing taken before it would be drawing against a project that no longer exists.
@@ -688,7 +1111,7 @@ func _on_translations_maybe_changed() -> void:
 	# Input Map, the node groups, the scene's nodes, the project's classes and its files - so a file
 	# added, a scene saved or an action declared in Project Settings changes them with nothing in any
 	# sheet having moved.
-	EventSheetCompletions.clear_cache()
+	_clear_if_loaded(COMPLETIONS_PATH, "clear_cache")
 	# And what a script the rows are AIMED at declares - the methods a Call Method field offers and
 	# the signals a Connect Signal one does. Entries are keyed by the file's identity, so a saved
 	# script adds a key and the superseded one would sit there for the rest of the session: correct,
@@ -705,6 +1128,15 @@ func _on_translations_maybe_changed() -> void:
 		propagate_notification(MainLoop.NOTIFICATION_TRANSLATION_CHANGED)
 		if _viewport != null:
 			_viewport.queue_redraw()
+
+
+## Drops a cache (or one entry of it) kept by a file this dock reaches by path - but only when
+## something has loaded that file this session. One that was never loaded holds nothing to drop,
+## and loading it just to empty it would compile it (and everything it names) on a filesystem ping
+## or an edit.
+static func _clear_if_loaded(script_path: String, method: String, arguments: Array = []) -> void:
+	if ResourceLoader.has_cached(script_path):
+		load(script_path).callv(method, arguments)
 
 
 ## The project-wide scan of who else holds which file has finished, some frames after a sheet opened
@@ -1033,7 +1465,7 @@ static func _tab_icon(title: Dictionary) -> Texture2D:
 		{"kind": "script", "label": str(title.get("name", ""))}, str(title.get("file", "")))
 	if picture != null:
 		return picture
-	return ACEPickerDialog.editor_icon(icon_class) if not icon_class.is_empty() else null
+	return EventSheetEditorIcons.icon(icon_class) if not icon_class.is_empty() else null
 
 
 func _format_tab_title(sheet: EventSheetResource, path: String, dirty: bool) -> String:
@@ -1229,7 +1661,7 @@ func _share_verbs_with_project_requested() -> void:
 ## the undo funnel - the Designer itself never mutates the sheet.
 func _open_inspector_designer() -> void:
 	if _inspector_designer_dialog == null:
-		_inspector_designer_dialog = EventSheetInspectorDesignerDialog.new()
+		_inspector_designer_dialog = load(INSPECTOR_DESIGNER_DIALOG_PATH).new()
 		_inspector_designer_dialog.wire_editing(
 			_designer_edit_variable,
 			_designer_move_variable_up,
@@ -1348,6 +1780,9 @@ func _notification(what: int) -> void:
 		# Disconnect the active theme style's `changed` signal + null the field. The live-reload
 		# binding is owned by EventSheetThemeManager, so its teardown lives there too.
 		_theme_manager.teardown_theme_binding()
+		# The palette commands and row items this dock registered are closures over it, so they go
+		# with it rather than staying listed against a freed workspace.
+		DOCK_REGISTRY.forget(self)
 		_release_ace_sources()
 		# A .gd still opening: join its worker before the job (and its Thread) is freed with us.
 		_sheet_io._abandon_open_job()
@@ -1588,7 +2023,7 @@ func _on_save_as_requested() -> void:
 ## so we flip a marker file it re-checks live - toggling off makes a connected AI client's
 ## tools vanish (and any in-flight call refuse) without a reconnect. Per-machine, uncommitted.
 func _toggle_mcp_server(view_popup: PopupMenu) -> void:
-	var marker: String = EventSheetMCPServer.DISABLED_MARKER
+	var marker: String = load(MCP_SERVER_PATH).DISABLED_MARKER
 	if FileAccess.file_exists(marker):
 		DirAccess.remove_absolute(marker)  # was off → turn on
 	else:
@@ -1596,7 +2031,7 @@ func _toggle_mcp_server(view_popup: PopupMenu) -> void:
 		if file != null:
 			file.store_string("MCP server disabled via the EventSheets dock (View ▸ MCP Server). Delete to re-enable.")
 			file.close()
-	var enabled: bool = EventSheetMCPServer.is_enabled()
+	var enabled: bool = load(MCP_SERVER_PATH).is_enabled()
 	if view_popup != null:
 		view_popup.set_item_checked(view_popup.get_item_index(12), enabled)
 	_set_status("MCP server (AI tools) is now %s." % ("ON" if enabled else "OFF"))
@@ -1642,12 +2077,12 @@ func _do_extract_to_include(path: String, rows: Array[Resource]) -> void:
 
 
 static func _scope_capture_offender(event: EventRow, actions: Array) -> String:
-	return EventSheetExtractOps._scope_capture_offender(event, actions)
+	return load(EXTRACT_OPS_PATH)._scope_capture_offender(event, actions)
 
 
 
 static func extract_actions_to_function(sheet: EventSheetResource, event: EventRow, actions_to_extract: Array, raw_name: String) -> EventFunction:
-	return EventSheetExtractOps.extract_actions_to_function(sheet, event, actions_to_extract, raw_name)
+	return load(EXTRACT_OPS_PATH).extract_actions_to_function(sheet, event, actions_to_extract, raw_name)
 
 
 
@@ -1834,7 +2269,7 @@ func apply_group_edit(group: EventGroup, new_name: String, new_desc: String, ext
 
 
 static func set_group_fields(group: EventGroup, new_name: String, new_desc: String, extras: Dictionary = {}) -> String:
-	return EventSheetQuickPromptDialogs.set_group_fields(group, new_name, new_desc, extras)
+	return load(QUICK_PROMPT_DIALOGS_PATH).set_group_fields(group, new_name, new_desc, extras)
 
 
 func _on_duplicate_requested() -> void:
@@ -2441,9 +2876,9 @@ func _rename_variable_references(old_name: String, new_name: String) -> int:  # 
 func _variable_rename_note(variable_name: String) -> String:
 	if variable_name.strip_edges().is_empty():
 		return ""
-	return EventSheetFindReferences.inline_rename_note(
-		EventSheetFindReferences.find_in_project_rows(
-			variable_name, EventSheetFindReferences.open_sheets_of(self)))
+	return load(FIND_REFERENCES_PATH).inline_rename_note(
+		load(FIND_REFERENCES_PATH).find_in_project_rows(
+			variable_name, load(FIND_REFERENCES_PATH).open_sheets_of(self)))
 
 
 func _open_rename_dialog(old_name: String) -> void:  # variable context menu
@@ -2457,7 +2892,7 @@ func _rename_in_includers(old_name: String, new_name: String, candidate_paths: P
 # ── Variables manager (global/local/tree variable authoring + usage scan) → dock/variables_manager.gd ──
 # Thin delegates preserve the original public names/signatures so callers and tests don't change.
 static func _tree_group_attributes(source: Dictionary) -> Dictionary:  # variable_group_roundtrip_test (static, by class name)
-	return EventSheetVariablesManager._tree_group_attributes(source)
+	return load(VARIABLES_MANAGER_PATH)._tree_group_attributes(source)
 
 
 func _on_variable_dialog_confirmed(var_name: String, type_name: String, default_value: Variant, scope: String, context: Dictionary = {}, is_constant: bool = false, exported: bool = true, combo_options: PackedStringArray = PackedStringArray(), attributes: Dictionary = {}, onready: bool = false, is_static: bool = false) -> void:  # _variable_dlg.variable_confirmed
@@ -2556,7 +2991,7 @@ func _active_view() -> EventSheetViewport:
 # Thin delegates preserve the original names/signatures so the shortcut caller and tests don't change.
 # filter_commands is static-by-class-name (tests call EventSheetDock.filter_commands); it forwards to the helper's static.
 static func filter_commands(commands: Array, query: String) -> Array:  # event_sheet_editor_test (static, by class name)
-	return EventSheetCommandPalette.filter_commands(commands, query)
+	return load(COMMAND_PALETTE_PATH).filter_commands(commands, query)
 
 
 func _command_palette_commands() -> Array[Dictionary]:  # event_sheet_editor_test
@@ -3224,7 +3659,7 @@ func _open_replace_object_dialog() -> void:
 	if targets.is_empty():
 		_set_status("Select the rows to retarget first.", true)
 		return
-	var references: Array[String] = EventSheetRefactor.collect_node_references(targets)
+	var references: Array[String] = load(REFACTOR_PATH).collect_node_references(targets)
 	if references.is_empty():
 		_set_status("The selection has no node references ($Path, %Unique, self) to replace.", true)
 		return
@@ -3249,8 +3684,8 @@ func _open_replace_object_dialog() -> void:
 	# Objects that have the SAME conditions and actions come first: those are the swaps that will
 	# still read the same afterwards.
 	var scene_root: Node = EditorInterface.get_edited_scene_root() if Engine.is_editor_hint() else null
-	var to_suggestions: PackedStringArray = EventSheetReplaceObject.rank_suggestions(
-		PackedStringArray(EventSheetRefactor.reference_suggestions(_current_sheet.events if _current_sheet != null else [], scene_root)),
+	var to_suggestions: PackedStringArray = load(REPLACE_OBJECT_PATH).rank_suggestions(
+		PackedStringArray(load(REFACTOR_PATH).reference_suggestions(_current_sheet.events if _current_sheet != null else [], scene_root)),
 		references[0] if not references.is_empty() else "", scene_root)
 	var to_row: HBoxContainer = HBoxContainer.new()
 	to_row.add_theme_constant_override("separation", 4)
@@ -3268,20 +3703,20 @@ func _open_replace_object_dialog() -> void:
 			return
 		var counter: Dictionary = {"count": 0}
 		var changed: bool = _perform_undoable_sheet_edit("Replace Object References", func() -> bool:
-			counter["count"] = EventSheetRefactor.replace_node_reference(targets, from_ref, to_ref)
+			counter["count"] = load(REFACTOR_PATH).replace_node_reference(targets, from_ref, to_ref)
 			return int(counter["count"]) > 0)
 		if changed:
 			# A parameter that named one of A's instance variables the new object does not have
 			# still compiles, and then fails at runtime - so it is said here and recorded for the
 			# Doctor rather than left to be discovered by a crash.
-			var missing: PackedStringArray = EventSheetReplaceObject.missing_members(targets, from_ref, to_ref, scene_root)
-			EventSheetReplaceObject.last_missing = {"from": from_ref, "to": to_ref, "members": missing, "path": _current_sheet_path}
+			var missing: PackedStringArray = load(REPLACE_OBJECT_PATH).missing_members(targets, from_ref, to_ref, scene_root)
+			load(REPLACE_OBJECT_PATH).last_missing = {"from": from_ref, "to": to_ref, "members": missing, "path": _current_sheet_path}
 			# Registered only while there IS something to report, so a clean project never carries
 			# a check that can only answer "nothing".
 			if missing.is_empty():
-				EventSheetProjectDoctor.unregister_check("replace-object-members")
+				load(PROJECT_DOCTOR_PATH).unregister_check("replace-object-members")
 			else:
-				EventSheetProjectDoctor.register_check("replace-object-members", EventSheetReplaceObject.doctor_check)
+				load(PROJECT_DOCTOR_PATH).register_check("replace-object-members", load(REPLACE_OBJECT_PATH).doctor_check)
 			_refresh_after_edit()
 			var missing_note: String = "" if missing.is_empty() else " %s does not have %s - see the Doctor." % [to_ref, ", ".join(missing)]
 			_mark_dirty("Replaced %d reference(s): %s becomes %s.%s" % [int(counter["count"]), from_ref, to_ref, missing_note])
@@ -3386,7 +3821,7 @@ func _open_batch_param_edit() -> void:
 	var targets: Array = _top_level_selected_resources()
 	if targets.is_empty() and _context_row != null and _context_row.source_resource != null:
 		targets = [_context_row.source_resource]
-	var groups: Array = EventSheetACEApply.batch_edit_groups(targets)
+	var groups: Array = load(ACE_APPLY_PATH).batch_edit_groups(targets)
 	if groups.is_empty():
 		_set_status("No action or condition appears more than once across the selection.", true)
 		return
@@ -3452,12 +3887,12 @@ var _find_resource_matches: Array[Resource] = []
 var _find_cursor: int = -1
 
 # ── Live Values panel - extracted to dock/live_values_panel.gd ───────────────────────
-var _live_values_panel: EventSheetLiveValuesPanel = null
+var _live_values_panel: RefCounted = null
 
 
-func _ensure_live_values_panel() -> EventSheetLiveValuesPanel:
+func _ensure_live_values_panel() -> RefCounted:
 	if _live_values_panel == null:
-		_live_values_panel = EventSheetLiveValuesPanel.new(self)
+		_live_values_panel = load(LIVE_VALUES_PANEL_PATH).new(self)
 	return _live_values_panel
 
 # Forwarding properties: tests (and the plugin) reach these through the dock.
@@ -3469,7 +3904,7 @@ var _live_values_window: Window:
 	get: return _ensure_live_values_panel().window
 
 
-func set_live_values_debugger(debugger: EventSheetLiveValuesDebugger) -> void:
+func set_live_values_debugger(debugger: EditorDebuggerPlugin) -> void:
 	_ensure_live_values_panel().debugger = debugger
 	# Self live grounding: the Expressions dictionary queries the RUNNING game for the sheet's
 	# real behaviour children through the same session, and upgrades its Behaviours subgroup
@@ -3499,12 +3934,12 @@ func _on_debug_session_ended() -> void:
 # ── The Debugger window (Inspect · Watch · Profile · Breakpoints) ───────────────────────
 ## One window over four seams that already shipped. Built the first time it is asked for and kept
 ## afterwards, like every other detached window here.
-var _debugger_window: EventSheetDebuggerWindow = null
+var _debugger_window: RefCounted = null
 
 
-func _ensure_debugger_window() -> EventSheetDebuggerWindow:
+func _ensure_debugger_window() -> RefCounted:
 	if _debugger_window == null:
-		_debugger_window = EventSheetDebuggerWindow.new(self)
+		_debugger_window = load(DEBUGGER_WINDOW_PATH).new(self)
 	return _debugger_window
 
 
@@ -3525,7 +3960,7 @@ func update_event_times(window: Dictionary) -> void:
 	# this very flush just reported. Fed here rather than beside the fires themselves because the
 	# frame ruler arrives with the times, and without it two fires in one frame cannot be told from
 	# two fires in two frames.
-	EventSheetStateTrail.note_fired(_last_fired_uids, window.get("markers", PackedInt32Array()),
+	load(STATE_TRAIL_PATH).note_fired(_last_fired_uids, window.get("markers", PackedInt32Array()),
 		_state_trail_index())
 	# The profiler finds you: the first stuttering window of a run offers Row Timings, once,
 	# on the quiet line (see EventSheetRescueTips - one offer per session, and a global switch).
@@ -3559,7 +3994,7 @@ func _state_trail_index() -> Dictionary:
 	if _state_trail_rows_for != _current_sheet:
 		_state_trail_rows_for = _current_sheet
 		_state_trail_rows = EventSheetStateFacts.trail_rows(_current_sheet)
-		_state_trail_rows[EventSheetStateTrail.HOME_KEY] = _current_sheet_path
+		_state_trail_rows[load(STATE_TRAIL_PATH).HOME_KEY] = _current_sheet_path
 	return _state_trail_rows
 
 ## Whether this run's once-only rescue offers were already considered (reset with the hit counts,
@@ -3582,7 +4017,7 @@ func update_live_values(values: Dictionary, instance: String = "") -> void:
 	EventSheetStateWatch.note_frame(values, instance)
 	# …and what it just DID, out of the same frame. The trail may not reach a sheet at all, so what
 	# this sheet says about its own states is handed to it as a plain Dictionary.
-	EventSheetStateTrail.note_frame(values, instance, _state_trail_index())
+	load(STATE_TRAIL_PATH).note_frame(values, instance, _state_trail_index())
 	_ensure_live_values_panel().update_values(values, instance)
 	if _debugger_window != null:
 		_debugger_window.update_values(values)
@@ -3740,7 +4175,7 @@ func _explain_runtime_error() -> void:
 	var page: String = str(_runtime_error_report.get("explain", "")).strip_edges()
 	if page.is_empty():
 		return
-	EventSheets.open_docs(page)
+	load(EVENTSHEETS_API_PATH).open_docs(page)
 
 
 ## Godot's words: the original message, never hidden and never rewritten - it is what every search
@@ -3958,12 +4393,12 @@ func _run_with_profiler() -> void:
 
 
 ## The optimiser's window, built the first time it is asked for and kept, like every other dialog.
-var _optimise_dialog: EventSheetOptimiseDialog = null
+var _optimise_dialog: RefCounted = null
 
 
-func _optimiser_dialog() -> EventSheetOptimiseDialog:
+func _optimiser_dialog() -> RefCounted:
 	if _optimise_dialog == null:
-		_optimise_dialog = EventSheetOptimiseDialog.new()
+		_optimise_dialog = load(OPTIMISE_DIALOG_PATH).new()
 		_optimise_dialog.init(self)
 	return _optimise_dialog
 
@@ -3974,19 +4409,19 @@ func open_optimiser() -> void:
 
 
 ## The Edit modes dialog, built the first time the modes band is clicked and kept afterwards.
-var _modes_dialog: EventSheetModesDialog = null
+var _modes_dialog: RefCounted = null
 
 
 ## The head's modes band ▸ Edit modes…: the game's modes, declared once, as ordinary rows.
 func open_modes_dialog() -> void:
 	if _modes_dialog == null:
-		_modes_dialog = EventSheetModesDialog.new()
+		_modes_dialog = load(MODES_DIALOG_PATH).new()
 		_modes_dialog.init(self)
 	_modes_dialog.open()
 
 
 ## The Declare states dialog, built the first time the states band is clicked and kept afterwards.
-var _states_dialog: EventSheetStatesDialog = null
+var _states_dialog: RefCounted = null
 
 
 ## The head's states band ▸ Declare states…: this object's own states, declared once, as ordinary
@@ -3994,7 +4429,7 @@ var _states_dialog: EventSheetStatesDialog = null
 ## object has a state.
 func open_states_dialog() -> void:
 	if _states_dialog == null:
-		_states_dialog = EventSheetStatesDialog.new()
+		_states_dialog = load(STATES_DIALOG_PATH).new()
 		_states_dialog.init(self)
 	_states_dialog.open()
 
@@ -4068,7 +4503,7 @@ func explain_pattern_reading() -> void:
 	if claim.is_empty():
 		_set_status("Pick an event with a pattern marker first.", true)
 		return
-	EventSheetPatternManual.open_page(str(claim.get("pattern", "")))
+	load(PATTERN_MANUAL_PATH).open_page(str(claim.get("pattern", "")))
 
 
 ## Row menu > Adopt behavior: the preview-first swap of a hand-written pattern for the shipped
@@ -4088,8 +4523,8 @@ func _context_pattern_claim(adoptable_only: bool = false) -> Dictionary:
 	var row: EventRow = _context_row.source_resource as EventRow if _context_row != null else null
 	if row == null or _current_sheet == null:
 		return {}
-	for entry: Variant in EventSheetPatternFacts.claims_for_row(_current_sheet, row.event_uid):
-		if adoptable_only and not EventSheetPatternAdopt.is_adoptable(entry as Dictionary):
+	for entry: Variant in load(PATTERN_FACTS_PATH).claims_for_row(_current_sheet, row.event_uid):
+		if adoptable_only and not load(PATTERN_ADOPT_PATH).is_adoptable(entry as Dictionary):
 			continue
 		return entry as Dictionary
 	return {}
@@ -4421,7 +4856,7 @@ func _turn_region_into_group() -> void:
 		return
 	var made: Array[EventGroup] = []
 	var changed: bool = _perform_undoable_sheet_edit("Turn Into Group", func() -> bool:
-		var group: EventGroup = EventSheetRefactor.region_to_group(location.get("container"), opener)
+		var group: EventGroup = load(REFACTOR_PATH).region_to_group(location.get("container"), opener)
 		if group == null:
 			return false
 		made.append(group)
@@ -4440,7 +4875,7 @@ func _turn_group_into_region() -> void:
 	if group == null:
 		_set_status("Select a group to turn it into a region.", true)
 		return
-	var problem: String = EventSheetRefactor.group_to_region_problem(group)
+	var problem: String = load(REFACTOR_PATH).group_to_region_problem(group)
 	if not problem.is_empty():
 		_set_status("\"%s\" %s, and a region cannot carry that." % [group.display_name(), problem], true)
 		return
@@ -4450,7 +4885,7 @@ func _turn_group_into_region() -> void:
 		return
 	var name_before: String = group.display_name()
 	var changed: bool = _perform_undoable_sheet_edit("Turn Into Region", func() -> bool:
-		return EventSheetRefactor.group_to_region(location.get("container"), group)
+		return load(REFACTOR_PATH).group_to_region(location.get("container"), group)
 	)
 	if changed:
 		_mark_dirty("\"%s\" is a #region now - the rows are unchanged." % name_before)
@@ -4468,7 +4903,7 @@ func _remove_context_region() -> void:
 		return
 	var kept: Array[int] = []
 	var changed: bool = _perform_undoable_sheet_edit("Remove Region", func() -> bool:
-		var moved: int = EventSheetRefactor.remove_region_keep_rows(location.get("container"), opener)
+		var moved: int = load(REFACTOR_PATH).remove_region_keep_rows(location.get("container"), opener)
 		if moved < 0:
 			return false
 		kept.append(moved)
@@ -4559,7 +4994,7 @@ func _register_autoload_entry(sheet: EventSheetResource, sheet_path: String) -> 
 	if sheet_path.is_empty():
 		return "Save the sheet first - the autoload entry must point at a real file."
 	var output_path: String = sheet_path.get_basename() + ".gd"
-	var compile_result: Dictionary = SheetCompiler.compile(sheet, output_path)
+	var compile_result: Dictionary = load(SHEET_COMPILER_PATH).compile(sheet, output_path)
 	if not bool(compile_result.get("success", false)):
 		return "Autoload not registered: the sheet doesn't compile (%s)." % str(compile_result.get("errors"))
 	var setting_name: String = "autoload/%s" % autoload_name
@@ -4572,25 +5007,25 @@ func _register_autoload_entry(sheet: EventSheetResource, sheet_path: String) -> 
 	return ""
 
 # ── Addon-author loop - extracted to dock/author_loop.gd ─────────────────────────────
-var _author_loop: EventSheetAuthorLoop = null
+var _author_loop: RefCounted = null
 
 
-func _ensure_author_loop() -> EventSheetAuthorLoop:
+func _ensure_author_loop() -> RefCounted:
 	if _author_loop == null:
-		_author_loop = EventSheetAuthorLoop.new(self)
+		_author_loop = load(AUTHOR_LOOP_PATH).new(self)
 	return _author_loop
 
 
 func _collect_publish_surface(sheet: EventSheetResource) -> Dictionary:
-	return EventSheetAuthorLoop.collect_publish_surface(sheet)
+	return load(AUTHOR_LOOP_PATH).collect_publish_surface(sheet)
 
 
 static func publish_surface_text(surface: Dictionary) -> String:
-	return EventSheetAuthorLoop.publish_surface_text(surface)
+	return load(AUTHOR_LOOP_PATH).publish_surface_text(surface)
 
 
 func _generate_pack_readme(sheet: EventSheetResource) -> String:
-	return EventSheetAuthorLoop.generate_pack_readme(sheet)
+	return load(AUTHOR_LOOP_PATH).generate_pack_readme(sheet)
 
 
 func _open_publish_preview() -> void:
@@ -4607,17 +5042,17 @@ func _build_test_bench(sheet: EventSheetResource, scene_path: String) -> String:
 # ── Project-wide find / replace / usages - extracted to dock/project_find.gd ─────────
 # (Dock decomposition arc: state + logic live in the helper; these delegates keep the
 # public/test surface stable.)
-var _project_find: EventSheetProjectFind = null
+var _project_find: RefCounted = null
 
 
 func _open_project_find(initial_query: String = "") -> void:
 	if _project_find == null:
-		_project_find = EventSheetProjectFind.new(self)
+		_project_find = load(PROJECT_FIND_PATH).new(self)
 	_project_find.open(initial_query)
 
 
 # ── Project View - every sheet on one page → self_doc/project_view_panel.gd ──────────
-var _project_view: EventSheetProjectViewPanel = null
+var _project_view: RefCounted = null
 
 
 ## Opens the Project View. The sheets are gathered here, once, from the tabs this session has open;
@@ -4627,7 +5062,7 @@ var _project_view: EventSheetProjectViewPanel = null
 ## that costs a run is a page nobody opens twice.
 func _open_project_view() -> void:
 	if _project_view == null:
-		_project_view = EventSheetProjectViewPanel.new(self)
+		_project_view = load(PROJECT_VIEW_PANEL_PATH).new(self)
 	var inputs: Dictionary = _project_view_inputs()
 	_project_view.open(inputs["sheets"], inputs["findings"], inputs["timings"])
 
@@ -4639,7 +5074,7 @@ func _project_view_inputs() -> Dictionary:
 	var sheets: Dictionary = _open_sheets_by_path()
 	return {
 		"sheets": sheets,
-		"findings": EventSheetProjectOutline.doctor_findings(),
+		"findings": load(PROJECT_OUTLINE_PATH).doctor_findings(),
 		"timings": EventSheetRunProfile.milliseconds_by_sheet(sheets),
 	}
 
@@ -4676,7 +5111,7 @@ func _run_diagnostics() -> int:
 	var view: EventSheetViewport = _active_view()
 	if view == null:
 		return 0
-	var diagnostics: Array = EventSheetDiagnostics.analyze(_current_sheet, _ace_registry)
+	var diagnostics: Array = load(DIAGNOSTICS_PATH).analyze(_current_sheet, _ace_registry)
 	var count: int = view.set_row_diagnostics(diagnostics)
 	if count > 0:
 		view.reveal_and_select_first_diagnostic()
@@ -4760,7 +5195,7 @@ func last_read_doc_id() -> String:
 ## condition explains that condition, not the row's trigger. The span metadata is the same
 ## context the row menu itself was built from, so the entry and the page can never disagree.
 func explain_row(resource: Resource) -> void:
-	open_documentation(EventSheetDocExplain.doc_id_for_row(resource, _context_hit.get("span_metadata", {})))
+	open_documentation(load(DOC_EXPLAIN_PATH).doc_id_for_row(resource, _context_hit.get("span_metadata", {})))
 
 
 ## The doc id of the first selected row that names a verb, or "" when the selection explains
@@ -4773,7 +5208,7 @@ func _selected_row_doc_id() -> String:
 			continue
 		# The whole selection is offered, not only its verb: an object label, a group band and a
 		# behavior's Include bar each have their own page, and one router decides which.
-		var doc_id: String = EventSheetDocHelpTarget.doc_id_for(_current_sheet,
+		var doc_id: String = load(DOC_HELP_TARGET_PATH).doc_id_for(_current_sheet,
 			row_data.source_resource, _selection_span_metadata(row_data))
 		if not doc_id.is_empty():
 			return doc_id
@@ -4804,7 +5239,7 @@ func _selection_span_metadata(row_data: EventRowData) -> Dictionary:
 ## being pressed. Silent when the Manual is not docked, not open, or not following - a reader who
 ## has not asked for this must never have a page change under them.
 func _follow_selection_in_manual() -> void:
-	var manual: EventSheetDocDock = EventSheetDocDock.active_dock()
+	var manual: EditorDock = load(DOC_DOCK_PATH).active_dock()
 	if manual == null or not manual.is_following():
 		return
 	var doc_id: String = _selected_row_doc_id()
@@ -4823,16 +5258,16 @@ func _follow_selection_in_manual() -> void:
 func _on_picker_help_requested(definition: ACEDefinition) -> void:
 	if definition == null:
 		return
-	open_documentation(EventSheetDocExplain.doc_id_for_definition(definition))
+	open_documentation(load(DOC_EXPLAIN_PATH).doc_id_for_definition(definition))
 
 
 func _on_picker_guide_requested(definition: ACEDefinition) -> void:
 	if definition == null:
 		return
-	var pack_dir: String = EventSheets.addon_pack_directory(definition.provider_id)
-	if pack_dir.is_empty() or not EventSheets.open_docs("addon:%s" % pack_dir):
+	var pack_dir: String = load(EVENTSHEETS_API_PATH).addon_pack_directory(definition.provider_id)
+	if pack_dir.is_empty() or not load(EVENTSHEETS_API_PATH).open_docs("addon:%s" % pack_dir):
 		return
-	_set_status("Opened %s in your browser." % EventSheets.addon_guide_for_pack(pack_dir).get_file())
+	_set_status("Opened %s in your browser." % load(EVENTSHEETS_API_PATH).addon_guide_for_pack(pack_dir).get_file())
 
 
 ## The addon's issue tracker. A plain constant rather than a project setting: it is where THIS
@@ -4860,7 +5295,7 @@ static func issue_report_body() -> String:
 		"",
 		"### Environment",
 		"",
-		"- EventSheets: %s" % SheetCompiler.VERSION,
+		"- EventSheets: %s" % load(SHEET_COMPILER_PATH).VERSION,
 		"- Godot: %s" % str(Engine.get_version_info().get("string", "unknown")),
 		"- Platform: %s" % OS.get_name(),
 	])
@@ -4877,9 +5312,9 @@ func _report_issue() -> void:
 ## Writes the always-current project vocabulary reference (EventSheetVocabularyDoc) -
 ## the answer to "what can I say in this project?" as one committed markdown file.
 func _generate_vocabulary_doc() -> void:
-	var doc_path: String = EventSheetVocabularyDoc.write()
+	var doc_path: String = load(VOCABULARY_DOC_PATH).write()
 	if doc_path.is_empty():
-		_set_status("Couldn't write the vocabulary doc to %s." % EventSheetVocabularyDoc.doc_path(), true)
+		_set_status("Couldn't write the vocabulary doc to %s." % load(VOCABULARY_DOC_PATH).doc_path(), true)
 		return
 	if Engine.is_editor_hint() and is_inside_tree():
 		EditorInterface.get_resource_filesystem().scan()
@@ -4944,23 +5379,23 @@ func _open_translation_studio() -> void:
 ## test can never leave a setting behind in the user's project file.
 func _preview_in_language(locale: String, persist: bool = true) -> void:
 	if locale.is_empty():
-		EventSheetGameCatalog.clear_preview()
-		EventSheetGameCatalog.set_test_locale("", persist)
+		load(GAME_CATALOG_PATH).clear_preview()
+		load(GAME_CATALOG_PATH).set_test_locale("", persist)
 		_refresh_after_edit()
 		_set_status("Rows read as you wrote them again, and Godot's Locale > Test setting is cleared.")
 		return
 	var catalog_path: String = _translation_studio.catalog_path()
 	var messages: Dictionary = {}
-	if locale != EventSheetGameCatalog.PSEUDO_LOCALE:
-		var catalog: Dictionary = EventSheetTranslationScan.read_catalog(catalog_path)
+	if locale != load(GAME_CATALOG_PATH).PSEUDO_LOCALE:
+		var catalog: Dictionary = load(TRANSLATION_SCAN_PATH).read_catalog(catalog_path)
 		for row: Variant in (catalog.get("rows", []) as Array):
 			var text: String = str((row as Dictionary).get(locale, "")).strip_edges()
 			if not text.is_empty():
-				messages[str((row as Dictionary).get(EventSheetTranslationScan.KEY_COLUMN, ""))] = text
-	EventSheetGameCatalog.set_preview(locale, messages, catalog_path)
-	EventSheetGameCatalog.set_test_locale(locale, persist)
+				messages[str((row as Dictionary).get(load(TRANSLATION_SCAN_PATH).KEY_COLUMN, ""))] = text
+	load(GAME_CATALOG_PATH).set_preview(locale, messages, catalog_path)
+	load(GAME_CATALOG_PATH).set_test_locale(locale, persist)
 	_refresh_after_edit()
-	if locale == EventSheetGameCatalog.PSEUDO_LOCALE:
+	if locale == load(GAME_CATALOG_PATH).PSEUDO_LOCALE:
 		_set_status("Previewing pseudo - a label that clips here clips in German. The sheet is untouched; Godot's Locale > Test setting now points at pseudo, so the next Play speaks it too. Pick \"As authored\" to put both back.")
 		return
 	_set_status("Previewing %s - %d translated string(s) from %s. The sheet is untouched; Godot's Locale > Test setting now points at %s, so the next Play speaks it too. Pick \"As authored\" to put both back." % [
@@ -4974,13 +5409,13 @@ func _rebuild_preview_language_menu() -> void:
 	if _preview_language_menu == null:
 		return
 	_preview_language_menu.clear()
-	var active: String = EventSheetGameCatalog.preview_locale()
+	var active: String = load(GAME_CATALOG_PATH).preview_locale()
 	_preview_language_menu.add_radio_check_item("As authored (English)", 0)
 	_preview_language_menu.set_item_checked(0, active.is_empty())
 	var languages: PackedStringArray = _preview_languages()
 	for index: int in range(languages.size()):
 		var locale: String = languages[index]
-		var label: String = "Pseudo (finds clipped labels)" if locale == EventSheetGameCatalog.PSEUDO_LOCALE \
+		var label: String = "Pseudo (finds clipped labels)" if locale == load(GAME_CATALOG_PATH).PSEUDO_LOCALE \
 			else "%s  (%s)" % [TranslationServer.get_locale_name(locale), locale]
 		_preview_language_menu.add_radio_check_item(label, index + 1)
 		_preview_language_menu.set_item_checked(index + 1, locale == active)
@@ -4989,12 +5424,12 @@ func _rebuild_preview_language_menu() -> void:
 ## Every language the sheet can be previewed in: the catalog's own columns plus pseudo.
 func _preview_languages() -> PackedStringArray:
 	var languages: PackedStringArray = PackedStringArray()
-	var catalog: Dictionary = EventSheetTranslationScan.read_catalog(_translation_studio.catalog_path())
+	var catalog: Dictionary = load(TRANSLATION_SCAN_PATH).read_catalog(_translation_studio.catalog_path())
 	for locale: String in (catalog.get("locales", PackedStringArray()) as PackedStringArray):
-		if locale != EventSheetTranslationScan.SOURCE_COLUMN and not languages.has(locale):
+		if locale != load(TRANSLATION_SCAN_PATH).SOURCE_COLUMN and not languages.has(locale):
 			languages.append(locale)
-	if not languages.has(EventSheetGameCatalog.PSEUDO_LOCALE):
-		languages.append(EventSheetGameCatalog.PSEUDO_LOCALE)
+	if not languages.has(load(GAME_CATALOG_PATH).PSEUDO_LOCALE):
+		languages.append(load(GAME_CATALOG_PATH).PSEUDO_LOCALE)
 	return languages
 
 
@@ -5057,7 +5492,7 @@ func _restore_backup_path(backup_path: String) -> void:
 		# A GDScript-backed sheet's backup IS plain source: re-import it through the lifter,
 		# then keep the OPEN sheet's source path + read-only state (the imported copy has
 		# neither, and the property loop below would otherwise blank them).
-		backup = GDScriptImporter.new().import_external_source(FileAccess.get_file_as_string(backup_path))
+		backup = load(GDSCRIPT_IMPORTER_PATH).new().import_external_source(FileAccess.get_file_as_string(backup_path))
 		if backup != null:
 			backup.external_source_path = _current_sheet.external_source_path
 			backup.read_only = _current_sheet.read_only
@@ -5084,7 +5519,7 @@ func _restore_backup_path(backup_path: String) -> void:
 func _save_as_project_template() -> void:
 	if _current_sheet == null:
 		return
-	var dir_path: String = EventSheetTemplates.templates_dir()
+	var dir_path: String = load(TEMPLATES_PATH).templates_dir()
 	DirAccess.make_dir_recursive_absolute(dir_path)
 	var base_name: String = _current_sheet.custom_class_name.to_snake_case()
 	if base_name.is_empty():
@@ -5103,11 +5538,11 @@ func _save_as_project_template() -> void:
 
 
 static func list_project_sheets() -> PackedStringArray:
-	return EventSheetProjectFind.list_project_sheets()
+	return load(PROJECT_FIND_PATH).list_project_sheets()
 
 
 static func find_in_sheet(sheet: EventSheetResource, needle: String) -> Array:
-	return EventSheetProjectFind.find_in_sheet(sheet, needle)
+	return load(PROJECT_FIND_PATH).find_in_sheet(sheet, needle)
 
 
 ## Find-bar "Open in Split" → dock/multi_view_manager.gd (jumps the split pane to the current match).
@@ -5115,12 +5550,12 @@ func _open_match_in_split() -> void:
 	_multi_view._open_match_in_split()
 
 # ── Bookmarks panel - extracted to dock/bookmarks_panel.gd ───────────────────────────
-var _bookmarks_panel: EventSheetBookmarksPanel = null
+var _bookmarks_panel: RefCounted = null
 
 
-func _ensure_bookmarks_panel() -> EventSheetBookmarksPanel:
+func _ensure_bookmarks_panel() -> RefCounted:
 	if _bookmarks_panel == null:
-		_bookmarks_panel = EventSheetBookmarksPanel.new(self)
+		_bookmarks_panel = load(BOOKMARKS_PANEL_PATH).new(self)
 	return _bookmarks_panel
 
 # ── the minimap column - drawn by dock/minimap.gd ────────────────────────────────────
@@ -5178,12 +5613,12 @@ func _toggle_minimap(view_popup: PopupMenu) -> void:
 
 
 # ── Outline panel - extracted to dock/outline_panel.gd ───────────────────────────────
-var _outline_panel: EventSheetOutlinePanel = null
+var _outline_panel: RefCounted = null
 
 
-func _ensure_outline_panel() -> EventSheetOutlinePanel:
+func _ensure_outline_panel() -> RefCounted:
 	if _outline_panel == null:
-		_outline_panel = EventSheetOutlinePanel.new(self)
+		_outline_panel = load(OUTLINE_PANEL_PATH).new(self)
 	return _outline_panel
 
 
@@ -5192,12 +5627,12 @@ func _open_outline_panel() -> void:
 
 
 # ── History panel - extracted to dock/history_panel.gd ───────────────────────────────
-var _history_panel: EventSheetHistoryPanel = null
+var _history_panel: RefCounted = null
 
 
-func _ensure_history_panel() -> EventSheetHistoryPanel:
+func _ensure_history_panel() -> RefCounted:
 	if _history_panel == null:
-		_history_panel = EventSheetHistoryPanel.new(self)
+		_history_panel = load(HISTORY_PANEL_PATH).new(self)
 	return _history_panel
 
 
@@ -5206,12 +5641,12 @@ func _open_history_panel() -> void:
 
 
 # ── Sheet map - extracted to dock/sheet_map_panel.gd ─────────────────────────────────
-var _sheet_map_panel: EventSheetSheetMapPanel = null
+var _sheet_map_panel: RefCounted = null
 
 
-func _ensure_sheet_map_panel() -> EventSheetSheetMapPanel:
+func _ensure_sheet_map_panel() -> RefCounted:
 	if _sheet_map_panel == null:
-		_sheet_map_panel = EventSheetSheetMapPanel.new(self)
+		_sheet_map_panel = load(SHEET_MAP_PANEL_PATH).new(self)
 	return _sheet_map_panel
 
 
@@ -5304,12 +5739,22 @@ func _apply_editor_native_defaults() -> void:
 # what the same typing ANSWERS - the states, rows, names, modes and findings it matches - is
 # _ask_field's, and rides the same field on the shipped completion popup.
 var _quick_add_edit: LineEdit = null
-var _ask_field: EventSheetAskField = EventSheetAskField.new()
+var _ask_field: RefCounted = null:
+	get:
+		if _ask_field == null:
+			_ask_field = load("res://addons/eventsheet/editor/dock/ask_field.gd").new()
+			_ask_field.init(self)
+		return _ask_field
 
 ## Where a door clicked in a comment row leads. Three of its five kinds are handed straight to
 ## _ask_field above, so a name opened from a note and the same name opened from the ask arrive in
 ## the same place.
-var _comment_door_open: EventSheetCommentDoorOpen = EventSheetCommentDoorOpen.new()
+var _comment_door_open: RefCounted = null:
+	get:
+		if _comment_door_open == null:
+			_comment_door_open = load("res://addons/eventsheet/editor/dock/comment_door_open.gd").new()
+			_comment_door_open.init(self)
+		return _comment_door_open
 
 
 ## Where a door clicked in a comment leads. A thin delegate like every other one on this facade, so
@@ -5887,7 +6332,7 @@ func _select_all_matching_from_context(lane: String) -> void:
 	if provider_id.is_empty() or ace_id.is_empty():
 		_set_status("Right-click a condition or action cell to select its other uses.", true)
 		return
-	var matches: Array = EventSheetACEApply.matching_event_rows(_current_sheet.events, provider_id, ace_id)
+	var matches: Array = load(ACE_APPLY_PATH).matching_event_rows(_current_sheet.events, provider_id, ace_id)
 	var selected: int = _viewport.select_resources(matches)
 	if selected == 0:
 		_set_status("No events use %s.%s." % [provider_id, ace_id], true)
@@ -5966,7 +6411,7 @@ func _apply_asset_drop(target_event: Resource, asset_paths: PackedStringArray) -
 	var changed: bool = _perform_undoable_sheet_edit("Drop Asset", func() -> bool:
 		var event_target: EventRow = target_event as EventRow
 		for asset_path: String in asset_paths:
-			var build: Callable = EventSheets.asset_drop_builder_for(asset_path.get_extension())
+			var build: Callable = load(EVENTSHEETS_API_PATH).asset_drop_builder_for(asset_path.get_extension())
 			if not build.is_valid():
 				continue
 			var built: Resource = build.call(asset_path, target_event)
@@ -6619,7 +7064,7 @@ func preview_object_rows(object_label: String) -> void:
 func add_row_for_object(object_label: String, as_action: bool) -> void:
 	if not _ensure_sheet_for_editing():
 		return
-	var entry: Dictionary = EventSheetObjectProperties.find_entry(_current_sheet, object_label)
+	var entry: Dictionary = load(OBJECT_PROPERTIES_PATH).find_entry(_current_sheet, object_label)
 	var context: Dictionary = {
 		"object_scope": str(entry.get("class", "")).strip_edges(),
 		"object_label": object_label
@@ -6644,17 +7089,17 @@ func apply_object_bar_drop(object_label: String, target_event: Resource, on_acti
 	# An object the reader marked `secret` in its properties has one event worth writing, so
 	# dropping it OFFERS that event first. An offer, not a rule: dismissing the dialog falls through
 	# to the picker the drop has always opened, and nothing is written until the reader says yes.
-	if EventSheetObjectProperties.is_secret(_source_path_for_secrets(), object_label):
+	if load(OBJECT_PROPERTIES_PATH).is_secret(_source_path_for_secrets(), object_label):
 		_open_secret_counter_offer(object_label, on_action_lane)
 		return
 	# The same offer for a door: a body the reader named a key for wants the event that TRIES
 	# it when the player walks in, which is the one row that both opens it and refuses it.
-	if not EventSheetObjectProperties.needs_key_of(_source_path_for_secrets(), object_label).is_empty():
+	if not load(OBJECT_PROPERTIES_PATH).needs_key_of(_source_path_for_secrets(), object_label).is_empty():
 		_open_locked_door_offer(object_label, on_action_lane)
 		return
 	# The same offer for the second mark: an area marked `water` has two events worth writing,
 	# the way in and the way out, and dropping it offers the pair before the picker.
-	if EventSheetObjectProperties.is_water(_source_path_for_secrets(), object_label):
+	if load(OBJECT_PROPERTIES_PATH).is_water(_source_path_for_secrets(), object_label):
 		_open_water_rows_offer(object_label, on_action_lane)
 		return
 	add_row_for_object(object_label, on_action_lane)
@@ -6703,13 +7148,13 @@ func _open_secret_counter_offer(object_label: String, on_action_lane: bool) -> v
 ## the list it counts into when the sheet does not declare one yet. One undo step.
 func _on_secret_counter_offer_accepted() -> void:
 	var object_label: String = _secret_offer_label
-	var entry: Dictionary = EventSheetObjectProperties.find_entry(_current_sheet, object_label)
+	var entry: Dictionary = load(OBJECT_PROPERTIES_PATH).find_entry(_current_sheet, object_label)
 	var host_class: String = str(entry.get("class", "")).strip_edges()
 	var changed: bool = _perform_undoable_sheet_edit("Count Secret", func() -> bool:
-		if not _current_sheet.variables.has(EventSheetStarterEvents.SECRETS_VARIABLE):
-			_current_sheet.variables[EventSheetStarterEvents.SECRETS_VARIABLE] = \
-				EventSheetStarterEvents.secrets_variable_entry()
-		_current_sheet.events.append(EventSheetStarterEvents.secret_counter_event(
+		if not _current_sheet.variables.has(load(STARTER_EVENTS_PATH).SECRETS_VARIABLE):
+			_current_sheet.variables[load(STARTER_EVENTS_PATH).SECRETS_VARIABLE] = \
+				load(STARTER_EVENTS_PATH).secrets_variable_entry()
+		_current_sheet.events.append(load(STARTER_EVENTS_PATH).secret_counter_event(
 			object_label, host_class if not host_class.is_empty() else "Area3D"))
 		return true)
 	if not changed:
@@ -6746,7 +7191,7 @@ func _open_locked_door_offer(object_label: String, on_action_lane: bool) -> void
 	# The dialog is built once and reused, so the door it is about is written on it EVERY open.
 	_door_offer_line.text = EventSheetL10n.translate(
 		"%s wants the %s key. Add the event that tries it when the player walks in?") \
-		% [object_label, EventSheetObjectProperties.needs_key_of(_source_path_for_secrets(), object_label)]
+		% [object_label, load(OBJECT_PROPERTIES_PATH).needs_key_of(_source_path_for_secrets(), object_label)]
 	_door_offer_dialog.popup_centered(Vector2i(460, 150))
 
 
@@ -6754,13 +7199,13 @@ func _open_locked_door_offer(object_label: String, on_action_lane: bool) -> void
 ## the key list it reads when the sheet does not declare one yet. One undo step.
 func _on_locked_door_offer_accepted() -> void:
 	var object_label: String = _door_offer_label
-	var entry: Dictionary = EventSheetObjectProperties.find_entry(_current_sheet, object_label)
+	var entry: Dictionary = load(OBJECT_PROPERTIES_PATH).find_entry(_current_sheet, object_label)
 	var host_class: String = str(entry.get("class", "")).strip_edges()
 	var changed: bool = _perform_undoable_sheet_edit("Add Door Event", func() -> bool:
-		if not _current_sheet.variables.has(EventSheetStarterEvents.KEYS_VARIABLE):
-			_current_sheet.variables[EventSheetStarterEvents.KEYS_VARIABLE] = \
-				EventSheetStarterEvents.keys_variable_entry()
-		_current_sheet.events.append(EventSheetStarterEvents.locked_door_event(
+		if not _current_sheet.variables.has(load(STARTER_EVENTS_PATH).KEYS_VARIABLE):
+			_current_sheet.variables[load(STARTER_EVENTS_PATH).KEYS_VARIABLE] = \
+				load(STARTER_EVENTS_PATH).keys_variable_entry()
+		_current_sheet.events.append(load(STARTER_EVENTS_PATH).locked_door_event(
 			object_label, host_class if not host_class.is_empty() else "StaticBody3D"))
 		return true)
 	if not changed:
@@ -6806,13 +7251,13 @@ func _open_water_rows_offer(object_label: String, on_action_lane: bool) -> void:
 ## sheet does not declare one yet. One undo step.
 func _on_water_rows_offer_accepted() -> void:
 	var object_label: String = _water_offer_label
-	var entry: Dictionary = EventSheetObjectProperties.find_entry(_current_sheet, object_label)
+	var entry: Dictionary = load(OBJECT_PROPERTIES_PATH).find_entry(_current_sheet, object_label)
 	var host_class: String = str(entry.get("class", "")).strip_edges()
 	var changed: bool = _perform_undoable_sheet_edit("Add Water Rows", func() -> bool:
-		if not _current_sheet.variables.has(EventSheetStarterEvents.WATER_VARIABLE):
-			_current_sheet.variables[EventSheetStarterEvents.WATER_VARIABLE] = \
-				EventSheetStarterEvents.water_variable_entry()
-		for event: EventRow in EventSheetStarterEvents.water_volume_events(
+		if not _current_sheet.variables.has(load(STARTER_EVENTS_PATH).WATER_VARIABLE):
+			_current_sheet.variables[load(STARTER_EVENTS_PATH).WATER_VARIABLE] = \
+				load(STARTER_EVENTS_PATH).water_variable_entry()
+		for event: EventRow in load(STARTER_EVENTS_PATH).water_volume_events(
 				object_label, host_class if not host_class.is_empty() else "Area3D"):
 			_current_sheet.events.append(event)
 		return true)
@@ -6970,7 +7415,7 @@ func open_pack_guide_for_sheet() -> bool:
 	if pack_dir.is_empty():
 		_set_status("This sheet is not part of an addon pack, so it has no pack guide.", true)
 		return false
-	return EventSheets.open_docs("addon:%s" % pack_dir)
+	return load(EVENTSHEETS_API_PATH).open_docs("addon:%s" % pack_dir)
 
 
 ## The popup's "Show in code": the verb's own function in Godot's script editor. Falls back to the top
@@ -6982,12 +7427,19 @@ func show_verb_in_code(event_function: Resource) -> void:
 	var verb: EventFunction = event_function as EventFunction
 	var line: int = -1
 	if verb != null:
-		line = EventSheetVerbProperties.function_line_in(_current_sheet.external_source_path, verb.function_name)
+		line = load(VERB_PROPERTIES_PATH).function_line_in(_current_sheet.external_source_path, verb.function_name)
 	_open_gdscript_path_in_godot(_current_sheet.external_source_path, line)
 
 
 # ── Welcome (Tools → Welcome…) - the window lives in dock/welcome_window.gd ──
 func show_welcome_if_first_run() -> void:  # plugin calls this at editor startup (first run pops it)
+	# The window's own first-run test, asked here first: the plugin calls this on every first open,
+	# and a project that has been welcomed already should not build (or compile) the window to hear
+	# "no". The window asks the same question again before it shows.
+	if not Engine.is_editor_hint() or DisplayServer.get_name() == "headless":
+		return
+	if bool(EditorInterface.get_editor_settings().get_project_metadata("eventsheets", "welcomed", false)):
+		return
 	_welcome.show_if_first_run()
 
 
@@ -7010,7 +7462,7 @@ func _attach_behavior_to_selection() -> void:
 	if not Engine.is_editor_hint() or not is_inside_tree():
 		return
 	var selected: Array[Node] = EditorInterface.get_selection().get_selected_nodes()
-	var result: Dictionary = EventSheetAuthorLoop.attach_behavior(_current_sheet, selected[0] if not selected.is_empty() else null)
+	var result: Dictionary = load(AUTHOR_LOOP_PATH).attach_behavior(_current_sheet, selected[0] if not selected.is_empty() else null)
 	if bool(result.get("ok", false)):
 		EditorInterface.mark_scene_as_unsaved()
 	_set_status(str(result.get("message", "")), not bool(result.get("ok", false)))
@@ -7536,7 +7988,7 @@ func _refresh_after_edit() -> void:
 	# keystroke in a field must never pay for this. The undo funnel drops them a moment EARLIER,
 	# before it swaps the sheet object the lists are keyed by; this covers every caller that
 	# refreshes a sheet it edited in place.
-	EventSheetCompletions.invalidate(_current_sheet)
+	_clear_if_loaded(COMPLETIONS_PATH, "invalidate", [_current_sheet])
 	_viewport.set_sheet(_current_sheet)
 	_sync_split_sheet()
 	_theme_manager._sync_active_theme_binding()
@@ -7806,7 +8258,7 @@ func apply_selected_row_fix() -> void:
 	if finding.is_empty():
 		return
 	if str(finding.get("family", "")) == PATTERN_HINT_FAMILY:
-		EventSheetPatternManual.open_page(str(finding.get("pattern", "")))
+		load(PATTERN_MANUAL_PATH).open_page(str(finding.get("pattern", "")))
 		return
 	if str(finding.get("family", "")) == ViewportRowBuilder.FINDINGS_COLLISIONS:
 		apply_collision_fix(finding)
@@ -7980,8 +8432,8 @@ static func _format_sheet_title(sheet: EventSheetResource, explicit_path: String
 		return "No Sheet Loaded"
 	# A scene opened as one sheet is named after the SCENE, extension and all: it is not one
 	# script's tab, and the file name is the thing the reader picked in the FileSystem.
-	if EventSheetSceneSheet.is_scene_sheet(sheet):
-		return EventSheetSceneSheet.scene_path_of(sheet).get_file()
+	if load(SCENE_SHEET_PATH).is_scene_sheet(sheet):
+		return load(SCENE_SHEET_PATH).scene_path_of(sheet).get_file()
 	var resolved_path: String = _resolve_sheet_path(sheet, explicit_path)
 	if resolved_path.is_empty():
 		return "Untitled EventSheet"
@@ -8208,7 +8660,7 @@ func _restore_sheet_snapshot(snapshot: EventSheetResource) -> void:
 	# object with a fresh duplicate - so the drop has to happen while the sheet those lists were
 	# built for is still the current one. Afterwards it drops nothing at all, and every superseded
 	# version's lists sit in the cache pushing out ones that are still being asked for.
-	EventSheetCompletions.invalidate(_current_sheet)
+	_clear_if_loaded(COMPLETIONS_PATH, "invalidate", [_current_sheet])
 	_current_sheet = snapshot.duplicate(true)
 	if not _current_sheet_path.is_empty():
 		_current_sheet.take_over_path(_current_sheet_path)
@@ -8310,17 +8762,17 @@ func _resource_contains_descendant(source: Resource, candidate: Resource) -> boo
 # Three windows over the same idea: the vocabulary is a choice, the installed packs are a list,
 # and adding a pack to an object is one gesture. Each is built on first open and kept, because
 # a session that never opens one should pay nothing for it.
-var _words_settings_dialog: EventSheetWordsSettingsDialog = null
-var _addon_manager_dialog: EventSheetAddonManagerDialog = null
-var _add_behavior_dialog: EventSheetAddBehaviorDialog = null
-var _docs_housekeeping_dialog: EventSheetDocsHousekeepingDialog = null
+var _words_settings_dialog: AcceptDialog = null
+var _addon_manager_dialog: AcceptDialog = null
+var _add_behavior_dialog: ConfirmationDialog = null
+var _docs_housekeeping_dialog: AcceptDialog = null
 
 
 ## Settings ▸ Words: every choosable word on one page. A change is baked into row TEXT at build
 ## time, so every open view is rebuilt rather than redrawn.
 func open_words_settings() -> void:
 	if _words_settings_dialog == null:
-		_words_settings_dialog = EventSheetWordsSettingsDialog.new()
+		_words_settings_dialog = load(WORDS_SETTINGS_DIALOG_PATH).new()
 		_words_settings_dialog.words_changed.connect(_on_words_changed)
 		add_child(_words_settings_dialog)
 	_words_settings_dialog.refresh()
@@ -8340,11 +8792,11 @@ func _on_words_changed() -> void:
 ## Tools ▸ Addon manager: the installed packs, their versions, and the switch.
 func open_addon_manager() -> void:
 	if _addon_manager_dialog == null:
-		_addon_manager_dialog = EventSheetAddonManagerDialog.new()
+		_addon_manager_dialog = load(ADDON_MANAGER_DIALOG_PATH).new()
 		_addon_manager_dialog.configure(
 			func() -> void: _refresh_ace_registry(),
 			func(page_id: String) -> void: open_documentation(page_id),
-			func(script_path: String) -> void: EventSheets.open_sheet(script_path),
+			func(script_path: String) -> void: load(EVENTSHEETS_API_PATH).open_sheet(script_path),
 			# The pack update's vocabulary section says which verbs the new version forwards; this is
 			# the door beside it, and it is the SAME receipt the head band's counting line opens -
 			# answered against the vocabulary that update WOULD leave rather than the one installed
@@ -8360,7 +8812,7 @@ func open_addon_manager() -> void:
 ## well as what is on disk.
 func open_docs_housekeeping() -> void:
 	if _docs_housekeeping_dialog == null:
-		_docs_housekeeping_dialog = EventSheetDocsHousekeepingDialog.new()
+		_docs_housekeeping_dialog = load(DOCS_HOUSEKEEPING_DIALOG_PATH).new()
 		_docs_housekeeping_dialog.configure(func() -> Dictionary: return _open_sheets_by_path())
 		add_child(_docs_housekeeping_dialog)
 	_docs_housekeeping_dialog.popup_centered(Vector2i(720, 560))
@@ -8369,7 +8821,7 @@ func open_docs_housekeeping() -> void:
 ## Object bar ▸ right-click an object ▸ Add behavior…: every pack, in one dialog.
 func open_add_behavior_dialog(object_label: String) -> void:
 	if _add_behavior_dialog == null:
-		_add_behavior_dialog = EventSheetAddBehaviorDialog.new()
+		_add_behavior_dialog = load(ADD_BEHAVIOR_DIALOG_PATH).new()
 		_add_behavior_dialog.configure(_apply_add_behavior)
 		add_child(_add_behavior_dialog)
 	_add_behavior_dialog.open_for(object_label)
@@ -8381,12 +8833,12 @@ func _apply_add_behavior(pack: Dictionary, values: Dictionary, inline: bool, obj
 	if inline:
 		var written: Dictionary = {}
 		var ok: bool = _perform_undoable_sheet_edit("Add behavior %s" % str(pack.get("name", "")), func() -> bool:
-			written = EventSheetAddBehavior.write_into_sheet(pack, _current_sheet, values)
+			written = load(ADD_BEHAVIOR_PATH).write_into_sheet(pack, _current_sheet, values)
 			return bool(written.get("ok", false)))
 		_set_status(str(written.get("message", "Nothing was written.")), not ok)
 		return
 	var host: Node = _scene_node_for_object(object_label)
-	var result: Dictionary = EventSheetAddBehavior.attach_node(pack, host, values)
+	var result: Dictionary = load(ADD_BEHAVIOR_PATH).attach_node(pack, host, values)
 	if bool(result.get("ok", false)) and Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
 		EditorInterface.mark_scene_as_unsaved()
 	_refresh_ace_registry()
@@ -8400,7 +8852,7 @@ func _scene_node_for_object(object_label: String) -> Node:
 	var edited_root: Node = EditorInterface.get_edited_scene_root()
 	if edited_root == null:
 		return null
-	var path: String = str(EventSheetObjectProperties.find_entry(
+	var path: String = str(load(OBJECT_PROPERTIES_PATH).find_entry(
 		_current_sheet, object_label).get("path", object_label)).strip_edges().trim_prefix("$").trim_prefix("%")
 	if path.is_empty():
 		return null
@@ -8473,13 +8925,13 @@ func current_view_lenses() -> Dictionary:
 
 ## Puts a saved view back: its arrangement, its filter, and each lens it named.
 func apply_saved_view(name: String) -> void:
-	var blob: Dictionary = EventSheetSavedViews.view(name)
+	var blob: Dictionary = load(SAVED_VIEWS_PATH).view(name)
 	if blob.is_empty():
 		_set_status(EventSheetL10n.translate("No saved view by that name."), true)
 		return
-	set_arrangement_mode(EventSheetSavedViews.arrangement_of(blob))
-	_apply_lens(EventSheetSavedViews.filter_of(blob))
-	var lenses: Dictionary = EventSheetSavedViews.lenses_of(blob)
+	set_arrangement_mode(load(SAVED_VIEWS_PATH).arrangement_of(blob))
+	_apply_lens(load(SAVED_VIEWS_PATH).filter_of(blob))
+	var lenses: Dictionary = load(SAVED_VIEWS_PATH).lenses_of(blob)
 	for pane_entry: Variant in _multi_view.all_views():
 		var pane: EventSheetViewport = pane_entry as EventSheetViewport
 		if pane == null:
@@ -8535,9 +8987,9 @@ func save_current_view_requested() -> void:
 func _on_save_view_confirmed() -> void:
 	var name: String = _save_view_edit.text.strip_edges()
 	var view: EventSheetViewport = _active_view()
-	var blob: Dictionary = EventSheetSavedViews.describe(arrangement_mode(),
+	var blob: Dictionary = load(SAVED_VIEWS_PATH).describe(arrangement_mode(),
 		view.lens_query() if view != null else "", current_view_lenses())
-	if EventSheetSavedViews.save_view(name, blob):
+	if load(SAVED_VIEWS_PATH).save_view(name, blob):
 		_set_status(EventSheetL10n.translate("Saved the view %s.") % name)
 	else:
 		_set_status(EventSheetL10n.translate("A view needs a name."), true)
@@ -8545,7 +8997,7 @@ func _on_save_view_confirmed() -> void:
 
 ## Forgets a saved view.
 func delete_saved_view(name: String) -> void:
-	if EventSheetSavedViews.delete_view(name):
+	if load(SAVED_VIEWS_PATH).delete_view(name):
 		_set_status(EventSheetL10n.translate("Forgot the view %s.") % name)
 
 
@@ -8558,7 +9010,7 @@ func delete_saved_view(name: String) -> void:
 
 ## The class the sheet knows this object is, and the triggers any behaviour pack on it fires.
 func _object_starter_facts(object_label: String) -> Dictionary:
-	var entry: Dictionary = EventSheetObjectProperties.find_entry(_current_sheet, object_label)
+	var entry: Dictionary = load(OBJECT_PROPERTIES_PATH).find_entry(_current_sheet, object_label)
 	var host_class: String = str(entry.get("class", "")).strip_edges()
 	if host_class.is_empty() and _current_sheet != null:
 		host_class = str(_current_sheet.host_class).strip_edges()
@@ -8579,18 +9031,18 @@ func add_common_events_for(object_label: String) -> void:
 	if not _ensure_sheet_for_editing():
 		return
 	var facts: Dictionary = _object_starter_facts(object_label)
-	var starters: Array = EventSheetStarterEvents.starters_for(str(facts.get("class", "")),
+	var starters: Array = load(STARTER_EVENTS_PATH).starters_for(str(facts.get("class", "")),
 		facts.get("pack_triggers", PackedStringArray()))
 	if starters.is_empty():
 		_set_status(EventSheetL10n.translate("No common events are known for %s.") % object_label, true)
 		return
 	var added: Dictionary = {"events": 0, "signals": 0}
 	var changed: bool = _perform_undoable_sheet_edit("Add Common Events", func() -> bool:
-		for declaration: Variant in EventSheetStarterEvents.missing_signal_rows(starters, _current_sheet):
+		for declaration: Variant in load(STARTER_EVENTS_PATH).missing_signal_rows(starters, _current_sheet):
 			_current_sheet.events.append(declaration)
 			added["signals"] = int(added["signals"]) + 1
 		for starter: Variant in starters:
-			_current_sheet.events.append(EventSheetStarterEvents.build_event(starter as Dictionary))
+			_current_sheet.events.append(load(STARTER_EVENTS_PATH).build_event(starter as Dictionary))
 			added["events"] = int(added["events"]) + 1
 		return int(added["events"]) > 0)
 	if not changed:
@@ -8646,9 +9098,9 @@ func _on_duplicate_events_confirmed() -> void:
 	var source: String = _duplicate_events_source
 	var made: Dictionary = {"count": 0}
 	var changed: bool = _perform_undoable_sheet_edit("Duplicate Events For", func() -> bool:
-		var source_reference: String = EventSheetDuplicateEvents.reference_for(_current_sheet, source)
+		var source_reference: String = load(DUPLICATE_EVENTS_PATH).reference_for(_current_sheet, source)
 		for target: String in targets:
-			var copies: Array = EventSheetDuplicateEvents.copies_for(_current_sheet, source_reference, target)
+			var copies: Array = load(DUPLICATE_EVENTS_PATH).copies_for(_current_sheet, source_reference, target)
 			for copy: Variant in copies:
 				_assign_fresh_event_uids(copy as Resource)
 				_current_sheet.events.append(copy)
@@ -8866,10 +9318,10 @@ var _health_dialog: AcceptDialog = null
 ## The card for the sheet in front of the reader, with the Doctor's own findings folded in.
 func sheet_health_card() -> Dictionary:
 	var findings: Array = []
-	var report: Dictionary = EventSheets.doctor()
+	var report: Dictionary = load(EVENTSHEETS_API_PATH).doctor()
 	if report.get("findings") is Array:
 		findings = report["findings"]
-	return EventSheetHealthCard.card_for(_current_sheet, _health_sheet_path(), findings)
+	return load(HEALTH_CARD_PATH).card_for(_current_sheet, _health_sheet_path(), findings)
 
 
 ## The file this sheet IS, which for an opened .gd is its source rather than its resource path.
@@ -8889,7 +9341,7 @@ func open_sheet_health() -> void:
 		return
 	var card: Dictionary = sheet_health_card()
 	var lines: VBoxContainer = EventSheetPopupUI.form_box()
-	for entry: Variant in EventSheetHealthCard.card_lines(card):
+	for entry: Variant in load(HEALTH_CARD_PATH).card_lines(card):
 		var line: Dictionary = entry
 		var button: Button = Button.new()
 		button.text = str(line.get("text", ""))
@@ -8924,11 +9376,11 @@ func open_health_panel(panel: String) -> void:
 			_open_loose_ends_panel()
 
 
-var _loose_ends_health_panel: EventSheetLooseEndsPanel = null
+var _loose_ends_health_panel: RefCounted = null
 
 
 func _open_loose_ends_panel() -> void:
 	if _loose_ends_health_panel == null:
-		_loose_ends_health_panel = EventSheetLooseEndsPanel.new()
+		_loose_ends_health_panel = load(LOOSE_ENDS_PANEL_PATH).new()
 		_loose_ends_health_panel.init(self)
 	_loose_ends_health_panel.open()

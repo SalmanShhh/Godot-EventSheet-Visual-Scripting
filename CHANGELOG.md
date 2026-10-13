@@ -45,6 +45,34 @@
   `scene_sheet.gd` to the importer, `ace_registry.gd` to the API), so each class is still compiled
   through some other path.
 
+### Changed: the first open compiles the workspace, not every window a click could open
+
+- The workspace's dialogs, windows, studios and click-only helpers (the picker, the parameters and
+  variable dialogs, the Manual, the Doctor panel, the Welcome window and tour, the starters, the
+  wizards, Save Studio, Translation Studio, Find all references and the row and ACE edit operations,
+  67 delegates in all) are built the first time something asks for them instead of when the workspace
+  is built. Each is a loosely typed field whose getter loads its file by path, builds it, wires it
+  and connects what the old start-up wiring connected, so every dialog opens, every signal fires and
+  undo works exactly as before.
+- The dock and the helpers that draw the first paint reach the compiler, the importer, the Doctor,
+  the public API and the pickers by path at the moment they are needed, instead of naming them. A
+  cache those files keep is only dropped when the file has been loaded this session.
+- The workspace announces itself, registers its own palette commands and row items, and fires the
+  sheet lifecycle listeners through `addons/eventsheet/api/dock_registry.gd`, a file that names no
+  class. `EventSheets` keeps the same methods and reads the same lists, and no longer names the dock,
+  which breaks the cycle that tied every file naming the API to the whole workspace.
+- A freed workspace takes its own palette commands and row items off those lists. Left behind, they
+  were closures over a freed node, and one still listed when the engine shut down took the process
+  down on the way out.
+- What the first open compiles, as `tools/measure_editor_closure.gd` reads it: 558 files and 249,073
+  lines before, 417 files and 205,473 lines after. The cold boot probe's headless `editor_load_ms`
+  went from about 18.3 s to about 13.4 s, and `editor_build_ms` from about 19.6 s to about 15.5 s
+  (median of three each, same machine, back to back). Those figures are this change alone, measured
+  on the tree before the reading change above landed; with both in, the first open measures 420
+  files and 205,738 lines. `workspace_first_open_lazy_test` pins the
+  click-only files out of that set, the heavy names out of the first-paint files and the shared lists
+  between the workspace and the API.
+
 ### Changed: the first sheet tab of a session no longer re-reads every pack
 
 - The verbs every pack script publishes are remembered in `.godot/eventsheets_pack_vocabulary.bin`

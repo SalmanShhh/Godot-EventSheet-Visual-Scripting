@@ -50,6 +50,10 @@ extends RefCounted
 # captures the LOCAL `style` (not a helper/dock member), so it survives verbatim; only the inner
 # `_current_sheet` reach-ins became `_dock.`.
 
+## The files this helper reaches BY PATH, at the moment something asks: naming one of these
+## classes here would compile it, and everything it names, into the first open of a sheet.
+const THEME_EDITOR_PATH := "res://addons/eventsheet/editor/theme_editor_dialog.gd"
+
 const THEME_FILTERS: Array[String] = ["*.tres ; EventSheetEditorStyle", "*.res ; EventSheetEditorStyle"]
 
 var _dock: Control = null
@@ -58,7 +62,7 @@ var _dock: Control = null
 # drive a live repaint when the backing `.tres` is edited on disk. Bound/rebound by
 # _sync_active_theme_binding on every tab-switch; torn down by teardown_theme_binding on dock delete.
 var _active_theme_style: EventSheetEditorStyle = null
-var _theme_editor: EventSheetThemeEditor = null
+var _theme_editor: RefCounted = null
 var _theme_file_dialog: FileDialog = null
 
 
@@ -312,7 +316,7 @@ func _on_theme_preset_selected(index: int) -> void:
 
 func _open_theme_editor() -> void:
 	if _theme_editor == null:
-		_theme_editor = EventSheetThemeEditor.new()
+		_theme_editor = load(THEME_EDITOR_PATH).new()
 	_theme_editor.open(_dock, _active_theme_style)
 
 

@@ -24,6 +24,10 @@ extends RefCounted
 # `editor_plugins/enabled`, and doing it from here means a plugin sheet never has to be finished
 # somewhere else. An already-registered plugin re-reads its cfg instead, which is what Reload is for.
 
+## The files this helper reaches BY PATH, at the moment something asks: naming one of these
+## classes here would compile it, and everything it names, into the first open of a sheet.
+const SHEET_COMPILER_PATH := "res://addons/eventforge/compiler/sheet_compiler.gd"
+
 ## The button kinds, in bar order. Each is the `kind` its span carries and the branch the viewport's
 ## input handler switches on, so the name is a small frozen contract between the two files.
 const KIND_RUN := "editor_tool_run"
@@ -449,7 +453,7 @@ func run_now() -> void:
 	if is_plugin_sheet(_dock._current_sheet):
 		_dock._set_status("A plugin runs when it is enabled, not on demand - use Enable plugin, then Reload after each change.", true)
 		return
-	var compile_result: Dictionary = SheetCompiler.compile(_dock._current_sheet, target)
+	var compile_result: Dictionary = load(SHEET_COMPILER_PATH).compile(_dock._current_sheet, target)
 	if not bool(compile_result.get("success", false)):
 		_dock._set_status("This tool doesn't compile yet, so there is nothing to run. (%s)" % ", ".join(PackedStringArray(compile_result.get("errors", []))), true)
 		return
@@ -480,7 +484,7 @@ func reload() -> void:
 	if target.is_empty():
 		_dock._set_status("Save the sheet first - Reload re-reads the script on disk.", true)
 		return
-	var compile_result: Dictionary = SheetCompiler.compile(_dock._current_sheet, target)
+	var compile_result: Dictionary = load(SHEET_COMPILER_PATH).compile(_dock._current_sheet, target)
 	if not bool(compile_result.get("success", false)):
 		_dock._set_status("This tool doesn't compile yet, so the old script is still what is loaded. (%s)" % ", ".join(PackedStringArray(compile_result.get("errors", []))), true)
 		return
@@ -535,7 +539,7 @@ func enable_plugin() -> void:
 	if folder.is_empty():
 		_dock._set_status("A plugin has to live in its own folder under res://addons/ - save this sheet there first.", true)
 		return
-	var compile_result: Dictionary = SheetCompiler.compile(_dock._current_sheet, target)
+	var compile_result: Dictionary = load(SHEET_COMPILER_PATH).compile(_dock._current_sheet, target)
 	if not bool(compile_result.get("success", false)):
 		_dock._set_status("This plugin doesn't compile yet, so it was not enabled. (%s)" % ", ".join(PackedStringArray(compile_result.get("errors", []))), true)
 		return

@@ -18,6 +18,11 @@
 class_name EventSheetPickerWarmup
 extends RefCounted
 
+## The files this helper reaches BY PATH, at the moment something asks: naming one of these
+## classes here would compile it, and everything it names, into the first open of a sheet.
+const ACE_PICKER_PATH := "res://addons/eventsheet/editor/ace_picker.gd"
+const EVENTSHEETS_API_PATH := "res://addons/eventsheet/api/eventsheets.gd"
+
 ## The most one slice may spend. Four milliseconds leaves the rest of a 16 ms frame to the editor.
 const SLICE_BUDGET_MSEC: int = 4
 
@@ -125,14 +130,15 @@ const ICON_SLICES: int = 32
 ## live vocabulary at RUN time rather than at build time: the warm is armed before the registry is
 ## refreshed, and an empty answer here simply warms nothing.
 static func _warm_icons(slice_index: int) -> void:
-	var verbs: Array[ACEDefinition] = EventSheets.all_verbs()
+	var verbs: Array[ACEDefinition] = load(EVENTSHEETS_API_PATH).all_verbs()
 	if verbs.is_empty():
 		return
 	var per_slice: int = int(ceil(float(verbs.size()) / float(ICON_SLICES)))
 	var from_index: int = slice_index * per_slice
 	var to_index: int = mini(from_index + per_slice, verbs.size())
+	var picker: Script = load(ACE_PICKER_PATH)
 	for index in range(from_index, to_index):
-		ACEPickerDialog.resolve_definition_icon(verbs[index])
+		picker.resolve_definition_icon(verbs[index])
 
 
 static func _arm() -> void:

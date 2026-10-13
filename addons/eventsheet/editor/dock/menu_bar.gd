@@ -10,6 +10,17 @@ extends RefCounted
 # them back so nothing else changes. Extracted from event_sheet_dock.gd to keep that file
 # maintainable; the menus keep their .name + item order so the dock's tests find them unchanged.
 
+## The files this helper reaches BY PATH, at the moment something asks: naming one of these
+## classes here would compile it, and everything it names, into the first open of a sheet.
+const COMPARE_DIALOG_PATH := "res://addons/eventsheet/editor/dock/compare_dialog.gd"
+const LOOSE_ENDS_PANEL_PATH := "res://addons/eventsheet/editor/dock/loose_ends_panel.gd"
+const MCP_SERVER_PATH := "res://addons/eventsheet/mcp/mcp_server.gd"
+const PATTERN_MANUAL_PATH := "res://addons/eventsheet/editor/docs/doc_patterns.gd"
+const REPEATED_ROWS_PATH := "res://addons/eventsheet/editor/dock/repeated_rows.gd"
+const SAVED_VIEWS_PATH := "res://addons/eventsheet/editor/dock/saved_views.gd"
+const DOC_WHATS_NEW_PATH := "res://addons/eventsheet/editor/docs/doc_whats_new.gd"
+const EVENTSHEETS_API_PATH := "res://addons/eventsheet/api/eventsheets.gd"
+
 var _dock: Control = null
 
 
@@ -478,7 +489,7 @@ func build(root: Node) -> void:
 			6: _dock._make_or_block_from_selection()
 			7: _dock._make_else_from_selection()
 			8: _dock._on_add_project_global_requested()
-			9: EventSheetPatternManual.open_page("")
+			9: load(PATTERN_MANUAL_PATH).open_page("")
 			10: _dock._shared_sheets.open_include_sheet()
 			12: _dock._on_add_event_requested()
 			13: _dock._on_add_condition_requested()
@@ -734,7 +745,11 @@ func build(root: Node) -> void:
 		_dock._preview_in_language("" if preview_id <= 0 or preview_id > languages.size() else languages[preview_id - 1]))
 	view_popup.add_separator()
 	view_popup.add_check_item("MCP Server (AI tools)", 12)
-	view_popup.set_item_checked(view_popup.get_item_index(12), EventSheetMCPServer.is_enabled())
+	# The tick is read when the menu opens rather than here: building the toolbar is part of the
+	# first open of a sheet, and asking the server file then would compile it for a tick nobody has
+	# looked at yet. Read on open, it also follows a marker file changed outside the editor.
+	view_popup.about_to_popup.connect(func() -> void:
+		view_popup.set_item_checked(view_popup.get_item_index(12), load(MCP_SERVER_PATH).is_enabled()))
 	view_popup.id_pressed.connect(func(id: int) -> void:
 		match id:
 			0: _dock._toggle_code_panel()
@@ -988,9 +1003,9 @@ func build(root: Node) -> void:
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(62), "Find action sequences written more than once, then turn one into a reusable function: extracted where it first appears, called everywhere else, in one undo step.")
 	tools_popup.id_pressed.connect(func(id: int) -> void:
 		match id:
-			60: open_dev_tool.call("compare", func() -> Variant: return EventSheetCompareDialog.new())
-			61: open_dev_tool.call("loose_ends", func() -> Variant: return EventSheetLooseEndsPanel.new())
-			62: open_dev_tool.call("repeated", func() -> Variant: return EventSheetRepeatedRows.new())
+			60: open_dev_tool.call("compare", func() -> Variant: return load(COMPARE_DIALOG_PATH).new())
+			61: open_dev_tool.call("loose_ends", func() -> Variant: return load(LOOSE_ENDS_PANEL_PATH).new())
+			62: open_dev_tool.call("repeated", func() -> Variant: return load(REPEATED_ROWS_PATH).new())
 	)
 	# The persisted Simple Mode preference loads before the toolbar builds - apply its gates now.
 	_dock._apply_simple_mode_gates()
@@ -1118,7 +1133,7 @@ func build(root: Node) -> void:
 	views_menu.about_to_popup.connect(func() -> void:
 		views_menu.clear()
 		views_menu.add_item(EventSheetL10n.translate("Save Current View…"), 0)
-		var names: PackedStringArray = EventSheetSavedViews.view_names()
+		var names: PackedStringArray = load(SAVED_VIEWS_PATH).view_names()
 		if names.is_empty():
 			return
 		views_menu.add_separator()
@@ -1128,7 +1143,7 @@ func build(root: Node) -> void:
 		for name_index: int in names.size():
 			views_menu.add_item(EventSheetL10n.translate("Forget %s") % names[name_index], 500 + name_index))
 	views_menu.id_pressed.connect(func(id: int) -> void:
-		var names: PackedStringArray = EventSheetSavedViews.view_names()
+		var names: PackedStringArray = load(SAVED_VIEWS_PATH).view_names()
 		if id == 0:
 			_dock.save_current_view_requested()
 		elif id >= 500 and id - 500 < names.size():
@@ -1266,8 +1281,8 @@ static func mark_unread(popup: PopupMenu, item_id: int, label: String) -> void:
 	var index: int = popup.get_item_index(item_id)
 	if index < 0:
 		return
-	var unread: bool = EventSheetDocWhatsNew.has_unread(EventSheets.docs_version(),
-		EventSheetDocWhatsNew.seen_version())
+	var unread: bool = load(DOC_WHATS_NEW_PATH).has_unread(load(EVENTSHEETS_API_PATH).docs_version(),
+		load(DOC_WHATS_NEW_PATH).seen_version())
 	popup.set_item_text(index, "%s ●" % label if unread else label)
 
 
@@ -1568,7 +1583,7 @@ func _apply_find_face() -> void:
 	_find_field.custom_minimum_size.x = float(EventSheetPalette.scaled(FIND_FIELD_WIDTH))
 	# The magnifier leads the word, the way a search field reads: a mark inside the field's left
 	# edge, with the field's own boxes widened on that side so the typed text starts after it.
-	var icon: Texture2D = ACEPickerDialog.editor_icon("Search")
+	var icon: Texture2D = EventSheetEditorIcons.icon("Search")
 	if icon == null:
 		_find_field.right_icon = icon
 		return

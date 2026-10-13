@@ -16,6 +16,11 @@ extends RefCounted
 # Nothing appears at all unless a game is running. All the deciding lives in EventSheetLiveEdit
 # (static, pure, pinned headless); this file is the shell.
 
+## The files this helper reaches BY PATH, at the moment something asks: naming one of these
+## classes here would compile it, and everything it names, into the first open of a sheet.
+const LIVE_VALUES_DEBUGGER_PATH := "res://addons/eventsheet/editor/live_values_debugger.gd"
+const SHEET_COMPILER_PATH := "res://addons/eventforge/compiler/sheet_compiler.gd"
+
 ## Where a pending compile goes while the strip works out whether it can be reloaded. Never res://.
 const TEMP_PATH := "user://eventsheets_live_edit_temp.gd"
 
@@ -121,8 +126,8 @@ func apply() -> bool:
 	return true
 
 
-func _debugger() -> EventSheetLiveValuesDebugger:
-	return _dock._ensure_live_values_panel().debugger as EventSheetLiveValuesDebugger
+func _debugger() -> EditorDebuggerPlugin:
+	return _dock._ensure_live_values_panel().debugger as EditorDebuggerPlugin
 
 
 ## The pulse: the changed rows flash once on the canvas, through the same channel the Event Trace
@@ -149,7 +154,7 @@ func _restart() -> void:
 func pending_source() -> String:
 	if _dock._current_sheet == null:
 		return ""
-	var result: Dictionary = SheetCompiler.compile(_dock._current_sheet, TEMP_PATH)
+	var result: Dictionary = load(SHEET_COMPILER_PATH).compile(_dock._current_sheet, TEMP_PATH)
 	DirAccess.remove_absolute(TEMP_PATH)
 	return str(result.get("output", ""))
 

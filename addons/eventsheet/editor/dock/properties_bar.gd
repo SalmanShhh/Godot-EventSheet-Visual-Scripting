@@ -18,6 +18,10 @@ extends RefCounted
 # default in Simple mode - a beginner's sheet is the sheet. The Edit Parameter dialog stays for
 # anyone who prefers it; nothing here replaces it.
 
+## The files this helper reaches BY PATH, at the moment something asks: naming one of these
+## classes here would compile it, and everything it names, into the first open of a sheet.
+const OBJECT_PROPERTIES_PATH := "res://addons/eventsheet/editor/dock/object_properties_popup.gd"
+
 var _dock: Control = null
 var panel: VBoxContainer = null
 var _heading: Label = null
@@ -301,8 +305,8 @@ func _show_object(object_label: String) -> void:
 	_clear_form()
 	_open_for_selection()
 	_heading.text = heading_for(object_label, "object")
-	var entry: Dictionary = EventSheetObjectProperties.find_entry(_dock._current_sheet, object_label)
-	for row: Variant in EventSheetObjectProperties.property_rows(entry, "", ""):
+	var entry: Dictionary = load(OBJECT_PROPERTIES_PATH).find_entry(_dock._current_sheet, object_label)
+	for row: Variant in load(OBJECT_PROPERTIES_PATH).property_rows(entry, "", ""):
 		if not (row is Dictionary):
 			continue
 		_form.add_child(EventSheetPopupUI.hint_label(str((row as Dictionary).get("label", "")), 90.0))
@@ -310,7 +314,7 @@ func _show_object(object_label: String) -> void:
 	# The same instance-variable table Object properties carries, in the bar, whenever the
 	# selected object is the one this file IS. Selecting an object and editing its variables
 	# without opening a popup is the whole point of the bar.
-	if EventSheetObjectProperties.owns_sheet_variables(entry):
+	if load(OBJECT_PROPERTIES_PATH).owns_sheet_variables(entry):
 		var table: Control = _dock._instance_variables.build_for(_dock._current_sheet)
 		if table != null:
 			_form.add_child(EventSheetPopupUI.hint_label(

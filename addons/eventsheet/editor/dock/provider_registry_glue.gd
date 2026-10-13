@@ -8,6 +8,12 @@ extends RefCounted
 # dock; bodies moved verbatim behind the `_dock.` back-reference with one-line
 # delegates keeping the public API and every signal target in place.
 
+## The files this helper reaches BY PATH, at the moment something asks: naming one of these
+## classes here would compile it, and everything it names, into the first open of a sheet.
+const PROJECT_DOCTOR_PATH := "res://addons/eventforge/project_doctor.gd"
+const PROVIDER_PREVIEW_PATH := "res://addons/eventsheet/ace/provider_preview.gd"
+const EVENTSHEETS_API_PATH := "res://addons/eventsheet/api/eventsheets.gd"
+
 ## The Kind dropdown's entries, in the order the range cell indexes them. Matches
 ## EventSheetProviderPreview.kind_label, which is what fills the BEFORE side of the diff.
 const KIND_CHOICES: PackedStringArray = ["Action", "Condition", "Expression", "Trigger"]
@@ -67,7 +73,7 @@ func share_verbs_with_project() -> bool:
 	if sheet_path.is_empty():
 		_dock._set_status("Save the sheet first - Teach a Verb shares the compiled script on disk.", true)
 		return false
-	var output_path: String = EventSheetProjectDoctor.output_path_for(sheet_path)
+	var output_path: String = load(PROJECT_DOCTOR_PATH).output_path_for(sheet_path)
 	if not FileAccess.file_exists(output_path):
 		_dock._set_status("Save the sheet first (compile-on-save writes %s) - Teach a Verb shares that script." % output_path.get_file(), true)
 		return false
@@ -187,9 +193,9 @@ func preview_provider_script(path: String, offer_register: bool) -> void:
 	_dock._provider_preview_tree.clear()
 	for stale_warning: Node in _dock._provider_preview_warnings.get_children():
 		stale_warning.queue_free()
-	var scan: Dictionary = EventSheetProviderPreview.scan(path)
+	var scan: Dictionary = load(PROVIDER_PREVIEW_PATH).scan(path)
 	_dock._provider_preview_scan = scan
-	_dock._provider_preview_summary.text = "%s\n%s" % [path.get_file(), EventSheetProviderPreview.summary_line(scan)]
+	_dock._provider_preview_summary.text = "%s\n%s" % [path.get_file(), load(PROVIDER_PREVIEW_PATH).summary_line(scan)]
 	for warning: Variant in scan.get("warnings", []):
 		var warning_label: Label = EventSheetPopupUI.hint_label("! %s" % str((warning as Dictionary).get("text", "")))
 		warning_label.add_theme_color_override("font_color", Color("#e0a33a"))
@@ -418,7 +424,7 @@ func on_provider_keep_old_name(old_member: String) -> void:
 	if row == null or str(row.get("source", "")) != "method":
 		_dock._set_status("Only a method can carry a forwarding shim.", true)
 		return
-	var result: Dictionary = EventSheets.keep_old_verb_working(path, old_member, str(row.get("member", "")))
+	var result: Dictionary = load(EVENTSHEETS_API_PATH).keep_old_verb_working(path, old_member, str(row.get("member", "")))
 	if not bool(result.get("ok", false)):
 		_dock._set_status(str(result.get("reason", "Could not add the shim.")), true)
 		return
@@ -476,7 +482,7 @@ func _ensure_curate_confirm() -> void:
 
 func _apply_curation() -> void:
 	var path: String = str(_dock._provider_preview_path)
-	var result: Dictionary = EventSheets.curate_provider(path, _curate_pending)
+	var result: Dictionary = load(EVENTSHEETS_API_PATH).curate_provider(path, _curate_pending)
 	if not bool(result.get("ok", false)):
 		_dock._set_status(str(result.get("reason", "Could not curate the script.")), true)
 		return
@@ -582,7 +588,7 @@ func _refresh_reading_check(sheet_path: String) -> void:
 func _apply_version_bump() -> void:
 	var path: String = str(_dock._current_sheet_path)
 	var bump: String = ["patch", "minor", "major"][_version_bump.selected if _version_bump.selected >= 0 else 0]
-	var result: Dictionary = EventSheets.publish_pack_version(path, bump, _version_note.text)
+	var result: Dictionary = load(EVENTSHEETS_API_PATH).publish_pack_version(path, bump, _version_note.text)
 	if not bool(result.get("ok", false)):
 		_dock._set_status(str(result.get("reason", "Could not publish the new version.")), true)
 		return
@@ -590,7 +596,7 @@ func _apply_version_bump() -> void:
 		path.get_file(), str(result.get("new_version")), str(result.get("old_version"))])
 	# Republish: refresh the vocabulary and reopen the sheet so the banner chip reads the new version.
 	_dock._refresh_ace_registry()
-	EventSheets.open_sheet(path)
+	load(EVENTSHEETS_API_PATH).open_sheet(path)
 
 
 ## Commits the previewed script to this sheet's providers.

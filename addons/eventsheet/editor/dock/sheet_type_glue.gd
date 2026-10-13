@@ -8,6 +8,10 @@ extends RefCounted
 # Bodies moved verbatim behind the `_dock.` back-reference; delegates keep the
 # menu wiring and tests untouched.
 
+## The files this helper reaches BY PATH, at the moment something asks: naming one of these
+## classes here would compile it, and everything it names, into the first open of a sheet.
+const SHEET_TYPE_DIALOG_PATH := "res://addons/eventsheet/editor/dock/sheet_type_dialog.gd"
+
 var _dock: Control = null
 
 
@@ -82,7 +86,7 @@ func apply_sheet_type_settings(type_index: int, class_name_text: String, icon_pa
 		# this apply can never disagree about what a type ships as.
 		# Added two more (Editor add-on / Command tool), and the add-on is the one tool type that
 		# does NOT force a host - so the @tool answer reads the type-index list, not the host table.
-		_dock._current_sheet.tool_mode = tool_enabled or EventSheetSheetTypeDialog.TOOL_TYPE_INDICES.has(type_index)
+		_dock._current_sheet.tool_mode = tool_enabled or load(SHEET_TYPE_DIALOG_PATH).TOOL_TYPE_INDICES.has(type_index)
 		_dock._current_sheet.custom_class_name = class_name_text.strip_edges() if type_index != 0 else ""
 		_dock._current_sheet.custom_class_icon = icon_path.strip_edges() if type_index != 0 else ""
 		# Family rides with the named-type identity: a plain sheet has no class to form a group from, so
@@ -114,8 +118,8 @@ func apply_sheet_type_settings(type_index: int, class_name_text: String, icon_pa
 			# A test runs as a node in a tree; the host row is hidden, so the field's stale text
 			# must not slip through here the way it must not for Autoload above.
 			_dock._current_sheet.host_class = "Node"
-		elif EventSheetSheetTypeDialog.TOOL_TYPE_HOSTS.has(type_index):
-			_dock._current_sheet.host_class = str(EventSheetSheetTypeDialog.TOOL_TYPE_HOSTS[type_index])
+		elif load(SHEET_TYPE_DIALOG_PATH).TOOL_TYPE_HOSTS.has(type_index):
+			_dock._current_sheet.host_class = str(load(SHEET_TYPE_DIALOG_PATH).TOOL_TYPE_HOSTS[type_index])
 		elif type_index == 5:
 			# Custom Resource: the host must BE a data-asset class. Keep the user's Resource
 			# subclass (AudioStream, a project class typed by hand); anything node-ish falls

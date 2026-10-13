@@ -28,6 +28,11 @@ extends LineEdit
 ## The parameter hint this field answers to. A pack (or a project's own vocabulary) asks for the
 ## strip by naming this hint on its parameter, and nothing else has to know about it.
 const HINT := "blend_mode"
+## Where the param-editor and param-help registries live - the same lists
+## EventSheets.register_param_editor and register_param_help write. This field registers while the
+## workspace is being built, and naming the API there would compile everything the API names into
+## the first open of a sheet.
+const EXTENSION_REGISTRIES := preload("res://addons/eventsheet/api/extension_registries.gd")
 
 ## How big one picture in the strip is. Small enough that twenty of them fit without scrolling,
 ## large enough that a soft edge and a colour shift are both visible.
@@ -65,8 +70,8 @@ var _open_button: Button = null
 ## dialog's help strip says under such a field. Idempotent: a second call (a plugin reload, a test)
 ## leaves exactly one registration.
 static func ensure_registered() -> void:
-	EventSheets.register_param_editor(HINT, Callable(EventSheetBlendModeField, "make_field"))
-	EventSheets.register_param_help(HINT, EventSheetL10n.translate("Pick the look by looking at it: the button shows one shape over one backdrop drawn through every mode. The five under Native are the ones the renderer draws by itself and cost nothing; the rest read the screen back, which costs one screen read per pixel the item covers. You can also type a mode word, or an expression that works one out while the game runs."))
+	EXTENSION_REGISTRIES.register_param_editor(HINT, Callable(EventSheetBlendModeField, "make_field"))
+	EXTENSION_REGISTRIES.register_param_help(HINT, EventSheetL10n.translate("Pick the look by looking at it: the button shows one shape over one backdrop drawn through every mode. The five under Native are the ones the renderer draws by itself and cost nothing; the rest read the screen back, which costs one screen read per pixel the item covers. You can also type a mode word, or an expression that works one out while the game runs."))
 
 
 ## The factory the seam calls: one field, opened on whatever the row already holds.

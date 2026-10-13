@@ -11,6 +11,11 @@ extends RefCounted
 # extraction. Bodies were moved VERBATIM with member access rewritten through `_dock.`;
 # the dock keeps one-line delegates so no call site changed.
 
+## The files this helper reaches BY PATH, at the moment something asks: naming one of these
+## classes here would compile it, and everything it names, into the first open of a sheet.
+const RAW_CODE_EDIT_PATH := "res://addons/eventsheet/editor/raw_code_edit.gd"
+const OBJECT_PROPERTIES_PATH := "res://addons/eventsheet/editor/dock/object_properties_popup.gd"
+
 var _dock: Control = null
 
 
@@ -189,13 +194,13 @@ func build_ui() -> void:
 	_dock._objects_panel.object_row_requested.connect(func(object_label: String, as_action: bool) -> void:
 		_dock.add_row_for_object(object_label, as_action))
 	_dock._objects_panel.object_scene_selection_requested.connect(func(object_label: String) -> void:
-		_dock.select_object_in_scene(str(EventSheetObjectProperties.find_entry(
+		_dock.select_object_in_scene(str(load(OBJECT_PROPERTIES_PATH).find_entry(
 			_dock._current_sheet, object_label).get("path", object_label))))
 	_dock._objects_panel.object_behavior_requested.connect(func(object_label: String) -> void:
 		_dock.open_add_behavior_dialog(object_label))
 	_dock._objects_panel.object_script_requested.connect(func(object_label: String) -> void:
 		_dock.open_object_file_as_sheet(EventSheetObjectFacts.script_path_for_entry(
-			EventSheetObjectProperties.find_entry(_dock._current_sheet, object_label),
+			load(OBJECT_PROPERTIES_PATH).find_entry(_dock._current_sheet, object_label),
 			str(_dock._current_sheet.get("external_source_path")) if _dock._current_sheet != null else "")))
 	# The two starter gestures: the events this object's class is usually given, and this
 	# object's events copied for other objects.
@@ -660,110 +665,16 @@ func ensure_editor_dialogs_initialized() -> void:
 	_dock._editor_dialogs_initialized = true
 	_dock._load_simple_mode_preference()
 	_dock._param_resolver.set_param_store(_dock._editor_param_store)
-	_dock._ace_picker.init_dialog(_dock, _dock._ace_registry)
-	_dock._ace_picker.set_simple_mode_provider(func() -> bool: return _dock._simple_mode)
-	_dock._ace_picker.set_reflect_class_provider(func() -> String: return _dock._current_sheet.host_class if _dock._current_sheet != null else "")
-	_dock._ace_picker.set_behavior_mode_provider(func() -> bool: return _dock._current_sheet != null and _dock._current_sheet.behavior_mode)
-	# The Editor object is offered on a sheet that runs in the editor and nowhere else.
-	_dock._ace_picker.set_tool_mode_provider(func() -> bool: return _dock._current_sheet != null and _dock._current_sheet.tool_mode)
-	# The Variables group names the variables each verb can take, and describes the one under the
-	# cursor in the sentence its row reads with - both out of the sheet's own catalog.
-	_dock._ace_picker.set_variable_catalog_provider(
-		func() -> Array: return EventSheetVariableOwners.catalog(_dock._current_sheet))
-	_dock._variable_dlg.simple_mode_provider = func() -> bool: return _dock._simple_mode
-	_dock._ace_picker.ace_selected.connect(_dock._on_ace_picker_selected)
-	# The rail's Picker preview answers "how will these verbs read in the picker", so it is on
-	# offer while the picker is open and gone the rest of the time. The dialog's own visibility is
-	# the only honest source for that.
-	var picker_window: Window = _dock._ace_picker.window()
-	if picker_window != null and not picker_window.visibility_changed.is_connected(_dock._refresh_rail_census):
-		picker_window.visibility_changed.connect(_dock._refresh_rail_census)
-	# A greyed entry's one-line reason IS the fix: pressing Add on it lands here instead, the dock
-	# performs the fix, and the ordinary selected path runs after it.
-	_dock._ace_picker.gate_fix_requested.connect(_dock._on_picker_gate_fix_requested)
-	# The empty-result shelf's recipes insert as real rows through the snippet path.
-	_dock._ace_picker.recipe_insert_requested.connect(_dock._on_picker_recipe_requested)
-	# The Add event dialog's first entry, "(none - runs every tick)": a real event with no
-	# condition of its own, made where the dialog was opened.
-	_dock._ace_picker.blank_event_selected.connect(_dock._on_picker_blank_event_selected)
-	# The figure's "read more" affordance, filled in: the label is DERIVED from the verb's pack
-	# (provider -> pack directory -> guide name), so a pack that ships tomorrow gets the button
-	# with no wiring, and a verb with no pack shows no button at all.
-	_dock._ace_picker.set_guide_label_provider(func(definition: ACEDefinition) -> String:
-		return EventSheetDocExplain.guide_label(definition.provider_id) if definition != null else "")
-	_dock._ace_picker.guide_requested.connect(_dock._on_picker_guide_requested)
-	_dock._ace_picker.help_requested.connect(_dock._on_picker_help_requested)
-	_dock._ace_params.init_dialog(_dock, _dock._ace_registry, _dock._collect_sheet_variable_names)
-	_dock._ace_params.set_lint_context_provider(func() -> EventSheetResource: return _dock._current_sheet)
-	_dock._ace_params.set_variable_creator(_dock._create_variable_quickfix)
-	_dock._ace_params.set_variable_adder(_dock._variables.open_add_variable_named)
-	_dock._ace_params.set_group_toggle_requester(_dock._make_group_switchable)
-	_dock._ace_params.params_confirmed.connect(_dock._on_ace_params_confirmed)
-	_dock._ace_params.back_requested.connect(_dock._on_ace_params_back_requested)
-	_dock._variable_dlg.init_dialog(_dock)
-	_dock._new_addon_panel.init(_dock)
-	_dock._new_resource_wizard.init(_dock)
-	_dock._import_sheet_wizard.init(_dock)
-	_dock._welcome.init(_dock)
-	_dock._tour.init(_dock)
-	_dock._behavior_preview.init(_dock)
-	_dock._starter.init(_dock)
-	_dock._comments.init(_dock)
-	_dock._struct_rows.init(_dock)
-	_dock._inline_params.init(_dock)
-	_dock._doctor.init(_dock)
-	_dock._includes.init(_dock)
-	_dock._find_refs.init(_dock)
-	_dock._pick.init(_dock)
-	_dock._compare.init(_dock)
-	_dock._compare.compare_confirmed.connect(_dock._on_compare_confirmed)
-	_dock._ai.init(_dock)
-	_dock._ask.init(_dock)
-	_dock._sheet_type.init(_dock)
+	# The dialogs, windows and studios (the picker, the parameters dialog, the variable dialog, the
+	# Doctor, the Manual, the wizards) are not wired here any more: each is built, wired and
+	# connected by its own getter on the dock the first time anything asks for it. What is left is
+	# what the first paint and the session restore read.
 	_dock._session.init(_dock)
-	_dock._shortcuts.init(_dock)
-	_dock._rename.init(_dock)
-	_dock._variables.init(_dock)
-	_dock._multi_view.init(_dock)
-	_dock._command_palette.init(_dock)
-	_dock._sheet_diff.init(_dock)
-	_dock._variable_grouping.init(_dock)
 	_dock._context_menus.init(_dock)
 	_dock._external_watcher.init(_dock)
 	_dock._sheet_io.init(_dock)
-	_dock._shared_sheets.init(_dock)
-	_dock._ace_apply.init(_dock)
-	_dock._row_edit_ops.init(_dock)
 	_dock._preview_glue.init(_dock)
-	_dock._author_actions.init(_dock)
-	_dock._ghost_row.init(_dock)
-	_dock._navigate.init(_dock)
-	_dock._export_pack.init(_dock)
-	_dock._save_studio.init(_dock)
-	_dock._function_dialog_glue.init(_dock)
 	_dock._theme_manager.init(_dock)
-	_dock._find_bar_glue.init(_dock)
-	_dock._clipboard_glue.init(_dock)
-	_dock._quick_prompts.init(_dock)
-	# The Message dialog writes an annotation; the Send dialog names one of the three shipped
-	# Send ACEs and hands it to the ordinary apply path, exactly as the Compare dialog does.
-	_dock._messages.init(_dock)
-	_dock._messages.send_confirmed.connect(_dock._on_send_message_confirmed)
-	_dock._custom_block_dialog.init(_dock)
-	# Feed the active sheet so the name field can flag host-member shadowing (live + blocking).
-	_dock._variable_dlg.set_sheet_provider(func() -> EventSheetResource: return _dock._current_sheet)
-	_dock._variable_dlg.variable_confirmed.connect(_dock._on_variable_dialog_confirmed)
-	# Scope ▸ Global writes into the autoload the dialog's "Write into" picker named, through the
-	# same writer the Add global variable dialog uses, rather than into this file.
-	_dock._variable_dlg.project_global_requested.connect(_dock._on_variable_dialog_global_requested)
-	# Sheet enums feed the variable dialog's one-click combo fill.
-	_dock._variable_dlg.set_enum_provider(func() -> Array:
-		var sheet_enums: Array = []
-		if _dock._current_sheet != null:
-			for row: Variant in _dock._current_sheet.events:
-				if row is EnumRow and (row as EnumRow).enabled:
-					sheet_enums.append({"name": (row as EnumRow).enum_name, "members": (row as EnumRow).members})
-		return sheet_enums)
 
 
 func ensure_raw_code_dialog() -> void:
@@ -787,7 +698,7 @@ func ensure_raw_code_dialog() -> void:
 	layout_box.add_child(_dock._raw_code_hint)
 	# EventSheetRawCodeEdit adds Scene-node / asset drop (insert $Path / %Name at the caret) while keeping
 	# the CodeEdit's native text drag-and-drop - a plain set_drag_forwarding would clobber the latter.
-	_dock._raw_code_edit = EventSheetRawCodeEdit.new()
+	_dock._raw_code_edit = load(RAW_CODE_EDIT_PATH).new()
 	_dock._raw_code_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_dock._raw_code_edit.custom_minimum_size = Vector2(620.0, 330.0)
 	_dock._raw_code_edit.gutters_draw_line_numbers = true

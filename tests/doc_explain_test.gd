@@ -294,16 +294,16 @@ static func _test_entry_points() -> bool:
 		input_code.contains("_dock.open_documentation(_dock.last_read_doc_id())"), true) and all_passed
 	var dock_code: String = _read(DOCK_PATH)
 	all_passed = _check("the row item registers through the public seam",
-		dock_code.contains("EventSheets.register_row_menu_item(\"What does this do?\""), true) and all_passed
+		dock_code.contains("DOCK_REGISTRY.register_row_menu_item(\"What does this do?\""), true) and all_passed
 	all_passed = _check("the row item is filtered by can_explain",
-		dock_code.contains("EventSheetDocExplain.can_explain(resource)"), true) and all_passed
+		dock_code.contains("load(DOC_EXPLAIN_PATH).can_explain(resource)"), true) and all_passed
 	all_passed = _check("the row item lands on explain_row", dock_code.contains("explain_row(resource))"), true) and all_passed
 	all_passed = _check("explain_row funnels into the one dock method",
 		dock_code.contains("func explain_row(resource: Resource) -> void:\n\topen_documentation("), true) and all_passed
 	# The picker's read-more affordance goes through the public doc id, not straight at a URL, so
 	# the day "addon:" resolves to something other than a browser tab this caller needs no edit.
 	all_passed = _check("the picker's guide button routes through the public doc id",
-		dock_code.contains("EventSheets.open_docs(\"addon:%s\" % pack_dir)"), true) and all_passed
+		dock_code.contains("load(EVENTSHEETS_API_PATH).open_docs(\"addon:%s\" % pack_dir)"), true) and all_passed
 
 	# The seam itself, exercised live with the dock's own filter and label, so a registration of
 	# this shape is proved to reach the menu (the dock's own call needs a running editor).

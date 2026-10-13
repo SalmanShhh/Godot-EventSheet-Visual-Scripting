@@ -17,6 +17,10 @@ extends RefCounted
 # the `_dock.` back-reference; the dock keeps one-line delegates (its
 # _unhandled_key_input virtual must live on the Control) so no wiring changed.
 
+## The list the public API keeps the extension row items on, in a file that names nothing:
+## asking the API itself here would compile it, and everything it names, into the first open.
+const DOCK_REGISTRY := preload("res://addons/eventsheet/api/dock_registry.gd")
+
 var _dock: Control = null
 
 
@@ -29,7 +33,7 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 		return
 	# Extension row-menu items (EventSheets.register_row_menu_item) occupy ids 900+.
 	if id >= 900:
-		var applicable: Array[Dictionary] = EventSheets.row_menu_items_for(_dock._context_row.source_resource)
+		var applicable: Array[Dictionary] = DOCK_REGISTRY.row_menu_items_for(_dock._context_row.source_resource)
 		var extension_index: int = id - 900
 		if extension_index < applicable.size():
 			var action: Callable = applicable[extension_index].get("action", Callable())

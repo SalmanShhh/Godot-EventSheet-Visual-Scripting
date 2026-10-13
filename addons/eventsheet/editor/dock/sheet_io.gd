@@ -7,16 +7,28 @@ extends RefCounted
 # this helper reaches them (and add_child, EVENT_SHEET_FILTERS) through the `_dock` back-reference,
 # the same pattern as the other dock/ helpers. The dock keeps thin one-line delegates with the
 # original names + signatures so external callers (plugin.gd, the other dock/ helpers, menu_bar,
-# command_palette) and the tests don't change. Globals (SheetCompiler, EventSheetBackups,
-# ResourceSaver/Loader, FileAccess, GDScriptImporter, EventSheetLiftReport) are untouched.
+# command_palette) and the tests don't change. The compiler and the importer are reached BY PATH
+# (the constants below): a blank first sheet needs neither, and naming them here compiled both
+# into every first open.
 #
 # ORDER NOTE: _on_save_requested's compile-on-save sequence is load-bearing - save →
 # (compile-on-save fail → _run_diagnostics → status → _refresh_title_strip → return) else
 # _run_diagnostics → _refresh_title_strip → status. Preserved verbatim from the dock.
 
+## The files this helper reaches BY PATH, at the moment something asks: naming one of these
+## classes here would compile it, and everything it names, into the first open of a sheet.
+const DOC_CHORES_PATH := "res://addons/eventsheet/editor/docs/doc_chores.gd"
+const OPEN_JOB_PATH := "res://addons/eventforge/importer/open_job.gd"
+const SCENE_SHEET_PATH := "res://addons/eventforge/importer/scene_sheet.gd"
+const GDSCRIPT_IMPORTER_PATH := "res://addons/eventforge/importer/gdscript_importer.gd"
+const SHEET_COMPILER_PATH := "res://addons/eventforge/compiler/sheet_compiler.gd"
+## The list the public API keeps its lifecycle listeners on, in a file that names nothing: asking
+## the API itself here would compile it, and everything it names, into the first open.
+const DOCK_REGISTRY := preload("res://addons/eventsheet/api/dock_registry.gd")
+
 var _dock: Control = null
 # The in-flight asynchronous .gd open (see _begin_async_gd_open). Null when nothing is opening.
-var _open_job: EventSheetOpenJob = null
+var _open_job: RefCounted = null
 var _open_job_path: String = ""
 ## The raw sheet the open painted first - the identity that finds the right tab when the lift lands
 ## (the same file can legitimately be open in two tabs, so the path alone is not an identity).
@@ -56,7 +68,7 @@ func _load_sheet_from_path(path: String) -> void:
 		_dock._current_sheet_path = resolved_path
 		_dock._dirty = false
 		_dock._refresh_title_strip()
-		EventSheets._notify_lifecycle("opened", {"sheet": loaded, "path": resolved_path})
+		DOCK_REGISTRY.notify_lifecycle("opened", {"sheet": loaded, "path": resolved_path})
 		return
 	_dock._set_status("Open failed: %s is not an EventSheetResource." % resolved_path.get_file(), true)
 
@@ -87,7 +99,7 @@ func _open_blocked_by_conflict(path: String) -> bool:
 	var markers: PackedInt32Array = EventSheetConflictGuard.marker_line_numbers(source)
 	if markers.is_empty():
 		return false
-	var raw: EventSheetResource = GDScriptImporter.new().import_external(path, false)
+	var raw: EventSheetResource = load(GDSCRIPT_IMPORTER_PATH).new().import_external(path, false)
 	if raw == null:
 		# Unreadable as anything at all: say the one true thing rather than opening an empty sheet.
 		_dock._set_status(EventSheetConflictGuard.banner_text(path.get_file(), markers), true)
@@ -134,7 +146,7 @@ func _begin_async_gd_open(resolved_path: String) -> void:
 	# One open at a time: an in-flight lift is abandoned (its result is discarded) so the newer
 	# request wins. Cancel makes the worker bail at its next function, so the join is short.
 	_abandon_open_job()
-	var raw: EventSheetResource = GDScriptImporter.new().import_external(resolved_path, false)
+	var raw: EventSheetResource = load(GDSCRIPT_IMPORTER_PATH).new().import_external(resolved_path, false)
 	if raw == null:
 		_dock._set_status("Open failed: could not read %s." % resolved_path.get_file(), true)
 		return
@@ -155,7 +167,7 @@ func _begin_async_gd_open(resolved_path: String) -> void:
 			"%s is marked to stay code - showing it as code, and leaving it alone.") % resolved_path.get_file())
 		return
 	_dock._set_status("Opening %s - showing the code now, working out the events…" % resolved_path.get_file())
-	_open_job = EventSheetOpenJob.new()
+	_open_job = load(OPEN_JOB_PATH).new()
 	_open_job_path = resolved_path
 	_open_job_raw = raw
 	if not _open_job.start(resolved_path):
@@ -183,7 +195,7 @@ func _begin_async_gd_open(resolved_path: String) -> void:
 func _open_scene_as_sheet(resolved_path: String) -> void:
 	_abandon_open_job()
 	_stop_scene_polling()
-	var sheet: EventSheetResource = EventSheetSceneSheet.build_shell(resolved_path)
+	var sheet: EventSheetResource = load(SCENE_SHEET_PATH).build_shell(resolved_path)
 	if sheet == null:
 		_dock._set_status("Open failed: could not read %s." % resolved_path.get_file(), true)
 		return
@@ -196,7 +208,7 @@ func _open_scene_as_sheet(resolved_path: String) -> void:
 	_dock._set_status("Opening %s - reading every script the scene uses…" % resolved_path.get_file())
 	if not _dock.is_inside_tree():
 		# No tree (a headless test driving the dock directly): there are no frames to spread over.
-		while EventSheetSceneSheet.load_next_member(sheet):
+		while load(SCENE_SHEET_PATH).load_next_member(sheet):
 			pass
 		_dock._viewport.set_sheet(sheet)
 		return
@@ -212,21 +224,21 @@ func _poll_scene_open() -> void:
 	if _scene_sheet == null:
 		_stop_scene_polling()
 		return
-	var more: bool = EventSheetSceneSheet.load_next_member(_scene_sheet)
+	var more: bool = load(SCENE_SHEET_PATH).load_next_member(_scene_sheet)
 	# The rows are rebuilt as each script lands, so the sheet fills in front of the reader.
 	if _dock._current_sheet == _scene_sheet:
 		_dock._viewport.set_sheet(_scene_sheet)
-	var pending: int = EventSheetSceneSheet.pending_members(_scene_sheet)
+	var pending: int = load(SCENE_SHEET_PATH).pending_members(_scene_sheet)
 	if _dock._open_progress != null:
-		var total: int = EventSheetSceneSheet.members_of(_scene_sheet).size()
+		var total: int = load(SCENE_SHEET_PATH).members_of(_scene_sheet).size()
 		_dock._open_progress.update("Reading %s - script %d of %d" % [
-			EventSheetSceneSheet.scene_path_of(_scene_sheet).get_file(), total - pending, total],
+			load(SCENE_SHEET_PATH).scene_path_of(_scene_sheet).get_file(), total - pending, total],
 			float(total - pending) / float(maxi(total, 1)))
 	if more or pending > 0:
 		return
 	_stop_scene_polling()
 	_dock._set_status("Opened %s - reading only. Double-click an object bar to edit that script." %
-		EventSheetSceneSheet.scene_path_of(_scene_sheet).get_file())
+		load(SCENE_SHEET_PATH).scene_path_of(_scene_sheet).get_file())
 
 
 func _stop_scene_polling() -> void:
@@ -279,7 +291,7 @@ func _stop_open_polling() -> void:
 
 ## Joins the worker and shows what it produced.
 func _collect_open_job() -> void:
-	var job: EventSheetOpenJob = _open_job
+	var job: RefCounted = _open_job
 	var job_path: String = _open_job_path
 	var job_raw: EventSheetResource = _open_job_raw
 	_open_job = null
@@ -333,7 +345,7 @@ func _finish_gd_open(sheet: EventSheetResource, raw_sheet: EventSheetResource, r
 		# from the active sheet, so tab switches always show the right counts).
 		_dock._refresh_preview_banner()
 		_flag_parse_error_rows(sheet, resolved_path)
-	EventSheets._notify_lifecycle("opened", {"sheet": sheet, "path": resolved_path})
+	DOCK_REGISTRY.notify_lifecycle("opened", {"sheet": sheet, "path": resolved_path})
 	# A "show the events behind this" that was waiting for this file finishes here, now that
 	# there are rows to land on.
 	_dock._complete_built_here(sheet, resolved_path)
@@ -373,7 +385,7 @@ func _flag_parse_error_rows(sheet: EventSheetResource, resolved_path: String) ->
 	if errors.is_empty():
 		_dock._viewport.clear_row_diagnostics()
 		return
-	var source_map: Array = SheetCompiler.compile(sheet, resolved_path).get("source_map", [])
+	var source_map: Array = load(SHEET_COMPILER_PATH).compile(sheet, resolved_path).get("source_map", [])
 	_dock._viewport.set_row_diagnostics(EventSheetParseErrors.row_diagnostics(errors, source_map))
 
 
@@ -384,7 +396,7 @@ func _open_new_sheet(path: String) -> void:
 	var resolved_path: String = path.strip_edges()
 	if resolved_path.is_empty():
 		return
-	var imported: EventSheetResource = GDScriptImporter.new().import_external(resolved_path)
+	var imported: EventSheetResource = load(GDSCRIPT_IMPORTER_PATH).new().import_external(resolved_path)
 	if imported == null:
 		_dock._set_status("Created %s, but couldn't open it as a sheet." % resolved_path.get_file(), true)
 		return
@@ -405,8 +417,8 @@ func _save_backed_sheet() -> bool:
 	# The .gd IS the sheet on this path - it deserves the same backup ring a .tres save
 	# gets (pre-save bytes first; the ring dedups no-op saves so it doesn't churn).
 	EventSheetBackups.backup_sheet(_dock._current_sheet.external_source_path)
-	var compile_result: Dictionary = SheetCompiler.compile(_dock._current_sheet, _dock._current_sheet.external_source_path)
-	EventSheets._notify_lifecycle("compiled", {"sheet": _dock._current_sheet, "path": _dock._current_sheet.external_source_path, "success": bool(compile_result.get("success", false))})
+	var compile_result: Dictionary = load(SHEET_COMPILER_PATH).compile(_dock._current_sheet, _dock._current_sheet.external_source_path)
+	DOCK_REGISTRY.notify_lifecycle("compiled", {"sheet": _dock._current_sheet, "path": _dock._current_sheet.external_source_path, "success": bool(compile_result.get("success", false))})
 	if not bool(compile_result.get("success", false)):
 		_dock._set_status("This sheet doesn't compile yet - fix the error, then save again. (%s)" % ", ".join(PackedStringArray(compile_result.get("errors", []))), true)
 		return false
@@ -417,7 +429,7 @@ func _save_backed_sheet() -> bool:
 	# written into the .gd - it is a plain script and stays one - and this only writes at all when the
 	# value would change, so a project file is touched once per version rather than once per save.
 	EventForgeVocabularyRecord.stamp()
-	EventSheets._notify_lifecycle("saved", {"sheet": _dock._current_sheet, "path": _dock._current_sheet.external_source_path})
+	DOCK_REGISTRY.notify_lifecycle("saved", {"sheet": _dock._current_sheet, "path": _dock._current_sheet.external_source_path})
 	return true
 
 
@@ -474,9 +486,9 @@ func _on_save_requested() -> void:
 	# "Edit Events" (then this becomes a normal GDScript-backed save), or forks via Save As.
 	# A scene read as one sheet is many files at once, and the .tscn is not one of them: there is
 	# nothing here to save, so say where the editing happens instead.
-	if EventSheetSceneSheet.is_scene_sheet(_dock._current_sheet):
+	if load(SCENE_SHEET_PATH).is_scene_sheet(_dock._current_sheet):
 		_dock._set_status("%s is a reading of the whole scene - double-click an object bar to open that script and save there." %
-			EventSheetSceneSheet.scene_path_of(_dock._current_sheet).get_file(), true)
+			load(SCENE_SHEET_PATH).scene_path_of(_dock._current_sheet).get_file(), true)
 		return
 	# A file still holding merge markers refuses in its OWN words, and refuses first: the read-only
 	# message below points at an "Edit Events" button that a blocked sheet does not have, and telling
@@ -529,7 +541,7 @@ func _on_save_requested() -> void:
 		# covers exports; this covers F5.
 		var compile_on_save: bool = bool(ProjectSettings.get_setting("eventsheets/editor/compile_on_save", true))
 		if compile_on_save:
-			var auto_result: Dictionary = SheetCompiler.compile(_dock._current_sheet, "")
+			var auto_result: Dictionary = load(SHEET_COMPILER_PATH).compile(_dock._current_sheet, "")
 			if not bool(auto_result.get("success", false)):
 				_dock._run_diagnostics()
 				# Friendly + actionable first (diagnostics just flagged + jumped to the bad row), with
@@ -554,7 +566,7 @@ func _on_save_requested() -> void:
 ## not grow with the size of the game, and nothing is created that was not already there (a project
 ## that never asked for a manual does not acquire one because somebody pressed Ctrl+S).
 func _refresh_documentation_for(sheet_path: String) -> void:
-	EventSheetDocChores.refresh_after_save(sheet_path, _dock._current_sheet)
+	load(DOC_CHORES_PATH).refresh_after_save(sheet_path, _dock._current_sheet)
 
 
 func _on_save_as_requested() -> void:
@@ -647,7 +659,7 @@ func _exported_script_basename() -> String:
 
 func _write_exported_gdscript(path: String) -> void:
 	var target: String = path if path.get_extension() == "gd" else path + ".gd"
-	var result: Dictionary = SheetCompiler.compile(_dock._current_sheet, target)
+	var result: Dictionary = load(SHEET_COMPILER_PATH).compile(_dock._current_sheet, target)
 	var errors: Array = result.get("errors", [])
 	if not errors.is_empty():
 		_dock._set_status("Export failed: %s" % str(errors[0]), true)
@@ -696,11 +708,11 @@ func _save_sheet_as_gdscript(path: String) -> bool:
 	# companion - it must not carry the "DO NOT EDIT / regenerated on every compile" banner.
 	# Save As over an existing .gd overwrites it - ring its pre-save bytes first.
 	EventSheetBackups.backup_sheet(path)
-	var compile_result: Dictionary = SheetCompiler.compile(_dock._current_sheet, path, true)
+	var compile_result: Dictionary = load(SHEET_COMPILER_PATH).compile(_dock._current_sheet, path, true)
 	if not bool(compile_result.get("success", false)):
 		_dock._set_status("Couldn't save as GDScript: %s" % ", ".join(PackedStringArray(compile_result.get("errors", []))), true)
 		return false
-	var backed: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var backed: EventSheetResource = load(GDSCRIPT_IMPORTER_PATH).new().import_external(path)
 	if backed == null:
 		_dock._set_status("Saved %s, but couldn't reopen it as a sheet." % path.get_file(), true)
 		return false

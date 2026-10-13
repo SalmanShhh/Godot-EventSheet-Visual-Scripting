@@ -33,13 +33,17 @@ extends RefCounted
 # return null/false); vocabulary, codegen and health services work anywhere, including tests.
 # ═══════════════════════════════════════════════════════════════════════════════════════
 
-## The live dock, registered by the dock itself at setup. Weak by contract: every use
-## checks validity, so a closed workspace never leaves the API pointing at a freed node.
-static var _dock: Control = null
+## Where the live workspace is announced, and the palette commands and row menu items are kept. The
+## workspace registers itself and its own entries while it is being built, so that storage sits in a
+## file that names nothing: reaching this class from there would compile all of it into the first
+## open of a sheet. Every method below reads and writes it exactly as it always did.
+const DOCK_REGISTRY := preload("res://addons/eventsheet/api/dock_registry.gd")
 
-## Palette entries registered from code: Array of {"title": String, "run": Callable}.
-## The Command Palette appends these after the built-in commands on every open.
-static var _palette_commands: Array[Dictionary] = []
+## The live dock, registered by the dock itself while it is built. Weak by contract: every use
+## checks validity, so a closed workspace never leaves the API pointing at a freed node.
+static var _dock: Control:
+	get:
+		return DOCK_REGISTRY.dock()
 
 
 # ── Vocabulary ─────────────────────────────────────────────────────────────────────────
@@ -373,21 +377,16 @@ static func build_caption_row(text: String, indent: int = 0, row_uid: String = "
 static func register_palette_command(title: String, action: Callable, category: String = "") -> void:
 	# An optional category prefixes the display title ("My Pack: Reroll Loot") so extension
 	# commands group together in the palette's fuzzy filter.
-	if not category.is_empty():
-		title = "%s: %s" % [category, title]
-	unregister_palette_command(title)
-	_palette_commands.append({"title": title, "run": action})
+	DOCK_REGISTRY.register_palette_command(title, action, category)
 
 
 static func unregister_palette_command(title: String) -> void:
-	for index in range(_palette_commands.size() - 1, -1, -1):
-		if str(_palette_commands[index].get("title", "")) == title:
-			_palette_commands.remove_at(index)
+	DOCK_REGISTRY.unregister_palette_command(title)
 
 
 ## The registered extension commands, in registration order (read by the palette).
 static func palette_commands() -> Array[Dictionary]:
-	return _palette_commands.duplicate()
+	return DOCK_REGISTRY.palette_commands()
 
 
 ## Builds the same live Inspector mock the Variable dialog shows - decor, group heading, widget
@@ -1233,10 +1232,6 @@ static func scripts_calling(function_name: String, own_script: String = "") -> P
 ## the API). The methods below are unchanged and stay the way every feature reaches them.
 const EXTENSION_REGISTRIES := preload("res://addons/eventsheet/api/extension_registries.gd")
 
-## Row context-menu items: [{label, filter: Callable(resource)->bool, action: Callable(resource)}].
-static var _row_menu_items: Array[Dictionary] = []
-## Lifecycle listeners: event name -> Array[Callable].
-static var _lifecycle: Dictionary = {"opened": [], "saved": [], "compiled": []}
 ## Extension starters: [{label, build: Callable()->EventSheetResource}] - ids 1000+ in the dialog.
 static var _starters: Array[Dictionary] = []
 ## Welcome Preferences rows: Array[Callable() -> Control].
@@ -1254,46 +1249,36 @@ static var _editor_gizmo_drawers: Dictionary = {}
 ## resource when clicked. Mutate the sheet inside your action via EventSheets.edit() so the
 ## change is one undo step. Re-registering a label replaces it.
 static func register_row_menu_item(label: String, filter: Callable, action: Callable) -> void:
-	unregister_row_menu_item(label)
-	_row_menu_items.append({"label": label, "filter": filter, "action": action})
+	DOCK_REGISTRY.register_row_menu_item(label, filter, action)
 
 
 static func unregister_row_menu_item(label: String) -> void:
-	for index: int in range(_row_menu_items.size() - 1, -1, -1):
-		if str(_row_menu_items[index].get("label", "")) == label:
-			_row_menu_items.remove_at(index)
+	DOCK_REGISTRY.unregister_row_menu_item(label)
 
 
 ## The registered row items applicable to `resource` (consulted by the context-menu builder).
 static func row_menu_items_for(resource: Resource) -> Array[Dictionary]:
-	var applicable: Array[Dictionary] = []
-	for entry: Dictionary in _row_menu_items:
-		var filter: Callable = entry.get("filter", Callable())
-		if not filter.is_valid() or bool(filter.call(resource)):
-			applicable.append(entry)
-	return applicable
+	return DOCK_REGISTRY.row_menu_items_for(resource)
 
 
 ## Lifecycle hooks: run `callback(payload)` whenever a sheet is opened ({sheet, path}), saved
 ## ({sheet, path}), or compiled ({sheet, path, success}). Fired by the editor's own open/save
 ## funnels - linters, sync tools, and exporters subscribe instead of polling.
 static func on_sheet_opened(callback: Callable) -> void:
-	(_lifecycle["opened"] as Array).append(callback)
+	DOCK_REGISTRY.on_lifecycle("opened", callback)
 
 
 static func on_sheet_saved(callback: Callable) -> void:
-	(_lifecycle["saved"] as Array).append(callback)
+	DOCK_REGISTRY.on_lifecycle("saved", callback)
 
 
 static func on_sheet_compiled(callback: Callable) -> void:
-	(_lifecycle["compiled"] as Array).append(callback)
+	DOCK_REGISTRY.on_lifecycle("compiled", callback)
 
 
 ## Internal: the dock's IO funnels announce lifecycle events here.
 static func _notify_lifecycle(event_name: String, payload: Dictionary) -> void:
-	for callback: Callable in (_lifecycle.get(event_name, []) as Array):
-		if callback.is_valid():
-			callback.call(payload)
+	DOCK_REGISTRY.notify_lifecycle(event_name, payload)
 
 
 ## Registers a starter template for the FileSystem "Create New > Event Sheet" dialog:
@@ -1857,7 +1842,7 @@ static func builtin_action(ace_id: String, params: Dictionary) -> ACEAction:
 	action.params = params.duplicate(true)
 	action.codegen_template = str(descriptor.codegen_template)
 	if action.codegen_template.contains("{uid}"):
-		action.codegen_template = action.codegen_template.replace("{uid}", EventSheetDock._fresh_uid_token())
+		action.codegen_template = action.codegen_template.replace("{uid}", str(load("res://addons/eventsheet/editor/event_sheet_dock.gd").call("_fresh_uid_token")))
 	return action
 
 
@@ -2909,8 +2894,8 @@ static func _typed_dictionaries(entries: Array) -> Array[Dictionary]:
 
 ## The dock announces itself here during setup; extensions never call this.
 static func _register_dock(dock: Control) -> void:
-	_dock = dock
+	DOCK_REGISTRY.register_dock(dock)
 
 
 static func _dock_alive() -> bool:
-	return _dock != null and is_instance_valid(_dock)
+	return DOCK_REGISTRY.dock_alive()

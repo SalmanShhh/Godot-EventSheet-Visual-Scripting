@@ -234,7 +234,7 @@ static func _test_seams() -> bool:
 		_read(SEARCH_PATH).contains("\"doc_id\": EventSheetDocExplain.doc_id_for_definition(definition)"),
 		true) and all_passed
 	all_passed = _check("the picker's info affordance opens the same entry",
-		_read(DOCK_PATH).contains("open_documentation(EventSheetDocExplain.doc_id_for_definition(definition))"),
+		_read(DOCK_PATH).contains("open_documentation(load(DOC_EXPLAIN_PATH).doc_id_for_definition(definition))"),
 		true) and all_passed
 	return all_passed
 

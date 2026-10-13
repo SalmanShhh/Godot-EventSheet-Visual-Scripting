@@ -17,6 +17,11 @@ extends RefCounted
 # `_dock.` back-reference; the dock keeps one-line delegates (several of these are
 # signal targets wired by name) so nothing else changed.
 
+## The files this helper reaches BY PATH, at the moment something asks: naming one of these
+## classes here would compile it, and everything it names, into the first open of a sheet.
+const SHEET_COMPILER_PATH := "res://addons/eventforge/compiler/sheet_compiler.gd"
+const COMPLETIONS_PATH := "res://addons/eventsheet/editor/autocomplete/completion_sources.gd"
+
 var _dock: Control = null
 
 
@@ -127,7 +132,7 @@ func refresh_code_panel() -> void:
 		_dock._code_panel_highlight = Vector2i(-1, -1)
 		_dock._update_code_panel_highlight()
 		return
-	var compile_result: Dictionary = SheetCompiler.compile(_dock._current_sheet, "user://eventforge_code_panel_preview.gd")
+	var compile_result: Dictionary = load(SHEET_COMPILER_PATH).compile(_dock._current_sheet, "user://eventforge_code_panel_preview.gd")
 	_dock._code_edit.text = str(compile_result.get("output", ""))
 	_dock._code_source_map = compile_result.get("source_map", [])
 	_dock._tab_state.store_code(_dock._code_edit.text, _dock._code_source_map)
@@ -342,11 +347,11 @@ func populate_raw_code_completion() -> void:
 	if _dock._raw_code_edit == null:
 		return
 	var before_caret: String = _dock._text_before_caret(_dock._raw_code_edit)
-	for entry: Dictionary in EventSheetCompletions.for_field(_dock._current_sheet,
-			EventSheetCompletions.FIELD_EXPRESSION, before_caret):
+	for entry: Dictionary in load(COMPLETIONS_PATH).for_field(_dock._current_sheet,
+			load(COMPLETIONS_PATH).FIELD_EXPRESSION, before_caret):
 		var label: String = str(entry.get("text", ""))
 		_dock._raw_code_edit.add_code_completion_option(
-			EventSheetCompletions.code_edit_kind(str(entry.get("kind", ""))), label, label)
+			load(COMPLETIONS_PATH).code_edit_kind(str(entry.get("kind", ""))), label, label)
 	_dock._raw_code_edit.update_code_completion_options(true)
 	_dock._raw_code_edit.set_code_hint(EventSheetGDScriptLint.signature_hint(_dock._text_before_caret(_dock._raw_code_edit), _dock._current_sheet))
 
