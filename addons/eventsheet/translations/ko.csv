@@ -7399,3 +7399,6 @@ Pause Requested By,일시정지 요청자
 A pause is requested by {reason},{reason}이(가) 일시정지를 요청함
 "True while this reason has asked the game to pause and not yet stopped asking - whatever any other reason is doing. To ask whether the game is paused at all, use Is Game Paused.",이 이유가 게임 일시정지를 요청했고 아직 멈추지 않은 동안 참입니다 - 다른 이유가 무엇을 하든. 게임이 일시정지 상태인지 자체는 게임 일시정지 중을 사용하세요.
 The name Ask To Pause was given.,일시정지 요청에 준 이름.
+Select a finding to fix it.,
+This finding has more than one fix - pick one of the Fix buttons below.,
+This finding has no one-step fix.,

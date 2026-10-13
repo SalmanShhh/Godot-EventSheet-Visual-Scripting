@@ -7399,3 +7399,6 @@ Pause Requested By,Pausa pedida por
 A pause is requested by {reason},{reason} pide una pausa
 "True while this reason has asked the game to pause and not yet stopped asking - whatever any other reason is doing. To ask whether the game is paused at all, use Is Game Paused.","Verdadero mientras este motivo haya pedido que el juego se pause y aún no haya dejado de pedirlo - haga lo que haga cualquier otro motivo. Para saber si el juego está en pausa, usa Juego en pausa."
 The name Ask To Pause was given.,El nombre que se dio a Pedir pausa.
+Select a finding to fix it.,
+This finding has more than one fix - pick one of the Fix buttons below.,
+This finding has no one-step fix.,

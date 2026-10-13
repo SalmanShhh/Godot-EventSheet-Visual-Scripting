@@ -114,6 +114,25 @@ static func run() -> bool:
 	all_passed = _check("an unnamed fix is refused rather than half-applied",
 		bool(EventSheetQuickFixes.apply("not_a_fix", {}, {}).get("ok", true)), false) and all_passed
 
+	# The Doctor's "Fix selected" applies a built-in fix too, and says why when it cannot.
+	var single: Dictionary = EventSheetProjectDoctorPanel.fix_selected_plan(
+		{"check": "raw-call-has-action", "path": "res://player.gd"})
+	var several: Dictionary = EventSheetProjectDoctorPanel.fix_selected_plan(unknown_control)
+	var none: Dictionary = EventSheetProjectDoctorPanel.fix_selected_plan(
+		{"check": "generated-output-drift"})
+	var attached: Dictionary = EventSheetProjectDoctorPanel.fix_selected_plan(
+		{"check": "an-extension-check", "fix": func(_finding: Dictionary) -> void: pass})
+	all_passed = SUPPORT.pins("addon_manager_test", [
+		["Fix selected applies a finding's one built-in fix", single["enabled"], true],
+		["...naming that fix", single["fix_id"], "convert_raw_call"],
+		["a finding with several fixes waits for a chip", several["enabled"], false],
+		["...and says so", several["reason"],
+			"This finding has more than one fix - pick one of the Fix buttons below."],
+		["a finding with no fix greys the button", none["enabled"], false],
+		["...and says why", none["reason"], "This finding has no one-step fix."],
+		["an extension's own fix still applies", attached["enabled"], true],
+	]) and all_passed
+
 	# THE WAY BACK OUT OF AN UPDATE TELLS THE REGISTRY, like the update door beside it. The file a
 	# restore puts back can be the pack's own .gd, whose @ace_* annotations ARE the vocabulary - which
 	# is the case this door exists for - so a restore that only redrew the manager's own table left

@@ -35,15 +35,36 @@ var _fix_button: Button = null
 var _quick_fix_bar: HBoxContainer = null
 
 
-## Enables the Fix button only when the selected finding carries a fix Callable, and redraws the
-## quick-fix chips for whatever is selected now.
+## Enables the Fix button when the selected finding has one fix to apply (see fix_selected_plan),
+## says why when it does not, and redraws the quick-fix chips for whatever is selected now.
 func _refresh_fix_button() -> void:
 	_refresh_quick_fixes()
 	if _fix_button == null:
 		return
 	var item: TreeItem = _doctor_tree.get_selected()
-	var finding: Variant = item.get_metadata(1) if item != null else null
-	_fix_button.disabled = not (finding is Dictionary and (finding as Dictionary).get("fix") is Callable)
+	var plan: Dictionary = fix_selected_plan(item.get_metadata(1) if item != null else null)
+	_fix_button.disabled = not bool(plan["enabled"])
+	_fix_button.tooltip_text = str(plan["reason"])
+
+
+## What "Fix selected" does for one finding, as {enabled, fix_id, reason}. A fix the check itself
+## attached (an extension check's "fix" Callable) comes first; otherwise a finding with exactly one
+## built-in fix applies that one (fix_id); a finding with several waits for the reader to pick one of
+## the chips, and one with none says so. `reason` is what the greyed button explains.
+static func fix_selected_plan(finding: Variant) -> Dictionary:
+	if not (finding is Dictionary):
+		return {"enabled": false, "fix_id": "",
+			"reason": EventSheetL10n.translate("Select a finding to fix it.")}
+	if (finding as Dictionary).get("fix") is Callable:
+		return {"enabled": true, "fix_id": "", "reason": ""}
+	var offered: Array[Dictionary] = EventSheetQuickFixes.fixes_for(finding as Dictionary)
+	if offered.size() == 1:
+		return {"enabled": true, "fix_id": str(offered[0].get("id", "")), "reason": ""}
+	if offered.size() > 1:
+		return {"enabled": false, "fix_id": "",
+			"reason": EventSheetL10n.translate("This finding has more than one fix - pick one of the Fix buttons below.")}
+	return {"enabled": false, "fix_id": "",
+		"reason": EventSheetL10n.translate("This finding has no one-step fix.")}
 
 
 ## The one-step fixes for the selected finding, as chips. A finding with a one-click fix is a
@@ -79,9 +100,14 @@ func _apply_quick_fix(fix_id: String, finding: Dictionary) -> void:
 func _run_selected_fix() -> void:
 	var item: TreeItem = _doctor_tree.get_selected()
 	var finding: Variant = item.get_metadata(1) if item != null else null
-	if finding is Dictionary and (finding as Dictionary).get("fix") is Callable:
+	var plan: Dictionary = fix_selected_plan(finding)
+	if not bool(plan["enabled"]):
+		return
+	if (finding as Dictionary).get("fix") is Callable:
 		((finding as Dictionary)["fix"] as Callable).call(finding)
 		_run_project_doctor()
+		return
+	_apply_quick_fix(str(plan["fix_id"]), finding as Dictionary)
 
 
 func open() -> void:
@@ -129,8 +155,8 @@ func open() -> void:
 		rerun_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		rerun_button.pressed.connect(_run_project_doctor)
 		buttons.add_child(rerun_button)
-		# Extension checks may attach a "fix" Callable to a finding - one click repairs it, then
-		# the audit re-runs so the finding's disappearance is PROVEN, not assumed.
+		# A finding's one fix - an extension check's "fix" Callable, or its single built-in fix -
+		# is one click, then the audit re-runs so the finding's disappearance is PROVEN, not assumed.
 		_fix_button = Button.new()
 		_fix_button.text = "Fix selected"
 		_fix_button.disabled = true

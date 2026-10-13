@@ -7399,3 +7399,6 @@ Pause Requested By,一時停止の要求元
 A pause is requested by {reason},{reason} が一時停止を要求している
 "True while this reason has asked the game to pause and not yet stopped asking - whatever any other reason is doing. To ask whether the game is paused at all, use Is Game Paused.",この理由がゲームの一時停止を要求していて、まだやめていない間は真 - ほかの理由が何をしていても。ゲームがそもそも一時停止中かどうかは「ゲームが一時停止中」を使います。
 The name Ask To Pause was given.,「一時停止を要求」に付けた名前。
+Select a finding to fix it.,
+This finding has more than one fix - pick one of the Fix buttons below.,
+This finding has no one-step fix.,

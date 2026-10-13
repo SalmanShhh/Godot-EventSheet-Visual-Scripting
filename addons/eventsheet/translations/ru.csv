@@ -7399,3 +7399,6 @@ Pause Requested By,Пауза запрошена
 A pause is requested by {reason},Пауза запрошена ради {reason}
 "True while this reason has asked the game to pause and not yet stopped asking - whatever any other reason is doing. To ask whether the game is paused at all, use Is Game Paused.","Истинно, пока эта причина попросила игру встать на паузу и ещё не перестала просить - что бы ни делали другие причины. Чтобы узнать, стоит ли игра на паузе вообще, используйте «Игра на паузе»."
 The name Ask To Pause was given.,"Имя, данное «Попросить паузу»."
+Select a finding to fix it.,
+This finding has more than one fix - pick one of the Fix buttons below.,
+This finding has no one-step fix.,
