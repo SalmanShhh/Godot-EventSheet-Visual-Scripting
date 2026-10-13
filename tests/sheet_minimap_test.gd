@@ -8,6 +8,22 @@ class_name SheetMinimapTest
 extends RefCounted
 
 
+## Stands in for the dock's undo and redo: each restores the snapshot the funnel would, which is all
+## the panel listens to.
+class TravelDock:
+	extends Control
+	var panel: EventSheetHistoryPanel = null
+	var _viewport: EventSheetViewport = null
+
+	func _on_undo_requested() -> void:
+		if panel.cursor > 0:
+			panel.note_restored(panel.entries[panel.cursor - 1].get("before"))
+
+	func _on_redo_requested() -> void:
+		if panel.cursor < panel.entries.size():
+			panel.note_restored(panel.entries[panel.cursor].get("after"))
+
+
 static func run() -> bool:
 	var passed: bool = true
 	passed = _bar_kinds() and passed
@@ -16,6 +32,8 @@ static func run() -> bool:
 	passed = _history_labels() and passed
 	passed = _history_touched_rows() and passed
 	passed = _history_cursor_follows_the_snapshots() and passed
+	passed = _history_travels_back_to_before_the_first_edit() and passed
+	passed = _history_lights_rows_on_hover_not_on_click() and passed
 	return passed
 
 
@@ -126,6 +144,52 @@ static func _history_cursor_follows_the_snapshots() -> bool:
 	panel.record("Paste", first_after, second_after, 3)
 	passed = _check("an edit made after an undo drops what was waiting to be redone",
 		[panel.entries.size(), str(panel.entries[1].get("label", ""))], [2, "Paste"]) and passed
+	return passed
+
+
+## The list's first line is the sheet before any of its edits, so a click can undo ALL of them -
+## without it the furthest back a click reached was just after the first edit.
+static func _history_travels_back_to_before_the_first_edit() -> bool:
+	var passed: bool = true
+	var dock: TravelDock = TravelDock.new()
+	var panel: EventSheetHistoryPanel = EventSheetHistoryPanel.new(dock)
+	dock.panel = panel
+	panel.build()
+	var first_after: EventSheetResource = _sheet(["a", "b"])
+	panel.record("Add Blank Event", _sheet(["a"]), first_after, 1)
+	panel.record("Add Group", first_after, _sheet(["a", "b", "c"]), 2)
+	var first_line: TreeItem = panel.tree.get_root().get_first_child()
+	passed = _check("the list opens with the sheet before these edits",
+		first_line.get_text(0), "• Before these edits") and passed
+	# What a click on the line does (the selection handler, without a Tree selection that the
+	# rebuild would free mid-signal in a headless run).
+	panel.travel_to(int(first_line.get_metadata(0)) + 1)
+	passed = _check("clicking it undoes every listed edit", panel.cursor, 0) and passed
+	dock.free()
+	return passed
+
+
+## The touched rows light while the pointer is OVER an entry and go dark when it leaves - a click
+## travels, it does not light anything.
+static func _history_lights_rows_on_hover_not_on_click() -> bool:
+	var passed: bool = true
+	var editor: EventSheetEditor = EventSheetEditor.new()
+	editor.setup(EventSheetResource.new())
+	var panel: EventSheetHistoryPanel = editor._ensure_history_panel()
+	panel.build()
+	panel.record("Add Group", _sheet(["a"]), _sheet(["a", "c"]), 1)
+	var entry_line: TreeItem = panel.tree.get_root().get_first_child().get_next()
+	# Selected without travelling, so the click below is the only thing that could light rows.
+	panel.tree.item_selected.disconnect(panel._on_entry_selected)
+	entry_line.select(0)
+	panel.tree.item_selected.connect(panel._on_entry_selected)
+	panel.tree.item_mouse_selected.emit(Vector2.ZERO, MOUSE_BUTTON_LEFT)
+	passed = _check("a click lights nothing", editor._viewport._row_highlight.keys(), []) and passed
+	panel.highlight_entry(0)
+	passed = _check("hovering the edit lights the row it added", editor._viewport._row_highlight.keys(), ["c"]) and passed
+	panel.highlight_entry(-1)
+	passed = _check("leaving the list clears the light", editor._viewport._row_highlight.keys(), []) and passed
+	editor.free()
 	return passed
 
 

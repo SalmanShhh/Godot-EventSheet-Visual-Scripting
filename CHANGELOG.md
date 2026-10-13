@@ -12,6 +12,9 @@
 - **Bookmarks:** Clear All now asks first, because bookmarks are not part of undo. OK and Esc keep
   them; only the separate Clear All button removes them. The list and its jumps follow the pane you
   are working in during split view, and entries carry an editor icon instead of an emoji.
+- **History:** the list now opens with a "Before these edits" line, so a click can undo back past
+  the first edit. Rows light up on the canvas while the pointer is over an entry, instead of when
+  you click one.
 
 ### Fixed: debugging, checks and small prompts
 

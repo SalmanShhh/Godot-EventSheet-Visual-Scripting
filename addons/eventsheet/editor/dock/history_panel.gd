@@ -3,8 +3,8 @@
 # Every edit you have made to this sheet, in the sheet's own words, newest last. Godot's own History
 # dock lists the same steps under their internal names; this one lists them the way the sheet named
 # them when it made them ("Add Group", "Extract to Function", "Move Variable Up"), with the event
-# they landed on beside them. Click one to undo or redo back to it; hover one to see the rows it
-# touched lit up on the canvas.
+# they landed on beside them. Click one to undo or redo back to it (the first line is the sheet as it
+# was before any of them); hover one to see the rows it touched lit up on the canvas.
 #
 # The log is the dock's own: it is written by the one funnel every sheet edit goes through, and the
 # cursor follows the snapshots that funnel restores - so Ctrl+Z from anywhere, the toolbar arrows
@@ -19,6 +19,10 @@ const MARK_UNDONE := "◦ "
 
 const COLOR_APPLIED := Color("#dfe4ec")
 const COLOR_UNDONE := Color("#8a90a0")
+
+## The metadata of the list's first line, the sheet before any listed edit: travelling to it undoes
+## every one of them.
+const START_INDEX := -1
 
 var _dock: Control = null
 
@@ -160,7 +164,8 @@ func build() -> void:
 	tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	tree.custom_minimum_size = Vector2(0.0, 260.0)
 	tree.item_selected.connect(_on_entry_selected)
-	tree.item_mouse_selected.connect(_on_entry_hovered)
+	tree.gui_input.connect(_on_tree_input)
+	tree.mouse_exited.connect(func() -> void: highlight_entry(-1))
 	body_box.add_child(tree)
 	_empty_hint = EventSheetPopupUI.hint_label("No edits yet. Every change you make to this sheet is listed here, in the sheet's own words.", 360.0)
 	body_box.add_child(_empty_hint)
@@ -185,6 +190,13 @@ func refresh() -> void:
 		return
 	tree.clear()
 	var root: TreeItem = tree.create_item()
+	# The sheet before the first listed edit: without a line of its own the list could undo back to
+	# just after the first edit and no further.
+	if not entries.is_empty():
+		var start: TreeItem = tree.create_item(root)
+		start.set_text(0, MARK_APPLIED + EventSheetL10n.translate("Before these edits"))
+		start.set_custom_color(0, COLOR_APPLIED)
+		start.set_metadata(0, START_INDEX)
 	for index: int in entries.size():
 		var entry: Dictionary = entries[index]
 		var undone: bool = index >= cursor
@@ -224,13 +236,21 @@ func travel_to(target_cursor: int) -> void:
 	refresh()
 
 
-## Hover = the rows that edit touched, lit on the canvas. Selecting an entry with the mouse is the
-## hover the Tree gives us; leaving the panel clears the light.
-func _on_entry_hovered(_position: Vector2, _button: int) -> void:
-	var selected: TreeItem = tree.get_selected()
-	if selected == null or _dock._viewport == null:
+## Hover = the rows that edit touched, lit on the canvas: the entry under the pointer as it moves,
+## not the one last clicked. Leaving the list clears the light.
+func _on_tree_input(event: InputEvent) -> void:
+	if not (event is InputEventMouseMotion):
 		return
-	var index: int = int(selected.get_metadata(0))
+	var hovered: TreeItem = tree.get_item_at_position((event as InputEventMouseMotion).position)
+	highlight_entry(int(hovered.get_metadata(0)) if hovered != null else -1)
+
+
+## Lights the rows entry `index` touched; anything that is not an edit (the start line, empty space,
+## -1) clears the light.
+func highlight_entry(index: int) -> void:
+	if _dock == null or _dock._viewport == null:
+		return
 	if index < 0 or index >= entries.size():
+		_dock._viewport.clear_row_highlight()
 		return
 	_dock._viewport.set_row_highlight(entries[index].get("touched", PackedStringArray()))
