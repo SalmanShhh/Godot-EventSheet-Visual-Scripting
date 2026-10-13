@@ -200,7 +200,8 @@ static func write_pseudo_column(csv_path: String, locale: String = PSEUDO_LOCALE
 	var column: String = locale.strip_edges()
 	if not is_pseudo_locale(column):
 		return {"ok": false, "message": "\"%s\" is a real language - pseudo text only ever goes in a throwaway column (qps)." % column}
-	var catalog: Dictionary = EventSheetTranslationScan.read_catalog(csv_path, separator)
+	var scan: Script = ReadingDoors.translation_scan()
+	var catalog: Dictionary = scan.read_catalog(csv_path, separator)
 	if not bool(catalog.get("ok", false)):
 		return catalog
 	var columns: PackedStringArray = catalog.get("columns", PackedStringArray())
@@ -209,8 +210,8 @@ static func write_pseudo_column(csv_path: String, locale: String = PSEUDO_LOCALE
 	var rows: Array = []
 	for row: Variant in (catalog.get("rows", []) as Array):
 		var record: Dictionary = (row as Dictionary).duplicate()
-		var key: String = str(record.get(EventSheetTranslationScan.KEY_COLUMN, ""))
-		var source: String = str(record.get(EventSheetTranslationScan.SOURCE_COLUMN, ""))
+		var key: String = str(record.get(scan.KEY_COLUMN, ""))
+		var source: String = str(record.get(scan.SOURCE_COLUMN, ""))
 		record[column] = pseudolocalize(source if not source.is_empty() else key, expansion)
 		var out: Dictionary = {}
 		for name: String in columns:
@@ -219,7 +220,7 @@ static func write_pseudo_column(csv_path: String, locale: String = PSEUDO_LOCALE
 	var column_specs: Array = []
 	for name: String in columns:
 		column_specs.append({"name": name, "type": "String"})
-	var written: Dictionary = EventSheetGridCSV.write_csv(csv_path, rows, column_specs, separator)
+	var written: Dictionary = ReadingDoors.grid_csv().write_csv(csv_path, rows, column_specs, separator)
 	if not bool(written.get("ok", false)):
 		return written
 	return {"ok": true, "rows": rows.size(),

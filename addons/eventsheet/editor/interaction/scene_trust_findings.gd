@@ -30,9 +30,13 @@
 class_name EventSheetSceneTrustFindings
 extends RefCounted
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## The one finding, by the same id the Doctor files it under - the amber state, the help strip and
-## the inbox line are one finding under three roofs.
-const KIND_UNTRUSTED_SCENE := EventSheetFilesDoctor.CHECK_UNTRUSTED_SCENE
+## the inbox line are one finding under three roofs. Spelled out rather than read off the Doctor's
+## constant, and the Doctor's words are reached through the doors: this file is read on every
+## paint, and naming the Doctor here compiled its whole Files section into the first open.
+const KIND_UNTRUSTED_SCENE := "files-untrusted-scene-load"
 
 ## Where the note hangs. The finding is about a row inside an event, so it anchors at the event -
 ## the same anchor the spawning and networking notes use for the same reason.
@@ -220,7 +224,7 @@ static func _note_this_event(event_row: EventRow, label: String, asked: PackedSt
 			"kind": KIND_UNTRUSTED_SCENE, "severity": "warning",
 			"anchor": ANCHOR_EVENT, "event": event_row,
 			"subject": path_expression,
-			"message": EventSheetFilesDoctor.untrusted_scene_message(label,
+			"message": ReadingDoors.files_doctor().untrusted_scene_message(label,
 				str(first_line[path_expression]), 1),
 			"fix": FIX_ASK_FIRST,
 			"fix_label": EventSheetL10n.translate("Ask whether it is data first"),

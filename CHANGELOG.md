@@ -49,6 +49,20 @@
   own now stays the comment it is, rather than becoming an option whose save would write a function
   the file never had.
 
+### Changed: the first sheet opens with less to compile
+
+- **Six scripts the first open never uses are compiled when they are first asked for instead.**
+  The Doctor's Files section (asked for one sentence when a scene-trust note is selected), the
+  translation scanner and the grid file codec (a pseudo column, a project walk), the Inspector mock
+  a hover over an exported variable shows, the Project bar (off unless the project asks for it) and
+  the Hierarchy pane. The workspace's first open compiles 14 fewer files and 7,255 fewer lines
+  (337 files and 165,891 lines before, 323 and 158,636 after). Measured interleaved against the previous build on the same machine (three
+  runs each, medians): loading the workspace editor 12.3 s -> 11.5 s, building it 15.1 s -> 14.3 s;
+  those six scripts cost about 1.4 s to compile once something does ask for them.
+- **The compiler stays on the first open, on purpose.** Opening a `.gd` as a sheet re-emits every
+  lifted row and the whole sheet to prove the bytes come back unchanged, and that proof is the
+  compiler, so loading it later would only move the same wait into the open's background job.
+
 ### Changed: quick questions take one plain shape
 
 - **A quick question now reads the same everywhere.** Its title is the question, one plain sentence

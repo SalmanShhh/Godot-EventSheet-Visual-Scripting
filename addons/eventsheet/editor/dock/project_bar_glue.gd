@@ -21,9 +21,12 @@ const _META_KEY: String = "eventsheets_project_bar_shown"
 ## Set when a sheet is made from a template or the reader takes the migration path - the two ways a
 ## project says "I want the familiar surfaces" without being asked.
 const STARTED_FROM_TEMPLATE_KEY: String = "eventsheets_started_from_template"
+## The bar's script, loaded on first show. Named as a type here, it compiled the bar and its project
+## scanner into every first open, for a panel that is off unless the project asks for it.
+const PROJECT_BAR_PATH: String = "res://addons/eventsheet/editor/project_bar.gd"
 
 var _dock: Control = null
-var _bar: EventSheetProjectBar = null
+var _bar: Variant = null
 
 
 func init(dock: Control) -> void:
@@ -32,7 +35,7 @@ func init(dock: Control) -> void:
 
 ## The bar itself, once it exists. Null until something asks for it - the panel is built on first
 ## show, so a project that never turns it on never pays for it.
-func bar() -> EventSheetProjectBar:
+func bar() -> Variant:
 	return _bar
 
 
@@ -92,7 +95,7 @@ func refresh_reading_prefs() -> void:
 
 
 func _build() -> void:
-	_bar = EventSheetProjectBar.new()
+	_bar = load(PROJECT_BAR_PATH).new()
 	_bar.entry_activated.connect(_on_entry_activated)
 	_bar.create_requested.connect(_on_create_requested)
 	_bar.close_requested.connect(func() -> void: set_shown(false))

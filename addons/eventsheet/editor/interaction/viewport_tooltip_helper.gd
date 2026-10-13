@@ -11,6 +11,8 @@ extends RefCounted
 # Godot's tooltip virtuals (_get_tooltip, _make_custom_tooltip) MUST stay on the Control and
 # delegate here; this helper supplies the bodies.
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## The sentinel _get_tooltip returns for an exported variable row: _make_custom_tooltip recognizes it
 ## and swaps in the live Inspector-preview card instead of a text tooltip. Never shown to the user.
 const INSPECTOR_PREVIEW_SENTINEL: String = "eventsheet:inspector_preview"
@@ -70,7 +72,7 @@ static func build_inspector_preview_tooltip(payload: Dictionary) -> Control:
 	style.set_corner_radius_all(4)
 	style.set_content_margin_all(6.0)
 	panel.add_theme_stylebox_override("panel", style)
-	var card := EventSheetInspectorPreviewCard.new()
+	var card: Variant = ReadingDoors.inspector_preview_card().new()
 	card.custom_minimum_size = Vector2(320.0, 0.0)
 	card.update_preview(
 		str(payload.get("name", "")),

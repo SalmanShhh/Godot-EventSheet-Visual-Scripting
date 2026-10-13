@@ -192,6 +192,11 @@ const BADGE_EXTRA_WIDTH := 12.0
 const CHIP_EXTRA_WIDTH := 16.0
 const CHIP_GAP := 8.0
 const ACE_DRAG_KINDS := ["trigger", "condition", "action"]
+## The Project bar's and the Hierarchy pane's drag payload types, spelled out rather than read off
+## those panels' constants: naming either panel here compiled it into every first open, and both
+## are built only when somebody shows them.
+const PROJECT_BAR_DRAG_TYPE := "eventsheet_project_entry"
+const HIERARCHY_CHILD_DRAG_TYPE := "eventsheet_hierarchy_child"
 # Sheet zoom runs 50% to 200% in the six steps the status-bar pill offers; the levels and the
 # remembered value live on the palette, beside row density, because the zoom belongs to the LAYOUT
 # (every open sheet at once) and not to any one view.
@@ -5431,7 +5436,7 @@ static func is_project_bar_drag(data: Variant) -> bool:
 	if not (data is Dictionary):
 		return false
 	var payload: Dictionary = data
-	return str(payload.get("type", "")) == EventSheetProjectBar.DRAG_TYPE \
+	return str(payload.get("type", "")) == PROJECT_BAR_DRAG_TYPE \
 		and not str(payload.get("intent", "")).strip_edges().is_empty()
 
 
@@ -5441,7 +5446,7 @@ static func is_hierarchy_child_drag(data: Variant) -> bool:
 	if not (data is Dictionary):
 		return false
 	var payload: Dictionary = data
-	return str(payload.get("type", "")) == EventSheetObjectHierarchy.CHILD_DRAG_TYPE \
+	return str(payload.get("type", "")) == HIERARCHY_CHILD_DRAG_TYPE \
 		and not str(payload.get("label", "")).strip_edges().is_empty()
 
 

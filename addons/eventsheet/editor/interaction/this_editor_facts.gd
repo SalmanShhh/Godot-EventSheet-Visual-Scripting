@@ -23,6 +23,8 @@ extends RefCounted
 # Nothing here scans anything until it is asked to. The listing is built when the folder is first
 # expanded and thrown away with it, so a reader who never opens it pays nothing.
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## The two marks that say "this project is the editor itself". Both, never either.
 const PLUGIN_CFG_PATH: String = "res://addons/eventforge/plugin.cfg"
 const PACK_BUILDERS_DIR: String = "res://tools/pack_builders"
@@ -224,7 +226,7 @@ static func source_files() -> PackedStringArray:
 	for root: String in SOURCE_ROOTS:
 		if not DirAccess.dir_exists_absolute(root):
 			continue
-		for path: String in EventSheetTranslationScan.files_under(root, ["gd"]):
+		for path: String in ReadingDoors.translation_scan().files_under(root, ["gd"]):
 			found.append(path)
 	found.sort()
 	return found

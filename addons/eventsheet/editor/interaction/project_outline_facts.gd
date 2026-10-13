@@ -35,6 +35,8 @@ const KIND_WORDS: Dictionary = {
 	"files": ["Files", "files"],
 }
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## Audio a project plays. Anything else with a texture/font/data extension falls into FILES.
 const SOUND_EXTENSIONS: Array = ["ogg", "wav", "mp3"]
 
@@ -90,10 +92,11 @@ static func _family_word(familiar_words: bool) -> String:
 ##    "packs": PackedStringArray}
 ## `root` is a parameter so a test can point the whole thing at a fixture folder.
 static func scan(root: String = "res://", packs_dir: String = PACKS_DIR) -> Dictionary:
-	var scenes: PackedStringArray = EventSheetTranslationScan.files_under(root, ["tscn"])
-	var scripts: PackedStringArray = EventSheetTranslationScan.files_under(root, ["gd"])
-	var sounds: PackedStringArray = EventSheetTranslationScan.files_under(root, SOUND_EXTENSIONS)
-	var others: PackedStringArray = EventSheetTranslationScan.files_under(
+	var walk: Script = ReadingDoors.translation_scan()
+	var scenes: PackedStringArray = walk.files_under(root, ["tscn"])
+	var scripts: PackedStringArray = walk.files_under(root, ["gd"])
+	var sounds: PackedStringArray = walk.files_under(root, SOUND_EXTENSIONS)
+	var others: PackedStringArray = walk.files_under(
 		root, ["png", "svg", "ttf", "otf", "json", "csv", "gdshader", "tres"])
 	return {
 		"scenes": scenes,

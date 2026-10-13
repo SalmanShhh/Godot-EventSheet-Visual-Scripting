@@ -30,6 +30,10 @@ const PATTERN_MANUAL_PATH: String = "res://addons/eventsheet/editor/docs/doc_pat
 const DOC_TRACKS_PATH: String = "res://addons/eventsheet/editor/docs/doc_tracks.gd"
 const DOC_LIBRARY_PATH: String = "res://addons/eventsheet/editor/docs/doc_library.gd"
 const DOC_FIGURES_PATH: String = "res://addons/eventsheet/editor/docs/doc_figures.gd"
+const FILES_DOCTOR_PATH: String = "res://addons/eventforge/files_doctor.gd"
+const TRANSLATION_SCAN_PATH: String = "res://addons/eventsheet/editor/translation_scan.gd"
+const GRID_CSV_PATH: String = "res://addons/eventsheet/editor/grid_csv.gd"
+const INSPECTOR_PREVIEW_CARD_PATH: String = "res://addons/eventsheet/editor/inspector_preview_card.gd"
 
 ## path -> the loaded script, so a row sweep asks the resource cache once per script, not per row.
 static var _loaded: Dictionary = {}
@@ -102,6 +106,27 @@ static func doc_library() -> Script:
 ## The Manual's figure reader, for the picker's recipes: which blocks are figures, and their sheets.
 static func doc_figures() -> Script:
 	return _script(DOC_FIGURES_PATH)
+
+
+## The Doctor's Files section, for the scene-trust sentence the help strip says under a row.
+static func files_doctor() -> Script:
+	return _script(FILES_DOCTOR_PATH)
+
+
+## The translation scanner, for its project file walk and its catalog columns. The grid codec and
+## the drawer widgets sit behind it.
+static func translation_scan() -> Script:
+	return _script(TRANSLATION_SCAN_PATH)
+
+
+## The grid file codec, for writing a catalog back.
+static func grid_csv() -> Script:
+	return _script(GRID_CSV_PATH)
+
+
+## The Inspector mock a hover over an exported variable shows. `.new()` on the answer builds one.
+static func inspector_preview_card() -> Script:
+	return _script(INSPECTOR_PREVIEW_CARD_PATH)
 
 
 static func _script(path: String) -> Script:

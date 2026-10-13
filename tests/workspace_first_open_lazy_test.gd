@@ -56,6 +56,26 @@ const CLICK_ONLY := [
 	"res://addons/eventsheet/editor/inspector_designer_dialog.gd",
 	"res://addons/eventsheet/editor/theme_editor_dialog.gd",
 	"res://addons/eventsheet/mcp/mcp_server.gd",
+	# Read only when something asks: the Doctor's Files section for one sentence of a finding, the
+	# translation scanner and the grid codec for a pseudo column or a project walk, the Inspector mock
+	# for a hover, the Project bar (off unless the project asks for it) and the Hierarchy pane.
+	"res://addons/eventforge/files_doctor.gd",
+	"res://addons/eventsheet/editor/translation_scan.gd",
+	"res://addons/eventsheet/editor/grid_csv.gd",
+	"res://addons/eventsheet/editor/inspector_preview_card.gd",
+	"res://addons/eventsheet/editor/project_bar.gd",
+	"res://addons/eventsheet/editor/dock/object_hierarchy.gd",
+]
+
+## The ids a first-paint file spells out rather than reading off a file it must not compile, each
+## beside the constant it copies: [file, its constant, the source file, the source's constant].
+const SPELLED_OUT := [
+	["res://addons/eventsheet/editor/event_sheet_viewport.gd", "PROJECT_BAR_DRAG_TYPE",
+		"res://addons/eventsheet/editor/project_bar.gd", "DRAG_TYPE"],
+	["res://addons/eventsheet/editor/event_sheet_viewport.gd", "HIERARCHY_CHILD_DRAG_TYPE",
+		"res://addons/eventsheet/editor/dock/object_hierarchy.gd", "CHILD_DRAG_TYPE"],
+	["res://addons/eventsheet/editor/interaction/scene_trust_findings.gd", "KIND_UNTRUSTED_SCENE",
+		"res://addons/eventforge/files_doctor.gd", "CHECK_UNTRUSTED_SCENE"],
 ]
 
 ## The dock and the helpers the first paint builds.
@@ -97,6 +117,11 @@ static func run() -> bool:
 	for path: String in CLICK_ONLY:
 		all_passed = _check("the first open does not compile %s" % path.get_file(),
 			closure.has(path), false) and all_passed
+	for pair: Array in SPELLED_OUT:
+		var spelled: String = str(load(pair[0]).get_script_constant_map().get(pair[1], ""))
+		all_passed = _check("%s spells %s" % [str(pair[0]).get_file(), pair[1]], spelled.is_empty(), false) and all_passed
+		all_passed = _check("%s %s matches %s" % [str(pair[0]).get_file(), pair[1], str(pair[2]).get_file()],
+			spelled, str(load(pair[2]).get_script_constant_map().get(pair[3], ""))) and all_passed
 	# The dock's registration store is a leaf: it names nothing, so reaching it compiles nothing.
 	all_passed = _check("the dock registry names no class",
 		Array((graph["edges"] as Dictionary).get(DOCK_REGISTRY_PATH, PackedStringArray())), []) and all_passed
