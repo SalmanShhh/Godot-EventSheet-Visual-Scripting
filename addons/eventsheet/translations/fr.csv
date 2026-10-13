@@ -8455,3 +8455,26 @@ Remove,Retirer
 Included sheets,Feuilles incluses
 Preview,Aperçu
 Contents,Contenu
+Side by side,Côte à côte
+The file read as rows.,Le fichier lu en lignes.
+"The file as code, byte for byte.","Le fichier en code, octet pour octet."
+Rows and code next to each other.,Les lignes et le code l'un à côté de l'autre.
+Description of %s,Description de %s
+"Shown when hovering the name, in Add Action and as the ## comment above the function.","Affichée au survol du nom, dans Ajouter une action et comme commentaire ## au-dessus de la fonction."
+Open in the script editor,Ouvrir dans l'éditeur de script
+Show in FileSystem,Afficher dans le système de fichiers
+Global (autoload),Global (autoload)
+loaded before the first scene as %s,chargé avant la première scène sous le nom %s
+%d global values,%d valeurs globales
+works on %s,agit sur %s
+listed under %s,rangé sous %s
+%d properties,%d propriétés
+"%d actions, %d conditions, %d triggers, %d expressions","%d actions, %d conditions, %d déclencheurs, %d expressions"
+Click the name to open it in the script editor or show it in the FileSystem.,Clique sur le nom pour l'ouvrir dans l'éditeur de script ou l'afficher dans le système de fichiers.
+This function hands back a %s.,Cette fonction renvoie un %s.
+"Returns true or false, and the event only runs while it is true.","Renvoie vrai ou faux, et l'événement ne s'exécute que tant que c'est vrai."
+"Usable inside any value: a number, text or object the function hands back.","Utilisable dans n'importe quelle valeur : un nombre, un texte ou un objet que la fonction renvoie."
+Runs when an event calls it.,S'exécute quand un événement l'appelle.
+No description yet.,Pas encore de description.
+Reads as: %s,Se lit : %s
+Double-click the name to edit the description.,Double-clique sur le nom pour modifier la description.

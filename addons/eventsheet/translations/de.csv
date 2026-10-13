@@ -8455,3 +8455,26 @@ Remove,Entfernen
 Included sheets,Eingebundene Blätter
 Preview,Vorschau
 Contents,Inhalt
+Side by side,Nebeneinander
+The file read as rows.,Die Datei als Zeilen gelesen.
+"The file as code, byte for byte.","Die Datei als Code, Byte für Byte."
+Rows and code next to each other.,Zeilen und Code nebeneinander.
+Description of %s,Beschreibung von %s
+"Shown when hovering the name, in Add Action and as the ## comment above the function.","Wird beim Überfahren des Namens angezeigt, in Aktion hinzufügen und als ##-Kommentar über der Funktion."
+Open in the script editor,Im Skripteditor öffnen
+Show in FileSystem,Im Dateisystem zeigen
+Global (autoload),Global (Autoload)
+loaded before the first scene as %s,vor der ersten Szene geladen als %s
+%d global values,%d globale Werte
+works on %s,wirkt auf %s
+listed under %s,unter %s aufgeführt
+%d properties,%d Eigenschaften
+"%d actions, %d conditions, %d triggers, %d expressions","%d Aktionen, %d Bedingungen, %d Auslöser, %d Ausdrücke"
+Click the name to open it in the script editor or show it in the FileSystem.,"Klicke auf den Namen, um die Datei im Skripteditor zu öffnen oder im Dateisystem zu zeigen."
+This function hands back a %s.,Diese Funktion gibt einen Wert vom Typ %s zurück.
+"Returns true or false, and the event only runs while it is true.","Gibt wahr oder falsch zurück, und das Ereignis läuft nur, solange es wahr ist."
+"Usable inside any value: a number, text or object the function hands back.","In jedem Wert verwendbar: eine Zahl, ein Text oder ein Objekt, das die Funktion zurückgibt."
+Runs when an event calls it.,"Läuft, wenn ein Ereignis sie aufruft."
+No description yet.,Noch keine Beschreibung.
+Reads as: %s,Liest sich als: %s
+Double-click the name to edit the description.,"Doppelklicke auf den Namen, um die Beschreibung zu bearbeiten."

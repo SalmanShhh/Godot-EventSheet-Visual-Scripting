@@ -1153,6 +1153,58 @@ static func follow_description(dropdown: OptionButton) -> void:
 	dropdown.tooltip_text = told if not told.is_empty() else str(dropdown.get_meta("described_fallback", ""))
 
 
+## A VIEW SWITCH: Sheet | Code | Side by side as one segmented row of toggle buttons in a ButtonGroup.
+## `view_chosen` fires when the reader picks a different view; `choose()` sets one from code.
+class ViewSwitch extends HBoxContainer:
+
+	signal view_chosen(view: String)
+
+	const SHEET := "sheet"
+	const CODE := "code"
+	const BOTH := "both"
+
+	var view: String = ""
+	var buttons: Dictionary = {}
+
+
+	func _init(start: String = SHEET) -> void:
+		add_theme_constant_override("separation", 0)
+		var group: ButtonGroup = ButtonGroup.new()
+		var labels: Dictionary = {
+			SHEET: EventSheetL10n.translate("Sheet"),
+			CODE: EventSheetL10n.translate("Code"),
+			BOTH: EventSheetL10n.translate("Side by side"),
+		}
+		var tips: Dictionary = {
+			SHEET: EventSheetL10n.translate("The file read as rows."),
+			CODE: EventSheetL10n.translate("The file as code, byte for byte."),
+			BOTH: EventSheetL10n.translate("Rows and code next to each other."),
+		}
+		for id: String in labels:
+			var button: Button = Button.new()
+			button.text = str(labels[id])
+			button.tooltip_text = str(tips[id])
+			button.toggle_mode = true
+			# The chosen view reads in the one accent, the way the editor marks its own choice.
+			button.add_theme_color_override("font_pressed_color", EventSheetPopupUI.accent_color())
+			button.add_theme_color_override("font_hover_pressed_color", EventSheetPopupUI.accent_color())
+			button.button_group = group
+			button.pressed.connect(choose.bind(id))
+			add_child(button)
+			buttons[id] = button
+		choose(start, false)
+
+
+	func choose(wanted: String, announce: bool = true) -> void:
+		if not buttons.has(wanted) or wanted == view:
+			return
+		view = wanted
+		for id: String in buttons:
+			(buttons[id] as Button).set_pressed_no_signal(id == wanted)
+		if announce:
+			view_chosen.emit(wanted)
+
+
 ## A RESULT CARD: a titled panel that says what just happened. `report()` fills it - a short flow of
 ## figures read left to right, then one line per outcome, each led by its tone's mark and closed by
 ## the file it touched when there is one.

@@ -110,7 +110,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	# typed line or the lifted Send action itself.
 	"CharacterBody2D ▸ Send Take Damage to the host   amount = 10",
 	"CharacterBody2D ▸ Send take damage to everyone 10",
-	"Functions ▸ On message Take Damage",
+	"On message take_damage",
 	"Multiplayer ▸ Is host",
 	"Multiplayer ▸ Owns this object"
 ])

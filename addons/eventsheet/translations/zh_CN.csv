@@ -8455,3 +8455,26 @@ Remove,移除
 Included sheets,已包含的表
 Preview,预览
 Contents,内容
+Side by side,并排
+The file read as rows.,把文件读成行。
+"The file as code, byte for byte.",以代码显示文件，逐字节一致。
+Rows and code next to each other.,行和代码并排显示。
+Description of %s,%s 的说明
+"Shown when hovering the name, in Add Action and as the ## comment above the function.",悬停在名称上时、在“添加动作”中，以及作为函数上方的 ## 注释显示。
+Open in the script editor,在脚本编辑器中打开
+Show in FileSystem,在文件系统中显示
+Global (autoload),全局（自动加载）
+loaded before the first scene as %s,在第一个场景之前以 %s 加载
+%d global values,%d 个全局值
+works on %s,作用于 %s
+listed under %s,列在 %s 下
+%d properties,%d 个属性
+"%d actions, %d conditions, %d triggers, %d expressions",%d 个动作、%d 个条件、%d 个触发器、%d 个表达式
+Click the name to open it in the script editor or show it in the FileSystem.,点击名称，可在脚本编辑器中打开，或在文件系统中显示。
+This function hands back a %s.,此函数返回一个 %s。
+"Returns true or false, and the event only runs while it is true.",返回真或假，只有为真时事件才会运行。
+"Usable inside any value: a number, text or object the function hands back.",可用于任何值中：函数返回的数字、文本或对象。
+Runs when an event calls it.,在事件调用它时运行。
+No description yet.,暂无说明。
+Reads as: %s,读作：%s
+Double-click the name to edit the description.,双击名称即可编辑说明。

@@ -564,8 +564,9 @@ That is the order this section is in.
   just says `reads as events`. The number is measured by the same code the corpus gate measures with,
   so the chip and the test can never disagree about the same file. When the engine reported parse
   errors, the bar also says `N errors - the game will not run this script`, in red.
-- **The head is ONE bar, and the lines it stands for are its fold.** An opened file rests under a
-  single line - `▣ FPSController extends Node · reads as events · 5 input actions` -
+- **The head is ONE bar, and the lines it stands for are its fold.** An opened game script rests
+  under a single line (a behaviour, a global and the other files of a pack have no bar - they read
+  in their file's order, below) - `▣ FPSController extends Node · reads as events · 5 input actions` -
   and the ▸ on it opens every bar a reader used to scroll past: the band per line of the file
   (`class_name FPSController`, `extends Node`, `@icon(...)`, the host binding), the Include bar for
   what no line says (`⇥ Addon Pack  v1.0.0  behaves on a  CharacterBody3D  reads as events ▸`),
@@ -585,33 +586,16 @@ That is the order this section is in.
   ![A behaviour pack's head: one bar reading "FPSController extends Node - reads as events - 5 input actions", the pack's own description as a comment row under it, and one folded folder per setting group below](images/opened-pack-head.png)
 
   ![The same head with the fold open: the bands for class_name, extends, @icon and the host binding, the Include bar reading "Addon Pack v1.0.0 behaves on a CharacterBody3D", the Input bar, and one folder per setting group](images/opened-pack-head-open.png)
-- **A behavior pack opens on its verbs.** A pack has a public face - the settings you turn in the
-  Inspector, the verbs the picker offers you - and an implementation you did not open it to read.
-  In file order it opened on the implementation: eleven variables, a script block and the loop that
-  counts a timer down, with the two verbs you clicked the pack for last of all. Opened to READ, a
-  pack now rests in four bands, under the head bar and the description:
-
-  | Band | What is in it |
-  | --- | --- |
-  | **Settings** | The `@export` knobs, the ones the Inspector shows. Open. |
-  | **Verbs** | Every published function as its own block - `ƒ Flash  seconds  action` - then the triggers the pack fires, each naming what fires it (`emits jumped  fired by Jump`). Open. |
-  | **How it works** | The lifecycle and tick events, and the pack's own Helpers folder. Folded. |
-  | **Internal state** | The private variables, the constants and the script blocks. Folded. |
-
-  A published verb reads as the verb the picker offers, not as a trigger: `ƒ Flash` rather than
-  `ƒ On Flash`, with the kind word - action, condition, expression - quietly beside it, and an
-  authored display sentence read whole (`ƒ Blink  pattern  for  seconds  s`) instead of being
-  repeated as input chips. Two plumbing lines every pack writes read in the sheet's words too:
-  `set_process(true)` / `set_process(false)` are **Start ticking** and **Stop ticking** (the physics
-  tick is named), and the host guard folds onto the tick's own line - `⟳ Every tick (draw)  host is
-  valid`. Inside a pack the sheet's own two labels - the System a member write reads under and the
-  class it is spelled with - both read as the name the picker offers the pack by, so a Flash row
-  reads `Flash ▸ Set flashing to true`; the node the pack rides keeps its own name, `host`.
-
-  All of it is a reading. The file keeps its own order for the code view and for what the compiler
-  emits, `#region` fences turn the reading off (an author who grouped the file has already said
-  where things go), and a pack you are AUTHORING rather than reading is untouched: there every row
-  is something you reach for by the name the file gives it.
+- **A behaviour or a global opens as its own file.** A behaviour (a pack's node script, or a
+  sheet made as one), a global and any other file of a pack read exactly in the order the file is
+  written, under the slim title row an edited sheet has with a quiet kind word -
+  `SineBehavior  Behaviour · extends Node`, `EventBus  Global (autoload) · extends Node`. Nothing
+  is gathered under a heading the file does not have. Hover the name for what it works on or the
+  name it loads as, its category, how many properties or global values it has and what it offers;
+  click the name to open the file in the script editor or show it in the FileSystem. The title
+  strip carries a **Sheet | Code | Side by side** switch for reading it as rows, as code, or both.
+  Each function reads as the head every sheet draws - `Action  Function  On set_sine_active` -
+  with its parameters under it and its own actions beside it.
 - **An autoload opens as the project's Globals sheet.** When the file IS a registered autoload, its
   head grows an `autoload  Game` band echoing the `project.godot` entry that grants the name, its
   knobs read as one `Global variables` folder rather than the Instance variables one, and its
@@ -642,9 +626,7 @@ That is the order this section is in.
   because the author said they wanted no fractions; an undeclared `100` still reads "number". Variables
   a designer can edit wear a small **sliders mark** beside the name (hover: "Editable in the
   Inspector"), and the head gathers them all in one **Instance variables** folder with those first,
-  rather than a Settings / Internal state split. A behavior pack opened to read is the one exception
-  and splits them: there the exported knobs are the pack's published **Settings** and everything else
-  is **Internal state**, which is the line a reader of somebody else's pack is looking for. Scope and type are WORDS on the row, never pills:
+  rather than a Settings / Internal state split. Scope and type are WORDS on the row, never pills:
   the only boxes a variable row wears are its `x` kind badge and that sliders mark.
 - **A `static var` says who shares it.** `static var spawned: int = 0` reads
   `Static number  spawned = 0  shared by every Player` - the scope word leads the type chip, and the

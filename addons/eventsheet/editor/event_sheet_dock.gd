@@ -3051,7 +3051,7 @@ func _open_go_to_event_dialog() -> void:
 	number_edit.value = 1
 	dialog.add_child(EventSheetPopupUI.titled_card("Event number", EventSheetPopupUI.form_row("Go to event", number_edit)))
 	dialog.confirmed.connect(func() -> void:
-		var target: EventRow = EventSheetViewport.event_by_number(_current_sheet.events, int(number_edit.value))
+		var target: EventRow = EventSheetViewport.event_by_number(_current_sheet.events, int(number_edit.value), _current_sheet.functions)
 		if target == null:
 			_set_status("There is no event %d." % int(number_edit.value), true)
 		elif _viewport != null:
@@ -6527,6 +6527,12 @@ func open_verb_properties(event_function: Resource) -> void:
 	_verb_properties.open_for(event_function)
 
 
+## A double-click on a function's name: its description, edited in a small window beside the row.
+func open_function_description(event_function: Resource, at: Vector2) -> void:
+	if event_function is EventFunction and _current_sheet != null and not _current_sheet.read_only:
+		load(EventSheetPropertiesBar.FUNCTION_INSPECTOR_PATH).open_description_editor(self, event_function, at)
+
+
 ## A click on a row's object name opens that object's popup.
 func open_object_properties(object_label: String) -> void:
 	_object_properties.open_for(object_label)
@@ -7859,32 +7865,6 @@ func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String,
 				if row_data.source_resource is EventRow:
 					(row_data.source_resource as EventRow).comment = new_value
 					return true
-			# A published verb's picker metadata, edited inline on its row. The empty string is a valid
-			# new value (it clears the field, so the row and compiler fall back to the function name / no
-			# annotation). Each case compares against the CURRENT field, not old_value, because an empty
-			# field draws a "+ ..." placeholder whose span text is not the value - so the outer
-			# old==new guard cannot see a genuine no-op, and a spurious change would rewrite an opened .gd.
-			"verb_display_name":
-				if row_data.source_resource is EventFunction:
-					var fn_name: EventFunction = row_data.source_resource as EventFunction
-					if fn_name.ace_display_name == new_value.strip_edges():
-						return false
-					fn_name.ace_display_name = new_value.strip_edges()
-					return true
-			"verb_description":
-				if row_data.source_resource is EventFunction:
-					var fn_desc: EventFunction = row_data.source_resource as EventFunction
-					if fn_desc.description == new_value.strip_edges():
-						return false
-					fn_desc.description = new_value.strip_edges()
-					return true
-			"verb_category":
-				if row_data.source_resource is EventFunction:
-					var fn_cat: EventFunction = row_data.source_resource as EventFunction
-					if fn_cat.ace_category == new_value.strip_edges():
-						return false
-					fn_cat.ace_category = new_value.strip_edges()
-					return true
 		return false
 	)
 	if updated:
@@ -8397,6 +8377,7 @@ func _refresh_title_strip() -> void:
 	if _identity_banner != null:
 		_identity_banner.update_from_sheet(_current_sheet, _current_sheet_path)
 	_refresh_preview_banner()
+	_code_panel_glue.refresh_view_switch()
 
 
 ## A sheet is named for the OBJECT it is about, not for the file it is stored in: the tab, the

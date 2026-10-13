@@ -24,6 +24,8 @@ const COMPLETIONS_PATH := "res://addons/eventsheet/editor/autocomplete/completio
 const LINT_PATH := "res://addons/eventsheet/ace/gdscript_lint.gd"
 
 var _dock: Control = null
+## The Sheet | Code | Side by side switch, once a behaviour or a global has been shown.
+var _view_switch: EventSheetPopupUI.ViewSwitch = null
 
 
 func init(dock: Control) -> void:
@@ -379,3 +381,44 @@ func on_raw_code_dialog_confirmed() -> void:
 	if changed:
 		_dock._refresh_after_edit()
 		_dock._mark_dirty("Updated script block.")
+
+
+# ── The Sheet | Code | Side by side switch on the title strip ─────────────────────────────────
+# A behaviour or a global is a script somebody may want to read either way, so its title strip
+# carries the switch; every other sheet keeps the code panel behind View, and shows its rows.
+# Built the first time such a sheet is shown.
+
+
+func refresh_view_switch() -> void:
+	var offered: bool = ViewportRowBuilder.reads_in_file_order(_dock._current_sheet)
+	if _view_switch == null:
+		if not offered or _dock._title_strip == null:
+			return
+		_view_switch = EventSheetPopupUI.ViewSwitch.new()
+		_view_switch.name = "EventSheetViewSwitch"
+		_view_switch.view_chosen.connect(set_sheet_view)
+		_dock._title_strip.add_child(_view_switch)
+	_view_switch.visible = offered
+	if not offered and _dock._scroll != null and not _dock._scroll.visible:
+		# A sheet with no switch always shows its rows.
+		set_sheet_view(EventSheetPopupUI.ViewSwitch.SHEET)
+		return
+	_view_switch.choose(current_sheet_view(), false)
+
+
+## Which of the three the dock shows now.
+func current_sheet_view() -> String:
+	if not _dock.is_code_panel_visible():
+		return EventSheetPopupUI.ViewSwitch.SHEET
+	return EventSheetPopupUI.ViewSwitch.CODE if not _dock._scroll.visible else EventSheetPopupUI.ViewSwitch.BOTH
+
+
+## Shows the rows, the code, or both side by side. The code is the panel the View menu opens.
+func set_sheet_view(view: String) -> void:
+	var wants_code: bool = view != EventSheetPopupUI.ViewSwitch.SHEET
+	if wants_code != _dock.is_code_panel_visible():
+		toggle_code_panel()
+	if _dock._scroll != null:
+		_dock._scroll.visible = view != EventSheetPopupUI.ViewSwitch.CODE
+	if _view_switch != null:
+		_view_switch.choose(view, false)

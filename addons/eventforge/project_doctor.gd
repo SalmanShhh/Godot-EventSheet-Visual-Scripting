@@ -1186,7 +1186,7 @@ static func check_unbounded_loops(sheet_paths: PackedStringArray, findings: Arra
 		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
 		if sheet == null:
 			continue
-		var numbers: Dictionary = EventSheetResource.event_numbers(sheet.events)
+		var numbers: Dictionary = EventSheetResource.event_numbers(sheet.events, sheet.functions)
 		for entry: Variant in sheet.events:
 			if entry is EventRow and _is_per_frame_trigger((entry as EventRow).trigger_id):
 				_scan_unbounded_loops(entry as EventRow, sheet_path, threshold, findings, numbers)
@@ -1207,7 +1207,7 @@ static func check_every_tick_setup(sheet_paths: PackedStringArray, findings: Arr
 		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
 		if sheet == null:
 			continue
-		var numbers: Dictionary = EventSheetResource.event_numbers(sheet.events)
+		var numbers: Dictionary = EventSheetResource.event_numbers(sheet.events, sheet.functions)
 		for entry: Variant in sheet.events:
 			if not (entry is EventRow):
 				continue
@@ -1283,7 +1283,7 @@ static func check_coroutine_in_per_frame_trigger(sheet_paths: PackedStringArray,
 		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
 		if sheet == null:
 			continue
-		var numbers: Dictionary = EventSheetResource.event_numbers(sheet.events)
+		var numbers: Dictionary = EventSheetResource.event_numbers(sheet.events, sheet.functions)
 		for entry: Variant in sheet.events:
 			if entry is EventRow and _is_per_frame_trigger((entry as EventRow).trigger_id):
 				_scan_coroutine_misuse(entry as EventRow, sheet_path, findings, numbers)
@@ -3286,7 +3286,7 @@ static func scan_pattern_smells(sheet: EventSheetResource, sheet_path: String,
 	var claims: Array = EventSheetPatternFacts.claims(sheet)
 	if claims.is_empty():
 		return
-	var numbers: Dictionary = EventSheetResource.event_numbers(sheet.events)
+	var numbers: Dictionary = EventSheetResource.event_numbers(sheet.events, sheet.functions)
 	var events: Dictionary = _events_by_uid(sheet)
 	for entry: Variant in claims:
 		var claim: Dictionary = entry as Dictionary

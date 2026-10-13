@@ -207,12 +207,6 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 	var act_x: Dictionary = {}
 	var cond_count: Dictionary = {}
 	var act_count: Dictionary = {}
-	# Full-width rows (a Function block header) flow their chips across the whole row and
-	# WRAP onto a second visual line when they run out of it. The chosen x / visual offset per span is
-	# handed to the layout pass so the drawn chips land exactly where the counted lines reserved room.
-	var chip_x: Dictionary = {}
-	var chip_offset: Dictionary = {}
-	var chip_line_offset: Dictionary = {}
 	var max_line: int = 0
 	# A theme that shows the add lines on hover gives them no room on an event at rest.
 	var resting_add_kinds: PackedStringArray = resting_add_line_kinds(row_data, event_style)
@@ -253,17 +247,7 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 					cond_count[line] = maxi(int(cond_count.get(line, 1)), _fill_cell_line_count(span, metadata, available_c + 2.0, font, font_size, object_column_override(metadata, condition_text_start_x, text_start)))
 					cond_text_x[line] = text_start + available_c + 2.0 + _viewport._get_span_gap(span)
 				else:
-					# The chip does not fit in what is left of this visual line: start a new one (the
-					# row grows by it) rather than clipping the chip to a stub.
-					if row_data.full_width_lanes and text_start > condition_text_start_x \
-							and text_start + measured > max_condition_right:
-						chip_line_offset[line] = int(chip_line_offset.get(line, 0)) + 1
-						cond_count[line] = maxi(int(cond_count.get(line, 1)), int(chip_line_offset[line]) + 1)
-						text_start = condition_text_start_x
 					var chip_width: float = maxf(minf(measured, max_condition_right - text_start), _viewport.MIN_SPAN_WIDTH)
-					if row_data.full_width_lanes:
-						chip_x[span_index] = text_start
-						chip_offset[span_index] = int(chip_line_offset.get(line, 0))
 					cond_text_x[line] = text_start + chip_width + 2.0 + _viewport._get_span_gap(span)
 	var cond_top: Dictionary = {}
 	var act_top: Dictionary = {}
@@ -276,7 +260,6 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 		act_cursor += maxi(int(act_count.get(line_cursor, 1)), 1)
 	return {
 		"cond_top": cond_top, "act_top": act_top, "cond_count": cond_count, "act_count": act_count,
-		"chip_x": chip_x, "chip_offset": chip_offset,
 		"total": maxi(maxi(cond_cursor, act_cursor), 1)
 	}
 
@@ -349,14 +332,11 @@ func condition_trailing_width(row_data: EventRowData, line_index: int, font: Fon
 	return total
 
 
-## How far right a CONDITION-lane cell may reach. Normally the lane divider (minus its padding); on a
-## full-width row (a Function block header with nothing in the right lane) the row's own right padding,
-## so the header uses both lanes as one track. ONE function, called by the height metrics AND the
-## layout pass, so the reserved width and the drawn width can never disagree.
-static func condition_right_limit(row_data: EventRowData, width: float, lane_divider_x: float,
+## How far right a CONDITION-lane cell may reach: the lane divider, minus its padding. ONE function,
+## called by the height metrics AND the layout pass, so the reserved width and the drawn width can
+## never disagree.
+static func condition_right_limit(_row_data: EventRowData, _width: float, lane_divider_x: float,
 		condition_lane_padding: float) -> float:
-	if row_data != null and row_data.full_width_lanes:
-		return width - EventSheetPalette.ROW_HORIZONTAL_PADDING
 	return lane_divider_x - condition_lane_padding
 
 

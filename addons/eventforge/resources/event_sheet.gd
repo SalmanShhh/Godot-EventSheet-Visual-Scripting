@@ -165,17 +165,27 @@ func family_group() -> String:
 
 ## instance-id -> 1-based event number, walking the sheet the way an event sheet counts down its
 ## left margin: every EventRow in order, descending into groups and sub-events. Groups, comments and
-## variable rows are not events, so they are not numbered. This is the ONE walk - the editor's
-## margin, "Go to event", bookmarks, Find results and the Doctor all name a row through it, so two
-## people looking at the same sheet always mean the same row by "event 4". Pure and static.
-static func event_numbers(entries: Array) -> Dictionary:
+## variable rows are not events, so they are not numbered. A function IS drawn as an event, so when
+## `functions` (the sheet's own) is passed, each one is numbered where the sheet draws it - at its
+## anchor in the file, or after the last event - then its body; the step it draws as its own actions
+## shares its number. This is the ONE walk - the editor's margin, "Go to event", bookmarks, Find
+## results and the Doctor all name a row through it, so two people looking at the same sheet always
+## mean the same row by "event 4". Pure and static.
+static func event_numbers(entries: Array, functions: Array = []) -> Dictionary:
 	var numbers: Dictionary = {}
 	var counter: Dictionary = {"next": 1}
-	_number_events(entries, numbers, counter)
+	var by_name: Dictionary = {}
+	for entry: Variant in functions:
+		if entry is EventFunction:
+			by_name[(entry as EventFunction).function_name] = entry
+	_number_events(entries, numbers, counter, by_name)
+	for entry: Variant in functions:
+		if entry is EventFunction and not numbers.has((entry as EventFunction).get_instance_id()):
+			_number_function(entry as EventFunction, numbers, counter)
 	return numbers
 
 
-static func _number_events(entries: Array, numbers: Dictionary, counter: Dictionary) -> void:
+static func _number_events(entries: Array, numbers: Dictionary, counter: Dictionary, by_name: Dictionary = {}) -> void:
 	for entry: Variant in entries:
 		if entry is EventRow:
 			numbers[(entry as EventRow).get_instance_id()] = int(counter["next"])
@@ -184,3 +194,18 @@ static func _number_events(entries: Array, numbers: Dictionary, counter: Diction
 		elif entry is EventGroup:
 			var group: EventGroup = entry as EventGroup
 			_number_events(group.events if not group.events.is_empty() else group.rows, numbers, counter)
+		elif entry is FunctionAnchorRow and by_name.has((entry as FunctionAnchorRow).function_name):
+			_number_function(by_name[(entry as FunctionAnchorRow).function_name] as EventFunction, numbers, counter)
+
+
+static func _number_function(event_function: EventFunction, numbers: Dictionary, counter: Dictionary) -> void:
+	var number: int = int(counter["next"])
+	numbers[event_function.get_instance_id()] = number
+	counter["next"] = number + 1
+	var body: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
+	var own: EventRow = event_function.lane_event()
+	if own != null:
+		numbers[own.get_instance_id()] = number
+		_number_events(own.sub_events, numbers, counter)
+		body = body.slice(1)
+	_number_events(body, numbers, counter)

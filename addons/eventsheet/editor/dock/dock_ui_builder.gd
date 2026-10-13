@@ -296,6 +296,7 @@ func build_ui() -> void:
 	_dock._viewport.custom_block_edit_requested.connect(_dock._open_custom_block_dialog)
 	_dock._viewport.function_edit_requested.connect(_dock._function_dialog_glue._open_function_dialog_for)
 	_dock._viewport.verb_properties_requested.connect(_dock.open_verb_properties)
+	_dock._viewport.function_description_requested.connect(_dock.open_function_description)
 	_dock._viewport.object_properties_requested.connect(_dock.open_object_properties)
 	_dock._viewport.hierarchy_flags_requested.connect(_dock.hierarchy_edit_row_flags)
 	_dock._viewport.data_class_add_field_requested.connect(_dock._open_data_class_add_field_for)

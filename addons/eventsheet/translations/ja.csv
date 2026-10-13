@@ -8455,3 +8455,26 @@ Remove,削除
 Included sheets,インクルードしたシート
 Preview,プレビュー
 Contents,内容
+Side by side,左右に並べる
+The file read as rows.,ファイルを行として読みます。
+"The file as code, byte for byte.",ファイルをコードとして、1 バイトも変えずに。
+Rows and code next to each other.,行とコードを並べて表示します。
+Description of %s,%s の説明
+"Shown when hovering the name, in Add Action and as the ## comment above the function.",名前にポインタを重ねたとき、アクションを追加の中、そして関数の上の ## コメントとして表示されます。
+Open in the script editor,スクリプトエディタで開く
+Show in FileSystem,ファイルシステムで表示
+Global (autoload),グローバル (自動読み込み)
+loaded before the first scene as %s,最初のシーンより前に %s として読み込まれる
+%d global values,グローバル値 %d 個
+works on %s,%s に作用する
+listed under %s,%s の下に並ぶ
+%d properties,プロパティ %d 個
+"%d actions, %d conditions, %d triggers, %d expressions",アクション %d、条件 %d、トリガー %d、式 %d
+Click the name to open it in the script editor or show it in the FileSystem.,名前をクリックすると、スクリプトエディタで開くか、ファイルシステムで表示できます。
+This function hands back a %s.,この関数は %s を返します。
+"Returns true or false, and the event only runs while it is true.",true か false を返し、true の間だけイベントが実行されます。
+"Usable inside any value: a number, text or object the function hands back.",どの値の中でも使えます。関数が返す数値、テキスト、オブジェクトです。
+Runs when an event calls it.,イベントが呼び出したときに実行されます。
+No description yet.,まだ説明がありません。
+Reads as: %s,表示: %s
+Double-click the name to edit the description.,名前をダブルクリックすると説明を編集できます。

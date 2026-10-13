@@ -92,3 +92,24 @@ extends Resource
 @export var events: Array[Resource] = []
 @export var rows: Array[Resource] = [] # Backwards-compatible alias.
 @export var local_variables: Dictionary = {}
+
+
+## The step a sheet draws as this function's OWN actions, beside its head: the first of its body,
+## when that is an enabled event with no trigger, condition, else, comment, scope or match of its own
+## and at least one action. Null otherwise. Read from the data alone, so every surface that addresses
+## those actions - a click, Add action, an edit, the event numbers - finds the same step.
+func lane_event() -> EventRow:
+	var body: Array = events if not events.is_empty() else rows
+	if body.is_empty() or not (body[0] is EventRow):
+		return null
+	var step: EventRow = body[0] as EventRow
+	if not step.enabled or step.trigger != null or not step.trigger_id.is_empty() \
+			or not step.conditions.is_empty() or step.else_mode != EventRow.ElseMode.NONE \
+			or not step.comment.strip_edges().is_empty() or not step.pick_filters.is_empty() \
+			or not step.with_node_target.is_empty() or not step.local_variables.is_empty() \
+			or step.actions.is_empty():
+		return null
+	for action: Variant in step.actions:
+		if action is MatchRow:
+			return null
+	return step

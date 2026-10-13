@@ -140,13 +140,15 @@ func _on_viewport_ace_picker_requested(row_data: EventRowData, lane: String) -> 
 	if row_data != null and row_data.match_case is MatchCase and lane == "action":
 		_dock._ace_picker.open("append_action", false, row_data.match_case)
 		return
-	if row_data == null or not (row_data.source_resource is EventRow):
+	# A function's head draws its own actions, so its Add action fills the step they belong to.
+	var event_row: EventRow = _dock._active_view().ace_owner(row_data.source_resource) if row_data != null else null
+	if event_row == null:
 		return
 	match lane:
 		"action":
-			_dock._ace_picker.open("append_action", false, row_data.source_resource)
+			_dock._ace_picker.open("append_action", false, event_row)
 		_:
-			_dock._ace_picker.open("append_condition", false, row_data.source_resource)
+			_dock._ace_picker.open("append_condition", false, event_row)
 
 
 func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, metadata: Dictionary) -> void:
@@ -164,9 +166,9 @@ func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, me
 				row_data.source_resource, int(metadata.get("param_index", -1))
 			)
 		return
-	if not (row_data.source_resource is EventRow):
+	var event_row: EventRow = _dock._active_view().ace_owner(row_data.source_resource)
+	if event_row == null:
 		return
-	var event_row: EventRow = row_data.source_resource as EventRow
 	# Action-cell comments edit in the comment dialog, not the ACE editor.
 	if bool(metadata.get("action_comment", false)):
 		var comment_index: int = int(metadata.get("ace_index", -1))

@@ -107,6 +107,7 @@ func _connect_view_signals(view: EventSheetViewport) -> void:
 	view.editor_tool_action_requested.connect(_dock._editor_tool_bar.activate)
 	view.this_editor_action_requested.connect(_dock._this_editor_bar.activate)
 	view.verb_properties_requested.connect(_dock.open_verb_properties)
+	view.function_description_requested.connect(_dock.open_function_description)
 	view.object_properties_requested.connect(_dock.open_object_properties)
 	view.hierarchy_flags_requested.connect(_dock.hierarchy_edit_row_flags)
 	view.data_class_add_field_requested.connect(_dock._open_data_class_add_field_for)

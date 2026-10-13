@@ -39,12 +39,6 @@ const CompilerSpellings := preload("res://addons/eventforge/compiler/compiler_sp
 ## Which Inspector section each member of an opened script sits in, by the Inspector's own rules.
 const ExportSections := preload("res://addons/eventsheet/editor/interaction/export_sections.gd")
 
-## The alpha floor a published verb's header wash keeps in READING mode. Reading mode drops the
-## "Action" / "Condition" / "Expression" word badge from the header (an event-sheet Function block
-## carries its name and its inputs, nothing else), so the role tint becomes the ONLY kind cue and
-## has to be visible even when the theme ships verb_row_tint_strength at 0.0 for the authoring look.
-const VERB_KIND_TINT_ALPHA: float = 0.16
-
 ## The mark a call row wears when the function hands over to ITSELF. One constant, so the row,
 ## the hover help and the Manual's legend can never draw two different glyphs for the same fact.
 const MARK_RECURSION := "↻"
@@ -80,18 +74,6 @@ const INCLUDE_BAR_HEIGHT_SCALE := 1.3
 ## A variable card's row (variable_row_cards): the 28 px card and the 6 px gap under it, over the
 ## 24 px line the row would otherwise take.
 const VARIABLE_CARD_ROW_SCALE := (28.0 + 6.0) / 24.0
-
-## The bars an opened pack's head builds, each named once here so the reading that gathers them into
-## Settings / Verbs / How it works / Internal state asks for them by name rather than by a literal
-## spelled twice. The row uids these open are `<prefix><sheet id>`, or `<prefix><group><sheet id>`
-## for the one settings bar per `@export_group`.
-const PACK_HEAD_BAR_UID_PREFIX := "sheet_head_bar_"
-const PACK_TRIGGERS_UID_PREFIX := "pack_triggers_"
-const PACK_HELPERS_UID_PREFIX := "helpers_group_"
-const PACK_SETTINGS_UID_PREFIX := "pack_settings"
-const PACK_SETTINGS_BAR_UID_PREFIX := "pack_settings_bar"
-const PACK_STATE_UID_PREFIX := "pack_internal_state"
-const PACK_VERBS_UID_PREFIX := "pack_verbs"
 
 ## The `@tool` band's switch, drawn as a mark in the badge column at the variable badge's width.
 ## A group head wears the same pair, because it is the same fact: this line is on, or it is not.
@@ -726,6 +708,9 @@ func build_head_band_rows(sheet: EventSheetResource, scaffold_rows: Array[EventR
 			continue
 		if quiet_head and head_band_moves_to_hover(band):
 			continue
+		# A global's Autoload entry is a fact about the project, said in the hover of its name.
+		if kind == EventSheetHeadBands.BAND_AUTOLOAD and is_autoload(sheet) and not bool(band.get("warning", false)):
+			continue
 		var head_row: EventRowData = _build_head_band_row(sheet, band, head_facts, description_source,
 			extends_band if kind == EventSheetHeadBands.BAND_NAME else {}, hovered_facts)
 		rows.append(head_row)
@@ -836,6 +821,11 @@ func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_fact
 			if not said.is_empty():
 				identity.append(said)
 			value_meta["hover_note"] = "\n".join(identity)
+		if is_name_band and not script_kind_word(sheet).is_empty():
+			# A behaviour's or a global's facts and options live in the hover of its name, and a
+			# click on the name offers the options.
+			value_meta["hover_note"] = script_facts_card(sheet)
+			value_meta["file_options"] = true
 		if is_name_band and quiet_head:
 			# The card's name is the one bold word on it.
 			value_meta["bbcode_segments"] = [{"text": value_text, "color": value_colour, "bold": true, "italic": false}]
@@ -948,7 +938,12 @@ func _class_head_spans(sheet: EventSheetResource, extends_band: Dictionary) -> A
 	if quiet_head and not sheet.read_only and not extends_band.is_empty():
 		kind_meta["head_action"] = EventSheetHeadBands.BAND_EXTENDS
 		kind_meta["hover_note"] = "%s %s" % [script_note, change_note]
-	spans.append(_make_span(EventSheetL10n.translate("Script"), SemanticSpan.SpanType.KEYWORD, kind_meta))
+	# A behaviour or a global says which it is, quietly, where any other file says Script.
+	var kind_word: String = script_kind_word(sheet)
+	if not kind_word.is_empty():
+		kind_meta["text_color"] = reading_style.muted_text_color
+	spans.append(_make_span(kind_word if not kind_word.is_empty() else EventSheetL10n.translate("Script"),
+		SemanticSpan.SpanType.KEYWORD, kind_meta))
 	if not extends_band.is_empty():
 		var extends_meta: Dictionary = {"editable": false, "kind": "head_band_%s" % EventSheetHeadBands.BAND_EXTENDS,
 			"head_band": EventSheetHeadBands.BAND_EXTENDS, "line_index": 0}
@@ -1339,193 +1334,6 @@ func _pack_host_guard_index(event_row: EventRow, trigger_lines: int) -> int:
 	return last
 
 
-## A PACK OPENS ON ITS VERBS.
-##
-## A behavior pack has a public face - the settings a designer turns, the verbs the picker offers -
-## and an implementation nobody opens on purpose. Read in file order it opens on the implementation:
-## eleven variables, a script block and a tick loop counting a timer down, with the two verbs the
-## reader came for last of all, under a head that reads them as triggers. Its own guide reads the
-## other way round, and so does the picker.
-##
-## So a pack being READ opens in four bands, and this is the lens that gathers them:
-##   Settings       - the knobs the Inspector shows, open.
-##   Verbs          - every published function as its ƒ block, then the triggers the pack fires. Open.
-##   How it works   - the lifecycle and tick events, and the helpers bar, folded.
-##   Internal state - the private variables, the constants and the script blocks, folded.
-##
-## PURE VIEW, exactly like the head bar and the Helpers bar: every row here is one that was already
-## built, moved within the list. `sheet.events`, `sheet.functions`, the resources and the emitted
-## bytes are untouched, the file keeps its own order for the code view and for emission, and a fold
-## the reader sets by hand still wins over the defaults above.
-##
-## Declines, leaving the list exactly as it was, on three shapes it must not fight: a sheet that is
-## not a pack being read, a pack with no published verb (there is no face to open on), and a pack
-## whose file draws its own structure with `#region` fences - an author who grouped the file has
-## said where things go, and a second grouping over the top would be arguing with them.
-## Returns the root list to use (the caller assigns it back).
-func arrange_pack_reading(rows: Array[EventRowData], sheet: EventSheetResource) -> Array[EventRowData]:
-	if sheet == null or rows.is_empty() or not _is_read_only_pack():
-		return rows
-	# Both refusals are decided BEFORE anything moves. The walk below re-parents rows and rewrites
-	# the head bar's own line as it goes, so a refusal discovered half way through would leave the
-	# sheet in neither shape.
-	if not _pack_reading_applies(rows):
-		return rows
-	var lead: Array[EventRowData] = []
-	var settings: Array[EventRowData] = []
-	var verbs: Array[EventRowData] = []
-	var triggers: Array[EventRowData] = []
-	var machinery: Array[EventRowData] = []
-	var internal: Array[EventRowData] = []
-	var state_bar: EventRowData = null
-	# The lead is what a reader meets before the first band: the head bar and the file's own prose.
-	# Once a body row has gone by, anything the four bands do not claim is something the file keeps
-	# rather than something it opens with - a closing note, a stray declaration - and it folds away
-	# with the rest of the internal state instead of jumping over the verbs to the top.
-	var body_seen: bool = false
-	for row_data: EventRowData in rows:
-		var uid: String = row_data.row_uid
-		if uid.begins_with(PACK_HEAD_BAR_UID_PREFIX):
-			lead.append(row_data)
-			state_bar = _lift_pack_knob_bars(row_data, settings)
-			continue
-		if uid.begins_with(PACK_TRIGGERS_UID_PREFIX):
-			# A trigger IS one of the verbs a pack publishes - the picker lists it beside the
-			# actions - so its rows join them rather than standing in a folder of their own.
-			for child: EventRowData in row_data.children:
-				_shift_row_indent(child, -1)
-				triggers.append(child)
-			continue
-		if uid.begins_with(PACK_HELPERS_UID_PREFIX):
-			machinery.append(row_data)
-			continue
-		var source: Resource = row_data.source_resource
-		if source is EventFunction:
-			verbs.append(row_data)
-			body_seen = true
-			continue
-		if row_data.row_type == EventRowData.RowType.EVENT:
-			machinery.append(row_data)
-			body_seen = true
-			continue
-		if source is RawCodeRow or source is LocalVariable:
-			internal.append(row_data)
-			body_seen = true
-			continue
-		if body_seen:
-			internal.append(row_data)
-			continue
-		lead.append(row_data)
-	var output: Array[EventRowData] = []
-	output.append_array(lead)
-	for bar: EventRowData in settings:
-		# The pack's own settings folder opens with the pack: it is what a reader came to change.
-		# A folder the AUTHOR made with `@export_group` keeps its closed default, because a pack
-		# that sorted sixty knobs into eight groups has said they are to be browsed by group, and
-		# throwing all eight open would rebuild the wall this reading exists to take down.
-		if bar.row_uid.begins_with(PACK_SETTINGS_BAR_UID_PREFIX):
-			bar.folded = bool(_viewport._fold_state.get(bar.row_uid, false))
-		output.append(bar)
-	verbs.append_array(triggers)
-	for verb_row: EventRowData in verbs:
-		_shift_row_indent(verb_row, 1)
-	var verbs_bar: EventRowData = _build_head_group_row(
-		sheet,
-		"pack_verbs",
-		EventSheetL10n.translate("Verbs"),
-		(EventSheetL10n.translate("1 verb") if verbs.size() == 1 \
-			else EventSheetL10n.translate("%d verbs") % verbs.size()),
-		verbs
-	)
-	verbs_bar.folded = bool(_viewport._fold_state.get(verbs_bar.row_uid, false))
-	output.append(verbs_bar)
-	if not machinery.is_empty():
-		var events: int = 0
-		for machine_row: EventRowData in machinery:
-			if machine_row.row_type == EventRowData.RowType.EVENT:
-				events += 1
-			_shift_row_indent(machine_row, 1)
-		output.append(_build_head_group_row(
-			sheet,
-			"pack_how_it_works",
-			EventSheetL10n.translate("How it works"),
-			(EventSheetL10n.translate("1 event") if events == 1 \
-				else EventSheetL10n.translate("%d events") % events),
-			machinery
-		))
-	if not internal.is_empty():
-		for internal_row: EventRowData in internal:
-			_shift_row_indent(internal_row, 1)
-		if state_bar == null:
-			state_bar = _build_head_group_row(
-				sheet, "pack_internal_state", EventSheetL10n.translate("Internal state"),
-				"%d" % internal.size(), internal
-			)
-		else:
-			# The knob folder the head already built is the same folder: the constants and the
-			# script blocks the file declares further down are internal state too, so they join it
-			# rather than opening a second folder that means the same thing.
-			var members: Array[EventRowData] = state_bar.children.duplicate()
-			members.append_array(internal)
-			state_bar.children = members
-			_retitle_group_count(state_bar, "%d" % members.size())
-	if state_bar != null:
-		output.append(state_bar)
-	return output
-
-
-## Whether the four bands may be gathered over this list at all, asked before a single row moves.
-## Two shapes are refused: a pack with no published verb, which has no face to open on, and a file
-## that draws its own structure with `#region` fences, whose author has already said where things go.
-func _pack_reading_applies(rows: Array[EventRowData]) -> bool:
-	var publishes: bool = false
-	for row_data: EventRowData in rows:
-		if _is_region_row(row_data):
-			return false
-		var verb: EventFunction = row_data.source_resource as EventFunction
-		if verb != null and verb.expose_as_ace:
-			publishes = true
-	return publishes
-
-
-## Moves a read pack's variable folders out of the one head bar's fold and onto the sheet, and drops
-## the bar's own "N variables" fact with them - that count is COUNTED FROM the bars it folds, so a
-## bar that no longer folds them must not go on claiming them. Returns the Internal state folder, or
-## null when the pack declares nothing it keeps to itself.
-func _lift_pack_knob_bars(head_row: EventRowData, settings: Array[EventRowData]) -> EventRowData:
-	var kept_children: Array[EventRowData] = []
-	var state_bar: EventRowData = null
-	for child: EventRowData in head_row.children:
-		if child.row_uid.begins_with(PACK_SETTINGS_UID_PREFIX):
-			_bump_indent(child, -1)
-			settings.append(child)
-			continue
-		if child.row_uid.begins_with(PACK_STATE_UID_PREFIX):
-			_bump_indent(child, -1)
-			state_bar = child
-			continue
-		kept_children.append(child)
-	head_row.children = kept_children
-	if state_bar == null and settings.is_empty():
-		return null
-	var kept_spans: Array[SemanticSpan] = []
-	for span: SemanticSpan in head_row.spans:
-		var meta: Dictionary = span.metadata if span.metadata is Dictionary else {}
-		if str(meta.get("kind", "")) != "head_bar_variables":
-			kept_spans.append(span)
-	head_row.spans = kept_spans
-	return state_bar
-
-
-## Rewrites the muted count on a group bar the arrange pass just grew. The title span is untouched -
-## only the one span that states a number the bar no longer tells the truth about.
-func _retitle_group_count(bar: EventRowData, subtitle: String) -> void:
-	for span: SemanticSpan in bar.spans:
-		if span.type == SemanticSpan.SpanType.COMMENT:
-			span.text = subtitle
-			return
-
-
 ## Re-collapses the verbs that turn out to live INSIDE something - a group, or a #region range paired
 ## after the rows were built. A verb at root stays open (its steps are the point); a nested one belongs
 ## to the block that encloses it, so it folds with that block instead of forcing it open. Run once over
@@ -1535,11 +1343,7 @@ func fold_nested_verb_rows(rows: Array[EventRowData], nested: bool = false) -> v
 		if nested and row_data.source_resource is EventFunction and not row_data.children.is_empty():
 			row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, true))
 		if not row_data.children.is_empty():
-			# The pack's own Verbs bar is the LIST of its verbs, not a block that encloses them, so a
-			# verb inside it is still at the top of its own reading: folding them there would close
-			# the one thing the bar exists to open on.
-			fold_nested_verb_rows(row_data.children,
-				not row_data.row_uid.begins_with(PACK_VERBS_UID_PREFIX))
+			fold_nested_verb_rows(row_data.children, true)
 
 
 ## THE HEAD OF AN OPENED PACK, in the event-sheet grammar. A read-only preview used to open on two and a
@@ -1752,16 +1556,11 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 	else:
 		head.append(_build_head_description_row(sheet, prose))
 	if not triggers.is_empty():
-		var fires_subtitle: String = EventSheetL10n.translate("this script fires - %d")
-		if is_addon_pack(sheet):
-			fires_subtitle = EventSheetL10n.translate("this pack fires - %d")
-		elif is_autoload(sheet):
-			fires_subtitle = EventSheetL10n.translate("this global fires - %d")
 		head.append(_build_head_group_row(
 			sheet,
 			"pack_triggers",
 			EventSheetL10n.translate("Triggers"),
-			fires_subtitle % triggers.size(),
+			EventSheetL10n.translate("this script fires - %d") % triggers.size(),
 			triggers
 		))
 	head.append_array(_build_object_folder_rows(sheet))
@@ -2017,24 +1816,10 @@ func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) 
 	}
 	var icon_class: String = host_class if not host_class.is_empty() else sheet.host_class
 	var identity_icon: Texture2D = EventSheetACEIcons.editor_icon(icon_class) if not icon_class.is_empty() else null
-	# An autoload is the project's GLOBAL, and the globe is the mark it already wears in the
-	# Objects rail and in every other sheet's `Game (global) ▸ …` row. Its own class is beside the
-	# point: what a reader needs is that this file is reachable from everywhere.
-	if is_autoload(sheet):
-		var globe: Texture2D = EventSheetViewportReadingRows.autoload_icon()
-		if globe != null:
-			identity_icon = globe
 	if identity_icon != null:
 		badge_meta["badge_icon"] = identity_icon
 	var spans: Array[SemanticSpan] = [_make_span("⇥", SemanticSpan.SpanType.KEYWORD, badge_meta)]
-	if is_autoload(sheet):
-		# An autoload's NAME is the autoload band's, one line up, with the `project.godot` entry that
-		# grants it echoed beside it; all this bar owes such a file is which file it is.
-		spans = _append_include_receipts(spans, str(sheet.external_source_path), {})
-	elif is_addon_pack(sheet):
-		spans.append_array(_addon_pack_include_spans(sheet, host_class))
-	else:
-		spans.append_array(_script_include_spans(sheet))
+	spans.append_array(_script_include_spans(sheet))
 	# What every shape of the bar ends with, in one place: how much of the file read as events, the
 	# buttons a tool sheet is run from, and - only inside this plugin's own repo - the bar a file of
 	# the RUNNING editor wears. Each is silent for the files it has nothing to say about.
@@ -2043,33 +1828,6 @@ func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) 
 	spans.append_array(_this_editor_bar_spans(sheet))
 	row_data.spans = spans
 	return row_data
-
-
-## The Include bar of a behaviour PACK: what it is, which version, and the class it behaves on -
-## `Addon Pack  v1.0.0  behaves on a  CharacterBody3D`. Its NAME is the name band's, one line up.
-func _addon_pack_include_spans(sheet: EventSheetResource, host_class: String) -> Array[SemanticSpan]:
-	var muted: Dictionary = {
-		"editable": false, "kind": "pack_include", "line_index": 0,
-		"text_color": _viewport._get_reading_style().muted_text_color
-	}
-	var spans: Array[SemanticSpan] = [_make_span(
-		EventSheetL10n.translate("Addon Pack"),
-		SemanticSpan.SpanType.VALUE,
-		{"editable": false, "kind": "pack_include", "line_index": 0,
-			"text_color": _viewport._get_reading_style().primary_text_color}
-	)]
-	var version: String = sheet.addon_version.strip_edges()
-	if not version.is_empty():
-		spans.append(_pack_include_chip("v%s" % version))
-	if not host_class.is_empty():
-		spans.append(_make_span(EventSheetL10n.translate("behaves on a"), SemanticSpan.SpanType.VALUE, muted))
-		spans.append(_pack_include_chip(host_class))
-	# A pack that ships editor tooling says so on its own bar: `adds 1 Tools menu item, 1 dock`.
-	# Silent for the packs that add nothing, which is nearly all of them.
-	var tools_summary: String = EventSheetEditorToolCensus.summary(EventSheetEditorToolCensus.from_sheet(sheet))
-	if not tools_summary.is_empty():
-		spans.append(_make_span(tools_summary, SemanticSpan.SpanType.VALUE, muted))
-	return spans
 
 
 ## A tool sheet's own play button, on the bar where the writing happens. An editor script is
@@ -2166,6 +1924,63 @@ func _reading_coverage_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 ## says rather than a guess from the file's shape.
 static func is_autoload(sheet: EventSheetResource) -> bool:
 	return sheet != null and not sheet.autoload_singleton_name().is_empty()
+
+
+## True for a script the sheet reads exactly in the order its file is written, under the same slim
+## title row an edited sheet has and with no headings of its own: a behaviour, a global, and any
+## other file of a pack. The view adds nothing the code does not have.
+static func reads_in_file_order(sheet: EventSheetResource) -> bool:
+	return sheet != null and (sheet.behavior_mode or is_autoload(sheet) or is_addon_pack(sheet))
+
+
+## The word a behaviour or a global wears on its title row in place of "Script"; "" for any other file.
+static func script_kind_word(sheet: EventSheetResource) -> String:
+	if is_autoload(sheet):
+		return EventSheetL10n.translate("Global (autoload)")
+	if sheet != null and sheet.behavior_mode:
+		return EventSheetL10n.translate("Behaviour")
+	return ""
+
+
+## The card hovering a behaviour's or a global's file name shows: what it is, its facts in one line,
+## and what a click on the name offers. "" for any other file.
+static func script_facts_card(sheet: EventSheetResource) -> String:
+	var kind: String = script_kind_word(sheet)
+	if kind.is_empty():
+		return ""
+	var facts: PackedStringArray = PackedStringArray()
+	var values: int = 0
+	var exported: int = 0
+	var triggers: int = 0
+	for entry: Variant in sheet.events:
+		if entry is LocalVariable:
+			values += 1
+			if (entry as LocalVariable).exported:
+				exported += 1
+		elif entry is SignalRow:
+			triggers += 1
+	if is_autoload(sheet):
+		facts.append(EventSheetL10n.translate("loaded before the first scene as %s") % sheet.autoload_singleton_name())
+		facts.append(EventSheetL10n.translate("%d global values") % values)
+	else:
+		facts.append(EventSheetL10n.translate("works on %s") % sheet.host_class)
+		if not sheet.addon_category.strip_edges().is_empty():
+			facts.append(EventSheetL10n.translate("listed under %s") % sheet.addon_category.strip_edges())
+		facts.append(EventSheetL10n.translate("%d properties") % exported)
+	var counts: Dictionary = {"action": 0, "condition": 0, "expression": 0}
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction and (entry as EventFunction).expose_as_ace:
+			counts[define_role_for(entry as EventFunction)] = int(counts[define_role_for(entry as EventFunction)]) + 1
+	facts.append(EventSheetL10n.translate("%d actions, %d conditions, %d triggers, %d expressions") % [
+		int(counts["action"]), int(counts["condition"]), triggers, int(counts["expression"])])
+	var title: String = sheet.custom_class_name.strip_edges()
+	if title.is_empty():
+		title = str(sheet.external_source_path).get_file()
+	return "\n".join(PackedStringArray([
+		"%s · %s" % [title, kind],
+		" · ".join(facts),
+		EventSheetL10n.translate("Click the name to open it in the script editor or show it in the FileSystem."),
+	]))
 
 
 ## The scene's own bar, at the top of a scene view: `⇥ Level1.tscn  a  Node2D  4 scripts`. Inert
@@ -3873,14 +3688,13 @@ func _define_role_name_color(role: String) -> Color:
 	return _viewport._get_event_style().object_label_color.lerp((_define_role_colors(role) as Array)[1], 0.55)
 
 
-## One Define block, as a real two-lane event row rather than a spec-sheet line. The CONDITION lane
-## carries what the verb IS - its role badge in the ACE-role colour, the friendly published name (or an
-## authored display template), and its typed inputs. The ACTION lane carries what it HANDS BACK - the
-## category chip, a "gives back <type>" chip for value-returning verbs, the async / static / internal /
-## featured markers, and the step count that doubles as the fold affordance. The role badge is the only
-## kind cue by default: a wash of the role accent plus a left accent bar is available behind the theme's
-## verb_row_tint_strength, but it ships at 0.0, because tinting every verb turned a pack into a wall of
-## coloured blocks. Pure READ view of sheet.functions - nothing here writes to the sheet.
+## One function, drawn like any other event on every sheet. The condition side says what it is and
+## when it runs: its kind as a coloured word (Action, Condition, Expression), "Function ▸ On
+## take_damage", what it hands back as a "returns int" chip, its settings as small tags, and one row
+## per parameter under them. Its description is not drawn - hovering the name shows it, and a
+## double-click on the name edits it. The action side carries the function's own actions (its first
+## step, when that step asks nothing of its own), and the rest of the body hangs underneath as
+## sub-events, so folding the row folds them away with it. Pure READ view of sheet.functions.
 func _build_define_function_row(event_function: EventFunction, indent: int) -> EventRowData:
 	var row_data := EventRowData.new()
 	row_data.indent = indent
@@ -3892,138 +3706,127 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 	row_data.row_uid = "define_fn_%s" % (fold_key if not fold_key.is_empty() else str(event_function.get_instance_id()))
 	row_data.disabled = not event_function.enabled
 	var role: String = define_role_for(event_function)
-	var badge_colors: Array = _define_role_colors(role)
-	# The whole verb reads as an event-sheet block tinted by its ACE kind: a wash of the role's
-	# accent behind the row (drawn by the renderer, which takes its strength from this alpha) plus a left
-	# accent bar, so Action / Condition / Expression are distinguishable at a glance, not only by the
-	# badge word. The alpha IS the theme's verb_row_tint_strength - the renderer reads it back off
-	# custom_color rather than keeping a second literal that could drift out of step with this one.
-	var role_accent: Color = badge_colors[1]
+	# The theme's verb_row_tint_strength washes the row in its kind's accent; it ships at 0.0, so a
+	# function draws as the ordinary event row it is unless a theme asks for the colour-coding.
+	var role_accent: Color = _define_role_colors(role)[1]
 	row_data.custom_color = Color(role_accent.r, role_accent.g, role_accent.b, _verb_tint_strength())
-	var display_name: String = event_function.ace_display_name.strip_edges()
-	if display_name.is_empty():
-		display_name = event_function.function_name.capitalize()
-	var chip_bg: Color = _verb_chip_colors()[0]
-	var chip_fg: Color = _verb_chip_colors()[1]
-	# The de-emphasised chips (static / internal) are the chip pair mixed toward its own background, so
-	# they read as quieter WITHOUT a second theme token.
-	var muted: Color = chip_fg.lerp(chip_bg, 0.45)
-	# READING MODE: the verb reads as an event-sheet Function block - ƒ, its name, one chip per input, and
-	# nothing else. Its kind survives as the header's wash (the role accent at VERB_KIND_TINT_ALPHA),
-	# and every other property it has - category, description, what it gives back, whether it is
-	# featured, the line it inserts - lives one click away in the ACE properties popup.
+	# Read rather than written, a few functions are not the author's own verbs at all: the editor's
+	# callbacks on an editor add-on, and the functions an animation's method track calls. Those read
+	# as the event they are; every other function reads as its own head.
 	if _verb_reading_mode():
-		row_data.custom_color = Color(
-			role_accent.r, role_accent.g, role_accent.b,
-			maxf(_verb_tint_strength(), VERB_KIND_TINT_ALPHA)
-		)
-		row_data.spans = _build_verb_function_block_spans(event_function, role, display_name)
-		_append_verb_body_rows(row_data, event_function, indent, display_name)
-		row_data.line_count = 1
-		# The name is a trigger cell now, so the body's first step belongs BESIDE it - the way every
-		# other event puts "when this happens" on the left and "do this" on the right. Without the
-		# merge the reading would carry the one empty condition cell in the whole sheet.
-		_merge_first_body_step_into_header(row_data)
-		# With something in the right lane the row is an ordinary two-lane event. Only a header that
-		# ended up with an empty right lane (an empty body) keeps the whole row for its chips.
-		row_data.full_width_lanes = not _has_action_lane_span(row_data.spans)
-		return row_data
-	# AUTHORING: the function is drawn like any other event. The condition side reads
-	# "ƒ Function ▸ On take_damage → nothing" with its settings as small tags, its description in
-	# italics under it, and each parameter on a line of its own; the body hangs underneath as
-	# sub-events, so folding the row folds them away with it.
+		row_data.spans = _callback_head_spans(event_function)
+	if row_data.spans.is_empty():
+		row_data.spans = _function_head_spans(event_function, role)
+	_append_verb_body_rows(row_data, event_function, indent)
+	var lines: int = 1
+	for span: SemanticSpan in row_data.spans:
+		lines = maxi(lines, int((span.metadata as Dictionary).get("line_index", 0)) + 1)
+	row_data.line_count = lines
+	_merge_first_body_step_into_header(row_data)
+	return row_data
+
+
+## The head of an editor callback or an animation-called function, or [] for every other function.
+func _callback_head_spans(event_function: EventFunction) -> Array[SemanticSpan]:
+	var editor_callback: Dictionary = EventSheetEditorPluginWords.callback_for(
+		_editor_plugin_class(), event_function.function_name)
+	if not editor_callback.is_empty():
+		return _build_editor_callback_spans(event_function, str(editor_callback.get("text", "")))
+	var animation_event: String = _animation_event_sentence(event_function)
+	if not animation_event.is_empty():
+		return _build_editor_callback_spans(event_function, animation_event,
+			EventSheetSentence.script_object(sentence_context()))
+	return []
+
+
+## The function head's spans, all in the CONDITION lane: the kind word and "Function ▸ On <name>" on
+## the first line, the "returns <type>" chip and the tags under them (a lane holds no more beside a
+## name longer than a word), then a line per parameter, then "+ Add parameter" on a sheet that can
+## take one.
+func _function_head_spans(event_function: EventFunction, role: String) -> Array[SemanticSpan]:
+	var role_colors: Array = _define_role_colors(role)
 	var chip_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
+	var editable: bool = _verb_metadata_editable()
+	var head: Dictionary = {"editable": false, "kind": "define_function", "lane": "condition", "line_index": 0}
 	var spans: Array[SemanticSpan] = [
-		_make_span("ƒ", SemanticSpan.SpanType.KEYWORD, {
-			"editable": false,
+		_make_span(function_kind_word(role), SemanticSpan.SpanType.KEYWORD, head.merged({
+			"function_kind": role,
 			"badge": true,
 			"badge_style": "scope",
-			"badge_bg": badge_colors[0],
-			"badge_fg": badge_colors[1],
-			"kind": "define_function",
-			"lane": "condition",
-			"line_index": 0
-		}),
-		_make_span(EventSheetL10n.translate("On %s") % event_function.function_name, SemanticSpan.SpanType.CONDITION, {
-			"editable": false,
-			"kind": "define_function",
-			"lane": "condition",
-			"line_index": 0,
-			"chip": true,
-			"object_label": EventSheetL10n.translate("Function"),
-		}.merged(chip_style, true)),
+			"badge_natural_width": true,
+			"badge_bg": role_colors[0],
+			"badge_fg": role_colors[1],
+			"hover_note": function_kind_note(role)
+		}, true)),
 	]
+	# A function marked `@rpc` is not one this peer calls: it ARRIVES, sent by another peer, and a
+	# visibility filter is ASKED, once per player, by a synchronizer. So the word between "On" and
+	# the name says which kind of arrival this head stands for.
+	var arrival: String = EventSheetL10n.translate("On")
+	if EventSheetMessageFacts.is_message(event_function):
+		arrival = EventSheetL10n.translate("On message")
+	elif not _visibility_filter_entry(event_function).is_empty():
+		arrival = EventSheetL10n.translate("On asked")
+	var name_word: String = event_function.function_name
+	if not _tool_file_entry_kind(event_function).is_empty():
+		name_word = EventSheetL10n.translate("run")
+	# "Function" is a word of its own in the object colour rather than the cell's object column: the
+	# kind word before it would push that column's shared edge and cut the word short.
+	spans.append(_make_span(_verb_trigger_object(event_function), SemanticSpan.SpanType.OBJECT, head.merged({
+		"natural_width": true,
+		"text_color": _viewport._get_event_style().object_label_color
+	}, true)))
+	spans.append(_make_span("%s %s" % [arrival, name_word], SemanticSpan.SpanType.CONDITION, head.merged({
+		"chip": true,
+		"function_name": true,
+		"hover_note": _function_name_card(event_function, editable)
+	}, true).merged(chip_style, true)))
+	var line: int = 1
+	var facts: Dictionary = head.merged({"line_index": line}, true)
 	var returns_word: String = CompilerSpellings.function_return_type_name(event_function)
-	var muted_color: Color = _viewport._get_reading_style().muted_text_color
-	spans.append(_make_span("→ %s" % (EventSheetL10n.translate("nothing") if returns_word == "void" else returns_word),
-		SemanticSpan.SpanType.VALUE, {
-			"editable": false,
-			"kind": "define_function",
-			"lane": "condition",
-			"line_index": 1,
+	if returns_word != "void":
+		var muted: Color = _viewport._get_reading_style().muted_text_color
+		var returns_text: String = EventSheetL10n.translate("returns %s") % returns_word
+		spans.append(_make_span(returns_text, SemanticSpan.SpanType.VALUE, facts.merged({
+			"kind": "function_returns",
+			"chip": true,
 			"natural_width": true,
-			"text_color": muted_color if returns_word == "void" else _viewport._get_event_style().value_highlight_color
-		}))
-	# What it hands back and its tags share the line under the name: beside it they would run out
-	# of lane on any name longer than a word.
-	for tag: Array in function_tags(event_function):
-		spans.append(_make_span(str(tag[0]), SemanticSpan.SpanType.CONDITION, {
-			"editable": false,
+			"font_size_delta": -2,
+			"hover_note": EventSheetL10n.translate("This function hands back a %s.") % returns_word,
+			"bbcode_segments": [
+				{"text": returns_text.trim_suffix(returns_word), "color": muted, "bold": false, "italic": false},
+				{"text": returns_word, "color": _viewport._get_event_style().value_highlight_color, "bold": true, "italic": false},
+			]
+		}, true).merged(chip_style, true)))
+	var tags: Array = function_tags(event_function)
+	for tag: Array in tags:
+		spans.append(_make_span(str(tag[0]), SemanticSpan.SpanType.CONDITION, facts.merged({
 			"kind": "function_tag",
-			"lane": "condition",
-			"line_index": 1,
 			"chip": true,
 			"font_size_delta": -2,
 			"hover_note": str(tag[1])
-		}.merged(chip_style, true)))
-	var condition_lines: int = 2
-	var editable: bool = _verb_metadata_editable()
-	var description: String = event_function.description.strip_edges()
-	if description.is_empty():
-		description = join_doc_prose(event_function.doc_comment)
-	if not description.is_empty() or editable:
-		var description_meta: Dictionary = {
-			"editable": editable,
-			"kind": "define_function",
-			"lane": "condition",
-			"line_index": condition_lines,
-			"text_color": muted_color
-		}
-		if editable:
-			description_meta["edit_kind"] = "verb_description"
-		if description.is_empty():
-			description = EventSheetL10n.translate("+ describe this function")
-			description_meta["edit_placeholder"] = true
-		else:
-			description_meta["bbcode_segments"] = [{"text": description, "color": muted_color, "bold": false, "italic": true}]
-		spans.append(_make_span(description, SemanticSpan.SpanType.COMMENT, description_meta))
-		condition_lines += 1
+		}, true).merged(chip_style, true)))
+	if returns_word != "void" or not tags.is_empty():
+		line += 1
+	var chip_colors: Array = _verb_chip_colors()
 	for index in range(event_function.params.size()):
 		var param: ACEParam = event_function.params[index]
 		if param == null:
 			continue
-		spans.append(_make_span(EventSheetL10n.translate("PARAM"), SemanticSpan.SpanType.KEYWORD, {
-			"editable": false,
+		var param_meta: Dictionary = {"editable": false, "kind": "verb_param", "param_index": index,
+			"lane": "condition", "line_index": line}
+		spans.append(_make_span(EventSheetL10n.translate("PARAM"), SemanticSpan.SpanType.KEYWORD, param_meta.merged({
 			"badge": true,
 			"badge_style": "scope",
 			"badge_natural_width": true,
-			"badge_bg": chip_bg,
-			"badge_fg": muted,
-			"kind": "verb_param",
-			"param_index": index,
-			"lane": "condition",
-			"line_index": condition_lines
-		}))
-		spans.append(_make_span(function_param_line(param), SemanticSpan.SpanType.VALUE, {
-			"editable": false,
-			"kind": "verb_param",
-			"param_index": index,
-			"lane": "condition",
-			"line_index": condition_lines,
+			"badge_bg": chip_colors[0],
+			"badge_fg": (chip_colors[1] as Color).lerp(chip_colors[0], 0.45)
+		}, true)))
+		spans.append(_make_span(function_param_line(param), SemanticSpan.SpanType.VALUE, param_meta.merged({
 			"text_color": _viewport._get_event_style().value_highlight_color,
 			"hover_note": function_param_note(param)
-		}))
-		condition_lines += 1
+		}, true)))
+		line += 1
 	# Adding an input is the core authoring gesture on a function, so it lives on the row. Only a
 	# read-only sheet goes without: it edits nothing, so it must not grow an affordance it cannot honour.
 	if editable:
@@ -4033,15 +3836,57 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 			"editable": false,
 			"kind": "verb_param_add",
 			"lane": "condition",
-			"line_index": condition_lines,
+			"line_index": line,
 			"text_color": add_color
 		}))
-		condition_lines += 1
 	_append_message_spans(spans, event_function)
-	row_data.spans = spans
-	_append_verb_body_rows(row_data, event_function, indent, display_name)
-	row_data.line_count = maxi(condition_lines, 1)
-	return row_data
+	return spans
+
+
+## The word a function's kind is drawn as, in its kind's colour: what it is to an event that calls it.
+static func function_kind_word(role: String) -> String:
+	match role:
+		"condition":
+			return EventSheetL10n.translate("Condition")
+		"expression":
+			return EventSheetL10n.translate("Expression")
+	return EventSheetL10n.translate("Action")
+
+
+## What hovering a function's kind word says.
+static func function_kind_note(role: String) -> String:
+	match role:
+		"condition":
+			return EventSheetL10n.translate("Returns true or false, and the event only runs while it is true.")
+		"expression":
+			return EventSheetL10n.translate("Usable inside any value: a number, text or object the function hands back.")
+	return EventSheetL10n.translate("Runs when an event calls it.")
+
+
+## The card hovering a function's name shows, one fact a line: the name, its description, how Add
+## Action lists it, who else calls it, how long it takes when it is a run of waits, and how to edit
+## the description. The description lives here rather than on the row.
+func _function_name_card(event_function: EventFunction, editable: bool) -> String:
+	var lines: PackedStringArray = PackedStringArray([event_function.function_name])
+	var described: String = event_function.description.strip_edges()
+	if described.is_empty():
+		described = join_doc_prose(event_function.doc_comment)
+	lines.append(described if not described.is_empty() else EventSheetL10n.translate("No description yet."))
+	var picker_line: String = verb_picker_sentence(event_function)
+	if picker_line.is_empty():
+		picker_line = EventSheetBBCodeLite.strip(event_function.ace_display_name.strip_edges())
+	if event_function.expose_as_ace and not picker_line.is_empty():
+		lines.append(EventSheetL10n.translate("Reads as: %s") % picker_line)
+	var sequence_words: String = _wait_sequence_words(event_function)
+	if not sequence_words.is_empty():
+		lines.append(sequence_words)
+	var callers: String = called_by_words(event_function.function_name,
+		str((_viewport._sheet as EventSheetResource).external_source_path) if _viewport._sheet != null else "")
+	if not callers.is_empty():
+		lines.append(callers)
+	if editable:
+		lines.append(EventSheetL10n.translate("Double-click the name to edit the description."))
+	return "\n".join(lines)
 
 
 ## The small tags a function's header carries, as [word, what it means] pairs, in the order the
@@ -4127,29 +3972,14 @@ func _animation_event_sentence(event_function: EventFunction) -> String:
 
 ## Which object a function reads its trigger under. A test's `run` and a command tool's
 ## `_init` are what the file EXISTS to do and the runner calls them by name, so they belong to Test
-## and to Command tool. Every other function is a helper this sheet calls, and stays under Functions.
+## and to Command tool, and both read "On run": the files are RUN. Every other function is a Function.
 func _verb_trigger_object(event_function: EventFunction) -> String:
 	match _tool_file_entry_kind(event_function):
 		EventSheetToolFiles.KIND_TEST_SHEET:
 			return EventSheetL10n.translate(EventSheetToolFiles.OBJECT_TEST)
 		EventSheetToolFiles.KIND_COMMAND_TOOL:
 			return EventSheetL10n.translate(EventSheetToolFiles.OBJECT_COMMAND_TOOL)
-	# A pack's PUBLISHED verb is not a function this file calls itself: it is the pack's own
-	# vocabulary, listed under the pack's own Verbs bar, so the object column has nobody left to
-	# name - the bar above it already said whose verbs these are, and the ƒ says what they are. Its
-	# unpublished helpers stay under Functions, because that is exactly what they are.
-	if event_function.expose_as_ace and _is_read_only_pack():
-		return ""
-	return EventSheetL10n.translate("Functions")
-
-
-## The words after "On" for the same two entry points, and they are the same words: both files are
-## RUN. A command tool's entry is spelled `_init` because that is when a main loop starts, and a
-## test's is spelled `run` because that is what the runner calls - one thing, said once.
-func _verb_trigger_name(event_function: EventFunction, display_name: String) -> String:
-	if _tool_file_entry_kind(event_function).is_empty():
-		return display_name
-	return EventSheetL10n.translate("run")
+	return EventSheetL10n.translate("Function")
 
 
 ## "" unless this function IS the open tooling file's entry point - the name and the file kind have to
@@ -4164,196 +3994,6 @@ func _tool_file_entry_kind(event_function: EventFunction) -> String:
 	if kind == EventSheetToolFiles.KIND_COMMAND_TOOL and name == EventSheetToolFiles.COMMAND_ENTRY_NAME:
 		return kind
 	return ""
-
-
-## True when any span of a row sits in the ACTION lane - i.e. the row's right half carries something.
-static func _has_action_lane_span(spans: Array[SemanticSpan]) -> bool:
-	for span: SemanticSpan in spans:
-		if span != null and span.metadata is Dictionary and str((span.metadata as Dictionary).get("lane", "")) == "action":
-			return true
-	return false
-
-
-## ƒ + the verb's DISPLAY NAME + one chip per input, and nothing else - the event-sheet Function block
-## header a pack reads as in Reading mode. A display name written with the plugin's BBCode-lite
-## (`Take [b]amount[/b] damage`) draws STYLED: the span carries the stripped text plus the parsed
-## segments the renderer paints, so the tags themselves are never printed. An unpublished helper adds
-## the one caption a reader takes a function in by - its doc comment - in the RIGHT lane, muted.
-func _build_verb_function_block_spans(event_function: EventFunction, role: String, display_name: String) -> Array[SemanticSpan]:
-	# ────────────────────────────────────────────────────────────────────────────────────────────
-	# On a script that extends one of the editor's plugin classes, some of these functions are not
-	# the author's verbs at all: they are the questions and the events the EDITOR calls, and reading
-	# them as "ƒ On parse property" tells a reader nothing they can act on. Named here, keyed only
-	# off the class the file extends and the function's own name - the reading changes, the sheet
-	# does not.
-	var editor_callback: Dictionary = EventSheetEditorPluginWords.callback_for(
-		_editor_plugin_class(), event_function.function_name)
-	if not editor_callback.is_empty():
-		return _build_editor_callback_spans(event_function, str(editor_callback.get("text", "")))
-	# ────────────────────────────────────────────────────────────────────────────────────────────
-	# A function an ANIMATION calls is not a helper this sheet calls itself, it is an event: the
-	# animation's method track names it, and the moment the play head reaches that key the engine
-	# calls it. Nothing in the script says so - which is exactly why the sheet has to.
-	var animation_event: String = _animation_event_sentence(event_function)
-	if not animation_event.is_empty():
-		return _build_editor_callback_spans(event_function, animation_event,
-			EventSheetSentence.script_object(sentence_context()))
-	var badge_colors: Array = _define_role_colors(role)
-	var name_color: Color = _define_role_name_color(role)
-	var spans: Array[SemanticSpan] = [
-		_make_span("ƒ", SemanticSpan.SpanType.KEYWORD, {
-			"editable": false,
-			"badge": true,
-			"badge_style": "scope",
-			"badge_bg": badge_colors[0],
-			"badge_fg": badge_colors[1],
-			"kind": "define_function",
-			"lane": "condition",
-			"line_index": 0
-		})
-	]
-	# The condition lane answers "when does this run?" on every other event; a function's answer is
-	# "when it is called", so the name reads there as the trigger it is - Functions ▸ On <name>.
-	var name_meta: Dictionary = {
-		"editable": false,
-		"kind": "define_function",
-		"lane": "condition",
-		"line_index": 0,
-		"chip": true,
-		# ── lens hook ─────────────────────────────────────────────────────────────────────────
-		# A test's `run` and a command tool's `_init` are not helpers something else calls: they are
-		# the one thing the file is FOR, and the runner calls them. So they read under the object
-		# that runs them - Test ▸ On run, Command tool ▸ On run - rather than under Functions.
-		"object_label": _verb_trigger_object(event_function),
-		"text_color": name_color
-	}
-	var plain_name: String = _verb_trigger_name(event_function, display_name)
-	# ── lens hook ─────────────────────────────────────────────────────────────────────────────
-	# A PACK'S PUBLISHED VERB IS NOT A TRIGGER. "On" answers "when does this run?", and a verb's
-	# answer is "when a row uses it" - which is what the picker's own words already say. So an
-	# opened pack reads its vocabulary the way the picker offers it: the authored sentence where the
-	# author wrote one, the display name otherwise, and no arrival word in front of either. Only
-	# inside a pack being READ - on every other sheet a function block still reads as the call it is.
-	var pack_verb: bool = event_function.expose_as_ace and _is_read_only_pack()
-	var styled_source: String = display_name
-	var sentence_carries_inputs: bool = false
-	if pack_verb:
-		var picker_line: String = verb_picker_sentence(event_function)
-		if not picker_line.is_empty():
-			plain_name = picker_line
-			styled_source = picker_line
-			sentence_carries_inputs = true
-	if EventSheetBBCodeLite.has_markup(styled_source):
-		plain_name = EventSheetBBCodeLite.strip(styled_source)
-		name_meta["bbcode_segments"] = EventSheetBBCodeLite.parse(styled_source, name_color)
-	# A function marked `@rpc` is not one this peer calls: it ARRIVES, sent by another peer,
-	# and a visibility filter is ASKED, once per player, by a synchronizer. So the word between "On"
-	# and the name says which kind of arrival this head stands for.
-	var arrival: String = EventSheetL10n.translate("On")
-	if EventSheetMessageFacts.is_message(event_function):
-		arrival = EventSheetL10n.translate("On message")
-	elif not _visibility_filter_entry(event_function).is_empty():
-		arrival = EventSheetL10n.translate("On asked")
-	spans.append(_make_span(plain_name if pack_verb else "%s %s" % [arrival, plain_name],
-		SemanticSpan.SpanType.OBJECT, name_meta))
-	# The inputs, as an event sheet's own trigger payload chips - the names the call passes in, beside
-	# the trigger that receives them. Their TYPES live in the properties popup, one click away.
-	var chip_texts: PackedStringArray = PackedStringArray()
-	# A picker sentence already names every input inside itself, so repeating them as chips would
-	# say the same words twice on one line.
-	if not sentence_carries_inputs:
-		for param: Variant in event_function.params:
-			if param is ACEParam:
-				chip_texts.append(verb_param_chip_text(param as ACEParam))
-		if chip_texts.is_empty():
-			for legacy: String in event_function.parameters:
-				chip_texts.append(str(legacy).replace("_", " ").strip_edges())
-	# A plain chip, not a field cell: an input chip belongs beside its verb, not in the row's shared
-	# object column (which is sized for object names and would elide "enabled" to an ellipsis).
-	var chip_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
-	for index in range(chip_texts.size()):
-		spans.append(_make_span(chip_texts[index], SemanticSpan.SpanType.CONDITION, {
-			"editable": false,
-			"lane": "condition",
-			"kind": "verb_param",
-			"param_index": index,
-			"chip": true,
-			"line_index": 0
-		}.merged(chip_style, true)))
-	# The KIND stays a word, quietly, beside the name: a published condition or expression answers a
-	# question rather than doing something, and the tint alone never said which. An action verb says
-	# nothing extra - "do these" is what every other event already means.
-	#
-	# Inside an opened PACK it does say it. There the verbs are the file's whole point and they are
-	# read side by side under one bar, so the word that tells an action from a condition is the one a
-	# reader is scanning the list for - the same word the picker files them under.
-	if event_function.expose_as_ace and (role != "action" or pack_verb):
-		spans.append(_make_span(EventSheetL10n.translate(role), SemanticSpan.SpanType.COMMENT, {
-			"editable": false,
-			"kind": "define_function",
-			"lane": "condition",
-			"line_index": 0,
-			"natural_width": true,
-			"text_color": _viewport._get_reading_style().muted_text_color
-		}))
-	# ────────────────────────────────────────────────────────────────────────────────────────────
-	# The two things about a function that change how it is CALLED, said on the header where the call
-	# is decided rather than found out inside the body. A function that waits cannot be called and
-	# left; a shared one belongs to the class rather than to any one object.
-	if event_function.is_async:
-		spans.append(_make_span("⏳ %s" % EventSheetL10n.translate("waits"),
-			SemanticSpan.SpanType.CONDITION, {
-				"editable": false,
-				"kind": "verb_param",
-				"chip": true,
-				"line_index": 0
-			}.merged(chip_style, true)))
-	if event_function.is_static:
-		spans.append(_make_span(EventSheetL10n.translate("shared"), SemanticSpan.SpanType.COMMENT, {
-			"editable": false,
-			"kind": "define_function",
-			"lane": "condition",
-			"line_index": 0,
-			"natural_width": true,
-			"text_color": _viewport._get_reading_style().muted_text_color
-		}))
-	# ────────────────────────────────────────────────────────────────────────────────────────────
-	# A function whose rows alternate waiting and doing IS a sequence, and the header says so with how
-	# long the whole run takes. Display only: the body is untouched, and the claim behind the chip is
-	# what the pattern chips and Refactor read.
-	var sequence_words: String = _wait_sequence_words(event_function)
-	if not sequence_words.is_empty():
-		spans.append(_make_span(sequence_words, SemanticSpan.SpanType.COMMENT, {
-			"editable": false,
-			"kind": "define_function",
-			"lane": "condition",
-			"line_index": 0,
-			"natural_width": true,
-			"text_color": _viewport._get_reading_style().muted_text_color
-		}))
-	if not event_function.expose_as_ace:
-		var doc_line: String = helper_doc_line(event_function)
-		if not doc_line.is_empty():
-			spans.append(_make_span(doc_line, SemanticSpan.SpanType.COMMENT, {
-				"editable": false,
-				"kind": "define_function",
-				"lane": "action",
-				"line_index": 0,
-				"text_color": _viewport._get_reading_style().muted_text_color
-			}))
-	var callers: String = called_by_words(event_function.function_name,
-		str((_viewport._sheet as EventSheetResource).external_source_path) if _viewport._sheet != null else "")
-	if not callers.is_empty():
-		spans.append(_make_span(callers, SemanticSpan.SpanType.COMMENT, {
-			"editable": false,
-			"kind": "define_function",
-			"lane": "action",
-			"line_index": 0,
-			"natural_width": true,
-			"text_color": _viewport._get_reading_style().muted_text_color
-		}))
-	_append_message_spans(spans, event_function)
-	return spans
 
 
 ## How many files the project has, so the band can name a few and count the rest rather than
@@ -4535,9 +4175,8 @@ func _wait_sequence_words(event_function: EventFunction) -> String:
 	return EventSheetPatternReadings.wait_sequence_words(EventSheetPatternReadings.wait_sequence(body))
 
 
-## The verb's BODY as foldable children, plus the fold seed and the "+ Add event" way in. Shared by
-## both header forms so a Reading-mode block opens exactly like an authoring one.
-func _append_verb_body_rows(row_data: EventRowData, event_function: EventFunction, indent: int, display_name: String) -> void:
+## The function's BODY as foldable children, plus the fold seed and the "+ Add event" way in.
+func _append_verb_body_rows(row_data: EventRowData, event_function: EventFunction, indent: int) -> void:
 	# Event-sheet expandable block: the function BODY renders as foldable children (its conditions,
 	# actions, and raw GDScript blocks), built by the SAME dispatcher as sheet events, folding like a group.
 	# On an AUTHORED sheet the body is LIVE - the child rows keep their source_resource so selection / drag /
@@ -4575,7 +4214,7 @@ func _append_verb_body_rows(row_data: EventRowData, event_function: EventFunctio
 	if body_editable and _viewport.add_event_footer_wanted(not body_entries.is_empty()):
 		row_data.children.append(_build_add_event_footer_row(
 			event_function, indent + 1,
-			"+ Add event to '%s'…" % (display_name if not display_name.is_empty() else event_function.function_name)
+			"+ Add event to '%s'…" % event_function.function_name
 		))
 	if not row_data.children.is_empty():
 		# A verb OPENS by default - its steps ARE the point, and a pack of collapsed rows reads as the spec
@@ -4585,30 +4224,38 @@ func _append_verb_body_rows(row_data: EventRowData, event_function: EventFunctio
 		row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, false))
 
 
-## Folds the body's FIRST step into the function's own row, so `Functions ▸ On Take Damage` reads with
-## `Player ▸ Subtract amount from hp` beside it instead of above an empty condition cell. Only an INERT
-## first step is folded in: an inert row has already dropped its resource (nothing addresses its
-## actions any more), so moving its drawn spans is purely a reading. A first step that still owns its
-## resource - an editable body, where clicking an action must reach that action - is left where it is,
-## and the function keeps the header form it had. Its own sub-events move up with it, so the branch
-## under the step still hangs off the step.
+## The function's OWN actions - its first step, when that step asks nothing of its own - drawn in the
+## head's action lane, so `Function ▸ On take_damage` reads with `Subtract amount from health` beside
+## it the way every other event puts "do this" beside "when this happens". The step's sub-events move
+## up with it. A live step stays addressable: EventFunction.lane_event() names it from the data, so
+## a click on one of these actions, its Add action and its edits reach the step's own EventRow. A
+## property setter's trigger row reads its first step the same way, while that step is a reading only.
 func _merge_first_body_step_into_header(row_data: EventRowData) -> void:
 	if row_data.children.is_empty():
 		return
 	var first_step: EventRowData = row_data.children[0]
-	if first_step == null or first_step.row_type != EventRowData.RowType.EVENT:
+	if first_step == null or first_step.row_type != EventRowData.RowType.EVENT \
+			or not first_step.ternary_anchor_uid.is_empty():
 		return
-	if first_step.source_resource != null:
-		return  # a live body row: its actions must stay addressable where they are
-	# The one row of a verb body whose words are needed at BUILD time rather than at draw time: they
-	# are about to move into the header, so they have to exist. Every other body row stays lazy.
+	var head_function: EventFunction = row_data.source_resource as EventFunction
+	if (head_function != null and head_function.lane_event() == null) \
+			or (head_function == null and first_step.source_resource != null):
+		return
+	# The one row of a body whose words are needed at BUILD time rather than at draw time: they are
+	# about to move into the head, so they have to exist. Every other body row stays lazy.
 	_ensure_event_spans(first_step)
 	var moved: Array[SemanticSpan] = []
 	for span: SemanticSpan in first_step.spans:
 		if span == null or not (span.metadata is Dictionary):
-			return  # an un-mergeable step: leave the block exactly as it was
-		if str((span.metadata as Dictionary).get("lane", "")) != "action":
-			return  # the step asks a question of its own - it is a row, not this row's right half
+			return
+		var metadata: Dictionary = span.metadata as Dictionary
+		# The step's "Always" and its "+ Add condition" belong to a row of its own; on a function's
+		# head the condition side is the function's.
+		if head_function != null and (bool(metadata.get("placeholder", false)) \
+				or str(metadata.get("kind", "")) == "add_condition"):
+			continue
+		if str(metadata.get("lane", "")) != "action":
+			return
 		moved.append(span)
 	if moved.is_empty():
 		return

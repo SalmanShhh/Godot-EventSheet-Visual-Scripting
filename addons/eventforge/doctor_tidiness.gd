@@ -226,8 +226,8 @@ static func unused_behaviors(sheet: EventSheetResource, corpus: String) -> Packe
 # ── 5. Events switched off for a long time ───────────────────────────────────────────────────
 ## The 1-based margin numbers of the events in `entries` that are switched off. Sub-events of a
 ## disabled parent are not counted twice: the parent already carries the note.
-static func disabled_event_numbers(entries: Array) -> PackedInt32Array:
-	var numbers: Dictionary = EventSheetResource.event_numbers(entries)
+static func disabled_event_numbers(entries: Array, functions: Array = []) -> PackedInt32Array:
+	var numbers: Dictionary = EventSheetResource.event_numbers(entries, functions)
 	var disabled: PackedInt32Array = PackedInt32Array()
 	_collect_disabled(entries, numbers, disabled)
 	return disabled
@@ -301,8 +301,8 @@ static func _params_signature(params: Dictionary) -> String:
 ## Pairs of margin numbers whose events read identically: [[6, 19], …], each pair reported once
 ## and in the order the sheet numbers them. An event with no actions is skipped - a bare
 ## condition row repeated is a shape, not a duplicate.
-static func identical_event_pairs(entries: Array) -> Array:
-	var numbers: Dictionary = EventSheetResource.event_numbers(entries)
+static func identical_event_pairs(entries: Array, functions: Array = []) -> Array:
+	var numbers: Dictionary = EventSheetResource.event_numbers(entries, functions)
 	var seen: Dictionary = {}
 	var pairs: Array = []
 	_collect_identical(entries, numbers, seen, pairs)
@@ -503,7 +503,7 @@ static func check_tidiness(sheet_paths: PackedStringArray, findings: Array[Dicti
 			_add(findings, "unused-behavior", sheet_path,
 				"Behavior \"%s\" is attached but no event uses it." % behavior)
 		_note_disabled_events(sheet, sheet_path, findings)
-		for pair: Array in identical_event_pairs(sheet.events):
+		for pair: Array in identical_event_pairs(sheet.events, sheet.functions):
 			_add(findings, "identical-events", sheet_path,
 				"Events %d and %d are identical - make one?" % [int(pair[0]), int(pair[1])], int(pair[0]))
 		var repeated: Dictionary = repeated_literals(sheet.events)
@@ -544,7 +544,7 @@ static func _note_unread_locals(sheet: EventSheetResource, sheet_path: String,
 
 static func _note_disabled_events(sheet: EventSheetResource, sheet_path: String,
 		findings: Array[Dictionary]) -> void:
-	var disabled: PackedInt32Array = disabled_event_numbers(sheet.events)
+	var disabled: PackedInt32Array = disabled_event_numbers(sheet.events, sheet.functions)
 	if disabled.is_empty():
 		return
 	var change: Dictionary = last_change(sheet_path)

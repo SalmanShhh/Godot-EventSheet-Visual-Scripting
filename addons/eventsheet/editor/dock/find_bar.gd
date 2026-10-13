@@ -130,7 +130,8 @@ func _find_step(direction: int) -> void:
 	var match_resource: Resource = _dock._find_resource_matches[_dock._find_cursor]
 	var label: String = "%d of %d" % [_dock._find_cursor + 1, _dock._find_resource_matches.size()]
 	var match_event: int = EventSheetViewport.event_number_containing(
-		_dock._current_sheet.events if _dock._current_sheet != null else [], match_resource)
+		_dock._current_sheet.events if _dock._current_sheet != null else [], match_resource,
+		_dock._current_sheet.functions if _dock._current_sheet != null else [])
 	if match_event > 0:
 		label += " · " + EventSheetL10n.translate("event %d") % match_event
 	_dock._find_count_label.text = label

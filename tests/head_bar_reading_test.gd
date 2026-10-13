@@ -13,7 +13,8 @@ extends RefCounted
 # and every bar they were is still there, as the fold under it. Four things are pinned here, each
 # by VALUE:
 #
-#   1. the bar's own words, for a showcase and for a shipped pack, plus the rows that hang under it;
+#   1. the bar's own words for a showcase, plus the rows that hang under it - and a shipped pack,
+#      which is a behaviour and so opens on its own title row in file order, with no bar at all;
 #   2. the file's prose drawn ONCE - the `##` band that used to draw its value and its echo over
 #      each other is gone, and the comment row is the only copy;
 #   3. the quiet sheet at the head: a control the Input Map has not got leaves the Input bar's words
@@ -55,20 +56,14 @@ static func _one_bar_for_a_showcase() -> bool:
 	])
 
 
-## A shipped pack's head: the same bar, with the pack's own Include bar, its `@icon` and its host
-## binding among the lines it folds.
-##
-## A PACK is the one file whose variable folders leave that fold: they read on the sheet as the
-## pack's Settings and its Internal state. The bar's variable count leaves with them, because every
-## fact on that line is COUNTED FROM the bar it folds and a bar that folds them no longer would be
-## claiming somebody else's rows.
+## A shipped pack opens on no head bar at all: it is a behaviour, and a behaviour reads in its file's
+## own order under the title row an edited sheet has - the class head first, then one band per line.
 static func _one_bar_for_a_pack() -> bool:
 	var head: Array = _head_rows(PACK)
 	return SUPPORT.pins(P, [
-		["flash head bar", _words_of(head[0]),
-			"▣ FlashBehavior extends Node"],
-		["flash head bar folds the bars it stands for", _child_uids(head[0]),
-			"sheet_head_name, sheet_head_icon, sheet_head_host, pack_include_bar"],
+		["flash opens on its title row", _words_of(head[0]),
+			"▣ FlashBehavior Behaviour · extends Node class_name FlashBehavior"],
+		["no head bar folds anything", _uids_matching(PACK, "sheet_head_bar"), ""],
 	])
 
 
@@ -79,10 +74,7 @@ static func _the_prose_is_drawn_once() -> bool:
 	return SUPPORT.pins(P, [
 		["input_rebind description bands", _uids_matching(SHOWCASE, "sheet_head_description"), ""],
 		["input_rebind description rows", _rows_saying(SHOWCASE, "a working rebind screen"), 1],
-		["flash description bands", _uids_matching(PACK, "sheet_head_description"), ""],
-		["flash description rows", _rows_saying(PACK, "Blinks the host node's visibility"), 1],
-		["flash reads its whole ## block", _words_of(_row_named(PACK, "head_description_row")),
-			"Blinks the host node's visibility on and off for a duration, then snaps it back to fully visible and fires On Flash Finished. The classic damage-flicker and invincibility-frames effect, with a single interval knob you can change live."],
+		["flash reads its ## line where the file has it", _uids_matching(PACK, "sheet_head_description"), "sheet_head_description"],
 	])
 
 

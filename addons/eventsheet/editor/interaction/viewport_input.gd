@@ -413,9 +413,13 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			_viewport.accept_event()
 			return
 		var head_action: String = str(metadata.get("head_action", ""))
+		# A behaviour's or a global's name offers what can be done with the file; a double-click on it
+		# still renames the class.
+		if not event.double_click and bool(metadata.get("file_options", false)):
+			head_action = "file_options"
 		if not event.double_click and not head_action.is_empty() and head_action != EventSheetHeadBands.BAND_NAME:
 			_viewport._select_from_click(row_index, span_index, false)
-			_viewport.sheet_head_action_requested.emit(str(metadata.get("head_action", "")))
+			_viewport.sheet_head_action_requested.emit(head_action)
 			_viewport.accept_event()
 			return
 		if bool(hit.get("fold", false)):
@@ -468,20 +472,20 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		if event.double_click:
 			# In-flow GDScript blocks (actions) open the code dialog, not the ACE editor.
 			var double_click_meta: Dictionary = hit.get("span_metadata", {})
-			if bool(double_click_meta.get("match_action", false)) and row_data != null and row_data.source_resource is EventRow:
+			if bool(double_click_meta.get("match_action", false)) and row_data != null and _viewport.ace_owner(row_data.source_resource) != null:
 				var match_target: Resource = _viewport._resolve_ace_resource(row_data.source_resource, "action", int(double_click_meta.get("ace_index", -1)))
 				if match_target is MatchRow:
 					_viewport.match_edit_requested.emit(match_target)
 					_viewport.accept_event()
 					return
-			if bool(double_click_meta.get("raw_action", false)) and row_data != null and row_data.source_resource is EventRow:
+			if bool(double_click_meta.get("raw_action", false)) and row_data != null and _viewport.ace_owner(row_data.source_resource) != null:
 				var inline_raw: Resource = _viewport._resolve_ace_resource(row_data.source_resource, "action", int(double_click_meta.get("ace_index", -1)))
 				if inline_raw is RawCodeRow:
 					_viewport.raw_code_edit_requested.emit(inline_raw, true)
 					_viewport.accept_event()
 					return
 			# Action-cell comments open the comment dialog (text + color).
-			if bool(double_click_meta.get("action_comment", false)) and row_data != null and row_data.source_resource is EventRow:
+			if bool(double_click_meta.get("action_comment", false)) and row_data != null and _viewport.ace_owner(row_data.source_resource) != null:
 				var inline_comment: Resource = _viewport._resolve_ace_resource(row_data.source_resource, "action", int(double_click_meta.get("ace_index", -1)))
 				if inline_comment is CommentRow:
 					_viewport.comment_edit_requested.emit(inline_comment)
@@ -507,19 +511,18 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			# metadata cell (the name, the category chip, or the description caption) edits that field in
 			# place, and anywhere else on the row opens the whole Edit Function dialog. Checked BEFORE the
 			# generic open-the-dialog fallthrough, which would otherwise swallow every cell on the row.
-			if row_data != null and row_data.source_resource is EventFunction:
+			if row_data != null and row_data.source_resource is EventFunction \
+					and not (str(double_click_meta.get("lane", "")) == "action" and _viewport.ace_owner(row_data.source_resource) != null):
 				if str(double_click_meta.get("kind", "")) in ["verb_param", "verb_param_add"]:
 					if _viewport._maybe_request_ace_edit(hit, row_index):
 						_viewport.accept_event()
 						return
-				if str(double_click_meta.get("edit_kind", "")) in ["verb_display_name", "verb_description", "verb_category"]:
-					_viewport._begin_edit(row_index, span_index)
-					_viewport.accept_event()
-					return
-				# The description caption is a COMMENT row whose whole body is the description, so a
-				# double-click anywhere on it (not only the exact span) edits the description.
-				if row_data.row_type == EventRowData.RowType.COMMENT:
-					_viewport._begin_edit(row_index, span_index)
+				# The name is where the description lives: its hover shows it, and a double-click edits
+				# it in a small window beside the row. A read-only sheet only shows it.
+				if bool(double_click_meta.get("function_name", false)):
+					if _viewport._sheet != null and not _viewport._sheet.read_only:
+						_viewport.function_description_requested.emit(row_data.source_resource,
+							_viewport.get_screen_transform() * local_position)
 					_viewport.accept_event()
 					return
 				_viewport.function_edit_requested.emit(row_data.source_resource)
@@ -545,11 +548,11 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			# Single-param inline editing: a double-click landing on a highlighted VALUE
 			# within an ACE edits just that parameter.
 			var value_kind: String = str(double_click_meta.get("kind", ""))
-			if value_kind in ["condition", "trigger", "action"] and row_data != null and row_data.source_resource is EventRow and span_index >= 0 and span_index < row_data.spans.size():
+			if value_kind in ["condition", "trigger", "action"] and row_data != null and _viewport.ace_owner(row_data.source_resource) != null and span_index >= 0 and span_index < row_data.spans.size():
 				var value_hit: Array = _viewport._value_text_at(row_data.spans[span_index], local_position.x, _viewport._get_font(), _viewport._get_font_size())
 				if not value_hit.is_empty():
 					var clicked_lane: String = "action" if value_kind == "action" else "condition"
-					var clicked_ace: Resource = row_data.source_resource.trigger if value_kind == "trigger" else _viewport._resolve_ace_resource(row_data.source_resource, clicked_lane, int(double_click_meta.get("ace_index", -1)))
+					var clicked_ace: Resource = _viewport.ace_owner(row_data.source_resource).trigger if value_kind == "trigger" else _viewport._resolve_ace_resource(row_data.source_resource, clicked_lane, int(double_click_meta.get("ace_index", -1)))
 					if clicked_ace != null:
 						var clicked_param: String = _viewport.param_id_for_value(clicked_ace, str(value_hit[0]), int(value_hit[1]))
 						if not clicked_param.is_empty():

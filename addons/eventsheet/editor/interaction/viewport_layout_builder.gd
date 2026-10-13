@@ -104,12 +104,6 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 		condition_lane_rect = Rect2(x, row_top, max(lane_divider_x - x, 1.0), row_height)
 		lane_divider_rect = Rect2(lane_divider_x, row_top, float(event_style.lane_divider_width), row_height)
 		action_lane_rect = Rect2(lane_divider_x + float(event_style.lane_divider_width), row_top, max(width - lane_divider_x - float(event_style.lane_divider_width), 1.0), row_height)
-		# A full-width row (a Function block header) reads as ONE track: the condition lane runs to the
-		# row's right padding and no divider is painted through it, so its chips get the whole row.
-		if row_data.full_width_lanes:
-			condition_lane_rect = Rect2(x, row_top, max(row_right_limit - x, 1.0), row_height)
-			lane_divider_rect = Rect2()
-			action_lane_rect = Rect2()
 	var condition_x: float = _viewport._get_condition_track_start(row_data, x, condition_lane_rect)
 	var condition_badge_column_width: float = max(float(event_style.condition_badge_column_width), 0.0)
 	var condition_badge_column_gap: float = EventSheetPalette.SPAN_GAP if condition_badge_column_width > 0.0 else 0.0
@@ -133,8 +127,6 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	var act_line_counts: Dictionary = event_extents.get("act_count", {})
 	# Full-width chip flow, decided by the extents walk (which also counted the row's height for it):
 	# per span index, the x it starts at and how many visual lines down its logical line it sits.
-	var chip_flow_x: Dictionary = event_extents.get("chip_x", {})
-	var chip_flow_offset: Dictionary = event_extents.get("chip_offset", {})
 	# Running X per line for non-event rows (group / variable / comment / GDScript block),
 	# which lay out left-to-right; multi-line rows stack by span line_index.
 	var non_event_origin_x: float = x
@@ -231,11 +223,6 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 					)
 				span_x = float(condition_line_x[line_index])
 			span_y = row_top + scale_pad + float(cond_line_tops.get(line_index, line_index)) * line_height + 3.0
-			# A wrapped full-width chip takes the x and the visual line the extents walk gave it.
-			if chip_flow_x.has(span_index):
-				span_x = float(chip_flow_x[span_index])
-				span_y += float(int(chip_flow_offset.get(span_index, 0))) * line_height
-				condition_line_x[line_index] = span_x
 		# The event-sheet sub-lane rule: every cell's object-column separator sits at ONE shared x per
 		# lane. Stamp the per-span aligned column width so the renderer, the resize hit-test,
 		# and the wrap math all land the boundary on the same line.

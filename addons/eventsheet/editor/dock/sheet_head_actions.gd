@@ -17,6 +17,7 @@ extends RefCounted
 var _dock: Control = null
 var _icon_dialog: EditorFileDialog = null
 var _add_menu: PopupMenu = null
+var _file_menu: PopupMenu = null
 var _add_offers: PackedStringArray = PackedStringArray()
 var _rename_dialog: ConfirmationDialog = null
 var _text_dialog: ConfirmationDialog = null
@@ -81,6 +82,8 @@ func handle(action: String) -> void:
 			_dock._attach_behavior_to_selection()
 		"add":
 			open_add_menu()
+		"file_options":
+			open_file_options()
 
 
 ## Shows a spawned scene where it lives, in Godot's own FileSystem dock. Browsing rather than
@@ -488,6 +491,28 @@ func _on_add_menu_pressed(index: int) -> void:
 	if index < 0 or index >= _add_offers.size():
 		return
 	handle(_add_offers[index])
+
+
+## What a click on a behaviour's or a global's name offers: the same file in Godot's own script
+## editor, or shown where it lives in the FileSystem dock.
+func open_file_options() -> void:
+	var path: String = str(_dock._current_sheet.external_source_path)
+	if path.is_empty():
+		return
+	if _file_menu == null:
+		_file_menu = PopupMenu.new()
+		_file_menu.id_pressed.connect(func(id: int) -> void:
+			if id == 0:
+				_dock._open_generated_in_godot()
+			else:
+				browse_to_scene(str(_dock._current_sheet.external_source_path)))
+		_dock.add_child(_file_menu)
+	_file_menu.clear()
+	_file_menu.add_item(EventSheetL10n.translate("Open in the script editor"), 0)
+	_file_menu.add_item(EventSheetL10n.translate("Show in FileSystem"), 1)
+	_file_menu.position = Vector2i(_dock.get_screen_position() + _dock.get_local_mouse_position())
+	_file_menu.reset_size()
+	_file_menu.popup()
 
 
 ## A one-field prompt for a band whose value is free text (the description). Kept here rather than

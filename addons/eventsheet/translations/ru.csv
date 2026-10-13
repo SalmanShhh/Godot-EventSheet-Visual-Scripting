@@ -8455,3 +8455,26 @@ Remove,Удалить
 Included sheets,Включённые листы
 Preview,Предпросмотр
 Contents,Содержимое
+Side by side,Рядом
+The file read as rows.,"Файл, прочитанный как строки."
+"The file as code, byte for byte.","Файл как код, байт в байт."
+Rows and code next to each other.,Строки и код рядом друг с другом.
+Description of %s,Описание %s
+"Shown when hovering the name, in Add Action and as the ## comment above the function.","Показывается при наведении на имя, в «Добавить действие» и как комментарий ## над функцией."
+Open in the script editor,Открыть в редакторе скриптов
+Show in FileSystem,Показать в файловой системе
+Global (autoload),Глобальный (автозагрузка)
+loaded before the first scene as %s,загружается до первой сцены как %s
+%d global values,глобальных значений: %d
+works on %s,работает на %s
+listed under %s,в разделе %s
+%d properties,свойств: %d
+"%d actions, %d conditions, %d triggers, %d expressions","действий: %d, условий: %d, триггеров: %d, выражений: %d"
+Click the name to open it in the script editor or show it in the FileSystem.,"Щёлкните по имени, чтобы открыть файл в редакторе скриптов или показать его в файловой системе."
+This function hands back a %s.,Эта функция возвращает %s.
+"Returns true or false, and the event only runs while it is true.","Возвращает истину или ложь, и событие выполняется, только пока это истина."
+"Usable inside any value: a number, text or object the function hands back.","Можно использовать внутри любого значения: число, текст или объект, который возвращает функция."
+Runs when an event calls it.,"Выполняется, когда её вызывает событие."
+No description yet.,Описания пока нет.
+Reads as: %s,Читается как: %s
+Double-click the name to edit the description.,"Дважды щёлкните по имени, чтобы изменить описание."

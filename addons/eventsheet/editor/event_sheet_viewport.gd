@@ -105,6 +105,9 @@ signal custom_block_edit_requested(block_row: Resource)
 ## Emitted when a signal row is double-clicked.
 signal signal_edit_requested(signal_row: Resource)
 signal function_edit_requested(event_function: Resource)
+## A function's NAME was double-clicked: its description is edited in a small window beside the row,
+## opened at `at` (a screen position).
+signal function_description_requested(event_function: Resource, at: Vector2)
 ## A published verb's header was CLICKED: the row carries the Function block (ƒ, name,
 ## inputs) and everything else the verb is - kind, category, description, what it gives back, the
 ## line it inserts - answers in the ACE properties popup this asks the dock to open.
@@ -1954,50 +1957,40 @@ func set_variable_row_view(mode: int) -> void:
 
 
 ## instance-id -> 1-based event number, walking the sheet the way an event sheet counts: every
-## EventRow in order, descending into groups and sub-events. Pure and static.
+## EventRow in order, descending into groups and sub-events, and - given the sheet's functions - every
+## function head where the sheet draws it, then its body. Pure and static.
 ## The walk itself lives on EventSheetResource, so the Project Doctor (which never touches the
 ## editor) names a row exactly the way this margin does. This stays the editor's spelling of it.
-static func event_numbers_for(entries: Array) -> Dictionary:
-	return EventSheetResource.event_numbers(entries)
+static func event_numbers_for(entries: Array, functions: Array = []) -> Dictionary:
+	return EventSheetResource.event_numbers(entries, functions)
 
 
-## The EventRow carrying the given number ("Go to Event N"), or null.
-static func event_by_number(entries: Array, number: int) -> EventRow:
-	# The SAME walk order as event_numbers_for, but counting straight to the Nth event -
-	# no whole-map allocation, no reverse value scan, no instance-id round-trip.
+## The EventRow carrying the given number ("Go to Event N"), or null. A function head's number finds
+## the step it draws as its own actions.
+static func event_by_number(entries: Array, number: int, functions: Array = []) -> EventRow:
 	if number < 1:
 		return null
-	var counter: Dictionary = {"next": 1}
-	return _event_at_number(entries, number, counter)
-
-
-static func _event_at_number(entries: Array, number: int, counter: Dictionary) -> EventRow:
-	for entry: Variant in entries:
-		if entry is EventRow:
-			if int(counter["next"]) == number:
-				return entry as EventRow
-			counter["next"] = int(counter["next"]) + 1
-			var in_subs: EventRow = _event_at_number((entry as EventRow).sub_events, number, counter)
-			if in_subs != null:
-				return in_subs
-		elif entry is EventGroup:
-			var group: EventGroup = entry as EventGroup
-			var in_group: EventRow = _event_at_number(group.events if not group.events.is_empty() else group.rows, number, counter)
-			if in_group != null:
-				return in_group
+	var numbers: Dictionary = event_numbers_for(entries, functions)
+	for id: int in numbers:
+		if int(numbers[id]) == number and instance_from_id(id) is EventRow:
+			return instance_from_id(id) as EventRow
 	return null
 
 
 ## The event number of the event that OWNS a resource - the event itself, or the event whose
 ## conditions/actions/comment the resource is one of - so a bookmark, a Find result and a Doctor
 ## finding can all name the row the way the margin does ("event 4"). 0 when nothing owns it.
-static func event_number_containing(entries: Array, target: Resource) -> int:
+static func event_number_containing(entries: Array, target: Resource, functions: Array = []) -> int:
 	if target == null:
 		return 0
-	var numbers: Dictionary = event_numbers_for(entries)
+	var numbers: Dictionary = event_numbers_for(entries, functions)
 	if numbers.has(target.get_instance_id()):
 		return int(numbers[target.get_instance_id()])
-	return _event_number_owning(entries, target, numbers)
+	var found: int = _event_number_owning(entries, target, numbers)
+	for entry: Variant in functions:
+		if found == 0 and entry is EventFunction:
+			found = _event_number_owning((entry as EventFunction).events, target, numbers)
+	return found
 
 
 static func _event_number_owning(entries: Array, target: Resource, numbers: Dictionary) -> int:
@@ -2804,7 +2797,7 @@ func _refresh_rows() -> void:
 		for entry in _flat_rows:
 			_ensure_event_spans(entry.get("row"))
 	_rebuild_row_metrics()
-	var event_numbers: Dictionary = event_numbers_for(_sheet.events if _sheet != null else [])
+	var event_numbers: Dictionary = event_numbers_for(_sheet.events if _sheet != null else [], _sheet.functions if _sheet != null else [])
 	for index in range(_flat_rows.size()):
 		var line_row: EventRowData = _flat_rows[index].get("row")
 		if line_row == null:
@@ -2815,7 +2808,10 @@ func _refresh_rows() -> void:
 		var gutter_owner: bool = line_row.ternary_anchor_uid.is_empty() or line_row.ternary_lead
 		var state_uid: String = line_row.statement_uid()
 		line_row.line_number = (index + 1) if gutter_owner else 0
-		line_row.event_number = int(event_numbers.get(line_row.source_resource.get_instance_id(), 0)) if (gutter_owner and line_row.source_resource != null) else 0
+		# A function's body rows read without being editable, so their number comes off the event
+		# they read from.
+		var numbered: Resource = line_row.source_resource if line_row.source_resource != null else line_row.reading_resource
+		line_row.event_number = int(event_numbers.get(numbered.get_instance_id(), 0)) if (gutter_owner and numbered != null) else 0
 		if _breakpoint_rows.has(state_uid):
 			line_row.breakpoint_enabled = gutter_owner and bool(_breakpoint_rows[state_uid])
 		line_row.bookmark_enabled = gutter_owner and _bookmark_rows.has(state_uid)
@@ -3001,7 +2997,11 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# in place of the prelude, signal and variable rows that used to fill two and a half screens before
 	# the first rule. Pure view, run over the already-built rows (the resources are untouched), and
 	# BEFORE the fence pairing so a #region opened mid-file still walks a settled list.
-	root_rows = _row_builder.build_read_only_head_rows(root_rows, sheet)
+	# A behaviour, a global or any other file of a pack reads in its file's own order instead, under
+	# the title row an edited sheet has.
+	var file_order: bool = ViewportRowBuilder.reads_in_file_order(sheet)
+	if not file_order:
+		root_rows = _row_builder.build_read_only_head_rows(root_rows, sheet)
 	# Pair #region/#endregion fences into foldable ranges (view layer only; the
 	# data model and emission stay flat). Runs before the footer so the trailing
 	# "Add event…" row can never be swallowed by an unclosed fence.
@@ -3014,13 +3014,10 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# so a behaviour pack reads events-then-vocabulary exactly like its .gd. After the fence pairing (an
 	# unclosed #region must not swallow the vocabulary) and before the footer.
 	root_rows.append_array(_row_builder.build_trailing_verb_rows(sheet))
-	# A read-only preview gathers the pack's unpublished helpers under one closed "Helpers" bar, after
-	# the last published verb - the vocabulary reads first, the plumbing folds away. Pure view.
-	root_rows = _row_builder.group_helper_verb_rows(root_rows, sheet)
-	# A read-only PACK then opens on its face rather than on its machinery: Settings and Verbs first,
-	# How it works and Internal state folded under them. Pure view over the finished list, and after
-	# the helpers bar because the helpers fold in with the rest of the machinery.
-	root_rows = _row_builder.arrange_pack_reading(root_rows, sheet)
+	# A read-only preview of any other script gathers its unpublished helpers under one closed
+	# "Helpers" bar, after the last published verb. Pure view.
+	if not file_order:
+		root_rows = _row_builder.group_helper_verb_rows(root_rows, sheet)
 	# The same events, re-grouped under headers by object / trigger / group. Display only - the
 	# events array keeps its order, the file is never rewritten, and every event keeps its number.
 	root_rows = _row_builder.arrange_rows(root_rows, sheet, arrangement_mode)
@@ -4289,15 +4286,15 @@ func _get_tooltip(at_position: Vector2) -> String:
 			return ViewportTooltipHelper.signal_declaration_tooltip(signal_row_data.source_resource as SignalRow)
 	if kind in ["condition", "trigger", "action"]:
 		var row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
-		if row_data != null and row_data.source_resource is EventRow:
+		if row_data != null and ace_owner(row_data.source_resource) != null:
 			# LEAD the tooltip with the whole event read as one plain-English sentence
 			# (built from the same descriptors the cells draw), then the hovered cell's own description.
-			var sentence: String = _row_builder.row_sentence(row_data.source_resource as EventRow)
+			var sentence: String = _row_builder.row_sentence(ace_owner(row_data.source_resource))
 			# A pattern reading is a claim spanning several lines, so every row of the event
 			# that owns one carries the evidence for it right under the sentence: which pattern, and
 			# the exact source lines that were the grounds for saying so.
 			var evidence_line: String = ViewportTooltipHelper.pattern_evidence_line(
-				_sheet, (row_data.source_resource as EventRow).event_uid) if patterns_lens_enabled() else ""
+				_sheet, ace_owner(row_data.source_resource).event_uid) if patterns_lens_enabled() else ""
 			if not evidence_line.is_empty():
 				sentence = "%s\n%s" % [sentence, evidence_line] if not sentence.is_empty() else evidence_line
 			var sentence_prefix: String = "%s\n\n" % sentence if not sentence.is_empty() else ""
@@ -4938,9 +4935,9 @@ func _build_ace_drag_entry(row_data: EventRowData, kind: String, ace_index: int)
 
 
 func _resolve_ace_resource(source_resource: Resource, kind: String, ace_index: int) -> Resource:
-	if not (source_resource is EventRow) or ace_index < 0:
+	var event_row: EventRow = ace_owner(source_resource)
+	if event_row == null or ace_index < 0:
 		return null
-	var event_row: EventRow = source_resource as EventRow
 	match kind:
 		"trigger":
 			return event_row.trigger
@@ -4950,6 +4947,17 @@ func _resolve_ace_resource(source_resource: Resource, kind: String, ace_index: i
 		"action":
 			if ace_index < event_row.actions.size() and event_row.actions[ace_index] is Resource:
 				return event_row.actions[ace_index]
+	return null
+
+
+## The event whose conditions and actions a row's cells are: the row's own event, or - on a
+## function's head - the step whose actions the head draws, while that function's body can be edited.
+## Null for every other row.
+func ace_owner(resource: Resource) -> EventRow:
+	if resource is EventRow:
+		return resource as EventRow
+	if resource is EventFunction and _row_builder._function_body_editable(resource as EventFunction):
+		return (resource as EventFunction).lane_event()
 	return null
 
 

@@ -113,12 +113,12 @@ const COLOR_CONST_BADGE_FG = Color("#eafde5")
 # card + a tinted badge bg/fg pair for the pill.
 const COLOR_CONDITION = Color("#5cc2a6")   # teal - a yes/no test
 const COLOR_EXPRESSION = Color("#c07ad8")  # magenta-violet - a value (distinct from trigger/category purple)
-const COLOR_ACE_ACTION_BADGE_BG = Color("#463414")
-const COLOR_ACE_ACTION_BADGE_FG = Color("#f2c879")
-const COLOR_ACE_CONDITION_BADGE_BG = Color("#123a30")
-const COLOR_ACE_CONDITION_BADGE_FG = Color("#77d3b7")
-const COLOR_ACE_EXPRESSION_BADGE_BG = Color("#3a2247")
-const COLOR_ACE_EXPRESSION_BADGE_FG = Color("#d7a6ea")
+const COLOR_ACE_ACTION_BADGE_BG = Color("#2e5a2a")
+const COLOR_ACE_ACTION_BADGE_FG = Color("#cdefc0")
+const COLOR_ACE_CONDITION_BADGE_BG = Color("#24497a")
+const COLOR_ACE_CONDITION_BADGE_FG = Color("#d3e6ff")
+const COLOR_ACE_EXPRESSION_BADGE_BG = Color("#4e3577")
+const COLOR_ACE_EXPRESSION_BADGE_FG = Color("#e5d5ff")
 # Chips reused by the preview: neutral param chips vs the picker-category chip.
 const COLOR_CHIP_BG = Color("#2c313a")
 const COLOR_CHIP_FG = Color("#9aa1ad")

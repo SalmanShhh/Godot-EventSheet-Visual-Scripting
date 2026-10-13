@@ -1,9 +1,11 @@
 # EventForge - functions on the sheet: each EventFunction is drawn like any other event, at root level -
-# ƒ, "Function ▸ On <name>", what it hands back, its tags, its description in italics and one line per
-# parameter, with its body as sub-events. Functions live in sheet.functions, a SEPARATE array from
-# sheet.events. Pins: the head's words and lanes, the description and parameter lines, the inline-at-root
-# layout, and - covenant-critical - that the view is a pure READ (opening a real pack still round-trips
-# byte-identically).
+# its kind as a coloured word, "Function", "On <name>", a "returns <type>" chip, its tags and one line
+# per parameter, its own actions in the action lane beside the head and the rest of its body as
+# sub-events, numbered like events. Its description is not drawn: the name's hover shows it and a
+# double-click on the name edits it. Functions live in sheet.functions, a SEPARATE array from
+# sheet.events. Pins: the head's words and lanes, the parameter lines, the own-actions lane (live and
+# read), the event numbers, the inline-at-root layout, and - covenant-critical - that the view is a pure
+# READ (opening a real pack still round-trips byte-identically).
 @tool
 class_name DefineBlockRowsTest
 extends RefCounted
@@ -36,21 +38,26 @@ static func run() -> bool:
 	ok = _check("the inline verb rows sit at root indent",
 		define_rows[0].indent if define_rows.size() > 0 else -1, 0) and ok
 	ok = _check("the verbs render in sheet order (take_damage first)",
-		_span_text(define_rows[0] if define_rows.size() > 0 else null, 1), "On take_damage") and ok
+		_span_text(define_rows[0] if define_rows.size() > 0 else null, 2), "On take_damage") and ok
 
-	# ── The function drawn like any other event: ƒ, "Function ▸ On <name>", what it hands back, its
-	# tags, its description in italics, one line per parameter ──
+	# ── The function drawn like any other event: its kind as a coloured word, "Function", "On <name>",
+	# what it returns, its tags, one line per parameter ──
 	var action_row: EventRowData = define_rows[0] if define_rows.size() > 0 else null
 	var condition_row: EventRowData = define_rows[1] if define_rows.size() > 1 else null
 	var expression_row: EventRowData = define_rows[2] if define_rows.size() > 2 else null
 	var internal_row: EventRowData = define_rows[3] if define_rows.size() > 3 else null
 	ok = SUPPORT.pins("define_block_rows_test", [
-		["the head leads with the ƒ badge", _span_text(action_row, 0), "ƒ"],
-		["the name reads On <name>, exactly as written", _span_text(action_row, 1), "On take_damage"],
-		["under the Function object", _span_meta(action_row, 1, "object_label"), "Function"],
-		["a void function hands back nothing", _row_has_span_text(action_row, "→ nothing"), true],
-		["a condition hands back bool", _row_has_span_text(condition_row, "→ bool"), true],
-		["an expression hands back its type", _row_has_span_text(expression_row, "→ float"), true],
+		["the head leads with its kind as a word", _span_text(action_row, 0), "Action"],
+		["in its kind's colours, never a glyph", _span_meta(action_row, 0, "badge_fg"), Color("#cdefc0")],
+		["the kind explains itself on hover", _span_meta(action_row, 0, "hover_note"), "Runs when an event calls it."],
+		["a condition says Condition", _span_text(condition_row, 0), "Condition"],
+		["an expression says Expression", _span_text(expression_row, 0), "Expression"],
+		["then the Function word", _span_text(action_row, 1), "Function"],
+		["the name reads On <name>, exactly as written", _span_text(action_row, 2), "On take_damage"],
+		["a void function says nothing about what it returns", _row_has_span_text(action_row, "returns void"), false],
+		["a condition returns bool", _row_has_span_text(condition_row, "returns bool"), true],
+		["an expression returns its type", _row_has_span_text(expression_row, "returns float"), true],
+		["the returns chip explains itself", _span_meta_of_kind(expression_row, "function_returns", "hover_note"), "This function hands back a float."],
 		["a function in Add Action carries the tag", _row_has_span_text(action_row, "In Add Action"), true],
 		["one that is not carries none", _row_has_span_text(internal_row, "In Add Action"), false],
 		["the tag explains itself on hover", str(_span_meta_of_kind(action_row, "function_tag", "hover_note")).begins_with("Listed in Add Action"), true],
@@ -102,10 +109,15 @@ static func run() -> bool:
 	var charge_row: EventRowData = _find_row_by_uid_prefix(described_view, "define_fn_charge")
 	ok = SUPPORT.pins("define_block_rows_test", [
 		["no caption row above the function any more", _find_row_by_uid_prefix(described_view, "verb_note_"), null],
-		["the description reads inside the head", _row_has_span_text(heal_row, "Restores health, capped at the maximum."), true],
-		["and is edited there", _span_edit_kind(heal_row, "Restores health, capped at the maximum."), "verb_description"],
-		["an undescribed function offers to be described", _span_edit_kind(silent_row, "+ describe this function"), "verb_description"],
-		["a doc comment reads as one whole sentence", _row_has_span_text(charge_row, "Builds up charge before releasing it for a moment."), true],
+		["the description is not drawn on the row", _row_has_span_text(heal_row, "Restores health, capped at the maximum."), false],
+		["hovering the name shows it, and how to edit it",
+			_span_meta(heal_row, 2, "hover_note"),
+			"heal\nRestores health, capped at the maximum.\nReads as: Heal\nDouble-click the name to edit the description."],
+		["the name is the door to the description", _span_meta(heal_row, 2, "function_name"), true],
+		["an undescribed function says so in the hover",
+			str(_span_meta(silent_row, 2, "hover_note")).get_slice("\n", 1), "No description yet."],
+		["a doc comment reads as one whole sentence",
+			str(_span_meta(charge_row, 2, "hover_note")).get_slice("\n", 1), "Builds up charge before releasing it for a moment."],
 		["a function that waits says so", _row_has_span_text(heal_row, "Waits"), true],
 		["a shared one says so", _row_has_span_text(heal_row, "Shared"), true],
 	]) and ok
@@ -146,10 +158,11 @@ static func run() -> bool:
 	var verb_body_row: EventRowData = verb_header.children[0] if verb_header != null and not verb_header.children.is_empty() else null
 	if verb_body_row != null:
 		tick_view._ensure_event_spans(verb_body_row)
-	ok = _check("a condition-less row INSIDE a verb body reads 'Always'",
+	ok = _check("a condition-less row with nothing in it INSIDE a verb body reads 'Always'",
 		_row_has_span_text(verb_body_row, "Always"), true) and ok
 	ok = _check("it never claims to run 'Every Tick' inside a verb body",
 		_row_has_span_text(verb_body_row, "Every Tick"), false) and ok
+
 	var sheet_event_row: EventRowData = _find_row_by_resource(tick_view, sheet_level_event)
 	if sheet_event_row != null:
 		tick_view._ensure_event_spans(sheet_event_row)
@@ -339,11 +352,141 @@ static func run() -> bool:
 	ok = _check("the refused drag did NOT alias the body row into sheet.events",
 		guard_dock.get_current_sheet().events.has(dragged_res), false) and ok
 	guard_dock.free()
-
+	ok = _own_actions_beside_the_head() and ok
+	ok = _function_heads_are_numbered() and ok
+	ok = _description_editor() and ok
 	return ok
 
 
-## Define rows anywhere in the tree, including the ones folded away under the "Helpers" bar.
+## A function's own actions - its first, condition-less step - sit in the head's action lane instead of
+## a separate "Always" row, on an authored sheet where they stay live: Add action on the head fills
+## that step, and an action there resolves to the step's own action. A step that asks a question of
+## its own stays a row.
+static func _own_actions_beside_the_head() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	var hurt: EventFunction = _make_function("hurt", TYPE_NIL, true, "", "")
+	var step: EventRow = EventRow.new()
+	var line: RawCodeRow = RawCodeRow.new()
+	line.code = "health -= 1"
+	step.actions.append(line)
+	var guarded: EventRow = EventRow.new()
+	guarded.conditions.append(ACECondition.new())
+	hurt.events.append(step)
+	hurt.events.append(guarded)
+	sheet.functions.append(hurt)
+	var asks: EventFunction = _make_function("asks", TYPE_NIL, true, "", "")
+	var asking_step: EventRow = EventRow.new()
+	asking_step.conditions.append(ACECondition.new())
+	asking_step.actions.append(RawCodeRow.new())
+	asks.events.append(asking_step)
+	sheet.functions.append(asks)
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(sheet)
+	var view: EventSheetViewport = dock._active_view()
+	var head: EventRowData = _find_row_by_uid_prefix(view, "define_fn_hurt")
+	var asks_head: EventRowData = _find_row_by_uid_prefix(view, "define_fn_asks")
+	var live: EventFunction = _find_function_by_name(dock.get_current_sheet(), "hurt")
+	var passed: bool = SUPPORT.pins("define_block_rows_test", [
+		["the first step's action sits in the head's action lane", _has_action_span(head), true],
+		["no 'Always' row is left under the head", _child_has_text(head, "Always"), false],
+		["the guarded step stays the one sub-event", head.children.size() if head != null else -1, 2],
+		["the data names the step the head draws", live.lane_event() == live.events[0], true],
+		["an action on the head resolves to the step's own action",
+			view._resolve_ace_resource(live, "action", 0) == (live.events[0] as EventRow).actions[0], true],
+		["the view owns the step's actions through the head", view.ace_owner(live) == live.events[0], true],
+		["a step with a condition of its own is not drawn beside the head", (asks.lane_event() == null), true],
+		["so that function's head keeps an empty action lane", _has_action_span(asks_head), false],
+	])
+	dock.free()
+	return passed
+
+
+## A function head carries an event number like any event, counted where the sheet draws it, its own
+## actions share it, and the rest of its body is numbered after it.
+static func _function_heads_are_numbered() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	var first: EventRow = EventRow.new()
+	sheet.events.append(first)
+	var hurt: EventFunction = _make_function("hurt", TYPE_NIL, true, "", "")
+	var own: EventRow = EventRow.new()
+	own.actions.append(RawCodeRow.new())
+	var later: EventRow = EventRow.new()
+	later.conditions.append(ACECondition.new())
+	hurt.events.append(own)
+	hurt.events.append(later)
+	sheet.functions.append(hurt)
+	var numbers: Dictionary = EventSheetResource.event_numbers(sheet.events, sheet.functions)
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(sheet)
+	var head: EventRowData = _find_row_by_uid_prefix(dock._active_view(), "define_fn_hurt")
+	var passed: bool = SUPPORT.pins("define_block_rows_test", [
+		["the sheet's own event is 1", int(numbers.get(first.get_instance_id(), 0)), 1],
+		["the function after it is 2", int(numbers.get(hurt.get_instance_id(), 0)), 2],
+		["its own actions share the head's number", int(numbers.get(own.get_instance_id(), 0)), 2],
+		["the next step of its body is 3", int(numbers.get(later.get_instance_id(), 0)), 3],
+		["without the functions the sheet's numbers are what they were",
+			EventSheetResource.event_numbers(sheet.events).size(), 1],
+		["the head wears its number in the gutter", head.event_number if head != null else -1, 2],
+		["Go to event 2 finds the function's own step",
+			EventSheetViewport.event_by_number(sheet.events, 2, sheet.functions) == own, true],
+	])
+	dock.free()
+	return passed
+
+
+## The small window a double-click on the name opens: the description in a text box, and Save writes
+## it as one undo step.
+static func _description_editor() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	var heal: EventFunction = _make_function("heal", TYPE_NIL, true, "", "")
+	heal.description = "Restores health."
+	sheet.functions.append(heal)
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(sheet)
+	var dialog: ConfirmationDialog = load(EventSheetPropertiesBar.FUNCTION_INSPECTOR_PATH).open_description_editor(
+		dock, _find_function_by_name(dock.get_current_sheet(), "heal"), Vector2.ZERO)
+	var text: TextEdit = dialog.find_child("Description", true, false) as TextEdit
+	var passed: bool = SUPPORT.pins("define_block_rows_test", [
+		["the window is titled by the function", dialog.title, "Description of heal"],
+		["it opens on the description", text.text if text != null else "", "Restores health."],
+		["and saves with Save", dialog.ok_button_text, "Save"],
+	])
+	text.text = "Restores health, capped at the maximum."
+	dialog.confirmed.emit()
+	passed = SUPPORT.check("define_block_rows_test", "Save writes the description",
+		_find_function_by_name(dock.get_current_sheet(), "heal").description,
+		"Restores health, capped at the maximum.") and passed
+	dialog.free()
+	dock.free()
+	return passed
+
+
+static func _has_action_span(row_data: EventRowData) -> bool:
+	if row_data == null:
+		return false
+	for span: SemanticSpan in row_data.spans:
+		if span.metadata is Dictionary and str((span.metadata as Dictionary).get("lane", "")) == "action" \
+				and str((span.metadata as Dictionary).get("kind", "")) != "add_action":
+			return true
+	return false
+
+
+static func _child_has_text(row_data: EventRowData, needle: String) -> bool:
+	if row_data == null:
+		return false
+	for child: EventRowData in row_data.children:
+		if _row_has_span_text(child, needle):
+			return true
+	return false
+
+
+## Define rows anywhere in the tree.
 static func _count_define_rows_deep(rows: Array) -> int:
 	var count: int = 0
 	for entry: Variant in rows:

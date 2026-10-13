@@ -1,16 +1,12 @@
 # EventForge - a pack opened as a sheet READS like an event sheet.
 #
 # Three things are pinned here, all of them pure view state over an unchanged .gd:
-#   A published verb reads as THE VERB THE PICKER OFFERS: its name and input chips sit in the
-#       CONDITION lane - `ƒ <name>  chips  <kind>` - with no "On" in front of it, because a verb is
-#       not a trigger and the picker offers it by name. The kind is a muted word beside it; no
-#       category chip, no ★, no "gives back", no description caption. A BBCode display name draws
-#       styled, never as raw tags. Its picker metadata answers in the ACE properties panel instead
-#       (EventSheetVerbProperties). An unpublished helper is a function this file calls, so it keeps
-#       the arrival word: `ƒ On <name>`.
-#   Unpublished helpers are the SAME Function block (no "internal" badge) with their doc comment
-#       as the right-lane caption, gathered under one closed "Helpers" bar - only in a read-only
-#       preview, and only as a re-parenting of already-built rows.
+#   A published verb reads as the same function head every sheet draws: its kind as a coloured word,
+#       "Function", "On <name>" exactly as the code names it, what it returns and its tags, then its
+#       parameters. Its description is in the name's hover, with how Add Action reads the verb, and
+#       its picker metadata answers in the ACE properties panel (EventSheetVerbProperties).
+#   Unpublished helpers are the SAME head, in the file's own order - a pack gathers nothing under a
+#       bar of its own.
 #   Reading mode on open: no "+ Add condition" / "+ Add action" scaffolding, and a body-only row
 #       inside a verb leaves its left cell blank instead of saying "Always".
 #
@@ -36,49 +32,34 @@ static func run() -> bool:
 	dock.setup(sheet)
 	var view: EventSheetViewport = dock._active_view()
 
-	# ── the header IS [ƒ, name, input chips] ──────
+	# ── the head: the kind as a coloured word, Function, On <name> as written, then its facts ──────
 	var action_row: EventRowData = _row_by_uid(view, "define_fn_take_damage")
-	ok = _check("a published verb's header reads as a Function block",
-		_span_texts(action_row), PackedStringArray(["ƒ", "Take damage", "amount", "action"])) and ok
+	ok = _check("a published verb reads as its function head",
+		_span_texts(action_row), PackedStringArray(["Action", "Function", "On take_damage", "In Add Action", "Featured", "PARAM", "float amount"])) and ok
 	var condition_row: EventRowData = _row_by_uid(view, "define_fn_is_dead")
-	ok = _check("a condition verb says its kind as a muted word",
-		_span_texts(condition_row), PackedStringArray(["ƒ", "Is Dead", "condition"])) and ok
+	ok = _check("a condition says what it returns",
+		_span_texts(condition_row), PackedStringArray(["Condition", "Function", "On is_dead", "returns bool", "In Add Action"])) and ok
 	var expression_row: EventRowData = _row_by_uid(view, "define_fn_health_percent")
-	ok = _check("an expression verb says its kind the same way",
-		_span_texts(expression_row), PackedStringArray(["ƒ", "Health %", "expression"])) and ok
-	ok = _check("no verb row prints a BBCode tag", _any_span_contains(view, "[b]"), false) and ok
+	ok = _check("an expression says it the same way",
+		_span_texts(expression_row), PackedStringArray(["Expression", "Function", "On health_percent", "returns float", "In Add Action"])) and ok
 	ok = _check("no row anywhere prints an @ace_ annotation line", _any_span_contains(view, "@ace_"), false) and ok
-	ok = _check("the styled name keeps its emphasis as parsed segments (not as tags)",
-		_segment_bold_text(action_row), "damage") and ok
+	ok = _check("the description is not drawn on the row", _any_span_contains(view, "off the pool"), false) and ok
+	ok = _check("hovering the name shows it, with how Add Action reads the verb",
+		_span_meta(action_row, "On take_damage", "hover_note"),
+		"take_damage\nTakes [b]amount[/b] off the pool.\nReads as: Take damage") and ok
+	ok = _check("each kind word wears its own colours",
+		[_span_meta(action_row, "Action", "badge_bg"), _span_meta(condition_row, "Condition", "badge_bg"),
+			_span_meta(expression_row, "Expression", "badge_bg")],
+		[Color("#2e5a2a"), Color("#24497a"), Color("#4e3577")]) and ok
 	ok = _check("no description caption row is welded above a verb",
 		_row_by_uid(view, "verb_note_take_damage") == null, true) and ok
-
-	# The kind is the header's WASH now, so it has to be visible and it has to differ per kind.
-	# Compared with a tolerance: a Color stores 32-bit floats, so the alpha read back is the nearest
-	# float32 to the constant, not the constant.
-	ok = _check("the header carries a visible kind tint",
-		action_row != null and is_equal_approx(action_row.custom_color.a, ViewportRowBuilder.VERB_KIND_TINT_ALPHA), true) and ok
-	ok = _check("action and condition wash differently",
-		_tint_rgb(action_row) != _tint_rgb(condition_row), true) and ok
-	ok = _check("condition and expression wash differently",
-		_tint_rgb(condition_row) != _tint_rgb(expression_row), true) and ok
-
-	# ── a hidden helper is the same block, with its doc comment in the RIGHT lane ──────
-	var helpers_bar_early: EventRowData = _row_by_uid(view, "helpers_group_")
-	# Read off the bar's children: the bar ships CLOSED, so its helpers are not in the flat (visible) list.
-	var helper_row: EventRowData = helpers_bar_early.children[0] if helpers_bar_early != null and not helpers_bar_early.children.is_empty() else null
-	ok = _check("a hidden helper reads as a plain Function block",
-		_span_texts(helper_row), PackedStringArray(["ƒ", "On Recalc", "Recomputes the cached totals."])) and ok
-	ok = _check("its doc comment is the RIGHT lane's caption",
-		_lane_of_text(helper_row, "Recomputes the cached totals."), "action") and ok
-	ok = _check("a helper wears no 'internal' badge", _row_has_text(helper_row, "internal"), false) and ok
-	var helpers_bar: EventRowData = helpers_bar_early
-	ok = _check("the helpers gather under one bar", _span_texts(helpers_bar),
-		PackedStringArray(["Helpers", "functions this pack uses inside itself - 1"])) and ok
-	ok = _check("the Helpers bar is closed by default", helpers_bar != null and helpers_bar.folded, true) and ok
-	ok = _check("the helper row lives INSIDE the bar", _child_uids(helpers_bar), PackedStringArray(["define_fn__recalc"])) and ok
-	ok = _check("the Helpers bar owns no resource (it is a lens, not a row)",
-		helpers_bar != null and helpers_bar.source_resource == null, true) and ok
+	# ── a pack reads in its file's order: its helper is a function head like any other ──────
+	var helper_row: EventRowData = _row_by_uid(view, "define_fn__recalc")
+	ok = _check("a hidden helper reads as a function head",
+		_span_texts(helper_row), PackedStringArray(["Action", "Function", "On _recalc"])) and ok
+	ok = _check("its doc comment is in the name's hover, not on the row",
+		str(_span_meta(helper_row, "On _recalc", "hover_note")).get_slice("\n", 1), "Recomputes the cached totals.") and ok
+	ok = _check("a pack gathers no Helpers bar", _row_by_uid(view, "helpers_group_"), null) and ok
 
 	# ── Reading mode - no add scaffolding, no "Always" on a body-only row ──────
 	ok = _check("no '+ Add condition' anywhere in a read-only preview", _any_span_contains(view, "+ Add condition"), false) and ok
@@ -149,8 +130,8 @@ static func run() -> bool:
 	ok = _check("no row of a real opened pack prints an @ace_ line", _any_span_contains(pack_view, "@ace_"), false) and ok
 	ok = _check("no row of a real opened pack prints a BBCode tag", _any_span_contains(pack_view, "[b]"), false) and ok
 	ok = _check("a real opened pack offers no add scaffolding", _any_span_contains(pack_view, "+ Add "), false) and ok
-	ok = _check("a real opened pack gathers a closed Helpers bar",
-		_row_by_uid(pack_view, "helpers_group_") != null, true) and ok
+	ok = _check("a real opened pack reads in file order, with no Helpers bar",
+		_row_by_uid(pack_view, "helpers_group_"), null) and ok
 	pack_dock.free()
 
 	# An `## @ace_*` line never becomes prose.
@@ -260,23 +241,13 @@ static func _lane_of_text(row_data: EventRowData, needle: String) -> String:
 	return ""
 
 
-## The BOLD segment's text on a row's styled name span - proof the tags were parsed, not printed.
-static func _segment_bold_text(row_data: EventRowData) -> String:
+static func _span_meta(row_data: EventRowData, text: String, key: String) -> Variant:
 	if row_data == null:
-		return ""
+		return null
 	for span: SemanticSpan in row_data.spans:
-		if not (span.metadata is Dictionary):
-			continue
-		for segment: Variant in (span.metadata as Dictionary).get("bbcode_segments", []):
-			if segment is Dictionary and bool((segment as Dictionary).get("bold", false)):
-				return str((segment as Dictionary).get("text", ""))
-	return ""
-
-
-static func _tint_rgb(row_data: EventRowData) -> Vector3:
-	if row_data == null:
-		return Vector3.ZERO
-	return Vector3(row_data.custom_color.r, row_data.custom_color.g, row_data.custom_color.b)
+		if str(span.text) == text and span.metadata is Dictionary:
+			return (span.metadata as Dictionary).get(key)
+	return null
 
 
 ## Every span text on every visible row, searched for a fragment - how "no scaffolding anywhere" and

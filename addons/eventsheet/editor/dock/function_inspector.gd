@@ -28,6 +28,9 @@ extends RefCounted
 const TYPE_WORDS: PackedStringArray = ["Nothing", "bool", "int", "float", "String", "Vector2", "Vector3",
 	"Color", "Array", "Dictionary", "Node", "Variant"]
 
+## The one shape every quick question takes, loaded when the description window first opens.
+const SMALL_PROMPT_PATH := "res://addons/eventsheet/editor/small_prompt.gd"
+
 var _dock: Control = null
 var _function_name: String = ""
 
@@ -129,6 +132,31 @@ static func category_choices(sheet: EventSheetResource, current: String) -> Pack
 	return found
 
 
+## The small window a double-click on a function's name opens beside the row: the description in a
+## text box, Save and Cancel. Save writes it as one undo step, the same edit the Description field makes.
+static func open_description_editor(dock: Control, event_function: EventFunction, at: Vector2) -> ConfirmationDialog:
+	var inspector: RefCounted = new(dock, event_function)
+	var text: TextEdit = TextEdit.new()
+	text.name = "Description"
+	text.text = event_function.description
+	text.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	text.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(300.0), EventSheetPalette.scaled_f(64.0))
+	var dialog: ConfirmationDialog = load(SMALL_PROMPT_PATH).open(dock, {
+		"title": EventSheetL10n.translate("Description of %s") % event_function.function_name,
+		"say": EventSheetL10n.translate("Shown when hovering the name, in Add Action and as the ## comment above the function."),
+		"body": text,
+		"glyph": "i",
+		"main": EventSheetL10n.translate("Save"),
+		"on_main": func() -> void: inspector.apply_field("description", text.text.strip_edges()),
+		"note": EventSheetL10n.translate("Ctrl+Z undoes it."),
+	})
+	if dialog.is_inside_tree():
+		# Beside the row it describes, not in the middle of the screen: the name stays in view.
+		dialog.position = Vector2i(at) + Vector2i(roundi(EventSheetPalette.scaled_f(12.0)), roundi(EventSheetPalette.scaled_f(12.0)))
+		text.grab_focus()
+	return dialog
+
+
 ## The function this panel edits, re-fetched from the live sheet (never held across an edit).
 func live_function() -> EventFunction:
 	if _dock == null or _dock._current_sheet == null:
@@ -154,7 +182,7 @@ func build_into(form: GridContainer) -> void:
 	description_edit.text = event_function.description
 	_commit_on_submit(description_edit, func(text: String) -> void: apply_field("description", text.strip_edges()))
 	_row(form, EventSheetL10n.translate("Description"), description_edit,
-		EventSheetL10n.translate("Shown in italics under the name, and as the help text in Add Action."), editable)
+		EventSheetL10n.translate("Shown when hovering the name, in Add Action and as the ## comment above the function."), editable)
 	var returns: OptionButton = type_dropdown(return_word(event_function), true)
 	returns.item_selected.connect(func(index: int) -> void: apply_returns(returns.get_item_text(index)))
 	_row(form, EventSheetL10n.translate("Returns"), returns,
