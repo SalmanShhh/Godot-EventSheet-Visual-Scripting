@@ -36,6 +36,8 @@ var _notes_output: Label = null
 var _import_returned_edit: LineEdit = null
 var _import_folder_edit: LineEdit = null
 var _import_output: CodeEdit = null
+## The coverage lines Report Coverage last wrote, so the next press replaces them.
+var _last_coverage_text: String = ""
 
 
 func init(dock: Control) -> void:
@@ -243,7 +245,13 @@ func run_coverage() -> Array:
 	if lines.is_empty():
 		lines.append("%s has no language column yet - one column per language is what a translator fills in." % catalog_path())
 	if _import_output != null:
-		_import_output.text = "%s\n%s" % [_import_output.text, "\n".join(lines)] if not _import_output.text.is_empty() else "\n".join(lines)
+		# The coverage block REPLACES the one this button wrote last time; only the line above it (an
+		# import's own message) is kept, so pressing Report Coverage twice shows one report, not two.
+		var kept: String = _import_output.text
+		if not _last_coverage_text.is_empty() and kept.ends_with(_last_coverage_text):
+			kept = kept.substr(0, kept.length() - _last_coverage_text.length()).trim_suffix("\n")
+		_last_coverage_text = "\n".join(lines)
+		_import_output.text = "%s\n%s" % [kept, _last_coverage_text] if not kept.is_empty() else _last_coverage_text
 	return report
 
 

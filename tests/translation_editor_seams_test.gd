@@ -327,6 +327,12 @@ static func _run_studio() -> bool:
 	all_passed = _check("a key from somebody else's file is reported, never invented",
 		", ".join(imported.get("unknown", PackedStringArray())), "A key from another game") and all_passed
 	all_passed = _check("the import says how many cells it really filled", int(imported.get("filled", 0)), 2) and all_passed
+	# Report Coverage pressed again replaces its own report rather than stacking a second copy.
+	var after_import: String = studio._import_output.text
+	studio.run_coverage()
+	studio.run_coverage()
+	all_passed = _check("pressing Report Coverage again shows one report, not two",
+		studio._import_output.text, after_import) and all_passed
 
 	# ---- orphans: the key nobody says any more ----
 	var orphans: PackedStringArray = studio.run_orphans()

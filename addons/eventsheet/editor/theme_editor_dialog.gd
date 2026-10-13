@@ -453,8 +453,29 @@ static func editable_tokens(style_resource: Resource) -> Array[Dictionary]:
 			continue
 		var token_type: int = int(property_info.get("type", TYPE_NIL))
 		if token_type in [TYPE_COLOR, TYPE_FLOAT, TYPE_INT, TYPE_BOOL]:
-			tokens.append({"name": str(property_info.get("name")), "type": token_type})
+			tokens.append({
+				"name": str(property_info.get("name")),
+				"type": token_type,
+				"hint": int(property_info.get("hint", PROPERTY_HINT_NONE)),
+				"hint_string": str(property_info.get("hint_string", "")),
+			})
 	return tokens
+
+
+## The spin box range for one number token: the token's own @export_range when it declares one
+## (min, max and step), otherwise a wide default. A float token with no range steps 0.5, an int 1.
+static func spin_range(token: Dictionary) -> Dictionary:
+	var is_float: bool = int(token.get("type")) == TYPE_FLOAT
+	var spin_bounds: Dictionary = {"min": -4096.0, "max": 4096.0, "step": 0.5 if is_float else 1.0}
+	if int(token.get("hint", PROPERTY_HINT_NONE)) != PROPERTY_HINT_RANGE:
+		return spin_bounds
+	var parts: PackedStringArray = str(token.get("hint_string", "")).split(",")
+	if parts.size() >= 2 and parts[0].strip_edges().is_valid_float() and parts[1].strip_edges().is_valid_float():
+		spin_bounds["min"] = parts[0].strip_edges().to_float()
+		spin_bounds["max"] = parts[1].strip_edges().to_float()
+	if parts.size() >= 3 and parts[2].strip_edges().is_valid_float():
+		spin_bounds["step"] = parts[2].strip_edges().to_float()
+	return spin_bounds
 
 
 ## Writes one token and reports whether the value actually changed.
@@ -664,9 +685,10 @@ func _build_section(form: VBoxContainer, title: String, style_resource: Resource
 				row.add_child(check)
 			_:
 				var spin: SpinBox = SpinBox.new()
-				spin.step = 0.5 if int(token.get("type")) == TYPE_FLOAT else 1.0
-				spin.min_value = -4096.0
-				spin.max_value = 4096.0
+				var spin_bounds: Dictionary = spin_range(token)
+				spin.step = float(spin_bounds["step"])
+				spin.min_value = float(spin_bounds["min"])
+				spin.max_value = float(spin_bounds["max"])
 				spin.value = float(style_resource.get(token_name))
 				spin.tooltip_text = description
 				spin.value_changed.connect(func(value: float) -> void: _on_token_edited(style_resource, token_name, value if int(token.get("type")) == TYPE_FLOAT else int(value)))
@@ -703,6 +725,9 @@ func _open_save_dialog() -> void:
 func save_preset(path: String) -> Error:
 	var to_save: EventSheetEditorStyle = _working_style.duplicate(true)
 	var error: Error = ResourceSaver.save(to_save, path)
-	if error == OK and _dock != null and _dock.has_method("_set_status"):
-		_dock.call("_set_status", "Theme preset saved: %s" % path.get_file())
+	if _dock != null and _dock.has_method("_set_status"):
+		if error == OK:
+			_dock.call("_set_status", "Theme preset saved: %s" % path.get_file())
+		else:
+			_dock.call("_set_status", EventSheetL10n.translate("Theme preset could not be saved: %s (%s)") % [path.get_file(), error_string(error)], true)
 	return error

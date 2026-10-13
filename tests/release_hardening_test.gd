@@ -111,6 +111,35 @@ static func run() -> bool:
 	all_passed = _check("preset round-trips with the edited token",
 		loaded.event_style.behavior_accent_color if loaded != null and loaded.event_style != null else Color.BLACK, Color.BLUE) and all_passed
 
+	# A preset that cannot be written says so on the status bar instead of saying nothing.
+	var status_dock: Control = _status_recorder()
+	theme_editor._dock = status_dock
+	var failed_save: Error = theme_editor.save_preset("res://no_such_folder_for_presets/preset.tres")
+	all_passed = _check("a preset written into a missing folder fails", failed_save != OK, true) and all_passed
+	all_passed = _check("and the failure reaches the status bar as an error",
+		[str(status_dock.get("last_text")).begins_with("Theme preset could not be saved: preset.tres"), status_dock.get("last_is_error")], [true, true]) and all_passed
+	theme_editor._dock = null
+	status_dock.free()
+
+	# Each number token's spin box takes the token's OWN range and step, so a 0.20-0.80 ratio
+	# stepping 0.01 can be set to 0.45 instead of snapping to the 0.5 grid of a -4096..4096 box.
+	var token_form: VBoxContainer = VBoxContainer.new()
+	theme_editor._build_section(token_form, "Sheet", EventSheetEventStyle.new())
+	var spins: Dictionary = {}
+	for spin_node: Node in token_form.find_children("*", "SpinBox", true, false):
+		var spin_row: Node = spin_node.get_parent()
+		spins[(spin_row.get_child(0) as Label).text] = spin_node
+	var lane_spin: SpinBox = spins.get("Condition Lane Ratio") as SpinBox
+	all_passed = _check("the lane ratio spin box carries the token's range and step",
+		[lane_spin.min_value, lane_spin.max_value, lane_spin.step] if lane_spin != null else [], [0.2, 0.8, 0.01]) and all_passed
+	if lane_spin != null:
+		lane_spin.value = 0.45
+	all_passed = _check("so 0.45 can be set", lane_spin.value if lane_spin != null else 0.0, 0.45) and all_passed
+	var height_spin: SpinBox = spins.get("Minimum Conditions Lane Width") as SpinBox
+	all_passed = _check("an int token keeps its own bounds too",
+		[height_spin.min_value, height_spin.max_value, height_spin.step] if height_spin != null else [], [120.0, 480.0, 1.0]) and all_passed
+	token_form.free()
+
 	# Quick Style - the no-token-fiddling path: EventSheetGodotTheme.apply regenerates the
 	# entire chrome from base/accent/text, so one colour change re-skins the whole sheet.
 	var quick: EventSheetEditorStyle = EventSheetThemeEditor.duplicate_style(null)
@@ -126,3 +155,13 @@ static func run() -> bool:
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	return SUPPORT.check("release_hardening_test", label, actual, expected)
+
+
+## A stand-in dock that keeps the last status line it was given.
+static func _status_recorder() -> Control:
+	var recorder_script: GDScript = GDScript.new()
+	recorder_script.source_code = "extends Control\nvar last_text: String = \"\"\nvar last_is_error: bool = false\nfunc _set_status(text: String, is_error: bool = false) -> void:\n\tlast_text = text\n\tlast_is_error = is_error\n"
+	recorder_script.reload()
+	var recorder: Control = Control.new()
+	recorder.set_script(recorder_script)
+	return recorder

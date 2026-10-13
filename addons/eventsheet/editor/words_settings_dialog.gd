@@ -15,6 +15,8 @@ extends AcceptDialog
 
 const CUSTOM_LABEL := "custom…"
 const _CUSTOM_ID := 9000
+## The words table's visible height; the rest of it scrolls.
+const TABLE_HEIGHT := 220.0
 
 var _rows: Dictionary = {}
 var _preview_condition: Label = null
@@ -35,7 +37,15 @@ func _build_body() -> Control:
 	page.add_child(EventSheetPopupUI.hint_label(
 		"A few things have two honest names: the Godot one and the one every other event-sheet editor uses. Choose either, or type your own - the sheet reads the same word everywhere at once.", 620.0))
 	page.add_child(EventSheetPopupUI.titled_card("the whole vocabulary at once", _build_presets()))
-	page.add_child(EventSheetPopupUI.titled_card("how the sheet talks", _build_table()))
+	# The table holds a row per choosable word - dozens of them - so it scrolls inside a bounded
+	# height; unscrolled, its minimum size grew the window past the bottom of the screen.
+	var table_scroll: ScrollContainer = ScrollContainer.new()
+	table_scroll.name = "WordsTableScroll"
+	table_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	table_scroll.custom_minimum_size = Vector2(0.0, TABLE_HEIGHT)
+	table_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	table_scroll.add_child(_build_table())
+	page.add_child(EventSheetPopupUI.titled_card("how the sheet talks", table_scroll))
 	page.add_child(EventSheetPopupUI.titled_card("live preview", _build_preview()))
 	var buttons: HBoxContainer = HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)

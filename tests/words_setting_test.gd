@@ -73,6 +73,16 @@ static func run() -> bool:
 		EventSheetWords.names_what("group"), "a Godot group") and all_passed
 	all_passed = _check("the state's store name is the one already written to disk",
 		EventSheetWords.state_key(true), "familiar") and all_passed
+
+	# The page's table scrolls, so a vocabulary of dozens of words never grows the window past the
+	# screen: the whole page asks for less height than the 560 it opens at.
+	var page_dialog: EventSheetWordsSettingsDialog = EventSheetWordsSettingsDialog.new()
+	var table_scroll: Node = page_dialog.find_child("WordsTableScroll", true, false)
+	var page_body: Control = page_dialog.get_child(0) as Control
+	all_passed = _check("the words table sits in a scroll box and the page fits the window it opens in",
+		[table_scroll is ScrollContainer, page_body.get_combined_minimum_size().y <= 560.0],
+		[true, true]) and all_passed
+	page_dialog.free()
 	return all_passed
 
 
