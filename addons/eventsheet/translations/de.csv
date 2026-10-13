@@ -8103,3 +8103,81 @@ The object these rows point at once pasted. Pick one from the scene or type a no
 {n} row(s) on the clipboard.,{n} Zeile(n) in der Zwischenablage.
 "These rows name no objects and no variables, so a plain Paste already does the job.","Diese Zeilen nennen weder Objekte noch Variablen, ein normales Einfügen reicht also."
 pasted as copied,"so eingefügt, wie kopiert"
+The code runs only when the game runs. Right for almost every script.,"Der Code läuft nur, wenn das Spiel läuft. Richtig für fast jedes Skript."
+Yes (@tool),Ja (@tool)
+"The code also runs inside the editor: previews, level tools, Inspector buttons.","Der Code läuft auch im Editor: Vorschauen, Level-Werkzeuge, Inspector-Schaltflächen."
+Object type,Objekttyp
+(no class name),(kein Klassenname)
+"Renames the class everywhere it is used, after showing every file.","Benennt die Klasse überall um, wo sie verwendet wird, nachdem jede Datei gezeigt wurde."
+Other class…,Andere Klasse…
+"Any class Godot or this project has, picked in the Sheet Type window.","Jede Klasse von Godot oder diesem Projekt, gewählt im Fenster Blatttyp."
+What it extends: its built-in properties and actions come from this.,Wovon sie erbt: ihre eingebauten Eigenschaften und Aktionen kommen daher.
+"What it is for, in one line.","Wofür sie da ist, in einer Zeile."
+The ## line: shown as its tooltip in the editor.,Die ##-Zeile: im Editor als ihr Tooltip gezeigt.
+Icon,Symbol
+The picture Godot shows for this class in the Scene dock and Create New Node.,"Das Bild, das Godot für diese Klasse im Szenen-Dock und unter Neuen Node erstellen zeigt."
+Runs in the editor,Läuft im Editor
+A tool: its code runs while you edit.,"Ein Werkzeug: sein Code läuft, während du bearbeitest."
+Show,Zeigen
+Where it lives.,Wo sie liegt.
+Change %s to %s?,%s zu %s ändern?
+"The events use these, and a %s does not have them. Those lines stop compiling until they are changed.","Die Events nutzen diese, und ein %s hat sie nicht. Diese Zeilen kompilieren nicht mehr, bis sie geändert werden."
+Keep %s,%s behalten
+Change type,Typ ändern
+Default: the %s icon,Standard: das %s-Symbol
+Use default,Standard verwenden
+Pick…,Wählen…
+"Your own icon, written as @icon at the top of the file.","Dein eigenes Symbol, als @icon oben in die Datei geschrieben."
+"Until you pick one, the class uses its type's own editor icon - nothing extra is written.","Bis du eines wählst, nutzt die Klasse das Editor-Symbol ihres Typs - es wird nichts zusätzlich geschrieben."
+Character,Figur
+"A body you move with code: players and enemies that walk, jump and collide.","Ein Körper, den du per Code bewegst: Spieler und Gegner, die laufen, springen und kollidieren."
+Sprite,Sprite
+A picture on screen.,Ein Bild auf dem Bildschirm.
+"Detects what enters or leaves it: pickups, triggers, hit boxes.","Erkennt, was hinein- oder hinausgeht: Sammelobjekte, Auslöser, Trefferzonen."
+Physics body,Physik-Körper
+"Moved by physics: crates, balls, debris.","Von der Physik bewegt: Kisten, Bälle, Trümmer."
+2D node,2D-Node
+"A plain 2D object with a position, for anything else.","Ein einfaches 2D-Objekt mit Position, für alles andere."
+Character 3D,Figur 3D
+A 3D body you move with code.,"Ein 3D-Körper, den du per Code bewegst."
+Mesh,Mesh
+A 3D model in the world.,Ein 3D-Modell in der Welt.
+Area 3D,Bereich 3D
+Detects what enters or leaves a 3D space.,"Erkennt, was einen 3D-Raum betritt oder verlässt."
+Camera 3D,Kamera 3D
+A 3D camera.,Eine 3D-Kamera.
+3D node,3D-Node
+A plain 3D object with a position.,Ein einfaches 3D-Objekt mit Position.
+User interface,Benutzeroberfläche
+UI element,UI-Element
+A box on the screen for menus and HUD.,Ein Kasten auf dem Bildschirm für Menüs und HUD.
+A clickable button.,Eine anklickbare Schaltfläche.
+Text on the screen.,Text auf dem Bildschirm.
+HUD layer,HUD-Ebene
+"Draws its children on top of the game, like a HUD.","Zeichnet seine Kinder über dem Spiel, wie ein HUD."
+A background box for a menu.,Ein Hintergrundkasten für ein Menü.
+Data and project,Daten und Projekt
+Data file,Datendatei
+"A .tres data asset: stats, waves, loot tables.","Ein .tres-Datenasset: Werte, Wellen, Beutetabellen."
+Logic only,Nur Logik
+"No position, just logic: a manager or controller.","Keine Position, nur Logik: ein Manager oder Controller."
+Editor tool,Editor-Werkzeug
+A script that runs inside the editor.,"Ein Skript, das im Editor läuft."
+A 2D light.,Ein 2D-Licht.
+"Everything a %s can do, and what you add to it.","Alles, was ein %s kann, und was du hinzufügst."
+Name it to insert it.,"Gib ihm einen Namen, um es einzufügen."
+%s is already in this folder.,%s ist bereits in diesem Ordner.
+Insert new object,Neues Objekt einfügen
+Search object types…,Objekttypen suchen…
+Grid,Raster
+"Icons, grouped by kind","Symbole, nach Art gruppiert"
+"The class tree, the way Godot's Create New Node lists it","Der Klassenbaum, so wie Godots Neuen Node erstellen ihn auflistet"
+Name when inserted,Name beim Einfügen
+"The class name, exactly as code will write it. The file is named after it.","Der Klassenname, genau so, wie der Code ihn schreibt. Die Datei wird danach benannt."
+Runs in the editor - a tool: its code runs while you edit (@tool),"Läuft im Editor - ein Werkzeug: sein Code läuft, während du bearbeitest (@tool)"
+Other classes,Andere Klassen
+Nothing is made of this one itself: pick one of the classes under it.,Von dieser selbst wird nichts erstellt: wähle eine der Klassen darunter.
+Creates %s in %s and opens it.,Erstellt %s in %s und öffnet es.
+"Inserted %s - a %s, in %s.","%s eingefügt - ein %s, in %s."
+New Class…,Neue Klasse…
+"Insert a new object: pick what it is, name it, and its script opens here.","Ein neues Objekt einfügen: wähle, was es ist, benenne es, und sein Skript öffnet sich hier."

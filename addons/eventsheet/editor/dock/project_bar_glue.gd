@@ -163,7 +163,7 @@ func _on_create_requested(what: String) -> void:
 		"new_script":
 			_dock._open_template_menu()
 		"new_class":
-			_dock._open_template_menu()
+			_dock.open_insert_object()
 		"extract_base_class":
 			_dock._set_status("Extract base class lives on the class itself - open Object properties and use its refactor entry.")
 		"import_sound":

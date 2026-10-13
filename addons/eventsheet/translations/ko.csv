@@ -8103,3 +8103,81 @@ The object these rows point at once pasted. Pick one from the scene or type a no
 {n} row(s) on the clipboard.,클립보드에 {n}개 행.
 "These rows name no objects and no variables, so a plain Paste already does the job.",이 행들은 오브젝트도 변수도 이름 짓지 않으므로 일반 붙여넣기로 충분합니다.
 pasted as copied,복사한 그대로 붙여넣기
+The code runs only when the game runs. Right for almost every script.,코드는 게임이 실행될 때만 동작합니다. 거의 모든 스크립트에 알맞습니다.
+Yes (@tool),예 (@tool)
+"The code also runs inside the editor: previews, level tools, Inspector buttons.","코드가 에디터 안에서도 동작합니다: 미리보기, 레벨 도구, 인스펙터 버튼."
+Object type,오브젝트 유형
+(no class name),(클래스 이름 없음)
+"Renames the class everywhere it is used, after showing every file.","모든 파일을 보여준 뒤, 클래스가 쓰인 모든 곳에서 이름을 바꿉니다."
+Other class…,다른 클래스…
+"Any class Godot or this project has, picked in the Sheet Type window.","Godot 또는 이 프로젝트의 어떤 클래스든, 시트 유형 창에서 고릅니다."
+What it extends: its built-in properties and actions come from this.,무엇을 상속하는지: 내장 속성과 액션이 여기서 옵니다.
+"What it is for, in one line.",무엇을 위한 것인지 한 줄로.
+The ## line: shown as its tooltip in the editor.,## 줄: 에디터에서 툴팁으로 표시됩니다.
+Icon,아이콘
+The picture Godot shows for this class in the Scene dock and Create New Node.,씬 독과 새 노드 만들기에서 Godot가 이 클래스에 보여주는 그림.
+Runs in the editor,에디터에서 실행
+A tool: its code runs while you edit.,도구: 편집하는 동안 코드가 동작합니다.
+Show,보기
+Where it lives.,있는 곳.
+Change %s to %s?,%s을(를) %s(으)로 바꿀까요?
+"The events use these, and a %s does not have them. Those lines stop compiling until they are changed.",이벤트가 이것들을 쓰지만 %s에는 없습니다. 바꾸기 전까지 그 줄은 컴파일되지 않습니다.
+Keep %s,%s 유지
+Change type,유형 바꾸기
+Default: the %s icon,기본값: %s 아이콘
+Use default,기본값 사용
+Pick…,고르기…
+"Your own icon, written as @icon at the top of the file.","직접 고른 아이콘으로, 파일 맨 위에 @icon으로 적힙니다."
+"Until you pick one, the class uses its type's own editor icon - nothing extra is written.",하나를 고르기 전까지 클래스는 그 유형의 에디터 아이콘을 씁니다 - 따로 적히는 것은 없습니다.
+Character,캐릭터
+"A body you move with code: players and enemies that walk, jump and collide.","코드로 움직이는 몸체: 걷고, 뛰고, 부딪히는 플레이어와 적."
+Sprite,스프라이트
+A picture on screen.,화면 위의 그림.
+"Detects what enters or leaves it: pickups, triggers, hit boxes.","들어오고 나가는 것을 감지합니다: 줍는 아이템, 트리거, 히트박스."
+Physics body,물리 몸체
+"Moved by physics: crates, balls, debris.","물리로 움직입니다: 상자, 공, 파편."
+2D node,2D 노드
+"A plain 2D object with a position, for anything else.","위치가 있는 단순한 2D 오브젝트로, 그 밖의 모든 것에 씁니다."
+Character 3D,캐릭터 3D
+A 3D body you move with code.,코드로 움직이는 3D 몸체.
+Mesh,메시
+A 3D model in the world.,월드 안의 3D 모델.
+Area 3D,영역 3D
+Detects what enters or leaves a 3D space.,3D 공간에 들어오고 나가는 것을 감지합니다.
+Camera 3D,카메라 3D
+A 3D camera.,3D 카메라.
+3D node,3D 노드
+A plain 3D object with a position.,위치가 있는 단순한 3D 오브젝트.
+User interface,사용자 인터페이스
+UI element,UI 요소
+A box on the screen for menus and HUD.,메뉴와 HUD를 위한 화면 위 상자.
+A clickable button.,클릭할 수 있는 버튼.
+Text on the screen.,화면 위의 텍스트.
+HUD layer,HUD 레이어
+"Draws its children on top of the game, like a HUD.",자식을 게임 위에 그립니다. HUD처럼.
+A background box for a menu.,메뉴의 배경 상자.
+Data and project,데이터와 프로젝트
+Data file,데이터 파일
+"A .tres data asset: stats, waves, loot tables.",".tres 데이터 애셋: 능력치, 웨이브, 전리품 표."
+Logic only,로직만
+"No position, just logic: a manager or controller.",위치 없이 로직만: 매니저나 컨트롤러.
+Editor tool,에디터 도구
+A script that runs inside the editor.,에디터 안에서 동작하는 스크립트.
+A 2D light.,2D 조명.
+"Everything a %s can do, and what you add to it.","%s이(가) 할 수 있는 모든 것, 그리고 직접 더하는 것."
+Name it to insert it.,삽입하려면 이름을 지으세요.
+%s is already in this folder.,%s이(가) 이미 이 폴더에 있습니다.
+Insert new object,새 오브젝트 삽입
+Search object types…,오브젝트 유형 검색…
+Grid,격자
+"Icons, grouped by kind",종류별로 묶은 아이콘
+"The class tree, the way Godot's Create New Node lists it",Godot의 새 노드 만들기와 같은 방식의 클래스 트리
+Name when inserted,삽입할 때 이름
+"The class name, exactly as code will write it. The file is named after it.",코드에 적힐 그대로의 클래스 이름. 파일 이름도 이것을 따릅니다.
+Runs in the editor - a tool: its code runs while you edit (@tool),에디터에서 실행 - 도구: 편집하는 동안 코드가 동작합니다 (@tool)
+Other classes,다른 클래스
+Nothing is made of this one itself: pick one of the classes under it.,이 클래스 자체로는 아무것도 만들 수 없습니다: 그 아래 클래스 중 하나를 고르세요.
+Creates %s in %s and opens it.,%s을(를) %s에 만들고 엽니다.
+"Inserted %s - a %s, in %s.","%s 삽입 완료 - %s, %s 안."
+New Class…,새 클래스…
+"Insert a new object: pick what it is, name it, and its script opens here.",새 오브젝트 삽입: 무엇인지 고르고 이름을 지으면 스크립트가 여기서 열립니다.

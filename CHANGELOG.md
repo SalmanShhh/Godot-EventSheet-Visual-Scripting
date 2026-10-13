@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added: make a script class like inserting an object, and change it from its Properties
+
+- Sheet ▸ New Class… (and the Project bar's New class…) opens Insert new object: tiles grouped by
+  kind (2D, 3D, User interface, Data and project) or the class tree the way Godot's Create New Node
+  lists it, with Godot's own Favorites and Recent from that dialog. Search reaches every class a
+  script can extend. The chosen kind's sentence stays on screen, a taken or unwritable name is said
+  beside the field and holds Insert back, and the window shows the head the file will start with
+  before Insert writes `<name>.gd` in the FileSystem dock's folder and opens it.
+- Selecting a line of the sheet's class head shows Object type in the Properties bar: Name
+  (Rename… lists every file first), Type (a described dropdown; a type that lacks members the events
+  use names each of them before it changes anything), Description, Icon (a preview of the icon
+  Godot will show, Pick… or Use default), Runs in the editor and File. Each writes only its own head
+  line, then the object's instance variables follow as for a selected object.
+
 ### Fixed: an empty node or resource slot previews the line it saves
 
 - The variable window's IN CODE line for a node or resource slot left empty read

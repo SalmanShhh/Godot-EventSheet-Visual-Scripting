@@ -39,6 +39,8 @@ const DIALOG_FILES: Array[String] = [
 	"res://addons/eventsheet/editor/add_behavior_dialog.gd",
 	"res://addons/eventsheet/editor/dock/compare_condition_dialog.gd",
 	"res://addons/eventsheet/editor/dock/comment_and_scope_dialogs.gd",
+	"res://addons/eventsheet/editor/dock/insert_object_dialog.gd",
+	"res://addons/eventsheet/editor/dock/class_properties.gd",
 ]
 
 

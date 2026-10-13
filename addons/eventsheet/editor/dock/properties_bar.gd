@@ -22,6 +22,7 @@ extends RefCounted
 ## classes here would compile it, and everything it names, into the first open of a sheet.
 const OBJECT_PROPERTIES_PATH := "res://addons/eventsheet/editor/dock/object_properties_popup.gd"
 const FUNCTION_INSPECTOR_PATH := "res://addons/eventsheet/editor/dock/function_inspector.gd"
+const CLASS_PROPERTIES_PATH := "res://addons/eventsheet/editor/dock/class_properties.gd"
 
 var _dock: Control = null
 var panel: VBoxContainer = null
@@ -49,6 +50,8 @@ var _shown_resource: Resource = null
 var _field_factory: EventSheetParamFieldFactory = EventSheetParamFieldFactory.new()
 # The fields of a selected function, kept alive while they are on screen (their signals call it).
 var _function_inspector: RefCounted = null
+# The fields of the class this file declares, kept alive the same way.
+var _class_properties: RefCounted = null
 
 
 func init(dock: Control) -> void:
@@ -157,7 +160,23 @@ func refresh() -> void:
 	if not object_label.is_empty():
 		_show_object(object_label)
 		return
+	if is_class_head_row(view.get_selected_row_data()):
+		_show_class()
+		return
 	_show_nothing()
+
+
+## True for a line of the sheet's own class head (its name, extends, icon, @tool or description
+## band) - the rows that together ARE the class this file declares.
+static func is_class_head_row(row_data: EventRowData) -> bool:
+	if row_data == null:
+		return false
+	for span: SemanticSpan in row_data.spans:
+		var band: String = str((span.metadata as Dictionary).get("head_band", "")) if span.metadata is Dictionary else ""
+		if band in [EventSheetHeadBands.BAND_NAME, EventSheetHeadBands.BAND_EXTENDS, EventSheetHeadBands.BAND_ICON,
+				EventSheetHeadBands.BAND_TOOL, EventSheetHeadBands.BAND_DESCRIPTION]:
+			return true
+	return false
 
 
 ## The label the heading shows for a selected ACE: "PROPERTIES · Flash · action". Static so the
@@ -322,7 +341,28 @@ func _show_object(object_label: String) -> void:
 	_clear_form()
 	_open_for_selection()
 	_heading.text = heading_for(object_label, "object")
-	var entry: Dictionary = load(OBJECT_PROPERTIES_PATH).find_entry(_dock._current_sheet, object_label)
+	_append_object_facts(load(OBJECT_PROPERTIES_PATH).find_entry(_dock._current_sheet, object_label), object_label)
+
+
+## The class this file declares, selected on its head: the Object type fields that write the
+## head's lines, then what the object carries - the same facts a selected object shows.
+func _show_class() -> void:
+	_shown_resource = null
+	_clear_form()
+	_open_for_selection()
+	_class_properties = load(CLASS_PROPERTIES_PATH).new(_dock)
+	_heading.text = heading_for(str(_dock._head_actions.head_facts().get("class_name", "")),
+		EventSheetL10n.translate("object type"))
+	_class_properties.build_into(_form)
+	for entry: Dictionary in EventSheetViewportReadingRows.object_census(_dock._current_sheet):
+		if load(OBJECT_PROPERTIES_PATH).owns_sheet_variables(entry):
+			_append_object_facts(entry, str(entry.get("label", "")))
+			return
+
+
+## What an object carries and does, as read-only rows, then its variable table when the object is
+## the one this file declares, then the door to its whole properties popup.
+func _append_object_facts(entry: Dictionary, object_label: String) -> void:
 	for row: Variant in load(OBJECT_PROPERTIES_PATH).property_rows(entry, "", ""):
 		if not (row is Dictionary):
 			continue

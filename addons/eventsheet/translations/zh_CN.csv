@@ -8103,3 +8103,81 @@ The object these rows point at once pasted. Pick one from the scene or type a no
 {n} row(s) on the clipboard.,剪贴板上有 {n} 行。
 "These rows name no objects and no variables, so a plain Paste already does the job.",这些行没有提到任何对象或变量，所以普通粘贴就够了。
 pasted as copied,按复制时原样粘贴
+The code runs only when the game runs. Right for almost every script.,代码只在游戏运行时执行。几乎所有脚本都适用。
+Yes (@tool),是 (@tool)
+"The code also runs inside the editor: previews, level tools, Inspector buttons.",代码也会在编辑器中运行:预览、关卡工具、检查器按钮。
+Object type,对象类型
+(no class name),(无类名)
+"Renames the class everywhere it is used, after showing every file.","先列出每个文件,再在所有用到的地方重命名该类。"
+Other class…,其他类…
+"Any class Godot or this project has, picked in the Sheet Type window.","Godot 或本项目中的任意类,在“表类型”窗口中选择。"
+What it extends: its built-in properties and actions come from this.,它继承自什么:内置的属性和动作都来自这里。
+"What it is for, in one line.",一句话说明它的用途。
+The ## line: shown as its tooltip in the editor.,## 行:在编辑器中作为它的提示显示。
+Icon,图标
+The picture Godot shows for this class in the Scene dock and Create New Node.,Godot 在场景面板和“新建节点”中为此类显示的图片。
+Runs in the editor,在编辑器中运行
+A tool: its code runs while you edit.,工具:编辑时其代码也会运行。
+Show,显示
+Where it lives.,它所在的位置。
+Change %s to %s?,将 %s 改为 %s?
+"The events use these, and a %s does not have them. Those lines stop compiling until they are changed.","事件用到了这些,而 %s 没有它们。在修改之前,这些行将无法编译。"
+Keep %s,保留 %s
+Change type,更改类型
+Default: the %s icon,默认:%s 的图标
+Use default,使用默认
+Pick…,选择…
+"Your own icon, written as @icon at the top of the file.","你自己的图标,以 @icon 写在文件顶部。"
+"Until you pick one, the class uses its type's own editor icon - nothing extra is written.","在你选择之前,该类使用其类型自己的编辑器图标 - 不会额外写入任何内容。"
+Character,角色
+"A body you move with code: players and enemies that walk, jump and collide.",用代码移动的物体:会走、会跳、会碰撞的玩家和敌人。
+Sprite,精灵
+A picture on screen.,屏幕上的一张图片。
+"Detects what enters or leaves it: pickups, triggers, hit boxes.",检测进入或离开的东西:拾取物、触发器、受击框。
+Physics body,物理体
+"Moved by physics: crates, balls, debris.",由物理驱动:箱子、球、碎片。
+2D node,2D 节点
+"A plain 2D object with a position, for anything else.","带位置的普通 2D 对象,用于其他一切。"
+Character 3D,3D 角色
+A 3D body you move with code.,用代码移动的 3D 物体。
+Mesh,网格
+A 3D model in the world.,世界中的一个 3D 模型。
+Area 3D,3D 区域
+Detects what enters or leaves a 3D space.,检测进入或离开 3D 空间的东西。
+Camera 3D,3D 摄像机
+A 3D camera.,一个 3D 摄像机。
+3D node,3D 节点
+A plain 3D object with a position.,带位置的普通 3D 对象。
+User interface,用户界面
+UI element,UI 元素
+A box on the screen for menus and HUD.,屏幕上用于菜单和 HUD 的方框。
+A clickable button.,可点击的按钮。
+Text on the screen.,屏幕上的文字。
+HUD layer,HUD 层
+"Draws its children on top of the game, like a HUD.","把子节点画在游戏上方,像 HUD 一样。"
+A background box for a menu.,菜单的背景框。
+Data and project,数据与项目
+Data file,数据文件
+"A .tres data asset: stats, waves, loot tables.",.tres 数据资源:属性、波次、掉落表。
+Logic only,仅逻辑
+"No position, just logic: a manager or controller.","没有位置,只有逻辑:管理器或控制器。"
+Editor tool,编辑器工具
+A script that runs inside the editor.,在编辑器中运行的脚本。
+A 2D light.,一盏 2D 灯光。
+"Everything a %s can do, and what you add to it.","%s 能做的一切,以及你添加的内容。"
+Name it to insert it.,命名后才能插入。
+%s is already in this folder.,%s 已在此文件夹中。
+Insert new object,插入新对象
+Search object types…,搜索对象类型…
+Grid,网格视图
+"Icons, grouped by kind",按种类分组的图标
+"The class tree, the way Godot's Create New Node lists it","类树,与 Godot 的“新建节点”列出的方式相同"
+Name when inserted,插入时的名称
+"The class name, exactly as code will write it. The file is named after it.","类名,与代码中写出的完全一致。文件以它命名。"
+Runs in the editor - a tool: its code runs while you edit (@tool),在编辑器中运行 - 工具:编辑时其代码也会运行 (@tool)
+Other classes,其他类
+Nothing is made of this one itself: pick one of the classes under it.,不能直接用这个类创建任何东西:请选择它下面的某个类。
+Creates %s in %s and opens it.,创建 %s(位于 %s)并打开它。
+"Inserted %s - a %s, in %s.","已插入 %s - 一个 %s,位于 %s。"
+New Class…,新建类…
+"Insert a new object: pick what it is, name it, and its script opens here.","插入新对象:选择它是什么、给它命名,它的脚本就会在这里打开。"

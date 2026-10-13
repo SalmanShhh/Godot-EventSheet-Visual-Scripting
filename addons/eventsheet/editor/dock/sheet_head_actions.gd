@@ -319,7 +319,7 @@ func class_rename_reach_text() -> String:
 func _current_class_name() -> String:
 	var current: String = _dock._current_sheet.custom_class_name.strip_edges()
 	if current.is_empty():
-		current = str(EventSheetHeadBands.facts(_dock._current_sheet, _prelude_text()).get("class_name", ""))
+		current = str(head_facts().get("class_name", ""))
 	return current
 
 
@@ -463,15 +463,13 @@ func toggle_tool_mode() -> void:
 func has_lines_to_add() -> bool:
 	if _dock._current_sheet == null:
 		return false
-	return not EventSheetHeadBands.addable(EventSheetHeadBands.facts(_dock._current_sheet, _prelude_text())).is_empty()
+	return not EventSheetHeadBands.addable(head_facts()).is_empty()
 
 
 ## "+ add" under the stack (or the canvas menu's "Add to Class Head…" under a quiet class head): only
 ## the lines this sheet could have and does not.
 func open_add_menu() -> void:
-	_add_offers = EventSheetHeadBands.addable(
-		EventSheetHeadBands.facts(_dock._current_sheet, _prelude_text())
-	)
+	_add_offers = EventSheetHeadBands.addable(head_facts())
 	if _add_offers.is_empty():
 		return
 	if _add_menu == null:
@@ -656,6 +654,12 @@ static func _index_of_line(lines: PackedStringArray, band_kind: String, fallback
 		if EventSheetHeadBands.line_is(lines[index].strip_edges(), band_kind):
 			return index
 	return fallback
+
+
+## What the open sheet's head says now - class name, extends, icon, @tool, description, file - read
+## the way the bands read it, so every surface that shows one of those lines shows the same value.
+func head_facts() -> Dictionary:
+	return EventSheetHeadBands.facts(_dock._current_sheet, _prelude_text())
 
 
 ## The sheet's whole prelude as text - what the band model reads.

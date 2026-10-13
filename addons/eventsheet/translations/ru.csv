@@ -8103,3 +8103,81 @@ The object these rows point at once pasted. Pick one from the scene or type a no
 {n} row(s) on the clipboard.,Строк в буфере обмена: {n}.
 "These rows name no objects and no variables, so a plain Paste already does the job.","Эти строки не называют ни объектов, ни переменных, так что хватит обычной вставки."
 pasted as copied,вставляется как скопировано
+The code runs only when the game runs. Right for almost every script.,Код работает только во время игры. Подходит почти для любого скрипта.
+Yes (@tool),Да (@tool)
+"The code also runs inside the editor: previews, level tools, Inspector buttons.","Код работает и в редакторе: превью, инструменты уровней, кнопки Инспектора."
+Object type,Тип объекта
+(no class name),(нет имени класса)
+"Renames the class everywhere it is used, after showing every file.","Переименовывает класс везде, где он используется, сначала показав каждый файл."
+Other class…,Другой класс…
+"Any class Godot or this project has, picked in the Sheet Type window.","Любой класс Godot или этого проекта, выбранный в окне «Тип листа»."
+What it extends: its built-in properties and actions come from this.,От чего он наследуется: встроенные свойства и действия берутся отсюда.
+"What it is for, in one line.","Для чего он, в одну строку."
+The ## line: shown as its tooltip in the editor.,Строка ##: показывается как подсказка в редакторе.
+Icon,Значок
+The picture Godot shows for this class in the Scene dock and Create New Node.,"Картинка, которую Godot показывает для этого класса в панели «Сцена» и в «Создать новый узел»."
+Runs in the editor,Работает в редакторе
+A tool: its code runs while you edit.,"Инструмент: его код работает, пока вы редактируете."
+Show,Показать
+Where it lives.,Где он лежит.
+Change %s to %s?,Сменить %s на %s?
+"The events use these, and a %s does not have them. Those lines stop compiling until they are changed.","События используют это, а у %s этого нет. Эти строки перестанут компилироваться, пока их не изменят."
+Keep %s,Оставить %s
+Change type,Сменить тип
+Default: the %s icon,По умолчанию: значок %s
+Use default,По умолчанию
+Pick…,Выбрать…
+"Your own icon, written as @icon at the top of the file.","Ваш собственный значок, записанный как @icon в начале файла."
+"Until you pick one, the class uses its type's own editor icon - nothing extra is written.","Пока вы не выберете значок, класс использует значок своего типа - ничего лишнего не пишется."
+Character,Персонаж
+"A body you move with code: players and enemies that walk, jump and collide.","Тело, которое вы двигаете кодом: игроки и враги, которые ходят, прыгают и сталкиваются."
+Sprite,Спрайт
+A picture on screen.,Картинка на экране.
+"Detects what enters or leaves it: pickups, triggers, hit boxes.","Замечает, что входит или выходит: подбираемые предметы, триггеры, хитбоксы."
+Physics body,Физическое тело
+"Moved by physics: crates, balls, debris.","Двигается физикой: ящики, мячи, обломки."
+2D node,2D-узел
+"A plain 2D object with a position, for anything else.","Простой 2D-объект с позицией, для всего остального."
+Character 3D,Персонаж 3D
+A 3D body you move with code.,"3D-тело, которое вы двигаете кодом."
+Mesh,Меш
+A 3D model in the world.,3D-модель в мире.
+Area 3D,Область 3D
+Detects what enters or leaves a 3D space.,"Замечает, что входит в 3D-пространство или выходит из него."
+Camera 3D,Камера 3D
+A 3D camera.,3D-камера.
+3D node,3D-узел
+A plain 3D object with a position.,Простой 3D-объект с позицией.
+User interface,Интерфейс
+UI element,Элемент интерфейса
+A box on the screen for menus and HUD.,Прямоугольник на экране для меню и HUD.
+A clickable button.,"Кнопка, на которую можно нажать."
+Text on the screen.,Текст на экране.
+HUD layer,Слой HUD
+"Draws its children on top of the game, like a HUD.","Рисует свои дочерние узлы поверх игры, как HUD."
+A background box for a menu.,Фоновый прямоугольник для меню.
+Data and project,Данные и проект
+Data file,Файл данных
+"A .tres data asset: stats, waves, loot tables.","Ресурс данных .tres: характеристики, волны, таблицы добычи."
+Logic only,Только логика
+"No position, just logic: a manager or controller.","Без позиции, только логика: менеджер или контроллер."
+Editor tool,Инструмент редактора
+A script that runs inside the editor.,"Скрипт, который работает в редакторе."
+A 2D light.,2D-свет.
+"Everything a %s can do, and what you add to it.","Всё, что умеет %s, и то, что вы добавите."
+Name it to insert it.,"Дайте имя, чтобы вставить."
+%s is already in this folder.,%s уже есть в этой папке.
+Insert new object,Вставить новый объект
+Search object types…,Искать типы объектов…
+Grid,Сетка
+"Icons, grouped by kind","Значки, сгруппированные по видам"
+"The class tree, the way Godot's Create New Node lists it","Дерево классов, как его показывает «Создать новый узел» в Godot"
+Name when inserted,Имя при вставке
+"The class name, exactly as code will write it. The file is named after it.","Имя класса - ровно так, как его запишет код. Файл назван по нему."
+Runs in the editor - a tool: its code runs while you edit (@tool),"Работает в редакторе - инструмент: его код работает, пока вы редактируете (@tool)"
+Other classes,Другие классы
+Nothing is made of this one itself: pick one of the classes under it.,Из самого этого класса ничего не создаётся: выберите один из классов под ним.
+Creates %s in %s and opens it.,Создаёт %s в %s и открывает его.
+"Inserted %s - a %s, in %s.","Вставлен %s - %s, в %s."
+New Class…,Новый класс…
+"Insert a new object: pick what it is, name it, and its script opens here.","Вставьте новый объект: выберите, что это, дайте имя, и его скрипт откроется здесь."

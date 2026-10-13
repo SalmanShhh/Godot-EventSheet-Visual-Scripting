@@ -33,6 +33,8 @@ const COMPLETIONS_PATH := "res://addons/eventsheet/editor/autocomplete/completio
 ## The one shape every quick question takes, loaded the first time a question is asked.
 const SMALL_PROMPT_PATH := "res://addons/eventsheet/editor/small_prompt.gd"
 const STATE_TRAIL_PATH := "res://addons/eventsheet/editor/state_trail.gd"
+## Insert new object: a new script class made the way an object is inserted, loaded when asked for.
+const INSERT_OBJECT_PATH := "res://addons/eventsheet/editor/dock/insert_object_dialog.gd"
 const ACE_APPLY_PATH := "res://addons/eventsheet/editor/dock/ace_apply.gd"
 const ADD_BEHAVIOR_DIALOG_PATH := "res://addons/eventsheet/editor/add_behavior_dialog.gd"
 const ADD_BEHAVIOR_PATH := "res://addons/eventsheet/editor/add_behavior.gd"
@@ -7833,6 +7835,12 @@ func _on_ace_comment_confirmed() -> void:
 # ── Starter templates ("new from template") - menu + sheet construction in dock/starter_templates.gd ──
 func _open_template_menu() -> void:  # New-Sheet shortcut (id 0) + command palette + Welcome button
 	_starter.open_menu()
+
+
+## Sheet ▸ New Class… and the Project bar's New class…: picks what the class is, names it, writes
+## its file and opens it.
+func open_insert_object() -> void:
+	load(INSERT_OBJECT_PATH).new().open(self)
 
 
 func _on_viewport_selection_changed(_row_data: EventRowData) -> void:

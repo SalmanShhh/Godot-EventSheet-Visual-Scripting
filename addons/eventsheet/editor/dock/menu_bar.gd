@@ -230,6 +230,9 @@ func build(root: Node) -> void:
 	menu_popup.add_child(sheet_popup)
 	menu_popup.add_submenu_node_item("Sheet", sheet_popup, 0)
 	sheet_popup.add_item("New…", 0)
+	sheet_popup.add_item(EventSheetL10n.translate("New Class…"), 20)
+	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(20), EventSheetL10n.translate(
+		"Insert a new object: pick what it is, name it, and its script opens here."))
 	sheet_popup.add_item("Open…", 1)
 	sheet_popup.add_item("Save", 2)
 	sheet_popup.add_item("Save As…", 3)
@@ -301,6 +304,7 @@ func build(root: Node) -> void:
 	sheet_popup.id_pressed.connect(func(id: int) -> void:
 		match id:
 			17: _dock._open_start_page()
+			20: _dock.open_insert_object()
 			0: _dock._open_template_menu()
 			1: _dock._on_open_requested()
 			2: _dock._on_save_requested()
