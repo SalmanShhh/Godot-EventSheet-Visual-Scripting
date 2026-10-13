@@ -118,6 +118,34 @@
   failing the assignment.
 - **Save Studio:** the Save Slots list shows save files only, not the editor's settings files.
 
+### Fixed: the dialogs that write events keep your typing and say what is wrong
+
+- A function parameter called `move speed` (a space, a keyword, or a name another parameter of the
+  same function already has) is refused in the Edit Parameter dialog, which stays open with the
+  reason under the form. It used to be stored as typed and break the generated `func` line.
+- The New Function dialog says what is wrong with the name while you type it, and OK no longer
+  closes the dialog and pops it back up on a refused name.
+- The New Function preview names the picker shelf the function will really land on, instead of
+  "(this behaviour)" on every sheet.
+- Pressing OK on Edit Comment without changing anything no longer adds an undo step or marks the
+  sheet as changed.
+- Add behavior labels each setting with the property's own name, as the pack wrote it, and picking
+  Platformer no longer highlights Platformer Pathfinding as well.
+- Edit Enum and Edit Signal keep the dialog open with the error in it when a name is refused,
+  instead of closing and reporting it in the status bar.
+- Snippets are listed by the name they were saved under, not re-capitalised, and saving a selection
+  under a name the library already has is refused with a message instead of quietly writing
+  `name-2`.
+- Paste Special keeps the form open when the paste is refused, so the retargets you typed survive.
+- Compare keeps OK disabled while "To" (or the other end of a range, or the tolerance) is empty.
+- The condition and action picker shows the editor's Favorites icon (or the word Pin) instead of
+  emoji, and the node picker shows each node's class icon.
+- An instance variable placed among the events keeps its "Editable in the Inspector" tick when you
+  press OK in the variable dialog. It was dropped on every edit.
+- A Show if or Lock unless condition now updates the Inspector the moment the variable it reads
+  changes: that variable's generated setter calls `notify_property_list_changed()`. Before, the
+  field only hid or showed after the node was selected again.
+
 ### Fixed: two prompts no longer lose work on Esc or Enter
 
 - **Every Tick:** taking the last condition off an event asks whether to keep it as an every-tick
