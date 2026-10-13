@@ -10,6 +10,8 @@ extends RefCounted
 var _dock: Control = null
 var _ai_window: Window = null
 var _ai_prompt_edit: TextEdit = null
+## True while a live request is out; a click meanwhile sends nothing.
+var _request_in_flight: bool = false
 
 
 func init(dock: Control) -> void:
@@ -59,8 +61,17 @@ func _ai_generate_clicked() -> void:
 	if EventSheetAIGeneration.response_provider.is_valid():
 		_apply_ai_gdscript(EventSheetAIGeneration.resolve_gdscript(description, _dock._current_sheet))
 		return
+	# Ask's switch is the one switch for anything leaving this machine: off means nothing is sent,
+	# whatever key this window's own settings hold.
+	if EventSheetAsk.mode() == EventSheetAsk.MODE_OFF:
+		_dock._set_status(EventSheetL10n.translate("Ask is off, so nothing will be sent. Turn it on in Project Settings ▸ EventSheets ▸ Ask to generate in-editor - or use the MCP server."), true)
+		return
 	if not EventSheetAIGeneration.is_live_configured():
 		_dock._set_status("Set eventsheets/ai/api_key (+ endpoint, model) in Project Settings to generate in-editor - or use the MCP server.", true)
+		return
+	# One request at a time: a second click while the first is out would append its rows twice.
+	if _request_in_flight:
+		_dock._set_status(EventSheetL10n.translate("Still generating from your description…"))
 		return
 	_ai_request_live(description)
 
@@ -91,6 +102,7 @@ func _ai_request_live(description: String) -> void:
 	var http: HTTPRequest = HTTPRequest.new()
 	_dock.add_child(http)
 	http.request_completed.connect(func(_result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+		_request_in_flight = false
 		_on_ai_live_response(code, body)
 		http.queue_free())
 	var headers: PackedStringArray = PackedStringArray([
@@ -102,8 +114,14 @@ func _ai_request_live(description: String) -> void:
 		"model": model, "max_tokens": 1024,
 		"messages": [{"role": "user", "content": prompt}]
 	})
+	var error: Error = http.request(endpoint, headers, HTTPClient.METHOD_POST, payload)
+	if error != OK:
+		# A request that never started never completes, so nothing else would ever free this node.
+		http.free()
+		_dock._set_status(EventSheetL10n.translate("AI request could not start (%s). Nothing was sent.") % error_string(error), true)
+		return
+	_request_in_flight = true
 	_dock._set_status("Generating from your description…")
-	http.request(endpoint, headers, HTTPClient.METHOD_POST, payload)
 
 
 func _on_ai_live_response(code: int, body: PackedByteArray) -> void:

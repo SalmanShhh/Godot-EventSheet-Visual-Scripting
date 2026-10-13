@@ -172,7 +172,7 @@ func _add_pressed() -> void:
 		_window.hide()
 
 
+## Drops the proposal only. The sentence stays, so the reader can reword it and ask again.
 func _discard_pressed() -> void:
 	_set_proposal([])
 	_proposal_label.text = ""
-	_prompt_edit.text = ""

@@ -23,6 +23,7 @@ static func run() -> bool:
 	ok = _test_request_contents() and ok
 	ok = _test_validation() and ok
 	ok = _test_proposal() and ok
+	ok = _test_the_windows() and ok
 	EventSheetAsk.transport = Callable()
 	ProjectSettings.set_setting(EventSheetAsk.SETTING_MODE, previous_mode)
 	ProjectSettings.set_setting(EventSheetAsk.SETTING_ENDPOINT, previous_endpoint)
@@ -131,6 +132,65 @@ static func _test_proposal() -> bool:
 	ok = _check("and nothing is applied by arriving - the sheet is untouched",
 		_sheet().events.size(), 0) and ok
 	return ok
+
+
+## The two windows that can send words out: Discard in Ask keeps the typed sentence, and the
+## Generate Events window obeys Ask's off switch, sends one request at a time, and frees a request
+## that never started.
+static func _test_the_windows() -> bool:
+	var ok: bool = true
+	var dock: Control = _stand_in_dock()
+	var ask_window: EventSheetAskWindow = EventSheetAskWindow.new()
+	ask_window.init(dock)
+	ask_window._build()
+	ask_window._prompt_edit.text = "make the player jump"
+	ask_window._set_proposal([{"ace_id": "Core::Jump"}])
+	ask_window._discard_pressed()
+	ok = _check("Discard drops the proposal and keeps the sentence",
+		[ask_window._prompt_edit.text, ask_window._proposal.is_empty(), ask_window._add_button.disabled],
+		["make the player jump", true, true]) and ok
+
+	var previous_key: Variant = ProjectSettings.get_setting("eventsheets/ai/api_key", null)
+	var previous_ai_endpoint: Variant = ProjectSettings.get_setting("eventsheets/ai/endpoint", null)
+	ProjectSettings.set_setting("eventsheets/ai/api_key", "test-key")
+	ProjectSettings.set_setting("eventsheets/ai/endpoint", "http://127.0.0.1:9/none")
+	EventSheetAIGeneration.response_provider = Callable()
+	var generate: EventSheetAIGenerateWindow = EventSheetAIGenerateWindow.new()
+	generate.init(dock)
+	generate._ai_prompt_edit = TextEdit.new()
+	generate._ai_prompt_edit.text = "make the player jump"
+	ProjectSettings.set_setting(EventSheetAsk.SETTING_MODE, EventSheetAsk.MODE_OFF)
+	generate._ai_generate_clicked()
+	ok = _check("with Ask off, Generate sends nothing and says why",
+		[dock.find_children("*", "HTTPRequest", true, false).size(), str(dock.get("last_text")).begins_with("Ask is off")],
+		[0, true]) and ok
+	ProjectSettings.set_setting(EventSheetAsk.SETTING_MODE, EventSheetAsk.MODE_LOCAL)
+	# Out of the tree an HTTPRequest cannot start, which is exactly the failed start to pin.
+	generate._ai_generate_clicked()
+	ok = _check("a request that cannot start is freed and reported",
+		[dock.find_children("*", "HTTPRequest", true, false).size(), str(dock.get("last_text")).begins_with("AI request could not start"),
+			generate._request_in_flight],
+		[0, true, false]) and ok
+	generate._request_in_flight = true
+	generate._ai_generate_clicked()
+	ok = _check("a second click while a request is out sends nothing",
+		[dock.find_children("*", "HTTPRequest", true, false).size(), str(dock.get("last_text"))],
+		[0, "Still generating from your description…"]) and ok
+	generate._ai_prompt_edit.free()
+	ProjectSettings.set_setting("eventsheets/ai/api_key", previous_key)
+	ProjectSettings.set_setting("eventsheets/ai/endpoint", previous_ai_endpoint)
+	dock.free()
+	return ok
+
+
+## A dock with a sheet that keeps the last status line it was given.
+static func _stand_in_dock() -> Control:
+	var dock_script: GDScript = GDScript.new()
+	dock_script.source_code = "extends Control\nvar _current_sheet: EventSheetResource = EventSheetResource.new()\nvar last_text: String = \"\"\nfunc _set_status(text: String, _is_error: bool = false) -> void:\n\tlast_text = text\n"
+	dock_script.reload()
+	var dock: Control = Control.new()
+	dock.set_script(dock_script)
+	return dock
 
 
 static func _sheet() -> EventSheetResource:
