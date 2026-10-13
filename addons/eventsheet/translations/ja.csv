@@ -7764,3 +7764,56 @@ what the button says,ボタンに表示する文字
 optional,任意
 READS AS,読み方
 IN CODE,コード
+%s   (shown while %s),%s   (%s の間だけ表示)
+"A constant - fixed while the game runs, not editable in the Inspector.",定数 - ゲーム実行中は固定され、Inspector では編集できません。
+Only the sheet uses it - it does not appear in the Inspector.,シートだけが使います - Inspector には表示されません。
+It is saved with the scene but hidden in the Inspector.,シーンと一緒に保存されますが、Inspector には表示されません。
+It runs from %s to %s or more.,範囲は %s から %s 以上です。
+It runs from %s to %s.,範囲は %s から %s です。
+It runs from %s to %s %s or more.,範囲は %s から %s %s 以上です。
+It runs from %s to %s %s.,範囲は %s から %s %s です。
+It is grouped under %s > %s.,%s > %s にグループ化されています。
+It is grouped under %s.,%s にグループ化されています。
+"It sits under the section header ""%s"".","セクション見出し ""%s"" の下にあります。"
+It has an info note.,情報メモがあります。
+"It is required, and warns while unset.",必須で、未設定の間は警告します。
+It is checked by %s().,%s() で検証されます。
+"It has a ""%s"" button.","""%s"" ボタンがあります。"
+Its group shows only while %s is on.,そのグループは %s がオンの間だけ表示されます。
+It is linked to %s.,%s とリンクしています。
+It is clamped to the range.,範囲内に制限されます。
+It is read-only.,読み取り専用です。
+A whole number.,整数。
+A number.,数値。
+Text.,テキスト。
+A yes/no switch.,はい/いいえのスイッチ。
+A color.,色。
+A node path.,ノードパス。
+A 2D vector.,2D ベクトル。
+A 3D vector.,3D ベクトル。
+A texture.,テクスチャ。
+A curve.,カーブ。
+A %s value.,%s の値。
+Shown as a progress bar.,プログレスバーとして表示されます。
+Shown as a direction dial.,方向ダイヤルとして表示されます。
+Shown as a min-max range slider.,最小-最大範囲スライダーとして表示されます。
+Shown as an editable table.,編集可能な表として表示されます。
+Shown as toggle buttons.,トグルボタンとして表示されます。
+Shown with a unit dropdown.,単位ドロップダウン付きで表示されます。
+Shown as four corners.,4 つの角として表示されます。
+Shown as color swatches.,カラースウォッチとして表示されます。
+Shown with a texture preview.,テクスチャプレビュー付きで表示されます。
+Shown with a curve preview.,カーブプレビュー付きで表示されます。
+Picked with a folder picker.,フォルダピッカーで選びます。
+Picked with a file picker.,ファイルピッカーで選びます。
+Shown as checkbox flags.,チェックボックスのフラグとして表示されます。
+Shown as a dropdown.,ドロップダウンとして表示されます。
+Shown as a dropdown that also accepts typing.,入力も受け付けるドロップダウンとして表示されます。
+Shown as a layers grid.,レイヤーグリッドとして表示されます。
+Picked from matching scene nodes.,一致するシーンノードから選びます。
+"Typed as dots, like a password.",パスワードのように点で入力されます。
+Typed as a math expression.,数式として入力されます。
+Its axes are linked.,軸がリンクされています。
+Shown as an easing curve.,イージングカーブとして表示されます。
+Edited in a big text box.,大きなテキストボックスで編集します。
+Shown as a slider.,スライダーとして表示されます。

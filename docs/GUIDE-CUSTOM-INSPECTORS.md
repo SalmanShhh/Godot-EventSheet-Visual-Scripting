@@ -82,8 +82,8 @@ You do not need to know any of the vocabulary below to design a property:
    dropdown, the filters for a file picker - each with an example in the empty field.
 4. Watch the **Inspector preview** card on the right: it mocks the final Inspector live - the
    category band, the group heading, the property name as the Inspector shortens it, and the chosen
-   widget - and states your choices as one sentence ("A whole number, from 0 to 100, shown as a
-   progress bar, grouped under Combat > Defense."). The **In code** lines above it show the exact
+   widget - and states your choices in plain words ("A whole number. It runs from 0 to 100.
+   Shown as a progress bar. It is grouped under Combat > Defense."). The **In code** lines above it show the exact
    GDScript the choices compile to.
 
 **Where it sits in the Inspector** holds the Category, the Group (with **Only names starting** for a
@@ -805,7 +805,7 @@ Grey hint text shows while the field is empty and vanishes at the first keystrok
 
 **Scenario:** before handing the scene to the design team, you want to check every exported variable looks right - without opening 15 dialogs.
 
-Hover each exported variable row in the sheet: a live preview card pops up with the decor, grouping, widget, and a one-sentence summary ("A whole number, from 0 to 100, shown as a progress bar, grouped under Combat."). Fix anything off via right-click > Edit, hover again to confirm.
+Hover each exported variable row in the sheet: a live preview card pops up with the decor, grouping, widget, and a plain-words summary ("A whole number. It runs from 0 to 100. Shown as a progress bar. It is grouped under Combat."). Fix anything off via right-click > Edit, hover again to confirm.
 
 ### Use case 15: a loot table a designer fills like a spreadsheet
 

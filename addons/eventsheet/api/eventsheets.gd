@@ -398,9 +398,10 @@ static func build_inspector_preview(variable_name: String, type_name: String, de
 	return card
 
 
-## One plain sentence describing an exported variable's Inspector look ("A whole number, from 0
-## to 100, shown as a progress bar, grouped under Combat."). Dock-free; the same source of truth
-## as the preview card, so your tooling never drifts from the editor's own wording.
+## An exported variable's Inspector look in plain words, one sentence per fact, in the editor's
+## language ("A whole number. It runs from 0 to 100. Shown as a progress bar. It is grouped under
+## Combat."). Dock-free; the same source of truth as the preview card, so your tooling never
+## drifts from the editor's own wording.
 static func describe_inspector(type_name: String, attributes: Dictionary, exported: bool = true, constant: bool = false) -> String:
 	return EventSheetInspectorPreviewCard.describe(type_name, attributes, exported, constant)
 

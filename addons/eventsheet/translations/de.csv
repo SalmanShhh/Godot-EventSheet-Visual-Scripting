@@ -7764,3 +7764,56 @@ what the button says,was auf dem Knopf steht
 optional,optional
 READS AS,LIEST SICH ALS
 IN CODE,IM CODE
+%s   (shown while %s),"%s   (sichtbar, solange %s)"
+"A constant - fixed while the game runs, not editable in the Inspector.","Eine Konstante - fest, solange das Spiel läuft, im Inspektor nicht bearbeitbar."
+Only the sheet uses it - it does not appear in the Inspector.,Nur das Blatt verwendet sie - sie erscheint nicht im Inspektor.
+It is saved with the scene but hidden in the Inspector.,"Sie wird mit der Szene gespeichert, ist im Inspektor aber verborgen."
+It runs from %s to %s or more.,Sie reicht von %s bis %s oder mehr.
+It runs from %s to %s.,Sie reicht von %s bis %s.
+It runs from %s to %s %s or more.,Sie reicht von %s bis %s %s oder mehr.
+It runs from %s to %s %s.,Sie reicht von %s bis %s %s.
+It is grouped under %s > %s.,Sie ist unter %s > %s gruppiert.
+It is grouped under %s.,Sie ist unter %s gruppiert.
+"It sits under the section header ""%s"".","Sie steht unter der Abschnittsüberschrift ""%s""."
+It has an info note.,Sie hat einen Infohinweis.
+"It is required, and warns while unset.","Sie ist erforderlich und warnt, solange sie leer ist."
+It is checked by %s().,Sie wird von %s() geprüft.
+"It has a ""%s"" button.","Sie hat eine Schaltfläche ""%s""."
+Its group shows only while %s is on.,"Ihre Gruppe ist nur sichtbar, solange %s an ist."
+It is linked to %s.,Sie ist mit %s verknüpft.
+It is clamped to the range.,Sie wird auf den Bereich begrenzt.
+It is read-only.,Sie ist schreibgeschützt.
+A whole number.,Eine ganze Zahl.
+A number.,Eine Zahl.
+Text.,Text.
+A yes/no switch.,Ein Ja/Nein-Schalter.
+A color.,Eine Farbe.
+A node path.,Ein Knotenpfad.
+A 2D vector.,Ein 2D-Vektor.
+A 3D vector.,Ein 3D-Vektor.
+A texture.,Eine Textur.
+A curve.,Eine Kurve.
+A %s value.,Ein %s-Wert.
+Shown as a progress bar.,Als Fortschrittsbalken angezeigt.
+Shown as a direction dial.,Als Richtungsregler angezeigt.
+Shown as a min-max range slider.,Als Min-Max-Bereichsregler angezeigt.
+Shown as an editable table.,Als bearbeitbare Tabelle angezeigt.
+Shown as toggle buttons.,Als Umschaltflächen angezeigt.
+Shown with a unit dropdown.,Mit einem Einheiten-Dropdown angezeigt.
+Shown as four corners.,Als vier Ecken angezeigt.
+Shown as color swatches.,Als Farbfelder angezeigt.
+Shown with a texture preview.,Mit einer Texturvorschau angezeigt.
+Shown with a curve preview.,Mit einer Kurvenvorschau angezeigt.
+Picked with a folder picker.,Mit einer Ordnerauswahl gewählt.
+Picked with a file picker.,Mit einer Dateiauswahl gewählt.
+Shown as checkbox flags.,Als Kontrollkästchen-Flags angezeigt.
+Shown as a dropdown.,Als Dropdown angezeigt.
+Shown as a dropdown that also accepts typing.,"Als Dropdown angezeigt, das auch Eingaben annimmt."
+Shown as a layers grid.,Als Ebenenraster angezeigt.
+Picked from matching scene nodes.,Aus passenden Szenenknoten gewählt.
+"Typed as dots, like a password.","Als Punkte eingegeben, wie ein Passwort."
+Typed as a math expression.,Als mathematischer Ausdruck eingegeben.
+Its axes are linked.,Ihre Achsen sind verknüpft.
+Shown as an easing curve.,Als Easing-Kurve angezeigt.
+Edited in a big text box.,In einem großen Textfeld bearbeitet.
+Shown as a slider.,Als Schieberegler angezeigt.

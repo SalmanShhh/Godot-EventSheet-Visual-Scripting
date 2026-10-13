@@ -7764,3 +7764,56 @@ what the button says,что написано на кнопке
 optional,необязательно
 READS AS,ЧИТАЕТСЯ КАК
 IN CODE,В КОДЕ
+%s   (shown while %s),"%s   (видна, пока %s)"
+"A constant - fixed while the game runs, not editable in the Inspector.","Константа - неизменна, пока идёт игра, в Inspector не редактируется."
+Only the sheet uses it - it does not appear in the Inspector.,Её использует только лист - в Inspector она не появляется.
+It is saved with the scene but hidden in the Inspector.,"Сохраняется вместе со сценой, но скрыта в Inspector."
+It runs from %s to %s or more.,Значения от %s до %s и больше.
+It runs from %s to %s.,Значения от %s до %s.
+It runs from %s to %s %s or more.,Значения от %s до %s %s и больше.
+It runs from %s to %s %s.,Значения от %s до %s %s.
+It is grouped under %s > %s.,Сгруппирована в %s > %s.
+It is grouped under %s.,Сгруппирована в %s.
+"It sits under the section header ""%s"".","Находится под заголовком раздела ""%s""."
+It has an info note.,Есть информационная заметка.
+"It is required, and warns while unset.","Обязательна и предупреждает, пока не задана."
+It is checked by %s().,Проверяется функцией %s().
+"It has a ""%s"" button.","Есть кнопка ""%s""."
+Its group shows only while %s is on.,"Её группа видна, только пока %s включено."
+It is linked to %s.,Связана с %s.
+It is clamped to the range.,Ограничена диапазоном.
+It is read-only.,Только для чтения.
+A whole number.,Целое число.
+A number.,Число.
+Text.,Текст.
+A yes/no switch.,Переключатель да/нет.
+A color.,Цвет.
+A node path.,Путь к узлу.
+A 2D vector.,2D-вектор.
+A 3D vector.,3D-вектор.
+A texture.,Текстура.
+A curve.,Кривая.
+A %s value.,Значение %s.
+Shown as a progress bar.,Показана как индикатор прогресса.
+Shown as a direction dial.,Показана как диск направления.
+Shown as a min-max range slider.,Показана как ползунок диапазона мин-макс.
+Shown as an editable table.,Показана как редактируемая таблица.
+Shown as toggle buttons.,Показана как кнопки-переключатели.
+Shown with a unit dropdown.,Показана с выпадающим списком единиц.
+Shown as four corners.,Показана как четыре угла.
+Shown as color swatches.,Показана как образцы цвета.
+Shown with a texture preview.,Показана с превью текстуры.
+Shown with a curve preview.,Показана с превью кривой.
+Picked with a folder picker.,Выбирается через выбор папки.
+Picked with a file picker.,Выбирается через выбор файла.
+Shown as checkbox flags.,Показана как флажки.
+Shown as a dropdown.,Показана как выпадающий список.
+Shown as a dropdown that also accepts typing.,"Показана как выпадающий список, в который можно и вводить."
+Shown as a layers grid.,Показана как сетка слоёв.
+Picked from matching scene nodes.,Выбирается из подходящих узлов сцены.
+"Typed as dots, like a password.","Вводится точками, как пароль."
+Typed as a math expression.,Вводится как математическое выражение.
+Its axes are linked.,Её оси связаны.
+Shown as an easing curve.,Показана как кривая сглаживания.
+Edited in a big text box.,Редактируется в большом текстовом поле.
+Shown as a slider.,Показана как ползунок.

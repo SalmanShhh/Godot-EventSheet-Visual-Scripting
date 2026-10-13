@@ -7764,3 +7764,56 @@ what the button says,cosa dice il pulsante
 optional,facoltativo
 READS AS,SI LEGGE COME
 IN CODE,NEL CODICE
+%s   (shown while %s),%s   (visibile finché %s)
+"A constant - fixed while the game runs, not editable in the Inspector.","Una costante - fissa mentre il gioco è in esecuzione, non modificabile nell'Inspector."
+Only the sheet uses it - it does not appear in the Inspector.,La usa solo il foglio - non compare nell'Inspector.
+It is saved with the scene but hidden in the Inspector.,Viene salvata con la scena ma è nascosta nell'Inspector.
+It runs from %s to %s or more.,Va da %s a %s o più.
+It runs from %s to %s.,Va da %s a %s.
+It runs from %s to %s %s or more.,Va da %s a %s %s o più.
+It runs from %s to %s %s.,Va da %s a %s %s.
+It is grouped under %s > %s.,È raggruppata sotto %s > %s.
+It is grouped under %s.,È raggruppata sotto %s.
+"It sits under the section header ""%s"".","Sta sotto l'intestazione di sezione ""%s""."
+It has an info note.,Ha una nota informativa.
+"It is required, and warns while unset.",È obbligatoria e avvisa finché è vuota.
+It is checked by %s().,È verificata da %s().
+"It has a ""%s"" button.","Ha un pulsante ""%s""."
+Its group shows only while %s is on.,Il suo gruppo si mostra solo finché %s è attivo.
+It is linked to %s.,È collegata a %s.
+It is clamped to the range.,È limitata all'intervallo.
+It is read-only.,È di sola lettura.
+A whole number.,Un numero intero.
+A number.,Un numero.
+Text.,Testo.
+A yes/no switch.,Un interruttore sì/no.
+A color.,Un colore.
+A node path.,Un percorso di nodo.
+A 2D vector.,Un vettore 2D.
+A 3D vector.,Un vettore 3D.
+A texture.,Una texture.
+A curve.,Una curva.
+A %s value.,Un valore %s.
+Shown as a progress bar.,Mostrata come barra di avanzamento.
+Shown as a direction dial.,Mostrata come quadrante di direzione.
+Shown as a min-max range slider.,Mostrata come cursore di intervallo min-max.
+Shown as an editable table.,Mostrata come tabella modificabile.
+Shown as toggle buttons.,Mostrata come pulsanti a interruttore.
+Shown with a unit dropdown.,Mostrata con un menu a tendina delle unità.
+Shown as four corners.,Mostrata come quattro angoli.
+Shown as color swatches.,Mostrata come campioni di colore.
+Shown with a texture preview.,Mostrata con un'anteprima della texture.
+Shown with a curve preview.,Mostrata con un'anteprima della curva.
+Picked with a folder picker.,Scelta con un selettore di cartelle.
+Picked with a file picker.,Scelta con un selettore di file.
+Shown as checkbox flags.,Mostrata come caselle di flag.
+Shown as a dropdown.,Mostrata come menu a tendina.
+Shown as a dropdown that also accepts typing.,Mostrata come menu a tendina che accetta anche la digitazione.
+Shown as a layers grid.,Mostrata come griglia di livelli.
+Picked from matching scene nodes.,Scelta tra i nodi di scena corrispondenti.
+"Typed as dots, like a password.","Digitata come puntini, come una password."
+Typed as a math expression.,Digitata come espressione matematica.
+Its axes are linked.,I suoi assi sono collegati.
+Shown as an easing curve.,Mostrata come curva di easing.
+Edited in a big text box.,Modificata in una grande casella di testo.
+Shown as a slider.,Mostrata come cursore.

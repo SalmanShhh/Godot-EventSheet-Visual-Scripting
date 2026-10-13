@@ -48,7 +48,7 @@ static func run() -> bool:
 	var inspector_attrs: Dictionary = {"range": {"min": "0", "max": "100"}, "drawer": "progress_bar", "group": "Combat", "header": "Combat", "info": "Tune with care."}
 	ok = _check("describe_inspector speaks the preview card's sentence",
 		EventSheets.describe_inspector("int", inspector_attrs),
-		"A whole number, from 0 to 100, shown as a progress bar, grouped under Combat, under a \"Combat\" section header, with an info note.") and ok
+		"A whole number. It runs from 0 to 100. Shown as a progress bar. It is grouped under Combat. It sits under the section header \"Combat\". It has an info note.") and ok
 	var preview: Control = EventSheets.build_inspector_preview("armour", "int", "10", inspector_attrs)
 	ok = _check("build_inspector_preview returns the live preview card",
 		preview is EventSheetInspectorPreviewCard, true) and ok

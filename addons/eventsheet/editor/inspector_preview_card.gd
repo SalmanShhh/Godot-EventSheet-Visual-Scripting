@@ -5,8 +5,8 @@ extends PanelContainer
 ## A live mock of what the Inspector will actually show for the variable being
 ## edited: the group header, the subgroup indent, the property name, and the
 ## chosen widget - one glance answers "what will this look like in Godot".
-## Below the mock, describe() renders the same choices as one plain sentence
-## ("A whole number from 0 to 100, shown as a progress bar, grouped under
+## Below the mock, describe() renders the same choices in plain words ("A whole
+## number. It runs from 0 to 100. Shown as a progress bar. It is grouped under
 ## Combat > Defense."). The card is a picture for beginners; the "Ships as:"
 ## strip underneath stays the code truth for experts.
 
@@ -78,7 +78,7 @@ func update_preview(variable_name: String, type_name: String, default_text: Stri
 		# The chip the Inspector Designer shows on a group header: the whole section hides with this
 		# switch, which is a fact about the SECTION, not about any one field under it.
 		var group_predicate: String = str(attributes.get("group_show_if", ""))
-		group_label.text = "%s   (shown while %s)" % [group_name, group_predicate] if not group_predicate.is_empty() else group_name
+		group_label.text = EventSheetL10n.translate("%s   (shown while %s)") % [group_name, group_predicate] if not group_predicate.is_empty() else group_name
 		group_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(12))
 		_rows.add_child(group_label)
 	if not subgroup_name.is_empty():
@@ -108,127 +108,133 @@ func update_preview(variable_name: String, type_name: String, default_text: Stri
 	_rows.add_child(property_row)
 
 
-## One plain sentence naming the type, the widget, the bounds, and the grouping -
-## in event-sheet-first language. Pinned by tests as exact strings.
+## The type, the widget, the bounds and the grouping in plain words, one short sentence per fact -
+## whole sentences so each one translates as a sentence. Pinned by tests as exact strings.
 static func describe(type_name: String, attributes: Dictionary, exported: bool, constant: bool) -> String:
 	if constant:
-		return "A constant - fixed while the game runs, not editable in the Inspector."
+		return EventSheetL10n.translate("A constant - fixed while the game runs, not editable in the Inspector.")
 	if not exported:
-		return "Only the sheet uses it - it does not appear in the Inspector."
-	var fragments: Array[String] = [_type_phrase(type_name)]
+		return EventSheetL10n.translate("Only the sheet uses it - it does not appear in the Inspector.")
+	var said: PackedStringArray = PackedStringArray([_type_sentence(type_name)])
+	if bool(attributes.get("storage", false)):
+		said.append(EventSheetL10n.translate("It is saved with the scene but hidden in the Inspector."))
+		return " ".join(said)
 	var range_spec: Variant = attributes.get("range")
 	if range_spec is Dictionary:
-		var bounds: String = "from %s to %s" % [str((range_spec as Dictionary).get("min", "0")), str((range_spec as Dictionary).get("max", "100"))]
-		if bool((range_spec as Dictionary).get("or_greater", false)):
-			bounds += " or more"
-		var suffix: String = str((range_spec as Dictionary).get("suffix", ""))
-		if not suffix.is_empty():
-			bounds += " (in %s)" % suffix
-		fragments.append(bounds)
-	var widget_phrase: String = _widget_phrase(attributes)
-	if not widget_phrase.is_empty():
-		fragments.append(widget_phrase)
+		var low: String = str((range_spec as Dictionary).get("min", "0"))
+		var high: String = str((range_spec as Dictionary).get("max", "100"))
+		var unit: String = str((range_spec as Dictionary).get("suffix", ""))
+		var or_more: bool = bool((range_spec as Dictionary).get("or_greater", false))
+		if unit.is_empty():
+			said.append((EventSheetL10n.translate("It runs from %s to %s or more.") if or_more
+				else EventSheetL10n.translate("It runs from %s to %s.")) % [low, high])
+		else:
+			said.append((EventSheetL10n.translate("It runs from %s to %s %s or more.") if or_more
+				else EventSheetL10n.translate("It runs from %s to %s %s.")) % [low, high, unit])
+	var widget_sentence: String = _widget_sentence(attributes)
+	if not widget_sentence.is_empty():
+		said.append(widget_sentence)
 	var group_name: String = str(attributes.get("group", ""))
 	var subgroup_name: String = str(attributes.get("subgroup", ""))
 	if not group_name.is_empty() and not subgroup_name.is_empty():
-		fragments.append("grouped under %s > %s" % [group_name, subgroup_name])
+		said.append(EventSheetL10n.translate("It is grouped under %s > %s.") % [group_name, subgroup_name])
 	elif not group_name.is_empty():
-		fragments.append("grouped under %s" % group_name)
+		said.append(EventSheetL10n.translate("It is grouped under %s.") % group_name)
 	if not str(attributes.get("header", "")).is_empty():
-		fragments.append("under a \"%s\" section header" % str(attributes.get("header")))
+		said.append(EventSheetL10n.translate("It sits under the section header \"%s\".") % str(attributes.get("header")))
 	if not str(attributes.get("info", "")).is_empty():
-		fragments.append("with an info note")
+		said.append(EventSheetL10n.translate("It has an info note."))
 	if bool(attributes.get("required", false)):
-		fragments.append("required (warns while unset)")
+		said.append(EventSheetL10n.translate("It is required, and warns while unset."))
 	if not str(attributes.get("validate", "")).is_empty():
-		fragments.append("validated by %s()" % str(attributes.get("validate")))
+		said.append(EventSheetL10n.translate("It is checked by %s().") % str(attributes.get("validate")))
 	if not str(attributes.get("action", "")).is_empty():
-		fragments.append("with a \"%s\" button" % str(attributes.get("action_label", str(attributes.get("action")).capitalize())))
+		said.append(EventSheetL10n.translate("It has a \"%s\" button.") % str(attributes.get("action_label", str(attributes.get("action")))))
 	if not str(attributes.get("group_show_if", "")).is_empty() and not group_name.is_empty():
-		fragments.append("shown with its group only while %s is on" % str(attributes.get("group_show_if")))
+		said.append(EventSheetL10n.translate("Its group shows only while %s is on.") % str(attributes.get("group_show_if")))
 	if not str(attributes.get("link_with", "")).is_empty():
-		fragments.append("linked to %s" % str(attributes.get("link_with")))
+		said.append(EventSheetL10n.translate("It is linked to %s.") % str(attributes.get("link_with")))
 	if bool(attributes.get("clamp", false)):
-		fragments.append("clamped to the range")
+		said.append(EventSheetL10n.translate("It is clamped to the range."))
 	if bool(attributes.get("read_only", false)):
-		fragments.append("read-only")
-	if bool(attributes.get("storage", false)):
-		return "%s, saved with the scene but hidden in the Inspector." % fragments[0]
-	return "%s." % ", ".join(fragments)
+		said.append(EventSheetL10n.translate("It is read-only."))
+	return " ".join(said)
 
 
-static func _type_phrase(type_name: String) -> String:
+static func _type_sentence(type_name: String) -> String:
 	match type_name:
 		"int":
-			return "A whole number"
+			return EventSheetL10n.translate("A whole number.")
 		"float":
-			return "A number"
+			return EventSheetL10n.translate("A number.")
 		"String":
-			return "Text"
+			return EventSheetL10n.translate("Text.")
 		"bool":
-			return "A yes/no switch"
+			return EventSheetL10n.translate("A yes/no switch.")
 		"Color":
-			return "A color"
+			return EventSheetL10n.translate("A color.")
 		"NodePath":
-			return "A node path"
+			return EventSheetL10n.translate("A node path.")
 		"Vector2", "Vector2i":
-			return "A 2D vector"
+			return EventSheetL10n.translate("A 2D vector.")
 		"Vector3", "Vector3i":
-			return "A 3D vector"
+			return EventSheetL10n.translate("A 3D vector.")
 		"Texture2D":
-			return "A texture"
+			return EventSheetL10n.translate("A texture.")
 		"Curve":
-			return "A curve"
-		_:
-			return "A %s value" % type_name
+			return EventSheetL10n.translate("A curve.")
+	return EventSheetL10n.translate("A %s value.") % type_name
 
 
-static func _widget_phrase(attributes: Dictionary) -> String:
+static func _widget_sentence(attributes: Dictionary) -> String:
 	match str(attributes.get("drawer", "")):
 		"progress_bar":
-			return "shown as a progress bar"
+			return EventSheetL10n.translate("Shown as a progress bar.")
 		"vector_dial":
-			return "shown as a direction dial"
+			return EventSheetL10n.translate("Shown as a direction dial.")
 		"min_max":
-			return "shown as a min-max range slider"
+			return EventSheetL10n.translate("Shown as a min-max range slider.")
 		"table":
-			return "shown as an editable table"
+			return EventSheetL10n.translate("Shown as an editable table.")
 		"toggle_row":
-			return "shown as toggle buttons"
+			return EventSheetL10n.translate("Shown as toggle buttons.")
 		"unit":
-			return "shown with a unit dropdown"
+			return EventSheetL10n.translate("Shown with a unit dropdown.")
 		"corners":
-			return "shown as four corners"
+			return EventSheetL10n.translate("Shown as four corners.")
 		"swatch_row":
-			return "shown as color swatches"
+			return EventSheetL10n.translate("Shown as color swatches.")
 		"texture_preview":
-			return "shown with a texture preview"
+			return EventSheetL10n.translate("Shown with a texture preview.")
 		"curve_preview", "curve_editor":
-			return "shown with a curve preview"
+			return EventSheetL10n.translate("Shown with a curve preview.")
 	if attributes.get("file") is Dictionary:
-		return "picked with a %s picker" % ("folder" if str((attributes.get("file") as Dictionary).get("mode", "")) == "dir" else "file")
+		if str((attributes.get("file") as Dictionary).get("mode", "")) == "dir":
+			return EventSheetL10n.translate("Picked with a folder picker.")
+		return EventSheetL10n.translate("Picked with a file picker.")
 	if attributes.has("flags"):
-		return "shown as checkbox flags"
+		return EventSheetL10n.translate("Shown as checkbox flags.")
 	if attributes.has("enum_values") or attributes.has("options"):
-		return "shown as a dropdown"
+		return EventSheetL10n.translate("Shown as a dropdown.")
 	if attributes.has("suggestions"):
-		return "shown as a dropdown that also accepts typing"
+		return EventSheetL10n.translate("Shown as a dropdown that also accepts typing.")
 	if attributes.has("layers"):
-		return "shown as a layers grid"
+		return EventSheetL10n.translate("Shown as a layers grid.")
 	if attributes.has("node_path_types"):
-		return "picked from matching scene nodes"
-	if str(attributes.get("custom_preset", "")) == "password":
-		return "typed as dots (password)"
-	if str(attributes.get("custom_preset", "")) == "expression":
-		return "typed as a math expression"
-	if str(attributes.get("custom_preset", "")) == "link":
-		return "with linked axes"
+		return EventSheetL10n.translate("Picked from matching scene nodes.")
+	match str(attributes.get("custom_preset", "")):
+		"password":
+			return EventSheetL10n.translate("Typed as dots, like a password.")
+		"expression":
+			return EventSheetL10n.translate("Typed as a math expression.")
+		"link":
+			return EventSheetL10n.translate("Its axes are linked.")
 	if bool(attributes.get("exp_easing", false)):
-		return "shown as an easing curve"
+		return EventSheetL10n.translate("Shown as an easing curve.")
 	if bool(attributes.get("multiline", false)):
-		return "with a big text box"
+		return EventSheetL10n.translate("Edited in a big text box.")
 	if attributes.get("range") is Dictionary:
-		return "shown as a slider"
+		return EventSheetL10n.translate("Shown as a slider.")
 	return ""
 
 

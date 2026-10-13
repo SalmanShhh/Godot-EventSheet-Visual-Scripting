@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Fixed: the Inspector preview's summary reads in the editor's language
+
+- The plain-words summary under the Inspector preview (and `EventSheets.describe_inspector`) was
+  one English sentence glued from phrase fragments, so it could not be translated. It is now one
+  short whole sentence per fact - "A whole number. It runs from 0 to 100. Shown as a progress bar.
+  It is grouped under Combat." - and every sentence reads in the editor's language. A button
+  named by its method alone is named as written rather than capitalised.
+
 ### Changed: the Doctor's Migration section reads the remembered pack vocabulary
 
 - The Migration section loaded and reflected every pack script to learn the installed vocabulary,
@@ -33,8 +41,7 @@
   IN CODE labels and the preview card's caption. The look and type tables stay English in the code
   as the keys their translations are filed under, and a test holds every word they show to a row
   in all eight languages. The values a look stores (a file picker's reach) stay the same whatever
-  language picked them. Left in English: the preview card's one-line summary, which is built from
-  phrase fragments that do not translate one by one.
+  language picked them.
 - **A typo in a `var hp := 100` value is refused.** The words of an inferred declaration are
   written as they stand, so the window now checks they still give the same type - `abc` or `5.0`
   on an int is refused with the reason, before it reaches the file. Ticking Write the type in code

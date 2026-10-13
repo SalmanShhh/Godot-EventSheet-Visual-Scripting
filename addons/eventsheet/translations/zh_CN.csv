@@ -7764,3 +7764,56 @@ what the button says,按钮上的文字
 optional,可选
 READS AS,读作
 IN CODE,代码中
+%s   (shown while %s),%s   (仅在 %s 时显示)
+"A constant - fixed while the game runs, not editable in the Inspector.",常量 - 游戏运行时固定不变，不能在 Inspector 中编辑。
+Only the sheet uses it - it does not appear in the Inspector.,只有事件表使用它 - 它不会出现在 Inspector 中。
+It is saved with the scene but hidden in the Inspector.,它随场景保存，但在 Inspector 中隐藏。
+It runs from %s to %s or more.,范围从 %s 到 %s 或更大。
+It runs from %s to %s.,范围从 %s 到 %s。
+It runs from %s to %s %s or more.,范围从 %s 到 %s %s 或更大。
+It runs from %s to %s %s.,范围从 %s 到 %s %s。
+It is grouped under %s > %s.,它分组在 %s > %s 下。
+It is grouped under %s.,它分组在 %s 下。
+"It sits under the section header ""%s"".","它位于分节标题 ""%s"" 下。"
+It has an info note.,它带有一条信息说明。
+"It is required, and warns while unset.",它是必填项，未设置时会警告。
+It is checked by %s().,它由 %s() 检查。
+"It has a ""%s"" button.","它有一个 ""%s"" 按钮。"
+Its group shows only while %s is on.,它所在的组仅在 %s 开启时显示。
+It is linked to %s.,它与 %s 关联。
+It is clamped to the range.,它被限制在范围内。
+It is read-only.,它是只读的。
+A whole number.,一个整数。
+A number.,一个数字。
+Text.,文本。
+A yes/no switch.,一个是/否开关。
+A color.,一种颜色。
+A node path.,一个节点路径。
+A 2D vector.,一个 2D 向量。
+A 3D vector.,一个 3D 向量。
+A texture.,一个纹理。
+A curve.,一条曲线。
+A %s value.,一个 %s 值。
+Shown as a progress bar.,显示为进度条。
+Shown as a direction dial.,显示为方向转盘。
+Shown as a min-max range slider.,显示为最小-最大范围滑块。
+Shown as an editable table.,显示为可编辑表格。
+Shown as toggle buttons.,显示为切换按钮。
+Shown with a unit dropdown.,带单位下拉菜单显示。
+Shown as four corners.,显示为四个角。
+Shown as color swatches.,显示为色板。
+Shown with a texture preview.,带纹理预览显示。
+Shown with a curve preview.,带曲线预览显示。
+Picked with a folder picker.,用文件夹选择器选取。
+Picked with a file picker.,用文件选择器选取。
+Shown as checkbox flags.,显示为复选框标志。
+Shown as a dropdown.,显示为下拉菜单。
+Shown as a dropdown that also accepts typing.,显示为也可输入的下拉菜单。
+Shown as a layers grid.,显示为图层网格。
+Picked from matching scene nodes.,从匹配的场景节点中选取。
+"Typed as dots, like a password.",像密码一样以圆点输入。
+Typed as a math expression.,以数学表达式输入。
+Its axes are linked.,它的轴已关联。
+Shown as an easing curve.,显示为缓动曲线。
+Edited in a big text box.,在大文本框中编辑。
+Shown as a slider.,显示为滑块。

@@ -7764,3 +7764,56 @@ what the button says,버튼에 쓰일 문구
 optional,선택 사항
 READS AS,읽는 방식
 IN CODE,코드
+%s   (shown while %s),%s   (%s 동안만 표시)
+"A constant - fixed while the game runs, not editable in the Inspector.",상수 - 게임이 실행되는 동안 고정되며 Inspector에서 편집할 수 없습니다.
+Only the sheet uses it - it does not appear in the Inspector.,시트만 사용합니다 - Inspector에 나타나지 않습니다.
+It is saved with the scene but hidden in the Inspector.,씬과 함께 저장되지만 Inspector에서는 숨겨집니다.
+It runs from %s to %s or more.,%s부터 %s 이상까지입니다.
+It runs from %s to %s.,%s부터 %s까지입니다.
+It runs from %s to %s %s or more.,%s부터 %s %s 이상까지입니다.
+It runs from %s to %s %s.,%s부터 %s %s까지입니다.
+It is grouped under %s > %s.,%s > %s 아래에 그룹화되어 있습니다.
+It is grouped under %s.,%s 아래에 그룹화되어 있습니다.
+"It sits under the section header ""%s"".","섹션 머리글 ""%s"" 아래에 있습니다."
+It has an info note.,정보 메모가 있습니다.
+"It is required, and warns while unset.",필수이며 비어 있는 동안 경고합니다.
+It is checked by %s().,%s()가 검사합니다.
+"It has a ""%s"" button.","""%s"" 버튼이 있습니다."
+Its group shows only while %s is on.,그룹은 %s이(가) 켜져 있는 동안에만 표시됩니다.
+It is linked to %s.,%s에 연결되어 있습니다.
+It is clamped to the range.,범위로 제한됩니다.
+It is read-only.,읽기 전용입니다.
+A whole number.,정수.
+A number.,숫자.
+Text.,텍스트.
+A yes/no switch.,예/아니요 스위치.
+A color.,색상.
+A node path.,노드 경로.
+A 2D vector.,2D 벡터.
+A 3D vector.,3D 벡터.
+A texture.,텍스처.
+A curve.,커브.
+A %s value.,%s 값.
+Shown as a progress bar.,진행 막대로 표시됩니다.
+Shown as a direction dial.,방향 다이얼로 표시됩니다.
+Shown as a min-max range slider.,최소-최대 범위 슬라이더로 표시됩니다.
+Shown as an editable table.,편집 가능한 표로 표시됩니다.
+Shown as toggle buttons.,토글 버튼으로 표시됩니다.
+Shown with a unit dropdown.,단위 드롭다운과 함께 표시됩니다.
+Shown as four corners.,네 모서리로 표시됩니다.
+Shown as color swatches.,색상 견본으로 표시됩니다.
+Shown with a texture preview.,텍스처 미리보기와 함께 표시됩니다.
+Shown with a curve preview.,커브 미리보기와 함께 표시됩니다.
+Picked with a folder picker.,폴더 선택기로 고릅니다.
+Picked with a file picker.,파일 선택기로 고릅니다.
+Shown as checkbox flags.,체크박스 플래그로 표시됩니다.
+Shown as a dropdown.,드롭다운으로 표시됩니다.
+Shown as a dropdown that also accepts typing.,입력도 받는 드롭다운으로 표시됩니다.
+Shown as a layers grid.,레이어 격자로 표시됩니다.
+Picked from matching scene nodes.,일치하는 씬 노드에서 고릅니다.
+"Typed as dots, like a password.",비밀번호처럼 점으로 입력됩니다.
+Typed as a math expression.,수식으로 입력됩니다.
+Its axes are linked.,축이 연결되어 있습니다.
+Shown as an easing curve.,이징 커브로 표시됩니다.
+Edited in a big text box.,큰 텍스트 상자에서 편집합니다.
+Shown as a slider.,슬라이더로 표시됩니다.
