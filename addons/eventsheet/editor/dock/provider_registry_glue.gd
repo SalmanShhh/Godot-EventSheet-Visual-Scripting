@@ -392,6 +392,15 @@ func on_provider_shim_pressed() -> void:
 	if _dock._provider_preview_tree == null or _dock._provider_preview_tree.get_selected() == null:
 		_dock._set_status("Select the function under its new name first.")
 		return
+	ensure_shim_dialog()
+	_shim_old_name.text = ""
+	_sync_shim_ok("")
+	_shim_dialog.popup_centered(Vector2i(520, 240))
+
+
+## Builds the Keep the old name working dialog once. Its Add Shim button is greyed while the old
+## name is empty, since a shim needs a name to forward from.
+func ensure_shim_dialog() -> void:
 	if _shim_dialog == null:
 		_shim_dialog = ConfirmationDialog.new()
 		_shim_dialog.title = "Keep the old name working"
@@ -400,12 +409,15 @@ func on_provider_shim_pressed() -> void:
 		body.add_child(EventSheetPopupUI.hint_label("Renaming a function changes the action's identity, so sheets that already use it break - silently, because the old call is baked into each row and still compiles.\nName what this function used to be called and a deprecated stand-in is added that forwards to it. Nothing existing is edited."))
 		_shim_old_name = LineEdit.new()
 		_shim_old_name.placeholder_text = "the previous function name"
+		_shim_old_name.text_changed.connect(_sync_shim_ok)
 		body.add_child(EventSheetPopupUI.form_row("Used to be", _shim_old_name))
 		_shim_dialog.add_child(EventSheetPopupUI.margined(body))
 		_shim_dialog.confirmed.connect(func() -> void: on_provider_keep_old_name(_shim_old_name.text.strip_edges()))
 		_dock.add_child(_shim_dialog)
-	_shim_old_name.text = ""
-	_shim_dialog.popup_centered(Vector2i(520, 240))
+
+
+func _sync_shim_ok(old_name: String) -> void:
+	_shim_dialog.get_ok_button().disabled = old_name.strip_edges().is_empty()
 
 
 ## Keeps a verb that has been RENAMED working for sheets that already use it.

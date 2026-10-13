@@ -94,6 +94,17 @@ static func run() -> bool:
 	dock._preview_provider_script("res://tests/fixtures/typed_provider_fixture.gd", false)
 	ok = _check("switching provider clears pending specs", glue.param_specs_for("start_wave"), {}) and ok
 
+	# Keep the old name working: Add Shim waits for the name it forwards from.
+	glue.ensure_shim_dialog()
+	var add_shim: Button = glue._shim_dialog.get_ok_button()
+	glue._shim_old_name.text_changed.emit("   ")
+	var blank_disabled: bool = add_shim.disabled
+	glue._shim_old_name.text_changed.emit("old_start_wave")
+	ok = SUPPORT.pins("provider_curate_test", [
+		["Add Shim is greyed for an empty old name", blank_disabled, true],
+		["and live once one is typed", add_shim.disabled, false],
+	]) and ok
+
 	dock.free()
 	return ok
 

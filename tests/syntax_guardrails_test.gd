@@ -73,6 +73,8 @@ static func run() -> bool:
 	dock._validate_raw_code()
 	all_passed = _check("code-block Save re-enables once the structure is sound",
 		dock._raw_code_dialog.get_ok_button().disabled, false) and all_passed
+	all_passed = SUPPORT.check("syntax_guardrails_test", "the code-block button says Save",
+		dock._raw_code_dialog.ok_button_text, "Save") and all_passed
 	dock.free()
 
 	return all_passed

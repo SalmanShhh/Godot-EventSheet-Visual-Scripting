@@ -682,6 +682,8 @@ func ensure_raw_code_dialog() -> void:
 		return
 	_dock._raw_code_dialog = ConfirmationDialog.new()
 	_dock._raw_code_dialog.title = "Edit Script Block"
+	# The button the lint and the guardrails call Save, so it says Save.
+	_dock._raw_code_dialog.ok_button_text = "Save"
 	# Standard popup margins, consistent with the other plugin dialogs.
 	var layout_box: VBoxContainer = EventSheetPopupUI.form_box()
 	layout_box.custom_minimum_size = Vector2(640.0, 0.0)

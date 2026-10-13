@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Fixed: debugging, checks and small prompts
+
+- **Debugger, Breakpoints tab:** unticking a breakpoint deleted it, outside Undo, although the hint
+  said it stays in place but inactive. Now it stays in the list unticked (condition kept), ticking
+  turns it back on, and both are one Undo step.
+- **Run Tests:** a test that asserted nothing was remembered on its sheet's health card as a clean
+  run while the report said FAIL; it now counts as a failure. Choosing Run Tests again while a run
+  is still going shows the window instead of starting a second run on top of the first.
+- **Loose Ends:** after any edit, clicking an entry jumped nowhere, because the list still pointed
+  at the sheet as it was before the edit. It now finds the row in the sheet as it is now.
+- **Project Doctor:** "Fix selected" only worked for fixes an extension check attached. It now
+  applies a finding's one built-in fix too, and when it cannot (no fix, or several to pick from)
+  it is greyed with the reason in its tooltip.
+- **Resolve Conflict:** the heading counted conflicted regions as "to resolve" instead of the
+  events that differ, and Save overwrote the file with no backup. It now counts the differing
+  events, and Save puts the file as it was into Sheet Backups first.
+- **Keep the old name working:** Add Shim could be pressed with no old name typed. It is greyed
+  until a name is entered.
+- **Edit Script Block:** the confirm button read OK; it now says Save, as everything about it does.
+
 ### Fixed: two prompts no longer lose work on Esc or Enter
 
 - **Every Tick:** taking the last condition off an event asks whether to keep it as an every-tick
