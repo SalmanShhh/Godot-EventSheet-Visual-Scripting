@@ -183,7 +183,8 @@ static func end_text(name: String) -> String:
 
 
 ## The start a set of names share, cut back to its last underscore - what a prefix group would take:
-## bullet_count and bullet_speed share "bullet". "" when they share nothing.
+## bullet_count and bullet_speed share "bullet". Only a whole word counts, so speed and spread share
+## nothing (not "sp"): "" unless every name is that start or goes on with an underscore.
 static func shared_start(names: PackedStringArray) -> String:
 	if names.is_empty():
 		return ""
@@ -192,5 +193,8 @@ static func shared_start(names: PackedStringArray) -> String:
 		while not each.begins_with(shared):
 			shared = shared.substr(0, shared.length() - 1)
 	if shared.contains("_"):
-		shared = shared.substr(0, shared.rfind("_"))
+		return shared.substr(0, shared.rfind("_"))
+	for each: String in names:
+		if each != shared and not each.substr(shared.length()).begins_with("_"):
+			return ""
 	return shared

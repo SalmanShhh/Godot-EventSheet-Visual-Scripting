@@ -35,6 +35,8 @@ static func _groups() -> bool:
 		["two names share their start", SECTIONS.shared_start(PackedStringArray(["bullet_count", "bullet_speed"])), "bullet"],
 		["one name is its own start", SECTIONS.shared_start(PackedStringArray(["health"])), "health"],
 		["names that share nothing", SECTIONS.shared_start(PackedStringArray(["health", "damage"])), ""],
+		["names that share only letters share no word", SECTIONS.shared_start(PackedStringArray(["speed", "spread"])), ""],
+		["a name that is the start of the others", SECTIONS.shared_start(PackedStringArray(["speed", "speed_max"])), "speed"],
 	]
 	var sheet: EventSheetResource = _opened(BULLETS)
 	GESTURES.group_by_prefix(sheet, PackedStringArray(["bullet_speed", "bullet_count"]), "Bullet", "bullet")
@@ -77,7 +79,7 @@ static func _strip() -> bool:
 		["a slider says its range",
 			said.get("max_jumps"), ["int max_jumps = 2 · in the Inspector · not in a group  A slider from 1 to 3 in the Inspector.", ["move", "range", "properties"]]],
 		["a private member is not in the Inspector", said.get("_cooldown"), ["float _cooldown = 0.0 · not in the Inspector", ["properties"]]],
-		["the doors read as the board names them", [GESTURES.link_label("move"), GESTURES.link_label("look"), GESTURES.link_label("range"), GESTURES.link_label("properties")],
+		["the doors read Move into a group…, Change look…, Edit range… and Properties…", [GESTURES.link_label("move"), GESTURES.link_label("look"), GESTURES.link_label("range"), GESTURES.link_label("properties")],
 			["Move into a group…", "Change look…", "Edit range…", "Properties…"]],
 	])
 
