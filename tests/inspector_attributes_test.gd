@@ -128,6 +128,15 @@ static func run() -> bool:
 		t2_output.contains("func _validate_property(property: Dictionary) -> void:")
 		and t2_output.contains("if str(property.name) == \"gravity_scale\" and not bool(use_gravity):")
 		and t2_output.contains("property.usage &= ~PROPERTY_USAGE_EDITOR"), true) and all_passed
+	# _validate_property only runs when the Inspector rebuilds its list, so the variable a condition
+	# reads asks for that rebuild from its own setter - ticking Use Gravity hides Gravity Scale at once,
+	# not on the next reselect.
+	all_passed = _check("the controlling variable refreshes the Inspector when it changes",
+		t2_output.contains("@export var use_gravity: bool = true:\n\tset(value):\n\t\tuse_gravity = value\n\t\tnotify_property_list_changed()\n"), true) and all_passed
+	all_passed = _check("a variable no condition reads keeps its plain declaration",
+		t2_output.contains("@export var gravity_scale: float = 1.0\n"), true) and all_passed
+	all_passed = _check("the generated file still reopens and saves byte for byte",
+		SUPPORT.reemit(t2_output, "user://eventsheets_t2.gd"), t2_output) and all_passed
 	all_passed = _check("lock_unless flips read-only usage",
 		t2_output.contains("if str(property.name) == \"drag\" and not bool(use_gravity):")
 		and t2_output.contains("property.usage |= PROPERTY_USAGE_READ_ONLY"), true) and all_passed

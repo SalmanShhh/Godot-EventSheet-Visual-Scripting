@@ -3438,6 +3438,10 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 	# Tier 2 conditions (Show If / Lock Unless) aggregate into ONE generated
 	# _validate_property below, in variable order - canonical shape, dialog-edited.
 	var property_conditions: Array = []
+	# The variables those conditions read. _validate_property only runs when the Inspector rebuilds
+	# its list, so each of these declares a setter that asks for that rebuild - otherwise ticking
+	# the controlling box changes nothing on screen until the node is selected again.
+	var controllers: Dictionary = _inspector_condition_controllers(variables)
 
 	for key: Variant in keys:
 		var var_name: String = str(key)
@@ -3502,6 +3506,7 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 					if attributes.has(unsupported_key):
 						warnings.append("Variable \"%s\": combo variables don't support the %s attribute yet - ignored." % [var_name, unsupported_key])
 				lines.append("%s var %s: String = %s" % [_export_enum_prefix(combo_options), var_name, _to_code_literal(default_value)])
+				_append_inspector_refresh_setter(lines, var_name, controllers)
 				continue
 			var export_prefix: String = "@export " if exported else ""
 			# Structured hint families (range + its modifier tail / flags / layers / file /
@@ -3546,8 +3551,11 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 					lines.append("\t\t%s = value" % var_name)
 				if not on_changed.is_empty():
 					lines.append("\t\t%s()" % on_changed)
+				if controllers.has(var_name):
+					lines.append("\t\tnotify_property_list_changed()")
 			else:
 				lines.append("%svar %s: %s = %s" % [export_prefix, var_name, type_name, _to_code_literal(default_value)])
+				_append_inspector_refresh_setter(lines, var_name, controllers)
 			# "group_show_if" is the group-scoped form of "show_if": the member hides with its whole
 			# group, and it compiles to the SAME _validate_property entry the field form compiles to -
 			# once per member, which is what "the group hides" means to Godot. It only counts on a
@@ -3562,6 +3570,7 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 					property_conditions.append({"name": var_name, "predicate": condition_predicate, "kind": "lock_unless" if condition_key == "lock_unless" else "show_if"})
 		else:
 			lines.append("@export var %s: Variant = %s" % [var_name, _to_code_literal(descriptor)])
+			_append_inspector_refresh_setter(lines, var_name, controllers)
 
 	if not property_conditions.is_empty():
 		lines.append("")
@@ -3575,6 +3584,39 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 				lines.append("\t\tproperty.usage |= PROPERTY_USAGE_READ_ONLY")
 
 	return lines
+
+
+## The names the generated _validate_property reads, as a set: every variable a Show If / Lock Unless
+## on an exported member points at, by the same rules _emit_variables uses to emit the condition
+## (a combo String ignores its conditions; a group show-if needs a group; an unknown name is skipped).
+static func _inspector_condition_controllers(variables: Dictionary) -> Dictionary:
+	var controllers: Dictionary = {}
+	for key: Variant in variables:
+		var descriptor: Variant = variables[key]
+		if not (descriptor is Dictionary) or not bool(descriptor.get("exported", true)):
+			continue
+		var attributes: Dictionary = descriptor.get("attributes") if descriptor.get("attributes") is Dictionary else {}
+		if str(descriptor.get("type", "Variant")) == "String" and not PackedStringArray(descriptor.get("options", [])).is_empty():
+			continue
+		for condition_key: String in ["group_show_if", "show_if", "lock_unless"]:
+			var predicate: String = str(attributes.get(condition_key, "")).strip_edges()
+			if condition_key == "group_show_if" and str(attributes.get("group", "")).strip_edges().is_empty():
+				continue
+			if not predicate.is_empty() and variables.has(predicate):
+				controllers[predicate] = true
+	return controllers
+
+
+## Turns the declaration just appended into one with a setter that refreshes the Inspector, when
+## `var_name` controls a Show If / Lock Unless. The canonical Godot shape: assign, then
+## notify_property_list_changed(), so the condition is asked again the moment the value changes.
+static func _append_inspector_refresh_setter(lines: PackedStringArray, var_name: String, controllers: Dictionary) -> void:
+	if not controllers.has(var_name) or lines.is_empty():
+		return
+	lines[lines.size() - 1] = lines[lines.size() - 1] + ":"
+	lines.append("\tset(value):")
+	lines.append("\t\t%s = value" % var_name)
+	lines.append("\t\tnotify_property_list_changed()")
 
 
 ## Recursively gathers tree-placed GDScript blocks from the top level and groups (sub-event
