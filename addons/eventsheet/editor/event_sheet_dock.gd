@@ -1672,17 +1672,6 @@ func get_ace_provider_scripts() -> PackedStringArray:
 
 
 
-func _on_manage_ace_providers_requested() -> void:
-	_providers_glue.on_manage_ace_providers_requested()
-
-
-
-## "Teach a Verb" (Sheet menu): share this sheet's published verbs project-wide.
-func _share_verbs_with_project_requested() -> void:
-	_providers_glue.share_verbs_with_project()
-
-
-
 ## "Inspector Designer" (Sheet menu): the whole sheet's Inspector as one live view - every
 ## exported variable with its decor, grouping, and widget, through the shared preview cards.
 ## Editing routes BACK through the dock: ✎ opens the shared Variable dialog, ▲ reorders through
@@ -1740,48 +1729,14 @@ func _build_provider_dialog() -> void:
 
 
 
-func _refresh_provider_list() -> void:
-	_providers_glue.refresh_provider_list()
-
-
-
-func _on_provider_add_pressed() -> void:
-	_providers_glue.on_provider_add_pressed()
-
-
-
-func _on_provider_file_selected(path: String) -> void:
-	_providers_glue.on_provider_file_selected(path)
-
-
 ## Renders "what this script publishes" into the provider dialog. offer_register is true for a script
 ## the user just browsed to (not registered yet), false when reading an already-registered one.
 func _preview_provider_script(path: String, offer_register: bool) -> void:
 	_providers_glue.preview_provider_script(path, offer_register)
 
 
-func _on_provider_register_pressed() -> void:
-	_providers_glue.on_provider_register_pressed()
-
-
-
-func _on_provider_curate_pressed() -> void:
-	_providers_glue.on_provider_curate_pressed()
-
-
-
 func _on_provider_params_pressed() -> void:
 	_providers_glue.on_provider_params_pressed()
-
-
-
-func _on_provider_shim_pressed() -> void:
-	_providers_glue.on_provider_shim_pressed()
-
-
-
-func _on_provider_remove_pressed() -> void:
-	_providers_glue.on_provider_remove_pressed()
 
 
 
@@ -2702,16 +2657,6 @@ var _code_panel_highlight: Vector2i = Vector2i(-1, -1)
 const CODE_PANEL_HIGHLIGHT_COLOR := Color(0.35, 0.55, 0.95, 0.18)
 
 
-func _refresh_open_sheets_panel() -> void:
-	_code_panel_glue.refresh_open_sheets_panel()
-
-
-
-func _toggle_open_sheets_panel(view_popup: PopupMenu) -> void:
-	_code_panel_glue.toggle_open_sheets_panel(view_popup)
-
-
-
 func _refresh_anatomy_panel() -> void:
 	_code_panel_glue.refresh_anatomy_panel()
 
@@ -2719,11 +2664,6 @@ func _refresh_anatomy_panel() -> void:
 ## Which rail panels the open sheet (and the picker) have anything to put in.
 func _refresh_rail_census() -> void:
 	_code_panel_glue.refresh_rail_census()
-
-
-func _apply_open_sheets_panel_prefs() -> void:
-	_code_panel_glue.apply_open_sheets_panel_prefs()
-
 
 
 func _toggle_code_panel() -> void:
@@ -2755,21 +2695,6 @@ func _refresh_functions_list() -> void:
 
 
 
-func _format_function_signature(function: EventFunction) -> String:
-	return _code_panel_glue.format_function_signature(function)
-
-
-
-func _on_functions_list_item_clicked(index: int, at_position: Vector2, mouse_button_index: int) -> void:
-	_code_panel_glue.on_functions_list_item_clicked(index, at_position, mouse_button_index)
-
-
-
-func _on_functions_menu_id_pressed(id: int) -> void:
-	_code_panel_glue.on_functions_menu_id_pressed(id)
-
-
-
 func _delete_selected_function() -> void:
 	_code_panel_glue.delete_selected_function()
 
@@ -2777,11 +2702,6 @@ func _delete_selected_function() -> void:
 
 func _update_code_panel_highlight() -> void:
 	_code_panel_glue.update_code_panel_highlight()
-
-
-
-func _on_code_panel_gui_input(event: InputEvent) -> void:
-	_code_panel_glue.on_code_panel_gui_input(event)
 
 
 
@@ -2811,11 +2731,6 @@ func _ensure_raw_code_dialog() -> void:
 
 func _validate_raw_code() -> void:
 	_code_panel_glue.validate_raw_code()
-
-
-
-func _populate_raw_code_completion() -> void:
-	_code_panel_glue.populate_raw_code_completion()
 
 
 
@@ -5864,11 +5779,6 @@ func _add_sheet_type_field(form: VBoxContainer, label_text: String, placeholder:
 
 
 
-func _add_sheet_type_multiline_field(form: VBoxContainer, label_text: String, placeholder: String) -> TextEdit:
-	return _sheet_type_glue.add_sheet_type_multiline_field(form, label_text, placeholder)
-
-
-
 func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_path: String, host_class_text: String, tool_enabled: bool = false, addon_tags: PackedStringArray = PackedStringArray(), include_paths: PackedStringArray = PackedStringArray(), uses_classes: PackedStringArray = PackedStringArray(), requires_classes: PackedStringArray = PackedStringArray(), autoload_name_text: String = "", class_description_text: String = "", family_enabled: bool = false) -> void:
 	_sheet_type_glue.apply_sheet_type_settings(type_index, class_name_text, icon_path, host_class_text, tool_enabled, addon_tags, include_paths, uses_classes, requires_classes, autoload_name_text, class_description_text, family_enabled)
 
@@ -7981,36 +7891,6 @@ func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String,
 		_mark_dirty("Updated row text.")
 
 
-func _collect_event_row_options() -> Array[Dictionary]:
-	return _queries.collect_event_row_options()
-
-
-
-func _collect_event_rows_recursive(resources: Array, output: Array[EventRow]) -> void:
-	_queries.collect_event_rows_recursive(resources, output)
-
-
-
-func _format_event_target_label(event_row: EventRow) -> String:
-	return _queries.format_event_target_label(event_row)
-
-
-
-func _find_event_row_by_uid(event_uid: String) -> EventRow:
-	return _queries.find_event_row_by_uid(event_uid)
-
-
-
-func _type_from_name(type_name: String) -> int:
-	return _queries.type_from_name(type_name)
-
-
-
-func _event_row_uses_or_mode(event_row: EventRow) -> bool:
-	return _queries.event_row_uses_or_mode(event_row)
-
-
-
 func _event_rows_use_or_mode(event_rows: Array[EventRow]) -> bool:
 	return _queries.event_rows_use_or_mode(event_rows)
 
@@ -8033,16 +7913,6 @@ func _build_ace_edit_context(event_row: EventRow, span_index: int, metadata: Dic
 
 func _find_definition(provider_id: String, ace_id: String) -> ACEDefinition:
 	return _queries.find_definition(provider_id, ace_id)
-
-
-
-func _find_first_event_row_resource() -> EventRow:
-	return _queries.find_first_event_row_resource()
-
-
-
-func _select_first_event_row() -> void:
-	_queries.select_first_event_row()
 
 
 

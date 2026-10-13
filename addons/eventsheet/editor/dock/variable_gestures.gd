@@ -298,12 +298,8 @@ func drop_group_end(source_row: EventRowData, target_row: EventRowData, drop_mod
 		_dock._set_status(EventSheetL10n.translate("Drop the end line on the variable the group should end above."), true)
 		return true
 	var to_name: String = target.name
-	var moved: bool = _dock._perform_undoable_sheet_edit(EventSheetL10n.translate("Move the group's end"), func() -> bool:
-		return move_group_end(_dock._current_sheet, owner, to_name))
-	if moved:
-		_dock._refresh_after_edit()
-		_dock._mark_dirty(EventSheetL10n.translate("The group now ends above %s.") % to_name)
-	else:
+	if not _write(EventSheetL10n.translate("Move the group's end"), EventSheetL10n.translate("The group now ends above %s.") % to_name,
+			func() -> bool: return move_group_end(_dock._current_sheet, owner, to_name)):
 		_dock._set_status(EventSheetL10n.translate("%s opens a group of its own, so the end line cannot stand above it.") % to_name, true)
 	return true
 
@@ -616,8 +612,6 @@ func add_inspector_button(label: String, icon: String, runs: String, group: Stri
 		return true)
 	if changed:
 		_dock._refresh_after_edit()
-		var note: String = EventSheetL10n.translate("Added the Inspector button \"%s\", which calls %s.") % [words, function_name]
-		if not sheet.tool_mode:
-			note += " " + EventSheetL10n.translate("(turn on Tool in the Sheet Type dialog for it to run in the editor.)")
-		_dock._mark_dirty(note)
+		_dock._mark_dirty(EventSheetL10n.translate("Added the Inspector button \"%s\", which calls %s.") % [words, function_name]
+			+ ("" if sheet.tool_mode else " " + EventSheetL10n.translate("(turn on Tool in the Sheet Type dialog for it to run in the editor.)")))
 	return changed

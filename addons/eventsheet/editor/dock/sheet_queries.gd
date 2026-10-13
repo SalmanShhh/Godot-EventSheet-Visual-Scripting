@@ -19,12 +19,12 @@ func collect_event_row_options() -> Array[Dictionary]:
 	if _dock._current_sheet == null:
 		return options
 	var event_rows: Array[EventRow] = []
-	_dock._collect_event_rows_recursive(_dock._current_sheet.events, event_rows)
+	_dock._queries.collect_event_rows_recursive(_dock._current_sheet.events, event_rows)
 	for event_row in event_rows:
 		options.append(
 			{
 				"uid": event_row.event_uid,
-				"label": _dock._format_event_target_label(event_row)
+				"label": _dock._queries.format_event_target_label(event_row)
 			}
 		)
 	return options
@@ -34,9 +34,9 @@ func collect_event_rows_recursive(resources: Array, output: Array[EventRow]) -> 
 	for resource_entry in resources:
 		if resource_entry is EventRow:
 			output.append(resource_entry as EventRow)
-			_dock._collect_event_rows_recursive((resource_entry as EventRow).sub_events, output)
+			_dock._queries.collect_event_rows_recursive((resource_entry as EventRow).sub_events, output)
 		elif resource_entry is EventGroup:
-			_dock._collect_event_rows_recursive(_dock._group_children_array(resource_entry as EventGroup), output)
+			_dock._queries.collect_event_rows_recursive(_dock._group_children_array(resource_entry as EventGroup), output)
 
 
 func format_event_target_label(event_row: EventRow) -> String:
@@ -56,7 +56,7 @@ func find_event_row_by_uid(event_uid: String) -> EventRow:
 	if _dock._current_sheet == null or event_uid.is_empty():
 		return null
 	var event_rows: Array[EventRow] = []
-	_dock._collect_event_rows_recursive(_dock._current_sheet.events, event_rows)
+	_dock._queries.collect_event_rows_recursive(_dock._current_sheet.events, event_rows)
 	for event_row in event_rows:
 		if event_row.event_uid == event_uid:
 			return event_row
@@ -85,7 +85,7 @@ func event_rows_use_or_mode(event_rows: Array[EventRow]) -> bool:
 	if event_rows.is_empty():
 		return false
 	for event_row in event_rows:
-		if not _dock._event_row_uses_or_mode(event_row):
+		if not _dock._queries.event_row_uses_or_mode(event_row):
 			return false
 	return true
 

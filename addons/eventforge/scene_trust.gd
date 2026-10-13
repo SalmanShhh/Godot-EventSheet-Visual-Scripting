@@ -143,8 +143,8 @@ static func loaded_scene_paths(line: String) -> PackedStringArray:
 	for call_text: String in LOAD_CALLS:
 		var at: int = _call_at(line, call_text)
 		while at >= 0:
-			var argument: String = _first_argument(
-				_arguments_after(line, at + call_text.length()))
+			var argument: String = EventForgeOutsidePaths.first_argument(
+				EventForgeOutsidePaths.arguments_after(line, at + call_text.length()))
 			if names_a_scene(argument) and not found.has(argument):
 				found.append(argument)
 			at = _call_at(line, call_text, at + call_text.length())
@@ -185,8 +185,8 @@ static func untrusted_code_file_paths(line: String) -> PackedStringArray:
 	for call_text: String in LOAD_CALLS:
 		var at: int = _call_at(line, call_text)
 		while at >= 0:
-			var argument: String = _first_argument(
-				_arguments_after(line, at + call_text.length()))
+			var argument: String = EventForgeOutsidePaths.first_argument(
+				EventForgeOutsidePaths.arguments_after(line, at + call_text.length()))
 			if names_a_code_file(argument) and not found.has(argument) \
 					and outside_the_games_own(argument):
 				found.append(argument)
@@ -222,7 +222,7 @@ static func guarded_paths(text: String) -> PackedStringArray:
 	var mark: String = HELPER_NAME + "("
 	var at: int = text.find(mark)
 	while at >= 0:
-		var argument: String = _first_argument(_arguments_after(text, at + mark.length()))
+		var argument: String = EventForgeOutsidePaths.first_argument(EventForgeOutsidePaths.arguments_after(text, at + mark.length()))
 		if not argument.is_empty() and not asked.has(argument) and _stands_as_a_requirement(text, at):
 			asked.append(argument)
 		at = text.find(mark, at + mark.length())
@@ -480,40 +480,3 @@ static func _is_word_glyph(glyph: String) -> bool:
 	if glyph.is_empty():
 		return false
 	return glyph == "_" or glyph.is_valid_int() or glyph.to_lower() != glyph.to_upper()
-
-
-## The text between a call's opening bracket and its matching close, so a nested call inside the
-## arguments does not end them early.
-static func _arguments_after(line: String, from: int) -> String:
-	var depth: int = 1
-	var index: int = from
-	while index < line.length():
-		var character: String = line[index]
-		if character == "(":
-			depth += 1
-		elif character == ")":
-			depth -= 1
-			if depth == 0:
-				return line.substr(from, index - from)
-		index += 1
-	return line.substr(from)
-
-
-## The first argument of an argument list, trimmed, with a call or a list inside it kept in one
-## piece and a comma inside a string literal left alone.
-static func _first_argument(arguments: String) -> String:
-	var depth: int = 0
-	var index: int = 0
-	while index < arguments.length():
-		var character: String = arguments[index]
-		if character == "(" or character == "[" or character == "{":
-			depth += 1
-		elif character == ")" or character == "]" or character == "}":
-			depth -= 1
-		elif character == "\"":
-			var close_at: int = arguments.find("\"", index + 1)
-			index = arguments.length() if close_at < 0 else close_at
-		elif character == "," and depth == 0:
-			return arguments.substr(0, index).strip_edges()
-		index += 1
-	return arguments.strip_edges()

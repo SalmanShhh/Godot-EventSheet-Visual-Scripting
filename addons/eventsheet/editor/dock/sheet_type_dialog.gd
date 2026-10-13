@@ -452,7 +452,7 @@ func _ensure_sheet_type_dialog() -> void:
 	icon_browse.text = "Browse…"
 	icon_browse.pressed.connect(_open_icon_file_dialog)
 	_sheet_type_icon_edit.get_parent().add_child(icon_browse)
-	_sheet_type_description_edit = _dock._add_sheet_type_multiline_field(ident_box, "Description", "What this does - shown in Godot's Create Node dialog.")
+	_sheet_type_description_edit = _dock._sheet_type_glue.add_sheet_type_multiline_field(ident_box, "Description", "What this does - shown in Godot's Create Node dialog.")
 	_sheet_type_autoload_edit = _dock._add_sheet_type_field(ident_box, "Autoload name", "GameState - a global name every sheet can call")
 	# "Runs in the editor too" reads as a field of the sheet's identity, not as a power option:
 	# it is one of the lines the head shows, so it is edited where the other lines are.

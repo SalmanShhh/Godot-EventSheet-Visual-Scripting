@@ -83,7 +83,7 @@ func refresh_rail_census() -> void:
 func apply_open_sheets_panel_prefs() -> void:
 	if _dock._open_sheets_panel == null:
 		return
-	_dock._refresh_open_sheets_panel()
+	_dock._code_panel_glue.refresh_open_sheets_panel()
 
 
 func toggle_code_panel() -> void:
@@ -152,7 +152,7 @@ func refresh_functions_list() -> void:
 		for function_resource: Variant in _dock._current_sheet.functions:
 			if function_resource is EventFunction:
 				var event_function: EventFunction = function_resource as EventFunction
-				_dock._functions_list.add_item(_dock._format_function_signature(event_function))
+				_dock._functions_list.add_item(_dock._code_panel_glue.format_function_signature(event_function))
 				# The one description this function carries, on its entry: what it is for, or the
 				# soft nudge that it has not been said yet. Read from the function's own doc line,
 				# never from a second store, so the list and the file cannot disagree.

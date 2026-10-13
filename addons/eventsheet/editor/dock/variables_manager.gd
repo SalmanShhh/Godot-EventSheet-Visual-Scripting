@@ -99,10 +99,10 @@ func open_add_variable_named(variable_name: String, type_name: String = "int") -
 func _on_add_local_variable_requested() -> void:
 	if not _dock._ensure_sheet_for_editing():
 		return
-	var target_event: EventRow = _dock._find_first_event_row_resource()
+	var target_event: EventRow = _dock._queries.find_first_event_row_resource()
 	var context: Dictionary = {"create_event_if_missing": true}
 	if target_event != null:
-		_dock._select_first_event_row()
+		_dock._queries.select_first_event_row()
 		context["selected_resource"] = target_event
 	_dock._variable_dlg.open_for_edit("local", context, "", "int", "", false, "Create Variable")
 
@@ -612,7 +612,7 @@ func _on_variable_dialog_confirmed(
 				owner_group.local_variables.append(group_local)
 			group_local.name = var_name
 			group_local.type_name = type_name
-			group_local.type = _dock._type_from_name(type_name)
+			group_local.type = _dock._queries.type_from_name(type_name)
 			group_local.default_value = default_value
 			group_local.is_constant = resolved_constant
 			group_local.is_static = is_static and not resolved_constant
@@ -622,7 +622,7 @@ func _on_variable_dialog_confirmed(
 		if selected is EventRow:
 			target_event = selected as EventRow
 		else:
-			target_event = _dock._find_first_event_row_resource()
+			target_event = _dock._queries.find_first_event_row_resource()
 		if target_event == null and not editing and bool(context.get("create_event_if_missing", true)):
 			target_event = EventRow.new()
 			_dock._current_sheet.events.append(target_event)
@@ -637,7 +637,7 @@ func _on_variable_dialog_confirmed(
 			target_event.local_variables.append(local_var)
 		local_var.name = var_name
 		local_var.type_name = type_name
-		local_var.type = _dock._type_from_name(type_name)
+		local_var.type = _dock._queries.type_from_name(type_name)
 		local_var.default_value = default_value
 		local_var.is_constant = resolved_constant
 		local_var.is_static = is_static and not resolved_constant
@@ -657,7 +657,7 @@ func _on_variable_dialog_confirmed(
 			status_text += " %d reference(s) updated across the sheet." % renamed_references
 		_dock._mark_dirty(status_text)
 		if scope == "local" and not (selected is EventRow):
-			_dock._select_first_event_row()
+			_dock._queries.select_first_event_row()
 
 
 func _context_variable_entry_from_metadata(row_data: EventRowData, metadata: Dictionary) -> Dictionary:
@@ -991,7 +991,7 @@ func retype_variable(variable_name: String, new_type: String, ordinal: int = -1)
 func _prompt_convert_global_variable_to_local(entry: Dictionary) -> void:
 	if _dock._current_sheet == null:
 		return
-	var options: Array[Dictionary] = _dock._collect_event_row_options()
+	var options: Array[Dictionary] = _dock._queries.collect_event_row_options()
 	if options.is_empty():
 		_dock._set_status("Add an event row first, then convert this variable to local.", true)
 		return
@@ -1029,7 +1029,7 @@ func _convert_variable_scope(entry: Dictionary, target_scope: String, target_eve
 			if descriptor.is_empty():
 				_dock._set_status("Global variable %s no longer exists." % var_name, true)
 				return false
-			var target_event: EventRow = _dock._find_event_row_by_uid(target_event_uid)
+			var target_event: EventRow = _dock._queries.find_event_row_by_uid(target_event_uid)
 			if target_event == null:
 				_dock._set_status("Select a target event for local conversion.", true)
 				return false
@@ -1039,7 +1039,7 @@ func _convert_variable_scope(entry: Dictionary, target_scope: String, target_eve
 			var local_var: LocalVariable = LocalVariable.new()
 			local_var.name = var_name
 			local_var.type_name = type_name
-			local_var.type = _dock._type_from_name(type_name)
+			local_var.type = _dock._queries.type_from_name(type_name)
 			local_var.default_value = default_value
 			local_var.is_constant = is_constant
 			target_event.local_variables.append(local_var)

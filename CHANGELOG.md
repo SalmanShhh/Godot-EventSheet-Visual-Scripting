@@ -56,6 +56,7 @@
   are 890. The generator shrank by half (a new behaviour is a sheet compiled to GDScript, not text
   written out by hand); the growth is the global form and the Properties and actions window, which
   had no counterpart before. Both reuse the window kit and the Anatomy census rather than new widgets.
+
 ### Fixed: Sheet > Publish New Version… opens its window again
 
 - The menu entry called a dock function that no longer existed, so choosing it did nothing but

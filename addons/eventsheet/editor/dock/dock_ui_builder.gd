@@ -151,17 +151,17 @@ func build_ui() -> void:
 	_dock._open_sheets_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_dock._open_sheets_panel.activate_requested.connect(_dock.activate_open_tab)
 	_dock._open_sheets_panel.reopen_requested.connect(_dock.reopen_sheet_path)
-	_dock.open_tabs_changed.connect(_dock._refresh_open_sheets_panel)
+	_dock.open_tabs_changed.connect(_dock._code_panel_glue.refresh_open_sheets_panel)
 	# The Functions overview is its own dockable rail panel (fold-expandable on demand) - it used
 	# to live inside the Generated-GDScript side panel, so seeing your functions meant opening the
 	# code view. The list's click/right-click handlers stay on the dock.
 	_dock._functions_panel = EventSheetFunctionsPanel.new()
 	_dock._functions_panel.add_requested.connect(_dock._open_function_dialog)
 	_dock._functions_list = _dock._functions_panel.list
-	_dock._functions_list.item_clicked.connect(_dock._on_functions_list_item_clicked)
+	_dock._functions_list.item_clicked.connect(_dock._code_panel_glue.on_functions_list_item_clicked)
 	_dock._functions_menu = PopupMenu.new()
 	_dock._functions_menu.add_item("Delete Function", 0)
-	_dock._functions_menu.id_pressed.connect(_dock._on_functions_menu_id_pressed)
+	_dock._functions_menu.id_pressed.connect(_dock._code_panel_glue.on_functions_menu_id_pressed)
 	_dock._functions_list.add_child(_dock._functions_menu)
 	# The Anatomy panel shares the left rail below Open Sheets: the active behaviour's organs
 	# (knobs/state/triggers/actions/conditions/expressions/uses) at a glance, click to jump.
@@ -238,7 +238,7 @@ func build_ui() -> void:
 	# The bands between the strip and the sheet follow the theme; they were all built above.
 	_dock._menu_bar.apply_theme_chrome()
 	_dock._properties_bar.attach_split(properties_split)
-	_dock._apply_open_sheets_panel_prefs()
+	_dock._code_panel_glue.apply_open_sheets_panel_prefs()
 
 	_dock._viewport = EventSheetViewport.new()
 	_dock._viewport.name = "EventSheetViewport"
@@ -500,11 +500,11 @@ func build_provider_dialog() -> void:
 	providers_box.add_child(buttons)
 	var add_button: Button = Button.new()
 	add_button.text = "Add…"
-	add_button.pressed.connect(_dock._on_provider_add_pressed)
+	add_button.pressed.connect(_dock._providers_glue.on_provider_add_pressed)
 	buttons.add_child(add_button)
 	var remove_button: Button = Button.new()
 	remove_button.text = "Remove Selected"
-	remove_button.pressed.connect(_dock._on_provider_remove_pressed)
+	remove_button.pressed.connect(_dock._providers_glue.on_provider_remove_pressed)
 	buttons.add_child(remove_button)
 	var open_in_godot_button: Button = Button.new()
 	open_in_godot_button.text = "Open in Godot Script Editor"
@@ -564,13 +564,13 @@ func build_provider_dialog() -> void:
 	_dock._provider_register_button.text = "Register This Script"
 	_dock._provider_register_button.visible = false
 	_dock._provider_register_button.tooltip_text = "Add the previewed script to this sheet's providers, so the actions above join the picker."
-	_dock._provider_register_button.pressed.connect(_dock._on_provider_register_pressed)
+	_dock._provider_register_button.pressed.connect(_dock._providers_glue.on_provider_register_pressed)
 	preview_actions.add_child(_dock._provider_register_button)
 	_dock._provider_curate_button = Button.new()
 	_dock._provider_curate_button.text = "Curate Script…"
 	_dock._provider_curate_button.visible = false
 	_dock._provider_curate_button.tooltip_text = "Write your edits above into the script as `## @ace_*` comments, so it keeps publishing them.\nOnly comments are added - your signatures and bodies are never touched, and the file is backed up first."
-	_dock._provider_curate_button.pressed.connect(_dock._on_provider_curate_pressed)
+	_dock._provider_curate_button.pressed.connect(_dock._providers_glue.on_provider_curate_pressed)
 	preview_actions.add_child(_dock._provider_curate_button)
 	_dock._provider_params_button = Button.new()
 	_dock._provider_params_button.text = "Parameters…"
@@ -582,7 +582,7 @@ func build_provider_dialog() -> void:
 	_dock._provider_shim_button.text = "Keep Old Name…"
 	_dock._provider_shim_button.visible = false
 	_dock._provider_shim_button.tooltip_text = "Renamed this function? Add a deprecated stand-in under its old name so sheets that already use it keep working.\nNothing existing is edited - the stand-in just forwards."
-	_dock._provider_shim_button.pressed.connect(_dock._on_provider_shim_pressed)
+	_dock._provider_shim_button.pressed.connect(_dock._providers_glue.on_provider_shim_pressed)
 	preview_actions.add_child(_dock._provider_shim_button)
 	var preview_card: PanelContainer = EventSheetPopupUI.titled_card("What it publishes", preview_box)
 	preview_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -592,7 +592,7 @@ func build_provider_dialog() -> void:
 	_dock._provider_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
 	_dock._provider_file_dialog.access = FileDialog.ACCESS_RESOURCES
 	_dock._provider_file_dialog.filters = PackedStringArray(["*.gd ; GDScript"])
-	_dock._provider_file_dialog.file_selected.connect(_dock._on_provider_file_selected)
+	_dock._provider_file_dialog.file_selected.connect(_dock._providers_glue.on_provider_file_selected)
 	_dock._provider_dialog.add_child(_dock._provider_file_dialog)
 
 
@@ -659,7 +659,7 @@ func ensure_code_panel() -> void:
 		_dock._code_edit.syntax_highlighter = ClassDB.instantiate("GDScriptSyntaxHighlighter")
 	# Make the panel read like the actual script editor: its code font + the minimap.
 	_dock._apply_editor_code_settings(_dock._code_edit)
-	_dock._code_edit.gui_input.connect(_dock._on_code_panel_gui_input)
+	_dock._code_edit.gui_input.connect(_dock._code_panel_glue.on_code_panel_gui_input)
 	_dock._side_panel.add_child(_dock._code_edit)
 	_dock._split.add_child(_dock._side_panel)
 	_dock._split.split_offset = int(_dock.size.x * 0.6) if _dock.size.x > 0.0 else 600
@@ -722,7 +722,7 @@ func ensure_raw_code_dialog() -> void:
 	_dock._raw_code_edit.code_completion_enabled = true
 	EventSheetPopupUI.configure_code_editor(_dock._raw_code_edit)  # auto-close brackets/quotes at the source
 	_dock._raw_code_edit.text_changed.connect(_dock._validate_raw_code)
-	_dock._raw_code_edit.code_completion_requested.connect(_dock._populate_raw_code_completion)
+	_dock._raw_code_edit.code_completion_requested.connect(_dock._code_panel_glue.populate_raw_code_completion)
 	layout_box.add_child(_dock._raw_code_edit)
 	_dock._raw_code_lint_label = Label.new()
 	_dock._raw_code_lint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

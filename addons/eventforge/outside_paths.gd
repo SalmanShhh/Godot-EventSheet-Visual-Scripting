@@ -138,7 +138,7 @@ static func outside_folders(statements: PackedStringArray) -> PackedStringArray:
 	for line: String in statements:
 		var watch_at: int = line.find(WATCH_CALL)
 		if watch_at >= 0:
-			var watched: String = _first_argument(arguments_after(line, watch_at + WATCH_CALL.length()))
+			var watched: String = first_argument(arguments_after(line, watch_at + WATCH_CALL.length()))
 			if not watched.is_empty() and not folders.has(watched):
 				folders.append(watched)
 				# A FOLDER MAY BE HELD IN A NAME. `var folder = "user://mods"` on one line and
@@ -153,7 +153,7 @@ static func outside_folders(statements: PackedStringArray) -> PackedStringArray:
 			unpacking = true
 		var make_at: int = line.find(MAKE_DIR_CALL)
 		if unpacking and make_at >= 0:
-			var into: String = _first_argument(arguments_after(line, make_at + MAKE_DIR_CALL.length()))
+			var into: String = first_argument(arguments_after(line, make_at + MAKE_DIR_CALL.length()))
 			unpacking = false
 			if not into.is_empty() and not into.contains(".get_base_dir()") and not folders.has(into):
 				folders.append(into)
@@ -296,7 +296,7 @@ static func _door_parameters(statements: PackedStringArray) -> PackedStringArray
 			var at: int = line.find(mark)
 			if at < 0:
 				continue
-			var connected: String = _first_argument(arguments_after(line, at + mark.length()))
+			var connected: String = first_argument(arguments_after(line, at + mark.length()))
 			if connected.is_empty():
 				continue
 			if _is_lambda(connected):
@@ -432,7 +432,7 @@ static func _call_at(line: String, call_text: String) -> int:
 
 
 ## The first argument of an argument list, trimmed.
-static func _first_argument(arguments: String) -> String:
+static func first_argument(arguments: String) -> String:
 	var parts: PackedStringArray = _split_arguments(arguments)
 	return "" if parts.is_empty() else parts[0]
 

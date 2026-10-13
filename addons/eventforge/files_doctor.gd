@@ -176,7 +176,7 @@ static func res_write_findings(sources: Dictionary) -> Array[Dictionary]:
 ## A READ of res:// is never here: reading the game's own files is what res:// is for.
 static func res_write_lines(source: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
-	var statements: PackedStringArray = _statements_of(source)
+	var statements: PackedStringArray = EventForgeOutsidePaths.statements_of(source)
 	var packers: PackedStringArray = _names_bound_to(statements,
 		EventForgeFilePlaces.PACKER_CLASS)
 	var folders: PackedStringArray = _written_folder_handles(statements)
@@ -226,7 +226,7 @@ static func _handle_call_literals(line: String, handles: PackedStringArray,
 		var mark: String = packer_name + call_text
 		var at: int = line.find(mark)
 		while at >= 0:
-			for literal: String in _quoted_literals(_arguments_after(line, at + mark.length())):
+			for literal: String in _quoted_literals(EventForgeOutsidePaths.arguments_after(line, at + mark.length())):
 				found.append(literal)
 			at = line.find(mark, at + mark.length())
 	return found
@@ -295,7 +295,7 @@ static func _folder_handle_literals(line: String, handles: PackedStringArray) ->
 		return found
 	var at: int = line.find(EventForgeFilePlaces.DIR_OPEN_CALL)
 	while at >= 0:
-		var arguments: String = _arguments_after(
+		var arguments: String = EventForgeOutsidePaths.arguments_after(
 			line, at + EventForgeFilePlaces.DIR_OPEN_CALL.length())
 		var bound: String = _bound_name(line, at)
 		for handle_name: String in handles:
@@ -321,7 +321,7 @@ static func _write_path_literals(line: String) -> PackedStringArray:
 	for call_text: String in EventForgeFilePlaces.WRITE_CALLS:
 		var at: int = line.find(call_text)
 		while at >= 0:
-			var arguments: String = _arguments_after(line, at + call_text.length())
+			var arguments: String = EventForgeOutsidePaths.arguments_after(line, at + call_text.length())
 			if not call_text.begins_with(EventForgeFilePlaces.OPEN_CALL_PREFIX) \
 					or _opens_for_writing(arguments):
 				for literal: String in _quoted_literals(arguments):
@@ -331,7 +331,7 @@ static func _write_path_literals(line: String) -> PackedStringArray:
 		var image_at: int = line.find(call_text)
 		while image_at >= 0:
 			for literal: String in _quoted_literals(
-					_arguments_after(line, image_at + call_text.length())):
+					EventForgeOutsidePaths.arguments_after(line, image_at + call_text.length())):
 				found.append(literal)
 			image_at = line.find(call_text, image_at + call_text.length())
 	return found
@@ -366,7 +366,7 @@ static func absolute_path_findings(sources: Dictionary) -> Array[Dictionary]:
 ## appear.
 static func absolute_path_lines(source: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
-	for line: String in _statements_of(source):
+	for line: String in EventForgeOutsidePaths.statements_of(source):
 		for literal: String in _file_call_literals(line):
 			if EventForgeFilePlaces.is_absolute_os_path(literal):
 				found.append(line)
@@ -397,13 +397,13 @@ static func _file_call_literals(line: String) -> PackedStringArray:
 			# Only when the bracket really belongs to THIS call: `FileAccess.open(` is a call and
 			# `FileAccess.WRITE` is a constant whose line may hold somebody else's brackets.
 			if open_at >= 0 and _is_identifier(line.substr(from, open_at - from)):
-				found.append_array(_quoted_literals(_arguments_after(line, open_at + 1)))
+				found.append_array(_quoted_literals(EventForgeOutsidePaths.arguments_after(line, open_at + 1)))
 			at = line.find(class_mark, from)
 	for call_text: String in FILE_CALLS:
 		var call_at: int = line.find(call_text)
 		while call_at >= 0:
 			found.append_array(_quoted_literals(
-				_arguments_after(line, call_at + call_text.length())))
+				EventForgeOutsidePaths.arguments_after(line, call_at + call_text.length())))
 			call_at = line.find(call_text, call_at + call_text.length())
 	return found
 
@@ -434,11 +434,11 @@ static func unguarded_read_findings(sources: Dictionary) -> Array[Dictionary]:
 ## makes the fix's own output stop reporting itself.
 static func unguarded_read_lines(source: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
-	for line: String in _statements_of(source):
+	for line: String in EventForgeOutsidePaths.statements_of(source):
 		var at: int = line.find(EventForgeFilePlaces.READ_CALL)
 		if at < 0:
 			continue
-		var arguments: String = _arguments_after(line, at + EventForgeFilePlaces.READ_CALL.length())
+		var arguments: String = EventForgeOutsidePaths.arguments_after(line, at + EventForgeFilePlaces.READ_CALL.length())
 		if _guarded_paths(line).has(arguments.strip_edges()):
 			continue
 		for literal: String in _quoted_literals(arguments):
@@ -455,7 +455,7 @@ static func _guarded_paths(line: String) -> PackedStringArray:
 	var asked: PackedStringArray = PackedStringArray()
 	var at: int = line.find(EventForgeFilePlaces.EXISTS_CALL)
 	while at >= 0:
-		asked.append(_arguments_after(line,
+		asked.append(EventForgeOutsidePaths.arguments_after(line,
 			at + EventForgeFilePlaces.EXISTS_CALL.length()).strip_edges())
 		at = line.find(EventForgeFilePlaces.EXISTS_CALL,
 			at + EventForgeFilePlaces.EXISTS_CALL.length())
@@ -618,7 +618,7 @@ static func untrusted_code_file_lines(source: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	if not EventForgeSceneTrust.says_enough(source):
 		return found
-	for line: String in _statements_of(source):
+	for line: String in EventForgeOutsidePaths.statements_of(source):
 		if not EventForgeSceneTrust.untrusted_code_file_paths(line).is_empty():
 			found.append(line)
 	return found
@@ -705,7 +705,7 @@ static func watch_never_stops_findings(sources: Dictionary) -> Array[Dictionary]
 ## control flow it has not read.
 static func watch_never_stops_lines(source: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
-	var statements: PackedStringArray = _statements_of(source)
+	var statements: PackedStringArray = EventForgeOutsidePaths.statements_of(source)
 	for line: String in statements:
 		if line.contains(STOP_WATCH_CALL):
 			return PackedStringArray()
@@ -784,7 +784,7 @@ static func respell(value: String) -> String:
 		return ""
 	if text.contains(EventForgeFilePlaces.EXISTS_CALL):
 		return ""
-	var path: String = _arguments_after(text, EventForgeFilePlaces.READ_CALL.length())
+	var path: String = EventForgeOutsidePaths.arguments_after(text, EventForgeFilePlaces.READ_CALL.length())
 	if path.length() != text.length() - EventForgeFilePlaces.READ_CALL.length() - 1:
 		return ""
 	if EventForgeFilePlaces.place_of(path) != EventForgeFilePlaces.PLACE_USER:
@@ -911,33 +911,6 @@ static func _walk_rows(rows: Array, visitor: Callable) -> void:
 
 
 # ── Shared ───────────────────────────────────────────────────────────────────────────────────
-
-
-## Every non-blank, non-comment statement of a source, trimmed - the unit all three checks read.
-static func _statements_of(source: String) -> PackedStringArray:
-	var statements: PackedStringArray = PackedStringArray()
-	for raw_line: String in source.split("\n"):
-		var line: String = raw_line.strip_edges()
-		if not line.is_empty() and not line.begins_with("#"):
-			statements.append(line)
-	return statements
-
-
-## The text between a call's opening bracket and its matching close, so a nested call inside the
-## arguments does not end them early.
-static func _arguments_after(line: String, from: int) -> String:
-	var depth: int = 1
-	var index: int = from
-	while index < line.length():
-		var character: String = line[index]
-		if character == "(":
-			depth += 1
-		elif character == ")":
-			depth -= 1
-			if depth == 0:
-				return line.substr(from, index - from)
-		index += 1
-	return line.substr(from)
 
 
 ## The double-quoted strings in one piece of text, in order, without their quotes. Single quotes are
