@@ -254,6 +254,19 @@ static func _test_project_find_reads_gd_sheets() -> bool:
 		[PackedStringArray(["eventsheets_project_find.gd (1)"]), PackedStringArray(),
 			"extends Node\n\n\nfunc _ready() -> void:\n\tprint(\"the hidden map\")\n"]) and all_passed
 	DirAccess.remove_absolute(script_path)
+
+	# A behaviour pack's script is emitted by its builder: Replace in Project and Rename class read
+	# past it rather than rewriting text in a file nobody opened. Replacing a word with itself keeps
+	# the bytes the same even on a regression, so the probe can never damage the pack.
+	var pack_path: String = "res://eventsheet_addons/advanced_random/advanced_random_addon.gd"
+	var pack_bytes: String = FileAccess.get_file_as_string(pack_path)
+	var pack_outcome: Dictionary = EventSheetProjectFind.replace_in_closed_sheets("AdvancedRandomAddon",
+		"AdvancedRandomAddon", PackedStringArray([pack_path]), {}, EventSheetFindBar.new()._replace_in_rows)
+	var renamed: Array[Dictionary] = EventSheetHeadActions.rename_class_across("AdvancedRandomAddon",
+		"AdvancedRandomPack", {}, PackedStringArray(), PackedStringArray([pack_path]), false)
+	all_passed = _check("a pack script is left alone by Replace in Project and Rename class",
+		[pack_outcome["touched"], renamed.size(), FileAccess.get_file_as_string(pack_path) == pack_bytes],
+		[PackedStringArray(), 0, true]) and all_passed
 	return all_passed
 
 

@@ -291,9 +291,23 @@ static func _test_a_taken_class_name_is_refused() -> bool:
 		"EventSheetHeadActions": true,
 		"NobodyHasThisClassName": false,
 	}, func(name: String) -> bool: return EventSheetHeadActions.class_name_taken(name))
-	return _check("a sheet's own current name is not a clash with itself",
+	ok = _check("a sheet's own current name is not a clash with itself",
 		EventSheetHeadActions.class_name_taken("EventSheetHeadActions", PackedStringArray([own])),
 		false) and ok
+	# A `.tres` sheet's compiled script still declares the old name until the next compile, so the
+	# rename's clash check counts it as the sheet's own: A -> B -> A used to be refused as taken.
+	var sheet := EventSheetResource.new()
+	sheet.host_class = "Node"
+	sheet.custom_class_name = "Hero"
+	sheet.take_over_path("user://eventforge_rename_back.tres")
+	var editor := EventSheetEditor.new()
+	editor.setup(sheet)
+	editor._current_sheet_path = "user://eventforge_rename_back.tres"
+	ok = _check("the clash check counts the compiled script as the sheet's own",
+		editor._head_actions.class_name_own_paths(),
+		PackedStringArray(["user://eventforge_rename_back.tres", "user://eventforge_rename_back_generated.gd"])) and ok
+	editor.free()
+	return ok
 
 
 static func _write(path: String, text: String) -> void:

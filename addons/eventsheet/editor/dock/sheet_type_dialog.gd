@@ -35,6 +35,10 @@ var _plugin_capabilities_box: VBoxContainer = null
 var _plugin_capability_checks: Dictionary = {}
 var _identity_card: PanelContainer = null
 var _ships_as: Label = null
+## What a new Name would rename elsewhere, said before OK writes other files - the same sentence the
+## head's Rename class dialog shows. Counted once per open, the first time the Name differs.
+var _rename_reach: Label = null
+var _rename_reach_text: String = ""
 var _more_toggle: Button = null
 var _more_card: PanelContainer = null
 var _icon_file_dialog: EditorFileDialog = null
@@ -167,6 +171,7 @@ func open() -> void:
 	_sheet_type_uses_edit.text = ", ".join(PackedStringArray(_dock._current_sheet.uses_addons))
 	_sheet_type_requires_edit.text = ", ".join(PackedStringArray(_dock._current_sheet.requires_behaviors))
 	_sheet_type_autoload_edit.text = _dock._current_sheet.autoload_name
+	_rename_reach_text = ""
 	for key: String in _plugin_capability_checks:
 		(_plugin_capability_checks[key] as CheckBox).button_pressed = sheet_has_capability(_dock._current_sheet, key)
 	# Collapse the power fields on every open, so the first read is always the short form.
@@ -462,6 +467,9 @@ func _ensure_sheet_type_dialog() -> void:
 	# The live compiled-identity line: `class_name X extends Y`, or the first validation problem.
 	_ships_as = EventSheetPopupUI.hint_label("", 440.0)
 	ident_box.add_child(_ships_as)
+	_rename_reach = EventSheetPopupUI.hint_label("", 440.0)
+	_rename_reach.visible = false
+	ident_box.add_child(_rename_reach)
 	_identity_card = EventSheetPopupUI.titled_card("Identity", ident_box)
 	form.add_child(_identity_card)
 	for edit: LineEdit in [_sheet_type_name_edit, _sheet_type_host_edit, _sheet_type_autoload_edit]:
@@ -594,6 +602,20 @@ func _refresh_identity_preview() -> void:
 		own_class_name
 	)
 	_sheet_type_dialog.get_ok_button().disabled = preview_blocks_apply(_ships_as.text)
+	_refresh_rename_reach(own_class_name)
+
+
+## A new Name on a named class renames every use of it, other files included, so the dialog says how
+## far that reaches before OK - not only on the status line once the files are written.
+func _refresh_rename_reach(own_class_name: String) -> void:
+	var typed: String = _sheet_type_name_edit.text.strip_edges()
+	var renaming: bool = bool(field_visibility(_selected_type()).get("name", false)) \
+		and not own_class_name.strip_edges().is_empty() and not typed.is_empty() \
+		and typed != own_class_name.strip_edges() and not preview_blocks_apply(_ships_as.text)
+	if renaming and _rename_reach_text.is_empty():
+		_rename_reach_text = _dock._head_actions.class_rename_reach_text()
+	_rename_reach.text = _rename_reach_text if renaming else ""
+	_rename_reach.visible = renaming
 
 
 ## True when the identity line is reporting a problem rather than a preview - the dialog's OK

@@ -25,6 +25,22 @@ class NoopUndoManager:
 	func clear_history() -> void: pass
 
 
+## Remembers the name of every undo step the editor creates, so a test can count the steps one
+## gesture produced.
+class RecordingUndoManager:
+	extends RefCounted
+	var actions: PackedStringArray = PackedStringArray()
+	func create_action(name = null, _b = null, _c = null, _d = null) -> void: actions.append(str(name))
+	func add_do_method(_a = null, _b = null, _c = null, _d = null, _e = null) -> void: pass
+	func add_undo_method(_a = null, _b = null, _c = null, _d = null, _e = null) -> void: pass
+	func commit_action(_a = null) -> void: pass
+	func has_undo() -> bool: return false
+	func has_redo() -> bool: return false
+	func undo() -> void: pass
+	func redo() -> void: pass
+	func clear_history() -> void: pass
+
+
 static func run() -> bool:
 	var passed: bool = true
 	passed = _test_field_visibility() and passed
@@ -42,7 +58,7 @@ static func _test_ok_waits_for_a_valid_identity() -> bool:
 	var ok: bool = true
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Node2D"
-	sheet.custom_class_name = "Patrol"
+	sheet.custom_class_name = "ZzSheetTypeReachProbe"
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(sheet)
 	editor.set_undo_redo_manager(NoopUndoManager.new())
@@ -58,10 +74,18 @@ static func _test_ok_waits_for_a_valid_identity() -> bool:
 	dialog._refresh_identity_preview()
 	ok = _check("OK comes back once the name is valid",
 		dialog._sheet_type_dialog.get_ok_button().disabled, false) and ok
+	# A new Name renames the class's uses, other files included, so the dialog says how far that
+	# reaches before OK - the sentence the head's Rename class dialog shows.
+	ok = _check("a new Name says what the rename reaches before OK",
+		[dialog._rename_reach.visible, dialog._rename_reach.text],
+		[true, "renames nothing else - this name is used nowhere yet"]) and ok
+	dialog._sheet_type_name_edit.text = "ZzSheetTypeReachProbe"
+	dialog._refresh_identity_preview()
+	ok = _check("and says nothing while the Name is unchanged", dialog._rename_reach.visible, false) and ok
 	dialog._sheet_type_name_edit.text = "My Class"
 	dialog._on_sheet_type_confirmed()
 	ok = _check("confirming with a problem showing leaves the class name alone",
-		editor._current_sheet.custom_class_name, "Patrol") and ok
+		editor._current_sheet.custom_class_name, "ZzSheetTypeReachProbe") and ok
 	editor.free()
 	return ok
 
@@ -84,6 +108,23 @@ static func _test_name_change_renames_uses() -> bool:
 	ok = _check("the row that used the old name follows it",
 		(editor._current_sheet.events[0] as RawCodeRow).code, "var leader: ZzSheetTypeRenameNew = null") and ok
 	editor.free()
+
+	# One OK is one undo step: the rename and the rest of the type settings used to land as "Rename
+	# Class" then "Set Sheet Type", so one Ctrl+Z took back the settings and left the rename behind.
+	var second: EventSheetResource = EventSheetResource.new()
+	second.host_class = "Node2D"
+	second.custom_class_name = "ZzSheetTypeRenameOld"
+	var recorded: EventSheetEditor = EventSheetEditor.new()
+	recorded.setup(second)
+	var recorder := RecordingUndoManager.new()
+	recorded.set_undo_redo_manager(recorder)
+	recorded._apply_sheet_type_settings(1, "ZzSheetTypeRenameNew", "", "Node2D", false,
+		PackedStringArray(), PackedStringArray(), PackedStringArray(), PackedStringArray(), "",
+		"Walks the guard route.")
+	ok = _check("a new Name and other settings on one OK are one undo step that carries both",
+		[recorder.actions, recorded._current_sheet.custom_class_name, recorded._current_sheet.class_description],
+		[PackedStringArray(["Set Sheet Type"]), "ZzSheetTypeRenameNew", "Walks the guard route."]) and ok
+	recorded.free()
 	return ok
 
 

@@ -9,6 +9,9 @@
 class_name EventSheetProjectFind
 extends RefCounted
 
+## Where the behaviour packs live - read by Find, never rewritten by a project-wide replace or rename.
+const PACK_ROOT: String = "res://eventsheet_addons/"
+
 var _dock: Control = null
 
 
@@ -184,7 +187,7 @@ static func find_in_project(needle: String, sheet_paths: PackedStringArray,
 ## `replace_rows` is the find bar's own row walk, so a closed `.tres` changes exactly what Replace All
 ## changes in an open sheet. A closed `.gd` is its text, so its text is what is replaced. Each file's
 ## pre-save bytes go to the backup ring first - a closed file has no undo - and a file is claimed as
-## replaced only when the save landed.
+## replaced only when the save landed. A behaviour pack's script is never rewritten (is_pack_script).
 static func replace_in_closed_sheets(needle: String, replacement: String,
 		sheet_paths: PackedStringArray, skip: Dictionary, replace_rows: Callable) -> Dictionary:
 	var touched: PackedStringArray = PackedStringArray()
@@ -195,6 +198,8 @@ static func replace_in_closed_sheets(needle: String, replacement: String,
 		if skip.has(sheet_path):
 			continue
 		if sheet_path.get_extension().to_lower() == "gd":
+			if is_pack_script(sheet_path):
+				continue
 			var source: String = FileAccess.get_file_as_string(sheet_path)
 			var hits: int = source.count(needle)
 			if hits <= 0:
@@ -224,6 +229,14 @@ static func replace_in_closed_sheets(needle: String, replacement: String,
 			else:
 				failed.append(sheet_path.get_file())
 	return {"touched": touched, "failed": failed}
+
+
+## True for a script the project-wide REWRITES (Replace in Project, Rename class) leave alone: the
+## behaviour packs under eventsheet_addons/. Their source is what the pack builders emit, so a text
+## pass over one changes a file nobody opened - string literals and comments included - and the next
+## rebuild silently takes it back. Find still reads them; only the writes stay out.
+static func is_pack_script(path: String) -> bool:
+	return path.begins_with(PACK_ROOT)
 
 
 ## Writes a closed `.gd` sheet's new text over it. True only when the write landed.

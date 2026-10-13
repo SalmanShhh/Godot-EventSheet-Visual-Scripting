@@ -149,7 +149,8 @@ static func rename_reach(class_name_text: String, extra_sheets: Dictionary = {},
 ## SAVED, in both formats: a `.tres` through the same model rename, a `.gd` as the text it is, one
 ## line at a time with string literals left alone. Each closed file's pre-save bytes go to the backup
 ## ring first, and `saved` is false for a file that could not be written. Paths in `skip_paths` are
-## never touched. With `write` false the same walk runs on throwaway copies and writes nothing.
+## never touched, and neither is a behaviour pack's script (EventSheetProjectFind.is_pack_script).
+## With `write` false the same walk runs on throwaway copies and writes nothing.
 static func rename_class_across(old_name: String, new_name: String, open_sheets: Dictionary,
 		skip_paths: PackedStringArray, sheet_paths: PackedStringArray, write: bool) -> Array[Dictionary]:
 	var done: Array[Dictionary] = []
@@ -174,6 +175,8 @@ static func rename_class_across(old_name: String, new_name: String, open_sheets:
 				done.append({"path": path, "count": moved, "open": true, "saved": true})
 			continue
 		if path.get_extension().to_lower() == "gd":
+			if EventSheetProjectFind.is_pack_script(path):
+				continue
 			var source: String = FileAccess.get_file_as_string(path)
 			if word.search(source) == null:
 				continue
@@ -254,12 +257,20 @@ func open_class_rename() -> void:
 		_rename_dialog.confirmed.connect(_apply_class_rename)
 		_dock.add_child(_rename_dialog)
 	_rename_edit.text = current
-	_rename_count.text = rename_reach_text(
-		rename_reach(current, EventSheetFindReferences.open_sheets_of(_dock), _generated_paths())
-	)
+	_rename_count.text = class_rename_reach_text()
 	_rename_dialog.popup_centered(Vector2i(420, 0))
 	_rename_edit.grab_focus()
 	_rename_edit.select_all()
+
+
+## What renaming this sheet's class would touch, as the sentence a rename dialog says before it
+## writes anything. Every surface that offers the rename reads it here, so they cannot disagree.
+func class_rename_reach_text() -> String:
+	var current: String = _dock._current_sheet.custom_class_name.strip_edges()
+	if current.is_empty():
+		current = str(EventSheetHeadBands.facts(_dock._current_sheet, _prelude_text()).get("class_name", ""))
+	return rename_reach_text(
+		rename_reach(current, EventSheetFindReferences.open_sheets_of(_dock), _generated_paths()))
 
 
 func _apply_class_rename() -> void:
@@ -270,7 +281,11 @@ func _apply_class_rename() -> void:
 ## rows and every other sheet that names it. Every surface that changes the class name comes through
 ## here, so a relabel can never leave the old name behind in the rows that use it. False when nothing
 ## was renamed (an empty, invalid or taken name, or the name it already has).
-func apply_class_rename_to(new_name_text: String) -> bool:
+##
+## `action_name` and `also` let a dialog that changes more than the name make it ONE undo step:
+## `also` runs inside the same edit, after the rename, so a single Ctrl+Z takes back both.
+func apply_class_rename_to(new_name_text: String, action_name: String = "Rename Class",
+		also: Callable = Callable()) -> bool:
 	var new_name: String = new_name_text.strip_edges()
 	if new_name.is_empty():
 		return false
@@ -283,14 +298,16 @@ func apply_class_rename_to(new_name_text: String) -> bool:
 	if old_name == new_name:
 		return false
 	var own_paths: PackedStringArray = _own_paths()
-	if class_name_taken(new_name, own_paths):
+	if class_name_taken(new_name, class_name_own_paths()):
 		_dock._set_status(EventSheetL10n.translate("\"%s\" is already the name of another class.") % new_name, true)
 		return false
-	var written: bool = _dock._perform_undoable_sheet_edit("Rename Class", func() -> bool:
+	var written: bool = _dock._perform_undoable_sheet_edit(action_name, func() -> bool:
 		_write_head_line(EventSheetHeadBands.BAND_NAME, new_name)
 		_dock._current_sheet.custom_class_name = new_name
 		if not old_name.is_empty():
 			EventSheetRefactor.rename_symbol(_dock._current_sheet, old_name, new_name, true)
+		if also.is_valid():
+			also.call()
 		return true
 	)
 	if not written:
@@ -338,6 +355,15 @@ func _own_paths() -> PackedStringArray:
 		own.append(str(_dock._current_sheet_path))
 	if not _dock._current_sheet.external_source_path.is_empty():
 		own.append(_dock._current_sheet.external_source_path)
+	return own
+
+
+## The files whose `class_name` is this sheet's own, so a name one of them declares is no clash:
+## its own files plus, for a `.tres` sheet, the script it compiles to - which still declares the OLD
+## name until the next compile, so renaming A to B and straight back to A is not a clash with anybody.
+func class_name_own_paths() -> PackedStringArray:
+	var own: PackedStringArray = _own_paths()
+	own.append_array(_generated_paths())
 	return own
 
 

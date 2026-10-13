@@ -71,10 +71,7 @@ func apply_sheet_type_settings(type_index: int, class_name_text: String, icon_pa
 	# Rename class takes, so the rows that use the old name follow it instead of going stale.
 	var old_class_name: String = _dock._current_sheet.custom_class_name.strip_edges()
 	var new_class_name: String = class_name_text.strip_edges()
-	if type_index != 0 and not old_class_name.is_empty() and not new_class_name.is_empty() 			and new_class_name != old_class_name:
-		if not _dock._head_actions.apply_class_rename_to(new_class_name):
-			return
-	var changed: bool = _dock._perform_undoable_sheet_edit("Set Sheet Type", func() -> bool:
+	var apply_type: Callable = func() -> bool:
 		_dock._current_sheet.behavior_mode = type_index == 2
 		# The class description rides with the named-type identity (cleared for a plain sheet,
 		# which has no class_name to attach a doc to).
@@ -141,7 +138,15 @@ func apply_sheet_type_settings(type_index: int, class_name_text: String, icon_pa
 		elif not host_class_text.strip_edges().is_empty():
 			_dock._current_sheet.host_class = host_class_text.strip_edges()
 		return true
-	)
+	# The rename and the type settings are ONE undo step: the rename runs the settings inside its
+	# own edit, so a single Ctrl+Z after OK takes back both, and its status line - the one naming
+	# the other files it wrote - is the last word rather than being overwritten by this one.
+	if type_index != 0 and not old_class_name.is_empty() and not new_class_name.is_empty() \
+			and new_class_name != old_class_name:
+		if _dock._head_actions.apply_class_rename_to(new_class_name, "Set Sheet Type", apply_type):
+			_dock._refresh_tab_bar()
+		return
+	var changed: bool = _dock._perform_undoable_sheet_edit("Set Sheet Type", apply_type)
 	if changed:
 		_dock._refresh_after_edit()
 		_dock._refresh_title_strip()
