@@ -143,19 +143,12 @@ static func titled_card(title: String, content: Control, pad: float = PANEL_SECT
 ## neutral dark values outside the editor (headless tests / non-editor runtime) so it never errors.
 static func inset_panel_stylebox() -> StyleBoxFlat:
 	var box: StyleBoxFlat = StyleBoxFlat.new()
-	var fill: Color = Color(0.12, 0.13, 0.16, 1.0)
 	var border: Color = Color(1.0, 1.0, 1.0, 0.07)
-	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
-		var editor_interface: Object = Engine.get_singleton("EditorInterface")
-		if editor_interface != null and editor_interface.has_method("get_editor_theme"):
-			var theme: Theme = editor_interface.get_editor_theme()
-			if theme != null:
-				if theme.has_color("dark_color_2", "Editor"):
-					fill = theme.get_color("dark_color_2", "Editor")
-				if theme.has_color("contrast_color_1", "Editor"):
-					var contrast: Color = theme.get_color("contrast_color_1", "Editor")
-					border = Color(contrast.r, contrast.g, contrast.b, 0.22)
-	box.bg_color = fill
+	var theme: Theme = editor_theme()
+	if theme != null and theme.has_color("contrast_color_1", "Editor"):
+		var contrast: Color = theme.get_color("contrast_color_1", "Editor")
+		border = Color(contrast.r, contrast.g, contrast.b, 0.22)
+	box.bg_color = panel_fill()
 	box.border_color = border
 	box.set_border_width_all(1)
 	box.set_corner_radius_all(4)
@@ -199,25 +192,72 @@ const TWO_COLUMN_MIN_WIDTH := 560.0
 ## The editor's accent colour, or a neutral blue outside the editor (headless tests, a non-editor
 ## run). The one place the accent is read, so every surface tints from the same source.
 static func accent_color() -> Color:
-	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
-		var editor_interface: Object = Engine.get_singleton("EditorInterface")
-		if editor_interface != null and editor_interface.has_method("get_editor_theme"):
-			var theme: Theme = editor_interface.get_editor_theme()
-			if theme != null and theme.has_color("accent_color", "Editor"):
-				return theme.get_color("accent_color", "Editor")
+	var theme: Theme = editor_theme()
+	if theme != null and theme.has_color("accent_color", "Editor"):
+		return theme.get_color("accent_color", "Editor")
 	return BADGE_NEUTRAL
+
+
+## The editor's theme, or null outside the editor (headless tests, a non-editor run). The one
+## place it is fetched, so every colour and font below reads the same source.
+static func editor_theme() -> Theme:
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return null
+	var editor_interface: Object = Engine.get_singleton("EditorInterface")
+	if editor_interface == null or not editor_interface.has_method("get_editor_theme"):
+		return null
+	return editor_interface.get_editor_theme()
+
+
+## The fill of an inset dialog panel: the editor's `dark_color_2`, the tone Godot's own inset
+## panels use - light in a light editor theme, dark in a dark one.
+static func panel_fill() -> Color:
+	var theme: Theme = editor_theme()
+	if theme != null and theme.has_color("dark_color_2", "Editor"):
+		return theme.get_color("dark_color_2", "Editor")
+	return Color(0.12, 0.13, 0.16, 1.0)
+
+
+## TEXT ON A DIALOG PANEL. The panels take their fill from the editor theme, so their text has to
+## as well: a fixed light grey reads on the dark theme and all but vanishes on the light one. The
+## primary voice is the theme's own Label colour; the secondary and muted voices are that colour
+## moved part of the way toward the panel fill, so they stay quieter in both themes without ever
+## fading into the panel. Outside the editor the palette's dark-theme values stand.
+static func text_color() -> Color:
+	var theme: Theme = editor_theme()
+	if theme != null and theme.has_color("font_color", "Label"):
+		return theme.get_color("font_color", "Label")
+	return EventSheetPalette.TEXT_PRIMARY
+
+
+static func secondary_text_color() -> Color:
+	return _quieter_text(0.18, EventSheetPalette.TEXT_SECONDARY)
+
+
+static func muted_text_color() -> Color:
+	return _quieter_text(0.3, EventSheetPalette.TEXT_MUTED)
+
+
+static func _quieter_text(amount: float, fallback: Color) -> Color:
+	if editor_theme() == null:
+		return fallback
+	return text_color().lerp(panel_fill(), amount)
+
+
+## A coloured voice (ok green, warning amber, error red, a badge tone) made readable on the panel:
+## those tones are picked for the dark theme, so on a light panel they are darkened until they
+## read as text instead of as a pale wash.
+static func readable_on_panel(color: Color) -> Color:
+	if panel_fill().get_luminance() < 0.5:
+		return color
+	return color.darkened(0.45)
 
 
 ## One of the editor's own documentation fonts by name ("doc", "doc_bold", "doc_source"), or null
 ## outside the editor where the default font is the only one there is. Callers fall back rather
 ## than fail: a missing font must degrade to plain text, never to an error.
 static func editor_font(font_name: String) -> Font:
-	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return null
-	var editor_interface: Object = Engine.get_singleton("EditorInterface")
-	if editor_interface == null or not editor_interface.has_method("get_editor_theme"):
-		return null
-	var theme: Theme = editor_interface.get_editor_theme()
+	var theme: Theme = editor_theme()
 	if theme == null or not theme.has_font(font_name, "EditorFonts"):
 		return null
 	return theme.get_font(font_name, "EditorFonts")
@@ -365,7 +405,7 @@ static func _table_cell(text: String, is_header: bool, expands: bool) -> PanelCo
 	label.text = text.to_upper() if is_header else text
 	label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10 if is_header else 11))
 	label.add_theme_color_override("font_color",
-		EventSheetPalette.TEXT_MUTED if is_header else EventSheetPalette.TEXT_PRIMARY)
+		EventSheetPopupUI.muted_text_color() if is_header else EventSheetPopupUI.text_color())
 	if expands:
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		label.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(120.0), 0.0)
@@ -509,7 +549,7 @@ class HelpStrip extends PanelContainer:
 		var row: HBoxContainer = HBoxContainer.new()
 		row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(10.0)))
 		row.visible = false
-		var label: Label = EventSheetPopupUI.small_caps_label(caption, EventSheetPalette.TEXT_MUTED)
+		var label: Label = EventSheetPopupUI.small_caps_label(caption, EventSheetPopupUI.muted_text_color())
 		row.add_child(label)
 		var value: Label = Label.new()
 		value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -727,7 +767,7 @@ static func code_noted_option(dropdown: OptionButton, code_for_index: Callable =
 	dropdown.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(dropdown)
 	var note: Label = Label.new()
-	note.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
+	note.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
 	note.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 	note.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	var mono: Font = editor_font("doc_source")
@@ -909,11 +949,11 @@ const TONE_MARKS := {TONE_OK: "✓", TONE_WARNING: "!", TONE_ERROR: "✕"}
 static func tone_color(tone: String) -> Color:
 	match tone:
 		TONE_OK:
-			return EventSheetPalette.COLOR_HEALTH_OK
+			return readable_on_panel(EventSheetPalette.COLOR_HEALTH_OK)
 		TONE_WARNING:
-			return EventSheetPalette.COLOR_HEALTH_WARN
+			return readable_on_panel(EventSheetPalette.COLOR_HEALTH_WARN)
 		TONE_ERROR:
-			return EventSheetPalette.COLOR_ERROR_TEXT
+			return readable_on_panel(EventSheetPalette.COLOR_ERROR_TEXT)
 	return accent_color()
 
 
@@ -1010,7 +1050,7 @@ class ResultCard extends PanelContainer:
 		var box: VBoxContainer = EventSheetPopupUI.form_box()
 		box.add_child(EventSheetPopupUI.section_header(title))
 		figures_label = Label.new()
-		figures_label.add_theme_color_override("font_color", EventSheetPalette.TEXT_SECONDARY)
+		figures_label.add_theme_color_override("font_color", EventSheetPopupUI.secondary_text_color())
 		figures_label.visible = false
 		box.add_child(figures_label)
 		lines_box = VBoxContainer.new()

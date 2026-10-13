@@ -51,7 +51,7 @@ func prompt_extract_function_name(callback: Callable) -> void:
 		hint.text = "These actions become one reusable function: call it anywhere, and it appears in the picker. Type a meaningful name (e.g. \"Apply Physics\")."
 		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		hint.custom_minimum_size = Vector2(340.0, 0.0)
-		hint.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
+		hint.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
 		box.add_child(hint)
 		_extract_function_name_dialog.add_child(EventSheetPopupUI.margined(box))
 		_extract_function_name_dialog.confirmed.connect(_apply_extract_function)

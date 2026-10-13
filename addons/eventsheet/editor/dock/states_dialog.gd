@@ -83,7 +83,7 @@ func _build() -> void:
 	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Starts in"), _starts_option))
 
 	_problem_label = EventSheetPopupUI.hint_label("", 400.0)
-	_problem_label.add_theme_color_override("font_color", Color(0.95, 0.5, 0.5))
+	_problem_label.add_theme_color_override("font_color", EventSheetPopupUI.readable_on_panel(Color(0.95, 0.5, 0.5)))
 	_problem_label.visible = false
 	form.add_child(_problem_label)
 

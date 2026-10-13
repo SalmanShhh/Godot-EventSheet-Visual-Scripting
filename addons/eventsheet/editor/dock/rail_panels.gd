@@ -280,7 +280,7 @@ func build(panels: Dictionary) -> Control:
 	# still says what is behind it.
 	_edge_label.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
 	_edge_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(9))
-	_edge_label.add_theme_color_override("font_color", EventSheetPalette.TEXT_SECONDARY)
+	_edge_label.add_theme_color_override("font_color", EventSheetPopupUI.secondary_text_color())
 	_edge_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_edge.add_child(_edge_label)
 	_root.add_child(_edge)

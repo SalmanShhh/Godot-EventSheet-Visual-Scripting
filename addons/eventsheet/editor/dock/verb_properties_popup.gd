@@ -169,7 +169,7 @@ static func build_panel(event_function: EventFunction, sheet: EventSheetResource
 	trailing.text = EventSheetL10n.translate("ACE properties")
 	trailing.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	trailing.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	trailing.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
+	trailing.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
 	title_row.add_child(trailing)
 	column.add_child(title_row)
 	var form: VBoxContainer = EventSheetPopupUI.form_box()

@@ -328,7 +328,7 @@ func _build_value_box() -> HBoxContainer:
 	var box: HBoxContainer = HBoxContainer.new()
 	box.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
 	_value_prefix = Label.new()
-	_value_prefix.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
+	_value_prefix.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
 	box.add_child(_value_prefix)
 	_default_edit = LineEdit.new()
 	_default_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -352,7 +352,7 @@ func _build_value_box() -> HBoxContainer:
 	box.add_child(_axis_box)
 	_value_note = Label.new()
 	_value_note.text = "Set in code: Godot has no editor for this type."
-	_value_note.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
+	_value_note.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
 	box.add_child(_value_note)
 	_items_button = Button.new()
 	_items_button.text = "Edit items…"
@@ -462,7 +462,7 @@ func _build_changes_fold() -> FoldableContainer:
 		_changes_checks[spec[0]] = _tick(ticks, str(spec[1]))
 	box.add_child(EventSheetPopupUI.form_row("Also", ticks))
 	_refresh_label = Label.new()
-	_refresh_label.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
+	_refresh_label.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
 	box.add_child(EventSheetPopupUI.form_row("Refresh the Inspector", _refresh_label))
 	_setter_edit = _code_box(box, "Setter body", "health = clampi(value, 0, max_health)")
 	_changes_edits["setter_param"] = LineEdit.new()

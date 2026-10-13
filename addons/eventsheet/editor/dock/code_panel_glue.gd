@@ -328,7 +328,7 @@ func validate_raw_code() -> void:
 		_dock._raw_code_dialog.get_ok_button().disabled = not structural.is_empty()
 	if not structural.is_empty():
 		_dock._raw_code_lint_label.text = "✗ %s" % structural
-		_dock._raw_code_lint_label.add_theme_color_override("font_color", Color(0.95, 0.5, 0.5))
+		_dock._raw_code_lint_label.add_theme_color_override("font_color", EventSheetPopupUI.readable_on_panel(Color(0.95, 0.5, 0.5)))
 		return
 	var lint_result: Dictionary = EventSheetGDScriptLint.lint(_dock._raw_code_edit.text, _dock._raw_code_in_flow, _dock._current_sheet)
 	if bool(lint_result.get("ok", true)):
@@ -336,7 +336,7 @@ func validate_raw_code() -> void:
 		_dock._raw_code_lint_label.add_theme_color_override("font_color", Color(0.55, 0.85, 0.6))
 	else:
 		_dock._raw_code_lint_label.text = "✗ %s" % str(lint_result.get("error", "Does not compile."))
-		_dock._raw_code_lint_label.add_theme_color_override("font_color", Color(0.95, 0.5, 0.5))
+		_dock._raw_code_lint_label.add_theme_color_override("font_color", EventSheetPopupUI.readable_on_panel(Color(0.95, 0.5, 0.5)))
 
 
 ## Contributes the SHEET's own names to Godot's completion in a Script block. The block keeps the

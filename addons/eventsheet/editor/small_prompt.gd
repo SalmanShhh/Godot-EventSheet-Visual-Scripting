@@ -106,7 +106,7 @@ static func set_list(dialog: ConfirmationDialog, rows: Array) -> void:
 		item.set_text(0, str(cells[0]))
 		item.set_tooltip_text(0, str(cells[0]))
 		item.set_text(1, str(cells[1]) if cells.size() > 1 else "")
-		item.set_custom_color(1, EventSheetPalette.TEXT_MUTED)
+		item.set_custom_color(1, EventSheetPopupUI.muted_text_color())
 	places.visible = not rows.is_empty()
 	# Tall enough for five places before it scrolls, so a long list still fits on the screen.
 	places.custom_minimum_size = Vector2(wrap_width(),

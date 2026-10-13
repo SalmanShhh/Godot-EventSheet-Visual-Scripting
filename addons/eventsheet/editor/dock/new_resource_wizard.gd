@@ -93,7 +93,7 @@ func _build_dialog() -> void:
 	content.add_child(_preview_label)
 	# What stops Create, said inside this window - the dock's status bar sits behind it.
 	_problem_label = EventSheetPopupUI.hint_label("")
-	_problem_label.add_theme_color_override("font_color", Color(1.0, 0.55, 0.55))
+	_problem_label.add_theme_color_override("font_color", EventSheetPopupUI.readable_on_panel(Color(1.0, 0.55, 0.55)))
 	_problem_label.visible = false
 	content.add_child(_problem_label)
 

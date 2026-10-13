@@ -69,7 +69,7 @@ func build() -> PanelContainer:
 
 	_detail_label = Label.new()
 	_detail_label.text = ""
-	_detail_label.add_theme_color_override("font_color", EventSheetPalette.TEXT_SECONDARY)
+	_detail_label.add_theme_color_override("font_color", EventSheetPopupUI.secondary_text_color())
 	_detail_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	text_box.add_child(_detail_label)
 

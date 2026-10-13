@@ -213,7 +213,7 @@ func _build() -> void:
 	issue_row.add_theme_constant_override("separation", 8)
 	var issue_label: Label = Label.new()
 	issue_label.text = "Something not working right?"
-	issue_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 0.65))
+	issue_label.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
 	issue_row.add_child(issue_label)
 	var issue_button: Button = Button.new()
 	issue_button.text = "Report an issue"

@@ -202,7 +202,7 @@ func _build_title_band() -> Control:
 ## of single letters on the first zero-width layout pass.
 func _muted_label() -> Label:
 	var label: Label = Label.new()
-	label.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
+	label.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
 	label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	return label
@@ -739,7 +739,7 @@ func _create_minutes_seconds_field(key: String, default_value: Variant) -> Contr
 	typed.tooltip_text = "Type it as minutes:seconds - 3:00 - or as plain seconds."
 	typed.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var shown: Label = Label.new()
-	shown.add_theme_color_override("font_color", Color(0.74, 0.78, 0.86, 0.95))
+	shown.add_theme_color_override("font_color", EventSheetPopupUI.secondary_text_color())
 	shown.text = "= %s s" % seconds.text
 	var sync: Callable = func(_ignored: Variant = null) -> void:
 		seconds.text = minutes_seconds_as_seconds(typed.text)
@@ -1692,7 +1692,7 @@ func _validate_named_field(edit: LineEdit, known: PackedStringArray, heading: St
 		edit.remove_theme_color_override("font_color")
 		_record_expression_note(edit, "", "", "", "", "")
 		return false
-	edit.add_theme_color_override("font_color", Color(0.92, 0.72, 0.35))
+	edit.add_theme_color_override("font_color", EventSheetPopupUI.readable_on_panel(Color(0.92, 0.72, 0.35)))
 	_record_expression_note(edit, EventSheetParamFieldFactory.LEVEL_WARNING, heading,
 		body_format % typed, "", closest_of(typed, known))
 	return true
@@ -2293,7 +2293,7 @@ static func fill_palette_swatches(into: HBoxContainer, raw_value: String) -> voi
 			role_label.custom_minimum_size = Vector2(0.0, swatch_side)
 			role_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 			role_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
-			role_label.add_theme_color_override("font_color", Color(0.74, 0.78, 0.86, 0.95))
+			role_label.add_theme_color_override("font_color", EventSheetPopupUI.secondary_text_color())
 			role_column.add_child(role_label)
 		into.add_child(role_column)
 	for entry: Variant in sets:
@@ -3107,7 +3107,7 @@ func _validate_expression_field(edit: Control) -> void:
 			edit.remove_theme_color_override("font_color")
 			_record_expression_note(edit, "", "", "", "", "")
 		else:
-			edit.add_theme_color_override("font_color", Color(0.92, 0.72, 0.35))
+			edit.add_theme_color_override("font_color", EventSheetPopupUI.readable_on_panel(Color(0.92, 0.72, 0.35)))
 			# Teach the unique-name idiom: % resolves only once a node is marked unique in the scene.
 			var missing_node: String = EventSheetL10n.translate(
 				"There is no node named %s in this scene - right-click it in the scene tree and choose Access as Unique Name, or it may be spawned at runtime.") % unresolved \
@@ -3117,7 +3117,7 @@ func _validate_expression_field(edit: Control) -> void:
 				EventSheetParamFieldFactory.strip_heading(param, EventSheetL10n.translate("no such node")),
 				missing_node, "", "")
 	else:
-		edit.add_theme_color_override("font_color", Color(0.96, 0.45, 0.45))
+		edit.add_theme_color_override("font_color", EventSheetPopupUI.readable_on_panel(Color(0.96, 0.45, 0.45)))
 		var undeclared: String = undeclared_identifier_in_expression(str(edit.get("text")), sheet)
 		# Typo path first: if the unknown identifier is one edit away from something the sheet
 		# DOES know, offer a one-click "Use it" before the create-new-variable fallback - far

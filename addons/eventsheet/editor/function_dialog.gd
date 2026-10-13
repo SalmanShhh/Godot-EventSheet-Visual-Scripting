@@ -203,7 +203,7 @@ func init_dialog(parent_node: Node) -> void:
 	# when it becomes visible on a validation error (the form is 540 wide).
 	_problem_label.custom_minimum_size = Vector2(520.0, 0.0)
 	_problem_label.visible = false
-	_problem_label.add_theme_color_override("font_color", Color(0.95, 0.5, 0.5))
+	_problem_label.add_theme_color_override("font_color", EventSheetPopupUI.readable_on_panel(Color(0.95, 0.5, 0.5)))
 	form.add_child(_problem_label)
 	_select_usable(0)
 
@@ -367,12 +367,12 @@ func _build_verb_kind_section() -> Control:
 		var subtitle: Label = Label.new()
 		subtitle.text = str(entry.get("card_title"))
 		subtitle.add_theme_font_size_override("font_size", EventSheetPalette.scaled(12))
-		subtitle.add_theme_color_override("font_color", EventSheetPalette.TEXT_SECONDARY)
+		subtitle.add_theme_color_override("font_color", EventSheetPopupUI.secondary_text_color())
 		inner.add_child(subtitle)
 		var examples: Label = Label.new()
 		examples.text = str(entry.get("card_examples"))
 		examples.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
-		examples.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
+		examples.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
 		examples.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		inner.add_child(examples)
 		var content_margin: MarginContainer = EventSheetPopupUI.margined(inner, 9)
@@ -412,7 +412,7 @@ func _refresh_usable_cards() -> void:
 		var accent: Color = card.get("accent")
 		var is_selected: bool = index == selected
 		panel.add_theme_stylebox_override("panel", _card_stylebox(accent, is_selected))
-		title.add_theme_color_override("font_color", accent if is_selected else EventSheetPalette.TEXT_SECONDARY)
+		title.add_theme_color_override("font_color", accent if is_selected else EventSheetPopupUI.secondary_text_color())
 
 
 ## Selected = a 2px accent border over an accent-tinted fill; unselected = the neutral inset panel.
@@ -445,7 +445,7 @@ func _build_preview_card() -> Control:
 	content.add_child(EventSheetPopupUI.panel_section(entry))
 	_preview_sub = Label.new()
 	_preview_sub.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
-	_preview_sub.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
+	_preview_sub.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
 	content.add_child(_preview_sub)
 	# "Ships as:" - the exact generated signature (built from the compiler's own formatters).
 	var ships_box: VBoxContainer = VBoxContainer.new()
@@ -453,10 +453,10 @@ func _build_preview_card() -> Control:
 	var ships_cap: Label = Label.new()
 	ships_cap.text = "SHIPS AS"
 	ships_cap.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
-	ships_cap.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
+	ships_cap.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
 	ships_box.add_child(ships_cap)
 	_preview_signature = Label.new()
-	_preview_signature.add_theme_color_override("font_color", EventSheetPalette.TEXT_SECONDARY)
+	_preview_signature.add_theme_color_override("font_color", EventSheetPopupUI.secondary_text_color())
 	ships_box.add_child(_preview_signature)
 	content.add_child(EventSheetPopupUI.panel_section(ships_box))
 	return EventSheetPopupUI.titled_card("This is what other people will see", content)

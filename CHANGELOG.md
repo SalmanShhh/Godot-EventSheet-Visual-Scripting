@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Fixed: dialog text is readable in a light editor theme
+
+- The help strip ("live, as you pick": the heading, the description, READS AS and IN CODE), the
+  Inspector preview card's group name, tables, result cards and the function, variable, parameter,
+  mode, state and wizard dialogs drew their text in fixed light greys made for the dark theme, on
+  panels that follow the editor theme - so in a light theme it all but vanished. Text on a dialog
+  panel now takes the editor theme's own Label colour (`EventSheetPopupUI.text_color()`), with
+  quieter `secondary_text_color()` / `muted_text_color()` voices moved toward the panel fill, and
+  the ok / warning / error tones are darkened on a light panel (`readable_on_panel()`). A test sweeps
+  the dialog files so a dark-only text colour cannot come back.
+
 ### Changed: the variable window is four cards, every look a described choice
 
 - **Variable** asks for the row in the order it reads: scope, name, type, initial value,
