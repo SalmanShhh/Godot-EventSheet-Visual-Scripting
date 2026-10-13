@@ -32,6 +32,10 @@ const DIALOG_FILES: Array[String] = [
 	"res://addons/eventsheet/editor/ace_picker.gd",
 	"res://addons/eventsheet/editor/ace_params_expression_picker.gd",
 	"res://addons/eventsheet/editor/ace_params_node_picker.gd",
+	"res://addons/eventsheet/editor/dock/struct_row_dialogs.gd",
+	"res://addons/eventsheet/editor/connect_signal_dialog.gd",
+	"res://addons/eventsheet/editor/dock/paste_special_dialog.gd",
+	"res://addons/eventsheet/editor/dock/insert_snippet_dialog.gd",
 ]
 
 

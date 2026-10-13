@@ -136,6 +136,10 @@ func _unlock_preview_for_edit() -> void:
 
 func _on_viewport_ace_picker_requested(row_data: EventRowData, lane: String) -> void:
 	_unlock_preview_for_edit()
+	# A branch of a switch: its Add action fills that branch, the way any event's does.
+	if row_data != null and row_data.match_case is MatchCase and lane == "action":
+		_dock._ace_picker.open("append_action", false, row_data.match_case)
+		return
 	if row_data == null or not (row_data.source_resource is EventRow):
 		return
 	match lane:
@@ -218,7 +222,7 @@ func _on_ace_params_confirmed(definition: ACEDefinition, values: Dictionary, con
 	if bool(context.get("chain_add", false)):
 		var mode: String = str(context.get("mode", ""))
 		var selected_resource: Resource = context.get("selected_resource", null)
-		if mode in ["append_condition", "append_action"] and selected_resource is EventRow:
+		if mode in ["append_condition", "append_action"] and (selected_resource is EventRow or selected_resource is MatchCase):
 			_dock._ace_picker.open(mode, false, selected_resource, {})
 
 
@@ -414,6 +418,11 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 				if selected_resource is EventRow:
 					var action_entry: ACEAction = _create_action_from_definition(definition, params)
 					(selected_resource as EventRow).actions.append(action_entry)
+					message["text"] = "Added action."
+					return true
+				if selected_resource is MatchCase:
+					EventSheetStructRowDialogs.append_case_action(selected_resource as MatchCase,
+						_create_action_from_definition(definition, params))
 					message["text"] = "Added action."
 					return true
 			"replace_trigger":

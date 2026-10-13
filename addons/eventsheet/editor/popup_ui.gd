@@ -1018,6 +1018,66 @@ class StateNote extends PanelContainer:
 		visible = not sentence.strip_edges().is_empty()
 
 
+## A ROW BAND: the top of a window that writes one row or one declaration, showing that row the way
+## the sheet will - the object it belongs to in the quiet object column, then its words, then an
+## optional note at the far right. It is redrawn live as the fields change, so the reader sees the
+## row before pressing OK instead of reading about it.
+class RowBand extends PanelContainer:
+
+	var object_label: Label = null
+	var words_label: Label = null
+	var note_label: Label = null
+
+
+	func _init() -> void:
+		var style: StyleBoxFlat = EventSheetPopupUI.inset_panel_stylebox()
+		style.content_margin_left = EventSheetPalette.scaled_f(8.0)
+		style.content_margin_right = EventSheetPalette.scaled_f(8.0)
+		style.content_margin_top = EventSheetPalette.scaled_f(5.0)
+		style.content_margin_bottom = EventSheetPalette.scaled_f(5.0)
+		add_theme_stylebox_override("panel", style)
+		var row: HBoxContainer = HBoxContainer.new()
+		row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(10.0)))
+		add_child(row)
+		object_label = Label.new()
+		object_label.add_theme_color_override("font_color", EventSheetPopupUI.secondary_text_color())
+		row.add_child(object_label)
+		words_label = Label.new()
+		words_label.add_theme_color_override("font_color", EventSheetPopupUI.text_color())
+		words_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		words_label.clip_text = true
+		words_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		row.add_child(words_label)
+		note_label = Label.new()
+		note_label.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
+		row.add_child(note_label)
+
+
+	## The row as the sheet will read it. An empty object hides that column.
+	func show_row(object_name: String, words: String, note: String = "") -> void:
+		object_label.text = object_name
+		object_label.visible = not object_name.is_empty()
+		words_label.text = words
+		words_label.tooltip_text = words
+		note_label.text = note
+		note_label.visible = not note.is_empty()
+
+
+## Gives a text field a red edge while `problem` is true, and its own look back when it is not - the
+## mark that says WHICH field the state note under the form is talking about.
+static func mark_field(field: Control, problem: bool) -> void:
+	if field == null:
+		return
+	if not problem:
+		field.remove_theme_stylebox_override("normal")
+		return
+	var base: StyleBox = field.get_theme_stylebox("normal")
+	var style: StyleBoxFlat = (base as StyleBoxFlat).duplicate() if base is StyleBoxFlat else StyleBoxFlat.new()
+	style.border_color = tone_color(TONE_ERROR)
+	style.set_border_width_all(maxi(1, EventSheetPalette.scaled(1)))
+	field.add_theme_stylebox_override("normal", style)
+
+
 # ── The described dropdown ────────────────────────────────────────────────────────────────────
 #
 # Every choice in a dropdown carries the sentence that says what it means, as Godot's own item

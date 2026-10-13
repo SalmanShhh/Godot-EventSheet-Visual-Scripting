@@ -174,17 +174,19 @@ static func _rows() -> bool:
 	ok = _check("an if/else inside a children loop keeps its Else",
 		_row_containing(rows, "(children)"),
 		"i2 [Child> (children) Is visible | child> Set invisible]") and ok
-	# First case states the test, later cases are an Else carrying theirs, `_` is a plain Else.
+	# The match says what it decides by, and each branch is a sub-event stating its own test; several
+	# values are an OR block; `_` is a plain Else.
+	ok = _check("the match says what it decides by", _row_containing(rows, "match difficulty"),
+		"i2 [match difficulty]") and ok
 	ok = _check("the first case states its test",
 		_row_containing(rows, "difficulty = \"easy\""),
-		"i2 [System> difficulty = \"easy\" | Set reward to 10]") and ok
-	# The OR mark on each line became a rule drawn between them, so the words are just the tests.
-	ok = _check("a multi-value case is an Else with an OR block",
+		"i3 [System> difficulty = \"easy\" | Set reward to 10]") and ok
+	ok = _check("a multi-value case states every value it runs for",
 		_row_containing(rows, "difficulty = \"normal\""),
-		"i2 [System> Else | System> difficulty = \"normal\" | System> difficulty = \"hard\" | Set reward to 25]") and ok
+		"i3 [System> difficulty = \"normal\" | System> difficulty = \"hard\" | Set reward to 25]") and ok
 	ok = _check("the default is a plain Else",
 		_row_containing(rows, "Set reward to 0"),
-		"i2 [System> Else | Set reward to 0]") and ok
+		"i3 [System> Else | Set reward to 0]") and ok
 	# Three statements, one row, named after the scene's root and carrying the local name.
 	# Re-pin: a property set on the way IN is part of making the thing, so it rides the same row as
 	# a chip rather than following it as an action of its own.

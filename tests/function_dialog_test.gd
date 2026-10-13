@@ -110,7 +110,7 @@ static func _test_param_names_are_checked(dock: EventSheetDock) -> bool:
 	param_dialog._function_name = "act"
 	param_dialog._param_index = -1
 	param_dialog._taken_param_names = PackedStringArray(["amount"])
-	param_dialog._remove_check.visible = false
+	param_dialog._delete_button.visible = false
 	param_dialog._name_edit.text = "move speed"
 	var emitted: Array = []
 	param_dialog.param_confirmed.connect(func(data: Dictionary) -> void: emitted.append(data))

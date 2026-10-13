@@ -8000,3 +8000,106 @@ Featured,추천
 "Inside this function, use it like any variable.",이 함수 안에서는 여느 변수처럼 쓰세요.
 Every call has to give it a value.,호출할 때마다 값을 주어야 합니다.
 "When it is called without one, it is %s.",값 없이 호출하면 %s입니다.
+Edit enum {name},enum {name} 편집
+Edit Enum,enum 편집
+Enum name,enum 이름
++ Add value,+ 값 추가
+"The enum's name. It becomes a type: a variable can hold one of its values, and a match can pick between them.","enum의 이름입니다. 타입이 되어, 변수는 그 값 중 하나를 담을 수 있고 match는 그 값들 중에서 고를 수 있습니다."
+"One value per field; an optional ""= 4"" sets an explicit number.","칸마다 값 하나. 선택적으로 ""= 4""를 붙이면 번호를 직접 정합니다."
+Multi-line enum,여러 줄 enum
+Remove this value,이 값 제거
+"""{name}"" can't be an enum name (letters/digits/underscores, not a GDScript keyword).","""{name}""은(는) enum 이름이 될 수 없습니다(문자/숫자/밑줄만, GDScript 키워드 불가)."
+"""{name}"" can't be an enum value name.","""{name}""은(는) enum 값 이름이 될 수 없습니다."
+Enums need a name and at least one value.,enum에는 이름과 값이 하나 이상 필요합니다.
+Edit signal {name},시그널 {name} 편집
+Edit Signal,시그널 편집
+Signal name,시그널 이름
+What the signal is called. It appears in the On signal and Emit signal pickers under this name.,시그널의 이름입니다. 이 이름으로 On signal 및 Emit signal 선택기에 나타납니다.
+"One parameter per line; an optional ""damage: int"" gives it a type.","줄마다 매개변수 하나. 선택적으로 ""damage: int""처럼 타입을 줄 수 있습니다."
+"""{name}"" can't be a signal name (letters/digits/underscores, not a GDScript keyword).","""{name}""은(는) 시그널 이름이 될 수 없습니다(문자/숫자/밑줄만, GDScript 키워드 불가)."
+"""{name}"" can't be a signal parameter name.","""{name}""은(는) 시그널 매개변수 이름이 될 수 없습니다."
+Parameters for System: Match,System: Match 매개변수
+This sheet's variables (any expression still works),이 시트의 변수(어떤 식이든 여전히 됩니다)
+Else (anything else),Else(그 밖의 모든 것)
+A last branch for every value the matches above do not name.,위의 match가 이름 짓지 않은 모든 값을 위한 마지막 분기입니다.
+Nothing,없음
+No last branch: a value no match names does nothing.,마지막 분기 없음: 어떤 match도 이름 짓지 않은 값은 아무것도 하지 않습니다.
+Otherwise,그 외
++ Add match,+ match 추가
+One match per state,상태마다 match 하나
+"Each match becomes a sub-event on the sheet; its actions are added there, like any event.",각 match는 시트에서 하위 이벤트가 됩니다. 그 액션은 다른 이벤트처럼 거기서 추가합니다.
+"Run one branch, picked by comparing a value: like a chain of Compare events ending in Else.",값을 비교해 고른 분기 하나를 실행합니다. Else로 끝나는 Compare 이벤트들의 연쇄와 같습니다.
+"What the match compares. Pick one of this sheet's variables from the list, or type any expression.",match가 비교하는 것입니다. 목록에서 이 시트의 변수를 고르거나 아무 식이나 입력하세요.
+Else catches every value the matches above do not name; it stays empty (does nothing) until you add actions to it.,Else는 위의 match가 이름 짓지 않은 모든 값을 받습니다. 액션을 추가하기 전까지는 비어 있습니다(아무것도 하지 않음).
+Adds one more value to pick between.,고를 값을 하나 더 추가합니다.
+"Adds a match for every value of the enum the Value holds, skipping the ones already here.","Value가 담은 enum의 각 값마다 match를 추가하며, 이미 있는 것은 건너뜁니다."
+Pick a value for this branch (you can still type any),이 분기의 값을 고르세요(아무 값이나 입력해도 됩니다)
+Remove this match,이 match 제거
+The value this branch runs for: pick from the list or type any value. Otherwise catches everything else.,이 분기가 실행되는 값입니다. 목록에서 고르거나 아무 값이나 입력하세요. 그 외는 나머지 전부를 받습니다.
+Match {n},Match {n}
+"Pick a Value whose type is one of this sheet's enums, and this adds a match for each of its values.","이 시트의 enum 중 하나가 타입인 Value를 고르면, 그 값마다 match를 추가합니다."
+Give the match a Value to compare.,match에 비교할 Value를 지정하세요.
+"Add at least one match, or choose Else for Otherwise.",match를 하나 이상 추가하거나 그 외에서 Else를 고르세요.
+{value} is matched twice - the second one could never run.,{value}이(가) 두 번 지정되었습니다 - 두 번째는 절대 실행될 수 없습니다.
+match,match
+Done drops the {n} action(s) the removed matches held.,완료하면 제거한 match에 있던 액션 {n}개가 사라집니다.
+"Done sets up {n} events on the sheet, ready for your actions.",완료하면 시트에 이벤트 {n}개를 만들어 액션을 넣을 수 있게 합니다.
+"Done updates the match: {n} branches, each keeping its actions.","완료하면 match를 갱신합니다: 분기 {n}개, 각자의 액션은 그대로 유지됩니다."
+The match doesn't compile - check the Value and each match's value.,match가 컴파일되지 않습니다 - Value와 각 match의 값을 확인하세요.
+Add behavior to {object},{object}에 동작 추가
+search,검색
+Properties,속성
+A node carrying the pack's script under the object - how every pack works.,오브젝트 아래에 팩의 스크립트를 가진 노드를 둡니다 - 모든 팩이 이렇게 동작합니다.
+The pack's knobs become this script's own variables. Only packs that say their shape can be written in offer it.,팩의 설정이 이 스크립트 자체의 변수가 됩니다. 그렇게 쓸 수 있다고 밝힌 팩만 제공합니다.
+"Reads every pack's name, its one-line pitch and its folder, so ""jump"" finds the platformer pack.","각 팩의 이름, 한 줄 소개, 폴더를 읽으므로 ""jump""로 플랫포머 팩을 찾습니다."
+All,전체
+"{type}, starting at {value}.","{type}, 시작값 {value}."
+Connect a signal of {node},{node}의 시그널 연결
+{node} - pick a signal,{node} - 시그널 고르기
+Narrows the list to the signals whose name holds what you type.,입력한 내용이 이름에 들어 있는 시그널만 남깁니다.
+This signal,이 시그널
+An On <signal> event is added to the node's sheet; its actions run when the signal fires.,"노드의 시트에 On <시그널> 이벤트가 추가되며, 시그널이 발생하면 액션이 실행됩니다."
+in {file},{file}에 있음
+No signal of {node} holds that.,{node}에는 그런 시그널이 없습니다.
+An {event} event is added to {file}; its actions run when the signal fires.,"{file}에 {event} 이벤트가 추가되며, 시그널이 발생하면 액션이 실행됩니다."
+{file} already handles {signal} - Connect adds a second event for it.,{file}은(는) 이미 {signal}을(를) 처리합니다 - 연결하면 두 번째 이벤트가 추가됩니다.
+Parameter,매개변수
+"The parameter's name in the GDScript, and the label on the function's row.",GDScript에서의 매개변수 이름이자 함수 행의 레이블입니다.
+"An optional starting value, so whoever uses the function can skip this input. Written as GDScript (10, 1.5, ""idle"", true). Inputs with a default have to come after those without.","선택적인 시작값으로, 함수를 쓰는 쪽이 이 입력을 생략할 수 있습니다. GDScript로 씁니다(10, 1.5, ""idle"", true). 기본값이 있는 입력은 없는 입력 뒤에 와야 합니다."
+"Opens the function's own window: its name, its doc comment, what kind it is and who can use it.","함수 자체의 창을 엽니다: 이름, 문서 주석, 종류, 사용할 수 있는 대상."
+Edit parameter {name},매개변수 {name} 편집
+"Parameters with a default value must come after those without - move this one down, or give the ones after it defaults too.",기본값이 있는 매개변수는 없는 것 뒤에 와야 합니다 - 이것을 아래로 옮기거나 뒤의 것들에도 기본값을 주세요.
+Save to the project snippet library,프로젝트 스니펫 라이브러리에 저장
+Snippet,스니펫
+Insert Snippet… lists it by this name.,스니펫 삽입…에서 이 이름으로 표시됩니다.
+Save {n} row(s) as a snippet,{n}개 행을 스니펫으로 저장
+{name} already exists - this writes {file}.,{name}은(는) 이미 있습니다 - 이것은 {file}에 씁니다.
+Edit comment,주석 편집
+Comment text (multiline supported; highlight text to format it),"주석 텍스트(여러 줄 가능, 텍스트를 선택해 서식 지정)"
+Background,배경
+Highlight text to format it; comments render BBCode in the sheet.,텍스트를 선택해 서식을 지정하세요. 주석은 시트에서 BBCode로 표시됩니다.
+A colour behind this comment on the sheet. Clear its alpha to 0 to go back to the theme default.,시트에서 이 주석 뒤에 깔리는 색입니다. 알파를 0으로 하면 테마 기본값으로 돌아갑니다.
+Writes ## instead of #. Notes left as # stay in this sheet - they are not documentation and nothing counts them as missing.,"# 대신 ##을 씁니다. #으로 남긴 메모는 이 시트에만 있으며, 문서가 아니므로 누락으로 세지 않습니다."
+theme default,테마 기본값
+Compare a value on {object},{object}의 값 비교
+Insert Snippet,스니펫 삽입
+Search snippets,스니펫 검색
+Snippets,스니펫
+Fill in,채우기
+Fill it once and the rows land filled; the snippet keeps its blanks for next time.,한 번 채우면 행이 채워진 채 들어갑니다. 스니펫은 다음을 위해 빈칸을 그대로 둡니다.
+Narrows the list to the snippets whose name holds what you type.,입력한 내용이 이름에 들어 있는 스니펫만 남깁니다.
+"Every snippet in the project's library, by the name it was saved under. Save Selection as Snippet… adds to it.",프로젝트 라이브러리의 모든 스니펫을 저장한 이름으로 보여 줍니다. 선택 항목을 스니펫으로 저장…으로 추가합니다.
+{n} blank(s),빈칸 {n}개
+No snippet's name holds that.,그런 이름의 스니펫이 없습니다.
+Ready to insert.,삽입할 준비가 되었습니다.
+Still to fill in: {blanks}.,아직 채울 것: {blanks}.
+{file} isn't a sheet snippet.,{file}은(는) 시트 스니펫이 아닙니다.
+Paste {n} row(s) retargeted,{n}개 행을 대상 바꿔 붙여넣기
+Paste Retargeted,대상 바꿔 붙여넣기
+On the way in,들어올 때
+"Object references are rewritten token-safely ($Enemy never touches $EnemySpawner); a variable this sheet has is reused, one it lacks is created.",오브젝트 참조는 토큰 단위로 안전하게 바뀝니다($Enemy는 $EnemySpawner를 건드리지 않음). 이 시트에 있는 변수는 재사용하고 없는 변수는 만듭니다.
+The object these rows point at once pasted. Pick one from the scene or type a node path.,붙여넣은 뒤 이 행들이 가리킬 오브젝트입니다. 씬에서 고르거나 노드 경로를 입력하세요.
+"The variable these rows use once pasted: one this sheet has is reused, one it lacks is created.","붙여넣은 뒤 이 행들이 쓸 변수입니다. 시트에 있으면 재사용하고, 없으면 만듭니다."
+{n} row(s) on the clipboard.,클립보드에 {n}개 행.
+"These rows name no objects and no variables, so a plain Paste already does the job.",이 행들은 오브젝트도 변수도 이름 짓지 않으므로 일반 붙여넣기로 충분합니다.
+pasted as copied,복사한 그대로 붙여넣기

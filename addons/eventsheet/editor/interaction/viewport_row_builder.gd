@@ -170,6 +170,9 @@ var _answer_return_rows: int = 0
 # only a number; which MENU that number belongs to is a fact about the walk (the lambda it was handed
 # to, or the function the connect line named), so it is stamped here exactly as the verb kind is.
 var _current_menu_key: String = ""
+## Which structured matches read as branches (see match_reads_as_branches), keyed by the match and its
+## patterns, so the walk's line count and the later span pass give the same answer.
+var _branch_matches: Dictionary = {}
 # Per-build occurrence counters ("label" -> count) giving every paired region a STABLE
 # fold key ("label#n") that survives sessions - row uids are instance-based and cannot
 # (the persisted-folds layer keys on these instead). Reset by _pair_region_fences.
@@ -8725,6 +8728,86 @@ func _build_timeline_step_rows(event_row: EventRow, indent: int) -> Array[EventR
 	return rows
 
 
+## Whether a structured match reads as BRANCHES - the shape the Match window writes: every case one or
+## more plain values, the catch-all `_` last, and a subject that is neither a menu's picked item nor a
+## combo's spelled move (those read as rows of their own). Such a match says "match state" beside its
+## event's trigger and each case is a sub-event ("state = State.IDLE", "Else") holding its own actions.
+## Decided once per match per walk: the line count is taken during the walk and the spans are built
+## later, and the two must give the same answer.
+func match_reads_as_branches(match_row: MatchRow, event_row: EventRow) -> bool:
+	if match_row == null or not match_row.enabled or match_row.cases.is_empty():
+		return false
+	var signature: String = match_row.match_expression
+	for match_case: MatchCase in match_row.cases:
+		signature += "\n" + (match_case.pattern if match_case != null else "")
+	var key: String = "%d|%s" % [match_row.get_instance_id(), signature]
+	if _branch_matches.has(key):
+		return bool(_branch_matches[key])
+	var answer: bool = not match_row.match_expression.strip_edges().is_empty()
+	for case_index: int in range(match_row.cases.size()):
+		var match_case: MatchCase = match_row.cases[case_index]
+		if not answer or match_case == null or not is_plain_match_pattern(match_case.pattern):
+			answer = false
+			break
+		if match_case.pattern.strip_edges() == "_" and case_index != match_row.cases.size() - 1:
+			answer = false
+	if answer:
+		answer = _menu_of_match(match_row, event_row).is_empty() and _combo_of_match(match_row).is_empty()
+	_branch_matches[key] = answer
+	return answer
+
+
+## The Add action door under a branch's actions - the door an event's action lane ends with. The row
+## carries its MatchCase, so the picked action lands in THIS branch and a switch fills like any event.
+func _append_case_add_action(case_row: EventRowData, action_lines: int) -> void:
+	if _scaffolding_suppressed():
+		return
+	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
+	var add_color: Color = action_style.get("text_color", _viewport._get_action_style().text_color)
+	add_color.a *= 0.55
+	case_row.spans.append(_make_span(EventSheetL10n.translate("+ Add action"), SemanticSpan.SpanType.ACTION, {
+		"lane": "action",
+		"kind": "add_action",
+		"line_index": action_lines,
+		"text_color": add_color,
+		"font_size_delta": action_style.get("font_size_delta", 0)
+	}))
+	case_row.line_count = maxi(case_row.line_count, action_lines + 1)
+
+
+## The match head on its event's condition lane: "match state", after the trigger. It carries the
+## match's action index, so a double-click opens the Match window exactly as the old caption did.
+func _match_head_span(match_row: MatchRow, action_index: int, line_index: int, style_meta: Dictionary) -> SemanticSpan:
+	return _make_span("%s %s" % [EventSheetL10n.translate("match"), match_row.match_expression.strip_edges()],
+		SemanticSpan.SpanType.CONDITION, {
+			"lane": "condition",
+			"kind": "match_head",
+			"ace_index": action_index,
+			"match_action": true,
+			"chip": false,
+			"line_index": line_index
+		}.merged(style_meta, true))
+
+
+## How many condition lines the branch-reading matches of an event add: none when the event has its
+## trigger line alone (the head sits on that line, after the trigger), otherwise one each.
+func _match_head_lines(event_row: EventRow, condition_lines: int) -> int:
+	var heads: int = 0
+	for action_item: Variant in event_row.actions:
+		if action_item is MatchRow and match_reads_as_branches(action_item as MatchRow, event_row):
+			heads += 1
+	if heads == 1 and _match_head_shares_trigger_line(event_row, condition_lines):
+		return 0
+	return heads
+
+
+## True when the event's condition lane holds exactly its trigger line, so one match head can sit
+## beside the trigger ("Every tick, match state") instead of on a line of its own.
+func _match_head_shares_trigger_line(event_row: EventRow, condition_lines: int) -> bool:
+	return condition_lines == 1 and event_row.else_mode == EventRow.ElseMode.NONE \
+		and (event_row.trigger != null or not event_row.trigger_id.is_empty())
+
+
 ## One condition/action child row per case of any structured MatchRow in this event's actions - the switch
 ## mapped onto the sheet: the case PATTERN reads as a condition, the case BODY as the actions to run. The row
 ## keeps the MatchRow as source_resource so double-click opens the switch editor; an empty case body is a
@@ -8767,6 +8850,12 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 		if not combo.is_empty():
 			state_shaped = false
 			else_if_chain = false
+		# A switch on plain values reads the way the Match window writes one: each branch is a
+		# sub-event saying "state = State.IDLE" (or Else), holding its own actions and its own Add action.
+		var branches: bool = match_reads_as_branches(match_row, event_row)
+		if branches:
+			state_shaped = false
+			else_if_chain = false
 		var chain_index: int = 0
 		for match_case: MatchCase in match_row.cases:
 			if match_case == null:
@@ -8803,9 +8892,12 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 				elif case_item is CommentRow:
 					for comment_line: String in (case_item as CommentRow).text.split("\n"):
 						body.append("# " + comment_line)
-			if body.is_empty() and transition_children.is_empty():
+			# A branch that does nothing yet is an empty lane with its Add action, not a "pass".
+			if branches and body.size() == 1 and body[0].strip_edges() == "pass":
+				body = PackedStringArray()
+			if body.is_empty() and transition_children.is_empty() and not branches:
 				body = PackedStringArray(["pass"])
-			elif body.is_empty():
+			elif body.is_empty() and not transition_children.is_empty():
 				body = PackedStringArray([" "])
 			var pattern_text: String = str(match_case.pattern).strip_edges()
 			var case_label: String = pattern_text
@@ -8816,7 +8908,7 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 			# state-shaped subject (a String state, another object's machine) keeps the older
 			# "State: <leaf>" reading it has always had.
 			var own_state_arm: String = "" if not own_state_match else EventSheetStateFacts.arm_reading(pattern_text)
-			if not own_state_arm.is_empty():
+			if not branches and not own_state_arm.is_empty():
 				case_label = own_state_arm
 			elif state_shaped and pattern_text != "_":
 				case_label = "%s: %s" % [EventSheetL10n.translate("State"), _pattern_leaf(pattern_text)]
@@ -8830,6 +8922,11 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 			if else_if_chain:
 				chain_spans = _match_else_if_condition_spans(match_row.match_expression, pattern_text, chain_index)
 				chain_index += 1
+			if branches:
+				# Every branch states its own test in the sentence grammar the sheet uses for any
+				# comparison (the subject read in words, the value in the value colour); the catch-all
+				# is a plain Else. No Else chip on the others: each branch is its own sub-event.
+				chain_spans = _match_else_if_condition_spans(match_row.match_expression, pattern_text, 0)
 			var case_row: EventRowData = _build_condition_action_row(case_label, body, indent, match_row, false, chain_spans)
 			if not chain_spans.is_empty():
 				# An Else-if's test sits on the SECOND condition line, under the Else chip, so the row is
@@ -8839,6 +8936,9 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 					chain_lines = maxi(chain_lines, int(chain_span.metadata.get("line_index", 0)) + 1)
 				case_row.line_count = maxi(case_row.line_count, chain_lines)
 			case_row.language_block = true  # a switch case - a language construct, not a regular ACE event
+			if branches:
+				case_row.match_case = match_case
+				_append_case_add_action(case_row, body.size())
 			for transition_child: EventRowData in transition_children:
 				case_row.children.append(transition_child)
 			if state_shaped and pattern_text != "_" and not case_row.spans.is_empty():
@@ -13792,6 +13892,17 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			)
 		)
 		condition_line_index += 1
+	# A switch that reads as branches says which value it decides by on the condition lane, beside the
+	# trigger when that is all the lane holds; its branches are the sub-events below.
+	var head_beside_trigger: bool = _match_head_lines(event_row, condition_line_index) == 0
+	for head_index: int in range(event_row.actions.size()):
+		var head_match: MatchRow = event_row.actions[head_index] as MatchRow
+		if head_match == null or not match_reads_as_branches(head_match, event_row):
+			continue
+		spans.append(_match_head_span(head_match, head_index,
+			0 if head_beside_trigger else condition_line_index, condition_style_meta))
+		if not head_beside_trigger:
+			condition_line_index += 1
 	# In a READ-ONLY preview a body-only row leaves its left cell blank, exactly as an event sheet
 	# draws one: "Always" is a placeholder that invites a condition, and a view that accepts none
 	# must not invite.
@@ -14117,6 +14228,9 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				# and the dialog edits those cases as first-class rows; a raw-text MatchRow shows its
 				# branches_text and the dialog edits the text. Either way match_action drives the editor.
 				var match_resource: MatchRow = action_resource as MatchRow
+				# Read as branches, the match has said itself on the condition lane already.
+				if match_reads_as_branches(match_resource, event_row):
+					continue
 				var structured_match: bool = not match_resource.cases.is_empty()
 				# A STRUCTURED match's header is a muted caption in plain words - `match state:`
 				# is code where a reader expects meaning, and the case rows below already say it.
@@ -14489,6 +14603,7 @@ func _count_event_lines(event_row: EventRow) -> int:
 	for pick_entry in event_row.pick_filters:
 		if pick_entry is PickFilter and (pick_entry as PickFilter).enabled:
 			condition_lines += 1
+	condition_lines += _match_head_lines(event_row, condition_lines)
 	# "+ Add condition" sits on its own line below the conditions, so the lane's last line index
 	# equals the condition line count - except an empty lane, where the Every Tick placeholder
 	# holds line 0 and the affordance takes line 1 (mirrors _build_event_spans exactly).
@@ -14555,7 +14670,9 @@ func _count_event_lines(event_row: EventRow) -> int:
 			action_count += 1 + (action_resource as CollectionDeclRow).entry_values.size()
 		elif action_resource is MatchRow:
 			var match_resource: MatchRow = action_resource as MatchRow
-			if not match_resource.cases.is_empty():
+			if match_reads_as_branches(match_resource, event_row):
+				pass  # its head is on the condition lane; each branch is its own child row
+			elif not match_resource.cases.is_empty():
 				action_count += 1  # just the `match expr:` header; each case is its own child row now
 			else:
 				action_count += match_resource.branches_text.split("\n").size() + 1

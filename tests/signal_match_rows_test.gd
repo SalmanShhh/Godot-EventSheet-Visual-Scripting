@@ -168,24 +168,23 @@ static func run() -> bool:
 	all_passed = _check("signal dialog sanitizes + applies",
 		hit.signal_name == "took_damage" and hit.params == PackedStringArray(["amount: int"]), true) and all_passed
 
-	# The match is edited as first-class cases (a pattern + a body per branch), not a text blob.
+	# The match is edited as branches: a raw-text match opens split into its branch rows.
 	editor._struct_rows._ensure_match_dialog()
-	editor._struct_rows._match_target = match_row
-	editor._struct_rows._match_expression_edit.text = "state"
-	# A broken case body (invalid GDScript) must not commit - the whole construct is lint-gated.
-	editor._struct_rows._clear_match_case_rows()
-	editor._struct_rows._add_match_case_row("State.RUN", "broken missing colon")
+	editor._struct_rows._populate_match_dialog(match_row)
+	# A value that is not valid code must not commit - the whole construct is lint-gated.
+	(editor._struct_rows._match_case_rows[0]["pattern"] as LineEdit).text = "broken missing colon"
 	editor._struct_rows._on_match_dialog_confirmed()
 	all_passed = _check("broken match never commits (cases + text unchanged)",
-		match_row.cases.is_empty() and match_row.branches_text.contains("State.IDLE:"), true) and all_passed
-	# A valid case applies as a structured MatchCase (and keeps branches_text in sync as the raw fallback).
-	editor._struct_rows._clear_match_case_rows()
-	editor._struct_rows._add_match_case_row("State.RUN", "state = State.IDLE")
+		[match_row.cases.size(), match_row.branches_text], [0, "State.IDLE:\n\tpass\n_:\n\tqueue_free()"]) and all_passed
+	# A valid value applies as structured cases, each keeping the body it had (and branches_text in sync).
+	(editor._struct_rows._match_case_rows[0]["pattern"] as LineEdit).text = "RUN"
 	editor._struct_rows._on_match_dialog_confirmed()
-	all_passed = _check("valid match applies as a structured case",
-		match_row.cases.size() == 1 and (match_row.cases[0] as MatchCase).pattern == "State.RUN", true) and all_passed
+	var applied: Array = []
+	for applied_case: MatchCase in match_row.cases:
+		applied.append(applied_case.pattern)
+	all_passed = _check("valid match applies as structured cases", applied, ["State.RUN", "_"]) and all_passed
 	all_passed = _check("branches_text stays in sync with the cases",
-		match_row.branches_text, "State.RUN:\n\tstate = State.IDLE") and all_passed
+		match_row.branches_text, "State.RUN:\n\tpass\n_:\n\tqueue_free()") and all_passed
 	editor.free()
 
 	return all_passed

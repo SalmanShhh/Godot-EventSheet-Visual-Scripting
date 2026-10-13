@@ -49,18 +49,25 @@ static func list_snippets() -> PackedStringArray:
 ## file outside the folder (then never showed in the list). Path-ish characters
 ## collapse to underscores instead.
 static func save_snippet(snippet_name: String, snippet_text: String) -> String:
-	var target: String = snippet_path_for(snippet_name)
-	var base_name: String = target.get_file().get_basename()
+	var target: String = free_path_for(snippet_name)
 	DirAccess.make_dir_recursive_absolute(snippets_dir())
-	var suffix: int = 2
-	while FileAccess.file_exists(target):
-		target = snippets_dir().path_join("%s-%d.txt" % [base_name, suffix])
-		suffix += 1
 	var file: FileAccess = FileAccess.open(target, FileAccess.WRITE)
 	if file == null:
 		return ""
 	file.store_string(snippet_text)
 	file.close()
+	return target
+
+
+## The file save_snippet would write for this name: its own file, or name-2 / name-3 … when that one
+## is taken - so a window can say which before anything is written.
+static func free_path_for(snippet_name: String) -> String:
+	var target: String = snippet_path_for(snippet_name)
+	var base_name: String = target.get_file().get_basename()
+	var suffix: int = 2
+	while FileAccess.file_exists(target):
+		target = snippets_dir().path_join("%s-%d.txt" % [base_name, suffix])
+		suffix += 1
 	return target
 
 

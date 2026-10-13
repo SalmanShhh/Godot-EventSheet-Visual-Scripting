@@ -181,15 +181,8 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 			_dock._open_signal_dialog(new_signal)
 		_dock.ROW_MENU_ADD_MATCH:
 			if _dock._context_row.source_resource is EventRow:
-				var new_match: MatchRow = MatchRow.new()
-				var match_host: EventRow = _dock._context_row.source_resource as EventRow
-				var added_match: bool = _dock._perform_undoable_sheet_edit("Add Match", func() -> bool:
-					match_host.actions.append(new_match)
-					return true
-				)
-				if added_match:
-					_dock._refresh_after_edit()
-					_dock._open_match_dialog(new_match)
+				# Nothing lands until Done: the window adds the match and its branches in one undo step.
+				_dock._struct_rows.open_match_dialog(MatchRow.new(), _dock._context_row.source_resource as EventRow)
 			else:
 				_dock._set_status("Select an event to add a match to its actions.", true)
 		_dock.ROW_MENU_FIND_USAGES:

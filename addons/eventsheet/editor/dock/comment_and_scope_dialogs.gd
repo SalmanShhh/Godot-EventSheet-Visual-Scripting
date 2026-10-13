@@ -24,6 +24,9 @@ var _comment_text_edit: TextEdit = null
 var _comment_color_button: ColorPickerButton = null
 var _comment_manual_check: CheckBox = null
 var _comment_dialog_target: CommentRow = null
+var _comment_band: EventSheetPopupUI.RowBand = null
+var _comment_color_label: Label = null
+var _comment_strip: EventSheetPopupUI.HelpStrip = null
 
 
 ## Dialog editor for comments: multiline comment rows, action-cell comments, and the row
@@ -37,47 +40,83 @@ func open_comment_dialog(comment_resource: Resource) -> void:
 	_comment_text_edit.text = comment_row.text
 	_comment_color_button.color = comment_row.custom_color
 	_comment_manual_check.button_pressed = comment_row.is_documentation()
-	_comment_dialog.popup_centered(Vector2i(560, 320))
-	_comment_text_edit.grab_focus()
+	_refresh_comment()
+	if _dock.is_inside_tree():
+		_comment_dialog.popup_centered(Vector2i(int(EventSheetPalette.scaled_f(560.0)), 0))
+		_comment_text_edit.grab_focus()
 
 
 func _ensure_comment_dialog() -> void:
 	if _comment_dialog != null:
 		return
 	_comment_dialog = ConfirmationDialog.new()
-	_comment_dialog.title = "Edit Comment"
+	_comment_dialog.title = EventSheetL10n.translate("Edit comment")
+	_comment_dialog.ok_button_text = EventSheetL10n.translate("Save")
 	var form: VBoxContainer = EventSheetPopupUI.form_box()
-	form.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_comment_band = EventSheetPopupUI.RowBand.new()
+	form.add_child(_comment_band)
+	var card: VBoxContainer = EventSheetPopupUI.form_box()
 	_comment_text_edit = TextEdit.new()
-	_comment_text_edit.custom_minimum_size = Vector2(520.0, 200.0)
+	_comment_text_edit.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(500.0), EventSheetPalette.scaled_f(150.0))
 	_comment_text_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_comment_text_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	# Wrap long lines to the box width so the whole comment is readable without a horizontal scroll
-	# (event-sheet style); Enter still inserts a newline (a multiline TextEdit consumes it rather
-	# than confirming).
+	# (event-sheet style); Enter still inserts a newline.
 	_comment_text_edit.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
-	_comment_text_edit.placeholder_text = "Comment text (multiline supported; highlight text to format it)"
-	form.add_child(_comment_text_edit)
+	_comment_text_edit.placeholder_text = EventSheetL10n.translate("Comment text (multiline supported; highlight text to format it)")
+	_comment_text_edit.text_changed.connect(_refresh_comment)
+	card.add_child(_comment_text_edit)
 	# Discord-style formatting: highlight text and a small unfocused bar floats above the
 	# selection to wrap it in BBCode (comments render BBCode in the sheet).
 	EventSheetBBCodeSelectionBar.attach(_comment_text_edit)
+	# The swatch says what it is set to beside it: "theme default" while its alpha is 0, which is
+	# what a cleared background means.
 	_comment_color_button = ColorPickerButton.new()
-	_comment_color_button.custom_minimum_size = Vector2(64.0, 0.0)
+	_comment_color_button.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(64.0), 0.0)
 	_comment_color_button.color = Color(0, 0, 0, 0)
-	form.add_child(EventSheetPopupUI.form_row("Background", _comment_color_button))
-	form.add_child(EventSheetPopupUI.hint_label("Alpha 0 = theme default."))
+	_comment_color_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_comment_color_button.color_changed.connect(func(_color: Color) -> void: _refresh_comment())
+	_comment_color_label = Label.new()
+	_comment_color_label.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
+	var swatch_row: HBoxContainer = HBoxContainer.new()
+	swatch_row.add_child(_comment_color_button)
+	swatch_row.add_child(_comment_color_label)
+	card.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Background"), swatch_row))
 	# The ONE control that decides which of GDScript's two comment spellings this row writes.
 	# Ticked, the row writes `##` - the documentation form the engine renders and the project manual
-	# sets as prose. Unticked, it writes `#` and never leaves this sheet. There is no separate
-	# "publish" field: the marker in the file IS the setting, so the row and the line always agree.
+	# sets as prose. Unticked, it writes `#` and never leaves this sheet. The marker in the file IS
+	# the setting, so the row and the line always agree.
 	_comment_manual_check = CheckBox.new()
 	_comment_manual_check.text = EventSheetL10n.translate("Shows in the manual")
-	form.add_child(_comment_manual_check)
-	form.add_child(EventSheetPopupUI.hint_label(
-		"Writes ## instead of #. Notes left as # stay in this sheet - they are not documentation and nothing counts them as missing.", 480.0))
+	_comment_manual_check.toggled.connect(func(_on: bool) -> void: _refresh_comment())
+	card.add_child(_comment_manual_check)
+	form.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("Comment"), card))
+	_comment_strip = EventSheetPopupUI.help_strip(EventSheetL10n.translate("Comment"),
+		EventSheetL10n.translate("Highlight text to format it; comments render BBCode in the sheet."),
+		"", "", EventSheetPalette.scaled_f(480.0))
+	form.add_child(_comment_strip)
+	_comment_strip.follow(_comment_text_edit, EventSheetL10n.translate("Comment"),
+		EventSheetL10n.translate("Highlight text to format it; comments render BBCode in the sheet."))
+	_comment_strip.follow(_comment_color_button, EventSheetL10n.translate("Background"),
+		EventSheetL10n.translate("A colour behind this comment on the sheet. Clear its alpha to 0 to go back to the theme default."))
+	_comment_strip.follow(_comment_manual_check, EventSheetL10n.translate("Shows in the manual"),
+		EventSheetL10n.translate("Writes ## instead of #. Notes left as # stay in this sheet - they are not documentation and nothing counts them as missing."))
 	_comment_dialog.add_child(EventSheetPopupUI.margined(form))
 	_comment_dialog.confirmed.connect(_on_comment_dialog_confirmed)
 	_dock.add_child(_comment_dialog)
+
+
+## The comment's first line as the file will hold it - `#` or `##` before it - for the band and the
+## strip, and the swatch's own label.
+func _refresh_comment() -> void:
+	var marker: String = "##" if _comment_manual_check.button_pressed else "#"
+	var first_line: String = _comment_text_edit.text.get_slice("\n", 0)
+	var line: String = "%s %s" % [marker, first_line]
+	if _comment_text_edit.text.contains("\n"):
+		line += " …"
+	_comment_band.show_row("", line)
+	_comment_strip.set_reading("", line)
+	_comment_color_label.text = EventSheetL10n.translate("theme default") if _comment_color_button.color.a <= 0.0 else ""
 
 
 func _on_comment_dialog_confirmed() -> void:

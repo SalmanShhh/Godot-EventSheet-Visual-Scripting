@@ -134,6 +134,54 @@
   name. A node slot among the events gets Pick (the editor's node picker; the value becomes `$Muzzle`
   looked up when the node is ready), a resource slot Load (`preload("res://…")`) and New (`Curve.new()`).
 
+### Changed: Match is written as branches, and each branch fills like any event
+
+- **The Match window is laid out like the parameters window.** A Value (this sheet's variables
+  offered as you type, with the type and description of the one picked), one row per branch -
+  "Match 1  IDLE" - and Otherwise (Else, or nothing). One match per state adds a branch for every
+  value of the enum the Value holds; a value matched twice is refused before Done. A branch reads
+  back by its own name (IDLE) and is written with its enum's (State.IDLE). The window no longer
+  edits branch bodies as code.
+- **On the sheet a switch on plain values reads as branches.** The event says "match state"
+  beside its trigger, and every branch is a sub-event stating its own test in the sheet's comparison
+  grammar - "state = State.IDLE", several values as an OR block, Else - with its own Add action: the
+  picked action lands in that branch, replacing the `pass` that held an empty one's place. An empty
+  branch shows its Add action rather than "pass". This replaces the "decides by" caption, the Else
+  chips the later branches wore, and the "Is in Patrol" / "State: PATROL" arm readings for such
+  matches.
+- **Add Match To Actions… adds nothing until Done**, then the match and its branches in one undo
+  step (it used to add a placeholder match first, so a Cancel left one behind). Re-editing keeps
+  every branch's actions under its new value, an untouched Done is no edit, and removing a branch
+  that holds actions says how many Done will drop.
+- The Edit Enum and Edit Signal windows are on the window kit: a band showing the line they write,
+  a card per part, the help strip with its IN CODE line, and a red edge on the field a problem is
+  about, with OK held until it is fixed. Both, and the Match window, read in the editor's language.
+
+### Changed: the small writing windows say what they write before OK
+
+- **Connect Signal** shows the event that will land in a band, notes the signals the sheet already
+  handles ("in door.gd", and a warning that Connect adds a second event), shows the handler line it
+  writes, and has a Cancel button.
+- **Paste Special** splits Objects and Variables into two cards, each field with its note under it,
+  and says what the paste will change in one line.
+- **Insert Snippet** is one window: the library (searchable, names exactly as saved, how many blanks
+  each asks for) and the chosen snippet's blanks to fill, with Insert held while one is empty. The
+  separate blanks window is gone.
+- **Save Selection as Snippet** is on the kit, with Cancel; a name the library already has is said
+  in amber before saving - the first is kept and this one is written as name-2 - instead of being
+  refused after the click.
+- **Edit Parameter** shows the function's row with this input marked and the `func` line it writes;
+  a default ahead of an input without one is refused in the window (it used to close and refuse in
+  the status bar), and the "Delete this parameter" tick read on Apply is now a red Delete button.
+- **Edit Comment** shows the `#` or `##` line in the band and the strip, and the swatch says "theme
+  default" beside itself instead of an "Alpha 0" hint. An untouched Save is still no edit.
+- **Compare** shows the row it writes in a band at the top (its title names the object); the strip
+  keeps the IN CODE line.
+- **Add behavior**: the search and the shelves share one row, a pack's knobs are typed Inspector
+  fields (a number you can scrub, a tick) under their own names with the pack's doc line in the help
+  strip, the strip says where the pack will land, and a search that hides the chosen pack moves the
+  choice to the first match. Every window here reads in the editor's language.
+
 ### Fixed: the variable window speaks the editor's language
 
 - The variable window, its look list and its type list were English in every language: the card

@@ -553,6 +553,9 @@ static func _test_empty_to_blocks_ok() -> bool:
 	dialog._refresh()
 	passed = SUPPORT.check("comparison_rows_test", "a filled To lets it through",
 		dialog._dialog.get_ok_button().disabled, false) and passed
+	passed = SUPPORT.check("comparison_rows_test", "the band reads the row, the strip keeps only its code",
+		[dialog._band.words_label.text, dialog._help_strip.reads_as_row.visible, dialog._help_strip.in_code_value.text],
+		["score > 10", false, "if score > 10:"]) and passed
 	dialog._on_confirmed()
 	passed = SUPPORT.check("comparison_rows_test", "and the row is written", emitted, [COMPARE.ACE_COMPARE_VALUES]) and passed
 	dialog._rebuild_operators(COMPARE.KIND_NUMBER, COMPARE.OPERATOR_BETWEEN)

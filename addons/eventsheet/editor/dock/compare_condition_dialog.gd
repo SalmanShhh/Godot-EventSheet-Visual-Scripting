@@ -80,7 +80,7 @@ const SOMETHING_ELSE := "__something_else__"
 
 var _dock: Control = null
 var _dialog: ConfirmationDialog = null
-var _owner_label: Label = null
+var _band: EventSheetPopupUI.RowBand = null
 var _left_option: OptionButton = null
 var _left_edit: LineEdit = null
 var _left_row: Control = null
@@ -382,8 +382,8 @@ func open(context: Dictionary, ace_id: String = "", params: Dictionary = {}, neg
 	_tolerance_edit.text = str(boxes.get("tolerance", "0.01"))
 	_ignore_case_check.button_pressed = bool(boxes.get("ignore_case", false))
 	_invert_check.button_pressed = bool(boxes.get("negated", false))
-	_owner_label.text = _owner_text()
-	_dialog.title = EventSheetL10n.translate("Compare")
+	_dialog.title = EventSheetL10n.translate("Compare") if _owner_name().is_empty() \
+		else EventSheetL10n.translate("Compare a value on {object}").replace("{object}", _owner_name())
 	_refresh()
 	_dialog.popup_centered(Vector2i(int(EventSheetPalette.scaled_f(560.0)), int(EventSheetPalette.scaled_f(420.0))))
 
@@ -398,13 +398,13 @@ func _ensure_dialog() -> void:
 	_dialog.confirmed.connect(_on_confirmed)
 	_dock.add_child(_dialog)
 
+	var page: VBoxContainer = EventSheetPopupUI.form_box()
+	_dialog.add_child(EventSheetPopupUI.margined(page))
+	# The row itself at the top, the way the sheet will read it: whose comparison this is in the object
+	# column, the comparison beside it.
+	_band = EventSheetPopupUI.RowBand.new()
+	page.add_child(_band)
 	var form: VBoxContainer = EventSheetPopupUI.form_box()
-	_dialog.add_child(EventSheetPopupUI.margined(form))
-
-	# Whose comparison this is, said once at the top - the same "to Player" line the Add variable
-	# dialog leads with, because a row belongs to an object before it belongs to a condition.
-	_owner_label = EventSheetPopupUI.hint_label("")
-	form.add_child(_owner_label)
 
 	# WHAT. The sheet's own variables, each with its type word and what it starts at, and a free-text
 	# entry for everything else - which is the difference between Compare variable and Compare Values.
@@ -454,10 +454,11 @@ func _ensure_dialog() -> void:
 	_invert_check.text = "Invert - true when it is NOT the case"
 	_invert_check.toggled.connect(func(_on: bool) -> void: _refresh())
 	form.add_child(_invert_check)
+	page.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("Compare"), form))
 
 	_help_strip = EventSheetPopupUI.help_strip("Compare",
 		"Pick what to compare, how, and to what. The row you get is whichever condition matches - the ids and the code are the sheet's own.")
-	form.add_child(_help_strip)
+	page.add_child(_help_strip)
 	_help_strip.follow(_left_option, "Compare",
 		"The left side of the question. Pick one of this sheet's variables, or choose the last entry to type any expression - then the row is a plain value comparison.")
 	_help_strip.follow(_left_edit, "Compare",
@@ -543,9 +544,9 @@ func _refresh() -> void:
 	# comparison with nothing on one side, which is a row that will not compile.
 	_dialog.get_ok_button().disabled = not ready_to_write()
 	var written: Dictionary = _written()
-	_help_strip.set_reading(
-		reads_as(str(written["ace_id"]), written["params"], bool(written["negated"]), _owner_name()),
-		in_code(str(written["ace_id"]), written["params"], bool(written["negated"])))
+	# The row reads in the band at the top; the strip keeps the line it compiles to.
+	_band.show_row(_owner_name(), reads_as(str(written["ace_id"]), written["params"], bool(written["negated"])))
+	_help_strip.set_reading("", in_code(str(written["ace_id"]), written["params"], bool(written["negated"])))
 
 
 ## The row this dialog would write right now.
@@ -593,11 +594,6 @@ func _sheet() -> EventSheetResource:
 ## the one place that answers it.
 func _owner_name() -> String:
 	return EventSheetVariableOwners.owner_of_sheet(_sheet())
-
-
-func _owner_text() -> String:
-	var owner: String = _owner_name()
-	return "" if owner.is_empty() else EventSheetL10n.translate("on {object}").replace("{object}", owner)
 
 
 ## True when every value box on screen is filled in: the typed left side (when no variable is

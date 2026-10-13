@@ -8000,3 +8000,106 @@ Featured,精选
 "Inside this function, use it like any variable.",在此函数内，像任何变量一样使用它。
 Every call has to give it a value.,每次调用都必须给它一个值。
 "When it is called without one, it is %s.",调用时省略它，它就是 %s。
+Edit enum {name},编辑枚举 {name}
+Edit Enum,编辑枚举
+Enum name,枚举名称
++ Add value,+ 添加值
+"The enum's name. It becomes a type: a variable can hold one of its values, and a match can pick between them.",枚举的名称。它会成为一个类型：变量可以保存其中一个值，match 可以在这些值之间选择。
+"One value per field; an optional ""= 4"" sets an explicit number.","每个栏一个值；可选的 ""= 4"" 指定明确的数字。"
+Multi-line enum,多行枚举
+Remove this value,移除此值
+"""{name}"" can't be an enum name (letters/digits/underscores, not a GDScript keyword).","""{name}"" 不能作为枚举名称（只能用字母/数字/下划线，且不能是 GDScript 关键字）。"
+"""{name}"" can't be an enum value name.","""{name}"" 不能作为枚举值名称。"
+Enums need a name and at least one value.,枚举需要一个名称和至少一个值。
+Edit signal {name},编辑信号 {name}
+Edit Signal,编辑信号
+Signal name,信号名称
+What the signal is called. It appears in the On signal and Emit signal pickers under this name.,信号的名称。它会以此名称出现在 On signal 和 Emit signal 选择器中。
+"One parameter per line; an optional ""damage: int"" gives it a type.","每行一个参数；可选的 ""damage: int"" 为其指定类型。"
+"""{name}"" can't be a signal name (letters/digits/underscores, not a GDScript keyword).","""{name}"" 不能作为信号名称（只能用字母/数字/下划线，且不能是 GDScript 关键字）。"
+"""{name}"" can't be a signal parameter name.","""{name}"" 不能作为信号参数名称。"
+Parameters for System: Match,System: Match 的参数
+This sheet's variables (any expression still works),此表的变量（任何表达式也都可以）
+Else (anything else),Else（其他所有情况）
+A last branch for every value the matches above do not name.,为上面的 match 没有列出的每个值准备的最后一个分支。
+Nothing,无
+No last branch: a value no match names does nothing.,没有最后分支：任何 match 都未列出的值什么也不做。
+Otherwise,否则
++ Add match,+ 添加 match
+One match per state,每个状态一个 match
+"Each match becomes a sub-event on the sheet; its actions are added there, like any event.",每个 match 都会成为表上的一个子事件；它的动作在那里添加，就像任何事件一样。
+"Run one branch, picked by comparing a value: like a chain of Compare events ending in Else.",运行一个分支，通过比较一个值来选择：就像以 Else 结尾的一串 Compare 事件。
+"What the match compares. Pick one of this sheet's variables from the list, or type any expression.",match 比较的内容。从列表中选择此表的一个变量，或输入任意表达式。
+Else catches every value the matches above do not name; it stays empty (does nothing) until you add actions to it.,Else 捕获上面 match 未列出的每个值；在你添加动作之前它保持为空（什么也不做）。
+Adds one more value to pick between.,再添加一个可供选择的值。
+"Adds a match for every value of the enum the Value holds, skipping the ones already here.",为 Value 所持枚举的每个值添加一个 match，已有的会跳过。
+Pick a value for this branch (you can still type any),为此分支选择一个值（也可以输入任意值）
+Remove this match,移除此 match
+The value this branch runs for: pick from the list or type any value. Otherwise catches everything else.,此分支运行时对应的值：从列表中选择或输入任意值。否则捕获其余所有情况。
+Match {n},Match {n}
+"Pick a Value whose type is one of this sheet's enums, and this adds a match for each of its values.",选择一个类型为此表某个枚举的 Value，这样会为它的每个值添加一个 match。
+Give the match a Value to compare.,给 match 一个要比较的 Value。
+"Add at least one match, or choose Else for Otherwise.",至少添加一个 match，或在否则中选择 Else。
+{value} is matched twice - the second one could never run.,{value} 被匹配了两次 - 第二个永远不会运行。
+match,match
+Done drops the {n} action(s) the removed matches held.,完成会丢弃被移除的 match 所含的 {n} 个动作。
+"Done sets up {n} events on the sheet, ready for your actions.",完成会在表上建立 {n} 个事件，等待你添加动作。
+"Done updates the match: {n} branches, each keeping its actions.",完成会更新 match：{n} 个分支，每个都保留自己的动作。
+The match doesn't compile - check the Value and each match's value.,match 无法编译 - 请检查 Value 和每个 match 的值。
+Add behavior to {object},为 {object} 添加行为
+search,搜索
+Properties,属性
+A node carrying the pack's script under the object - how every pack works.,在对象下放一个带有包脚本的节点 - 每个包都是这样工作的。
+The pack's knobs become this script's own variables. Only packs that say their shape can be written in offer it.,包的参数会成为此脚本自己的变量。只有声明可以这样写入的包才提供此项。
+"Reads every pack's name, its one-line pitch and its folder, so ""jump"" finds the platformer pack.","读取每个包的名称、一句话介绍和文件夹，所以 ""jump"" 能找到平台跳跃包。"
+All,全部
+"{type}, starting at {value}.",{type}，初始值 {value}。
+Connect a signal of {node},连接 {node} 的信号
+{node} - pick a signal,{node} - 选择一个信号
+Narrows the list to the signals whose name holds what you type.,将列表缩小到名称包含你输入内容的信号。
+This signal,此信号
+An On <signal> event is added to the node's sheet; its actions run when the signal fires.,会在节点的表中添加一个 On <信号> 事件；信号触发时运行其动作。
+in {file},在 {file} 中
+No signal of {node} holds that.,{node} 没有包含此内容的信号。
+An {event} event is added to {file}; its actions run when the signal fires.,会在 {file} 中添加一个 {event} 事件；信号触发时运行其动作。
+{file} already handles {signal} - Connect adds a second event for it.,{file} 已经处理 {signal} - 连接会为它再添加一个事件。
+Parameter,参数
+"The parameter's name in the GDScript, and the label on the function's row.",参数在 GDScript 中的名称，也是函数行上的标签。
+"An optional starting value, so whoever uses the function can skip this input. Written as GDScript (10, 1.5, ""idle"", true). Inputs with a default have to come after those without.","可选的初始值，这样使用函数的人可以省略此输入。以 GDScript 书写（10、1.5、""idle""、true）。有默认值的输入必须排在没有默认值的之后。"
+"Opens the function's own window: its name, its doc comment, what kind it is and who can use it.",打开函数自己的窗口：名称、文档注释、类型以及谁能使用它。
+Edit parameter {name},编辑参数 {name}
+"Parameters with a default value must come after those without - move this one down, or give the ones after it defaults too.",有默认值的参数必须排在没有默认值的之后 - 把这个下移，或给后面的参数也设默认值。
+Save to the project snippet library,保存到项目代码片段库
+Snippet,代码片段
+Insert Snippet… lists it by this name.,插入代码片段… 会以此名称列出它。
+Save {n} row(s) as a snippet,将 {n} 行保存为代码片段
+{name} already exists - this writes {file}.,{name} 已存在 - 这会写入 {file}。
+Edit comment,编辑注释
+Comment text (multiline supported; highlight text to format it),注释文本（支持多行；选中文本可设置格式）
+Background,背景
+Highlight text to format it; comments render BBCode in the sheet.,选中文本可设置格式；注释会在表中渲染 BBCode。
+A colour behind this comment on the sheet. Clear its alpha to 0 to go back to the theme default.,表中此注释背后的颜色。将其 alpha 设为 0 即恢复主题默认。
+Writes ## instead of #. Notes left as # stay in this sheet - they are not documentation and nothing counts them as missing.,写成 ## 而不是 #。用 # 的备注只留在此表中 - 它们不是文档，也不会被算作缺失。
+theme default,主题默认
+Compare a value on {object},比较 {object} 上的值
+Insert Snippet,插入代码片段
+Search snippets,搜索代码片段
+Snippets,代码片段
+Fill in,填写
+Fill it once and the rows land filled; the snippet keeps its blanks for next time.,填写一次，行就会带着内容落下；代码片段会保留空白以备下次使用。
+Narrows the list to the snippets whose name holds what you type.,将列表缩小到名称包含你输入内容的代码片段。
+"Every snippet in the project's library, by the name it was saved under. Save Selection as Snippet… adds to it.",项目库中的每个代码片段，以保存时的名称列出。将所选保存为代码片段… 会往里添加。
+{n} blank(s),{n} 个空白
+No snippet's name holds that.,没有代码片段的名称包含此内容。
+Ready to insert.,可以插入。
+Still to fill in: {blanks}.,仍需填写：{blanks}。
+{file} isn't a sheet snippet.,{file} 不是表的代码片段。
+Paste {n} row(s) retargeted,重定向后粘贴 {n} 行
+Paste Retargeted,重定向粘贴
+On the way in,粘贴时
+"Object references are rewritten token-safely ($Enemy never touches $EnemySpawner); a variable this sheet has is reused, one it lacks is created.",对象引用会按词元安全地改写（$Enemy 不会动到 $EnemySpawner）；此表已有的变量会被复用，没有的会被创建。
+The object these rows point at once pasted. Pick one from the scene or type a node path.,粘贴后这些行指向的对象。从场景中选择或输入节点路径。
+"The variable these rows use once pasted: one this sheet has is reused, one it lacks is created.",粘贴后这些行使用的变量：此表已有的会被复用，没有的会被创建。
+{n} row(s) on the clipboard.,剪贴板上有 {n} 行。
+"These rows name no objects and no variables, so a plain Paste already does the job.",这些行没有提到任何对象或变量，所以普通粘贴就够了。
+pasted as copied,按复制时原样粘贴

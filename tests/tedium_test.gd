@@ -189,8 +189,8 @@ static func run() -> bool:
 	# A snippet reads by the name it was saved under, never re-cased into a title.
 	all_passed = _check("a snippet is listed by its own name",
 		EventSheetAuthorActions.snippet_label(saved_path), "combo_bump") and all_passed
-	# Saving the selection under a name the library already has is refused out loud, not filed
-	# quietly as name-2.
+	# Saving the selection under a name the library already has keeps the first and files this one as
+	# name-2 - which the Save window says in amber before anything is written.
 	var clash_sheet: EventSheetResource = EventSheetResource.new()
 	clash_sheet.host_class = "Node"
 	clash_sheet.events.append(snippet_event.duplicate(true))
@@ -199,16 +199,18 @@ static func run() -> bool:
 	clash_editor.set_undo_redo_manager(NoopUndoManager.new())
 	var clash_view: EventSheetViewport = clash_editor.get_viewport_control()
 	clash_view.select_resource(clash_editor._current_sheet.events[0])
-	var before_listing: PackedStringArray = EventSheetSnippetLibrary.list_snippets()
-	all_passed = _check("a clashing snippet name is refused",
-		clash_editor._author_actions._save_selection_snippet_named("Combo Bump"), "") and all_passed
-	all_passed = _check("...writing nothing", EventSheetSnippetLibrary.list_snippets(), before_listing) and all_passed
-	all_passed = _check("...and saying so",
-		clash_editor._status_label.text, "⚠  A snippet called combo_bump already exists - pick another name.") and all_passed
+	clash_editor._author_actions._open_save_snippet_dialog()
+	clash_editor._author_actions._snippet_name_edit.text = "Combo Bump"
+	clash_editor._author_actions._refresh_snippet_name()
+	all_passed = _check("the Save window says a taken name is kept and where this one goes",
+		clash_editor._author_actions._snippet_name_note.text, "combo_bump already exists - this writes combo_bump-3.txt.") and all_passed
+	all_passed = _check("a clashing snippet name is filed beside the first",
+		clash_editor._author_actions._save_selection_snippet_named("Combo Bump").get_file(), "combo_bump-3.txt") and all_passed
 	clash_editor.free()
 	ProjectSettings.set_setting("eventsheets/project/snippets_dir", null)
 	DirAccess.remove_absolute("user://snip_dir/combo_bump.txt")
 	DirAccess.remove_absolute("user://snip_dir/combo_bump-2.txt")
+	DirAccess.remove_absolute("user://snip_dir/combo_bump-3.txt")
 
 	# ── Bulk operations on a selection ────────────────────────────────────────────
 	var bulk_sheet: EventSheetResource = insert_editor._current_sheet

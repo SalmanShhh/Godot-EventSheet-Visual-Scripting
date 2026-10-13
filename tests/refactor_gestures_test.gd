@@ -517,13 +517,27 @@ static func _test_snippet_blanks() -> bool:
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(EventSheetResource.new())
 	editor.set_undo_redo_manager(RecordingUndoManager.new())
-	var dialog: EventSheetSnippetBlanksDialog = EventSheetSnippetBlanksDialog.new()
-	dialog.configure(editor, "Pickup", text)
+	# The Insert Snippet window reads the library, so the snippet is filed in a scratch one first.
+	ProjectSettings.set_setting("eventsheets/project/snippets_dir", "user://refactor_gestures_snippets")
+	var plain_path: String = EventSheetSnippetLibrary.save_snippet("a_plain",
+		EventSheetSnippet.serialize_rows([_tick_event(["\"plain\""])], source))
+	var snippet_path: String = EventSheetSnippetLibrary.save_snippet("pickup", text)
+	var dialog: ConfirmationDialog = load("res://addons/eventsheet/editor/dock/insert_snippet_dialog.gd").new()
+	dialog.configure(editor, EventSheetSnippetLibrary.list_snippets())
+	all_passed = _check("the library lists every snippet by its own name, blanks counted",
+		[dialog._list.get_root().get_child(0).get_text(0), dialog._list.get_root().get_child(1).get_text(0),
+			dialog._list.get_root().get_child(1).get_text(1)], ["a_plain", "pickup", "2 blank(s)"]) and all_passed
+	all_passed = _check("a snippet without blanks shows no form", dialog._fill_card.visible, false) and all_passed
+	dialog._search.text = "pick"
+	dialog._fill_list()
+	all_passed = _check("the search narrows the list and picks what is left", dialog._snippet_path, snippet_path) and all_passed
 	all_passed = _check("the form seeds each field with the blank's own default",
 		(dialog._fields[1].get("edit") as LineEdit).text, "\"coin.ogg\"") and all_passed
 	(dialog._fields[0].get("edit") as LineEdit).text = ""
 	all_passed = _check("an empty answer refuses rather than landing a placeholder row", dialog.confirm(), false) and all_passed
 	all_passed = _check("and nothing was inserted", editor._current_sheet.events.size(), 0) and all_passed
+	all_passed = _check("the window says which blank is missing, Insert held",
+		[dialog._note.text, dialog.get_ok_button().disabled], ["Still to fill in: Pickup Node.", true]) and all_passed
 	# The refusal has to be actionable: AcceptDialog hides on OK before `confirmed` is handled, so
 	# with its default the form - and every other answer already typed - would be gone.
 	all_passed = _check("the form is not thrown away by the press it refused", dialog.dialog_hide_on_ok, false) and all_passed
@@ -542,6 +556,9 @@ static func _test_snippet_blanks() -> bool:
 		_compile(editor._current_sheet), before_insert) and all_passed
 	dialog.free()
 	editor.free()
+	DirAccess.remove_absolute(plain_path)
+	DirAccess.remove_absolute(snippet_path)
+	ProjectSettings.set_setting("eventsheets/project/snippets_dir", null)
 	return all_passed
 
 # ── The menu entries a reader can actually find ──────────────────────────────

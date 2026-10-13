@@ -8000,3 +8000,106 @@ Featured,En vedette
 "Inside this function, use it like any variable.","Dans cette fonction, utilise-le comme n'importe quelle variable."
 Every call has to give it a value.,Chaque appel doit lui donner une valeur.
 "When it is called without one, it is %s.","Quand elle est appelée sans, il vaut %s."
+Edit enum {name},Modifier l'enum {name}
+Edit Enum,Modifier l'enum
+Enum name,Nom de l'enum
++ Add value,+ Ajouter une valeur
+"The enum's name. It becomes a type: a variable can hold one of its values, and a match can pick between them.","Le nom de l'enum. Il devient un type : une variable peut contenir l'une de ses valeurs, et un match peut choisir entre elles."
+"One value per field; an optional ""= 4"" sets an explicit number.","Une valeur par champ ; un ""= 4"" facultatif fixe un nombre explicite."
+Multi-line enum,Enum sur plusieurs lignes
+Remove this value,Retirer cette valeur
+"""{name}"" can't be an enum name (letters/digits/underscores, not a GDScript keyword).","""{name}"" ne peut pas être un nom d'enum (lettres/chiffres/tirets bas, pas un mot-clé GDScript)."
+"""{name}"" can't be an enum value name.","""{name}"" ne peut pas être un nom de valeur d'enum."
+Enums need a name and at least one value.,Un enum a besoin d'un nom et d'au moins une valeur.
+Edit signal {name},Modifier le signal {name}
+Edit Signal,Modifier le signal
+Signal name,Nom du signal
+What the signal is called. It appears in the On signal and Emit signal pickers under this name.,Le nom du signal. Il apparaît sous ce nom dans les sélecteurs On signal et Emit signal.
+"One parameter per line; an optional ""damage: int"" gives it a type.","Un paramètre par ligne ; un ""damage: int"" facultatif lui donne un type."
+"""{name}"" can't be a signal name (letters/digits/underscores, not a GDScript keyword).","""{name}"" ne peut pas être un nom de signal (lettres/chiffres/tirets bas, pas un mot-clé GDScript)."
+"""{name}"" can't be a signal parameter name.","""{name}"" ne peut pas être un nom de paramètre de signal."
+Parameters for System: Match,Paramètres de System : Match
+This sheet's variables (any expression still works),Les variables de cette feuille (toute expression fonctionne aussi)
+Else (anything else),Sinon (tout le reste)
+A last branch for every value the matches above do not name.,Une dernière branche pour toute valeur que les matchs au-dessus ne nomment pas.
+Nothing,Rien
+No last branch: a value no match names does nothing.,Pas de dernière branche : une valeur qu'aucun match ne nomme ne fait rien.
+Otherwise,Sinon
++ Add match,+ Ajouter un match
+One match per state,Un match par état
+"Each match becomes a sub-event on the sheet; its actions are added there, like any event.","Chaque match devient un sous-événement sur la feuille ; ses actions s'y ajoutent, comme pour tout événement."
+"Run one branch, picked by comparing a value: like a chain of Compare events ending in Else.","Exécute une branche, choisie en comparant une valeur : comme une chaîne d'événements Comparer se terminant par Sinon."
+"What the match compares. Pick one of this sheet's variables from the list, or type any expression.","Ce que le match compare. Choisis une variable de cette feuille dans la liste, ou tape n'importe quelle expression."
+Else catches every value the matches above do not name; it stays empty (does nothing) until you add actions to it.,Sinon attrape toute valeur que les matchs au-dessus ne nomment pas ; il reste vide (ne fait rien) jusqu'à ce que tu lui ajoutes des actions.
+Adds one more value to pick between.,Ajoute une valeur de plus parmi lesquelles choisir.
+"Adds a match for every value of the enum the Value holds, skipping the ones already here.","Ajoute un match pour chaque valeur de l'enum que contient Value, en sautant celles déjà présentes."
+Pick a value for this branch (you can still type any),Choisis une valeur pour cette branche (tu peux toujours en taper une autre)
+Remove this match,Retirer ce match
+The value this branch runs for: pick from the list or type any value. Otherwise catches everything else.,La valeur pour laquelle cette branche s'exécute : choisis-la dans la liste ou tape n'importe quelle valeur. Sinon attrape tout le reste.
+Match {n},Match {n}
+"Pick a Value whose type is one of this sheet's enums, and this adds a match for each of its values.","Choisis une Value dont le type est l'un des enums de cette feuille, et ceci ajoute un match pour chacune de ses valeurs."
+Give the match a Value to compare.,Donne au match une Value à comparer.
+"Add at least one match, or choose Else for Otherwise.","Ajoute au moins un match, ou choisis Sinon pour Sinon."
+{value} is matched twice - the second one could never run.,{value} est testé deux fois - le second ne pourrait jamais s'exécuter.
+match,match
+Done drops the {n} action(s) the removed matches held.,Terminé supprime les {n} action(s) que contenaient les matchs retirés.
+"Done sets up {n} events on the sheet, ready for your actions.","Terminé crée {n} événements sur la feuille, prêts pour tes actions."
+"Done updates the match: {n} branches, each keeping its actions.","Terminé met à jour le match : {n} branches, chacune garde ses actions."
+The match doesn't compile - check the Value and each match's value.,Le match ne compile pas - vérifie la Value et la valeur de chaque match.
+Add behavior to {object},Ajouter un comportement à {object}
+search,rechercher
+Properties,Propriétés
+A node carrying the pack's script under the object - how every pack works.,Un nœud portant le script du pack sous l'objet - c'est ainsi que fonctionne chaque pack.
+The pack's knobs become this script's own variables. Only packs that say their shape can be written in offer it.,Les réglages du pack deviennent les variables de ce script. Seuls les packs qui le permettent le proposent.
+"Reads every pack's name, its one-line pitch and its folder, so ""jump"" finds the platformer pack.","Lit le nom, l'accroche et le dossier de chaque pack, donc ""jump"" trouve le pack de plateforme."
+All,Tous
+"{type}, starting at {value}.","{type}, valeur de départ {value}."
+Connect a signal of {node},Connecter un signal de {node}
+{node} - pick a signal,{node} - choisis un signal
+Narrows the list to the signals whose name holds what you type.,Réduit la liste aux signaux dont le nom contient ce que tu tapes.
+This signal,Ce signal
+An On <signal> event is added to the node's sheet; its actions run when the signal fires.,Un événement On <signal> est ajouté à la feuille du nœud ; ses actions s'exécutent quand le signal est émis.
+in {file},dans {file}
+No signal of {node} holds that.,Aucun signal de {node} ne contient cela.
+An {event} event is added to {file}; its actions run when the signal fires.,Un événement {event} est ajouté à {file} ; ses actions s'exécutent quand le signal est émis.
+{file} already handles {signal} - Connect adds a second event for it.,{file} gère déjà {signal} - Connecter ajoute un second événement pour lui.
+Parameter,Paramètre
+"The parameter's name in the GDScript, and the label on the function's row.","Le nom du paramètre dans le GDScript, et l'étiquette sur la ligne de la fonction."
+"An optional starting value, so whoever uses the function can skip this input. Written as GDScript (10, 1.5, ""idle"", true). Inputs with a default have to come after those without.","Une valeur de départ facultative, pour que l'appelant puisse omettre cette entrée. Écrite en GDScript (10, 1.5, ""idle"", true). Les entrées avec une valeur par défaut viennent après celles sans."
+"Opens the function's own window: its name, its doc comment, what kind it is and who can use it.","Ouvre la fenêtre de la fonction : son nom, son commentaire de doc, son type et qui peut l'utiliser."
+Edit parameter {name},Modifier le paramètre {name}
+"Parameters with a default value must come after those without - move this one down, or give the ones after it defaults too.",Les paramètres avec une valeur par défaut doivent venir après ceux sans - descends celui-ci ou donne aussi des valeurs par défaut aux suivants.
+Save to the project snippet library,Enregistrer dans la bibliothèque d'extraits du projet
+Snippet,Extrait
+Insert Snippet… lists it by this name.,Insérer un extrait… le liste sous ce nom.
+Save {n} row(s) as a snippet,Enregistrer {n} ligne(s) comme extrait
+{name} already exists - this writes {file}.,{name} existe déjà - ceci écrit {file}.
+Edit comment,Modifier le commentaire
+Comment text (multiline supported; highlight text to format it),Texte du commentaire (plusieurs lignes possibles ; sélectionne du texte pour le mettre en forme)
+Background,Arrière-plan
+Highlight text to format it; comments render BBCode in the sheet.,Sélectionne du texte pour le mettre en forme ; les commentaires affichent le BBCode dans la feuille.
+A colour behind this comment on the sheet. Clear its alpha to 0 to go back to the theme default.,Une couleur derrière ce commentaire sur la feuille. Mets son alpha à 0 pour revenir à la valeur du thème.
+Writes ## instead of #. Notes left as # stay in this sheet - they are not documentation and nothing counts them as missing.,Écrit ## au lieu de #. Les notes en # restent dans cette feuille - ce n'est pas de la documentation et rien ne les compte comme manquantes.
+theme default,valeur du thème
+Compare a value on {object},Comparer une valeur sur {object}
+Insert Snippet,Insérer un extrait
+Search snippets,Rechercher des extraits
+Snippets,Extraits
+Fill in,À remplir
+Fill it once and the rows land filled; the snippet keeps its blanks for next time.,Remplis-le une fois et les lignes arrivent remplies ; l'extrait garde ses blancs pour la prochaine fois.
+Narrows the list to the snippets whose name holds what you type.,Réduit la liste aux extraits dont le nom contient ce que tu tapes.
+"Every snippet in the project's library, by the name it was saved under. Save Selection as Snippet… adds to it.","Chaque extrait de la bibliothèque du projet, sous le nom avec lequel il a été enregistré. Enregistrer la sélection comme extrait… y ajoute."
+{n} blank(s),{n} blanc(s)
+No snippet's name holds that.,Aucun nom d'extrait ne contient cela.
+Ready to insert.,Prêt à insérer.
+Still to fill in: {blanks}.,Reste à remplir : {blanks}.
+{file} isn't a sheet snippet.,{file} n'est pas un extrait de feuille.
+Paste {n} row(s) retargeted,Coller {n} ligne(s) reciblées
+Paste Retargeted,Coller reciblé
+On the way in,À l'arrivée
+"Object references are rewritten token-safely ($Enemy never touches $EnemySpawner); a variable this sheet has is reused, one it lacks is created.","Les références d'objet sont réécrites sans risque ($Enemy ne touche jamais $EnemySpawner) ; une variable que la feuille a est réutilisée, une qui manque est créée."
+The object these rows point at once pasted. Pick one from the scene or type a node path.,L'objet que visent ces lignes une fois collées. Choisis-en un dans la scène ou tape un chemin de nœud.
+"The variable these rows use once pasted: one this sheet has is reused, one it lacks is created.","La variable qu'utilisent ces lignes une fois collées : une que la feuille a est réutilisée, une qui manque est créée."
+{n} row(s) on the clipboard.,{n} ligne(s) dans le presse-papiers.
+"These rows name no objects and no variables, so a plain Paste already does the job.","Ces lignes ne nomment ni objet ni variable, un simple Coller suffit donc."
+pasted as copied,collé tel que copié

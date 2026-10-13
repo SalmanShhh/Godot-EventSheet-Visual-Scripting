@@ -281,56 +281,77 @@ func _play_scene_path(scene_path: String) -> void:
 
 # ── Row snippets - save the selection, insert from the project library
 # (EventSheetSnippetLibrary; the clipboard text format is the file format) ────────────
-var _snippet_name_window: Window = null
+const INSERT_SNIPPET_DIALOG_PATH := "res://addons/eventsheet/editor/dock/insert_snippet_dialog.gd"
+var _snippet_name_dialog: ConfirmationDialog = null
 var _snippet_name_edit: LineEdit = null
-var _snippet_list_window: Window = null
-var _snippet_list: ItemList = null
+var _snippet_name_note: EventSheetPopupUI.StateNote = null
+var _snippet_name_strip: EventSheetPopupUI.HelpStrip = null
 
 
 func _open_save_snippet_dialog() -> void:
-	if _dock._top_level_selected_resources().is_empty():
+	var count: int = _dock._top_level_selected_resources().size()
+	if count == 0:
 		_dock._set_status("Select rows to save as a snippet.", true)
 		return
-	if _snippet_name_window == null:
-		_snippet_name_window = Window.new()
-		_snippet_name_window.title = "Save Selection as Snippet"
-		_snippet_name_window.size = Vector2i(360, 100)
-		_snippet_name_window.close_requested.connect(func() -> void: _snippet_name_window.hide())
-		var box: VBoxContainer = VBoxContainer.new()
-		box.set_anchors_preset(Control.PRESET_FULL_RECT)
+	if _snippet_name_dialog == null:
+		_snippet_name_dialog = ConfirmationDialog.new()
+		_snippet_name_dialog.ok_button_text = EventSheetL10n.translate("Save to the project snippet library")
+		_snippet_name_dialog.dialog_hide_on_ok = false
+		_snippet_name_dialog.confirmed.connect(_confirm_save_snippet)
+		var form: VBoxContainer = EventSheetPopupUI.form_box()
 		_snippet_name_edit = LineEdit.new()
-		_snippet_name_edit.placeholder_text = "Snippet name (e.g. fade_and_free)"
-		_snippet_name_edit.text_submitted.connect(func(_t: String) -> void: _confirm_save_snippet())
-		box.add_child(_snippet_name_edit)
-		var save_button: Button = Button.new()
-		save_button.text = "Save to the project snippet library"
-		save_button.pressed.connect(_confirm_save_snippet)
-		box.add_child(save_button)
-		_snippet_name_window.add_child(box)
-		_dock.add_child(_snippet_name_window)
-	_snippet_name_window.popup_centered()
-	_snippet_name_edit.grab_focus()
+		_snippet_name_edit.placeholder_text = "fade_and_free"
+		_snippet_name_edit.text_changed.connect(func(_typed: String) -> void: _refresh_snippet_name())
+		_snippet_name_dialog.register_text_enter(_snippet_name_edit)
+		var card: VBoxContainer = EventSheetPopupUI.form_box()
+		card.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Name"), _snippet_name_edit))
+		form.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("Snippet"), card))
+		_snippet_name_note = EventSheetPopupUI.StateNote.new(EventSheetPalette.scaled_f(360.0))
+		form.add_child(_snippet_name_note)
+		_snippet_name_strip = EventSheetPopupUI.help_strip(EventSheetL10n.translate("Name"),
+			EventSheetL10n.translate("Insert Snippet… lists it by this name."), "", "", EventSheetPalette.scaled_f(360.0))
+		var strip: EventSheetPopupUI.HelpStrip = _snippet_name_strip
+		strip.follow(_snippet_name_edit, EventSheetL10n.translate("Name"),
+			EventSheetL10n.translate("Insert Snippet… lists it by this name."))
+		form.add_child(strip)
+		_snippet_name_dialog.add_child(EventSheetPopupUI.margined(form))
+		_dock.add_child(_snippet_name_dialog)
+	_snippet_name_dialog.title = EventSheetL10n.translate("Save {n} row(s) as a snippet").replace("{n}", str(count))
+	_refresh_snippet_name()
+	if _dock.is_inside_tree():
+		_snippet_name_dialog.popup_centered(Vector2i(int(EventSheetPalette.scaled_f(420.0)), 0))
+		_snippet_name_edit.grab_focus()
+
+
+## Says before Save what the name will do: nothing to save under yet, or a name the library already
+## has - which is kept, and this one written beside it under the next free file name.
+func _refresh_snippet_name() -> void:
+	var snippet_name: String = _snippet_name_edit.text.strip_edges()
+	_snippet_name_dialog.get_ok_button().disabled = snippet_name.is_empty()
+	var taken: String = EventSheetSnippetLibrary.snippet_path_for(snippet_name)
+	# The file it will be written to, where the strip shows code everywhere else.
+	_snippet_name_strip.set_reading("", "" if snippet_name.is_empty() else EventSheetSnippetLibrary.free_path_for(snippet_name))
+	if snippet_name.is_empty() or not FileAccess.file_exists(taken):
+		_snippet_name_note.say("")
+		return
+	_snippet_name_note.say(EventSheetL10n.translate("{name} already exists - this writes {file}.").replace(
+		"{name}", taken.get_file().get_basename()).replace(
+		"{file}", EventSheetSnippetLibrary.free_path_for(snippet_name).get_file()), EventSheetPopupUI.TONE_WARNING)
 
 
 func _confirm_save_snippet() -> void:
 	var saved: String = _save_selection_snippet_named(_snippet_name_edit.text.strip_edges())
 	if not saved.is_empty():
-		_snippet_name_window.hide()
+		_snippet_name_dialog.hide()
 
 
-## The testable save core: serializes the top-level selection with the SAME serializer
-## Copy uses and files it in the library. Returns the path, or "" on a problem.
+## The testable save core: serializes the top-level selection with the SAME serializer Copy uses and
+## files it in the library - under the next free name when the name is taken, which the window has
+## already said. Returns the path, or "" on a problem.
 func _save_selection_snippet_named(snippet_name: String) -> String:
 	var targets: Array = _dock._top_level_selected_resources()
 	if targets.is_empty() or snippet_name.is_empty():
 		_dock._set_status("Name the snippet and select at least one row.", true)
-		return ""
-	# A name already in the library is refused out loud. Saving it under a quiet "-2" would leave two
-	# entries the list cannot tell apart, and the reader believing they had replaced the first.
-	var existing: String = EventSheetSnippetLibrary.snippet_path_for(snippet_name)
-	if FileAccess.file_exists(existing):
-		_dock._set_status(EventSheetL10n.translate("A snippet called {name} already exists - pick another name.").replace(
-			"{name}", existing.get_file().get_basename()), true)
 		return ""
 	var path: String = EventSheetSnippetLibrary.save_snippet(snippet_name, EventSheetSnippet.serialize_rows(targets, _dock._current_sheet))
 	if path.is_empty():
@@ -347,40 +368,22 @@ static func snippet_label(snippet_path: String) -> String:
 	return snippet_path.get_file().get_basename()
 
 
-func _open_insert_snippet() -> void:
+func _open_insert_snippet() -> ConfirmationDialog:
 	var snippets: PackedStringArray = EventSheetSnippetLibrary.list_snippets()
 	if snippets.is_empty():
 		_dock._set_status("No snippets yet - select rows and Save Selection as Snippet… first.", true)
-		return
-	if _snippet_list_window == null:
-		_snippet_list_window = Window.new()
-		_snippet_list_window.title = "Insert Snippet"
-		_snippet_list_window.size = Vector2i(380, 320)
-		_snippet_list_window.close_requested.connect(func() -> void: _snippet_list_window.hide())
-		_snippet_list = ItemList.new()
-		_snippet_list.set_anchors_preset(Control.PRESET_FULL_RECT)
-		_snippet_list.item_activated.connect(func(index: int) -> void:
-			_insert_snippet_path(str(_snippet_list.get_item_metadata(index)))
-			_snippet_list_window.hide())
-		_snippet_list_window.add_child(_snippet_list)
-		_dock.add_child(_snippet_list_window)
-	_snippet_list.clear()
-	for snippet_path: String in snippets:
-		_snippet_list.add_item(snippet_label(snippet_path))
-		_snippet_list.set_item_metadata(_snippet_list.item_count - 1, snippet_path)
-		_snippet_list.set_item_tooltip(_snippet_list.item_count - 1, snippet_path)
-	_snippet_list_window.popup_centered()
+		return null
+	return load(INSERT_SNIPPET_DIALOG_PATH).open_for(_dock, snippets)
 
 
-## Insert = the normal snippet paste (fresh uids, missing variables created - the
-## whole paste contract for free).
+## Insert one snippet by path. A snippet with BLANKS ({{blank:Label}}) opens the Insert Snippet window
+## on it, so its fields are filled first; any other one lands straight away through the normal paste
+## (fresh uids, missing variables created - the whole paste contract for free).
 func _insert_snippet_path(snippet_path: String) -> void:
 	var snippet_text: String = EventSheetSnippetLibrary.read_snippet(snippet_path)
-	# A snippet may mark values as BLANKS ({{blank:Label}}); then insert shows one small fill-in
-	# form first and the rows land filled, with no placeholder left behind. A snippet without
-	# blanks takes the same path it always did (dock/snippet_blanks_dialog.gd).
 	if EventSheetSnippet.has_blanks(snippet_text):
-		EventSheetSnippetBlanksDialog.open_for(_dock, snippet_label(snippet_path), snippet_text)
+		var dialog: ConfirmationDialog = load(INSERT_SNIPPET_DIALOG_PATH).open_for(_dock, EventSheetSnippetLibrary.list_snippets())
+		dialog.call("select_snippet", snippet_path)
 		return
 	if not _dock._paste_snippet_text(snippet_text):
 		_dock._set_status("That file isn't a sheet snippet: %s" % snippet_path.get_file(), true)

@@ -8000,3 +8000,106 @@ Featured,おすすめ
 "Inside this function, use it like any variable.",この関数の中では、普通の変数と同じように使えます。
 Every call has to give it a value.,呼び出すたびに値を渡す必要があります。
 "When it is called without one, it is %s.",省略して呼び出すと %s になります。
+Edit enum {name},enum {name} を編集
+Edit Enum,enum を編集
+Enum name,enum 名
++ Add value,+ 値を追加
+"The enum's name. It becomes a type: a variable can hold one of its values, and a match can pick between them.",enum の名前。型になります。変数はその値のひとつを持てて、match はその中から選べます。
+"One value per field; an optional ""= 4"" sets an explicit number.","1 つの欄に 1 つの値。""= 4"" を付けると番号を明示できます。"
+Multi-line enum,複数行の enum
+Remove this value,この値を削除
+"""{name}"" can't be an enum name (letters/digits/underscores, not a GDScript keyword).","""{name}"" は enum 名にできません（英字・数字・アンダースコアのみ、GDScript のキーワードは不可）。"
+"""{name}"" can't be an enum value name.","""{name}"" は enum の値の名前にできません。"
+Enums need a name and at least one value.,enum には名前と少なくとも 1 つの値が必要です。
+Edit signal {name},シグナル {name} を編集
+Edit Signal,シグナルを編集
+Signal name,シグナル名
+What the signal is called. It appears in the On signal and Emit signal pickers under this name.,シグナルの名前。この名前で On signal と Emit signal のピッカーに表示されます。
+"One parameter per line; an optional ""damage: int"" gives it a type.","1 行に 1 つのパラメーター。""damage: int"" と書くと型を付けられます。"
+"""{name}"" can't be a signal name (letters/digits/underscores, not a GDScript keyword).","""{name}"" はシグナル名にできません（英字・数字・アンダースコアのみ、GDScript のキーワードは不可）。"
+"""{name}"" can't be a signal parameter name.","""{name}"" はシグナルのパラメーター名にできません。"
+Parameters for System: Match,System: Match のパラメーター
+This sheet's variables (any expression still works),このシートの変数（どんな式でも使えます）
+Else (anything else),Else（それ以外すべて）
+A last branch for every value the matches above do not name.,上の match が挙げていないすべての値のための最後の分岐。
+Nothing,なし
+No last branch: a value no match names does nothing.,最後の分岐なし。どの match も挙げていない値では何も起きません。
+Otherwise,それ以外
++ Add match,+ match を追加
+One match per state,状態ごとに 1 つの match
+"Each match becomes a sub-event on the sheet; its actions are added there, like any event.",各 match はシート上のサブイベントになります。アクションはそこで、他のイベントと同じように追加します。
+"Run one branch, picked by comparing a value: like a chain of Compare events ending in Else.",値を比べて選んだ 1 つの分岐を実行します。Else で終わる Compare イベントの連なりのようなものです。
+"What the match compares. Pick one of this sheet's variables from the list, or type any expression.",match が比べるもの。リストからこのシートの変数を選ぶか、任意の式を入力します。
+Else catches every value the matches above do not name; it stays empty (does nothing) until you add actions to it.,Else は上の match が挙げていないすべての値を受け取ります。アクションを追加するまでは空のまま（何もしない）です。
+Adds one more value to pick between.,選択肢の値をもう 1 つ追加します。
+"Adds a match for every value of the enum the Value holds, skipping the ones already here.",Value が持つ enum の値ごとに match を追加します。すでにあるものは飛ばします。
+Pick a value for this branch (you can still type any),この分岐の値を選ぶ（任意の値も入力できます）
+Remove this match,この match を削除
+The value this branch runs for: pick from the list or type any value. Otherwise catches everything else.,この分岐が実行される値。リストから選ぶか任意の値を入力します。それ以外はほかのすべてを受け取ります。
+Match {n},Match {n}
+"Pick a Value whose type is one of this sheet's enums, and this adds a match for each of its values.",このシートの enum のいずれかを型に持つ Value を選ぶと、その値ごとに match を追加します。
+Give the match a Value to compare.,match に比べる Value を指定してください。
+"Add at least one match, or choose Else for Otherwise.",match を少なくとも 1 つ追加するか、それ以外で Else を選んでください。
+{value} is matched twice - the second one could never run.,{value} が 2 回指定されています。2 つ目は決して実行されません。
+match,match
+Done drops the {n} action(s) the removed matches held.,完了すると、削除した match が持っていた {n} 個のアクションは失われます。
+"Done sets up {n} events on the sheet, ready for your actions.",完了するとシートに {n} 個のイベントを用意します。アクションを追加できます。
+"Done updates the match: {n} branches, each keeping its actions.",完了すると match を更新します。{n} 個の分岐それぞれがアクションを保ちます。
+The match doesn't compile - check the Value and each match's value.,match がコンパイルできません。Value と各 match の値を確認してください。
+Add behavior to {object},{object} にビヘイビアを追加
+search,検索
+Properties,プロパティ
+A node carrying the pack's script under the object - how every pack works.,オブジェクトの下に、パックのスクリプトを持つノードを置きます。すべてのパックの仕組みです。
+The pack's knobs become this script's own variables. Only packs that say their shape can be written in offer it.,パックの設定がこのスクリプト自身の変数になります。対応を宣言したパックだけが選べます。
+"Reads every pack's name, its one-line pitch and its folder, so ""jump"" finds the platformer pack.","各パックの名前・一行説明・フォルダーを読むので、""jump"" でプラットフォーマーのパックが見つかります。"
+All,すべて
+"{type}, starting at {value}.",{type}、初期値 {value}。
+Connect a signal of {node},{node} のシグナルを接続
+{node} - pick a signal,{node} - シグナルを選ぶ
+Narrows the list to the signals whose name holds what you type.,名前に入力した文字を含むシグナルだけに絞り込みます。
+This signal,このシグナル
+An On <signal> event is added to the node's sheet; its actions run when the signal fires.,ノードのシートに On <シグナル> イベントが追加されます。シグナルが発火するとアクションが実行されます。
+in {file},{file} 内
+No signal of {node} holds that.,{node} にそれを含むシグナルはありません。
+An {event} event is added to {file}; its actions run when the signal fires.,{file} に {event} イベントが追加されます。シグナルが発火するとアクションが実行されます。
+{file} already handles {signal} - Connect adds a second event for it.,{file} はすでに {signal} を処理しています。接続すると 2 つ目のイベントが追加されます。
+Parameter,パラメーター
+"The parameter's name in the GDScript, and the label on the function's row.",GDScript でのパラメーター名で、関数の行のラベルにもなります。
+"An optional starting value, so whoever uses the function can skip this input. Written as GDScript (10, 1.5, ""idle"", true). Inputs with a default have to come after those without.","省略可能な初期値で、関数を使う側がこの入力を省けます。GDScript で書きます（10、1.5、""idle""、true）。初期値のある入力は、ない入力の後に置く必要があります。"
+"Opens the function's own window: its name, its doc comment, what kind it is and who can use it.",関数自身のウィンドウを開きます。名前、ドキュメントコメント、種類、使える範囲です。
+Edit parameter {name},パラメーター {name} を編集
+"Parameters with a default value must come after those without - move this one down, or give the ones after it defaults too.",初期値のあるパラメーターは、ないものの後に置く必要があります。これを下に移すか、後ろのものにも初期値を付けてください。
+Save to the project snippet library,プロジェクトのスニペットライブラリに保存
+Snippet,スニペット
+Insert Snippet… lists it by this name.,スニペットを挿入… ではこの名前で表示されます。
+Save {n} row(s) as a snippet,{n} 行をスニペットとして保存
+{name} already exists - this writes {file}.,{name} はすでにあります。これは {file} に書き込みます。
+Edit comment,コメントを編集
+Comment text (multiline supported; highlight text to format it),コメントのテキスト（複数行可。選択すると書式を付けられます）
+Background,背景
+Highlight text to format it; comments render BBCode in the sheet.,テキストを選択すると書式を付けられます。コメントはシート上で BBCode を表示します。
+A colour behind this comment on the sheet. Clear its alpha to 0 to go back to the theme default.,シート上でこのコメントの背後に敷く色。アルファを 0 にするとテーマの既定に戻ります。
+Writes ## instead of #. Notes left as # stay in this sheet - they are not documentation and nothing counts them as missing.,# ではなく ## を書きます。# のメモはこのシートに残り、ドキュメントではないので、欠けているとは数えられません。
+theme default,テーマの既定
+Compare a value on {object},{object} の値を比較
+Insert Snippet,スニペットを挿入
+Search snippets,スニペットを検索
+Snippets,スニペット
+Fill in,記入
+Fill it once and the rows land filled; the snippet keeps its blanks for next time.,一度記入すれば行は記入済みで入ります。スニペットの空欄は次回のために残ります。
+Narrows the list to the snippets whose name holds what you type.,名前に入力した文字を含むスニペットだけに絞り込みます。
+"Every snippet in the project's library, by the name it was saved under. Save Selection as Snippet… adds to it.",プロジェクトのライブラリにあるすべてのスニペットを、保存した名前で表示します。「選択をスニペットとして保存…」で追加できます。
+{n} blank(s),空欄 {n}
+No snippet's name holds that.,それを名前に含むスニペットはありません。
+Ready to insert.,挿入できます。
+Still to fill in: {blanks}.,まだ記入が必要: {blanks}。
+{file} isn't a sheet snippet.,{file} はシートのスニペットではありません。
+Paste {n} row(s) retargeted,{n} 行を差し替えて貼り付け
+Paste Retargeted,差し替えて貼り付け
+On the way in,取り込み時
+"Object references are rewritten token-safely ($Enemy never touches $EnemySpawner); a variable this sheet has is reused, one it lacks is created.",オブジェクト参照はトークン単位で安全に書き換えます（$Enemy が $EnemySpawner に触れることはありません）。このシートにある変数は再利用し、ないものは作成します。
+The object these rows point at once pasted. Pick one from the scene or type a node path.,貼り付けた後にこれらの行が指すオブジェクト。シーンから選ぶかノードパスを入力します。
+"The variable these rows use once pasted: one this sheet has is reused, one it lacks is created.",貼り付けた後にこれらの行が使う変数。シートにあるものは再利用し、ないものは作成します。
+{n} row(s) on the clipboard.,クリップボードに {n} 行。
+"These rows name no objects and no variables, so a plain Paste already does the job.",これらの行はオブジェクトも変数も挙げていないので、普通の貼り付けで十分です。
+pasted as copied,コピーしたまま貼り付け

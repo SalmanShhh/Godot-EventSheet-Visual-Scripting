@@ -8000,3 +8000,106 @@ Featured,Destacada
 "Inside this function, use it like any variable.","Dentro de esta función, úsalo como cualquier variable."
 Every call has to give it a value.,Cada llamada tiene que darle un valor.
 "When it is called without one, it is %s.","Cuando se llama sin él, vale %s."
+Edit enum {name},Editar enum {name}
+Edit Enum,Editar enum
+Enum name,Nombre del enum
++ Add value,+ Añadir valor
+"The enum's name. It becomes a type: a variable can hold one of its values, and a match can pick between them.",El nombre del enum. Se convierte en un tipo: una variable puede guardar uno de sus valores y un match puede elegir entre ellos.
+"One value per field; an optional ""= 4"" sets an explicit number.","Un valor por campo; un ""= 4"" opcional fija un número explícito."
+Multi-line enum,Enum multilínea
+Remove this value,Quitar este valor
+"""{name}"" can't be an enum name (letters/digits/underscores, not a GDScript keyword).","""{name}"" no puede ser nombre de enum (letras/dígitos/guiones bajos, no una palabra clave de GDScript)."
+"""{name}"" can't be an enum value name.","""{name}"" no puede ser nombre de valor de enum."
+Enums need a name and at least one value.,Los enums necesitan un nombre y al menos un valor.
+Edit signal {name},Editar señal {name}
+Edit Signal,Editar señal
+Signal name,Nombre de la señal
+What the signal is called. It appears in the On signal and Emit signal pickers under this name.,Cómo se llama la señal. Aparece con este nombre en los selectores de On signal y Emit signal.
+"One parameter per line; an optional ""damage: int"" gives it a type.","Un parámetro por línea; un ""damage: int"" opcional le da un tipo."
+"""{name}"" can't be a signal name (letters/digits/underscores, not a GDScript keyword).","""{name}"" no puede ser nombre de señal (letras/dígitos/guiones bajos, no una palabra clave de GDScript)."
+"""{name}"" can't be a signal parameter name.","""{name}"" no puede ser nombre de parámetro de señal."
+Parameters for System: Match,Parámetros de System: Match
+This sheet's variables (any expression still works),Las variables de esta hoja (cualquier expresión sigue funcionando)
+Else (anything else),Else (todo lo demás)
+A last branch for every value the matches above do not name.,Una última rama para cada valor que los matches de arriba no nombran.
+Nothing,Nada
+No last branch: a value no match names does nothing.,Sin última rama: un valor que ningún match nombra no hace nada.
+Otherwise,En otro caso
++ Add match,+ Añadir match
+One match per state,Un match por estado
+"Each match becomes a sub-event on the sheet; its actions are added there, like any event.","Cada match se convierte en un subevento en la hoja; sus acciones se añaden ahí, como en cualquier evento."
+"Run one branch, picked by comparing a value: like a chain of Compare events ending in Else.","Ejecuta una rama, elegida comparando un valor: como una cadena de eventos Compare que termina en Else."
+"What the match compares. Pick one of this sheet's variables from the list, or type any expression.",Lo que compara el match. Elige una de las variables de esta hoja en la lista o escribe cualquier expresión.
+Else catches every value the matches above do not name; it stays empty (does nothing) until you add actions to it.,Else recoge cada valor que los matches de arriba no nombran; queda vacío (no hace nada) hasta que le añadas acciones.
+Adds one more value to pick between.,Añade un valor más entre los que elegir.
+"Adds a match for every value of the enum the Value holds, skipping the ones already here.","Añade un match por cada valor del enum que contiene Value, saltando los que ya están."
+Pick a value for this branch (you can still type any),Elige un valor para esta rama (puedes seguir escribiendo cualquiera)
+Remove this match,Quitar este match
+The value this branch runs for: pick from the list or type any value. Otherwise catches everything else.,El valor para el que se ejecuta esta rama: elígelo de la lista o escribe cualquier valor. En otro caso recoge todo lo demás.
+Match {n},Match {n}
+"Pick a Value whose type is one of this sheet's enums, and this adds a match for each of its values.",Elige un Value cuyo tipo sea uno de los enums de esta hoja y esto añadirá un match por cada uno de sus valores.
+Give the match a Value to compare.,Dale al match un Value que comparar.
+"Add at least one match, or choose Else for Otherwise.",Añade al menos un match o elige Else en En otro caso.
+{value} is matched twice - the second one could never run.,{value} aparece dos veces - la segunda nunca podría ejecutarse.
+match,match
+Done drops the {n} action(s) the removed matches held.,Hecho descarta las {n} acción(es) que tenían los matches quitados.
+"Done sets up {n} events on the sheet, ready for your actions.","Hecho crea {n} eventos en la hoja, listos para tus acciones."
+"Done updates the match: {n} branches, each keeping its actions.","Hecho actualiza el match: {n} ramas, cada una conserva sus acciones."
+The match doesn't compile - check the Value and each match's value.,El match no compila - revisa el Value y el valor de cada match.
+Add behavior to {object},Añadir comportamiento a {object}
+search,buscar
+Properties,Propiedades
+A node carrying the pack's script under the object - how every pack works.,Un nodo con el script del paquete bajo el objeto - así funciona cada paquete.
+The pack's knobs become this script's own variables. Only packs that say their shape can be written in offer it.,Los ajustes del paquete pasan a ser variables propias de este script. Solo lo ofrecen los paquetes que lo permiten.
+"Reads every pack's name, its one-line pitch and its folder, so ""jump"" finds the platformer pack.","Lee el nombre, la frase y la carpeta de cada paquete, así que ""jump"" encuentra el paquete de plataformas."
+All,Todos
+"{type}, starting at {value}.","{type}, empieza en {value}."
+Connect a signal of {node},Conectar una señal de {node}
+{node} - pick a signal,{node} - elige una señal
+Narrows the list to the signals whose name holds what you type.,Reduce la lista a las señales cuyo nombre contiene lo que escribes.
+This signal,Esta señal
+An On <signal> event is added to the node's sheet; its actions run when the signal fires.,Se añade un evento On <señal> a la hoja del nodo; sus acciones se ejecutan cuando la señal se emite.
+in {file},en {file}
+No signal of {node} holds that.,Ninguna señal de {node} contiene eso.
+An {event} event is added to {file}; its actions run when the signal fires.,Se añade un evento {event} a {file}; sus acciones se ejecutan cuando la señal se emite.
+{file} already handles {signal} - Connect adds a second event for it.,{file} ya gestiona {signal} - Conectar añade un segundo evento para ella.
+Parameter,Parámetro
+"The parameter's name in the GDScript, and the label on the function's row.",El nombre del parámetro en el GDScript y la etiqueta en la fila de la función.
+"An optional starting value, so whoever uses the function can skip this input. Written as GDScript (10, 1.5, ""idle"", true). Inputs with a default have to come after those without.","Un valor inicial opcional, para que quien use la función pueda omitir esta entrada. Escrito como GDScript (10, 1.5, ""idle"", true). Las entradas con valor por defecto van después de las que no lo tienen."
+"Opens the function's own window: its name, its doc comment, what kind it is and who can use it.","Abre la ventana de la función: su nombre, su comentario de documentación, qué tipo es y quién puede usarla."
+Edit parameter {name},Editar parámetro {name}
+"Parameters with a default value must come after those without - move this one down, or give the ones after it defaults too.",Los parámetros con valor por defecto deben ir después de los que no lo tienen - mueve este hacia abajo o da valores por defecto a los siguientes.
+Save to the project snippet library,Guardar en la biblioteca de fragmentos del proyecto
+Snippet,Fragmento
+Insert Snippet… lists it by this name.,Insertar fragmento… lo muestra con este nombre.
+Save {n} row(s) as a snippet,Guardar {n} fila(s) como fragmento
+{name} already exists - this writes {file}.,{name} ya existe - esto escribe {file}.
+Edit comment,Editar comentario
+Comment text (multiline supported; highlight text to format it),Texto del comentario (admite varias líneas; selecciona texto para darle formato)
+Background,Fondo
+Highlight text to format it; comments render BBCode in the sheet.,Selecciona texto para darle formato; los comentarios muestran BBCode en la hoja.
+A colour behind this comment on the sheet. Clear its alpha to 0 to go back to the theme default.,Un color detrás de este comentario en la hoja. Pon su alfa en 0 para volver al predeterminado del tema.
+Writes ## instead of #. Notes left as # stay in this sheet - they are not documentation and nothing counts them as missing.,Escribe ## en vez de #. Las notas con # se quedan en esta hoja - no son documentación y nada las cuenta como ausentes.
+theme default,predeterminado del tema
+Compare a value on {object},Comparar un valor en {object}
+Insert Snippet,Insertar fragmento
+Search snippets,Buscar fragmentos
+Snippets,Fragmentos
+Fill in,Rellenar
+Fill it once and the rows land filled; the snippet keeps its blanks for next time.,Rellénalo una vez y las filas llegan rellenas; el fragmento conserva sus huecos para la próxima vez.
+Narrows the list to the snippets whose name holds what you type.,Reduce la lista a los fragmentos cuyo nombre contiene lo que escribes.
+"Every snippet in the project's library, by the name it was saved under. Save Selection as Snippet… adds to it.","Cada fragmento de la biblioteca del proyecto, con el nombre con que se guardó. Guardar selección como fragmento… añade más."
+{n} blank(s),{n} hueco(s)
+No snippet's name holds that.,Ningún nombre de fragmento contiene eso.
+Ready to insert.,Listo para insertar.
+Still to fill in: {blanks}.,Falta rellenar: {blanks}.
+{file} isn't a sheet snippet.,{file} no es un fragmento de hoja.
+Paste {n} row(s) retargeted,Pegar {n} fila(s) redirigidas
+Paste Retargeted,Pegar redirigido
+On the way in,Al entrar
+"Object references are rewritten token-safely ($Enemy never touches $EnemySpawner); a variable this sheet has is reused, one it lacks is created.","Las referencias a objetos se reescriben de forma segura ($Enemy nunca toca $EnemySpawner); una variable que esta hoja tiene se reutiliza, una que le falta se crea."
+The object these rows point at once pasted. Pick one from the scene or type a node path.,El objeto al que apuntan estas filas una vez pegadas. Elige uno de la escena o escribe una ruta de nodo.
+"The variable these rows use once pasted: one this sheet has is reused, one it lacks is created.","La variable que usan estas filas una vez pegadas: una que la hoja tiene se reutiliza, una que le falta se crea."
+{n} row(s) on the clipboard.,{n} fila(s) en el portapapeles.
+"These rows name no objects and no variables, so a plain Paste already does the job.","Estas filas no nombran objetos ni variables, así que un Pegar normal ya basta."
+pasted as copied,se pega tal como se copió

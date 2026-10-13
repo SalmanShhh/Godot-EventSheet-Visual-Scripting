@@ -56,8 +56,8 @@ static func run() -> bool:
 		if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("match_action", false)):
 			match_action_texts.append(str(span.text))
 
-	# A structured match's header is a muted plain-words caption, never the raw `match x:` line.
-	ok = _check("the structured match header reads as a caption", texts.has("decides by phase · 2 branches below"), true) and ok
+	# A structured match says what it decides by beside its trigger, never the raw `match x:` line.
+	ok = _check("the structured match says what it decides by", texts.has("match phase"), true) and ok
 	ok = _check("the raw match line is not shown for structured cases", texts.has("match phase:"), false) and ok
 	ok = _check("branches_text is not shown when cases exist", _any_contains(texts, "SHOULD_NOT_SHOW"), false) and ok
 	ok = _check("the match header opens the editor on double-click (match_action)", not match_action_texts.is_empty(), true) and ok
@@ -72,14 +72,13 @@ static func run() -> bool:
 	if case_rows.size() == 2:
 		ok = _check("a case row is an EVENT row (so it gets the condition | action lanes)",
 			(case_rows[0] as EventRowData).row_type == EventRowData.RowType.EVENT, true) and ok
-		# An event sheet has no switch, so a match on a plain value states its branches as the
-		# if / else-if / else chain an event-sheet user reads: the first case says the TEST (subject and
-		# value, not the bare pattern), and `_` is the plain Else it means.
+		# Each branch is a sub-event stating its TEST (subject and value, not the bare pattern), and `_`
+		# is the plain Else it means.
 		ok = _check("the first case's condition cell states the test", _lane_text(case_rows[0], "condition"), "phase = 0") and ok
 		# Case bodies read as sentences (the same view every raw statement row gets).
 		ok = _check("the first case's BODY is in the action cell", _lane_text(case_rows[0], "action"), "Set velocity to (0, 0)") and ok
 		ok = _check("the default case reads as the Else it is", _lane_text(case_rows[1], "condition"), "Else") and ok
-		ok = _check("an empty case reads as a `pass` action", _lane_text(case_rows[1], "action"), "pass") and ok
+		ok = _check("an empty case offers only its Add action", _lane_text(case_rows[1], "action"), "+ Add action") and ok
 
 	# ── A raw-text MatchRow (no cases) still shows its branches and keeps the double-click dialog ──
 	var raw_match: MatchRow = MatchRow.new()

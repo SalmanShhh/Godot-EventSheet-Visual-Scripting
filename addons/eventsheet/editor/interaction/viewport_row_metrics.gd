@@ -312,8 +312,9 @@ static func resting_add_line_kinds(row_data: EventRowData, event_style: EventShe
 
 
 ## The chip kinds that sit AFTER a condition cell on its own line and must therefore be given room
-## back out of it: a trigger's parameter chips, and the ⟡ chip that names the pattern the event is.
-const TRAILING_CHIP_KINDS: PackedStringArray = ["trigger_payload", "pattern_chip"]
+## back out of it: a trigger's parameter chips, the ⟡ chip that names the pattern the event is, and the
+## "match state" a switch says beside its trigger.
+const TRAILING_CHIP_KINDS: PackedStringArray = ["trigger_payload", "pattern_chip", "match_head"]
 ## The most of the conditions lane the chips after a condition may take, under a theme that lets them
 ## yield (lane_chips_yield).
 const LANE_CHIP_SHARE := 0.4

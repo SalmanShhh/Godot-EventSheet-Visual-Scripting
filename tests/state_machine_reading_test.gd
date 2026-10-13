@@ -83,14 +83,8 @@ static func run() -> bool:
 	ok = _check("no Trigger/Signal word pill remains", has_word_pill, false) and ok
 	ok = _check("the friendly name still shows", row_data.spans[1].text, "On State Changed") and ok
 
-	# 4. A lifted `match` on a state-shaped subject reads in the same grammar: case rows carry
-	# the ◆ badge; other matches (and the `_` default) keep their pattern text untouched.
-	#
-	# TWO READINGS, AND WHICH IS WHICH. A subject that is THIS OBJECT's own `state` variable is the
-	# machine the sheet's own states band declares, so its arms read as the rows that vocabulary
-	# already has - "Is in Patrol", not a second spelling of the same idea. Every OTHER state-shaped
-	# subject (a machine held on another node, the behaviour pack's String state) keeps the older
-	# "State: <leaf>" reading, because nothing about those says which enum a leaf belongs to.
+	# 4. A lifted `match` reads as branches: the subject is still recognised as state-shaped, and
+	# every arm of a plain-value match states its own test.
 	ok = _check("state subject detected", builder._is_state_shaped_subject("state"), true) and ok
 	ok = _check("dotted state subject detected", builder._is_state_shaped_subject("machine.current_state"), true) and ok
 	ok = _check("non-state subject passes through", builder._is_state_shaped_subject("damage_type"), false) and ok
@@ -108,16 +102,13 @@ static func run() -> bool:
 	match_event.actions.append(lifted_match)
 	var case_rows: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
 	ok = _check("one case row built", case_rows.size(), 1) and ok
-	ok = _check("case row leads with the state badge", case_rows[0].spans[0].text, "◆") and ok
-	ok = _check("the object's own machine reads as its Is in row",
-		case_rows[0].spans[1].text, "Is in Patrol") and ok
-	# ...and somebody else's machine keeps the leaf reading, for want of anything better to say.
+	# A match on plain values reads the way the Match window writes one, whatever it decides by: each
+	# branch states its test ("state = State.PATROL"), the subject exactly as written.
+	ok = _check("the object's own machine reads as its branch test", case_rows[0].spans[0].text, "state = State.PATROL") and ok
 	lifted_match.match_expression = "machine.current_state"
 	var foreign_rows: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
-	ok = _check("another object's machine reads State: leaf",
-		foreign_rows[0].spans[1].text, "State: PATROL") and ok
-	# A match on an ORDINARY value is not a state machine at all, and an event sheet has no switch:
-	# it reads as the if / else-if chain an event-sheet user knows, so the first case states the test.
+	ok = _check("another object's machine reads as its branch test",
+		foreign_rows[0].spans[0].text, "machine.current_state = State.PATROL") and ok
 	lifted_match.match_expression = "damage_type"
 	var plain_rows: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
 	ok = _check("a non-state match reads as its test", plain_rows[0].spans[0].text, "damage_type = State.PATROL") and ok

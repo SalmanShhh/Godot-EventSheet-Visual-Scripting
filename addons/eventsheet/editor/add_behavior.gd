@@ -42,8 +42,21 @@ static func exported_properties(script_path: String) -> Array[Dictionary]:
 			# The label is the property's own name, exactly as the pack wrote it - the same word the
 			# sheet and the generated code use for it.
 			"name": identifier,
+			"description": _doc_above(source, found.get_start()),
 		})
 	return out
+
+
+## The `##` doc comment written right above the declaration starting at `offset`, joined into one
+## line - what the pack says the knob is for, and what the Inspector shows on hover.
+static func _doc_above(source: String, offset: int) -> String:
+	var lines: PackedStringArray = source.substr(0, offset).split("\n")
+	var said: PackedStringArray = PackedStringArray()
+	var index: int = lines.size() - 2  # the last piece is the start of the declaration's own line
+	while index >= 0 and lines[index].strip_edges().begins_with("##"):
+		said.insert(0, lines[index].strip_edges().trim_prefix("##").strip_edges())
+		index -= 1
+	return " ".join(said)
 
 
 ## Adds a Node carrying the pack's script under `host`, with `values` (id -> text) applied to the
