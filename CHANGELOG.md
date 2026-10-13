@@ -40,6 +40,24 @@
   line no longer says one Ctrl+Z takes all of it back - it says Ctrl+Z covers this sheet's rows and
   names the files it saved.
 
+### Fixed: the studio and settings windows
+
+- **Theme Editor:** each number token's box now uses that token's own range and step, so a lane
+  ratio of 0.45 can be set instead of snapping to steps of 0.5.
+- **Theme Editor:** a preset that cannot be saved now says so on the status bar.
+- **Translation Studio:** pressing Report Coverage again replaces the report instead of adding a
+  second copy under it.
+- **Keyboard Shortcuts:** clicking a second binding while another one is listening now listens on
+  the one you clicked, and a key that lands on one of the fixed keys (Ctrl+F, F9, Delete...) is
+  flagged as a clash.
+- **Words:** the table of words scrolls, so the window no longer grows past the bottom of the screen.
+- **Generate Events from a Description:** it sends nothing while Ask is off, a second click while a
+  request is out sends nothing, and a request that cannot start is reported and cleaned up.
+- **Ask:** Discard drops the proposal and keeps the sentence you typed.
+- **Add Save Support:** a typed array such as `Array[String]` now loads back from a save instead of
+  failing the assignment.
+- **Save Studio:** the Save Slots list shows save files only, not the editor's settings files.
+
 ### Fixed: two prompts no longer lose work on Esc or Enter
 
 - **Every Tick:** taking the last condition off an event asks whether to keep it as an every-tick
