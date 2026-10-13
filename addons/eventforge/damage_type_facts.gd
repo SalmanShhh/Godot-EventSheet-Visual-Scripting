@@ -26,10 +26,6 @@
 class_name EventForgeDamageTypeFacts
 extends RefCounted
 
-## Where the walk stops. A project with more files than this is not read further: the list is a
-## convenience, and an editor that stalls opening a dialog is not one.
-const FILE_LIMIT: int = 4000
-
 ## THE PLUGIN'S OWN COPIES OF THE STARTER SET, which are not the project's answer to anything.
 ## `has_any_set` is what the Doctor asks before it may call a word a misspelling, so a starter that
 ## ships with the pack would answer "yes, this project has written its damage types down" in every
@@ -104,7 +100,7 @@ static func project_types() -> Array[Dictionary]:
 ## which point the project's own list is the only one worth reading.
 static func starter_types() -> Array[Dictionary]:
 	var seen: Dictionary = {}
-	for path: String in _resource_files():
+	for path: String in EventForgeTileSetFacts.text_resource_files(PackedStringArray(["tres"])):
 		if not _is_shipped(path) or not source_of(path).contains(SET_MARKER):
 			continue
 		for name_of_type: String in type_names(source_of(path)):
@@ -136,7 +132,7 @@ static func has_any_set() -> bool:
 ## ships is not one of them: it is the plugin's own file, not something this project decided.
 static func project_set_files() -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
-	for path: String in _resource_files():
+	for path: String in EventForgeTileSetFacts.text_resource_files(PackedStringArray(["tres"])):
 		if _is_shipped(path):
 			continue
 		if source_of(path).contains(SET_MARKER):
@@ -201,30 +197,3 @@ static func _quoted_matches(source: String, pattern: String) -> PackedStringArra
 	var names: Array = seen.keys()
 	names.sort()
 	return PackedStringArray(names)
-
-
-## Every text-format resource in the project, sorted, bounded, and skipping this plugin's own folder.
-static func _resource_files() -> PackedStringArray:
-	var found: PackedStringArray = PackedStringArray()
-	var pending: Array[String] = ["res://"]
-	while not pending.is_empty() and found.size() < FILE_LIMIT:
-		var directory: String = pending.pop_front()
-		var handle: DirAccess = DirAccess.open(directory)
-		if handle == null:
-			continue
-		var directories: PackedStringArray = handle.get_directories()
-		directories.sort()
-		for sub_directory: String in directories:
-			if sub_directory.begins_with(".") or sub_directory == "addons":
-				continue
-			pending.append(directory.path_join(sub_directory))
-		var files: PackedStringArray = handle.get_files()
-		files.sort()
-		for file_name: String in files:
-			if file_name.get_extension().to_lower() != "tres":
-				continue
-			found.append(directory.path_join(file_name))
-			if found.size() >= FILE_LIMIT:
-				break
-	found.sort()
-	return found

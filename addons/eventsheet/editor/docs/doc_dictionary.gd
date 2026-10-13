@@ -45,17 +45,8 @@ static func markdown() -> String:
 	if _loaded:
 		return _markdown
 	_loaded = true
-	_markdown = ""
-	var text: String = _read(BUNDLE_PATH)
-	if text.is_empty():
-		return _markdown
-	var newline: int = text.find("\n")
-	if newline < 0 or text.substr(0, newline).strip_edges() != BUNDLE_HEADER:
-		push_warning("EventSheetDocDictionary: %s is not an %s file." % [BUNDLE_PATH, BUNDLE_HEADER])
-		return _markdown
-	var payload: Variant = str_to_var(text.substr(newline + 1))
-	if payload is Dictionary:
-		_markdown = str((payload as Dictionary).get("markdown", ""))
+	var payload: Variant = EventSheetDocLibrary.payload_of(BUNDLE_PATH, BUNDLE_HEADER)
+	_markdown = str((payload as Dictionary).get("markdown", "")) if payload is Dictionary else ""
 	return _markdown
 
 
@@ -208,14 +199,3 @@ static func page_markdown(found: Array[Dictionary]) -> String:
 static func bundle_text(found: Array[Dictionary]) -> String:
 	return "%s\n%s\n" % [BUNDLE_HEADER,
 		var_to_str({"version": 1, "markdown": page_markdown(found)})]
-
-
-static func _read(path: String) -> String:
-	if not FileAccess.file_exists(path):
-		return ""
-	var handle: FileAccess = FileAccess.open(path, FileAccess.READ)
-	if handle == null:
-		return ""
-	var text: String = handle.get_as_text()
-	handle.close()
-	return text

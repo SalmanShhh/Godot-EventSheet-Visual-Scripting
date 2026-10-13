@@ -25,8 +25,15 @@ static func is_template_path(path: String) -> bool:
 
 ## Every sheet .tres under the templates dir (recursive), sorted for stable menus.
 static func list_templates() -> PackedStringArray:
-	var templates: PackedStringArray = PackedStringArray()
-	var pending: PackedStringArray = PackedStringArray([templates_dir()])
+	return PackedStringArray(Array(files_under(templates_dir(), ".tres")).filter(func(path: String) -> bool:
+		return ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_REUSE) is EventSheetResource))
+
+
+## Every file under `folder` (recursive, hidden folders skipped) whose name ends with `ending`,
+## sorted for stable menus. The template and snippet libraries both list their files this way.
+static func files_under(folder: String, ending: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	var pending: PackedStringArray = PackedStringArray([folder])
 	while not pending.is_empty():
 		var directory_path: String = pending[pending.size() - 1]
 		pending.remove_at(pending.size() - 1)
@@ -40,12 +47,12 @@ static func list_templates() -> PackedStringArray:
 			if dir.current_is_dir():
 				if not entry.begins_with("."):
 					pending.append(full_path)
-			elif entry.ends_with(".tres") and ResourceLoader.load(full_path, "", ResourceLoader.CACHE_MODE_REUSE) is EventSheetResource:
-				templates.append(full_path)
+			elif entry.ends_with(ending):
+				found.append(full_path)
 			entry = dir.get_next()
 		dir.list_dir_end()
-	templates.sort()
-	return templates
+	found.sort()
+	return found
 
 
 ## A deep, path-less copy of a template - adopting it can never mutate the template

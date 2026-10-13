@@ -19,27 +19,7 @@ static func snippets_dir() -> String:
 
 ## Every .txt under the snippets dir (recursive), sorted for stable menus.
 static func list_snippets() -> PackedStringArray:
-	var snippets: PackedStringArray = PackedStringArray()
-	var pending: PackedStringArray = PackedStringArray([snippets_dir()])
-	while not pending.is_empty():
-		var directory_path: String = pending[pending.size() - 1]
-		pending.remove_at(pending.size() - 1)
-		var dir: DirAccess = DirAccess.open(directory_path)
-		if dir == null:
-			continue
-		dir.list_dir_begin()
-		var entry: String = dir.get_next()
-		while not entry.is_empty():
-			var full_path: String = directory_path.path_join(entry)
-			if dir.current_is_dir():
-				if not entry.begins_with("."):
-					pending.append(full_path)
-			elif entry.ends_with(".txt"):
-				snippets.append(full_path)
-			entry = dir.get_next()
-		dir.list_dir_end()
-	snippets.sort()
-	return snippets
+	return EventSheetTemplates.files_under(snippets_dir(), ".txt")
 
 
 ## Writes serialized snippet text under the given name; an existing name gets a

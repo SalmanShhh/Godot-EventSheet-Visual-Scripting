@@ -65,17 +65,8 @@ static func markdown() -> String:
 	if _loaded:
 		return _markdown
 	_loaded = true
-	_markdown = ""
-	var text: String = _read(BUNDLE_PATH)
-	if text.is_empty():
-		return _markdown
-	var newline: int = text.find("\n")
-	if newline < 0 or text.substr(0, newline).strip_edges() != BUNDLE_HEADER:
-		push_warning("EventSheetDocWhatsNew: %s is not an %s file." % [BUNDLE_PATH, BUNDLE_HEADER])
-		return _markdown
-	var payload: Variant = str_to_var(text.substr(newline + 1))
-	if payload is Dictionary:
-		_markdown = str((payload as Dictionary).get("markdown", ""))
+	var payload: Variant = EventSheetDocLibrary.payload_of(BUNDLE_PATH, BUNDLE_HEADER)
+	_markdown = str((payload as Dictionary).get("markdown", "")) if payload is Dictionary else ""
 	return _markdown
 
 
@@ -220,10 +211,3 @@ static func mark_seen(installed_version: String) -> void:
 	var settings: EditorSettings = EditorInterface.get_editor_settings()
 	if settings != null:
 		settings.set_project_metadata(SEEN_SECTION, SEEN_KEY, installed_version.strip_edges())
-
-
-static func _read(path: String) -> String:
-	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
-	if file == null:
-		return ""
-	return file.get_as_text()

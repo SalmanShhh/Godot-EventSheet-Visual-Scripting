@@ -133,7 +133,7 @@ static func project_files_with_tilesets() -> PackedStringArray:
 	if _holding and _held.has(WALK_KEY):
 		return _held[WALK_KEY]
 	var found: PackedStringArray = PackedStringArray()
-	for path: String in _text_resource_files():
+	for path: String in text_resource_files():
 		var source: String = source_of(path)
 		if source.contains("custom_data_layer_") or source.contains("terrain_set_"):
 			found.append(path)
@@ -196,9 +196,9 @@ static func _read(path: String) -> String:
 	return "" if file == null else file.get_as_text()
 
 
-## Every text-format resource and scene in the project, sorted, bounded, and skipping this plugin's
-## own folder - the editor's demo tilesets are not the reader's game.
-static func _text_resource_files() -> PackedStringArray:
+## Every text-format resource and scene in the project (or only the `extensions` given), sorted,
+## bounded, and skipping this plugin's own folder - the editor's demo tilesets are not the reader's game.
+static func text_resource_files(extensions: PackedStringArray = TEXT_RESOURCE_EXTENSIONS) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	var pending: Array[String] = ["res://"]
 	while not pending.is_empty() and found.size() < FILE_LIMIT:
@@ -215,7 +215,7 @@ static func _text_resource_files() -> PackedStringArray:
 		var files: PackedStringArray = handle.get_files()
 		files.sort()
 		for file_name: String in files:
-			if not TEXT_RESOURCE_EXTENSIONS.has(file_name.get_extension().to_lower()):
+			if not extensions.has(file_name.get_extension().to_lower()):
 				continue
 			found.append(directory.path_join(file_name))
 			if found.size() >= FILE_LIMIT:
