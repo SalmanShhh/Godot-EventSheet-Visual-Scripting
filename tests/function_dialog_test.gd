@@ -66,8 +66,100 @@ static func run() -> bool:
 	var output: String = str(SheetCompiler.compile(sheet, "user://fd_test.gd").get("output", ""))
 	ok = _check("the default param compiles", output.contains("func act(amount: int = 5) -> void:"), true) and ok
 	ok = _check("the guard compiles to an if", output.contains("\tif host.enabled:"), true) and ok
+	ok = _test_param_names_are_checked(dock) and ok
 	dock.free()
+	ok = _test_problems_said_while_typing() and ok
+	ok = _test_preview_names_the_real_shelf() and ok
 
+	return ok
+
+
+## A parameter name lands verbatim in the generated `func` line, so one that is not an identifier,
+## or one a sibling already uses, is refused before it reaches the sheet - in the dialog, which stays
+## open on the typing, and again at the apply for a caller that skips the dialog.
+static func _test_param_names_are_checked(dock: EventSheetDock) -> bool:
+	var ok: bool = true
+	var glue: EventSheetFunctionDialogGlue = dock._function_dialog_glue
+	var live_params: Callable = func() -> Array:
+		var names: Array = []
+		for fn: Variant in dock._current_sheet.functions:
+			if (fn as EventFunction).function_name == "act":
+				for param: ACEParam in (fn as EventFunction).params:
+					names.append(param.id)
+		return names
+	ok = _check("a spaced name is refused with the way to write it",
+		EventSheetParamDialog.param_name_problem("move speed", PackedStringArray()),
+		"\"move speed\" can't be a parameter name - use letters, digits and underscores (move_speed, not move speed), and not a GDScript keyword.") and ok
+	ok = _check("a keyword is refused", EventSheetParamDialog.param_name_problem("class", PackedStringArray()).is_empty(), false) and ok
+	ok = _check("a second input of the same name is refused",
+		EventSheetParamDialog.param_name_problem("amount", PackedStringArray(["amount"])),
+		"This function already has a parameter called \"amount\".") and ok
+	ok = _check("a good name passes", EventSheetParamDialog.param_name_problem("move_speed", PackedStringArray(["amount"])), "") and ok
+	glue._apply_param_edit({"function": "act", "index": -1, "id": "move speed", "type_name": "float", "default": "", "description": "", "removed": false})
+	ok = _check("the apply never stores a spaced name", live_params.call(), ["amount"]) and ok
+	glue._apply_param_edit({"function": "act", "index": -1, "id": "amount", "type_name": "float", "default": "", "description": "", "removed": false})
+	ok = _check("nor a duplicate", live_params.call(), ["amount"]) and ok
+	# Renaming a parameter to its OWN current name is not a duplicate.
+	glue._apply_param_edit({"function": "act", "index": 0, "id": "amount", "type_name": "int", "default": "5", "description": "How much more", "removed": false})
+	ok = _check("a parameter keeps its own name through an edit",
+		((dock._current_sheet.functions[0] as EventFunction).params[0] as ACEParam).description, "How much more") and ok
+	# The dialog itself: a refused name stays in the open form, with the reason under it.
+	glue._ensure_param_dialog()
+	var param_dialog: EventSheetParamDialog = glue._param_dialog
+	ok = _check("Apply does not close the parameter dialog by itself", param_dialog._dialog.dialog_hide_on_ok, false) and ok
+	param_dialog._function_name = "act"
+	param_dialog._param_index = -1
+	param_dialog._taken_param_names = PackedStringArray(["amount"])
+	param_dialog._remove_check.visible = false
+	param_dialog._name_edit.text = "move speed"
+	var emitted: Array = []
+	param_dialog.param_confirmed.connect(func(data: Dictionary) -> void: emitted.append(data))
+	param_dialog._on_confirmed()
+	ok = _check("a refused name emits nothing", emitted.size(), 0) and ok
+	ok = _check("and says why inside the dialog", param_dialog._problem_label.visible, true) and ok
+	ok = _check("the typed name survives the refusal", param_dialog._name_edit.text, "move speed") and ok
+	param_dialog._name_edit.text = "move_speed"
+	param_dialog._on_confirmed()
+	ok = _check("a good name goes through", emitted.size(), 1) and ok
+	return ok
+
+
+## The function dialog judges the name as it is typed, and OK never closes on a refused one.
+static func _test_problems_said_while_typing() -> bool:
+	var ok: bool = true
+	var parent: Node = Node.new()
+	var dialog: EventSheetFunctionDialog = EventSheetFunctionDialog.new()
+	dialog.init_dialog(parent)
+	ok = _check("OK does not close the function dialog by itself", dialog._dialog.dialog_hide_on_ok, false) and ok
+	dialog._name_edit.text = "1st"
+	dialog._refresh_studio()
+	ok = _check("a bad name is said while typing", dialog._problem_label.text,
+		"✗ Function names must be valid identifiers (e.g. take_damage).") and ok
+	ok = _check("and shown", dialog._problem_label.visible, true) and ok
+	dialog._name_edit.text = "take_damage"
+	dialog._refresh_studio()
+	ok = _check("a good one clears it", dialog._problem_label.visible, false) and ok
+	dialog._name_edit.text = ""
+	dialog._refresh_studio()
+	ok = _check("an empty name is not judged yet", dialog._problem_label.visible, false) and ok
+	parent.free()
+	return ok
+
+
+## The preview's shelf is the one the picker will really use - never a "(this behaviour)" placeholder.
+static func _test_preview_names_the_real_shelf() -> bool:
+	var ok: bool = true
+	var parent: Node = Node.new()
+	var dialog: EventSheetFunctionDialog = EventSheetFunctionDialog.new()
+	dialog.init_dialog(parent)
+	dialog._name_edit.text = "Take Damage"
+	dialog._refresh_studio()
+	ok = _check("an uncategorised function lands on the shelf the picker infers",
+		dialog._preview_sub.text, "Combat › Take Damage") and ok
+	dialog.set_sheet_category_context("Health")
+	dialog._refresh_studio()
+	ok = _check("a class-level category wins over the inferred one", dialog._preview_sub.text, "Health › Take Damage") and ok
+	parent.free()
 	return ok
 
 

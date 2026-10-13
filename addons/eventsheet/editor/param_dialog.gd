@@ -27,6 +27,10 @@ var _default_edit: LineEdit = null
 var _description_edit: LineEdit = null
 var _remove_check: CheckBox = null
 var _title_label: Label = null
+## Says why Apply did not take, inside the dialog, so the typed fields survive the refusal.
+var _problem_label: Label = null
+## The names the verb's OTHER parameters already use - a second input of the same name would not parse.
+var _taken_param_names: PackedStringArray = PackedStringArray()
 ## The verb being edited and which of its parameters (-1 while adding a fresh one).
 var _function_name: String = ""
 var _param_index: int = -1
@@ -36,6 +40,9 @@ func init_dialog(parent_node: Node) -> void:
 	_dialog = ConfirmationDialog.new()
 	_dialog.title = "Edit Parameter"
 	_dialog.ok_button_text = "Apply"
+	# Apply closes the dialog itself, and only once the parameter is accepted: a refused name keeps
+	# the form open with the reason in it instead of closing on the reader's typing.
+	_dialog.dialog_hide_on_ok = false
 	_dialog.confirmed.connect(_on_confirmed)
 	parent_node.add_child(_dialog)
 	var form: VBoxContainer = EventSheetPopupUI.form_box()
@@ -82,6 +89,11 @@ func init_dialog(parent_node: Node) -> void:
 		full_editor_requested.emit(_function_name))
 	form.add_child(full_editor_button)
 
+	_problem_label = EventSheetPopupUI.hint_label("", 400.0)
+	_problem_label.add_theme_color_override("font_color", Color(0.95, 0.5, 0.5))
+	_problem_label.visible = false
+	form.add_child(_problem_label)
+
 
 ## Opens on one existing parameter of `event_function` (index into its params).
 func open_for_param(event_function: EventFunction, param_index: int) -> void:
@@ -99,6 +111,7 @@ func open_for_param(event_function: EventFunction, param_index: int) -> void:
 	_description_edit.text = param.description
 	_remove_check.button_pressed = false
 	_remove_check.visible = true
+	_taken_param_names = other_param_names(event_function, param_index)
 	_popup()
 
 
@@ -119,10 +132,12 @@ func open_for_new_param(event_function: EventFunction) -> void:
 	_remove_check.button_pressed = false
 	# Nothing to delete yet - the checkbox would be a trap that discards what was just typed.
 	_remove_check.visible = false
+	_taken_param_names = other_param_names(event_function, -1)
 	_popup()
 
 
 func _popup() -> void:
+	_problem_label.visible = false
 	_dialog.popup_centered(Vector2i(460, 0))
 	_name_edit.call_deferred("grab_focus")
 	_name_edit.call_deferred("select_all")
@@ -135,7 +150,37 @@ func _verb_label(event_function: EventFunction) -> String:
 	return display_name if not display_name.is_empty() else event_function.function_name
 
 
+## Every parameter name of `event_function` except the one at `skip_index` (-1 skips none).
+static func other_param_names(event_function: EventFunction, skip_index: int) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	for position: int in range(event_function.params.size()):
+		if position != skip_index:
+			names.append((event_function.params[position] as ACEParam).id)
+	return names
+
+
+## Why `param_name` cannot name a parameter beside `taken`, or "" when it can. The name is taken as
+## written - it becomes the parameter in the generated `func` line - so a space or a keyword is
+## refused rather than silently rewritten into something the reader did not type.
+static func param_name_problem(param_name: String, taken: PackedStringArray) -> String:
+	if param_name.is_empty():
+		return EventSheetL10n.translate("A parameter needs a name.")
+	if not EventSheetIdentifierRules.is_valid(param_name):
+		return EventSheetL10n.translate("\"{name}\" can't be a parameter name - use letters, digits and underscores (move_speed, not move speed), and not a GDScript keyword.").replace("{name}", param_name)
+	if taken.has(param_name):
+		return EventSheetL10n.translate("This function already has a parameter called \"{name}\".").replace("{name}", param_name)
+	return ""
+
+
 func _on_confirmed() -> void:
+	var removed: bool = _remove_check.visible and _remove_check.button_pressed
+	if not removed:
+		var problem: String = param_name_problem(_name_edit.text.strip_edges(), _taken_param_names)
+		if not problem.is_empty():
+			_problem_label.text = problem
+			_problem_label.visible = true
+			return
+	_dialog.hide()
 	param_confirmed.emit({
 		"function": _function_name,
 		"index": _param_index,
@@ -143,5 +188,5 @@ func _on_confirmed() -> void:
 		"type_name": EventSheetFunctionDialog.PARAM_TYPES[maxi(_type_option.selected, 0)],
 		"default": _default_edit.text.strip_edges(),
 		"description": _description_edit.text.strip_edges(),
-		"removed": _remove_check.visible and _remove_check.button_pressed,
+		"removed": removed,
 	})

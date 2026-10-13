@@ -81,6 +81,8 @@ var _carried_category: String = ""
 var _expose_check: CheckBox = null
 var _problem_label: Label = null
 var _taken_names_provider: Callable = Callable()
+## The open sheet's class-level picker category ("" = none), the preview's fallback shelf.
+var _sheet_category: String = ""
 # Live picker-preview widgets (the "this is what other people will see" pane + the "Ships as:" line).
 var _preview_badge: Label = null
 var _preview_name: Label = null
@@ -95,6 +97,9 @@ func init_dialog(parent_node: Node) -> void:
 	_dialog = ConfirmationDialog.new()
 	_dialog.title = "New Function"
 	_dialog.ok_button_text = "Create Function"
+	# OK closes the dialog itself, and only when the function is accepted - a refused name keeps the
+	# form open with the reason under it rather than closing and popping back up.
+	_dialog.dialog_hide_on_ok = false
 	_dialog.confirmed.connect(_on_confirmed)
 	parent_node.add_child(_dialog)
 	var form: VBoxContainer = EventSheetPopupUI.form_box()
@@ -211,6 +216,12 @@ func set_taken_names_provider(provider: Callable) -> void:
 func set_tool_mode_context(enabled: bool) -> void:
 	if _tool_mode_hint != null:
 		_tool_mode_hint.visible = enabled
+
+
+## The dock passes the open sheet's class-level picker category per open ("" when it has none), so
+## the preview files an uncategorised function on the same shelf the picker will.
+func set_sheet_category_context(category: String) -> void:
+	_sheet_category = category.strip_edges()
 
 
 ## Opens the dialog for a NEW function. `kind` pre-selects a card ("action" / "condition" /
@@ -478,12 +489,32 @@ func _refresh_studio() -> void:
 	var arg_hint: String = ""
 	for param: Dictionary in params:
 		arg_hint += "  %s" % str(param.get("id"))
-	_preview_sub.text = "%s › %s%s" % [category if not category.is_empty() else "(this behaviour)", display_name, arg_hint]
+	_preview_sub.text = "%s › %s%s" % [_preview_category(category, raw_name, kind), display_name, arg_hint]
 	# Signature - from the compiler's own formatters, so it can't disagree with what actually ships.
 	var signature_name: String = raw_name.to_snake_case()
 	if signature_name.is_empty() or not signature_name.is_valid_identifier():
 		signature_name = "new_function"
 	_preview_signature.text = format_signature(signature_name, _return_type_for_kind(kind), params, _selected_return_type_name())
+	# The problem is said as it is typed, not only after OK. An empty name is not one yet - the
+	# dialog has just opened - so it stays quiet until there is something to judge.
+	if _problem_label != null:
+		_show_problem("" if raw_name.is_empty() else str(build_function_data().get("problem", "")))
+
+
+## The shelf the picker will file this function under, worked out the way the picker itself does:
+## the function's own category, else the sheet's class-level one, else the category the picker
+## infers from the name and the kind. Never a placeholder - the preview says where it will really land.
+func _preview_category(own_category: String, raw_name: String, kind: String) -> String:
+	if not own_category.is_empty():
+		return own_category
+	if not _sheet_category.is_empty():
+		return _sheet_category
+	var ace_type: int = ACEDefinition.ACEType.ACTION
+	if kind == "condition":
+		ace_type = ACEDefinition.ACEType.CONDITION
+	elif kind == "expression":
+		ace_type = ACEDefinition.ACEType.EXPRESSION
+	return EventSheetCategoryInference.infer_category(raw_name.to_snake_case(), ace_type, _return_type_for_kind(kind))
 
 
 ## A pill Label with a rounded coloured background - the shared badge/chip look.
@@ -619,12 +650,16 @@ func collect_params() -> Array[Dictionary]:
 func _on_confirmed() -> void:
 	var data: Dictionary = build_function_data()
 	if not str(data.get("problem", "")).is_empty():
-		_problem_label.text = "✗ %s" % str(data.get("problem"))
-		_problem_label.visible = true
-		if _dialog.is_inside_tree():
-			_dialog.call_deferred("popup_centered")
+		_show_problem(str(data.get("problem")))
 		return
+	_dialog.hide()
 	function_confirmed.emit(data)
+
+
+## The problem line under the form: shown while there is one, hidden when there is none.
+func _show_problem(problem: String) -> void:
+	_problem_label.text = "✗ %s" % problem if not problem.is_empty() else ""
+	_problem_label.visible = not problem.is_empty()
 
 
 ## Validated dialog state → {name, return_type, params, guards, description, expose,

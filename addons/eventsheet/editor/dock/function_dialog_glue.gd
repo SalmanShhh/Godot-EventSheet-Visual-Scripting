@@ -57,8 +57,20 @@ func _open_function_dialog() -> void:
 	if not _dock._ensure_sheet_for_editing():
 		return
 	_ensure_dialog()
-	_function_dialog.set_tool_mode_context(_dock._current_sheet != null and _dock._current_sheet.tool_mode)
+	_set_dialog_context()
 	_function_dialog.open()
+
+
+## What the dialog needs to know about the open sheet, told per open: whether it is an editor tool,
+## and the class-level picker category an uncategorised function lands under (only a named class
+## writes one, so an unnamed sheet passes none).
+func _set_dialog_context() -> void:
+	var sheet: EventSheetResource = _dock._current_sheet
+	_function_dialog.set_tool_mode_context(sheet != null and sheet.tool_mode)
+	var class_category: String = ""
+	if sheet != null and not sheet.custom_class_name.strip_edges().is_empty():
+		class_category = sheet.addon_category
+	_function_dialog.set_sheet_category_context(class_category)
 
 
 ## The right-click "New Function ▸" submenu entry point: opens the dialog pre-set to a kind and publish
@@ -67,7 +79,7 @@ func _open_function_dialog_new(kind: String, publish: bool) -> void:
 	if not _dock._ensure_sheet_for_editing():
 		return
 	_ensure_dialog()
-	_function_dialog.set_tool_mode_context(_dock._current_sheet != null and _dock._current_sheet.tool_mode)
+	_set_dialog_context()
 	_function_dialog.open(kind, publish)
 
 
@@ -80,7 +92,7 @@ func open_function_dialog_for_new_message() -> void:
 		return
 	_ensure_dialog()
 	_message_after_add = true
-	_function_dialog.set_tool_mode_context(_dock._current_sheet != null and _dock._current_sheet.tool_mode)
+	_set_dialog_context()
 	_function_dialog.open("", false)
 
 
@@ -90,7 +102,7 @@ func _open_function_dialog_for(event_function: Resource) -> void:
 	if not (event_function is EventFunction) or _dock._current_sheet == null:
 		return
 	_ensure_dialog()
-	_function_dialog.set_tool_mode_context(_dock._current_sheet.tool_mode)
+	_set_dialog_context()
 	_function_dialog.open_for_edit(event_function as EventFunction)
 
 
@@ -151,13 +163,20 @@ func _apply_param_edit(data: Dictionary) -> void:
 	var param_index: int = int(data.get("index", -1))
 	var removed: bool = bool(data.get("removed", false))
 	var new_id: String = str(data.get("id", "")).strip_edges()
-	if not removed and new_id.is_empty():
-		_dock._set_status("A parameter needs a name.", true)
-		return
+	var target_now: EventFunction = _find_function(function_name)
+	# The name lands verbatim in the generated `func` line, so a name that is not an identifier, or one
+	# a sibling parameter already uses, is refused here too - the dialog asks first, but a programmatic
+	# caller reaches this apply directly.
+	if not removed:
+		var taken: PackedStringArray = EventSheetParamDialog.other_param_names(target_now, param_index) \
+			if target_now != null else PackedStringArray()
+		var problem: String = EventSheetParamDialog.param_name_problem(new_id, taken)
+		if not problem.is_empty():
+			_dock._set_status(problem, true)
+			return
 	# GDScript requires defaulted parameters to be trailing, and this dialog is now the ONLY way to
 	# author them - the verb dialog's parameter list is gone. Without this check a default on an early
 	# parameter emits a `func` that will not parse, which the sheet would then fail to compile.
-	var target_now: EventFunction = _find_function(function_name)
 	if target_now != null and not _defaults_stay_trailing(target_now, data):
 		_dock._set_status(
 			"Parameters with a default value must come after those without - move this one down, or give the ones after it defaults too.",
