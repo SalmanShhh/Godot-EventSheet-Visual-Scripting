@@ -265,15 +265,15 @@ func build(root: Node) -> void:
 	sheet_popup.add_item("Manage Includes…", 8)
 	sheet_popup.add_item("Custom Actions…", 5)
 	# Making your own behaviour and your own global: a form each, then the lists of what it offers.
-	sheet_popup.add_item("New behaviour…", 9)
-	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(9),
-		"Make a behaviour of your own: a child node that adds properties, actions, conditions and triggers to the object it is added to.")
-	sheet_popup.add_item("New global…", 20)
-	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(20),
-		"Make a global of your own: one script or scene Godot loads before the first scene and keeps for the whole game, listed in Project Settings > Globals > Autoload.")
-	sheet_popup.add_item("Properties and actions…", 21)
-	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(21),
-		"What this behaviour or global offers: its properties or values, and the actions, conditions, triggers and expressions every sheet's picker lists.")
+	sheet_popup.add_item(EventSheetL10n.translate("New behaviour…"), 9)
+	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(9), EventSheetL10n.translate(
+		"Make a behaviour of your own: a child node that adds properties, actions, conditions and triggers to the object it is added to."))
+	sheet_popup.add_item(EventSheetL10n.translate("New global…"), 22)
+	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(22), EventSheetL10n.translate(
+		"Make a global of your own: one script or scene Godot loads before the first scene and keeps for the whole game, listed in Project Settings > Globals > Autoload."))
+	sheet_popup.add_item(EventSheetL10n.translate("Properties and actions…"), 23)
+	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(23), EventSheetL10n.translate(
+		"What this behaviour or global offers: its properties or values, and the actions, conditions, triggers and expressions every sheet's picker lists."))
 	sheet_popup.add_item("New Editor Tool…", 12)
 	sheet_popup.set_item_tooltip(
 		sheet_popup.get_item_index(12),
@@ -322,8 +322,8 @@ func build(root: Node) -> void:
 			7: _dock._export_gdscript_requested()
 			8: _dock._open_include_manager()
 			9: _dock._new_addon_panel.open()
-			20: _dock._new_addon_panel.open(true)
-			21: _dock._new_addon_panel.open_members()
+			22: _dock._new_addon_panel.open(true)
+			23: _dock._new_addon_panel.open_members()
 			10: _dock._share_verbs_with_project_requested()
 			11: _dock._open_inspector_designer()
 			12: _dock._starter._new_sheet_from_template(10)
