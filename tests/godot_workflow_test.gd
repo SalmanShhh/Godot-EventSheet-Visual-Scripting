@@ -757,6 +757,20 @@ static func _shortcut_clash_and_capture_checks() -> bool:
 		if int(EventSheetShortcuts.parse(str(chord)).get("keycode")) == KEY_NONE:
 			unparsed.append(str(chord))
 	all_passed = _check("every fixed chord names a real key", unparsed, [] as Array[String]) and all_passed
+	# The clash table and the dialog's Fixed keys section are two spellings of one list: every key the
+	# clash check guards is a row the reader can see, and every row is guarded.
+	var listed: Array[String] = []
+	for pair: Variant in EventSheetDock.FIXED_KEYS:
+		if not listed.has(str((pair as Array)[1])):
+			listed.append(str((pair as Array)[1]))
+	var guarded: Array[String] = []
+	for chord: Variant in EventSheetShortcuts.FIXED_CHORDS:
+		if not guarded.has(str(EventSheetShortcuts.FIXED_CHORDS[chord])):
+			guarded.append(str(EventSheetShortcuts.FIXED_CHORDS[chord]))
+	listed.sort()
+	guarded.sort()
+	all_passed = _check("the fixed keys the dialog lists are the ones the clash check guards",
+		listed, guarded) and all_passed
 	var default_clashes: Array[String] = []
 	for action: Variant in EventSheetShortcuts.DEFAULTS:
 		if not EventSheetShortcuts.conflicting_fixed_key(str(EventSheetShortcuts.DEFAULTS[action])).is_empty():
