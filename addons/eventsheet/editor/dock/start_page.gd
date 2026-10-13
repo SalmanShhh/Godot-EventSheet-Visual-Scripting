@@ -4,30 +4,22 @@ extends RefCounted
 
 # THE START PAGE. Everything a session starts with, on one page instead of three:
 #
-#   New from template   the shipped starters and the playable showcases, by genre, each with a
-#                       one-line pitch and its picture
+#   New from template   "Open an existing script" first, then the shipped starters by shelf (2D,
+#                       3D, menus, behaviours, project-wide, game shapes, data, editor tools) and
+#                       the playable showcases; chips above narrow it to one shelf
 #   Recent              the sheets and scenes this project was last in
 #   Learn               the tutorials, and What's new
+#
+# Each row shows its kind beside its name. A click selects and the help strip at the foot says what
+# the row is and what opening it does; Open, Enter or a double-click opens it.
 #
 # It opens when the EventSheet tab is shown with no sheet open, and from Sheet ▸ Start page. A
 # checkbox turns the startup half off; the menu entry always works.
 #
-# Nothing here is a new way to do anything: every card calls the starter builder, the open path, or
+# Nothing here is a new way to do anything: every row calls the starter builder, the open path, or
 # the Manual, all of which already exist.
 
 const _META_KEY: String = "eventsheets_start_page_on_startup"
-
-## The starters the page offers, as [starter id, genre, one-line pitch]. The LABEL is not repeated
-## here - it comes from the starter table itself, so a renamed starter renames on this page too.
-const TEMPLATE_PITCHES: Array = [
-	[1, "Platformer", "Run, jump and coyote time, already wired - a character that feels right on the first run."],
-	[2, "Top-down", "Eight-way movement and a camera that follows - the shape every top-down game starts from."],
-	[8, "Behavior", "One behavior you attach to any node: signals in, actions out, nothing else to set up."],
-	[11, "Systems", "One sheet that runs over a whole group of entities each tick, instead of a script per entity."],
-	[9, "Data", "A data asset your designers fill in like a table, saved as .tres files."],
-	[10, "Editor tools", "A sheet whose events run INSIDE the editor - batch renames, scene checks, one-click chores."],
-	[0, "Empty", "An empty sheet. Start with a blank event and go."],
-]
 
 ## The shelf each showcase folder sits on. A showcase says what it DOES in the about comment its
 ## sheet opens with, and `pitch_from_about` turns that into the line a card shows - but nothing in
@@ -107,8 +99,13 @@ const SHOWCASE_DIR: String = "res://demo/showcase"
 
 var _dock: Control = null
 var _window: Window = null
-var _startup_check: CheckBox = null
 var _columns_row: HBoxContainer = null
+var _lists: Array[Tree] = []
+var _strip: EventSheetPopupUI.HelpStrip = null
+var _opens_value: Label = null
+var _open_button: Button = null
+## The row the reader picked last, from whichever column; {} while nothing is picked.
+var _chosen: Dictionary = {}
 
 
 func init(dock: Control) -> void:
@@ -130,51 +127,58 @@ static func _set_opens_on_startup(on: bool) -> void:
 		settings.call("set_project_metadata", "eventsheets", _META_KEY, on)
 
 
+## The shelf a row sits on when it is the reader's own project rather than a starter. It leads the
+## column: a project that already has scripts is the common case, so opening one comes first.
+const SHELF_YOUR_PROJECT: String = "Your project"
+const SHELF_EDITOR_TOOLS: String = "Editor tools"
+const SHELF_SHOWCASES: String = "Showcases"
+
+
 ## The three columns, as [{id, title, entries}] where each entry is
-## {kind, label, note, target}. Pure, so a test pins the page's contents without building it.
-##   kind "template"  target = the starter id, as text
-##   kind "showcase"  target = the scene path (its line comes from `abouts`, {folder: about text})
-##   kind "recent"    target = the file path
-##   kind "learn"     target = the Manual doc id
+## {kind, label, tag, pitch, shelf, target}: `tag` is the kind word drawn beside the name, `pitch`
+## the line the help strip says, `shelf` the heading it sits under (templates only). Pure, so a test
+## pins the page's contents without building it.
+##   kind "open_script"  target = "" (the Open file picker)
+##   kind "template"     target = the starter id, as text
+##   kind "editor_tool"  target = "" (the list of editor tool shapes)
+##   kind "showcase"     target = the folder path (its line comes from `abouts`, {folder: about text})
+##   kind "recent"       target = the file path
+##   kind "learn"        target = the Manual doc id
 ##   kind "this_editor"  target = "" (only in the plugin's own repo)
-static func columns(starters: Array, showcases: PackedStringArray, recents: Array,
+static func columns(showcases: PackedStringArray, recents: Array,
 		is_editor_project: bool = false, abouts: Dictionary = {}) -> Array:
-	var templates: Array = []
-	var label_by_id: Dictionary = {}
-	for starter: Variant in starters:
-		label_by_id[int((starter as Dictionary).get("id", -1))] = str((starter as Dictionary).get("label", ""))
-	for entry: Variant in TEMPLATE_PITCHES:
-		var record: Array = entry
-		var starter_id: int = int(record[0])
-		if not label_by_id.has(starter_id):
-			continue
-		templates.append({"kind": "template", "label": str(label_by_id[starter_id]),
-			"note": "%s · %s" % [str(record[1]), str(record[2])], "target": str(starter_id)})
+	var templates: Array = [{"kind": "open_script", "label": "Open an existing script…", "tag": "Your scripts",
+		"pitch": "Any script in this project reads as a sheet, and saving it untouched leaves the file exactly as it was.",
+		"shelf": SHELF_YOUR_PROJECT, "target": ""}]
+	for starter: Dictionary in EventSheetStarterTemplates.MENU_STARTERS:
+		templates.append({"kind": "template", "label": str(starter["label"]).get_slice(" (", 0),
+			"tag": str(starter["kind"]), "pitch": str(starter["pitch"]), "shelf": str(starter["shelf"]),
+			"target": str(starter["id"])})
+	templates.append({"kind": "editor_tool", "label": "Editor Tool…", "tag": "@tool",
+		"pitch": "A sheet whose events run INSIDE the editor - batch renames, scene checks, one-click chores.",
+		"shelf": SHELF_EDITOR_TOOLS, "target": ""})
 	for showcase: String in showcases:
-		var genre: String = str(SHOWCASE_KINDS.get(showcase, SHOWCASE_UNSHELVED))
 		var line: String = str(SHOWCASE_PITCHES.get(showcase, ""))
 		if line.is_empty():
 			line = pitch_from_about(str(abouts.get(showcase, "")))
-		if line.is_empty():
-			line = SHOWCASE_UNDESCRIBED
 		templates.append({"kind": "showcase", "label": showcase.capitalize(),
-			"note": "%s · %s" % [genre, line], "target": "%s/%s" % [SHOWCASE_DIR, showcase]})
+			"tag": str(SHOWCASE_KINDS.get(showcase, SHOWCASE_UNSHELVED)),
+			"pitch": line if not line.is_empty() else SHOWCASE_UNDESCRIBED, "shelf": SHELF_SHOWCASES,
+			"target": "%s/%s" % [SHOWCASE_DIR, showcase]})
 	var recent_entries: Array = []
 	for path: Variant in recents:
 		# The health card's short form is the Recent list's second column: how many events the
 		# sheet has and how its tests last went, read from the file rather than by loading it.
 		recent_entries.append({"kind": "recent", "label": str(path).get_file(),
-			"note": EventSheetHealthCard.brief_for_path(str(path), str(path).get_base_dir()),
-			"target": str(path)})
+			"tag": EventSheetHealthCard.brief_for_path(str(path), str(path).get_base_dir()),
+			"pitch": str(path), "target": str(path)})
 	var learn: Array = []
 	for tutorial: Dictionary in EventSheetDocTutorials.tutorials():
-		learn.append({
-			"kind": "learn", "label": str(tutorial.get("title", "")),
-			"note": "%d min" % int(tutorial.get("minutes", 0)),
-			"target": EventSheetDocTutorials.doc_id(str(tutorial.get("id", "")))
-		})
-	learn.append({"kind": "learn", "label": "What's new", "note": "since you last looked",
-		"target": "reference:whats-new"})
+		learn.append({"kind": "learn", "label": str(tutorial.get("title", "")),
+			"tag": "%d min" % int(tutorial.get("minutes", 0)), "pitch": str(tutorial.get("lead", "")),
+			"target": EventSheetDocTutorials.doc_id(str(tutorial.get("id", "")))})
+	learn.append({"kind": "learn", "label": "What's new", "tag": "since you last looked",
+		"pitch": "What changed in the editor since you last looked.", "target": "reference:whats-new"})
 	var built: Array = [
 		{"id": "templates", "title": "New from template", "entries": templates},
 		{"id": "recent", "title": "Recent", "entries": recent_entries},
@@ -185,11 +189,40 @@ static func columns(starters: Array, showcases: PackedStringArray, recents: Arra
 	if is_editor_project:
 		built.append({"id": "this_editor", "title": "This editor", "entries": [{
 			"kind": "this_editor",
-			"label": "This is the editor's own project - open its source as sheets",
-			"note": "Every file the editor is built from, grouped by what it does, read the way your own scripts are.",
+			"label": "This is the editor's own project - open its source as sheets", "tag": "",
+			"pitch": "Every file the editor is built from, grouped by what it does, read the way your own scripts are.",
 			"target": ""
 		}]})
 	return built
+
+
+## The shelves of the template column in the order they first appear - the filter chips' order.
+static func shelves(entries: Array) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for entry: Variant in entries:
+		var shelf: String = str((entry as Dictionary).get("shelf", ""))
+		if not shelf.is_empty() and not found.has(shelf):
+			found.append(shelf)
+	return found
+
+
+## What opening a row does, said before it is opened - the strip's OPENS line.
+static func opens_line(entry: Dictionary) -> String:
+	var target: String = str(entry.get("target", ""))
+	match str(entry.get("kind", "")):
+		"open_script":
+			return EventSheetL10n.translate("The file picker, at this project's scripts.")
+		"template":
+			return EventSheetL10n.translate("%s as a new unsaved sheet - Save As… keeps it.") % str(entry.get("label", ""))
+		"editor_tool":
+			return EventSheetL10n.translate("The list of editor tool kinds, to pick which one to start from.")
+		"showcase":
+			return EventSheetL10n.translate("%s in Godot's scene editor - press Play to try it.") % showcase_scene(target).get_file()
+		"recent":
+			return EventSheetL10n.translate("%s in the sheet editor.") % target
+		"learn":
+			return EventSheetL10n.translate("This lesson in the Manual, beside the sheet.")
+	return EventSheetL10n.translate("The Project bar, at the editor's own source.")
 
 
 ## The showcase folders on disk, sorted. Empty when the project has no demo folder, which is the
@@ -307,26 +340,45 @@ func _build() -> void:
 	if _window != null:
 		return
 	_window = Window.new()
-	_window.title = "Start"
-	_window.size = Vector2i(EventSheetPalette.scaled(900), EventSheetPalette.scaled(520))
-	_window.close_requested.connect(func() -> void: _window.hide())
+	_window.title = EventSheetL10n.translate("Start - open a sheet or make one")
+	_window.size = Vector2i(EventSheetPalette.scaled(1120), EventSheetPalette.scaled(640))
+	_window.close_requested.connect(_window.hide)
 	var outer: VBoxContainer = EventSheetPopupUI.form_box()
-	outer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_columns_row = HBoxContainer.new()
-	_columns_row.add_theme_constant_override("separation", 12)
+	_columns_row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(12.0)))
 	_columns_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	outer.add_child(_columns_row)
-	_startup_check = CheckBox.new()
-	_startup_check.text = "Show this page when nothing is open"
-	_startup_check.tooltip_text = "Off means the Start page only opens from Sheet ▸ Start page."
-	_startup_check.button_pressed = opens_on_startup()
-	_startup_check.toggled.connect(func(on: bool) -> void: _set_opens_on_startup(on))
-	outer.add_child(_startup_check)
+	_strip = EventSheetPopupUI.help_strip("", "", "", "", EventSheetPalette.scaled_f(640.0))
+	_opens_value = _strip.add_line(EventSheetL10n.translate("OPENS"))
+	outer.add_child(_strip)
+	var foot: HBoxContainer = HBoxContainer.new()
+	foot.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)
+	var startup_check: CheckBox = CheckBox.new()
+	startup_check.text = "Show this page when nothing is open"
+	startup_check.tooltip_text = "Off means the Start page only opens from Sheet ▸ Start page."
+	startup_check.button_pressed = opens_on_startup()
+	startup_check.toggled.connect(_set_opens_on_startup)
+	startup_check.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	foot.add_child(startup_check)
+	var close_button: Button = Button.new()
+	close_button.text = "Close"
+	close_button.pressed.connect(_window.hide)
+	foot.add_child(close_button)
+	_open_button = Button.new()
+	_open_button.text = "Open"
+	_open_button.pressed.connect(func() -> void: activate(_chosen))
+	foot.add_child(_open_button)
+	outer.add_child(foot)
 	# The margin wrapper is what the window holds, so IT is the thing that has to fill the window.
 	# Anchoring the box INSIDE a wrapper that does not fill left all three columns collapsed to their
 	# titles in the top-left corner - the page opened, and it opened empty.
 	var margined: MarginContainer = EventSheetPopupUI.margined(outer)
 	margined.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# A plain Window draws no background of its own; the editor's panel behind the page is what a
+	# dialog has, and what keeps the light theme light.
+	var back: Panel = Panel.new()
+	back.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_window.add_child(back)
 	_window.add_child(margined)
 	_dock.add_child(_window)
 
@@ -337,51 +389,122 @@ func _fill() -> void:
 	for child: Node in _columns_row.get_children():
 		_columns_row.remove_child(child)
 		child.queue_free()
-	var recents: Array = _dock.get_open_sheets_state().get("recent", [])
+	_lists.clear()
+	_choose({})
 	var folders: PackedStringArray = showcase_folders()
-	for column: Variant in columns(EventSheetStarterTemplates.create_new_starters(),
-			folders, recents, EventSheetThisEditor.is_editor_project(), showcase_abouts(folders)):
+	for column: Variant in columns(folders, _dock.get_open_sheets_state().get("recent", []),
+			EventSheetThisEditor.is_editor_project(), showcase_abouts(folders)):
 		var section: Dictionary = column
-		var box: VBoxContainer = VBoxContainer.new()
-		box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var entries: Array = section.get("entries", [])
+		var box: VBoxContainer = EventSheetPopupUI.form_box()
 		box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		var scroll: ScrollContainer = ScrollContainer.new()
-		scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		var list: VBoxContainer = VBoxContainer.new()
-		list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		for entry: Variant in section.get("entries", []):
-			list.add_child(_entry_card(entry as Dictionary))
-		if (section.get("entries", []) as Array).is_empty():
-			var empty := Label.new()
-			empty.text = "Nothing here yet."
-			empty.modulate = Color(1.0, 1.0, 1.0, 0.6)
-			list.add_child(empty)
-		scroll.add_child(list)
-		box.add_child(scroll)
+		var list: Tree = Tree.new()
+		list.columns = 2
+		list.hide_root = true
+		list.select_mode = Tree.SELECT_ROW
+		# The kind is the quieter, narrower column; the name gets three parts of four.
+		list.set_column_expand_ratio(0, 3)
+		list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		list.item_selected.connect(func() -> void:
+			for other: Tree in _lists:
+				if other != list:
+					other.deselect_all()
+			_choose(list.get_selected().get_metadata(0) as Dictionary))
+		list.item_activated.connect(func() -> void: activate(_chosen))
+		_lists.append(list)
+		if str(section.get("id", "")) == "templates":
+			box.add_child(_shelf_chips(list, entries))
+		_fill_list(list, entries)
+		box.add_child(list)
 		var card: PanelContainer = EventSheetPopupUI.titled_card(str(section.get("title", "")), box)
-		# Without these the three cards shrink to their titles: an HBoxContainer hands out no space
-		# a child did not ask for.
+		# Without these the cards shrink to their titles: an HBoxContainer hands out no space a
+		# child did not ask for. The template column is the one with the most to show.
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		card.size_flags_stretch_ratio = 2.0 if str(section.get("id", "")) == "templates" else 1.0
 		_columns_row.add_child(card)
 
 
-func _entry_card(entry: Dictionary) -> Control:
-	var button := Button.new()
-	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	button.text = str(entry.get("label", ""))
-	button.tooltip_text = str(entry.get("note", ""))
-	button.pressed.connect(activate.bind(entry))
-	return button
+## One row per entry - its name, and its kind in the quieter second column - under the heading of
+## each shelf it reaches. `shelf` keeps one shelf only; "" keeps them all.
+func _fill_list(list: Tree, entries: Array, shelf: String = "") -> void:
+	list.clear()
+	var root: TreeItem = list.create_item()
+	var heading: String = ""
+	for entry: Variant in entries:
+		var row: Dictionary = entry
+		var row_shelf: String = str(row.get("shelf", ""))
+		# The reader's own project stays on top whichever shelf is chosen.
+		if not shelf.is_empty() and row_shelf != shelf and row_shelf != SHELF_YOUR_PROJECT:
+			continue
+		if row_shelf != heading:
+			heading = row_shelf
+			var head: TreeItem = list.create_item(root)
+			head.set_text(0, heading.to_upper())
+			head.set_custom_color(0, EventSheetPopupUI.accent_color())
+			head.set_custom_font(0, EventSheetPopupUI.small_caps_font(list.get_theme_font("font")))
+			head.set_custom_font_size(0, EventSheetPalette.scaled(EventSheetPopupUI.SMALL_CAPS_FONT_SIZE))
+			head.set_selectable(0, false)
+			head.set_selectable(1, false)
+		var item: TreeItem = list.create_item(root)
+		item.set_text(0, str(row.get("label", "")))
+		item.set_text(1, str(row.get("tag", "")))
+		item.set_tooltip_text(0, str(row.get("label", "")))
+		item.set_custom_color(1, EventSheetPopupUI.muted_text_color())
+		item.set_metadata(0, row)
+	if root.get_child_count() == 0:
+		var empty: TreeItem = list.create_item(root)
+		empty.set_text(0, "Nothing here yet.")
+		empty.set_custom_color(0, EventSheetPopupUI.muted_text_color())
+		empty.set_selectable(0, false)
+		empty.set_selectable(1, false)
 
 
-## What a card does. Every branch is a path the editor already has.
+## The chips over the template column: All, then one per shelf. A chip narrows the list to its shelf.
+func _shelf_chips(list: Tree, entries: Array) -> HFlowContainer:
+	var chips: HFlowContainer = HFlowContainer.new()
+	var group: ButtonGroup = ButtonGroup.new()
+	var shelf_names: PackedStringArray = PackedStringArray([""])
+	shelf_names.append_array(shelves(entries))
+	shelf_names.erase(SHELF_YOUR_PROJECT)
+	for shelf: String in shelf_names:
+		var chip: Button = Button.new()
+		# The chip is the heading's first words: "Project-wide", not "Project-wide (autoloads)".
+		chip.text = shelf.get_slice(" (", 0) if not shelf.is_empty() else EventSheetL10n.translate("All")
+		chip.toggle_mode = true
+		chip.button_group = group
+		chip.flat = true
+		chip.set_pressed_no_signal(shelf.is_empty())
+		chip.pressed.connect(func() -> void: _fill_list(list, entries, shelf))
+		chips.add_child(chip)
+	return chips
+
+
+## What the help strip says about the chosen row, and whether Open has anything to open.
+func _choose(entry: Dictionary) -> void:
+	_chosen = entry
+	_open_button.disabled = entry.is_empty()
+	if entry.is_empty():
+		_strip.describe(EventSheetL10n.translate("This entry"),
+			EventSheetL10n.translate("Pick a row to see what it is; Open or a double-click opens it."))
+		_strip.set_line(_opens_value, "")
+		return
+	var tag: String = EventSheetL10n.translate(str(entry.get("tag", "")))
+	var pitch: String = EventSheetL10n.translate(str(entry.get("pitch", "")))
+	_strip.describe(EventSheetL10n.translate("This entry"), pitch if tag.is_empty() else "%s · %s" % [tag, pitch])
+	_strip.set_line(_opens_value, opens_line(entry))
+
+
+## What a row does. Every branch is a path the editor already has.
 func activate(entry: Dictionary) -> void:
 	var target: String = str(entry.get("target", ""))
 	match str(entry.get("kind", "")):
+		"open_script":
+			_dock._on_open_requested()
 		"template":
-			EventSheetProjectBarGlue.mark_started_from_template()
 			_dock._starter._new_sheet_from_template(int(target))
+		"editor_tool":
+			_pick_editor_tool()
+			return
 		"showcase":
 			_open_showcase(target)
 		"recent":
@@ -390,8 +513,22 @@ func activate(entry: Dictionary) -> void:
 			_dock.open_documentation(target)
 		"this_editor":
 			_open_this_editor_folder()
+		_:
+			return
 	if _window != null:
 		_window.hide()
+
+
+## The editor tool kinds, as the New-Sheet menu's Editor Tool submenu lists them; picking one opens
+## that starter like any other row.
+func _pick_editor_tool() -> void:
+	var menu: PopupMenu = PopupMenu.new()
+	for shape: Dictionary in EventSheetStarterTemplates.EDITOR_TOOL_SHAPES:
+		menu.add_item("%s - %s" % [str(shape["label"]), str(shape["note"])], int(shape["id"]))
+	menu.id_pressed.connect(func(id: int) -> void: activate({"kind": "template", "target": str(id)}))
+	menu.popup_hide.connect(menu.queue_free, CONNECT_DEFERRED)
+	_window.add_child(menu)
+	menu.popup(Rect2i(Vector2i(_window.get_mouse_position()) + _window.position, Vector2i.ZERO))
 
 
 ## The contributor's door: turn the Project bar on, open it, and open the plugin's own script

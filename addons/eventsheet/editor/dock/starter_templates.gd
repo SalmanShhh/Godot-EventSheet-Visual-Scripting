@@ -40,32 +40,12 @@ func _build_template_menu_items() -> void:
 	# The creation-time ASK: what kind of Godot script is this sheet for? Sections mirror
 	# EventSheetScriptIntent so a newcomer discovers custom resources and editor tools at the
 	# same moment they discover behaviours - without a wizard slowing every creation down.
-	_template_menu.add_separator("Scripts on a node")
-	_template_menu.add_item("Blank Sheet", 0)
-	_template_menu.add_item("Platformer Starter", 1)
-	_template_menu.add_item("Top-down Starter", 2)
-	_template_menu.add_item("First-Person Controller (3D)", 6)
-	_template_menu.add_item("Third-Person Mover (3D)", 7)
-	_template_menu.add_item("Boomer Arsenal (3D)", 30)
-	_template_menu.add_item("Game Options", 31)
-	_template_menu.add_item("Level Stats Screen", 32)
-	_template_menu.add_item("Keycard Door (3D)", 33)
-	_template_menu.add_item("Skill Tree Screen", 34)
-	_template_menu.add_separator("Behaviours - attach under a node")
-	_template_menu.add_item("Behavior Component (signal-driven)", 8)
-	_template_menu.add_separator("Autoloads - project-wide singletons")
-	_template_menu.add_item("Game State (Autoload)", 3)
-	_template_menu.add_item("Event Bus (Autoload)", 4)
-	_template_menu.add_item("Save System (Autoload)", 5)
-	_template_menu.add_separator("Systems - run over a group of entities")
-	_template_menu.add_item("Entity System (Autoload)", 11)
-	_template_menu.add_separator("Game shapes - a whole mechanic, ready to retune")
-	_template_menu.add_item("Loot Chest (pity rolls)", 26)
-	_template_menu.add_item("Stealth Guard (seen, heard, hunted)", 27)
-	_template_menu.add_item("Boss Fight (phases and i-frames)", 28)
-	_template_menu.add_item("Mission Timer (a clock with a deadline)", 29)
-	_template_menu.add_separator("Custom Resources - data assets (.tres)")
-	_template_menu.add_item("Custom Resource (data + logic)", 9)
+	var section: String = ""
+	for starter: Dictionary in MENU_STARTERS:
+		if str(starter["section"]) != section:
+			section = str(starter["section"])
+			_template_menu.add_separator(section)
+		_template_menu.add_item(str(starter["label"]), int(starter["id"]))
 	_template_menu.add_separator("Editor Tools - run inside the editor")
 	# Fifteen shapes is too many to read as a flat run in a menu that also offers game starters,
 	# so the whole family lives behind one entry - the "New Sheet ▸ Editor tool" list. The
@@ -78,6 +58,63 @@ func _build_template_menu_items() -> void:
 		for index in _project_template_paths.size():
 			_template_menu.add_item(_project_template_paths[index].get_file().get_basename().capitalize(), 100 + index)
 
+
+## Every game starter the New-Sheet menu offers, in its order: the menu reads `label` under its
+## `section` divider; the Start page shelves it under `shelf` with its `kind` beside the name; the
+## Start page and the New Event Sheet window both say `pitch` for it. One table, so a starter is
+## described once wherever it is offered.
+const MENU_STARTERS: Array[Dictionary] = [
+	{"id": 0, "label": "Blank Sheet", "section": "Scripts on a node", "shelf": "2D", "kind": "Empty",
+		"pitch": "An empty sheet. Start with a blank event and go."},
+	{"id": 1, "label": "Platformer Starter", "section": "Scripts on a node", "shelf": "2D", "kind": "Platformer",
+		"pitch": "Run, jump and coyote time, already wired - a character that feels right on the first run."},
+	{"id": 2, "label": "Top-down Starter", "section": "Scripts on a node", "shelf": "2D", "kind": "Top-down",
+		"pitch": "Eight-way movement and a camera that follows - the shape every top-down game starts from."},
+	{"id": 6, "label": "First-Person Controller (3D)", "section": "Scripts on a node", "shelf": "3D", "kind": "First person",
+		"pitch": "Walk relative to where the camera faces, and jump - a CharacterBody3D ready for a level."},
+	{"id": 7, "label": "Third-Person Mover (3D)", "section": "Scripts on a node", "shelf": "3D", "kind": "Third person",
+		"pitch": "Move on the ground plane and turn to face the way you go."},
+	{"id": 30, "label": "Boomer Arsenal (3D)", "section": "Scripts on a node", "shelf": "3D", "kind": "Shooter",
+		"pitch": "Fire, switch weapons, spend ammo and count secrets."},
+	{"id": 31, "label": "Game Options", "section": "Scripts on a node", "shelf": "UI and menus", "kind": "Menu",
+		"pitch": "The accessibility screen: remapping, effect strength, no flashing, text size and aim help."},
+	{"id": 32, "label": "Level Stats Screen", "section": "Scripts on a node", "shelf": "UI and menus", "kind": "Menu",
+		"pitch": "The end-of-level tally: kills, secrets and time."},
+	{"id": 33, "label": "Keycard Door (3D)", "section": "Scripts on a node", "shelf": "3D", "kind": "Doors",
+		"pitch": "A door that opens for the key it names."},
+	{"id": 34, "label": "Skill Tree Screen", "section": "Scripts on a node", "shelf": "UI and menus", "kind": "Menu",
+		"pitch": "The picture of a skill tree: a button per skill, the points left and what is granted."},
+	{"id": 8, "label": "Behavior Component (signal-driven)", "section": "Behaviours - attach under a node",
+		"shelf": "Behaviours", "kind": "Behaviour",
+		"pitch": "One behavior you attach to any node: signals in, actions out, nothing else to set up."},
+	{"id": 3, "label": "Game State (Autoload)", "section": "Autoloads - project-wide singletons",
+		"shelf": "Project-wide (autoloads)", "kind": "Autoload",
+		"pitch": "The score and the lives every sheet can read, with a signal when the score changes."},
+	{"id": 4, "label": "Event Bus (Autoload)", "section": "Autoloads - project-wide singletons",
+		"shelf": "Project-wide (autoloads)", "kind": "Autoload",
+		"pitch": "Project-wide signals: any sheet emits them and any sheet listens."},
+	{"id": 5, "label": "Save System (Autoload)", "section": "Autoloads - project-wide singletons",
+		"shelf": "Project-wide (autoloads)", "kind": "Autoload",
+		"pitch": "Save a number under a name and load it back, in one file in user://."},
+	{"id": 11, "label": "Entity System (Autoload)", "section": "Systems - run over a group of entities",
+		"shelf": "Project-wide (autoloads)", "kind": "System",
+		"pitch": "One sheet that runs over a whole group of entities each tick, instead of a script per entity."},
+	{"id": 26, "label": "Loot Chest (pity rolls)", "section": "Game shapes - a whole mechanic, ready to retune",
+		"shelf": "Game shapes", "kind": "Pity rolls",
+		"pitch": "A chance that grows with every miss and a cap that guarantees the win."},
+	{"id": 27, "label": "Stealth Guard (seen, heard, hunted)", "section": "Game shapes - a whole mechanic, ready to retune",
+		"shelf": "Game shapes", "kind": "AI",
+		"pitch": "Suspicion that fills while the target is seen, drains when it is not, and starts the hunt."},
+	{"id": 28, "label": "Boss Fight (phases and i-frames)", "section": "Game shapes - a whole mechanic, ready to retune",
+		"shelf": "Game shapes", "kind": "Phases",
+		"pitch": "Phases from health, each starting exactly once, and attacks laid out as timelines."},
+	{"id": 29, "label": "Mission Timer (a clock with a deadline)", "section": "Game shapes - a whole mechanic, ready to retune",
+		"shelf": "Game shapes", "kind": "Clock",
+		"pitch": "A countdown, the m:ss the player reads, and the fail event, as one shape."},
+	{"id": 9, "label": "Custom Resource (data + logic)", "section": "Custom Resources - data assets (.tres)",
+		"shelf": "Data", "kind": "Data",
+		"pitch": "A data asset your designers fill in like a table, saved as .tres files."},
+]
 
 ## Every shape Godot's editor can be extended in, as {id, label, note} in the order the submenu
 ## fixed. The note is the second column of that list - what the shape IS, in the words a reader who

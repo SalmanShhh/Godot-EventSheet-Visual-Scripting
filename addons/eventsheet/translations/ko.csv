@@ -8289,3 +8289,80 @@ Edit %s in the Variable dialog,변수 대화 상자에서 %s 편집
 Move this variable up in the Inspector (one undo step),이 변수를 인스펙터에서 위로 이동 (실행 취소 한 단계)
 Dragged in the viewport:,뷰포트에서 드래그:
 Browse what the global %s offers - every sheet reaches it by this name.,전역 개체 %s이(가) 제공하는 것을 살펴봅니다. 모든 시트가 이 이름으로 접근합니다.
+New Event Sheet,새 이벤트 시트
+The file name. Words become snake_case and a trailing .gd is dropped.,파일 이름입니다. 단어는 snake_case가 되고 끝의 .gd는 빠집니다.
+Create an event sheet in %s,%s에 이벤트 시트 만들기
+written and opened on Create,만들기를 누르면 저장되고 열립니다
+%s is already in this folder - pick another name.,%s 파일이 이미 이 폴더에 있습니다 - 다른 이름을 고르세요.
+"The file picker, at this project's scripts.",이 프로젝트의 스크립트를 보여 주는 파일 선택기.
+%s as a new unsaved sheet - Save As… keeps it.,%s을(를) 저장되지 않은 새 시트로 - 다른 이름으로 저장…으로 보관합니다.
+"The list of editor tool kinds, to pick which one to start from.",에디터 도구 종류 목록에서 시작할 것을 고릅니다.
+%s in Godot's scene editor - press Play to try it.,Godot 씬 에디터에서 %s - 실행을 눌러 해 보세요.
+%s in the sheet editor.,시트 에디터에서 %s.
+"This lesson in the Manual, beside the sheet.",시트 옆 매뉴얼에서 이 강의.
+"The Project bar, at the editor's own source.",프로젝트 바에서 에디터 자체의 소스.
+Start - open a sheet or make one,시작 - 시트를 열거나 만들기
+OPENS,열기
+This entry,이 항목
+Pick a row to see what it is; Open or a double-click opens it.,행을 고르면 무엇인지 보입니다. 열기나 더블클릭으로 엽니다.
+words = %s · theme = %s · Project bar = %s · GDScript panel = %s · tour = %s,용어 = %s · 테마 = %s · 프로젝트 바 = %s · GDScript 패널 = %s · 투어 = %s
+Classic sheet,클래식 시트
+editor,에디터
+Welcome - set EventSheets up for how you work,환영합니다 - 작업 방식에 맞게 EventSheets 설정
+"Event sheets that compile to plain GDScript - zero runtime, performance parity, and every sheet shows you its honest generated code.","일반 GDScript로 컴파일되는 이벤트 시트 - 런타임 없음, 동일한 성능, 모든 시트가 생성된 코드를 그대로 보여 줍니다."
+SETS,설정
+This answer,이 답변
+"Pick one - it sets the words, the look and the panels, and each stays changeable.","하나를 고르세요 - 용어, 모양, 패널이 설정되고 모두 나중에 바꿀 수 있습니다."
+Your project,내 프로젝트
+Showcases,쇼케이스
+Showcase,쇼케이스
+Game shapes,게임 틀
+Behaviours,비헤이비어
+Behaviour,비헤이비어
+UI and menus,UI와 메뉴
+Editor tools,에디터 도구
+Project-wide (autoloads),프로젝트 전체 (오토로드)
+Project-wide,프로젝트 전체
+Top-down,탑다운
+AI,AI
+Shooter,슈터
+Doors,문
+Phases,페이즈
+First person,1인칭
+Third person,3인칭
+Pity rolls,천장 확률
+Your scripts,내 스크립트
+Open an existing script…,기존 스크립트 열기…
+since you last looked,마지막으로 본 뒤로
+Arcade,아케이드
+Toy,장난감
+Feel,손맛
+Fighting,격투
+Sports,스포츠
+Adventure,어드벤처
+Systems,시스템
+Menus,메뉴
+An empty sheet. Start with a blank event and go.,빈 시트입니다. 빈 이벤트로 시작하세요.
+"Run, jump and coyote time, already wired - a character that feels right on the first run.","달리기, 점프, 코요테 타임이 이미 연결됨 - 첫 실행부터 손맛이 좋은 캐릭터."
+Eight-way movement and a camera that follows - the shape every top-down game starts from.,8방향 이동과 따라오는 카메라 - 모든 탑다운 게임의 출발점.
+"Walk relative to where the camera faces, and jump - a CharacterBody3D ready for a level.",카메라가 보는 방향 기준으로 걷고 점프 - 레벨에 바로 쓸 CharacterBody3D.
+Move on the ground plane and turn to face the way you go.,지면 위를 이동하며 가는 방향으로 몸을 돌립니다.
+"Fire, switch weapons, spend ammo and count secrets.","사격, 무기 교체, 탄약 소비, 비밀 개수 세기."
+"The accessibility screen: remapping, effect strength, no flashing, text size and aim help.","접근성 화면: 키 재설정, 효과 강도, 깜박임 없음, 글자 크기, 조준 보조."
+"The end-of-level tally: kills, secrets and time.","레벨 종료 집계: 처치 수, 비밀, 시간."
+A door that opens for the key it names.,지정한 열쇠로 열리는 문.
+"The picture of a skill tree: a button per skill, the points left and what is granted.","스킬 트리 화면: 스킬마다 버튼, 남은 포인트, 얻은 것."
+"One behavior you attach to any node: signals in, actions out, nothing else to set up.",어느 노드에나 붙이는 비헤이비어: 시그널이 들어오고 액션이 나가며 따로 설정할 것이 없습니다.
+"The score and the lives every sheet can read, with a signal when the score changes.","모든 시트가 읽을 수 있는 점수와 목숨, 점수가 바뀔 때 시그널 포함."
+Project-wide signals: any sheet emits them and any sheet listens.,프로젝트 전체 시그널: 어느 시트든 보내고 어느 시트든 듣습니다.
+"Save a number under a name and load it back, in one file in user://.",이름을 붙여 숫자를 저장하고 다시 불러옵니다. user://의 파일 하나에.
+"One sheet that runs over a whole group of entities each tick, instead of a script per entity.",엔티티마다 스크립트를 두는 대신 매 틱 그룹 전체를 도는 시트 하나.
+A chance that grows with every miss and a cap that guarantees the win.,실패할 때마다 오르는 확률과 당첨을 보장하는 상한.
+"Suspicion that fills while the target is seen, drains when it is not, and starts the hunt.",대상이 보이면 차오르고 안 보이면 줄어들며 사냥을 시작하는 의심도.
+"Phases from health, each starting exactly once, and attacks laid out as timelines.",체력에 따른 페이즈(각각 정확히 한 번 시작)와 타임라인으로 배치한 공격.
+"A countdown, the m:ss the player reads, and the fail event, as one shape.","카운트다운, 플레이어가 읽는 m:ss, 실패 이벤트를 하나의 틀로."
+"A data asset your designers fill in like a table, saved as .tres files.","디자이너가 표처럼 채우는 데이터 에셋, .tres 파일로 저장."
+"Any script in this project reads as a sheet, and saving it untouched leaves the file exactly as it was.","이 프로젝트의 어떤 스크립트든 시트로 읽히고, 손대지 않고 저장하면 파일은 그대로입니다."
+"A sheet whose events run INSIDE the editor - batch renames, scene checks, one-click chores.","이벤트가 에디터 안에서 실행되는 시트 - 일괄 이름 바꾸기, 씬 점검, 한 번 클릭 작업."
+What changed in the editor since you last looked.,마지막으로 본 뒤 에디터에서 바뀐 점.
+A playable example you can open and take apart.,열어서 뜯어볼 수 있는 플레이 가능한 예제.

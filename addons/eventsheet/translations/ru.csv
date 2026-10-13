@@ -8289,3 +8289,80 @@ Edit %s in the Variable dialog,Править %s в окне переменно�
 Move this variable up in the Inspector (one undo step),Поднять эту переменную в Инспекторе (один шаг отмены)
 Dragged in the viewport:,Перетаскивается во вьюпорте:
 Browse what the global %s offers - every sheet reaches it by this name.,"Посмотреть, что предлагает глобальный объект %s - каждый лист обращается к нему по этому имени."
+New Event Sheet,Новый лист событий
+The file name. Words become snake_case and a trailing .gd is dropped.,"Имя файла. Слова становятся snake_case, а .gd в конце отбрасывается."
+Create an event sheet in %s,Создать лист событий в %s
+written and opened on Create,записывается и открывается при создании
+%s is already in this folder - pick another name.,%s уже есть в этой папке - выберите другое имя.
+"The file picker, at this project's scripts.",Выбор файла среди скриптов этого проекта.
+%s as a new unsaved sheet - Save As… keeps it.,%s как новый несохранённый лист - «Сохранить как…» оставит его.
+"The list of editor tool kinds, to pick which one to start from.","Список видов инструментов редактора, чтобы выбрать, с какого начать."
+%s in Godot's scene editor - press Play to try it.,"%s в редакторе сцен Godot - нажмите «Запуск», чтобы попробовать."
+%s in the sheet editor.,%s в редакторе листов.
+"This lesson in the Manual, beside the sheet.","Этот урок в Руководстве, рядом с листом."
+"The Project bar, at the editor's own source.","Панель проекта, на исходниках самого редактора."
+Start - open a sheet or make one,Начало - открыть лист или создать
+OPENS,ОТКРОЕТ
+This entry,Этот пункт
+Pick a row to see what it is; Open or a double-click opens it.,"Выберите строку, чтобы увидеть, что это; «Открыть» или двойной щелчок открывает её."
+words = %s · theme = %s · Project bar = %s · GDScript panel = %s · tour = %s,слова = %s · тема = %s · панель проекта = %s · панель GDScript = %s · тур = %s
+Classic sheet,Классический лист
+editor,редактор
+Welcome - set EventSheets up for how you work,Добро пожаловать - настройте EventSheets под свою работу
+"Event sheets that compile to plain GDScript - zero runtime, performance parity, and every sheet shows you its honest generated code.","Листы событий, которые компилируются в обычный GDScript - без среды выполнения, с той же скоростью, и каждый лист честно показывает свой код."
+SETS,ЗАДАЁТ
+This answer,Этот ответ
+"Pick one - it sets the words, the look and the panels, and each stays changeable.","Выберите один - он задаёт слова, вид и панели, и всё можно поменять."
+Your project,Ваш проект
+Showcases,Витрины
+Showcase,Витрина
+Game shapes,Игровые схемы
+Behaviours,Поведения
+Behaviour,Поведение
+UI and menus,Интерфейс и меню
+Editor tools,Инструменты редактора
+Project-wide (autoloads),На весь проект (автозагрузка)
+Project-wide,На весь проект
+Top-down,Вид сверху
+AI,ИИ
+Shooter,Шутер
+Doors,Двери
+Phases,Фазы
+First person,От первого лица
+Third person,От третьего лица
+Pity rolls,Броски с гарантией
+Your scripts,Ваши скрипты
+Open an existing script…,Открыть существующий скрипт…
+since you last looked,с вашего прошлого визита
+Arcade,Аркада
+Toy,Игрушка
+Feel,Отклик
+Fighting,Файтинг
+Sports,Спорт
+Adventure,Приключение
+Systems,Системы
+Menus,Меню
+An empty sheet. Start with a blank event and go.,Пустой лист. Начните с пустого события.
+"Run, jump and coyote time, already wired - a character that feels right on the first run.","Бег, прыжок и «время койота» уже связаны - персонаж, который ощущается правильно с первого запуска."
+Eight-way movement and a camera that follows - the shape every top-down game starts from.,"Движение в восьми направлениях и камера, которая следует, - основа любой игры с видом сверху."
+"Walk relative to where the camera faces, and jump - a CharacterBody3D ready for a level.","Ходьба относительно взгляда камеры и прыжок - CharacterBody3D, готовый для уровня."
+Move on the ground plane and turn to face the way you go.,Движение по земле с поворотом в сторону хода.
+"Fire, switch weapons, spend ammo and count secrets.","Стрельба, смена оружия, расход патронов и подсчёт секретов."
+"The accessibility screen: remapping, effect strength, no flashing, text size and aim help.","Экран доступности: переназначение, сила эффектов, без вспышек, размер текста и помощь в прицеливании."
+"The end-of-level tally: kills, secrets and time.","Итог уровня: убийства, секреты и время."
+A door that opens for the key it names.,"Дверь, которая открывается названным ключом."
+"The picture of a skill tree: a button per skill, the points left and what is granted.","Вид дерева навыков: кнопка на навык, оставшиеся очки и что получено."
+"One behavior you attach to any node: signals in, actions out, nothing else to set up.","Поведение, которое цепляется к любому узлу: сигналы на входе, действия на выходе, больше ничего настраивать не нужно."
+"The score and the lives every sheet can read, with a signal when the score changes.","Счёт и жизни, которые читает любой лист, и сигнал при изменении счёта."
+Project-wide signals: any sheet emits them and any sheet listens.,Сигналы на весь проект: любой лист их испускает и любой слушает.
+"Save a number under a name and load it back, in one file in user://.","Сохранить число под именем и загрузить обратно, в одном файле в user://."
+"One sheet that runs over a whole group of entities each tick, instead of a script per entity.","Один лист, который каждый тик обходит целую группу объектов вместо скрипта на каждый."
+A chance that grows with every miss and a cap that guarantees the win.,"Шанс, который растёт с каждым промахом, и предел, гарантирующий выигрыш."
+"Suspicion that fills while the target is seen, drains when it is not, and starts the hunt.","Подозрение, которое растёт, пока цель видна, падает, когда нет, и начинает охоту."
+"Phases from health, each starting exactly once, and attacks laid out as timelines.","Фазы по здоровью, каждая начинается ровно один раз, и атаки, разложенные по таймлайнам."
+"A countdown, the m:ss the player reads, and the fail event, as one shape.","Обратный отсчёт, m:ss для игрока и событие провала - в одной форме."
+"A data asset your designers fill in like a table, saved as .tres files.","Ресурс данных, который дизайнеры заполняют как таблицу, сохраняется в файлы .tres."
+"Any script in this project reads as a sheet, and saving it untouched leaves the file exactly as it was.","Любой скрипт проекта читается как лист, а сохранение без правок оставляет файл точно таким же."
+"A sheet whose events run INSIDE the editor - batch renames, scene checks, one-click chores.","Лист, чьи события выполняются ВНУТРИ редактора, - массовые переименования, проверки сцен, дела в один клик."
+What changed in the editor since you last looked.,Что изменилось в редакторе с вашего прошлого визита.
+A playable example you can open and take apart.,"Играбельный пример, который можно открыть и разобрать."

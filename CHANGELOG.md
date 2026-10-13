@@ -87,6 +87,23 @@
 - ▲ in the Designer moves a variable above the next one UP in the Inspector. It used to swap with
   the variable just above it in the file even when that one is not shown in the Inspector, which
   changed nothing anybody could see.
+### Changed: the Start page, the Welcome, the tour and New Event Sheet say what a choice does first
+
+- The Start page's first column opens with "Open an existing script…", so a project that already
+  has scripts starts there, then offers every starter the New-Sheet menu has - the 3D controllers,
+  the menus and the autoloads included - under shelves (2D, 3D, UI and menus, Behaviours,
+  Project-wide, Game shapes, Data, Editor tools, Showcases), with chips that narrow it to one
+  shelf. Each row shows its kind beside its name. A click selects and the help strip says what the
+  row is and what opening it does; Open, Enter or a double-click opens it.
+- The Welcome's "how do you usually make games?" answer is chosen first and applied by Apply; the
+  help strip says what it would set (words, theme, Project bar, GDScript panel, tour). Before, a
+  click applied it at once, and "I'm new" closed the window before Preferences could be read. What
+  the plugin is reads as the band across the top, and the four Get Started doors sit two by two.
+- The tour's foot reads Back on the left, then the progress as dots and a count, Skip tour and Next.
+- New Event Sheet names the exact file Create writes, and a name already taken in the folder says
+  so beside the field and holds Create, instead of quietly writing a suffixed file. Each starter in
+  Start from carries its one-line description, and the help strip shows the line the sheet starts
+  with.
 
 ### Fixed: an empty node or resource slot previews the line it saves
 

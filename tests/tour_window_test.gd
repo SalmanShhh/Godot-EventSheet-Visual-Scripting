@@ -65,6 +65,8 @@ static func run() -> bool:
 	grouped_row.sub_events.append(parent_row)
 	passed = _check("an action on a sub-event ticks step 4",
 		bool((steps[3]["check"] as Callable).call(grouped_sheet)), true) and passed
+	passed = _check("the progress reads as dots as well as a count",
+		EventSheetTourWindow.progress_dots(1, 7), "●●○○○○○") and passed
 	passed = _test_no_step_points_at_a_retired_button(steps) and passed
 	return passed
 

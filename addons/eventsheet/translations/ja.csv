@@ -8289,3 +8289,80 @@ Edit %s in the Variable dialog,変数ダイアログで %s を編集
 Move this variable up in the Inspector (one undo step),この変数をインスペクターで上へ移動 (元に戻すは 1 ステップ)
 Dragged in the viewport:,ビューポートでドラッグ:
 Browse what the global %s offers - every sheet reaches it by this name.,グローバル %s が提供するものを見ます。どのシートもこの名前で参照します。
+New Event Sheet,新しいイベントシート
+The file name. Words become snake_case and a trailing .gd is dropped.,ファイル名です。単語は snake_case になり、末尾の .gd は外されます。
+Create an event sheet in %s,%s にイベントシートを作成
+written and opened on Create,作成で書き込まれて開きます
+%s is already in this folder - pick another name.,%s はこのフォルダーに既にあります - 別の名前にしてください。
+"The file picker, at this project's scripts.",このプロジェクトのスクリプトを示すファイル選択。
+%s as a new unsaved sheet - Save As… keeps it.,%s を未保存の新しいシートとして - 名前を付けて保存… で残せます。
+"The list of editor tool kinds, to pick which one to start from.",エディターツールの種類の一覧。どれから始めるかを選びます。
+%s in Godot's scene editor - press Play to try it.,Godot のシーンエディターで %s - 再生で試せます。
+%s in the sheet editor.,シートエディターで %s。
+"This lesson in the Manual, beside the sheet.",シートの横のマニュアルでこのレッスン。
+"The Project bar, at the editor's own source.",プロジェクトバーで、エディター自身のソース。
+Start - open a sheet or make one,スタート - シートを開くか作る
+OPENS,開くもの
+This entry,この項目
+Pick a row to see what it is; Open or a double-click opens it.,行を選ぶと内容が分かります。開くかダブルクリックで開きます。
+words = %s · theme = %s · Project bar = %s · GDScript panel = %s · tour = %s,用語 = %s · テーマ = %s · プロジェクトバー = %s · GDScript パネル = %s · ツアー = %s
+Classic sheet,クラシックシート
+editor,エディター
+Welcome - set EventSheets up for how you work,ようこそ - 作業スタイルに合わせて EventSheets を設定
+"Event sheets that compile to plain GDScript - zero runtime, performance parity, and every sheet shows you its honest generated code.",素の GDScript にコンパイルされるイベントシート - ランタイムなし、同等の性能、すべてのシートが生成コードをそのまま見せます。
+SETS,設定内容
+This answer,この回答
+"Pick one - it sets the words, the look and the panels, and each stays changeable.",1 つ選んでください - 用語、見た目、パネルが設定され、どれも後で変えられます。
+Your project,あなたのプロジェクト
+Showcases,ショーケース
+Showcase,ショーケース
+Game shapes,ゲームの型
+Behaviours,ビヘイビア
+Behaviour,ビヘイビア
+UI and menus,UI とメニュー
+Editor tools,エディターツール
+Project-wide (autoloads),プロジェクト全体 (オートロード)
+Project-wide,プロジェクト全体
+Top-down,見下ろし
+AI,AI
+Shooter,シューター
+Doors,ドア
+Phases,フェーズ
+First person,一人称
+Third person,三人称
+Pity rolls,天井付き抽選
+Your scripts,あなたのスクリプト
+Open an existing script…,既存のスクリプトを開く…
+since you last looked,前回見たとき以降
+Arcade,アーケード
+Toy,おもちゃ
+Feel,手触り
+Fighting,格闘
+Sports,スポーツ
+Adventure,アドベンチャー
+Systems,システム
+Menus,メニュー
+An empty sheet. Start with a blank event and go.,空のシート。空のイベントから始めましょう。
+"Run, jump and coyote time, already wired - a character that feels right on the first run.",走る、跳ぶ、コヨーテタイムが配線済み - 最初の実行から気持ちよく動くキャラクター。
+Eight-way movement and a camera that follows - the shape every top-down game starts from.,8 方向移動と追従カメラ - 見下ろし型ゲームの出発点。
+"Walk relative to where the camera faces, and jump - a CharacterBody3D ready for a level.",カメラの向きを基準に歩いてジャンプ - レベルにすぐ置ける CharacterBody3D。
+Move on the ground plane and turn to face the way you go.,地面の上を移動し、進む向きに体を向けます。
+"Fire, switch weapons, spend ammo and count secrets.",撃つ、武器を切り替える、弾を使う、隠し要素を数える。
+"The accessibility screen: remapping, effect strength, no flashing, text size and aim help.",アクセシビリティ画面: キー割り当て、エフェクト強度、点滅なし、文字サイズ、エイム補助。
+"The end-of-level tally: kills, secrets and time.",レベル終了時の集計: 撃破数、隠し要素、タイム。
+A door that opens for the key it names.,指定した鍵で開くドア。
+"The picture of a skill tree: a button per skill, the points left and what is granted.",スキルツリーの画面: スキルごとのボタン、残りポイント、取得済みのもの。
+"One behavior you attach to any node: signals in, actions out, nothing else to set up.",どのノードにも付けられるビヘイビア: シグナルが入りアクションが出る、ほかの設定は不要。
+"The score and the lives every sheet can read, with a signal when the score changes.",どのシートからも読めるスコアと残機、スコア変化時のシグナル付き。
+Project-wide signals: any sheet emits them and any sheet listens.,プロジェクト全体のシグナル: どのシートも発信し、どのシートも受信できます。
+"Save a number under a name and load it back, in one file in user://.",名前を付けて数値を保存し読み戻す、user:// の 1 ファイルで。
+"One sheet that runs over a whole group of entities each tick, instead of a script per entity.",エンティティごとのスクリプトではなく、毎ティックでグループ全体を処理する 1 枚のシート。
+A chance that grows with every miss and a cap that guarantees the win.,外れるたびに上がる確率と、当たりを保証する上限。
+"Suspicion that fills while the target is seen, drains when it is not, and starts the hunt.",標的が見えている間は溜まり、見えないと減り、満ちると追跡が始まる警戒度。
+"Phases from health, each starting exactly once, and attacks laid out as timelines.",体力によるフェーズ (各 1 回だけ開始) と、タイムラインで組む攻撃。
+"A countdown, the m:ss the player reads, and the fail event, as one shape.",カウントダウン、プレイヤーが読む m:ss、失敗イベントを 1 つの形に。
+"A data asset your designers fill in like a table, saved as .tres files.",デザイナーが表のように記入するデータアセット、.tres ファイルとして保存。
+"Any script in this project reads as a sheet, and saving it untouched leaves the file exactly as it was.",このプロジェクトのどのスクリプトもシートとして読め、触らずに保存すればファイルはそのままです。
+"A sheet whose events run INSIDE the editor - batch renames, scene checks, one-click chores.",イベントがエディターの中で動くシート - 一括リネーム、シーン点検、ワンクリック作業。
+What changed in the editor since you last looked.,前回見たとき以降にエディターで変わったこと。
+A playable example you can open and take apart.,開いて分解できる遊べるサンプル。

@@ -8289,3 +8289,80 @@ Edit %s in the Variable dialog,%s im Variablen-Dialog bearbeiten
 Move this variable up in the Inspector (one undo step),Diese Variable im Inspektor nach oben schieben (ein Rückgängig-Schritt)
 Dragged in the viewport:,Im Viewport gezogen:
 Browse what the global %s offers - every sheet reaches it by this name.,"Durchsuchen, was das globale Objekt %s anbietet - jedes Sheet erreicht es unter diesem Namen."
+New Event Sheet,Neues Ereignisblatt
+The file name. Words become snake_case and a trailing .gd is dropped.,"Der Dateiname. Wörter werden zu snake_case, ein angehängtes .gd fällt weg."
+Create an event sheet in %s,Ereignisblatt in %s anlegen
+written and opened on Create,wird bei Anlegen geschrieben und geöffnet
+%s is already in this folder - pick another name.,%s liegt schon in diesem Ordner - wähle einen anderen Namen.
+"The file picker, at this project's scripts.","Die Dateiauswahl, bei den Skripten dieses Projekts."
+%s as a new unsaved sheet - Save As… keeps it.,"%s als neues, ungespeichertes Blatt - Speichern unter… behält es."
+"The list of editor tool kinds, to pick which one to start from.","Die Liste der Editor-Werkzeugarten, um eine als Start zu wählen."
+%s in Godot's scene editor - press Play to try it.,%s im Szeneneditor von Godot - drücke Abspielen zum Ausprobieren.
+%s in the sheet editor.,%s im Blatteditor.
+"This lesson in the Manual, beside the sheet.","Diese Lektion im Handbuch, neben dem Blatt."
+"The Project bar, at the editor's own source.","Die Projektleiste, beim Quellcode des Editors selbst."
+Start - open a sheet or make one,Start - ein Blatt öffnen oder anlegen
+OPENS,ÖFFNET
+This entry,Dieser Eintrag
+Pick a row to see what it is; Open or a double-click opens it.,"Wähle eine Zeile, um zu sehen, was sie ist; Öffnen oder ein Doppelklick öffnet sie."
+words = %s · theme = %s · Project bar = %s · GDScript panel = %s · tour = %s,Wörter = %s · Thema = %s · Projektleiste = %s · GDScript-Leiste = %s · Tour = %s
+Classic sheet,Klassisches Blatt
+editor,Editor
+Welcome - set EventSheets up for how you work,"Willkommen - richte EventSheets so ein, wie du arbeitest"
+"Event sheets that compile to plain GDScript - zero runtime, performance parity, and every sheet shows you its honest generated code.","Ereignisblätter, die zu einfachem GDScript kompilieren - keine Laufzeit, gleiche Leistung, und jedes Blatt zeigt dir seinen ehrlichen erzeugten Code."
+SETS,SETZT
+This answer,Diese Antwort
+"Pick one - it sets the words, the look and the panels, and each stays changeable.","Wähle eine - sie setzt die Wörter, das Aussehen und die Leisten, und alles bleibt änderbar."
+Your project,Dein Projekt
+Showcases,Vorzeigebeispiele
+Showcase,Vorzeigebeispiel
+Game shapes,Spielmuster
+Behaviours,Verhalten
+Behaviour,Verhalten
+UI and menus,UI und Menüs
+Editor tools,Editor-Werkzeuge
+Project-wide (autoloads),Projektweit (Autoloads)
+Project-wide,Projektweit
+Top-down,Draufsicht
+AI,KI
+Shooter,Shooter
+Doors,Türen
+Phases,Phasen
+First person,Ego-Perspektive
+Third person,Third-Person
+Pity rolls,Mitleidswürfe
+Your scripts,Deine Skripte
+Open an existing script…,Ein vorhandenes Skript öffnen…
+since you last looked,seit du zuletzt geschaut hast
+Arcade,Arcade
+Toy,Spielzeug
+Feel,Spielgefühl
+Fighting,Kampf
+Sports,Sport
+Adventure,Abenteuer
+Systems,Systeme
+Menus,Menüs
+An empty sheet. Start with a blank event and go.,Ein leeres Blatt. Fang mit einem leeren Ereignis an und los.
+"Run, jump and coyote time, already wired - a character that feels right on the first run.","Laufen, Springen und Coyote-Time, schon verdrahtet - eine Figur, die sich vom ersten Start an richtig anfühlt."
+Eight-way movement and a camera that follows - the shape every top-down game starts from.,Bewegung in acht Richtungen und eine folgende Kamera - der Anfang jedes Spiels in Draufsicht.
+"Walk relative to where the camera faces, and jump - a CharacterBody3D ready for a level.","Laufen relativ zur Blickrichtung der Kamera und springen - ein CharacterBody3D, bereit für ein Level."
+Move on the ground plane and turn to face the way you go.,Auf der Bodenebene bewegen und sich in Laufrichtung drehen.
+"Fire, switch weapons, spend ammo and count secrets.","Feuern, Waffen wechseln, Munition verbrauchen und Geheimnisse zählen."
+"The accessibility screen: remapping, effect strength, no flashing, text size and aim help.","Der Barrierefreiheitsbildschirm: Tastenbelegung, Effektstärke, kein Blinken, Textgröße und Zielhilfe."
+"The end-of-level tally: kills, secrets and time.","Die Bilanz am Levelende: Abschüsse, Geheimnisse und Zeit."
+A door that opens for the key it names.,"Eine Tür, die sich für den genannten Schlüssel öffnet."
+"The picture of a skill tree: a button per skill, the points left and what is granted.","Das Bild eines Fähigkeitenbaums: ein Knopf pro Fähigkeit, die übrigen Punkte und was gewährt ist."
+"One behavior you attach to any node: signals in, actions out, nothing else to set up.","Ein Verhalten, das du an jeden Knoten hängst: Signale rein, Aktionen raus, sonst nichts einzurichten."
+"The score and the lives every sheet can read, with a signal when the score changes.","Punkte und Leben, die jedes Blatt lesen kann, mit einem Signal, wenn sich die Punkte ändern."
+Project-wide signals: any sheet emits them and any sheet listens.,"Projektweite Signale: jedes Blatt sendet sie, jedes Blatt hört zu."
+"Save a number under a name and load it back, in one file in user://.","Eine Zahl unter einem Namen speichern und wieder laden, in einer Datei in user://."
+"One sheet that runs over a whole group of entities each tick, instead of a script per entity.","Ein Blatt, das jeden Tick über eine ganze Gruppe von Objekten läuft, statt eines Skripts pro Objekt."
+A chance that grows with every miss and a cap that guarantees the win.,"Eine Chance, die mit jedem Fehlschlag wächst, und eine Obergrenze, die den Gewinn garantiert."
+"Suspicion that fills while the target is seen, drains when it is not, and starts the hunt.","Misstrauen, das steigt, solange das Ziel gesehen wird, sinkt, wenn nicht, und die Jagd beginnt."
+"Phases from health, each starting exactly once, and attacks laid out as timelines.","Phasen aus der Gesundheit, jede startet genau einmal, und Angriffe als Zeitleisten."
+"A countdown, the m:ss the player reads, and the fail event, as one shape.","Ein Countdown, das m:ss für den Spieler und das Fehlschlag-Ereignis, als eine Form."
+"A data asset your designers fill in like a table, saved as .tres files.","Ein Daten-Asset, das deine Designer wie eine Tabelle ausfüllen, gespeichert als .tres-Dateien."
+"Any script in this project reads as a sheet, and saving it untouched leaves the file exactly as it was.","Jedes Skript in diesem Projekt liest sich als Blatt, und unverändert gespeichert bleibt die Datei genau wie sie war."
+"A sheet whose events run INSIDE the editor - batch renames, scene checks, one-click chores.","Ein Blatt, dessen Ereignisse IM Editor laufen - Stapel-Umbenennungen, Szenenprüfungen, Ein-Klick-Aufgaben."
+What changed in the editor since you last looked.,"Was sich im Editor geändert hat, seit du zuletzt geschaut hast."
+A playable example you can open and take apart.,Ein spielbares Beispiel zum Öffnen und Zerlegen.

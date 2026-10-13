@@ -36,6 +36,9 @@ static func run() -> bool:
 		["the sentence for someone new",
 			EventSheetWelcomeWindow.choice_summary(EventSheetWelcomeWindow.CAME_FROM_NEW),
 			"Sets: Familiar words, the editor-matching theme, the tour. Change any of it later in Settings ▸ Words and the View menu."],
+		["the SETS line names every setting and its value",
+			EventSheetWelcomeWindow.choice_sets(EventSheetWelcomeWindow.CAME_FROM_SHEETS),
+			"words = Event-sheet-editor words · theme = Classic sheet · Project bar = on · GDScript panel = off · tour = off"],
 		["the theme it names ships", ResourceLoader.exists(str(sheets["theme"])), true],
 		["the guide it opens ships in the Manual", EventSheetDocLibrary.has_page(str(sheets["guide"])), true],
 	])

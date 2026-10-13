@@ -276,51 +276,57 @@ static func _shortcut_preset() -> bool:
 	return all_passed
 
 
+## The Start page's three columns, read through `columns` with no window. The template column
+## leads with the reader's own project ("Open an existing script…"), then every starter of the
+## New-Sheet menu by shelf - 3D, menus and autoloads included - each row carrying its kind beside
+## its name and its pitch for the help strip, then the showcases.
 static func _start_page_columns() -> bool:
-	var all_passed: bool = true
-	var starters: Array = [{"id": 0, "label": "Blank Sheet"}, {"id": 1, "label": "Platformer Starter"}]
-	var columns: Array = EventSheetStartPage.columns(
-		starters, PackedStringArray(["starfall"]), ["res://player.gd"])
+	var columns: Array = EventSheetStartPage.columns(PackedStringArray(["starfall"]), ["res://player.gd"])
 	var titles: PackedStringArray = PackedStringArray()
 	for column: Variant in columns:
 		titles.append(str((column as Dictionary).get("title", "")))
-	all_passed = _check("the Start page is three columns",
-		" | ".join(titles), "New from template | Recent | Learn") and all_passed
 	var templates: Array = (columns[0] as Dictionary).get("entries", [])
-	# The label comes from the starter table, so a renamed starter renames here too; the pitch and
-	# the genre are the page's own.
-	all_passed = _check("a starter carries its genre and its one-line pitch",
-		"%s - %s" % [str((templates[0] as Dictionary).get("label", "")),
-			str((templates[0] as Dictionary).get("note", ""))],
-		"Platformer Starter - Platformer · Run, jump and coyote time, already wired - a character that feels right on the first run.") and all_passed
-	all_passed = _check("a showcase sits in the same column, by genre",
-		"%s - %s" % [str((templates[2] as Dictionary).get("label", "")),
-			str((templates[2] as Dictionary).get("note", ""))],
-		"Starfall - Arcade · Falling objects, a score and a fail state - the whole loop in one small scene.") and all_passed
+	var by_label: Dictionary = {}
+	for entry: Variant in templates:
+		by_label[str((entry as Dictionary).get("label", ""))] = entry
 	var recent: Array = (columns[1] as Dictionary).get("entries", [])
-	all_passed = _check("Recent is what you had open, by file",
-		str((recent[0] as Dictionary).get("label", "")), "player.gd") and all_passed
 	var learn: Array = (columns[2] as Dictionary).get("entries", [])
-	all_passed = _check("Learn leads with the first tutorial",
-		str((learn[0] as Dictionary).get("label", "")), "Your first event") and all_passed
-	all_passed = _check("and ends with What's new",
-		str((learn[learn.size() - 1] as Dictionary).get("label", "")), "What's new") and all_passed
-	# Every pitch the page writes has a starter to stand on: with the real starter table, each
-	# pitched starter shows, the Systems one included.
-	var shown_starters: PackedStringArray = PackedStringArray()
-	for entry: Variant in (EventSheetStartPage.columns(EventSheetStarterTemplates.create_new_starters(),
-			PackedStringArray(), [])[0] as Dictionary).get("entries", []):
-		shown_starters.append(str((entry as Dictionary).get("note", "")).get_slice(" · ", 0))
-	all_passed = _check("every pitched starter appears on the page",
-		" | ".join(shown_starters), "Platformer | Top-down | Behavior | Systems | Data | Editor tools | Empty") and all_passed
-	# A showcase opens its own scene, not the last scene of the folder by name.
-	all_passed = _check("a showcase opens the scene named after its folder",
-		EventSheetStartPage.showcase_scene("res://demo/showcase/platformer_shooter"),
-		"res://demo/showcase/platformer_shooter/platformer_shooter.tscn") and all_passed
-	all_passed = _check("a showcase_<folder> scene counts as the folder's own",
-		EventSheetStartPage.showcase_scene("res://demo/showcase/carousel"),
-		"res://demo/showcase/carousel/showcase_carousel.tscn") and all_passed
-	return all_passed
+	var behaviour: Dictionary = by_label.get("Behavior Component", {})
+	return SUPPORT.pins("start_page_columns", [
+		["the Start page is three columns", " | ".join(titles), "New from template | Recent | Learn"],
+		["opening an existing script comes first",
+			[str((templates[0] as Dictionary).get("label", "")), str((templates[0] as Dictionary).get("kind", ""))],
+			["Open an existing script…", "open_script"]],
+		["the shelves read in the menu's order, the reader's own project first",
+			" | ".join(EventSheetStartPage.shelves(templates)),
+			"Your project | 2D | 3D | UI and menus | Behaviours | Project-wide (autoloads) | Game shapes | Data | Editor tools | Showcases"],
+		["the 3D starters are on the page",
+			[str((by_label.get("First-Person Controller", {}) as Dictionary).get("shelf", "")),
+				str((by_label.get("Keycard Door", {}) as Dictionary).get("tag", ""))],
+			["3D", "Doors"]],
+		["a starter row is its name and its kind, the parenthesis dropped",
+			[str(behaviour.get("label", "")), str(behaviour.get("tag", ""))], ["Behavior Component", "Behaviour"]],
+		["its pitch is the help strip's line", str(behaviour.get("pitch", "")),
+			"One behavior you attach to any node: signals in, actions out, nothing else to set up."],
+		["and the strip says what Open does with it", EventSheetStartPage.opens_line(behaviour),
+			"Behavior Component as a new unsaved sheet - Save As… keeps it."],
+		["the Systems starter is offered", str((by_label.get("Entity System", {}) as Dictionary).get("tag", "")), "System"],
+		["a showcase sits in the same column, on its genre",
+			[str((templates[templates.size() - 1] as Dictionary).get("label", "")),
+				str((templates[templates.size() - 1] as Dictionary).get("tag", "")),
+				str((templates[templates.size() - 1] as Dictionary).get("pitch", ""))],
+			["Starfall", "Arcade", "Falling objects, a score and a fail state - the whole loop in one small scene."]],
+		["Recent is what you had open, by file", str((recent[0] as Dictionary).get("label", "")), "player.gd"],
+		["Learn leads with the first tutorial", str((learn[0] as Dictionary).get("label", "")), "Your first event"],
+		["and ends with What's new", str((learn[learn.size() - 1] as Dictionary).get("label", "")), "What's new"],
+		# A showcase opens its own scene, not the last scene of the folder by name.
+		["a showcase opens the scene named after its folder",
+			EventSheetStartPage.showcase_scene("res://demo/showcase/platformer_shooter"),
+			"res://demo/showcase/platformer_shooter/platformer_shooter.tscn"],
+		["a showcase_<folder> scene counts as the folder's own",
+			EventSheetStartPage.showcase_scene("res://demo/showcase/carousel"),
+			"res://demo/showcase/carousel/showcase_carousel.tscn"],
+	])
 
 
 ## The Start page walks demo/showcase, so a showcase added by the example builder appears on it
@@ -335,12 +341,11 @@ static func _start_page_columns() -> bool:
 ## a colon introducing a list, and an "and" opening a second clause - and then end to end through
 ## `columns`, where a pitch still written on the page beats the showcase's own line.
 static func _start_page_lists_every_showcase() -> bool:
-	var starters: Array = [{"id": 0, "label": "Blank Sheet"}]
-	var derived: Array = EventSheetStartPage.columns(starters, PackedStringArray(["pin_modes"]), [],
+	var derived: Array = EventSheetStartPage.columns(PackedStringArray(["pin_modes"]), [],
 		false, {"pin_modes": PIN_MODES_ABOUT})
-	var written: Array = EventSheetStartPage.columns(starters, PackedStringArray(["starfall"]), [],
+	var written: Array = EventSheetStartPage.columns(PackedStringArray(["starfall"]), [],
 		false, {"starfall": "[b]Starfall[/b] - a complete restartable arcade game authored as events: move the ship."})
-	var silent: Array = EventSheetStartPage.columns(starters, PackedStringArray(["a_new_showcase"]),
+	var silent: Array = EventSheetStartPage.columns(PackedStringArray(["a_new_showcase"]),
 		[], false, {})
 	return SUPPORT.pins("start_page_showcases", [
 		["every showcase folder has a shelf on the page",
@@ -377,7 +382,7 @@ static func _start_page_lists_every_showcase() -> bool:
 static func _showcase_note(built: Array) -> String:
 	for entry: Variant in (built[0] as Dictionary).get("entries", []):
 		if str((entry as Dictionary).get("kind", "")) == "showcase":
-			return str((entry as Dictionary).get("note", ""))
+			return "%s · %s" % [str((entry as Dictionary).get("tag", "")), str((entry as Dictionary).get("pitch", ""))]
 	return "no showcase card was built"
 
 

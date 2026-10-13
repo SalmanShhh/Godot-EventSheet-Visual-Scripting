@@ -8289,3 +8289,80 @@ Edit %s in the Variable dialog,在变量对话框中编辑 %s
 Move this variable up in the Inspector (one undo step),在检查器中上移此变量(一个撤销步骤)
 Dragged in the viewport:,在视口中拖动:
 Browse what the global %s offers - every sheet reaches it by this name.,浏览全局 %s 提供的内容 - 每张表都通过这个名字访问它。
+New Event Sheet,新建事件表
+The file name. Words become snake_case and a trailing .gd is dropped.,文件名。单词会变成 snake_case，末尾的 .gd 会被去掉。
+Create an event sheet in %s,在 %s 中创建事件表
+written and opened on Create,点击创建时写入并打开
+%s is already in this folder - pick another name.,此文件夹中已有 %s - 请换一个名称。
+"The file picker, at this project's scripts.",文件选择器，定位到本项目的脚本。
+%s as a new unsaved sheet - Save As… keeps it.,%s 作为未保存的新表 - 另存为… 即可保留。
+"The list of editor tool kinds, to pick which one to start from.",编辑器工具类型列表，用来选择从哪一种开始。
+%s in Godot's scene editor - press Play to try it.,在 Godot 场景编辑器中打开 %s - 按运行试试。
+%s in the sheet editor.,在表编辑器中打开 %s。
+"This lesson in the Manual, beside the sheet.",在表旁边的手册中打开本课。
+"The Project bar, at the editor's own source.",项目栏，定位到编辑器自身的源代码。
+Start - open a sheet or make one,开始 - 打开或新建一个表
+OPENS,打开
+This entry,此项
+Pick a row to see what it is; Open or a double-click opens it.,选一行看看它是什么；点打开或双击即可打开。
+words = %s · theme = %s · Project bar = %s · GDScript panel = %s · tour = %s,用词 = %s · 主题 = %s · 项目栏 = %s · GDScript 面板 = %s · 导览 = %s
+Classic sheet,经典表
+editor,编辑器
+Welcome - set EventSheets up for how you work,欢迎 - 按你的工作方式设置 EventSheets
+"Event sheets that compile to plain GDScript - zero runtime, performance parity, and every sheet shows you its honest generated code.",编译为普通 GDScript 的事件表 - 零运行时、性能相当，每张表都如实展示其生成的代码。
+SETS,设置
+This answer,此回答
+"Pick one - it sets the words, the look and the panels, and each stays changeable.",选一个 - 它会设置用词、外观和面板，之后都可更改。
+Your project,你的项目
+Showcases,展示示例
+Showcase,展示示例
+Game shapes,玩法模板
+Behaviours,行为
+Behaviour,行为
+UI and menus,界面与菜单
+Editor tools,编辑器工具
+Project-wide (autoloads),全项目 (自动加载)
+Project-wide,全项目
+Top-down,俯视
+AI,AI
+Shooter,射击
+Doors,门
+Phases,阶段
+First person,第一人称
+Third person,第三人称
+Pity rolls,保底抽取
+Your scripts,你的脚本
+Open an existing script…,打开现有脚本…
+since you last looked,自你上次查看以来
+Arcade,街机
+Toy,玩具
+Feel,手感
+Fighting,格斗
+Sports,体育
+Adventure,冒险
+Systems,系统
+Menus,菜单
+An empty sheet. Start with a blank event and go.,空白表。从一个空事件开始吧。
+"Run, jump and coyote time, already wired - a character that feels right on the first run.",跑、跳和土狼时间都已接好 - 第一次运行就手感正确的角色。
+Eight-way movement and a camera that follows - the shape every top-down game starts from.,八方向移动和跟随镜头 - 每个俯视游戏的起点。
+"Walk relative to where the camera faces, and jump - a CharacterBody3D ready for a level.",按镜头朝向行走并跳跃 - 可直接放进关卡的 CharacterBody3D。
+Move on the ground plane and turn to face the way you go.,在地面上移动，并转向前进方向。
+"Fire, switch weapons, spend ammo and count secrets.",开火、切换武器、消耗弹药并统计秘密。
+"The accessibility screen: remapping, effect strength, no flashing, text size and aim help.",无障碍设置界面：改键、效果强度、无闪烁、文字大小和瞄准辅助。
+"The end-of-level tally: kills, secrets and time.",关卡结束统计：击杀、秘密和用时。
+A door that opens for the key it names.,一扇只为指定钥匙打开的门。
+"The picture of a skill tree: a button per skill, the points left and what is granted.",技能树的画面：每个技能一个按钮、剩余点数和已获得的内容。
+"One behavior you attach to any node: signals in, actions out, nothing else to set up.",一个可挂到任意节点上的行为：信号进、动作出，无需其他设置。
+"The score and the lives every sheet can read, with a signal when the score changes.",任何表都能读取的分数和生命，分数变化时发出信号。
+Project-wide signals: any sheet emits them and any sheet listens.,全项目信号：任何表都能发出，任何表都能监听。
+"Save a number under a name and load it back, in one file in user://.",按名称保存一个数字并读回，存于 user:// 中的一个文件。
+"One sheet that runs over a whole group of entities each tick, instead of a script per entity.",一张每帧遍历整组实体的表，而不是每个实体一个脚本。
+A chance that grows with every miss and a cap that guarantees the win.,每次落空都会增长的概率，以及保证中奖的上限。
+"Suspicion that fills while the target is seen, drains when it is not, and starts the hunt.",看到目标时上升、看不到时下降，并会触发追捕的怀疑值。
+"Phases from health, each starting exactly once, and attacks laid out as timelines.",按生命值划分的阶段（每段只触发一次），以及用时间线排布的攻击。
+"A countdown, the m:ss the player reads, and the fail event, as one shape.",倒计时、玩家看到的 m:ss 和失败事件，合为一体。
+"A data asset your designers fill in like a table, saved as .tres files.",设计师像填表一样填写的数据资源，保存为 .tres 文件。
+"Any script in this project reads as a sheet, and saving it untouched leaves the file exactly as it was.",本项目的任何脚本都能作为表来读，不改动直接保存时文件保持原样。
+"A sheet whose events run INSIDE the editor - batch renames, scene checks, one-click chores.",事件在编辑器内部运行的表 - 批量重命名、场景检查、一键杂务。
+What changed in the editor since you last looked.,自你上次查看以来编辑器的变化。
+A playable example you can open and take apart.,一个可以打开并拆解的可玩示例。

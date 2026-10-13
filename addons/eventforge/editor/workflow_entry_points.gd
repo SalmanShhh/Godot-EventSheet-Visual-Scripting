@@ -55,6 +55,22 @@ static func is_openable_as_sheet(path: String) -> bool:
 	return false
 
 
+## The file a typed name becomes in `directory`, before any collision suffix: get_file() drops any
+## path parts and "../" traversal (so a name can never escape the chosen folder), a trailing ".gd" is
+## stripped so "player.gd" becomes player.gd and not player.gd.gd, then snake_case with a safe
+## fallback. The New Event Sheet window names this file before Create, so both spell it here.
+static func sheet_file_path(directory: String, base_name: String) -> String:
+	var raw_name: String = str(base_name).get_file()
+	if raw_name.get_extension().to_lower() == "gd":
+		raw_name = raw_name.get_basename()
+	var stem: String = raw_name.to_snake_case()
+	if stem.is_empty():
+		stem = "event_sheet"
+	# path_join handles trailing slashes itself; trim_suffix would mangle the root forms
+	# ("res://" -> "res:/").
+	return directory.path_join(stem + ".gd")
+
+
 ## The FileSystem "Create New > Event Sheet" core: compiles a starter sheet straight to a
 ## hand-editable .gd in the chosen folder (suffix, never overwrite), so the .gd IS the sheet -
 ## the default format, no .tres. Pure + headless: the editable reopen, filesystem rescan and
@@ -63,24 +79,13 @@ static func is_openable_as_sheet(path: String) -> bool:
 static func write_sheet_file(sheet: EventSheetResource, directory: String, base_name: String) -> Dictionary:
 	if sheet == null:
 		return {"ok": false, "message": "No sheet to create.", "sheet_path": ""}
-	# Sanitize the typed name into a bare filename stem: get_file() drops any path parts and "../"
-	# traversal (so a name can never escape the chosen folder), and a trailing ".gd" is stripped so
-	# "player.gd" becomes player.gd, not player.gd.gd. Then snake_case, with a safe fallback.
-	var raw_name: String = str(base_name).get_file()
-	if raw_name.get_extension().to_lower() == "gd":
-		raw_name = raw_name.get_basename()
-	var stem: String = raw_name.to_snake_case()
-	if stem.is_empty():
-		stem = "event_sheet"
-	# path_join handles trailing slashes itself; trim_suffix would mangle the root
-	# forms ("res://" -> "res:/").
-	var sheet_path: String = directory.path_join(stem + ".gd")
+	var sheet_path: String = sheet_file_path(directory, base_name)
 	var wanted_file: String = sheet_path.get_file()
 	# The suffix joins with an underscore, never a hyphen: the stem has to stay a valid identifier
 	# so a class_name derived from the file name can still match it.
 	var suffix: int = 2
 	while FileAccess.file_exists(sheet_path):
-		sheet_path = directory.path_join("%s_%d.gd" % [stem, suffix])
+		sheet_path = directory.path_join("%s_%d.gd" % [wanted_file.get_basename(), suffix])
 		suffix += 1
 	# omit_generated_banner = true: this .gd is the user's own hand-editable source of truth,
 	# NOT a regenerated companion, so it must not carry the "regenerated on every compile"

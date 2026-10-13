@@ -107,6 +107,11 @@ static func _any_event_in(rows: Array, test: Callable) -> bool:
 	return false
 
 
+## The progress as dots: filled up to and including the step on screen, hollow after it.
+static func progress_dots(step_index: int, step_count: int) -> String:
+	return "●".repeat(step_index + 1) + "○".repeat(maxi(0, step_count - step_index - 1))
+
+
 func init(dock: Control) -> void:
 	_dock = dock
 
@@ -168,18 +173,8 @@ func _build() -> void:
 	_done_label.visible = false
 	task_box.add_child(_done_label)
 	box.add_child(EventSheetPopupUI.titled_card("Try it", task_box))
+	# Back on the left of the foot; the progress, Skip tour and Next on the right.
 	var buttons: HBoxContainer = HBoxContainer.new()
-	var skip_button: Button = Button.new()
-	skip_button.text = "Skip tour"
-	skip_button.flat = true
-	skip_button.pressed.connect(_finish)
-	buttons.add_child(skip_button)
-	var spacer: Control = Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	buttons.add_child(spacer)
-	_progress_label = Label.new()
-	_progress_label.modulate = Color(1.0, 1.0, 1.0, 0.6)
-	buttons.add_child(_progress_label)
 	_back_button = Button.new()
 	_back_button.text = "Back"
 	_back_button.pressed.connect(func() -> void:
@@ -187,6 +182,16 @@ func _build() -> void:
 			_step_index -= 1
 			_show_step())
 	buttons.add_child(_back_button)
+	_progress_label = Label.new()
+	_progress_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_progress_label.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
+	buttons.add_child(_progress_label)
+	var skip_button: Button = Button.new()
+	skip_button.text = "Skip tour"
+	skip_button.flat = true
+	skip_button.pressed.connect(_finish)
+	buttons.add_child(skip_button)
 	_next_button = Button.new()
 	_next_button.pressed.connect(func() -> void:
 		if _step_index >= _active_steps().size() - 1:
@@ -212,7 +217,7 @@ func _show_step() -> void:
 	_body_label.text = str(step["body"])
 	_task_label.text = str(step["task"])
 	_done_label.visible = false
-	_progress_label.text = "%d / %d" % [_step_index + 1, tour_steps.size()]
+	_progress_label.text = "%s   %d / %d" % [progress_dots(_step_index, tour_steps.size()), _step_index + 1, tour_steps.size()]
 	_back_button.disabled = _step_index == 0
 	_next_button.text = "Finish" if _step_index == tour_steps.size() - 1 else "Next"
 	_poll_current_step()
@@ -229,7 +234,7 @@ func _poll_current_step() -> void:
 		return
 	if bool(check.call(_dock._current_sheet)):
 		_done_label.text = "✓ Done - nice! Hit Next."
-		_done_label.modulate = Color(0.55, 0.9, 0.55, 1.0)
+		_done_label.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_OK))
 		_done_label.visible = true
 
 

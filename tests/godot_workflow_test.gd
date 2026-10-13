@@ -109,10 +109,7 @@ static func run() -> bool:
 	new_sheet_dialog.init_dialog(new_sheet_host)
 	new_sheet_dialog._directory = "res://scenes"
 	new_sheet_dialog._name_edit.text = "My Sheet"
-	# The starter is a spec'd field now, so the test asks the form for it by id rather than
-	# reaching for a control the dialog no longer keeps a second reference to.
-	new_sheet_dialog._form.set_value(
-		EventSheetNewSheetDialog.FIELD_STARTER, EventSheetNewSheetDialog.BLANK_STARTER_ID)
+	new_sheet_dialog._starter_option.select(0)
 	var create_payload: Array = [null]
 	new_sheet_dialog.create_requested.connect(func(dir: String, nm: String, sid: int) -> void:
 		create_payload[0] = [dir, nm, sid])
@@ -123,8 +120,35 @@ static func run() -> bool:
 		and str((create_payload[0] as Array)[1]) == "My Sheet"
 		and int((create_payload[0] as Array)[2]) == 0, true) and all_passed
 	all_passed = _check("the starter dropdown offers the curated dock-free set",
-		(new_sheet_dialog._form.control(EventSheetNewSheetDialog.FIELD_STARTER) as OptionButton).item_count,
+		new_sheet_dialog._starter_option.item_count,
 		EventSheetStarterTemplates.create_new_starters().size()) and all_passed
+	# The band names the exact file before Create, and a taken name says so and holds Create
+	# instead of quietly writing a suffixed file.
+	var taken_handle: FileAccess = FileAccess.open("user://event_sheet.gd", FileAccess.WRITE)
+	taken_handle.store_string("extends Node\n")
+	taken_handle.close()
+	new_sheet_dialog._directory = "user://"
+	new_sheet_dialog._name_edit.text = "Event Sheet.gd"
+	new_sheet_dialog._refresh()
+	var taken_state: Array = [new_sheet_dialog._band.words_label.text, new_sheet_dialog._taken_note.text,
+		new_sheet_dialog._dialog.get_ok_button().disabled]
+	create_payload[0] = null
+	new_sheet_dialog._on_confirmed()
+	new_sheet_dialog._name_edit.text = "loot_table"
+	new_sheet_dialog._refresh()
+	all_passed = SUPPORT.pins("new_event_sheet_window", [
+		["the band names the file a typed name becomes, and a taken one holds Create", taken_state,
+			["user://event_sheet.gd", "event_sheet.gd is already in this folder - pick another name.", true]],
+		["and Create on a taken name writes nothing", create_payload[0], null],
+		["a free name clears the note and lets Create go",
+			[new_sheet_dialog._taken_note.text, new_sheet_dialog._dialog.get_ok_button().disabled], ["", false]],
+		["each starter carries its pitch as its description",
+			new_sheet_dialog._starter_option.get_item_tooltip(1),
+			"Run, jump and coyote time, already wired - a character that feels right on the first run."],
+		["an editor tool starter carries its shape's note",
+			EventSheetNewSheetDialog.starter_pitch(10), "Run it yourself, from the sheet's bar."],
+	]) and all_passed
+	DirAccess.remove_absolute("user://event_sheet.gd")
 	new_sheet_host.free()
 
 	# ── Open as Event Sheet eligibility ───────────────────────────────────────────
@@ -445,7 +469,17 @@ static func run() -> bool:
 	all_passed = _check("welcome content sits inside real margins",
 		welcome_margin != null and welcome_margin.get_theme_constant("margin_left") >= 8, true) and all_passed
 	all_passed = _check("welcome exposes the native-default checkbox for reopen sync",
-		toolbar_editor._welcome._welcome_window.get_meta("native_check") is CheckBox, true) and all_passed
+		toolbar_editor._welcome._native_check is CheckBox, true) and all_passed
+	# An answer is CHOSEN by a click and applied by Apply: the click only says what it would set.
+	var welcome: EventSheetWelcomeWindow = toolbar_editor._welcome
+	var words_before: Dictionary = EventSheetWords.snapshot()
+	(welcome._answers[EventSheetWelcomeWindow.CAME_FROM_GDSCRIPT] as Button).pressed.emit()
+	all_passed = SUPPORT.pins("welcome_answer_waits_for_apply", [
+		["a click chooses the answer", welcome._picked, EventSheetWelcomeWindow.CAME_FROM_GDSCRIPT],
+		["and the strip says what Apply would set", welcome._sets_value.text,
+			EventSheetWelcomeWindow.choice_sets(EventSheetWelcomeWindow.CAME_FROM_GDSCRIPT)],
+		["but nothing is set until Apply", EventSheetWords.snapshot(), words_before],
+	]) and all_passed
 	toolbar_editor.free()
 
 	# ── Merged block cells: GDScript + action comments group their lines so the
