@@ -134,13 +134,13 @@ static func _pin_builtin_descriptor_index() -> bool:
 ## The picker's category-to-host map, consulted for every section header it draws. Its fill is
 ## filtered on having a real ClassDB host, so a host-agnostic vocabulary derives an empty map.
 static func _pin_category_hosts() -> bool:
-	ACEPickerDialog._category_hosts.clear()
-	ACEPickerDialog._category_hosts_derived = false
-	var derived: int = ACEPickerDialog._category_host_classes().size()
-	ACEPickerDialog._category_hosts.clear()
-	var after_emptying: int = ACEPickerDialog._category_host_classes().size()
-	ACEPickerDialog._category_hosts_derived = false
-	var rebuilt: int = ACEPickerDialog._category_host_classes().size()
+	EventSheetACEIcons._category_hosts.clear()
+	EventSheetACEIcons._category_hosts_derived = false
+	var derived: int = EventSheetACEIcons._category_host_classes().size()
+	EventSheetACEIcons._category_hosts.clear()
+	var after_emptying: int = EventSheetACEIcons._category_host_classes().size()
+	EventSheetACEIcons._category_hosts_derived = false
+	var rebuilt: int = EventSheetACEIcons._category_host_classes().size()
 	return SUPPORT.pins(TEST_NAME, [
 		["the category hosts derive", derived > 0, true],
 		["an empty host map is not walked again behind the latch", after_emptying, 0],

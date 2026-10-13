@@ -21,6 +21,9 @@ extends RefCounted
 #                                       under that class in words, its own name muted beside it
 
 
+## The compiler's own spellings, read from the one file the compiler itself reads them from.
+const CompilerSpellings := preload("res://addons/eventforge/compiler/compiler_spellings.gd")
+
 ## The object label a pack's host is shown under. One constant so the icon map, the row builder
 ## and the tests can never disagree about which label the host icon belongs to.
 const HOST_LABEL := "host"
@@ -2630,7 +2633,7 @@ static func class_icon_for(object_label: String, class_map: Dictionary) -> Textu
 	var class_name_str: String = str(class_map.get(trimmed, ""))
 	if class_name_str.is_empty():
 		return null
-	return ACEPickerDialog.editor_icon(class_name_str)
+	return EventSheetACEIcons.editor_icon(class_name_str)
 
 
 ## The class name a node declaration shows after its value ("ProgressBar"), or "" when the
@@ -2701,7 +2704,7 @@ static func called_function_name(code: String) -> String:
 		callee = callee.substr(callee.rfind(".") + 1)
 	if not EventSheetViewportLenses.is_identifier(callee):
 		return ""
-	if callee.begins_with(SheetCompiler.SHARED_HELPER_PREFIX):
+	if callee.begins_with(CompilerSpellings.SHARED_HELPER_PREFIX):
 		return ""
 	return callee
 
@@ -2871,7 +2874,7 @@ static func global_object_label(object_label: String, autoloads: Dictionary) -> 
 ## The globe an autoload's row wears, or null when the editor theme has nothing to give.
 static func autoload_icon() -> Texture2D:
 	for icon_name: String in AUTOLOAD_ICON_NAMES:
-		var icon: Texture2D = ACEPickerDialog.editor_icon(icon_name)
+		var icon: Texture2D = EventSheetACEIcons.editor_icon(icon_name)
 		if icon != null:
 			return icon
 	return null
@@ -3513,7 +3516,7 @@ static func object_icon(entry: Dictionary, class_map: Dictionary, sheet_source_p
 		return autoload_icon()
 	var class_name_str: String = str(entry.get("class", "")).strip_edges()
 	if not class_name_str.is_empty() and ClassDB.class_exists(class_name_str):
-		return ACEPickerDialog.editor_icon(class_name_str)
+		return EventSheetACEIcons.editor_icon(class_name_str)
 	return class_icon_for(str(entry.get("label", "")), class_map)
 
 

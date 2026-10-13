@@ -12,6 +12,10 @@
 class_name EventSheetGroupFacts
 extends RefCounted
 
+## The compiler and the lifter, loaded by path the first time a row asks them anything - naming
+## either class here would compile it, and all it names, the moment this file loads.
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## How far in each nesting level draws its bracket, in px before display scaling. Nested groups sit
 ## 2px further in, so three levels read as three rules rather than one thick one.
 const BRACKET_DEPTH_INSET: float = 2.0
@@ -182,7 +186,7 @@ static func collect(events: Array, into: Array[EventGroup] = []) -> Array[EventG
 static func guard_token(group: EventGroup) -> String:
 	# The compiler builds the guard from `group_name`, blank included (which it turns into "group"),
 	# so this asks the same question of the same field rather than of the prettier display name.
-	return SheetCompiler.guard_token("" if group == null else group.group_name)
+	return ReadingDoors.compiler().guard_token("" if group == null else group.group_name)
 
 
 ## The value the two group ACEs take: the guard token as a GDScript string literal, which is what

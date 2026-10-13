@@ -17,6 +17,10 @@
 class_name EventSheetCodeEcho
 extends RefCounted
 
+## The compiler and the lifter, loaded by path the first time a row asks them anything - naming
+## either class here would compile it, and all it names, the moment this file loads.
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## The token classes, frozen: the colour table, the tests and the theme fallbacks address them by
 ## these names.
 const TOKEN_KEYWORD: String = "keyword"
@@ -192,7 +196,7 @@ static func segments(line: String, colours: Dictionary, alpha: float) -> Array[D
 static func line_for(variable: LocalVariable) -> String:
 	if variable == null:
 		return ""
-	return declaration_line(SheetCompiler._emit_tree_variable_line(variable))
+	return declaration_line(ReadingDoors.compiler()._emit_tree_variable_line(variable))
 
 
 ## The declaration line for a sheet-level (dictionary) variable: the compiler's OWN emitter for those
@@ -204,7 +208,7 @@ static func line_for(variable: LocalVariable) -> String:
 static func line_for_descriptor(var_name: String, descriptor: Dictionary) -> String:
 	if var_name.strip_edges().is_empty():
 		return ""
-	return declaration_line("\n".join(SheetCompiler._emit_variables({var_name: descriptor})))
+	return declaration_line("\n".join(ReadingDoors.compiler()._emit_variables({var_name: descriptor})))
 
 
 ## The DECLARATION out of what the emitter wrote for a variable. The emitter also writes the doc

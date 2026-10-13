@@ -20,6 +20,10 @@ extends RefCounted
 # Text only - no sheet is opened and nothing is compiled, so marking a scene of fifty nodes costs a
 # read per script rather than fifty lifts. Pure and static, so the whole map is testable headless.
 
+## The compiler and the lifter, loaded by path the first time a row asks them anything - naming
+## either class here would compile it, and all it names, the moment this file loads.
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## The project setting the overlay is gated on. Off by default, on purpose.
 const SETTING_SHOW_EVENTS := "eventsheets/editor/show_scene_events"
 
@@ -121,8 +125,8 @@ static func trigger_ids_in_source(source: String) -> PackedStringArray:
 		if not connections.has(function_name):
 			continue
 		var signal_name: String = str(connections[function_name])
-		if EventSheetACELifter.CORE_SIGNAL_TRIGGERS.has(signal_name):
-			found.append(str(EventSheetACELifter.CORE_SIGNAL_TRIGGERS[signal_name]))
+		if ReadingDoors.lifter().CORE_SIGNAL_TRIGGERS.has(signal_name):
+			found.append(str(ReadingDoors.lifter().CORE_SIGNAL_TRIGGERS[signal_name]))
 		else:
 			found.append("signal:%s" % signal_name)
 	return found

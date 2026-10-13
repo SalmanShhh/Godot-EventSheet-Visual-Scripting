@@ -34,6 +34,13 @@ extends RefCounted
 # Everything here is static and pure over the passed source, so the corpus gate runs it headless and
 # the panel runs it on a loose buffer with no file behind it.
 
+## The compiler and the lifter, loaded by path the first time a row asks them anything - naming
+## either class here would compile it, and all it names, the moment this file loads.
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
+## The compiler's own spellings, read from the one file the compiler itself reads them from.
+const CompilerSpellings := preload("res://addons/eventforge/compiler/compiler_spellings.gd")
+
 ## The four layers a line can be read at. Values are stable, they key the panel's own styling.
 const LAYER_ENTRY: String = "entry"
 const LAYER_READING: String = "reading"
@@ -85,7 +92,7 @@ static func read(source: String, script_path: String = "", draft_entries: Array 
 	if sheet.external_source_path.is_empty():
 		sheet.external_source_path = script_path if not script_path.is_empty() else THROWAWAY_PATH
 	# The throwaway path, never the file's own - see THROWAWAY_PATH. A reading measures; it does not save.
-	var compiled: Dictionary = SheetCompiler.compile(sheet, THROWAWAY_PATH)
+	var compiled: Dictionary = ReadingDoors.compiler().compile(sheet, THROWAWAY_PATH)
 	var emitted: String = str(compiled.get("output", ""))
 	reading["emitted"] = emitted
 	reading["identical"] = emitted == source
@@ -466,7 +473,7 @@ static func _row_claim(row: Resource, sheet: EventSheetResource,
 		# A COMPILER-EMITTED SHARED HELPER IS NOT THE AUTHOR'S OWN FUNCTION. Those are this
 		# compiler's plumbing - one definition per file, appended last - and naming one as
 		# "function __eventsheets_tile_under" hands a developer an internal name to go and look for.
-		if written.begins_with(SheetCompiler.SHARED_HELPER_PREFIX):
+		if written.begins_with(CompilerSpellings.SHARED_HELPER_PREFIX):
 			return {"claim": "shared helper", "layer": LAYER_READING}
 		return {"claim": "function %s" % written, "layer": LAYER_READING}
 	if row is LocalVariable:

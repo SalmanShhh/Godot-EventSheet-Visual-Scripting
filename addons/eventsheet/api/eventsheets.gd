@@ -2856,8 +2856,7 @@ static func networking_coverage_text(sheet: EventSheetResource) -> String:
 ## `.gd` still round-trips byte-for-byte and a project with no scenes gets an empty list. Ordinary
 ## Dictionaries, so a pack reading them needs nothing of this plugin at runtime.
 static func synced_properties(sheet: EventSheetResource) -> Array[Dictionary]:
-	return _typed_dictionaries(EventSheetSceneReplication.for_script(
-		str(sheet.external_source_path) if sheet != null else "").get("synced", []))
+	return EventSheetSceneReplication.synced_of_sheet(sheet)
 
 
 ## Every `MultiplayerSpawner` this sheet is about: the ones IN its own scene (which a Spawn row can
@@ -2870,8 +2869,7 @@ static func synced_properties(sheet: EventSheetResource) -> Array[Dictionary]:
 ## `.tscn`; it is "" when no line sets one. Same contract as `synced_properties`: read-only, derived,
 ## and empty for a sheet no scene uses.
 static func spawners_of(sheet: EventSheetResource) -> Array[Dictionary]:
-	return _typed_dictionaries(EventSheetSceneReplication.for_script(
-		str(sheet.external_source_path) if sheet != null else "").get("spawners", []))
+	return EventSheetSceneReplication.spawners_of_sheet(sheet)
 
 
 ## Every light in the scene (or scenes) that run this sheet's script, in scene order. One entry

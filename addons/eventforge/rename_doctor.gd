@@ -44,7 +44,7 @@ const CHECK_NODE_GONE := EventSheetRenameFindings.KIND_NODE_GONE
 ## Registers the section, replacing any previous registration - so a plugin reload, a second Doctor
 ## run and a test that registers it by hand all leave exactly one.
 static func ensure_registered() -> void:
-	EventSheets.register_doctor_check(CHECK_ID, Callable(EventSheetRenameDoctor, "check"))
+	EventSheetProjectDoctor.register_check(CHECK_ID, Callable(EventSheetRenameDoctor, "check"))
 
 
 ## The section itself, with the contract every registered check has: append findings, never write

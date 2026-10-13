@@ -29,6 +29,13 @@ extends RefCounted
 # `_value_ranges_for` + `_value_regex` are STATIC (pure text → ranges), so they stay unit-testable
 # without a live viewport; the viewport keeps a static forwarder for any class-name caller.
 
+## The compiler and the lifter, loaded by path the first time a row asks them anything - naming
+## either class here would compile it, and all it names, the moment this file loads.
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
+## The compiler's own spellings, read from the one file the compiler itself reads them from.
+const CompilerSpellings := preload("res://addons/eventforge/compiler/compiler_spellings.gd")
+
 ## The alpha floor a published verb's header wash keeps in READING mode. Reading mode drops the
 ## "Action" / "Condition" / "Expression" word badge from the header (an event-sheet Function block
 ## carries its name and its inputs, nothing else), so the role tint becomes the ONLY kind cue and
@@ -784,7 +791,7 @@ func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_fact
 		# dialog draws.
 		var extends_target: String = str(head_facts.get("extends", "")).strip_edges()
 		spans.append(_head_band_icon_span(band_meta, EventSheetHeadBands.BAND_NAME,
-			ACEPickerDialog.editor_icon(extends_target) if not extends_target.is_empty() else null,
+			EventSheetACEIcons.editor_icon(extends_target) if not extends_target.is_empty() else null,
 			EventSheetL10n.translate("F2 renames this class everywhere.")))
 	elif kind == EventSheetHeadBands.BAND_ICON:
 		# The image the `@icon` annotation names, drawn at badge size: the picture and the way to
@@ -1800,7 +1807,7 @@ func _build_one_head_bar_row(sheet: EventSheetResource, detail: Array[EventRowDa
 	var extends_word: String = _head_band_value_of(_head_band_row(detail, EventSheetHeadBands.BAND_NAME),
 		EventSheetHeadBands.BAND_EXTENDS)
 	var spans: Array[SemanticSpan] = [_head_band_icon_span(bar_meta, EventSheetHeadBands.BAND_NAME,
-		ACEPickerDialog.editor_icon(extends_word) if not extends_word.is_empty() else null,
+		EventSheetACEIcons.editor_icon(extends_word) if not extends_word.is_empty() else null,
 		EventSheetL10n.translate("What this file is. ▸ opens the lines behind it."))]
 	var class_word: String = _head_band_value(_head_band_row(detail, EventSheetHeadBands.BAND_NAME))
 	if not class_word.is_empty():
@@ -2010,7 +2017,7 @@ func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) 
 		"line_index": 0
 	}
 	var icon_class: String = host_class if not host_class.is_empty() else sheet.host_class
-	var identity_icon: Texture2D = ACEPickerDialog.editor_icon(icon_class) if not icon_class.is_empty() else null
+	var identity_icon: Texture2D = EventSheetACEIcons.editor_icon(icon_class) if not icon_class.is_empty() else null
 	# An autoload is the project's GLOBAL, and the globe is the mark it already wears in the
 	# Objects rail and in every other sheet's `Game (global) ▸ …` row. Its own class is beside the
 	# point: what a reader needs is that this file is reachable from everywhere.
@@ -2184,7 +2191,7 @@ func build_scene_bar_row(sheet: EventSheetResource) -> EventRowData:
 		"kind": "pack_include",
 		"line_index": 0
 	}
-	var root_icon: Texture2D = ACEPickerDialog.editor_icon(root_type) if not root_type.is_empty() else null
+	var root_icon: Texture2D = EventSheetACEIcons.editor_icon(root_type) if not root_type.is_empty() else null
 	if root_icon != null:
 		badge_meta["badge_icon"] = root_icon
 	var spans: Array[SemanticSpan] = [_make_span("⇥", SemanticSpan.SpanType.KEYWORD, badge_meta)]
@@ -3822,7 +3829,7 @@ static func _plural_type_word(type_name: String) -> String:
 
 ## The return type read as plain words - the label the "gives back …" chip shows.
 static func _friendly_return_type(event_function: EventFunction) -> String:
-	return friendly_type_word(SheetCompiler._function_return_type_name(event_function))
+	return friendly_type_word(CompilerSpellings.function_return_type_name(event_function))
 
 
 ## Appends first-class typed parameter spans to a Define row: each parameter as `name : friendly-type`
@@ -6433,7 +6440,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 			"kind": "raw_code",
 			"line_index": 0
 		}
-		var host_icon: Texture2D = ACEPickerDialog.editor_icon(host_class)
+		var host_icon: Texture2D = EventSheetACEIcons.editor_icon(host_class)
 		if host_icon != null:
 			host_badge_meta["badge_icon"] = host_icon
 		row_data.spans = [
@@ -7330,7 +7337,7 @@ func _build_preload_object_row(object_name: String, res_path: String, indent: in
 	var icon_class: String = str(resolved.get("icon_class", ""))
 	var icon: Texture2D = null
 	if _viewport.show_object_icons and not icon_class.is_empty():
-		icon = ACEPickerDialog.editor_icon(icon_class)
+		icon = EventSheetACEIcons.editor_icon(icon_class)
 	row_data.spans = [
 		_make_span(EventSheetL10n.translate("Object"), SemanticSpan.SpanType.KEYWORD, {
 			"editable": false, "kind": "variable", "line_index": 0, "badge": true, "badge_style": "scope",
@@ -8121,7 +8128,7 @@ func _append_property_body_rows(row: EventRowData, body: String, indent: int, ui
 	var body_lines: PackedStringArray = PackedStringArray()
 	for line: String in body.split("\n"):
 		body_lines.append(line)
-	var lifted: Array = EventSheetACELifter.lift_body_rows(body_lines, _sheet_object_variable_names())
+	var lifted: Array = ReadingDoors.lifter().lift_body_rows(body_lines, _sheet_object_variable_names())
 	if lifted.is_empty():
 		return false
 	var index: int = 0
@@ -8186,7 +8193,7 @@ static var _folder_icon_cache: Texture2D = null
 static func _folder_icon() -> Texture2D:
 	if _folder_icon_cache != null:
 		return _folder_icon_cache
-	var themed: Texture2D = ACEPickerDialog.editor_icon("Folder")
+	var themed: Texture2D = EventSheetACEIcons.editor_icon("Folder")
 	if themed != null:
 		_folder_icon_cache = themed
 		return themed
@@ -8317,7 +8324,7 @@ func _group_declaration_line(group: EventGroup) -> String:
 	if group == null or _viewport == null or _viewport._sheet == null:
 		return ""
 	if not _group_declaration_lines.has("lines"):
-		_group_declaration_lines["lines"] = SheetCompiler.group_declaration_lines(_viewport._sheet.events)
+		_group_declaration_lines["lines"] = ReadingDoors.compiler().group_declaration_lines(_viewport._sheet.events)
 	return str((_group_declaration_lines["lines"] as Dictionary).get(group, ""))
 
 
@@ -12377,7 +12384,7 @@ static func _trimmed_seconds(text: String) -> String:
 ## with it about which bodies qualify would be a function that lifts and then reads as a helper. Only
 ## the display spelling of the number is this file's own.
 static func await_loop_seconds(code: String) -> String:
-	var seconds: String = EventSheetACELifter.await_beat_seconds(code)
+	var seconds: String = ReadingDoors.lifter().await_beat_seconds(code)
 	return seconds if seconds.is_empty() else _trimmed_seconds(seconds)
 
 
@@ -12598,7 +12605,7 @@ func _scene_trigger_icon(event_row: EventRow) -> Texture2D:
 	var source_class: String = str(event_row.get_meta("__scene_source_class", ""))
 	if source_class.is_empty():
 		return null
-	return ACEPickerDialog.editor_icon(source_class)
+	return EventSheetACEIcons.editor_icon(source_class)
 
 
 # ── Signals: who listens, and where it comes from ─────────────────────────────────────────────
@@ -12628,8 +12635,8 @@ static func signal_name_of_trigger(trigger_id: String) -> String:
 		return ""
 	if declared.begins_with("signal:"):
 		return declared.trim_prefix("signal:")
-	for signal_name: String in EventSheetACELifter.CORE_SIGNAL_TRIGGERS:
-		if str(EventSheetACELifter.CORE_SIGNAL_TRIGGERS[signal_name]) == declared:
+	for signal_name: String in ReadingDoors.lifter().CORE_SIGNAL_TRIGGERS:
+		if str(ReadingDoors.lifter().CORE_SIGNAL_TRIGGERS[signal_name]) == declared:
 			return signal_name
 	return ""
 
@@ -12758,7 +12765,7 @@ func _with_bound_values(event_row: EventRow, chips: PackedStringArray) -> Packed
 	var connect_line: String = str(event_row.get_meta("__source_connect_line", ""))
 	if connect_line.is_empty() or not connect_line.contains(".bind("):
 		return chips
-	var values: PackedStringArray = EventSheetACELifter.bound_arguments(connect_line)
+	var values: PackedStringArray = ReadingDoors.lifter().bound_arguments(connect_line)
 	if values.is_empty() or values.size() > chips.size():
 		return chips
 	var first: int = chips.size() - values.size()
@@ -12849,7 +12856,7 @@ func _input_branch_reading(event_row: EventRow) -> Dictionary:
 		var condition: ACECondition = event_row.conditions[condition_index]
 		if condition == null:
 			continue
-		var pieces: PackedStringArray = _split_top_level_and(_strip_event_casts(SheetCompiler.condition_source_text(condition)))
+		var pieces: PackedStringArray = _split_top_level_and(_strip_event_casts(ReadingDoors.compiler().condition_source_text(condition)))
 		atom_counts[condition_index] = pieces.size()
 		for piece: String in pieces:
 			atoms.append({"text": piece, "index": condition_index, "used": false})
@@ -14637,7 +14644,7 @@ func _build_undo_step_rows(event_row: EventRow, anchor_base: String, indent: int
 		# anything?"), which is what the flag below turns on - for these rows only.
 		_answer_return_rows += 1
 		var built: int = 0
-		for body_event: Variant in EventSheetACELifter.lift_body_rows(
+		for body_event: Variant in ReadingDoors.lifter().lift_body_rows(
 				parts.get("body", PackedStringArray()), _sheet_object_variable_names()):
 			if not (body_event is EventRow):
 				continue
@@ -14841,7 +14848,7 @@ func _build_connect_lambda_rows(event_row: EventRow, anchor_base: String, indent
 			connect_statement_of(event_row.actions[action_index]))
 		# The body reads through the very same lift a declared handler's body goes through, so a
 		# statement says the same thing whether it was written in a func or handed to connect.
-		for body_event: Variant in EventSheetACELifter.lift_body_rows(
+		for body_event: Variant in ReadingDoors.lifter().lift_body_rows(
 				parts.get("body", PackedStringArray()), _sheet_object_variable_names()):
 			if not (body_event is EventRow):
 				continue
@@ -14865,7 +14872,7 @@ func _sheet_object_variable_names() -> PackedStringArray:
 		if not (row is LocalVariable):
 			continue
 		var type_name: String = (row as LocalVariable).type_name.strip_edges()
-		if type_name.is_empty() or type_name in EventSheetACELifter.VALUE_TYPE_NAMES:
+		if type_name.is_empty() or type_name in ReadingDoors.lifter().VALUE_TYPE_NAMES:
 			continue
 		names.append((row as LocalVariable).name)
 	return names
@@ -16225,7 +16232,7 @@ func _pick_test_text(pick: PickFilter) -> String:
 		# An inverted comparison shows its opposite here too, exactly as it does on a condition row
 		# and exactly as the filter compiles - one spelling of the same question everywhere.
 		var reading: ACECondition = _comparison_flip_of(entry as ACECondition)
-		var term: String = SheetCompiler.condition_source_text(reading).strip_edges()
+		var term: String = ReadingDoors.compiler().condition_source_text(reading).strip_edges()
 		if term.is_empty():
 			continue
 		terms.append("%s %s" % [EventSheetL10n.translate("not"), term] if reading.negated else term)
@@ -17560,7 +17567,7 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	# off a Dictionary and bails, which is the whole cost on every other statement in the file.
 	var value_icon_class: String = str(sentence.get("value_icon_class", ""))
 	if not value_icon_class.is_empty() and literal.is_empty() and _viewport.show_object_icons:
-		var value_icon: Texture2D = ACEPickerDialog.editor_icon(value_icon_class)
+		var value_icon: Texture2D = EventSheetACEIcons.editor_icon(value_icon_class)
 		if value_icon != null and _append_value_icon_sentence_spans(spans, pieces, indent,
 				object_label, object_note, sentence_icon, value_icon, raw, action_index,
 				line_index, action_style_meta):
@@ -19886,11 +19893,11 @@ func _object_icon_for(provider_id: String, ace_id: String) -> Texture2D:
 		# host_class_of, not `.node_type`: an ACEDefinition has no such property (it keeps its host in
 		# metadata), so reading it directly threw once for EVERY row drawn - invisible headless,
 		# and it filled the Output dock the moment anyone opened a sheet in the real editor.
-		icon = ACEPickerDialog.category_header_icon(definition.category, ACEPickerDialog.host_class_of(definition))
+		icon = EventSheetACEIcons.category_header_icon(definition.category, EventSheetACEIcons.host_class_of(definition))
 	if icon == null:
-		icon = ACEPickerDialog.resolve_definition_icon(definition)
+		icon = EventSheetACEIcons.resolve_definition_icon(definition)
 	if icon == null and is_core:
-		icon = ACEPickerDialog.editor_icon("Tools")
+		icon = EventSheetACEIcons.editor_icon("Tools")
 	_ace_icon_cache[cache_key] = icon
 	return icon
 

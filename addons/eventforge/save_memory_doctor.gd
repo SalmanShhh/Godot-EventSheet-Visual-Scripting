@@ -49,7 +49,7 @@ const SHEET_WORDS: PackedStringArray = ["__first_time_in_save_", "__seen_in_save
 ## Registers the section, replacing any previous registration - so a plugin reload, a second Doctor
 ## run and a test that registers it by hand all leave exactly one.
 static func ensure_registered() -> void:
-	EventSheets.register_doctor_check(CHECK_ID, Callable(EventSheetSaveMemoryDoctor, "check"))
+	EventSheetProjectDoctor.register_check(CHECK_ID, Callable(EventSheetSaveMemoryDoctor, "check"))
 
 
 ## The section itself, with the contract every registered check has: append findings, never write
@@ -58,7 +58,7 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 	if save_pack_is_registered():
 		return
 	var paths: PackedStringArray = PackedStringArray()
-	for script_path: String in EventSheets.project_scripts():
+	for script_path: String in EventSheetProjectDoctor._project_scripts():
 		if script_path.begins_with(PLUGIN_DIRECTORY):
 			continue
 		if _says_any(EventSheetProjectDoctor.source_of(script_path), SHEET_WORDS):

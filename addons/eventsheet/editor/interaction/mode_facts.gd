@@ -20,6 +20,10 @@
 class_name EventSheetModeFacts
 extends RefCounted
 
+## The compiler and the lifter, loaded by path the first time a row asks them anything - naming
+## either class here would compile it, and all it names, the moment this file loads.
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## The names the four declarations go by. Frozen: a hand-written project spelling them this way is
 ## already declaring modes, which is the point of choosing the obvious names.
 const ENUM_NAME: String = "Mode"
@@ -223,7 +227,7 @@ static func band_line(said: PackedStringArray, opening: String) -> String:
 ## second spelling of them, so the band can never echo a line the compiler would not write.
 static func band_echo(sheet: EventSheetResource) -> String:
 	var row: EnumRow = enum_row(sheet)
-	return "" if row == null else SheetCompiler._emit_enum_line(row)
+	return "" if row == null else ReadingDoors.compiler()._emit_enum_line(row)
 
 
 ## Every mode a row of this sheet NAMES, in encounter order - what Go to mode, In mode, Push mode,

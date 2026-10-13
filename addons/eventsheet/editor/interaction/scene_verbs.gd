@@ -54,7 +54,7 @@ static func spawn_scene_choices(sheet: EventSheetResource) -> PackedStringArray:
 ## head's "spawned by" band is about and has no verb.)
 static func spawners_in_scene(sheet: EventSheetResource) -> Array[Dictionary]:
 	var found: Array[Dictionary] = []
-	for entry: Dictionary in EventSheets.spawners_of(sheet):
+	for entry: Dictionary in EventSheetSceneReplication.spawners_of_sheet(sheet):
 		if str(entry.get("relation", "")) == EventSheetSceneReplication.RELATION_IN_SCENE:
 			found.append(entry)
 	return found

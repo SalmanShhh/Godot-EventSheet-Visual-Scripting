@@ -64,14 +64,14 @@ const LINES_PER_SHAPE: int = 3
 ## Registers the section, replacing any previous registration - so a plugin reload, a second Doctor
 ## run and a test that registers it by hand all leave exactly one.
 static func ensure_registered() -> void:
-	EventSheets.register_doctor_check(CHECK_ID, Callable(EventSheetReadingDoctor, "check"))
+	EventSheetProjectDoctor.register_check(CHECK_ID, Callable(EventSheetReadingDoctor, "check"))
 
 
 ## The section itself, with the contract every registered check has: append findings, never write
 ## inside res://. `sheet_paths` is deliberately unused - it finds only `.tres` sheets while `.gd` is
 ## the default sheet format, and this page is about hand-written GDScript above all.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(EventSheets.project_scripts()))
+	findings.append_array(report(EventSheetProjectDoctor._project_scripts()))
 
 
 ## The whole page for a list of scripts, as findings. Pure over the paths, so a test can hand it a

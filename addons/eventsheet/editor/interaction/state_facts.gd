@@ -32,6 +32,10 @@
 class_name EventSheetStateFacts
 extends RefCounted
 
+## The compiler and the lifter, loaded by path the first time a row asks them anything - naming
+## either class here would compile it, and all it names, the moment this file loads.
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## The names the declarations go by. Frozen, and deliberately the obvious ones: a hand-written object
 ## spelling them this way is already declaring states, which is the whole point of choosing them.
 const ENUM_NAME: String = "State"
@@ -150,7 +154,7 @@ static func band_reading(sheet: EventSheetResource) -> String:
 ## second spelling of them, so the band can never echo a line the compiler would not write.
 static func band_echo(sheet: EventSheetResource) -> String:
 	var row: EnumRow = enum_row(sheet)
-	return "" if row == null else SheetCompiler._emit_enum_line(row)
+	return "" if row == null else ReadingDoors.compiler()._emit_enum_line(row)
 
 
 # -- The vocabulary, and what each half of it is for ---------------------------------------------

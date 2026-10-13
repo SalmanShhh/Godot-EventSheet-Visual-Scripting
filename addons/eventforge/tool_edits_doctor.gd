@@ -33,7 +33,7 @@ const CHECK_NOT_UNDOABLE := EventSheetUndoableFindings.KIND_NOT_UNDOABLE
 ## Registers the section, replacing any previous registration - so a plugin reload, a second Doctor
 ## run and a test that registers it by hand all leave exactly one.
 static func ensure_registered() -> void:
-	EventSheets.register_doctor_check(CHECK_ID, Callable(EventSheetToolEditsDoctor, "check"))
+	EventSheetProjectDoctor.register_check(CHECK_ID, Callable(EventSheetToolEditsDoctor, "check"))
 
 
 ## The section itself, with the contract every registered check has: append findings, never write
@@ -50,7 +50,7 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 ## project full of ordinary tool scripts would pay for nothing.
 static func scene_editing_tools() -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
-	for script_path: String in EventSheets.project_scripts():
+	for script_path: String in EventSheetProjectDoctor._project_scripts():
 		var source: String = EventSheetProjectDoctor.source_of(script_path)
 		if source.contains("@tool") and EventForgeUndoableEdits.touches_open_scene(source):
 			found.append(script_path)

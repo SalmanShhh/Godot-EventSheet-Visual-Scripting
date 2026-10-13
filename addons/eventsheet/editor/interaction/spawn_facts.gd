@@ -107,7 +107,7 @@ static func spawned_scenes(sheet: EventSheetResource) -> Array[Dictionary]:
 		var event_function: EventFunction = entry as EventFunction
 		if event_function != null:
 			_walk(event_function.events, found, seen)
-	for entry: Dictionary in EventSheets.spawners_of(sheet):
+	for entry: Dictionary in EventSheetSceneReplication.spawners_of_sheet(sheet):
 		if str(entry.get("relation", "")) != EventSheetSceneReplication.RELATION_IN_SCENE:
 			continue
 		for scene_path: String in PackedStringArray(entry.get("scenes", PackedStringArray())):

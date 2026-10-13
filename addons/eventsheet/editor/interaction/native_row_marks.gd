@@ -466,7 +466,7 @@ static func _editor_icon(icon_name: String) -> Texture2D:
 	if _editor_icon_cache.has(icon_name):
 		return _editor_icon_cache[icon_name]
 	# Only a FOUND icon is kept: a miss before the editor theme exists must not stick for the session.
-	var icon: Texture2D = ACEPickerDialog.editor_icon(icon_name)
+	var icon: Texture2D = EventSheetACEIcons.editor_icon(icon_name)
 	if icon != null:
 		_editor_icon_cache[icon_name] = icon
 	return icon

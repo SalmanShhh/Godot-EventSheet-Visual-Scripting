@@ -38,7 +38,7 @@ const PLAYER_WORD := "$FeedbackPlayer"
 ## Registers the section, replacing any previous registration - so a plugin reload, a second Doctor
 ## run and a test that registers it by hand all leave exactly one.
 static func ensure_registered() -> void:
-	EventSheets.register_doctor_check(CHECK_ID, Callable(EventSheetFeedbackDoctor, "check"))
+	EventSheetProjectDoctor.register_check(CHECK_ID, Callable(EventSheetFeedbackDoctor, "check"))
 
 
 ## The section itself, with the contract every registered check has: append findings, never write
@@ -51,7 +51,7 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 ## plugin's own code, like every other Doctor corpus.
 static func scripts_naming_a_player() -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
-	for script_path: String in EventSheets.project_scripts():
+	for script_path: String in EventSheetProjectDoctor._project_scripts():
 		if EventSheetProjectDoctor.source_of(script_path).contains(PLAYER_WORD):
 			found.append(script_path)
 	return found

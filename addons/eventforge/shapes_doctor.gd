@@ -52,7 +52,7 @@ const STOPPED_SPEEDS: PackedStringArray = ["0", "0.0", "-0.0"]
 ## Registers the section, replacing any previous registration - so a plugin reload, a second Doctor
 ## run and a test that registers it by hand all leave exactly one.
 static func ensure_registered() -> void:
-	EventSheets.register_doctor_check(CHECK_ID, Callable(EventSheetShapesDoctor, "check"))
+	EventSheetProjectDoctor.register_check(CHECK_ID, Callable(EventSheetShapesDoctor, "check"))
 
 
 ## The section itself, with the contract every registered check has: append findings, never write
@@ -68,7 +68,7 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 ## the row's template, and there is no sheet there at all.
 static func scripts_scrolling_dashes() -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
-	for script_path: String in EventSheets.project_scripts():
+	for script_path: String in EventSheetProjectDoctor._project_scripts():
 		if script_path.begins_with(PLUGIN_DIRECTORY):
 			continue
 		var source: String = EventSheetProjectDoctor.source_of(script_path)

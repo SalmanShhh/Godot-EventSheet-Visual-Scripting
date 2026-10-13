@@ -106,6 +106,33 @@ static func for_script(script_path: String) -> Dictionary:
 	return answer
 
 
+## Every property a MultiplayerSynchronizer in this sheet's scene keeps in step, as a typed list of
+## the `synced` entries above. The one implementation behind the public `synced_properties` call; the
+## reading layer asks it here, so a fact scanner never has to load the public API to read a scene.
+## `sheet` is any sheet resource (or null); its `external_source_path` names the script.
+static func synced_of_sheet(sheet: Resource) -> Array[Dictionary]:
+	return typed_entries(for_script(_sheet_script_path(sheet)).get("synced", []))
+
+
+## Every MultiplayerSpawner this sheet is about, as a typed list of the `spawners` entries above -
+## the one implementation behind the public `spawners_of` call.
+static func spawners_of_sheet(sheet: Resource) -> Array[Dictionary]:
+	return typed_entries(for_script(_sheet_script_path(sheet)).get("spawners", []))
+
+
+## An untyped Array of Dictionaries as a typed one, anything else in it left out.
+static func typed_entries(entries: Array) -> Array[Dictionary]:
+	var typed: Array[Dictionary] = []
+	for entry: Variant in entries:
+		if entry is Dictionary:
+			typed.append(entry as Dictionary)
+	return typed
+
+
+static func _sheet_script_path(sheet: Resource) -> String:
+	return str(sheet.get("external_source_path")) if sheet != null else ""
+
+
 ## Drops the cache. The editor calls this when the filesystem changes; tests call it between fixtures.
 static func clear_cache() -> void:
 	_cache.clear()

@@ -124,7 +124,7 @@ static func row_contexts(sheet: EventSheetResource) -> Array[Dictionary]:
 ## The bare names a MultiplayerSynchronizer in this sheet's scene keeps in step.
 static func synced_names(sheet: EventSheetResource) -> PackedStringArray:
 	var names: PackedStringArray = PackedStringArray()
-	for entry: Dictionary in EventSheets.synced_properties(sheet):
+	for entry: Dictionary in EventSheetSceneReplication.synced_of_sheet(sheet):
 		var name_text: String = str(entry.get("name", "")).strip_edges()
 		if not name_text.is_empty() and not names.has(name_text):
 			names.append(name_text)

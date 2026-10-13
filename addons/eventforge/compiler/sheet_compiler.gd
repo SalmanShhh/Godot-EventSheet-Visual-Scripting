@@ -34,13 +34,17 @@ const SceneTrust := preload("res://addons/eventforge/scene_trust.gd")
 ## same reason the two above are.
 const SpecText := preload("res://addons/eventforge/registration/annotation_spec_text.gd")
 
+## The spellings the editor's readers recognise this compiler's output by. They live in a file that
+## names nothing heavy, so a reader can ask for them without compiling this one.
+const Spellings := preload("res://addons/eventforge/compiler/compiler_spellings.gd")
+
 const VERSION: String = "0.18.0"
 
 ## The prefix EVERY shared helper this compiler writes carries. They are the compiler's own plumbing -
 ## one definition per file, appended last, never something anybody sat down and wrote - so a reader
 ## opening an emitted file must not be shown them as the author's own functions, and the reading layer
-## asks this rather than keeping a second copy of the spelling.
-const SHARED_HELPER_PREFIX: String = "__eventsheets_"
+## asks the same spelling rather than keeping a second copy of it.
+const SHARED_HELPER_PREFIX: String = Spellings.SHARED_HELPER_PREFIX
 
 ## The name of the shared aimed-floor helper the cursor and floor expressions call. One
 ## definition per file, whichever of them the picker wrote first.
@@ -75,7 +79,7 @@ const FIRST_PARENT_HELPER: String = "__eventsheets_first_parent_of_type"
 
 ## The running total Distance Travelled reads, and the line that adds to it every physics frame.
 ## Kept beside the class only when a row reads it - see _keep_distance_travelled.
-const TRAVELLED_MEMBER: String = "_travelled"
+const TRAVELLED_MEMBER: String = Spellings.TRAVELLED_MEMBER
 
 ## Who is asking the game to pause, for the three pause-request rows: the member they read, the
 ## helper its starting value comes from, and the Engine metadata name the one shared set is kept
@@ -3338,16 +3342,7 @@ static func _function_header_line(event_function: EventFunction) -> String:
 ## Builds the typed parameter list for a sheet function (e.g. "amount: int, label: String").
 ## "-> void" unless the function declares a Variant.Type return (TYPE_NIL = void).
 static func _function_return_type_name(event_function: EventFunction) -> String:
-	# An explicit type NAME wins - it can express what a Variant.Type can't (custom/engine classes,
-	# typed collections), so a lifted `-> HealthPool` helper round-trips verbatim.
-	if not event_function.return_type_name.strip_edges().is_empty():
-		return event_function.return_type_name.strip_edges()
-	if event_function.return_type == TYPE_NIL:
-		return "void"
-	# TYPE_MAX is the "returns Variant" sentinel (there is no Variant.Type for Variant).
-	if event_function.return_type == TYPE_MAX:
-		return "Variant"
-	return type_string(event_function.return_type)
+	return Spellings.function_return_type_name(event_function)
 
 
 static func _emit_function_params(event_function: EventFunction) -> String:

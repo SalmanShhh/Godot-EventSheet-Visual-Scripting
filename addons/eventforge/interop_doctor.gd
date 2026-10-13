@@ -44,13 +44,13 @@ const MEASURE_BUDGET_MSEC: int = 1200
 ## Registers the section, replacing any previous registration - so a plugin reload, a second Doctor
 ## run and a test that registers it by hand all leave exactly one.
 static func ensure_registered() -> void:
-	EventSheets.register_doctor_check(CHECK_ID, Callable(EventSheetInteropDoctor, "check"))
+	EventSheetProjectDoctor.register_check(CHECK_ID, Callable(EventSheetInteropDoctor, "check"))
 
 
 ## The section itself, with the contract every registered check has: append findings, never write
 ## inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(EventSheets.project_scripts()))
+	findings.append_array(report(EventSheetProjectDoctor._project_scripts()))
 
 
 ## Whether this file carries the mark that keeps it code. Read off the file, so it is the same answer

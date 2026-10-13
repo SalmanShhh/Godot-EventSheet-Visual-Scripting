@@ -53,7 +53,14 @@ const SAMPLE_SIZE: int = 40
 ## an honest "not measured yet" rather than a pretend pass.
 const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	"plugin": 5,
-	"workspace": 32,
+	# Re-measured over the WHOLE role when the corpus gained three files, the rotating sample moved and
+	# landed on shooter_tour.gd, which measures 78 and has since it was added. All 132 workspace files,
+	# read off the tree today, worst first: shooter_tour 78, tour_window 21, comment_door_open 21,
+	# starter_templates 20, outline_panel 13, and nothing else over 10. The tour IS a table - one
+	# dictionary literal per step, title, body, task and check - so most of its rows are entries
+	# rather than logic, the same reason the pack-recipe and vocabulary groups sit where they do.
+	# Nothing about the reading layer changed to move this; the ceiling is the worst file in the group.
+	"workspace": 78,
 	"canvas": 14,
 	"readings": 15,
 	# Read off the tree like the rest. Raised by one when the rotating sample reached

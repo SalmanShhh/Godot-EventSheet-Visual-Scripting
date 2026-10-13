@@ -836,7 +836,7 @@ static func check_editor_tool_undo(sheet_paths: PackedStringArray, findings: Arr
 		# stands down wherever that one speaks, so one file never earns two findings about one
 		# mistake. It still covers a compiled output that is not one of the project's own scripts -
 		# a `.tres` sheet whose output lives outside the swept tree - which is the only case left.
-		if EventSheets.project_scripts().has(output_path):
+		if _project_scripts().has(output_path):
 			continue
 		_add(findings, "info", "editor-tool-undo", sheet_path,
 			"This editor tool changes the open scene (add/remove/reparent nodes) without registering undo, so Ctrl+Z can't take the change back. Wrap the edits in EditorInterface.get_editor_undo_redo() create_action/commit_action (ignore for one-off scripts you re-run freely).")

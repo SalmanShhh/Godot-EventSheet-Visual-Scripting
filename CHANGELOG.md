@@ -21,6 +21,30 @@
   first open compiles (558 files, about 249,000 lines today), the fifteen names whose removal would
   drop the most of it, and the largest files in it. The output is the same on every run.
 
+### Changed: the sheet's reading code no longer names the dialogs, the compiler or the API it borrows from
+
+- The row builder, the sentence grammar, the reading rows and the row marks asked the picker dialog
+  for theme icons. Those icon lookups (the category icon table, class icons, the role dots, the
+  `res://` icon cache) now live in `ace_icons.gd` (`EventSheetACEIcons`), which names only the
+  vocabulary it reads. The picker's old static calls still work and forward there.
+- The three compiler spellings the readers needed (the shared-helper prefix, the Distance Travelled
+  member, how a function's return type is written) live in `compiler_spellings.gd`. The compiler reads
+  them from there too, so there is still one copy of each.
+- The compiler and the lifter, and on the canvas the parameter and variable dialogs, the Manual's
+  reference and the public API, are loaded by path where they are actually called, through
+  `interaction/reading_doors.gd`. Before, naming them compiled all of them as soon as the reading
+  code loaded.
+- The Doctor sections register and list scripts through the Doctor itself instead of the public API.
+  The multiplayer and spawn facts read the scene through `EventSheetSceneReplication`, which the API's
+  `synced_properties` and `spawners_of` now forward to.
+- Every row reading is unchanged: `tools/reading_dump.gd` gives byte-identical output before and after.
+  `reading_core_lazy_test` reads the compile-time graph, fails if any of these names comes back, and
+  checks that each leaf and each by-path door gives the same answers the classes did.
+- This half of the cut does not shrink the first open on its own yet. The dock still names every one
+  of these classes, and other doors stay open (for example `variable_owners.gd` to both dialogs,
+  `scene_sheet.gd` to the importer, `ace_registry.gd` to the API), so each class is still compiled
+  through some other path.
+
 ### Changed: the first sheet tab of a session no longer re-reads every pack
 
 - The verbs every pack script publishes are remembered in `.godot/eventsheets_pack_vocabulary.bin`

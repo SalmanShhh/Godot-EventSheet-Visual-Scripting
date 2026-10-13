@@ -45,6 +45,10 @@
 class_name EventSheetMigrationPlan
 extends RefCounted
 
+## The compiler and the lifter, loaded by path the first time a row asks them anything - naming
+## either class here would compile it, and all it names, the moment this file loads.
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## The lane a planned row sits in, spelled the way every other finding in this pass spells it.
 const LANE_CONDITION := "condition"
 const LANE_ACTION := "action"
@@ -126,7 +130,7 @@ static func _hold_to_the_file(sheet: EventSheetResource, known: Dictionary,
 			_walk(_function_rows(event_function), known, mirror, "", host, counter)
 	if mirror.size() != planned.size():
 		return
-	var baseline: Dictionary = SheetCompiler.compile(copy, COMPILE_PROBE_PATH)
+	var baseline: Dictionary = ReadingDoors.compiler().compile(copy, COMPILE_PROBE_PATH)
 	var baseline_parses: bool = bool(baseline.get("success", false)) \
 		and parses(str(baseline.get("output", "")))
 	if not baseline_parses:
@@ -140,7 +144,7 @@ static func _hold_to_the_file(sheet: EventSheetResource, known: Dictionary,
 			continue
 		var held: Dictionary = _identity_of(row)
 		apply([trial])
-		var written: Dictionary = SheetCompiler.compile(copy, COMPILE_PROBE_PATH)
+		var written: Dictionary = ReadingDoors.compiler().compile(copy, COMPILE_PROBE_PATH)
 		var accepted: bool = bool(written.get("success", false)) \
 			and parses(str(written.get("output", "")))
 		_restore_identity(row, held)
@@ -415,7 +419,7 @@ static func _proved_line(row: Resource, successor: Dictionary, params: Dictionar
 			return ""
 	if line == before:
 		return line
-	var lifted: Resource = EventSheetACELifter.lift_one_line(line, row is ACECondition)
+	var lifted: Resource = ReadingDoors.lifter().lift_one_line(line, row is ACECondition)
 	if lifted == null or not (lifted is ACEAction or lifted is ACECondition):
 		return ""
 	if str(lifted.get("ace_id")).strip_edges() != address[1]:

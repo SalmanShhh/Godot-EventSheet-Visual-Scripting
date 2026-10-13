@@ -159,6 +159,11 @@ signal data_class_field_edit_requested(raw_row: Resource, field_index: int, part
 ## listen, so the number of events and of rows the Doctor has a word about follow the sheet.
 signal rows_rebuilt
 
+## The dialogs, the Manual's reference and the public API, loaded by path the first hover or drop
+## that asks them anything - naming any of those classes here would compile it, and all it names,
+## with the canvas on the first sheet open.
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 # The DEFAULT density's numbers. Every layout read goes through row_height_floor() /
 # indent_width() / event_block_gap() below, which ask the sheet's own theme; these two are the
 # fallback that answer names, and what a caller with no theme in hand (a measurement harness, a
@@ -4445,7 +4450,7 @@ func _mark_tooltip(hit: Dictionary) -> String:
 	var span: SemanticSpan = row_data.spans[span_index]
 	if span == null:
 		return ""
-	var help: String = EventSheetDocReference.mark_help(span.text)
+	var help: String = ReadingDoors.doc_reference().mark_help(span.text)
 	if help.is_empty():
 		return ""
 	return "%s
@@ -4474,7 +4479,7 @@ func _inspector_preview_payload(hit: Dictionary, metadata: Dictionary) -> Dictio
 		return {
 			"name": tree_var.name,
 			"type_name": tree_var.type_name,
-			"default_text": VariableDialog._default_display_text(tree_var.default_value),
+			"default_text": ReadingDoors.variable_dialog()._default_display_text(tree_var.default_value),
 			"attributes": (tree_var.attributes as Dictionary).duplicate() if tree_var.attributes is Dictionary else {},
 			"constant": tree_var.is_constant
 		}
@@ -4492,7 +4497,7 @@ func _inspector_preview_payload(hit: Dictionary, metadata: Dictionary) -> Dictio
 		return {
 			"name": str(metadata.get("variable_name", "")),
 			"type_name": str(descriptor_dict.get("type", "Variant")),
-			"default_text": VariableDialog._default_display_text(descriptor_dict.get("default")),
+			"default_text": ReadingDoors.variable_dialog()._default_display_text(descriptor_dict.get("default")),
 			"attributes": attributes,
 			"constant": bool(metadata.get("is_constant", false))
 		}
@@ -5367,7 +5372,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	if _is_node_path_drag(data):
 		var target: Dictionary = _param_value_at(_to_logical_position(at_position))
 		if not target.is_empty() and _param_accepts_node_ref(target.get("ace"), str(target.get("param_id", ""))):
-			var reference: String = ACEParamsDialog.drop_data_to_expression(data)
+			var reference: String = ReadingDoors.params_dialog().drop_data_to_expression(data)
 			if not reference.is_empty():
 				param_node_drop_requested.emit(target.get("ace"), str(target.get("param_id", "")), reference)
 				return
@@ -5468,7 +5473,7 @@ static func property_drop_parts(data: Variant, scene_root: Node) -> Dictionary:
 	var property_name: String = str(payload.get("property", ""))
 	var reference: String = "self"
 	if scene_root != null and node != scene_root:
-		reference = ACEParamsDialog._best_node_reference(scene_root, str(scene_root.get_path_to(node)))
+		reference = ReadingDoors.params_dialog()._best_node_reference(scene_root, str(scene_root.get_path_to(node)))
 	elif scene_root == null:
 		reference = "$%s" % node.name
 	var access: String = property_name if reference == "self" else "%s.%s" % [reference, property_name]
@@ -5498,7 +5503,7 @@ static func property_value_literal(value: Variant) -> String:
 static func _resolve_dropped_asset_paths(data: Variant) -> PackedStringArray:
 	var assets: PackedStringArray = PackedStringArray()
 	if data is Dictionary and str((data as Dictionary).get("type", "")) == "files":
-		var handled: PackedStringArray = EventSheets.handled_asset_extensions()
+		var handled: PackedStringArray = ReadingDoors.api().handled_asset_extensions()
 		for file_path: Variant in ((data as Dictionary).get("files", []) as Array):
 			if str(file_path).get_extension().to_lower() in handled:
 				assets.append(str(file_path))
@@ -5560,7 +5565,7 @@ func variable_insert_text(row_data: EventRowData) -> String:
 		var name_text: String = str(metadata.get("variable_name", span.text)).strip_edges()
 		if name_text.is_empty():
 			return ""
-		var entry: Dictionary = EventSheetVariableOwners.find(EventSheets.sheet_variables(_sheet), name_text)
+		var entry: Dictionary = EventSheetVariableOwners.find(ReadingDoors.api().sheet_variables(_sheet), name_text)
 		return str(entry.get("insert_text", name_text))
 	return ""
 

@@ -55,7 +55,7 @@ const SCRIPTS_SAMPLED: int = 24
 ## Registers the section, replacing any previous registration - so a plugin reload, a second Doctor
 ## run and a test that registers it by hand all leave exactly one.
 static func ensure_registered() -> void:
-	EventSheets.register_doctor_check(CHECK_ID, Callable(EventSheetMigrationDoctor, "check"))
+	EventSheetProjectDoctor.register_check(CHECK_ID, Callable(EventSheetMigrationDoctor, "check"))
 
 
 ## The section itself, with the contract every registered check has: append findings, never write
@@ -65,7 +65,7 @@ static func check(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -
 	# ONE walk for both halves of the section. Opening a sheet is the expensive part of this audit -
 	# a `.gd` one is lifted from its text every time - so the words and the per-sheet counts are
 	# taken from the same open rather than from two walks of the same corpus.
-	var scripts: PackedStringArray = EventSheets.project_scripts()
+	var scripts: PackedStringArray = EventSheetProjectDoctor._project_scripts()
 	var audited: Dictionary = _audit(corpus(sheet_paths, scripts), {},
 		sample_note(sheet_paths, scripts))
 	var said: Array[Dictionary] = []
@@ -81,7 +81,7 @@ static func check(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -
 static func project_corpus(read_every_script: bool = false) -> PackedStringArray:
 	return corpus(
 		EventSheetTemplates.non_template_sheets(EventSheetProjectFind.list_project_sheets()),
-		EventSheets.project_scripts(), read_every_script)
+		EventSheetProjectDoctor._project_scripts(), read_every_script)
 
 
 ## THE PUBLIC REPORT'S ROWS, and the shape is frozen the way an `ace_id` is - see

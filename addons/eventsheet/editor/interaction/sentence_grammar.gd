@@ -30,6 +30,13 @@ extends RefCounted
 # A shape is claimed only when it is recognised exactly; anything else returns {} and the row keeps
 # reading as the plain statement it is.
 
+## The compiler and the lifter, loaded by path the first time a row asks them anything - naming
+## either class here would compile it, and all it names, the moment this file loads.
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
+## The compiler's own spellings, read from the one file the compiler itself reads them from.
+const CompilerSpellings := preload("res://addons/eventforge/compiler/compiler_spellings.gd")
+
 ## The object a receiver-less statement belongs to, matching the picker's own word for Core rows.
 const OBJECT_SYSTEM := "System"
 ## The mark a function reference wears wherever it is shown as a VALUE - the same ƒ the
@@ -12040,7 +12047,7 @@ static var _tree_word_patterns: Array = []
 
 
 static func hierarchy_expression_words(text: String, context: Dictionary = {}) -> String:
-	if text == SheetCompiler.TRAVELLED_MEMBER:
+	if text == CompilerSpellings.TRAVELLED_MEMBER:
 		return _fill(translate("how far {object} has travelled"), {"object": script_object(context)})
 	if not (text.contains("__eventsheets_first_parent_of_type(") or text.contains(".get_index()")):
 		return ""
@@ -12049,14 +12056,14 @@ static func hierarchy_expression_words(text: String, context: Dictionary = {}) -
 				["NextSibling", "the sibling after {object}"], ["PreviousSibling", "the sibling before {object}"]]:
 			var descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", str(pair[0]))
 			if descriptor != null:
-				_tree_word_patterns.append([EventSheetACELifter._template_to_regex(descriptor.codegen_template), str(pair[1])])
+				_tree_word_patterns.append([ReadingDoors.lifter()._template_to_regex(descriptor.codegen_template), str(pair[1])])
 	for entry: Array in _tree_word_patterns:
 		var pattern: RegEx = entry[0] as RegEx
 		var found: RegExMatch = pattern.search(text) if pattern != null else null
 		if found == null:
 			continue
 		var target: String = found.get_string("target").strip_edges()
-		if not EventSheetACELifter._is_balanced_expression(target):
+		if not ReadingDoors.lifter()._is_balanced_expression(target):
 			continue
 		var words: Dictionary = {"object": _receiver_object(target, context)}
 		if pattern.get_names().has("type"):
@@ -12099,7 +12106,7 @@ static func cell_block_loop_words(collection: String, iterator: String) -> Strin
 		_cell_block_descriptor = ACERegistry.find_descriptor("Core", "ForEachCellInRectangle")
 		if _cell_block_descriptor == null:
 			return ""
-		_cell_block_pattern = EventSheetACELifter._template_to_regex(_cell_block_descriptor.codegen_template)
+		_cell_block_pattern = ReadingDoors.lifter()._template_to_regex(_cell_block_descriptor.codegen_template)
 	if _cell_block_pattern == null or iterator != _cell_block_descriptor.looping_iterator:
 		return ""
 	var found: RegExMatch = _cell_block_pattern.search(collection.strip_edges())

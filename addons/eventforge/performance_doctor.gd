@@ -54,7 +54,7 @@ const SHAPES: PackedStringArray = [
 ## Registers the section, replacing any previous registration - so a plugin reload, a second Doctor
 ## run and a test that registers it by hand all leave exactly one.
 static func ensure_registered() -> void:
-	EventSheets.register_doctor_check(CHECK_ID, Callable(EventSheetPerformanceDoctor, "check"))
+	EventSheetProjectDoctor.register_check(CHECK_ID, Callable(EventSheetPerformanceDoctor, "check"))
 
 
 ## The check id for the one question that is not about speed, and the project setting that answers
@@ -78,7 +78,7 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 static func sweep() -> Dictionary:
 	var busy: PackedStringArray = PackedStringArray()
 	var handles_trouble: bool = false
-	for script_path: String in EventSheets.project_scripts():
+	for script_path: String in EventSheetProjectDoctor._project_scripts():
 		var text: String = EventSheetProjectDoctor.source_of(script_path)
 		if text.contains(SheetCompiler.TROUBLE_SIGNAL):
 			handles_trouble = true
