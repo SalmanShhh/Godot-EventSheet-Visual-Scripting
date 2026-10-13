@@ -7399,30 +7399,30 @@ Pause Requested By,暂停请求者
 A pause is requested by {reason},{reason} 正在请求暂停
 "True while this reason has asked the game to pause and not yet stopped asking - whatever any other reason is doing. To ask whether the game is paused at all, use Is Game Paused.","当此原因已请求游戏暂停且尚未停止请求时为真 - 无论其他原因在做什么。要询问游戏是否处于暂停状态,请使用“游戏已暂停”。"
 The name Ask To Pause was given.,“请求暂停”所用的名称。
-Select a finding to fix it.,
-This finding has more than one fix - pick one of the Fix buttons below.,
-This finding has no one-step fix.,
-"%d row(s) renamed - one Ctrl+Z takes back this sheet's rows. Also written and saved, which Ctrl+Z does not undo: %s.",
-"""%s"" is already the name of another class.",
-Could not save %s - still says %s.,
-%s is a fixed key ('%s') - one of them won't fire. Pick another key.,
-Theme preset could not be saved: %s (%s),
-"Ask is off, so nothing will be sent. Turn it on in Project Settings ▸ EventSheets ▸ Ask to generate in-editor - or use the MCP server.",
-Still generating from your description…,
-AI request could not start (%s). Nothing was sent.,
-Clear All Bookmarks,
-"Remove every bookmark from this sheet? Bookmarks are not part of undo, so they cannot be brought back.",
-Keep Bookmarks,
-Before these edits,
-%d pack(s) name a published source: %s. %d name none. Nothing was checked online - open each source to see whether it has a newer version than the one shown here.,
-Not saved.,
-"%d mode(s) declared. The On entering event of %s holds rows of your own, so it was kept - move or delete it, since that mode is gone.",
-"""%s"" isn't a usable class name - use letters/digits/underscore starting with a letter, and not a reserved or existing class name.",
-A file already exists at %s - pick another name.,
-"Name what one entry is called first (e.g. ""Loot Drop"").",
-List at least one column (one per line).,
-%s is already a class name - pick another Resource name.,
-"Rows still name %s, so the states were not changed. Point those rows at another state first, then remove or rename it.",
-"""{name}"" can't be a parameter name - use letters, digits and underscores (move_speed, not move speed), and not a GDScript keyword.",
-"This function already has a parameter called ""{name}"".",
-A snippet called {name} already exists - pick another name.,
+Select a finding to fix it.,选择一个发现以修复它。
+This finding has more than one fix - pick one of the Fix buttons below.,此发现有不止一种修复 - 请从下方的修复按钮中选一个。
+This finding has no one-step fix.,此发现没有一步完成的修复。
+"%d row(s) renamed - one Ctrl+Z takes back this sheet's rows. Also written and saved, which Ctrl+Z does not undo: %s.",已重命名 %d 行 - 按一次 Ctrl+Z 即可撤销此表的行。另外还写入并保存了以下内容，Ctrl+Z 无法撤销：%s。
+"""%s"" is already the name of another class.",“%s”已是另一个类的名称。
+Could not save %s - still says %s.,无法保存 %s - 仍然是 %s。
+%s is a fixed key ('%s') - one of them won't fire. Pick another key.,%s 是固定按键（'%s'）- 其中一个不会触发。请选择其他按键。
+Theme preset could not be saved: %s (%s),无法保存主题预设：%s（%s）
+"Ask is off, so nothing will be sent. Turn it on in Project Settings ▸ EventSheets ▸ Ask to generate in-editor - or use the MCP server.",Ask 已关闭，因此不会发送任何内容。请在项目设置 ▸ EventSheets ▸ Ask to generate in-editor 中开启 - 或使用 MCP 服务器。
+Still generating from your description…,仍在根据你的描述生成…
+AI request could not start (%s). Nothing was sent.,AI 请求无法启动（%s）。未发送任何内容。
+Clear All Bookmarks,清除所有书签
+"Remove every bookmark from this sheet? Bookmarks are not part of undo, so they cannot be brought back.",删除此表中的所有书签？书签不属于撤销范围，因此无法恢复。
+Keep Bookmarks,保留书签
+Before these edits,在这些编辑之前
+%d pack(s) name a published source: %s. %d name none. Nothing was checked online - open each source to see whether it has a newer version than the one shown here.,%d 个包注明了发布来源：%s。%d 个未注明。未进行任何在线检查 - 请打开每个来源，查看是否有比此处显示的更新的版本。
+Not saved.,未保存。
+"%d mode(s) declared. The On entering event of %s holds rows of your own, so it was kept - move or delete it, since that mode is gone.",已声明 %d 个模式。%s 的“进入时”事件包含你自己的行，因此已保留 - 既然该模式已不存在，请移动或删除它。
+"""%s"" isn't a usable class name - use letters/digits/underscore starting with a letter, and not a reserved or existing class name.",“%s”不是可用的类名 - 请使用以字母开头的字母/数字/下划线，且不要使用保留或已有的类名。
+A file already exists at %s - pick another name.,%s 处已存在文件 - 请换一个名称。
+"Name what one entry is called first (e.g. ""Loot Drop"").",先为单个条目命名（例如“Loot Drop”）。
+List at least one column (one per line).,至少列出一列（每行一个）。
+%s is already a class name - pick another Resource name.,%s 已是类名 - 请换一个资源名称。
+"Rows still name %s, so the states were not changed. Point those rows at another state first, then remove or rename it.",仍有行指向 %s，因此未更改状态。请先将这些行指向其他状态，再删除或重命名它。
+"""{name}"" can't be a parameter name - use letters, digits and underscores (move_speed, not move speed), and not a GDScript keyword.",“{name}”不能作为参数名 - 请使用字母、数字和下划线（用 move_speed，而不是 move speed），且不要使用 GDScript 关键字。
+"This function already has a parameter called ""{name}"".",此函数已有名为“{name}”的参数。
+A snippet called {name} already exists - pick another name.,名为 {name} 的片段已存在 - 请换一个名称。

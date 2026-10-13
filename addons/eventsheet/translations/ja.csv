@@ -7399,30 +7399,30 @@ Pause Requested By,一時停止の要求元
 A pause is requested by {reason},{reason} が一時停止を要求している
 "True while this reason has asked the game to pause and not yet stopped asking - whatever any other reason is doing. To ask whether the game is paused at all, use Is Game Paused.",この理由がゲームの一時停止を要求していて、まだやめていない間は真 - ほかの理由が何をしていても。ゲームがそもそも一時停止中かどうかは「ゲームが一時停止中」を使います。
 The name Ask To Pause was given.,「一時停止を要求」に付けた名前。
-Select a finding to fix it.,
-This finding has more than one fix - pick one of the Fix buttons below.,
-This finding has no one-step fix.,
-"%d row(s) renamed - one Ctrl+Z takes back this sheet's rows. Also written and saved, which Ctrl+Z does not undo: %s.",
-"""%s"" is already the name of another class.",
-Could not save %s - still says %s.,
-%s is a fixed key ('%s') - one of them won't fire. Pick another key.,
-Theme preset could not be saved: %s (%s),
-"Ask is off, so nothing will be sent. Turn it on in Project Settings ▸ EventSheets ▸ Ask to generate in-editor - or use the MCP server.",
-Still generating from your description…,
-AI request could not start (%s). Nothing was sent.,
-Clear All Bookmarks,
-"Remove every bookmark from this sheet? Bookmarks are not part of undo, so they cannot be brought back.",
-Keep Bookmarks,
-Before these edits,
-%d pack(s) name a published source: %s. %d name none. Nothing was checked online - open each source to see whether it has a newer version than the one shown here.,
-Not saved.,
-"%d mode(s) declared. The On entering event of %s holds rows of your own, so it was kept - move or delete it, since that mode is gone.",
-"""%s"" isn't a usable class name - use letters/digits/underscore starting with a letter, and not a reserved or existing class name.",
-A file already exists at %s - pick another name.,
-"Name what one entry is called first (e.g. ""Loot Drop"").",
-List at least one column (one per line).,
-%s is already a class name - pick another Resource name.,
-"Rows still name %s, so the states were not changed. Point those rows at another state first, then remove or rename it.",
-"""{name}"" can't be a parameter name - use letters, digits and underscores (move_speed, not move speed), and not a GDScript keyword.",
-"This function already has a parameter called ""{name}"".",
-A snippet called {name} already exists - pick another name.,
+Select a finding to fix it.,修正する指摘を選択してください。
+This finding has more than one fix - pick one of the Fix buttons below.,この指摘には複数の修正があります - 下の「修正」ボタンから一つ選んでください。
+This finding has no one-step fix.,この指摘には一回で済む修正がありません。
+"%d row(s) renamed - one Ctrl+Z takes back this sheet's rows. Also written and saved, which Ctrl+Z does not undo: %s.",%d 行を名前変更 - Ctrl+Z 一回でこのシートの行を元に戻せます。Ctrl+Z では元に戻せない書き込みと保存も行いました: %s。
+"""%s"" is already the name of another class.","""%s"" はすでに別のクラスの名前です。"
+Could not save %s - still says %s.,%s を保存できませんでした - まだ %s のままです。
+%s is a fixed key ('%s') - one of them won't fire. Pick another key.,%s は固定キー ('%s') です - どちらか一方が動作しません。別のキーを選んでください。
+Theme preset could not be saved: %s (%s),テーマプリセットを保存できませんでした: %s (%s)
+"Ask is off, so nothing will be sent. Turn it on in Project Settings ▸ EventSheets ▸ Ask to generate in-editor - or use the MCP server.",Ask がオフなので、何も送信されません。プロジェクト設定 ▸ EventSheets ▸ Ask to generate in-editor でオンにするか - MCP サーバーを使ってください。
+Still generating from your description…,説明からまだ生成中です…
+AI request could not start (%s). Nothing was sent.,AI リクエストを開始できませんでした (%s)。何も送信されていません。
+Clear All Bookmarks,すべてのブックマークを消去
+"Remove every bookmark from this sheet? Bookmarks are not part of undo, so they cannot be brought back.",このシートのブックマークをすべて削除しますか? ブックマークは元に戻すの対象外なので、復元できません。
+Keep Bookmarks,ブックマークを残す
+Before these edits,これらの編集の前
+%d pack(s) name a published source: %s. %d name none. Nothing was checked online - open each source to see whether it has a newer version than the one shown here.,%d 個のパックが公開元を示しています: %s。%d 個は示していません。オンラインでの確認は行っていません - ここに表示されたものより新しいバージョンがあるか、各公開元を開いて確かめてください。
+Not saved.,保存されていません。
+"%d mode(s) declared. The On entering event of %s holds rows of your own, so it was kept - move or delete it, since that mode is gone.",%d 個のモードを宣言。%s の「入ったとき」イベントにはあなた自身の行があるため残しました - そのモードはもうないので、移動または削除してください。
+"""%s"" isn't a usable class name - use letters/digits/underscore starting with a letter, and not a reserved or existing class name.","""%s"" は使えるクラス名ではありません - 文字で始まる文字/数字/アンダースコアを使い、予約済みや既存のクラス名は避けてください。"
+A file already exists at %s - pick another name.,%s にはすでにファイルがあります - 別の名前を選んでください。
+"Name what one entry is called first (e.g. ""Loot Drop"").","まず一つの項目の呼び名を付けてください (例: ""Loot Drop"")。"
+List at least one column (one per line).,列を少なくとも一つ書いてください (一行に一つ)。
+%s is already a class name - pick another Resource name.,%s はすでにクラス名です - 別のリソース名を選んでください。
+"Rows still name %s, so the states were not changed. Point those rows at another state first, then remove or rename it.",まだ %s を指している行があるため、状態は変更しませんでした。先にそれらの行を別の状態に向けてから、削除または名前変更してください。
+"""{name}"" can't be a parameter name - use letters, digits and underscores (move_speed, not move speed), and not a GDScript keyword.","""{name}"" はパラメーター名にできません - 文字、数字、アンダースコアを使い (move speed ではなく move_speed)、GDScript のキーワードは避けてください。"
+"This function already has a parameter called ""{name}"".","この関数にはすでに ""{name}"" というパラメーターがあります。"
+A snippet called {name} already exists - pick another name.,{name} というスニペットはすでにあります - 別の名前を選んでください。

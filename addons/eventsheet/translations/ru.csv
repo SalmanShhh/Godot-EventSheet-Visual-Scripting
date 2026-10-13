@@ -7399,30 +7399,30 @@ Pause Requested By,Пауза запрошена
 A pause is requested by {reason},Пауза запрошена ради {reason}
 "True while this reason has asked the game to pause and not yet stopped asking - whatever any other reason is doing. To ask whether the game is paused at all, use Is Game Paused.","Истинно, пока эта причина попросила игру встать на паузу и ещё не перестала просить - что бы ни делали другие причины. Чтобы узнать, стоит ли игра на паузе вообще, используйте «Игра на паузе»."
 The name Ask To Pause was given.,"Имя, данное «Попросить паузу»."
-Select a finding to fix it.,
-This finding has more than one fix - pick one of the Fix buttons below.,
-This finding has no one-step fix.,
-"%d row(s) renamed - one Ctrl+Z takes back this sheet's rows. Also written and saved, which Ctrl+Z does not undo: %s.",
-"""%s"" is already the name of another class.",
-Could not save %s - still says %s.,
-%s is a fixed key ('%s') - one of them won't fire. Pick another key.,
-Theme preset could not be saved: %s (%s),
-"Ask is off, so nothing will be sent. Turn it on in Project Settings ▸ EventSheets ▸ Ask to generate in-editor - or use the MCP server.",
-Still generating from your description…,
-AI request could not start (%s). Nothing was sent.,
-Clear All Bookmarks,
-"Remove every bookmark from this sheet? Bookmarks are not part of undo, so they cannot be brought back.",
-Keep Bookmarks,
-Before these edits,
-%d pack(s) name a published source: %s. %d name none. Nothing was checked online - open each source to see whether it has a newer version than the one shown here.,
-Not saved.,
-"%d mode(s) declared. The On entering event of %s holds rows of your own, so it was kept - move or delete it, since that mode is gone.",
-"""%s"" isn't a usable class name - use letters/digits/underscore starting with a letter, and not a reserved or existing class name.",
-A file already exists at %s - pick another name.,
-"Name what one entry is called first (e.g. ""Loot Drop"").",
-List at least one column (one per line).,
-%s is already a class name - pick another Resource name.,
-"Rows still name %s, so the states were not changed. Point those rows at another state first, then remove or rename it.",
-"""{name}"" can't be a parameter name - use letters, digits and underscores (move_speed, not move speed), and not a GDScript keyword.",
-"This function already has a parameter called ""{name}"".",
-A snippet called {name} already exists - pick another name.,
+Select a finding to fix it.,"Выберите находку, чтобы исправить её."
+This finding has more than one fix - pick one of the Fix buttons below.,У этой находки больше одного исправления - выберите одну из кнопок «Исправить» ниже.
+This finding has no one-step fix.,У этой находки нет исправления в один шаг.
+"%d row(s) renamed - one Ctrl+Z takes back this sheet's rows. Also written and saved, which Ctrl+Z does not undo: %s.","Переименовано строк: %d - одно нажатие Ctrl+Z вернёт строки этого листа. Также записано и сохранено, чего Ctrl+Z не отменит: %s."
+"""%s"" is already the name of another class.",«%s» уже является именем другого класса.
+Could not save %s - still says %s.,Не удалось сохранить %s - там всё ещё %s.
+%s is a fixed key ('%s') - one of them won't fire. Pick another key.,%s - это фиксированная клавиша ('%s') - одна из них не сработает. Выберите другую клавишу.
+Theme preset could not be saved: %s (%s),Не удалось сохранить пресет темы: %s (%s)
+"Ask is off, so nothing will be sent. Turn it on in Project Settings ▸ EventSheets ▸ Ask to generate in-editor - or use the MCP server.","Ask выключен, поэтому ничего не будет отправлено. Включите его в Настройках проекта ▸ EventSheets ▸ Ask to generate in-editor - или используйте MCP-сервер."
+Still generating from your description…,Всё ещё создаётся по вашему описанию…
+AI request could not start (%s). Nothing was sent.,Запрос к ИИ не удалось запустить (%s). Ничего не отправлено.
+Clear All Bookmarks,Очистить все закладки
+"Remove every bookmark from this sheet? Bookmarks are not part of undo, so they cannot be brought back.","Удалить все закладки из этого листа? Закладки не входят в отмену, поэтому их нельзя будет вернуть."
+Keep Bookmarks,Оставить закладки
+Before these edits,До этих правок
+%d pack(s) name a published source: %s. %d name none. Nothing was checked online - open each source to see whether it has a newer version than the one shown here.,"Пакетов с опубликованным источником: %d: %s. Без источника: %d. Ничего не проверялось онлайн - откройте каждый источник, чтобы узнать, есть ли версия новее показанной здесь."
+Not saved.,Не сохранено.
+"%d mode(s) declared. The On entering event of %s holds rows of your own, so it was kept - move or delete it, since that mode is gone.","Объявлено режимов: %d. Событие «При входе» для %s содержит ваши строки, поэтому оно сохранено - переместите или удалите его, раз этого режима больше нет."
+"""%s"" isn't a usable class name - use letters/digits/underscore starting with a letter, and not a reserved or existing class name.","«%s» нельзя использовать как имя класса - используйте буквы/цифры/подчёркивание, начиная с буквы, и не зарезервированное или уже существующее имя класса."
+A file already exists at %s - pick another name.,По пути %s уже есть файл - выберите другое имя.
+"Name what one entry is called first (e.g. ""Loot Drop"").","Сначала назовите, как называется одна запись (например, ""Loot Drop"")."
+List at least one column (one per line).,Укажите хотя бы один столбец (по одному на строку).
+%s is already a class name - pick another Resource name.,%s уже является именем класса - выберите другое имя ресурса.
+"Rows still name %s, so the states were not changed. Point those rows at another state first, then remove or rename it.","Строки всё ещё называют %s, поэтому состояния не изменены. Сначала направьте эти строки на другое состояние, затем удалите или переименуйте его."
+"""{name}"" can't be a parameter name - use letters, digits and underscores (move_speed, not move speed), and not a GDScript keyword.","«{name}» не может быть именем параметра - используйте буквы, цифры и подчёркивания (move_speed, а не move speed) и не ключевое слово GDScript."
+"This function already has a parameter called ""{name}"".",У этой функции уже есть параметр «{name}».
+A snippet called {name} already exists - pick another name.,Фрагмент {name} уже существует - выберите другое имя.

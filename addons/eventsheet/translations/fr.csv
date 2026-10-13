@@ -7399,30 +7399,30 @@ Pause Requested By,Pause demandée par
 A pause is requested by {reason},Une pause est demandée par {reason}
 "True while this reason has asked the game to pause and not yet stopped asking - whatever any other reason is doing. To ask whether the game is paused at all, use Is Game Paused.","Vrai tant que cette raison a demandé la pause du jeu sans avoir cessé de la demander - quoi que fassent les autres raisons. Pour savoir si le jeu est en pause tout court, utilisez Jeu en pause."
 The name Ask To Pause was given.,Le nom donné à Demander la pause.
-Select a finding to fix it.,
-This finding has more than one fix - pick one of the Fix buttons below.,
-This finding has no one-step fix.,
-"%d row(s) renamed - one Ctrl+Z takes back this sheet's rows. Also written and saved, which Ctrl+Z does not undo: %s.",
-"""%s"" is already the name of another class.",
-Could not save %s - still says %s.,
-%s is a fixed key ('%s') - one of them won't fire. Pick another key.,
-Theme preset could not be saved: %s (%s),
-"Ask is off, so nothing will be sent. Turn it on in Project Settings ▸ EventSheets ▸ Ask to generate in-editor - or use the MCP server.",
-Still generating from your description…,
-AI request could not start (%s). Nothing was sent.,
-Clear All Bookmarks,
-"Remove every bookmark from this sheet? Bookmarks are not part of undo, so they cannot be brought back.",
-Keep Bookmarks,
-Before these edits,
-%d pack(s) name a published source: %s. %d name none. Nothing was checked online - open each source to see whether it has a newer version than the one shown here.,
-Not saved.,
-"%d mode(s) declared. The On entering event of %s holds rows of your own, so it was kept - move or delete it, since that mode is gone.",
-"""%s"" isn't a usable class name - use letters/digits/underscore starting with a letter, and not a reserved or existing class name.",
-A file already exists at %s - pick another name.,
-"Name what one entry is called first (e.g. ""Loot Drop"").",
-List at least one column (one per line).,
-%s is already a class name - pick another Resource name.,
-"Rows still name %s, so the states were not changed. Point those rows at another state first, then remove or rename it.",
-"""{name}"" can't be a parameter name - use letters, digits and underscores (move_speed, not move speed), and not a GDScript keyword.",
-"This function already has a parameter called ""{name}"".",
-A snippet called {name} already exists - pick another name.,
+Select a finding to fix it.,Sélectionnez un constat pour le corriger.
+This finding has more than one fix - pick one of the Fix buttons below.,Ce constat a plus d'une correction - choisissez l'un des boutons Corriger ci-dessous.
+This finding has no one-step fix.,Ce constat n'a pas de correction en une étape.
+"%d row(s) renamed - one Ctrl+Z takes back this sheet's rows. Also written and saved, which Ctrl+Z does not undo: %s.","%d ligne(s) renommée(s) - un Ctrl+Z annule les lignes de cette feuille. Également écrit et enregistré, ce que Ctrl+Z n'annule pas : %s."
+"""%s"" is already the name of another class.","""%s"" est déjà le nom d'une autre classe."
+Could not save %s - still says %s.,Impossible d'enregistrer %s - indique toujours %s.
+%s is a fixed key ('%s') - one of them won't fire. Pick another key.,%s est une touche fixe ('%s') - l'une des deux ne se déclenchera pas. Choisissez une autre touche.
+Theme preset could not be saved: %s (%s),Le préréglage de thème n'a pas pu être enregistré : %s (%s)
+"Ask is off, so nothing will be sent. Turn it on in Project Settings ▸ EventSheets ▸ Ask to generate in-editor - or use the MCP server.","Ask est désactivé, rien ne sera donc envoyé. Activez-le dans Paramètres du projet ▸ EventSheets ▸ Ask to generate in-editor - ou utilisez le serveur MCP."
+Still generating from your description…,Génération en cours à partir de votre description…
+AI request could not start (%s). Nothing was sent.,La requête IA n'a pas pu démarrer (%s). Rien n'a été envoyé.
+Clear All Bookmarks,Effacer tous les signets
+"Remove every bookmark from this sheet? Bookmarks are not part of undo, so they cannot be brought back.",Retirer tous les signets de cette feuille ? Les signets ne font pas partie de l'annulation et ne peuvent donc pas être récupérés.
+Keep Bookmarks,Garder les signets
+Before these edits,Avant ces modifications
+%d pack(s) name a published source: %s. %d name none. Nothing was checked online - open each source to see whether it has a newer version than the one shown here.,%d paquet(s) indiquent une source publiée : %s. %d n'en indiquent aucune. Rien n'a été vérifié en ligne - ouvrez chaque source pour voir si elle a une version plus récente que celle affichée ici.
+Not saved.,Non enregistré.
+"%d mode(s) declared. The On entering event of %s holds rows of your own, so it was kept - move or delete it, since that mode is gone.","%d mode(s) déclaré(s). L'événement À l'entrée de %s contient vos propres lignes, il a donc été conservé - déplacez-le ou supprimez-le, puisque ce mode n'existe plus."
+"""%s"" isn't a usable class name - use letters/digits/underscore starting with a letter, and not a reserved or existing class name.","""%s"" n'est pas un nom de classe utilisable - utilisez lettres/chiffres/tiret bas en commençant par une lettre, et pas un nom de classe réservé ou existant."
+A file already exists at %s - pick another name.,Un fichier existe déjà à %s - choisissez un autre nom.
+"Name what one entry is called first (e.g. ""Loot Drop"").","Nommez d'abord ce qu'est une entrée (p. ex. ""Loot Drop"")."
+List at least one column (one per line).,Indiquez au moins une colonne (une par ligne).
+%s is already a class name - pick another Resource name.,%s est déjà un nom de classe - choisissez un autre nom de ressource.
+"Rows still name %s, so the states were not changed. Point those rows at another state first, then remove or rename it.","Des lignes nomment encore %s, les états n'ont donc pas été modifiés. Pointez d'abord ces lignes vers un autre état, puis retirez-le ou renommez-le."
+"""{name}"" can't be a parameter name - use letters, digits and underscores (move_speed, not move speed), and not a GDScript keyword.","""{name}"" ne peut pas être un nom de paramètre - utilisez lettres, chiffres et tirets bas (move_speed, pas move speed), et pas un mot-clé GDScript."
+"This function already has a parameter called ""{name}"".","Cette fonction a déjà un paramètre nommé ""{name}""."
+A snippet called {name} already exists - pick another name.,Un extrait nommé {name} existe déjà - choisissez un autre nom.
