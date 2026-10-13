@@ -228,6 +228,7 @@ static func run() -> bool:
 	EventSheetShortcuts.reset("duplicate")
 	all_passed = _check("reset restores the default binding",
 		EventSheetShortcuts.binding_for("duplicate"), "Ctrl+D") and all_passed
+	all_passed = _shortcut_clash_and_capture_checks() and all_passed
 
 	# ── The event-sheet key grammar: the defaults ARE the familiar sheet keys ────
 	for key_pair: Array in [["add_event", "E"], ["add_condition", "C"], ["add_action", "A"],
@@ -736,3 +737,56 @@ static func _menu_labels(menu: PopupMenu) -> PackedStringArray:
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	return SUPPORT.check("godot_workflow_test", label, actual, expected)
+
+
+## The clash check covers the fixed keys too, and clicking a second binding while another one
+## listens moves the listening to the button just clicked instead of freeing it.
+static func _shortcut_clash_and_capture_checks() -> bool:
+	var all_passed: bool = true
+	all_passed = _check("a rebindable key put on a fixed key is flagged",
+		EventSheetShortcuts.conflicting_fixed_key("Ctrl+F"), "Find & Replace") and all_passed
+	all_passed = _check("a chord with different modifiers is not",
+		EventSheetShortcuts.conflicting_fixed_key("Alt+Left"), "") and all_passed
+	var unparsed: Array[String] = []
+	for chord: Variant in EventSheetShortcuts.FIXED_CHORDS:
+		if int(EventSheetShortcuts.parse(str(chord)).get("keycode")) == KEY_NONE:
+			unparsed.append(str(chord))
+	all_passed = _check("every fixed chord names a real key", unparsed, [] as Array[String]) and all_passed
+	var default_clashes: Array[String] = []
+	for action: Variant in EventSheetShortcuts.DEFAULTS:
+		if not EventSheetShortcuts.conflicting_fixed_key(str(EventSheetShortcuts.DEFAULTS[action])).is_empty():
+			default_clashes.append(str(action))
+	all_passed = _check("no shipped default lands on a fixed key", default_clashes, [] as Array[String]) and all_passed
+
+	var dock: EventSheetDock = EventSheetDock.new()
+	var dialog: EventSheetShortcutsDialog = EventSheetShortcutsDialog.new()
+	dialog.init(dock)
+	dialog._shortcuts_list = VBoxContainer.new()
+	EventSheetShortcuts.set_binding("copy", "Ctrl+F")
+	dialog._refresh_shortcuts_editor()
+	var copy_button: Button = _capture_button(dialog, "copy")
+	var paste_button: Button = _capture_button(dialog, "paste")
+	all_passed = _check("the dialog flags a binding that lands on a fixed key",
+		copy_button.tooltip_text if copy_button != null else "",
+		"Ctrl+F is a fixed key ('Find & Replace') - one of them won't fire. Pick another key.") and all_passed
+	EventSheetShortcuts.reset("copy")
+	dialog._refresh_shortcuts_editor()
+	copy_button = _capture_button(dialog, "copy")
+	paste_button = _capture_button(dialog, "paste")
+	dialog._begin_shortcut_capture("copy", copy_button)
+	dialog._begin_shortcut_capture("paste", paste_button)
+	all_passed = _check("clicking a second binding listens on THAT live button, and the first shows its key again",
+		[paste_button.is_queued_for_deletion(), dialog._shortcuts_capturing_button == paste_button,
+			dialog._shortcuts_capturing_action, copy_button.text],
+		[false, true, "paste", "Ctrl+C"]) and all_passed
+	dialog._shortcuts_list.free()
+	dock.free()
+	return all_passed
+
+
+static func _capture_button(dialog: EventSheetShortcutsDialog, action: String) -> Button:
+	for row: Node in dialog._shortcuts_list.get_children():
+		if row is HBoxContainer and row.get_child_count() == 3 \
+				and (row.get_child(0) as Label).text == EventSheetShortcuts.label_for(action):
+			return row.get_child(1) as Button
+	return null

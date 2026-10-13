@@ -314,6 +314,52 @@ static func conflicting_action(action: String, binding: String) -> String:
 			return str(other)
 	return ""
 
+
+## The structural keys no one can rebind, spelled as chords parse() reads, each with what it does.
+## A rebindable action put on one of these would fight it, so the editor flags that clash too.
+const FIXED_CHORDS: Dictionary = {
+	"Enter": "Edit the selected row",
+	"F2": "Edit the selected row",
+	"Tab": "Nest / un-nest the event",
+	"Shift+Tab": "Nest / un-nest the event",
+	"Alt+Up": "Move the row up / down",
+	"Alt+Down": "Move the row up / down",
+	"Left": "Collapse / expand a group",
+	"Right": "Collapse / expand a group",
+	"Up": "Select previous / next row",
+	"Down": "Select previous / next row",
+	"Shift+Up": "Extend the row selection",
+	"Shift+Down": "Extend the row selection",
+	"Delete": "Delete the selection",
+	"Backspace": "Delete the selection",
+	"Ctrl+F": "Find & Replace",
+	"F3": "Find next / previous",
+	"Shift+F3": "Find next / previous",
+	"Ctrl+P": "Command Palette",
+	"Ctrl+G": "Go to event",
+	"F9": "Toggle breakpoint",
+	"Ctrl+B": "Toggle breakpoint",
+	"Ctrl+M": "Toggle bookmark",
+	"Ctrl+Y": "Redo",
+	"Ctrl+Equal": "Zoom in / out (also Ctrl + mouse wheel)",
+	"Ctrl+Minus": "Zoom in / out (also Ctrl + mouse wheel)",
+	"Ctrl+0": "Reset zoom to 100%",
+	"Escape": "Close a popup / cancel an edit",
+}
+
+
+## The fixed key `binding` lands on, as its description ("" when it lands on none).
+static func conflicting_fixed_key(binding: String) -> String:
+	if binding.strip_edges().is_empty():
+		return ""
+	var target: Dictionary = parse(binding)
+	if int(target.get("keycode")) == KEY_NONE:
+		return ""
+	for chord: Variant in FIXED_CHORDS:
+		if parse(str(chord)) == target:
+			return str(FIXED_CHORDS[chord])
+	return ""
+
 # Parse memo: the key handler probes up to ~18 actions per keystroke; bindings only change when the
 # binding string does, so cache by (action, binding text).
 static var _parse_cache: Dictionary = {}

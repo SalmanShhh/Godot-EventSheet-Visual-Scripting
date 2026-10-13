@@ -12,6 +12,7 @@ var _dock: Control = null
 var _shortcuts_dialog: AcceptDialog = null
 var _shortcuts_list: VBoxContainer = null
 var _shortcuts_capturing_action: String = ""
+var _shortcuts_capturing_button: Button = null
 var _preset_picker: OptionButton = null
 
 
@@ -76,6 +77,7 @@ func _refresh_shortcuts_editor() -> void:
 	if _shortcuts_list == null:
 		return
 	_shortcuts_capturing_action = ""
+	_shortcuts_capturing_button = null
 	# The picker follows the LIVE bindings, so rebinding one key by hand honestly drops the dialog
 	# back to "Godot EventSheets" rather than claiming a preset that is no longer in force.
 	if _preset_picker != null:
@@ -91,15 +93,9 @@ func _refresh_shortcuts_editor() -> void:
 		label.custom_minimum_size = Vector2(230.0, 0.0)
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(label)
-		var binding: String = EventSheetShortcuts.binding_for(action)
 		var capture: Button = Button.new()
-		capture.text = binding if not binding.is_empty() else "(none)"
 		capture.custom_minimum_size = Vector2(150.0, 0.0)
-		capture.tooltip_text = "Click, then press the new key combination."
-		var conflict: String = EventSheetShortcuts.conflicting_action(action, binding)
-		if not conflict.is_empty():
-			capture.modulate = Color(1.0, 0.7, 0.4)
-			capture.tooltip_text = "Also bound to '%s' - one of them won't fire. Rebind one." % EventSheetShortcuts.label_for(conflict)
+		_paint_capture(capture, action)
 		capture.pressed.connect(_begin_shortcut_capture.bind(action, capture))
 		capture.gui_input.connect(_shortcut_capture_gui_input.bind(action, capture))
 		row.add_child(capture)
@@ -131,12 +127,32 @@ func _refresh_shortcuts_editor() -> void:
 		_shortcuts_list.add_child(fixed_row)
 
 
+## Shows one action's binding on its button, flagged when it clashes with another rebindable
+## action or with one of the fixed keys.
+func _paint_capture(capture: Button, action: String) -> void:
+	var binding: String = EventSheetShortcuts.binding_for(action)
+	capture.text = binding if not binding.is_empty() else "(none)"
+	capture.modulate = Color.WHITE
+	capture.tooltip_text = "Click, then press the new key combination."
+	var conflict: String = EventSheetShortcuts.conflicting_action(action, binding)
+	var fixed_conflict: String = EventSheetShortcuts.conflicting_fixed_key(binding)
+	if not conflict.is_empty():
+		capture.modulate = Color(1.0, 0.7, 0.4)
+		capture.tooltip_text = "Also bound to '%s' - one of them won't fire. Rebind one." % EventSheetShortcuts.label_for(conflict)
+	elif not fixed_conflict.is_empty():
+		capture.modulate = Color(1.0, 0.7, 0.4)
+		capture.tooltip_text = EventSheetL10n.translate("%s is a fixed key ('%s') - one of them won't fire. Pick another key.") % [binding, EventSheetL10n.translate(fixed_conflict)]
+
+
 ## Click-to-rebind: the binding button enters "listening" mode; the next real key press is captured
 ## by _shortcut_capture_gui_input (a lone modifier keeps listening; Esc cancels).
 func _begin_shortcut_capture(action: String, capture: Button) -> void:
-	if not _shortcuts_capturing_action.is_empty() and _shortcuts_capturing_action != action:
-		_refresh_shortcuts_editor()
+	# Another binding was listening: put THAT button back to its key in place. Rebuilding the list
+	# here would free the button just clicked, leaving the capture listening on a dead button.
+	if is_instance_valid(_shortcuts_capturing_button) and _shortcuts_capturing_button != capture:
+		_paint_capture(_shortcuts_capturing_button, _shortcuts_capturing_action)
 	_shortcuts_capturing_action = action
+	_shortcuts_capturing_button = capture
 	capture.text = "Press a key…  (Esc cancels)"
 	capture.modulate = Color(0.6, 0.9, 1.0)
 	capture.grab_focus()
