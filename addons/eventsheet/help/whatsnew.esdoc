@@ -6,6 +6,355 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Fixed: a selected variable's help strip fits beside its doors
+
+- The status-bar strip under a selected variable repeated the row's own type, name and value and
+  then the Inspector facts before saying anything new, so at ordinary editor widths the sentence was
+  cut off before the doors. It now says the one thing the row cannot - why the variable is outside
+  the group above it, else its slider (\"A slider from 1 to 3 in the Inspector.\"), else where the
+  Inspector shows it - and hovering it says the whole, type, name and value first. The strip also
+  takes a larger share of the bar beside the status message.
+
+### Added: make a script class like inserting an object, and change it from its Properties
+
+- Sheet ▸ New Class… (and the Project bar's New class…) opens Insert new object: tiles grouped by
+  kind (2D, 3D, User interface, Data and project) or the class tree the way Godot's Create New Node
+  lists it, with Godot's own Favorites and Recent from that dialog. Search reaches every class a
+  script can extend. The chosen kind's sentence stays on screen, a taken or unwritable name is said
+  beside the field and holds Insert back, and the window shows the head the file will start with
+  before Insert writes `<name>.gd` in the FileSystem dock's folder and opens it.
+- Selecting a line of the sheet's class head shows Object type in the Properties bar: Name
+  (Rename… lists every file first), Type (a described dropdown; a type that lacks members the events
+  use names each of them before it changes anything), Description, Icon (a preview of the icon
+  Godot will show, Pick… or Use default), Runs in the editor and File. Each writes only its own head
+  line, then the object's instance variables follow as for a selected object.
+### Changed: making your own behaviour and your own global is a form, not a commented script
+
+- **Sheet > New behaviour…** replaces New Behaviour Addon…. It asks the name, what the behaviour works
+  on (Any node, Node2D, CharacterBody2D and the rest, each described, the chosen one's sentence kept in
+  view), the shelf it sits on in the Add behaviour list (the shelves the installed packs use, each
+  named by the packs on it), its icon (the Works-on class's own editor icon unless you choose another),
+  a description, and what to start from: Empty, a copy of a shipped pack made for the same kind of
+  object, a script you wrote or the selected node's script (its exported variables become the
+  behaviour's properties; the script itself is not changed). Create writes the behaviour the way every
+  pack is written - a folder under eventsheet_addons/, `host` typed as what it works on - and opens it
+  as a sheet. The teaching skeleton and the two recipes are gone.
+- **Sheet > New global…** asks the name, Script or Scene (the one choice Godot asks of an autoload),
+  the picker heading, the icon, a description and what to start from: Empty, a copy of a pack meant to
+  run as an autoload, a script you wrote, or an autoload you already have (opened as a sheet, nothing
+  moved). Create writes the file - and the scene, for a Scene - and turns it on as its row in Project
+  Settings > Globals > Autoload, one undo step.
+- **Sheet > Properties and actions…** lists what the open behaviour or global offers: its Properties
+  (or Global values) as a Name / Type / Default / What it means table with the lines they are in code,
+  then its Actions, Conditions, Triggers and Expressions, each kind a coloured word and a \"returns\" chip
+  where it gives a value back; clicking a name shows its row. Each list's Add opens the window that
+  already writes that kind of member. A global's tick turns it on or off in Godot's own Autoload list.
+- The Add behaviour list puts your own behaviours first under Your behaviours, greys a pack made for
+  another kind of object (\"Made for a Node2D - Enemy is a Node.\") or one that is a global, with the
+  reason on hover, and adding one is a step Ctrl+Z takes back out of the scene.
+- A global is its own object at the top of every picker, straight after System, whether it is a
+  global made here (its annotated actions) or an autoload the project already had (reflected, as Your
+  Project reflects a class, which no longer lists autoloads). A global made as a scene emits the same
+  `GameState.add_score(1)` calls as one made as a script.
+- Size: the old scaffold and its dialog were 531 lines; the generator, the two forms and the new window
+  are 890. The generator shrank by half (a new behaviour is a sheet compiled to GDScript, not text
+  written out by hand); the growth is the global form and the Properties and actions window, which
+  had no counterpart before. Both reuse the window kit and the Anatomy census rather than new widgets.
+### Fixed: Sheet > Publish New Version… opens its window again
+
+- The menu entry called a dock function that no longer existed, so choosing it did nothing but
+  print a script error. It opens the version window again.
+
+### Fixed: the Inspector Designer and the Inspector's badges speak the editor's language
+
+- The Inspector Designer window (title, intro, empty hint, button tooltips, \"Dragged in the
+  viewport:\") and the Inspector drawers' own words - the Required and validate badges, the action
+  button's tooltip, the slider, corner, link and table tooltips - read in the editor's language
+  instead of English in every one. The validate badge with no function named now reads \"validated
+  by a sheet function while you edit\" rather than \"a sheet function()\".
+- The Designer's intro and chip text take the window kit's text colours, so they read in a light
+  editor theme.
+- ▲ in the Designer moves a variable above the next one UP in the Inspector. It used to swap with
+  the variable just above it in the file even when that one is not shown in the Inspector, which
+  changed nothing anybody could see.
+### Changed: the Start page, the Welcome, the tour and New Event Sheet say what a choice does first
+
+- The Start page's first column opens with \"Open an existing script…\", so a project that already
+  has scripts starts there, then offers every starter the New-Sheet menu has - the 3D controllers,
+  the menus and the autoloads included - under shelves (2D, 3D, UI and menus, Behaviours,
+  Project-wide, Game shapes, Data, Editor tools, Showcases), with chips that narrow it to one
+  shelf. Each row shows its kind beside its name. A click selects and the help strip says what the
+  row is and what opening it does; Open, Enter or a double-click opens it.
+- The Welcome's \"how do you usually make games?\" answer is chosen first and applied by Apply; the
+  help strip says what it would set (words, theme, Project bar, GDScript panel, tour). Before, a
+  click applied it at once, and \"I'm new\" closed the window before Preferences could be read. What
+  the plugin is reads as the band across the top, and the four Get Started doors sit two by two.
+- The tour's foot reads Back on the left, then the progress as dots and a count, Skip tour and Next.
+- New Event Sheet names the exact file Create writes, and a name already taken in the folder says
+  so beside the field and holds Create, instead of quietly writing a suffixed file. Each starter in
+  Start from carries its one-line description, and the help strip shows the line the sheet starts
+  with.
+### Changed: New Custom Resource is now New Data Table, filled in like a spreadsheet
+
+- Sheet > New Data Table… opens one small spreadsheet instead of three questions: name what one
+  row is (`LootDrop` - the Name, `LootDropTable`, is derived from it), then fill a grid. Click a
+  column's header to select it and set its name and kind beside the grid - Text, Number (whole),
+  Number, True/false, Choice (with its words), Colour or Translation key, each saying what it holds
+  as the pointer rests on it; double-click a header to rename its column; drag a column's right edge
+  to resize it and double-click the edge to fit it. + Column (the last header) and + Row add, Delete
+  removes the selected row, and a cell is typed into, ticked or picked from a dropdown by its kind.
+- Import from CSV… reads a CSV's header line as the columns (a column of numbers comes in as a
+  number column) and its lines as the rows; Export to CSV… writes the rows back out.
+- Insert writes two files into the folder open in the FileSystem dock - the Resource script, opened
+  as a sheet, and a .tres holding the rows typed - and refuses, on the window, a row with no name, a
+  column name GDScript cannot use, a class name already taken, or a file already there.
+- \"Warn in the Inspector when a row is missing a value\" makes the script a tool script and gives
+  it a check that warns until the table has rows and names the first row with an empty text cell;
+  the tick it replaces asked only for rows, and its validator never ran in the editor because the
+  script was not a tool script.
+- Not built: a column's own default value and description (the board shows both); the table
+  drawer's column format has no room for them yet. Remove column, in the panel beside the grid,
+  takes a column out of every row.
+
+### Changed: the Modes and States windows name the rows a removed name leaves behind, as you type
+
+- Taking a mode or a state off the list now says so under the field while you type - \"Cutscene left
+  the list - 2 row(s) still name it.\", \"Hurt left the list - 3 row(s) still say State.HURT.\" - before
+  OK is pressed. The On entering event the Modes window wrote for that mode goes with it on OK, so it
+  is not counted. The windows are titled \"Edit the game's modes\" and \"Declare this object's states\",
+  and OK reads Declare Modes / Declare States.
+- The Modes window's words are translated, and its Physics and Mouse answers each say what they do
+  when the pointer rests on them.
+
+### Fixed: an empty node or resource slot previews the line it saves
+
+- The variable window's IN CODE line for a node or resource slot left empty read
+  `@export var falloff: Curve = \"\"`, which does not parse, while Save wrote the slot with no value.
+  The preview now shows `@export var falloff: Curve`, the line Save writes.
+
+### Fixed: two hand-written declarations open as variables instead of code lines
+
+- `@export_subgroup(\"\")`, which ends only the subgroup before the next property, now opens as a fact
+  of the variable under it (the way `@export_group(\"\")` already did) and saves back as written; the
+  Properties table writes it too.
+- `@onready var label = $Label`, written with no type, now opens as an `@onready` variable that reads
+  as Variant - the node lookup implies no type - and saves back without one.
+
+### Changed: a function's head reads as a sheet row, and is edited in the Properties bar
+
+- On a sheet you are writing, a function reads `ƒ Function ▸ On take_damage`, with what it hands
+  back (`→ nothing`, `→ float`) and its settings as small tags (In Add Action, Waits, Shared) on the
+  line under it, its description in italics under that (edited in place), and each parameter on a
+  line of its own - `PARAM int amount = 1` - whose hover says what it is for and its value when a
+  call leaves it out. Names read exactly as the code writes them. The description caption that sat
+  above the function, the role word, the category chip and the \"gives back\" / \"internal\" chips are
+  gone; folding the function folds its body away.
+- Not drawn like an event yet: the function's own actions still sit in an \"Always\" row under the
+  head rather than in an action lane on its right, the head carries no event number, and it is
+  edited in a panel of the Properties bar rather than in the Inspector.
+- Clicking a function's head selects it and the Properties bar shows Name (renaming renames every
+  call), Description, Returns, In Add Action, Category, Waits and Shared - every dropdown describing
+  each choice - and its parameters, retyped and given defaults in place, reordered by dragging the
+  handle, added with + Add. Each change is one undo step and nothing is written when nothing
+  changed. A read-only preview keeps the popup that only reads.
+- The New / Edit Function window is on the window kit: a band showing the row it will draw, the
+  Function card (with the code name beside Name), one described Kind dropdown in place of the three
+  cards, the help strip with the `func` line as IN CODE, the live name in the title, and the reason
+  a name cannot be used in amber. Every word of it reads in the editor's language.
+
+### Changed: the parameters window is laid out the familiar way
+
+- The window is titled \"Parameters for Player: Move toward\", and its head names the object and the
+  action with the action's description under them (and the class-reference link for a native
+  node's action). The live sentence band at the top is gone: the sheet shows the row once Done is
+  pressed, and the strip under the rows still gives the GDScript line it will write.
+- One row per parameter, name left and box right. The row the strip is speaking about is lit, and a
+  problem is said in one sentence under its own row as well as beside Done. The window now opens
+  already saying what is wrong with a value it was handed, rather than only once you type in it.
+- The Expressions panel sits beside the form: search it, double-click an entry, and it is inserted
+  at the caret of the box that last had focus; its band names the verb, the field and what the
+  field holds now. It replaces the floating dictionary and the button beside every expression box.
+- A parameter that names a node (a node picked from the scene, an \"On node\" target, or one typed as
+  a node class) carries \"click to choose\", which opens the node search; the pick replaces what the
+  box said. The magnifier beside every expression box is gone.
+- A position written as a literal - a lone vector parameter, or one declared as a Vector2/Vector3 -
+  splits into X and Y (and Z) rows, one expression box each.
+- Every dropdown is a described one: each choice carries its line as Godot's own item tooltip (or the
+  code it writes, when its words differ from it), and the closed dropdown says the chosen one's.
+  The muted caption beside a dropdown is gone. An angle shows its unit beside the box.
+- Back, Done and Cancel, with Back leading; Apply & Add Another stays in the picker loop.
+- Text and tones on the window follow the editor theme, so a light editor reads as well as a dark one.
+
+### Changed: the picking windows say what the pick answers
+
+- **Add Action / Condition** names the object in its title (\"Add an action to Player\") and shows
+  the event the pick lands on in a band above the search (\"Player Is on floor - the action you
+  pick lands here\"). Its description panel is now the help strip every other window wears: the
+  verb's name, kind and category, what it does and how often this sheet uses it, the line it
+  ships as, and its guide link. A verb found by another engine's word (\"WaitForSeconds\") says so
+  on an ALSO CALLED line instead of on the row's tail. With nothing highlighted, or on the object
+  cards, the strip says what the window is for - the hint line above the list is gone. A Help (F1)
+  button, and F1 itself, open the highlighted verb's Manual page; the Recent pane loses its star.
+- **The Expressions dictionary** names the field in its title (\"Insert an expression into Speed\"),
+  bands the verb, field and what the field holds now (kept in step as results chain in), gains a
+  Close button beside Insert, and says what the list is and what the highlighted entry inserts in
+  its strip. (It has since become the parameters window's Expressions panel, above, which keeps
+  the band.)
+- **Pick Node** names the field in its title (\"Pick a node for Target\") and bands it the same way;
+  its strip says what the highlighted node is and the reference it goes in as; Used in sheet rows
+  now show their class and icon; a Cancel button sits beside Use Node.
+- All three read in the editor's language and in the light theme: their group colours are
+  darkened on a light panel, and the missing-reference red follows the error tone.
+
+### Fixed: the Inspector preview's summary reads in the editor's language
+
+- The plain-words summary under the Inspector preview (and `EventSheets.describe_inspector`) was
+  one English sentence glued from phrase fragments, so it could not be translated. It is now one
+  short whole sentence per fact - \"A whole number. It runs from 0 to 100. Shown as a progress bar.
+  It is grouped under Combat.\" - and every sentence reads in the editor's language. A button
+  named by its method alone is named as written rather than capitalised.
+
+### Changed: the Doctor's Migration section reads the remembered pack vocabulary
+
+- The Migration section loaded and reflected every pack script to learn the installed vocabulary,
+  about 6.5 seconds of each audit, although the registry already keeps that answer in `.godot/`
+  between sessions. It now reads the same memory, so only a pack that changed is loaded again: on
+  this project the section went from 9.7 to 2.3 seconds and the whole audit from 47 to 40.
+
+### Changed: twenty-two scripts the first open compiled and never called wait for their moment
+
+- The first sheet open compiled the sheet export, the token index a `{uid}` mint draws against, the
+  class vocabulary filter, the pack annotation writer and reading check, the Loose Ends walk, the
+  command palette, the GDScript lint, the project search and Find References, the tileset and
+  damage type facts, the picker recipes and quick-add scorer, the snippet codec, number scrubbing,
+  the runtime error wording, the verb suggestion, rescue tips, workspaces, the inline format bar
+  and the text listing - and, run with every function counted, called none of them. Each is now
+  read by path when its own moment comes (a paste, a search, an error from the running game, a
+  pack being curated), and the error strip's button label is spelled beside a test that holds it
+  equal to its source.
+- Workspace first-open closure: 324 files / 159,464 lines -> 303 / 154,300. Timed in a busy
+  machine the change sits inside the noise (three alternating pairs, medians: editor load 17.6 s
+  -> 17.0 s, build 22.4 s -> 20.9 s); the closure figure is the one to hold it to.
+### Added: a variable row's own gestures - its doors, its submenus, its groups and its buttons
+
+- **The help strip speaks for a selected variable.** Under the sheet it reads the row as code - `int
+  health = 10 · in the Inspector · not in a group` - adds why a prefix group shuts it out or the range
+  its slider keeps, and offers the doors that fit: Move into a group…, Change look…, Edit range… and
+  Properties…. Nothing is added inside the row.
+- **Right-click > Inspector look and Group.** Inspector look lists the plain editor and every look the
+  type can wear, ticked at the one it wears; a look with details (min, max, choices) ends in \"…\" and
+  opens the variable window on them. Group lists the sheet's groups (Move into), New group… (the old
+  Group Under a Heading), Group by prefix… and End group here.
+- **Group by prefix…** proposes the start the selected names share (`bullet_count`, `bullet_speed`
+  -> Bullet / bullet) and writes the one line `@export_group(\"Bullet\", \"bullet\")` above the first.
+  Only a whole word counts: `speed` and `spread` propose nothing rather than a group \"Sp\".
+- **End group here** writes `@export_group(\"\")` above the variable, and the end line it draws can be
+  dragged onto another variable to move where the group ends.
+- **Add > Inspector button…** asks for the label, an editor icon (checked against the editor's own
+  icons), the function it runs - one of the sheet's or a new one - and its group, showing the code as
+  it is typed. It writes Godot's own spelling, `@export_tool_button(\"Bake\", \"Bake\") var bake_button =
+  _bake`, which opens back as the same row. The canvas menu's Add Inspector Button… asks the same.
+- **The Ghost Row reads a variable sentence.** `max_jumps is a whole number from 1 to 3, in the
+  Inspector` declares `@export_range(1, 3, 1) var max_jumps: int = 1`; \"saved but hidden\" and \"in
+  group Bullet\" are understood too.
+- **The variable window searches its types and fills its slots.** Search types… beside the Type
+  dropdown finds a type by its name, its words or its sentence, and any node or resource class by
+  name. A node slot among the events gets Pick (the editor's node picker; the value becomes `$Muzzle`
+  looked up when the node is ready), a resource slot Load (`preload(\"res://…\")`) and New (`Curve.new()`).
+
+### Changed: Match is written as branches, and each branch fills like any event
+
+- **The Match window is laid out like the parameters window.** A Value (this sheet's variables
+  offered as you type, with the type and description of the one picked), one row per branch -
+  \"Match 1  IDLE\" - and Otherwise (Else, or nothing). One match per state adds a branch for every
+  value of the enum the Value holds; a value matched twice is refused before Done. A branch reads
+  back by its own name (IDLE) and is written with its enum's (State.IDLE). The window no longer
+  edits branch bodies as code. It has Done and Cancel but no Back: it opens from the row menu or a
+  double-click, never from the picker, so there is no earlier step to go back to.
+- **On the sheet a switch on plain values reads as branches.** The event says \"match state\"
+  beside its trigger, and every branch is a sub-event stating its own test in the sheet's comparison
+  grammar - \"state is IDLE\" (a member of one of this sheet's enums by its own name, any other value
+  as written), several values as an OR block, Else - with its own Add action: the
+  picked action lands in that branch, replacing the `pass` that held an empty one's place. An empty
+  branch shows its Add action rather than \"pass\". This replaces the \"decides by\" caption, the Else
+  chips the later branches wore, and the \"Is in Patrol\" / \"State: PATROL\" arm readings for such
+  matches.
+- **Add Match To Actions… adds nothing until Done**, then the match and its branches in one undo
+  step (it used to add a placeholder match first, so a Cancel left one behind). Re-editing keeps
+  every branch's actions under its new value, an untouched Done is no edit, and removing a branch
+  that holds actions says how many Done will drop.
+- The Edit Enum and Edit Signal windows are on the window kit: a band showing the line they write,
+  a card per part, the help strip with its IN CODE line, and a red edge on the field a problem is
+  about, with OK held until it is fixed. Both, and the Match window, read in the editor's language.
+
+### Changed: the small writing windows say what they write before OK
+
+- **Connect Signal** shows the event that will land in a band, notes the signals the sheet already
+  handles (\"in door.gd\", and a warning that Connect adds a second event), shows the handler line it
+  writes, and has a Cancel button.
+- **Paste Special** splits Objects and Variables into two cards, each field with its note under it,
+  and says what the paste will change in one line.
+- **Insert Snippet** is one window: the library (searchable, names exactly as saved, how many blanks
+  each asks for) and the chosen snippet's blanks to fill, with Insert held while one is empty. The
+  separate blanks window is gone.
+- **Save Selection as Snippet** is on the kit, with Cancel; a name the library already has is said
+  in amber before saving - the first is kept and this one is written as name-2 - instead of being
+  refused after the click.
+- **Edit Parameter** shows the function's row with this input marked and the `func` line it writes;
+  a default ahead of an input without one is refused in the window (it used to close and refuse in
+  the status bar), and the \"Delete this parameter\" tick read on Apply is now a red Delete button.
+- **Edit Comment** shows the `#` or `##` line in the band and the strip, and the swatch says \"theme
+  default\" beside itself instead of an \"Alpha 0\" hint. An untouched Save is still no edit.
+- **Compare** shows the row it writes in a band at the top (its title names the object); the strip
+  keeps the IN CODE line.
+- **Add behavior**: the search and the shelves share one row, a pack's knobs are typed Inspector
+  fields (a number you can scrub, a tick) under their own names with the pack's doc line in the help
+  strip, the strip says where the pack will land, and a search that hides the chosen pack moves the
+  choice to the first match. Every window here reads in the editor's language.
+
+### Fixed: the variable window speaks the editor's language
+
+- The variable window, its look list and its type list were English in every language: the card
+  titles, field names, ticks, placeholders, refusals, the \"Keep in step\" choices, every type's
+  words and sentence, every Inspector look's name, hover and detail fields, and each field's help
+  paragraph. All of it now reads in the editor's language, and so do the help strip's READS AS and
+  IN CODE labels and the preview card's caption. The look and type tables stay English in the code
+  as the keys their translations are filed under, and a test holds every word they show to a row
+  in all eight languages. The values a look stores (a file picker's reach) stay the same whatever
+  language picked them.
+- **A typo in a `var hp := 100` value is refused.** The words of an inferred declaration are
+  written as they stand, so the window now checks they still give the same type - `abc` or `5.0`
+  on an int is refused with the reason, before it reaches the file. Ticking Write the type in code
+  lifts the check, since the type is then written out.
+- A variable opened with a subgroup prefix or a group end, then saved with its subgroup cleared or
+  a group given, no longer keeps those keys: they meant nothing any more, and the file was already
+  right without them.
+
+### Changed: the Show if lift loads only for a file that needs it
+
+- The lift that reads a generated `_validate_property` back onto its variables is loaded by path,
+  and only for a file carrying the generated function's doc line, so the first open of every other
+  file no longer compiles it.
+
+### Fixed: two flock members on one spot always part
+
+- Flock and Flock 3D send a member that sits exactly on a neighbour away along an angle of its own.
+  That angle was its instance id's remainder by 360, so two members whose ids differed by a multiple
+  of 360 took the same angle and stayed stuck together - about one pair in 360, and which pair
+  depended on how many objects the game had made before them. The angle is now a hash of the id
+  spread over the whole turn.
+
+### Fixed: dialog text is readable in a light editor theme
+
+- The help strip (\"live, as you pick\": the heading, the description, READS AS and IN CODE), the
+  Inspector preview card's group name, tables, result cards and the function, variable, parameter,
+  mode, state and wizard dialogs drew their text in fixed light greys made for the dark theme, on
+  panels that follow the editor theme - so in a light theme it all but vanished. Text on a dialog
+  panel now takes the editor theme's own Label colour (`EventSheetPopupUI.text_color()`), with
+  quieter `secondary_text_color()` / `muted_text_color()` voices moved toward the panel fill, and
+  the ok / warning / error tones are darkened on a light panel (`readable_on_panel()`). A test sweeps
+  the dialog files so a dark-only text colour cannot come back.
+
 ### Changed: the variable window is four cards, every look a described choice
 
 - **Variable** asks for the row in the order it reads: scope, name, type, initial value,
@@ -112,6 +461,9 @@ What changed in the build you have installed (v0.18.0), in the words the release
   Inspector go with it; the file still saves byte for byte. A hand-edited function stays the
   function, and a file that writes its own `_validate_property` keeps it: the generated one stands
   aside (with a warning naming the variables it leaves to it) instead of writing a second.
+- The generated function now follows every variable, tree rows included. On a `.tres` sheet with
+  dictionary variables it used to sit straight after those, before the tree variables, so a saved
+  file moves it once.
 - **Add An Inspector Button For It...** on a function's row asks what the button should say (the
   function's name, read as words, to start with) and shows the `@export_tool_button` line it adds.
   Ctrl+Z removes it again.
