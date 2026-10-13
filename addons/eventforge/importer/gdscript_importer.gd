@@ -11,6 +11,13 @@
 class_name GDScriptImporter
 extends RefCounted
 
+const InspectorConditionLift := preload("res://addons/eventforge/importer/inspector_condition_lift.gd")
+
+## Whether the file being read writes its own `_validate_property`. A group show-if comment is read as
+## the variable's option only then: with no function behind it the compile would write one the file
+## does not have, so the comment stays the plain line it is.
+var _source_writes_validate_property: bool = false
+
 
 func import_script(script_path: String) -> EventSheetResource:
 	if not FileAccess.file_exists(script_path):
@@ -86,6 +93,7 @@ static func _autoload_target_matches(target: String, script_path: String) -> boo
 func import_external_source(source: String, lift: bool = true, script_path: String = "") -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = _parse_host_class(source)
+	_source_writes_validate_property = source.contains("func _validate_property(")
 	var lines: PackedStringArray = source.split("\n")
 	# A trailing "\n" yields one empty trailing element; the compiler re-appends the final
 	# newline, so drop exactly that element to keep round-trips byte-identical.
@@ -311,6 +319,9 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 		if host_match != null:
 			sheet.behavior_mode = true
 			sheet.host_class = host_match.get_string(1)
+	# A generated _validate_property goes back onto the variables it came from (byte-gated inside), before
+	# the statement lift below would read it as an ordinary function.
+	InspectorConditionLift.lift(sheet, source)
 	# Tier 2: reverse template matching lifts trailing trigger functions, sheet functions
 	# (with their @ace annotation blocks), and trailing comments into real rows - verified
 	# by a byte-identical recompile and reverted otherwise (the lossless rule always wins).
@@ -806,7 +817,8 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 	# WHOLE group rather than to one field. It is read only when a group line was actually found -
 	# above anything else the same comment is the field form, which the attribute path owns.
 	var group_show_if_value: String = ""
-	if not group_value.is_empty() and cursor >= 0 and pending[cursor].begins_with("# @inspector_show_if "):
+	if _source_writes_validate_property and not group_value.is_empty() and cursor >= 0 \
+			and pending[cursor].begins_with("# @inspector_show_if "):
 		group_show_if_value = pending[cursor].substr(21).strip_edges()
 		if group_show_if_value.is_valid_identifier():
 			meta_count += 1

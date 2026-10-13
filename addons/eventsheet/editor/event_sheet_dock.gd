@@ -176,6 +176,9 @@ const ROW_MENU_MAKE_MESSAGE := 65
 ## "Rename…" on a function's own row: the name belongs to the function, so the gesture that changes
 ## it - and the receipt listing every row and file that says it - belongs to the row that declares it.
 const ROW_MENU_RENAME_FUNCTION := 66
+## "Add an Inspector button for it…" on a function's own row: a tool's verbs (Bake, Clear) are its
+## functions, so the button that runs one in the editor is made from the row that declares it.
+const ROW_MENU_ADD_TOOL_BUTTON := 67
 const GROUP_RUNS_ON_EVERYONE := 70
 const GROUP_RUNS_ON_HOST := 71
 const GROUP_RUNS_ON_OWNER := 72
@@ -6049,6 +6052,53 @@ func add_inspector_button(label: String) -> bool:
 		var note: String = "Added the Inspector button \"%s\" and the function it calls." % button_label
 		if not _current_sheet.tool_mode:
 			note += "  (turn on Tool in the Sheet Type dialog for it to run in the editor.)"
+		_mark_dirty(note)
+	return changed
+
+
+## "Add an Inspector button for it…": asks what the button says (the function's name, read as words, to
+## start with) and labels THIS function, so the Inspector shows a button that runs it while editing.
+func prompt_inspector_button_for(function_name: String) -> void:
+	var edit: LineEdit = LineEdit.new()
+	edit.text = function_name.trim_prefix("_").capitalize()
+	var small_prompt: GDScript = load(SMALL_PROMPT_PATH)
+	var code_for: Callable = func(label: String) -> String:
+		return "@export_tool_button(\"%s\") var _btn_%s: Callable = %s" % [label.strip_edges().c_escape(), function_name, function_name]
+	var prompt: ConfirmationDialog = small_prompt.open(self, {
+		"title": EventSheetL10n.translate("Add an Inspector button?"),
+		"say": EventSheetL10n.translate("Pressing the button in the Inspector runs this function in the editor. The sheet has to be a Tool sheet for it to run there."),
+		"body": EventSheetPopupUI.form_row(EventSheetL10n.translate("Button says"), edit),
+		"code": code_for.call(edit.text),
+		"note": EventSheetL10n.translate("Ctrl+Z removes the button again."),
+		"main": EventSheetL10n.translate("Add Button"),
+		"on_main": func() -> void: label_tool_button(function_name, edit.text),
+	})
+	prompt.register_text_enter(edit)
+	edit.text_changed.connect(func(typed: String) -> void: small_prompt.set_code(prompt, code_for.call(typed)))
+	if edit.is_inside_tree():
+		edit.grab_focus()
+		edit.select_all()
+
+
+## Gives the sheet function `function_name` an Inspector button saying `label`, in one undo step: the
+## compiler writes `@export_tool_button("<label>") var _btn_<name>: Callable = <name>` for a labelled
+## function. False when there is no such function, it already has a button, or the label is blank.
+func label_tool_button(function_name: String, label: String) -> bool:
+	var button_label: String = label.strip_edges()
+	if button_label.is_empty() or _current_sheet == null:
+		return false
+	var changed: bool = _perform_undoable_sheet_edit("Add Inspector Button", func() -> bool:
+		for entry: Variant in _current_sheet.functions:
+			if entry is EventFunction and (entry as EventFunction).function_name == function_name:
+				if not (entry as EventFunction).tool_button_label.strip_edges().is_empty():
+					return false
+				(entry as EventFunction).tool_button_label = button_label
+				return true
+		return false)
+	if changed:
+		var note: String = EventSheetL10n.translate("Added the Inspector button \"%s\" for %s.") % [button_label, function_name]
+		if not _current_sheet.tool_mode:
+			note += " " + EventSheetL10n.translate("(turn on Tool in the Sheet Type dialog for it to run in the editor.)")
 		_mark_dirty(note)
 	return changed
 

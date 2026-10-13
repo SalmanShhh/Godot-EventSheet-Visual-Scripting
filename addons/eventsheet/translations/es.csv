@@ -7441,3 +7441,11 @@ Any type at all. The editor cannot check it for you.,Cualquier tipo. El editor n
 "One row per value, which opens in a spreadsheet. Good for checking balance numbers in a spreadsheet.","Una fila por valor, que se abre en una hoja de cálculo. Buena para revisar números de equilibrio en una hoja de cálculo."
 "The classic settings-file layout, readable by many older tools. Good when modders expect a familiar file.","El formato clásico de archivo de ajustes, legible por muchas herramientas antiguas. Bueno cuando los modders esperan un archivo conocido."
 Tagged text that many tools can check against a schema. Good when another tool needs to validate the file.,Texto con etiquetas que muchas herramientas pueden comprobar con un esquema. Bueno cuando otra herramienta necesita validar el archivo.
+Add an Inspector button?,¿Añadir un botón al Inspector?
+Pressing the button in the Inspector runs this function in the editor. The sheet has to be a Tool sheet for it to run there.,Pulsar el botón en el Inspector ejecuta esta función en el editor. La hoja tiene que ser una hoja Tool para que se ejecute allí.
+Button says,El botón dice
+Ctrl+Z removes the button again.,Ctrl+Z vuelve a quitar el botón.
+Add Button,Añadir botón
+"Added the Inspector button ""%s"" for %s.","Se añadió el botón del Inspector ""%s"" para %s."
+(turn on Tool in the Sheet Type dialog for it to run in the editor.),(activa Tool en el diálogo Tipo de hoja para que se ejecute en el editor.)
+Add An Inspector Button For It…,Añadir un botón del Inspector para ella…

@@ -66,7 +66,10 @@ const PURE_HELPERS: Array[String] = [
 	"table_enum_entry", "table_enum_key", "table_enum_label", "table_enum_options",
 	"table_enum_pair", "table_enum_type", "variable_emit_order",
 	# What a sheet's declarations start each variable on: a read of the sheet handed in, nothing kept.
-	"declared_starting_values"
+	"declared_starting_values",
+	# The Show if / Lock unless a sheet's variables ask for, who refreshes the Inspector, and the
+	# generated function: reads of the variables handed in, nothing kept.
+	"inspector_conditions", "inspector_condition_controllers", "inspector_conditions_function"
 ]
 
 ## What a poisoned static is set to, by type. Any value that is not the default will do - what

@@ -7441,3 +7441,11 @@ Any type at all. The editor cannot check it for you.,Любой тип. Реда
 "One row per value, which opens in a spreadsheet. Good for checking balance numbers in a spreadsheet.","Одна строка на значение, открывается в электронной таблице. Подходит для проверки чисел баланса в таблице."
 "The classic settings-file layout, readable by many older tools. Good when modders expect a familiar file.","Классический формат файла настроек, его читают многие старые инструменты. Подходит, когда моддеры ждут привычный файл."
 Tagged text that many tools can check against a schema. Good when another tool needs to validate the file.,"Размеченный текст, который многие инструменты проверяют по схеме. Подходит, когда другому инструменту нужно проверить файл."
+Add an Inspector button?,Добавить кнопку в Инспектор?
+Pressing the button in the Inspector runs this function in the editor. The sheet has to be a Tool sheet for it to run there.,"Нажатие кнопки в Инспекторе запускает эту функцию в редакторе. Чтобы она там работала, лист должен быть листом Tool."
+Button says,Текст кнопки
+Ctrl+Z removes the button again.,Ctrl+Z снова уберёт кнопку.
+Add Button,Добавить кнопку
+"Added the Inspector button ""%s"" for %s.","Добавлена кнопка Инспектора ""%s"" для %s."
+(turn on Tool in the Sheet Type dialog for it to run in the editor.),"(включите Tool в диалоге «Тип листа», чтобы она работала в редакторе.)"
+Add An Inspector Button For It…,Добавить для неё кнопку Инспектора…

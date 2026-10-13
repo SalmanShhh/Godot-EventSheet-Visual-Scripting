@@ -451,6 +451,8 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		menu.add_item(
 			"Change The Message…" if EventSheetMessageFacts.is_message(verb_function) else "Make It A Message…",
 			_dock.ROW_MENU_MAKE_MESSAGE)
+		if verb_function.tool_button_label.strip_edges().is_empty():
+			menu.add_item(EventSheetL10n.translate("Add An Inspector Button For It…"), _dock.ROW_MENU_ADD_TOOL_BUTTON)
 		# On an OPENED behaviour pack a verb's body is read-only by default (protecting the .gd round-trip);
 		# offer a per-function opt-in to edit THIS verb's body. Authored sheets edit every body already, and
 		# a read-only preview edits nothing, so the toggle only appears for an editable opened pack.

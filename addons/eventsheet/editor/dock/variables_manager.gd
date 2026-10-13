@@ -466,16 +466,23 @@ static func _apply_property_accessors(variable: LocalVariable, source: Dictionar
 
 static func _tree_group_attributes(source: Dictionary) -> Dictionary:
 	var result: Dictionary = {}
-	for attr_key: String in ["tooltip", "group", "subgroup", "drawer", "header", "header_color", "info", "validate", "action", "action_label"]:
+	# Show if / Lock unless / On changed compile on a sheet variable exactly as on a dictionary one (one
+	# generated _validate_property, a setter that reacts), so they ride along too.
+	for attr_key: String in ["tooltip", "group", "subgroup", "drawer", "header", "header_color", "info", "validate", "action", "action_label",
+			"show_if", "group_show_if", "lock_unless", "on_changed"]:
 		var attr_value: String = str(source.get(attr_key, "")).strip_edges()
 		if not attr_value.is_empty():
 			result[attr_key] = attr_value
-	# Required is a bool flag, not a string - copied as-is so the emitter's bool() read stays typed.
-	if source.get("required", false) == true:
-		result["required"] = true
+	# Required, Wait for ready and Saved but hidden (@export_storage) are bool flags, not strings - copied
+	# as-is so the emitter's bool() read stays typed.
+	for flag_key: String in ["required", "wait_for_ready", "storage"]:
+		if source.get(flag_key, false) == true:
+			result[flag_key] = true
+	# An Inspector button's own arguments (label, editor icon), which no field of the dialog edits.
+	if source.get("tool_button") is Dictionary:
+		result["tool_button"] = (source.get("tool_button") as Dictionary).duplicate()
 	# A Tier 3 drawer's numeric bounds (progress_bar/min_max/vector_dial) ride along as the range dict so the
-	# @export_custom marker can re-emit them; the tree path can't express the other dict-only attributes,
-	# so they're intentionally dropped (degrade to a plain field, never a corrupt one).
+	# @export_custom marker can re-emit them.
 	if result.has("drawer") and source.get("range") is Dictionary and not (source.get("range") as Dictionary).is_empty():
 		result["range"] = (source.get("range") as Dictionary).duplicate()
 	# The table drawer's column schema rides along the same way (an Array of {name, type} entries).
@@ -537,7 +544,10 @@ func _on_variable_dialog_confirmed(
 				existing.default_value = default_value
 				existing.is_constant = resolved_constant
 				existing.exported = exported
+				var kept_button: Variant = (existing.attributes as Dictionary).get("tool_button") if existing.attributes is Dictionary else null
 				existing.attributes = _tree_group_attributes(attributes)
+				if kept_button is Dictionary and not existing.attributes.has("tool_button"):
+					existing.attributes["tool_button"] = kept_button
 				existing.onready = onready
 				existing.is_static = is_static and not resolved_constant
 				_apply_property_accessors(existing, attributes)

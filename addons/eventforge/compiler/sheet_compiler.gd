@@ -39,6 +39,9 @@ const SpecText := preload("res://addons/eventforge/registration/annotation_spec_
 const Spellings := preload("res://addons/eventforge/compiler/compiler_spellings.gd")
 
 const VERSION: String = "0.18.0"
+## The doc line above the generated _validate_property. Frozen: files already carry it, and the
+## importer reads it to know the function below is the generated one.
+const INSPECTOR_CONDITIONS_DOC: String = "## Inspector conditions (Show If / Lock Unless) — generated; edit via the Variable dialog."
 
 ## The prefix EVERY shared helper this compiler writes carries. They are the compiler's own plumbing -
 ## one definition per file, appended last, never something anybody sat down and wrote - so a reader
@@ -448,7 +451,16 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	for known_function: Variant in all_functions:
 		if known_function is EventFunction:
 			sheet_function_names[(known_function as EventFunction).function_name] = true
-	var variable_lines: PackedStringArray = _emit_variables(merged_variables, result["warnings"], sheet_function_names)
+	# Show if / Lock unless from BOTH variable stores, written as one _validate_property after the last
+	# variable, unless the sheet writes that function itself.
+	var class_raw_rows: Array = []
+	_collect_class_level_raw_rows(all_events, class_raw_rows)
+	var inspector_condition_entries: Array = _conditions_to_write(
+		inspector_conditions(merged_variables, tree_variables, result["warnings"]),
+		_sheet_writes_function(class_raw_rows, all_functions, "_validate_property"), result["warnings"])
+	var controllers: Dictionary = inspector_condition_controllers(inspector_condition_entries)
+	_warn_unread_reactions(tree_variables, sheet_function_names, class_raw_rows, result["warnings"])
+	var variable_lines: PackedStringArray = _emit_variables(merged_variables, result["warnings"], sheet_function_names, controllers)
 	if variable_lines.size() > 0:
 		lines.append("")
 		for line: String in variable_lines:
@@ -457,7 +469,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		if variable_lines.is_empty():
 			lines.append("")
 		for tree_entry: Variant in tree_variables:
-			var declaration: String = _emit_tree_variable_line(tree_entry as LocalVariable)
+			var declaration: String = _emit_tree_variable_line(tree_entry as LocalVariable, controllers.has((tree_entry as LocalVariable).name))
 			if declaration.is_empty():
 				continue
 			# Split multi-line declarations (a `## doc` comment above the `@export var`) so lines.size()
@@ -466,6 +478,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 			for declaration_line: String in declaration.split("\n"):
 				lines.append(declaration_line)
 			source_map.append({"uid": str((tree_entry as LocalVariable).get_instance_id()), "start": tree_var_start, "end": lines.size(), "kind": "variable"})
+	lines.append_array(inspector_conditions_function(inspector_condition_entries))
 
 	# Group-local variables: class members under a per-group header comment.
 	var group_local_sets: Array = []
@@ -607,8 +620,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 
 	# Tree-placed GDScript blocks (top level / inside groups) are emitted verbatim at class
 	# level - helper functions, @onready vars, signal declarations, etc.
-	var raw_blocks: Array = []
-	_collect_class_level_raw_rows(all_events, raw_blocks)
+	var raw_blocks: Array = class_raw_rows
 	for raw_entry: Variant in raw_blocks:
 		var raw_block: RawCodeRow = raw_entry as RawCodeRow
 		if raw_block == null or not raw_block.enabled or raw_block.code.strip_edges().is_empty():
@@ -619,7 +631,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 			lines.append(code_line)
 		source_map.append({"uid": str(raw_block.get_instance_id()), "start": raw_start, "end": lines.size(), "kind": "raw"})
 
-	for hook_name: String in ["_validate_property", "_get_configuration_warnings", "_process", "_ready", "_physics_process"]:
+	for hook_name: String in ["_get_configuration_warnings", "_process", "_ready", "_physics_process"]:
 		var hook_generated: bool = false
 		for emitted_line: String in lines:
 			if emitted_line.begins_with("func %s(" % hook_name):
@@ -937,10 +949,27 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	# Lifted MID-FILE lifecycle handlers (EventAnchorRow): the events they own emit as one function
 	# at the anchor's slot below, so the trailing grouped section must not claim them a second time.
 	var anchored_event_uids: Dictionary = {}
+	# The opened file's own variables (its top-level rows) and the Show if / Lock unless they carry. The
+	# generated _validate_property lands straight after the last of them, which is where a sheet-written
+	# file has it, so a file that came from a sheet reopens and saves byte for byte.
+	var external_variables: Array = []
+	var external_raw_rows: Array = []
 	for entry: Variant in sheet.events:
 		if entry is EventAnchorRow:
 			for anchored_uid: String in (entry as EventAnchorRow).event_uids:
 				anchored_event_uids[anchored_uid] = true
+		elif entry is LocalVariable:
+			external_variables.append(entry)
+		elif entry is RawCodeRow:
+			external_raw_rows.append(entry)
+	var external_conditions: Array = _conditions_to_write(inspector_conditions({}, external_variables, result["warnings"]),
+		_sheet_writes_function(external_raw_rows, sheet.functions, "_validate_property"), result["warnings"])
+	var external_controllers: Dictionary = inspector_condition_controllers(external_conditions)
+	var external_function_names: Dictionary = {}
+	for known_function: Variant in sheet.functions:
+		if known_function is EventFunction:
+			external_function_names[(known_function as EventFunction).function_name] = true
+	_warn_unread_reactions(external_variables, external_function_names, external_raw_rows, result["warnings"])
 	for entry: Variant in sheet.events:
 		if entry is LocalVariable:
 			# The declaration can be MULTI-LINE (a `## doc` comment above the `@export var` line).
@@ -948,9 +977,12 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 			# this one - counts the true line total; appending the whole string as one element would
 			# undercount and drift the source map for the rest of the file.
 			var variable_start: int = lines.size() + 1
-			for declaration_line: String in _emit_tree_variable_line(entry as LocalVariable).split("\n"):
+			var external_variable: LocalVariable = entry as LocalVariable
+			for declaration_line: String in _emit_tree_variable_line(external_variable, external_controllers.has(external_variable.name)).split("\n"):
 				lines.append(declaration_line)
 			source_map.append({"uid": str((entry as LocalVariable).get_instance_id()), "start": variable_start, "end": lines.size(), "kind": "variable"})
+			if entry == external_variables.back():
+				lines.append_array(inspector_conditions_function(external_conditions))
 		elif entry is CollectionDeclRow:
 			# A top-level structured collection declaration (a const table, a var default set): the
 			# brackets exist only in this emission, which parse() byte-gates against.
@@ -1025,10 +1057,6 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 			_emit_anchored_trigger_function(_collect_anchored_events(sheet, entry as EventAnchorRow), lines, source_map, result)
 	# External sheets: raw rows include the original file's verbatim segments, so signals
 	# declared anywhere in the source validate self-connections.
-	var external_raw_rows: Array = []
-	for entry: Variant in sheet.events:
-		if entry is RawCodeRow:
-			external_raw_rows.append(entry)
 	var external_connect_context: Dictionary = {
 		"self_class": sheet.host_class if ClassDB.class_exists(sheet.host_class) else "Node",
 		"declared_signals": _scan_declared_signals(external_raw_rows),
@@ -3424,8 +3452,12 @@ static func _section_rank(ranks: Dictionary, path: String, leaf: String) -> int:
 	return int(ranks[path])
 
 
-## Emits `@export var` lines from the sheet variables dictionary.
-static func _emit_variables(variables: Dictionary, warnings: Array = [], function_names: Dictionary = {}) -> PackedStringArray:
+## Emits `@export var` lines from the sheet variables dictionary. `controllers` is the set of names a
+## Show if / Lock unless reads (see inspector_condition_controllers); each of those declares a setter
+## that refreshes the Inspector. Left null it is worked out from `variables` alone. The generated
+## _validate_property itself is the caller's to place (inspector_conditions_function), after every
+## variable the sheet declares, tree rows included.
+static func _emit_variables(variables: Dictionary, warnings: Array = [], function_names: Dictionary = {}, controllers: Variant = null) -> PackedStringArray:
 	var lines: PackedStringArray = PackedStringArray()
 	# Author order, with each Inspector section kept contiguous - the @export_group /
 	# @export_subgroup / @export_category header is then written ONCE per section (deduped below
@@ -3435,13 +3467,8 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 	var last_category: String = ""
 	var last_group: String = ""
 	var last_subgroup: String = ""
-	# Tier 2 conditions (Show If / Lock Unless) aggregate into ONE generated
-	# _validate_property below, in variable order - canonical shape, dialog-edited.
-	var property_conditions: Array = []
-	# The variables those conditions read. _validate_property only runs when the Inspector rebuilds
-	# its list, so each of these declares a setter that asks for that rebuild - otherwise ticking
-	# the controlling box changes nothing on screen until the node is selected again.
-	var controllers: Dictionary = _inspector_condition_controllers(variables)
+	if not (controllers is Dictionary):
+		controllers = inspector_condition_controllers(inspector_conditions(variables, []))
 
 	for key: Variant in keys:
 		var var_name: String = str(key)
@@ -3542,69 +3569,162 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 				warnings.append("Variable \"%s\": On Changed targets unknown function \"%s\" - check the spelling." % [var_name, on_changed])
 			if not on_changed.is_empty() or clamp_enabled:
 				lines.append("%svar %s: %s = %s:" % [export_prefix, var_name, type_name, _to_code_literal(default_value)])
-				lines.append("\tset(value):")
+				var assignment: String = "%s = value" % var_name
 				if clamp_enabled:
 					var clamp_range: Dictionary = attributes.get("range")
 					var clamp_call: String = "clampi" if type_name == "int" else "clampf"
-					lines.append("\t\t%s = %s(value, %s, %s)" % [var_name, clamp_call, str(clamp_range.get("min", "0")), str(clamp_range.get("max", "100"))])
-				else:
-					lines.append("\t\t%s = value" % var_name)
-				if not on_changed.is_empty():
-					lines.append("\t\t%s()" % on_changed)
-				if controllers.has(var_name):
-					lines.append("\t\tnotify_property_list_changed()")
+					assignment = "%s = %s(value, %s, %s)" % [var_name, clamp_call, str(clamp_range.get("min", "0")), str(clamp_range.get("max", "100"))]
+				lines.append_array(_reaction_setter_lines(assignment, attributes, controllers.has(var_name)))
 			else:
 				lines.append("%svar %s: %s = %s" % [export_prefix, var_name, type_name, _to_code_literal(default_value)])
 				_append_inspector_refresh_setter(lines, var_name, controllers)
-			# "group_show_if" is the group-scoped form of "show_if": the member hides with its whole
-			# group, and it compiles to the SAME _validate_property entry the field form compiles to -
-			# once per member, which is what "the group hides" means to Godot. It only counts on a
-			# variable that is actually in a group; without one there is no group to scope.
-			for condition_key: String in ["group_show_if", "show_if", "lock_unless"]:
-				var condition_predicate: String = str(attributes.get(condition_key, "")).strip_edges()
-				if condition_key == "group_show_if" and str(attributes.get("group", "")).strip_edges().is_empty():
-					continue
-				if exported and not condition_predicate.is_empty():
-					if not variables.has(condition_predicate):
-						warnings.append("Variable \"%s\": %s targets unknown variable \"%s\" - check the spelling." % [var_name, condition_key, condition_predicate])
-					property_conditions.append({"name": var_name, "predicate": condition_predicate, "kind": "lock_unless" if condition_key == "lock_unless" else "show_if"})
 		else:
 			lines.append("@export var %s: Variant = %s" % [var_name, _to_code_literal(descriptor)])
 			_append_inspector_refresh_setter(lines, var_name, controllers)
-
-	if not property_conditions.is_empty():
-		lines.append("")
-		lines.append("## Inspector conditions (Show If / Lock Unless) — generated; edit via the Variable dialog.")
-		lines.append("func _validate_property(property: Dictionary) -> void:")
-		for condition: Dictionary in property_conditions:
-			lines.append("\tif str(property.name) == \"%s\" and not bool(%s):" % [str(condition.get("name")), str(condition.get("predicate"))])
-			if str(condition.get("kind")) == "show_if":
-				lines.append("\t\tproperty.usage &= ~PROPERTY_USAGE_EDITOR")
-			else:
-				lines.append("\t\tproperty.usage |= PROPERTY_USAGE_READ_ONLY")
-
 	return lines
 
 
-## The names the generated _validate_property reads, as a set: every variable a Show If / Lock Unless
-## on an exported member points at, by the same rules _emit_variables uses to emit the condition
-## (a combo String ignores its conditions; a group show-if needs a group; an unknown name is skipped).
-static func _inspector_condition_controllers(variables: Dictionary) -> Dictionary:
-	var controllers: Dictionary = {}
+## Every Show if / Lock unless the sheet's variables ask for, as {name, predicate, kind} entries in
+## emission order: the dictionary variables first, then the tree rows. One rule set for both stores, so
+## a `.gd` sheet (whose variables are rows) gets the same Inspector conditions a `.tres` sheet does:
+## only an exported member counts, a combo String ignores its conditions, and "group_show_if" (the
+## group-scoped form, the member hiding with its whole group) needs a group to scope. A predicate that
+## names no variable still compiles - it is the author's to fix - and gets a warning.
+static func inspector_conditions(variables: Dictionary, tree_variables: Array, warnings: Array = []) -> Array:
+	var known: Dictionary = {}
 	for key: Variant in variables:
+		known[str(key)] = true
+	for entry: Variant in tree_variables:
+		if entry is LocalVariable:
+			known[(entry as LocalVariable).name] = true
+	var entries: Array = []
+	for key: Variant in variable_emit_order(variables):
 		var descriptor: Variant = variables[key]
-		if not (descriptor is Dictionary) or not bool(descriptor.get("exported", true)):
+		if descriptor is Dictionary:
+			var attributes: Dictionary = descriptor.get("attributes") if descriptor.get("attributes") is Dictionary else {}
+			var is_combo: bool = str(descriptor.get("type", "Variant")) == "String" and not PackedStringArray(descriptor.get("options", [])).is_empty()
+			if bool(descriptor.get("exported", true)) and not is_combo:
+				_append_condition_entries(entries, str(key), attributes, known, warnings)
+	for entry: Variant in tree_variables:
+		var row: LocalVariable = entry as LocalVariable
+		if row != null and row.exported and not row.is_constant and row.attributes is Dictionary \
+				and not (row.type_name == "String" and not row.options.is_empty()):
+			_append_condition_entries(entries, row.name, row.attributes, known, warnings)
+	return entries
+
+
+static func _append_condition_entries(entries: Array, var_name: String, attributes: Dictionary, known: Dictionary, warnings: Array) -> void:
+	for condition_key: String in ["group_show_if", "show_if", "lock_unless"]:
+		var predicate: String = str(attributes.get(condition_key, "")).strip_edges()
+		if predicate.is_empty() or (condition_key == "group_show_if" and str(attributes.get("group", "")).strip_edges().is_empty()):
 			continue
-		var attributes: Dictionary = descriptor.get("attributes") if descriptor.get("attributes") is Dictionary else {}
-		if str(descriptor.get("type", "Variant")) == "String" and not PackedStringArray(descriptor.get("options", [])).is_empty():
-			continue
-		for condition_key: String in ["group_show_if", "show_if", "lock_unless"]:
-			var predicate: String = str(attributes.get(condition_key, "")).strip_edges()
-			if condition_key == "group_show_if" and str(attributes.get("group", "")).strip_edges().is_empty():
-				continue
-			if not predicate.is_empty() and variables.has(predicate):
-				controllers[predicate] = true
+		if not known.has(predicate):
+			warnings.append("Variable \"%s\": %s targets unknown variable \"%s\" - check the spelling." % [var_name, condition_key, predicate])
+		entries.append({"name": var_name, "predicate": predicate, "known": known.has(predicate), "key": condition_key,
+			"kind": "lock_unless" if condition_key == "lock_unless" else "show_if"})
+
+
+## The names the generated _validate_property reads, as a set. _validate_property only runs when the
+## Inspector rebuilds its list, so each of these declares a setter that asks for that rebuild -
+## otherwise ticking the controlling box changes nothing on screen until the node is selected again.
+static func inspector_condition_controllers(conditions: Array) -> Dictionary:
+	var controllers: Dictionary = {}
+	for condition: Dictionary in conditions:
+		if bool(condition.get("known", false)):
+			controllers[str(condition.get("predicate"))] = true
 	return controllers
+
+
+## The generated _validate_property for `conditions`, with the blank line and the doc line above it;
+## empty when there is nothing to hide or lock.
+static func inspector_conditions_function(conditions: Array) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	if conditions.is_empty():
+		return lines
+	lines.append("")
+	lines.append(INSPECTOR_CONDITIONS_DOC)
+	lines.append("func _validate_property(property: Dictionary) -> void:")
+	for condition: Dictionary in conditions:
+		lines.append("\tif str(property.name) == \"%s\" and not bool(%s):" % [str(condition.get("name")), str(condition.get("predicate"))])
+		if str(condition.get("kind")) == "show_if":
+			lines.append("\t\tproperty.usage &= ~PROPERTY_USAGE_EDITOR")
+		else:
+			lines.append("\t\tproperty.usage |= PROPERTY_USAGE_READ_ONLY")
+	return lines
+
+
+## True when the sheet writes `func <function_name>(` itself, in a function or a code block. The
+## generated _validate_property then stands aside (two would not parse), and so do the refresh setters
+## that only exist to serve it: the author's own function decides what the Inspector shows.
+static func _sheet_writes_function(raw_rows: Array, functions: Array, function_name: String) -> bool:
+	for function_entry: Variant in functions:
+		if function_entry is EventFunction and (function_entry as EventFunction).function_name == function_name:
+			return true
+	for raw_entry: Variant in raw_rows:
+		if raw_entry is RawCodeRow and (raw_entry as RawCodeRow).code.contains("func %s(" % function_name):
+			return true
+	return false
+
+
+## The conditions a compile writes, after the stand-aside rule above: none when the sheet has its own
+## _validate_property, with a warning naming the variables whose Show if / Lock unless it leaves to it.
+## A group show-if is not named: in a file with its own function that comment is the author's note to
+## the editor, which reads it from the file whatever the function does.
+static func _conditions_to_write(conditions: Array, sheet_owns_hook: bool, warnings: Array) -> Array:
+	if not sheet_owns_hook or conditions.is_empty():
+		return conditions
+	var names: PackedStringArray = PackedStringArray()
+	for condition: Dictionary in conditions:
+		if str(condition.get("key")) != "group_show_if" and not names.has(str(condition.get("name"))):
+			names.append(str(condition.get("name")))
+	if not names.is_empty():
+		warnings.append("The sheet writes its own _validate_property, so the Show if / Lock unless on %s are left to it." % ", ".join(names))
+	return []
+
+
+## A setter that reacts to a change: the assignment, then the sheet function the variable's On changed
+## names, then the Inspector refresh when a Show if / Lock unless reads it. "wait_for_ready" guards the
+## call with is_node_ready(), because a @tool script's setters also run while the scene LOADS, before
+## the children that function reaches exist - the guard is what keeps dragging a slider in the
+## Inspector from crashing the editor on the next scene open.
+static func _reaction_setter_lines(assignment: String, attributes: Dictionary, refresh_inspector: bool) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray(["\tset(value):", "\t\t%s" % assignment])
+	var on_changed: String = str(attributes.get("on_changed", "")).strip_edges()
+	if not on_changed.is_empty():
+		if bool(attributes.get("wait_for_ready", false)):
+			lines.append("\t\tif is_node_ready():")
+			lines.append("\t\t\t%s()" % on_changed)
+		else:
+			lines.append("\t\t%s()" % on_changed)
+	if refresh_inspector:
+		lines.append("\t\tnotify_property_list_changed()")
+	return lines
+
+
+## True when a tree variable gets a written-for-it setter: it is read by a Show if / Lock unless, or it
+## is an exported variable with an On changed. A constant or a static has no setter to give.
+static func _reacts_to_changes(local_var: LocalVariable, refresh_inspector: bool) -> bool:
+	if local_var.is_constant or local_var.is_static or local_var.static_local:
+		return false
+	var on_changed: String = str((local_var.attributes as Dictionary).get("on_changed", "")).strip_edges() \
+		if local_var.attributes is Dictionary else ""
+	return refresh_inspector or (local_var.exported and not on_changed.is_empty())
+
+
+## The warnings a tree variable's On changed earns: it names no function the sheet has, or the variable
+## has a setter of its own (which wins, so the On changed is not written).
+static func _warn_unread_reactions(tree_variables: Array, function_names: Dictionary, raw_rows: Array, warnings: Array) -> void:
+	for entry: Variant in tree_variables:
+		var row: LocalVariable = entry as LocalVariable
+		if row == null or not (row.attributes is Dictionary):
+			continue
+		var on_changed: String = str((row.attributes as Dictionary).get("on_changed", "")).strip_edges()
+		if on_changed.is_empty():
+			continue
+		if row.has_property_accessors():
+			warnings.append("Variable \"%s\" has a setter of its own, so its On changed (%s) is not written - call it from the setter." % [row.name, on_changed])
+		elif not function_names.has(on_changed) and not _sheet_writes_function(raw_rows, [], on_changed):
+			warnings.append("Variable \"%s\": On Changed targets unknown function \"%s\" - check the spelling." % [row.name, on_changed])
 
 
 ## Turns the declaration just appended into one with a setter that refreshes the Inspector, when
@@ -3614,9 +3734,7 @@ static func _append_inspector_refresh_setter(lines: PackedStringArray, var_name:
 	if not controllers.has(var_name) or lines.is_empty():
 		return
 	lines[lines.size() - 1] = lines[lines.size() - 1] + ":"
-	lines.append("\tset(value):")
-	lines.append("\t\t%s = value" % var_name)
-	lines.append("\t\tnotify_property_list_changed()")
+	lines.append_array(_reaction_setter_lines("%s = value" % var_name, {}, true))
 
 
 ## Recursively gathers tree-placed GDScript blocks from the top level and groups (sub-event
@@ -4172,7 +4290,9 @@ static func _labeled_value_arguments(entries: Array) -> PackedStringArray:
 
 
 ## Emits the class-level declaration for one tree-placed variable (const / @export var / var).
-static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
+## `refresh_inspector` is true when a Show if / Lock unless reads this variable: with no setter of its
+## own it then declares one that refreshes the Inspector (see inspector_condition_controllers).
+static func _emit_tree_variable_line(local_var: LocalVariable, refresh_inspector: bool = false) -> String:
 	if local_var == null or local_var.name.strip_edges().is_empty():
 		return ""
 	# A Static local is written as a local and lives as a member: two lines, the marker that says
@@ -4268,6 +4388,12 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 	# reproduces the source exactly (the lift byte-gate below refuses anything that does not).
 	if local_var.has_property_accessors():
 		var_line = _append_property_accessors(local_var, var_line)
+	elif _reacts_to_changes(local_var, refresh_inspector):
+		# The setter the variable's options write (On changed, the Inspector refresh). A setter the author
+		# wrote wins above: their body says what happens on a change, and On changed stands aside for it.
+		var reaction: PackedStringArray = PackedStringArray([var_line + ":"])
+		reaction.append_array(_reaction_setter_lines("%s = value" % local_var.name, local_var.attributes, refresh_inspector))
+		var_line = "\n".join(reaction)
 	# Inspector grouping rides in front, matching the dict-var path (_emit_variables) byte-for-byte so the
 	# round-trip lift can absorb it back onto the variable instead of stranding it as a GDScript block.
 	return _tree_variable_group_prefix(local_var) + var_line

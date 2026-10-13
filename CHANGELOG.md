@@ -2,6 +2,32 @@
 
 ## [Unreleased]
 
+### Added: a tool sheet's variables, written both ways
+
+- **Show if and Lock unless work on a `.gd` sheet.** A sheet variable (the rows a `.gd` sheet keeps
+  its variables in) with a Show if or a Lock unless now compiles exactly as on a `.tres` sheet: one
+  generated `_validate_property` straight after the last variable, and the variable it reads gets a
+  setter that calls `notify_property_list_changed()`, so the field appears or locks the moment the
+  box is ticked instead of after the node is selected again. Before, the dialog's fields were
+  dropped on a sheet variable without a word.
+- **On changed, and Wait for ready.** A sheet variable's On changed calls its function from the
+  setter. The new `wait_for_ready` option puts that call behind `if is_node_ready():`, because a
+  tool script's setters also run while the scene loads, before the children the function reaches
+  exist. It works on dictionary variables too.
+- **A sheet-written file reopens as the options that wrote it.** The generated `_validate_property`
+  goes back onto the variables as their Show if / Lock unless, and the setters that only refresh the
+  Inspector go with it; the file still saves byte for byte. A hand-edited function stays the
+  function, and a file that writes its own `_validate_property` keeps it: the generated one stands
+  aside (with a warning naming the variables it leaves to it) instead of writing a second.
+- **Add An Inspector Button For It...** on a function's row asks what the button should say (the
+  function's name, read as words, to start with) and shows the `@export_tool_button` line it adds.
+  Ctrl+Z removes it again.
+- **Saved but hidden survives an edit.** Editing a sheet variable that is `@export_storage`, or an
+  Inspector button row, through the Variable dialog no longer turns it back into a plain export.
+- A group show-if comment (`# @inspector_show_if`) in a file with no `_validate_property` of its
+  own now stays the comment it is, rather than becoming an option whose save would write a function
+  the file never had.
+
 ### Changed: quick questions take one plain shape
 
 - **A quick question now reads the same everywhere.** Its title is the question, one plain sentence

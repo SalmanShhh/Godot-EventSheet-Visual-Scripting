@@ -143,6 +143,9 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 					(_dock._context_row.source_resource as EventFunction).function_name)
 			else:
 				_dock._set_status("Select a function's row to rename it.", true)
+		_dock.ROW_MENU_ADD_TOOL_BUTTON:
+			if _dock._context_row != null and _dock._context_row.source_resource is EventFunction:
+				_dock.prompt_inspector_button_for((_dock._context_row.source_resource as EventFunction).function_name)
 		_dock.ROW_MENU_MAKE_MESSAGE:
 			if _dock._context_row != null and _dock._context_row.source_resource is EventFunction:
 				_dock._messages.open_message(_dock._context_row.source_resource)

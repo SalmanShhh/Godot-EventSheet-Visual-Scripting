@@ -7441,3 +7441,11 @@ Any type at all. The editor cannot check it for you.,任何类型。编辑器无
 "One row per value, which opens in a spreadsheet. Good for checking balance numbers in a spreadsheet.",每个值一行，可以在电子表格中打开。适合在电子表格里检查平衡数值。
 "The classic settings-file layout, readable by many older tools. Good when modders expect a familiar file.",经典的设置文件格式，许多旧工具都能读取。适合模组作者期待熟悉文件的情况。
 Tagged text that many tools can check against a schema. Good when another tool needs to validate the file.,带标签的文本，许多工具可以按模式检查。适合另一个工具需要验证该文件的情况。
+Add an Inspector button?,添加检查器按钮?
+Pressing the button in the Inspector runs this function in the editor. The sheet has to be a Tool sheet for it to run there.,在检查器中按下按钮会在编辑器里运行这个函数。工作表必须是 Tool 工作表才能在那里运行。
+Button says,按钮文字
+Ctrl+Z removes the button again.,Ctrl+Z 会再次移除该按钮。
+Add Button,添加按钮
+"Added the Inspector button ""%s"" for %s.","已添加检查器按钮 ""%s""(用于 %s)。"
+(turn on Tool in the Sheet Type dialog for it to run in the editor.),"(在“工作表类型”对话框中打开 Tool,它才会在编辑器中运行。)"
+Add An Inspector Button For It…,为它添加检查器按钮…

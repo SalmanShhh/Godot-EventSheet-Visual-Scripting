@@ -7441,3 +7441,11 @@ Any type at all. The editor cannot check it for you.,どんな型でも。エデ
 "One row per value, which opens in a spreadsheet. Good for checking balance numbers in a spreadsheet.",値ごとに 1 行で、表計算ソフトで開けます。バランス調整の数値を表計算で確かめるのに向いています。
 "The classic settings-file layout, readable by many older tools. Good when modders expect a familiar file.",昔ながらの設定ファイルの形式で、多くの古いツールが読めます。MOD 制作者が見慣れたファイルを期待する場合に向いています。
 Tagged text that many tools can check against a schema. Good when another tool needs to validate the file.,多くのツールがスキーマで検証できるタグ付きテキスト。別のツールがファイルを検証する必要がある場合に向いています。
+Add an Inspector button?,Inspector にボタンを追加しますか?
+Pressing the button in the Inspector runs this function in the editor. The sheet has to be a Tool sheet for it to run there.,Inspector のボタンを押すと、この関数がエディタ内で実行されます。そこで実行するには、シートが Tool シートである必要があります。
+Button says,ボタンの表示
+Ctrl+Z removes the button again.,Ctrl+Z でボタンを元に戻せます。
+Add Button,ボタンを追加
+"Added the Inspector button ""%s"" for %s.","Inspector ボタン ""%s"" を追加しました (%s)。"
+(turn on Tool in the Sheet Type dialog for it to run in the editor.),(エディタで実行するには、シートタイプダイアログで Tool をオンにしてください。)
+Add An Inspector Button For It…,この関数の Inspector ボタンを追加…

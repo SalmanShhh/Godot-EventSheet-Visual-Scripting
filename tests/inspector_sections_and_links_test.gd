@@ -87,16 +87,20 @@ static func _group_show_if() -> bool:
 			[{"kind": "group_show_if", "predicate": "dashed"}, {"kind": "header", "text": "Dashes", "color": ""}]]
 	]) and ok
 
-	# Round trip: a tree variable carrying the group scope re-emits byte for byte, and reopens with
-	# the scope recovered as an editable attribute rather than a stray comment block.
-	var lifted: EventSheetResource = SUPPORT.reopen(source)
+	# Round trip: a file the sheet wrote (the comment, the generated _validate_property behind it and the
+	# refresh setter) reopens with the scope recovered as an editable attribute rather than a stray
+	# comment block, and re-emits byte for byte. A comment with no function behind it stays the comment
+	# it is, or saving would write a function the file never had.
+	var written: String = "extends Node\n\n@export var dashed: bool = false:\n\tset(value):\n\t\tdashed = value\n\t\tnotify_property_list_changed()\n# @inspector_show_if dashed\n@export_group(\"Dashes\")\n@export var dash_count: int = 16\n\n%s\nfunc _validate_property(property: Dictionary) -> void:\n\tif str(property.name) == \"dash_count\" and not bool(dashed):\n\t\tproperty.usage &= ~PROPERTY_USAGE_EDITOR\n" % SheetCompiler.INSPECTOR_CONDITIONS_DOC
+	var lifted: EventSheetResource = SUPPORT.reopen(written)
 	var lifted_count: LocalVariable = _find(lifted, "dash_count")
 	ok = SUPPORT.pins(P, [
 		["the group scope reopens as an attribute",
 			(lifted_count.attributes as Dictionary).get("group_show_if", "") if lifted_count != null else "<missing>", "dashed"],
 		["the group itself reopens too",
 			(lifted_count.attributes as Dictionary).get("group", "") if lifted_count != null else "<missing>", "Dashes"],
-		["the file re-emits byte for byte", SUPPORT.reemit(source, "user://eventsheets_group_show_if_roundtrip.gd"), source]
+		["the file re-emits byte for byte", SUPPORT.reemit(written, "user://eventsheets_group_show_if_roundtrip.gd"), written],
+		["a comment-only file re-emits byte for byte", SUPPORT.reemit(source, "user://eventsheets_group_show_if_comment.gd"), source]
 	]) and ok
 	return ok
 
