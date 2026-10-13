@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Fixed: the sheet and project windows
+
+- **New Event Sheet:** when the name you typed was taken, the sheet was written as
+  `event_sheet-2.gd`, a file name no class name can match, and nothing said so. The suffix now joins
+  with an underscore (`event_sheet_2.gd`) and the Output panel says which file was written instead.
+- **Sheet Type:** OK applied the sheet type even while the Ships as line showed a problem, so a broken
+  class name or an unknown class went straight into the sheet. OK now stays disabled until the line
+  reads clean.
+- **Sheet Type:** changing Name on a class that already had one only relabelled the class, leaving
+  every row that used the old name pointing at a class that no longer existed. It now renames the
+  uses too, the same way Rename class on the sheet's head does.
+
 ### Fixed: the finding and navigation windows
 
 - **Find References:** double-clicking a result now selects the row the use sits on, opening its
@@ -1348,7 +1360,6 @@ file diff over the subject line.
   space so a shape far from the origin stays mediump-safe. Many of a kind still want a MultiMesh,
   and the guide says so.
 
-
 ### Fixed in the opened-script reading
 
 - **A wired handler reads as its trigger again, and a `while true: await` body as the beat it is.**
@@ -1366,7 +1377,6 @@ file diff over the subject line.
   handler sitting after a run of lifted verbs is not worth the file degrading to code blocks. The
   shape is spelled once now, in the lifter, and the canvas asks it rather than keeping a second copy
   that could drift.
-
 
 ### Fixed after a reading of the shapes and inspector pass
 
@@ -1675,7 +1685,6 @@ file diff over the subject line.
   written as a Dictionary, an Array or a constructor call survives whole; and a dropdown entry that
   is the empty word was written as nothing at all, so an "or leave it empty" entry silently stopped
   existing - it ships quoted now, and comes back.
-
 
 ### Fixed after a reading of the juice composition pass
 
@@ -6743,7 +6752,6 @@ A boundary review read the three lift families, the guards and the pages against
   of the file spells it. And two tests left `_scene_save_roundtrip.gd` and a `__fileplaces_test`
   folder in the player's data folder after every run.
 
-
 ### Every call on a known class is a row
 
 - **The API is vocabulary too.** A call whose receiver's class the sheet can KNOW now derives an
@@ -10626,7 +10634,6 @@ byte for byte, which is the gate each of them ships behind.
 
 - **The Addon manager figure counts the packs that are actually there.** It said 91; there are 95.
   Re-rendered from the real window, and the alt text says what the picture says.
-
 
 ### Changed - the documentation caught up with everything the sheet learned, and the index gates it
 

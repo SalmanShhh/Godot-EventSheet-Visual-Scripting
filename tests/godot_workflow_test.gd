@@ -24,7 +24,7 @@ static func run() -> bool:
 	var all_passed: bool = true
 
 	# ── Attach Event Sheet (the "Attach Script" reflex): a single hand-editable .gd, no .tres ──
-	for stale: String in ["user://boss_fight_sheet.gd", "user://boss_fight_sheet-2.gd",
+	for stale: String in ["user://boss_fight_sheet.gd", "user://boss_fight_sheet_2.gd",
 			"user://boss_fight_sheet.tres", "user://boss_fight_sheet_generated.gd"]:
 		if FileAccess.file_exists(stale):
 			DirAccess.remove_absolute(stale)
@@ -45,12 +45,12 @@ static func run() -> bool:
 	sibling_node.name = "Boss Fight"
 	var suffixed: Dictionary = EventSheetWorkflow.create_sheet_for_node(sibling_node, "user://")
 	all_passed = _check("name collisions suffix instead of overwriting",
-		str(suffixed.get("sheet_path")), "user://boss_fight_sheet-2.gd") and all_passed
+		str(suffixed.get("sheet_path")), "user://boss_fight_sheet_2.gd") and all_passed
 
 	# ── New Event Sheet (the FileSystem "Create New > Event Sheet" core) ──────────
 	# write_sheet_file compiles a starter straight to a hand-editable .gd (the default sheet
 	# format) in the chosen folder; the .gd IS the sheet, so it lifts back to an EventSheetResource.
-	for stale_gd: String in ["user://event_sheet.gd", "user://event_sheet-2.gd", "user://loot_table.gd", "user://escape.gd", "user://player.gd"]:
+	for stale_gd: String in ["user://event_sheet.gd", "user://event_sheet_2.gd", "user://loot_table.gd", "user://escape.gd", "user://player.gd"]:
 		if FileAccess.file_exists(stale_gd):
 			DirAccess.remove_absolute(stale_gd)
 	var made: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetStarterTemplates.build_starter(0), "user://", "event_sheet")
@@ -64,9 +64,14 @@ static func run() -> bool:
 	# event_sheet.gd now exists, so a same-named create must suffix.
 	var made_again: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetStarterTemplates.build_starter(0), "user://", "event_sheet")
 	all_passed = _check("a second Create New suffixes instead of overwriting",
-		str(made_again.get("sheet_path")), "user://event_sheet-2.gd") and all_passed
+		str(made_again.get("sheet_path")), "user://event_sheet_2.gd") and all_passed
+	# The suffixed stem stays a valid identifier, and the result names the rename for the user.
+	all_passed = _check("a suffixed sheet name is still a valid identifier",
+		str(made_again.get("sheet_path")).get_file().get_basename().is_valid_ascii_identifier(), true) and all_passed
+	all_passed = _check("a taken name is reported, naming both files",
+		str(made_again.get("message")), "event_sheet.gd was taken, so the new event sheet is event_sheet_2.gd.") and all_passed
 	# Clear both so the empty-name fallback lands on the un-suffixed default.
-	for reset_gd: String in ["user://event_sheet.gd", "user://event_sheet-2.gd"]:
+	for reset_gd: String in ["user://event_sheet.gd", "user://event_sheet_2.gd"]:
 		if FileAccess.file_exists(reset_gd):
 			DirAccess.remove_absolute(reset_gd)
 	var blank_named: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetResource.new(), "user://", "")
@@ -87,7 +92,7 @@ static func run() -> bool:
 	var double_ext: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetResource.new(), "user://", "player.gd")
 	all_passed = _check("a .gd in the typed name is not doubled",
 		str(double_ext.get("sheet_path")), "user://player.gd") and all_passed
-	for cleanup_gd: String in ["user://event_sheet.gd", "user://event_sheet-2.gd", "user://loot_table.gd", "user://escape.gd", "user://player.gd"]:
+	for cleanup_gd: String in ["user://event_sheet.gd", "user://event_sheet_2.gd", "user://loot_table.gd", "user://escape.gd", "user://player.gd"]:
 		if FileAccess.file_exists(cleanup_gd):
 			DirAccess.remove_absolute(cleanup_gd)
 
@@ -174,7 +179,7 @@ static func run() -> bool:
 	plain.free()
 	node.free()
 	sibling_node.free()
-	for cleanup: String in ["user://boss_fight_sheet.gd", "user://boss_fight_sheet-2.gd",
+	for cleanup: String in ["user://boss_fight_sheet.gd", "user://boss_fight_sheet_2.gd",
 			"user://paired.tres", paired_gd]:
 		if FileAccess.file_exists(cleanup):
 			DirAccess.remove_absolute(cleanup)

@@ -297,6 +297,9 @@ func _finish_create_sheet(directory: String, sheet_name: String, starter_id: int
 	if not bool(result.get("ok", false)):
 		push_warning("[Godot EventSheets] %s" % str(result.get("message")))
 		return
+	if bool(result.get("renamed", false)):
+		# The typed name was taken: say which file was written instead of leaving the user to find it.
+		print("[Godot EventSheets] %s" % str(result.get("message")))
 	var sheet_path: String = str(result.get("sheet_path"))
 	# Index the just-written file so it appears in the FileSystem dock, then build + reveal the
 	# workspace and open the new sheet editable.

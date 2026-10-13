@@ -75,9 +75,12 @@ static func write_sheet_file(sheet: EventSheetResource, directory: String, base_
 	# path_join handles trailing slashes itself; trim_suffix would mangle the root
 	# forms ("res://" -> "res:/").
 	var sheet_path: String = directory.path_join(stem + ".gd")
+	var wanted_file: String = sheet_path.get_file()
+	# The suffix joins with an underscore, never a hyphen: the stem has to stay a valid identifier
+	# so a class_name derived from the file name can still match it.
 	var suffix: int = 2
 	while FileAccess.file_exists(sheet_path):
-		sheet_path = directory.path_join("%s-%d.gd" % [stem, suffix])
+		sheet_path = directory.path_join("%s_%d.gd" % [stem, suffix])
 		suffix += 1
 	# omit_generated_banner = true: this .gd is the user's own hand-editable source of truth,
 	# NOT a regenerated companion, so it must not carry the "regenerated on every compile"
@@ -86,4 +89,7 @@ static func write_sheet_file(sheet: EventSheetResource, directory: String, base_
 	var compile_result: Dictionary = SheetCompiler.compile(sheet, sheet_path, true)
 	if not bool(compile_result.get("success", false)):
 		return {"ok": false, "message": "The new sheet didn't compile: %s" % str(compile_result.get("errors")), "sheet_path": sheet_path}
-	return {"ok": true, "message": "Created event sheet %s." % sheet_path.get_file(), "sheet_path": sheet_path}
+	if sheet_path.get_file() != wanted_file:
+		return {"ok": true, "renamed": true, "sheet_path": sheet_path,
+			"message": "%s was taken, so the new event sheet is %s." % [wanted_file, sheet_path.get_file()]}
+	return {"ok": true, "renamed": false, "message": "Created event sheet %s." % sheet_path.get_file(), "sheet_path": sheet_path}
