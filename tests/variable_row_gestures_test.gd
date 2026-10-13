@@ -3,7 +3,8 @@
 #   1. Group by prefix proposes the start the names share and writes ONE prefix group above the first.
 #   2. End group here writes `@export_group("")` above the member; dragging the end line moves it.
 #   3. Move into a group, and an Inspector look picked from the submenu, land on the member.
-#   4. The help strip says the member's type, value, Inspector state and group, with its doors.
+#   4. The help strip says the one thing the row cannot (why it is outside a group, its slider, its
+#      Inspector state and group), with its doors; its hover says the whole, type and value first.
 #   5. Add > Inspector button writes the button and the function it runs.
 #   6. The Ghost Row reads "max_jumps is a whole number from 1 to 3, in the Inspector".
 #   7. The variable window searches its types, and fills node and resource slots (Pick, Load, New).
@@ -73,12 +74,14 @@ static func _strip() -> bool:
 	view.free()
 	return SUPPORT.pins(P, [
 		["a member a prefix group shuts out says why, and offers the move",
-			said.get("health"), ["int health = 10 · in the Inspector · not in a group  Not in Bullet: that group only takes names starting bullet.", ["move", "properties"]]],
+			said.get("health"), ["Not in Bullet: that group only takes names starting bullet.", ["move", "properties"]]],
 		["a member in a group with a slider offers its look and its range",
-			said.get("bullet_count"), ["int bullet_count = 3 · in the Inspector · in group Bullet", ["look", "properties"]]],
+			said.get("bullet_count"), ["in the Inspector · in group Bullet", ["look", "properties"]]],
 		["a slider says its range",
-			said.get("max_jumps"), ["int max_jumps = 2 · in the Inspector · not in a group  A slider from 1 to 3 in the Inspector.", ["move", "range", "properties"]]],
-		["a private member is not in the Inspector", said.get("_cooldown"), ["float _cooldown = 0.0 · not in the Inspector", ["properties"]]],
+			said.get("max_jumps"), ["A slider from 1 to 3 in the Inspector.", ["move", "range", "properties"]]],
+		["and its hover says the whole of it, type, name and value first", said.get("max_jumps detail"),
+			"int max_jumps = 2 · in the Inspector · not in a group  A slider from 1 to 3 in the Inspector."],
+		["a private member is not in the Inspector", said.get("_cooldown"), ["not in the Inspector", ["properties"]]],
 		["the doors read Move into a group…, Change look…, Edit range… and Properties…", [GESTURES.link_label("move"), GESTURES.link_label("look"), GESTURES.link_label("range"), GESTURES.link_label("properties")],
 			["Move into a group…", "Change look…", "Edit range…", "Properties…"]],
 	])
@@ -91,6 +94,7 @@ static func _collect_strips(row: EventRowData, sheet: EventSheetResource, into: 
 		var strip: Dictionary = GESTURES.strip_for(row, sheet)
 		if not strip.is_empty():
 			into[(row.source_resource as LocalVariable).name] = [strip["text"], Array(strip["links"])]
+			into[(row.source_resource as LocalVariable).name + " detail"] = strip["detail"]
 	for child: EventRowData in row.children:
 		_collect_strips(child, sheet, into)
 

@@ -113,8 +113,11 @@ static func identity_of(row_data: EventRowData) -> Dictionary:
 # ── The help strip ────────────────────────────────────────────────────────────────────────────────
 
 
-## What the help strip says under a selected member and the doors beside it: {text, links}. The row
-## itself never says any of it. {} for any other row.
+## What the help strip says under a selected member and the doors beside it: {text, detail, links}.
+## The strip shares the status bar with the doors and the counts, so `text` is only the one thing the
+## selected row cannot say itself - why it is outside the group above it, else its slider, else where
+## the Inspector shows it. `detail`, the hover, is the whole of it with the type, name and value
+## first. The row itself never says any of it. {} for any other row.
 static func strip_for(row_data: EventRowData, sheet: EventSheetResource) -> Dictionary:
 	if row_data == null:
 		return {}
@@ -126,7 +129,7 @@ static func strip_for(row_data: EventRowData, sheet: EventSheetResource) -> Dict
 	var words: String = "%s %s" % [_type_of(found), str(identity["name"])]
 	if not _value_words(found).is_empty():
 		words += " = %s" % _value_words(found)
-	var facts: PackedStringArray = PackedStringArray([words])
+	var facts: PackedStringArray = PackedStringArray()
 	var links: PackedStringArray = PackedStringArray()
 	var group: String = group_of_row(row_data, found)
 	if exported:
@@ -136,15 +139,18 @@ static func strip_for(row_data: EventRowData, sheet: EventSheetResource) -> Dict
 	else:
 		facts.append(EventSheetL10n.translate("not in the Inspector"))
 	var text: String = " · ".join(facts)
+	var detail: String = "%s · %s" % [words, text]
 	var bounds: Variant = attributes_of(found).get("range")
 	if exported and bounds is Dictionary:
-		text += "  " + EventSheetL10n.translate("A slider from %s to %s in the Inspector.") % [
+		text = EventSheetL10n.translate("A slider from %s to %s in the Inspector.") % [
 			str((bounds as Dictionary).get("min", "")), str((bounds as Dictionary).get("max", ""))]
+		detail += "  " + text
 		links.append(LINK_RANGE)
 	if not row_data.help_note.is_empty():
-		text += "  " + row_data.help_note
+		text = row_data.help_note
+		detail += "  " + row_data.help_note
 	links.append(LINK_PROPERTIES)
-	return {"text": text, "links": links}
+	return {"text": text, "detail": detail, "links": links}
 
 
 static func link_label(link: String) -> String:

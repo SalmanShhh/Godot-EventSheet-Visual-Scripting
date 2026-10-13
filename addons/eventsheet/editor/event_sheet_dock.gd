@@ -8288,16 +8288,18 @@ func _update_row_help_strip(row_data: EventRowData) -> void:
 func _show_successor_hint(row_data: EventRowData) -> bool:
 	var said: String = row_data.successor_hint
 	var links: PackedStringArray = PackedStringArray()
+	var detail: String = ""
 	if said.is_empty() and row_data.variable_row:
 		var strip: Dictionary = _variable_gestures.strip_for(row_data, _current_sheet)
 		said = str(strip.get("text", ""))
 		links = strip.get("links", PackedStringArray())
+		detail = str(strip.get("detail", ""))
 	if said.is_empty():
 		said = row_data.help_note
 	if said.is_empty():
 		return false
 	_row_help_label.text = said
-	_row_help_label.tooltip_text = _row_help_label.text
+	_row_help_label.tooltip_text = detail if not detail.is_empty() else said
 	_row_help_label.modulate = EventSheetActiveTheme.reading().muted_text_color
 	_row_help_label.visible = true
 	if not links.is_empty():

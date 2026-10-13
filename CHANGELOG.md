@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Fixed: a selected variable's help strip fits beside its doors
+
+- The status-bar strip under a selected variable repeated the row's own type, name and value and
+  then the Inspector facts before saying anything new, so at ordinary editor widths the sentence was
+  cut off before the doors. It now says the one thing the row cannot - why the variable is outside
+  the group above it, else its slider ("A slider from 1 to 3 in the Inspector."), else where the
+  Inspector shows it - and hovering it says the whole, type, name and value first. The strip also
+  takes a larger share of the bar beside the status message.
+
 ### Added: make a script class like inserting an object, and change it from its Properties
 
 - Sheet ▸ New Class… (and the Project bar's New class…) opens Insert new object: tiles grouped by
