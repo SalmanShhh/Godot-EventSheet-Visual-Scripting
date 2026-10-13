@@ -78,6 +78,25 @@ static func _run_dialog() -> bool:
 	# per mode saying the game runs normally.
 	EventSheetModesDialog.write(sheet, PackedStringArray(["Playing", "Paused"]), "Paused", {})
 	all_passed = _check("and they go away when nothing wants them", _entering_events(sheet), 0) and all_passed
+
+	# Taking a mode off the list takes its On entering event along in the same write, so no event is
+	# left naming a member the enum no longer has.
+	var paused_policy: Dictionary = {"Paused": {"physics": false, "mouse": true}}
+	EventSheetModesDialog.write(sheet, PackedStringArray(["Playing", "Paused", "Cutscene"]), "Paused", paused_policy)
+	all_passed = SUPPORT.check("game_state_test", "three modes, three entering events", _entering_events(sheet), 3) and all_passed
+	EventSheetModesDialog.write(sheet, PackedStringArray(["Playing", "Paused"]), "Paused", paused_policy)
+	all_passed = SUPPORT.check("game_state_test", "a removed mode's entering event goes with it", _entering_events(sheet), 2) and all_passed
+	all_passed = SUPPORT.check("game_state_test", "and nothing is left naming a mode that is gone",
+		EventSheetModesDialog.stray_entering_events(sheet), PackedStringArray()) and all_passed
+	# One the author put their own rows into stays, and is named rather than deleted.
+	EventSheetModesDialog.write(sheet, PackedStringArray(["Playing", "Paused", "Cutscene"]), "Paused", paused_policy)
+	for entry: Variant in sheet.events:
+		var entering: EventRow = entry as EventRow
+		if entering != null and str(entering.trigger_params.get(EventSheetModeFacts.MODE_PARAM, "")) == "CUTSCENE":
+			entering.actions.append(ACEAction.new())
+	EventSheetModesDialog.write(sheet, PackedStringArray(["Playing", "Paused"]), "Paused", paused_policy)
+	all_passed = SUPPORT.check("game_state_test", "an entering event holding the author's rows is kept and named",
+		EventSheetModesDialog.stray_entering_events(sheet), PackedStringArray(["CUTSCENE"])) and all_passed
 	return all_passed
 
 

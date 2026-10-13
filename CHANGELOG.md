@@ -31,6 +31,9 @@
   already in the project without keeping them. It now backs up every file it replaces into the backup
   ring first and reports how each imported pack reads. Check for updates and Import from URL no
   longer claim to check or download anything online; they say what they actually do.
+- **Edit modes:** removing a mode left its On entering event behind, naming a mode the game no
+  longer has. The event now goes in the same undo step; one you added your own rows to is kept and
+  named on the status bar instead.
 
 ### Fixed: the finding and navigation windows
 

@@ -180,6 +180,11 @@ func _on_confirmed() -> void:
 			return write(_dock._current_sheet, declared, opening, policy)):
 		return
 	_dock._refresh_after_edit()
+	var stray: PackedStringArray = stray_entering_events(_dock._current_sheet)
+	if not stray.is_empty():
+		_dock._set_status(EventSheetL10n.translate("%d mode(s) declared. The On entering event of %s holds rows of your own, so it was kept - move or delete it, since that mode is gone.")
+			% [declared.size(), ", ".join(stray)], true)
+		return
 	_dock._set_status(EventSheetL10n.translate("%d mode(s) declared - groups can now say which one they run in.")
 		% declared.size())
 
@@ -195,6 +200,15 @@ static func write(sheet: EventSheetResource, declared: PackedStringArray, starts
 	var members: PackedStringArray = PackedStringArray()
 	for word: String in declared:
 		members.append(EventSheetModeFacts.member_for(word))
+	# A mode taken off the list takes the On entering event this dialog wrote for it along, in this
+	# same edit - left behind it would name a member the enum no longer has. An event the author put
+	# their own rows into is theirs and stays; stray_entering_events names it so the dialog can say so.
+	for previous: String in EventSheetModeFacts.names(sheet):
+		if members.has(EventSheetModeFacts.member_for(previous)):
+			continue
+		var stale: EventRow = _policy_event(sheet, previous)
+		if stale != null and _is_only_policy(stale):
+			sheet.events.erase(stale)
 	var enum_row: EnumRow = EventSheetModeFacts.enum_row(sheet)
 	if enum_row == null:
 		enum_row = EnumRow.new()
@@ -228,6 +242,25 @@ static func write(sheet: EventSheetResource, declared: PackedStringArray, starts
 	for word: String in declared:
 		_write_policy_event(sheet, word, policy.get(word, default_policy()), any_differs)
 	return true
+
+
+## The modes whose On entering event is still on the sheet although the mode is gone - events the
+## author added their own rows to, which removing the mode does not delete.
+static func stray_entering_events(sheet: EventSheetResource) -> PackedStringArray:
+	var stray: PackedStringArray = PackedStringArray()
+	if sheet == null:
+		return stray
+	var members: PackedStringArray = PackedStringArray()
+	for word: String in EventSheetModeFacts.names(sheet):
+		members.append(EventSheetModeFacts.member_for(word))
+	for entry: Variant in sheet.events:
+		var event_row: EventRow = entry as EventRow
+		if event_row == null or event_row.trigger_id != EventSheetModeFacts.ENTERING_TRIGGER_ID:
+			continue
+		var member: String = str(event_row.trigger_params.get(EventSheetModeFacts.MODE_PARAM, ""))
+		if not member.is_empty() and not members.has(member) and not stray.has(member):
+			stray.append(member)
+	return stray
 
 
 ## What a mode does to the game unless it says otherwise: the game runs and the mouse is shown. The
