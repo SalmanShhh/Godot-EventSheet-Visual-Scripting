@@ -8256,3 +8256,8 @@ What every sheet's picker offers under the object this is added to. Host is that
 + Add property,+ 添加属性
 returns %s,返回 %s
 Added a trigger.,已添加触发器。
+Your behaviours,你的行为
+Packs,扩展包
+"%s is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object.",%s 是全局：它在 项目设置 > 全局 > 自动加载 中启用，而不是添加到对象上。
+Made for a %s - %s is a %s.,为 %s 而做 - %s 是 %s。
+Add behaviour %s,添加行为 %s

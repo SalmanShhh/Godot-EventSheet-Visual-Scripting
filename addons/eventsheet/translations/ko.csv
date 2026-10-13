@@ -8256,3 +8256,8 @@ What every sheet's picker offers under the object this is added to. Host is that
 + Add property,+ 속성 추가
 returns %s,%s 반환
 Added a trigger.,트리거를 추가했습니다.
+Your behaviours,내 비헤이비어
+Packs,팩
+"%s is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object.",%s은(는) 전역 개체입니다. 프로젝트 설정 > 전역 > 오토로드에서 켜는 것이지 개체에 추가하는 것이 아닙니다.
+Made for a %s - %s is a %s.,%s용입니다. %s은(는) %s입니다.
+Add behaviour %s,비헤이비어 %s 추가

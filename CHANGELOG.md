@@ -36,6 +36,9 @@
   then its Actions, Conditions, Triggers and Expressions, each kind a coloured word and a "returns" chip
   where it gives a value back; clicking a name shows its row. Each list's Add opens the window that
   already writes that kind of member. A global's tick turns it on or off in Godot's own Autoload list.
+- The Add behaviour list puts your own behaviours first under Your behaviours, greys a pack made for
+  another kind of object ("Made for a Node2D - Enemy is a Node.") or one that is a global, with the
+  reason on hover, and adding one is a step Ctrl+Z takes back out of the scene.
 - Size: the old scaffold and its dialog were 531 lines; the generator, the two forms and the new window
   are 890. The generator shrank by half (a new behaviour is a sheet compiled to GDScript, not text
   written out by hand); the growth is the global form and the Properties and actions window, which

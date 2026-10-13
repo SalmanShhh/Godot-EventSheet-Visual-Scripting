@@ -8256,3 +8256,8 @@ What every sheet's picker offers under the object this is added to. Host is that
 + Add property,+ Eigenschaft hinzufügen
 returns %s,gibt %s zurück
 Added a trigger.,Auslöser hinzugefügt.
+Your behaviours,Deine Verhalten
+Packs,Pakete
+"%s is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object.","%s ist ein globales Objekt: Es wird unter Projekteinstellungen > Globale > Autoload eingeschaltet, nicht einem Objekt hinzugefügt."
+Made for a %s - %s is a %s.,Für ein %s gemacht - %s ist ein %s.
+Add behaviour %s,Verhalten %s hinzufügen

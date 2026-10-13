@@ -107,6 +107,22 @@ static func run() -> bool:
 	sheet.autoload_name = "GameState"
 	ok = _check("a global's values are every variable but the constants", MEMBERS.entries(sheet, "properties").size(), 2) and ok
 	ok = _check("each kind wears its own word", [MEMBERS.kind_word("action"), MEMBERS.kind_word("trigger")], ["Action", "Trigger"]) and ok
+	# The Add behaviour list greys what cannot go on this object, with the reason on hover.
+	var bullet: Dictionary = EventSheetPackCatalog.describe("bullet")
+	var plain: Node = Node.new()
+	plain.name = "Enemy"
+	var body: Node2D = Node2D.new()
+	ok = SUPPORT.pins("new_addon_panel_test", [
+		["a pack made for another kind says so", EventSheetAddBehaviorDialog.refusal(bullet, plain), "Made for a Node2D - Enemy is a Node."],
+		["the kind it was made for takes it", EventSheetAddBehaviorDialog.refusal(bullet, body), ""],
+		["with no scene open nothing is greyed", EventSheetAddBehaviorDialog.refusal(bullet, null), ""],
+	]) and ok
+	ProjectSettings.set_setting("autoload/ZzBullet", "*" + str(bullet.get("path")))
+	ok = _check("a global is never added to an object", EventSheetAddBehaviorDialog.refusal(bullet, body),
+		"Bullet is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object.") and ok
+	ProjectSettings.set_setting("autoload/ZzBullet", null)
+	plain.free()
+	body.free()
 	host.free()
 	return ok
 

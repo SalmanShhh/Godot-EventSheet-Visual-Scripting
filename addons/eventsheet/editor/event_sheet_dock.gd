@@ -8926,7 +8926,7 @@ func open_add_behavior_dialog(object_label: String) -> void:
 		_add_behavior_dialog = load(ADD_BEHAVIOR_DIALOG_PATH).new()
 		_add_behavior_dialog.configure(_apply_add_behavior)
 		add_child(_add_behavior_dialog)
-	_add_behavior_dialog.open_for(object_label)
+	_add_behavior_dialog.open_for(object_label, _scene_node_for_object(object_label))
 
 
 ## The Add button's landing: the node path goes into the open scene, the inline path goes through
@@ -8941,7 +8941,17 @@ func _apply_add_behavior(pack: Dictionary, values: Dictionary, inline: bool, obj
 		return
 	var host: Node = _scene_node_for_object(object_label)
 	var result: Dictionary = load(ADD_BEHAVIOR_PATH).attach_node(pack, host, values)
-	if bool(result.get("ok", false)) and Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+	var added: Node = result.get("node") as Node
+	if added != null and Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		# The node is already in the scene; the step only teaches Ctrl+Z (and Ctrl+Y) to take it out and
+		# put it back, the way Godot's own Add Child Node does.
+		var undo: EditorUndoRedoManager = EditorInterface.get_editor_undo_redo()
+		undo.create_action(EventSheetL10n.translate("Add behaviour %s") % added.name, UndoRedo.MERGE_DISABLE, host)
+		undo.add_do_method(host, "add_child", added)
+		undo.add_do_property(added, "owner", added.owner)
+		undo.add_do_reference(added)
+		undo.add_undo_method(host, "remove_child", added)
+		undo.commit_action(false)
 		EditorInterface.mark_scene_as_unsaved()
 	_refresh_ace_registry()
 	_set_status(str(result.get("message", "")), not bool(result.get("ok", false)))

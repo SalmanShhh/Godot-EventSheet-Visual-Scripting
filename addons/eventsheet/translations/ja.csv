@@ -8256,3 +8256,8 @@ What every sheet's picker offers under the object this is added to. Host is that
 + Add property,+ プロパティを追加
 returns %s,%s を返す
 Added a trigger.,トリガーを追加しました。
+Your behaviours,自分のビヘイビア
+Packs,パック
+"%s is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object.",%s はグローバルです。プロジェクト設定 > グローバル > 自動読み込み で有効にするもので、オブジェクトには追加しません。
+Made for a %s - %s is a %s.,%s 用です。%s は %s です。
+Add behaviour %s,ビヘイビア %s を追加

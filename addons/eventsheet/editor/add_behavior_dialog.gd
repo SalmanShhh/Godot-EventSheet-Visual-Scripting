@@ -15,6 +15,8 @@ extends ConfirmationDialog
 # expressions, the head's Behaviors folder shows it, and the Doctor checks the host the pack needs.
 
 var _object_label: String = ""
+## The node the behaviour is being added to, when the scene is open - what the cards are measured against.
+var _host: Node = null
 var _packs: Array[Dictionary] = []
 var _selected_dir: String = ""
 var _category: String = ""
@@ -41,9 +43,11 @@ func configure(on_add: Callable) -> void:
 	_on_add = on_add
 
 
-## Opens for one object. The label is the object the picker and the head will show it under.
-func open_for(object_label: String) -> void:
+## Opens for one object. The label is the object the picker and the head will show it under; `host` is
+## its node in the open scene, when there is one, so a behaviour made for another kind of object is greyed.
+func open_for(object_label: String, host: Node = null) -> void:
 	_object_label = object_label
+	_host = host
 	title = EventSheetL10n.translate("Add behavior to {object}").replace("{object}", object_label) \
 		if not object_label.is_empty() else EventSheetL10n.translate("Add behavior")
 	_packs = EventSheetPackCatalog.packs()
@@ -147,17 +151,31 @@ func _rebuild_list() -> void:
 		child.queue_free()
 	var shown: Array[Dictionary] = EventSheetPackCatalog.filtered(
 		_packs, _category, _search.text if _search != null else "")
+	# Your own behaviours lead, under their own heading, ahead of the packs that ship.
+	var yours: Array[Dictionary] = []
+	var shipped: Array[Dictionary] = []
 	for pack: Dictionary in shown:
+		(yours if EventSheetBehaviourAddonScaffold.is_yours(FileAccess.get_file_as_string(str(pack.get("path", "")))) else shipped).append(pack)
+	if not yours.is_empty():
+		_list.add_child(EventSheetPopupUI.small_caps_label(EventSheetL10n.translate("Your behaviours")))
+		for pack: Dictionary in yours:
+			_list.add_child(_build_card(pack))
+		if not shipped.is_empty():
+			_list.add_child(EventSheetPopupUI.small_caps_label(EventSheetL10n.translate("Packs")))
+	for pack: Dictionary in shipped:
 		_list.add_child(_build_card(pack))
 	if shown.is_empty():
 		_list.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("No pack here matches that."), 260.0))
 	# The card on the right always belongs to a pack the list shows: a search that hides the chosen one
 	# moves the choice to the first match.
 	var still_shown: bool = false
-	for pack: Dictionary in shown:
+	var first_addable: Dictionary = {}
+	for pack: Dictionary in yours + shipped:
 		still_shown = still_shown or str(pack.get("dir", "")) == _selected_dir
-	if not shown.is_empty() and not still_shown:
-		_select_pack(shown[0])
+		if first_addable.is_empty() and refusal(pack, _host).is_empty():
+			first_addable = pack
+	if not first_addable.is_empty() and not still_shown:
+		_select_pack(first_addable)
 
 
 func _build_card(pack: Dictionary) -> Control:
@@ -172,7 +190,29 @@ func _build_card(pack: Dictionary) -> Control:
 	button.text = str(pack.get("name", "")) if pitch.is_empty() else "%s  -  %s" % [str(pack.get("name", "")), pitch]
 	button.tooltip_text = pitch
 	button.pressed.connect(func() -> void: _select_pack(pack))
+	var why_not: String = refusal(pack, _host)
+	if not why_not.is_empty():
+		button.disabled = true
+		button.tooltip_text = why_not
 	return button
+
+
+## Why `pack` cannot be added to `host`, or "" when it can: it is a global (turned on in Godot's
+## Autoload list, never added to an object), or it was made for another kind of object.
+static func refusal(pack: Dictionary, host: Node) -> String:
+	var path: String = str(pack.get("path", ""))
+	for property_info: Dictionary in ProjectSettings.get_property_list():
+		var setting: String = str(property_info.get("name", ""))
+		if setting.begins_with("autoload/") and str(ProjectSettings.get_setting(setting, "")).trim_prefix("*").get_basename() == path.get_basename():
+			return EventSheetL10n.translate("%s is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object.") % str(pack.get("name", ""))
+	if host == null:
+		return ""
+	var needs: String = EventSheetBehaviourAddonScaffold.host_class_of(FileAccess.get_file_as_string(path))
+	if needs.is_empty():
+		needs = EventSheetAddBehavior.host_requirement(pack)
+	if needs.is_empty() or not ClassDB.class_exists(needs) or host.is_class(needs):
+		return ""
+	return EventSheetL10n.translate("Made for a %s - %s is a %s.") % [needs, host.name, host.get_class()]
 
 
 ## One knob as the Inspector would show it: a tick for a bool, a number field (its label scrubs it)
