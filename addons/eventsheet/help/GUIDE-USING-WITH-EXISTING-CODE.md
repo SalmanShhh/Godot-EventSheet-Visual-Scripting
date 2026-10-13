@@ -2163,25 +2163,16 @@ is instantiated to answer a question.
   script's own exported variables). After adding, the picker under the object lists the
   behavior's conditions, actions and expressions, the head's Behaviors folder shows it, and the
   Project Doctor checks the host the pack needs (a CharacterBody2D for the platformer pack).
-- **The installed packs are a list, not a folder.** **Tools ▸ Addon manager…** is a table over the
-  pack registry: pack, its version (read from its own `@ace_version`), an **enabled** tick, and
-  **Guide / Update… / Source / Publish…** per row. Switching a pack off takes its conditions, actions
-  and expressions out of the picker on the next refresh - its files stay where they are and the
-  sheets using it still open, and the Doctor names any sheet that still does. Under the table:
-  **Import from .zip…** and **Import from URL…** (an archive that would write outside
-  `eventsheet_addons/` is refused whole, before anything lands), **Check for updates** (which asks
-  every pack that names a published source with `## @ace_source(...)`), and the Asset Library door.
-- **A pack update is a proposal.** An import hashes every file it lands into the pack's own
-  `pack_manifest.json`, so **Update…** can tell your edits from theirs by content rather than by a
-  date. Point it at the new version's .zip and it lists, before a byte moves: the files still exactly
-  as they arrived (which take the new version - listed, not swept), the files you changed (one answer
-  each: *Keep mine*, the default, *Take new*, or *See the diff*), and what the new version retires and
-  adds, diffed out of the two versions' published vocabularies rather than read off a release note. A
-  retired verb keeps its id, its template and its place in the picker, so rows written on it compile
-  to the same line as ever - the dry run beside it shows what migrating them would change. Everything
-  the update overwrites or removes goes into the backup ring first. A pack with no record - one that
-  ships inside the plugin, or a folder assembled by hand - lists every file as yours and takes
-  nothing unless you say so.
+- **A pack is a folder, and Godot already shows folders.** Every pack is a folder of ordinary
+  behaviour scripts under `eventsheet_addons/`, and the FileSystem dock is where you see them. Adding
+  one is putting its folder there - from the Asset Library, or a .zip you unpack yourself - and its
+  conditions, actions and expressions are in the picker on the next refresh. Removing one is deleting
+  its folder; version control undoes that like any other delete. A pack's version is the
+  `## @ace_version(...)` line at the top of its own script, and where it publishes from is its
+  `## @ace_source(...)` line. Taking a newer version is replacing the folder's files with the new
+  ones and reading the diff version control shows you: a verb the new version retires keeps its id,
+  its template and its place in the picker, so rows written on it compile to the same line as ever,
+  and the Project Doctor names any row whose verb is gone altogether.
 - **The words are yours.** **Menu ▸ Tools ▸ Words…** is every word the sheet lets you choose, on one
   page: an inheritance set, a scene, `_process`, an attached pack, a Godot group,
   Array/Dictionary, `queue_free`, and the reader. Each row shows the word it reads as with
@@ -2217,13 +2208,10 @@ is instantiated to answer a question.
   update.
 - **A finding with a one-step fix shows it.** In the Project Doctor, selecting a finding that has
   a one-step answer draws a chip per answer: an unknown control offers *Add "dash" to the Input
-  Map* and *Pick an existing action…*, a variable read but never set offers *Declare it*, a pack
-  you switched off that a sheet still uses offers *Switch it back on*. Each applies through the
-  same operation the dock already owns, and the audit re-runs immediately, so the finding's
-  disappearance is proven rather than assumed.
+  Map* and *Pick an existing action…*, and a variable read but never set offers *Declare it*. Each
+  applies through the same operation the dock already owns, and the audit re-runs immediately, so
+  the finding's disappearance is proven rather than assumed.
 <img src="images/add-behavior.png" alt="The Add behavior dialog for Player: a scrolling row of category shelves above a search box, a list of pack cards each naming the pack and its one-line pitch, and on the right the selected pack's properties as editable fields above a Where dropdown reading as a behavior node." width="620">
-
-<img src="images/addon-manager.png" alt="The Addon manager: a table of installed packs with columns pack, version, enabled, what you can do and reads, each row showing the pack name over its eventsheet_addons folder, its version, a ticked enabled box and Guide, Update and Publish buttons, above Import from .zip, Import from URL, Check for updates and Find more, and the line 96 packs installed, 0 switched off." width="620">
 
 <img src="images/words-settings.png" alt="The Words page: a table headed what it names, with Familiar Words on, off, listing an inheritance set as Family or Base class, a scene as Layout or Scene, _process as Every tick, an attached pack as Behavior, a Godot group as Family (group) or Group, Array slash Dictionary as list slash table, queue_free as Destroy and the reader as Manual, above a live preview of one event and a Reset to defaults button." width="560">
 

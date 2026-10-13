@@ -71,10 +71,10 @@ One button, five groups, then two doors at its foot:
 | **Add** | The whole authoring vocabulary: Event, Condition, Action, Group, Comment (each printing its key), signals, the three kinds of variable, the Declare submenu, functions, includes, sub-events, Or, Else, Pattern, a code block, and one entry per registered custom block kind | 20 |
 | **Edit** | Copy, Paste, Undo, Redo, Extract Selection to Include, Find References, Generate from Description | 7 |
 | **View** | Everything about what is on screen: the panels and lenses, zoom, split and detached views, Sheet theme, Load / Reload Theme, the Theme Editor, Language, Simple Mode, Familiar Words, the Outline, the Sheet Map, the Debugger, Saved Views, Arrange by, the collapse sweeps, Add toolbar, Project bar, Full toolbar, Text labels | 50 |
-| **Tools** | Debug and project work: breakpoints, Live Values, Event Trace, Bookmarks, Find in Project, Project View, Project Doctor, Check Sheet for Errors, the Studios, Lift Report and Workbench, the Addon manager, Compare With, Loose Ends, Find Repeated Rows, Run Tests, the Replay Recorder, Welcome, the Tour, Keyboard Shortcuts, Words | 37 |
+| **Tools** | Debug and project work: breakpoints, Live Values, Event Trace, Bookmarks, Find in Project, Project View, Project Doctor, Check Sheet for Errors, the Studios, Lift Report and Workbench, Compare With, Loose Ends, Find Repeated Rows, Run Tests, the Replay Recorder, Welcome, the Tour, Keyboard Shortcuts, Words | 36 |
 | _(foot)_ | **Manual...** and **What's new...**, the two doors a reader looks for by name rather than by group | 2 |
 
-That is **137 commands** behind one button, which is exactly why they are behind one button.
+That is **136 commands** behind one button, which is exactly why they are behind one button.
 
 Three things about the cascade are worth knowing:
 

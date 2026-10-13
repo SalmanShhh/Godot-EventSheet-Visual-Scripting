@@ -409,84 +409,35 @@ offers **Make %HealthBar unique** where you are standing.
 
 ## Taking a pack's new version
 
-A pack is **copied into your project** on purpose: once it is in `eventsheet_addons/` it is your code,
-to read, edit and ship like anything else. That is the good half. The other half is that a year later
-nobody can tell which of its files they changed - and an update that cannot tell either is an update
-that either overwrites somebody's work or refuses to move at all.
+A pack is a folder of ordinary scripts under `eventsheet_addons/`, **copied into your project** on
+purpose: once it is there it is your code, to read, edit and ship like anything else. That is also why
+there is nothing new to learn about updating one. It is the same move as for any Godot addon: replace
+the folder's files with the new version's (from the Asset Library, or a .zip you unpack yourself), and
+let version control show you what moved. Removing a pack is deleting its folder, and version control
+undoes that too.
 
-So attaching a pack **writes down what arrived**: one small `pack_manifest.json` inside the pack's own
-folder, holding the content hash of every file the attach landed. No mtimes - a checkout, a copy or a
-sync moves those without touching a byte. The moment a file arrives is the only moment its arrival
-state is knowable, so that is when it is recorded.
+**Commit before you replace the folder.** Then the diff your version-control tool shows is the honest
+answer to "which of these files did I change?" - an edit of yours shows up as a line the new version
+rewrote, and you keep or drop each one the way you would any other change. Nothing in the editor keeps
+a second record of the pack, so there is no second record to fall out of step with the files.
 
-**Update…** then shows the whole proposal before a byte moves:
+Three details are worth knowing before you replace anything:
 
-![The pack update dialog: a lead line reading 4 file(s) are exactly as they arrived and take the new version, 2 you changed, each with its own answer below; an Untouched card listing four files with what the new version does to each; a Yours card listing two files each with a Keep mine dropdown and a See the diff button; a What this version retires and adds card naming one verb that now points elsewhere and one that is new; and Take This Update beside Cancel](images/pack-update-dialog.png)
-
-| The card | What it holds |
-| --- | --- |
-| **Untouched** | Files that still hash to what arrived. They take the new version - and they are **listed**, never swept: "we replaced eleven files you never opened" is something you get to read beforehand rather than discover afterwards |
-| **Yours** | Every file that differs. One answer each: *Keep mine* (always the default), *Take new*, or *See the diff* |
-| **What this version retires and adds** | The vocabulary difference, derived by diffing the two versions' **registry dumps** rather than by reading a release note or a version number |
-
-Four details are worth knowing before you press anything:
-
-- **A line-ending difference is a difference.** A file re-saved with the other platform's line endings
-  does not hash to what arrived, so it is Yours - the honest answer to "did this change?" is the one
-  the bytes give. The row says *only the line endings differ* beside it, so taking the new version is
-  one click and not a mystery.
-- **A pack with no record is not a pack with no changes.** The packs that ship inside the plugin were
-  never attached, and neither was a folder somebody assembled by hand. Those put every file under
-  Yours and default every one of them to *Keep mine*. "We do not know" and "you changed nothing" are
-  different sentences, and only one of them is true.
 - **Retiring a verb is still a forwarding address, never a deleted template.** A verb the new version
   retires keeps its id, its template and its place in the picker, and every row written on it compiles
   to exactly the line it always did. The row that mentions it opens the migrate dry run one click
   away, rather than asking for anything.
-- **The old version goes to the backup ring first.** Every file the update is about to overwrite or
-  remove is copied into the same per-file ring a sheet save uses, before the first new byte lands,
-  and the line printed afterwards says how many went and names the folder they are in.
-- **The dry run answers the vocabulary the update would leave**, not the one you have. The
-  forwarding addresses it is about are the incoming version's, and those do not exist in the packs
-  installed today.
-
-**Asking writes nothing under `res://`, and it runs the incoming code.** Reading a new version,
-classifying every file and diffing both vocabularies leaves the pack byte for byte as it was. But
-reading a version's verbs means REFLECTING it - the copy is written under `user://`, loaded and
-instantiated, so its `_init` and any static initialiser execute, and then it is removed again. That
-is what the live registry does for every pack you have installed; the difference here is that this
-one is a version you have not accepted yet. An archive whose code you would not run is an archive
-not to open.
-
-### Restore: the way back out of an update
-
-The ring is not only a folder any more. **Restore…** on a pack's row in the addon manager lists
-what the ring is holding for that pack - every earlier version of every file, newest first, with when
-that copy was taken and how big it is - and writes the one you choose back over the file in the pack.
-
-Three things about it are worth saying plainly.
-
-**It is one edit you can undo.** Ctrl+Z writes back the bytes that were there before the restore. A
-file that was not in the folder at all - one an update *removed* - is removed again instead. So
-pressing the button is not a decision you have to be sure about.
-
-**A file the update removed is listed, and says so.** That is the case people actually come here for:
-the pack no longer mentions it, the record was re-stamped over the folder the update left, and only
-the ring remembers it existed. Such a file is offered when its place in the pack can be known for
-certain rather than guessed - a ring folder's name is the file's whole path with the separators
-replaced by underscores, which two different paths can spell the same way, and a door that guessed
-where to write would only have to be wrong once.
-
-**The ring itself is never touched.** Restore reads it and copies out of it. Only a save or an update
-ever adds to it, and only its own pruning ever takes anything out.
-
-The editor's own **Restore** menu is a different door and stays what it was: it restores *the sheet
-in front of you*, loading a backup into the editor as an unsaved change. This one restores a pack's
-files, which are rarely sheets at all - a guide, an icon, a translation table.
+- **A verb the new version drops altogether leaves its rows quiet, not broken.** Each row keeps the
+  line and the reading it was given when it was added, so it compiles the same and says the same
+  sentence; it wears the quiet amber state, and the Project Doctor's Migration section names every row
+  whose verb the installed packs no longer have.
+- **What a version retires and adds is a diff of two registry dumps**, never a release note. Dump the
+  vocabulary before you replace the folder and again after, and compare the two texts - the next
+  section is how.
 
 ### The registry dump
 
-The vocabulary diff above is not prose, and it is available to you directly:
+The vocabulary diff is not prose, and it is available to you directly:
 
 ```
 godot --headless --path . --script tools/dump_registry.gd
@@ -721,7 +672,7 @@ is the only review anybody on the team has to know how to do.
   mean". Type the name into the cell; that path is always open.
 - **`%name` prevents the node half of this entirely.** It is worth the one click at the moment you drag
   a node into a field, not later.
-- **Uninstalling a pack does not break the sheets that used it.** The rows keep their line and their
+- **Deleting a pack's folder does not break the sheets that used it.** The rows keep their line and their
   reading. They go quiet-amber and lose the ability to be edited, which is a different and much
   smaller problem than the one people expect.
 - **A file with no newline at its end fails the round-trip check.** Saving it from the editor adds one,

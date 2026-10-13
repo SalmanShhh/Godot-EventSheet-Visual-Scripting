@@ -306,8 +306,8 @@ Speed: the parameter "amount" is not named - give it @ace_param(amount, "Speed",
 ```
 
 **Publishing is never blocked by it.** A check that stopped work would simply be routed around.
-The pack publishes, and carries its score ("reads 94%") in the Addon manager until it passes. The
-same check runs as a note in the Project Doctor over the packs in your project, and as a test over
+The pack publishes, and carries its score ("reads 94%") as a note in the Project Doctor until it
+passes - the same check runs there over the packs in your project, and as a test over
 the packs that ship with the plugin - which is how all 91 of those keep passing it.
 
 ## Checklist before you ship
