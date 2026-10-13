@@ -20,7 +20,7 @@ func _init() -> void:
 	var column := VBoxContainer.new()
 	add_child(column)
 	_caption = Label.new()
-	_caption.text = "Inspector preview"
+	_caption.text = EventSheetL10n.translate("Inspector preview")
 	_caption.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 	_caption.modulate = Color(1.0, 1.0, 1.0, 0.5)
 	column.add_child(_caption)
@@ -324,7 +324,7 @@ func _build_widget(type_name: String, default_text: String, attributes: Dictiona
 		return _ignored(slider)
 	if type_name == "bool":
 		var check := CheckBox.new()
-		check.text = "On"
+		check.text = EventSheetL10n.translate("On")
 		check.button_pressed = default_text.strip_edges() == "true"
 		check.disabled = true
 		return _ignored(check)

@@ -533,10 +533,10 @@ class HelpStrip extends PanelContainer:
 		learn_more_row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
 		learn_more_row.visible = false
 		box.add_child(learn_more_row)
-		reads_as_row = _reading_row("READS AS")
+		reads_as_row = _reading_row(EventSheetL10n.translate("READS AS"))
 		reads_as_value = reads_as_row.get_child(1) as Label
 		box.add_child(reads_as_row)
-		in_code_row = _reading_row("IN CODE")
+		in_code_row = _reading_row(EventSheetL10n.translate("IN CODE"))
 		in_code_value = in_code_row.get_child(1) as Label
 		var mono: Font = EventSheetPopupUI.editor_font("doc_source")
 		if mono != null:

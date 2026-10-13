@@ -7469,3 +7469,298 @@ Only names starting %s join this group.,"Nur Namen, die mit %s beginnen, gehöre
 "%s does not start with %s, so Godot leaves it outside %s. Rename it, or turn off the prefix.","%s beginnt nicht mit %s, daher lässt Godot es außerhalb von %s. Benennen Sie es um oder schalten Sie das Präfix aus."
 automatic: %s tells it when it changes,"automatisch: %s meldet es, wenn es sich ändert"
 nothing to refresh,nichts zu aktualisieren
+Axis fields,Achsenfelder
+Its own editor,Sein eigener Editor
+Writes %s,Schreibt %s
+"(saved, not shown)","(gespeichert, nicht angezeigt)"
+Where it sits in the Inspector,Wo sie im Inspektor steht
+"Live, as you pick","Live, während du wählst"
+Class,Klasse
+What it is for - the Inspector tooltip,Wofür sie da ist - der Tooltip im Inspektor
+Set in code: Godot has no editor for this type.,Im Code gesetzt: Godot hat für diesen Typ keinen Editor.
+Edit the items one per line instead of typing a literal.,"Die Einträge zeilenweise bearbeiten, statt ein Literal zu tippen."
+Write the type in code,Den Typ in den Code schreiben
+In the Inspector,Im Inspektor
+Only names starting,"Nur Namen, die beginnen mit"
+Subgroup,Untergruppe
+When it changes,Wenn sie sich ändert
+a sheet function called after the value is set,"eine Blatt-Funktion, die nach dem Setzen des Werts aufgerufen wird"
+a bool variable - hidden while it is false,"eine bool-Variable - ausgeblendet, solange sie false ist"
+Show group if,"Gruppe anzeigen, wenn"
+a bool variable - hides this with its whole group,eine bool-Variable - blendet dies mit der ganzen Gruppe aus
+a bool variable - read-only while it is false,"eine bool-Variable - schreibgeschützt, solange sie false ist"
+Link with,Verknüpfen mit
+the neighbouring number this one keeps a ratio with,"die benachbarte Zahl, zu der diese ein Verhältnis hält"
+a sheet function returning a warning (empty = fine),"eine Blatt-Funktion, die eine Warnung zurückgibt (leer = in Ordnung)"
+"function and button words, e.g. reroll_stats Reroll","Funktion und Button-Text, z. B. reroll_stats Reroll"
+"an accent label above, e.g. Combat #e06666","eine farbige Überschrift darüber, z. B. Combat #e06666"
+a quiet note panel above the field,ein dezentes Hinweisfeld über dem Feld
+Wait for ready,Auf ready warten
+Required,Erforderlich
+Also,Außerdem
+Refresh the Inspector,Inspektor aktualisieren
+Inspector look · %s,Aussehen im Inspektor · %s
+Const is unavailable for Variant variables - GDScript needs a known type to freeze one.,"Const gibt es nicht für Variant-Variablen - GDScript braucht einen bekannten Typ, um einen Wert festzuschreiben."
+This sheet's enums,Enums dieses Blatts
+%s · One of a named list,%s · Einer aus einer benannten Liste
+"A value from an enum you declare. The Inspector shows a dropdown of its members, written as declared.","Ein Wert aus einem Enum, das du deklarierst. Der Inspektor zeigt ein Dropdown seiner Mitglieder, so geschrieben wie deklariert."
+This variable,Diese Variable
+The type this variable already has.,"Der Typ, den diese Variable bereits hat."
+(set in the Inspector),(im Inspektor gesetzt)
+The Inspector shows the type's own editor.,Der Inspektor zeigt den eigenen Editor des Typs.
+As written,Wie geschrieben
+Keeps the annotation the file wrote.,"Behält die Annotation, die die Datei geschrieben hat."
+Edit variable,Variable bearbeiten
+in group %s,in Gruppe %s
+to %s,zu %s
+Write the type in code (: %s),Den Typ in den Code schreiben (: %s)
+Type is locked because this variable is already in use.,"Der Typ ist gesperrt, weil diese Variable schon verwendet wird."
+"✗ ""%s"" shadows a %s member - pick another name.","✗ ""%s"" verdeckt ein Mitglied von %s - wähle einen anderen Namen."
+"@onready needs an expression (e.g. $Player or get_node(""UI/Score"")).","@onready braucht einen Ausdruck (z. B. $Player oder get_node(""UI/Score""))."
+The initial value must be one of the choices (%s).,Der Anfangswert muss eine der Auswahlmöglichkeiten sein (%s).
+%s takes a single identifier (a variable or function name).,%s nimmt einen einzelnen Bezeichner (einen Variablen- oder Funktionsnamen).
+Clamp needs a slider look (a min and a max) to clamp to.,"Begrenzen braucht ein Slider-Aussehen (ein Min und ein Max), auf das begrenzt wird."
+Not a valid %s literal - e.g. %s,Kein gültiges %s-Literal - z. B. %s
+Element %s is not %s (declared %s).,Element %s ist nicht %s (deklariert als %s).
+"A := line takes its type from its value, so it needs one.","Eine :=-Zeile bekommt ihren Typ aus ihrem Wert, also braucht sie einen."
+"%s does not read as type %s, and a := line takes its type from its value. Change the value, or tick Write the type in code.","%s liest sich nicht als Typ %s, und eine :=-Zeile bekommt ihren Typ aus ihrem Wert. Ändere den Wert oder hake Den Typ in den Code schreiben an."
+"one ""key"": value per line","ein ""Schlüssel"": Wert pro Zeile"
+one value per line,ein Wert pro Zeile
+Edit Dictionary Items,Dictionary-Einträge bearbeiten
+Edit Array Items,Array-Einträge bearbeiten
+Scope · %s,Bereich · %s
+Type · %s,Typ · %s
+No scene runs this script yet,Noch keine Szene führt dieses Skript aus
+Not kept in step - this scene has no synchronizer,Nicht synchron gehalten - diese Szene hat keinen Synchronizer
+Off - stays on this machine,Aus - bleibt auf diesem Rechner
+Always - every frame,Immer - jeden Frame
+On change - only when it moves,Bei Änderung - nur wenn sie sich bewegt
+"At spawn only - once, with the object","Nur beim Spawnen - einmal, mit dem Objekt"
+Add the variable first - a synchronizer keeps an existing property in step.,Füge zuerst die Variable hinzu - ein Synchronizer hält eine bestehende Eigenschaft synchron.
+%s added.,%s hinzugefügt.
+"⚠ ""%s"" shadows a %s member - rename to avoid a clash.","⚠ ""%s"" verdeckt ein Mitglied von %s - benenne um, um einen Konflikt zu vermeiden."
+"⚠ ""%s"" is already a variable here - pick another name.","⚠ ""%s"" ist hier schon eine Variable - wähle einen anderen Namen."
+Basic,Grundlegend
+True or false,Wahr oder falsch
+"On or off: is_locked, can_jump. The Inspector shows a checkbox.","An oder aus: is_locked, can_jump. Der Inspektor zeigt ein Kontrollkästchen."
+Whole number,Ganzzahl
+"A whole number: counts, lives, levels. No decimals. Sliders, dropdowns, flags and layer grids are its looks.","Eine ganze Zahl: Anzahlen, Leben, Level. Keine Nachkommastellen. Slider, Dropdowns, Flags und Ebenenraster sind ihre Aussehen."
+Number with decimals,Zahl mit Nachkommastellen
+"A number that can have decimals: speeds, times, distances. Sliders with units, angles and easing curves are its looks.","Eine Zahl mit möglichen Nachkommastellen: Geschwindigkeiten, Zeiten, Entfernungen. Slider mit Einheiten, Winkel und Easing-Kurven sind ihre Aussehen."
+"Text: names, messages, file paths. File and folder pickers, big text boxes and dropdowns are its looks.","Text: Namen, Nachrichten, Dateipfade. Datei- und Ordnerauswahl, große Textfelder und Dropdowns sind seine Aussehen."
+Unique name,Eindeutiger Name
+"Text that is compared fast: action names, animation names, group names (&""jump"").","Text, der schnell verglichen wird: Aktionsnamen, Animationsnamen, Gruppennamen (&""jump"")."
+Path to a node,Pfad zu einem Node
+"A path such as ^""Muzzle"", resolved when used. Can be limited to some node classes.","Ein Pfad wie ^""Muzzle"", aufgelöst bei Verwendung. Kann auf bestimmte Node-Klassen beschränkt werden."
+Vectors and maths,Vektoren und Mathematik
+X and Y pair,X- und Y-Paar
+"Two numbers together: a position, a size, a direction. The Inspector shows X and Y fields.","Zwei Zahlen zusammen: eine Position, eine Größe, eine Richtung. Der Inspektor zeigt X- und Y-Felder."
+Whole X and Y,Ganzzahliges X und Y
+"Two whole numbers: a grid cell, a tile size.","Zwei ganze Zahlen: eine Rasterzelle, eine Kachelgröße."
+"X, Y and Z","X, Y und Z"
+"Three numbers: a 3D position, size or direction.","Drei Zahlen: eine 3D-Position, -Größe oder -Richtung."
+"Whole X, Y and Z","Ganzzahliges X, Y und Z"
+Three whole numbers: a voxel or 3D grid cell.,Drei ganze Zahlen: ein Voxel oder eine 3D-Rasterzelle.
+Four numbers,Vier Zahlen
+"Four numbers together, often shader values or corners.","Vier Zahlen zusammen, oft Shader-Werte oder Ecken."
+Four whole numbers,Vier ganze Zahlen
+Four whole numbers together.,Vier ganze Zahlen zusammen.
+Rectangle,Rechteck
+A position and a size: an area on screen.,Eine Position und eine Größe: ein Bereich auf dem Bildschirm.
+Whole rectangle,Ganzzahliges Rechteck
+A rectangle in whole numbers: a region of tiles.,Ein Rechteck in ganzen Zahlen: ein Bereich von Kacheln.
+2D transform,2D-Transformation
+"Position, rotation and scale together, in 2D.","Position, Drehung und Skalierung zusammen, in 2D."
+3D transform,3D-Transformation
+"Position, rotation and scale together, in 3D.","Position, Drehung und Skalierung zusammen, in 3D."
+3D rotation and scale,3D-Drehung und -Skalierung
+The rotation and scale part of a 3D transform.,Der Drehungs- und Skalierungsteil einer 3D-Transformation.
+3D rotation,3D-Drehung
+A 3D rotation that blends smoothly.,"Eine 3D-Drehung, die sich weich überblenden lässt."
+Plane,Ebene
+An infinite flat surface in 3D: a normal and a distance.,Eine unendliche flache Fläche in 3D: eine Normale und ein Abstand.
+3D box,3D-Box
+An axis-aligned box in 3D: a position and a size.,Eine achsenparallele Box in 3D: eine Position und eine Größe.
+4x4 matrix,4x4-Matrix
+A camera-style 4x4 projection matrix.,Eine 4x4-Projektionsmatrix wie bei einer Kamera.
+"A colour, with or without transparency. The Inspector shows a swatch you click to pick.","Eine Farbe, mit oder ohne Transparenz. Der Inspektor zeigt ein Farbfeld, auf das du zum Auswählen klickst."
+Colour ramp,Farbverlauf
+"A smooth colour ramp (fire, sky, a health bar), edited in the Inspector's gradient editor.","Ein weicher Farbverlauf (Feuer, Himmel, eine Lebensleiste), bearbeitet im Verlaufseditor des Inspektors."
+Nodes and resources,Nodes und Ressourcen
+A node in the scene,Ein Node in der Szene
+"A link to another node, picked from the scene tree. Any node class works (Node, Node3D, Control, Area2D...); only nodes of that class can be picked.","Ein Verweis auf einen anderen Node, aus dem Szenenbaum gewählt. Jede Node-Klasse geht (Node, Node3D, Control, Area2D...); nur Nodes dieser Klasse sind wählbar."
+A resource file,Eine Ressourcendatei
+"A saved data file (.tres) such as stats or a curve, shared by everything that uses it. Any resource class or your own class_name works.","Eine gespeicherte Datendatei (.tres) wie Werte oder eine Kurve, geteilt von allem, was sie nutzt. Jede Ressourcenklasse oder dein eigener class_name geht."
+Image,Bild
+An image or sprite resource.,Eine Bild- oder Sprite-Ressource.
+Curve,Kurve
+"A shape over 0 to 1 (easing, falloff, ramps), edited in the Inspector's curve editor.","Eine Form über 0 bis 1 (Easing, Abfall, Rampen), bearbeitet im Kurveneditor des Inspektors."
+A function to call,Eine aufrufbare Funktion
+"A function stored as a value. Exported, it becomes an Inspector button that runs in the editor (@tool).","Eine als Wert gespeicherte Funktion. Exportiert wird sie zu einem Inspektor-Button, der im Editor läuft (@tool)."
+Collections,Sammlungen
+List of anything,Liste von beliebigem
+A list of values of any type. The Inspector edits each element.,Eine Liste von Werten beliebigen Typs. Der Inspektor bearbeitet jedes Element.
+List of whole numbers,Liste ganzer Zahlen
+"A typed list: every element is a whole number - scores, ids, tile indexes.","Eine typisierte Liste: jedes Element ist eine ganze Zahl - Punktzahlen, IDs, Kachelindizes."
+List of numbers,Liste von Zahlen
+"A typed list of numbers - weights, timings, chances.","Eine typisierte Liste von Zahlen - Gewichte, Zeitpunkte, Chancen."
+List of text,Liste von Texten
+"A typed list of text - names, lines, tags.","Eine typisierte Liste von Texten - Namen, Zeilen, Tags."
+List of rows,Liste von Zeilen
+A list of rows - the typed form of a table. The Editable table look edits it as a grid.,Eine Liste von Zeilen - die typisierte Form einer Tabelle. Das Aussehen Bearbeitbare Tabelle bearbeitet sie als Raster.
+Key to value map,Zuordnung von Schlüssel zu Wert
+Pairs of keys and values of any type.,Paare aus Schlüsseln und Werten beliebigen Typs.
+Whole numbers by name,Ganze Zahlen nach Name
+"Keys of text and values of whole numbers - costs[""sword""] = 10.","Schlüssel aus Text und Werte aus ganzen Zahlen - costs[""sword""] = 10."
+Numbers by name,Zahlen nach Name
+"Keys of text and values of numbers - volumes[""music""] = 0.8.","Schlüssel aus Text und Werte aus Zahlen - volumes[""music""] = 0.8."
+Text by name,Text nach Name
+"Keys of text and values of text - lines[""greeting""].","Schlüssel aus Text und Werte aus Text - lines[""greeting""]."
+Anything by name,Beliebiges nach Name
+Keys of text and values of any type - a flexible data bag.,Schlüssel aus Text und Werte beliebigen Typs - ein flexibler Datenbeutel.
+Packed arrays,Gepackte Arrays
+Packed bytes,Gepackte Bytes
+A compact list of bytes: raw data.,Eine kompakte Liste von Bytes: Rohdaten.
+Packed whole numbers,Gepackte ganze Zahlen
+A compact list of 32-bit whole numbers.,Eine kompakte Liste von 32-Bit-Ganzzahlen.
+Packed decimals,Gepackte Dezimalzahlen
+A compact list of decimal numbers.,Eine kompakte Liste von Dezimalzahlen.
+Packed text,Gepackter Text
+A compact list of texts.,Eine kompakte Liste von Texten.
+Packed 2D points,Gepackte 2D-Punkte
+"A compact list of 2D points: a path, a polygon.","Eine kompakte Liste von 2D-Punkten: ein Pfad, ein Polygon."
+Packed colours,Gepackte Farben
+"A compact list of colours: a gradient, a palette.","Eine kompakte Liste von Farben: ein Verlauf, eine Palette."
+Special,Besondere
+Any type (untyped),Beliebiger Typ (untypisiert)
+No written type: holds anything. The Inspector needs a value to know what to show.,"Kein geschriebener Typ: nimmt alles auf. Der Inspektor braucht einen Wert, um zu wissen, was er zeigen soll."
+A signal as a value,Ein Signal als Wert
+"A signal stored in a variable. A real type, but the Inspector cannot show it.","Ein in einer Variable gespeichertes Signal. Ein echter Typ, aber der Inspektor kann ihn nicht zeigen."
+Server resource id,Server-Ressourcen-ID
+"A low-level handle to a server resource. A real type, but the Inspector cannot show it.","Ein Low-Level-Handle auf eine Server-Ressource. Ein echter Typ, aber der Inspektor kann ihn nicht zeigen."
+"What the row will call it. Letters, digits and underscores, and not a word GDScript already uses. A name already taken in this scope is flagged under the field as you type.","Wie die Zeile sie nennt. Buchstaben, Ziffern und Unterstriche, und kein Wort, das GDScript schon verwendet. Ein Name, der in diesem Bereich schon vergeben ist, wird beim Tippen unter dem Feld markiert."
+"The value it starts at, in the editor the Inspector would give its type. Left empty it starts at nothing - 0 for a number, """" for text, false for a boolean.","Der Wert, mit dem sie beginnt, im Editor, den der Inspektor ihrem Typ geben würde. Leer gelassen beginnt sie bei nichts - 0 für eine Zahl, """" für Text, false für einen Wahrheitswert."
+"One line saying what the variable is for. It compiles to a ## comment above the declaration, which IS the description Godot shows in the Inspector - so it is never written twice.","Eine Zeile, die sagt, wofür die Variable da ist. Sie wird zu einem ##-Kommentar über der Deklaration, und genau das ist die Beschreibung, die Godot im Inspektor zeigt - sie wird also nie doppelt geschrieben."
+"One value shared by every copy of the object rather than one each, and readable without a copy at all. Never combined with Constant - GDScript has no static const.","Ein Wert, den alle Kopien des Objekts teilen, statt einer pro Kopie, und lesbar ganz ohne Kopie. Nie mit Konstante kombiniert - GDScript hat kein static const."
+"Ticked, the line names its type (`var hp: int = 100`), so a later value of another kind is an error rather than a quiet change. Unticked, the code gives no type and Godot takes one from the initial value (`var hp = 100`). Either way the row reads the same.","Angehakt nennt die Zeile ihren Typ (`var hp: int = 100`), sodass ein späterer Wert anderer Art ein Fehler ist statt einer stillen Änderung. Nicht angehakt gibt der Code keinen Typ an und Godot nimmt einen aus dem Anfangswert (`var hp = 100`). So oder so liest sich die Zeile gleich."
+"The local keeps its value between runs of its event - a hit counter, a cooldown - instead of starting over each time. The row stays where it is; only the declaration moves, to a private member the rest of the sheet cannot name.","Die lokale Variable behält ihren Wert zwischen den Durchläufen ihres Events - ein Trefferzähler, eine Abklingzeit - statt jedes Mal neu zu beginnen. Die Zeile bleibt, wo sie ist; nur die Deklaration zieht um, in ein privates Mitglied, das der Rest des Blatts nicht nennen kann."
+"Set here and never changed while the game runs. A constant is neither Static nor an Inspector property, so both grey out when it is ticked.","Hier gesetzt und während des Spiels nie geändert. Eine Konstante ist weder Statisch noch eine Inspektor-Eigenschaft, darum werden beide ausgegraut, wenn sie angehakt ist."
+"The value is a lookup made when the node enters the scene ($Player, get_node(""UI/Score"")), written as @onready var. The type is any class name.","Der Wert ist eine Abfrage, die erfolgt, wenn der Node die Szene betritt ($Player, get_node(""UI/Score"")), geschrieben als @onready var. Der Typ ist ein beliebiger Klassenname."
+"A designer can tune this per copy in Godot's Inspector (@export var). Off, it is internal state only the sheet touches. A Local is never a property - it is gone before the Inspector could show it.","Ein Designer kann dies pro Kopie im Inspektor von Godot einstellen (@export var). Aus ist es interner Zustand, den nur das Blatt berührt. Eine Lokale ist nie eine Eigenschaft - sie ist weg, bevor der Inspektor sie zeigen könnte."
+"The autoload the global will live on - every sheet then reads it as Game.Score. ""New global sheet…"" makes one and registers it for you.","Das Autoload, auf dem die globale Variable leben wird - jedes Blatt liest sie dann als Game.Score. ""New global sheet…"" legt eines an und registriert es für dich."
+"The class the slot accepts: any node class (Node2D, Area2D, Label…), any resource class, or a class_name of your own. Only things of that class can be dropped in.","Die Klasse, die das Feld annimmt: jede Node-Klasse (Node2D, Area2D, Label…), jede Ressourcenklasse oder ein eigener class_name. Nur Dinge dieser Klasse lassen sich hineinziehen."
+"Whether a MultiplayerSynchronizer in this object's scene sends this value to the other players, and how often: Always every frame, On change only when it moves, At spawn only once with the object. The fact lives in the scene, so picking here writes the .tscn - the Replication panel is the same switch, and either can be undone from the scene.","Ob ein MultiplayerSynchronizer in der Szene dieses Objekts den Wert an die anderen Spieler sendet, und wie oft: Immer jeden Frame, Bei Änderung nur wenn er sich bewegt, Beim Spawnen nur einmal mit dem Objekt. Das steht in der Szene, also schreibt eine Wahl hier die .tscn - das Replication-Panel ist derselbe Schalter, und beides lässt sich in der Szene rückgängig machen."
+A heavy band in the Inspector that splits a long script into chapters (@export_category).,"Ein kräftiges Band im Inspektor, das ein langes Skript in Kapitel teilt (@export_category)."
+A folder in the Inspector for the exported variables that share it (@export_group). Dragging rows together on the sheet does the same.,"Ein Ordner im Inspektor für die exportierten Variablen, die ihn teilen (@export_group). Zeilen auf dem Blatt zusammenzuziehen bewirkt dasselbe."
+"Godot puts only the names that start with this into the group, and shows them without it: bullet_speed reads as Speed under Bullet.","Godot nimmt nur die Namen in die Gruppe auf, die damit beginnen, und zeigt sie ohne diesen Anfang: bullet_speed liest sich als Speed unter Bullet."
+A folder inside the group (@export_subgroup).,Ein Ordner innerhalb der Gruppe (@export_subgroup).
+one per {who} - each copy in the scene has its own,eine pro {who} - jede Kopie in der Szene hat ihre eigene
+"One per {who}. Every {who} in the scene gets its own; change it on one and the others keep theirs. Pick Global for a value the whole game shares, Local for a value only this event needs.","Eine pro {who}. Jedes {who} in der Szene bekommt seine eigene; ändere sie bei einem, und die anderen behalten ihre. Wähle Global für einen Wert, den das ganze Spiel teilt, Lokal für einen Wert, den nur dieses Event braucht."
+"lives inside the event it sits in, and is gone when it ends","lebt im Event, in dem sie steht, und ist weg, wenn es endet"
+"Lives inside one event. It is made when the event runs and gone when it ends, so nothing else in the sheet can read it - which is exactly what you want for a working total.","Lebt in einem einzigen Event. Sie entsteht, wenn das Event läuft, und ist weg, wenn es endet, also kann nichts anderes im Blatt sie lesen - genau richtig für eine Zwischensumme."
+one value the whole project shares - written into an autoload,"ein Wert, den das ganze Projekt teilt - in ein Autoload geschrieben"
+"One value the whole project shares. It lives on an autoload, so every sheet reads it as Game.Score; ""Write into"" says which autoload gets it.","Ein Wert, den das ganze Projekt teilt. Er lebt auf einem Autoload, also liest jedes Blatt ihn als Game.Score; ""Write into"" sagt, welches Autoload ihn bekommt."
+never changes while the game runs,"ändert sich nie, während das Spiel läuft"
+"Set here and never changed while the game runs. Use it for the numbers a reader should be able to find in one place - a top speed, a maximum. A constant is never a Static and never an Inspector property.","Hier gesetzt und während des Spiels nie geändert. Nutze es für Zahlen, die ein Leser an einer Stelle finden soll - eine Höchstgeschwindigkeit, ein Maximum. Eine Konstante ist nie Statisch und nie eine Inspektor-Eigenschaft."
+"one value shared by every {who}, kept between scenes","ein Wert, den alle {who} teilen, über Szenen hinweg behalten"
+"One value shared by every {who} rather than one each - a count of how many exist, a high score kept while the scene changes. Reading it needs no copy of the object at all.","Ein Wert, den alle {who} teilen, statt einer pro Exemplar - eine Zählung, wie viele es gibt, ein Highscore, der beim Szenenwechsel bleibt. Zum Lesen braucht es überhaupt keine Kopie des Objekts."
+Slider,Schieberegler
+"A slider between a min and a max, with an optional unit after the number.","Ein Schieberegler zwischen einem Min und einem Max, mit optionaler Einheit hinter der Zahl."
+Min,Min
+Max,Max
+Step,Schritt
+Unit,Einheit
+Above max,Über Max
+allow typing above the max (or_greater),Eingaben über dem Max erlauben (or_greater)
+Below min,Unter Min
+allow typing below the min (or_less),Eingaben unter dem Min erlauben (or_less)
+Angle in degrees,Winkel in Grad
+"An angle: stored in radians, shown and typed in degrees.","Ein Winkel: in Radiant gespeichert, in Grad angezeigt und eingegeben."
+Stored as,Gespeichert als
+Exponential slider,Exponentieller Schieberegler
+"A slider with fine control near the low end: zoom, volume, scale.","Ein Schieberegler mit feiner Steuerung am unteren Ende: Zoom, Lautstärke, Skalierung."
+"Slider, no handle",Schieberegler ohne Griff
+"A number box kept between a min and a max, with no slider drawn.","Ein Zahlenfeld, das zwischen einem Min und einem Max bleibt, ohne gezeichneten Schieberegler."
+Progress bar,Fortschrittsbalken
+A filled bar between a min and a max. Without this plugin it is a plain number.,Ein gefüllter Balken zwischen einem Min und einem Max. Ohne dieses Plugin ist es eine einfache Zahl.
+Dropdown of numbers,Dropdown von Zahlen
+A dropdown where each word stands for a number.,"Ein Dropdown, in dem jedes Wort für eine Zahl steht."
+Choices,Auswahl
+Checkbox flags,Kontrollkästchen-Flags
+Several on/off boxes packed into one number.,"Mehrere An/Aus-Kästchen, in eine Zahl gepackt."
+Layers grid,Ebenenraster
+The little grid of layer toggles physics and rendering use.,"Das kleine Raster aus Ebenen-Schaltern, das Physik und Rendering nutzen."
+Which layers,Welche Ebenen
+Easing curve,Easing-Kurve
+"An easing-curve handle for a 0 to 1 value: falloff, attenuation.","Ein Easing-Kurven-Griff für einen Wert von 0 bis 1: Abfall, Dämpfung."
+Number with its unit,Zahl mit ihrer Einheit
+"A number with a unit dropdown beside it - switching the unit changes the reading, never the stored value.","Eine Zahl mit einem Einheiten-Dropdown daneben - ein Wechsel der Einheit ändert die Anzeige, nie den gespeicherten Wert."
+Units,Einheiten
+File picker,Dateiauswahl
+"Pick a file, with a filter on the kinds it accepts.","Eine Datei wählen, mit einem Filter für die erlaubten Arten."
+Path as typed,Pfad wie getippt
+"keep the path, never a uid:// reference","den Pfad behalten, nie einen uid://-Verweis"
+Folder picker,Ordnerauswahl
+Pick a folder.,Einen Ordner wählen.
+Big text box,Großes Textfeld
+A tall text box for several lines.,Ein hohes Textfeld für mehrere Zeilen.
+Hint inside the box,Hinweis im Feld
+Grey hint text shown while the box is empty.,"Grauer Hinweistext, der angezeigt wird, solange das Feld leer ist."
+Hint,Hinweis
+Dropdown,Dropdown
+A dropdown of fixed choices.,Ein Dropdown mit festen Auswahlmöglichkeiten.
+"Dropdown, free typing",Dropdown mit freier Eingabe
+A dropdown of suggestions that still accepts anything typed.,"Ein Dropdown mit Vorschlägen, das trotzdem jede Eingabe annimmt."
+Suggestions,Vorschläge
+Toggle buttons,Umschaltknöpfe
+"A row of buttons, one per choice. Without this plugin it is a plain text box.","Eine Reihe von Knöpfen, einer pro Auswahl. Ohne dieses Plugin ist es ein einfaches Textfeld."
+Password dots,Passwortpunkte
+Typed text shows as dots.,Eingegebener Text erscheint als Punkte.
+Expression field,Ausdrucksfeld
+A box meant for a math expression.,Ein Feld für einen mathematischen Ausdruck.
+"Solid colour, no alpha","Volle Farbe, kein Alpha"
+A colour swatch with no transparency slider.,Ein Farbfeld ohne Transparenzregler.
+Swatch row,Farbfeldreihe
+A row of colour swatches to pick from. Without this plugin it is a plain colour.,Eine Reihe von Farbfeldern zur Auswahl. Ohne dieses Plugin ist es eine einfache Farbe.
+Linked axes,Verknüpfte Achsen
+Drag one axis and the others follow.,"Zieh eine Achse, und die anderen folgen."
+Direction dial,Richtungsscheibe
+The vector as an arrow on a dial. Without this plugin it is X and Y fields.,Der Vektor als Pfeil auf einer Scheibe. Ohne dieses Plugin sind es X- und Y-Felder.
+Min-max range,Min-Max-Bereich
+"Two handles on one slider: x is the low end, y the high end.","Zwei Griffe auf einem Schieberegler: x ist das untere Ende, y das obere."
+Four corners,Vier Ecken
+"One number for all four corners, with a button that opens a box per corner.","Eine Zahl für alle vier Ecken, mit einem Knopf, der ein Feld pro Ecke öffnet."
+"Node path, filtered","Node-Pfad, gefiltert"
+"Pick a scene node, limited to the classes you list.","Einen Szenen-Node wählen, beschränkt auf die Klassen, die du aufführst."
+Only these types,Nur diese Typen
+A button in the Inspector that runs the function in the editor. The sheet has to be a Tool sheet.,"Ein Knopf im Inspektor, der die Funktion im Editor ausführt. Das Blatt muss ein Tool-Blatt sein."
+Button label,Knopfbeschriftung
+Editor icon,Editor-Symbol
+Texture preview,Texturvorschau
+A bigger picture of the texture under the slot.,Ein größeres Bild der Textur unter dem Feld.
+Curve preview,Kurvenvorschau
+A picture of the curve; its points are shaped in Godot's own curve editor.,Ein Bild der Kurve; ihre Punkte formt man im Kurveneditor von Godot.
+Editable table,Bearbeitbare Tabelle
+"Every element a row of cells. Columns: name:type (String, int, float, bool, color, enum(a|b)).","Jedes Element eine Zeile aus Zellen. Spalten: name:typ (String, int, float, bool, color, enum(a|b))."
+Columns,Spalten
+Your own hint,Dein eigener Hinweis
+"Any PROPERTY_HINT_* with its hint text, and the usage flags when they matter.","Ein beliebiges PROPERTY_HINT_* mit seinem Hinweistext, und die Usage-Flags, wenn sie wichtig sind."
+Hint text,Hinweistext
+Usage,Verwendung
+Saved but hidden,"Gespeichert, aber verborgen"
+Saved with the scene but not shown in the Inspector: data a tool writes.,"Mit der Szene gespeichert, aber nicht im Inspektor gezeigt: Daten, die ein Werkzeug schreibt."
+Plain number,Einfache Zahl
+Plain text,Einfacher Text
+Checkbox,Kontrollkästchen
+Colour with alpha,Farbe mit Alpha
+Node path,Node-Pfad
+A function value,Ein Funktionswert
+project,Projekt
+anywhere on disk,überall auf der Festplatte
+plain,einfach
+shown while empty,"angezeigt, solange leer"
+what the button says,was auf dem Knopf steht
+"an editor icon name, e.g. Bake","ein Editor-Symbolname, z. B. Bake"
+optional,optional
+READS AS,LIEST SICH ALS
+IN CODE,IM CODE

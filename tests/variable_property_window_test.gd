@@ -29,6 +29,8 @@ static func run() -> bool:
 	ok = _fold_and_unfold_are_inverses() and ok
 	ok = _stores_write_code_values() and ok
 	ok = _tree_rows_keep_what_the_window_sends() and ok
+	ok = _tables_are_translated() and ok
+	ok = _window_speaks_the_editor_language() and ok
 	return ok
 
 
@@ -97,6 +99,20 @@ static func _sections(dialog: VariableDialog) -> bool:
 		(confirmed.get("attributes", {}) as Dictionary).get("doc_after_group"), true])
 	rows.append(["the sections are written as attributes", [(confirmed.get("attributes", {}) as Dictionary).get("category"),
 		(confirmed.get("attributes", {}) as Dictionary).get("group_prefix")], ["Weapon", "bullet"]])
+	# Opened with a subgroup prefix and a group end, then the subgroup cleared and a group given: the
+	# two keys no field shows no longer mean anything, so they leave with the save.
+	dialog.open_for_edit("global", {"attributes": {"subgroup": "Trail", "subgroup_prefix": "trail", "group_end": true,
+		"doc_after_group": true}}, "trail_length", "float", "1.0", false, "Add", false, true)
+	dialog._subgroup_edit.text = ""
+	dialog._group_edit.text = "Bullet"
+	var kept: Dictionary = _confirm(dialog).get("attributes", {})
+	rows.append(["a cleared subgroup takes its prefix with it, a group drops the end above it",
+		[kept.has("subgroup_prefix"), kept.has("group_end"), kept.get("doc_after_group")], [false, false, true]])
+	dialog.open_for_edit("global", {"attributes": {"subgroup": "Trail", "subgroup_prefix": "trail", "group_end": true}},
+		"trail_length", "float", "1.0", false, "Add", false, true)
+	kept = _confirm(dialog).get("attributes", {})
+	rows.append(["...while they still mean something they ride through",
+		[kept.get("subgroup_prefix"), kept.get("group_end")], ["trail", true]])
 	return SUPPORT.pins(P, rows)
 
 
@@ -236,3 +252,65 @@ static func _bare_looks(dialog: VariableDialog) -> Array:
 		if not dialog._look_option.get_item_tooltip(index).contains("\nWrites "):
 			bare.append(dialog._look_option.get_item_text(index))
 	return bare
+
+
+## The window's tables stay English - each word is the key its translation is filed under - and are
+## translated as they are shown, so the harvest (which reads only literal arguments) never sees them.
+## This is the gate it cannot be: every word a table shows has a row in every bundled language.
+static func _tables_are_translated() -> bool:
+	var words: PackedStringArray = PackedStringArray()
+	for entry: Array in VariableDialog.TYPES:
+		words.append_array([str(entry[0]), str(entry[2]), str(entry[3])])
+	for field: Variant in VariableDialog.FIELD_HELP:
+		words.append_array([str(field), str(VariableDialog.FIELD_HELP[field])])
+	for scope: Variant in VariableDialog.SCOPE_FACTS:
+		words.append_array([str(VariableDialog.SCOPE_FACTS[scope]["short"]), str(VariableDialog.SCOPE_FACTS[scope]["long"])])
+	for look: Dictionary in EventSheetInspectorLooks.LOOKS:
+		words.append_array([str(look["label"]), str(look["tip"])])
+		for field: Array in look.get("fields", []):
+			words.append(str(field[1]))
+			if str(field[2]) == "tick":
+				words.append(str(field[4]))
+	words.append_array(PackedStringArray(EventSheetInspectorLooks.PLAIN_LABELS.values()))
+	words.append_array(PackedStringArray(EventSheetInspectorLooks.REACH))
+	var missing: Array = []
+	for locale: String in ["de", "es", "fr", "it", "ja", "ko", "ru", "zh_CN"]:
+		var cells: Dictionary = _csv_cells("res://addons/eventsheet/translations/%s.csv" % locale)
+		for word: String in words:
+			if str(cells.get(word, "")).strip_edges().is_empty():
+				missing.append("%s: %s" % [locale, word])
+	return SUPPORT.check(P, "every word the window's tables show is translated in all eight languages", missing, [])
+
+
+## In German the window reads German: the look list, a look's hover, the type list and a field's help.
+static func _window_speaks_the_editor_language() -> bool:
+	var before: String = EventSheetL10n.get_locale()
+	EventSheetL10n.set_locale("de")
+	var host: Node = Node.new()
+	var dialog: VariableDialog = VariableDialog.new()
+	dialog.init_dialog(host)
+	dialog.set_sheet_provider(func() -> Variant: return null)
+	dialog.open_for_edit("global", {}, "speed", "float", "1.0", false, "Add", false, true)
+	var rows: Array = [
+		["the plain look", dialog._look_option.get_item_text(0), "Einfache Zahl"],
+		["a look's name", EventSheetInspectorLooks.label(EventSheetInspectorLooks.by_id("slider")), "Schieberegler"],
+		["a look's hover, the annotation kept as code", EventSheetInspectorLooks.description(EventSheetInspectorLooks.by_id("angle")),
+			"Ein Winkel: in Radiant gespeichert, in Grad angezeigt und eingegeben.
+Schreibt @export_range(0, 360, 0.1, \"radians_as_degrees\")"],
+		["the type, kept as code beside its words", dialog._type_option.get_item_text(dialog._type_option.selected), "float · Zahl mit Nachkommastellen"],
+		["a field's help", VariableDialog.field_help("Subgroup"), "Ein Ordner innerhalb der Gruppe (@export_subgroup)."],
+		["the window's own words", [dialog._dialog.title, dialog._changes_fold.title], ["Variable hinzufügen", "Wenn sie sich ändert"]],
+	]
+	host.free()
+	EventSheetL10n.set_locale(before)
+	return SUPPORT.pins(P, rows)
+
+
+static func _csv_cells(path: String) -> Dictionary:
+	var cells: Dictionary = {}
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	while file != null and not file.eof_reached():
+		var row: PackedStringArray = file.get_csv_line()
+		if row.size() > 1:
+			cells[row[0]] = row[1]
+	return cells

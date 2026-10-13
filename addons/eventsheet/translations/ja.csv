@@ -7469,3 +7469,298 @@ Only names starting %s join this group.,%s で始まる名前だけがこのグ�
 "%s does not start with %s, so Godot leaves it outside %s. Rename it, or turn off the prefix.",%s は %s で始まらないため、Godot は %s の外に置きます。名前を変えるか、接頭辞をオフにしてください。
 automatic: %s tells it when it changes,自動: %s が変わると知らせます
 nothing to refresh,更新するものはありません
+Axis fields,軸ごとの欄
+Its own editor,型そのもののエディター
+Writes %s,%s を書き込みます
+"(saved, not shown)",(保存されますが表示されません)
+Where it sits in the Inspector,インスペクター内の位置
+"Live, as you pick",選びながらリアルタイムで
+Class,クラス
+What it is for - the Inspector tooltip,何のためのものか - インスペクターのツールチップ
+Set in code: Godot has no editor for this type.,コードで設定します。Godot にはこの型のエディターがありません。
+Edit the items one per line instead of typing a literal.,リテラルを入力する代わりに、要素を 1 行に 1 つずつ編集します。
+Write the type in code,型をコードに書く
+In the Inspector,インスペクター内
+Only names starting,名前の先頭がこれのもののみ
+Subgroup,サブグループ
+When it changes,変わったとき
+a sheet function called after the value is set,値が設定された後に呼ばれるシートの関数
+a bool variable - hidden while it is false,bool 変数 - false の間は隠れます
+Show group if,グループを表示する条件
+a bool variable - hides this with its whole group,bool 変数 - これをグループごと隠します
+a bool variable - read-only while it is false,bool 変数 - false の間は読み取り専用
+Link with,連動させる相手
+the neighbouring number this one keeps a ratio with,この値が比率を保つ隣の数値
+a sheet function returning a warning (empty = fine),警告を返すシートの関数 (空 = 問題なし)
+"function and button words, e.g. reroll_stats Reroll",関数とボタンの文字。例: reroll_stats Reroll
+"an accent label above, e.g. Combat #e06666",上に付く色付きラベル。例: Combat #e06666
+a quiet note panel above the field,欄の上の控えめな注記パネル
+Wait for ready,ready を待つ
+Required,必須
+Also,その他
+Refresh the Inspector,インスペクターの更新
+Inspector look · %s,インスペクターでの見た目 · %s
+Const is unavailable for Variant variables - GDScript needs a known type to freeze one.,Variant 変数では const は使えません。GDScript が値を固定するには型が分かっている必要があります。
+This sheet's enums,このシートの列挙型
+%s · One of a named list,%s · 名前付きリストの 1 つ
+"A value from an enum you declare. The Inspector shows a dropdown of its members, written as declared.",自分で宣言した列挙型の値です。インスペクターは宣言どおりの表記でメンバーのドロップダウンを表示します。
+This variable,この変数
+The type this variable already has.,この変数がすでに持っている型です。
+(set in the Inspector),(インスペクターで設定)
+The Inspector shows the type's own editor.,インスペクターはその型そのもののエディターを表示します。
+As written,書かれたとおり
+Keeps the annotation the file wrote.,ファイルに書かれた注釈をそのまま残します。
+Edit variable,変数を編集
+in group %s,グループ %s 内
+to %s,%s へ
+Write the type in code (: %s),型をコードに書く (: %s)
+Type is locked because this variable is already in use.,この変数はすでに使われているため、型は固定されています。
+"✗ ""%s"" shadows a %s member - pick another name.","✗ ""%s"" は %s のメンバーを隠してしまいます - 別の名前にしてください。"
+"@onready needs an expression (e.g. $Player or get_node(""UI/Score"")).","@onready には式が必要です (例: $Player や get_node(""UI/Score""))。"
+The initial value must be one of the choices (%s).,初期値は選択肢 (%s) のいずれかである必要があります。
+%s takes a single identifier (a variable or function name).,%s には識別子を 1 つだけ指定します (変数名または関数名)。
+Clamp needs a slider look (a min and a max) to clamp to.,範囲に収めるには、スライダーの見た目 (最小と最大) が必要です。
+Not a valid %s literal - e.g. %s,有効な %s リテラルではありません - 例: %s
+Element %s is not %s (declared %s).,要素 %s は %s ではありません (宣言は %s)。
+"A := line takes its type from its value, so it needs one.",:= の行は値から型を決めるので、値が必要です。
+"%s does not read as type %s, and a := line takes its type from its value. Change the value, or tick Write the type in code.",%s は型 %s として読めません。:= の行は値から型を決めます。値を変えるか、「型をコードに書く」にチェックを入れてください。
+"one ""key"": value per line","1 行に 1 つの ""キー"": 値"
+one value per line,1 行に 1 つの値
+Edit Dictionary Items,Dictionary の要素を編集
+Edit Array Items,Array の要素を編集
+Scope · %s,スコープ · %s
+Type · %s,型 · %s
+No scene runs this script yet,まだこのスクリプトを動かすシーンがありません
+Not kept in step - this scene has no synchronizer,同期されません - このシーンにはシンクロナイザーがありません
+Off - stays on this machine,オフ - このマシンにとどまります
+Always - every frame,常に - 毎フレーム
+On change - only when it moves,変更時 - 動いたときだけ
+"At spawn only - once, with the object",生成時のみ - オブジェクトと一緒に 1 回
+Add the variable first - a synchronizer keeps an existing property in step.,先に変数を追加してください。シンクロナイザーは既存のプロパティを同期します。
+%s added.,%s を追加しました。
+"⚠ ""%s"" shadows a %s member - rename to avoid a clash.","⚠ ""%s"" は %s のメンバーを隠します - 衝突を避けるため名前を変えてください。"
+"⚠ ""%s"" is already a variable here - pick another name.","⚠ ""%s"" はここですでに変数です - 別の名前にしてください。"
+Basic,基本
+True or false,真か偽
+"On or off: is_locked, can_jump. The Inspector shows a checkbox.",オンかオフ: is_locked、can_jump など。インスペクターはチェックボックスを表示します。
+Whole number,整数
+"A whole number: counts, lives, levels. No decimals. Sliders, dropdowns, flags and layer grids are its looks.",整数です: 個数、残機、レベルなど。小数はありません。スライダー、ドロップダウン、フラグ、レイヤーグリッドが見た目の選択肢です。
+Number with decimals,小数を含む数
+"A number that can have decimals: speeds, times, distances. Sliders with units, angles and easing curves are its looks.",小数を持てる数です: 速度、時間、距離など。単位付きスライダー、角度、イージングカーブが見た目の選択肢です。
+"Text: names, messages, file paths. File and folder pickers, big text boxes and dropdowns are its looks.",テキストです: 名前、メッセージ、ファイルパスなど。ファイル/フォルダー選択、大きなテキストボックス、ドロップダウンが見た目の選択肢です。
+Unique name,一意の名前
+"Text that is compared fast: action names, animation names, group names (&""jump"").","高速に比較されるテキストです: アクション名、アニメーション名、グループ名 (&""jump"")。"
+Path to a node,ノードへのパス
+"A path such as ^""Muzzle"", resolved when used. Can be limited to some node classes.","^""Muzzle"" のようなパスで、使うときに解決されます。特定のノードクラスに限定できます。"
+Vectors and maths,ベクトルと数学
+X and Y pair,X と Y の組
+"Two numbers together: a position, a size, a direction. The Inspector shows X and Y fields.",2 つの数の組です: 位置、サイズ、方向など。インスペクターは X と Y の欄を表示します。
+Whole X and Y,整数の X と Y
+"Two whole numbers: a grid cell, a tile size.",2 つの整数です: グリッドのセル、タイルのサイズなど。
+"X, Y and Z",X、Y、Z
+"Three numbers: a 3D position, size or direction.",3 つの数です: 3D の位置、サイズ、方向など。
+"Whole X, Y and Z",整数の X、Y、Z
+Three whole numbers: a voxel or 3D grid cell.,3 つの整数です: ボクセルや 3D グリッドのセルなど。
+Four numbers,4 つの数
+"Four numbers together, often shader values or corners.",4 つの数の組です。シェーダーの値や角によく使います。
+Four whole numbers,4 つの整数
+Four whole numbers together.,4 つの整数の組です。
+Rectangle,矩形
+A position and a size: an area on screen.,位置とサイズです: 画面上の領域など。
+Whole rectangle,整数の矩形
+A rectangle in whole numbers: a region of tiles.,整数の矩形です: タイルの範囲など。
+2D transform,2D トランスフォーム
+"Position, rotation and scale together, in 2D.",2D の位置・回転・スケールをまとめたものです。
+3D transform,3D トランスフォーム
+"Position, rotation and scale together, in 3D.",3D の位置・回転・スケールをまとめたものです。
+3D rotation and scale,3D の回転とスケール
+The rotation and scale part of a 3D transform.,3D トランスフォームの回転とスケールの部分です。
+3D rotation,3D の回転
+A 3D rotation that blends smoothly.,なめらかに補間できる 3D の回転です。
+Plane,平面
+An infinite flat surface in 3D: a normal and a distance.,3D の無限に広がる平面です: 法線と距離で表します。
+3D box,3D ボックス
+An axis-aligned box in 3D: a position and a size.,3D の軸に沿った箱です: 位置とサイズで表します。
+4x4 matrix,4x4 行列
+A camera-style 4x4 projection matrix.,カメラで使うような 4x4 の射影行列です。
+"A colour, with or without transparency. The Inspector shows a swatch you click to pick.",透明度の有無を選べる色です。インスペクターはクリックして選ぶ色見本を表示します。
+Colour ramp,カラーランプ
+"A smooth colour ramp (fire, sky, a health bar), edited in the Inspector's gradient editor.",なめらかなカラーランプ (炎、空、体力バーなど) で、インスペクターのグラデーションエディターで編集します。
+Nodes and resources,ノードとリソース
+A node in the scene,シーン内のノード
+"A link to another node, picked from the scene tree. Any node class works (Node, Node3D, Control, Area2D...); only nodes of that class can be picked.",シーンツリーから選ぶ、別のノードへのリンクです。どのノードクラスでも使えます (Node、Node3D、Control、Area2D...)。そのクラスのノードだけを選べます。
+A resource file,リソースファイル
+"A saved data file (.tres) such as stats or a curve, shared by everything that uses it. Any resource class or your own class_name works.",保存されたデータファイル (.tres) で、ステータスやカーブなど、使うものすべてで共有されます。どのリソースクラスでも、自作の class_name でも使えます。
+Image,画像
+An image or sprite resource.,画像またはスプライトのリソースです。
+Curve,カーブ
+"A shape over 0 to 1 (easing, falloff, ramps), edited in the Inspector's curve editor.",0 から 1 にわたる形 (イージング、減衰、ランプ) で、インスペクターのカーブエディターで編集します。
+A function to call,呼び出す関数
+"A function stored as a value. Exported, it becomes an Inspector button that runs in the editor (@tool).",値として保存された関数です。エクスポートすると、エディター内で動くインスペクターのボタンになります (@tool)。
+Collections,コレクション
+List of anything,何でも入るリスト
+A list of values of any type. The Inspector edits each element.,どんな型の値でも入るリストです。インスペクターは各要素を編集します。
+List of whole numbers,整数のリスト
+"A typed list: every element is a whole number - scores, ids, tile indexes.",型付きリストです: 要素はすべて整数 - スコア、ID、タイルのインデックスなど。
+List of numbers,数のリスト
+"A typed list of numbers - weights, timings, chances.",数の型付きリストです - 重み、タイミング、確率など。
+List of text,テキストのリスト
+"A typed list of text - names, lines, tags.",テキストの型付きリストです - 名前、セリフ、タグなど。
+List of rows,行のリスト
+A list of rows - the typed form of a table. The Editable table look edits it as a grid.,行のリストで、表を型付きにしたものです。見た目「編集できる表」でグリッドとして編集できます。
+Key to value map,キーと値の対応表
+Pairs of keys and values of any type.,どんな型でもよいキーと値の組です。
+Whole numbers by name,名前ごとの整数
+"Keys of text and values of whole numbers - costs[""sword""] = 10.","テキストのキーと整数の値です - costs[""sword""] = 10。"
+Numbers by name,名前ごとの数
+"Keys of text and values of numbers - volumes[""music""] = 0.8.","テキストのキーと数の値です - volumes[""music""] = 0.8。"
+Text by name,名前ごとのテキスト
+"Keys of text and values of text - lines[""greeting""].","テキストのキーとテキストの値です - lines[""greeting""]。"
+Anything by name,名前ごとの何でも
+Keys of text and values of any type - a flexible data bag.,テキストのキーと、どんな型でもよい値です - 柔軟なデータ入れ。
+Packed arrays,パック配列
+Packed bytes,パックされたバイト
+A compact list of bytes: raw data.,バイトの省メモリなリストです: 生データなど。
+Packed whole numbers,パックされた整数
+A compact list of 32-bit whole numbers.,32 ビット整数の省メモリなリストです。
+Packed decimals,パックされた小数
+A compact list of decimal numbers.,小数の省メモリなリストです。
+Packed text,パックされたテキスト
+A compact list of texts.,テキストの省メモリなリストです。
+Packed 2D points,パックされた 2D の点
+"A compact list of 2D points: a path, a polygon.",2D の点の省メモリなリストです: 経路、多角形など。
+Packed colours,パックされた色
+"A compact list of colours: a gradient, a palette.",色の省メモリなリストです: グラデーション、パレットなど。
+Special,特殊
+Any type (untyped),任意の型 (型なし)
+No written type: holds anything. The Inspector needs a value to know what to show.,型を書かないので何でも入ります。インスペクターは何を表示するか決めるのに値が必要です。
+A signal as a value,値としてのシグナル
+"A signal stored in a variable. A real type, but the Inspector cannot show it.",変数に保存したシグナルです。実在する型ですが、インスペクターは表示できません。
+Server resource id,サーバーリソース ID
+"A low-level handle to a server resource. A real type, but the Inspector cannot show it.",サーバーリソースへの低レベルなハンドルです。実在する型ですが、インスペクターは表示できません。
+"What the row will call it. Letters, digits and underscores, and not a word GDScript already uses. A name already taken in this scope is flagged under the field as you type.",行での呼び名です。英字、数字、アンダースコアで、GDScript がすでに使っている語は避けます。このスコープですでに使われている名前は、入力中に欄の下で知らせます。
+"The value it starts at, in the editor the Inspector would give its type. Left empty it starts at nothing - 0 for a number, """" for text, false for a boolean.","開始時の値で、インスペクターがその型に使うエディターで入力します。空のままだと何もない状態から始まります - 数なら 0、テキストなら """"、真偽値なら false。"
+"One line saying what the variable is for. It compiles to a ## comment above the declaration, which IS the description Godot shows in the Inspector - so it is never written twice.",変数の用途を 1 行で書きます。宣言の上の ## コメントになり、それがそのまま Godot がインスペクターで表示する説明です - なので二度書くことはありません。
+"One value shared by every copy of the object rather than one each, and readable without a copy at all. Never combined with Constant - GDScript has no static const.",オブジェクトのコピーごとではなく全コピーで共有する 1 つの値で、コピーがなくても読めます。定数とは組み合わせません - GDScript に static const はありません。
+"Ticked, the line names its type (`var hp: int = 100`), so a later value of another kind is an error rather than a quiet change. Unticked, the code gives no type and Godot takes one from the initial value (`var hp = 100`). Either way the row reads the same.",チェックすると行に型が書かれ (`var hp: int = 100`)、後で別の種類の値を入れると黙って変わるのではなくエラーになります。チェックしないとコードに型は書かれず、Godot が初期値から型を決めます (`var hp = 100`)。どちらでも行の読み方は同じです。
+"The local keeps its value between runs of its event - a hit counter, a cooldown - instead of starting over each time. The row stays where it is; only the declaration moves, to a private member the rest of the sheet cannot name.",ローカル変数はイベントの実行をまたいで値を保ちます - ヒット数やクールダウンなど - 毎回やり直しません。行はその場に残り、宣言だけがシートの他の部分から名前で参照できない非公開メンバーへ移ります。
+"Set here and never changed while the game runs. A constant is neither Static nor an Inspector property, so both grey out when it is ticked.",ここで設定し、ゲーム中は決して変わりません。定数は静的でもインスペクターのプロパティでもないため、チェックするとその 2 つは灰色になります。
+"The value is a lookup made when the node enters the scene ($Player, get_node(""UI/Score"")), written as @onready var. The type is any class name.","値はノードがシーンに入ったときの参照 ($Player、get_node(""UI/Score"")) で、@onready var として書かれます。型は任意のクラス名です。"
+"A designer can tune this per copy in Godot's Inspector (@export var). Off, it is internal state only the sheet touches. A Local is never a property - it is gone before the Inspector could show it.",デザイナーがコピーごとに Godot のインスペクターで調整できます (@export var)。オフならシートだけが触る内部状態です。ローカルは決してプロパティになりません - インスペクターが表示する前に消えるからです。
+"The autoload the global will live on - every sheet then reads it as Game.Score. ""New global sheet…"" makes one and registers it for you.","グローバル変数を置くオートロードです - どのシートからも Game.Score として読めます。""New global sheet…"" で作成と登録をまとめて行えます。"
+"The class the slot accepts: any node class (Node2D, Area2D, Label…), any resource class, or a class_name of your own. Only things of that class can be dropped in.",スロットが受け付けるクラスです: 任意のノードクラス (Node2D、Area2D、Label…)、任意のリソースクラス、または自作の class_name。そのクラスのものだけをドロップできます。
+"Whether a MultiplayerSynchronizer in this object's scene sends this value to the other players, and how often: Always every frame, On change only when it moves, At spawn only once with the object. The fact lives in the scene, so picking here writes the .tscn - the Replication panel is the same switch, and either can be undone from the scene.",このオブジェクトのシーンにある MultiplayerSynchronizer がこの値を他のプレイヤーに送るかどうかと、その頻度です: 常に (毎フレーム)、変更時 (動いたときだけ)、生成時のみ (オブジェクトと一緒に 1 回)。この情報はシーンにあるので、ここで選ぶと .tscn に書き込まれます - Replication パネルも同じスイッチで、どちらもシーン側で元に戻せます。
+A heavy band in the Inspector that splits a long script into chapters (@export_category).,長いスクリプトを章に分ける、インスペクター内の太い帯です (@export_category)。
+A folder in the Inspector for the exported variables that share it (@export_group). Dragging rows together on the sheet does the same.,それを共有するエクスポート変数をまとめる、インスペクター内のフォルダーです (@export_group)。シート上で行をドラッグして集めても同じになります。
+"Godot puts only the names that start with this into the group, and shows them without it: bullet_speed reads as Speed under Bullet.",Godot はこれで始まる名前だけをグループに入れ、その部分を除いて表示します: bullet_speed は Bullet の下で Speed と表示されます。
+A folder inside the group (@export_subgroup).,グループの中のフォルダーです (@export_subgroup)。
+one per {who} - each copy in the scene has its own,{who} ごとに 1 つ - シーン内のコピーがそれぞれ持ちます
+"One per {who}. Every {who} in the scene gets its own; change it on one and the others keep theirs. Pick Global for a value the whole game shares, Local for a value only this event needs.",{who} ごとに 1 つです。シーン内の {who} はそれぞれ自分の値を持ち、1 つを変えても他はそのままです。ゲーム全体で共有する値ならグローバル、このイベントだけで使う値ならローカルを選びます。
+"lives inside the event it sits in, and is gone when it ends",置かれたイベントの中だけで生き、イベントが終わると消えます
+"Lives inside one event. It is made when the event runs and gone when it ends, so nothing else in the sheet can read it - which is exactly what you want for a working total.",1 つのイベントの中だけで生きます。イベントの実行時に作られ、終わると消えるので、シートの他の部分からは読めません - 作業用の合計にちょうどよい性質です。
+one value the whole project shares - written into an autoload,プロジェクト全体で共有する 1 つの値 - オートロードに書き込まれます
+"One value the whole project shares. It lives on an autoload, so every sheet reads it as Game.Score; ""Write into"" says which autoload gets it.","プロジェクト全体で共有する 1 つの値です。オートロード上にあるので、どのシートからも Game.Score として読めます。""Write into"" でどのオートロードに置くかを決めます。"
+never changes while the game runs,ゲーム中に変わることはありません
+"Set here and never changed while the game runs. Use it for the numbers a reader should be able to find in one place - a top speed, a maximum. A constant is never a Static and never an Inspector property.",ここで設定し、ゲーム中は決して変わりません。最高速度や上限など、読む人が 1 か所で見つけられるべき数に使います。定数は静的にもインスペクターのプロパティにもなりません。
+"one value shared by every {who}, kept between scenes",すべての {who} で共有する 1 つの値で、シーンをまたいで保たれます
+"One value shared by every {who} rather than one each - a count of how many exist, a high score kept while the scene changes. Reading it needs no copy of the object at all.",{who} ごとではなく、すべての {who} で共有する 1 つの値です - 存在する数のカウントや、シーンが変わっても残るハイスコアなど。読むのにオブジェクトのコピーはまったく要りません。
+Slider,スライダー
+"A slider between a min and a max, with an optional unit after the number.",最小と最大の間のスライダーで、数のあとに単位を付けられます。
+Min,最小
+Max,最大
+Step,刻み
+Unit,単位
+Above max,最大を超える
+allow typing above the max (or_greater),最大を超える値の入力を許可 (or_greater)
+Below min,最小を下回る
+allow typing below the min (or_less),最小を下回る値の入力を許可 (or_less)
+Angle in degrees,度数の角度
+"An angle: stored in radians, shown and typed in degrees.",角度です。ラジアンで保存し、度で表示・入力します。
+Stored as,保存形式
+Exponential slider,指数スライダー
+"A slider with fine control near the low end: zoom, volume, scale.",小さい値の側で細かく調整できるスライダーです: ズーム、音量、スケールなど。
+"Slider, no handle",つまみなしスライダー
+"A number box kept between a min and a max, with no slider drawn.",最小と最大の範囲に収まる数値欄で、スライダーは描かれません。
+Progress bar,プログレスバー
+A filled bar between a min and a max. Without this plugin it is a plain number.,最小と最大の間を塗りつぶすバーです。このプラグインがなければ普通の数値になります。
+Dropdown of numbers,数のドロップダウン
+A dropdown where each word stands for a number.,それぞれの語が数を表すドロップダウンです。
+Choices,選択肢
+Checkbox flags,チェックボックスのフラグ
+Several on/off boxes packed into one number.,複数のオン/オフのボックスを 1 つの数にまとめたものです。
+Layers grid,レイヤーグリッド
+The little grid of layer toggles physics and rendering use.,物理や描画で使う、レイヤーの切り替えの小さなグリッドです。
+Which layers,どのレイヤーか
+Easing curve,イージングカーブ
+"An easing-curve handle for a 0 to 1 value: falloff, attenuation.",0 から 1 の値のためのイージングカーブのつまみです: 減衰、減光など。
+Number with its unit,単位付きの数
+"A number with a unit dropdown beside it - switching the unit changes the reading, never the stored value.",横に単位のドロップダウンが付いた数です - 単位を切り替えても表示が変わるだけで、保存される値は変わりません。
+Units,単位一覧
+File picker,ファイル選択
+"Pick a file, with a filter on the kinds it accepts.",受け付ける種類を絞り込んでファイルを選びます。
+Path as typed,入力どおりのパス
+"keep the path, never a uid:// reference",パスのまま保ち、uid:// 参照にはしません
+Folder picker,フォルダー選択
+Pick a folder.,フォルダーを選びます。
+Big text box,大きなテキストボックス
+A tall text box for several lines.,複数行を書ける縦長のテキストボックスです。
+Hint inside the box,ボックス内のヒント
+Grey hint text shown while the box is empty.,ボックスが空の間に表示される灰色のヒント文です。
+Hint,ヒント
+Dropdown,ドロップダウン
+A dropdown of fixed choices.,決まった選択肢のドロップダウンです。
+"Dropdown, free typing",自由入力できるドロップダウン
+A dropdown of suggestions that still accepts anything typed.,候補のドロップダウンですが、入力したものは何でも受け付けます。
+Suggestions,候補
+Toggle buttons,トグルボタン
+"A row of buttons, one per choice. Without this plugin it is a plain text box.",選択肢ごとに 1 つ並ぶボタンです。このプラグインがなければ普通のテキストボックスになります。
+Password dots,パスワードの伏せ字
+Typed text shows as dots.,入力した文字が点で表示されます。
+Expression field,式の欄
+A box meant for a math expression.,数式を書くための欄です。
+"Solid colour, no alpha",不透明色 (アルファなし)
+A colour swatch with no transparency slider.,透明度スライダーのない色見本です。
+Swatch row,色見本の列
+A row of colour swatches to pick from. Without this plugin it is a plain colour.,選べる色見本が並んだ列です。このプラグインがなければ普通の色になります。
+Linked axes,連動する軸
+Drag one axis and the others follow.,1 つの軸をドラッグすると他の軸も追従します。
+Direction dial,方向ダイヤル
+The vector as an arrow on a dial. Without this plugin it is X and Y fields.,ベクトルをダイヤル上の矢印で表します。このプラグインがなければ X と Y の欄になります。
+Min-max range,最小 - 最大の範囲
+"Two handles on one slider: x is the low end, y the high end.",1 本のスライダーに 2 つのつまみ: x が下限、y が上限です。
+Four corners,4 つの角
+"One number for all four corners, with a button that opens a box per corner.",4 つの角すべてに 1 つの数を使い、ボタンで角ごとの欄を開けます。
+"Node path, filtered",絞り込んだノードパス
+"Pick a scene node, limited to the classes you list.",挙げたクラスに限定して、シーンのノードを選びます。
+Only these types,これらの型のみ
+A button in the Inspector that runs the function in the editor. The sheet has to be a Tool sheet.,エディター内で関数を実行するインスペクターのボタンです。シートは Tool シートである必要があります。
+Button label,ボタンの文字
+Editor icon,エディターのアイコン
+Texture preview,テクスチャのプレビュー
+A bigger picture of the texture under the slot.,スロットの下にテクスチャを大きく表示します。
+Curve preview,カーブのプレビュー
+A picture of the curve; its points are shaped in Godot's own curve editor.,カーブの絵です。点の形は Godot 自身のカーブエディターで整えます。
+Editable table,編集できる表
+"Every element a row of cells. Columns: name:type (String, int, float, bool, color, enum(a|b)).",要素ごとにセルの 1 行になります。列: 名前:型 (String、int、float、bool、color、enum(a|b))。
+Columns,列
+Your own hint,自分で決めるヒント
+"Any PROPERTY_HINT_* with its hint text, and the usage flags when they matter.",任意の PROPERTY_HINT_* とそのヒント文、必要なら使用フラグも指定します。
+Hint text,ヒント文
+Usage,使用フラグ
+Saved but hidden,保存するが非表示
+Saved with the scene but not shown in the Inspector: data a tool writes.,シーンと一緒に保存されますが、インスペクターには表示されません: ツールが書き込むデータなど。
+Plain number,普通の数
+Plain text,普通のテキスト
+Checkbox,チェックボックス
+Colour with alpha,アルファ付きの色
+Node path,ノードパス
+A function value,関数の値
+project,プロジェクト内
+anywhere on disk,ディスク上のどこでも
+plain,標準
+shown while empty,空の間に表示されます
+what the button says,ボタンに表示する文字
+"an editor icon name, e.g. Bake",エディターのアイコン名。例: Bake
+optional,任意
+READS AS,読み方
+IN CODE,コード

@@ -28,6 +28,8 @@ signal variable_confirmed(name: String, type_name: String, default_value: Varian
 ## into" picker chose) rather than writing a member that only looks global.
 signal project_global_requested(name: String, type_name: String, value_text: String, target: Dictionary)
 
+const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
+
 ## The scopes the window offers, in the sheet's own order.
 const CHOOSABLE_SCOPES: PackedStringArray = EventSheetVariableSentence.SCOPE_ORDER
 
@@ -215,8 +217,8 @@ func init_dialog(parent_node: Node) -> void:
 	if _dialog != null:
 		return
 	_dialog = ConfirmationDialog.new()
-	_dialog.title = "Add variable"
-	_dialog.ok_button_text = "Add"
+	_dialog.title = EventSheetL10n.translate("Add variable")
+	_dialog.ok_button_text = EventSheetL10n.translate("Add")
 	_dialog.visible = false
 	_dialog.min_size = Vector2i(int(EventSheetPalette.scaled_f(900.0)), int(EventSheetPalette.scaled_f(600.0)))
 	_dialog.confirmed.connect(_on_confirmed)
@@ -225,10 +227,10 @@ func init_dialog(parent_node: Node) -> void:
 	var form: VBoxContainer = EventSheetPopupUI.form_box()
 	_owner_label = EventSheetPopupUI.hint_label("")
 	form.add_child(_owner_label)
-	form.add_child(EventSheetPopupUI.titled_card("Variable", _build_variable_card()))
+	form.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("Variable"), _build_variable_card()))
 	_inspector_card = _build_inspector_card()
 	form.add_child(_inspector_card)
-	_sections_card = EventSheetPopupUI.titled_card("Where it sits in the Inspector", _build_sections_card())
+	_sections_card = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Where it sits in the Inspector"), _build_sections_card())
 	form.add_child(_sections_card)
 	_changes_fold = _build_changes_fold()
 	form.add_child(_changes_fold)
@@ -239,7 +241,7 @@ func init_dialog(parent_node: Node) -> void:
 	# The live column, read as you pick: the row and the code (the strip's two reading lines, under
 	# whatever is focused) and the Inspector the choices add up to.
 	var live: VBoxContainer = EventSheetPopupUI.form_box()
-	live.add_child(EventSheetPopupUI.small_caps_label("Live, as you pick"))
+	live.add_child(EventSheetPopupUI.small_caps_label(EventSheetL10n.translate("Live, as you pick")))
 	_help_strip = EventSheetPopupUI.help_strip("", "", "", "", 300.0)
 	# The code can run long; it wraps inside the column rather than widening the window.
 	_help_strip.in_code_value.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
@@ -261,9 +263,9 @@ func _build_variable_card() -> VBoxContainer:
 		_scope_option.set_item_metadata(_scope_option.item_count - 1, scope_key)
 	_scope_option.item_selected.connect(func(index: int) -> void:
 		_apply_scope_key(str(_scope_option.get_item_metadata(index))))
-	box.add_child(EventSheetPopupUI.form_row("Scope", _scope_option))
+	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Scope"), _scope_option))
 	_global_target_option = OptionButton.new()
-	_global_target_row = EventSheetPopupUI.form_row("Write into", _global_target_option)
+	_global_target_row = EventSheetPopupUI.form_row(EventSheetL10n.translate("Write into"), _global_target_option)
 	_global_target_row.visible = false
 	box.add_child(_global_target_row)
 	_name_edit = LineEdit.new()
@@ -271,28 +273,28 @@ func _build_variable_card() -> VBoxContainer:
 	_name_edit.text_changed.connect(func(_text: String) -> void:
 		_refresh_name_warning()
 		_refresh_reading())
-	box.add_child(EventSheetPopupUI.form_row("Name", _name_edit))
+	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Name"), _name_edit))
 	_name_warning = EventSheetPopupUI.StateNote.new(380.0)
 	box.add_child(_name_warning)
 	_type_option = EventSheetPopupUI.described_option()
 	_type_option.item_selected.connect(func(_index: int) -> void: _on_type_changed())
-	box.add_child(EventSheetPopupUI.form_row("Type", _type_option))
+	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Type"), _type_option))
 	_class_edit = LineEdit.new()
 	_class_edit.placeholder_text = "Node2D, Area2D, EnemyStats…"
 	_class_edit.text_changed.connect(func(_text: String) -> void: _refresh_reading())
 	EventSheetCompletionPopup.attach(_class_edit, EventSheetCompletions.FIELD_CLASS, Callable())
-	_class_row = EventSheetPopupUI.form_row("Class", _class_edit)
+	_class_row = EventSheetPopupUI.form_row(EventSheetL10n.translate("Class"), _class_edit)
 	box.add_child(_class_row)
-	box.add_child(EventSheetPopupUI.form_row("Initial value", _build_value_box()))
+	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Initial value"), _build_value_box()))
 	_attr_tooltip_edit = LineEdit.new()
-	_attr_tooltip_edit.placeholder_text = "What it is for - the Inspector tooltip"
+	_attr_tooltip_edit.placeholder_text = EventSheetL10n.translate("What it is for - the Inspector tooltip")
 	_attr_tooltip_edit.text_changed.connect(func(_text: String) -> void: _refresh_reading())
-	box.add_child(EventSheetPopupUI.form_row("Description", _attr_tooltip_edit))
+	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Description"), _attr_tooltip_edit))
 	var flags: HBoxContainer = HBoxContainer.new()
 	flags.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)
-	_static_check = _tick(flags, "Static")
-	_static_local_check = _tick(flags, "Static local")
-	_const_check = _tick(flags, "Constant")
+	_static_check = _tick(flags, EventSheetL10n.translate("Static"))
+	_static_local_check = _tick(flags, EventSheetL10n.translate("Static local"))
+	_const_check = _tick(flags, EventSheetL10n.translate("Constant"))
 	_const_check.toggled.connect(func(pressed: bool) -> void:
 		if pressed:
 			_is_static = false
@@ -304,12 +306,12 @@ func _build_variable_card() -> VBoxContainer:
 			_const_check.set_pressed_no_signal(false)
 		_apply_scope_gating()
 		refresh_scope_selection())
-	_onready_check = _tick(flags, "On ready")
+	_onready_check = _tick(flags, EventSheetL10n.translate("On ready"))
 	_onready_check.toggled.connect(_on_onready_toggled_interactive)
-	box.add_child(EventSheetPopupUI.form_row("Flags", flags))
+	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Flags"), flags))
 	_sync_option = OptionButton.new()
 	_sync_option.item_selected.connect(_on_sync_mode_chosen)
-	box.add_child(EventSheetPopupUI.form_row("Keep in step", _sync_option))
+	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Keep in step"), _sync_option))
 	return box
 
 
@@ -351,27 +353,27 @@ func _build_value_box() -> HBoxContainer:
 	_axis_box = HBoxContainer.new()
 	box.add_child(_axis_box)
 	_value_note = Label.new()
-	_value_note.text = "Set in code: Godot has no editor for this type."
+	_value_note.text = EventSheetL10n.translate("Set in code: Godot has no editor for this type.")
 	_value_note.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
 	box.add_child(_value_note)
 	_items_button = Button.new()
-	_items_button.text = "Edit items…"
-	_items_button.tooltip_text = "Edit the items one per line instead of typing a literal."
+	_items_button.text = EventSheetL10n.translate("Edit items…")
+	_items_button.tooltip_text = EventSheetL10n.translate("Edit the items one per line instead of typing a literal.")
 	_items_button.pressed.connect(_open_items_editor)
 	box.add_child(_items_button)
-	_write_type_check = _tick(box, "Write the type in code")
+	_write_type_check = _tick(box, EventSheetL10n.translate("Write the type in code"))
 	return box
 
 
 func _build_inspector_card() -> PanelContainer:
 	var box: VBoxContainer = EventSheetPopupUI.form_box()
 	var head: HBoxContainer = HBoxContainer.new()
-	head.add_child(EventSheetPopupUI.section_header("In the Inspector"))
+	head.add_child(EventSheetPopupUI.section_header(EventSheetL10n.translate("In the Inspector")))
 	var spacer: Control = Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(spacer)
 	_exported_check = CheckBox.new()
-	_exported_check.text = "Editable in the Inspector"
+	_exported_check.text = EventSheetL10n.translate("Editable in the Inspector")
 	_exported_check.toggled.connect(func(_pressed: bool) -> void:
 		_update_attr_gating()
 		_refresh_reading())
@@ -382,7 +384,7 @@ func _build_inspector_card() -> PanelContainer:
 		_rebuild_look_details()
 		_refresh_reading())
 	# The annotation the chosen look writes sits muted beside it, so the friendly name teaches the code.
-	box.add_child(EventSheetPopupUI.form_row("Inspector look", EventSheetPopupUI.code_noted_option(_look_option,
+	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Inspector look"), EventSheetPopupUI.code_noted_option(_look_option,
 		func(_index: int) -> String: return annotation_text())))
 	var annotation_note: Label = _look_option.get_meta("code_note") as Label
 	annotation_note.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -397,8 +399,8 @@ func _build_inspector_card() -> PanelContainer:
 
 func _build_sections_card() -> VBoxContainer:
 	var box: VBoxContainer = EventSheetPopupUI.form_box()
-	_category_edit = _section_field(box, "Category", "Weapon", "category")
-	_group_edit = _section_field(box, "Group", "Bullet", "group")
+	_category_edit = _section_field(box, EventSheetL10n.translate("Category"), "Weapon", "category")
+	_group_edit = _section_field(box, EventSheetL10n.translate("Group"), "Bullet", "group")
 	var prefix_row: HBoxContainer = HBoxContainer.new()
 	_prefix_check = CheckBox.new()
 	_prefix_check.toggled.connect(func(on: bool) -> void:
@@ -412,8 +414,8 @@ func _build_sections_card() -> VBoxContainer:
 	_prefix_edit.placeholder_text = "bullet"
 	_prefix_edit.text_changed.connect(func(_text: String) -> void: _refresh_reading())
 	prefix_row.add_child(_prefix_edit)
-	box.add_child(EventSheetPopupUI.form_row("Only names starting", prefix_row))
-	_subgroup_edit = _section_field(box, "Subgroup", "Jump", "subgroup")
+	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Only names starting"), prefix_row))
+	_subgroup_edit = _section_field(box, EventSheetL10n.translate("Subgroup"), "Jump", "subgroup")
 	_prefix_note = EventSheetPopupUI.StateNote.new(380.0)
 	box.add_child(_prefix_note)
 	return box
@@ -435,40 +437,41 @@ func _section_field(box: VBoxContainer, label: String, placeholder: String, leve
 ## getter - and the Inspector decor that hangs above the field. Folded until something in it is set.
 func _build_changes_fold() -> FoldableContainer:
 	var fold: FoldableContainer = FoldableContainer.new()
-	fold.title = "When it changes"
+	fold.title = EventSheetL10n.translate("When it changes")
 	fold.folded = true
 	var box: VBoxContainer = EventSheetPopupUI.form_box()
 	for spec: Array in [
-		["on_changed", "On changed", "a sheet function called after the value is set", EventSheetCompletions.FIELD_FUNCTION],
-		["show_if", "Show if", "a bool variable - hidden while it is false", EventSheetCompletions.FIELD_VARIABLE],
-		["group_show_if", "Show group if", "a bool variable - hides this with its whole group", EventSheetCompletions.FIELD_VARIABLE],
-		["lock_unless", "Lock unless", "a bool variable - read-only while it is false", EventSheetCompletions.FIELD_VARIABLE],
-		["link_with", "Link with", "the neighbouring number this one keeps a ratio with", EventSheetCompletions.FIELD_VARIABLE],
-		["validate", "Validate with", "a sheet function returning a warning (empty = fine)", EventSheetCompletions.FIELD_FUNCTION],
-		["action", "Field button", "function and button words, e.g. reroll_stats Reroll", EventSheetCompletions.FIELD_FUNCTION],
-		["header", "Section header", "an accent label above, e.g. Combat #e06666", ""],
-		["info", "Info note", "a quiet note panel above the field", ""],
+		["on_changed", EventSheetL10n.translate("On changed"), EventSheetL10n.translate("a sheet function called after the value is set"), EventSheetCompletions.FIELD_FUNCTION],
+		["show_if", EventSheetL10n.translate("Show if"), EventSheetL10n.translate("a bool variable - hidden while it is false"), EventSheetCompletions.FIELD_VARIABLE],
+		["group_show_if", EventSheetL10n.translate("Show group if"), EventSheetL10n.translate("a bool variable - hides this with its whole group"), EventSheetCompletions.FIELD_VARIABLE],
+		["lock_unless", EventSheetL10n.translate("Lock unless"), EventSheetL10n.translate("a bool variable - read-only while it is false"), EventSheetCompletions.FIELD_VARIABLE],
+		["link_with", EventSheetL10n.translate("Link with"), EventSheetL10n.translate("the neighbouring number this one keeps a ratio with"), EventSheetCompletions.FIELD_VARIABLE],
+		["validate", EventSheetL10n.translate("Validate with"), EventSheetL10n.translate("a sheet function returning a warning (empty = fine)"), EventSheetCompletions.FIELD_FUNCTION],
+		["action", EventSheetL10n.translate("Field button"), EventSheetL10n.translate("function and button words, e.g. reroll_stats Reroll"), EventSheetCompletions.FIELD_FUNCTION],
+		["header", EventSheetL10n.translate("Section header"), EventSheetL10n.translate("an accent label above, e.g. Combat #e06666"), ""],
+		["info", EventSheetL10n.translate("Info note"), EventSheetL10n.translate("a quiet note panel above the field"), ""],
 	]:
 		var edit: LineEdit = LineEdit.new()
 		edit.placeholder_text = str(spec[2])
 		edit.text_changed.connect(func(_text: String) -> void: _refresh_reading())
 		if not str(spec[3]).is_empty():
 			EventSheetCompletionPopup.attach(edit, str(spec[3]), func() -> Variant: return _sheet())
+		edit.set_meta("label", str(spec[1]))
 		_changes_edits[spec[0]] = edit
 		box.add_child(EventSheetPopupUI.form_row(str(spec[1]), edit))
 	var ticks: HBoxContainer = HBoxContainer.new()
-	for spec: Array in [["wait_for_ready", "Wait for ready"], ["clamp", "Clamp to range"], ["read_only", "Read-only"],
-			["required", "Required"]]:
+	for spec: Array in [["wait_for_ready", EventSheetL10n.translate("Wait for ready")], ["clamp", EventSheetL10n.translate("Clamp to range")], ["read_only", EventSheetL10n.translate("Read-only")],
+			["required", EventSheetL10n.translate("Required")]]:
 		_changes_checks[spec[0]] = _tick(ticks, str(spec[1]))
-	box.add_child(EventSheetPopupUI.form_row("Also", ticks))
+	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Also"), ticks))
 	_refresh_label = Label.new()
 	_refresh_label.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
-	box.add_child(EventSheetPopupUI.form_row("Refresh the Inspector", _refresh_label))
-	_setter_edit = _code_box(box, "Setter body", "health = clampi(value, 0, max_health)")
+	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Refresh the Inspector"), _refresh_label))
+	_setter_edit = _code_box(box, EventSheetL10n.translate("Setter body"), "health = clampi(value, 0, max_health)")
 	_changes_edits["setter_param"] = LineEdit.new()
 	(_changes_edits["setter_param"] as LineEdit).placeholder_text = "value"
-	box.add_child(EventSheetPopupUI.form_row("Setter parameter", _changes_edits["setter_param"]))
-	_getter_edit = _code_box(box, "Getter body", "return _health")
+	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Setter parameter"), _changes_edits["setter_param"]))
+	_getter_edit = _code_box(box, EventSheetL10n.translate("Getter body"), "return _health")
 	fold.add_child(box)
 	return fold
 
@@ -487,7 +490,7 @@ func _wire_help_strip() -> void:
 	_help_strip.follow_option(_scope_option, _describe_scope_index)
 	_help_strip.follow_option(_type_option, _describe_type_index)
 	_help_strip.follow_option(_look_option, func(index: int) -> Dictionary:
-		return {"heading": "Inspector look · %s" % _look_option.get_item_text(index), "body": _look_option.get_item_tooltip(index)})
+		return {"heading": EventSheetL10n.translate("Inspector look · %s") % _look_option.get_item_text(index), "body": _look_option.get_item_tooltip(index)})
 	for wired: Array in [
 		[_name_edit, "Name"], [_default_edit, "Initial value"], [_attr_tooltip_edit, "Description"],
 		[_static_check, "Static"], [_static_local_check, "Static local"], [_write_type_check, "Write the type in code"],
@@ -495,20 +498,21 @@ func _wire_help_strip() -> void:
 		[_global_target_option, "Write into"], [_class_edit, "Class"], [_category_edit, "Category"],
 		[_group_edit, "Group"], [_prefix_edit, "Only names starting"], [_subgroup_edit, "Subgroup"],
 	]:
-		_help_strip.follow(wired[0] as Control, str(wired[1]), field_help(str(wired[1])))
+		_help_strip.follow(wired[0] as Control, EventSheetL10n.translate(str(wired[1])), field_help(str(wired[1])))
 	# The Constant tick greys out for a type that cannot be frozen, and a greyed tick is exactly what
 	# the reader asks the strip about - so its paragraph is worked out when it is reached.
-	_help_strip.follow(_const_check, "Constant", field_help("Constant"), _constant_help)
+	_help_strip.follow(_const_check, EventSheetL10n.translate("Constant"), field_help("Constant"), _constant_help)
 
 
-## The paragraph the strip shows for a field, "" for one the table does not carry.
+## The paragraph the strip shows for a field, in the editor's language; "" for one the table does
+## not carry. The table stays English: it is the key each translation is filed under.
 static func field_help(field: String) -> String:
-	return str(FIELD_HELP.get(field, ""))
+	return EventSheetL10n.translate(str(FIELD_HELP.get(field, "")))
 
 
 func _constant_help() -> String:
 	if _const_check != null and _const_check.disabled and not _supports_constant(_selected_stored_type()):
-		return "Const is unavailable for Variant variables - GDScript needs a known type to freeze one."
+		return EventSheetL10n.translate("Const is unavailable for Variant variables - GDScript needs a known type to freeze one.")
 	return field_help("Constant")
 
 
@@ -557,15 +561,15 @@ static func scope_help(scope_key: String, owner: String) -> String:
 static func _scope_fact(scope_key: String, length: String, owner: String) -> String:
 	if not (SCOPE_FACTS.get(scope_key) is Dictionary):
 		return ""
-	var who: String = owner.strip_edges() if not owner.strip_edges().is_empty() else "this object"
-	return str((SCOPE_FACTS[scope_key] as Dictionary).get(length, "")).replace("{who}", who)
+	var who: String = owner.strip_edges() if not owner.strip_edges().is_empty() else EventSheetL10n.translate("this object")
+	return EventSheetL10n.translate(str((SCOPE_FACTS[scope_key] as Dictionary).get(length, ""))).replace("{who}", who)
 
 
-## The sentence a type's option carries: what it holds, in plain words.
+## The sentence a type's option carries: what it holds, in plain words, in the editor's language.
 static func type_description(stored_type: String) -> String:
 	for entry: Array in TYPES:
 		if str(entry[1]) == stored_type:
-			return str(entry[3])
+			return EventSheetL10n.translate(str(entry[3]))
 	return stored_type
 
 
@@ -590,14 +594,16 @@ static func value_kind(type_name: String) -> String:
 
 
 ## Adds every type of the table to `option`, under its group's heading: "int · Whole number", with
-## the type as the item's metadata and its sentence as the item's hover.
+## the type as the item's metadata and its sentence as the item's hover. The words are translated
+## here, as they are shown; the type itself is code and never is.
 static func add_type_items(option: OptionButton) -> void:
 	var group: String = ""
 	for entry: Array in TYPES:
 		if str(entry[0]) != group:
 			group = str(entry[0])
-			option.add_separator(group)
-		EventSheetPopupUI.add_described_item(option, "%s · %s" % [entry[1], entry[2]], str(entry[3]), str(entry[1]))
+			option.add_separator(EventSheetL10n.translate(group))
+		EventSheetPopupUI.add_described_item(option, "%s · %s" % [entry[1], EventSheetL10n.translate(str(entry[2]))],
+			EventSheetL10n.translate(str(entry[3])), str(entry[1]))
 
 
 ## Fills the type list: the table's groups, then the sheet's own enums, then - when the variable
@@ -607,13 +613,13 @@ func _fill_type_option(current: String) -> void:
 	add_type_items(_type_option)
 	var enums: PackedStringArray = _enum_names()
 	if not enums.is_empty():
-		_type_option.add_separator("This sheet's enums")
+		_type_option.add_separator(EventSheetL10n.translate("This sheet's enums"))
 		for enum_name: String in enums:
-			EventSheetPopupUI.add_described_item(_type_option, "%s · One of a named list" % enum_name,
-				"A value from an enum you declare. The Inspector shows a dropdown of its members, written as declared.", enum_name)
+			EventSheetPopupUI.add_described_item(_type_option, EventSheetL10n.translate("%s · One of a named list") % enum_name,
+				EventSheetL10n.translate("A value from an enum you declare. The Inspector shows a dropdown of its members, written as declared."), enum_name)
 	if not current.is_empty() and _type_index(current) < 0 and _class_entry(current) < 0:
-		_type_option.add_separator("This variable")
-		EventSheetPopupUI.add_described_item(_type_option, current, "The type this variable already has.", current)
+		_type_option.add_separator(EventSheetL10n.translate("This variable"))
+		EventSheetPopupUI.add_described_item(_type_option, current, EventSheetL10n.translate("The type this variable already has."), current)
 
 
 func _type_index(type_name: String) -> int:
@@ -721,7 +727,7 @@ func _refresh_value_editor() -> void:
 	_value_note.visible = kind == "none"
 	_items_button.visible = kind == "collection"
 	_rebuild_axes(kind)
-	var placeholders: Dictionary = {"class": "(set in the Inspector)", "callable": "_bake", "enum": "Kind.ROUND",
+	var placeholders: Dictionary = {"class": EventSheetL10n.translate("(set in the Inspector)"), "callable": "_bake", "enum": "Kind.ROUND",
 		"code": "%s()" % _selected_stored_type(), "collection": "{\"key\": 1}" if _selected_stored_type().begins_with("Dictionary") else "[1, 2, 3]"}
 	_default_edit.placeholder_text = "$Player or get_node(\"UI/Score\")" if _onready_check.button_pressed \
 		else str(placeholders.get(kind, "0" if kind == "number" else ""))
@@ -811,12 +817,13 @@ func _refresh_looks() -> void:
 	var type_name: String = _selected_stored_type()
 	_look_option.clear()
 	EventSheetPopupUI.add_described_item(_look_option, EventSheetInspectorLooks.plain_label(type_name),
-		"The Inspector shows the type's own editor.\nWrites @export", "")
+		"%s\n%s" % [EventSheetL10n.translate("The Inspector shows the type's own editor."), EventSheetL10n.translate("Writes %s") % "@export"], "")
 	if not _export_hint.is_empty():
-		EventSheetPopupUI.add_described_item(_look_option, "As written",
-			"Keeps the annotation the file wrote.\nWrites %s" % _export_hint, "written")
+		EventSheetPopupUI.add_described_item(_look_option, EventSheetL10n.translate("As written"),
+			"%s\n%s" % [EventSheetL10n.translate("Keeps the annotation the file wrote."), EventSheetL10n.translate("Writes %s") % _export_hint], "written")
 	for look: Dictionary in EventSheetInspectorLooks.for_type(type_name):
-		EventSheetPopupUI.add_described_item(_look_option, str(look.get("label")), EventSheetInspectorLooks.description(look), str(look.get("id")))
+		EventSheetPopupUI.add_described_item(_look_option, EventSheetInspectorLooks.label(look), EventSheetInspectorLooks.description(look),
+			str(look.get("id")))
 	_select_look(previous)
 	_rebuild_look_details()
 
@@ -851,24 +858,27 @@ func _rebuild_look_details() -> void:
 		match str(field[2]):
 			"tick":
 				var tick: CheckBox = CheckBox.new()
-				tick.text = str(field[4])
+				tick.text = EventSheetL10n.translate(str(field[4]))
 				tick.button_pressed = bool(value)
 				tick.toggled.connect(func(on: bool) -> void: _set_look_value(key, on))
 				control = tick
 			"pick":
+				# The choice is the value the look folds; the words on it are the editor's language.
 				var pick: OptionButton = OptionButton.new()
 				for choice: Variant in field[4]:
-					pick.add_item(str(choice))
-				EventSheetPopupUI.select_option(pick, str(value))
-				pick.item_selected.connect(func(index: int) -> void: _set_look_value(key, pick.get_item_text(index)))
+					pick.add_item(EventSheetL10n.translate(str(choice)))
+					pick.set_item_metadata(pick.item_count - 1, str(choice))
+					if str(choice) == str(value):
+						pick.select(pick.item_count - 1)
+				pick.item_selected.connect(func(index: int) -> void: _set_look_value(key, str(pick.get_item_metadata(index))))
 				control = pick
 			_:
 				var edit: LineEdit = LineEdit.new()
 				edit.text = str(value)
-				edit.placeholder_text = str(field[4]) if field.size() > 4 else ""
+				edit.placeholder_text = EventSheetL10n.translate(str(field[4])) if field.size() > 4 else ""
 				edit.text_changed.connect(func(typed: String) -> void: _set_look_value(key, typed))
 				control = edit
-		_look_details.add_child(EventSheetPopupUI.form_row(str(field[1]), control))
+		_look_details.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate(str(field[1])), control))
 	_refresh_look_note()
 
 
@@ -925,6 +935,12 @@ func _collect_attributes(type_name: String) -> Dictionary:
 			attributes[level[0]] = words
 	if _prefix_check.button_pressed and attributes.has("group") and not _prefix_edit.text.strip_edges().is_empty():
 		attributes["group_prefix"] = _prefix_edit.text.strip_edges()
+	# Two opened keys no field shows ride through only while they still mean something: a subgroup's
+	# prefix needs its subgroup, and the end of a group above the variable is gone once it sits in one.
+	if not attributes.has("subgroup"):
+		attributes.erase("subgroup_prefix")
+	if attributes.has("group"):
+		attributes.erase("group_end")
 	for key: String in ["on_changed", "show_if", "group_show_if", "lock_unless", "link_with", "validate", "info"]:
 		var words: String = (_changes_edits[key] as LineEdit).text.strip_edges()
 		if not words.is_empty():
@@ -1007,14 +1023,14 @@ func open_for_edit(
 		_member_scope = _scope
 	_context = context.duplicate(true)
 	var is_editing: bool = bool(context.get("editing", false))
-	_dialog.title = "Edit variable" if is_editing else "Add variable"
-	_dialog.ok_button_text = "Save" if is_editing else "Add"
+	_dialog.title = EventSheetL10n.translate("Edit variable") if is_editing else EventSheetL10n.translate("Add variable")
+	_dialog.ok_button_text = EventSheetL10n.translate("Save") if is_editing else EventSheetL10n.translate("Add")
 	var owner_group: EventGroup = _context.get("group") as EventGroup
 	var owner: String = _owner_name()
 	if owner_group != null:
-		_owner_label.text = "in group %s" % EventSheetGroupFacts.display_name(owner_group)
+		_owner_label.text = EventSheetL10n.translate("in group %s") % EventSheetGroupFacts.display_name(owner_group)
 	else:
-		_owner_label.text = ("to %s" % owner) if not owner.is_empty() else ""
+		_owner_label.text = (EventSheetL10n.translate("to %s") % owner) if not owner.is_empty() else ""
 	_owner_label.visible = not _owner_label.text.is_empty()
 	_refresh_scope_descriptions()
 	_refresh_global_targets()
@@ -1032,7 +1048,7 @@ func open_for_edit(
 	# A row placed among the events can be written with or without its type; the tick says which, and
 	# names the type it writes. A sheet-level variable always writes one, so it is not asked.
 	var inferred_type: String = str(context.get("inferred_type", ""))
-	_write_type_check.text = "Write the type in code (: %s)" % (inferred_type if not inferred_type.is_empty() else type_name)
+	_write_type_check.text = EventSheetL10n.translate("Write the type in code (: %s)") % (inferred_type if not inferred_type.is_empty() else type_name)
 	_write_type_check.set_pressed_no_signal(inferred_type.is_empty())
 	_context["written_untyped"] = not inferred_type.is_empty()
 	var is_local: bool = _scope == "local"
@@ -1078,7 +1094,7 @@ func open_for_edit(
 	_refresh_name_warning()
 	_refusal_field = ""
 	if lock_type:
-		_help_strip.show_note("Type", "Type is locked because this variable is already in use.",
+		_help_strip.show_note(EventSheetL10n.translate("Type"), EventSheetL10n.translate("Type is locked because this variable is already in use."),
 			EventSheetPopupUI.HelpStrip.TONE_WARNING)
 	else:
 		var opening: Dictionary = _describe_scope_index(_scope_option.selected)
@@ -1102,7 +1118,7 @@ func _on_confirmed() -> void:
 	# A name that shadows a host-class member breaks the generated script: refuse it.
 	var shadow_owner: String = _shadow_owner(var_name)
 	if not shadow_owner.is_empty():
-		_name_warning.say("✗ \"%s\" shadows a %s member - pick another name." % [var_name, shadow_owner])
+		_name_warning.say(EventSheetL10n.translate("✗ \"%s\" shadows a %s member - pick another name.") % [var_name, shadow_owner])
 		_reopen()
 		return
 	_last_scope_key = current_scope_word()
@@ -1114,7 +1130,7 @@ func _on_confirmed() -> void:
 	# @onready: the value is an expression looked up when the node is ready, never a literal.
 	if _onready_check.button_pressed and _scope == "tree":
 		if _value_text().is_empty():
-			_refuse("Initial value", "@onready needs an expression (e.g. $Player or get_node(\"UI/Score\")).")
+			_refuse("Initial value", EventSheetL10n.translate("@onready needs an expression (e.g. $Player or get_node(\"UI/Score\"))."))
 			return
 		variable_confirmed.emit(var_name, type_name, _value_text(), _scope, _context.duplicate(true), false, false, PackedStringArray(), {}, true, false)
 		return
@@ -1122,6 +1138,13 @@ func _on_confirmed() -> void:
 	if not bool(verdict.get("ok", true)):
 		_refuse("Initial value", str(verdict.get("error", "")))
 		return
+	var editing_resource: Variant = _context.get("variable_resource", null)
+	if editing_resource is LocalVariable and (editing_resource as LocalVariable).inferred_type \
+			and not (_write_type_check.visible and _write_type_check.button_pressed):
+		var inferred_refusal: String = inferred_value_refusal(str(_context.get("inferred_type", "")), _value_text())
+		if not inferred_refusal.is_empty():
+			_refuse("Initial value", inferred_refusal)
+			return
 	var value_is_code: bool = _current_value_kind() in CODE_KINDS and not _value_text().is_empty()
 	var empty_code: bool = _current_value_kind() in CODE_KINDS and not value_is_code
 	var default_value: Variant = _value_text() if value_is_code else (null if empty_code else _parse_default(type_name, _value_text()))
@@ -1133,14 +1156,15 @@ func _on_confirmed() -> void:
 		if str(default_value).strip_edges().is_empty() and not combo_options.is_empty():
 			default_value = combo_options[0]
 		elif not combo_options.is_empty() and not combo_options.has(str(default_value)):
-			_refuse("Initial value", "The initial value must be one of the choices (%s)." % ", ".join(combo_options))
+			_refuse("Initial value", EventSheetL10n.translate("The initial value must be one of the choices (%s).") % ", ".join(combo_options))
 			return
 	for key: String in ["on_changed", "show_if", "group_show_if", "lock_unless", "link_with"]:
 		if attributes.has(key) and not EventSheetIdentifierRules.is_valid(str(attributes[key])):
-			_refuse(key.capitalize(), "%s must be a single identifier (a variable/function name)." % key.capitalize())
+			var field: String = str((_changes_edits[key] as LineEdit).get_meta("label", key))
+			_refuse(field, EventSheetL10n.translate("%s takes a single identifier (a variable or function name).") % field)
 			return
 	if bool(attributes.get("clamp", false)) and not attributes.get("range") is Dictionary:
-		_refuse("Clamp", "Clamp needs a slider look (a min and a max) to clamp to.")
+		_refuse(EventSheetL10n.translate("Clamp to range"), EventSheetL10n.translate("Clamp needs a slider look (a min and a max) to clamp to."))
 		return
 	var is_constant: bool = _const_check.button_pressed and _supports_constant(type_name)
 	var exported: bool = _exported_check.button_pressed and not _exported_check.disabled
@@ -1166,7 +1190,7 @@ func _reopen() -> void:
 
 func _say_refusal(field: String, reason: String) -> void:
 	_refusal_field = field
-	_help_strip.show_note(field, reason, EventSheetPopupUI.HelpStrip.TONE_ERROR)
+	_help_strip.show_note(EventSheetL10n.translate(field), reason, EventSheetPopupUI.HelpStrip.TONE_ERROR)
 
 
 ## Takes a refusal back once the field it was about is fixed; a no-op for any other field.
@@ -1174,7 +1198,7 @@ func _clear_refusal(field: String) -> void:
 	if _refusal_field != field or _help_strip.tone != EventSheetPopupUI.HelpStrip.TONE_ERROR:
 		return
 	_refusal_field = ""
-	_help_strip.show_note(field, field_help(field))
+	_help_strip.show_note(EventSheetL10n.translate(field), field_help(field))
 
 
 ## Returns the trimmed text from the name field.
@@ -1261,7 +1285,7 @@ static func validate_default(type_name: String, raw: String) -> Dictionary:
 	var parsed: Variant = str_to_var(value)
 	var wants_dictionary: bool = type_name.begins_with("Dictionary")
 	if parsed == null or (wants_dictionary and not (parsed is Dictionary)) or (not wants_dictionary and not (parsed is Array)):
-		return {"ok": false, "error": "Not a valid %s literal - e.g. %s" % [
+		return {"ok": false, "error": EventSheetL10n.translate("Not a valid %s literal - e.g. %s") % [
 			"Dictionary" if wants_dictionary else "Array", "{\"key\": 1}" if wants_dictionary else "[1, 2, 3]"]}
 	var element_type: String = ""
 	if type_name.contains("[") and type_name.ends_with("]"):
@@ -1275,8 +1299,25 @@ static func validate_default(type_name: String, raw: String) -> Dictionary:
 			if typeof(element) == TYPE_INT and expected_type == TYPE_FLOAT:
 				continue
 			if typeof(element) != expected_type:
-				return {"ok": false, "error": "Element %s is not %s (declared %s)." % [str(element), element_type, type_name]}
+				return {"ok": false, "error": EventSheetL10n.translate("Element %s is not %s (declared %s).") % [str(element), element_type, type_name]}
 	return {"ok": true, "error": ""}
+
+
+## A `var hp := 100` keeps its value as the words the file wrote and Godot infers the type from them,
+## so new words must still infer the same type - or the line quietly changes what the variable is, or
+## (a typo) stops compiling. "" when the words are fine. Ticking "Write the type in code" lifts the rule,
+## since the type is then written out. An `inferred_type` of "" is one the words never told (a call, a
+## constant), so nothing is checked against it.
+static func inferred_value_refusal(inferred_type: String, words: String) -> String:
+	var said: String = words.strip_edges()
+	if inferred_type.is_empty():
+		return ""
+	if said.is_empty():
+		return EventSheetL10n.translate("A := line takes its type from its value, so it needs one.")
+	if NativeVariableMarks.gdscript_type_word("", said, true) == inferred_type:
+		return ""
+	return EventSheetL10n.translate("%s does not read as type %s, and a := line takes its type from its value. Change the value, or tick Write the type in code.") % [
+		said, inferred_type]
 
 
 ## Splits an Array/Dictionary literal into its top-level entries (bracket- and string-aware):
@@ -1322,8 +1363,8 @@ func _open_items_editor() -> void:
 	var is_dict: bool = _selected_stored_type().begins_with("Dictionary")
 	if _items_window == null:
 		_items_window = AcceptDialog.new()
-		_items_window.add_cancel_button("Cancel")
-		_items_window.ok_button_text = "Apply"
+		_items_window.add_cancel_button(EventSheetL10n.translate("Cancel"))
+		_items_window.ok_button_text = EventSheetL10n.translate("Apply")
 		_items_edit = TextEdit.new()
 		_items_edit.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(380.0), EventSheetPalette.scaled_f(260.0))
 		_items_window.add_child(_items_edit)
@@ -1335,8 +1376,8 @@ func _open_items_editor() -> void:
 			_set_value_words(items_to_collection_literal(items, _selected_stored_type().begins_with("Dictionary"))))
 		_dialog.add_child(_items_window)
 	_items_edit.text = "\n".join(collection_literal_items(_default_edit.text))
-	_items_edit.placeholder_text = "one \"key\": value per line" if is_dict else "one value per line"
-	_items_window.title = "Edit Dictionary Items" if is_dict else "Edit Array Items"
+	_items_edit.placeholder_text = EventSheetL10n.translate("one \"key\": value per line") if is_dict else EventSheetL10n.translate("one value per line")
+	_items_window.title = EventSheetL10n.translate("Edit Dictionary Items") if is_dict else EventSheetL10n.translate("Edit Array Items")
 	_items_window.popup_centered()
 
 
@@ -1562,14 +1603,14 @@ func _describe_scope_index(index: int) -> Dictionary:
 	if index < 0 or index >= _scope_option.item_count:
 		return {}
 	var scope_key: String = str(_scope_option.get_item_metadata(index))
-	return {"heading": "Scope · %s" % EventSheetVariableSentence.scope_word(scope_key), "body": scope_help(scope_key, _owner_name())}
+	return {"heading": EventSheetL10n.translate("Scope · %s") % EventSheetVariableSentence.scope_word(scope_key), "body": scope_help(scope_key, _owner_name())}
 
 
 ## The strip's text for the type at `index` of the Type dropdown ({} for a group heading).
 func _describe_type_index(index: int) -> Dictionary:
 	if index < 0 or index >= _type_option.item_count or _type_option.is_item_separator(index):
 		return {}
-	return {"heading": "Type · %s" % _type_option.get_item_text(index), "body": _type_option.get_item_tooltip(index)}
+	return {"heading": EventSheetL10n.translate("Type · %s") % _type_option.get_item_text(index), "body": _type_option.get_item_tooltip(index)}
 
 
 ## Refills the write-into picker with the project's autoloads (plus "New global sheet…").
@@ -1579,7 +1620,7 @@ func _refresh_global_targets() -> void:
 	for entry: Dictionary in EventSheetGlobalVariables.autoload_sheets():
 		_global_target_option.add_item("%s  (%s)" % [str(entry.get("name", "")), str(entry.get("path", "")).get_file()])
 		_global_target_option.set_item_metadata(_global_target_option.item_count - 1, entry)
-	_global_target_option.add_item("New global sheet…")
+	_global_target_option.add_item(EventSheetL10n.translate("New global sheet…"))
 	_global_target_option.set_item_metadata(_global_target_option.item_count - 1, {})
 	_global_target_option.select(0)
 	for index: int in range(_global_target_option.item_count):
@@ -1678,30 +1719,30 @@ func _refresh_sync_option() -> void:
 	var named: String = _name_edit.text.strip_edges()
 	var can_ask: bool = not host_named.is_empty() and _scope != "local" and bool(_context.get("editing", false)) and not named.is_empty()
 	if host_named.is_empty():
-		_sync_option.add_item("No scene runs this script yet")
+		_sync_option.add_item(EventSheetL10n.translate("No scene runs this script yet"))
 		_sync_option.disabled = true
 		return
 	if (scene.get("synchronizers", []) as Array).is_empty():
 		# The offer is the SECOND item: a dropdown whose only entry is selected never reports a choice.
-		_sync_option.add_item("Not kept in step - this scene has no synchronizer")
+		_sync_option.add_item(EventSheetL10n.translate("Not kept in step - this scene has no synchronizer"))
 		_sync_option.set_item_metadata(0, "")
-		_sync_option.add_item("Add a synchronizer to %s…" % host_named)
+		_sync_option.add_item(EventSheetL10n.translate("Add a synchronizer to %s…") % host_named)
 		_sync_option.set_item_metadata(1, SYNC_ADD_CHOICE)
 		_sync_option.disabled = not can_ask
 		return
 	var current: String = str(EventSheetSceneReplication.entry_for(scene.get("synced", []), named).get("mode", EventSheetSceneReplication.MODE_OFF))
 	for choice: Array in [
-		[EventSheetSceneReplication.MODE_OFF, "Off - stays on this machine"],
-		[EventSheetSceneReplication.MODE_ALWAYS, "Always - every frame"],
-		[EventSheetSceneReplication.MODE_ON_CHANGE, "On change - only when it moves"],
-		[EventSheetSceneReplication.MODE_AT_SPAWN, "At spawn only - once, with the object"],
+		[EventSheetSceneReplication.MODE_OFF, EventSheetL10n.translate("Off - stays on this machine")],
+		[EventSheetSceneReplication.MODE_ALWAYS, EventSheetL10n.translate("Always - every frame")],
+		[EventSheetSceneReplication.MODE_ON_CHANGE, EventSheetL10n.translate("On change - only when it moves")],
+		[EventSheetSceneReplication.MODE_AT_SPAWN, EventSheetL10n.translate("At spawn only - once, with the object")],
 	]:
 		_sync_option.add_item(str(choice[1]))
 		_sync_option.set_item_metadata(_sync_option.item_count - 1, str(choice[0]))
 		if str(choice[0]) == current:
 			_sync_option.select(_sync_option.item_count - 1)
 	_sync_option.disabled = not can_ask
-	_sync_option.tooltip_text = "" if can_ask else "Add the variable first - a synchronizer keeps an existing property in step."
+	_sync_option.tooltip_text = "" if can_ask else EventSheetL10n.translate("Add the variable first - a synchronizer keeps an existing property in step.")
 
 
 ## A mode picked here goes straight to the scene, whose undo owns it - it cannot ride Save.
@@ -1713,7 +1754,7 @@ func _on_sync_mode_chosen(index: int) -> void:
 	if mode == SYNC_ADD_CHOICE:
 		var host: Dictionary = scene.get("host", {})
 		var added: Dictionary = EventSheetSceneReplication.add_synchronizer(str(host.get("scene_path", "")), str(host.get("node_path", ".")))
-		_say_sync_result(added, "%s added." % str(added.get("name", "")))
+		_say_sync_result(added, EventSheetL10n.translate("%s added.") % str(added.get("name", "")))
 		_refresh_sync_option()
 		return
 	var named: String = _name_edit.text.strip_edges()
@@ -1729,7 +1770,7 @@ func _on_sync_mode_chosen(index: int) -> void:
 
 func _say_sync_result(result: Dictionary, done: String) -> void:
 	var failed: bool = not bool(result.get("ok", false))
-	_help_strip.show_note("Keep in step", str(result.get("reason", "")) if failed else done,
+	_help_strip.show_note(EventSheetL10n.translate("Keep in step"), str(result.get("reason", "")) if failed else done,
 		EventSheetPopupUI.HelpStrip.TONE_ERROR if failed else EventSheetPopupUI.HelpStrip.TONE_NORMAL)
 
 
@@ -1754,9 +1795,9 @@ func _refresh_name_warning() -> void:
 	var typed: String = _name_edit.text.strip_edges()
 	var owner: String = _shadow_owner(typed)
 	if not owner.is_empty():
-		_name_warning.say("⚠ \"%s\" shadows a %s member - rename to avoid a clash." % [typed, owner], EventSheetPopupUI.TONE_WARNING)
+		_name_warning.say(EventSheetL10n.translate("⚠ \"%s\" shadows a %s member - rename to avoid a clash.") % [typed, owner], EventSheetPopupUI.TONE_WARNING)
 	elif name_clashes(typed):
-		_name_warning.say("⚠ \"%s\" is already a variable here - pick another name." % typed, EventSheetPopupUI.TONE_WARNING)
+		_name_warning.say(EventSheetL10n.translate("⚠ \"%s\" is already a variable here - pick another name.") % typed, EventSheetPopupUI.TONE_WARNING)
 	else:
 		_name_warning.say("")
 

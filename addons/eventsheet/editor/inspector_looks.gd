@@ -12,6 +12,9 @@ extends RefCounted
 ##   fields  its details, each [key, label, kind, default, hint]; kind is "number", "text",
 ##           "pick" (hint = the choices) or "tick" (hint = the words beside the box)
 ##
+## The table is English on purpose: each label, tip and detail word is the key its translation is filed
+## under, and label() / description() / plain_label() hand it out in the editor's language.
+##
 ## fold() turns a look and its detail values into the attribute keys the compiler reads, and
 ## unfold() reads them back, so a variable reopens on the look and the details it was saved with.
 ## The keys are the compiler's own (range, flags, layers, file, drawer, ...) - this file only
@@ -133,16 +136,24 @@ static func by_id(look_id: String) -> Dictionary:
 	return {}
 
 
-## The no-look choice's name for a type ("Plain number"), and its hover sentence.
+## The no-look choice's name for a type ("Plain number"), in the editor's language.
 static func plain_label(type_name: String) -> String:
 	if VECTOR_TYPES.has(type_name):
-		return "Axis fields"
-	return str(PLAIN_LABELS.get(type_name, "Its own editor"))
+		return EventSheetL10n.translate("Axis fields")
+	if PLAIN_LABELS.has(type_name):
+		return EventSheetL10n.translate(str(PLAIN_LABELS[type_name]))
+	return EventSheetL10n.translate("Its own editor")
+
+
+## A look's name on its dropdown option, in the editor's language.
+static func label(look: Dictionary) -> String:
+	return EventSheetL10n.translate(str(look.get("label", "")))
 
 
 ## A look's hover: what it shows, then the annotation it writes.
 static func description(look: Dictionary) -> String:
-	return "%s\nWrites %s" % [str(look.get("tip", "")), str(look.get("writes", ""))]
+	return "%s\n%s" % [EventSheetL10n.translate(str(look.get("tip", ""))),
+		EventSheetL10n.translate("Writes %s") % str(look.get("writes", ""))]
 
 
 ## The attributes a look writes for `values` (its detail fields by key). A String dropdown's
@@ -487,7 +498,7 @@ static func _build_preview_inner(look_id: String) -> Control:
 			return _LayerGridPreview.new()
 		"storage":
 			var storage_label := Label.new()
-			storage_label.text = "(saved, not shown)"
+			storage_label.text = EventSheetL10n.translate("(saved, not shown)")
 			storage_label.modulate = Color(1.0, 1.0, 1.0, 0.45)
 			return storage_label
 	if not look_id.is_empty():

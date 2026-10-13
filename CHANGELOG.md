@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+### Fixed: the variable window speaks the editor's language
+
+- The variable window, its look list and its type list were English in every language: the card
+  titles, field names, ticks, placeholders, refusals, the "Keep in step" choices, every type's
+  words and sentence, every Inspector look's name, hover and detail fields, and each field's help
+  paragraph. All of it now reads in the editor's language, and so do the help strip's READS AS and
+  IN CODE labels and the preview card's caption. The look and type tables stay English in the code
+  as the keys their translations are filed under, and a test holds every word they show to a row
+  in all eight languages. The values a look stores (a file picker's reach) stay the same whatever
+  language picked them. Left in English: the preview card's one-line summary, which is built from
+  phrase fragments that do not translate one by one.
+- **A typo in a `var hp := 100` value is refused.** The words of an inferred declaration are
+  written as they stand, so the window now checks they still give the same type - `abc` or `5.0`
+  on an int is refused with the reason, before it reaches the file. Ticking Write the type in code
+  lifts the check, since the type is then written out.
+- A variable opened with a subgroup prefix or a group end, then saved with its subgroup cleared or
+  a group given, no longer keeps those keys: they meant nothing any more, and the file was already
+  right without them.
+
+### Changed: the Show if lift loads only for a file that needs it
+
+- The lift that reads a generated `_validate_property` back onto its variables is loaded by path,
+  and only for a file carrying the generated function's doc line, so the first open of every other
+  file no longer compiles it.
+
 ### Fixed: two flock members on one spot always part
 
 - Flock and Flock 3D send a member that sits exactly on a neighbour away along an angle of its own.
@@ -127,6 +152,9 @@
   Inspector go with it; the file still saves byte for byte. A hand-edited function stays the
   function, and a file that writes its own `_validate_property` keeps it: the generated one stands
   aside (with a warning naming the variables it leaves to it) instead of writing a second.
+- The generated function now follows every variable, tree rows included. On a `.tres` sheet with
+  dictionary variables it used to sit straight after those, before the tree variables, so a saved
+  file moves it once.
 - **Add An Inspector Button For It...** on a function's row asks what the button should say (the
   function's name, read as words, to start with) and shows the `@export_tool_button` line it adds.
   Ctrl+Z removes it again.

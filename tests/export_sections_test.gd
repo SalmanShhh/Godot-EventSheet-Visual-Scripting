@@ -141,7 +141,21 @@ static func _test_writing_the_type() -> bool:
 	dock._variable_dlg._write_type_check.button_pressed = true
 	dock._variable_dlg._on_confirmed()
 	var written: String = str(SheetCompiler.compile(dock._current_sheet).get("output", ""))
+	# An inferred member's new words must still infer its type: a typo is refused, the file untouched.
+	_edit(dock, "bullet_count")
+	dock._variable_dlg._set_value_words("abc")
+	dock._variable_dlg._on_confirmed()
+	var typo: String = str(SheetCompiler.compile(dock._current_sheet).get("output", ""))
+	_edit(dock, "bullet_count")
+	dock._variable_dlg._set_value_words("7")
+	dock._variable_dlg._on_confirmed()
+	var retyped: String = str(SheetCompiler.compile(dock._current_sheet).get("output", ""))
 	var ok: bool = SUPPORT.pins("export_sections_test", [
+		["a typo in an inferred value is refused, not written", typo, written],
+		["...and words of the same type are written as they stand", retyped,
+			written.replace("@export var bullet_count := 3", "@export var bullet_count := 7")],
+		["the refusal says why", VariableDialog.inferred_value_refusal("int", "abc"),
+			"abc does not read as type int, and a := line takes its type from its value. Change the value, or tick Write the type in code."],
 		["a written type is offered the tick, already ticked", typed_offer, [true, true]],
 		["an untouched save keeps the file's own words", untouched, SOURCE],
 		["an inferred member is offered the type Godot infers", offer, "Write the type in code (: int)"],

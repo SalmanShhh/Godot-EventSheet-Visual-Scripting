@@ -7469,3 +7469,298 @@ Only names starting %s join this group.,"В эту группу входят т�
 "%s does not start with %s, so Godot leaves it outside %s. Rename it, or turn off the prefix.","%s не начинается с %s, поэтому Godot оставляет его вне %s. Переименуйте его или отключите префикс."
 automatic: %s tells it when it changes,автоматически: %s сообщает об изменении
 nothing to refresh,нечего обновлять
+Axis fields,Поля по осям
+Its own editor,Собственный редактор
+Writes %s,Пишет %s
+"(saved, not shown)","(сохраняется, не показывается)"
+Where it sits in the Inspector,Где она стоит в Инспекторе
+"Live, as you pick","Вживую, пока вы выбираете"
+Class,Класс
+What it is for - the Inspector tooltip,Для чего она - подсказка в Инспекторе
+Set in code: Godot has no editor for this type.,Задаётся в коде: у Godot нет редактора для этого типа.
+Edit the items one per line instead of typing a literal.,Редактировать элементы по одному в строке вместо ввода литерала.
+Write the type in code,Писать тип в коде
+In the Inspector,В Инспекторе
+Only names starting,"Только имена, начинающиеся с"
+Subgroup,Подгруппа
+When it changes,Когда она меняется
+a sheet function called after the value is set,"функция листа, вызываемая после установки значения"
+a bool variable - hidden while it is false,"переменная bool - скрыто, пока она false"
+Show group if,"Показывать группу, если"
+a bool variable - hides this with its whole group,переменная bool - скрывает это вместе со всей группой
+a bool variable - read-only while it is false,"переменная bool - только для чтения, пока она false"
+Link with,Связать с
+the neighbouring number this one keeps a ratio with,"соседнее число, с которым это сохраняет пропорцию"
+a sheet function returning a warning (empty = fine),"функция листа, возвращающая предупреждение (пусто = всё в порядке)"
+"function and button words, e.g. reroll_stats Reroll","функция и надпись кнопки, например reroll_stats Reroll"
+"an accent label above, e.g. Combat #e06666","цветная подпись сверху, например Combat #e06666"
+a quiet note panel above the field,неброская панель заметки над полем
+Wait for ready,Ждать ready
+Required,Обязательно
+Also,Также
+Refresh the Inspector,Обновление Инспектора
+Inspector look · %s,Вид в Инспекторе · %s
+Const is unavailable for Variant variables - GDScript needs a known type to freeze one.,"Const недоступен для переменных Variant - чтобы закрепить значение, GDScript нужен известный тип."
+This sheet's enums,Перечисления этого листа
+%s · One of a named list,%s · Одно из именованного списка
+"A value from an enum you declare. The Inspector shows a dropdown of its members, written as declared.","Значение из объявленного вами перечисления. Инспектор показывает выпадающий список его членов в том виде, как они объявлены."
+This variable,Эта переменная
+The type this variable already has.,"Тип, который уже есть у этой переменной."
+(set in the Inspector),(задаётся в Инспекторе)
+The Inspector shows the type's own editor.,Инспектор показывает собственный редактор типа.
+As written,Как написано
+Keeps the annotation the file wrote.,"Сохраняет аннотацию, записанную в файле."
+Edit variable,Изменить переменную
+in group %s,в группе %s
+to %s,в %s
+Write the type in code (: %s),Писать тип в коде (: %s)
+Type is locked because this variable is already in use.,"Тип заблокирован, потому что переменная уже используется."
+"✗ ""%s"" shadows a %s member - pick another name.","✗ ""%s"" перекрывает член %s - выберите другое имя."
+"@onready needs an expression (e.g. $Player or get_node(""UI/Score"")).","Для @onready нужно выражение (например, $Player или get_node(""UI/Score""))."
+The initial value must be one of the choices (%s).,Начальное значение должно быть одним из вариантов (%s).
+%s takes a single identifier (a variable or function name).,%s принимает один идентификатор (имя переменной или функции).
+Clamp needs a slider look (a min and a max) to clamp to.,"Для ограничения нужен вид ползунка (минимум и максимум), к которым ограничивать."
+Not a valid %s literal - e.g. %s,"Недопустимый литерал %s - например, %s"
+Element %s is not %s (declared %s).,Элемент %s не является %s (объявлено %s).
+"A := line takes its type from its value, so it needs one.","Строка := берёт тип из своего значения, поэтому значение нужно."
+"%s does not read as type %s, and a := line takes its type from its value. Change the value, or tick Write the type in code.","%s не читается как тип %s, а строка := берёт тип из значения. Измените значение или отметьте «Писать тип в коде»."
+"one ""key"": value per line","по одной паре ""ключ"": значение в строке"
+one value per line,по одному значению в строке
+Edit Dictionary Items,Изменить элементы Dictionary
+Edit Array Items,Изменить элементы Array
+Scope · %s,Область · %s
+Type · %s,Тип · %s
+No scene runs this script yet,Этот скрипт пока не запускает ни одна сцена
+Not kept in step - this scene has no synchronizer,Не синхронизируется - в этой сцене нет синхронизатора
+Off - stays on this machine,Выкл. - остаётся на этой машине
+Always - every frame,Всегда - каждый кадр
+On change - only when it moves,При изменении - только когда меняется
+"At spawn only - once, with the object","Только при появлении - один раз, вместе с объектом"
+Add the variable first - a synchronizer keeps an existing property in step.,Сначала добавьте переменную - синхронизатор синхронизирует уже существующее свойство.
+%s added.,%s добавлен.
+"⚠ ""%s"" shadows a %s member - rename to avoid a clash.","⚠ ""%s"" перекрывает член %s - переименуйте, чтобы избежать конфликта."
+"⚠ ""%s"" is already a variable here - pick another name.","⚠ ""%s"" здесь уже переменная - выберите другое имя."
+Basic,Основные
+True or false,Истина или ложь
+"On or off: is_locked, can_jump. The Inspector shows a checkbox.","Вкл. или выкл.: is_locked, can_jump. Инспектор показывает флажок."
+Whole number,Целое число
+"A whole number: counts, lives, levels. No decimals. Sliders, dropdowns, flags and layer grids are its looks.","Целое число: количества, жизни, уровни. Без дробей. Его виды - ползунки, выпадающие списки, флаги и сетки слоёв."
+Number with decimals,Число с дробной частью
+"A number that can have decimals: speeds, times, distances. Sliders with units, angles and easing curves are its looks.","Число, у которого может быть дробная часть: скорости, время, расстояния. Его виды - ползунки с единицами, углы и кривые плавности."
+"Text: names, messages, file paths. File and folder pickers, big text boxes and dropdowns are its looks.","Текст: имена, сообщения, пути к файлам. Его виды - выбор файла и папки, большие текстовые поля и выпадающие списки."
+Unique name,Уникальное имя
+"Text that is compared fast: action names, animation names, group names (&""jump"").","Текст, который сравнивается быстро: имена действий, анимаций, групп (&""jump"")."
+Path to a node,Путь к узлу
+"A path such as ^""Muzzle"", resolved when used. Can be limited to some node classes.","Путь вроде ^""Muzzle"", разрешается при использовании. Можно ограничить некоторыми классами узлов."
+Vectors and maths,Векторы и математика
+X and Y pair,Пара X и Y
+"Two numbers together: a position, a size, a direction. The Inspector shows X and Y fields.","Два числа вместе: позиция, размер, направление. Инспектор показывает поля X и Y."
+Whole X and Y,Целые X и Y
+"Two whole numbers: a grid cell, a tile size.","Два целых числа: клетка сетки, размер тайла."
+"X, Y and Z","X, Y и Z"
+"Three numbers: a 3D position, size or direction.","Три числа: 3D-позиция, размер или направление."
+"Whole X, Y and Z","Целые X, Y и Z"
+Three whole numbers: a voxel or 3D grid cell.,Три целых числа: воксель или клетка 3D-сетки.
+Four numbers,Четыре числа
+"Four numbers together, often shader values or corners.","Четыре числа вместе, часто значения шейдера или углы."
+Four whole numbers,Четыре целых числа
+Four whole numbers together.,Четыре целых числа вместе.
+Rectangle,Прямоугольник
+A position and a size: an area on screen.,Позиция и размер: область на экране.
+Whole rectangle,Целочисленный прямоугольник
+A rectangle in whole numbers: a region of tiles.,Прямоугольник в целых числах: область тайлов.
+2D transform,2D-преобразование
+"Position, rotation and scale together, in 2D.","Позиция, поворот и масштаб вместе, в 2D."
+3D transform,3D-преобразование
+"Position, rotation and scale together, in 3D.","Позиция, поворот и масштаб вместе, в 3D."
+3D rotation and scale,3D-поворот и масштаб
+The rotation and scale part of a 3D transform.,"Часть 3D-преобразования, отвечающая за поворот и масштаб."
+3D rotation,3D-поворот
+A 3D rotation that blends smoothly.,"3D-поворот, который плавно интерполируется."
+Plane,Плоскость
+An infinite flat surface in 3D: a normal and a distance.,Бесконечная плоская поверхность в 3D: нормаль и расстояние.
+3D box,3D-параллелепипед
+An axis-aligned box in 3D: a position and a size.,"Параллелепипед, выровненный по осям в 3D: позиция и размер."
+4x4 matrix,Матрица 4x4
+A camera-style 4x4 projection matrix.,"Матрица проекции 4x4, как у камеры."
+"A colour, with or without transparency. The Inspector shows a swatch you click to pick.","Цвет, с прозрачностью или без. Инспектор показывает образец, по которому щёлкают для выбора."
+Colour ramp,Цветовая шкала
+"A smooth colour ramp (fire, sky, a health bar), edited in the Inspector's gradient editor.","Плавная цветовая шкала (огонь, небо, полоска здоровья), редактируется в редакторе градиента Инспектора."
+Nodes and resources,Узлы и ресурсы
+A node in the scene,Узел в сцене
+"A link to another node, picked from the scene tree. Any node class works (Node, Node3D, Control, Area2D...); only nodes of that class can be picked.","Ссылка на другой узел, выбранный в дереве сцены. Подойдёт любой класс узла (Node, Node3D, Control, Area2D...); выбрать можно только узлы этого класса."
+A resource file,Файл ресурса
+"A saved data file (.tres) such as stats or a curve, shared by everything that uses it. Any resource class or your own class_name works.","Сохранённый файл данных (.tres), например характеристики или кривая, общий для всего, что его использует. Подойдёт любой класс ресурса или ваш собственный class_name."
+Image,Изображение
+An image or sprite resource.,Ресурс изображения или спрайта.
+Curve,Кривая
+"A shape over 0 to 1 (easing, falloff, ramps), edited in the Inspector's curve editor.","Форма на отрезке от 0 до 1 (плавность, затухание, наклоны), редактируется в редакторе кривых Инспектора."
+A function to call,Функция для вызова
+"A function stored as a value. Exported, it becomes an Inspector button that runs in the editor (@tool).","Функция, хранимая как значение. При экспорте она становится кнопкой Инспектора, которая работает в редакторе (@tool)."
+Collections,Коллекции
+List of anything,Список чего угодно
+A list of values of any type. The Inspector edits each element.,Список значений любого типа. Инспектор редактирует каждый элемент.
+List of whole numbers,Список целых чисел
+"A typed list: every element is a whole number - scores, ids, tile indexes.","Типизированный список: каждый элемент - целое число - очки, идентификаторы, индексы тайлов."
+List of numbers,Список чисел
+"A typed list of numbers - weights, timings, chances.","Типизированный список чисел - веса, тайминги, шансы."
+List of text,Список текстов
+"A typed list of text - names, lines, tags.","Типизированный список текстов - имена, реплики, метки."
+List of rows,Список строк таблицы
+A list of rows - the typed form of a table. The Editable table look edits it as a grid.,Список строк - типизированная форма таблицы. Вид «Редактируемая таблица» редактирует его как сетку.
+Key to value map,Словарь ключ - значение
+Pairs of keys and values of any type.,Пары ключей и значений любого типа.
+Whole numbers by name,Целые числа по имени
+"Keys of text and values of whole numbers - costs[""sword""] = 10.","Текстовые ключи и целые значения - costs[""sword""] = 10."
+Numbers by name,Числа по имени
+"Keys of text and values of numbers - volumes[""music""] = 0.8.","Текстовые ключи и числовые значения - volumes[""music""] = 0.8."
+Text by name,Текст по имени
+"Keys of text and values of text - lines[""greeting""].","Текстовые ключи и текстовые значения - lines[""greeting""]."
+Anything by name,Что угодно по имени
+Keys of text and values of any type - a flexible data bag.,Текстовые ключи и значения любого типа - гибкий набор данных.
+Packed arrays,Упакованные массивы
+Packed bytes,Упакованные байты
+A compact list of bytes: raw data.,Компактный список байтов: сырые данные.
+Packed whole numbers,Упакованные целые числа
+A compact list of 32-bit whole numbers.,Компактный список 32-битных целых чисел.
+Packed decimals,Упакованные дробные числа
+A compact list of decimal numbers.,Компактный список дробных чисел.
+Packed text,Упакованный текст
+A compact list of texts.,Компактный список текстов.
+Packed 2D points,Упакованные 2D-точки
+"A compact list of 2D points: a path, a polygon.","Компактный список 2D-точек: путь, многоугольник."
+Packed colours,Упакованные цвета
+"A compact list of colours: a gradient, a palette.","Компактный список цветов: градиент, палитра."
+Special,Особые
+Any type (untyped),Любой тип (без типа)
+No written type: holds anything. The Inspector needs a value to know what to show.,"Тип не написан: хранит что угодно. Инспектору нужно значение, чтобы понять, что показывать."
+A signal as a value,Сигнал как значение
+"A signal stored in a variable. A real type, but the Inspector cannot show it.","Сигнал, хранимый в переменной. Настоящий тип, но Инспектор не может его показать."
+Server resource id,Идентификатор ресурса сервера
+"A low-level handle to a server resource. A real type, but the Inspector cannot show it.","Низкоуровневый дескриптор ресурса сервера. Настоящий тип, но Инспектор не может его показать."
+"What the row will call it. Letters, digits and underscores, and not a word GDScript already uses. A name already taken in this scope is flagged under the field as you type.","Как строка будет её называть. Буквы, цифры и подчёркивания, и не слово, которое GDScript уже использует. Имя, уже занятое в этой области, отмечается под полем по мере ввода."
+"The value it starts at, in the editor the Inspector would give its type. Left empty it starts at nothing - 0 for a number, """" for text, false for a boolean.","Значение, с которого она начинается, в редакторе, который Инспектор дал бы её типу. Если оставить пустым, она начнётся с ничего - 0 для числа, """" для текста, false для логического значения."
+"One line saying what the variable is for. It compiles to a ## comment above the declaration, which IS the description Godot shows in the Inspector - so it is never written twice.","Одна строка о том, для чего переменная. Она становится комментарием ## над объявлением, а это и есть описание, которое Godot показывает в Инспекторе - поэтому оно никогда не пишется дважды."
+"One value shared by every copy of the object rather than one each, and readable without a copy at all. Never combined with Constant - GDScript has no static const.","Одно значение на все копии объекта, а не по одному на каждую, и читается вовсе без копии. Никогда не сочетается с «Константой» - в GDScript нет static const."
+"Ticked, the line names its type (`var hp: int = 100`), so a later value of another kind is an error rather than a quiet change. Unticked, the code gives no type and Godot takes one from the initial value (`var hp = 100`). Either way the row reads the same.","Если отмечено, строка называет свой тип (`var hp: int = 100`), и более позднее значение другого рода - ошибка, а не тихая замена. Если не отмечено, код не указывает тип, и Godot берёт его из начального значения (`var hp = 100`). В обоих случаях строка читается одинаково."
+"The local keeps its value between runs of its event - a hit counter, a cooldown - instead of starting over each time. The row stays where it is; only the declaration moves, to a private member the rest of the sheet cannot name.","Локальная переменная сохраняет значение между запусками своего события - счётчик попаданий, перезарядка - а не начинает заново каждый раз. Строка остаётся на месте; переносится только объявление, в закрытый член, который остальной лист не может назвать."
+"Set here and never changed while the game runs. A constant is neither Static nor an Inspector property, so both grey out when it is ticked.","Задаётся здесь и никогда не меняется во время игры. Константа не бывает ни статической, ни свойством Инспектора, поэтому оба становятся серыми, когда она отмечена."
+"The value is a lookup made when the node enters the scene ($Player, get_node(""UI/Score"")), written as @onready var. The type is any class name.","Значение - поиск, выполняемый, когда узел входит в сцену ($Player, get_node(""UI/Score"")), записывается как @onready var. Тип - любое имя класса."
+"A designer can tune this per copy in Godot's Inspector (@export var). Off, it is internal state only the sheet touches. A Local is never a property - it is gone before the Inspector could show it.","Дизайнер может настраивать это для каждой копии в Инспекторе Godot (@export var). Если выключено, это внутреннее состояние, которое трогает только лист. Локальная никогда не бывает свойством - она исчезает раньше, чем Инспектор успел бы её показать."
+"The autoload the global will live on - every sheet then reads it as Game.Score. ""New global sheet…"" makes one and registers it for you.","Автозагрузка, на которой будет жить глобальная переменная - каждый лист читает её как Game.Score. ""New global sheet…"" создаёт и регистрирует её за вас."
+"The class the slot accepts: any node class (Node2D, Area2D, Label…), any resource class, or a class_name of your own. Only things of that class can be dropped in.","Класс, который принимает слот: любой класс узла (Node2D, Area2D, Label…), любой класс ресурса или ваш собственный class_name. Перетащить можно только объекты этого класса."
+"Whether a MultiplayerSynchronizer in this object's scene sends this value to the other players, and how often: Always every frame, On change only when it moves, At spawn only once with the object. The fact lives in the scene, so picking here writes the .tscn - the Replication panel is the same switch, and either can be undone from the scene.","Отправляет ли MultiplayerSynchronizer в сцене этого объекта это значение другим игрокам и как часто: «Всегда» - каждый кадр, «При изменении» - только когда меняется, «Только при появлении» - один раз вместе с объектом. Это хранится в сцене, поэтому выбор здесь записывает .tscn - панель Replication это тот же переключатель, и любое из них можно отменить в сцене."
+A heavy band in the Inspector that splits a long script into chapters (@export_category).,"Широкая полоса в Инспекторе, которая делит длинный скрипт на главы (@export_category)."
+A folder in the Inspector for the exported variables that share it (@export_group). Dragging rows together on the sheet does the same.,"Папка в Инспекторе для экспортируемых переменных, которые её разделяют (@export_group). Перетаскивание строк вместе на листе делает то же самое."
+"Godot puts only the names that start with this into the group, and shows them without it: bullet_speed reads as Speed under Bullet.","Godot помещает в группу только имена, начинающиеся с этого, и показывает их без этого начала: bullet_speed читается как Speed под Bullet."
+A folder inside the group (@export_subgroup).,Папка внутри группы (@export_subgroup).
+one per {who} - each copy in the scene has its own,одна на каждый {who} - у каждой копии в сцене своя
+"One per {who}. Every {who} in the scene gets its own; change it on one and the others keep theirs. Pick Global for a value the whole game shares, Local for a value only this event needs.","Одна на каждый {who}. У каждого {who} в сцене своя; измените её у одного, и у остальных останется их собственная. Выберите «Глобальная» для значения на всю игру, «Локальная» - для значения, нужного только этому событию."
+"lives inside the event it sits in, and is gone when it ends","живёт внутри своего события и исчезает, когда оно заканчивается"
+"Lives inside one event. It is made when the event runs and gone when it ends, so nothing else in the sheet can read it - which is exactly what you want for a working total.","Живёт внутри одного события. Создаётся, когда событие выполняется, и исчезает, когда оно заканчивается, поэтому больше ничто на листе не может её прочитать - ровно то, что нужно для промежуточной суммы."
+one value the whole project shares - written into an autoload,одно значение на весь проект - записывается в автозагрузку
+"One value the whole project shares. It lives on an autoload, so every sheet reads it as Game.Score; ""Write into"" says which autoload gets it.","Одно значение на весь проект. Оно живёт на автозагрузке, поэтому каждый лист читает его как Game.Score; ""Write into"" указывает, какая автозагрузка его получит."
+never changes while the game runs,никогда не меняется во время игры
+"Set here and never changed while the game runs. Use it for the numbers a reader should be able to find in one place - a top speed, a maximum. A constant is never a Static and never an Inspector property.","Задаётся здесь и никогда не меняется во время игры. Используйте для чисел, которые читатель должен находить в одном месте - максимальная скорость, предел. Константа никогда не бывает статической и не бывает свойством Инспектора."
+"one value shared by every {who}, kept between scenes","одно значение на все {who}, сохраняется между сценами"
+"One value shared by every {who} rather than one each - a count of how many exist, a high score kept while the scene changes. Reading it needs no copy of the object at all.","Одно значение на все {who}, а не по одному на каждый - счётчик того, сколько их существует, рекорд, сохраняемый при смене сцены. Чтобы его прочитать, копия объекта вообще не нужна."
+Slider,Ползунок
+"A slider between a min and a max, with an optional unit after the number.","Ползунок между минимумом и максимумом, с необязательной единицей после числа."
+Min,Мин.
+Max,Макс.
+Step,Шаг
+Unit,Единица
+Above max,Выше макс.
+allow typing above the max (or_greater),разрешить ввод выше максимума (or_greater)
+Below min,Ниже мин.
+allow typing below the min (or_less),разрешить ввод ниже минимума (or_less)
+Angle in degrees,Угол в градусах
+"An angle: stored in radians, shown and typed in degrees.","Угол: хранится в радианах, показывается и вводится в градусах."
+Stored as,Хранится как
+Exponential slider,Экспоненциальный ползунок
+"A slider with fine control near the low end: zoom, volume, scale.","Ползунок с точной настройкой у нижнего края: масштаб изображения, громкость, размер."
+"Slider, no handle",Ползунок без ручки
+"A number box kept between a min and a max, with no slider drawn.","Числовое поле, удерживаемое между минимумом и максимумом, без нарисованного ползунка."
+Progress bar,Полоса прогресса
+A filled bar between a min and a max. Without this plugin it is a plain number.,Заполняемая полоса между минимумом и максимумом. Без этого плагина - обычное число.
+Dropdown of numbers,Выпадающий список чисел
+A dropdown where each word stands for a number.,"Выпадающий список, где каждое слово означает число."
+Choices,Варианты
+Checkbox flags,Флаги-флажки
+Several on/off boxes packed into one number.,"Несколько флажков вкл./выкл., упакованных в одно число."
+Layers grid,Сетка слоёв
+The little grid of layer toggles physics and rendering use.,"Маленькая сетка переключателей слоёв, которую используют физика и отрисовка."
+Which layers,Какие слои
+Easing curve,Кривая плавности
+"An easing-curve handle for a 0 to 1 value: falloff, attenuation.","Ручка кривой плавности для значения от 0 до 1: затухание, ослабление."
+Number with its unit,Число с единицей
+"A number with a unit dropdown beside it - switching the unit changes the reading, never the stored value.","Число с выпадающим списком единиц рядом - смена единицы меняет показ, но никогда не сохранённое значение."
+Units,Единицы
+File picker,Выбор файла
+"Pick a file, with a filter on the kinds it accepts.",Выбор файла с фильтром допустимых видов.
+Path as typed,Путь как введён
+"keep the path, never a uid:// reference","сохранять путь, никогда не ссылку uid://"
+Folder picker,Выбор папки
+Pick a folder.,Выбор папки.
+Big text box,Большое текстовое поле
+A tall text box for several lines.,Высокое текстовое поле для нескольких строк.
+Hint inside the box,Подсказка внутри поля
+Grey hint text shown while the box is empty.,"Серый текст подсказки, видимый, пока поле пустое."
+Hint,Подсказка
+Dropdown,Выпадающий список
+A dropdown of fixed choices.,Выпадающий список фиксированных вариантов.
+"Dropdown, free typing",Выпадающий список со свободным вводом
+A dropdown of suggestions that still accepts anything typed.,"Выпадающий список подсказок, который всё равно принимает любой ввод."
+Suggestions,Подсказки
+Toggle buttons,Кнопки-переключатели
+"A row of buttons, one per choice. Without this plugin it is a plain text box.","Ряд кнопок, по одной на вариант. Без этого плагина - обычное текстовое поле."
+Password dots,Точки пароля
+Typed text shows as dots.,Введённый текст показывается точками.
+Expression field,Поле выражения
+A box meant for a math expression.,Поле для математического выражения.
+"Solid colour, no alpha","Сплошной цвет, без альфы"
+A colour swatch with no transparency slider.,Образец цвета без ползунка прозрачности.
+Swatch row,Ряд образцов
+A row of colour swatches to pick from. Without this plugin it is a plain colour.,Ряд образцов цвета на выбор. Без этого плагина - обычный цвет.
+Linked axes,Связанные оси
+Drag one axis and the others follow.,"Тяните одну ось, и остальные следуют за ней."
+Direction dial,Диск направления
+The vector as an arrow on a dial. Without this plugin it is X and Y fields.,Вектор как стрелка на диске. Без этого плагина - поля X и Y.
+Min-max range,Диапазон мин.-макс.
+"Two handles on one slider: x is the low end, y the high end.","Две ручки на одном ползунке: x - нижний край, y - верхний."
+Four corners,Четыре угла
+"One number for all four corners, with a button that opens a box per corner.","Одно число для всех четырёх углов и кнопка, открывающая поле для каждого угла."
+"Node path, filtered","Путь к узлу, с фильтром"
+"Pick a scene node, limited to the classes you list.","Выбор узла сцены, ограниченный перечисленными классами."
+Only these types,Только эти типы
+A button in the Inspector that runs the function in the editor. The sheet has to be a Tool sheet.,"Кнопка в Инспекторе, которая запускает функцию в редакторе. Лист должен быть листом Tool."
+Button label,Надпись кнопки
+Editor icon,Значок редактора
+Texture preview,Предпросмотр текстуры
+A bigger picture of the texture under the slot.,Более крупное изображение текстуры под слотом.
+Curve preview,Предпросмотр кривой
+A picture of the curve; its points are shaped in Godot's own curve editor.,Изображение кривой; её точки настраиваются в редакторе кривых Godot.
+Editable table,Редактируемая таблица
+"Every element a row of cells. Columns: name:type (String, int, float, bool, color, enum(a|b)).","Каждый элемент - строка ячеек. Столбцы: имя:тип (String, int, float, bool, color, enum(a|b))."
+Columns,Столбцы
+Your own hint,Своя подсказка
+"Any PROPERTY_HINT_* with its hint text, and the usage flags when they matter.","Любой PROPERTY_HINT_* с текстом подсказки и флаги использования, когда они важны."
+Hint text,Текст подсказки
+Usage,Использование
+Saved but hidden,"Сохраняется, но скрыто"
+Saved with the scene but not shown in the Inspector: data a tool writes.,"Сохраняется со сценой, но не показывается в Инспекторе: данные, которые пишет инструмент."
+Plain number,Обычное число
+Plain text,Обычный текст
+Checkbox,Флажок
+Colour with alpha,Цвет с альфой
+Node path,Путь к узлу
+A function value,Значение-функция
+project,проект
+anywhere on disk,где угодно на диске
+plain,обычная
+shown while empty,"показывается, пока пусто"
+what the button says,что написано на кнопке
+"an editor icon name, e.g. Bake","имя значка редактора, например Bake"
+optional,необязательно
+READS AS,ЧИТАЕТСЯ КАК
+IN CODE,В КОДЕ

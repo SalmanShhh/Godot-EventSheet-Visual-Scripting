@@ -7469,3 +7469,298 @@ Only names starting %s join this group.,只有以 %s 开头的名称会加入此
 "%s does not start with %s, so Godot leaves it outside %s. Rename it, or turn off the prefix.",%s 不以 %s 开头，所以 Godot 会把它放在 %s 之外。请重命名，或关闭前缀。
 automatic: %s tells it when it changes,自动：%s 改变时会通知它
 nothing to refresh,无需刷新
+Axis fields,各轴字段
+Its own editor,其自身的编辑器
+Writes %s,写入 %s
+"(saved, not shown)",(已保存，不显示)
+Where it sits in the Inspector,在检查器中的位置
+"Live, as you pick",选择时实时显示
+Class,类
+What it is for - the Inspector tooltip,它的用途 - 检查器中的提示
+Set in code: Godot has no editor for this type.,在代码中设置：Godot 没有此类型的编辑器。
+Edit the items one per line instead of typing a literal.,逐行编辑各项，而不是输入字面量。
+Write the type in code,在代码中写出类型
+In the Inspector,在检查器中
+Only names starting,仅限以此开头的名称
+Subgroup,子分组
+When it changes,当它改变时
+a sheet function called after the value is set,设置值之后调用的表函数
+a bool variable - hidden while it is false,一个 bool 变量 - 为 false 时隐藏
+Show group if,显示分组的条件
+a bool variable - hides this with its whole group,一个 bool 变量 - 连同整个分组一起隐藏
+a bool variable - read-only while it is false,一个 bool 变量 - 为 false 时只读
+Link with,关联到
+the neighbouring number this one keeps a ratio with,与此值保持比例的相邻数值
+a sheet function returning a warning (empty = fine),返回警告的表函数 (为空 = 正常)
+"function and button words, e.g. reroll_stats Reroll",函数和按钮文字，例如 reroll_stats Reroll
+"an accent label above, e.g. Combat #e06666",上方的强调标签，例如 Combat #e06666
+a quiet note panel above the field,字段上方的低调注释面板
+Wait for ready,等待 ready
+Required,必填
+Also,另外
+Refresh the Inspector,刷新检查器
+Inspector look · %s,检查器外观 · %s
+Const is unavailable for Variant variables - GDScript needs a known type to freeze one.,Variant 变量不能用 const - GDScript 需要已知类型才能固定它。
+This sheet's enums,本表的枚举
+%s · One of a named list,%s · 命名列表中的一项
+"A value from an enum you declare. The Inspector shows a dropdown of its members, written as declared.",来自你声明的枚举的一个值。检查器按声明的写法显示其成员的下拉列表。
+This variable,此变量
+The type this variable already has.,此变量已有的类型。
+(set in the Inspector),(在检查器中设置)
+The Inspector shows the type's own editor.,检查器显示该类型自身的编辑器。
+As written,按原样
+Keeps the annotation the file wrote.,保留文件中写的注解。
+Edit variable,编辑变量
+in group %s,在分组 %s 中
+to %s,加到 %s
+Write the type in code (: %s),在代码中写出类型 (: %s)
+Type is locked because this variable is already in use.,此变量已在使用中，因此类型已锁定。
+"✗ ""%s"" shadows a %s member - pick another name.","✗ ""%s"" 遮蔽了 %s 的成员 - 请换一个名称。"
+"@onready needs an expression (e.g. $Player or get_node(""UI/Score"")).","@onready 需要一个表达式 (例如 $Player 或 get_node(""UI/Score""))。"
+The initial value must be one of the choices (%s).,初始值必须是选项 (%s) 之一。
+%s takes a single identifier (a variable or function name).,%s 只接受一个标识符 (变量名或函数名)。
+Clamp needs a slider look (a min and a max) to clamp to.,限制范围需要滑块外观 (最小值和最大值) 作为界限。
+Not a valid %s literal - e.g. %s,不是有效的 %s 字面量 - 例如 %s
+Element %s is not %s (declared %s).,元素 %s 不是 %s (声明为 %s)。
+"A := line takes its type from its value, so it needs one.",:= 行从其值推断类型，因此需要一个值。
+"%s does not read as type %s, and a := line takes its type from its value. Change the value, or tick Write the type in code.",%s 不能读作类型 %s，而 := 行从其值推断类型。请修改值，或勾选“在代码中写出类型”。
+"one ""key"": value per line","每行一个 ""键"": 值"
+one value per line,每行一个值
+Edit Dictionary Items,编辑 Dictionary 项
+Edit Array Items,编辑 Array 项
+Scope · %s,作用域 · %s
+Type · %s,类型 · %s
+No scene runs this script yet,尚无场景运行此脚本
+Not kept in step - this scene has no synchronizer,不同步 - 此场景没有同步器
+Off - stays on this machine,关闭 - 只留在本机
+Always - every frame,始终 - 每帧
+On change - only when it moves,改变时 - 仅在变化时
+"At spawn only - once, with the object",仅在生成时 - 随对象一次
+Add the variable first - a synchronizer keeps an existing property in step.,请先添加变量 - 同步器只同步已存在的属性。
+%s added.,已添加 %s。
+"⚠ ""%s"" shadows a %s member - rename to avoid a clash.","⚠ ""%s"" 遮蔽了 %s 的成员 - 请重命名以避免冲突。"
+"⚠ ""%s"" is already a variable here - pick another name.","⚠ ""%s"" 在这里已是变量 - 请换一个名称。"
+Basic,基本
+True or false,真或假
+"On or off: is_locked, can_jump. The Inspector shows a checkbox.",开或关：is_locked、can_jump。检查器显示一个复选框。
+Whole number,整数
+"A whole number: counts, lives, levels. No decimals. Sliders, dropdowns, flags and layer grids are its looks.",整数：计数、生命数、等级。没有小数。滑块、下拉列表、标志和层网格是它的外观。
+Number with decimals,带小数的数
+"A number that can have decimals: speeds, times, distances. Sliders with units, angles and easing curves are its looks.",可以有小数的数：速度、时间、距离。带单位的滑块、角度和缓动曲线是它的外观。
+"Text: names, messages, file paths. File and folder pickers, big text boxes and dropdowns are its looks.",文本：名称、消息、文件路径。文件和文件夹选择器、大文本框和下拉列表是它的外观。
+Unique name,唯一名称
+"Text that is compared fast: action names, animation names, group names (&""jump"").","可快速比较的文本：动作名、动画名、分组名 (&""jump"")。"
+Path to a node,节点路径
+"A path such as ^""Muzzle"", resolved when used. Can be limited to some node classes.","像 ^""Muzzle"" 这样的路径，使用时才解析。可限定为某些节点类。"
+Vectors and maths,向量与数学
+X and Y pair,X 和 Y 一对
+"Two numbers together: a position, a size, a direction. The Inspector shows X and Y fields.",两个数一组：位置、尺寸、方向。检查器显示 X 和 Y 字段。
+Whole X and Y,整数 X 和 Y
+"Two whole numbers: a grid cell, a tile size.",两个整数：网格单元、图块尺寸。
+"X, Y and Z",X、Y 和 Z
+"Three numbers: a 3D position, size or direction.",三个数：3D 位置、尺寸或方向。
+"Whole X, Y and Z",整数 X、Y 和 Z
+Three whole numbers: a voxel or 3D grid cell.,三个整数：体素或 3D 网格单元。
+Four numbers,四个数
+"Four numbers together, often shader values or corners.",四个数一组，常用于着色器值或四角。
+Four whole numbers,四个整数
+Four whole numbers together.,四个整数一组。
+Rectangle,矩形
+A position and a size: an area on screen.,位置和尺寸：屏幕上的一块区域。
+Whole rectangle,整数矩形
+A rectangle in whole numbers: a region of tiles.,以整数表示的矩形：一片图块区域。
+2D transform,2D 变换
+"Position, rotation and scale together, in 2D.",2D 中的位置、旋转和缩放的组合。
+3D transform,3D 变换
+"Position, rotation and scale together, in 3D.",3D 中的位置、旋转和缩放的组合。
+3D rotation and scale,3D 旋转与缩放
+The rotation and scale part of a 3D transform.,3D 变换中的旋转和缩放部分。
+3D rotation,3D 旋转
+A 3D rotation that blends smoothly.,可平滑插值的 3D 旋转。
+Plane,平面
+An infinite flat surface in 3D: a normal and a distance.,3D 中无限延伸的平面：一个法线和一个距离。
+3D box,3D 盒子
+An axis-aligned box in 3D: a position and a size.,3D 中轴对齐的盒子：一个位置和一个尺寸。
+4x4 matrix,4x4 矩阵
+A camera-style 4x4 projection matrix.,相机式的 4x4 投影矩阵。
+"A colour, with or without transparency. The Inspector shows a swatch you click to pick.",颜色，可带或不带透明度。检查器显示一个色块，点击即可选取。
+Colour ramp,颜色渐变
+"A smooth colour ramp (fire, sky, a health bar), edited in the Inspector's gradient editor.",平滑的颜色渐变 (火焰、天空、血条)，在检查器的渐变编辑器中编辑。
+Nodes and resources,节点与资源
+A node in the scene,场景中的节点
+"A link to another node, picked from the scene tree. Any node class works (Node, Node3D, Control, Area2D...); only nodes of that class can be picked.",指向另一个节点的链接，从场景树中选取。任何节点类都可以 (Node、Node3D、Control、Area2D...)；只能选取该类的节点。
+A resource file,资源文件
+"A saved data file (.tres) such as stats or a curve, shared by everything that uses it. Any resource class or your own class_name works.",已保存的数据文件 (.tres)，例如属性或曲线，由所有使用它的地方共享。任何资源类或你自己的 class_name 都可以。
+Image,图像
+An image or sprite resource.,图像或精灵资源。
+Curve,曲线
+"A shape over 0 to 1 (easing, falloff, ramps), edited in the Inspector's curve editor.",0 到 1 之间的形状 (缓动、衰减、斜坡)，在检查器的曲线编辑器中编辑。
+A function to call,要调用的函数
+"A function stored as a value. Exported, it becomes an Inspector button that runs in the editor (@tool).",作为值存储的函数。导出后会成为在编辑器中运行的检查器按钮 (@tool)。
+Collections,集合
+List of anything,任意内容的列表
+A list of values of any type. The Inspector edits each element.,任意类型值的列表。检查器逐个编辑元素。
+List of whole numbers,整数列表
+"A typed list: every element is a whole number - scores, ids, tile indexes.",类型化列表：每个元素都是整数 - 分数、ID、图块索引。
+List of numbers,数值列表
+"A typed list of numbers - weights, timings, chances.",类型化的数值列表 - 权重、时机、几率。
+List of text,文本列表
+"A typed list of text - names, lines, tags.",类型化的文本列表 - 名称、台词、标签。
+List of rows,行列表
+A list of rows - the typed form of a table. The Editable table look edits it as a grid.,行的列表 - 表格的类型化形式。“可编辑表格”外观将其作为网格编辑。
+Key to value map,键值映射
+Pairs of keys and values of any type.,任意类型的键值对。
+Whole numbers by name,按名称的整数
+"Keys of text and values of whole numbers - costs[""sword""] = 10.","文本键和整数值 - costs[""sword""] = 10。"
+Numbers by name,按名称的数值
+"Keys of text and values of numbers - volumes[""music""] = 0.8.","文本键和数值 - volumes[""music""] = 0.8。"
+Text by name,按名称的文本
+"Keys of text and values of text - lines[""greeting""].","文本键和文本值 - lines[""greeting""]。"
+Anything by name,按名称的任意值
+Keys of text and values of any type - a flexible data bag.,文本键和任意类型的值 - 灵活的数据袋。
+Packed arrays,紧凑数组
+Packed bytes,紧凑字节
+A compact list of bytes: raw data.,紧凑的字节列表：原始数据。
+Packed whole numbers,紧凑整数
+A compact list of 32-bit whole numbers.,紧凑的 32 位整数列表。
+Packed decimals,紧凑小数
+A compact list of decimal numbers.,紧凑的小数列表。
+Packed text,紧凑文本
+A compact list of texts.,紧凑的文本列表。
+Packed 2D points,紧凑 2D 点
+"A compact list of 2D points: a path, a polygon.",紧凑的 2D 点列表：路径、多边形。
+Packed colours,紧凑颜色
+"A compact list of colours: a gradient, a palette.",紧凑的颜色列表：渐变、调色板。
+Special,特殊
+Any type (untyped),任意类型 (无类型)
+No written type: holds anything. The Inspector needs a value to know what to show.,未写类型：可容纳任何内容。检查器需要一个值才知道该显示什么。
+A signal as a value,作为值的信号
+"A signal stored in a variable. A real type, but the Inspector cannot show it.",存储在变量中的信号。是真实的类型，但检查器无法显示它。
+Server resource id,服务器资源 ID
+"A low-level handle to a server resource. A real type, but the Inspector cannot show it.",指向服务器资源的低级句柄。是真实的类型，但检查器无法显示它。
+"What the row will call it. Letters, digits and underscores, and not a word GDScript already uses. A name already taken in this scope is flagged under the field as you type.",行中对它的称呼。使用字母、数字和下划线，且不能是 GDScript 已使用的词。在此作用域中已被占用的名称会在输入时于字段下方标出。
+"The value it starts at, in the editor the Inspector would give its type. Left empty it starts at nothing - 0 for a number, """" for text, false for a boolean.","它的起始值，使用检查器为其类型提供的编辑器输入。留空则从“无”开始 - 数为 0，文本为 """"，布尔值为 false。"
+"One line saying what the variable is for. It compiles to a ## comment above the declaration, which IS the description Godot shows in the Inspector - so it is never written twice.",用一行说明变量的用途。它会编译为声明上方的 ## 注释，而这正是 Godot 在检查器中显示的描述 - 所以不会写两遍。
+"One value shared by every copy of the object rather than one each, and readable without a copy at all. Never combined with Constant - GDScript has no static const.",由对象的所有副本共享的一个值，而不是每个副本一个，甚至没有副本也能读取。绝不与“常量”同时使用 - GDScript 没有 static const。
+"Ticked, the line names its type (`var hp: int = 100`), so a later value of another kind is an error rather than a quiet change. Unticked, the code gives no type and Godot takes one from the initial value (`var hp = 100`). Either way the row reads the same.",勾选时，该行会写出类型 (`var hp: int = 100`)，之后放入其他种类的值会报错，而不是悄悄改变。不勾选时，代码不写类型，Godot 从初始值推断类型 (`var hp = 100`)。无论哪种，行的读法都一样。
+"The local keeps its value between runs of its event - a hit counter, a cooldown - instead of starting over each time. The row stays where it is; only the declaration moves, to a private member the rest of the sheet cannot name.",局部变量在其事件的多次运行之间保留值 - 命中计数、冷却 - 而不是每次重新开始。行保持原位；只有声明会移到一个表中其他部分无法引用的私有成员。
+"Set here and never changed while the game runs. A constant is neither Static nor an Inspector property, so both grey out when it is ticked.",在此设定，游戏运行期间绝不改变。常量既不是静态的，也不是检查器属性，所以勾选后这两项都会变灰。
+"The value is a lookup made when the node enters the scene ($Player, get_node(""UI/Score"")), written as @onready var. The type is any class name.","该值是节点进入场景时进行的查找 ($Player、get_node(""UI/Score""))，写作 @onready var。类型可以是任何类名。"
+"A designer can tune this per copy in Godot's Inspector (@export var). Off, it is internal state only the sheet touches. A Local is never a property - it is gone before the Inspector could show it.",设计者可以在 Godot 的检查器中逐个副本调整它 (@export var)。关闭时，它是只有表会碰的内部状态。局部变量绝不是属性 - 在检查器能显示之前它就消失了。
+"The autoload the global will live on - every sheet then reads it as Game.Score. ""New global sheet…"" makes one and registers it for you.","全局变量所在的自动加载 - 之后每个表都以 Game.Score 读取它。""New global sheet…"" 会为你创建并注册一个。"
+"The class the slot accepts: any node class (Node2D, Area2D, Label…), any resource class, or a class_name of your own. Only things of that class can be dropped in.",槽位接受的类：任何节点类 (Node2D、Area2D、Label…)、任何资源类，或你自己的 class_name。只能拖入该类的对象。
+"Whether a MultiplayerSynchronizer in this object's scene sends this value to the other players, and how often: Always every frame, On change only when it moves, At spawn only once with the object. The fact lives in the scene, so picking here writes the .tscn - the Replication panel is the same switch, and either can be undone from the scene.",此对象场景中的 MultiplayerSynchronizer 是否把这个值发送给其他玩家，以及多频繁：始终为每帧，改变时为仅在变化时，仅在生成时为随对象一次。这一信息存在于场景中，所以在这里选择会写入 .tscn - Replication 面板是同一个开关，两者都可以在场景中撤销。
+A heavy band in the Inspector that splits a long script into chapters (@export_category).,检查器中把长脚本分成章节的粗横条 (@export_category)。
+A folder in the Inspector for the exported variables that share it (@export_group). Dragging rows together on the sheet does the same.,检查器中供共享它的导出变量使用的文件夹 (@export_group)。在表上把行拖到一起效果相同。
+"Godot puts only the names that start with this into the group, and shows them without it: bullet_speed reads as Speed under Bullet.",Godot 只把以此开头的名称放进分组，并在显示时去掉这一开头：bullet_speed 在 Bullet 下显示为 Speed。
+A folder inside the group (@export_subgroup).,分组内的文件夹 (@export_subgroup)。
+one per {who} - each copy in the scene has its own,每个 {who} 一个 - 场景中每个副本各有一个
+"One per {who}. Every {who} in the scene gets its own; change it on one and the others keep theirs. Pick Global for a value the whole game shares, Local for a value only this event needs.",每个 {who} 一个。场景中每个 {who} 都有自己的一份；改动其中一个，其他的保持不变。整个游戏共享的值选“全局”，只有此事件需要的值选“局部”。
+"lives inside the event it sits in, and is gone when it ends",只存在于所在的事件中，事件结束即消失
+"Lives inside one event. It is made when the event runs and gone when it ends, so nothing else in the sheet can read it - which is exactly what you want for a working total.",只存在于一个事件中。事件运行时创建，结束时消失，所以表中的其他部分都读不到它 - 正适合用作中间合计。
+one value the whole project shares - written into an autoload,整个项目共享的一个值 - 写入自动加载
+"One value the whole project shares. It lives on an autoload, so every sheet reads it as Game.Score; ""Write into"" says which autoload gets it.","整个项目共享的一个值。它存在于一个自动加载上，所以每个表都以 Game.Score 读取它；""Write into"" 指定由哪个自动加载持有。"
+never changes while the game runs,游戏运行期间绝不改变
+"Set here and never changed while the game runs. Use it for the numbers a reader should be able to find in one place - a top speed, a maximum. A constant is never a Static and never an Inspector property.",在此设定，游戏运行期间绝不改变。用于读者应能在一处找到的数 - 最高速度、上限。常量绝不是静态的，也绝不是检查器属性。
+"one value shared by every {who}, kept between scenes",所有 {who} 共享的一个值，在场景之间保留
+"One value shared by every {who} rather than one each - a count of how many exist, a high score kept while the scene changes. Reading it needs no copy of the object at all.",所有 {who} 共享的一个值，而不是每个一份 - 统计现存数量、换场景时保留的最高分。读取它完全不需要对象的副本。
+Slider,滑块
+"A slider between a min and a max, with an optional unit after the number.",介于最小值和最大值之间的滑块，数字后可带单位。
+Min,最小值
+Max,最大值
+Step,步长
+Unit,单位
+Above max,超过最大值
+allow typing above the max (or_greater),允许输入超过最大值 (or_greater)
+Below min,低于最小值
+allow typing below the min (or_less),允许输入低于最小值 (or_less)
+Angle in degrees,以度表示的角度
+"An angle: stored in radians, shown and typed in degrees.",角度：以弧度存储，以度显示和输入。
+Stored as,存储为
+Exponential slider,指数滑块
+"A slider with fine control near the low end: zoom, volume, scale.",在低端可精细调节的滑块：缩放、音量、比例。
+"Slider, no handle",无手柄滑块
+"A number box kept between a min and a max, with no slider drawn.",限制在最小值和最大值之间的数字框，不绘制滑块。
+Progress bar,进度条
+A filled bar between a min and a max. Without this plugin it is a plain number.,介于最小值和最大值之间的填充条。没有此插件时就是普通数字。
+Dropdown of numbers,数字下拉列表
+A dropdown where each word stands for a number.,每个词代表一个数字的下拉列表。
+Choices,选项
+Checkbox flags,复选框标志
+Several on/off boxes packed into one number.,把多个开/关框打包成一个数字。
+Layers grid,层网格
+The little grid of layer toggles physics and rendering use.,物理和渲染使用的小型层开关网格。
+Which layers,哪些层
+Easing curve,缓动曲线
+"An easing-curve handle for a 0 to 1 value: falloff, attenuation.",用于 0 到 1 之间数值的缓动曲线手柄：衰减、减弱。
+Number with its unit,带单位的数字
+"A number with a unit dropdown beside it - switching the unit changes the reading, never the stored value.",旁边带单位下拉列表的数字 - 切换单位只改变显示，绝不改变存储的值。
+Units,单位列表
+File picker,文件选择器
+"Pick a file, with a filter on the kinds it accepts.",选择文件，并按可接受的类型过滤。
+Path as typed,按输入的路径
+"keep the path, never a uid:// reference",保留路径，绝不使用 uid:// 引用
+Folder picker,文件夹选择器
+Pick a folder.,选择一个文件夹。
+Big text box,大文本框
+A tall text box for several lines.,可容纳多行的高文本框。
+Hint inside the box,框内提示
+Grey hint text shown while the box is empty.,框为空时显示的灰色提示文字。
+Hint,提示
+Dropdown,下拉列表
+A dropdown of fixed choices.,固定选项的下拉列表。
+"Dropdown, free typing",可自由输入的下拉列表
+A dropdown of suggestions that still accepts anything typed.,提供建议、但仍接受任意输入的下拉列表。
+Suggestions,建议
+Toggle buttons,切换按钮
+"A row of buttons, one per choice. Without this plugin it is a plain text box.",一排按钮，每个选项一个。没有此插件时就是普通文本框。
+Password dots,密码圆点
+Typed text shows as dots.,输入的文本显示为圆点。
+Expression field,表达式字段
+A box meant for a math expression.,用于数学表达式的框。
+"Solid colour, no alpha",纯色，无透明度
+A colour swatch with no transparency slider.,没有透明度滑块的色块。
+Swatch row,色块行
+A row of colour swatches to pick from. Without this plugin it is a plain colour.,一排可供选择的色块。没有此插件时就是普通颜色。
+Linked axes,关联轴
+Drag one axis and the others follow.,拖动一个轴，其他轴随之变化。
+Direction dial,方向转盘
+The vector as an arrow on a dial. Without this plugin it is X and Y fields.,把向量显示为转盘上的箭头。没有此插件时就是 X 和 Y 字段。
+Min-max range,最小-最大范围
+"Two handles on one slider: x is the low end, y the high end.",一个滑块上的两个手柄：x 为下限，y 为上限。
+Four corners,四个角
+"One number for all four corners, with a button that opens a box per corner.",四个角共用一个数字，另有按钮可为每个角打开单独的框。
+"Node path, filtered",筛选后的节点路径
+"Pick a scene node, limited to the classes you list.",选择场景节点，仅限你列出的类。
+Only these types,仅限这些类型
+A button in the Inspector that runs the function in the editor. The sheet has to be a Tool sheet.,检查器中在编辑器里运行该函数的按钮。表必须是 Tool 表。
+Button label,按钮文字
+Editor icon,编辑器图标
+Texture preview,纹理预览
+A bigger picture of the texture under the slot.,在槽位下方显示更大的纹理图像。
+Curve preview,曲线预览
+A picture of the curve; its points are shaped in Godot's own curve editor.,曲线的图示；其各点在 Godot 自带的曲线编辑器中调整。
+Editable table,可编辑表格
+"Every element a row of cells. Columns: name:type (String, int, float, bool, color, enum(a|b)).",每个元素是一行单元格。列：名称:类型 (String、int、float、bool、color、enum(a|b))。
+Columns,列
+Your own hint,自定义提示
+"Any PROPERTY_HINT_* with its hint text, and the usage flags when they matter.",任意 PROPERTY_HINT_* 及其提示文本，必要时加上使用标志。
+Hint text,提示文本
+Usage,用法
+Saved but hidden,保存但隐藏
+Saved with the scene but not shown in the Inspector: data a tool writes.,随场景保存，但不在检查器中显示：由工具写入的数据。
+Plain number,普通数字
+Plain text,普通文本
+Checkbox,复选框
+Colour with alpha,带透明度的颜色
+Node path,节点路径
+A function value,函数值
+project,项目内
+anywhere on disk,磁盘上任意位置
+plain,普通
+shown while empty,为空时显示
+what the button says,按钮上的文字
+"an editor icon name, e.g. Bake",编辑器图标名称，例如 Bake
+optional,可选
+READS AS,读作
+IN CODE,代码中
