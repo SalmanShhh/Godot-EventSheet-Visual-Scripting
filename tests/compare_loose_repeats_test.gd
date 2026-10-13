@@ -190,6 +190,24 @@ static func _run_loose_ends() -> bool:
 	ok = _check("the panel lists what the walk found", counted > 0, true) and ok
 	ok = _check("opening the index leaves the compiled sheet byte-identical", _compiled(dock.get_current_sheet()), before_output) and ok
 	ok = _check("…and adds no chrome to any row", sheet.events.size(), 4) and ok
+
+	# An edit replaces the sheet with a snapshot duplicate: an entry picked after it must lead to the
+	# row in the sheet as it is now, not to the copy the list was built from.
+	var disabled_index: int = -1
+	for index: int in panel._entries.size():
+		if str((panel._entries[index] as Dictionary).get("kind", "")) == "disabled":
+			disabled_index = index
+	dock._perform_undoable_sheet_edit("Add Comment", func() -> bool:
+		dock._current_sheet.events.append(CommentRow.new())
+		return true
+	)
+	var live_disabled: Resource = dock._current_sheet.events[1]
+	ok = SUPPORT.pins("compare_loose_repeats_test", [
+		["the edit replaced the sheet the list was built from",
+			dock._current_sheet != panel._entries_sheet, true],
+		["a picked entry leads to the row in the current sheet",
+			panel.target_of(disabled_index) == live_disabled, true],
+	]) and ok
 	dock.free()
 	return ok
 

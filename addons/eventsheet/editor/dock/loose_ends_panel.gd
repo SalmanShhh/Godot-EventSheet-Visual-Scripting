@@ -36,6 +36,9 @@ var tree: Tree = null
 var summary_label: Label = null
 
 var _entries: Array = []
+## The sheet object `_entries` was walked from. Every edit replaces the sheet with a snapshot
+## duplicate, so once this differs from the dock's current sheet the listed resources are stale.
+var _entries_sheet: EventSheetResource = null
 
 
 func init(dock: Control) -> void:
@@ -270,9 +273,13 @@ func refresh() -> int:
 	var sheet: EventSheetResource = _dock._current_sheet
 	var flagged: Array = EventSheetDiagnostics.analyze(sheet, _dock._ace_registry)
 	_entries = loose_ends(sheet, flagged)
+	_entries_sheet = sheet
 	tree.clear()
 	var root: TreeItem = tree.create_item()
 	var heading_font: FontVariation = EventSheetPopupUI.small_caps_font(tree.get_theme_font("font"))
+	var index_of: Dictionary = {}
+	for index: int in _entries.size():
+		index_of[_entries[index]] = index
 	for kind_entry: Dictionary in KIND_ORDER:
 		var kind_id: String = str(kind_entry.get("id"))
 		var of_kind: Array = _entries.filter(func(entry: Variant) -> bool:
@@ -290,7 +297,7 @@ func refresh() -> int:
 			var item: TreeItem = tree.create_item(heading)
 			item.set_text(0, str((entry as Dictionary).get("label", "")))
 			item.set_text(1, str((entry as Dictionary).get("detail", "")))
-			item.set_metadata(0, (entry as Dictionary).get("resource"))
+			item.set_metadata(0, int(index_of.get(entry, -1)))
 	summary_label.text = "Nothing left hanging - no TODOs, no disabled rows, no half-written events." if _entries.is_empty() \
 		else "%d loose end(s). Nothing here is drawn on the sheet - click an entry to jump to the row." % _entries.size()
 	return _entries.size()
@@ -300,10 +307,49 @@ func _on_entry_selected() -> void:
 	var selected: TreeItem = tree.get_selected()
 	if selected == null:
 		return
-	var target: Resource = selected.get_metadata(0)
+	var target: Resource = target_of(int(selected.get_metadata(0)))
 	if target == null:
 		return
 	var view: EventSheetViewport = _dock._active_view()
 	if view != null:
 		view.reveal_resource(target)
 		view.select_resource(target)
+
+
+## The row listed entry `index` points at, in the sheet as it is NOW. When the sheet has been edited
+## since the list was built, the same entry (by kind, label and place, counting repeats) is found in
+## a fresh walk of the current sheet and the list is rebuilt; null when it is gone.
+func target_of(index: int) -> Resource:
+	if index < 0 or index >= _entries.size():
+		return null
+	var sheet: EventSheetResource = _dock._current_sheet
+	if sheet == _entries_sheet:
+		return (_entries[index] as Dictionary).get("resource")
+	var fresh: Array = loose_ends(sheet, EventSheetDiagnostics.analyze(sheet, _dock._ace_registry))
+	var target: Resource = matching_resource(_entries, index, fresh)
+	refresh.call_deferred()
+	return target
+
+
+## Entry `index` of `before`, found again in `after`: the entry with the same kind, label and detail,
+## counting earlier entries that read the same so a repeated note maps onto its own row. Null when
+## the entry is no longer there.
+static func matching_resource(before: Array, index: int, after: Array) -> Resource:
+	var wanted: String = _entry_key(before[index])
+	var occurrence: int = 0
+	for earlier: int in index:
+		if _entry_key(before[earlier]) == wanted:
+			occurrence += 1
+	for entry: Variant in after:
+		if _entry_key(entry) != wanted:
+			continue
+		if occurrence == 0:
+			return (entry as Dictionary).get("resource")
+		occurrence -= 1
+	return null
+
+
+static func _entry_key(entry: Variant) -> String:
+	var fields: Dictionary = entry as Dictionary
+	return "%s|%s|%s" % [str(fields.get("kind", "")), str(fields.get("label", "")),
+		str(fields.get("detail", ""))]
