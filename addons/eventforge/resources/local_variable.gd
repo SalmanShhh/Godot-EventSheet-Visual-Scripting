@@ -92,6 +92,7 @@ extends Resource
 ##   "group_end"       bool   - `@export_group("")` above this variable: the folder before it ends here.
 ##   "subgroup"        String - `@export_subgroup("Jump")`, a folder inside the group.
 ##   "subgroup_prefix" String - the subgroup's second argument, read like group_prefix.
+##   "subgroup_end"    bool   - `@export_subgroup("")` above this variable: only the subgroup ends here.
 ## And one hint with no annotation of its own:
 ##   "custom_hint"     Dictionary {"hint", "text", "usage"} - a free-form
 ##                     `@export_custom(PROPERTY_HINT_RANGE, "0,10", PROPERTY_USAGE_DEFAULT)`: the hint

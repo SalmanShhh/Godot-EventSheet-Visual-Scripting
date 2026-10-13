@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Fixed: two hand-written declarations open as variables instead of code lines
+
+- `@export_subgroup("")`, which ends only the subgroup before the next property, now opens as a fact
+  of the variable under it (the way `@export_group("")` already did) and saves back as written; the
+  Properties table writes it too.
+- `@onready var label = $Label`, written with no type, now opens as an `@onready` variable that reads
+  as Variant - the node lookup implies no type - and saves back without one.
+
 ### Changed: a function is drawn like any other event, and edited in the Properties bar
 
 - On a sheet you are writing, a function reads `ƒ Function ▸ On take_damage`, with what it hands

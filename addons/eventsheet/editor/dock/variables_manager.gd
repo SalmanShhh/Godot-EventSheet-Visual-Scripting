@@ -517,6 +517,11 @@ func _on_variable_dialog_confirmed(
 				existing.name = var_name
 				if previous_tree_name != var_name:
 					message["renamed"] = _dock._rename_variable_references(previous_tree_name, var_name)
+				# The window offers no "Write the type in code" tick for an @onready, so one the file
+				# wrote with no type (`@onready var label = $Label`) keeps that spelling while its type
+				# is still the one it opened with; picking a type writes it.
+				var untyped_onready_kept: bool = onready and existing.onready and existing.untyped \
+					and type_name == existing.type_name
 				existing.type_name = type_name
 				# An inferred declaration (`var hp := 100`) holds its initial value as the words the file
 				# wrote, so the field's words are kept as they are (`5.0` stays `5.0`). "Write the type in
@@ -533,7 +538,8 @@ func _on_variable_dialog_confirmed(
 					existing.default_value = default_value
 					existing.expression_default = bool(context.get("value_is_code", existing.expression_default))
 					# "Write the type in code" puts the `: int` in, or (unticked) leaves it out.
-					existing.untyped = bool(context.get("untyped", existing.untyped)) and not bool(context.get("write_type", false))
+					existing.untyped = untyped_onready_kept or bool(context.get("untyped", existing.untyped)) \
+						and not bool(context.get("write_type", false))
 				existing.export_hint = str(context.get("export_hint", existing.export_hint))
 				existing.is_constant = resolved_constant
 				existing.exported = exported

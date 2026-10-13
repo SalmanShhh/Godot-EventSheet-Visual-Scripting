@@ -566,10 +566,11 @@ func _try_lift_variable(line: String) -> LocalVariable:
 		and not lifted.is_constant
 	# A declaration with no type at all (`@export var damage = 3`, `var _cooldown = 0.0`): the row
 	# still needs a type to read and edit by, so it takes the one the value implies, and the flag
-	# keeps the `: int` out of the file. Not for @onready, whose value is a node lookup that implies
-	# nothing, nor for a line ending in `:` (a property header whose accessors this line cannot hold),
-	# nor with no value at all (`var spark`), where there is nothing to imply a type.
-	lifted.untyped = bool(descriptor.get("untyped", false)) and not lifted.onready \
+	# keeps the `: int` out of the file. An @onready's value is a node lookup that implies nothing, so
+	# `@onready var label = $Label` reads as Variant. Not for a line ending in `:` (a property header
+	# whose accessors this line cannot hold), nor with no value at all (`var spark`), where there is
+	# nothing to imply a type.
+	lifted.untyped = bool(descriptor.get("untyped", false)) \
 		and not lifted.no_default and not declaration.strip_edges().ends_with(":")
 	# With no `=` to stop at, the parser reads a trailing comment as part of the TYPE
 	# (`PackedScene # set in the Inspector`). The line would still round-trip, but the row would
@@ -586,7 +587,8 @@ func _try_lift_variable(line: String) -> LocalVariable:
 			and line.contains("= %s" % str(lifted.default_value)) and not line.contains("\"%s\"" % str(lifted.default_value)):
 		lifted.expression_default = true
 	if lifted.untyped:
-		lifted.type_name = "Variant" if lifted.expression_default else _implied_type_name(lifted.default_value)
+		lifted.type_name = "Variant" if lifted.expression_default or lifted.onready \
+			else _implied_type_name(lifted.default_value)
 	# An Inspector button is a Callable knob, and Godot's own spelling for it carries no type
 	# annotation - the annotation names the button, the value names the function it calls. It is
 	# pulled into structured attributes BEFORE the gate below rather than after it, the way every
@@ -835,10 +837,12 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 	var subgroup_prefix_value: String = ""
 	var group_prefix_value: String = ""
 	var group_end_value: bool = false
+	var subgroup_end_value: bool = false
 	if cursor >= 0 and pending[cursor].begins_with("@export_subgroup(\""):
 		var subgroup_arguments: PackedStringArray = _quoted_arguments(pending[cursor])
 		subgroup_value = subgroup_arguments[0] if subgroup_arguments.size() > 0 else ""
 		subgroup_prefix_value = subgroup_arguments[1] if subgroup_arguments.size() > 1 else ""
+		subgroup_end_value = subgroup_value.is_empty()
 		meta_count += 1
 		cursor -= 1
 	if cursor >= 0 and pending[cursor].begins_with("@export_group(\""):
@@ -876,7 +880,8 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 	# The flag is only worth carrying when there IS a section line to sit above: with none, the two
 	# orders are the same bytes, and a stray flag would be a difference the sheet cannot justify.
 	doc_after_group = doc_after_group and not (
-		category_value.is_empty() and group_value.is_empty() and subgroup_value.is_empty() and not group_end_value)
+		category_value.is_empty() and group_value.is_empty() and subgroup_value.is_empty() and not group_end_value
+		and not subgroup_end_value)
 	# Inspector decor rides ABOVE the tooltip (canonical emission order: header, info, tooltip, groups) -
 	# plain `#` comments the editor renders as a section header / info panel. Recovered into the same
 	# attributes the emitter reads so they reopen as editable dialog fields, verify-gated like the rest.
@@ -966,6 +971,8 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 		candidate["subgroup"] = subgroup_value
 	if not subgroup_prefix_value.is_empty():
 		candidate["subgroup_prefix"] = subgroup_prefix_value
+	if subgroup_end_value:
+		candidate["subgroup_end"] = true
 	if doc_after_group:
 		candidate["doc_after_group"] = true
 	if candidate.is_empty():

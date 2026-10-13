@@ -3531,7 +3531,11 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 						lines.append(export_section_line("group", this_group, str(attributes.get("group_prefix", "")).strip_edges()))
 					last_group = this_group
 					last_subgroup = ""
-				# Nested Inspector grouping: @export_subgroup follows the group and nests under it.
+				# Nested Inspector grouping: @export_subgroup follows the group and nests under it, and
+				# an empty one (`@export_subgroup("")`) ends only the subgroup before this variable.
+				if this_subgroup.is_empty() and bool(attributes.get("subgroup_end", false)):
+					lines.append(export_section_line("subgroup", ""))
+					last_subgroup = ""
 				if this_subgroup != last_subgroup:
 					if not this_subgroup.is_empty():
 						lines.append(export_section_line("subgroup", this_subgroup, str(attributes.get("subgroup_prefix", "")).strip_edges()))
@@ -4854,6 +4858,8 @@ static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
 	var subgroup: String = str(attributes.get("subgroup", "")).strip_edges()
 	if not subgroup.is_empty():
 		prefix += export_section_line("subgroup", subgroup, str(attributes.get("subgroup_prefix", "")).strip_edges()) + "\n"
+	elif bool(attributes.get("subgroup_end", false)):
+		prefix += export_section_line("subgroup", "") + "\n"
 	if doc_after_group:
 		prefix += doc_line
 	return prefix

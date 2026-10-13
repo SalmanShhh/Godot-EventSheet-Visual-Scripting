@@ -58,7 +58,66 @@ static func run() -> bool:
 			{"exp_easing_flags": ["attenuation", "positive_only"]}],
 		["no option is left as a verbatim hint", _verbatim_hints(by_name), {}],
 	])
-	return _authoring_spellings() and all_passed
+	all_passed = _authoring_spellings() and all_passed
+	return _ends_and_untyped_nodes() and all_passed
+
+
+## Two spellings that stayed code lines: `@export_subgroup("")`, which ends only the subgroup, and an
+## @onready written with no type, whose node lookup implies nothing and so reads as Variant.
+static func _ends_and_untyped_nodes() -> bool:
+	var source: String = "\n".join([
+		"extends Node2D",
+		"",
+		"@export_group(\"Movement\")",
+		"@export var speed: float = 2.0",
+		"@export_subgroup(\"Jump\")",
+		"@export var jump_height: float = 3.0",
+		"@export_subgroup(\"\")",
+		"@export var run_boost: float = 1.5",
+		"@onready var label = $Label",
+		"@onready var sprite = get_node(\"Sprite2D\")",
+		"",
+	])
+	var by_name: Dictionary = {}
+	var code_rows: PackedStringArray = PackedStringArray()
+	for row: Variant in SUPPORT.reopen(source).events:
+		if row is LocalVariable:
+			by_name[(row as LocalVariable).name] = row
+		elif row is RawCodeRow and (row as RawCodeRow).code.contains("@"):
+			code_rows.append((row as RawCodeRow).code)
+	var label: LocalVariable = by_name.get("label") as LocalVariable
+	return SUPPORT.pins(TEST_NAME, [
+		["neither spelling is left as a code line", code_rows, PackedStringArray()],
+		["the subgroup end is a fact of the variable after it",
+			_attributes(by_name, "run_boost", ["group", "subgroup", "subgroup_end"]), {"subgroup_end": true}],
+		["an untyped @onready reads as Variant and keeps no type in code",
+			[label.onready, label.untyped, label.type_name, str(label.default_value)] if label != null else [],
+			[true, true, "Variant", "$Label"]],
+		["the file saves back byte for byte", SUPPORT.reemit(source, VERIFY_PATH), source],
+	]) and _untyped_onready_survives_the_window()
+
+
+## The variable window has no "Write the type in code" tick for an @onready, so it always sends
+## "untyped": false. Saving the row untouched must not write a `: Variant` the file never had, and
+## picking a type must write that type.
+static func _untyped_onready_survives_the_window() -> bool:
+	var written: PackedStringArray = PackedStringArray()
+	for picked_type: String in ["Variant", "Label"]:
+		var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+		dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+		dock.setup(SUPPORT.reopen("extends Node\n\n@onready var label = $Label\n"))
+		var label: LocalVariable = null
+		for row: Variant in dock._current_sheet.events:
+			if row is LocalVariable and (row as LocalVariable).name == "label":
+				label = row as LocalVariable
+		dock._variables._on_variable_dialog_confirmed("label", picked_type, "$Label", "tree",
+			{"editing": true, "variable_resource": label, "untyped": false, "default_text": "$Label"},
+			false, false, PackedStringArray(), {}, true)
+		var output: String = SUPPORT.compile_output(dock._current_sheet, "user://export_options_lift_window.gd")
+		written.append(output.substr(output.find("@onready")).get_slice("\n", 0))
+		dock.free()
+	return SUPPORT.check(TEST_NAME, "the window keeps an untyped @onready untyped, and writes a picked type",
+		written, PackedStringArray(["@onready var label = $Label", "@onready var label: Label = $Label"]))
 
 
 ## What each option compiles to when a row is given it, the way the variable dialog gives it: the
@@ -70,6 +129,7 @@ static func _authoring_spellings() -> bool:
 		["prefix subgroup", {"group": "Movement", "subgroup": "Jump", "subgroup_prefix": "jump_"}, "int", false,
 			"@export_group(\"Movement\")\n@export_subgroup(\"Jump\", \"jump_\")\n@export var bullet_count: int = 3"],
 		["group end", {"group_end": true}, "int", false, "@export_group(\"\")\n@export var bullet_count: int = 3"],
+		["subgroup end", {"subgroup_end": true}, "int", false, "@export_subgroup(\"\")\n@export var bullet_count: int = 3"],
 		["untyped", {}, "int", true, "@export var bullet_count = 3"],
 		["raw-path file picker", {"file": {"mode": "file", "plain_path": true, "filters": ["*.png"]}}, "String", false,
 			"@export_file_path(\"*.png\") var bullet_count: String = 3"],
