@@ -51,6 +51,7 @@ const HISTORY_PANEL_PATH := "res://addons/eventsheet/editor/dock/history_panel.g
 const INSPECTOR_DESIGNER_DIALOG_PATH := "res://addons/eventsheet/editor/inspector_designer_dialog.gd"
 const LIVE_VALUES_DEBUGGER_PATH := "res://addons/eventsheet/editor/live_values_debugger.gd"
 const LIVE_VALUES_PANEL_PATH := "res://addons/eventsheet/editor/dock/live_values_panel.gd"
+const LOCAL_TOKENS_PATH := "res://addons/eventforge/local_tokens.gd"
 const LOOSE_ENDS_PANEL_PATH := "res://addons/eventsheet/editor/dock/loose_ends_panel.gd"
 const MCP_SERVER_PATH := "res://addons/eventsheet/mcp/mcp_server.gd"
 const MODES_DIALOG_PATH := "res://addons/eventsheet/editor/dock/modes_dialog.gd"
@@ -60,14 +61,18 @@ const OUTLINE_PANEL_PATH := "res://addons/eventsheet/editor/dock/outline_panel.g
 const PATTERN_ADOPT_PATH := "res://addons/eventsheet/editor/dock/pattern_adopt.gd"
 const PATTERN_FACTS_PATH := "res://addons/eventsheet/editor/interaction/pattern_facts.gd"
 const PATTERN_MANUAL_PATH := "res://addons/eventsheet/editor/docs/doc_patterns.gd"
+const PICKER_RECIPES_PATH := "res://addons/eventsheet/editor/picker_recipes.gd"
 const PROJECT_FIND_PATH := "res://addons/eventsheet/editor/dock/project_find.gd"
 const PROJECT_OUTLINE_PATH := "res://addons/eventsheet/editor/interaction/project_outline_facts.gd"
 const PROJECT_VIEW_PANEL_PATH := "res://addons/eventsheet/editor/self_doc/project_view_panel.gd"
 const QUICK_PROMPT_DIALOGS_PATH := "res://addons/eventsheet/editor/dock/quick_prompt_dialogs.gd"
 const REFACTOR_PATH := "res://addons/eventforge/sheet_refactor.gd"
 const REPLACE_OBJECT_PATH := "res://addons/eventsheet/editor/dock/replace_object.gd"
+const RESCUE_TIPS_PATH := "res://addons/eventsheet/editor/rescue_tips.gd"
+const RUNTIME_ERROR_WORDS_PATH := "res://addons/eventsheet/editor/dock/runtime_error_words.gd"
 const SAVED_VIEWS_PATH := "res://addons/eventsheet/editor/dock/saved_views.gd"
 const SCENE_SHEET_PATH := "res://addons/eventforge/importer/scene_sheet.gd"
+const SHEET_EXPORT_PATH := "res://addons/eventsheet/editor/dock/sheet_export.gd"
 const SHEET_MAP_PANEL_PATH := "res://addons/eventsheet/editor/dock/sheet_map_panel.gd"
 const STARTER_EVENTS_PATH := "res://addons/eventsheet/editor/dock/starter_events.gd"
 const STATES_DIALOG_PATH := "res://addons/eventsheet/editor/dock/states_dialog.gd"
@@ -75,8 +80,11 @@ const TEMPLATES_PATH := "res://addons/eventforge/sheet_templates.gd"
 const TRANSLATION_SCAN_PATH := "res://addons/eventsheet/editor/translation_scan.gd"
 const VARIABLES_MANAGER_PATH := "res://addons/eventsheet/editor/dock/variables_manager.gd"
 const VERB_PROPERTIES_PATH := "res://addons/eventsheet/editor/dock/verb_properties_popup.gd"
+const VERB_SUGGESTION_PATH := "res://addons/eventsheet/ace/verb_suggestion.gd"
+const VOCABULARY_CATALOG_PATH := "res://addons/eventsheet/ace/vocabulary_catalog.gd"
 const VOCABULARY_DOC_PATH := "res://addons/eventforge/vocabulary_doc.gd"
 const WORDS_SETTINGS_DIALOG_PATH := "res://addons/eventsheet/editor/words_settings_dialog.gd"
+const WORKSPACES_PATH := "res://addons/eventsheet/editor/dock/workspaces.gd"
 const CONDITION_MENU_EDIT := 1
 const CONDITION_MENU_ADD := 2
 const CONDITION_MENU_REPLACE := 3
@@ -945,9 +953,10 @@ func _init() -> void:
 	# The global "don't offer tips" switch for the once-per-session rescue offers (the profiler on
 	# the first stutter, Ask-why on the first silent trigger - see EventSheetRescueTips).
 	DOCK_REGISTRY.register_palette_command("Toggle Rescue Tips", func() -> void:
-		EventSheetRescueTips.set_offers_enabled(not EventSheetRescueTips.offers_enabled())
+		var tips: Script = load(RESCUE_TIPS_PATH)
+		tips.set_offers_enabled(not tips.offers_enabled())
 		_set_status("Rescue tips on - one quiet offer per moment, per session."
-			if EventSheetRescueTips.offers_enabled() else "Rescue tips off - nothing will be offered."))
+			if tips.offers_enabled() else "Rescue tips off - nothing will be offered."))
 	DOCK_REGISTRY.register_palette_command("Collapse Everything (regions + groups)", func() -> void: _viewport.set_region_folds(true, true))
 	DOCK_REGISTRY.register_palette_command("Expand Everything", func() -> void: _viewport.set_region_folds(false, true))
 	DOCK_REGISTRY.register_palette_command("Collapse All", func() -> void: _viewport.collapse_all())
@@ -1117,7 +1126,7 @@ func _on_translations_maybe_changed() -> void:
 	# And the tokens those scripts already hold, which the next `{uid}` mint draws against. A file
 	# that arrived from a pull holds tokens this session never minted, and a mint that answered from
 	# the listing taken before it would be drawing against a project that no longer exists.
-	EventSheetLocalTokens.clear_index()
+	_clear_if_loaded(LOCAL_TOKENS_PATH, "clear_index")
 	# And what it says about EFFECTS: which node wears which material, which shader is at the end of
 	# that chain, and what dials the shader declares. All three are reads of files that just changed -
 	# a uniform renamed in the shader has to reach the rows naming it, and the project-wide "who else
@@ -2306,11 +2315,12 @@ static var _minted_uid_tokens: Dictionary = {}
 ## The index is built once per session and is a listing of files, never a write. A token is recorded
 ## in it the moment it is drawn, so the next draw excludes it even before anything is saved.
 static func _fresh_uid_token() -> String:
+	var local_tokens: Script = load(LOCAL_TOKENS_PATH)
 	var token: String = "%08x" % randi()
-	while _minted_uid_tokens.has(token) or EventSheetLocalTokens.is_taken(token):
+	while _minted_uid_tokens.has(token) or local_tokens.is_taken(token):
 		token = "%08x" % randi()
 	_minted_uid_tokens[token] = true
-	EventSheetLocalTokens.remember(token)
+	local_tokens.remember(token)
 	return token
 
 
@@ -2510,7 +2520,7 @@ func _on_picker_gate_fix_requested(gate: Dictionary, definition: ACEDefinition, 
 ## through the same one-undo-step snippet path the Manual's figures use.
 func _on_picker_recipe_requested(recipe: Dictionary) -> void:
 	var title: String = str(recipe.get("title", ""))
-	if EventSheetPickerRecipes.insert(recipe, "Insert recipe: %s" % title):
+	if load(PICKER_RECIPES_PATH).insert(recipe, "Insert recipe: %s" % title):
 		_set_status(EventSheetL10n.translate("Inserted \"%s\" - retune the values on the rows themselves.") % title, false)
 	else:
 		_set_status(EventSheetL10n.translate("Couldn't insert \"%s\" here - open its guide page from the Manual instead.") % title, true)
@@ -3991,7 +4001,7 @@ func update_event_times(window: Dictionary) -> void:
 	# The profiler finds you: the first stuttering window of a run offers Row Timings, once,
 	# on the quiet line (see EventSheetRescueTips - one offer per session, and a global switch).
 	if EventSheetTraceTimings.last_window_worst_usec() >= EventSheetTraceTimings.STUTTER_USEC:
-		var stutter_tip: String = EventSheetRescueTips.offer("first_slow_run")
+		var stutter_tip: String = load(RESCUE_TIPS_PATH).offer("first_slow_run")
 		if not stutter_tip.is_empty():
 			_set_status(stutter_tip)
 	if _debugger_window != null:
@@ -4105,12 +4115,13 @@ var _paused_row_uid: String = ""
 ## the report so a caller - and the suite - can read what was said without looking at a Control.
 func report_runtime_error(message: String, script_path: String, line: int = 0) -> Dictionary:
 	var located: Dictionary = _locate_runtime_error_row(script_path, line)
-	var report: Dictionary = EventSheetRuntimeErrorWords.report(message, script_path,
+	var words: Script = load(RUNTIME_ERROR_WORDS_PATH)
+	var report: Dictionary = words.report(message, script_path,
 		int(located.get("event_number", 0)), str(located.get("reading", "")))
 	report["row_resource"] = located.get("resource")
 	report["line"] = line
 	_runtime_error_report = report
-	for output_line: String in EventSheetRuntimeErrorWords.output_lines(report):
+	for output_line: String in words.output_lines(report):
 		print(output_line)
 	_set_status(str(report.get("sentence", "")), true)
 	if _runtime_error_strip != null and _runtime_error_label != null:
@@ -4120,7 +4131,7 @@ func report_runtime_error(message: String, script_path: String, line: int = 0) -
 	if _runtime_error_jump_button != null:
 		_runtime_error_jump_button.disabled = report.get("row_resource") == null
 	if _runtime_error_explain_button != null:
-		_runtime_error_explain_button.disabled = not EventSheetRuntimeErrorWords.can_explain(report)
+		_runtime_error_explain_button.disabled = not words.can_explain(report)
 	return report
 
 
@@ -4210,7 +4221,7 @@ func _show_runtime_error_original() -> void:
 	var original: String = str(_runtime_error_report.get("original", "")).strip_edges()
 	if original.is_empty():
 		return
-	_set_status("%s: %s" % [EventSheetRuntimeErrorWords.GODOT_WORDS_LABEL, original], true)
+	_set_status("%s: %s" % [load(RUNTIME_ERROR_WORDS_PATH).GODOT_WORDS_LABEL, original], true)
 
 
 ## The strip goes away when the reader dismisses it, and whenever a new run starts - a failure from
@@ -4252,7 +4263,7 @@ func update_fired_events(uids: PackedStringArray) -> void:
 		if not tip_script.is_empty() and not tip_script.begins_with("res://eventsheet_addons") \
 				and not tip_script.begins_with("res://addons") \
 				and EventSheetSceneLights.nodes_for_script(tip_script).is_empty():
-			var attached_tip: String = EventSheetRescueTips.offer("first_run_without_this_sheet")
+			var attached_tip: String = load(RESCUE_TIPS_PATH).offer("first_run_without_this_sheet")
 			if not attached_tip.is_empty():
 				_set_status(attached_tip, true)
 	# Held for the timings message of the same flush, which arrives right after this one and needs
@@ -4336,7 +4347,7 @@ func _toggle_row_hit_counts(view_popup: PopupMenu) -> void:
 		# "Ask it why" finds you at the first never-fired trigger, once per session, on the same
 		# quiet line the toggle just used (see EventSheetRescueTips).
 		if _sheet_has_never_fired_trigger():
-			var why_tip: String = EventSheetRescueTips.offer("first_never_fired_trigger")
+			var why_tip: String = load(RESCUE_TIPS_PATH).offer("first_never_fired_trigger")
 			if not why_tip.is_empty():
 				_set_status(why_tip)
 	else:
@@ -6276,7 +6287,7 @@ func suggested_verb_for_action(action: Resource) -> Dictionary:
 	if action == null or str(action.get("ace_id")) != "CallMethod":
 		return {}
 	var params: Dictionary = action.get("params")
-	var class_id: String = EventSheetVerbSuggestion.class_from_target(str(params.get("target", "")))
+	var class_id: String = load(VERB_SUGGESTION_PATH).class_from_target(str(params.get("target", "")))
 	if class_id.is_empty():
 		return {}
 	var candidates: Array = []
@@ -6292,12 +6303,12 @@ func suggested_verb_for_action(action: Resource) -> Dictionary:
 		for entry: Dictionary in EventSheetProjectScanner.list_project_classes():
 			if str(entry.get("name", "")) != class_id:
 				continue
-			candidates = EventSheetVocabularyCatalog.apply(
+			candidates = load(VOCABULARY_CATALOG_PATH).apply(
 				EventSheetClassDBSource.definitions_for_class(class_id, str(entry.get("autoload", ""))))
 			break
 	if candidates.is_empty():
 		return {}
-	return EventSheetVerbSuggestion.suggest(str(params.get("target", "")), str(params.get("method", "")),
+	return load(VERB_SUGGESTION_PATH).suggest(str(params.get("target", "")), str(params.get("method", "")),
 		str(params.get("args", "")), candidates)
 
 
@@ -6320,7 +6331,7 @@ func _convert_context_action_to_verb() -> void:
 				break
 	if definition == null:
 		return
-	var params: Dictionary = EventSheetVerbSuggestion.mapped_params(definition, suggestion["arguments"])
+	var params: Dictionary = load(VERB_SUGGESTION_PATH).mapped_params(definition, suggestion["arguments"])
 	if params.is_empty() and definition.parameters.size() > 0:
 		return
 	_apply_ace_definition(definition, params, {
@@ -9183,16 +9194,16 @@ func _on_duplicate_events_confirmed() -> void:
 
 ## Opens every sheet of one scene as a named tab group, and remembers the group.
 func open_scene_workspace(scene_path: String) -> void:
-	var name: String = EventSheetWorkspaces.remember_scene(scene_path)
+	var name: String = load(WORKSPACES_PATH).remember_scene(scene_path)
 	if name.is_empty():
 		_set_status(EventSheetL10n.translate("That scene has no sheets to open."), true)
 		return
-	_open_workspace_paths(name, EventSheetWorkspaces.members_of_scene(scene_path))
+	_open_workspace_paths(name, load(WORKSPACES_PATH).members_of_scene(scene_path))
 
 
 ## Reopens a remembered workspace by name.
 func open_workspace(name: String) -> void:
-	var paths: PackedStringArray = EventSheetWorkspaces.paths_of(name)
+	var paths: PackedStringArray = load(WORKSPACES_PATH).paths_of(name)
 	if paths.is_empty():
 		_set_status(EventSheetL10n.translate("That workspace has nothing left to open."), true)
 		return
@@ -9201,7 +9212,7 @@ func open_workspace(name: String) -> void:
 
 ## Forgets a remembered workspace (the sheets themselves are untouched).
 func forget_workspace(name: String) -> void:
-	if EventSheetWorkspaces.forget(name):
+	if load(WORKSPACES_PATH).forget(name):
 		_set_status(EventSheetL10n.translate("Forgot the workspace %s.") % name)
 
 
@@ -9229,7 +9240,7 @@ func _open_workspace_paths(name: String, paths: PackedStringArray) -> void:
 # sheet and the sheet on screen can never be two different readings of the same file. The canvas is
 # virtualized (it only ever draws what is on screen), so the whole sheet is captured a screenful at
 # a time and stitched; everything that follows from that picture - the page split, the PDF, the
-# Markdown - is arithmetic and lives in EventSheetSheetExport.
+# Markdown - is arithmetic and lives in sheet_export.gd.
 
 var _export_picture_dialog: EditorFileDialog = null
 var _export_picture_kind: String = "png"
@@ -9276,8 +9287,8 @@ func _write_sheet_picture(path: String, kind: String) -> void:
 		return
 	match kind:
 		"pdf":
-			var pages: Array = EventSheetSheetExport.split_pages(picture)
-			var bytes: PackedByteArray = EventSheetSheetExport.pdf_bytes(pages)
+			var pages: Array = load(SHEET_EXPORT_PATH).split_pages(picture)
+			var bytes: PackedByteArray = load(SHEET_EXPORT_PATH).pdf_bytes(pages)
 			var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 			if file == null:
 				_set_status(EventSheetL10n.translate("Could not write %s.") % path, true)
@@ -9287,7 +9298,7 @@ func _write_sheet_picture(path: String, kind: String) -> void:
 			_set_status(EventSheetL10n.translate("Exported %d page(s) to %s.") % [pages.size(), path])
 		"md":
 			var figures: Array = _write_sheet_figures(path, picture)
-			var text: String = EventSheetSheetExport.markdown_with_figures(
+			var text: String = load(SHEET_EXPORT_PATH).markdown_with_figures(
 				_active_view().get_row_tree(), _sheet_io._exported_script_basename(), figures)
 			var document: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 			if document == null:
@@ -9320,7 +9331,7 @@ func _write_sheet_figures(document_path: String, picture: Image) -> Array:
 		if to_y - from_y <= 0:
 			continue
 		var title: String = str(band.get("title", ""))
-		var file_name: String = EventSheetSheetExport.figure_file_name(document_path, title, band_index)
+		var file_name: String = load(SHEET_EXPORT_PATH).figure_file_name(document_path, title, band_index)
 		var figure: Image = picture.get_region(Rect2i(0, from_y, picture.get_width(), to_y - from_y))
 		if figure.save_png("%s/%s" % [folder, file_name]) == OK:
 			figures.append({"title": title, "path": file_name})
@@ -9349,7 +9360,7 @@ func capture_sheet_picture() -> Image:
 		scroll.scroll_vertical = cursor
 		await get_tree().process_frame
 		await RenderingServer.frame_post_draw
-		var screen: Image = EventSheetSheetExport.matched_to(window.get_texture().get_image(),
+		var screen: Image = load(SHEET_EXPORT_PATH).matched_to(window.get_texture().get_image(),
 			stitched.get_format())
 		var visible: Rect2i = band.intersection(Rect2i(Vector2i.ZERO, screen.get_size()))
 		if visible.size.x <= 0 or visible.size.y <= 0:

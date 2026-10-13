@@ -3,6 +3,13 @@ class_name EventSheetCompletions
 extends RefCounted
 
 const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+## What only some fields ask, read by path when one does: naming any of these would compile it,
+## and what it names, into every first open that loads the completions.
+const COMMAND_PALETTE_PATH := "res://addons/eventsheet/editor/dock/command_palette.gd"
+const PROJECT_FIND_PATH := "res://addons/eventsheet/editor/dock/project_find.gd"
+const LINT_PATH := "res://addons/eventsheet/ace/gdscript_lint.gd"
+const TILESET_FACTS_PATH := "res://addons/eventforge/tileset_facts.gd"
+const DAMAGE_TYPE_FACTS_PATH := "res://addons/eventforge/damage_type_facts.gd"
 
 # THE list of names a field can be completed with - one source, whatever the field is.
 #
@@ -439,7 +446,7 @@ static func _state_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 static func _ask_row_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 	var entries: Array[Dictionary] = []
 	var seen: Dictionary = {}
-	for found: Dictionary in EventSheetProjectFind.findable(sheet):
+	for found: Dictionary in load(PROJECT_FIND_PATH).findable(sheet):
 		var text: String = str(found.get("text", "")).replace("\n", " ").strip_edges()
 		if text.is_empty():
 			continue
@@ -473,7 +480,7 @@ static func _ask_symbol_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 		var word: String = EventSheetStateFacts.word_for(member)
 		entries.append({"text": word, "detail": "", "kind": KIND_STATE, "symbol": member,
 			"lower": word.to_lower()})
-	for entry: Variant in EventSheetCommandPalette.collect_symbols(sheet):
+	for entry: Variant in load(COMMAND_PALETTE_PATH).collect_symbols(sheet):
 		var symbol: Dictionary = entry
 		var name: String = str(symbol.get("name", ""))
 		entries.append({"text": name, "detail": "", "kind": str(symbol.get("kind", KIND_VARIABLE)),
@@ -683,14 +690,14 @@ static func _path_entries() -> Array[Dictionary]:
 ## rather than a wrong one.
 static func _tile_data_key_entries() -> Array[Dictionary]:
 	var entries: Array[Dictionary] = []
-	for key: String in EventForgeTileSetFacts.project_data_keys():
+	for key: String in load(TILESET_FACTS_PATH).project_data_keys():
 		entries.append({"text": "\"%s\"" % key, "detail": EventSheetL10n.translate("tile data"),
 			"kind": KIND_MEMBER})
 	return entries
 
 
 ## Every kind of damage the project has written down, quoted, because the field it fills takes a
-## name as a string. Read as TEXT by EventForgeDamageTypeFacts rather than by loading anything - a
+## name as a string. Read as TEXT by the damage type facts rather than by loading anything - a
 ## set's script ships in a pack the reader may not have installed.
 ##
 ## A PROJECT THAT HAS WRITTEN NONE DOWN IS OFFERED THE SHIPPED STARTER, which is the opposite of
@@ -701,7 +708,7 @@ static func _tile_data_key_entries() -> Array[Dictionary]:
 ## down yet - so the field takes whatever is typed into it either way.
 static func _damage_type_entries() -> Array[Dictionary]:
 	var entries: Array[Dictionary] = []
-	for kind: Dictionary in EventForgeDamageTypeFacts.types_to_suggest():
+	for kind: Dictionary in load(DAMAGE_TYPE_FACTS_PATH).types_to_suggest():
 		entries.append({"text": "\"%s\"" % str(kind["name"]),
 			"detail": str(kind["path"]).get_file(), "kind": KIND_MEMBER})
 	return entries
@@ -712,7 +719,7 @@ static func _damage_type_entries() -> Array[Dictionary]:
 ## field is an index and an index says nothing to anybody.
 static func _tile_terrain_entries() -> Array[Dictionary]:
 	var entries: Array[Dictionary] = []
-	for terrain: Dictionary in EventForgeTileSetFacts.project_terrains():
+	for terrain: Dictionary in load(TILESET_FACTS_PATH).project_terrains():
 		entries.append({"text": str(terrain["index"]),
 			"detail": "%s %s %s %d" % [str(terrain["name"]), SEPARATOR,
 				EventSheetL10n.translate("terrain set"), int(terrain["set"])],
@@ -796,7 +803,7 @@ static func _expression_pool(sheet: EventSheetResource, text_before_caret: Strin
 	var receiver: String = member_receiver(text_before_caret)
 	if not receiver.is_empty():
 		var members: Array[Dictionary] = []
-		for candidate: Dictionary in EventSheetGDScriptLint.dot_completion_candidates(receiver, sheet):
+		for candidate: Dictionary in load(LINT_PATH).dot_completion_candidates(receiver, sheet):
 			members.append({"text": str(candidate.get("label", "")), "detail": receiver,
 				"kind": KIND_MEMBER})
 		return members
@@ -841,10 +848,11 @@ static func _build_expression_entries(sheet: EventSheetResource) -> Array[Dictio
 				continue
 			entries.append({"text": "%s()" % method_name, "detail": "%s %s %s" % [sheet.host_class,
 				SEPARATOR, EventSheetL10n.translate("method")], "kind": KIND_MEMBER})
-	for global_name: Variant in EventSheetGDScriptLint.GDSCRIPT_GLOBAL_HINTS.keys():
+	var global_hints: Dictionary = load(LINT_PATH).GDSCRIPT_GLOBAL_HINTS
+	for global_name: Variant in global_hints.keys():
 		entries.append({"text": "%s()" % str(global_name),
 			"detail": "%s %s %s" % [EventSheetL10n.translate("built-in"), SEPARATOR,
-				str(EventSheetGDScriptLint.GDSCRIPT_GLOBAL_HINTS[global_name])],
+				str(global_hints[global_name])],
 			"kind": KIND_BUILTIN})
 	return entries
 

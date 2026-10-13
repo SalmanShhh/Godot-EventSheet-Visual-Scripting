@@ -163,6 +163,9 @@ signal rows_rebuilt
 ## that asks them anything - naming any of those classes here would compile it, and all it names,
 ## with the canvas on the first sheet open.
 const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+## What only an edit or a copy asks for, read by path at that moment.
+const FORMAT_BAR_PATH := "res://addons/eventsheet/editor/bbcode_selection_bar.gd"
+const TEXT_LISTING_PATH := "res://addons/eventsheet/editor/dock/text_listing.gd"
 
 # The DEFAULT density's numbers. Every layout read goes through row_height_floor() /
 # indent_width() / event_block_gap() below, which ask the sheet's own theme; these two are the
@@ -4147,7 +4150,7 @@ func _update_inline_format_bar() -> void:
 			_inline_format_bar.visible = false
 		return
 	if _inline_format_bar == null:
-		_inline_format_bar = EventSheetBBCodeSelectionBar.attach_floating(self)
+		_inline_format_bar = load(FORMAT_BAR_PATH).attach_floating(self)
 		_inline_format_bar.format_requested.connect(_wrap_editing_selection)
 	var row_data: EventRowData = _row_at(_editing_row_index)
 	if row_data == null or _editing_span_index >= row_data.spans.size():
@@ -5628,7 +5631,7 @@ func accessible_name_for_row(row_index: int) -> String:
 		return ""
 	_ensure_event_spans(row_data)
 	var parts: PackedStringArray = PackedStringArray()
-	for line: String in EventSheetTextListing.lines_for_rows([row_data]):
+	for line: String in load(TEXT_LISTING_PATH).lines_for_rows([row_data]):
 		var trimmed: String = line.strip_edges()
 		if not trimmed.is_empty():
 			parts.append(trimmed)

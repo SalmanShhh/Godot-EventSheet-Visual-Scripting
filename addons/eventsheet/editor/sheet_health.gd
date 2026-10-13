@@ -22,6 +22,9 @@ extends RefCounted
 
 const META_SECTION := "eventsheets"
 const META_KEY := "test_results"
+## The Loose Ends walk, read by path when a card counts: naming the panel would compile it, and
+## what it names, wherever the card is loaded.
+const LOOSE_ENDS_PANEL_PATH := "res://addons/eventsheet/editor/dock/loose_ends_panel.gd"
 
 ## Headless twin of the editor metadata store, so the last-run memory is testable without an editor.
 static var _memory: Dictionary = {}
@@ -143,7 +146,7 @@ static func test_sheets_for(sheet: EventSheetResource, sheet_path: String) -> Pa
 ## listed one by one; this is only how many.
 static func unused_count(sheet: EventSheetResource) -> int:
 	var counted: int = 0
-	for entry: Variant in EventSheetLooseEndsPanel.loose_ends(sheet):
+	for entry: Variant in load(LOOSE_ENDS_PANEL_PATH).loose_ends(sheet):
 		var kind: String = str((entry as Dictionary).get("kind", ""))
 		if kind == "orphan_verb" or kind == "unfinished" or kind == "disabled":
 			counted += 1

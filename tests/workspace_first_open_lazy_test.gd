@@ -67,6 +67,30 @@ const CLICK_ONLY := [
 	"res://addons/eventsheet/editor/dock/object_hierarchy.gd",
 	# Only a file holding the generated `_validate_property` needs its lift back onto the variables.
 	"res://addons/eventforge/importer/inspector_condition_lift.gd",
+	# Compiled by the first open and never called by it: each is read by path when its own moment
+	# comes - a mint, a paste, a search, an error from the running game, a pack being curated.
+	"res://addons/eventforge/local_tokens.gd",
+	"res://addons/eventsheet/ace/vocabulary_catalog.gd",
+	"res://addons/eventsheet/editor/dock/sheet_export.gd",
+	"res://addons/eventsheet/ace/annotation_writer.gd",
+	"res://addons/eventsheet/ace/pack_reading_check.gd",
+	"res://addons/eventsheet/editor/dock/loose_ends_panel.gd",
+	"res://addons/eventsheet/editor/dock/command_palette.gd",
+	"res://addons/eventsheet/ace/gdscript_lint.gd",
+	"res://addons/eventsheet/editor/dock/project_find.gd",
+	"res://addons/eventsheet/editor/dock/find_references.gd",
+	"res://addons/eventforge/tileset_facts.gd",
+	"res://addons/eventforge/damage_type_facts.gd",
+	"res://addons/eventsheet/editor/picker_recipes.gd",
+	"res://addons/eventsheet/editor/autocomplete/quick_add.gd",
+	"res://addons/eventsheet/editor/event_sheet_snippet.gd",
+	"res://addons/eventsheet/editor/number_scrub.gd",
+	"res://addons/eventsheet/editor/dock/runtime_error_words.gd",
+	"res://addons/eventsheet/ace/verb_suggestion.gd",
+	"res://addons/eventsheet/editor/rescue_tips.gd",
+	"res://addons/eventsheet/editor/dock/workspaces.gd",
+	"res://addons/eventsheet/editor/bbcode_selection_bar.gd",
+	"res://addons/eventsheet/editor/dock/text_listing.gd",
 ]
 
 ## The ids a first-paint file spells out rather than reading off a file it must not compile, each
@@ -78,6 +102,8 @@ const SPELLED_OUT := [
 		"res://addons/eventsheet/editor/dock/object_hierarchy.gd", "CHILD_DRAG_TYPE"],
 	["res://addons/eventsheet/editor/interaction/scene_trust_findings.gd", "KIND_UNTRUSTED_SCENE",
 		"res://addons/eventforge/files_doctor.gd", "CHECK_UNTRUSTED_SCENE"],
+	["res://addons/eventsheet/editor/dock/dock_ui_builder.gd", "GODOT_WORDS_LABEL",
+		"res://addons/eventsheet/editor/dock/runtime_error_words.gd", "GODOT_WORDS_LABEL"],
 ]
 
 ## The dock and the helpers the first paint builds.
@@ -96,6 +122,16 @@ const FIRST_PAINT_FILES := [
 	"res://addons/eventsheet/editor/dock/dock_input_dispatch.gd",
 	"res://addons/eventsheet/editor/dock/find_results_bar.gd",
 	"res://addons/eventsheet/editor/dock/editor_tool_bar.gd",
+]
+
+## Files the first open loads that reach a script by path, beside the first-paint helpers above.
+const PATH_READERS := [
+	"res://addons/eventsheet/editor/picker_warmup.gd",
+	"res://addons/eventsheet/editor/event_sheet_viewport.gd",
+	"res://addons/eventsheet/editor/popup_ui.gd",
+	"res://addons/eventsheet/editor/sheet_health.gd",
+	"res://addons/eventsheet/editor/dock/global_variables.gd",
+	"res://addons/eventsheet/editor/autocomplete/completion_sources.gd",
 ]
 
 ## The names none of those files may hold in code. The API keeps its DOT, as in the boot lint: the
@@ -141,7 +177,7 @@ static func run() -> bool:
 
 	# 3. Every path those files reach by name of a constant exists.
 	var path_constant: RegEx = RegEx.create_from_string("(?m)^const [A-Z_]+_PATH := \"(res://[^\"]+)\"")
-	for path: String in FIRST_PAINT_FILES + ["res://addons/eventsheet/editor/picker_warmup.gd"]:
+	for path: String in FIRST_PAINT_FILES + PATH_READERS:
 		for found: RegExMatch in path_constant.search_all(FileAccess.get_file_as_string(path)):
 			all_passed = _check("%s reaches an existing %s" % [path.get_file(), found.get_string(1).get_file()],
 				ResourceLoader.exists(found.get_string(1)), true) and all_passed

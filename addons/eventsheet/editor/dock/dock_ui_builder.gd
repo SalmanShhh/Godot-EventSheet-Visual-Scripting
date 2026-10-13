@@ -15,6 +15,9 @@ extends RefCounted
 ## classes here would compile it, and everything it names, into the first open of a sheet.
 const RAW_CODE_EDIT_PATH := "res://addons/eventsheet/editor/raw_code_edit.gd"
 const OBJECT_PROPERTIES_PATH := "res://addons/eventsheet/editor/dock/object_properties_popup.gd"
+## The runtime error strip's button, spelled out here so building the strip does not compile the
+## error wording it only needs once an error arrives; a test holds it equal to that file's label.
+const GODOT_WORDS_LABEL := "Godot's words"
 
 var _dock: Control = null
 
@@ -362,7 +365,7 @@ func build_ui() -> void:
 	error_strip.add_child(_dock._runtime_error_explain_button)
 	var godot_words_button: Button = Button.new()
 	godot_words_button.name = "EventSheetRuntimeErrorOriginal"
-	godot_words_button.text = EventSheetRuntimeErrorWords.GODOT_WORDS_LABEL
+	godot_words_button.text = GODOT_WORDS_LABEL
 	godot_words_button.flat = true
 	godot_words_button.pressed.connect(_dock._show_runtime_error_original)
 	error_strip.add_child(godot_words_button)

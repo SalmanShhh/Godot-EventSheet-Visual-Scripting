@@ -24,6 +24,8 @@ extends RefCounted
 const DOCK_REGISTRY := preload("res://addons/eventsheet/api/dock_registry.gd")
 
 const RESULT_ROW_META := "find_result"
+## The project-wide search, read by path when a search runs, so the first open does not compile it.
+const FIND_REFERENCES_PATH := "res://addons/eventsheet/editor/dock/find_references.gd"
 
 var _dock: Control = null
 var bar: VBoxContainer = null
@@ -71,7 +73,8 @@ func close() -> void:
 
 ## Every reference to `symbol` across the open tabs and the project's sheets, grouped by sheet.
 func results_for(symbol: String) -> Array:
-	return EventSheetFindReferences.find_in_project_rows(symbol, EventSheetFindReferences.open_sheets_of(_dock))
+	var find: Script = load(FIND_REFERENCES_PATH)
+	return find.find_in_project_rows(symbol, find.open_sheets_of(_dock))
 
 
 ## "7 in 2 sheets" - what the bar's heading says after the symbol.

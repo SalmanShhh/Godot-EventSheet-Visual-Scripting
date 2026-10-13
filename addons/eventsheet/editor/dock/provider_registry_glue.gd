@@ -13,12 +13,14 @@ extends RefCounted
 const PROJECT_DOCTOR_PATH := "res://addons/eventforge/project_doctor.gd"
 const PROVIDER_PREVIEW_PATH := "res://addons/eventsheet/ace/provider_preview.gd"
 const EVENTSHEETS_API_PATH := "res://addons/eventsheet/api/eventsheets.gd"
+const ANNOTATION_WRITER_PATH := "res://addons/eventsheet/ace/annotation_writer.gd"
+const READING_CHECK_PATH := "res://addons/eventsheet/ace/pack_reading_check.gd"
 
 ## The Kind dropdown's entries, in the order the range cell indexes them. Matches
 ## EventSheetProviderPreview.kind_label, which is what fills the BEFORE side of the diff.
 const KIND_CHOICES: PackedStringArray = ["Action", "Condition", "Expression", "Trigger"]
 
-## The annotation each Kind writes, keyed the way EventSheetACEAnnotationWriter expects.
+## The annotation each Kind writes, keyed the way the annotation writer expects.
 const KIND_EDIT_KEYS: PackedStringArray = ["action", "condition", "expression", "trigger"]
 
 ## The param hints the curation editor offers. Not the whole vocabulary - any hint a provider can
@@ -414,7 +416,7 @@ func open_shim_question(path: String, new_member: String) -> ConfirmationDialog:
 	})
 	var sync: Callable = func(typed: String) -> void:
 		var old_name: String = typed.strip_edges()
-		var shim: Dictionary = EventSheetACEAnnotationWriter.forwarding_shim(source, old_name, new_member)
+		var shim: Dictionary = load(ANNOTATION_WRITER_PATH).forwarding_shim(source, old_name, new_member)
 		var can_add: bool = bool(shim.get("ok", false))
 		load(_dock.SMALL_PROMPT_PATH).set_code(dialog,
 			str(shim["source"]).substr(source.length()).strip_edges() if can_add else "")
@@ -476,7 +478,7 @@ func curation_diff_text(edits: Array) -> String:
 		var edit: Dictionary = entry
 		var lines: PackedStringArray = PackedStringArray()
 		lines.append("%s %s" % [str(edit.get("source_kind", "")), str(edit.get("member", ""))])
-		for annotation: String in EventSheetACEAnnotationWriter.annotation_lines(edit):
+		for annotation: String in load(ANNOTATION_WRITER_PATH).annotation_lines(edit):
 			lines.append("  + %s" % annotation)
 		blocks.append("\n".join(lines))
 	return "\n\n".join(blocks)
@@ -584,7 +586,7 @@ func _refresh_version_preview() -> void:
 		return
 	var source: String = FileAccess.get_file_as_string(str(_dock._current_sheet_path))
 	var bump: String = ["patch", "minor", "major"][_version_bump.selected if _version_bump.selected >= 0 else 0]
-	var preview: Dictionary = EventSheetACEAnnotationWriter.bump_version(source, bump, "preview")
+	var preview: Dictionary = load(ANNOTATION_WRITER_PATH).bump_version(source, bump, "preview")
 	_version_preview.text = "%s  ->  %s" % [str(preview.get("old_version")), str(preview.get("new_version"))]
 
 
@@ -594,14 +596,14 @@ func _refresh_version_preview() -> void:
 func _refresh_reading_check(sheet_path: String) -> void:
 	if _reading_summary == null or _reading_failures == null:
 		return
-	var definitions: Dictionary = EventSheetPackReadingCheck.check_definitions(
-		EventSheetPackReadingCheck.definitions_for_script(sheet_path))
-	var demo: Dictionary = EventSheetPackReadingCheck.check_demo_sheet(_dock._current_sheet, sheet_path)
-	var result: Dictionary = EventSheetPackReadingCheck.combine(definitions, demo)
-	_reading_summary.text = EventSheetPackReadingCheck.summary_text(result)
+	var check: Script = load(READING_CHECK_PATH)
+	var definitions: Dictionary = check.check_definitions(check.definitions_for_script(sheet_path))
+	var demo: Dictionary = check.check_demo_sheet(_dock._current_sheet, sheet_path)
+	var result: Dictionary = check.combine(definitions, demo)
+	_reading_summary.text = check.summary_text(result)
 	_reading_failures.clear()
 	for failure: Dictionary in result.get("failures", []):
-		_reading_failures.add_item(EventSheetPackReadingCheck.failure_line(failure))
+		_reading_failures.add_item(check.failure_line(failure))
 	_reading_failures.visible = not _reading_failures.item_count == 0
 
 

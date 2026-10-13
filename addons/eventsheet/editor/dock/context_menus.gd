@@ -21,6 +21,7 @@ const PATTERN_ADOPT_PATH := "res://addons/eventsheet/editor/dock/pattern_adopt.g
 const PATTERN_FACTS_PATH := "res://addons/eventsheet/editor/interaction/pattern_facts.gd"
 const REFACTOR_PATH := "res://addons/eventforge/sheet_refactor.gd"
 const REFACTOR_MENU_PATH := "res://addons/eventsheet/editor/dock/refactor_menu.gd"
+const SNIPPET_PATH := "res://addons/eventsheet/editor/event_sheet_snippet.gd"
 ## The list the public API keeps the extension row items on, in a file that names nothing: asking
 ## the API itself here would compile it, and everything it names, into the first open.
 const DOCK_REGISTRY := preload("res://addons/eventsheet/api/dock_registry.gd")
@@ -688,7 +689,8 @@ func _build_row_more_submenu(is_event: bool) -> void:
 	# way in instead of as a second step. Disabled (with the reason) when the clipboard holds no
 	# snippet, so the gesture stays discoverable rather than silently absent.
 	m.add_item("Paste Special…", _dock.ROW_MENU_PASTE_SPECIAL)
-	var has_snippet: bool = EventSheetSnippet.is_snippet_text(EventSheetSnippet.clipboard_text())
+	var snippet: Script = load(SNIPPET_PATH)
+	var has_snippet: bool = snippet.is_snippet_text(snippet.clipboard_text())
 	m.set_item_disabled(m.item_count - 1, not has_snippet)
 	m.set_item_tooltip(m.item_count - 1, "Paste the copied rows pointed at another object or variable." if has_snippet
 		else "Copy some rows first - Paste Special retargets a copied snippet.")

@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Changed: twenty-two scripts the first open compiled and never called wait for their moment
+
+- The first sheet open compiled the sheet export, the token index a `{uid}` mint draws against, the
+  class vocabulary filter, the pack annotation writer and reading check, the Loose Ends walk, the
+  command palette, the GDScript lint, the project search and Find References, the tileset and
+  damage type facts, the picker recipes and quick-add scorer, the snippet codec, number scrubbing,
+  the runtime error wording, the verb suggestion, rescue tips, workspaces, the inline format bar
+  and the text listing - and, run with every function counted, called none of them. Each is now
+  read by path when its own moment comes (a paste, a search, an error from the running game, a
+  pack being curated), and the error strip's button label is spelled beside a test that holds it
+  equal to its source.
+- Workspace first-open closure: 324 files / 159,464 lines -> 303 / 154,300. Timed in a busy
+  machine the change sits inside the noise (three alternating pairs, medians: editor load 17.6 s
+  -> 17.0 s, build 22.4 s -> 20.9 s); the closure figure is the one to hold it to.
+
 ### Fixed: the variable window speaks the editor's language
 
 - The variable window, its look list and its type list were English in every language: the card

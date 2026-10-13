@@ -22,6 +22,7 @@ const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/readin
 const DOC_CHORES_PATH := "res://addons/eventsheet/editor/docs/doc_chores.gd"
 const OPEN_JOB_PATH := "res://addons/eventforge/importer/open_job.gd"
 const SCENE_SHEET_PATH := "res://addons/eventforge/importer/scene_sheet.gd"
+const TEXT_LISTING_PATH := "res://addons/eventsheet/editor/dock/text_listing.gd"
 const GDSCRIPT_IMPORTER_PATH := "res://addons/eventforge/importer/gdscript_importer.gd"
 const SHEET_COMPILER_PATH := "res://addons/eventforge/compiler/sheet_compiler.gd"
 ## The list the public API keeps its lifecycle listeners on, in a file that names nothing: asking
@@ -655,7 +656,7 @@ func sheet_text_markdown() -> String:
 	var view: EventSheetViewport = _dock._active_view()
 	if view == null:
 		return ""
-	return EventSheetTextListing.markdown_for_rows(view.get_row_tree(), _exported_script_basename())
+	return load(TEXT_LISTING_PATH).markdown_for_rows(view.get_row_tree(), _exported_script_basename())
 
 
 func _exported_script_basename() -> String:

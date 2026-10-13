@@ -21,6 +21,9 @@ const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/readin
 
 ## What an autoload's script has to end in for the sheet to be able to write a variable into it.
 const SHEET_EXTENSIONS: PackedStringArray = ["gd", "tres"]
+## Read by path, and only for a project that autoloads a sheet: the first open of any other
+## project never compiles the project-wide search.
+const FIND_REFERENCES_PATH := "res://addons/eventsheet/editor/dock/find_references.gd"
 
 ## script path -> {"stamp": modified time, "declared": the scan}. See declared_globals.
 static var _declared_cache: Dictionary = {}
@@ -67,7 +70,7 @@ static func used_here(sheet: EventSheetResource) -> Array[Dictionary]:
 		names.append(str(entry.get("name", "")))
 	if paths.is_empty():
 		return used
-	var fragments: Array = EventSheetFindReferences.text_fragments(sheet)
+	var fragments: Array = load(FIND_REFERENCES_PATH).text_fragments(sheet)
 	# row -> the autoload its object column names. Gathered first, because the property cell can be
 	# read before the object cell is.
 	var owner_of_row: Dictionary = {}

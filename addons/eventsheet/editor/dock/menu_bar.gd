@@ -20,6 +20,7 @@ const REPEATED_ROWS_PATH := "res://addons/eventsheet/editor/dock/repeated_rows.g
 const SAVED_VIEWS_PATH := "res://addons/eventsheet/editor/dock/saved_views.gd"
 const DOC_WHATS_NEW_PATH := "res://addons/eventsheet/editor/docs/doc_whats_new.gd"
 const EVENTSHEETS_API_PATH := "res://addons/eventsheet/api/eventsheets.gd"
+const WORKSPACES_PATH := "res://addons/eventsheet/editor/dock/workspaces.gd"
 
 var _dock: Control = null
 
@@ -1186,7 +1187,7 @@ func build(root: Node) -> void:
 		"A scene's sheets, open together: the whole layout plus every script in it, in tree order, as one named tab group. Right-click a scene in the FileSystem ▸ Open its sheets makes one; picking it here opens it again.")
 	workspaces_menu.about_to_popup.connect(func() -> void:
 		workspaces_menu.clear()
-		var names: PackedStringArray = EventSheetWorkspaces.workspace_names()
+		var names: PackedStringArray = load(WORKSPACES_PATH).workspace_names()
 		if names.is_empty():
 			workspaces_menu.add_item(EventSheetL10n.translate("No workspaces yet"), -1)
 			workspaces_menu.set_item_disabled(0, true)
@@ -1197,7 +1198,7 @@ func build(root: Node) -> void:
 		for name_index: int in names.size():
 			workspaces_menu.add_item(EventSheetL10n.translate("Forget %s") % names[name_index], 500 + name_index))
 	workspaces_menu.id_pressed.connect(func(id: int) -> void:
-		var names: PackedStringArray = EventSheetWorkspaces.workspace_names()
+		var names: PackedStringArray = load(WORKSPACES_PATH).workspace_names()
 		if id >= 500 and id - 500 < names.size():
 			_dock.forget_workspace(names[id - 500])
 		elif id >= 100 and id - 100 < names.size():

@@ -21,6 +21,7 @@ extends RefCounted
 ## classes here would compile it, and everything it names, into the first open of a sheet.
 const SHEET_COMPILER_PATH := "res://addons/eventforge/compiler/sheet_compiler.gd"
 const COMPLETIONS_PATH := "res://addons/eventsheet/editor/autocomplete/completion_sources.gd"
+const LINT_PATH := "res://addons/eventsheet/ace/gdscript_lint.gd"
 
 var _dock: Control = null
 
@@ -323,14 +324,14 @@ func validate_raw_code() -> void:
 	# Live hard-block: a STRUCTURAL error (unbalanced brackets / unterminated string) disables Save
 	# immediately - always wrong, so it can never lock the user out on a lint false positive (a runtime-only
 	# symbol). Semantic lint errors keep Save enabled but are caught on confirm (which re-opens the dialog).
-	var structural: String = EventSheetGDScriptLint.structural_syntax_error(_dock._raw_code_edit.text)
+	var structural: String = load(LINT_PATH).structural_syntax_error(_dock._raw_code_edit.text)
 	if _dock._raw_code_dialog != null:
 		_dock._raw_code_dialog.get_ok_button().disabled = not structural.is_empty()
 	if not structural.is_empty():
 		_dock._raw_code_lint_label.text = "✗ %s" % structural
 		_dock._raw_code_lint_label.add_theme_color_override("font_color", EventSheetPopupUI.readable_on_panel(Color(0.95, 0.5, 0.5)))
 		return
-	var lint_result: Dictionary = EventSheetGDScriptLint.lint(_dock._raw_code_edit.text, _dock._raw_code_in_flow, _dock._current_sheet)
+	var lint_result: Dictionary = load(LINT_PATH).lint(_dock._raw_code_edit.text, _dock._raw_code_in_flow, _dock._current_sheet)
 	if bool(lint_result.get("ok", true)):
 		_dock._raw_code_lint_label.text = "✓ Compiles"
 		_dock._raw_code_lint_label.add_theme_color_override("font_color", Color(0.55, 0.85, 0.6))
@@ -353,7 +354,7 @@ func populate_raw_code_completion() -> void:
 		_dock._raw_code_edit.add_code_completion_option(
 			load(COMPLETIONS_PATH).code_edit_kind(str(entry.get("kind", ""))), label, label)
 	_dock._raw_code_edit.update_code_completion_options(true)
-	_dock._raw_code_edit.set_code_hint(EventSheetGDScriptLint.signature_hint(_dock._text_before_caret(_dock._raw_code_edit), _dock._current_sheet))
+	_dock._raw_code_edit.set_code_hint(load(LINT_PATH).signature_hint(_dock._text_before_caret(_dock._raw_code_edit), _dock._current_sheet))
 
 
 func on_raw_code_dialog_confirmed() -> void:
@@ -361,7 +362,7 @@ func on_raw_code_dialog_confirmed() -> void:
 		return
 	var target: RawCodeRow = _dock._raw_code_target
 	# Guardrail: broken GDScript never commits - the dialog reopens with the text intact.
-	var commit_lint: Dictionary = EventSheetGDScriptLint.lint(_dock._raw_code_edit.text, _dock._raw_code_in_flow, _dock._current_sheet)
+	var commit_lint: Dictionary = load(LINT_PATH).lint(_dock._raw_code_edit.text, _dock._raw_code_in_flow, _dock._current_sheet)
 	if not bool(commit_lint.get("ok", true)):
 		_dock._set_status("Script block not saved: fix the error first (or Cancel to discard).", true)
 		if _dock.is_inside_tree():

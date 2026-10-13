@@ -16,6 +16,9 @@ const LABEL_MIN_WIDTH := 120.0
 ## during the initial zero-width pass - which balloons the whole dialog. Giving the label a minimum
 ## width makes that pass wrap at a sane width while the label still wraps wider at runtime.
 const HINT_WRAP_WIDTH := 360.0
+## The label drag that tunes a number, read by path when a form row is built: naming it would
+## compile it into every first open that paints with this kit.
+const NUMBER_SCRUB_PATH := "res://addons/eventsheet/editor/number_scrub.gd"
 
 
 ## Hardens a CodeEdit against the most common user syntax errors: auto-CLOSES brackets and quotes (typing
@@ -59,8 +62,9 @@ static func form_row(label_text: String, field: Control, label_min_width: float 
 	row.add_child(field)
 	# Every form row in the plugin gets number scrubbing for free: drag the label sideways to
 	# tune a numeric field. A no-op for controls that hold no number, so callers need no test.
-	EventSheetNumberScrub.attach(label, field)
-	if EventSheetNumberScrub.is_scrubbable(EventSheetNumberScrub.read_value(field)):
+	var scrub: Script = load(NUMBER_SCRUB_PATH)
+	scrub.attach(label, field)
+	if scrub.is_scrubbable(scrub.read_value(field)):
 		var scrub_hint: String = "Drag this label sideways to scrub the value (Shift = fine, Ctrl = coarse)."
 		label.tooltip_text = scrub_hint if label.tooltip_text.strip_edges().is_empty() else "%s\n\n%s" % [label.tooltip_text, scrub_hint]
 		label.mouse_filter = Control.MOUSE_FILTER_STOP
