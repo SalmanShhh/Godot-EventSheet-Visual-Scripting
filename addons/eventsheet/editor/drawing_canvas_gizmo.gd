@@ -1,6 +1,6 @@
 @tool
 class_name EventSheetDrawingCanvasGizmo
-extends RefCounted
+extends "res://addons/eventsheet/editor/selection_preview.gd"
 
 # Selection-driven 2D preview gizmo for the DrawingCanvas behaviour. Select a DrawingCanvas node in the
 # scene and its preview_prefab formation draws in the 2D viewport, centered on the host and scaled and
@@ -22,61 +22,21 @@ const STAMP_PATH: String = "res://eventsheet_addons/drawing_prefab_stamp/drawing
 const CANVAS_SCRIPT_SUFFIX: String = "drawing_canvas/drawing_canvas_behavior.gd"
 const PREVIEW_NODE_NAME: String = "__DrawingCanvasPreview"
 
-var _editor_interface: EditorInterface = null
-var _preview: Node2D = null
-
-
-## Wires the gizmo to editor selection and previews the current selection. Called from the plugin's
-## _enter_tree; a null interface (non-editor context) is a safe no-op.
-func init(editor_interface: EditorInterface) -> void:
-	_editor_interface = editor_interface
-	if _editor_interface == null:
-		return
-	var selection: EditorSelection = _editor_interface.get_selection()
-	if selection != null and not selection.selection_changed.is_connected(_on_selection_changed):
-		selection.selection_changed.connect(_on_selection_changed)
-	_on_selection_changed()
-
-
-## Tears the gizmo down: drops any live preview and disconnects from selection, so a disabled plugin
-## leaves the edited scene byte-identical to how it found it.
-func teardown() -> void:
-	_clear_preview()
-	if _editor_interface != null:
-		var selection: EditorSelection = _editor_interface.get_selection()
-		if selection != null and selection.selection_changed.is_connected(_on_selection_changed):
-			selection.selection_changed.disconnect(_on_selection_changed)
-	_editor_interface = null
-
-
-## Rebuilds the preview for the current selection: exactly one DrawingCanvas behaviour that has a
-## preview_prefab set shows its formation at its host; every other selection clears it. The behaviour
-## is a Node component (extends Node, host = get_parent() as Node2D), so the preview draws under the
-## PARENT Node2D and its knobs are read off the selected behaviour.
-func _on_selection_changed() -> void:
-	_clear_preview()
-	if _editor_interface == null:
-		return
-	var selected: Array[Node] = _editor_interface.get_selection().get_selected_nodes()
-	if selected.size() != 1:
-		return
-	var canvas: Node = selected[0]
-	if not _is_drawing_canvas(canvas):
-		return
-	var prefab: Variant = canvas.get("preview_prefab")
-	if prefab == null:
-		return
-	var host: Node2D = canvas.get_parent() as Node2D
-	if host == null:
-		return
-	_add_preview(host, canvas, prefab)
-
 
 ## True when the node's attached script is the DrawingCanvas behaviour (matched by path so this file
 ## never names the pack class).
 static func _is_drawing_canvas(node: Node) -> bool:
 	var script: Script = node.get_script() as Script
 	return script != null and str(script.resource_path).ends_with(CANVAS_SCRIPT_SUFFIX)
+
+
+## Previews exactly one DrawingCanvas behaviour that has a preview_prefab set, at its host. The
+## behaviour is a Node component (host = get_parent() as Node2D), so the preview draws under the
+## PARENT Node2D and its knobs are read off the selected behaviour.
+func _preview_for(canvas: Node) -> void:
+	var prefab: Variant = canvas.get("preview_prefab") if _is_drawing_canvas(canvas) else null
+	if prefab != null and canvas.get_parent() is Node2D:
+		_add_preview(canvas.get_parent() as Node2D, canvas, prefab)
 
 
 ## Spawns the transient preview stamp under the host Node2D (so it draws at the host's position),
@@ -92,9 +52,7 @@ func _add_preview(host: Node2D, source: Node, prefab: Variant) -> void:
 	stamp.set("prefab", prefab)
 	stamp.set("prefab_scale", _knob(source, "preview_scale", 1.0))
 	stamp.set("prefab_rotation", _knob(source, "preview_rotation", 0.0))
-	host.add_child(stamp)
-	stamp.owner = null
-	_preview = stamp
+	_show_preview(host, stamp)
 
 
 ## Reads a float knob off the behaviour node, tolerating a missing/unset property (returns fallback).
@@ -103,12 +61,3 @@ static func _knob(source: Node, property_name: String, fallback: float) -> float
 	if value == null:
 		return fallback
 	return float(value)
-
-
-## Removes the live preview stamp, if any.
-func _clear_preview() -> void:
-	if _preview != null and is_instance_valid(_preview):
-		if _preview.get_parent() != null:
-			_preview.get_parent().remove_child(_preview)
-		_preview.queue_free()
-	_preview = null

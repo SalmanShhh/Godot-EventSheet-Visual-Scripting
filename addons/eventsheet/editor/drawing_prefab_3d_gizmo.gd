@@ -1,6 +1,6 @@
 @tool
 class_name EventSheetDrawingPrefab3DGizmo
-extends RefCounted
+extends "res://addons/eventsheet/editor/selection_preview.gd"
 
 # Selection-driven 3D preview gizmo for DrawingPrefabResource references. Select a Node3D that exposes a
 # DrawingPrefabResource property and the formation shows as a camera-facing billboard at the node's
@@ -20,49 +20,12 @@ const TEXTURE_SIZE: Vector2i = Vector2i(128, 128)
 ## World units per texture pixel: a 128 px raster stands ~1.28 units tall - a legible marker at scene scale.
 const PIXEL_SIZE: float = 0.01
 
-var _editor_interface: EditorInterface = null
-var _preview: Node3D = null
 
-
-## Wires the gizmo to editor selection and previews the current selection. Called from the plugin's
-## _enter_tree; a null interface (non-editor context) is a safe no-op.
-func init(editor_interface: EditorInterface) -> void:
-	_editor_interface = editor_interface
-	if _editor_interface == null:
-		return
-	var selection: EditorSelection = _editor_interface.get_selection()
-	if selection != null and not selection.selection_changed.is_connected(_on_selection_changed):
-		selection.selection_changed.connect(_on_selection_changed)
-	_on_selection_changed()
-
-
-## Tears the gizmo down: drops any live preview and disconnects from selection, so a disabled plugin
-## leaves the edited scene byte-identical to how it found it.
-func teardown() -> void:
-	_clear_preview()
-	if _editor_interface != null:
-		var selection: EditorSelection = _editor_interface.get_selection()
-		if selection != null and selection.selection_changed.is_connected(_on_selection_changed):
-			selection.selection_changed.disconnect(_on_selection_changed)
-	_editor_interface = null
-
-
-## Rebuilds the preview for the current selection: exactly one Node3D that exposes a DrawingPrefabResource
-## shows that formation as a billboard at its origin; every other selection clears it.
-func _on_selection_changed() -> void:
-	_clear_preview()
-	if _editor_interface == null:
-		return
-	var selected: Array[Node] = _editor_interface.get_selection().get_selected_nodes()
-	if selected.size() != 1:
-		return
-	var node: Node3D = selected[0] as Node3D
-	if node == null:
-		return
-	var prefab: Resource = find_prefab(node)
-	if prefab == null:
-		return
-	_add_preview(node, prefab)
+## Previews exactly one Node3D that exposes a DrawingPrefabResource, as a billboard at its origin.
+func _preview_for(node: Node) -> void:
+	var prefab: Resource = find_prefab(node) if node is Node3D else null
+	if prefab != null:
+		_add_preview(node as Node3D, prefab)
 
 
 ## The first DrawingPrefabResource-typed property value stored on the node, or null. A self-contained
@@ -112,15 +75,4 @@ func _add_preview(host: Node3D, prefab: Resource) -> void:
 	var sprite: Node3D = build_billboard(prefab)
 	if sprite == null:
 		return
-	host.add_child(sprite)
-	sprite.owner = null
-	_preview = sprite
-
-
-## Removes the live preview billboard, if any.
-func _clear_preview() -> void:
-	if _preview != null and is_instance_valid(_preview):
-		if _preview.get_parent() != null:
-			_preview.get_parent().remove_child(_preview)
-		_preview.queue_free()
-	_preview = null
+	_show_preview(host, sprite)

@@ -1,6 +1,6 @@
 @tool
 class_name EventSheetDrawingPrefabGizmo
-extends RefCounted
+extends "res://addons/eventsheet/editor/selection_preview.gd"
 
 # Selection-driven 2D preview gizmo for DrawingPrefabResource references. Select ANY Node2D that exposes
 # a DrawingPrefabResource property (e.g. `@export var marker: DrawingPrefabResource`) and that formation
@@ -26,49 +26,12 @@ const SELF_DRAWING_SUFFIXES: Array[String] = [
 	"drawing_prefab_stamp/drawing_prefab_stamp.gd",
 ]
 
-var _editor_interface: EditorInterface = null
-var _preview: Node2D = null
 
-
-## Wires the gizmo to editor selection and previews the current selection. Called from the plugin's
-## _enter_tree; a null interface (non-editor context) is a safe no-op.
-func init(editor_interface: EditorInterface) -> void:
-	_editor_interface = editor_interface
-	if _editor_interface == null:
-		return
-	var selection: EditorSelection = _editor_interface.get_selection()
-	if selection != null and not selection.selection_changed.is_connected(_on_selection_changed):
-		selection.selection_changed.connect(_on_selection_changed)
-	_on_selection_changed()
-
-
-## Tears the gizmo down: drops any live preview and disconnects from selection, so a disabled plugin
-## leaves the edited scene byte-identical to how it found it.
-func teardown() -> void:
-	_clear_preview()
-	if _editor_interface != null:
-		var selection: EditorSelection = _editor_interface.get_selection()
-		if selection != null and selection.selection_changed.is_connected(_on_selection_changed):
-			selection.selection_changed.disconnect(_on_selection_changed)
-	_editor_interface = null
-
-
-## Rebuilds the preview for the current selection: exactly one Node2D that exposes a DrawingPrefabResource
-## (and does not draw it itself) shows that formation at its origin; every other selection clears it.
-func _on_selection_changed() -> void:
-	_clear_preview()
-	if _editor_interface == null:
-		return
-	var selected: Array[Node] = _editor_interface.get_selection().get_selected_nodes()
-	if selected.size() != 1:
-		return
-	var node: Node2D = selected[0] as Node2D
-	if node == null or _is_self_drawing(node):
-		return
-	var prefab: Resource = find_prefab(node)
-	if prefab == null:
-		return
-	_add_preview(node, prefab)
+## Previews exactly one Node2D that exposes a DrawingPrefabResource (and does not draw it itself).
+func _preview_for(node: Node) -> void:
+	var prefab: Resource = find_prefab(node) if node is Node2D and not _is_self_drawing(node) else null
+	if prefab != null:
+		_add_preview(node as Node2D, prefab)
 
 
 ## The first DrawingPrefabResource-typed property value stored on the node, or null. Pure and
@@ -117,15 +80,4 @@ func _add_preview(host: Node2D, prefab: Resource) -> void:
 		return
 	stamp.name = PREVIEW_NODE_NAME
 	stamp.set("prefab", prefab)
-	host.add_child(stamp)
-	stamp.owner = null
-	_preview = stamp
-
-
-## Removes the live preview stamp, if any.
-func _clear_preview() -> void:
-	if _preview != null and is_instance_valid(_preview):
-		if _preview.get_parent() != null:
-			_preview.get_parent().remove_child(_preview)
-		_preview.queue_free()
-	_preview = null
+	_show_preview(host, stamp)

@@ -70,44 +70,50 @@ func _export_begin(features: PackedStringArray, is_debug: bool, _path: String, _
 ## `await` (see the coroutine note below). Static + headless-safe so tests (and a CI export)
 ## exercise the exact pass the editor takes.
 static func run_export_tools(features: PackedStringArray, is_debug: bool, root: String = "res://") -> Dictionary:
+	# A handler that awaits (Render Scene To Image waits for a drawn frame, for instance) hands back
+	# a GDScriptFunctionState the moment it suspends, and the exporter does not wait: it packages the
+	# files while the rest of that handler is still pending. Nothing here can hold the export open, so
+	# say so plainly rather than reporting a tool as "ran" when half of it has not.
+	return run_hook_scripts(HOOK_FUNCTION, [is_debug, features], root, "export bake step",
+		"On Project Export belongs on an Editor Tool sheet (Sheet Type > Editor Tool).",
+		"and an export cannot wait - anything after that await may not be in the exported build. Keep a bake step synchronous (a rendered thumbnail belongs in a File > Run tool).")
+
+
+## Runs every script under `root` that declares `hook`, calling it with `arguments`: the pass the
+## export bake step and the import hook share. `label` opens every printed line, `home` says where a
+## Node-hosted script's trigger belongs, and `await_note` finishes the warning for a handler that paused.
+static func run_hook_scripts(hook: String, arguments: Array, root: String, label: String, home: String,
+		await_note: String) -> Dictionary:
 	var report: Dictionary = {"ran": 0, "skipped": 0, "unfinished": 0, "scripts": PackedStringArray()}
 	# Built as a local and stored back at the end: a PackedStringArray is a VALUE, so appending to one
 	# fetched out of a Dictionary appends to a copy and the report would come back empty.
 	var ran_paths: PackedStringArray = PackedStringArray()
-	for script_path: String in find_export_tools(root):
+	for script_path: String in find_hook_scripts(hook, root):
 		var script: Script = load(script_path) as Script
+		var skipped: String = ""
 		if script == null or not script.can_instantiate():
-			report["skipped"] = int(report["skipped"]) + 1
-			push_warning("[Godot EventSheets] export bake step: %s could not be instantiated - skipped." % script_path)
-			continue
+			skipped = "%s could not be instantiated - skipped." % script_path
 		# Reflection BEFORE construction. Discovery is a text match, so a file that merely mentions the
 		# handler name in a comment or a string reaches this loop; instantiating it to ask would run its
 		# _init for nothing (and leak it, when its host is a plain Object with no reference counting).
-		if not _declares_hook(script):
+		elif not declares(script, hook):
+			skipped = "%s mentions %s but declares no such function, so it was skipped." % [script_path, hook]
+		elif ClassDB.class_exists(script.get_instance_base_type()) and ClassDB.is_parent_class(script.get_instance_base_type(), "Node"):
+			skipped = "%s is a %s script, so it was skipped - %s" % [script_path, script.get_instance_base_type(), home]
+		var instance: Object = script.new() as Object if skipped.is_empty() else null
+		if skipped.is_empty() and instance == null:
+			skipped = "%s produced no instance - skipped. (An EditorScript can only be built while an editor is running.)" % script_path
+		if not skipped.is_empty():
 			report["skipped"] = int(report["skipped"]) + 1
-			push_warning("[Godot EventSheets] export bake step: %s mentions %s but declares no such function, so it was skipped." % [script_path, HOOK_FUNCTION])
+			push_warning("[Godot EventSheets] %s: %s" % [label, skipped])
 			continue
-		var base_type: String = script.get_instance_base_type()
-		if ClassDB.class_exists(base_type) and ClassDB.is_parent_class(base_type, "Node"):
-			report["skipped"] = int(report["skipped"]) + 1
-			push_warning("[Godot EventSheets] export bake step: %s is a %s script, so it was skipped - On Project Export belongs on an Editor Tool sheet (Sheet Type > Editor Tool)." % [script_path, base_type])
-			continue
-		var instance: Object = script.new() as Object
-		if instance == null:
-			report["skipped"] = int(report["skipped"]) + 1
-			push_warning("[Godot EventSheets] export bake step: %s produced no instance - skipped. (An EditorScript can only be built while an editor is running.)" % script_path)
-			continue
-		print("[Godot EventSheets] export bake step: running %s" % script_path)
-		var outcome: Variant = instance.call(HOOK_FUNCTION, is_debug, features)
+		print("[Godot EventSheets] %s: running %s" % [label, script_path])
+		var outcome: Variant = instance.callv(hook, arguments)
 		report["ran"] = int(report["ran"]) + 1
 		ran_paths.append(script_path)
-		# A handler that awaits (Render Scene To Image waits for a drawn frame, for instance) hands back
-		# a GDScriptFunctionState the moment it suspends, and the exporter does not wait: it packages the
-		# files while the rest of that handler is still pending. Nothing here can hold the export open, so
-		# say so plainly rather than reporting a tool as "ran" when half of it has not.
 		if outcome is Object and (outcome as Object).get_class() == "GDScriptFunctionState":
 			report["unfinished"] = int(report["unfinished"]) + 1
-			push_warning("[Godot EventSheets] export bake step: %s paused on an await, and an export cannot wait - anything after that await may not be in the exported build. Keep a bake step synchronous (a rendered thumbnail belongs in a File > Run tool)." % script_path)
+			push_warning("[Godot EventSheets] %s: %s paused on an await, %s" % [label, script_path, await_note])
 	report["scripts"] = ran_paths
 	return report
 
@@ -117,8 +123,12 @@ static func run_export_tools(features: PackedStringArray, is_debug: bool, root: 
 ## what carries the scripted functions. It includes inherited ones, so a handler on a parent script
 ## answers here too; discovery is still a text scan, so the file that DECLARES it is the one found.
 static func _declares_hook(script: Script) -> bool:
+	return declares(script, HOOK_FUNCTION)
+
+
+static func declares(script: Script, hook: String) -> bool:
 	for method: Dictionary in script.get_script_method_list():
-		if str(method.get("name", "")) == HOOK_FUNCTION:
+		if str(method.get("name", "")) == hook:
 			return true
 	return false
 
@@ -128,16 +138,15 @@ static func _declares_hook(script: Script) -> bool:
 ## the alternative (loading every script in the project to reflect on it) costs far more than reading
 ## the files, and whether the script is a legal host is settled at run time from its real base type.
 static func find_export_tools(root: String = "res://") -> PackedStringArray:
+	return find_hook_scripts(HOOK_FUNCTION, root)
+
+
+static func find_hook_scripts(hook: String, root: String = "res://") -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	var directories: Array[String] = [root]
 	while not directories.is_empty():
 		var current: String = directories.pop_back()
-		var skip: bool = false
-		for skipped_root: String in SKIPPED_ROOTS:
-			if current.begins_with(skipped_root):
-				skip = true
-				break
-		if skip:
+		if SKIPPED_ROOTS.any(func(skipped_root: String) -> bool: return current.begins_with(skipped_root)):
 			continue
 		var dir: DirAccess = DirAccess.open(current)
 		if dir == null:
@@ -150,7 +159,7 @@ static func find_export_tools(root: String = "res://") -> PackedStringArray:
 				if not entry.begins_with("."):
 					directories.append(entry_path)
 			elif entry.get_extension() == "gd":
-				if FileAccess.get_file_as_string(entry_path).contains("func %s(" % HOOK_FUNCTION):
+				if FileAccess.get_file_as_string(entry_path).contains("func %s(" % hook):
 					found.append(entry_path)
 			entry = dir.get_next()
 		dir.list_dir_end()

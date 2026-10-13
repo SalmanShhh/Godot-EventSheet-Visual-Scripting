@@ -32,9 +32,9 @@ extends RefCounted
 ## already-generated tool script goes quiet, so it is frozen like an ace_id.
 const HOOK_FUNCTION: String = "_on_files_imported"
 
-## Folders that never hold a user's editor tools - the import cache and plugin code (this plugin
-## included), so the scan stays proportional to the game's own files.
-const SKIPPED_ROOTS: Array[String] = ["res://.godot", "res://addons"]
+## The export bake step, whose discovery and run this hook shares: it skips the same folders (the
+## import cache and plugin code) and holds every script to the same safety rules.
+const EXPORT_TOOLS := preload("res://addons/eventforge/editor/export_tools_plugin.gd")
 
 var _filesystem: EditorFileSystem = null
 
@@ -69,81 +69,14 @@ func _on_resources_reimported(resources: PackedStringArray) -> void:
 ## Runs every Editor Tool script that declared the On File Imported trigger, handing each the paths
 ## that were just imported. Returns {ran, skipped, unfinished, scripts} - `scripts` lists what
 ## actually ran, in the order it ran. Static + headless-safe so tests exercise the exact pass the
-## editor takes.
+## editor takes. The pass itself is the export bake step's, by the same rules.
 static func run_import_tools(paths: PackedStringArray, root: String = "res://") -> Dictionary:
-	var report: Dictionary = {"ran": 0, "skipped": 0, "unfinished": 0, "scripts": PackedStringArray()}
-	# Built as a local and stored back at the end: a PackedStringArray is a VALUE, so appending to one
-	# fetched out of a Dictionary appends to a copy and the report would come back empty.
-	var ran_paths: PackedStringArray = PackedStringArray()
-	for script_path: String in find_import_tools(root):
-		var script: Script = load(script_path) as Script
-		if script == null or not script.can_instantiate():
-			report["skipped"] = int(report["skipped"]) + 1
-			push_warning("[Godot EventSheets] import hook: %s could not be instantiated - skipped." % script_path)
-			continue
-		if not _declares_hook(script):
-			report["skipped"] = int(report["skipped"]) + 1
-			push_warning("[Godot EventSheets] import hook: %s mentions %s but declares no such function, so it was skipped." % [script_path, HOOK_FUNCTION])
-			continue
-		var base_type: String = script.get_instance_base_type()
-		if ClassDB.class_exists(base_type) and ClassDB.is_parent_class(base_type, "Node"):
-			report["skipped"] = int(report["skipped"]) + 1
-			push_warning("[Godot EventSheets] import hook: %s is a %s script, so it was skipped - On File Imported belongs on an Import Tool sheet (Sheet Type > Import tool)." % [script_path, base_type])
-			continue
-		var instance: Object = script.new() as Object
-		if instance == null:
-			report["skipped"] = int(report["skipped"]) + 1
-			push_warning("[Godot EventSheets] import hook: %s produced no instance - skipped. (An EditorScript can only be built while an editor is running.)" % script_path)
-			continue
-		print("[Godot EventSheets] import hook: running %s" % script_path)
-		var outcome: Variant = instance.call(HOOK_FUNCTION, paths)
-		report["ran"] = int(report["ran"]) + 1
-		ran_paths.append(script_path)
-		if outcome is Object and (outcome as Object).get_class() == "GDScriptFunctionState":
-			report["unfinished"] = int(report["unfinished"]) + 1
-			push_warning("[Godot EventSheets] import hook: %s paused on an await, so the rest of it runs after the editor has moved on from this import. Keep an import reaction synchronous." % script_path)
-	report["scripts"] = ran_paths
-	return report
-
-
-## True when the script really has the handler, asked of the SCRIPT rather than an instance -
-## `Script.has_method` answers for the Script OBJECT (reload, get_source_code...), so the method list
-## is what carries the scripted functions.
-static func _declares_hook(script: Script) -> bool:
-	for method: Dictionary in script.get_script_method_list():
-		if str(method.get("name", "")) == HOOK_FUNCTION:
-			return true
-	return false
+	return EXPORT_TOOLS.run_hook_scripts(HOOK_FUNCTION, [paths], root, "import hook",
+		"On File Imported belongs on an Import Tool sheet (Sheet Type > Import tool).",
+		"so the rest of it runs after the editor has moved on from this import. Keep an import reaction synchronous.")
 
 
 ## Every `.gd` under `root` whose text declares the import handler, sorted so the run order is the
 ## same everywhere. Declaring the handler IS the opt-in, so the text test is exactly that one line.
 static func find_import_tools(root: String = "res://") -> PackedStringArray:
-	var found: PackedStringArray = PackedStringArray()
-	var directories: Array[String] = [root]
-	while not directories.is_empty():
-		var current: String = directories.pop_back()
-		var skip: bool = false
-		for skipped_root: String in SKIPPED_ROOTS:
-			if current.begins_with(skipped_root):
-				skip = true
-				break
-		if skip:
-			continue
-		var dir: DirAccess = DirAccess.open(current)
-		if dir == null:
-			continue
-		dir.list_dir_begin()
-		var entry: String = dir.get_next()
-		while not entry.is_empty():
-			var entry_path: String = current.path_join(entry)
-			if dir.current_is_dir():
-				if not entry.begins_with("."):
-					directories.append(entry_path)
-			elif entry.get_extension() == "gd":
-				if FileAccess.get_file_as_string(entry_path).contains("func %s(" % HOOK_FUNCTION):
-					found.append(entry_path)
-			entry = dir.get_next()
-		dir.list_dir_end()
-	found.sort()
-	return found
+	return EXPORT_TOOLS.find_hook_scripts(HOOK_FUNCTION, root)

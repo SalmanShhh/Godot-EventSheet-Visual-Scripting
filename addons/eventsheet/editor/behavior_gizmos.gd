@@ -1,5 +1,5 @@
 @tool
-extends RefCounted
+extends "res://addons/eventsheet/editor/selection_preview.gd"
 
 # Selection-driven editor gizmos for behavior packs (event-sheet parity with engines whose
 # behaviors draw their setup in the editor): select a node and every attached behavior that
@@ -24,41 +24,9 @@ const CANVAS_PATH: String = "res://addons/eventsheet/editor/behavior_gizmo_canva
 const API_PATH: String = "res://addons/eventsheet/api/eventsheets.gd"
 const CANVAS_NODE_NAME: String = "__BehaviorGizmoCanvas"
 
-var _editor_interface: EditorInterface = null
-var _canvas: Node2D = null
 
-
-## Wires the gizmos to editor selection and covers the current selection. Called from the
-## plugin's _enter_tree; a null interface (non-editor context) is a safe no-op.
-func init(editor_interface: EditorInterface) -> void:
-	_editor_interface = editor_interface
-	if _editor_interface == null:
-		return
-	var selection: EditorSelection = _editor_interface.get_selection()
-	if selection != null and not selection.selection_changed.is_connected(_on_selection_changed):
-		selection.selection_changed.connect(_on_selection_changed)
-	_on_selection_changed()
-
-
-## Drops any live canvas and disconnects from selection - a disabled plugin leaves the edited
-## scene byte-identical to how it found it.
-func teardown() -> void:
-	_clear_canvas()
-	if _editor_interface != null:
-		var selection: EditorSelection = _editor_interface.get_selection()
-		if selection != null and selection.selection_changed.is_connected(_on_selection_changed):
-			selection.selection_changed.disconnect(_on_selection_changed)
-	_editor_interface = null
-
-
-func _on_selection_changed() -> void:
-	_clear_canvas()
-	if _editor_interface == null:
-		return
-	var selected: Array[Node] = _editor_interface.get_selection().get_selected_nodes()
-	if selected.size() != 1:
-		return
-	var pair: Dictionary = gizmo_target_for(selected[0])
+func _preview_for(selected: Node) -> void:
+	var pair: Dictionary = gizmo_target_for(selected)
 	var host: Node2D = pair.get("host")
 	var entries: Array[Dictionary] = pair.get("entries", [] as Array[Dictionary])
 	if host == null or entries.is_empty():
@@ -67,9 +35,7 @@ func _on_selection_changed() -> void:
 	canvas.name = CANVAS_NODE_NAME
 	canvas.set("host", host)
 	canvas.set("entries", entries)
-	host.add_child(canvas)
-	canvas.owner = null
-	_canvas = canvas
+	_show_preview(host, canvas)
 
 
 ## Resolves what to draw for a selected node: selecting a HOST gizmos every opted-in child
@@ -109,11 +75,3 @@ static func _has_gizmo_static(script: Script) -> bool:
 		if str(method.get("name", "")) == "editor_gizmo_draw":
 			return true
 	return false
-
-
-func _clear_canvas() -> void:
-	if _canvas != null and is_instance_valid(_canvas):
-		if _canvas.get_parent() != null:
-			_canvas.get_parent().remove_child(_canvas)
-		_canvas.queue_free()
-	_canvas = null
