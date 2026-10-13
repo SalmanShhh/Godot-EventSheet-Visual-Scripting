@@ -283,14 +283,42 @@ func _collect_like_save_system(node: Node) -> Dictionary:
 func _refresh_slots() -> void:
 	_slots_files = PackedStringArray()
 	_slots_list.clear()
-	for file: String in DirAccess.get_files_at("user://"):
-		if file.begins_with("__save_studio"):
-			continue
+	for file: String in slot_files(DirAccess.get_files_at("user://"), _slot_file_pattern()):
 		var path: String = "user://%s" % file
 		_slots_files.append(path)
 		var size_kb: float = FileAccess.get_file_as_bytes(path).size() / 1024.0
 		var stamp: String = Time.get_datetime_string_from_unix_time(FileAccess.get_modified_time(path), true)
 		_slots_list.add_item("%s   (%.1f KB, %s)" % [file, size_kb, stamp])
+
+
+## The save files among `file_names`: the ones the Save System's slot pattern names
+## ("save_{slot}.cfg" makes save_0.cfg, save_1.cfg...), in that pattern's extension or any other
+## save format's. The editor's own settings files and anything else in user:// stay out.
+static func slot_files(file_names: PackedStringArray, pattern: String) -> PackedStringArray:
+	var stem: String = pattern.get_basename()
+	var extensions: PackedStringArray = PackedStringArray(FORMAT_EXTENSIONS.values())
+	if not pattern.get_extension().is_empty() and not extensions.has(".%s" % pattern.get_extension()):
+		extensions.append(".%s" % pattern.get_extension())
+	var matcher: RegEx = RegEx.create_from_string("^%s$" % _regex_escape(stem).replace("\\{slot\\}", "\\d+"))
+	var found: PackedStringArray = PackedStringArray()
+	for file: String in file_names:
+		if extensions.has(".%s" % file.get_extension()) and matcher.search(file.get_basename()) != null:
+			found.append(file)
+	return found
+
+
+static func _regex_escape(text: String) -> String:
+	var escaped: String = ""
+	for character: String in text:
+		escaped += ("\\" + character) if "\\^$.|?*+()[]{}".contains(character) else character
+	return escaped
+
+
+## The slot file pattern the Save System pack declares, or its shipped default when the pack is absent.
+func _slot_file_pattern() -> String:
+	var pack: Script = load(SAVE_SYSTEM_SCRIPT) as Script if ResourceLoader.exists(SAVE_SYSTEM_SCRIPT) else null
+	var declared: Variant = pack.get_property_default_value("file_pattern") if pack != null else null
+	return str(declared) if declared is String and not str(declared).is_empty() else "save_{slot}.cfg"
 
 
 func _view_selected_slot() -> void:

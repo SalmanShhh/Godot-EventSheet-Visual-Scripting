@@ -214,6 +214,16 @@ static func run() -> bool:
 	ok = _check("save_state_code round-trips a live node", gen_fresh.call("save_state"), gen_snap) and ok
 	gen_node.free()
 	gen_fresh.free()
+	# A TYPED array loads from the untyped array a state carries (a plain assignment would refuse it).
+	var typed_seam: String = EventSheets.save_state_code([{"name": "tags", "type": "Array[String]"}])
+	var typed_script: GDScript = GDScript.new()
+	typed_script.source_code = "@tool\nextends Node\n\nvar tags: Array[String] = []\n\n\n%s\n" % typed_seam
+	ok = _check("a typed-array seam compiles", typed_script.reload(), OK) and ok
+	var typed_node: Node = typed_script.new()
+	typed_node.call("load_state", {"tags": ["red", "blue"]})
+	ok = _check("and loads an untyped array into the typed field",
+		typed_node.call("save_state"), {"tags": ["red", "blue"]}) and ok
+	typed_node.free()
 	# persistable_fields flags plain data and skips references (host / RNG).
 	var timer_path: String = "res://eventsheet_addons/timer/timer_behavior.gd"
 	var fields: Array[Dictionary] = EventSheets.persistable_fields(timer_path)

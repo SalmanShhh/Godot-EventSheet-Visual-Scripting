@@ -915,6 +915,13 @@ static func save_state_code(fields: Array) -> String:
 		var var_name: String = str((field as Dictionary).get("name", ""))
 		var var_type: String = str((field as Dictionary).get("type", "Variant"))
 		var key: String = var_name.trim_prefix("_")
+		# A TYPED collection (Array[String], Dictionary[String, int]) refuses a plain assignment of
+		# the untyped collection a loaded state holds, so it is filled in place with assign().
+		var typed_base: String = var_type.get_slice("[", 0) if var_type.ends_with("]") else ""
+		if typed_base == "Array" or typed_base == "Dictionary":
+			save_lines.append("\t\t\"%s\": %s.duplicate(true)," % [key, var_name])
+			load_lines.append("\t%s.assign((state.get(\"%s\", %s) as %s).duplicate(true))" % [var_name, key, var_name, typed_base])
+			continue
 		match var_type:
 			"Dictionary":
 				save_lines.append("\t\t\"%s\": %s.duplicate(true)," % [key, var_name])

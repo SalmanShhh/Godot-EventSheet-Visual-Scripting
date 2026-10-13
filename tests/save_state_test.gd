@@ -241,6 +241,15 @@ static func _studio_generator() -> bool:
 	all_passed = _check("generated seam round-trips a live node", fresh.call("save_state"), snap) and all_passed
 	live.free()
 	fresh.free()
+	# The Save Slots list holds save files only: the slot pattern's files in any save format, never
+	# the editor's settings or anything else that happens to live in user://.
+	all_passed = _check("the slot list keeps save files and leaves settings out",
+		EventSheetSaveStudio.slot_files(PackedStringArray(["save_0.cfg", "save_12.json", "eventforge_shortcuts.cfg",
+			"editor_settings.cfg", "save_backup.cfg", "__save_studio_preview.cfg", "notes.txt"]), "save_{slot}.cfg"),
+		PackedStringArray(["save_0.cfg", "save_12.json"])) and all_passed
+	all_passed = _check("and follows a renamed pattern",
+		EventSheetSaveStudio.slot_files(PackedStringArray(["save_0.cfg", "slot-3.dat", "slot-x.dat"]), "slot-{slot}.dat"),
+		PackedStringArray(["slot-3.dat"])) and all_passed
 	return all_passed
 
 
