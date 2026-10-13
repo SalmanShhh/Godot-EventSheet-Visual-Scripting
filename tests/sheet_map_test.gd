@@ -21,6 +21,9 @@ static func run() -> bool:
 	passed = _the_arrangement(found) and passed
 	passed = _a_long_name_still_reads(found) and passed
 	passed = _what_a_click_on_a_line_finds() and passed
+	passed = _lines_meet_the_facing_edges() and passed
+	passed = _every_line_says_what_it_is() and passed
+	passed = _a_click_on_a_scene_opens_it() and passed
 	EventSheetSignalFanout.clear_cache()
 	return passed
 
@@ -43,7 +46,7 @@ static func _the_edges(found: Dictionary) -> bool:
 
 static func _the_summary(found: Dictionary) -> bool:
 	return _check("the map says what it drew, in the sheet's words",
-		EventSheetSheetMap.summary(found), "4 sheets, 3 connections")
+		EventSheetSheetMap.summary(found), "3 sheets, 1 scene, 3 connections")
 
 
 static func _the_arrangement(found: Dictionary) -> bool:
@@ -105,6 +108,60 @@ static func _what_a_click_on_a_line_finds() -> bool:
 		EventSheetSheetMapPanel.find_query({"kind": EventSheetSheetMap.EDGE_INCLUDES,
 			"label": "includes", "to": "res://enemy.gd"}), "enemy") and passed
 	return passed
+
+
+## A line joins the two edges that FACE each other, whichever way round the boxes sit - a line to a
+## box on the left used to leave from the right edge and run back through both boxes.
+static func _lines_meet_the_facing_edges() -> bool:
+	var panel: EventSheetSheetMapPanel = _laid_out_panel()
+	return _check("a line to the right, to the left, below and above meets the facing edges", [
+		panel.edge_points("a", "b"), panel.edge_points("b", "a"),
+		panel.edge_points("a", "c"), panel.edge_points("c", "a"),
+	], [
+		PackedVector2Array([Vector2(164.0, 33.0), Vector2(220.0, 33.0)]),
+		PackedVector2Array([Vector2(220.0, 33.0), Vector2(164.0, 33.0)]),
+		PackedVector2Array([Vector2(90.0, 50.0), Vector2(90.0, 68.0)]),
+		PackedVector2Array([Vector2(90.0, 68.0), Vector2(90.0, 50.0)]),
+	])
+
+
+## Every line carries its own words at its middle, and two lines between the same pair of boxes
+## stack rather than print over each other.
+static func _every_line_says_what_it_is() -> bool:
+	var panel: EventSheetSheetMapPanel = _laid_out_panel()
+	panel.found = {"nodes": panel.found["nodes"], "edges": [
+		{"from": "a", "to": "b", "kind": EventSheetSheetMap.EDGE_INCLUDES, "label": "includes"},
+		{"from": "b", "to": "a", "kind": EventSheetSheetMap.EDGE_CALLS, "label": "calls Game"},
+		{"from": "a", "to": "c", "kind": EventSheetSheetMap.EDGE_LAYOUT, "label": "Go to layout"},
+	], "skipped": 0}
+	return _check("each line's label sits at its middle, stacked per pair", panel.edge_label_spots(), [
+		{"text": "includes", "position": Vector2(192.0, 29.0)},
+		{"text": "calls Game", "position": Vector2(192.0, 43.0)},
+		{"text": "Go to layout", "position": Vector2(90.0, 55.0)},
+	])
+
+
+## A box is opened by clicking it, and that holds for a scene too: it goes to Godot's scene editor.
+static func _a_click_on_a_scene_opens_it() -> bool:
+	var editor: EventSheetEditor = EventSheetEditor.new()
+	var panel: EventSheetSheetMapPanel = EventSheetSheetMapPanel.new(editor)
+	panel._open_node("%s/level_two.tscn" % FIXTURE_ROOT)
+	var status: String = editor._status_label.text if editor._status_label != null else ""
+	editor.free()
+	return _check("clicking a scene box opens that scene", status,
+		"Opened level_two.tscn in the scene editor. Sheet ▸ Open… the same file to read the whole layout as one sheet.")
+
+
+## Three standard boxes: `a` top left, `b` to its right, `c` under `a`.
+static func _laid_out_panel() -> EventSheetSheetMapPanel:
+	var panel: EventSheetSheetMapPanel = EventSheetSheetMapPanel.new(null)
+	panel.found = {"nodes": [
+		{"id": "a", "label": "A", "kind": EventSheetSheetMap.NODE_SHEET},
+		{"id": "b", "label": "B", "kind": EventSheetSheetMap.NODE_SHEET},
+		{"id": "c", "label": "C", "kind": EventSheetSheetMap.NODE_SHEET},
+	], "edges": [], "skipped": 0}
+	panel.positions = {"a": Vector2(16.0, 16.0), "b": Vector2(220.0, 16.0), "c": Vector2(16.0, 68.0)}
+	return panel
 
 
 # ── Reading the graph ─────────────────────────────────────────────────────────────────────────

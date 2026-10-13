@@ -15,6 +15,10 @@
 - **History:** the list now opens with a "Before these edits" line, so a click can undo back past
   the first edit. Rows light up on the canvas while the pointer is over an entry, instead of when
   you click one.
+- **Sheet map:** the summary counts scenes and globals as what they are instead of calling every box
+  a sheet. Lines now join the edges of the two boxes that face each other, so a line to a box on the
+  left no longer runs back through both boxes. Every line shows its label ("includes", "calls Game",
+  "signals On died"), and clicking a scene box opens that scene in Godot's scene editor.
 
 ### Fixed: debugging, checks and small prompts
 

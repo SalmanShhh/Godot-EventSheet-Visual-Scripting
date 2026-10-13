@@ -85,11 +85,25 @@ static func summary(found: Dictionary) -> String:
 	var nodes: Array = found.get("nodes", []) as Array
 	var edges: Array = found.get("edges", []) as Array
 	var skipped: int = int(found.get("skipped", 0))
-	var line: String = "%d sheet%s, %d connection%s" % [nodes.size(), "" if nodes.size() == 1 else "s",
-		edges.size(), "" if edges.size() == 1 else "s"]
+	# Counted by what each box IS: a scene or a global is not a sheet, so it is not counted as one.
+	var counts: Dictionary = {NODE_SHEET: 0, NODE_SCENE: 0, NODE_GLOBAL: 0}
+	for entry: Variant in nodes:
+		var kind: String = str((entry as Dictionary).get("kind", NODE_SHEET))
+		counts[kind] = int(counts.get(kind, 0)) + 1
+	var parts: PackedStringArray = PackedStringArray([_counted(int(counts[NODE_SHEET]), "sheet")])
+	if int(counts[NODE_SCENE]) > 0:
+		parts.append(_counted(int(counts[NODE_SCENE]), "scene"))
+	if int(counts[NODE_GLOBAL]) > 0:
+		parts.append(_counted(int(counts[NODE_GLOBAL]), "global"))
+	parts.append(_counted(edges.size(), "connection"))
+	var line: String = ", ".join(parts)
 	if skipped > 0:
 		line += " (%d more not drawn)" % skipped
 	return line
+
+
+static func _counted(count: int, noun: String) -> String:
+	return "%d %s%s" % [count, noun, "" if count == 1 else "s"]
 
 
 # ── Reading one script ────────────────────────────────────────────────────────────────────────

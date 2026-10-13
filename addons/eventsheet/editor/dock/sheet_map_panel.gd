@@ -21,6 +21,8 @@ const MARGIN := 16.0
 const HIT_TOLERANCE := 6.0
 ## The clear space between a box's edge and its name, on each side.
 const TEXT_INSET := 8.0
+## How far apart two labels sharing one pair of boxes sit, so neither is drawn over the other.
+const EDGE_LABEL_STEP := 14.0
 
 ## Where the arrangement is remembered. Editor metadata, not project state: it is a reading
 ## position, not something a project commits.
@@ -210,11 +212,19 @@ func _draw_map() -> void:
 		var edge: Dictionary = entry
 		if not positions.has(str(edge["from"])) or not positions.has(str(edge["to"])):
 			continue
-		var from_point: Vector2 = _anchor(str(edge["from"]), true) * scale
-		var to_point: Vector2 = _anchor(str(edge["to"]), false) * scale
+		var points: PackedVector2Array = edge_points(str(edge["from"]), str(edge["to"]))
 		var color: Color = chrome.sheet_map_signal_edge_color \
 			if str(edge["kind"]) == EventSheetSheetMap.EDGE_SIGNALS else chrome.sheet_map_edge_color
-		canvas.draw_line(from_point, to_point, color, 1.0 * scale)
+		canvas.draw_line(points[0] * scale, points[1] * scale, color, 1.0 * scale)
+	# Each line says what it is ("includes", "calls Game", "signals On died") at its middle, so the
+	# picture reads without clicking every line to find out.
+	if font != null:
+		var label_size: int = maxi(int(round(font_size * 0.85)), 8)
+		for spot: Dictionary in edge_label_spots():
+			var text: String = str(spot["text"])
+			var text_width: float = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, label_size).x
+			canvas.draw_string(font, (spot["position"] as Vector2) * scale - Vector2(text_width * 0.5, 0.0),
+				text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, label_size, chrome.sheet_map_text_color)
 	for entry: Variant in (found.get("nodes", []) as Array):
 		var node: Dictionary = entry
 		var id: String = str(node.get("id", ""))
@@ -240,11 +250,47 @@ static func _kind_color(kind: String, chrome: EventSheetChromeStyle) -> Color:
 	return chrome.sheet_map_sheet_color
 
 
-## Where a line leaves or lands on a box: the right edge of the one it comes from, the left edge of
-## the one it goes to, so the direction reads without an arrowhead to draw.
-func _anchor(id: String, outgoing: bool) -> Vector2:
-	var corner: Vector2 = positions.get(id, Vector2.ZERO)
-	return corner + Vector2(width_of(id) if outgoing else 0.0, BOX_HEIGHT * 0.5)
+## Where one line leaves its box and lands on the other, at 1x: the facing edges of the two boxes,
+## so a line never runs through either of them. A target to the right is left from the right edge
+## and landed on at its left edge; a target to the left the other way round; a box above or below
+## (the same column) is joined bottom edge to top edge. Pure over the current layout.
+func edge_points(from_id: String, to_id: String) -> PackedVector2Array:
+	var from_box: Rect2 = Rect2(positions.get(from_id, Vector2.ZERO) as Vector2, Vector2(width_of(from_id), BOX_HEIGHT))
+	var to_box: Rect2 = Rect2(positions.get(to_id, Vector2.ZERO) as Vector2, Vector2(width_of(to_id), BOX_HEIGHT))
+	if to_box.position.x >= from_box.end.x:
+		return PackedVector2Array([Vector2(from_box.end.x, from_box.get_center().y),
+			Vector2(to_box.position.x, to_box.get_center().y)])
+	if to_box.end.x <= from_box.position.x:
+		return PackedVector2Array([Vector2(from_box.position.x, from_box.get_center().y),
+			Vector2(to_box.end.x, to_box.get_center().y)])
+	if to_box.get_center().y >= from_box.get_center().y:
+		return PackedVector2Array([Vector2(from_box.get_center().x, from_box.end.y),
+			Vector2(to_box.get_center().x, to_box.position.y)])
+	return PackedVector2Array([Vector2(from_box.get_center().x, from_box.position.y),
+		Vector2(to_box.get_center().x, to_box.end.y)])
+
+
+## Where each line's words go, at 1x: [{text, position}], the position being the middle of the line
+## the text is centred on. Lines between the same two boxes share a middle, so each later one steps
+## down a line rather than printing over the one before. Pure over the current layout.
+func edge_label_spots() -> Array[Dictionary]:
+	var spots: Array[Dictionary] = []
+	var per_pair: Dictionary = {}
+	for entry: Variant in (found.get("edges", []) as Array):
+		var edge: Dictionary = entry
+		var from_id: String = str(edge["from"])
+		var to_id: String = str(edge["to"])
+		if not positions.has(from_id) or not positions.has(to_id) or str(edge.get("label", "")).is_empty():
+			continue
+		var pair: String = "%s|%s" % ([from_id, to_id] if from_id < to_id else [to_id, from_id])
+		var stacked: int = int(per_pair.get(pair, 0))
+		per_pair[pair] = stacked + 1
+		var points: PackedVector2Array = edge_points(from_id, to_id)
+		spots.append({
+			"text": str(edge["label"]),
+			"position": (points[0] + points[1]) * 0.5 + Vector2(0.0, -4.0 + EDGE_LABEL_STEP * stacked),
+		})
+	return spots
 
 
 # ── Clicking and dragging ─────────────────────────────────────────────────────────────────────
@@ -303,17 +349,21 @@ func edge_at(at: Vector2) -> Dictionary:
 		var edge: Dictionary = entry
 		if not positions.has(str(edge["from"])) or not positions.has(str(edge["to"])):
 			continue
-		if Geometry2D.get_closest_point_to_segment(at, _anchor(str(edge["from"]), true),
-				_anchor(str(edge["to"]), false)).distance_to(at) <= HIT_TOLERANCE:
+		var points: PackedVector2Array = edge_points(str(edge["from"]), str(edge["to"]))
+		if Geometry2D.get_closest_point_to_segment(at, points[0], points[1]).distance_to(at) <= HIT_TOLERANCE:
 			return edge
 	return {}
 
 
-## A double-click-free open: a single click on a box opens that sheet, because opening it IS what
-## the box is for.
+## A double-click-free open: a single click on a box opens what the box stands for, because opening
+## it IS what the box is for - a sheet (or a script global) as a sheet, a scene (or a scene global) in
+## Godot's own scene editor.
 func _open_node(id: String) -> void:
-	if id.get_extension().to_lower() == "gd":
-		_dock.reopen_sheet_path(id)
+	match id.get_extension().to_lower():
+		"gd":
+			_dock.reopen_sheet_path(id)
+		"tscn", "scn":
+			_dock._project_bar_glue._open_scene(id)
 
 
 ## A click on a line runs the Find that explains it - the signal's name for a signal edge, the
