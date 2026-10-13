@@ -11,7 +11,6 @@ extends RefCounted
 
 # Section-header tint shared with the ACE picker's object headers, so panels read as one family.
 const HEADER_COLOR := Color("#e0b070")
-const ENTRY_NUMBER_COLOR := Color("#6f7580")
 ## The mark beside each entry: the editor's own star, the one its FileSystem favorites wear (Godot
 ## 4.7's editor theme carries no icon named "Bookmark"). Asked of the editor theme, so a run with no
 ## editor (the suite) simply shows the words.
@@ -34,14 +33,9 @@ func _init(dock: Control) -> void:
 func build() -> void:
 	if window != null:
 		return
-	window = Window.new()
-	window.title = "Bookmarks"
-	window.size = Vector2i(400, 340)
-	window.close_requested.connect(func() -> void: window.hide())
-	var body_box: VBoxContainer = VBoxContainer.new()
-	body_box.add_theme_constant_override("separation", 6)
-	body_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var parts: Dictionary = EventSheetPopupUI.panel_window("Bookmarks", Vector2i(400, 340), _dock)
+	window = parts["window"]
+	var body_box: VBoxContainer = parts["box"]
 	var toolbar: HBoxContainer = HBoxContainer.new()
 	toolbar.add_theme_constant_override("separation", 6)
 	var previous_button: Button = Button.new()
@@ -72,13 +66,6 @@ func build() -> void:
 	body_box.add_child(tree)
 	_empty_hint = EventSheetPopupUI.hint_label("No bookmarks yet - select a row and press Ctrl+M to mark it. F4 / Shift+F4 cycle through marks.", 360.0)
 	body_box.add_child(_empty_hint)
-	var card: Control = EventSheetPopupUI.titled_card("Bookmarks", body_box)
-	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var body: Control = EventSheetPopupUI.margined(card)
-	body.set_anchors_preset(Control.PRESET_FULL_RECT)
-	window.add_child(body)
-	_dock.add_child(window)
 
 
 ## Lists every bookmarked row; activating one reveals it (Ctrl+M marks rows).

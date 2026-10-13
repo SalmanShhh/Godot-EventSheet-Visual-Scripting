@@ -53,6 +53,47 @@ func _finish_window(parts: Dictionary) -> void:
 	_dock.add_child(parts["dialog"])
 
 
+## Reads a name field and its entries, each [text, field]: a value or parameter name with an optional
+## `separator` part ("IDLE = 4", "damage: int"). {name, entries, problem, field} - `field` is the
+## control the problem is about, so it can wear the red edge. A blank entry is an unfilled slot.
+static func _read_named(name_edit: LineEdit, name_problem: String, entries: Array, separator: String,
+		entry_problem: String) -> Dictionary:
+	var new_name: String = EventSheetIdentifierRules.sanitize(name_edit.text)
+	if not EventSheetIdentifierRules.is_valid(new_name):
+		return {"problem": name_problem.replace("{name}", name_edit.text), "field": name_edit}
+	var parts: PackedStringArray = PackedStringArray()
+	for entry: Array in entries:
+		var text: String = entry[0]
+		if text.strip_edges().is_empty():
+			continue
+		var part: String = EventSheetIdentifierRules.sanitize(text.get_slice(separator, 0))
+		if not EventSheetIdentifierRules.is_valid(part):
+			return {"problem": entry_problem.replace("{name}", text.strip_edges()), "field": entry[1]}
+		if text.contains(separator):
+			part += (" = " if separator == "=" else ": ") + text.get_slice(separator, 1).strip_edges()
+		parts.append(part)
+	return {"name": new_name, "entries": parts, "problem": "", "field": null}
+
+
+## Shows what a read says: the red edge on the field it blames, the note, OK held while it is wrong,
+## and the line it writes in the band and the strip.
+static func _show_read(read: Dictionary, fields: Array, parts: Array, line: String) -> void:
+	var problem: String = str(read.get("problem", ""))
+	for field: Control in fields:
+		EventSheetPopupUI.mark_field(field, field == read.get("field"))
+	(parts[1] as EventSheetPopupUI.StateNote).say(problem)
+	(parts[0] as ConfirmationDialog).get_ok_button().disabled = not problem.is_empty()
+	(parts[2] as EventSheetPopupUI.RowBand).show_row("", line if problem.is_empty() else "")
+	(parts[3] as EventSheetPopupUI.HelpStrip).set_reading("", line if problem.is_empty() else "")
+
+
+## Runs one window's write through the undo funnel and says what it did.
+func _commit(undo_note: String, done: String, operation: Callable) -> void:
+	if _dock._perform_undoable_sheet_edit(undo_note, operation):
+		_dock._refresh_after_edit()
+		_dock._mark_dirty(done)
+
+
 # ── Enum ──────────────────────────────────────────────────────────────────────────────────────
 # One field per value (with its remove button) rather than lines in one text box, so every value is
 # plainly a separate entry. The model is unchanged - members stays a PackedStringArray - so the
@@ -170,9 +211,7 @@ func _add_enum_member_row(text: String) -> LineEdit:
 
 func _remove_enum_member_row(row: HBoxContainer, edit: LineEdit) -> void:
 	_enum_member_edits.erase(edit)
-	_enum_strip.followed.erase(edit)
-	_enum_members_box.remove_child(row)
-	row.queue_free()
+	_drop_row(_enum_strip, edit, row, false)
 	# Keep at least one field so the list is never empty and there is always somewhere to type.
 	if _enum_member_edits.is_empty():
 		_add_enum_member_row("")
@@ -180,38 +219,31 @@ func _remove_enum_member_row(row: HBoxContainer, edit: LineEdit) -> void:
 
 
 func _clear_enum_member_rows() -> void:
-	for row: Node in _enum_members_box.get_children():
-		_enum_members_box.remove_child(row)
-		row.free()
-	for edit: LineEdit in _enum_member_edits:
-		_enum_strip.followed.erase(edit)
+	for index: int in range(_enum_members_box.get_child_count() - 1, -1, -1):
+		_drop_row(_enum_strip, _enum_member_edits[index], _enum_members_box.get_child(index), true)
 	_enum_member_edits.clear()
 
 
-## What the fields currently describe: {name, members, problem, field} - `field` is the control the
-## problem is about, so it can wear the red edge.
+## Takes one field's row out of its window: the strip stops following the field and the row goes.
+static func _drop_row(strip: EventSheetPopupUI.HelpStrip, field: Control, row: Node, now: bool) -> void:
+	strip.followed.erase(field)
+	row.get_parent().remove_child(row)
+	if now:
+		row.free()
+	else:
+		row.queue_free()
+
+
+## What the fields currently describe: {name, entries (the values), problem, field}.
 func _read_enum() -> Dictionary:
-	var new_name: String = EventSheetIdentifierRules.sanitize(_enum_name_edit.text)
-	if not EventSheetIdentifierRules.is_valid(new_name):
-		return {"problem": EventSheetL10n.translate("\"{name}\" can't be an enum name (letters/digits/underscores, not a GDScript keyword).").replace("{name}", _enum_name_edit.text),
-			"field": _enum_name_edit}
-	var new_members: PackedStringArray = PackedStringArray()
-	for edit: LineEdit in _enum_member_edits:
-		var entry: String = edit.text
-		if entry.strip_edges().is_empty():
-			continue  # a blank field is just an unfilled slot, not an error
-		var member_name: String = EventSheetIdentifierRules.sanitize(entry.get_slice("=", 0))
-		if not EventSheetIdentifierRules.is_valid(member_name):
-			return {"problem": EventSheetL10n.translate("\"{name}\" can't be an enum value name.").replace("{name}", entry.strip_edges()),
-				"field": edit}
-		var member_text: String = member_name
-		if entry.contains("="):
-			member_text += " = " + entry.get_slice("=", 1).strip_edges()
-		new_members.append(member_text)
-	if new_members.is_empty():
+	var read: Dictionary = _read_named(_enum_name_edit,
+		EventSheetL10n.translate("\"{name}\" can't be an enum name (letters/digits/underscores, not a GDScript keyword)."),
+		_enum_member_edits.map(func(edit: LineEdit) -> Array: return [edit.text, edit]), "=",
+		EventSheetL10n.translate("\"{name}\" can't be an enum value name."))
+	if str(read["problem"]).is_empty() and (read["entries"] as PackedStringArray).is_empty():
 		return {"problem": EventSheetL10n.translate("Enums need a name and at least one value."),
 			"field": _enum_member_edits[0] if not _enum_member_edits.is_empty() else null}
-	return {"name": new_name, "members": new_members, "problem": "", "field": null}
+	return read
 
 
 ## The line the enum compiles to, on one line - what the band and the strip show.
@@ -225,16 +257,8 @@ func _refresh_enum() -> void:
 	if _enum_band == null or _enum_name_edit == null:
 		return
 	var read: Dictionary = _read_enum()
-	var problem: String = str(read.get("problem", ""))
-	for edit: LineEdit in _enum_member_edits:
-		EventSheetPopupUI.mark_field(edit, edit == read.get("field"))
-	EventSheetPopupUI.mark_field(_enum_name_edit, _enum_name_edit == read.get("field"))
-	_enum_problem_label.say(problem)
-	_enum_dialog.get_ok_button().disabled = not problem.is_empty()
-	var shown: String = enum_line(EventSheetIdentifierRules.sanitize(_enum_name_edit.text),
-		read.get("members", PackedStringArray()) as PackedStringArray) if problem.is_empty() else ""
-	_enum_band.show_row("", shown)
-	_enum_strip.set_reading("", shown)
+	_show_read(read, [_enum_name_edit] + _enum_member_edits, [_enum_dialog, _enum_problem_label, _enum_band, _enum_strip],
+		enum_line(str(read.get("name", "")), read.get("entries", PackedStringArray()) as PackedStringArray))
 
 
 func _on_enum_dialog_confirmed() -> void:
@@ -247,19 +271,15 @@ func _on_enum_dialog_confirmed() -> void:
 		return
 	_enum_dialog.hide()
 	var new_name: String = str(read["name"])
-	var new_members: PackedStringArray = read["members"]
+	var new_members: PackedStringArray = read["entries"]
 	var multiline_choice: bool = _enum_multiline_check.button_pressed
-	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Enum", func() -> bool:
+	_commit("Edit Enum", "Enum updated (compiles before variables; use it as a variable type).", func() -> bool:
 		if target.enum_name == new_name and target.members == new_members and target.multiline == multiline_choice:
 			return false
 		target.enum_name = new_name
 		target.members = new_members
 		target.multiline = multiline_choice
-		return true
-	)
-	if changed:
-		_dock._refresh_after_edit()
-		_dock._mark_dirty("Enum updated (compiles before variables; use it as a variable type).")
+		return true)
 
 
 # ── Signal ────────────────────────────────────────────────────────────────────────────────────
@@ -315,39 +335,20 @@ func _ensure_signal_dialog() -> void:
 	_signal_dialog.confirmed.connect(_on_signal_dialog_confirmed)
 
 
-## What the fields currently describe: {name, params, problem, field}.
+## What the fields currently describe: {name, entries (the parameters), problem, field}.
 func _read_signal() -> Dictionary:
-	var new_name: String = EventSheetIdentifierRules.sanitize(_signal_name_edit.text)
-	if not EventSheetIdentifierRules.is_valid(new_name):
-		return {"problem": EventSheetL10n.translate("\"{name}\" can't be a signal name (letters/digits/underscores, not a GDScript keyword).").replace("{name}", _signal_name_edit.text),
-			"field": _signal_name_edit}
-	var new_params: PackedStringArray = PackedStringArray()
-	for line: String in _signal_params_edit.text.split("\n"):
-		if line.strip_edges().is_empty():
-			continue
-		var param_name: String = EventSheetIdentifierRules.sanitize(line.get_slice(":", 0))
-		if not EventSheetIdentifierRules.is_valid(param_name):
-			return {"problem": EventSheetL10n.translate("\"{name}\" can't be a signal parameter name.").replace("{name}", line.strip_edges()),
-				"field": _signal_params_edit}
-		var param_text: String = param_name
-		if line.contains(":"):
-			param_text += ": " + line.get_slice(":", 1).strip_edges()
-		new_params.append(param_text)
-	return {"name": new_name, "params": new_params, "problem": "", "field": null}
+	return _read_named(_signal_name_edit,
+		EventSheetL10n.translate("\"{name}\" can't be a signal name (letters/digits/underscores, not a GDScript keyword)."),
+		Array(_signal_params_edit.text.split("\n")).map(func(line: String) -> Array: return [line, _signal_params_edit]),
+		":", EventSheetL10n.translate("\"{name}\" can't be a signal parameter name."))
 
 
 func _refresh_signal() -> void:
 	if _signal_band == null or _signal_name_edit == null:
 		return
 	var read: Dictionary = _read_signal()
-	var problem: String = str(read.get("problem", ""))
-	EventSheetPopupUI.mark_field(_signal_name_edit, _signal_name_edit == read.get("field"))
-	EventSheetPopupUI.mark_field(_signal_params_edit, _signal_params_edit == read.get("field"))
-	_signal_problem_label.say(problem)
-	_signal_dialog.get_ok_button().disabled = not problem.is_empty()
-	var line: String = "" if not problem.is_empty() else "signal %s(%s)" % [str(read["name"]), ", ".join(read["params"] as PackedStringArray)]
-	_signal_band.show_row("", line)
-	_signal_strip.set_reading("", line)
+	_show_read(read, [_signal_name_edit, _signal_params_edit], [_signal_dialog, _signal_problem_label, _signal_band,
+		_signal_strip], "signal %s(%s)" % [str(read.get("name", "")), ", ".join(read.get("entries", PackedStringArray()) as PackedStringArray)])
 
 
 func _on_signal_dialog_confirmed() -> void:
@@ -360,17 +361,13 @@ func _on_signal_dialog_confirmed() -> void:
 		return
 	_signal_dialog.hide()
 	var new_name: String = str(read["name"])
-	var new_params: PackedStringArray = read["params"]
-	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Signal", func() -> bool:
+	var new_params: PackedStringArray = read["entries"]
+	_commit("Edit Signal", "Signal updated (it now appears in the On/Emit Signal pickers).", func() -> bool:
 		if target.signal_name == new_name and target.params == new_params:
 			return false
 		target.signal_name = new_name
 		target.params = new_params
-		return true
-	)
-	if changed:
-		_dock._refresh_after_edit()
-		_dock._mark_dirty("Signal updated (it now appears in the On/Emit Signal pickers).")
+		return true)
 
 
 # ── Match ─────────────────────────────────────────────────────────────────────────────────────
@@ -548,9 +545,7 @@ func _remove_match_case_row(entry: Dictionary) -> void:
 	if source_case != null:
 		_match_dropped_actions += source_case.events.size()
 	_match_case_rows.erase(entry)
-	_match_strip.followed.erase(entry["pattern"])
-	_match_cases_box.remove_child(entry["row"])
-	(entry["row"] as Node).queue_free()
+	_drop_row(_match_strip, entry["pattern"], entry["row"], false)
 	if _match_case_rows.is_empty():
 		_add_match_case_row("")
 	_relabel_match_rows()
@@ -558,9 +553,7 @@ func _remove_match_case_row(entry: Dictionary) -> void:
 
 func _clear_match_case_rows() -> void:
 	for entry: Dictionary in _match_case_rows:
-		_match_strip.followed.erase(entry["pattern"])
-		_match_cases_box.remove_child(entry["row"])
-		(entry["row"] as Node).free()
+		_drop_row(_match_strip, entry["pattern"], entry["row"], true)
 	_match_case_rows.clear()
 
 
@@ -673,9 +666,7 @@ func _fill_cases_from_subject() -> void:
 		var shown: String = (entry["pattern"] as LineEdit).text.strip_edges()
 		if shown.is_empty() and entry.get("case") == null:
 			_match_case_rows.erase(entry)
-			_match_strip.followed.erase(entry["pattern"])
-			_match_cases_box.remove_child(entry["row"])
-			(entry["row"] as Node).free()
+			_drop_row(_match_strip, entry["pattern"], entry["row"], true)
 			continue
 		existing.append(_pattern_written(shown))
 	for member: String in _enum_members(subject_enum):
@@ -801,20 +792,17 @@ func _on_match_dialog_confirmed() -> void:
 	var target: MatchRow = _match_target
 	var host: EventRow = _match_host
 	_match_host = null
-	var changed: bool = _dock._perform_undoable_sheet_edit("Add Match" if host != null else "Edit Match", func() -> bool:
-		if host == null and target.match_expression == expression and _same_cases(target.cases, new_cases):
-			return false
-		target.match_expression = expression
-		target.cases = new_cases
-		# The raw form is only read while `cases` is empty; written from the cases it stays a true copy.
-		target.branches_text = _match_branches_from_cases(new_cases)
-		if host != null and not host.actions.has(target):
-			host.actions.append(target)
-		return true
-	)
-	if changed:
-		_dock._refresh_after_edit()
-		_dock._mark_dirty("Match updated." if host == null else "Match added - add each branch's actions on the sheet.")
+	_commit("Add Match" if host != null else "Edit Match",
+		"Match updated." if host == null else "Match added - add each branch's actions on the sheet.", func() -> bool:
+			if host == null and target.match_expression == expression and _same_cases(target.cases, new_cases):
+				return false
+			target.match_expression = expression
+			target.cases = new_cases
+			# The raw form is only read while `cases` is empty; written from the cases it stays a true copy.
+			target.branches_text = _match_branches_from_cases(new_cases)
+			if host != null and not host.actions.has(target):
+				host.actions.append(target)
+			return true)
 
 
 ## True when two branch lists hold the same patterns and the same actions - an untouched Done.

@@ -153,15 +153,7 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 ## Fetches a named editor-theme icon ("EditorIcons" - class icons and member glyphs).
 ## Null outside the editor or when the name is unknown, so callers degrade gracefully.
 static func editor_icon(icon_name: String) -> Texture2D:
-	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return null
-	var editor_interface: Object = Engine.get_singleton("EditorInterface")
-	if editor_interface == null or not editor_interface.has_method("get_editor_theme"):
-		return null
-	var theme: Theme = editor_interface.get_editor_theme()
-	if theme == null or not theme.has_icon(icon_name, "EditorIcons"):
-		return null
-	return theme.get_icon(icon_name, "EditorIcons")
+	return EventSheetEditorIcons.icon(icon_name)
 
 
 ## The editor-theme icon for a builtin category header ("Math & Random" -> the

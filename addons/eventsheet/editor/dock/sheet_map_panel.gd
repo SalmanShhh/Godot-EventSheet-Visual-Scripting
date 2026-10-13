@@ -114,14 +114,9 @@ static func width_for_label(label: String, font: Font, font_size: int, scale: fl
 func build() -> void:
 	if window != null:
 		return
-	window = Window.new()
-	window.title = "Sheet map"
-	window.size = Vector2i(760, 520)
-	window.close_requested.connect(func() -> void: window.hide())
-	var body_box: VBoxContainer = VBoxContainer.new()
-	body_box.add_theme_constant_override("separation", 6)
-	body_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var parts: Dictionary = EventSheetPopupUI.panel_window("Sheet map", Vector2i(760, 520), _dock)
+	window = parts["window"]
+	var body_box: VBoxContainer = parts["box"]
 	var scroll: ScrollContainer = ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -136,13 +131,6 @@ func build() -> void:
 	summary_label = EventSheetPopupUI.hint_label(
 		"Click a sheet to open it. Click a line to find every place it comes from.", 640.0)
 	body_box.add_child(summary_label)
-	var card: Control = EventSheetPopupUI.titled_card("Sheet map", body_box)
-	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var body: Control = EventSheetPopupUI.margined(card)
-	body.set_anchors_preset(Control.PRESET_FULL_RECT)
-	window.add_child(body)
-	_dock.add_child(window)
 
 
 func open() -> void:

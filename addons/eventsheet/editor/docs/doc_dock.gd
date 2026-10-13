@@ -374,7 +374,7 @@ func _build_footer() -> HBoxContainer:
 	var online_button: Button = Button.new()
 	online_button.flat = true
 	online_button.tooltip_text = "Opens this page in your browser, pinned to the version you installed. The online pages carry the screenshots this one leaves out."
-	var icon: Texture2D = _editor_icon("ExternalLink")
+	var icon: Texture2D = EventSheetEditorIcons.icon("ExternalLink")
 	if icon != null:
 		online_button.icon = icon
 	else:
@@ -382,17 +382,6 @@ func _build_footer() -> HBoxContainer:
 	online_button.pressed.connect(_open_current_online)
 	footer.add_child(online_button)
 	return footer
-
-
-## An editor theme icon by name, or null when this build carries none - which is why the caller
-## always has a wordy fallback. No plugin class is named here; see the boot contract.
-func _editor_icon(icon_name: String) -> Texture2D:
-	if not Engine.is_editor_hint():
-		return null
-	var theme: Theme = EditorInterface.get_editor_theme()
-	if theme == null or not theme.has_icon(icon_name, "EditorIcons"):
-		return null
-	return theme.get_icon(icon_name, "EditorIcons")
 
 
 ## Registers the public API scripts into the editor's built-in Help. Done HERE rather than at

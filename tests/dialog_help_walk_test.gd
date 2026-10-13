@@ -33,7 +33,7 @@ const SPECIMEN: String = "res://tools/previews/dialog_shape.gd"
 
 ## The ways a dialog can tell its strip to follow something. One of these has to appear beside the
 ## strip it builds, or the strip is a decoration.
-const FOLLOW_CALLS: Array[String] = [".follow(", ".follow_option(", ".show_note(", ".describe("]
+const FOLLOW_CALLS: Array[String] = [".follow(", ".follow_option(", ".follow_form(", ".show_note(", ".describe("]
 
 ## The ways it says what the row will read as. `help_strip(` with arguments counts: the two reading
 ## lines are its third and fourth.

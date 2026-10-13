@@ -115,14 +115,9 @@ static func _collect_outline(rows: Array, depth: int, parent_index: int, entries
 func build() -> void:
 	if window != null:
 		return
-	window = Window.new()
-	window.title = "Outline"
-	window.size = Vector2i(360, 420)
-	window.close_requested.connect(func() -> void: window.hide())
-	var body_box: VBoxContainer = VBoxContainer.new()
-	body_box.add_theme_constant_override("separation", 6)
-	body_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var parts: Dictionary = EventSheetPopupUI.panel_window("Outline", Vector2i(360, 420), _dock)
+	window = parts["window"]
+	var body_box: VBoxContainer = parts["box"]
 	tree = Tree.new()
 	tree.hide_root = true
 	tree.select_mode = Tree.SELECT_ROW
@@ -132,13 +127,6 @@ func build() -> void:
 	body_box.add_child(tree)
 	_empty_hint = EventSheetPopupUI.hint_label("Nothing structural yet - groups, #region fences, and published functions appear here as you add them.", 320.0)
 	body_box.add_child(_empty_hint)
-	var card: Control = EventSheetPopupUI.titled_card("Outline", body_box)
-	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var body: Control = EventSheetPopupUI.margined(card)
-	body.set_anchors_preset(Control.PRESET_FULL_RECT)
-	window.add_child(body)
-	_dock.add_child(window)
 
 
 func open() -> void:

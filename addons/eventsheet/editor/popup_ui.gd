@@ -90,6 +90,28 @@ static func margined(content: Control, margin: int = CONTENT_MARGIN) -> MarginCo
 	return box
 
 
+## A side window the dock keeps (History, Outline, Bookmarks, the sheet map): `title` on the window
+## and on the one card that fills it, closing hides it, and it lives under `host`. Returns {window,
+## box} - `box` is the card's column to fill.
+static func panel_window(title: String, size: Vector2i, host: Node) -> Dictionary:
+	var window: Window = Window.new()
+	window.title = title
+	window.size = size
+	window.close_requested.connect(func() -> void: window.hide())
+	var box: VBoxContainer = VBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
+	box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var card: Control = titled_card(title, box)
+	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var body: Control = margined(card)
+	body.set_anchors_preset(Control.PRESET_FULL_RECT)
+	window.add_child(body)
+	host.add_child(window)
+	return {"window": window, "box": box}
+
+
 ## A muted helper/hint label (the small explanatory text under a field). The autowrap is WIDTH-BOUNDED
 ## (wrap_width) so it never balloons a content-sized dialog - see HINT_WRAP_WIDTH. Pass a smaller
 ## wrap_width in a narrower dialog if the default would widen it.
@@ -675,6 +697,22 @@ class HelpStrip extends PanelContainer:
 		followed.append(control)
 
 
+	## Wires every field of a built form the way follow() does - each field's own label and tooltip are
+	## its heading and words, so there is one place a field's wording lives - and calls `reread` as one
+	## is reached (and once now), so the reading lines say what is typed NOW rather than what the
+	## window opened with.
+	func follow_form(form: EventSheetFieldForm, reread: Callable) -> void:
+		for field_id: String in form.field_ids():
+			var spec: EventSheetFieldSpec = form.spec(field_id)
+			var control: Control = form.control(field_id)
+			if spec == null or control == null:
+				continue
+			follow(control, spec.label, spec.tooltip_text)
+			control.focus_entered.connect(reread)
+			control.mouse_entered.connect(reread)
+		reread.call()
+
+
 	## Wires a dropdown per ITEM: `describer.call(index)` returns {"heading": …, "body": …} for the
 	## item at `index`. Arrowing or hovering the open list describes the choice before it is picked
 	## (PopupMenu.id_focused), and picking one leaves that description standing.
@@ -832,15 +870,7 @@ static func _has_option_code_notes(dropdown: OptionButton) -> bool:
 
 ## An editor icon by name, or null outside the editor / when the theme has no such icon.
 static func _editor_icon(icon_name: String) -> Texture2D:
-	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return null
-	var editor_interface: Object = Engine.get_singleton("EditorInterface")
-	if editor_interface == null or not editor_interface.has_method("get_editor_theme"):
-		return null
-	var theme: Theme = editor_interface.get_editor_theme()
-	if theme == null or not theme.has_icon(icon_name, "EditorIcons"):
-		return null
-	return theme.get_icon(icon_name, "EditorIcons")
+	return EventSheetEditorIcons.icon(icon_name)
 
 
 ## Fills `popup` with the suggestions whose text contains `filter_text` (case-insensitive;

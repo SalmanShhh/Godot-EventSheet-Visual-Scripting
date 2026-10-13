@@ -663,7 +663,7 @@ func _icon_button(icon_names: Array, fallback_text: String, tooltip: String, act
 ## The first of `icon_names` this editor carries, or null for none of them.
 func _first_icon(icon_names: Array) -> Texture2D:
 	for icon_name: Variant in icon_names:
-		var icon: Texture2D = _editor_icon(str(icon_name))
+		var icon: Texture2D = EventSheetEditorIcons.icon(str(icon_name))
 		if icon != null:
 			return icon
 	return null
@@ -682,24 +682,11 @@ func _open_current_online() -> void:
 	link_activated.emit(target)
 
 
-## An editor theme icon by name, or null outside the editor and for a name this build lacks.
-func _editor_icon(icon_name: String) -> Texture2D:
-	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return null
-	var editor_interface: Object = Engine.get_singleton("EditorInterface")
-	if editor_interface == null or not editor_interface.has_method("get_editor_theme"):
-		return null
-	var theme: Theme = editor_interface.get_editor_theme()
-	if theme == null or not theme.has_icon(icon_name, "EditorIcons"):
-		return null
-	return theme.get_icon(icon_name, "EditorIcons")
-
-
 ## The icon a page id's KIND wears in the sidebar, or null when this editor carries none of the
 ## alternatives (and headless, where a row is simply a name).
 func _kind_icon(page_id: String) -> Texture2D:
 	for icon_name: Variant in KIND_ICONS.get(kind_for_page(page_id), []) as Array:
-		var icon: Texture2D = _editor_icon(str(icon_name))
+		var icon: Texture2D = EventSheetEditorIcons.icon(str(icon_name))
 		if icon != null:
 			return icon
 	return null

@@ -790,20 +790,6 @@ func _card_label_row(label_text: String, trailing: Control = null) -> HBoxContai
 	return row
 
 
-## An editor theme icon by name, or null outside the editor (and for a name this build does not
-## carry, which is why every caller has a wordy fallback).
-func _editor_icon(icon_name: String) -> Texture2D:
-	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return null
-	var editor_interface: Object = Engine.get_singleton("EditorInterface")
-	if editor_interface == null or not editor_interface.has_method("get_editor_theme"):
-		return null
-	var theme: Theme = editor_interface.get_editor_theme()
-	if theme == null or not theme.has_icon(icon_name, "EditorIcons"):
-		return null
-	return theme.get_icon(icon_name, "EditorIcons")
-
-
 ## Code is the one block that must neither re-wrap nor widen the page. A label with autowrap off
 ## reports its LONGEST LINE as its minimum width, and a page column takes the widest minimum on it -
 ## so one long line in a guide silently sets the width of the whole page, which is unreadable in a
@@ -832,7 +818,7 @@ func _image_card(path: String, alt: String) -> Control:
 		button = Button.new()
 		button.text = "See this picture online"
 		button.tooltip_text = "Opens the image in your browser, pinned to the version you installed."
-		var link_icon: Texture2D = _editor_icon("ExternalLink")
+		var link_icon: Texture2D = EventSheetEditorIcons.icon("ExternalLink")
 		if link_icon != null:
 			button.icon = link_icon
 		button.pressed.connect(func() -> void:
