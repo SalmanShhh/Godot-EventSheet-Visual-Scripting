@@ -7870,3 +7870,53 @@ Reset %s to its inferred name.,%s auf seinen abgeleiteten Namen zurückgesetzt.
 "Pick an object, then a verb","Wähle ein Objekt, dann ein Verb"
 Typing drops straight into the full search across every object.,Tippen springt direkt in die volle Suche über alle Objekte.
 "A group of related actions, conditions, and expressions.","Eine Gruppe zusammengehöriger Aktionen, Bedingungen und Ausdrücke."
+Search types…,Typen suchen…
+Pick a node of this class in the open scene. The variable looks it up when the node is ready (@onready).,"Wähle einen Knoten dieser Klasse in der offenen Szene. Die Variable sucht ihn, wenn der Knoten bereit ist (@onready)."
+Load,Laden
+Load a saved resource file of this class (preload).,Eine gespeicherte Ressourcendatei dieser Klasse laden (preload).
+New,Neu
+Make a new resource of this class or one of its kinds (.new()).,Eine neue Ressource dieser Klasse oder einer ihrer Arten erstellen (.new()).
+One of a named list,Einer aus einer benannten Liste
+New resource,Neue Ressource
+saved but hidden,"gespeichert, aber verborgen"
+not in the Inspector,nicht im Inspektor
+a slider from %s to %s,ein Schieberegler von %s bis %s
+This sheet already has a variable called %s.,Dieses Blatt hat bereits eine Variable namens %s.
+Add variable %s,Variable %s hinzufügen
+Added variable %s.,Variable %s hinzugefügt.
+not in a group,in keiner Gruppe
+A slider from %s to %s in the Inspector.,Ein Schieberegler von %s bis %s im Inspektor.
+Move into a group…,In eine Gruppe verschieben…
+Change look…,Aussehen ändern…
+Edit range…,Bereich bearbeiten…
+Properties…,Eigenschaften…
+Drop the end line on the variable the group should end above.,"Lass die Endlinie auf der Variable fallen, über der die Gruppe enden soll."
+Move the group's end,Das Ende der Gruppe verschieben
+The group now ends above %s.,Die Gruppe endet jetzt über %s.
+"%s opens a group of its own, so the end line cannot stand above it.","%s öffnet eine eigene Gruppe, daher kann die Endlinie nicht darüber stehen."
+"a group of this sheet, or a new name",eine Gruppe dieses Blatts oder ein neuer Name
+Move %s into a group?,%s in eine Gruppe verschieben?
+The Inspector shows it in that group's folder. The group's line is written right above it.,Der Inspektor zeigt sie im Ordner dieser Gruppe. Die Zeile der Gruppe wird direkt darüber geschrieben.
+Ctrl+Z puts it back.,Strg+Z macht es rückgängig.
+Move,Verschieben
+Move %s into %s,%s nach %s verschieben
+%s is in %s now.,%s ist jetzt in %s.
+"Select exported variables whose names start the same way (bullet_count, bullet_speed).","Wähle exportierte Variablen, deren Namen gleich beginnen (bullet_count, bullet_speed)."
+Group these by the start they share?,Diese nach ihrem gemeinsamen Anfang gruppieren?
+"Godot puts only the names that start with the prefix into the group, and shows them without it: bullet_speed reads as Speed.","Godot nimmt nur die Namen in die Gruppe auf, die mit dem Präfix beginnen, und zeigt sie ohne es: bullet_speed liest sich als Speed."
+Ctrl+Z puts them back.,Strg+Z macht es rückgängig.
+Group by prefix,Nach Präfix gruppieren
+%s now holds the names starting %s.,"%s enthält jetzt die Namen, die mit %s beginnen."
+New group…,Neue Gruppe…
+Move into,Verschieben nach
+Group by prefix…,Nach Präfix gruppieren…
+End group here,Gruppe hier beenden
+End the group above %s,Die Gruppe über %s beenden
+Change how %s looks in the Inspector,"Ändern, wie %s im Inspektor aussieht"
+%s has a new look in the Inspector.,%s hat ein neues Aussehen im Inspektor.
+New function…,Neue Funktion…
+Tool buttons,Werkzeug-Knöpfe
+Label,Beschriftung
+Pressing the button in the Inspector runs the function in the editor. The sheet has to be a Tool sheet for it to run there.,"Ein Druck auf den Knopf im Inspektor führt die Funktion im Editor aus. Das Blatt muss ein Werkzeug-Blatt sein, damit sie dort läuft."
+Add Inspector Button,Inspektor-Knopf hinzufügen
+"Added the Inspector button ""%s"", which calls %s.","Inspektor-Knopf ""%s"" hinzugefügt, der %s aufruft."

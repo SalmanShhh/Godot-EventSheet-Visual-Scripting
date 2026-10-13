@@ -180,3 +180,17 @@ static func outside_note(shut: Dictionary) -> String:
 ## The words on an explicit end line.
 static func end_text(name: String) -> String:
 	return EventSheetL10n.translate("%s ends here") % name
+
+
+## The start a set of names share, cut back to its last underscore - what a prefix group would take:
+## bullet_count and bullet_speed share "bullet". "" when they share nothing.
+static func shared_start(names: PackedStringArray) -> String:
+	if names.is_empty():
+		return ""
+	var shared: String = names[0]
+	for each: String in names:
+		while not each.begins_with(shared):
+			shared = shared.substr(0, shared.length() - 1)
+	if shared.contains("_"):
+		shared = shared.substr(0, shared.rfind("_"))
+	return shared

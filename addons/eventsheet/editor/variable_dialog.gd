@@ -29,6 +29,7 @@ signal variable_confirmed(name: String, type_name: String, default_value: Varian
 signal project_global_requested(name: String, type_name: String, value_text: String, target: Dictionary)
 
 const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
+const ExportSections := preload("res://addons/eventsheet/editor/interaction/export_sections.gd")
 
 ## The scopes the window offers, in the sheet's own order.
 const CHOOSABLE_SCOPES: PackedStringArray = EventSheetVariableSentence.SCOPE_ORDER
@@ -146,6 +147,8 @@ var _global_target_row: Control = null
 var _name_edit: LineEdit = null
 var _name_warning: EventSheetPopupUI.StateNote = null
 var _type_option: OptionButton = null
+var _type_row: Control = null
+var _type_search: LineEdit = null
 ## The class a node or resource slot accepts, and the free-typed type of an @onready lookup.
 var _class_edit: LineEdit = null
 var _class_row: Control = null
@@ -156,6 +159,7 @@ var _bool_check: CheckBox = null
 var _color_button: ColorPickerButton = null
 var _axis_box: HBoxContainer = null
 var _items_button: Button = null
+var _slot_buttons: HBoxContainer = null
 var _value_note: Label = null
 var _items_window: AcceptDialog = null
 var _items_edit: TextEdit = null
@@ -277,8 +281,18 @@ func _build_variable_card() -> VBoxContainer:
 	_name_warning = EventSheetPopupUI.StateNote.new(380.0)
 	box.add_child(_name_warning)
 	_type_option = EventSheetPopupUI.described_option()
+	_type_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_type_option.item_selected.connect(func(_index: int) -> void: _on_type_changed())
-	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Type"), _type_option))
+	var type_box: HBoxContainer = HBoxContainer.new()
+	type_box.add_child(_type_option)
+	# The list is long; a few letters of a type, of its words or of a class find it.
+	_type_search = LineEdit.new()
+	_type_search.placeholder_text = EventSheetL10n.translate("Search types…")
+	_type_search.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(150.0), 0.0)
+	EventSheetCompletionPopup.attach_entries(_type_search, type_search_entries)
+	type_box.add_child(_type_search)
+	_type_row = EventSheetPopupUI.form_row(EventSheetL10n.translate("Type"), type_box)
+	box.add_child(_type_row)
 	_class_edit = LineEdit.new()
 	_class_edit.placeholder_text = "Node2D, Area2D, EnemyStats…"
 	_class_edit.text_changed.connect(func(_text: String) -> void: _refresh_reading())
@@ -361,6 +375,13 @@ func _build_value_box() -> HBoxContainer:
 	_items_button.tooltip_text = EventSheetL10n.translate("Edit the items one per line instead of typing a literal.")
 	_items_button.pressed.connect(_open_items_editor)
 	box.add_child(_items_button)
+	# A node or resource slot is filled the way the Inspector fills one - pick the node, load a file
+	# or make a new one - each through the editor's own window.
+	_slot_buttons = HBoxContainer.new()
+	_slot_button(EventSheetL10n.translate("Pick"), EventSheetL10n.translate("Pick a node of this class in the open scene. The variable looks it up when the node is ready (@onready)."), _pick_node)
+	_slot_button(EventSheetL10n.translate("Load"), EventSheetL10n.translate("Load a saved resource file of this class (preload)."), _load_resource)
+	_slot_button(EventSheetL10n.translate("New"), EventSheetL10n.translate("Make a new resource of this class or one of its kinds (.new())."), _new_resource)
+	box.add_child(_slot_buttons)
 	_write_type_check = _tick(box, EventSheetL10n.translate("Write the type in code"))
 	return box
 
@@ -631,17 +652,74 @@ func _type_index(type_name: String) -> int:
 
 ## The Node2D or Resource entry a class name belongs under, -1 for a name that is neither.
 func _class_entry(type_name: String) -> int:
-	if type_name.is_empty() or not type_name[0].to_upper() == type_name[0] or type_name.contains("["):
-		return -1
-	if ClassDB.class_exists(type_name):
-		if ClassDB.is_parent_class(type_name, "Node"):
+	match slot_kind(type_name):
+		"node":
 			return _type_index("Node2D")
-		return _type_index("Resource") if ClassDB.is_parent_class(type_name, "Resource") else -1
-	for global_class: Dictionary in ProjectSettings.get_global_class_list():
-		if str(global_class.get("class", "")) == type_name:
-			var base: String = str(global_class.get("base", ""))
-			return _type_index("Node2D") if ClassDB.class_exists(base) and ClassDB.is_parent_class(base, "Node") else _type_index("Resource")
+		"resource":
+			return _type_index("Resource")
 	return -1
+
+
+## "node" or "resource" for a class a slot can hold - Godot's own, or a class_name of the project
+## followed up its bases - and "" for anything else.
+static func slot_kind(type_name: String) -> String:
+	if type_name.is_empty() or type_name.contains("["):
+		return ""
+	var bases: Dictionary = {}
+	for global_class: Dictionary in ProjectSettings.get_global_class_list():
+		bases[str(global_class.get("class", ""))] = str(global_class.get("base", ""))
+	var base: String = type_name
+	for _step: int in range(32):
+		if ClassDB.class_exists(base):
+			if ClassDB.is_parent_class(base, "Node"):
+				return "node"
+			return "resource" if ClassDB.is_parent_class(base, "Resource") else ""
+		if not bases.has(base):
+			return ""
+		base = str(bases[base])
+	return ""
+
+
+## "Search types…": every type whose name, words or sentence hold what is typed - the list's own and
+## the sheet's enums - then the node and resource classes starting with it, each entry picking itself.
+func type_search_entries(typed: String) -> Array:
+	var wanted: String = typed.strip_edges().to_lower()
+	var found: Array = []
+	if wanted.is_empty():
+		return found
+	for entry: Array in TYPES:
+		var words: String = EventSheetL10n.translate(str(entry[2]))
+		if ("%s %s %s" % [entry[1], words, EventSheetL10n.translate(str(entry[3]))]).to_lower().contains(wanted):
+			found.append(_type_search_entry(str(entry[1]), words))
+	for enum_name: String in _enum_names():
+		if enum_name.to_lower().contains(wanted):
+			found.append(_type_search_entry(enum_name, EventSheetL10n.translate("One of a named list")))
+	var classes: PackedStringArray = ClassDB.get_class_list()
+	for global_class: Dictionary in ProjectSettings.get_global_class_list():
+		classes.append(str(global_class.get("class", "")))
+	var listed: PackedStringArray = type_ids()
+	var shown: int = 0
+	for found_class: String in classes:
+		if shown >= 8 or listed.has(found_class) or not found_class.to_lower().begins_with(wanted):
+			continue
+		var kind: String = slot_kind(found_class)
+		if not kind.is_empty():
+			found.append(_type_search_entry(found_class, EventSheetL10n.translate("A node in the scene") if kind == "node"
+				else EventSheetL10n.translate("A resource file")))
+			shown += 1
+	# A type whose NAME starts with what was typed leads; one only its words mention follows.
+	var named: Array = found.filter(func(entry: Dictionary) -> bool: return str(entry["text"]).to_lower().begins_with(wanted))
+	return named + found.filter(func(entry: Dictionary) -> bool: return not named.has(entry))
+
+
+func _type_search_entry(type_name: String, words: String) -> Dictionary:
+	return {"text": "%s · %s" % [type_name, words], "detail": "", "open": func() -> void: pick_type(type_name)}
+
+
+## Puts the variable on `type_name`; a class lands on its slot with the class written beside it.
+func pick_type(type_name: String) -> void:
+	_select_stored_type(type_name)
+	_type_search.text = ""
 
 
 ## The sheet's enum names, from the enum provider.
@@ -690,7 +768,7 @@ func _on_type_changed(reset_class: bool = true) -> void:
 	if reset_class:
 		_class_edit.text = meta if is_class else ""
 	_class_row.visible = is_class or _onready_check.button_pressed
-	_type_option.get_parent().visible = not _onready_check.button_pressed
+	_type_row.visible = not _onready_check.button_pressed
 	_refresh_value_editor()
 	_refresh_const_ui()
 	_refresh_default_hint()
@@ -726,6 +804,10 @@ func _refresh_value_editor() -> void:
 		_color_button.color = parsed_color
 	_value_note.visible = kind == "none"
 	_items_button.visible = kind == "collection"
+	var slot: String = slot_kind(_selected_stored_type()) if kind == "class" or _onready_check.button_pressed else ""
+	_slot_buttons.get_child(0).visible = slot == "node" and _scope == "tree"
+	_slot_buttons.get_child(1).visible = slot == "resource"
+	_slot_buttons.get_child(2).visible = slot == "resource"
 	_rebuild_axes(kind)
 	var placeholders: Dictionary = {"class": EventSheetL10n.translate("(set in the Inspector)"), "callable": "_bake", "enum": "Kind.ROUND",
 		"code": "%s()" % _selected_stored_type(), "collection": "{\"key\": 1}" if _selected_stored_type().begins_with("Dictionary") else "[1, 2, 3]"}
@@ -762,6 +844,60 @@ func _rebuild_axes(kind: String) -> void:
 			for each: LineEdit in edits:
 				parts.append(each.text.strip_edges() if not each.text.strip_edges().is_empty() else "0")
 			_set_value_words("%s(%s)" % [type_name, ", ".join(parts)]))
+
+
+func _slot_button(words: String, tip: String, action: Callable) -> void:
+	var button: Button = Button.new()
+	button.text = words
+	button.tooltip_text = tip
+	button.pressed.connect(action)
+	_slot_buttons.add_child(button)
+
+
+static func _editor() -> Object:
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		return Engine.get_singleton("EditorInterface")
+	return null
+
+
+func _pick_node() -> void:
+	if _editor() != null:
+		_editor().popup_node_selector(_on_node_picked, [StringName(_selected_stored_type())])
+
+
+func _load_resource() -> void:
+	if _editor() != null:
+		_editor().popup_quick_open(_on_resource_loaded, [StringName(_selected_stored_type())])
+
+
+func _new_resource() -> void:
+	if _editor() != null:
+		_editor().popup_create_dialog(_on_resource_created, StringName(_selected_stored_type()), "",
+			EventSheetL10n.translate("New resource"), [])
+
+
+## A node picked in the open scene: the value is its lookup ($Muzzle), which only resolves once this
+## node is in the scene, so On ready is ticked with it.
+func _on_node_picked(path: NodePath) -> void:
+	var text: String = str(path)
+	if text.is_empty():
+		return
+	var plain: bool = true
+	for part: String in text.split("/"):
+		plain = plain and part.is_valid_identifier()
+	if not _onready_check.button_pressed:
+		_onready_check.button_pressed = true
+	_set_value_words("$%s" % text if plain else "get_node(\"%s\")" % text.c_escape())
+
+
+func _on_resource_loaded(path: String) -> void:
+	if not path.is_empty():
+		_set_value_words("preload(\"%s\")" % path)
+
+
+func _on_resource_created(type_name: String) -> void:
+	if not type_name.is_empty():
+		_set_value_words("%s.new()" % type_name)
 
 
 ## What the value field offers for the type in front of it: an enum's members, written as
@@ -1042,6 +1178,7 @@ func open_for_edit(
 	var is_tree: bool = _scope == "tree"
 	_onready_check.set_pressed_no_signal(onready and is_tree)
 	_default_edit.text = _default_display_text(default_value)
+	_type_search.text = ""
 	_select_stored_type(type_name)
 	_show_value(_default_display_text(default_value))
 	_const_check.set_pressed_no_signal(is_constant)
@@ -1104,6 +1241,26 @@ func open_for_edit(
 		_dialog.popup_centered()
 		_name_edit.grab_focus()
 		_name_edit.select_all()
+
+
+## Turns the open window to the part a door promised - "look", the look's "details" or the "group"
+## field - on `look_id` when one is named, and returns the control it focuses.
+func focus_part(part: String, look_id: String = "") -> Control:
+	if not look_id.is_empty() and not _exported_check.disabled:
+		_exported_check.button_pressed = true
+		_select_look(look_id)
+		_rebuild_look_details()
+		_refresh_reading()
+	var target: Control = _group_edit if part == "group" else _look_option
+	if part == "details":
+		for row: Node in _look_details.get_children():
+			var field: Control = row.get_child(row.get_child_count() - 1) as Control
+			if field is LineEdit:
+				target = field
+				break
+	if target.is_inside_tree():
+		target.call_deferred("grab_focus")
+	return target
 
 
 func _close() -> void:
@@ -1423,12 +1580,8 @@ func suggested_prefix() -> String:
 			if descriptor is Dictionary and descriptor.get("attributes") is Dictionary \
 					and str((descriptor.get("attributes") as Dictionary).get("group", "")) == group:
 				names.append(str(key))
-	var shared: String = names[0]
-	for each: String in names:
-		while not each.begins_with(shared):
-			shared = shared.substr(0, shared.length() - 1)
-	shared = shared.substr(0, shared.rfind("_") + 1) if shared.contains("_") else shared
-	return shared.trim_suffix("_") if not shared.trim_suffix("_").is_empty() else group.to_snake_case()
+	var shared: String = ExportSections.shared_start(names)
+	return shared if not shared.is_empty() else group.to_snake_case()
 
 
 ## The names the sheet already uses at one section level, for the section fields' completion.

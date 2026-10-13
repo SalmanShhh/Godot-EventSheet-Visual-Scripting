@@ -191,6 +191,9 @@ static func row_identity(row_data: EventRowData) -> Dictionary:
 ## Drop-onto-variable: fold both into the target's folder (or a fresh "New Group" when the target
 ## has none), then open the naming popup select-all'd - drag, type the name, Enter.
 func on_group_requested(source_row: EventRowData, target_row: EventRowData) -> void:
+	# A group's end line dropped on a member moves where the group ends instead.
+	if _dock._is_group_end_line(source_row) and _dock._variable_gestures.drop_group_end(source_row, target_row, "before"):
+		return
 	var source: Dictionary = row_identity(source_row)
 	var target: Dictionary = row_identity(target_row)
 	if source.is_empty() or target.is_empty():

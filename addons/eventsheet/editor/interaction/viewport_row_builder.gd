@@ -10992,8 +10992,10 @@ func group_variable_rows_by_folder(rows: Array[EventRowData], sheet: EventSheetR
 			if not sections.is_empty():
 				continue
 		if is_member and variable.exported:
+			pass_state["end_owner"] = variable.name
 			for section: Dictionary in ExportSections.from_attributes(variable.attributes):
 				_enter_export_section(pass_state, section, null)
+			pass_state["end_owner"] = ""
 			var shut: Dictionary = walk.place(variable.name)
 			if not shut.is_empty():
 				row_data.help_note = ExportSections.outside_note(shut)
@@ -11042,6 +11044,9 @@ func _enter_export_section(pass_state: Dictionary, section: Dictionary, stand_in
 				rows.append(stand_in)
 			return
 		var end_row: EventRowData = _section_row(stand_in, "end", kind, closing, "", pass_state)
+		# An end the lift put on a member names it, so dragging the line moves the end to another one.
+		if not str(pass_state.get("end_owner", "")).is_empty():
+			(end_row.spans[0].metadata as Dictionary)["group_end_owner"] = pass_state["end_owner"]
 		if parent != null:
 			parent.children.append(end_row)
 		else:

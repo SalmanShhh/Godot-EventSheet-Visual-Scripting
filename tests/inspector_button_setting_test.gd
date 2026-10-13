@@ -31,7 +31,7 @@ static func run() -> bool:
 	ok = _check("the one-argument line round-trips byte-identically",
 		_roundtrip(ONE_ARGUMENT), ONE_ARGUMENT) and ok
 	ok = _check("Add Inspector Button writes the line and the function it calls",
-		_added_button(), "@export_tool_button(\"Bake\") var _btn_bake: Callable = bake") and ok
+		_added_button(), "@export_tool_button(\"Bake\") var bake_button = _bake") and ok
 	return ok
 
 
@@ -80,7 +80,7 @@ static func _added_button() -> String:
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	dock.setup(sheet)
-	dock.add_inspector_button("Bake")
+	dock._variable_gestures.add_inspector_button("Bake", "", "", "")
 	var emitted: String = str(SheetCompiler.compile(dock._current_sheet, PROBE_PATH).get("output", ""))
 	var functions: int = dock._current_sheet.functions.size()
 	dock.free()

@@ -414,6 +414,9 @@ func build(root: Node) -> void:
 	add_popup.add_item("Instance Variable…", 1)
 	add_popup.add_item("Local Variable…", 2)
 	add_popup.add_item("Global Variable…", 8)
+	# A tool's verbs (Bake, Clear) are buttons in the Inspector: label, editor icon, the function it
+	# runs and the group it sits in, asked in one small question.
+	add_popup.add_item("Inspector Button…", 17)
 	# Declare ▸ - every way to give something a NAME, gathered in one place: what the sheet
 	# remembers (Variable, Constant, Collection), reaches (Node reference), uses (Resource),
 	# announces (Signal), and the named values a thing can take (Enum). Each entry opens the
@@ -497,6 +500,7 @@ func build(root: Node) -> void:
 			14: _dock._on_add_action_requested()
 			15: _dock._on_add_group_requested()
 			16: _dock._on_add_comment_requested()
+			17: _dock._variable_gestures.prompt_inspector_button()
 	)
 	# Every key on this menu, printed from EventSheetShortcuts through the ONE seam that puts a key
 	# on a menu item. A hint only: the keys are already routed in the viewport's own key handling,

@@ -51,6 +51,31 @@
 - Workspace first-open closure: 324 files / 159,464 lines -> 303 / 154,300. Timed in a busy
   machine the change sits inside the noise (three alternating pairs, medians: editor load 17.6 s
   -> 17.0 s, build 22.4 s -> 20.9 s); the closure figure is the one to hold it to.
+### Added: a variable row's own gestures - its doors, its submenus, its groups and its buttons
+
+- **The help strip speaks for a selected variable.** Under the sheet it reads the row as code - `int
+  health = 10 · in the Inspector · not in a group` - adds why a prefix group shuts it out or the range
+  its slider keeps, and offers the doors that fit: Move into a group…, Change look…, Edit range… and
+  Properties…. Nothing is added inside the row.
+- **Right-click > Inspector look and Group.** Inspector look lists the plain editor and every look the
+  type can wear, ticked at the one it wears; a look with details (min, max, choices) ends in "…" and
+  opens the variable window on them. Group lists the sheet's groups (Move into), New group… (the old
+  Group Under a Heading), Group by prefix… and End group here.
+- **Group by prefix…** proposes the start the selected names share (`bullet_count`, `bullet_speed`
+  -> Bullet / bullet) and writes the one line `@export_group("Bullet", "bullet")` above the first.
+- **End group here** writes `@export_group("")` above the variable, and the end line it draws can be
+  dragged onto another variable to move where the group ends.
+- **Add > Inspector button…** asks for the label, an editor icon (checked against the editor's own
+  icons), the function it runs - one of the sheet's or a new one - and its group, showing the code as
+  it is typed. It writes Godot's own spelling, `@export_tool_button("Bake", "Bake") var bake_button =
+  _bake`, which opens back as the same row. The canvas menu's Add Inspector Button… asks the same.
+- **The Ghost Row reads a variable sentence.** `max_jumps is a whole number from 1 to 3, in the
+  Inspector` declares `@export_range(1, 3, 1) var max_jumps: int = 1`; "saved but hidden" and "in
+  group Bullet" are understood too.
+- **The variable window searches its types and fills its slots.** Search types… beside the Type
+  dropdown finds a type by its name, its words or its sentence, and any node or resource class by
+  name. A node slot among the events gets Pick (the editor's node picker; the value becomes `$Muzzle`
+  looked up when the node is ready), a resource slot Load (`preload("res://…")`) and New (`Curve.new()`).
 
 ### Fixed: the variable window speaks the editor's language
 

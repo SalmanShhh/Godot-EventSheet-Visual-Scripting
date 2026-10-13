@@ -186,8 +186,6 @@ func _on_variable_context_menu_id_pressed(id: int) -> void:
 			_toggle_context_variable_constant()
 		_dock.VARIABLE_MENU_REMEMBER:
 			_toggle_context_variable_remember()
-		_dock.VARIABLE_MENU_GROUP:
-			_group_context_selection()
 		_dock.VARIABLE_MENU_SORT_AZ:
 			sort_variables_alphabetically()
 		_dock.VARIABLE_MENU_GRID_EXPORT:
@@ -428,7 +426,7 @@ func _resolve_tree_variable(var_name: String) -> LocalVariable:
 	return null
 
 
-## "Group Under a Heading..." routes the multi-selection (or just the clicked row)
+## Group ▸ New group… routes the multi-selection (or just the clicked row)
 ## into the same folder gesture the drag performs, so grouping stays discoverable
 ## for users who never find the drag-onto-variable gesture.
 func _group_context_selection() -> void:

@@ -91,6 +91,8 @@ const CLICK_ONLY := [
 	"res://addons/eventsheet/editor/dock/workspaces.gd",
 	"res://addons/eventsheet/editor/bbcode_selection_bar.gd",
 	"res://addons/eventsheet/editor/dock/text_listing.gd",
+	# A variable row's doors, submenus and drags: read on the first click that asks for one.
+	"res://addons/eventsheet/editor/dock/variable_gestures.gd",
 ]
 
 ## The ids a first-paint file spells out rather than reading off a file it must not compile, each

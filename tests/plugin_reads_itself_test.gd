@@ -141,7 +141,9 @@ const KNOWN_DRIFT: PackedStringArray = []
 const DERIVED_FLOOR: Dictionary = {
 	"res://addons/eventforge/compiler/sheet_compiler.gd": 6,
 	"res://addons/eventsheet/editor/dock/multi_view_manager.gd": 11,
-	"res://addons/eventsheet/editor/dock/quick_prompt_dialogs.gd": 16,
+	# 13: the Inspector button prompt and its three generic calls moved out of this file with the
+	# prompt (the variable gestures ask it now).
+	"res://addons/eventsheet/editor/dock/quick_prompt_dialogs.gd": 13,
 	"res://addons/eventsheet/editor/event_sheet_exposed_node.gd": 8,
 	"res://addons/eventsheet/editor/objects_panel.gd": 10,
 }

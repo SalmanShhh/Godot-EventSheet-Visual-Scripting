@@ -123,6 +123,10 @@ func _refresh(query: String) -> void:
 	var recipe: Dictionary = GhostRecipes.offer_for(query) if typing else {}
 	if not recipe.is_empty():
 		_candidates.push_front({"recipe": recipe})
+	# "max_jumps is a whole number from 1 to 3, in the Inspector" declares the variable it describes.
+	var declared: Dictionary = GhostRecipes.variable_offer_for(query) if typing else {}
+	if not declared.is_empty():
+		_candidates.push_front({"variable": declared})
 	if _chips != null:
 		_chips.visible = not typing and _chips.get_child_count() > 0
 	if _list == null:
@@ -134,6 +138,9 @@ func _refresh(query: String) -> void:
 			continue
 		if candidate.has("recipe"):
 			_list.add_item(GhostRecipes.label_for(candidate["recipe"] as Dictionary))
+			continue
+		if candidate.has("variable"):
+			_list.add_item(GhostRecipes.variable_label_for(candidate["variable"] as Dictionary))
 			continue
 		var definition: ACEDefinition = candidate.get("definition")
 		var summary: String = ""
@@ -210,6 +217,9 @@ func _apply_selected() -> void:
 	if candidate.has("recipe"):
 		_apply_recipe(candidate["recipe"] as Dictionary)
 		return
+	if candidate.has("variable"):
+		apply_variable(candidate["variable"] as Dictionary)
+		return
 	_apply_definition(candidate.get("definition"), candidate.get("params", {}))
 
 
@@ -234,6 +244,29 @@ func _apply_picking(offer: Dictionary) -> void:
 		else:
 			_dock._current_sheet.events.append(EventSheetPickingOffer.event_for(offer, _dock._fresh_uid_token()))
 		return true)
+
+
+## Declares the variable a sentence described, in one undo step, below the sheet's other members -
+## refused, with the reason, when the sheet already has one of that name.
+func apply_variable(offer: Dictionary) -> bool:
+	if _popup != null:
+		_popup.hide()
+	var made: LocalVariable = GhostRecipes.variable_for(offer)
+	if _dock._variable_gestures.member(_dock._current_sheet, made.name) != null:
+		_dock._set_status(EventSheetL10n.translate("This sheet already has a variable called %s.") % made.name, true)
+		return false
+	var added: bool = _dock._perform_undoable_sheet_edit(EventSheetL10n.translate("Add variable %s") % made.name, func() -> bool:
+		var events: Array = _dock._current_sheet.events
+		var last_member: int = -1
+		for index: int in events.size():
+			if events[index] is LocalVariable:
+				last_member = index
+		events.insert(last_member + 1, made)
+		return true)
+	if added:
+		_dock._refresh_after_edit()
+		_dock._mark_dirty(EventSheetL10n.translate("Added variable %s.") % made.name)
+	return added
 
 
 ## Lands a recipe's rows in one undo step. With an event selected the rows go UNDER it, so the move

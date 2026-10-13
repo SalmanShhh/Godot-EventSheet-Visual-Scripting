@@ -7870,3 +7870,53 @@ Reset %s to its inferred name.,%s возвращено к выведенному
 "Pick an object, then a verb","Выберите объект, затем глагол"
 Typing drops straight into the full search across every object.,Ввод сразу переключает на полный поиск по всем объектам.
 "A group of related actions, conditions, and expressions.","Группа связанных действий, условий и выражений."
+Search types…,Искать типы…
+Pick a node of this class in the open scene. The variable looks it up when the node is ready (@onready).,"Выбрать узел этого класса в открытой сцене. Переменная находит его, когда узел готов (@onready)."
+Load,Загрузить
+Load a saved resource file of this class (preload).,Загрузить сохранённый файл ресурса этого класса (preload).
+New,Новый
+Make a new resource of this class or one of its kinds (.new()).,Создать новый ресурс этого класса или одного из его видов (.new()).
+One of a named list,Один из именованного списка
+New resource,Новый ресурс
+saved but hidden,"сохраняется, но скрыто"
+not in the Inspector,не в Инспекторе
+a slider from %s to %s,ползунок от %s до %s
+This sheet already has a variable called %s.,На этом листе уже есть переменная %s.
+Add variable %s,Добавить переменную %s
+Added variable %s.,Переменная %s добавлена.
+not in a group,не в группе
+A slider from %s to %s in the Inspector.,Ползунок от %s до %s в Инспекторе.
+Move into a group…,Переместить в группу…
+Change look…,Изменить вид…
+Edit range…,Изменить диапазон…
+Properties…,Свойства…
+Drop the end line on the variable the group should end above.,"Отпустите линию конца на переменной, над которой группа должна закончиться."
+Move the group's end,Переместить конец группы
+The group now ends above %s.,Теперь группа заканчивается над %s.
+"%s opens a group of its own, so the end line cannot stand above it.","%s открывает свою группу, поэтому линия конца не может стоять над ней."
+"a group of this sheet, or a new name",группа этого листа или новое имя
+Move %s into a group?,Переместить %s в группу?
+The Inspector shows it in that group's folder. The group's line is written right above it.,Инспектор показывает её в папке этой группы. Строка группы пишется прямо над ней.
+Ctrl+Z puts it back.,Ctrl+Z вернёт как было.
+Move,Переместить
+Move %s into %s,Переместить %s в %s
+%s is in %s now.,%s теперь в %s.
+"Select exported variables whose names start the same way (bullet_count, bullet_speed).","Выберите экспортируемые переменные, чьи имена начинаются одинаково (bullet_count, bullet_speed)."
+Group these by the start they share?,Сгруппировать их по общему началу?
+"Godot puts only the names that start with the prefix into the group, and shows them without it: bullet_speed reads as Speed.","Godot помещает в группу только имена, начинающиеся с префикса, и показывает их без него: bullet_speed читается как Speed."
+Ctrl+Z puts them back.,Ctrl+Z вернёт их обратно.
+Group by prefix,Сгруппировать по префиксу
+%s now holds the names starting %s.,"%s теперь содержит имена, начинающиеся с %s."
+New group…,Новая группа…
+Move into,Переместить в
+Group by prefix…,Сгруппировать по префиксу…
+End group here,Закончить группу здесь
+End the group above %s,Закончить группу над %s
+Change how %s looks in the Inspector,Изменить вид %s в Инспекторе
+%s has a new look in the Inspector.,У %s новый вид в Инспекторе.
+New function…,Новая функция…
+Tool buttons,Кнопки инструмента
+Label,Надпись
+Pressing the button in the Inspector runs the function in the editor. The sheet has to be a Tool sheet for it to run there.,"Нажатие кнопки в Инспекторе запускает функцию в редакторе. Чтобы она там выполнялась, лист должен быть листом Tool."
+Add Inspector Button,Добавить кнопку Инспектора
+"Added the Inspector button ""%s"", which calls %s.","Добавлена кнопка Инспектора ""%s"", она вызывает %s."

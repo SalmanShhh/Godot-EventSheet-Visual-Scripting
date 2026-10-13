@@ -7870,3 +7870,53 @@ Reset %s to its inferred name.,%s を推定された名前に戻しました。
 "Pick an object, then a verb",オブジェクトを選び、次に動詞を選びます
 Typing drops straight into the full search across every object.,入力するとすべてのオブジェクトを対象にした全体検索に切り替わります。
 "A group of related actions, conditions, and expressions.",関連するアクション、条件、式のグループです。
+Search types…,型を検索…
+Pick a node of this class in the open scene. The variable looks it up when the node is ready (@onready).,開いているシーンからこのクラスのノードを選びます。ノードの準備ができたときに変数がそれを探します (@onready)。
+Load,読み込む
+Load a saved resource file of this class (preload).,このクラスの保存済みリソースファイルを読み込みます (preload)。
+New,新規
+Make a new resource of this class or one of its kinds (.new()).,このクラスまたはその種類の新しいリソースを作ります (.new())。
+One of a named list,名前付きリストのひとつ
+New resource,新しいリソース
+saved but hidden,保存されるが非表示
+not in the Inspector,インスペクターに出ない
+a slider from %s to %s,%s から %s のスライダー
+This sheet already has a variable called %s.,このシートには既に %s という変数があります。
+Add variable %s,変数 %s を追加
+Added variable %s.,変数 %s を追加しました。
+not in a group,グループに属さない
+A slider from %s to %s in the Inspector.,インスペクターでは %s から %s のスライダーです。
+Move into a group…,グループへ移動…
+Change look…,見た目を変更…
+Edit range…,範囲を編集…
+Properties…,プロパティ…
+Drop the end line on the variable the group should end above.,グループを終わらせたい変数の上に終端線をドロップしてください。
+Move the group's end,グループの終わりを移動
+The group now ends above %s.,グループは %s の上で終わるようになりました。
+"%s opens a group of its own, so the end line cannot stand above it.",%s は自分のグループを開くため、終端線をその上に置けません。
+"a group of this sheet, or a new name",このシートのグループ、または新しい名前
+Move %s into a group?,%s をグループへ移動しますか?
+The Inspector shows it in that group's folder. The group's line is written right above it.,インスペクターはそれをそのグループのフォルダーに表示します。グループの行はそのすぐ上に書かれます。
+Ctrl+Z puts it back.,Ctrl+Z で元に戻ります。
+Move,移動
+Move %s into %s,%s を %s へ移動
+%s is in %s now.,%s は %s に入りました。
+"Select exported variables whose names start the same way (bullet_count, bullet_speed).","名前の始まりが同じエクスポート変数を選んでください (bullet_count, bullet_speed)。"
+Group these by the start they share?,共通の始まりでグループにしますか?
+"Godot puts only the names that start with the prefix into the group, and shows them without it: bullet_speed reads as Speed.",Godot はプレフィックスで始まる名前だけをグループに入れ、それを省いて表示します: bullet_speed は Speed と表示されます。
+Ctrl+Z puts them back.,Ctrl+Z で元に戻ります。
+Group by prefix,プレフィックスでグループ化
+%s now holds the names starting %s.,%s は %s で始まる名前を持つようになりました。
+New group…,新しいグループ…
+Move into,移動先
+Group by prefix…,プレフィックスでグループ化…
+End group here,ここでグループを終える
+End the group above %s,%s の上でグループを終える
+Change how %s looks in the Inspector,インスペクターでの %s の見た目を変更
+%s has a new look in the Inspector.,%s のインスペクターでの見た目が変わりました。
+New function…,新しい関数…
+Tool buttons,ツールボタン
+Label,ラベル
+Pressing the button in the Inspector runs the function in the editor. The sheet has to be a Tool sheet for it to run there.,インスペクターのボタンを押すと、エディターで関数が実行されます。そこで実行するにはシートが Tool シートである必要があります。
+Add Inspector Button,インスペクターボタンを追加
+"Added the Inspector button ""%s"", which calls %s.","インスペクターボタン ""%s"" を追加しました。%s を呼びます。"

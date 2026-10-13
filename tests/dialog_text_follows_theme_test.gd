@@ -20,6 +20,7 @@ const DIALOG_FILES: Array[String] = [
 	"res://addons/eventsheet/editor/small_prompt.gd",
 	"res://addons/eventsheet/editor/inspector_preview_card.gd",
 	"res://addons/eventsheet/editor/dock/quick_prompt_dialogs.gd",
+	"res://addons/eventsheet/editor/dock/variable_gestures.gd",
 	"res://addons/eventsheet/editor/dock/verb_properties_popup.gd",
 	"res://addons/eventsheet/editor/dock/modes_dialog.gd",
 	"res://addons/eventsheet/editor/dock/states_dialog.gd",

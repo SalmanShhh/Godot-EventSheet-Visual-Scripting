@@ -11,6 +11,8 @@ const EVENT_SHEET_FILTERS: Array[String] = ["*.gd ; GDScript EventSheet", "*.tsc
 const TAUGHT_PROVIDERS_SETTING := "eventsheets/vocabulary/taught_provider_scripts"
 ## The help strip's door, when what it shows is the pattern an event was read as rather than a finding.
 const PATTERN_HINT_FAMILY := "pattern_hint"
+## ...and when it is a selected variable's own doors (Move into a group…, Properties…).
+const VARIABLE_LINKS_FAMILY := "variable_links"
 ## Where the workspace announces itself and keeps its palette commands and row menu items: the
 ## storage the public API reads, in a file that names nothing, so building this dock never compiles
 ## the API (and everything the API names) on the way.
@@ -225,6 +227,8 @@ const VARIABLE_MENU_SORT_AZ := 14
 const VARIABLE_MENU_COPY_EXPRESSION := 15
 const VARIABLE_MENU_SHOW_IN_INSPECTOR := 16
 const VARIABLE_MENU_KEEP_IN_STEP := 17
+## Inspector look ▸ - the looks the variable's type can wear (VARIABLE_MENU_GROUP is the Group ▸ beside it).
+const VARIABLE_MENU_LOOK := 18
 ## "Keep in step": the modes a MultiplayerSynchronizer in the scene can hold a variable in, and
 ## the offer to add one to a scene that has none. Their own run of ids, because the submenu owns its
 ## own id_pressed - the parent menu never sees them.
@@ -291,6 +295,8 @@ var _event_count_label: Label = null
 var _row_help_label: Label = null
 var _row_help_button: Button = null
 var _row_help_button_second: Button = null
+## A selected variable can offer three doors (Change look…, Edit range…, Properties…).
+var _row_help_button_third: Button = null
 ## The finding the door acts on, held only between the selection that showed it and the click that
 ## answers it.
 var _row_help_finding: Dictionary = {}
@@ -805,6 +811,12 @@ var _quick_prompts: RefCounted = null:  # one-field prompt popups: Extract-to-Fu
 			_quick_prompts = load("res://addons/eventsheet/editor/dock/quick_prompt_dialogs.gd").new()
 			_quick_prompts.init(self)
 		return _quick_prompts
+var _variable_gestures: RefCounted = null:  # a variable's strip doors, Look / Group submenus, group by prefix, the end line, Inspector button (dock/variable_gestures.gd)
+	get:
+		if _variable_gestures == null:
+			_variable_gestures = load("res://addons/eventsheet/editor/dock/variable_gestures.gd").new()
+			_variable_gestures.init(self)
+		return _variable_gestures
 var _custom_block_dialog: RefCounted = null:  # Custom Block API: schema-driven add/edit dialog for registered kinds (dock/custom_block_dialog.gd)
 	get:
 		if _custom_block_dialog == null:
@@ -2609,7 +2621,16 @@ func _group_children_array(group: EventGroup) -> Array:
 
 
 func _on_row_drop_requested(source_row: EventRowData, target_row: EventRowData, drop_mode: String = "before", copy_mode: bool = false) -> void:
+	# A group's end line is not a row of the sheet: dropping it moves where the group ends.
+	if _is_group_end_line(source_row) and _variable_gestures.drop_group_end(source_row, target_row, drop_mode):
+		return
 	_ace_apply._on_row_drop_requested(source_row, target_row, drop_mode, copy_mode)
+
+
+## True for the line an `@export_group("")` the lift put on a member draws as.
+static func _is_group_end_line(row_data: EventRowData) -> bool:
+	return row_data != null and not row_data.spans.is_empty() and row_data.spans[0].metadata is Dictionary \
+		and (row_data.spans[0].metadata as Dictionary).has("group_end_owner")
 
 
 func _on_rows_drop_requested(source_rows: Array, target_row: EventRowData, drop_mode: String = "before", copy_mode: bool = false) -> void:
@@ -6036,35 +6057,13 @@ func _on_empty_space_context_menu_id_pressed(id: int) -> void:
 		EMPTY_MENU_ADD_INSTANCE_VARIABLE:
 			_on_add_instance_variable_requested()
 		EMPTY_MENU_ADD_INSPECTOR_BUTTON:
-			_quick_prompts.prompt_inspector_button(add_inspector_button)
+			_variable_gestures.prompt_inspector_button()
 		EMPTY_MENU_INSERT_SNIPPET:
 			_open_insert_snippet()
 		EMPTY_MENU_INCLUDE_SHEET:
 			_shared_sheets.open_include_sheet()
 		EMPTY_MENU_CLASS_HEAD_LINE:
 			_head_actions.open_add_menu()
-
-
-## The `@export_tool_button` line and the empty function it calls, in ONE undo step. The button
-## is a labelled function, which is the shape the sheet already emits for one - so nothing new is
-## written to the file and the line round-trips exactly as an authored button always has.
-func add_inspector_button(label: String) -> bool:
-	var button_label: String = label.strip_edges()
-	if button_label.is_empty() or _current_sheet == null:
-		return false
-	var function_name: String = _unique_extracted_function_name(_current_sheet, button_label.to_snake_case())
-	var changed: bool = _perform_undoable_sheet_edit("Add Inspector Button", func() -> bool:
-		var event_function: EventFunction = EventFunction.new()
-		event_function.function_name = function_name
-		event_function.tool_button_label = button_label
-		_current_sheet.functions.append(event_function)
-		return true)
-	if changed:
-		var note: String = "Added the Inspector button \"%s\" and the function it calls." % button_label
-		if not _current_sheet.tool_mode:
-			note += "  (turn on Tool in the Sheet Type dialog for it to run in the editor.)"
-		_mark_dirty(note)
-	return changed
 
 
 ## "Add an Inspector button for it…": asks what the button says (the function's name, read as words, to
@@ -8247,8 +8246,9 @@ func _update_row_help_strip(row_data: EventRowData) -> void:
 		return
 	_row_help_label.visible = false
 	_row_help_button.visible = false
-	if _row_help_button_second != null:
-		_row_help_button_second.visible = false
+	for door: Button in [_row_help_button_second, _row_help_button_third]:
+		if door != null:
+			door.visible = false
 	if row_data == null or _current_sheet == null:
 		return
 	# The findings were joined onto the row when the sheet was built - one join, read back here, so
@@ -8292,15 +8292,41 @@ func _update_row_help_strip(row_data: EventRowData) -> void:
 ## place that offers it is the head band's migrate dialog, not a button under one row - and it wears
 ## the strip's ordinary muted colour rather than the warning one, because a row written in the older
 ## spelling is not a warning. A row with a finding never reaches here: something being wrong outranks
-## something being older. The row's help note (a variable outside the group above it, and why) is
-## said the same way, when there is no newer spelling to say.
+## something being older. A selected variable is said the same way when there is no newer spelling -
+## its type, name and value, whether and where the Inspector shows it, why it is outside the group
+## above it - with its own doors (Move into a group…, Change look…, Edit range…, Properties…).
 func _show_successor_hint(row_data: EventRowData) -> bool:
-	if row_data.successor_hint.is_empty() and row_data.help_note.is_empty():
+	var said: String = row_data.successor_hint
+	var links: PackedStringArray = PackedStringArray()
+	if said.is_empty() and row_data.variable_row:
+		var strip: Dictionary = _variable_gestures.strip_for(row_data, _current_sheet)
+		said = str(strip.get("text", ""))
+		links = strip.get("links", PackedStringArray())
+	if said.is_empty():
+		said = row_data.help_note
+	if said.is_empty():
 		return false
-	_row_help_label.text = row_data.successor_hint if not row_data.successor_hint.is_empty() else row_data.help_note
+	_row_help_label.text = said
 	_row_help_label.tooltip_text = _row_help_label.text
 	_row_help_label.modulate = EventSheetActiveTheme.reading().muted_text_color
 	_row_help_label.visible = true
+	if not links.is_empty():
+		_row_help_finding = {"family": VARIABLE_LINKS_FAMILY, "links": links, "row": row_data}
+		var doors: Array = [_row_help_button, _row_help_button_second, _row_help_button_third]
+		for index: int in doors.size():
+			if doors[index] != null:
+				(doors[index] as Button).visible = index < links.size()
+				(doors[index] as Button).text = _variable_gestures.link_label(links[index]) if index < links.size() else ""
+	return true
+
+
+## One of a selected variable's doors, by its place on the strip; false when the strip is not showing them.
+func _run_variable_link(index: int) -> bool:
+	if str(_row_help_finding.get("family", "")) != VARIABLE_LINKS_FAMILY:
+		return false
+	var links: PackedStringArray = _row_help_finding.get("links", PackedStringArray())
+	if index < links.size():
+		_variable_gestures.run_link(links[index], _row_help_finding.get("row") as EventRowData)
 	return true
 
 
@@ -8342,7 +8368,7 @@ func _pattern_hint_text(row_data: EventRowData) -> String:
 ## fix is the very dock operation its inbox chip runs - one gesture, wherever it was clicked from.
 func apply_selected_row_fix() -> void:
 	var finding: Dictionary = _row_help_finding
-	if finding.is_empty():
+	if finding.is_empty() or _run_variable_link(0):
 		return
 	if str(finding.get("family", "")) == PATTERN_HINT_FAMILY:
 		load(PATTERN_MANUAL_PATH).open_page(str(finding.get("pattern", "")))
@@ -8374,7 +8400,7 @@ func apply_selected_row_fix() -> void:
 ## them should be able to see both words at once.
 func apply_selected_row_second_fix() -> void:
 	var finding: Dictionary = _row_help_finding
-	if str(finding.get("second_fix", "")) != EventSheetMigrationFindings.FIX_KEEP_AS_CODE:
+	if _run_variable_link(1) or str(finding.get("second_fix", "")) != EventSheetMigrationFindings.FIX_KEEP_AS_CODE:
 		return
 	_keep_as_code_dialog.open(finding)
 

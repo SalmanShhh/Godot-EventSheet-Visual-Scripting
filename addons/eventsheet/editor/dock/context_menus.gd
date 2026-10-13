@@ -190,7 +190,6 @@ func build_all() -> void:
 	_dock._variable_context_menu.add_item("Convert Scope", _dock.VARIABLE_MENU_CONVERT_SCOPE)
 	_dock._variable_context_menu.add_item("Toggle Constant", _dock.VARIABLE_MENU_TOGGLE_CONST)
 	_dock._variable_context_menu.add_item("Remember Between Runs", _dock.VARIABLE_MENU_REMEMBER)
-	_dock._variable_context_menu.add_item("Group Under a Heading…", _dock.VARIABLE_MENU_GROUP)
 	# The list is in the order it was written; this is how you ask for alphabetical, and it
 	# WRITES that order rather than sorting the view behind your back.
 	_dock._variable_context_menu.add_item("Sort A-Z", _dock.VARIABLE_MENU_SORT_AZ)
@@ -199,6 +198,13 @@ func build_all() -> void:
 	# runs); "Show in Inspector" is the one tick that turns a variable into a designer knob.
 	_dock._variable_context_menu.add_item("Copy as Expression", _dock.VARIABLE_MENU_COPY_EXPRESSION)
 	_dock._variable_context_menu.add_check_item("Show in Inspector", _dock.VARIABLE_MENU_SHOW_IN_INSPECTOR)
+	# How it shows there, and which folder it sits in: both filled from the variable as they open.
+	_variable_submenu("VariableLookSubmenu", "Inspector look", _dock.VARIABLE_MENU_LOOK,
+		func(menu: PopupMenu) -> void: _dock._variable_gestures.fill_look_menu(menu),
+		func(id: int) -> void: _dock._variable_gestures.on_look_menu(id))
+	_variable_submenu("VariableGroupSubmenu", "Group", _dock.VARIABLE_MENU_GROUP,
+		func(menu: PopupMenu) -> void: _dock._variable_gestures.fill_group_menu(menu),
+		func(id: int) -> void: _dock._variable_gestures.on_group_menu(id))
 	# "Keep in step": whether a MultiplayerSynchronizer in this object's SCENE replicates this
 	# value, and in which of the three modes. Filled the moment it opens, because the answer is a
 	# fact of a file this dock does not own - and the submenu is named after the synchronizer that
@@ -882,6 +888,15 @@ func _fill_group_runs_on_submenu() -> void:
 		var choices: Array[Dictionary] = EventSheetGroupFacts.runs_on_choices()
 		menu.add_radio_check_item(str(choices[EventSheetGroupFacts.runs_on_index(value)].get("label", "")), mode_id)
 		menu.set_item_checked(menu.get_item_count() - 1, current == value)
+
+
+## A submenu of the variable menu that `fill` builds each time it opens and `pressed` answers.
+func _variable_submenu(node_name: String, words: String, item_id: int, fill: Callable, pressed: Callable) -> void:
+	var submenu: PopupMenu = PopupMenu.new()
+	submenu.name = node_name
+	submenu.about_to_popup.connect(func() -> void: fill.call(submenu))
+	submenu.id_pressed.connect(pressed)
+	_dock._variable_context_menu.add_submenu_node_item(words, submenu, item_id)
 
 
 ## The Keep in step submenu, built from the SCENE every time it opens. With a synchronizer it

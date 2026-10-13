@@ -7870,3 +7870,53 @@ Reset %s to its inferred name.,已将 %s 重置为推断的名称。
 "Pick an object, then a verb","先选对象,再选动词"
 Typing drops straight into the full search across every object.,输入后会直接进入针对所有对象的完整搜索。
 "A group of related actions, conditions, and expressions.",一组相关的动作、条件和表达式。
+Search types…,搜索类型…
+Pick a node of this class in the open scene. The variable looks it up when the node is ready (@onready).,在打开的场景中选取此类的节点。节点就绪时变量会查找它 (@onready)。
+Load,加载
+Load a saved resource file of this class (preload).,加载此类的已保存资源文件 (preload)。
+New,新建
+Make a new resource of this class or one of its kinds (.new()).,新建此类或其某个子类的资源 (.new())。
+One of a named list,命名列表中的一项
+New resource,新建资源
+saved but hidden,保存但隐藏
+not in the Inspector,不在检查器中
+a slider from %s to %s,从 %s 到 %s 的滑块
+This sheet already has a variable called %s.,此表已有名为 %s 的变量。
+Add variable %s,添加变量 %s
+Added variable %s.,已添加变量 %s。
+not in a group,不在任何分组中
+A slider from %s to %s in the Inspector.,在检查器中是从 %s 到 %s 的滑块。
+Move into a group…,移入分组…
+Change look…,更改外观…
+Edit range…,编辑范围…
+Properties…,属性…
+Drop the end line on the variable the group should end above.,把结束线放到分组应在其上方结束的变量上。
+Move the group's end,移动分组的结束位置
+The group now ends above %s.,分组现在在 %s 上方结束。
+"%s opens a group of its own, so the end line cannot stand above it.","%s 开启了自己的分组,所以结束线不能放在它上方。"
+"a group of this sheet, or a new name","此表的分组,或新名称"
+Move %s into a group?,把 %s 移入分组?
+The Inspector shows it in that group's folder. The group's line is written right above it.,检查器会在该分组的文件夹中显示它。分组那一行写在它的正上方。
+Ctrl+Z puts it back.,Ctrl+Z 可撤销。
+Move,移动
+Move %s into %s,把 %s 移入 %s
+%s is in %s now.,%s 现在在 %s 中。
+"Select exported variables whose names start the same way (bullet_count, bullet_speed).","请选择名称开头相同的导出变量 (bullet_count, bullet_speed)。"
+Group these by the start they share?,按它们共同的开头分组?
+"Godot puts only the names that start with the prefix into the group, and shows them without it: bullet_speed reads as Speed.","Godot 只把以该前缀开头的名称放入分组,并在显示时去掉前缀:bullet_speed 显示为 Speed。"
+Ctrl+Z puts them back.,Ctrl+Z 可撤销。
+Group by prefix,按前缀分组
+%s now holds the names starting %s.,%s 现在包含以 %s 开头的名称。
+New group…,新建分组…
+Move into,移入
+Group by prefix…,按前缀分组…
+End group here,在此结束分组
+End the group above %s,在 %s 上方结束分组
+Change how %s looks in the Inspector,更改 %s 在检查器中的外观
+%s has a new look in the Inspector.,%s 在检查器中有了新外观。
+New function…,新建函数…
+Tool buttons,工具按钮
+Label,标签
+Pressing the button in the Inspector runs the function in the editor. The sheet has to be a Tool sheet for it to run there.,在检查器中按下按钮会在编辑器中运行该函数。表必须是 Tool 表才能在那里运行。
+Add Inspector Button,添加检查器按钮
+"Added the Inspector button ""%s"", which calls %s.","已添加检查器按钮 ""%s"",它调用 %s。"
