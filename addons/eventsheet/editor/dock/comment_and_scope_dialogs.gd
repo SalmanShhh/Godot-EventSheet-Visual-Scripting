@@ -88,6 +88,11 @@ func _on_comment_dialog_confirmed() -> void:
 	var new_color: Color = _comment_color_button.color
 	var documentation: bool = _comment_manual_check.button_pressed
 	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Comment", func() -> bool:
+		# An OK that changed nothing is not an edit: no undo step, and the sheet stays clean (for an
+		# opened .gd that means no rewrite at all).
+		if target.text == new_text and target.custom_color == new_color \
+				and target.is_documentation() == documentation:
+			return false
 		target.text = new_text
 		target.custom_color = new_color
 		# Leaves the marker completely alone when the side has not changed, so a comment lifted as

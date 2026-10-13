@@ -75,7 +75,43 @@ static func run() -> bool:
 	all_passed = _check("find/replace counts the scope-target hit", int(counter.get("count", 0)) >= 1, true) and all_passed
 
 	editor.free()
+	all_passed = _test_untouched_comment_ok_is_no_edit() and all_passed
 	return all_passed
+
+
+class CountingUndoManager:
+	extends NoopUndoManager
+	var commits: int = 0
+
+	func commit_action() -> void:
+		commits += 1
+
+
+## OK on Edit Comment with nothing changed is not an edit: no undo step, and the sheet stays clean.
+static func _test_untouched_comment_ok_is_no_edit() -> bool:
+	var passed: bool = true
+	var sheet: EventSheetResource = EventSheetResource.new()
+	var note: CommentRow = CommentRow.new()
+	note.text = "Waves get harder every minute."
+	sheet.events.append(note)
+	var editor: EventSheetEditor = EventSheetEditor.new()
+	var undo: CountingUndoManager = CountingUndoManager.new()
+	editor.set_undo_redo_manager(undo)
+	editor.setup(sheet)
+	editor._comments._ensure_comment_dialog()
+	var live_note: CommentRow = editor._current_sheet.events[0] as CommentRow
+	editor._comments._comment_dialog_target = live_note
+	editor._comments._comment_text_edit.text = live_note.text
+	editor._comments._comment_color_button.color = live_note.custom_color
+	editor._comments._comment_manual_check.button_pressed = live_note.is_documentation()
+	editor._comments._on_comment_dialog_confirmed()
+	passed = _check("an untouched OK makes no undo step", undo.commits, 0) and passed
+	passed = _check("and leaves the sheet clean", editor._dirty, false) and passed
+	editor._comments._comment_text_edit.text = "Waves get harder every thirty seconds."
+	editor._comments._on_comment_dialog_confirmed()
+	passed = _check("a real change is one undo step", undo.commits, 1) and passed
+	editor.free()
+	return passed
 
 
 ## The rendered row whose source resource is `event` (robust against any leading header rows).
