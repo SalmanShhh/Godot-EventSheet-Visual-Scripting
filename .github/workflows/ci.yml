@@ -81,7 +81,16 @@ jobs:
         shell: bash
         run: |
           EVENTFORGE_TEST_SHARD=tail ~/godot/godot --headless --path . --script tests/run_tests.gd > tail.log 2>&1 || true
+          # The real-editor boot numbers (and any WARN past their tighter line) in the run's summary,
+          # so they can be compared across runs; the whole log is kept with the run as well.
+          grep "\[boot\]" tail.log >> "$GITHUB_STEP_SUMMARY" || true
           bash .github/scripts/suite_verdict.sh tail.log "suite tail"
+      - name: Keep the tail log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: suite-tail-log
+          path: tail.log
 
   # The gates that read the whole tree at once.
   gates:

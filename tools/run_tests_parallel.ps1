@@ -232,6 +232,9 @@ foreach ($job in ($jobs + @(@{ Log = $tailLog; Err = $tailErr; Name = "tail" }))
 	if ($result.Verdict -ne "green") { $allGreen = $false }
 }
 "total: $passes pass, $fails fail across $Shards shards + tail"
+# The real-editor boot numbers, and any WARN past their tighter line, said under the verdict where
+# they can be compared run to run instead of left inside the tail's log.
+Get-Content $tailLog -ErrorAction SilentlyContinue | Where-Object { $_ -match "\[boot\]" } | ForEach-Object { $_.Trim() }
 
 # A process that CRASHED reports no failure at all - its log simply stops. The trail the runner
 # leaves is what turns that into a named test, so it is checked on every run, green or not.
