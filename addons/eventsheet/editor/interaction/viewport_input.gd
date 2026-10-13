@@ -567,7 +567,8 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 				_viewport.accept_event()
 				return
 			# The variable-group chip renames the folder (empty name in the popup ungroups).
-			if bool(double_click_meta.get("group_chip", false)) \
+			# A head a script line declares is that line: the double-click below edits it instead.
+			if bool(double_click_meta.get("group_chip", false)) and not bool(double_click_meta.get("raw_section", false)) \
 					and not str(double_click_meta.get("variable_group", "")).is_empty():
 				_viewport.variable_group_rename_requested.emit(str(double_click_meta.get("variable_group")))
 				_viewport.accept_event()

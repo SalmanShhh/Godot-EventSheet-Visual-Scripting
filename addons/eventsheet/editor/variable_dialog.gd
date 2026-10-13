@@ -68,6 +68,9 @@ const FIELD_HELP: Dictionary = {
 		+ "IS the description Godot shows in the Inspector - so it is never written twice.",
 	"Static": "One value shared by every copy of the object rather than one each, and readable without a copy at "
 		+ "all. Never combined with Constant - GDScript has no static const.",
+	"Write the type in code": "The code gives this variable no type of its own (`var hp := 100`), so Godot takes one "
+		+ "from the initial value. Ticked, saving writes that type into the line (`var hp: int = 100`), so a later "
+		+ "value of another kind is an error rather than a quiet change.",
 	"Static local": "The local keeps its value between runs of its event - a hit counter, a cooldown - instead of "
 		+ "starting over each time. The row stays where it is; only the declaration moves, to a private "
 		+ "member the rest of the sheet cannot name.",
@@ -117,6 +120,9 @@ var _static_check: CheckBox = null
 ## value survives from one run of that event to the next because the compiler hoists the declaration
 ## to a private class member. Meaningless for every other scope, so it is not offered there.
 var _static_local_check: CheckBox = null
+## "Write the type in code", shown only for a member whose type the code leaves to inference: ticked,
+## saving writes the type Godot infers into the declaration.
+var _write_type_check: CheckBox = null
 var _exported_check: CheckBox = null
 # "@onready" toggle - tree-placed variables only (class-level). When on, the variable compiles to
 # `@onready var` and the Default field is a verbatim GDScript expression (a node ref like $Player).
@@ -668,6 +674,9 @@ func init_dialog(parent_node: Node) -> void:
 	_const_check = CheckBox.new()
 	_const_check.text = "Constant"
 	flags_box.add_child(_const_check)
+	_write_type_check = CheckBox.new()
+	_write_type_check.visible = false
+	flags_box.add_child(_write_type_check)
 	form.add_child(EventSheetPopupUI.form_row("Flags", flags_box))
 
 	# @onready row - shown only for tree-placed (class-level) variables (open_for_edit gates visibility).
@@ -875,6 +884,7 @@ func _wire_help_strip() -> void:
 		[_attr_tooltip_edit, "Description"],
 		[_static_check, "Static"],
 		[_static_local_check, "Static local"],
+		[_write_type_check, "Write the type in code"],
 		[_exported_check, "Editable in the Inspector"],
 		[_sync_option, "Keep in step"],
 		[_global_target_option, "Write into"],
@@ -1301,6 +1311,11 @@ func open_for_edit(
 	_select_stored_type(type_name)
 	_refresh_items_button()
 	_const_check.button_pressed = is_constant
+	# A member whose type the code leaves to inference is offered the one tick that writes it.
+	var inferred_type: String = str(context.get("inferred_type", ""))
+	_write_type_check.visible = not inferred_type.is_empty()
+	_write_type_check.text = "Write the type in code (: %s)" % inferred_type
+	_write_type_check.set_pressed_no_signal(false)
 	# Local variables are inherently private to the script body, so the export toggle only
 	# applies to global (sheet-level) variables.
 	var is_local: bool = _scope == "local"
@@ -1583,6 +1598,9 @@ func _on_confirmed() -> void:
 		attributes["setter_param"] = setter_param if not setter_param.is_empty() else "value"
 	if not getter_body.is_empty():
 		attributes["getter_body"] = getter_body
+	# The receiver keeps an untouched initial value exactly as the file wrote it, so it needs the words.
+	_context["default_text"] = _default_edit.text.strip_edges()
+	_context["write_type"] = _write_type_check.visible and _write_type_check.button_pressed
 	variable_confirmed.emit(var_name, type_name, default_value, _scope, _context.duplicate(true), is_constant, exported, combo_options, attributes, false, _is_static and not is_constant)
 
 

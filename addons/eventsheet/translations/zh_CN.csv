@@ -7449,3 +7449,19 @@ Add Button,添加按钮
 "Added the Inspector button ""%s"" for %s.","已添加检查器按钮 ""%s""(用于 %s)。"
 (turn on Tool in the Sheet Type dialog for it to run in the editor.),"(在“工作表类型”对话框中打开 Tool,它才会在编辑器中运行。)"
 Add An Inspector Button For It…,为它添加检查器按钮…
+%s - a category,
+A heavy band in the Inspector that starts a new chapter of properties.,
+%s - a subgroup of %s,
+A folder inside the %s folder in the Inspector.,
+%s - an export group,
+"The exported variables under it share one folder in the Inspector, until the group ends.",
+%s - a prefix group,
+Only variables whose names start with %s join it; the Inspector shows them without that start.,
+1 subgroup,
+%d subgroups,
+Not in %s: that group only takes names starting %s.,
+%s ends here,
+Double-click to rename it.,
+Only names starting %s join this group.,
+"%s (inferred) - no type is written in the code, so Godot takes it from the default value. Properties... can write it.",
+%s - the type written in the code.,

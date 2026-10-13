@@ -61,6 +61,10 @@ var attention_findings: Array[Dictionary] = []
 # the row is selected - where it reads muted, beside nothing. "" = this row's verb is the current one
 # (which is nearly every row of nearly every sheet). View-only, recomputed per rebuild.
 var successor_hint: String = ""
+# Another muted sentence of the same kind, about where the row SITS rather than what it says: an
+# exported variable written under a prefix group it does not match is outside that group, and this
+# says so ("Not in Bullet: ...") - in the strip, never inside the row. View-only, recomputed per rebuild.
+var help_note: String = ""
 # Live event trace: true while this event is in the latest streamed "fired" frame - a transient
 # highlight so you can watch which events fire in real time during a debug run.
 var firing: bool = false

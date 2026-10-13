@@ -36,6 +36,9 @@ const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/readin
 ## The compiler's own spellings, read from the one file the compiler itself reads them from.
 const CompilerSpellings := preload("res://addons/eventforge/compiler/compiler_spellings.gd")
 
+## Which Inspector section each member of an opened script sits in, by the Inspector's own rules.
+const ExportSections := preload("res://addons/eventsheet/editor/interaction/export_sections.gd")
+
 ## The alpha floor a published verb's header wash keeps in READING mode. Reading mode drops the
 ## "Action" / "Condition" / "Expression" word badge from the header (an event-sheet Function block
 ## carries its name and its inputs, nothing else), so the role tint becomes the ONLY kind cue and
@@ -3366,6 +3369,7 @@ func _build_reading_variable_row(variable: LocalVariable, description: String, i
 		{
 			"is_constant": variable.is_constant,
 			"expression_default": variable.expression_default or variable.inferred_type or variable.onready,
+			"type_inferred": variable.inferred_type,
 			"is_static": variable.is_static,
 			"source_resource": variable,
 			"row_uid": "variable_reading_%d" % variable.get_instance_id(),
@@ -7836,6 +7840,8 @@ func _build_tree_variable_row(variable: LocalVariable, indent: int, doc_note: St
 			"group": str((variable.attributes as Dictionary).get("group", "")) if variable.exported and variable.attributes is Dictionary else "",
 			"subgroup": str((variable.attributes as Dictionary).get("subgroup", "")) if variable.exported and variable.attributes is Dictionary else "",
 			"expression_default": variable.expression_default or variable.inferred_type or variable.onready,
+			# `var hp := 100` writes no type: the row reads the one Godot infers, as inferred.
+			"type_inferred": variable.inferred_type,
 			"is_static": variable.is_static,
 			"source_resource": variable,
 			"row_uid": "variable_tree_%d" % variable.get_instance_id(),
@@ -10948,7 +10954,9 @@ func _flush_variable_group(rows: Array[EventRowData], sheet: EventSheetResource,
 				"variable_scope": "global",
 				"variable_name": "",
 				"text_color": _viewport._get_reading_style().category_chip_foreground_color,
-				"hover_note": EventSheetL10n.translate("An Inspector section. Double-click to rename it.")
+				"hover_note": "%s
+%s" % [ExportSections.head_hover(ExportSections.GROUP, group_name, "", "",
+					ExportSections.holds_text(members.size(), 0)), EventSheetL10n.translate("Double-click to rename it.")]
 			}
 		)
 	]
@@ -10956,48 +10964,254 @@ func _flush_variable_group(rows: Array[EventRowData], sheet: EventSheetResource,
 	members.clear()
 
 
-## The same labelled, foldable strip over a run of consecutive MEMBER variables in an opened
-## `.gd`. An `@export_group("Movement")` is one folder whether the sheet stores its variables in the
-## dictionary or as rows of the event tree, so a reader meets one shape either way, and the rows keep
-## their indent: a folder never pushes what it holds sideways.
+## The Inspector's sections drawn over the MEMBER variables of an opened `.gd`: a category as a
+## heavy band, each group as a labelled, foldable strip holding its run, a subgroup as a tinted strip
+## inside its group, and an explicit `@export_group("")` as the line the group ends on. Which member
+## sits in which section is ExportSections' walk - the Inspector's own rules, prefix groups included -
+## so a member a prefix group shuts out reads outside it, and the help strip says why when it is
+## selected. The rows keep their indent: a folder never pushes what it holds sideways.
 ##
-## A pure view pass over the already-built list, run after the fence pairing and the read-only head
-## (both of which walk a flat list of declarations and must not meet a strip in their place). Skipped
-## on a read-only preview, whose head already gathers the same knobs into its own group bars.
+## A section line the lift left as a script block is still that block: its row becomes the head, band
+## or end line it declares, and a double-click still edits the line. A pure view pass over the
+## already-built list, run after the fence pairing and the read-only head (both of which walk a flat
+## list of declarations and must not meet a strip in their place). Skipped on a read-only preview,
+## whose head already gathers the same knobs into its own group bars.
 func group_variable_rows_by_folder(rows: Array[EventRowData], sheet: EventSheetResource) -> Array[EventRowData]:
 	if sheet == null or sheet.read_only:
 		return rows
-	var grouped: Array[EventRowData] = []
-	var members: Array[EventRowData] = []
-	var current_group: String = ""
-	# The @export_group in force. Godot's grouping runs until the NEXT group line, and the importer
-	# records it on the FIRST member of each run only - so it is carried forward here, or every
-	# member but the first would land outside its own folder.
-	var declared_group: String = ""
-	# One folder can appear in two runs (a plain member splits it, or the file comes back to it), and
-	# each run is its own strip - so the strips need their own uids or the two would share a fold.
-	var group_runs: Dictionary = {}
+	var pass_state := {"walk": ExportSections.new(), "rows": [] as Array[EventRowData], "group": null,
+		"subgroup": null, "runs": {}, "heads": [] as Array[EventRowData]}
+	var walk: ExportSections = pass_state["walk"]
 	for row_data: EventRowData in rows:
 		var variable: LocalVariable = row_data.source_resource as LocalVariable
 		var is_member: bool = variable != null and row_data.variable_row and row_data.indent == 0
-		if is_member:
-			var declared: String = str((variable.attributes as Dictionary).get("group", "")).strip_edges() if variable.attributes is Dictionary else ""
-			if not declared.is_empty():
-				declared_group = declared
-		elif not _is_spacing_row(row_data):
-			# Past the declarations. A folder never leaps over the events below them - and a blank
-			# line between two knobs is spacing the round trip keeps, not the end of a group.
-			declared_group = ""
-		var group_name: String = declared_group if is_member and variable.exported else ""
-		if group_name != current_group:
-			_flush_variable_group(grouped, sheet, current_group, members, group_runs, "variable_tree_group")
-			current_group = group_name
-		if group_name.is_empty():
-			grouped.append(row_data)
+		if row_data.indent == 0 and row_data.source_resource is RawCodeRow:
+			var sections: Array[Dictionary] = ExportSections.parse_block((row_data.source_resource as RawCodeRow).code)
+			for index: int in sections.size():
+				_enter_export_section(pass_state, sections[index], row_data if index == sections.size() - 1 else null)
+			if not sections.is_empty():
+				continue
+		if is_member and variable.exported:
+			for section: Dictionary in ExportSections.from_attributes(variable.attributes):
+				_enter_export_section(pass_state, section, null)
+			var shut: Dictionary = walk.place(variable.name)
+			if not shut.is_empty():
+				row_data.help_note = ExportSections.outside_note(shut)
+				pass_state["group"] = null
+				pass_state["subgroup"] = null
+			_stamp_section_member(row_data, walk)
+			var holder: EventRowData = _open_section_strip(pass_state)
+			if holder != null:
+				holder.children.append(row_data)
+				continue
+		elif is_member or _is_spacing_row(row_data):
+			# A plain member, or the blank line the round trip keeps, is in no section and ends the strip
+			# on the canvas - but not the section itself, which the next exported member is still in.
+			pass_state["group"] = null
+			pass_state["subgroup"] = null
 		else:
-			members.append(row_data)
-	_flush_variable_group(grouped, sheet, current_group, members, group_runs, "variable_tree_group")
-	return grouped
+			# Past the declarations. A folder never leaps over the events below them.
+			walk.reset()
+			pass_state["group"] = null
+			pass_state["subgroup"] = null
+		(pass_state["rows"] as Array[EventRowData]).append(row_data)
+	for head: EventRowData in pass_state["heads"]:
+		_finish_section_head(head)
+	return pass_state["rows"]
+
+
+## One section line, read in file order: opens (or closes) the section and puts its row on the canvas
+## - `stand_in` is the script block that wrote the line, null when the lift put it on a member.
+func _enter_export_section(pass_state: Dictionary, section: Dictionary, stand_in: EventRowData) -> void:
+	var walk: ExportSections = pass_state["walk"]
+	var kind: String = str(section.get("kind", ""))
+	var name: String = str(section.get("name", ""))
+	var closing: String = walk.group if kind == ExportSections.GROUP else walk.subgroup
+	walk.enter(section)
+	var rows: Array[EventRowData] = pass_state["rows"]
+	if name.is_empty():
+		# An end line, inside the strip it ends. Nothing open means nothing to end: the line reads as
+		# the script line it is.
+		var parent: EventRowData = pass_state["subgroup"] if kind == ExportSections.SUBGROUP \
+			and pass_state["subgroup"] != null else pass_state["group"]
+		if closing.is_empty() or kind == ExportSections.CATEGORY:
+			pass_state["subgroup"] = null
+			if kind != ExportSections.SUBGROUP:
+				pass_state["group"] = null
+			if stand_in != null:
+				rows.append(stand_in)
+			return
+		var end_row: EventRowData = _section_row(stand_in, "end", kind, closing, "", pass_state)
+		if parent != null:
+			parent.children.append(end_row)
+		else:
+			rows.append(end_row)
+		pass_state["subgroup"] = null
+		if kind == ExportSections.GROUP:
+			pass_state["group"] = null
+		return
+	if kind == ExportSections.SUBGROUP:
+		if walk.subgroup.is_empty():
+			if stand_in != null:
+				rows.append(stand_in)
+			return
+		var group_head: EventRowData = _open_section_strip(pass_state, false)
+		var sub_head: EventRowData = _section_row(stand_in, "head", kind, name, walk.subgroup_prefix, pass_state)
+		sub_head.custom_color = _subgroup_tint()
+		group_head.children.append(sub_head)
+		pass_state["subgroup"] = sub_head
+		return
+	pass_state["group"] = null
+	pass_state["subgroup"] = null
+	if kind == ExportSections.CATEGORY:
+		rows.append(_section_row(stand_in, "band", kind, name, "", pass_state))
+		return
+	var head: EventRowData = _section_row(stand_in, "head", kind, name, walk.group_prefix, pass_state)
+	rows.append(head)
+	pass_state["group"] = head
+
+
+## The strip the next exported member lands in, opening a continuation of its group (and subgroup)
+## when a plain member or a blank line closed the one on the canvas. Null when no section is open.
+func _open_section_strip(pass_state: Dictionary, with_subgroup: bool = true) -> EventRowData:
+	var walk: ExportSections = pass_state["walk"]
+	if walk.group.is_empty():
+		return null
+	var head: EventRowData = pass_state["group"]
+	if head == null:
+		head = _section_row(null, "head", ExportSections.GROUP, walk.group, walk.group_prefix, pass_state)
+		(pass_state["rows"] as Array[EventRowData]).append(head)
+		pass_state["group"] = head
+	if not with_subgroup or walk.subgroup.is_empty():
+		return head
+	var sub_head: EventRowData = pass_state["subgroup"]
+	if sub_head == null:
+		sub_head = _section_row(null, "head", ExportSections.SUBGROUP, walk.subgroup, walk.subgroup_prefix, pass_state)
+		sub_head.custom_color = _subgroup_tint()
+		head.children.append(sub_head)
+		pass_state["subgroup"] = sub_head
+	return sub_head
+
+
+## A section's row: a head strip, a category band or an end line. The script block that wrote the line
+## lends its row (its uid, its source and its double-click into the code), else the row is a reading.
+func _section_row(stand_in: EventRowData, shape: String, kind: String, name: String, prefix: String,
+		pass_state: Dictionary) -> EventRowData:
+	var row_data: EventRowData = stand_in
+	var walk: ExportSections = pass_state["walk"]
+	var parent: String = walk.group if kind == ExportSections.SUBGROUP else ""
+	if row_data == null:
+		var runs: Dictionary = pass_state["runs"]
+		# One section can appear in several runs (a plain member splits it, or the file comes back to
+		# it), and each run is its own strip - so each needs its own uid, or two would share a fold.
+		var key: String = "group_%s" % name if shape == "head" and kind == ExportSections.GROUP \
+			else "%s_%s_%s" % [shape, kind, name]
+		var run_index: int = int(runs.get(key, 0))
+		runs[key] = run_index + 1
+		row_data = EventRowData.new()
+		row_data.row_type = EventRowData.RowType.SECTION
+		row_data.source_resource = _viewport._sheet
+		row_data.row_uid = "variable_tree_%s_%d" % [key, run_index]
+		row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, false))
+	# One line however many the script block holds: a block of two section lines stands for the last.
+	row_data.line_count = 1
+	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var meta: Dictionary = {
+		"kind": "raw_code" if stand_in != null else "variable",
+		"editable": false,
+		"variable_scope": "global",
+		"variable_name": "",
+		"section_kind": kind,
+		"raw_section": stand_in != null
+	}
+	row_data.spans = []
+	match shape:
+		"band":
+			row_data.variable_row = false
+			row_data.custom_color = Color(event_style.group_background_color, 1.0)
+			row_data.spans.append(_make_span(name, SemanticSpan.SpanType.KEYWORD, meta.merged({
+				"align_center": true,
+				"bbcode_segments": [{"text": name, "color": event_style.group_title_color, "bold": true}],
+				"hover_note": ExportSections.head_hover(kind, name, "", "", "")
+			}, true)))
+		"end":
+			row_data.variable_row = true
+			meta["variable_group"] = walk.group if kind == ExportSections.SUBGROUP else name
+			row_data.spans.append(_make_span(ExportSections.end_text(name), SemanticSpan.SpanType.COMMENT,
+				meta.merged({"text_color": reading_style.muted_text_color, "align_right": true}, true)))
+			row_data.spans.append(_make_span(ExportSections.code_line(kind, ""), SemanticSpan.SpanType.COMMENT,
+				meta.merged({"text_color": reading_style.muted_text_color, "align_right": true}, true)))
+		_:
+			row_data.variable_row = true
+			# Only a group's head renames its folder; a subgroup's would rename the group around it.
+			meta["group_chip"] = kind == ExportSections.GROUP
+			meta["variable_group"] = parent if not parent.is_empty() else name
+			if kind == ExportSections.SUBGROUP:
+				meta["variable_subgroup"] = name
+			meta["section_prefix"] = prefix
+			meta["section_parent"] = parent
+			row_data.spans.append(_make_span(name, SemanticSpan.SpanType.KEYWORD, meta.merged({
+				"bbcode_segments": [{"text": name, "color": event_style.group_title_color, "bold": true}]
+			}, true)))
+			if not prefix.is_empty():
+				row_data.spans.append(_make_span("%s*" % prefix, SemanticSpan.SpanType.KEYWORD, meta.merged({
+					"text_color": event_style.tooltip_badge_foreground_color,
+					"hover_note": EventSheetL10n.translate("Only names starting %s join this group.") % prefix
+				}, true)))
+			(pass_state["heads"] as Array[EventRowData]).append(row_data)
+	return row_data
+
+
+## A head's hover, said once its strip holds everything it will: what kind of section it is, what it
+## holds and the line that declares it - on the head's NAME only.
+func _finish_section_head(head: EventRowData) -> void:
+	var name_meta: Dictionary = head.spans[0].metadata
+	var variables: int = 0
+	var subgroups: int = 0
+	for child: EventRowData in head.children:
+		if child.source_resource is LocalVariable:
+			variables += 1
+		elif child.spans.size() > 0 and child.spans[0].metadata is Dictionary \
+				and (child.spans[0].metadata as Dictionary).get("section_kind") == ExportSections.SUBGROUP \
+				and not child.children.is_empty():
+			subgroups += 1
+	name_meta["hover_note"] = ExportSections.head_hover(str(name_meta.get("section_kind", "")),
+		head.spans[0].text, str(name_meta.get("section_prefix", "")), str(name_meta.get("section_parent", "")),
+		ExportSections.holds_text(variables, subgroups))
+	# A head the lift put on its members renames them all; one a script line declares is that line.
+	if not bool(name_meta.get("raw_section", false)) and name_meta.get("section_kind") == ExportSections.GROUP:
+		name_meta["hover_note"] += "
+%s" % EventSheetL10n.translate("Double-click to rename it.")
+
+
+## Stamps a member with the sections it sits in - the bubble, the drag-into-folder gesture and the
+## rename read them off its spans - and tints the start of its name a prefix group matched.
+func _stamp_section_member(row_data: EventRowData, walk: ExportSections) -> void:
+	var prefix: String = walk.subgroup_prefix if not walk.subgroup.is_empty() and not walk.subgroup_prefix.is_empty() \
+		else walk.group_prefix
+	if not walk.subgroup.is_empty():
+		row_data.custom_color = _subgroup_tint()
+	for span: SemanticSpan in row_data.spans:
+		if not (span.metadata is Dictionary) or not (span.metadata as Dictionary).has("variable_name"):
+			continue
+		var meta: Dictionary = span.metadata
+		meta["variable_group"] = walk.group
+		meta["variable_subgroup"] = walk.subgroup
+		if prefix.is_empty() or not bool(meta.get("variable_name_span", false)) or not span.text.begins_with(prefix):
+			continue
+		meta["section_prefix_tint"] = true
+		var segments: Array = meta.get("bbcode_segments", [])
+		var ink: Variant = (segments[0] as Dictionary).get("color") if not segments.is_empty() else null
+		meta["bbcode_segments"] = [
+			{"text": prefix, "color": _viewport._get_event_style().tooltip_badge_foreground_color, "bold": true},
+			{"text": span.text.substr(prefix.length()), "color": ink, "bold": true}]
+
+
+## The faint wash a subgroup's strip and rows wear, from the theme's Inspector badge so a light theme
+## gets its own.
+func _subgroup_tint() -> Color:
+	return Color(_viewport._get_event_style().inspector_badge_background_color, 0.45)
 
 
 ## True for a row that is only the blank line the round trip keeps between two declarations - spacing,
@@ -11029,8 +11243,8 @@ static func variable_group_runs(flat_rows: Array) -> Array:
 		var group: String = ""
 		if index < flat_rows.size():
 			var row_data: EventRowData = (flat_rows[index] as Dictionary).get("row")
-			if row_data != null and not row_data.spans.is_empty() and row_data.spans[0].metadata is Dictionary \
-					and str((row_data.spans[0].metadata as Dictionary).get("kind", "")) == "variable":
+			# A head or an end line the script declares is a script block's row, and still part of the run.
+			if row_data != null and not row_data.spans.is_empty() and row_data.spans[0].metadata is Dictionary:
 				group = str((row_data.spans[0].metadata as Dictionary).get("variable_group", ""))
 		if group == current_group and not group.is_empty():
 			continue
@@ -11718,6 +11932,11 @@ func _build_variable_row(
 				)
 			)
 		if not type_word.strip_edges().is_empty():
+			# A type the code does not write reads in grey italics, and its hover says where it came
+			# from - and that Properties can write it.
+			var inferred: bool = bool(options.get("type_inferred", false))
+			var code_type: String = NativeVariableMarks.gdscript_type_word(type_name, default_value,
+				bool(options.get("expression_default", false)))
 			row_data.spans.append(
 				_make_span(
 					type_word,
@@ -11725,10 +11944,14 @@ func _build_variable_row(
 					variable_meta.merged({
 						"editable": false,
 						"variable_type_span": true,
-						"text_color": reading_style.secondary_text_color,
+						"variable_type_inferred": inferred,
+						"italic_note": inferred and not inspector_rows,
+						"text_color": reading_style.muted_text_color if inferred else reading_style.secondary_text_color,
 						# Which colour family the type word paints in (View > Value Glyphs). A fact,
 						# not a colour: the painter asks the theme, so the reading never moves.
-						"variable_type_family": type_family
+						"variable_type_family": type_family,
+						"hover_note": EventSheetL10n.translate("%s (inferred) - no type is written in the code, so Godot takes it from the default value. Properties... can write it.") % code_type
+							if inferred else EventSheetL10n.translate("%s - the type written in the code.") % code_type
 					}, true)
 				)
 			)
@@ -16099,8 +16322,9 @@ func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, f
 	var span_width: float = font.get_string_size(display_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 	# A code echo is drawn segment by segment, and the per-segment advances do not add up to the
 	# measurement of the whole string (kerning is lost at every seam). It has to reserve what the
-	# renderer will actually advance, or the last characters of the declaration clip away.
-	if bool(metadata.get("code_echo", false)):
+	# renderer will actually advance, or the last characters of the declaration clip away. The same
+	# holds for a name drawn in two pieces (a prefix group's matched start, then the rest).
+	if bool(metadata.get("code_echo", false)) or bool(metadata.get("section_prefix_tint", false)):
 		span_width = 0.0
 		for segment: Variant in (metadata.get("bbcode_segments", []) as Array):
 			span_width += font.get_string_size(

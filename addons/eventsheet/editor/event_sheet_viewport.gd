@@ -4259,9 +4259,10 @@ func _get_tooltip(at_position: Vector2) -> String:
 			return trigger_hover
 	# A variable's badge tiles are pictures too; each says what it means.
 	if show_variable_badges:
-		var badge: String = NativeVariableMarks.badge_at(_row_at(int(hit.get("row_index", -1))), _to_logical_position(at_position))
+		var badge_row: EventRowData = _row_at(int(hit.get("row_index", -1)))
+		var badge: String = NativeVariableMarks.badge_at(badge_row, _to_logical_position(at_position))
 		if not badge.is_empty():
-			return NativeVariableMarks.badge_tooltip(badge)
+			return NativeVariableMarks.badge_tooltip(badge, badge_row.source_resource as LocalVariable)
 	var metadata: Dictionary = hit.get("span_metadata", {}) if hit.get("span_metadata", {}) is Dictionary else {}
 	var kind: String = str(metadata.get("kind", ""))
 	# A MARK explains itself. The glyphs a sheet puts on a row (runs every frame, trigger, calls a

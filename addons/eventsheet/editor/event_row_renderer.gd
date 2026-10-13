@@ -1861,12 +1861,15 @@ func _draw_variable_word(control: Control, span: SemanticSpan, metadata: Diction
 	var centre_y: float = span.rect.position.y + span.rect.size.y * ROW_VERTICAL_CENTER_RATIO
 	var family: String = str(metadata.get("variable_type_family", ""))
 	if bool(metadata.get("variable_type_span", false)) and not family.is_empty():
-		var ink: Color = _family_ink(event_style, family)
+		# A type the code does not write (`var hp := 100`) leans and greys: it is the one Godot infers.
+		var inferred: bool = bool(metadata.get("variable_type_inferred", false))
+		var ink: Color = reading.muted_text_color if inferred else _family_ink(event_style, family)
 		if ink.a <= 0.01:
 			ink = metadata.get("text_color", reading.secondary_text_color)
 		var type_size: int = NativeVariableMarks.type_font_size(draw_font_size)
+		var type_font: Font = NativeVariableMarks.mono_font(font)
 		_draw_text(control, Vector2(span.rect.position.x, centre_y + type_size * FONT_BASELINE_OFFSET_RATIO), span.text,
-			maxf(span.rect.size.x, 1.0), NativeVariableMarks.mono_font(font), type_size, ink)
+			maxf(span.rect.size.x, 1.0), NativeVariableMarks.italic_font(type_font) if inferred else type_font, type_size, ink)
 		return true
 	if str(metadata.get("value_glyph", "")) == NativeVariableMarks.GLYPH_VECTOR:
 		var value_ink: Color = metadata.get("text_color", _get_span_color(span.type, event_style, reading))

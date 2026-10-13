@@ -495,17 +495,45 @@ static func saved_names(source_path: String) -> Dictionary:
 	return names
 
 
-## What a badge means, for its hover.
-static func badge_tooltip(badge: String) -> String:
+## What a badge means, for its hover - and, when the row is a variable of an opened script, the line
+## of code that earns it (`@export_range(0, 600)`), so the picture and the code read side by side.
+static func badge_tooltip(badge: String, variable: LocalVariable = null) -> String:
+	var said: String = ""
 	match badge:
 		BADGE_INSPECTOR:
-			return EventSheetL10n.translate("Editable in the Inspector")
+			said = EventSheetL10n.translate("Editable in the Inspector")
 		BADGE_RANGE:
-			return EventSheetL10n.translate("Kept between limits in the Inspector (@export_range).")
+			said = EventSheetL10n.translate("Kept between limits in the Inspector (@export_range).")
 		BADGE_TOOLTIP:
-			return EventSheetL10n.translate("Has a description: its ## comment, which the Inspector shows as its tooltip.")
+			said = EventSheetL10n.translate("Has a description: its ## comment, which the Inspector shows as its tooltip.")
 		BADGE_SAVED:
-			return EventSheetL10n.translate("Kept by the Save System under this variable's name.")
+			said = EventSheetL10n.translate("Kept by the Save System under this variable's name.")
+	var code: String = _badge_code(badge, variable)
+	return said if code.is_empty() else "%s
+%s" % [said, code]
+
+
+## The code a badge stands for on `variable`, or "" when the row has none to show.
+static func _badge_code(badge: String, variable: LocalVariable) -> String:
+	if variable == null:
+		return ""
+	var attributes: Dictionary = variable.attributes if variable.attributes is Dictionary else {}
+	match badge:
+		BADGE_INSPECTOR:
+			return "@export"
+		BADGE_RANGE:
+			if attributes.get("range") is Dictionary:
+				var limits := PackedStringArray()
+				for key: String in ["min", "max", "step"]:
+					var limit: String = str((attributes["range"] as Dictionary).get(key, "")).strip_edges()
+					if not limit.is_empty():
+						limits.append(limit)
+				return "@export_range(%s)" % ", ".join(limits)
+			return variable.export_hint.strip_edges()
+		BADGE_TOOLTIP:
+			var note: String = str(attributes.get("tooltip", variable.description)).strip_edges().get_slice("
+", 0)
+			return "## %s" % note if not note.is_empty() else ""
 	return ""
 
 

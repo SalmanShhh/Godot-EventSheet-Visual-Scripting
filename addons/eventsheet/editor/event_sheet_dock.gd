@@ -8281,11 +8281,12 @@ func _update_row_help_strip(row_data: EventRowData) -> void:
 ## place that offers it is the head band's migrate dialog, not a button under one row - and it wears
 ## the strip's ordinary muted colour rather than the warning one, because a row written in the older
 ## spelling is not a warning. A row with a finding never reaches here: something being wrong outranks
-## something being older.
+## something being older. The row's help note (a variable outside the group above it, and why) is
+## said the same way, when there is no newer spelling to say.
 func _show_successor_hint(row_data: EventRowData) -> bool:
-	if row_data.successor_hint.is_empty():
+	if row_data.successor_hint.is_empty() and row_data.help_note.is_empty():
 		return false
-	_row_help_label.text = row_data.successor_hint
+	_row_help_label.text = row_data.successor_hint if not row_data.successor_hint.is_empty() else row_data.help_note
 	_row_help_label.tooltip_text = _row_help_label.text
 	_row_help_label.modulate = EventSheetActiveTheme.reading().muted_text_color
 	_row_help_label.visible = true

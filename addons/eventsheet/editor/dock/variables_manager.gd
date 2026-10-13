@@ -12,6 +12,9 @@ extends RefCounted
 
 const VARIABLE_USAGE_MAX_DEPTH := 8
 
+## The type Godot infers for a `var hp := 100`, read the way the row reads it.
+const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
+
 var _dock: Control = null
 
 # The variable the variable context menu / viewport edit is acting on. Written by the dock's context-menu
@@ -541,13 +544,28 @@ func _on_variable_dialog_confirmed(
 				if previous_tree_name != var_name:
 					message["renamed"] = _dock._rename_variable_references(previous_tree_name, var_name)
 				existing.type_name = type_name
-				existing.default_value = default_value
+				# An inferred declaration (`var hp := 100`) holds its initial value as the words the file
+				# wrote, so the field's words are kept as they are (`5.0` stays `5.0`). "Write the type in
+				# code" turns `:=` into `: int =` in the same undo step, the words unchanged.
+				if existing.inferred_type:
+					var typed: String = str(context.get("default_text", existing.default_value))
+					if typed != str(existing.default_value).strip_edges():
+						existing.default_value = typed
+					if bool(context.get("write_type", false)):
+						existing.inferred_type = false
+						existing.type_name = str(context.get("inferred_type", type_name))
+						existing.expression_default = true
+				else:
+					existing.default_value = default_value
 				existing.is_constant = resolved_constant
 				existing.exported = exported
-				var kept_button: Variant = (existing.attributes as Dictionary).get("tool_button") if existing.attributes is Dictionary else null
+				# What the dialog has no field for - the category the variable opens, which side of its
+				# section lines the `##` doc was written on, an Inspector button - is kept by a save.
+				var unseen: Dictionary = existing.attributes if existing.attributes is Dictionary else {}
 				existing.attributes = _tree_group_attributes(attributes)
-				if kept_button is Dictionary and not existing.attributes.has("tool_button"):
-					existing.attributes["tool_button"] = kept_button
+				for key: String in ["category", "doc_after_group", "tool_button"]:
+					if unseen.has(key) and not existing.attributes.has(key):
+						existing.attributes[key] = unseen[key]
 				existing.onready = onready
 				existing.is_static = is_static and not resolved_constant
 				_apply_property_accessors(existing, attributes)
@@ -784,9 +802,13 @@ func _edit_context_variable() -> void:
 			edit_attributes["setter_body"] = tree_var.setter_body
 			edit_attributes["getter_body"] = tree_var.getter_body
 			edit_attributes["setter_param"] = tree_var.setter_param
+		# A `var hp := 100` is offered the one tick that writes the type Godot infers for it.
+		var inferred_type: String = NativeVariableMarks.gdscript_type_word(tree_var.type_name,
+			tree_var.default_value, true) if tree_var.inferred_type else ""
 		_dock._variable_dlg.open_for_edit(
 			"tree",
-			{"editing": true, "variable_resource": tree_var, "attributes": edit_attributes},
+			{"editing": true, "variable_resource": tree_var, "attributes": edit_attributes,
+				"inferred_type": inferred_type if inferred_type != "Variant" else ""},
 			tree_var.name,
 			tree_var.type_name,
 			tree_var.default_value,

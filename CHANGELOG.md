@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+### Changed: export groups read on the sheet the way the Inspector shows them
+
+- **`@export_category` is a heavy centred band**, and **`@export_subgroup` is its own tinted,
+  foldable strip inside its group**, holding its own variables. A group strip names itself in bold,
+  and its outline now wraps every variable in the group, not just the first.
+- **`@export_group("")` draws as the line the group ends on** ("Gun ends here"), inside the strip, so
+  where a group stops is never a guess.
+- **Prefix groups** (`@export_group("Bullet", "bullet")`) show their prefix (`bullet*`) beside the
+  name, and each member's matching start is tinted. The first exported name that does not start with
+  the prefix is outside the group, as the Inspector has it - and selecting it says why in the help
+  strip under the sheet ("Not in Bullet: that group only takes names starting bullet."), never inside
+  the row. A section line the importer leaves as a script line still reads this way, and a
+  double-click on it still edits the line.
+- **Hovering a group's name** says what kind of section it is, what it holds and the line that
+  declares it. The hover is on the name only.
+- **A type the code does not write** (`var hp := 100`) reads in grey italics, its hover says Godot
+  takes it from the value, and **Properties offers "Write the type in code (: int)"**, which turns the
+  line into `var hp: int = 100` in one undo step. Saving such a variable from Properties untouched now
+  keeps its value exactly as written (`5.0` stays `5.0`), and keeps the category it opens.
+- **The badge tiles' hovers end with the code that earns them** - `@export`, `@export_range(0, 600)`,
+  the `##` line.
 ### Added: a tool sheet's variables, written both ways
 
 - **Show if and Lock unless work on a `.gd` sheet.** A sheet variable (the rows a `.gd` sheet keeps

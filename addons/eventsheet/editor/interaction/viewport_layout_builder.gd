@@ -325,6 +325,11 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				run_tail = _right_run_after(row_data, span_index, font, font_size)
 			span_width = max(min(span_width, row_right_limit - span_x - 2.0 - run_tail), 1.0)
 			flow_right_x = span_x + span_width + 2.0 + _viewport._get_span_gap(span)
+		elif bool(metadata.get("align_center", false)):
+			# A band's one word (an Inspector category), centred across the row the way the Inspector
+			# centres its own.
+			span_width = max(min(span_width, flow_right_anchor - non_event_origin_x - 2.0), 1.0)
+			span_x = max(non_event_origin_x, (non_event_origin_x + flow_right_anchor - span_width) * 0.5)
 		else:
 			# -2.0 accounts for the +2.0 the rect adds below, so non-event spans (variables,
 			# blocks) never bleed past the row's right padding - nor under the right-anchored run
