@@ -272,9 +272,6 @@ const NEW_FUNCTION_MENU_EXPRESSION := 3
 ## questions an `@rpc` answers, because a message IS a function before it is anything else.
 const NEW_FUNCTION_MENU_MESSAGE := 4
 const ACE_DRAG_KINDS := ["condition", "action"]
-const SIDE_PANEL_MIN_WIDTH := 160.0
-const SIDE_PANEL_MAX_WIDTH := 220.0
-const SIDE_PANEL_WIDTH_RATIO := 0.18
 
 var _toolbar: HFlowContainer = null
 var _title_strip: HBoxContainer = null
@@ -3941,10 +3938,6 @@ func _ensure_live_values_panel() -> RefCounted:
 # Forwarding properties: tests (and the plugin) reach these through the dock.
 var _live_values_tree: Tree:
 	get: return _ensure_live_values_panel().tree
-var _live_values_label: RichTextLabel:
-	get: return _ensure_live_values_panel().label
-var _live_values_window: Window:
-	get: return _ensure_live_values_panel().window
 
 
 func set_live_values_debugger(debugger: EditorDebuggerPlugin) -> void:
@@ -5721,9 +5714,6 @@ var _outline_tree: Tree:
 
 
 # Forwarding properties (tests reach these directly - keep them settable).
-var _bookmarks_window: Window:
-	get: return _ensure_bookmarks_panel().window
-	set(value): _ensure_bookmarks_panel().window = value
 var _bookmarks_tree: Tree:
 	get: return _ensure_bookmarks_panel().tree
 	set(value): _ensure_bookmarks_panel().tree = value

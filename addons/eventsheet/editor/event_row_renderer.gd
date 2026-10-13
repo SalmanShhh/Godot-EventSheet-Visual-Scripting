@@ -258,7 +258,6 @@ const SELECTION_OUTLINE_WIDTH := 2
 const SPAN_SELECT_OUTLINE_LIGHTEN := 0.3
 const SPAN_SELECT_OUTLINE_ALPHA := 0.95
 const SPAN_HOVER_OUTLINE_LIGHTEN := 0.28
-const SPAN_HOVER_OUTLINE_ALPHA := 0.82
 
 
 ## Event-sheet-style insert marker: arrowheads at both ends of a thin drop line so the insert point
@@ -493,7 +492,6 @@ func _draw_text(
 ## match the viewport's wrapped_line_count(), so what is drawn fills exactly the height the
 ## row reserved. Zoom is handled like _draw_text: at zoom != 1 we paint at the physical size
 ## (scaling width too) so wrap points stay identical and glyphs stay crisp.
-const COMMENT_BREAK_FLAGS := TextServer.BREAK_WORD_BOUND | TextServer.BREAK_GRAPHEME_BOUND
 
 
 func _draw_multiline_text(

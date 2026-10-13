@@ -494,12 +494,6 @@ func set_bands_folded(folded: bool) -> void:
 	_apply()
 
 
-## The rail state for this project, for the dock to hand to the Properties bar and for a test to
-## round-trip. A copy: the rail is the only writer.
-func export_state() -> Dictionary:
-	return _state.duplicate(true)
-
-
 ## Put a remembered (or a test's) state on the built rail: the folds go down to the panels, and
 ## everything else is laid out by `_apply`.
 func apply_state(state: Dictionary) -> void:

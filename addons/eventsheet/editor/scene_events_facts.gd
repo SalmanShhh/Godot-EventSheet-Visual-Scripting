@@ -73,11 +73,6 @@ static func badge_for_script(script_path: String) -> Dictionary:
 	return {"count": triggers.size(), "triggers": triggers}
 
 
-## The same question about a node in the edited scene, through whatever script it carries.
-static func badge_for_node(node: Node) -> Dictionary:
-	return badge_for_script(script_path_of(node))
-
-
 ## The res:// path of the script a node carries, or "" when it carries none.
 static func script_path_of(node: Node) -> String:
 	if node == null:

@@ -64,18 +64,6 @@ func record_control(action: String, pressed: bool, engine_frame: int) -> void:
 		"frame": take_frame(engine_frame)})
 
 
-## An InputEvent the running game received, recorded as the CONTROLS it means. An event that maps to
-## no control is dropped on purpose: a replay can only press controls, and silently recording
-## something that will never be replayed is the one way a recording lies.
-func record_input(event: InputEvent, engine_frame: int, actions: PackedStringArray) -> void:
-	if not recording or event == null:
-		return
-	for action: String in actions:
-		if not event.is_action(action):
-			continue
-		record_control(action, event.is_action_pressed(action), engine_frame)
-
-
 ## A checkpoint the reader adds: "Expect Player's hp = 90 at frame 300". Allowed after Stop, which
 ## is when a reader actually knows what they want to pin.
 func add_checkpoint(named: String, actual: String, expected: String, frame: int) -> void:

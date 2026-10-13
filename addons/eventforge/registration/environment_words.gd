@@ -411,7 +411,6 @@ const WORDS: Array[Dictionary] = [
 ## reader and subtract before they call.
 const GLOW_LEVEL_COUNT: int = 7
 const GLOW_LEVEL_SET_CALL: String = "set_glow_level"
-const GLOW_LEVEL_GET_CALL: String = "get_glow_level"
 
 ## THREE SETS OF SEVEN NUMBERS, offered as SUGGESTIONS in an ordinary value field and nothing more.
 ## Level 1 is the sharpest, finest blur and level 7 is the widest, softest one, so numbers leaning on
@@ -742,18 +741,3 @@ static func forward_plus_calls() -> PackedStringArray:
 		if not found.has(call_text):
 			found.append(call_text)
 	return found
-
-
-## True when a class is one these rows speak for - a WorldEnvironment, or a project's own subclass
-## of one. Asked through ClassDB rather than against a list, so a subclass resolves too.
-static func is_world_class(class_text: String) -> bool:
-	var text: String = class_text.strip_edges()
-	return not text.is_empty() and ClassDB.class_exists(text) and ClassDB.is_parent_class(text, HOST)
-
-
-## One glow spread by its key, or {}.
-static func glow_spread(key: String) -> Dictionary:
-	for spread: Dictionary in GLOW_LEVEL_SPREADS:
-		if str(spread["key"]) == key:
-			return spread
-	return {}

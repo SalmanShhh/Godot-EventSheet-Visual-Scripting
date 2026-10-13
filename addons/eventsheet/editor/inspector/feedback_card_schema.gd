@@ -332,23 +332,6 @@ static func card_seconds(card: Dictionary) -> float:
 	return maxf(float(card.get(SECONDS_KEY, 0.0)), 0.0) + maxf(float(card.get("delay", 0.0)), 0.0)
 
 
-## The timing every card carries whatever its kind is - the fields the unfolded card's Timing
-## foldout shows. Offered as one list so a caller adds them to a kind's own fields rather than
-## spelling them per kind.
-static func timing_fields() -> Array:
-	return [
-		{"key": "delay", "label": "Initial delay", "drawer": "unit:time", "default": 0.0},
-		{"key": "cooldown", "label": "Cooldown", "drawer": "unit:time", "default": 0.0},
-		{"key": "repeat", "label": "Repeat", "drawer": "int", "default": 1},
-		{"key": "interval", "label": "Interval", "drawer": "unit:time", "default": 0.0},
-		{"key": "clock", "label": "Clock", "drawer": "toggle_row:game,real", "default": "game"},
-		{"key": "min_strength", "label": "Only if strength over", "drawer": "num", "default": 0.0},
-		{"key": "max_strength", "label": "and under", "drawer": "num", "default": 0.0},
-		{"key": "skip_on_stop", "label": "Skip on stop", "drawer": "bool", "default": false},
-		{"key": "chance", "label": "Chance", "drawer": "progress_bar:0:100", "default": 100.0}
-	]
-
-
 ## The verb whose name begins with a prefix - how a word finds the verb that spells it out in full
 ## ("punch" finding Punch Scale), without a table saying which is which. Function names only, so a
 ## signal called On Punch Finished can never be mistaken for the verb.

@@ -22,11 +22,6 @@ const INSPECTOR_CONDITION_LIFT_PATH := "res://addons/eventforge/importer/inspect
 var _source_writes_validate_property: bool = false
 
 
-func import_script(script_path: String) -> EventSheetResource:
-	if not FileAccess.file_exists(script_path):
-		return null
-	return import_source(FileAccess.get_file_as_string(script_path))
-
 ## ── GDScript-backed sheets (open ANY .gd as a sheet, losslessly) ─────────────
 ## Unlike import_source (structural import into a normal sheet), external import keeps the
 ## .gd file as the single source of truth. THE LOSSLESS RULE: every line lands in exactly

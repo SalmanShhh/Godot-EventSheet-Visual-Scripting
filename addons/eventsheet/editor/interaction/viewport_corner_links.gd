@@ -172,8 +172,3 @@ func link_at(position: Vector2) -> String:
 func link_at_control_position(control_position: Vector2) -> String:
 	var zoom: float = maxf(_viewport._zoom_factor, 0.001)
 	return link_at(control_position / zoom)
-
-
-## The drawn rect of one link in logical canvas space, or an empty Rect2 when it is not on screen.
-func rect_of(link_id: String) -> Rect2:
-	return _link_rects.get(link_id, Rect2())

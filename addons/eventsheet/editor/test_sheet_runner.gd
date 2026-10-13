@@ -43,15 +43,6 @@ const QUIET_FRAMES := 30
 const SKIPPED_DIRS: Array[String] = ["res://addons", "res://.godot"]
 
 
-## Runs every test found under `root_path` and returns the results array report_lines() words.
-## Both shells call this; it is a coroutine, so `await` it.
-static func run_all(tree: SceneTree, root_path: String = "res://", timeout: float = DEFAULT_TIMEOUT) -> Array:
-	var results: Array = []
-	for path: String in discover(root_path):
-		results.append(await run_script(tree, path, timeout))
-	return results
-
-
 ## Runs one compiled test script inside `tree` and returns {test, path, entries}. Every failure
 ## mode - a script that will not load, one that is not a Node, one that says nothing - comes back as
 ## a recorded FAILURE rather than an absence, so no run can go green by staying silent.

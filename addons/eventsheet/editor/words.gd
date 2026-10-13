@@ -287,23 +287,6 @@ static func snapshot() -> Dictionary:
 	return out
 
 
-## True when the word chosen for this key in this state is one the user typed themselves
-## (the page shows those as "custom…" and keeps the typed word in the field).
-static func is_custom(key: String, familiar: bool) -> bool:
-	var chosen: String = chosen_word(key, familiar)
-	if chosen.is_empty():
-		return false
-	return not choices(key).has(chosen)
-
-
-## The word the user pinned for this key in this state, or "" when they pinned none.
-static func chosen_word(key: String, familiar: bool) -> String:
-	var state: Variant = overrides().get(state_key(familiar), {})
-	if state is Dictionary:
-		return str((state as Dictionary).get(key, "")).strip_edges()
-	return ""
-
-
 # --- the store (per user, with the editor settings) -------------------------------------------
 
 
@@ -369,12 +352,6 @@ static func verb_aliases() -> Dictionary:
 	return _verb_aliases
 
 
-## Drops the parsed table so the next reader re-reads the files. What a dropped-in CSV needs.
-static func forget_verb_aliases() -> void:
-	_verb_aliases_loaded = false
-	_verb_aliases = {}
-
-
 ## One CSV, merged over whatever is already loaded. A short row is skipped rather than half-read,
 ## and the header line is skipped by its first cell's name, so a file without one still loads.
 static func _merge_verb_words_file(path: String) -> void:
@@ -416,11 +393,6 @@ static func verb_alias(key: String) -> Dictionary:
 ## What the row and the picker say for this key with the second vocabulary on.
 static func verb_alias_word(key: String) -> String:
 	return str(verb_alias(key).get("word", ""))
-
-
-## What the key names, in plain words - the Words page's left column.
-static func verb_names_what(key: String) -> String:
-	return str(verb_alias(key).get("names", ""))
 
 
 ## The verb's shipped picker name: the "off" side, and the value a test holds the registry to.
@@ -501,12 +473,6 @@ static func verb_name_words_for(key: String, shipped_name: String, enabled: bool
 	if shipped.is_empty() or alias.is_empty() or shipped_name != shipped:
 		return shipped_name
 	return alias
-
-
-## The picker's row for a verb that has an alias: BOTH names, the chosen vocabulary leading, so the
-## reader who searched for one word sees the other beside it and learns it by reading.
-static func picker_name(key: String, shipped_name: String) -> String:
-	return picker_name_for(key, shipped_name, verb_words_enabled())
 
 
 ## The pure form, for tests and for a caller that already holds the state.

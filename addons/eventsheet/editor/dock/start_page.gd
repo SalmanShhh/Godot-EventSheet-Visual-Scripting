@@ -303,13 +303,6 @@ func open() -> void:
 	_window.popup_centered()
 
 
-## The startup half: only when the reader left it on, and only with nothing open.
-func open_if_idle() -> void:
-	if not opens_on_startup() or _dock._current_sheet != null:
-		return
-	open()
-
-
 func _build() -> void:
 	if _window != null:
 		return

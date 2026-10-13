@@ -248,22 +248,6 @@ func set_undo_redo(undo_redo: Variant) -> void:
 	set_undo_redo_manager(undo_redo)
 
 
-func set_context_sheet(sheet: EventSheetResource) -> void:
-	_sheet = sheet
-	_rebuild_prop_map()
-	notify_property_list_changed()
-
-
-func set_provider_filter(provider_ids: PackedStringArray) -> void:
-	_provider_filter.clear()
-	for provider_id in provider_ids:
-		if provider_id.is_empty():
-			continue
-		_provider_filter[provider_id] = true
-	_rebuild_prop_map()
-	notify_property_list_changed()
-
-
 func _set_store_param(provider_id: String, ace_id: String, param_id: String, value: Variant) -> void:
 	if _param_store == null:
 		return

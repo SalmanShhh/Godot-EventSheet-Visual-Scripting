@@ -182,22 +182,6 @@ static func harvest_now() -> int:
 	return found.size()
 
 
-## Whether a started harvest has finished since the last call, writing the receipt when it has.
-## A host polls this from a timer; nothing here waits on a process.
-static func poll_harvest() -> bool:
-	if is_harvested():
-		return true
-	if _harvest_pid < 0 or OS.is_process_running(_harvest_pid):
-		return false
-	_harvest_pid = -1
-	var found: Dictionary = scan_files(cache_dir())
-	if found.is_empty():
-		return false
-	write_receipt(cache_dir(), found.size())
-	reload()
-	return true
-
-
 ## The receipt's exact bytes: the frozen header, then a var_to_str payload. Same versioned-text
 ## discipline the help manifest uses, so an older reader can say "this is newer than I know".
 static func receipt_text(class_count: int) -> String:
@@ -272,11 +256,6 @@ static func class_names() -> PackedStringArray:
 	for name: Variant in files():
 		names.append(str(name))
 	return names
-
-
-## True when the harvest has text for a class.
-static func has_class(class_id: String) -> bool:
-	return files().has(class_id.strip_edges())
 
 
 ## One class, parsed:
@@ -534,13 +513,6 @@ static func member_kind_of(doc: Dictionary, member: String) -> String:
 	return ""
 
 
-## The class's own page on the engine's documentation site, opened at one member when the kind of
-## member is known. Deterministic: the same class and member always name the same URL, and nothing
-## is asked of a network to build it.
-static func online_url(class_id: String, member: String = "") -> String:
-	return online_url_for(docs_version(), class_id, member, member_kind(class_id, member))
-
-
 ## The URL itself, given everything it is built from. Pure - the suite pins the spelling of a link
 ## a reader will click without depending on a harvest or on the engine that ran the test.
 static func online_url_for(version: String, class_id: String, member: String, kind: String) -> String:
@@ -662,11 +634,6 @@ static func missing_text_bbcode(class_id: String, member: String, kind: String, 
 		+ "offline. Read the description in [url=%s]Godot's own class reference[/url], " % help_doc_id_for(class_id, member, kind) \
 		+ "open [url=%s]the page on docs.godotengine.org[/url], " % online_url_for(version, class_id, member, kind) \
 		+ "or fetch the reference text once from Docs housekeeping and it stays here."
-
-
-## The id that opens a class - or one of its members - in the editor's own class reference.
-static func help_doc_id(class_id: String, member: String = "") -> String:
-	return help_doc_id_for(class_id, member, member_kind(class_id, member))
 
 
 static func help_doc_id_for(class_id: String, member: String, kind: String) -> String:

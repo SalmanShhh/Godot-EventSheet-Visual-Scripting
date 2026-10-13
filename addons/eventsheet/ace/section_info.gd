@@ -47,12 +47,6 @@ static func all() -> Dictionary:
 	return _descriptions.duplicate()
 
 
-## Test seam: drops the seed so a following describe()/lookup re-seeds from the beginning.
-static func _reset_for_test() -> void:
-	_descriptions = {}
-	_seeded = false
-
-
 ## Seeds the core categories once, then merges each ACE module's own section_descriptions()
 ## (module entries never override a core seed). Idempotent.
 static func _ensure_seeded() -> void:

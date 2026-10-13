@@ -104,16 +104,6 @@ static func descriptor_count() -> int:
 	return total
 
 
-## Returns descriptors for a provider including built-ins and runtime descriptors.
-static func get_provider_descriptors(provider_id: String) -> Array[ACEDescriptor]:
-	var output: Array[ACEDescriptor] = []
-	for descriptor: ACEDescriptor in get_all_descriptors():
-		if descriptor.provider_id == provider_id:
-			output.append(descriptor)
-
-	return output
-
-
 ## Finds a descriptor by provider and ACE ID.
 static func find_descriptor(provider_id: String, ace_id: String) -> ACEDescriptor:
 	_ensure_builtin_cache()

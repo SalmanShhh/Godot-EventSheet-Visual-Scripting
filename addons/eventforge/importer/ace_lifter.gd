@@ -3447,11 +3447,6 @@ static func _is_pure_range(expr: String) -> bool:
 	return false
 
 
-## True for a `_ready` body line that is a regenerated signal connection.
-static func _is_connect_line(line: String) -> bool:
-	return line.begins_with("\t") and line.ends_with(")") and line.contains(".connect(")
-
-
 ## True when this line is one of the connects the connection map already claimed - the only ones a
 ## lifted `_ready` may drop, because only those come back when the handler they wire re-emits.
 static func _is_known_connect_line(line: String, connections: Dictionary) -> bool:

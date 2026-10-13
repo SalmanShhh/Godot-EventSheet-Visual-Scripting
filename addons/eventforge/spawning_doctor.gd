@@ -243,12 +243,6 @@ static func declares_a_node(source: String) -> bool:
 	return false
 
 
-## True when a script's own text says it could earn one of the four findings. Pure over the text, so
-## the pre-read is pinned without opening anything.
-static func might_earn_a_finding(script_path: String) -> bool:
-	return says_enough(EventSheetProjectDoctor.source_of(script_path))
-
-
 ## The same question, asked of the text itself: does anything in it weigh at all.
 static func says_enough(source: String) -> bool:
 	return evidence(source) > 0

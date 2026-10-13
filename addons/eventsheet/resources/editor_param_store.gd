@@ -49,11 +49,6 @@ func clear_all() -> void:
 	overrides_cleared.emit()
 
 
-## Return a flat copy of all stored overrides (read-only snapshot).
-func get_all_overrides() -> Dictionary:
-	return _overrides.duplicate()
-
-
 ## Number of stored overrides.
 func override_count() -> int:
 	return _overrides.size()

@@ -125,11 +125,6 @@ static func record_output(lines: PackedStringArray) -> void:
 	_reload_output = lines
 
 
-static func clear_state() -> void:
-	_reload_output = PackedStringArray()
-	_blocked_reason = ""
-
-
 ## The red the bar wears while a reload is refused, and the door a test reads it through.
 static func blocked_reason() -> String:
 	return _blocked_reason
@@ -168,14 +163,6 @@ static func cfg_setting_rows(text: String) -> Array[Dictionary]:
 	return rows
 
 
-## One setting row's sentence, in the words every other setting row in the sheet uses.
-static func cfg_row_text(row: Dictionary) -> String:
-	var kind: String = EventSheetL10n.translate("file") if str(row.get("key", "")) == "script" \
-		else EventSheetL10n.translate("text")
-	return "%s %s %s = %s" % [EventSheetL10n.translate("setting"), kind,
-		str(row.get("key", "")), str(row.get("value", ""))]
-
-
 ## Whether the save question is still being asked. Off means the reader answered "Always".
 static func keep_asking() -> bool:
 	var settings: Object = EventSheetEditorSettings.current()
@@ -194,10 +181,6 @@ static func set_keep_asking(asking: bool) -> void:
 ## has a plugin list behind it, and a picture of the bar saying Disabled would be a picture of the
 ## harness rather than of the editor.
 static var _enabled_override: int = -1
-
-
-static func set_enabled_override(state: int) -> void:
-	_enabled_override = state
 
 
 ## Whether the plugin is ticked on right now. False headless, where there is no plugin list to ask.

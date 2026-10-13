@@ -131,7 +131,3 @@ func update(status: String, ratio: float) -> void:
 func hide_strip() -> void:
 	if is_instance_valid(_panel):
 		_panel.visible = false
-
-
-func is_visible() -> bool:
-	return is_instance_valid(_panel) and _panel.visible

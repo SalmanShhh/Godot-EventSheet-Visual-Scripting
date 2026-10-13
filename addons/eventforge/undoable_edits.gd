@@ -127,15 +127,6 @@ static func create_line(gesture: String) -> String:
 	return "%s.create_action(\"%s\")" % [HISTORY, gesture.c_escape()]
 
 
-## The name a gesture opened at this line carries, or "" when the line is not one. The exact inverse
-## of create_line, which is what lets the importer ask "is this the bracket the compiler would have
-## written here" instead of guessing.
-static func gesture_of_create_line(line: String) -> String:
-	var found: RegExMatch = _regex("^EditorInterface\\.get_editor_undo_redo\\(\\)\\.create_action\\(\"(?<gesture>.*)\"\\)$").search(
-		line.strip_edges())
-	return "" if found == null else found.get_string("gesture").c_unescape()
-
-
 ## True when this row is one of the three that write into the editor's undo history. Asked of an
 ## action of any kind, so a verbatim block or a match row answers false rather than erroring.
 static func is_undoable(item: Variant) -> bool:

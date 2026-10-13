@@ -60,11 +60,6 @@ static func trail_reading(trail: PackedStringArray) -> String:
 	return " › ".join(said)
 
 
-## The trail as the panel has it - what the Why panel and the tests read.
-func mode_trail() -> PackedStringArray:
-	return _mode_trail
-
-
 ## Toggles live-value streaming for this sheet (debug compiles send variable frames;
 ## the window shows them while the game runs). Recompile + run to start streaming.
 func toggle() -> void:

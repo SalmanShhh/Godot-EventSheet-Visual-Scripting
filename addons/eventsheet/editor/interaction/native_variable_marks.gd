@@ -54,7 +54,6 @@ const BADGE_INSPECTOR := "inspector"
 const BADGE_RANGE := "range"
 const BADGE_TOOLTIP := "tooltip"
 const BADGE_SAVED := "saved"
-const BADGE_ORDER: PackedStringArray = [BADGE_INSPECTOR, BADGE_RANGE, BADGE_TOOLTIP, BADGE_SAVED]
 
 ## A badge tile and the icon inside it, and the room between two tiles and before the first.
 const TILE_SIZE := 18.0

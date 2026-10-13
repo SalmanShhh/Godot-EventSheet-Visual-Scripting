@@ -174,7 +174,6 @@ const TEXT_LISTING_PATH := "res://addons/eventsheet/editor/dock/text_listing.gd"
 const ROW_HEIGHT := EventSheetPalette.ROW_HEIGHT
 const INDENT_WIDTH := EventSheetPalette.INDENT_WIDTH
 const FONT_SIZE := EventSheetPalette.FONT_SIZE
-const CONDITION_KEYWORD_METADATA := {"lane": "condition", "hoverable": false}
 # The `not` badge carries no colour of its own: the builder fills badge_bg / badge_fg from the live
 # theme (the condition lane's badge pair and the event style's invert marker), so a preset dresses it
 # like every other badge in the lane. The reading style's OR pair now dresses the "or" DIVIDER the
@@ -688,10 +687,6 @@ func expand_to_level(level: int) -> void:
 ## is not collapsed. Called by the renderer through this control.
 func collapsed_row_summary(row_data: EventRowData) -> String:
 	return _folding.collapsed_summary(row_data)
-
-
-func _persist_region_folds() -> void:
-	_folding.persist_region_folds()
 
 
 func region_fold_snapshot() -> Dictionary:
@@ -1461,14 +1456,6 @@ func get_zoom_factor() -> float:
 	return _zoom_factor
 
 
-func can_zoom_in() -> bool:
-	return _zoom_factor < MAX_ZOOM_FACTOR
-
-
-func can_zoom_out() -> bool:
-	return _zoom_factor > MIN_ZOOM_FACTOR
-
-
 func set_zoom_factor(value: float) -> void:
 	var clamped_value: float = clampf(value, MIN_ZOOM_FACTOR, MAX_ZOOM_FACTOR)
 	if is_equal_approx(_zoom_factor, clamped_value):
@@ -2103,10 +2090,6 @@ func set_object_preview(object_label: String) -> void:
 		return
 	_object_preview = wanted
 	queue_redraw()
-
-
-func object_preview() -> String:
-	return _object_preview
 
 
 ## True when a row's own cells name the previewed object - matched on the OBJECT COLUMN, so a row

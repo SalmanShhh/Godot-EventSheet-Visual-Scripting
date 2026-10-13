@@ -208,11 +208,6 @@ func set_project_bar(bar: Control) -> void:
 	_apply_active_tab()
 
 
-## Which tab of the bar is showing - "objects" or "project".
-func active_tab() -> String:
-	return _active_tab
-
-
 func set_active_tab(tab_id: String) -> void:
 	if _project_bar == null:
 		tab_id = "objects"
@@ -230,11 +225,6 @@ func _apply_active_tab() -> void:
 	_sort_button.visible = on_objects and _expanded
 	if _project_bar != null:
 		_project_bar.visible = not on_objects
-
-
-## Which object's rows are currently highlighted, or "" when none are.
-func highlighted_object() -> String:
-	return _highlighted
 
 
 ## Highlights one object FROM OUTSIDE - the Scene dock's selection landing on a node this sheet

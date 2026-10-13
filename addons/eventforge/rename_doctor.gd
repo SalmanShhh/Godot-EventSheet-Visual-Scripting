@@ -38,7 +38,6 @@ extends EventSheetDoctorSection
 ## the wording: the quick-fix chips and the tests address a finding by its check id.
 const CHECK_ID := "renames"
 const CHECK_CALL_GONE := EventSheetRenameFindings.KIND_CALL_GONE
-const CHECK_NODE_GONE := EventSheetRenameFindings.KIND_NODE_GONE
 
 
 ## Registers the section, replacing any previous registration - so a plugin reload, a second Doctor

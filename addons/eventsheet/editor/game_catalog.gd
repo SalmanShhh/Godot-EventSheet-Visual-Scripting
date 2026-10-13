@@ -77,14 +77,6 @@ static func preview_locale() -> String:
 	return _preview_locale
 
 
-static func preview_source() -> String:
-	return _preview_source
-
-
-static func is_previewing() -> bool:
-	return not _preview_locale.is_empty()
-
-
 ## One source string as the preview shows it. The identity when no preview is active, the pseudo
 ## transform under the pseudo locale, and the catalog's translation otherwise - falling back to the
 ## source string exactly as tr() does when a key is missing, so an untranslated row reads as the

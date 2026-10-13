@@ -23,7 +23,6 @@ extends RefCounted
 ## asking the API itself here would compile it, and everything it names, into the first open.
 const DOCK_REGISTRY := preload("res://addons/eventsheet/api/dock_registry.gd")
 
-const RESULT_ROW_META := "find_result"
 ## The project-wide search, read by path when a search runs, so the first open does not compile it.
 const FIND_REFERENCES_PATH := "res://addons/eventsheet/editor/dock/find_references.gd"
 

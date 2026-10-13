@@ -163,11 +163,6 @@ static func receipt_path() -> String:
 	return "%s/%s" % [EventSheetDocEngineReference.cache_dir(), RECEIPT_FILE]
 
 
-## True when this engine's cache has been filled with the reference text.
-static func is_fetched() -> bool:
-	return FileAccess.file_exists(receipt_path())
-
-
 ## Why a fetch cannot run, in one sentence, or "" when it can. Asked by every door before it offers
 ## the action, so a reader is never shown a button that would fail.
 static func blocked_reason() -> String:

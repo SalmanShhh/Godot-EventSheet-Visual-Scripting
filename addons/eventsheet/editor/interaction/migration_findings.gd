@@ -110,13 +110,6 @@ static func resolver_over(keys: Dictionary) -> Callable:
 		return keys.has(EventForgeSuccessors.key_of(provider_id, ace_id))
 
 
-## The resolver a headless run uses: the shipped vocabulary as the forwarding-address catalogue
-## reflects it, which is the built-in descriptors plus every installed pack. Built once and closed
-## over, so a walk of a hundred rows reflects the packs once rather than a hundred times.
-static func catalog_resolver() -> Callable:
-	return resolver_over(EventForgeSuccessors.catalog())
-
-
 ## Where this row's verb went, as a "<provider>::<ace_id>" key, or "" when the vocabulary has no
 ## forwarding address for it. A verb that is gone is usually gone without one - the address is
 ## carried BY the old entry, and the old entry is what is missing - so this answers for the case

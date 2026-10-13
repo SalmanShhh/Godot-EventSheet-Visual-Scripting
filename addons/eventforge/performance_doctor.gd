@@ -87,12 +87,6 @@ static func sweep() -> Dictionary:
 	return {"busy": busy, "handles_trouble": handles_trouble}
 
 
-## Every script in the project worth opening: one that does something every frame AND spells one of
-## the six shapes somewhere.
-static func busy_scripts() -> PackedStringArray:
-	return PackedStringArray(sweep().get("busy", PackedStringArray()))
-
-
 ## Whether the project still wants to be asked about this. Absent means yes, which is what makes it
 ## a suggestion a new project sees exactly once.
 static func _still_asking() -> bool:

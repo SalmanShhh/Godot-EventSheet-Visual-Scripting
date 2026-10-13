@@ -93,16 +93,6 @@ func get_provider_definitions(provider_id: String) -> Array[ACEDefinition]:
 	return output
 
 
-func get_categories() -> PackedStringArray:
-	var categories: PackedStringArray = PackedStringArray()
-	for definition in _definitions:
-		if definition.category.is_empty() or categories.has(definition.category):
-			continue
-		categories.append(definition.category)
-	categories.sort()
-	return categories
-
-
 func search(query: String, category: String = "", ace_type: int = -1) -> Array[ACEDefinition]:
 	var output: Array[ACEDefinition] = []
 	var normalized_query: String = query.to_lower().strip_edges()
