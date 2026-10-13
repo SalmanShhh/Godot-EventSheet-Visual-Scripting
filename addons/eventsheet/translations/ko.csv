@@ -8429,3 +8429,31 @@ New Data Table…,새 데이터 테이블…
 "Sheets aren't only for gameplay: Sheet > New Data Table… is a small spreadsheet - name what one row is, give each column a kind, type the rows - and Insert writes a data asset whose Inspector is that same table, plus a .tres holding your rows - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.","시트는 게임플레이만을 위한 것이 아닙니다: Sheet > New Data Table…은 작은 스프레드시트입니다. 한 행이 무엇인지 쓰고, 각 열에 종류를 주고, 행을 입력하면, 삽입이 바로 그 표가 Inspector가 되는 데이터 애셋과 행을 담은 .tres를 씁니다(전리품 테이블, 대사, 웨이브 계획). 디자이너는 행을 채우고 .tres 변형을 저장하며, 시트가 그것을 불러옵니다. Sheet > New Editor Tool…도 같은 방식으로 한 번의 클릭으로 끝나는 에디터 작업을 만듭니다."
 Peek at Sheet > New Data Table… (Esc closes it without creating anything).,Sheet > New Data Table…을 살펴보세요 (Esc를 누르면 아무것도 만들지 않고 닫힙니다).
 Remove column,열 제거
+Source file,원본 파일
+"The exported project (.zip) or one exported sheet (.json); it is never written to. Every condition, action and expression this vocabulary knows becomes the row that says the same thing; anything it does not know arrives switched off with its own words beside it.","내보낸 프로젝트(.zip)나 내보낸 시트 하나(.json)입니다. 여기에 쓰는 일은 없습니다. 이 어휘가 아는 조건, 액션, 표현식은 같은 뜻의 행이 되고, 모르는 것은 원래 말을 옆에 둔 채 꺼진 상태로 들어옵니다."
+Which event sheet inside the project comes across. Nothing is written until Save as…,프로젝트 안의 어느 이벤트 시트를 가져올지 고릅니다. 다른 이름으로 저장… 전에는 아무것도 쓰지 않습니다.
+Becomes,변환
+"What kind of object it was, which decides the words its rows read with.","어떤 종류의 오브젝트였는지로, 그 행이 읽히는 말이 정해집니다."
+"Written into the rows as-is, so $Player means the child called Player; empty acts on the sheet's own node and keeps the object name in the report.",행에 그대로 쓰이므로 $Player는 Player라는 자식을 뜻합니다. 비워 두면 시트 자신의 노드에 작용하고 오브젝트 이름은 보고서에 남습니다.
+Manage what %s includes,%s이(가) 포함하는 것 관리
+%d function(s),함수 %d개
+%d variable(s),변수 %d개
+ADDS,추가
+This sheet,이 시트
+Pick an include to see what it brings; Add… includes another sheet.,포함 항목을 고르면 무엇을 가져오는지 보입니다. 추가…로 다른 시트를 포함합니다.
+This include is missing or is not a sheet - Remove takes it off the list.,이 포함 항목이 없거나 시트가 아닙니다 - 제거로 목록에서 뺍니다.
+"%s - read-only here. Open Source Sheet… edits it, and every sheet that includes it follows.",%s - 여기서는 읽기 전용입니다. 원본 시트 열기…로 편집하면 이를 포함한 모든 시트가 따라갑니다.
+Add an include to %s,%s에 포함 항목 추가
+included,포함됨
+already included,이미 포함됨
+would loop,순환이 생깁니다
+not an event sheet,이벤트 시트가 아닙니다
+Fix %s first,먼저 %s을(를) 고치세요
+file not found,파일을 찾을 수 없음
+empty path,빈 경로
+Move up,위로
+Move down,아래로
+Remove,제거
+Included sheets,포함된 시트
+Preview,미리 보기
+Contents,내용

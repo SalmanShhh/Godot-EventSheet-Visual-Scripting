@@ -87,6 +87,23 @@
 - ▲ in the Designer moves a variable above the next one UP in the Inspector. It used to swap with
   the variable just above it in the file even when that one is not shown in the Inspector, which
   changed nothing anybody could see.
+### Changed: Sheet Type, Manage Includes and Import event sheet say what they will write
+
+- Sheet Type's "Ships as" line is the band across the top, with a "?" where the field that is wrong
+  goes; the problem is said under the fields, the field is marked, and the foot says which field to
+  fix while OK waits. The chosen kind's description stays in view under Kind, and the help strip
+  shows the `extends` line the sheet will compile to.
+- Manage Includes shows what each include brings beside its name ("3 function(s)", "file not
+  found"), and the help strip says what the selected one is and every function and variable it
+  ADDS. Move up and Move down are named. Add… opens a picker of the project's sheet files in which
+  a file already included, one that would include this sheet back, or one that is not a sheet is
+  marked the moment it is chosen, and Include waits. Includes stay `.tres` sheets: the compiler
+  merges sheet resources, so a `.gd` script cannot be an include.
+- Import event sheet names the sheet coming across, the file it becomes and how many rows mapped
+  in a band across the top; the object grid has column heads (Object, Becomes, Node); the report
+  sits beside the preview; the long explanations moved into the help strip; and when Save as…
+  cannot compile the sheet, the reason is said in the foot beside the button.
+
 ### Changed: the Start page, the Welcome, the tour and New Event Sheet say what a choice does first
 
 - The Start page's first column opens with "Open an existing script…", so a project that already

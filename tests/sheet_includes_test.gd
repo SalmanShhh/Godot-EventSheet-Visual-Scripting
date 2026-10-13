@@ -5,6 +5,8 @@
 class_name SheetIncludesTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
+
 
 static func run() -> bool:
     var passed: bool = true
@@ -27,6 +29,16 @@ static func run() -> bool:
         (summary.get("variables", []) as Array).has("score") and (summary.get("variables", []) as Array).has("lives"), true) and passed
     passed = _check("summarize of a missing path is invalid",
         bool(EventSheetIncludes.summarize("res://does_not_exist.tres").get("valid", true)), false) and passed
+    # Manage Includes says what each include brings beside its name, and the strip what it ADDS.
+    passed = SUPPORT.pins("include_manager_words", [
+        ["an include's second column counts its functions", EventSheetIncludeManager.brings(summary), "1 function(s)"],
+        ["a missing include says so", EventSheetIncludeManager.brings(EventSheetIncludes.summarize("res://does_not_exist.tres")),
+            "file not found"],
+        ["the strip's ADDS line lists the calls, then the variables", EventSheetIncludeManager.adds_line(summary),
+            "add_score() · lives · score"],
+        ["the picker offers the sheet files by name, sorted, outside addons/",
+            Array(EventSheetIncludeManager.sheet_files("res://tests/fixtures")).has("res://tests/fixtures/compiler_golden_sheet.tres"), true],
+    ]) and passed
     DirAccess.remove_absolute(path)
 
     # ── extract_to_include ─────────────────────────────────────────────────────────

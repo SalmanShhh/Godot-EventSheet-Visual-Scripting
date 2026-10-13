@@ -47,6 +47,9 @@ const DIALOG_FILES: Array[String] = [
 	"res://addons/eventsheet/editor/dock/start_page.gd",
 	"res://addons/eventsheet/editor/dock/tour_window.gd",
 	"res://addons/eventsheet/editor/new_sheet_dialog.gd",
+	"res://addons/eventsheet/editor/dock/sheet_type_dialog.gd",
+	"res://addons/eventsheet/editor/dock/include_manager.gd",
+	"res://addons/eventsheet/editor/dock/import_sheet_wizard.gd",
 ]
 
 

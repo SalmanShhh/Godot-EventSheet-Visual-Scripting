@@ -8429,3 +8429,31 @@ New Data Table…,新しいデータテーブル…
 "Sheets aren't only for gameplay: Sheet > New Data Table… is a small spreadsheet - name what one row is, give each column a kind, type the rows - and Insert writes a data asset whose Inspector is that same table, plus a .tres holding your rows - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.",シートはゲームプレイ専用ではありません: Sheet > New Data Table… は小さな表計算です。1 行が何かを書き、各列に種類を与え、行を入力すると、挿入でその表がそのまま Inspector になるデータアセットと、行を収めた .tres が書き出されます (ドロップテーブル、セリフ、ウェーブ計画)。デザイナーは行を記入して .tres のバリエーションを保存し、シートがそれを読み込みます。Sheet > New Editor Tool… も同じように、ワンクリックのエディタ作業を作ります。
 Peek at Sheet > New Data Table… (Esc closes it without creating anything).,Sheet > New Data Table… を覗いてみましょう (Esc で何も作らずに閉じます)。
 Remove column,列を削除
+Source file,元ファイル
+"The exported project (.zip) or one exported sheet (.json); it is never written to. Every condition, action and expression this vocabulary knows becomes the row that says the same thing; anything it does not know arrives switched off with its own words beside it.",書き出したプロジェクト (.zip) か、書き出したシート 1 枚 (.json)。書き込まれることはありません。この語彙が知っている条件・アクション・式は同じ意味の行になり、知らないものは元の言葉を添えてオフの状態で入ります。
+Which event sheet inside the project comes across. Nothing is written until Save as…,プロジェクト内のどのイベントシートを取り込むか。名前を付けて保存… までは何も書き込まれません。
+Becomes,変換先
+"What kind of object it was, which decides the words its rows read with.",どんな種類のオブジェクトだったか。これで行の読み方の言葉が決まります。
+"Written into the rows as-is, so $Player means the child called Player; empty acts on the sheet's own node and keeps the object name in the report.",行にそのまま書かれるので、$Player は Player という名前の子を指します。空ならシート自身のノードに作用し、オブジェクト名はレポートに残ります。
+Manage what %s includes,%s のインクルードを管理
+%d function(s),%d 個の関数
+%d variable(s),%d 個の変数
+ADDS,追加されるもの
+This sheet,このシート
+Pick an include to see what it brings; Add… includes another sheet.,インクルードを選ぶと中身が分かります。追加… で別のシートを含めます。
+This include is missing or is not a sheet - Remove takes it off the list.,このインクルードは見つからないかシートではありません - 削除で一覧から外せます。
+"%s - read-only here. Open Source Sheet… edits it, and every sheet that includes it follows.",%s - ここでは読み取り専用です。元のシートを開く… で編集でき、それを含むすべてのシートに反映されます。
+Add an include to %s,%s にインクルードを追加
+included,インクルード済み
+already included,インクルード済み
+would loop,循環します
+not an event sheet,イベントシートではありません
+Fix %s first,先に %s を直してください
+file not found,ファイルが見つかりません
+empty path,パスが空です
+Move up,上へ
+Move down,下へ
+Remove,削除
+Included sheets,インクルードしたシート
+Preview,プレビュー
+Contents,内容

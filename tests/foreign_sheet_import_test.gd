@@ -113,9 +113,13 @@ static func _wizard() -> bool:
 	# Save as… that cannot write says so on the report instead of being dropped.
 	wizard._imported = {"sheet": null, "report": {}}
 	wizard._on_save_path_chosen("user://foreign_import_never_written.gd")
-	passed = _check("a Save as that did not compile is reported on the window",
-		wizard._report_label.text.get_slice("
-", 0), "[b]Not saved.[/b] That sheet did not compile: Sheet is null") and passed
+	passed = _check("a Save as that did not compile says why in the foot",
+		wizard._save_note.text, "Not saved. That sheet did not compile: Sheet is null") and passed
+	# The band names the sheet, the file it becomes and the count before anything is written.
+	wizard.load_source(FIXTURE)
+	passed = _check("the band names what comes across, where to, and how much",
+		[wizard._band.words_label.text.get_slice(" → ", 1).get_extension(), wizard._band.note_label.text],
+		["gd", "14 of 17 rows mapped (82%)"]) and passed
 	host.free()
 	return passed
 

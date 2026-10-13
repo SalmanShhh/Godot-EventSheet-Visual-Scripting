@@ -74,6 +74,8 @@ static func _test_dialogs_are_found() -> bool:
 		"res://addons/eventsheet/editor/dock/author_actions.gd",
 		"res://addons/eventsheet/editor/dock/comment_and_scope_dialogs.gd",
 		"res://addons/eventsheet/editor/dock/compare_condition_dialog.gd",
+		"res://addons/eventsheet/editor/dock/import_sheet_wizard.gd",
+		"res://addons/eventsheet/editor/dock/include_manager.gd",
 		"res://addons/eventsheet/editor/dock/insert_snippet_dialog.gd",
 		"res://addons/eventsheet/editor/dock/message_dialog.gd",
 		"res://addons/eventsheet/editor/dock/modes_dialog.gd",

@@ -8429,3 +8429,31 @@ New Data Table…,新建数据表…
 "Sheets aren't only for gameplay: Sheet > New Data Table… is a small spreadsheet - name what one row is, give each column a kind, type the rows - and Insert writes a data asset whose Inspector is that same table, plus a .tres holding your rows - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.","事件表不只服务于玩法:Sheet > New Data Table… 是一个小电子表格 - 说明一行是什么,给每列一个类型,输入各行 - 然后插入会写出一个数据资源,它的检查器就是这张表,另外还有一个保存你的行的 .tres - 掉落表、对白、波次计划。设计师填写行并保存 .tres 变体;你的事件表加载它们。Sheet > New Editor Tool… 也以同样的方式制作一键完成的编辑器杂务。"
 Peek at Sheet > New Data Table… (Esc closes it without creating anything).,"看一看 Sheet > New Data Table… (按 Esc 关闭,不会创建任何东西)。"
 Remove column,移除列
+Source file,源文件
+"The exported project (.zip) or one exported sheet (.json); it is never written to. Every condition, action and expression this vocabulary knows becomes the row that says the same thing; anything it does not know arrives switched off with its own words beside it.",导出的项目 (.zip) 或单个导出的表 (.json)；不会写入它。此词汇认识的每个条件、动作和表达式都会变成意思相同的行；不认识的会以关闭状态导入，并在旁边保留原话。
+Which event sheet inside the project comes across. Nothing is written until Save as…,要导入项目中的哪张事件表。点另存为… 之前不会写入任何内容。
+Becomes,变为
+"What kind of object it was, which decides the words its rows read with.",它原来是哪种对象，这决定了它的行用什么词来读。
+"Written into the rows as-is, so $Player means the child called Player; empty acts on the sheet's own node and keeps the object name in the report.",按原样写入各行，所以 $Player 指名为 Player 的子节点；留空则作用于表自身的节点，并在报告中保留对象名。
+Manage what %s includes,管理 %s 包含的内容
+%d function(s),%d 个函数
+%d variable(s),%d 个变量
+ADDS,添加
+This sheet,此表
+Pick an include to see what it brings; Add… includes another sheet.,选一个包含项看看它带来什么；点添加… 可包含另一张表。
+This include is missing or is not a sheet - Remove takes it off the list.,此包含项缺失或不是表 - 点移除可将其从列表中去掉。
+"%s - read-only here. Open Source Sheet… edits it, and every sheet that includes it follows.",%s - 此处只读。点打开源表… 可编辑它，所有包含它的表都会随之更新。
+Add an include to %s,为 %s 添加包含项
+included,已包含
+already included,已包含
+would loop,会形成循环
+not an event sheet,不是事件表
+Fix %s first,请先修正 %s
+file not found,找不到文件
+empty path,空路径
+Move up,上移
+Move down,下移
+Remove,移除
+Included sheets,已包含的表
+Preview,预览
+Contents,内容

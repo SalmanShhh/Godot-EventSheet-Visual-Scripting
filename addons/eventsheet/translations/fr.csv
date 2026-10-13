@@ -8429,3 +8429,31 @@ New Data Table…,Nouvelle table de données…
 "Sheets aren't only for gameplay: Sheet > New Data Table… is a small spreadsheet - name what one row is, give each column a kind, type the rows - and Insert writes a data asset whose Inspector is that same table, plus a .tres holding your rows - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.","Les feuilles ne servent pas qu'au gameplay : Sheet > New Data Table… est un petit tableur - dites ce qu'est une ligne, donnez un type à chaque colonne, tapez les lignes - et Insérer écrit un asset de données dont l'Inspecteur est cette même table, plus un .tres contenant vos lignes - tables de butin, répliques, plans de vagues. Les game designers remplissent des lignes et enregistrent des variantes .tres ; vos feuilles les chargent. Et Sheet > New Editor Tool… fait les corvées de l'éditeur en un clic de la même façon."
 Peek at Sheet > New Data Table… (Esc closes it without creating anything).,Jetez un œil à Sheet > New Data Table… (Échap la ferme sans rien créer).
 Remove column,Retirer la colonne
+Source file,Fichier source
+"The exported project (.zip) or one exported sheet (.json); it is never written to. Every condition, action and expression this vocabulary knows becomes the row that says the same thing; anything it does not know arrives switched off with its own words beside it.","Le projet exporté (.zip) ou une feuille exportée (.json) ; il n'est jamais modifié. Chaque condition, action et expression que ce vocabulaire connaît devient la ligne qui dit la même chose ; ce qu'il ne connaît pas arrive désactivé avec ses propres mots à côté."
+Which event sheet inside the project comes across. Nothing is written until Save as…,Quelle feuille d'événements du projet est importée. Rien n'est écrit avant Enregistrer sous…
+Becomes,Devient
+"What kind of object it was, which decides the words its rows read with.","Le type d'objet qu'il était, qui décide des mots avec lesquels ses lignes se lisent."
+"Written into the rows as-is, so $Player means the child called Player; empty acts on the sheet's own node and keeps the object name in the report.","Écrit tel quel dans les lignes, donc $Player désigne l'enfant nommé Player ; vide agit sur le nœud de la feuille et garde le nom de l'objet dans le rapport."
+Manage what %s includes,Gérer ce que %s inclut
+%d function(s),%d fonction(s)
+%d variable(s),%d variable(s)
+ADDS,AJOUTE
+This sheet,Cette feuille
+Pick an include to see what it brings; Add… includes another sheet.,Choisissez une inclusion pour voir ce qu'elle apporte ; Ajouter… inclut une autre feuille.
+This include is missing or is not a sheet - Remove takes it off the list.,Cette inclusion est absente ou n'est pas une feuille - Retirer l'enlève de la liste.
+"%s - read-only here. Open Source Sheet… edits it, and every sheet that includes it follows.","%s - en lecture seule ici. Ouvrir la feuille source… la modifie, et chaque feuille qui l'inclut suit."
+Add an include to %s,Ajouter une inclusion à %s
+included,incluse
+already included,déjà incluse
+would loop,bouclerait
+not an event sheet,pas une feuille d'événements
+Fix %s first,Corrigez d'abord %s
+file not found,fichier introuvable
+empty path,chemin vide
+Move up,Monter
+Move down,Descendre
+Remove,Retirer
+Included sheets,Feuilles incluses
+Preview,Aperçu
+Contents,Contenu

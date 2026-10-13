@@ -11,8 +11,9 @@ extends RefCounted
 # filled from the sheet at open() and its value passes through on OK, so opening + OK never mutates
 # hidden state. The composition fields (tags / includes / uses / requires) live behind a collapsed
 # "More" disclosure; the @tool toggle sits with the identity fields. A live identity line previews the
-# compiled `class_name X extends Y` and validates the host class + class name as you type, and OK stays
-# disabled while that line shows a problem, so a sheet never ships the broken name it warned about.
+# compiled `class_name X extends Y` in the band across the top and validates the host class + class
+# name as you type; the problem is said under the fields, and OK stays disabled (the foot says which
+# field to fix) while it shows, so a sheet never ships the broken name it warned about.
 
 var _dock: Control = null
 var _sheet_type_dialog: ConfirmationDialog = null
@@ -34,7 +35,14 @@ var _sheet_type_autoload_edit: LineEdit = null
 var _plugin_capabilities_box: VBoxContainer = null
 var _plugin_capability_checks: Dictionary = {}
 var _identity_card: PanelContainer = null
-var _ships_as: Label = null
+## The band across the top: the class line the sheet ships as, redrawn as the fields change.
+var _band: EventSheetPopupUI.RowBand = null
+## The first problem the identity has, under the field it is about; OK waits while it shows.
+var _problem: EventSheetPopupUI.StateNote = null
+## The chosen kind's one line, kept in view under the dropdown.
+var _kind_hint: Label = null
+## Beside OK and Cancel: which field to fix before OK will go.
+var _foot_note: Label = null
 ## What a new Name would rename elsewhere, said before OK writes other files - the same sentence the
 ## head's Rename class dialog shows. Counted once per open, the first time the Name differs.
 var _rename_reach: Label = null
@@ -394,17 +402,22 @@ func _ensure_sheet_type_dialog() -> void:
 	_sheet_type_dialog = ConfirmationDialog.new()
 	_sheet_type_dialog.title = "Sheet Type"
 	var form: VBoxContainer = EventSheetPopupUI.form_box()
+	_band = EventSheetPopupUI.RowBand.new(true)
+	form.add_child(_band)
 	# Drop a Scene-dock node ANYWHERE on the dialog and the host field takes its class - the
 	# fastest honest answer to "what do I type in Controls / extends?" is the node you meant.
 	form.set_drag_forwarding(Callable(), _can_drop_node, _drop_node)
-	_sheet_type_option = OptionButton.new()
+	_sheet_type_option = EventSheetPopupUI.described_option()
 	for type_index: int in TYPE_ORDER:
 		if type_index < 0:
 			_sheet_type_option.add_separator()
 			continue
 		_sheet_type_option.add_item(TYPE_LABELS[type_index], type_index)
+		_sheet_type_option.set_item_tooltip(_sheet_type_option.item_count - 1, TYPE_HINTS[type_index])
 	_sheet_type_option.item_selected.connect(func(_index: int) -> void: _refresh_type_ui())
 	form.add_child(EventSheetPopupUI.form_row("Kind", _sheet_type_option))
+	_kind_hint = EventSheetPopupUI.hint_label("", 440.0)
+	form.add_child(_kind_hint)
 	# Identity card - only the fields the chosen type consumes are visible (see field_visibility).
 	var ident_box: VBoxContainer = EventSheetPopupUI.form_box()
 	_sheet_type_name_edit = _dock._add_sheet_type_field(ident_box, "Name", "PatrolBehavior")
@@ -464,9 +477,9 @@ func _ensure_sheet_type_dialog() -> void:
 		_plugin_capabilities_box.add_child(check)
 		_plugin_capability_checks[str(capability["key"])] = check
 	ident_box.add_child(_plugin_capabilities_box)
-	# The live compiled-identity line: `class_name X extends Y`, or the first validation problem.
-	_ships_as = EventSheetPopupUI.hint_label("", 440.0)
-	ident_box.add_child(_ships_as)
+	# The first validation problem, said where the fields are; the class line itself is the band.
+	_problem = EventSheetPopupUI.StateNote.new(440.0)
+	ident_box.add_child(_problem)
 	_rename_reach = EventSheetPopupUI.hint_label("", 440.0)
 	_rename_reach.visible = false
 	ident_box.add_child(_rename_reach)
@@ -510,6 +523,11 @@ func _ensure_sheet_type_dialog() -> void:
 	_help_strip.follow(_sheet_type_tool_check, "Runs in the editor too · @tool",
 		"The script runs inside the editor as well as in the game, so its events fire while you are building the scene.")
 	_sheet_type_dialog.add_child(EventSheetPopupUI.margined(form))
+	_foot_note = Label.new()
+	_foot_note.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
+	var foot: Node = _sheet_type_dialog.get_ok_button().get_parent()
+	foot.add_child(_foot_note)
+	foot.move_child(_foot_note, 0)
 	_sheet_type_dialog.confirmed.connect(_on_sheet_type_confirmed)
 	_dock.add_child(_sheet_type_dialog)
 
@@ -535,6 +553,8 @@ func _refresh_type_ui() -> void:
 		_:
 			_host_label.text = "Extends"
 	_host_menu.visible = type_index != 5  # the node shortlist makes no sense for a Resource host
+	EventSheetPopupUI.follow_description(_sheet_type_option)
+	_kind_hint.text = TYPE_HINTS[type_index]
 	_refresh_identity_preview()
 	if _sheet_type_dialog.visible:
 		_sheet_type_dialog.reset_size()
@@ -594,24 +614,41 @@ func _open_icon_file_dialog() -> void:
 
 func _refresh_identity_preview() -> void:
 	var own_class_name: String = _dock._current_sheet.custom_class_name if _dock._current_sheet != null else ""
-	_ships_as.text = identity_preview(
-		_selected_type(),
-		_sheet_type_name_edit.text,
-		_sheet_type_host_edit.text,
-		_sheet_type_autoload_edit.text,
-		own_class_name
-	)
-	_sheet_type_dialog.get_ok_button().disabled = preview_blocks_apply(_ships_as.text)
-	_refresh_rename_reach(own_class_name)
+	var preview: String = identity_preview(_selected_type(), _sheet_type_name_edit.text,
+		_sheet_type_host_edit.text, _sheet_type_autoload_edit.text, own_class_name)
+	var blocked: bool = preview_blocks_apply(preview)
+	# An unknown host is the only problem the Extends field owns; every other one is the Name's.
+	var host_bad: bool = blocked and preview.begins_with("x Unknown class")
+	_band.show_row("", band_line(preview, _sheet_type_name_edit.text, _sheet_type_host_edit.text),
+		EventSheetL10n.translate("Ships as"))
+	_problem.say(preview.trim_prefix("x ") if blocked else "")
+	EventSheetPopupUI.mark_field(_sheet_type_host_edit, host_bad)
+	EventSheetPopupUI.mark_field(_sheet_type_name_edit, blocked and not host_bad)
+	var to_fix: String = _host_label.text.get_slice(" (", 0) if host_bad else EventSheetL10n.translate("Name")
+	_foot_note.text = EventSheetL10n.translate("Fix %s first") % to_fix if blocked else ""
+	var line: String = _band.words_label.text
+	_help_strip.set_reading("", line.substr(line.find("extends")) if not blocked else "")
+	_sheet_type_dialog.get_ok_button().disabled = blocked
+	_refresh_rename_reach(own_class_name, blocked)
+
+
+## The class line the band shows: the preview's own line, or - while there is a problem - the line
+## with a "?" where the field that is wrong goes.
+static func band_line(preview: String, typed_name: String, typed_host: String) -> String:
+	if not preview_blocks_apply(preview):
+		return preview.trim_prefix("Ships as:  ")
+	if not preview.begins_with("x Unknown class"):
+		return "class_name ? extends %s" % (typed_host.strip_edges() if not typed_host.strip_edges().is_empty() else "Node")
+	return "class_name %s extends ?" % typed_name.strip_edges() if not typed_name.strip_edges().is_empty() else "extends ?"
 
 
 ## A new Name on a named class renames every use of it, other files included, so the dialog says how
 ## far that reaches before OK - not only on the status line once the files are written.
-func _refresh_rename_reach(own_class_name: String) -> void:
+func _refresh_rename_reach(own_class_name: String, blocked: bool) -> void:
 	var typed: String = _sheet_type_name_edit.text.strip_edges()
 	var renaming: bool = bool(field_visibility(_selected_type()).get("name", false)) \
 		and not own_class_name.strip_edges().is_empty() and not typed.is_empty() \
-		and typed != own_class_name.strip_edges() and not preview_blocks_apply(_ships_as.text)
+		and typed != own_class_name.strip_edges() and not blocked
 	if renaming and _rename_reach_text.is_empty():
 		_rename_reach_text = _dock._head_actions.class_rename_reach_text()
 	_rename_reach.text = _rename_reach_text if renaming else ""

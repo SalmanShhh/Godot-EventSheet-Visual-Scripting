@@ -65,13 +65,30 @@ static func _test_ok_waits_for_a_valid_identity() -> bool:
 	var dialog: EventSheetSheetTypeDialog = editor._sheet_type as EventSheetSheetTypeDialog
 	dialog._ensure_sheet_type_dialog()
 	dialog._select_type(1)
+	dialog._refresh_type_ui()
 	dialog._sheet_type_host_edit.text = "Node2D"
 	dialog._sheet_type_name_edit.text = "My Class"
 	dialog._refresh_identity_preview()
 	ok = _check("OK is disabled while the class name is invalid",
 		dialog._sheet_type_dialog.get_ok_button().disabled, true) and ok
+	var bad_name: Array = [dialog._band.words_label.text, dialog._problem.text, dialog._foot_note.text]
+	dialog._sheet_type_host_edit.text = "CharcterBody2D"
 	dialog._sheet_type_name_edit.text = "Guard"
 	dialog._refresh_identity_preview()
+	var bad_host: Array = [dialog._band.words_label.text, dialog._problem.text, dialog._foot_note.text]
+	dialog._sheet_type_host_edit.text = "Node2D"
+	dialog._refresh_identity_preview()
+	ok = SUPPORT.pins("sheet_type_band", [
+		["the band puts a ? where the bad name goes, the note says why, the foot says what to fix",
+			bad_name, ["class_name ? extends Node2D",
+				"\"My Class\" can't be a class name (letters/digits/underscores, no keywords).", "Fix Name first"]],
+		["an unknown host is the Extends field's problem", bad_host, ["class_name Guard extends ?",
+			"Unknown class \"CharcterBody2D\" - did you mean CharacterBody2D?", "Fix Extends first"]],
+		["a valid identity is the band's class line, and the strip's IN CODE",
+			[dialog._band.words_label.text, dialog._problem.text, dialog._foot_note.text, dialog._help_strip.in_code_value.text],
+			["class_name Guard extends Node2D", "", "", "extends Node2D"]],
+		["the chosen kind's line stays in view", dialog._kind_hint.text, EventSheetSheetTypeDialog.TYPE_HINTS[1]],
+	]) and ok
 	ok = _check("OK comes back once the name is valid",
 		dialog._sheet_type_dialog.get_ok_button().disabled, false) and ok
 	# A new Name renames the class's uses, other files included, so the dialog says how far that
