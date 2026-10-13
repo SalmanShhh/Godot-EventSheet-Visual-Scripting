@@ -1,10 +1,9 @@
-# EventForge - Define-block rendering: the sheet's functions (its verbs) appear on the canvas as INLINE
-# role-tinted Define rows, one per EventFunction, at root level (no "Published verbs" section wrapper) - so
-# a sheet reads top-to-bottom like a code file. Functions live in sheet.functions, a SEPARATE array from
-# sheet.events, so before this view a behaviour pack's whole vocabulary was invisible outside the Functions
-# dialog. Pins: the role classification (void=Action / bool=Condition / typed=Expression, mirroring the ACE
-# Studio cards), the badge/chip spans, the compiler-bound signature line, the inline-at-root layout, and -
-# covenant-critical - that the view is a pure READ (opening a real pack still round-trips byte-identically).
+# EventForge - functions on the sheet: each EventFunction is drawn like any other event, at root level -
+# ƒ, "Function ▸ On <name>", what it hands back, its tags, its description in italics and one line per
+# parameter, with its body as sub-events. Functions live in sheet.functions, a SEPARATE array from
+# sheet.events. Pins: the head's words and lanes, the description and parameter lines, the inline-at-root
+# layout, and - covenant-critical - that the view is a pure READ (opening a real pack still round-trips
+# byte-identically).
 @tool
 class_name DefineBlockRowsTest
 extends RefCounted
@@ -37,156 +36,80 @@ static func run() -> bool:
 	ok = _check("the inline verb rows sit at root indent",
 		define_rows[0].indent if define_rows.size() > 0 else -1, 0) and ok
 	ok = _check("the verbs render in sheet order (take_damage first)",
-		_span_text(define_rows[0] if define_rows.size() > 0 else null, 1), "Take Damage") and ok
+		_span_text(define_rows[0] if define_rows.size() > 0 else null, 1), "On take_damage") and ok
 
-	# ── Role classification mirrors the ACE Studio cards ──
-	ok = _check("void → action", ViewportRowBuilder.define_role_for(_make_function("f", TYPE_NIL, true, "", "")), "action") and ok
-	ok = _check("bool → condition", ViewportRowBuilder.define_role_for(_make_function("f", TYPE_BOOL, true, "", "")), "condition") and ok
-	ok = _check("float → expression", ViewportRowBuilder.define_role_for(_make_function("f", TYPE_FLOAT, true, "", "")), "expression") and ok
-
-	# ── The Define rows themselves, in sheet order ──
+	# ── The function drawn like any other event: ƒ, "Function ▸ On <name>", what it hands back, its
+	# tags, its description in italics, one line per parameter ──
 	var action_row: EventRowData = define_rows[0] if define_rows.size() > 0 else null
 	var condition_row: EventRowData = define_rows[1] if define_rows.size() > 1 else null
 	var expression_row: EventRowData = define_rows[2] if define_rows.size() > 2 else null
 	var internal_row: EventRowData = define_rows[3] if define_rows.size() > 3 else null
-	ok = _check("action badge", _span_text(action_row, 0), "Action") and ok
-	ok = _check("display name prefers @ace_name", _span_text(action_row, 1), "Take Damage") and ok
-	# The display name is inline-editable on the row (it maps to @ace_name).
-	ok = _check("the display name is inline-editable", _span_edit_kind(action_row, "Take Damage"), "verb_display_name") and ok
-	# The category is now an EDITABLE chip on a published verb of an authored sheet - a pack author can
-	# retitle its picker section straight from the row. It stays muted (an unset one prompts "+ category").
-	ok = _check("the category shows as a chip on a published verb", _row_has_span_text(action_row, "Health"), true) and ok
-	ok = _check("the category chip is inline-editable", _span_edit_kind(action_row, "Health"), "verb_category") and ok
-	ok = _check("a void action gives nothing back (no return chip)", _row_has_span_text(condition_row, "gives back boolean") and not _row_has_span_text(action_row, "gives back"), true) and ok
-	ok = _check("condition badge", _span_text(condition_row, 0), "Condition") and ok
-	ok = _check("condition name falls back to the humanized function name", _span_text(condition_row, 1), "Is Dead") and ok
-	ok = _check("a condition reads its return in plain words (bool -> boolean)", _row_has_span_text(condition_row, "gives back boolean"), true) and ok
-	ok = _check("expression reads its return in plain words (float -> number)", _row_has_span_text(expression_row, "gives back number"), true) and ok
-	ok = _check("an un-exposed helper is marked internal", _row_has_span_text(internal_row, "internal"), true) and ok
-	ok = _check("an exposed verb is NOT marked internal", _row_has_span_text(action_row, "internal"), false) and ok
-	# The abstraction covenant: NO raw `func ... -> Type` signature leaks into the row - a reader with no
-	# GDScript knowledge sees the verb and its inputs, never the code.
-	ok = _check("no raw func signature leaks into the row",
-		_row_has_span_text(action_row, "func take_damage"), false) and ok
-
-	# ── The readable verb line: reads like an event-sheet action - the verb name plus first-class typed
-	# parameter chips (`name : friendly-type`), no raw signature. An authored @ace_display_template fills
-	# its slots with the friendly labels instead (a Define row shows the verb's shape, not call-site values).
-	# Each parameter is its OWN cell, built with the condition-cell grammar: the parameter's NAME is the
-	# cell's object_label (the bold lead a condition uses for its object) and the cell text is what the
-	# parameter accepts. Clicking one opens the verb's dialog focused on that parameter.
-	ok = _check("a parameter renders as a cell whose text is what it accepts",
-		_row_has_span_text(action_row, "number"), true) and ok
-	ok = _check("the parameter's name leads the cell as its object label",
-		_span_meta_of_kind(action_row, "verb_param", "object_label"), "amount") and ok
-	ok = _check("a parameter cell is a filled chip, like a condition cell",
-		_span_meta_of_kind(action_row, "verb_param", "chip"), true) and ok
-	ok = _check("the cell carries its parameter index, so a click knows which one to open",
-		_span_meta_of_kind(action_row, "verb_param", "param_index"), 0) and ok
+	ok = SUPPORT.pins("define_block_rows_test", [
+		["the head leads with the ƒ badge", _span_text(action_row, 0), "ƒ"],
+		["the name reads On <name>, exactly as written", _span_text(action_row, 1), "On take_damage"],
+		["under the Function object", _span_meta(action_row, 1, "object_label"), "Function"],
+		["a void function hands back nothing", _row_has_span_text(action_row, "→ nothing"), true],
+		["a condition hands back bool", _row_has_span_text(condition_row, "→ bool"), true],
+		["an expression hands back its type", _row_has_span_text(expression_row, "→ float"), true],
+		["a function in Add Action carries the tag", _row_has_span_text(action_row, "In Add Action"), true],
+		["one that is not carries none", _row_has_span_text(internal_row, "In Add Action"), false],
+		["the tag explains itself on hover", str(_span_meta_of_kind(action_row, "function_tag", "hover_note")).begins_with("Listed in Add Action"), true],
+		["a parameter is its own line, as the code names it", _row_has_span_text(action_row, "float amount"), true],
+		["led by a PARAM tag", _row_has_span_text(action_row, "PARAM"), true],
+		["the parameter line carries its index, so a click knows which one to open", _span_meta_of_kind(action_row, "verb_param", "param_index"), 0],
+		["the parameter explains itself on hover",
+			ViewportRowBuilder.function_param_note(action_row.source_resource.params[0]) if action_row != null else "",
+			"amount (float). Inside this function, use it like any variable. Every call has to give it a value."],
+		["a parameter with a default says it", ViewportRowBuilder.function_param_line(_defaulted_param()), "int amount = 1"],
+		["the whole head sits in the CONDITION lane", _lane_of_span_text(action_row, "float amount"), "condition"],
+		["no raw func signature leaks into the row", _row_has_span_text(action_row, "func take_damage"), false],
+		["no category chip on the row (the Properties bar holds it)", _row_has_span_text(action_row, "Health"), false],
+		["a Define row is an EVENT row", action_row.row_type if action_row != null else -1, EventRowData.RowType.EVENT],
+		["a verb row is never a drag handle", EventSheetViewport.is_event_drag_zone(action_row, -1), false],
+	]) and ok
+	# Role classification and the plain type words other surfaces still read with.
+	ok = _check("void → action", ViewportRowBuilder.define_role_for(_make_function("f", TYPE_NIL, true, "", "")), "action") and ok
+	ok = _check("bool → condition", ViewportRowBuilder.define_role_for(_make_function("f", TYPE_BOOL, true, "", "")), "condition") and ok
+	ok = _check("float → expression", ViewportRowBuilder.define_role_for(_make_function("f", TYPE_FLOAT, true, "", "")), "expression") and ok
 	ok = _check("params humanize the id (underscores open out)",
 		ViewportRowBuilder.friendly_param_labels(_two_param_function()), "from x, to x") and ok
-	# GDScript types read as plain words so a non-coder learns what each input is.
 	ok = _check("String reads as text", ViewportRowBuilder.friendly_type_word("String"), "text") and ok
 	ok = _check("a declared int is a whole number", ViewportRowBuilder.friendly_type_word("int"), "whole number") and ok
-	ok = _check("bool reads as boolean", ViewportRowBuilder.friendly_type_word("bool"), "boolean") and ok
-	ok = _check("a node class reads as the one word a reader knows", ViewportRowBuilder.friendly_type_word("Sprite2D"), "object") and ok
 	var templated: EventFunction = _make_function("draw_line", TYPE_NIL, true, "Draw Line", "")
 	templated.params[0].id = "from_x"
 	templated.display_template = "Line to {from_x}"
 	ok = _check("an authored template fills its slots with param labels",
 		ViewportRowBuilder.friendly_template_line(templated), "Line to from x") and ok
-	ok = _check("no template yields an empty authored line (auto path used)",
-		ViewportRowBuilder.friendly_template_line(_make_function("f", TYPE_NIL, true, "", "")), "") and ok
 
-	# ── The verb reads as a REAL event row: two lanes, what-it-is on the left, what-it-hands-back on the
-	# right. This is the whole point - a published ACE must scan like the rest of the sheet, not like a
-	# spec table - so the row type and the lane each span lands in are pinned, not just the text.
-	ok = _check("a Define row is an EVENT row (so it gets the condition | action lanes)",
-		action_row.row_type if action_row != null else -1, EventRowData.RowType.EVENT) and ok
-	ok = _check("the role badge sits in the CONDITION lane", _span_lane(action_row, 0), "condition") and ok
-	ok = _check("the verb's name sits in the CONDITION lane", _span_lane(action_row, 1), "condition") and ok
-	ok = _check("its typed input sits in the CONDITION lane too", _lane_of_span_text(action_row, "number"), "condition") and ok
-	ok = _check("the return chip crosses to the ACTION lane", _lane_of_span_text(condition_row, "gives back boolean"), "action") and ok
-	ok = _check("the 'internal' marker crosses to the ACTION lane", _lane_of_span_text(internal_row, "internal"), "action") and ok
-	# The role badge is a WORD ("Condition"), not the single glyph a condition row's badge column is
-	# sized for, so it opts out of that column or it clips to a stub.
-	ok = _check("the role badge keeps its natural width", _span_meta(condition_row, 0, "badge_natural_width"), true) and ok
-	# A verb's row is a pure READ view of sheet.functions, whose order IS the file's emission order.
-	ok = _check("a verb row is never a drag handle", EventSheetViewport.is_event_drag_zone(action_row, -1), false) and ok
-
-	# ── The description the pack author already wrote finally renders: a caption row above the verb ──
+	# ── The description lives INSIDE the head, under the name, and is edited there ──
 	var described_sheet: EventSheetResource = EventSheetResource.new()
 	described_sheet.host_class = "Node2D"
 	var described_fn: EventFunction = _make_function("heal", TYPE_NIL, true, "Heal", "Health")
 	described_fn.description = "Restores health, capped at the maximum."
+	described_fn.is_async = true
+	described_fn.is_static = true
 	described_sheet.functions.append(described_fn)
 	described_sheet.functions.append(_make_function("silent", TYPE_NIL, true, "Silent", ""))
+	var documented_fn: EventFunction = _make_function("charge", TYPE_NIL, true, "Charge", "")
+	documented_fn.doc_comment = "Builds up charge before releasing it\nfor a moment."
+	described_sheet.functions.append(documented_fn)
 	var described_dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	described_dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	described_dock.setup(described_sheet)
 	var described_view: EventSheetViewport = described_dock._active_view()
-	var note_row: EventRowData = _find_row_by_uid_prefix(described_view, "verb_note_heal")
-	ok = _check("a described verb grows a caption row", note_row != null, true) and ok
-	ok = _check("the caption shows the authored @ace_description",
-		_span_text(note_row, 0), "Restores health, capped at the maximum.") and ok
-	# The caption is now inline-editable as the description on an authored sheet: it carries the
-	# EventFunction as its source (so the span-edit dispatch can reach it) and the verb_description
-	# edit_kind. Deleting it is still a no-op - a function source is not locatable in sheet.events.
-	ok = _check("the caption is inline-editable as the description",
-		note_row != null and note_row.source_resource is EventFunction, true) and ok
-	ok = _check("the caption's edit routes to the description",
-		_span_edit_kind(note_row, "Restores health, capped at the maximum."), "verb_description") and ok
-	ok = _check("the caption is welded to the verb below it (no block gap between them)",
-		note_row != null and note_row.attached_below, true) and ok
-	# An undescribed verb on an authored sheet grows a faint "+ describe this function" prompt (the empty
-	# state of the editable caption), so a pack author can add a description straight from the row.
-	var silent_caption: EventRowData = _find_row_by_uid_prefix(described_view, "verb_note_silent")
-	ok = _check("an undescribed verb grows a '+ describe' prompt", silent_caption != null, true) and ok
-	ok = _check("the prompt is the editable description placeholder",
-		_span_edit_kind(silent_caption, _span_text(silent_caption, 0)), "verb_description") and ok
-
-	# A verb DOCUMENTED with a ## doc comment but no @ace_description: the caption shows the doc line, yet
-	# stays inline-editable as the description - otherwise (the dialog having no Description field) there
-	# would be no way to author @ace_description for a documented verb at all.
-	var documented_sheet: EventSheetResource = EventSheetResource.new()
-	documented_sheet.host_class = "Node2D"
-	var documented_fn: EventFunction = _make_function("charge", TYPE_NIL, true, "Charge", "")
-	documented_fn.doc_comment = "Builds up charge before releasing it."
-	documented_sheet.functions.append(documented_fn)
-	var documented_dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
-	documented_dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
-	documented_dock.setup(documented_sheet)
-	var doc_caption: EventRowData = _find_row_by_uid_prefix(documented_dock._active_view(), "verb_note_charge")
-	ok = _check("a documented verb's caption shows the doc line",
-		_span_text(doc_caption, 0), "Builds up charge before releasing it.") and ok
-	ok = _check("that caption is still editable as the description (only place to author @ace_description)",
-		_span_edit_kind(doc_caption, "Builds up charge before releasing it."), "verb_description") and ok
-	documented_dock.free()
-
-	# A doc comment WRAPS at the width its author was writing to, so its first line is usually half a
-	# sentence. Packs ship that shape wherever the description is prose rather than an
-	# @ace_description line, and taking only the first line showed the reader a fragment that stopped
-	# mid-clause. The caption folds the whole prose into one line instead.
-	var wrapped_sheet: EventSheetResource = EventSheetResource.new()
-	wrapped_sheet.host_class = "Node2D"
-	var wrapped_fn: EventFunction = _make_function("anchor_to", TYPE_NIL, true, "Anchor To", "")
-	wrapped_fn.doc_comment = "Puts the host on a corner, an edge or the whole rectangle of its\nparent - the one action this behavior exists for."
-	wrapped_sheet.functions.append(wrapped_fn)
-	var wrapped_dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
-	wrapped_dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
-	wrapped_dock.setup(wrapped_sheet)
-	var wrapped_caption: EventRowData = _find_row_by_uid_prefix(wrapped_dock._active_view(), "verb_note_anchor_to")
-	ok = _check("a wrapped doc comment reads as one whole sentence, not its first line",
-		_span_text(wrapped_caption, 0),
-		"Puts the host on a corner, an edge or the whole rectangle of its parent - the one action this behavior exists for.") and ok
-	wrapped_dock.free()
-
-	ok = _check("captions never collide with the define_fn_ prefix (still one Define row per verb)",
-		_find_rows_by_uid_prefix(described_view, "define_fn_").size(), 2) and ok
-	ok = _check("the caption sits directly ABOVE its verb",
-		_flat_index_of(described_view, "verb_note_heal") + 1, _flat_index_of(described_view, "define_fn_heal")) and ok
+	var heal_row: EventRowData = _find_row_by_uid_prefix(described_view, "define_fn_heal")
+	var silent_row: EventRowData = _find_row_by_uid_prefix(described_view, "define_fn_silent")
+	var charge_row: EventRowData = _find_row_by_uid_prefix(described_view, "define_fn_charge")
+	ok = SUPPORT.pins("define_block_rows_test", [
+		["no caption row above the function any more", _find_row_by_uid_prefix(described_view, "verb_note_"), null],
+		["the description reads inside the head", _row_has_span_text(heal_row, "Restores health, capped at the maximum."), true],
+		["and is edited there", _span_edit_kind(heal_row, "Restores health, capped at the maximum."), "verb_description"],
+		["an undescribed function offers to be described", _span_edit_kind(silent_row, "+ describe this function"), "verb_description"],
+		["a doc comment reads as one whole sentence", _row_has_span_text(charge_row, "Builds up charge before releasing it for a moment."), true],
+		["a function that waits says so", _row_has_span_text(heal_row, "Waits"), true],
+		["a shared one says so", _row_has_span_text(heal_row, "Shared"), true],
+	]) and ok
 	described_dock.free()
-
 	# ── Ordering: the canvas mirrors the COMPILER - the sheet's events first, then its vocabulary. The old
 	# view hoisted every verb above everything, so an opened pack read back-to-front against its own .gd.
 	var order_sheet: EventSheetResource = EventSheetResource.new()
@@ -549,6 +472,14 @@ static func _make_function(fn_name: String, return_type: int, exposed: bool, dis
 	param.type_name = "float"
 	event_function.params.append(param)
 	return event_function
+
+
+static func _defaulted_param() -> ACEParam:
+	var param: ACEParam = ACEParam.new()
+	param.id = "amount"
+	param.type_name = "int"
+	param.gdscript_default = "1"
+	return param
 
 
 static func _two_param_function() -> EventFunction:

@@ -7929,3 +7929,74 @@ click to choose,クリックして選択
 Choose a node from the open scene. The pick replaces what is in the box.,開いているシーンからノードを選びます。選んだノードが欄の内容を置き換えます。
 The %s key,%s キー
 Double-click to insert into the focused box.,ダブルクリックでフォーカス中の欄に挿入します。
+"A condition asks a yes or no question: the event only runs when it answers yes. It sits in the left-hand lane. For example: Is Dead, Is Full Health.",条件は「はい/いいえ」で答える問いです。答えが「はい」のときだけイベントが実行されます。左側の列に置きます。例: 死んでいる、体力が満タン。
+"An expression answers with a value you can use inside any parameter box, like a number or some text. For example: Health %, Remaining Shields.",式は、数値やテキストのように、どのパラメーター欄でも使える値を返します。例: 体力 %、残りシールド。
+"An action does something when the event runs: change a value, move, play a sound. It sits in the right-hand lane. For example: Take Damage, Heal, Knock Back.",アクションはイベントの実行時に何かを行います。値を変える、移動する、音を鳴らすなど。右側の列に置きます。例: ダメージを受ける、回復する、ノックバック。
+Does something,何かをする
+Is it true?,真かどうか
+A value,値
+Create Function,関数を作成
+"The function's row, as the sheet will show it.",シートに表示されるときの関数の行です。
+Take Damage,ダメージを受ける
+"Write it in plain words - ""Take Damage"" becomes take_damage in the generated GDScript. Other rows call it by this name.","普通の言葉で書きます。""Take Damage"" は生成される GDScript では take_damage になります。ほかの行はこの名前で呼び出します。"
+Godot's own documentation for this function. It is written above the function as ## lines and shows up in the editor's built-in help and when hovering it elsewhere. Optional.,この関数の Godot 標準のドキュメントです。関数の上に ## 行として書かれ、エディターの組み込みヘルプや、ほかの場所でカーソルを合わせたときに表示されます。省略可。
+Use this draft,この下書きを使う
+"Puts the drafted line in the field above, where you can edit it before saving. Nothing is written until you save.",下書きの行を上の欄に入れます。保存する前に編集できます。保存するまで何も書き込まれません。
+"Puts a clickable button on this node's Inspector panel, labelled with whatever you type here. Pressing it runs this function right there in the editor. Leave it empty (the usual case) and no button appears.",このノードのインスペクターに、ここに入力した文字のボタンを置きます。押すとエディター上でこの関数がその場で実行されます。空のまま(通常)ならボタンは表示されません。
+"This sheet is an editor tool: this function runs INSIDE the editor (File > Run or an Inspector button), never in the game.",このシートはエディターツールです。この関数はエディターの中(ファイル > 実行、またはインスペクターのボタン)で実行され、ゲーム内では実行されません。
+Publish,公開
+Ticked: this function shows up in the Add Action / Condition picker for every sheet in the project. Unticked: only events in this sheet can call it.,チェックあり: この関数はプロジェクト内のすべてのシートのアクション/条件の選択欄に表示されます。チェックなし: このシートのイベントだけが呼び出せます。
+What kind is it?,どの種類ですか?
+Save Changes,変更を保存
+"No description yet. Its own rows say: ""%s""","まだ説明がありません。自身の行の内容: ""%s"""
+This is what other people will see,ほかの人にはこう見えます
+New function,新しい関数
+Edit function %s,関数 %s を編集
+Create function %s,関数 %s を作成
+"A type of your own project, kept as it is written.",自分のプロジェクトの型。書かれたとおりに保持します。
+"""%s"" already exists on this sheet (function or variable).","""%s"" はこのシートに既にあります(関数または変数)。"
+"Parameters with a default value must come after those without (""%s"" has no default).","既定値のある引数は、既定値のない引数の後に置く必要があります(""%s"" には既定値がありません)。"
+Hands nothing back. Use it as an action.,何も返しません。アクションとして使います。
+"A color, with transparency.",透明度つきの色。
+"A list of values, in order.",順番に並んだ値のリスト。
+"Values stored under names, looked up by name.",名前の下に保存され、名前で引ける値。
+"Any node in the scene, like the nearest enemy.",シーン内の任意のノード。たとえば一番近い敵など。
+Not listed,表示しない
+"Only callable by name from this sheet, or from code.",このシートかコードから名前で呼び出すときだけ使えます。
+Listed,表示する
+"Shown in Add Action under its Category, with its description as help.",アクションを追加のカテゴリーの下に、説明をヘルプとして表示します。
+Finishes at once,すぐに終わる
+Runs start to end in one frame. Callers carry on straight after.,1 フレームで最初から最後まで実行されます。呼び出し側はすぐに続きを実行します。
+Can wait,待つことがある
+"May pause on a Wait (timer, signal, tween). Callers can wait for it to finish before carrying on.",待機(タイマー、シグナル、トゥイーン)で一時停止することがあります。呼び出し側は終わるのを待ってから続けられます。
+One per object,オブジェクトごとに 1 つ
+"Each object runs its own copy and can use its own variables, like health.",各オブジェクトが自分のコピーを実行し、体力のような自分の変数を使えます。
+One for the script,スクリプトに 1 つ
+"Called without picking an object. It cannot read one object's variables, so it suits helpers like maths.",オブジェクトを選ばずに呼び出します。個々のオブジェクトの変数は読めないので、計算などの補助に向いています。
+Exactly as written in code. Renaming it renames every call.,コードに書かれたとおりの名前です。名前を変えるとすべての呼び出しも変わります。
+"Shown in italics under the name, and as the help text in Add Action.",名前の下に斜体で、またアクションを追加のヘルプとして表示されます。
+Returns,戻り値
+"What the function hands back. Nothing makes it an action; any type makes it usable inside expressions, and its last action is Return.",関数が返すもの。「なし」ならアクションになり、型を選ぶと式の中で使え、最後のアクションは「返す」になります。
+In Add Action,アクションを追加に表示
+Whether other events can pick it from Add Action like a built-in.,ほかのイベントが組み込みと同じようにアクションを追加から選べるかどうか。
+The default heading for your own functions.,自分で作った関数の既定の見出し。
+Listed under %s in Add Action.,アクションを追加の %s の下に表示されます。
+The heading it is listed under in Add Action.,アクションを追加で表示される見出し。
+Waits,待機する
+Whether the function can pause part way. Chosen for you when it contains a Wait.,関数が途中で一時停止できるかどうか。待機が含まれていれば自動で選ばれます。
+Whether it belongs to each object or to the script itself.,各オブジェクトのものか、スクリプト自体のものか。
++ Add,+ 追加
+Adds an input this function is called with.,この関数を呼び出すときの入力を追加します。
+Drag to move this parameter. Callers pass inputs in this order.,ドラッグしてこの引数を移動します。呼び出し側はこの順番で入力を渡します。
+required,必須
+The value it has when a call leaves it out. Empty makes it required.,呼び出しで省略されたときの値。空にすると必須になります。
+Parameters with a default value must come after those without.,既定値のある引数は、既定値のない引数の後に置く必要があります。
+PARAM,引数
+"Listed in Add Action and Add Condition under its category, so any sheet can pick it like a built-in.",アクションを追加と条件を追加のカテゴリーの下に表示されるので、どのシートでも組み込みと同じように選べます。
+"It has a Wait inside, so callers can wait for it to finish (await).",中に待機があるので、呼び出し側は終わるのを待てます(await)。
+"Belongs to the script, not to each object: call it without an object (static func).",各オブジェクトではなくスクリプトに属します。オブジェクトなしで呼び出します(static func)。
+Featured,おすすめ
+"Leads its section of Add Action, starred.",アクションを追加の自分のセクションの先頭に星つきで表示されます。
+"Inside this function, use it like any variable.",この関数の中では、普通の変数と同じように使えます。
+Every call has to give it a value.,呼び出すたびに値を渡す必要があります。
+"When it is called without one, it is %s.",省略して呼び出すと %s になります。

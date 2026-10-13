@@ -100,7 +100,7 @@ static func run() -> bool:
 	authored_dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	authored_dock.setup(authored)
 	var authored_view: EventSheetViewport = authored_dock._active_view()
-	ok = _check("an authored sheet keeps its kind badge", _row_has_text(_row_by_uid(authored_view, "define_fn_take_damage"), "Action"), true) and ok
+	ok = _check("an authored sheet draws the function as an event", _row_has_text(_row_by_uid(authored_view, "define_fn_take_damage"), "On take_damage"), true) and ok
 	ok = _check("an authored sheet gathers NO Helpers bar", _row_by_uid(authored_view, "helpers_group_") == null, true) and ok
 	ok = _check("an authored sheet keeps its add scaffolding", _any_span_contains(authored_view, "+ Add action"), true) and ok
 	authored_dock.free()

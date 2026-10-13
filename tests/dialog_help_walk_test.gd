@@ -74,6 +74,7 @@ static func _test_dialogs_are_found() -> bool:
 		"res://addons/eventsheet/editor/dock/quick_prompt_dialogs.gd",
 		"res://addons/eventsheet/editor/dock/sheet_type_dialog.gd",
 		"res://addons/eventsheet/editor/dock/states_dialog.gd",
+		"res://addons/eventsheet/editor/function_dialog.gd",
 		"res://addons/eventsheet/editor/mod_template_dialog.gd",
 		"res://addons/eventsheet/editor/variable_dialog.gd"
 	]))

@@ -285,7 +285,7 @@ func _apply_function_data(data: Dictionary) -> void:
 ## (events/local_variables) and the tool-button label stay untouched. Confirming with nothing changed
 ## returns false so the sheet is not dirtied - an accidental open-and-OK on a lifted helper stays
 ## byte-safe. Call sites are NOT rewritten on rename (same as renaming via the Functions dialog list).
-func _apply_function_edit(data: Dictionary) -> void:
+func _apply_function_edit(data: Dictionary) -> bool:
 	var original_name: String = str(data.get("editing"))
 	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Function", func() -> bool:
 		var target: EventFunction = null
@@ -311,7 +311,9 @@ func _apply_function_edit(data: Dictionary) -> void:
 				target.description, target.expose_as_ace, target.ace_display_name, target.ace_category, target.params, target.doc_comment, target.tool_button_label) \
 				== _function_fingerprint(str(data.get("name")), int(data.get("return_type", TYPE_NIL)),
 				str(data.get("return_type_name", "")), str(data.get("description", "")), bool(data.get("expose", false)),
-				incoming_display, str(data.get("ace_category", "")), new_params, str(data.get("doc_comment", "")), str(data.get("tool_button_label", ""))):
+				incoming_display, str(data.get("ace_category", "")), new_params, str(data.get("doc_comment", "")), str(data.get("tool_button_label", ""))) \
+				and target.is_async == bool(data.get("is_async", target.is_async)) \
+				and target.is_static == bool(data.get("is_static", target.is_static)):
 			return false
 		target.function_name = str(data.get("name"))
 		target.return_type = int(data.get("return_type", TYPE_NIL))
@@ -326,12 +328,41 @@ func _apply_function_edit(data: Dictionary) -> void:
 		target.expose_as_ace = bool(data.get("expose", false))
 		target.ace_display_name = incoming_display
 		target.ace_category = str(data.get("ace_category", ""))
+		# Waits and Shared ride in the payload only when the Inspector sends them; the dialog leaves
+		# them as they are.
+		target.is_async = bool(data.get("is_async", target.is_async))
+		target.is_static = bool(data.get("is_static", target.is_static))
 		# A real edit makes this an authored function: normal annotation emission resumes (the flag
 		# only ever suppressed annotations to keep an UNTOUCHED reverse-lifted helper byte-identical).
 		target.lifted_unannotated = false
 		return true)
 	if changed:
 		_dock._mark_dirty("Edited function %s()." % str(data.get("name")))
+	return changed
+
+
+## The edit payload that leaves a function exactly as it is - the Inspector changes one key of it and
+## sends it through the same edit the dialog's Save makes.
+static func edit_payload(event_function: EventFunction) -> Dictionary:
+	var params: Array[Dictionary] = []
+	for param: ACEParam in event_function.params:
+		params.append({"id": param.id, "type_name": param.type_name,
+			"default": param.gdscript_default, "description": param.description})
+	return {
+		"editing": event_function.function_name,
+		"name": event_function.function_name,
+		"return_type": event_function.return_type,
+		"return_type_name": event_function.return_type_name,
+		"params": params,
+		"doc_comment": event_function.doc_comment,
+		"tool_button_label": event_function.tool_button_label,
+		"description": event_function.description,
+		"expose": event_function.expose_as_ace,
+		"ace_display_name": event_function.ace_display_name,
+		"ace_category": event_function.ace_category,
+		"is_async": event_function.is_async,
+		"is_static": event_function.is_static,
+	}
 
 
 ## One comparable string per (name, emitted-return-type, description, expose, display, category, params)

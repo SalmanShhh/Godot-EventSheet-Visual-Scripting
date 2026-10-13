@@ -7929,3 +7929,74 @@ click to choose,clic para elegir
 Choose a node from the open scene. The pick replaces what is in the box.,Elige un nodo de la escena abierta. La elección reemplaza lo que hay en la casilla.
 The %s key,La tecla %s
 Double-click to insert into the focused box.,Doble clic para insertar en la casilla activa.
+"A condition asks a yes or no question: the event only runs when it answers yes. It sits in the left-hand lane. For example: Is Dead, Is Full Health.","Una condición hace una pregunta de sí o no: el evento solo se ejecuta cuando la respuesta es sí. Va en la columna izquierda. Por ejemplo: Está muerto, Tiene la salud completa."
+"An expression answers with a value you can use inside any parameter box, like a number or some text. For example: Health %, Remaining Shields.","Una expresión responde con un valor que puedes usar en cualquier casilla de parámetro, como un número o un texto. Por ejemplo: Salud %, Escudos restantes."
+"An action does something when the event runs: change a value, move, play a sound. It sits in the right-hand lane. For example: Take Damage, Heal, Knock Back.","Una acción hace algo cuando se ejecuta el evento: cambiar un valor, moverse, reproducir un sonido. Va en la columna derecha. Por ejemplo: Recibir daño, Curar, Empujar."
+Does something,Hace algo
+Is it true?,¿Es verdad?
+A value,Un valor
+Create Function,Crear función
+"The function's row, as the sheet will show it.","La fila de la función, tal como la mostrará la hoja."
+Take Damage,Recibir daño
+"Write it in plain words - ""Take Damage"" becomes take_damage in the generated GDScript. Other rows call it by this name.","Escríbelo con palabras sencillas: ""Take Damage"" se convierte en take_damage en el GDScript generado. Otras filas la llaman por este nombre."
+Godot's own documentation for this function. It is written above the function as ## lines and shows up in the editor's built-in help and when hovering it elsewhere. Optional.,La documentación propia de Godot para esta función. Se escribe encima de la función como líneas ## y aparece en la ayuda integrada del editor y al pasar el cursor por encima en otros sitios. Opcional.
+Use this draft,Usar este borrador
+"Puts the drafted line in the field above, where you can edit it before saving. Nothing is written until you save.","Pone la línea propuesta en el campo de arriba, donde puedes editarla antes de guardar. No se escribe nada hasta que guardes."
+"Puts a clickable button on this node's Inspector panel, labelled with whatever you type here. Pressing it runs this function right there in the editor. Leave it empty (the usual case) and no button appears.","Pone un botón en el Inspector de este nodo, con el texto que escribas aquí. Al pulsarlo se ejecuta esta función allí mismo en el editor. Déjalo vacío (lo habitual) y no aparece ningún botón."
+"This sheet is an editor tool: this function runs INSIDE the editor (File > Run or an Inspector button), never in the game.","Esta hoja es una herramienta del editor: esta función se ejecuta DENTRO del editor (Archivo > Ejecutar o un botón del Inspector), nunca en el juego."
+Publish,Publicar
+Ticked: this function shows up in the Add Action / Condition picker for every sheet in the project. Unticked: only events in this sheet can call it.,Marcado: esta función aparece en el selector de acciones / condiciones de todas las hojas del proyecto. Sin marcar: solo los eventos de esta hoja pueden llamarla.
+What kind is it?,¿De qué tipo es?
+Save Changes,Guardar cambios
+"No description yet. Its own rows say: ""%s""","Aún no tiene descripción. Sus propias filas dicen: ""%s"""
+This is what other people will see,Esto es lo que verán los demás
+New function,Nueva función
+Edit function %s,Editar función %s
+Create function %s,Crear función %s
+"A type of your own project, kept as it is written.","Un tipo de tu propio proyecto, tal como está escrito."
+"""%s"" already exists on this sheet (function or variable).","""%s"" ya existe en esta hoja (función o variable)."
+"Parameters with a default value must come after those without (""%s"" has no default).","Los parámetros con valor por defecto deben ir después de los que no lo tienen (""%s"" no tiene valor por defecto)."
+Hands nothing back. Use it as an action.,No devuelve nada. Úsala como acción.
+"A color, with transparency.","Un color, con transparencia."
+"A list of values, in order.","Una lista de valores, en orden."
+"Values stored under names, looked up by name.",Valores guardados bajo nombres y buscados por nombre.
+"Any node in the scene, like the nearest enemy.","Cualquier nodo de la escena, como el enemigo más cercano."
+Not listed,No aparece
+"Only callable by name from this sheet, or from code.",Solo se puede llamar por su nombre desde esta hoja o desde código.
+Listed,Aparece
+"Shown in Add Action under its Category, with its description as help.","Se muestra en Añadir acción bajo su Categoría, con su descripción como ayuda."
+Finishes at once,Termina enseguida
+Runs start to end in one frame. Callers carry on straight after.,Se ejecuta de principio a fin en un fotograma. Quien la llama sigue justo después.
+Can wait,Puede esperar
+"May pause on a Wait (timer, signal, tween). Callers can wait for it to finish before carrying on.","Puede pausar en una Espera (temporizador, señal, tween). Quien la llama puede esperar a que termine antes de seguir."
+One per object,Una por objeto
+"Each object runs its own copy and can use its own variables, like health.","Cada objeto ejecuta su propia copia y puede usar sus propias variables, como la salud."
+One for the script,Una para el script
+"Called without picking an object. It cannot read one object's variables, so it suits helpers like maths.","Se llama sin elegir un objeto. No puede leer las variables de un objeto, así que sirve para ayudantes como cálculos."
+Exactly as written in code. Renaming it renames every call.,Exactamente como está escrito en el código. Renombrarla renombra cada llamada.
+"Shown in italics under the name, and as the help text in Add Action.",Se muestra en cursiva bajo el nombre y como texto de ayuda en Añadir acción.
+Returns,Devuelve
+"What the function hands back. Nothing makes it an action; any type makes it usable inside expressions, and its last action is Return.","Lo que devuelve la función. Nada la convierte en una acción; cualquier tipo la hace usable en expresiones, y su última acción es Devolver."
+In Add Action,En Añadir acción
+Whether other events can pick it from Add Action like a built-in.,Si otros eventos pueden elegirla en Añadir acción como una integrada.
+The default heading for your own functions.,El encabezado predeterminado para tus propias funciones.
+Listed under %s in Add Action.,Aparece bajo %s en Añadir acción.
+The heading it is listed under in Add Action.,El encabezado bajo el que aparece en Añadir acción.
+Waits,Espera
+Whether the function can pause part way. Chosen for you when it contains a Wait.,Si la función puede pausar a mitad. Se elige por ti cuando contiene una Espera.
+Whether it belongs to each object or to the script itself.,Si pertenece a cada objeto o al propio script.
++ Add,+ Añadir
+Adds an input this function is called with.,Añade una entrada con la que se llama a esta función.
+Drag to move this parameter. Callers pass inputs in this order.,Arrastra para mover este parámetro. Quien llama pasa las entradas en este orden.
+required,obligatorio
+The value it has when a call leaves it out. Empty makes it required.,El valor que tiene cuando una llamada lo omite. Vacío lo hace obligatorio.
+Parameters with a default value must come after those without.,Los parámetros con valor por defecto deben ir después de los que no lo tienen.
+PARAM,PARÁM
+"Listed in Add Action and Add Condition under its category, so any sheet can pick it like a built-in.","Aparece en Añadir acción y Añadir condición bajo su categoría, así cualquier hoja puede elegirla como una integrada."
+"It has a Wait inside, so callers can wait for it to finish (await).","Tiene una Espera dentro, así que quien la llama puede esperar a que termine (await)."
+"Belongs to the script, not to each object: call it without an object (static func).","Pertenece al script, no a cada objeto: llámala sin un objeto (static func)."
+Featured,Destacada
+"Leads its section of Add Action, starred.","Encabeza su sección de Añadir acción, con estrella."
+"Inside this function, use it like any variable.","Dentro de esta función, úsalo como cualquier variable."
+Every call has to give it a value.,Cada llamada tiene que darle un valor.
+"When it is called without one, it is %s.","Cuando se llama sin él, vale %s."

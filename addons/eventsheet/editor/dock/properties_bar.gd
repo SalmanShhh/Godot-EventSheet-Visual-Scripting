@@ -21,6 +21,7 @@ extends RefCounted
 ## The files this helper reaches BY PATH, at the moment something asks: naming one of these
 ## classes here would compile it, and everything it names, into the first open of a sheet.
 const OBJECT_PROPERTIES_PATH := "res://addons/eventsheet/editor/dock/object_properties_popup.gd"
+const FUNCTION_INSPECTOR_PATH := "res://addons/eventsheet/editor/dock/function_inspector.gd"
 
 var _dock: Control = null
 var panel: VBoxContainer = null
@@ -46,6 +47,8 @@ var _shown_resource: Resource = null
 # Parameter dialog uses, so a colour, an enum, a node reference or an input action edits in place
 # here exactly as it does there.
 var _field_factory: EventSheetParamFieldFactory = EventSheetParamFieldFactory.new()
+# The fields of a selected function, kept alive while they are on screen (their signals call it).
+var _function_inspector: RefCounted = null
 
 
 func init(dock: Control) -> void:
@@ -146,6 +149,9 @@ func refresh() -> void:
 	var selected: Resource = view.get_selected_context().get("source_resource", null)
 	if selected is EventGroup:
 		_show_group(selected as EventGroup)
+		return
+	if selected is EventFunction:
+		_show_function(selected as EventFunction)
 		return
 	var object_label: String = str(view.get_selected_context().get("span_metadata", {}).get("object_label", "")).strip_edges()
 	if not object_label.is_empty():
@@ -297,6 +303,17 @@ func _apply_group_enabled(enabled: bool) -> void:
 		_dock._refresh_after_edit()
 		_dock._mark_dirty("Group %s." % ("enabled" if enabled else "disabled"))
 	refresh()
+
+
+## A selected function: its name, description, what it returns, its three settings and its
+## parameters, each a field that writes one undo step (dock/function_inspector.gd).
+func _show_function(event_function: EventFunction) -> void:
+	_shown_resource = event_function
+	_clear_form()
+	_open_for_selection()
+	_heading.text = heading_for(event_function.function_name, EventSheetL10n.translate("function"))
+	_function_inspector = load(FUNCTION_INSPECTOR_PATH).new(_dock, event_function)
+	_function_inspector.build_into(_form)
 
 
 ## A selected object reads what the Object properties popup reads - the same facts, in the bar.

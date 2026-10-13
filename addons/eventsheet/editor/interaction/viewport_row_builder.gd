@@ -1186,17 +1186,10 @@ func _build_add_event_footer_row(owner_resource: Resource, indent: int, label: S
 ## byte-exact round-trip of the underlying .gd is untouched. (Formerly a folded "Published verbs" section;
 ## the verbs now read inline, role-tinted like any Action / Condition / Expression, rather than hiding
 ## behind a section header.)
-## One verb as a block: its description caption (when it has one) welded to its Define row, so the
-## pack author's own `## @ace_description` reads as the sentence above the verb it describes.
+## One function as a block: its head row (description and parameters inside it) plus the notes a
+## message or a visibility filter needs.
 func build_verb_block_rows(event_function: EventFunction, indent: int) -> Array[EventRowData]:
 	var rows: Array[EventRowData] = []
-	# In READING mode the caption is gone: an event-sheet Function block is its name and its inputs,
-	# and the description is one of the things the ACE properties popup answers. (An unpublished
-	# helper keeps its doc comment - in the header's right lane, where a reader expects it.)
-	if not _verb_reading_mode():
-		var note_row: EventRowData = _build_verb_note_row(event_function, define_role_for(event_function), indent)
-		if note_row != null:
-			rows.append(note_row)
 	var head_row: EventRowData = _build_define_function_row(event_function, indent)
 	rows.append(head_row)
 	# An `@rpc` carrying an option Godot does not take cannot be read into words, so the row
@@ -3436,57 +3429,6 @@ static func find_function_by_name(sheet: EventSheetResource, function_name: Stri
 	return null
 
 
-## The verb's one-line description as a muted caption directly ABOVE its Define row - the
-## `## @ace_description("…")` the pack author already wrote, which round-tripped through the compiler
-## and the lifter without ever being drawn. Falls back to the first non-empty line of the ordinary `##`
-## doc comment, so a plain documented helper reads too; null when the verb has neither.
-## COMMENT is deliberate: it is the only row type the metrics measure for word wrap, so a full-sentence
-## blurb wraps instead of clipping. source_resource stays null so no edit / drag / delete reaches it.
-func _build_verb_note_row(event_function: EventFunction, role: String, indent: int) -> EventRowData:
-	# The caption is the verb's DESCRIPTION (@ace_description). On a read-only view it falls back to the
-	# doc comment's first line so a documented verb still reads; on an EDITABLE sheet the caption is the
-	# only place to author @ace_description (the dialog no longer has a Description field), so it must
-	# always be editable there - including for a verb that has a doc comment but no description yet. The
-	# doc comment still shows (as the caption's starting text), so editing it just promotes that line to
-	# the picker description; typing over it sets a distinct one.
-	var description: String = event_function.description.strip_edges()
-	var editable: bool = _verb_metadata_editable()
-	var note: String = description
-	if note.is_empty():
-		# The WHOLE prose, folded to one line - a doc comment wraps where the author was writing to,
-		# so its first line is usually half a sentence.
-		note = join_doc_prose(event_function.doc_comment)
-	var placeholder: bool = note.is_empty()
-	# Nothing to show and nowhere to add it (a read-only preview) - no caption at all.
-	if placeholder and not editable:
-		return null
-	if placeholder:
-		note = EventSheetL10n.translate("+ describe this function")
-	var accent: Color = (_define_role_colors(role) as Array)[1]
-	# The caption's band is a quieter echo of its verb's wash (70% of it), so the pair reads as one
-	# block with the prose sitting behind the row it describes.
-	var row_data: EventRowData = build_caption_row(
-		note, indent, "verb_note_%s" % event_function.function_name.strip_edges(),
-		Color(accent.r, accent.g, accent.b, _verb_tint_strength() * 0.7)
-	)
-	row_data.disabled = not event_function.enabled
-	# Inline-edit the description on an authored sheet - double-click the caption. The caption is a
-	# COMMENT row whose source is the EventFunction: the delete path already treats a function source as
-	# non-locatable (it lives in sheet.functions), so the caption cannot be deleted, and a COMMENT row is
-	# never a drag zone - so pointing it at the function is safe.
-	if editable:
-		row_data.source_resource = event_function
-		var span: SemanticSpan = row_data.spans[0]
-		var meta: Dictionary = span.metadata if span.metadata is Dictionary else {}
-		meta["editable"] = true
-		meta["edit_kind"] = "verb_description"
-		if placeholder:
-			meta["edit_placeholder"] = true
-			meta["text_color"] = _viewport._get_reading_style().muted_text_color
-		span.metadata = meta
-	return row_data
-
-
 ## A muted, wrapping CAPTION row welded to the row directly below it - the "one line of prose above the
 ## thing it describes" pattern, which a published verb uses for its @ace_description. COMMENT is the row
 ## type on purpose: it is the only one the metrics measure for word wrap, so a full sentence wraps
@@ -3836,66 +3778,6 @@ static func _friendly_return_type(event_function: EventFunction) -> String:
 	return friendly_type_word(CompilerSpellings.function_return_type_name(event_function))
 
 
-## Appends first-class typed parameter spans to a Define row: each parameter as `name : friendly-type`
-## (the variable-row grammar), so the row reads "Create Ability · id : text" rather than a raw
-## `func create_ability(id: String)` signature. A ONE-input verb keeps its parameter inline on the verb's
-## own line; two or more STACK one per line beneath it, so a six-input verb reads as a list instead of a
-## sentence that runs off the row. An optional parameter also shows its ` = default`. Types come from
-## ACEParam.type_name; a legacy lifted verb with only string parameter names shows the names alone.
-## Returns the last condition-lane line index used, so the caller can size the row.
-func _append_define_param_spans(spans: Array[SemanticSpan], event_function: EventFunction, verb_line: int) -> int:
-	var value_color: Color = _viewport._get_event_style().value_highlight_color
-	var typed_params: Array[ACEParam] = []
-	for param: Variant in event_function.params:
-		if param is ACEParam:
-			typed_params.append(param as ACEParam)
-	if typed_params.is_empty():
-		# Legacy lifted verb (no ACEParam metadata): show the bare friendly names.
-		var legacy_labels: String = friendly_param_labels(event_function)
-		if not legacy_labels.is_empty():
-			spans.append(_make_span(legacy_labels, SemanticSpan.SpanType.VALUE, {
-				"editable": false, "kind": "define_function",
-				"lane": "condition", "line_index": verb_line, "text_color": value_color
-			}))
-		return verb_line
-	# Each parameter is its OWN cell, in the shared field-cell grammar (the same one a condition cell
-	# uses): the parameter's name leads the chip, its text says what it accepts. Clicking one opens the
-	# verb's editor focused on that parameter, exactly as clicking a condition opens its editor. Built
-	# through the public append_field_cell primitive so the built-in path and an extension's path are
-	# literally the same code.
-	var cell_host := EventRowData.new()
-	for index in range(typed_params.size()):
-		var param: ACEParam = typed_params[index]
-		var cell_text: String = _define_param_type_word(param)
-		var default_text: String = param.gdscript_default.strip_edges()
-		if not default_text.is_empty():
-			cell_text += " = %s" % default_text
-		append_field_cell(cell_host, friendly_param_label(param), cell_text, {
-			"kind": "verb_param",
-			"param_index": index,
-			"line_index": verb_line + 1 + index
-		})
-	spans.append_array(cell_host.spans)
-	return verb_line + typed_params.size()
-
-
-## A parameter's type read as plain words. A param with a fixed option list reads as the CHOICES it
-## accepts ("one of (fade, slide)") rather than the bare "text" its GDScript type would say, because
-## the choices are what the caller actually needs to know.
-static func _define_param_type_word(param: ACEParam) -> String:
-	if not param.options.is_empty():
-		var labels: PackedStringArray = PackedStringArray()
-		for option: Variant in param.options:
-			if option is Dictionary:
-				var option_dict: Dictionary = option as Dictionary
-				labels.append(str(option_dict.get("label", option_dict.get("key", ""))))
-			else:
-				labels.append(str(option))
-		if not labels.is_empty():
-			return "one of (%s)" % ", ".join(labels)
-	return friendly_type_word(param.type_name)
-
-
 ## One chip on a Define row's ACTION lane (category, return, waits / static / internal / featured) - the
 ## same badge grammar the row's role badge uses, on the lane that reads as "and what do I get back?".
 func _define_chip(text: String, background: Color, foreground: Color, line_index: int,
@@ -4043,136 +3925,165 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 		# ended up with an empty right lane (an empty body) keeps the whole row for its chips.
 		row_data.full_width_lanes = not _has_action_lane_span(row_data.spans)
 		return row_data
+	# AUTHORING: the function is drawn like any other event. The condition side reads
+	# "ƒ Function ▸ On take_damage → nothing" with its settings as small tags, its description in
+	# italics under it, and each parameter on a line of its own; the body hangs underneath as
+	# sub-events, so folding the row folds them away with it.
+	var chip_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var spans: Array[SemanticSpan] = [
-		_make_span(EventSheetL10n.translate(role.capitalize()), SemanticSpan.SpanType.KEYWORD, {
+		_make_span("ƒ", SemanticSpan.SpanType.KEYWORD, {
 			"editable": false,
 			"badge": true,
 			"badge_style": "scope",
 			"badge_bg": badge_colors[0],
 			"badge_fg": badge_colors[1],
-			# The role WORD is the kind cue, so it keeps its measured width instead of snapping to the
-			# narrow badge column a condition row's single-glyph badge uses - "Condition" would clip.
-			"badge_natural_width": true,
 			"kind": "define_function",
 			"lane": "condition",
 			"line_index": 0
-		})
-	]
-	# One word says this function is not one the sheet CALLS: a `@rpc` function arrives,
-	# sent by another peer, and a visibility filter is asked, per player, by a synchronizer. The word
-	# leads the name the way a variable row's scope word leads its own.
-	var role_word: String = _function_role_word(event_function)
-	if not role_word.is_empty():
-		spans.append(_make_span(role_word, SemanticSpan.SpanType.KEYWORD, {
+		}),
+		_make_span(EventSheetL10n.translate("On %s") % event_function.function_name, SemanticSpan.SpanType.CONDITION, {
 			"editable": false,
 			"kind": "define_function",
-			"role_word": true,
 			"lane": "condition",
 			"line_index": 0,
+			"chip": true,
+			"object_label": EventSheetL10n.translate("Function"),
+		}.merged(chip_style, true)),
+	]
+	var returns_word: String = CompilerSpellings.function_return_type_name(event_function)
+	var muted_color: Color = _viewport._get_reading_style().muted_text_color
+	spans.append(_make_span("→ %s" % (EventSheetL10n.translate("nothing") if returns_word == "void" else returns_word),
+		SemanticSpan.SpanType.VALUE, {
+			"editable": false,
+			"kind": "define_function",
+			"lane": "condition",
+			"line_index": 1,
 			"natural_width": true,
-			"text_color": _viewport._get_reading_style().muted_text_color
+			"text_color": muted_color if returns_word == "void" else _viewport._get_event_style().value_highlight_color
 		}))
-	# The verb reads as an event-sheet line, NOT a raw signature: an authored @ace_display_template is
-	# the whole sentence (its {param} slots filled with each parameter's label); otherwise the friendly
-	# name plus first-class typed parameter chips (`name : Type`, the same grammar a variable row uses).
-	# There is deliberately no trailing `func ... -> Type` code cue - the whole point is that a reader with
-	# no GDScript knowledge sees the abstraction (verb, its inputs, what it hands back), not the code.
-	# Slight per-role tint on the verb name so an Action / Condition / Expression reads distinctly at a
-	# glance among the inline verb rows (reinforces the role badge without a loud colour).
-	var name_color: Color = _define_role_name_color(role)
-	var authored_line: String = friendly_template_line(event_function)
-	var condition_lines: int = 1
-	if not authored_line.is_empty():
-		spans.append(_make_span(authored_line, SemanticSpan.SpanType.OBJECT, {
+	# What it hands back and its tags share the line under the name: beside it they would run out
+	# of lane on any name longer than a word.
+	for tag: Array in function_tags(event_function):
+		spans.append(_make_span(str(tag[0]), SemanticSpan.SpanType.CONDITION, {
+			"editable": false,
+			"kind": "function_tag",
+			"lane": "condition",
+			"line_index": 1,
+			"chip": true,
+			"font_size_delta": -2,
+			"hover_note": str(tag[1])
+		}.merged(chip_style, true)))
+	var condition_lines: int = 2
+	var editable: bool = _verb_metadata_editable()
+	var description: String = event_function.description.strip_edges()
+	if description.is_empty():
+		description = join_doc_prose(event_function.doc_comment)
+	if not description.is_empty() or editable:
+		var description_meta: Dictionary = {
+			"editable": editable,
 			"kind": "define_function",
 			"lane": "condition",
-			"line_index": 0,
-			"text_color": name_color
-		}))
-	else:
-		# The name is the verb's DISPLAY NAME, edited inline (double-click) on an authored sheet - the
-		# same field the old dialog's "Display name" box set. Clearing it falls the row and compiler back
-		# to the function name. Not editable on a read-only preview, and not on an authored @ace_display_-
-		# template line (that whole-sentence form is a GDScript concern), so only this plain branch opts in.
-		var name_meta: Dictionary = {
-			"kind": "define_function",
-			"lane": "condition",
-			"line_index": 0,
-			"text_color": name_color
+			"line_index": condition_lines,
+			"text_color": muted_color
 		}
-		if _verb_metadata_editable():
-			name_meta["editable"] = true
-			name_meta["edit_kind"] = "verb_display_name"
-		spans.append(_make_span(display_name, SemanticSpan.SpanType.OBJECT, name_meta))
-		condition_lines = _append_define_param_spans(spans, event_function, 0) + 1
-		# The mirror of "+ Add condition": adding an argument is the core authoring gesture on a verb, so
-		# it lives on the row - and since the verb dialog no longer carries a parameter list, this IS the
-		# way in. It must therefore appear wherever the dialog used to, which includes a .gd-backed sheet
-		# (the default format, where external_source_path is always set). Only a read-only sheet is
-		# excluded: it edits nothing, so it must not grow an affordance it cannot honour. Editing a
-		# verb's SIGNATURE is not the same as editing an opened pack's body - the body stays a read view
-		# behind its own per-function opt-in, while the signature has always been editable from here.
-		var owning_sheet: EventSheetResource = _viewport._sheet
-		if owning_sheet != null and not owning_sheet.read_only:
-			var add_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
-			var add_color: Color = add_style_meta.get("text_color", _viewport._get_condition_style().text_color)
-			add_color.a *= 0.55
-			spans.append(_make_span(
-				EventSheetL10n.translate("+ Add parameter"),
-				SemanticSpan.SpanType.CONDITION,
-				{
-					"editable": false,
-					"kind": "verb_param_add",
-					"lane": "condition",
-					"line_index": condition_lines,
-					"text_color": add_color
-				}
-			))
-			condition_lines += 1
-	# The ACTION lane answers "and what do I get back?": the value it hands over (a Condition answers a
-	# question and an Expression yields a value, so the type shows as a "gives back Type" chip - a void
-	# Action returns nothing and shows none), then the markers that change how it is CALLED (waits =
-	# async) or who may call it (internal = not published as an ACE).
-	if role != "action":
-		spans.append(_define_chip(EventSheetL10n.translate("gives back %s") % _friendly_return_type(event_function), chip_bg, chip_fg, 0))
-	if event_function.is_async:
-		spans.append(_define_chip(EventSheetL10n.translate("waits"), chip_bg, chip_fg, 0))
-	if event_function.is_static:
-		# `static` is GDScript's word; the sheet's word for a function that belongs to the class
-		# rather than to any one object is `shared`, and the define row says the same word the reading
-		# does.
-		spans.append(_define_chip(EventSheetL10n.translate("shared"), chip_bg, muted, 0))
-	if not event_function.expose_as_ace:
-		spans.append(_define_chip(EventSheetL10n.translate("internal"), chip_bg, muted, 0))
-	if event_function.featured:
-		spans.append(_define_chip(EventSheetL10n.translate("★ featured"), chip_bg, chip_fg, 0))
-	# The picker CATEGORY as a muted, double-click-editable chip - the old dialog's "Picker category" box,
-	# now on the row. Only for a PUBLISHED verb on an authored sheet (an unpublished helper has no picker
-	# entry to file, and a read view must not offer an edit): an unset category shows a faint "+ category"
-	# placeholder. Kept muted so a pack filing every verb under one word does not read as a wall of chips.
-	if event_function.expose_as_ace and _verb_metadata_editable():
-		var category: String = event_function.ace_category.strip_edges()
-		var category_meta: Dictionary = {
-			"editable": true,
+		if editable:
+			description_meta["edit_kind"] = "verb_description"
+		if description.is_empty():
+			description = EventSheetL10n.translate("+ describe this function")
+			description_meta["edit_placeholder"] = true
+		else:
+			description_meta["bbcode_segments"] = [{"text": description, "color": muted_color, "bold": false, "italic": true}]
+		spans.append(_make_span(description, SemanticSpan.SpanType.COMMENT, description_meta))
+		condition_lines += 1
+	for index in range(event_function.params.size()):
+		var param: ACEParam = event_function.params[index]
+		if param == null:
+			continue
+		spans.append(_make_span(EventSheetL10n.translate("PARAM"), SemanticSpan.SpanType.KEYWORD, {
+			"editable": false,
 			"badge": true,
 			"badge_style": "scope",
+			"badge_natural_width": true,
 			"badge_bg": chip_bg,
-			"badge_fg": muted if category.is_empty() else chip_fg,
-			"kind": "define_function",
-			"edit_kind": "verb_category",
-			"lane": "action",
-			"line_index": 0
-		}
-		if category.is_empty():
-			category_meta["edit_placeholder"] = true
-		spans.append(_make_span(
-			category if not category.is_empty() else EventSheetL10n.translate("+ category"),
-			SemanticSpan.SpanType.KEYWORD, category_meta))
+			"badge_fg": muted,
+			"kind": "verb_param",
+			"param_index": index,
+			"lane": "condition",
+			"line_index": condition_lines
+		}))
+		spans.append(_make_span(function_param_line(param), SemanticSpan.SpanType.VALUE, {
+			"editable": false,
+			"kind": "verb_param",
+			"param_index": index,
+			"lane": "condition",
+			"line_index": condition_lines,
+			"text_color": _viewport._get_event_style().value_highlight_color,
+			"hover_note": function_param_note(param)
+		}))
+		condition_lines += 1
+	# Adding an input is the core authoring gesture on a function, so it lives on the row. Only a
+	# read-only sheet goes without: it edits nothing, so it must not grow an affordance it cannot honour.
+	if editable:
+		var add_color: Color = _viewport._get_condition_style().text_color
+		add_color.a *= 0.55
+		spans.append(_make_span(EventSheetL10n.translate("+ Add parameter"), SemanticSpan.SpanType.CONDITION, {
+			"editable": false,
+			"kind": "verb_param_add",
+			"lane": "condition",
+			"line_index": condition_lines,
+			"text_color": add_color
+		}))
+		condition_lines += 1
 	_append_message_spans(spans, event_function)
 	row_data.spans = spans
 	_append_verb_body_rows(row_data, event_function, indent, display_name)
 	row_data.line_count = maxi(condition_lines, 1)
 	return row_data
+
+
+## The small tags a function's header carries, as [word, what it means] pairs, in the order the
+## Properties bar lists the same three settings.
+static func function_tags(event_function: EventFunction) -> Array:
+	var tags: Array = []
+	if event_function.expose_as_ace:
+		tags.append([EventSheetL10n.translate("In Add Action"),
+			EventSheetL10n.translate("Listed in Add Action and Add Condition under its category, so any sheet can pick it like a built-in.")])
+	if event_function.is_async:
+		tags.append([EventSheetL10n.translate("Waits"),
+			EventSheetL10n.translate("It has a Wait inside, so callers can wait for it to finish (await).")])
+	if event_function.is_static:
+		tags.append([EventSheetL10n.translate("Shared"),
+			EventSheetL10n.translate("Belongs to the script, not to each object: call it without an object (static func).")])
+	if event_function.featured:
+		tags.append([EventSheetL10n.translate("Featured"),
+			EventSheetL10n.translate("Leads its section of Add Action, starred.")])
+	return tags
+
+
+## One parameter's line under its function, as the code names it: "int amount = 1".
+static func function_param_line(param: ACEParam) -> String:
+	var line: String = param.id
+	if not param.type_name.strip_edges().is_empty():
+		line = "%s %s" % [param.type_name.strip_edges(), param.id]
+	if not param.gdscript_default.strip_edges().is_empty():
+		line += " = %s" % param.gdscript_default.strip_edges()
+	return line
+
+
+## What hovering a parameter's line says: what it is for, how to use it, and its value when a call
+## leaves it out.
+static func function_param_note(param: ACEParam) -> String:
+	var words: PackedStringArray = PackedStringArray()
+	var described: String = param.get_param_description().strip_edges()
+	var type_name: String = param.type_name.strip_edges()
+	words.append("%s (%s)%s" % [param.id, type_name if not type_name.is_empty() else "Variant",
+		". %s." % described.trim_suffix(".") if not described.is_empty() else "."])
+	words.append(EventSheetL10n.translate("Inside this function, use it like any variable."))
+	if param.gdscript_default.strip_edges().is_empty():
+		words.append(EventSheetL10n.translate("Every call has to give it a value."))
+	else:
+		words.append(EventSheetL10n.translate("When it is called without one, it is %s.") % param.gdscript_default.strip_edges())
+	return " ".join(words)
 
 
 ## What the last headless run said about one Check row, or null when this test has not been run
@@ -4494,17 +4405,6 @@ func _append_message_spans(spans: Array[SemanticSpan], event_function: EventFunc
 		"message_annotation": true,
 		"hover_note": EventSheetL10n.translate("The line that makes this function a message. Click to open it in the code panel.")
 	}, EventSheetCodeEcho.REST_ALPHA, true))
-
-
-## The word a function row leads with when the sheet does not CALL this function - it is
-## reached some other way, and the row says which. "" for an ordinary function, which is most of
-## them. Both words are literals rather than a table lookup, so the translation gate can see them.
-func _function_role_word(event_function: EventFunction) -> String:
-	if EventSheetMessageFacts.is_message(event_function):
-		return EventSheetL10n.translate("message")
-	if not _visibility_filter_entry(event_function).is_empty():
-		return EventSheetL10n.translate("visibility filter")
-	return ""
 
 
 ## What the sheet's own rows say about this function being a visibility filter, or {} for every

@@ -67,7 +67,6 @@ static func run() -> bool:
 		if sample_row != null:
 			sample_uids.append(sample_row.row_uid)
 	all_passed = _check("the verb row itself renders in the preview", sample_uids.has("define_fn_spawn_pickup"), true) and all_passed
-	all_passed = _check("so does its description caption", sample_uids.has("verb_note_spawn_pickup"), true) and all_passed
 
 	# The Theme editor's form is reflective, so a token only reaches the user if it is an @export.
 	all_passed = _check("the role accents are offered as tokens",

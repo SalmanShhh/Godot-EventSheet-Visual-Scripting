@@ -7929,3 +7929,74 @@ click to choose,"нажмите, чтобы выбрать"
 Choose a node from the open scene. The pick replaces what is in the box.,Выберите узел из открытой сцены. Выбор заменит содержимое поля.
 The %s key,Клавиша %s
 Double-click to insert into the focused box.,Двойной щелчок вставляет в активное поле.
+"A condition asks a yes or no question: the event only runs when it answers yes. It sits in the left-hand lane. For example: Is Dead, Is Full Health.","Условие задаёт вопрос с ответом «да» или «нет»: событие выполняется, только если ответ «да». Оно стоит в левой колонке. Например: Мёртв, Здоровье полное."
+"An expression answers with a value you can use inside any parameter box, like a number or some text. For example: Health %, Remaining Shields.","Выражение отвечает значением, которое можно подставить в любое поле параметра, например число или текст. Например: Здоровье %, Оставшиеся щиты."
+"An action does something when the event runs: change a value, move, play a sound. It sits in the right-hand lane. For example: Take Damage, Heal, Knock Back.","Действие что-то делает при выполнении события: меняет значение, двигает, проигрывает звук. Оно стоит в правой колонке. Например: Получить урон, Лечить, Отбросить."
+Does something,Что-то делает
+Is it true?,Это так?
+A value,Значение
+Create Function,Создать функцию
+"The function's row, as the sheet will show it.","Строка функции в том виде, в каком её покажет лист."
+Take Damage,Получить урон
+"Write it in plain words - ""Take Damage"" becomes take_damage in the generated GDScript. Other rows call it by this name.","Пишите простыми словами - ""Take Damage"" становится take_damage в созданном GDScript. Другие строки вызывают её по этому имени."
+Godot's own documentation for this function. It is written above the function as ## lines and shows up in the editor's built-in help and when hovering it elsewhere. Optional.,Собственная документация Godot для этой функции. Пишется над функцией строками ## и видна во встроенной справке редактора и при наведении в других местах. Необязательно.
+Use this draft,Использовать этот черновик
+"Puts the drafted line in the field above, where you can edit it before saving. Nothing is written until you save.","Помещает черновую строку в поле выше, где её можно поправить перед сохранением. Ничего не записывается, пока вы не сохраните."
+"Puts a clickable button on this node's Inspector panel, labelled with whatever you type here. Pressing it runs this function right there in the editor. Leave it empty (the usual case) and no button appears.","Добавляет кнопку в Инспектор этого узла с подписью, которую вы введёте здесь. Нажатие запускает эту функцию прямо в редакторе. Оставьте пустым (обычный случай) - и кнопки не будет."
+"This sheet is an editor tool: this function runs INSIDE the editor (File > Run or an Inspector button), never in the game.","Этот лист - инструмент редактора: функция выполняется ВНУТРИ редактора (Файл > Запустить или кнопка Инспектора), а не в игре."
+Publish,Опубликовать
+Ticked: this function shows up in the Add Action / Condition picker for every sheet in the project. Unticked: only events in this sheet can call it.,Отмечено: функция появляется в выборе действий / условий на каждом листе проекта. Не отмечено: вызывать её могут только события этого листа.
+What kind is it?,Какого она вида?
+Save Changes,Сохранить изменения
+"No description yet. Its own rows say: ""%s""","Описания пока нет. Её собственные строки говорят: ""%s"""
+This is what other people will see,Вот что увидят другие
+New function,Новая функция
+Edit function %s,Изменить функцию %s
+Create function %s,Создать функцию %s
+"A type of your own project, kept as it is written.","Тип из вашего проекта, сохранён как написан."
+"""%s"" already exists on this sheet (function or variable).","""%s"" уже есть на этом листе (функция или переменная)."
+"Parameters with a default value must come after those without (""%s"" has no default).","Параметры со значением по умолчанию должны идти после параметров без него (у ""%s"" его нет)."
+Hands nothing back. Use it as an action.,Ничего не возвращает. Используйте как действие.
+"A color, with transparency.",Цвет с прозрачностью.
+"A list of values, in order.",Список значений по порядку.
+"Values stored under names, looked up by name.","Значения, хранящиеся под именами и находимые по имени."
+"Any node in the scene, like the nearest enemy.","Любой узел сцены, например ближайший враг."
+Not listed,Не в списке
+"Only callable by name from this sheet, or from code.",Вызывается только по имени с этого листа или из кода.
+Listed,В списке
+"Shown in Add Action under its Category, with its description as help.","Показывается в «Добавить действие» в своей категории, с описанием в качестве справки."
+Finishes at once,Завершается сразу
+Runs start to end in one frame. Callers carry on straight after.,Выполняется от начала до конца за один кадр. Вызывающие продолжают сразу после.
+Can wait,Может ждать
+"May pause on a Wait (timer, signal, tween). Callers can wait for it to finish before carrying on.","Может остановиться на Ожидании (таймер, сигнал, твин). Вызывающие могут дождаться её завершения, прежде чем продолжить."
+One per object,Одна на объект
+"Each object runs its own copy and can use its own variables, like health.","Каждый объект запускает свою копию и может использовать свои переменные, например здоровье."
+One for the script,Одна на скрипт
+"Called without picking an object. It cannot read one object's variables, so it suits helpers like maths.","Вызывается без выбора объекта. Не может читать переменные объекта, поэтому подходит для помощников вроде математики."
+Exactly as written in code. Renaming it renames every call.,Точно как написано в коде. Переименование меняет каждый вызов.
+"Shown in italics under the name, and as the help text in Add Action.",Показывается курсивом под именем и как справка в «Добавить действие».
+Returns,Возвращает
+"What the function hands back. Nothing makes it an action; any type makes it usable inside expressions, and its last action is Return.","Что возвращает функция. «Ничего» делает её действием; любой тип позволяет использовать её в выражениях, и последним действием будет «Вернуть»."
+In Add Action,В «Добавить действие»
+Whether other events can pick it from Add Action like a built-in.,"Могут ли другие события выбрать её в «Добавить действие», как встроенную."
+The default heading for your own functions.,Заголовок по умолчанию для ваших функций.
+Listed under %s in Add Action.,В «Добавить действие» в разделе %s.
+The heading it is listed under in Add Action.,"Заголовок, под которым она стоит в «Добавить действие»."
+Waits,Ждёт
+Whether the function can pause part way. Chosen for you when it contains a Wait.,"Может ли функция приостанавливаться на полпути. Выбирается за вас, если в ней есть Ожидание."
+Whether it belongs to each object or to the script itself.,Принадлежит ли она каждому объекту или самому скрипту.
++ Add,+ Добавить
+Adds an input this function is called with.,"Добавляет вход, с которым вызывается эта функция."
+Drag to move this parameter. Callers pass inputs in this order.,"Перетащите, чтобы переместить параметр. Вызывающие передают входы в этом порядке."
+required,обязательно
+The value it has when a call leaves it out. Empty makes it required.,"Значение, если вызов его не передал. Пустое делает параметр обязательным."
+Parameters with a default value must come after those without.,Параметры со значением по умолчанию должны идти после параметров без него.
+PARAM,ПАРАМ
+"Listed in Add Action and Add Condition under its category, so any sheet can pick it like a built-in.","Видна в «Добавить действие» и «Добавить условие» в своей категории, так что любой лист может выбрать её как встроенную."
+"It has a Wait inside, so callers can wait for it to finish (await).","Внутри есть Ожидание, поэтому вызывающие могут дождаться её завершения (await)."
+"Belongs to the script, not to each object: call it without an object (static func).","Принадлежит скрипту, а не каждому объекту: вызывайте без объекта (static func)."
+Featured,Избранное
+"Leads its section of Add Action, starred.","Стоит первой в своём разделе «Добавить действие», со звёздочкой."
+"Inside this function, use it like any variable.",Внутри этой функции используйте его как любую переменную.
+Every call has to give it a value.,Каждый вызов должен передать ему значение.
+"When it is called without one, it is %s.","Если вызвать без него, он равен %s."

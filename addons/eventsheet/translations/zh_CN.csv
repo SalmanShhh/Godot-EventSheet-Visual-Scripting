@@ -7929,3 +7929,74 @@ click to choose,点击选择
 Choose a node from the open scene. The pick replaces what is in the box.,从打开的场景中选择一个节点。所选节点会替换框中的内容。
 The %s key,%s 键
 Double-click to insert into the focused box.,双击插入到当前聚焦的框中。
+"A condition asks a yes or no question: the event only runs when it answers yes. It sits in the left-hand lane. For example: Is Dead, Is Full Health.",条件提出一个是或否的问题：只有回答为是时事件才会运行。它位于左侧栏。例如：已死亡、生命值已满。
+"An expression answers with a value you can use inside any parameter box, like a number or some text. For example: Health %, Remaining Shields.",表达式返回一个值，可以用在任何参数框中，比如数字或文本。例如：生命值 %、剩余护盾。
+"An action does something when the event runs: change a value, move, play a sound. It sits in the right-hand lane. For example: Take Damage, Heal, Knock Back.",动作在事件运行时执行某件事：改变一个值、移动、播放声音。它位于右侧栏。例如：受到伤害、治疗、击退。
+Does something,执行某件事
+Is it true?,是否为真？
+A value,一个值
+Create Function,创建函数
+"The function's row, as the sheet will show it.",函数在表中显示的那一行。
+Take Damage,受到伤害
+"Write it in plain words - ""Take Damage"" becomes take_damage in the generated GDScript. Other rows call it by this name.","用平常的词语书写 - ""Take Damage"" 在生成的 GDScript 中会变成 take_damage。其他行用这个名字调用它。"
+Godot's own documentation for this function. It is written above the function as ## lines and shows up in the editor's built-in help and when hovering it elsewhere. Optional.,Godot 自带的此函数文档。它以 ## 行写在函数上方，会出现在编辑器的内置帮助中，以及在其他地方悬停时。可选。
+Use this draft,使用此草稿
+"Puts the drafted line in the field above, where you can edit it before saving. Nothing is written until you save.",把草稿行放进上面的字段，保存前可以编辑。保存之前不会写入任何内容。
+"Puts a clickable button on this node's Inspector panel, labelled with whatever you type here. Pressing it runs this function right there in the editor. Leave it empty (the usual case) and no button appears.",在此节点的检查器中放一个按钮，标签为你在这里输入的文字。按下它会在编辑器中直接运行此函数。留空（通常情况）则不出现按钮。
+"This sheet is an editor tool: this function runs INSIDE the editor (File > Run or an Inspector button), never in the game.",此表是编辑器工具：此函数在编辑器内运行（文件 > 运行 或检查器按钮），从不在游戏中运行。
+Publish,发布
+Ticked: this function shows up in the Add Action / Condition picker for every sheet in the project. Unticked: only events in this sheet can call it.,勾选：此函数会出现在项目中每个表的添加动作 / 条件选择器中。不勾选：只有此表中的事件可以调用它。
+What kind is it?,它是哪一种？
+Save Changes,保存更改
+"No description yet. Its own rows say: ""%s""","还没有描述。它自己的行写道：""%s"""
+This is what other people will see,其他人将看到这些
+New function,新函数
+Edit function %s,编辑函数 %s
+Create function %s,创建函数 %s
+"A type of your own project, kept as it is written.",你自己项目中的类型，按原样保留。
+"""%s"" already exists on this sheet (function or variable).","""%s"" 已存在于此表中（函数或变量）。"
+"Parameters with a default value must come after those without (""%s"" has no default).","带默认值的参数必须放在没有默认值的参数之后（""%s"" 没有默认值）。"
+Hands nothing back. Use it as an action.,不返回任何东西。把它当作动作使用。
+"A color, with transparency.",一种颜色，带透明度。
+"A list of values, in order.",一组按顺序排列的值。
+"Values stored under names, looked up by name.",以名称存储、按名称查找的值。
+"Any node in the scene, like the nearest enemy.",场景中的任意节点，比如最近的敌人。
+Not listed,不列出
+"Only callable by name from this sheet, or from code.",只能在此表或代码中按名称调用。
+Listed,列出
+"Shown in Add Action under its Category, with its description as help.",显示在添加动作中它的类别下，描述作为帮助。
+Finishes at once,立即完成
+Runs start to end in one frame. Callers carry on straight after.,在一帧内从头运行到尾。调用者紧接着继续。
+Can wait,可以等待
+"May pause on a Wait (timer, signal, tween). Callers can wait for it to finish before carrying on.",可能在等待（计时器、信号、补间）处暂停。调用者可以等它完成再继续。
+One per object,每个对象一份
+"Each object runs its own copy and can use its own variables, like health.",每个对象运行自己的副本，可以使用自己的变量，比如生命值。
+One for the script,整个脚本一份
+"Called without picking an object. It cannot read one object's variables, so it suits helpers like maths.",无需选择对象即可调用。它不能读取某个对象的变量，所以适合数学之类的辅助函数。
+Exactly as written in code. Renaming it renames every call.,与代码中写的完全一致。重命名会同时改掉每次调用。
+"Shown in italics under the name, and as the help text in Add Action.",以斜体显示在名称下方，也作为添加动作中的帮助文字。
+Returns,返回
+"What the function hands back. Nothing makes it an action; any type makes it usable inside expressions, and its last action is Return.",函数返回什么。返回空则它是动作；任何类型都能让它用在表达式中，它的最后一个动作是返回。
+In Add Action,在添加动作中
+Whether other events can pick it from Add Action like a built-in.,其他事件能否像内置功能一样在添加动作中选择它。
+The default heading for your own functions.,你自己的函数的默认标题。
+Listed under %s in Add Action.,在添加动作中列于 %s 下。
+The heading it is listed under in Add Action.,它在添加动作中所属的标题。
+Waits,等待
+Whether the function can pause part way. Chosen for you when it contains a Wait.,函数能否中途暂停。包含等待时会自动选择。
+Whether it belongs to each object or to the script itself.,它属于每个对象还是脚本本身。
++ Add,+ 添加
+Adds an input this function is called with.,添加调用此函数时使用的输入。
+Drag to move this parameter. Callers pass inputs in this order.,拖动以移动此参数。调用者按此顺序传入输入。
+required,必填
+The value it has when a call leaves it out. Empty makes it required.,调用省略它时的值。留空则为必填。
+Parameters with a default value must come after those without.,带默认值的参数必须放在没有默认值的参数之后。
+PARAM,参数
+"Listed in Add Action and Add Condition under its category, so any sheet can pick it like a built-in.",列在添加动作和添加条件中它的类别下，因此任何表都能像内置功能一样选择它。
+"It has a Wait inside, so callers can wait for it to finish (await).",内部有等待，所以调用者可以等它完成（await）。
+"Belongs to the script, not to each object: call it without an object (static func).",属于脚本而非每个对象：无需对象即可调用（static func）。
+Featured,精选
+"Leads its section of Add Action, starred.",带星标排在添加动作中其所在分区的最前面。
+"Inside this function, use it like any variable.",在此函数内，像任何变量一样使用它。
+Every call has to give it a value.,每次调用都必须给它一个值。
+"When it is called without one, it is %s.",调用时省略它，它就是 %s。

@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Changed: a function is drawn like any other event, and edited in the Properties bar
+
+- On a sheet you are writing, a function reads `ƒ Function ▸ On take_damage`, with what it hands
+  back (`→ nothing`, `→ float`) and its settings as small tags (In Add Action, Waits, Shared) on the
+  line under it, its description in italics under that (edited in place), and each parameter on a
+  line of its own - `PARAM int amount = 1` - whose hover says what it is for and its value when a
+  call leaves it out. Names read exactly as the code writes them. The description caption that sat
+  above the function, the role word, the category chip and the "gives back" / "internal" chips are
+  gone; folding the function folds its body away.
+- Clicking a function's head selects it and the Properties bar shows Name (renaming renames every
+  call), Description, Returns, In Add Action, Category, Waits and Shared - every dropdown describing
+  each choice - and its parameters, retyped and given defaults in place, reordered by dragging the
+  handle, added with + Add. Each change is one undo step and nothing is written when nothing
+  changed. A read-only preview keeps the popup that only reads.
+- The New / Edit Function window is on the window kit: a band showing the row it will draw, the
+  Function card (with the code name beside Name), one described Kind dropdown in place of the three
+  cards, the help strip with the `func` line as IN CODE, the live name in the title, and the reason
+  a name cannot be used in amber. Every word of it reads in the editor's language.
+
 ### Changed: the parameters window is laid out the familiar way
 
 - The window is titled "Parameters for Player: Move toward", and its head names the object and the
