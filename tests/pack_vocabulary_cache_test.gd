@@ -54,6 +54,7 @@ static func run() -> bool:
 	EventSheetPackVocabularyCache.forget(true)
 	var all_passed: bool = true
 	all_passed = _every_pack_matches_a_fresh_reflection() and all_passed
+	all_passed = _the_migration_vocabulary_reads_the_same_memory() and all_passed
 	all_passed = _a_changed_input_is_never_trusted() and all_passed
 	all_passed = _a_damaged_file_is_ignored() and all_passed
 	all_passed = _a_class_that_appears_is_seen() and all_passed
@@ -115,6 +116,26 @@ static func _every_pack_matches_a_fresh_reflection() -> bool:
 	all_passed = SUPPORT.check(TEST_NAME, "the registry lists the same verbs in the same order",
 		_identifiers(by_cache.get_all_definitions()), _identifiers(by_sources.get_all_definitions())) and all_passed
 	return all_passed
+
+
+## The Doctor's Migration section asks for the whole vocabulary, packs included, and used to load and
+## reflect every pack script itself - about 6.5 seconds of an audit that had already paid for the same
+## answer. It now reads the memory above, so with the memory warm only a computed surface is loaded.
+static func _the_migration_vocabulary_reads_the_same_memory() -> bool:
+	var paths: Array[String] = EventSheetAddonScanner.list_addon_scripts()
+	var computed: PackedStringArray = PackedStringArray()
+	for path: String in paths:
+		if _surface_is_computed(load(path) as Script):
+			computed.append(path)
+	EventForgeSuccessors.clear_cache()
+	EventSheetPackVocabularyCache.last_remembered = PackedStringArray()
+	EventSheetPackVocabularyCache.last_reflected = PackedStringArray()
+	EventForgeSuccessors.catalog()
+	EventForgeSuccessors.clear_cache()
+	var all_passed: bool = SUPPORT.check(TEST_NAME, "the migration vocabulary loads only computed surfaces",
+		EventSheetPackVocabularyCache.last_reflected, computed)
+	return SUPPORT.check(TEST_NAME, "the migration vocabulary answers every other pack from memory",
+		EventSheetPackVocabularyCache.last_remembered.size(), paths.size() - computed.size()) and all_passed
 
 
 ## A probe provider that builds on a base script and names a third: each of the three, the content

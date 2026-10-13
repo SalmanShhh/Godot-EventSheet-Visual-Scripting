@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Changed: the Doctor's Migration section reads the remembered pack vocabulary
+
+- The Migration section loaded and reflected every pack script to learn the installed vocabulary,
+  about 6.5 seconds of each audit, although the registry already keeps that answer in `.godot/`
+  between sessions. It now reads the same memory, so only a pack that changed is loaded again: on
+  this project the section went from 9.7 to 2.3 seconds and the whole audit from 47 to 40.
+
 ### Changed: twenty-two scripts the first open compiled and never called wait for their moment
 
 - The first sheet open compiled the sheet export, the token index a `{uid}` mint draws against, the

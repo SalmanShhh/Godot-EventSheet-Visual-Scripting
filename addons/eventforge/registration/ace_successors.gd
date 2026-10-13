@@ -568,19 +568,12 @@ static func _cycle_from(key: String, known: Dictionary) -> PackedStringArray:
 ## Every installed pack's definitions, reflected the same way the live registry reflects them.
 ## Packs are the half of the vocabulary that ships from outside this plugin, and a forwarding
 ## address written in one has to be held to exactly the same gate as a built-in's.
+##
+## Through the same remembered vocabulary the registry reads, so a script unchanged since it was last
+## reflected is not loaded again: loading and reflecting every pack here cost the Doctor's Migration
+## section about 6.5 seconds of an audit that had already paid for the same answer.
 static func _pack_definitions() -> Array[ACEDefinition]:
-	var definitions: Array[ACEDefinition] = []
-	var analyzer: EventSheetSemanticAnalyzer = EventSheetSemanticAnalyzer.new()
-	var generator: EventSheetACEGenerator = EventSheetACEGenerator.new()
-	for script_path: String in EventSheetAddonScanner.list_addon_scripts():
-		var script: Script = load(script_path) as Script
-		if script == null:
-			continue
-		# The analyzer reads annotations off DISK, so the reflection below sees the same
-		# `## @ace_succeeded_by(...)` a reader sees in the file.
-		analyzer.parse_source_metadata(script)
-		definitions.append_array(generator.reflect_script(script))
-	return definitions
+	return EventSheetPackVocabularyCache.definitions_for(EventSheetAddonScanner.list_addon_scripts())
 
 
 ## What the remembered vocabulary is keyed on: every pack file and the moment it was last saved, so

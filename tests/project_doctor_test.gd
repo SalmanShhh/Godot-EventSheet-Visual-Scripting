@@ -119,6 +119,11 @@ const SUPPORT := preload("res://tests/support.gd")
 ## two rules this comment's history has used, and it is the right one to use while there are only
 ## four samples. It is not tuned to bite - the two pins below are still the strong half, and the
 ## SHEETS-OPENED pin is the one that would catch a corpus quietly widening again.
+##
+## 2026-10-13, alone in its own process on a developer machine: 46.8 and 48.2 seconds, over the line,
+## and section by section the Migration section was 9.7 of them - it loaded and reflected every pack
+## script for its vocabulary although the registry keeps that answer in .godot/. Reading the same
+## memory, the section is 2.3 seconds and the test measured 39.8. The budget did not move.
 const DOCTOR_BUDGET_MS: int = 45000
 
 ## What the audit measured on 2026-09-05 once this project declared its own scope: 50 distinct
