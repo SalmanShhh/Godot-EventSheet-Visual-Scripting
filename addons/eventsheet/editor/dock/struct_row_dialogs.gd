@@ -28,6 +28,22 @@ var _enum_members_box: VBoxContainer = null
 var _enum_member_edits: Array[LineEdit] = []
 var _enum_multiline_check: CheckBox = null
 var _enum_target: EnumRow = null
+var _enum_problem_label: Label = null
+
+
+## The red line under a form that says why OK did not take. Hidden until there is something to say.
+static func _problem_label() -> Label:
+	var label: Label = EventSheetPopupUI.hint_label("", 400.0)
+	label.add_theme_color_override("font_color", Color(0.95, 0.5, 0.5))
+	label.visible = false
+	return label
+
+
+## Refuses the OK in the dialog itself: the reason goes under the form and the dialog stays open on
+## what was typed, so a fix is one edit rather than a re-entry.
+static func _refuse(problem_label: Label, problem: String) -> void:
+	problem_label.text = problem
+	problem_label.visible = true
 
 
 ## Opens the enum editor for an EnumRow (double-click or "Add Enum Below").
@@ -44,6 +60,7 @@ func open_enum_dialog(enum_resource: Resource) -> void:
 ## half of open_enum_dialog, so it is drivable without a window.
 func _populate_enum_dialog(enum_row: EnumRow) -> void:
 	_enum_target = enum_row
+	_enum_problem_label.visible = false
 	_enum_name_edit.text = enum_row.enum_name
 	_enum_multiline_check.button_pressed = enum_row.multiline
 	# One value field per existing member (at least one empty field so the list is never blank).
@@ -88,7 +105,11 @@ func _ensure_enum_dialog() -> void:
 	_enum_multiline_check.text = "Write one value per line (multi-line enum)"
 	_enum_multiline_check.tooltip_text = "Off: enum State { IDLE, RUN }. On: each value on its own tab-indented line - the usual shape for long enums with explicit numbers."
 	form.add_child(_enum_multiline_check)
+	_enum_problem_label = _problem_label()
+	form.add_child(_enum_problem_label)
 	_enum_dialog.add_child(EventSheetPopupUI.margined(form))
+	# OK closes the dialog only once the enum is accepted; a refused name stays open with the reason.
+	_enum_dialog.dialog_hide_on_ok = false
 	_enum_dialog.confirmed.connect(_on_enum_dialog_confirmed)
 	_dock.add_child(_enum_dialog)
 
@@ -134,7 +155,7 @@ func _on_enum_dialog_confirmed() -> void:
 	var target: EnumRow = _enum_target
 	var new_name: String = EventSheetIdentifierRules.sanitize(_enum_name_edit.text)
 	if not EventSheetIdentifierRules.is_valid(new_name):
-		_dock._set_status("\"%s\" can't be an enum name (letters/digits/underscores, not a GDScript keyword)." % _enum_name_edit.text, true)
+		_refuse(_enum_problem_label, "\"%s\" can't be an enum name (letters/digits/underscores, not a GDScript keyword)." % _enum_name_edit.text)
 		return
 	var new_members: PackedStringArray = PackedStringArray()
 	for edit: LineEdit in _enum_member_edits:
@@ -143,15 +164,17 @@ func _on_enum_dialog_confirmed() -> void:
 			continue  # a blank field is just an unfilled slot, not an error
 		var member_name: String = EventSheetIdentifierRules.sanitize(entry.get_slice("=", 0))
 		if not EventSheetIdentifierRules.is_valid(member_name):
-			_dock._set_status("\"%s\" can't be an enum value name." % entry.strip_edges(), true)
+			_refuse(_enum_problem_label, "\"%s\" can't be an enum value name." % entry.strip_edges())
 			return
 		var member_text: String = member_name
 		if entry.contains("="):
 			member_text += " = " + entry.get_slice("=", 1).strip_edges()
 		new_members.append(member_text)
 	if new_members.is_empty():
-		_dock._set_status("Enums need a name and at least one value.", true)
+		_refuse(_enum_problem_label, "Enums need a name and at least one value.")
 		return
+	_enum_problem_label.visible = false
+	_enum_dialog.hide()
 	var multiline_choice: bool = _enum_multiline_check.button_pressed
 	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Enum", func() -> bool:
 		target.enum_name = new_name
@@ -168,6 +191,7 @@ var _signal_dialog: ConfirmationDialog = null
 var _signal_name_edit: LineEdit = null
 var _signal_params_edit: TextEdit = null
 var _signal_target: SignalRow = null
+var _signal_problem_label: Label = null
 var _match_dialog: ConfirmationDialog = null
 var _match_expression_edit: LineEdit = null
 var _match_cases_box: VBoxContainer = null
@@ -183,6 +207,7 @@ func open_signal_dialog(signal_resource: Resource) -> void:
 		return
 	_ensure_signal_dialog()
 	_signal_target = signal_row
+	_signal_problem_label.visible = false
 	_signal_name_edit.text = signal_row.signal_name
 	_signal_params_edit.text = "\n".join(signal_row.params)
 	_signal_dialog.popup_centered(Vector2i(420, 280))
@@ -202,7 +227,11 @@ func _ensure_signal_dialog() -> void:
 	_signal_params_edit.custom_minimum_size = Vector2(380.0, 120.0)
 	_signal_params_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	form.add_child(_signal_params_edit)
+	_signal_problem_label = _problem_label()
+	form.add_child(_signal_problem_label)
 	_signal_dialog.add_child(EventSheetPopupUI.margined(form))
+	# OK closes the dialog only once the signal is accepted; a refused name stays open with the reason.
+	_signal_dialog.dialog_hide_on_ok = false
 	_signal_dialog.confirmed.connect(_on_signal_dialog_confirmed)
 	_dock.add_child(_signal_dialog)
 
@@ -213,7 +242,7 @@ func _on_signal_dialog_confirmed() -> void:
 	var target: SignalRow = _signal_target
 	var new_name: String = EventSheetIdentifierRules.sanitize(_signal_name_edit.text)
 	if not EventSheetIdentifierRules.is_valid(new_name):
-		_dock._set_status("\"%s\" can't be a signal name (letters/digits/underscores, not a GDScript keyword)." % _signal_name_edit.text, true)
+		_refuse(_signal_problem_label, "\"%s\" can't be a signal name (letters/digits/underscores, not a GDScript keyword)." % _signal_name_edit.text)
 		return
 	var new_params: PackedStringArray = PackedStringArray()
 	for line: String in _signal_params_edit.text.split("\n"):
@@ -221,12 +250,14 @@ func _on_signal_dialog_confirmed() -> void:
 			continue
 		var param_name: String = EventSheetIdentifierRules.sanitize(line.get_slice(":", 0))
 		if not EventSheetIdentifierRules.is_valid(param_name):
-			_dock._set_status("\"%s\" can't be a signal parameter name." % line.strip_edges(), true)
+			_refuse(_signal_problem_label, "\"%s\" can't be a signal parameter name." % line.strip_edges())
 			return
 		var param_text: String = param_name
 		if line.contains(":"):
 			param_text += ": " + line.get_slice(":", 1).strip_edges()
 		new_params.append(param_text)
+	_signal_problem_label.visible = false
+	_signal_dialog.hide()
 	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Signal", func() -> bool:
 		target.signal_name = new_name
 		target.params = new_params

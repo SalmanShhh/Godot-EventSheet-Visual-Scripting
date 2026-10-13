@@ -150,6 +150,18 @@ static func run() -> bool:
 
 	editor._struct_rows._ensure_signal_dialog()
 	editor._struct_rows._signal_target = hit
+	# A refused name stays in the open dialog with the reason under the form - never a closed dialog
+	# and a line in the status bar the reader has to go and find.
+	all_passed = _check("OK does not close Edit Signal by itself",
+		editor._struct_rows._signal_dialog.dialog_hide_on_ok, false) and all_passed
+	editor._struct_rows._signal_name_edit.text = "class"
+	editor._struct_rows._signal_params_edit.text = ""
+	editor._struct_rows._on_signal_dialog_confirmed()
+	all_passed = _check("a keyword signal name is refused inside the dialog",
+		editor._struct_rows._signal_problem_label.text,
+		"\"class\" can't be a signal name (letters/digits/underscores, not a GDScript keyword).") and all_passed
+	all_passed = _check("...shown, not hidden", editor._struct_rows._signal_problem_label.visible, true) and all_passed
+	all_passed = _check("...and the signal is untouched", hit.signal_name, "hit") and all_passed
 	editor._struct_rows._signal_name_edit.text = "took damage"
 	editor._struct_rows._signal_params_edit.text = "amount: int"
 	editor._struct_rows._on_signal_dialog_confirmed()

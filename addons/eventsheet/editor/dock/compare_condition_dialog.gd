@@ -539,6 +539,9 @@ func _refresh() -> void:
 	_second_row.visible = fields == FIELDS_TWO
 	_tolerance_row.visible = fields == FIELDS_TOLERANCE
 	_ignore_case_check.visible = _operator_kind == KIND_TEXT and operator != OPERATOR_IS_EMPTY
+	# OK waits until every box the operator asks for holds something: an empty "To" writes a
+	# comparison with nothing on one side, which is a row that will not compile.
+	_dialog.get_ok_button().disabled = not ready_to_write()
 	var written: Dictionary = _written()
 	_help_strip.set_reading(
 		reads_as(str(written["ace_id"]), written["params"], bool(written["negated"]), _owner_name()),
@@ -597,6 +600,26 @@ func _owner_text() -> String:
 	return "" if owner.is_empty() else EventSheetL10n.translate("on {object}").replace("{object}", owner)
 
 
+## True when every value box on screen is filled in: the typed left side (when no variable is
+## picked), "To", and "And" or "Give or take" when the operator shows them.
+func ready_to_write() -> bool:
+	var required: Array[LineEdit] = []
+	if _selected_variable().is_empty():
+		required.append(_left_edit)
+	if _right_row.visible:
+		required.append(_right_edit)
+	if _second_row.visible:
+		required.append(_second_edit)
+	if _tolerance_row.visible:
+		required.append(_tolerance_edit)
+	for edit: LineEdit in required:
+		if edit.text.strip_edges().is_empty():
+			return false
+	return true
+
+
 func _on_confirmed() -> void:
+	if not ready_to_write():
+		return
 	var written: Dictionary = _written()
 	compare_confirmed.emit(str(written["ace_id"]), written["params"], bool(written["negated"]), _context)

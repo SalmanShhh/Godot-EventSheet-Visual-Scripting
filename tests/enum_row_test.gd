@@ -118,6 +118,16 @@ static func run() -> bool:
 		all_passed = _check("enum sentence drops the braces", enum_span_texts.has("State { IDLE, RUN, HURT = 4 }"), false) and all_passed
 	editor._struct_rows._ensure_enum_dialog()
 	editor._struct_rows._enum_target = state
+	# A refused value stays in the open dialog, with the reason under the form.
+	all_passed = _check("OK does not close Edit Enum by itself",
+		editor._struct_rows._enum_dialog.dialog_hide_on_ok, false) and all_passed
+	editor._struct_rows._enum_name_edit.text = "PlayerState"
+	editor._struct_rows._clear_enum_member_rows()
+	editor._struct_rows._add_enum_member_row("class")
+	editor._struct_rows._on_enum_dialog_confirmed()
+	all_passed = _check("a keyword value is refused inside the dialog",
+		editor._struct_rows._enum_problem_label.text, "\"class\" can't be an enum value name.") and all_passed
+	all_passed = _check("...and the enum is untouched", state.enum_name, "State") and all_passed
 	editor._struct_rows._enum_name_edit.text = "PlayerState"
 	# The enum dialog now shows each value in its own field (was one TextEdit): populate two fields.
 	editor._struct_rows._clear_enum_member_rows()

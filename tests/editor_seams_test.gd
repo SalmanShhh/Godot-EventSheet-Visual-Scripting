@@ -516,6 +516,9 @@ static func _run_paste_special() -> bool:
 		more_menu.get_item_text(paste_index) if paste_index >= 0 else "", "Paste Special…") and all_passed
 	var dialog: EventSheetPasteSpecialDialog = editor._paste_special_dialog
 	dialog.open(snippet)
+	# OK hands over to confirm(), which closes the dialog only once the rows land - a refused paste
+	# keeps the form and every retarget typed into it.
+	all_passed = _check("OK does not close Paste Special by itself", dialog._dialog.dialog_hide_on_ok, false) and all_passed
 	all_passed = _check("a name the sheet has reads as a reuse",
 		EventSheetPasteSpecial.describe_variable_target(target, "enemy_speed"), "reuses this sheet's enemy_speed") and all_passed
 	all_passed = _check("a name it lacks reads as a create",

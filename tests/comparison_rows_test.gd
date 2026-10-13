@@ -19,6 +19,7 @@ extends RefCounted
 ## The dialog under test. A class_name is not a constant expression, so the alias that lets the
 ## mapping table below read as a table is the script itself.
 const COMPARE := preload("res://addons/eventsheet/editor/dock/compare_condition_dialog.gd")
+const SUPPORT := preload("res://tests/support.gd")
 
 
 static func run() -> bool:
@@ -29,6 +30,7 @@ static func run() -> bool:
 	all_passed = _test_or_and_else() and all_passed
 	all_passed = _test_pick_sentence() and all_passed
 	all_passed = _test_picker_filing() and all_passed
+	all_passed = _test_empty_to_blocks_ok() and all_passed
 	if all_passed:
 		print("[PASS] comparison_rows: a comparison reads as the question it is.")
 	return all_passed
@@ -526,6 +528,39 @@ static func _all_span_text(row_data: EventRowData) -> String:
 		if span != null:
 			parts.append(str(span.text))
 	return " ".join(parts)
+
+
+## OK waits for every box the operator asks for: an empty "To" would write a comparison with nothing
+## on one side, a row that does not compile.
+static func _test_empty_to_blocks_ok() -> bool:
+	var passed: bool = true
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(EventSheetResource.new())
+	var dialog: EventSheetCompareConditionDialog = EventSheetCompareConditionDialog.new()
+	dialog.init(dock)
+	dialog._ensure_dialog()
+	dialog._fill_left_options("score", false)
+	dialog._rebuild_operators(COMPARE.KIND_NUMBER, ">")
+	dialog._refresh()
+	var emitted: Array = []
+	dialog.compare_confirmed.connect(func(ace_id: String, _p: Dictionary, _n: bool, _c: Dictionary) -> void: emitted.append(ace_id))
+	passed = SUPPORT.check("comparison_rows_test", "an empty To keeps OK disabled",
+		dialog._dialog.get_ok_button().disabled, true) and passed
+	dialog._on_confirmed()
+	passed = SUPPORT.check("comparison_rows_test", "and writes no row", emitted.size(), 0) and passed
+	dialog._right_edit.text = "10"
+	dialog._refresh()
+	passed = SUPPORT.check("comparison_rows_test", "a filled To lets it through",
+		dialog._dialog.get_ok_button().disabled, false) and passed
+	dialog._on_confirmed()
+	passed = SUPPORT.check("comparison_rows_test", "and the row is written", emitted, [COMPARE.ACE_COMPARE_VALUES]) and passed
+	dialog._rebuild_operators(COMPARE.KIND_NUMBER, COMPARE.OPERATOR_BETWEEN)
+	dialog._refresh()
+	passed = SUPPORT.check("comparison_rows_test", "a range waits for its other end too",
+		dialog._dialog.get_ok_button().disabled, true) and passed
+	dock.free()
+	return passed
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

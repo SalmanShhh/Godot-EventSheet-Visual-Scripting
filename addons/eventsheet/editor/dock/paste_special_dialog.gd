@@ -53,6 +53,9 @@ func _build_dialog() -> void:
 	_dialog.title = "Paste Special"
 	_dialog.ok_button_text = "Paste Retargeted"
 	_dialog.add_cancel_button("Cancel")
+	# confirm() closes the dialog once the rows have landed; a refused paste keeps the form and every
+	# retarget typed into it, instead of closing on them.
+	_dialog.dialog_hide_on_ok = false
 	_dialog.confirmed.connect(func() -> void: confirm())
 	var content: VBoxContainer = EventSheetPopupUI.form_box()
 	content.add_child(EventSheetPopupUI.hint_label("Point the copied rows at something else on the way in. Object references are rewritten token-safely ($Enemy never touches $EnemySpawner); a variable name this sheet already has is reused, one it lacks is created."))
