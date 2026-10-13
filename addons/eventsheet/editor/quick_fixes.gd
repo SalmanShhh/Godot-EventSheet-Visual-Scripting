@@ -50,9 +50,6 @@ const OFFERED := {
 	"unset-variable": [
 		{"id": "declare_variable", "label": "Declare %s"},
 	],
-	"disabled-pack-in-use": [
-		{"id": "enable_pack", "label": "Switch %s back on"},
-	],
 	# Both land where the change belongs: Adopt shows the diff on the block's own row, and
 	# marking a message is the function row's gesture, so the chips say where rather than rewriting
 	# bytes from a report the reader is not looking at.
@@ -275,9 +272,6 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 				return {"ok": made, "message": "Declared %s." % subject if made
 					else "%s could not be declared here - it may already exist." % subject}
 			return {"ok": false, "message": "Open the sheet that reads %s to declare it." % subject}
-		"enable_pack":
-			EventSheetPackCatalog.set_enabled(subject, true)
-			return {"ok": true, "message": "%s is back on - its actions return to the picker on the next refresh." % subject}
 		# Two gestures that already exist on the row the finding points at - double-clicking
 		# the finding opens that sheet, and these say what to reach for once it is open.
 		"adopt_block":

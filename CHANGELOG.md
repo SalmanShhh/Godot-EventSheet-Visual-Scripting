@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Removed: the Addon manager - a pack is a folder, as everywhere else in Godot
+
+- **Tools ▸ Addon manager… is gone**, and with it the pack Update… and Restore… windows and the
+  pack import, update-check and hashing record they used. A pack is a folder of ordinary behaviour
+  scripts under `eventsheet_addons/`: you see it in the FileSystem dock, add one from the Asset
+  Library or by unpacking a .zip there, and remove one by deleting its folder - version control
+  undoes that like any other delete. Taking a newer version is replacing the folder's files and
+  reading the diff version control shows. Nothing else changes for the rows: a verb a new version
+  retires still forwards to its successor and compiles to the same line, and the Doctor's Migration
+  section still names every row whose verb is no longer installed.
+- **There is no switch to turn a pack off any more.** The scanner no longer reads the
+  `eventsheets/addons/disabled_packs` project setting, so every pack on disk is in the picker. **If
+  your project had packs switched off, they come back.** To keep one out, delete its folder. The
+  Project Doctor notes a project that still carries the old setting, once, as a quiet note saying
+  it is ignored now and can be deleted. The "Switch it back on" quick fix went with the switch.
+- **For scripts that called the catalog:** `EventSheetPackCatalog.disabled_packs()`,
+  `is_enabled()`, `set_enabled()` and `is_disabled_path()` keep their shapes and are deprecated
+  no-ops (empty, true, nothing, false). `publish_pack` and every `EventSheets` method are unchanged.
+
 ### Fixed: what the review of the window fixes found
 
 - **Replace in Project and Rename class:** both rewrote the behaviour packs under `eventsheet_addons/`

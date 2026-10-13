@@ -549,7 +549,7 @@ func open_publish_version_dialog() -> void:
 		_version_preview = Label.new()
 		form.add_child(_version_preview)
 		# The reading check. Publishing is never blocked by it - a check that stopped work would
-		# just be routed around - but the pack carries its score in the Addon manager until it
+		# just be routed around - but the pack carries its score in the Project Doctor until it
 		# passes, and every failure is listed here with the fix rather than as a verdict.
 		_reading_summary = Label.new()
 		_reading_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -582,7 +582,7 @@ func _refresh_version_preview() -> void:
 
 ## Runs the reading check on what this pack publishes plus the sheet in front of us as its demo,
 ## and lists every failure with its fix. The score is stored on the sheet's own metadata so the
-## Addon manager can show "reads 94%" without re-reflecting every pack.
+## score is at hand without re-reflecting every pack.
 func _refresh_reading_check(sheet_path: String) -> void:
 	if _reading_summary == null or _reading_failures == null:
 		return

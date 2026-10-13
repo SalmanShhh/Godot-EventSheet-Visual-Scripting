@@ -2629,18 +2629,7 @@ with Familiar Words on,开启熟悉用词时
 Reset to defaults,恢复默认
 custom…,自定义…
 your word,你的用词
-Addon manager,扩展管理器
-Addon manager…,扩展管理器…
-installed packs,已安装的包
 pack,包
-what you can do,你可以做什么
-Import from .zip…,从 .zip 导入…
-Import from URL…,从网址导入…
-Check for updates,检查更新
-Find more (Asset Library),查找更多（资源库）
-user pack,自制包
-Import a pack from a .zip,从 .zip 导入一个包
-Import a pack from a URL,从网址导入一个包
 Add behavior,添加行为
 Add behavior…,添加行为…
 as a behavior node,作为行为节点
@@ -5929,24 +5918,6 @@ Rename %s,重命名 %s
 Point rows at %s,将行指向 %s
 %d row(s) renamed - one Ctrl+Z takes all of it back.,已重命名 %d 行 - 一次 Ctrl+Z 即可全部撤销。
 Rename…,重命名…
-new in this version,此版本新增
-dropped by this version,此版本已移除
-this version rewrites it,此版本会重写它
-identical in both,两边完全相同
-"This pack carries no record of what arrived, so all %d file(s) are listed as yours and nothing is taken unless you say so.","该扩展包没有到达时的记录，因此全部 %d 个文件都列为你的文件，除非你明确选择，否则不会取用任何内容。"
-%d file(s) are exactly as they arrived and take the new version. You changed none of them.,"%d 个文件与到达时完全一致，将采用新版本。你没有改动过其中任何一个。"
-"%d file(s) are exactly as they arrived and take the new version. %d you changed, each with its own answer below.","%d 个文件与到达时完全一致，将采用新版本。%d 个是你改过的，下面每个都可单独选择。"
-%s is not published by the new version - rows using it keep working from the file you have.,%s 在新版本中不再发布 - 使用它的行仍按你现有的文件继续工作。
-%s now points at %s - old rows still compile the same; the dry run shows what would change.,%s 现在指向 %s - 旧行仍编译成同样的结果；试运行会显示会有什么变化。
-%s is new in this version.,%s 是此版本新增的。
-Keep mine,保留我的
-Take new,采用新的
-See the diff,查看差异
-These two files are identical.,这两个文件完全相同。
-Yours:,你的：
-The new version:,新版本：
-"%d file(s) took the new version, %d were removed, %d of yours were kept. %d went into the backup ring first.","%d 个文件采用了新版本，%d 个被移除，你的 %d 个被保留。%d 个先进入了备份环。"
-"This version publishes the same conditions, actions and expressions as the one you have.","该版本发布的条件、动作和表达式与你现有的版本相同。"
 %s → %s (%d field(s) in this row),%s → %s（此行的 %d 个字段）
 "Two rows in this sheet declare __%s, which is a file Godot will not parse. The %d row(s) below get a name of their own. Both rows go on saying exactly what they say, and one Ctrl+Z puts the name back.",本表中有两行都声明了 __%s，这样的文件 Godot 无法解析。下面的 %d 行会获得自己的名字。两行说的话完全不变，一次 Ctrl+Z 就能把名字改回来。
 Re-mint duplicated local,重铸重复的局部变量
@@ -5960,13 +5931,7 @@ Nothing in the open sheet declares __%s twice any more - the other copy may alre
 Migrate These Rows,迁移这些行
 What will be rewritten,将被重写的内容
 Left exactly as they are,保持原样的内容
-Update pack,更新扩展包
-Take This Update,接受此更新
-Untouched - these take the new version,未改动 - 这些将采用新版本
-Yours - you changed these,你的 - 这些你改动过
-Dry run…,试运行…
 "Opens the migrate receipt for the sheet in front of you: every row that would be rewritten, shown before anything is.",打开面前这张表的迁移回执：所有将被重写的行，在任何内容被重写之前先行展示。
-What this version retires and adds,该版本淘汰与新增的内容
 Rename,重命名
 New name,新名称
 "Named and left exactly as they are - the index answers by name, so a file here may be calling something else",已列出但保持原样 - 索引按名称作答，因此这里的文件可能调用的是别的东西
@@ -5977,7 +5942,6 @@ lines %s and %s%s,第 %s 和 %s 行%s
 %s still has merge conflict markers in it - saving would write the sheet's reading of them back over the file. Resolve the merge first.,%s 中仍有合并冲突标记 - 保存会把本表对它们的读法覆盖到文件上。请先解决合并。
 "%s still holds %d merge conflict marker line(s) (%s). It will not parse, and it opens read-only until the merge is finished.",%s 仍有 %d 行合并冲突标记（%s）。它无法解析，在合并完成前将以只读方式打开。
 " The previous bytes of those %d file(s) are in the backup ring beside each of them, under %s.", 那 %d 个文件的旧字节保存在各自旁边的备份环中，位于 %s。
-"Opens the migrate receipt for the sheet in front of you, answered against the vocabulary this update would leave: every row that would be rewritten, shown before anything is. Reading a version's verbs runs its script, under user:// - nothing of it is written under res:// until you take it.",打开面前这张表的迁移回执，并以该更新将留下的词汇作答：所有将被重写的行，在任何内容被重写之前先行展示。读取某个版本的动词会在 user:// 下运行它的脚本 - 在你接受之前，不会有任何内容写入 res://。
 " %d sheet(s) that include this one are rewritten and SAVED, which one Ctrl+Z here does not undo.", 有 %d 张包含本表的表会被重写并保存，此处的 Ctrl+Z 不会撤销它们。
 "Also written, and saved - these sheets include this one, so Ctrl+Z here does not undo them",同样会被写入并保存 - 这些表包含本表，因此此处的 Ctrl+Z 不会撤销它们
 ☰ Menu,☰ 菜单
@@ -6972,17 +6936,6 @@ particle amount,粒子数量
 "Walks the effect's lifetime to a new value over time instead of jumping to it - one tween, no state to keep. Writes `GPUParticles3D.lifetime`, which is the emitter's own.",让存续时间随时间走到新值，而不是直接跳过去 - 一个补间，不需要保存任何状态。写入发射器自己的 `GPUParticles3D.lifetime`。
 "How many particles the emitter keeps in the air at once. Writing it makes the engine throw the whole particle buffer away and build a new one, so it is a row to use at a moment rather than every frame - which is also why there is no fade for it. Writes `GPUParticles3D.amount`, which is the emitter's own.",发射器同时保持在空中的粒子数量。写它会让引擎把整个粒子缓冲丢掉重建，所以这是一行用在某个时刻、而不是每帧都跑的行 - 这也是它没有渐变版本的原因。写入发射器自己的 `GPUParticles3D.amount`。
 "Reads the effect's amount back. Writes `GPUParticles3D.amount`, which is the emitter's own. Use it in any value field.",读回特效的数量。写入发射器自己的 `GPUParticles3D.amount`。可用在任何数值字段里。
-" The previous bytes of those %d file(s) are in the backup ring, under %s - Restore… on this pack's row lists them.", 这 %d 个文件的先前字节位于 %s 下的备份环中 - 该包所在行的 恢复… 会列出它们。
-this file is not in the pack any more,此文件已不在包中
-Restore %s from the backup ring,从备份环恢复 %s
-"That backup is not there any more - the ring keeps a fixed number of them, and a save since this list was drawn has pushed it out.",该备份已不存在 - 备份环只保留固定数量，绘制此列表之后的一次保存把它挤了出去。
-"%s is back in the pack, %d byte(s), from the backup ring. It was not in the folder at all until now. Ctrl+Z removes it again, and the ring is untouched.",%s 已从备份环回到包中，%d 字节。在此之前它根本不在文件夹里。Ctrl+Z 会再次移除它，备份环不受影响。
-"%s was put back from the backup ring, %d byte(s). Ctrl+Z writes the bytes that were there before, and the ring is untouched.",%s 已从备份环放回，%d 字节。Ctrl+Z 会写回之前那里的字节，备份环不受影响。
-Restore a file from the backup ring,从备份环恢复文件
-Put this one back,放回这一个
-"Writes the chosen backup's bytes over the file in the pack, as one edit you can undo. The backup ring itself is not touched.",把所选备份的字节写到包中的文件上，作为一次可撤销的编辑。备份环本身不会被改动。
-"What the ring is holding, newest first",备份环里保存的内容，最新在前
-"%s - the backup ring is holding %d earlier version(s) of %d file(s). Choose one and it is written back over the file in the pack, as one edit you can undo.",%s - 备份环保存着 %d 个较早版本，涉及 %d 个文件。选择一个，它会作为一次可撤销的编辑写回包中的文件。
 Native,原生
 Light and dark,明与暗
 Resource files,资源文件
@@ -6990,7 +6943,6 @@ Resource files,资源文件
 "True when a scene file brings nothing in from outside the game: no script written inside it, nothing built by a value in a node's body, and every file it points at under res://, which is the game's own. It reads the file's own resource table as TEXT, tag by tag the way the engine's own parser reads it, and instantiates nothing. Ask it above a row that builds a scene which did not come with the game - a level the player built, a pack somebody sent them - because a scene file can name a script, and building one runs that script with everything this game can reach. Anything it cannot read as a scene table answers false, because an unfamiliar file is not a file that has been cleared. A true answer means the file brings no code of its OWN: a cleared scene may still hold a connection, an animation track or a placeholder that reaches your game's own methods, so it is still somebody else's data.",当一个场景文件不带进任何来自游戏之外的东西时为真：里面没有写脚本，节点正文中的值也不会构建任何东西，它指向的每个文件都在 res:// 之下，也就是游戏自己的文件。它把该文件自己的资源表当作文本来读，像引擎自己的解析器那样逐个标签地读，并且不实例化任何东西。请把它放在构建一个并非随游戏一起来的场景的那一行上面来询问 - 玩家自己搭的关卡、别人发来的资源包 - 因为场景文件可以指名一个脚本，而构建它就是让那个脚本以这个游戏能够触及的一切来运行。任何它读不成场景表的东西都回答假，因为陌生的文件不是被放行的文件。回答为真的意思是这个文件不带进它自己的代码：被放行的场景仍可能带着连接、动画方法轨道或占位符去触及你自己游戏的方法，所以它依然是别人的数据。
 "What the expression reads as when there is no file at that path. Leave it blank to read the file plainly, with no guard around it. A file that IS there but cannot be decoded - a truncated picture, or something that is not one at all - answers with null and an engine message rather than with this, because the guard asks whether a file exists and not whether it is a picture.",该路径上没有文件时这个表达式读到的值。留空则直接读取文件，外面不加任何守卫。文件确实在那里却解不开时 - 被截断的图片，或者根本就不是图片 - 回答的是 null 和一条引擎消息而不是这个值，因为守卫问的是文件在不在，而不是它是不是一张图片。
 "What the expression reads as when there is no file at that path, or when its extension is none of the three. Leave it blank to read the file plainly, with no guard around it. A file that IS there with the right extension but cannot be decoded answers with null and an engine message rather than with this, because the guard asks whether a file exists and not whether it is a track.",该路径上没有文件、或者它的扩展名不属于这三种时，这个表达式读到的值。留空则直接读取文件，外面不加任何守卫。文件确实在那里、扩展名也对却解不开时，回答的是 null 和一条引擎消息而不是这个值，因为守卫问的是文件在不在，而不是它是不是一段音轨。
-"%s - %s, %d byte(s)","%s - %s，%d 字节"
 tile data,瓦片数据
 terrain set,地形集
 "Streaming: %d chunk folder(s), %d with something to look at.",流式加载：%d 个区块文件夹，其中 %d 个有需要查看的问题。
@@ -7095,8 +7047,6 @@ Forget Seen,忘掉已见
 forget seen ( {key} ),忘掉已见 ( {key} )
 The memory's name to clear.,要清除的记忆的名字。
 "%s opens %s with a plain scene change, and that scene is %s on disk - big enough that the last frame of the old one sits there while it loads. Go To Scene With Loading shows a loading screen of your own while it comes off the disk, with a shortest time so it cannot flash past.",%s 用普通的场景切换打开 %s，而那个场景在磁盘上有 %s - 大到足以让旧场景的最后一帧在加载期间一直停在屏幕上。「带加载画面切换场景」会在它从磁盘读出来的时候显示你自己的加载画面，并且有一个最短时间，不会一闪而过。
-"That restore was taken back - %s is what it was before it, and the backup ring is untouched.",该还原已撤销 - %s 恢复为之前的状态，备份环不受影响。
-"Nothing was written. A restore only ever puts a file back inside the pack folder its own entry names, out of the backup ring, and %s is not that.",未写入任何内容。还原只会把文件放回其条目所指明的包文件夹中，并且只从备份环中取出 - %s 不属于这种情况。
 no such state,没有这个状态
 This scene's animation tree has no state called %s. A misspelled state travels nowhere and reports nothing - pick the one you meant.,此场景的动画树中没有名为 %s 的状态。拼错的状态哪里也去不了，也不会报告任何信息 - 请选择你想要的那个。
 %d-dimensional,%d 维
@@ -7414,7 +7364,6 @@ Clear All Bookmarks,清除所有书签
 "Remove every bookmark from this sheet? Bookmarks are not part of undo, so they cannot be brought back.",删除此表中的所有书签？书签不属于撤销范围，因此无法恢复。
 Keep Bookmarks,保留书签
 Before these edits,在这些编辑之前
-%d pack(s) name a published source: %s. %d name none. Nothing was checked online - open each source to see whether it has a newer version than the one shown here.,%d 个包注明了发布来源：%s。%d 个未注明。未进行任何在线检查 - 请打开每个来源，查看是否有比此处显示的更新的版本。
 Not saved.,未保存。
 "%d mode(s) declared. The On entering event of %s holds rows of your own, so it was kept - move or delete it, since that mode is gone.",已声明 %d 个模式。%s 的“进入时”事件包含你自己的行，因此已保留 - 既然该模式已不存在，请移动或删除它。
 """%s"" isn't a usable class name - use letters/digits/underscore starting with a letter, and not a reserved or existing class name.",“%s”不是可用的类名 - 请使用以字母开头的字母/数字/下划线，且不要使用保留或已有的类名。

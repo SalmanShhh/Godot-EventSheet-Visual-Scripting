@@ -2629,18 +2629,7 @@ with Familiar Words on,con Parole Familiari attive
 Reset to defaults,Ripristina i valori predefiniti
 custom…,personalizzato…
 your word,la tua parola
-Addon manager,Gestore dei componenti
-Addon manager…,Gestore dei componenti…
-installed packs,pacchetti installati
 pack,pacchetto
-what you can do,che cosa puoi fare
-Import from .zip…,Importa da .zip…
-Import from URL…,Importa da un URL…
-Check for updates,Cerca aggiornamenti
-Find more (Asset Library),Trovane altri (Asset Library)
-user pack,pacchetto tuo
-Import a pack from a .zip,Importa un pacchetto da un .zip
-Import a pack from a URL,Importa un pacchetto da un URL
 Add behavior,Aggiungi comportamento
 Add behavior…,Aggiungi comportamento…
 as a behavior node,come nodo di comportamento
@@ -5929,24 +5918,6 @@ Rename %s,Rinomina %s
 Point rows at %s,Punta righe a %s
 %d row(s) renamed - one Ctrl+Z takes all of it back.,%d riga/righe rinominate - un Ctrl+Z annulla tutto.
 Rename…,Rinomina…
-new in this version,nuovo in questa versione
-dropped by this version,rimosso da questa versione
-this version rewrites it,questa versione lo riscrive
-identical in both,identico in entrambi
-"This pack carries no record of what arrived, so all %d file(s) are listed as yours and nothing is taken unless you say so.","Questo pacchetto non conserva traccia di cio che e arrivato, quindi tutti i %d file sono elencati come tuoi e nulla viene preso senza il tuo assenso."
-%d file(s) are exactly as they arrived and take the new version. You changed none of them.,%d file sono esattamente come sono arrivati e prendono la nuova versione. Non ne hai cambiato nessuno.
-"%d file(s) are exactly as they arrived and take the new version. %d you changed, each with its own answer below.","%d file sono esattamente come sono arrivati e prendono la nuova versione. %d li hai cambiati tu, ognuno con la sua risposta qui sotto."
-%s is not published by the new version - rows using it keep working from the file you have.,%s non e pubblicato dalla nuova versione - le righe che lo usano continuano con il file che hai.
-%s now points at %s - old rows still compile the same; the dry run shows what would change.,%s ora punta a %s - le righe vecchie compilano uguale; la prova mostra cosa cambierebbe.
-%s is new in this version.,%s e nuovo in questa versione.
-Keep mine,Tieni la mia
-Take new,Prendi la nuova
-See the diff,Vedi la differenza
-These two files are identical.,Questi due file sono identici.
-Yours:,La tua:
-The new version:,La nuova versione:
-"%d file(s) took the new version, %d were removed, %d of yours were kept. %d went into the backup ring first.","%d file hanno preso la nuova versione, %d sono stati rimossi, %d dei tuoi sono stati tenuti. %d sono finiti prima nell'anello dei backup."
-"This version publishes the same conditions, actions and expressions as the one you have.","Questa versione pubblica le stesse condizioni, azioni ed espressioni di quella che hai."
 %s → %s (%d field(s) in this row),%s → %s (%d campo/i in questa riga)
 "Two rows in this sheet declare __%s, which is a file Godot will not parse. The %d row(s) below get a name of their own. Both rows go on saying exactly what they say, and one Ctrl+Z puts the name back.","Due righe di questo foglio dichiarano __%s, che e un file che Godot non analizzera. La/e %d riga/righe qui sotto ricevono un nome proprio. Entrambe le righe continuano a dire esattamente la stessa cosa, e un Ctrl+Z rimette il nome."
 Re-mint duplicated local,Riconia la locale duplicata
@@ -5960,13 +5931,7 @@ Nothing in the open sheet declares __%s twice any more - the other copy may alre
 Migrate These Rows,Migra queste righe
 What will be rewritten,Che cosa verra riscritto
 Left exactly as they are,Lasciate esattamente come sono
-Update pack,Aggiorna il pacchetto
-Take This Update,Accetta questo aggiornamento
-Untouched - these take the new version,Intatti: questi prendono la nuova versione
-Yours - you changed these,Tuoi: hai cambiato questi
-Dry run…,Prova a vuoto…
 "Opens the migrate receipt for the sheet in front of you: every row that would be rewritten, shown before anything is.","Apre la ricevuta di migrazione del foglio davanti a te: ogni riga che verrebbe riscritta, mostrata prima che lo sia qualcosa."
-What this version retires and adds,Che cosa ritira e aggiunge questa versione
 Rename,Rinomina
 New name,Nuovo nome
 "Named and left exactly as they are - the index answers by name, so a file here may be calling something else","Nominati e lasciati esattamente come sono: l'indice risponde per nome, quindi un file qui potrebbe chiamare altro"
@@ -5977,7 +5942,6 @@ lines %s and %s%s,righe %s e %s%s
 %s still has merge conflict markers in it - saving would write the sheet's reading of them back over the file. Resolve the merge first.,%s contiene ancora marcatori di conflitto di merge: salvare scriverebbe la lettura del foglio sopra il file. Risolvi prima il merge.
 "%s still holds %d merge conflict marker line(s) (%s). It will not parse, and it opens read-only until the merge is finished.",%s contiene ancora %d riga/righe con marcatori di conflitto di merge (%s). Non verra analizzato e si apre in sola lettura finche il merge non e concluso.
 " The previous bytes of those %d file(s) are in the backup ring beside each of them, under %s."," I byte precedenti di quei %d file sono nell'anello di backup accanto a ciascuno, sotto %s."
-"Opens the migrate receipt for the sheet in front of you, answered against the vocabulary this update would leave: every row that would be rewritten, shown before anything is. Reading a version's verbs runs its script, under user:// - nothing of it is written under res:// until you take it.","Apre la ricevuta di migrazione del foglio davanti a te, risposta rispetto al vocabolario che questo aggiornamento lascerebbe: ogni riga che verrebbe riscritta, mostrata prima che lo sia qualcosa. Leggere i verbi di una versione esegue il suo script, sotto user:// - nulla di essa viene scritto sotto res:// finche non la accetti."
 " %d sheet(s) that include this one are rewritten and SAVED, which one Ctrl+Z here does not undo."," %d foglio/fogli che includono questo vengono riscritti e SALVATI, cosa che un Ctrl+Z qui non annulla."
 "Also written, and saved - these sheets include this one, so Ctrl+Z here does not undo them","Anche scritti e salvati: questi fogli includono questo, quindi un Ctrl+Z qui non li annulla"
 ☰ Menu,☰ Menu
@@ -6972,17 +6936,6 @@ particle amount,quantità di particelle
 "Walks the effect's lifetime to a new value over time instead of jumping to it - one tween, no state to keep. Writes `GPUParticles3D.lifetime`, which is the emitter's own.","Porta la durata a un nuovo valore nel tempo invece di saltarci - un tween, nessuno stato da tenere. Scrive `GPUParticles3D.lifetime`, che appartiene all'emettitore stesso."
 "How many particles the emitter keeps in the air at once. Writing it makes the engine throw the whole particle buffer away and build a new one, so it is a row to use at a moment rather than every frame - which is also why there is no fade for it. Writes `GPUParticles3D.amount`, which is the emitter's own.","Quante particelle l'emettitore tiene in aria alla volta. Scriverla fa buttare al motore tutto il buffer delle particelle e costruirne uno nuovo, quindi è una riga per un momento e non per ogni frame - che è anche il motivo per cui non c'è una dissolvenza. Scrive `GPUParticles3D.amount`, che appartiene all'emettitore stesso."
 "Reads the effect's amount back. Writes `GPUParticles3D.amount`, which is the emitter's own. Use it in any value field.","Rilegge la quantità dell'effetto. Scrive `GPUParticles3D.amount`, che appartiene all'emettitore stesso. Usalo in qualsiasi campo di valore."
-" The previous bytes of those %d file(s) are in the backup ring, under %s - Restore… on this pack's row lists them."," I byte precedenti di quei %d file sono nell'anello dei backup, sotto %s - Ripristina… sulla riga di questo pacchetto li elenca."
-this file is not in the pack any more,questo file non è più nel pacchetto
-Restore %s from the backup ring,Ripristina %s dall'anello dei backup
-"That backup is not there any more - the ring keeps a fixed number of them, and a save since this list was drawn has pushed it out.","Quel backup non c'è più - l'anello ne tiene un numero fisso, e un salvataggio successivo a questo elenco lo ha spinto fuori."
-"%s is back in the pack, %d byte(s), from the backup ring. It was not in the folder at all until now. Ctrl+Z removes it again, and the ring is untouched.","%s è di nuovo nel pacchetto, %d byte, dall'anello dei backup. Fino a ora non era affatto nella cartella. Ctrl+Z lo rimuove di nuovo, e l'anello resta intatto."
-"%s was put back from the backup ring, %d byte(s). Ctrl+Z writes the bytes that were there before, and the ring is untouched.","%s è stato rimesso dall'anello dei backup, %d byte. Ctrl+Z riscrive i byte che c'erano prima, e l'anello resta intatto."
-Restore a file from the backup ring,Ripristina un file dall'anello dei backup
-Put this one back,Rimetti questo
-"Writes the chosen backup's bytes over the file in the pack, as one edit you can undo. The backup ring itself is not touched.","Scrive i byte del backup scelto sopra il file nel pacchetto, come una sola modifica annullabile. L'anello dei backup non viene toccato."
-"What the ring is holding, newest first","Cosa contiene l'anello, dal più recente"
-"%s - the backup ring is holding %d earlier version(s) of %d file(s). Choose one and it is written back over the file in the pack, as one edit you can undo.","%s - l'anello dei backup conserva %d versione/i precedente/i di %d file. Scegline una e viene riscritta sopra il file nel pacchetto, come una sola modifica annullabile."
 Native,Nativo
 Light and dark,Chiaro e scuro
 Resource files,File di risorsa
@@ -6990,7 +6943,6 @@ Resource files,File di risorsa
 "True when a scene file brings nothing in from outside the game: no script written inside it, nothing built by a value in a node's body, and every file it points at under res://, which is the game's own. It reads the file's own resource table as TEXT, tag by tag the way the engine's own parser reads it, and instantiates nothing. Ask it above a row that builds a scene which did not come with the game - a level the player built, a pack somebody sent them - because a scene file can name a script, and building one runs that script with everything this game can reach. Anything it cannot read as a scene table answers false, because an unfamiliar file is not a file that has been cleared. A true answer means the file brings no code of its OWN: a cleared scene may still hold a connection, an animation track or a placeholder that reaches your game's own methods, so it is still somebody else's data.","Vero quando un file di scena non porta dentro nulla da fuori del gioco: nessuno script scritto al suo interno, nulla che un valore nel corpo di un nodo costruisca, e ogni file a cui punta sotto res://, che sono i file propri del gioco. Legge la tabella delle risorse del file come TESTO, tag per tag come fa il parser del motore, e non istanzia nulla. Chiedilo sopra una riga che costruisce una scena che non è arrivata col gioco - un livello costruito dal giocatore, un pacchetto che qualcuno gli ha mandato - perché un file di scena può nominare uno script, e costruirlo esegue quello script con tutto ciò che questo gioco può raggiungere. Tutto ciò che non riesce a leggere come tabella di scena risponde falso, perché un file sconosciuto non è un file approvato. Una risposta vera significa che il file non porta codice PROPRIO: una scena approvata può ancora avere una connessione, una traccia di animazione o un segnaposto che raggiunge i metodi del tuo gioco, quindi resta il dato di qualcun altro."
 "What the expression reads as when there is no file at that path. Leave it blank to read the file plainly, with no guard around it. A file that IS there but cannot be decoded - a truncated picture, or something that is not one at all - answers with null and an engine message rather than with this, because the guard asks whether a file exists and not whether it is a picture.","Che cosa legge l'espressione quando a quel percorso non c'è nessun file. Lascialo vuoto per leggere il file così com'è, senza alcuna guardia intorno. Un file che C'È ma non si riesce a decodificare - un'immagine troncata, o qualcosa che non è affatto un'immagine - risponde null e un messaggio del motore invece che questo, perché la guardia chiede se un file esiste e non se è un'immagine."
 "What the expression reads as when there is no file at that path, or when its extension is none of the three. Leave it blank to read the file plainly, with no guard around it. A file that IS there with the right extension but cannot be decoded answers with null and an engine message rather than with this, because the guard asks whether a file exists and not whether it is a track.","Che cosa legge l'espressione quando a quel percorso non c'è nessun file, o quando la sua estensione non è nessuna delle tre. Lascialo vuoto per leggere il file così com'è, senza alcuna guardia intorno. Un file che C'È con l'estensione giusta ma non si riesce a decodificare risponde null e un messaggio del motore invece che questo, perché la guardia chiede se un file esiste e non se è una traccia."
-"%s - %s, %d byte(s)","%s - %s, %d byte"
 tile data,dati della casella
 terrain set,set di terreno
 "Streaming: %d chunk folder(s), %d with something to look at.","Streaming: %d cartella/e di blocchi, %d con qualcosa da guardare."
@@ -7095,8 +7047,6 @@ Forget Seen,Dimentica il visto
 forget seen ( {key} ),dimentica il visto ( {key} )
 The memory's name to clear.,Il nome della memoria da cancellare.
 "%s opens %s with a plain scene change, and that scene is %s on disk - big enough that the last frame of the old one sits there while it loads. Go To Scene With Loading shows a loading screen of your own while it comes off the disk, with a shortest time so it cannot flash past.","%s apre %s con un normale cambio di scena, e quella scena occupa %s su disco: abbastanza perché l'ultimo fotogramma della precedente resti lì mentre carica. Vai alla scena con caricamento mostra una schermata tua mentre esce dal disco, con una durata minima perché non passi in un lampo."
-"That restore was taken back - %s is what it was before it, and the backup ring is untouched.","Quel ripristino è stato annullato - %s è tornato com'era prima, e l'anello dei backup resta intatto."
-"Nothing was written. A restore only ever puts a file back inside the pack folder its own entry names, out of the backup ring, and %s is not that.","Non è stato scritto nulla. Un ripristino rimette un file solo nella cartella del pacchetto che la sua stessa voce indica, e solo dall'anello dei backup - %s non è questo."
 no such state,nessuno stato con questo nome
 This scene's animation tree has no state called %s. A misspelled state travels nowhere and reports nothing - pick the one you meant.,L'albero di animazione di questa scena non ha nessuno stato chiamato %s. Uno stato scritto male non porta da nessuna parte e non segnala nulla - scegli quello che intendevi.
 %d-dimensional,a %d dimensioni
@@ -7414,7 +7364,6 @@ Clear All Bookmarks,Cancella tutti i segnalibri
 "Remove every bookmark from this sheet? Bookmarks are not part of undo, so they cannot be brought back.","Rimuovere tutti i segnalibri da questo foglio? I segnalibri non fanno parte dell'annullamento, quindi non si possono recuperare."
 Keep Bookmarks,Mantieni i segnalibri
 Before these edits,Prima di queste modifiche
-%d pack(s) name a published source: %s. %d name none. Nothing was checked online - open each source to see whether it has a newer version than the one shown here.,%d pacchetto/i indicano una fonte pubblicata: %s. %d non ne indicano nessuna. Non è stato controllato nulla online - apri ogni fonte per vedere se ha una versione più recente di quella mostrata qui.
 Not saved.,Non salvato.
 "%d mode(s) declared. The On entering event of %s holds rows of your own, so it was kept - move or delete it, since that mode is gone.","%d modalità dichiarata/e. L'evento All'ingresso di %s contiene righe tue, quindi è stato mantenuto - spostalo o eliminalo, dato che quella modalità non c'è più."
 """%s"" isn't a usable class name - use letters/digits/underscore starting with a letter, and not a reserved or existing class name.","""%s"" non è un nome di classe utilizzabile - usa lettere/cifre/trattino basso iniziando con una lettera, e non un nome di classe riservato o esistente."

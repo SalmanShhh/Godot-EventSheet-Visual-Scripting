@@ -265,7 +265,8 @@ static func _test_the_cascade() -> bool:
 	# out or tucked, the way back to it under a theme that leaves no edge strip for a tucked rail.
 	ok = _check("View keeps its items, plus Full toolbar, Sheet theme, Panels and Text labels",
 		counts["EventSheetViewMenu"], 66) and ok
-	ok = _check("Tools keeps its items, plus Words…", counts["EventSheetToolsMenu"], 42) and ok
+	# The Addon manager left Tools: a pack is a folder, seen in the FileSystem dock.
+	ok = _check("Tools keeps its items, plus Words…, less the Addon manager", counts["EventSheetToolsMenu"], 41) and ok
 	# Words… moved menus rather than leaving: it is on Tools now, beside Keyboard Shortcuts.
 	ok = _check("Words… is on Tools, at its own id",
 		tools.get_item_text(tools.get_item_index(63)), "Words…") and ok

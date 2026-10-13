@@ -152,7 +152,7 @@ static func run() -> Dictionary:
 	check_vocabulary_doc(findings)
 	check_pack_reading(findings)
 	check_pack_spellings(findings)
-	check_disabled_pack_usage(sheet_paths, findings)
+	check_old_disabled_packs_setting(findings)
 	check_family_group_agreement(findings)
 	check_imported_rows(sheet_paths, findings)
 	check_task_notes(findings)
@@ -2464,35 +2464,17 @@ static func check_pack_spellings(findings: Array[Dictionary]) -> void:
 		_add(findings, "info", "pack-spelling", EventForgePackSpellings.PACK_DIR, advisory)
 
 
-## A sheet still using a pack that was switched off in the Addon manager. Its actions have left
-## the picker, so the row can no longer be edited in the sheet's own words - which is worth
-## saying out loud rather than leaving as a row that quietly stopped offering anything.
-static func check_disabled_pack_usage(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	var disabled: PackedStringArray = EventSheetPackCatalog.disabled_packs()
-	if disabled.is_empty():
+## A project that still carries the setting older versions wrote to switch packs off. Nothing reads
+## it any more - every pack on disk is in the picker - so the packs it lists are back, and the
+## setting is only clutter in project.godot. One quiet note, never per pack: deleting a pack's
+## folder is how a pack is removed now, and version control undoes it.
+static func check_old_disabled_packs_setting(findings: Array[Dictionary]) -> void:
+	var listed: PackedStringArray = EventSheetPackCatalog.legacy_disabled_setting()
+	if listed.is_empty():
 		return
-	for pack_dir: String in disabled:
-		var pack: Dictionary = EventSheetPackCatalog.describe(pack_dir)
-		if pack.is_empty():
-			continue
-		var identifier: String = str(pack.get("path", "")).get_file().get_basename()
-		var users: PackedStringArray = PackedStringArray()
-		for script_path: String in _list_files_with_extension("gd"):
-			if script_path.begins_with("res://eventsheet_addons/"):
-				continue
-			var file: FileAccess = FileAccess.open(script_path, FileAccess.READ)
-			if file == null:
-				continue
-			var source: String = file.get_as_text()
-			file.close()
-			if source.contains(identifier) and not users.has(script_path):
-				users.append(script_path)
-		if users.is_empty():
-			continue
-		_add(findings, "warning", "disabled-pack-in-use", users[0],
-			"%s is switched off in the Addon manager, but %d sheet(s) still use it - its actions have left the picker, so those rows can no longer be edited in the sheet's own words. Switch it back on, or replace the rows." % [
-				str(pack.get("name", pack_dir)), users.size()])
-		findings[findings.size() - 1]["subject"] = pack_dir
+	_add(findings, "info", "old-disabled-packs-setting", "res://project.godot",
+		"This project still has the old disabled-packs setting (%s, listing %s). It is ignored now, so those packs are back in the picker. To remove a pack, delete its folder under eventsheet_addons/ instead, then delete the setting." % [
+			EventSheetPackCatalog.DISABLED_SETTING, ", ".join(listed)])
 
 
 static func _list_files_with_extension(extension: String) -> PackedStringArray:

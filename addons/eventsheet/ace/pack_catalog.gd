@@ -4,29 +4,29 @@ extends RefCounted
 
 # One list of the packs this project has installed, with everything a reader needs to decide
 # about one: what it is called, what it does in a line, which shelf it belongs on, its version,
-# whether it is switched on, and whether its shape can be written straight into a script instead
-# of attached as a node.
+# and whether its shape can be written straight into a script instead of attached as a node.
 #
-# Everything here is derived from the pack's own file - there is no manifest to keep in step.
-# The one thing that is NOT in the file is the enabled flag, because it is a decision about this
-# project rather than about the pack: it lives in ProjectSettings so it travels with the repo,
-# and a disabled pack's scripts leave the scan, which is what takes its actions out of the
-# picker.
+# Everything here is derived from the pack's own file - there is no manifest to keep in step. A
+# pack is a folder of ordinary scripts under eventsheet_addons/: it is installed by being there
+# and removed by deleting the folder, so every pack on disk is in the list and in the picker.
 
 const PACKS_ROOT := "res://eventsheet_addons"
+## The project setting older versions wrote to switch a pack off. Nothing reads it to decide what
+## is scanned any more; the Doctor notes a project that still carries it, so it can be deleted.
 const DISABLED_SETTING := "eventsheets/addons/disabled_packs"
 
 ## The annotation a pack writes when its shape can be written into an ordinary script instead of
 ## attached as a node. Additive - a pack that says nothing is attachable only.
 const INLINE_ANNOTATION := "@ace_inline_capable"
-## The annotation naming where a pack's published source lives, so "check for updates" has
-## somewhere to look.
+## The annotation naming where a pack's published source lives, so a reader knows where to look
+## for a newer version.
 const SOURCE_ANNOTATION := "@ace_source"
 
 
 ## Every installed pack, sorted by folder name, each as
 ## {"dir", "path", "name", "pitch", "category", "version", "enabled", "inline_capable",
-##  "source", "icon", "guide"}.
+##  "source", "icon", "guide"}. "enabled" is always true and stays only so a caller that reads it
+## keeps working: a pack on disk is a pack in use.
 static func packs() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	if not DirAccess.dir_exists_absolute(PACKS_ROOT):
@@ -37,12 +37,10 @@ static func packs() -> Array[Dictionary]:
 		if not entry.begins_with("."):
 			names.append(entry)
 	names.sort()
-	var disabled: PackedStringArray = disabled_packs()
 	for entry: String in names:
 		var pack: Dictionary = describe(entry)
 		if pack.is_empty():
 			continue
-		pack["enabled"] = not disabled.has(entry)
 		out.append(pack)
 	return out
 
@@ -154,45 +152,36 @@ static func filtered(pack_list: Array[Dictionary], category: String, query: Stri
 	return out
 
 
-# --- enabled / disabled -----------------------------------------------------------------------
+# --- the retired on/off switch ----------------------------------------------------------------
+# These four kept their shapes so a caller written against them still resolves, and each now
+# answers what is true: there is no switch, every pack on disk is scanned.
 
 
-## The pack folders switched off in this project.
+## Deprecated: always empty. Every pack on disk is in use; the old setting's own value is
+## `legacy_disabled_setting()`, read only by the Doctor's note about it.
 static func disabled_packs() -> PackedStringArray:
+	return PackedStringArray()
+
+
+## Deprecated: always true. Delete a pack's folder to stop using it.
+static func is_enabled(_pack_dir: String) -> bool:
+	return true
+
+
+## Deprecated: does nothing. Delete a pack's folder to stop using it; version control undoes it.
+static func set_enabled(_pack_dir: String, _enabled: bool) -> void:
+	pass
+
+
+## Deprecated: always false, because no pack is switched off.
+static func is_disabled_path(_script_path: String) -> bool:
+	return false
+
+
+## What an older project's switched-off setting still lists, or empty when it carries none. Only
+## the Doctor asks, to say the setting is ignored now and may be deleted.
+static func legacy_disabled_setting() -> PackedStringArray:
 	return PackedStringArray(ProjectSettings.get_setting(DISABLED_SETTING, PackedStringArray()))
-
-
-static func is_enabled(pack_dir: String) -> bool:
-	return not disabled_packs().has(pack_dir)
-
-
-## Switches one pack on or off. A disabled pack's scripts leave the scan, so its actions leave
-## the picker; sheets already using them still open, and the Doctor says so.
-static func set_enabled(pack_dir: String, enabled: bool) -> void:
-	var disabled: PackedStringArray = disabled_packs()
-	var index: int = disabled.find(pack_dir)
-	if enabled and index >= 0:
-		disabled.remove_at(index)
-	elif not enabled and index < 0:
-		disabled.append(pack_dir)
-	else:
-		return
-	disabled.sort()
-	ProjectSettings.set_setting(DISABLED_SETTING, disabled if not disabled.is_empty() else null)
-	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
-		ProjectSettings.save()
-
-
-## True when this script belongs to a pack that is switched off - the one question the scanner
-## asks about every path it finds.
-static func is_disabled_path(script_path: String) -> bool:
-	var prefix: String = "%s/" % PACKS_ROOT
-	if not script_path.begins_with(prefix):
-		return false
-	var rest: String = script_path.substr(prefix.length())
-	var slash: int = rest.find("/")
-	var pack_dir: String = rest if slash < 0 else rest.substr(0, slash)
-	return disabled_packs().has(pack_dir)
 
 
 # --- reading the pack's own words --------------------------------------------------------------

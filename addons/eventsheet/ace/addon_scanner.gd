@@ -26,14 +26,9 @@ static func list_addon_scripts() -> Array[String]:
 	var scripts: Array[String] = []
 	for root in ADDON_DIRS:
 		_collect_scripts(root, scripts)
-	# A pack switched off in the Addon manager leaves the scan entirely, which is what takes its
-	# actions out of the picker. Its files stay on disk and its sheets still open - only the
-	# vocabulary goes, and the Doctor names any sheet still using it.
-	var enabled_only: Array[String] = []
-	for script_path: String in scripts:
-		if not EventSheetPackCatalog.is_disabled_path(script_path):
-			enabled_only.append(script_path)
-	scripts = enabled_only
+	# Every pack on disk is in the scan. A pack is a folder of ordinary scripts: to stop using one,
+	# delete its folder (version control undoes it). An older project's "eventsheets/addons/
+	# disabled_packs" setting is not read here any more; the Doctor notes it once so it can go.
 	scripts.sort()
 	_listing_cache = scripts
 	_listing_cache_key = key
@@ -41,7 +36,7 @@ static func list_addon_scripts() -> Array[String]:
 
 
 ## What the addon fleet looks like right now, as one string: every root and pack folder with its
-## modification time, plus the packs that are switched off. Two calls that answer the same string
+## modification time. Two calls that answer the same string
 ## are looking at the same fleet, so a caller holding a vocabulary built from it (the editor keeps
 ## one per open tab) knows whether it may keep it - and it costs a stat per pack folder, not a walk.
 ## Empty when a root is missing, which is "cannot say" and must be read as a change.
@@ -70,10 +65,6 @@ static func _listing_key() -> String:
 				parts.append("%s|%d" % [sub, FileAccess.get_modified_time(sub)])
 			entry = dir.get_next()
 		dir.list_dir_end()
-	# Switching a pack off changes the listing without touching a directory's mtime, so the
-	# disabled set is part of the key - otherwise the picker kept the pack's actions until the
-	# next unrelated file change.
-	parts.append("disabled|%s" % ",".join(EventSheetPackCatalog.disabled_packs()))
 	return "
 ".join(parts)
 

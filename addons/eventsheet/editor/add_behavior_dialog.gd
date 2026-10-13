@@ -145,9 +145,6 @@ func _build_card(pack: Dictionary) -> Control:
 	var pitch: String = str(pack.get("pitch", "")).strip_edges()
 	button.text = str(pack.get("name", "")) if pitch.is_empty() else "%s  -  %s" % [str(pack.get("name", "")), pitch]
 	button.tooltip_text = pitch
-	if not bool(pack.get("enabled", true)):
-		button.disabled = true
-		button.tooltip_text = "This pack is switched off in the Addon manager."
 	button.pressed.connect(func() -> void: _select_pack(pack))
 	return button
 

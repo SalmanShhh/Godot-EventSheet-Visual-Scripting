@@ -16,7 +16,7 @@ extends RefCounted
 # and the pack's demo sheet must open with every line as a row and no Script blocks left.
 #
 # Publishing is never blocked: a pack that fails still publishes, and carries its score
-# ("reads 94%") in the Addon manager until it passes. A check that stopped work would just be
+# ("reads 94%") in the Project Doctor until it passes. A check that stopped work would just be
 # routed around.
 
 ## The words the sheet never uses about itself in anything a reader sees. `verb_*` identifiers are
@@ -174,7 +174,7 @@ static func _file_length(script_path: String) -> int:
 	return length
 
 
-## The one line the Publish dialog and the Addon manager both show.
+## The one line the Publish dialog shows.
 static func summary_text(result: Dictionary) -> String:
 	if bool(result.get("reads", false)):
 		return "Reads as sentences - every condition, action and expression, and the demo sheet."

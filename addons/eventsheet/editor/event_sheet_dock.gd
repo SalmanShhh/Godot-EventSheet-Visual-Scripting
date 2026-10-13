@@ -30,7 +30,6 @@ const LANGUAGE_VARIANTS_DIALOG_PATH := "res://addons/eventsheet/editor/dock/lang
 const COMPLETIONS_PATH := "res://addons/eventsheet/editor/autocomplete/completion_sources.gd"
 const STATE_TRAIL_PATH := "res://addons/eventsheet/editor/state_trail.gd"
 const ACE_APPLY_PATH := "res://addons/eventsheet/editor/dock/ace_apply.gd"
-const ADDON_MANAGER_DIALOG_PATH := "res://addons/eventsheet/editor/addon_manager_dialog.gd"
 const ADD_BEHAVIOR_DIALOG_PATH := "res://addons/eventsheet/editor/add_behavior_dialog.gd"
 const ADD_BEHAVIOR_PATH := "res://addons/eventsheet/editor/add_behavior.gd"
 const AUTHOR_LOOP_PATH := "res://addons/eventsheet/editor/dock/author_loop.gd"
@@ -8802,12 +8801,12 @@ func _resource_contains_descendant(source: Resource, candidate: Resource) -> boo
 	return false
 
 
-# ── Settings ▸ Words, Tools ▸ Addon manager, Object bar ▸ Add behavior… ────────────────────────
-# Three windows over the same idea: the vocabulary is a choice, the installed packs are a list,
-# and adding a pack to an object is one gesture. Each is built on first open and kept, because
-# a session that never opens one should pay nothing for it.
+# ── Settings ▸ Words, Tools ▸ Docs Housekeeping, Object bar ▸ Add behavior… ────────────────────
+# The vocabulary is a choice, the documentation chores are one report, and adding a pack to an
+# object is one gesture. The packs themselves need no window: a pack is a folder under
+# eventsheet_addons/, seen in the FileSystem dock like any other. Each window is built on first
+# open and kept, because a session that never opens one should pay nothing for it.
 var _words_settings_dialog: AcceptDialog = null
-var _addon_manager_dialog: AcceptDialog = null
 var _add_behavior_dialog: ConfirmationDialog = null
 var _docs_housekeeping_dialog: AcceptDialog = null
 
@@ -8831,24 +8830,6 @@ func _on_words_changed() -> void:
 	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
 		if view != null:
 			view.set_sheet(_current_sheet)
-
-
-## Tools ▸ Addon manager: the installed packs, their versions, and the switch.
-func open_addon_manager() -> void:
-	if _addon_manager_dialog == null:
-		_addon_manager_dialog = load(ADDON_MANAGER_DIALOG_PATH).new()
-		_addon_manager_dialog.configure(
-			func() -> void: _refresh_ace_registry(),
-			func(page_id: String) -> void: open_documentation(page_id),
-			func(script_path: String) -> void: load(EVENTSHEETS_API_PATH).open_sheet(script_path),
-			# The pack update's vocabulary section says which verbs the new version forwards; this is
-			# the door beside it, and it is the SAME receipt the head band's counting line opens -
-			# answered against the vocabulary that update WOULD leave rather than the one installed
-			# today, which is the only corpus its own forwarding addresses exist in.
-			func(vocabulary: Dictionary) -> void: open_migrate_dialog(vocabulary))
-		add_child(_addon_manager_dialog)
-	_addon_manager_dialog.refresh()
-	_addon_manager_dialog.popup_centered(Vector2i(760, 500))
 
 
 ## Tools ▸ Docs Housekeeping: the documentation chores, with checkboxes and one report. The window

@@ -2629,18 +2629,7 @@ with Familiar Words on,со Знакомыми словами
 Reset to defaults,Вернуть значения по умолчанию
 custom…,своё…
 your word,ваше слово
-Addon manager,Менеджер дополнений
-Addon manager…,Менеджер дополнений…
-installed packs,установленные паки
 pack,пак
-what you can do,что можно сделать
-Import from .zip…,Импорт из .zip…
-Import from URL…,Импорт по ссылке…
-Check for updates,Проверить обновления
-Find more (Asset Library),Найти ещё (Asset Library)
-user pack,свой пак
-Import a pack from a .zip,Импорт пака из .zip
-Import a pack from a URL,Импорт пака по ссылке
 Add behavior,Добавить поведение
 Add behavior…,Добавить поведение…
 as a behavior node,как узел поведения
@@ -5929,24 +5918,6 @@ Rename %s,Переименовать %s
 Point rows at %s,Направить строки на %s
 %d row(s) renamed - one Ctrl+Z takes all of it back.,Переименовано строк: %d - одно Ctrl+Z вернёт всё назад.
 Rename…,Переименовать…
-new in this version,новое в этой версии
-dropped by this version,удалено в этой версии
-this version rewrites it,эта версия перезаписывает его
-identical in both,одинаково в обоих
-"This pack carries no record of what arrived, so all %d file(s) are listed as yours and nothing is taken unless you say so.","Этот пакет не хранит записи о том, что пришло, поэтому все %d файл(ов) перечислены как ваши, и ничего не берётся без вашего решения."
-%d file(s) are exactly as they arrived and take the new version. You changed none of them.,"%d файл(ов) в точности такие, какими пришли, и принимают новую версию. Ни один из них вы не меняли."
-"%d file(s) are exactly as they arrived and take the new version. %d you changed, each with its own answer below.","%d файл(ов) в точности такие, какими пришли, и принимают новую версию. %d вы меняли, для каждого ниже свой ответ."
-%s is not published by the new version - rows using it keep working from the file you have.,"%s не публикуется новой версией - строки, которые его используют, продолжают работать с имеющимся файлом."
-%s now points at %s - old rows still compile the same; the dry run shows what would change.,"%s теперь указывает на %s - старые строки компилируются так же; пробный прогон покажет, что изменится."
-%s is new in this version.,%s появился в этой версии.
-Keep mine,Оставить моё
-Take new,Взять новое
-See the diff,Посмотреть различия
-These two files are identical.,Эти два файла одинаковы.
-Yours:,Ваш:
-The new version:,Новая версия:
-"%d file(s) took the new version, %d were removed, %d of yours were kept. %d went into the backup ring first.","%d файл(ов) приняли новую версию, %d удалены, %d ваших сохранены. %d сначала попали в кольцо резервных копий."
-"This version publishes the same conditions, actions and expressions as the one you have.","Эта версия публикует те же условия, действия и выражения, что и имеющаяся у вас."
 %s → %s (%d field(s) in this row),%s → %s (%d поле(й) в этой строке)
 "Two rows in this sheet declare __%s, which is a file Godot will not parse. The %d row(s) below get a name of their own. Both rows go on saying exactly what they say, and one Ctrl+Z puts the name back.","Две строки этого листа объявляют __%s, и такой файл Godot не разберёт. Указанные ниже %d строк(и) получат собственное имя. Обе строки продолжают говорить ровно то же самое, а одно Ctrl+Z возвращает имя."
 Re-mint duplicated local,Перечеканить дублирующуюся локальную
@@ -5960,13 +5931,7 @@ Nothing in the open sheet declares __%s twice any more - the other copy may alre
 Migrate These Rows,Мигрировать эти строки
 What will be rewritten,Что будет переписано
 Left exactly as they are,Оставлены ровно как есть
-Update pack,Обновить пакет
-Take This Update,Принять это обновление
-Untouched - these take the new version,Не тронуты - они получат новую версию
-Yours - you changed these,Ваши - вы изменили их
-Dry run…,Пробный прогон…
 "Opens the migrate receipt for the sheet in front of you: every row that would be rewritten, shown before anything is.","Открывает квитанцию миграции для листа перед вами: каждая строка, которая была бы переписана, показана до того, как что-либо перепишется."
-What this version retires and adds,Что эта версия выводит и что добавляет
 Rename,Переименовать
 New name,Новое имя
 "Named and left exactly as they are - the index answers by name, so a file here may be calling something else","Названы и оставлены ровно как есть - индекс отвечает по имени, так что файл отсюда может вызывать что-то другое"
@@ -5977,7 +5942,6 @@ lines %s and %s%s,строки %s и %s%s
 %s still has merge conflict markers in it - saving would write the sheet's reading of them back over the file. Resolve the merge first.,В %s всё ещё есть маркеры конфликта слияния - сохранение запишет прочтение листа поверх файла. Сначала разрешите слияние.
 "%s still holds %d merge conflict marker line(s) (%s). It will not parse, and it opens read-only until the merge is finished.","В %s всё ещё %d строк(и) с маркерами конфликта слияния (%s). Файл не разберётся и открывается только для чтения, пока слияние не завершено."
 " The previous bytes of those %d file(s) are in the backup ring beside each of them, under %s."," Прежние байты этих %d файл(ов) лежат в кольце резервных копий рядом с каждым из них, в %s."
-"Opens the migrate receipt for the sheet in front of you, answered against the vocabulary this update would leave: every row that would be rewritten, shown before anything is. Reading a version's verbs runs its script, under user:// - nothing of it is written under res:// until you take it.","Открывает квитанцию миграции для листа перед вами, отвечая против словаря, который оставит это обновление: каждая строка, которая была бы переписана, показана до того, как что-либо перепишется. Чтение глаголов версии запускает её скрипт, под user:// - ничего из неё не пишется под res://, пока вы её не примете."
 " %d sheet(s) that include this one are rewritten and SAVED, which one Ctrl+Z here does not undo."," %d лист(ов), включающих этот, будут переписаны и СОХРАНЕНЫ, чего Ctrl+Z здесь не отменит."
 "Also written, and saved - these sheets include this one, so Ctrl+Z here does not undo them","Также записаны и сохранены - эти листы включают этот, поэтому Ctrl+Z здесь их не отменит"
 ☰ Menu,☰ Меню
@@ -6972,17 +6936,6 @@ particle amount,количество частиц
 "Walks the effect's lifetime to a new value over time instead of jumping to it - one tween, no state to keep. Writes `GPUParticles3D.lifetime`, which is the emitter's own.","Плавно ведёт время жизни к новому значению вместо скачка - один твин, никакого состояния. Пишет `GPUParticles3D.lifetime` - собственное свойство эмиттера."
 "How many particles the emitter keeps in the air at once. Writing it makes the engine throw the whole particle buffer away and build a new one, so it is a row to use at a moment rather than every frame - which is also why there is no fade for it. Writes `GPUParticles3D.amount`, which is the emitter's own.","Сколько частиц эмиттер держит в воздухе одновременно. Запись этого значения заставляет движок выбросить весь буфер частиц и построить новый, поэтому это строка для момента, а не для каждого кадра - и поэтому же для неё нет плавного изменения. Пишет `GPUParticles3D.amount` - собственное свойство эмиттера."
 "Reads the effect's amount back. Writes `GPUParticles3D.amount`, which is the emitter's own. Use it in any value field.",Читает количество эффекта. Пишет `GPUParticles3D.amount` - собственное свойство эмиттера. Используйте в любом поле значения.
-" The previous bytes of those %d file(s) are in the backup ring, under %s - Restore… on this pack's row lists them."," Прежние байты этих %d файл(ов) лежат в кольце резервных копий, под %s - Восстановить… в строке этого пакета покажет их список."
-this file is not in the pack any more,этого файла больше нет в пакете
-Restore %s from the backup ring,Восстановить %s из кольца резервных копий
-"That backup is not there any more - the ring keeps a fixed number of them, and a save since this list was drawn has pushed it out.","Этой резервной копии больше нет - кольцо хранит фиксированное количество, и сохранение после составления этого списка вытеснило её."
-"%s is back in the pack, %d byte(s), from the backup ring. It was not in the folder at all until now. Ctrl+Z removes it again, and the ring is untouched.","%s снова в пакете, %d байт(ов), из кольца резервных копий. До сих пор этого файла в папке вообще не было. Ctrl+Z удалит его снова, а кольцо остаётся нетронутым."
-"%s was put back from the backup ring, %d byte(s). Ctrl+Z writes the bytes that were there before, and the ring is untouched.","%s возвращён из кольца резервных копий, %d байт(ов). Ctrl+Z запишет байты, которые были там раньше, а кольцо остаётся нетронутым."
-Restore a file from the backup ring,Восстановить файл из кольца резервных копий
-Put this one back,Вернуть этот
-"Writes the chosen backup's bytes over the file in the pack, as one edit you can undo. The backup ring itself is not touched.","Записывает байты выбранной копии поверх файла в пакете, одним отменяемым изменением. Само кольцо резервных копий не трогается."
-"What the ring is holding, newest first","Что хранит кольцо, сначала новые"
-"%s - the backup ring is holding %d earlier version(s) of %d file(s). Choose one and it is written back over the file in the pack, as one edit you can undo.","%s - кольцо резервных копий хранит %d прежних версий %d файл(ов). Выберите одну, и она будет записана поверх файла в пакете, одним отменяемым изменением."
 Native,Встроенные
 Light and dark,Свет и тень
 Resource files,Файлы ресурсов
@@ -6990,7 +6943,6 @@ Resource files,Файлы ресурсов
 "True when a scene file brings nothing in from outside the game: no script written inside it, nothing built by a value in a node's body, and every file it points at under res://, which is the game's own. It reads the file's own resource table as TEXT, tag by tag the way the engine's own parser reads it, and instantiates nothing. Ask it above a row that builds a scene which did not come with the game - a level the player built, a pack somebody sent them - because a scene file can name a script, and building one runs that script with everything this game can reach. Anything it cannot read as a scene table answers false, because an unfamiliar file is not a file that has been cleared. A true answer means the file brings no code of its OWN: a cleared scene may still hold a connection, an animation track or a placeholder that reaches your game's own methods, so it is still somebody else's data.","Истина, когда файл сцены не приносит ничего извне игры: никакого скрипта, написанного внутри, ничего, что построит значение в теле узла, и каждый файл, на который он указывает, лежит под res:// - в собственных файлах игры. Он читает таблицу ресурсов файла как ТЕКСТ, тег за тегом так же, как её читает собственный разборщик движка, и ничего не создаёт. Спрашивайте это над строкой, которая строит сцену, пришедшую не вместе с игрой - уровень, собранный игроком, пакет, который ему прислали - потому что файл сцены может назвать скрипт, а собрать его значит запустить этот скрипт со всем, до чего дотягивается игра. Всё, что не читается как таблица сцены, отвечает ложью, потому что незнакомый файл - не проверенный файл. Истинный ответ значит, что файл не приносит СВОЕГО кода: проверенная сцена всё ещё может нести соединение, дорожку анимации или заполнитель, который дотягивается до собственных методов вашей игры, так что это по-прежнему чужие данные."
 "What the expression reads as when there is no file at that path. Leave it blank to read the file plainly, with no guard around it. A file that IS there but cannot be decoded - a truncated picture, or something that is not one at all - answers with null and an engine message rather than with this, because the guard asks whether a file exists and not whether it is a picture.","Что выражение читает, когда по этому пути файла нет. Оставьте пустым, чтобы прочитать файл прямо, без всякой защиты вокруг. Файл, который ЕСТЬ, но не декодируется - обрезанная картинка или то, что картинкой вовсе не является - отвечает null и сообщением движка, а не этим, потому что защита спрашивает, существует ли файл, а не является ли он картинкой."
 "What the expression reads as when there is no file at that path, or when its extension is none of the three. Leave it blank to read the file plainly, with no guard around it. A file that IS there with the right extension but cannot be decoded answers with null and an engine message rather than with this, because the guard asks whether a file exists and not whether it is a track.","Что выражение читает, когда по этому пути файла нет или его расширение не одно из трёх. Оставьте пустым, чтобы прочитать файл прямо, без всякой защиты вокруг. Файл, который ЕСТЬ и носит нужное расширение, но не декодируется, отвечает null и сообщением движка, а не этим, потому что защита спрашивает, существует ли файл, а не является ли он звуковой дорожкой."
-"%s - %s, %d byte(s)","%s - %s, %d байт"
 tile data,данные тайла
 terrain set,набор ландшафта
 "Streaming: %d chunk folder(s), %d with something to look at.","Стриминг: папок с чанками - %d, из них %d с тем, на что стоит взглянуть."
@@ -7095,8 +7047,6 @@ Forget Seen,Забыть виденное
 forget seen ( {key} ),забыть виденное ( {key} )
 The memory's name to clear.,"Имя памяти, которую нужно очистить."
 "%s opens %s with a plain scene change, and that scene is %s on disk - big enough that the last frame of the old one sits there while it loads. Go To Scene With Loading shows a loading screen of your own while it comes off the disk, with a shortest time so it cannot flash past.","%s открывает %s обычной сменой сцены, а эта сцена занимает %s на диске - достаточно, чтобы последний кадр прежней замер на экране, пока она грузится. Строка Перейти к сцене с загрузкой показывает ваш собственный экран загрузки, пока сцена поднимается с диска, и держит его не меньше заданного времени, чтобы он не промелькнул."
-"That restore was taken back - %s is what it was before it, and the backup ring is untouched.","Это восстановление отменено - %s снова такой, каким был до него, а кольцо резервных копий остаётся нетронутым."
-"Nothing was written. A restore only ever puts a file back inside the pack folder its own entry names, out of the backup ring, and %s is not that.","Ничего не записано. Восстановление возвращает файл только в папку пакета, которую называет его собственная запись, и только из кольца резервных копий - %s таковым не является."
 no such state,нет такого состояния
 This scene's animation tree has no state called %s. A misspelled state travels nowhere and reports nothing - pick the one you meant.,"В дереве анимации этой сцены нет состояния с именем %s. Состояние с опечаткой никуда не переходит и ни о чём не сообщает - выберите то, которое имелось в виду."
 %d-dimensional,%d-мерное
@@ -7414,7 +7364,6 @@ Clear All Bookmarks,Очистить все закладки
 "Remove every bookmark from this sheet? Bookmarks are not part of undo, so they cannot be brought back.","Удалить все закладки из этого листа? Закладки не входят в отмену, поэтому их нельзя будет вернуть."
 Keep Bookmarks,Оставить закладки
 Before these edits,До этих правок
-%d pack(s) name a published source: %s. %d name none. Nothing was checked online - open each source to see whether it has a newer version than the one shown here.,"Пакетов с опубликованным источником: %d: %s. Без источника: %d. Ничего не проверялось онлайн - откройте каждый источник, чтобы узнать, есть ли версия новее показанной здесь."
 Not saved.,Не сохранено.
 "%d mode(s) declared. The On entering event of %s holds rows of your own, so it was kept - move or delete it, since that mode is gone.","Объявлено режимов: %d. Событие «При входе» для %s содержит ваши строки, поэтому оно сохранено - переместите или удалите его, раз этого режима больше нет."
 """%s"" isn't a usable class name - use letters/digits/underscore starting with a letter, and not a reserved or existing class name.","«%s» нельзя использовать как имя класса - используйте буквы/цифры/подчёркивание, начиная с буквы, и не зарезервированное или уже существующее имя класса."
