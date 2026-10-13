@@ -1,5 +1,6 @@
 # EventForge - the unsaved-close guard. Closing a tab with unsaved edits must not silently drop
 # work: a dirty tab arms a 3-way Save / Discard / Cancel dialog, a clean tab closes immediately.
+# Save is the OK button so Enter keeps the work; Discard is its own button that must be clicked.
 @tool
 class_name UnsavedCloseTest
 extends RefCounted
@@ -28,12 +29,17 @@ static func run() -> bool:
 	# The guard dialog is a 3-way Save / Discard / Cancel.
 	dock._ensure_unsaved_close_dialog()
 	ok = _check("guard dialog created", dock._unsaved_close_dialog != null, true) and ok
-	ok = _check("OK button discards", dock._unsaved_close_dialog.ok_button_text, "Discard") and ok
+	ok = _check("OK button saves, so Enter keeps the work", dock._unsaved_close_dialog.ok_button_text, "Save") and ok
 	ok = _check("Cancel button aborts", dock._unsaved_close_dialog.cancel_button_text, "Cancel") and ok
+	ok = _check("Discard is its own button", _button_texts(dock._unsaved_close_dialog).has("Discard"), true) and ok
+	ok = _check("OK does not discard", dock._unsaved_close_dialog.confirmed.is_connected(dock._on_unsaved_close_save), true) and ok
 
-	# Discard closes the armed tab and clears the pending index.
+	# A custom action that is not Discard closes nothing.
 	dock._pending_close_index = 0
-	dock._on_unsaved_close_discard()
+	dock._on_unsaved_close_action(&"something_else")
+	ok = _check("another action leaves the tab open", dock.get_open_tab_count(), 2) and ok
+	# Discard closes the armed tab and clears the pending index.
+	dock._on_unsaved_close_action(dock.UNSAVED_DISCARD_ACTION)
 	ok = _check("discard closes the tab", dock.get_open_tab_count(), 1) and ok
 	ok = _check("pending index cleared", dock._pending_close_index, -1) and ok
 	ok = _check("remaining tab is clean", dock.has_unsaved_tabs(), false) and ok
@@ -54,6 +60,14 @@ static func run() -> bool:
 
 	dock.free()
 	return ok
+
+
+## The text of every button the dialog shows, wherever Godot placed it.
+static func _button_texts(dialog: AcceptDialog) -> PackedStringArray:
+	var texts: PackedStringArray = PackedStringArray()
+	for button: Node in dialog.find_children("*", "Button", true, false):
+		texts.append((button as Button).text)
+	return texts
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

@@ -1075,29 +1075,36 @@ func _ensure_unsaved_close_dialog() -> void:
 		return
 	_unsaved_close_dialog = ConfirmationDialog.new()
 	_unsaved_close_dialog.title = "Unsaved Changes"
-	_unsaved_close_dialog.ok_button_text = "Discard"
+	# Save is the OK button, so Enter (the key a hand presses without reading) keeps the work. Discard
+	# is the one button that loses edits, so it is a separate button that must be clicked on purpose;
+	# Cancel and Esc just abort.
+	_unsaved_close_dialog.ok_button_text = "Save"
 	_unsaved_close_dialog.cancel_button_text = "Cancel"
-	# A third action button so Save-and-close is one step; Cancel (the default) just aborts.
-	_unsaved_close_dialog.add_button("Save", false, "save")
-	_unsaved_close_dialog.confirmed.connect(_on_unsaved_close_discard)
+	_unsaved_close_dialog.add_button(UNSAVED_DISCARD_TEXT, true, UNSAVED_DISCARD_ACTION)
+	_unsaved_close_dialog.confirmed.connect(_on_unsaved_close_save)
 	_unsaved_close_dialog.custom_action.connect(_on_unsaved_close_action)
 	add_child(_unsaved_close_dialog)
 
 
-## Discard (the OK button): close the tab, losing its unsaved edits.
-func _on_unsaved_close_discard() -> void:
+## The Unsaved Changes dialog's Discard button: its label and the action it sends.
+const UNSAVED_DISCARD_TEXT: String = "Discard"
+const UNSAVED_DISCARD_ACTION: StringName = &"discard"
+
+
+## Discard (the custom button): close the tab, losing its unsaved edits.
+func _on_unsaved_close_action(action: StringName) -> void:
+	if action != UNSAVED_DISCARD_ACTION:
+		return
+	_unsaved_close_dialog.hide()
 	var index: int = _pending_close_index
 	_pending_close_index = -1
 	if index >= 0:
 		_close_tab(index)
 
 
-## Save (the custom button): activate the target tab, save it, and close only if the save succeeded
+## Save (the OK button): activate the target tab, save it, and close only if the save succeeded
 ## (a failed compile leaves the tab open with its error in the status bar, so nothing is lost).
-func _on_unsaved_close_action(action: StringName) -> void:
-	if action != &"save":
-		return
-	_unsaved_close_dialog.hide()
+func _on_unsaved_close_save() -> void:
 	var index: int = _pending_close_index
 	_pending_close_index = -1
 	if index < 0 or index >= _open_tabs.size():

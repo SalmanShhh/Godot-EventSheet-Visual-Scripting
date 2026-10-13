@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Fixed: two prompts no longer lose work on Esc or Enter
+
+- **Every Tick:** taking the last condition off an event asks whether to keep it as an every-tick
+  event or delete it. Delete was the Cancel button, so Esc or the close box deleted the event. Now
+  Delete The Event is its own button and every other way out of the question keeps the event.
+- **Unsaved Changes:** Discard was the OK button, so Enter closed the tab and threw the edits away.
+  Save is now the OK button, Discard is a separate button you click on purpose, and Cancel and Esc
+  still just abort.
+
 ### Added: the first open of the workspace is measured, and what it compiles is listed
 
 - The cold boot probe now also times building the workspace editor in a fresh process of its own:

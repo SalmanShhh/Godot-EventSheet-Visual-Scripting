@@ -195,8 +195,11 @@ func _prompt_keep_as_every_tick(event_uid: String) -> void:
 		_every_tick_dialog = ConfirmationDialog.new()
 		_every_tick_dialog.title = EventSheetL10n.translate("Every Tick")
 		_every_tick_dialog.ok_button_text = EventSheetL10n.translate("Keep As Every Tick")
-		_every_tick_dialog.cancel_button_text = EventSheetL10n.translate("Delete The Event")
-		_every_tick_dialog.canceled.connect(_delete_every_tick_event)
+		# Deleting is its own button, never Cancel: Esc and the close box send `canceled`, and a
+		# reader dismissing the question must not lose the event. Dismissing keeps it, as OK does.
+		_every_tick_dialog.get_cancel_button().hide()
+		_every_tick_dialog.add_button(EventSheetL10n.translate("Delete The Event"), true, EVERY_TICK_DELETE_ACTION)
+		_every_tick_dialog.custom_action.connect(_on_every_tick_action)
 		_dock.add_child(_every_tick_dialog)
 	_every_tick_dialog.dialog_text = EventSheetL10n.translate(
 		"That was the event's last condition. An event with no condition of its own runs every tick - keep it that way, or delete the event?")
@@ -212,6 +215,18 @@ func _top_level_event_by_uid(event_uid: String) -> EventRow:
 		if entry is EventRow and (entry as EventRow).event_uid == event_uid:
 			return entry as EventRow
 	return null
+
+
+## The action the Every Tick prompt's Delete The Event button sends.
+const EVERY_TICK_DELETE_ACTION: StringName = &"delete_event"
+
+
+## Only the Delete The Event button deletes; every other way out of the prompt keeps the event.
+func _on_every_tick_action(action: StringName) -> void:
+	if action != EVERY_TICK_DELETE_ACTION:
+		return
+	_every_tick_dialog.hide()
+	_delete_every_tick_event()
 
 
 ## The other half of the prompt: the reader meant the event to go, not to widen.
