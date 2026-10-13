@@ -72,17 +72,17 @@ static func _test_name_change_renames_uses() -> bool:
 	var ok: bool = true
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Node2D"
-	sheet.custom_class_name = "Patrol"
+	sheet.custom_class_name = "ZzSheetTypeRenameOld"
 	var use_row: RawCodeRow = RawCodeRow.new()
-	use_row.code = "var leader: Patrol = null"
+	use_row.code = "var leader: ZzSheetTypeRenameOld = null"
 	sheet.events.append(use_row)
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(sheet)
 	editor.set_undo_redo_manager(NoopUndoManager.new())
-	editor._apply_sheet_type_settings(1, "Guard", "", "Node2D")
-	ok = _check("the class takes the new name", editor._current_sheet.custom_class_name, "Guard") and ok
+	editor._apply_sheet_type_settings(1, "ZzSheetTypeRenameNew", "", "Node2D")
+	ok = _check("the class takes the new name", editor._current_sheet.custom_class_name, "ZzSheetTypeRenameNew") and ok
 	ok = _check("the row that used the old name follows it",
-		(editor._current_sheet.events[0] as RawCodeRow).code, "var leader: Guard = null") and ok
+		(editor._current_sheet.events[0] as RawCodeRow).code, "var leader: ZzSheetTypeRenameNew = null") and ok
 	editor.free()
 	return ok
 
