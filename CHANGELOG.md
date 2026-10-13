@@ -16,7 +16,7 @@
 - `@onready var label = $Label`, written with no type, now opens as an `@onready` variable that reads
   as Variant - the node lookup implies no type - and saves back without one.
 
-### Changed: a function is drawn like any other event, and edited in the Properties bar
+### Changed: a function's head reads as a sheet row, and is edited in the Properties bar
 
 - On a sheet you are writing, a function reads `ƒ Function ▸ On take_damage`, with what it hands
   back (`→ nothing`, `→ float`) and its settings as small tags (In Add Action, Waits, Shared) on the
@@ -25,6 +25,9 @@
   call leaves it out. Names read exactly as the code writes them. The description caption that sat
   above the function, the role word, the category chip and the "gives back" / "internal" chips are
   gone; folding the function folds its body away.
+- Not drawn like an event yet: the function's own actions still sit in an "Always" row under the
+  head rather than in an action lane on its right, the head carries no event number, and it is
+  edited in a panel of the Properties bar rather than in the Inspector.
 - Clicking a function's head selects it and the Properties bar shows Name (renaming renames every
   call), Description, Returns, In Add Action, Category, Waits and Shared - every dropdown describing
   each choice - and its parameters, retyped and given defaults in place, reordered by dragging the
@@ -120,6 +123,7 @@
   Group Under a Heading), Group by prefix… and End group here.
 - **Group by prefix…** proposes the start the selected names share (`bullet_count`, `bullet_speed`
   -> Bullet / bullet) and writes the one line `@export_group("Bullet", "bullet")` above the first.
+  Only a whole word counts: `speed` and `spread` propose nothing rather than a group "Sp".
 - **End group here** writes `@export_group("")` above the variable, and the end line it draws can be
   dragged onto another variable to move where the group ends.
 - **Add > Inspector button…** asks for the label, an editor icon (checked against the editor's own
@@ -141,10 +145,12 @@
   "Match 1  IDLE" - and Otherwise (Else, or nothing). One match per state adds a branch for every
   value of the enum the Value holds; a value matched twice is refused before Done. A branch reads
   back by its own name (IDLE) and is written with its enum's (State.IDLE). The window no longer
-  edits branch bodies as code.
+  edits branch bodies as code. It has Done and Cancel but no Back: it opens from the row menu or a
+  double-click, never from the picker, so there is no earlier step to go back to.
 - **On the sheet a switch on plain values reads as branches.** The event says "match state"
   beside its trigger, and every branch is a sub-event stating its own test in the sheet's comparison
-  grammar - "state = State.IDLE", several values as an OR block, Else - with its own Add action: the
+  grammar - "state is IDLE" (a member of one of this sheet's enums by its own name, any other value
+  as written), several values as an OR block, Else - with its own Add action: the
   picked action lands in that branch, replacing the `pass` that held an empty one's place. An empty
   branch shows its Add action rather than "pass". This replaces the "decides by" caption, the Else
   chips the later branches wore, and the "Is in Patrol" / "State: PATROL" arm readings for such
