@@ -159,7 +159,7 @@ func begin_row_drag(row_index: int) -> void:
 	_viewport._drag_ghost_label = (
 		"%d rows" % _viewport._drag_row_indices.size()
 		if _viewport._drag_row_indices.size() > 1
-		else _viewport._row_ghost_label(_viewport._row_at(row_index))
+		else _viewport._drag.row_ghost_label(_viewport._row_at(row_index))
 	)
 
 
@@ -212,7 +212,7 @@ func maybe_begin_ace_drag(hit: Dictionary, row_index: int) -> bool:
 	_viewport._drag_ace_target_ace_index = -1
 	_viewport._drag_ace_insert_mode = "append"
 	_viewport._drag_ace_drop_valid = true
-	_viewport._clear_drag_feedback()
+	_viewport._drag.clear_drag_feedback()
 	_viewport._clear_row_drag()
 	# Ghost label set after _viewport._clear_row_drag(), which resets it.
 	if _viewport._drag_ace_entries.size() > 1:
@@ -233,7 +233,7 @@ func clear_ace_drag() -> void:
 	_viewport._drag_ace_copy_mode = false
 	_viewport._drag_ace_drop_valid = true
 	_viewport._drag_ghost_label = ""
-	_viewport._clear_drag_feedback()
+	_viewport._drag.clear_drag_feedback()
 
 
 func clear_drag_feedback() -> void:
@@ -248,7 +248,7 @@ func update_ace_drag_target(hit: Dictionary, position: Vector2) -> void:
 	_viewport._drag_ace_target_ace_index = -1
 	_viewport._drag_ace_insert_mode = "append"
 	_viewport._drag_ace_drop_valid = true
-	_viewport._clear_drag_feedback()
+	_viewport._drag.clear_drag_feedback()
 	if _viewport._drag_ace_entries.is_empty():
 		return
 	var row_index: int = int(hit.get("row_index", -1))

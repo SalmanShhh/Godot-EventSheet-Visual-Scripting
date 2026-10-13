@@ -206,7 +206,7 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 	var local_position: Vector2 = _viewport._to_logical_position(event.position)
 	if event.button_index == MOUSE_BUTTON_LEFT and not event.pressed and _viewport._box_select_active:
 		_viewport._box_select_current = local_position
-		_viewport._complete_box_selection()
+		_viewport._drag.complete_box_selection()
 		_viewport.accept_event()
 		return
 	var hit: Dictionary = _viewport._hit_test(local_position)
@@ -227,7 +227,7 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			# to that cell only as a FALLBACK, which is why it selects the whole event; handing the
 			# fallback on unchanged made the outline say "event" while the menu said "this condition".
 			var menu_span_index: int = int(_viewport.press_target_at(local_position).get("span_index", -1))
-			if not _viewport._is_selection_hit(row_index, menu_span_index):
+			if not _viewport._drag.is_selection_hit(row_index, menu_span_index):
 				_viewport._select_from_click(row_index, menu_span_index, false)
 			var row_data: EventRowData = _viewport._row_at(row_index)
 			if row_data != null:
@@ -266,7 +266,7 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 				_viewport.empty_space_double_clicked.emit()
 				_viewport.accept_event()
 				return
-			_viewport._begin_box_selection(local_position, event.ctrl_pressed or event.meta_pressed)
+			_viewport._drag.begin_box_selection(local_position, event.ctrl_pressed or event.meta_pressed)
 			_viewport.accept_event()
 			return
 		var row_data: EventRowData = _viewport._row_at(row_index)
@@ -627,7 +627,7 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			return
 		_viewport._drag_ace_copy_mode = event.ctrl_pressed or event.meta_pressed
 		_viewport._drag_row_copy_mode = event.ctrl_pressed or event.meta_pressed
-		if _viewport._maybe_begin_ace_drag(hit, row_index):
+		if _viewport._drag.maybe_begin_ace_drag(hit, row_index):
 			# Accept so this control keeps receiving motion/release for the drag.
 			_viewport.accept_event()
 			return
@@ -695,7 +695,7 @@ func handle_key(event: InputEventKey) -> void:
 	if not event.pressed or event.echo:
 		return
 	if _viewport._editing_row_index >= 0:
-		_viewport._handle_editing_key(event)
+		_viewport._input_handlers.handle_editing_key(event)
 		return
 	# Param scope owns Tab / Esc / Enter / typing while active. The scope is entered explicitly
 	# (Enter below), so Tab at plain row scope still falls through to the dock's nest/outdent -

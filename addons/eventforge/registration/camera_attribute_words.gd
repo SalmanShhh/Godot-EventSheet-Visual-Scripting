@@ -147,11 +147,6 @@ const WORDS: Array[Dictionary] = [
 	}
 ]
 
-## Per class, `property -> true`, filled the first time a class is asked about. ClassDB answers the
-## same thing for the life of the process, and this is asked once per word on every descriptor build
-## and once per line on every reading.
-static var _properties: Dictionary = {}
-
 
 ## The property the attributes class answers a word with, or "" when it has none of that word's
 ## spellings. Derived: the word says which spellings are possible, ClassDB says which of them the
@@ -169,12 +164,7 @@ static func property_of(word: String) -> String:
 ## True when a class really carries a property, inherited ones included. The one question the whole
 ## word map is derived from.
 static func has_property(class_text: String, property: String) -> bool:
-	if not _properties.has(class_text):
-		var names: Dictionary = {}
-		for described: Dictionary in ClassDB.class_get_property_list(class_text, false):
-			names[str(described.get("name", ""))] = true
-		_properties[class_text] = names
-	return bool((_properties[class_text] as Dictionary).get(property, false))
+	return EventForgeEnvironmentWords.has_property(class_text, property)
 
 
 ## The word entry by its word, or {}.

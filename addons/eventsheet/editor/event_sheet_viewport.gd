@@ -2695,16 +2695,6 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 
 
 
-func _begin_box_selection(position: Vector2, additive: bool) -> void:
-	_drag.begin_box_selection(position, additive)
-
-
-
-func _complete_box_selection() -> void:
-	_drag.complete_box_selection()
-
-
-
 func _draw_box_selection_overlay() -> void:
 	_drag.draw_box_selection_overlay()
 
@@ -2712,11 +2702,6 @@ func _draw_box_selection_overlay() -> void:
 
 func _apply_box_selection(selection_rect: Rect2, additive: bool) -> void:
 	_drag.apply_box_selection(selection_rect, additive)
-
-
-
-func _is_selection_hit(row_index: int, span_index: int) -> bool:
-	return _drag.is_selection_hit(row_index, span_index)
 
 
 
@@ -2744,28 +2729,13 @@ func _begin_row_drag(row_index: int) -> void:
 
 
 
-func _row_ghost_label(row_data: EventRowData) -> String:
-	return _drag.row_ghost_label(row_data)
-
-
-
 func _clear_row_drag() -> void:
 	_drag.clear_row_drag()
 
 
 
-func _maybe_begin_ace_drag(hit: Dictionary, row_index: int) -> bool:
-	return _drag.maybe_begin_ace_drag(hit, row_index)
-
-
-
 func _clear_ace_drag() -> void:
 	_drag.clear_ace_drag()
-
-
-
-func _clear_drag_feedback() -> void:
-	_drag.clear_drag_feedback()
 
 
 
@@ -2781,11 +2751,6 @@ func _complete_ace_drag() -> bool:
 
 func _handle_key(event: InputEventKey) -> void:
 	_input_handlers.handle_key(event)
-
-
-
-func _handle_editing_key(event: InputEventKey) -> void:
-	_input_handlers.handle_editing_key(event)
 
 
 
