@@ -7920,3 +7920,12 @@ Label,Etichetta
 Pressing the button in the Inspector runs the function in the editor. The sheet has to be a Tool sheet for it to run there.,Premere il pulsante nell'Ispettore esegue la funzione nell'editor. Il foglio deve essere un foglio Tool perché venga eseguita lì.
 Add Inspector Button,Aggiungi pulsante dell'Ispettore
 "Added the Inspector button ""%s"", which calls %s.","Aggiunto il pulsante dell'Ispettore ""%s"", che chiama %s."
+Done,Fatto
+Parameters: %s,Parametri: %s
+Parameters for %s: %s,Parametri di %s: %s
+View %s in Godot Docs,Vedi %s nella documentazione di Godot
+Open the built-in class reference for %s.,Apre il riferimento di classe integrato per %s.
+click to choose,clic per scegliere
+Choose a node from the open scene. The pick replaces what is in the box.,Scegli un nodo dalla scena aperta. La scelta sostituisce il contenuto della casella.
+The %s key,Il tasto %s
+Double-click to insert into the focused box.,Doppio clic per inserire nella casella attiva.

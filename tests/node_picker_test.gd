@@ -37,34 +37,34 @@ static func run() -> bool:
 	all_passed = _check("headless rows simply carry no icon", ACEParamsNodePicker._class_icon("Node2D"), null) and all_passed
 	# Query modes.
 	all_passed = _check("plain query matches class",
-		ACEParamsDialog.node_matches_query(enemy, "Slime", "characterbody"), true) and all_passed
+		ACEParamsNodePicker.node_matches_query(enemy, "Slime", "characterbody"), true) and all_passed
 	all_passed = _check("group: query matches membership",
-		ACEParamsDialog.node_matches_query(enemy, "Slime", "group:enemies"), true) and all_passed
+		ACEParamsNodePicker.node_matches_query(enemy, "Slime", "group:enemies"), true) and all_passed
 	all_passed = _check("group: query rejects non-members",
-		ACEParamsDialog.node_matches_query(ui, "HUD", "group:enemies"), false) and all_passed
+		ACEParamsNodePicker.node_matches_query(ui, "HUD", "group:enemies"), false) and all_passed
 	var probe_script: GDScript = GDScript.new()
 	probe_script.source_code = "extends CharacterBody2D\n"
 	probe_script.take_over_path("res://enemy_brain.gd")
 	probe_script.reload()
 	enemy.set_script(probe_script)
 	all_passed = _check("script: query matches the attached script file",
-		ACEParamsDialog.node_matches_query(enemy, "Slime", "script:enemy_brain"), true) and all_passed
+		ACEParamsNodePicker.node_matches_query(enemy, "Slime", "script:enemy_brain"), true) and all_passed
 	enemy.set_script(null)
 
 	# Populated tree: chips filter by base class; recents pin to the top.
 	var dialog: ACEParamsDialog = ACEParamsDialog.new()
 	var host: Node = Node.new()
 	dialog.init_dialog(host)
-	dialog._ensure_node_picker_ui()
+	dialog._node_picker._ensure_node_picker_ui()
 	dialog._node_picker._node_picker_search.text = ""
 	dialog._node_picker._node_picker_chips["Audio"].button_pressed = true
-	dialog._populate_node_picker_from_root(root)
+	dialog._node_picker._populate_node_picker_from_root(root)
 	var labels: PackedStringArray = _tree_column(dialog._node_picker._node_picker_tree, 0)
 	all_passed = _check("Audio chip shows only players",
 		labels.size() == 1 and labels[0].contains("Jingle"), true) and all_passed
 	dialog._node_picker._node_picker_chips["Audio"].button_pressed = false
 	dialog._node_picker._node_picker_recents.insert(0, "HUD")
-	dialog._populate_node_picker_from_root(root)
+	dialog._node_picker._populate_node_picker_from_root(root)
 	labels = _tree_column(dialog._node_picker._node_picker_tree, 0)
 	all_passed = _check("recents pin first with the star",
 		labels.size() > 0 and labels[0] == "★ HUD", true) and all_passed
@@ -84,31 +84,31 @@ static func run() -> bool:
 	block.code = "$\"UI/Health Bar\".value = 5"
 	event.actions.append(block)
 	sheet.events.append(event)
-	var references: PackedStringArray = ACEParamsDialog.extract_sheet_node_references(sheet)
+	var references: PackedStringArray = ACEParamsNodePicker.extract_sheet_node_references(sheet)
 	all_passed = _check("sheet references extract ($Name and $\"Path\")",
 		references.has("Slime") and references.has("UI/Health Bar"), true) and all_passed
 	dialog._lint_context_provider = func() -> EventSheetResource: return sheet
 	dialog._node_picker._node_picker_used_toggle.button_pressed = true
-	dialog._populate_node_picker_from_root(root)
+	dialog._node_picker._populate_node_picker_from_root(root)
 	var missing_flags: PackedStringArray = _tree_column(dialog._node_picker._node_picker_tree, 1)
 	all_passed = _check("missing references flag red in the audit, present ones name their class",
 		missing_flags, PackedStringArray(["CharacterBody2D", "MISSING"])) and all_passed
 	dialog._node_picker._node_picker_used_toggle.button_pressed = false
 
 	# The themed picker's "Use Node" button enables only when a real node row is highlighted.
-	dialog._populate_node_picker_from_root(root)
+	dialog._node_picker._populate_node_picker_from_root(root)
 	var ok_button: Button = dialog._node_picker._node_picker_window.get_ok_button()
-	dialog._on_node_picker_selection_changed()
+	dialog._node_picker._on_node_picker_selection_changed()
 	all_passed = _check("Use Node disabled with nothing selected", ok_button.disabled, true) and all_passed
 	var first_row: TreeItem = dialog._node_picker._node_picker_tree.get_root().get_first_child()
 	if first_row != null:
 		first_row.select(0)
-	dialog._on_node_picker_selection_changed()
+	dialog._node_picker._on_node_picker_selection_changed()
 	all_passed = _check("Use Node enables when a node row is selected",
 		first_row != null and not ok_button.disabled, true) and all_passed
 
 	# Cross-scene scan finds the demo player scene by node/class.
-	var hits: Array = ACEParamsDialog.scan_scene_files("CharacterBody2D", "res://demo")
+	var hits: Array = ACEParamsNodePicker.scan_scene_files("CharacterBody2D", "res://demo")
 	all_passed = _check("scene: scan finds nodes across .tscn files", hits.size() >= 1, true) and all_passed
 
 	# Keypad constants keep their underscore.
@@ -133,7 +133,7 @@ static func run() -> bool:
 	all_passed = _check("a scene-unique deep node collapses to %Name",
 		ACEParamsDialog._best_node_reference(arena, "Visuals/Body"), "%Body") and all_passed
 	dialog._node_picker._node_picker_search.text = ""
-	dialog._populate_node_picker_from_root(arena)
+	dialog._node_picker._populate_node_picker_from_root(arena)
 	all_passed = _check("the picker tree shows the %handle for a unique node",
 		_tree_column(dialog._node_picker._node_picker_tree, 0).has("%Body"), true) and all_passed
 	# One-click "Make %unique": offered for a non-root, non-unique, scene-owned node; withdrawn once unique.
@@ -142,12 +142,12 @@ static func run() -> bool:
 	arena.add_child(arena_hud)
 	arena_hud.owner = arena
 	all_passed = _check("a fresh deep node can be made unique",
-		ACEParamsDialog._node_is_uniqueable(arena, "HUD"), true) and all_passed
+		ACEParamsNodePicker._node_is_uniqueable(arena, "HUD"), true) and all_passed
 	arena_hud.unique_name_in_owner = true
 	all_passed = _check("an already-unique node is not offered Make-unique",
-		ACEParamsDialog._node_is_uniqueable(arena, "HUD"), false) and all_passed
+		ACEParamsNodePicker._node_is_uniqueable(arena, "HUD"), false) and all_passed
 	all_passed = _check("the scene root itself is not uniqueable",
-		ACEParamsDialog._node_is_uniqueable(arena, "."), false) and all_passed
+		ACEParamsNodePicker._node_is_uniqueable(arena, "."), false) and all_passed
 	all_passed = _check("the picker exposes a Make-unique button",
 		dialog._node_picker._node_picker_unique_button != null, true) and all_passed
 	arena.free()

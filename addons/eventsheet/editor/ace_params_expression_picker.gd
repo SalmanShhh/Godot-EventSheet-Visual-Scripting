@@ -1,34 +1,35 @@
 @tool
 class_name ACEParamsExpressionPicker
 extends RefCounted
-# The "Insert Expression" picker opened by the ƒx button next to an expression field - a visual
-# expression builder. Lists EXPRESSION-type ACEs (grouped), the host object's reflected
-# properties/methods, and the sheet's own variables (with member chaining while searching);
-# picking one inserts its code fragment at the field's caret. Extracted from
-# ace_params_dialog.gd to keep that file maintainable; it owns its own widgets and reaches the host
+# The Expressions panel beside the parameters form - a visual expression builder. Lists
+# EXPRESSION-type ACEs (grouped), the host object's reflected properties/methods, and the sheet's own
+# variables (with member chaining while searching); double-clicking one inserts its code fragment at
+# the caret of the box that last had focus. It owns its own widgets and reaches the host
 # ACEParamsDialog (the ACE registry, the host-class reflection, the value-bearing _fields, the live
-# ƒx validation) through the `_host` back-reference, the same pattern as the other editor helpers.
+# expression validation) through the `_host` back-reference, the same pattern as the other helpers.
 #
 # The host (ACEParamsDialog) keeps a one-line delegate for every method/var/static reached from
 # outside (tests, the host's own field-builder) so callers and the by-class-name static calls
 # (ACEParamsDialog.member_expression_fragment, …) keep working unchanged.
 
-# The host ACEParamsDialog instance (named _host, not _dialog, because the host's OWN field is
-# literally `var _dialog: ConfirmationDialog` - `_host._dialog` reads unambiguously). ACEParamsDialog
-# extends RefCounted (not Control), so the back-ref is typed as the host class, and `_host._dialog` is
-# the ConfirmationDialog this picker parents its window under.
+# The host ACEParamsDialog instance. ACEParamsDialog extends RefCounted (not Control), so the back-ref
+# is typed as the host class.
 var _host: ACEParamsDialog = null
 
-var _expression_window: AcceptDialog = null
+var _panel: Control = null
 var _expression_tree: Tree = null
 var _expression_search: LineEdit = null
 var _robust_checkbox: CheckBox = null
-## The field this dictionary inserts into, named above the search, and what it holds now.
+var _inserts_label: Label = null
+## The field the panel inserts into, named above the search, and what it holds now.
 var _band: EventSheetPopupUI.ContextBand = null
-## The foot: what the list is (or the highlighted entry), and the line the entry inserts.
-var _help_strip: EventSheetPopupUI.HelpStrip = null
-var _inserts: Label = null
+## The parameter whose box double-click inserts into, and the box itself - the one that last had
+## focus. The box is held apart from the key because a position's X and Y are two boxes of one key.
 var _expression_target_key: String = ""
+var _target_box: Control = null
+## The type the tree was last drawn for: entries that cannot go into the focused box are greyed, so
+## the tree is redrawn when focus moves to a box that wants something else.
+var _drawn_for_type: String = ""
 # Per-dialog-session cache of the Self section's derivation: typing in the search box only
 # re-FILTERS, so re-deriving the census + all 76 packs' behaviour groups per keystroke (~25ms on
 # a project-sized sheet) would be pure waste. Cleared on every open; the behaviour half also
@@ -61,11 +62,10 @@ func init(host: ACEParamsDialog) -> void:
 	_host = host
 
 
-func _open_expression_picker(target_key: String) -> void:
-	_expression_target_key = target_key
+## Re-derives the panel for a fresh opening of the parameters window - the sheet (and the Scene-dock
+## selection) may have changed since it last showed.
+func refresh_for_open() -> void:
 	_ensure_expression_window()
-	# Fresh derivation per open - the sheet (and the Scene-dock selection) may have changed since
-	# the dialog last showed.
 	_self_section_cache = {}
 	_behaviour_groups_cache = {}
 	_global_variables_cache = {}
@@ -79,14 +79,19 @@ func _open_expression_picker(target_key: String) -> void:
 	# Spawn-heavy sheets DEFAULT to the robust behaviour access: their behaviours may attach at
 	# runtime, where a $-path to an auto-named child misses silently. Re-derived on every open so
 	# the default tracks the sheet as it grows; the checkbox stays a per-session user override.
-	if _robust_checkbox != null:
-		_robust_checkbox.set_pressed_no_signal(EventSheetSelfExpressions.is_spawn_heavy(_context_sheet()))
+	_robust_checkbox.set_pressed_no_signal(EventSheetSelfExpressions.is_spawn_heavy(_context_sheet()))
+	_expression_search.text = ""
 	_refresh_expression_tree()
-	_expression_window.get_ok_button().disabled = true
+
+
+## Points the panel at the box that just took focus: double-click inserts there from now on, and the
+## tree is redrawn when this box wants a different type than the one it was drawn for.
+func aim(key: String, box: Control) -> void:
+	_expression_target_key = key
+	_target_box = box
 	_say_field()
-	_describe_list()
-	_expression_window.popup_centered(Vector2i(560, 520))
-	_expression_search.grab_focus()
+	if _expression_tree != null and _wanted_type() != _drawn_for_type:
+		_refresh_expression_tree()
 
 
 ## The sheet behind the open dialog (null headless / before setup) - the Self section's census input.
@@ -107,11 +112,11 @@ func _sheet_script_path() -> String:
 
 
 ## The RUNNING game answered a query_children request. Adopt it only when it is OUR sheet's
-## report and the dictionary is still open - a stale reply after the dialog moved on is noise.
+## report and the panel is still showing - a stale reply after the dialog moved on is noise.
 ## The live tier outranks the edit-time tiers: it is the only one that sees behaviours attached
 ## at runtime, under their real runtime names.
 func _on_live_children_report(report: Dictionary) -> void:
-	if _expression_window == null or not _expression_window.visible:
+	if _panel == null or not _panel.is_visible_in_tree():
 		return
 	if str(report.get("script_path", "")) != _sheet_script_path() or _sheet_script_path().is_empty():
 		return
@@ -150,37 +155,15 @@ func _grounded_children_from_selection() -> Array:
 	return []
 
 
-func _ensure_expression_window() -> void:
-	if _expression_window != null:
-		return
-	_expression_window = AcceptDialog.new()
-	# Event-sheet style: a floating EXPRESSIONS DICTIONARY, not a modal insert step. Non-exclusive
-	# so the params dialog underneath stays live (type in the field, dictionary at your side),
-	# and inserting keeps it OPEN - close with X, reopen any time with the field's ƒx
-	# (Find Expressions) button. Typing in the field itself pops the unfocused autocomplete;
-	# this window is the browsable catalog for when you don't know the name yet.
-	_expression_window.title = EventSheetL10n.translate("Expressions dictionary")
-	_expression_window.visible = false
-	_expression_window.exclusive = false
-	_expression_window.dialog_hide_on_ok = false
-	_expression_window.min_size = Vector2i(480, 360)
-	_expression_window.ok_button_text = EventSheetL10n.translate("Insert")
-	_expression_window.get_ok_button().disabled = true
-	# A way out beside Insert, since inserting keeps the dictionary open.
-	_expression_window.add_cancel_button(EventSheetL10n.translate("Close"))
-	_expression_window.close_requested.connect(func() -> void: _expression_window.hide())
-	_expression_window.confirmed.connect(_on_expression_activated)
-	_host._dialog.add_child(_expression_window)
-
-	# Standard body margins + a consistent form box (matches the picker + node picker).
+## The panel itself, built once and parented beside the form by the host: a titled card holding the
+## search, the robust-lookup tick, the tree, the line saying what the highlighted entry inserts, and
+## how to use it. Returned so the host can place it; built bare for tests that drive it headlessly.
+func _ensure_expression_window() -> Control:
+	if _panel != null:
+		return _panel
 	var content: VBoxContainer = EventSheetPopupUI.form_box()
-	var margin: MarginContainer = EventSheetPopupUI.margined(content)
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_expression_window.add_child(margin)
-
 	_band = EventSheetPopupUI.ContextBand.new()
 	content.add_child(_band)
-
 	_expression_search = LineEdit.new()
 	_expression_search.placeholder_text = EventSheetL10n.translate("Search expressions...")
 	_expression_search.clear_button_enabled = true
@@ -203,31 +186,34 @@ func _ensure_expression_window() -> void:
 	_expression_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_expression_tree.item_activated.connect(_on_expression_activated)
 	_expression_tree.item_selected.connect(_on_expression_selection_changed)
-	# Bare Control holder bounds the dialog height (a Tree reports its full content height as its
-	# minimum, which an AcceptDialog would otherwise grow to fit).
+	# Bare Control holder bounds the window height (a Tree reports its full content height as its
+	# minimum, which the window would otherwise grow to fit).
 	var expr_holder: Control = Control.new()
-	expr_holder.custom_minimum_size = Vector2(0.0, 300.0)
+	expr_holder.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(200.0))
 	expr_holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	expr_holder.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_expression_tree.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	expr_holder.add_child(_expression_tree)
-	var expr_card: PanelContainer = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Expressions"), expr_holder)
-	expr_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	content.add_child(expr_card)
+	content.add_child(expr_holder)
 
-	# The foot says what the list is, then what the highlighted entry actually inserts. A global
-	# reads `Score` in its group and inserts `Game.Score`, and this is where a reader finds that out
-	# before it lands in the field rather than after.
-	_help_strip = EventSheetPopupUI.help_strip()
-	_help_strip.body_label.max_lines_visible = 3
-	_inserts = _help_strip.add_line(EventSheetL10n.translate("INSERTS"))
-	content.add_child(_help_strip)
+	# The line under the tree: what the highlighted entry actually inserts. A global reads `Score` in
+	# its group and inserts `Game.Score`, and this is where a reader finds that out before it lands in
+	# the box rather than after.
+	_inserts_label = EventSheetPopupUI.hint_label("", EventSheetPalette.scaled_f(240.0))
+	content.add_child(_inserts_label)
+	content.add_child(EventSheetPopupUI.hint_label(
+		EventSheetL10n.translate("Double-click to insert into the focused box."), EventSheetPalette.scaled_f(240.0)))
+	_panel = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Expressions"), content)
+	_panel.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(280.0), 0.0)
+	_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	return _panel
 
 
 func _refresh_expression_tree() -> void:
 	if _expression_tree == null or _host._registry == null:
 		return
 	_expression_tree.clear()
+	_drawn_for_type = _wanted_type()
 	var root: TreeItem = _expression_tree.create_item()
 	var query: String = _expression_search.text.strip_edges()
 	# The Self section pins FIRST - the "what does my object know about itself" reflex. A
@@ -246,13 +232,12 @@ func _refresh_expression_tree() -> void:
 		if not group_nodes.has(group_key):
 			var group_item: TreeItem = _expression_tree.create_item(root)
 			group_item.set_text(0, group_key)
-			group_item.set_custom_color(0, EventSheetPopupUI.readable_on_panel(
-				ACEPickerDialog.GROUP_COLOR_NODE_TYPE if not node_type.is_empty() else ACEPickerDialog.GROUP_COLOR_NEUTRAL))
+			group_item.set_custom_color(0, _ink(ACEPickerDialog.GROUP_COLOR_NODE_TYPE if not node_type.is_empty() else ACEPickerDialog.GROUP_COLOR_NEUTRAL))
 			group_item.set_selectable(0, false)
 			group_nodes[group_key] = group_item
 		var item: TreeItem = _expression_tree.create_item(group_nodes[group_key])
 		item.set_text(0, definition.display_name)
-		item.set_custom_color(0, EventSheetPopupUI.readable_on_panel(ACEPickerDialog.ITEM_COLOR_EXPRESSION))
+		item.set_custom_color(0, _ink(ACEPickerDialog.ITEM_COLOR_EXPRESSION))
 		if not definition.description.is_empty():
 			item.set_tooltip_text(0, definition.description)
 		item.set_metadata(0, definition)
@@ -293,7 +278,7 @@ func _add_self_section(root: TreeItem, lowered_query: String) -> void:
 			self_item = _self_root(root)
 		var subgroup_item: TreeItem = _expression_tree.create_item(self_item)
 		subgroup_item.set_text(0, str(subgroup[0]))
-		subgroup_item.set_custom_color(0, EventSheetPopupUI.readable_on_panel(ACEPickerDialog.GROUP_COLOR_NEUTRAL))
+		subgroup_item.set_custom_color(0, _ink(ACEPickerDialog.GROUP_COLOR_NEUTRAL))
 		subgroup_item.set_selectable(0, false)
 		_add_self_leaves(subgroup_item, survivors)
 	# Behaviours: one child group per pack, its knobs and value-returning verbs as $Pack.member
@@ -328,7 +313,7 @@ func _add_self_section(root: TreeItem, lowered_query: String) -> void:
 				behaviours_label = "Behaviours (on the selected node)"
 				behaviours_tooltip = "Read off the node selected in the Scene dock - these are its actual behaviour children, under their real names."
 			behaviours_item.set_text(0, behaviours_label)
-			behaviours_item.set_custom_color(0, EventSheetPopupUI.readable_on_panel(ACEPickerDialog.GROUP_COLOR_NEUTRAL))
+			behaviours_item.set_custom_color(0, _ink(ACEPickerDialog.GROUP_COLOR_NEUTRAL))
 			behaviours_item.set_selectable(0, false)
 			behaviours_item.set_tooltip_text(0, behaviours_tooltip)
 		var pack_item: TreeItem = _expression_tree.create_item(behaviours_item)
@@ -336,7 +321,7 @@ func _add_self_section(root: TreeItem, lowered_query: String) -> void:
 			pack_item.set_text(0, "$%s (%s)" % [str(pack.get("node_name")), str(pack.get("provider"))])
 		else:
 			pack_item.set_text(0, str(pack.get("provider")) + (" (used here)" if bool(pack.get("used")) else ""))
-		pack_item.set_custom_color(0, EventSheetPopupUI.readable_on_panel(ACEPickerDialog.GROUP_COLOR_NODE_TYPE))
+		pack_item.set_custom_color(0, _ink(ACEPickerDialog.GROUP_COLOR_NODE_TYPE))
 		pack_item.set_selectable(0, false)
 		# Browsing (no query): grounded groups are all real, so all open; in the fallback only
 		# the packs this sheet already uses open expanded.
@@ -347,7 +332,7 @@ func _add_self_section(root: TreeItem, lowered_query: String) -> void:
 func _self_root(root: TreeItem) -> TreeItem:
 	var self_item: TreeItem = _expression_tree.create_item(root)
 	self_item.set_text(0, "Self")
-	self_item.set_custom_color(0, EventSheetPopupUI.readable_on_panel(ACEPickerDialog.GROUP_COLOR_NODE_TYPE))
+	self_item.set_custom_color(0, _ink(ACEPickerDialog.GROUP_COLOR_NODE_TYPE))
 	self_item.set_selectable(0, false)
 	self_item.set_tooltip_text(0, "What this sheet's object knows about itself - every entry inserts plain GDScript.")
 	return self_item
@@ -357,9 +342,15 @@ func _add_self_leaves(parent: TreeItem, entries: Array) -> void:
 	for entry: Dictionary in entries:
 		var item: TreeItem = _expression_tree.create_item(parent)
 		item.set_text(0, str(entry.get("label", "")))
-		item.set_custom_color(0, EventSheetPopupUI.readable_on_panel(ACEPickerDialog.ITEM_COLOR_EXPRESSION))
+		item.set_custom_color(0, _ink(ACEPickerDialog.ITEM_COLOR_EXPRESSION))
 		item.set_tooltip_text(0, str(entry.get("tooltip", "")))
 		item.set_metadata(0, str(entry.get("fragment", "")))
+
+
+## A tree colour made readable on the panel it sits on: the picker's tones are picked for a dark
+## editor, and a light one darkens them until they read as text.
+static func _ink(colour: Color) -> Color:
+	return EventSheetPopupUI.readable_on_panel(colour)
 
 
 ## Adds a reflected-members group to the expression picker; methods insert as `name()`,
@@ -374,12 +365,12 @@ func _add_member_expression_group(root: TreeItem, label: String, members: Array,
 		if group_item == null:
 			group_item = _expression_tree.create_item(root)
 			group_item.set_text(0, label)
-			group_item.set_custom_color(0, EventSheetPopupUI.readable_on_panel(ACEPickerDialog.GROUP_COLOR_NODE_TYPE))
+			group_item.set_custom_color(0, _ink(ACEPickerDialog.GROUP_COLOR_NODE_TYPE))
 			group_item.set_selectable(0, false)
 		var fragment: String = member_expression_fragment(member_name, is_method)
 		var item: TreeItem = _expression_tree.create_item(group_item)
 		item.set_text(0, fragment)
-		item.set_custom_color(0, EventSheetPopupUI.readable_on_panel(ACEPickerDialog.ITEM_COLOR_EXPRESSION))
+		item.set_custom_color(0, _ink(ACEPickerDialog.ITEM_COLOR_EXPRESSION))
 		item.set_metadata(0, fragment)
 
 
@@ -427,12 +418,12 @@ func _add_sheet_variable_expressions(root: TreeItem, query: String) -> void:
 			if group_item == null:
 				group_item = _expression_tree.create_item(root)
 				group_item.set_text(0, str(group.get("title", "")))
-				group_item.set_custom_color(0, EventSheetPopupUI.readable_on_panel(ACEPickerDialog.GROUP_COLOR_NEUTRAL))
+				group_item.set_custom_color(0, _ink(ACEPickerDialog.GROUP_COLOR_NEUTRAL))
 				group_item.set_selectable(0, false)
 			var item: TreeItem = _expression_tree.create_item(group_item)
 			item.set_text(0, EventSheetVariableOwners.leaf_text(entry))
 			var fits: bool = EventSheetVariableOwners.fits(entry, wanted)
-			item.set_custom_color(0, EventSheetPopupUI.readable_on_panel(ACEPickerDialog.ITEM_COLOR_EXPRESSION if fits
+			item.set_custom_color(0, _ink(ACEPickerDialog.ITEM_COLOR_EXPRESSION if fits
 				else ACEPickerDialog.GROUP_COLOR_NEUTRAL))
 			item.set_selectable(0, fits)
 			item.set_tooltip_text(0, EventSheetVariableOwners.sentence(entry) if fits
@@ -450,7 +441,7 @@ func _add_sheet_variable_expressions(root: TreeItem, query: String) -> void:
 		_add_variable_member_group(root, str(entry.get("name", "")), vtype, lowered)
 
 
-## The GDScript type the field that opened the picker is asking for, or "" when it asks for anything.
+## The GDScript type the focused box is asking for, or "" when it asks for anything.
 ## Read off the parameter's own declared type, which is what the compiler will hand the template.
 func _wanted_type() -> String:
 	if _host._definition == null or _expression_target_key.is_empty():
@@ -461,19 +452,17 @@ func _wanted_type() -> String:
 	return ""
 
 
-## The title and the band name the field this dictionary answers ("Insert an expression into
-## Speed" over "Move Toward Speed  base_speed *"). Refreshed after each insert, since the dictionary
-## stays open and the field keeps growing.
+## The band names the field the panel answers ("Move Toward Speed" over what it holds now).
+## Refreshed as focus moves and after each insert, since the box keeps growing.
 func _say_field() -> void:
 	if _band == null:
 		return
-	_expression_window.title = EventSheetL10n.translate("Insert an expression into %s") % _host._param_label(_expression_target_key)
 	var words: PackedStringArray = field_words(_host, _expression_target_key)
 	_band.say(words[0], words[1])
 
 
 ## The verb and the field a picker answers, and what the field holds now: ["Move Toward Speed",
-## "base_speed *"]. Shared by this dictionary and the node picker, which band the same question.
+## "base_speed *"]. Shared by this panel and the node picker, which band the same question.
 static func field_words(host: ACEParamsDialog, key: String) -> PackedStringArray:
 	var verb: String = EventSheetL10n.translate(host._definition.display_name) if host._definition != null else ""
 	var field: Variant = host._fields.get(key)
@@ -481,11 +470,13 @@ static func field_words(host: ACEParamsDialog, key: String) -> PackedStringArray
 		str((field as Control).get("text")) if field is Control else ""])
 
 
-## The strip with nothing highlighted: what this list is and how inserting works.
-func _describe_list() -> void:
-	_help_strip.show_note(EventSheetL10n.translate("This list"), EventSheetL10n.translate(
-		"Double-click inserts at the cursor and the dictionary stays open, so results chain. You can also just type in the field: the same expressions autocomplete as you go."))
-	_help_strip.set_line(_inserts, "")
+## The line under the tree: what picking the highlighted entry actually inserts, so the reader
+## sees `Game.Score` before they insert it into a field that shows `Score`. "" when nothing is
+## highlighted. Static + pure.
+static func inserts_note(insert_text: String) -> String:
+	if insert_text.strip_edges().is_empty():
+		return ""
+	return EventSheetL10n.translate("Inserts %s") % insert_text.strip_edges()
 
 
 ## Every reachable sheet variable as [{name, type_name}] - the census MOVED to
@@ -507,11 +498,11 @@ func _add_variable_member_group(root: TreeItem, var_name: String, var_type: Stri
 			if group_item == null:
 				group_item = _expression_tree.create_item(root)
 				group_item.set_text(0, "%s (%s)" % [var_name, var_type])
-				group_item.set_custom_color(0, EventSheetPopupUI.readable_on_panel(ACEPickerDialog.GROUP_COLOR_NODE_TYPE))
+				group_item.set_custom_color(0, _ink(ACEPickerDialog.GROUP_COLOR_NODE_TYPE))
 				group_item.set_selectable(0, false)
 			var item: TreeItem = _expression_tree.create_item(group_item)
 			item.set_text(0, fragment)
-			item.set_custom_color(0, EventSheetPopupUI.readable_on_panel(ACEPickerDialog.ITEM_COLOR_EXPRESSION))
+			item.set_custom_color(0, _ink(ACEPickerDialog.ITEM_COLOR_EXPRESSION))
 			item.set_metadata(0, fragment)
 
 
@@ -526,20 +517,9 @@ func _activate_first_expression_match() -> void:
 ## Enables the "Insert" button only when a real expression row is highlighted.
 func _on_expression_selection_changed() -> void:
 	var selected: TreeItem = _expression_tree.get_selected() if _expression_tree != null else null
-	if _expression_window != null:
-		_expression_window.get_ok_button().disabled = selected == null or selected.get_metadata(0) == null
-	if _help_strip == null:
-		return
-	var metadata: Variant = selected.get_metadata(0) if selected != null else null
-	if metadata == null:
-		_describe_list()
-		return
-	var tooltip: String = selected.get_tooltip_text(0)
-	if tooltip.is_empty():
-		_describe_list()
-		tooltip = _help_strip.body_label.text
-	_help_strip.show_note(selected.get_text(0), tooltip)
-	_help_strip.set_line(_inserts, _expression_template(metadata as ACEDefinition) if metadata is ACEDefinition else str(metadata))
+	if _inserts_label != null:
+		var metadata: Variant = selected.get_metadata(0) if selected != null else null
+		_inserts_label.text = inserts_note(str(metadata)) if metadata is String else ""
 
 
 func _on_expression_activated() -> void:
@@ -554,19 +534,25 @@ func _on_expression_activated() -> void:
 		insert_text = str(metadata)
 	if insert_text.is_empty():
 		return
-	# Insert at the caret so results compose into a larger expression (e.g. health + sin(time)). The OK
-	# button still closes the window (AcceptDialog auto-hides on confirm); double-clicking a tree result
-	# leaves the window open so several can be chained. The old code only handled LineEdit - and the
-	# expression field is always a CodeEdit - so picking a result silently did nothing. This fixes it.
+	# Insert at the caret so results compose into a larger expression (e.g. health + sin(time)), and
+	# hand focus back to the box so typing carries on where the insert left off.
 	_insert_into_expression_target(insert_text)
+	var target: Control = _target() as Control
+	if target != null and target.is_inside_tree():
+		target.grab_focus()
 
 
-## Inserts a snippet at the caret of the expression field that opened the picker (the CodeEdit for
-## _expression_target_key) and re-validates it. A behaviour chain leaves its node token SELECTED
-## ($SineBehavior / the quoted name in get_node_or_null) so retargeting is one keystroke or a
-## node drag - the fields already accept node drops.
+## The box an insert lands in: the one that last had focus, else the field registered for the target
+## parameter.
+func _target() -> Variant:
+	return _target_box if is_instance_valid(_target_box) else _host._fields.get(_expression_target_key)
+
+
+## Inserts a snippet at the caret of the focused box and re-validates it. A behaviour chain leaves its
+## node token SELECTED ($SineBehavior / the quoted name in get_node_or_null) so retargeting is one
+## keystroke or a node drag - the fields already accept node drops.
 func _insert_into_expression_target(snippet: String) -> void:
-	var target: Variant = _host._fields.get(_expression_target_key)
+	var target: Variant = _target()
 	var span: Vector2i = EventSheetSelfExpressions.retarget_span(snippet) if not snippet.contains("\n") else Vector2i(-1, 0)
 	if target is TextEdit:  # CodeEdit extends TextEdit
 		var edit: TextEdit = target as TextEdit

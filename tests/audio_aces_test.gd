@@ -77,14 +77,13 @@ static func run() -> bool:
 	all_passed = _check("preview field round-trips the path", dialog._extract_value(path_edit), "\"res://x.ogg\"") and all_passed
 	field.free()
 
-	# Node picker: expression fields gain the 🔍 browser; filter logic matches
-	# name/class/path case-insensitively (asserted via the row builder on a tiny tree).
+	# Node picker: a row naming a node (its "On node" target) is an object row, whose "click to
+	# choose" opens the node search - the expression box itself carries no button of its own.
 	var field2: Control = dialog._create_expression_field("target", "self")
-	var has_node_button: bool = false
-	for child in field2.get_children():
-		if child is Button and (child as Button).tooltip_text.begins_with("Pick a scene node"):
-			has_node_button = true
-	all_passed = _check("expression fields offer the node picker", has_node_button, true) and all_passed
+	all_passed = _check("an expression box carries no per-box button",
+		field2.find_children("*", "Button", true, false).size(), 0) and all_passed
+	all_passed = _check("a target row is an object row",
+		ACEParamsDialog._is_object_param({"id": "target", "hint": "expression"}), true) and all_passed
 	field2.free()
 	all_passed = _check("node references stay identifier-safe",
 		ACEParamsDialog._node_reference("UI/Health Bar"), "$\"UI/Health Bar\"") and all_passed

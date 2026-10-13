@@ -1,12 +1,13 @@
-# EventSheet - ACE Parameters dialog component
-# Builds a dynamic form from ACEDefinition.parameters metadata and emits params_confirmed
-# when the user confirms. Supports:
-#  - left-label / right-control rows with the parameter description rendered below,
-#  - variable-reference params (hint == "variable_reference"): a dropdown of the sheet's
-#    variables; when none exist the dialog blocks apply and tells the user to add one,
-#  - expression params (hint == "expression"): an inline "fx" button opening an Insert
-#    Expression picker (EXPRESSION ACE definitions) whose code template is inserted,
-#  - a "Back" button (when opened from the picker) that returns to the picker.
+# EventSheet - the parameters window. Builds a form from ACEDefinition.parameters and emits
+# params_confirmed when Done is pressed. Laid out the way event-sheet users already know it:
+#  - titled "Parameters for <object>: <action>", with the object, the action and its description on top,
+#  - one row per parameter, name left and box right; every box takes an expression, every choice is a
+#    described dropdown, and a node parameter carries a "click to choose" door into the node search,
+#  - a lone position splits into X and Y rows, one expression box each,
+#  - the focused parameter explained in the one help strip under the rows, with the GDScript line,
+#  - a problem said under its own row, and the strongest one beside Done,
+#  - the Expressions panel beside the form: double-click inserts into the focused box,
+#  - Back (to the picker), Done and Cancel.
 @tool
 class_name ACEParamsDialog
 extends RefCounted
@@ -47,14 +48,19 @@ var _form: VBoxContainer = null
 ## it is typed, and shows the line of code the row becomes. It replaced the per-field description
 ## labels and their tooltips: four parameters read as four rows now, not four paragraphs.
 var _help_strip: EventSheetPopupUI.HelpStrip = null
-## The title band: the row this dialog is writing, in the sheet's own colours, filled in live
-## from the fields. The window title carries the same sentence as plain text.
-var _title_label: RichTextLabel = null
-var _title_ace_label: Label = null
-## The reason OK is not the obvious next step, sitting beside it rather than replacing the
+## The head of the window: the object's icon, "Object · Action", and the action's description.
+var _header_icon: TextureRect = null
+var _header_name: Label = null
+var _header_about: Label = null
+## The door to the engine's own class reference, for an action that is a native node's.
+var _header_docs: Button = null
+## The reason Done is not the obvious next step, sitting beside it rather than replacing the
 ## button with a grey rectangle that explains nothing.
 var _ok_reason: Label = null
 var _fields: Dictionary = {}
+## Each parameter's row parts: {"panels": [PanelContainer], "labels": [Label], "note": StateNote}.
+## A position split into X and Y is one parameter with two panels and one note under the last.
+var _rows: Dictionary = {}
 ## The shipped descriptor dictionary per parameter id - what the strip describes and validates
 ## against. Kept beside _fields because a built widget knows its value, never its parameter.
 var _param_dicts: Dictionary = {}
@@ -87,11 +93,11 @@ var _apply_blocked: bool = false
 var _back_button: Button = null
 var _add_another_button: Button = null
 
-# Sheet-context source for live ƒx validation (set by the dock; returns the active sheet).
+# Sheet-context source for live expression validation (set by the dock; returns the active sheet).
 var _lint_context_provider: Callable = Callable()
 
-# The 🔍 scene-node picker and the ƒx Insert-Expression picker are self-contained dialog
-# subsystems extracted to their own files (each owns its widgets + state) to keep this file
+# The node search behind "click to choose" and the Expressions panel beside the form are
+# self-contained subsystems in their own files (each owns its widgets + state) to keep this file
 # maintainable. They reach back here through a _host reference for the shared bits that stay on
 # this dialog: _fields, _validate_expression_field, _first_metadata_row, _best_node_reference,
 # the ACE registry and the host-class reflection. This dialog keeps a thin delegate for every
@@ -114,7 +120,9 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry = null, vari
 	_node_picker.init(self)
 	_expression_picker.init(self)
 	_dialog = ConfirmationDialog.new()
-	_dialog.title = "Parameters"
+	_dialog.title = EventSheetL10n.translate("Parameters")
+	_dialog.ok_button_text = EventSheetL10n.translate("Done")
+	_dialog.cancel_button_text = EventSheetL10n.translate("Cancel")
 	_dialog.visible = false
 	_dialog.confirmed.connect(_on_confirmed)
 	_dialog.close_requested.connect(_close)
@@ -123,83 +131,131 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry = null, vari
 			_stop_audio_preview()
 	)
 	_dialog.canceled.connect(_close)
-	_back_button = _dialog.add_button("◀ Back", true, BACK_ACTION)
-	# "Apply & Add Another" keeps the picker loop going for repeated authoring
-	# (add three conditions without re-opening the picker each time). Only shown in
-	# append modes, where the target event is stable.
-	_add_another_button = _dialog.add_button("✚ Apply & Add Another", false, ADD_ANOTHER_ACTION)
+	# "Apply & Add Another" keeps the picker loop going for repeated authoring (add three conditions
+	# without re-opening the picker each time). Only shown in append modes, where the target event is
+	# stable. Back is added after it so it lands leftmost: Back, then Done and Cancel at the right.
+	_add_another_button = _dialog.add_button(EventSheetL10n.translate("✚ Apply & Add Another"), false, ADD_ANOTHER_ACTION)
+	_back_button = _dialog.add_button(EventSheetL10n.translate("Back"), false, BACK_ACTION)
 	_dialog.custom_action.connect(_on_custom_action)
 	# The "Add hpp…" fix opens the Add variable dialog over this one. Coming back, the variable
 	# may exist, so the catalog is re-read and every field re-checked the moment focus returns.
 	_dialog.focus_entered.connect(_refresh_variable_context)
 	parent_node.add_child(_dialog)
 
-	# One content child, laid out top to bottom: the row being written, the fields, the help strip.
-	# The strip lives OUTSIDE the scroll on purpose - it is the foot of the dialog, not the foot of
-	# the form, and scrolling to read why a field is red is exactly the friction it exists to remove.
-	var content: VBoxContainer = VBoxContainer.new()
-	content.add_theme_constant_override("separation", 8)
-	_dialog.add_child(EventSheetPopupUI.margined(content))
-	content.add_child(_build_title_band())
-
+	# The form side, top to bottom: the head, the rows, the help strip. The strip lives OUTSIDE the
+	# scroll on purpose - it is the foot of the form, and scrolling to read why a field is red is
+	# exactly the friction it exists to remove.
+	var form_side: VBoxContainer = VBoxContainer.new()
+	form_side.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	form_side.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(8.0)))
+	form_side.add_child(_build_header())
 	var scroll: ScrollContainer = ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(520.0, 200.0)
+	scroll.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(520.0), EventSheetPalette.scaled_f(240.0))
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	# Fields fit the dialog width instead of growing a horizontal scrollbar (long
 	# enum defaults like DisplayServer.WINDOW_MODE_FULLSCREEN used to overflow).
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	content.add_child(scroll)
-
+	form_side.add_child(scroll)
 	_form = VBoxContainer.new()
 	_form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_form.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_form.add_theme_constant_override("separation", 4)
-	# Sunken inset card so the parameter rows read as a themed panel (matches the picker + function dialog).
-	var form_card: PanelContainer = EventSheetPopupUI.panel_section(_form)
-	form_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	form_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.add_child(form_card)
-
+	_form.add_theme_constant_override("separation", 0)
+	scroll.add_child(_form)
 	_help_strip = EventSheetPopupUI.help_strip()
-	content.add_child(_help_strip)
+	form_side.add_child(_help_strip)
 
-	# The reason OK will not do what you expect, beside OK. AcceptDialog lays its buttons out in one
-	# row, so the reason sits where the eye already is when the hand reaches for the button.
+	# The form, and the Expressions panel beside it.
+	var content: HBoxContainer = HBoxContainer.new()
+	content.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(12.0)))
+	content.add_child(form_side)
+	content.add_child(_expression_picker._ensure_expression_window())
+	_dialog.add_child(EventSheetPopupUI.margined(content))
+
+	# The reason Done will not do what you expect, beside Done. AcceptDialog lays its buttons out in
+	# one row, so the reason sits where the eye already is when the hand reaches for the button.
 	_ok_reason = _muted_label()
+	_ok_reason.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_ok_reason.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	var button_row: Node = _dialog.get_ok_button().get_parent()
 	if button_row != null:
 		button_row.add_child(_ok_reason)
 		button_row.move_child(_ok_reason, _dialog.get_ok_button().get_index())
 
 
-## The band at the top: the object this row belongs to, then the sentence the row will read as, then
-## the ACE's own name at the right. It IS the row - what the sheet will show once OK is pressed -
-## which is the one thing the old "<name> Parameters" title could never say.
-func _build_title_band() -> Control:
-	var band: HBoxContainer = HBoxContainer.new()
-	band.add_theme_constant_override("separation", 8)
-	_title_label = RichTextLabel.new()
-	_title_label.bbcode_enabled = true
-	# One line, never wrapped, and NOT fit_content: a RichTextLabel asked to size itself to its
-	# content reports one glyph per line during the initial zero-width layout pass, and a sentence
-	# measured that way makes the whole dialog taller than the screen.
-	_title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_title_label.fit_content = false
-	_title_label.scroll_active = false
-	_title_label.clip_contents = true
-	_title_label.custom_minimum_size = Vector2(EventSheetPopupUI.HINT_WRAP_WIDTH,
-		EventSheetPalette.scaled_f(22.0))
-	_title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	band.add_child(_title_label)
-	_title_ace_label = _muted_label()
-	band.add_child(_title_ace_label)
-	return band
+## The head of the window: the icon of the object the action belongs to, "Object · Action" in the
+## strong text colour, and the action's own description under it.
+func _build_header() -> Control:
+	var header: HBoxContainer = HBoxContainer.new()
+	header.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(10.0)))
+	_header_icon = TextureRect.new()
+	_header_icon.custom_minimum_size = Vector2.ONE * EventSheetPalette.scaled_f(32.0)
+	_header_icon.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+	header.add_child(_header_icon)
+	var words: VBoxContainer = VBoxContainer.new()
+	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	words.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(3.0)))
+	header.add_child(words)
+	_header_name = Label.new()
+	_header_name.add_theme_color_override("font_color", EventSheetPopupUI.text_color())
+	var bold: Font = EventSheetPopupUI.editor_font("bold")
+	if bold != null:
+		_header_name.add_theme_font_override("font", bold)
+	words.add_child(_header_name)
+	_header_about = Label.new()
+	_header_about.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_header_about.custom_minimum_size = Vector2(EventSheetPopupUI.HINT_WRAP_WIDTH, 0.0)
+	_header_about.add_theme_color_override("font_color", EventSheetPopupUI.secondary_text_color())
+	words.add_child(_header_about)
+	_header_docs = Button.new()
+	_header_docs.flat = true
+	_header_docs.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	_header_docs.pressed.connect(func() -> void: open_class_docs(str(_header_docs.get_meta("docs_class", ""))))
+	header.add_child(_header_docs)
+	return header
 
 
-## A one-line muted caption - the ACE's own name beside the sentence, the reason beside OK. No
-## autowrap: both sit in a row that measures them, and a wrapped caption there collapses to a column
-## of single letters on the first zero-width layout pass.
+## "Parameters for Player: Move toward" - the object, then the action. An action no object owns
+## reads "Parameters: Move toward". Static and pure, so a test pins it without a window.
+static func window_title(definition: ACEDefinition, object_name: String = "") -> String:
+	if definition == null:
+		return ""
+	var action: String = EventSheetL10n.translate(definition.display_name)
+	if object_name.strip_edges().is_empty():
+		return EventSheetL10n.translate("Parameters: %s") % action
+	return EventSheetL10n.translate("Parameters for %s: %s") % [object_name.strip_edges(), action]
+
+
+## The object this window's action belongs to: the sheet's own object, or the node class a native
+## action acts on when there is no sheet to ask.
+func _object_name() -> String:
+	if not _row_owner.strip_edges().is_empty():
+		return _row_owner.strip_edges()
+	return str(_definition.metadata.get("node_type", "")).strip_edges() if _definition != null else ""
+
+
+## Fills the head for the action being opened: the title, the icon, the names and the description,
+## and the class-reference door when the action is a native node's (the vocabulary IS Godot, and the
+## built-in docs are one click away).
+func _fill_header() -> void:
+	var object_name: String = _object_name()
+	_dialog.title = window_title(_definition, object_name)
+	if _header_name == null:
+		return
+	var action: String = EventSheetL10n.translate(_definition.display_name)
+	_header_name.text = action if object_name.is_empty() else "%s  ·  %s" % [object_name, action]
+	_header_about.text = EventSheetL10n.translate(_definition.description.strip_edges())
+	_header_about.visible = not _header_about.text.is_empty()
+	var docs_class: String = str(_definition.metadata.get("node_type", "")).strip_edges()
+	_header_icon.texture = editor_icon_named(docs_class if not docs_class.is_empty() else "Node")
+	_header_docs.visible = not docs_class.is_empty() and ClassDB.class_exists(docs_class)
+	_header_docs.set_meta("docs_class", docs_class)
+	_header_docs.text = EventSheetL10n.translate("View %s in Godot Docs") % docs_class
+	_header_docs.tooltip_text = EventSheetL10n.translate("Open the built-in class reference for %s.") % docs_class
+
+
+## A one-line muted caption - the reason beside Done, a unit beside a box. No autowrap: both sit in a
+## row that measures them, and a wrapped caption there collapses to a column of single letters on the
+## first zero-width layout pass.
 func _muted_label() -> Label:
 	var label: Label = Label.new()
 	label.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
@@ -232,6 +288,7 @@ func open_with_values(definition: ACEDefinition, context: Dictionary, initial_va
 		form_values = (_remembered_values[definition.id] as Dictionary).duplicate(true)
 	_build_form(definition, form_values)
 	_attach_recent_value_combos()
+	_fill_header()
 	_refresh_live_reading()
 	_dialog.get_ok_button().disabled = _apply_blocked
 	# Back returns to the picker - from the add flow OR a row edit (which opens in a replace_* mode),
@@ -239,9 +296,18 @@ func open_with_values(definition: ACEDefinition, context: Dictionary, initial_va
 	_set_back_visible(_can_return_to_picker())
 	if _add_another_button != null:
 		_add_another_button.visible = str(_context.get("mode", "")) in ["append_condition", "append_action"]
-	_dialog.popup_centered(Vector2i(560, 380))
+	_dialog.popup_centered(_window_size())
 	_dialog.call_deferred("grab_focus")
 	call_deferred("_focus_first_field")
+	# The Expressions panel is filled after the window is up: it reads the sheet, the host class and
+	# every expression verb, which the first frame of the window has no need to wait for.
+	_expression_picker.call_deferred("refresh_for_open")
+
+
+## The window's opening size: the form and the Expressions panel beside it, at the editor's scale.
+static func _window_size() -> Vector2i:
+	return Vector2i(int(EventSheetPalette.scaled_f(900.0)), int(EventSheetPalette.scaled_f(440.0)))
+
 
 ## Rebuilds the parameter rows. Separated from open() so it can be exercised without
 ## popping the window (which requires a display server).
@@ -314,6 +380,7 @@ func _build_form(definition: ACEDefinition, initial_values: Dictionary) -> void:
 	_param_dicts.clear()
 	_field_notes.clear()
 	_choice_captions.clear()
+	_rows.clear()
 	_focused_key = ""
 	_batch_apply_checks.clear()
 	_apply_blocked = false
@@ -321,17 +388,6 @@ func _build_form(definition: ACEDefinition, initial_values: Dictionary) -> void:
 	for child in _form.get_children():
 		_form.remove_child(child)
 		child.queue_free()
-	# Native-node ACEs link to the engine's own class reference - the vocabulary IS
-	# Godot, and the built-in docs are one click away.
-	var docs_class: String = str(definition.metadata.get("node_type", "")).strip_edges()
-	if not docs_class.is_empty() and ClassDB.class_exists(docs_class):
-		var docs_button: Button = Button.new()
-		docs_button.text = "View %s in Godot Docs" % docs_class
-		docs_button.flat = true
-		docs_button.tooltip_text = "Open the built-in class reference for %s." % docs_class
-		docs_button.pressed.connect(func() -> void: open_class_docs(docs_class))
-		_form.add_child(docs_button)
-
 	for parameter: Variant in definition.parameters:
 		if not (parameter is Dictionary):
 			continue
@@ -458,13 +514,6 @@ func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 	var key: String = str(param_dict.get("id", ""))
 	var hint: String = str(param_dict.get("hint", ""))
 	_param_dicts[key] = param_dict
-
-	var row: HBoxContainer = HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	var label: Label = Label.new()
-	label.text = str(param_dict.get("display_name", key))
-	label.custom_minimum_size = Vector2(160.0, 0.0)
-	row.add_child(label)
 	# Extension seam (EventSheets.register_param_editor): a factory registered for this param's
 	# hint (or type_name) supplies the field. Contract: it returns a LineEdit (subclass freely -
 	# buttons, popups, validation) so the dialog's value read (.text) needs no special case.
@@ -479,8 +528,21 @@ func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 			push_warning("[EventSheets] param editor for '%s' must return a LineEdit - falling back." % key)
 	if field == null:
 		field = _create_field(param_dict, initial_values, key, hint)
+	var label_text: String = str(param_dict.get("display_name", key))
+	if field.has_meta("vector_axis_edits"):
+		_add_axis_rows(key, label_text, field)
+		return
 	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(field)
+	var row: HBoxContainer = _param_row(key, label_text, field)
+	var label: Label = row.get_child(0) as Label
+	# A unit the parameter's kind always means sits muted at the right of its box.
+	var unit: String = str(UNIT_BY_HINT.get(hint, ""))
+	if not unit.is_empty():
+		var unit_label: Label = _muted_label()
+		unit_label.text = EventSheetL10n.translate(unit)
+		row.add_child(unit_label)
+	if _is_object_param(param_dict):
+		row.add_child(_object_chooser(key))
 	# Batch edit: each param gets its own "apply to all" checkbox, so one field can retune
 	# across the selection while the others keep each instance's own value.
 	if str(_context.get("mode", "")) == "batch_edit_params":
@@ -490,9 +552,6 @@ func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 		apply_check.tooltip_text = "Checked: this value overwrites every matching instance.\nUnchecked: each instance keeps its own value for this parameter."
 		row.add_child(apply_check)
 		_batch_apply_checks[key] = apply_check
-	_form.add_child(row)
-	# No description under the field and no tooltip on it. The strip at the foot says both, for
-	# the focused parameter only, and it is the one place a reader has to look.
 	# Drag the param's NAME to scrub its number (the Inspector gesture). Only arms while the field
 	# holds a plain number, so an expression can never be flattened into a literal by a stray drag.
 	EventSheetNumberScrub.attach(label, field)
@@ -502,14 +561,97 @@ func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 	var dropdown: OptionButton = _fields.get(key) as OptionButton
 	if dropdown != null:
 		dropdown.clip_text = true
-		dropdown.custom_minimum_size = Vector2(220.0, 0.0)
-	# The line under each choice, from whichever source the hint names.
-	_attach_option_notes(key, param_dict, row, _option_notes_for(param_dict))
+		dropdown.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(220.0), 0.0)
+		_describe_dropdown(key, param_dict, dropdown)
 	if hint == "input_action" or (hint == "group_reference" and not EventSheetGroupFacts.reads_sheet_groups(_definition_template(), key)):
 		_attach_typed_choice_note(key, row, hint)
 	if hint == "file_path":
 		_attach_place_lead(key, row)
 	_watch_field(key, label)
+
+
+## The unit a parameter's KIND always means, shown muted beside its box. Only kinds whose unit is a
+## fact of the kind itself: an angle is degrees whatever the row is about.
+const UNIT_BY_HINT: Dictionary = {"angle": "°"}
+
+
+## One parameter row: the name on the left at a fixed width, the box filling the rest, and the one
+## sentence that says what is wrong with the value underneath (hidden while nothing is). The row's
+## panel lights up while its parameter is the one the strip is speaking about. Returns the line the
+## name and the box sit on, so the caller can add what sits beside the box.
+func _param_row(key: String, label_text: String, field: Control) -> HBoxContainer:
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = Color(0.0, 0.0, 0.0, 0.0)
+	style.content_margin_left = EventSheetPalette.scaled_f(4.0)
+	style.content_margin_right = EventSheetPalette.scaled_f(4.0)
+	style.content_margin_top = EventSheetPalette.scaled_f(2.0)
+	style.content_margin_bottom = EventSheetPalette.scaled_f(2.0)
+	var panel: PanelContainer = PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", style)
+	var column: VBoxContainer = VBoxContainer.new()
+	column.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(2.0)))
+	panel.add_child(column)
+	var line: HBoxContainer = HBoxContainer.new()
+	line.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(8.0)))
+	column.add_child(line)
+	var label: Label = Label.new()
+	label.text = label_text
+	label.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(160.0), 0.0)
+	label.add_theme_color_override("font_color", EventSheetPopupUI.secondary_text_color())
+	line.add_child(label)
+	line.add_child(field)
+	var row: Dictionary = _rows.get(key, {"panels": [], "labels": [], "note": null})
+	if row["note"] != null:
+		(row["note"] as Control).reparent(column)
+	else:
+		var note: EventSheetPopupUI.StateNote = EventSheetPopupUI.StateNote.new()
+		column.add_child(note)
+		row["note"] = note
+	(row["panels"] as Array).append(panel)
+	(row["labels"] as Array).append(label)
+	_rows[key] = row
+	_form.add_child(panel)
+	return line
+
+
+## A lone position as one row per axis - "X", "Y" (and "Z") - each an expression box of its own, the
+## way actions list them. The holder that composes them back into one Vector stays in the form,
+## hidden, because it is what the value is read from.
+func _add_axis_rows(key: String, label_text: String, holder: Control) -> void:
+	var axes: PackedStringArray = PackedStringArray(["X", "Y", "Z"])
+	var edits: Array = holder.get_meta("vector_axis_edits")
+	for axis: int in edits.size():
+		var edit: LineEdit = edits[axis]
+		holder.remove_child(edit)
+		var line: HBoxContainer = _param_row(key, axes[axis] if _single_param_form else "%s %s" % [label_text, axes[axis]], edit)
+		EventSheetNumberScrub.attach(line.get_child(0) as Control, edit)
+		edit.focus_entered.connect(func() -> void:
+			_describe_field(key)
+			_expression_picker.aim(key, edit))
+		edit.text_changed.connect(func(_text: String) -> void: _refresh_live_reading())
+	holder.visible = false
+	_form.add_child(holder)
+
+
+## True for a parameter that names a node: a node picked out of the scene, a row's "On node" target, or
+## one typed as a node class. Those rows carry the "click to choose" door into the node search.
+static func _is_object_param(param_dict: Dictionary) -> bool:
+	var type_name: String = str(param_dict.get("type_name", ""))
+	return str(param_dict.get("hint", "")) == "scene_node" or str(param_dict.get("id", "")) == "target" \
+		or (ClassDB.class_exists(type_name) and ClassDB.is_parent_class(type_name, "Node"))
+
+
+## The door into the node search for an object row: a flat "click to choose" at the right of the box.
+## The pick REPLACES what the box says, because choosing an object answers the whole parameter.
+func _object_chooser(key: String) -> Button:
+	var chooser: Button = Button.new()
+	chooser.flat = true
+	chooser.text = EventSheetL10n.translate("click to choose")
+	chooser.icon = editor_icon_named("Node")
+	chooser.tooltip_text = EventSheetL10n.translate("Choose a node from the open scene. The pick replaces what is in the box.")
+	chooser.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
+	chooser.pressed.connect(_open_node_picker.bind(key))
+	return chooser
 
 ## Build a typed input widget for one parameter entry. The value-extraction node is
 ## registered in _fields[key]; the returned Control is what gets added to the row.
@@ -540,19 +682,23 @@ func _ensure_hint_factories() -> void:
 			# a magic path, so the list has to come off the tree resource or the reader is typing
 			# blind - which is exactly how `travel(&"Swng")` reaches a game.
 			"animation_state": _create_animation_state_field,
-			"blend_space": _create_blend_space_field,
-			"blend_layer": _create_blend_layer_field,
+			# A blend SPACE takes a blend position; a blend LAYER (Blend2, Add2) takes one amount. Bare
+			# names, not quoted: the row writes the name straight into the tree's parameter path.
+			"blend_space": _create_blend_node_field.bind(true),
+			"blend_layer": _create_blend_node_field.bind(false),
 			"animation_frame": _create_animation_frame_field,
 			"method_reference": _create_method_reference_field,
 			"property_reference": _create_property_reference_field,
-			"physics_layer_2d": _create_physics_layer_2d_field,
-			"physics_layer_3d": _create_physics_layer_3d_field,
-			"render_layer_2d": _create_render_layer_2d_field,
+			"physics_layer_2d": _create_named_layer_field.bind("2d_physics"),
+			"physics_layer_3d": _create_named_layer_field.bind("3d_physics"),
+			# Visibility layers are read from the same place by the same picker: Godot names its 2D
+			# render layers in Project Settings exactly as it names its physics ones.
+			"render_layer_2d": _create_named_layer_field.bind("2d_render"),
 			# The three above take a SET of layers as one mask; these two take ONE layer as its
 			# number, which is what the engine's own per-layer calls read and what a sentence
 			# naming a single layer means.
-			"physics_layer_name_2d": _create_physics_layer_name_2d_field,
-			"physics_layer_name_3d": _create_physics_layer_name_3d_field,
+			"physics_layer_name_2d": _create_single_layer_field.bind(EventForgePhysicsLayers.DIMENSION_2D),
+			"physics_layer_name_3d": _create_single_layer_field.bind(EventForgePhysicsLayers.DIMENSION_3D),
 			"quality_preset": _create_quality_preset_field,
 			"feature_tag": _create_feature_tag_field,
 			# Three fields that take any GDScript exactly as an expression param does, and are
@@ -809,10 +955,12 @@ func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: Stri
 	var options: Array = param_dict.get("options", [])
 	var autocomplete: Array = param_dict.get("autocomplete", [])
 
-	# A lone Vector2/Vector3 param (positions, sizes…) splits into per-axis fields -
-	# each axis is still a full GDScript expression (user call: "when setting
-	# positions, split it into 2-3 params").
-	if _single_param_form and hint in ["", EXPRESSION_HINT]:
+	# A position (a lone vector param, or one declared as a Vector2/Vector3) written as a literal
+	# splits into X and Y rows - each axis still a full GDScript expression. A vector written any
+	# other way (a variable, a call) stays the one box it was typed in. Only in this window's own form:
+	# the rows are the form's to lay out, and the Properties bar borrows the builders without one.
+	if _form != null and hint in ["", EXPRESSION_HINT] and (_single_param_form
+			or str(param_dict.get("type_name", "")) in ["Vector2", "Vector3"]):
 		var vector_parts: PackedStringArray = vector_literal_parts(str(default_value))
 		if not vector_parts.is_empty():
 			return _create_vector_field(key, vector_parts)
@@ -984,12 +1132,6 @@ func _create_autocomplete_field(key: String, suggestions: Array, default_value: 
 		return EventSheetCompletions.rank(offered, typed))
 	_fields[key] = edit
 	return row
-
-
-## Thin delegate kept for external callers (tests pin the filter through this name); the
-## shared implementation lives on EventSheetPopupUI beside the combo builder it feeds.
-static func _rebuild_autocomplete_popup(popup: PopupMenu, suggestions: PackedStringArray, filter_text: String) -> void:
-	EventSheetPopupUI.fill_suggestion_popup(popup, suggestions, filter_text)
 
 
 ## Rich-text param editor (hint "bbcode_text"): Discord-style formatting for BBCode-taking
@@ -1261,7 +1403,7 @@ func _create_editor_icon_field(key: String, default_value: Variant) -> Control:
 ## Empty whenever there is no editor around (a headless run, an embedder), so the field simply
 ## degrades to a plain text box instead of erroring.
 static func editor_icon_choices() -> Array:
-	var theme: Theme = _editor_theme()
+	var theme: Theme = EventSheetPopupUI.editor_theme()
 	if theme == null:
 		return []
 	var choices: Array = []
@@ -1274,24 +1416,13 @@ static func editor_icon_choices() -> Array:
 ## The texture one quoted (or bare) icon name stands for, or null when there is no editor theme or
 ## no icon by that name - the preview simply stays blank rather than drawing a fallback that lies.
 static func editor_icon_named(raw_name: String) -> Texture2D:
-	var theme: Theme = _editor_theme()
+	var theme: Theme = EventSheetPopupUI.editor_theme()
 	if theme == null:
 		return null
 	var wanted: String = raw_name.strip_edges().trim_prefix("\"").trim_suffix("\"").strip_edges()
 	if wanted.is_empty() or not theme.has_icon(wanted, "EditorIcons"):
 		return null
 	return theme.get_icon(wanted, "EditorIcons")
-
-
-## The editor's theme, or null outside the editor. Reached through Engine rather than by naming
-## EditorInterface directly so this file still loads in a headless run and in an exported game.
-static func _editor_theme() -> Theme:
-	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return null
-	var interface: Object = Engine.get_singleton("EditorInterface")
-	if interface == null or not interface.has_method("get_editor_theme"):
-		return null
-	return interface.call("get_editor_theme") as Theme
 
 
 ## The Editor Settings path field: every path the user's own preferences actually carry, so a
@@ -1443,21 +1574,6 @@ static func _quoted_text(raw_value: String) -> String:
 	return text
 
 
-func _create_physics_layer_2d_field(key: String, default_value: Variant) -> Control:
-	return _create_named_layer_field(key, default_value, "2d_physics")
-
-
-func _create_physics_layer_3d_field(key: String, default_value: Variant) -> Control:
-	return _create_named_layer_field(key, default_value, "3d_physics")
-
-
-## Visibility layers read from the same place by the same picker: Godot names its 2D render layers
-## in Project Settings exactly as it names its physics ones, so "which cameras may see this" is the
-## same question with a different list behind it rather than a second widget.
-func _create_render_layer_2d_field(key: String, default_value: Variant) -> Control:
-	return _create_named_layer_field(key, default_value, "2d_render")
-
-
 ## The named-mask picker: a checkable list of the project's layers of one kind - NAMED layers
 ## show their Project Settings names, so a beginner ticks "Walls" instead of computing the
 ## bitmask integer. The button label reads the selection back ("Walls, Enemies"); the value
@@ -1502,14 +1618,6 @@ func _named_layer_summary(mask: int, dimension: String) -> String:
 			parts.append(EventForgePhysicsLayers.words_for(layer_index + 1, dimension))
 	var summary: String = ", ".join(parts)
 	return summary if summary.length() <= 42 else summary.left(39) + "..."
-
-
-func _create_physics_layer_name_2d_field(key: String, default_value: Variant) -> Control:
-	return _create_single_layer_field(key, default_value, EventForgePhysicsLayers.DIMENSION_2D)
-
-
-func _create_physics_layer_name_3d_field(key: String, default_value: Variant) -> Control:
-	return _create_single_layer_field(key, default_value, EventForgePhysicsLayers.DIMENSION_3D)
 
 
 ## The NAMED-LAYER picker: one layer, by the name the project gave it. The mask picker beside it
@@ -1692,7 +1800,7 @@ func _validate_named_field(edit: LineEdit, known: PackedStringArray, heading: St
 		edit.remove_theme_color_override("font_color")
 		_record_expression_note(edit, "", "", "", "", "")
 		return false
-	edit.add_theme_color_override("font_color", EventSheetPopupUI.readable_on_panel(Color(0.92, 0.72, 0.35)))
+	edit.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_WARNING))
 	_record_expression_note(edit, EventSheetParamFieldFactory.LEVEL_WARNING, heading,
 		body_format % typed, "", closest_of(typed, known))
 	return true
@@ -1714,7 +1822,7 @@ static func closest_of(name: String, candidates: PackedStringArray) -> String:
 	for candidate: String in candidates:
 		if candidate.is_empty() or candidate == name:
 			continue
-		var distance: int = _edit_distance(name.to_lower(), candidate.to_lower())
+		var distance: int = EventSheetNameRescue.edit_distance(name.to_lower(), candidate.to_lower())
 		if distance < best_distance:
 			best_distance = distance
 			best = candidate
@@ -2209,33 +2317,11 @@ func _create_scene_path_field(key: String, default_value: Variant) -> Control:
 	var container: HBoxContainer = base["container"]
 	var path_edit: LineEdit = base["edit"]
 	var browse: Button = Button.new()
-	browse.text = "Browse…"
-	browse.pressed.connect(func() -> void: _browse_for_scene(path_edit))
+	browse.text = EventSheetL10n.translate("Browse…")
+	browse.pressed.connect(func() -> void: _browse_for_file(path_edit, PackedStringArray(["*.tscn", "*.scn"]),
+		EventSheetL10n.translate("Scenes"), Callable(ACEParamsDialog, "format_quoted_literal")))
 	container.add_child(browse)
 	return container
-
-# One cached scene browser, parented to the PERSISTENT params dialog: no per-press
-# accumulation, and a form rebuild can't kill it mid-interaction. The target retargets
-# per open via a single stored reference (old lambda connections would pile up).
-var _scene_file_dialog: EditorFileDialog = null
-var _scene_browse_target: LineEdit = null
-
-
-func _browse_for_scene(path_edit: LineEdit) -> void:
-	if not Engine.is_editor_hint():
-		return
-	if _scene_file_dialog == null:
-		_scene_file_dialog = EditorFileDialog.new()
-		_scene_file_dialog.file_mode = EditorFileDialog.FILE_MODE_OPEN_FILE
-		_scene_file_dialog.add_filter("*.tscn", "Scenes")
-		_scene_file_dialog.add_filter("*.scn", "Scenes (binary)")
-		_scene_file_dialog.file_selected.connect(func(selected_path: String) -> void:
-			if _scene_browse_target != null and is_instance_valid(_scene_browse_target):
-				_scene_browse_target.text = format_quoted_literal(selected_path)
-		)
-		_dialog.add_child(_scene_file_dialog)
-	_scene_browse_target = path_edit
-	_scene_file_dialog.popup_file_dialog()
 
 
 ## The palette parameter: a path to a colour-palette data asset, with every colour SET that
@@ -2254,7 +2340,8 @@ func _create_palette_field(key: String, default_value: Variant) -> Control:
 		return column
 	var browse: Button = Button.new()
 	browse.text = EventSheetL10n.translate("Browse…")
-	browse.pressed.connect(func() -> void: _browse_for_palette(edit))
+	browse.pressed.connect(func() -> void: _browse_for_file(edit, PackedStringArray(["*.tres"]),
+		EventSheetL10n.translate("Palette assets"), Callable(ACEParamsDialog, "format_quoted_literal")))
 	row.add_child(browse)
 	var swatches: HBoxContainer = HBoxContainer.new()
 	swatches.add_theme_constant_override("separation", 12)
@@ -2418,9 +2505,8 @@ static func palette_asset_choices() -> Array:
 	choices.sort()
 	return choices
 
-# ONE cached file browser for every Browse button in this dialog, parented to the persistent dialog
-# for the same reason the scene browser is: no per-press accumulation, and a form rebuild cannot kill
-# it mid-interaction. Which files it offers and how the pick is written are per-press, so a palette
+# ONE cached file browser for every Browse button in this dialog, parented to the persistent dialog:
+# no per-press accumulation, and a form rebuild cannot kill it mid-interaction. Which files it offers and how the pick is written are per-press, so a palette
 # field and a texture field share the window and not each other's answer.
 var _file_browse_dialog: EditorFileDialog = null
 var _file_browse_target: LineEdit = null
@@ -2466,15 +2552,10 @@ func _create_resource_path_field(key: String, default_value: Variant) -> Control
 	var path_edit: LineEdit = base["edit"]
 	var browse: Button = Button.new()
 	browse.text = EventSheetL10n.translate("Browse…")
-	browse.pressed.connect(func() -> void: _browse_for_resource(path_edit))
+	browse.pressed.connect(func() -> void: _browse_for_file(path_edit, PackedStringArray(["*.tres", "*.res"]),
+		EventSheetL10n.translate("Resource files"), Callable(ACEParamsDialog, "format_loading_call")))
 	container.add_child(browse)
 	return container
-
-
-func _browse_for_resource(path_edit: LineEdit) -> void:
-	_browse_for_file(path_edit, PackedStringArray(["*.tres", "*.res"]),
-		EventSheetL10n.translate("Resource files"),
-		Callable(ACEParamsDialog, "format_loading_call"))
 
 
 ## THE GDSCRIPT THAT LOADS ONE FILE. A project file is preloaded, because that is resolved when the
@@ -2485,11 +2566,6 @@ static func format_loading_call(value: String) -> String:
 	if value.begins_with("res://"):
 		return "preload(\"%s\")" % value
 	return "load(\"%s\")" % value
-
-
-func _browse_for_palette(path_edit: LineEdit) -> void:
-	_browse_for_file(path_edit, PackedStringArray(["*.tres"]),
-		EventSheetL10n.translate("Palette assets"), Callable(ACEParamsDialog, "format_quoted_literal"))
 
 
 ## Drops onto plain LineEdit fields: files become quoted paths, nodes $Refs (reuses
@@ -2631,21 +2707,7 @@ func _judge_state(edit: LineEdit, known: PackedStringArray) -> void:
 		EventSheetL10n.translate("This scene's animation tree has no state called %s. A misspelled state travels nowhere and reports nothing - pick the one you meant."))
 
 
-## The BLEND SPACES the attached scene's tree declares - the nodes that take a blend position. Bare
-## names, not quoted ones: the row writes the name straight into the parameter path
-## (`parameters/<name>/blend_position`), so what the field holds is the name itself.
-func _create_blend_space_field(key: String, default_value: Variant) -> Control:
-	return _create_blend_node_field(key, default_value, true)
-
-
-## The BLEND LAYERS beside them - the Blend2 and Add2 nodes, which take one amount rather than a
-## position. Told apart from the spaces by the class the tree gives each child, so a layer never
-## appears in a blend-position field and a space never appears in a layer one.
-func _create_blend_layer_field(key: String, default_value: Variant) -> Control:
-	return _create_blend_node_field(key, default_value, false)
-
-
-## The one body behind the two fields above: the tree's own child names, described by what each one
+## A blend space or blend layer field: the tree's own child names, described by what each one
 ## is, so a reader picking "Locomotion" can see it is a two-dimensional space before they write a
 ## number into it.
 func _create_blend_node_field(key: String, default_value: Variant, want_space: bool) -> Control:
@@ -2730,10 +2792,11 @@ func _create_key_capture_field(key: String, default_value: Variant) -> Control:
 			capture.accept_event()
 	)
 	container.add_child(capture)
-	var fallback: OptionButton = OptionButton.new()
-	fallback.add_item("(or choose)")
-	for key_name in ["KEY_SPACE", "KEY_ENTER", "KEY_ESCAPE", "KEY_SHIFT", "KEY_CTRL", "KEY_ALT", "KEY_TAB", "KEY_UP", "KEY_DOWN", "KEY_LEFT", "KEY_RIGHT"]:
-		fallback.add_item(key_name)
+	var fallback: OptionButton = EventSheetPopupUI.described_option()
+	fallback.add_item(EventSheetL10n.translate("(or choose)"))
+	for key_name: String in ["KEY_SPACE", "KEY_ENTER", "KEY_ESCAPE", "KEY_SHIFT", "KEY_CTRL", "KEY_ALT", "KEY_TAB", "KEY_UP", "KEY_DOWN", "KEY_LEFT", "KEY_RIGHT"]:
+		EventSheetPopupUI.add_described_item(fallback, key_name,
+			EventSheetL10n.translate("The %s key") % key_name.trim_prefix("KEY_").capitalize())
 	fallback.item_selected.connect(func(index: int) -> void:
 		if index > 0:
 			capture.set_meta("key_constant", fallback.get_item_text(index))
@@ -2805,70 +2868,23 @@ func _create_expression_field(key: String, default_value: Variant) -> Control:
 		edit.request_code_completion()
 	)
 	edit.code_completion_requested.connect(func() -> void: _populate_expression_completion(edit))
-	_validate_expression_field(edit)
-	container.add_child(edit)
-	var fx_button: Button = Button.new()
-	fx_button.text = "ƒx"
-	fx_button.tooltip_text = "Find Expressions - open the expressions dictionary (floating: double-click inserts, stays open until you close it)"
-	fx_button.pressed.connect(_open_expression_picker.bind(key))
-	container.add_child(fx_button)
-	var node_button: Button = Button.new()
-	node_button.text = "🔍"
-	node_button.tooltip_text = "Pick a scene node (search by name, class or path)"
-	node_button.pressed.connect(_open_node_picker.bind(key))
-	container.add_child(node_button)
+	# Registered BEFORE the first check, so what the check finds is filed under this parameter and the
+	# window opens already saying what is wrong with a value it was handed.
 	_fields[key] = edit
+	_validate_expression_field(edit)
+	# No button per box: the Expressions panel beside the form inserts into whichever box is focused,
+	# and an object row carries its own "click to choose" door into the node search.
+	container.add_child(edit)
 	return container
 
 # ── Scene node picker (large-project search) ──────────────────────────────────────────
-# The 🔍 picker dialog (search modes, filter chips, recents, used-in-sheet audit) lives in its own
-# file - see ACEParamsNodePicker (ace_params_node_picker.gd). The methods/state below are thin
-# delegates so callers, the 🔍 button's .bind, and the by-class-name static calls
-# (ACEParamsDialog.node_matches_query, .extract_sheet_node_references, .scan_scene_files,
-# ._node_is_uniqueable) keep working unchanged.
+# The node search behind "click to choose" (search modes, filter chips, recents, used-in-sheet
+# audit) lives in its own file - see ACEParamsNodePicker (ace_params_node_picker.gd); tests and
+# tools reach it as `_node_picker` and its statics by its own class name.
 
 
 func _open_node_picker(key: String) -> void:
 	_node_picker._open_node_picker(key)
-
-
-## Builds the picker UI lazily - delegate kept for tests that drive it headlessly.
-func _ensure_node_picker_ui() -> void:
-	_node_picker._ensure_node_picker_ui()
-
-
-## Population delegate kept for tests that drive an explicit tree.
-func _populate_node_picker_from_root(scene_root: Node) -> void:
-	_node_picker._populate_node_picker_from_root(scene_root)
-
-
-## Selection-changed delegate kept for tests.
-func _on_node_picker_selection_changed() -> void:
-	_node_picker._on_node_picker_selection_changed()
-
-
-## Query matching with the group:/script: prefixes (plain = name/class/path).
-## Static delegate - reached as ACEParamsDialog.node_matches_query by tests/tools.
-static func node_matches_query(node: Node, relative_path: String, query: String) -> bool:
-	return ACEParamsNodePicker.node_matches_query(node, relative_path, query)
-
-
-## Every $Name / $"Path" reference the sheet makes (params, blocks, pick filters).
-## Static delegate - reached as ACEParamsDialog.extract_sheet_node_references by tests/tools.
-static func extract_sheet_node_references(sheet: EventSheetResource) -> PackedStringArray:
-	return ACEParamsNodePicker.extract_sheet_node_references(sheet)
-
-
-## Cross-scene search: regex-scans .tscn node headers under res://.
-## Static delegate - reached as ACEParamsDialog.scan_scene_files by tests/tools.
-static func scan_scene_files(query: String, base_dir: String = "res://") -> Array:
-	return ACEParamsNodePicker.scan_scene_files(query, base_dir)
-
-
-## True when the node at relative_path can be made scene-unique. Pure → unit-testable.
-## Static delegate - reached as ACEParamsDialog._node_is_uniqueable by tests.
-static func _node_is_uniqueable(scene_root: Node, relative_path: String) -> bool:
-	return ACEParamsNodePicker._node_is_uniqueable(scene_root, relative_path)
 
 
 ## Stops any in-flight audio preview (called when the dialog hides - a preview must
@@ -2939,14 +2955,6 @@ static func _is_inside_string_literal(text: String, index: int) -> bool:
 		if text[i] == "\"":
 			quotes += 1
 	return quotes % 2 == 1
-
-
-## True when a trailing `%` is the modulo / string-format operator (preceded by a value: an
-## identifier, number, `)`, `]`, or a closing quote) rather than the start of a `%Name` reference.
-## The reading itself lives beside the completion seam, which asks the same question about the same
-## caret; this stays as the name the node-path checks already call it by.
-static func _looks_like_modulo(before_caret: String) -> bool:
-	return EventSheetCompletions.is_modulo_context(before_caret)
 
 
 ## The first node reference in `expression` that does NOT resolve in `scene_root`, or "" when every
@@ -3107,7 +3115,7 @@ func _validate_expression_field(edit: Control) -> void:
 			edit.remove_theme_color_override("font_color")
 			_record_expression_note(edit, "", "", "", "", "")
 		else:
-			edit.add_theme_color_override("font_color", EventSheetPopupUI.readable_on_panel(Color(0.92, 0.72, 0.35)))
+			edit.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_WARNING))
 			# Teach the unique-name idiom: % resolves only once a node is marked unique in the scene.
 			var missing_node: String = EventSheetL10n.translate(
 				"There is no node named %s in this scene - right-click it in the scene tree and choose Access as Unique Name, or it may be spawned at runtime.") % unresolved \
@@ -3117,7 +3125,7 @@ func _validate_expression_field(edit: Control) -> void:
 				EventSheetParamFieldFactory.strip_heading(param, EventSheetL10n.translate("no such node")),
 				missing_node, "", "")
 	else:
-		edit.add_theme_color_override("font_color", EventSheetPopupUI.readable_on_panel(Color(0.96, 0.45, 0.45)))
+		edit.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_ERROR))
 		var undeclared: String = undeclared_identifier_in_expression(str(edit.get("text")), sheet)
 		# Typo path first: if the unknown identifier is one edit away from something the sheet
 		# DOES know, offer a one-click "Use it" before the create-new-variable fallback - far
@@ -3208,8 +3216,6 @@ var _field_notes: Dictionary = {}
 ## member) to an unknown identifier, within a small edit distance - powers the "Did you
 ## mean …?" typo quick-fix. "" when nothing is close enough (avoid nonsense suggestions).
 static func closest_known_identifier(identifier: String, sheet: EventSheetResource) -> String:
-	if identifier.length() < 2:
-		return ""
 	var candidates: Array[String] = []
 	if sheet != null:
 		for var_name: Variant in sheet.variables.keys():
@@ -3223,22 +3229,7 @@ static func closest_known_identifier(identifier: String, sheet: EventSheetResour
 	var host_class: String = sheet.host_class if sheet != null and ClassDB.class_exists(sheet.host_class) else "Node"
 	for property: Dictionary in ClassDB.class_get_property_list(host_class):
 		candidates.append(str(property.get("name")))
-	var best: String = ""
-	var best_distance: int = 3  # only suggest within 2 edits (strictly < 3)
-	for candidate: String in candidates:
-		if candidate.is_empty() or candidate == identifier:
-			continue
-		var distance: int = _edit_distance(identifier.to_lower(), candidate.to_lower())
-		if distance < best_distance:
-			best_distance = distance
-			best = candidate
-	return best
-
-
-## Levenshtein distance (small strings - identifiers), used only by closest_known_identifier.
-## One definition of "near" for the whole plugin - see EventSheetNameRescue.
-static func _edit_distance(a: String, b: String) -> int:
-	return EventSheetNameRescue.edit_distance(a, b)
+	return closest_of(identifier, PackedStringArray(candidates))
 
 
 func set_variable_creator(creator: Callable) -> void:
@@ -3416,21 +3407,17 @@ static func vector_literal_parts(value: String) -> PackedStringArray:
 	return parts if parts.size() == dims else PackedStringArray()
 
 
-## Per-axis fields composing back to "VectorN(x, y[, z])" on extract.
+## One expression box per axis, held by a container that composes them back to "VectorN(x, y[, z])"
+## on extract. The form gives each box a row of its own (_add_axis_rows).
 func _create_vector_field(key: String, parts: PackedStringArray) -> Control:
-	var container: HBoxContainer = HBoxContainer.new()
-	container.add_theme_constant_override("separation", 6)
+	var container: Control = Control.new()
 	var axis_edits: Array = []
-	var axis_names: PackedStringArray = PackedStringArray(["x", "y", "z"])
-	for axis in parts.size():
-		var axis_label: Label = Label.new()
-		axis_label.text = axis_names[axis]
-		container.add_child(axis_label)
+	for axis: int in parts.size():
 		var axis_edit: LineEdit = LineEdit.new()
 		axis_edit.text = parts[axis]
 		axis_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		axis_edit.tooltip_text = "Any GDScript expression works per axis."
-		_dialog.register_text_enter(axis_edit)
+		if _dialog != null:
+			_dialog.register_text_enter(axis_edit)
 		container.add_child(axis_edit)
 		axis_edits.append(axis_edit)
 	container.set_meta("vector_axis_edits", axis_edits)
@@ -3576,7 +3563,7 @@ func _on_confirmed() -> void:
 			_ok_reason.text = EventSheetL10n.translate("this will not compile")
 		(blocker.get("field") as Control).grab_focus()
 		if _dialog != null and is_instance_valid(_dialog) and _dialog.is_inside_tree():
-			_dialog.call_deferred("popup_centered", Vector2i(520, 380))
+			_dialog.call_deferred("popup_centered", _window_size())
 		return
 	_commit(false)
 
@@ -3692,47 +3679,11 @@ func _set_back_visible(visible: bool) -> void:
 	if _back_button != null:
 		_back_button.visible = visible
 
-# ── Insert Expression picker ────────────────────────────────────────────────
-# The ƒx visual expression builder lives in its own file - see ACEParamsExpressionPicker
-# (ace_params_expression_picker.gd). The methods/state below are thin delegates so callers, the ƒx
-# button's .bind, and the by-class-name static calls (ACEParamsDialog.member_expression_fragment,
-# .variable_member_fragment) keep working unchanged.
+# ── The Expressions panel ───────────────────────────────────────────────────
+# The visual expression builder beside the form lives in its own file - see ACEParamsExpressionPicker
+# (ace_params_expression_picker.gd); tests reach it as `_expression_picker` and its statics by its
+# own class name.
 
-
-func _open_expression_picker(target_key: String) -> void:
-	_expression_picker._open_expression_picker(target_key)
-
-
-## Builds the Insert-Expression window lazily - delegate kept for tests that drive it headlessly.
-func _ensure_expression_window() -> void:
-	_expression_picker._ensure_expression_window()
-
-
-## Rebuilds the expression tree - delegate kept for tests.
-func _refresh_expression_tree() -> void:
-	_expression_picker._refresh_expression_tree()
-
-
-## Inserts a snippet at the caret of the expression field - delegate kept for tests.
-func _insert_into_expression_target(snippet: String) -> void:
-	_expression_picker._insert_into_expression_target(snippet)
-
-
-## The code template inserted for an expression definition - delegate kept for tests.
-func _expression_template(definition: ACEDefinition) -> String:
-	return _expression_picker._expression_template(definition)
-
-
-## The insert fragment for a reflected member (`name()` / `name`). Static + pure.
-## Static delegate - reached as ACEParamsDialog.member_expression_fragment by tests.
-static func member_expression_fragment(member: String, is_method: bool) -> String:
-	return ACEParamsExpressionPicker.member_expression_fragment(member, is_method)
-
-
-## The insert fragment for a member reached THROUGH a variable (`enemy.health`). Static + pure.
-## Static delegate - reached as ACEParamsDialog.variable_member_fragment by tests.
-static func variable_member_fragment(var_name: String, member: String, is_method: bool) -> String:
-	return ACEParamsExpressionPicker.variable_member_fragment(var_name, member, is_method)
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -3774,56 +3725,10 @@ func _is_reedit_flow() -> bool:
 	return mode.begins_with("replace")
 
 
-# ── The row this dialog writes, and the strip that explains it ───────────────────────────────
+# ── The strip that explains the focused parameter ────────────────────────────────────────────
 #
-# The dialog used to be titled "<ACE name> Parameters" and to print each parameter's
-# description under its field. It never said the one thing the author is actually deciding: what
-# the ROW will read as once OK is pressed. The title band says it, filled in from the fields as
-# they are typed, in the sheet's own colours - and the strip at the foot says what the FOCUSED
-# parameter takes, what is wrong with it, and the line of code the row becomes.
-
-
-## The sentence the row will read as: the object it belongs to, then the ACE's own display
-## template with the values filled in. Static and pure, so a test pins it without a window.
-static func title_sentence(definition: ACEDefinition, values: Dictionary, owner: String = "") -> String:
-	if definition == null:
-		return ""
-	var text: String = definition.format_display(values).strip_edges()
-	if text.is_empty():
-		text = definition.display_name
-	var named: String = owner.strip_edges()
-	return text if named.is_empty() else "%s   %s" % [named, text]
-
-
-## The same sentence in the sheet's colours: the owner in the object blue, every filled value in
-## the value green, the template's own words plain. Square brackets in a value are escaped, because
-## a value like `[1, 2]` is a list and not markup.
-static func title_bbcode(definition: ACEDefinition, values: Dictionary, owner: String = "") -> String:
-	if definition == null:
-		return ""
-	var template: String = str(definition.metadata.get("display_template", definition.display_name))
-	if template.strip_edges().is_empty():
-		template = definition.display_name
-	var text: String = _bbcode_escaped(template)
-	for index: int in range(definition.parameters.size()):
-		var parameter: Variant = definition.parameters[index]
-		if not (parameter is Dictionary):
-			continue
-		var parameter_dict: Dictionary = parameter
-		var key: String = str(parameter_dict.get("id", ""))
-		if key.is_empty():
-			continue
-		var fallback: Variant = parameter_dict.get("default_value", parameter_dict.get("default", ""))
-		var shown: String = ACEDefinition.display_value_for(parameter_dict, values.get(key, fallback))
-		var tinted: String = "[color=#%s]%s[/color]" % [
-			EventSheetPalette.COLOR_VALUE.to_html(false), _bbcode_escaped(shown)]
-		text = text.replace("{%d}" % index, tinted)
-		text = text.replace("{%s}" % key, tinted)
-	var named: String = owner.strip_edges()
-	if named.is_empty():
-		return text
-	return "[color=#%s]%s[/color]  %s" % [EventSheetPalette.COLOR_OBJECT.to_html(false),
-		_bbcode_escaped(named), text]
+# The strip under the rows says what the FOCUSED parameter takes, what is wrong with it, and the line
+# of code the row becomes; the window's title and head say which object and which action.
 
 
 ## The line the compiler will write for this row, with the values as typed - produced BY the
@@ -3889,12 +3794,6 @@ static func reset_reading(definition: ACEDefinition, values: Dictionary, startin
 	return EventSheetL10n.translate("%s back to its starting value - the line Reset Variable writes") % variable_name
 
 
-## Square brackets in a value are a list, a node path or an array index - never markup. Escaped
-## before anything is tinted, so the tint's own tags are the only markup in the string.
-static func _bbcode_escaped(text: String) -> String:
-	return text.replace("[", "[lb]")
-
-
 ## Every field's value as the row would carry it - the same read the commit path does, so what the
 ## title shows and what OK writes are one answer.
 func _current_values() -> Dictionary:
@@ -3923,19 +3822,12 @@ func _refresh_variable_context() -> void:
 	_refresh_live_reading()
 
 
-## The title band, the window title, the IN CODE line and the reason beside OK - everything that
-## reads the values rather than describing a field. Called on every change of every field.
+## The IN CODE line, the notes under the rows and the reason beside Done - everything that reads the
+## values rather than describing a field. Called on every change of every field.
 func _refresh_live_reading() -> void:
 	if _definition == null or _dialog == null:
 		return
 	var values: Dictionary = _current_values()
-	var sentence: String = title_sentence(_definition, values, _row_owner)
-	_dialog.title = sentence if not sentence.is_empty() else _definition.display_name
-	if _title_label != null:
-		_title_label.text = title_bbcode(_definition, values, _row_owner)
-	if _title_ace_label != null:
-		_title_ace_label.text = "%s (%s)" % [_definition.display_name,
-			EventSheetL10n.translate("editing")] if _is_reedit_flow() else _definition.display_name
 	if _help_strip != null:
 		var starting: Dictionary = SheetCompiler.declared_starting_values(_lint_sheet())
 		_help_strip.set_reading(reset_reading(_definition, values, starting),
@@ -3945,25 +3837,28 @@ func _refresh_live_reading() -> void:
 	_refresh_notes()
 
 
-## The strip for whichever parameter is focused, and the reason beside OK: the strongest problem any
-## field has, so a red field is never hidden behind an amber one.
+## The strip for whichever parameter is focused, the sentence under each row that has a problem, and
+## the reason beside Done: the strongest problem any field has, so a red field is never hidden behind
+## an amber one.
 func _refresh_notes() -> void:
 	if _help_strip != null and not _focused_key.is_empty():
 		_describe_field(_focused_key)
-	if _ok_reason == null:
-		return
 	var strongest: Dictionary = {}
 	for key: Variant in _fields.keys():
 		var note: Dictionary = _note_for(str(key))
-		_tint_field(_fields[key] as Control, str(note.get("level", "")))
+		var level: String = str(note.get("level", ""))
+		var problem: bool = level in [EventSheetParamFieldFactory.LEVEL_ERROR, EventSheetParamFieldFactory.LEVEL_WARNING]
+		_tint_field(_fields[key] as Control, level if problem else "")
+		var row_note: EventSheetPopupUI.StateNote = (_rows.get(str(key), {}) as Dictionary).get("note")
+		if row_note != null:
+			row_note.say(str(note.get("body", "")) if problem else "", level)
 		if note.is_empty():
 			continue
-		if strongest.is_empty() or str(note.get("level", "")) == EventSheetParamFieldFactory.LEVEL_ERROR:
+		if strongest.is_empty() or level == EventSheetParamFieldFactory.LEVEL_ERROR:
 			strongest = note
-	_ok_reason.text = str(strongest.get("reason", ""))
-	_ok_reason.add_theme_color_override("font_color",
-		EventSheetPalette.COLOR_ERROR_TEXT if str(strongest.get("level", "")) == EventSheetParamFieldFactory.LEVEL_ERROR
-		else EventSheetPalette.COLOR_HEALTH_WARN)
+	if _ok_reason != null:
+		_ok_reason.text = str(strongest.get("reason", ""))
+		_ok_reason.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(str(strongest.get("level", ""))))
 
 
 ## The field itself wears its note's colour, so the trouble is visible from the field the eye is
@@ -3972,13 +3867,26 @@ func _refresh_notes() -> void:
 func _tint_field(field: Control, level: String) -> void:
 	if field == null or not is_instance_valid(field):
 		return
-	match level:
-		EventSheetParamFieldFactory.LEVEL_ERROR:
-			field.add_theme_color_override("font_color", EventSheetPalette.COLOR_ERROR_TEXT)
-		EventSheetParamFieldFactory.LEVEL_WARNING:
-			field.add_theme_color_override("font_color", EventSheetPalette.COLOR_HEALTH_WARN)
-		_:
-			field.remove_theme_color_override("font_color")
+	if level.is_empty():
+		field.remove_theme_color_override("font_color")
+	else:
+		field.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(level))
+
+
+## Lights the row the strip is speaking about, and only that one: its panel takes a quiet wash of the
+## editor's accent and its name the strong text colour, the way a selected row reads anywhere else.
+func _highlight_row(key: String) -> void:
+	var accent: Color = EventSheetPopupUI.accent_color()
+	for row_key: Variant in _rows.keys():
+		var lit: bool = str(row_key) == key
+		var row: Dictionary = _rows[row_key]
+		for panel: PanelContainer in row["panels"]:
+			if is_instance_valid(panel):
+				(panel.get_theme_stylebox("panel") as StyleBoxFlat).bg_color = Color(accent, 0.18 if lit else 0.0)
+		for label: Label in row["labels"]:
+			if is_instance_valid(label):
+				label.add_theme_color_override("font_color",
+					EventSheetPopupUI.text_color() if lit else EventSheetPopupUI.secondary_text_color())
 
 
 ## What is wrong with one parameter's value, or {}. An expression field's own lint answer comes
@@ -4002,6 +3910,7 @@ func _describe_field(key: String) -> void:
 	if _help_strip == null:
 		return
 	_focused_key = key
+	_highlight_row(key)
 	var param: Dictionary = _param_dict(key)
 	var note: Dictionary = _note_for(key)
 	if note.is_empty():
@@ -4336,7 +4245,8 @@ func _write_field(key: String, value: String) -> void:
 		(field as TextEdit).text = value
 		_validate_expression_field(field as Control)
 	_refresh_live_reading()
-	(field as Control).grab_focus()
+	if (field as Control).is_inside_tree():
+		(field as Control).grab_focus()
 
 
 ## The "Add hpp…" fix: the dock opens the Add variable dialog with the name already in it when it
@@ -4385,7 +4295,10 @@ func _watch_field(key: String, label: Control) -> void:
 	if field == null:
 		return
 	var describe: Callable = func() -> void: _describe_field(key)
-	field.focus_entered.connect(describe)
+	# Focus, not hover, decides which box the Expressions panel inserts into.
+	field.focus_entered.connect(func() -> void:
+		_describe_field(key)
+		_expression_picker.aim(key, field))
 	field.mouse_entered.connect(describe)
 	if label != null:
 		label.mouse_filter = Control.MOUSE_FILTER_PASS
@@ -4405,21 +4318,24 @@ func _watch_field(key: String, label: Control) -> void:
 		(field as ColorPickerButton).color_changed.connect(changed)
 
 
-## The line under each choice of a dropdown, from wherever the choices came from. The muted
-## caption beside the list shows the chosen one's line; arrowing the open list describes each choice
-## in the strip BEFORE it is picked. A list with no lines is left exactly as it was.
-func _attach_option_notes(key: String, param_dict: Dictionary, row: HBoxContainer, notes: Dictionary) -> void:
-	var dropdown: OptionButton = _fields.get(key) as OptionButton
-	if dropdown == null or notes.is_empty():
-		return
-	var caption: Label = _muted_label()
-	row.add_child(caption)
-	var refresh: Callable = func(_index: int = -1) -> void:
-		caption.text = str(notes.get(str(_extract_value(dropdown)), ""))
-	dropdown.item_selected.connect(refresh)
-	_choice_captions.append(refresh)
-	refresh.call(dropdown.selected)
-	if _help_strip == null:
+## Every dropdown of the form is a described one. Each choice carries the line that explains it, from
+## wherever the choices came from (the descriptor's notes, a variable's type and value), as Godot's
+## own item tooltip - or, with no line written, the code it stands for when its words differ from it.
+## The closed dropdown's tooltip is the chosen one's line, else the parameter's own description, and
+## arrowing the open list describes each choice in the strip BEFORE it is picked.
+func _describe_dropdown(key: String, param_dict: Dictionary, dropdown: OptionButton) -> void:
+	var notes: Dictionary = _option_notes_for(param_dict)
+	dropdown.tooltip_text = EventSheetL10n.translate(str(param_dict.get("description", "")).strip_edges())
+	EventSheetPopupUI.described_option(dropdown)
+	for index: int in dropdown.item_count:
+		var code: String = str(dropdown.get_item_metadata(index)) if dropdown.get_item_metadata(index) != null else ""
+		var note: String = str(notes.get(code, ""))
+		dropdown.set_item_tooltip(index, note if not note.is_empty()
+			else (code if code != dropdown.get_item_text(index) else ""))
+	EventSheetPopupUI.follow_description(dropdown)
+	# A fix writes into the dropdown with select(), which emits nothing - re-read with the rest.
+	_choice_captions.append(func() -> void: EventSheetPopupUI.follow_description(dropdown))
+	if _help_strip == null or notes.is_empty():
 		return
 	_help_strip.follow_option(dropdown, func(index: int) -> Dictionary:
 		if index < 0 or index >= dropdown.item_count:
@@ -4489,9 +4405,8 @@ func _attach_place_lead(key: String, row: HBoxContainer) -> void:
 
 
 ## The direct child of a parameter row that holds this field - the field itself when it was added
-## bare, or the container it was wrapped in (an expression field is a box, an ƒx button and a
-## magnifier). Null when the field is not under this row at all, which is the caller's cue to leave
-## the layout alone rather than to guess at it.
+## bare, or the container it was wrapped in. Null when the field is not under this row at all, which
+## is the caller's cue to leave the layout alone rather than to guess at it.
 func _row_child_holding(row: HBoxContainer, field: Control) -> Control:
 	var walker: Node = field
 	while walker != null and walker.get_parent() != row:

@@ -22,13 +22,13 @@ static func run() -> bool:
 		{"id": "target", "default_value": "Vector2.ZERO"},
 		{"id": "speed", "default_value": "100"}
 	]
-	all_passed = _check("expression template fills named params", dialog._expression_template(expr), "move_to(Vector2.ZERO, 100)") and all_passed
+	all_passed = _check("expression template fills named params", dialog._expression_picker._expression_template(expr), "move_to(Vector2.ZERO, 100)") and all_passed
 
 	# Expression template: no codegen -> falls back to display.
 	var expr2: ACEDefinition = ACEDefinition.new()
 	expr2.display_name = "Health"
 	expr2.metadata = {}
-	all_passed = _check("expression template falls back to display name", dialog._expression_template(expr2), "Health") and all_passed
+	all_passed = _check("expression template falls back to display name", dialog._expression_picker._expression_template(expr2), "Health") and all_passed
 
 	# Variable-name resolution via provider callable.
 	dialog._variable_names_provider = func() -> Array: return ["hp", "speed"]
@@ -138,8 +138,8 @@ static func run() -> bool:
 	all_passed = _check("reflected properties include position", node2d_props.has("position"), true) and all_passed
 	all_passed = _check("unknown class reflects nothing", ACEParamsDialog.reflected_members("NotARealClass", "method").is_empty(), true) and all_passed
 	# Visual expression builder: a picked member inserts as name() (method) or name (property).
-	all_passed = _check("member fragment: method gets ()", ACEParamsDialog.member_expression_fragment("get_index", true), "get_index()") and all_passed
-	all_passed = _check("member fragment: property is bare", ACEParamsDialog.member_expression_fragment("position", false), "position") and all_passed
+	all_passed = _check("member fragment: method gets ()", ACEParamsExpressionPicker.member_expression_fragment("get_index", true), "get_index()") and all_passed
+	all_passed = _check("member fragment: property is bare", ACEParamsExpressionPicker.member_expression_fragment("position", false), "position") and all_passed
 
 	# First-result-row helper (powers Enter-to-confirm in the node + expression sub-pickers): depth-
 	# first, skips non-selectable group folders and empty-state rows (no metadata), returns the first

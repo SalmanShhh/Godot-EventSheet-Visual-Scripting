@@ -26,8 +26,8 @@ static func run() -> bool:
 
 	# Operator palette (" + ") then a chained value ("10") compose at the caret - the regression guard:
 	# before the fix this CodeEdit branch was missing, so both inserts were no-ops.
-	dlg._insert_into_expression_target(" + ")
-	dlg._insert_into_expression_target("10")
+	dlg._expression_picker._insert_into_expression_target(" + ")
+	dlg._expression_picker._insert_into_expression_target("10")
 	all_passed = _check("inserts compose at the CodeEdit caret", edit.text, "health + 10") and all_passed
 
 	# The LineEdit fallback still works (parity for any future LineEdit-backed expression field).
@@ -37,15 +37,15 @@ static func run() -> bool:
 	dlg._fields["other"] = line
 	dlg._expression_picker._expression_target_key = "other"
 	line.caret_column = line.text.length()
-	dlg._insert_into_expression_target(" > 5")
+	dlg._expression_picker._insert_into_expression_target(" > 5")
 	all_passed = _check("inserts into a LineEdit target too", line.text, "x > 5") and all_passed
 	host.free()
 
 	# (c) Non-self reflection - a class-backed sheet variable's members are pickable as `enemy.member`.
 	all_passed = _check("variable member fragment (property)",
-		ACEParamsDialog.variable_member_fragment("enemy", "health", false), "enemy.health") and all_passed
+		ACEParamsExpressionPicker.variable_member_fragment("enemy", "health", false), "enemy.health") and all_passed
 	all_passed = _check("variable member fragment (method)",
-		ACEParamsDialog.variable_member_fragment("enemy", "move_and_slide", true), "enemy.move_and_slide()") and all_passed
+		ACEParamsExpressionPicker.variable_member_fragment("enemy", "move_and_slide", true), "enemy.move_and_slide()") and all_passed
 
 	# Build the Insert-Expression tree over a sheet with enemy: CharacterBody2D and assert the reflection.
 	var host2: Node = Node.new()
@@ -55,18 +55,18 @@ static func run() -> bool:
 	sheet.host_class = "Node2D"
 	sheet.variables = {"enemy": {"type": "CharacterBody2D"}, "score": {"type": "int"}}
 	dlg2.set_lint_context_provider(func() -> EventSheetResource: return sheet)
-	dlg2._ensure_expression_window()  # builds _expression_search + _expression_tree (no popup, headless-safe)
+	dlg2._expression_picker._ensure_expression_window()  # builds _expression_search + _expression_tree (no popup, headless-safe)
 	dlg2._expression_picker._expression_target_key = "value"
 
 	# Empty search → the sheet's variables show as one-click leaves.
 	dlg2._expression_picker._expression_search.text = ""
-	dlg2._refresh_expression_tree()
+	dlg2._expression_picker._refresh_expression_tree()
 	all_passed = _check("sheet variable leaf 'enemy' inserts enemy", _tree_inserts(dlg2._expression_picker._expression_tree, "enemy"), true) and all_passed
 	all_passed = _check("sheet variable leaf 'score' inserts score", _tree_inserts(dlg2._expression_picker._expression_tree, "score"), true) and all_passed
 
 	# Searching 'velocity' → enemy.velocity is offered (CharacterBody2D reflection); score (int) adds nothing.
 	dlg2._expression_picker._expression_search.text = "velocity"
-	dlg2._refresh_expression_tree()
+	dlg2._expression_picker._refresh_expression_tree()
 	all_passed = _check("chained member 'enemy.velocity' is offered", _tree_has_item(dlg2._expression_picker._expression_tree, "enemy.velocity"), true) and all_passed
 
 	# TREE variables (LocalVariable rows) - an opened .gd stores its @export/State vars and the host
@@ -81,11 +81,11 @@ static func run() -> bool:
 	speed_var.type_name = "float"
 	sheet.events.append(speed_var)
 	dlg2._expression_picker._expression_search.text = ""
-	dlg2._refresh_expression_tree()
+	dlg2._expression_picker._refresh_expression_tree()
 	all_passed = _check("tree variable 'host' inserts host", _tree_inserts(dlg2._expression_picker._expression_tree, "host"), true) and all_passed
 	all_passed = _check("tree variable 'move_speed' inserts move_speed", _tree_inserts(dlg2._expression_picker._expression_tree, "move_speed"), true) and all_passed
 	dlg2._expression_picker._expression_search.text = "velocity"
-	dlg2._refresh_expression_tree()
+	dlg2._expression_picker._refresh_expression_tree()
 	all_passed = _check("tree variable 'host' chains 'host.velocity'", _tree_has_item(dlg2._expression_picker._expression_tree, "host.velocity"), true) and all_passed
 	host2.free()
 	return all_passed

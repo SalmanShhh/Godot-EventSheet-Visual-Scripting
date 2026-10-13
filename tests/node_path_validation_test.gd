@@ -70,8 +70,8 @@ static func run() -> bool:
 	all_passed = _check("a format string is not flagged as a bad node", ACEParamsDialog.unresolved_node_reference("\"Avg: %d\" % avg", root), "") and all_passed
 
 	# The modulo/format guard for the `%` autocomplete trigger (a % b vs a fresh %Name).
-	all_passed = _check("trailing % after a value reads as modulo", ACEParamsDialog._looks_like_modulo("health %"), true) and all_passed
-	all_passed = _check("trailing % after = reads as a ref start", ACEParamsDialog._looks_like_modulo("target = %"), false) and all_passed
+	all_passed = _check("trailing % after a value reads as modulo", EventSheetCompletions.is_modulo_context("health %"), true) and all_passed
+	all_passed = _check("trailing % after = reads as a ref start", EventSheetCompletions.is_modulo_context("target = %"), false) and all_passed
 
 	root.free()
 	return all_passed

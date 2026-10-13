@@ -7920,3 +7920,12 @@ Label,ラベル
 Pressing the button in the Inspector runs the function in the editor. The sheet has to be a Tool sheet for it to run there.,インスペクターのボタンを押すと、エディターで関数が実行されます。そこで実行するにはシートが Tool シートである必要があります。
 Add Inspector Button,インスペクターボタンを追加
 "Added the Inspector button ""%s"", which calls %s.","インスペクターボタン ""%s"" を追加しました。%s を呼びます。"
+Done,完了
+Parameters: %s,パラメーター: %s
+Parameters for %s: %s,%s のパラメーター: %s
+View %s in Godot Docs,Godot ドキュメントで %s を見る
+Open the built-in class reference for %s.,%s の組み込みクラスリファレンスを開きます。
+click to choose,クリックして選択
+Choose a node from the open scene. The pick replaces what is in the box.,開いているシーンからノードを選びます。選んだノードが欄の内容を置き換えます。
+The %s key,%s キー
+Double-click to insert into the focused box.,ダブルクリックでフォーカス中の欄に挿入します。

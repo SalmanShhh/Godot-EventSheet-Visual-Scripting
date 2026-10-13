@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Changed: the parameters window is laid out the familiar way
+
+- The window is titled "Parameters for Player: Move toward", and its head names the object and the
+  action with the action's description under them (and the class-reference link for a native
+  node's action). The live sentence band at the top is gone: the sheet shows the row once Done is
+  pressed, and the strip under the rows still gives the GDScript line it will write.
+- One row per parameter, name left and box right. The row the strip is speaking about is lit, and a
+  problem is said in one sentence under its own row as well as beside Done. The window now opens
+  already saying what is wrong with a value it was handed, rather than only once you type in it.
+- The Expressions panel sits beside the form: search it, double-click an entry, and it is inserted
+  at the caret of the box that last had focus; its band names the verb, the field and what the
+  field holds now. It replaces the floating dictionary and the button beside every expression box.
+- A parameter that names a node (a node picked from the scene, an "On node" target, or one typed as
+  a node class) carries "click to choose", which opens the node search; the pick replaces what the
+  box said. The magnifier beside every expression box is gone.
+- A position written as a literal - a lone vector parameter, or one declared as a Vector2/Vector3 -
+  splits into X and Y (and Z) rows, one expression box each.
+- Every dropdown is a described one: each choice carries its line as Godot's own item tooltip (or the
+  code it writes, when its words differ from it), and the closed dropdown says the chosen one's.
+  The muted caption beside a dropdown is gone. An angle shows its unit beside the box.
+- Back, Done and Cancel, with Back leading; Apply & Add Another stays in the picker loop.
+- Text and tones on the window follow the editor theme, so a light editor reads as well as a dark one.
+
 ### Changed: the picking windows say what the pick answers
 
 - **Add Action / Condition** names the object in its title ("Add an action to Player") and shows
@@ -15,7 +38,8 @@
 - **The Expressions dictionary** names the field in its title ("Insert an expression into Speed"),
   bands the verb, field and what the field holds now (kept in step as results chain in), gains a
   Close button beside Insert, and says what the list is and what the highlighted entry inserts in
-  its strip.
+  its strip. (It has since become the parameters window's Expressions panel, above, which keeps
+  the band.)
 - **Pick Node** names the field in its title ("Pick a node for Target") and bands it the same way;
   its strip says what the highlighted node is and the reference it goes in as; Used in sheet rows
   now show their class and icon; a Cancel button sits beside Use Node.

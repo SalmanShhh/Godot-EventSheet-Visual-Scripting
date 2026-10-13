@@ -56,12 +56,12 @@ static func run() -> bool:
 	passed = _check("the field seeds the current value",
 		(stored as LineEdit).text if stored is LineEdit else "", "\"idle\"") and passed
 	var popup := PopupMenu.new()
-	dialog._rebuild_autocomplete_popup(popup, PackedStringArray(["\"idle\"", "\"run\"", "\"jump\""]), "ru")
+	EventSheetPopupUI.fill_suggestion_popup(popup, PackedStringArray(["\"idle\"", "\"run\"", "\"jump\""]), "ru")
 	passed = _check("popup filters to case-insensitive substring matches", popup.item_count, 1) and passed
 	passed = _check("a filtered item's id is its index in the FULL list", popup.get_item_id(0), 1) and passed
-	dialog._rebuild_autocomplete_popup(popup, PackedStringArray(["\"idle\"", "\"run\""]), "")
+	EventSheetPopupUI.fill_suggestion_popup(popup, PackedStringArray(["\"idle\"", "\"run\""]), "")
 	passed = _check("an empty filter shows every suggestion", popup.item_count, 2) and passed
-	dialog._rebuild_autocomplete_popup(popup, PackedStringArray(["\"idle\""]), "zzz")
+	EventSheetPopupUI.fill_suggestion_popup(popup, PackedStringArray(["\"idle\""]), "zzz")
 	passed = _check("no match shows one disabled hint item",
 		popup.item_count == 1 and popup.is_item_disabled(0), true) and passed
 	popup.free()

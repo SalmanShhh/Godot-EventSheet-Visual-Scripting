@@ -4,9 +4,9 @@ extends RefCounted
 # Godot EventSheets - the three picking windows say what the pick answers. Add Action / Condition
 # names the object in its title and bands the event the pick lands on; its one help strip says what
 # the highlighted verb is, the line it ships as, and the other engine's word a search found it by
-# (on its own ALSO CALLED line, no longer on the row's tail). The Expressions dictionary and Pick
-# Node name the field they answer in the title and the band, and say the rest in a strip; the
-# dictionary gains a Close button beside Insert.
+# (on its own ALSO CALLED line, no longer on the row's tail). The parameters window's Expressions
+# panel bands the field it inserts into; Pick Node names the field it answers in the title and the
+# band, and says the rest in a strip.
 
 
 const SUPPORT := preload("res://tests/support.gd")
@@ -131,13 +131,7 @@ static func _the_field_pickers_name_their_field() -> bool:
 	dialog._fields["target"] = target
 	var expressions: ACEParamsExpressionPicker = dialog._expression_picker
 	expressions._expression_target_key = "speed"
-	expressions._ensure_expression_window()
 	expressions._say_field()
-	expressions._describe_list()
-	var close_button: Button = null
-	for child: Node in expressions._expression_window.get_ok_button().get_parent().get_children():
-		if child is Button and (child as Button).text == "Close":
-			close_button = child as Button
 	var nodes: ACEParamsNodePicker = dialog._node_picker
 	nodes._ensure_node_picker_ui()
 	nodes._say_field("target")
@@ -157,18 +151,15 @@ static func _the_field_pickers_name_their_field() -> bool:
 		enemy_item.select(0)
 	nodes._on_node_picker_selection_changed()
 	var rows: Array = [
-		["the dictionary's title names the field", expressions._expression_window.title, "Insert an expression into Speed"],
-		["its band names the verb and the field", expressions._band.lead_label.text, "Move Toward Speed"],
+		["the Expressions panel's band names the verb and the field", expressions._band.lead_label.text, "Move Toward Speed"],
 		["and what the field holds", expressions._band.value_label.text, "base_speed * "],
-		["its strip says what the list is", expressions._help_strip.heading_label.text, "THIS LIST"],
-		["Close sits beside Insert", close_button != null, true],
 		["Pick Node's title names the field", nodes._node_picker_window.title, "Pick a node for Target"],
 		["its band names the verb and the field", nodes._band.lead_label.text, "Move Toward Target"],
 		["and what the field holds", nodes._band.value_label.text, "$Enemy"],
 		["a highlighted node says what it is", nodes._help_strip.body_label.text, "A CharacterBody2D."],
 		["and the reference it goes in as", nodes._help_strip.in_code_value.text, "$\"Enemies/Enemy1\""],
 	]
-	# The dictionary keeps its band in step with the field as results chain into it.
+	# The panel keeps its band in step with the field as results chain into it.
 	expressions._insert_into_expression_target("base_speed")
 	rows.append(["an insert refreshes the band", expressions._band.value_label.text, "base_speed * base_speed"])
 	root.free()

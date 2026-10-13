@@ -4,7 +4,7 @@
 # to print each parameter's description under its field in small text. It never said what the ROW
 # would read as, never said what the focused BOX wanted, and found a wrong value on OK or later.
 #
-# This pins the four halves of the answer: the title sentence filled from the fields, the line
+# This pins the four halves of the answer: the window title naming the object and the action, the line
 # under each choice of an option list, the paragraph each hint contributes to the one help
 # strip, and the red / amber notes with their fixes. Everything here is static or built
 # without a tree, because the dialog's own window needs a display server and its logic does not.
@@ -63,34 +63,18 @@ static func _test_read_as() -> bool:
 	return passed
 
 
-## The title IS the row: the object it belongs to, then the ACE's sentence with the values as
-## typed. The code line beside it comes from the emitter, so the dialog cannot promise a spelling
-## the compiler would not use.
+## The window is titled the way event-sheet users know it - "Parameters for <object>: <action>" - and
+## the code line under the rows comes from the emitter, so the dialog cannot promise a spelling the
+## compiler would not use.
 static func _test_title_sentence() -> bool:
 	var passed: bool = true
 	var subtract: ACEDefinition = _definition("SubtractVar", "Subtract from",
 		"Subtract {amount} from {var_name}", "{var_name} -= {amount}", ACEDefinition.ACEType.ACTION)
-	passed = _check("the title reads as the row will",
-		ACEParamsDialog.title_sentence(subtract, {"var_name": "hp", "amount": "damage * 2"}, "Player"),
-		"Player   Subtract damage * 2 from hp") and passed
-	passed = _check("without an owner it is the sentence alone",
-		ACEParamsDialog.title_sentence(subtract, {"var_name": "hp", "amount": "1"}),
-		"Subtract 1 from hp") and passed
-	# The values fill from the descriptor's own defaults, so a dialog that has just opened already
-	# reads as the row it would write if OK were pressed straight away.
-	passed = _check("an untouched dialog still reads as a row",
-		ACEParamsDialog.title_sentence(subtract, {}, "Player"),
-		"Player   Subtract 1 from score") and passed
-	passed = _check("the owner is tinted with the object colour",
-		ACEParamsDialog.title_bbcode(subtract, {"var_name": "hp", "amount": "1"}, "Player").begins_with(
-			"[color=#%s]Player[/color]" % EventSheetPalette.COLOR_OBJECT.to_html(false)), true) and passed
-	passed = _check("and every filled value with the value colour",
-		ACEParamsDialog.title_bbcode(subtract, {"var_name": "hp", "amount": "1"}).contains(
-			"[color=#%s]hp[/color]" % EventSheetPalette.COLOR_VALUE.to_html(false)), true) and passed
-	# A value carrying square brackets is a list, not markup - it must survive into the band as text.
-	passed = _check("a bracketed value is escaped, not parsed",
-		ACEParamsDialog.title_bbcode(subtract, {"var_name": "hp", "amount": "[1, 2]"}).contains("[lb]1, 2]"),
-		true) and passed
+	passed = _check("the title names the object and the action",
+		ACEParamsDialog.window_title(subtract, "Player"), "Parameters for Player: Subtract from") and passed
+	passed = _check("an action no object owns is titled by the action alone",
+		ACEParamsDialog.window_title(subtract), "Parameters: Subtract from") and passed
+	passed = _check("no definition, no title", ACEParamsDialog.window_title(null, "Player"), "") and passed
 	passed = _check("IN CODE is the line the emitter writes",
 		ACEParamsDialog.row_code_line(subtract, {"var_name": "hp", "amount": "damage * 2"}),
 		"hp -= damage * 2") and passed
@@ -99,8 +83,6 @@ static func _test_title_sentence() -> bool:
 	passed = _check("a condition's line is the if it becomes",
 		ACEParamsDialog.row_code_line(compare, {"var_name": "hp", "op": "<=", "value": "0"}),
 		"if hp <= 0:") and passed
-	passed = _check("no definition, nothing promised",
-		ACEParamsDialog.title_sentence(null, {}, "Player"), "") and passed
 	return passed
 
 

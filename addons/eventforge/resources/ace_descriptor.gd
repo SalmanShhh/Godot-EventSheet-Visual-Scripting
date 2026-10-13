@@ -153,7 +153,7 @@ func get_display_text() -> String:
 ##
 ## `param_id` is the {slot} the template substitutes; `default_value` is the literal the row starts
 ## on; `label` is the field's name in the dialog (blank reads as the id); `words` is the sentence
-## under the field; `hint` picks the field's control ("expression" for the fx button, "file_path",
+## under the field; `hint` picks the field's control ("expression" for an expression box, "file_path",
 ## "color", "scene_node", ...).
 ##
 ## The parameter's TYPE comes from the default's own type - text is a String field, `true` a

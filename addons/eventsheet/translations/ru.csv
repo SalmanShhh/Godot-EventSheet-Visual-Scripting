@@ -7920,3 +7920,12 @@ Label,Надпись
 Pressing the button in the Inspector runs the function in the editor. The sheet has to be a Tool sheet for it to run there.,"Нажатие кнопки в Инспекторе запускает функцию в редакторе. Чтобы она там выполнялась, лист должен быть листом Tool."
 Add Inspector Button,Добавить кнопку Инспектора
 "Added the Inspector button ""%s"", which calls %s.","Добавлена кнопка Инспектора ""%s"", она вызывает %s."
+Done,Готово
+Parameters: %s,Параметры: %s
+Parameters for %s: %s,Параметры для %s: %s
+View %s in Godot Docs,Открыть %s в документации Godot
+Open the built-in class reference for %s.,Открывает встроенный справочник класса %s.
+click to choose,"нажмите, чтобы выбрать"
+Choose a node from the open scene. The pick replaces what is in the box.,Выберите узел из открытой сцены. Выбор заменит содержимое поля.
+The %s key,Клавиша %s
+Double-click to insert into the focused box.,Двойной щелчок вставляет в активное поле.

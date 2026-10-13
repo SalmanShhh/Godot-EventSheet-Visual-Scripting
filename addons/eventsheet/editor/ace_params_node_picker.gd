@@ -1,10 +1,10 @@
 @tool
 class_name ACEParamsNodePicker
 extends RefCounted
-# The "Pick Node" dialog opened by the 🔍 button next to an expression field - a large-project
-# scene-node search that hands a node reference back into the field. Extracted from
+# The "Pick Node" dialog opened by an object row's "click to choose" - a large-project scene-node
+# search whose pick REPLACES what the row's box says, since choosing an object answers the parameter. Extracted from
 # ace_params_dialog.gd to keep that file maintainable; it owns all its own widgets and reaches the
-# host ACEParamsDialog (the value-bearing _fields, the live ƒx validation, node-reference formatting)
+# host ACEParamsDialog (the field writer, node-reference formatting)
 # through the `_host` back-reference, the same pattern as the other editor helpers.
 #
 # Search modes (all case-insensitive):
@@ -425,13 +425,7 @@ func _on_node_picker_activated() -> void:
 		_node_picker_recents.insert(0, relative)
 		if _node_picker_recents.size() > NODE_PICKER_RECENTS_CAP:
 			_node_picker_recents.resize(NODE_PICKER_RECENTS_CAP)
-	var field: Variant = _host._fields.get(_node_picker_target_key)
-	if field is TextEdit:
-		(field as TextEdit).insert_text_at_caret(reference)
-		_host._validate_expression_field(field)
-	elif field is LineEdit:
-		(field as LineEdit).insert_text_at_caret(reference)
-	_node_picker_window.hide()
+	_hand_back(reference)
 
 
 func _on_node_picker_custom_action(action: StringName) -> void:
@@ -455,12 +449,13 @@ func _make_picked_node_unique() -> void:
 	var reference: String = EventSheetUniqueNameDoor.mark(EditorInterface.get_edited_scene_root(), relative)
 	if reference.is_empty():
 		return
-	var field: Variant = _host._fields.get(_node_picker_target_key)
-	if field is TextEdit:
-		(field as TextEdit).insert_text_at_caret(reference)
-		_host._validate_expression_field(field)
-	elif field is LineEdit:
-		(field as LineEdit).insert_text_at_caret(reference)
+	_hand_back(reference)
+
+
+## Writes the picked reference into the row's box, through the host's one field writer (which
+## re-checks the row), and closes the search.
+func _hand_back(reference: String) -> void:
+	_host._write_field(_node_picker_target_key, reference)
 	_node_picker_window.hide()
 
 

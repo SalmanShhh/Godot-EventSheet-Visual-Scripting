@@ -31,7 +31,7 @@ static func build(host: Window) -> Control:
 	stage.set_meta("dialog", dialog)
 	var fields: VBoxContainer = EventSheetPopupUI.form_box()
 	fields.add_child(EventSheetPopupUI.form_row("Visible to",
-		dialog._create_render_layer_2d_field("layers", "2")))
+		dialog._create_named_layer_field("layers", "2", "2d_render")))
 	fields.add_child(EventSheetPopupUI.form_row("Preset",
 		dialog._create_quality_preset_field("preset", "\"res://settings/quality/medium.tres\"")))
 	var strip: EventSheetPopupUI.HelpStrip = EventSheetPopupUI.help_strip()

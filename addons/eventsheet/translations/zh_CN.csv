@@ -7920,3 +7920,12 @@ Label,标签
 Pressing the button in the Inspector runs the function in the editor. The sheet has to be a Tool sheet for it to run there.,在检查器中按下按钮会在编辑器中运行该函数。表必须是 Tool 表才能在那里运行。
 Add Inspector Button,添加检查器按钮
 "Added the Inspector button ""%s"", which calls %s.","已添加检查器按钮 ""%s"",它调用 %s。"
+Done,完成
+Parameters: %s,参数：%s
+Parameters for %s: %s,%s 的参数：%s
+View %s in Godot Docs,在 Godot 文档中查看 %s
+Open the built-in class reference for %s.,打开 %s 的内置类参考。
+click to choose,点击选择
+Choose a node from the open scene. The pick replaces what is in the box.,从打开的场景中选择一个节点。所选节点会替换框中的内容。
+The %s key,%s 键
+Double-click to insert into the focused box.,双击插入到当前聚焦的框中。

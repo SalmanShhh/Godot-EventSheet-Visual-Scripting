@@ -7920,3 +7920,12 @@ Label,Etiqueta
 Pressing the button in the Inspector runs the function in the editor. The sheet has to be a Tool sheet for it to run there.,Pulsar el botón en el Inspector ejecuta la función en el editor. La hoja tiene que ser una hoja Tool para que se ejecute allí.
 Add Inspector Button,Añadir botón del Inspector
 "Added the Inspector button ""%s"", which calls %s.","Se añadió el botón del Inspector ""%s"", que llama a %s."
+Done,Hecho
+Parameters: %s,Parámetros: %s
+Parameters for %s: %s,Parámetros de %s: %s
+View %s in Godot Docs,Ver %s en la documentación de Godot
+Open the built-in class reference for %s.,Abre la referencia de clase integrada de %s.
+click to choose,clic para elegir
+Choose a node from the open scene. The pick replaces what is in the box.,Elige un nodo de la escena abierta. La elección reemplaza lo que hay en la casilla.
+The %s key,La tecla %s
+Double-click to insert into the focused box.,Doble clic para insertar en la casilla activa.

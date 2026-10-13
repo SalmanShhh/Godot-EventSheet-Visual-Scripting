@@ -142,7 +142,7 @@ static func change_signal_of(field: Control) -> String:
 ## (the object whose variables are in scope), so the sentence names something the reader can see.
 ## A hint that is not here contributes nothing and the strip shows the description alone.
 const HINT_PARAGRAPHS: Dictionary = {
-	"expression": "A number, a variable, or an expression. In scope are the event's trigger parameters, %s's variables and the globals - the fx button lists them all, and the arrow holds what you typed here before.",
+	"expression": "A number, a variable, or an expression. In scope are the event's trigger parameters, %s's variables and the globals - the Expressions panel beside the form lists them all, and the arrow holds what you typed here before.",
 	"variable_reference": "One of %s's variables. The list shows each one's type and, while the game runs, its value.",
 	"color": "A colour word (red), a hex (#ff4d4d) or Color(1, 0.3, 0.3). The swatch opens the palette with your saved colours; the row shows the word and the swatch.",
 	"key_capture": "Press the key you want while this box is focused. Prefer an Input Map action when the player may rebind it.",

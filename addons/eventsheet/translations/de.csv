@@ -7920,3 +7920,12 @@ Label,Beschriftung
 Pressing the button in the Inspector runs the function in the editor. The sheet has to be a Tool sheet for it to run there.,"Ein Druck auf den Knopf im Inspektor führt die Funktion im Editor aus. Das Blatt muss ein Werkzeug-Blatt sein, damit sie dort läuft."
 Add Inspector Button,Inspektor-Knopf hinzufügen
 "Added the Inspector button ""%s"", which calls %s.","Inspektor-Knopf ""%s"" hinzugefügt, der %s aufruft."
+Done,Fertig
+Parameters: %s,Parameter: %s
+Parameters for %s: %s,Parameter für %s: %s
+View %s in Godot Docs,%s in der Godot-Dokumentation ansehen
+Open the built-in class reference for %s.,Öffnet die eingebaute Klassenreferenz für %s.
+click to choose,zum Auswählen klicken
+Choose a node from the open scene. The pick replaces what is in the box.,"Einen Node aus der offenen Szene wählen. Die Auswahl ersetzt, was im Feld steht."
+The %s key,Die Taste %s
+Double-click to insert into the focused box.,Doppelklick fügt in das fokussierte Feld ein.

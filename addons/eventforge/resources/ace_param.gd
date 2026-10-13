@@ -70,7 +70,7 @@ extends Resource
 ## the same thing wherever it was authored from: the factory's `make_param`, a descriptor's chained
 ## `.param(...)`, and any pack builder reaching for a parameter directly all land here.
 ##
-## `hint` selects the dialog field ("expression" = the fx button, "key_capture" = press-a-key,
+## `hint` selects the dialog field ("expression" = an expression box, "key_capture" = press-a-key,
 ## "audio_path" = path + preview, "color", ...); `options` makes it a fixed dropdown; `autocomplete`
 ## makes it an editable suggest combo (type freely + filter/pick). `options` entries are either a
 ## plain value string (label == value) or a {"key": <inserted value>, "label": <shown text>} dict, so
