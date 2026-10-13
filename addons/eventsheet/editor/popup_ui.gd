@@ -1018,10 +1018,11 @@ class StateNote extends PanelContainer:
 		visible = not sentence.strip_edges().is_empty()
 
 
-## A ROW BAND: the top of a window that writes one row or one declaration, showing that row the way
-## the sheet will - the object it belongs to in the quiet object column, then its words, then an
-## optional note at the far right. It is redrawn live as the fields change, so the reader sees the
-## row before pressing OK instead of reading about it.
+## A ROW BAND: the line at the top of a window naming what it is about - the row a writing window
+## will write, read the way the sheet will (its object in the quiet object column, then its words), or
+## the event a pick lands on and the field a pick goes into - then an optional note at the far right.
+## Redrawn live as the fields change, so nothing is written or picked blind. `code_words` sets the
+## words in the code font (a picker's field shows what the field holds); an empty band hides.
 class RowBand extends PanelContainer:
 
 	var object_label: Label = null
@@ -1029,7 +1030,7 @@ class RowBand extends PanelContainer:
 	var note_label: Label = null
 
 
-	func _init() -> void:
+	func _init(code_words: bool = false) -> void:
 		var style: StyleBoxFlat = EventSheetPopupUI.inset_panel_stylebox()
 		style.content_margin_left = EventSheetPalette.scaled_f(8.0)
 		style.content_margin_right = EventSheetPalette.scaled_f(8.0)
@@ -1047,13 +1048,17 @@ class RowBand extends PanelContainer:
 		words_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		words_label.clip_text = true
 		words_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		var mono: Font = EventSheetPopupUI.editor_font("doc_source") if code_words else null
+		if mono != null:
+			words_label.add_theme_font_override("font", mono)
 		row.add_child(words_label)
 		note_label = Label.new()
 		note_label.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
 		row.add_child(note_label)
+		visible = false
 
 
-	## The row as the sheet will read it. An empty object hides that column.
+	## The row as the sheet will read it. An empty object hides that column; nothing to name hides the band.
 	func show_row(object_name: String, words: String, note: String = "") -> void:
 		object_label.text = object_name
 		object_label.visible = not object_name.is_empty()
@@ -1061,6 +1066,7 @@ class RowBand extends PanelContainer:
 		words_label.tooltip_text = words
 		note_label.text = note
 		note_label.visible = not note.is_empty()
+		visible = not (object_name + words).strip_edges().is_empty()
 
 
 ## Gives a text field a red edge while `problem` is true, and its own look back when it is not - the
@@ -1115,46 +1121,6 @@ static func add_described_item(dropdown: OptionButton, text: String, description
 static func follow_description(dropdown: OptionButton) -> void:
 	var told: String = dropdown.get_item_tooltip(dropdown.selected) if dropdown.selected >= 0 else ""
 	dropdown.tooltip_text = told if not told.is_empty() else str(dropdown.get_meta("described_fallback", ""))
-
-
-## A CONTEXT BAND: the line at the top of a picker naming what the pick answers - the event an
-## action lands on, the field an expression goes into - so nothing is picked blind. The lead reads in
-## the panel's own voice, the value in the code font, the note muted; an empty band hides.
-class ContextBand extends PanelContainer:
-
-	var lead_label: Label = null
-	var value_label: Label = null
-	var note_label: Label = null
-
-
-	func _init() -> void:
-		var style: StyleBoxFlat = EventSheetPopupUI.inset_panel_stylebox()
-		style.set_content_margin_all(EventSheetPalette.scaled_f(6.0))
-		style.content_margin_left = EventSheetPalette.scaled_f(8.0)
-		add_theme_stylebox_override("panel", style)
-		var row: HBoxContainer = HBoxContainer.new()
-		row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(8.0)))
-		add_child(row)
-		lead_label = Label.new()
-		row.add_child(lead_label)
-		value_label = Label.new()
-		value_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var mono: Font = EventSheetPopupUI.editor_font("doc_source")
-		if mono != null:
-			value_label.add_theme_font_override("font", mono)
-		row.add_child(value_label)
-		note_label = Label.new()
-		note_label.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
-		row.add_child(note_label)
-		visible = false
-
-
-	func say(lead: String, value: String = "", note: String = "") -> void:
-		lead_label.text = lead
-		value_label.text = value
-		note_label.text = note
-		visible = not lead.strip_edges().is_empty()
 
 
 ## A RESULT CARD: a titled panel that says what just happened. `report()` fills it - a short flow of

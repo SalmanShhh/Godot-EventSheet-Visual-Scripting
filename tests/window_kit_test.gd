@@ -2,7 +2,7 @@
 extends RefCounted
 # Godot EventSheets - the window kit's parts: the described dropdown (every choice carries its
 # sentence as Godot's own item tooltip, and the closed dropdown's tooltip follows the chosen one),
-# the result card and the state note.
+# the result card, the state note and the one band every window and picker leads with.
 
 
 const SUPPORT := preload("res://tests/support.gd")
@@ -14,6 +14,7 @@ static func run() -> bool:
 	passed = _described_dropdown() and passed
 	passed = _result_card() and passed
 	passed = _state_note() and passed
+	passed = _row_band() and passed
 	passed = _described_sentences_are_translatable() and passed
 	return passed
 
@@ -113,6 +114,25 @@ static func _state_note() -> bool:
 	note.say("")
 	rows.append(["saying nothing hides it again", note.visible, false])
 	note.free()
+	return SUPPORT.pins(NAME, rows)
+
+
+## One band for the writing windows (the row they write) and the pickers (what the pick answers): it
+## hides until it has something to name, and a picker's field shows what it holds in the code font.
+static func _row_band() -> bool:
+	var band: EventSheetPopupUI.RowBand = EventSheetPopupUI.RowBand.new()
+	var code_band: EventSheetPopupUI.RowBand = EventSheetPopupUI.RowBand.new(true)
+	var rows: Array = [["an unsaid band hides", band.visible, false]]
+	band.show_row("System", "match state", "")
+	rows.append(["a written row shows, object then words", [band.visible, band.object_label.text, band.words_label.text,
+		band.note_label.visible], [true, "System", "match state", false]])
+	band.show_row("", "", "the action you pick lands here")
+	rows.append(["a note with nothing to name hides the band", band.visible, false])
+	rows.append(["only a code band's words take the code font",
+		[band.words_label.has_theme_font_override("font"), code_band.words_label.has_theme_font_override("font")],
+		[false, EventSheetPopupUI.editor_font("doc_source") != null]])
+	band.free()
+	code_band.free()
 	return SUPPORT.pins(NAME, rows)
 
 

@@ -257,7 +257,7 @@ var _tree: Tree = null
 var _help_strip: EventSheetPopupUI.HelpStrip = null
 var _also_called: Label = null
 ## The event the pick lands on, above the search ("Is on floor - the action you pick lands here").
-var _band: EventSheetPopupUI.ContextBand = null
+var _band: EventSheetPopupUI.RowBand = null
 ## Returns the label for the highlighted verb's "read more" link ("Open Quest's guide"), or "" for
 ## none. Left unset, the strip never offers one.
 var _guide_label_provider: Callable = Callable()
@@ -327,7 +327,7 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_window.add_child(EventSheetPopupUI.margined(content))
-	_band = EventSheetPopupUI.ContextBand.new()
+	_band = EventSheetPopupUI.RowBand.new()
 	content.add_child(_band)
 
 	# Search row: the field + a toggle that pins/unpins the highlighted ACE.
@@ -1120,7 +1120,7 @@ func _say_landing(mode: String, resource: Resource) -> void:
 		"replace_condition", "replace_trigger":
 			note = EventSheetL10n.translate("the condition you pick replaces one here")
 	var reading: String = landing_reading(_landing_row(resource)) if not note.is_empty() else ""
-	_band.say(reading, "", note)
+	_band.show_row("", reading, note)
 
 
 ## The row the dock drew for `resource`: the selected one when it is that row, else the first row

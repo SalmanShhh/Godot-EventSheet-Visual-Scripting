@@ -105,7 +105,7 @@ static func _the_dock_opens_on_the_event() -> bool:
 	var picker: ACEPickerDialog = dock._ace_picker
 	var rows: Array = [
 		["the title names the object", picker._window.title, "Add an action to Player"],
-		["the band reads the event", picker._band.lead_label.text, "Player Is on floor"],
+		["the band reads the event", picker._band.words_label.text, "Player Is on floor"],
 		["and says where the pick goes", picker._band.note_label.text, "the action you pick lands here"],
 		["it shows", picker._band.visible, true],
 	]
@@ -151,17 +151,17 @@ static func _the_field_pickers_name_their_field() -> bool:
 		enemy_item.select(0)
 	nodes._on_node_picker_selection_changed()
 	var rows: Array = [
-		["the Expressions panel's band names the verb and the field", expressions._band.lead_label.text, "Move Toward Speed"],
-		["and what the field holds", expressions._band.value_label.text, "base_speed * "],
+		["the Expressions panel's band names the verb and the field", expressions._band.object_label.text, "Move Toward Speed"],
+		["and what the field holds", expressions._band.words_label.text, "base_speed * "],
 		["Pick Node's title names the field", nodes._node_picker_window.title, "Pick a node for Target"],
-		["its band names the verb and the field", nodes._band.lead_label.text, "Move Toward Target"],
-		["and what the field holds", nodes._band.value_label.text, "$Enemy"],
+		["its band names the verb and the field", nodes._band.object_label.text, "Move Toward Target"],
+		["and what the field holds", nodes._band.words_label.text, "$Enemy"],
 		["a highlighted node says what it is", nodes._help_strip.body_label.text, "A CharacterBody2D."],
 		["and the reference it goes in as", nodes._help_strip.in_code_value.text, "$\"Enemies/Enemy1\""],
 	]
 	# The panel keeps its band in step with the field as results chain into it.
 	expressions._insert_into_expression_target("base_speed")
-	rows.append(["an insert refreshes the band", expressions._band.value_label.text, "base_speed * base_speed"])
+	rows.append(["an insert refreshes the band", expressions._band.words_label.text, "base_speed * base_speed"])
 	root.free()
 	speed.free()
 	target.free()

@@ -35,7 +35,7 @@ var _node_picker_chips: Dictionary = {}  # chip label -> Button (toggle)
 var _node_picker_used_toggle: Button = null
 var _node_picker_recents: PackedStringArray = PackedStringArray()
 ## The verb and field this pick answers, and what the field holds now ("Move Toward Target  $Enemy").
-var _band: EventSheetPopupUI.ContextBand = null
+var _band: EventSheetPopupUI.RowBand = null
 ## The foot: what the highlighted node is, and the reference it goes into the field as.
 var _help_strip: EventSheetPopupUI.HelpStrip = null
 
@@ -67,7 +67,7 @@ func _open_node_picker(key: String) -> void:
 func _say_field(key: String) -> void:
 	_node_picker_window.title = EventSheetL10n.translate("Pick a node for %s") % _host._param_label(key)
 	var words: PackedStringArray = ACEParamsExpressionPicker.field_words(_host, key)
-	_band.say(words[0], words[1])
+	_band.show_row(words[0], words[1])
 	_describe_node(null)
 
 
@@ -89,7 +89,7 @@ func _ensure_node_picker_ui() -> void:
 		_node_picker_unique_button.disabled = true
 		_node_picker_window.custom_action.connect(_on_node_picker_custom_action)
 		var box: VBoxContainer = EventSheetPopupUI.form_box()
-		_band = EventSheetPopupUI.ContextBand.new()
+		_band = EventSheetPopupUI.RowBand.new(true)
 		box.add_child(_band)
 		# Find card: the search box + the filter chips, grouped in a titled inset card.
 		var find_box: VBoxContainer = EventSheetPopupUI.form_box()

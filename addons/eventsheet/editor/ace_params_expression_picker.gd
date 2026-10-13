@@ -22,7 +22,7 @@ var _expression_search: LineEdit = null
 var _robust_checkbox: CheckBox = null
 var _inserts_label: Label = null
 ## The field the panel inserts into, named above the search, and what it holds now.
-var _band: EventSheetPopupUI.ContextBand = null
+var _band: EventSheetPopupUI.RowBand = null
 ## The parameter whose box double-click inserts into, and the box itself - the one that last had
 ## focus. The box is held apart from the key because a position's X and Y are two boxes of one key.
 var _expression_target_key: String = ""
@@ -162,7 +162,7 @@ func _ensure_expression_window() -> Control:
 	if _panel != null:
 		return _panel
 	var content: VBoxContainer = EventSheetPopupUI.form_box()
-	_band = EventSheetPopupUI.ContextBand.new()
+	_band = EventSheetPopupUI.RowBand.new(true)
 	content.add_child(_band)
 	_expression_search = LineEdit.new()
 	_expression_search.placeholder_text = EventSheetL10n.translate("Search expressions...")
@@ -458,7 +458,7 @@ func _say_field() -> void:
 	if _band == null:
 		return
 	var words: PackedStringArray = field_words(_host, _expression_target_key)
-	_band.say(words[0], words[1])
+	_band.show_row(words[0], words[1])
 
 
 ## The verb and the field a picker answers, and what the field holds now: ["Move Toward Speed",
