@@ -21,7 +21,6 @@ extends RefCounted
 
 var _dock: Control = null
 var _dialog: ConfirmationDialog = null
-var _message_label: Label = null
 var _old_key: String = ""
 var _new_key: String = ""
 var _plan: Dictionary = {}
@@ -93,12 +92,15 @@ func offer(old_key: String, new_key: String) -> bool:
 			if _dock != null:
 				_dock._set_status(last_refusal, true)
 		return false
-	_build_dialog()
-	_message_label.text = "%s\n\nDecline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Notes ▸ Find Orphans lists it." % \
-		EventSheetTranslationScan.rename_sentence(_plan, old_key)
-	_dialog.title = "Rename the translation key too?"
-	if _dock.is_inside_tree():
-		_dialog.popup_centered(Vector2i(520, 220))
+	_dialog = load(_dock.SMALL_PROMPT_PATH).open(_dock, {
+		"title": EventSheetL10n.translate("Rename the translation key too?"),
+		"say": EventSheetTranslationScan.rename_sentence(_plan, old_key),
+		"note": EventSheetL10n.translate("Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Notes ▸ Find Orphans lists it."),
+		"glyph": "i",
+		"main": EventSheetL10n.translate("Update the catalogs"),
+		"cancel": EventSheetL10n.translate("Leave them"),
+		"on_main": confirm,
+	})
 	return true
 
 
@@ -109,18 +111,3 @@ func confirm() -> Dictionary:
 	if _dock != null:
 		_dock._set_status(str(outcome.get("message", "")), not bool(outcome.get("ok", false)))
 	return outcome
-
-
-func _build_dialog() -> void:
-	if _dialog != null:
-		return
-	_dialog = ConfirmationDialog.new()
-	_dialog.ok_button_text = "Update the catalogs"
-	_dialog.cancel_button_text = "Leave them"
-	_dialog.confirmed.connect(func() -> void: confirm())
-	var content: VBoxContainer = EventSheetPopupUI.form_box()
-	_message_label = EventSheetPopupUI.hint_label("")
-	content.add_child(EventSheetPopupUI.titled_card("Every translation of this sentence", _message_label))
-	_dialog.add_child(EventSheetPopupUI.margined(content))
-	EventSheetL10n.apply_to(_dialog)
-	_dock.add_child(_dialog)

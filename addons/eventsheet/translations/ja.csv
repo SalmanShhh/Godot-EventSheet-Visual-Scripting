@@ -7423,3 +7423,7 @@ Make %s local to one event?,%s を 1 つのイベントのローカルにしま�
 "Only the event you pick, and the events under it, will see it.",選んだイベントと、その下のイベントだけがこれを参照できます。
 Ctrl+Z undoes it.,Ctrl+Z で戻せます。
 Make it local,ローカルにする
+Rename the translation key too?,翻訳キーも名前変更しますか?
+Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Notes ▸ Find Orphans lists it.,断ると古いキーは孤立したままカタログに残ります - Translation Studio ▸ メモ ▸ 孤立キーを探す に一覧されます。
+Update the catalogs,カタログを更新
+Leave them,そのままにする

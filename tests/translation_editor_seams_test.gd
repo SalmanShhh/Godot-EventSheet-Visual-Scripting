@@ -660,7 +660,8 @@ static func _run_key_rename() -> bool:
 	var offered: bool = editor._translation_key_dialog.offer("Play", "Start")
 	all_passed = _check("the offer appears when a catalog really holds the old key", offered, true) and all_passed
 	all_passed = _check("and it says what declining costs",
-		editor._translation_key_dialog._message_label.text.contains("Find Orphans"), true) and all_passed
+		(editor._translation_key_dialog._dialog.find_child("Note", true, false) as Label).text,
+		"Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Notes ▸ Find Orphans lists it.") and all_passed
 	var committed: Dictionary = editor._translation_key_dialog.confirm()
 	all_passed = _check("confirming rewrites the catalog",
 		str(EventSheetTranslationScan.read_catalog(CATALOG_PATH).get("by_key", {}).keys()[1]), "Start") and all_passed

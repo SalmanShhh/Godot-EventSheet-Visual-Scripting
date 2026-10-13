@@ -7423,3 +7423,7 @@ Make %s local to one event?,%s lokal für ein Event machen?
 "Only the event you pick, and the events under it, will see it.",Nur das gewählte Event und die Events darunter sehen sie.
 Ctrl+Z undoes it.,Strg+Z macht es rückgängig.
 Make it local,Lokal machen
+Rename the translation key too?,Den Übersetzungsschlüssel auch umbenennen?
+Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Notes ▸ Find Orphans lists it.,"Lehnst du ab, bleibt der alte Schlüssel als Waise in deinen Katalogen - Translation Studio ▸ Notizen ▸ Waisen finden listet ihn auf."
+Update the catalogs,Kataloge aktualisieren
+Leave them,So lassen

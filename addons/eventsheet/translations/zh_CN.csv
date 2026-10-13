@@ -7423,3 +7423,7 @@ Make %s local to one event?,将 %s 设为某个事件的局部变量？
 "Only the event you pick, and the events under it, will see it.",只有你选的事件及其下的事件能看到它。
 Ctrl+Z undoes it.,Ctrl+Z 可撤销。
 Make it local,设为局部
+Rename the translation key too?,也重命名翻译键吗？
+Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Notes ▸ Find Orphans lists it.,如果拒绝，旧键会作为孤立项留在你的目录中 - Translation Studio ▸ 备注 ▸ 查找孤立项会列出它。
+Update the catalogs,更新目录
+Leave them,保持不变

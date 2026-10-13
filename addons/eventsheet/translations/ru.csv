@@ -7423,3 +7423,7 @@ Make %s local to one event?,Сделать %s локальной для одно
 "Only the event you pick, and the events under it, will see it.",Её увидят только выбранное событие и события под ним.
 Ctrl+Z undoes it.,Ctrl+Z отменяет это.
 Make it local,Сделать локальной
+Rename the translation key too?,Переименовать и ключ перевода?
+Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Notes ▸ Find Orphans lists it.,"Если отказаться, старый ключ останется в каталогах сиротой - Translation Studio ▸ Заметки ▸ Найти сирот покажет его."
+Update the catalogs,Обновить каталоги
+Leave them,Оставить как есть

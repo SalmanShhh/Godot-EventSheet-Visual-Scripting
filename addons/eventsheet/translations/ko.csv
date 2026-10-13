@@ -7423,3 +7423,7 @@ Make %s local to one event?,%s을(를) 한 이벤트의 로컬로 만들까요?
 "Only the event you pick, and the events under it, will see it.",선택한 이벤트와 그 아래 이벤트만 이것을 볼 수 있습니다.
 Ctrl+Z undoes it.,Ctrl+Z로 되돌릴 수 있습니다.
 Make it local,로컬로 만들기
+Rename the translation key too?,번역 키도 이름을 바꿀까요?
+Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Notes ▸ Find Orphans lists it.,거절하면 이전 키가 카탈로그에 고아로 남습니다 - Translation Studio ▸ 메모 ▸ 고아 찾기에 표시됩니다.
+Update the catalogs,카탈로그 업데이트
+Leave them,그대로 두기

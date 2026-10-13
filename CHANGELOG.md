@@ -24,8 +24,8 @@
 - **Keep old events working?** (the providers panel's forwarding stand-in) shows the exact lines
   it would add to the script as you type the old name, and the button stays greyed until there is
   one to add.
-- **Save before closing?**, **Clear every bookmark?** and **Make a variable local to one event?**
-  take the same shape: Save and Keep Bookmarks stay the Enter answers, Discard and Clear all are
+- **Save before closing?**, **Clear every bookmark?**, **Make a variable local to one event?** and
+  **Rename the translation key too?** take the same shape: Save and Keep Bookmarks stay the Enter answers, Discard and Clear all are
   the red buttons on the left.
 
 ### Added: the window kit's dropdown, view switch, result card and state note
