@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Fixed: two flock members on one spot always part
+
+- Flock and Flock 3D send a member that sits exactly on a neighbour away along an angle of its own.
+  That angle was its instance id's remainder by 360, so two members whose ids differed by a multiple
+  of 360 took the same angle and stayed stuck together - about one pair in 360, and which pair
+  depended on how many objects the game had made before them. The angle is now a hash of the id
+  spread over the whole turn.
+
 ### Fixed: dialog text is readable in a light editor theme
 
 - The help strip ("live, as you pick": the heading, the description, READS AS and IN CODE), the

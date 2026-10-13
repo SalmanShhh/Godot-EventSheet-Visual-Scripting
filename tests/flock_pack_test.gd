@@ -100,6 +100,15 @@ static func _test_each_rule_alone(stub: GDScript) -> bool:
 	all_passed = _check("and they leave in different directions",
 		first_way.normalized().is_equal_approx(second_way.normalized()), false) and all_passed
 	_free(made)
+
+	# Which two members share an angle must not hang on how many objects the process made before
+	# them: 361 members on one spot are 361 different ways out, which no 360-step dial can give.
+	var ways: Dictionary = {}
+	for index: int in 361:
+		var member: Node = stub.new()
+		ways[member._away_from_the_same_spot()] = true
+		member.free()
+	all_passed = _check("361 members on one spot leave along 361 angles", ways.size(), 361) and all_passed
 	return all_passed
 
 

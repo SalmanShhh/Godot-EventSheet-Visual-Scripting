@@ -85,10 +85,11 @@ func _steer_toward(direction: Vector3) -> Vector3:
 
 ## The direction away from a neighbour that sits exactly on top of this member. Two members on one
 ## spot would otherwise push each other along the same line and never part, so each one leaves
-## along an angle of its own, fixed for its lifetime.
+## along an angle of its own, fixed for its lifetime: a hash of its instance id spread over the
+## whole turn, where a remainder by 360 gave two members a one-in-360 chance of the same angle.
 ## @ace_hidden
 func _away_from_the_same_spot() -> Vector3:
-	return Vector3.RIGHT.rotated(Vector3.UP, float(get_instance_id() % 360) * TAU / 360.0)
+	return Vector3.RIGHT.rotated(Vector3.UP, float(hash(get_instance_id())) / 4294967296.0 * TAU)
 
 ## Where a node is in the world. A node outside the scene tree has no global transform to ask, so
 ## its own position stands in - which is what a headless test, and a member not yet added, has.
