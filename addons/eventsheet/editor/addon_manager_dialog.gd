@@ -66,13 +66,13 @@ func _build_body() -> Control:
 	var actions: HBoxContainer = HBoxContainer.new()
 	actions.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)
 	actions.add_child(_action_button("Import from .zip…",
-		"Unpacks a pack folder into eventsheet_addons/ after checking that what it publishes reads as sentences.",
+		"Unpacks a pack folder into eventsheet_addons/, puts any file it replaces in the backup ring first, then says how what it publishes reads as sentences.",
 		_on_import_zip))
 	actions.add_child(_action_button("Import from URL…",
-		"Downloads a pack .zip and unpacks it the same way, after the same reading check.",
+		"Opens the address of a pack .zip in your browser; the file you download imports through Import from .zip….",
 		_on_import_url))
 	actions.add_child(_action_button("Check for updates",
-		"Asks every pack that names a published source whether a newer version is out.",
+		"Lists which installed packs name a published source. It does not go online: compare their versions there yourself.",
 		_on_check_updates))
 	actions.add_child(_action_button("Find more (Asset Library)",
 		"Opens Godot's Asset Library filtered to event-sheet packs.",
@@ -292,8 +292,14 @@ func _on_check_updates() -> void:
 	if checked.is_empty():
 		_set_status("No installed pack names a published source yet, so there is nothing to compare with. A pack says where it lives with ## @ace_source(\"…\").")
 		return
-	_set_status("%d pack%s name a published source: %s. %d name none." % [
-		checked.size(), "" if checked.size() == 1 else "s", ", ".join(checked), skipped])
+	_set_status(updates_status(checked, skipped))
+
+
+## What Check for updates can honestly say: which packs name a source, and that nothing was asked
+## online - the editor has no way to read a remote version, so it never claims to have compared one.
+static func updates_status(checked: PackedStringArray, skipped: int) -> String:
+	return EventSheetL10n.translate("%d pack(s) name a published source: %s. %d name none. Nothing was checked online - open each source to see whether it has a newer version than the one shown here.") % [
+		checked.size(), ", ".join(checked), skipped]
 
 
 func _on_publish(pack: Dictionary) -> void:
@@ -330,7 +336,7 @@ func _on_import_url() -> void:
 		_url_edit = LineEdit.new()
 		_url_edit.placeholder_text = "https://…/pack.zip"
 		form.add_child(EventSheetPopupUI.form_row("URL", _url_edit, EventSheetPopupUI.LABEL_MIN_WIDTH,
-			"The address of a pack .zip. It opens in your browser; the downloaded file imports through Import from .zip…, which runs the reading check before anything lands in eventsheet_addons/."))
+			"The address of a pack .zip. It opens in your browser; the downloaded file imports through Import from .zip…, which backs up anything it replaces and then runs the reading check on what landed."))
 		form.add_child(EventSheetPopupUI.hint_label(
 			"Nothing is downloaded in the background: the editor opens the address so you can see what you are taking, then you import the file you got.", 460.0))
 		_url_dialog.add_child(EventSheetPopupUI.margined(form))
@@ -347,7 +353,8 @@ func _on_import_url() -> void:
 
 
 ## Unpacks a pack .zip into eventsheet_addons/. Refuses an archive that would write outside the
-## packs folder, and says what it did in the sheet's own words. Returns the status line, so the
+## packs folder, backs up every file it replaces, runs the reading check on each pack that landed,
+## and says what it did in the sheet's own words. Returns the status line, so the
 ## test can pin the refusal without a window.
 func import_zip(zip_path: String) -> String:
 	var result: String = unpack(zip_path, IMPORT_TARGET)
@@ -371,11 +378,16 @@ static func unpack(zip_path: String, target: String) -> String:
 			reader.close()
 			return "Refused %s: it writes to \"%s\", which is outside eventsheet_addons/." % [zip_path.get_file(), entry]
 	var written: int = 0
+	var backed_up: int = 0
 	var landed: Dictionary = {}
 	for entry: String in entries:
 		if entry.ends_with("/"):
 			continue
 		var destination: String = target.path_join(entry)
+		# A file already there is someone's: its bytes go into the backup ring before the archive's
+		# land on top, the same ring a pack update and Restore… use.
+		if FileAccess.file_exists(destination) and not EventSheetBackups.backup_sheet(destination).is_empty():
+			backed_up += 1
 		DirAccess.make_dir_recursive_absolute(destination.get_base_dir())
 		var file: FileAccess = FileAccess.open(destination, FileAccess.WRITE)
 		if file == null:
@@ -392,14 +404,25 @@ static func unpack(zip_path: String, target: String) -> String:
 	# what arrived - and the moment it arrives is the only moment that is knowable. No mtimes, no
 	# guessing, no second copy kept somewhere: one manifest per pack, holding a content hash per file.
 	var stamped: int = 0
+	var readings: PackedStringArray = PackedStringArray()
 	for pack_dir: Variant in landed.keys():
 		var folder: String = target.path_join(str(pack_dir))
 		if not EventSheetPackManifest.stamp(folder,
 				str(EventSheetPackCatalog.describe(str(pack_dir)).get("version", ""))).is_empty():
 			stamped += 1
-	return "Imported %s - %d file%s under eventsheet_addons/, %d pack%s hashed so a later update can tell your edits from theirs." % [
+		# The reading check the tooltip promises, on what actually landed. It never refuses a pack -
+		# a pack that does not read still works - it says how it reads, the way Publish does.
+		var main_script: String = EventSheetPackCatalog.main_script_for(str(pack_dir), target)
+		if not main_script.is_empty():
+			readings.append("%s: %s" % [str(pack_dir),
+				EventSheetPackReadingCheck.summary_text(EventSheetPackReadingCheck.check_script(main_script))])
+	var said: String = "Imported %s - %d file%s under eventsheet_addons/, %d pack%s hashed so a later update can tell your edits from theirs." % [
 		zip_path.get_file(), written, "" if written == 1 else "s",
 		stamped, "" if stamped == 1 else "s"]
+	said += EventSheetPackUpdate.backup_note({"backed_up": backed_up})
+	if not readings.is_empty():
+		said += " " + " ".join(readings)
+	return said
 
 
 ## True when a zip entry may be written under the packs folder: a relative path with no `..` step

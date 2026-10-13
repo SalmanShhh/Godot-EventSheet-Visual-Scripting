@@ -91,6 +91,10 @@ static func run() -> bool:
 		EventSheetAddonManagerDialog.is_safe_entry("..\\..\\project.godot"), false) and all_passed
 	all_passed = _check("and a leading backslash is refused",
 		EventSheetAddonManagerDialog.is_safe_entry("\\etc\\passwd"), false) and all_passed
+	all_passed = _import_backs_up_and_reads() and all_passed
+	all_passed = _check("Check for updates says it did not go online",
+		EventSheetAddonManagerDialog.updates_status(PackedStringArray(["Health"]), 2),
+		"1 pack(s) name a published source: Health. 2 name none. Nothing was checked online - open each source to see whether it has a newer version than the one shown here.") and all_passed
 	all_passed = _check("a pack that reads shows no score",
 		EventSheetAddonManagerDialog.reading_badge_text({"reads_percent": 100}), "") and all_passed
 	all_passed = _check("a pack that does not carries it",
@@ -154,6 +158,54 @@ static func _test_a_restore_tells_the_registry() -> bool:
 		told[0], 1) and ok
 	manager.free()
 	return ok
+
+
+## Import from .zip puts the bytes of every file it replaces into the backup ring before writing,
+## and runs the reading check on the pack that landed instead of only promising it.
+static func _import_backs_up_and_reads() -> bool:
+	var passed: bool = true
+	var target: String = "user://addon_import_probe_%d" % OS.get_process_id()
+	var existing: String = target.path_join("probe_pack/probe_pack.gd")
+	DirAccess.make_dir_recursive_absolute(existing.get_base_dir())
+	var old_file: FileAccess = FileAccess.open(existing, FileAccess.WRITE)
+	old_file.store_string("extends Node
+# the project's own edit
+")
+	old_file.close()
+	var zip_path: String = "user://addon_import_probe_%d.zip" % OS.get_process_id()
+	var packer: ZIPPacker = ZIPPacker.new()
+	packer.open(zip_path)
+	packer.start_file("probe_pack/probe_pack.gd")
+	packer.write_file("class_name ImportProbePack
+extends Node
+
+
+## Says hello.
+func greet() -> void:
+	pass
+".to_utf8_buffer())
+	packer.close_file()
+	packer.close()
+	var said: String = EventSheetAddonManagerDialog.unpack(zip_path, target)
+	var backups: PackedStringArray = EventSheetBackups.list_backups(existing)
+	passed = _check("the file an import replaces is in the backup ring first",
+		FileAccess.get_file_as_string(backups[0]) if not backups.is_empty() else "",
+		"extends Node
+# the project's own edit
+") and passed
+	passed = _check("the import says where the replaced bytes went",
+		said.contains("The previous bytes of those 1 file(s) are in the backup ring"), true) and passed
+	passed = _check("the import runs the reading check on what landed",
+		said.contains("probe_pack: "), true) and passed
+	for backup: String in backups:
+		DirAccess.remove_absolute(backup)
+	DirAccess.remove_absolute(EventSheetBackups.backup_dir_for(existing))
+	for leftover: String in DirAccess.get_files_at(target.path_join("probe_pack")):
+		DirAccess.remove_absolute(target.path_join("probe_pack").path_join(leftover))
+	DirAccess.remove_absolute(target.path_join("probe_pack"))
+	DirAccess.remove_absolute(target)
+	DirAccess.remove_absolute(zip_path)
+	return passed
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

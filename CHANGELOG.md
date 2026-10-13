@@ -27,6 +27,10 @@
   and a taken class name is refused.
 - **New Behaviour Addon:** a name that clashed was only reported when you pressed Create. It is now
   reported while you type.
+- **Addon manager:** Import from .zip promised a reading check it never ran, and overwrote files
+  already in the project without keeping them. It now backs up every file it replaces into the backup
+  ring first and reports how each imported pack reads. Check for updates and Import from URL no
+  longer claim to check or download anything online; they say what they actually do.
 
 ### Fixed: the finding and navigation windows
 
