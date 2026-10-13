@@ -19,6 +19,7 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 const RUNNER_PATH := "res://addons/eventsheet/editor/test_sheet_runner.gd"
+const PANEL_PATH := "res://addons/eventsheet/editor/dock/test_report_panel.gd"
 const FIXTURE_DIR := "user://ef_test_sheet_fixtures"
 const TEMP_COMPILE_PATH := "user://ef_test_sheet_compile.gd"
 
@@ -38,6 +39,8 @@ static func run() -> bool:
 	passed = _test_the_emitted_test_sheet_reopens_byte_identically() and passed
 	passed = _test_the_runner_discovers_test_scripts_by_their_marker() and passed
 	passed = _test_the_report_panel_shows_the_same_claims() and passed
+	passed = _test_the_report_panel_counts_a_silent_test_as_failed() and passed
+	passed = _test_the_report_panel_does_not_start_a_second_run() and passed
 	return passed
 
 
@@ -289,6 +292,41 @@ static func _test_the_report_panel_shows_the_same_claims() -> bool:
 	ok = _check("a silent test still gets a row", str((silent[0] as Array)[1]), "FAIL") and ok
 	ok = _check("the window's verdict pill matches the printed one",
 		str(runner.call("verdict_line", [result])), "Some tests failed.") and ok
+	return ok
+
+
+## What the health card records for a test is the runner's own failure count: a test that recorded
+## no claims is FAIL in the report, so it cannot be remembered as a clean run.
+static func _test_the_report_panel_counts_a_silent_test_as_failed() -> bool:
+	var panel: GDScript = load(PANEL_PATH)
+	var failing: Dictionary = {"test": "failing_test",
+		"entries": _entries_of(_failing_sheet(), "failing_test")}
+	return SUPPORT.pins("test_sheets_test", [
+		["a silent test is recorded as one failure",
+			int(panel.call("recorded_failures", {"test": "silent_test", "entries": []})), 1],
+		["a failing test is recorded with its failed claims",
+			int(panel.call("recorded_failures", failing)), 2],
+	])
+
+
+## Choosing Run Tests again while a run is still going shows the window and starts nothing: the
+## window's content is left as the running run put it.
+static func _test_the_report_panel_does_not_start_a_second_run() -> bool:
+	var dock: Control = Control.new()
+	var panel: RefCounted = load(PANEL_PATH).new()
+	panel.call("init", dock)
+	panel.call("_ensure_dialog")
+	var marker: VBoxContainer = VBoxContainer.new()
+	marker.name = "RunInProgress"
+	panel.call("_fill", marker)
+	(panel.get("_dialog") as Window).visible = true
+	panel.set("_running", true)
+	panel.call("open")
+	var body: VBoxContainer = panel.get("_body")
+	var shown: String = str(body.get_child(0).name) if body.get_child_count() > 0 else ""
+	var ok: bool = SUPPORT.check("test_sheets_test", "a second Run Tests leaves the run alone",
+		shown, "RunInProgress")
+	dock.free()
 	return ok
 
 

@@ -23,6 +23,9 @@ const FAIL_TONE := Color(0.88, 0.42, 0.42)
 var _dock: Control = null
 var _dialog: AcceptDialog = null
 var _body: VBoxContainer = null
+## True while a run is in progress. The run awaits each test, so the menu item can be chosen again
+## before it finishes; a second run started then would interleave with the first in the same tree.
+var _running: bool = false
 
 
 func init(dock: Control) -> void:
@@ -33,6 +36,10 @@ func init(dock: Control) -> void:
 ## slow test would otherwise look like a menu item that does nothing at all.
 func open() -> void:
 	_ensure_dialog()
+	if _running:
+		if not _dialog.visible:
+			_dialog.popup_centered(Vector2i(EventSheetPalette.scaled(620), EventSheetPalette.scaled(460)))
+		return
 	_fill(_placeholder("Running every test sheet in the project…"))
 	_dialog.popup_centered(Vector2i(EventSheetPalette.scaled(620), EventSheetPalette.scaled(460)))
 	var runner: GDScript = load(RUNNER_PATH)
@@ -44,17 +51,22 @@ func open() -> void:
 		_fill(_placeholder("Tests need a running editor tree to run in."))
 		return
 	var results: Array = []
+	_running = true
 	for path: String in runner.call("discover", "res://"):
 		var result: Dictionary = await runner.call("run_script", tree, path, 5.0)
 		results.append(result)
 		# A sheet's health card says how its tests last went, and this run is what it means by
 		# "last". Nothing is written onto any sheet: the memory is the editor's own, per project.
-		var failed: int = 0
-		for entry: Variant in result.get("entries", []):
-			if not bool((entry as Array)[1]):
-				failed += 1
-		EventSheetHealthCard.record_test_result(path, failed)
+		EventSheetHealthCard.record_test_result(path, recorded_failures(result))
+	_running = false
 	_fill(build_body(results))
+
+
+## How many failures one test's result counts as - the runner's own count, so a test that recorded
+## no claims at all is one failure here exactly as it is FAIL in the report beside it.
+static func recorded_failures(result: Dictionary) -> int:
+	var runner: GDScript = load(RUNNER_PATH)
+	return int((runner.call("summarize", [result]) as Dictionary)["failed"])
 
 
 ## The whole window content for a finished run: the verdict pill, one card per test with its claims
