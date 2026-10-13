@@ -145,7 +145,7 @@ static func _test_unticking_keeps_the_breakpoint_inactive() -> bool:
 	var after_untick: EventRow = EventSheetDock._find_event_by_uid(dock._current_sheet.events, "bp")
 	var flat: Array = [_flat_of(after_untick, 1)]
 	var listed: Array[Dictionary] = EventSheetDebuggerWindow.breakpoint_rows(flat,
-		debugger._disarmed)
+		debugger.listed_uids())
 	var ok: bool = SUPPORT.pins("debugger_window_test", [
 		["unticking is a sheet edit", changed, true],
 		["the edit went through the funnel that replaces the sheet",
@@ -164,6 +164,19 @@ static func _test_unticking_keeps_the_breakpoint_inactive() -> bool:
 	var after_tick: EventRow = EventSheetDock._find_event_by_uid(dock._current_sheet.events, "bp")
 	ok = SUPPORT.check("debugger_window_test", "ticking it again re-arms it",
 		after_tick.debug_break, true) and ok
+	# Undo past the re-arm leaves the event disarmed: it stays listed, unticked, rather than
+	# vanishing because the re-arm had forgotten it.
+	undo.undo()
+	var after_undo_tick: EventRow = EventSheetDock._find_event_by_uid(dock._current_sheet.events, "bp")
+	var relisted: Array[Dictionary] = EventSheetDebuggerWindow.breakpoint_rows(
+		[_flat_of(after_undo_tick, 1)], debugger.listed_uids())
+	ok = SUPPORT.check("debugger_window_test", "undo after a re-arm keeps it listed, unticked",
+		[after_undo_tick.debug_break, relisted.map(func(row: Dictionary) -> bool: return bool(row["armed"]))],
+		[false, [false]]) and ok
+	# Another sheet shown in the window does not inherit this sheet's kept rows.
+	dock._current_sheet_path = "res://another_sheet.tres"
+	ok = SUPPORT.check("debugger_window_test", "another sheet starts with nothing kept",
+		debugger.listed_uids(), {}) and ok
 	dock.free()
 	return ok
 

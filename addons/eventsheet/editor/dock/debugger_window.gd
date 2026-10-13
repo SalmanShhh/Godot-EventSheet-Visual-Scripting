@@ -70,9 +70,12 @@ var paused_label: Label = null
 var _picked_object: String = ""
 ## The last streamed frame, so switching tabs redraws what is on screen instead of blanking it.
 var _last_values: Dictionary = {}
-## Breakpoints the reader unticked in the list, by event uid: still listed (unticked) so ticking
-## brings them back, while the sheet no longer pauses on them.
+## Breakpoints the reader has ticked or unticked in the list, by event uid: they stay listed
+## whatever their state, so an unticked one can be ticked again. Kept even after a re-arm, because
+## an undo past that re-arm leaves the event disarmed and it must not drop out of the list then.
+## Belongs to one sheet - `_disarmed_sheet` - and is forgotten when another sheet is shown.
 var _disarmed: Dictionary = {}
+var _disarmed_sheet: String = ""
 
 
 func _init(dock: Control) -> void:
@@ -568,7 +571,7 @@ func _refresh_breakpoints() -> void:
 	var root: TreeItem = breakpoints_tree.create_item()
 	var view: EventSheetViewport = _dock._active_view() if _dock != null else null
 	var rows: Array[Dictionary] = breakpoint_rows(view.get_flat_rows() if view != null else [],
-		_disarmed)
+		listed_uids())
 	if rows.is_empty():
 		var empty: TreeItem = breakpoints_tree.create_item(root)
 		empty.set_text(1, EMPTY_STATES["Breakpoints"])
@@ -581,6 +584,16 @@ func _refresh_breakpoints() -> void:
 		item.set_checked(0, bool(row.get("armed", true)))
 		item.set_text(1, breakpoint_text(row))
 		item.set_metadata(0, str(row.get("uid", "")))
+
+
+## The uids the list keeps whatever their state (see _disarmed), for the sheet shown now: a
+## breakpoint touched on another sheet is not this sheet's to list.
+func listed_uids() -> Dictionary:
+	var sheet_key: String = str(_dock._current_sheet_path) if _dock != null else ""
+	if sheet_key != _disarmed_sheet:
+		_disarmed.clear()
+		_disarmed_sheet = sheet_key
+	return _disarmed
 
 
 func _paused_text() -> String:
@@ -602,8 +615,8 @@ func _on_breakpoint_toggled() -> void:
 	_refresh_breakpoints()
 
 
-## Arms or disarms the breakpoint on one event through the undo funnel, and remembers a disarmed
-## one so the list keeps it. Returns whether the sheet changed.
+## Arms or disarms the breakpoint on one event through the undo funnel, and remembers it so the
+## list keeps it through any later undo. Returns whether the sheet changed.
 func set_breakpoint_armed(uid: String, armed: bool) -> bool:
 	if _dock == null or uid.is_empty():
 		return false
@@ -616,10 +629,7 @@ func set_breakpoint_armed(uid: String, armed: bool) -> bool:
 			event_row.debug_break = armed
 			return true
 	)
-	if armed:
-		_disarmed.erase(uid)
-	else:
-		_disarmed[uid] = true
+	listed_uids()[uid] = true
 	var view: EventSheetViewport = _dock._active_view()
 	if view != null:
 		if armed:
