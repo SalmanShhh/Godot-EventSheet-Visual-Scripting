@@ -1727,24 +1727,11 @@ func _refresh_inspector_designer_after_edit(_n: Variant = null, _t: Variant = nu
 		_inspector_designer_dialog.call_deferred("refresh")
 
 
-## Designer ▲: swap the tree variable with the PREVIOUS tree variable in emission order - one
-## undo step. Sheet-level (dict) variables emit alphabetically, so only tree variables reorder.
+## Designer ▲: move the tree variable above the exported tree variable before it, past any the
+## Inspector does not show - one undo step. Sheet-level (dict) variables emit alphabetically, so only tree variables reorder.
 func _designer_move_variable_up(var_name: String) -> void:
 	_perform_undoable_sheet_edit("Move Variable Up", func() -> bool:
-		var previous_index: int = -1
-		for index: int in range(_current_sheet.events.size()):
-			var sheet_entry: Variant = _current_sheet.events[index]
-			if not (sheet_entry is LocalVariable):
-				continue
-			if (sheet_entry as LocalVariable).name == var_name:
-				if previous_index < 0:
-					return false
-				var moved: Variant = _current_sheet.events[index]
-				_current_sheet.events[index] = _current_sheet.events[previous_index]
-				_current_sheet.events[previous_index] = moved
-				return true
-			previous_index = index
-		return false)
+		return load(INSPECTOR_DESIGNER_DIALOG_PATH).move_up_among_exported(_current_sheet.events, var_name))
 
 
 

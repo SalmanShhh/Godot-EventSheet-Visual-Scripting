@@ -14,8 +14,8 @@ extends AcceptDialog
 var _column: VBoxContainer = null
 var _empty_hint: Label = null
 var _row_card_count: int = 0
-# Editing seams, wired by the dock: ✎ routes the entry to the shared Variable dialog, ▲ swaps a
-# tree variable with the previous one in emission order, and live_sheet re-fetches the CURRENT
+# Editing seams, wired by the dock: ✎ routes the entry to the shared Variable dialog, ▲ moves a
+# tree variable above the exported one before it (move_up_among_exported), and live_sheet re-fetches the CURRENT
 # sheet on refresh (the funnel replaces resources - a cached sheet reference goes stale).
 var _edit_handler: Callable = Callable()
 var _move_up_handler: Callable = Callable()
@@ -36,8 +36,8 @@ func refresh() -> void:
 
 
 func _init() -> void:
-	title = "Inspector Designer"
-	ok_button_text = "Close"
+	title = EventSheetL10n.translate("Inspector Designer")
+	ok_button_text = EventSheetL10n.translate("Close")
 	min_size = Vector2i(560, 620)
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(520.0, 560.0)
@@ -104,15 +104,16 @@ func rebuild_for_sheet(sheet: EventSheetResource) -> void:
 	var entries: Array[Dictionary] = collect_entries(sheet)
 	if entries.is_empty():
 		_empty_hint = Label.new()
-		_empty_hint.text = "No Inspector-visible variables yet - tick \"Editable in the Inspector\" on a variable and it appears here."
+		_empty_hint.text = EventSheetL10n.translate("No Inspector-visible variables yet - tick \"Editable in the Inspector\" on a variable and it appears here.")
 		_empty_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_column.add_child(_empty_hint)
 		return
 	var intro: Label = Label.new()
-	intro.text = "Every Inspector-visible variable, exactly as Godot will show it. ✎ edits a variable; ▲ moves a sheet variable up (the list is in the order the file declares them)." if _edit_handler.is_valid() else "Every Inspector-visible variable, exactly as Godot will show it. Edit a variable from its row in the sheet (hover it there for this same preview)."
+	intro.text = EventSheetL10n.translate("Every Inspector-visible variable, exactly as Godot will show it. ✎ edits a variable; ▲ moves a sheet variable up (the list is in the order the file declares them).") \
+		if _edit_handler.is_valid() else EventSheetL10n.translate("Every Inspector-visible variable, exactly as Godot will show it. Edit a variable from its row in the sheet (hover it there for this same preview).")
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
-	intro.modulate = Color(1.0, 1.0, 1.0, 0.65)
+	intro.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
 	_column.add_child(intro)
 	var first_tree_entry: bool = true
 	for entry: Dictionary in entries:
@@ -136,13 +137,13 @@ func rebuild_for_sheet(sheet: EventSheetResource) -> void:
 		var buttons: VBoxContainer = VBoxContainer.new()
 		var edit_button: Button = Button.new()
 		edit_button.text = "✎"
-		edit_button.tooltip_text = "Edit %s in the Variable dialog" % str(entry.get("name"))
+		edit_button.tooltip_text = EventSheetL10n.translate("Edit %s in the Variable dialog") % str(entry.get("name"))
 		edit_button.pressed.connect(_on_edit_pressed.bind(entry.duplicate(true)))
 		buttons.add_child(edit_button)
 		if str(entry.get("scope", "")) == "tree" and _move_up_handler.is_valid():
 			var up_button: Button = Button.new()
 			up_button.text = "▲"
-			up_button.tooltip_text = "Move this variable up in the Inspector (one undo step)"
+			up_button.tooltip_text = EventSheetL10n.translate("Move this variable up in the Inspector (one undo step)")
 			up_button.disabled = first_tree_entry
 			up_button.pressed.connect(_on_move_up_pressed.bind(str(entry.get("name"))))
 			buttons.add_child(up_button)
@@ -171,17 +172,36 @@ func _build_handle_chips(chips: PackedStringArray) -> Control:
 	var row: HFlowContainer = HFlowContainer.new()
 	row.add_theme_constant_override("h_separation", 6)
 	var lead: Label = Label.new()
-	lead.text = "Dragged in the viewport:"
+	lead.text = EventSheetL10n.translate("Dragged in the viewport:")
 	lead.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
-	lead.modulate = Color(1.0, 1.0, 1.0, 0.65)
+	lead.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
 	row.add_child(lead)
 	for chip: String in chips:
 		var label: Label = Label.new()
 		label.text = chip
 		label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
-		label.modulate = Color(0.72, 0.76, 0.84)
+		label.add_theme_color_override("font_color", EventSheetPopupUI.text_color())
 		row.add_child(label)
 	return row
+
+
+## Moves the exported sheet variable `var_name` up past the exported one above it - the next one up
+## in the Inspector - by taking it out and putting it back right before that one, so every variable
+## the Inspector does not show keeps its place. False when it is already first (or not found).
+static func move_up_among_exported(events: Array, var_name: String) -> bool:
+	var previous_index: int = -1
+	for index: int in range(events.size()):
+		var entry: Variant = events[index]
+		if not (entry is LocalVariable) or not (entry as LocalVariable).exported:
+			continue
+		if (entry as LocalVariable).name == var_name:
+			if previous_index < 0:
+				return false
+			events.remove_at(index)
+			events.insert(previous_index, entry)
+			return true
+		previous_index = index
+	return false
 
 
 func open_for_sheet(sheet: EventSheetResource) -> void:

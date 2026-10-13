@@ -8261,3 +8261,30 @@ Packs,Pakete
 "%s is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object.","%s ist ein globales Objekt: Es wird unter Projekteinstellungen > Globale > Autoload eingeschaltet, nicht einem Objekt hinzugefügt."
 Made for a %s - %s is a %s.,Für ein %s gemacht - %s ist ein %s.
 Add behaviour %s,Verhalten %s hinzufügen
+Required - assign a value,Erforderlich - einen Wert zuweisen
+Drag to set the value,"Ziehen, um den Wert zu setzen"
+Drag either handle to set the low / high end,"Einen der beiden Griffe ziehen, um das untere / obere Ende zu setzen"
+validated by %s() while you edit,wird beim Bearbeiten von %s() geprüft
+validated by a sheet function while you edit,wird beim Bearbeiten von einer Sheet-Funktion geprüft
+Needs a @tool sheet with a %s() function to run in the editor.,"Braucht ein @tool-Blatt mit einer Funktion %s(), um im Editor zu laufen."
+Calls %s() on this object.,Ruft %s() auf diesem Objekt auf.
+All four corners at once.,Alle vier Ecken auf einmal.
+Set each corner on its own.,Jede Ecke einzeln setzen.
+Top-left,Oben links
+Top-right,Oben rechts
+Bottom-left,Unten links
+Bottom-right,Unten rechts
+Keep %s and %s in the ratio they have now.,%s und %s im aktuellen Verhältnis halten.
+linked to %s,verknüpft mit %s
+Link %s and %s,%s und %s verknüpfen
+Move this row up,Diese Zeile nach oben
+Remove this row,Diese Zeile entfernen
+Drag the handle to set direction + magnitude,"Den Griff ziehen, um Richtung + Stärke zu setzen"
+Custom colour…,Eigene Farbe…
+Inspector Designer,Inspektor-Designer
+"No Inspector-visible variables yet - tick ""Editable in the Inspector"" on a variable and it appears here.","Noch keine im Inspektor sichtbaren Variablen - setze bei einer Variable den Haken ""Editable in the Inspector"", dann erscheint sie hier."
+"Every Inspector-visible variable, exactly as Godot will show it. ✎ edits a variable; ▲ moves a sheet variable up (the list is in the order the file declares them).","Jede im Inspektor sichtbare Variable, genau so, wie Godot sie zeigt. ✎ bearbeitet eine Variable; ▲ schiebt eine Blatt-Variable nach oben (die Liste folgt der Reihenfolge, in der die Datei sie deklariert)."
+"Every Inspector-visible variable, exactly as Godot will show it. Edit a variable from its row in the sheet (hover it there for this same preview).","Jede im Inspektor sichtbare Variable, genau so, wie Godot sie zeigt. Bearbeite eine Variable über ihre Zeile im Blatt (fahre dort darüber, um dieselbe Vorschau zu sehen)."
+Edit %s in the Variable dialog,%s im Variablen-Dialog bearbeiten
+Move this variable up in the Inspector (one undo step),Diese Variable im Inspektor nach oben schieben (ein Rückgängig-Schritt)
+Dragged in the viewport:,Im Viewport gezogen:

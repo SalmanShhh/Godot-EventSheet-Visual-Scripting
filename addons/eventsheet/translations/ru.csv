@@ -8261,3 +8261,30 @@ Packs,Пакеты
 "%s is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object.","%s - глобальный объект: он включается в Настройки проекта > Глобальные > Автозагрузка, а не добавляется к объекту."
 Made for a %s - %s is a %s.,Сделано для %s - %s является %s.
 Add behaviour %s,Добавить поведение %s
+Required - assign a value,Обязательно - задайте значение
+Drag to set the value,"Перетащите, чтобы задать значение"
+Drag either handle to set the low / high end,"Перетащите любой из маркеров, чтобы задать нижнюю / верхнюю границу"
+validated by %s() while you edit,проверяется %s() во время правки
+validated by a sheet function while you edit,проверяется функцией листа во время правки
+Needs a @tool sheet with a %s() function to run in the editor.,"Чтобы работать в редакторе, нужен лист @tool с функцией %s()."
+Calls %s() on this object.,Вызывает %s() у этого объекта.
+All four corners at once.,Все четыре угла сразу.
+Set each corner on its own.,Задать каждый угол отдельно.
+Top-left,Слева сверху
+Top-right,Справа сверху
+Bottom-left,Слева снизу
+Bottom-right,Справа снизу
+Keep %s and %s in the ratio they have now.,Сохранять %s и %s в текущем соотношении.
+linked to %s,связано с %s
+Link %s and %s,Связать %s и %s
+Move this row up,Поднять эту строку
+Remove this row,Удалить эту строку
+Drag the handle to set direction + magnitude,"Перетащите маркер, чтобы задать направление + величину"
+Custom colour…,Свой цвет…
+Inspector Designer,Дизайнер Инспектора
+"No Inspector-visible variables yet - tick ""Editable in the Inspector"" on a variable and it appears here.","В Инспекторе пока нет видимых переменных - отметьте у переменной ""Editable in the Inspector"", и она появится здесь."
+"Every Inspector-visible variable, exactly as Godot will show it. ✎ edits a variable; ▲ moves a sheet variable up (the list is in the order the file declares them).","Все переменные, видимые в Инспекторе, ровно так, как их покажет Godot. ✎ правит переменную; ▲ поднимает переменную листа (список идёт в том порядке, в котором их объявляет файл)."
+"Every Inspector-visible variable, exactly as Godot will show it. Edit a variable from its row in the sheet (hover it there for this same preview).","Все переменные, видимые в Инспекторе, ровно так, как их покажет Godot. Правьте переменную из её строки на листе (наведите на неё там, чтобы увидеть этот же предпросмотр)."
+Edit %s in the Variable dialog,Править %s в окне переменной
+Move this variable up in the Inspector (one undo step),Поднять эту переменную в Инспекторе (один шаг отмены)
+Dragged in the viewport:,Перетаскивается во вьюпорте:

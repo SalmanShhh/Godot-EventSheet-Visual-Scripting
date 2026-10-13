@@ -43,16 +43,20 @@ const DIALOG_FILES: Array[String] = [
 	"res://addons/eventsheet/editor/dock/comment_and_scope_dialogs.gd",
 	"res://addons/eventsheet/editor/dock/insert_object_dialog.gd",
 	"res://addons/eventsheet/editor/dock/class_properties.gd",
+	"res://addons/eventsheet/editor/inspector_designer_dialog.gd",
 ]
 
 
 static func run() -> bool:
 	var dark_only: RegEx = RegEx.create_from_string("\"font_color\",\\s*(EventSheetPalette\\.TEXT_|Color\\((0\\.[6-9]|1\\.0))")
+	# A tinted modulate is the same fixed colour by another door: it multiplies a pale tint into the
+	# text instead of following the theme. A white one with an alpha only dims, which reads on both.
+	var tinted: RegEx = RegEx.create_from_string("modulate\\s*=\\s*Color\\(0\\.")
 	var offenders: Array[String] = []
 	for path: String in DIALOG_FILES:
 		var lines: PackedStringArray = FileAccess.get_file_as_string(path).split("\n")
 		for index: int in lines.size():
-			if dark_only.search(lines[index]) != null:
+			if dark_only.search(lines[index]) != null or tinted.search(lines[index]) != null:
 				offenders.append("%s:%d" % [path.get_file(), index + 1])
 	var light_panel_red: Color = Color(0.95, 0.5, 0.5).darkened(0.45)
 	return SUPPORT.pins(NAME, [

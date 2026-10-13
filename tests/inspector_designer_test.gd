@@ -9,6 +9,8 @@
 class_name InspectorDesignerTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -86,7 +88,43 @@ static func run() -> bool:
 		order_refused, PackedStringArray(["beta", "alpha"])) and all_passed
 	dock.free()
 
-	return all_passed
+	return _move_past_hidden() and _speaks_the_editor_language() and all_passed
+
+
+## ▲ moves a variable past the ones the Inspector does not show: the next one UP in the Inspector is
+## the exported one above it, so swapping with a hidden neighbour changed nothing anybody could see.
+static func _move_past_hidden() -> bool:
+	var events: Array = []
+	for pair: Array in [["alpha", true], ["cache", false], ["gamma", true]]:
+		var declared: LocalVariable = LocalVariable.new()
+		declared.name = pair[0]
+		declared.exported = pair[1]
+		events.append(declared)
+	var moved: bool = EventSheetInspectorDesignerDialog.move_up_among_exported(events, "gamma")
+	var order: PackedStringArray = PackedStringArray()
+	for entry: LocalVariable in events:
+		order.append(entry.name)
+	return SUPPORT.pins("inspector_designer_test", [
+		["moving up past a hidden variable lands above the exported one", [moved, order],
+			[true, PackedStringArray(["gamma", "alpha", "cache"])]],
+		["the first exported variable stays put", EventSheetInspectorDesignerDialog.move_up_among_exported(events, "gamma"), false],
+	])
+
+
+## The window and the Inspector badges speak the editor's language, not English in every one.
+static func _speaks_the_editor_language() -> bool:
+	var before_locale: String = EventSheetL10n.get_locale()
+	EventSheetL10n.set_locale("de")
+	var dialog: EventSheetInspectorDesignerDialog = EventSheetInspectorDesignerDialog.new()
+	var badge: EventSheetDrawerWidgets.RequiredBadge = EventSheetDrawerWidgets.RequiredBadge.new()
+	var validate: EventSheetDrawerWidgets.ValidateBadge = EventSheetDrawerWidgets.ValidateBadge.new()
+	var said: Array = [dialog.title, badge.text, validate.text]
+	dialog.free()
+	badge.free()
+	validate.free()
+	EventSheetL10n.set_locale(before_locale)
+	return SUPPORT.check("inspector_designer_test", "the Designer and the badges read German in German", said,
+		["Inspektor-Designer", "⚠ Erforderlich - einen Wert zuweisen", "⚠ wird beim Bearbeiten von einer Sheet-Funktion geprüft"])
 
 
 static func _eq(label: String, actual: Variant, expected: Variant) -> bool:

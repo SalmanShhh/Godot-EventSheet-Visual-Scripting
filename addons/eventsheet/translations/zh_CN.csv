@@ -8261,3 +8261,30 @@ Packs,扩展包
 "%s is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object.",%s 是全局：它在 项目设置 > 全局 > 自动加载 中启用，而不是添加到对象上。
 Made for a %s - %s is a %s.,为 %s 而做 - %s 是 %s。
 Add behaviour %s,添加行为 %s
+Required - assign a value,必填 - 请赋一个值
+Drag to set the value,拖动以设置数值
+Drag either handle to set the low / high end,拖动任一手柄以设置下限 / 上限
+validated by %s() while you edit,编辑时由 %s() 校验
+validated by a sheet function while you edit,编辑时由事件表函数校验
+Needs a @tool sheet with a %s() function to run in the editor.,需要一个带有 %s() 函数的 @tool 事件表才能在编辑器中运行。
+Calls %s() on this object.,在此对象上调用 %s()。
+All four corners at once.,四个角一起设置。
+Set each corner on its own.,分别设置每个角。
+Top-left,左上
+Top-right,右上
+Bottom-left,左下
+Bottom-right,右下
+Keep %s and %s in the ratio they have now.,让 %s 和 %s 保持现在的比例。
+linked to %s,已链接到 %s
+Link %s and %s,链接 %s 和 %s
+Move this row up,上移这一行
+Remove this row,移除这一行
+Drag the handle to set direction + magnitude,拖动手柄以设置方向 + 大小
+Custom colour…,自定义颜色…
+Inspector Designer,检查器设计器
+"No Inspector-visible variables yet - tick ""Editable in the Inspector"" on a variable and it appears here.","检查器中还没有可见的变量 - 在变量上勾选 ""Editable in the Inspector"",它就会出现在这里。"
+"Every Inspector-visible variable, exactly as Godot will show it. ✎ edits a variable; ▲ moves a sheet variable up (the list is in the order the file declares them).","检查器中可见的每个变量,与 Godot 显示的完全一致。✎ 编辑变量;▲ 上移事件表变量(列表按文件声明它们的顺序排列)。"
+"Every Inspector-visible variable, exactly as Godot will show it. Edit a variable from its row in the sheet (hover it there for this same preview).","检查器中可见的每个变量,与 Godot 显示的完全一致。请在事件表中该变量的行上编辑它(悬停在那里可看到同样的预览)。"
+Edit %s in the Variable dialog,在变量对话框中编辑 %s
+Move this variable up in the Inspector (one undo step),在检查器中上移此变量(一个撤销步骤)
+Dragged in the viewport:,在视口中拖动:

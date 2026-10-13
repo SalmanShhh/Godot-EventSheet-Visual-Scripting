@@ -62,6 +62,18 @@
   tileset facts walk the project once.
 - Rows read exactly as before: the trigger badge, the accessor rows and the connect reading build
   their shared cells in one place each.
+### Fixed: the Inspector Designer and the Inspector's badges speak the editor's language
+
+- The Inspector Designer window (title, intro, empty hint, button tooltips, "Dragged in the
+  viewport:") and the Inspector drawers' own words - the Required and validate badges, the action
+  button's tooltip, the slider, corner, link and table tooltips - read in the editor's language
+  instead of English in every one. The validate badge with no function named now reads "validated
+  by a sheet function while you edit" rather than "a sheet function()".
+- The Designer's intro and chip text take the window kit's text colours, so they read in a light
+  editor theme.
+- ▲ in the Designer moves a variable above the next one UP in the Inspector. It used to swap with
+  the variable just above it in the file even when that one is not shown in the Inspector, which
+  changed nothing anybody could see.
 
 ### Fixed: an empty node or resource slot previews the line it saves
 

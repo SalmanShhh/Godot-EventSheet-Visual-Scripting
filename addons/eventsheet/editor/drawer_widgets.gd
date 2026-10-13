@@ -236,7 +236,7 @@ class RequiredBadge:
 	func _init(target: Object = null, property: String = "") -> void:
 		_target = target
 		_property = property
-		text = "⚠ Required - assign a value"
+		text = "⚠ " + EventSheetL10n.translate("Required - assign a value")
 		add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 		add_theme_color_override("font_color", EventSheetActiveTheme.chrome().drawer_required_color)
 		_refresh()
@@ -278,7 +278,7 @@ class DrawerProgressBar:
 		max_value = p_max
 		custom_minimum_size = Vector2(0.0, 18.0)
 		mouse_filter = Control.MOUSE_FILTER_STOP
-		tooltip_text = "Drag to set the value"
+		tooltip_text = EventSheetL10n.translate("Drag to set the value")
 
 	func set_value(v: float) -> void:
 		_value = clampf(v, min_value, max_value)
@@ -340,7 +340,7 @@ class DrawerMinMaxSlider:
 		_value = Vector2(p_min, p_max)
 		custom_minimum_size = Vector2(0.0, 18.0)
 		mouse_filter = Control.MOUSE_FILTER_STOP
-		tooltip_text = "Drag either handle to set the low / high end"
+		tooltip_text = EventSheetL10n.translate("Drag either handle to set the low / high end")
 
 	func set_value(v: Vector2) -> void:
 		var low: float = clampf(minf(v.x, v.y), min_value, max_value)
@@ -419,7 +419,8 @@ class ValidateBadge:
 	func _init(target: Object = null, validate_function: String = "") -> void:
 		_target = target
 		_function = validate_function
-		text = "⚠ validated by %s() while you edit" % (_function if not _function.is_empty() else "a sheet function")
+		text = "⚠ " + (EventSheetL10n.translate("validated by %s() while you edit") % _function if not _function.is_empty()
+			else EventSheetL10n.translate("validated by a sheet function while you edit"))
 		autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 		add_theme_color_override("font_color", EventSheetActiveTheme.chrome().drawer_validate_color)
@@ -470,9 +471,9 @@ class ActionButton:
 			return  # mock: enabled-looking, wired to nothing
 		if not _can_run():
 			disabled = true
-			tooltip_text = "Needs a @tool sheet with a %s() function to run in the editor." % _function
+			tooltip_text = EventSheetL10n.translate("Needs a @tool sheet with a %s() function to run in the editor.") % _function
 		else:
-			tooltip_text = "Calls %s() on this object." % _function
+			tooltip_text = EventSheetL10n.translate("Calls %s() on this object.") % _function
 		pressed.connect(_on_pressed)
 
 	func _on_pressed() -> void:
@@ -681,24 +682,26 @@ class DrawerCorners:
 		_uniform_spin.allow_greater = true
 		_uniform_spin.allow_lesser = true
 		_uniform_spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_uniform_spin.tooltip_text = "All four corners at once."
+		_uniform_spin.tooltip_text = EventSheetL10n.translate("All four corners at once.")
 		_uniform_spin.value_changed.connect(_on_uniform_changed)
 		top_row.add_child(_uniform_spin)
 		_expand_button = Button.new()
 		_expand_button.text = "⊞"
 		_expand_button.toggle_mode = true
-		_expand_button.tooltip_text = "Set each corner on its own."
+		_expand_button.tooltip_text = EventSheetL10n.translate("Set each corner on its own.")
 		_expand_button.toggled.connect(_on_expand_toggled)
 		top_row.add_child(_expand_button)
 		add_child(top_row)
 		_corner_grid = GridContainer.new()
 		_corner_grid.columns = 2
 		_corner_grid.visible = false
+		var corner_words: Dictionary = {0: EventSheetL10n.translate("Top-left"), 1: EventSheetL10n.translate("Top-right"), 3: EventSheetL10n.translate("Bottom-left"),
+			2: EventSheetL10n.translate("Bottom-right")}
 		for cell: Array in CORNER_CELLS:
 			var cell_box: VBoxContainer = VBoxContainer.new()
 			cell_box.add_theme_constant_override("separation", 0)
 			var cell_label: Label = Label.new()
-			cell_label.text = str(cell[0])
+			cell_label.text = str(corner_words.get(cell[1], cell[0]))
 			cell_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 			cell_label.modulate.a = 0.65
 			cell_box.add_child(cell_label)
@@ -817,11 +820,11 @@ class LinkToggle:
 		_button = Button.new()
 		_button.text = "="
 		_button.toggle_mode = true
-		_button.tooltip_text = "Keep %s and %s in the ratio they have now." % [_first, _second]
+		_button.tooltip_text = EventSheetL10n.translate("Keep %s and %s in the ratio they have now.") % [_first, _second]
 		_button.toggled.connect(_on_toggled)
 		add_child(_button)
 		var caption: Label = Label.new()
-		caption.text = "linked to %s" % _second
+		caption.text = EventSheetL10n.translate("linked to %s") % _second
 		caption.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 		caption.modulate.a = 0.6
 		add_child(caption)
@@ -899,7 +902,7 @@ class LinkToggle:
 		# MERGE_ALL, never MERGE_ENDS: the ends mode DROPS the undo operations of the action being
 		# merged in, and the follower's undo operation is the whole point of the merge.
 		undo_redo_manager.call("create_action",
-			joined if not joined.is_empty() else "Link %s and %s" % [leader, follower], UndoRedo.MERGE_ALL)
+			joined if not joined.is_empty() else EventSheetL10n.translate("Link %s and %s") % [leader, follower], UndoRedo.MERGE_ALL)
 		undo_redo_manager.call("add_do_property", target, leader, leader_after)
 		undo_redo_manager.call("add_do_property", target, follower, follower_after)
 		undo_redo_manager.call("add_undo_property", target, leader, leader_before)
@@ -989,7 +992,7 @@ class DrawerTable:
 		_grid.add_theme_constant_override("v_separation", 2)
 		add_child(_grid)
 		_add_button = Button.new()
-		_add_button.text = "+ Add row"
+		_add_button.text = "+ " + EventSheetL10n.translate("Add row")
 		_add_button.pressed.connect(_on_add_row)
 		add_child(_add_button)
 		_rebuild()
@@ -1050,13 +1053,13 @@ class DrawerTable:
 				_grid.add_child(_make_cell(row, column))
 			var up_button: Button = Button.new()
 			up_button.text = "▲"
-			up_button.tooltip_text = "Move this row up"
+			up_button.tooltip_text = EventSheetL10n.translate("Move this row up")
 			up_button.disabled = not editable or row_index == 0
 			up_button.pressed.connect(_on_move_up.bind(row_index))
 			_grid.add_child(up_button)
 			var remove_button: Button = Button.new()
 			remove_button.text = "✕"
-			remove_button.tooltip_text = "Remove this row"
+			remove_button.tooltip_text = EventSheetL10n.translate("Remove this row")
 			remove_button.disabled = not editable
 			remove_button.pressed.connect(_on_remove.bind(row_index))
 			_grid.add_child(remove_button)
@@ -1159,7 +1162,7 @@ class DrawerVectorDial:
 		max_magnitude = maxf(0.0001, p_max)
 		custom_minimum_size = Vector2(124.0, 124.0)
 		mouse_filter = Control.MOUSE_FILTER_STOP
-		tooltip_text = "Drag the handle to set direction + magnitude"
+		tooltip_text = EventSheetL10n.translate("Drag the handle to set direction + magnitude")
 
 	func set_value(v: Vector2) -> void:
 		_value = v
@@ -1222,7 +1225,7 @@ class DrawerSwatchRow:
 		_picker = ColorPickerButton.new()
 		_picker.custom_minimum_size = Vector2(38.0, 20.0)
 		_picker.color = _value
-		_picker.tooltip_text = "Custom colour…"
+		_picker.tooltip_text = EventSheetL10n.translate("Custom colour…")
 		_picker.color_changed.connect(_on_picked)
 		add_child(_picker)
 

@@ -8261,3 +8261,30 @@ Packs,パック
 "%s is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object.",%s はグローバルです。プロジェクト設定 > グローバル > 自動読み込み で有効にするもので、オブジェクトには追加しません。
 Made for a %s - %s is a %s.,%s 用です。%s は %s です。
 Add behaviour %s,ビヘイビア %s を追加
+Required - assign a value,必須 - 値を割り当ててください
+Drag to set the value,ドラッグして値を設定
+Drag either handle to set the low / high end,どちらかのハンドルをドラッグして下限 / 上限を設定
+validated by %s() while you edit,編集中に %s() で検証されます
+validated by a sheet function while you edit,編集中にシートの関数で検証されます
+Needs a @tool sheet with a %s() function to run in the editor.,エディタで実行するには %s() 関数を持つ @tool シートが必要です。
+Calls %s() on this object.,このオブジェクトの %s() を呼び出します。
+All four corners at once.,4 つの角をまとめて。
+Set each corner on its own.,角を 1 つずつ設定します。
+Top-left,左上
+Top-right,右上
+Bottom-left,左下
+Bottom-right,右下
+Keep %s and %s in the ratio they have now.,%s と %s を今の比率のまま保ちます。
+linked to %s,%s とリンク
+Link %s and %s,%s と %s をリンク
+Move this row up,この行を上へ
+Remove this row,この行を削除
+Drag the handle to set direction + magnitude,ハンドルをドラッグして方向と大きさを設定
+Custom colour…,カスタムカラー…
+Inspector Designer,インスペクターデザイナー
+"No Inspector-visible variables yet - tick ""Editable in the Inspector"" on a variable and it appears here.","インスペクターに表示される変数はまだありません - 変数で ""Editable in the Inspector"" にチェックを入れるとここに表示されます。"
+"Every Inspector-visible variable, exactly as Godot will show it. ✎ edits a variable; ▲ moves a sheet variable up (the list is in the order the file declares them).",インスペクターに表示されるすべての変数を、Godot が表示するとおりに並べています。✎ で変数を編集、▲ でシートの変数を上へ移動します (一覧はファイルが宣言する順です)。
+"Every Inspector-visible variable, exactly as Godot will show it. Edit a variable from its row in the sheet (hover it there for this same preview).",インスペクターに表示されるすべての変数を、Godot が表示するとおりに並べています。変数はシートのその行から編集します (行にカーソルを合わせると同じプレビューが出ます)。
+Edit %s in the Variable dialog,変数ダイアログで %s を編集
+Move this variable up in the Inspector (one undo step),この変数をインスペクターで上へ移動 (元に戻すは 1 ステップ)
+Dragged in the viewport:,ビューポートでドラッグ:
