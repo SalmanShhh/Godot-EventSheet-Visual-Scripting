@@ -32,6 +32,7 @@ static func run() -> bool:
 	all_passed = _run_moment() and all_passed
 	all_passed = _run_round_trip() and all_passed
 	all_passed = _run_dialog() and all_passed
+	all_passed = _run_dialog_refuses_in_place() and all_passed
 	all_passed = _run_findings() and all_passed
 	all_passed = _run_change_inside_a_change() and all_passed
 	all_passed = _run_starting_hold() and all_passed
@@ -238,6 +239,30 @@ static func _run_dialog() -> bool:
 		[EventSheetStatesDialog.write(sheet, PackedStringArray(["Chase"]), "Chase"),
 			EventSheetStateFacts.names(sheet)],
 		[true, PackedStringArray(["Chase"])]) and all_passed
+	return all_passed
+
+
+## The refusal is read where the typing was: the dialog stays open with the reason under its form,
+## instead of closing and saying it on the status bar behind it.
+static func _run_dialog_refuses_in_place() -> bool:
+	var sheet: EventSheetResource = _states_sheet()
+	sheet.events.append(_row("OnReady", [], [_action_ace("GoToState", {"state": "CHASE"})]))
+	var dock: EventSheetDock = EventSheetDock.new()
+	dock.setup(sheet)
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	var dialog: EventSheetStatesDialog = EventSheetStatesDialog.new()
+	dialog.init(dock)
+	dialog._build()
+	dialog._states_edit.text = "Patrol · Hunt"
+	dialog._refill(EventSheetStatesDialog.words_of(dialog._states_edit.text), "Patrol")
+	dialog._on_confirmed()
+	var all_passed: bool = SUPPORT.check("object_state_test",
+		"a refused OK keeps the dialog open and says why under the form",
+		[dialog._dialog.dialog_hide_on_ok, dialog._problem_label.visible, dialog._problem_label.text,
+			EventSheetStateFacts.names(dock._current_sheet)],
+		[false, true, "Rows still name Chase, so the states were not changed. Point those rows at another state first, then remove or rename it.",
+			PackedStringArray(["Patrol", "Chase", "Stagger"])])
+	dock.free()
 	return all_passed
 
 

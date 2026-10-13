@@ -55,6 +55,12 @@ var _mouse_option: OptionButton = null
 ## The ONE help strip at the foot: what the focused field is for, then what the sheet will read as
 ## and the lines it will compile to.
 var _help_strip: EventSheetPopupUI.HelpStrip = null
+## What OK has to say, under the form - a refusal, or the On entering event it kept - with the dialog
+## still open on it.
+var _problem_label: Label = null
+## The answers the last OK applied when it had something to say. A second OK on the same answers has
+## nothing left to write, so it closes the dialog instead of writing them again.
+var _applied_key: String = ""
 ## mode word -> {"physics": bool, "mouse": bool}, edited here and written on OK. Read from the rows
 ## the last OK wrote, so re-opening the dialog shows what the sheet actually says.
 var _policy: Dictionary = {}
@@ -77,6 +83,8 @@ func open() -> void:
 	_modes_edit.text = " · ".join(declared)
 	_policy = read_policy(sheet)
 	_refill(declared, EventSheetModeFacts.starts_in(sheet))
+	_problem_label.visible = false
+	_applied_key = ""
 	_dialog.popup_centered(Vector2i(560, 460))
 
 
@@ -87,6 +95,8 @@ func _build() -> void:
 	_dialog.title = "Modes"
 	_dialog.ok_button_text = "OK"
 	_dialog.visible = false
+	# What OK has to say is said in the dialog, which stays open on what was typed.
+	_dialog.dialog_hide_on_ok = false
 	_dialog.confirmed.connect(_on_confirmed)
 	_dock.add_child(_dialog)
 	var form: VBoxContainer = EventSheetPopupUI.form_box()
@@ -111,6 +121,11 @@ func _build() -> void:
 	_mouse_option = _policy_dropdown(["Hidden", "Shown"])
 	_mouse_option.item_selected.connect(func(_index: int) -> void: _remember_policy())
 	form.add_child(EventSheetPopupUI.form_row("Mouse", _mouse_option))
+
+	_problem_label = EventSheetPopupUI.hint_label("", 400.0)
+	_problem_label.add_theme_color_override("font_color", Color(0.95, 0.5, 0.5))
+	_problem_label.visible = false
+	form.add_child(_problem_label)
 
 	_help_strip = EventSheetPopupUI.help_strip()
 	form.add_child(_help_strip)
@@ -171,20 +186,33 @@ func _remember_policy() -> void:
 func _on_confirmed() -> void:
 	var declared: PackedStringArray = words_of(_modes_edit.text)
 	if declared.is_empty():
-		_dock._set_status(EventSheetL10n.translate("Name at least one mode."), true)
+		_problem_label.text = EventSheetL10n.translate("Name at least one mode.")
+		_problem_label.visible = true
 		return
 	_remember_policy()
 	var opening: String = _starts_in()
 	var policy: Dictionary = _policy.duplicate(true)
-	if not _dock._perform_undoable_sheet_edit(EventSheetL10n.translate("Edit modes"), func() -> bool:
-			return write(_dock._current_sheet, declared, opening, policy)):
+	var key: String = var_to_str([declared, opening, policy])
+	if key == _applied_key:
+		_dialog.hide()
+		return
+	_problem_label.visible = false
+	var applied: bool = _dock._perform_undoable_sheet_edit(EventSheetL10n.translate("Edit modes"), func() -> bool:
+			return write(_dock._current_sheet, declared, opening, policy))
+	if not applied:
+		_dialog.hide()
 		return
 	_dock._refresh_after_edit()
 	var stray: PackedStringArray = stray_entering_events(_dock._current_sheet)
 	if not stray.is_empty():
-		_dock._set_status(EventSheetL10n.translate("%d mode(s) declared. The On entering event of %s holds rows of your own, so it was kept - move or delete it, since that mode is gone.")
-			% [declared.size(), ", ".join(stray)], true)
+		# Said where the typing was, not on the status line behind the dialog: the modes ARE declared,
+		# and the next OK on these same answers closes the dialog without writing them again.
+		_problem_label.text = EventSheetL10n.translate("%d mode(s) declared. The On entering event of %s holds rows of your own, so it was kept - move or delete it, since that mode is gone.") \
+			% [declared.size(), ", ".join(stray)]
+		_problem_label.visible = true
+		_applied_key = key
 		return
+	_dialog.hide()
 	_dock._set_status(EventSheetL10n.translate("%d mode(s) declared - groups can now say which one they run in.")
 		% declared.size())
 

@@ -25,6 +25,7 @@ static func run() -> bool:
 	all_passed = _run_moment() and all_passed
 	all_passed = _run_round_trip() and all_passed
 	all_passed = _run_dialog() and all_passed
+	all_passed = _run_dialog_notice_in_place() and all_passed
 	all_passed = _run_findings() and all_passed
 	all_passed = _run_seen() and all_passed
 	all_passed = _run_mode_row_before_ready() and all_passed
@@ -97,6 +98,41 @@ static func _run_dialog() -> bool:
 	EventSheetModesDialog.write(sheet, PackedStringArray(["Playing", "Paused"]), "Paused", paused_policy)
 	all_passed = SUPPORT.check("game_state_test", "an entering event holding the author's rows is kept and named",
 		EventSheetModesDialog.stray_entering_events(sheet), PackedStringArray(["CUTSCENE"])) and all_passed
+	return all_passed
+
+
+## The kept-event notice is read where the typing was: OK applies the modes and the dialog stays open
+## with the notice under its form, and the next OK on the same answers closes it without a second
+## write.
+static func _run_dialog_notice_in_place() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node"
+	var paused_policy: Dictionary = {"Paused": {"physics": false, "mouse": true}}
+	EventSheetModesDialog.write(sheet, PackedStringArray(["Playing", "Paused", "Cutscene"]), "Paused", paused_policy)
+	for entry: Variant in sheet.events:
+		var entering: EventRow = entry as EventRow
+		if entering != null and str(entering.trigger_params.get(EventSheetModeFacts.MODE_PARAM, "")) == "CUTSCENE":
+			entering.actions.append(ACEAction.new())
+	var dock: EventSheetDock = EventSheetDock.new()
+	dock.setup(sheet)
+	var undo: EventSheetEditorTest.FakeEditorUndoRedoManager = EventSheetEditorTest.FakeEditorUndoRedoManager.new()
+	dock.set_undo_redo_manager(undo)
+	var dialog: EventSheetModesDialog = EventSheetModesDialog.new()
+	dialog.init(dock)
+	dialog._build()
+	dialog._modes_edit.text = "Playing · Paused"
+	dialog._policy = EventSheetModesDialog.read_policy(dock._current_sheet)
+	dialog._refill(EventSheetModesDialog.words_of(dialog._modes_edit.text), "Paused")
+	dialog._on_confirmed()
+	var after_first: Array = [dialog._dialog.dialog_hide_on_ok, dialog._problem_label.visible,
+		dialog._problem_label.text, EventSheetModeFacts.names(dock._current_sheet), undo._undo_stack.size()]
+	dialog._on_confirmed()
+	var all_passed: bool = SUPPORT.check("game_state_test",
+		"the kept-event notice shows in the dialog, and OK again closes without a second write",
+		[after_first, undo._undo_stack.size()],
+		[[false, true, "2 mode(s) declared. The On entering event of CUTSCENE holds rows of your own, so it was kept - move or delete it, since that mode is gone.",
+			PackedStringArray(["Playing", "Paused"]), 1], 1])
+	dock.free()
 	return all_passed
 
 
