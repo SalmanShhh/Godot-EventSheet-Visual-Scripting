@@ -17,6 +17,9 @@ static func run() -> bool:
 	var ok: bool = _test_the_inspector_rules()
 	ok = _test_the_sheet_reading() and ok
 	ok = _test_writing_the_type() and ok
+	# The dock publishes the Editor Native style these sheets wear; put the quiet one back so the
+	# next test in the same process meets the strip nobody chose.
+	EventSheetActiveTheme.publish(null)
 	return ok
 
 
