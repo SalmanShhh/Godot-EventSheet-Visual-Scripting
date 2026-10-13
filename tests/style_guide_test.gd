@@ -8,6 +8,9 @@
 #   3. camelCase function/variable names (with a small documented allowlist: resource
 #      properties that are public API - renaming them would break saved .tres files and the
 #      pack-author compatibility covenant)
+#   4. a run of tabs in the MIDDLE of a code line - a `\` line continuation that got joined with
+#      its next line's indentation. It still parses, which is why nobody sees it, but the line is
+#      unreadable and the next edit tends to break it
 #
 # eventsheet_addons/*.gd, demo/sheets AND demo/showcase are COMPILER OUTPUT (build_examples.gd
 # emits the showcases the same way the packs are emitted, and showcase_examples_test.gd pins
@@ -39,6 +42,9 @@ const SINGLE_BLANK_TREE: String = "res://tools/pack_builders/src/"
 ## reference them by name); everything else must be snake_case.
 const NAMING_ALLOWLIST: Array[String] = ["listName", "nodeType", "initialValue", "displayText"]
 
+## Rule 4's pattern, compiled once for the whole sweep rather than once per line.
+static var _joined: RegEx = null
+
 
 static func run() -> bool:
 	var violations: PackedStringArray = PackedStringArray()
@@ -53,7 +59,22 @@ static func run() -> bool:
 			exempted.size(), SINGLE_BLANK_TREE])
 	var all_passed: bool = true
 	all_passed = _check("every hand-written script passes the style gate (%d scanned)" % scanned, violations.size(), 0) and all_passed
+	all_passed = _check("a joined line continuation is caught, and ordinary lines are not", [
+		joined_continuation("\tif a and not b.is_empty() \t\t\tand c != d:"),
+		joined_continuation("\tif a and not b.is_empty() \\"),
+		joined_continuation("\tlines.append(\"\tsaid.append(text)\")"),
+		joined_continuation("\tvar x: int = 1  # a comment \t\there"),
+	], [true, false, false, false]) and all_passed
 	return all_passed
+
+
+## True when a line of CODE carries a run of tabs after a space, part way along it: the shape a
+## `\` continuation takes once something joins it with the indentation of the line below. Text
+## inside a string or after a comment is not code, so the scan stops at the first quote or `#`.
+static func joined_continuation(line: String) -> bool:
+	if _joined == null:
+		_joined = RegEx.create_from_string("^\\t*[^\\t\"#][^\"#]*?\\S \\t+\\S")
+	return _joined.search(line) != null
 
 
 static func _scan_directory(dir_path: String, violations: PackedStringArray, exempted: PackedStringArray) -> int:
@@ -115,6 +136,8 @@ static func _scan_file(path: String, violations: PackedStringArray, exempted: Pa
 			var declared: String = name_match.get_string(1)
 			if declared.to_lower() != declared and not NAMING_ALLOWLIST.has(declared):
 				violations.append("%s:%d '%s' is not snake_case" % [path, index + 1, declared])
+		if joined_continuation(line):
+			violations.append("%s:%d has a run of tabs mid-line (a joined line continuation)" % [path, index + 1])
 		if line.count("\"\"\"") % 2 == 1:
 			in_string = true
 	if extends_line >= 0 and class_name_line >= 0 and extends_line < class_name_line:
