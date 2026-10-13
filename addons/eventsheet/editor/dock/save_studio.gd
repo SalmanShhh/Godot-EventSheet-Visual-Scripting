@@ -24,15 +24,6 @@ extends RefCounted
 const SAVE_SYSTEM_SCRIPT: String = "res://eventsheet_addons/save_system/save_system_addon.gd"
 const FORMATS: PackedStringArray = ["config", "json", "binary", "csv", "ini", "xml"]
 const FORMAT_EXTENSIONS: Dictionary = {"config": ".cfg", "json": ".json", "binary": ".sav", "csv": ".csv", "ini": ".ini", "xml": ".xml"}
-## What each format is and when it is the right one - the line the open list shows on hover.
-const FORMAT_DESCRIPTIONS: Dictionary = {
-	"config": "Godot's ConfigFile: plain text, one section per object. Readable and easy to fix by hand. The default, good for most games.",
-	"json": "Plain text that almost every tool and website can read. Good when a server, a website or another program reads the saves too.",
-	"binary": "Godot's compact binary form. Smallest and fastest; not readable in a text editor. Good for big saves (open worlds, many objects).",
-	"csv": "One row per value, which opens in a spreadsheet. Good for checking balance numbers in a spreadsheet.",
-	"ini": "The classic settings-file layout, readable by many older tools. Good when modders expect a familiar file.",
-	"xml": "Tagged text that many tools can check against a schema. Good when another tool needs to validate the file.",
-}
 
 var _dock: Control = null
 var _window: Window = null
@@ -54,6 +45,25 @@ var _support_pick_dialog: EditorFileDialog = null
 
 func init(dock: Control) -> void:
 	_dock = dock
+
+
+## What each format is and when it is the right one - the line the open list shows on hover. Each
+## sentence is written out inside its translate() call so the translation harvest finds it.
+static func format_description(fmt: String) -> String:
+	match fmt:
+		"config":
+			return EventSheetL10n.translate("Godot's ConfigFile: plain text, one section per object. Readable and easy to fix by hand. The default, good for most games.")
+		"json":
+			return EventSheetL10n.translate("Plain text that almost every tool and website can read. Good when a server, a website or another program reads the saves too.")
+		"binary":
+			return EventSheetL10n.translate("Godot's compact binary form. Smallest and fastest; not readable in a text editor. Good for big saves (open worlds, many objects).")
+		"csv":
+			return EventSheetL10n.translate("One row per value, which opens in a spreadsheet. Good for checking balance numbers in a spreadsheet.")
+		"ini":
+			return EventSheetL10n.translate("The classic settings-file layout, readable by many older tools. Good when modders expect a familiar file.")
+		"xml":
+			return EventSheetL10n.translate("Tagged text that many tools can check against a schema. Good when another tool needs to validate the file.")
+	return ""
 
 
 func open() -> void:
@@ -92,7 +102,7 @@ func _build_preview_tab() -> Control:
 	_preview_format_picker = EventSheetPopupUI.described_option()
 	for fmt: String in FORMATS:
 		EventSheetPopupUI.add_described_item(_preview_format_picker, "%s  (save_0%s)" % [fmt, FORMAT_EXTENSIONS[fmt]],
-			EventSheetL10n.translate(str(FORMAT_DESCRIPTIONS[fmt])))
+			format_description(fmt))
 	_preview_format_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(EventSheetPopupUI.form_row("Format", _preview_format_picker))
 	var preview_button: Button = Button.new()
@@ -137,7 +147,7 @@ func _build_slots_tab() -> Control:
 		EventSheetL10n.translate("Export the file exactly as it was written."))
 	for fmt: String in FORMATS:
 		EventSheetPopupUI.add_described_item(_slots_convert_picker, "as %s" % fmt,
-			EventSheetL10n.translate(str(FORMAT_DESCRIPTIONS[fmt])))
+			format_description(fmt))
 	actions.add_child(_slots_convert_picker)
 	var export_button: Button = Button.new()
 	export_button.text = "Export…"

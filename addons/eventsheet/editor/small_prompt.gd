@@ -16,15 +16,17 @@ extends RefCounted
 
 ## The custom action the risky button sends. Only it runs `on_danger`.
 const DANGER_ACTION: StringName = &"small_prompt_danger"
-## The width the sentence and the note wrap at, so a content-sized dialog never balloons.
+## The width the sentence and the note wrap at before the display scale, so a content-sized dialog
+## never balloons. Read through wrap_width(), which scales it the way the rest of the dialog is.
 const WRAP_WIDTH := 400.0
-## The glyph -> its badge colours (background, foreground): a question, a notice, a finished thing.
+## The glyph -> its badge colours: background and foreground on a dark editor theme, then the same
+## pair on a light one. A question, a notice, a finished thing.
 const GLYPH_TONES := {
-	"?": [Color("#4A3E22"), Color("#FFD27A")],
-	"!": [Color("#4A3E22"), Color("#FFD27A")],
-	"i": [Color("#23384D"), Color("#7CC4FF")],
-	"{ }": [Color("#23384D"), Color("#7CC4FF")],
-	"✓": [Color("#25402A"), Color("#8EE09A")],
+	"?": [Color("#4A3E22"), Color("#FFD27A"), Color("#F5E2B8"), Color("#7A4E00")],
+	"!": [Color("#4A3E22"), Color("#FFD27A"), Color("#F5E2B8"), Color("#7A4E00")],
+	"i": [Color("#23384D"), Color("#7CC4FF"), Color("#C4DCF5"), Color("#0B4F96")],
+	"{ }": [Color("#23384D"), Color("#7CC4FF"), Color("#C4DCF5"), Color("#0B4F96")],
+	"✓": [Color("#25402A"), Color("#8EE09A"), Color("#C7EBCB"), Color("#1D6A2A")],
 }
 ## The risky button's colour outside the editor, where the theme has no error colour to read.
 const DANGER_FALLBACK := Color("#F07A7A")
@@ -56,7 +58,7 @@ static func open(host: Node, ask: Dictionary) -> ConfirmationDialog:
 	var column: VBoxContainer = EventSheetPopupUI.form_box()
 	row.add_child(column)
 	dialog.add_child(EventSheetPopupUI.margined(row))
-	var say: Label = EventSheetPopupUI.hint_label(str(ask.get("say", "")), WRAP_WIDTH)
+	var say: Label = EventSheetPopupUI.hint_label(str(ask.get("say", "")), wrap_width())
 	say.name = "Say"
 	say.modulate = Color.WHITE
 	column.add_child(say)
@@ -65,6 +67,9 @@ static func open(host: Node, ask: Dictionary) -> ConfirmationDialog:
 	places.columns = 2
 	places.hide_root = true
 	places.focus_mode = Control.FOCUS_NONE
+	# The where-column is a short count; the what-column gets the rest of the width.
+	places.set_column_expand(1, false)
+	places.set_column_custom_minimum_width(1, roundi(EventSheetPalette.scaled_f(96.0)))
 	column.add_child(places)
 	set_list(dialog, ask.get("list", []))
 	if ask.get("body") is Control:
@@ -74,7 +79,7 @@ static func open(host: Node, ask: Dictionary) -> ConfirmationDialog:
 	column.add_child(code)
 	set_code(dialog, str(ask.get("code", "")))
 	if not str(ask.get("note", "")).is_empty():
-		var note: Label = EventSheetPopupUI.hint_label(str(ask["note"]), WRAP_WIDTH)
+		var note: Label = EventSheetPopupUI.hint_label(str(ask["note"]), wrap_width())
 		note.name = "Note"
 		column.add_child(note)
 	_wire(dialog, ask)
@@ -82,6 +87,11 @@ static func open(host: Node, ask: Dictionary) -> ConfirmationDialog:
 	if dialog.is_inside_tree():
 		dialog.popup_centered()
 	return dialog
+
+
+## The width the sentence, the note and the list wrap at on this display.
+static func wrap_width() -> float:
+	return EventSheetPalette.scaled_f(WRAP_WIDTH)
 
 
 ## Redraws the list under the sentence - for a question whose answer is still being typed. An empty
@@ -99,7 +109,7 @@ static func set_list(dialog: ConfirmationDialog, rows: Array) -> void:
 		item.set_custom_color(1, EventSheetPalette.TEXT_MUTED)
 	places.visible = not rows.is_empty()
 	# Tall enough for five places before it scrolls, so a long list still fits on the screen.
-	places.custom_minimum_size = Vector2(WRAP_WIDTH,
+	places.custom_minimum_size = Vector2(wrap_width(),
 		EventSheetPalette.scaled_f(34.0) * clampi(rows.size(), 1, 5) + EventSheetPalette.scaled_f(6.0))
 	places.scroll_vertical_enabled = rows.size() > 5
 
@@ -108,7 +118,7 @@ static func set_list(dialog: ConfirmationDialog, rows: Array) -> void:
 static func set_code(dialog: ConfirmationDialog, text: String) -> void:
 	var old: Control = dialog.find_child("Code", true, false) as Control
 	# The card's copy button copies what it was built with, so a new text is a new card.
-	var card: Control = EventSheetPopupUI.code_card(text, WRAP_WIDTH - 40.0)
+	var card: Control = EventSheetPopupUI.code_card(text, wrap_width() - EventSheetPalette.scaled_f(40.0))
 	card.visible = not text.is_empty()
 	old.add_sibling(card)
 	old.get_parent().remove_child(old)
@@ -158,7 +168,7 @@ static func _stand_apart(danger: Button) -> void:
 
 ## The round glyph beside the sentence, tinted by the kind of question it is.
 static func _badge(glyph: String) -> Control:
-	var tones: Array = GLYPH_TONES.get(glyph, GLYPH_TONES["?"])
+	var tones: Array = badge_tones(glyph, _light_editor())
 	var label: Label = Label.new()
 	label.name = "Glyph"
 	label.text = glyph
@@ -173,6 +183,24 @@ static func _badge(glyph: String) -> Control:
 	label.add_theme_stylebox_override("normal", disc)
 	label.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	return label
+
+
+## A glyph's badge colours [background, foreground] on a light or a dark editor theme.
+static func badge_tones(glyph: String, light: bool) -> Array:
+	var tones: Array = GLYPH_TONES.get(glyph, GLYPH_TONES["?"])
+	return tones.slice(2, 4) if light else tones.slice(0, 2)
+
+
+## True when the editor wears a light theme - Godot says so itself, as the "dark_theme" constant.
+static func _light_editor() -> bool:
+	var theme: Theme = _editor_theme()
+	return theme != null and theme.has_constant("dark_theme", "Editor") and theme.get_constant("dark_theme", "Editor") == 0
+
+
+static func _editor_theme() -> Theme:
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		return Engine.get_singleton("EditorInterface").get_editor_theme()
+	return null
 
 
 ## Recolours one of the dialog's own buttons: filled for the safe choice, outlined for the risky one.
@@ -194,8 +222,7 @@ static func _paint(button: Button, fill: Color, text: Color, filled: bool) -> vo
 
 ## The editor's own error colour, so the risky button matches Godot's red in every theme.
 static func _danger_color() -> Color:
-	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
-		var theme: Theme = Engine.get_singleton("EditorInterface").get_editor_theme()
-		if theme != null and theme.has_color("error_color", "Editor"):
-			return theme.get_color("error_color", "Editor")
+	var theme: Theme = _editor_theme()
+	if theme != null and theme.has_color("error_color", "Editor"):
+		return theme.get_color("error_color", "Editor")
 	return DANGER_FALLBACK

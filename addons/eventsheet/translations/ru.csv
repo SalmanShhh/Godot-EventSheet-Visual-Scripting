@@ -7380,7 +7380,7 @@ A snippet called {name} already exists - pick another name.,Фрагмент {na
 Reloading reads its events again; there is nothing for Ctrl+Z to take back.,Перезагрузка заново читает события; Ctrl+Z нечего отменять.
 Keep this version,Оставить эту версию
 The file on disk changed while you were editing it here. Which version do you want?,"Файл на диске изменился, пока вы редактировали его здесь. Какую версию оставить?"
-"Using the file on disk drops your unsaved edits here, and Ctrl+Z cannot bring them back.","Если взять файл с диска, несохранённые правки здесь пропадут, и Ctrl+Z их не вернёт."
+Using the file on disk keeps your unsaved edits as a backup in Sheet Backups first; Ctrl+Z cannot bring them back.,"Если взять файл с диска, несохранённые правки сначала попадут в Резервные копии листа как резервная копия; Ctrl+Z их не вернёт."
 Keep mine,Оставить мою
 Use the file on disk,Взять файл с диска
 Keep this event?,Оставить это событие?
@@ -7414,7 +7414,7 @@ No thanks,"Нет, спасибо"
 You renamed %s to %s. Events that still say %s can keep working.,"Вы переименовали %s в %s. События, где всё ещё написано %s, могут продолжать работать."
 "Type the name %s had before, and events that still say it keep working.","Введите прежнее имя %s, и события, где оно ещё написано, продолжат работать."
 Class name,Имя класса
-"Ctrl+Z undoes it in open sheets. Closed files are saved, each with a backup in Sheet Backups.","Ctrl+Z отменяет это в открытых листах. Закрытые файлы сохраняются, у каждого есть копия в «Резервных копиях листов»."
+"Ctrl+Z undoes it in this sheet. Other open tabs change and stay unsaved; closed files are saved, each with a backup in Sheet Backups.","Ctrl+Z отменяет это в этом листе. Другие открытые вкладки меняются и остаются несохранёнными; закрытые файлы сохраняются, у каждого остаётся копия в Резервные копии листа."
 Rename %s to %s?,Переименовать %s в %s?
 Name this class?,Дать имя этому классу?
 %s will be the class name everywhere %s is used.,"%s станет именем класса везде, где используется %s."
@@ -7427,3 +7427,17 @@ Rename the translation key too?,Переименовать и ключ пере�
 Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Notes ▸ Find Orphans lists it.,"Если отказаться, старый ключ останется в каталогах сиротой - Translation Studio ▸ Заметки ▸ Найти сирот покажет его."
 Update the catalogs,Обновить каталоги
 Leave them,Оставить как есть
+Looking for every place it is used...,"Ищем каждое место, где он используется..."
+"A number with a fraction: speeds, distances, seconds.","Число с дробной частью: скорости, расстояния, секунды."
+"A whole number: counts, health, coins.","Целое число: счётчики, здоровье, монеты."
+"Text, like a name or a line of dialogue.","Текст, например имя или реплика диалога."
+True or false: answers a yes/no question.,Истина или ложь: ответ на вопрос «да или нет».
+"A 2D point or direction (x, y).","Точка или направление в 2D (x, y)."
+"A 3D point or direction (x, y, z).","Точка или направление в 3D (x, y, z)."
+Any type at all. The editor cannot check it for you.,Любой тип. Редактор не сможет его проверить.
+"Godot's ConfigFile: plain text, one section per object. Readable and easy to fix by hand. The default, good for most games.","ConfigFile Godot: простой текст, по одному разделу на объект. Читается и легко правится вручную. По умолчанию, подходит большинству игр."
+"Plain text that almost every tool and website can read. Good when a server, a website or another program reads the saves too.","Простой текст, который читает почти любой инструмент и сайт. Подходит, когда сохранения читает ещё и сервер, сайт или другая программа."
+"Godot's compact binary form. Smallest and fastest; not readable in a text editor. Good for big saves (open worlds, many objects).","Компактный двоичный формат Godot. Самый маленький и быстрый; в текстовом редакторе не читается. Подходит для больших сохранений (открытые миры, много объектов)."
+"One row per value, which opens in a spreadsheet. Good for checking balance numbers in a spreadsheet.","Одна строка на значение, открывается в электронной таблице. Подходит для проверки чисел баланса в таблице."
+"The classic settings-file layout, readable by many older tools. Good when modders expect a familiar file.","Классический формат файла настроек, его читают многие старые инструменты. Подходит, когда моддеры ждут привычный файл."
+Tagged text that many tools can check against a schema. Good when another tool needs to validate the file.,"Размеченный текст, который многие инструменты проверяют по схеме. Подходит, когда другому инструменту нужно проверить файл."

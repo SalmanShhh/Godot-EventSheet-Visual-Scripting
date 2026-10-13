@@ -51,6 +51,23 @@ static func run() -> bool:
 		[true, 2, "2 places", true, false, true]) and ok
 	load(SMALL_PROMPT_PATH).set_list(listed, [])
 	ok = _check("an emptied list hides", places.visible, false) and ok
+
+	# With its Cancel button hidden the way out still works: Esc goes through that same button's
+	# answer, and a closed question frees itself.
+	var heard: Array = []
+	var bare: ConfirmationDialog = load(SMALL_PROMPT_PATH).open(host, {"title": "Keep it?", "cancel": "",
+		"on_cancel": func() -> void: heard.append("cancel")})
+	bare.get_cancel_button().pressed.emit()
+	ok = _check("a hidden Cancel still cancels", heard, ["cancel"]) and ok
+	# Outside a running tree hide() only sets the flag, so the signal Godot sends on closing is sent here.
+	bare.hide()
+	bare.visibility_changed.emit()
+	ok = _check("a closed question frees itself", bare.is_queued_for_deletion(), true) and ok
+	ok = _check("the badge reads in a light theme as well as a dark one",
+		[load(SMALL_PROMPT_PATH).badge_tones("!", false), load(SMALL_PROMPT_PATH).badge_tones("!", true)],
+		[[Color("#4A3E22"), Color("#FFD27A")], [Color("#F5E2B8"), Color("#7A4E00")]]) and ok
+	ok = _check("the sentence wraps at the display's scale", load(SMALL_PROMPT_PATH).wrap_width(),
+		EventSheetPalette.scaled_f(400.0)) and ok
 	host.free()
 	return _test_class_rename_question() and ok
 
@@ -72,6 +89,29 @@ static func _test_class_rename_question() -> bool:
 			["Rename SmallPromptProbe?", "\"Node\" is already the name of another class.", true]],
 		["a free name is asked about by name", [head._rename_dialog.title, say.text, head._rename_dialog.get_ok_button().disabled],
 			["Rename SmallPromptProbe to Hero?", "Hero will be the class name everywhere SmallPromptProbe is used.", false]],
+		# Only this sheet's edit is an undo step: the other open tabs change unsaved, closed files saved.
+		["the note says what Ctrl+Z reaches", head.class_rename_note(),
+			"Ctrl+Z undoes it in this sheet. Other open tabs change and stay unsaved; closed files are saved, each with a backup in Sheet Backups."],
+	])
+	dock.free()
+	return _test_places_follow_the_question() and ok
+
+
+## The rename question shows at once with a counting row, and the walk of the project fills the list
+## after it - so a big project never stalls the click.
+static func _test_places_follow_the_question() -> bool:
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock._current_sheet = EventSheetResource.new()
+	dock._current_sheet.custom_class_name = "SmallPromptProbe"
+	var head: EventSheetHeadActions = EventSheetHeadActions.new()
+	head.init(dock)
+	head.open_class_rename()
+	var places: Tree = head._rename_dialog.find_child("Places", true, false) as Tree
+	var before: Array = [places.visible, places.get_root().get_child(0).get_text(0)]
+	head.fill_class_rename_places(head._rename_dialog, "SmallPromptProbe")
+	var ok: bool = SUPPORT.pins("small_prompt_test", [
+		["the question shows first, counting", before, [true, "Looking for every place it is used..."]],
+		["then the walk fills the list - a name used nowhere lists nothing", places.visible, false],
 	])
 	dock.free()
 	return ok

@@ -36,24 +36,17 @@ const USABLE_AS: Array[Dictionary] = [
 	{"label": "Expression (returns a value - a getter)", "kind": "expression", "kind_label": "Expression", "card_title": "A value", "card_examples": "Health %, Remaining Shields", "glyph": "ƒx"},
 ]
 # Value types offered when the verb is "A value" (Expression). `friendly` is the plain-English label
-# shown; `label` is the GDScript type name kept for reference; `description` is the sentence the open
-# list shows as the pointer rests on a choice. Order is index-stable (build_function_data
+# shown; `label` is the GDScript type name kept for reference; value_type_description() is the sentence
+# the open list shows as the pointer rests on a choice. Order is index-stable (build_function_data
 # + the unit tests read VALUE_TYPES[selected]).
 const VALUE_TYPES: Array[Dictionary] = [
-	{"label": "float", "friendly": "a number (float)", "type": TYPE_FLOAT,
-		"description": "A number with a fraction: speeds, distances, seconds."},
-	{"label": "int", "friendly": "a whole number (int)", "type": TYPE_INT,
-		"description": "A whole number: counts, health, coins."},
-	{"label": "String", "friendly": "text (String)", "type": TYPE_STRING,
-		"description": "Text, like a name or a line of dialogue."},
-	{"label": "bool", "friendly": "yes / no (bool)", "type": TYPE_BOOL,
-		"description": "True or false: answers a yes/no question."},
-	{"label": "Vector2", "friendly": "a point (Vector2)", "type": TYPE_VECTOR2,
-		"description": "A 2D point or direction (x, y)."},
-	{"label": "Vector3", "friendly": "a 3D point (Vector3)", "type": TYPE_VECTOR3,
-		"description": "A 3D point or direction (x, y, z)."},
-	{"label": "Variant", "friendly": "anything (Variant)", "type": TYPE_MAX,
-		"description": "Any type at all. The editor cannot check it for you."},
+	{"label": "float", "friendly": "a number (float)", "type": TYPE_FLOAT},
+	{"label": "int", "friendly": "a whole number (int)", "type": TYPE_INT},
+	{"label": "String", "friendly": "text (String)", "type": TYPE_STRING},
+	{"label": "bool", "friendly": "yes / no (bool)", "type": TYPE_BOOL},
+	{"label": "Vector2", "friendly": "a point (Vector2)", "type": TYPE_VECTOR2},
+	{"label": "Vector3", "friendly": "a 3D point (Vector3)", "type": TYPE_VECTOR3},
+	{"label": "Variant", "friendly": "anything (Variant)", "type": TYPE_MAX},
 ]
 const PARAM_TYPES: PackedStringArray = ["float", "int", "bool", "String", "Vector2", "Vector3", "Variant"]
 
@@ -173,7 +166,7 @@ func init_dialog(parent_node: Node) -> void:
 	_value_type_option = EventSheetPopupUI.described_option()
 	for entry: Dictionary in VALUE_TYPES:
 		EventSheetPopupUI.add_described_item(_value_type_option, str(entry.get("friendly")),
-			EventSheetL10n.translate(str(entry.get("description"))))
+			value_type_description(int(entry.get("type"))))
 	_value_type_option.item_selected.connect(func(_index: int) -> void: _refresh_studio())
 	_value_type_row = EventSheetPopupUI.form_row("What kind of value?", _value_type_option, EventSheetPopupUI.LABEL_MIN_WIDTH,
 		"The kind of value this function hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the function works out.")
@@ -603,6 +596,27 @@ func _builtin_value_type_index(return_type: int) -> int:
 		if int(VALUE_TYPES[index].get("type")) == return_type:
 			return index
 	return -1
+
+
+## The sentence the open value-type list shows for a VALUE_TYPES card. Each is written out inside its
+## translate() call so the translation harvest finds it.
+static func value_type_description(value_type: int) -> String:
+	match value_type:
+		TYPE_FLOAT:
+			return EventSheetL10n.translate("A number with a fraction: speeds, distances, seconds.")
+		TYPE_INT:
+			return EventSheetL10n.translate("A whole number: counts, health, coins.")
+		TYPE_STRING:
+			return EventSheetL10n.translate("Text, like a name or a line of dialogue.")
+		TYPE_BOOL:
+			return EventSheetL10n.translate("True or false: answers a yes/no question.")
+		TYPE_VECTOR2:
+			return EventSheetL10n.translate("A 2D point or direction (x, y).")
+		TYPE_VECTOR3:
+			return EventSheetL10n.translate("A 3D point or direction (x, y, z).")
+		TYPE_MAX:
+			return EventSheetL10n.translate("Any type at all. The editor cannot check it for you.")
+	return ""
 
 
 ## Appends a dynamic value-type entry naming a type no builtin card offers (a custom / engine class, or a

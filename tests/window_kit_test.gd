@@ -2,7 +2,7 @@
 extends RefCounted
 # Godot EventSheets - the window kit's parts: the described dropdown (every choice carries its
 # sentence as Godot's own item tooltip, and the closed dropdown's tooltip follows the chosen one),
-# the Events | Code | Both view switch, the result card and the state note.
+# the result card and the state note.
 
 
 const SUPPORT := preload("res://tests/support.gd")
@@ -12,10 +12,35 @@ const NAME := "window_kit_test"
 static func run() -> bool:
 	var passed: bool = true
 	passed = _described_dropdown() and passed
-	passed = _view_switch() and passed
 	passed = _result_card() and passed
 	passed = _state_note() and passed
+	passed = _described_sentences_are_translatable() and passed
 	return passed
+
+
+## Every hover sentence the Save studio's formats and the function dialog's value types show is a key
+## the translation tables carry - a sentence spelled out inside its translate() call, which the
+## harvest reads, rather than one looked up from a table, which it cannot.
+static func _described_sentences_are_translatable() -> bool:
+	var keys: Dictionary = {}
+	var table: FileAccess = FileAccess.open("res://addons/eventsheet/translations/TEMPLATE.csv", FileAccess.READ)
+	while not table.eof_reached():
+		var cells: PackedStringArray = table.get_csv_line()
+		if not cells.is_empty():
+			keys[cells[0]] = true
+	var missing: Array = []
+	var sentences: Array = []
+	for fmt: String in EventSheetSaveStudio.FORMATS:
+		sentences.append(EventSheetSaveStudio.format_description(fmt))
+	for entry: Dictionary in EventSheetFunctionDialog.VALUE_TYPES:
+		sentences.append(EventSheetFunctionDialog.value_type_description(int(entry.get("type"))))
+	for sentence: String in sentences:
+		if sentence.is_empty() or not keys.has(sentence):
+			missing.append(sentence)
+	return SUPPORT.pins(NAME, [
+		["thirteen hover sentences", sentences.size(), 13],
+		["each one is in the translation tables", missing, []],
+	])
 
 
 static func _described_dropdown() -> bool:
@@ -48,28 +73,6 @@ static func _described_dropdown() -> bool:
 		"What the field is for."])
 	dropdown.free()
 	told.free()
-	return SUPPORT.pins(NAME, rows)
-
-
-static func _view_switch() -> bool:
-	var switch: EventSheetPopupUI.ViewSwitch = EventSheetPopupUI.ViewSwitch.new()
-	var heard: Array = []
-	switch.view_chosen.connect(func(view: String) -> void: heard.append(view))
-	var rows: Array = [
-		["it reads Events | Code | Both", _texts(switch), ["Events", "Code", "Both"]],
-		["it opens on Both", switch.view, "both"],
-		["with Both pressed", (switch.buttons["both"] as Button).button_pressed, true],
-	]
-	(switch.buttons["code"] as Button).pressed.emit()
-	rows.append(["pressing Code emits the chosen view", heard, ["code"]])
-	rows.append(["and presses Code alone", _pressed(switch), ["code"]])
-	switch.choose("code")
-	rows.append(["choosing the view already shown emits nothing", heard, ["code"]])
-	switch.choose("events", false)
-	rows.append(["a quiet choice from code moves the buttons", _pressed(switch), ["events"]])
-	rows.append(["without emitting", heard, ["code"]])
-	rows.append(["only the three views exist", _chosen_after(switch, "split"), "events"])
-	switch.free()
 	return SUPPORT.pins(NAME, rows)
 
 
@@ -111,26 +114,6 @@ static func _state_note() -> bool:
 	rows.append(["saying nothing hides it again", note.visible, false])
 	note.free()
 	return SUPPORT.pins(NAME, rows)
-
-
-static func _texts(switch: EventSheetPopupUI.ViewSwitch) -> Array:
-	var texts: Array = []
-	for child: Node in switch.get_children():
-		texts.append((child as Button).text)
-	return texts
-
-
-static func _pressed(switch: EventSheetPopupUI.ViewSwitch) -> Array:
-	var pressed: Array = []
-	for id: String in switch.buttons:
-		if (switch.buttons[id] as Button).button_pressed:
-			pressed.append(id)
-	return pressed
-
-
-static func _chosen_after(switch: EventSheetPopupUI.ViewSwitch, wanted: String) -> String:
-	switch.choose(wanted)
-	return switch.view
 
 
 static func _edge(note: EventSheetPopupUI.StateNote) -> Color:

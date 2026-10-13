@@ -69,13 +69,20 @@ static func _is_ring_entry(entry: String) -> bool:
 ## Copies the sheet file's CURRENT bytes into the ring and prunes past backup_count.
 ## Returns the backup path, or "" when disabled or there's nothing to back up yet.
 static func backup_sheet(sheet_path: String) -> String:
+	if not FileAccess.file_exists(sheet_path):
+		return ""
+	return backup_bytes(sheet_path, FileAccess.get_file_as_bytes(sheet_path))
+
+
+## Puts `current_bytes` into `sheet_path`'s ring as its newest backup - for a version that is not on
+## disk, such as the unsaved edits a reload is about to replace. Same pruning and dedup as above.
+static func backup_bytes(sheet_path: String, current_bytes: PackedByteArray) -> String:
 	var keep: int = backup_count()
-	if keep <= 0 or not FileAccess.file_exists(sheet_path):
+	if keep <= 0:
 		return ""
 	var dir_path: String = backup_dir_for(sheet_path)
 	DirAccess.make_dir_recursive_absolute(dir_path)
 	var existing: PackedStringArray = list_backups(sheet_path)
-	var current_bytes: PackedByteArray = FileAccess.get_file_as_bytes(sheet_path)
 	var next_index: int = 1
 	if not existing.is_empty():
 		# Identical to the newest backup: nothing new to protect - don't churn the ring

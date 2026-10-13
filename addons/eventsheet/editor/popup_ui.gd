@@ -996,48 +996,6 @@ static func follow_description(dropdown: OptionButton) -> void:
 	dropdown.tooltip_text = told if not told.is_empty() else str(dropdown.get_meta("described_fallback", ""))
 
 
-## A VIEW SWITCH: Events | Code | Both as one segmented row of toggle buttons in a ButtonGroup.
-## `view_chosen` fires when the reader picks a different view; `choose()` sets one from code.
-class ViewSwitch extends HBoxContainer:
-
-	signal view_chosen(view: String)
-
-	const EVENTS := "events"
-	const CODE := "code"
-	const BOTH := "both"
-	const LABELS := {EVENTS: "Events", CODE: "Code", BOTH: "Both"}
-
-	var view: String = ""
-	var buttons: Dictionary = {}
-
-
-	func _init(start: String = BOTH) -> void:
-		add_theme_constant_override("separation", 0)
-		var group: ButtonGroup = ButtonGroup.new()
-		for id: String in LABELS:
-			var button: Button = Button.new()
-			button.text = EventSheetL10n.translate(str(LABELS[id]))
-			button.toggle_mode = true
-			# The chosen view reads in the one accent, the way the editor marks its own choice.
-			button.add_theme_color_override("font_pressed_color", EventSheetPopupUI.accent_color())
-			button.add_theme_color_override("font_hover_pressed_color", EventSheetPopupUI.accent_color())
-			button.button_group = group
-			button.pressed.connect(choose.bind(id))
-			add_child(button)
-			buttons[id] = button
-		choose(start, false)
-
-
-	func choose(wanted: String, announce: bool = true) -> void:
-		if not buttons.has(wanted) or wanted == view:
-			return
-		view = wanted
-		for id: String in buttons:
-			(buttons[id] as Button).set_pressed_no_signal(id == wanted)
-		if announce:
-			view_chosen.emit(wanted)
-
-
 ## A RESULT CARD: a titled panel that says what just happened. `report()` fills it - a short flow of
 ## figures read left to right, then one line per outcome, each led by its tone's mark and closed by
 ## the file it touched when there is one.

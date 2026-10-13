@@ -12,6 +12,10 @@ extends RefCounted
 # (_prompt_external_reload_if_changed / _external_sheet_changed_on_disk / _reload_external_sheet)
 # so the focus-in notification and the watch test keep calling the dock unchanged.
 
+const SHEET_COMPILER_PATH := "res://addons/eventforge/compiler/sheet_compiler.gd"
+## The file the unsaved version is compiled into before it joins the backup ring; removed straight after.
+const UNSAVED_COPY := "user://eventsheet_unsaved_before_reload.gd"
+
 var _dock: Control = null
 var _external_reload_dialog: ConfirmationDialog = null
 
@@ -56,8 +60,24 @@ func prompt_external_reload_if_changed() -> void:
 			_dock._external_mtime = FileAccess.get_modified_time(_dock._current_sheet.external_source_path)
 	ask["on_cancel"] = keep
 	ask["on_main"] = keep if dirty else reload_external_sheet
-	ask["on_danger"] = reload_external_sheet
+	ask["on_danger"] = func() -> void:
+		keep_unsaved_in_backups()
+		reload_external_sheet()
 	_external_reload_dialog = load(_dock.SMALL_PROMPT_PATH).open(_dock, ask)
+
+
+## Puts the version in the editor - unsaved edits and all - into the file's backup ring, so taking
+## the file on disk loses nothing for good. Returns the backup's path, "" when it could not be kept.
+func keep_unsaved_in_backups() -> String:
+	var sheet: EventSheetResource = _dock._current_sheet
+	if sheet == null or sheet.external_source_path.is_empty():
+		return ""
+	var compiled: Dictionary = load(SHEET_COMPILER_PATH).compile(sheet, UNSAVED_COPY)
+	var kept: String = ""
+	if bool(compiled.get("success", false)):
+		kept = EventSheetBackups.backup_bytes(sheet.external_source_path, FileAccess.get_file_as_bytes(UNSAVED_COPY))
+	DirAccess.remove_absolute(UNSAVED_COPY)
+	return kept
 
 
 ## What the reload question says, and which answer is the safe one. With unsaved edits here, keeping
@@ -75,7 +95,7 @@ static func reload_prompt(file_name: String, dirty: bool) -> Dictionary:
 	if dirty:
 		ask.merge({
 			"say": EventSheetL10n.translate("The file on disk changed while you were editing it here. Which version do you want?"),
-			"note": EventSheetL10n.translate("Using the file on disk drops your unsaved edits here, and Ctrl+Z cannot bring them back."),
+			"note": EventSheetL10n.translate("Using the file on disk keeps your unsaved edits as a backup in Sheet Backups first; Ctrl+Z cannot bring them back."),
 			"main": EventSheetL10n.translate("Keep mine"),
 			"cancel": "",
 			"danger": EventSheetL10n.translate("Use the file on disk"),

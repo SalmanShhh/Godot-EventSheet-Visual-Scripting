@@ -13,14 +13,20 @@
   Keep it as the blue answer and Delete the event on the left.
 - **A file changed outside the editor** - on a tab with no unsaved edits the question offers Reload
   as the safe answer; with unsaved edits, Keep mine is the safe answer and Use the file on disk is
-  the red one, and the prompt says plainly that Ctrl+Z cannot bring the edits back. Refocusing the
-  editor while the question is open no longer asks it a second time.
+  the red one. Taking the file on disk first keeps the version in the editor, unsaved edits and all,
+  as a backup in Sheet Backups, and the prompt says so (Ctrl+Z still cannot bring the edits back).
+  Refocusing the editor while the question is open no longer asks it a second time.
 - **Rename (a variable) asks Rename health?** and keeps Rename greyed, saying why, until the name
   typed is one the sheet accepts. Afterwards a short receipt - **Renamed health to hit_points** -
   lists the places it changed: this sheet with its count, each sheet that includes it (saved), and
   any hand-written script that still calls the old name (not changed - check it).
 - **Rename class asks Rename Player to Hero?** as you type, lists every file it will change with
-  its count before it changes any, and refuses a name another class already has, saying so.
+  its count before it changes any, and refuses a name another class already has, saying so. The
+  question shows at once and fills that list a moment later, so a big project does not stall the
+  click. Its note says what Ctrl+Z reaches: this sheet only - other open tabs change and stay
+  unsaved, and closed files are saved, each with a backup in Sheet Backups.
+- **The question's badge and red button read in a light editor theme too**, and its sentence wraps
+  at the display's scale, so a 2x screen no longer wraps it at half the width.
 - **Keep old events working?** (the providers panel's forwarding stand-in) shows the exact lines
   it would add to the script as you type the old name, and the button stays greyed until there is
   one to add.
@@ -28,13 +34,14 @@
   **Rename the translation key too?** take the same shape: Save and Keep Bookmarks stay the Enter answers, Discard and Clear all are
   the red buttons on the left.
 
-### Added: the window kit's dropdown, view switch, result card and state note
+### Added: the window kit's dropdown, result card and state note
 
 - **A dropdown says what each choice means.** Every choice carries its sentence as Godot's own item
   tooltip, so the open list explains a choice as the pointer rests on it, and the closed dropdown's
   tooltip is the chosen one's sentence. The variable dialog's Scope and Type, the retype dialog's
   type, the function dialog's "What kind of value?", and the Save studio's Format and export
-  dropdowns all read this way (the last three gained their sentences with it).
+  dropdowns all read this way (the last three gained their sentences with it, in all nine
+  languages).
 - **A result card says what just happened**: a titled panel with a short flow of figures and one
   line per outcome, led by a green, amber or red mark and closed by a chip naming the file it
   touched. The grid CSV and language-variants windows answer in it instead of a bare label, and the
@@ -42,8 +49,6 @@
 - **A state note** is one sentence with a coloured edge under the field it is about, hidden when
   there is nothing to say. The variable dialog's name clash and the New Behaviour Addon dialog's
   name problem use it in place of hand-tinted labels.
-- **An Events | Code | Both switch** for windows that show a sheet both ways: one segmented row of
-  toggle buttons that says which view was chosen.
 
 ### Tests: a real-editor boot budget, and scripts from a project the plugin has never touched
 
@@ -61,6 +66,10 @@
   asks each the standing contracts `tools/verify_sheets.gd` asks. All five re-emit byte for byte
   today; a file that ever does not is listed as expected to degrade, with its reason, instead of
   being quietly weakened.
+- **A tighter WARN line beside each budget**: about 1.5 times the medians (690 ms and 41.4 s). Past
+  one the test prints a loud `[boot] WARN` line and still passes. The parallel launcher repeats
+  every `[boot]` line under its verdict, and CI writes them into the tail job's summary and keeps
+  the tail log with the run, so the numbers can be compared from run to run.
 
 ### Removed: the Addon manager - a pack is a folder, as everywhere else in Godot
 

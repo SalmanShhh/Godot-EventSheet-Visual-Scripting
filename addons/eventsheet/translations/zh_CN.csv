@@ -7380,7 +7380,7 @@ A snippet called {name} already exists - pick another name.,名为 {name} 的片
 Reloading reads its events again; there is nothing for Ctrl+Z to take back.,重新加载会重新读取其事件；Ctrl+Z 没有可撤销的内容。
 Keep this version,保留此版本
 The file on disk changed while you were editing it here. Which version do you want?,你在这里编辑时，磁盘上的文件已更改。你要哪个版本？
-"Using the file on disk drops your unsaved edits here, and Ctrl+Z cannot bring them back.",使用磁盘上的文件会丢弃你在这里未保存的编辑，Ctrl+Z 也无法找回。
+Using the file on disk keeps your unsaved edits as a backup in Sheet Backups first; Ctrl+Z cannot bring them back.,使用磁盘上的文件会先把你未保存的编辑作为备份存入“事件表备份”；Ctrl+Z 无法找回它们。
 Keep mine,保留我的
 Use the file on disk,使用磁盘上的文件
 Keep this event?,保留此事件？
@@ -7414,7 +7414,7 @@ No thanks,不用了
 You renamed %s to %s. Events that still say %s can keep working.,你把 %s 重命名为 %s。仍写着 %s 的事件可以继续工作。
 "Type the name %s had before, and events that still say it keep working.",输入 %s 以前的名称，仍写着它的事件就能继续工作。
 Class name,类名
-"Ctrl+Z undoes it in open sheets. Closed files are saved, each with a backup in Sheet Backups.",Ctrl+Z 可在打开的表中撤销。关闭的文件会被保存，每个都会在表备份中留一份备份。
+"Ctrl+Z undoes it in this sheet. Other open tabs change and stay unsaved; closed files are saved, each with a backup in Sheet Backups.",Ctrl+Z 只能在此表中撤销。其他打开的标签页会被更改并保持未保存；已关闭的文件会被保存，每个都在“事件表备份”中留有备份。
 Rename %s to %s?,将 %s 重命名为 %s？
 Name this class?,为此类命名？
 %s will be the class name everywhere %s is used.,%s 将成为所有使用 %s 之处的类名。
@@ -7427,3 +7427,17 @@ Rename the translation key too?,也重命名翻译键吗？
 Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Notes ▸ Find Orphans lists it.,如果拒绝，旧键会作为孤立项留在你的目录中 - Translation Studio ▸ 备注 ▸ 查找孤立项会列出它。
 Update the catalogs,更新目录
 Leave them,保持不变
+Looking for every place it is used...,正在查找所有用到它的地方...
+"A number with a fraction: speeds, distances, seconds.",带小数的数字：速度、距离、秒数。
+"A whole number: counts, health, coins.",整数：数量、生命值、金币。
+"Text, like a name or a line of dialogue.",文本，例如名字或一句对白。
+True or false: answers a yes/no question.,真或假：回答是/否的问题。
+"A 2D point or direction (x, y).","二维点或方向 (x, y)。"
+"A 3D point or direction (x, y, z).","三维点或方向 (x, y, z)。"
+Any type at all. The editor cannot check it for you.,任何类型。编辑器无法替你检查。
+"Godot's ConfigFile: plain text, one section per object. Readable and easy to fix by hand. The default, good for most games.",Godot 的 ConfigFile：纯文本，每个对象一个分节。易读，也容易手动修改。默认格式，适合大多数游戏。
+"Plain text that almost every tool and website can read. Good when a server, a website or another program reads the saves too.",几乎所有工具和网站都能读取的纯文本。适合服务器、网站或其他程序也要读取存档的情况。
+"Godot's compact binary form. Smallest and fastest; not readable in a text editor. Good for big saves (open worlds, many objects).",Godot 的紧凑二进制格式。最小最快；无法在文本编辑器中阅读。适合大型存档（开放世界、大量对象）。
+"One row per value, which opens in a spreadsheet. Good for checking balance numbers in a spreadsheet.",每个值一行，可以在电子表格中打开。适合在电子表格里检查平衡数值。
+"The classic settings-file layout, readable by many older tools. Good when modders expect a familiar file.",经典的设置文件格式，许多旧工具都能读取。适合模组作者期待熟悉文件的情况。
+Tagged text that many tools can check against a schema. Good when another tool needs to validate the file.,带标签的文本，许多工具可以按模式检查。适合另一个工具需要验证该文件的情况。

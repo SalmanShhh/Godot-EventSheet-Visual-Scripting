@@ -7380,7 +7380,7 @@ A snippet called {name} already exists - pick another name.,Esiste già uno snip
 Reloading reads its events again; there is nothing for Ctrl+Z to take back.,Ricaricare rilegge i suoi eventi; Ctrl+Z non ha nulla da annullare.
 Keep this version,Mantieni questa versione
 The file on disk changed while you were editing it here. Which version do you want?,Il file su disco è cambiato mentre lo modificavi qui. Quale versione vuoi?
-"Using the file on disk drops your unsaved edits here, and Ctrl+Z cannot bring them back.","Usare il file su disco scarta le modifiche non salvate qui, e Ctrl+Z non può recuperarle."
+Using the file on disk keeps your unsaved edits as a backup in Sheet Backups first; Ctrl+Z cannot bring them back.,Usare il file su disco conserva prima le modifiche non salvate come backup in Backup del foglio; Ctrl+Z non può recuperarle.
 Keep mine,Mantieni la mia
 Use the file on disk,Usa il file su disco
 Keep this event?,Mantenere questo evento?
@@ -7414,7 +7414,7 @@ No thanks,No grazie
 You renamed %s to %s. Events that still say %s can keep working.,Hai rinominato %s in %s. Gli eventi che dicono ancora %s possono continuare a funzionare.
 "Type the name %s had before, and events that still say it keep working.","Scrivi il nome che %s aveva prima, e gli eventi che lo dicono ancora continuano a funzionare."
 Class name,Nome della classe
-"Ctrl+Z undoes it in open sheets. Closed files are saved, each with a backup in Sheet Backups.","Ctrl+Z lo annulla nei fogli aperti. I file chiusi vengono salvati, ognuno con un backup in Backup dei fogli."
+"Ctrl+Z undoes it in this sheet. Other open tabs change and stay unsaved; closed files are saved, each with a backup in Sheet Backups.","Ctrl+Z lo annulla in questo foglio. Le altre schede aperte cambiano e restano non salvate; i file chiusi vengono salvati, ognuno con un backup in Backup del foglio."
 Rename %s to %s?,Rinominare %s in %s?
 Name this class?,Dare un nome a questa classe?
 %s will be the class name everywhere %s is used.,%s sarà il nome della classe ovunque si usi %s.
@@ -7427,3 +7427,17 @@ Rename the translation key too?,Rinominare anche la chiave di traduzione?
 Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Notes ▸ Find Orphans lists it.,"Se rifiuti, la vecchia chiave resta orfana nei tuoi cataloghi - Translation Studio ▸ Note ▸ Trova orfane la elenca."
 Update the catalogs,Aggiorna i cataloghi
 Leave them,Lasciali
+Looking for every place it is used...,Cerco ogni punto in cui è usato...
+"A number with a fraction: speeds, distances, seconds.","Un numero con la virgola: velocità, distanze, secondi."
+"A whole number: counts, health, coins.","Un numero intero: conteggi, salute, monete."
+"Text, like a name or a line of dialogue.","Testo, come un nome o una battuta di dialogo."
+True or false: answers a yes/no question.,Vero o falso: risponde a una domanda sì/no.
+"A 2D point or direction (x, y).","Un punto o una direzione 2D (x, y)."
+"A 3D point or direction (x, y, z).","Un punto o una direzione 3D (x, y, z)."
+Any type at all. The editor cannot check it for you.,Qualsiasi tipo. L'editor non può controllarlo per te.
+"Godot's ConfigFile: plain text, one section per object. Readable and easy to fix by hand. The default, good for most games.","Il ConfigFile di Godot: testo semplice, una sezione per oggetto. Leggibile e facile da correggere a mano. Il predefinito, adatto alla maggior parte dei giochi."
+"Plain text that almost every tool and website can read. Good when a server, a website or another program reads the saves too.","Testo semplice che quasi ogni strumento e sito web sa leggere. Utile quando anche un server, un sito web o un altro programma legge i salvataggi."
+"Godot's compact binary form. Smallest and fastest; not readable in a text editor. Good for big saves (open worlds, many objects).","La forma binaria compatta di Godot. La più piccola e veloce; non leggibile in un editor di testo. Adatta a salvataggi grandi (mondi aperti, molti oggetti)."
+"One row per value, which opens in a spreadsheet. Good for checking balance numbers in a spreadsheet.","Una riga per valore, che si apre in un foglio di calcolo. Utile per controllare i numeri di bilanciamento in un foglio di calcolo."
+"The classic settings-file layout, readable by many older tools. Good when modders expect a familiar file.","Il classico formato dei file di impostazioni, leggibile da molti strumenti più vecchi. Utile quando i modder si aspettano un file familiare."
+Tagged text that many tools can check against a schema. Good when another tool needs to validate the file.,Testo con tag che molti strumenti possono verificare rispetto a uno schema. Utile quando un altro strumento deve validare il file.

@@ -92,6 +92,26 @@ static func run() -> bool:
 	# Esc keeps the edits and remembers the change, so the question is not asked again.
 	dirty.canceled.emit()
 	all_passed = _check("Esc keeps the edits and stops asking", [editor._dirty, editor._external_sheet_changed_on_disk()], [true, false]) and all_passed
+	# Taking the file on disk first keeps the version in the editor as a backup, and says so.
+	for old_backup: String in EventSheetBackups.list_backups(sample_path):
+		DirAccess.remove_absolute(old_backup)
+	var third: FileAccess = FileAccess.open(sample_path, FileAccess.WRITE)
+	third.store_string("extends Node\n\nvar hp: int = 3\n")
+	third.close()
+	editor._external_mtime = 1
+	editor._prompt_external_reload_if_changed()
+	var taking: ConfirmationDialog = editor._external_watcher._external_reload_dialog
+	var note: String = (taking.find_child("Note", true, false) as Label).text
+	taking.custom_action.emit(load(editor.SMALL_PROMPT_PATH).DANGER_ACTION)
+	var kept: PackedStringArray = EventSheetBackups.list_backups(sample_path)
+	all_passed = _check("the unsaved version is kept in Sheet Backups before the disk one loads", [note,
+		FileAccess.get_file_as_string(kept[0]).contains("var hp: int = 2") if not kept.is_empty() else "no backup",
+		FileAccess.file_exists(EventSheetExternalWatcher.UNSAVED_COPY),
+		str(SheetCompiler.compile(editor._current_sheet, "user://eventsheets_watch_rt.gd").get("output", "")).contains("var hp: int = 3")],
+		["Using the file on disk keeps your unsaved edits as a backup in Sheet Backups first; Ctrl+Z cannot bring them back.",
+		true, false, true]) and all_passed
+	for made: String in EventSheetBackups.list_backups(sample_path):
+		DirAccess.remove_absolute(made)
 	editor.free()
 
 	return all_passed

@@ -7380,7 +7380,7 @@ A snippet called {name} already exists - pick another name.,{name} というス�
 Reloading reads its events again; there is nothing for Ctrl+Z to take back.,再読み込みはイベントを読み直します。Ctrl+Z で戻すものはありません。
 Keep this version,この版を残す
 The file on disk changed while you were editing it here. Which version do you want?,ここで編集している間にディスク上のファイルが変更されました。どちらの版を使いますか?
-"Using the file on disk drops your unsaved edits here, and Ctrl+Z cannot bring them back.",ディスク上のファイルを使うと、ここでの未保存の編集は失われ、Ctrl+Z でも戻せません。
+Using the file on disk keeps your unsaved edits as a backup in Sheet Backups first; Ctrl+Z cannot bring them back.,ディスク上のファイルを使うと、未保存の編集はまず「シートのバックアップ」にバックアップとして残ります。Ctrl+Z では戻せません。
 Keep mine,自分の版を残す
 Use the file on disk,ディスク上のファイルを使う
 Keep this event?,このイベントを残しますか?
@@ -7414,7 +7414,7 @@ No thanks,いいえ
 You renamed %s to %s. Events that still say %s can keep working.,%s を %s に名前変更しました。まだ %s と書かれたイベントも動き続けられます。
 "Type the name %s had before, and events that still say it keep working.",%s の以前の名前を入力すると、まだその名前のイベントも動き続けます。
 Class name,クラス名
-"Ctrl+Z undoes it in open sheets. Closed files are saved, each with a backup in Sheet Backups.",開いているシートでは Ctrl+Z で戻せます。閉じたファイルは保存され、それぞれシートのバックアップに控えが残ります。
+"Ctrl+Z undoes it in this sheet. Other open tabs change and stay unsaved; closed files are saved, each with a backup in Sheet Backups.",Ctrl+Z で戻せるのはこのシートだけです。開いている他のタブは変更され、未保存のままになります。閉じているファイルは保存され、それぞれ「シートのバックアップ」にバックアップが残ります。
 Rename %s to %s?,%s を %s に名前変更しますか?
 Name this class?,このクラスに名前を付けますか?
 %s will be the class name everywhere %s is used.,%s が、%s が使われているすべての場所でのクラス名になります。
@@ -7427,3 +7427,17 @@ Rename the translation key too?,翻訳キーも名前変更しますか?
 Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Notes ▸ Find Orphans lists it.,断ると古いキーは孤立したままカタログに残ります - Translation Studio ▸ メモ ▸ 孤立キーを探す に一覧されます。
 Update the catalogs,カタログを更新
 Leave them,そのままにする
+Looking for every place it is used...,使われている場所をすべて探しています...
+"A number with a fraction: speeds, distances, seconds.",小数を含む数: 速さ、距離、秒数。
+"A whole number: counts, health, coins.",整数: 個数、体力、コイン。
+"Text, like a name or a line of dialogue.",テキスト。名前やセリフの一行など。
+True or false: answers a yes/no question.,true か false: はい/いいえの問いに答えます。
+"A 2D point or direction (x, y).","2D の点または方向 (x, y)。"
+"A 3D point or direction (x, y, z).","3D の点または方向 (x, y, z)。"
+Any type at all. The editor cannot check it for you.,どんな型でも。エディターはチェックできません。
+"Godot's ConfigFile: plain text, one section per object. Readable and easy to fix by hand. The default, good for most games.",Godot の ConfigFile: プレーンテキストで、オブジェクトごとに 1 セクション。読みやすく手で直しやすい。既定値で、たいていのゲームに向いています。
+"Plain text that almost every tool and website can read. Good when a server, a website or another program reads the saves too.",ほとんどのツールやウェブサイトが読めるプレーンテキスト。サーバーやウェブサイト、別のプログラムもセーブを読む場合に向いています。
+"Godot's compact binary form. Smallest and fastest; not readable in a text editor. Good for big saves (open worlds, many objects).",Godot のコンパクトなバイナリ形式。最も小さく速いですが、テキストエディターでは読めません。大きなセーブ (オープンワールド、多数のオブジェクト) に向いています。
+"One row per value, which opens in a spreadsheet. Good for checking balance numbers in a spreadsheet.",値ごとに 1 行で、表計算ソフトで開けます。バランス調整の数値を表計算で確かめるのに向いています。
+"The classic settings-file layout, readable by many older tools. Good when modders expect a familiar file.",昔ながらの設定ファイルの形式で、多くの古いツールが読めます。MOD 制作者が見慣れたファイルを期待する場合に向いています。
+Tagged text that many tools can check against a schema. Good when another tool needs to validate the file.,多くのツールがスキーマで検証できるタグ付きテキスト。別のツールがファイルを検証する必要がある場合に向いています。

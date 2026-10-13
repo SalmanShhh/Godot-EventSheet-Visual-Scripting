@@ -243,19 +243,14 @@ static func rename_reach_text(reach: Dictionary) -> String:
 ## a name that is not a class name or that another class already has.
 func open_class_rename() -> void:
 	var current: String = _current_class_name()
-	var places: Array = []
-	for entry: Dictionary in rename_class_across(current, current + "_",
-			EventSheetFindReferences.open_sheets_of(_dock), _generated_paths(),
-			EventSheetProjectFind.list_all_project_sheets(), false):
-		var count: int = int(entry.get("count", 0))
-		places.append([str(entry.get("path", "")).get_file(),
-			EventSheetL10n.translate("1 place") if count == 1 else EventSheetL10n.translate("%d places") % count])
 	var edit: LineEdit = LineEdit.new()
 	edit.text = current
 	_rename_dialog = load(_dock.SMALL_PROMPT_PATH).open(_dock, {
-		"list": places,
+		# The walk reads every script in the project, so the question shows first and the places
+		# follow a frame later - a big project never stalls the click.
+		"list": [[EventSheetL10n.translate("Looking for every place it is used..."), ""]],
 		"body": EventSheetPopupUI.form_row(EventSheetL10n.translate("Class name"), edit),
-		"note": EventSheetL10n.translate("Ctrl+Z undoes it in open sheets. Closed files are saved, each with a backup in Sheet Backups."),
+		"note": class_rename_note(),
 		"main": EventSheetL10n.translate("Rename"),
 		"on_main": func() -> void: apply_class_rename_to(edit.text),
 	})
@@ -263,13 +258,40 @@ func open_class_rename() -> void:
 	edit.text_changed.connect(func(typed: String) -> void: _sync_class_rename(current, typed))
 	_sync_class_rename(current, current)
 	if edit.is_inside_tree():
+		# After the frame that draws the question, not merely later in the same one.
+		RenderingServer.frame_post_draw.connect(fill_class_rename_places.bind(_rename_dialog, current),
+			CONNECT_ONE_SHOT)
 		edit.grab_focus()
 		edit.select_all()
+
+
+## What Ctrl+Z reaches after a class rename: only this sheet's edit is an undo step. Other open tabs
+## are rewritten in memory and left unsaved; closed files are written, each backed up first.
+static func class_rename_note() -> String:
+	return EventSheetL10n.translate("Ctrl+Z undoes it in this sheet. Other open tabs change and stay unsaved; closed files are saved, each with a backup in Sheet Backups.")
+
+
+## Lists every file the class rename would change, with its count - the very walk the button runs,
+## on throwaway copies. Once per open: retyping the name does not walk the project again.
+func fill_class_rename_places(dialog: ConfirmationDialog, current: String) -> void:
+	if not is_instance_valid(dialog):
+		return
+	var places: Array = []
+	for entry: Dictionary in rename_class_across(current, current + "_",
+			EventSheetFindReferences.open_sheets_of(_dock), _generated_paths(),
+			EventSheetProjectFind.list_all_project_sheets(), false):
+		var count: int = int(entry.get("count", 0))
+		places.append([str(entry.get("path", "")).get_file(),
+			EventSheetL10n.translate("1 place") if count == 1 else EventSheetL10n.translate("%d places") % count])
+	load(_dock.SMALL_PROMPT_PATH).set_list(dialog, places)
 
 
 ## Words the class-rename question to the name typed so far: the title asks it, the sentence says
 ## what it will do or why it cannot, and Rename is only pressable for a name it would accept.
 func _sync_class_rename(current: String, typed: String) -> void:
+	# The question frees itself once it closes; the reference outlives it.
+	if not is_instance_valid(_rename_dialog):
+		return
 	var wanted: String = typed.strip_edges()
 	var problem: String = ""
 	if not wanted.is_empty() and not EventSheetIdentifierRules.is_valid(wanted):

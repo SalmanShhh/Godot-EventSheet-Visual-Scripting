@@ -7380,7 +7380,7 @@ A snippet called {name} already exists - pick another name.,{name} 스니펫이 
 Reloading reads its events again; there is nothing for Ctrl+Z to take back.,다시 불러오면 이벤트를 다시 읽습니다. Ctrl+Z로 되돌릴 것은 없습니다.
 Keep this version,이 버전 유지
 The file on disk changed while you were editing it here. Which version do you want?,여기서 편집하는 동안 디스크의 파일이 변경되었습니다. 어느 버전을 원하나요?
-"Using the file on disk drops your unsaved edits here, and Ctrl+Z cannot bring them back.",디스크의 파일을 사용하면 여기서 저장하지 않은 편집이 사라지며 Ctrl+Z로 되돌릴 수 없습니다.
+Using the file on disk keeps your unsaved edits as a backup in Sheet Backups first; Ctrl+Z cannot bring them back.,디스크의 파일을 사용하면 저장하지 않은 편집은 먼저 시트 백업에 백업으로 남습니다. Ctrl+Z로는 되돌릴 수 없습니다.
 Keep mine,내 버전 유지
 Use the file on disk,디스크의 파일 사용
 Keep this event?,이 이벤트를 유지할까요?
@@ -7414,7 +7414,7 @@ No thanks,괜찮습니다
 You renamed %s to %s. Events that still say %s can keep working.,%s을(를) %s(으)로 이름을 바꿨습니다. 아직 %s(이)라고 쓰인 이벤트도 계속 동작할 수 있습니다.
 "Type the name %s had before, and events that still say it keep working.",%s의 이전 이름을 입력하면 아직 그 이름을 쓰는 이벤트도 계속 동작합니다.
 Class name,클래스 이름
-"Ctrl+Z undoes it in open sheets. Closed files are saved, each with a backup in Sheet Backups.","열린 시트에서는 Ctrl+Z로 되돌릴 수 있습니다. 닫힌 파일은 저장되며, 각각 시트 백업에 백업이 남습니다."
+"Ctrl+Z undoes it in this sheet. Other open tabs change and stay unsaved; closed files are saved, each with a backup in Sheet Backups.","Ctrl+Z는 이 시트에서만 되돌립니다. 열려 있는 다른 탭은 바뀌고 저장되지 않은 상태로 남으며, 닫힌 파일은 저장되고 각각 시트 백업에 백업이 남습니다."
 Rename %s to %s?,%s을(를) %s(으)로 이름을 바꿀까요?
 Name this class?,이 클래스에 이름을 붙일까요?
 %s will be the class name everywhere %s is used.,%s이(가) %s이(가) 쓰이는 모든 곳에서 클래스 이름이 됩니다.
@@ -7427,3 +7427,17 @@ Rename the translation key too?,번역 키도 이름을 바꿀까요?
 Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Notes ▸ Find Orphans lists it.,거절하면 이전 키가 카탈로그에 고아로 남습니다 - Translation Studio ▸ 메모 ▸ 고아 찾기에 표시됩니다.
 Update the catalogs,카탈로그 업데이트
 Leave them,그대로 두기
+Looking for every place it is used...,사용된 모든 곳을 찾는 중...
+"A number with a fraction: speeds, distances, seconds.","소수가 있는 숫자: 속도, 거리, 초."
+"A whole number: counts, health, coins.","정수: 개수, 체력, 코인."
+"Text, like a name or a line of dialogue.",텍스트. 이름이나 대사 한 줄 같은 것.
+True or false: answers a yes/no question.,참 또는 거짓: 예/아니요 질문에 답합니다.
+"A 2D point or direction (x, y).","2D 점 또는 방향 (x, y)."
+"A 3D point or direction (x, y, z).","3D 점 또는 방향 (x, y, z)."
+Any type at all. The editor cannot check it for you.,어떤 타입이든. 편집기가 대신 확인해 줄 수 없습니다.
+"Godot's ConfigFile: plain text, one section per object. Readable and easy to fix by hand. The default, good for most games.","Godot의 ConfigFile: 일반 텍스트, 오브젝트마다 섹션 하나. 읽기 쉽고 손으로 고치기 쉽습니다. 기본값이며 대부분의 게임에 알맞습니다."
+"Plain text that almost every tool and website can read. Good when a server, a website or another program reads the saves too.","거의 모든 도구와 웹사이트가 읽을 수 있는 일반 텍스트. 서버, 웹사이트나 다른 프로그램도 세이브를 읽을 때 좋습니다."
+"Godot's compact binary form. Smallest and fastest; not readable in a text editor. Good for big saves (open worlds, many objects).","Godot의 압축된 바이너리 형식. 가장 작고 빠르지만 텍스트 편집기로는 읽을 수 없습니다. 큰 세이브(오픈 월드, 많은 오브젝트)에 좋습니다."
+"One row per value, which opens in a spreadsheet. Good for checking balance numbers in a spreadsheet.",값마다 한 행이며 스프레드시트에서 열립니다. 밸런스 수치를 스프레드시트에서 확인할 때 좋습니다.
+"The classic settings-file layout, readable by many older tools. Good when modders expect a familiar file.","고전적인 설정 파일 형식으로, 많은 오래된 도구가 읽을 수 있습니다. 모더가 익숙한 파일을 기대할 때 좋습니다."
+Tagged text that many tools can check against a schema. Good when another tool needs to validate the file.,많은 도구가 스키마로 검사할 수 있는 태그 텍스트. 다른 도구가 파일을 검증해야 할 때 좋습니다.
