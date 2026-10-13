@@ -26,6 +26,7 @@ static func run() -> bool:
 	all_passed = _run_round_trip() and all_passed
 	all_passed = _run_dialog() and all_passed
 	all_passed = _run_dialog_notice_in_place() and all_passed
+	all_passed = _run_dialog_names_rows_as_typed() and all_passed
 	all_passed = _run_findings() and all_passed
 	all_passed = _run_seen() and all_passed
 	all_passed = _run_mode_row_before_ready() and all_passed
@@ -136,7 +137,43 @@ static func _run_dialog_notice_in_place() -> bool:
 	return all_passed
 
 
-# ── 6. The two things that go wrong with modes ────────────────────────────────────────────
+## A mode leaving the list is named AS IT IS TYPED, with how many rows still name it. The On entering
+## event this window wrote holds nothing else and goes with the mode on OK, so it is not counted; the
+## Go to and the On leaving row are.
+static func _run_dialog_names_rows_as_typed() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node"
+	EventSheetModesDialog.write(sheet, PackedStringArray(["Playing", "Paused", "Cutscene"]), "Paused",
+		{"Paused": {"physics": false, "mouse": true}})
+	var policy_only: String = EventSheetModesDialog.left_list_note(sheet, PackedStringArray(["Playing", "Paused"]))
+	var going: EventRow = EventRow.new()
+	going.trigger_id = "OnReady"
+	var mode_action: ACEAction = ACEAction.new()
+	mode_action.ace_id = "GoToMode"
+	mode_action.params = {EventSheetModeFacts.MODE_PARAM: "CUTSCENE"}
+	going.actions.append(mode_action)
+	sheet.events.append(going)
+	var leaving: EventRow = EventRow.new()
+	leaving.trigger_id = EventSheetModeFacts.LEAVING_TRIGGER_ID
+	leaving.trigger_params = {EventSheetModeFacts.MODE_PARAM: "CUTSCENE"}
+	sheet.events.append(leaving)
+	var dock: EventSheetDock = EventSheetDock.new()
+	dock.setup(sheet)
+	var dialog: EventSheetModesDialog = EventSheetModesDialog.new()
+	dialog.init(dock)
+	dialog._build()
+	dialog._modes_edit.text = "Playing · Paused"
+	dialog._refill(EventSheetModesDialog.words_of(dialog._modes_edit.text), "Paused")
+	var all_passed: bool = SUPPORT.check("game_state_test",
+		"a mode leaving the list names how many rows still name it, as it is typed",
+		[policy_only, dialog._problem_label.visible, dialog._problem_label.text, dialog._dialog.title,
+			dialog._dialog.ok_button_text],
+		["", true, "Cutscene left the list - 2 row(s) still name it.", "Edit the game's modes", "Declare Modes"])
+	dock.free()
+	return all_passed
+
+
+# ── 6. The two things that go wrong with modes────────────────────────────────────────────
 static func _run_findings() -> bool:
 	var all_passed: bool = true
 	var sheet: EventSheetResource = _modes_sheet()

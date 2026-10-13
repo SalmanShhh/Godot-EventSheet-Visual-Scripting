@@ -55,9 +55,9 @@ var _mouse_option: OptionButton = null
 ## The ONE help strip at the foot: what the focused field is for, then what the sheet will read as
 ## and the lines it will compile to.
 var _help_strip: EventSheetPopupUI.HelpStrip = null
-## What OK has to say, under the form - a refusal, or the On entering event it kept - with the dialog
-## still open on it.
-var _problem_label: Label = null
+## What the window has to say, under the form - a mode leaving the list while rows still name it, as
+## it is typed, then a refusal or the On entering event OK kept - with the dialog still open on it.
+var _problem_label: EventSheetPopupUI.StateNote = null
 ## The answers the last OK applied when it had something to say. A second OK on the same answers has
 ## nothing left to write, so it closes the dialog instead of writing them again.
 var _applied_key: String = ""
@@ -83,7 +83,6 @@ func open() -> void:
 	_modes_edit.text = " · ".join(declared)
 	_policy = read_policy(sheet)
 	_refill(declared, EventSheetModeFacts.starts_in(sheet))
-	_problem_label.visible = false
 	_applied_key = ""
 	_dialog.popup_centered(Vector2i(560, 460))
 
@@ -92,8 +91,8 @@ func _build() -> void:
 	if _dialog != null:
 		return
 	_dialog = ConfirmationDialog.new()
-	_dialog.title = "Modes"
-	_dialog.ok_button_text = "OK"
+	_dialog.title = EventSheetL10n.translate("Edit the game's modes")
+	_dialog.ok_button_text = EventSheetL10n.translate("Declare Modes")
 	_dialog.visible = false
 	# What OK has to say is said in the dialog, which stays open on what was typed.
 	_dialog.dialog_hide_on_ok = false
@@ -103,48 +102,49 @@ func _build() -> void:
 	_dialog.add_child(EventSheetPopupUI.margined(form))
 
 	_modes_edit = LineEdit.new()
-	_modes_edit.placeholder_text = "Playing · Paused · Cutscene · Menu"
+	_modes_edit.placeholder_text = EventSheetL10n.translate("Playing · Paused · Cutscene · Menu")
 	_modes_edit.text_changed.connect(func(_text: String) -> void: _refill(words_of(_modes_edit.text), _starts_in()))
-	form.add_child(EventSheetPopupUI.form_row("Modes", _modes_edit))
+	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Modes"), _modes_edit))
 
 	_starts_option = OptionButton.new()
-	form.add_child(EventSheetPopupUI.form_row("Starts in", _starts_option))
+	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Starts in"), _starts_option))
 
 	# The policy is asked ONE MODE AT A TIME, because it is a fact about that mode. The dropdown
 	# beside it picks which mode is being answered for.
 	_policy_mode_option = OptionButton.new()
 	_policy_mode_option.item_selected.connect(func(_index: int) -> void: _show_policy())
-	form.add_child(EventSheetPopupUI.form_row("Policy for", _policy_mode_option))
-	_physics_option = _policy_dropdown(["Runs", "Stopped"])
+	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Policy for"), _policy_mode_option))
+	_physics_option = _policy_dropdown([EventSheetL10n.translate("Runs"), EventSheetL10n.translate("The scene tree keeps processing in this mode."),
+		EventSheetL10n.translate("Stopped"), EventSheetL10n.translate("Entering this mode asks the tree to pause; gameplay nodes stop.")])
 	_physics_option.item_selected.connect(func(_index: int) -> void: _remember_policy())
-	form.add_child(EventSheetPopupUI.form_row("Physics", _physics_option))
-	_mouse_option = _policy_dropdown(["Hidden", "Shown"])
+	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Physics"), _physics_option))
+	_mouse_option = _policy_dropdown([EventSheetL10n.translate("Hidden"), EventSheetL10n.translate("Entering this mode captures the mouse, as a first-person view does."),
+		EventSheetL10n.translate("Shown"), EventSheetL10n.translate("Entering this mode shows the mouse cursor, as a menu does.")])
 	_mouse_option.item_selected.connect(func(_index: int) -> void: _remember_policy())
-	form.add_child(EventSheetPopupUI.form_row("Mouse", _mouse_option))
+	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Mouse"), _mouse_option))
 
-	_problem_label = EventSheetPopupUI.hint_label("", 400.0)
-	_problem_label.add_theme_color_override("font_color", EventSheetPopupUI.readable_on_panel(Color(0.95, 0.5, 0.5)))
-	_problem_label.visible = false
+	_problem_label = EventSheetPopupUI.StateNote.new(400.0)
 	form.add_child(_problem_label)
 
 	_help_strip = EventSheetPopupUI.help_strip()
 	form.add_child(_help_strip)
-	_help_strip.follow(_modes_edit, "Modes",
-		"The states the whole game can be in, separated by anything you like. They become an enum, and every row and group that names a mode picks from this list.")
-	_help_strip.follow(_starts_option, "Starts in",
-		"The mode the game opens in - the value the mode variable is declared with.")
-	_help_strip.follow(_policy_mode_option, "Policy for",
-		"Which mode the two answers below are about. Each mode declares its own policy once, and entering it applies them.")
-	_help_strip.follow(_physics_option, "Physics",
-		"Whether the scene tree keeps processing while the game is in this mode. This is also the answer to \"does gameplay input reach the game\": pausing the tree is what stops gameplay nodes hearing it, and a node that must keep hearing it says so with its own process mode. A mode that stops it asks to pause for \"mode\" rather than flipping the switch, so a pause something else asked for - the inventory, a dialogue box - holds until that stops asking too.")
-	_help_strip.follow(_mouse_option, "Mouse",
-		"Whether the mouse cursor is shown while the game is in this mode. A menu shows it; a first-person view captures it.")
+	_help_strip.follow(_modes_edit, EventSheetL10n.translate("Modes"),
+		EventSheetL10n.translate("The states the whole game can be in, separated by anything you like. They become an enum, and every row and group that names a mode picks from this list."))
+	_help_strip.follow(_starts_option, EventSheetL10n.translate("Starts in"),
+		EventSheetL10n.translate("The mode the game opens in - the value the mode variable is declared with."))
+	_help_strip.follow(_policy_mode_option, EventSheetL10n.translate("Policy for"),
+		EventSheetL10n.translate("Which mode the two answers below are about. Each mode declares its own policy once, and entering it applies them."))
+	_help_strip.follow(_physics_option, EventSheetL10n.translate("Physics"),
+		EventSheetL10n.translate("Whether the scene tree keeps processing while the game is in this mode. This is also the answer to \"does gameplay input reach the game\": pausing the tree is what stops gameplay nodes hearing it, and a node that must keep hearing it says so with its own process mode. A mode that stops it asks to pause for \"mode\" rather than flipping the switch, so a pause something else asked for - the inventory, a dialogue box - holds until that stops asking too."))
+	_help_strip.follow(_mouse_option, EventSheetL10n.translate("Mouse"),
+		EventSheetL10n.translate("Whether the mouse cursor is shown while the game is in this mode. A menu shows it; a first-person view captures it."))
 
 
-static func _policy_dropdown(labels: Array) -> OptionButton:
-	var dropdown: OptionButton = OptionButton.new()
-	for label: String in labels:
-		dropdown.add_item(EventSheetL10n.translate(label))
+## A policy dropdown from [label, description, label, description]: each answer says what it does.
+static func _policy_dropdown(pairs: Array) -> OptionButton:
+	var dropdown: OptionButton = EventSheetPopupUI.described_option()
+	for index: int in range(0, pairs.size(), 2):
+		EventSheetPopupUI.add_described_item(dropdown, pairs[index], pairs[index + 1])
 	return dropdown
 
 
@@ -160,6 +160,7 @@ func _refill(declared: PackedStringArray, keep_starting: String) -> void:
 		_policy_mode_option.select(0)
 	_show_policy()
 	_help_strip.set_reading(reads_as(declared, _starts_in()), in_code(declared, _starts_in()))
+	_problem_label.say(left_list_note(_dock._current_sheet, declared), EventSheetPopupUI.TONE_WARNING)
 
 
 func _starts_in() -> String:
@@ -175,6 +176,8 @@ func _show_policy() -> void:
 	var answers: Dictionary = _policy.get(_policy_mode(), default_policy())
 	_physics_option.select(0 if bool(answers.get("physics", true)) else 1)
 	_mouse_option.select(1 if bool(answers.get("mouse", true)) else 0)
+	EventSheetPopupUI.follow_description(_physics_option)
+	EventSheetPopupUI.follow_description(_mouse_option)
 
 
 func _remember_policy() -> void:
@@ -186,8 +189,7 @@ func _remember_policy() -> void:
 func _on_confirmed() -> void:
 	var declared: PackedStringArray = words_of(_modes_edit.text)
 	if declared.is_empty():
-		_problem_label.text = EventSheetL10n.translate("Name at least one mode.")
-		_problem_label.visible = true
+		_problem_label.say(EventSheetL10n.translate("Name at least one mode."))
 		return
 	_remember_policy()
 	var opening: String = _starts_in()
@@ -196,7 +198,7 @@ func _on_confirmed() -> void:
 	if key == _applied_key:
 		_dialog.hide()
 		return
-	_problem_label.visible = false
+	_problem_label.say("")
 	var applied: bool = _dock._perform_undoable_sheet_edit(EventSheetL10n.translate("Edit modes"), func() -> bool:
 			return write(_dock._current_sheet, declared, opening, policy))
 	if not applied:
@@ -207,9 +209,8 @@ func _on_confirmed() -> void:
 	if not stray.is_empty():
 		# Said where the typing was, not on the status line behind the dialog: the modes ARE declared,
 		# and the next OK on these same answers closes the dialog without writing them again.
-		_problem_label.text = EventSheetL10n.translate("%d mode(s) declared. The On entering event of %s holds rows of your own, so it was kept - move or delete it, since that mode is gone.") \
-			% [declared.size(), ", ".join(stray)]
-		_problem_label.visible = true
+		_problem_label.say(EventSheetL10n.translate("%d mode(s) declared. The On entering event of %s holds rows of your own, so it was kept - move or delete it, since that mode is gone.")
+			% [declared.size(), ", ".join(stray)], EventSheetPopupUI.TONE_WARNING)
 		_applied_key = key
 		return
 	_dialog.hide()
@@ -289,6 +290,24 @@ static func stray_entering_events(sheet: EventSheetResource) -> PackedStringArra
 		if not member.is_empty() and not members.has(member) and not stray.has(member):
 			stray.append(member)
 	return stray
+
+
+## What the window says as a mode leaves the list while rows still name it - one sentence per such
+## mode ("Cutscene left the list - 2 row(s) still name it."), or "" when nothing is left behind. The
+## On entering event this window wrote for the mode goes with it on OK, so it is not counted.
+static func left_list_note(sheet: EventSheetResource, declared: PackedStringArray) -> String:
+	var kept: PackedStringArray = PackedStringArray()
+	for word: String in declared:
+		kept.append(EventSheetModeFacts.member_for(word))
+	var counts: Dictionary = EventSheetModeFacts.naming_counts(sheet)
+	var said: PackedStringArray = PackedStringArray()
+	for word: String in EventSheetModeFacts.names(sheet):
+		var member: String = EventSheetModeFacts.member_for(word)
+		var policy_event: EventRow = _policy_event(sheet, word)
+		var naming: int = int(counts.get(member, 0)) - (1 if policy_event != null and _is_only_policy(policy_event) else 0)
+		if not kept.has(member) and naming > 0:
+			said.append(EventSheetL10n.translate("%s left the list - %d row(s) still name it.") % [word, naming])
+	return " ".join(said)
 
 
 ## What a mode does to the game unless it says otherwise: the game runs and the mouse is shown. The

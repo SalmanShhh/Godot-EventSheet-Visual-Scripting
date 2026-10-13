@@ -8366,3 +8366,19 @@ A chance that grows with every miss and a cap that guarantees the win.,실패할
 "A sheet whose events run INSIDE the editor - batch renames, scene checks, one-click chores.","이벤트가 에디터 안에서 실행되는 시트 - 일괄 이름 바꾸기, 씬 점검, 한 번 클릭 작업."
 What changed in the editor since you last looked.,마지막으로 본 뒤 에디터에서 바뀐 점.
 A playable example you can open and take apart.,열어서 뜯어볼 수 있는 플레이 가능한 예제.
+Edit the game's modes,게임 모드 편집
+Declare Modes,모드 선언
+Playing · Paused · Cutscene · Menu,Playing · Paused · Cutscene · Menu
+The scene tree keeps processing in this mode.,이 모드에서는 씬 트리가 계속 처리됩니다.
+Entering this mode asks the tree to pause; gameplay nodes stop.,이 모드에 들어가면 트리에 일시 정지를 요청합니다. 게임플레이 노드가 멈춥니다.
+"Entering this mode captures the mouse, as a first-person view does.",이 모드에 들어가면 마우스를 캡처합니다. 1인칭 시점처럼요.
+"Entering this mode shows the mouse cursor, as a menu does.",이 모드에 들어가면 마우스 커서를 보여 줍니다. 메뉴처럼요.
+"The states the whole game can be in, separated by anything you like. They become an enum, and every row and group that names a mode picks from this list.","게임 전체가 있을 수 있는 상태들이며, 아무렇게나 구분해도 됩니다. enum이 되고, 모드를 지정하는 모든 행과 그룹은 이 목록에서 고릅니다."
+The mode the game opens in - the value the mode variable is declared with.,게임이 시작되는 모드 - 모드 변수가 선언될 때의 값입니다.
+"Which mode the two answers below are about. Each mode declares its own policy once, and entering it applies them.","아래 두 답이 어느 모드에 대한 것인지. 각 모드는 자신의 정책을 한 번 선언하고, 그 모드에 들어가면 적용됩니다."
+"Whether the scene tree keeps processing while the game is in this mode. This is also the answer to ""does gameplay input reach the game"": pausing the tree is what stops gameplay nodes hearing it, and a node that must keep hearing it says so with its own process mode. A mode that stops it asks to pause for ""mode"" rather than flipping the switch, so a pause something else asked for - the inventory, a dialogue box - holds until that stops asking too.","게임이 이 모드에 있는 동안 씬 트리가 계속 처리되는지 여부. ""게임플레이 입력이 게임에 닿는가""에 대한 답이기도 합니다. 트리를 일시 정지하면 게임플레이 노드가 입력을 듣지 못하게 되고, 계속 들어야 하는 노드는 자신의 process mode로 그렇게 말합니다. 트리를 멈추는 모드는 스위치를 바꾸는 대신 ""mode""라는 이유로 일시 정지를 요청하므로, 다른 것(인벤토리, 대화 상자)이 요청한 일시 정지는 그것도 요청을 멈출 때까지 유지됩니다."
+Whether the mouse cursor is shown while the game is in this mode. A menu shows it; a first-person view captures it.,"게임이 이 모드에 있는 동안 마우스 커서를 보여 주는지 여부. 메뉴는 보여 주고, 1인칭 시점은 캡처합니다."
+%s left the list - %d row(s) still name it.,%s이(가) 목록에서 빠졌습니다 - 아직 %d개 행이 이를 지정합니다.
+Declare this object's states,이 오브젝트의 상태 선언
+Declare States,상태 선언
+%s left the list - %d row(s) still say %s.,%s이(가) 목록에서 빠졌습니다 - 아직 %d개 행이 %s(이)라고 씁니다.

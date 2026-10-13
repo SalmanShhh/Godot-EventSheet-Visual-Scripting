@@ -104,6 +104,15 @@
   so beside the field and holds Create, instead of quietly writing a suffixed file. Each starter in
   Start from carries its one-line description, and the help strip shows the line the sheet starts
   with.
+### Changed: the Modes and States windows name the rows a removed name leaves behind, as you type
+
+- Taking a mode or a state off the list now says so under the field while you type - "Cutscene left
+  the list - 2 row(s) still name it.", "Hurt left the list - 3 row(s) still say State.HURT." - before
+  OK is pressed. The On entering event the Modes window wrote for that mode goes with it on OK, so it
+  is not counted. The windows are titled "Edit the game's modes" and "Declare this object's states",
+  and OK reads Declare Modes / Declare States.
+- The Modes window's words are translated, and its Physics and Mouse answers each say what they do
+  when the pointer rests on them.
 
 ### Fixed: an empty node or resource slot previews the line it saves
 

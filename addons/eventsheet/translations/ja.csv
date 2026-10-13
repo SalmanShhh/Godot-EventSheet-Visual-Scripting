@@ -8366,3 +8366,19 @@ A chance that grows with every miss and a cap that guarantees the win.,外れる
 "A sheet whose events run INSIDE the editor - batch renames, scene checks, one-click chores.",イベントがエディターの中で動くシート - 一括リネーム、シーン点検、ワンクリック作業。
 What changed in the editor since you last looked.,前回見たとき以降にエディターで変わったこと。
 A playable example you can open and take apart.,開いて分解できる遊べるサンプル。
+Edit the game's modes,ゲームのモードを編集
+Declare Modes,モードを宣言
+Playing · Paused · Cutscene · Menu,Playing · Paused · Cutscene · Menu
+The scene tree keeps processing in this mode.,このモードではシーンツリーが処理を続けます。
+Entering this mode asks the tree to pause; gameplay nodes stop.,このモードに入るとツリーに一時停止を求めます。ゲームプレイのノードは止まります。
+"Entering this mode captures the mouse, as a first-person view does.",このモードに入るとマウスをキャプチャします。一人称視点と同じです。
+"Entering this mode shows the mouse cursor, as a menu does.",このモードに入るとマウスカーソルを表示します。メニューと同じです。
+"The states the whole game can be in, separated by anything you like. They become an enum, and every row and group that names a mode picks from this list.",ゲーム全体がとりうる状態。区切り方は自由です。enum になり、モードを名指しするすべての行とグループはこのリストから選びます。
+The mode the game opens in - the value the mode variable is declared with.,ゲームが始まるモード。モード変数の宣言時の値です。
+"Which mode the two answers below are about. Each mode declares its own policy once, and entering it applies them.",下の 2 つの答えがどのモードについてのものか。各モードは自分のポリシーを一度宣言し、そのモードに入るとそれが適用されます。
+"Whether the scene tree keeps processing while the game is in this mode. This is also the answer to ""does gameplay input reach the game"": pausing the tree is what stops gameplay nodes hearing it, and a node that must keep hearing it says so with its own process mode. A mode that stops it asks to pause for ""mode"" rather than flipping the switch, so a pause something else asked for - the inventory, a dialogue box - holds until that stops asking too.","ゲームがこのモードにある間、シーンツリーが処理を続けるかどうか。これは「ゲームプレイの入力はゲームに届くか」への答えでもあります。ツリーを一時停止するとゲームプレイのノードは入力を受け取らなくなり、受け取り続ける必要があるノードは自分の process mode でそう指定します。ツリーを止めるモードはスイッチを切り替えるのではなく ""mode"" という理由で一時停止を求めるので、ほかのもの (インベントリやダイアログボックス) が求めた一時停止は、それが求めるのをやめるまで続きます。"
+Whether the mouse cursor is shown while the game is in this mode. A menu shows it; a first-person view captures it.,ゲームがこのモードにある間、マウスカーソルを表示するかどうか。メニューは表示し、一人称視点はキャプチャします。
+%s left the list - %d row(s) still name it.,%s がリストから外れました - まだ %d 行がそれを名指ししています。
+Declare this object's states,このオブジェクトの状態を宣言
+Declare States,状態を宣言
+%s left the list - %d row(s) still say %s.,%s がリストから外れました - まだ %d 行が %s と書いています。

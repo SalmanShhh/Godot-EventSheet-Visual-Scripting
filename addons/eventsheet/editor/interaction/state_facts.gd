@@ -196,42 +196,54 @@ static func entered_states(sheet: EventSheetResource) -> PackedStringArray:
 	return entered
 
 
+## How many times rows name each state (bare member -> count): what the States window says when a
+## state leaves the list while rows still say it.
+static func naming_counts(sheet: EventSheetResource) -> Dictionary:
+	var every: PackedStringArray = PackedStringArray()
+	if sheet != null:
+		_walk(sheet.events, every, STATE_ACE_IDS, true, true)
+	var counts: Dictionary = {}
+	for member: String in every:
+		counts[member] = int(counts.get(member, 0)) + 1
+	return counts
+
+
 static func _walk(items: Array, into: PackedStringArray, only: PackedStringArray,
-		with_triggers: bool) -> void:
+		with_triggers: bool, repeats: bool = false) -> void:
 	for item: Variant in items:
 		if item is EventGroup:
-			_walk(EventSheetGroupFacts.children(item as EventGroup), into, only, with_triggers)
+			_walk(EventSheetGroupFacts.children(item as EventGroup), into, only, with_triggers, repeats)
 			continue
 		# A `match state:` row, wherever it sits. Its arms hold verbatim lines rather than ACE rows,
 		# and a Go to written in one of them reaches a state exactly as a row does. The arm PATTERNS
 		# are deliberately NOT read here: a pattern asks, and asking has never been a way in.
 		if item is MatchRow and only.has(GOING_ACE_IDS[0]):
 			for member: String in gone_to_in_match(item as MatchRow):
-				_note(into, member)
+				_note(into, member, repeats)
 			continue
 		var event_row: EventRow = item as EventRow
 		if event_row == null:
 			continue
 		if with_triggers and (event_row.trigger_id == ENTERING_TRIGGER_ID
 				or event_row.trigger_id == LEAVING_TRIGGER_ID):
-			_note(into, str(event_row.trigger_params.get(STATE_PARAM, "")))
+			_note(into, str(event_row.trigger_params.get(STATE_PARAM, "")), repeats)
 		for is_action: bool in [false, true]:
 			for ace: Variant in (event_row.actions if is_action else event_row.conditions):
 				if ace is MatchRow and only.has(GOING_ACE_IDS[0]):
 					for member: String in gone_to_in_match(ace as MatchRow):
-						_note(into, member)
+						_note(into, member, repeats)
 					continue
 				if not (ace is Resource) or not only.has(str((ace as Resource).get("ace_id"))):
 					continue
 				var params: Variant = (ace as Resource).get("params")
 				if params is Dictionary:
-					_note(into, str((params as Dictionary).get(STATE_PARAM, "")))
-		_walk(event_row.sub_events, into, only, with_triggers)
+					_note(into, str((params as Dictionary).get(STATE_PARAM, "")), repeats)
+		_walk(event_row.sub_events, into, only, with_triggers, repeats)
 
 
-static func _note(into: PackedStringArray, member: String) -> void:
+static func _note(into: PackedStringArray, member: String, repeats: bool = false) -> void:
 	var bare: String = member.strip_edges()
-	if not bare.is_empty() and not into.has(bare):
+	if not bare.is_empty() and (repeats or not into.has(bare)):
 		into.append(bare)
 
 

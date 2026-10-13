@@ -33,6 +33,7 @@ static func run() -> bool:
 	all_passed = _run_round_trip() and all_passed
 	all_passed = _run_dialog() and all_passed
 	all_passed = _run_dialog_refuses_in_place() and all_passed
+	all_passed = _run_dialog_names_rows_as_typed() and all_passed
 	all_passed = _run_findings() and all_passed
 	all_passed = _run_change_inside_a_change() and all_passed
 	all_passed = _run_starting_hold() and all_passed
@@ -262,6 +263,32 @@ static func _run_dialog_refuses_in_place() -> bool:
 			EventSheetStateFacts.names(dock._current_sheet)],
 		[false, true, "Rows still name Chase, so the states were not changed. Point those rows at another state first, then remove or rename it.",
 			PackedStringArray(["Patrol", "Chase", "Stagger"])])
+	dock.free()
+	return all_passed
+
+
+## A state leaving the list is named AS IT IS TYPED, with how many rows still say it, before OK is
+## ever pressed - and a list that keeps every named state says nothing.
+static func _run_dialog_names_rows_as_typed() -> bool:
+	var sheet: EventSheetResource = _states_sheet()
+	sheet.events.append(_row("OnReady", [], [_action_ace("GoToState", {"state": "CHASE"})]))
+	sheet.events.append(_row("OnEnteringState", [], [], {"state": "CHASE"}))
+	sheet.events.append(_row("OnReady", [_condition("InState", {"state": "CHASE"})], []))
+	var dock: EventSheetDock = EventSheetDock.new()
+	dock.setup(sheet)
+	var dialog: EventSheetStatesDialog = EventSheetStatesDialog.new()
+	dialog.init(dock)
+	dialog._build()
+	dialog._states_edit.text = "Patrol · Stagger"
+	dialog._refill(EventSheetStatesDialog.words_of(dialog._states_edit.text), "Patrol")
+	var typed: Array = [dialog._problem_label.visible, dialog._problem_label.text, dialog._problem_label.tone]
+	dialog._states_edit.text = "Patrol · Chase"
+	dialog._refill(EventSheetStatesDialog.words_of(dialog._states_edit.text), "Patrol")
+	var all_passed: bool = SUPPORT.check("object_state_test",
+		"a state leaving the list names how many rows still say it, as it is typed",
+		[typed, dialog._problem_label.visible, dialog._dialog.title, dialog._dialog.ok_button_text],
+		[[true, "Chase left the list - 3 row(s) still say State.CHASE.", EventSheetPopupUI.TONE_WARNING], false,
+			"Declare this object's states", "Declare States"])
 	dock.free()
 	return all_passed
 

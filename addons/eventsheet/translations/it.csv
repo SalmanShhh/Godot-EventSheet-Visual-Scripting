@@ -8366,3 +8366,19 @@ A chance that grows with every miss and a cap that guarantees the win.,Una proba
 "A sheet whose events run INSIDE the editor - batch renames, scene checks, one-click chores.","Un foglio i cui eventi girano DENTRO l'editor - rinomine in blocco, controlli di scena, lavoretti con un clic."
 What changed in the editor since you last looked.,Cosa è cambiato nell'editor dall'ultima volta che hai guardato.
 A playable example you can open and take apart.,Un esempio giocabile da aprire e smontare.
+Edit the game's modes,Modifica le modalità del gioco
+Declare Modes,Dichiara modalità
+Playing · Paused · Cutscene · Menu,In gioco · In pausa · Filmato · Menu
+The scene tree keeps processing in this mode.,L'albero della scena continua a elaborare in questa modalità.
+Entering this mode asks the tree to pause; gameplay nodes stop.,Entrare in questa modalità chiede all'albero di andare in pausa; i nodi di gioco si fermano.
+"Entering this mode captures the mouse, as a first-person view does.","Entrare in questa modalità cattura il mouse, come fa una visuale in prima persona."
+"Entering this mode shows the mouse cursor, as a menu does.","Entrare in questa modalità mostra il cursore del mouse, come fa un menu."
+"The states the whole game can be in, separated by anything you like. They become an enum, and every row and group that names a mode picks from this list.","Gli stati in cui può trovarsi l'intero gioco, separati come preferisci. Diventano un enum, e ogni riga e gruppo che nomina una modalità sceglie da questo elenco."
+The mode the game opens in - the value the mode variable is declared with.,La modalità in cui il gioco si apre - il valore con cui è dichiarata la variabile della modalità.
+"Which mode the two answers below are about. Each mode declares its own policy once, and entering it applies them.","A quale modalità si riferiscono le due risposte qui sotto. Ogni modalità dichiara la propria regola una volta, ed entrarci la applica."
+"Whether the scene tree keeps processing while the game is in this mode. This is also the answer to ""does gameplay input reach the game"": pausing the tree is what stops gameplay nodes hearing it, and a node that must keep hearing it says so with its own process mode. A mode that stops it asks to pause for ""mode"" rather than flipping the switch, so a pause something else asked for - the inventory, a dialogue box - holds until that stops asking too.","Se l'albero della scena continua a elaborare mentre il gioco è in questa modalità. È anche la risposta a ""l'input di gioco raggiunge il gioco"": mettere in pausa l'albero è ciò che impedisce ai nodi di gioco di sentirlo, e un nodo che deve continuare a sentirlo lo dice con il proprio process mode. Una modalità che lo ferma chiede una pausa per ""mode"" invece di girare l'interruttore, così una pausa chiesta da altro - l'inventario, un riquadro di dialogo - resta finché anche quello smette di chiederla."
+Whether the mouse cursor is shown while the game is in this mode. A menu shows it; a first-person view captures it.,Se il cursore del mouse è mostrato mentre il gioco è in questa modalità. Un menu lo mostra; una visuale in prima persona lo cattura.
+%s left the list - %d row(s) still name it.,%s ha lasciato l'elenco - %d riga/e lo nominano ancora.
+Declare this object's states,Dichiara gli stati di questo oggetto
+Declare States,Dichiara stati
+%s left the list - %d row(s) still say %s.,%s ha lasciato l'elenco - %d riga/e dicono ancora %s.

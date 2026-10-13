@@ -33,8 +33,9 @@ var _starts_option: OptionButton = null
 ## The ONE help strip at the foot: what the focused field is for, then what the sheet will read as
 ## and the lines it will compile to.
 var _help_strip: EventSheetPopupUI.HelpStrip = null
-## Why OK did not take, under the form - where the typing was - with the dialog still open on it.
-var _problem_label: Label = null
+## Under the form, where the typing was: a state leaving the list while rows still say it, as it is
+## typed, and why OK did not take, with the dialog still open on it.
+var _problem_label: EventSheetPopupUI.StateNote = null
 
 
 func init(dock: Control) -> void:
@@ -53,7 +54,6 @@ func open() -> void:
 		declared = PackedStringArray(["Idle", "Chase", "Hurt"])
 	_states_edit.text = " · ".join(declared)
 	_refill(declared, EventSheetStateFacts.starts_in(sheet))
-	_problem_label.visible = false
 	_dialog.popup_centered(Vector2i(560, 320))
 
 
@@ -63,8 +63,8 @@ func _build() -> void:
 	_dialog = ConfirmationDialog.new()
 	# EVERY WORD IN HERE IS KEYED, chrome included. A dialog whose fields are translated and whose
 	# title, button and help paragraphs are not is the one that reads half in the reader's language.
-	_dialog.title = EventSheetL10n.translate("States")
-	_dialog.ok_button_text = EventSheetL10n.translate("OK")
+	_dialog.title = EventSheetL10n.translate("Declare this object's states")
+	_dialog.ok_button_text = EventSheetL10n.translate("Declare States")
 	_dialog.visible = false
 	# A refusal keeps the dialog open on what was typed, so the fix is one edit rather than a re-entry.
 	_dialog.dialog_hide_on_ok = false
@@ -82,9 +82,7 @@ func _build() -> void:
 	_starts_option.item_selected.connect(func(_index: int) -> void: _show_reading())
 	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Starts in"), _starts_option))
 
-	_problem_label = EventSheetPopupUI.hint_label("", 400.0)
-	_problem_label.add_theme_color_override("font_color", EventSheetPopupUI.readable_on_panel(Color(0.95, 0.5, 0.5)))
-	_problem_label.visible = false
+	_problem_label = EventSheetPopupUI.StateNote.new(400.0)
 	form.add_child(_problem_label)
 
 	_help_strip = EventSheetPopupUI.help_strip()
@@ -103,6 +101,7 @@ func _refill(declared: PackedStringArray, keep_starting: String) -> void:
 		_starts_option.add_item(word)
 	EventSheetPopupUI.select_option(_starts_option, keep_starting)
 	_show_reading()
+	_problem_label.say(left_list_note(_dock._current_sheet, declared), EventSheetPopupUI.TONE_WARNING)
 
 
 func _show_reading() -> void:
@@ -129,7 +128,7 @@ func _on_confirmed() -> void:
 		_refuse(EventSheetL10n.translate("Rows still name %s, so the states were not changed. Point those rows at another state first, then remove or rename it.")
 			% ", ".join(words))
 		return
-	_problem_label.visible = false
+	_problem_label.say("")
 	_dialog.hide()
 	var opening: String = _starts_in()
 	if not _dock._perform_undoable_sheet_edit(EventSheetL10n.translate("Declare states"), func() -> bool:
@@ -142,8 +141,7 @@ func _on_confirmed() -> void:
 
 ## Says why OK did not take, in the dialog itself, which stays open on what was typed.
 func _refuse(problem: String) -> void:
-	_problem_label.text = problem
-	_problem_label.visible = true
+	_problem_label.say(problem)
 
 
 # ── What it writes, and what it reads back (static and pure, so the suite drives all of it) ──
@@ -200,6 +198,18 @@ static func still_named_states(sheet: EventSheetResource, declared: PackedString
 		if not kept.has(member) and named.has(member):
 			blocked.append(member)
 	return blocked
+
+
+## What the window says as a state leaves the list while rows still say it - one sentence per such
+## state ("Hurt left the list - 3 row(s) still say State.HURT."), or "" when nothing is left behind.
+static func left_list_note(sheet: EventSheetResource, declared: PackedStringArray) -> String:
+	var counts: Dictionary = EventSheetStateFacts.naming_counts(sheet)
+	var said: PackedStringArray = PackedStringArray()
+	for member: String in still_named_states(sheet, declared):
+		said.append(EventSheetL10n.translate("%s left the list - %d row(s) still say %s.") % [
+			EventSheetStateFacts.word_for(member), int(counts.get(member, 0)),
+			EventSheetStateFacts.MEMBER_PREFIX + member])
+	return " ".join(said)
 
 
 ## The words a states field says, in order, however they were separated. A reader typing commas,

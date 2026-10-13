@@ -263,25 +263,38 @@ const LEAVING_TRIGGER_ID: String = EventForgeModeWords.LEAVING_TRIGGER_ID
 const MODE_PARAM: String = EventForgeModeWords.MODE_PARAM
 
 
-static func _walk(items: Array, into: PackedStringArray, only: PackedStringArray = MODE_ACE_IDS) -> void:
+## How many times rows name each mode (bare member -> count): what the Modes window says when a
+## mode leaves the list while rows still name it.
+static func naming_counts(sheet: EventSheetResource) -> Dictionary:
+	var every: PackedStringArray = PackedStringArray()
+	if sheet != null:
+		_walk(sheet.events, every, MODE_ACE_IDS, true)
+	var counts: Dictionary = {}
+	for member: String in every:
+		counts[member] = int(counts.get(member, 0)) + 1
+	return counts
+
+
+static func _walk(items: Array, into: PackedStringArray, only: PackedStringArray = MODE_ACE_IDS,
+		repeats: bool = false) -> void:
 	for item: Variant in items:
 		if item is EventGroup:
-			_walk(EventSheetGroupFacts.children(item as EventGroup), into, only)
+			_walk(EventSheetGroupFacts.children(item as EventGroup), into, only, repeats)
 			continue
 		var event_row: EventRow = item as EventRow
 		if event_row == null:
 			continue
 		var trigger_mode: String = str(event_row.trigger_params.get(MODE_PARAM, "")).strip_edges()
 		if not trigger_mode.is_empty() and _trigger_counts(event_row.trigger_id, only):
-			_note(into, trigger_mode)
+			_note(into, trigger_mode, repeats)
 		for is_action: bool in [false, true]:
 			for ace: Variant in (event_row.actions if is_action else event_row.conditions):
 				if not (ace is Resource) or not only.has(str((ace as Resource).get("ace_id"))):
 					continue
 				var params: Variant = (ace as Resource).get("params")
 				if params is Dictionary:
-					_note(into, str((params as Dictionary).get(MODE_PARAM, "")))
-		_walk(event_row.sub_events, into, only)
+					_note(into, str((params as Dictionary).get(MODE_PARAM, "")), repeats)
+		_walk(event_row.sub_events, into, only, repeats)
 
 
 ## Whether a trigger counts for this walk. Entering a mode is a way IN and belongs to the
@@ -292,9 +305,9 @@ static func _trigger_counts(trigger_id: String, only: PackedStringArray) -> bool
 	return trigger_id == LEAVING_TRIGGER_ID and only == MODE_ACE_IDS
 
 
-static func _note(into: PackedStringArray, member: String) -> void:
+static func _note(into: PackedStringArray, member: String, repeats: bool = false) -> void:
 	var bare: String = member.strip_edges()
-	if not bare.is_empty() and not into.has(bare):
+	if not bare.is_empty() and (repeats or not into.has(bare)):
 		into.append(bare)
 
 

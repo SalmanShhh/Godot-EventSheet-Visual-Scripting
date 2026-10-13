@@ -8366,3 +8366,19 @@ A chance that grows with every miss and a cap that guarantees the win.,"Шанс
 "A sheet whose events run INSIDE the editor - batch renames, scene checks, one-click chores.","Лист, чьи события выполняются ВНУТРИ редактора, - массовые переименования, проверки сцен, дела в один клик."
 What changed in the editor since you last looked.,Что изменилось в редакторе с вашего прошлого визита.
 A playable example you can open and take apart.,"Играбельный пример, который можно открыть и разобрать."
+Edit the game's modes,Изменить режимы игры
+Declare Modes,Объявить режимы
+Playing · Paused · Cutscene · Menu,Игра · Пауза · Заставка · Меню
+The scene tree keeps processing in this mode.,В этом режиме дерево сцены продолжает обработку.
+Entering this mode asks the tree to pause; gameplay nodes stop.,Вход в этот режим просит дерево встать на паузу; игровые узлы останавливаются.
+"Entering this mode captures the mouse, as a first-person view does.","Вход в этот режим захватывает мышь, как при виде от первого лица."
+"Entering this mode shows the mouse cursor, as a menu does.","Вход в этот режим показывает курсор мыши, как в меню."
+"The states the whole game can be in, separated by anything you like. They become an enum, and every row and group that names a mode picks from this list.","Состояния, в которых может быть вся игра, разделённые чем угодно. Они становятся enum, и каждая строка и группа, называющая режим, выбирает из этого списка."
+The mode the game opens in - the value the mode variable is declared with.,"Режим, в котором игра открывается, - значение, с которым объявлена переменная режима."
+"Which mode the two answers below are about. Each mode declares its own policy once, and entering it applies them.","К какому режиму относятся два ответа ниже. Каждый режим объявляет свою политику один раз, и вход в него её применяет."
+"Whether the scene tree keeps processing while the game is in this mode. This is also the answer to ""does gameplay input reach the game"": pausing the tree is what stops gameplay nodes hearing it, and a node that must keep hearing it says so with its own process mode. A mode that stops it asks to pause for ""mode"" rather than flipping the switch, so a pause something else asked for - the inventory, a dialogue box - holds until that stops asking too.","Продолжает ли дерево сцены обработку, пока игра в этом режиме. Это же ответ на вопрос ""доходит ли игровой ввод до игры"": пауза дерева - это то, что не даёт игровым узлам его слышать, а узел, который должен слышать его дальше, говорит об этом своим process mode. Режим, который останавливает дерево, просит паузу по причине ""mode"", а не щёлкает выключателем, поэтому пауза, о которой попросило что-то другое - инвентарь, окно диалога, - держится, пока и оно не перестанет просить."
+Whether the mouse cursor is shown while the game is in this mode. A menu shows it; a first-person view captures it.,"Показывается ли курсор мыши, пока игра в этом режиме. Меню показывает его; вид от первого лица захватывает."
+%s left the list - %d row(s) still name it.,%s ушёл из списка - %d строк(и) всё ещё его называют.
+Declare this object's states,Объявить состояния этого объекта
+Declare States,Объявить состояния
+%s left the list - %d row(s) still say %s.,%s ушло из списка - %d строк(и) всё ещё пишут %s.
