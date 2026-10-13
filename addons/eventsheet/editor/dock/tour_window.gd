@@ -75,29 +75,35 @@ static func steps() -> Array[Dictionary]:
 
 
 static func _sheet_has_event(sheet: EventSheetResource) -> bool:
-	if sheet == null:
-		return false
-	for entry: Variant in sheet.events:
-		if entry is EventRow:
-			return true
-	return false
+	return _any_event(sheet, func(_event: EventRow) -> bool: return true)
 
 
 static func _sheet_has_condition(sheet: EventSheetResource) -> bool:
-	if sheet == null:
-		return false
-	for entry: Variant in sheet.events:
-		if entry is EventRow and not (entry as EventRow).conditions.is_empty():
-			return true
-	return false
+	return _any_event(sheet, func(event: EventRow) -> bool: return not event.conditions.is_empty())
 
 
 static func _sheet_has_action(sheet: EventSheetResource) -> bool:
+	return _any_event(sheet, func(event: EventRow) -> bool: return not event.actions.is_empty())
+
+
+## True when any event on the sheet passes `test` - events inside groups and sub-events count, so a
+## step ticks wherever the reader put the event, not only at the top level.
+static func _any_event(sheet: EventSheetResource, test: Callable) -> bool:
 	if sheet == null:
 		return false
-	for entry: Variant in sheet.events:
-		if entry is EventRow and not (entry as EventRow).actions.is_empty():
-			return true
+	return _any_event_in(sheet.events, test)
+
+
+static func _any_event_in(rows: Array, test: Callable) -> bool:
+	for entry: Variant in rows:
+		if entry is EventGroup:
+			var group: EventGroup = entry
+			if _any_event_in(group.events if not group.events.is_empty() else group.rows, test):
+				return true
+		elif entry is EventRow:
+			var event: EventRow = entry
+			if bool(test.call(event)) or _any_event_in(event.sub_events, test):
+				return true
 	return false
 
 

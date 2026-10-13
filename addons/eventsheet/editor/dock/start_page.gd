@@ -414,15 +414,28 @@ func _open_this_editor_folder() -> void:
 	_dock._set_status("The editor's own source, in the Project bar under This editor. Every file is read-only until you say Edit anyway.")
 
 
+## The scene a showcase folder runs from. A folder also holds the scenes its main scene spawns (a
+## shot, an enemy), so the main one is the scene named after the folder - `<folder>.tscn`, or
+## `showcase_<folder>.tscn` - and only a folder with neither falls back to its first scene by name.
+## Empty when the folder has no scene at all.
+static func showcase_scene(folder_path: String) -> String:
+	if not DirAccess.dir_exists_absolute(folder_path):
+		return ""
+	var names: PackedStringArray = DirAccess.get_files_at(folder_path)
+	names.sort()
+	var folder: String = folder_path.trim_suffix("/").get_file()
+	for wanted: String in ["%s.tscn" % folder, "showcase_%s.tscn" % folder]:
+		if names.has(wanted):
+			return folder_path.path_join(wanted)
+	for file_name: String in names:
+		if file_name.get_extension() == "tscn":
+			return folder_path.path_join(file_name)
+	return ""
+
+
 ## A showcase folder opens its scene in Godot's own editor - the point of a showcase is that it runs.
 func _open_showcase(folder_path: String) -> void:
-	var scene_path: String = ""
-	if DirAccess.dir_exists_absolute(folder_path):
-		var names: PackedStringArray = DirAccess.get_files_at(folder_path)
-		names.sort()
-		for file_name: String in names:
-			if file_name.get_extension() == "tscn":
-				scene_path = "%s/%s" % [folder_path, file_name]
+	var scene_path: String = showcase_scene(folder_path)
 	if scene_path.is_empty():
 		_dock._set_status("That showcase has no scene to open.", true)
 		return

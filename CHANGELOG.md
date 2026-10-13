@@ -13,6 +13,12 @@
 - **Sheet Type:** changing Name on a class that already had one only relabelled the class, leaving
   every row that used the old name pointing at a class that no longer existed. It now renames the
   uses too, the same way Rename class on the sheet's head does.
+- **Start page:** the Systems starter had a pitch but never showed, because the starter list it
+  reads did not offer it. Entity System is now offered there and in Create New > Event Sheet.
+- **Start page:** a showcase card opened whichever scene came last by name in its folder, so
+  Platformer Shooter opened its target scene. It now opens the scene named after the showcase.
+- **Tour:** the add-an-event, add-a-condition and add-an-action steps only looked at top-level
+  events, so an event made inside a group never ticked. Events in groups and sub-events count now.
 
 ### Fixed: the finding and navigation windows
 

@@ -305,6 +305,21 @@ static func _start_page_columns() -> bool:
 		str((learn[0] as Dictionary).get("label", "")), "Your first event") and all_passed
 	all_passed = _check("and ends with What's new",
 		str((learn[learn.size() - 1] as Dictionary).get("label", "")), "What's new") and all_passed
+	# Every pitch the page writes has a starter to stand on: with the real starter table, each
+	# pitched starter shows, the Systems one included.
+	var shown_starters: PackedStringArray = PackedStringArray()
+	for entry: Variant in (EventSheetStartPage.columns(EventSheetStarterTemplates.create_new_starters(),
+			PackedStringArray(), [])[0] as Dictionary).get("entries", []):
+		shown_starters.append(str((entry as Dictionary).get("note", "")).get_slice(" · ", 0))
+	all_passed = _check("every pitched starter appears on the page",
+		" | ".join(shown_starters), "Platformer | Top-down | Behavior | Systems | Data | Editor tools | Empty") and all_passed
+	# A showcase opens its own scene, not the last scene of the folder by name.
+	all_passed = _check("a showcase opens the scene named after its folder",
+		EventSheetStartPage.showcase_scene("res://demo/showcase/platformer_shooter"),
+		"res://demo/showcase/platformer_shooter/platformer_shooter.tscn") and all_passed
+	all_passed = _check("a showcase_<folder> scene counts as the folder's own",
+		EventSheetStartPage.showcase_scene("res://demo/showcase/carousel"),
+		"res://demo/showcase/carousel/showcase_carousel.tscn") and all_passed
 	return all_passed
 
 

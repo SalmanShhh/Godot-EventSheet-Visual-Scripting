@@ -1407,6 +1407,7 @@ static func create_new_starters() -> Array[Dictionary]:
 		{"id": 1, "label": "Platformer Starter"},
 		{"id": 2, "label": "Top-down Starter"},
 		{"id": 8, "label": "Behavior Component"},
+		{"id": 11, "label": "Entity System (Autoload)"},
 		{"id": 9, "label": "Custom Resource"},
 		{"id": 26, "label": "Loot Chest"},
 		{"id": 27, "label": "Stealth Guard"},

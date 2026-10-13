@@ -47,6 +47,24 @@ static func run() -> bool:
 		bool((steps[3]["check"] as Callable).call(event_sheet)), true) and passed
 	passed = _check("checks survive a null sheet (no open sheet = pending, never a crash)",
 		bool((steps[1]["check"] as Callable).call(null)), false) and passed
+	# An event the reader put inside a group (or under another event) ticks the same steps.
+	var grouped_sheet: EventSheetResource = EventSheetResource.new()
+	var group: EventGroup = EventGroup.new()
+	var grouped_row: EventRow = EventRow.new()
+	grouped_row.conditions.append(ACECondition.new())
+	group.events.append(grouped_row)
+	grouped_sheet.events.append(group)
+	passed = _check("an event inside a group ticks step 2",
+		bool((steps[1]["check"] as Callable).call(grouped_sheet)), true) and passed
+	passed = _check("a condition inside a group ticks step 3",
+		bool((steps[2]["check"] as Callable).call(grouped_sheet)), true) and passed
+	var parent_row: EventRow = EventRow.new()
+	var child_row: EventRow = EventRow.new()
+	child_row.actions.append(ACEAction.new())
+	parent_row.sub_events.append(child_row)
+	grouped_row.sub_events.append(parent_row)
+	passed = _check("an action on a sub-event ticks step 4",
+		bool((steps[3]["check"] as Callable).call(grouped_sheet)), true) and passed
 	passed = _test_no_step_points_at_a_retired_button(steps) and passed
 	return passed
 
