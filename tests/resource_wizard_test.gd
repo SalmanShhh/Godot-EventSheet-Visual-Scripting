@@ -11,6 +11,9 @@ class_name ResourceWizardTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 
@@ -109,7 +112,33 @@ static func run() -> bool:
 	if FileAccess.file_exists("user://wizard_roundtrip.gd"):
 		DirAccess.remove_absolute("user://wizard_roundtrip.gd")
 
+	ok = _window_says_its_own_problems() and ok
 	return ok
+
+
+## The window names what it will make and says what stops Create on itself: the placeholder is the
+## name the entry derives, a class name already in use is refused, and the problem lands on the
+## window rather than on the status bar behind it.
+static func _window_says_its_own_problems() -> bool:
+	var passed: bool = true
+	var host: Control = Control.new()
+	var wizard: EventSheetNewResourceWizard = EventSheetNewResourceWizard.new()
+	wizard.init(host)
+	wizard.open()
+	passed = SUPPORT.check("resource_wizard_test", "the placeholder is the name a Loot Drop derives",
+		wizard._class_edit.placeholder_text.get_slice(" ", 0),
+		EventSheetNewResourceWizard.class_name_for("", "Loot Drop")) and passed
+	passed = SUPPORT.check("resource_wizard_test", "a class name already in use is refused",
+		EventSheetNewResourceWizard.create_problem("Loot Drop", "Node", ["name"]),
+		"Node is already a class name - pick another Resource name.") and passed
+	passed = SUPPORT.check("resource_wizard_test", "a fresh name has no problem",
+		EventSheetNewResourceWizard.create_problem("Loot Drop", "", ["name"]), "") and passed
+	wizard._on_create()
+	passed = SUPPORT.check("resource_wizard_test", "Create with no entry name says so on the window",
+		[wizard._problem_label.visible, wizard._problem_label.text],
+		[true, "Name what one entry is called first (e.g. \"Loot Drop\")."]) and passed
+	host.free()
+	return passed
 
 
 static func _check(ok: bool, condition: bool, label: String) -> bool:

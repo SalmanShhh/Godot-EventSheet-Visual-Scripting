@@ -284,10 +284,22 @@ func _open_save_dialog() -> void:
 		_save_dialog.access = FileDialog.ACCESS_RESOURCES
 		_save_dialog.filters = PackedStringArray(["*.gd ; Event sheet"])
 		_save_dialog.title = "Save the imported sheet as"
-		_save_dialog.file_selected.connect(save_as)
+		_save_dialog.file_selected.connect(_on_save_path_chosen)
 		_dialog.add_child(_save_dialog)
 	_save_dialog.current_file = "%s.gd" % str(selected_sheet_json().get("name", "imported_sheet")).to_snake_case()
 	_save_dialog.popup_centered(Vector2i(720, 520))
+
+
+## The Save as… answer. A sheet that could not be written says why on the report this window is
+## showing; without it the window simply stayed open with nothing said.
+func _on_save_path_chosen(path: String) -> void:
+	var error: String = save_as(path)
+	if error.is_empty() or _report_label == null:
+		return
+	_report_label.text = "[b]%s[/b] %s
+
+%s" % [EventSheetL10n.translate("Not saved."),
+		error.replace("[", "[lb]"), report_text()]
 
 
 ## Writes the imported sheet to `path` through the ordinary compiler and opens it. Returns the

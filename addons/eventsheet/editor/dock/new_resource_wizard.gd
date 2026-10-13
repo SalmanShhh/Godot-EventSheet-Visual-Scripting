@@ -23,6 +23,7 @@ var _columns_edit: TextEdit = null
 var _required_check: CheckBox = null
 var _validator_check: CheckBox = null
 var _preview_label: Label = null
+var _problem_label: Label = null
 
 
 func init(dock: Control) -> void:
@@ -37,6 +38,7 @@ func open() -> void:
 	_columns_edit.text = ""
 	_required_check.button_pressed = false
 	_validator_check.button_pressed = false
+	show_problem("")
 	_refresh_preview()
 	if _dialog.is_inside_tree():  # headless tests: fields reset, no window to pop
 		_dialog.popup_centered(Vector2i(560, 600))
@@ -63,7 +65,7 @@ func _build_dialog() -> void:
 	_entry_edit.text_changed.connect(func(_t: String) -> void: _refresh_preview())
 	identity_box.add_child(EventSheetPopupUI.form_row("One entry is a…", _entry_edit))
 	_class_edit = LineEdit.new()
-	_class_edit.placeholder_text = "LootTable  (auto from the entry name)"
+	_class_edit.placeholder_text = "LootDropTable  (auto from the entry name)"
 	_class_edit.text_changed.connect(func(_t: String) -> void: _refresh_preview())
 	identity_box.add_child(EventSheetPopupUI.form_row("Resource name", _class_edit))
 
@@ -89,6 +91,11 @@ func _build_dialog() -> void:
 
 	_preview_label = EventSheetPopupUI.hint_label("")
 	content.add_child(_preview_label)
+	# What stops Create, said inside this window - the dock's status bar sits behind it.
+	_problem_label = EventSheetPopupUI.hint_label("")
+	_problem_label.add_theme_color_override("font_color", Color(1.0, 0.55, 0.55))
+	_problem_label.visible = false
+	content.add_child(_problem_label)
 
 	var buttons: HBoxContainer = HBoxContainer.new()
 	buttons.alignment = BoxContainer.ALIGNMENT_END
@@ -131,14 +138,12 @@ func _column_lines() -> Array:
 
 
 func _on_create() -> void:
+	var problem: String = create_problem(_entry_edit.text, _class_edit.text, _column_lines())
+	show_problem(problem)
+	if not problem.is_empty():
+		return
 	var entry_name: String = _entry_edit.text.strip_edges()
-	if entry_name.is_empty():
-		_dock._set_status("Name what one entry is called first (e.g. \"Loot Drop\").", true)
-		return
 	var columns: Array = _column_lines()
-	if columns.is_empty():
-		_dock._set_status("List at least one column (one per line).", true)
-		return
 	var sheet: EventSheetResource = build_wizard_sheet(_class_edit.text, entry_name, columns, _required_check.button_pressed)
 	if _validator_check.button_pressed:
 		EventSheets.attach_validator(sheet, grid_name_for(entry_name))
@@ -148,6 +153,38 @@ func _on_create() -> void:
 	_dock._dirty = true
 	_dock._refresh_title_strip()
 	_dock._set_status("New %s resource - fill the %s grid via the Inspector Designer, then Save As… to keep it." % [sheet.custom_class_name, grid_name_for(entry_name)])
+
+
+## Shows what stops Create on the window itself, or hides the line when nothing does.
+func show_problem(problem: String) -> void:
+	if _problem_label == null:
+		return
+	_problem_label.text = problem
+	_problem_label.visible = not problem.is_empty()
+
+
+## What keeps Create from making the resource, or "" when nothing does: no entry name, no columns, or
+## a class name the project or the engine already has (a second class_name of the same name would
+## not compile).
+static func create_problem(entry_name: String, resource_name: String, columns: Array) -> String:
+	if entry_name.strip_edges().is_empty():
+		return EventSheetL10n.translate("Name what one entry is called first (e.g. \"Loot Drop\").")
+	if columns.is_empty():
+		return EventSheetL10n.translate("List at least one column (one per line).")
+	var chosen: String = class_name_for(resource_name, entry_name)
+	if class_name_taken(chosen):
+		return EventSheetL10n.translate("%s is already a class name - pick another Resource name.") % chosen
+	return ""
+
+
+## True when the name is already an engine class or a project class_name.
+static func class_name_taken(type_name: String) -> bool:
+	if ClassDB.class_exists(type_name):
+		return true
+	for entry: Dictionary in ProjectSettings.get_global_class_list():
+		if str(entry.get("class", "")) == type_name:
+			return true
+	return false
 
 
 ## The whole wizard as a pure function: entry name + column phrases -> a Resource-host sheet

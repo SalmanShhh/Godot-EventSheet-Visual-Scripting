@@ -110,6 +110,12 @@ static func _wizard() -> bool:
 		wizard.report_text().contains("Switched off: [b]Enemy ▸ set-blend-mode[/b]"), true) and passed
 	passed = _check("a file that is not an exported sheet is refused",
 		wizard.load_source("res://tests/fixtures/nothing_here.json"), "That file does not exist.") and passed
+	# Save as… that cannot write says so on the report instead of being dropped.
+	wizard._imported = {"sheet": null, "report": {}}
+	wizard._on_save_path_chosen("user://foreign_import_never_written.gd")
+	passed = _check("a Save as that did not compile is reported on the window",
+		wizard._report_label.text.get_slice("
+", 0), "[b]Not saved.[/b] That sheet did not compile: Sheet is null") and passed
 	host.free()
 	return passed
 

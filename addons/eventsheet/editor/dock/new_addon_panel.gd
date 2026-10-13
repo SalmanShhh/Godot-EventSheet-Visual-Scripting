@@ -146,19 +146,29 @@ func _refresh_preview() -> void:
 		_path_label.text = "Will be created under res://eventsheet_addons/…"
 	else:
 		_path_label.text = "Will be created at: %s" % BehaviourAddonScaffold.suggested_path(addon_name)
+	# The clash is said while typing, not first on Create; an empty field is not a problem yet.
 	if _status_label != null:
-		_status_label.text = ""
+		_status_label.text = "" if addon_name.is_empty() else name_problem(addon_name)
+
+
+## Why this name cannot be created, or "" when it can: not a usable class name, or a file already
+## sitting where the addon would be written.
+static func name_problem(addon_name: String) -> String:
+	if not BehaviourAddonScaffold.is_valid_class_name(addon_name):
+		return EventSheetL10n.translate("\"%s\" isn't a usable class name - use letters/digits/underscore starting with a letter, and not a reserved or existing class name.") % addon_name
+	var path: String = BehaviourAddonScaffold.suggested_path(addon_name)
+	if FileAccess.file_exists(path):
+		return EventSheetL10n.translate("A file already exists at %s - pick another name.") % path
+	return ""
 
 
 func _on_create() -> void:
 	var addon_name: String = _name_edit.text.strip_edges()
-	if not BehaviourAddonScaffold.is_valid_class_name(addon_name):
-		_status_label.text = "\"%s\" isn't a usable class name - use letters/digits/underscore starting with a letter, and not a reserved or existing class name." % addon_name
+	var problem: String = name_problem(addon_name)
+	if not problem.is_empty():
+		_status_label.text = problem
 		return
 	var path: String = BehaviourAddonScaffold.suggested_path(addon_name)
-	if FileAccess.file_exists(path):
-		_status_label.text = "A file already exists at %s - pick another name." % path
-		return
 	var base: String = _base_option.get_item_text(_base_option.selected)
 	var recipe_id: String = str((BehaviourAddonScaffold.RECIPES[maxi(_recipe_option.selected, 0)] as Dictionary).get("id"))
 	var source: String = BehaviourAddonScaffold.generate_recipe(recipe_id, addon_name, base, _category_edit.text, _desc_edit.text)

@@ -19,6 +19,14 @@
   Platformer Shooter opened its target scene. It now opens the scene named after the showcase.
 - **Tour:** the add-an-event, add-a-condition and add-an-action steps only looked at top-level
   events, so an event made inside a group never ticked. Events in groups and sub-events count now.
+- **Import event sheet:** when Save as could not compile the sheet, the error was dropped and the
+  window just stayed open. The reason is now shown on the window's report.
+- **New Custom Resource:** the Resource name hint said `LootTable` while the wizard actually makes
+  `LootDropTable`; its problems were written to the status bar hidden behind the window; and a class
+  name already in use was accepted. The hint now shows the real name, problems show on the window,
+  and a taken class name is refused.
+- **New Behaviour Addon:** a name that clashed was only reported when you pressed Create. It is now
+  reported while you type.
 
 ### Fixed: the finding and navigation windows
 
