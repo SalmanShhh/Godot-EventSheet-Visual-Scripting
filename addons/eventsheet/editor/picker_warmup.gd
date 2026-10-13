@@ -129,7 +129,15 @@ const ICON_SLICES: int = 32
 ## The icons of one slice of the vocabulary, resolved into the picker's own path cache. Reads the
 ## live vocabulary at RUN time rather than at build time: the warm is armed before the registry is
 ## refreshed, and an empty answer here simply warms nothing.
+##
+## ONLY ONCE THE PICKER AND THE API ARE COMPILED. Loading either here would compile it, and the
+## Doctor, the parameters dialog and everything else they name, inside one idle slice a couple of
+## seconds after the workspace opens - the freeze the lazy picker exists to avoid, moved rather than
+## removed. So a slice that finds either script uncompiled warms nothing, and the dock rearms the warm
+## the moment it builds the picker, which is when the icons are worth having.
 static func _warm_icons(slice_index: int) -> void:
+	if not icon_scripts_compiled():
+		return
 	var verbs: Array[ACEDefinition] = load(EVENTSHEETS_API_PATH).all_verbs()
 	if verbs.is_empty():
 		return
@@ -139,6 +147,11 @@ static func _warm_icons(slice_index: int) -> void:
 	var picker: Script = load(ACE_PICKER_PATH)
 	for index in range(from_index, to_index):
 		picker.resolve_definition_icon(verbs[index])
+
+
+## Whether the two scripts the icon warm reaches are already loaded, so asking them costs no compile.
+static func icon_scripts_compiled() -> bool:
+	return ResourceLoader.has_cached(ACE_PICKER_PATH) and ResourceLoader.has_cached(EVENTSHEETS_API_PATH)
 
 
 static func _arm() -> void:

@@ -59,9 +59,12 @@ const FIRST_OPEN_BUDGET_MS: int = 6500
 ## then `.new()` on it. This is the wait the FIRST open of the workspace pays, on top of the first
 ## tab above. Measured 16,671, 16,754 and 17,051 ms before the closure was cut (15,548-15,884 of it
 ## the compile alone); after the cuts, 11,606 to 12,170 ms on a quiet machine (9,783-10,260 the compile).
-## The budget is about 12,170 times 1.25, lowered with every cut that lands rather than left with room to
-## grow back into. `editor_closure_budget_test` holds the compiled set itself, which does not flap.
-const EDITOR_BUILD_BUDGET_MS: int = 15200
+## This is the SANITY CEILING, not the regrowth gate: `editor_closure_budget_test` holds the compiled set
+## itself, deterministically, and the probe's `cached` list below holds what the build and its first
+## paint compile at runtime. So the margin is wide - about 12,170 times 1.5 - because the serial tail
+## job runs this alone on a shared runner, and a run that started beside another process has already
+## measured 15,755 here.
+const EDITOR_BUILD_BUDGET_MS: int = 18300
 
 ## Opening the fixture's 2,000-line script as a sheet: the import, the lift, and the row build with
 ## its head bands, ending in 1,441 rows. Measured 5,629, 5,758 and 7,305 ms - the widest spread of
@@ -235,7 +238,28 @@ static func _pin_cold_boot() -> bool:
 	passed = _check("building the workspace editor costs under %d ms (took %.1f ms, %.1f of it the compile)" % [
 		EDITOR_BUILD_BUDGET_MS, editor_build_ms, float(numbers.get("editor_load_ms", -1.0))],
 		editor_build_ms <= float(EDITOR_BUILD_BUDGET_MS), true) and passed
+	# What the build, a blank first sheet and the picker's whole idle warm left compiled, out of the
+	# scripts only a click may compile. A value, so it does not flap: a helper the dock reaches by
+	# path at runtime is invisible to the static closure walk, and this is where it shows.
+	var cached: String = _probe_text(output, "cached")
+	passed = _check("the probe listed what the first open compiled", cached.is_empty(), false) and passed
+	var compiled: PackedStringArray = cached.split(",", false) if cached != "none" else PackedStringArray()
+	for path: String in load(COLD_BOOT_PROBE).runtime_heavy_paths():
+		passed = _check("the first open of the workspace leaves %s uncompiled" % path.get_file(),
+			compiled.has(path), false) and passed
 	return passed
+
+
+## One `key=value` pair off the probe's result line, as written - for the values that are not numbers.
+static func _probe_text(output: Array, key: String) -> String:
+	for chunk: Variant in output:
+		for line: String in str(chunk).split("\n"):
+			if not line.begins_with("cold_boot "):
+				continue
+			for pair: String in line.trim_prefix("cold_boot ").strip_edges().split(" ", false):
+				if pair.begins_with(key + "="):
+					return pair.trim_prefix(key + "=")
+	return ""
 
 
 ## The `key=value` pairs off the probe's one result line.
@@ -249,7 +273,7 @@ static func _probe_numbers(output: Array) -> Dictionary:
 			continue
 		for pair: String in line.trim_prefix("cold_boot ").split(" ", false):
 			var parts: PackedStringArray = pair.split("=")
-			if parts.size() == 2:
+			if parts.size() == 2 and parts[1].is_valid_float():
 				numbers[parts[0]] = float(parts[1])
 	return numbers
 

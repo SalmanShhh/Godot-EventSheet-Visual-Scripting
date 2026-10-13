@@ -193,10 +193,23 @@
   Headless `editor_build_ms`, median of three, interleaved with the tree before the cut: 18,174 ms
   there, 12,170 ms here. `_ensure_editor()` in a real editor: 20,516 ms there, 14,600 ms here.
 - New `editor_closure_budget_test` walks the same graph and fails when the first open's set grows
-  more than three percent past those figures, printing the files that hold the most of it in.
+  more than three percent past the figure pinned in the test (338 files and 165,938 lines, measured
+  again after a rebase), printing the files that hold the most of it in.
   `plugin_boot_lazy_test` now holds the workspace editor and the reading core to never naming the
   compiler, the importer, the lifter, the Doctor, the pickers, the dialogs, the API or the Manual,
-  and the workspace build budget in `huge_project_budget_test` is lowered from 21 s to 15.2 s.
+  and the workspace build budget in `huge_project_budget_test` is lowered from 21 s to 18.3 s - a
+  sanity ceiling with room for a busy runner, since the closure test is what holds regrowth.
+- The picker's idle warm no longer compiles the picker and the API on its own a couple of seconds
+  after the workspace opens: its row-icon slices wait until both are already loaded, and building
+  the picker on the first click asks for them again. Escape and a stray click on the workspace no
+  longer build the picker to ask whether it is open.
+- The cold boot probe now opens a blank sheet in the workspace it built and runs the whole idle warm,
+  then lists which of the picker, the parameters and variable dialogs, the Doctor, the API and the
+  Manual's scripts that compiled; `huge_project_budget_test` pins every one of them uncompiled. This
+  sees a helper the workspace reaches by path at runtime, which the static closure walk cannot.
+- The workspace tab's class icon and the toolbar's find magnifier use the same editor-icon lookup as
+  before the cut again (no mirrored stand-in when the theme lacks an icon), and the "welcomed" flag
+  the Welcome window writes and the workspace reads is spelled in one place.
 - Every row reading is unchanged: `tools/reading_dump.gd` gives byte-identical output on this tree
   and on the tree before the cut began.
 

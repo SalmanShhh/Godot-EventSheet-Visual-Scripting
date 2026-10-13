@@ -167,6 +167,19 @@ static func run() -> bool:
 	editor.call("_refresh_ace_registry")
 	editor.call("_refresh_anatomy_panel")
 	all_passed = _check("opening a sheet does not build the picker", editor.get("_ace_picker_built"), false) and all_passed
+	# Escape and a stray left-click on the dock both ask "is the picker open, then close it". Asked by
+	# reading the field, that question builds the picker - a freeze on a cancel gesture.
+	var escape: InputEventKey = InputEventKey.new()
+	escape.keycode = KEY_ESCAPE
+	escape.pressed = true
+	editor.get("_input_dispatch").call("unhandled_key_input", escape)
+	all_passed = _check("Escape does not build the picker", editor.get("_ace_picker_built"), false) and all_passed
+	var click: InputEventMouseButton = InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	editor.call("_gui_input", click)
+	all_passed = _check("a click on the dock does not build the picker", editor.get("_ace_picker_built"),
+		false) and all_passed
 	# The plugin hands the workspace its debugger while building it; that hand-over keeps the debugger
 	# for the parameters dialog instead of building the dialog to wire it.
 	var dock_source: String = FileAccess.get_file_as_string(DOCK_PATH)

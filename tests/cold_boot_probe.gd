@@ -33,6 +33,12 @@
 #   editor_build_ms - that load plus `.new()` on it: what the plugin's lazy editor build pays
 #                     before the editor is handed to the main screen.
 #
+#   cached          - after that build, off the clock, the workspace opens a blank sheet and runs
+#                     the picker's whole idle warm, exactly as the first open in the editor does;
+#                     then the heavy scripts in RUNTIME_HEAVY that this left compiled, or `none`.
+#                     A VALUE, not a time: the static closure walk cannot see a helper the dock
+#                     reaches by path at runtime, and this is the gate that can.
+#
 # What it deliberately leaves out: the three EditorPlugin registration calls (`add_context_menu_plugin`
 # and friends), which need a live editor, and the import hook's `attach`, which needs
 # EditorInterface. All four are engine bookkeeping over objects already built by then; the cost
@@ -52,6 +58,23 @@ const RESULT_PREFIX: String = "cold_boot"
 ## script measure ONLY that, in a process of its own.
 const EDITOR_SCRIPT: String = "res://addons/eventforge/editor/event_sheet_editor.gd"
 const EDITOR_ONLY_ARGUMENT: String = "--editor-only"
+
+## The sheet resource the workspace opens on its first paint, by path for the reason above.
+const SHEET_RESOURCE_SCRIPT: String = "res://addons/eventforge/resources/event_sheet.gd"
+const PICKER_WARMUP_SCRIPT: String = "res://addons/eventsheet/editor/picker_warmup.gd"
+
+## The scripts a click compiles and the first open of the workspace must not: the picker, the
+## parameters and variable dialogs, the Doctor and the public API. Every script in the Manual's
+## folder is added to these when the probe runs: the plugin builds the docked Manual at boot, but this
+## process never boots the plugin, so the workspace compiling any of them is still a fault.
+const RUNTIME_HEAVY: Array[String] = [
+	"res://addons/eventsheet/editor/ace_picker.gd",
+	"res://addons/eventsheet/editor/ace_params_dialog.gd",
+	"res://addons/eventsheet/editor/variable_dialog.gd",
+	"res://addons/eventforge/project_doctor.gd",
+	"res://addons/eventsheet/api/eventsheets.gd",
+]
+const MANUAL_FOLDER: String = "res://addons/eventsheet/editor/docs/"
 
 ## A typical first sheet: a showcase script of about seventy lines, the size most files really are.
 ## The heaviest open in the project has its own budget elsewhere; this one is about what the first
@@ -176,10 +199,27 @@ func _time_editor_build() -> String:
 		return "editor_load_ms=-1 editor_build_ms=-1"
 	var editor: Variant = editor_script.new()
 	var built_usec: int = Time.get_ticks_usec()
+	var timings: String = "editor_load_ms=%.1f editor_build_ms=%.1f" % [
+		float(loaded_usec - start_usec) / 1000.0, float(built_usec - start_usec) / 1000.0]
 	if editor is Node:
+		(editor as Node).call("setup", load(SHEET_RESOURCE_SCRIPT).new())
+		(load(PICKER_WARMUP_SCRIPT) as Object).call("warm_now")
+		var cached: PackedStringArray = PackedStringArray()
+		for path: String in runtime_heavy_paths():
+			if ResourceLoader.has_cached(path):
+				cached.append(path)
+		timings += " cached=%s" % (",".join(cached) if not cached.is_empty() else "none")
 		(editor as Node).free()
-	return "editor_load_ms=%.1f editor_build_ms=%.1f" % [float(loaded_usec - start_usec) / 1000.0,
-		float(built_usec - start_usec) / 1000.0]
+	return timings
+
+
+## RUNTIME_HEAVY plus every script of the Manual folder. Static so the budget test names the same set.
+static func runtime_heavy_paths() -> PackedStringArray:
+	var paths: PackedStringArray = PackedStringArray(RUNTIME_HEAVY)
+	for file: String in DirAccess.get_files_at(MANUAL_FOLDER):
+		if file.get_extension() == "gd":
+			paths.append(MANUAL_FOLDER + file)
+	return paths
 
 
 ## One ordinary sheet, opened through the registries above.

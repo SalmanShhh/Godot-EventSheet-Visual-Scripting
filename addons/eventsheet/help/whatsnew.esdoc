@@ -6,6 +6,30 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Fixed: what the review of the window fixes found
+
+- **Replace in Project and Rename class:** both rewrote the behaviour packs under `eventsheet_addons/`
+  as plain text when a word matched, string literals and comments included, although nobody had
+  opened them and the next pack rebuild takes the change back. They now read past pack scripts; Find
+  in Project still lists matches in them.
+- **Sheet Type:** a new Name together with other changes made two undo steps, so one Ctrl+Z after OK
+  took back the type settings and left the rename in place, and the line naming the other files the
+  rename wrote was replaced by \"Sheet type updated.\" OK is now one undo step, the status keeps the
+  file list, and the dialog says how far the rename reaches before OK, as Rename class does.
+- **Rename class:** on a `.tres` sheet, renaming the class and then renaming it back was refused as
+  \"already the name of another class\", because the compiled script still declared the old name.
+- **Debugger, Breakpoints tab:** unticking a breakpoint, ticking it again and then pressing Ctrl+Z
+  took it out of the list instead of leaving it there unticked. A breakpoint touched on one sheet no
+  longer keeps a row listed on another.
+- **ACE picker:** the reactive-trigger tip read \"Reactive alternative:On Timeout\" with no space.
+- **States and Modes:** a refused OK in States, and the Modes notice about an On entering event that
+  was kept, closed the dialog and spoke on the status bar behind it. Both now say it under the form
+  with the dialog still open; in Modes the next OK on the same answers closes it.
+- **Keyboard Shortcuts:** the Fixed keys list left out Ctrl+Y (Redo) and Backspace (delete), which the
+  clash check already guarded.
+- **History:** in split view, hovering an edit lit its rows in the left pane even when you were
+  working in the right one. It now lights the pane you are working in.
+
 ### Fixed: the sheet and project windows
 
 - **New Event Sheet:** when the name you typed was taken, the sheet was written as
@@ -173,10 +197,23 @@ What changed in the build you have installed (v0.18.0), in the words the release
   Headless `editor_build_ms`, median of three, interleaved with the tree before the cut: 18,174 ms
   there, 12,170 ms here. `_ensure_editor()` in a real editor: 20,516 ms there, 14,600 ms here.
 - New `editor_closure_budget_test` walks the same graph and fails when the first open's set grows
-  more than three percent past those figures, printing the files that hold the most of it in.
+  more than three percent past the figure pinned in the test (338 files and 165,938 lines, measured
+  again after a rebase), printing the files that hold the most of it in.
   `plugin_boot_lazy_test` now holds the workspace editor and the reading core to never naming the
   compiler, the importer, the lifter, the Doctor, the pickers, the dialogs, the API or the Manual,
-  and the workspace build budget in `huge_project_budget_test` is lowered from 21 s to 15.2 s.
+  and the workspace build budget in `huge_project_budget_test` is lowered from 21 s to 18.3 s - a
+  sanity ceiling with room for a busy runner, since the closure test is what holds regrowth.
+- The picker's idle warm no longer compiles the picker and the API on its own a couple of seconds
+  after the workspace opens: its row-icon slices wait until both are already loaded, and building
+  the picker on the first click asks for them again. Escape and a stray click on the workspace no
+  longer build the picker to ask whether it is open.
+- The cold boot probe now opens a blank sheet in the workspace it built and runs the whole idle warm,
+  then lists which of the picker, the parameters and variable dialogs, the Doctor, the API and the
+  Manual's scripts that compiled; `huge_project_budget_test` pins every one of them uncompiled. This
+  sees a helper the workspace reaches by path at runtime, which the static closure walk cannot.
+- The workspace tab's class icon and the toolbar's find magnifier use the same editor-icon lookup as
+  before the cut again (no mirrored stand-in when the theme lacks an icon), and the \"welcomed\" flag
+  the Welcome window writes and the workspace reads is spelled in one place.
 - Every row reading is unchanged: `tools/reading_dump.gd` gives byte-identical output on this tree
   and on the tree before the cut began.
 

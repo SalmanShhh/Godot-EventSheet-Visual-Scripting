@@ -404,6 +404,9 @@ var _ace_picker: RefCounted = null:
 			_ace_picker.guide_requested.connect(_on_picker_guide_requested)
 			_ace_picker.help_requested.connect(_on_picker_help_requested)
 			_ace_picker_built = true
+			# The idle warm skips the row icons while the picker is uncompiled, so it is asked again
+			# now that the picker exists. Outside the editor this schedules nothing.
+			EventSheetPickerWarmup.rearm()
 		return _ace_picker
 ## True once the getter above has built and wired the picker, so a registry refresh can hand a BUILT
 ## picker the new vocabulary without building one just to hand it over. Set only by that getter.
@@ -1476,7 +1479,7 @@ static func _tab_icon(title: Dictionary) -> Texture2D:
 		{"kind": "script", "label": str(title.get("name", ""))}, str(title.get("file", "")))
 	if picture != null:
 		return picture
-	return EventSheetEditorIcons.icon(icon_class) if not icon_class.is_empty() else null
+	return EventSheetACEIcons.editor_icon(icon_class) if not icon_class.is_empty() else null
 
 
 func _format_tab_title(sheet: EventSheetResource, path: String, dirty: bool) -> String:
@@ -1946,7 +1949,9 @@ func _gui_input(event: InputEvent) -> void:
 	var mouse_event: InputEventMouseButton = event as InputEventMouseButton
 	if not mouse_event.pressed or mouse_event.button_index != MOUSE_BUTTON_LEFT:
 		return
-	if not _ace_picker.is_open():
+	# The built flag first: reading the field builds the picker, and a stray click on the dock is no
+	# reason to compile it.
+	if not _ace_picker_built or not _ace_picker.is_open():
 		return
 	if _ace_picker.get_popup_rect().has_point(get_global_mouse_position()):
 		return
@@ -7472,7 +7477,8 @@ func show_welcome_if_first_run() -> void:  # plugin calls this at editor startup
 	# "no". The window asks the same question again before it shows.
 	if not Engine.is_editor_hint() or DisplayServer.get_name() == "headless":
 		return
-	if bool(EditorInterface.get_editor_settings().get_project_metadata("eventsheets", "welcomed", false)):
+	var welcomed: Array = DOCK_REGISTRY.WELCOMED_METADATA
+	if bool(EditorInterface.get_editor_settings().get_project_metadata(welcomed[0], welcomed[1], false)):
 		return
 	_welcome.show_if_first_run()
 
@@ -8374,7 +8380,7 @@ func point_the_rows_there(finding: Dictionary) -> void:
 func see_what_replaced_it(finding: Dictionary) -> void:
 	var event_row: EventRow = finding.get("event", null) as EventRow
 	var slot: int = int(finding.get("index", -1))
-	if event_row == null or slot < 0 or _ace_picker == null:
+	if event_row == null or slot < 0:
 		return
 	var lane: String = str(finding.get("lane", ""))
 	var context: Dictionary = {"selected_resource": event_row, "ace_index": slot}

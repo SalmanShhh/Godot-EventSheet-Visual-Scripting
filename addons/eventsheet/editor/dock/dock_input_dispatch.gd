@@ -244,7 +244,8 @@ func unhandled_key_input(event: InputEvent) -> void:
 	var key_event: InputEventKey = event as InputEventKey
 	if not key_event.pressed or key_event.echo:
 		return
-	if key_event.keycode == KEY_ESCAPE and _dock._ace_picker.is_open():
+	# The built flag first: reading the field builds the picker, and Escape is no reason to compile it.
+	if key_event.keycode == KEY_ESCAPE and _dock._ace_picker_built and _dock._ace_picker.is_open():
 		_dock._ace_picker.close()
 		_dock.accept_event()
 		return

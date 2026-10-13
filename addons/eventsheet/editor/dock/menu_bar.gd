@@ -1583,7 +1583,7 @@ func _apply_find_face() -> void:
 	_find_field.custom_minimum_size.x = float(EventSheetPalette.scaled(FIND_FIELD_WIDTH))
 	# The magnifier leads the word, the way a search field reads: a mark inside the field's left
 	# edge, with the field's own boxes widened on that side so the typed text starts after it.
-	var icon: Texture2D = EventSheetEditorIcons.icon("Search")
+	var icon: Texture2D = EventSheetACEIcons.editor_icon("Search")
 	if icon == null:
 		_find_field.right_icon = icon
 		return

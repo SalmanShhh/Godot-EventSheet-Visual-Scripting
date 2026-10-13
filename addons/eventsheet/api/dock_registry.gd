@@ -20,6 +20,11 @@
 @tool
 extends RefCounted
 
+## The editor project-metadata section and key that record "this project has been welcomed". The
+## Welcome window writes it, and the workspace reads it on every first open to decide whether to
+## build that window at all - so it lives here, where reading it compiles nothing.
+const WELCOMED_METADATA: Array[String] = ["eventsheets", "welcomed"]
+
 ## The live workspace, announced by the workspace itself while it is built. Weak by contract: every
 ## reader checks validity, so a closed workspace never leaves the API pointing at a freed node.
 static var _dock: Control = null

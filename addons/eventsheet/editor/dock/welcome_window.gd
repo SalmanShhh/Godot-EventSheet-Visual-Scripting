@@ -22,6 +22,9 @@ const CAME_FROM_NEW := "new"
 const CAME_FROM_SHEETS := "sheets"
 const CAME_FROM_GDSCRIPT := "gdscript"
 const CAME_FROM_CHOICES: Array[String] = [CAME_FROM_NEW, CAME_FROM_SHEETS, CAME_FROM_GDSCRIPT]
+## Where "this project has been welcomed" is kept. Spelled once, in a file that names nothing, so
+## the workspace can ask the same question on every first open without compiling this window.
+const DOCK_REGISTRY := preload("res://addons/eventsheet/api/dock_registry.gd")
 ## The Classic sheet starter's own file - the look another event-sheet editor's users already know.
 const CLASSIC_THEME_PATH := "res://addons/eventsheet/themes/classic_sheet_theme.tres"
 ## The guide a reader from another event-sheet editor is handed, opened in the Manual.
@@ -77,9 +80,10 @@ func show_if_first_run() -> void:
 	if not Engine.is_editor_hint() or DisplayServer.get_name() == "headless":
 		return
 	var editor_settings: EditorSettings = EditorInterface.get_editor_settings()
-	if bool(editor_settings.get_project_metadata("eventsheets", "welcomed", false)):
+	var welcomed: Array = DOCK_REGISTRY.WELCOMED_METADATA
+	if bool(editor_settings.get_project_metadata(welcomed[0], welcomed[1], false)):
 		return
-	editor_settings.set_project_metadata("eventsheets", "welcomed", true)
+	editor_settings.set_project_metadata(welcomed[0], welcomed[1], true)
 	# First run in a project starts in Simple Mode (the Welcome's checkbox shows it checked): the
 	# newcomer surface should be the default surface, and the toolbar's Simple Mode pill makes
 	# flipping to Expert one visible click - so experts lose seconds, beginners gain a fighting start.
