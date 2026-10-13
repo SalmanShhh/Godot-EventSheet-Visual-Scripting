@@ -138,6 +138,9 @@ func _build_card(pack: Dictionary) -> Control:
 	var button: Button = Button.new()
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.toggle_mode = true
+	# The card knows WHICH pack it is by folder, so the selection highlight never has to guess it
+	# from the label (a name that begins another pack's name would light up both).
+	button.set_meta("pack_dir", str(pack.get("dir", "")))
 	button.button_pressed = _selected_dir == str(pack.get("dir", ""))
 	var pitch: String = str(pack.get("pitch", "")).strip_edges()
 	button.text = str(pack.get("name", "")) if pitch.is_empty() else "%s  -  %s" % [str(pack.get("name", "")), pitch]
@@ -173,14 +176,7 @@ func _select_pack(pack: Dictionary) -> void:
 func _rebuild_list_selection() -> void:
 	for child: Node in _list.get_children():
 		if child is Button:
-			(child as Button).set_pressed_no_signal((child as Button).text.begins_with(_selected_name()))
-
-
-func _selected_name() -> String:
-	for pack: Dictionary in _packs:
-		if str(pack.get("dir", "")) == _selected_dir:
-			return str(pack.get("name", ""))
-	return ""
+			(child as Button).set_pressed_no_signal(str(child.get_meta("pack_dir", "")) == _selected_dir)
 
 
 ## The pack the dialog is on, or an empty Dictionary. Public so the dock (and a test) can ask.

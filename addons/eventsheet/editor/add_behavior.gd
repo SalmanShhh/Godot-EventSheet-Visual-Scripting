@@ -39,7 +39,9 @@ static func exported_properties(script_path: String) -> Array[Dictionary]:
 			"id": identifier,
 			"type": declared_type,
 			"default": default_text,
-			"name": _humanize(identifier),
+			# The label is the property's own name, exactly as the pack wrote it - the same word the
+			# sheet and the generated code use for it.
+			"name": identifier,
 		})
 	return out
 
@@ -217,12 +219,3 @@ static func _infer_type(default_text: String) -> String:
 	if trimmed.is_valid_float():
 		return "float"
 	return ""
-
-
-static func _humanize(identifier: String) -> String:
-	var words: PackedStringArray = identifier.replace("_", " ").strip_edges().split(" ", false)
-	var out: PackedStringArray = PackedStringArray()
-	for index: int in words.size():
-		var word: String = words[index]
-		out.append(word.substr(0, 1).to_upper() + word.substr(1) if index == 0 else word)
-	return " ".join(out)

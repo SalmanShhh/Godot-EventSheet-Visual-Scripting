@@ -56,6 +56,33 @@ static func run() -> bool:
 	var knobs: Array[Dictionary] = EventSheetAddBehavior.exported_properties("res://eventsheet_addons/health/health_behavior.gd")
 	all_passed = _check("a pack publishes its @export knobs to the Add behavior dialog",
 		knobs.size() > 0, true) and all_passed
+	all_passed = _check("a knob is labelled with its own name, as the pack wrote it",
+		str(knobs[0].get("name", "")) if not knobs.is_empty() else "", "max_health") and all_passed
+	# The card highlight follows the pack's FOLDER, so a name that begins another pack's name never
+	# lights both up.
+	var behavior_dialog: EventSheetAddBehaviorDialog = EventSheetAddBehaviorDialog.new()
+	var two_packs: Array[Dictionary] = [
+		{"name": "Platformer", "dir": "platformer", "category": "Movement"},
+		{"name": "Platformer Pathfinding", "dir": "platformer_pathfinding", "category": "Movement"},
+	]
+	behavior_dialog._packs = two_packs
+	behavior_dialog._selected_dir = "platformer"
+	behavior_dialog._rebuild_list()
+	behavior_dialog._rebuild_list_selection()
+	var lit: PackedStringArray = PackedStringArray()
+	for card: Node in behavior_dialog._list.get_children():
+		if card is Button and (card as Button).button_pressed and not card.is_queued_for_deletion():
+			lit.append((card as Button).text)
+	all_passed = _check("picking Platformer lights Platformer alone", lit, PackedStringArray(["Platformer"])) and all_passed
+	behavior_dialog._selected_dir = "platformer_pathfinding"
+	behavior_dialog._rebuild_list_selection()
+	lit.clear()
+	for card: Node in behavior_dialog._list.get_children():
+		if card is Button and (card as Button).button_pressed and not card.is_queued_for_deletion():
+			lit.append((card as Button).text)
+	all_passed = _check("...and the longer name alone when it is the pick", lit,
+		PackedStringArray(["Platformer Pathfinding"])) and all_passed
+	behavior_dialog.free()
 	all_passed = _check("a field's text becomes the value the property wants",
 		EventSheetAddBehavior.parse_value("200", "float"), 200.0) and all_passed
 	all_passed = _check("...including a flag", EventSheetAddBehavior.parse_value("true", "bool"), true) and all_passed
