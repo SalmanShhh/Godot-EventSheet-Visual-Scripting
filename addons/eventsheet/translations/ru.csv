@@ -1756,7 +1756,6 @@ Subtract {value} from {name},Вычесть {value} из {name}
 Multiply {name} by {value},Умножить {name} на {value}
 Divide {name} by {value},Разделить {name} на {value}
 Set {name} to {value},Задать {name} = {value}
-Destroy,Уничтожить
 Destroy (at end of frame),Уничтожить (в конце кадра)
 ⏳ Wait {seconds} seconds,⏳ Ждать {seconds} с
 Go to scene {path},Перейти к сцене {path}
@@ -5052,7 +5051,6 @@ Warnings,Предупреждения
 "The game has no name of its own yet, so the window and the built file are both called after the project template. Project Settings > Application > Config > Name.","У игры пока нет собственного имени, поэтому окно и собранный файл названы по шаблону проекта. Настройки проекта > Приложение > Конфигурация > Имя."
 "The icon is still the engine's own, so the taskbar shows Godot's logo rather than the game's. Project Settings > Application > Config > Icon.","Значок всё ещё движковый, поэтому на панели задач виден логотип Godot, а не игры. Настройки проекта > Приложение > Конфигурация > Значок."
 %s writes to the console where an exported release build still runs it - first: %s.,"%s пишет в консоль там, где экспортированная релизная сборка всё ещё это выполняет - первое: %s."
-%d more like it in this file.,Ещё %d таких же в этом файле.
 Log (Debug Builds Only) compiles the line out of a release game.,Лог (только в отладочных сборках) убирает строку из релизной игры.
 "%s is missing %d key(s) the game asks for, so a player reading it sees the raw key: %s.","В %s не хватает %d ключ(ей), которые запрашивает игра, поэтому игрок видит сырой ключ: %s."
 %s costs %.2f ms of a frame in the last measured run - %d%% of the %.1f ms a 60 fps frame has.,"%s стоит %.2f мс кадра в последнем измеренном запуске - %d%% от %.1f мс, которые есть у кадра при 60 fps."

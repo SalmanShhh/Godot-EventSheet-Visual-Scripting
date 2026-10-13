@@ -1756,7 +1756,6 @@ Subtract {value} from {name},从 {name} 减去 {value}
 Multiply {name} by {value},将 {name} 乘以 {value}
 Divide {name} by {value},将 {name} 除以 {value}
 Set {name} to {value},将 {name} 设为 {value}
-Destroy,销毁
 Destroy (at end of frame),销毁（帧结束时）
 ⏳ Wait {seconds} seconds,⏳ 等待 {seconds} 秒
 Go to scene {path},转到场景 {path}
@@ -5052,7 +5051,6 @@ Warnings,警告
 "The game has no name of its own yet, so the window and the built file are both called after the project template. Project Settings > Application > Config > Name.",游戏还没有自己的名字，所以窗口和构建出的文件都沿用项目模板的名称。项目设置 > 应用 > 配置 > 名称。
 "The icon is still the engine's own, so the taskbar shows Godot's logo rather than the game's. Project Settings > Application > Config > Icon.",图标仍是引擎自带的，所以任务栏显示的是 Godot 的标志而不是游戏的。项目设置 > 应用 > 配置 > 图标。
 %s writes to the console where an exported release build still runs it - first: %s.,%s 在导出的发行版构建仍会执行的位置写入控制台 - 第一处：%s。
-%d more like it in this file.,该文件中还有 %d 处类似的。
 Log (Debug Builds Only) compiles the line out of a release game.,日志（仅调试构建）会把这一行从发行版游戏中去掉。
 "%s is missing %d key(s) the game asks for, so a player reading it sees the raw key: %s.",%s 缺少游戏请求的 %d 个键，玩家会看到原始键：%s。
 %s costs %.2f ms of a frame in the last measured run - %d%% of the %.1f ms a 60 fps frame has.,%s 在上次测量的运行中每帧耗费 %.2f 毫秒 - 占一帧的 %d%%（60 fps 下一帧为 %.1f 毫秒）。

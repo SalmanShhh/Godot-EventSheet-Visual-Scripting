@@ -1756,7 +1756,6 @@ Subtract {value} from {name},Sottrai {value} da {name}
 Multiply {name} by {value},Moltiplica {name} per {value}
 Divide {name} by {value},Dividi {name} per {value}
 Set {name} to {value},Imposta {name} a {value}
-Destroy,Distruggi
 Destroy (at end of frame),Distruggi (a fine frame)
 ⏳ Wait {seconds} seconds,⏳ Attendi {seconds} secondi
 Go to scene {path},Vai alla scena {path}
@@ -5052,7 +5051,6 @@ Warnings,Avvisi
 "The game has no name of its own yet, so the window and the built file are both called after the project template. Project Settings > Application > Config > Name.","Il gioco non ha ancora un nome suo, quindi la finestra e il file costruito prendono il nome del modello di progetto. Impostazioni progetto > Applicazione > Config > Nome."
 "The icon is still the engine's own, so the taskbar shows Godot's logo rather than the game's. Project Settings > Application > Config > Icon.","L'icona è ancora quella del motore, quindi la barra delle applicazioni mostra il logo di Godot invece di quello del gioco. Impostazioni progetto > Applicazione > Config > Icona."
 %s writes to the console where an exported release build still runs it - first: %s.,%s scrive nella console dove una build di release esportata la esegue ancora - prima: %s.
-%d more like it in this file.,%d altre simili in questo file.
 Log (Debug Builds Only) compiles the line out of a release game.,Log (solo build di debug) toglie la riga da un gioco di release.
 "%s is missing %d key(s) the game asks for, so a player reading it sees the raw key: %s.","A %s mancano %d chiave/i che il gioco chiede, quindi chi legge vede la chiave grezza: %s."
 %s costs %.2f ms of a frame in the last measured run - %d%% of the %.1f ms a 60 fps frame has.,%s costa %.2f ms di un frame nell'ultima esecuzione misurata - %d%% dei %.1f ms che ha un frame a 60 fps.

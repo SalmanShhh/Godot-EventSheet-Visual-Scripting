@@ -25,6 +25,7 @@ static func run() -> bool:
 	var ok: bool = _test_the_sources_are_alive()
 	ok = _test_a_verbatim_literal_keeps_its_spaces() and ok
 	ok = _test_the_harvest_has_nothing_to_write() and ok
+	ok = _test_no_key_is_listed_twice() and ok
 	return ok
 
 
@@ -55,6 +56,25 @@ static func _test_the_harvest_has_nothing_to_write() -> bool:
 			print("    %s" % key)
 		print("  run: \"$GODOT\" --headless --path . --script tools/harvest_translations.gd")
 	return _check("the harvest would write nothing", plan.append, PackedStringArray())
+
+
+## Two harvests that meet in a merge can each append the same key. The second row is dead weight
+## whose value drifts from the first one's, and only the later of the two is ever read.
+static func _test_no_key_is_listed_twice() -> bool:
+	var doubled: PackedStringArray = PackedStringArray()
+	for file_name: String in DirAccess.get_files_at("res://addons/eventsheet/translations"):
+		if file_name.get_extension() != "csv":
+			continue
+		var file: FileAccess = FileAccess.open("res://addons/eventsheet/translations".path_join(file_name), FileAccess.READ)
+		var seen: Dictionary = {}
+		while not file.eof_reached():
+			var row: PackedStringArray = file.get_csv_line()
+			if row.is_empty() or row[0].is_empty():
+				continue
+			if seen.has(row[0]):
+				doubled.append("%s: %s" % [file_name, row[0]])
+			seen[row[0]] = true
+	return _check("no catalog lists a key twice", doubled, PackedStringArray())
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

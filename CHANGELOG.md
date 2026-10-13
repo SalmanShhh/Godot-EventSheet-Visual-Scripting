@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Fixed: no translation key is listed twice
+
+- "Destroy" and "%d more like it in this file." each sat twice in all nine translation files (two
+  harvests met in a merge), and in Spanish and Italian the two rows had drifted to different words.
+  The earlier row of each is gone - the later one is the one the editor always read - and a gate
+  now fails when any catalog lists a key twice.
+
 ### Fixed: a range that leaves its step to Godot opens as a range
 
 - `@export_range(1, 3)` - two numbers, the step left to Godot - stayed a code line on a variable,
