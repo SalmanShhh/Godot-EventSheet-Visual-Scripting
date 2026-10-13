@@ -46,6 +46,9 @@ static func run() -> bool:
 	ok = _pin("German reads whole German sentences", "int",
 		{"range": {"min": "0", "max": "100"}, "drawer": "progress_bar", "group": "Combat"}, true, false,
 		"Eine ganze Zahl. Sie reicht von 0 bis 100. Als Fortschrittsbalken angezeigt. Sie ist unter Combat gruppiert.") and ok
+	EventSheetL10n.set_locale("ja")
+	ok = _pin("Japanese sentences meet without a space", "int", {"flags": [{"label": "Fire", "value": "1"}]}, true, false,
+		"整数。チェックボックスのフラグとして表示されます。") and ok
 	EventSheetL10n.set_locale(before_locale)
 
 	# The card mock itself: exported shows rows; unexported hides the card.

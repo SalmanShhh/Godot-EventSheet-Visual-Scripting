@@ -118,7 +118,7 @@ static func describe(type_name: String, attributes: Dictionary, exported: bool, 
 	var said: PackedStringArray = PackedStringArray([_type_sentence(type_name)])
 	if bool(attributes.get("storage", false)):
 		said.append(EventSheetL10n.translate("It is saved with the scene but hidden in the Inspector."))
-		return " ".join(said)
+		return _sentences(said)
 	var range_spec: Variant = attributes.get("range")
 	if range_spec is Dictionary:
 		var low: String = str((range_spec as Dictionary).get("min", "0"))
@@ -158,7 +158,16 @@ static func describe(type_name: String, attributes: Dictionary, exported: bool, 
 		said.append(EventSheetL10n.translate("It is clamped to the range."))
 	if bool(attributes.get("read_only", false)):
 		said.append(EventSheetL10n.translate("It is read-only."))
-	return " ".join(said)
+	return _sentences(said)
+
+
+## The sentences one after another: a space after a Latin full stop, none after the ideographic one,
+## which carries its own.
+static func _sentences(said: PackedStringArray) -> String:
+	var text: String = ""
+	for sentence: String in said:
+		text += sentence if text.is_empty() or text.ends_with("。") else " " + sentence
+	return text
 
 
 static func _type_sentence(type_name: String) -> String:
