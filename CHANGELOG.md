@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Fixed: an empty node or resource slot previews the line it saves
+
+- The variable window's IN CODE line for a node or resource slot left empty read
+  `@export var falloff: Curve = ""`, which does not parse, while Save wrote the slot with no value.
+  The preview now shows `@export var falloff: Curve`, the line Save writes.
+
 ### Fixed: two hand-written declarations open as variables instead of code lines
 
 - `@export_subgroup("")`, which ends only the subgroup before the next property, now opens as a fact

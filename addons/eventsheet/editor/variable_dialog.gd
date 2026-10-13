@@ -1824,7 +1824,9 @@ func _preview_variable(attributes: Dictionary) -> LocalVariable:
 	var stored_type: String = _selected_stored_type()
 	preview.type_name = stored_type
 	var code: bool = _current_value_kind() in CODE_KINDS or (_onready_check != null and _onready_check.button_pressed)
-	preview.default_value = _value_text() if code else _parse_default(stored_type, _value_text())
+	# An empty code value is no value (an empty node or resource slot), as the save makes it - never "".
+	preview.default_value = (null if _value_text().is_empty() else _value_text()) if code \
+		else _parse_default(stored_type, _value_text())
 	preview.expression_default = code and not _value_text().is_empty()
 	preview.no_default = code and _value_text().is_empty()
 	preview.is_constant = _const_check != null and _const_check.button_pressed and _supports_constant(stored_type)
