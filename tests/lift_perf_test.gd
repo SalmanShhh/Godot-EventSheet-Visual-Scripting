@@ -32,12 +32,17 @@ const ENGINE_BASE_PACK: String = "res://eventsheet_addons/health/health_behavior
 ##
 ## Re-measured on a QUIET machine every time the FIXTURE grows, and set at the near-doubled margin
 ## each earlier figure carried over its own measurement. The variable sentence took the sheet from
-## 389 rows to 414 (the globals it borrows, and the folder strips over them), and those 414 rebuild
-## in 950-1117 ms across five runs, one of them inside the full suite - so 1800. A budget sized
-## while the machine is loaded is a budget everyone learns to ignore, so the load is taken away
-## rather than paid for. What the pin is for is a rebuild that got ALGORITHMICALLY slower, and a
-## regression of that kind lands far outside this band rather than just inside it.
-const REBUILD_BUDGET_MS: int = 1800
+## 389 rows to 414 (the globals it borrows, and the folder strips over them), and those 414 rebuilt
+## in 950-1117 ms across five runs - so 1800. Re-measured 2026-10-13 when the serial tail read
+## 1645-1804 ms: the 418 rows rebuild in 1373-1499 ms alone on a quiet machine, the tree before the
+## export-section pass in 1508-1662 ms, and the very tree the 950-1117 figure came from in
+## 1706-2077 ms on the same machine that day. The section pass itself measured 1.4-2.4 ms. So the
+## rebuild did not get slower - the machine's figure moved - and the budget is set again at the same
+## near-doubled margin over today's number. A budget sized while the machine is loaded is a budget
+## everyone learns to ignore, so the load is taken away rather than paid for. What the pin is for is
+## a rebuild that got ALGORITHMICALLY slower, and a regression of that kind lands far outside this
+## band rather than just inside it.
+const REBUILD_BUDGET_MS: int = 2700
 ## A warm warm_registries() must be a no-op. Measured 0.1 ms; 50 catches a re-run without flapping.
 const WARM_REPEAT_BUDGET_MS: int = 50
 ## 200 mouse-motion events inside one cell. Measured 0.3 ms once a repeat is recognised as already
