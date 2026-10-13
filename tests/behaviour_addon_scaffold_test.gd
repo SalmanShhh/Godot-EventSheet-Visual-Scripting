@@ -1,74 +1,149 @@
-# Godot EventSheets - the "New Behaviour Addon" scaffold generator.
+# Godot EventSheets - the files the New behaviour and New global windows write.
 #
-# The scaffold writes a richly-commented skeleton .gd that teaches the @ace_* vocabulary and is dropped into
-# res://eventsheet_addons/ to become an auto-discovered ACE provider. The load-bearing guarantee: the
-# generated skeleton must be VALID GDScript for every base class offered - a scaffold that doesn't parse is
-# worse than none. This pins name validation, the path, the content, and that parse for all bases.
+# A new behaviour is the sheet a behaviour has (host typed as Works on, marked as yours, shelved) compiled
+# to plain GDScript, so it has the shape every shipped pack has and reopens as that sheet byte for byte.
+# A global is a plain Node script with no class_name. A copy keeps the source below its header and
+# rewrites only the header. Pins the text each one writes, that it parses, and the two readings the Add
+# behaviour list makes of a source (the host it works on, whether it is yours).
 @tool
 class_name BehaviourAddonScaffoldTest
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
-# preload (not the global class_name) so the test parses even before a project re-import registers the
-# freshly-added EventSheetBehaviourAddonScaffold in the global class cache.
 const Scaffold := preload("res://addons/eventsheet/editor/behaviour_addon_scaffold.gd")
+const PROBE_PATH := "user://behaviour_scaffold_probe.gd"
 
 
 static func run() -> bool:
-	var all_passed: bool = true
+	var ok: bool = true
+	ok = SUPPORT.pins("behaviour_addon_scaffold_test", [
+		["accepts a plain name", Scaffold.is_valid_class_name("Patrol"), true],
+		["rejects an empty name", Scaffold.is_valid_class_name(""), false],
+		["rejects a leading digit", Scaffold.is_valid_class_name("3Lives"), false],
+		["rejects a reserved word", Scaffold.is_valid_class_name("func"), false],
+		["rejects an engine class", Scaffold.is_valid_class_name("Node"), false],
+		["rejects a global script class", Scaffold.is_valid_class_name("ACEAction"), false],
+		["a behaviour lives in its own folder", Scaffold.script_path_for("PlayerCombat"),
+			"res://eventsheet_addons/player_combat/player_combat.gd"],
+		["a scene global sits beside its script", Scaffold.scene_path_for("GameState"),
+			"res://eventsheet_addons/game_state/game_state.tscn"],
+	]) and ok
 
-	# Name validation.
-	all_passed = _check("accepts a valid PascalCase name", Scaffold.is_valid_class_name("PlayerCombat"), true) and all_passed
-	all_passed = _check("rejects an empty name", Scaffold.is_valid_class_name(""), false) and all_passed
-	all_passed = _check("rejects a leading digit", Scaffold.is_valid_class_name("3Lives"), false) and all_passed
-	all_passed = _check("rejects a reserved word", Scaffold.is_valid_class_name("func"), false) and all_passed
-	all_passed = _check("rejects an existing engine class", Scaffold.is_valid_class_name("Node"), false) and all_passed
+	var behaviour: String = Scaffold.source_of(Scaffold.behaviour_sheet("Patrol", "CharacterBody2D", "Movement",
+		"Walks between points,\nwaits at each, and says \"arrived\"."))
+	ok = _check("a new behaviour is the pack shape, typed as what it works on", behaviour, "\n".join(PackedStringArray([
+		"## @ace_tags(custom)",
+		"## @ace_category(\"Movement\")",
+		"class_name Patrol",
+		"extends Node",
+		"## Walks between points, waits at each, and says 'arrived'.",
+		"",
+		"## The node this behavior acts on (its parent). Required host: CharacterBody2D.",
+		"var host: CharacterBody2D = null",
+		"",
+		"func _enter_tree() -> void:",
+		"\thost = get_parent() as CharacterBody2D",
+		"\tif host == null:",
+		"\t\tpush_warning(\"Patrol behavior requires a CharacterBody2D parent.\")",
+		"",
+	]))) and ok
+	ok = _check("it parses", _parses(behaviour), OK) and ok
+	ok = _check("a kind of object Godot does not have works on any node",
+		Scaffold.host_class_of(Scaffold.source_of(Scaffold.behaviour_sheet("Odd", "NoSuchClass", "", ""))), "Node") and ok
 
-	# Suggested path (snake_cased under the auto-scanned folder).
-	all_passed = _check("suggested path is snake_cased under eventsheet_addons",
-		Scaffold.suggested_path("PlayerCombat"),
-		"res://eventsheet_addons/player_combat/player_combat.gd") and all_passed
+	# It reopens as the sheet it was made from, and saves back byte for byte.
+	var file: FileAccess = FileAccess.open(PROBE_PATH, FileAccess.WRITE)
+	file.store_string(behaviour)
+	file.close()
+	var reopened: EventSheetResource = GDScriptImporter.new().import_external(PROBE_PATH)
+	ok = SUPPORT.pins("behaviour_addon_scaffold_test", [
+		["reopens as a behaviour", reopened.behavior_mode, true],
+		["working on what it was made for", reopened.host_class, "CharacterBody2D"],
+		["marked as yours", Array(reopened.addon_tags), ["custom"]],
+		["saves back byte for byte", str(SheetCompiler.compile(reopened, "").get("output")), behaviour],
+	]) and ok
+	DirAccess.remove_absolute(PROBE_PATH)
 
-	# Content: identity + the taught vocabulary.
-	var src: String = Scaffold.generate("PlayerCombat", "Node2D", "Combat", "Handles attacks.")
-	all_passed = _check("includes the class_name", src.contains("class_name PlayerCombat"), true) and all_passed
-	all_passed = _check("includes the chosen base", src.contains("extends Node2D"), true) and all_passed
-	all_passed = _check("applies the category", src.contains("@ace_category(\"Combat\")"), true) and all_passed
-	all_passed = _check("teaches the core annotation types + a trigger signal",
-		src.contains("@ace_action") and src.contains("@ace_condition") and src.contains("@ace_expression") and src.contains("signal activated"), true) and all_passed
+	var global_source: String = Scaffold.source_of(Scaffold.global_sheet("Score and lives."))
+	ok = _check("a new global is a plain Node script with no class_name", global_source,
+		"extends Node\n## Score and lives.\n") and ok
 
-	# CRITICAL: the skeleton must be valid GDScript for EVERY offered base class.
-	for base: String in Scaffold.BASE_CLASSES:
-		var script: GDScript = GDScript.new()
-		script.source_code = Scaffold.generate("ScaffoldProbe%s" % base, base, "Demo", "Probe.")
-		all_passed = _check("the skeleton parses cleanly (extends %s)" % base, script.reload(), OK) and all_passed
+	# A copy rewrites the header only: renamed, marked as yours (beside its own tags), reshelved, its
+	# version dropped, and the description you wrote in place of its own.
+	var pack: String = "\n".join(PackedStringArray([
+		"## @ace_tags(events, messaging)",
+		"## @ace_category(\"Events\")",
+		"## @ace_version(1.0.0)",
+		"@icon(\"res://eventsheet_addons/event_bus/icon.svg\")",
+		"class_name EventBusPackAddon",
+		"extends Node",
+		"## A game-wide message board.",
+		"## Second line of its own words.",
+		"",
+		"signal event_raised(channel: String)",
+	]))
+	ok = _check("a copied behaviour keeps everything below its header", Scaffold.copied_source(pack, "Messages", "AI", "Mine now.", true),
+		"\n".join(PackedStringArray([
+			"## @ace_tags(events, messaging, custom)",
+			"## @ace_category(\"AI\")",
+			"@icon(\"res://eventsheet_addons/event_bus/icon.svg\")",
+			"class_name Messages",
+			"extends Node",
+			"## Mine now.",
+			"",
+			"signal event_raised(channel: String)",
+		]))) and ok
+	ok = _check("a copied global drops the class, so it cannot clash with the pack or the autoload",
+		Scaffold.copied_source(pack, "Messages", "", "", false).contains("class_name"), false) and ok
+	ok = _check("and keeps the words it came with when none are written", Scaffold.copied_source(pack, "Messages", "", "", false).contains(
+		"extends Node\n## A game-wide message board.\n## Second line of its own words."), true) and ok
+	ok = _check("a copy parses", _parses(Scaffold.copied_source(pack, "Messages", "AI", "", true)), OK) and ok
 
-	# Each ACE kind the scaffold teaches is present + annotated, so the generator (which reads these exact
-	# annotations from the file, exercised by the real behaviour packs) turns them into a Trigger / Action /
-	# Condition / Expression. Kept deterministic (no temp-file load, which is flaky headless).
-	var sample: String = Scaffold.generate("AcesProbe", "Node", "Demo", "Probe.")
-	all_passed = _check("a signal trigger is annotated", sample.contains("signal activated"), true) and all_passed
-	all_passed = _check("an action method is annotated", sample.contains("@ace_action") and sample.contains("func do_the_thing"), true) and all_passed
-	all_passed = _check("a condition method is annotated", sample.contains("@ace_condition") and sample.contains("func is_ready"), true) and all_passed
-	all_passed = _check("an expression method is annotated", sample.contains("@ace_expression") and sample.contains("func current_strength"), true) and all_passed
-	all_passed = _check("an @export property is present", sample.contains("@export var strength"), true) and all_passed
+	ok = SUPPORT.pins("behaviour_addon_scaffold_test", [
+		["the host a shipped pack works on", Scaffold.host_class_of(FileAccess.get_file_as_string(
+			"res://eventsheet_addons/bullet/bullet_behavior.gd")), "Node2D"],
+		["an @onready host reads the same", Scaffold.host_class_of("@onready var host: Control = get_parent()"), "Control"],
+		["no host, no kind", Scaffold.host_class_of("extends Node"), ""],
+		["a new behaviour is yours", Scaffold.is_yours(behaviour), true],
+		["a shipped pack is not", Scaffold.is_yours(pack), false],
+		["a copy is", Scaffold.is_yours(Scaffold.copied_source(pack, "Messages", "", "", true)), true],
+	]) and ok
 
-	# ── Adversarial-review regression cases ──
-	# Finding 1: a duplicate class_name is a HARD project error, so an existing GLOBAL script class is rejected.
-	all_passed = _check("rejects an existing global script class", Scaffold.is_valid_class_name("ACEAction"), false) and all_passed
-	# Finding 4: _to_snake_case must not mangle acronyms / digits.
-	all_passed = _check("snake_case keeps an acronym intact (HUDManager)", Scaffold._to_snake_case("HUDManager"), "hud_manager") and all_passed
-	all_passed = _check("snake_case keeps a leading acronym (ABCWidget)", Scaffold._to_snake_case("ABCWidget"), "abc_widget") and all_passed
-	all_passed = _check("snake_case keeps a digit run (Box2DBody)", Scaffold._to_snake_case("Box2DBody"), "box2d_body") and all_passed
-	all_passed = _check("snake_case the simple case (PlayerCombat)", Scaffold._to_snake_case("PlayerCombat"), "player_combat") and all_passed
-	# Findings 2 + 3: newlines / quotes in category + description never corrupt the generated GDScript.
-	var dirty: String = Scaffold.generate("DirtyInput", "Node", "Multi\nLine", "Has \"quotes\" and\nnewlines")
-	var dirty_script: GDScript = GDScript.new()
-	dirty_script.source_code = dirty
-	all_passed = _check("newline/quote-laden category & description still parse", dirty_script.reload(), OK) and all_passed
-	all_passed = _check("embedded double-quotes are neutralised in the annotation", dirty.contains("Has 'quotes'"), true) and all_passed
+	# What a script I wrote hands a behaviour: its exported variables, never its constants or state.
+	var mine: String = "extends CharacterBody2D\n\n@export var speed: float = 120.0\nconst LIMIT: int = 3\nvar _timer: float = 0.0\n@export var loop: bool = true\n"
+	file = FileAccess.open(PROBE_PATH, FileAccess.WRITE)
+	file.store_string(mine)
+	file.close()
+	ok = SUPPORT.pins("behaviour_addon_scaffold_test", [
+		["a behaviour takes the exported variables", _names(Scaffold.carried_variables(PROBE_PATH, true)), ["speed", "loop"]],
+		["a global takes every variable but the constants", _names(Scaffold.carried_variables(PROBE_PATH, false)), ["speed", "_timer", "loop"]],
+		["a missing script hands over nothing", Scaffold.carried_variables("res://no/such.gd", true).size(), 0],
+	]) and ok
+	var carried: String = Scaffold.source_of(Scaffold.with_variables(Scaffold.behaviour_sheet("Walker", "CharacterBody2D", "", ""),
+		Scaffold.carried_variables(PROBE_PATH, true)))
+	ok = _check("the carried properties are written as @export lines", carried.contains(
+		"@export var speed: float = 120.0\n@export var loop: bool = true"), true) and ok
+	ok = _check("and the result parses", _parses(carried), OK) and ok
+	DirAccess.remove_absolute(PROBE_PATH)
 
-	return all_passed
+	var scene: PackedScene = Scaffold.global_scene("GameState", GDScript.new())
+	var root: Node = scene.instantiate()
+	ok = _check("a scene global's root is named for it", str(root.name), "GameState") and ok
+	root.free()
+	return ok
+
+
+static func _parses(source: String) -> int:
+	var script: GDScript = GDScript.new()
+	script.source_code = source
+	return script.reload()
+
+
+static func _names(variables: Array[LocalVariable]) -> Array:
+	var out: Array = []
+	for variable: LocalVariable in variables:
+		out.append(variable.name)
+	return out
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

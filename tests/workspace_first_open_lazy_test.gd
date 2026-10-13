@@ -38,6 +38,8 @@ const CLICK_ONLY := [
 	"res://addons/eventsheet/editor/dock/find_references_panel.gd",
 	"res://addons/eventsheet/editor/dock/import_sheet_wizard.gd",
 	"res://addons/eventsheet/editor/dock/new_addon_panel.gd",
+	"res://addons/eventsheet/editor/dock/own_members_window.gd",
+	"res://addons/eventsheet/editor/behaviour_addon_scaffold.gd",
 	"res://addons/eventsheet/editor/dock/new_resource_wizard.gd",
 	"res://addons/eventsheet/editor/dock/ai_generate_window.gd",
 	"res://addons/eventsheet/editor/dock/ask_window.gd",

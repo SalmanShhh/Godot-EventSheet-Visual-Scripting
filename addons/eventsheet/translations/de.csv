@@ -8181,3 +8181,78 @@ Creates %s in %s and opens it.,Erstellt %s in %s und öffnet es.
 "Inserted %s - a %s, in %s.","%s eingefügt - ein %s, in %s."
 New Class…,Neue Klasse…
 "Insert a new object: pick what it is, name it, and its script opens here.","Ein neues Objekt einfügen: wähle, was es ist, benenne es, und sein Skript öffnet sich hier."
+New global,Neues globales Objekt
+New behaviour,Neues Verhalten
+New behaviour…,Neues Verhalten…
+New global…,Neues globales Objekt…
+Properties and actions…,Eigenschaften und Aktionen…
+"Make a behaviour of your own: a child node that adds properties, actions, conditions and triggers to the object it is added to.","Ein eigenes Verhalten erstellen: ein Kindknoten, der dem Objekt, dem er hinzugefügt wird, Eigenschaften, Aktionen, Bedingungen und Auslöser gibt."
+"Make a global of your own: one script or scene Godot loads before the first scene and keeps for the whole game, listed in Project Settings > Globals > Autoload.","Ein eigenes globales Objekt erstellen: ein Skript oder eine Szene, die Godot vor der ersten Szene lädt und das ganze Spiel über behält, eingetragen unter Projekteinstellungen > Globale > Autoload."
+"What this behaviour or global offers: its properties or values, and the actions, conditions, triggers and expressions every sheet's picker lists.","Was dieses Verhalten oder globale Objekt anbietet: seine Eigenschaften oder Werte und die Aktionen, Bedingungen, Auslöser und Ausdrücke, die der Picker jedes Sheets auflistet."
+"Just code and values: score, lives, messages between scenes, saving. The usual choice - Godot adds it as a plain Node.","Nur Code und Werte: Punkte, Leben, Nachrichten zwischen Szenen, Speichern. Die übliche Wahl - Godot fügt es als einfachen Node hinzu."
+"Needs nodes of its own: music players, a fade overlay, a pause menu or a HUD that stays while levels change. Godot loads the whole scene.","Braucht eigene Nodes: Musikplayer, eine Überblendung, ein Pausenmenü oder ein HUD, das beim Levelwechsel bleibt. Godot lädt die ganze Szene."
+Made as,Erstellt als
+Works on,Wirkt auf
+Picker heading,Überschrift im Picker
+"What it does, in one line.","Was es tut, in einer Zeile."
+Start from,Beginnen mit
+Autoload,Autoload
+Any node,Beliebiger Node
+"Works on every object. It can only use what every node has: its name, groups, signals, timers.","Wirkt auf jedes Objekt. Es kann nur nutzen, was jeder Node hat: Name, Gruppen, Signale, Timer."
+"Any 2D object. It can move, turn and scale the object it is added to.","Jedes 2D-Objekt. Es kann das Objekt, dem es hinzugefügt wird, bewegen, drehen und skalieren."
+"A 2D character moved by code: it gets velocity and move_and_slide(), the usual choice for walking, patrolling, jumping.","Eine 2D-Figur, die per Code bewegt wird: Sie hat velocity und move_and_slide(), die übliche Wahl für Laufen, Patrouillieren, Springen."
+A 2D object moved by physics: it pushes with forces and impulses rather than setting positions.,"Ein 2D-Objekt, das von der Physik bewegt wird: Es schiebt mit Kräften und Impulsen, statt Positionen zu setzen."
+"A piece of UI: buttons, labels, panels.","Ein Stück Benutzeroberfläche: Schaltflächen, Beschriftungen, Panels."
+Any 3D object.,Jedes 3D-Objekt.
+A 3D character moved by code.,"Eine 3D-Figur, die per Code bewegt wird."
+Its own name,Sein eigener Name
+"Listed under its own name at the top of every picker, like System. The usual choice.","Unter seinem eigenen Namen oben in jedem Picker aufgeführt, wie System. Die übliche Wahl."
+Listed with the sound and music actions.,Bei den Sound- und Musikaktionen aufgeführt.
+Listed with the save and load actions.,Bei den Speicher- und Ladeaktionen aufgeführt.
+Listed with menus and screens.,Bei Menüs und Bildschirmen aufgeführt.
+Listed with %s.,Aufgeführt bei %s.
+Empty,Leer
+A global with no values or events yet. You add each one next.,Ein globales Objekt noch ohne Werte oder Events. Du fügst jedes als Nächstes hinzu.
+A behaviour with no properties or events yet. You add each one next. Pick this when nothing that ships is close to what you want.,"Ein Verhalten noch ohne Eigenschaften oder Events. Du fügst jedes als Nächstes hinzu. Wähle das, wenn nichts Mitgeliefertes nah an dem ist, was du willst."
+Copy of %s,Kopie von %s
+%s Your copy gets its own name and folder; the shipped one stays as it is.,"%s Deine Kopie bekommt ihren eigenen Namen und Ordner; das mitgelieferte bleibt, wie es ist."
+From a script I wrote,Aus einem eigenen Skript
+Its variables become this global's values. The script itself is not changed.,Seine Variablen werden die Werte dieses globalen Objekts. Das Skript selbst wird nicht verändert.
+From an autoload I already have,Aus einem vorhandenen Autoload
+Opens a global your project already lists in Project Settings > Globals as a sheet. Nothing is moved or renamed.,"Öffnet ein globales Objekt, das dein Projekt schon in Projekteinstellungen > Globale führt, als Sheet. Nichts wird verschoben oder umbenannt."
+Its exported variables become this behaviour's properties. The script itself is not changed.,Seine exportierten Variablen werden die Eigenschaften dieses Verhaltens. Das Skript selbst wird nicht verändert.
+From the selected node,Vom ausgewählten Node
+"Uses the script on the node selected in the Scene dock, the same way as From a script I wrote.","Nimmt das Skript des im Szene-Dock ausgewählten Nodes, genauso wie Aus einem eigenen Skript."
+Choose another…,Anderes wählen…
+"Default: the %s icon, following Works on","Standard: das %s-Symbol, folgt Wirkt auf"
+Opens %s as a sheet.,Öffnet %s als Sheet.
+"Makes %s, turns it on in Project Settings > Globals > Autoload and opens it as a sheet.","Erstellt %s, schaltet es unter Projekteinstellungen > Globale > Autoload ein und öffnet es als Sheet."
+Makes %s and opens it as a sheet.,Erstellt %s und öffnet es als Sheet.
+"""%s"" can't be a name here - use letters, digits and underscores, starting with a letter, and not the name of a class that already exists.","""%s"" kann hier kein Name sein - nutze Buchstaben, Ziffern und Unterstriche, beginne mit einem Buchstaben und nimm nicht den Namen einer vorhandenen Klasse."
+Project Settings > Globals already has an autoload called %s - pick another name.,Projekteinstellungen > Globale hat schon ein Autoload namens %s - wähle einen anderen Namen.
+%s already exists - pick another name.,%s gibt es schon - wähle einen anderen Namen.
+Opened the global %s as a sheet - nothing was moved or renamed.,Das globale Objekt %s wurde als Sheet geöffnet - nichts wurde verschoben oder umbenannt.
+Choose the script to start from.,"Wähle das Skript, mit dem du beginnst."
+Select a node that has a script in the Scene dock first.,"Wähle zuerst im Szene-Dock einen Node, der ein Skript hat."
+Couldn't write %s - check folder permissions.,%s konnte nicht geschrieben werden - prüfe die Ordnerrechte.
+Made the behaviour %s at %s. Add it to an object from the Add behaviour list.,Verhalten %s unter %s erstellt. Füge es einem Objekt über die Liste Verhalten hinzufügen hinzu.
+Made the global %s and turned it on in Project Settings > Globals > Autoload. Ctrl+Z turns it off again; the file stays.,Globales Objekt %s erstellt und unter Projekteinstellungen > Globale > Autoload eingeschaltet. Strg+Z schaltet es wieder aus; die Datei bleibt.
+Turn on global %s,Globales Objekt %s einschalten
+Turn off global %s,Globales Objekt %s ausschalten
+Global values,Globale Werte
+Actions,Aktionen
+Conditions,Bedingungen
+None yet - Add writes the first one.,Noch keine - Hinzufügen schreibt die erste.
+What it means,Was es bedeutet
+%s is on - it loads before the first scene and stays while scenes change.,%s ist eingeschaltet - es lädt vor der ersten Szene und bleibt beim Szenenwechsel.
+"%s is off - the script stays, nothing loads it.","%s ist ausgeschaltet - das Skript bleibt, nichts lädt es."
+"Values every scene shares, kept while scenes change.","Werte, die jede Szene teilt und die beim Szenenwechsel erhalten bleiben."
+"What a designer sets per object in the Inspector, like any behaviour's properties.","Was ein Designer pro Objekt im Inspektor einstellt, wie die Eigenschaften jedes Verhaltens."
+What every sheet's picker offers under this global's name. Click a name to see its row.,"Was der Picker jedes Sheets unter dem Namen dieses globalen Objekts anbietet. Klicke auf einen Namen, um seine Zeile zu sehen."
+What every sheet's picker offers under the object this is added to. Host is that object. Click a name to see its row.,"Was der Picker jedes Sheets unter dem Objekt anbietet, dem dies hinzugefügt wird. Host ist dieses Objekt. Klicke auf einen Namen, um seine Zeile zu sehen."
++ Add trigger,+ Auslöser hinzufügen
++ Add expression,+ Ausdruck hinzufügen
++ Add global value,+ Globalen Wert hinzufügen
++ Add property,+ Eigenschaft hinzufügen
+returns %s,gibt %s zurück
+Added a trigger.,Auslöser hinzugefügt.

@@ -48,7 +48,7 @@ Argument** for reading the handoff.
 
 ## Setup
 
-1. Open **Sheet > New Behaviour Addon…** and pick Named Scenes, or use **Tools > Register Autoload**
+1. Open **Sheet > New global…** and start from **Copy of Named Scenes** (it is turned on for you), or use **Tools > Register Autoload**
    on `res://eventsheet_addons/named_scenes/named_scenes_addon.gd`. It registers as `NamedScenes`.
 2. Register your scenes once, in a boot sheet the game always runs first - either one Register Scene
    row per level, or a single Register Scenes In Folder over `res://levels`.

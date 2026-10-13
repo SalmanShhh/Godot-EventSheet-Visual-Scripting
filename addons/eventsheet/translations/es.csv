@@ -8181,3 +8181,78 @@ Creates %s in %s and opens it.,Crea %s en %s y lo abre.
 "Inserted %s - a %s, in %s.","Insertado %s - un %s, en %s."
 New Class…,Nueva clase…
 "Insert a new object: pick what it is, name it, and its script opens here.","Inserta un objeto nuevo: elige qué es, ponle nombre y su script se abre aquí."
+New global,Nuevo global
+New behaviour,Nuevo comportamiento
+New behaviour…,Nuevo comportamiento…
+New global…,Nuevo global…
+Properties and actions…,Propiedades y acciones…
+"Make a behaviour of your own: a child node that adds properties, actions, conditions and triggers to the object it is added to.","Crea un comportamiento propio: un nodo hijo que añade propiedades, acciones, condiciones y disparadores al objeto al que se añade."
+"Make a global of your own: one script or scene Godot loads before the first scene and keeps for the whole game, listed in Project Settings > Globals > Autoload.","Crea un global propio: un script o una escena que Godot carga antes de la primera escena y conserva durante todo el juego, listado en Configuración del proyecto > Globales > Autoload."
+"What this behaviour or global offers: its properties or values, and the actions, conditions, triggers and expressions every sheet's picker lists.","Lo que ofrece este comportamiento o global: sus propiedades o valores, y las acciones, condiciones, disparadores y expresiones que lista el selector de cada hoja."
+"Just code and values: score, lives, messages between scenes, saving. The usual choice - Godot adds it as a plain Node.","Solo código y valores: puntuación, vidas, mensajes entre escenas, guardado. La opción habitual: Godot lo añade como un Node simple."
+"Needs nodes of its own: music players, a fade overlay, a pause menu or a HUD that stays while levels change. Godot loads the whole scene.","Necesita nodos propios: reproductores de música, una capa de fundido, un menú de pausa o un HUD que se mantiene al cambiar de nivel. Godot carga la escena entera."
+Made as,Hecho como
+Works on,Funciona en
+Picker heading,Encabezado en el selector
+"What it does, in one line.","Lo que hace, en una línea."
+Start from,Empezar desde
+Autoload,Autoload
+Any node,Cualquier nodo
+"Works on every object. It can only use what every node has: its name, groups, signals, timers.","Funciona en cualquier objeto. Solo puede usar lo que tiene todo nodo: su nombre, grupos, señales, temporizadores."
+"Any 2D object. It can move, turn and scale the object it is added to.","Cualquier objeto 2D. Puede mover, girar y escalar el objeto al que se añade."
+"A 2D character moved by code: it gets velocity and move_and_slide(), the usual choice for walking, patrolling, jumping.","Un personaje 2D movido por código: tiene velocity y move_and_slide(), la opción habitual para caminar, patrullar o saltar."
+A 2D object moved by physics: it pushes with forces and impulses rather than setting positions.,Un objeto 2D movido por la física: empuja con fuerzas e impulsos en lugar de fijar posiciones.
+"A piece of UI: buttons, labels, panels.","Una pieza de interfaz: botones, etiquetas, paneles."
+Any 3D object.,Cualquier objeto 3D.
+A 3D character moved by code.,Un personaje 3D movido por código.
+Its own name,Su propio nombre
+"Listed under its own name at the top of every picker, like System. The usual choice.","Aparece con su propio nombre arriba en cada selector, como System. La opción habitual."
+Listed with the sound and music actions.,Aparece con las acciones de sonido y música.
+Listed with the save and load actions.,Aparece con las acciones de guardar y cargar.
+Listed with menus and screens.,Aparece con los menús y pantallas.
+Listed with %s.,Aparece junto a %s.
+Empty,Vacío
+A global with no values or events yet. You add each one next.,Un global todavía sin valores ni eventos. Los añades a continuación.
+A behaviour with no properties or events yet. You add each one next. Pick this when nothing that ships is close to what you want.,Un comportamiento todavía sin propiedades ni eventos. Los añades a continuación. Elígelo cuando nada de lo incluido se parezca a lo que quieres.
+Copy of %s,Copia de %s
+%s Your copy gets its own name and folder; the shipped one stays as it is.,%s Tu copia recibe su propio nombre y carpeta; el incluido se queda como está.
+From a script I wrote,Desde un script mío
+Its variables become this global's values. The script itself is not changed.,Sus variables pasan a ser los valores de este global. El script en sí no se cambia.
+From an autoload I already have,Desde un autoload que ya tengo
+Opens a global your project already lists in Project Settings > Globals as a sheet. Nothing is moved or renamed.,Abre como hoja un global que tu proyecto ya lista en Configuración del proyecto > Globales. No se mueve ni se renombra nada.
+Its exported variables become this behaviour's properties. The script itself is not changed.,Sus variables exportadas pasan a ser las propiedades de este comportamiento. El script en sí no se cambia.
+From the selected node,Desde el nodo seleccionado
+"Uses the script on the node selected in the Scene dock, the same way as From a script I wrote.","Usa el script del nodo seleccionado en el panel Escena, igual que Desde un script mío."
+Choose another…,Elegir otro…
+"Default: the %s icon, following Works on","Predeterminado: el icono de %s, según Funciona en"
+Opens %s as a sheet.,Abre %s como hoja.
+"Makes %s, turns it on in Project Settings > Globals > Autoload and opens it as a sheet.","Crea %s, lo activa en Configuración del proyecto > Globales > Autoload y lo abre como hoja."
+Makes %s and opens it as a sheet.,Crea %s y lo abre como hoja.
+"""%s"" can't be a name here - use letters, digits and underscores, starting with a letter, and not the name of a class that already exists.","""%s"" no puede ser un nombre aquí: usa letras, dígitos y guiones bajos, empieza con una letra y no uses el nombre de una clase que ya existe."
+Project Settings > Globals already has an autoload called %s - pick another name.,Configuración del proyecto > Globales ya tiene un autoload llamado %s: elige otro nombre.
+%s already exists - pick another name.,%s ya existe: elige otro nombre.
+Opened the global %s as a sheet - nothing was moved or renamed.,Se abrió el global %s como hoja: no se movió ni renombró nada.
+Choose the script to start from.,Elige el script del que partir.
+Select a node that has a script in the Scene dock first.,Primero selecciona en el panel Escena un nodo que tenga un script.
+Couldn't write %s - check folder permissions.,No se pudo escribir %s: revisa los permisos de la carpeta.
+Made the behaviour %s at %s. Add it to an object from the Add behaviour list.,Se creó el comportamiento %s en %s. Añádelo a un objeto desde la lista Añadir comportamiento.
+Made the global %s and turned it on in Project Settings > Globals > Autoload. Ctrl+Z turns it off again; the file stays.,Se creó el global %s y se activó en Configuración del proyecto > Globales > Autoload. Ctrl+Z lo desactiva de nuevo; el archivo se queda.
+Turn on global %s,Activar el global %s
+Turn off global %s,Desactivar el global %s
+Global values,Valores globales
+Actions,Acciones
+Conditions,Condiciones
+None yet - Add writes the first one.,Todavía ninguno: Añadir escribe el primero.
+What it means,Qué significa
+%s is on - it loads before the first scene and stays while scenes change.,%s está activado: se carga antes de la primera escena y se mantiene al cambiar de escena.
+"%s is off - the script stays, nothing loads it.","%s está desactivado: el script se queda, nada lo carga."
+"Values every scene shares, kept while scenes change.",Valores que comparten todas las escenas y que se conservan al cambiar de escena.
+"What a designer sets per object in the Inspector, like any behaviour's properties.","Lo que un diseñador ajusta en cada objeto en el Inspector, como las propiedades de cualquier comportamiento."
+What every sheet's picker offers under this global's name. Click a name to see its row.,Lo que el selector de cada hoja ofrece bajo el nombre de este global. Haz clic en un nombre para ver su fila.
+What every sheet's picker offers under the object this is added to. Host is that object. Click a name to see its row.,Lo que el selector de cada hoja ofrece bajo el objeto al que se añade esto. Host es ese objeto. Haz clic en un nombre para ver su fila.
++ Add trigger,+ Añadir disparador
++ Add expression,+ Añadir expresión
++ Add global value,+ Añadir valor global
++ Add property,+ Añadir propiedad
+returns %s,devuelve %s
+Added a trigger.,Se añadió un disparador.

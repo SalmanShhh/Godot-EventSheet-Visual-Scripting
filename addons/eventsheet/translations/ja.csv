@@ -8181,3 +8181,78 @@ Creates %s in %s and opens it.,%s を %s に作成して開きます。
 "Inserted %s - a %s, in %s.",%s を挿入しました - %s、%s 内。
 New Class…,新しいクラス…
 "Insert a new object: pick what it is, name it, and its script opens here.",新しいオブジェクトを挿入: 種類を選び、名前を付けると、スクリプトがここで開きます。
+New global,新しいグローバル
+New behaviour,新しいビヘイビア
+New behaviour…,新しいビヘイビア…
+New global…,新しいグローバル…
+Properties and actions…,プロパティとアクション…
+"Make a behaviour of your own: a child node that adds properties, actions, conditions and triggers to the object it is added to.",自分のビヘイビアを作ります。追加先のオブジェクトにプロパティ、アクション、条件、トリガーを加える子ノードです。
+"Make a global of your own: one script or scene Godot loads before the first scene and keeps for the whole game, listed in Project Settings > Globals > Autoload.",自分のグローバルを作ります。Godot が最初のシーンより前に読み込み、ゲーム全体を通して保持するスクリプトまたはシーンで、プロジェクト設定 > グローバル > 自動読み込み に登録されます。
+"What this behaviour or global offers: its properties or values, and the actions, conditions, triggers and expressions every sheet's picker lists.",このビヘイビアまたはグローバルが提供するもの：プロパティや値と、各シートのピッカーに並ぶアクション、条件、トリガー、式です。
+"Just code and values: score, lives, messages between scenes, saving. The usual choice - Godot adds it as a plain Node.",コードと値だけ：スコア、残機、シーン間のメッセージ、セーブなど。いつもの選択で、Godot は普通の Node として追加します。
+"Needs nodes of its own: music players, a fade overlay, a pause menu or a HUD that stays while levels change. Godot loads the whole scene.",自分のノードが必要なもの：音楽プレイヤー、フェード用オーバーレイ、ポーズメニュー、レベルが変わっても残る HUD など。Godot はシーン全体を読み込みます。
+Made as,作り方
+Works on,対象
+Picker heading,ピッカーの見出し
+"What it does, in one line.",何をするか、1 行で。
+Start from,開始元
+Autoload,自動読み込み
+Any node,任意のノード
+"Works on every object. It can only use what every node has: its name, groups, signals, timers.",どのオブジェクトにも使えます。使えるのはすべてのノードが持つものだけです：名前、グループ、シグナル、タイマー。
+"Any 2D object. It can move, turn and scale the object it is added to.",任意の 2D オブジェクト。追加先のオブジェクトを移動、回転、拡大縮小できます。
+"A 2D character moved by code: it gets velocity and move_and_slide(), the usual choice for walking, patrolling, jumping.",コードで動かす 2D キャラクター。velocity と move_and_slide() を持ち、歩く、巡回する、ジャンプするといった用途でいつも選ばれます。
+A 2D object moved by physics: it pushes with forces and impulses rather than setting positions.,物理で動く 2D オブジェクト。位置を設定するのではなく、力やインパルスで押します。
+"A piece of UI: buttons, labels, panels.",UI の部品：ボタン、ラベル、パネル。
+Any 3D object.,任意の 3D オブジェクト。
+A 3D character moved by code.,コードで動かす 3D キャラクター。
+Its own name,自分の名前
+"Listed under its own name at the top of every picker, like System. The usual choice.",System と同じように、すべてのピッカーの一番上に自分の名前で並びます。いつもの選択です。
+Listed with the sound and music actions.,サウンドと音楽のアクションと一緒に並びます。
+Listed with the save and load actions.,セーブとロードのアクションと一緒に並びます。
+Listed with menus and screens.,メニューと画面と一緒に並びます。
+Listed with %s.,%s と一緒に並びます。
+Empty,空
+A global with no values or events yet. You add each one next.,値もイベントもまだないグローバル。次にひとつずつ追加します。
+A behaviour with no properties or events yet. You add each one next. Pick this when nothing that ships is close to what you want.,プロパティもイベントもまだないビヘイビア。次にひとつずつ追加します。付属のものに近いものがないときに選びます。
+Copy of %s,%s のコピー
+%s Your copy gets its own name and folder; the shipped one stays as it is.,%s コピーには独自の名前とフォルダが付き、付属のものはそのまま残ります。
+From a script I wrote,自分で書いたスクリプトから
+Its variables become this global's values. The script itself is not changed.,その変数がこのグローバルの値になります。スクリプト自体は変更されません。
+From an autoload I already have,既存の自動読み込みから
+Opens a global your project already lists in Project Settings > Globals as a sheet. Nothing is moved or renamed.,プロジェクト設定 > グローバル にすでにあるグローバルをシートとして開きます。移動や名前の変更は何もしません。
+Its exported variables become this behaviour's properties. The script itself is not changed.,エクスポートされた変数がこのビヘイビアのプロパティになります。スクリプト自体は変更されません。
+From the selected node,選択中のノードから
+"Uses the script on the node selected in the Scene dock, the same way as From a script I wrote.",シーンドックで選択中のノードのスクリプトを、「自分で書いたスクリプトから」と同じように使います。
+Choose another…,別のものを選ぶ…
+"Default: the %s icon, following Works on",既定：%s のアイコン（対象に合わせます）
+Opens %s as a sheet.,%s をシートとして開きます。
+"Makes %s, turns it on in Project Settings > Globals > Autoload and opens it as a sheet.",%s を作り、プロジェクト設定 > グローバル > 自動読み込み で有効にして、シートとして開きます。
+Makes %s and opens it as a sheet.,%s を作り、シートとして開きます。
+"""%s"" can't be a name here - use letters, digits and underscores, starting with a letter, and not the name of a class that already exists.","""%s"" はここでは名前にできません。英字・数字・アンダースコアを使い、英字で始め、既存のクラス名は避けてください。"
+Project Settings > Globals already has an autoload called %s - pick another name.,プロジェクト設定 > グローバル にはすでに %s という自動読み込みがあります。別の名前を選んでください。
+%s already exists - pick another name.,%s はすでにあります。別の名前を選んでください。
+Opened the global %s as a sheet - nothing was moved or renamed.,グローバル %s をシートとして開きました。移動や名前の変更はしていません。
+Choose the script to start from.,元にするスクリプトを選んでください。
+Select a node that has a script in the Scene dock first.,先にシーンドックでスクリプトを持つノードを選択してください。
+Couldn't write %s - check folder permissions.,%s を書き込めませんでした。フォルダの権限を確認してください。
+Made the behaviour %s at %s. Add it to an object from the Add behaviour list.,ビヘイビア %s を %s に作りました。「ビヘイビアを追加」リストからオブジェクトに追加してください。
+Made the global %s and turned it on in Project Settings > Globals > Autoload. Ctrl+Z turns it off again; the file stays.,グローバル %s を作り、プロジェクト設定 > グローバル > 自動読み込み で有効にしました。Ctrl+Z で再び無効になりますが、ファイルは残ります。
+Turn on global %s,グローバル %s を有効にする
+Turn off global %s,グローバル %s を無効にする
+Global values,グローバルの値
+Actions,アクション
+Conditions,条件
+None yet - Add writes the first one.,まだありません。追加で最初のひとつを書きます。
+What it means,意味
+%s is on - it loads before the first scene and stays while scenes change.,%s は有効です。最初のシーンより前に読み込まれ、シーンが変わっても残ります。
+"%s is off - the script stays, nothing loads it.",%s は無効です。スクリプトは残りますが、何も読み込みません。
+"Values every scene shares, kept while scenes change.",すべてのシーンで共有され、シーンが変わっても保たれる値です。
+"What a designer sets per object in the Inspector, like any behaviour's properties.",デザイナーがインスペクターでオブジェクトごとに設定するもので、どのビヘイビアのプロパティとも同じです。
+What every sheet's picker offers under this global's name. Click a name to see its row.,各シートのピッカーがこのグローバルの名前の下に出すものです。名前をクリックするとその行を表示します。
+What every sheet's picker offers under the object this is added to. Host is that object. Click a name to see its row.,各シートのピッカーが、これを追加したオブジェクトの下に出すものです。Host はそのオブジェクトです。名前をクリックするとその行を表示します。
++ Add trigger,+ トリガーを追加
++ Add expression,+ 式を追加
++ Add global value,+ グローバルの値を追加
++ Add property,+ プロパティを追加
+returns %s,%s を返す
+Added a trigger.,トリガーを追加しました。

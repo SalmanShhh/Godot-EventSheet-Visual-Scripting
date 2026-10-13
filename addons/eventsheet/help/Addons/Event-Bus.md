@@ -50,7 +50,7 @@ remember to check.
 
 ## Setup
 
-1. Open **Sheet > New Behaviour Addon…** and pick Event Bus, or use **Tools > Register Autoload** on
+1. Open **Sheet > New global…** and start from **Copy of Event Bus** (it is turned on for you), or use **Tools > Register Autoload** on
    `res://eventsheet_addons/event_bus/event_bus_addon.gd`. It registers as `EventBus`.
 2. Nothing else. There is no node to place and no wiring: every sheet in the project can reach the
    vocabulary the moment the autoload exists.

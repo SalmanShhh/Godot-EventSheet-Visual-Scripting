@@ -8181,3 +8181,78 @@ Creates %s in %s and opens it.,创建 %s(位于 %s)并打开它。
 "Inserted %s - a %s, in %s.","已插入 %s - 一个 %s,位于 %s。"
 New Class…,新建类…
 "Insert a new object: pick what it is, name it, and its script opens here.","插入新对象:选择它是什么、给它命名,它的脚本就会在这里打开。"
+New global,新建全局
+New behaviour,新建行为
+New behaviour…,新建行为…
+New global…,新建全局…
+Properties and actions…,属性与动作…
+"Make a behaviour of your own: a child node that adds properties, actions, conditions and triggers to the object it is added to.",创建你自己的行为：一个子节点，为它所添加到的对象增加属性、动作、条件和触发器。
+"Make a global of your own: one script or scene Godot loads before the first scene and keeps for the whole game, listed in Project Settings > Globals > Autoload.",创建你自己的全局：一个由 Godot 在第一个场景之前加载并在整个游戏中保留的脚本或场景，列在 项目设置 > 全局 > 自动加载 中。
+"What this behaviour or global offers: its properties or values, and the actions, conditions, triggers and expressions every sheet's picker lists.",这个行为或全局提供的内容：它的属性或值，以及每张表的选择器列出的动作、条件、触发器和表达式。
+"Just code and values: score, lives, messages between scenes, saving. The usual choice - Godot adds it as a plain Node.",只有代码和数值：分数、生命、场景之间的消息、存档。通常的选择 - Godot 把它作为普通 Node 添加。
+"Needs nodes of its own: music players, a fade overlay, a pause menu or a HUD that stays while levels change. Godot loads the whole scene.",需要自己的节点：音乐播放器、淡入淡出遮罩、暂停菜单或在关卡切换时保留的 HUD。Godot 会加载整个场景。
+Made as,制作为
+Works on,作用于
+Picker heading,选择器标题
+"What it does, in one line.",用一行写出它做什么。
+Start from,起点
+Autoload,自动加载
+Any node,任意节点
+"Works on every object. It can only use what every node has: its name, groups, signals, timers.",作用于任何对象。只能使用每个节点都有的东西：名称、分组、信号、计时器。
+"Any 2D object. It can move, turn and scale the object it is added to.",任意 2D 对象。可以移动、旋转和缩放它所添加到的对象。
+"A 2D character moved by code: it gets velocity and move_and_slide(), the usual choice for walking, patrolling, jumping.",由代码移动的 2D 角色：拥有 velocity 和 move_and_slide()，是行走、巡逻、跳跃的常用选择。
+A 2D object moved by physics: it pushes with forces and impulses rather than setting positions.,由物理移动的 2D 对象：用力和冲量推动，而不是直接设置位置。
+"A piece of UI: buttons, labels, panels.",界面的一部分：按钮、标签、面板。
+Any 3D object.,任意 3D 对象。
+A 3D character moved by code.,由代码移动的 3D 角色。
+Its own name,它自己的名字
+"Listed under its own name at the top of every picker, like System. The usual choice.",像 System 一样，以自己的名字列在每个选择器的顶部。通常的选择。
+Listed with the sound and music actions.,与声音和音乐动作列在一起。
+Listed with the save and load actions.,与保存和读取动作列在一起。
+Listed with menus and screens.,与菜单和界面列在一起。
+Listed with %s.,与 %s 列在一起。
+Empty,空白
+A global with no values or events yet. You add each one next.,还没有任何值或事件的全局。接下来逐个添加。
+A behaviour with no properties or events yet. You add each one next. Pick this when nothing that ships is close to what you want.,还没有任何属性或事件的行为。接下来逐个添加。当自带的东西都不接近你想要的时选它。
+Copy of %s,%s 的副本
+%s Your copy gets its own name and folder; the shipped one stays as it is.,%s 你的副本有自己的名字和文件夹；自带的那份保持不变。
+From a script I wrote,来自我写的脚本
+Its variables become this global's values. The script itself is not changed.,它的变量成为这个全局的值。脚本本身不会改变。
+From an autoload I already have,来自已有的自动加载
+Opens a global your project already lists in Project Settings > Globals as a sheet. Nothing is moved or renamed.,把项目已在 项目设置 > 全局 中列出的全局作为表打开。不会移动或重命名任何东西。
+Its exported variables become this behaviour's properties. The script itself is not changed.,它导出的变量成为这个行为的属性。脚本本身不会改变。
+From the selected node,来自选中的节点
+"Uses the script on the node selected in the Scene dock, the same way as From a script I wrote.",使用场景面板中选中节点上的脚本，方式与“来自我写的脚本”相同。
+Choose another…,选择其他…
+"Default: the %s icon, following Works on",默认：%s 图标，跟随“作用于”
+Opens %s as a sheet.,把 %s 作为表打开。
+"Makes %s, turns it on in Project Settings > Globals > Autoload and opens it as a sheet.",创建 %s，在 项目设置 > 全局 > 自动加载 中启用它，并作为表打开。
+Makes %s and opens it as a sheet.,创建 %s 并作为表打开。
+"""%s"" can't be a name here - use letters, digits and underscores, starting with a letter, and not the name of a class that already exists.",“%s”不能用作这里的名称 - 请使用字母、数字和下划线，以字母开头，并且不要使用已存在的类名。
+Project Settings > Globals already has an autoload called %s - pick another name.,项目设置 > 全局 中已有名为 %s 的自动加载 - 请换一个名字。
+%s already exists - pick another name.,%s 已存在 - 请换一个名字。
+Opened the global %s as a sheet - nothing was moved or renamed.,已把全局 %s 作为表打开 - 没有移动或重命名任何东西。
+Choose the script to start from.,选择作为起点的脚本。
+Select a node that has a script in the Scene dock first.,请先在场景面板中选择一个带脚本的节点。
+Couldn't write %s - check folder permissions.,无法写入 %s - 请检查文件夹权限。
+Made the behaviour %s at %s. Add it to an object from the Add behaviour list.,已创建行为 %s，位于 %s。请从“添加行为”列表把它添加到对象上。
+Made the global %s and turned it on in Project Settings > Globals > Autoload. Ctrl+Z turns it off again; the file stays.,已创建全局 %s，并在 项目设置 > 全局 > 自动加载 中启用。Ctrl+Z 会再次停用它；文件会保留。
+Turn on global %s,启用全局 %s
+Turn off global %s,停用全局 %s
+Global values,全局值
+Actions,动作
+Conditions,条件
+None yet - Add writes the first one.,还没有 - 点“添加”写下第一个。
+What it means,含义
+%s is on - it loads before the first scene and stays while scenes change.,%s 已启用 - 它在第一个场景之前加载，并在场景切换时保留。
+"%s is off - the script stays, nothing loads it.",%s 已停用 - 脚本保留，但没有东西加载它。
+"Values every scene shares, kept while scenes change.",所有场景共享、在场景切换时保留的值。
+"What a designer sets per object in the Inspector, like any behaviour's properties.",设计者在检查器中为每个对象设置的内容，和任何行为的属性一样。
+What every sheet's picker offers under this global's name. Click a name to see its row.,每张表的选择器在这个全局名称下提供的内容。点击名称查看它的行。
+What every sheet's picker offers under the object this is added to. Host is that object. Click a name to see its row.,每张表的选择器在添加了它的对象下提供的内容。Host 就是那个对象。点击名称查看它的行。
++ Add trigger,+ 添加触发器
++ Add expression,+ 添加表达式
++ Add global value,+ 添加全局值
++ Add property,+ 添加属性
+returns %s,返回 %s
+Added a trigger.,已添加触发器。

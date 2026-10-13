@@ -471,7 +471,7 @@ var _variable_dlg: RefCounted = null:
 							sheet_enums.append({"name": (row as EnumRow).enum_name, "members": (row as EnumRow).members})
 				return sheet_enums)
 		return _variable_dlg
-var _new_addon_panel: RefCounted = null:  # Sheet ▸ New Behaviour Addon… (dock/new_addon_panel.gd)
+var _new_addon_panel: RefCounted = null:  # Sheet ▸ New behaviour… / New global… (dock/new_addon_panel.gd)
 	get:
 		if _new_addon_panel == null:
 			_new_addon_panel = load("res://addons/eventsheet/editor/dock/new_addon_panel.gd").new()

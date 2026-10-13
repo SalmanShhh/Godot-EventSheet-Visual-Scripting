@@ -8181,3 +8181,78 @@ Creates %s in %s and opens it.,Создаёт %s в %s и открывает е�
 "Inserted %s - a %s, in %s.","Вставлен %s - %s, в %s."
 New Class…,Новый класс…
 "Insert a new object: pick what it is, name it, and its script opens here.","Вставьте новый объект: выберите, что это, дайте имя, и его скрипт откроется здесь."
+New global,Новый глобальный объект
+New behaviour,Новое поведение
+New behaviour…,Новое поведение…
+New global…,Новый глобальный объект…
+Properties and actions…,Свойства и действия…
+"Make a behaviour of your own: a child node that adds properties, actions, conditions and triggers to the object it is added to.","Создать своё поведение: дочерний узел, который добавляет объекту свойства, действия, условия и триггеры."
+"Make a global of your own: one script or scene Godot loads before the first scene and keeps for the whole game, listed in Project Settings > Globals > Autoload.","Создать свой глобальный объект: скрипт или сцену, которые Godot загружает до первой сцены и держит всю игру; он указан в Настройки проекта > Глобальные > Автозагрузка."
+"What this behaviour or global offers: its properties or values, and the actions, conditions, triggers and expressions every sheet's picker lists.","Что предлагает это поведение или глобальный объект: свойства или значения, а также действия, условия, триггеры и выражения, которые показывает выбор в каждом листе."
+"Just code and values: score, lives, messages between scenes, saving. The usual choice - Godot adds it as a plain Node.","Только код и значения: очки, жизни, сообщения между сценами, сохранение. Обычный выбор - Godot добавляет его как простой Node."
+"Needs nodes of its own: music players, a fade overlay, a pause menu or a HUD that stays while levels change. Godot loads the whole scene.","Нужны свои узлы: проигрыватели музыки, затемнение, меню паузы или HUD, который остаётся при смене уровней. Godot загружает всю сцену."
+Made as,Сделан как
+Works on,Работает с
+Picker heading,Заголовок в выборе
+"What it does, in one line.","Что он делает, одной строкой."
+Start from,Начать с
+Autoload,Автозагрузка
+Any node,Любой узел
+"Works on every object. It can only use what every node has: its name, groups, signals, timers.","Работает с любым объектом. Может использовать только то, что есть у каждого узла: имя, группы, сигналы, таймеры."
+"Any 2D object. It can move, turn and scale the object it is added to.","Любой 2D-объект. Может двигать, поворачивать и масштабировать объект, к которому добавлен."
+"A 2D character moved by code: it gets velocity and move_and_slide(), the usual choice for walking, patrolling, jumping.","2D-персонаж, которого двигает код: у него есть velocity и move_and_slide(), обычный выбор для ходьбы, патрулирования, прыжков."
+A 2D object moved by physics: it pushes with forces and impulses rather than setting positions.,"2D-объект, которым движет физика: он толкается силами и импульсами, а не задаёт позиции."
+"A piece of UI: buttons, labels, panels.","Элемент интерфейса: кнопки, надписи, панели."
+Any 3D object.,Любой 3D-объект.
+A 3D character moved by code.,"3D-персонаж, которого двигает код."
+Its own name,Собственное имя
+"Listed under its own name at the top of every picker, like System. The usual choice.","Показан под своим именем вверху каждого выбора, как System. Обычный выбор."
+Listed with the sound and music actions.,Показан вместе с действиями звука и музыки.
+Listed with the save and load actions.,Показан вместе с действиями сохранения и загрузки.
+Listed with menus and screens.,Показан вместе с меню и экранами.
+Listed with %s.,Показан рядом с %s.
+Empty,Пусто
+A global with no values or events yet. You add each one next.,Глобальный объект пока без значений и событий. Вы добавите их дальше.
+A behaviour with no properties or events yet. You add each one next. Pick this when nothing that ships is close to what you want.,"Поведение пока без свойств и событий. Вы добавите их дальше. Выберите это, если ничего из поставляемого не похоже на то, что нужно."
+Copy of %s,Копия %s
+%s Your copy gets its own name and folder; the shipped one stays as it is.,%s Копия получает своё имя и папку; поставляемый остаётся как есть.
+From a script I wrote,Из моего скрипта
+Its variables become this global's values. The script itself is not changed.,Его переменные становятся значениями этого глобального объекта. Сам скрипт не меняется.
+From an autoload I already have,Из уже имеющейся автозагрузки
+Opens a global your project already lists in Project Settings > Globals as a sheet. Nothing is moved or renamed.,"Открывает как лист глобальный объект, который уже указан в Настройки проекта > Глобальные. Ничего не перемещается и не переименовывается."
+Its exported variables become this behaviour's properties. The script itself is not changed.,Его экспортированные переменные становятся свойствами этого поведения. Сам скрипт не меняется.
+From the selected node,Из выбранного узла
+"Uses the script on the node selected in the Scene dock, the same way as From a script I wrote.","Берёт скрипт узла, выбранного в панели Сцена, так же как Из моего скрипта."
+Choose another…,Выбрать другой…
+"Default: the %s icon, following Works on","По умолчанию: значок %s, следует за Работает с"
+Opens %s as a sheet.,Открывает %s как лист.
+"Makes %s, turns it on in Project Settings > Globals > Autoload and opens it as a sheet.","Создаёт %s, включает его в Настройки проекта > Глобальные > Автозагрузка и открывает как лист."
+Makes %s and opens it as a sheet.,Создаёт %s и открывает его как лист.
+"""%s"" can't be a name here - use letters, digits and underscores, starting with a letter, and not the name of a class that already exists.","""%s"" не может быть здесь именем - используйте буквы, цифры и подчёркивания, начинайте с буквы и не берите имя уже существующего класса."
+Project Settings > Globals already has an autoload called %s - pick another name.,В Настройки проекта > Глобальные уже есть автозагрузка %s - выберите другое имя.
+%s already exists - pick another name.,%s уже существует - выберите другое имя.
+Opened the global %s as a sheet - nothing was moved or renamed.,Глобальный объект %s открыт как лист - ничего не перемещено и не переименовано.
+Choose the script to start from.,"Выберите скрипт, с которого начать."
+Select a node that has a script in the Scene dock first.,Сначала выберите в панели Сцена узел со скриптом.
+Couldn't write %s - check folder permissions.,Не удалось записать %s - проверьте права на папку.
+Made the behaviour %s at %s. Add it to an object from the Add behaviour list.,Поведение %s создано в %s. Добавьте его объекту из списка Добавить поведение.
+Made the global %s and turned it on in Project Settings > Globals > Autoload. Ctrl+Z turns it off again; the file stays.,Глобальный объект %s создан и включён в Настройки проекта > Глобальные > Автозагрузка. Ctrl+Z снова выключает его; файл остаётся.
+Turn on global %s,Включить глобальный объект %s
+Turn off global %s,Выключить глобальный объект %s
+Global values,Глобальные значения
+Actions,Действия
+Conditions,Условия
+None yet - Add writes the first one.,Пока нет - Добавить пишет первый.
+What it means,Что значит
+%s is on - it loads before the first scene and stays while scenes change.,%s включён - загружается до первой сцены и остаётся при смене сцен.
+"%s is off - the script stays, nothing loads it.","%s выключен - скрипт остаётся, но его ничто не загружает."
+"Values every scene shares, kept while scenes change.","Значения, общие для всех сцен и сохраняемые при смене сцен."
+"What a designer sets per object in the Inspector, like any behaviour's properties.","То, что дизайнер задаёт для каждого объекта в Инспекторе, как свойства любого поведения."
+What every sheet's picker offers under this global's name. Click a name to see its row.,"То, что выбор в каждом листе предлагает под именем этого глобального объекта. Нажмите на имя, чтобы увидеть его строку."
+What every sheet's picker offers under the object this is added to. Host is that object. Click a name to see its row.,"То, что выбор в каждом листе предлагает под объектом, к которому это добавлено. Host - этот объект. Нажмите на имя, чтобы увидеть его строку."
++ Add trigger,+ Добавить триггер
++ Add expression,+ Добавить выражение
++ Add global value,+ Добавить глобальное значение
++ Add property,+ Добавить свойство
+returns %s,возвращает %s
+Added a trigger.,Триггер добавлен.

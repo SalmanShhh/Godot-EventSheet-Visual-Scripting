@@ -15,6 +15,31 @@
   use names each of them before it changes anything), Description, Icon (a preview of the icon
   Godot will show, Pick… or Use default), Runs in the editor and File. Each writes only its own head
   line, then the object's instance variables follow as for a selected object.
+### Changed: making your own behaviour and your own global is a form, not a commented script
+
+- **Sheet > New behaviour…** replaces New Behaviour Addon…. It asks the name, what the behaviour works
+  on (Any node, Node2D, CharacterBody2D and the rest, each described, the chosen one's sentence kept in
+  view), the shelf it sits on in the Add behaviour list (the shelves the installed packs use, each
+  named by the packs on it), its icon (the Works-on class's own editor icon unless you choose another),
+  a description, and what to start from: Empty, a copy of a shipped pack made for the same kind of
+  object, a script you wrote or the selected node's script (its exported variables become the
+  behaviour's properties; the script itself is not changed). Create writes the behaviour the way every
+  pack is written - a folder under eventsheet_addons/, `host` typed as what it works on - and opens it
+  as a sheet. The teaching skeleton and the two recipes are gone.
+- **Sheet > New global…** asks the name, Script or Scene (the one choice Godot asks of an autoload),
+  the picker heading, the icon, a description and what to start from: Empty, a copy of a pack meant to
+  run as an autoload, a script you wrote, or an autoload you already have (opened as a sheet, nothing
+  moved). Create writes the file - and the scene, for a Scene - and turns it on as its row in Project
+  Settings > Globals > Autoload, one undo step.
+- **Sheet > Properties and actions…** lists what the open behaviour or global offers: its Properties
+  (or Global values) as a Name / Type / Default / What it means table with the lines they are in code,
+  then its Actions, Conditions, Triggers and Expressions, each kind a coloured word and a "returns" chip
+  where it gives a value back; clicking a name shows its row. Each list's Add opens the window that
+  already writes that kind of member. A global's tick turns it on or off in Godot's own Autoload list.
+- Size: the old scaffold and its dialog were 531 lines; the generator, the two forms and the new window
+  are 890. The generator shrank by half (a new behaviour is a sheet compiled to GDScript, not text
+  written out by hand); the growth is the global form and the Properties and actions window, which
+  had no counterpart before. Both reuse the window kit and the Anatomy census rather than new widgets.
 
 ### Fixed: an empty node or resource slot previews the line it saves
 

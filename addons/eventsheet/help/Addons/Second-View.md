@@ -81,7 +81,7 @@ And the Editor Tools row **Render Scene To Image** is the one-shot cousin: it ph
 
 ## Setup
 
-1. Open **Sheet > New Behaviour Addon…** and pick Second View, or use **Tools > Register Autoload**
+1. Open **Sheet > New global…** and start from **Copy of Second View** (it is turned on for you), or use **Tools > Register Autoload**
    on `res://eventsheet_addons/second_view/second_view_addon.gd`. It registers as `SecondView`.
 2. Put a `TextureRect` on your HUD where you want the view to appear.
 3. Two rows: **Make A View** naming the view and the node it follows, then **Show View In** naming

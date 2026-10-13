@@ -8181,3 +8181,78 @@ Creates %s in %s and opens it.,%s을(를) %s에 만들고 엽니다.
 "Inserted %s - a %s, in %s.","%s 삽입 완료 - %s, %s 안."
 New Class…,새 클래스…
 "Insert a new object: pick what it is, name it, and its script opens here.",새 오브젝트 삽입: 무엇인지 고르고 이름을 지으면 스크립트가 여기서 열립니다.
+New global,새 전역 개체
+New behaviour,새 비헤이비어
+New behaviour…,새 비헤이비어…
+New global…,새 전역 개체…
+Properties and actions…,속성과 액션…
+"Make a behaviour of your own: a child node that adds properties, actions, conditions and triggers to the object it is added to.","나만의 비헤이비어를 만듭니다. 추가된 개체에 속성, 액션, 조건, 트리거를 더하는 자식 노드입니다."
+"Make a global of your own: one script or scene Godot loads before the first scene and keeps for the whole game, listed in Project Settings > Globals > Autoload.","나만의 전역 개체를 만듭니다. Godot가 첫 씬보다 먼저 불러와 게임 내내 유지하는 스크립트나 씬으로, 프로젝트 설정 > 전역 > 오토로드에 등록됩니다."
+"What this behaviour or global offers: its properties or values, and the actions, conditions, triggers and expressions every sheet's picker lists.","이 비헤이비어나 전역 개체가 제공하는 것: 속성이나 값, 그리고 모든 시트의 선택기에 나오는 액션, 조건, 트리거, 표현식입니다."
+"Just code and values: score, lives, messages between scenes, saving. The usual choice - Godot adds it as a plain Node.","코드와 값만: 점수, 목숨, 씬 사이 메시지, 저장. 보통의 선택이며 Godot가 일반 Node로 추가합니다."
+"Needs nodes of its own: music players, a fade overlay, a pause menu or a HUD that stays while levels change. Godot loads the whole scene.","자체 노드가 필요한 경우: 음악 플레이어, 페이드 오버레이, 일시정지 메뉴, 레벨이 바뀌어도 남는 HUD. Godot가 씬 전체를 불러옵니다."
+Made as,만드는 방식
+Works on,적용 대상
+Picker heading,선택기 제목
+"What it does, in one line.",하는 일을 한 줄로.
+Start from,시작점
+Autoload,오토로드
+Any node,모든 노드
+"Works on every object. It can only use what every node has: its name, groups, signals, timers.","모든 개체에 적용됩니다. 모든 노드가 가진 것만 쓸 수 있습니다: 이름, 그룹, 시그널, 타이머."
+"Any 2D object. It can move, turn and scale the object it is added to.","모든 2D 개체. 추가된 개체를 이동, 회전, 크기 조절할 수 있습니다."
+"A 2D character moved by code: it gets velocity and move_and_slide(), the usual choice for walking, patrolling, jumping.","코드로 움직이는 2D 캐릭터: velocity와 move_and_slide()가 있어 걷기, 순찰, 점프에 보통 쓰입니다."
+A 2D object moved by physics: it pushes with forces and impulses rather than setting positions.,물리로 움직이는 2D 개체: 위치를 정하는 대신 힘과 충격으로 밉니다.
+"A piece of UI: buttons, labels, panels.","UI의 한 부분: 버튼, 레이블, 패널."
+Any 3D object.,모든 3D 개체.
+A 3D character moved by code.,코드로 움직이는 3D 캐릭터.
+Its own name,자기 이름
+"Listed under its own name at the top of every picker, like System. The usual choice.",System처럼 모든 선택기 맨 위에 자기 이름으로 나옵니다. 보통의 선택입니다.
+Listed with the sound and music actions.,소리와 음악 액션과 함께 나옵니다.
+Listed with the save and load actions.,저장과 불러오기 액션과 함께 나옵니다.
+Listed with menus and screens.,메뉴와 화면과 함께 나옵니다.
+Listed with %s.,%s와(과) 함께 나옵니다.
+Empty,빈 상태
+A global with no values or events yet. You add each one next.,아직 값이나 이벤트가 없는 전역 개체. 다음에 하나씩 추가합니다.
+A behaviour with no properties or events yet. You add each one next. Pick this when nothing that ships is close to what you want.,아직 속성이나 이벤트가 없는 비헤이비어. 다음에 하나씩 추가합니다. 포함된 것 중 원하는 것과 비슷한 게 없을 때 고르세요.
+Copy of %s,%s 사본
+%s Your copy gets its own name and folder; the shipped one stays as it is.,"%s 사본은 자기 이름과 폴더를 갖고, 포함된 원본은 그대로 남습니다."
+From a script I wrote,내가 쓴 스크립트에서
+Its variables become this global's values. The script itself is not changed.,그 변수들이 이 전역 개체의 값이 됩니다. 스크립트 자체는 바뀌지 않습니다.
+From an autoload I already have,이미 있는 오토로드에서
+Opens a global your project already lists in Project Settings > Globals as a sheet. Nothing is moved or renamed.,프로젝트 설정 > 전역에 이미 있는 전역 개체를 시트로 엽니다. 아무것도 옮기거나 이름을 바꾸지 않습니다.
+Its exported variables become this behaviour's properties. The script itself is not changed.,내보낸 변수들이 이 비헤이비어의 속성이 됩니다. 스크립트 자체는 바뀌지 않습니다.
+From the selected node,선택한 노드에서
+"Uses the script on the node selected in the Scene dock, the same way as From a script I wrote.",씬 독에서 선택한 노드의 스크립트를 '내가 쓴 스크립트에서'와 같은 방식으로 씁니다.
+Choose another…,다른 것 선택…
+"Default: the %s icon, following Works on","기본값: %s 아이콘, 적용 대상을 따릅니다"
+Opens %s as a sheet.,%s을(를) 시트로 엽니다.
+"Makes %s, turns it on in Project Settings > Globals > Autoload and opens it as a sheet.",%s을(를) 만들고 프로젝트 설정 > 전역 > 오토로드에서 켠 다음 시트로 엽니다.
+Makes %s and opens it as a sheet.,%s을(를) 만들고 시트로 엽니다.
+"""%s"" can't be a name here - use letters, digits and underscores, starting with a letter, and not the name of a class that already exists.","""%s""은(는) 여기서 이름이 될 수 없습니다. 글자, 숫자, 밑줄을 쓰고 글자로 시작하며 이미 있는 클래스 이름은 피하세요."
+Project Settings > Globals already has an autoload called %s - pick another name.,프로젝트 설정 > 전역에 이미 %s 오토로드가 있습니다. 다른 이름을 고르세요.
+%s already exists - pick another name.,%s이(가) 이미 있습니다. 다른 이름을 고르세요.
+Opened the global %s as a sheet - nothing was moved or renamed.,전역 개체 %s을(를) 시트로 열었습니다. 아무것도 옮기거나 이름을 바꾸지 않았습니다.
+Choose the script to start from.,시작할 스크립트를 고르세요.
+Select a node that has a script in the Scene dock first.,먼저 씬 독에서 스크립트가 있는 노드를 선택하세요.
+Couldn't write %s - check folder permissions.,%s을(를) 쓰지 못했습니다. 폴더 권한을 확인하세요.
+Made the behaviour %s at %s. Add it to an object from the Add behaviour list.,비헤이비어 %s을(를) %s에 만들었습니다. 비헤이비어 추가 목록에서 개체에 추가하세요.
+Made the global %s and turned it on in Project Settings > Globals > Autoload. Ctrl+Z turns it off again; the file stays.,전역 개체 %s을(를) 만들고 프로젝트 설정 > 전역 > 오토로드에서 켰습니다. Ctrl+Z로 다시 끌 수 있으며 파일은 남습니다.
+Turn on global %s,전역 개체 %s 켜기
+Turn off global %s,전역 개체 %s 끄기
+Global values,전역 값
+Actions,액션
+Conditions,조건
+None yet - Add writes the first one.,아직 없습니다. 추가를 누르면 첫 항목을 씁니다.
+What it means,의미
+%s is on - it loads before the first scene and stays while scenes change.,%s 켜짐 - 첫 씬보다 먼저 불러와지고 씬이 바뀌어도 남습니다.
+"%s is off - the script stays, nothing loads it.",%s 꺼짐 - 스크립트는 남지만 아무것도 불러오지 않습니다.
+"Values every scene shares, kept while scenes change.",모든 씬이 함께 쓰고 씬이 바뀌어도 유지되는 값입니다.
+"What a designer sets per object in the Inspector, like any behaviour's properties.","디자이너가 인스펙터에서 개체마다 정하는 것으로, 여느 비헤이비어의 속성과 같습니다."
+What every sheet's picker offers under this global's name. Click a name to see its row.,모든 시트의 선택기가 이 전역 개체 이름 아래에 보여 주는 것입니다. 이름을 누르면 해당 행을 봅니다.
+What every sheet's picker offers under the object this is added to. Host is that object. Click a name to see its row.,모든 시트의 선택기가 이것이 추가된 개체 아래에 보여 주는 것입니다. Host가 그 개체입니다. 이름을 누르면 해당 행을 봅니다.
++ Add trigger,+ 트리거 추가
++ Add expression,+ 표현식 추가
++ Add global value,+ 전역 값 추가
++ Add property,+ 속성 추가
+returns %s,%s 반환
+Added a trigger.,트리거를 추가했습니다.
