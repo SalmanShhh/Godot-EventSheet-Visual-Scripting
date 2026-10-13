@@ -517,7 +517,7 @@ static func _test_snippet_blanks() -> bool:
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(EventSheetResource.new())
 	editor.set_undo_redo_manager(RecordingUndoManager.new())
-	# The Insert Snippet window reads the library, so the snippet is filed in a scratch one first.
+	# The Insert Snippet window reads the library, so the snippet is filed in a throwaway one first.
 	ProjectSettings.set_setting("eventsheets/project/snippets_dir", "user://refactor_gestures_snippets")
 	var plain_path: String = EventSheetSnippetLibrary.save_snippet("a_plain",
 		EventSheetSnippet.serialize_rows([_tick_event(["\"plain\""])], source))
