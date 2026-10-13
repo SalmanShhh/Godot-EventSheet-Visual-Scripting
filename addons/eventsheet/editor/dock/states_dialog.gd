@@ -109,6 +109,16 @@ func _on_confirmed() -> void:
 	if declared.is_empty():
 		_dock._set_status(EventSheetL10n.translate("Name at least one state."), true)
 		return
+	# A state rows still name cannot leave the list: dropping or renaming it would leave every such row
+	# pointing at a member the enum no longer has. Say which ones, and change nothing.
+	var still_named: PackedStringArray = still_named_states(_dock._current_sheet, declared)
+	if not still_named.is_empty():
+		var words: PackedStringArray = PackedStringArray()
+		for member: String in still_named:
+			words.append(EventSheetStateFacts.word_for(member))
+		_dock._set_status(EventSheetL10n.translate("Rows still name %s, so the states were not changed. Point those rows at another state first, then remove or rename it.")
+			% ", ".join(words), true)
+		return
 	var opening: String = _starts_in()
 	if not _dock._perform_undoable_sheet_edit(EventSheetL10n.translate("Declare states"), func() -> bool:
 			return write(_dock._current_sheet, declared, opening)):
@@ -123,6 +133,8 @@ func _on_confirmed() -> void:
 ## is an ordinary row: an enum row, a signal row, and three variable rows.
 static func write(sheet: EventSheetResource, declared: PackedStringArray, starts_in: String) -> bool:
 	if sheet == null or declared.is_empty():
+		return false
+	if not still_named_states(sheet, declared).is_empty():
 		return false
 	var members: PackedStringArray = PackedStringArray()
 	for word: String in declared:
@@ -154,6 +166,22 @@ static func write(sheet: EventSheetResource, declared: PackedStringArray, starts
 	_ensure_variable(sheet, EventSheetStateFacts.SINCE_VARIABLE, "int",
 		EventSheetStateFacts.SINCE_INITIAL)
 	return true
+
+
+## The declared states (bare members) that `declared` would remove or rename while rows of the sheet
+## still name them - Go to, Is in, Was in, On entering, On leaving. Empty when the new list is safe.
+static func still_named_states(sheet: EventSheetResource, declared: PackedStringArray) -> PackedStringArray:
+	var blocked: PackedStringArray = PackedStringArray()
+	if sheet == null:
+		return blocked
+	var kept: PackedStringArray = PackedStringArray()
+	for word: String in declared:
+		kept.append(EventSheetStateFacts.member_for(word))
+	var named: PackedStringArray = EventSheetStateFacts.named_states(sheet)
+	for member: String in EventSheetStateFacts.bare_members(sheet):
+		if not kept.has(member) and named.has(member):
+			blocked.append(member)
+	return blocked
 
 
 ## The words a states field says, in order, however they were separated. A reader typing commas,

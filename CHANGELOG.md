@@ -34,6 +34,9 @@
 - **Edit modes:** removing a mode left its On entering event behind, naming a mode the game no
   longer has. The event now goes in the same undo step; one you added your own rows to is kept and
   named on the status bar instead.
+- **States:** OK rewrote the state list without looking at the rows, so removing or renaming a state
+  that a Go to, Is in or On entering row still named left that row pointing at nothing. Such a change
+  is now refused, and the status bar names the states the rows still use.
 
 ### Fixed: the finding and navigation windows
 

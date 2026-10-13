@@ -19,6 +19,9 @@
 class_name ObjectStateTest
 extends RefCounted
 
+
+const SUPPORT := preload("res://tests/support.gd")
+
 const OUT_PATH := "user://__eventsheets_states_probe.gd"
 
 
@@ -220,6 +223,21 @@ static func _run_dialog() -> bool:
 		sheet.events.size(), before) and all_passed
 	all_passed = _check("and what it wrote compiles",
 		_parses(str(SheetCompiler.compile(sheet, OUT_PATH).get("output", ""))), true) and all_passed
+
+	# A state a row still names cannot be removed or renamed out from under it: the dialog names it
+	# and the enum keeps it. One nothing names goes as asked.
+	sheet.events.append(_row("OnReady", [], [_action_ace("GoToState", {"state": "CHASE"})]))
+	all_passed = SUPPORT.check("object_state_test", "removing a state a row goes to is refused, naming it",
+		EventSheetStatesDialog.still_named_states(sheet, PackedStringArray(["Patrol", "Hunt"])),
+		PackedStringArray(["CHASE"])) and all_passed
+	all_passed = SUPPORT.check("object_state_test", "and the write changes nothing",
+		[EventSheetStatesDialog.write(sheet, PackedStringArray(["Patrol", "Hunt"]), "Patrol"),
+			EventSheetStateFacts.names(sheet)],
+		[false, PackedStringArray(["Patrol", "Chase"])]) and all_passed
+	all_passed = SUPPORT.check("object_state_test", "a state no row names can still be removed",
+		[EventSheetStatesDialog.write(sheet, PackedStringArray(["Chase"]), "Chase"),
+			EventSheetStateFacts.names(sheet)],
+		[true, PackedStringArray(["Chase"])]) and all_passed
 	return all_passed
 
 
