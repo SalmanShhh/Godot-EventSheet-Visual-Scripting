@@ -325,6 +325,13 @@ func _save_selection_snippet_named(snippet_name: String) -> String:
 	if targets.is_empty() or snippet_name.is_empty():
 		_dock._set_status("Name the snippet and select at least one row.", true)
 		return ""
+	# A name already in the library is refused out loud. Saving it under a quiet "-2" would leave two
+	# entries the list cannot tell apart, and the reader believing they had replaced the first.
+	var existing: String = EventSheetSnippetLibrary.snippet_path_for(snippet_name)
+	if FileAccess.file_exists(existing):
+		_dock._set_status(EventSheetL10n.translate("A snippet called {name} already exists - pick another name.").replace(
+			"{name}", existing.get_file().get_basename()), true)
+		return ""
 	var path: String = EventSheetSnippetLibrary.save_snippet(snippet_name, EventSheetSnippet.serialize_rows(targets, _dock._current_sheet))
 	if path.is_empty():
 		_dock._set_status("Couldn't write the snippet.", true)
@@ -333,6 +340,11 @@ func _save_selection_snippet_named(snippet_name: String) -> String:
 		EditorInterface.get_resource_filesystem().scan()
 	_dock._set_status("Snippet saved: %s - Insert Snippet… lists it now." % path)
 	return path
+
+
+## The name a snippet is listed and titled by: its file's name exactly as saved, never re-cased.
+static func snippet_label(snippet_path: String) -> String:
+	return snippet_path.get_file().get_basename()
 
 
 func _open_insert_snippet() -> void:
@@ -354,7 +366,7 @@ func _open_insert_snippet() -> void:
 		_dock.add_child(_snippet_list_window)
 	_snippet_list.clear()
 	for snippet_path: String in snippets:
-		_snippet_list.add_item(snippet_path.get_file().get_basename().capitalize())
+		_snippet_list.add_item(snippet_label(snippet_path))
 		_snippet_list.set_item_metadata(_snippet_list.item_count - 1, snippet_path)
 		_snippet_list.set_item_tooltip(_snippet_list.item_count - 1, snippet_path)
 	_snippet_list_window.popup_centered()
@@ -368,7 +380,7 @@ func _insert_snippet_path(snippet_path: String) -> void:
 	# form first and the rows land filled, with no placeholder left behind. A snippet without
 	# blanks takes the same path it always did (dock/snippet_blanks_dialog.gd).
 	if EventSheetSnippet.has_blanks(snippet_text):
-		EventSheetSnippetBlanksDialog.open_for(_dock, snippet_path.get_file().get_basename().capitalize(), snippet_text)
+		EventSheetSnippetBlanksDialog.open_for(_dock, snippet_label(snippet_path), snippet_text)
 		return
 	if not _dock._paste_snippet_text(snippet_text):
 		_dock._set_status("That file isn't a sheet snippet: %s" % snippet_path.get_file(), true)

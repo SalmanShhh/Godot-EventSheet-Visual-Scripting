@@ -49,18 +49,9 @@ static func list_snippets() -> PackedStringArray:
 ## file outside the folder (then never showed in the list). Path-ish characters
 ## collapse to underscores instead.
 static func save_snippet(snippet_name: String, snippet_text: String) -> String:
-	var base_name: String = snippet_name.to_snake_case()
-	var sanitizer: RegEx = RegEx.new()
-	sanitizer.compile("[\\\\/:*?\"<>|.]+")
-	base_name = sanitizer.sub(base_name, "_", true)
-	while base_name.begins_with("_"):
-		base_name = base_name.substr(1)
-	while base_name.ends_with("_"):
-		base_name = base_name.substr(0, base_name.length() - 1)
-	if base_name.is_empty():
-		base_name = "snippet"
+	var target: String = snippet_path_for(snippet_name)
+	var base_name: String = target.get_file().get_basename()
 	DirAccess.make_dir_recursive_absolute(snippets_dir())
-	var target: String = snippets_dir().path_join(base_name + ".txt")
 	var suffix: int = 2
 	while FileAccess.file_exists(target):
 		target = snippets_dir().path_join("%s-%d.txt" % [base_name, suffix])
@@ -71,6 +62,22 @@ static func save_snippet(snippet_name: String, snippet_text: String) -> String:
 	file.store_string(snippet_text)
 	file.close()
 	return target
+
+
+## The file a snippet of this name is written to, before any clash suffix - so a caller can ask
+## whether the name is already taken before it saves.
+static func snippet_path_for(snippet_name: String) -> String:
+	var base_name: String = snippet_name.to_snake_case()
+	var sanitizer: RegEx = RegEx.new()
+	sanitizer.compile("[\\\\/:*?\"<>|.]+")
+	base_name = sanitizer.sub(base_name, "_", true)
+	while base_name.begins_with("_"):
+		base_name = base_name.substr(1)
+	while base_name.ends_with("_"):
+		base_name = base_name.substr(0, base_name.length() - 1)
+	if base_name.is_empty():
+		base_name = "snippet"
+	return snippets_dir().path_join(base_name + ".txt")
 
 
 static func read_snippet(snippet_path: String) -> String:
