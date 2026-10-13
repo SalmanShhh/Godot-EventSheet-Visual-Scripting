@@ -555,7 +555,7 @@ func _pack_definition(script_path: String, ace_id: String) -> ACEDefinition:
 ## the panel below it, which is what the image is of.
 func _shrink_dialog_body(picker: ACEPickerDialog) -> void:
 	var node: Node = picker._tree
-	while node != null and node != picker._info_panel.get_parent():
+	while node != null and node != picker._help_strip.get_parent():
 		if node is Control and (node as Control).custom_minimum_size.y > 200.0:
 			(node as Control).custom_minimum_size.y = 200.0
 		node = node.get_parent()
@@ -573,9 +573,8 @@ func _search_and_select(picker: ACEPickerDialog, query: String) -> void:
 ## review: what the figure actually measures, and what the picker's panels actually occupy.
 func _report_geometry() -> void:
 	var picker: ACEPickerDialog = _editor._ace_picker
-	print("[preview] info panel min height = %.1f, actual height = %.1f" % [
-		picker._info_panel.custom_minimum_size.y, picker._info_panel.size.y])
-	if picker._guide_button != null and picker._guide_button.visible:
-		print("[preview] guide link shown: %s" % picker._guide_button.text)
+	print("[preview] help strip height = %.1f" % picker._help_strip.size.y)
+	if picker._help_strip.learn_more_row.visible:
+		print("[preview] guide link shown: %s" % (picker._help_strip.learn_more_row.get_child(0) as Button).text)
 	else:
 		print("[preview] guide link hidden (builtin verb, section, or nothing selected)")

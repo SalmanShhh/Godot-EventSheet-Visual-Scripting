@@ -7817,3 +7817,56 @@ Its axes are linked.,Ses axes sont liés.
 Shown as an easing curve.,Affichée comme une courbe d'accélération.
 Edited in a big text box.,Modifiée dans une grande zone de texte.
 Shown as a slider.,Affichée comme un curseur.
+Search expressions...,Rechercher des expressions...
+Robust behaviour lookups (get_node_or_null),Accès robustes aux comportements (get_node_or_null)
+"Behaviour entries insert get_node_or_null(""Name"") instead of $Name - the access that keeps working when a behaviour is attached at runtime, where a $-path to an auto-named child misses silently. Defaults on for sheets that spawn objects.","Les entrées de comportement insèrent get_node_or_null(""Name"") au lieu de $Name - l'accès qui fonctionne encore quand un comportement est attaché à l'exécution, là où un chemin $ vers un enfant nommé automatiquement échoue en silence. Activé par défaut pour les feuilles qui font apparaître des objets."
+Expressions,Expressions
+INSERTS,INSÈRE
+Insert an expression into %s,Insérer une expression dans %s
+This list,Cette liste
+"Double-click inserts at the cursor and the dictionary stays open, so results chain. You can also just type in the field: the same expressions autocomplete as you go.","Un double-clic insère au curseur et le dictionnaire reste ouvert, pour enchaîner les résultats. Vous pouvez aussi taper dans le champ : les mêmes expressions se complètent au fil de la saisie."
+Pick a node for %s,Choisir un nœud pour %s
+Pick Node,Choisir un nœud
+Use Node,Utiliser le nœud
+Make %unique,Rendre %unique
+"Search…  (also group:enemies, script:Enemy, scene:Coin)","Rechercher…  (aussi group:enemies, script:Enemy, scene:Coin)"
+Used in sheet,Utilisé dans la feuille
+List every node reference this sheet makes (red = missing from the scene).,Lister chaque référence de nœud de cette feuille (rouge = absente de la scène).
+Find a node,Trouver un nœud
+Results,Résultats
+MISSING,ABSENT
+(no scene open),(aucune scène ouverte)
+"Type a name, a class or a path - or group:, script: and scene: to search by group, by script or across every scene.","Tapez un nom, une classe ou un chemin - ou group:, script: et scene: pour chercher par groupe, par script ou dans toutes les scènes."
+A %s.,Un %s.
+"Make %%unique hands back %s, a handle that survives moving it.","Rendre %%unique renvoie %s, une poignée qui survit à son déplacement."
+Help (F1),Aide (F1)
+Favorites,Favoris
+ALSO CALLED,AUSSI APPELÉ
+Add Sub-Event,Ajouter un sous-événement
+Replace Trigger,Remplacer le déclencheur
+Select a signal trigger to create a signal event.,Choisissez un déclencheur de signal pour créer un événement de signal.
+Select a condition or trigger to create a new event.,Choisissez une condition ou un déclencheur pour créer un nouvel événement.
+Select a condition or trigger to create a nested sub-condition event.,Choisissez une condition ou un déclencheur pour créer un sous-événement imbriqué.
+Select a condition to replace the current condition.,Choisissez une condition pour remplacer la condition actuelle.
+Select a trigger to replace the current trigger.,Choisissez un déclencheur pour remplacer le déclencheur actuel.
+Select an action to replace the current action.,Choisissez une action pour remplacer l'action actuelle.
+Add an action to %s,Ajouter une action à %s
+Add a condition to %s,Ajouter une condition à %s
+the action you pick lands here,l'action choisie arrive ici
+the action you pick replaces one here,l'action choisie en remplace une ici
+the condition you pick joins these,la condition choisie rejoint celles-ci
+the condition you pick replaces one here,la condition choisie en remplace une ici
+%s is visible again.,%s est de nouveau visible.
+You may know it as %s from another engine - the word you typed and this verb are one row.,Vous le connaissez peut-être sous le nom %s dans un autre moteur - le mot tapé et ce verbe sont une seule ligne.
+"Updated %s - right-click it again to reset, or delete eventsheet_vocabulary.tres to undo every override.","%s mis à jour - clic droit à nouveau pour réinitialiser, ou supprimez eventsheet_vocabulary.tres pour annuler toutes les modifications."
+Pinned %s to Favorites,%s épinglé aux favoris
+Unpinned %s from Favorites,%s retiré des favoris
+Copied the ## @ace_* stub for %s - paste it into a provider script.,Squelette ## @ace_* de %s copié - collez-le dans un script fournisseur.
+Copied the registrar snippet for %s - paste it into a provider script.,Extrait d'enregistrement de %s copié - collez-le dans un script fournisseur.
+Hid %s - delete eventsheet_vocabulary.tres to restore every hidden entry.,%s masqué - supprimez eventsheet_vocabulary.tres pour rétablir toutes les entrées masquées.
+Hid everything from %s.,Tout ce qui vient de %s est masqué.
+Reset %s to its inferred name.,%s réinitialisé à son nom déduit.
+"Reactive alternative: %s - reacts once when it happens, instead of checking every frame.","Alternative réactive : %s - réagit une fois quand cela arrive, au lieu de vérifier à chaque image."
+"Pick an object, then a verb","Choisissez un objet, puis un verbe"
+Typing drops straight into the full search across every object.,La saisie passe directement à la recherche complète sur tous les objets.
+"A group of related actions, conditions, and expressions.","Un groupe d'actions, de conditions et d'expressions apparentées."

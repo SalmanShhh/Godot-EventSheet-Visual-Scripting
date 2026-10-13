@@ -561,6 +561,25 @@ class HelpStrip extends PanelContainer:
 		return row
 
 
+	## One more reading line under the two above, for a window with a third fact worth a caption of
+	## its own ("ALSO CALLED", "INSERTS"). Returns its value label; fill it with set_line().
+	func add_line(caption: String) -> Label:
+		var row: HBoxContainer = _reading_row(caption)
+		var value: Label = row.get_child(1) as Label
+		value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		# A wrapping label with no width of its own measures one glyph per line on the window's
+		# first pass and stretches the whole window; the paragraph's width keeps it sane.
+		value.custom_minimum_size = Vector2(body_label.custom_minimum_size.x * 0.75, 0.0)
+		in_code_row.get_parent().add_child(row)
+		return value
+
+
+	## Fills a line add_line() made; an empty text hides it, like the two reading lines.
+	func set_line(value: Label, text: String) -> void:
+		value.text = text
+		value.get_parent().visible = not text.strip_edges().is_empty()
+
+
 	## Says what the focused thing is. The heading names it, the paragraph explains it.
 	func describe(heading: String, body: String) -> void:
 		heading_label.text = heading.to_upper()
@@ -1036,6 +1055,46 @@ static func add_described_item(dropdown: OptionButton, text: String, description
 static func follow_description(dropdown: OptionButton) -> void:
 	var told: String = dropdown.get_item_tooltip(dropdown.selected) if dropdown.selected >= 0 else ""
 	dropdown.tooltip_text = told if not told.is_empty() else str(dropdown.get_meta("described_fallback", ""))
+
+
+## A CONTEXT BAND: the line at the top of a picker naming what the pick answers - the event an
+## action lands on, the field an expression goes into - so nothing is picked blind. The lead reads in
+## the panel's own voice, the value in the code font, the note muted; an empty band hides.
+class ContextBand extends PanelContainer:
+
+	var lead_label: Label = null
+	var value_label: Label = null
+	var note_label: Label = null
+
+
+	func _init() -> void:
+		var style: StyleBoxFlat = EventSheetPopupUI.inset_panel_stylebox()
+		style.set_content_margin_all(EventSheetPalette.scaled_f(6.0))
+		style.content_margin_left = EventSheetPalette.scaled_f(8.0)
+		add_theme_stylebox_override("panel", style)
+		var row: HBoxContainer = HBoxContainer.new()
+		row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(8.0)))
+		add_child(row)
+		lead_label = Label.new()
+		row.add_child(lead_label)
+		value_label = Label.new()
+		value_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var mono: Font = EventSheetPopupUI.editor_font("doc_source")
+		if mono != null:
+			value_label.add_theme_font_override("font", mono)
+		row.add_child(value_label)
+		note_label = Label.new()
+		note_label.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
+		row.add_child(note_label)
+		visible = false
+
+
+	func say(lead: String, value: String = "", note: String = "") -> void:
+		lead_label.text = lead
+		value_label.text = value
+		note_label.text = note
+		visible = not lead.strip_edges().is_empty()
 
 
 ## A RESULT CARD: a titled panel that says what just happened. `report()` fills it - a short flow of

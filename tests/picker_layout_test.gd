@@ -40,12 +40,13 @@ static func run() -> bool:
 	# Featured verbs float to the top: in append_action mode the very first row is a featured action.
 	ok = _check("a featured verb floats to the top of the list", first != null and picker._is_featured(first.get_metadata(0)), true) and ok
 
-	# Codegen panel is visible-but-muted: a built-in ACE's template is shown color-wrapped, not raw [code].
+	# The help strip's IN CODE line carries a built-in ACE's template as written.
 	if first != null and first.get_metadata(0) is ACEDefinition:
 		var def: ACEDefinition = first.get_metadata(0)
 		picker._update_info_panel(def)
 		if not str(def.metadata.get("codegen_template", "")).is_empty():
-			ok = _check("codegen in the description is muted (color-wrapped)", picker._info_label.text.contains("[color=#") and picker._info_label.text.contains("[code]"), true) and ok
+			ok = _check("the strip's IN CODE line is the template", picker._help_strip.in_code_value.text,
+				str(def.metadata.get("codegen_template", ""))) and ok
 
 	# Section headers are now selectable and carry a {"section": name} marker, so selecting one shows a
 	# group description instead of an ACE (and Add stays disabled - a header is not addable).
@@ -57,8 +58,8 @@ static func run() -> bool:
 		picker._selected_definition = first.get_metadata(0)
 		picker._add_button.disabled = false
 		picker._show_section_info(header, section_name)
-		ok = _check("selecting a section header shows its description and disables Add",
-			picker._info_label.text.contains(section_name) and picker._add_button.disabled and picker._selected_definition == null, true) and ok
+		ok = _check("selecting a section header names it in the strip", picker._help_strip.heading_label.text, section_name.to_upper()) and ok
+		ok = _check("and disables Add", picker._add_button.disabled and picker._selected_definition == null, true) and ok
 
 	parent.free()
 	return ok

@@ -252,13 +252,14 @@ var _object_filter_provider: String = ""
 ## at, which is what the picked entry's `%Name` becomes on the row.
 var _unique_scope: Dictionary = {}
 var _tree: Tree = null
-var _info_label: RichTextLabel = null
-var _info_panel: PanelContainer = null
-## The live one-row illustration of the highlighted verb, built from its parameter defaults.
-var _guide_button: Button = null
-## Returns the label for the highlighted verb's "read more" affordance ("Open Quest's guide"), or
-## "" for no affordance. Phase 2 of the docs work wires it to the derived pack -> guide mapping;
-## unset, the button simply never appears.
+## The one explanatory foot: what the highlighted entry is (or, with nothing highlighted, what this
+## window is for), the line it ships as, and the other engine's name a search found it by.
+var _help_strip: EventSheetPopupUI.HelpStrip = null
+var _also_called: Label = null
+## The event the pick lands on, above the search ("Is on floor - the action you pick lands here").
+var _band: EventSheetPopupUI.ContextBand = null
+## Returns the label for the highlighted verb's "read more" link ("Open Quest's guide"), or "" for
+## none. Left unset, the strip never offers one.
 var _guide_label_provider: Callable = Callable()
 var _favorites_list: Tree = null
 var _recent_list: Tree = null
@@ -281,7 +282,6 @@ var _add_default_label: String = "Add"
 var _selected_recipe: Dictionary = {}
 var _tree_context_menu: PopupMenu = null
 var _tree_context_definition: ACEDefinition = null
-var _hint: Label = null
 var _context: Dictionary = {}
 var _registry: EventSheetACERegistry = null
 
@@ -301,10 +301,10 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	# title bar, and OK/Cancel buttons as every other plugin dialog (function / variable / params).
 	# The built-in OK button is the "Add" button; Cancel is the dialog's own cancel button.
 	_window = ConfirmationDialog.new()
-	_window.title = "Add Action / Condition"
+	_window.title = EventSheetL10n.translate("Add Action / Condition")
 	_window.visible = false
 	_window.min_size = Vector2i(640, 420)
-	_window.ok_button_text = "Add"
+	_window.ok_button_text = EventSheetL10n.translate("Add")
 	_window.close_requested.connect(close)
 	_window.canceled.connect(close)
 	_window.confirmed.connect(_on_add_button_pressed)
@@ -312,6 +312,12 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	# The dialog's own OK button drives "Add" - disabled until something is selected.
 	_add_button = _window.get_ok_button()
 	_add_button.disabled = true
+	# The Manual's page for the highlighted verb, the same question the row's "?" and F1 ask.
+	var help_button: Button = _window.add_button(EventSheetL10n.translate("Help (F1)"), false, "help")
+	help_button.icon = editor_icon_named("Help")
+	_window.custom_action.connect(func(action: StringName) -> void:
+		if action == &"help":
+			_request_help())
 
 	# A sensible default content width; the body height is bounded by the split below so the
 	# dialog opens at a comfortable size and the tree scrolls internally (it does NOT grow to
@@ -321,14 +327,16 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_window.add_child(EventSheetPopupUI.margined(content))
+	_band = EventSheetPopupUI.ContextBand.new()
+	content.add_child(_band)
 
-	# Search row: the field + a ⭐ toggle that pins/unpins the highlighted ACE.
+	# Search row: the field + a toggle that pins/unpins the highlighted ACE.
 	var search_row: HBoxContainer = HBoxContainer.new()
 	search_row.add_theme_constant_override("separation", 6)
 	content.add_child(search_row)
 	_search = LineEdit.new()
 	_search.name = "ACEPickerSearch"
-	_search.placeholder_text = "Search actions, conditions, triggers..."
+	_search.placeholder_text = EventSheetL10n.translate("Search actions, conditions, triggers...")
 	_search.clear_button_enabled = true
 	_search.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_search.text_changed.connect(func(_text: String) -> void:
@@ -349,22 +357,12 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	# to ask, the button says what it does in a word instead.
 	_favorite_button.icon = EventSheetPopupUI._editor_icon("Favorites")
 	_favorite_button.text = "" if _favorite_button.icon != null else EventSheetL10n.translate("Pin")
-	_favorite_button.tooltip_text = "Pin the highlighted entry to Favorites (or right-click any entry)."
+	_favorite_button.tooltip_text = EventSheetL10n.translate("Pin the highlighted entry to Favorites (or right-click any entry).")
 	_favorite_button.focus_mode = Control.FOCUS_NONE
 	_favorite_button.pressed.connect(_on_favorite_button_pressed)
 	search_row.add_child(_favorite_button)
 
-	# Single-line (NOT autowrap): the dialog sizes to its content's minimum, and an autowrap
-	# label reports a runaway min height during the initial zero-width pass (it wraps to one
-	# glyph per line), which balloons the whole dialog. The hints are short, fixed strings that
-	# fit the dialog width, so a single line is all they need.
-	_hint = Label.new()
-	_hint.add_theme_color_override("font_color", GROUP_COLOR_NEUTRAL)
-	_hint.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_hint.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	content.add_child(_hint)
-
-	# Body: ⭐ Favorites + ★ Recent panes on the left (Create-Node style), category tree right.
+	# Body: Favorites + Recent panes on the left (Create-Node style), category tree right.
 	# A plain Control holder bounds the dialog height: a Tree reports its FULL content height as
 	# its minimum size, and a ConfirmationDialog grows to fit that - so a populated picker would
 	# open thousands of px tall. A bare Control ignores its children's minimums and reports only
@@ -379,7 +377,7 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	# step looks and handles like the rest of this picker (single-click an object to browse
 	# its verbs; icons stay 16px, never scaled up).
 	_objects_page = Control.new()
-	_objects_page.custom_minimum_size = Vector2(0.0, 452.0)
+	_objects_page.custom_minimum_size = Vector2(0.0, 340.0)
 	_objects_page.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_objects_page.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_objects_page.visible = false
@@ -387,10 +385,11 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_objects_tree.hide_root = true
 	_objects_tree.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_objects_tree.item_selected.connect(_on_object_tree_selected)
+	_objects_tree.gui_input.connect(_on_objects_tree_gui_input)
 	_objects_page.add_child(_objects_tree)
 	content.add_child(_objects_page)
 	_objects_back = Button.new()
-	_objects_back.text = "◂ All objects"
+	_objects_back.text = "◂ " + EventSheetL10n.translate("All objects")
 	_objects_back.visible = false
 	_objects_back.focus_mode = Control.FOCUS_NONE
 	_objects_back.pressed.connect(func() -> void:
@@ -412,15 +411,15 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	side.add_theme_constant_override("separation", 8)
 	split.add_child(side)
 	var favorites_label: Label = Label.new()
-	favorites_label.text = "Favorites"
-	favorites_label.add_theme_color_override("font_color", GROUP_COLOR_NEUTRAL)
+	favorites_label.text = EventSheetL10n.translate("Favorites")
+	favorites_label.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
 	_favorites_list = _make_side_tree()
 	var favorites_card: PanelContainer = EventSheetPopupUI.panel_section(_titled_pane(favorites_label, _favorites_list))
 	favorites_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	side.add_child(favorites_card)
 	var recent_label: Label = Label.new()
-	recent_label.text = "★ Recent"
-	recent_label.add_theme_color_override("font_color", GROUP_COLOR_NEUTRAL)
+	recent_label.text = EventSheetL10n.translate("Recent")
+	recent_label.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
 	_recent_list = _make_side_tree()
 	var recent_card: PanelContainer = EventSheetPopupUI.panel_section(_titled_pane(recent_label, _recent_list))
 	recent_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -438,41 +437,15 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_tree.gui_input.connect(_on_tree_gui_input)
 	_tree.button_clicked.connect(_on_tree_button_clicked)
 	split.add_child(_tree)
-	# Description panel (Create-Node style): the highlighted ACE's name, type + what it does.
-	# Fixed height + internal scrolling (NOT fit_content): inside a ConfirmationDialog the dialog
-	# hugs its content's minimum size, and a fit_content + autowrap RichTextLabel reports a huge
-	# min height during that pass (it wraps at ~0 width), which would balloon the whole dialog.
-	_info_panel = PanelContainer.new()
-	# Same filled inset card as the Favorites/Recent panes, so the description reads as a distinct panel.
-	_info_panel.add_theme_stylebox_override("panel", EventSheetPopupUI.inset_panel_stylebox())
-	# Tall enough for name + description + the "ships as" codegen line without scrolling - the
-	# description panel is the picker's main teaching surface, so it gets room to breathe.
-	_info_panel.custom_minimum_size = Vector2(0.0, 110.0)
-	content.add_child(_info_panel)
-	var info_margin: MarginContainer = MarginContainer.new()
-	info_margin.add_theme_constant_override("margin_left", 8)
-	info_margin.add_theme_constant_override("margin_right", 8)
-	info_margin.add_theme_constant_override("margin_top", 6)
-	info_margin.add_theme_constant_override("margin_bottom", 6)
-	_info_panel.add_child(info_margin)
-	_info_label = RichTextLabel.new()
-	_info_label.bbcode_enabled = true
-	_info_label.fit_content = false
-	_info_label.scroll_active = true
-	_info_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	info_margin.add_child(_info_label)
-	# The read-more affordance for a pack verb ("Open Quest's guide"), a slim right-aligned link
-	# under the description. It is the only extra the picker carries: the description panel already
-	# says what the verb is, and a live figure here read as clutter, so the illustration lives in the
-	# Explain panel (F1 / right-click a row), where a reader has asked to be shown.
-	var guide_row: HBoxContainer = HBoxContainer.new()
-	guide_row.alignment = BoxContainer.ALIGNMENT_END
-	_guide_button = Button.new()
-	_guide_button.flat = true
-	_guide_button.visible = false
-	_guide_button.pressed.connect(_on_figure_guide_requested)
-	guide_row.add_child(_guide_button)
-	content.add_child(guide_row)
+	# The help strip (the kit's one explanatory foot): the highlighted entry's name, kind and
+	# category, what it does, the line it ships as - and, when a search found it by another engine's
+	# word, that word on a line of its own. With nothing highlighted it says what this window is for.
+	# Lines are capped so arrowing down the list never resizes the window under the pointer.
+	_help_strip = EventSheetPopupUI.help_strip()
+	_help_strip.body_label.max_lines_visible = 4
+	_help_strip.in_code_value.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_also_called = _help_strip.add_line(EventSheetL10n.translate("ALSO CALLED"))
+	content.add_child(_help_strip)
 	# Add / Cancel are the dialog's own themed buttons (wired in the window setup above);
 	# double-click and Enter-to-add still work alongside them.
 
@@ -983,19 +956,18 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 		_reveal_objects_page()
 	else:
 		_show_classic(false)
-	var title: String = _title_for_mode(mode, signals_only)
-	_window.title = title
+	_window.title = title_naming_object(mode, _title_for_mode(mode, signals_only),
+		EventSheetViewportReadingRows.script_object_name(_open_sheet()))
+	_say_landing(mode, selected_resource as Resource)
 	# A caller may open the picker ALREADY SEARCHING - the words of a verb the vocabulary no longer
 	# has, so the list lands on the nearest things to it rather than on the whole vocabulary. It is
 	# only a search: the field is editable, clearing it shows everything, and nothing is preselected.
 	_search.text = str(_context.get("search_seed", "")).strip_edges()
-	_hint.text = _build_hint_text(mode, signals_only)
 	_selected_definition = null
 	if _add_button != null:
 		_add_button.disabled = true
 	if _favorite_button != null:
 		_favorite_button.set_pressed_no_signal(false)
-	_update_info_panel(null)
 	# ─────────────────────────────────────────────────────────────────────────────────────────────
 	# THE WINDOW COMES UP FIRST, THE LIST ARRIVES A FRAME LATER.
 	#
@@ -1009,7 +981,10 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 	#
 	# The token is what makes closing the dialog in between safe: a fill whose token has moved on -
 	# a second open, or a close - is a fill for a dialog that is no longer there, and it returns.
-	_hint.text = EventSheetL10n.translate("Loading the vocabulary...")
+	_help_strip.show_note(_window.title, EventSheetL10n.translate("Loading the vocabulary..."))
+	_help_strip.set_reading("")
+	_help_strip.set_line(_also_called, "")
+	_help_strip.offer_learn_more("")
 	# EMPTIED, not left holding the last open's rows. A stale tree would be the wrong list for one
 	# frame, and Enter on the wrong list adds the wrong verb.
 	_tree.clear()
@@ -1059,12 +1034,15 @@ func _fill_after_popup(token: int) -> void:
 	# display-server question that a headless run cannot answer at all.
 	if token != _fill_token or _window == null:
 		return
-	_hint.text = _build_hint_text(str(_context.get("mode", "new_event")), bool(_context.get("signals_only", false)))
+	_update_info_panel(null)
 	if _objects_page != null and _objects_page.visible:
 		_populate_object_cards()
 	_refresh_tree()
 	_refresh_side_panes()
 	_select_first_match()
+	# The object cards are in front: the strip speaks for them, not for the list behind them.
+	if _objects_page != null and _objects_page.visible:
+		_update_info_panel(null)
 	# Lands AFTER the fill, which is the whole reason it was deferred in the first place - callers
 	# preselect via context instead of racing the open sequence.
 	if _context.has("preselect_ace_id"):
@@ -1073,46 +1051,114 @@ func _fill_after_popup(token: int) -> void:
 
 func _title_for_mode(mode: String, signals_only: bool) -> String:
 	if signals_only:
-		return "Add Event"
+		return EventSheetL10n.translate("Add Event")
 	match mode:
 		"new_event", "new_condition_event":
-			return "Add Event"
+			return EventSheetL10n.translate("Add Event")
 		"new_sub_condition_event":
-			return "Add Sub-Event"
+			return EventSheetL10n.translate("Add Sub-Event")
 		"append_condition":
-			return "Add Condition"
+			return EventSheetL10n.translate("Add Condition")
 		"append_action":
-			return "Add Action"
+			return EventSheetL10n.translate("Add Action")
 		"replace_condition":
-			return "Replace Condition"
+			return EventSheetL10n.translate("Replace Condition")
 		"replace_trigger":
-			return "Replace Trigger"
+			return EventSheetL10n.translate("Replace Trigger")
 		"replace_action":
-			return "Replace Action"
+			return EventSheetL10n.translate("Replace Action")
 		_:
-			return "Add Event"
+			return EventSheetL10n.translate("Add Event")
 
 
 func _build_hint_text(mode: String, signals_only: bool) -> String:
 	if signals_only:
-		return "Select a signal trigger to create a signal event."
+		return EventSheetL10n.translate("Select a signal trigger to create a signal event.")
 	match mode:
 		"new_condition_event":
-			return "Select a condition or trigger to create a new event."
+			return EventSheetL10n.translate("Select a condition or trigger to create a new event.")
 		"new_sub_condition_event":
-			return "Select a condition or trigger to create a nested sub-condition event."
+			return EventSheetL10n.translate("Select a condition or trigger to create a nested sub-condition event.")
 		"append_condition":
-			return "Select a condition or trigger to append to the selected event."
+			return EventSheetL10n.translate("Select a condition or trigger to append to the selected event.")
 		"append_action":
-			return "Select an action to append to the selected event."
+			return EventSheetL10n.translate("Select an action to append to the selected event.")
 		"replace_condition":
-			return "Select a condition to replace the current condition."
+			return EventSheetL10n.translate("Select a condition to replace the current condition.")
 		"replace_trigger":
-			return "Select a trigger to replace the current trigger."
+			return EventSheetL10n.translate("Select a trigger to replace the current trigger.")
 		"replace_action":
-			return "Select an action to replace the current action."
+			return EventSheetL10n.translate("Select an action to replace the current action.")
 		_:
-			return "Select a condition, action, or trigger to create a new event."
+			return EventSheetL10n.translate("Select a condition, action, or trigger to create a new event.")
+
+
+## The title, naming the object the pick is added to where the mode adds to an event: "Add an action
+## to Player". The object is the one the sheet's own rows read under; with none, the plain title.
+static func title_naming_object(mode: String, plain: String, object_name: String) -> String:
+	if object_name.strip_edges().is_empty():
+		return plain
+	match mode:
+		"append_action":
+			return EventSheetL10n.translate("Add an action to %s") % object_name
+		"append_condition":
+			return EventSheetL10n.translate("Add a condition to %s") % object_name
+	return plain
+
+
+## The band above the search: the event this pick lands on, read the way its row reads, with what
+## the pick does to it. Hidden for the modes that make a new event, and for a row with no condition.
+func _say_landing(mode: String, resource: Resource) -> void:
+	var note: String = ""
+	match mode:
+		"append_action":
+			note = EventSheetL10n.translate("the action you pick lands here")
+		"replace_action":
+			note = EventSheetL10n.translate("the action you pick replaces one here")
+		"append_condition":
+			note = EventSheetL10n.translate("the condition you pick joins these")
+		"replace_condition", "replace_trigger":
+			note = EventSheetL10n.translate("the condition you pick replaces one here")
+	var reading: String = landing_reading(_landing_row(resource)) if not note.is_empty() else ""
+	_band.say(reading, "", note)
+
+
+## The row the dock drew for `resource`: the selected one when it is that row, else the first row
+## built from it. Null without a dock (a picker in a test) or before the row exists.
+func _landing_row(resource: Resource) -> EventRowData:
+	if resource == null or _host_node == null or not _host_node.has_method("get_viewport_control"):
+		return null
+	var view: Object = _host_node.get_viewport_control()
+	if view == null:
+		return null
+	var selected: EventRowData = view.get_selected_row_data() as EventRowData
+	if selected != null and selected.source_resource == resource:
+		return selected
+	var rows: Array = (view.rows_for_resources([resource]) as Dictionary).get("rows", [])
+	return rows[0] as EventRowData if not rows.is_empty() else null
+
+
+## An event's conditions as its row reads them, each led by the object it is on ("Player Is on
+## floor - Every tick"). "" for no row, or a row with no condition. Static + pure over the row.
+static func landing_reading(row_data: EventRowData) -> String:
+	if row_data == null:
+		return ""
+	var conditions: PackedStringArray = PackedStringArray()
+	var last_object: String = ""
+	for span: SemanticSpan in row_data.spans:
+		if not (span.metadata is Dictionary):
+			continue
+		var metadata: Dictionary = span.metadata as Dictionary
+		var text: String = span.text.strip_edges()
+		# The condition cells themselves: never a badge, a keyword or the "+ Add condition" target.
+		if text.is_empty() or span.type != SemanticSpan.SpanType.CONDITION or bool(metadata.get("badge", false)) \
+				or str(metadata.get("lane", "")) != "condition" or str(metadata.get("kind", "")).begins_with("add_"):
+			continue
+		var object_word: String = str(metadata.get("object_label", "")).strip_edges()
+		conditions.append(text if object_word.is_empty() or object_word == last_object else "%s %s" % [object_word, text])
+		last_object = object_word
+	return " - ".join(conditions)
+
 
 ## Event-sheet phrase → Godot search-term bridge, so event-sheet users typing their old vocabulary
 ## still find the right ACE (e.g. "on start of layout" finds _ready-based triggers).
@@ -1389,8 +1435,6 @@ func _reveal_objects_page() -> void:
 	_objects_back.visible = false
 	if _body_holder != null:
 		_body_holder.visible = false
-	if _info_panel != null:
-		_info_panel.visible = false
 
 
 ## Shows the classic search + tree; with a provider scope active the breadcrumb offers
@@ -1402,8 +1446,6 @@ func _show_classic(show_breadcrumb: bool) -> void:
 		_objects_back.visible = show_breadcrumb
 	if _body_holder != null:
 		_body_holder.visible = true
-	if _info_panel != null:
-		_info_panel.visible = true
 
 
 ## The distinct "objects" the front page offers, from an assembled definitions list:
@@ -1582,7 +1624,7 @@ func _populate_function_cards(root: TreeItem) -> void:
 		return
 	var header: TreeItem = _objects_tree.create_item(root)
 	header.set_text(0, "%s   %s" % [str(content.get("title", "")), str(content.get("note", ""))])
-	header.set_custom_color(0, GROUP_COLOR_CUSTOM)
+	header.set_custom_color(0, EventSheetPopupUI.readable_on_panel(GROUP_COLOR_CUSTOM))
 	header.set_selectable(0, false)
 	for entry: Variant in content.get("published", []):
 		_add_function_item(header, entry as Dictionary, false)
@@ -1593,7 +1635,7 @@ func _populate_function_cards(root: TreeItem) -> void:
 	# click away for the moment you do want to call one.
 	var helpers_header: TreeItem = _objects_tree.create_item(header)
 	helpers_header.set_text(0, str(content.get("helpers_header", "")))
-	helpers_header.set_custom_color(0, GROUP_COLOR_NEUTRAL)
+	helpers_header.set_custom_color(0, EventSheetPopupUI.readable_on_panel(GROUP_COLOR_NEUTRAL))
 	helpers_header.set_selectable(0, false)
 	helpers_header.collapsed = true
 	for entry: Variant in helpers:
@@ -1607,7 +1649,7 @@ func _add_function_item(parent_item: TreeItem, entry: Dictionary, muted: bool) -
 	item.set_tooltip_text(0, EventSheetL10n.translate("Insert a call to %s in this script.") % function_name)
 	item.set_metadata(0, "%s%s" % [FUNCTION_PREFIX, function_name])
 	if muted:
-		item.set_custom_color(0, GROUP_COLOR_NEUTRAL)
+		item.set_custom_color(0, EventSheetPopupUI.readable_on_panel(GROUP_COLOR_NEUTRAL))
 	# Headless has no editor theme, so this is null there and the entry simply carries no icon.
 	var function_icon: Texture2D = editor_icon("MemberMethod")
 	if function_icon != null:
@@ -1658,7 +1700,7 @@ func _populate_unique_name_cards(root: TreeItem) -> void:
 		return
 	var header: TreeItem = _objects_tree.create_item(root)
 	header.set_text(0, "%s   %s" % [str(content.get("title", "")), str(content.get("note", ""))])
-	header.set_custom_color(0, GROUP_COLOR_CUSTOM)
+	header.set_custom_color(0, EventSheetPopupUI.readable_on_panel(GROUP_COLOR_CUSTOM))
 	header.set_selectable(0, false)
 	for value: Variant in content.get("entries", []):
 		var entry: Dictionary = value
@@ -1746,12 +1788,12 @@ func _populate_object_cards() -> void:
 			if objects_header == null:
 				objects_header = _objects_tree.create_item(root)
 				objects_header.set_text(0, "Objects & Behaviors")
-				objects_header.set_custom_color(0, GROUP_COLOR_CUSTOM)
+				objects_header.set_custom_color(0, EventSheetPopupUI.readable_on_panel(GROUP_COLOR_CUSTOM))
 				objects_header.set_selectable(0, false)
 			parent_item = objects_header
 		var item: TreeItem = _objects_tree.create_item(parent_item)
 		if provider == "Core":
-			item.set_custom_color(0, GROUP_COLOR_NODE_TYPE)
+			item.set_custom_color(0, EventSheetPopupUI.readable_on_panel(GROUP_COLOR_NODE_TYPE))
 		item.set_text(0, label)
 		var tooltip: String = "Browse %s's conditions, actions, and triggers." % label
 		# A pack can ship editor tooling as well as gameplay verbs, and until you installed it
@@ -1789,7 +1831,7 @@ func _populate_project_cards(root: TreeItem) -> void:
 		return
 	var header: TreeItem = _objects_tree.create_item(root)
 	header.set_text(0, "Your Project")
-	header.set_custom_color(0, GROUP_COLOR_CUSTOM)
+	header.set_custom_color(0, EventSheetPopupUI.readable_on_panel(GROUP_COLOR_CUSTOM))
 	header.set_selectable(0, false)
 	# Hidden classes are listed too, greyed and marked - hiding must not be a one-way door
 	# with no path back, and a card the user cannot see is a card they cannot restore.
@@ -1814,7 +1856,7 @@ func _populate_project_cards(root: TreeItem) -> void:
 	for hidden_name: String in hidden_names:
 		var hidden_item: TreeItem = _objects_tree.create_item(header)
 		hidden_item.set_text(0, "%s (hidden)" % hidden_name)
-		hidden_item.set_custom_color(0, GROUP_COLOR_NEUTRAL)
+		hidden_item.set_custom_color(0, EventSheetPopupUI.readable_on_panel(GROUP_COLOR_NEUTRAL))
 		hidden_item.set_tooltip_text(0, "You hid %s. Select it to show it again." % hidden_name)
 		# The metadata carries the restore intent; selecting it un-hides rather than scoping.
 		hidden_item.set_metadata(0, "%s%s" % [UNHIDE_PREFIX, hidden_name])
@@ -1851,6 +1893,16 @@ func _project_definitions_for(provider: String) -> Array[ACEDefinition]:
 
 
 ## Single-click an object (the event-sheet first step): scope the classic tree to its verbs.
+## The pointer resting on an object row describes it in the strip - the row's own tooltip, said
+## where the reader is already looking.
+func _on_objects_tree_gui_input(input_event: InputEvent) -> void:
+	if not (input_event is InputEventMouseMotion):
+		return
+	var hovered: TreeItem = _objects_tree.get_item_at_position((input_event as InputEventMouseMotion).position)
+	if hovered != null and not hovered.get_tooltip_text(0).is_empty():
+		_say(hovered.get_text(0), hovered.get_tooltip_text(0))
+
+
 func _on_object_tree_selected() -> void:
 	var selected: TreeItem = _objects_tree.get_selected()
 	if selected == null or not (selected.get_metadata(0) is String):
@@ -1861,8 +1913,7 @@ func _on_object_tree_selected() -> void:
 		var restored: String = chosen.trim_prefix(UNHIDE_PREFIX)
 		EventSheetVocabularyCatalog.set_class_excluded(restored, false)
 		_populate_object_cards()
-		if _info_label != null:
-			_info_label.text = "%s is visible again." % restored
+		_help_strip.show_note(restored, EventSheetL10n.translate("%s is visible again.") % restored)
 		return
 	# A Functions entry is not an object to browse - it IS the row, so picking it adds the call.
 	if chosen.begins_with(FUNCTION_PREFIX):
@@ -1883,7 +1934,7 @@ func _on_object_tree_selected() -> void:
 		return
 	_unique_scope = {}
 	_object_filter_provider = str(selected.get_metadata(0))
-	_objects_back.text = "◂ All objects · %s" % selected.get_text(0)
+	_objects_back.text = "◂ %s · %s" % [EventSheetL10n.translate("All objects"), selected.get_text(0)]
 	_show_classic(true)
 	_refresh_tree()
 	_select_first_match()
@@ -2151,7 +2202,7 @@ func _refresh_tree() -> void:
 		# turns the Add button into the fix (see _on_definition_selected).
 		var entry_gate: Dictionary = EventSheetPickerGates.gate_for(definition, _gate_context)
 		if not entry_gate.is_empty():
-			item.set_custom_color(0, GROUP_COLOR_NEUTRAL)
+			item.set_custom_color(0, EventSheetPopupUI.readable_on_panel(GROUP_COLOR_NEUTRAL))
 			item.set_tooltip_text(0, "%s\n%s" % [
 				EventSheetPickerGates.reason_text(entry_gate), item.get_tooltip_text(0)])
 		_add_help_button(item, definition)
@@ -2200,7 +2251,7 @@ func _refresh_tree() -> void:
 		var empty_item: TreeItem = _tree.create_item(root)
 		empty_item.set_text(0, "No matches for \"%s\" - try a plainer word like \"move\", \"spawn\", or \"hide\"." % query)
 		empty_item.set_selectable(0, false)
-		empty_item.set_custom_color(0, GROUP_COLOR_NEUTRAL)
+		empty_item.set_custom_color(0, EventSheetPopupUI.readable_on_panel(GROUP_COLOR_NEUTRAL))
 
 	# First-open calm: with no query the tree reads as a table of contents - every section starts
 	# collapsed (the event-sheet reflex: pick the object first, then browse its verbs) instead of
@@ -2239,16 +2290,13 @@ func _on_blank_event_highlighted() -> void:
 	_selected_definition = null
 	_selected_recipe = {}
 	_blank_event_highlighted = true
-	_update_guide_button(null)
 	if _favorite_button != null:
 		_favorite_button.set_pressed_no_signal(false)
 	if _add_button != null:
 		_add_button.disabled = false
 		_add_button.text = EventSheetL10n.translate(_add_default_label)
-	if _info_label != null:
-		_info_label.text = "[b]%s[/b]\n%s" % [
-			EventSheetL10n.translate("(none - runs every tick)"),
-			EventSheetL10n.translate("An event with no condition of its own runs every tick. Add its actions with A, or add a condition later to narrow it down.")]
+	_say(EventSheetL10n.translate("(none - runs every tick)"),
+		EventSheetL10n.translate("An event with no condition of its own runs every tick. Add its actions with A, or add a condition later to narrow it down."))
 
 
 ## Commits the blank first entry: a new event with no condition, where the dialog was opened.
@@ -2429,7 +2477,6 @@ func _item_label(definition: ACEDefinition) -> String:
 		var hint: String = EventSheetCodeSearch.gdscript_hint(definition, _code_query)
 		if not hint.is_empty():
 			display_name = "%s  ·  %s" % [display_name, hint]
-	display_name = foreign_name_note(display_name, str(_foreign_phrase_by_id.get(str(definition.id), "")))
 	# A variable verb says which variables it can take, so "Add to" with no numbers in scope
 	# reads as empty before it is clicked rather than after.
 	var takes: String = variable_verb_note(_variables_in_scope(), definition)
@@ -2442,14 +2489,13 @@ func _item_label(definition: ACEDefinition) -> String:
 	return "%s  ·  %s" % [display_name, definition.provider_id.capitalize()]
 
 
-## A row's name with the other editor's phrase for it after, in quotes - "Change Scene  ·  \"go to
-## layout\"" - so the reader sees that the word they typed and the verb that landed are one row. The
-## phrase is that editor's own term, quoted rather than translated. Nothing is added when the two
-## names already read the same.
-static func foreign_name_note(display_name: String, phrase: String) -> String:
+## The ALSO CALLED line for a verb a search found by another engine's word: that word, as written,
+## and that it and this verb are one row. "" when nothing was typed that way, or the two names
+## already read the same.
+static func also_called_line(display_name: String, phrase: String) -> String:
 	if phrase.is_empty() or display_name.to_lower().contains(phrase.to_lower()):
-		return display_name
-	return "%s  ·  \"%s\"" % [display_name, phrase]
+		return ""
+	return EventSheetL10n.translate("You may know it as %s from another engine - the word you typed and this verb are one row.") % phrase
 
 
 ## The id every "?" on a row carries. One id, because there is one question a "?" asks.
@@ -2682,6 +2728,9 @@ func _on_search_gui_input(input_event: InputEvent) -> void:
 	elif key_event.keycode == KEY_ESCAPE:
 		close()
 		_search.accept_event()
+	elif key_event.keycode == KEY_F1:
+		_request_help()
+		_search.accept_event()
 
 
 func _on_tree_gui_input(input_event: InputEvent) -> void:
@@ -2691,6 +2740,9 @@ func _on_tree_gui_input(input_event: InputEvent) -> void:
 		var key_event: InputEventKey = input_event
 		if key_event.pressed and not key_event.echo and key_event.keycode == KEY_ESCAPE:
 			close()
+			_tree.accept_event()
+		elif key_event.pressed and not key_event.echo and key_event.keycode == KEY_F1:
+			_request_help()
 			_tree.accept_event()
 		return
 	if not (input_event is InputEventMouseButton):
@@ -2765,8 +2817,7 @@ func _prompt_override(definition: ACEDefinition, field: String, title: String, s
 			return
 		EventSheetVocabularyCatalog.set_override(definition.provider_id, definition.id, {field: edit.text})
 		_refresh_tree()
-		if _info_label != null:
-			_info_label.text = "Updated %s - right-click it again to reset, or delete eventsheet_vocabulary.tres to undo every override." % definition.display_name
+		_say(definition.display_name, EventSheetL10n.translate("Updated %s - right-click it again to reset, or delete eventsheet_vocabulary.tres to undo every override.") % definition.display_name)
 		window.queue_free()
 	window.confirmed.connect(commit)
 	edit.text_submitted.connect(func(_text: String) -> void: commit.call(); window.hide())
@@ -2783,21 +2834,19 @@ func _on_tree_context_menu_pressed(item_id: int) -> void:
 	match item_id:
 		0:
 			var pinned: bool = toggle_favorite(definition.provider_id, definition.id)
-			if _info_label != null:
-				_info_label.text = ("Pinned %s to Favorites" if pinned else "Unpinned %s from Favorites") % definition.display_name
+			_say(definition.display_name, (EventSheetL10n.translate("Pinned %s to Favorites") if pinned
+				else EventSheetL10n.translate("Unpinned %s from Favorites")) % definition.display_name)
 			if _favorite_button != null and _selected_definition == definition:
 				_favorite_button.set_pressed_no_signal(pinned)
 			_refresh_side_panes()
 		1:
 			var comment_stub: String = EventSheetACEAnnotationStub.comment_stub(definition)
 			DisplayServer.clipboard_set(comment_stub)
-			if _info_label != null:
-				_info_label.text = "Copied the ## @ace_* stub for %s - paste it into a provider script.%s" % [definition.display_name, _stub_note_hint(comment_stub)]
+			_say(definition.display_name, EventSheetL10n.translate("Copied the ## @ace_* stub for %s - paste it into a provider script.") % definition.display_name + _stub_note_hint(comment_stub))
 		2:
 			var registrar_stub: String = EventSheetACEAnnotationStub.registrar_stub(definition)
 			DisplayServer.clipboard_set(registrar_stub)
-			if _info_label != null:
-				_info_label.text = "Copied the registrar snippet for %s - paste it into a provider script.%s" % [definition.display_name, _stub_note_hint(registrar_stub)]
+			_say(definition.display_name, EventSheetL10n.translate("Copied the registrar snippet for %s - paste it into a provider script.") % definition.display_name + _stub_note_hint(registrar_stub))
 		3:
 			_prompt_override(definition, "display_name", "Rename entry", definition.display_name)
 		4:
@@ -2805,21 +2854,18 @@ func _on_tree_context_menu_pressed(item_id: int) -> void:
 		5:
 			EventSheetVocabularyCatalog.set_override(definition.provider_id, definition.id, {"hidden": true})
 			_refresh_tree()
-			if _info_label != null:
-				_info_label.text = "Hid %s - delete eventsheet_vocabulary.tres to restore every hidden entry." % definition.display_name
+			_say(definition.display_name, EventSheetL10n.translate("Hid %s - delete eventsheet_vocabulary.tres to restore every hidden entry.") % definition.display_name)
 		6:
 			EventSheetVocabularyCatalog.set_class_excluded(definition.provider_id, true)
 			_populate_object_cards()
 			_refresh_tree()
-			if _info_label != null:
-				_info_label.text = "Hid everything from %s." % definition.provider_id
+			_say(definition.provider_id, EventSheetL10n.translate("Hid everything from %s.") % definition.provider_id)
 		7:
 			# Clearing every field drops the entry, which restores the inferred identity.
 			EventSheetVocabularyCatalog.set_override(definition.provider_id, definition.id,
 				{"display_name": null, "category": null, "hidden": null})
 			_refresh_tree()
-			if _info_label != null:
-				_info_label.text = "Reset %s to its inferred name." % definition.id
+			_say(definition.id, EventSheetL10n.translate("Reset %s to its inferred name.") % definition.id)
 
 
 ## Enter in the search box applies the first concrete match - type-and-Enter, no mouse.
@@ -3133,44 +3179,66 @@ func _is_favorite(definition: ACEDefinition) -> bool:
 ## The one-line tip under a polling condition that has a signal twin, naming the trigger that
 ## reacts once instead of checking every frame.
 static func reactive_tip(trigger_name: String) -> String:
-	return "[color=#e0b050]Reactive alternative: [b]%s[/b] - reacts once when it happens, instead of checking every frame.[/color]" % trigger_name
+	return EventSheetL10n.translate("Reactive alternative: %s - reacts once when it happens, instead of checking every frame.") % trigger_name
 
 
-## Create-Node-style description panel: name, type + category, what it does, and its codegen.
+## The strip for the highlighted verb: name, kind and category, what it does (and how often this
+## sheet already uses it), the line it ships as, the other engine's word a search found it by, and
+## its guide. A gated verb speaks in the warning voice, since Add is already wearing the fix. With
+## nothing highlighted the strip says what this window is for.
 func _update_info_panel(definition: ACEDefinition) -> void:
-	_update_guide_button(definition)
-	if _info_label == null:
+	if _help_strip == null:
 		return
+	_help_strip.set_line(_also_called, "")
+	_offer_guide(definition)
 	if definition == null:
-		_info_label.text = ""
+		var mode: String = str(_context.get("mode", "new_event"))
+		var signals_only: bool = bool(_context.get("signals_only", false))
+		if _objects_page != null and _objects_page.visible:
+			_say(EventSheetL10n.translate("Pick an object, then a verb"),
+				EventSheetL10n.translate("Typing drops straight into the full search across every object."))
+		else:
+			_say(_title_for_mode(mode, signals_only), _build_hint_text(mode, signals_only))
 		return
-	var description: String = EventSheetL10n.translate(definition.description if not definition.description.is_empty() else str(definition.metadata.get("display_template", definition.display_name)))
+	var lines: PackedStringArray = PackedStringArray([EventSheetL10n.translate(
+		definition.description if not definition.description.is_empty()
+		else str(definition.metadata.get("display_template", definition.display_name)))])
+	var used: int = EventSheetDocUsage.count_in(_usage_in_sheet(), definition.provider_id, definition.id)
+	if used > 0:
+		lines.append(EventSheetL10n.translate("Used %d× in this sheet") % used)
+	# Reactivity nudge: a polling condition that has a clean signal twin names the trigger that
+	# reacts once instead. Informational only - the condition stays fully pickable.
+	var reactive: Dictionary = ACEDescriptor.reactive_alternative(definition.provider_id, definition.id)
+	if not reactive.is_empty():
+		lines.append(reactive_tip(str(reactive.get("trigger_name", ""))))
+	# A variable verb lists every variable it can take, each in the sentence its row reads with.
+	var sentences: String = variable_sentences_footer(_variables_in_scope(), definition)
+	if not sentences.is_empty():
+		lines.append(sentences)
+	var info_gate: Dictionary = EventSheetPickerGates.gate_for(definition, _gate_context)
+	if not info_gate.is_empty():
+		lines.append(EventSheetPickerGates.reason_text(info_gate))
+	_help_strip.show_note("%s · %s · %s" % [EventSheetL10n.translate(definition.display_name),
+		EventSheetL10n.translate(_ace_type_label(definition.ace_type)), EventSheetL10n.translate(_category_of(definition))],
+		"\n".join(lines), EventSheetPopupUI.HelpStrip.TONE_WARNING if not info_gate.is_empty() else "")
 	var template: String = str(definition.metadata.get("codegen_template", ""))
 	if template.is_empty():
 		# Instance-backed reflected methods bake their owned-instance call at APPLY time -
-		# preview the same call so "ships as" is never blank for a working ACE.
+		# preview the same call so the IN CODE line is never blank for a working ACE.
 		template = definition.instance_backed_template()
-	var header_line: String = "[b]%s[/b]  ·  %s  ·  %s" % [definition.display_name, _ace_type_label(definition.ace_type), _category_of(definition)]
-	var body: String = header_line + "\n" + description
-	if not template.is_empty():
-		# Visible-but-muted: keep the "it's just GDScript" codegen, de-emphasized below the description.
-		body += "\n[color=#%s]→ [code]%s[/code][/color]" % [_muted_header_color().to_html(false), template]
-	# Reactivity nudge: a polling condition that has a clean signal twin gets a one-line tip pointing at
-	# the reactive trigger (the Godot idiom). Informational only - the condition stays fully pickable.
-	var reactive: Dictionary = ACEDescriptor.reactive_alternative(definition.provider_id, definition.id)
-	if not reactive.is_empty():
-		body += "\n" + reactive_tip(str(reactive.get("trigger_name", "")))
-	# The footer under a variable verb: every variable it can take, each in the sentence its row
-	# reads with, so the choice is made from the sheet's own words instead of from a bare name.
-	var sentences: String = variable_sentences_footer(_variables_in_scope(), definition)
-	if not sentences.is_empty():
-		body += "\n[color=#%s]%s[/color]" % [_muted_header_color().to_html(false), sentences]
-	# A gated entry says WHY it is grey, in one line, right where the reader is looking - and the
-	# Add button under this panel is already wearing the fix that answers it.
-	var info_gate: Dictionary = EventSheetPickerGates.gate_for(definition, _gate_context)
-	if not info_gate.is_empty():
-		body += "\n[color=#e0b050]%s[/color]" % EventSheetPickerGates.reason_text(info_gate)
-	_info_label.text = body
+	_help_strip.set_reading("", template)
+	_help_strip.set_line(_also_called, also_called_line(EventSheetL10n.translate(definition.display_name),
+		str(_foreign_phrase_by_id.get(str(definition.id), ""))))
+
+
+## The strip says something that is not a verb: a section, a recipe, a note after a right-click.
+## The reading lines go, since there is no one line of code behind it.
+func _say(heading: String, body: String) -> void:
+	if _help_strip == null:
+		return
+	_help_strip.show_note(heading, body)
+	_help_strip.set_reading("")
+	_help_strip.set_line(_also_called, "")
 
 
 ## The variable verbs' footer: one line per variable the highlighted verb can take, written the
@@ -3195,21 +3263,20 @@ func set_guide_label_provider(provider: Callable) -> void:
 	_guide_label_provider = provider
 
 
-## The "Open <Pack>'s guide" link under the description: shown only when the label provider
-## names a guide for this verb (a pack verb), hidden for builtin verbs, sections and no selection.
-func _update_guide_button(definition: ACEDefinition) -> void:
-	if _guide_button == null:
-		return
+## The strip's "Open <Pack>'s guide" link: offered only when the label provider names a guide for
+## this verb (a pack verb), never for builtin verbs, sections or no selection.
+func _offer_guide(definition: ACEDefinition) -> void:
 	var guide_label: String = ""
 	if definition != null and _guide_label_provider.is_valid():
 		guide_label = str(_guide_label_provider.call(definition))
-	_guide_button.text = guide_label
-	_guide_button.visible = not guide_label.is_empty()
+	_help_strip.offer_learn_more(guide_label, func() -> void: guide_requested.emit(definition))
 
 
-func _on_figure_guide_requested() -> void:
+## Help (F1, or the footer button): the Manual's page for the highlighted verb - the question the
+## row's own "?" asks. Nothing highlighted, nothing to ask about.
+func _request_help() -> void:
 	if _selected_definition != null:
-		guide_requested.emit(_selected_definition)
+		help_requested.emit(_selected_definition)
 
 
 ## A recipe is highlighted: the panel says where it comes from, and Add becomes Insert rows.
@@ -3217,17 +3284,14 @@ func _show_recipe_info(recipe: Dictionary) -> void:
 	_selected_recipe = recipe.duplicate(true)
 	_selected_definition = null
 	_blank_event_highlighted = false
-	_update_guide_button(null)
 	if _favorite_button != null:
 		_favorite_button.set_pressed_no_signal(false)
 	if _add_button != null:
 		_add_button.disabled = false
 		_add_button.text = EventSheetL10n.translate("Insert rows")
-	if _info_label != null:
-		_info_label.text = "[b]%s[/b]  ·  %s\n%s" % [
-			str(recipe.get("title", "")), EventSheetL10n.translate("recipe"),
-			EventSheetL10n.translate("A worked example from %s, inserted as real rows - retune the values on the rows themselves.")
-				% str(recipe.get("page_title", ""))]
+	_say("%s · %s" % [str(recipe.get("title", "")), EventSheetL10n.translate("recipe")],
+		EventSheetL10n.translate("A worked example from %s, inserted as real rows - retune the values on the rows themselves.")
+			% str(recipe.get("page_title", "")))
 
 
 func _commit_recipe(recipe: Dictionary) -> void:
@@ -3243,21 +3307,19 @@ func _commit_recipe(recipe: Dictionary) -> void:
 func _show_section_info(item: TreeItem, section_name: String) -> void:
 	_selected_definition = null
 	_selected_recipe = {}
-	# A section is a group of verbs, not a pack verb - no guide link.
-	_update_guide_button(null)
 	if _add_button != null:
 		_add_button.disabled = true
 		_add_button.text = EventSheetL10n.translate(_add_default_label)
 	if _favorite_button != null:
 		_favorite_button.set_pressed_no_signal(false)
-	if _info_label == null:
-		return
 	var blurb: String = EventSheetSectionInfo.description_for(section_name)
 	if blurb.is_empty():
 		blurb = _provider_description_in(item)
 	if blurb.is_empty():
-		blurb = "[color=#%s]A group of related actions, conditions, and expressions.[/color]" % _muted_header_color().to_html(false)
-	_info_label.text = "[b]%s[/b]  ·  section\n%s" % [section_name, blurb]
+		blurb = EventSheetL10n.translate("A group of related actions, conditions, and expressions.")
+	_say(section_name, blurb)
+	# A section is a group of verbs, not a pack verb - no guide link.
+	_help_strip.offer_learn_more("")
 
 
 ## The first provider_description among a section's ACE rows (a pack's class doc comment), or "".

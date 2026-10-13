@@ -34,6 +34,10 @@ var _node_picker_target_key: String = ""
 var _node_picker_chips: Dictionary = {}  # chip label -> Button (toggle)
 var _node_picker_used_toggle: Button = null
 var _node_picker_recents: PackedStringArray = PackedStringArray()
+## The verb and field this pick answers, and what the field holds now ("Move Toward Target  $Enemy").
+var _band: EventSheetPopupUI.ContextBand = null
+## The foot: what the highlighted node is, and the reference it goes into the field as.
+var _help_strip: EventSheetPopupUI.HelpStrip = null
 
 const NODE_PICKER_CHIP_CLASSES: Dictionary = {
 	"2D": ["Node2D"], "3D": ["Node3D"], "UI": ["Control"],
@@ -53,32 +57,45 @@ func _open_node_picker(key: String) -> void:
 	_ensure_node_picker_ui()
 	_populate_node_picker()
 	_node_picker_window.get_ok_button().disabled = true
-	_node_picker_window.popup_centered(Vector2i(520, 560))
+	_say_field(key)
+	_node_picker_window.popup_centered(Vector2i(520, 640))
 	_node_picker_search.grab_focus()
+
+
+## The title and the band name the field this pick answers ("Pick a node for Target" over "Move
+## Toward Target  $Enemy"), and the strip starts on how to search.
+func _say_field(key: String) -> void:
+	_node_picker_window.title = EventSheetL10n.translate("Pick a node for %s") % _host._param_label(key)
+	var words: PackedStringArray = ACEParamsExpressionPicker.field_words(_host, key)
+	_band.say(words[0], words[1])
+	_describe_node(null)
 
 
 ## Builds the picker UI lazily (separate from _open so headless tests can drive it).
 func _ensure_node_picker_ui() -> void:
 	if _node_picker_window == null:
 		_node_picker_window = AcceptDialog.new()
-		_node_picker_window.title = "Pick Node"
+		_node_picker_window.title = EventSheetL10n.translate("Pick Node")
 		_node_picker_window.min_size = Vector2i(480, 460)
-		_node_picker_window.ok_button_text = "Use Node"
+		_node_picker_window.ok_button_text = EventSheetL10n.translate("Use Node")
 		_node_picker_window.get_ok_button().disabled = true
 		_node_picker_window.close_requested.connect(func() -> void: _node_picker_window.hide())
+		_node_picker_window.add_cancel_button(EventSheetL10n.translate("Cancel"))
 		_node_picker_window.confirmed.connect(_on_node_picker_activated)
 		# One-click "Make %unique": turns the selected deep node into a scene-unique node (undoable) and
 		# hands back %Name - so ANY node, not just pre-marked ones, gets a flat path-free handle. The button
 		# enables only for a non-root node that isn't already unique (see _on_node_picker_selection_changed).
-		_node_picker_unique_button = _node_picker_window.add_button("Make %unique", true, "make_unique")
+		_node_picker_unique_button = _node_picker_window.add_button(EventSheetL10n.translate("Make %unique"), true, "make_unique")
 		_node_picker_unique_button.disabled = true
 		_node_picker_window.custom_action.connect(_on_node_picker_custom_action)
 		var box: VBoxContainer = EventSheetPopupUI.form_box()
+		_band = EventSheetPopupUI.ContextBand.new()
+		box.add_child(_band)
 		# Find card: the search box + the filter chips, grouped in a titled inset card.
 		var find_box: VBoxContainer = EventSheetPopupUI.form_box()
 		_node_picker_search = LineEdit.new()
 		_node_picker_search.clear_button_enabled = true
-		_node_picker_search.placeholder_text = "Search…  (also group:enemies, script:Enemy, scene:Coin)"
+		_node_picker_search.placeholder_text = EventSheetL10n.translate("Search…  (also group:enemies, script:Enemy, scene:Coin)")
 		_node_picker_search.text_changed.connect(func(_t: String) -> void: _populate_node_picker())
 		# Enter commits the first result (parity with the main ACE picker's type-and-Enter).
 		_node_picker_search.text_submitted.connect(func(_t: String) -> void: _activate_first_node_picker_match())
@@ -93,17 +110,17 @@ func _ensure_node_picker_ui() -> void:
 			chip_row.add_child(chip)
 			_node_picker_chips[chip_label] = chip
 		_node_picker_used_toggle = Button.new()
-		_node_picker_used_toggle.text = "Used in sheet"
+		_node_picker_used_toggle.text = EventSheetL10n.translate("Used in sheet")
 		_node_picker_used_toggle.toggle_mode = true
-		_node_picker_used_toggle.tooltip_text = "List every node reference this sheet makes (red = missing from the scene)."
+		_node_picker_used_toggle.tooltip_text = EventSheetL10n.translate("List every node reference this sheet makes (red = missing from the scene).")
 		_node_picker_used_toggle.toggled.connect(func(_on: bool) -> void: _populate_node_picker())
 		chip_row.add_child(_node_picker_used_toggle)
 		find_box.add_child(chip_row)
-		box.add_child(EventSheetPopupUI.titled_card("Find a node", find_box))
+		box.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("Find a node"), find_box))
 		_node_picker_tree = Tree.new()
 		_node_picker_tree.columns = 2
-		_node_picker_tree.set_column_title(0, "Node")
-		_node_picker_tree.set_column_title(1, "Class")
+		_node_picker_tree.set_column_title(0, EventSheetL10n.translate("Node"))
+		_node_picker_tree.set_column_title(1, EventSheetL10n.translate("Class"))
 		_node_picker_tree.column_titles_visible = true
 		_node_picker_tree.hide_root = true
 		_node_picker_tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -118,9 +135,12 @@ func _ensure_node_picker_ui() -> void:
 		tree_holder.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		_node_picker_tree.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		tree_holder.add_child(_node_picker_tree)
-		var results_card: PanelContainer = EventSheetPopupUI.titled_card("Results", tree_holder)
+		var results_card: PanelContainer = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Results"), tree_holder)
 		results_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		box.add_child(results_card)
+		_help_strip = EventSheetPopupUI.help_strip()
+		_help_strip.body_label.max_lines_visible = 3
+		box.add_child(_help_strip)
 		_node_picker_window.add_child(EventSheetPopupUI.margined(box))
 		_host._dialog.add_child(_node_picker_window)
 
@@ -144,11 +164,15 @@ func _populate_node_picker_from_root(scene_root: Node) -> void:
 			var item: TreeItem = _node_picker_tree.create_item(root_item)
 			var exists: bool = scene_root != null and scene_root.has_node(NodePath(reference))
 			item.set_text(0, reference)
-			item.set_text(1, "" if exists else "MISSING")
 			item.set_metadata(0, reference)
-			if not exists:
-				item.set_custom_color(0, Color(0.9, 0.35, 0.35))
-				item.set_custom_color(1, Color(0.9, 0.35, 0.35))
+			if exists:
+				var node_class: String = scene_root.get_node(NodePath(reference)).get_class()
+				item.set_text(1, node_class)
+				item.set_icon(0, _class_icon(node_class))
+			else:
+				item.set_text(1, EventSheetL10n.translate("MISSING"))
+				item.set_custom_color(0, EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_ERROR))
+				item.set_custom_color(1, EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_ERROR))
 		return
 	# Cross-scene search: scan .tscn node headers.
 	if query.to_lower().begins_with("scene:"):
@@ -161,7 +185,7 @@ func _populate_node_picker_from_root(scene_root: Node) -> void:
 		return
 	if scene_root == null:
 		var empty: TreeItem = _node_picker_tree.create_item(root_item)
-		empty.set_text(0, "(no scene open)")
+		empty.set_text(0, EventSheetL10n.translate("(no scene open)"))
 		return
 	# Recents first (when not searching).
 	if query.is_empty():
@@ -353,10 +377,39 @@ func _on_node_picker_selection_changed() -> void:
 	var selected: TreeItem = _node_picker_tree.get_selected() if _node_picker_tree != null else null
 	if _node_picker_window != null:
 		_node_picker_window.get_ok_button().disabled = selected == null or selected.get_metadata(0) == null
+	var meta: Variant = selected.get_metadata(0) if selected != null else null
+	var scene_root: Node = EditorInterface.get_edited_scene_root() if Engine.is_editor_hint() else null
+	var uniqueable: bool = meta != null and _node_is_uniqueable(scene_root, str(meta))
 	if _node_picker_unique_button != null:
-		var meta: Variant = selected.get_metadata(0) if selected != null else null
-		var scene_root: Node = EditorInterface.get_edited_scene_root() if Engine.is_editor_hint() else null
-		_node_picker_unique_button.disabled = meta == null or not _node_is_uniqueable(scene_root, str(meta))
+		_node_picker_unique_button.disabled = not uniqueable
+	_describe_node(selected if meta != null else null, uniqueable)
+
+
+## The strip under the results: with a node highlighted, what it is and the reference it goes into
+## the field as; with none, how to search.
+func _describe_node(selected: TreeItem, uniqueable: bool = false) -> void:
+	if _help_strip == null:
+		return
+	if selected == null:
+		_help_strip.show_note(EventSheetL10n.translate("Find a node"),
+			EventSheetL10n.translate("Type a name, a class or a path - or group:, script: and scene: to search by group, by script or across every scene."))
+		_help_strip.set_reading("")
+		return
+	var body: String = EventSheetL10n.translate("A %s.") % selected.get_text(1) if not selected.get_text(1).is_empty() else ""
+	if uniqueable:
+		body = ("%s %s" % [body, EventSheetL10n.translate("Make %%unique hands back %s, a handle that survives moving it.")
+			% ("%" + str(selected.get_text(0)).get_file())]).strip_edges()
+	_help_strip.show_note(selected.get_text(0), body)
+	_help_strip.set_reading("", _reference_for(str(selected.get_metadata(0))))
+
+
+## What a picked row goes into the field as: a quoted path for another scene's node, `self` for the
+## scene root, else the shortest reference that reaches it (%Name for a scene-unique node).
+static func _reference_for(relative: String) -> String:
+	if relative.begins_with("scene::"):
+		return ACEParamsDialog.format_quoted_literal(relative.trim_prefix("scene::"))
+	var picker_root: Node = EditorInterface.get_edited_scene_root() if Engine.is_editor_hint() else null
+	return "self" if relative == "." else ACEParamsDialog._best_node_reference(picker_root, relative)
 
 
 func _on_node_picker_activated() -> void:
@@ -364,12 +417,8 @@ func _on_node_picker_activated() -> void:
 	if selected == null:
 		return
 	var relative: String = str(selected.get_metadata(0))
-	var reference: String
-	if relative.begins_with("scene::"):
-		reference = ACEParamsDialog.format_quoted_literal(relative.trim_prefix("scene::"))
-	else:
-		var picker_root: Node = EditorInterface.get_edited_scene_root() if Engine.is_editor_hint() else null
-		reference = "self" if relative == "." else ACEParamsDialog._best_node_reference(picker_root, relative)
+	var reference: String = _reference_for(relative)
+	if not relative.begins_with("scene::"):
 		var existing_index: int = _node_picker_recents.find(relative)
 		if existing_index >= 0:
 			_node_picker_recents.remove_at(existing_index)

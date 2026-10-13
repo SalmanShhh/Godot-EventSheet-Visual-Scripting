@@ -7817,3 +7817,56 @@ Its axes are linked.,它的轴已关联。
 Shown as an easing curve.,显示为缓动曲线。
 Edited in a big text box.,在大文本框中编辑。
 Shown as a slider.,显示为滑块。
+Search expressions...,搜索表达式...
+Robust behaviour lookups (get_node_or_null),稳健的行为查找 (get_node_or_null)
+"Behaviour entries insert get_node_or_null(""Name"") instead of $Name - the access that keeps working when a behaviour is attached at runtime, where a $-path to an auto-named child misses silently. Defaults on for sheets that spawn objects.","行为条目插入 get_node_or_null(""Name"") 而不是 $Name - 这种访问方式在行为于运行时附加时依然有效,而指向自动命名子节点的 $ 路径会静默失败。对生成对象的表默认开启。"
+Expressions,表达式
+INSERTS,插入
+Insert an expression into %s,向 %s 插入表达式
+This list,此列表
+"Double-click inserts at the cursor and the dictionary stays open, so results chain. You can also just type in the field: the same expressions autocomplete as you go.","双击在光标处插入,字典保持打开,便于连续组合结果。也可以直接在字段中输入:同样的表达式会随输入自动补全。"
+Pick a node for %s,为 %s 选择节点
+Pick Node,选择节点
+Use Node,使用节点
+Make %unique,设为 %unique
+"Search…  (also group:enemies, script:Enemy, scene:Coin)",搜索…  (也可用 group:enemies、script:Enemy、scene:Coin)
+Used in sheet,表中已用
+List every node reference this sheet makes (red = missing from the scene).,列出此表引用的每个节点 (红色 = 场景中缺失)。
+Find a node,查找节点
+Results,结果
+MISSING,缺失
+(no scene open),(未打开场景)
+"Type a name, a class or a path - or group:, script: and scene: to search by group, by script or across every scene.",输入名称、类或路径 - 或用 group:、script: 和 scene: 按组、按脚本或在所有场景中搜索。
+A %s.,一个 %s。
+"Make %%unique hands back %s, a handle that survives moving it.","设为 %%unique 会返回 %s,即使移动节点也依然有效的引用。"
+Help (F1),帮助 (F1)
+Favorites,收藏
+ALSO CALLED,又称
+Add Sub-Event,添加子事件
+Replace Trigger,替换触发器
+Select a signal trigger to create a signal event.,选择一个信号触发器来创建信号事件。
+Select a condition or trigger to create a new event.,选择一个条件或触发器来创建新事件。
+Select a condition or trigger to create a nested sub-condition event.,选择一个条件或触发器来创建嵌套的子事件。
+Select a condition to replace the current condition.,选择一个条件来替换当前条件。
+Select a trigger to replace the current trigger.,选择一个触发器来替换当前触发器。
+Select an action to replace the current action.,选择一个动作来替换当前动作。
+Add an action to %s,为 %s 添加动作
+Add a condition to %s,为 %s 添加条件
+the action you pick lands here,所选动作会放在这里
+the action you pick replaces one here,所选动作会替换这里的一个
+the condition you pick joins these,所选条件会加入这些条件
+the condition you pick replaces one here,所选条件会替换这里的一个
+%s is visible again.,%s 已重新显示。
+You may know it as %s from another engine - the word you typed and this verb are one row.,你可能在其他引擎中称它为 %s - 你输入的词和这个动词是同一行。
+"Updated %s - right-click it again to reset, or delete eventsheet_vocabulary.tres to undo every override.","已更新 %s - 再次右键可重置,或删除 eventsheet_vocabulary.tres 撤销所有覆盖。"
+Pinned %s to Favorites,已将 %s 固定到收藏
+Unpinned %s from Favorites,已将 %s 从收藏中移除
+Copied the ## @ace_* stub for %s - paste it into a provider script.,已复制 %s 的 ## @ace_* 存根 - 粘贴到提供者脚本中。
+Copied the registrar snippet for %s - paste it into a provider script.,已复制 %s 的注册代码片段 - 粘贴到提供者脚本中。
+Hid %s - delete eventsheet_vocabulary.tres to restore every hidden entry.,已隐藏 %s - 删除 eventsheet_vocabulary.tres 可恢复所有隐藏条目。
+Hid everything from %s.,已隐藏 %s 的全部内容。
+Reset %s to its inferred name.,已将 %s 重置为推断的名称。
+"Reactive alternative: %s - reacts once when it happens, instead of checking every frame.","响应式替代: %s - 在发生时响应一次,而不是每帧检查。"
+"Pick an object, then a verb","先选对象,再选动词"
+Typing drops straight into the full search across every object.,输入后会直接进入针对所有对象的完整搜索。
+"A group of related actions, conditions, and expressions.",一组相关的动作、条件和表达式。

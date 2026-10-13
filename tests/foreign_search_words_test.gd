@@ -72,10 +72,10 @@ static func _typed_phrases_find_their_verb() -> bool:
 
 static func _a_found_row_says_the_phrase_back() -> bool:
 	return SUPPORT.pins("foreign_search_words_test", [
-		["the phrase follows the name, quoted", ACEPickerDialog.foreign_name_note("Change Scene", "go to layout"),
-			"Change Scene  ·  \"go to layout\""],
-		["nothing when the names already agree", ACEPickerDialog.foreign_name_note("Wait", "wait"), "Wait"],
-		["nothing when no phrase found it", ACEPickerDialog.foreign_name_note("Wait", ""), "Wait"],
+		["the phrase is said on its own line", ACEPickerDialog.also_called_line("Change Scene", "go to layout"),
+			"You may know it as go to layout from another engine - the word you typed and this verb are one row."],
+		["nothing when the names already agree", ACEPickerDialog.also_called_line("Wait", "wait"), ""],
+		["nothing when no phrase found it", ACEPickerDialog.also_called_line("Wait", ""), ""],
 	])
 
 
@@ -103,8 +103,9 @@ static func _familiar_names_find_what_ships() -> bool:
 		["Draw Debug Ray", ACEPickerDialog.foreign_query_matches("draw debug ray"),
 			{"method:draw_ray": "Draw Debug Ray", "method:draw_ray_3d": "Draw Debug Ray"}],
 		["GetRange", ACEPickerDialog.foreign_query_matches("GetRange"), {"ArraySlice": "GetRange"}],
-		["the note quotes the name as written", ACEPickerDialog.foreign_name_note("Wait",
-			str(ACEPickerDialog.foreign_query_matches("waitforseconds").get("Wait", ""))), "Wait  ·  \"WaitForSeconds\""],
+		["the line says the name as written", ACEPickerDialog.also_called_line("Wait",
+			str(ACEPickerDialog.foreign_query_matches("waitforseconds").get("Wait", ""))),
+			"You may know it as WaitForSeconds from another engine - the word you typed and this verb are one row."],
 		["an importer phrase is still said as itself", EventSheetForeignACEMap.phrase_as_written("go to layout"),
 			"go to layout"],
 	])

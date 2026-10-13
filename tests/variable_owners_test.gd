@@ -13,7 +13,6 @@ class_name VariableOwnersTest
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
-const EXPRESSION_PICKER := preload("res://addons/eventsheet/editor/ace_params_expression_picker.gd")
 const INSPECTOR_PLUGIN := preload("res://addons/eventforge/editor/sheet_edit_inspector_plugin.gd")
 
 
@@ -336,9 +335,6 @@ static func _test_expression_picker_leaves() -> bool:
 	ok = _check("a designer knob says so",
 		EventSheetVariableOwners.leaf_text(EventSheetVariableOwners.find(entries, "speed")),
 		"speed   number = 200.0  · Inspector") and ok
-	ok = _check("the footer says what will land in the field",
-		EXPRESSION_PICKER.inserts_note("Game.Score"), "Inserts Game.Score") and ok
-	ok = _check("nothing highlighted, nothing said", EXPRESSION_PICKER.inserts_note(""), "") and ok
 	return ok
 
 

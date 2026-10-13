@@ -91,8 +91,8 @@ static func run() -> bool:
 	dialog._node_picker._node_picker_used_toggle.button_pressed = true
 	dialog._populate_node_picker_from_root(root)
 	var missing_flags: PackedStringArray = _tree_column(dialog._node_picker._node_picker_tree, 1)
-	all_passed = _check("missing references flag red in the audit",
-		missing_flags.has("MISSING") and missing_flags.has(""), true) and all_passed
+	all_passed = _check("missing references flag red in the audit, present ones name their class",
+		missing_flags, PackedStringArray(["CharacterBody2D", "MISSING"])) and all_passed
 	dialog._node_picker._node_picker_used_toggle.button_pressed = false
 
 	# The themed picker's "Use Node" button enables only when a real node row is highlighted.

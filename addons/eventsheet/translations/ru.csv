@@ -7817,3 +7817,56 @@ Its axes are linked.,Её оси связаны.
 Shown as an easing curve.,Показана как кривая сглаживания.
 Edited in a big text box.,Редактируется в большом текстовом поле.
 Shown as a slider.,Показана как ползунок.
+Search expressions...,Поиск выражений...
+Robust behaviour lookups (get_node_or_null),Надёжный поиск поведений (get_node_or_null)
+"Behaviour entries insert get_node_or_null(""Name"") instead of $Name - the access that keeps working when a behaviour is attached at runtime, where a $-path to an auto-named child misses silently. Defaults on for sheets that spawn objects.","Элементы поведений вставляют get_node_or_null(""Name"") вместо $Name - доступ, который работает и тогда, когда поведение подключается во время выполнения, где $-путь к автоматически названному дочернему узлу молча промахивается. По умолчанию включено для листов, создающих объекты."
+Expressions,Выражения
+INSERTS,ВСТАВЛЯЕТ
+Insert an expression into %s,Вставить выражение в %s
+This list,Этот список
+"Double-click inserts at the cursor and the dictionary stays open, so results chain. You can also just type in the field: the same expressions autocomplete as you go.","Двойной щелчок вставляет в позицию курсора, а словарь остаётся открытым, так что результаты складываются в цепочку. Можно и просто печатать в поле: те же выражения дополняются по ходу ввода."
+Pick a node for %s,Выбрать узел для %s
+Pick Node,Выбрать узел
+Use Node,Использовать узел
+Make %unique,Сделать %unique
+"Search…  (also group:enemies, script:Enemy, scene:Coin)","Поиск…  (также group:enemies, script:Enemy, scene:Coin)"
+Used in sheet,Используется в листе
+List every node reference this sheet makes (red = missing from the scene).,Показать все ссылки этого листа на узлы (красный = нет в сцене).
+Find a node,Найти узел
+Results,Результаты
+MISSING,НЕТ
+(no scene open),(сцена не открыта)
+"Type a name, a class or a path - or group:, script: and scene: to search by group, by script or across every scene.","Введите имя, класс или путь - или group:, script: и scene:, чтобы искать по группе, по скрипту или во всех сценах."
+A %s.,Это %s.
+"Make %%unique hands back %s, a handle that survives moving it.","Сделать %%unique вернёт %s - ссылку, которая переживёт перемещение узла."
+Help (F1),Справка (F1)
+Favorites,Избранное
+ALSO CALLED,ТАКЖЕ НАЗЫВАЕТСЯ
+Add Sub-Event,Добавить подсобытие
+Replace Trigger,Заменить триггер
+Select a signal trigger to create a signal event.,"Выберите триггер сигнала, чтобы создать событие сигнала."
+Select a condition or trigger to create a new event.,"Выберите условие или триггер, чтобы создать новое событие."
+Select a condition or trigger to create a nested sub-condition event.,"Выберите условие или триггер, чтобы создать вложенное подсобытие."
+Select a condition to replace the current condition.,"Выберите условие, чтобы заменить текущее."
+Select a trigger to replace the current trigger.,"Выберите триггер, чтобы заменить текущий."
+Select an action to replace the current action.,"Выберите действие, чтобы заменить текущее."
+Add an action to %s,Добавить действие к %s
+Add a condition to %s,Добавить условие к %s
+the action you pick lands here,выбранное действие попадёт сюда
+the action you pick replaces one here,выбранное действие заменит одно из этих
+the condition you pick joins these,выбранное условие добавится к этим
+the condition you pick replaces one here,выбранное условие заменит одно из этих
+%s is visible again.,%s снова видно.
+You may know it as %s from another engine - the word you typed and this verb are one row.,"Возможно, вы знаете это как %s из другого движка - набранное слово и этот глагол - одна строка."
+"Updated %s - right-click it again to reset, or delete eventsheet_vocabulary.tres to undo every override.","%s обновлено - щёлкните правой кнопкой ещё раз для сброса или удалите eventsheet_vocabulary.tres, чтобы отменить все переопределения."
+Pinned %s to Favorites,%s закреплено в избранном
+Unpinned %s from Favorites,%s откреплено из избранного
+Copied the ## @ace_* stub for %s - paste it into a provider script.,Заготовка ## @ace_* для %s скопирована - вставьте её в скрипт-провайдер.
+Copied the registrar snippet for %s - paste it into a provider script.,Фрагмент регистрации для %s скопирован - вставьте его в скрипт-провайдер.
+Hid %s - delete eventsheet_vocabulary.tres to restore every hidden entry.,"%s скрыто - удалите eventsheet_vocabulary.tres, чтобы вернуть все скрытые элементы."
+Hid everything from %s.,Всё из %s скрыто.
+Reset %s to its inferred name.,%s возвращено к выведенному имени.
+"Reactive alternative: %s - reacts once when it happens, instead of checking every frame.","Реактивная альтернатива: %s - срабатывает один раз, когда это происходит, вместо проверки каждый кадр."
+"Pick an object, then a verb","Выберите объект, затем глагол"
+Typing drops straight into the full search across every object.,Ввод сразу переключает на полный поиск по всем объектам.
+"A group of related actions, conditions, and expressions.","Группа связанных действий, условий и выражений."

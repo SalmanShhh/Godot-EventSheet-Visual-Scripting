@@ -7817,3 +7817,56 @@ Its axes are linked.,축이 연결되어 있습니다.
 Shown as an easing curve.,이징 커브로 표시됩니다.
 Edited in a big text box.,큰 텍스트 상자에서 편집합니다.
 Shown as a slider.,슬라이더로 표시됩니다.
+Search expressions...,식 검색...
+Robust behaviour lookups (get_node_or_null),안전한 비헤이비어 조회 (get_node_or_null)
+"Behaviour entries insert get_node_or_null(""Name"") instead of $Name - the access that keeps working when a behaviour is attached at runtime, where a $-path to an auto-named child misses silently. Defaults on for sheets that spawn objects.","비헤이비어 항목은 $Name 대신 get_node_or_null(""Name"")을 삽입합니다 - 실행 중에 비헤이비어가 붙어도 계속 동작하는 접근 방식이며, 자동으로 이름 붙은 자식에 대한 $ 경로는 조용히 실패합니다. 오브젝트를 생성하는 시트에서는 기본으로 켜집니다."
+Expressions,식
+INSERTS,삽입
+Insert an expression into %s,%s에 식 삽입
+This list,이 목록
+"Double-click inserts at the cursor and the dictionary stays open, so results chain. You can also just type in the field: the same expressions autocomplete as you go.",더블 클릭하면 커서 위치에 삽입되고 사전은 열린 채로 남아 결과를 이어 붙일 수 있습니다. 필드에 바로 입력해도 같은 식이 입력하는 대로 자동 완성됩니다.
+Pick a node for %s,%s에 쓸 노드 선택
+Pick Node,노드 선택
+Use Node,노드 사용
+Make %unique,%unique로 만들기
+"Search…  (also group:enemies, script:Enemy, scene:Coin)","검색…  (group:enemies, script:Enemy, scene:Coin도 가능)"
+Used in sheet,시트에서 사용
+List every node reference this sheet makes (red = missing from the scene).,이 시트가 참조하는 모든 노드를 나열합니다 (빨강 = 씬에 없음).
+Find a node,노드 찾기
+Results,결과
+MISSING,없음
+(no scene open),(열린 씬 없음)
+"Type a name, a class or a path - or group:, script: and scene: to search by group, by script or across every scene.","이름, 클래스, 경로를 입력하세요 - group:, script:, scene:으로 그룹별, 스크립트별, 모든 씬에서 찾을 수 있습니다."
+A %s.,%s입니다.
+"Make %%unique hands back %s, a handle that survives moving it.",%%unique로 만들면 %s를 돌려줍니다. 노드를 옮겨도 유지되는 핸들입니다.
+Help (F1),도움말 (F1)
+Favorites,즐겨찾기
+ALSO CALLED,다른 이름
+Add Sub-Event,하위 이벤트 추가
+Replace Trigger,트리거 교체
+Select a signal trigger to create a signal event.,시그널 트리거를 골라 시그널 이벤트를 만듭니다.
+Select a condition or trigger to create a new event.,조건이나 트리거를 골라 새 이벤트를 만듭니다.
+Select a condition or trigger to create a nested sub-condition event.,조건이나 트리거를 골라 중첩된 하위 이벤트를 만듭니다.
+Select a condition to replace the current condition.,현재 조건을 바꿀 조건을 고릅니다.
+Select a trigger to replace the current trigger.,현재 트리거를 바꿀 트리거를 고릅니다.
+Select an action to replace the current action.,현재 액션을 바꿀 액션을 고릅니다.
+Add an action to %s,%s에 액션 추가
+Add a condition to %s,%s에 조건 추가
+the action you pick lands here,고른 액션이 여기에 들어갑니다
+the action you pick replaces one here,고른 액션이 여기 있는 것 하나를 바꿉니다
+the condition you pick joins these,고른 조건이 이 조건들에 더해집니다
+the condition you pick replaces one here,고른 조건이 여기 있는 것 하나를 바꿉니다
+%s is visible again.,%s이(가) 다시 보입니다.
+You may know it as %s from another engine - the word you typed and this verb are one row.,다른 엔진에서는 %s(으)로 알고 있을 수 있습니다 - 입력한 단어와 이 동사는 같은 행입니다.
+"Updated %s - right-click it again to reset, or delete eventsheet_vocabulary.tres to undo every override.","%s을(를) 업데이트했습니다 - 다시 우클릭하면 초기화되고, eventsheet_vocabulary.tres를 지우면 모든 덮어쓰기가 취소됩니다."
+Pinned %s to Favorites,%s을(를) 즐겨찾기에 고정했습니다
+Unpinned %s from Favorites,%s을(를) 즐겨찾기에서 뺐습니다
+Copied the ## @ace_* stub for %s - paste it into a provider script.,%s의 ## @ace_* 스텁을 복사했습니다 - 프로바이더 스크립트에 붙여 넣으세요.
+Copied the registrar snippet for %s - paste it into a provider script.,%s의 등록 스니펫을 복사했습니다 - 프로바이더 스크립트에 붙여 넣으세요.
+Hid %s - delete eventsheet_vocabulary.tres to restore every hidden entry.,%s을(를) 숨겼습니다 - eventsheet_vocabulary.tres를 지우면 숨긴 항목이 모두 돌아옵니다.
+Hid everything from %s.,%s의 모든 항목을 숨겼습니다.
+Reset %s to its inferred name.,%s을(를) 추론된 이름으로 되돌렸습니다.
+"Reactive alternative: %s - reacts once when it happens, instead of checking every frame.",반응형 대안: %s - 매 프레임 확인하는 대신 일이 생길 때 한 번 반응합니다.
+"Pick an object, then a verb",오브젝트를 고른 다음 동사를 고르세요
+Typing drops straight into the full search across every object.,입력하면 모든 오브젝트를 대상으로 하는 전체 검색으로 바로 넘어갑니다.
+"A group of related actions, conditions, and expressions.","관련된 액션, 조건, 식의 묶음입니다."

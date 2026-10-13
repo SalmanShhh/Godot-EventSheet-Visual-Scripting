@@ -107,19 +107,19 @@ func _draw_entries() -> void:
 			HORIZONTAL_ALIGNMENT_LEFT, -1.0, pill_font, pill[2])
 		var x: float = 26.0 * ui
 		if bool(entry.get("featured", false)):
-			_canvas.draw_string(font, Vector2(x, y + 15.0 * ui), "★", HORIZONTAL_ALIGNMENT_LEFT, -1.0, name_font, EventSheetPalette.COLOR_ACTION)
+			_canvas.draw_string(font, Vector2(x, y + 15.0 * ui), "★", HORIZONTAL_ALIGNMENT_LEFT, -1.0, name_font, EventSheetPopupUI.readable_on_panel(EventSheetPalette.COLOR_ACTION))
 			x += 14.0 * ui
 		var title: String = str(entry.get("name"))
 		var parameters: Array = entry.get("params", [])
 		if not parameters.is_empty():
 			title += " (%s)" % ", ".join(PackedStringArray(parameters))
 		_canvas.draw_string(font, Vector2(x, y + 15.0 * ui), title,
-			HORIZONTAL_ALIGNMENT_LEFT, width - x - 4.0 * ui, name_font, EventSheetPalette.TEXT_PRIMARY)
+			HORIZONTAL_ALIGNMENT_LEFT, width - x - 4.0 * ui, name_font, EventSheetPopupUI.text_color())
 		var category: String = str(entry.get("category", ""))
 		if not category.is_empty():
 			var title_width: float = font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1.0, name_font).x
 			_canvas.draw_string(font, Vector2(x + title_width + 8.0 * ui, y + 15.0 * ui), category,
-				HORIZONTAL_ALIGNMENT_LEFT, width - x - title_width - 12.0 * ui, pill_font, EventSheetPalette.COLOR_CAT_CHIP_FG)
+				HORIZONTAL_ALIGNMENT_LEFT, width - x - title_width - 12.0 * ui, pill_font, EventSheetPopupUI.readable_on_panel(EventSheetPalette.COLOR_CAT_CHIP_FG))
 		y += _row_height()
 
 

@@ -256,7 +256,7 @@ static func _test_the_deferred_fill() -> bool:
 	all_passed = _check("with the search field ready for the first keystroke",
 		picker._search.text, "") and all_passed
 	all_passed = _check("and one line saying what is happening",
-		picker._hint.text, "Loading the vocabulary...") and all_passed
+		picker._help_strip.body_label.text, "Loading the vocabulary...") and all_passed
 	all_passed = _check("the tree is not built yet - that is the point",
 		picker._tree.get_root() == null, true) and all_passed
 	var token: int = picker._fill_token
@@ -264,7 +264,7 @@ static func _test_the_deferred_fill() -> bool:
 	all_passed = _check("the frame arrives and the tree is built",
 		picker._tree.get_root() != null and picker._tree.get_root().get_child_count() > 0, true) and all_passed
 	all_passed = _check("and the hint is the mode's own words again",
-		picker._hint.text, picker._build_hint_text("append_action", false)) and all_passed
+		picker._help_strip.body_label.text, picker._build_hint_text("append_action", false)) and all_passed
 
 	# A fill posted for a dialog that has since been closed, or reopened, must do nothing at all.
 	picker.open("append_action", false, null, {})

@@ -7817,3 +7817,56 @@ Its axes are linked.,軸がリンクされています。
 Shown as an easing curve.,イージングカーブとして表示されます。
 Edited in a big text box.,大きなテキストボックスで編集します。
 Shown as a slider.,スライダーとして表示されます。
+Search expressions...,式を検索...
+Robust behaviour lookups (get_node_or_null),堅牢なビヘイビア参照 (get_node_or_null)
+"Behaviour entries insert get_node_or_null(""Name"") instead of $Name - the access that keeps working when a behaviour is attached at runtime, where a $-path to an auto-named child misses silently. Defaults on for sheets that spawn objects.","ビヘイビアの項目は $Name の代わりに get_node_or_null(""Name"") を挿入します - 実行時にビヘイビアが付けられても動き続ける参照方法で、自動命名された子への $ パスは黙って失敗します。オブジェクトを生成するシートでは既定でオンです。"
+Expressions,式
+INSERTS,挿入
+Insert an expression into %s,%s に式を挿入
+This list,この一覧
+"Double-click inserts at the cursor and the dictionary stays open, so results chain. You can also just type in the field: the same expressions autocomplete as you go.",ダブルクリックでカーソル位置に挿入し、辞書は開いたままなので結果をつなげられます。フィールドに直接入力しても、同じ式が入力に合わせて補完されます。
+Pick a node for %s,%s のノードを選択
+Pick Node,ノードを選択
+Use Node,ノードを使う
+Make %unique,%unique にする
+"Search…  (also group:enemies, script:Enemy, scene:Coin)",検索…  (group:enemies、script:Enemy、scene:Coin も可)
+Used in sheet,シートで使用中
+List every node reference this sheet makes (red = missing from the scene).,このシートが参照するノードをすべて一覧表示します (赤 = シーンにない)。
+Find a node,ノードを探す
+Results,結果
+MISSING,見つからない
+(no scene open),(シーンが開かれていません)
+"Type a name, a class or a path - or group:, script: and scene: to search by group, by script or across every scene.",名前、クラス、パスを入力します - group:、script:、scene: でグループ、スクリプト、全シーンから検索できます。
+A %s.,%s です。
+"Make %%unique hands back %s, a handle that survives moving it.",%%unique にすると %s が返ります。ノードを移動しても使える参照です。
+Help (F1),ヘルプ (F1)
+Favorites,お気に入り
+ALSO CALLED,別名
+Add Sub-Event,サブイベントを追加
+Replace Trigger,トリガーを置き換え
+Select a signal trigger to create a signal event.,シグナルトリガーを選んでシグナルイベントを作成します。
+Select a condition or trigger to create a new event.,条件かトリガーを選んで新しいイベントを作成します。
+Select a condition or trigger to create a nested sub-condition event.,条件かトリガーを選んで入れ子のサブイベントを作成します。
+Select a condition to replace the current condition.,現在の条件を置き換える条件を選びます。
+Select a trigger to replace the current trigger.,現在のトリガーを置き換えるトリガーを選びます。
+Select an action to replace the current action.,現在のアクションを置き換えるアクションを選びます。
+Add an action to %s,%s にアクションを追加
+Add a condition to %s,%s に条件を追加
+the action you pick lands here,選んだアクションはここに入ります
+the action you pick replaces one here,選んだアクションがここの一つを置き換えます
+the condition you pick joins these,選んだ条件がこれらに加わります
+the condition you pick replaces one here,選んだ条件がここの一つを置き換えます
+%s is visible again.,%s が再び表示されます。
+You may know it as %s from another engine - the word you typed and this verb are one row.,別のエンジンでは %s として知っているかもしれません - 入力した語とこの動詞は同じ行です。
+"Updated %s - right-click it again to reset, or delete eventsheet_vocabulary.tres to undo every override.",%s を更新しました - もう一度右クリックで元に戻せます。eventsheet_vocabulary.tres を削除するとすべての上書きが取り消されます。
+Pinned %s to Favorites,%s をお気に入りに固定しました
+Unpinned %s from Favorites,%s をお気に入りから外しました
+Copied the ## @ace_* stub for %s - paste it into a provider script.,%s の ## @ace_* スタブをコピーしました - プロバイダースクリプトに貼り付けてください。
+Copied the registrar snippet for %s - paste it into a provider script.,%s の登録スニペットをコピーしました - プロバイダースクリプトに貼り付けてください。
+Hid %s - delete eventsheet_vocabulary.tres to restore every hidden entry.,%s を非表示にしました - eventsheet_vocabulary.tres を削除すると非表示の項目がすべて戻ります。
+Hid everything from %s.,%s のものをすべて非表示にしました。
+Reset %s to its inferred name.,%s を推定された名前に戻しました。
+"Reactive alternative: %s - reacts once when it happens, instead of checking every frame.",リアクティブな代替: %s - 毎フレーム確認する代わりに、起きたときに一度だけ反応します。
+"Pick an object, then a verb",オブジェクトを選び、次に動詞を選びます
+Typing drops straight into the full search across every object.,入力するとすべてのオブジェクトを対象にした全体検索に切り替わります。
+"A group of related actions, conditions, and expressions.",関連するアクション、条件、式のグループです。

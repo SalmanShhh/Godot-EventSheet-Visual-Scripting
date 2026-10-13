@@ -50,7 +50,7 @@ static func run() -> bool:
 	# "Reactive alternative:On Timeout").
 	all_passed = _check("the picker's tip reads with a space after the colon",
 		ACEPickerDialog.reactive_tip("On Timeout"),
-		"[color=#e0b050]Reactive alternative: [b]On Timeout[/b] - reacts once when it happens, instead of checking every frame.[/color]") and all_passed
+		"Reactive alternative: On Timeout - reacts once when it happens, instead of checking every frame.") and all_passed
 
 	return all_passed
 

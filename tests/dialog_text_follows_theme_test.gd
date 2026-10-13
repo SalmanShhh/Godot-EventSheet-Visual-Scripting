@@ -27,6 +27,9 @@ const DIALOG_FILES: Array[String] = [
 	"res://addons/eventsheet/editor/dock/welcome_window.gd",
 	"res://addons/eventsheet/editor/dock/open_progress.gd",
 	"res://addons/eventsheet/editor/dock/rail_panels.gd",
+	"res://addons/eventsheet/editor/ace_picker.gd",
+	"res://addons/eventsheet/editor/ace_params_expression_picker.gd",
+	"res://addons/eventsheet/editor/ace_params_node_picker.gd",
 ]
 
 

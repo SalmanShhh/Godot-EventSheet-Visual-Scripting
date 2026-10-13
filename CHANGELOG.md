@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Changed: the picking windows say what the pick answers
+
+- **Add Action / Condition** names the object in its title ("Add an action to Player") and shows
+  the event the pick lands on in a band above the search ("Player Is on floor - the action you
+  pick lands here"). Its description panel is now the help strip every other window wears: the
+  verb's name, kind and category, what it does and how often this sheet uses it, the line it
+  ships as, and its guide link. A verb found by another engine's word ("WaitForSeconds") says so
+  on an ALSO CALLED line instead of on the row's tail. With nothing highlighted, or on the object
+  cards, the strip says what the window is for - the hint line above the list is gone. A Help (F1)
+  button, and F1 itself, open the highlighted verb's Manual page; the Recent pane loses its star.
+- **The Expressions dictionary** names the field in its title ("Insert an expression into Speed"),
+  bands the verb, field and what the field holds now (kept in step as results chain in), gains a
+  Close button beside Insert, and says what the list is and what the highlighted entry inserts in
+  its strip.
+- **Pick Node** names the field in its title ("Pick a node for Target") and bands it the same way;
+  its strip says what the highlighted node is and the reference it goes in as; Used in sheet rows
+  now show their class and icon; a Cancel button sits beside Use Node.
+- All three read in the editor's language and in the light theme: their group colours are
+  darkened on a light panel, and the missing-reference red follows the error tone.
+
 ### Fixed: the Inspector preview's summary reads in the editor's language
 
 - The plain-words summary under the Inspector preview (and `EventSheets.describe_inspector`) was
