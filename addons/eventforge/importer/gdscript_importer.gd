@@ -1122,13 +1122,16 @@ func _extract_custom_hint(lifted: LocalVariable, line: String) -> void:
 
 ## Parses `@export_range(min, max, step, "modifier", ...)` into the structured range spec.
 ## The three bounds keep their raw source spelling; only the canonical modifier set is
-## accepted ({} on anything else, so the caller leaves the hint verbatim).
+## accepted ({} on anything else, so the caller leaves the hint verbatim). `@export_range(min, max)`,
+## which leaves the step to Godot, reads with an empty step, which the compiler writes back unwritten.
 func _parse_range_hint(hint: String) -> Dictionary:
 	var open_paren: int = hint.find("(")
 	var close_paren: int = hint.rfind(")")
 	if open_paren < 0 or close_paren <= open_paren:
 		return {}
 	var arguments: PackedStringArray = hint.substr(open_paren + 1, close_paren - open_paren - 1).split(", ")
+	if arguments.size() == 2 and not arguments[0].strip_edges().is_empty() and not arguments[1].strip_edges().is_empty():
+		return {"min": arguments[0], "max": arguments[1], "step": ""}
 	if arguments.size() < 3:
 		return {}
 	var range_spec: Dictionary = {"min": arguments[0], "max": arguments[1], "step": arguments[2]}

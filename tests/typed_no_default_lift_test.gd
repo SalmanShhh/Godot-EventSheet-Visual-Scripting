@@ -52,7 +52,8 @@ static func run() -> bool:
 	# What the hints became is what a valued declaration of the same spelling becomes, so the
 	# Inspector-side editors of the variable dialog see them unchanged.
 	ok = SUPPORT.pins(TEST_NAME, [
-		["the range hint stays verbatim", _row(rows, "level").export_hint, "@export_range(0, 10)"],
+		["the two-number range is structured, its step left to Godot", _row(rows, "level").attributes.get("range"),
+			{"min": "0", "max": "10", "step": ""}],
 		["the modified range is structured", _row(rows, "reach").attributes.get("range"),
 			{"min": "0", "max": "10", "step": "0.5", "or_greater": true}],
 		["the file hint is structured", _row(rows, "data_path").attributes.get("file"),

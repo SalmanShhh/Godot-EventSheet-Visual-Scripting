@@ -4240,6 +4240,11 @@ static func _structured_hint_prefix(attributes: Dictionary, type_name: String) -
 		var arguments: PackedStringArray = PackedStringArray([
 			str(range_spec.get("min", "0")), str(range_spec.get("max", "100")), str(range_spec.get("step", "1")),
 		])
+		# An EMPTY step is one the source left to Godot (`@export_range(1, 3)`): it stays unwritten,
+		# unless a modifier follows, which needs the step written in front of it (Godot's default, 1).
+		var unwritten_step: bool = str(range_spec.get("step", "1")).strip_edges().is_empty()
+		if unwritten_step:
+			arguments[2] = "1"
 		# Fixed modifier order keeps the byte gate deterministic; hand-written other orders
 		# stay verbatim hints (graceful degradation, never corruption).
 		if bool(range_spec.get("or_greater", false)):
@@ -4256,6 +4261,8 @@ static func _structured_hint_prefix(attributes: Dictionary, type_name: String) -
 		var suffix: String = str(range_spec.get("suffix", "")).strip_edges()
 		if not suffix.is_empty() and not suffix.contains("\""):
 			arguments.append("\"suffix:%s\"" % suffix)
+		if unwritten_step and arguments.size() == 3:
+			arguments.remove_at(2)
 		return "@export_range(%s) " % ", ".join(arguments)
 	if type_name == "int" and attributes.get("flags") is Array and not (attributes.get("flags") as Array).is_empty():
 		return "@export_flags(%s) " % ", ".join(_labeled_value_arguments(attributes.get("flags")))

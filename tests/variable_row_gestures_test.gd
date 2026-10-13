@@ -128,7 +128,7 @@ static func _dock_gestures() -> bool:
 	rows.append(["the button reopens and saves byte for byte", _resaved(dock._current_sheet), emitted])
 	dock._ghost_row.apply_variable(RECIPES.variable_offer_for("max_jumps is a whole number from 1 to 3, in the Inspector"))
 	rows.append(["the Ghost Row's sentence declares the variable",
-		_emitted(dock._current_sheet).contains("@export_range(1, 3, 1) var max_jumps: int = 1"), true])
+		_emitted(dock._current_sheet).contains("@export_range(1, 3) var max_jumps: int = 1"), true])
 	rows.append(["...but never a second of the same name",
 		dock._ghost_row.apply_variable(RECIPES.variable_offer_for("max_jumps is a whole number")), false])
 	dock.free()

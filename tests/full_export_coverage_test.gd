@@ -90,6 +90,24 @@ static func run() -> bool:
 	all_passed = _check("and still round-trips byte-identically",
 		str(SheetCompiler.compile(hostile, "user://export_hostile.gd").get("output", "")).contains("@export_range(0, 10, 1, \"exp\", \"or_greater\") var odd_order: float = 1.0"), true) and all_passed
 
+	# ── A range that leaves its step to Godot opens as a range and saves without one ──
+	var short_source: String = "extends Node\n\n@export_range(1, 3) var max_jumps: int = 2\n"
+	var short_sheet: EventSheetResource = importer.import_external_source(short_source)
+	var short_range: Variant = null
+	for entry: Variant in short_sheet.events:
+		if entry is LocalVariable:
+			short_range = (entry as LocalVariable).attributes.get("range")
+	short_sheet.external_source_path = "user://export_short_range.gd"
+	var stepped: EventSheetResource = EventSheetResource.new()
+	stepped.host_class = "Node"
+	stepped.variables = {"zoom": {"type": "float", "default": 1.0, "exported": true,
+		"attributes": {"range": {"min": "0", "max": "4", "step": "", "or_greater": true}}}}
+	all_passed = SUPPORT.pins("full_export_coverage_test", [
+		["@export_range(1, 3) opens as a range with its step unwritten", short_range, {"min": "1", "max": "3", "step": ""}],
+		["and saves back byte-identically", str(SheetCompiler.compile(short_sheet, "user://export_short_range.gd").get("output", "")), short_source],
+		["an unwritten step before a modifier is written as Godot's default", str(SheetCompiler.compile(stepped, "user://export_stepped.gd").get("output", "")).contains("@export_range(0, 4, 1, \"or_greater\") var zoom: float = 1.0"), true],
+	]) and all_passed
+
 	# ── The dict-variable (main) path emits the same canonical shapes ──
 	var authored: EventSheetResource = EventSheetResource.new()
 	authored.host_class = "Node"

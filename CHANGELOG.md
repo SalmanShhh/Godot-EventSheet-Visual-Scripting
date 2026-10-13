@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Fixed: a range that leaves its step to Godot opens as a range
+
+- `@export_range(1, 3)` - two numbers, the step left to Godot - stayed a code line on a variable,
+  so its Inspector look could not be changed from the sheet. It now opens as the same range the
+  three-number form does and saves back exactly as written, and a modifier added later writes the
+  step in front of it (Godot's own default, 1).
+- A whole number typed in the Ghost Row with a range ("max_jumps is a whole number from 1 to 3, in
+  the Inspector") writes `@export_range(1, 3)` rather than `@export_range(1, 3, 1)`.
+
 ### Fixed: a selected variable's help strip fits beside its doors
 
 - The status-bar strip under a selected variable repeated the row's own type, name and value and
