@@ -74,7 +74,7 @@ static func run() -> bool:
 			(case_rows[0] as EventRowData).row_type == EventRowData.RowType.EVENT, true) and ok
 		# Each branch is a sub-event stating its TEST (subject and value, not the bare pattern), and `_`
 		# is the plain Else it means.
-		ok = _check("the first case's condition cell states the test", _lane_text(case_rows[0], "condition"), "phase = 0") and ok
+		ok = _check("the first case's condition cell states the test", _lane_text(case_rows[0], "condition"), "phase is 0") and ok
 		# Case bodies read as sentences (the same view every raw statement row gets).
 		ok = _check("the first case's BODY is in the action cell", _lane_text(case_rows[0], "action"), "Set velocity to (0, 0)") and ok
 		ok = _check("the default case reads as the Else it is", _lane_text(case_rows[1], "condition"), "Else") and ok

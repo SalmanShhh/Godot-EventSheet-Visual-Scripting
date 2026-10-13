@@ -103,15 +103,15 @@ static func run() -> bool:
 	var case_rows: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
 	ok = _check("one case row built", case_rows.size(), 1) and ok
 	# A match on plain values reads the way the Match window writes one, whatever it decides by: each
-	# branch states its test ("state = State.PATROL"), the subject exactly as written.
-	ok = _check("the object's own machine reads as its branch test", case_rows[0].spans[0].text, "state = State.PATROL") and ok
+	# branch states its test ("state is State.PATROL"), the subject exactly as written.
+	ok = _check("the object's own machine reads as its branch test", case_rows[0].spans[0].text, "state is State.PATROL") and ok
 	lifted_match.match_expression = "machine.current_state"
 	var foreign_rows: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
 	ok = _check("another object's machine reads as its branch test",
-		foreign_rows[0].spans[0].text, "machine.current_state = State.PATROL") and ok
+		foreign_rows[0].spans[0].text, "machine.current_state is State.PATROL") and ok
 	lifted_match.match_expression = "damage_type"
 	var plain_rows: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
-	ok = _check("a non-state match reads as its test", plain_rows[0].spans[0].text, "damage_type = State.PATROL") and ok
+	ok = _check("a non-state match reads as its test", plain_rows[0].spans[0].text, "damage_type is State.PATROL") and ok
 
 	# 5. A case body's if block is a nested CONDITION row whose guard SPEAKS: a bare self-call
 	# humanizes ("Can See Player"), `not` reads as the word Not - a beginner never meets

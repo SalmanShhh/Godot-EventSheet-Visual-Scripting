@@ -1,7 +1,7 @@
 # Godot EventSheets - the Match window and the match on the sheet.
 #
 # A match is written as parameter rows (a Value, then one row per branch and Otherwise) and lands on
-# the sheet as its event's "match state" plus one sub-event per branch - "state = State.IDLE", "Else" -
+# the sheet as its event's "match state" plus one sub-event per branch - "state is IDLE", "Else" -
 # each holding its own actions and its own Add action. Pins: the reading of a lifted match, the Add
 # action door filling ONE branch, the window's rows read back from a match, Done adding a new match in
 # one undo step, an edit keeping each branch's actions, the duplicate-value refusal, the per-state
@@ -96,8 +96,8 @@ static func _test_sheet_reading() -> bool:
 	var ok: bool = SUPPORT.pins(NAME, [
 		["the match says itself beside the trigger", head_texts, PackedStringArray(["match state"])],
 		["each branch is a sub-event holding its own actions, an empty one only its Add action", case_reading, [
-			"condition:state = State.IDLE | match_case:Set x to 0 | add_action:+ Add action",
-			"condition:state = State.RUN | add_action:+ Add action",
+			"condition:state is IDLE | match_case:Set x to 0 | add_action:+ Add action",
+			"condition:state is RUN | add_action:+ Add action",
 			"else_keyword:Else | add_action:+ Add action"]],
 		["a branch row knows its branch", case_rows.size() == 3 and case_rows[1].match_case == match_row.cases[1], true],
 		["the opened file re-emits byte for byte", SUPPORT.reemit(SOURCE, "user://match_window_player.gd"), SOURCE],
@@ -112,6 +112,13 @@ static func _test_sheet_reading() -> bool:
 	var compiled: String = str(SheetCompiler.compile(sheet, "user://match_window_out.gd").get("output", ""))
 	ok = SUPPORT.check(NAME, "the action compiles inside its branch, in place of pass",
 		compiled.contains("\t\tState.RUN:\n\t\t\tprint(\"run\")\n\t\t_:"), true) and ok
+	# Every edit swaps in a snapshot copy of the match; the branch answers kept are one sweep's only.
+	var host_event: EventRow = _first_event(editor)
+	for _sweep: int in range(3):
+		host_event.actions[0] = (host_event.actions[0] as MatchRow).duplicate(true)
+		viewport.rebuild_rows()
+	ok = SUPPORT.check(NAME, "three edits later only the live match's answer is kept",
+		viewport._row_builder._branch_matches.size(), 1) and ok
 	editor.free()
 	return ok
 

@@ -2958,6 +2958,9 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# And the networking and lighting mistakes, read from the whole sheet and then hung under
 	# the rows they are about. Derived once per sweep for the same reason: each walks every row.
 	_row_builder._sheet_findings_cache.clear()
+	# And which matches read as branches: the answer hangs on the menus and combos around the match,
+	# which this sweep may read differently, and every edit's snapshot is a new match to ask about.
+	_row_builder._branch_matches.clear()
 	if sheet == null:
 		return root_rows
 	# ── The pattern registry ──────────────────────────────────────────────────────────────────

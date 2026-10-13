@@ -171,7 +171,8 @@ var _answer_return_rows: int = 0
 # to, or the function the connect line named), so it is stamped here exactly as the verb kind is.
 var _current_menu_key: String = ""
 ## Which structured matches read as branches (see match_reads_as_branches), keyed by the match and its
-## patterns, so the walk's line count and the later span pass give the same answer.
+## patterns, so the walk's line count and the later span pass give the same answer. Emptied at the
+## start of every sweep (the viewport's row build), so it holds one sweep's matches and no more.
 var _branch_matches: Dictionary = {}
 # Per-build occurrence counters ("label" -> count) giving every paired region a STABLE
 # fold key ("label#n") that survives sessions - row uids are instance-based and cannot
@@ -8731,8 +8732,8 @@ func _build_timeline_step_rows(event_row: EventRow, indent: int) -> Array[EventR
 ## Whether a structured match reads as BRANCHES - the shape the Match window writes: every case one or
 ## more plain values, the catch-all `_` last, and a subject that is neither a menu's picked item nor a
 ## combo's spelled move (those read as rows of their own). Such a match says "match state" beside its
-## event's trigger and each case is a sub-event ("state = State.IDLE", "Else") holding its own actions.
-## Decided once per match per walk: the line count is taken during the walk and the spans are built
+## event's trigger and each case is a sub-event ("state is IDLE", "Else") holding its own actions.
+## Decided once per match per sweep: the line count is taken during the walk and the spans are built
 ## later, and the two must give the same answer.
 func match_reads_as_branches(match_row: MatchRow, event_row: EventRow) -> bool:
 	if match_row == null or not match_row.enabled or match_row.cases.is_empty():
@@ -8851,7 +8852,7 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 			state_shaped = false
 			else_if_chain = false
 		# A switch on plain values reads the way the Match window writes one: each branch is a
-		# sub-event saying "state = State.IDLE" (or Else), holding its own actions and its own Add action.
+		# sub-event saying "state is IDLE" (or Else), holding its own actions and its own Add action.
 		var branches: bool = match_reads_as_branches(match_row, event_row)
 		if branches:
 			state_shaped = false
@@ -8923,10 +8924,10 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 				chain_spans = _match_else_if_condition_spans(match_row.match_expression, pattern_text, chain_index)
 				chain_index += 1
 			if branches:
-				# Every branch states its own test in the sentence grammar the sheet uses for any
-				# comparison (the subject read in words, the value in the value colour); the catch-all
-				# is a plain Else. No Else chip on the others: each branch is its own sub-event.
-				chain_spans = _match_else_if_condition_spans(match_row.match_expression, pattern_text, 0)
+				# Every branch states its own test - "state is IDLE" - in the sentence grammar the sheet
+				# uses for any comparison (the subject read in words, the value in the value colour); the
+				# catch-all is a plain Else. No Else chip on the others: each branch is its own sub-event.
+				chain_spans = _match_else_if_condition_spans(match_row.match_expression, pattern_text, 0, true)
 			var case_row: EventRowData = _build_condition_action_row(case_label, body, indent, match_row, false, chain_spans)
 			if not chain_spans.is_empty():
 				# An Else-if's test sits on the SECOND condition line, under the Else chip, so the row is
@@ -10502,7 +10503,10 @@ func _match_reads_as_else_if(match_row: MatchRow) -> bool:
 ## case, and the Else chip ABOVE the test for every case after it - which is exactly how an event sheet
 ## draws an else-if, and exactly what a chained ternary already draws here. Several values in one
 ## pattern (`"a", "b":`) become the OR block, since that is what the branch means.
-func _match_else_if_condition_spans(subject: String, pattern: String, chain_index: int) -> Array[SemanticSpan]:
+## `branch` reads a Match window branch: "state is IDLE", the value named the way the window names it
+## (a member of one of this sheet's enums without its enum's name).
+func _match_else_if_condition_spans(subject: String, pattern: String, chain_index: int,
+		branch: bool = false) -> Array[SemanticSpan]:
 	var spans: Array[SemanticSpan] = []
 	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var text: String = pattern.strip_edges()
@@ -10525,7 +10529,8 @@ func _match_else_if_condition_spans(subject: String, pattern: String, chain_inde
 	var tests: PackedStringArray = PackedStringArray()
 	for term: String in EventSheetSentence.split_top_level(text, ", "):
 		if not term.strip_edges().is_empty():
-			tests.append("%s == %s" % [subject.strip_edges(), term.strip_edges()])
+			tests.append("%s == %s" % [subject.strip_edges(),
+				_sheet_enum_member(term.strip_edges()) if branch else term.strip_edges()])
 	if tests.is_empty():
 		return spans
 	# Routed through the shared conjunct/OR splitter so a multi-value branch draws the very same OR
@@ -10533,9 +10538,27 @@ func _match_else_if_condition_spans(subject: String, pattern: String, chain_inde
 	var carrier := EventRowData.new()
 	_append_conjunct_condition_lines(carrier, " or ".join(tests), 1 if chain_index > 0 else 0, condition_style_meta)
 	for carried: SemanticSpan in carrier.spans:
-		_say_equals_once(carried)
+		_say_equals_once(carried, " %s " % EventSheetL10n.translate("is") if branch else " = ")
 		spans.append(carried)
 	return spans
+
+
+## `State.IDLE` as `IDLE` when State is an enum this sheet declares with that member; any other value
+## exactly as written.
+func _sheet_enum_member(value: String) -> String:
+	var dot: int = value.find(".")
+	if dot <= 0 or _viewport == null or _viewport._sheet == null:
+		return value
+	var entries: Array = _viewport._sheet.events.duplicate()
+	while not entries.is_empty():
+		var entry: Variant = entries.pop_back()
+		if entry is EventGroup:
+			entries.append_array((entry as EventGroup).child_rows())
+		elif entry is EnumRow and (entry as EnumRow).enum_name == value.substr(0, dot):
+			for written: String in (entry as EnumRow).members:
+				if written.get_slice("=", 0).strip_edges() == value.substr(dot + 1):
+					return value.substr(dot + 1)
+	return value
 
 
 ## The condition cells of one PATTERN arm: the Else chip when the arm takes whatever is left, the
@@ -10579,18 +10602,24 @@ func _match_pattern_condition_spans(reading: Dictionary, chain_index: int,
 	return spans
 
 
-## An event sheet compares with a single `=`, and nobody typed the `==` in these cells: the reading
-## built it, out of a match pattern that has no operator at all. So it is written the way an event
-## sheet writes it. A comparison the user really did type is left exactly as typed, elsewhere and
-## on purpose.
-func _say_equals_once(span: SemanticSpan) -> void:
+## An event sheet compares with a single `=` (a Match branch says "is"), and nobody typed the `==` in
+## these cells: the reading built it, out of a match pattern that has no operator at all. So it is
+## written the way an event sheet writes it. A comparison the user really did type is left exactly as
+## typed, elsewhere and on purpose. Only the operator the reading put between subject and value
+## changes, never an " = " inside the value.
+func _say_equals_once(span: SemanticSpan, word: String = " = ") -> void:
 	span.text = span.text.replace(" == ", " = ")
+	var at: int = span.text.find(" = ")
+	if at >= 0:
+		span.text = span.text.substr(0, at) + word + span.text.substr(at + 3)
 	var segments: Array = span.metadata.get("bbcode_segments", []) as Array
 	for segment: Variant in segments:
 		var piece: Dictionary = segment as Dictionary
 		if piece == null:
 			continue
 		piece["text"] = str(piece.get("text", "")).replace(" == ", " = ")
+		if str(piece["text"]) == " = ":
+			piece["text"] = word
 
 
 ## The friendly one-line reading of a case-body statement: a sentence when the statement
