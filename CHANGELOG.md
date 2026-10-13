@@ -2,6 +2,30 @@
 
 ## [Unreleased]
 
+### Fixed: what the review of the window fixes found
+
+- **Replace in Project and Rename class:** both rewrote the behaviour packs under `eventsheet_addons/`
+  as plain text when a word matched, string literals and comments included, although nobody had
+  opened them and the next pack rebuild takes the change back. They now read past pack scripts; Find
+  in Project still lists matches in them.
+- **Sheet Type:** a new Name together with other changes made two undo steps, so one Ctrl+Z after OK
+  took back the type settings and left the rename in place, and the line naming the other files the
+  rename wrote was replaced by "Sheet type updated." OK is now one undo step, the status keeps the
+  file list, and the dialog says how far the rename reaches before OK, as Rename class does.
+- **Rename class:** on a `.tres` sheet, renaming the class and then renaming it back was refused as
+  "already the name of another class", because the compiled script still declared the old name.
+- **Debugger, Breakpoints tab:** unticking a breakpoint, ticking it again and then pressing Ctrl+Z
+  took it out of the list instead of leaving it there unticked. A breakpoint touched on one sheet no
+  longer keeps a row listed on another.
+- **ACE picker:** the reactive-trigger tip read "Reactive alternative:On Timeout" with no space.
+- **States and Modes:** a refused OK in States, and the Modes notice about an On entering event that
+  was kept, closed the dialog and spoke on the status bar behind it. Both now say it under the form
+  with the dialog still open; in Modes the next OK on the same answers closes it.
+- **Keyboard Shortcuts:** the Fixed keys list left out Ctrl+Y (Redo) and Backspace (delete), which the
+  clash check already guarded.
+- **History:** in split view, hovering an edit lit its rows in the left pane even when you were
+  working in the right one. It now lights the pane you are working in.
+
 ### Fixed: the sheet and project windows
 
 - **New Event Sheet:** when the name you typed was taken, the sheet was written as
