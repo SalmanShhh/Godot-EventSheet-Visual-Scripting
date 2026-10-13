@@ -27,19 +27,21 @@ static func run() -> bool:
 	ok = _check("has_unsaved_tabs sees the dirty tab", dock.has_unsaved_tabs(), true) and ok
 
 	# The guard dialog is a 3-way Save / Discard / Cancel.
-	dock._ensure_unsaved_close_dialog()
-	ok = _check("guard dialog created", dock._unsaved_close_dialog != null, true) and ok
-	ok = _check("OK button saves, so Enter keeps the work", dock._unsaved_close_dialog.ok_button_text, "Save") and ok
-	ok = _check("Cancel button aborts", dock._unsaved_close_dialog.cancel_button_text, "Cancel") and ok
-	ok = _check("Discard is its own button", _button_texts(dock._unsaved_close_dialog).has("Discard"), true) and ok
-	ok = _check("OK does not discard", dock._unsaved_close_dialog.confirmed.is_connected(dock._on_unsaved_close_save), true) and ok
+	dock._suppress_tab_signal = false
+	dock._on_tab_close_pressed(0)
+	var guard: ConfirmationDialog = dock._unsaved_close_dialog
+	ok = _check("guard dialog created", guard != null, true) and ok
+	ok = _check("OK button saves, so Enter keeps the work", guard.ok_button_text, "Save") and ok
+	ok = _check("Cancel button aborts", guard.cancel_button_text, "Cancel") and ok
+	ok = _check("Discard is its own button", _button_texts(guard).has("Discard"), true) and ok
+	ok = _check("OK does not discard", guard.confirmed.is_connected(dock._on_unsaved_close_save), true) and ok
 
-	# A custom action that is not Discard closes nothing.
-	dock._pending_close_index = 0
-	dock._on_unsaved_close_action(&"something_else")
+	# Esc and a custom action that is not Discard close nothing.
+	guard.canceled.emit()
+	guard.custom_action.emit(&"something_else")
 	ok = _check("another action leaves the tab open", dock.get_open_tab_count(), 2) and ok
 	# Discard closes the armed tab and clears the pending index.
-	dock._on_unsaved_close_action(dock.UNSAVED_DISCARD_ACTION)
+	guard.custom_action.emit(load(dock.SMALL_PROMPT_PATH).DANGER_ACTION)
 	ok = _check("discard closes the tab", dock.get_open_tab_count(), 1) and ok
 	ok = _check("pending index cleared", dock._pending_close_index, -1) and ok
 	ok = _check("remaining tab is clean", dock.has_unsaved_tabs(), false) and ok

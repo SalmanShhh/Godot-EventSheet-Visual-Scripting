@@ -7389,3 +7389,37 @@ Keep this event?,このイベントを残しますか?
 Keep it,残す
 Delete the event,イベントを削除
 Export the file exactly as it was written.,書き込まれたとおりにファイルを書き出します。
+Save %s before closing?,閉じる前に %s を保存しますか?
+This tab has edits that are not saved yet.,このタブにはまだ保存されていない編集があります。
+"Discarding closes the tab without them, and Ctrl+Z cannot bring them back.",破棄すると編集なしでタブを閉じ、Ctrl+Z でも戻せません。
+Rename %s?,%s の名前を変更しますか?
+"Ctrl+Z undoes it in this sheet. Sheets that include this one are saved with it, each with a backup in Sheet Backups.",このシートでは Ctrl+Z で戻せます。このシートを取り込むシートも一緒に保存され、それぞれシートのバックアップに控えが残ります。
+"Every use of %s in this sheet, and in every sheet that includes it, takes the new name.",このシートと、このシートを取り込むすべてのシートにある %s の使用箇所が新しい名前になります。
+1 place,1 か所
+%d places,%d か所
+not changed - check it,変更なし - 確認してください
+Renamed %s to %s,%s を %s に名前変更しました
+Changed %d place(s) in %d sheet(s).,%d か所を %d 枚のシートで変更しました。
+Ctrl+Z undoes all of it in this sheet.,このシートでは Ctrl+Z ですべて戻せます。
+Ctrl+Z undoes all of it in this sheet. Other files were saved; your version control can undo those.,このシートでは Ctrl+Z ですべて戻せます。ほかのファイルは保存されたので、バージョン管理で戻せます。
+Clear every bookmark?,すべてのブックマークを消しますか?
+Every bookmark in this sheet goes; the rows themselves stay as they are.,このシートのブックマークはすべて消えます。行そのものはそのままです。
+"Bookmarks are not part of undo, so Ctrl+Z cannot bring them back.",ブックマークは元に戻す対象ではないので、Ctrl+Z では戻せません。
+Clear all,すべて消す
+Keep old events working?,古いイベントを動くままにしますか?
+Used to be,以前の名前
+Adds this small function to the script and hides it from the picker. Nothing existing is edited.,この小さな関数をスクリプトに追加し、ピッカーには表示しません。既存のものは何も編集しません。
+Keep them working,動くままにする
+No thanks,いいえ
+You renamed %s to %s. Events that still say %s can keep working.,%s を %s に名前変更しました。まだ %s と書かれたイベントも動き続けられます。
+"Type the name %s had before, and events that still say it keep working.",%s の以前の名前を入力すると、まだその名前のイベントも動き続けます。
+Class name,クラス名
+"Ctrl+Z undoes it in open sheets. Closed files are saved, each with a backup in Sheet Backups.",開いているシートでは Ctrl+Z で戻せます。閉じたファイルは保存され、それぞれシートのバックアップに控えが残ります。
+Rename %s to %s?,%s を %s に名前変更しますか?
+Name this class?,このクラスに名前を付けますか?
+%s will be the class name everywhere %s is used.,%s が、%s が使われているすべての場所でのクラス名になります。
+Type the new name; every place listed changes with it.,新しい名前を入力してください。一覧のすべての場所が一緒に変わります。
+Make %s local to one event?,%s を 1 つのイベントのローカルにしますか?
+"Only the event you pick, and the events under it, will see it.",選んだイベントと、その下のイベントだけがこれを参照できます。
+Ctrl+Z undoes it.,Ctrl+Z で戻せます。
+Make it local,ローカルにする

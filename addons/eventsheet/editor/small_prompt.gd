@@ -33,8 +33,9 @@ const DANGER_FALLBACK := Color("#F07A7A")
 ## Builds the question under `host`, shows it when `host` is in the tree, and returns it. A dialog
 ## shown this way frees itself once it closes. `ask` holds the copy, already translated:
 ##   title   the question                       say     one plain sentence
-##   list    [[what, where], ...] (optional)    code    the code it adds or shows (optional)
-##   body    a Control under the sentence, for the one field a question may need (optional)
+##   list    [[what, where], ...] (optional)
+##   body    a Control under the list, for the one field a question may need (optional)
+##   code    the code it adds or shows, under the field (optional)
 ##   note    the muted last line, saying whether Ctrl+Z undoes it (optional)
 ##   glyph   "?" (default), "!", "i", "{ }" or "✓"
 ##   main    the safe choice's label; runs `on_main`
@@ -66,12 +67,12 @@ static func open(host: Node, ask: Dictionary) -> ConfirmationDialog:
 	places.focus_mode = Control.FOCUS_NONE
 	column.add_child(places)
 	set_list(dialog, ask.get("list", []))
+	if ask.get("body") is Control:
+		column.add_child(ask["body"] as Control)
 	var code: Control = Control.new()
 	code.name = "Code"
 	column.add_child(code)
 	set_code(dialog, str(ask.get("code", "")))
-	if ask.get("body") is Control:
-		column.add_child(ask["body"] as Control)
 	if not str(ask.get("note", "")).is_empty():
 		var note: Label = EventSheetPopupUI.hint_label(str(ask["note"]), WRAP_WIDTH)
 		note.name = "Note"
@@ -99,7 +100,8 @@ static func set_list(dialog: ConfirmationDialog, rows: Array) -> void:
 	places.visible = not rows.is_empty()
 	# Tall enough for five places before it scrolls, so a long list still fits on the screen.
 	places.custom_minimum_size = Vector2(WRAP_WIDTH,
-		EventSheetPalette.scaled_f(30.0) * clampi(rows.size(), 1, 5) + EventSheetPalette.scaled_f(6.0))
+		EventSheetPalette.scaled_f(34.0) * clampi(rows.size(), 1, 5) + EventSheetPalette.scaled_f(6.0))
+	places.scroll_vertical_enabled = rows.size() > 5
 
 
 ## Redraws the code card - for a question whose code depends on what is being typed. Empty hides it.

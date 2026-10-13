@@ -12,9 +12,8 @@ extends RefCounted
 # _open_rename_dialog / _rename_in_includers delegates for the variables-tree callers and tedium_test.
 
 var _dock: Control = null
-var _rename_window: Window = null
-var _rename_edit: LineEdit = null
-var _rename_old_name: String = ""
+## The last rename's places - {moved, touched, callers} - which the receipt after it lists.
+var _last_done: Dictionary = {}
 
 
 func init(dock: Control) -> void:
@@ -110,50 +109,59 @@ func _regex_rename(regex: RegEx, text: String, new_name: String, counter: Dictio
 	return regex.sub(text, new_name, true)
 
 
-## Opens the "Rename Everywhere" dialog seeded with old_name (the variable context menu's Rename).
-func open(old_name: String) -> void:
+## Opens the Rename question seeded with old_name (the variable context menu's Rename). Rename is
+## only pressable for a name the sheet would accept, and the sentence says why when it would not.
+func open(old_name: String) -> ConfirmationDialog:
 	if old_name.is_empty():
-		return
-	_rename_old_name = old_name
-	ensure_window()
-	_rename_edit.text = old_name
-	_rename_window.popup_centered()
-	_rename_edit.grab_focus()
-	_rename_edit.select_all()
+		return null
+	var edit: LineEdit = LineEdit.new()
+	edit.text = old_name
+	var rename: Callable = func() -> void:
+		if rename_everywhere(old_name, edit.text.strip_edges()):
+			show_done(old_name, edit.text.strip_edges())
+	var dialog: ConfirmationDialog = load(_dock.SMALL_PROMPT_PATH).open(_dock, {
+		"title": EventSheetL10n.translate("Rename %s?") % old_name,
+		"body": EventSheetPopupUI.form_row(EventSheetL10n.translate("New name"), edit),
+		"note": EventSheetL10n.translate("Ctrl+Z undoes it in this sheet. Sheets that include this one are saved with it, each with a backup in Sheet Backups."),
+		"main": EventSheetL10n.translate("Rename"),
+		"on_main": rename,
+	})
+	dialog.register_text_enter(edit)
+	var sync: Callable = func(typed: String) -> void:
+		var problem: String = "" if typed.strip_edges() == old_name \
+			else EventSheetRefactor.validate_new_name(_dock._current_sheet, old_name, typed.strip_edges())
+		(dialog.find_child("Say", true, false) as Label).text = problem if not problem.is_empty() \
+			else EventSheetL10n.translate("Every use of %s in this sheet, and in every sheet that includes it, takes the new name.") % old_name
+		dialog.get_ok_button().disabled = not problem.is_empty() or typed.strip_edges() == old_name
+	edit.text_changed.connect(sync)
+	sync.call(old_name)
+	if edit.is_inside_tree():
+		edit.grab_focus()
+		edit.select_all()
+	return dialog
 
 
-## Builds the dialog once and returns it. Separate from open() so the suite can read what the window
-## offers without a screen to pop it up on.
-func ensure_window() -> Window:
-	if _rename_window == null:
-		_rename_window = Window.new()
-		_rename_window.title = "Rename Everywhere"
-		_rename_window.size = Vector2i(380, 140)
-		_rename_window.close_requested.connect(func() -> void: _rename_window.hide())
-		var box: VBoxContainer = VBoxContainer.new()
-		box.set_anchors_preset(Control.PRESET_FULL_RECT)
-		_rename_edit = LineEdit.new()
-		_rename_edit.text_submitted.connect(func(_t: String) -> void: _confirm_rename())
-		box.add_child(_rename_edit)
-		var apply_button: Button = Button.new()
-		apply_button.text = "Rename in this sheet + every sheet that includes it"
-		apply_button.pressed.connect(_confirm_rename)
-		box.add_child(apply_button)
-		# A way out that changes nothing - the window used to offer only the rename and the title
-		# bar's close box.
-		var cancel_button: Button = Button.new()
-		cancel_button.name = "CancelButton"
-		cancel_button.text = EventSheetL10n.translate("Cancel")
-		cancel_button.pressed.connect(func() -> void: _rename_window.hide())
-		box.add_child(cancel_button)
-		_rename_window.add_child(box)
-		_dock.add_child(_rename_window)
-	return _rename_window
-
-
-func _confirm_rename() -> void:
-	if rename_everywhere(_rename_old_name, _rename_edit.text.strip_edges()):
-		_rename_window.hide()
+## The receipt after the rename: what happened, and the places it happened in. The last rename's
+## places are kept by rename_everywhere, so what is listed is what was written.
+func show_done(old_name: String, new_name: String) -> ConfirmationDialog:
+	var moved: int = int(_last_done.get("moved", 0))
+	var touched: PackedStringArray = _last_done.get("touched", PackedStringArray())
+	var places: Array = [[EventSheetL10n.translate("this sheet"),
+		EventSheetL10n.translate("1 place") if moved == 1 else EventSheetL10n.translate("%d places") % moved]]
+	for file: String in touched:
+		places.append([file, EventSheetL10n.translate("saved")])
+	for file: String in _last_done.get("callers", PackedStringArray()):
+		places.append([file, EventSheetL10n.translate("not changed - check it")])
+	return load(_dock.SMALL_PROMPT_PATH).open(_dock, {
+		"title": EventSheetL10n.translate("Renamed %s to %s") % [old_name, new_name],
+		"say": EventSheetL10n.translate("Changed %d place(s) in %d sheet(s).") % [moved, 1 + touched.size()],
+		"list": places,
+		"note": EventSheetL10n.translate("Ctrl+Z undoes all of it in this sheet.") if touched.is_empty()
+			else EventSheetL10n.translate("Ctrl+Z undoes all of it in this sheet. Other files were saved; your version control can undo those."),
+		"glyph": "✓",
+		"main": EventSheetL10n.translate("OK"),
+		"cancel": "",
+	})
 
 
 ## The full rename: validate, undoably rewrite the open sheet, then rewrite + save every project sheet
@@ -167,41 +175,42 @@ func rename_everywhere(old_name: String, new_name: String) -> bool:
 	if not problem.is_empty():
 		_dock._set_status(problem, true)
 		return false
+	var moved: Array[int] = [0]
 	var renamed: bool = _dock._perform_undoable_sheet_edit("Rename %s" % old_name, func() -> bool:
-		return EventSheetRefactor.rename_symbol(_dock._current_sheet, old_name, new_name) > 0)
+		moved[0] = EventSheetRefactor.rename_symbol(_dock._current_sheet, old_name, new_name)
+		return moved[0] > 0)
 	if not renamed:
 		_dock._set_status("\"%s\" appears nowhere in this sheet." % old_name, true)
 		return false
 	var touched: PackedStringArray = PackedStringArray()
 	if not _dock._current_sheet_path.is_empty():
 		touched = rename_in_includers(old_name, new_name, EventSheetProjectFind.list_project_sheets())
+	var callers: PackedStringArray = hand_written_callers(old_name,
+		str(_dock._current_sheet.external_source_path) if _dock._current_sheet != null else "")
+	_last_done = {"moved": moved[0], "touched": touched, "callers": callers}
 	_dock._refresh_title_strip()
 	_dock._set_status("Renamed %s → %s%s.%s" % [old_name, new_name,
 		" (also in: %s)" % ", ".join(touched) if not touched.is_empty() else "",
-		hand_written_callers_note(old_name,
-			str(_dock._current_sheet.external_source_path) if _dock._current_sheet != null else "")])
+		"" if callers.is_empty() else " " + EventSheetL10n.translate(
+			"Hand-written code was not changed - check these, which call %s by that name: %s") % [
+				old_name, ", ".join(callers)]])
 	return true
 
 
-## What a rename must say about the code it did NOT touch: the project's own scripts that call the
-## old name, listed so the one decision the plugin must not make alone is made by somebody who can.
+## The code a rename did NOT touch: the project's own scripts that call the old name, by file name,
+## listed so the one decision the plugin must not make alone is made by somebody who can.
 ##
 ## It renames nothing outside a sheet, on purpose. Hand-written code is not the plugin's to rewrite,
 ## and the index answers BY NAME - the words say "check", because a file listed here may be calling a
-## different function that happens to share the name. "" when nothing calls it, and "" while the
-## project index is still counting: a silent answer beats a wrong one.
-static func hand_written_callers_note(old_name: String, own_script: String) -> String:
-	if not EventSheetProjectShareIndex.request():
-		return ""
-	var callers: PackedStringArray = EventSheetProjectShareIndex.callers_of(old_name, own_script)
-	if callers.is_empty():
-		return ""
+## different function that happens to share the name. Empty when nothing calls it, and empty while
+## the project index is still counting: a silent answer beats a wrong one.
+static func hand_written_callers(old_name: String, own_script: String) -> PackedStringArray:
 	var names: PackedStringArray = PackedStringArray()
-	for path: String in callers:
+	if not EventSheetProjectShareIndex.request():
+		return names
+	for path: String in EventSheetProjectShareIndex.callers_of(old_name, own_script):
 		names.append(path.get_file())
-	return " " + EventSheetL10n.translate(
-		"Hand-written code was not changed - check these, which call %s by that name: %s") % [
-			old_name, ", ".join(names)]
+	return names
 
 
 ## Every candidate sheet a rename WOULD rewrite and save: the ones whose `includes` lists the open

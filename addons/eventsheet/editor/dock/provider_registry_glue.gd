@@ -36,8 +36,6 @@ var _param_specs: Dictionary = {}
 var _param_dialog: ConfirmationDialog = null
 var _param_rows: Array = []
 var _param_member: String = ""
-var _shim_dialog: ConfirmationDialog = null
-var _shim_old_name: LineEdit = null
 
 
 func init(dock: Control) -> void:
@@ -392,32 +390,42 @@ func on_provider_shim_pressed() -> void:
 	if _dock._provider_preview_tree == null or _dock._provider_preview_tree.get_selected() == null:
 		_dock._set_status("Select the function under its new name first.")
 		return
-	ensure_shim_dialog()
-	_shim_old_name.text = ""
-	_sync_shim_ok("")
-	_shim_dialog.popup_centered(Vector2i(520, 240))
+	var row: Dictionary = _dock._provider_preview_tree.get_selected().get_metadata(0) as Dictionary
+	open_shim_question(str(_dock._provider_preview_path), str(row.get("member", "")) if row != null else "")
 
 
-## Builds the Keep the old name working dialog once. Its Add Shim button is greyed while the old
-## name is empty, since a shim needs a name to forward from.
-func ensure_shim_dialog() -> void:
-	if _shim_dialog == null:
-		_shim_dialog = ConfirmationDialog.new()
-		_shim_dialog.title = "Keep the old name working"
-		_shim_dialog.ok_button_text = "Add Shim"
-		var body: VBoxContainer = EventSheetPopupUI.form_box()
-		body.add_child(EventSheetPopupUI.hint_label("Renaming a function changes the action's identity, so sheets that already use it break - silently, because the old call is baked into each row and still compiles.\nName what this function used to be called and a deprecated stand-in is added that forwards to it. Nothing existing is edited."))
-		_shim_old_name = LineEdit.new()
-		_shim_old_name.placeholder_text = "the previous function name"
-		_shim_old_name.text_changed.connect(_sync_shim_ok)
-		body.add_child(EventSheetPopupUI.form_row("Used to be", _shim_old_name))
-		_shim_dialog.add_child(EventSheetPopupUI.margined(body))
-		_shim_dialog.confirmed.connect(func() -> void: on_provider_keep_old_name(_shim_old_name.text.strip_edges()))
-		_dock.add_child(_shim_dialog)
-
-
-func _sync_shim_ok(old_name: String) -> void:
-	_shim_dialog.get_ok_button().disabled = old_name.strip_edges().is_empty()
+## The Keep old events working question. Renaming a function changes the action's identity, so
+## sheets that already use it break - silently, because the old call is baked into each row and
+## still compiles. Naming what it used to be called shows the exact stand-in that would be added
+## before anything is written, and the button stays greyed until there is one to add.
+func open_shim_question(path: String, new_member: String) -> ConfirmationDialog:
+	# One line ending, so the added lines are exactly the text after the file's own.
+	var source: String = FileAccess.get_file_as_string(path).replace("\r\n", "\n")
+	var edit: LineEdit = LineEdit.new()
+	edit.placeholder_text = EventSheetL10n.translate("the previous function name")
+	var dialog: ConfirmationDialog = load(_dock.SMALL_PROMPT_PATH).open(_dock, {
+		"title": EventSheetL10n.translate("Keep old events working?"),
+		"body": EventSheetPopupUI.form_row(EventSheetL10n.translate("Used to be"), edit),
+		"note": EventSheetL10n.translate("Adds this small function to the script and hides it from the picker. Nothing existing is edited."),
+		"glyph": "i",
+		"main": EventSheetL10n.translate("Keep them working"),
+		"cancel": EventSheetL10n.translate("No thanks"),
+		"on_main": func() -> void: on_provider_keep_old_name(edit.text.strip_edges()),
+	})
+	var sync: Callable = func(typed: String) -> void:
+		var old_name: String = typed.strip_edges()
+		var shim: Dictionary = EventSheetACEAnnotationWriter.forwarding_shim(source, old_name, new_member)
+		var can_add: bool = bool(shim.get("ok", false))
+		load(_dock.SMALL_PROMPT_PATH).set_code(dialog,
+			str(shim["source"]).substr(source.length()).strip_edges() if can_add else "")
+		(dialog.find_child("Say", true, false) as Label).text = \
+			EventSheetL10n.translate("You renamed %s to %s. Events that still say %s can keep working.") % [old_name, new_member, old_name] if can_add \
+			else EventSheetL10n.translate("Type the name %s had before, and events that still say it keep working.") % new_member if old_name.is_empty() \
+			else str(shim.get("reason", ""))
+		dialog.get_ok_button().disabled = not can_add
+	edit.text_changed.connect(sync)
+	sync.call("")
+	return dialog
 
 
 ## Keeps a verb that has been RENAMED working for sheets that already use it.

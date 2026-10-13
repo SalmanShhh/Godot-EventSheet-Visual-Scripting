@@ -94,15 +94,21 @@ static func run() -> bool:
 	dock._preview_provider_script("res://tests/fixtures/typed_provider_fixture.gd", false)
 	ok = _check("switching provider clears pending specs", glue.param_specs_for("start_wave"), {}) and ok
 
-	# Keep the old name working: Add Shim waits for the name it forwards from.
-	glue.ensure_shim_dialog()
-	var add_shim: Button = glue._shim_dialog.get_ok_button()
-	glue._shim_old_name.text_changed.emit("   ")
+	# Keep old events working: the button waits for the name it forwards from, and the exact
+	# stand-in it would add is shown before anything is written.
+	var shim: ConfirmationDialog = glue.open_shim_question("res://tests/fixtures/typed_provider_fixture.gd", "start_wave")
+	var add_shim: Button = shim.get_ok_button()
+	var old_name: LineEdit = shim.find_children("*", "LineEdit", true, false).back() as LineEdit
+	old_name.text_changed.emit("   ")
 	var blank_disabled: bool = add_shim.disabled
-	glue._shim_old_name.text_changed.emit("old_start_wave")
+	var blank_code: bool = (shim.find_child("Code", true, false) as Control).visible
+	old_name.text_changed.emit("old_start_wave")
+	var code: String = (shim.find_child("Code", true, false).find_children("*", "Label", true, false)[0] as Label).text
 	ok = SUPPORT.pins("provider_curate_test", [
-		["Add Shim is greyed for an empty old name", blank_disabled, true],
+		["Keep them working is greyed for an empty old name, with no code to show", [blank_disabled, blank_code], [true, false]],
 		["and live once one is typed", add_shim.disabled, false],
+		["the code it adds is shown first", code,
+			"## @ace_deprecated(\"Renamed to start_wave.\", \"method:start_wave\")\nfunc old_start_wave(index: int) -> void:\n\tstart_wave(index)"],
 	]) and ok
 
 	dock.free()

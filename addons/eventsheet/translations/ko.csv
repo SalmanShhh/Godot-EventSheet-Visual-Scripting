@@ -7389,3 +7389,37 @@ Keep this event?,이 이벤트를 유지할까요?
 Keep it,유지
 Delete the event,이벤트 삭제
 Export the file exactly as it was written.,파일을 작성된 그대로 내보냅니다.
+Save %s before closing?,닫기 전에 %s을(를) 저장할까요?
+This tab has edits that are not saved yet.,이 탭에는 아직 저장하지 않은 편집이 있습니다.
+"Discarding closes the tab without them, and Ctrl+Z cannot bring them back.",버리면 편집 없이 탭을 닫으며 Ctrl+Z로 되돌릴 수 없습니다.
+Rename %s?,%s의 이름을 바꿀까요?
+"Ctrl+Z undoes it in this sheet. Sheets that include this one are saved with it, each with a backup in Sheet Backups.","이 시트에서는 Ctrl+Z로 되돌릴 수 있습니다. 이 시트를 포함하는 시트도 함께 저장되며, 각각 시트 백업에 백업이 남습니다."
+"Every use of %s in this sheet, and in every sheet that includes it, takes the new name.",이 시트와 이 시트를 포함하는 모든 시트에서 %s의 모든 사용처가 새 이름을 갖게 됩니다.
+1 place,1곳
+%d places,%d곳
+not changed - check it,변경 안 됨 - 확인하세요
+Renamed %s to %s,%s을(를) %s(으)로 이름을 바꿨습니다
+Changed %d place(s) in %d sheet(s).,%d곳을 시트 %d개에서 변경했습니다.
+Ctrl+Z undoes all of it in this sheet.,이 시트에서는 Ctrl+Z로 모두 되돌릴 수 있습니다.
+Ctrl+Z undoes all of it in this sheet. Other files were saved; your version control can undo those.,이 시트에서는 Ctrl+Z로 모두 되돌릴 수 있습니다. 다른 파일은 저장되었으므로 버전 관리로 되돌릴 수 있습니다.
+Clear every bookmark?,모든 책갈피를 지울까요?
+Every bookmark in this sheet goes; the rows themselves stay as they are.,"이 시트의 모든 책갈피가 사라지며, 행 자체는 그대로 남습니다."
+"Bookmarks are not part of undo, so Ctrl+Z cannot bring them back.",책갈피는 실행 취소 대상이 아니므로 Ctrl+Z로 되돌릴 수 없습니다.
+Clear all,모두 지우기
+Keep old events working?,예전 이벤트가 계속 동작하게 할까요?
+Used to be,이전 이름
+Adds this small function to the script and hides it from the picker. Nothing existing is edited.,이 작은 함수를 스크립트에 추가하고 선택기에서는 숨깁니다. 기존 내용은 아무것도 편집하지 않습니다.
+Keep them working,계속 동작하게 하기
+No thanks,괜찮습니다
+You renamed %s to %s. Events that still say %s can keep working.,%s을(를) %s(으)로 이름을 바꿨습니다. 아직 %s(이)라고 쓰인 이벤트도 계속 동작할 수 있습니다.
+"Type the name %s had before, and events that still say it keep working.",%s의 이전 이름을 입력하면 아직 그 이름을 쓰는 이벤트도 계속 동작합니다.
+Class name,클래스 이름
+"Ctrl+Z undoes it in open sheets. Closed files are saved, each with a backup in Sheet Backups.","열린 시트에서는 Ctrl+Z로 되돌릴 수 있습니다. 닫힌 파일은 저장되며, 각각 시트 백업에 백업이 남습니다."
+Rename %s to %s?,%s을(를) %s(으)로 이름을 바꿀까요?
+Name this class?,이 클래스에 이름을 붙일까요?
+%s will be the class name everywhere %s is used.,%s이(가) %s이(가) 쓰이는 모든 곳에서 클래스 이름이 됩니다.
+Type the new name; every place listed changes with it.,새 이름을 입력하세요. 목록의 모든 곳이 함께 바뀝니다.
+Make %s local to one event?,%s을(를) 한 이벤트의 로컬로 만들까요?
+"Only the event you pick, and the events under it, will see it.",선택한 이벤트와 그 아래 이벤트만 이것을 볼 수 있습니다.
+Ctrl+Z undoes it.,Ctrl+Z로 되돌릴 수 있습니다.
+Make it local,로컬로 만들기

@@ -7389,3 +7389,37 @@ Keep this event?,Mantenere questo evento?
 Keep it,Mantienilo
 Delete the event,Elimina l'evento
 Export the file exactly as it was written.,Esporta il file esattamente come è stato scritto.
+Save %s before closing?,Salvare %s prima di chiudere?
+This tab has edits that are not saved yet.,Questa scheda ha modifiche non ancora salvate.
+"Discarding closes the tab without them, and Ctrl+Z cannot bring them back.","Scartare chiude la scheda senza di esse, e Ctrl+Z non può recuperarle."
+Rename %s?,Rinominare %s?
+"Ctrl+Z undoes it in this sheet. Sheets that include this one are saved with it, each with a backup in Sheet Backups.","Ctrl+Z lo annulla in questo foglio. I fogli che includono questo vengono salvati insieme, ognuno con un backup in Backup dei fogli."
+"Every use of %s in this sheet, and in every sheet that includes it, takes the new name.","Ogni uso di %s in questo foglio, e in ogni foglio che lo include, prende il nuovo nome."
+1 place,1 punto
+%d places,%d punti
+not changed - check it,non modificato - controllalo
+Renamed %s to %s,%s rinominato in %s
+Changed %d place(s) in %d sheet(s).,Modificati %d punto/i in %d foglio/i.
+Ctrl+Z undoes all of it in this sheet.,Ctrl+Z annulla tutto in questo foglio.
+Ctrl+Z undoes all of it in this sheet. Other files were saved; your version control can undo those.,Ctrl+Z annulla tutto in questo foglio. Altri file sono stati salvati; il tuo controllo di versione può annullarli.
+Clear every bookmark?,Cancellare tutti i segnalibri?
+Every bookmark in this sheet goes; the rows themselves stay as they are.,Tutti i segnalibri di questo foglio spariscono; le righe restano come sono.
+"Bookmarks are not part of undo, so Ctrl+Z cannot bring them back.","I segnalibri non fanno parte dell'annullamento, quindi Ctrl+Z non può recuperarli."
+Clear all,Cancella tutti
+Keep old events working?,Mantenere funzionanti i vecchi eventi?
+Used to be,Prima era
+Adds this small function to the script and hides it from the picker. Nothing existing is edited.,Aggiunge questa piccola funzione allo script e la nasconde dal selettore. Nulla di esistente viene modificato.
+Keep them working,Mantienili funzionanti
+No thanks,No grazie
+You renamed %s to %s. Events that still say %s can keep working.,Hai rinominato %s in %s. Gli eventi che dicono ancora %s possono continuare a funzionare.
+"Type the name %s had before, and events that still say it keep working.","Scrivi il nome che %s aveva prima, e gli eventi che lo dicono ancora continuano a funzionare."
+Class name,Nome della classe
+"Ctrl+Z undoes it in open sheets. Closed files are saved, each with a backup in Sheet Backups.","Ctrl+Z lo annulla nei fogli aperti. I file chiusi vengono salvati, ognuno con un backup in Backup dei fogli."
+Rename %s to %s?,Rinominare %s in %s?
+Name this class?,Dare un nome a questa classe?
+%s will be the class name everywhere %s is used.,%s sarà il nome della classe ovunque si usi %s.
+Type the new name; every place listed changes with it.,Scrivi il nuovo nome; ogni punto elencato cambia con esso.
+Make %s local to one event?,Rendere %s locale a un evento?
+"Only the event you pick, and the events under it, will see it.","Solo l'evento che scegli, e gli eventi sotto di esso, la vedranno."
+Ctrl+Z undoes it.,Ctrl+Z lo annulla.
+Make it local,Rendila locale

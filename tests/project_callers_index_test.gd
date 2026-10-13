@@ -67,12 +67,10 @@ static func run() -> bool:
 		many.count("·") >= 3 and many.contains("more"), true) and ok
 
 	# ── What a rename says about the code it will not touch ─────────────────────────────────
-	var note: String = EventSheetRenameRefactor.hand_written_callers_note("grant_xp", "")
-	ok = _check("the rename note names the caller it did not change",
-		note.contains("progress.gd"), true) and ok
-	ok = _check("and says the code was not changed", note.contains("not changed"), true) and ok
-	ok = _check("a rename nothing else calls says nothing",
-		EventSheetRenameRefactor.hand_written_callers_note("no_function_is_called_this", ""), "") and ok
+	ok = _check("the rename names the caller it did not change",
+		EventSheetRenameRefactor.hand_written_callers("grant_xp", "").has("progress.gd"), true) and ok
+	ok = _check("a rename nothing else calls names nothing",
+		EventSheetRenameRefactor.hand_written_callers("no_function_is_called_this", ""), PackedStringArray()) and ok
 
 	# ── One scan, dropped whole, and cheap to build again ───────────────────────────────────
 	EventSheetProjectShareIndex.clear_cache()

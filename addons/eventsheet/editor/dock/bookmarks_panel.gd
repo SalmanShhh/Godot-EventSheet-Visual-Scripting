@@ -16,8 +16,6 @@ const ENTRY_NUMBER_COLOR := Color("#6f7580")
 ## 4.7's editor theme carries no icon named "Bookmark"). Asked of the editor theme, so a run with no
 ## editor (the suite) simply shows the words.
 const ENTRY_ICON := "Favorites"
-## The confirmation's destructive button sends this action; OK only keeps the marks.
-const CLEAR_ACTION: StringName = &"clear_bookmarks"
 
 var _dock: Control = null
 
@@ -91,26 +89,20 @@ func open() -> void:
 
 
 ## Clear All asks first. Bookmarks live outside the undo stack, so a slip would cost every mark with
-## no way back: OK (and Enter) KEEPS them, Cancel and Esc keep them too, and only the separate
-## Clear All button removes them.
+## no way back: OK (and Enter) KEEPS them, Esc keeps them too, and only the red Clear all removes them.
 func ask_clear_all() -> void:
-	if clear_confirm == null:
-		clear_confirm = ConfirmationDialog.new()
-		clear_confirm.title = EventSheetL10n.translate("Clear All Bookmarks")
-		clear_confirm.dialog_text = EventSheetL10n.translate("Remove every bookmark from this sheet? Bookmarks are not part of undo, so they cannot be brought back.")
-		clear_confirm.ok_button_text = EventSheetL10n.translate("Keep Bookmarks")
-		clear_confirm.get_cancel_button().hide()
-		clear_confirm.add_button(EventSheetL10n.translate("Clear All"), true, CLEAR_ACTION)
-		clear_confirm.custom_action.connect(_on_clear_confirm_action)
-		_dock.add_child(clear_confirm)
-	if clear_confirm.is_inside_tree():
-		clear_confirm.popup_centered()
+	clear_confirm = load(_dock.SMALL_PROMPT_PATH).open(_dock, {
+		"title": EventSheetL10n.translate("Clear every bookmark?"),
+		"say": EventSheetL10n.translate("Every bookmark in this sheet goes; the rows themselves stay as they are."),
+		"note": EventSheetL10n.translate("Bookmarks are not part of undo, so Ctrl+Z cannot bring them back."),
+		"main": EventSheetL10n.translate("Keep Bookmarks"),
+		"cancel": "",
+		"danger": EventSheetL10n.translate("Clear all"),
+		"on_danger": _clear_all,
+	})
 
 
-func _on_clear_confirm_action(action: StringName) -> void:
-	if action != CLEAR_ACTION:
-		return
-	clear_confirm.hide()
+func _clear_all() -> void:
 	var view: EventSheetViewport = _view()
 	if view != null:
 		view.clear_bookmarks()

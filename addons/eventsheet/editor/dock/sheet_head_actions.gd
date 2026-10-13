@@ -19,8 +19,6 @@ var _icon_dialog: EditorFileDialog = null
 var _add_menu: PopupMenu = null
 var _add_offers: PackedStringArray = PackedStringArray()
 var _rename_dialog: ConfirmationDialog = null
-var _rename_edit: LineEdit = null
-var _rename_count: Label = null
 var _text_dialog: ConfirmationDialog = null
 var _text_edit: LineEdit = null
 var _text_band: String = ""
@@ -241,40 +239,66 @@ static func rename_reach_text(reach: Dictionary) -> String:
 
 ## The head's name band, renamed everywhere: the class line of this file plus every row of every
 ## sheet that names the class.
+## The question names every file the rename will change before it changes any of them, and refuses
+## a name that is not a class name or that another class already has.
 func open_class_rename() -> void:
-	var current: String = _dock._current_sheet.custom_class_name.strip_edges()
-	if current.is_empty():
-		current = str(EventSheetHeadBands.facts(_dock._current_sheet, _prelude_text()).get("class_name", ""))
-	if _rename_dialog == null:
-		_rename_dialog = ConfirmationDialog.new()
-		_rename_dialog.title = "Rename class"
-		var form: VBoxContainer = EventSheetPopupUI.form_box()
-		_rename_edit = LineEdit.new()
-		form.add_child(EventSheetPopupUI.form_row("Class name", _rename_edit))
-		_rename_count = EventSheetPopupUI.hint_label("")
-		form.add_child(_rename_count)
-		_rename_dialog.add_child(EventSheetPopupUI.margined(form))
-		_rename_dialog.confirmed.connect(_apply_class_rename)
-		_dock.add_child(_rename_dialog)
-	_rename_edit.text = current
-	_rename_count.text = class_rename_reach_text()
-	_rename_dialog.popup_centered(Vector2i(420, 0))
-	_rename_edit.grab_focus()
-	_rename_edit.select_all()
+	var current: String = _current_class_name()
+	var places: Array = []
+	for entry: Dictionary in rename_class_across(current, current + "_",
+			EventSheetFindReferences.open_sheets_of(_dock), _generated_paths(),
+			EventSheetProjectFind.list_all_project_sheets(), false):
+		var count: int = int(entry.get("count", 0))
+		places.append([str(entry.get("path", "")).get_file(),
+			EventSheetL10n.translate("1 place") if count == 1 else EventSheetL10n.translate("%d places") % count])
+	var edit: LineEdit = LineEdit.new()
+	edit.text = current
+	_rename_dialog = load(_dock.SMALL_PROMPT_PATH).open(_dock, {
+		"list": places,
+		"body": EventSheetPopupUI.form_row(EventSheetL10n.translate("Class name"), edit),
+		"note": EventSheetL10n.translate("Ctrl+Z undoes it in open sheets. Closed files are saved, each with a backup in Sheet Backups."),
+		"main": EventSheetL10n.translate("Rename"),
+		"on_main": func() -> void: apply_class_rename_to(edit.text),
+	})
+	_rename_dialog.register_text_enter(edit)
+	edit.text_changed.connect(func(typed: String) -> void: _sync_class_rename(current, typed))
+	_sync_class_rename(current, current)
+	if edit.is_inside_tree():
+		edit.grab_focus()
+		edit.select_all()
+
+
+## Words the class-rename question to the name typed so far: the title asks it, the sentence says
+## what it will do or why it cannot, and Rename is only pressable for a name it would accept.
+func _sync_class_rename(current: String, typed: String) -> void:
+	var wanted: String = typed.strip_edges()
+	var problem: String = ""
+	if not wanted.is_empty() and not EventSheetIdentifierRules.is_valid(wanted):
+		problem = EventSheetL10n.translate("\"%s\" cannot be a class name.") % wanted
+	elif wanted != current and class_name_taken(wanted, class_name_own_paths()):
+		problem = EventSheetL10n.translate("\"%s\" is already the name of another class.") % wanted
+	var renaming: bool = problem.is_empty() and not wanted.is_empty() and wanted != current
+	_rename_dialog.title = EventSheetL10n.translate("Rename %s to %s?") % [current, wanted] if renaming and not current.is_empty() \
+		else EventSheetL10n.translate("Rename %s?") % current if not current.is_empty() \
+		else EventSheetL10n.translate("Name this class?")
+	(_rename_dialog.find_child("Say", true, false) as Label).text = problem if not problem.is_empty() \
+		else EventSheetL10n.translate("%s will be the class name everywhere %s is used.") % [wanted, current] if renaming \
+		else EventSheetL10n.translate("Type the new name; every place listed changes with it.")
+	_rename_dialog.get_ok_button().disabled = not renaming
 
 
 ## What renaming this sheet's class would touch, as the sentence a rename dialog says before it
 ## writes anything. Every surface that offers the rename reads it here, so they cannot disagree.
 func class_rename_reach_text() -> String:
+	return rename_reach_text(
+		rename_reach(_current_class_name(), EventSheetFindReferences.open_sheets_of(_dock), _generated_paths()))
+
+
+## The class name this sheet answers to now: the one its sheet records, else the one its file declares.
+func _current_class_name() -> String:
 	var current: String = _dock._current_sheet.custom_class_name.strip_edges()
 	if current.is_empty():
 		current = str(EventSheetHeadBands.facts(_dock._current_sheet, _prelude_text()).get("class_name", ""))
-	return rename_reach_text(
-		rename_reach(current, EventSheetFindReferences.open_sheets_of(_dock), _generated_paths()))
-
-
-func _apply_class_rename() -> void:
-	apply_class_rename_to(_rename_edit.text)
+	return current
 
 
 ## Renames the sheet's class to new_name_text and every use with it - the class line, this sheet's
@@ -292,9 +316,7 @@ func apply_class_rename_to(new_name_text: String, action_name: String = "Rename 
 	if not EventSheetIdentifierRules.is_valid(new_name):
 		_dock._set_status(EventSheetL10n.translate("\"%s\" cannot be a class name.") % new_name, true)
 		return false
-	var old_name: String = _dock._current_sheet.custom_class_name.strip_edges()
-	if old_name.is_empty():
-		old_name = str(EventSheetHeadBands.facts(_dock._current_sheet, _prelude_text()).get("class_name", ""))
+	var old_name: String = _current_class_name()
 	if old_name == new_name:
 		return false
 	var own_paths: PackedStringArray = _own_paths()

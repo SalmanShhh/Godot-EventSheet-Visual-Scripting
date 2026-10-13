@@ -7389,3 +7389,37 @@ Keep this event?,Оставить это событие?
 Keep it,Оставить
 Delete the event,Удалить событие
 Export the file exactly as it was written.,"Экспортировать файл точно в том виде, в каком он был записан."
+Save %s before closing?,Сохранить %s перед закрытием?
+This tab has edits that are not saved yet.,В этой вкладке есть несохранённые правки.
+"Discarding closes the tab without them, and Ctrl+Z cannot bring them back.","Отказ закроет вкладку без них, и Ctrl+Z их не вернёт."
+Rename %s?,Переименовать %s?
+"Ctrl+Z undoes it in this sheet. Sheets that include this one are saved with it, each with a backup in Sheet Backups.","Ctrl+Z отменяет это в этом листе. Листы, которые включают этот, сохраняются вместе с ним, у каждого есть копия в «Резервных копиях листов»."
+"Every use of %s in this sheet, and in every sheet that includes it, takes the new name.","Каждое использование %s в этом листе и во всех листах, которые его включают, получит новое имя."
+1 place,1 место
+%d places,мест: %d
+not changed - check it,не изменено - проверьте
+Renamed %s to %s,%s переименован в %s
+Changed %d place(s) in %d sheet(s).,"Изменено мест: %d, листов: %d."
+Ctrl+Z undoes all of it in this sheet.,Ctrl+Z отменяет всё это в этом листе.
+Ctrl+Z undoes all of it in this sheet. Other files were saved; your version control can undo those.,Ctrl+Z отменяет всё это в этом листе. Другие файлы сохранены; их можно откатить в системе контроля версий.
+Clear every bookmark?,Удалить все закладки?
+Every bookmark in this sheet goes; the rows themselves stay as they are.,Все закладки этого листа исчезнут; сами строки останутся как есть.
+"Bookmarks are not part of undo, so Ctrl+Z cannot bring them back.","Закладки не входят в отмену, поэтому Ctrl+Z их не вернёт."
+Clear all,Удалить все
+Keep old events working?,Сохранить работу старых событий?
+Used to be,Раньше было
+Adds this small function to the script and hides it from the picker. Nothing existing is edited.,Добавляет в скрипт эту небольшую функцию и скрывает её из выбора. Ничего существующего не меняется.
+Keep them working,Сохранить их работу
+No thanks,"Нет, спасибо"
+You renamed %s to %s. Events that still say %s can keep working.,"Вы переименовали %s в %s. События, где всё ещё написано %s, могут продолжать работать."
+"Type the name %s had before, and events that still say it keep working.","Введите прежнее имя %s, и события, где оно ещё написано, продолжат работать."
+Class name,Имя класса
+"Ctrl+Z undoes it in open sheets. Closed files are saved, each with a backup in Sheet Backups.","Ctrl+Z отменяет это в открытых листах. Закрытые файлы сохраняются, у каждого есть копия в «Резервных копиях листов»."
+Rename %s to %s?,Переименовать %s в %s?
+Name this class?,Дать имя этому классу?
+%s will be the class name everywhere %s is used.,"%s станет именем класса везде, где используется %s."
+Type the new name; every place listed changes with it.,Введите новое имя; все перечисленные места изменятся вместе с ним.
+Make %s local to one event?,Сделать %s локальной для одного события?
+"Only the event you pick, and the events under it, will see it.",Её увидят только выбранное событие и события под ним.
+Ctrl+Z undoes it.,Ctrl+Z отменяет это.
+Make it local,Сделать локальной

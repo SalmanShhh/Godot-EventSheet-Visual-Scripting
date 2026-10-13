@@ -971,35 +971,22 @@ func _prompt_convert_global_variable_to_local(entry: Dictionary) -> void:
 	if options.is_empty():
 		_dock._set_status("Add an event row first, then convert this variable to local.", true)
 		return
-	var dialog: ConfirmationDialog = ConfirmationDialog.new()
-	dialog.title = "Convert Global Variable to Local"
-	var content: VBoxContainer = VBoxContainer.new()
-	content.custom_minimum_size = Vector2(420.0, 120.0)
-	dialog.add_child(content)
-	var summary: Label = Label.new()
-	summary.text = "Select the target event for local variable %s." % str(entry.get("name", ""))
-	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	# Width-bound the label itself - the parent VBox's custom_minimum_size.x does not bound the
-	# child's min-height pass, so an unbounded autowrap label would balloon this dialog on launch.
-	summary.custom_minimum_size = Vector2(400.0, 0.0)
-	content.add_child(summary)
 	var picker: OptionButton = OptionButton.new()
 	picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	for option in options:
+	for option: Dictionary in options:
 		picker.add_item(str(option.get("label", "")))
 		picker.set_item_metadata(picker.item_count - 1, str(option.get("uid", "")))
-	content.add_child(picker)
-	dialog.confirmed.connect(func() -> void:
-		var selected_uid: String = str(picker.get_item_metadata(picker.selected))
-		var converted: bool = _convert_variable_scope(entry, "local", selected_uid)
-		if not converted:
+	var convert: Callable = func() -> void:
+		if not _convert_variable_scope(entry, "local", str(picker.get_item_metadata(picker.selected))):
 			_dock._set_status("Could not convert variable to local scope.", true)
-		dialog.queue_free()
-	)
-	dialog.canceled.connect(func() -> void: dialog.queue_free())
-	dialog.close_requested.connect(func() -> void: dialog.queue_free())
-	_dock.add_child(dialog)
-	dialog.popup_centered(Vector2i(460, 180))
+	load(_dock.SMALL_PROMPT_PATH).open(_dock, {
+		"title": EventSheetL10n.translate("Make %s local to one event?") % str(entry.get("name", "")),
+		"say": EventSheetL10n.translate("Only the event you pick, and the events under it, will see it."),
+		"body": picker,
+		"note": EventSheetL10n.translate("Ctrl+Z undoes it."),
+		"main": EventSheetL10n.translate("Make it local"),
+		"on_main": convert,
+	})
 
 
 func _convert_variable_scope(entry: Dictionary, target_scope: String, target_event_uid: String = "") -> bool:

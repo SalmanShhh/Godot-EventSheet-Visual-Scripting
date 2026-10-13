@@ -1501,48 +1501,32 @@ func _on_tab_selected(index: int) -> void:
 func _on_tab_close_pressed(index: int) -> void:
 	if _suppress_tab_signal:
 		return
-	# Guard against losing work: a dirty tab asks Save / Discard / Cancel before it closes.
+	# Guard against losing work: a dirty tab asks Save / Discard / Cancel before it closes. Save is the
+	# OK button, so Enter (the key a hand presses without reading) keeps the work; Discard is the red
+	# button that must be clicked on purpose; Cancel and Esc just abort.
 	if is_tab_dirty(index):
 		_pending_close_index = index
-		_ensure_unsaved_close_dialog()
 		var tab: Dictionary = _open_tabs[index]
-		var tab_title: String = _format_sheet_title(tab.get("sheet"), str(tab.get("path", "")))
-		_unsaved_close_dialog.dialog_text = "\"%s\" has unsaved changes.\n\nSave before closing?" % tab_title
-		_unsaved_close_dialog.popup_centered(Vector2i(440, 150))
+		_unsaved_close_dialog = load(SMALL_PROMPT_PATH).open(self, {
+			"title": EventSheetL10n.translate("Save %s before closing?") % _format_sheet_title(tab.get("sheet"), str(tab.get("path", ""))),
+			"say": EventSheetL10n.translate("This tab has edits that are not saved yet."),
+			"note": EventSheetL10n.translate("Discarding closes the tab without them, and Ctrl+Z cannot bring them back."),
+			"glyph": "!",
+			"main": EventSheetL10n.translate("Save"),
+			"danger": EventSheetL10n.translate("Discard"),
+			"on_main": _on_unsaved_close_save,
+			"on_danger": _discard_pending_close,
+		})
 		return
 	_close_tab(index)
 
-## 3-way "you have unsaved changes" guard for closing a dirty tab (Save / Discard / Cancel).
+## The "you have unsaved changes" guard for closing a dirty tab, and the tab it was asked for.
 var _unsaved_close_dialog: ConfirmationDialog = null
 var _pending_close_index: int = -1
 
 
-func _ensure_unsaved_close_dialog() -> void:
-	if _unsaved_close_dialog != null:
-		return
-	_unsaved_close_dialog = ConfirmationDialog.new()
-	_unsaved_close_dialog.title = "Unsaved Changes"
-	# Save is the OK button, so Enter (the key a hand presses without reading) keeps the work. Discard
-	# is the one button that loses edits, so it is a separate button that must be clicked on purpose;
-	# Cancel and Esc just abort.
-	_unsaved_close_dialog.ok_button_text = "Save"
-	_unsaved_close_dialog.cancel_button_text = "Cancel"
-	_unsaved_close_dialog.add_button(UNSAVED_DISCARD_TEXT, true, UNSAVED_DISCARD_ACTION)
-	_unsaved_close_dialog.confirmed.connect(_on_unsaved_close_save)
-	_unsaved_close_dialog.custom_action.connect(_on_unsaved_close_action)
-	add_child(_unsaved_close_dialog)
-
-
-## The Unsaved Changes dialog's Discard button: its label and the action it sends.
-const UNSAVED_DISCARD_TEXT: String = "Discard"
-const UNSAVED_DISCARD_ACTION: StringName = &"discard"
-
-
-## Discard (the custom button): close the tab, losing its unsaved edits.
-func _on_unsaved_close_action(action: StringName) -> void:
-	if action != UNSAVED_DISCARD_ACTION:
-		return
-	_unsaved_close_dialog.hide()
+## Discard (the red button): close the tab, losing its unsaved edits.
+func _discard_pending_close() -> void:
 	var index: int = _pending_close_index
 	_pending_close_index = -1
 	if index >= 0:

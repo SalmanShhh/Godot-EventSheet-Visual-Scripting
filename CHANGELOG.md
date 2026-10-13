@@ -15,6 +15,18 @@
   as the safe answer; with unsaved edits, Keep mine is the safe answer and Use the file on disk is
   the red one, and the prompt says plainly that Ctrl+Z cannot bring the edits back. Refocusing the
   editor while the question is open no longer asks it a second time.
+- **Rename (a variable) asks Rename health?** and keeps Rename greyed, saying why, until the name
+  typed is one the sheet accepts. Afterwards a short receipt - **Renamed health to hit_points** -
+  lists the places it changed: this sheet with its count, each sheet that includes it (saved), and
+  any hand-written script that still calls the old name (not changed - check it).
+- **Rename class asks Rename Player to Hero?** as you type, lists every file it will change with
+  its count before it changes any, and refuses a name another class already has, saying so.
+- **Keep old events working?** (the providers panel's forwarding stand-in) shows the exact lines
+  it would add to the script as you type the old name, and the button stays greyed until there is
+  one to add.
+- **Save before closing?**, **Clear every bookmark?** and **Make a variable local to one event?**
+  take the same shape: Save and Keep Bookmarks stay the Enter answers, Discard and Clear all are
+  the red buttons on the left.
 
 ### Added: the window kit's dropdown, view switch, result card and state note
 

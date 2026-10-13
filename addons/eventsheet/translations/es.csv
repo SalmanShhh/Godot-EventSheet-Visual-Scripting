@@ -7389,3 +7389,37 @@ Keep this event?,¿Conservar este evento?
 Keep it,Conservarlo
 Delete the event,Eliminar el evento
 Export the file exactly as it was written.,Exporta el archivo exactamente como se escribió.
+Save %s before closing?,¿Guardar %s antes de cerrar?
+This tab has edits that are not saved yet.,Esta pestaña tiene cambios que aún no se han guardado.
+"Discarding closes the tab without them, and Ctrl+Z cannot bring them back.","Descartar cierra la pestaña sin ellos, y Ctrl+Z no puede recuperarlos."
+Rename %s?,¿Renombrar %s?
+"Ctrl+Z undoes it in this sheet. Sheets that include this one are saved with it, each with a backup in Sheet Backups.","Ctrl+Z lo deshace en esta hoja. Las hojas que incluyen esta se guardan con ella, cada una con una copia en Copias de hojas."
+"Every use of %s in this sheet, and in every sheet that includes it, takes the new name.","Cada uso de %s en esta hoja, y en cada hoja que la incluye, toma el nuevo nombre."
+1 place,1 lugar
+%d places,%d lugares
+not changed - check it,sin cambiar - revísalo
+Renamed %s to %s,%s renombrado a %s
+Changed %d place(s) in %d sheet(s).,Se cambiaron %d lugar(es) en %d hoja(s).
+Ctrl+Z undoes all of it in this sheet.,Ctrl+Z lo deshace todo en esta hoja.
+Ctrl+Z undoes all of it in this sheet. Other files were saved; your version control can undo those.,Ctrl+Z lo deshace todo en esta hoja. Otros archivos se guardaron; tu control de versiones puede deshacerlos.
+Clear every bookmark?,¿Quitar todos los marcadores?
+Every bookmark in this sheet goes; the rows themselves stay as they are.,Se van todos los marcadores de esta hoja; las filas quedan como están.
+"Bookmarks are not part of undo, so Ctrl+Z cannot bring them back.","Los marcadores no forman parte de deshacer, así que Ctrl+Z no puede recuperarlos."
+Clear all,Quitar todos
+Keep old events working?,¿Mantener funcionando los eventos antiguos?
+Used to be,Antes era
+Adds this small function to the script and hides it from the picker. Nothing existing is edited.,Añade esta pequeña función al script y la oculta del selector. No se edita nada existente.
+Keep them working,Mantenerlos funcionando
+No thanks,"No, gracias"
+You renamed %s to %s. Events that still say %s can keep working.,Renombraste %s a %s. Los eventos que aún dicen %s pueden seguir funcionando.
+"Type the name %s had before, and events that still say it keep working.","Escribe el nombre que tenía %s antes, y los eventos que aún lo dicen seguirán funcionando."
+Class name,Nombre de clase
+"Ctrl+Z undoes it in open sheets. Closed files are saved, each with a backup in Sheet Backups.","Ctrl+Z lo deshace en las hojas abiertas. Los archivos cerrados se guardan, cada uno con una copia en Copias de hojas."
+Rename %s to %s?,¿Renombrar %s a %s?
+Name this class?,¿Dar nombre a esta clase?
+%s will be the class name everywhere %s is used.,%s será el nombre de clase en todos los lugares donde se usa %s.
+Type the new name; every place listed changes with it.,Escribe el nuevo nombre; cada lugar de la lista cambia con él.
+Make %s local to one event?,¿Hacer %s local a un evento?
+"Only the event you pick, and the events under it, will see it.","Solo el evento que elijas, y los eventos bajo él, la verán."
+Ctrl+Z undoes it.,Ctrl+Z lo deshace.
+Make it local,Hacerla local

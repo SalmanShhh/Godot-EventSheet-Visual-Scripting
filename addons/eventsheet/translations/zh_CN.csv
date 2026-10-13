@@ -7389,3 +7389,37 @@ Keep this event?,保留此事件？
 Keep it,保留
 Delete the event,删除事件
 Export the file exactly as it was written.,按写入时的原样导出文件。
+Save %s before closing?,关闭前保存 %s？
+This tab has edits that are not saved yet.,此标签页有尚未保存的编辑。
+"Discarding closes the tab without them, and Ctrl+Z cannot bring them back.",放弃会在不保留它们的情况下关闭标签页，Ctrl+Z 也无法找回。
+Rename %s?,重命名 %s？
+"Ctrl+Z undoes it in this sheet. Sheets that include this one are saved with it, each with a backup in Sheet Backups.",Ctrl+Z 可在此表中撤销。包含此表的表会一并保存，每个都会在表备份中留一份备份。
+"Every use of %s in this sheet, and in every sheet that includes it, takes the new name.",此表以及包含它的每个表中 %s 的每一处使用都会改用新名称。
+1 place,1 处
+%d places,%d 处
+not changed - check it,未更改 - 请检查
+Renamed %s to %s,已将 %s 重命名为 %s
+Changed %d place(s) in %d sheet(s).,已更改 %d 处，涉及 %d 个表。
+Ctrl+Z undoes all of it in this sheet.,Ctrl+Z 可在此表中全部撤销。
+Ctrl+Z undoes all of it in this sheet. Other files were saved; your version control can undo those.,Ctrl+Z 可在此表中全部撤销。其他文件已保存；可用版本控制撤销它们。
+Clear every bookmark?,清除所有书签？
+Every bookmark in this sheet goes; the rows themselves stay as they are.,此表中的所有书签都会移除；行本身保持不变。
+"Bookmarks are not part of undo, so Ctrl+Z cannot bring them back.",书签不在撤销范围内，所以 Ctrl+Z 无法找回。
+Clear all,全部清除
+Keep old events working?,让旧事件继续工作？
+Used to be,以前叫
+Adds this small function to the script and hides it from the picker. Nothing existing is edited.,向脚本添加这个小函数，并在选择器中隐藏它。不会编辑任何现有内容。
+Keep them working,让它们继续工作
+No thanks,不用了
+You renamed %s to %s. Events that still say %s can keep working.,你把 %s 重命名为 %s。仍写着 %s 的事件可以继续工作。
+"Type the name %s had before, and events that still say it keep working.",输入 %s 以前的名称，仍写着它的事件就能继续工作。
+Class name,类名
+"Ctrl+Z undoes it in open sheets. Closed files are saved, each with a backup in Sheet Backups.",Ctrl+Z 可在打开的表中撤销。关闭的文件会被保存，每个都会在表备份中留一份备份。
+Rename %s to %s?,将 %s 重命名为 %s？
+Name this class?,为此类命名？
+%s will be the class name everywhere %s is used.,%s 将成为所有使用 %s 之处的类名。
+Type the new name; every place listed changes with it.,输入新名称；列出的每一处都会随之更改。
+Make %s local to one event?,将 %s 设为某个事件的局部变量？
+"Only the event you pick, and the events under it, will see it.",只有你选的事件及其下的事件能看到它。
+Ctrl+Z undoes it.,Ctrl+Z 可撤销。
+Make it local,设为局部

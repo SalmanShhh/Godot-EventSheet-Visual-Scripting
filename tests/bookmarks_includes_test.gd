@@ -105,7 +105,7 @@ static func run() -> bool:
 		confirm.canceled.emit()
 	all_passed = _check("OK and Cancel leave every bookmark in place", viewport.jump_to_bookmark(1), true) and all_passed
 	if confirm != null:
-		confirm.custom_action.emit(EventSheetBookmarksPanel.CLEAR_ACTION)
+		confirm.custom_action.emit(load(editor.SMALL_PROMPT_PATH).DANGER_ACTION)
 	all_passed = _check("Clear All empties every bookmark", viewport.jump_to_bookmark(1), false) and all_passed
 	all_passed = _check("the cleared panel shows no entries", editor._bookmarks_tree.get_root().get_first_child(), null) and all_passed
 	editor.free()

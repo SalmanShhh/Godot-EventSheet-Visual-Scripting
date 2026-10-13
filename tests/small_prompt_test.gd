@@ -52,6 +52,28 @@ static func run() -> bool:
 	load(SMALL_PROMPT_PATH).set_list(listed, [])
 	ok = _check("an emptied list hides", places.visible, false) and ok
 	host.free()
+	return _test_class_rename_question() and ok
+
+
+## Rename class asks in words that follow what is typed, and refuses a name another class has.
+static func _test_class_rename_question() -> bool:
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock._current_sheet = EventSheetResource.new()
+	dock._current_sheet.custom_class_name = "SmallPromptProbe"
+	var head: EventSheetHeadActions = EventSheetHeadActions.new()
+	head.init(dock)
+	head._rename_dialog = load(SMALL_PROMPT_PATH).open(dock, {"main": "Rename"})
+	var say: Label = head._rename_dialog.find_child("Say", true, false) as Label
+	head._sync_class_rename("SmallPromptProbe", "Node")
+	var taken: Array = [head._rename_dialog.title, say.text, head._rename_dialog.get_ok_button().disabled]
+	head._sync_class_rename("SmallPromptProbe", "Hero")
+	var ok: bool = SUPPORT.pins("small_prompt_test", [
+		["a taken name is refused, and says why", taken,
+			["Rename SmallPromptProbe?", "\"Node\" is already the name of another class.", true]],
+		["a free name is asked about by name", [head._rename_dialog.title, say.text, head._rename_dialog.get_ok_button().disabled],
+			["Rename SmallPromptProbe to Hero?", "Hero will be the class name everywhere SmallPromptProbe is used.", false]],
+	])
+	dock.free()
 	return ok
 
 

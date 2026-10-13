@@ -284,19 +284,28 @@ static func _test_the_receipt_lists_the_files_it_writes() -> bool:
 	return ok
 
 
-## The variable Rename Everywhere window offered the rename and nothing else - no way out that
-## changes nothing short of the title bar's close box.
+## The variable Rename question offers a way out that changes nothing, keeps Rename unpressable
+## until a name the sheet accepts is typed, and the receipt after it lists where the rename landed.
 static func _test_rename_everywhere_can_be_cancelled() -> bool:
-	var dock := Control.new()
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock._current_sheet = EventSheetResource.new()
+	dock._current_sheet.variables = {"health": {"type": "int", "default": 0}}
 	var refactor := EventSheetRenameRefactor.new()
 	refactor.init(dock)
-	var window: Window = refactor.ensure_window()
-	var cancel: Button = window.find_child("CancelButton", true, false) as Button
-	var ok: bool = _check("the window offers Cancel", cancel.text if cancel != null else "", "Cancel")
-	if cancel != null:
-		window.visible = true
-		cancel.pressed.emit()
-		ok = _check("and Cancel closes it", window.visible, false) and ok
+	var dialog: ConfirmationDialog = refactor.open("health")
+	var edit: LineEdit = dialog.find_children("*", "LineEdit", true, false).back() as LineEdit
+	var ok: bool = _check("the question offers Cancel, and Rename waits for a new name",
+		[dialog.title, dialog.cancel_button_text, dialog.get_ok_button().disabled],
+		["Rename health?", "Cancel", true])
+	edit.text_changed.emit("hit_points")
+	ok = _check("a good name makes Rename pressable", dialog.get_ok_button().disabled, false) and ok
+	refactor._last_done = {"moved": 3, "touched": PackedStringArray(["hud.tres"]), "callers": PackedStringArray()}
+	var done: ConfirmationDialog = refactor.show_done("health", "hit_points")
+	var places: Tree = done.find_child("Places", true, false) as Tree
+	ok = _check("the receipt says what happened and lists the places",
+		[done.title, (done.find_child("Say", true, false) as Label).text, places.get_root().get_child_count(),
+		places.get_root().get_child(1).get_text(0)],
+		["Renamed health to hit_points", "Changed 3 place(s) in 2 sheet(s).", 2, "hud.tres"]) and ok
 	dock.free()
 	return ok
 
