@@ -73,7 +73,10 @@
   gizmos share one selection-preview shell; the export bake step and the import hook share one
   discovery and run pass; the template and snippet libraries list files one way; the dictionary and
   release-notes pages read their bundle through the Manual's one reader; the damage-type and
-  tileset facts walk the project once.
+  tileset facts walk the project once; the Files and scene-trust checks read call arguments through
+  one reader; the render-word maps share one property cache; thirty-three dock and viewport
+  delegates that only forwarded a call are gone.
+- Net: about 1,080 fewer plugin lines.
 - Rows read exactly as before: the trigger badge, the accessor rows and the connect reading build
   their shared cells in one place each.
 ### Fixed: the Inspector Designer and the Inspector's badges speak the editor's language
