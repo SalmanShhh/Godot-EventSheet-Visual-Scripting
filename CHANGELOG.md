@@ -40,6 +40,25 @@
   are 890. The generator shrank by half (a new behaviour is a sheet compiled to GDScript, not text
   written out by hand); the growth is the global form and the Properties and actions window, which
   had no counterpart before. Both reuse the window kit and the Anatomy census rather than new widgets.
+### Fixed: Sheet > Publish New Version… opens its window again
+
+- The menu entry called a dock function that no longer existed, so choosing it did nothing but
+  print a script error. It opens the version window again.
+
+### Maintenance: the plugin pays back the code the last waves grew
+
+- Functions and constants nothing called are gone (about forty, from the importer to the docs
+  panel).
+- Copies folded onto one: the Enum and Signal windows read their fields, show what is wrong and
+  write through one path; the side windows (History, Outline, Bookmarks, the sheet map) take their
+  shell from the window kit; the form windows wire their help strip with one kit call; every
+  editor-icon lookup goes through the one that knows the editor's names; the drawing and behaviour
+  gizmos share one selection-preview shell; the export bake step and the import hook share one
+  discovery and run pass; the template and snippet libraries list files one way; the dictionary and
+  release-notes pages read their bundle through the Manual's one reader; the damage-type and
+  tileset facts walk the project once.
+- Rows read exactly as before: the trigger badge, the accessor rows and the connect reading build
+  their shared cells in one place each.
 
 ### Fixed: an empty node or resource slot previews the line it saves
 

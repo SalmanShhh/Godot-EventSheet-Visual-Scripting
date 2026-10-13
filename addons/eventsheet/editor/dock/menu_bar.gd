@@ -317,7 +317,7 @@ func build(root: Node) -> void:
 			4: _dock._open_sheet_type_dialog()
 			5: _dock._on_manage_ace_providers_requested()
 			6: _dock._export_addon_pack()
-			14: _dock._open_publish_version_dialog()
+			14: _dock._providers_glue.open_publish_version_dialog()
 			15: _dock._name_raw_calls_requested()
 			7: _dock._export_gdscript_requested()
 			8: _dock._open_include_manager()
