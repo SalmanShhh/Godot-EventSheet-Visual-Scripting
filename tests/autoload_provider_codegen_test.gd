@@ -36,6 +36,14 @@ static func run() -> bool:
 	bus.free()
 	ProjectSettings.set_setting(AUTOLOAD_SETTING, null)
 
+	# A global made as a scene autoloads the scene beside its script: still the same singleton.
+	ProjectSettings.set_setting(AUTOLOAD_SETTING, "*" + BUS_PATH.get_basename() + ".tscn")
+	var scene_bus: Node = script.new()
+	ok = _check("a scene global's script calls the singleton too",
+		_template(generator.generate_from_object(scene_bus), "method:publish"), "TestBus.publish({value})") and ok
+	scene_bus.free()
+	ProjectSettings.set_setting(AUTOLOAD_SETTING, null)
+
 	# The same script NOT registered: the Node-provider form returns (regression guard).
 	# The $-default derives from the FILENAME (PascalCase), never the spaced display id -
 	# "$Bus Fixture" is not a valid bare node path and defeats {target} parameterization.

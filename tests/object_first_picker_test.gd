@@ -35,6 +35,14 @@ static func run() -> bool:
 	all_passed = _check("cards are distinct, System leads, the rest alphabetize",
 		labels, ["System", "AdvancedRandomAddon", "BulletBehavior", "StatForge"]) and all_passed
 	all_passed = _check("Core folds into the System card", str(cards[0].get("provider")), "Core") and all_passed
+	# A global - a provider Godot autoloads under its own name - sits straight after System.
+	ProjectSettings.set_setting("autoload/StatForge", "*res://zz_stat_forge.gd")
+	var global_labels: Array = []
+	for card: Dictionary in ACEPickerDialog.object_cards_for(definitions):
+		global_labels.append(str(card.get("label")))
+	ProjectSettings.set_setting("autoload/StatForge", null)
+	all_passed = _check("a global follows System, ahead of the rest",
+		global_labels, ["System", "StatForge", "AdvancedRandomAddon", "BulletBehavior"]) and all_passed
 
 	# The builtin registry enumeration leads with the System card (pack providers join at
 	# dock scan time; their card behavior is covered by the synthetic block above).

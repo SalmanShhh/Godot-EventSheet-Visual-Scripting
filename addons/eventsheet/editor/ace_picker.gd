@@ -1449,8 +1449,9 @@ func _show_classic(show_breadcrumb: bool) -> void:
 
 
 ## The distinct "objects" the front page offers, from an assembled definitions list:
-## one card per provider, Core folded into a leading "System" card (the event-sheet convention).
-## Pure and static so tests pin the enumeration.
+## one card per provider, Core folded into a leading "System" card (the event-sheet convention), and
+## every global (a provider Godot autoloads under its own name) straight after it, the way System sits
+## at the top: a global is one object every sheet shares. Pure and static so tests pin the enumeration.
 static func object_cards_for(definitions: Array[ACEDefinition]) -> Array[Dictionary]:
 	var seen: Dictionary = {}
 	var cards: Array[Dictionary] = []
@@ -1459,13 +1460,14 @@ static func object_cards_for(definitions: Array[ACEDefinition]) -> Array[Diction
 		if provider.is_empty() or seen.has(provider):
 			continue
 		seen[provider] = true
-		cards.append({"provider": provider, "label": "System" if provider == "Core" else provider})
+		cards.append({"provider": provider, "label": "System" if provider == "Core" else provider,
+			"global": ProjectSettings.has_setting("autoload/" + provider)})
 	cards.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		# System leads; the rest alphabetize - the stable order hands learn.
-		if str(a.get("provider")) == "Core":
-			return true
-		if str(b.get("provider")) == "Core":
-			return false
+		# System leads, the globals follow it, the rest alphabetize - the stable order hands learn.
+		var rank_a: int = 0 if str(a.get("provider")) == "Core" else (1 if bool(a.get("global")) else 2)
+		var rank_b: int = 0 if str(b.get("provider")) == "Core" else (1 if bool(b.get("global")) else 2)
+		if rank_a != rank_b:
+			return rank_a < rank_b
 		return str(a.get("label")) < str(b.get("label")))
 	return cards
 
@@ -1780,11 +1782,12 @@ func _populate_object_cards() -> void:
 	# System is one selectable row at the top (colored like a node-type header, it IS the
 	# whole Core vocabulary); every other object sits under one section header.
 	var objects_header: TreeItem = null
+	var after_system: int = 0
 	for card: Dictionary in object_cards_for(definitions):
 		var provider: String = str(card.get("provider"))
 		var label: String = str(card.get("label"))
 		var parent_item: TreeItem = root
-		if provider != "Core":
+		if provider != "Core" and not bool(card.get("global")):
 			if objects_header == null:
 				objects_header = _objects_tree.create_item(root)
 				objects_header.set_text(0, "Objects & Behaviors")
@@ -1806,6 +1809,8 @@ func _populate_object_cards() -> void:
 			tooltip += "\n%s" % adds
 		item.set_tooltip_text(0, tooltip)
 		item.set_metadata(0, provider)
+		if parent_item == root:
+			after_system = item.get_index() + 1
 		# Same icon discipline as the classic tree: the provider's own icon at 16px, never
 		# scaled up; System gets the Node glyph from the editor theme.
 		var item_icon: Texture2D = provider_icons.get(provider, null) as Texture2D
@@ -1814,7 +1819,28 @@ func _populate_object_cards() -> void:
 		if item_icon != null:
 			item.set_icon(0, item_icon)
 			item.set_icon_max_width(0, 16)
+	# A global the vocabulary does not publish (an autoload outside the packs folder, with no annotations)
+	# still sits at the top beside System, reflected the way Your Project reflects a class.
+	for entry: Dictionary in EventSheetProjectScanner.list_autoloads():
+		var global_name: String = str(entry.get("autoload", ""))
+		if _objects_tree_has(root, global_name):
+			continue
+		var global_item: TreeItem = _objects_tree.create_item(root, after_system)
+		after_system += 1
+		global_item.set_text(0, global_name)
+		global_item.set_tooltip_text(0, EventSheetL10n.translate("Browse what the global %s offers - every sheet reaches it by this name.") % global_name)
+		global_item.set_metadata(0, str(entry.get("name", "")))
+		global_item.set_icon(0, editor_icon("Node"))
+		global_item.set_icon_max_width(0, 16)
 	_populate_project_cards(root)
+
+
+## Whether a top-level row already offers `provider`.
+func _objects_tree_has(root: TreeItem, provider: String) -> bool:
+	for child: TreeItem in root.get_children():
+		if str(child.get_metadata(0)) == provider:
+			return true
+	return false
 
 
 ## Your Project: the game's OWN classes and autoloads as object cards, so code you wrote
@@ -1826,7 +1852,9 @@ func _populate_object_cards() -> void:
 ## members are a large, uncurated surface, and dumping them among the curated verbs is the
 ## "silent vocabulary pollution" the autoload provider path already refuses.
 func _populate_project_cards(root: TreeItem) -> void:
-	var entries: Array = EventSheetProjectScanner.list_project_classes()
+	# A global sits at the top beside System, so this section is the project's classes only.
+	var entries: Array = EventSheetProjectScanner.list_project_classes().filter(func(entry: Dictionary) -> bool:
+		return str(entry.get("autoload", "")).is_empty())
 	if entries.is_empty():
 		return
 	var header: TreeItem = _objects_tree.create_item(root)
@@ -1838,12 +1866,11 @@ func _populate_project_cards(root: TreeItem) -> void:
 	var hidden_names: PackedStringArray = PackedStringArray()
 	for entry: Dictionary in entries:
 		var entry_name: String = str(entry.get("name", ""))
-		var singleton: String = str(entry.get("autoload", ""))
 		if EventSheetVocabularyCatalog.is_class_excluded(entry_name):
 			hidden_names.append(entry_name)
 			continue
 		var item: TreeItem = _objects_tree.create_item(header)
-		item.set_text(0, entry_name if singleton.is_empty() else "%s (autoload)" % entry_name)
+		item.set_text(0, entry_name)
 		item.set_tooltip_text(0, "Browse %s's methods, properties and signals - reflected from %s." % [
 			entry_name, str(entry.get("path", ""))])
 		# The metadata is the provider id the scoped tree filters on, which for a reflected

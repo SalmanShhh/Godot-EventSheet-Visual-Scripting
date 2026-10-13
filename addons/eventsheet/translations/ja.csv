@@ -8288,3 +8288,4 @@ Inspector Designer,インスペクターデザイナー
 Edit %s in the Variable dialog,変数ダイアログで %s を編集
 Move this variable up in the Inspector (one undo step),この変数をインスペクターで上へ移動 (元に戻すは 1 ステップ)
 Dragged in the viewport:,ビューポートでドラッグ:
+Browse what the global %s offers - every sheet reaches it by this name.,グローバル %s が提供するものを見ます。どのシートもこの名前で参照します。

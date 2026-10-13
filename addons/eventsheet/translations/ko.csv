@@ -8288,3 +8288,4 @@ Inspector Designer,인스펙터 디자이너
 Edit %s in the Variable dialog,변수 대화 상자에서 %s 편집
 Move this variable up in the Inspector (one undo step),이 변수를 인스펙터에서 위로 이동 (실행 취소 한 단계)
 Dragged in the viewport:,뷰포트에서 드래그:
+Browse what the global %s offers - every sheet reaches it by this name.,전역 개체 %s이(가) 제공하는 것을 살펴봅니다. 모든 시트가 이 이름으로 접근합니다.

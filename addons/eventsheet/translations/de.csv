@@ -8288,3 +8288,4 @@ Inspector Designer,Inspektor-Designer
 Edit %s in the Variable dialog,%s im Variablen-Dialog bearbeiten
 Move this variable up in the Inspector (one undo step),Diese Variable im Inspektor nach oben schieben (ein Rückgängig-Schritt)
 Dragged in the viewport:,Im Viewport gezogen:
+Browse what the global %s offers - every sheet reaches it by this name.,"Durchsuchen, was das globale Objekt %s anbietet - jedes Sheet erreicht es unter diesem Namen."

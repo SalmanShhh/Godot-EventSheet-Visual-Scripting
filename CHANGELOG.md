@@ -39,6 +39,10 @@
 - The Add behaviour list puts your own behaviours first under Your behaviours, greys a pack made for
   another kind of object ("Made for a Node2D - Enemy is a Node.") or one that is a global, with the
   reason on hover, and adding one is a step Ctrl+Z takes back out of the scene.
+- A global is its own object at the top of every picker, straight after System, whether it is a
+  global made here (its annotated actions) or an autoload the project already had (reflected, as Your
+  Project reflects a class, which no longer lists autoloads). A global made as a scene emits the same
+  `GameState.add_score(1)` calls as one made as a script.
 - Size: the old scaffold and its dialog were 531 lines; the generator, the two forms and the new window
   are 890. The generator shrank by half (a new behaviour is a sheet compiled to GDScript, not text
   written out by hand); the growth is the global form and the Properties and actions window, which

@@ -423,7 +423,9 @@ static func _autoload_name_for(script: Script) -> String:
 		var setting_name: String = str(property_info.get("name", ""))
 		if not setting_name.begins_with("autoload/"):
 			continue
-		if str(ProjectSettings.get_setting(setting_name, "")).trim_prefix("*") == script.resource_path:
+		# A global made as a scene autoloads the scene beside its script, which is the same singleton.
+		var target: String = str(ProjectSettings.get_setting(setting_name, "")).trim_prefix("*")
+		if target == script.resource_path or target == script.resource_path.get_basename() + ".tscn":
 			return setting_name.trim_prefix("autoload/")
 	return ""
 
