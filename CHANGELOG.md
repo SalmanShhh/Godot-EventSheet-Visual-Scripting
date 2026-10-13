@@ -20,6 +20,9 @@
 - **For scripts that called the catalog:** `EventSheetPackCatalog.disabled_packs()`,
   `is_enabled()`, `set_enabled()` and `is_disabled_path()` keep their shapes and are deprecated
   no-ops (empty, true, nothing, false). `publish_pack` and every `EventSheets` method are unchanged.
+- **Follow-up:** the Tools menu no longer raises an index error in the Output each time it is built
+  (the manager's old tooltip outlived its item), and the README and the guide index describe taking
+  a pack's new version as replacing its folder instead of the removed update window.
 
 ### Fixed: what the review of the window fixes found
 

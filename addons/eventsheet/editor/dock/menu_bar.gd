@@ -880,7 +880,6 @@ func build(root: Node) -> void:
 	)
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(24), "Every open sheet on one page - how big each is, how much of it is described, what the Doctor said about it - plus a search that reaches all of them and the page each sheet writes about itself.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(25), "The documentation chores in one window: rewrite the page each sheet writes about itself, check what the guides do not answer, export the Manual as a browsable site, write out a translator's missing keys. Nothing is published - drafts stay drafts.")
-	tools_popup.set_item_tooltip(tools_popup.get_item_index(23), "Every installed pack with its version: enable or disable one, read its guide, check for updates, import a pack from a .zip or a URL, or publish yours.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(22), "The Manual: the tutorials, the guides, and a reference page for every object and behavior. F1 opens help for whatever is selected; Ctrl+F1 reopens the page you were reading.")
 	# The dot: a reader who has not opened What's new since the plugin's version changed gets a mark
 	# on the Manual entry, and it comes off the moment they read it. Re-asked every time the menu

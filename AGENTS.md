@@ -146,7 +146,7 @@ from `tools/build_help_bundle.gd`).
   is translated ratchet-wise, on purpose);
   `project_doctor.gd` (CLI shim); `verify_sheets.gd` (the four-contract repository gate: parses,
   round-trips, unique tokens, no unanswered migrations - read-only, exit-coded, wired into CI);
-  `dump_registry.gd` (the vocabulary as text - the diff receipt for pack updates and the identity
+  `dump_registry.gd` (the vocabulary as text - the before/after diff when a pack's folder is replaced, and the identity
   proof for vocabulary-touching refactors. It writes FOUR texts and THE GATE IS ALL FOUR: the
   default identity line; `-- words` for the wording a picker reads out; `-- fields` for what a verb
   OFFERS (each parameter's options, autocomplete, lens, option-label and required flags, plus the
@@ -233,7 +233,7 @@ from `tools/build_help_bundle.gd`).
 - `docs/GUIDE-SCENES.md` - layouts on top, `%names`, 3D spawning, the scene-file trust line,
   undoable editor-tool edits
 - `docs/GUIDE-UPDATING-AND-REFACTORING.md` - the migration contract: successor data, the migrate
-  dialog and its receipts, pack updates as proposals, the merge guards, `verify_sheets`
+  dialog and its receipts, a pack's new version as a folder replacement, the merge guards, `verify_sheets`
 - `docs/GUIDE-EDITOR-TOOLS.md` - the editor-tool sheet family
 - `docs/GUIDE-WRITING-THE-DOCS.md` - how the doc set is built; the regenerate-before-commit gate
 - `docs/REFERENCE-MCP-SERVER.md` - the AI-tooling protocol

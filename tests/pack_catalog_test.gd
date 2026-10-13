@@ -181,33 +181,43 @@ static func _test_no_door_names_a_pack_manager() -> bool:
 	editor.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	editor.setup(EventSheetResource.new())
 	var items: PackedStringArray = PackedStringArray()
-	_collect_menu_items(editor, items)
+	var tooltips: PackedStringArray = PackedStringArray()
+	_collect_menu_items(editor, items, tooltips)
 	var palette: PackedStringArray = PackedStringArray()
 	for command: Dictionary in editor._command_palette_commands():
 		palette.append(str(command.get("title", "")))
 	var named: PackedStringArray = PackedStringArray()
 	for text: String in items + palette:
 		var lowered: String = text.to_lower()
-		if lowered.contains("addon manager") or lowered.contains("installed packs") \
-				or lowered.contains("manage packs"):
+		if lowered.contains("addon manager") or lowered.contains("installed packs") 				or lowered.contains("manage packs"):
+			named.append(text)
+	# A tooltip may say "installed packs" in passing; what it must not do is describe the manager's
+	# chores, which is how a stale one outlived its removed item.
+	for text: String in tooltips:
+		var lowered: String = text.to_lower()
+		if lowered.contains("addon manager") or lowered.contains("enable or disable") 				or lowered.contains("check for updates") or lowered.contains("import a pack"):
 			named.append(text)
 	var ok: bool = SUPPORT.pins("pack_catalog_test", [
 		# The walk must have reached the real Tools menu, or "nothing named" would prove nothing.
 		["the walk reads the Tools menu", items.has("Lift Workbench…"), true],
-		["no menu item or palette command names a pack manager", named, PackedStringArray()],
+		["the walk reads the Tools menu's tooltips", tooltips.size() > 0, true],
+		["no menu item, tooltip or palette command names a pack manager", named, PackedStringArray()],
 		["the dock has no manager door left", editor.has_method("open_addon_manager"), false],
 	])
 	editor.free()
 	return ok
 
 
-static func _collect_menu_items(node: Node, into: PackedStringArray) -> void:
+static func _collect_menu_items(node: Node, into: PackedStringArray, tooltips: PackedStringArray) -> void:
 	if node is PopupMenu:
 		var menu: PopupMenu = node as PopupMenu
 		for index: int in range(menu.item_count):
 			into.append(menu.get_item_text(index))
+			var tooltip: String = menu.get_item_tooltip(index)
+			if not tooltip.is_empty():
+				tooltips.append(tooltip)
 	for child: Node in node.get_children(true):
-		_collect_menu_items(child, into)
+		_collect_menu_items(child, into, tooltips)
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
