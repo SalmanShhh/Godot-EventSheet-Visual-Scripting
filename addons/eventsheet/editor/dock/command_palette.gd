@@ -123,10 +123,11 @@ static func filter_sheets(sheet_paths: PackedStringArray, query: String) -> Arra
 	return result
 
 
-## The `#` mode's palette entries: every matching project sheet as a {title, run} that opens it.
+## The `#` mode's palette entries: every matching project sheet as a {title, run} that opens it - in
+## both formats, since a `.gd` is a sheet too (and the default kind).
 func _sheet_matches(query: String) -> Array:
 	var matches: Array = []
-	for entry: Dictionary in filter_sheets(_dock.list_project_sheets(), query):
+	for entry: Dictionary in filter_sheets(EventSheetProjectFind.list_all_project_sheets(), query):
 		var path: String = str(entry["path"])
 		matches.append({"title": "# %s" % str(entry["title"]), "run": func() -> void:
 			_dock._navigate.record_current()  # a palette jump is history too - Alt+Left returns

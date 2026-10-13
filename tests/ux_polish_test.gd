@@ -212,6 +212,48 @@ static func run() -> bool:
 	ProjectSettings.set_setting("eventsheets/editor/compile_on_save", null)
 	cos_editor.free()
 
+	all_passed = _test_project_find_reads_gd_sheets() and all_passed
+	return all_passed
+
+
+## Find / Replace in Project over the default sheet format. The walk used to stop at `.tres`, so a
+## project of `.gd` sheets found nothing and replaced nothing, and a result carried only its file -
+## the event it sat in was collected and then dropped, so activating it opened the sheet at the top.
+static func _test_project_find_reads_gd_sheets() -> bool:
+	var all_sheets: PackedStringArray = EventSheetProjectFind.list_all_project_sheets()
+	var all_passed: bool = _check("every sheet means both formats",
+		[all_sheets.has("res://tests/fixtures/compiler_golden_sheet.tres"),
+			all_sheets.has("res://tests/run_tests.gd")], [true, true])
+	var sorted_sheets: PackedStringArray = all_sheets.duplicate()
+	sorted_sheets.sort()
+	all_passed = _check("and the listing is path-sorted", all_sheets == sorted_sheets, true) and all_passed
+
+	var script_path: String = "user://eventsheets_project_find.gd"
+	var handle: FileAccess = FileAccess.open(script_path, FileAccess.WRITE)
+	handle.store_string("extends Node\n\n\nfunc _ready() -> void:\n\tprint(\"the hidden treasure\")\n")
+	handle.close()
+	var open_sheet := EventSheetResource.new()
+	var open_event := EventRow.new()
+	open_event.event_uid = "evt-treasure"
+	var open_comment := ACEAction.new()
+	open_comment.params = {"text": "more treasure here"}
+	open_event.actions = [open_comment] as Array[Resource]
+	open_sheet.events = [open_event] as Array[Resource]
+	var found: Array = EventSheetProjectFind.find_in_project("TREASURE",
+		PackedStringArray([script_path]), {"res://open_sheet.tres": open_sheet})
+	all_passed = _check("a closed .gd is searched, and every result says where it is", found, [
+		{"path": "res://open_sheet.tres", "preview": "more treasure here", "uid": "evt-treasure", "line": 0},
+		{"path": script_path, "preview": "print(\"the hidden treasure\")", "uid": "", "line": 5},
+	]) and all_passed
+
+	var outcome: Dictionary = EventSheetProjectFind.replace_in_closed_sheets("treasure", "map",
+		PackedStringArray([script_path, "res://open_sheet.tres"]), {"res://open_sheet.tres": true},
+		EventSheetFindBar.new()._replace_in_rows)
+	all_passed = _check("Replace in Project writes a closed .gd and names it",
+		[outcome["touched"], outcome["failed"], FileAccess.get_file_as_string(script_path)],
+		[PackedStringArray(["eventsheets_project_find.gd (1)"]), PackedStringArray(),
+			"extends Node\n\n\nfunc _ready() -> void:\n\tprint(\"the hidden map\")\n"]) and all_passed
+	DirAccess.remove_absolute(script_path)
 	return all_passed
 
 
