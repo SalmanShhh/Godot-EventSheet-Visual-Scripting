@@ -45,6 +45,23 @@
 - **An Events | Code | Both switch** for windows that show a sheet both ways: one segmented row of
   toggle buttons that says which view was chosen.
 
+### Tests: a real-editor boot budget, and scripts from a project the plugin has never touched
+
+- **`tools/measure_editor_boot.gd` times the two waits a person meets inside a real editor**:
+  enabling the plugin (`EditorInterface.set_plugin_enabled`, on an editor that booted without it)
+  and opening the first sheet through the plugin's own door until its lift lands. Measured three
+  times at this commit: a visible editor enables in 443-465 ms (median 447) and opens the first
+  sheet in 23.5-26.6 s (median 26.5); headless, 446-497 ms (median 460) and 27.3-29.3 s (median
+  27.6). `editor_boot_budget_test` runs it as a subprocess in the serial tail and fails past
+  1,500 ms or 85 s - about three times the medians, so it catches a regression in kind without
+  flapping on a shared runner.
+- **`existing_project_round_trip_test`** opens five hand-written scripts of the kind an existing
+  project already holds (a player with `@export` categories and groups, an autoload with an inner
+  class, a `Resource` with `class_name`, a `@tool` script, an enum state machine in a `match`) and
+  asks each the standing contracts `tools/verify_sheets.gd` asks. All five re-emit byte for byte
+  today; a file that ever does not is listed as expected to degrade, with its reason, instead of
+  being quietly weakened.
+
 ### Removed: the Addon manager - a pack is a folder, as everywhere else in Godot
 
 - **Tools ▸ Addon manager… is gone**, and with it the pack Update… and Restore… windows and the
