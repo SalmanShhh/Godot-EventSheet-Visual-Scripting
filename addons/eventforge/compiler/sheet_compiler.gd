@@ -3510,6 +3510,12 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 					last_category = this_category
 					last_group = ""
 					last_subgroup = ""
+				# An explicit end (`@export_group("")`) closes whatever folder is open before this
+				# variable; it stands in the group's place, so a variable has one or the other.
+				if this_group.is_empty() and bool(attributes.get("group_end", false)):
+					lines.append(export_section_line("group", ""))
+					last_group = ""
+					last_subgroup = ""
 				if this_group != last_group:
 					if not this_group.is_empty():
 						# A show-if that scopes the WHOLE group rides as a plain `#` comment directly
@@ -3520,13 +3526,13 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 						var group_predicate: String = str(attributes.get("group_show_if", "")).strip_edges()
 						if not group_predicate.is_empty():
 							lines.append("# @inspector_show_if %s" % group_predicate)
-						lines.append("@export_group(\"%s\")" % this_group)
+						lines.append(export_section_line("group", this_group, str(attributes.get("group_prefix", "")).strip_edges()))
 					last_group = this_group
 					last_subgroup = ""
 				# Nested Inspector grouping: @export_subgroup follows the group and nests under it.
 				if this_subgroup != last_subgroup:
 					if not this_subgroup.is_empty():
-						lines.append("@export_subgroup(\"%s\")" % this_subgroup)
+						lines.append(export_section_line("subgroup", this_subgroup, str(attributes.get("subgroup_prefix", "")).strip_edges()))
 					last_subgroup = this_subgroup
 			if exported and type_name == "String" and not combo_options.is_empty():
 				for unsupported_key: String in ["clamp", "on_changed", "read_only", "show_if", "lock_unless", "drawer"]:
@@ -4254,14 +4260,16 @@ static func _structured_hint_prefix(attributes: Dictionary, type_name: String) -
 		var global_scope: String = "global_" if bool(file_spec.get("global", false)) else ""
 		if str(file_spec.get("mode", "file")) == "dir":
 			return "@export_%sdir " % global_scope
+		# `@export_file_path` keeps the path as typed; it has no global form, so global wins.
+		var file_word: String = "file_path" if bool(file_spec.get("plain_path", false)) and global_scope.is_empty() else "file"
 		var filters: PackedStringArray = PackedStringArray()
 		for filter_entry: Variant in file_spec.get("filters", []):
 			var filter_text: String = str(filter_entry).strip_edges()
 			if not filter_text.is_empty() and not filter_text.contains("\""):
 				filters.append("\"%s\"" % filter_text)
 		if filters.is_empty():
-			return "@export_%sfile " % global_scope
-		return "@export_%sfile(%s) " % [global_scope, ", ".join(filters)]
+			return "@export_%s%s " % [global_scope, file_word]
+		return "@export_%s%s(%s) " % [global_scope, file_word, ", ".join(filters)]
 	if type_name == "NodePath" and attributes.get("node_path_types") is Array and not (attributes.get("node_path_types") as Array).is_empty():
 		var type_filters: PackedStringArray = PackedStringArray()
 		for filter_type: Variant in attributes.get("node_path_types"):
@@ -4270,6 +4278,18 @@ static func _structured_hint_prefix(attributes: Dictionary, type_name: String) -
 				type_filters.append("\"%s\"" % type_text)
 		if not type_filters.is_empty():
 			return "@export_node_path(%s) " % ", ".join(type_filters)
+	# Your own hint: any PROPERTY_HINT_* with its hint string and, when written, the usage flags -
+	# the way in for every hint without an annotation of its own. The hint must be a bare constant
+	# name and the text must carry no quote or backslash, or there is no single spelling to write.
+	if attributes.get("custom_hint") is Dictionary:
+		var custom: Dictionary = attributes.get("custom_hint")
+		var hint_name: String = str(custom.get("hint", "")).strip_edges()
+		var hint_text: String = str(custom.get("text", ""))
+		var usage: String = str(custom.get("usage", "")).strip_edges()
+		if hint_name.is_valid_identifier() and not hint_text.contains("\"") and not hint_text.contains("\\"):
+			if usage.is_empty():
+				return "@export_custom(%s, \"%s\") " % [hint_name, hint_text]
+			return "@export_custom(%s, \"%s\", %s) " % [hint_name, hint_text, usage]
 	return ""
 
 
@@ -4373,6 +4393,14 @@ static func _emit_tree_variable_line(local_var: LocalVariable, refresh_inspector
 		# first-class row instead of stranding it as a GDScript block over a quoted `"Vector2.ZERO"`.
 		var default_code: String = str(local_var.default_value) if local_var.expression_default else _to_code_literal(local_var.default_value)
 		var_line = "%svar %s: %s = %s" % [export_prefix, local_var.name, local_var.type_name, default_code]
+	# A declaration written with no type (`@export var damage = 3`) leaves the `: int` out; every
+	# branch above spells the declaration `var name: Type` (or `const`), so that one cut is the change.
+	if local_var.untyped and not local_var.inferred_type:
+		for keyword: String in ["var ", "const "]:
+			var typed_head: String = "%s%s: %s" % [keyword, local_var.name, local_var.type_name]
+			if var_line.contains(typed_head):
+				var_line = var_line.replace(typed_head, keyword + local_var.name)
+				break
 	# A declaration written with no initial value (`@export var spark: PackedScene`) keeps that
 	# spelling for as long as its default is still empty. Every branch above renders an empty default
 	# as `null` (a literal) or `<null>` (an expression), so dropping that one tail is the whole change;
@@ -4762,6 +4790,16 @@ static func _cards_marker_word(value: Variant, fallback: String) -> String:
 	return word
 
 
+## One Inspector section line, as Godot spells it: `@export_group("Gun")`, or with the name prefix
+## as the second argument when there is one (`@export_group("Bullet", "bullet")`). `level` is
+## "category", "group" or "subgroup"; an empty title is the explicit end (`@export_group("")`).
+## Public because the row's code echo and the variable dialog's preview write the same line.
+static func export_section_line(level: String, title: String, prefix: String = "") -> String:
+	if prefix.is_empty():
+		return "@export_%s(\"%s\")" % [level, title]
+	return "@export_%s(\"%s\", \"%s\")" % [level, title, prefix]
+
+
 ## @export_group/@export_subgroup lines emitted before an EXPORTED tree variable that carries Inspector
 ## grouping. Empty for non-exported or un-grouped vars (the common case - existing emission stays
 ## byte-identical). Must match _emit_variables' format exactly (the verify-lift compares against it).
@@ -4801,10 +4839,12 @@ static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
 		var group_predicate: String = str(attributes.get("group_show_if", "")).strip_edges()
 		if not group_predicate.is_empty():
 			prefix += "# @inspector_show_if %s\n" % group_predicate
-		prefix += "@export_group(\"%s\")\n" % group
+		prefix += export_section_line("group", group, str(attributes.get("group_prefix", "")).strip_edges()) + "\n"
+	elif bool(attributes.get("group_end", false)):
+		prefix += export_section_line("group", "") + "\n"
 	var subgroup: String = str(attributes.get("subgroup", "")).strip_edges()
 	if not subgroup.is_empty():
-		prefix += "@export_subgroup(\"%s\")\n" % subgroup
+		prefix += export_section_line("subgroup", subgroup, str(attributes.get("subgroup_prefix", "")).strip_edges()) + "\n"
 	if doc_after_group:
 		prefix += doc_line
 	return prefix

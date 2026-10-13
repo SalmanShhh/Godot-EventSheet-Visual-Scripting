@@ -71,13 +71,16 @@ static func run() -> bool:
 	ok = _check("the setter-property static var round-trips byte-identically",
 		str(SheetCompiler.compile(setter_imported, "user://sv_setter.gd").get("output", "")) == setter, true) and ok
 
-	# ── Degrade safety: an untyped `static var x = 5` cannot re-emit exactly -> stays a verbatim block ──
+	# ── An untyped `static var x = 5` lifts too: the row takes int from the value, the file keeps no type ──
 	var untyped: String = "@tool\nextends Node\n\nstatic var x = 5\n"
 	var untyped_imported: EventSheetResource = GDScriptImporter.new().import_external_source(untyped)
-	ok = _check("an untyped static var does NOT lift (byte-gate degrades it)",
-		_static_vars(untyped_imported).is_empty(), true) and ok
+	var untyped_vars: Array = _static_vars(untyped_imported)
+	var untyped_reading: Array = [untyped_vars.size()]
+	for untyped_var: Variant in untyped_vars:
+		untyped_reading.append_array([(untyped_var as LocalVariable).type_name, (untyped_var as LocalVariable).untyped])
+	ok = _check("an untyped static var lifts with the type its value implies", untyped_reading, [1, "int", true]) and ok
 	untyped_imported.external_source_path = "user://sv_untyped.gd"
-	ok = _check("the un-lifted untyped static var round-trips byte-identically",
+	ok = _check("the untyped static var round-trips byte-identically",
 		str(SheetCompiler.compile(untyped_imported, "user://sv_untyped.gd").get("output", "")) == untyped, true) and ok
 
 	ok = _reads_as_shared_by_every_object() and ok

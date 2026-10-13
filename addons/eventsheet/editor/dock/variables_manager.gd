@@ -559,11 +559,13 @@ func _on_variable_dialog_confirmed(
 					existing.default_value = default_value
 				existing.is_constant = resolved_constant
 				existing.exported = exported
-				# What the dialog has no field for - the category the variable opens, which side of its
-				# section lines the `##` doc was written on, an Inspector button - is kept by a save.
+				# What the dialog has no field for - the category the variable opens, a section's name
+				# prefix or end line, which side of its section lines the `##` doc was written on, an
+				# Inspector button, a free-form @export_custom - is kept by a save.
 				var unseen: Dictionary = existing.attributes if existing.attributes is Dictionary else {}
 				existing.attributes = _tree_group_attributes(attributes)
-				for key: String in ["category", "doc_after_group", "tool_button"]:
+				for key: String in ["category", "group_prefix", "group_end", "subgroup_prefix", "doc_after_group",
+						"tool_button", "custom_hint"]:
 					if unseen.has(key) and not existing.attributes.has(key):
 						existing.attributes[key] = unseen[key]
 				existing.onready = onready

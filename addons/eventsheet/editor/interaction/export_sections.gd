@@ -68,10 +68,14 @@ static func from_attributes(attributes: Variant) -> Array[Dictionary]:
 	var sections: Array[Dictionary] = []
 	if not (attributes is Dictionary):
 		return sections
+	var lifted: Dictionary = attributes as Dictionary
 	for kind: String in [CATEGORY, GROUP, SUBGROUP]:
-		var name: String = str((attributes as Dictionary).get(kind, "")).strip_edges()
+		var name: String = str(lifted.get(kind, "")).strip_edges()
 		if not name.is_empty():
-			sections.append({"kind": kind, "name": name, "prefix": ""})
+			sections.append({"kind": kind, "name": name, "prefix": str(lifted.get(kind + "_prefix", "")).strip_edges()})
+		elif kind == GROUP and bool(lifted.get("group_end", false)):
+			# `@export_group("")` above the member, lifted as the end it is.
+			sections.append({"kind": GROUP, "name": "", "prefix": ""})
 	return sections
 
 

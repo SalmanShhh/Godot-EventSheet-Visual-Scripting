@@ -48,6 +48,11 @@ extends Resource
 ## moment someone gives the row a starting value, that value is written, so the flag can never hide
 ## an edit. Set by the importer and byte-verify gated like every lift.
 @export var no_default: bool = false
+## When true, the declaration is written with NO type (`@export var damage = 3`): Godot works the
+## type out from the value, and the code says nothing. type_name still holds the type the value
+## implies (int from 3), so the row and the value picker read it; only the `: int` is left out of
+## the file. Clearing it is "write the type in code". Set by the importer and byte-verify gated.
+@export var untyped: bool = false
 ## Property SETTER body (the statements under `set(<setter_param>):`), verbatim, one statement per line,
 ## dedented relative to the accessor header. Non-empty turns the variable into a GDScript property:
 ## the declaration line gains a `:` suffix and the accessor blocks emit beneath it. Byte-gated on lift.
@@ -76,10 +81,23 @@ extends Resource
 ## Event-sheet-style "Combo": allowed values for a String variable. When exported, compiles to
 ## @export_enum so the Inspector shows a dropdown; the value picker uses it too.
 @export var options: PackedStringArray = PackedStringArray()
-## Inspector attributes that don't ride the export prefix - currently the Inspector grouping
-## ("group"/"subgroup", compiling to @export_group/@export_subgroup). Kept here so a tree-placed exported
-## variable round-trips its grouping losslessly (the importer absorbs the group lines onto this dict, and
-## _emit_tree_variable_line re-emits them) instead of degrading into a stray @export_group GDScript block.
+## Inspector attributes that don't ride the export prefix - among them the Inspector sections, written
+## as lines ABOVE the variable. Kept here so a tree-placed exported variable round-trips its sections
+## losslessly (the importer absorbs the lines onto this dict, and _emit_tree_variable_line re-emits
+## them) instead of degrading into a stray @export_group GDScript block. The section keys:
+##   "category"        String - `@export_category("Weapon")`, the heavy band.
+##   "group"           String - `@export_group("Gun")`, a folder.
+##   "group_prefix"    String - the group's second argument (`@export_group("Bullet", "bullet")`): only
+##                     names starting with it join the folder, and the Inspector shows them without it.
+##   "group_end"       bool   - `@export_group("")` above this variable: the folder before it ends here.
+##   "subgroup"        String - `@export_subgroup("Jump")`, a folder inside the group.
+##   "subgroup_prefix" String - the subgroup's second argument, read like group_prefix.
+## And one hint with no annotation of its own:
+##   "custom_hint"     Dictionary {"hint", "text", "usage"} - a free-form
+##                     `@export_custom(PROPERTY_HINT_RANGE, "0,10", PROPERTY_USAGE_DEFAULT)`: the hint
+##                     constant's name, the hint string, and the usage flags as written ("" = left out).
+## A file picker's "file" spec also takes "plain_path": true for `@export_file_path`, which stores
+## the path as typed where `@export_file` may store a `uid://` reference instead.
 @export var attributes: Dictionary = {}
 
 

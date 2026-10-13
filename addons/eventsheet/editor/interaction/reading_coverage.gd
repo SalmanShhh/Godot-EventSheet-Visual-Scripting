@@ -258,6 +258,14 @@ static func _walk(items: Array, top_level: bool, tally: Dictionary, networking_t
 			_walk((item as EventFunction).events, false, tally, networking_too)
 		elif item is EventGroup:
 			_walk((item as EventGroup).events, top_level, tally, networking_too)
+		elif item is LocalVariable:
+			# A declaration is one line, and a networking one when what it holds is (`var peer =
+			# ENetMultiplayerPeer.new()`): reading as a variable row is reading as a row.
+			tally["total_lines"] = int(tally["total_lines"]) + 1
+			var variable: LocalVariable = item as LocalVariable
+			if networking_too and EventForgeMultiplayerLift.is_networking_line(
+					"%s %s" % [variable.type_name, str(variable.default_value)]):
+				tally["net_lines"] = int(tally["net_lines"]) + 1
 		elif item is CommentRow:
 			var comment_lines: int = 0
 			for line: String in (item as CommentRow).text.split("\n"):

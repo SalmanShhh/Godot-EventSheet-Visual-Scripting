@@ -68,6 +68,7 @@ static func _test_the_sheet_reading() -> bool:
 		shape.append("%s%s" % ["  " if parent != null else "", _texts(row_data)])
 	var gun: EventRowData = _row(view, "variable_tree_group_Gun_0")
 	var bullet: EventRowData = _row_named(view, "Bullet")
+	var gun_end: EventRowData = _row_named(view, "Gun ends here")
 	var health: EventRowData = _member(view, "health")
 	var bullet_count: EventRowData = _member(view, "bullet_count")
 	var damage_type: Dictionary = _span_meta(_member(view, "damage"), "variable_type_span")
@@ -93,8 +94,13 @@ static func _test_the_sheet_reading() -> bool:
 		["a head's hover says its kind, what it holds and its line - on the name",
 			str((gun.spans[0].metadata as Dictionary).get("hover_note")),
 			"Gun - an export group\nThe exported variables under it share one folder in the Inspector, until the group ends.\n2 variables\n@export_group(\"Gun\")\nDouble-click to rename it."],
-		["a head the script line declares IS that line, so a double-click edits it",
-			bullet.source_resource is RawCodeRow and bool((bullet.spans[0].metadata as Dictionary).get("raw_section")), true],
+		# The prefix group's line lifts onto bullet_count (group + group_prefix), so its head is the
+		# group's own and a double-click renames it; the end line just above it stays a script line
+		# (two section lines in a row cannot both ride one variable) and edits as that line.
+		["a head the lift carries on its variable renames the group",
+			[bullet.source_resource is RawCodeRow, bool((bullet.spans[0].metadata as Dictionary).get("raw_section"))], [false, false]],
+		["a section line the lift leaves as a script line IS that line, so a double-click edits it",
+			[gun_end.source_resource is RawCodeRow, bool((gun_end.spans[0].metadata as Dictionary).get("raw_section"))], [true, true]],
 		["a prefix group's members tint the start their name matched",
 			((_span_meta(bullet_count, "variable_name_span").get("bbcode_segments") as Array)[0] as Dictionary).get("text"), "bullet"],
 		["the member a prefix shut out says why, in the help strip only", health.help_note,

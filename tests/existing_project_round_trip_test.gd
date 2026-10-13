@@ -14,6 +14,8 @@
 #                      default arm and a static sort function
 #   spawn_area.gd      a @tool script whose exports redraw it, with configuration warnings
 #   slime.gd           untyped code, an enum state machine in a match, an arm with two patterns
+#   turret.gd          every Inspector export option: prefixed groups and subgroups, a group end,
+#                      categories, untyped exports, a raw-path file picker, a free-form @export_custom
 #
 # Each file is asked every standing contract `tools/verify_sheets.gd` asks (it parses, it carries no
 # merge markers or doubled locals, and it re-emits byte for byte), through the gate's own function,
@@ -27,7 +29,7 @@ const SUPPORT := preload("res://tests/support.gd")
 const TEST_NAME := "existing_project_round_trip_test"
 const FIXTURE_DIR: String = "res://tests/fixtures/existing_project/"
 ## Every file the folder holds, so a file that goes missing is a failure rather than one fewer check.
-const FILES: PackedStringArray = ["game_state.gd", "inventory_item.gd", "player.gd", "slime.gd", "spawn_area.gd"]
+const FILES: PackedStringArray = ["game_state.gd", "inventory_item.gd", "player.gd", "slime.gd", "spawn_area.gd", "turret.gd"]
 ## File name -> why it does not round-trip yet. Empty: every file passed when the gate was written.
 const EXPECTED_DEGRADE: Dictionary = {}
 

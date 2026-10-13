@@ -1670,8 +1670,8 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 			var attributes: Dictionary = variable.attributes if variable.attributes is Dictionary else {}
 			if variable.exported:
 				var declared_group: String = str(attributes.get("group", "")).strip_edges()
-				if not declared_group.is_empty():
-					current_group = declared_group
+				if not declared_group.is_empty() or bool(attributes.get("group_end", false)):
+					current_group = declared_group  # `@export_group("")` closes the folder here
 			var description: String = str(attributes.get("tooltip", "")).strip_edges()
 			if description.is_empty():
 				description = pending_description

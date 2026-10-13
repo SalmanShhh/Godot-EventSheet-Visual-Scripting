@@ -57,9 +57,12 @@ static func run() -> bool:
 		true) and ok
 	ok = _check("every line is advisory - the score gates nothing",
 		_severities(findings), PackedStringArray(["info"])) and ok
-	# Best candidate first: the script that already reads as rows is the one to open next.
-	ok = _check("the measured scripts are sorted best candidate first",
-		_measured_paths(findings), PackedStringArray([PLAYER, PICKUP])) and ok
+	# Best candidate first: the script that already reads as rows is the one to open next. Both read
+	# whole now (pickup's untyped `@export var value = 10` lifts as a variable), so the tie falls to
+	# the path, alphabetical.
+	ok = _check("the measured scripts are sorted best candidate first, ties by path",
+		_measured_paths(findings), PackedStringArray([PICKUP, PLAYER])) and ok
+	ok = _check("and the untyped one reads whole", int(EventSheetInteropDoctor.adoption(PICKUP).get("reads_as", 0)), 100) and ok
 	ok = _check("and the marked one is listed as left alone, not as a candidate",
 		_stays_code_paths(findings), PackedStringArray([SOLVER])) and ok
 	ok = _check("a corpus with nothing in it reports nothing",

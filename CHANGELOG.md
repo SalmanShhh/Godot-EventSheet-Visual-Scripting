@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Added: every Inspector export option opens as the variable it belongs to
+
+- **A group with a name prefix** - `@export_group("Bullet", "bullet")` - and a subgroup with one
+  open as grouped variables instead of a block of code above them, and save back unchanged. The
+  prefix is the variable's `group_prefix` / `subgroup_prefix` attribute.
+- **The end of a group** - `@export_group("")` - is a fact of the variable after it
+  (`group_end`), and the sheet's settings folder now closes there instead of running on.
+- **An untyped variable** (`@export var damage = 3`, `var _cooldown = 0.0`, `const GRAVITY = 900`)
+  opens as a variable row whose type is the one its value implies (int, float, ...), and saves
+  back with no type written, exactly as it was. The new `untyped` field says so; clearing it writes
+  the type in the code.
+- **`@export_file_path`** opens as a file picker that keeps the path as typed (`plain_path` on the
+  file spec), and **a free-form `@export_custom(hint, "text", usage)`** opens as the variable's own
+  `custom_hint` {hint, text, usage} instead of a line of code. Both compile from the same fields.
+- The hand-written-project round trip gained `turret.gd`, a script using every one of these next to
+  the category, NodePath, range-extra and easing-flag spellings that already lifted.
+
 ### Changed: export groups read on the sheet the way the Inspector shows them
 
 - **`@export_category` is a heavy centred band**, and **`@export_subgroup` is its own tinted,

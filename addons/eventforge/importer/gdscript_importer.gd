@@ -558,6 +558,13 @@ func _try_lift_variable(line: String) -> LocalVariable:
 	# leaves the flag off and the line to whichever reading it had before.
 	lifted.no_default = lifted.default_value == null and not declaration.contains("=") \
 		and not lifted.is_constant
+	# A declaration with no type at all (`@export var damage = 3`, `var _cooldown = 0.0`): the row
+	# still needs a type to read and edit by, so it takes the one the value implies, and the flag
+	# keeps the `: int` out of the file. Not for @onready, whose value is a node lookup that implies
+	# nothing, nor for a line ending in `:` (a property header whose accessors this line cannot hold),
+	# nor with no value at all (`var spark`), where there is nothing to imply a type.
+	lifted.untyped = bool(descriptor.get("untyped", false)) and not lifted.onready \
+		and not lifted.no_default and not declaration.strip_edges().ends_with(":")
 	# With no `=` to stop at, the parser reads a trailing comment as part of the TYPE
 	# (`PackedScene # set in the Inspector`). The line would still round-trip, but the row would
 	# carry a type no picker or value check knows, so that spelling keeps its code block.
@@ -572,6 +579,8 @@ func _try_lift_variable(line: String) -> LocalVariable:
 	if lifted.default_value is String and not lifted.is_constant and not lifted.onready \
 			and line.contains("= %s" % str(lifted.default_value)) and not line.contains("\"%s\"" % str(lifted.default_value)):
 		lifted.expression_default = true
+	if lifted.untyped:
+		lifted.type_name = "Variant" if lifted.expression_default else _implied_type_name(lifted.default_value)
 	# An Inspector button is a Callable knob, and Godot's own spelling for it carries no type
 	# annotation - the annotation names the button, the value names the function it calls. It is
 	# pulled into structured attributes BEFORE the gate below rather than after it, the way every
@@ -602,7 +611,17 @@ func _try_lift_variable(line: String) -> LocalVariable:
 	_extract_exp_easing(lifted, line)
 	_extract_placeholder(lifted, line)
 	_extract_structured_hint(lifted, line)
+	_extract_custom_hint(lifted, line)
 	return lifted
+
+
+## The type an untyped declaration's parsed value implies: a whole number is int, a decimal float,
+## and so on. "Variant" when the value is code (`State.IDLE`) and says nothing on its own.
+static func _implied_type_name(value: Variant) -> String:
+	match typeof(value):
+		TYPE_BOOL, TYPE_INT, TYPE_FLOAT, TYPE_STRING, TYPE_VECTOR2, TYPE_COLOR, TYPE_ARRAY, TYPE_DICTIONARY:
+			return type_string(typeof(value))
+	return "Variant"
 
 
 ## @export_color_no_alpha round-trip: pull the bare hint into the structured `no_alpha` attribute so a
@@ -805,12 +824,22 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 			doc_after_group = true
 			meta_count += 1
 			cursor -= 1
+	# A section line may carry the name prefix as its second argument (`@export_group("Bullet",
+	# "bullet")`), and an empty group name is the explicit end of the folder before it.
+	var subgroup_prefix_value: String = ""
+	var group_prefix_value: String = ""
+	var group_end_value: bool = false
 	if cursor >= 0 and pending[cursor].begins_with("@export_subgroup(\""):
-		subgroup_value = _extract_first_quoted(pending[cursor])
+		var subgroup_arguments: PackedStringArray = _quoted_arguments(pending[cursor])
+		subgroup_value = subgroup_arguments[0] if subgroup_arguments.size() > 0 else ""
+		subgroup_prefix_value = subgroup_arguments[1] if subgroup_arguments.size() > 1 else ""
 		meta_count += 1
 		cursor -= 1
 	if cursor >= 0 and pending[cursor].begins_with("@export_group(\""):
-		group_value = _extract_first_quoted(pending[cursor])
+		var group_arguments: PackedStringArray = _quoted_arguments(pending[cursor])
+		group_value = group_arguments[0] if group_arguments.size() > 0 else ""
+		group_prefix_value = group_arguments[1] if group_arguments.size() > 1 else ""
+		group_end_value = group_value.is_empty()
 		meta_count += 1
 		cursor -= 1
 	# A `# @inspector_show_if <var>` sitting directly above the group line scopes the show-if to the
@@ -841,7 +870,7 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 	# The flag is only worth carrying when there IS a section line to sit above: with none, the two
 	# orders are the same bytes, and a stray flag would be a difference the sheet cannot justify.
 	doc_after_group = doc_after_group and not (
-		category_value.is_empty() and group_value.is_empty() and subgroup_value.is_empty())
+		category_value.is_empty() and group_value.is_empty() and subgroup_value.is_empty() and not group_end_value)
 	# Inspector decor rides ABOVE the tooltip (canonical emission order: header, info, tooltip, groups) -
 	# plain `#` comments the editor renders as a section header / info panel. Recovered into the same
 	# attributes the emitter reads so they reopen as editable dialog fields, verify-gated like the rest.
@@ -921,10 +950,16 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 		candidate["link_with"] = link_partner_value
 	if not group_value.is_empty():
 		candidate["group"] = group_value
+	if not group_prefix_value.is_empty():
+		candidate["group_prefix"] = group_prefix_value
+	if group_end_value:
+		candidate["group_end"] = true
 	if not group_show_if_value.is_empty():
 		candidate["group_show_if"] = group_show_if_value
 	if not subgroup_value.is_empty():
 		candidate["subgroup"] = subgroup_value
+	if not subgroup_prefix_value.is_empty():
+		candidate["subgroup_prefix"] = subgroup_prefix_value
 	if doc_after_group:
 		candidate["doc_after_group"] = true
 	if candidate.is_empty():
@@ -1019,6 +1054,8 @@ func _extract_structured_hint(lifted: LocalVariable, line: String) -> void:
 		candidate["layers"] = hint.trim_prefix("@export_flags_")
 	elif (hint.begins_with("@export_file") or hint.begins_with("@export_global_file")) and lifted.type_name == "String":
 		var file_spec: Dictionary = {"mode": "file", "global": hint.begins_with("@export_global_")}
+		if hint.begins_with("@export_file_path"):
+			file_spec["plain_path"] = true
 		var filters: Array = []
 		for filter_text: String in _quoted_arguments(hint):
 			filters.append(filter_text)
@@ -1040,6 +1077,34 @@ func _extract_structured_hint(lifted: LocalVariable, line: String) -> void:
 	var saved_attrs: Dictionary = (lifted.attributes as Dictionary).duplicate(true) if lifted.attributes is Dictionary else {}
 	var attrs: Dictionary = (lifted.attributes as Dictionary).duplicate(true) if lifted.attributes is Dictionary else {}
 	attrs.merge(candidate, true)
+	lifted.attributes = attrs
+	lifted.export_hint = ""
+	if SheetCompiler._emit_tree_variable_line(lifted) != line:
+		lifted.export_hint = saved_hint
+		lifted.attributes = saved_attrs
+
+
+## A free-form `@export_custom(PROPERTY_HINT_RANGE, "0,10", PROPERTY_USAGE_DEFAULT)` - one the named
+## families above did not claim - into the structured `custom_hint` {hint, text, usage}, so the hint
+## reads and edits as the variable's own fields instead of a line of code. A marker the editor's
+## drawers own (`"eventsheet:…"`) is never claimed here. Verify-gated like every extract.
+func _extract_custom_hint(lifted: LocalVariable, line: String) -> void:
+	var hint: String = lifted.export_hint.strip_edges()
+	if not hint.begins_with("@export_custom(") or not hint.ends_with(")"):
+		return
+	var inside: String = hint.substr("@export_custom(".length(), hint.length() - "@export_custom(".length() - 1)
+	var first_comma: int = inside.find(", \"")
+	var close_quote: int = inside.find("\"", first_comma + 3) if first_comma > 0 else -1
+	if close_quote < 0:
+		return
+	var text: String = inside.substr(first_comma + 3, close_quote - first_comma - 3)
+	var tail: String = inside.substr(close_quote + 1)
+	if text.begins_with("eventsheet:") or not (tail.is_empty() or tail.begins_with(", ")):
+		return
+	var saved_hint: String = lifted.export_hint
+	var saved_attrs: Dictionary = (lifted.attributes as Dictionary).duplicate(true) if lifted.attributes is Dictionary else {}
+	var attrs: Dictionary = saved_attrs.duplicate(true)
+	attrs["custom_hint"] = {"hint": inside.substr(0, first_comma), "text": text, "usage": tail.trim_prefix(", ")}
 	lifted.attributes = attrs
 	lifted.export_hint = ""
 	if SheetCompiler._emit_tree_variable_line(lifted) != line:
