@@ -12,13 +12,79 @@ extends RefCounted
 const SUPPORT := preload("res://tests/support.gd")
 
 
+class NoopUndoManager:
+	extends RefCounted
+	func create_action(_a = null) -> void: pass
+	func add_do_method(_a = null, _b = null, _c = null, _d = null, _e = null) -> void: pass
+	func add_undo_method(_a = null, _b = null, _c = null, _d = null, _e = null) -> void: pass
+	func commit_action() -> void: pass
+	func has_undo() -> bool: return false
+	func has_redo() -> bool: return false
+	func undo() -> void: pass
+	func redo() -> void: pass
+	func clear_history() -> void: pass
+
+
 static func run() -> bool:
 	var passed: bool = true
 	passed = _test_field_visibility() and passed
 	passed = _test_identity_preview() and passed
 	passed = _test_validation() and passed
 	passed = _test_host_candidates() and passed
+	passed = _test_ok_waits_for_a_valid_identity() and passed
+	passed = _test_name_change_renames_uses() and passed
 	return passed
+
+
+## OK cannot apply what the identity line is warning about: it is disabled while the line shows a
+## problem and enabled again once the problem is gone.
+static func _test_ok_waits_for_a_valid_identity() -> bool:
+	var ok: bool = true
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.custom_class_name = "Patrol"
+	var editor: EventSheetEditor = EventSheetEditor.new()
+	editor.setup(sheet)
+	editor.set_undo_redo_manager(NoopUndoManager.new())
+	var dialog: EventSheetSheetTypeDialog = editor._sheet_type
+	dialog._ensure_sheet_type_dialog()
+	dialog._select_type(1)
+	dialog._sheet_type_host_edit.text = "Node2D"
+	dialog._sheet_type_name_edit.text = "My Class"
+	dialog._refresh_identity_preview()
+	ok = _check("OK is disabled while the class name is invalid",
+		dialog._sheet_type_dialog.get_ok_button().disabled, true) and ok
+	dialog._sheet_type_name_edit.text = "Guard"
+	dialog._refresh_identity_preview()
+	ok = _check("OK comes back once the name is valid",
+		dialog._sheet_type_dialog.get_ok_button().disabled, false) and ok
+	dialog._sheet_type_name_edit.text = "My Class"
+	dialog._on_sheet_type_confirmed()
+	ok = _check("confirming with a problem showing leaves the class name alone",
+		editor._current_sheet.custom_class_name, "Patrol") and ok
+	editor.free()
+	return ok
+
+
+## A new Name on an already named class renames its uses too, the way the head's Rename class does,
+## instead of relabelling the class and leaving the rows naming a class that no longer exists.
+static func _test_name_change_renames_uses() -> bool:
+	var ok: bool = true
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.custom_class_name = "Patrol"
+	var use_row: RawCodeRow = RawCodeRow.new()
+	use_row.code = "var leader: Patrol = null"
+	sheet.events.append(use_row)
+	var editor: EventSheetEditor = EventSheetEditor.new()
+	editor.setup(sheet)
+	editor.set_undo_redo_manager(NoopUndoManager.new())
+	editor._apply_sheet_type_settings(1, "Guard", "", "Node2D")
+	ok = _check("the class takes the new name", editor._current_sheet.custom_class_name, "Guard") and ok
+	ok = _check("the row that used the old name follows it",
+		(editor._current_sheet.events[0] as RawCodeRow).code, "var leader: Guard = null") and ok
+	editor.free()
+	return ok
 
 
 ## The as-you-type host suggestions: curated shortlist when empty, prefix-then-substring ranking,

@@ -2,11 +2,11 @@
 class_name EventSheetTypeGlue
 extends RefCounted
 # The Sheet Type dialog's dock-side glue, extracted from event_sheet_dock.gd:
-# opening the dialog, its two field factories, and _apply_sheet_type_settings -
+# opening the dialog, its two field factories, and apply_sheet_type_settings -
 # the one function that turns the dialog's answers (intent, class name, icon,
-# host, tags, includes, uses/requires, autoload, family) into sheet fields.
-# Bodies moved verbatim behind the `_dock.` back-reference; delegates keep the
-# menu wiring and tests untouched.
+# host, tags, includes, uses/requires, autoload, family) into sheet fields. A
+# changed class name is not just a field: it is handed to the head's class
+# rename first, so every use of the old name is renamed with it.
 
 ## The files this helper reaches BY PATH, at the moment something asks: naming one of these
 ## classes here would compile it, and everything it names, into the first open of a sheet.
@@ -67,6 +67,13 @@ func add_sheet_type_multiline_field(form: VBoxContainer, label_text: String, pla
 func apply_sheet_type_settings(type_index: int, class_name_text: String, icon_path: String, host_class_text: String, tool_enabled: bool = false, addon_tags: PackedStringArray = PackedStringArray(), include_paths: PackedStringArray = PackedStringArray(), uses_classes: PackedStringArray = PackedStringArray(), requires_classes: PackedStringArray = PackedStringArray(), autoload_name_text: String = "", class_description_text: String = "", family_enabled: bool = false) -> void:
 	if _dock._current_sheet == null:
 		return
+	# A new Name on a class that already has one is a RENAME: it goes through the same path the head's
+	# Rename class takes, so the rows that use the old name follow it instead of going stale.
+	var old_class_name: String = _dock._current_sheet.custom_class_name.strip_edges()
+	var new_class_name: String = class_name_text.strip_edges()
+	if type_index != 0 and not old_class_name.is_empty() and not new_class_name.is_empty() 			and new_class_name != old_class_name:
+		if not _dock._head_actions.apply_class_rename_to(new_class_name):
+			return
 	var changed: bool = _dock._perform_undoable_sheet_edit("Set Sheet Type", func() -> bool:
 		_dock._current_sheet.behavior_mode = type_index == 2
 		# The class description rides with the named-type identity (cleared for a plain sheet,

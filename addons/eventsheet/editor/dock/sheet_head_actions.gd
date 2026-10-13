@@ -263,21 +263,29 @@ func open_class_rename() -> void:
 
 
 func _apply_class_rename() -> void:
-	var new_name: String = _rename_edit.text.strip_edges()
+	apply_class_rename_to(_rename_edit.text)
+
+
+## Renames the sheet's class to new_name_text and every use with it - the class line, this sheet's
+## rows and every other sheet that names it. Every surface that changes the class name comes through
+## here, so a relabel can never leave the old name behind in the rows that use it. False when nothing
+## was renamed (an empty, invalid or taken name, or the name it already has).
+func apply_class_rename_to(new_name_text: String) -> bool:
+	var new_name: String = new_name_text.strip_edges()
 	if new_name.is_empty():
-		return
+		return false
 	if not EventSheetIdentifierRules.is_valid(new_name):
 		_dock._set_status(EventSheetL10n.translate("\"%s\" cannot be a class name.") % new_name, true)
-		return
+		return false
 	var old_name: String = _dock._current_sheet.custom_class_name.strip_edges()
 	if old_name.is_empty():
 		old_name = str(EventSheetHeadBands.facts(_dock._current_sheet, _prelude_text()).get("class_name", ""))
 	if old_name == new_name:
-		return
+		return false
 	var own_paths: PackedStringArray = _own_paths()
 	if class_name_taken(new_name, own_paths):
 		_dock._set_status(EventSheetL10n.translate("\"%s\" is already the name of another class.") % new_name, true)
-		return
+		return false
 	var written: bool = _dock._perform_undoable_sheet_edit("Rename Class", func() -> bool:
 		_write_head_line(EventSheetHeadBands.BAND_NAME, new_name)
 		_dock._current_sheet.custom_class_name = new_name
@@ -286,7 +294,7 @@ func _apply_class_rename() -> void:
 		return true
 	)
 	if not written:
-		return
+		return false
 	# Every OTHER sheet that names the class, in both formats - the sheets the dialog counted. Open
 	# tabs change in memory and are left unsaved; closed files are written.
 	var elsewhere: Array[Dictionary] = []
@@ -301,6 +309,7 @@ func _apply_class_rename() -> void:
 	_dock._refresh_title_strip()
 	_dock._mark_dirty(EventSheetL10n.translate("Renamed %s to %s.") % [old_name, new_name] \
 		+ class_rename_elsewhere_text(old_name, elsewhere))
+	return true
 
 
 ## What the status line adds after a class rename: the other files it rewrote, each with its count,

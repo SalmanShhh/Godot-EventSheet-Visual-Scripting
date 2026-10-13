@@ -9,9 +9,10 @@ extends RefCounted
 # apply_sheet_type_settings exactly (a plain sheet CLEARS class name/icon/description/family/tags; an
 # Autoload/Editor Tool FORCES its host, so those fields hide). Hiding is visual only - every control is
 # filled from the sheet at open() and its value passes through on OK, so opening + OK never mutates
-# hidden state. The composition fields and the experimental @tool toggle live behind a collapsed
-# "More options" disclosure. A live identity line previews the compiled `class_name X extends Y` and
-# validates the host class + class name as you type.
+# hidden state. The composition fields (tags / includes / uses / requires) live behind a collapsed
+# "More" disclosure; the @tool toggle sits with the identity fields. A live identity line previews the
+# compiled `class_name X extends Y` and validates the host class + class name as you type, and OK stays
+# disabled while that line shows a problem, so a sheet never ships the broken name it warned about.
 
 var _dock: Control = null
 var _sheet_type_dialog: ConfirmationDialog = null
@@ -465,7 +466,7 @@ func _ensure_sheet_type_dialog() -> void:
 	form.add_child(_identity_card)
 	for edit: LineEdit in [_sheet_type_name_edit, _sheet_type_host_edit, _sheet_type_autoload_edit]:
 		edit.text_changed.connect(func(_text: String) -> void: _refresh_identity_preview())
-	# "More options" disclosure - the composition wiring + the experimental @tool toggle. Collapsed on
+	# "More" disclosure - the composition wiring (tags, includes, uses, requires). Collapsed on
 	# every open so the everyday read stays short; power users expand it deliberately.
 	_more_toggle = Button.new()
 	_more_toggle.toggle_mode = true
@@ -592,6 +593,13 @@ func _refresh_identity_preview() -> void:
 		_sheet_type_autoload_edit.text,
 		own_class_name
 	)
+	_sheet_type_dialog.get_ok_button().disabled = preview_blocks_apply(_ships_as.text)
+
+
+## True when the identity line is reporting a problem rather than a preview - the dialog's OK
+## stays disabled for exactly as long as this holds.
+static func preview_blocks_apply(preview_text: String) -> bool:
+	return preview_text.begins_with("x ")
 
 
 func _set_more_expanded(expanded: bool) -> void:
@@ -605,6 +613,10 @@ func _set_more_expanded(expanded: bool) -> void:
 
 
 func _on_sheet_type_confirmed() -> void:
+	if preview_blocks_apply(identity_preview(_selected_type(), _sheet_type_name_edit.text,
+			_sheet_type_host_edit.text, _sheet_type_autoload_edit.text,
+			_dock._current_sheet.custom_class_name if _dock._current_sheet != null else "")):
+		return
 	_dock._apply_sheet_type_settings(
 		_selected_type(),
 		_sheet_type_name_edit.text,
