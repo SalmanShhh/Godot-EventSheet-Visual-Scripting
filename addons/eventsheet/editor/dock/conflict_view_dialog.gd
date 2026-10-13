@@ -95,12 +95,24 @@ func build() -> void:
 	_dock.add_child(window)
 
 
+## How many events the reader has to decide: the pairs that differ, across every region. The pairs
+## both sides agree on are greyed and asked nothing, so they are not counted.
+static func to_resolve_count(regions: Array[Dictionary]) -> int:
+	var count: int = 0
+	for region: Dictionary in regions:
+		for pair: Dictionary in EventSheetConflictRegions.side_by_side(region):
+			if not bool(pair["same"]):
+				count += 1
+	return count
+
+
 static func translate_hint() -> String:
 	return EventSheetL10n.translate("Events both sides agree on are greyed - there is nothing to decide about them. Pick one of the rest per event.")
 
 
 func _refresh() -> void:
-	heading_label.text = EventSheetL10n.translate("%s - %d to resolve") % [_path.get_file(), _regions.size()]
+	heading_label.text = EventSheetL10n.translate("%s - %d to resolve") % [_path.get_file(),
+		to_resolve_count(_regions)]
 	for child: Node in rows_box.get_children():
 		child.queue_free()
 	for region: Dictionary in _regions:
@@ -187,6 +199,9 @@ func _save_resolved() -> void:
 		_dock._load_sheet_from_path(_path)
 		_dock._set_status(EventSheetL10n.translate("%s has changed on disk since this window read it, so nothing was written - opening what it says now.") % _path.get_file(), true)
 		return
+	# The file as it stood, markers and all, goes into the sheet backup ring first - the same ring
+	# every sheet save feeds - so a resolution picked wrongly can be taken back from Sheet Backups.
+	EventSheetBackups.backup_sheet(_path)
 	var file: FileAccess = FileAccess.open(_path, FileAccess.WRITE)
 	if file == null:
 		_dock._set_status(EventSheetL10n.translate("Could not write %s.") % _path.get_file(), true)

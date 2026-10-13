@@ -19,6 +19,8 @@
 class_name MergeGuardsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
+
 ## The token the merged fixture doubles, and the one the re-mint hands back. Fixed rather than drawn,
 ## so the receipt below is a value and not a shape.
 const DOUBLED_TOKEN := "a3f81c02"
@@ -292,11 +294,32 @@ func _ready() -> void:
 	third.store_string(_conflicted_source())
 	third.close()
 	ok = _check("re-opening reads the conflicted file again", view.open_path(path), true) and ok
+	for stale: String in EventSheetBackups.list_backups(path):
+		DirAccess.remove_absolute(stale)
 	view._save_resolved()
 	ok = _check("and Save writes the resolved file with no markers in it",
 		EventSheetConflictGuard.blocks(FileAccess.get_file_as_string(path)), false) and ok
+	var backups: PackedStringArray = EventSheetBackups.list_backups(path)
+	ok = SUPPORT.pins("merge_guards_test", [
+		["Save keeps the file it overwrote in the backup ring", backups.size(), 1],
+		["...markers and all", FileAccess.get_file_as_string(backups[0])
+			if not backups.is_empty() else "", _conflicted_source()],
+	]) and ok
+	for written: String in backups:
+		DirAccess.remove_absolute(written)
 	DirAccess.remove_absolute(path)
 	dock.free()
+	# The heading counts the events that differ, not the regions holding them: one region with
+	# three events, two of them rewritten on each side, is two decisions.
+	var three_events: String = "extends Node\n\n\n" \
+		+ "<<<<<<< HEAD\nfunc a():\n\tx = 1\nfunc b():\n\ty = 1\nfunc c():\n\tz = 1\n" \
+		+ "=======\nfunc a():\n\tx = 2\nfunc b():\n\ty = 2\nfunc c():\n\tz = 1\n>>>>>>> theirs\n"
+	var regions: Array[Dictionary] = EventSheetConflictRegions.find(three_events)
+	ok = SUPPORT.pins("merge_guards_test", [
+		["the fixture is one region", regions.size(), 1],
+		["the heading counts the two events that differ",
+			EventSheetConflictViewDialog.to_resolve_count(regions), 2],
+	]) and ok
 	return ok
 
 
