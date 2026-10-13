@@ -46,6 +46,12 @@ static func run() -> bool:
 	all_passed = _check("reactive_alternative is empty for an unmapped ACE",
 		ACEDescriptor.reactive_alternative("Core", "Print").is_empty(), true) and all_passed
 
+	# The tip as the picker renders it: a word gap after the colon (it once read
+	# "Reactive alternative:On Timeout").
+	all_passed = _check("the picker's tip reads with a space after the colon",
+		ACEPickerDialog.reactive_tip("On Timeout"),
+		"[color=#e0b050]Reactive alternative: [b]On Timeout[/b] - reacts once when it happens, instead of checking every frame.[/color]") and all_passed
+
 	return all_passed
 
 

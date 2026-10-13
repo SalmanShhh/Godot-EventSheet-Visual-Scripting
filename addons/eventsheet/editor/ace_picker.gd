@@ -3130,6 +3130,12 @@ func _is_favorite(definition: ACEDefinition) -> bool:
 	return favorite_ids().has("%s/%s" % [definition.provider_id, definition.id])
 
 
+## The one-line tip under a polling condition that has a signal twin, naming the trigger that
+## reacts once instead of checking every frame.
+static func reactive_tip(trigger_name: String) -> String:
+	return "[color=#e0b050]Reactive alternative: [b]%s[/b] - reacts once when it happens, instead of checking every frame.[/color]" % trigger_name
+
+
 ## Create-Node-style description panel: name, type + category, what it does, and its codegen.
 func _update_info_panel(definition: ACEDefinition) -> void:
 	_update_guide_button(definition)
@@ -3153,7 +3159,7 @@ func _update_info_panel(definition: ACEDefinition) -> void:
 	# the reactive trigger (the Godot idiom). Informational only - the condition stays fully pickable.
 	var reactive: Dictionary = ACEDescriptor.reactive_alternative(definition.provider_id, definition.id)
 	if not reactive.is_empty():
-		body += "\n[color=#e0b050]Reactive alternative:[b]%s[/b] - reacts once when it happens, instead of checking every frame.[/color]" % str(reactive.get("trigger_name", ""))
+		body += "\n" + reactive_tip(str(reactive.get("trigger_name", "")))
 	# The footer under a variable verb: every variable it can take, each in the sentence its row
 	# reads with, so the choice is made from the sheet's own words instead of from a bare name.
 	var sentences: String = variable_sentences_footer(_variables_in_scope(), definition)
