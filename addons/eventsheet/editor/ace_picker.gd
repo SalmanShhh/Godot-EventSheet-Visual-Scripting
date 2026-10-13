@@ -345,7 +345,10 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	search_row.add_child(_search)
 	_favorite_button = Button.new()
 	_favorite_button.toggle_mode = true
-	_favorite_button.text = "⭐"
+	# The editor's own Favorites star, as the FileSystem dock shows it; where there is no editor theme
+	# to ask, the button says what it does in a word instead.
+	_favorite_button.icon = EventSheetPopupUI._editor_icon("Favorites")
+	_favorite_button.text = "" if _favorite_button.icon != null else EventSheetL10n.translate("Pin")
 	_favorite_button.tooltip_text = "Pin the highlighted entry to Favorites (or right-click any entry)."
 	_favorite_button.focus_mode = Control.FOCUS_NONE
 	_favorite_button.pressed.connect(_on_favorite_button_pressed)
@@ -409,7 +412,7 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	side.add_theme_constant_override("separation", 8)
 	split.add_child(side)
 	var favorites_label: Label = Label.new()
-	favorites_label.text = "⭐ Favorites"
+	favorites_label.text = "Favorites"
 	favorites_label.add_theme_color_override("font_color", GROUP_COLOR_NEUTRAL)
 	_favorites_list = _make_side_tree()
 	var favorites_card: PanelContainer = EventSheetPopupUI.panel_section(_titled_pane(favorites_label, _favorites_list))
@@ -2781,7 +2784,7 @@ func _on_tree_context_menu_pressed(item_id: int) -> void:
 		0:
 			var pinned: bool = toggle_favorite(definition.provider_id, definition.id)
 			if _info_label != null:
-				_info_label.text = ("⭐ Pinned %s to Favorites" if pinned else "Unpinned %s from Favorites") % definition.display_name
+				_info_label.text = ("Pinned %s to Favorites" if pinned else "Unpinned %s from Favorites") % definition.display_name
 			if _favorite_button != null and _selected_definition == definition:
 				_favorite_button.set_pressed_no_signal(pinned)
 			_refresh_side_panes()
@@ -3150,7 +3153,7 @@ func _update_info_panel(definition: ACEDefinition) -> void:
 	# the reactive trigger (the Godot idiom). Informational only - the condition stays fully pickable.
 	var reactive: Dictionary = ACEDescriptor.reactive_alternative(definition.provider_id, definition.id)
 	if not reactive.is_empty():
-		body += "\n[color=#e0b050]💡 Reactive alternative: [b]%s[/b] - reacts once when it happens, instead of checking every frame.[/color]" % str(reactive.get("trigger_name", ""))
+		body += "\n[color=#e0b050]Reactive alternative:[b]%s[/b] - reacts once when it happens, instead of checking every frame.[/color]" % str(reactive.get("trigger_name", ""))
 	# The footer under a variable verb: every variable it can take, each in the sentence its row
 	# reads with, so the choice is made from the sheet's own words instead of from a bare name.
 	var sentences: String = variable_sentences_footer(_variables_in_scope(), definition)

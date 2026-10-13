@@ -28,6 +28,9 @@ static func run() -> bool:
 	picker.init_dialog(parent, registry)
 
 	ok = _check("tree is single-column (Type column removed)", picker._tree.columns, 1) and ok
+	# The pin button wears the editor's Favorites icon; with no editor theme to ask (headless, as
+	# here) it says what it does in a word - never an emoji the editor font may not even carry.
+	ok = _check("the pin button falls back to a word, not an emoji", picker._favorite_button.text, "Pin") and ok
 
 	# Populate in append_action mode - a leftover set_*(1, …) would error on a one-column Tree.
 	picker._context = {"mode": "append_action", "signals_only": false, "selected_resource": null}

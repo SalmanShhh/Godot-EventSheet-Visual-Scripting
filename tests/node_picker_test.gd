@@ -25,6 +25,16 @@ static func run() -> bool:
 	sfx.name = "Jingle"
 	root.add_child(sfx)
 
+	# Each row wears its class's editor icon, the nearest ancestor's where the class has none of its
+	# own - the walk is pinned here with a stand-in theme, since headless has no editor icons at all.
+	var has_icon: Callable = func(candidate: String) -> bool: return candidate in ["Node2D", "PhysicsBody2D"]
+	all_passed = _check("a class with its own icon wears it",
+		ACEParamsNodePicker.class_icon_name("Node2D", has_icon), "Node2D") and all_passed
+	all_passed = _check("a class without one wears its nearest ancestor's",
+		ACEParamsNodePicker.class_icon_name("CharacterBody2D", has_icon), "PhysicsBody2D") and all_passed
+	all_passed = _check("no icon anywhere up the line is none",
+		ACEParamsNodePicker.class_icon_name("Node", has_icon), "") and all_passed
+	all_passed = _check("headless rows simply carry no icon", ACEParamsNodePicker._class_icon("Node2D"), null) and all_passed
 	# Query modes.
 	all_passed = _check("plain query matches class",
 		ACEParamsDialog.node_matches_query(enemy, "Slime", "characterbody"), true) and all_passed

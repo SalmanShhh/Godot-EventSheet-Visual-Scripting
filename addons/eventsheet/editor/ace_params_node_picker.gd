@@ -156,6 +156,7 @@ func _populate_node_picker_from_root(scene_root: Node) -> void:
 			var scene_item: TreeItem = _node_picker_tree.create_item(root_item)
 			scene_item.set_text(0, "%s  -  %s" % [str(hit.get("node", "")), str(hit.get("file", ""))])
 			scene_item.set_text(1, str(hit.get("class", "")))
+			scene_item.set_icon(0, _class_icon(str(hit.get("class", ""))))
 			scene_item.set_metadata(0, "scene::" + str(hit.get("file", "")))
 		return
 	if scene_root == null:
@@ -169,6 +170,7 @@ func _populate_node_picker_from_root(scene_root: Node) -> void:
 				var recent_item: TreeItem = _node_picker_tree.create_item(root_item)
 				recent_item.set_text(0, "★ " + recent)
 				recent_item.set_text(1, scene_root.get_node(NodePath(recent)).get_class())
+				recent_item.set_icon(0, _class_icon(scene_root.get_node(NodePath(recent)).get_class()))
 				recent_item.set_metadata(0, recent)
 	_append_node_picker_rows(scene_root, scene_root, root_item, query)
 
@@ -182,9 +184,30 @@ func _append_node_picker_rows(node: Node, scene_root: Node, parent_item: TreeIte
 		var is_unique: bool = node != scene_root and node.unique_name_in_owner and node.owner == scene_root
 		item.set_text(0, ("%" + str(node.name)) if is_unique else (relative if node != scene_root else node.name))
 		item.set_text(1, node.get_class())
+		item.set_icon(0, _class_icon(node.get_class()))
 		item.set_metadata(0, relative if node != scene_root else ".")
 	for child: Node in node.get_children():
 		_append_node_picker_rows(child, scene_root, parent_item, query)
+
+
+## The editor icon that stands for `node_class`: the class's own, else the nearest ancestor's that has
+## one - the same walk the Scene dock does, so a class without its own art still wears its family's.
+## Null outside the editor (headless, tests), where the row simply has no icon.
+static func _class_icon(node_class: String) -> Texture2D:
+	var icon_name: String = class_icon_name(node_class, func(candidate: String) -> bool:
+		return EventSheetPopupUI._editor_icon(candidate) != null)
+	return EventSheetPopupUI._editor_icon(icon_name) if not icon_name.is_empty() else null
+
+
+## The first name in `node_class`'s ancestry (itself first) that `has_icon` accepts, or "" when none
+## does. Separate from the theme lookup so the walk itself can be pinned without an editor.
+static func class_icon_name(node_class: String, has_icon: Callable) -> String:
+	var candidate: String = node_class
+	while not candidate.is_empty():
+		if bool(has_icon.call(candidate)):
+			return candidate
+		candidate = str(ClassDB.get_parent_class(StringName(candidate))) if ClassDB.class_exists(StringName(candidate)) else ""
+	return ""
 
 
 ## True when no chip is active, or the node inherits any active chip's base classes.
