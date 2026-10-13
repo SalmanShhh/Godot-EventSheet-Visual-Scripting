@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Fixed: the finding and navigation windows
+
+- **Find References:** double-clicking a result now selects the row the use sits on, opening its
+  sheet first when it is not the one on screen. It used to open the sheet (and only when it was a
+  saved file) and leave you at the top.
+- **Outline:** in split view, picking an entry now lands in the pane you are working in, the same
+  pane the outline was read from. To-do notes carry the editor's own info icon instead of an emoji.
+- **Bookmarks:** Clear All now asks first, because bookmarks are not part of undo. OK and Esc keep
+  them; only the separate Clear All button removes them. The list and its jumps follow the pane you
+  are working in during split view, and entries carry an editor icon instead of an emoji.
+
 ### Fixed: debugging, checks and small prompts
 
 - **Debugger, Breakpoints tab:** unticking a breakpoint deleted it, outside Undo, although the hint

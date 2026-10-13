@@ -12,6 +12,9 @@ const COLOR_GROUP := Color("#e0b070")     # amber - groups (the picker's section
 const COLOR_REGION := Color("#7fb3d5")    # blue - region fences (the script editor's fold hue)
 const COLOR_FUNCTION := Color("#c79bf0")  # purple - published verbs (the picker's custom tint)
 const COLOR_TODO := Color("#8b91a3")      # muted - a note is quieter than the structure around it
+## The editor's own picture for a note, asked of the editor theme. A run with no editor (the suite)
+## shows the note's words alone, tinted by COLOR_TODO under its "To do" folder.
+const TODO_ICON := "NodeInfo"
 
 var _dock: Control = null
 
@@ -167,6 +170,10 @@ func refresh() -> void:
 		var kind: String = str(entry.get("kind", ""))
 		item.set_text(0, _entry_prefix(kind) + str(entry.get("label", "")))
 		item.set_custom_color(0, _entry_color(kind))
+		if kind == "todo":
+			var note_icon: Texture2D = EventSheetEditorIcons.icon(TODO_ICON)
+			if note_icon != null:
+				item.set_icon(0, note_icon)
 		item.set_metadata(0, entry.get("resource", null))
 		items.append(item)
 	if _empty_hint != null:
@@ -183,8 +190,6 @@ static func _entry_prefix(kind: String) -> String:
 			return "ƒ "
 		"todo_folder":
 			return "▸ "
-		"todo":
-			return "💬 "
 	return ""
 
 
@@ -206,9 +211,12 @@ func _on_entry_selected() -> void:
 	if selected == null:
 		return
 	var target: Resource = selected.get_metadata(0)
-	if target != null and _dock._viewport != null:
-		_dock._viewport.reveal_resource(target)
-		_dock._viewport.select_resource(target)
+	# The pane the outline was built from (refresh reads the active view's arrangement), so in split
+	# view the jump lands where the reader is looking, not always in the left pane.
+	var view: EventSheetViewport = _dock._active_view()
+	if target != null and view != null:
+		view.reveal_resource(target)
+		view.select_resource(target)
 
 
 ## The Outline under an arrangement. When the sheet is being read Arranged By something, the

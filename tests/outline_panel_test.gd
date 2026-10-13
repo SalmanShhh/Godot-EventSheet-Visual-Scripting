@@ -82,8 +82,42 @@ static func run() -> bool:
 	all_passed = _check("a sub-event region stays TOP-LEVEL, never under the unrelated group",
 		int(nested_entry.get("parent", -99)), -1) and all_passed
 
-
+	all_passed = _check("a note reads as its words (its mark is an editor icon, not an emoji)",
+		EventSheetOutlinePanel._entry_prefix("todo"), "") and all_passed
+	all_passed = _jumps_land_in_the_active_pane() and all_passed
 	return all_passed
+
+
+## The outline is built from the active pane, so its jumps land there too: in split view, picking an
+## entry selects it in the pane the reader is working in, not always in the left one.
+static func _jumps_land_in_the_active_pane() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	var lead: CommentRow = CommentRow.new()
+	lead.text = "lead"
+	sheet.events.append(lead)
+	var combat: EventGroup = EventGroup.new()
+	combat.group_name = "Combat"
+	sheet.events.append(combat)
+	var editor: EventSheetEditor = EventSheetEditor.new()
+	editor.setup(sheet)
+	editor.set_undo_redo_manager(NoopUndoManager.new())
+	var primary: EventSheetViewport = editor.get_viewport_control()
+	editor._toggle_split_view()
+	var split: EventSheetViewport = editor._multi_view._split_viewport
+	primary._select_row(0, -1)
+	# Selecting in the split makes it the active pane (selecting in the left pane would reclaim it).
+	split._select_row(0, -1)
+	var panel: EventSheetOutlinePanel = editor._ensure_outline_panel()
+	panel.build()
+	panel.refresh()
+	var group_item: TreeItem = editor._outline_tree.get_root().get_first_child()
+	group_item.select(0)
+	panel._on_entry_selected()
+	var landed: Array = [split.get_selected_context().get("source_resource", null),
+		primary.get_selected_context().get("source_resource", null)]
+	editor._toggle_split_view()
+	editor.free()
+	return _check("an outline jump in split view lands in the active pane", landed, [combat, lead])
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

@@ -12,12 +12,20 @@ extends RefCounted
 # Section-header tint shared with the ACE picker's object headers, so panels read as one family.
 const HEADER_COLOR := Color("#e0b070")
 const ENTRY_NUMBER_COLOR := Color("#6f7580")
+## The mark beside each entry: the editor's own star, the one its FileSystem favorites wear (Godot
+## 4.7's editor theme carries no icon named "Bookmark"). Asked of the editor theme, so a run with no
+## editor (the suite) simply shows the words.
+const ENTRY_ICON := "Favorites"
+## The confirmation's destructive button sends this action; OK only keeps the marks.
+const CLEAR_ACTION: StringName = &"clear_bookmarks"
 
 var _dock: Control = null
 
 var window: Window = null
 var tree: Tree = null
 var _empty_hint: Label = null
+## Asks before Clear All: the marks are not sheet edits, so there is no undo that brings them back.
+var clear_confirm: ConfirmationDialog = null
 
 
 func _init(dock: Control) -> void:
@@ -54,10 +62,7 @@ func build() -> void:
 	var clear_button: Button = Button.new()
 	clear_button.text = "Clear All"
 	clear_button.tooltip_text = "Remove every bookmark from this sheet."
-	clear_button.pressed.connect(func() -> void:
-		if _dock._viewport != null:
-			_dock._viewport.clear_bookmarks()
-		refresh())
+	clear_button.pressed.connect(ask_clear_all)
 	toolbar.add_child(clear_button)
 	body_box.add_child(toolbar)
 	tree = Tree.new()
@@ -85,24 +90,62 @@ func open() -> void:
 	window.popup_centered()
 
 
-## Fills the bookmarks tree from the primary pane (popup-free; testable headless).
+## Clear All asks first. Bookmarks live outside the undo stack, so a slip would cost every mark with
+## no way back: OK (and Enter) KEEPS them, Cancel and Esc keep them too, and only the separate
+## Clear All button removes them.
+func ask_clear_all() -> void:
+	if clear_confirm == null:
+		clear_confirm = ConfirmationDialog.new()
+		clear_confirm.title = EventSheetL10n.translate("Clear All Bookmarks")
+		clear_confirm.dialog_text = EventSheetL10n.translate("Remove every bookmark from this sheet? Bookmarks are not part of undo, so they cannot be brought back.")
+		clear_confirm.ok_button_text = EventSheetL10n.translate("Keep Bookmarks")
+		clear_confirm.get_cancel_button().hide()
+		clear_confirm.add_button(EventSheetL10n.translate("Clear All"), true, CLEAR_ACTION)
+		clear_confirm.custom_action.connect(_on_clear_confirm_action)
+		_dock.add_child(clear_confirm)
+	if clear_confirm.is_inside_tree():
+		clear_confirm.popup_centered()
+
+
+func _on_clear_confirm_action(action: StringName) -> void:
+	if action != CLEAR_ACTION:
+		return
+	clear_confirm.hide()
+	var view: EventSheetViewport = _view()
+	if view != null:
+		view.clear_bookmarks()
+	refresh()
+
+
+## The pane the reader is working in - in split view that is the one they last clicked, not always
+## the left one. Bookmarks are shared between panes, but which rows are unfolded (and so listable)
+## and where a jump lands are each pane's own.
+func _view() -> EventSheetViewport:
+	return _dock._active_view()
+
+
+## Fills the bookmarks tree from the active pane (popup-free; testable headless).
 func refresh() -> void:
 	if tree == null:
 		return
 	tree.clear()
 	var root: TreeItem = tree.create_item()
 	var marked: int = 0
-	if _dock._viewport != null:
+	var view: EventSheetViewport = _view()
+	if view != null:
+		var entry_icon: Texture2D = EventSheetEditorIcons.icon(ENTRY_ICON)
 		var sheet_header: TreeItem = tree.create_item(root)
 		sheet_header.set_text(0, _sheet_label())
 		sheet_header.set_custom_color(0, HEADER_COLOR)
 		sheet_header.set_selectable(0, false)
-		for flat_entry: Dictionary in _dock._viewport.get_flat_rows():
+		for flat_entry: Dictionary in view.get_flat_rows():
 			var row_data: EventRowData = flat_entry.get("row")
 			if row_data == null or not row_data.bookmark_enabled or row_data.source_resource == null:
 				continue
 			var entry: TreeItem = tree.create_item(sheet_header)
 			entry.set_text(0, entry_label(row_data))
+			if entry_icon != null:
+				entry.set_icon(0, entry_icon)
 			entry.set_tooltip_text(0, _full_row_text(row_data))
 			entry.set_metadata(0, row_data.source_resource)
 			marked += 1
@@ -125,7 +168,7 @@ static func entry_label(row_data: EventRowData) -> String:
 			break
 	if row_data.event_number > 0:
 		return "%d · %s" % [row_data.event_number, text]
-	return "🔖 %s" % text
+	return text
 
 
 func _sheet_label() -> String:
@@ -150,12 +193,14 @@ func _on_entry_selected() -> void:
 	if selected == null:
 		return
 	var target: Resource = selected.get_metadata(0)
-	if target != null and _dock._viewport != null:
-		_dock._viewport.reveal_resource(target)
-		_dock._viewport.select_resource(target)
+	var view: EventSheetViewport = _view()
+	if target != null and view != null:
+		view.reveal_resource(target)
+		view.select_resource(target)
 
 
 func _cycle(direction: int) -> void:
-	if _dock._viewport != null:
-		_dock._viewport.jump_to_bookmark(direction)
+	var view: EventSheetViewport = _view()
+	if view != null:
+		view.jump_to_bookmark(direction)
 		refresh()

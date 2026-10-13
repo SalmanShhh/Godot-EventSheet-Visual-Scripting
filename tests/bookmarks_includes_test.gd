@@ -69,8 +69,43 @@ static func run() -> bool:
 	numbered_span.text = "System OnReady"
 	numbered.spans.append(numbered_span)
 	all_passed = _check("event rows show their margin number (panel matches gutter)", EventSheetBookmarksPanel.entry_label(numbered), "12 · System OnReady") and all_passed
-	viewport.clear_bookmarks()
+	var plain: EventRowData = EventRowData.new()
+	var plain_span: SemanticSpan = SemanticSpan.new()
+	plain_span.text = "Spawn the boss"
+	plain.spans.append(plain_span)
+	all_passed = _check("a row with no event number reads as its words (the mark is an editor icon, not an emoji)",
+		EventSheetBookmarksPanel.entry_label(plain), "Spawn the boss") and all_passed
+
+	# Split view: the panel lists and jumps in the pane the reader is working in.
+	editor._toggle_split_view()
+	var split: EventSheetViewport = editor._multi_view._split_viewport
+	viewport._select_row(2, -1)
+	viewport.toggle_bookmark_selected()
+	viewport._select_row(1, -1)
+	# The marks are shared state; the split pane re-reads them when it next builds its rows.
+	split.set_sheet(sheet)
+	# Selecting in the split makes it the active pane (selecting in the left pane would reclaim it).
+	split._select_row(0, -1)
 	panel.refresh()
+	var split_entry: TreeItem = editor._bookmarks_tree.get_root().get_first_child().get_child(1)
+	split_entry.select(0)
+	panel._on_entry_selected()
+	all_passed = _check("picking a bookmark in split view lands in the active pane, not the left one",
+		[split.get_selected_context().get("source_resource", null), viewport.get_selected_context().get("source_resource", null)],
+		[sheet.events[2], sheet.events[1]]) and all_passed
+	editor._toggle_split_view()
+
+	# Clear All asks first: OK keeps every mark, only the separate Clear All button removes them.
+	panel.ask_clear_all()
+	var confirm: ConfirmationDialog = panel.clear_confirm
+	all_passed = _check("Clear All asks, and its OK button keeps the bookmarks",
+		[confirm != null, confirm.ok_button_text if confirm != null else ""], [true, "Keep Bookmarks"]) and all_passed
+	if confirm != null:
+		confirm.confirmed.emit()
+		confirm.canceled.emit()
+	all_passed = _check("OK and Cancel leave every bookmark in place", viewport.jump_to_bookmark(1), true) and all_passed
+	if confirm != null:
+		confirm.custom_action.emit(EventSheetBookmarksPanel.CLEAR_ACTION)
 	all_passed = _check("Clear All empties every bookmark", viewport.jump_to_bookmark(1), false) and all_passed
 	all_passed = _check("the cleared panel shows no entries", editor._bookmarks_tree.get_root().get_first_child(), null) and all_passed
 	editor.free()

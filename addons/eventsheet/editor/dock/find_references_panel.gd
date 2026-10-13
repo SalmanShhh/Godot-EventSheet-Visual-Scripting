@@ -85,6 +85,9 @@ func _run_find_references() -> int:
 			# The ROW the hit sits on, so activating a result lands on it rather than on the top
 			# of the file - the same metadata the Find results bar carries.
 			item.set_metadata(1, reference.get("row", null))
+			# The line the row emits at survives the open (a freshly opened sheet is a new resource
+			# tree, so the row above only matches when the sheet was already open).
+			item.set_metadata(2, int(reference.get("line", 0)))
 			total += int(reference.get("count", 0))
 	var summary: TreeItem = _find_refs_tree.create_item(root)
 	summary.set_text(0, "%d reference(s)" % total)
@@ -98,8 +101,16 @@ func _on_find_reference_activated() -> void:
 	if item == null:
 		return
 	var path: String = str(item.get_metadata(0)) if item.get_metadata(0) != null else ""
-	if not path.is_empty() and ResourceLoader.exists(path):
-		_dock._load_sheet_from_path(path)
+	if path.is_empty():
+		return
+	# The same landing the Find results bar uses: open (or focus) the sheet, then select the row the
+	# hit sits on - by its line, which survives the open, or by the row itself when no line is known.
+	var line: int = int(item.get_metadata(2)) if item.get_metadata(2) != null else 0
+	if _dock._find_results.jump_to_line(path, line):
+		return
+	var row: Variant = item.get_metadata(1)
+	if row is Resource and _dock._active_view() != null:
+		_dock._active_view().reveal_resource(row as Resource)
 
 
 ## Seeds the search box from a selected local-variable or signal row (a quick "find this").
