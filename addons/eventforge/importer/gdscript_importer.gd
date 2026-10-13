@@ -11,7 +11,10 @@
 class_name GDScriptImporter
 extends RefCounted
 
-const InspectorConditionLift := preload("res://addons/eventforge/importer/inspector_condition_lift.gd")
+## The lift that takes a generated `_validate_property` back onto its variables. Loaded by path, and
+## only for a file that carries the generated function's doc line, so the first open of every other
+## file never compiles it.
+const INSPECTOR_CONDITION_LIFT_PATH := "res://addons/eventforge/importer/inspector_condition_lift.gd"
 
 ## Whether the file being read writes its own `_validate_property`. A group show-if comment is read as
 ## the variable's option only then: with no function behind it the compile would write one the file
@@ -321,7 +324,10 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 			sheet.host_class = host_match.get_string(1)
 	# A generated _validate_property goes back onto the variables it came from (byte-gated inside), before
 	# the statement lift below would read it as an ordinary function.
-	InspectorConditionLift.lift(sheet, source)
+	if source.contains("
+" + SheetCompiler.INSPECTOR_CONDITIONS_DOC + "
+"):
+		load(INSPECTOR_CONDITION_LIFT_PATH).lift(sheet, source)
 	# Tier 2: reverse template matching lifts trailing trigger functions, sheet functions
 	# (with their @ace annotation blocks), and trailing comments into real rows - verified
 	# by a byte-identical recompile and reverted otherwise (the lossless rule always wins).

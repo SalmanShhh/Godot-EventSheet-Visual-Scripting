@@ -65,6 +65,8 @@ const CLICK_ONLY := [
 	"res://addons/eventsheet/editor/inspector_preview_card.gd",
 	"res://addons/eventsheet/editor/project_bar.gd",
 	"res://addons/eventsheet/editor/dock/object_hierarchy.gd",
+	# Only a file holding the generated `_validate_property` needs its lift back onto the variables.
+	"res://addons/eventforge/importer/inspector_condition_lift.gd",
 ]
 
 ## The ids a first-paint file spells out rather than reading off a file it must not compile, each
