@@ -272,6 +272,32 @@ static func _test_the_receipt_lists_the_files_it_writes() -> bool:
 	ok = _check("and a rename that writes nothing else says nothing else",
 		EventSheetRenameReceipt.summary_text(4, []),
 		"4 row(s) in this sheet, and nothing else in the project calls it by that name.") and ok
+	# The status line after the button. It used to promise "one Ctrl+Z takes all of it back" even
+	# when the includers pass had saved other files to disk, which that Ctrl+Z never reaches.
+	ok = _check("with nothing written elsewhere, one Ctrl+Z is the whole of it",
+		EventSheetRenameReceipt.done_text(4, PackedStringArray()),
+		"4 row(s) renamed - one Ctrl+Z takes all of it back.") and ok
+	ok = _check("with files saved elsewhere, the sentence says Ctrl+Z does not reach them",
+		EventSheetRenameReceipt.done_text(4, PackedStringArray(["pause.tres", "bars.tres"])),
+		"4 row(s) renamed - one Ctrl+Z takes back this sheet's rows. Also written and saved, which Ctrl+Z does not undo: pause.tres, bars.tres.") and ok
+	ok = _test_rename_everywhere_can_be_cancelled() and ok
+	return ok
+
+
+## The variable Rename Everywhere window offered the rename and nothing else - no way out that
+## changes nothing short of the title bar's close box.
+static func _test_rename_everywhere_can_be_cancelled() -> bool:
+	var dock := Control.new()
+	var refactor := EventSheetRenameRefactor.new()
+	refactor.init(dock)
+	var window: Window = refactor.ensure_window()
+	var cancel: Button = window.find_child("CancelButton", true, false) as Button
+	var ok: bool = _check("the window offers Cancel", cancel.text if cancel != null else "", "Cancel")
+	if cancel != null:
+		window.visible = true
+		cancel.pressed.emit()
+		ok = _check("and Cancel closes it", window.visible, false) and ok
+	dock.free()
 	return ok
 
 

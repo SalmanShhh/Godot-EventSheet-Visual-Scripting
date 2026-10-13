@@ -22,6 +22,24 @@
   until a name is entered.
 - **Edit Script Block:** the confirm button read OK; it now says Save, as everything about it does.
 
+### Fixed: project-wide find, replace and rename see `.gd` sheets too
+
+- **Find in Project** searched only `.tres` sheets, so a project of `.gd` sheets (the default kind)
+  found nothing. It now searches every sheet in both formats, and opening a result takes you to the
+  event or line it was found on instead of the top of the sheet.
+- **Replace in Project** now replaces in closed `.gd` sheets as well, backing each file up first and
+  naming it on the status line.
+- **Rename class** counted uses across the whole project but rewrote only the open sheet and the
+  `.tres` sheets that include it, so a `.gd` that extends or creates the class kept the old name. It
+  now rewrites every sheet that names the class, in both formats (open tabs are left unsaved for you
+  to save), and the count it shows is the one it applies.
+- **Rename class** now refuses a name another class, engine class or built-in type already has.
+- **Ctrl+P `#`** and **What Changed…** now list `.gd` sheets alongside `.tres` sheets.
+- **Rename Everywhere** (a variable's rename window) now has a Cancel button.
+- **Rename a function:** after a rename that also saved sheets which include this one, the status
+  line no longer says one Ctrl+Z takes all of it back - it says Ctrl+Z covers this sheet's rows and
+  names the files it saved.
+
 ### Fixed: two prompts no longer lose work on Esc or Enter
 
 - **Every Tick:** taking the last condition off an event asks whether to keep it as an every-tick

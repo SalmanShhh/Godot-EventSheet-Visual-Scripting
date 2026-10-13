@@ -31,6 +31,8 @@ static func run() -> bool:
 	ok = _test_prelude_rewrite() and ok
 	ok = _test_a_doc_comment_block_keeps_its_other_lines() and ok
 	ok = _test_rename_count() and ok
+	ok = _test_class_rename_reaches_every_sheet() and ok
+	ok = _test_a_taken_class_name_is_refused() and ok
 	ok = _test_dialog_order() and ok
 	return ok
 
@@ -221,6 +223,84 @@ static func _test_rename_count() -> bool:
 	ok = _check("a class nobody named has nothing to rename",
 		EventSheetHeadActions.rename_reach(""), {"uses": 0, "sheets": 0}) and ok
 	return ok
+
+
+## The class rename's count and its writes are one walk over every sheet that names the class, in
+## both formats: a closed `.gd` (as its text, string literals left alone), a closed `.tres`, and an
+## open tab (in memory). It used to count project-wide and then rewrite only this sheet and the
+## `.tres` sheets that include it, so a `.gd` that extends the class kept the old name.
+static func _test_class_rename_reaches_every_sheet() -> bool:
+	var script_path: String = "user://eventforge_class_rename_user.gd"
+	var resource_path: String = "user://eventforge_class_rename_user.tres"
+	var script_text: String = "extends Hero\n\nvar champion: Hero = Hero.new()\n\n\nfunc _ready() -> void:\n\tprint(\"Hero\")\n"
+	_write(script_path, script_text)
+	var closed := EventSheetResource.new()
+	var closed_code := RawCodeRow.new()
+	closed_code.code = "var backup := Hero.new()"
+	closed.events = [closed_code] as Array[Resource]
+	ResourceSaver.save(closed, resource_path)
+	var open_sheet := EventSheetResource.new()
+	var open_code := RawCodeRow.new()
+	open_code.code = "var ally := Hero.new()"
+	open_sheet.events = [open_code] as Array[Resource]
+	var open_sheets: Dictionary = {"user://eventforge_class_rename_open.gd": open_sheet}
+	var paths := PackedStringArray([script_path, resource_path])
+
+	var ok: bool = _check("the count is every use in every sheet, both formats and the open tab",
+		EventSheetHeadActions.rename_reach("Hero", open_sheets, PackedStringArray(), paths),
+		{"uses": 5, "sheets": 3})
+	ok = _check("and counting wrote nothing",
+		[FileAccess.get_file_as_string(script_path), open_code.code],
+		[script_text, "var ally := Hero.new()"]) and ok
+
+	var done: Array[Dictionary] = EventSheetHeadActions.rename_class_across("Hero", "Champion",
+		open_sheets, PackedStringArray(), paths, true)
+	ok = _check("the rename rewrites the same sheets it counted",
+		done.map(func(entry: Dictionary) -> Array: return [
+			str(entry["path"]).get_file(), entry["count"], entry["open"], entry["saved"]]),
+		[["eventforge_class_rename_open.gd", 1, true, true],
+			["eventforge_class_rename_user.gd", 3, false, true],
+			["eventforge_class_rename_user.tres", 1, false, true]]) and ok
+	ok = _check("a closed .gd is rewritten as its text, the printed word left alone",
+		FileAccess.get_file_as_string(script_path),
+		"extends Champion\n\nvar champion: Champion = Champion.new()\n\n\nfunc _ready() -> void:\n\tprint(\"Hero\")\n") and ok
+	var reread: EventSheetResource = ResourceLoader.load(resource_path, "",
+		ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
+	ok = _check("a closed .tres is rewritten and saved",
+		(reread.events[0] as RawCodeRow).code if reread != null else "", "var backup := Champion.new()") and ok
+	ok = _check("an open tab changes in memory",
+		open_code.code, "var ally := Champion.new()") and ok
+	ok = _check("the status names each file with its count",
+		EventSheetHeadActions.class_rename_elsewhere_text("Hero", done),
+		" (eventforge_class_rename_open.gd (1), eventforge_class_rename_user.gd (3), eventforge_class_rename_user.tres (1))") and ok
+	ok = _check("and says which files it could not save",
+		EventSheetHeadActions.class_rename_elsewhere_text("Hero",
+			[{"path": "res://enemy.gd", "count": 2, "saved": false}] as Array[Dictionary]),
+		" Could not save enemy.gd - still says Hero.") and ok
+	DirAccess.remove_absolute(script_path)
+	DirAccess.remove_absolute(resource_path)
+	return ok
+
+
+## A class rename onto a name the project already answers to would make two classes share it.
+static func _test_a_taken_class_name_is_refused() -> bool:
+	var own: String = "res://addons/eventsheet/editor/dock/sheet_head_actions.gd"
+	var ok: bool = SUPPORT.pin_table("sheet_head_bands_test", {
+		"Node": true,
+		"Vector2": true,
+		"EventSheetHeadActions": true,
+		"NobodyHasThisClassName": false,
+	}, func(name: String) -> bool: return EventSheetHeadActions.class_name_taken(name))
+	return _check("a sheet's own current name is not a clash with itself",
+		EventSheetHeadActions.class_name_taken("EventSheetHeadActions", PackedStringArray([own])),
+		false) and ok
+
+
+static func _write(path: String, text: String) -> void:
+	var handle: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	if handle != null:
+		handle.store_string(text)
+		handle.close()
 
 
 static func _test_dialog_order() -> bool:

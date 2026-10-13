@@ -118,21 +118,109 @@ func reveal_scene_node(scene_path: String, node_path: String) -> void:
 ## What a class rename would touch, before anything is written: {"uses": N, "sheets": M}. The count
 ## is the whole point of the gesture - a rename nobody can see the blast radius of is a rename
 ## nobody presses.
-static func rename_reach(class_name_text: String, extra_sheets: Dictionary = {}) -> Dictionary:
+##
+## Counted BY DOING IT: the very walk the button runs, on throwaway copies, so the number before the
+## button and the files after it cannot disagree. `extra_sheets` are the open tabs (this sheet among
+## them), `skip_paths` files that are not sheets of their own (a `.tres` sheet's generated script),
+## and `sheet_paths` the closed sheets to walk - every sheet in the project, both formats, when null.
+static func rename_reach(class_name_text: String, extra_sheets: Dictionary = {},
+		skip_paths: PackedStringArray = PackedStringArray(), sheet_paths: Variant = null) -> Dictionary:
 	var wanted: String = class_name_text.strip_edges()
-	if wanted.is_empty():
+	if not wanted.is_valid_identifier():
 		return {"uses": 0, "sheets": 0}
+	var walked: PackedStringArray = sheet_paths if sheet_paths is PackedStringArray \
+		else EventSheetProjectFind.list_all_project_sheets()
 	var uses: int = 0
 	var sheets: int = 0
-	for entry: Variant in EventSheetFindReferences.find_in_project(wanted, extra_sheets):
-		if not (entry is Dictionary):
-			continue
-		var count: int = int((entry as Dictionary).get("count", 0))
+	# Any other name gives the same count; nothing is written on this walk.
+	for entry: Dictionary in rename_class_across(wanted, wanted + "_", extra_sheets, skip_paths,
+			walked, false):
+		var count: int = int(entry.get("count", 0))
 		if count <= 0:
 			continue
 		uses += count
 		sheets += 1
 	return {"uses": uses, "sheets": sheets}
+
+
+## Every sheet that names the class, rewritten by the rename the class line gets: [{path, count,
+## open, saved}] in path order. Open tabs (`open_sheets`, {path: sheet}) are rewritten in memory - the
+## live version of their file, left unsaved like any other edit. Closed sheets are rewritten and
+## SAVED, in both formats: a `.tres` through the same model rename, a `.gd` as the text it is, one
+## line at a time with string literals left alone. Each closed file's pre-save bytes go to the backup
+## ring first, and `saved` is false for a file that could not be written. Paths in `skip_paths` are
+## never touched. With `write` false the same walk runs on throwaway copies and writes nothing.
+static func rename_class_across(old_name: String, new_name: String, open_sheets: Dictionary,
+		skip_paths: PackedStringArray, sheet_paths: PackedStringArray, write: bool) -> Array[Dictionary]:
+	var done: Array[Dictionary] = []
+	if not old_name.is_valid_identifier() or not new_name.is_valid_identifier() or old_name == new_name:
+		return done
+	var word: RegEx = RegEx.create_from_string("\\b%s\\b" % old_name)
+	var paths: PackedStringArray = sheet_paths.duplicate()
+	for open_path: Variant in open_sheets.keys():
+		if not paths.has(str(open_path)):
+			paths.append(str(open_path))
+	paths.sort()
+	for path: String in paths:
+		if path.is_empty() or skip_paths.has(path):
+			continue
+		if open_sheets.has(path):
+			var live: EventSheetResource = open_sheets[path] as EventSheetResource
+			if live == null:
+				continue
+			var target: EventSheetResource = live if write else live.duplicate(true)
+			var moved: int = EventSheetRefactor.rename_symbol(target, old_name, new_name, true)
+			if moved > 0:
+				done.append({"path": path, "count": moved, "open": true, "saved": true})
+			continue
+		if path.get_extension().to_lower() == "gd":
+			var source: String = FileAccess.get_file_as_string(path)
+			if word.search(source) == null:
+				continue
+			var lines: PackedStringArray = source.split("\n")
+			var renamed: int = 0
+			for index: int in range(lines.size()):
+				var before: int = word.search_all(lines[index]).size()
+				if before == 0:
+					continue
+				lines[index] = EventSheetRefactor.rename_in_code(lines[index], old_name, new_name)
+				renamed += before - word.search_all(lines[index]).size()
+			if renamed <= 0:
+				continue
+			var written: bool = true
+			if write:
+				EventSheetBackups.backup_sheet(path)
+				written = EventSheetProjectFind.write_script_text(path, "\n".join(lines))
+			done.append({"path": path, "count": renamed, "open": false, "saved": written})
+			continue
+		var closed: EventSheetResource = load(path) as EventSheetResource
+		if closed == null:
+			continue
+		var copy: EventSheetResource = closed if write else closed.duplicate(true)
+		var count: int = EventSheetRefactor.rename_symbol(copy, old_name, new_name, true)
+		if count <= 0:
+			continue
+		var saved: bool = true
+		if write:
+			EventSheetBackups.backup_sheet(path)
+			saved = ResourceSaver.save(copy, path) == OK
+		done.append({"path": path, "count": count, "open": false, "saved": saved})
+	return done
+
+
+## True when the project already answers to `name` as a type: an engine class, a built-in type, or a
+## `class_name` another script declares. Two classes sharing one name is a parse error for every
+## script that names it. `own_paths` are this sheet's own files, whose current name is no clash.
+static func class_name_taken(name: String, own_paths: PackedStringArray = PackedStringArray()) -> bool:
+	if ClassDB.class_exists(name):
+		return true
+	for type_index: int in range(TYPE_MAX):
+		if type_string(type_index) == name:
+			return true
+	for entry: Dictionary in ProjectSettings.get_global_class_list():
+		if str(entry.get("class", "")) == name and not own_paths.has(str(entry.get("path", ""))):
+			return true
+	return false
 
 
 ## The sentence the rename dialog says before it writes anything.
@@ -167,7 +255,7 @@ func open_class_rename() -> void:
 		_dock.add_child(_rename_dialog)
 	_rename_edit.text = current
 	_rename_count.text = rename_reach_text(
-		rename_reach(current, EventSheetFindReferences.open_sheets_of(_dock))
+		rename_reach(current, EventSheetFindReferences.open_sheets_of(_dock), _generated_paths())
 	)
 	_rename_dialog.popup_centered(Vector2i(420, 0))
 	_rename_edit.grab_focus()
@@ -186,6 +274,10 @@ func _apply_class_rename() -> void:
 		old_name = str(EventSheetHeadBands.facts(_dock._current_sheet, _prelude_text()).get("class_name", ""))
 	if old_name == new_name:
 		return
+	var own_paths: PackedStringArray = _own_paths()
+	if class_name_taken(new_name, own_paths):
+		_dock._set_status(EventSheetL10n.translate("\"%s\" is already the name of another class.") % new_name, true)
+		return
 	var written: bool = _dock._perform_undoable_sheet_edit("Rename Class", func() -> bool:
 		_write_head_line(EventSheetHeadBands.BAND_NAME, new_name)
 		_dock._current_sheet.custom_class_name = new_name
@@ -195,15 +287,78 @@ func _apply_class_rename() -> void:
 	)
 	if not written:
 		return
-	var touched: PackedStringArray = PackedStringArray()
+	# Every OTHER sheet that names the class, in both formats - the sheets the dialog counted. Open
+	# tabs change in memory and are left unsaved; closed files are written.
+	var elsewhere: Array[Dictionary] = []
 	if not old_name.is_empty():
-		touched = _dock._rename.rename_in_includers(
-			old_name, new_name, EventSheetProjectFind.list_project_sheets()
-		)
+		var skip: PackedStringArray = own_paths.duplicate()
+		skip.append_array(_generated_paths())
+		elsewhere = rename_class_across(old_name, new_name,
+			EventSheetFindReferences.open_sheets_of(_dock), skip,
+			EventSheetProjectFind.list_all_project_sheets(), true)
+	_mark_open_tabs_unsaved(elsewhere)
 	_dock._refresh_after_edit()
 	_dock._refresh_title_strip()
 	_dock._mark_dirty(EventSheetL10n.translate("Renamed %s to %s.") % [old_name, new_name] \
-		+ ("" if touched.is_empty() else " (%s)" % ", ".join(touched)))
+		+ class_rename_elsewhere_text(old_name, elsewhere))
+
+
+## What the status line adds after a class rename: the other files it rewrote, each with its count,
+## and - said apart, because it is the part that broke something - any file it could not save.
+static func class_rename_elsewhere_text(old_name: String, elsewhere: Array[Dictionary]) -> String:
+	var touched: PackedStringArray = PackedStringArray()
+	var failed: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in elsewhere:
+		var file: String = str(entry.get("path", "")).get_file()
+		if bool(entry.get("saved", true)):
+			touched.append("%s (%d)" % [file, int(entry.get("count", 0))])
+		else:
+			failed.append(file)
+	var text: String = "" if touched.is_empty() else " (%s)" % ", ".join(touched)
+	if not failed.is_empty():
+		text += " " + EventSheetL10n.translate("Could not save %s - still says %s.") % [
+			", ".join(failed), old_name]
+	return text
+
+
+## This sheet's own files: the tab path and, for a sheet opened from a `.gd`, that file. The rename
+## of their class line is the undoable edit itself, so the project walk leaves them alone.
+func _own_paths() -> PackedStringArray:
+	var own: PackedStringArray = PackedStringArray()
+	if not str(_dock._current_sheet_path).is_empty():
+		own.append(str(_dock._current_sheet_path))
+	if not _dock._current_sheet.external_source_path.is_empty():
+		own.append(_dock._current_sheet.external_source_path)
+	return own
+
+
+## The script a `.tres` sheet compiles to. It is this sheet's own output, not a sheet that uses the
+## class, so neither the count nor the walk treats it as one - the next compile rewrites it anyway.
+func _generated_paths() -> PackedStringArray:
+	var generated: PackedStringArray = PackedStringArray()
+	if _dock._current_sheet.external_source_path.is_empty() \
+			and not _dock._current_sheet.resource_path.is_empty():
+		var output: String = EventSheetSheetDiff.saved_path_for(_dock._current_sheet)
+		if not output.is_empty():
+			generated.append(output)
+	return generated
+
+
+## Marks each open tab the class rename rewrote in memory as unsaved, so its new text is saved with
+## the tab rather than lost when it closes.
+func _mark_open_tabs_unsaved(elsewhere: Array[Dictionary]) -> void:
+	var open_sheets: Dictionary = EventSheetFindReferences.open_sheets_of(_dock)
+	var changed: bool = false
+	for entry: Dictionary in elsewhere:
+		if not bool(entry.get("open", false)):
+			continue
+		var sheet: EventSheetResource = open_sheets.get(str(entry.get("path", ""))) as EventSheetResource
+		for tab_index: int in range(_dock._open_tabs.size()):
+			if _dock._open_tabs[tab_index].get("sheet") == sheet and sheet != null:
+				_dock._open_tabs[tab_index]["dirty"] = true
+				changed = true
+	if changed:
+		_dock._refresh_tab_bar()
 
 
 ## The `@icon` band's swatch: a file dialog filtered to images, writing the annotation.

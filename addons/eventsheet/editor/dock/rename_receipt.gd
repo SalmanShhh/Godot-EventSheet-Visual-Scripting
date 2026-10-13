@@ -222,9 +222,17 @@ func confirm() -> void:
 		touched = _dock._rename.rename_in_includers(_old_name, new_name,
 			EventSheetProjectFind.list_project_sheets())
 	_dock._refresh_title_strip()
-	_dock._set_status(EventSheetL10n.translate("%d row(s) renamed - one Ctrl+Z takes all of it back.%s") % [
-		moved[0], EventSheetL10n.translate(" Also written: %s.") % ", ".join(touched) \
-			if not touched.is_empty() else ""])
+	_dock._set_status(done_text(moved[0], touched))
+
+
+## The status line after the button. "One Ctrl+Z takes all of it back" is only true while nothing
+## outside this sheet was written: an includer the rename saved to disk is outside this sheet's undo
+## step, so the sentence then says what Ctrl+Z reaches and names what it does not.
+static func done_text(moved: int, touched: PackedStringArray) -> String:
+	if touched.is_empty():
+		return EventSheetL10n.translate("%d row(s) renamed - one Ctrl+Z takes all of it back.") % moved
+	return EventSheetL10n.translate("%d row(s) renamed - one Ctrl+Z takes back this sheet's rows. Also written and saved, which Ctrl+Z does not undo: %s.") % [
+		moved, ", ".join(touched)]
 
 
 ## The node half of the same button: every row of this sheet that reaches the old node, pointed at

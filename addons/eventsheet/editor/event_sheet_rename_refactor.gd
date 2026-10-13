@@ -115,10 +115,20 @@ func open(old_name: String) -> void:
 	if old_name.is_empty():
 		return
 	_rename_old_name = old_name
+	ensure_window()
+	_rename_edit.text = old_name
+	_rename_window.popup_centered()
+	_rename_edit.grab_focus()
+	_rename_edit.select_all()
+
+
+## Builds the dialog once and returns it. Separate from open() so the suite can read what the window
+## offers without a screen to pop it up on.
+func ensure_window() -> Window:
 	if _rename_window == null:
 		_rename_window = Window.new()
 		_rename_window.title = "Rename Everywhere"
-		_rename_window.size = Vector2i(380, 110)
+		_rename_window.size = Vector2i(380, 140)
 		_rename_window.close_requested.connect(func() -> void: _rename_window.hide())
 		var box: VBoxContainer = VBoxContainer.new()
 		box.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -129,12 +139,16 @@ func open(old_name: String) -> void:
 		apply_button.text = "Rename in this sheet + every sheet that includes it"
 		apply_button.pressed.connect(_confirm_rename)
 		box.add_child(apply_button)
+		# A way out that changes nothing - the window used to offer only the rename and the title
+		# bar's close box.
+		var cancel_button: Button = Button.new()
+		cancel_button.name = "CancelButton"
+		cancel_button.text = EventSheetL10n.translate("Cancel")
+		cancel_button.pressed.connect(func() -> void: _rename_window.hide())
+		box.add_child(cancel_button)
 		_rename_window.add_child(box)
 		_dock.add_child(_rename_window)
-	_rename_edit.text = old_name
-	_rename_window.popup_centered()
-	_rename_edit.grab_focus()
-	_rename_edit.select_all()
+	return _rename_window
 
 
 func _confirm_rename() -> void:

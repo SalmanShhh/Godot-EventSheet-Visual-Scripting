@@ -43,7 +43,7 @@ static func _test_a_verbatim_literal_keeps_its_spaces() -> bool:
 	for key: String in HARVEST.editor_literals().keys:
 		carried[key] = true
 	return _check("a literal that starts with a space is that key",
-		carried.has(" Also written: %s."), true)
+		carried.has(" %d sheet(s) that include this one are rewritten and SAVED, which one Ctrl+Z here does not undo."), true)
 
 
 ## The whole point: running the harvest on this tree changes nothing.

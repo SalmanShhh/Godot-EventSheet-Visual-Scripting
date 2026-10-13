@@ -7402,3 +7402,6 @@ The name Ask To Pause was given.,"Der Name, den Um Pause bitten bekommen hat."
 Select a finding to fix it.,
 This finding has more than one fix - pick one of the Fix buttons below.,
 This finding has no one-step fix.,
+"%d row(s) renamed - one Ctrl+Z takes back this sheet's rows. Also written and saved, which Ctrl+Z does not undo: %s.",
+"""%s"" is already the name of another class.",
+Could not save %s - still says %s.,
