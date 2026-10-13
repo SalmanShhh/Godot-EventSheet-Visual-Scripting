@@ -6,6 +6,22 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Fixed: no translation key is listed twice
+
+- \"Destroy\" and \"%d more like it in this file.\" each sat twice in all nine translation files (two
+  harvests met in a merge), and in Spanish and Italian the two rows had drifted to different words.
+  The earlier row of each is gone - the later one is the one the editor always read - and a gate
+  now fails when any catalog lists a key twice.
+
+### Fixed: a range that leaves its step to Godot opens as a range
+
+- `@export_range(1, 3)` - two numbers, the step left to Godot - stayed a code line on a variable,
+  so its Inspector look could not be changed from the sheet. It now opens as the same range the
+  three-number form does and saves back exactly as written, and a modifier added later writes the
+  step in front of it (Godot's own default, 1).
+- A whole number typed in the Ghost Row with a range (\"max_jumps is a whole number from 1 to 3, in
+  the Inspector\") writes `@export_range(1, 3)` rather than `@export_range(1, 3, 1)`.
+
 ### Fixed: a selected variable's help strip fits beside its doors
 
 - The status-bar strip under a selected variable repeated the row's own type, name and value and
@@ -60,6 +76,7 @@ What changed in the build you have installed (v0.18.0), in the words the release
   are 890. The generator shrank by half (a new behaviour is a sheet compiled to GDScript, not text
   written out by hand); the growth is the global form and the Properties and actions window, which
   had no counterpart before. Both reuse the window kit and the Anatomy census rather than new widgets.
+
 ### Fixed: Sheet > Publish New Version… opens its window again
 
 - The menu entry called a dock function that no longer existed, so choosing it did nothing but
@@ -77,6 +94,23 @@ What changed in the build you have installed (v0.18.0), in the words the release
 - ▲ in the Designer moves a variable above the next one UP in the Inspector. It used to swap with
   the variable just above it in the file even when that one is not shown in the Inspector, which
   changed nothing anybody could see.
+### Changed: Sheet Type, Manage Includes and Import event sheet say what they will write
+
+- Sheet Type's \"Ships as\" line is the band across the top, with a \"?\" where the field that is wrong
+  goes; the problem is said under the fields, the field is marked, and the foot says which field to
+  fix while OK waits. The chosen kind's description stays in view under Kind, and the help strip
+  shows the `extends` line the sheet will compile to.
+- Manage Includes shows what each include brings beside its name (\"3 function(s)\", \"file not
+  found\"), and the help strip says what the selected one is and every function and variable it
+  ADDS. Move up and Move down are named. Add… opens a picker of the project's sheet files in which
+  a file already included, one that would include this sheet back, or one that is not a sheet is
+  marked the moment it is chosen, and Include waits. Includes stay `.tres` sheets: the compiler
+  merges sheet resources, so a `.gd` script cannot be an include.
+- Import event sheet names the sheet coming across, the file it becomes and how many rows mapped
+  in a band across the top; the object grid has column heads (Object, Becomes, Node); the report
+  sits beside the preview; the long explanations moved into the help strip; and when Save as…
+  cannot compile the sheet, the reason is said in the foot beside the button.
+
 ### Changed: the Start page, the Welcome, the tour and New Event Sheet say what a choice does first
 
 - The Start page's first column opens with \"Open an existing script…\", so a project that already
