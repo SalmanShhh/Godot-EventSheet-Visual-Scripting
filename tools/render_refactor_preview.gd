@@ -2,7 +2,7 @@
 #
 #   docs/images/refactor-row-menu.png          the row menu's Refactor ▸ submenu, on a real sheet
 #   docs/images/duplicate-as-variant.png       the Duplicate as Variant… dialog, preview pane filled
-#   docs/images/snippet-blanks.png             Insert Snippet…'s fill-in form for a snippet with blanks
+#   docs/images/snippet-blanks.png             the Insert Snippet window with a snippet's blanks to fill in
 #
 # These are the parts no headless run can answer. The suite pins the transforms, the refusals and
 # the menu labels; what it cannot see is whether a disabled item still READS as an offer with its
@@ -119,10 +119,15 @@ func _on_frame() -> void:
 		_stage = 5
 		return
 	if _stage == 5 and _frames == 38:
-		var blanks: EventSheetSnippetBlanksDialog = EventSheetSnippetBlanksDialog.open_for(_editor, "Pickup", _snippet_text())
-		blanks.size = Vector2i(520, 340)
-		blanks.position = Vector2i(230, 190)
-		_dialog = blanks
+		# The Insert Snippet window lists the library, so the snippet is filed in a throwaway one.
+		ProjectSettings.set_setting("eventsheets/project/snippets_dir", "user://render_refactor_snippets")
+		var snippet_path: String = EventSheetSnippetLibrary.save_snippet("Pickup", _snippet_text())
+		var insert: ConfirmationDialog = load("res://addons/eventsheet/editor/dock/insert_snippet_dialog.gd").open_for(
+			_editor, EventSheetSnippetLibrary.list_snippets())
+		insert.call("select_snippet", snippet_path)
+		insert.size = Vector2i(520, 420)
+		insert.position = Vector2i(230, 150)
+		_dialog = insert
 		_stage = 6
 		return
 	if _stage == 6 and _frames == 48:
