@@ -7375,3 +7375,16 @@ List at least one column (one per line).,至少列出一列（每行一个）。
 """{name}"" can't be a parameter name - use letters, digits and underscores (move_speed, not move speed), and not a GDScript keyword.",“{name}”不能作为参数名 - 请使用字母、数字和下划线（用 move_speed，而不是 move speed），且不要使用 GDScript 关键字。
 "This function already has a parameter called ""{name}"".",此函数已有名为“{name}”的参数。
 A snippet called {name} already exists - pick another name.,名为 {name} 的片段已存在 - 请换一个名称。
+%s changed outside the editor,%s 在编辑器外被修改
+"The file on disk changed, and nothing here is unsaved. Show the new version?",磁盘上的文件已更改，这里没有未保存的内容。显示新版本？
+Reloading reads its events again; there is nothing for Ctrl+Z to take back.,重新加载会重新读取其事件；Ctrl+Z 没有可撤销的内容。
+Keep this version,保留此版本
+The file on disk changed while you were editing it here. Which version do you want?,你在这里编辑时，磁盘上的文件已更改。你要哪个版本？
+"Using the file on disk drops your unsaved edits here, and Ctrl+Z cannot bring them back.",使用磁盘上的文件会丢弃你在这里未保存的编辑，Ctrl+Z 也无法找回。
+Keep mine,保留我的
+Use the file on disk,使用磁盘上的文件
+Keep this event?,保留此事件？
+"You removed its last condition, so this event now runs every frame (60 times a second).",你移除了它的最后一个条件，所以此事件现在每帧运行（每秒 60 次）。
+"That is fine for movement, often not what you meant otherwise. Ctrl+Z undoes either choice.",这对移动来说没问题，其他情况下往往不是你想要的。两种选择都可以用 Ctrl+Z 撤销。
+Keep it,保留
+Delete the event,删除事件

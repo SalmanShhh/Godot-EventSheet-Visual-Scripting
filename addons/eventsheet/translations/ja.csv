@@ -7375,3 +7375,16 @@ List at least one column (one per line).,列を少なくとも一つ書いてく
 """{name}"" can't be a parameter name - use letters, digits and underscores (move_speed, not move speed), and not a GDScript keyword.","""{name}"" はパラメーター名にできません - 文字、数字、アンダースコアを使い (move speed ではなく move_speed)、GDScript のキーワードは避けてください。"
 "This function already has a parameter called ""{name}"".","この関数にはすでに ""{name}"" というパラメーターがあります。"
 A snippet called {name} already exists - pick another name.,{name} というスニペットはすでにあります - 別の名前を選んでください。
+%s changed outside the editor,%s がエディターの外で変更されました
+"The file on disk changed, and nothing here is unsaved. Show the new version?",ディスク上のファイルが変更されました。ここに未保存の変更はありません。新しい版を表示しますか?
+Reloading reads its events again; there is nothing for Ctrl+Z to take back.,再読み込みはイベントを読み直します。Ctrl+Z で戻すものはありません。
+Keep this version,この版を残す
+The file on disk changed while you were editing it here. Which version do you want?,ここで編集している間にディスク上のファイルが変更されました。どちらの版を使いますか?
+"Using the file on disk drops your unsaved edits here, and Ctrl+Z cannot bring them back.",ディスク上のファイルを使うと、ここでの未保存の編集は失われ、Ctrl+Z でも戻せません。
+Keep mine,自分の版を残す
+Use the file on disk,ディスク上のファイルを使う
+Keep this event?,このイベントを残しますか?
+"You removed its last condition, so this event now runs every frame (60 times a second).",最後の条件を外したので、このイベントは毎フレーム(1 秒に 60 回)実行されます。
+"That is fine for movement, often not what you meant otherwise. Ctrl+Z undoes either choice.",移動ならそれで問題ありませんが、それ以外では意図と違うことがよくあります。どちらを選んでも Ctrl+Z で戻せます。
+Keep it,残す
+Delete the event,イベントを削除

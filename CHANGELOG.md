@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Changed: quick questions take one plain shape
+
+- **A quick question now reads the same everywhere.** Its title is the question, one plain sentence
+  says what happens, a short list shows what it touches, and a muted last line says whether Ctrl+Z
+  undoes it. The safe answer is the blue button Enter presses; Esc and the close box always cancel;
+  a risky answer (delete, discard, use the other version) is its own red-outlined button on the
+  left, so neither Enter nor Esc can take it.
+- **Keep this event?** - taking the last condition off a top-level event asks in those words, with
+  Keep it as the blue answer and Delete the event on the left.
+- **A file changed outside the editor** - on a tab with no unsaved edits the question offers Reload
+  as the safe answer; with unsaved edits, Keep mine is the safe answer and Use the file on disk is
+  the red one, and the prompt says plainly that Ctrl+Z cannot bring the edits back. Refocusing the
+  editor while the question is open no longer asks it a second time.
+
 ### Removed: the Addon manager - a pack is a folder, as everywhere else in Godot
 
 - **Tools ▸ Addon manager… is gone**, and with it the pack Update… and Restore… windows and the

@@ -7375,3 +7375,16 @@ List at least one column (one per line).,Укажите хотя бы один �
 """{name}"" can't be a parameter name - use letters, digits and underscores (move_speed, not move speed), and not a GDScript keyword.","«{name}» не может быть именем параметра - используйте буквы, цифры и подчёркивания (move_speed, а не move speed) и не ключевое слово GDScript."
 "This function already has a parameter called ""{name}"".",У этой функции уже есть параметр «{name}».
 A snippet called {name} already exists - pick another name.,Фрагмент {name} уже существует - выберите другое имя.
+%s changed outside the editor,%s изменён вне редактора
+"The file on disk changed, and nothing here is unsaved. Show the new version?","Файл на диске изменился, а здесь нет несохранённых правок. Показать новую версию?"
+Reloading reads its events again; there is nothing for Ctrl+Z to take back.,Перезагрузка заново читает события; Ctrl+Z нечего отменять.
+Keep this version,Оставить эту версию
+The file on disk changed while you were editing it here. Which version do you want?,"Файл на диске изменился, пока вы редактировали его здесь. Какую версию оставить?"
+"Using the file on disk drops your unsaved edits here, and Ctrl+Z cannot bring them back.","Если взять файл с диска, несохранённые правки здесь пропадут, и Ctrl+Z их не вернёт."
+Keep mine,Оставить мою
+Use the file on disk,Взять файл с диска
+Keep this event?,Оставить это событие?
+"You removed its last condition, so this event now runs every frame (60 times a second).","Вы убрали его последнее условие, поэтому теперь это событие выполняется каждый кадр (60 раз в секунду)."
+"That is fine for movement, often not what you meant otherwise. Ctrl+Z undoes either choice.","Для движения это нормально, в остальных случаях обычно не то, что задумано. Ctrl+Z отменяет любой из вариантов."
+Keep it,Оставить
+Delete the event,Удалить событие

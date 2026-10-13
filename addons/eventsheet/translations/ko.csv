@@ -7375,3 +7375,16 @@ List at least one column (one per line).,열을 하나 이상 적으세요(한 �
 """{name}"" can't be a parameter name - use letters, digits and underscores (move_speed, not move speed), and not a GDScript keyword.","""{name}""은(는) 매개변수 이름이 될 수 없습니다 - 문자, 숫자, 밑줄을 사용하고(move speed가 아니라 move_speed), GDScript 키워드는 피하세요."
 "This function already has a parameter called ""{name}"".","이 함수에는 이미 ""{name}"" 매개변수가 있습니다."
 A snippet called {name} already exists - pick another name.,{name} 스니펫이 이미 있습니다 - 다른 이름을 고르세요.
+%s changed outside the editor,%s이(가) 편집기 밖에서 변경되었습니다
+"The file on disk changed, and nothing here is unsaved. Show the new version?",디스크의 파일이 변경되었고 여기에는 저장하지 않은 내용이 없습니다. 새 버전을 표시할까요?
+Reloading reads its events again; there is nothing for Ctrl+Z to take back.,다시 불러오면 이벤트를 다시 읽습니다. Ctrl+Z로 되돌릴 것은 없습니다.
+Keep this version,이 버전 유지
+The file on disk changed while you were editing it here. Which version do you want?,여기서 편집하는 동안 디스크의 파일이 변경되었습니다. 어느 버전을 원하나요?
+"Using the file on disk drops your unsaved edits here, and Ctrl+Z cannot bring them back.",디스크의 파일을 사용하면 여기서 저장하지 않은 편집이 사라지며 Ctrl+Z로 되돌릴 수 없습니다.
+Keep mine,내 버전 유지
+Use the file on disk,디스크의 파일 사용
+Keep this event?,이 이벤트를 유지할까요?
+"You removed its last condition, so this event now runs every frame (60 times a second).",마지막 조건을 제거했으므로 이 이벤트는 이제 매 프레임(초당 60번) 실행됩니다.
+"That is fine for movement, often not what you meant otherwise. Ctrl+Z undoes either choice.","이동에는 괜찮지만, 그 밖의 경우에는 의도와 다른 경우가 많습니다. 어느 쪽을 골라도 Ctrl+Z로 되돌릴 수 있습니다."
+Keep it,유지
+Delete the event,이벤트 삭제

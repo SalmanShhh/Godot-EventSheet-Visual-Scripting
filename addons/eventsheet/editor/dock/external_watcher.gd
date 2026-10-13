@@ -45,29 +45,39 @@ func prompt_external_reload_if_changed() -> void:
 	if _dock._current_sheet != null and _dock._current_sheet.read_only:
 		reload_external_sheet()
 		return
-	if _external_reload_dialog == null:
-		_external_reload_dialog = ConfirmationDialog.new()
-		_external_reload_dialog.title = "File Changed On Disk"
-		_external_reload_dialog.ok_button_text = "Reload"
-		_external_reload_dialog.cancel_button_text = "Keep Editor Version"
-		_external_reload_dialog.confirmed.connect(reload_external_sheet)
-		# Keeping the editor version: remember the new mtime so we only ask once per change.
-		_external_reload_dialog.canceled.connect(func() -> void:
-			if _dock._current_sheet != null:
-				_dock._external_mtime = FileAccess.get_modified_time(_dock._current_sheet.external_source_path)
-		)
-		_dock.add_child(_external_reload_dialog)
-	_external_reload_dialog.dialog_text = reload_prompt_text(
-		_dock._current_sheet.external_source_path.get_file(), bool(_dock._dirty))
-	if _dock.is_inside_tree():
-		_external_reload_dialog.popup_centered(Vector2i(460, 160))
+	# Focus comes back to the editor while the question is still open; asking twice helps nobody.
+	if is_instance_valid(_external_reload_dialog) and _external_reload_dialog.visible:
+		return
+	var dirty: bool = bool(_dock._dirty)
+	var ask: Dictionary = reload_prompt(_dock._current_sheet.external_source_path.get_file(), dirty)
+	# Keeping the editor version remembers the new mtime, so the question is asked once per change.
+	var keep: Callable = func() -> void:
+		if _dock._current_sheet != null:
+			_dock._external_mtime = FileAccess.get_modified_time(_dock._current_sheet.external_source_path)
+	ask["on_cancel"] = keep
+	ask["on_main"] = keep if dirty else reload_external_sheet
+	ask["on_danger"] = reload_external_sheet
+	_external_reload_dialog = load(_dock.SMALL_PROMPT_PATH).open(_dock, ask)
 
 
-## What the reload question says. The warning about losing edits is only true when the tab HAS
-## unsaved edits; on a clean tab a reload loses nothing, and saying otherwise makes "Reload" look
-## dangerous when it is the safe answer.
-static func reload_prompt_text(file_name: String, dirty: bool) -> String:
-	var text: String = "%s was modified outside the sheet editor.\nReload it (re-import + event lifting)?" % file_name
+## What the reload question says, and which answer is the safe one. With unsaved edits here, keeping
+## them is the blue answer and the file on disk is the red one; on a clean tab a reload loses
+## nothing, so Reload is the blue answer and nothing is painted as dangerous.
+static func reload_prompt(file_name: String, dirty: bool) -> Dictionary:
+	var ask: Dictionary = {
+		"title": EventSheetL10n.translate("%s changed outside the editor") % file_name,
+		"say": EventSheetL10n.translate("The file on disk changed, and nothing here is unsaved. Show the new version?"),
+		"note": EventSheetL10n.translate("Reloading reads its events again; there is nothing for Ctrl+Z to take back."),
+		"glyph": "!",
+		"main": EventSheetL10n.translate("Reload"),
+		"cancel": EventSheetL10n.translate("Keep this version"),
+	}
 	if dirty:
-		text += " Unsaved sheet edits will be lost."
-	return text
+		ask.merge({
+			"say": EventSheetL10n.translate("The file on disk changed while you were editing it here. Which version do you want?"),
+			"note": EventSheetL10n.translate("Using the file on disk drops your unsaved edits here, and Ctrl+Z cannot bring them back."),
+			"main": EventSheetL10n.translate("Keep mine"),
+			"cancel": "",
+			"danger": EventSheetL10n.translate("Use the file on disk"),
+		}, true)
+	return ask

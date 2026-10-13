@@ -7375,3 +7375,16 @@ List at least one column (one per line).,Gib mindestens eine Spalte an (eine pro
 """{name}"" can't be a parameter name - use letters, digits and underscores (move_speed, not move speed), and not a GDScript keyword.","""{name}"" kann kein Parametername sein - verwende Buchstaben, Ziffern und Unterstriche (move_speed, nicht move speed) und kein GDScript-Schlüsselwort."
 "This function already has a parameter called ""{name}"".","Diese Funktion hat bereits einen Parameter namens ""{name}""."
 A snippet called {name} already exists - pick another name.,Ein Snippet namens {name} existiert bereits - wähle einen anderen Namen.
+%s changed outside the editor,%s wurde außerhalb des Editors geändert
+"The file on disk changed, and nothing here is unsaved. Show the new version?","Die Datei auf der Festplatte hat sich geändert, und hier ist nichts ungespeichert. Die neue Version anzeigen?"
+Reloading reads its events again; there is nothing for Ctrl+Z to take back.,Neu laden liest die Events erneut; Strg+Z hat nichts zurückzunehmen.
+Keep this version,Diese Version behalten
+The file on disk changed while you were editing it here. Which version do you want?,"Die Datei auf der Festplatte hat sich geändert, während du sie hier bearbeitet hast. Welche Version möchtest du?"
+"Using the file on disk drops your unsaved edits here, and Ctrl+Z cannot bring them back.","Die Datei von der Festplatte zu nehmen verwirft deine ungespeicherten Änderungen hier, und Strg+Z kann sie nicht zurückholen."
+Keep mine,Meine behalten
+Use the file on disk,Datei von der Festplatte verwenden
+Keep this event?,Dieses Event behalten?
+"You removed its last condition, so this event now runs every frame (60 times a second).","Du hast seine letzte Bedingung entfernt, daher läuft dieses Event jetzt in jedem Frame (60-mal pro Sekunde)."
+"That is fine for movement, often not what you meant otherwise. Ctrl+Z undoes either choice.","Für Bewegung ist das in Ordnung, sonst meist nicht gewollt. Strg+Z macht beide Entscheidungen rückgängig."
+Keep it,Behalten
+Delete the event,Event löschen

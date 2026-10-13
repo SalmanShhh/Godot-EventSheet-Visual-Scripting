@@ -28,6 +28,8 @@ const VARIABLE_OWNERS_PATH := "res://addons/eventsheet/editor/interaction/variab
 const BLEND_MODE_FIELD_PATH := "res://addons/eventsheet/editor/blend_mode_field.gd"
 const LANGUAGE_VARIANTS_DIALOG_PATH := "res://addons/eventsheet/editor/dock/language_variants_dialog.gd"
 const COMPLETIONS_PATH := "res://addons/eventsheet/editor/autocomplete/completion_sources.gd"
+## The one shape every quick question takes, loaded the first time a question is asked.
+const SMALL_PROMPT_PATH := "res://addons/eventsheet/editor/small_prompt.gd"
 const STATE_TRAIL_PATH := "res://addons/eventsheet/editor/state_trail.gd"
 const ACE_APPLY_PATH := "res://addons/eventsheet/editor/dock/ace_apply.gd"
 const ADD_BEHAVIOR_DIALOG_PATH := "res://addons/eventsheet/editor/add_behavior_dialog.gd"

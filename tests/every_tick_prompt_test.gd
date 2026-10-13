@@ -1,6 +1,6 @@
 # EventForge - the Every Tick prompt. Taking the last condition off a top-level event asks whether to
 # keep it as an every-tick event or delete it. Dismissing the question (Esc, the close box) must keep
-# the event: only the Delete The Event button deletes it.
+# the event: only the Delete the event button deletes it.
 @tool
 class_name EveryTickPromptTest
 extends RefCounted
@@ -24,9 +24,10 @@ static func run() -> bool:
 	ops._prompt_keep_as_every_tick("every_tick_probe")
 	var dialog: ConfirmationDialog = ops._every_tick_dialog
 	ok = _check("the prompt was built", dialog != null, true) and ok
-	ok = _check("OK keeps the event", dialog.ok_button_text, "Keep As Every Tick") and ok
+	ok = _check("the title is the question", dialog.title, "Keep this event?") and ok
+	ok = _check("OK keeps the event", dialog.ok_button_text, "Keep it") and ok
 	ok = _check("there is no Cancel button to mistake for delete", dialog.get_cancel_button().visible, false) and ok
-	ok = _check("Delete The Event is its own button", _button_texts(dialog).has("Delete The Event"), true) and ok
+	ok = _check("Delete the event is its own button", _button_texts(dialog).has("Delete the event"), true) and ok
 
 	# Esc and the close box send `canceled`: the event stays.
 	dialog.canceled.emit()
@@ -35,8 +36,8 @@ static func run() -> bool:
 	dialog.custom_action.emit(&"something_else")
 	ok = _check("another action keeps the event", dock._current_sheet.events.size(), 1) and ok
 	# Only the Delete The Event button deletes.
-	dialog.custom_action.emit(ops.EVERY_TICK_DELETE_ACTION)
-	ok = _check("Delete The Event deletes it", dock._current_sheet.events.size(), 0) and ok
+	dialog.custom_action.emit(load(dock.SMALL_PROMPT_PATH).DANGER_ACTION)
+	ok = _check("Delete the event deletes it", dock._current_sheet.events.size(), 0) and ok
 
 	dock.free()
 	return ok

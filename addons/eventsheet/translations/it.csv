@@ -7375,3 +7375,16 @@ List at least one column (one per line).,Elenca almeno una colonna (una per riga
 """{name}"" can't be a parameter name - use letters, digits and underscores (move_speed, not move speed), and not a GDScript keyword.","""{name}"" non può essere un nome di parametro - usa lettere, cifre e trattini bassi (move_speed, non move speed), e non una parola chiave di GDScript."
 "This function already has a parameter called ""{name}"".","Questa funzione ha già un parametro chiamato ""{name}""."
 A snippet called {name} already exists - pick another name.,Esiste già uno snippet chiamato {name} - scegli un altro nome.
+%s changed outside the editor,%s è stato modificato fuori dall'editor
+"The file on disk changed, and nothing here is unsaved. Show the new version?",Il file su disco è cambiato e qui non c'è nulla di non salvato. Mostrare la nuova versione?
+Reloading reads its events again; there is nothing for Ctrl+Z to take back.,Ricaricare rilegge i suoi eventi; Ctrl+Z non ha nulla da annullare.
+Keep this version,Mantieni questa versione
+The file on disk changed while you were editing it here. Which version do you want?,Il file su disco è cambiato mentre lo modificavi qui. Quale versione vuoi?
+"Using the file on disk drops your unsaved edits here, and Ctrl+Z cannot bring them back.","Usare il file su disco scarta le modifiche non salvate qui, e Ctrl+Z non può recuperarle."
+Keep mine,Mantieni la mia
+Use the file on disk,Usa il file su disco
+Keep this event?,Mantenere questo evento?
+"You removed its last condition, so this event now runs every frame (60 times a second).","Hai rimosso la sua ultima condizione, quindi ora questo evento viene eseguito a ogni frame (60 volte al secondo)."
+"That is fine for movement, often not what you meant otherwise. Ctrl+Z undoes either choice.","Va bene per il movimento, altrimenti spesso non è ciò che intendevi. Ctrl+Z annulla entrambe le scelte."
+Keep it,Mantienilo
+Delete the event,Elimina l'evento
