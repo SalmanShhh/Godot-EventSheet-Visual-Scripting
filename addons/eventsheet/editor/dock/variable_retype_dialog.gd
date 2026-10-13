@@ -59,19 +59,16 @@ func _build_dialog() -> void:
 	var content: VBoxContainer = EventSheetPopupUI.form_box()
 	content.add_child(EventSheetPopupUI.hint_label("Changes the variable's type AND every row that sets or compares it, in one step you can undo. Values it cannot convert on its own are listed below rather than guessed at."))
 	var type_box: VBoxContainer = EventSheetPopupUI.form_box()
-	_type_option = OptionButton.new()
+	_type_option = EventSheetPopupUI.described_option()
 	# The variable dialog's own list: the three everyday types first, then the advanced Godot ones
 	# (int/float collapse into Number + the tick below, bool into Yes-No, String into Text).
 	for friendly: String in ["number", "text", "boolean"]:
-		_type_option.add_item(friendly)
-		_type_option.set_item_tooltip(_type_option.item_count - 1, str(VariableDialog.TYPE_HINTS[friendly]))
+		EventSheetPopupUI.add_described_item(_type_option, friendly, str(VariableDialog.TYPE_HINTS[friendly]))
 	_type_option.add_separator("Advanced types")
 	for option: String in VariableDialog.TYPE_OPTIONS:
 		if option in ["int", "float", "bool", "String"]:
 			continue
-		_type_option.add_item(option)
-		if VariableDialog.TYPE_HINTS.has(option):
-			_type_option.set_item_tooltip(_type_option.item_count - 1, str(VariableDialog.TYPE_HINTS[option]))
+		EventSheetPopupUI.add_described_item(_type_option, option, str(VariableDialog.TYPE_HINTS.get(option, "")))
 	# The tick belongs to "number" alone, so picking a type from the dropdown has to show or hide it -
 	# without this the only UI route to a numeric type leaves the tick hidden and `int` unreachable.
 	_type_option.item_selected.connect(func(_index: int) -> void:

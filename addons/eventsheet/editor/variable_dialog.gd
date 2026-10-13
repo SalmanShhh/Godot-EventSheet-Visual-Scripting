@@ -90,7 +90,7 @@ const FIELD_HELP: Dictionary = {
 var _refusal_field: String = ""
 
 var _name_edit: LineEdit = null
-var _name_warning: Label = null
+var _name_warning: EventSheetPopupUI.StateNote = null
 ## "Keep in step over the network": the mode a synchronizer in the scene holds this variable in.
 ## Its items carry the mode string as metadata; an item that does nothing carries "", and the offer
 ## to add a synchronizer carries this, which is no mode.
@@ -292,7 +292,7 @@ func init_dialog(parent_node: Node) -> void:
 
 	# The scope is a DROPDOWN, and it comes first: it is the row's first word, and every other
 	# field in the dialog is gated by it. Each option carries the one line that says what it means.
-	_scope_option = OptionButton.new()
+	_scope_option = EventSheetPopupUI.described_option()
 	for scope_key: String in CHOOSABLE_SCOPES:
 		_scope_option.add_item(EventSheetVariableSentence.scope_word(scope_key))
 		_scope_option.set_item_metadata(_scope_option.item_count - 1, scope_key)
@@ -318,11 +318,7 @@ func init_dialog(parent_node: Node) -> void:
 	_dialog.register_text_enter(_name_edit)
 	name_row.add_child(_name_edit)
 	form.add_child(name_row)
-	_name_warning = Label.new()
-	_name_warning.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_name_warning.custom_minimum_size = Vector2(380.0, 0.0)
-	_name_warning.visible = false
-	_name_warning.modulate = Color(1.0, 0.5, 0.5)
+	_name_warning = EventSheetPopupUI.StateNote.new(380.0)
 	form.add_child(_name_warning)
 	_name_edit.text_changed.connect(func(_text: String) -> void: _refresh_name_warning())
 
@@ -331,7 +327,7 @@ func init_dialog(parent_node: Node) -> void:
 	type_label.text = "Type"
 	type_label.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
 	type_row.add_child(type_label)
-	_type_option = OptionButton.new()
+	_type_option = EventSheetPopupUI.described_option()
 	# Number / Text / Boolean, a divider, then Vector / Color / List / Table, then the Godot
 	# types under their own names. Every entry carries the stored type as its METADATA (never as its
 	# text), so the display can read as plainly as it likes while _selected_stored_type() still
@@ -340,16 +336,13 @@ func init_dialog(parent_node: Node) -> void:
 		if choice.has("separator"):
 			_type_option.add_separator(str(choice["separator"]))
 			continue
-		_type_option.add_item(str(choice["label"]))
-		_type_option.set_item_metadata(_type_option.item_count - 1, str(choice["stored"]))
-		_type_option.set_item_tooltip(_type_option.item_count - 1, type_description(str(choice["stored"])))
+		EventSheetPopupUI.add_described_item(_type_option, str(choice["label"]),
+			type_description(str(choice["stored"])), str(choice["stored"]))
 	for option: String in TYPE_OPTIONS:
 		# The friendly half already covers these under plainer words.
 		if FRIENDLY_STORED_TYPES.has(option):
 			continue
-		_type_option.add_item(option)
-		_type_option.set_item_metadata(_type_option.item_count - 1, option)
-		_type_option.set_item_tooltip(_type_option.item_count - 1, type_description(option))
+		EventSheetPopupUI.add_described_item(_type_option, option, type_description(option), option)
 	_type_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_type_option.item_selected.connect(func(_index: int) -> void:
 		_refresh_whole_numbers_row()
@@ -941,6 +934,7 @@ func _refresh_scope_descriptions() -> void:
 	for index: int in range(_scope_option.item_count):
 		_scope_option.set_item_tooltip(index,
 			scope_description(str(_scope_option.get_item_metadata(index)), owner))
+	EventSheetPopupUI.follow_description(_scope_option)
 
 
 ## The dialog's fields, top to bottom, by the word each row leads with, in the pinned order: the
@@ -1457,8 +1451,7 @@ func _on_confirmed() -> void:
 	var shadow_owner: String = _shadow_owner(var_name)
 	if not shadow_owner.is_empty():
 		if _name_warning != null:
-			_name_warning.visible = true
-			_name_warning.text = "✗ \"%s\" shadows a %s member - pick another name." % [var_name, shadow_owner]
+			_name_warning.say("✗ \"%s\" shadows a %s member - pick another name." % [var_name, shadow_owner])
 		if _dialog.is_inside_tree():
 			_dialog.call_deferred("popup_centered", Vector2i(460, 260))
 		return
@@ -2610,14 +2603,14 @@ func _refresh_name_warning() -> void:
 	var typed: String = _name_edit.text.strip_edges()
 	var owner: String = _shadow_owner(typed)
 	if not owner.is_empty():
-		_name_warning.visible = true
-		_name_warning.text = "⚠ \"%s\" shadows a %s member - rename to avoid a clash." % [typed, owner]
+		_name_warning.say("⚠ \"%s\" shadows a %s member - rename to avoid a clash." % [typed, owner],
+			EventSheetPopupUI.TONE_WARNING)
 		return
 	if name_clashes(typed):
-		_name_warning.visible = true
-		_name_warning.text = "⚠ \"%s\" is already a variable here - pick another name." % typed
+		_name_warning.say("⚠ \"%s\" is already a variable here - pick another name." % typed,
+			EventSheetPopupUI.TONE_WARNING)
 		return
-	_name_warning.visible = false
+	_name_warning.say("")
 
 
 ## True when the sheet already declares `candidate` - a sheet variable or a row-placed one - and it

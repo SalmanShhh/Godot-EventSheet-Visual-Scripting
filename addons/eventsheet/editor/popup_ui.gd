@@ -539,12 +539,7 @@ class HelpStrip extends PanelContainer:
 	## the corner of the eye without reading a word.
 	func set_tone(level: String) -> void:
 		tone = level
-		var colour: Color = EventSheetPopupUI.accent_color()
-		match level:
-			TONE_WARNING:
-				colour = EventSheetPalette.COLOR_HEALTH_WARN
-			TONE_ERROR:
-				colour = EventSheetPalette.COLOR_ERROR_TEXT
+		var colour: Color = EventSheetPopupUI.tone_color(level)
 		if _panel_style != null:
 			_panel_style.border_color = colour
 		heading_label.add_theme_color_override("font_color", colour)
@@ -895,6 +890,212 @@ static func sized_list(rows_high: float) -> ItemList:
 	list.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(rows_high))
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return list
+
+
+# ── The window kit's state parts ──────────────────────────────────────────────────────────────
+#
+# A window says how things stand in three tones and no more: ok (green), a warning (amber - it
+# will work, but not the way you might expect) and a problem (red - it cannot be meant). The help
+# strip, the state note and the result card all colour from tone_color(), so one tone is one colour
+# wherever a window shows it.
+
+const TONE_OK := "ok"
+const TONE_WARNING := "warning"
+const TONE_ERROR := "error"
+## The mark a result line leads with, per tone. Plain glyphs in the tone's colour, so the line still
+## reads in a theme, a headless build or a screen reader with no icons at all.
+const TONE_MARKS := {TONE_OK: "✓", TONE_WARNING: "!", TONE_ERROR: "✕"}
+
+
+## The colour of a tone; anything that is not one of the three is the editor's accent.
+static func tone_color(tone: String) -> Color:
+	match tone:
+		TONE_OK:
+			return EventSheetPalette.COLOR_HEALTH_OK
+		TONE_WARNING:
+			return EventSheetPalette.COLOR_HEALTH_WARN
+		TONE_ERROR:
+			return EventSheetPalette.COLOR_ERROR_TEXT
+	return accent_color()
+
+
+## A STATE NOTE: one sentence with a coloured edge, the way a window says what is wrong with the
+## field above it. `say("")` hides it, so a caller sets it on every change and never toggles
+## visibility by hand. `text` reads back what it says.
+class StateNote extends PanelContainer:
+
+	var text: String:
+		get:
+			return _label.text
+
+	var tone: String = ""
+	var _label: Label = null
+	var _style: StyleBoxFlat = null
+
+
+	func _init(wrap_width: float = EventSheetPopupUI.HINT_WRAP_WIDTH) -> void:
+		_style = StyleBoxFlat.new()
+		_style.content_margin_left = EventSheetPalette.scaled_f(8.0)
+		_style.content_margin_right = EventSheetPalette.scaled_f(8.0)
+		_style.content_margin_top = EventSheetPalette.scaled_f(4.0)
+		_style.content_margin_bottom = EventSheetPalette.scaled_f(4.0)
+		_style.border_width_left = EventSheetPalette.scaled(3)
+		add_theme_stylebox_override("panel", _style)
+		_label = Label.new()
+		_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_label.custom_minimum_size = Vector2(wrap_width, 0.0)
+		add_child(_label)
+		visible = false
+
+
+	func say(sentence: String, level: String = EventSheetPopupUI.TONE_ERROR) -> void:
+		tone = level
+		_label.text = sentence
+		var colour: Color = EventSheetPopupUI.tone_color(level)
+		_style.border_color = colour
+		_style.bg_color = Color(colour.r, colour.g, colour.b, 0.12)
+		visible = not sentence.strip_edges().is_empty()
+
+
+# ── The described dropdown ────────────────────────────────────────────────────────────────────
+#
+# Every choice in a dropdown carries the sentence that says what it means, as Godot's own item
+# tooltip: the open list shows it as the pointer rests on a choice, and the closed dropdown's own
+# tooltip is the chosen item's sentence. No popup of our own - the PopupMenu already does this.
+
+
+## Wires `dropdown` (or a new one) so its tooltip follows the chosen item's description, and
+## returns it. A tooltip it already had stays as the answer for a choice with no description.
+static func described_option(dropdown: OptionButton = null) -> OptionButton:
+	if dropdown == null:
+		dropdown = OptionButton.new()
+	dropdown.set_meta("described_fallback", dropdown.tooltip_text)
+	dropdown.item_selected.connect(func(_index: int) -> void: follow_description(dropdown))
+	# select() from code emits nothing, so the tooltip is also brought up to date as the pointer
+	# arrives - the only moment it can show.
+	dropdown.mouse_entered.connect(func() -> void: follow_description(dropdown))
+	return dropdown
+
+
+## Adds one choice with the sentence that describes it, and returns its index. `metadata` is the
+## stored value when the words shown are not the value written.
+static func add_described_item(dropdown: OptionButton, text: String, description: String,
+		metadata: Variant = null) -> int:
+	dropdown.add_item(text)
+	var index: int = dropdown.item_count - 1
+	dropdown.set_item_tooltip(index, description)
+	if metadata != null:
+		dropdown.set_item_metadata(index, metadata)
+	follow_description(dropdown)
+	return index
+
+
+## Sets the dropdown's tooltip to its chosen item's description (or the tooltip it started with).
+static func follow_description(dropdown: OptionButton) -> void:
+	var told: String = dropdown.get_item_tooltip(dropdown.selected) if dropdown.selected >= 0 else ""
+	dropdown.tooltip_text = told if not told.is_empty() else str(dropdown.get_meta("described_fallback", ""))
+
+
+## A VIEW SWITCH: Events | Code | Both as one segmented row of toggle buttons in a ButtonGroup.
+## `view_chosen` fires when the reader picks a different view; `choose()` sets one from code.
+class ViewSwitch extends HBoxContainer:
+
+	signal view_chosen(view: String)
+
+	const EVENTS := "events"
+	const CODE := "code"
+	const BOTH := "both"
+	const LABELS := {EVENTS: "Events", CODE: "Code", BOTH: "Both"}
+
+	var view: String = ""
+	var buttons: Dictionary = {}
+
+
+	func _init(start: String = BOTH) -> void:
+		add_theme_constant_override("separation", 0)
+		var group: ButtonGroup = ButtonGroup.new()
+		for id: String in LABELS:
+			var button: Button = Button.new()
+			button.text = EventSheetL10n.translate(str(LABELS[id]))
+			button.toggle_mode = true
+			# The chosen view reads in the one accent, the way the editor marks its own choice.
+			button.add_theme_color_override("font_pressed_color", EventSheetPopupUI.accent_color())
+			button.add_theme_color_override("font_hover_pressed_color", EventSheetPopupUI.accent_color())
+			button.button_group = group
+			button.pressed.connect(choose.bind(id))
+			add_child(button)
+			buttons[id] = button
+		choose(start, false)
+
+
+	func choose(wanted: String, announce: bool = true) -> void:
+		if not buttons.has(wanted) or wanted == view:
+			return
+		view = wanted
+		for id: String in buttons:
+			(buttons[id] as Button).set_pressed_no_signal(id == wanted)
+		if announce:
+			view_chosen.emit(wanted)
+
+
+## A RESULT CARD: a titled panel that says what just happened. `report()` fills it - a short flow of
+## figures read left to right, then one line per outcome, each led by its tone's mark and closed by
+## the file it touched when there is one.
+class ResultCard extends PanelContainer:
+
+	var figures_label: Label = null
+	var lines_box: VBoxContainer = null
+
+
+	func _init(title: String) -> void:
+		var style: StyleBoxFlat = EventSheetPopupUI.inset_panel_stylebox()
+		style.set_content_margin_all(EventSheetPopupUI.PANEL_SECTION_PAD)
+		add_theme_stylebox_override("panel", style)
+		var box: VBoxContainer = EventSheetPopupUI.form_box()
+		box.add_child(EventSheetPopupUI.section_header(title))
+		figures_label = Label.new()
+		figures_label.add_theme_color_override("font_color", EventSheetPalette.TEXT_SECONDARY)
+		figures_label.visible = false
+		box.add_child(figures_label)
+		lines_box = VBoxContainer.new()
+		box.add_child(lines_box)
+		add_child(box)
+
+
+	## `lines` are {"text", "tone" (ok / warning / error), "file" (optional)}; empty clears the card.
+	func report(lines: Array, figures: PackedStringArray = PackedStringArray()) -> void:
+		figures_label.text = "  →  ".join(figures)
+		figures_label.visible = not figures.is_empty()
+		for old: Node in lines_box.get_children():
+			lines_box.remove_child(old)
+			old.queue_free()
+		for line: Variant in lines:
+			if line is Dictionary:
+				lines_box.add_child(_line(line))
+
+
+	func _line(entry: Dictionary) -> HBoxContainer:
+		var tone: String = str(entry.get("tone", EventSheetPopupUI.TONE_OK))
+		var row: HBoxContainer = HBoxContainer.new()
+		row.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)
+		var mark: Label = Label.new()
+		mark.name = "Mark"
+		mark.text = str(EventSheetPopupUI.TONE_MARKS.get(tone, "·"))
+		mark.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(tone))
+		# One width for every mark, so the words of each line start at the same edge.
+		mark.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(30.0), 0.0)
+		mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		row.add_child(mark)
+		var words: Label = EventSheetPopupUI.hint_label(str(entry.get("text", "")))
+		words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(words)
+		var file: String = str(entry.get("file", ""))
+		if not file.is_empty():
+			var chip: PanelContainer = EventSheetPopupUI.metadata_badge(file.get_file())
+			chip.name = "File"
+			chip.tooltip_text = file
+			row.add_child(chip)
+		return row
 
 
 # ── The typed field makers ────────────────────────────────────────────────────────────────────

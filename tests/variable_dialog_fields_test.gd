@@ -99,6 +99,7 @@ static func run() -> bool:
 	ok = _check("a name already taken here is flagged under the field", dialog._name_warning.visible, true) and ok
 	ok = _check("…and says so plainly", dialog._name_warning.text,
 		"⚠ \"taken\" is already a variable here - pick another name.") and ok
+	ok = _check("…as a warning, not a refusal", dialog._name_warning.tone, EventSheetPopupUI.TONE_WARNING) and ok
 	dialog._name_edit.text = "hp"
 	dialog._refresh_name_warning()
 	ok = _check("a free name is not flagged", dialog._name_warning.visible, false) and ok
@@ -192,7 +193,7 @@ static func _confirmed_scope(host: Node, opened_scope: String) -> String:
 ## own red or amber, and taken back from there when it is answered.
 static func _test_the_strip_is_the_only_explanation(dialog: VariableDialog) -> bool:
 	var ok: bool = _check("the form draws no hint label of its own",
-		_loose_labels(dialog), PackedStringArray(["owner line", "name clash"]))
+		_loose_labels(dialog), PackedStringArray(["owner line"]))
 	dialog.open_for_edit("global", {}, "loot", "Array", "[1, 2, 3]", false, "Add variable")
 	ok = _check("a literal that parses says nothing extra",
 		dialog._help_strip.tone, EventSheetPopupUI.HelpStrip.TONE_NORMAL) and ok
@@ -222,11 +223,11 @@ static func _test_the_strip_is_the_only_explanation(dialog: VariableDialog) -> b
 	return ok
 
 
-## What the form draws loose between its rows: the owner line under the title, and the inline name
-## clash. Anything else is a note beside a field - the very thing the one strip replaced - and it
+## What the form draws loose between its rows: the owner line under the title (the inline name clash
+## is a state note, not a label). Anything else is a note beside a field - the very thing the one strip replaced - and it
 ## comes back named by its text, so a regression says which label came back.
 static func _loose_labels(dialog: VariableDialog) -> PackedStringArray:
-	var known: Dictionary = {dialog._owner_label: "owner line", dialog._name_warning: "name clash"}
+	var known: Dictionary = {dialog._owner_label: "owner line"}
 	var found: PackedStringArray = PackedStringArray()
 	for child: Node in (dialog._scope_option.get_parent().get_parent() as Node).get_children():
 		if child is Label:

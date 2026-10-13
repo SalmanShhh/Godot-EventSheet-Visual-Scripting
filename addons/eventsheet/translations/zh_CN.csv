@@ -7388,3 +7388,4 @@ Keep this event?,保留此事件？
 "That is fine for movement, often not what you meant otherwise. Ctrl+Z undoes either choice.",这对移动来说没问题，其他情况下往往不是你想要的。两种选择都可以用 Ctrl+Z 撤销。
 Keep it,保留
 Delete the event,删除事件
+Export the file exactly as it was written.,按写入时的原样导出文件。

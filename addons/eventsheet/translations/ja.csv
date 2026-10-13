@@ -7388,3 +7388,4 @@ Keep this event?,このイベントを残しますか?
 "That is fine for movement, often not what you meant otherwise. Ctrl+Z undoes either choice.",移動ならそれで問題ありませんが、それ以外では意図と違うことがよくあります。どちらを選んでも Ctrl+Z で戻せます。
 Keep it,残す
 Delete the event,イベントを削除
+Export the file exactly as it was written.,書き込まれたとおりにファイルを書き出します。

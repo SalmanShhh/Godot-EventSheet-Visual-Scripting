@@ -28,7 +28,7 @@ var _dock: Control = null
 var _dialog: AcceptDialog = null
 var _asset_option: OptionButton = null
 var _locales_box: VBoxContainer = null
-var _result_label: Label = null
+var _result_card: EventSheetPopupUI.ResultCard = null
 var _checks: Array[CheckBox] = []
 
 
@@ -122,7 +122,7 @@ func open(resource: Resource) -> void:
 		_asset_option.add_item(path)
 	_asset_option.select(0)
 	refresh_locales()
-	_result_label.text = ""
+	_result_card.report([])
 	if _dock != null and _dock.is_inside_tree():
 		_dialog.popup_centered(Vector2i(620, 460))
 
@@ -165,15 +165,19 @@ func apply(persist: bool = true) -> Dictionary:
 		if check.button_pressed:
 			pairs[check.name] = EventSheetGameCatalog.variant_path(base, str(check.name))
 	var outcome: Dictionary = EventSheetGameCatalog.set_remap(base, pairs, persist)
+	var ok: bool = bool(outcome.get("ok", false))
+	var lines: Array = [{"text": str(outcome.get("message", "")), "file": base if ok else "",
+		"tone": EventSheetPopupUI.TONE_OK if ok else EventSheetPopupUI.TONE_ERROR}]
 	var frozen: PackedStringArray = EventSheetGameCatalog.frozen_preloads(base, EventSheetProjectDoctor.all_project_scripts())
 	if not frozen.is_empty():
+		var warning: String = "%s preloads it, so the choice is fixed when that script loads and a live language switch never swaps it - use a plain load() under On Language Changed." % ", ".join(frozen)
 		outcome["frozen"] = frozen
-		outcome["message"] = "%s\n%s preloads it, so the choice is fixed when that script loads and a live language switch never swaps it - use a plain load() under On Language Changed." % [
-			str(outcome.get("message", "")), ", ".join(frozen)]
-	if _result_label != null:
-		_result_label.text = str(outcome.get("message", ""))
+		outcome["message"] = "%s\n%s" % [str(outcome.get("message", "")), warning]
+		lines.append({"text": warning, "tone": EventSheetPopupUI.TONE_WARNING})
+	if _result_card != null:
+		_result_card.report(lines)
 	if _dock != null:
-		_dock._set_status(str(outcome.get("message", "")), not bool(outcome.get("ok", false)))
+		_dock._set_status(str(outcome.get("message", "")), not ok)
 	return outcome
 
 
@@ -194,8 +198,8 @@ func _build_dialog() -> void:
 	body.add_child(EventSheetPopupUI.titled_card("Which file", form))
 	_locales_box = EventSheetPopupUI.form_box()
 	body.add_child(EventSheetPopupUI.titled_card("Which languages", _locales_box))
-	_result_label = EventSheetPopupUI.hint_label("")
-	body.add_child(EventSheetPopupUI.titled_card("What happened", _result_label))
+	_result_card = EventSheetPopupUI.ResultCard.new("What happened")
+	body.add_child(_result_card)
 	_dialog.add_child(EventSheetPopupUI.margined(body))
 	EventSheetL10n.apply_to(_dialog)
 	_dock.add_child(_dialog)

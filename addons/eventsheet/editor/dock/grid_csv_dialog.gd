@@ -43,7 +43,7 @@ var _asset_edit: LineEdit = null
 var _property_edit: LineEdit = null
 var _csv_edit: LineEdit = null
 var _separator_option: OptionButton = null
-var _result_label: Label = null
+var _result_card: EventSheetPopupUI.ResultCard = null
 ## Which grid columns hold words a translator works on. Prefilled from the columns declared as a
 ## `key` type, falling back to every text column - the honest "ask" when nothing declares itself.
 var _key_columns_edit: LineEdit = null
@@ -104,7 +104,7 @@ func open(mode: String, entry: Dictionary) -> void:
 		if _csv_edit.text.strip_edges() == "res://%s.csv" % _variable_name:
 			_csv_edit.text = "res://translations/%s.csv" % _variable_name
 		_key_columns_edit.text = ", ".join(key_columns(columns))
-	_result_label.text = ""
+	_result_card.report([])
 	if _dock.is_inside_tree():
 		_dialog.popup_centered(Vector2i(560, 420))
 
@@ -171,8 +171,8 @@ func _build_dialog() -> void:
 	form.add_child(EventSheetPopupUI.form_row("Separator", _separator_option,
 		EventSheetPopupUI.LABEL_MIN_WIDTH, "What separates the columns in that file. Comma is what a spreadsheet exports by default."))
 	content.add_child(EventSheetPopupUI.titled_card("Which grid, which file", form))
-	_result_label = EventSheetPopupUI.hint_label("")
-	content.add_child(EventSheetPopupUI.titled_card("What happened", _result_label))
+	_result_card = EventSheetPopupUI.ResultCard.new("What happened")
+	content.add_child(_result_card)
 	_dialog.add_child(EventSheetPopupUI.margined(content))
 	EventSheetL10n.apply_to(_dialog)
 	_dock.add_child(_dialog)
@@ -229,12 +229,7 @@ func run() -> Dictionary:
 	var separator: String = current_separator()
 	var outcome: Dictionary = {}
 	if TRANSLATION_MODES.has(_mode):
-		outcome = _run_translation(csv_path, asset_path, separator)
-		if _result_label != null:
-			_result_label.text = str(outcome.get("message", ""))
-		if _dock != null:
-			_dock._set_status(str(outcome.get("message", "")), not bool(outcome.get("ok", false)))
-		return outcome
+		return _said(_run_translation(csv_path, asset_path, separator), csv_path)
 	if not asset_path.is_empty():
 		# The property the rows live under on that resource - named in the form, because a data
 		# asset's grid is rarely spelled like the sheet variable that points at it.
@@ -249,10 +244,18 @@ func run() -> Dictionary:
 		outcome = EventSheetGridCSV.write_csv(csv_path, sheet_rows(), grid_columns(), separator)
 	else:
 		outcome = _import_into_sheet(csv_path, separator)
-	if _result_label != null:
-		_result_label.text = str(outcome.get("message", ""))
+	return _said(outcome, csv_path)
+
+
+## Says what the button just did - in the card and on the status bar - and hands the outcome back.
+func _said(outcome: Dictionary, csv_path: String) -> Dictionary:
+	var ok: bool = bool(outcome.get("ok", false))
+	var message: String = str(outcome.get("message", ""))
+	if _result_card != null:
+		_result_card.report([{"text": message, "file": csv_path if ok else "",
+			"tone": EventSheetPopupUI.TONE_OK if ok else EventSheetPopupUI.TONE_ERROR}])
 	if _dock != null:
-		_dock._set_status(str(outcome.get("message", "")), not bool(outcome.get("ok", false)))
+		_dock._set_status(message, not ok)
 	return outcome
 
 

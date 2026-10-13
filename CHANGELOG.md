@@ -16,6 +16,23 @@
   the red one, and the prompt says plainly that Ctrl+Z cannot bring the edits back. Refocusing the
   editor while the question is open no longer asks it a second time.
 
+### Added: the window kit's dropdown, view switch, result card and state note
+
+- **A dropdown says what each choice means.** Every choice carries its sentence as Godot's own item
+  tooltip, so the open list explains a choice as the pointer rests on it, and the closed dropdown's
+  tooltip is the chosen one's sentence. The variable dialog's Scope and Type, the retype dialog's
+  type, the function dialog's "What kind of value?", and the Save studio's Format and export
+  dropdowns all read this way (the last three gained their sentences with it).
+- **A result card says what just happened**: a titled panel with a short flow of figures and one
+  line per outcome, led by a green, amber or red mark and closed by a chip naming the file it
+  touched. The grid CSV and language-variants windows answer in it instead of a bare label, and the
+  language-variants warning about a preloading script now reads as its own amber line.
+- **A state note** is one sentence with a coloured edge under the field it is about, hidden when
+  there is nothing to say. The variable dialog's name clash and the New Behaviour Addon dialog's
+  name problem use it in place of hand-tinted labels.
+- **An Events | Code | Both switch** for windows that show a sheet both ways: one segmented row of
+  toggle buttons that says which view was chosen.
+
 ### Removed: the Addon manager - a pack is a folder, as everywhere else in Godot
 
 - **Tools ▸ Addon manager… is gone**, and with it the pack Update… and Restore… windows and the

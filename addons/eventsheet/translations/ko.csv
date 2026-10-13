@@ -7388,3 +7388,4 @@ Keep this event?,이 이벤트를 유지할까요?
 "That is fine for movement, often not what you meant otherwise. Ctrl+Z undoes either choice.","이동에는 괜찮지만, 그 밖의 경우에는 의도와 다른 경우가 많습니다. 어느 쪽을 골라도 Ctrl+Z로 되돌릴 수 있습니다."
 Keep it,유지
 Delete the event,이벤트 삭제
+Export the file exactly as it was written.,파일을 작성된 그대로 내보냅니다.

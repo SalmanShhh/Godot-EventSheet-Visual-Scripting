@@ -27,7 +27,7 @@ var _base_option: OptionButton = null
 var _category_edit: LineEdit = null
 var _desc_edit: LineEdit = null
 var _path_label: Label = null
-var _status_label: Label = null
+var _name_note: EventSheetPopupUI.StateNote = null
 
 
 ## Wires the dock reference used to parent the dialog and to call back after a create.
@@ -111,12 +111,8 @@ func _build_dialog() -> void:
 	_path_label = EventSheetPopupUI.hint_label("")
 	preview_box.add_child(_path_label)
 
-	_status_label = Label.new()
-	_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	# Width-bound so a long validation message can't balloon the content-sized dialog.
-	_status_label.custom_minimum_size = Vector2(EventSheetPopupUI.HINT_WRAP_WIDTH, 0.0)
-	_status_label.add_theme_color_override("font_color", Color(1.0, 0.55, 0.55))
-	preview_box.add_child(_status_label)
+	_name_note = EventSheetPopupUI.StateNote.new()
+	preview_box.add_child(_name_note)
 
 	var spacer: Control = Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -147,8 +143,8 @@ func _refresh_preview() -> void:
 	else:
 		_path_label.text = "Will be created at: %s" % BehaviourAddonScaffold.suggested_path(addon_name)
 	# The clash is said while typing, not first on Create; an empty field is not a problem yet.
-	if _status_label != null:
-		_status_label.text = "" if addon_name.is_empty() else name_problem(addon_name)
+	if _name_note != null:
+		_name_note.say("" if addon_name.is_empty() else name_problem(addon_name))
 
 
 ## Why this name cannot be created, or "" when it can: not a usable class name, or a file already
@@ -166,7 +162,7 @@ func _on_create() -> void:
 	var addon_name: String = _name_edit.text.strip_edges()
 	var problem: String = name_problem(addon_name)
 	if not problem.is_empty():
-		_status_label.text = problem
+		_name_note.say(problem)
 		return
 	var path: String = BehaviourAddonScaffold.suggested_path(addon_name)
 	var base: String = _base_option.get_item_text(_base_option.selected)
@@ -174,11 +170,11 @@ func _on_create() -> void:
 	var source: String = BehaviourAddonScaffold.generate_recipe(recipe_id, addon_name, base, _category_edit.text, _desc_edit.text)
 	var folder: String = path.get_base_dir()
 	if DirAccess.make_dir_recursive_absolute(folder) != OK and not DirAccess.dir_exists_absolute(folder):
-		_status_label.text = "Couldn't create the folder %s - check permissions." % folder
+		_name_note.say("Couldn't create the folder %s - check permissions." % folder)
 		return
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	if file == null:
-		_status_label.text = "Couldn't write %s - check folder permissions." % path
+		_name_note.say("Couldn't write %s - check folder permissions." % path)
 		return
 	file.store_string(source)
 	file.close()
