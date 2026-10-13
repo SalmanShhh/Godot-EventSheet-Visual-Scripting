@@ -19,6 +19,12 @@
   a sheet. Lines now join the edges of the two boxes that face each other, so a line to a box on the
   left no longer runs back through both boxes. Every line shows its label ("includes", "calls Game",
   "signals On died"), and clicking a scene box opens that scene in Godot's scene editor.
+- **File Changed On Disk:** the reload question only warns that unsaved edits will be lost when the
+  tab has unsaved edits.
+- **Change Type Everywhere:** the OK button is off when the variable is not declared in the sheet,
+  instead of doing nothing.
+- **Unsaved Changes:** Save on a sheet that was never saved opens Save As, and the tab now closes
+  once that file is written. Cancelling the Save As keeps the tab open.
 
 ### Fixed: debugging, checks and small prompts
 

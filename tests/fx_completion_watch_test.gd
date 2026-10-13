@@ -71,6 +71,20 @@ static func run() -> bool:
 	all_passed = _check("reload re-imports the new content",
 		str(SheetCompiler.compile(editor._current_sheet, "user://eventsheets_watch_rt.gd").get("output", "")).contains("var hp: int = 2"), true) and all_passed
 	all_passed = _check("reload resets the change flag", editor._external_sheet_changed_on_disk(), false) and all_passed
+
+	# The reload question only warns about losing edits when there ARE edits to lose.
+	editor._current_sheet.read_only = false
+	editor._dirty = false
+	editor._external_mtime = 1
+	editor._prompt_external_reload_if_changed()
+	var clean_text: String = editor._external_watcher._external_reload_dialog.dialog_text
+	editor._dirty = true
+	editor._prompt_external_reload_if_changed()
+	var dirty_text: String = editor._external_watcher._external_reload_dialog.dialog_text
+	all_passed = _check("a clean tab is not told its edits will be lost, a dirty one is",
+		[clean_text, dirty_text],
+		["eventsheets_watch_sample.gd was modified outside the sheet editor.\nReload it (re-import + event lifting)?",
+		"eventsheets_watch_sample.gd was modified outside the sheet editor.\nReload it (re-import + event lifting)? Unsaved sheet edits will be lost."]) and all_passed
 	editor.free()
 
 	return all_passed

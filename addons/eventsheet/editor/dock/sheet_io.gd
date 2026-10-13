@@ -478,7 +478,10 @@ func _reload_after_editor_save() -> void:
 	_dock._this_editor_bar.reload(str(_dock._current_sheet.external_source_path))
 
 
-func _on_save_requested() -> void:
+## `after_save_as` runs once a Save As this save had to open (the sheet had never been saved) has
+## written the file - the unsaved-close guard passes "close the tab" here, so Save on an untitled
+## sheet ends the way Save on a titled one does.
+func _on_save_requested(after_save_as: Callable = Callable()) -> void:
 	if _dock._current_sheet == null:
 		_dock._set_status("Nothing to save.", true)
 		return
@@ -520,7 +523,7 @@ func _on_save_requested() -> void:
 			_reload_after_editor_save()
 		return
 	if _dock._current_sheet_path.is_empty() and _dock._current_sheet.resource_path.is_empty():
-		_on_save_as_requested()
+		_on_save_as_requested(after_save_as)
 		return
 	var save_path: String = _dock._current_sheet_path if not _dock._current_sheet_path.is_empty() else _dock._current_sheet.resource_path
 	# Backup ring: the file's pre-save bytes go to user://eventsheet_backups first
@@ -569,7 +572,9 @@ func _refresh_documentation_for(sheet_path: String) -> void:
 	load(DOC_CHORES_PATH).refresh_after_save(sheet_path, _dock._current_sheet)
 
 
-func _on_save_as_requested() -> void:
+## `after_saved` runs only when the chosen file was really written (the tab is clean afterwards); a
+## cancelled dialog or a failed save runs nothing.
+func _on_save_as_requested(after_saved: Callable = Callable()) -> void:
 	if _dock._current_sheet == null:
 		_dock._set_status("Nothing to save.", true)
 		return
@@ -582,6 +587,8 @@ func _on_save_as_requested() -> void:
 	dialog.file_selected.connect(func(path: String) -> void:
 		_save_sheet_to_path(path)
 		dialog.call_deferred("queue_free")
+		if after_saved.is_valid() and not _dock._dirty:
+			after_saved.call()
 	)
 	dialog.canceled.connect(func() -> void: dialog.queue_free())
 	_dock.add_child(dialog)

@@ -57,6 +57,17 @@ func prompt_external_reload_if_changed() -> void:
 				_dock._external_mtime = FileAccess.get_modified_time(_dock._current_sheet.external_source_path)
 		)
 		_dock.add_child(_external_reload_dialog)
-	_external_reload_dialog.dialog_text = "%s was modified outside the sheet editor.
-Reload it (re-import + event lifting)? Unsaved sheet edits will be lost." % _dock._current_sheet.external_source_path.get_file()
-	_external_reload_dialog.popup_centered(Vector2i(460, 160))
+	_external_reload_dialog.dialog_text = reload_prompt_text(
+		_dock._current_sheet.external_source_path.get_file(), bool(_dock._dirty))
+	if _dock.is_inside_tree():
+		_external_reload_dialog.popup_centered(Vector2i(460, 160))
+
+
+## What the reload question says. The warning about losing edits is only true when the tab HAS
+## unsaved edits; on a clean tab a reload loses nothing, and saying otherwise makes "Reload" look
+## dangerous when it is the safe answer.
+static func reload_prompt_text(file_name: String, dirty: bool) -> String:
+	var text: String = "%s was modified outside the sheet editor.\nReload it (re-import + event lifting)?" % file_name
+	if dirty:
+		text += " Unsaved sheet edits will be lost."
+	return text

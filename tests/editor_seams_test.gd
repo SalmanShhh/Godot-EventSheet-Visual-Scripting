@@ -180,6 +180,15 @@ static func _run_change_type() -> bool:
 		str(((undone.events[0] as EventRow).conditions[0] as ACECondition).params.get("value", "")), "true") and all_passed
 	all_passed = _check("a yes/no retype reports the expression it left alone",
 		(bool_report.get("reviews", []) as Array).size(), 1) and all_passed
+
+	# ---- a name the sheet does not declare: nothing to change, so nothing to press ----
+	dialog.open({"name": "not_declared_here", "scope": "global", "type": "int", "default": 0})
+	all_passed = _check("an undeclared variable says so and turns Change It Everywhere off",
+		[dialog.preview_lines(), dialog._dialog.get_ok_button().disabled],
+		[PackedStringArray(["not_declared_here is not declared in this sheet."]), true]) and all_passed
+	dialog.open({"name": "score", "scope": "global", "type": "bool", "default": false})
+	all_passed = _check("a declared variable turns it back on",
+		dialog._dialog.get_ok_button().disabled, false) and all_passed
 	editor.free()
 	all_passed = _run_change_type_targets_the_clicked_row() and all_passed
 	all_passed = _run_change_type_leaves_property_names_alone() and all_passed

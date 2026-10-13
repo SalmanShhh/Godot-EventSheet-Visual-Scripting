@@ -192,8 +192,12 @@ func refresh_preview() -> void:
 		# A long row (an expression left as written) is wider than the list; the tooltip carries the
 		# whole sentence so nothing the preview promises to say is only half-said.
 		_preview_list.set_item_tooltip(_preview_list.item_count - 1, line)
+	var report: Dictionary = EventSheetVariableRetype.plan(_dock._current_sheet, _variable_name, selected_type(), _ordinal) if _dock != null and _dock._current_sheet != null else {}
+	# Nothing to change when the name is not declared here: the preview says so, and the button that
+	# would apply it is off rather than pressable into a silent no-op.
+	if _dialog != null:
+		_dialog.get_ok_button().disabled = not bool(report.get("found", false))
 	if _summary_label != null:
-		var report: Dictionary = EventSheetVariableRetype.plan(_dock._current_sheet, _variable_name, selected_type(), _ordinal) if _dock != null and _dock._current_sheet != null else {}
 		var reviews: int = (report.get("reviews", []) as Array).size() if report.has("reviews") else 0
 		var changes: int = (report.get("changes", []) as Array).size() if report.has("changes") else 0
 		_summary_label.text = "%d row(s) rewritten, %d left for you to check." % [changes, reviews]

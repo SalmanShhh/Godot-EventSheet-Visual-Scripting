@@ -57,9 +57,61 @@ static func run() -> bool:
 	dock._suppress_tab_signal = false
 	dock._on_tab_close_pressed(0)
 	ok = _check("clean tab closes without a prompt", dock.get_open_tab_count(), 1) and ok
+	dock.free()
 
+	ok = _save_on_an_untitled_sheet_closes_after_save_as() and ok
+	return ok
+
+
+## Save in the guard on a sheet that was never saved has to ask WHERE first (Save As), and the tab it
+## was asked for closes once that file is written - not left open as if Save had been refused. A
+## cancelled Save As keeps the tab.
+static func _save_on_an_untitled_sheet_closes_after_save_as() -> bool:
+	var ok: bool = true
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	var untitled: EventSheetResource = EventSheetResource.new()
+	untitled.host_class = "Node2D"
+	var other: EventSheetResource = EventSheetResource.new()
+	other.host_class = "Node2D"
+	dock._open_tabs.clear()
+	dock._open_tabs.append({"sheet": other, "path": "", "dirty": false})
+	dock._open_tabs.append({"sheet": untitled, "path": "", "dirty": true})
+	dock._activate_tab(1)
+	dock._dirty = true
+	dock._open_tabs[1]["dirty"] = true
+
+	dock._pending_close_index = 1
+	dock._on_unsaved_close_save()
+	var picker: FileDialog = _save_as_dialog(dock)
+	ok = _check("Save on an untitled sheet asks where to save it", picker != null, true) and ok
+	ok = _check("the tab waits for that answer", dock.get_open_tab_count(), 2) and ok
+	if picker != null:
+		picker.canceled.emit()
+	ok = _check("a cancelled Save As keeps the tab open", dock.get_open_tab_count(), 2) and ok
+
+	dock._activate_tab(1)
+	dock._dirty = true
+	dock._pending_close_index = 1
+	dock._on_unsaved_close_save()
+	picker = _save_as_dialog(dock)
+	var target: String = "user://unsaved_close_untitled_probe.tres"
+	if picker != null:
+		picker.file_selected.emit(target)
+	ok = _check("the tab closes once Save As has written the file",
+		[dock.get_open_tab_count(), FileAccess.file_exists(target)], [1, true]) and ok
+	ok = _check("the tab left open is the other sheet", dock.get_current_sheet() == other, true) and ok
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(target))
 	dock.free()
 	return ok
+
+
+## The newest Save As file dialog the dock is holding, or null.
+static func _save_as_dialog(dock: Node) -> FileDialog:
+	var found: FileDialog = null
+	for child: Node in dock.get_children():
+		if child is FileDialog and not child.is_queued_for_deletion() and (child as FileDialog).title == "Save EventSheet As":
+			found = child as FileDialog
+	return found
 
 
 ## The text of every button the dialog shows, wherever Godot placed it.

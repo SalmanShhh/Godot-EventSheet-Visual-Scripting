@@ -1543,7 +1543,13 @@ func _on_unsaved_close_save() -> void:
 		return
 	if index != _active_tab_index:
 		_activate_tab(index)
-	_on_save_requested()
+	# A sheet that was never saved opens Save As instead of writing, so the close waits for that
+	# dialog: the tab closes once the file is written, and stays open if it is cancelled.
+	var close_after_save_as: Callable = func() -> void:
+		var saved_index: int = _active_tab_index
+		if saved_index >= 0 and saved_index < _open_tabs.size():
+			_close_tab(saved_index)
+	_sheet_io._on_save_requested(close_after_save_as)
 	if not _dirty:
 		_close_tab(index)
 
