@@ -246,11 +246,15 @@ func _on_tree_input(event: InputEvent) -> void:
 
 
 ## Lights the rows entry `index` touched; anything that is not an edit (the start line, empty space,
-## -1) clears the light.
+## -1) clears the light. The rows light in the ACTIVE pane - the one the reader is working in, as
+## the Outline and Bookmarks jump there - not always in the left one.
 func highlight_entry(index: int) -> void:
-	if _dock == null or _dock._viewport == null:
+	if _dock == null:
+		return
+	var view: EventSheetViewport = _dock._active_view()
+	if view == null:
 		return
 	if index < 0 or index >= entries.size():
-		_dock._viewport.clear_row_highlight()
+		view.clear_row_highlight()
 		return
-	_dock._viewport.set_row_highlight(entries[index].get("touched", PackedStringArray()))
+	view.set_row_highlight(entries[index].get("touched", PackedStringArray()))
