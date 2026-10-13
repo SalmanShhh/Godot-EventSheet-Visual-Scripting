@@ -77,6 +77,7 @@ static func _test_dialogs_are_found() -> bool:
 		"res://addons/eventsheet/editor/dock/insert_snippet_dialog.gd",
 		"res://addons/eventsheet/editor/dock/message_dialog.gd",
 		"res://addons/eventsheet/editor/dock/modes_dialog.gd",
+		"res://addons/eventsheet/editor/dock/new_resource_wizard.gd",
 		"res://addons/eventsheet/editor/dock/optimise_dialog.gd",
 		"res://addons/eventsheet/editor/dock/paste_special_dialog.gd",
 		"res://addons/eventsheet/editor/dock/quick_prompt_dialogs.gd",

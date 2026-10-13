@@ -8382,3 +8382,50 @@ Whether the mouse cursor is shown while the game is in this mode. A menu shows i
 Declare this object's states,このオブジェクトの状態を宣言
 Declare States,状態を宣言
 %s left the list - %d row(s) still say %s.,%s がリストから外れました - まだ %d 行が %s と書いています。
+"Words: a name, a line of dialogue, a file path.",文字: 名前、セリフの 1 行、ファイルパス。
+Number (whole),数値 (整数)
+"A whole number: an amount, a count, a level.",整数: 数量、個数、レベル。
+"A number that can have a fraction: a weight, a speed, a chance.",小数を持てる数値: 重み、速度、確率。
+True/false,真/偽
+A tick: yes or no.,チェック: はいかいいえ。
+Choice,選択
+One of a list of words you name; the cell is a dropdown.,自分で並べた単語の 1 つ。セルはドロップダウンになります。
+"A colour, picked from a swatch in the Inspector.",色。Inspector のスウォッチから選びます。
+Translation key,翻訳キー
+Text a translator turns into each language; the cell holds its key.,翻訳者が各言語に訳すテキスト。セルにはそのキーが入ります。
+New data table,新しいデータテーブル
+Data table · a Custom Resource,データテーブル · Custom Resource
+"A list of entries you fill in like a spreadsheet, saved as a .tres file any sheet can read: loot, waves, dialogue lines, shop items.",表計算のように記入するエントリの一覧。どのシートからも読める .tres ファイルとして保存されます: ドロップ品、ウェーブ、セリフ、ショップの商品。
+One row is a,1 行は
+"click a header to set its kind, a cell to type · Delete removes the selected row",見出しをクリックすると種類を設定、セルをクリックすると入力 · Delete で選択した行を削除
++ Row,+ 行
+Import from CSV…,CSV から読み込む…
+Export to CSV…,CSV に書き出す…
+New rows get,新しい行の値
+Warn in the Inspector when a row is missing a value,値が欠けている行があれば Inspector で警告する
+Warn in the Inspector,Inspector で警告
+"Adds a check the Inspector runs while the table is edited: it warns until the table has rows, and names the first row with an empty text cell.",テーブルの編集中に Inspector が実行するチェックを追加します。テーブルに行ができるまで警告し、テキストのセルが空の最初の行を示します。
+"A column name is a GDScript name: letters, digits and _, not starting with a digit.",列名は GDScript の名前です: 英字、数字、_ で、数字から始められません。
+Another column already has this name.,ほかの列がすでにこの名前を使っています。
+%s has no rows under its header line.,%s には見出し行の下に行がありません。
+Read %d row(s) from %s.,%d 行を %s から読み込みました。
+Wrote %d row(s) to %s.,%d 行を %s に書き出しました。
+"%s - double-click to rename, drag the right edge to resize",%s - ダブルクリックで名前を変更、右端をドラッグで幅を変更
++ Column,+ 列
+Add a column,列を追加
+%d row(s) · %d column(s),%d 行 · %d 列
+Column: %s,列: %s
+(empty),(空)
+Creates %s and %s in %s; any sheet can read its rows.,%s と %s を %s に作成します。どのシートからもその行を読めます。
+%s already exists - pick another Name.,%s はすでにあります - 別の名前を選んでください。
+"%s was written but does not compile, so no .tres was made.",%s は書き込みましたがコンパイルできないため、.tres は作成していません。
+Made %s and %s - load the .tres from any sheet to read its rows.,%s と %s を作成しました - どのシートからでも .tres を読み込めば行を読めます。
+Say what one row is first (e.g. LootDrop).,まず 1 行が何かを書いてください (例: LootDrop)。
+Add at least one column.,列を 1 つ以上追加してください。
+"Column %s needs a name of its own: letters, digits and _.",列 %s には固有の名前が必要です: 英字、数字、_。
+%s is already a class name - pick another Name.,%s はすでにクラス名です - 別の名前を選んでください。
+New Data Table…,新しいデータテーブル…
+"A list of entries you fill in like a spreadsheet - loot, waves, dialogue lines, shop items - saved as a Custom Resource script and a .tres any sheet can read.",表計算のように記入するエントリの一覧 (ドロップ品、ウェーブ、セリフ、ショップの商品)。Custom Resource スクリプトと、どのシートからも読める .tres として保存されます。
+"Sheets aren't only for gameplay: Sheet > New Data Table… is a small spreadsheet - name what one row is, give each column a kind, type the rows - and Insert writes a data asset whose Inspector is that same table, plus a .tres holding your rows - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.",シートはゲームプレイ専用ではありません: Sheet > New Data Table… は小さな表計算です。1 行が何かを書き、各列に種類を与え、行を入力すると、挿入でその表がそのまま Inspector になるデータアセットと、行を収めた .tres が書き出されます (ドロップテーブル、セリフ、ウェーブ計画)。デザイナーは行を記入して .tres のバリエーションを保存し、シートがそれを読み込みます。Sheet > New Editor Tool… も同じように、ワンクリックのエディタ作業を作ります。
+Peek at Sheet > New Data Table… (Esc closes it without creating anything).,Sheet > New Data Table… を覗いてみましょう (Esc で何も作らずに閉じます)。
+Remove column,列を削除

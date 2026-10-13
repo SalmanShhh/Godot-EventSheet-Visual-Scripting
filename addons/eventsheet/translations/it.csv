@@ -8382,3 +8382,50 @@ Whether the mouse cursor is shown while the game is in this mode. A menu shows i
 Declare this object's states,Dichiara gli stati di questo oggetto
 Declare States,Dichiara stati
 %s left the list - %d row(s) still say %s.,%s ha lasciato l'elenco - %d riga/e dicono ancora %s.
+"Words: a name, a line of dialogue, a file path.","Parole: un nome, una battuta di dialogo, un percorso di file."
+Number (whole),Numero (intero)
+"A whole number: an amount, a count, a level.","Un numero intero: una quantità, un conteggio, un livello."
+"A number that can have a fraction: a weight, a speed, a chance.","Un numero che può avere una parte decimale: un peso, una velocità, una probabilità."
+True/false,Vero/falso
+A tick: yes or no.,Una spunta: sì o no.
+Choice,Scelta
+One of a list of words you name; the cell is a dropdown.,Una tra le parole di un elenco che nomini; la cella è un menu a tendina.
+"A colour, picked from a swatch in the Inspector.","Un colore, scelto da un campione nell'Inspector."
+Translation key,Chiave di traduzione
+Text a translator turns into each language; the cell holds its key.,Testo che un traduttore rende in ogni lingua; la cella contiene la sua chiave.
+New data table,Nuova tabella dati
+Data table · a Custom Resource,Tabella dati · una Custom Resource
+"A list of entries you fill in like a spreadsheet, saved as a .tres file any sheet can read: loot, waves, dialogue lines, shop items.","Un elenco di voci che compili come un foglio di calcolo, salvato come file .tres che ogni foglio può leggere: bottino, ondate, battute di dialogo, articoli del negozio."
+One row is a,Una riga è un
+"click a header to set its kind, a cell to type · Delete removes the selected row","clicca un'intestazione per sceglierne il tipo, una cella per scrivere · Canc rimuove la riga selezionata"
++ Row,+ Riga
+Import from CSV…,Importa da CSV…
+Export to CSV…,Esporta in CSV…
+New rows get,Le nuove righe ricevono
+Warn in the Inspector when a row is missing a value,Avvisa nell'Inspector quando a una riga manca un valore
+Warn in the Inspector,Avvisa nell'Inspector
+"Adds a check the Inspector runs while the table is edited: it warns until the table has rows, and names the first row with an empty text cell.",Aggiunge un controllo che l'Inspector esegue mentre la tabella viene modificata: avvisa finché la tabella non ha righe e nomina la prima riga con una cella di testo vuota.
+"A column name is a GDScript name: letters, digits and _, not starting with a digit.","Il nome di una colonna è un nome GDScript: lettere, cifre e _, senza iniziare con una cifra."
+Another column already has this name.,Un'altra colonna ha già questo nome.
+%s has no rows under its header line.,%s non ha righe sotto la riga di intestazione.
+Read %d row(s) from %s.,Lette %d riga/e da %s.
+Wrote %d row(s) to %s.,Scritte %d riga/e in %s.
+"%s - double-click to rename, drag the right edge to resize","%s - doppio clic per rinominare, trascina il bordo destro per ridimensionare"
++ Column,+ Colonna
+Add a column,Aggiungi una colonna
+%d row(s) · %d column(s),%d riga/e · %d colonna/e
+Column: %s,Colonna: %s
+(empty),(vuoto)
+Creates %s and %s in %s; any sheet can read its rows.,Crea %s e %s in %s; ogni foglio può leggerne le righe.
+%s already exists - pick another Name.,%s esiste già - scegli un altro nome.
+"%s was written but does not compile, so no .tres was made.","%s è stato scritto ma non compila, quindi non è stato creato alcun .tres."
+Made %s and %s - load the .tres from any sheet to read its rows.,Creati %s e %s - carica il .tres da qualsiasi foglio per leggerne le righe.
+Say what one row is first (e.g. LootDrop).,Prima di' cos'è una riga (es. LootDrop).
+Add at least one column.,Aggiungi almeno una colonna.
+"Column %s needs a name of its own: letters, digits and _.","La colonna %s ha bisogno di un nome tutto suo: lettere, cifre e _."
+%s is already a class name - pick another Name.,%s è già il nome di una classe - scegli un altro nome.
+New Data Table…,Nuova tabella dati…
+"A list of entries you fill in like a spreadsheet - loot, waves, dialogue lines, shop items - saved as a Custom Resource script and a .tres any sheet can read.","Un elenco di voci che compili come un foglio di calcolo - bottino, ondate, battute di dialogo, articoli del negozio - salvato come script Custom Resource e come .tres che ogni foglio può leggere."
+"Sheets aren't only for gameplay: Sheet > New Data Table… is a small spreadsheet - name what one row is, give each column a kind, type the rows - and Insert writes a data asset whose Inspector is that same table, plus a .tres holding your rows - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.","I fogli non servono solo al gameplay: Sheet > New Data Table… è un piccolo foglio di calcolo - di' cos'è una riga, dai un tipo a ogni colonna, scrivi le righe - e Inserisci scrive un asset di dati il cui Inspector è proprio quella tabella, più un .tres con le tue righe - tabelle del bottino, battute di dialogo, piani delle ondate. I designer compilano righe e salvano varianti .tres; i tuoi fogli le caricano. E Sheet > New Editor Tool… fa le faccende dell'editor con un clic allo stesso modo."
+Peek at Sheet > New Data Table… (Esc closes it without creating anything).,Dai un'occhiata a Sheet > New Data Table… (Esc la chiude senza creare nulla).
+Remove column,Rimuovi colonna

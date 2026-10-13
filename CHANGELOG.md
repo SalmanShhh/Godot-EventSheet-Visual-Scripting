@@ -104,6 +104,28 @@
   so beside the field and holds Create, instead of quietly writing a suffixed file. Each starter in
   Start from carries its one-line description, and the help strip shows the line the sheet starts
   with.
+### Changed: New Custom Resource is now New Data Table, filled in like a spreadsheet
+
+- Sheet > New Data Table… opens one small spreadsheet instead of three questions: name what one
+  row is (`LootDrop` - the Name, `LootDropTable`, is derived from it), then fill a grid. Click a
+  column's header to select it and set its name and kind beside the grid - Text, Number (whole),
+  Number, True/false, Choice (with its words), Colour or Translation key, each saying what it holds
+  as the pointer rests on it; double-click a header to rename its column; drag a column's right edge
+  to resize it and double-click the edge to fit it. + Column (the last header) and + Row add, Delete
+  removes the selected row, and a cell is typed into, ticked or picked from a dropdown by its kind.
+- Import from CSV… reads a CSV's header line as the columns (a column of numbers comes in as a
+  number column) and its lines as the rows; Export to CSV… writes the rows back out.
+- Insert writes two files into the folder open in the FileSystem dock - the Resource script, opened
+  as a sheet, and a .tres holding the rows typed - and refuses, on the window, a row with no name, a
+  column name GDScript cannot use, a class name already taken, or a file already there.
+- "Warn in the Inspector when a row is missing a value" makes the script a tool script and gives
+  it a check that warns until the table has rows and names the first row with an empty text cell;
+  the tick it replaces asked only for rows, and its validator never ran in the editor because the
+  script was not a tool script.
+- Not built: a column's own default value and description (the board shows both); the table
+  drawer's column format has no room for them yet. Remove column, in the panel beside the grid,
+  takes a column out of every row.
+
 ### Changed: the Modes and States windows name the rows a removed name leaves behind, as you type
 
 - Taking a mode or a state off the list now says so under the field while you type - "Cutscene left

@@ -2,7 +2,7 @@
 
 A custom resource is a data asset: a file that holds numbers, names, and tables instead of code. A loot table's drops, a boss's stats, a shop's stock, a quest's steps - anything that is "rows of data someone tunes" belongs in a custom resource. You design the shape once (the columns), and then designers fill in as many `.tres` files as the game needs, entirely in Godot's Inspector, without ever opening a script or an event sheet.
 
-Godot EventSheets makes this a two-minute job. The **Sheet > New Custom Resource…** wizard asks three plain questions and generates a Resource-host sheet whose exported grid IS the Inspector: a real table with typed and dropdown columns, an optional "must be filled" warning, and an optional live validation check. Compile it and Godot treats your class like any built-in resource type - the FileSystem dock can stamp out `.tres` variants of it all day.
+Godot EventSheets makes this a two-minute job. **Sheet > New Data Table…** is a small spreadsheet: name what one row is, give each column a kind, type a few rows, and Insert writes a Resource script whose exported grid IS the Inspector - a real table with typed and dropdown columns and an optional "a row is missing a value" warning - plus a `.tres` holding the rows you typed. Godot treats your class like any built-in resource type, and the FileSystem dock can stamp out more `.tres` variants of it all day.
 
 This guide covers the wizard, the column language, validation, designing the whole Inspector, adding logic to a resource, the `.tres` workflow, and the APIs pack authors use to build the same things in code.
 
@@ -42,24 +42,16 @@ If a grid of rows can describe an AI's decision-making, it can describe your sho
 
 ## 2. Your first data asset in 60 seconds (the wizard)
 
-Open the EventSheet dock and pick **Sheet > New Custom Resource…**. The dialog asks three beginner questions:
+Open the EventSheet dock and pick **Sheet > New Data Table…**. The window is one small spreadsheet:
 
-1. **"One entry is a…"** - name a single row of your data, in plain words. Type `Loot Drop` and the wizard derives everything else: the grid variable becomes `loot_drops`, and the class name defaults to `LootDropTable` (there is a **Resource name** field right below if you want a different class name, like `LootTable`).
-2. **"What does an entry have?"** - the columns, one per line, as plain phrases:
+1. **One row is a** - name a single row of your data as one word, `LootDrop`. Everything else is derived from it: the grid variable becomes `loot_drops`, and the **Name** (the class name) defaults to `LootDropTable` - type another name there if you want one, like `LootTable`.
+2. **The grid** - the table starts with one Text column called `name`. Click **+ Column** (the last header) to add one; click a header to select its column, and the panel beside the grid sets that column's **Name** and **Kind**: Text, Number (whole), Number, True/false, Choice (a dropdown - list its words in **Choices**), Colour, or Translation key. Each kind says what it holds when the pointer rests on it. Double-click a header to rename its column; drag a column's right edge to make it wider or narrower, and double-click the edge to fit it to its contents. **+ Row** adds a row; click a cell to type, tick, or pick. Delete removes the selected row.
+3. **Import from CSV… / Export to CSV…** - a CSV's header line becomes the columns (a column whose every cell is a number becomes a number column) and its lines become the rows; Export writes the rows back out for a spreadsheet.
+4. **Warn in the Inspector when a row is missing a value** - generates a `validate_loot_drops` function on the sheet, and makes the script a tool script so the Inspector can run it while the table is edited: it warns until the table has rows, and names the first row with an empty text cell.
 
-   ```
-   name
-   kind: coin|gem|key
-   weight: float
-   ```
+The strip under the grid says what the selected column holds and the exact declaration the script will carry, and the foot of the window names the two files Insert writes - into the folder open in the FileSystem dock.
 
-3. **"Before it works"** - two checkboxes:
-   - **Warn in the Inspector until the table has rows (required)** - the Inspector shows a warning on every `.tres` whose grid is still empty, so a half-configured asset cannot slip by silently.
-   - **Add a validation check (a function warning about bad data, live)** - generates a ready-to-edit `validate_loot_drops` function on the sheet; whatever warning String it returns shows above the field live, while the table is being edited.
-
-As you type, a live **Ships as:** line at the bottom describes exactly what the grid will look like in the Inspector - it is phrased by the same API that builds the sheet, so the preview can never disagree with the result.
-
-Press **Create** and the dock opens a fresh, unsaved Resource-host sheet: `host_class` is `Resource`, the class name is set, and the grid variable is already exported with a table drawer. The sheet starts with a comment row that re-explains the whole workflow right where you will see it. Use **Save As…** to keep it, then **Compile** - and your class exists.
+Press **Insert**: `loot_drop_table.gd` (a Resource-host sheet, opened in the dock) and `loot_drop_table.tres` (your rows) are written side by side. The sheet starts with a comment row that re-explains the whole workflow right where you will see it.
 
 That is genuinely all of it. No annotations, no hint strings, no `@export_custom` syntax - the wizard writes those for you.
 
@@ -67,7 +59,7 @@ That is genuinely all of it. No annotations, no hint strings, no `@export_custom
 
 ## 3. The column language
 
-Each line in the wizard's columns box (and each String in the `resource_grid` API) is one column of the table. The whole syntax is four small rules:
+Each String in the `resource_grid` API is one column of the table (the New Data Table window builds the same columns from its grid). The whole syntax is four small rules:
 
 | You type | You get |
 |---|---|
@@ -111,13 +103,13 @@ Column names become the keys of each row's Dictionary at runtime, so keep them s
 
 ## 4. Required fields and live validation
 
-**Required** is the first checkbox. It marks the grid so the Inspector warns until the table has at least one row. Use it whenever an empty asset is a broken asset - a loot table with no drops, a wave plan with no waves. The same idea appears on loader behaviors like the Loot Table Loader and Skin Catalog Loader: their resource slots are marked required, so the Scene dock warns until a `.tres` is actually attached. Between a required grid and a required slot, "I forgot to fill it in" gets caught in the editor, not in a playtest.
+**Required** is half of the window's warn tick. It marks the grid so the Inspector warns until the table has at least one row. Use it whenever an empty asset is a broken asset - a loot table with no drops, a wave plan with no waves. The same idea appears on loader behaviors like the Loot Table Loader and Skin Catalog Loader: their resource slots are marked required, so the Scene dock warns until a `.tres` is actually attached. Between a required grid and a required slot, "I forgot to fill it in" gets caught in the editor, not in a playtest.
 
-**Validation** goes further: it checks the *content*, live. Ticking **Add a validation check** creates a function named `validate_<grid>` on the sheet:
+**Validation** goes further: it checks the *content*, live. Ticking **Warn in the Inspector when a row is missing a value** also creates a function named `validate_<grid>` on the sheet:
 
 - It returns a **String**: a warning message when something is wrong, or `""` when the data is fine.
 - It runs **while the table is edited in the Inspector**, and the returned message shows above the field immediately.
-- The generated body is a ready-to-edit skeleton (for a grid it starts as "warn when empty"); you extend it with your own condition rows.
+- The generated body warns while the table is empty and names the first row with an empty text cell; you extend it with your own condition rows.
 
 For example, a loot table that requires weights to be positive - the validator is ordinary sheet logic:
 
@@ -313,7 +305,7 @@ for the Dictionary records inside it.
 
 ## 9. Use cases
 
-Each one is a real shape you can build with the wizard today. The column sketch is exactly what you would type into the wizard's columns box.
+Each one is a real shape you can build with the New Data Table window today. The column sketch is the column phrases `resource_grid` takes - in the window, one column per line of the sketch, its kind set from the header.
 
 ### 1. A loot table
 
@@ -528,7 +520,7 @@ Everything the wizard does goes through two static methods on the `EventSheets` 
 
 ### `EventSheets.resource_grid(columns, options)`
 
-Builds one Inspector-grid variable descriptor (the `"drawer": "table"` payload) from plain column phrases - the same phrases the wizard accepts, because this method is the one owner of that syntax:
+Builds one Inspector-grid variable descriptor (the `"drawer": "table"` payload) from plain column phrases - the same columns the New Data Table window builds, because this method is the one owner of that syntax:
 
 ```gdscript
 var sheet: EventSheetResource = EventSheets.new_sheet({"host_class": "Resource", "class_name": "LootTable"})
@@ -588,10 +580,10 @@ A data-driven pack usually ships three pieces: the resource sheet (a grid built 
 ## 11. Troubleshooting
 
 **My class does not appear under New Resource… in the FileSystem dock.**
-The class exists only after the sheet compiles and the generated `.gd` is saved. Compile first; if it still does not show, check the sheet has a class name (the wizard's Resource name field) and that its host is `Resource`. A freshly added `class_name` can also need an editor restart to enter Godot's class cache.
+The class exists only after the sheet compiles and the generated `.gd` is saved. Compile first; if it still does not show, check the sheet has a class name (the window's Name field) and that its host is `Resource`. A freshly added `class_name` can also need an editor restart to enter Godot's class cache.
 
-**The wizard's Create button complains at me.**
-It needs two things before it can build: the entry name ("One entry is a…") and at least one column line. Everything else has a default.
+**The window's Insert button complains at me.**
+It needs a row name ("One row is a"), columns whose names are GDScript names (letters, digits and `_`, each one different), a class name nothing else in the project has, and no `.gd` or `.tres` of that name already in the folder. It says which on the window.
 
 **The grid shows in the Inspector but the columns are wrong.**
 Re-read the column line syntax: the type goes *after* a colon (`weight: float`), and only `float`, `int`, `bool`, and `String` are the built-in words - anything else after the colon passes through as a raw hint. A choices column needs the `|` separators (`kind: coin|gem|key`).

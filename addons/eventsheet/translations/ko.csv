@@ -8382,3 +8382,50 @@ Whether the mouse cursor is shown while the game is in this mode. A menu shows i
 Declare this object's states,이 오브젝트의 상태 선언
 Declare States,상태 선언
 %s left the list - %d row(s) still say %s.,%s이(가) 목록에서 빠졌습니다 - 아직 %d개 행이 %s(이)라고 씁니다.
+"Words: a name, a line of dialogue, a file path.","글자: 이름, 대사 한 줄, 파일 경로."
+Number (whole),숫자 (정수)
+"A whole number: an amount, a count, a level.","정수: 수량, 개수, 레벨."
+"A number that can have a fraction: a weight, a speed, a chance.","소수가 있을 수 있는 숫자: 가중치, 속도, 확률."
+True/false,참/거짓
+A tick: yes or no.,체크: 예 또는 아니요.
+Choice,선택
+One of a list of words you name; the cell is a dropdown.,직접 나열한 단어 중 하나. 셀은 드롭다운이 됩니다.
+"A colour, picked from a swatch in the Inspector.",색. Inspector의 견본에서 고릅니다.
+Translation key,번역 키
+Text a translator turns into each language; the cell holds its key.,번역가가 각 언어로 옮기는 텍스트. 셀에는 그 키가 들어갑니다.
+New data table,새 데이터 테이블
+Data table · a Custom Resource,데이터 테이블 · Custom Resource
+"A list of entries you fill in like a spreadsheet, saved as a .tres file any sheet can read: loot, waves, dialogue lines, shop items.","스프레드시트처럼 채우는 항목 목록. 어떤 시트든 읽을 수 있는 .tres 파일로 저장됩니다: 전리품, 웨이브, 대사, 상점 물품."
+One row is a,한 행은
+"click a header to set its kind, a cell to type · Delete removes the selected row","머리글을 클릭하면 종류를 정하고, 셀을 클릭하면 입력합니다 · Delete는 선택한 행을 지웁니다"
++ Row,+ 행
+Import from CSV…,CSV에서 가져오기…
+Export to CSV…,CSV로 내보내기…
+New rows get,새 행의 값
+Warn in the Inspector when a row is missing a value,값이 빠진 행이 있으면 Inspector에서 경고
+Warn in the Inspector,Inspector에서 경고
+"Adds a check the Inspector runs while the table is edited: it warns until the table has rows, and names the first row with an empty text cell.","테이블을 편집하는 동안 Inspector가 실행하는 검사를 추가합니다. 테이블에 행이 생길 때까지 경고하고, 텍스트 셀이 빈 첫 행을 알려 줍니다."
+"A column name is a GDScript name: letters, digits and _, not starting with a digit.","열 이름은 GDScript 이름입니다: 영문자, 숫자, _이며 숫자로 시작할 수 없습니다."
+Another column already has this name.,다른 열이 이미 이 이름을 쓰고 있습니다.
+%s has no rows under its header line.,%s에는 머리글 줄 아래에 행이 없습니다.
+Read %d row(s) from %s.,%d개 행을 %s에서 읽었습니다.
+Wrote %d row(s) to %s.,%d개 행을 %s에 썼습니다.
+"%s - double-click to rename, drag the right edge to resize","%s - 더블클릭으로 이름 바꾸기, 오른쪽 가장자리를 끌어 너비 조절"
++ Column,+ 열
+Add a column,열 추가
+%d row(s) · %d column(s),%d개 행 · %d개 열
+Column: %s,열: %s
+(empty),(비어 있음)
+Creates %s and %s in %s; any sheet can read its rows.,%s와(과) %s을(를) %s에 만듭니다. 어떤 시트든 그 행을 읽을 수 있습니다.
+%s already exists - pick another Name.,%s이(가) 이미 있습니다 - 다른 이름을 고르세요.
+"%s was written but does not compile, so no .tres was made.",%s을(를) 썼지만 컴파일되지 않아 .tres를 만들지 않았습니다.
+Made %s and %s - load the .tres from any sheet to read its rows.,%s와(과) %s을(를) 만들었습니다 - 어떤 시트에서든 .tres를 불러와 행을 읽으세요.
+Say what one row is first (e.g. LootDrop).,먼저 한 행이 무엇인지 쓰세요 (예: LootDrop).
+Add at least one column.,열을 하나 이상 추가하세요.
+"Column %s needs a name of its own: letters, digits and _.","열 %s에는 고유한 이름이 필요합니다: 영문자, 숫자, _."
+%s is already a class name - pick another Name.,%s은(는) 이미 클래스 이름입니다 - 다른 이름을 고르세요.
+New Data Table…,새 데이터 테이블…
+"A list of entries you fill in like a spreadsheet - loot, waves, dialogue lines, shop items - saved as a Custom Resource script and a .tres any sheet can read.","스프레드시트처럼 채우는 항목 목록(전리품, 웨이브, 대사, 상점 물품). Custom Resource 스크립트와, 어떤 시트든 읽을 수 있는 .tres로 저장됩니다."
+"Sheets aren't only for gameplay: Sheet > New Data Table… is a small spreadsheet - name what one row is, give each column a kind, type the rows - and Insert writes a data asset whose Inspector is that same table, plus a .tres holding your rows - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.","시트는 게임플레이만을 위한 것이 아닙니다: Sheet > New Data Table…은 작은 스프레드시트입니다. 한 행이 무엇인지 쓰고, 각 열에 종류를 주고, 행을 입력하면, 삽입이 바로 그 표가 Inspector가 되는 데이터 애셋과 행을 담은 .tres를 씁니다(전리품 테이블, 대사, 웨이브 계획). 디자이너는 행을 채우고 .tres 변형을 저장하며, 시트가 그것을 불러옵니다. Sheet > New Editor Tool…도 같은 방식으로 한 번의 클릭으로 끝나는 에디터 작업을 만듭니다."
+Peek at Sheet > New Data Table… (Esc closes it without creating anything).,Sheet > New Data Table…을 살펴보세요 (Esc를 누르면 아무것도 만들지 않고 닫힙니다).
+Remove column,열 제거

@@ -474,7 +474,7 @@ var _new_addon_panel: RefCounted = null:  # Sheet ▸ New behaviour… / New glo
 			_new_addon_panel = load("res://addons/eventsheet/editor/dock/new_addon_panel.gd").new()
 			_new_addon_panel.init(self)
 		return _new_addon_panel
-var _new_resource_wizard: RefCounted = null:  # Sheet ▸ New Custom Resource… (dock/new_resource_wizard.gd)
+var _new_resource_wizard: RefCounted = null:  # Sheet ▸ New Data Table… (dock/new_resource_wizard.gd)
 	get:
 		if _new_resource_wizard == null:
 			_new_resource_wizard = load("res://addons/eventsheet/editor/dock/new_resource_wizard.gd").new()

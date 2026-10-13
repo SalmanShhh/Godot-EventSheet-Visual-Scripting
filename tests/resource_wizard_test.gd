@@ -102,41 +102,145 @@ static func run() -> bool:
 	ok = _check(ok, EventSheets.attach_validator(sheet, "no_such_variable") == "", "an unknown variable attaches nothing")
 
 	# ---- the covenant: the wizard's output compiles and round-trips byte-exactly ----
+	EventSheetNewResourceWizard._check_rows(sheet, validator_name)
 	var compiled: Dictionary = SheetCompiler.compile(sheet, "user://wizard_roundtrip.gd")
 	ok = _check(ok, bool(compiled.get("success", false)), "the wizard sheet compiles")
 	var source: String = str(compiled.get("output", ""))
 	ok = _check(ok, source.contains("class_name LootDropTable") and source.contains("extends Resource"), "output is a named Resource script")
 	ok = _check(ok, source.contains("# @inspector_validate validate_loot_drops"), "output carries the validate decor")
 	ok = _check(ok, source.contains("func validate_loot_drops() -> String:"), "output ships the validator function")
+	ok = SUPPORT.check("resource_wizard_test", "the warn tick's check names the first row with an empty text cell",
+		source.contains("\t\t\tif row[column] is String and str(row[column]).is_empty():\n\t\t\t\treturn \"Row %d has no %s.\" % [loot_drops.find(row), column]"),
+		true) and ok
 	ok = _check(ok, EventSheets.round_trips(source), "the wizard sheet round-trips byte-exactly")
 	if FileAccess.file_exists("user://wizard_roundtrip.gd"):
 		DirAccess.remove_absolute("user://wizard_roundtrip.gd")
 
 	ok = _window_says_its_own_problems() and ok
+	ok = _table_edits() and ok
+	ok = _csv_and_files() and ok
 	return ok
 
 
-## The window names what it will make and says what stops Create on itself: the placeholder is the
-## name the entry derives, a class name already in use is refused, and the problem lands on the
-## window rather than on the status bar behind it.
+## The window names what it will make and says what stops Insert on itself: the placeholder is the
+## name the row derives, a class name already in use is refused, and the problem lands on the window
+## rather than on the status bar behind it.
 static func _window_says_its_own_problems() -> bool:
 	var passed: bool = true
 	var host: Control = Control.new()
 	var wizard: EventSheetNewResourceWizard = EventSheetNewResourceWizard.new()
 	wizard.init(host)
 	wizard.open()
-	passed = SUPPORT.check("resource_wizard_test", "the placeholder is the name a Loot Drop derives",
-		wizard._class_edit.placeholder_text.get_slice(" ", 0),
-		EventSheetNewResourceWizard.class_name_for("", "Loot Drop")) and passed
+	passed = SUPPORT.check("resource_wizard_test", "the Name placeholder is the name a LootDrop row derives",
+		[wizard._name_edit.placeholder_text, wizard._caption_label.text, wizard._files_label.text],
+		["LootDropTable", "Loot drops", "Creates loot_drop_table.gd and loot_drop_table.tres in res://; any sheet can read its rows."]) and passed
 	passed = SUPPORT.check("resource_wizard_test", "a class name already in use is refused",
 		EventSheetNewResourceWizard.create_problem("Loot Drop", "Node", ["name"]),
-		"Node is already a class name - pick another Resource name.") and passed
+		"Node is already a class name - pick another Name.") and passed
 	passed = SUPPORT.check("resource_wizard_test", "a fresh name has no problem",
 		EventSheetNewResourceWizard.create_problem("Loot Drop", "", ["name"]), "") and passed
 	wizard._on_create()
-	passed = SUPPORT.check("resource_wizard_test", "Create with no entry name says so on the window",
+	passed = SUPPORT.check("resource_wizard_test", "Insert with no row name says so on the window",
 		[wizard._problem_label.visible, wizard._problem_label.text],
-		[true, "Name what one entry is called first (e.g. \"Loot Drop\")."]) and passed
+		[true, "Say what one row is first (e.g. LootDrop)."]) and passed
+	host.free()
+	return passed
+
+
+## The table itself: columns are added, renamed (every row's key with them) and given a kind; a name
+## GDScript cannot use is refused; the grid draws one column per table column plus the row number
+## and the + Column header; a drag on a column's right edge resizes it.
+static func _table_edits() -> bool:
+	var host: Control = Control.new()
+	var wizard: EventSheetNewResourceWizard = EventSheetNewResourceWizard.new()
+	wizard.init(host)
+	wizard.open()
+	wizard.add_row()
+	wizard.add_column()
+	var renamed: String = wizard.rename_column(1, "kind")
+	var refused: Array = [wizard.rename_column(1, "2kind"), wizard.rename_column(1, "name")]
+	wizard.set_kind(1, "enum")
+	wizard.set_choices(1, "coin, gem | key")
+	wizard.add_column()
+	wizard.rename_column(2, "amount")
+	wizard.set_kind(2, "int")
+	wizard.add_row()
+	var titles: Array = []
+	for column: int in wizard._table.columns:
+		titles.append(wizard._table.get_column_title(column))
+	var passed: bool = SUPPORT.pins("resource_wizard_test", [
+		["a renamed column renames every row's key", [renamed, wizard.rows[0].keys()], ["", ["name", "kind", "amount"]]],
+		["a name GDScript cannot use, or one already taken, is refused", refused,
+			["A column name is a GDScript name: letters, digits and _, not starting with a digit.", "Another column already has this name."]],
+		["a Choice column's cells are its words, a new row taking the first", [wizard.columns[1], wizard.rows[1]],
+			[{"name": "kind", "type": "enum", "options": ["coin", "gem", "key"]}, {"name": "", "kind": "coin", "amount": 0}]],
+		["the grid draws the row number, the columns and + Column", titles,
+			["", "name · Text", "kind · Choice", "amount · Number (whole)", "+ Column"]],
+		["the panel is about the selected column", [wizard._column_card_title.text, wizard._choices_row.visible, wizard._default_label.text],
+			["Column: amount", false, "0"]],
+	])
+	var right_of_name: float = wizard._table.get_theme_stylebox("panel").get_margin(SIDE_LEFT) \
+		+ wizard._table.get_column_width(0) + wizard._table.get_column_width(1)
+	var press: InputEventMouseButton = InputEventMouseButton.new()
+	press.button_index = MOUSE_BUTTON_LEFT
+	press.pressed = true
+	press.position = Vector2(right_of_name, 0.0)
+	wizard._on_table_input(press)
+	var motion: InputEventMouseMotion = InputEventMouseMotion.new()
+	motion.position = press.position + Vector2(EventSheetPalette.scaled_f(50.0), 0.0)
+	wizard._on_table_input(motion)
+	passed = SUPPORT.check("resource_wizard_test", "a drag on a column's right edge resizes that column",
+		[wizard.edge_at(right_of_name + EventSheetPalette.scaled_f(50.0)), wizard._widths[0]],
+		[0, EventSheetNewResourceWizard.START_COLUMN_WIDTH + 50.0]) and passed
+	wizard.remove_column(1)
+	var after_one: Array = [wizard.columns.size(), wizard.rows[0].keys(), wizard._widths.size()]
+	wizard.remove_column(0)
+	wizard.remove_column(0)
+	passed = SUPPORT.check("resource_wizard_test", "Remove column takes it out of every row, and the last column stays",
+		[after_one, wizard.columns.size()], [[2, ["name", "amount"], 2], 1]) and passed
+	host.free()
+	return passed
+
+
+## The rows go out to a CSV and come back in, kinds read from the cells; Insert writes the Resource
+## script and a .tres whose grid holds the rows typed, and refuses to write over either file.
+static func _csv_and_files() -> bool:
+	var host: Control = Control.new()
+	var wizard: EventSheetNewResourceWizard = EventSheetNewResourceWizard.new()
+	wizard.init(host)
+	wizard.open()
+	wizard._row_edit.text = "ProbeDrop"
+	wizard._warn_check.button_pressed = true
+	var csv_path: String = "user://data_table_probe.csv"
+	var csv_text: String = "name,amount,weight\nCoin,5,0.6\nGem,1,0.25\n"
+	var file: FileAccess = FileAccess.open(csv_path, FileAccess.WRITE)
+	file.store_string(csv_text)
+	file.close()
+	var read: String = wizard.import_csv(csv_path)
+	var passed: bool = SUPPORT.check("resource_wizard_test", "an imported CSV brings its columns, typed by their cells, and its rows",
+		[read, wizard.columns, wizard.rows],
+		["Read 2 row(s) from data_table_probe.csv.",
+			[{"name": "name", "type": "String"}, {"name": "amount", "type": "int"}, {"name": "weight", "type": "float"}],
+			[{"name": "Coin", "amount": 5, "weight": 0.6}, {"name": "Gem", "amount": 1, "weight": 0.25}]])
+	passed = SUPPORT.check("resource_wizard_test", "and goes back out as the same CSV",
+		[wizard.export_csv(csv_path), FileAccess.get_file_as_string(csv_path)],
+		["Wrote 2 row(s) to data_table_probe.csv.", csv_text]) and passed
+	DirAccess.remove_absolute(csv_path)
+	var folder: String = "user://data_table_probe"
+	DirAccess.make_dir_recursive_absolute(folder)
+	var written: Dictionary = wizard.write_files(folder)
+	var data: Resource = load(str(written.get("tres", ""))) if bool(written.get("ok", false)) else null
+	passed = SUPPORT.check("resource_wizard_test", "Insert writes the script and a .tres holding the rows",
+		[written.get("message"), data.get("probe_drops") if data != null else null,
+			FileAccess.get_file_as_string(str(written.get("gd", ""))).get_slice("\n", 0),
+			FileAccess.get_file_as_string(str(written.get("gd", ""))).contains("class_name ProbeDropTable")],
+		["Made probe_drop_table.gd and probe_drop_table.tres - load the .tres from any sheet to read its rows.",
+			wizard.rows, "@tool", true]) and passed
+	passed = SUPPORT.check("resource_wizard_test", "and will not write over either file",
+		wizard.write_files(folder), {"ok": false, "message": "probe_drop_table.gd already exists - pick another Name."}) and passed
+	for leftover: String in DirAccess.get_files_at(folder):
+		DirAccess.remove_absolute(folder.path_join(leftover))
+	DirAccess.remove_absolute(folder)
 	host.free()
 	return passed
 

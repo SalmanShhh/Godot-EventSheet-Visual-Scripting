@@ -8382,3 +8382,50 @@ Whether the mouse cursor is shown while the game is in this mode. A menu shows i
 Declare this object's states,声明此对象的状态
 Declare States,声明状态
 %s left the list - %d row(s) still say %s.,%s 已离开列表 - 仍有 %d 行写着 %s。
+"Words: a name, a line of dialogue, a file path.",文字:名字、一句对白、文件路径。
+Number (whole),数字 (整数)
+"A whole number: an amount, a count, a level.",整数:数量、计数、等级。
+"A number that can have a fraction: a weight, a speed, a chance.",可以带小数的数字:权重、速度、概率。
+True/false,真/假
+A tick: yes or no.,勾选:是或否。
+Choice,选项
+One of a list of words you name; the cell is a dropdown.,你列出的词中的一个;单元格是一个下拉框。
+"A colour, picked from a swatch in the Inspector.","颜色,从检查器中的色板选取。"
+Translation key,翻译键
+Text a translator turns into each language; the cell holds its key.,译者翻译成各种语言的文字;单元格保存它的键。
+New data table,新建数据表
+Data table · a Custom Resource,数据表 · 一个 Custom Resource
+"A list of entries you fill in like a spreadsheet, saved as a .tres file any sheet can read: loot, waves, dialogue lines, shop items.","像电子表格一样填写的条目列表,保存为任何事件表都能读取的 .tres 文件:掉落物、波次、对白、商店商品。"
+One row is a,一行是一个
+"click a header to set its kind, a cell to type · Delete removes the selected row","点击表头设置它的类型,点击单元格输入 · Delete 删除选中的行"
++ Row,+ 行
+Import from CSV…,从 CSV 导入…
+Export to CSV…,导出为 CSV…
+New rows get,新行的值
+Warn in the Inspector when a row is missing a value,某行缺少值时在检查器中警告
+Warn in the Inspector,在检查器中警告
+"Adds a check the Inspector runs while the table is edited: it warns until the table has rows, and names the first row with an empty text cell.","添加一个检查,检查器在编辑表格时运行它:在表格有行之前一直警告,并指出第一个文本单元格为空的行。"
+"A column name is a GDScript name: letters, digits and _, not starting with a digit.","列名是 GDScript 名称:字母、数字和 _,不能以数字开头。"
+Another column already has this name.,另一列已经使用这个名字。
+%s has no rows under its header line.,%s 的表头行下面没有任何行。
+Read %d row(s) from %s.,"已读取 %d 行,来自 %s。"
+Wrote %d row(s) to %s.,已写入 %d 行到 %s。
+"%s - double-click to rename, drag the right edge to resize","%s - 双击重命名,拖动右边缘调整宽度"
++ Column,+ 列
+Add a column,添加一列
+%d row(s) · %d column(s),%d 行 · %d 列
+Column: %s,列:%s
+(empty),(空)
+Creates %s and %s in %s; any sheet can read its rows.,"创建 %s 和 %s,位于 %s;任何事件表都能读取它的行。"
+%s already exists - pick another Name.,%s 已存在 - 请换个名字。
+"%s was written but does not compile, so no .tres was made.","%s 已写入但无法编译,所以没有生成 .tres。"
+Made %s and %s - load the .tres from any sheet to read its rows.,已创建 %s 和 %s - 在任何事件表中加载该 .tres 即可读取它的行。
+Say what one row is first (e.g. LootDrop).,先说明一行是什么 (例如 LootDrop)。
+Add at least one column.,至少添加一列。
+"Column %s needs a name of its own: letters, digits and _.",第 %s 列需要自己的名字:字母、数字和 _。
+%s is already a class name - pick another Name.,%s 已经是一个类名 - 请换个名字。
+New Data Table…,新建数据表…
+"A list of entries you fill in like a spreadsheet - loot, waves, dialogue lines, shop items - saved as a Custom Resource script and a .tres any sheet can read.",像电子表格一样填写的条目列表 - 掉落物、波次、对白、商店商品 - 保存为一个 Custom Resource 脚本和一个任何事件表都能读取的 .tres。
+"Sheets aren't only for gameplay: Sheet > New Data Table… is a small spreadsheet - name what one row is, give each column a kind, type the rows - and Insert writes a data asset whose Inspector is that same table, plus a .tres holding your rows - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.","事件表不只服务于玩法:Sheet > New Data Table… 是一个小电子表格 - 说明一行是什么,给每列一个类型,输入各行 - 然后插入会写出一个数据资源,它的检查器就是这张表,另外还有一个保存你的行的 .tres - 掉落表、对白、波次计划。设计师填写行并保存 .tres 变体;你的事件表加载它们。Sheet > New Editor Tool… 也以同样的方式制作一键完成的编辑器杂务。"
+Peek at Sheet > New Data Table… (Esc closes it without creating anything).,"看一看 Sheet > New Data Table… (按 Esc 关闭,不会创建任何东西)。"
+Remove column,移除列

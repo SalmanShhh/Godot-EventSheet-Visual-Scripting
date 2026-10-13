@@ -279,10 +279,10 @@ func build(root: Node) -> void:
 		sheet_popup.get_item_index(12),
 		"Start an editor-side tool sheet: its events run INSIDE the editor (script editor > File > Run), never in the game - batch renames, scene checks, one-click chores."
 	)
-	sheet_popup.add_item("New Custom Resource…", 13)
+	sheet_popup.add_item("New Data Table…", 13)
 	sheet_popup.set_item_tooltip(
 		sheet_popup.get_item_index(13),
-		"Make your own data asset in three questions: name one entry, list its columns, done - a Resource whose Inspector is a fill-in table, saved as .tres files designers edit."
+		"A list of entries you fill in like a spreadsheet - loot, waves, dialogue lines, shop items - saved as a Custom Resource script and a .tres any sheet can read."
 	)
 	sheet_popup.add_item("Teach a Verb - Share Published Verbs", 10)
 	sheet_popup.set_item_tooltip(

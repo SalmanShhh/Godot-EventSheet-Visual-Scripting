@@ -61,8 +61,8 @@ static func steps() -> Array[Dictionary]:
 		},
 		{
 			"title": "Make your own data asset",
-			"body": "Sheets aren't only for gameplay: Sheet > New Custom Resource… asks three plain questions (what one entry is called, what columns it has, whether it's required) and builds a data asset whose Inspector is a fill-in table - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.",
-			"task": "Peek at Sheet > New Custom Resource… (Esc closes it without creating anything).",
+			"body": "Sheets aren't only for gameplay: Sheet > New Data Table… is a small spreadsheet - name what one row is, give each column a kind, type the rows - and Insert writes a data asset whose Inspector is that same table, plus a .tres holding your rows - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.",
+			"task": "Peek at Sheet > New Data Table… (Esc closes it without creating anything).",
 			"check": Callable(),
 		},
 		{

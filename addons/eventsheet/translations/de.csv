@@ -8382,3 +8382,50 @@ Whether the mouse cursor is shown while the game is in this mode. A menu shows i
 Declare this object's states,Die Zustände dieses Objekts deklarieren
 Declare States,Zustände deklarieren
 %s left the list - %d row(s) still say %s.,%s ist nicht mehr in der Liste - %d Zeile(n) sagen noch %s.
+"Words: a name, a line of dialogue, a file path.","Wörter: ein Name, eine Dialogzeile, ein Dateipfad."
+Number (whole),Zahl (ganz)
+"A whole number: an amount, a count, a level.","Eine ganze Zahl: eine Menge, eine Anzahl, eine Stufe."
+"A number that can have a fraction: a weight, a speed, a chance.","Eine Zahl mit möglichem Bruchteil: ein Gewicht, eine Geschwindigkeit, eine Chance."
+True/false,Wahr/falsch
+A tick: yes or no.,Ein Häkchen: ja oder nein.
+Choice,Auswahl
+One of a list of words you name; the cell is a dropdown.,"Eines aus einer Liste von Wörtern, die du nennst; die Zelle ist ein Dropdown."
+"A colour, picked from a swatch in the Inspector.","Eine Farbe, aus einem Farbfeld im Inspector gewählt."
+Translation key,Übersetzungsschlüssel
+Text a translator turns into each language; the cell holds its key.,"Text, den ein Übersetzer in jede Sprache überträgt; die Zelle hält seinen Schlüssel."
+New data table,Neue Datentabelle
+Data table · a Custom Resource,Datentabelle · eine Custom Resource
+"A list of entries you fill in like a spreadsheet, saved as a .tres file any sheet can read: loot, waves, dialogue lines, shop items.","Eine Liste von Einträgen, die du wie eine Tabelle ausfüllst, gespeichert als .tres-Datei, die jedes Blatt lesen kann: Beute, Wellen, Dialogzeilen, Shop-Artikel."
+One row is a,Eine Zeile ist ein
+"click a header to set its kind, a cell to type · Delete removes the selected row","Klicke eine Überschrift an, um ihre Art festzulegen, eine Zelle, um zu tippen · Entf entfernt die gewählte Zeile"
++ Row,+ Zeile
+Import from CSV…,Aus CSV importieren…
+Export to CSV…,Als CSV exportieren…
+New rows get,Neue Zeilen erhalten
+Warn in the Inspector when a row is missing a value,"Im Inspector warnen, wenn einer Zeile ein Wert fehlt"
+Warn in the Inspector,Im Inspector warnen
+"Adds a check the Inspector runs while the table is edited: it warns until the table has rows, and names the first row with an empty text cell.","Fügt eine Prüfung hinzu, die der Inspector beim Bearbeiten der Tabelle ausführt: Sie warnt, bis die Tabelle Zeilen hat, und nennt die erste Zeile mit einer leeren Textzelle."
+"A column name is a GDScript name: letters, digits and _, not starting with a digit.","Ein Spaltenname ist ein GDScript-Name: Buchstaben, Ziffern und _, nicht mit einer Ziffer beginnend."
+Another column already has this name.,Eine andere Spalte hat diesen Namen bereits.
+%s has no rows under its header line.,%s hat keine Zeilen unter seiner Kopfzeile.
+Read %d row(s) from %s.,%d Zeile(n) aus %s gelesen.
+Wrote %d row(s) to %s.,%d Zeile(n) nach %s geschrieben.
+"%s - double-click to rename, drag the right edge to resize","%s - Doppelklick zum Umbenennen, rechten Rand ziehen zum Ändern der Breite"
++ Column,+ Spalte
+Add a column,Eine Spalte hinzufügen
+%d row(s) · %d column(s),%d Zeile(n) · %d Spalte(n)
+Column: %s,Spalte: %s
+(empty),(leer)
+Creates %s and %s in %s; any sheet can read its rows.,Erstellt %s und %s in %s; jedes Blatt kann seine Zeilen lesen.
+%s already exists - pick another Name.,%s existiert bereits - wähle einen anderen Namen.
+"%s was written but does not compile, so no .tres was made.","%s wurde geschrieben, kompiliert aber nicht, daher wurde keine .tres erstellt."
+Made %s and %s - load the .tres from any sheet to read its rows.,"%s und %s erstellt - lade die .tres aus einem beliebigen Blatt, um ihre Zeilen zu lesen."
+Say what one row is first (e.g. LootDrop).,"Sag zuerst, was eine Zeile ist (z. B. LootDrop)."
+Add at least one column.,Füge mindestens eine Spalte hinzu.
+"Column %s needs a name of its own: letters, digits and _.","Spalte %s braucht einen eigenen Namen: Buchstaben, Ziffern und _."
+%s is already a class name - pick another Name.,%s ist bereits ein Klassenname - wähle einen anderen Namen.
+New Data Table…,Neue Datentabelle…
+"A list of entries you fill in like a spreadsheet - loot, waves, dialogue lines, shop items - saved as a Custom Resource script and a .tres any sheet can read.","Eine Liste von Einträgen, die du wie eine Tabelle ausfüllst - Beute, Wellen, Dialogzeilen, Shop-Artikel -, gespeichert als Custom-Resource-Skript und als .tres, die jedes Blatt lesen kann."
+"Sheets aren't only for gameplay: Sheet > New Data Table… is a small spreadsheet - name what one row is, give each column a kind, type the rows - and Insert writes a data asset whose Inspector is that same table, plus a .tres holding your rows - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.","Blätter sind nicht nur für Gameplay da: Sheet > New Data Table… ist eine kleine Tabelle - nenne, was eine Zeile ist, gib jeder Spalte eine Art, tippe die Zeilen -, und Einfügen schreibt ein Daten-Asset, dessen Inspector genau diese Tabelle ist, dazu eine .tres mit deinen Zeilen - Beutetabellen, Dialogzeilen, Wellenpläne. Designer füllen Zeilen und speichern .tres-Varianten; deine Blätter laden sie. Und Sheet > New Editor Tool… erledigt Editor-Aufgaben per Klick auf dieselbe Weise."
+Peek at Sheet > New Data Table… (Esc closes it without creating anything).,"Wirf einen Blick auf Sheet > New Data Table… (Esc schließt es, ohne etwas zu erstellen)."
+Remove column,Spalte entfernen
