@@ -1,6 +1,8 @@
 @tool
 class_name EventSheetGlobalVariables
 extends RefCounted
+
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
 # GLOBAL VARIABLES - one value the whole project shares.
 #
 # On the sheet a global is a row you add at the top of any sheet. In Godot it lives on an autoload,
@@ -283,7 +285,7 @@ func add_global(raw_name: String, type_name: String, value_text: String, target:
 		target = _create_global_sheet(variable_name)
 		if target.is_empty():
 			return
-	var value: Variant = VariableDialog._parse_default(type_name, value_text)
+	var value: Variant = ReadingDoors.variable_dialog()._parse_default(type_name, value_text)
 	var path: String = str(target.get("path", ""))
 	# Open (or focus) the autoload as a sheet FIRST, then write into it through the ordinary funnel:
 	# the user sees where their global went, and the undo step lands on the tab that owns the file.

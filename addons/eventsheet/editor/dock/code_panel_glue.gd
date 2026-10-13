@@ -71,7 +71,7 @@ func refresh_rail_census() -> void:
 		return
 	_dock._rail_panels.set_census(
 		_dock._current_sheet != null and _dock._current_sheet.behavior_mode,
-		_dock._ace_picker != null and _dock._ace_picker.is_open())
+		_dock._ace_picker_built and _dock._ace_picker.is_open())
 
 
 ## Apply the remembered state when the workspace is built. The panel used to keep a second,

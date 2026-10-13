@@ -57,10 +57,11 @@ const FIRST_OPEN_BUDGET_MS: int = 6500
 ## Building the workspace editor in a process that has compiled nothing of it yet: loading
 ## event_sheet_editor.gd, which compiles every class it names and everything those name in turn,
 ## then `.new()` on it. This is the wait the FIRST open of the workspace pays, on top of the first
-## tab above. Measured 16,671, 16,754 and 17,051 ms (15,548-15,884 of it the compile alone), and the
-## budget is that median times 1.25 - a ceiling to hold the line while the closure is cut down, and
-## to be lowered with every cut that lands rather than left with room to grow back into.
-const EDITOR_BUILD_BUDGET_MS: int = 21000
+## tab above. Measured 16,671, 16,754 and 17,051 ms before the closure was cut (15,548-15,884 of it
+## the compile alone); after the cuts, 11,606 to 12,170 ms on a quiet machine (9,783-10,260 the compile).
+## The budget is about 12,170 times 1.25, lowered with every cut that lands rather than left with room to
+## grow back into. `editor_closure_budget_test` holds the compiled set itself, which does not flap.
+const EDITOR_BUILD_BUDGET_MS: int = 15200
 
 ## Opening the fixture's 2,000-line script as a sheet: the import, the lift, and the row build with
 ## its head bands, ending in 1,441 rows. Measured 5,629, 5,758 and 7,305 ms - the widest spread of

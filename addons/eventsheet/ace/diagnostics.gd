@@ -12,6 +12,8 @@
 class_name EventSheetDiagnostics
 extends RefCounted
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 
 ## Returns [{ "uid": String, "message": String, "suggestion": String }], one per offending row.
 ## uid = str(resource.get_instance_id()). `registry` is optional: without it, ƒx expression
@@ -95,7 +97,7 @@ static func _check_raw(raw: RawCodeRow, in_flow: bool, sheet: EventSheetResource
 static func _check_local_var(local: LocalVariable, sheet: EventSheetResource, diagnostics: Array) -> void:
 	if local.name.strip_edges().is_empty():
 		return
-	var owner: String = EventSheetProjectDoctor.shadowed_member_class(sheet, local.name)
+	var owner: String = ReadingDoors.doctor().shadowed_member_class(sheet, local.name)
 	if not owner.is_empty():
 		diagnostics.append(_make(local, "Variable \"%s\" shadows a %s member - rename it." % [local.name, owner], ""))
 
@@ -136,7 +138,7 @@ static func _suggest(expression: String, sheet: EventSheetResource) -> String:
 	var identifier: RegEx = RegEx.new()
 	if identifier.compile("^[A-Za-z_][A-Za-z0-9_]*$") != OK or identifier.search(token) == null:
 		return ""
-	var closest: String = ACEParamsDialog.closest_known_identifier(token, sheet)
+	var closest: String = ReadingDoors.params_dialog().closest_known_identifier(token, sheet)
 	return ("Did you mean \"%s\"?" % closest) if not closest.is_empty() else ""
 
 

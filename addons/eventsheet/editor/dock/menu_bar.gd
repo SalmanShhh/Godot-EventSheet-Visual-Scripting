@@ -1322,7 +1322,7 @@ func _fill_panels_menu(panels_menu: PopupMenu) -> void:
 	var ids: PackedStringArray = EventSheetRailPanels.panel_ids()
 	var offered: PackedStringArray = EventSheetRailPanels.shown_panel_ids({
 		"behaviour_pack": _dock._current_sheet != null and _dock._current_sheet.behavior_mode,
-		"picker_open": _dock._ace_picker != null and _dock._ace_picker.is_open(),
+		"picker_open": _dock._ace_picker_built and _dock._ace_picker.is_open(),
 	})
 	for panel_index: int in ids.size():
 		if not offered.has(ids[panel_index]):

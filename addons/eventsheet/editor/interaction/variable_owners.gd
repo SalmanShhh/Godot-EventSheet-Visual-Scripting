@@ -17,6 +17,8 @@
 class_name EventSheetVariableOwners
 extends RefCounted
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## The owner a local variable reads with - nobody's property, so the sheet's own word for "the
 ## machinery itself". Frozen: rows, the picker and the notes all address this group by it.
 const OWNER_SYSTEM: String = "System"
@@ -95,7 +97,7 @@ static func own_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 			"name": nested_name,
 			"type_name": descriptor.type_name,
 			"type_word": ViewportRowBuilder.friendly_type_word(descriptor.type_name),
-			"value": VariableDialog._default_display_text(descriptor.default_value),
+			"value": ReadingDoors.variable_dialog()._default_display_text(descriptor.default_value),
 			"scope": EventSheetVariableSentence.member_scope(
 				descriptor.is_constant, descriptor.is_static, autoload, resource_host),
 			"owner": self_object,
@@ -169,7 +171,7 @@ static func local_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 			"name": name_text,
 			"type_name": descriptor.type_name,
 			"type_word": ViewportRowBuilder.friendly_type_word(descriptor.type_name),
-			"value": VariableDialog._default_display_text(descriptor.default_value),
+			"value": ReadingDoors.variable_dialog()._default_display_text(descriptor.default_value),
 			"scope": EventSheetVariableSentence.local_scope(descriptor.static_local),
 			"owner": OWNER_SYSTEM,
 			"group": GROUP_LOCAL,
@@ -322,7 +324,7 @@ static func variable_reference_values(parameters: Array, params: Dictionary) -> 
 		elif entry is ACEParam:
 			param_id = (entry as ACEParam).id
 			hint = (entry as ACEParam).hint
-		if not hint.begins_with(ACEParamsDialog.VARIABLE_REFERENCE_HINT):
+		if not hint.begins_with(ReadingDoors.params_dialog().VARIABLE_REFERENCE_HINT):
 			continue
 		var value: String = str(params.get(param_id, "")).strip_edges()
 		if not value.is_empty():

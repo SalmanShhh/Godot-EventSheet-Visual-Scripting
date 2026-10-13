@@ -6,6 +6,180 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Fixed: the sheet and project windows
+
+- **New Event Sheet:** when the name you typed was taken, the sheet was written as
+  `event_sheet-2.gd`, a file name no class name can match, and nothing said so. The suffix now joins
+  with an underscore (`event_sheet_2.gd`) and the Output panel says which file was written instead.
+- **Sheet Type:** OK applied the sheet type even while the Ships as line showed a problem, so a broken
+  class name or an unknown class went straight into the sheet. OK now stays disabled until the line
+  reads clean.
+- **Sheet Type:** changing Name on a class that already had one only relabelled the class, leaving
+  every row that used the old name pointing at a class that no longer existed. It now renames the
+  uses too, the same way Rename class on the sheet's head does.
+- **Start page:** the Systems starter had a pitch but never showed, because the starter list it
+  reads did not offer it. Entity System is now offered there and in Create New > Event Sheet.
+- **Start page:** a showcase card opened whichever scene came last by name in its folder, so
+  Platformer Shooter opened its target scene. It now opens the scene named after the showcase.
+- **Tour:** the add-an-event, add-a-condition and add-an-action steps only looked at top-level
+  events, so an event made inside a group never ticked. Events in groups and sub-events count now.
+- **Import event sheet:** when Save as could not compile the sheet, the error was dropped and the
+  window just stayed open. The reason is now shown on the window's report.
+- **New Custom Resource:** the Resource name hint said `LootTable` while the wizard actually makes
+  `LootDropTable`; its problems were written to the status bar hidden behind the window; and a class
+  name already in use was accepted. The hint now shows the real name, problems show on the window,
+  and a taken class name is refused.
+- **New Behaviour Addon:** a name that clashed was only reported when you pressed Create. It is now
+  reported while you type.
+- **Addon manager:** Import from .zip promised a reading check it never ran, and overwrote files
+  already in the project without keeping them. It now backs up every file it replaces into the backup
+  ring first and reports how each imported pack reads. Check for updates and Import from URL no
+  longer claim to check or download anything online; they say what they actually do.
+- **Edit modes:** removing a mode left its On entering event behind, naming a mode the game no
+  longer has. The event now goes in the same undo step; one you added your own rows to is kept and
+  named on the status bar instead.
+- **States:** OK rewrote the state list without looking at the rows, so removing or renaming a state
+  that a Go to, Is in or On entering row still named left that row pointing at nothing. Such a change
+  is now refused, and the status bar names the states the rows still use.
+
+### Fixed: the finding and navigation windows
+
+- **Find References:** double-clicking a result now selects the row the use sits on, opening its
+  sheet first when it is not the one on screen. It used to open the sheet (and only when it was a
+  saved file) and leave you at the top.
+- **Outline:** in split view, picking an entry now lands in the pane you are working in, the same
+  pane the outline was read from. To-do notes carry the editor's own info icon instead of an emoji.
+- **Bookmarks:** Clear All now asks first, because bookmarks are not part of undo. OK and Esc keep
+  them; only the separate Clear All button removes them. The list and its jumps follow the pane you
+  are working in during split view, and entries carry an editor icon instead of an emoji.
+- **History:** the list now opens with a \"Before these edits\" line, so a click can undo back past
+  the first edit. Rows light up on the canvas while the pointer is over an entry, instead of when
+  you click one.
+- **Sheet map:** the summary counts scenes and globals as what they are instead of calling every box
+  a sheet. Lines now join the edges of the two boxes that face each other, so a line to a box on the
+  left no longer runs back through both boxes. Every line shows its label (\"includes\", \"calls Game\",
+  \"signals On died\"), and clicking a scene box opens that scene in Godot's scene editor.
+- **File Changed On Disk:** the reload question only warns that unsaved edits will be lost when the
+  tab has unsaved edits.
+- **Change Type Everywhere:** the OK button is off when the variable is not declared in the sheet,
+  instead of doing nothing.
+- **Unsaved Changes:** Save on a sheet that was never saved opens Save As, and the tab now closes
+  once that file is written. Cancelling the Save As keeps the tab open.
+
+### Fixed: debugging, checks and small prompts
+
+- **Debugger, Breakpoints tab:** unticking a breakpoint deleted it, outside Undo, although the hint
+  said it stays in place but inactive. Now it stays in the list unticked (condition kept), ticking
+  turns it back on, and both are one Undo step.
+- **Run Tests:** a test that asserted nothing was remembered on its sheet's health card as a clean
+  run while the report said FAIL; it now counts as a failure. Choosing Run Tests again while a run
+  is still going shows the window instead of starting a second run on top of the first.
+- **Loose Ends:** after any edit, clicking an entry jumped nowhere, because the list still pointed
+  at the sheet as it was before the edit. It now finds the row in the sheet as it is now.
+- **Project Doctor:** \"Fix selected\" only worked for fixes an extension check attached. It now
+  applies a finding's one built-in fix too, and when it cannot (no fix, or several to pick from)
+  it is greyed with the reason in its tooltip.
+- **Resolve Conflict:** the heading counted conflicted regions as \"to resolve\" instead of the
+  events that differ, and Save overwrote the file with no backup. It now counts the differing
+  events, and Save puts the file as it was into Sheet Backups first.
+- **Keep the old name working:** Add Shim could be pressed with no old name typed. It is greyed
+  until a name is entered.
+- **Edit Script Block:** the confirm button read OK; it now says Save, as everything about it does.
+
+### Fixed: project-wide find, replace and rename see `.gd` sheets too
+
+- **Find in Project** searched only `.tres` sheets, so a project of `.gd` sheets (the default kind)
+  found nothing. It now searches every sheet in both formats, and opening a result takes you to the
+  event or line it was found on instead of the top of the sheet.
+- **Replace in Project** now replaces in closed `.gd` sheets as well, backing each file up first and
+  naming it on the status line.
+- **Rename class** counted uses across the whole project but rewrote only the open sheet and the
+  `.tres` sheets that include it, so a `.gd` that extends or creates the class kept the old name. It
+  now rewrites every sheet that names the class, in both formats (open tabs are left unsaved for you
+  to save), and the count it shows is the one it applies.
+- **Rename class** now refuses a name another class, engine class or built-in type already has.
+- **Ctrl+P `#`** and **What Changed…** now list `.gd` sheets alongside `.tres` sheets.
+- **Rename Everywhere** (a variable's rename window) now has a Cancel button.
+- **Rename a function:** after a rename that also saved sheets which include this one, the status
+  line no longer says one Ctrl+Z takes all of it back - it says Ctrl+Z covers this sheet's rows and
+  names the files it saved.
+
+### Fixed: the studio and settings windows
+
+- **Theme Editor:** each number token's box now uses that token's own range and step, so a lane
+  ratio of 0.45 can be set instead of snapping to steps of 0.5.
+- **Theme Editor:** a preset that cannot be saved now says so on the status bar.
+- **Translation Studio:** pressing Report Coverage again replaces the report instead of adding a
+  second copy under it.
+- **Keyboard Shortcuts:** clicking a second binding while another one is listening now listens on
+  the one you clicked, and a key that lands on one of the fixed keys (Ctrl+F, F9, Delete...) is
+  flagged as a clash.
+- **Words:** the table of words scrolls, so the window no longer grows past the bottom of the screen.
+- **Generate Events from a Description:** it sends nothing while Ask is off, a second click while a
+  request is out sends nothing, and a request that cannot start is reported and cleaned up.
+- **Ask:** Discard drops the proposal and keeps the sentence you typed.
+- **Add Save Support:** a typed array such as `Array[String]` now loads back from a save instead of
+  failing the assignment.
+- **Save Studio:** the Save Slots list shows save files only, not the editor's settings files.
+
+### Fixed: the dialogs that write events keep your typing and say what is wrong
+
+- A function parameter called `move speed` (a space, a keyword, or a name another parameter of the
+  same function already has) is refused in the Edit Parameter dialog, which stays open with the
+  reason under the form. It used to be stored as typed and break the generated `func` line.
+- The New Function dialog says what is wrong with the name while you type it, and OK no longer
+  closes the dialog and pops it back up on a refused name.
+- The New Function preview names the picker shelf the function will really land on, instead of
+  \"(this behaviour)\" on every sheet.
+- Pressing OK on Edit Comment without changing anything no longer adds an undo step or marks the
+  sheet as changed.
+- Add behavior labels each setting with the property's own name, as the pack wrote it, and picking
+  Platformer no longer highlights Platformer Pathfinding as well.
+- Edit Enum and Edit Signal keep the dialog open with the error in it when a name is refused,
+  instead of closing and reporting it in the status bar.
+- Snippets are listed by the name they were saved under, not re-capitalised, and saving a selection
+  under a name the library already has is refused with a message instead of quietly writing
+  `name-2`.
+- Paste Special keeps the form open when the paste is refused, so the retargets you typed survive.
+- Compare keeps OK disabled while \"To\" (or the other end of a range, or the tolerance) is empty.
+- The condition and action picker shows the editor's Favorites icon (or the word Pin) instead of
+  emoji, and the node picker shows each node's class icon.
+- An instance variable placed among the events keeps its \"Editable in the Inspector\" tick when you
+  press OK in the variable dialog. It was dropped on every edit.
+- A Show if or Lock unless condition now updates the Inspector the moment the variable it reads
+  changes: that variable's generated setter calls `notify_property_list_changed()`. Before, the
+  field only hid or showed after the node was selected again.
+
+### Changed: the first open no longer compiles the Doctor, the pickers, the dialogs, the API or the Manual
+
+- The last doors from the workspace's first open into the Project Doctor, the Add picker, the
+  parameters and variable dialogs, the public API and the Manual are now by-path loads at the call
+  that needs them, through `interaction/reading_doors.gd`. That covers the Doctor sections, the
+  share index and the local tokens (the Doctor), the completions and quick add (the picker's fuzzy
+  match and the dialog's scene lists), the variable tables and owners (the variable dialog's
+  default text), the diagnostics, the game catalog, the Command Palette, the picker recipes and the
+  Manual's own reference files (the API), and the member descriptions, the pattern marks and the
+  after-save learning track (the Manual).
+- The session's simple verbs (`EventSheets.register_simple_ace`) are read by the vocabulary from
+  `dock_registry.gd`, which holds the API's own list, instead of through the API.
+- Three things still BUILT a click-only dialog while the workspace was built in the real editor:
+  the Properties bar's field factory made a parameters dialog up front, a registry refresh and the
+  rail census read the picker field (which builds the picker), and handing the workspace the Live
+  Values debugger built the parameters dialog to wire its expression picker. Each now waits for the
+  dialog: the factory builds it on the first field, the picker is handed the registry and asked
+  whether it is open only once it exists, and the debugger is kept and wired when the dialog is built.
+- What the first open compiles, as `tools/measure_editor_closure.gd` reads it: 420 files and 205,738
+  lines before, 338 files and 165,630 lines after (558 files and 249,073 lines before this cut began).
+  Headless `editor_build_ms`, median of three, interleaved with the tree before the cut: 18,174 ms
+  there, 12,170 ms here. `_ensure_editor()` in a real editor: 20,516 ms there, 14,600 ms here.
+- New `editor_closure_budget_test` walks the same graph and fails when the first open's set grows
+  more than three percent past those figures, printing the files that hold the most of it in.
+  `plugin_boot_lazy_test` now holds the workspace editor and the reading core to never naming the
+  compiler, the importer, the lifter, the Doctor, the pickers, the dialogs, the API or the Manual,
+  and the workspace build budget in `huge_project_budget_test` is lowered from 21 s to 15.2 s.
+- Every row reading is unchanged: `tools/reading_dump.gd` gives byte-identical output on this tree
+  and on the tree before the cut began.
+
 ### Fixed: two prompts no longer lose work on Esc or Enter
 
 - **Every Tick:** taking the last condition off an event asks whether to keep it as an every-tick
@@ -1259,7 +1433,6 @@ What changed in the build you have installed (v0.18.0), in the words the release
   space so a shape far from the origin stays mediump-safe. Many of a kind still want a MultiMesh,
   and the guide says so.
 
-
 ### Fixed in the opened-script reading
 
 - **A wired handler reads as its trigger again, and a `while true: await` body as the beat it is.**
@@ -1277,7 +1450,6 @@ What changed in the build you have installed (v0.18.0), in the words the release
   handler sitting after a run of lifted verbs is not worth the file degrading to code blocks. The
   shape is spelled once now, in the lifter, and the canvas asks it rather than keeping a second copy
   that could drift.
-
 
 ### Fixed after a reading of the shapes and inspector pass
 
@@ -1586,7 +1758,6 @@ What changed in the build you have installed (v0.18.0), in the words the release
   written as a Dictionary, an Array or a constructor call survives whole; and a dropdown entry that
   is the empty word was written as nothing at all, so an \"or leave it empty\" entry silently stopped
   existing - it ships quoted now, and comes back.
-
 
 ### Fixed after a reading of the juice composition pass
 
@@ -5695,7 +5866,6 @@ A boundary review read the three lift families, the guards and the pages against
   of the file spells it. And two tests left `_scene_save_roundtrip.gd` and a `__fileplaces_test`
   folder in the player's data folder after every run.
 
-
 ### Every call on a known class is a row
 
 - **The API is vocabulary too.** A call whose receiver's class the sheet can KNOW now derives an
@@ -9578,7 +9748,6 @@ byte for byte, which is the gate each of them ships behind.
 
 - **The Addon manager figure counts the packs that are actually there.** It said 91; there are 95.
   Re-rendered from the real window, and the alt text says what the picture says.
-
 
 ### Changed - the documentation caught up with everything the sheet learned, and the index gates it
 

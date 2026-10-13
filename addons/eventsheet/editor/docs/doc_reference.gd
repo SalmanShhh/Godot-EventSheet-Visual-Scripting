@@ -28,6 +28,8 @@
 class_name EventSheetDocReference
 extends RefCounted
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## The scheme, and the kinds after it. Frozen with the ids themselves.
 const SCHEME := "reference:"
 const KIND_SECTION := "section"
@@ -199,7 +201,7 @@ static func title_for(kind: String, name: String) -> String:
 ## guide name the whole plugin already agrees on, so the Manual and the picker call a pack the
 ## same thing.
 static func pack_title(pack_dir: String) -> String:
-	var guide: String = EventSheets.addon_guide_name(pack_dir)
+	var guide: String = ReadingDoors.api().addon_guide_name(pack_dir)
 	if guide.is_empty():
 		return pack_dir.strip_edges()
 	return guide.replace("-", " ")
@@ -213,12 +215,12 @@ static func guide_page_for(kind: String, name: String) -> String:
 			# Resolved from the pack directory rather than through the "addon:" route, because the
 			# router reads THIS file: asking it back would be a cycle between two classes.
 			var directory: String = name.strip_edges()
-			var bundled: String = EventSheetDocLibrary.id_for_repo_path(EventSheets.addon_guide_for_pack(directory))
+			var bundled: String = EventSheetDocLibrary.id_for_repo_path(ReadingDoors.api().addon_guide_for_pack(directory))
 			if EventSheetDocLibrary.has_page(bundled):
 				return bundled
 			return EventSheetDocLibrary.pack_page_id(directory)
 		KIND_SECTION:
-			var target: String = EventSheets.module_guide_target(name)
+			var target: String = ReadingDoors.api().module_guide_target(name)
 			var derived: String = EventSheetDocLibrary.id_for_repo_path(target)
 			return derived if EventSheetDocLibrary.has_page(derived) else ""
 	return ""
@@ -261,7 +263,7 @@ static func breadcrumb(doc_id_text: String, title: String) -> PackedStringArray:
 			KIND_TRACKS:
 				crumbs.append(EventSheetDocTracks.PAGE_TITLE)
 	elif id.begins_with("ace:"):
-		crumbs.append(SECTION_TREE_TITLE if EventSheets.addon_pack_directory(
+		crumbs.append(SECTION_TREE_TITLE if ReadingDoors.api().addon_pack_directory(
 			id.substr(4).get_slice("/", 0)).is_empty() else PACK_TREE_TITLE)
 	elif id.begins_with("guide:"):
 		var group: String = group_title_for_page(id.substr("guide:".length()))
@@ -306,7 +308,7 @@ static func definitions_in_section(section_name: String) -> Array[ACEDefinition]
 	var found: Array[ACEDefinition] = []
 	if wanted.is_empty():
 		return found
-	for definition: ACEDefinition in EventSheets.all_verbs():
+	for definition: ACEDefinition in ReadingDoors.api().all_verbs():
 		if category_of(definition) == wanted:
 			found.append(definition)
 	return found
@@ -315,10 +317,10 @@ static func definitions_in_section(section_name: String) -> Array[ACEDefinition]
 ## Every category the live vocabulary offers, sorted - the System reference's own tree.
 static func section_names() -> PackedStringArray:
 	var seen: Dictionary = {}
-	for definition: ACEDefinition in EventSheets.all_verbs():
+	for definition: ACEDefinition in ReadingDoors.api().all_verbs():
 		# A pack's verbs are the BEHAVIOR reference's business; the System reference is the
 		# vocabulary that ships with the plugin, which is what its name promises.
-		if not EventSheets.addon_pack_directory(definition.provider_id).is_empty():
+		if not ReadingDoors.api().addon_pack_directory(definition.provider_id).is_empty():
 			continue
 		seen[category_of(definition)] = true
 	var names: PackedStringArray = PackedStringArray()
@@ -419,7 +421,7 @@ static func blocks_for(kind: String, name: String) -> Array[Dictionary]:
 		KIND_CLASS:
 			return _rows_page(title_for(KIND_CLASS, name),
 				"Everything this sheet can ask of a %s, drawn from the vocabulary this editor has loaded." % name.strip_edges(),
-				rows_from_definitions(EventSheets.class_vocabulary(name.strip_edges())), "")
+				rows_from_definitions(ReadingDoors.api().class_vocabulary(name.strip_edges())), "")
 		KIND_SECTION:
 			return _rows_page(title_for(KIND_SECTION, name), _section_lead(name),
 				rows_from_definitions(definitions_in_section(name)), guide_page_for(KIND_SECTION, name))

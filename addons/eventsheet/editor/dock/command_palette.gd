@@ -1,6 +1,8 @@
 @tool
 class_name EventSheetCommandPalette
 extends RefCounted
+
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
 # The Command Palette (Ctrl+P): keyboard-first access to every dock action - the affordance power
 # users reach for first. The command list + fuzzy filter are pure/testable (filter_commands is static
 # so tests can score titles without a live window); the popup is the GUI shell built lazily. Every
@@ -56,7 +58,7 @@ func _command_palette_commands() -> Array[Dictionary]:
 		commands.append({"title": "Add %s…" % kind.title, "run": func() -> void: _dock._open_custom_block_add(kind_id)})
 	# Extension commands registered through the public API (EventSheets.register_palette_
 	# command) - the plugin's own region fold commands arrive this way, dogfooding the seam.
-	commands.append_array(EventSheets.palette_commands())
+	commands.append_array(ReadingDoors.api().palette_commands())
 	return commands
 
 
@@ -202,13 +204,13 @@ func _symbol_matches(query: String) -> Array:
 ## there - so the fastest route to a guide is Ctrl+P, "?", the word you remember.
 func _doc_matches(query: String) -> Array:
 	var matches: Array = []
-	for result: Dictionary in EventSheets.search_docs(query, 30):
+	for result: Dictionary in ReadingDoors.api().search_docs(query, 30):
 		var doc_id: String = str(result.get("doc_id", ""))
 		var anchor: String = str(result.get("anchor", ""))
 		var heading: String = str(result.get("heading", ""))
 		var title: String = str(result.get("title", ""))
 		matches.append({"title": "? %s" % (title if heading.is_empty() else "%s - %s" % [title, heading]),
-			"run": func() -> void: EventSheets.open_docs(doc_id, anchor)})
+			"run": func() -> void: ReadingDoors.api().open_docs(doc_id, anchor)})
 	return matches
 
 

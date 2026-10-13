@@ -110,6 +110,44 @@ const FORBIDDEN := {
 	],
 }
 
+## THE FIRST OPEN of the workspace, held to the same rule one step later. These files are not loaded
+## at boot - they load when the first sheet is opened, as the workspace editor and the reading core
+## it paints with. Each of them once named some of the classes below, and each name compiled that
+## class and everything it names into that first open, before a single row had asked for it: the
+## first open compiled 558 scripts, about 249,000 lines, before these doors were moved to by-path
+## loads. Every class below is reached at the click, the save or the hover that needs it.
+##
+## Kept apart from FORBIDDEN on purpose: the loops over FORBIDDEN also hold every file to the whole
+## reading subtree, and these files ARE the reading subtree.
+const FIRST_OPEN_FILES := [
+	"res://addons/eventforge/editor/event_sheet_editor.gd",
+	"res://addons/eventsheet/editor/event_sheet_dock.gd",
+	"res://addons/eventsheet/editor/event_sheet_viewport.gd",
+	"res://addons/eventsheet/editor/event_row_renderer.gd",
+	"res://addons/eventsheet/editor/interaction/viewport_row_builder.gd",
+	"res://addons/eventsheet/editor/interaction/sentence_grammar.gd",
+	"res://addons/eventsheet/editor/interaction/viewport_reading_rows.gd",
+	"res://addons/eventsheet/editor/interaction/pattern_readings.gd",
+	"res://addons/eventsheet/editor/interaction/viewport_input.gd",
+	"res://addons/eventsheet/editor/interaction/sheet_head_bands.gd",
+	"res://addons/eventsheet/editor/interaction/behavior_shape_readings.gd",
+	"res://addons/eventsheet/editor/dock/menu_bar.gd",
+]
+
+## The names none of the FIRST_OPEN_FILES may hold in code. The public API keeps its dot for the
+## reason PUBLIC_API_TOKEN gives; the Manual's classes are spelled out whole, because their shared
+## prefix is also the start of every `EventSheetDock...` helper the workspace rightly names.
+const FIRST_OPEN_FORBIDDEN := [
+	"EventSheets.", "SheetCompiler", "GDScriptImporter", "EventSheetACELifter",
+	"EventSheetProjectDoctor", "ACEPickerDialog", "ACEParamsDialog", "VariableDialog",
+	"EventSheetDocBrowser", "EventSheetDocPageView", "EventSheetDocLibrary", "EventSheetDocMarkdown",
+	"EventSheetDocWindow", "EventSheetDocSearch", "EventSheetDocAceReference", "EventSheetDocFigures",
+	"EventSheetDocExplain", "EventSheetDocPanel", "EventSheetDocReference", "EventSheetDocGlossary",
+	"EventSheetDocHistory", "EventSheetDocUsage", "EventSheetDocHelpTarget", "EventSheetDocTutorials",
+	"EventSheetDocWhatsNew", "EventSheetDocFeedback", "EventSheetDocLocale",
+	"EventSheetDocEngineReference", "EventSheetDocTracks", "EventSheetPatternManual",
+]
+
 ## The debugger bridge's hook the editor calls AT BOOT, for the tab that exists before any Run. The
 ## FORBIDDEN lint reads class names, and a `load("res://...")` string names none - which is exactly how
 ## the state trail slipped into every editor start with this whole test green. So the hook itself is
@@ -221,6 +259,16 @@ static func run() -> bool:
 		all_passed = _check("%s never calls the %s API in code" % [
 			boot_path.get_file(), PUBLIC_API_TOKEN.trim_suffix(".")],
 			api_code.contains(PUBLIC_API_TOKEN), false) and all_passed
+
+	# 1c'. The first open: the workspace editor and the reading core name none of the classes they
+	# only borrow from at a click.
+	for first_open_path: String in FIRST_OPEN_FILES:
+		var first_open_code: String = _code_only(first_open_path)
+		all_passed = _check("first-open file readable: %s" % first_open_path.get_file(),
+			first_open_code.is_empty(), false) and all_passed
+		for heavy: String in FIRST_OPEN_FORBIDDEN:
+			all_passed = _check("%s never names %s in code" % [first_open_path.get_file(), heavy],
+				first_open_code.contains(heavy), false) and all_passed
 
 	# 1d. The debugger hook the editor calls at boot loads nothing, by class or by path.
 	var hook: String = _function_body(_code_only(BOOT_HOOK_FILE), BOOT_HOOK)

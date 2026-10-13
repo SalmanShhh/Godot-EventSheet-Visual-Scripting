@@ -82,6 +82,8 @@
 class_name EventSheetFilesDoctor
 extends EventSheetDoctorSection
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## The id the section is registered under, and the ids each kind of line is filed as. Frozen
 ## alongside the wording: the tests and the quick-fix chips address a finding by these.
 const CHECK_ID := "files"
@@ -114,7 +116,7 @@ const NAMED_LIMIT: int = 1
 ## Registers the section, replacing any previous registration - so a plugin reload, a second Doctor
 ## run and a test that registers it by hand all leave exactly one.
 static func ensure_registered() -> void:
-	EventSheetProjectDoctor.register_check(CHECK_ID, Callable(EventSheetFilesDoctor, "check"))
+	ReadingDoors.doctor().register_check(CHECK_ID, Callable(EventSheetFilesDoctor, "check"))
 
 
 ## The section, with the contract every registered check has: append findings, never write inside
@@ -141,10 +143,10 @@ static func report(sources: Dictionary) -> Array[Dictionary]:
 ## shared listing and its shared read - so this adds no walk of the tree and no second read.
 static func project_sources() -> Dictionary:
 	var sources: Dictionary = {}
-	for script_path: String in EventSheetProjectDoctor._project_scripts():
+	for script_path: String in ReadingDoors.doctor()._project_scripts():
 		if _is_someone_elses(script_path):
 			continue
-		var text: String = EventSheetProjectDoctor.source_of(script_path)
+		var text: String = ReadingDoors.doctor().source_of(script_path)
 		if not text.is_empty():
 			sources[script_path] = text
 	return sources

@@ -1,6 +1,8 @@
 @tool
 class_name ViewportInputHandlers
 extends RefCounted
+
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
 # The INPUT handling of the event sheet's virtualized viewport, extracted from
 # event_sheet_viewport.gd to keep that file maintainable. The four handlers behind
 # the viewport's _gui_input virtual live here:
@@ -347,7 +349,7 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		# the hand-written shape and the events shape side by side. The hover already promised this,
 		# so the click has to keep the promise.
 		if not event.double_click and str(metadata.get("kind", "")) == "pattern_chip":
-			EventSheetPatternManual.open_page(str(metadata.get("pattern", "")))
+			ReadingDoors.pattern_manual().open_page(str(metadata.get("pattern", "")))
 			_viewport.accept_event()
 			return
 		# The ƒ chip names a function this sheet declares; clicking it goes there, the way the

@@ -31,6 +31,11 @@ static var _row_menu_items: Array[Dictionary] = []
 ## Lifecycle listeners: event name -> Array[Callable]. The workspace fires these from its own open,
 ## save and compile funnels - the first of which runs while the first sheet is being opened.
 static var _lifecycle: Dictionary = {"opened": [], "saved": [], "compiled": []}
+## The dictionary-defined verbs (`EventSheets.register_simple_ace`). The API owns the typed list and
+## hands this file the SAME array object the moment it registers one, so a verb registered, or the
+## list cleared, through the API is what the workspace's vocabulary reads on its next refresh - the
+## first of which runs while the workspace is being built. Empty until something registers.
+static var _simple_aces: Array = []
 
 
 static func register_dock(dock: Control) -> void:
@@ -85,6 +90,16 @@ static func row_menu_items_for(resource: Resource) -> Array[Dictionary]:
 		if not filter.is_valid() or bool(filter.call(resource)):
 			applicable.append(entry)
 	return applicable
+
+
+## Called by the API with its own list of simple verbs; held by reference, never copied.
+static func share_simple_aces(definitions: Array) -> void:
+	_simple_aces = definitions
+
+
+## The simple verbs, for the vocabulary refresh. The API's own array once one is registered.
+static func simple_aces() -> Array:
+	return _simple_aces
 
 
 ## Adds a listener for "opened", "saved" or "compiled".

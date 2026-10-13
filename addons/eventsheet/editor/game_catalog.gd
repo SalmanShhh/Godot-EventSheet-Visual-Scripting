@@ -25,6 +25,8 @@
 class_name EventSheetGameCatalog
 extends RefCounted
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## The pseudo locale. Godot's CSV importer standardizes a header into a locale and drops a subtag it
 ## does not recognise, so "qps_ploc" lands as "qps" - which is what the column must be called for
 ## the imported .translation to answer to it.
@@ -104,7 +106,7 @@ static func preview_param(value: Variant) -> String:
 	var text: String = str(value)
 	if _preview_locale.is_empty():
 		return text
-	var parts: Dictionary = ACEParamsDialog.translatable_parts(text)
+	var parts: Dictionary = ReadingDoors.params_dialog().translatable_parts(text)
 	if not bool(parts.get("translatable", false)):
 		return text
 	return "\"%s\"" % preview(str(parts.get("text", "")))

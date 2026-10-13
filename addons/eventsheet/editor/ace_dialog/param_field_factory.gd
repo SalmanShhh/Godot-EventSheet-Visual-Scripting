@@ -2,6 +2,10 @@
 class_name EventSheetParamFieldFactory
 extends RefCounted
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+## Where a pack's own parameter help is kept: the store the API's `param_help_for` reads.
+const EXTENSION_REGISTRIES := preload("res://addons/eventsheet/api/extension_registries.gd")
+
 # The ONE door to "give me the right editor for this parameter".
 #
 # The per-hint widgets - the colour swatch, the enum dropdown, the node picker, the Input Map
@@ -30,7 +34,21 @@ extends RefCounted
 ## The dialog instance the widgets are built in. Never shown: `init_dialog` is not called, so it owns
 ## no window, and every builder that would reach for one is already null-guarded (a plain field just
 ## does not get its Enter-presses-OK binding, which is right - there is no OK).
-var _builder: ACEParamsDialog = ACEParamsDialog.new()
+##
+## Typed loosely, reached by path and built the first time a field is asked for: the workspace
+## builds this factory with its Properties bar, and naming the dialog's class here - or building the
+## dialog then - compiled the dialog and everything it names into the workspace's first open.
+var _builder: Object:
+	get:
+		if _built_dialog == null:
+			_built_dialog = ReadingDoors.params_dialog().new()
+			_configure(_built_dialog)
+		return _built_dialog
+var _built_dialog: Object = null
+## The context `init` was handed, kept until the dialog is built: the registry as it was then, and
+## the workspace the sheet and its variable names are read from.
+var _registry: Object = null
+var _dock: Control = null
 
 
 ## Points the factory at the same registry and sheet context the Edit Parameter dialog uses, so the
@@ -38,11 +56,21 @@ var _builder: ACEParamsDialog = ACEParamsDialog.new()
 func init(dock: Control) -> void:
 	if dock == null:
 		return
-	_builder.set_registry(dock._ace_registry)
-	_builder.set_lint_context_provider(func() -> EventSheetResource: return dock._current_sheet)
+	_dock = dock
+	_registry = dock._ace_registry
+	if _built_dialog != null:
+		_configure(_built_dialog)
+
+
+func _configure(builder: Object) -> void:
+	if _dock == null:
+		return
+	var dock: Control = _dock
+	builder.set_registry(_registry)
+	builder.set_lint_context_provider(func() -> EventSheetResource: return dock._current_sheet)
 	# The variable dropdowns read the sheet's own variables through the same provider the dialog uses,
 	# so a `variable_reference` parameter offers the same names in the bar as in the dialog.
-	_builder._variable_names_provider = dock._collect_sheet_variable_names
+	builder._variable_names_provider = dock._collect_sheet_variable_names
 
 
 ## The editor for one parameter. `descriptor` is the shipped parameter dictionary (id, type, hint,
@@ -221,7 +249,7 @@ static func hint_paragraph(hint: String, owner: String = "") -> String:
 	var key: String = hint.get_slice(":", 0) if hint.contains(":") else hint
 	# A pack that ships a hint of its own describes it through EventSheets.register_param_help, and
 	# its wording wins - it knows what its field takes and this table cannot.
-	var text: String = EventSheets.param_help_for(key)
+	var text: String = EXTENSION_REGISTRIES.param_help_for(key)
 	if text.is_empty():
 		text = str(HINT_PARAGRAPHS.get(key, ""))
 	# A path field's paragraph is composed from the one reading of the two places rather than

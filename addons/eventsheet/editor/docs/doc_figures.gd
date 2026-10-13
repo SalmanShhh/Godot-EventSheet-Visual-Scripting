@@ -47,6 +47,8 @@
 class_name EventSheetDocFigures
 extends RefCounted
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## The authored fence tag, and the language an automatic figure is detected in. Both are frozen:
 ## every guide already written with them is a promise.
 const AUTHORED_TAG := "eventsheet"
@@ -161,12 +163,12 @@ static func live_capability_failure(body: String) -> String:
 		return "the fence is empty"
 	# The REASON, not the bool: an importer or compiler that faults says so here, instead of every
 	# fence in the corpus reading as a body whose re-emission drifted.
-	var round_trip: String = EventSheets.round_trip_failure(body)
+	var round_trip: String = ReadingDoors.api().round_trip_failure(body)
 	if round_trip == "output differs":
 		return "re-emitting the rows would not reproduce the code byte for byte"
 	if not round_trip.is_empty():
 		return "the code could not be re-emitted at all - %s" % round_trip
-	var sheet: EventSheetResource = EventSheets.open_gd_as_sheet(body)
+	var sheet: EventSheetResource = ReadingDoors.api().open_gd_as_sheet(body)
 	if lifted_row_count(sheet) <= 0:
 		return "every line stayed verbatim code - there are no rows to draw"
 	return ""
@@ -182,12 +184,12 @@ const KNOWN_GOOD_FENCE := "extends Node\nvar a: int = 1\n"
 ## refused it otherwise. A result that is not a String (a call that aborted on a script error
 ## returns nothing) counts as broken too.
 static func toolchain_failure() -> String:
-	var reason: Variant = EventSheets.round_trip_failure(KNOWN_GOOD_FENCE)
+	var reason: Variant = ReadingDoors.api().round_trip_failure(KNOWN_GOOD_FENCE)
 	if not (reason is String):
 		return "the round trip returned no answer"
 	if not (reason as String).is_empty():
 		return reason as String
-	if not EventSheets.round_trips(KNOWN_GOOD_FENCE):
+	if not ReadingDoors.api().round_trips(KNOWN_GOOD_FENCE):
 		return "the round trip answered false with no reason"
 	return ""
 
@@ -274,7 +276,7 @@ static func sheet_for_body(body: String, crop_prelude: bool = true) -> EventShee
 	# whether it should be is the recognizer's, already answered by the time anyone gets here.
 	if not gate_failure(body, false).is_empty():
 		return null
-	var sheet: EventSheetResource = EventSheets.open_gd_as_sheet(body)
+	var sheet: EventSheetResource = ReadingDoors.api().open_gd_as_sheet(body)
 	if sheet == null:
 		return null
 	if crop_prelude:

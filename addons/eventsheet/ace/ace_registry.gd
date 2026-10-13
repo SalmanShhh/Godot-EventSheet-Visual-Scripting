@@ -2,6 +2,10 @@
 class_name EventSheetACERegistry
 extends RefCounted
 
+## Where the API keeps the session's simple verbs. Read here rather than through `EventSheets`, which
+## names most of the plugin: this registry is refreshed while the workspace is being built.
+const DOCK_REGISTRY := preload("res://addons/eventsheet/api/dock_registry.gd")
+
 var _generator: EventSheetACEGenerator = EventSheetACEGenerator.new()
 var _definitions: Array[ACEDefinition] = []
 var _definitions_by_key: Dictionary = {}
@@ -30,7 +34,7 @@ func refresh_from_sources(sources: Array[Object], include_builtin: bool = true,
 	_definitions_by_key.clear()
 	# Extension seam: dictionary-defined ACEs (EventSheets.register_simple_ace) join every
 	# refresh - session-scoped verbs with no provider script file.
-	for simple_definition: ACEDefinition in EventSheets.simple_aces():
+	for simple_definition: ACEDefinition in DOCK_REGISTRY.simple_aces():
 		_store_definition(simple_definition)
 	if include_builtin:
 		if not _builtin_definitions_derived:

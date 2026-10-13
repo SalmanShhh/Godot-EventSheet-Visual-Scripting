@@ -21,6 +21,7 @@ const TEST_NAME := "reading_core_lazy_test"
 const Closure := preload("res://tools/measure_editor_closure.gd")
 const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
 const CompilerSpellings := preload("res://addons/eventforge/compiler/compiler_spellings.gd")
+const DockRegistry := preload("res://addons/eventsheet/api/dock_registry.gd")
 
 const PICKER := "res://addons/eventsheet/editor/ace_picker.gd"
 const COMPILER := "res://addons/eventforge/compiler/sheet_compiler.gd"
@@ -104,7 +105,13 @@ static func run() -> bool:
 	# 3. The doors.
 	for door: Array in [[ReadingDoors.compiler(), COMPILER], [ReadingDoors.lifter(), LIFTER],
 			[ReadingDoors.api(), API], [ReadingDoors.params_dialog(), PARAMS_DIALOG],
-			[ReadingDoors.variable_dialog(), VARIABLE_DIALOG], [ReadingDoors.doc_reference(), DOC_REFERENCE]]:
+			[ReadingDoors.variable_dialog(), VARIABLE_DIALOG], [ReadingDoors.doc_reference(), DOC_REFERENCE],
+			[ReadingDoors.doctor(), "res://addons/eventforge/project_doctor.gd"], [ReadingDoors.picker_dialog(), PICKER],
+			[ReadingDoors.engine_reference(), "res://addons/eventsheet/editor/docs/doc_engine_reference.gd"],
+			[ReadingDoors.pattern_manual(), "res://addons/eventsheet/editor/docs/doc_patterns.gd"],
+			[ReadingDoors.doc_tracks(), "res://addons/eventsheet/editor/docs/doc_tracks.gd"],
+			[ReadingDoors.doc_library(), "res://addons/eventsheet/editor/docs/doc_library.gd"],
+			[ReadingDoors.doc_figures(), "res://addons/eventsheet/editor/docs/doc_figures.gd"]]:
 		var script: Script = door[0] as Script
 		rows.append(["door opens on %s" % str(door[1]).get_file(),
 			script.resource_path if script != null else "", door[1]])
@@ -117,6 +124,41 @@ static func run() -> bool:
 	rows.append(["the variable dialog's default text through the door",
 		ReadingDoors.variable_dialog()._default_display_text(Vector2(1, 2)),
 		VariableDialog._default_display_text(Vector2(1, 2))])
+	rows.append(["the Doctor's shadowing rule through the door",
+		ReadingDoors.doctor().shadowed_member_class(null, "position"),
+		EventSheetProjectDoctor.shadowed_member_class(null, "position")])
+	rows.append(["and it names the host it shadows", ReadingDoors.doctor().shadowed_member_class(null, "name"), "Node"])
+	rows.append(["the picker's fuzzy match through the door", ReadingDoors.picker_dialog().fuzzy_match("stm", "set_timer"),
+		ACEPickerDialog.fuzzy_match("stm", "set_timer")])
+	rows.append(["a parameters dialog constant reads through the door",
+		ReadingDoors.params_dialog().VARIABLE_REFERENCE_HINT, ACEParamsDialog.VARIABLE_REFERENCE_HINT])
+	rows.append(["the engine reference's credit line through the door", ReadingDoors.engine_reference().CREDIT_LINE,
+		EventSheetDocEngineReference.CREDIT_LINE])
+	rows.append(["the figure reader's mode through the door", ReadingDoors.doc_figures().MODE_FIGURE,
+		EventSheetDocFigures.MODE_FIGURE])
+	# The simple verbs: the API owns the list and the workspace's vocabulary reads it from the leaf, so
+	# a verb registered through the API must be the very object the leaf holds, and clearing the API's
+	# list must clear what the leaf hands the registry.
+	var registered: ACEDefinition = EventSheets.register_simple_ace({"id": "zz_door_probe", "kind": "action",
+		"display_name": "Door probe", "template": "pass"})
+	var held: Array = DockRegistry.simple_aces()
+	rows.append(["a simple verb registered through the API is held by the leaf", held.has(registered), true])
+	rows.append(["the leaf holds the API's own list", is_same(held, EventSheets.simple_aces()), true])
+	EventSheets.simple_aces().erase(registered)
+	rows.append(["and taking it off the API's list takes it off the leaf's",
+		DockRegistry.simple_aces().has(registered), false])
+	# The Properties bar's field factory is built with the workspace; the parameters dialog it builds
+	# its fields in waits for the first field, so building the workspace does not compile the dialog.
+	var factory: EventSheetParamFieldFactory = EventSheetParamFieldFactory.new()
+	rows.append(["the field factory holds no dialog until a field is asked for", factory._built_dialog, null])
+	var built: Dictionary = factory.build({"id": "speed", "type_name": "float", "hint": ""}, "3.5")
+	rows.append(["the first field builds the dialog and a field in it", [factory._built_dialog != null,
+		built.get("field") is Control], [true, true]])
+	rows.append(["and the field reads back what it was given", factory.value_of(built.get("field") as Control), "3.5"])
+	if built.get("control") is Node:
+		(built.get("control") as Node).free()
+	if factory._built_dialog is Node:
+		(factory._built_dialog as Node).free()
 	rows.append(["the scene readers answer an absent sheet with nothing",
 		[EventSheetSceneReplication.synced_of_sheet(null).size(), EventSheetSceneReplication.spawners_of_sheet(null).size()],
 		[0, 0]])

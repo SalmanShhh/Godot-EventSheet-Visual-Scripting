@@ -22,6 +22,8 @@
 class_name EventSheetInteropDoctor
 extends EventSheetDoctorSection
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## The id the section is registered under, and the ids each kind of line is filed as. Frozen
 ## alongside the wording: the tests and any quick-fix chip address a finding by its check id.
 const CHECK_ID := "interop"
@@ -44,13 +46,13 @@ const MEASURE_BUDGET_MSEC: int = 1200
 ## Registers the section, replacing any previous registration - so a plugin reload, a second Doctor
 ## run and a test that registers it by hand all leave exactly one.
 static func ensure_registered() -> void:
-	EventSheetProjectDoctor.register_check(CHECK_ID, Callable(EventSheetInteropDoctor, "check"))
+	ReadingDoors.doctor().register_check(CHECK_ID, Callable(EventSheetInteropDoctor, "check"))
 
 
 ## The section itself, with the contract every registered check has: append findings, never write
 ## inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(EventSheetProjectDoctor._project_scripts()))
+	findings.append_array(report(ReadingDoors.doctor()._project_scripts()))
 
 
 ## Whether this file carries the mark that keeps it code. Read off the file, so it is the same answer
@@ -58,7 +60,7 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 static func stays_code(script_path: String) -> bool:
 	if script_path.strip_edges().is_empty():
 		return false
-	return _marked_in(EventSheetProjectDoctor.source_of(script_path))
+	return _marked_in(ReadingDoors.doctor().source_of(script_path))
 
 
 ## The same question asked of text already in hand, which is how the report asks it: it reads every
@@ -77,7 +79,7 @@ static func _marked_in(text: String) -> bool:
 ## code; `callers` is how many other scripts call something this one declares, which is what a rename
 ## of it would have to check. Pure over a path, so the wording is pinned without a Doctor run.
 static func adoption(script_path: String) -> Dictionary:
-	var sheet: EventSheetResource = EventSheetProjectDoctor.sheet_of(script_path)
+	var sheet: EventSheetResource = ReadingDoors.doctor().sheet_of(script_path)
 	if sheet == null:
 		return {}
 	var coverage: Dictionary = EventSheetReadingCoverage.measure(sheet)
@@ -109,7 +111,7 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 	var kept_as_code: PackedStringArray = PackedStringArray()
 	var sized: Array[Dictionary] = []
 	for script_path: String in scripts:
-		var text: String = EventSheetProjectDoctor.source_of(script_path)
+		var text: String = ReadingDoors.doctor().source_of(script_path)
 		if _marked_in(text):
 			kept_as_code.append(script_path)
 			continue

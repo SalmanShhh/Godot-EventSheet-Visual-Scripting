@@ -403,7 +403,11 @@ var _ace_picker: RefCounted = null:
 				return str(load(DOC_EXPLAIN_PATH).guide_label(definition.provider_id)) if definition != null else "")
 			_ace_picker.guide_requested.connect(_on_picker_guide_requested)
 			_ace_picker.help_requested.connect(_on_picker_help_requested)
+			_ace_picker_built = true
 		return _ace_picker
+## True once the getter above has built and wired the picker, so a registry refresh can hand a BUILT
+## picker the new vocabulary without building one just to hand it over. Set only by that getter.
+var _ace_picker_built: bool = false
 var _ace_params: RefCounted = null:
 	get:
 		if _ace_params == null:
@@ -415,7 +419,14 @@ var _ace_params: RefCounted = null:
 			_ace_params.set_group_toggle_requester(_make_group_switchable)
 			_ace_params.params_confirmed.connect(_on_ace_params_confirmed)
 			_ace_params.back_requested.connect(_on_ace_params_back_requested)
+			_ace_params_built = true
+			_wire_params_to_live_debugger()
 		return _ace_params
+## True once the getter above has built and wired the parameters dialog. Set only by that getter.
+var _ace_params_built: bool = false
+## The Live Values debugger the plugin handed over, kept for the parameters dialog's expression
+## picker until that dialog is built.
+var _params_live_debugger: EditorDebuggerPlugin = null
 var _variable_dlg: RefCounted = null:
 	get:
 		if _variable_dlg == null:
@@ -3916,9 +3927,25 @@ func set_live_values_debugger(debugger: EditorDebuggerPlugin) -> void:
 	# real behaviour children through the same session, and upgrades its Behaviours subgroup
 	# when the report lands.
 	if debugger != null:
-		_ace_params._expression_picker.live_query = debugger.send_query_children
-		debugger.children_report_received.connect(_ace_params._expression_picker._on_live_children_report)
+		# The parameters dialog is built on its first use, not with the workspace (the plugin hands the
+		# debugger over while the workspace is being built), so the debugger is kept and wired into the
+		# dialog when it exists - now if it already does, otherwise by the dialog's getter.
+		_params_live_debugger = debugger
+		if _ace_params_built:
+			_wire_params_to_live_debugger()
 		debugger.session_ended.connect(_on_debug_session_ended)
+
+
+## Points the parameters dialog's expression picker at the running game, through the debugger the
+## plugin handed over. Called once the dialog exists; does nothing before a debugger is set.
+func _wire_params_to_live_debugger() -> void:
+	var debugger: EditorDebuggerPlugin = _params_live_debugger
+	if debugger == null:
+		return
+	_ace_params._expression_picker.live_query = debugger.send_query_children
+	var report: Callable = _ace_params._expression_picker._on_live_children_report
+	if not debugger.children_report_received.is_connected(report):
+		debugger.children_report_received.connect(report)
 
 
 ## The debug session ended: the last streamed frame stops counting as live values. Without this the
@@ -8486,7 +8513,11 @@ func _refresh_ace_registry() -> void:
 	_tab_state.note_registry_built()
 	if _viewport != null:
 		_viewport.set_ace_registry(_ace_registry)
-	_ace_picker.set_registry(_ace_registry)
+	# A picker not built yet takes the registry when it is built (its getter passes it on), so it is
+	# only handed over here once one exists - reading the field would build the picker, and compile
+	# the picker and all it names, on every workspace's first registry refresh.
+	if _ace_picker_built:
+		_ace_picker.set_registry(_ace_registry)
 	_refresh_exposed_node()
 
 

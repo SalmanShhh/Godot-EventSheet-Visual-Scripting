@@ -49,6 +49,8 @@
 class_name EventSheetDerivedProperties
 extends RefCounted
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## `<class>|<script path>|<property>` -> what that property is. One entry per property a file
 ## actually writes or asks about, so a sheet pays for the properties in front of the reader.
 static var _property_cache: Dictionary = {}
@@ -160,7 +162,7 @@ static func doc_id_for(class_text: String, property: String) -> String:
 		return ""
 	if not _properties_of(bare).has(property.strip_edges()):
 		return ""
-	return EventSheetDocEngineReference.doc_id(bare, property.strip_edges())
+	return ReadingDoors.engine_reference().doc_id(bare, property.strip_edges())
 
 
 ## Drops every cached answer. Called from the same filesystem ping that drops the derived call
@@ -239,11 +241,11 @@ static func _read_property(class_text: String, script_path: String, property: St
 	var known: Dictionary = _properties_of(host)
 	if not known.has(property):
 		return {}
-	var described: String = EventSheetDocEngineReference.member_description(host, property)
+	var described: String = ReadingDoors.engine_reference().member_description(host, property)
 	return {
 		"doc": described,
-		"credit": "" if described.strip_edges().is_empty() else EventSheetDocEngineReference.CREDIT_LINE,
-		"doc_id": EventSheetDocEngineReference.doc_id(host, property),
+		"credit": "" if described.strip_edges().is_empty() else ReadingDoors.engine_reference().CREDIT_LINE,
+		"doc_id": ReadingDoors.engine_reference().doc_id(host, property),
 		"type": str(known[property]),
 	}
 

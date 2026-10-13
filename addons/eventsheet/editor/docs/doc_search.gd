@@ -24,6 +24,8 @@
 class_name EventSheetDocSearch
 extends RefCounted
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## The scores, best first. They are ordinals, never weights: a caller sorts by them and the suite
 ## pins the resulting ORDER, so the gaps between them mean nothing and can be renumbered.
 const SCORE_TITLE_PREFIX := 0
@@ -569,12 +571,12 @@ static func _vocabulary_hits(wanted: String, sheet: EventSheetResource) -> Array
 	# One walk of the sheet for the whole pass. This ran per MATCHING verb, per keystroke, and each
 	# ask walked every event, condition, action and sub-event of the open sheet from the top.
 	var usage: Dictionary = EventSheetDocUsage.counts_for(sheet)
-	for definition: ACEDefinition in EventSheets.all_verbs():
+	for definition: ACEDefinition in ReadingDoors.api().all_verbs():
 		var title: String = EventSheetL10n.translate(definition.display_name)
 		var score: int = match_score(title.to_lower(), wanted)
 		if score < 0:
 			continue
-		var pack_dir: String = EventSheets.addon_pack_directory(definition.provider_id)
+		var pack_dir: String = ReadingDoors.api().addon_pack_directory(definition.provider_id)
 		var home: String = EventSheetDocReference.PACK_TREE_TITLE if not pack_dir.is_empty() \
 			else EventSheetDocReference.SECTION_TREE_TITLE
 		hits.append({
@@ -703,7 +705,7 @@ static func _godot_word_hits(query: String) -> Array[Dictionary]:
 		return hits
 	var call: String = EventSheetCodeSearch.normalize(query)
 	for definition: ACEDefinition in EventSheetCodeSearch.matching_definitions(
-			EventSheets.all_verbs(), call):
+			ReadingDoors.api().all_verbs(), call):
 		hits.append({
 			"kind": "glossary",
 			"title": "\"%s\" - the same call here" % call,

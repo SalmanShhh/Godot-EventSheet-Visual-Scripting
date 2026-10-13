@@ -1586,12 +1586,14 @@ static func register_simple_ace(config: Dictionary) -> ACEDefinition:
 		if _simple_aces[index].id == definition.id and _simple_aces[index].provider_id == definition.provider_id:
 			_simple_aces.remove_at(index)
 	_simple_aces.append(definition)
+	DOCK_REGISTRY.share_simple_aces(_simple_aces)
 	if _dock_alive() and _dock.has_method("_refresh_ace_registry"):
 		_dock.call("_refresh_ace_registry")
 	return definition
 
 
 static func simple_aces() -> Array[ACEDefinition]:
+	DOCK_REGISTRY.share_simple_aces(_simple_aces)
 	return _simple_aces
 
 

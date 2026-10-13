@@ -21,6 +21,8 @@
 class_name EventSheetDocAceReference
 extends RefCounted
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## The heading this replaces, and the slug it resolves to. Frozen in the sense that matters: it is
 ## the heading 70 shipped guides already use, so changing it here silently stops replacing them.
 const SECTION_TITLE := "ACE reference"
@@ -95,7 +97,7 @@ static func _ensure_pack_map() -> void:
 	var pack_dirs: PackedStringArray = DirAccess.get_directories_at(PACKS_ROOT)
 	pack_dirs.sort()
 	for pack_dir: String in pack_dirs:
-		var guide_name: String = EventSheets.addon_guide_name(pack_dir)
+		var guide_name: String = ReadingDoors.api().addon_guide_name(pack_dir)
 		if guide_name.is_empty():
 			continue
 		var page_id: String = "%s/%s" % [EventSheetDocLibrary.ADDONS_DIR, guide_name]
@@ -169,8 +171,8 @@ static func property_rows(pack_dir: String) -> Array:
 ## outside the editor, which is what hands the question to the script-level half.
 static func _rows_from_registry(pack_dir: String) -> Dictionary:
 	var grouped: Dictionary = {}
-	for provider_id: String in EventSheets.pack_providers(pack_dir):
-		for definition: ACEDefinition in EventSheets.provider_verbs(provider_id):
+	for provider_id: String in ReadingDoors.api().pack_providers(pack_dir):
+		for definition: ACEDefinition in ReadingDoors.api().provider_verbs(provider_id):
 			var group: String = _group_of(definition.ace_type)
 			if not grouped.has(group):
 				grouped[group] = []

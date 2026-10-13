@@ -20,6 +20,8 @@
 class_name EventSheetPickerRecipes
 extends RefCounted
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## How many nearest entries and recipes the empty-result shelves offer at most. Small on purpose:
 ## the shelf is a door, not a second catalog.
 const NEAREST_LIMIT := 8
@@ -38,17 +40,17 @@ static func all_recipes() -> Array[Dictionary]:
 		return _recipes
 	_loaded = true
 	_recipes = []
-	for page_id: String in EventSheetDocLibrary.page_ids():
-		var page_title: String = EventSheetDocLibrary.page_title(page_id)
+	for page_id: String in ReadingDoors.doc_library().page_ids():
+		var page_title: String = ReadingDoors.doc_library().page_title(page_id)
 		var heading: String = page_title
-		for block: Dictionary in EventSheetDocLibrary.page_blocks(page_id):
+		for block: Dictionary in ReadingDoors.doc_library().page_blocks(page_id):
 			if str(block.get("kind", "")) == "heading":
 				heading = str(block.get("text", heading))
 				continue
 			if str(block.get("kind", "")) != "code":
 				continue
-			var verdict: Dictionary = EventSheetDocFigures.recognize(block)
-			if str(verdict.get("mode", "")) != EventSheetDocFigures.MODE_FIGURE:
+			var verdict: Dictionary = ReadingDoors.doc_figures().recognize(block)
+			if str(verdict.get("mode", "")) != ReadingDoors.doc_figures().MODE_FIGURE:
 				continue
 			var caption: String = str(verdict.get("caption", "")).strip_edges()
 			_recipes.append({
@@ -113,14 +115,14 @@ static func nearest_definitions(query: String, definitions: Array[ACEDefinition]
 ## path the Manual's figures use. False when there is no sheet open or the body no longer lifts
 ## (a caller says so rather than reporting silent success).
 static func insert(recipe: Dictionary, label: String = "Insert recipe") -> bool:
-	var sheet: EventSheetResource = EventSheetDocFigures.sheet_for_body(str(recipe.get("body", "")))
+	var sheet: EventSheetResource = ReadingDoors.doc_figures().sheet_for_body(str(recipe.get("body", "")))
 	if sheet == null:
 		return false
 	var text: String = EventSheetSnippet.serialize_rows(sheet.events, sheet)
 	if text.is_empty():
 		return false
 	# as_example: a recipe is a guide's worked example, marked exactly as the figure it came from.
-	return EventSheets.insert_snippet(text, label, true)
+	return ReadingDoors.api().insert_snippet(text, label, true)
 
 
 ## Drops the session cache - for tests, and for a bundle rebuilt underneath a running editor.

@@ -19,6 +19,8 @@
 class_name EventSheetScriptMembers
 extends RefCounted
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## file identity -> what that file declares. `path|mtime|size`, worked out once per file per session
 ## and dropped when the editor's filesystem ping fires, like every other by-file reader here.
 static var _declared: Dictionary = {}
@@ -218,7 +220,7 @@ static func detail_of(member: Dictionary) -> String:
 		parts.append(doc)
 		# `from` is set only where the description was harvested from the engine reference.
 		if not from.is_empty():
-			parts.append(EventSheetDocEngineReference.CREDIT_LINE)
+			parts.append(ReadingDoors.engine_reference().CREDIT_LINE)
 	if parts.is_empty() and not from.is_empty():
 		parts.append(EventSheetL10n.translate("from %s") % from)
 	return " · ".join(parts)
@@ -297,7 +299,7 @@ static func _append_inherited(members: Array[Dictionary], class_text: String, ki
 		# fill - one convention, described once. "" until this machine has harvested the reference,
 		# which reads exactly as it did before: an inherited member with nothing said about it.
 		members.append({"name": name, "args": _argument_text(info),
-			"doc": EventSheetDocEngineReference.member_description(class_text, name),
+			"doc": ReadingDoors.engine_reference().member_description(class_text, name),
 			"from": class_text})
 
 

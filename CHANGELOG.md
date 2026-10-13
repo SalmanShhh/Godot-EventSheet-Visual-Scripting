@@ -146,6 +146,36 @@
   changes: that variable's generated setter calls `notify_property_list_changed()`. Before, the
   field only hid or showed after the node was selected again.
 
+### Changed: the first open no longer compiles the Doctor, the pickers, the dialogs, the API or the Manual
+
+- The last doors from the workspace's first open into the Project Doctor, the Add picker, the
+  parameters and variable dialogs, the public API and the Manual are now by-path loads at the call
+  that needs them, through `interaction/reading_doors.gd`. That covers the Doctor sections, the
+  share index and the local tokens (the Doctor), the completions and quick add (the picker's fuzzy
+  match and the dialog's scene lists), the variable tables and owners (the variable dialog's
+  default text), the diagnostics, the game catalog, the Command Palette, the picker recipes and the
+  Manual's own reference files (the API), and the member descriptions, the pattern marks and the
+  after-save learning track (the Manual).
+- The session's simple verbs (`EventSheets.register_simple_ace`) are read by the vocabulary from
+  `dock_registry.gd`, which holds the API's own list, instead of through the API.
+- Three things still BUILT a click-only dialog while the workspace was built in the real editor:
+  the Properties bar's field factory made a parameters dialog up front, a registry refresh and the
+  rail census read the picker field (which builds the picker), and handing the workspace the Live
+  Values debugger built the parameters dialog to wire its expression picker. Each now waits for the
+  dialog: the factory builds it on the first field, the picker is handed the registry and asked
+  whether it is open only once it exists, and the debugger is kept and wired when the dialog is built.
+- What the first open compiles, as `tools/measure_editor_closure.gd` reads it: 420 files and 205,738
+  lines before, 338 files and 165,630 lines after (558 files and 249,073 lines before this cut began).
+  Headless `editor_build_ms`, median of three, interleaved with the tree before the cut: 18,174 ms
+  there, 12,170 ms here. `_ensure_editor()` in a real editor: 20,516 ms there, 14,600 ms here.
+- New `editor_closure_budget_test` walks the same graph and fails when the first open's set grows
+  more than three percent past those figures, printing the files that hold the most of it in.
+  `plugin_boot_lazy_test` now holds the workspace editor and the reading core to never naming the
+  compiler, the importer, the lifter, the Doctor, the pickers, the dialogs, the API or the Manual,
+  and the workspace build budget in `huge_project_budget_test` is lowered from 21 s to 15.2 s.
+- Every row reading is unchanged: `tools/reading_dump.gd` gives byte-identical output on this tree
+  and on the tree before the cut began.
+
 ### Fixed: two prompts no longer lose work on Esc or Enter
 
 - **Every Tick:** taking the last condition off an event asks whether to keep it as an every-tick

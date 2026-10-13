@@ -2,6 +2,8 @@
 class_name EventSheetQuickAdd
 extends RefCounted
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 # TYPING A ROW AS A SENTENCE - the Add picker's filter, taught to read a whole one.
 #
 # The filter used to take the query as one string: "flash" found Flash, and "boss flash" found
@@ -131,7 +133,7 @@ static func _word_score(word: String, name: String, object: String, keywords: St
 		return SCORE_NAME_CONTAINS
 	if keywords.contains(word):
 		return SCORE_KEYWORDS
-	if ACEPickerDialog.fuzzy_match(word, name):
+	if ReadingDoors.picker_dialog().fuzzy_match(word, name):
 		return SCORE_FUZZY
 	return 0
 

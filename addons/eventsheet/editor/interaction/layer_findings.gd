@@ -21,6 +21,8 @@
 class_name EventSheetLayerFindings
 extends RefCounted
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## The two findings, by the same ids the Doctor files them under - the amber state, the help strip
 ## and the inbox line are one finding under three roofs.
 const KIND_UNNAMED := EventSheetCollisionLayerDoctor.CHECK_UNNAMED
@@ -44,7 +46,7 @@ static func findings(sheet: EventSheetResource, script_path: String = "") -> Arr
 	if not EventSheetCollisionLayerDoctor.says_enough(EventSheetCollisionFindings.all_lines(sheet)):
 		return found
 	var dimension: String = EventForgePhysicsLayers.dimension_for_class(
-		EventForgeCollisionLayerLift.extended_class(EventSheetProjectDoctor.source_of(script_path)))
+		EventForgeCollisionLayerLift.extended_class(ReadingDoors.doctor().source_of(script_path)))
 	_walk(sheet.events, label_path.get_file(), dimension, found)
 	for entry: Variant in sheet.functions:
 		var event_function: EventFunction = entry as EventFunction

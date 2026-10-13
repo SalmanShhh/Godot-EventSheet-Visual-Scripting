@@ -38,6 +38,8 @@
 class_name EventSheetDocExplain
 extends RefCounted
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 const SCHEME_ACE := "ace:"
 const SCHEME_REFERENCE := "reference:"
 const SCHEME_SECTION := "section:"
@@ -106,7 +108,7 @@ static func resolve(doc_id: String) -> Dictionary:
 		route["pack"] = pack
 		if pack.is_empty() or not DirAccess.dir_exists_absolute(PACK_ROOT.path_join(pack)):
 			return route
-		route["target"] = EventSheets.addon_guide_for_pack(pack)
+		route["target"] = ReadingDoors.api().addon_guide_for_pack(pack)
 		route["page_id"] = EventSheetDocLibrary.id_for_repo_path(str(route["target"]))
 		# A pack that ships its OWN guide.md answers with that page whenever the bundle carries no
 		# page for it - which is every third-party pack, since the derived docs/Addons path names a
@@ -144,7 +146,7 @@ static func resolve(doc_id: String) -> Dictionary:
 ## themselves, and this reader must keep working whether that mapping has landed yet or not - a
 ## hard reference would turn "the guides are not written yet" into a parse error.
 static func module_guide_target(module_name: String) -> String:
-	var api: Script = EventSheets as Script
+	var api: Script = ReadingDoors.api()
 	var lookup: Callable = Callable(api, "module_guide_target")
 	if not lookup.is_valid():
 		return ""
@@ -279,7 +281,7 @@ static func blocks_for_definition(definition: ACEDefinition) -> Array[Dictionary
 			"title": "About %s" % category_of(definition),
 			"text": EventSheetL10n.translate(section_blurb),
 		})
-	var guide: String = EventSheets.addon_guide_for_provider(definition.provider_id)
+	var guide: String = ReadingDoors.api().addon_guide_for_provider(definition.provider_id)
 	if not guide.is_empty():
 		# The read-more affordance carries a DOC ID as well as a path. The id is what makes the
 		# button open the pack's guide inside the editor once the bundle ships it, while the same
@@ -289,7 +291,7 @@ static func blocks_for_definition(definition: ACEDefinition) -> Array[Dictionary
 			"kind": "link",
 			"label": guide_label(definition.provider_id),
 			"target": guide,
-			"doc_id": doc_id_for_pack(EventSheets.addon_pack_directory(definition.provider_id)),
+			"doc_id": doc_id_for_pack(ReadingDoors.api().addon_pack_directory(definition.provider_id)),
 		})
 	return blocks
 
@@ -312,7 +314,7 @@ static func see_also_for(definition: ACEDefinition) -> Array[Dictionary]:
 	var category: String = category_of(definition)
 	var same_kind: Array[Dictionary] = []
 	var other_kind: Array[Dictionary] = []
-	for other: ACEDefinition in EventSheets.all_verbs():
+	for other: ACEDefinition in ReadingDoors.api().all_verbs():
 		if other == null or other.id == definition.id or category_of(other) != category:
 			continue
 		var entry: Dictionary = {
@@ -439,10 +441,10 @@ static func parameter_items(definition: ACEDefinition) -> Array[Dictionary]:
 ## is plural ("Priced Tables") makes a possessive read wrong, and the label is derived, never
 ## hand-written per pack.
 static func guide_label(provider_id: String) -> String:
-	var pack_dir: String = EventSheets.addon_pack_directory(provider_id)
+	var pack_dir: String = ReadingDoors.api().addon_pack_directory(provider_id)
 	if pack_dir.is_empty():
 		return ""
-	var guide_name: String = EventSheets.addon_guide_name(pack_dir)
+	var guide_name: String = ReadingDoors.api().addon_guide_name(pack_dir)
 	if guide_name.is_empty():
 		return ""
 	return "Open the %s guide" % guide_name.replace("-", " ")

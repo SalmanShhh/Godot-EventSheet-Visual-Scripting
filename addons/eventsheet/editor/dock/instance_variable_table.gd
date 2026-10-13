@@ -1,6 +1,8 @@
 @tool
 class_name EventSheetInstanceVariableTable
 extends RefCounted
+
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
 # The INSTANCE VARIABLES table - the object's own variables, edited where they are read.
 #
 #   Name      Type            Initial value   Inspector
@@ -47,7 +49,7 @@ static func rows_for(sheet: EventSheetResource) -> Array[Dictionary]:
 			"name": variable.name,
 			"type_name": variable.type_name,
 			"type_word": ViewportRowBuilder.friendly_type_word(variable.type_name),
-			"value": VariableDialog._default_display_text(variable.default_value),
+			"value": ReadingDoors.variable_dialog()._default_display_text(variable.default_value),
 			"inspector": variable.exported,
 			"description": str(attributes.get("tooltip", "")),
 			"scope": EventSheetVariableSentence.member_scope(
@@ -65,7 +67,7 @@ static func rows_for(sheet: EventSheetResource) -> Array[Dictionary]:
 			"name": str(key),
 			"type_name": type_name,
 			"type_word": ViewportRowBuilder.friendly_type_word(type_name),
-			"value": VariableDialog._default_display_text(descriptor.get("default", null)),
+			"value": ReadingDoors.variable_dialog()._default_display_text(descriptor.get("default", null)),
 			"inspector": bool(descriptor.get("exported", descriptor.get("exposed", true))),
 			"description": str(descriptor_attributes.get("tooltip", "")),
 			"scope": EventSheetVariableSentence.member_scope(
@@ -236,7 +238,7 @@ func _retype(variable_name: String, type_name: String) -> void:
 ## reason add_variable is: the Inspector's rows write through this one path, never a second one.
 func set_value(variable_name: String, text: String) -> void:
 	var type_name: String = _type_name_of(variable_name)
-	var parsed: Variant = VariableDialog._parse_default(type_name, text)
+	var parsed: Variant = ReadingDoors.variable_dialog()._parse_default(type_name, text)
 	_write(variable_name, "Set %s" % variable_name,
 		func(variable: LocalVariable) -> void:
 			# A variable whose default is SOURCE TEXT - the inferred spelling (`var mode := "idle"`),

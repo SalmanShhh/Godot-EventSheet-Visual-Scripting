@@ -23,6 +23,13 @@ const API_PATH: String = "res://addons/eventsheet/api/eventsheets.gd"
 const PARAMS_DIALOG_PATH: String = "res://addons/eventsheet/editor/ace_params_dialog.gd"
 const VARIABLE_DIALOG_PATH: String = "res://addons/eventsheet/editor/variable_dialog.gd"
 const DOC_REFERENCE_PATH: String = "res://addons/eventsheet/editor/docs/doc_reference.gd"
+const DOCTOR_PATH: String = "res://addons/eventforge/project_doctor.gd"
+const PICKER_DIALOG_PATH: String = "res://addons/eventsheet/editor/ace_picker.gd"
+const ENGINE_REFERENCE_PATH: String = "res://addons/eventsheet/editor/docs/doc_engine_reference.gd"
+const PATTERN_MANUAL_PATH: String = "res://addons/eventsheet/editor/docs/doc_patterns.gd"
+const DOC_TRACKS_PATH: String = "res://addons/eventsheet/editor/docs/doc_tracks.gd"
+const DOC_LIBRARY_PATH: String = "res://addons/eventsheet/editor/docs/doc_library.gd"
+const DOC_FIGURES_PATH: String = "res://addons/eventsheet/editor/docs/doc_figures.gd"
 
 ## path -> the loaded script, so a row sweep asks the resource cache once per script, not per row.
 static var _loaded: Dictionary = {}
@@ -57,6 +64,44 @@ static func variable_dialog() -> Script:
 ## The Manual's reference script, for the help line a mark's tooltip shows.
 static func doc_reference() -> Script:
 	return _script(DOC_REFERENCE_PATH)
+
+
+## The Project Doctor script, for the project's script list and the sources it has already read. A
+## Doctor section, a fact scanner and the share index ask it these; none of them is the Doctor.
+static func doctor() -> Script:
+	return _script(DOCTOR_PATH)
+
+
+## The picker dialog script, for its fuzzy match - the very one the picker's own search uses, so a
+## completion list and the picker never disagree about what a typed word finds.
+static func picker_dialog() -> Script:
+	return _script(PICKER_DIALOG_PATH)
+
+
+## The Manual's engine reference, for a member's one-line description, its page id and the credit
+## line that goes with it. The Manual's Markdown parser and page library sit behind it.
+static func engine_reference() -> Script:
+	return _script(ENGINE_REFERENCE_PATH)
+
+
+## The Manual's patterns page, opened from a pattern mark on the canvas.
+static func pattern_manual() -> Script:
+	return _script(PATTERN_MANUAL_PATH)
+
+
+## The Manual's learning tracks, for the suggestion the status line makes after a save.
+static func doc_tracks() -> Script:
+	return _script(DOC_TRACKS_PATH)
+
+
+## The Manual's page library, for the picker's recipes read off its pages.
+static func doc_library() -> Script:
+	return _script(DOC_LIBRARY_PATH)
+
+
+## The Manual's figure reader, for the picker's recipes: which blocks are figures, and their sheets.
+static func doc_figures() -> Script:
+	return _script(DOC_FIGURES_PATH)
 
 
 static func _script(path: String) -> Script:

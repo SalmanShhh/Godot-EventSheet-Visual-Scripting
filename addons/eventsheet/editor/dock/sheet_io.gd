@@ -1,6 +1,8 @@
 @tool
 class_name EventSheetSheetIO
 extends RefCounted
+
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
 # The sheet FILE-IO subsystem: opening a sheet from disk and every write-back path (Save,
 # Save As, Export Generated GDScript, Save-as-.gd). Extracted from event_sheet_dock.gd to keep
 # that file maintainable. The tab cluster, mutation funnel, and UI refreshers STAY on the dock -
@@ -366,12 +368,12 @@ func _offer_read_next(sheet: EventSheetResource) -> void:
 	# Asked before the suggestion is WORKED OUT, not after. Working one out takes a census of the
 	# sheet and puts up to forty of its verbs through the search index, and this runs on the
 	# file-open path - so a session that has already made its one offer must not pay for it again.
-	if not EventSheetDocTracks.may_offer_at_all():
+	if not ReadingDoors.doc_tracks().may_offer_at_all():
 		return
-	var suggestion: Dictionary = EventSheetDocTracks.suggest_for([sheet] as Array[EventSheetResource])
-	if not EventSheetDocTracks.may_offer(suggestion):
+	var suggestion: Dictionary = ReadingDoors.doc_tracks().suggest_for([sheet] as Array[EventSheetResource])
+	if not ReadingDoors.doc_tracks().may_offer(suggestion):
 		return
-	_dock._set_status(EventSheetDocTracks.suggestion_text(suggestion))
+	_dock._set_status(ReadingDoors.doc_tracks().suggestion_text(suggestion))
 
 
 ## Marks the rows built from lines the ENGINE could not parse, using the errors the open job already

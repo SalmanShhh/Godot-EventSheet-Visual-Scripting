@@ -16,6 +16,8 @@
 class_name EventSheetPatternManual
 extends RefCounted
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## The page id, in the frozen "reference:" scheme: the whole page, and one pattern's section of it.
 const PAGE_ID := "reference:patterns"
 const PAGE_TITLE := "Common Game Patterns"
@@ -37,8 +39,8 @@ static func doc_id_for(pattern: String) -> String:
 static func open_page(pattern: String) -> bool:
 	var wanted: String = pattern.strip_edges()
 	if wanted.is_empty() or EventSheetPatternVocabulary.fixture_source(wanted).is_empty():
-		return EventSheets.open_docs(PAGE_ID)
-	return EventSheets.open_docs(doc_id_for(wanted))
+		return ReadingDoors.api().open_docs(PAGE_ID)
+	return ReadingDoors.api().open_docs(doc_id_for(wanted))
 
 
 ## THE WHOLE PAGE: a lead, then one section per documented pattern, most common first.

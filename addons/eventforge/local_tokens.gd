@@ -29,6 +29,8 @@
 class_name EventSheetLocalTokens
 extends RefCounted
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## The shape of a baked local, frozen because it is already baked into shipped files: two leading
 ## underscores, a lowercase prefix, an underscore, and eight hex digits. Group 1 is the token.
 const TOKEN_PATTERN := "__[a-z_]+_([0-9a-f]{8})\\b"
@@ -218,7 +220,7 @@ static func index_over(paths: PackedStringArray) -> Dictionary:
 static func project_index() -> Dictionary:
 	if _index_built:
 		return _index
-	_index = index_over(EventSheetProjectDoctor.all_project_scripts())
+	_index = index_over(ReadingDoors.doctor().all_project_scripts())
 	_index_built = true
 	return _index
 

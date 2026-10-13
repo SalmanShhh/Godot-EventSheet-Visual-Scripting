@@ -159,7 +159,24 @@ static func run() -> bool:
 	var compare: Object = editor.get("_compare")
 	all_passed = _check("the Compare dialog's confirm still reaches the dock",
 		compare.is_connected("compare_confirmed", Callable(editor, "_on_compare_confirmed")), true) and all_passed
+	# Opening a sheet refreshes the vocabulary and the rail, and neither may build the picker to do it:
+	# both once read the picker field to hand it the registry or ask whether it is open, and reading
+	# that field builds the picker - which compiled it, the Doctor, the parameters dialog and the
+	# public API into every first open in the real editor.
+	editor.call("setup", EventSheetResource.new())
+	editor.call("_refresh_ace_registry")
+	editor.call("_refresh_anatomy_panel")
+	all_passed = _check("opening a sheet does not build the picker", editor.get("_ace_picker_built"), false) and all_passed
+	# The plugin hands the workspace its debugger while building it; that hand-over keeps the debugger
+	# for the parameters dialog instead of building the dialog to wire it.
+	var dock_source: String = FileAccess.get_file_as_string(DOCK_PATH)
+	var hand_over: String = dock_source.get_slice("func set_live_values_debugger(", 1).get_slice("\nfunc ", 0)
+	all_passed = _check("the debugger hand-over is found", hand_over.is_empty(), false) and all_passed
+	all_passed = _check("and it does not build the parameters dialog", hand_over.contains("_ace_params."), false) and all_passed
+	all_passed = _check("opening a sheet does not build the parameters dialog", editor.get("_ace_params_built"),
+		false) and all_passed
 	var picker: Object = editor.get("_ace_picker")
+	all_passed = _check("asking for the picker builds it", editor.get("_ace_picker_built"), true) and all_passed
 	all_passed = _check("the picker's selection still reaches the dock",
 		picker.is_connected("ace_selected", Callable(editor, "_on_ace_picker_selected")), true) and all_passed
 	var params: Object = editor.get("_ace_params")

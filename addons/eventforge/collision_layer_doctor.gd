@@ -30,6 +30,8 @@
 class_name EventSheetCollisionLayerDoctor
 extends EventSheetDoctorSection
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## The id the section is registered under, and the id each finding is filed as. Frozen alongside the
 ## wording: the tests address a finding by its check id.
 const CHECK_ID := "collision-layers"
@@ -49,13 +51,13 @@ const MARK := "collision_"
 ## Registers the section, replacing any previous registration - so a plugin reload, a second Doctor
 ## run and a test that registers it by hand all leave exactly one.
 static func ensure_registered() -> void:
-	EventSheetProjectDoctor.register_check(CHECK_ID, Callable(EventSheetCollisionLayerDoctor, "check"))
+	ReadingDoors.doctor().register_check(CHECK_ID, Callable(EventSheetCollisionLayerDoctor, "check"))
 
 
 ## The section itself, with the contract every registered check has: append findings, never write
 ## inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(EventSheetProjectDoctor._project_scripts()))
+	findings.append_array(report(ReadingDoors.doctor()._project_scripts()))
 
 
 ## The whole section as findings. Pure over its corpus, so a test can hand it a list of scripts and
@@ -66,7 +68,7 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 	var ordered: PackedStringArray = ranked(scripts)
 	for script_path: String in ordered:
 		findings.append_array(script_findings(script_path,
-			EventSheetProjectDoctor.source_of(script_path)))
+			ReadingDoors.doctor().source_of(script_path)))
 	return findings
 
 
@@ -77,7 +79,7 @@ static func ranked(scripts: PackedStringArray) -> PackedStringArray:
 	for script_path: String in scripts:
 		if script_path.begins_with(PLUGIN_DIRECTORY):
 			continue
-		if says_enough(EventSheetProjectDoctor.source_of(script_path)):
+		if says_enough(ReadingDoors.doctor().source_of(script_path)):
 			ordered.append(script_path)
 	ordered.sort()
 	return ordered

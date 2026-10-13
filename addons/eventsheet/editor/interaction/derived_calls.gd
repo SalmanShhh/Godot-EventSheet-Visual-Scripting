@@ -37,6 +37,8 @@
 class_name EventSheetDerivedCalls
 extends RefCounted
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 ## The tone a derived reading's verb wears, told apart from the curated sentence's bold `name`.
 ## The renderer maps it; the constant lives here so the reading and the painting share one word.
 const TONE_DERIVED: String = "derived"
@@ -208,7 +210,7 @@ static func doc_id_for(class_text: String, method: String) -> String:
 	var bare: String = class_text.strip_edges()
 	if bare.is_empty() or method.strip_edges().is_empty() or not ClassDB.class_exists(bare):
 		return ""
-	return EventSheetDocEngineReference.doc_id(bare, method.strip_edges())
+	return ReadingDoors.engine_reference().doc_id(bare, method.strip_edges())
 
 
 ## THE MUTED WORD a derived row carries beside its object: the class the verb was read off, or "" when
@@ -286,11 +288,11 @@ static func _read_method(class_text: String, script_path: String, method: String
 		return {}
 	if not ClassDB.class_has_method(host, method, false):
 		return {}
-	var described: String = EventSheetDocEngineReference.member_description(host, method)
+	var described: String = ReadingDoors.engine_reference().member_description(host, method)
 	return {
 		"params": EventSheetViewportReadingRows.method_parameter_names(host, method),
 		"doc": described,
-		"credit": "" if described.strip_edges().is_empty() else EventSheetDocEngineReference.CREDIT_LINE,
+		"credit": "" if described.strip_edges().is_empty() else ReadingDoors.engine_reference().CREDIT_LINE,
 		"doc_id": doc_id_for(host, method),
 	}
 

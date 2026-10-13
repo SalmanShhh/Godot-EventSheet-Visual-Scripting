@@ -2,6 +2,8 @@
 class_name EventSheetCompletions
 extends RefCounted
 
+const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+
 # THE list of names a field can be completed with - one source, whatever the field is.
 #
 # The plugin already knows every name a sheet can say: it compiles them all. What it did not have
@@ -482,7 +484,7 @@ static func _ask_symbol_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 static func _group_entries() -> Array[Dictionary]:
 	var entries: Array[Dictionary] = []
 	var scene_root: Node = _scene_root()
-	for choice: Variant in ACEParamsDialog.group_choices(scene_root):
+	for choice: Variant in ReadingDoors.params_dialog().group_choices(scene_root):
 		var value: String = str(choice)
 		entries.append({
 			"text": value,
@@ -496,7 +498,7 @@ static func _group_entries() -> Array[Dictionary]:
 ## `input_action` field already opens, said through the one seam so the same list rides the popup.
 static func _input_action_entries() -> Array[Dictionary]:
 	var entries: Array[Dictionary] = []
-	for choice: Variant in ACEParamsDialog.input_action_choices():
+	for choice: Variant in ReadingDoors.params_dialog().input_action_choices():
 		var value: String = str(choice)
 		entries.append({
 			"text": value,
@@ -513,10 +515,10 @@ static func _node_entries() -> Array[Dictionary]:
 	var scene_root: Node = _scene_root()
 	if scene_root == null:
 		return entries
-	for path: String in ACEParamsDialog.scene_node_paths(scene_root):
+	for path: String in ReadingDoors.params_dialog().scene_node_paths(scene_root):
 		entries.append({"text": "$%s" % path, "detail": EventSheetL10n.translate("node"),
 			"kind": KIND_NODE})
-	for unique_name: String in ACEParamsDialog.scene_unique_names(scene_root):
+	for unique_name: String in ReadingDoors.params_dialog().scene_unique_names(scene_root):
 		entries.append({"text": "%%%s" % unique_name,
 			"detail": EventSheetL10n.translate("node"), "kind": KIND_NODE})
 	return entries
@@ -1075,7 +1077,7 @@ static func score_of(entry: Dictionary, query: String, allow_fuzzy: bool = true)
 		score = 250
 	elif str(entry.get("detail", "")).to_lower().contains(query):
 		score = 100
-	elif allow_fuzzy and query.length() >= FUZZY_FLOOR and ACEPickerDialog.fuzzy_match(query, text):
+	elif allow_fuzzy and query.length() >= FUZZY_FLOOR and ReadingDoors.picker_dialog().fuzzy_match(query, text):
 		score = 50
 	if score > 0:
 		score -= mini(text.length(), 99)
