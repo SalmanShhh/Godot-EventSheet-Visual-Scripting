@@ -65,11 +65,6 @@ func mode_trail() -> PackedStringArray:
 	return _mode_trail
 
 
-## Wired by the plugin entry point so value edits can flow back to the running game.
-func setdebugger(debugger: EventSheetLiveValuesDebugger) -> void:
-	debugger = debugger
-
-
 ## Toggles live-value streaming for this sheet (debug compiles send variable frames;
 ## the window shows them while the game runs). Recompile + run to start streaming.
 func toggle() -> void:

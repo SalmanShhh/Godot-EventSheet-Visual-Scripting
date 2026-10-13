@@ -7,6 +7,8 @@
 class_name DebuggerWindowTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
+
 
 static func _event(uid: String, breakpoint_on: bool, condition: String) -> EventRow:
 	var row: EventRow = EventRow.new()
@@ -112,6 +114,7 @@ static func run() -> bool:
 		"event 12 - when health <= 0") and ok
 	ok = _check("a sheet with no breakpoints lists none",
 		EventSheetDebuggerWindow.breakpoint_rows([]).size(), 0) and ok
+	ok = _test_unticking_keeps_the_breakpoint_inactive() and ok
 
 	# ── The bridge parses the timings message it will really be handed ──
 	var window: Dictionary = EventSheetLiveValuesDebugger.parse_event_times(
@@ -123,6 +126,53 @@ static func run() -> bool:
 		int(EventSheetLiveValuesDebugger.parse_event_times([]).get("flush", -1)), 0) and ok
 
 	return ok
+
+
+## Unticking a breakpoint in the list keeps it listed but inactive (the hint above the list says
+## so), and the change goes through the undo funnel: the sheet is replaced by a snapshot, so the
+## event is fetched again by uid after each step.
+static func _test_unticking_keeps_the_breakpoint_inactive() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.events.append(_event("bp", true, "health <= 0"))
+	var dock: EventSheetDock = EventSheetDock.new()
+	dock.setup(sheet)
+	var undo: EventSheetEditorTest.FakeEditorUndoRedoManager = \
+		EventSheetEditorTest.FakeEditorUndoRedoManager.new()
+	dock.set_undo_redo_manager(undo)
+	var debugger: EventSheetDebuggerWindow = EventSheetDebuggerWindow.new(dock)
+	var before: EventSheetResource = dock._current_sheet
+	var changed: bool = debugger.set_breakpoint_armed("bp", false)
+	var after_untick: EventRow = EventSheetDock._find_event_by_uid(dock._current_sheet.events, "bp")
+	var flat: Array = [_flat_of(after_untick, 1)]
+	var listed: Array[Dictionary] = EventSheetDebuggerWindow.breakpoint_rows(flat,
+		debugger._disarmed)
+	var ok: bool = SUPPORT.pins("debugger_window_test", [
+		["unticking is a sheet edit", changed, true],
+		["the edit went through the funnel that replaces the sheet",
+			dock._current_sheet != before, true],
+		["the event no longer pauses", after_untick.debug_break, false],
+		["its condition is kept", after_untick.debug_break_condition, "health <= 0"],
+		["it is still listed", listed.size(), 1],
+		["listed unticked", bool(listed[0]["armed"]) if listed.size() > 0 else true, false],
+	])
+	undo.undo()
+	var after_undo: EventRow = EventSheetDock._find_event_by_uid(dock._current_sheet.events, "bp")
+	ok = SUPPORT.check("debugger_window_test", "undo arms it again",
+		after_undo.debug_break, true) and ok
+	debugger.set_breakpoint_armed("bp", false)
+	debugger.set_breakpoint_armed("bp", true)
+	var after_tick: EventRow = EventSheetDock._find_event_by_uid(dock._current_sheet.events, "bp")
+	ok = SUPPORT.check("debugger_window_test", "ticking it again re-arms it",
+		after_tick.debug_break, true) and ok
+	dock.free()
+	return ok
+
+
+static func _flat_of(event_row: EventRow, number: int) -> Dictionary:
+	var row_data: EventRowData = EventRowData.new()
+	row_data.event_number = number
+	row_data.source_resource = event_row
+	return {"row": row_data}
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

@@ -70,6 +70,9 @@ var paused_label: Label = null
 var _picked_object: String = ""
 ## The last streamed frame, so switching tabs redraws what is on screen instead of blanking it.
 var _last_values: Dictionary = {}
+## Breakpoints the reader unticked in the list, by event uid: still listed (unticked) so ticking
+## brings them back, while the sheet no longer pauses on them.
+var _disarmed: Dictionary = {}
 
 
 func _init(dock: Control) -> void:
@@ -160,8 +163,9 @@ func _build_inspect_tab() -> Control:
 	return split
 
 
-## The Objects side of Inspect: one row per object type this sheet talks about, with its running
-## instance count, and the sheet's own variables under a row of their own. Derived from the census
+## The Objects side of Inspect: one row per object type this sheet talks about, with the values the
+## run reports for it (the "(N)" beside its name counts those values - the stream names behavior
+## sections, never instances), and the sheet's own variables under a row of their own. Derived from the census
 ## the Object bar already builds, so the two surfaces never disagree about what this sheet is about.
 static func object_rows(census: Array, values: Dictionary) -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
@@ -523,22 +527,24 @@ func _build_breakpoints_tab() -> Control:
 	return box
 
 
-## The breakpoint rows of a sheet: every event carrying debug_break, in reading order, as
-## {uid, event_number, condition}. Pure over the flattened rows, so the suite pins the list without
-## a viewport of its own.
-static func breakpoint_rows(flat_rows: Array) -> Array[Dictionary]:
+## The breakpoint rows of a sheet: every event carrying debug_break, plus every event whose uid is
+## in `disarmed` (a breakpoint unticked in the list, kept in place but inactive), in reading order,
+## as {uid, event_number, condition, armed}. Pure over the flattened rows, so the suite pins the
+## list without a viewport of its own.
+static func breakpoint_rows(flat_rows: Array, disarmed: Dictionary = {}) -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
 	for entry: Variant in flat_rows:
 		var row_data: EventRowData = (entry as Dictionary).get("row")
 		if row_data == null or not (row_data.source_resource is EventRow):
 			continue
 		var event_row: EventRow = row_data.source_resource as EventRow
-		if not event_row.debug_break:
+		if not event_row.debug_break and not disarmed.has(event_row.event_uid):
 			continue
 		rows.append({
 			"uid": event_row.event_uid,
 			"event_number": row_data.event_number,
 			"condition": event_row.debug_break_condition.strip_edges(),
+			"armed": event_row.debug_break,
 		})
 	return rows
 
@@ -561,7 +567,8 @@ func _refresh_breakpoints() -> void:
 		"⏸ Paused at %s" % _paused_text()
 	var root: TreeItem = breakpoints_tree.create_item()
 	var view: EventSheetViewport = _dock._active_view() if _dock != null else null
-	var rows: Array[Dictionary] = breakpoint_rows(view.get_flat_rows() if view != null else [])
+	var rows: Array[Dictionary] = breakpoint_rows(view.get_flat_rows() if view != null else [],
+		_disarmed)
 	if rows.is_empty():
 		var empty: TreeItem = breakpoints_tree.create_item(root)
 		empty.set_text(1, EMPTY_STATES["Breakpoints"])
@@ -571,7 +578,7 @@ func _refresh_breakpoints() -> void:
 		var item: TreeItem = breakpoints_tree.create_item(root)
 		item.set_cell_mode(0, TreeItem.CELL_MODE_CHECK)
 		item.set_editable(0, true)
-		item.set_checked(0, true)
+		item.set_checked(0, bool(row.get("armed", true)))
 		item.set_text(1, breakpoint_text(row))
 		item.set_metadata(0, str(row.get("uid", "")))
 
@@ -584,22 +591,43 @@ func _paused_text() -> String:
 	return _dock._paused_row_uid
 
 
-## Unticking a row clears its breakpoint on the sheet - the same thing F9 does, reached from the
-## list instead of from the row.
+## Unticking a row disarms its breakpoint and ticking re-arms it, as one undoable sheet edit. An
+## unticked row stays in the list, so the breakpoint is kept in place (with its condition) rather
+## than deleted.
 func _on_breakpoint_toggled() -> void:
 	var edited: TreeItem = breakpoints_tree.get_edited()
-	if edited == null or edited.is_checked(0) or _dock == null:
+	if edited == null or _dock == null:
 		return
-	var uid: String = str(edited.get_metadata(0))
-	var event_row: EventRow = EventSheetDock._find_event_by_uid(
-		_dock._current_sheet.events if _dock._current_sheet != null else [], uid)
-	if event_row != null:
-		event_row.debug_break = false
+	set_breakpoint_armed(str(edited.get_metadata(0)), edited.is_checked(0))
+	_refresh_breakpoints()
+
+
+## Arms or disarms the breakpoint on one event through the undo funnel, and remembers a disarmed
+## one so the list keeps it. Returns whether the sheet changed.
+func set_breakpoint_armed(uid: String, armed: bool) -> bool:
+	if _dock == null or uid.is_empty():
+		return false
+	var changed: bool = _dock._perform_undoable_sheet_edit(
+		"Enable Breakpoint" if armed else "Disable Breakpoint", func() -> bool:
+			var event_row: EventRow = EventSheetDock._find_event_by_uid(
+				_dock._current_sheet.events, uid)
+			if event_row == null or event_row.debug_break == armed:
+				return false
+			event_row.debug_break = armed
+			return true
+	)
+	if armed:
+		_disarmed.erase(uid)
+	else:
+		_disarmed[uid] = true
 	var view: EventSheetViewport = _dock._active_view()
 	if view != null:
-		view.get_shared_state().breakpoint_rows.erase(uid)
+		if armed:
+			view.get_shared_state().breakpoint_rows[uid] = true
+		else:
+			view.get_shared_state().breakpoint_rows.erase(uid)
 		view.queue_redraw()
-	_refresh_breakpoints()
+	return changed
 
 
 func _jump_to_breakpoint() -> void:
