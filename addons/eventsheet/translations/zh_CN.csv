@@ -8484,3 +8484,36 @@ signals,信号
 calls · includes · Go to layout,调用 · 包含 · 转到布局
 Reset Layout,重置布局
 Put every box back in its column and forget where it was dragged.,把每个方框放回它的列，并忘记它被拖到的位置。
+Refresh,刷新
+Find what is unfinished in %s,查找 %s 中未完成的内容
+Apply its fix,应用其修复
+Check the project,检查项目
+Inbox,收件箱
+THIS FINDING,此发现
+A FIX,修复
+"Applies through undo, then re-runs the check, so the finding's going away is proven.",通过撤销系统应用，然后重新运行检查，从而证明该发现确实消失。
+Re-run Checks,重新运行检查
+Mark All as Read,全部标为已读
+"Writes down what is on this page, so the next audit marks only what appeared after it.",记下此页上的内容，下次检查只标记之后出现的项目。
+Section,分区
+Open %s,打开 %s
+"Double-click it, or press Open, to open %s.",双击或按“打开”以打开 %s。
+Select a finding to see where it is and what fixes it.,选择一个发现，查看它的位置和修复方式。
+"Applies this fix through undo, then re-runs the check.",通过撤销系统应用此修复，然后重新运行检查。
+Double-click to open this sheet.,双击打开此表。
+New since you last looked.,自上次查看后新出现。
+This finding has no sheet to open (%s).,此发现没有可打开的表 (%s)。
+This finding points at %s - open it from the FileSystem dock.,此发现指向 %s - 请从文件系统面板打开它。
+Opened %s from the Project Doctor.,已从项目医生打开 %s。
+Running every test sheet in the project…,正在运行项目中的所有测试表…
+Tests need a running editor tree to run in.,测试需要正在运行的编辑器树。
+"No test sheets found. Set a sheet's type to Test (Sheet > Sheet Type…), add an On Test Start event, and assert something.",未找到测试表。将表的类型设为 Test（表 > 表类型…），添加 On Test Start 事件，然后断言一些内容。
+Verdict,结论
+"%s - %d passed, %d failed",%s - %d 通过，%d 失败
+Report (copyable),报告（可复制）
+Run every test sheet,运行所有测试表
+Run Again,再次运行
+Copy Report,复制报告
+Why didn't event %d fire?,为什么事件 %d 没有触发？
+Jump to This Row,跳到此行
+This row has no conditions.,此行没有条件。

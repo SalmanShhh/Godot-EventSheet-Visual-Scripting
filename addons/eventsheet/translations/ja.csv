@@ -8484,3 +8484,36 @@ signals,シグナル
 calls · includes · Go to layout,呼び出し · インクルード · レイアウトへ移動
 Reset Layout,配置をリセット
 Put every box back in its column and forget where it was dragged.,すべてのボックスを元の列に戻し、ドラッグした位置を忘れます。
+Refresh,再読み込み
+Find what is unfinished in %s,%s の未完成箇所を探す
+Apply its fix,その修正を適用
+Check the project,プロジェクトをチェック
+Inbox,受信箱
+THIS FINDING,この指摘
+A FIX,修正
+"Applies through undo, then re-runs the check, so the finding's going away is proven.",元に戻す操作として適用し、チェックを再実行するので、指摘が消えたことが確かめられます。
+Re-run Checks,チェックを再実行
+Mark All as Read,すべて既読にする
+"Writes down what is on this page, so the next audit marks only what appeared after it.",このページの内容を記録し、次の監査ではその後に現れたものだけに印を付けます。
+Section,セクション
+Open %s,%s を開く
+"Double-click it, or press Open, to open %s.",ダブルクリックするか「開く」を押すと %s を開きます。
+Select a finding to see where it is and what fixes it.,指摘を選ぶと、場所と直し方が表示されます。
+"Applies this fix through undo, then re-runs the check.",この修正を元に戻せる形で適用し、チェックを再実行します。
+Double-click to open this sheet.,ダブルクリックでこのシートを開きます。
+New since you last looked.,前回見てから新しく出たものです。
+This finding has no sheet to open (%s).,この指摘には開けるシートがありません (%s)。
+This finding points at %s - open it from the FileSystem dock.,この指摘は %s を指しています - ファイルシステムドックから開いてください。
+Opened %s from the Project Doctor.,プロジェクトドクターから %s を開きました。
+Running every test sheet in the project…,プロジェクトのすべてのテストシートを実行中…
+Tests need a running editor tree to run in.,テストの実行には動作中のエディターツリーが必要です。
+"No test sheets found. Set a sheet's type to Test (Sheet > Sheet Type…), add an On Test Start event, and assert something.",テストシートがありません。シートの種類を Test にし (シート > シートの種類…)、On Test Start イベントを追加して何かを確かめてください。
+Verdict,判定
+"%s - %d passed, %d failed",%s - 成功 %d、失敗 %d
+Report (copyable),レポート (コピー可)
+Run every test sheet,すべてのテストシートを実行
+Run Again,もう一度実行
+Copy Report,レポートをコピー
+Why didn't event %d fire?,イベント %d が動かなかったのはなぜ?
+Jump to This Row,この行へ移動
+This row has no conditions.,この行には条件がありません。

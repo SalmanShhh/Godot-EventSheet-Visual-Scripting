@@ -8484,3 +8484,36 @@ signals,segnali
 calls · includes · Go to layout,chiama · include · Vai al layout
 Reset Layout,Reimposta disposizione
 Put every box back in its column and forget where it was dragged.,Riporta ogni riquadro nella sua colonna e dimentica dove era stato trascinato.
+Refresh,Aggiorna
+Find what is unfinished in %s,Trova ciò che è incompiuto in %s
+Apply its fix,Applica la sua correzione
+Check the project,Controlla il progetto
+Inbox,In arrivo
+THIS FINDING,QUESTO RISULTATO
+A FIX,UNA CORREZIONE
+"Applies through undo, then re-runs the check, so the finding's going away is proven.","Si applica tramite annulla, poi riesegue il controllo, così la scomparsa del risultato è dimostrata."
+Re-run Checks,Riesegui i controlli
+Mark All as Read,Segna tutto come letto
+"Writes down what is on this page, so the next audit marks only what appeared after it.","Annota ciò che c'è in questa pagina, così il prossimo controllo segna solo ciò che compare dopo."
+Section,Sezione
+Open %s,Apri %s
+"Double-click it, or press Open, to open %s.",Fai doppio clic o premi Apri per aprire %s.
+Select a finding to see where it is and what fixes it.,Seleziona un risultato per vedere dov'è e cosa lo corregge.
+"Applies this fix through undo, then re-runs the check.","Applica questa correzione tramite annulla, poi riesegue il controllo."
+Double-click to open this sheet.,Fai doppio clic per aprire questo foglio.
+New since you last looked.,Nuovo dall'ultima volta che hai guardato.
+This finding has no sheet to open (%s).,Questo risultato non ha un foglio da aprire (%s).
+This finding points at %s - open it from the FileSystem dock.,Questo risultato punta a %s - aprilo dal pannello FileSystem.
+Opened %s from the Project Doctor.,%s aperto dal Dottore del progetto.
+Running every test sheet in the project…,Esecuzione di tutti i fogli di test del progetto…
+Tests need a running editor tree to run in.,I test richiedono un albero dell'editor in esecuzione.
+"No test sheets found. Set a sheet's type to Test (Sheet > Sheet Type…), add an On Test Start event, and assert something.","Nessun foglio di test trovato. Imposta il tipo di un foglio su Test (Foglio > Tipo di foglio…), aggiungi un evento On Test Start e verifica qualcosa."
+Verdict,Verdetto
+"%s - %d passed, %d failed","%s - %d superati, %d falliti"
+Report (copyable),Rapporto (copiabile)
+Run every test sheet,Esegui tutti i fogli di test
+Run Again,Esegui di nuovo
+Copy Report,Copia rapporto
+Why didn't event %d fire?,Perché l'evento %d non è scattato?
+Jump to This Row,Vai a questa riga
+This row has no conditions.,Questa riga non ha condizioni.

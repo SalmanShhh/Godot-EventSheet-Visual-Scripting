@@ -8484,3 +8484,36 @@ signals,сигналы
 calls · includes · Go to layout,вызывает · включает · Перейти к макету
 Reset Layout,Сбросить расположение
 Put every box back in its column and forget where it was dragged.,"Возвращает каждый блок в его столбец и забывает, куда он был перетащен."
+Refresh,Обновить
+Find what is unfinished in %s,Найти незавершённое в %s
+Apply its fix,Применить его исправление
+Check the project,Проверить проект
+Inbox,Входящие
+THIS FINDING,ЭТА НАХОДКА
+A FIX,ИСПРАВЛЕНИЕ
+"Applies through undo, then re-runs the check, so the finding's going away is proven.","Применяется через отмену, затем проверка запускается снова, так что исчезновение находки доказано."
+Re-run Checks,Перезапустить проверки
+Mark All as Read,Отметить всё прочитанным
+"Writes down what is on this page, so the next audit marks only what appeared after it.","Запоминает содержимое этой страницы, чтобы следующая проверка отмечала только появившееся после."
+Section,Раздел
+Open %s,Открыть %s
+"Double-click it, or press Open, to open %s.","Дважды щёлкните или нажмите «Открыть», чтобы открыть %s."
+Select a finding to see where it is and what fixes it.,"Выберите находку, чтобы увидеть, где она и что её исправит."
+"Applies this fix through undo, then re-runs the check.",Применяет это исправление через отмену и снова запускает проверку.
+Double-click to open this sheet.,"Дважды щёлкните, чтобы открыть этот лист."
+New since you last looked.,Новое с вашего последнего просмотра.
+This finding has no sheet to open (%s).,У этой находки нет листа для открытия (%s).
+This finding points at %s - open it from the FileSystem dock.,Эта находка указывает на %s - откройте его из панели «Файловая система».
+Opened %s from the Project Doctor.,%s открыт из «Доктора проекта».
+Running every test sheet in the project…,Запуск всех тестовых листов проекта…
+Tests need a running editor tree to run in.,Для тестов нужно работающее дерево редактора.
+"No test sheets found. Set a sheet's type to Test (Sheet > Sheet Type…), add an On Test Start event, and assert something.","Тестовые листы не найдены. Задайте листу тип Test (Лист > Тип листа…), добавьте событие On Test Start и что-нибудь проверьте."
+Verdict,Вердикт
+"%s - %d passed, %d failed","%s - пройдено %d, не пройдено %d"
+Report (copyable),Отчёт (можно скопировать)
+Run every test sheet,Запустить все тестовые листы
+Run Again,Запустить снова
+Copy Report,Копировать отчёт
+Why didn't event %d fire?,Почему событие %d не сработало?
+Jump to This Row,Перейти к этой строке
+This row has no conditions.,У этой строки нет условий.

@@ -8484,3 +8484,36 @@ signals,signaux
 calls · includes · Go to layout,appelle · inclut · Aller à la disposition
 Reset Layout,Réinitialiser la disposition
 Put every box back in its column and forget where it was dragged.,Remet chaque boîte dans sa colonne et oublie où elle avait été glissée.
+Refresh,Actualiser
+Find what is unfinished in %s,Trouver ce qui est inachevé dans %s
+Apply its fix,Appliquer son correctif
+Check the project,Vérifier le projet
+Inbox,Boîte de réception
+THIS FINDING,CE CONSTAT
+A FIX,UN CORRECTIF
+"Applies through undo, then re-runs the check, so the finding's going away is proven.","S'applique via l'annulation, puis relance la vérification : la disparition du constat est ainsi prouvée."
+Re-run Checks,Relancer les vérifications
+Mark All as Read,Tout marquer comme lu
+"Writes down what is on this page, so the next audit marks only what appeared after it.","Note ce qui figure sur cette page, pour que le prochain audit ne marque que ce qui apparaît ensuite."
+Section,Section
+Open %s,Ouvrir %s
+"Double-click it, or press Open, to open %s.",Double-cliquez ou appuyez sur Ouvrir pour ouvrir %s.
+Select a finding to see where it is and what fixes it.,Sélectionnez un constat pour voir où il se trouve et ce qui le corrige.
+"Applies this fix through undo, then re-runs the check.","Applique ce correctif via l'annulation, puis relance la vérification."
+Double-click to open this sheet.,Double-cliquez pour ouvrir cette feuille.
+New since you last looked.,Nouveau depuis votre dernier passage.
+This finding has no sheet to open (%s).,Ce constat n'a pas de feuille à ouvrir (%s).
+This finding points at %s - open it from the FileSystem dock.,Ce constat désigne %s - ouvrez-le depuis le dock Système de fichiers.
+Opened %s from the Project Doctor.,%s ouvert depuis le Docteur du projet.
+Running every test sheet in the project…,Exécution de toutes les feuilles de test du projet…
+Tests need a running editor tree to run in.,Les tests ont besoin d'un arbre d'éditeur en cours d'exécution.
+"No test sheets found. Set a sheet's type to Test (Sheet > Sheet Type…), add an On Test Start event, and assert something.","Aucune feuille de test trouvée. Réglez le type d'une feuille sur Test (Feuille > Type de feuille…), ajoutez un évènement On Test Start et vérifiez quelque chose."
+Verdict,Verdict
+"%s - %d passed, %d failed","%s - %d réussis, %d échoués"
+Report (copyable),Rapport (copiable)
+Run every test sheet,Exécuter toutes les feuilles de test
+Run Again,Relancer
+Copy Report,Copier le rapport
+Why didn't event %d fire?,Pourquoi l'évènement %d ne s'est-il pas déclenché ?
+Jump to This Row,Aller à cette ligne
+This row has no conditions.,Cette ligne n'a aucune condition.

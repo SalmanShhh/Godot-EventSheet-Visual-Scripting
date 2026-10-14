@@ -8484,3 +8484,36 @@ signals,Signale
 calls · includes · Go to layout,ruft auf · bindet ein · Gehe zu Layout
 Reset Layout,Anordnung zurücksetzen
 Put every box back in its column and forget where it was dragged.,"Setzt jedes Feld zurück in seine Spalte und vergisst, wohin es gezogen wurde."
+Refresh,Aktualisieren
+Find what is unfinished in %s,Unfertiges in %s finden
+Apply its fix,Seine Korrektur anwenden
+Check the project,Projekt prüfen
+Inbox,Eingang
+THIS FINDING,DIESER BEFUND
+A FIX,EINE KORREKTUR
+"Applies through undo, then re-runs the check, so the finding's going away is proven.","Wird über Rückgängig angewendet, dann läuft die Prüfung erneut, damit das Verschwinden des Befunds bewiesen ist."
+Re-run Checks,Prüfungen erneut ausführen
+Mark All as Read,Alle als gelesen markieren
+"Writes down what is on this page, so the next audit marks only what appeared after it.","Merkt sich, was auf dieser Seite steht, damit die nächste Prüfung nur markiert, was danach dazukam."
+Section,Abschnitt
+Open %s,%s öffnen
+"Double-click it, or press Open, to open %s.","Doppelklicken oder Öffnen drücken, um %s zu öffnen."
+Select a finding to see where it is and what fixes it.,"Einen Befund auswählen, um zu sehen, wo er ist und was ihn behebt."
+"Applies this fix through undo, then re-runs the check.",Wendet diese Korrektur über Rückgängig an und führt die Prüfung erneut aus.
+Double-click to open this sheet.,"Doppelklicken, um dieses Blatt zu öffnen."
+New since you last looked.,Neu seit deinem letzten Blick.
+This finding has no sheet to open (%s).,Dieser Befund hat kein Blatt zum Öffnen (%s).
+This finding points at %s - open it from the FileSystem dock.,Dieser Befund zeigt auf %s - öffne es aus dem Dateisystem-Dock.
+Opened %s from the Project Doctor.,%s aus dem Projekt-Doktor geöffnet.
+Running every test sheet in the project…,Alle Testblätter des Projekts werden ausgeführt…
+Tests need a running editor tree to run in.,Tests brauchen einen laufenden Editor-Baum.
+"No test sheets found. Set a sheet's type to Test (Sheet > Sheet Type…), add an On Test Start event, and assert something.","Keine Testblätter gefunden. Setze den Typ eines Blatts auf Test (Blatt > Blatttyp…), füge ein On Test Start-Ereignis hinzu und prüfe etwas."
+Verdict,Urteil
+"%s - %d passed, %d failed","%s - %d bestanden, %d fehlgeschlagen"
+Report (copyable),Bericht (kopierbar)
+Run every test sheet,Alle Testblätter ausführen
+Run Again,Erneut ausführen
+Copy Report,Bericht kopieren
+Why didn't event %d fire?,Warum wurde Ereignis %d nicht ausgelöst?
+Jump to This Row,Zu dieser Zeile springen
+This row has no conditions.,Diese Zeile hat keine Bedingungen.

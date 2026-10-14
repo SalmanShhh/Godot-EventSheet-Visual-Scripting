@@ -336,16 +336,22 @@ static func open_for_row(host: Control, event_row: EventRow, values: Dictionary,
 	var report: Dictionary = build_report(event_row, values, not values.is_empty(), sheet)
 	if _window == null or not is_instance_valid(_window):
 		_window = Window.new()
-		_window.title = "Why didn't this fire?"
-		_window.size = Vector2i(520, 420)
+		_window.size = Vector2i(EventSheetPalette.scaled(520), EventSheetPalette.scaled(420))
 		_window.close_requested.connect(func() -> void:
 			if is_instance_valid(_window):
 				_window.hide())
 		host.add_child(_window)
+	# The title is the question, asked about this row by its number.
+	_window.title = EventSheetL10n.translate("Why didn't event %d fire?") % event_number if event_number > 0 \
+		else EventSheetL10n.translate("Why didn't this fire?")
 	for stale: Node in _window.get_children():
 		stale.queue_free()
 	var body: Control = build_body(report, event_number)
 	body.add_child(_buttons(host, report, event_row))
+	# A plain Window clears to the engine's grey; the panel under the body is what makes it the theme's.
+	var back: Panel = Panel.new()
+	back.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_window.add_child(back)
 	_window.add_child(EventSheetPopupUI.margined(body))
 	_window.popup_centered()
 
@@ -354,15 +360,6 @@ static func open_for_row(host: Control, event_row: EventRow, values: Dictionary,
 ## Both are gestures the editor already has - the panel only points at them.
 static func _buttons(host: Control, report: Dictionary, event_row: EventRow) -> Control:
 	var row: HBoxContainer = HBoxContainer.new()
-	var jump: Button = Button.new()
-	jump.text = EventSheetL10n.translate("Jump to this row")
-	jump.pressed.connect(func() -> void:
-		if is_instance_valid(_window):
-			_window.hide()
-		var view: Object = host.call("_active_view") if host.has_method("_active_view") else null
-		if view != null and view.has_method("reveal_resource"):
-			view.call("reveal_resource", event_row))
-	row.add_child(jump)
 	var watched: String = watchable_name(report)
 	if not watched.is_empty():
 		var watch: Button = Button.new()
@@ -371,6 +368,19 @@ static func _buttons(host: Control, report: Dictionary, event_row: EventRow) -> 
 			if host.has_method("_ensure_live_values_panel"):
 				host.call("_ensure_live_values_panel").add_watch(watched))
 		row.add_child(watch)
+	var gap: Control = Control.new()
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(gap)
+	var jump: Button = Button.new()
+	jump.text = EventSheetL10n.translate("Jump to This Row")
+	jump.add_theme_color_override("font_color", EventSheetPopupUI.accent_color())
+	jump.pressed.connect(func() -> void:
+		if is_instance_valid(_window):
+			_window.hide()
+		var view: Object = host.call("_active_view") if host.has_method("_active_view") else null
+		if view != null and view.has_method("reveal_resource"):
+			view.call("reveal_resource", event_row))
+	row.add_child(jump)
 	return row
 
 
@@ -384,6 +394,11 @@ static func watchable_name(report: Dictionary) -> String:
 	var seen: String = str((entries[blocker] as Dictionary).get("seen", ""))
 	var at: int = seen.find(" = ")
 	return "" if at <= 0 else seen.substr(0, at)
+
+
+## A verdict as the line reads it: "true", "false", or "?" for one that could not be read from here.
+static func verdict_word(verdict: String) -> String:
+	return "true" if verdict == VERDICT_TRUE else "false" if verdict == VERDICT_FALSE else "?"
 
 
 ## The report as controls. Split from open_for_row so a render harness can shoot the body
@@ -405,23 +420,24 @@ static func build_body(report: Dictionary, event_number: int = 0) -> Control:
 	box.add_child(EventSheetPopupUI.hint_label(str(report.get("verdict_line", ""))))
 	for fact: String in PackedStringArray(report.get("facts", PackedStringArray())):
 		box.add_child(EventSheetPopupUI.hint_label(fact))
-	var rows: Array = []
+	# One line per condition: its verdict, its words, and the value it was tested against. The one that
+	# said no is the state note's shape - a red edge - so it is found without reading the others.
+	var conditions: VBoxContainer = VBoxContainer.new()
 	var entries: Array = report.get("conditions", [])
 	for index: int in range(entries.size()):
 		var entry: Dictionary = entries[index]
-		var marker: String = str(entry.get("verdict", VERDICT_UNKNOWN))
+		var said: String = "%s   %s   %s" % [verdict_word(str(entry.get("verdict", VERDICT_UNKNOWN))),
+			str(entry.get("label", "")), str(entry.get("seen", "")) + str(entry.get("note", ""))]
 		if index == int(report.get("blocker_index", -1)):
-			marker += "  ← said no"
-		rows.append(PackedStringArray([
-			marker,
-			str(entry.get("label", "")),
-			str(entry.get("seen", "")),
-			str(entry.get("note", "")),
-		]))
-	if rows.is_empty():
-		rows.append(PackedStringArray(["", "This row has no conditions.", "", ""]))
-	box.add_child(EventSheetPopupUI.labelled_card("CONDITIONS",
-		EventSheetPopupUI.compact_table(PackedStringArray(["", "Condition", "Value seen", "Note"]), rows, 3)))
+			var blocker: EventSheetPopupUI.StateNote = EventSheetPopupUI.StateNote.new()
+			blocker.name = "Blocker"
+			blocker.say(said.strip_edges())
+			conditions.add_child(blocker)
+		else:
+			conditions.add_child(EventSheetPopupUI.hint_label(said.strip_edges()))
+	if entries.is_empty():
+		conditions.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("This row has no conditions.")))
+	box.add_child(EventSheetPopupUI.labelled_card(EventSheetL10n.translate("Conditions"), conditions))
 	box.add_child(EventSheetPopupUI.hint_label(
 		"Read from the values the running game streams. Nothing is written to your sheet, and closing this window leaves nothing behind."))
 	return box

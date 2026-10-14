@@ -8484,3 +8484,36 @@ signals,시그널
 calls · includes · Go to layout,호출 · 포함 · 레이아웃으로 이동
 Reset Layout,배치 초기화
 Put every box back in its column and forget where it was dragged.,모든 상자를 원래 열로 되돌리고 끌어 놓은 위치를 잊습니다.
+Refresh,새로 고침
+Find what is unfinished in %s,%s에서 끝나지 않은 것 찾기
+Apply its fix,해당 수정 적용
+Check the project,프로젝트 검사
+Inbox,받은 편지함
+THIS FINDING,이 항목
+A FIX,수정
+"Applies through undo, then re-runs the check, so the finding's going away is proven.","실행 취소를 통해 적용한 뒤 검사를 다시 실행하므로, 항목이 사라졌음이 증명됩니다."
+Re-run Checks,검사 다시 실행
+Mark All as Read,모두 읽음으로 표시
+"Writes down what is on this page, so the next audit marks only what appeared after it.","이 페이지의 내용을 기록해 두어, 다음 검사에서는 그 뒤에 나타난 것만 표시합니다."
+Section,섹션
+Open %s,%s 열기
+"Double-click it, or press Open, to open %s.",두 번 클릭하거나 열기를 눌러 %s을(를) 엽니다.
+Select a finding to see where it is and what fixes it.,항목을 선택하면 위치와 수정 방법이 보입니다.
+"Applies this fix through undo, then re-runs the check.",이 수정을 실행 취소 가능하게 적용하고 검사를 다시 실행합니다.
+Double-click to open this sheet.,두 번 클릭하여 이 시트를 엽니다.
+New since you last looked.,마지막으로 본 뒤 새로 생겼습니다.
+This finding has no sheet to open (%s).,이 항목에는 열 시트가 없습니다 (%s).
+This finding points at %s - open it from the FileSystem dock.,이 항목은 %s을(를) 가리킵니다 - 파일시스템 독에서 여세요.
+Opened %s from the Project Doctor.,프로젝트 닥터에서 %s을(를) 열었습니다.
+Running every test sheet in the project…,프로젝트의 모든 테스트 시트를 실행하는 중…
+Tests need a running editor tree to run in.,테스트를 실행하려면 실행 중인 에디터 트리가 필요합니다.
+"No test sheets found. Set a sheet's type to Test (Sheet > Sheet Type…), add an On Test Start event, and assert something.","테스트 시트가 없습니다. 시트 유형을 Test로 정하고(시트 > 시트 유형…), On Test Start 이벤트를 추가한 뒤 무언가를 확인하세요."
+Verdict,판정
+"%s - %d passed, %d failed","%s - 통과 %d, 실패 %d"
+Report (copyable),보고서 (복사 가능)
+Run every test sheet,모든 테스트 시트 실행
+Run Again,다시 실행
+Copy Report,보고서 복사
+Why didn't event %d fire?,이벤트 %d이(가) 실행되지 않은 이유는?
+Jump to This Row,이 행으로 이동
+This row has no conditions.,이 행에는 조건이 없습니다.

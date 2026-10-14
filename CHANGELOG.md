@@ -42,6 +42,22 @@
 - Fixed: the History steps, the Outline kinds and the Bookmarks sheet header no longer keep their
   dark-theme colours on a light editor theme, where the History text all but vanished.
 
+### Changed: the four checking windows say a finding as an edge and a sentence
+
+- **Check the project** (Tools > Project Doctor) keeps its worst-first inbox and its new-since-last-look
+  dots; every line now leads with an edge in its severity's colour. The selected finding's fixes open
+  as rows under it, and a click on one applies it through undo and re-runs the check. That is the only
+  way a fix is applied now: the "Fix selected" button, which was greyed for every built-in fix, and the
+  chip bar below the list that did the same job are gone. The blue button names the file it opens.
+- **Run every test sheet** (Tools > Run Tests) gains Run Again and Copy Report, and keeps its window
+  open between runs. A failing claim is a red edge plus its reason; a passing one is its name and PASS.
+- **Why didn't event 12 fire?** asks the question by the row's number, and the condition that said
+  no wears a red edge instead of an arrow in a table. Jump to This Row stands on the right.
+- **Find what is unfinished in player.gd** (Loose Ends) gains Refresh: the list was read once on open
+  and went stale after any edit.
+- The Doctor, Why and Loose Ends windows draw the editor theme's panel behind their content, so they
+  read in a light editor theme instead of showing dark text on the engine's grey.
+
 ### Fixed: a global made as a scene is found wherever the scene lives
 
 - An autoload that points at a scene whose root node carries the script - the way many existing

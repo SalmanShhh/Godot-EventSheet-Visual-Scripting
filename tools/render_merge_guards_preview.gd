@@ -78,7 +78,7 @@ func _open_inbox() -> void:
 	var branch: TreeItem = root_item.get_first_child()
 	if branch != null and branch.get_first_child() != null:
 		branch.get_first_child().select(3)
-		_panel._refresh_fix_button()
+		_panel._on_finding_selected()
 
 
 ## A file a merge did not finish with: an ordinary movement script whose speed line came back from

@@ -8484,3 +8484,36 @@ signals,señales
 calls · includes · Go to layout,llama · incluye · Ir al diseño
 Reset Layout,Restablecer disposición
 Put every box back in its column and forget where it was dragged.,Devuelve cada caja a su columna y olvida adónde se arrastró.
+Refresh,Actualizar
+Find what is unfinished in %s,Buscar lo inacabado en %s
+Apply its fix,Aplicar su corrección
+Check the project,Revisar el proyecto
+Inbox,Bandeja de entrada
+THIS FINDING,ESTE HALLAZGO
+A FIX,UNA CORRECCIÓN
+"Applies through undo, then re-runs the check, so the finding's going away is proven.","Se aplica mediante deshacer y luego vuelve a ejecutar la comprobación, así se demuestra que el hallazgo desaparece."
+Re-run Checks,Volver a comprobar
+Mark All as Read,Marcar todo como leído
+"Writes down what is on this page, so the next audit marks only what appeared after it.","Anota lo que hay en esta página, para que la próxima revisión marque solo lo que aparezca después."
+Section,Sección
+Open %s,Abrir %s
+"Double-click it, or press Open, to open %s.",Haz doble clic o pulsa Abrir para abrir %s.
+Select a finding to see where it is and what fixes it.,Selecciona un hallazgo para ver dónde está y qué lo corrige.
+"Applies this fix through undo, then re-runs the check.",Aplica esta corrección mediante deshacer y vuelve a ejecutar la comprobación.
+Double-click to open this sheet.,Doble clic para abrir esta hoja.
+New since you last looked.,Nuevo desde la última vez que miraste.
+This finding has no sheet to open (%s).,Este hallazgo no tiene hoja que abrir (%s).
+This finding points at %s - open it from the FileSystem dock.,Este hallazgo apunta a %s - ábrelo desde el panel Sistema de archivos.
+Opened %s from the Project Doctor.,Se abrió %s desde el Doctor del proyecto.
+Running every test sheet in the project…,Ejecutando todas las hojas de prueba del proyecto…
+Tests need a running editor tree to run in.,Las pruebas necesitan un árbol del editor en marcha.
+"No test sheets found. Set a sheet's type to Test (Sheet > Sheet Type…), add an On Test Start event, and assert something.","No se encontraron hojas de prueba. Pon el tipo de una hoja en Test (Hoja > Tipo de hoja…), añade un evento On Test Start y comprueba algo."
+Verdict,Veredicto
+"%s - %d passed, %d failed","%s - %d superadas, %d fallidas"
+Report (copyable),Informe (copiable)
+Run every test sheet,Ejecutar todas las hojas de prueba
+Run Again,Ejecutar de nuevo
+Copy Report,Copiar informe
+Why didn't event %d fire?,¿Por qué no se disparó el evento %d?
+Jump to This Row,Ir a esta fila
+This row has no conditions.,Esta fila no tiene condiciones.

@@ -231,8 +231,8 @@ func build() -> void:
 		return
 	window = Window.new()
 	window.title = "Loose Ends"
-	window.size = Vector2i(520, 480)
-	window.min_size = Vector2i(400, 300)
+	window.size = Vector2i(EventSheetPalette.scaled(520), EventSheetPalette.scaled(480))
+	window.min_size = Vector2i(EventSheetPalette.scaled(400), EventSheetPalette.scaled(300))
 	window.close_requested.connect(func() -> void: window.hide())
 	var body: VBoxContainer = EventSheetPopupUI.form_box()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -253,8 +253,27 @@ func build() -> void:
 	var card: PanelContainer = EventSheetPopupUI.labelled_card("Loose ends", tree)
 	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(card)
+	# Refresh reads the sheet again: the list is a reading of the sheet at one moment, and every edit
+	# since then has made it a little older.
+	var buttons: HBoxContainer = HBoxContainer.new()
+	var again: Button = Button.new()
+	again.text = EventSheetL10n.translate("Refresh")
+	again.pressed.connect(refresh)
+	buttons.add_child(again)
+	var gap: Control = Control.new()
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	buttons.add_child(gap)
+	var close: Button = Button.new()
+	close.text = EventSheetL10n.translate("Close")
+	close.pressed.connect(window.hide)
+	buttons.add_child(close)
+	body.add_child(buttons)
 	var margined: MarginContainer = EventSheetPopupUI.margined(body)
 	margined.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# A plain Window clears to the engine's grey; the panel under the body is what makes it the theme's.
+	var back: Panel = Panel.new()
+	back.set_anchors_preset(Control.PRESET_FULL_RECT)
+	window.add_child(back)
 	window.add_child(margined)
 	_dock.add_child(window)
 
@@ -274,6 +293,7 @@ func refresh() -> int:
 	var flagged: Array = EventSheetDiagnostics.analyze(sheet, _dock._ace_registry)
 	_entries = loose_ends(sheet, flagged)
 	_entries_sheet = sheet
+	window.title = EventSheetL10n.translate("Find what is unfinished in %s") % _sheet_name(sheet)
 	tree.clear()
 	var root: TreeItem = tree.create_item()
 	var heading_font: FontVariation = EventSheetPopupUI.small_caps_font(tree.get_theme_font("font"))
@@ -301,6 +321,13 @@ func refresh() -> int:
 	summary_label.text = "Nothing left hanging - no TODOs, no disabled rows, no half-written events." if _entries.is_empty() \
 		else "%d loose end(s). Nothing here is drawn on the sheet - click an entry to jump to the row." % _entries.size()
 	return _entries.size()
+
+
+## The sheet's file name, the way its tab names it; "this sheet" before it has one.
+static func _sheet_name(sheet: EventSheetResource) -> String:
+	var path: String = "" if sheet == null else sheet.external_source_path if not sheet.external_source_path.is_empty() \
+		else sheet.resource_path
+	return path.get_file() if not path.is_empty() else EventSheetL10n.translate("this sheet")
 
 
 func _on_entry_selected() -> void:
