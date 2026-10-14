@@ -40,6 +40,15 @@ const PREVIEW_PANEL_PATH: String = "res://addons/eventsheet/editor/inspector/pre
 ## never asks for cards must not pay for them at every editor start.
 const CARD_LIST_DRAWER_PATH: String = "res://addons/eventsheet/editor/inspector/card_list_drawer.gd"
 const CARD_SCHEMAS_PATH: String = "res://addons/eventsheet/editor/inspector/card_schemas.gd"
+## The widgets themselves, loaded BY PATH for the same reason: most objects an Inspector shows carry
+## no drawer and no decor, and the widgets (with their translations) are the larger half of this file's
+## weight at boot. Reached through `widgets()`; the property wrappers below hold them as plain Controls.
+const DRAWER_WIDGETS_PATH: String = "res://addons/eventsheet/editor/drawer_widgets.gd"
+
+
+## The drawer widgets module, compiled the first time a drawer or a decor line is drawn.
+static func widgets() -> GDScript:
+	return load(DRAWER_WIDGETS_PATH)
 
 
 func _can_handle(_object: Object) -> bool:
@@ -61,22 +70,22 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 		var decor_entry: Dictionary = entry as Dictionary
 		match str(decor_entry.get("kind", "")):
 			"header":
-				add_custom_control(EventSheetDrawerWidgets.build_header_label(str(decor_entry.get("text", "")), str(decor_entry.get("color", ""))))
+				add_custom_control(widgets().build_header_label(str(decor_entry.get("text", "")), str(decor_entry.get("color", ""))))
 			"required":
-				add_custom_control(EventSheetDrawerWidgets.RequiredBadge.new(_object, name))
+				add_custom_control(widgets().RequiredBadge.new(_object, name))
 			"validate":
-				add_custom_control(EventSheetDrawerWidgets.ValidateBadge.new(_object, str(decor_entry.get("function", ""))))
+				add_custom_control(widgets().ValidateBadge.new(_object, str(decor_entry.get("function", ""))))
 			"action":
-				add_custom_control(EventSheetDrawerWidgets.ActionButton.new(_object, str(decor_entry.get("function", "")), str(decor_entry.get("label", ""))))
+				add_custom_control(widgets().ActionButton.new(_object, str(decor_entry.get("function", "")), str(decor_entry.get("label", ""))))
 			"link":
-				add_custom_control(EventSheetDrawerWidgets.LinkToggle.new(_object, str(decor_entry.get("first", "")), str(decor_entry.get("second", ""))))
+				add_custom_control(widgets().LinkToggle.new(_object, str(decor_entry.get("first", "")), str(decor_entry.get("second", ""))))
 			"group_show_if":
 				# Nothing to draw: hiding the group is the ordinary _validate_property the compiler
 				# emits once per member, exactly as the per-field Show If compiles. The entry is here
 				# so the Designer (and anything else reading the map) can say WHY a group hides.
 				pass
 			_:
-				add_custom_control(EventSheetDrawerWidgets.build_info_panel(str(decor_entry.get("text", ""))))
+				add_custom_control(widgets().build_info_panel(str(decor_entry.get("text", ""))))
 	var drawer: Dictionary = parse_drawer_hint(hint_string)
 	var kind: String = str(drawer.get("drawer", ""))
 	match kind:
@@ -198,8 +207,8 @@ static func parse_unit_spec(spec: String) -> Dictionary:
 	# no `kinds=` was given, so a marker that names its units keeps naming them.
 	if units.is_empty():
 		var family: String = spec.strip_edges()
-		if EventSheetDrawerWidgets.UNIT_FAMILIES.has(family):
-			for unit: Variant in (EventSheetDrawerWidgets.UNIT_FAMILIES[family] as Array):
+		if widgets().UNIT_FAMILIES.has(family):
+			for unit: Variant in (widgets().UNIT_FAMILIES[family] as Array):
 				units.append(str(unit))
 	if units.is_empty():
 		return {"units": units, "store": ""}
@@ -370,7 +379,7 @@ static func parse_table_columns(spec: String) -> Array:
 		# By path, not by class name: this file is constructed at editor boot (add_inspector_plugin
 		# takes an instance), and naming the compiler here would compile its whole subtree into every
 		# session for one schema helper. The widgets module owns the cached load.
-		var enum_options: Array = EventSheetDrawerWidgets.sheet_compiler().table_enum_options(column_type)
+		var enum_options: Array = widgets().sheet_compiler().table_enum_options(column_type)
 		if not enum_options.is_empty():
 			columns.append({"name": column_name, "type": "enum", "options": enum_options})
 			continue
@@ -401,11 +410,11 @@ static func _value_is_kind(object: Object, name: String, type_class: String) -> 
 ## Numeric progress bar: drag to set; emits an int back for int properties, a float for floats.
 class ProgressBarProperty:
 	extends EditorProperty
-	var _bar: EventSheetDrawerWidgets.DrawerProgressBar
+	var _bar: Control
 
 	func _init(min_value: float, max_value: float) -> void:
-		_bar = EventSheetDrawerWidgets.DrawerProgressBar.new(min_value, max_value)
-		_bar.value_changed.connect(_on_changed)
+		_bar = EventSheetAttributeDrawers.widgets().DrawerProgressBar.new(min_value, max_value)
+		_bar.connect("value_changed", _on_changed)
 		add_child(_bar)
 		add_focusable(_bar)
 
@@ -414,17 +423,17 @@ class ProgressBarProperty:
 		emit_changed(get_edited_property(), int(round(v)) if is_int else v)
 
 	func _update_property() -> void:
-		_bar.set_value(float(get_edited_object().get(get_edited_property())))
+		_bar.call("set_value", float(get_edited_object().get(get_edited_property())))
 
 
 ## Vector2 min-max range: drag either handle to set the low (x) / high (y) end.
 class MinMaxSliderProperty:
 	extends EditorProperty
-	var _slider: EventSheetDrawerWidgets.DrawerMinMaxSlider
+	var _slider: Control
 
 	func _init(min_value: float, max_value: float) -> void:
-		_slider = EventSheetDrawerWidgets.DrawerMinMaxSlider.new(min_value, max_value)
-		_slider.value_changed.connect(_on_changed)
+		_slider = EventSheetAttributeDrawers.widgets().DrawerMinMaxSlider.new(min_value, max_value)
+		_slider.connect("value_changed", _on_changed)
 		add_child(_slider)
 		add_focusable(_slider)
 
@@ -432,7 +441,7 @@ class MinMaxSliderProperty:
 		emit_changed(get_edited_property(), v)
 
 	func _update_property() -> void:
-		_slider.set_value(get_edited_object().get(get_edited_property()))
+		_slider.call("set_value", get_edited_object().get(get_edited_property()))
 
 
 ## Fixed choices as one row of toggle buttons: the pressed button IS the value. A String property
@@ -440,15 +449,15 @@ class MinMaxSliderProperty:
 ## @export_enum int already reads - so the same row of buttons serves both without a second drawer.
 class ToggleRowProperty:
 	extends EditorProperty
-	var _row: EventSheetDrawerWidgets.DrawerToggleRow
+	var _row: Control
 	var _options: PackedStringArray = PackedStringArray()
 	var _stores_index: bool = false
 
 	func _init(options: PackedStringArray, stores_index: bool = false, icon_source: String = "", segmented: bool = false) -> void:
 		_options = options
 		_stores_index = stores_index
-		_row = EventSheetDrawerWidgets.DrawerToggleRow.new(options, icon_source, segmented)
-		_row.value_changed.connect(_on_changed)
+		_row = EventSheetAttributeDrawers.widgets().DrawerToggleRow.new(options, icon_source, segmented)
+		_row.connect("value_changed", _on_changed)
 		add_child(_row)
 		set_bottom_editor(_row)
 
@@ -463,20 +472,20 @@ class ToggleRowProperty:
 	func _update_property() -> void:
 		var value: Variant = get_edited_object().get(get_edited_property())
 		if not _stores_index:
-			_row.set_value(str(value))
+			_row.call("set_value", str(value))
 			return
 		var index: int = int(value)
-		_row.set_value(_options[index] if index >= 0 and index < _options.size() else "")
+		_row.call("set_value", _options[index] if index >= 0 and index < _options.size() else "")
 
 
 ## Four corners in one property: one number while they agree, four labelled boxes when they do not.
 class CornersProperty:
 	extends EditorProperty
-	var _corners: EventSheetDrawerWidgets.DrawerCorners
+	var _corners: Control
 
 	func _init() -> void:
-		_corners = EventSheetDrawerWidgets.DrawerCorners.new()
-		_corners.value_changed.connect(_on_changed)
+		_corners = EventSheetAttributeDrawers.widgets().DrawerCorners.new()
+		_corners.connect("value_changed", _on_changed)
 		add_child(_corners)
 		set_bottom_editor(_corners)
 
@@ -485,7 +494,7 @@ class CornersProperty:
 
 	func _update_property() -> void:
 		var value: Variant = get_edited_object().get(get_edited_property())
-		_corners.set_value(value if value is Vector4 else Vector4.ZERO)
+		_corners.call("set_value", value if value is Vector4 else Vector4.ZERO)
 
 
 ## A float with its unit: a spin box plus a unit dropdown at its edge. The dropdown converts what is
@@ -493,11 +502,11 @@ class CornersProperty:
 ## and never moves a number the running game reads.
 class UnitFieldProperty:
 	extends EditorProperty
-	var _field: EventSheetDrawerWidgets.DrawerUnitField
+	var _field: Control
 
 	func _init(units: PackedStringArray, store_unit: String) -> void:
-		_field = EventSheetDrawerWidgets.DrawerUnitField.new(units, store_unit)
-		_field.value_changed.connect(_on_changed)
+		_field = EventSheetAttributeDrawers.widgets().DrawerUnitField.new(units, store_unit)
+		_field.connect("value_changed", _on_changed)
 		add_child(_field)
 		add_focusable(_field)
 
@@ -505,17 +514,17 @@ class UnitFieldProperty:
 		emit_changed(get_edited_property(), value)
 
 	func _update_property() -> void:
-		_field.set_value(float(get_edited_object().get(get_edited_property())))
+		_field.call("set_value", float(get_edited_object().get(get_edited_property())))
 
 
 ## Array-of-Dictionary table: a grid with typed cell editors, add / remove / move-up.
 class TableProperty:
 	extends EditorProperty
-	var _table: EventSheetDrawerWidgets.DrawerTable
+	var _table: Control
 
 	func _init(columns: Array) -> void:
-		_table = EventSheetDrawerWidgets.DrawerTable.new(columns)
-		_table.value_changed.connect(_on_changed)
+		_table = EventSheetAttributeDrawers.widgets().DrawerTable.new(columns)
+		_table.connect("value_changed", _on_changed)
 		add_child(_table)
 		set_bottom_editor(_table)
 
@@ -536,9 +545,9 @@ class TableProperty:
 		# reselecting the asset) brings a different value that actually rebuilds the grid.
 		var value: Variant = get_edited_object().get(get_edited_property())
 		var incoming: Array = value if value is Array else []
-		if incoming == _table.get_value():
+		if incoming == _table.call("get_value"):
 			return
-		_table.set_value(incoming)
+		_table.call("set_value", incoming)
 
 
 ## A list of Dictionaries as a list of cards: drag to reorder, fold one open for its own fields.
@@ -575,11 +584,11 @@ class CardListProperty:
 ## Vector2 dial: drag the handle to set direction + magnitude.
 class VectorDialProperty:
 	extends EditorProperty
-	var _dial: EventSheetDrawerWidgets.DrawerVectorDial
+	var _dial: Control
 
 	func _init(max_magnitude: float) -> void:
-		_dial = EventSheetDrawerWidgets.DrawerVectorDial.new(max_magnitude)
-		_dial.value_changed.connect(_on_changed)
+		_dial = EventSheetAttributeDrawers.widgets().DrawerVectorDial.new(max_magnitude)
+		_dial.connect("value_changed", _on_changed)
 		add_child(_dial)
 		set_bottom_editor(_dial)
 
@@ -587,17 +596,17 @@ class VectorDialProperty:
 		emit_changed(get_edited_property(), v)
 
 	func _update_property() -> void:
-		_dial.set_value(get_edited_object().get(get_edited_property()))
+		_dial.call("set_value", get_edited_object().get(get_edited_property()))
 
 
 ## Colour swatch row: click a preset (or the picker) to set the colour.
 class SwatchRowProperty:
 	extends EditorProperty
-	var _row: EventSheetDrawerWidgets.DrawerSwatchRow
+	var _row: Control
 
 	func _init() -> void:
-		_row = EventSheetDrawerWidgets.DrawerSwatchRow.new()
-		_row.value_changed.connect(_on_changed)
+		_row = EventSheetAttributeDrawers.widgets().DrawerSwatchRow.new()
+		_row.connect("value_changed", _on_changed)
 		add_child(_row)
 		set_bottom_editor(_row)
 
@@ -605,13 +614,13 @@ class SwatchRowProperty:
 		emit_changed(get_edited_property(), c)
 
 	func _update_property() -> void:
-		_row.set_value(get_edited_object().get(get_edited_property()))
+		_row.call("set_value", get_edited_object().get(get_edited_property()))
 
 
 ## Texture preview: a Texture2D resource picker above a live thumbnail.
 class TexturePreviewProperty:
 	extends EditorProperty
-	var _preview: EventSheetDrawerWidgets.DrawerTexturePreview
+	var _preview: Control
 	var _picker: EditorResourcePicker
 
 	func _init() -> void:
@@ -620,25 +629,25 @@ class TexturePreviewProperty:
 		_picker.base_type = "Texture2D"
 		_picker.resource_changed.connect(_on_resource_changed)
 		box.add_child(_picker)
-		_preview = EventSheetDrawerWidgets.DrawerTexturePreview.new()
+		_preview = EventSheetAttributeDrawers.widgets().DrawerTexturePreview.new()
 		box.add_child(_preview)
 		add_child(box)
 		set_bottom_editor(box)
 
 	func _on_resource_changed(resource: Resource) -> void:
-		_preview.set_texture(resource as Texture2D)
+		_preview.call("set_texture", resource as Texture2D)
 		emit_changed(get_edited_property(), resource)
 
 	func _update_property() -> void:
 		var value: Variant = get_edited_object().get(get_edited_property())
 		_picker.edited_resource = value as Resource
-		_preview.set_texture(value as Texture2D)
+		_preview.call("set_texture", value as Texture2D)
 
 
 ## Curve editor: a Curve resource picker above a live inline render of the curve's shape.
 class CurveEditorProperty:
 	extends EditorProperty
-	var _preview: EventSheetDrawerWidgets.DrawerCurvePreview
+	var _preview: Control
 	var _picker: EditorResourcePicker
 
 	func _init() -> void:
@@ -647,16 +656,16 @@ class CurveEditorProperty:
 		_picker.base_type = "Curve"
 		_picker.resource_changed.connect(_on_resource_changed)
 		box.add_child(_picker)
-		_preview = EventSheetDrawerWidgets.DrawerCurvePreview.new()
+		_preview = EventSheetAttributeDrawers.widgets().DrawerCurvePreview.new()
 		box.add_child(_preview)
 		add_child(box)
 		set_bottom_editor(box)
 
 	func _on_resource_changed(resource: Resource) -> void:
-		_preview.set_curve(resource as Curve)
+		_preview.call("set_curve", resource as Curve)
 		emit_changed(get_edited_property(), resource)
 
 	func _update_property() -> void:
 		var value: Variant = get_edited_object().get(get_edited_property())
 		_picker.edited_resource = value as Resource
-		_preview.set_curve(value as Curve)
+		_preview.call("set_curve", value as Curve)

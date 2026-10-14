@@ -12,6 +12,14 @@
   was typed, the way the other making windows already did, instead of closing and saying it on
   the dock's status line.
 
+### Fixed: enabling the plugin compiles less
+
+- The Inspector drawers' widgets and the translation layer behind them were compiled at every editor
+  start, because the Inspector plugin Godot builds at boot named them; translating the drawers' badges
+  had made that cost larger. The widgets now load the first time a drawer or a decor line is drawn,
+  which takes about 2,500 lines of GDScript (six files) off the enable path. Enabling the plugin
+  measured 703 to 1,289 ms before and 495 to 655 ms after on the same busy machine.
+
 ### Fixed: a global made as a scene is found wherever the scene lives
 
 - An autoload that points at a scene whose root node carries the script - the way many existing

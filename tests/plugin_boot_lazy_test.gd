@@ -81,8 +81,11 @@ const FORBIDDEN := {
 	# reason the compiler crept back onto the boot path once already: drawer_widgets named
 	# SheetCompiler for three table-enum schema helpers, and that one name carried the compiler's
 	# whole subtree into every session. They reach it by path through a cached accessor instead.
+	# The plugin itself reaches the widgets by path too: most objects carry no drawer and no decor,
+	# and naming the widgets compiled them and their translations into every editor start.
 	"res://addons/eventsheet/editor/attribute_drawers.gd": [
 		"SheetCompiler", "EventSheetWorkflow", "EventSheetProjectDoctor", "EventSheetViewport",
+		"EventSheetDrawerWidgets", "EventSheetL10n",
 	],
 	"res://addons/eventsheet/editor/drawer_widgets.gd": [
 		"SheetCompiler", "EventSheetWorkflow", "EventSheetProjectDoctor", "EventSheetViewport",
