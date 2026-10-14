@@ -5943,7 +5943,6 @@ func prompt_inspector_button_for(function_name: String) -> void:
 		"main": EventSheetL10n.translate("Add Button"),
 		"on_main": func() -> void: label_tool_button(function_name, edit.text),
 	})
-	prompt.register_text_enter(edit)
 	edit.text_changed.connect(func(typed: String) -> void: small_prompt.set_code(prompt, code_for.call(typed)))
 	if edit.is_inside_tree():
 		edit.grab_focus()
@@ -7578,7 +7577,7 @@ func _open_ace_comment_dialog(target: Resource) -> void:
 	if target == null:
 		_set_status("Right-click a condition or action to comment it.", true)
 		return
-	_ask_for_line("Row Comment", "Why this condition/action exists…", str(target.get("comment")),
+	_ask_for_line(EventSheetL10n.translate("Row Comment"), EventSheetL10n.translate("Why this condition/action exists…"), str(target.get("comment")),
 		_on_ace_comment_confirmed.bind(target))
 
 
@@ -7593,7 +7592,6 @@ func _ask_for_line(title: String, placeholder: String, text: String, on_ok: Call
 		"on_main": func() -> void: on_ok.call(edit.text.strip_edges())})
 	# The field is the whole question: no sentence above it.
 	dialog.find_child("Say", true, false).visible = false
-	dialog.register_text_enter(edit)
 
 
 func _on_ace_comment_confirmed(new_comment: String, target: Resource) -> void:
@@ -8877,7 +8875,7 @@ func open_duplicate_events_dialog(object_label: String) -> void:
 	if not _ensure_sheet_for_editing():
 		return
 	# The title names the object, so a sheet with four objects says whose events are about to be copied.
-	_ask_for_line("%s %s" % [EventSheetL10n.translate("Duplicate Events For"), object_label], "Enemy2, Enemy3", "",
+	_ask_for_line("%s %s" % [EventSheetL10n.translate("Duplicate Events For"), object_label], EventSheetL10n.translate("Enemy2, Enemy3"), "",
 		_on_duplicate_events_confirmed.bind(object_label))
 
 

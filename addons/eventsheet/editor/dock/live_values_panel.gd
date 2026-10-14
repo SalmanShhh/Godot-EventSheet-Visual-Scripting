@@ -143,9 +143,7 @@ func ensure_window() -> void:
 	watch_tree.item_activated.connect(_remove_selected_watch)
 	live_box.add_child(watch_box["root"])
 	live_box.add_child(footer(window, EventSheetL10n.translate("Double-click a value to edit it live.")))
-	var body: MarginContainer = EventSheetPopupUI.margined(live_box)
-	body.set_anchors_preset(Control.PRESET_FULL_RECT)
-	window.add_child(body)
+	window.add_child(EventSheetPopupUI.window_body(live_box))
 	_dock.add_child(window)
 
 
@@ -428,9 +426,9 @@ static func missing_name(expression: String, names: PackedStringArray) -> String
 func send_edit(variable_name: String, text: String) -> String:
 	var new_value: Variant = EventSheetLiveValuesDebugger.parse_edited_value(text)
 	if debugger == null or not debugger.send_set_value(variable_name, new_value):
-		_dock._set_status("Live edit needs a streaming debug session (run the game with Live Values on).", true)
+		_dock._set_status(EventSheetL10n.translate("Live edit needs a streaming debug session (run the game with Live Values on)."), true)
 		return ""
-	_dock._set_status("Live edit: %s = %s sent to the running game." % [variable_name, str(new_value)])
+	_dock._set_status(EventSheetL10n.translate("Live edit: %s = %s sent to the running game.") % [variable_name, str(new_value)])
 	return EventSheetL10n.translate("%s = %s   # into the running game; the sheet is not changed") \
 		% [variable_name, str(new_value)]
 

@@ -467,6 +467,7 @@ func on_provider_curate_pressed() -> void:
 		"title": EventSheetL10n.translate("Write these comment lines into %s?") % path.get_file(),
 		"say": EventSheetL10n.translate("Each line goes above the member it names. Nothing else in the file changes - no signature, no body."),
 		"code": curation_diff_text(_curate_pending),
+		"code_width": 640.0,
 		"note": EventSheetL10n.translate("A backup is taken first (Tools > Sheet Backups). Ctrl+Z does not undo a write to a script."),
 		"main": EventSheetL10n.translate("Write Annotations"),
 		"on_main": _apply_curation,

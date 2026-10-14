@@ -134,12 +134,8 @@ func ensure_window() -> void:
 	for index: int in range(TAB_TITLES.size()):
 		tabs.set_tab_title(index, TAB_TITLES[index])
 	tabs.tab_changed.connect(func(_index: int) -> void: refresh())
-	# The margin wrapper is what the window actually holds, so IT is the thing that has to fill the
-	# window - anchoring the column inside a container that does not fill leaves the tabs in the
-	# top-left corner of an empty window.
-	var margined: MarginContainer = EventSheetPopupUI.margined(column)
-	margined.set_anchors_preset(Control.PRESET_FULL_RECT)
-	window.add_child(margined)
+	# The painted body fills the window, so a light editor theme shows its own colour behind the cards.
+	window.add_child(EventSheetPopupUI.window_body(column))
 	_dock.add_child(window)
 	# A window parented to the dock inherits the plugin's translation domain through the tree, but
 	# claiming it here is what the dock's other detached windows do and what keeps a language switch

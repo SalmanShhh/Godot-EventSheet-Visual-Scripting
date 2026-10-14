@@ -154,4 +154,17 @@ static func _window_backdrop() -> bool:
 		["the box still sits inside it", body.is_ancestor_of(made["box"]), true],
 	]
 	host.free()
+	# The two debugger windows are built by hand rather than by panel_window, and paint the same body.
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.setup(EventSheetResource.new())
+	var debugger: EventSheetDebuggerWindow = EventSheetDebuggerWindow.new(dock)
+	debugger.ensure_window()
+	var live: EventSheetLiveValuesPanel = EventSheetLiveValuesPanel.new(dock)
+	live.ensure_window()
+	for pair: Array in [["the Debugger", debugger.window], ["Live Values", live.window]]:
+		var painted: Node = (pair[1] as Window).get_child(0)
+		var paint: StyleBox = (painted as Control).get_theme_stylebox("panel") if painted is PanelContainer else null
+		rows.append(["%s paints its body opaque" % pair[0],
+			(paint as StyleBoxFlat).bg_color.a if paint is StyleBoxFlat else 0.0, 1.0])
+	dock.free()
 	return SUPPORT.pins(NAME, rows)

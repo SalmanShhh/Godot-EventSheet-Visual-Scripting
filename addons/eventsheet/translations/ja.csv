@@ -8654,3 +8654,8 @@ Key,キー
 Change this entry?,この項目を変更しますか?
 Add an entry?,項目を追加しますか?
 "The value is a GDScript expression, written into the list exactly as typed.",値は GDScript の式で、入力したとおりにリストへ書き込まれます。
+Row Comment,行コメント
+Why this condition/action exists…,この条件/アクションがある理由…
+"Enemy2, Enemy3","Enemy2, Enemy3"
+Live edit needs a streaming debug session (run the game with Live Values on).,ライブ編集にはストリーミング中のデバッグセッションが必要です (ライブ値をオンにしてゲームを実行してください)。
+Live edit: %s = %s sent to the running game.,ライブ編集: %s = %s を実行中のゲームに送信しました。

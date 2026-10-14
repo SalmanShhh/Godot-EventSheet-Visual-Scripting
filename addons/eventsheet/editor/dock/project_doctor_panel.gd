@@ -30,6 +30,9 @@ var _this_finding: EventSheetPopupUI.StateNote = null
 var _fixed_item: TreeItem = null
 ## The page currently drawn - what "mark as read" writes down.
 var _page: Array[Dictionary] = []
+## True from a fix being applied until the re-run redraws the page, so the second click of a
+## double-click (which Godot also reports as an activation) does not apply the same fix again.
+var _fix_pending: bool = false
 
 
 func init(dock: Control) -> void:
@@ -137,6 +140,7 @@ func _close() -> void:
 
 
 func _run_project_doctor() -> void:
+	_fix_pending = false
 	_doctor_tree.clear()
 	_fixed_item = null
 	var root_item: TreeItem = _doctor_tree.create_item()
@@ -192,10 +196,14 @@ func _on_finding_selected() -> void:
 
 
 ## A click (or Enter) on a fix row applies it, then re-runs the audit so the finding's going away is
-## proven rather than assumed. False when the row is not a fix row.
+## proven rather than assumed. False when the row is not a fix row; a fix row clicked again before
+## the re-run has redrawn the page is answered as handled, so one gesture is one undo step.
 func _apply_fix_row(item: TreeItem) -> bool:
 	if item == null or not (item.get_metadata(2) is Dictionary):
 		return false
+	if _fix_pending:
+		return true
+	_fix_pending = true
 	var finding: Dictionary = item.get_parent().get_metadata(1) as Dictionary
 	var fix_id: String = str((item.get_metadata(2) as Dictionary).get("id", ""))
 	if fix_id.is_empty():

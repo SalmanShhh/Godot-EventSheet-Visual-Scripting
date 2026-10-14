@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Fixed: quick questions stop wiring Enter twice, and the debugger windows read in a light theme
+
+- Seven quick questions (Row Comment, Save View, Duplicate Events For, the two Add an Inspector button
+  questions, Move into a group, Group by prefix and Rename class) wired Enter in their field a second
+  time, so Godot printed "already connected" every time one opened. The quick question alone wires it.
+- The Debugger and Live Values windows paint the editor's base colour behind their cards, as every
+  other kit window does, instead of showing the engine's grey in a light editor theme.
+- A double-click on one of the Project Doctor's fix rows applies the fix once, not once per click.
+- Curate script shows its lines in a wider card that scrolls past twelve lines, instead of a narrow
+  card that grew the window off the screen.
+- The Row Comment question and the Live Values edit messages are translated.
+
 ### Fixed: kit windows paint their own background
 
 - The Outline, Sheet map, Bookmarks, History and the making windows built on the window kit painted
@@ -88,6 +100,7 @@
   and went stale after any edit.
 - The Doctor, Why and Loose Ends windows draw the editor theme's panel behind their content, so they
   read in a light editor theme instead of showing dark text on the engine's grey.
+
 ### Changed: the Debugger says where the run is on every tab, and Live Values reads at a glance
 
 - A band over the Debugger's five tabs names the sheet, whether a run is reporting, whether Live
@@ -105,7 +118,9 @@
   edited (a behavior's, a list's items) reads muted instead of looking editable.
 - Fixed: double-clicking a Profile or Breakpoints row to go to it no longer marks the game as paused
   there, and the paused row is forgotten when the run ends.
+
 ### Changed: the find windows say where each hit is and what their main button does
+
 - **Command Palette** (Ctrl+P): the four prefix modes are tabs - Commands, `#` Sheets, `@` Symbols,
   `?` Docs - plus an Error line tab that waits for a pasted `res://file.gd:42`. Clicking a tab types
   its prefix. The foot has Cancel and Run, and a strip names the keys and the modes. Every mode shares
@@ -119,6 +134,7 @@
 - **Find Repeated Rows**: why a run cannot become one function (it uses an event-local or a For Each
   item) is said beside the greyed-out Make a Function button when the run is picked, not in the
   status bar after pressing it. The strip names the events the run sits in.
+
 ### Changed: renaming a variable shows everything it touches first, and the refactor windows say more
 
 - A variable's Rename - from its menu or its name cell in the variables table - now opens the same

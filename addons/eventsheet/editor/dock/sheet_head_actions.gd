@@ -256,7 +256,6 @@ func open_class_rename() -> void:
 		"main": EventSheetL10n.translate("Rename"),
 		"on_main": func() -> void: apply_class_rename_to(edit.text),
 	})
-	_rename_dialog.register_text_enter(edit)
 	edit.text_changed.connect(func(typed: String) -> void: _sync_class_rename(current, typed))
 	_sync_class_rename(current, current)
 	if edit.is_inside_tree():

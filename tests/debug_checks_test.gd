@@ -50,6 +50,15 @@ static func _test_doctor_fix_rows() -> bool:
 		["the mark says which line is new", [first.get_metadata(3), branch.get_child(1).get_metadata(3)], [true, false]],
 		["the Fix selected button is gone", panel.get("_fix_button"), null],
 	])
+	# A double-click on a fix row is a click and then an activation: the fix runs once, not twice.
+	var applied: Array = []
+	var fixable: TreeItem = panel._doctor_tree.create_item(branch)
+	fixable.set_metadata(1, {"fix": func(_finding: Dictionary) -> void: applied.append("fixed")})
+	var fix_row: TreeItem = panel._doctor_tree.create_item(fixable)
+	fix_row.set_metadata(2, {"id": ""})
+	var answered: Array = [panel._apply_fix_row(fix_row), panel._apply_fix_row(fix_row)]
+	ok = SUPPORT.check(NAME, "one double-click on a fix row is one fix", [answered, applied],
+		[[true, true], ["fixed"]]) and ok
 	dock.free()
 	return ok
 

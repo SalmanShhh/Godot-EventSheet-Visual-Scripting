@@ -8654,3 +8654,8 @@ Key,Clé
 Change this entry?,Modifier cette entrée ?
 Add an entry?,Ajouter une entrée ?
 "The value is a GDScript expression, written into the list exactly as typed.","La valeur est une expression GDScript, écrite dans la liste exactement comme elle est tapée."
+Row Comment,Commentaire de ligne
+Why this condition/action exists…,Pourquoi cette condition/action existe…
+"Enemy2, Enemy3","Enemy2, Enemy3"
+Live edit needs a streaming debug session (run the game with Live Values on).,La modification en direct nécessite une session de débogage en streaming (lancez le jeu avec les Valeurs en direct activées).
+Live edit: %s = %s sent to the running game.,Modification en direct : %s = %s envoyé au jeu en cours.

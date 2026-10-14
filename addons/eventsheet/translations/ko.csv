@@ -8654,3 +8654,8 @@ Key,키
 Change this entry?,이 항목을 바꿀까요?
 Add an entry?,항목을 추가할까요?
 "The value is a GDScript expression, written into the list exactly as typed.","값은 GDScript 식이며, 입력한 그대로 목록에 쓰입니다."
+Row Comment,행 주석
+Why this condition/action exists…,이 조건/액션이 있는 이유…
+"Enemy2, Enemy3","Enemy2, Enemy3"
+Live edit needs a streaming debug session (run the game with Live Values on).,실시간 편집에는 스트리밍 중인 디버그 세션이 필요합니다 (실시간 값을 켜고 게임을 실행하세요).
+Live edit: %s = %s sent to the running game.,실시간 편집: %s = %s 값을 실행 중인 게임에 보냈습니다.

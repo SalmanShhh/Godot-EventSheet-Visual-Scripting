@@ -19,6 +19,10 @@ const DANGER_ACTION: StringName = &"small_prompt_danger"
 ## The width the sentence and the note wrap at before the display scale, so a content-sized dialog
 ## never balloons. Read through wrap_width(), which scales it the way the rest of the dialog is.
 const WRAP_WIDTH := 400.0
+## The lines a code card shows before it scrolls, and the height it scrolls in before the display
+## scale, so a preview of many lines never pushes the buttons off the screen.
+const CODE_LINES := 12
+const CODE_HEIGHT := 260.0
 ## The glyph -> its badge colours: background and foreground on a dark editor theme, then the same
 ## pair on a light one. A question, a notice, a finished thing.
 const GLYPH_TONES := {
@@ -38,6 +42,7 @@ const DANGER_FALLBACK := Color("#F07A7A")
 ##   list    [[what, where], ...] (optional)
 ##   body    a Control under the list, for the one field a question may need (optional)
 ##   code    the code it adds or shows, under the field (optional)
+##   code_width  the code card's width before the display scale, for a preview of long lines (optional)
 ##   note    the muted last line, saying whether Ctrl+Z undoes it (optional)
 ##   glyph   "?" (default), "!", "i", "{ }" or "✓"
 ##   main    the safe choice's label; runs `on_main`
@@ -80,6 +85,7 @@ static func open(host: Node, ask: Dictionary) -> ConfirmationDialog:
 				dialog.register_text_enter(field as LineEdit)
 	var code: Control = Control.new()
 	code.name = "Code"
+	dialog.set_meta(&"code_width", float(ask.get("code_width", WRAP_WIDTH)))
 	column.add_child(code)
 	set_code(dialog, str(ask.get("code", "")))
 	if not str(ask.get("note", "")).is_empty():
@@ -122,7 +128,15 @@ static func set_list(dialog: ConfirmationDialog, rows: Array) -> void:
 static func set_code(dialog: ConfirmationDialog, text: String) -> void:
 	var old: Control = dialog.find_child("Code", true, false) as Control
 	# The card's copy button copies what it was built with, so a new text is a new card.
-	var card: Control = EventSheetPopupUI.code_card(text, wrap_width() - EventSheetPalette.scaled_f(40.0))
+	var width: float = EventSheetPalette.scaled_f(float(dialog.get_meta(&"code_width", WRAP_WIDTH)) - 40.0)
+	var card: Control = EventSheetPopupUI.code_card(text, width)
+	if text.count("\n") >= CODE_LINES:
+		var scroll: ScrollContainer = ScrollContainer.new()
+		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		scroll.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(CODE_HEIGHT))
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		scroll.add_child(card)
+		card = scroll
 	card.visible = not text.is_empty()
 	old.add_sibling(card)
 	old.get_parent().remove_child(old)

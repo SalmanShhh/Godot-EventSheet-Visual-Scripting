@@ -49,6 +49,15 @@ static func run() -> bool:
 		(listed.find_child("Code", true, false) as Control).visible, listed.get_cancel_button().visible,
 		listed.find_child("Danger", true, false) == null],
 		[true, 2, "2 places", true, false, true]) and ok
+	# A long preview asks for a wider card, and scrolls past twelve lines instead of growing.
+	var long_code: String = "\n".join(range(20).map(func(index: int) -> String: return "+ ## @ace_action line %d" % index))
+	var long_preview: ConfirmationDialog = load(SMALL_PROMPT_PATH).open(host, {"title": "Write these?",
+		"code": long_code, "code_width": 640.0})
+	var long_card: Control = long_preview.find_child("Code", true, false) as Control
+	var long_label: Label = long_card.find_children("*", "Label", true, false)[0] as Label
+	ok = _check("a long preview scrolls in a wider card",
+		[long_card is ScrollContainer, long_label.custom_minimum_size.x, long_label.text],
+		[true, EventSheetPalette.scaled_f(600.0), long_code]) and ok
 	load(SMALL_PROMPT_PATH).set_list(listed, [])
 	ok = _check("an emptied list hides", places.visible, false) and ok
 

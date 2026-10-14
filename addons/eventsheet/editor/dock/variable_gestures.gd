@@ -334,7 +334,6 @@ func prompt_move_into_group(row_data: EventRowData) -> void:
 		"main": EventSheetL10n.translate("Move"),
 		"on_main": func() -> void: move_into(var_name, edit.text),
 	})
-	prompt.register_text_enter(edit)
 	edit.text_changed.connect(func(typed: String) -> void:
 		small_prompt.set_code(prompt, ExportSections.code_line(ExportSections.GROUP, typed.strip_edges())))
 
@@ -390,7 +389,6 @@ func prompt_group_by_prefix() -> void:
 		"on_main": func() -> void: group_names(names, title_edit.text, prefix_edit.text),
 	})
 	for edit: LineEdit in [title_edit, prefix_edit]:
-		prompt.register_text_enter(edit)
 		edit.text_changed.connect(func(_typed: String) -> void: small_prompt.set_code(prompt, code_for.call()))
 
 
@@ -566,7 +564,6 @@ func prompt_inspector_button() -> void:
 			if not icon.is_empty() and Engine.is_editor_hint() and EventSheetPopupUI._editor_icon(icon) == null else "",
 			EventSheetPopupUI.TONE_WARNING)
 	for edit: LineEdit in [label_edit, icon_edit, group_edit]:
-		prompt.register_text_enter(edit)
 		edit.text_changed.connect(func(_typed: String) -> void: refresh.call())
 	runs.item_selected.connect(func(_index: int) -> void: refresh.call())
 	if label_edit.is_inside_tree():

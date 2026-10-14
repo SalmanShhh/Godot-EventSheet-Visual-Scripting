@@ -8654,3 +8654,8 @@ Key,Ключ
 Change this entry?,Изменить эту запись?
 Add an entry?,Добавить запись?
 "The value is a GDScript expression, written into the list exactly as typed.","Значение - выражение GDScript, оно записывается в список ровно так, как набрано."
+Row Comment,Комментарий к строке
+Why this condition/action exists…,Зачем нужно это условие/действие…
+"Enemy2, Enemy3","Enemy2, Enemy3"
+Live edit needs a streaming debug session (run the game with Live Values on).,Для правки на лету нужен сеанс отладки с потоком значений (запустите игру с включёнными Живыми значениями).
+Live edit: %s = %s sent to the running game.,Правка на лету: %s = %s отправлено в запущенную игру.

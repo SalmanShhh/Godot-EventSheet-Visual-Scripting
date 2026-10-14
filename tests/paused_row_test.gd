@@ -64,6 +64,23 @@ static func run() -> bool:
 	ok = _check("the paused event's row is selected",
 		dock._active_view().get_selected_context().get("source_resource", null), event) and ok
 	dock.reveal_paused_row("")  # empty uid: a no-op, never a crash
+	ok = _check("the dock remembers where the game is paused", dock._paused_row_uid, event.event_uid) and ok
+
+	# ── Going to an event from the Debugger's tables is not a pause ──
+	var debugger: EventSheetDebuggerWindow = EventSheetDebuggerWindow.new(dock)
+	var table: Tree = Tree.new()
+	var listed: TreeItem = table.create_item(table.create_item())
+	listed.set_metadata(0, conditional.event_uid)
+	listed.select(0)
+	debugger._jump_to_selected(table)
+	ok = _check("a Profile double-click goes to the event",
+		dock._active_view().get_selected_context().get("source_resource", null), conditional) and ok
+	ok = _check("and leaves the paused row where the game paused", dock._paused_row_uid, event.event_uid) and ok
+	table.free()
+
+	# ── A game that has stopped is not paused anywhere ──
+	dock._on_debug_session_ended()
+	ok = _check("ending the session forgets the paused row", dock._paused_row_uid, "") and ok
 	dock.free()
 
 	return ok

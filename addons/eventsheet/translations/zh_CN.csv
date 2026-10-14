@@ -8654,3 +8654,8 @@ Key,键
 Change this entry?,修改此条目？
 Add an entry?,添加条目？
 "The value is a GDScript expression, written into the list exactly as typed.",值是一个 GDScript 表达式，会按输入原样写入列表。
+Row Comment,行注释
+Why this condition/action exists…,为什么需要这个条件/动作…
+"Enemy2, Enemy3","Enemy2, Enemy3"
+Live edit needs a streaming debug session (run the game with Live Values on).,实时编辑需要一个正在推送数据的调试会话 (请在开启实时数值的情况下运行游戏)。
+Live edit: %s = %s sent to the running game.,实时编辑: 已将 %s = %s 发送到正在运行的游戏。
