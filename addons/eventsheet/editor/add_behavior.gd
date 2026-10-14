@@ -174,8 +174,13 @@ static func host_requirement(pack: Dictionary) -> String:
 	var script_path: String = str(pack.get("path", ""))
 	if script_path.is_empty() or not FileAccess.file_exists(script_path):
 		return ""
+	return requirement_in(FileAccess.get_file_as_string(script_path))
+
+
+## The class a pack's source says its host must be (`@ace_requires`), or "".
+static func requirement_in(source: String) -> String:
 	var pattern: RegEx = RegEx.create_from_string("(?m)^\\s*#+\\s*@ace_requires\\(\\s*\"?([A-Za-z_][A-Za-z0-9_]*)\"?")
-	var found: RegExMatch = pattern.search(FileAccess.get_file_as_string(script_path))
+	var found: RegExMatch = pattern.search(source)
 	return "" if found == null else found.get_string(1)
 
 

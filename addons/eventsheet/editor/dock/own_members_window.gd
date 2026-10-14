@@ -75,23 +75,16 @@ func _sheet() -> EventSheetResource:
 static func identity(sheet: EventSheetResource) -> Dictionary:
 	if sheet == null:
 		return {"name": "", "global": false}
-	var file_name: String = sheet.external_source_path.get_file().get_basename().to_pascal_case()
+	var file_name: String = sheet.external_source_path.get_file()
 	if sheet.autoload_mode or not global_name_for(sheet.external_source_path).is_empty():
 		var autoload: String = sheet.autoload_name if not sheet.autoload_name.is_empty() else global_name_for(sheet.external_source_path)
 		return {"name": autoload if not autoload.is_empty() else file_name, "global": true}
 	return {"name": sheet.custom_class_name if not sheet.custom_class_name.is_empty() else file_name, "global": false}
 
 
-## The autoload name Godot loads this script under (directly or as the scene beside it), or "".
+## The autoload name Godot loads this script under (directly or as a scene's root), or "".
 static func global_name_for(script_path: String) -> String:
-	if script_path.is_empty():
-		return ""
-	for property_info: Dictionary in ProjectSettings.get_property_list():
-		var setting: String = str(property_info.get("name", ""))
-		var target: String = str(ProjectSettings.get_setting(setting, "")).trim_prefix("*") if setting.begins_with("autoload/") else ""
-		if target == script_path or target == script_path.get_basename() + ".tscn":
-			return setting.trim_prefix("autoload/")
-	return ""
+	return EventSheetACEGenerator.autoload_name_for_path(script_path)
 
 
 ## The entries of one list, as {"label", "kind", "returns", "reads", "resource"} - or, for the first
@@ -267,6 +260,8 @@ func _on_turned(on: bool) -> void:
 	var scene_path: String = script_path.get_basename() + ".tscn"
 	var global_name: String = global_name_for(script_path)
 	if global_name.is_empty():
-		global_name = str(identity(sheet).get("name"))
+		# The sheet's own autoload name, else the one Godot's Autoload tab suggests for the file.
+		global_name = sheet.autoload_name if not sheet.autoload_name.is_empty() \
+			else script_path.get_file().get_basename().to_pascal_case()
 	load(PANEL_PATH).set_global_on(global_name, scene_path if FileAccess.file_exists(scene_path) else script_path, on)
 	refresh()

@@ -63,6 +63,29 @@ static func run() -> bool:
 	ok = _check("which the window reads back", MEMBERS.global_name_for("res://zz_panel_global.gd"), "ZzPanelGlobal") and ok
 	EventSheetNewAddonPanel.set_global_on("ZzPanelGlobal", "res://zz_panel_global.gd", false)
 	ok = _check("off removes it", ProjectSettings.has_setting("autoload/ZzPanelGlobal"), false) and ok
+	# An existing project's autoload scene lives anywhere, under any name: its root node's script is
+	# the global.
+	var scene_path: String = "user://zz_panel_world_scene.tscn"
+	var scene_file: FileAccess = FileAccess.open(scene_path, FileAccess.WRITE)
+	scene_file.store_string("[gd_scene load_steps=2 format=3]\n\n"
+		+ "[ext_resource type=\"Texture2D\" path=\"res://icon.svg\" id=\"2_tex\"]\n"
+		+ "[ext_resource type=\"Script\" uid=\"uid://zzpanel\" path=\"res://zz_panel_state.gd\" id=\"1_state\"]\n\n"
+		+ "[node name=\"World\" type=\"Node\"]\nscript = ExtResource(\"1_state\")\n\n"
+		+ "[node name=\"Child\" type=\"Node\" parent=\".\"]\nscript = ExtResource(\"2_tex\")\n")
+	scene_file.close()
+	ProjectSettings.set_setting("autoload/ZzPanelWorld", "*" + scene_path)
+	ok = SUPPORT.pins("new_addon_panel_test", [
+		["a scene autoload names its root node's script", EventSheetACEGenerator.scene_root_script(scene_path), "res://zz_panel_state.gd"],
+		["so that script reads as the global", MEMBERS.global_name_for("res://zz_panel_state.gd"), "ZzPanelWorld"],
+		["and the picker's generator agrees", EventSheetACEGenerator.autoload_name_for_path("res://zz_panel_state.gd"), "ZzPanelWorld"],
+		["a child node's script is not the global", MEMBERS.global_name_for("res://icon.svg"), ""],
+	]) and ok
+	ProjectSettings.set_setting("autoload/ZzPanelWorld", null)
+	DirAccess.remove_absolute(scene_path)
+	var unnamed: EventSheetResource = EventSheetResource.new()
+	unnamed.external_source_path = "res://zz_panel/game_state.gd"
+	ok = _check("a file with no class or autoload name is titled by its file name as written",
+		MEMBERS.identity(unnamed)["name"], "game_state.gd") and ok
 
 	# The window's lists, read from a sheet.
 	var sheet: EventSheetResource = EventSheetBehaviourAddonScaffold.behaviour_sheet("Patrol", "CharacterBody2D", "", "")
@@ -121,6 +144,30 @@ static func run() -> bool:
 	ok = _check("a global is never added to an object", EventSheetAddBehaviorDialog.refusal(bullet, body),
 		"Bullet is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object.") and ok
 	ProjectSettings.set_setting("autoload/ZzBullet", null)
+	# A list of every pack walks the Autoload list once and reads each pack's file once, so the
+	# reason comes from what the caller hands in, not from a fresh read per pack.
+	ok = SUPPORT.pins("new_addon_panel_test", [
+		["the Autoload list handed in decides a global",
+			EventSheetAddBehaviorDialog.refusal(bullet, body, {str(bullet.get("path")).get_basename(): true}, ""),
+			"Bullet is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object."],
+		["the source handed in decides the host",
+			EventSheetAddBehaviorDialog.refusal(bullet, plain, {}, "extends Node\n## @ace_requires(\"Camera3D\")\n"),
+			"Made for a Camera3D - Enemy is a Node."],
+	]) and ok
+	var dialog: EventSheetAddBehaviorDialog = EventSheetAddBehaviorDialog.new()
+	dialog._host = plain
+	var only_bullet: Array[Dictionary] = [bullet]
+	dialog._packs = only_bullet
+	dialog._rebuild_list()
+	dialog._pack_sources[str(bullet.get("path"))] = "extends Node\n## @ace_requires(\"Camera3D\")\n"
+	dialog._rebuild_list()
+	var greyed: Array = []
+	for card: Node in dialog._list.get_children():
+		if card is Button and not card.is_queued_for_deletion():
+			greyed.append((card as Button).tooltip_text)
+	ok = _check("a rebuild reads the pack from the opening's copy, not the file again", greyed,
+		["Made for a Camera3D - Enemy is a Node."]) and ok
+	dialog.free()
 	plain.free()
 	body.free()
 	host.free()

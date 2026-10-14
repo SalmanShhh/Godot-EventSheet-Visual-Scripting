@@ -43,6 +43,9 @@ var _autoload_singleton: String = ""
 ## and defeats {target} parameterization - so node templates use the class_name, else the
 ## PascalCase filename.
 var _provider_node_name: String = ""
+## The root-node script of each autoload scene read so far, keyed by "<path>@<modified time>" so
+## an edited scene is read again.
+static var _scene_root_scripts: Dictionary = {}
 
 
 ## Every verb one provider script publishes - the one door the picker, the Doctor, the successor map
@@ -419,14 +422,52 @@ func _property_access(provider_id: String, property_name: String) -> String:
 static func _autoload_name_for(script: Script) -> String:
 	if script == null or script.resource_path.is_empty():
 		return ""
+	return autoload_name_for_path(script.resource_path)
+
+
+## The autoload name Godot loads `script_path` under, or "": an Autoload row naming the script
+## itself, or a scene whose root node carries it. The scene beside the script (the one a global made
+## as a scene writes) is taken without reading it; a scene elsewhere or under another name - common
+## in existing projects - is read for its root node's script.
+static func autoload_name_for_path(script_path: String) -> String:
+	if script_path.is_empty():
+		return ""
 	for property_info: Dictionary in ProjectSettings.get_property_list():
 		var setting_name: String = str(property_info.get("name", ""))
 		if not setting_name.begins_with("autoload/"):
 			continue
-		# A global made as a scene autoloads the scene beside its script, which is the same singleton.
 		var target: String = str(ProjectSettings.get_setting(setting_name, "")).trim_prefix("*")
-		if target == script.resource_path or target == script.resource_path.get_basename() + ".tscn":
+		if target == script_path or target == script_path.get_basename() + ".tscn" \
+				or (target.get_extension() == "tscn" and scene_root_script(target) == script_path):
 			return setting_name.trim_prefix("autoload/")
+	return ""
+
+
+## The script on a .tscn scene's root node, read off the scene's text without loading it, or "".
+## Remembered per scene until the file changes: a scan asks once for every provider script.
+static func scene_root_script(scene_path: String) -> String:
+	if not FileAccess.file_exists(scene_path):
+		return ""
+	var stamp: String = "%s@%d" % [scene_path, FileAccess.get_modified_time(scene_path)]
+	if not _scene_root_scripts.has(stamp):
+		_scene_root_scripts[stamp] = _read_scene_root_script(FileAccess.get_file_as_string(scene_path))
+	return _scene_root_scripts[stamp]
+
+
+static func _read_scene_root_script(text: String) -> String:
+	var root_at: int = text.find("[node ")
+	if root_at < 0:
+		return ""
+	var block_end: int = text.find("\n[", root_at + 1)
+	var root_block: String = text.substr(root_at, -1 if block_end < 0 else block_end - root_at)
+	var script_ref: RegExMatch = RegEx.create_from_string(
+		"(?m)^script\\s*=\\s*ExtResource\\(\\s*\"?([^\")\\s]+)\"?\\s*\\)").search(root_block)
+	if script_ref == null:
+		return ""
+	for line: String in text.substr(0, root_at).split("\n"):
+		if line.begins_with("[ext_resource") and line.contains("id=\"%s\"" % script_ref.get_string(1)):
+			var path: RegExMatch = RegEx.create_from_string("path=\"([^\"]+)\"").search(line)
+			return "" if path == null else path.get_string(1)
 	return ""
 
 

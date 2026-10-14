@@ -28,6 +28,9 @@ var _where: OptionButton = null
 var _strip: EventSheetPopupUI.HelpStrip = null
 var _fields: Dictionary = {}
 var _on_add: Callable = Callable()
+## Each listed pack's script text, read once per opening: the list is rebuilt on every keystroke of
+## the search, and a big project has well over a hundred packs.
+var _pack_sources: Dictionary = {}
 
 
 func _init() -> void:
@@ -51,6 +54,7 @@ func open_for(object_label: String, host: Node = null) -> void:
 	title = EventSheetL10n.translate("Add behavior to {object}").replace("{object}", object_label) \
 		if not object_label.is_empty() else EventSheetL10n.translate("Add behavior")
 	_packs = EventSheetPackCatalog.packs()
+	_pack_sources.clear()
 	_category = ""
 	_selected_dir = ""
 	if _search != null:
@@ -151,19 +155,24 @@ func _rebuild_list() -> void:
 		child.queue_free()
 	var shown: Array[Dictionary] = EventSheetPackCatalog.filtered(
 		_packs, _category, _search.text if _search != null else "")
-	# Your own behaviours lead, under their own heading, ahead of the packs that ship.
+	# Your own behaviours lead, under their own heading, ahead of the packs that ship. What each pack
+	# is refused for is worked out once per rebuild - one walk of the Autoload list for all of them.
+	var autoloads: Dictionary = autoload_bases()
+	var refusals: Dictionary = {}
 	var yours: Array[Dictionary] = []
 	var shipped: Array[Dictionary] = []
 	for pack: Dictionary in shown:
-		(yours if EventSheetBehaviourAddonScaffold.is_yours(FileAccess.get_file_as_string(str(pack.get("path", "")))) else shipped).append(pack)
+		var source: String = _source_of(pack)
+		refusals[str(pack.get("dir", ""))] = refusal(pack, _host, autoloads, source)
+		(yours if EventSheetBehaviourAddonScaffold.is_yours(source) else shipped).append(pack)
 	if not yours.is_empty():
 		_list.add_child(EventSheetPopupUI.small_caps_label(EventSheetL10n.translate("Your behaviours")))
 		for pack: Dictionary in yours:
-			_list.add_child(_build_card(pack))
+			_list.add_child(_build_card(pack, refusals[str(pack.get("dir", ""))]))
 		if not shipped.is_empty():
 			_list.add_child(EventSheetPopupUI.small_caps_label(EventSheetL10n.translate("Packs")))
 	for pack: Dictionary in shipped:
-		_list.add_child(_build_card(pack))
+		_list.add_child(_build_card(pack, refusals[str(pack.get("dir", ""))]))
 	if shown.is_empty():
 		_list.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("No pack here matches that."), 260.0))
 	# The card on the right always belongs to a pack the list shows: a search that hides the chosen one
@@ -172,13 +181,20 @@ func _rebuild_list() -> void:
 	var first_addable: Dictionary = {}
 	for pack: Dictionary in yours + shipped:
 		still_shown = still_shown or str(pack.get("dir", "")) == _selected_dir
-		if first_addable.is_empty() and refusal(pack, _host).is_empty():
+		if first_addable.is_empty() and str(refusals[str(pack.get("dir", ""))]).is_empty():
 			first_addable = pack
 	if not first_addable.is_empty() and not still_shown:
 		_select_pack(first_addable)
 
 
-func _build_card(pack: Dictionary) -> Control:
+func _source_of(pack: Dictionary) -> String:
+	var path: String = str(pack.get("path", ""))
+	if not _pack_sources.has(path):
+		_pack_sources[path] = FileAccess.get_file_as_string(path) if not path.is_empty() else ""
+	return _pack_sources[path]
+
+
+func _build_card(pack: Dictionary, why_not: String) -> Control:
 	var button: Button = Button.new()
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.toggle_mode = true
@@ -190,7 +206,6 @@ func _build_card(pack: Dictionary) -> Control:
 	button.text = str(pack.get("name", "")) if pitch.is_empty() else "%s  -  %s" % [str(pack.get("name", "")), pitch]
 	button.tooltip_text = pitch
 	button.pressed.connect(func() -> void: _select_pack(pack))
-	var why_not: String = refusal(pack, _host)
 	if not why_not.is_empty():
 		button.disabled = true
 		button.tooltip_text = why_not
@@ -198,21 +213,34 @@ func _build_card(pack: Dictionary) -> Control:
 
 
 ## Why `pack` cannot be added to `host`, or "" when it can: it is a global (turned on in Godot's
-## Autoload list, never added to an object), or it was made for another kind of object.
-static func refusal(pack: Dictionary, host: Node) -> String:
+## Autoload list, never added to an object), or it was made for another kind of object. A caller
+## asking for many packs passes `autoloads` (from `autoload_bases`) and the pack's `source` it already
+## read, so neither the project settings nor the file are read again per pack.
+static func refusal(pack: Dictionary, host: Node, autoloads: Variant = null, source: Variant = null) -> String:
 	var path: String = str(pack.get("path", ""))
-	for property_info: Dictionary in ProjectSettings.get_property_list():
-		var setting: String = str(property_info.get("name", ""))
-		if setting.begins_with("autoload/") and str(ProjectSettings.get_setting(setting, "")).trim_prefix("*").get_basename() == path.get_basename():
-			return EventSheetL10n.translate("%s is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object.") % str(pack.get("name", ""))
+	var globals: Dictionary = autoloads if autoloads is Dictionary else autoload_bases()
+	if globals.has(path.get_basename()):
+		return EventSheetL10n.translate("%s is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object.") % str(pack.get("name", ""))
 	if host == null:
 		return ""
-	var needs: String = EventSheetBehaviourAddonScaffold.host_class_of(FileAccess.get_file_as_string(path))
+	var text: String = str(source) if source is String else FileAccess.get_file_as_string(path)
+	var needs: String = EventSheetBehaviourAddonScaffold.host_class_of(text)
 	if needs.is_empty():
-		needs = EventSheetAddBehavior.host_requirement(pack)
+		needs = EventSheetAddBehavior.requirement_in(text)
 	if needs.is_empty() or not ClassDB.class_exists(needs) or host.is_class(needs):
 		return ""
 	return EventSheetL10n.translate("Made for a %s - %s is a %s.") % [needs, host.name, host.get_class()]
+
+
+## Every script Godot's Autoload list turns on, by path without its extension - one walk of the
+## project settings.
+static func autoload_bases() -> Dictionary:
+	var bases: Dictionary = {}
+	for property_info: Dictionary in ProjectSettings.get_property_list():
+		var setting: String = str(property_info.get("name", ""))
+		if setting.begins_with("autoload/"):
+			bases[str(ProjectSettings.get_setting(setting, "")).trim_prefix("*").get_basename()] = true
+	return bases
 
 
 ## One knob as the Inspector would show it: a tick for a bool, a number field (its label scrubs it)
