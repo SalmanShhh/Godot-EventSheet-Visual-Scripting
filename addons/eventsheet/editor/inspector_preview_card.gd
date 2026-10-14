@@ -256,11 +256,17 @@ func _build_widget(type_name: String, default_text: String, attributes: Dictiona
 		button.text = str((attributes.get("tool_button") as Dictionary).get("label", ""))
 		return _ignored(button)
 	var drawer_kind: String = str(attributes.get("drawer", ""))
+	# Every widget below that has a value shows the variable's OWN value inside its own bounds, so a
+	# health of 100 out of 0..200 reads half full, the way the Inspector will draw it.
+	var bounds: Dictionary = attributes.get("range") if attributes.get("range") is Dictionary else {}
+	var low: float = str(bounds.get("min", "0")).to_float()
+	var high: float = str(bounds.get("max", "100")).to_float()
+	var value: Variant = str_to_var(default_text) if not default_text.strip_edges().is_empty() else null
 	if drawer_kind == "progress_bar":
 		var progress := ProgressBar.new()
-		progress.min_value = 0.0
-		progress.max_value = 100.0
-		progress.value = 65.0
+		progress.min_value = low
+		progress.max_value = high
+		progress.value = default_text.to_float()
 		progress.custom_minimum_size = Vector2(120.0, 0.0)
 		return _ignored(progress)
 	if drawer_kind == "swatch_row":
@@ -274,9 +280,9 @@ func _build_widget(type_name: String, default_text: String, attributes: Dictiona
 	if drawer_kind == "vector_dial":
 		return _ignored(_DialPreview.new())
 	if drawer_kind == "min_max":
-		var range_slider := EventSheetDrawerWidgets.DrawerMinMaxSlider.new(0.0, 100.0)
+		var range_slider := EventSheetDrawerWidgets.DrawerMinMaxSlider.new(low, high)
 		range_slider.editable = false
-		range_slider.set_value(Vector2(25.0, 75.0))
+		range_slider.set_value(value if value is Vector2 else Vector2(low, high))
 		range_slider.custom_minimum_size = Vector2(120.0, 18.0)
 		return _ignored(range_slider)
 	if drawer_kind == "toggle_row":
@@ -287,8 +293,11 @@ func _build_widget(type_name: String, default_text: String, attributes: Dictiona
 		var toggle_row := EventSheetDrawerWidgets.DrawerToggleRow.new(toggle_texts,
 			str(attributes.get("toggle_icons", "")), bool(attributes.get("toggle_segmented", false)))
 		toggle_row.editable = false
-		if not toggle_texts.is_empty():
-			toggle_row.set_value(toggle_texts[0])
+		# A String keeps the chosen word; an int keeps its place in the list.
+		var chosen: String = str(value) if value is String else ""
+		if value is int and int(value) >= 0 and int(value) < toggle_texts.size():
+			chosen = toggle_texts[int(value)]
+		toggle_row.set_value(chosen)
 		return _ignored(toggle_row)
 	if drawer_kind == "corners":
 		var corners_field := EventSheetDrawerWidgets.DrawerCorners.new()
@@ -325,15 +334,51 @@ func _build_widget(type_name: String, default_text: String, attributes: Dictiona
 		# Remaining drawer kinds are curve-shaped (curve preview); the gallery's
 		# ease miniature is the honest picture for them.
 		return _ignored(EventSheetInspectorLooks.build_preview("easing"))
+	# Flags and number choices draw the variable's own names, ticked or chosen by its own value, with
+	# the values Godot gives them: a flag is 1 << its place, a choice one more than the one before,
+	# unless the entry gives its own value.
+	var labels: Variant = attributes.get("flags", attributes.get("enum_values", [])) if type_name == "int" else []
+	if labels is Array and not labels.is_empty():
+		var is_flags: bool = attributes.get("flags") is Array
+		var labelled := HBoxContainer.new()
+		var dropdown := OptionButton.new()
+		dropdown.disabled = true
+		var next_value: int = 0
+		for index: int in labels.size():
+			var entry: Dictionary = labels[index] if labels[index] is Dictionary else {"label": str(labels[index])}
+			var own_value: String = str(entry.get("value", "")).strip_edges()
+			next_value = own_value.to_int() if not own_value.is_empty() else (1 << index if is_flags else next_value)
+			var label: String = str(entry.get("label", ""))
+			if is_flags:
+				var flag_check := CheckBox.new()
+				flag_check.text = label
+				flag_check.button_pressed = (default_text.to_int() & next_value) != 0
+				flag_check.disabled = true
+				labelled.add_child(flag_check)
+			else:
+				dropdown.add_item(label)
+				if next_value == default_text.to_int():
+					dropdown.select(dropdown.item_count - 1)
+				next_value += 1
+		if not is_flags:
+			labelled.add_child(dropdown)
+		return _ignored(labelled)
 	var look_id: String = _look_id_from_attributes(attributes)
 	var look_preview: Control = EventSheetInspectorLooks.build_preview(look_id) if not look_id.is_empty() else null
 	if look_preview != null:
+		# A text look (a path, a password, an expression) holds the variable's own text, not the sample.
+		var text_field: LineEdit = look_preview as LineEdit
+		if text_field == null and look_preview.get_child_count() > 0:
+			text_field = look_preview.get_child(0) as LineEdit
+		if text_field != null:
+			text_field.text = str(value) if value != null else ""
 		return _ignored(look_preview)
-	if attributes.get("range") is Dictionary and (type_name == "int" or type_name == "float"):
+	if not bounds.is_empty() and (type_name == "int" or type_name == "float"):
 		var slider := HSlider.new()
-		slider.min_value = 0.0
-		slider.max_value = 1.0
-		slider.value = 0.62
+		slider.min_value = low
+		slider.max_value = high
+		slider.step = 0.0
+		slider.value = default_text.to_float()
 		slider.editable = false
 		slider.custom_minimum_size = Vector2(120.0, 0.0)
 		return _ignored(slider)
@@ -345,7 +390,7 @@ func _build_widget(type_name: String, default_text: String, attributes: Dictiona
 		return _ignored(check)
 	if type_name == "Color":
 		var color_swatch := ColorRect.new()
-		color_swatch.color = Color(0.35, 0.55, 0.9)
+		color_swatch.color = value if value is Color else Color(0.35, 0.55, 0.9)
 		color_swatch.custom_minimum_size = Vector2(60.0, 18.0)
 		return _ignored(color_swatch)
 	var field := LineEdit.new()

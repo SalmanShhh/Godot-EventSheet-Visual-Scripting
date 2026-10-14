@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Fixed: the Inspector preview shows the variable's own value
+
+- The Inspector preview a variable's hover and the Inspector Designer draw showed a fixed sample in
+  place of the value: every slider at the same spot on a 0 to 1 track, every progress bar at 65 of
+  100, every set of flags as Fire, Ice and Poison. A slider, progress bar or min-max range now sits at
+  the variable's value inside its own bounds (a `max_health` of 100 out of 0 to 200 reads half way),
+  flags and number choices show the variable's own names ticked or chosen by its value, a colour
+  shows its colour, a toggle row its chosen word, and a path, password or expression its own text.
+
 ### Changed: the making windows share one form shell and one described dropdown
 
 - New data table, Insert new object, New behaviour, New global, Sheet Type and the class's

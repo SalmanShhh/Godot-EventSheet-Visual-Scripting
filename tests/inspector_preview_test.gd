@@ -57,8 +57,34 @@ static func run() -> bool:
 	ok = _check("exported variable shows the card", card.visible, true) and ok
 	card.update_preview("max_health", "int", "100", {}, false, false)
 	ok = _check("unexported variable hides the card", card.visible, false) and ok
+
+	# The mock draws the variable's OWN value inside its own bounds, never a fixed sample.
+	var range_spec: Dictionary = {"range": {"min": "0", "max": "200"}}
+	var slider: Range = _widget(card, "int", "100", range_spec)
+	ok = _check("a range slider sits at the value, within the bounds",
+		[slider.min_value, slider.max_value, slider.value], [0.0, 200.0, 100.0]) and ok
+	var bar: Range = _widget(card, "int", "30", {"range": {"min": "0", "max": "50"}, "drawer": "progress_bar"})
+	ok = _check("a progress bar fills to the value", [bar.max_value, bar.value], [50.0, 30.0]) and ok
+	var flags: Control = _widget(card, "int", "2", {"flags": [{"label": "Fire"}, {"label": "Ice"}, {"label": "Poison"}]})
+	ok = _check("flags tick the value's own bits under the variable's own names",
+		flags.get_children().map(func(check: CheckBox) -> Array: return [check.text, check.button_pressed]),
+		[["Fire", false], ["Ice", true], ["Poison", false]]) and ok
+	var choices: Control = _widget(card, "int", "31", {"enum_values": [{"label": "Slow", "value": "30"}, {"label": "Fast"}]})
+	var chosen: OptionButton = choices.get_child(0) as OptionButton
+	ok = _check("number choices show the chosen name", chosen.get_item_text(chosen.selected), "Fast") and ok
+	var swatch: ColorRect = _widget(card, "Color", "Color(1, 0, 0, 1)", {})
+	ok = _check("a colour shows its own colour", swatch.color, Color(1, 0, 0, 1)) and ok
+	var path_row: Control = _widget(card, "String", "\"res://sfx/hit.ogg\"", {"file": {"mode": "file"}})
+	ok = _check("a file look holds the variable's own path", (path_row.get_child(0) as LineEdit).text, "res://sfx/hit.ogg") and ok
 	card.free()
 	return ok
+
+
+## The widget the card draws for one variable: the last control on its property row.
+static func _widget(card: EventSheetInspectorPreviewCard, type_name: String, default_text: String, attributes: Dictionary) -> Control:
+	card.update_preview("value", type_name, default_text, attributes, true, false)
+	var property_row: Node = card._rows.get_child(card._rows.get_child_count() - 1)
+	return property_row.get_child(property_row.get_child_count() - 1) as Control
 
 
 static func _pin(label: String, type_name: String, attributes: Dictionary, exported: bool, constant: bool, expected: String) -> bool:
