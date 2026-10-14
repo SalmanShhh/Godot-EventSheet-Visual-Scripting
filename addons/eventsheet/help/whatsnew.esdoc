@@ -6,6 +6,97 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Changed: the making windows share one form shell and one described dropdown
+
+- New data table, Insert new object, New behaviour, New global, Sheet Type and the class's
+  Properties are built from the window kit's form window and its described field (a dropdown
+  with the chosen choice's sentence kept in view under it) instead of each hand-building its own,
+  and every file picker they open is the kit's one picker. Nothing they ask or write changed.
+- Insert new object says a file it could not write on its own window, which stays open on what
+  was typed, the way the other making windows already did, instead of closing and saying it on
+  the dock's status line.
+- Open, Save As, Export Generated GDScript, Save Sheet as Text, Include Sheet, Extract to an
+  included sheet, Save as Test Sheet and the data table's CSV import and export open the same
+  one-shot file picker. Dropping an object marked secret, locked or water asks its offer as the
+  same quick question every other one is, with the same three answers it had.
+
+### Changed: a behaviour names its host once
+
+- A behaviour opened as a sheet showed its host twice: on the `host` variable row, and again as a
+  separate Host binding bar for the generated `_enter_tree` that sets it. Only the variable row is
+  left, where the file declares it; the title's hover still says what the behaviour works on. The
+  `_enter_tree` stays in the file and is written back exactly as it was, and one that fails to
+  compile still shows, so its error has a row.
+
+### Fixed: enabling the plugin compiles less
+
+- The Inspector drawers' widgets and the translation layer behind them were compiled at every editor
+  start, because the Inspector plugin Godot builds at boot named them; translating the drawers' badges
+  had made that cost larger. The widgets now load the first time a drawer or a decor line is drawn,
+  which takes about 2,500 lines of GDScript (six files) off the enable path. Enabling the plugin
+  measured 703 to 1,289 ms before and 495 to 655 ms after on the same busy machine.
+
+### Added: the sheet panels say more and read in both themes
+
+- **Outline**: a Filter box narrows a long outline to the entries that hold the typed words, keeping
+  the folder each match lives in. Groups and the \"To do\" folder wear the FileSystem dock's folder
+  icon instead of a \"▸\" mark; a region and a function keep their \"#\" and \"ƒ\".
+- **Sheet map**: a key under the picture names each kind of box and line in the colour it is drawn
+  in, and Reset Layout puts every dragged box back in its column and forgets where it was dragged.
+- **Bookmarks**: a numbered entry leads with its event number and only an unnumbered one (a comment,
+  a group) wears the star; the foot says bookmarks last for this session only.
+- **History**: the first line reads \"Opened player.gd\" (the sheet's own file) instead of \"Before
+  these edits\".
+- Fixed: the History steps, the Outline kinds and the Bookmarks sheet header no longer keep their
+  dark-theme colours on a light editor theme, where the History text all but vanished.
+
+### Changed: the four checking windows say a finding as an edge and a sentence
+
+- **Check the project** (Tools > Project Doctor) keeps its worst-first inbox and its new-since-last-look
+  dots; every line now leads with an edge in its severity's colour. The selected finding's fixes open
+  as rows under it, and a click on one applies it through undo and re-runs the check. That is the only
+  way a fix is applied now: the \"Fix selected\" button, which was greyed for every built-in fix, and the
+  chip bar below the list that did the same job are gone. The blue button names the file it opens.
+- **Run every test sheet** (Tools > Run Tests) gains Run Again and Copy Report, and keeps its window
+  open between runs. A failing claim is a red edge plus its reason; a passing one is its name and PASS.
+- **Why didn't event 12 fire?** asks the question by the row's number, and the condition that said
+  no wears a red edge instead of an arrow in a table. Jump to This Row stands on the right.
+- **Find what is unfinished in player.gd** (Loose Ends) gains Refresh: the list was read once on open
+  and went stale after any edit.
+- The Doctor, Why and Loose Ends windows draw the editor theme's panel behind their content, so they
+  read in a light editor theme instead of showing dark text on the engine's grey.
+### Changed: the Debugger says where the run is on every tab, and Live Values reads at a glance
+
+- A band over the Debugger's five tabs names the sheet, whether a run is reporting, whether Live
+  Values and Event Trace are on, and - only while the game is paused at a row - which row. The
+  window is titled after the sheet (\"Debug player.gd while it runs\").
+- Inspect lists \"This sheet's variables\" first, with how many values the run reported for each
+  object beside it, and dims an object the run has said nothing about. A strip under the values
+  names the one under the cursor and, after an edit, shows exactly what was sent into the running
+  game (the sheet itself is never changed).
+- A watch that cannot be read says \"cannot read\" in the warning colour and why on its own line
+  (\"velocity is not a streamed value.\"), instead of an engine error packed into the value cell. The
+  Debugger's Watch tab and the Live Values window draw the one table over the one list.
+- Profile draws each event's share of the run as a thin bar under its name.
+- Live Values puts how the game got to its mode on a line of its own, and a value that cannot be
+  edited (a behavior's, a list's items) reads muted instead of looking editable.
+- Fixed: double-clicking a Profile or Breakpoints row to go to it no longer marks the game as paused
+  there, and the paused row is forgotten when the run ends.
+### Changed: the find windows say where each hit is and what their main button does
+- **Command Palette** (Ctrl+P): the four prefix modes are tabs - Commands, `#` Sheets, `@` Symbols,
+  `?` Docs - plus an Error line tab that waits for a pasted `res://file.gd:42`. Clicking a tab types
+  its prefix. The foot has Cancel and Run, and a strip names the keys and the modes. Every mode shares
+  one fuzzy order (prefix, then substring, then subsequence).
+- **Find in Project**: Find and Replace share one card, and results gain an Event column (the event's
+  margin number, or the line of a closed script) with a count under them. Picking a result names it
+  in the strip, with the matched text as it reads in code. That Replace in Project saves closed sheets
+  at once is said beside the button.
+- **Find References**: uses group under the sheet they sit in, with a count per sheet and in all. Go
+  to Row lands on the picked use, and the window is titled after the symbol.
+- **Find Repeated Rows**: why a run cannot become one function (it uses an event-local or a For Each
+  item) is said beside the greyed-out Make a Function button when the run is picked, not in the
+  status bar after pressing it. The strip names the events the run sits in.
+
 ### Fixed: a global made as a scene is found wherever the scene lives
 
 - An autoload that points at a scene whose root node carries the script - the way many existing
