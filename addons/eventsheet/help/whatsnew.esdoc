@@ -174,23 +174,52 @@ What changed in the build you have installed (v0.18.0), in the words the release
 - `@onready var label = $Label`, written with no type, now opens as an `@onready` variable that reads
   as Variant - the node lookup implies no type - and saves back without one.
 
-### Changed: a function's head reads as a sheet row, and is edited in the Properties bar
+### Changed: a behaviour or a global opens as its own file, in its file's order
 
-- On a sheet you are writing, a function reads `ƒ Function ▸ On take_damage`, with what it hands
-  back (`→ nothing`, `→ float`) and its settings as small tags (In Add Action, Waits, Shared) on the
-  line under it, its description in italics under that (edited in place), and each parameter on a
-  line of its own - `PARAM int amount = 1` - whose hover says what it is for and its value when a
-  call leaves it out. Names read exactly as the code writes them. The description caption that sat
-  above the function, the role word, the category chip and the \"gives back\" / \"internal\" chips are
-  gone; folding the function folds its body away.
-- Not drawn like an event yet: the function's own actions still sit in an \"Always\" row under the
-  head rather than in an action lane on its right, the head carries no event number, and it is
-  edited in a panel of the Properties bar rather than in the Inspector.
+- A behaviour (a pack's node script, or a sheet made as one), a global (an autoload) and any other
+  file of a pack open under the slim title row an edited sheet has, with a quiet kind word -
+  `Behaviour` or `Global (autoload)` - where any other script says Script, and every row reads where
+  the file has it. The head bar that folded the file's first lines away, the Settings / Verbs / How
+  it works / Internal state bands, the Triggers bar and the Helpers bar are gone for these files;
+  lines the sheet cannot read stay code blocks, as before.
+- Their facts live in the hover of the file's name - what it works on or the name it loads as, the
+  category it is listed under, how many properties or global values it has and how many actions,
+  conditions, triggers and expressions it offers - and a click on the name offers Open in the script
+  editor and Show in FileSystem. A double-click still renames the class. A global's Autoload entry
+  is said there too, instead of as a row.
+- The title strip of such a file carries a Sheet | Code | Side by side switch: the rows, the file as
+  code, or both next to each other.
+- Not built: reopening the form the file was made with (Behaviour settings… / Global settings…) and
+  a door straight to its row in Project Settings > Globals, which Godot offers no way to open from a
+  plugin.
+
+### Changed: a function is drawn like an event on every sheet, and edited in the Properties bar
+
+- A function reads `Action  Function  On take_damage` on every sheet, written or only read: its
+  kind as a coloured word (Action green, Condition blue, Expression purple, the theme's role colours,
+  never a glyph), then its name exactly as the code writes it, a `returns float` chip when it hands
+  something back (none for void), its settings as small tags (In Add Action, Waits, Shared,
+  Featured) and each parameter on a line of its own - `PARAM int amount = 1` - whose hover says what
+  it is for and its value when a call leaves it out.
+- Its own actions - the first step of its body, when that step asks nothing of its own - sit in the
+  action lane beside the head, the way any event puts \"do this\" beside \"when this happens\", instead
+  of a separate \"Always\" row under it. They stay live on a sheet you are writing: Add action on the
+  head fills that step, and clicking or editing one of them edits the step's own action.
+- Function heads carry an event number like any event, counted where the sheet draws them, and the
+  rest of their body is numbered after them; Go to event, Find and the Doctor count the same way.
+- The description is not drawn on the row. Hovering the name shows it (with how Add Action reads
+  the verb, who else calls it, and how to edit it); a double-click on the name opens a small window
+  beside the row that edits it as one undo step. The italic description line, the \"+ describe this
+  function\" placeholder, the reading-only \"ƒ\" block with its input chips and kind word, and the
+  role wash are gone.
+- The ACE kind colours of the native theme are now Action green, Condition blue and Expression
+  purple in a dark and in a light editor, so a kind reads the same colour wherever it is named.
 - Clicking a function's head selects it and the Properties bar shows Name (renaming renames every
   call), Description, Returns, In Add Action, Category, Waits and Shared - every dropdown describing
   each choice - and its parameters, retyped and given defaults in place, reordered by dragging the
   handle, added with + Add. Each change is one undo step and nothing is written when nothing
-  changed. A read-only preview keeps the popup that only reads.
+  changed. A read-only preview keeps the popup that only reads. (It is a panel of the Properties
+  bar, not Godot's own Inspector.)
 - The New / Edit Function window is on the window kit: a band showing the row it will draw, the
   Function card (with the code name beside Name), one described Kind dropdown in place of the three
   cards, the help strip with the `func` line as IN CODE, the live name in the title, and the reason

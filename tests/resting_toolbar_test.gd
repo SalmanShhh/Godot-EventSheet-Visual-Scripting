@@ -249,7 +249,7 @@ static func _test_the_cascade() -> bool:
 			"EventSheetToolsMenu"]:
 		var submenu: PopupMenu = popup.find_child(name, true, false) as PopupMenu
 		counts[name] = -1 if submenu == null else submenu.item_count
-	ok = _check("Sheet keeps its items", counts["EventSheetSheetMenu"], 27) and ok
+	ok = _check("Sheet keeps its items", counts["EventSheetSheetMenu"], 30) and ok
 	ok = _check("Edit keeps its items", counts["EventSheetEditMenu"], 10) and ok
 	# 59, not 56: View ▸ Sheet theme joined it when the theme OptionButton left the strip, and
 	# View ▸ Panels when the left rail learned to slide its panels off. Both are submenus, so this

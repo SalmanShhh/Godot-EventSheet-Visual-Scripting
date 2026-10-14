@@ -337,7 +337,7 @@ static func _test_opened_files() -> bool:
 	_write(GAME_TEST_PATH, GAME_TEST_SOURCE)
 	var readings: PackedStringArray = _open_and_read(GAME_TEST_PATH)
 	passed = _check("the test's entry point reads under Test, not under Functions",
-		_has(readings, "Test ▸ On run"), true) and passed
+		" | ".join(readings).contains("Condition | Test | On run"), true) and passed
 	passed = _check("a Check row is drawn for the coin claim",
 		_has(readings, "Test ▸ Check \"a coin is worth ten\": ScoreRules.value_of(\"coin\") = 10"), true) and passed
 	passed = _check("the head says it is a test sheet",
@@ -346,7 +346,7 @@ static func _test_opened_files() -> bool:
 	_write(GAME_TOOL_PATH, GAME_TOOL_SOURCE)
 	var tool_readings: PackedStringArray = _open_and_read(GAME_TOOL_PATH)
 	passed = _check("a command tool's _init reads as the run it is",
-		_has(tool_readings, "Command tool ▸ On run"), true) and passed
+		" | ".join(tool_readings).contains("Action | Command tool | On run"), true) and passed
 	passed = _check("the head says it runs headless",
 		_has(tool_readings, "runs headless"), true) and passed
 	return passed
@@ -413,7 +413,7 @@ static func _button_words(path: String) -> String:
 static func _open_and_read(path: String) -> PackedStringArray:
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
 	var view := EventSheetViewport.new()
-	# Reading mode is where a verb reads as the trigger it is (`Test ▸ On run`) rather than as its
+	# Reading mode is where a verb reads as the trigger it is (`Test  On run`) rather than as its
 	# Define row - the same mode the whole reading campaign is about.
 	view.reading_mode = true
 	view.set_sheet(sheet)

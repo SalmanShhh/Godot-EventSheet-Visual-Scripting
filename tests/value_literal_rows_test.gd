@@ -238,7 +238,8 @@ static func _function_chip_span() -> bool:
 	var chip: SemanticSpan = null
 	var whole: String = ""
 	for row_data: EventRowData in _rows_of(viewport):
-		if row_data.source_resource != event_row:
+		# The function's one untriggered step sits in the action lane of the function's own head.
+		if row_data.row_uid != "define_fn__wire_up":
 			continue
 		viewport._row_builder._ensure_event_spans(row_data)
 		for span: SemanticSpan in row_data.spans:

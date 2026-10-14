@@ -1656,7 +1656,7 @@ static func declared_type_map(sheet: EventSheetResource) -> Dictionary:
 			types[variable.name] = declared_type
 			if enum_names.has(declared_type):
 				enum_types[variable.name] = declared_type
-		if _is_fraction_range(variable.export_hint):
+		if _is_fraction_range(variable):
 			percent_members[variable.name] = true
 	return {"types": types, "enum_types": enum_types, "percent_members": percent_members}
 
@@ -1755,9 +1755,13 @@ static func pin_seat_map(sheet: EventSheetResource) -> Dictionary:
 ## True when an export hint says the value runs from 0 to 1 - the range the engine itself treats
 ## as a fraction (alpha, volume, a blend weight), and the one an event sheet shows as a percentage.
 ## Matched on the two numbers only, so `@export_range(0, 1, 0.01)` and `@export_range(0.0, 1.0)` both
-## count and `@export_range(0, 100)` does not.
-static func _is_fraction_range(export_hint: String) -> bool:
-	var text: String = export_hint.strip_edges()
+## count and `@export_range(0, 100)` does not. A range the importer lifted into the variable's
+## attributes is read from there; one it left verbatim is read off the hint.
+static func _is_fraction_range(variable: LocalVariable) -> bool:
+	var lifted: Variant = variable.attributes.get("range")
+	if lifted is Dictionary:
+		return str((lifted as Dictionary).get("min", "")).to_float() == 0.0 			and str((lifted as Dictionary).get("max", "")).to_float() == 1.0
+	var text: String = variable.export_hint.strip_edges()
 	if not text.begins_with("@export_range(") or not text.ends_with(")"):
 		return false
 	var parts: PackedStringArray = text.substr(14, text.length() - 15).split(",", false)

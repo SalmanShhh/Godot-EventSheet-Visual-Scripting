@@ -13,16 +13,20 @@ static func run() -> bool:
 	var ok: bool = true
 	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(SOURCE)
 	var hints: Dictionary = {}
+	var ranges: Dictionary = {}
 	var raw_blocks: int = 0
 	for r: Variant in imported.events:
 		if r is LocalVariable:
 			hints[(r as LocalVariable).name] = (r as LocalVariable).export_hint
+			ranges[(r as LocalVariable).name] = (r as LocalVariable).attributes.get("range", {})
 		elif r is RawCodeRow and (r as RawCodeRow).code.contains("@export"):
 			raw_blocks += 1
-	ok = _check("range hint lifts to a variable row", hints.get("speed", ""), "@export_range(0, 100)") and ok
-	# File and flags hints now lift STRUCTURED: the hint moves
-	# into editable attributes and export_hint empties. Two-arg @export_range above keeps
-	# pinning the verbatim fallback for shapes outside the canon.
+	# Range, file and flags hints all lift STRUCTURED: the hint moves into editable attributes and
+	# export_hint empties. A two-argument @export_range leaves its step to Godot, so it reads with an
+	# empty step that the compiler writes back unwritten.
+	ok = _check("range hint lifts structured (hint consumed)", hints.get("speed", "missing"), "") and ok
+	ok = _check("and its bounds are the variable's range, with no step written",
+		ranges.get("speed", {}), {"min": "0", "max": "100", "step": ""}) and ok
 	ok = _check("file hint lifts structured (hint consumed)", hints.get("data_path", "missing"), "") and ok
 	ok = _check("flags hint lifts structured (hint consumed)", hints.get("elements", "missing"), "") and ok
 	ok = _check("no hinted export stayed a raw block", raw_blocks, 0) and ok

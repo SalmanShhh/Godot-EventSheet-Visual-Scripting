@@ -51,7 +51,7 @@ static func _folds() -> bool:
 	ok = _check("the verdict bookkeeping does not read as a row",
 		readings.contains("passed = true"), false) and ok
 	ok = _check("nor does the harness the Check rows are drawn from",
-		readings.contains("On Check"), false) and ok
+		readings.contains("On _check"), false) and ok
 	ok = _check("and the check the test makes still reads as a Check row",
 		readings.contains("Check \"two is two\": count = 2"), true) and ok
 	# The head is where both went, and it still counts what the file claims.
@@ -71,7 +71,7 @@ static func _folds() -> bool:
 static func _game_script_keeps_everything() -> bool:
 	var readings: String = " | ".join(_open_and_read(GAME_PATH, SOURCE))
 	return _check("a game script with the same lines keeps its harness row",
-		readings.contains("On Check"), true)
+		readings.contains("On _check"), true)
 
 
 ## Writes the source, opens it as a sheet, and returns every cell reading.

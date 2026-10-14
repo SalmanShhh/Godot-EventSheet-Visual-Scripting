@@ -27,10 +27,9 @@ static func run() -> bool:
 		ViewportRowBuilder.host_binding_class("func _ready() -> void:\n\tpass"), "") and ok
 
 	# ── Rendering over a real opened pack ──
-	# The Host binding BAR is now the editable-sheet reading. A read-only preview folds it (with the
-	# class-setup strip and the `host` variable) into the one Include bar the pack head opens with, so
-	# this half of the test drives the same pack with the preview flag cleared - the bar itself, its
-	# chips and its byte round-trip are unchanged, and the preview's own reading is pinned below.
+	# A read-only preview reads the pack in file order, so the binding is the same Host binding row
+	# an editable sheet draws, where the file has it - not folded into a bar the file does not have.
+	# The second half drives the same pack with the preview flag cleared.
 	var pack_path: String = "res://eventsheet_addons/health/health_behavior.gd"
 	var source: String = (FileAccess.open(pack_path, FileAccess.READ)).get_as_text()
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
@@ -38,14 +37,12 @@ static func run() -> bool:
 	dock.setup(EventSheetResource.new())
 	dock._load_sheet_from_path(pack_path)
 	var view: EventSheetViewport = dock._active_view()
-	# The Include bar rides the head bar's fold now, so the preview is read from the row TREE - the
-	# bar is a real row that is simply not on screen until the head is opened.
-	var preview_bar: EventRowData = _row_with_uid(view._root_rows, "pack_include_bar_")
-	ok = _check("a read-only preview folds the binding into the Include bar", preview_bar != null, true) and ok
-	ok = _check("the Include bar still names the host class",
-		preview_bar != null and _span_texts(preview_bar).has("Node2D"), true) and ok
-	ok = _check("no Host binding bar is drawn twice on a preview",
-		_has_host_binding_row(view), false) and ok
+	var preview_row: EventRowData = _host_binding_row(view)
+	ok = _check("a read-only preview reads the binding as its Host binding row", preview_row != null, true) and ok
+	ok = _check("the row still names the host class",
+		str(preview_row.spans[2].text) if preview_row != null and preview_row.spans.size() > 2 else "", "Node2D") and ok
+	ok = _check("no Include bar is drawn on a preview",
+		_row_with_uid(view._root_rows, "pack_include_bar_"), null) and ok
 	var opened_sheet: EventSheetResource = dock.get_current_sheet()
 	opened_sheet.read_only = false
 	view.set_sheet(opened_sheet)
@@ -76,20 +73,12 @@ static func run() -> bool:
 	return ok
 
 
-## Every span text of a row, so a claim can ask what a bar SAYS without indexing into its spans.
-static func _span_texts(row_data: EventRowData) -> PackedStringArray:
-	var texts: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
-		texts.append(str(span.text))
-	return texts
-
-
-static func _has_host_binding_row(view: EventSheetViewport) -> bool:
+static func _host_binding_row(view: EventSheetViewport) -> EventRowData:
 	for entry: Dictionary in view.get_flat_rows():
 		var row_data: EventRowData = entry.get("row")
 		if row_data != null and row_data.spans.size() >= 2 and str(row_data.spans[1].text) == "Host binding":
-			return true
-	return false
+			return row_data
+	return null
 
 
 static func _has_enter_tree_block(view: EventSheetViewport) -> bool:

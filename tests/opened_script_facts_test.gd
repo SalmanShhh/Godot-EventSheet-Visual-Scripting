@@ -16,9 +16,9 @@
 #       multiline note, a colour with its word, and flags with their names. Read from what the
 #       importer already stored, over a REAL hinted file rather than a hand-built sheet.
 #
-#   AN AUTOLOAD READS AS THE PROJECT'S GLOBAL. Its Include bar says so, its knobs collapse into
-#       one Global variables folder (on a global there is nothing for a second folder to mean), its
-#       triggers say "this global fires", and the Objects rail names it the same way.
+#   AN AUTOLOAD READS AS THE PROJECT'S GLOBAL. Its title row says so, its name's hover says how it
+#       loads, its knobs and triggers read in file order under no invented folder or bar, and the
+#       Objects rail names it the same way.
 #
 # And the covenant under all three: every word of it is a lens, so both fixtures still re-emit
 # byte-identically.
@@ -161,24 +161,32 @@ static func _test_autoload_head() -> bool:
 	var ok: bool = true
 	var view: EventSheetViewport = _open(SETTINGS_PATH, true)
 	var rows: Array = _all_rows(view)
-	# The singleton's NAME is the autoload band's, with the project.godot entry that grants it
-	# echoed beside it; the bar under the stack is left with the file it is and its coverage.
-	ok = _check("an autoload's own band names the singleton and echoes the entry that grants it",
-		_texts(_row_with_uid(rows, "sheet_head_autoload_")),
-		"autoload | Game | project.godot: autoload/Game = \"*res://tests/fixtures/opened_script_settings.gd\"") and ok
-	ok = _check("and its Include bar keeps the receipts",
-		_texts(_row_with_uid(rows, "pack_include_bar_")),
-		"⇥ | · opened_script_settings.gd | reads as events") and ok
-	var globals: EventRowData = _bar_titled(rows, "Global variables")
-	ok = _check("its knobs read as ONE Global variables folder", globals != null, true) and ok
-	ok = _check("holding every one of them", globals.children.size() if globals != null else -1, 8) and ok
+	# A global reads in plain file order under its own title row: the title says it is a global,
+	# the Autoload entry that grants it is said in the name's hover, and nothing groups its rows
+	# into bands or folders the file does not have.
+	ok = _check("an autoload's title row says it is a global",
+		_texts(_row_with_uid(rows, "sheet_head_name_")),
+		"▣ | TunedKnobs | Global (autoload) | · extends | Node2D | class_name TunedKnobs") and ok
+	ok = _check("and its name's hover says how it loads",
+		ViewportRowBuilder.script_facts_card(view._sheet).get_slice("
+", 1).get_slice(" · ", 0),
+		"loaded before the first scene as Game") and ok
+	ok = _check("no autoload band and no Include bar are drawn",
+		[_row_with_uid(rows, "sheet_head_autoload_"), _row_with_uid(rows, "pack_include_bar_")], [null, null]) and ok
+	ok = _check("its knobs read as rows in file order, in no folder",
+		_bar_titled(rows, "Global variables"), null) and ok
+	ok = _check("every one of them is a row",
+		rows.filter(func(entry: Dictionary) -> bool:
+			return (entry.get("row") as EventRowData).row_uid.begins_with("variable_tree_")).size(), 8) and ok
 	ok = _check("and the per-group / Instance variables split is gone",
 		_bar_titled(rows, "Movement") == null and _bar_titled(rows, "Instance variables") == null, true) and ok
 	view.free()
 
 	var firing: EventSheetViewport = _open(PLAYER_PATH, true)
-	ok = _check("a global's triggers say a GLOBAL fires them",
-		_texts(_bar_titled(_all_rows(firing), "Triggers")), "Triggers | this global fires - 3") and ok
+	var firing_rows: Array = _all_rows(firing)
+	ok = _check("a global's triggers read where the file declares them, under no Triggers bar",
+		[_bar_titled(firing_rows, "Triggers"), firing_rows.filter(func(entry: Dictionary) -> bool:
+			return (entry.get("row") as EventRowData).row_uid.begins_with("signal_")).size()], [null, 3]) and ok
 	firing.free()
 	return ok
 
