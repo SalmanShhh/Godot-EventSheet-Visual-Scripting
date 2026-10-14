@@ -1808,10 +1808,7 @@ func _build_preview_window() -> void:
 	add_child(_preview_window)
 
 	var content: VBoxContainer = VBoxContainer.new()
-	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_preview_window.add_child(content)
+	_preview_window.add_child(EventSheetPopupUI.window_body(content))
 
 	_preview_title = Label.new()
 	_preview_title.name = "ACEPreviewTitle"
@@ -5375,7 +5372,6 @@ func _open_sheet_backups() -> void:
 		_backups_window.size = Vector2i(460, 360)
 		_backups_window.close_requested.connect(func() -> void: _backups_window.hide())
 		var box: VBoxContainer = VBoxContainer.new()
-		box.set_anchors_preset(Control.PRESET_FULL_RECT)
 		_backups_list = ItemList.new()
 		_backups_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		_backups_list.item_activated.connect(func(_index: int) -> void: _on_restore_backup_pressed())
@@ -5386,9 +5382,7 @@ func _open_sheet_backups() -> void:
 		restore_button.text = "Restore into editor (unsaved - Save to keep)"
 		restore_button.pressed.connect(_on_restore_backup_pressed)
 		box.add_child(restore_button)
-		var body: MarginContainer = EventSheetPopupUI.margined(box)
-		body.set_anchors_preset(Control.PRESET_FULL_RECT)
-		_backups_window.add_child(body)
+		_backups_window.add_child(EventSheetPopupUI.window_body(box))
 		add_child(_backups_window)
 	_backups_list.clear()
 	for backup_path: String in EventSheetBackups.list_backups(_current_sheet_path):

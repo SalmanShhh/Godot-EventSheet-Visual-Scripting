@@ -128,9 +128,7 @@ func _ensure_window() -> void:
 	box.add_child(EventSheetPopupUI.hint_label(
 		EventSheetL10n.translate("This page is composed from the sheet every time you select it, so it cannot be out of date. Select a sheet above to read it."), 720.0))
 
-	var margined: MarginContainer = EventSheetPopupUI.margined(box)
-	margined.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_window.add_child(margined)
+	_window.add_child(EventSheetPopupUI.window_body(box))
 	_dock.add_child(_window)
 
 

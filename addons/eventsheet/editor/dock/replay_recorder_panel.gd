@@ -77,9 +77,7 @@ func build() -> void:
 	take_list.custom_minimum_size = Vector2(0.0, 180.0)
 	body.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("The take"), take_list))
 	body.add_child(_checkpoint_card())
-	var margined: MarginContainer = EventSheetPopupUI.margined(body)
-	margined.set_anchors_preset(Control.PRESET_FULL_RECT)
-	window.add_child(margined)
+	window.add_child(EventSheetPopupUI.window_body(body))
 	_dock.add_child(window)
 
 

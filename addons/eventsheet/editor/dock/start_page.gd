@@ -369,17 +369,10 @@ func _build() -> void:
 	_open_button.pressed.connect(func() -> void: activate(_chosen))
 	foot.add_child(_open_button)
 	outer.add_child(foot)
-	# The margin wrapper is what the window holds, so IT is the thing that has to fill the window.
-	# Anchoring the box INSIDE a wrapper that does not fill left all three columns collapsed to their
+	# The painted body is what the window holds, so IT fills the window (window_body anchors it):
+	# anchoring the box INSIDE a wrapper that does not fill left all three columns collapsed to their
 	# titles in the top-left corner - the page opened, and it opened empty.
-	var margined: MarginContainer = EventSheetPopupUI.margined(outer)
-	margined.set_anchors_preset(Control.PRESET_FULL_RECT)
-	# A plain Window draws no background of its own; the editor's panel behind the page is what a
-	# dialog has, and what keeps the light theme light.
-	var back: Panel = Panel.new()
-	back.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_window.add_child(back)
-	_window.add_child(margined)
+	_window.add_child(EventSheetPopupUI.window_body(outer))
 	_dock.add_child(_window)
 
 

@@ -268,13 +268,7 @@ func build() -> void:
 	close.pressed.connect(window.hide)
 	buttons.add_child(close)
 	body.add_child(buttons)
-	var margined: MarginContainer = EventSheetPopupUI.margined(body)
-	margined.set_anchors_preset(Control.PRESET_FULL_RECT)
-	# A plain Window clears to the engine's grey; the panel under the body is what makes it the theme's.
-	var back: Panel = Panel.new()
-	back.set_anchors_preset(Control.PRESET_FULL_RECT)
-	window.add_child(back)
-	window.add_child(margined)
+	window.add_child(EventSheetPopupUI.window_body(body))
 	_dock.add_child(window)
 
 

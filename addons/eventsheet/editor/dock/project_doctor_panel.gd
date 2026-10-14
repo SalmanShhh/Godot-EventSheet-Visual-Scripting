@@ -66,8 +66,6 @@ func _build() -> void:
 	# instead would erase the marks the reader came to read.
 	_doctor_window.close_requested.connect(_close)
 	var box: VBoxContainer = EventSheetPopupUI.form_box()
-	var body: MarginContainer = EventSheetPopupUI.margined(box)
-	body.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_summary_label = Label.new()
 	box.add_child(_summary_label)
 	_doctor_tree = inbox_tree()
@@ -101,11 +99,7 @@ func _build() -> void:
 	_open_button.add_theme_color_override("font_color", EventSheetPopupUI.accent_color())
 	buttons.add_child(_open_button)
 	box.add_child(buttons)
-	# A plain Window clears to the engine's grey; the panel under the body is what makes it the theme's.
-	var back: Panel = Panel.new()
-	back.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_doctor_window.add_child(back)
-	_doctor_window.add_child(body)
+	_doctor_window.add_child(EventSheetPopupUI.window_body(box))
 	_dock.add_child(_doctor_window)
 
 

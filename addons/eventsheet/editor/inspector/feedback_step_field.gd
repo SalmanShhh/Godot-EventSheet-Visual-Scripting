@@ -63,15 +63,10 @@ func _open_card() -> void:
 	_window.title = "Feedback"
 	_window.size = Vector2i(520, 460)
 	_window.close_requested.connect(_close_card)
-	var frame: MarginContainer = MarginContainer.new()
-	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
-	for side: String in ["left", "right", "top", "bottom"]:
-		frame.add_theme_constant_override("margin_" + side, 10)
 	var scroll: ScrollContainer = ScrollContainer.new()
 	scroll.add_child(_drawer)
 	_drawer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	frame.add_child(scroll)
-	_window.add_child(frame)
+	_window.add_child(EventSheetPopupUI.window_body(scroll))
 	add_child(_window)
 	_window.popup_centered()
 

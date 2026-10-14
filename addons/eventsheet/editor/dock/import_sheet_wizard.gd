@@ -139,17 +139,10 @@ func _build_dialog() -> void:
 	buttons.add_child(_save_button)
 	content.add_child(buttons)
 
-	# A plain Window draws no background of its own; the editor's panel behind it is what keeps the
-	# light theme light.
-	var back: Panel = Panel.new()
-	back.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_dialog.add_child(back)
 	var scroll: ScrollContainer = ScrollContainer.new()
-	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var margined: MarginContainer = EventSheetPopupUI.margined(content)
-	margined.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(margined)
-	_dialog.add_child(scroll)
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(content)
+	_dialog.add_child(EventSheetPopupUI.window_body(scroll))
 
 
 ## Reads the chosen file and fills the sheet list. Returns the error to show, or "" when it read.

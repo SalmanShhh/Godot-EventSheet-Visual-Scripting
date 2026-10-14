@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Fixed: every other plain window reads in a light theme too
+
+- Nineteen more windows (the Replay Recorder, Compare With, the conflict view, Loose Ends, the Project
+  Doctor, the start page, the tour, the include manager, Import sheet, the Lift Workbench and its
+  drafts, the publish preview, Sheet Backups, the dropped-node preview, Custom ACE Providers, the
+  project view, New shared sheet, Why didn't this fire and the feedback card) now sit on the
+  editor's own base colour instead of showing the engine's grey margins in a light editor theme. The
+  six that painted a hand-built panel of their own take the same one body, so the fix is 62 lines
+  shorter than what it replaces.
+
 ### Fixed: quick questions stop wiring Enter twice, and the debugger windows read in a light theme
 
 - Seven quick questions (Row Comment, Save View, Duplicate Events For, the two Add an Inspector button

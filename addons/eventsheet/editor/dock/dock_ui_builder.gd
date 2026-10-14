@@ -483,9 +483,7 @@ func build_provider_dialog() -> void:
 	_dock.add_child(_dock._provider_dialog)
 
 	var content: VBoxContainer = EventSheetPopupUI.form_box()
-	var margin: MarginContainer = EventSheetPopupUI.margined(content)
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_dock._provider_dialog.add_child(margin)
+	_dock._provider_dialog.add_child(EventSheetPopupUI.window_body(content))
 
 	content.add_child(EventSheetPopupUI.hint_label("Register GDScript files whose methods, signals and exported variables become custom ACEs.\nZero-config alternative: drop scripts into res://eventsheet_addons/ and they register project-wide automatically."))
 

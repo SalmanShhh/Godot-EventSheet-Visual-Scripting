@@ -201,7 +201,7 @@ func _build() -> void:
 			_show_step())
 	buttons.add_child(_next_button)
 	box.add_child(buttons)
-	_window.add_child(EventSheetPopupUI.margined(box))
+	_window.add_child(EventSheetPopupUI.window_body(box))
 	# The live "did they do it?" watcher - cheap, and only while the tour is open.
 	_poll_timer = Timer.new()
 	_poll_timer.wait_time = 0.5

@@ -95,9 +95,7 @@ func build() -> void:
 	there_list.item_selected.connect(func(_index: int) -> void: bring_button.disabled = false)
 	body.add_child(bring_button)
 
-	var margined: MarginContainer = EventSheetPopupUI.margined(body)
-	margined.set_anchors_preset(Control.PRESET_FULL_RECT)
-	window.add_child(margined)
+	window.add_child(EventSheetPopupUI.window_body(body))
 	_dock.add_child(window)
 
 

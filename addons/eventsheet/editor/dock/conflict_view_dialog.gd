@@ -89,9 +89,7 @@ func build() -> void:
 	save_button.pressed.connect(_save_resolved)
 	buttons.add_child(save_button)
 	body.add_child(buttons)
-	var margined: MarginContainer = EventSheetPopupUI.margined(body)
-	margined.set_anchors_preset(Control.PRESET_FULL_RECT)
-	window.add_child(margined)
+	window.add_child(EventSheetPopupUI.window_body(body))
 	_dock.add_child(window)
 
 

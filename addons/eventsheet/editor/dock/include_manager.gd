@@ -125,12 +125,7 @@ func _build_include_manager() -> void:
 	close_button.size_flags_horizontal = Control.SIZE_SHRINK_END
 	close_button.pressed.connect(_include_manager_window.hide)
 	outer.add_child(close_button)
-	var back: Panel = Panel.new()
-	back.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_include_manager_window.add_child(back)
-	var margined: MarginContainer = EventSheetPopupUI.margined(outer)
-	margined.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_include_manager_window.add_child(margined)
+	_include_manager_window.add_child(EventSheetPopupUI.window_body(outer))
 	_dock.add_child(_include_manager_window)
 
 

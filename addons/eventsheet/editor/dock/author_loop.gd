@@ -93,9 +93,7 @@ func open_publish_preview() -> void:
 		var card: PanelContainer = EventSheetPopupUI.titled_card("Published surface", _publish_preview_text)
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		var body: MarginContainer = EventSheetPopupUI.margined(card)
-		body.set_anchors_preset(Control.PRESET_FULL_RECT)
-		_publish_preview_window.add_child(body)
+		_publish_preview_window.add_child(EventSheetPopupUI.window_body(card))
 		_dock.add_child(_publish_preview_window)
 	_publish_preview_text.text = publish_surface_text(collect_publish_surface(_dock._current_sheet))
 	_publish_preview_window.popup_centered()

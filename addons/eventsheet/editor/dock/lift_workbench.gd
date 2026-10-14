@@ -359,9 +359,7 @@ func build_window() -> Window:
 	body.add_child(top)
 	body.add_child(_build_rows_card())
 	body.add_child(_build_footer())
-	var margined: MarginContainer = EventSheetPopupUI.margined(body)
-	margined.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_window.add_child(margined)
+	_window.add_child(EventSheetPopupUI.window_body(body))
 	_window.add_child(_timer)
 	_buffer.text = STARTER_BUFFER
 	if _dock != null:
@@ -489,6 +487,6 @@ func _build_draft_window() -> void:
 	append.pressed.connect(_append_draft)
 	buttons.add_child(append)
 	body.add_child(buttons)
-	_draft_window.add_child(EventSheetPopupUI.margined(body))
+	_draft_window.add_child(EventSheetPopupUI.window_body(body))
 	if _dock != null:
 		_dock.add_child(_draft_window)

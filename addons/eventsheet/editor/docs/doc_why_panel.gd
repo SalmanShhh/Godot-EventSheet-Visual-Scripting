@@ -348,11 +348,7 @@ static func open_for_row(host: Control, event_row: EventRow, values: Dictionary,
 		stale.queue_free()
 	var body: Control = build_body(report, event_number)
 	body.add_child(_buttons(host, report, event_row))
-	# A plain Window clears to the engine's grey; the panel under the body is what makes it the theme's.
-	var back: Panel = Panel.new()
-	back.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_window.add_child(back)
-	_window.add_child(EventSheetPopupUI.margined(body))
+	_window.add_child(EventSheetPopupUI.window_body(body))
 	_window.popup_centered()
 
 
