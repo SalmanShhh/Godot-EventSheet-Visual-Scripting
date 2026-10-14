@@ -82,6 +82,19 @@ static func apply(
 	event_style.ace_expression_badge_background_color = _role_badge(EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_BG, base, light_editor)
 	event_style.verb_chip_background_color = base.lerp(dark_1, 0.4)
 	event_style.verb_chip_foreground_color = Color(font_color.r, font_color.g, font_color.b, 0.7)
+	# The cell words and the number gutter are the dark palette's pale text on a near-black strip. On a
+	# light editor the words take the editor's own font colour (their object labels, values and quoted
+	# text the light hand of the native look) and the gutter the editor's row grey, or the words read
+	# pale on pale beside a black bar.
+	if light_editor:
+		for cells: EventSheetElementStyle in [style.get_condition_style(), style.get_action_style()]:
+			cells.text_color = font_color
+			cells.badge_foreground_color = font_color
+		for token_name: String in ["object_label_color", "value_highlight_color", "word_text_color", "word_number_color"]:
+			event_style.set(token_name, EventSheetEditorThemeDeriver.NATIVE_COLOURS_LIGHT[token_name])
+		event_style.gutter_background_color = dark_1
+		event_style.gutter_text_color = Color(font_color.r, font_color.g, font_color.b, 0.6)
+		event_style.gutter_icon_color = Color(font_color.r, font_color.g, font_color.b, 0.75)
 	# The marks new with the native look (type words, the class block, badges, links) take the
 	# light hand of their palette on a light editor, so none of them lands dark on pale paper.
 	EventSheetEditorThemeDeriver.dress_new_marks(event_style, light_editor)

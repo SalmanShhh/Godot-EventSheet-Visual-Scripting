@@ -208,4 +208,12 @@ static func _test_clear_means_as_before() -> bool:
 		adapted.get_event_style().type_number_color.to_html(false), "2c681c"])
 	rows.append(["and still no include edge (clear = as before)",
 		adapted.get_event_style().include_border_color.a, 0.0])
+	# ...and its cell words and number gutter leave the dark palette: the editor's own text on its own
+	# row grey, not pale words on pale lanes beside a black strip.
+	rows.append(["a light editor's cell words and gutter", [
+		adapted.get_condition_style().text_color.to_html(false), adapted.get_action_style().text_color.to_html(false),
+		adapted.get_event_style().gutter_background_color.to_html(false),
+		adapted.get_event_style().gutter_text_color.to_html(),
+		adapted.get_event_style().word_text_color.to_html(false), adapted.get_event_style().value_highlight_color.to_html(false)],
+		["202020", "202020", "d8d8d8", "20202099", "8a4a0c", "2c681c"]])
 	return SUPPORT.pins(TEST_NAME, rows)
