@@ -7056,17 +7056,24 @@ func apply_object_bar_drop(object_label: String, target_event: Resource, on_acti
 	# dropping it OFFERS that event first. An offer, not a rule: dismissing the dialog falls through
 	# to the picker the drop has always opened, and nothing is written until the reader says yes.
 	if load(OBJECT_PROPERTIES_PATH).is_secret(_source_path_for_secrets(), object_label):
-		_open_secret_counter_offer(object_label, on_action_lane)
+		_offer_marked_drop(object_label, on_action_lane, EventSheetL10n.translate("Count This Secret"),
+			EventSheetL10n.translate("%s is marked a secret. Add the event that counts it the first time the player walks in?")
+			% object_label, EventSheetL10n.translate("Count it"), _on_secret_counter_offer_accepted)
 		return
 	# The same offer for a door: a body the reader named a key for wants the event that TRIES
 	# it when the player walks in, which is the one row that both opens it and refuses it.
 	if not load(OBJECT_PROPERTIES_PATH).needs_key_of(_source_path_for_secrets(), object_label).is_empty():
-		_open_locked_door_offer(object_label, on_action_lane)
+		_offer_marked_drop(object_label, on_action_lane, EventSheetL10n.translate("Try This Door"),
+			EventSheetL10n.translate("%s wants the %s key. Add the event that tries it when the player walks in?") % [object_label,
+			load(OBJECT_PROPERTIES_PATH).needs_key_of(_source_path_for_secrets(), object_label)],
+			EventSheetL10n.translate("Add the door event"), _on_locked_door_offer_accepted)
 		return
 	# The same offer for the second mark: an area marked `water` has two events worth writing,
 	# the way in and the way out, and dropping it offers the pair before the picker.
 	if load(OBJECT_PROPERTIES_PATH).is_water(_source_path_for_secrets(), object_label):
-		_open_water_rows_offer(object_label, on_action_lane)
+		_offer_marked_drop(object_label, on_action_lane, EventSheetL10n.translate("Add The Water Rows"),
+			EventSheetL10n.translate("%s is marked water. Add the two rows that raise the flag on the way in and lower it on the way out?")
+			% object_label, EventSheetL10n.translate("Add them"), _on_water_rows_offer_accepted)
 		return
 	add_row_for_object(object_label, on_action_lane)
 
@@ -7077,43 +7084,19 @@ func _source_path_for_secrets() -> String:
 	return str(_current_sheet.resource_path) if _current_sheet != null else ""
 
 
-var _secret_offer_dialog: ConfirmationDialog = null
-var _secret_offer_line: Label = null
-var _secret_offer_label: String = ""
-var _secret_offer_on_action_lane: bool = false
-
-
-## The offer a secret area's drop opens: one sentence saying what the event would be, "Count it" to
-## add it, and Cancel to get the ordinary drop instead. Built with the shared popup helpers so it
-## wears the same card look as every other dialog here.
-func _open_secret_counter_offer(object_label: String, on_action_lane: bool) -> void:
-	_secret_offer_label = object_label
-	_secret_offer_on_action_lane = on_action_lane
-	if _secret_offer_dialog == null:
-		_secret_offer_dialog = ConfirmationDialog.new()
-		_secret_offer_dialog.title = EventSheetL10n.translate("Count This Secret")
-		_secret_offer_dialog.ok_button_text = EventSheetL10n.translate("Count it")
-		_secret_offer_dialog.get_cancel_button().text = EventSheetL10n.translate("Just add a row")
-		_secret_offer_dialog.confirmed.connect(_on_secret_counter_offer_accepted)
-		_secret_offer_dialog.canceled.connect(func() -> void:
-			add_row_for_object(_secret_offer_label, _secret_offer_on_action_lane))
-		var body: VBoxContainer = EventSheetPopupUI.form_box()
-		_secret_offer_line = EventSheetPopupUI.hint_label("")
-		body.add_child(_secret_offer_line)
-		_secret_offer_dialog.add_child(EventSheetPopupUI.margined(body))
-		add_child(_secret_offer_dialog)
-		EventSheetL10n.apply_to(_secret_offer_dialog)
-	# The dialog is built once and reused, so the object it is about is written on it EVERY open.
-	_secret_offer_line.text = EventSheetL10n.translate(
-		"%s is marked a secret. Add the event that counts it the first time the player walks in?") \
-		% object_label
-	_secret_offer_dialog.popup_centered(Vector2i(460, 150))
+## The offer a marked object's drop opens - a secret, a locked door, a water volume: the quick
+## question saying what it would write, `main` to write it, and "Just add a row" (or Esc) for the
+## ordinary drop instead. Nothing is written until the reader says yes.
+func _offer_marked_drop(object_label: String, on_action_lane: bool, title: String, say: String, main: String,
+		accept: Callable) -> void:
+	load(SMALL_PROMPT_PATH).open(self, {"title": title, "say": say, "main": main,
+		"cancel": EventSheetL10n.translate("Just add a row"), "on_main": accept.bind(object_label),
+		"on_cancel": add_row_for_object.bind(object_label, on_action_lane)})
 
 
 ## "Count it": the secret's own walked-into event with the shipped Mark Secret Found row in it, plus
 ## the list it counts into when the sheet does not declare one yet. One undo step.
-func _on_secret_counter_offer_accepted() -> void:
-	var object_label: String = _secret_offer_label
+func _on_secret_counter_offer_accepted(object_label: String) -> void:
 	var entry: Dictionary = load(OBJECT_PROPERTIES_PATH).find_entry(_current_sheet, object_label)
 	var host_class: String = str(entry.get("class", "")).strip_edges()
 	var changed: bool = _perform_undoable_sheet_edit("Count Secret", func() -> bool:
@@ -7129,42 +7112,9 @@ func _on_secret_counter_offer_accepted() -> void:
 	_mark_dirty(EventSheetL10n.translate("Counting %s as a secret.") % object_label)
 
 
-var _door_offer_dialog: ConfirmationDialog = null
-var _door_offer_line: Label = null
-var _door_offer_label: String = ""
-var _door_offer_on_action_lane: bool = false
-
-
-## The offer a locked door's drop opens, built exactly like the secret one above: one sentence
-## naming the key it wants, "Add the door event" to write it, and Cancel to get the ordinary drop.
-func _open_locked_door_offer(object_label: String, on_action_lane: bool) -> void:
-	_door_offer_label = object_label
-	_door_offer_on_action_lane = on_action_lane
-	if _door_offer_dialog == null:
-		_door_offer_dialog = ConfirmationDialog.new()
-		_door_offer_dialog.title = EventSheetL10n.translate("Try This Door")
-		_door_offer_dialog.ok_button_text = EventSheetL10n.translate("Add the door event")
-		_door_offer_dialog.get_cancel_button().text = EventSheetL10n.translate("Just add a row")
-		_door_offer_dialog.confirmed.connect(_on_locked_door_offer_accepted)
-		_door_offer_dialog.canceled.connect(func() -> void:
-			add_row_for_object(_door_offer_label, _door_offer_on_action_lane))
-		var body: VBoxContainer = EventSheetPopupUI.form_box()
-		_door_offer_line = EventSheetPopupUI.hint_label("")
-		body.add_child(_door_offer_line)
-		_door_offer_dialog.add_child(EventSheetPopupUI.margined(body))
-		add_child(_door_offer_dialog)
-		EventSheetL10n.apply_to(_door_offer_dialog)
-	# The dialog is built once and reused, so the door it is about is written on it EVERY open.
-	_door_offer_line.text = EventSheetL10n.translate(
-		"%s wants the %s key. Add the event that tries it when the player walks in?") \
-		% [object_label, load(OBJECT_PROPERTIES_PATH).needs_key_of(_source_path_for_secrets(), object_label)]
-	_door_offer_dialog.popup_centered(Vector2i(460, 150))
-
-
 ## "Add the door event": the door's own walked-into event with the shipped Try Door row in it, plus
 ## the key list it reads when the sheet does not declare one yet. One undo step.
-func _on_locked_door_offer_accepted() -> void:
-	var object_label: String = _door_offer_label
+func _on_locked_door_offer_accepted(object_label: String) -> void:
 	var entry: Dictionary = load(OBJECT_PROPERTIES_PATH).find_entry(_current_sheet, object_label)
 	var host_class: String = str(entry.get("class", "")).strip_edges()
 	var changed: bool = _perform_undoable_sheet_edit("Add Door Event", func() -> bool:
@@ -7180,43 +7130,9 @@ func _on_locked_door_offer_accepted() -> void:
 	_mark_dirty(EventSheetL10n.translate("Trying %s when the player walks in.") % object_label)
 
 
-var _water_offer_dialog: ConfirmationDialog = null
-var _water_offer_line: Label = null
-var _water_offer_label: String = ""
-var _water_offer_on_action_lane: bool = false
-
-
-## The offer a water volume's drop opens: one sentence saying what the two rows would be, "Add
-## them" to write the pair, and Cancel to get the ordinary drop instead. Same shape as the secret
-## offer, built with the shared popup helpers.
-func _open_water_rows_offer(object_label: String, on_action_lane: bool) -> void:
-	_water_offer_label = object_label
-	_water_offer_on_action_lane = on_action_lane
-	if _water_offer_dialog == null:
-		_water_offer_dialog = ConfirmationDialog.new()
-		_water_offer_dialog.title = EventSheetL10n.translate("Add The Water Rows")
-		_water_offer_dialog.ok_button_text = EventSheetL10n.translate("Add them")
-		_water_offer_dialog.get_cancel_button().text = EventSheetL10n.translate("Just add a row")
-		_water_offer_dialog.confirmed.connect(_on_water_rows_offer_accepted)
-		_water_offer_dialog.canceled.connect(func() -> void:
-			add_row_for_object(_water_offer_label, _water_offer_on_action_lane))
-		var body: VBoxContainer = EventSheetPopupUI.form_box()
-		_water_offer_line = EventSheetPopupUI.hint_label("")
-		body.add_child(_water_offer_line)
-		_water_offer_dialog.add_child(EventSheetPopupUI.margined(body))
-		add_child(_water_offer_dialog)
-		EventSheetL10n.apply_to(_water_offer_dialog)
-	# The dialog is built once and reused, so the object it is about is written on it EVERY open.
-	_water_offer_line.text = EventSheetL10n.translate(
-		"%s is marked water. Add the two rows that raise the flag on the way in and lower it on the way out?") \
-		% object_label
-	_water_offer_dialog.popup_centered(Vector2i(460, 150))
-
-
 ## "Add them": the two events that hold the sheet's in-water flag, plus the flag itself when the
 ## sheet does not declare one yet. One undo step.
-func _on_water_rows_offer_accepted() -> void:
-	var object_label: String = _water_offer_label
+func _on_water_rows_offer_accepted(object_label: String) -> void:
 	var entry: Dictionary = load(OBJECT_PROPERTIES_PATH).find_entry(_current_sheet, object_label)
 	var host_class: String = str(entry.get("class", "")).strip_edges()
 	var changed: bool = _perform_undoable_sheet_edit("Add Water Rows", func() -> bool:

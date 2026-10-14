@@ -11,6 +11,10 @@
 - Insert new object says a file it could not write on its own window, which stays open on what
   was typed, the way the other making windows already did, instead of closing and saying it on
   the dock's status line.
+- Open, Save As, Export Generated GDScript, Save Sheet as Text, Include Sheet, Extract to an
+  included sheet, Save as Test Sheet and the data table's CSV import and export open the same
+  one-shot file picker. Dropping an object marked secret, locked or water asks its offer as the
+  same quick question every other one is, with the same three answers it had.
 
 ### Changed: a behaviour names its host once
 
