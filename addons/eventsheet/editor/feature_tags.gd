@@ -114,10 +114,11 @@ static func commit_validator(value: String) -> Dictionary:
 	if tag.is_empty() or is_known(tag):
 		return {}
 	return {
-		"title": "Unknown Feature Tag",
-		"message": "\"%s\" isn't defined by Godot or any export preset, so OS.has_feature(\"%s\") will be false at runtime.\n\nAdd it to your export preset(s) now? Presets manage feature tags under Project > Export > Features." % [tag, tag],
-		"confirm_text": "Add To Preset(s)",
-		"cancel_text": "Keep As Is",
+		"title": EventSheetL10n.translate("Add %s to your export presets?") % tag,
+		"message": EventSheetL10n.translate("Neither Godot nor any export preset defines %s, so OS.has_feature(\"%s\") is false when the game runs.") % [tag, tag],
+		"note": EventSheetL10n.translate("Presets keep their feature tags under Project > Export > Features. Ctrl+Z does not take the tag out again."),
+		"confirm_text": EventSheetL10n.translate("Add to Presets"),
+		"cancel_text": EventSheetL10n.translate("Keep As Is"),
 		"on_confirm": func() -> void:
 			if add_custom_tag(tag) == 0:
 				push_warning("[EventSheets] Couldn't write the tag - if export_presets.cfg doesn't exist yet (or the Export dialog holds unsaved changes), add \"%s\" under Project > Export > Features." % tag)

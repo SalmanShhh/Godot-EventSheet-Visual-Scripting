@@ -3018,29 +3018,22 @@ func _open_go_to_event_dialog() -> void:
 	if _current_sheet == null:
 		_set_status("Open a sheet first.", true)
 		return
-	var dialog: AcceptDialog = AcceptDialog.new()
-	dialog.title = "Go to event"
-	dialog.ok_button_text = "Go"
 	var number_edit: SpinBox = SpinBox.new()
 	number_edit.min_value = 1
 	number_edit.max_value = 99999
-	number_edit.value = 1
-	dialog.add_child(EventSheetPopupUI.titled_card("Event number", EventSheetPopupUI.form_row("Go to event", number_edit)))
-	dialog.confirmed.connect(func() -> void:
-		var target: EventRow = EventSheetViewport.event_by_number(_current_sheet.events, int(number_edit.value), _current_sheet.functions)
-		if target == null:
-			_set_status("There is no event %d." % int(number_edit.value), true)
-		elif _viewport != null:
-			_viewport.reveal_resource(target)
-			_viewport.select_resource(target))
-	# The dialog frees on ANY exit - confirm auto-hides, cancel/Esc, or the titlebar X.
-	# Freeing only on the success branch leaked one hidden AcceptDialog per dismissal.
-	dialog.confirmed.connect(dialog.queue_free)
-	dialog.canceled.connect(dialog.queue_free)
-	dialog.close_requested.connect(dialog.queue_free)
-	EventSheetL10n.apply_to(dialog)
-	add_child(dialog)
-	dialog.popup_centered(Vector2i(320, 160))
+	load(SMALL_PROMPT_PATH).open(self, {
+		"title": EventSheetL10n.translate("Go to which event?"),
+		"say": EventSheetL10n.translate("Shows the event with this number and selects it."),
+		"body": EventSheetPopupUI.form_row(EventSheetL10n.translate("Event number"), number_edit),
+		"main": EventSheetL10n.translate("Go"),
+		"on_main": func() -> void:
+			var target: EventRow = EventSheetViewport.event_by_number(_current_sheet.events, int(number_edit.value), _current_sheet.functions)
+			if target == null:
+				_set_status(EventSheetL10n.translate("There is no event %d.") % int(number_edit.value), true)
+			elif _viewport != null:
+				_viewport.reveal_resource(target)
+				_viewport.select_resource(target),
+	})
 	number_edit.get_line_edit().grab_focus()
 
 

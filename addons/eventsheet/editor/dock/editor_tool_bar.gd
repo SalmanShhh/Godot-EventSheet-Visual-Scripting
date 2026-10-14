@@ -364,23 +364,19 @@ func ask_for_arguments() -> void:
 	if target.is_empty():
 		_dock._set_status("Save the sheet first - Run needs a tool on disk to run.", true)
 		return
-	var dialog: ConfirmationDialog = ConfirmationDialog.new()
-	dialog.title = EventSheetL10n.translate("Run with arguments…")
-	var body: VBoxContainer = EventSheetPopupUI.form_box()
-	body.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate(
-		"The words that would follow -- on the command line. This tool runs headless, in a second copy of this editor."), 480.0))
 	var field: LineEdit = LineEdit.new()
 	field.text = str(_arguments_by_path.get(target, ""))
-	body.add_child(field)
-	dialog.add_child(EventSheetPopupUI.margined(EventSheetPopupUI.titled_card(
-		EventSheetL10n.translate("Arguments"), body)))
-	dialog.confirmed.connect(func() -> void:
-		_arguments_by_path[target] = field.text
-		run_command_tool(target, field.text)
-		dialog.queue_free())
-	dialog.canceled.connect(dialog.queue_free)
-	_dock.add_child(dialog)
-	dialog.popup_centered()
+	load(_dock.SMALL_PROMPT_PATH).open(_dock, {
+		"title": EventSheetL10n.translate("Run %s with which arguments?") % target.get_file(),
+		"say": EventSheetL10n.translate("The words that would follow -- on the command line. This tool runs headless, in a second copy of this editor."),
+		"body": EventSheetPopupUI.form_row(EventSheetL10n.translate("Arguments"), field),
+		"glyph": "i",
+		"main": EventSheetL10n.translate("Run"),
+		"on_main": func() -> void:
+			_arguments_by_path[target] = field.text
+			run_command_tool(target, field.text),
+	})
+	field.grab_focus()
 
 
 ## Runs one command tool headless with the words given, and files what it printed under Output.

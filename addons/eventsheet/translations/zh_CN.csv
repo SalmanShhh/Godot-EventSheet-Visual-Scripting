@@ -8489,9 +8489,6 @@ Find what is unfinished in %s,查找 %s 中未完成的内容
 Apply its fix,应用其修复
 Check the project,检查项目
 Inbox,收件箱
-THIS FINDING,此发现
-A FIX,修复
-"Applies through undo, then re-runs the check, so the finding's going away is proven.",通过撤销系统应用，然后重新运行检查，从而证明该发现确实消失。
 Re-run Checks,重新运行检查
 Mark All as Read,全部标为已读
 "Writes down what is on this page, so the next audit marks only what appeared after it.",记下此页上的内容，下次检查只标记之后出现的项目。
@@ -8628,3 +8625,32 @@ yours,你的
 the file,文件
 %s - not changed,%s - 未更改
 check it,请检查
+Check this value,检查此值
+Keep As Is,保持原样
+Go to which event?,跳到哪个事件？
+Shows the event with this number and selects it.,显示并选中此编号的事件。
+Go,转到
+There is no event %d.,没有事件 %d。
+Add %s to your export presets?,将 %s 添加到导出预设？
+"Neither Godot nor any export preset defines %s, so OS.has_feature(""%s"") is false when the game runs.","Godot 和任何导出预设都没有定义 %s，因此游戏运行时 OS.has_feature(""%s"") 为 false。"
+Presets keep their feature tags under Project > Export > Features. Ctrl+Z does not take the tag out again.,预设的特性标签位于 项目 > 导出 > 特性。Ctrl+Z 不会再移除该标签。
+Add to Presets,添加到预设
+Edit code block,编辑代码块
+Run %s with which arguments?,用哪些参数运行 %s？
+Write these comment lines into %s?,将这些注释行写入 %s？
+"Each line goes above the member it names. Nothing else in the file changes - no signature, no body.",每一行放在它所指成员的上方。文件中的其他内容不变 - 不改签名，也不改函数体。
+A backup is taken first (Tools > Sheet Backups). Ctrl+Z does not undo a write to a script.,会先做备份（工具 > 表备份）。Ctrl+Z 无法撤销对脚本的写入。
+Extract these actions to a function?,将这些动作提取为函数？
+"These actions become one reusable function: call it anywhere, and it appears in the picker.",这些动作会成为一个可复用的函数：可在任何地方调用，并出现在选择器中。
+Name this action,为此动作命名
+Extract,提取
+Break only when?,仅在何时暂停？
+"Break only when this GDScript expression is true. Leave blank to break every pass - either way, this enables the event's breakpoint.",仅当此 GDScript 表达式为真时暂停。留空则每次都暂停 - 无论哪种，都会启用该事件的断点。
+Set,设置
+At (seconds),时间（秒）
+Add a step to this timeline?,向此时间线添加一步？
+The step runs one line of GDScript - a call or a Set - this many seconds after the timeline starts.,该步骤在时间线开始后这么多秒运行一行 GDScript - 一次调用或一次 Set。
+Key,键
+Change this entry?,修改此条目？
+Add an entry?,添加条目？
+"The value is a GDScript expression, written into the list exactly as typed.",值是一个 GDScript 表达式，会按输入原样写入列表。

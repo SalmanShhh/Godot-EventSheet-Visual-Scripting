@@ -8489,9 +8489,6 @@ Find what is unfinished in %s,Trouver ce qui est inachevé dans %s
 Apply its fix,Appliquer son correctif
 Check the project,Vérifier le projet
 Inbox,Boîte de réception
-THIS FINDING,CE CONSTAT
-A FIX,UN CORRECTIF
-"Applies through undo, then re-runs the check, so the finding's going away is proven.","S'applique via l'annulation, puis relance la vérification : la disparition du constat est ainsi prouvée."
 Re-run Checks,Relancer les vérifications
 Mark All as Read,Tout marquer comme lu
 "Writes down what is on this page, so the next audit marks only what appeared after it.","Note ce qui figure sur cette page, pour que le prochain audit ne marque que ce qui apparaît ensuite."
@@ -8628,3 +8625,32 @@ yours,la vôtre
 the file,le fichier
 %s - not changed,%s - non modifié
 check it,à vérifier
+Check this value,Vérifiez cette valeur
+Keep As Is,Laisser tel quel
+Go to which event?,Aller à quel évènement ?
+Shows the event with this number and selects it.,Affiche l'évènement portant ce numéro et le sélectionne.
+Go,Aller
+There is no event %d.,Il n'y a pas d'évènement %d.
+Add %s to your export presets?,Ajouter %s à vos préréglages d'export ?
+"Neither Godot nor any export preset defines %s, so OS.has_feature(""%s"") is false when the game runs.","Ni Godot ni aucun préréglage d'export ne définit %s : OS.has_feature(""%s"") vaut donc false quand le jeu tourne."
+Presets keep their feature tags under Project > Export > Features. Ctrl+Z does not take the tag out again.,Les préréglages gardent leurs étiquettes sous Projet > Exporter > Fonctionnalités. Ctrl+Z ne retire pas l'étiquette.
+Add to Presets,Ajouter aux préréglages
+Edit code block,Modifier le bloc de code
+Run %s with which arguments?,Exécuter %s avec quels arguments ?
+Write these comment lines into %s?,Écrire ces lignes de commentaire dans %s ?
+"Each line goes above the member it names. Nothing else in the file changes - no signature, no body.","Chaque ligne se place au-dessus du membre qu'elle nomme. Rien d'autre ne change dans le fichier - ni signature, ni corps."
+A backup is taken first (Tools > Sheet Backups). Ctrl+Z does not undo a write to a script.,Une sauvegarde est faite d'abord (Outils > Sauvegardes des feuilles). Ctrl+Z n'annule pas une écriture dans un script.
+Extract these actions to a function?,Extraire ces actions dans une fonction ?
+"These actions become one reusable function: call it anywhere, and it appears in the picker.","Ces actions deviennent une fonction réutilisable : appelez-la n'importe où, et elle apparaît dans le sélecteur."
+Name this action,Nommez cette action
+Extract,Extraire
+Break only when?,S'arrêter seulement quand ?
+"Break only when this GDScript expression is true. Leave blank to break every pass - either way, this enables the event's breakpoint.","S'arrêter seulement quand cette expression GDScript est vraie. Laissez vide pour s'arrêter à chaque passage - dans les deux cas, le point d'arrêt de l'évènement est activé."
+Set,Définir
+At (seconds),À (secondes)
+Add a step to this timeline?,Ajouter une étape à cette chronologie ?
+The step runs one line of GDScript - a call or a Set - this many seconds after the timeline starts.,L'étape exécute une ligne de GDScript - un appel ou un Set - autant de secondes après le début de la chronologie.
+Key,Clé
+Change this entry?,Modifier cette entrée ?
+Add an entry?,Ajouter une entrée ?
+"The value is a GDScript expression, written into the list exactly as typed.","La valeur est une expression GDScript, écrite dans la liste exactement comme elle est tapée."

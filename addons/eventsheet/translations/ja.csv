@@ -8489,9 +8489,6 @@ Find what is unfinished in %s,%s の未完成箇所を探す
 Apply its fix,その修正を適用
 Check the project,プロジェクトをチェック
 Inbox,受信箱
-THIS FINDING,この指摘
-A FIX,修正
-"Applies through undo, then re-runs the check, so the finding's going away is proven.",元に戻す操作として適用し、チェックを再実行するので、指摘が消えたことが確かめられます。
 Re-run Checks,チェックを再実行
 Mark All as Read,すべて既読にする
 "Writes down what is on this page, so the next audit marks only what appeared after it.",このページの内容を記録し、次の監査ではその後に現れたものだけに印を付けます。
@@ -8628,3 +8625,32 @@ yours,あなたの版
 the file,ファイルの版
 %s - not changed,%s - 変更なし
 check it,要確認
+Check this value,この値を確認
+Keep As Is,このままにする
+Go to which event?,どのイベントへ移動しますか?
+Shows the event with this number and selects it.,この番号のイベントを表示して選択します。
+Go,移動
+There is no event %d.,イベント %d はありません。
+Add %s to your export presets?,%s をエクスポートプリセットに追加しますか?
+"Neither Godot nor any export preset defines %s, so OS.has_feature(""%s"") is false when the game runs.","Godot もどのエクスポートプリセットも %s を定義していないため、ゲーム実行中の OS.has_feature(""%s"") は false です。"
+Presets keep their feature tags under Project > Export > Features. Ctrl+Z does not take the tag out again.,プリセットの機能タグは プロジェクト > エクスポート > 機能 にあります。Ctrl+Z ではタグは取り除かれません。
+Add to Presets,プリセットに追加
+Edit code block,コードブロックを編集
+Run %s with which arguments?,%s をどの引数で実行しますか?
+Write these comment lines into %s?,これらのコメント行を %s に書き込みますか?
+"Each line goes above the member it names. Nothing else in the file changes - no signature, no body.",各行は名指しするメンバーの上に入ります。ファイルのほかの部分 (シグネチャも本体も) は変わりません。
+A backup is taken first (Tools > Sheet Backups). Ctrl+Z does not undo a write to a script.,先にバックアップを取ります (ツール > シートのバックアップ)。スクリプトへの書き込みは Ctrl+Z で元に戻せません。
+Extract these actions to a function?,これらのアクションを関数に切り出しますか?
+"These actions become one reusable function: call it anywhere, and it appears in the picker.",これらのアクションは再利用できる 1 つの関数になります。どこからでも呼び出せ、ピッカーにも表示されます。
+Name this action,このアクションの名前
+Extract,切り出す
+Break only when?,どんなときだけ止めますか?
+"Break only when this GDScript expression is true. Leave blank to break every pass - either way, this enables the event's breakpoint.",この GDScript の式が true のときだけ止まります。空欄なら毎回止まります。どちらでもイベントのブレークポイントが有効になります。
+Set,設定
+At (seconds),時刻 (秒)
+Add a step to this timeline?,このタイムラインにステップを追加しますか?
+The step runs one line of GDScript - a call or a Set - this many seconds after the timeline starts.,このステップは、タイムライン開始からこの秒数後に GDScript を 1 行 (呼び出しか Set) 実行します。
+Key,キー
+Change this entry?,この項目を変更しますか?
+Add an entry?,項目を追加しますか?
+"The value is a GDScript expression, written into the list exactly as typed.",値は GDScript の式で、入力したとおりにリストへ書き込まれます。

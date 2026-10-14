@@ -29,8 +29,6 @@ const KIND_EDIT_KEYS: PackedStringArray = ["action", "condition", "expression", 
 const PARAM_HINTS: PackedStringArray = ["", "comparison", "expression", "color", "variable_reference", "input_action"]
 
 var _dock: Control = null
-var _curate_confirm: ConfirmationDialog = null
-var _curate_diff: CodeEdit = null
 var _curate_pending: Array = []
 ## member -> {param_id -> {hint, options, default}}. Held aside from the Tree because a param spec
 ## has no cell to live in, and re-scanning after an apply must not silently drop pending edits.
@@ -465,10 +463,14 @@ func on_provider_curate_pressed() -> void:
 	if _curate_pending.is_empty():
 		_dock._set_status("Nothing to curate - change a Publish box, Kind, Name or Category first.")
 		return
-	_ensure_curate_confirm()
-	_curate_diff.text = curation_diff_text(_curate_pending)
-	_curate_confirm.title = "Curate %s" % path.get_file()
-	_curate_confirm.popup_centered(Vector2i(720, 460))
+	load(_dock.SMALL_PROMPT_PATH).open(_dock, {
+		"title": EventSheetL10n.translate("Write these comment lines into %s?") % path.get_file(),
+		"say": EventSheetL10n.translate("Each line goes above the member it names. Nothing else in the file changes - no signature, no body."),
+		"code": curation_diff_text(_curate_pending),
+		"note": EventSheetL10n.translate("A backup is taken first (Tools > Sheet Backups). Ctrl+Z does not undo a write to a script."),
+		"main": EventSheetL10n.translate("Write Annotations"),
+		"on_main": _apply_curation,
+	})
 
 
 ## A human-readable preview of the comment lines each member will gain.
@@ -482,24 +484,6 @@ func curation_diff_text(edits: Array) -> String:
 			lines.append("  + %s" % annotation)
 		blocks.append("\n".join(lines))
 	return "\n\n".join(blocks)
-
-
-func _ensure_curate_confirm() -> void:
-	if _curate_confirm != null:
-		return
-	_curate_confirm = ConfirmationDialog.new()
-	_curate_confirm.ok_button_text = "Write Annotations"
-	var body: VBoxContainer = EventSheetPopupUI.form_box()
-	body.add_child(EventSheetPopupUI.hint_label("These comment lines are added above the members named below.\nNothing else in the file changes - no signature, no body - and a backup is taken first (Tools > Sheet Backups)."))
-	_curate_diff = CodeEdit.new()
-	_curate_diff.editable = false
-	_curate_diff.custom_minimum_size = Vector2(0, 260)
-	_curate_diff.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	EventSheetPopupUI.configure_code_editor(_curate_diff)
-	body.add_child(_curate_diff)
-	_curate_confirm.add_child(EventSheetPopupUI.margined(body))
-	_curate_confirm.confirmed.connect(_apply_curation)
-	_dock.add_child(_curate_confirm)
 
 
 func _apply_curation() -> void:

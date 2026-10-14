@@ -8489,9 +8489,6 @@ Find what is unfinished in %s,%s에서 끝나지 않은 것 찾기
 Apply its fix,해당 수정 적용
 Check the project,프로젝트 검사
 Inbox,받은 편지함
-THIS FINDING,이 항목
-A FIX,수정
-"Applies through undo, then re-runs the check, so the finding's going away is proven.","실행 취소를 통해 적용한 뒤 검사를 다시 실행하므로, 항목이 사라졌음이 증명됩니다."
 Re-run Checks,검사 다시 실행
 Mark All as Read,모두 읽음으로 표시
 "Writes down what is on this page, so the next audit marks only what appeared after it.","이 페이지의 내용을 기록해 두어, 다음 검사에서는 그 뒤에 나타난 것만 표시합니다."
@@ -8628,3 +8625,32 @@ yours,내 버전
 the file,파일
 %s - not changed,%s - 바뀌지 않음
 check it,확인 필요
+Check this value,이 값 확인
+Keep As Is,그대로 두기
+Go to which event?,어느 이벤트로 이동할까요?
+Shows the event with this number and selects it.,이 번호의 이벤트를 보여 주고 선택합니다.
+Go,이동
+There is no event %d.,이벤트 %d이(가) 없습니다.
+Add %s to your export presets?,%s을(를) 내보내기 프리셋에 추가할까요?
+"Neither Godot nor any export preset defines %s, so OS.has_feature(""%s"") is false when the game runs.","Godot와 어떤 내보내기 프리셋도 %s을(를) 정의하지 않으므로, 게임 실행 중 OS.has_feature(""%s"")는 false입니다."
+Presets keep their feature tags under Project > Export > Features. Ctrl+Z does not take the tag out again.,프리셋의 기능 태그는 프로젝트 > 내보내기 > 기능에 있습니다. Ctrl+Z로는 태그가 다시 빠지지 않습니다.
+Add to Presets,프리셋에 추가
+Edit code block,코드 블록 편집
+Run %s with which arguments?,%s을(를) 어떤 인수로 실행할까요?
+Write these comment lines into %s?,이 주석 줄을 %s에 쓸까요?
+"Each line goes above the member it names. Nothing else in the file changes - no signature, no body.",각 줄은 가리키는 멤버 위에 들어갑니다. 파일의 다른 부분은 바뀌지 않습니다 - 시그니처도 본문도.
+A backup is taken first (Tools > Sheet Backups). Ctrl+Z does not undo a write to a script.,먼저 백업을 만듭니다(도구 > 시트 백업). 스크립트에 쓴 내용은 Ctrl+Z로 되돌릴 수 없습니다.
+Extract these actions to a function?,이 액션들을 함수로 추출할까요?
+"These actions become one reusable function: call it anywhere, and it appears in the picker.",이 액션들은 재사용할 수 있는 함수 하나가 됩니다. 어디서든 호출할 수 있고 선택기에도 나타납니다.
+Name this action,이 액션의 이름
+Extract,추출
+Break only when?,언제만 멈출까요?
+"Break only when this GDScript expression is true. Leave blank to break every pass - either way, this enables the event's breakpoint.",이 GDScript 식이 참일 때만 멈춥니다. 비워 두면 매번 멈춥니다 - 어느 쪽이든 이벤트의 중단점이 켜집니다.
+Set,설정
+At (seconds),시점 (초)
+Add a step to this timeline?,이 타임라인에 단계를 추가할까요?
+The step runs one line of GDScript - a call or a Set - this many seconds after the timeline starts.,이 단계는 타임라인이 시작된 뒤 이 초만큼 지나서 GDScript 한 줄(호출 또는 Set)을 실행합니다.
+Key,키
+Change this entry?,이 항목을 바꿀까요?
+Add an entry?,항목을 추가할까요?
+"The value is a GDScript expression, written into the list exactly as typed.","값은 GDScript 식이며, 입력한 그대로 목록에 쓰입니다."

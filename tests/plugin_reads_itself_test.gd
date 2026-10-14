@@ -141,9 +141,9 @@ const KNOWN_DRIFT: PackedStringArray = []
 const DERIVED_FLOOR: Dictionary = {
 	"res://addons/eventforge/compiler/sheet_compiler.gd": 6,
 	"res://addons/eventsheet/editor/dock/multi_view_manager.gd": 11,
-	# 13: the Inspector button prompt and its three generic calls moved out of this file with the
-	# prompt (the variable gestures ask it now).
-	"res://addons/eventsheet/editor/dock/quick_prompt_dialogs.gd": 13,
+	# 3: the four quick questions here now ask through the shared small prompt, so the dialog-building
+	# generic calls they named (popup_centered, add_child and the rest) left the file with them.
+	"res://addons/eventsheet/editor/dock/quick_prompt_dialogs.gd": 3,
 	"res://addons/eventsheet/editor/event_sheet_exposed_node.gd": 8,
 	"res://addons/eventsheet/editor/objects_panel.gd": 10,
 }

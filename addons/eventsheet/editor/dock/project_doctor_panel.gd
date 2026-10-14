@@ -24,8 +24,8 @@ var _doctor_window: Window = null
 var _doctor_tree: Tree = null
 var _summary_label: Label = null
 var _open_button: Button = null
-var _strip: EventSheetPopupUI.HelpStrip = null
-var _this_finding: Label = null
+## One sentence under the inbox saying where the selected finding is and how to open it.
+var _this_finding: EventSheetPopupUI.StateNote = null
 ## The finding whose fixes are listed under it right now, so choosing another one takes them away.
 var _fixed_item: TreeItem = null
 ## The page currently drawn - what "mark as read" writes down.
@@ -78,14 +78,8 @@ func _build() -> void:
 	var findings_card: PanelContainer = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Inbox"), _doctor_tree)
 	findings_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_child(findings_card)
-	_strip = EventSheetPopupUI.help_strip()
-	# Only the two captioned lines speak here; the heading and paragraph above them would be empty room.
-	_strip.heading_label.visible = false
-	_strip.body_label.visible = false
-	_this_finding = _strip.add_line(EventSheetL10n.translate("THIS FINDING"))
-	_strip.set_line(_strip.add_line(EventSheetL10n.translate("A FIX")),
-		EventSheetL10n.translate("Applies through undo, then re-runs the check, so the finding's going away is proven."))
-	box.add_child(_strip)
+	_this_finding = EventSheetPopupUI.StateNote.new(EventSheetPalette.scaled_f(600.0))
+	box.add_child(_this_finding)
 	var buttons: HBoxContainer = HBoxContainer.new()
 	buttons.add_child(_button(EventSheetL10n.translate("Re-run Checks"), _run_project_doctor))
 	# The reader's own "I have dealt with this page" - the same thing closing the window does, for a
@@ -185,8 +179,8 @@ func _on_finding_selected() -> void:
 	_open_button.disabled = not is_finding
 	_open_button.text = EventSheetL10n.translate("Open %s") % item.get_tooltip_text(2).get_file() \
 		if is_finding else EventSheetL10n.translate("Open")
-	_strip.set_line(_this_finding, EventSheetL10n.translate("Double-click it, or press Open, to open %s.") % item.get_text(2)
-		if is_finding else EventSheetL10n.translate("Select a finding to see where it is and what fixes it."))
+	_this_finding.say(EventSheetL10n.translate("Double-click it, or press Open, to open %s.") % item.get_text(2)
+		if is_finding else EventSheetL10n.translate("Select a finding to see where it is and what fixes it."), "")
 	if not is_finding or item.get_child_count() > 0:
 		return
 	for offer: Dictionary in offers_for(finding as Dictionary):

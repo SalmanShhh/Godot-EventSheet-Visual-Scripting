@@ -693,7 +693,7 @@ func ensure_raw_code_dialog() -> void:
 	if _dock._raw_code_dialog != null:
 		return
 	_dock._raw_code_dialog = ConfirmationDialog.new()
-	_dock._raw_code_dialog.title = "Edit Script Block"
+	_dock._raw_code_dialog.title = EventSheetL10n.translate("Edit code block")
 	# The button the lint and the guardrails call Save, so it says Save.
 	_dock._raw_code_dialog.ok_button_text = "Save"
 	# Standard popup margins, consistent with the other plugin dialogs.

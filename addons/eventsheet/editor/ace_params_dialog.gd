@@ -22,6 +22,8 @@ const VARIABLE_REFERENCE_HINT := "variable_reference"
 const EXPRESSION_HINT := "expression"
 const NO_VARIABLES_PLACEHOLDER := "No variables available"
 const BACK_ACTION := "back"
+## The one shape every quick question takes, loaded the first time a value asks one.
+const SMALL_PROMPT_PATH := "res://addons/eventsheet/editor/small_prompt.gd"
 const ADD_ANOTHER_ACTION := "add_another"
 
 ## The row that puts a layout over the running game, and the field of it that decides which layout
@@ -3622,19 +3624,14 @@ func _first_commit_validation_prompt(values: Dictionary) -> Dictionary:
 	return {}
 
 
-## The ONE deferred-commit prompt: whichever way it closes - confirm, cancel, Esc
-## (canceled), or the titlebar X (close_requested, which does NOT emit canceled) - the
-## deferred params_confirmed lands exactly once; on_confirm runs only on confirm.
-## Dropping any exit path would silently lose the user's already-committed edit.
+## The ONE deferred-commit prompt, in the shape every quick question takes: whichever way it closes -
+## the main button, Keep As Is, Esc or the close box - the deferred params_confirmed lands exactly
+## once; on_confirm runs only on the main button. Dropping any exit path would silently lose the
+## user's already-committed edit. The spec's keys are the commit-validator seam's: title, message,
+## confirm_text, cancel_text, on_confirm, and an optional note.
 func _prompt_commit_validation(prompt: Dictionary, definition: ACEDefinition, values: Dictionary, context: Dictionary) -> void:
 	if _commit_validation_prompt != null and is_instance_valid(_commit_validation_prompt):
 		_commit_validation_prompt.queue_free()
-	_commit_validation_prompt = ConfirmationDialog.new()
-	_commit_validation_prompt.title = str(prompt.get("title", "Check this value"))
-	_commit_validation_prompt.dialog_text = str(prompt.get("message", ""))
-	_commit_validation_prompt.ok_button_text = str(prompt.get("confirm_text", "OK"))
-	_commit_validation_prompt.cancel_button_text = str(prompt.get("cancel_text", "Keep As Is"))
-	var dialog_node: ConfirmationDialog = _commit_validation_prompt
 	var on_confirm: Callable = prompt.get("on_confirm", Callable())
 	var finished: Dictionary = {"done": false}
 	var finish_commit: Callable = func(confirmed_choice: bool) -> void:
@@ -3644,13 +3641,16 @@ func _prompt_commit_validation(prompt: Dictionary, definition: ACEDefinition, va
 		if confirmed_choice and on_confirm.is_valid():
 			on_confirm.call()
 		params_confirmed.emit(definition, values, context)
-		dialog_node.queue_free()
-	_commit_validation_prompt.confirmed.connect(func() -> void: finish_commit.call(true))
-	_commit_validation_prompt.canceled.connect(func() -> void: finish_commit.call(false))
-	_commit_validation_prompt.close_requested.connect(func() -> void: finish_commit.call(false))
-	_dialog.get_parent().add_child(_commit_validation_prompt)
-	EventSheetL10n.apply_to(_commit_validation_prompt)
-	_commit_validation_prompt.popup_centered(Vector2i(460, 200))
+	_commit_validation_prompt = load(SMALL_PROMPT_PATH).open(_dialog.get_parent(), {
+		"title": str(prompt.get("title", EventSheetL10n.translate("Check this value"))),
+		"say": str(prompt.get("message", "")),
+		"note": str(prompt.get("note", "")),
+		"main": str(prompt.get("confirm_text", EventSheetL10n.translate("OK"))),
+		"cancel": str(prompt.get("cancel_text", EventSheetL10n.translate("Keep As Is"))),
+		"on_main": finish_commit.bind(true),
+		"on_cancel": finish_commit.bind(false),
+	})
+	_commit_validation_prompt.tree_exiting.connect(finish_commit.bind(false))
 
 
 func _on_custom_action(action: StringName) -> void:

@@ -17,6 +17,16 @@
   flags and number choices show the variable's own names ticked or chosen by its value, a colour
   shows its colour, a toggle row its chosen word, and a path, password or expression its own text.
 
+### Changed: eight more quick questions take the one small-prompt shape
+
+- Go to event, Extract to function, the conditional breakpoint, a Timeline step, a list or dictionary
+  entry, Run with arguments, Curate script and the unknown feature tag question were each a one-off
+  dialog. They now ask the way every quick question does: the title is the question ("Go to which
+  event?", "Break only when?"), one sentence says what happens, the note says whether Ctrl+Z undoes
+  it, and the blue button is the safe answer.
+- Enter in the field a quick question asks for presses its blue button, in every quick question.
+- The code block window is titled Edit code block.
+
 ### Changed: the making windows share one form shell and one described dropdown
 
 - New data table, Insert new object, New behaviour, New global, Sheet Type and the class's

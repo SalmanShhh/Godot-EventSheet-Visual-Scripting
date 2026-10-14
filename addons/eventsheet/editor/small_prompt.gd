@@ -74,6 +74,10 @@ static func open(host: Node, ask: Dictionary) -> ConfirmationDialog:
 	set_list(dialog, ask.get("list", []))
 	if ask.get("body") is Control:
 		column.add_child(ask["body"] as Control)
+		# Enter in a field the question asks for is the blue button, as rule 4 says it is everywhere.
+		for field: Node in [ask["body"]] + (ask["body"] as Control).find_children("*", "LineEdit", true, false):
+			if field is LineEdit:
+				dialog.register_text_enter(field as LineEdit)
 	var code: Control = Control.new()
 	code.name = "Code"
 	column.add_child(code)

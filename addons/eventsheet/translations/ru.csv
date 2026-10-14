@@ -8489,9 +8489,6 @@ Find what is unfinished in %s,Найти незавершённое в %s
 Apply its fix,Применить его исправление
 Check the project,Проверить проект
 Inbox,Входящие
-THIS FINDING,ЭТА НАХОДКА
-A FIX,ИСПРАВЛЕНИЕ
-"Applies through undo, then re-runs the check, so the finding's going away is proven.","Применяется через отмену, затем проверка запускается снова, так что исчезновение находки доказано."
 Re-run Checks,Перезапустить проверки
 Mark All as Read,Отметить всё прочитанным
 "Writes down what is on this page, so the next audit marks only what appeared after it.","Запоминает содержимое этой страницы, чтобы следующая проверка отмечала только появившееся после."
@@ -8628,3 +8625,32 @@ yours,ваша
 the file,файл
 %s - not changed,%s - не изменён
 check it,проверьте
+Check this value,Проверьте это значение
+Keep As Is,Оставить как есть
+Go to which event?,К какому событию перейти?
+Shows the event with this number and selects it.,Показывает событие с этим номером и выделяет его.
+Go,Перейти
+There is no event %d.,События %d нет.
+Add %s to your export presets?,Добавить %s в пресеты экспорта?
+"Neither Godot nor any export preset defines %s, so OS.has_feature(""%s"") is false when the game runs.","Ни Godot, ни один пресет экспорта не определяет %s, поэтому OS.has_feature(""%s"") во время игры равно false."
+Presets keep their feature tags under Project > Export > Features. Ctrl+Z does not take the tag out again.,Пресеты хранят метки возможностей в Проект > Экспорт > Возможности. Ctrl+Z не уберёт метку обратно.
+Add to Presets,Добавить в пресеты
+Edit code block,Изменить блок кода
+Run %s with which arguments?,С какими аргументами запустить %s?
+Write these comment lines into %s?,Записать эти строки комментариев в %s?
+"Each line goes above the member it names. Nothing else in the file changes - no signature, no body.","Каждая строка ставится над членом, который она называет. Больше в файле ничего не меняется - ни сигнатуры, ни тела."
+A backup is taken first (Tools > Sheet Backups). Ctrl+Z does not undo a write to a script.,Сначала делается резервная копия (Инструменты > Резервные копии листов). Ctrl+Z не отменяет запись в скрипт.
+Extract these actions to a function?,Вынести эти действия в функцию?
+"These actions become one reusable function: call it anywhere, and it appears in the picker.","Эти действия станут одной переиспользуемой функцией: её можно вызвать где угодно, и она появится в выборе."
+Name this action,Назовите это действие
+Extract,Вынести
+Break only when?,Останавливаться только когда?
+"Break only when this GDScript expression is true. Leave blank to break every pass - either way, this enables the event's breakpoint.","Останавливаться, только когда это выражение GDScript истинно. Оставьте пустым, чтобы останавливаться каждый проход - в любом случае точка останова события включается."
+Set,Задать
+At (seconds),На (секунде)
+Add a step to this timeline?,Добавить шаг на эту шкалу времени?
+The step runs one line of GDScript - a call or a Set - this many seconds after the timeline starts.,Шаг выполняет одну строку GDScript - вызов или Set - через столько секунд после начала шкалы.
+Key,Ключ
+Change this entry?,Изменить эту запись?
+Add an entry?,Добавить запись?
+"The value is a GDScript expression, written into the list exactly as typed.","Значение - выражение GDScript, оно записывается в список ровно так, как набрано."

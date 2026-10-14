@@ -74,8 +74,9 @@ custom_features="demo_mode,itch"
 	all_passed = _check("an expression is never prompted",
 		EventSheetFeatureTags.commit_validator("current_tag()").is_empty(), true) and all_passed
 	var validator_prompt: Dictionary = EventSheetFeatureTags.commit_validator("\"vr_build\"")
-	all_passed = _check("an unknown literal returns the prompt spec",
-		str(validator_prompt.get("confirm_text", "")), "Add To Preset(s)") and all_passed
+	all_passed = _check("an unknown literal returns the prompt spec, its title the question",
+		[str(validator_prompt.get("title", "")), str(validator_prompt.get("confirm_text", ""))],
+		["Add vr_build to your export presets?", "Add to Presets"]) and all_passed
 	all_passed = _check("the prompt carries its on_confirm action",
 		(validator_prompt.get("on_confirm", Callable()) as Callable).is_valid(), true) and all_passed
 
