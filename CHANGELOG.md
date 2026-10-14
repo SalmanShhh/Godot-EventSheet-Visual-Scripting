@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Changed: the help, keys, words and asking windows say what they do on the window
+
+- Keyboard Shortcuts: a key put on a fixed key (Ctrl+F, Ctrl+P…) or on another changeable key says
+  so in an amber note under its row, not only in a tooltip. The rows are built once and repainted, so
+  the button listening for a key is never rebuilt under it. Reset all to defaults sits beside Done,
+  and a help strip names the key being changed and where custom keys are kept.
+- Words: each vocabulary choice describes itself on hover and keeps the chosen one's sentence under
+  the dropdown; Reset to defaults sits beside Close; the help strip follows every word's two fields.
+- Ask: the mode line wears the ok edge while Ask is on and amber while it is off, Add these events is
+  the window's blue main button, and the strip says which setting the sentence is sent to.
+- Generate Events from a Description: Generate is greyed while it cannot run, and the window itself
+  says why (Ask off, no key, a request still out) and what went wrong with the last request, instead
+  of only the dock's status line; the strip says which setting the description is sent to.
+- The Manual window drops its Read this online button: Open online under the guide tree does the same.
+- A described dropdown no longer prints a missing-metadata error each time an item is added.
 ### Changed: the hand-built confirm dialogs open through the window kit
 
 - The window kit's form window takes `hide_on_ok` (OK closes it, for a form OK cannot refuse) and a

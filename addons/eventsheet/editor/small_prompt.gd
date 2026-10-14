@@ -55,8 +55,7 @@ static func open(host: Node, ask: Dictionary) -> ConfirmationDialog:
 	var cancel_text: String = str(ask.get("cancel", EventSheetL10n.translate("Cancel")))
 	dialog.cancel_button_text = cancel_text
 	dialog.get_cancel_button().visible = not cancel_text.is_empty()
-	var blue: Color = EventSheetPopupUI.accent_color().darkened(0.3)
-	_paint(dialog.get_ok_button(), blue, Color.WHITE, true)
+	EventSheetPopupUI.main_button(dialog.get_ok_button())
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", EventSheetPopupUI.CONTENT_MARGIN)
 	row.add_child(_badge(str(ask.get("glyph", "?"))))
@@ -156,7 +155,7 @@ static func _wire(dialog: ConfirmationDialog, ask: Dictionary) -> void:
 		var danger: Button = dialog.add_button(danger_text, false, DANGER_ACTION)
 		danger.name = "Danger"
 		var red: Color = _danger_color()
-		_paint(danger, Color(red, 0.0), red, false)
+		EventSheetPopupUI.paint_button(danger, Color(red, 0.0), red, false)
 		_stand_apart(danger)
 		var on_danger: Callable = ask.get("on_danger", Callable()) as Callable
 		dialog.custom_action.connect(func(action: StringName) -> void:
@@ -219,23 +218,6 @@ static func _editor_theme() -> Theme:
 	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
 		return Engine.get_singleton("EditorInterface").get_editor_theme()
 	return null
-
-
-## Recolours one of the dialog's own buttons: filled for the safe choice, outlined for the risky one.
-static func _paint(button: Button, fill: Color, text: Color, filled: bool) -> void:
-	for state: String in ["normal", "hover", "pressed", "focus"]:
-		var style: StyleBoxFlat = StyleBoxFlat.new()
-		var base: StyleBox = button.get_theme_stylebox(state)
-		if base is StyleBoxFlat:
-			style = (base as StyleBoxFlat).duplicate() as StyleBoxFlat
-		style.draw_center = filled and state != "focus"
-		style.bg_color = fill.lightened(0.12) if state == "hover" else fill
-		style.border_color = fill if filled and state != "focus" else text
-		style.set_border_width_all(1)
-		style.set_corner_radius_all(3)
-		button.add_theme_stylebox_override(state, style)
-	for color_name: String in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
-		button.add_theme_color_override(color_name, text)
 
 
 ## The editor's own error colour, so the risky button matches Godot's red in every theme.

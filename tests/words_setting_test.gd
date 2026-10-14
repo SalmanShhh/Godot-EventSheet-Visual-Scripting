@@ -82,6 +82,15 @@ static func run() -> bool:
 	all_passed = _check("the words table sits in a scroll box and the page fits the window it opens in",
 		[table_scroll is ScrollContainer, page_body.get_combined_minimum_size().y <= 560.0],
 		[true, true]) and all_passed
+	# Every choice of the vocabulary dropdown says what it means, and the chosen one's sentence stays
+	# under it; the one help strip at the foot follows every field and says where the words are kept.
+	var probe: Dictionary = EventSheetPopupUI.probe_help_dialog(page_body)
+	var preset_note: Label = page_dialog._preset_option.get_meta("chosen_note") as Label \
+		if page_dialog._preset_option.has_meta("chosen_note") else null
+	all_passed = _check("the vocabulary choices are described and the page's one strip follows every field",
+		[page_dialog._preset_option.get_item_tooltip(0).is_empty(), preset_note != null, int(probe.get("strips", 0)),
+			probe.get("unwired", PackedStringArray())],
+		[false, true, 1, PackedStringArray()]) and all_passed
 	page_dialog.free()
 	return all_passed
 

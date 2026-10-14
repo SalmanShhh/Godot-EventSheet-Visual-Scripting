@@ -8659,3 +8659,37 @@ Why this condition/action exists…,Perché esiste questa condizione/azione…
 "Enemy2, Enemy3","Enemy2, Enemy3"
 Live edit needs a streaming debug session (run the game with Live Values on).,La modifica dal vivo richiede una sessione di debug in streaming (avvia il gioco con Valori dal vivo attivo).
 Live edit: %s = %s sent to the running game.,Modifica dal vivo: %s = %s inviato al gioco in esecuzione.
+STORED,SALVATO
+SENDS TO,INVIA A
+"per user, on this machine - not in the project","per utente, su questo computer - non nel progetto"
+Press the new key combination now. Esc cancels.,Premi ora la nuova combinazione di tasti. Esc annulla.
+"Click, then press the new key combination.","Fai clic, poi premi la nuova combinazione di tasti."
+Reset to default (%s),Ripristina il valore predefinito (%s)
+Reset,Ripristina
+%s is also '%s' - one of them won't fire. Rebind one.,%s è anche '%s' - uno dei due non scatterà. Riassegnane uno.
+"%s is also %s, a fixed key - one of them won't fire. Rebind this one.","%s è anche %s, un tasto fisso - uno dei due non scatterà. Riassegna questo."
+"with your editor settings, not the project - two people can read one sheet in different words","con le impostazioni del tuo editor, non nel progetto - due persone possono leggere un foglio con parole diverse"
+"Sets both halves at once: whether the nouns read in the sheet's words, and whether the verbs do.",Imposta entrambe le metà insieme: se i nomi si leggono con le parole del foglio e se lo fanno anche i verbi.
+with Familiar Words on: the word every row says. custom… lets you type your own.,con Parole familiari attive: la parola che dice ogni riga. custom… ti lascia scrivere la tua.
+with Familiar Words off: the word every row says. custom… lets you type your own.,con Parole familiari disattivate: la parola che dice ogni riga. custom… ti lascia scrivere la tua.
+"The rows land in this sheet at once, as one undo step.","Le righe arrivano in questo foglio tutte insieme, come un solo passo di annullamento."
+Set eventsheets/ai/api_key in Project Settings first.,Imposta prima eventsheets/ai/api_key nelle Impostazioni progetto.
+AI request failed (HTTP %d). Check eventsheets/ai/* settings.,Richiesta IA non riuscita (HTTP %d). Controlla le impostazioni eventsheets/ai/*.
+AI response could not be parsed.,Impossibile interpretare la risposta dell'IA.
+AI returned no usable text.,L'IA non ha restituito testo utilizzabile.
+Nothing is added until you press Add these events - one undo step.,Non viene aggiunto nulla finché non premi Aggiungi questi eventi - un solo passo di annullamento.
+One sentence in your own words. Nothing is sent until you press Ask.,Una frase con parole tue. Non viene inviato nulla finché non premi Chiedi.
+"Ask is on (%s). Your sentence, this sheet's objects and the words this sheet can write go to %s when you press Ask. Nothing else, and nothing until then.","Chiedi è attivo (%s). La tua frase, gli oggetti di questo foglio e le parole che può scrivere vanno a %s quando premi Chiedi. Nient'altro, e niente prima."
+"Ask is off, so nothing will be sent. Turn it on in Project Settings ▸ EventSheets ▸ Ask and give it an endpoint that speaks the common chat format.","Chiedi è disattivato, quindi non verrà inviato nulla. Attivalo in Impostazioni progetto ▸ EventSheets ▸ Ask e dagli un endpoint che parli il formato chat comune."
+Asking %s…,Sto chiedendo a %s…
+%s answered %d:,%s ha risposto %d:
+"Dropped, because this project has no words for them:","Scartato, perché questo progetto non ha parole per questo:"
+Change the keyboard shortcuts,Modifica le scorciatoie da tastiera
+Keys you can change,Tasti che puoi cambiare
+Fixed keys (not rebindable),Tasti fissi (non riassegnabili)
+Reset all to defaults,Ripristina tutto
+Press a key…,Premi un tasto…
+Words: choose what the sheet calls things,Parole: scegli come il foglio chiama le cose
+Ask for events,Chiedi eventi
+"Drops the proposal. Your sentence stays, so you can reword it and ask again.","Scarta la proposta. La tua frase resta, così puoi riformularla e chiedere di nuovo."
+Generate,Genera

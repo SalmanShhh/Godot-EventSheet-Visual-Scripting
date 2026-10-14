@@ -20,11 +20,6 @@
 class_name EventSheetDocWindow
 extends RefCounted
 
-## The guide index in the repo, opened by the window's "Read this online" button. The native pages
-## carry no images, so this is the escape hatch to the full-fidelity page - version-pinned, so it
-## always matches the installed plugin.
-const INDEX_DOC_PATH := "docs/README.md"
-
 var _dock: Control = null
 var _dialog: AcceptDialog = null
 var _browser: EventSheetDocBrowser = null
@@ -108,29 +103,14 @@ func _ensure_built() -> void:
 	_browser.project_row_requested.connect(func(sheet_path: String, line: int) -> void:
 		if not EventSheets.reveal_project_row(sheet_path, line):
 			_dock._set_status("Could not open that sheet."))
-	var body: VBoxContainer = EventSheetPopupUI.form_box()
-	body.add_child(_browser)
-	var online_button: Button = Button.new()
-	online_button.text = "Read this online"
-	online_button.tooltip_text = "Opens the full guide index in your browser, pinned to the version you installed. The online pages carry the screenshots this one leaves out."
-	online_button.pressed.connect(_open_current_online)
-	var footer: HBoxContainer = HBoxContainer.new()
-	footer.alignment = BoxContainer.ALIGNMENT_END
-	footer.add_child(online_button)
-	body.add_child(footer)
-	dialog.add_child(EventSheetPopupUI.margined(body))
+	# The page's own way online is the Open online button under the guide tree, so the window adds
+	# no second one.
+	dialog.add_child(EventSheetPopupUI.margined(_browser))
+	EventSheetPopupUI.main_button(dialog.get_ok_button())
 	_dock.add_child(dialog)
 	# Chrome translates for free once the dialog is in the plugin's translation domain.
 	EventSheetL10n.apply_to(dialog)
 	_dialog = dialog
-
-
-## The online escape hatch follows the reader: the page they are on when there is one, and the
-## index when the surface is showing generated reference instead of a guide.
-func _open_current_online() -> void:
-	var route: Dictionary = EventSheetDocExplain.resolve(_browser.current_doc_id())
-	var target: String = str(route.get("target", ""))
-	EventSheets.open_online_doc(target if not target.is_empty() else INDEX_DOC_PATH)
 
 
 ## The window title names what is on screen, so a reader with the window parked beside the sheet

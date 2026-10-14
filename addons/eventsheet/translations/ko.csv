@@ -8659,3 +8659,37 @@ Why this condition/action exists…,이 조건/액션이 있는 이유…
 "Enemy2, Enemy3","Enemy2, Enemy3"
 Live edit needs a streaming debug session (run the game with Live Values on).,실시간 편집에는 스트리밍 중인 디버그 세션이 필요합니다 (실시간 값을 켜고 게임을 실행하세요).
 Live edit: %s = %s sent to the running game.,실시간 편집: %s = %s 값을 실행 중인 게임에 보냈습니다.
+STORED,저장 위치
+SENDS TO,보내는 곳
+"per user, on this machine - not in the project",사용자별로 이 컴퓨터에 저장 - 프로젝트에는 들어가지 않습니다
+Press the new key combination now. Esc cancels.,지금 새 키 조합을 누르세요. Esc를 누르면 취소됩니다.
+"Click, then press the new key combination.",클릭한 다음 새 키 조합을 누르세요.
+Reset to default (%s),기본값으로 되돌리기 (%s)
+Reset,초기화
+%s is also '%s' - one of them won't fire. Rebind one.,%s는 '%s'에도 쓰입니다 - 둘 중 하나는 동작하지 않습니다. 하나를 다시 지정하세요.
+"%s is also %s, a fixed key - one of them won't fire. Rebind this one.",%s는 고정 키인 %s이기도 합니다 - 둘 중 하나는 동작하지 않습니다. 이 키를 다시 지정하세요.
+"with your editor settings, not the project - two people can read one sheet in different words",프로젝트가 아니라 에디터 설정에 저장 - 두 사람이 한 시트를 서로 다른 말로 읽을 수 있습니다
+"Sets both halves at once: whether the nouns read in the sheet's words, and whether the verbs do.","두 가지를 한 번에 정합니다: 명사를 시트의 말로 읽을지, 동사도 그렇게 할지."
+with Familiar Words on: the word every row says. custom… lets you type your own.,익숙한 말이 켜져 있을 때: 모든 행이 말하는 단어. custom…으로 직접 입력할 수 있습니다.
+with Familiar Words off: the word every row says. custom… lets you type your own.,익숙한 말이 꺼져 있을 때: 모든 행이 말하는 단어. custom…으로 직접 입력할 수 있습니다.
+"The rows land in this sheet at once, as one undo step.","행은 이 시트에 한 번에 들어가며, 실행 취소 한 번으로 되돌릴 수 있습니다."
+Set eventsheets/ai/api_key in Project Settings first.,먼저 프로젝트 설정에서 eventsheets/ai/api_key를 지정하세요.
+AI request failed (HTTP %d). Check eventsheets/ai/* settings.,AI 요청이 실패했습니다 (HTTP %d). eventsheets/ai/* 설정을 확인하세요.
+AI response could not be parsed.,AI 응답을 해석할 수 없습니다.
+AI returned no usable text.,AI가 쓸 수 있는 텍스트를 돌려주지 않았습니다.
+Nothing is added until you press Add these events - one undo step.,'이 이벤트 추가'를 누르기 전에는 아무것도 추가되지 않습니다 - 실행 취소 한 번입니다.
+One sentence in your own words. Nothing is sent until you press Ask.,자신의 말로 쓴 한 문장. '질문'을 누르기 전에는 아무것도 보내지 않습니다.
+"Ask is on (%s). Your sentence, this sheet's objects and the words this sheet can write go to %s when you press Ask. Nothing else, and nothing until then.","질문이 켜져 있습니다 (%s). '질문'을 누르면 문장, 이 시트의 오브젝트, 이 시트가 쓸 수 있는 말이 %s(으)로 갑니다. 그 밖에는 없고, 그 전에는 아무것도 가지 않습니다."
+"Ask is off, so nothing will be sent. Turn it on in Project Settings ▸ EventSheets ▸ Ask and give it an endpoint that speaks the common chat format.","질문이 꺼져 있어 아무것도 보내지 않습니다. 프로젝트 설정 ▸ EventSheets ▸ Ask에서 켜고, 일반적인 채팅 형식을 쓰는 엔드포인트를 지정하세요."
+Asking %s…,%s에 묻는 중…
+%s answered %d:,%s 응답 %d:
+"Dropped, because this project has no words for them:",이 프로젝트에 해당하는 말이 없어 뺐습니다:
+Change the keyboard shortcuts,키보드 단축키 바꾸기
+Keys you can change,바꿀 수 있는 키
+Fixed keys (not rebindable),고정 키 (다시 지정할 수 없음)
+Reset all to defaults,모두 기본값으로
+Press a key…,키를 누르세요…
+Words: choose what the sheet calls things,말: 시트가 부르는 이름 고르기
+Ask for events,이벤트 요청
+"Drops the proposal. Your sentence stays, so you can reword it and ask again.",제안을 버립니다. 문장은 남아 있으니 고쳐 쓰고 다시 물어볼 수 있습니다.
+Generate,생성

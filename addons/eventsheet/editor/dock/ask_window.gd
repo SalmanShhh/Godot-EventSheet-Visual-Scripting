@@ -14,11 +14,11 @@ extends RefCounted
 # the status line, the same shape as the other dock/ helpers: it reaches dock state through _dock.
 
 var _dock: Control = null
-var _window: Window = null
+var _window: ConfirmationDialog = null
 var _prompt_edit: TextEdit = null
 var _proposal_label: RichTextLabel = null
 var _add_button: Button = null
-var _mode_label: Label = null
+var _mode_note: EventSheetPopupUI.StateNote = null
 ## Built on the first live call and kept: the one socket this plugin ever opens.
 var _http: HTTPRequest = null
 ## The checked rows the last reply proposed. Empty until a reply arrives; emptied by Discard.
@@ -36,58 +36,61 @@ func open() -> void:
 	if _window == null:
 		_build()
 	_refresh_mode()
-	_window.popup_centered()
+	_window.popup_centered(Vector2i(EventSheetPalette.scaled(620), EventSheetPalette.scaled(560)))
 	_prompt_edit.grab_focus()
 
 
+## The window: the mode line, the sentence, the proposal and one help strip, with Discard, Ask and
+## the blue Add these events in the button row. Add these events is the window's OK, and it closes
+## the window only once the rows are in.
 func _build() -> void:
-	_window = Window.new()
-	_window.title = "Ask"
-	_window.size = Vector2i(620, 560)
-	_window.close_requested.connect(func() -> void: _window.hide())
-	var box: VBoxContainer = EventSheetPopupUI.form_box()
-	_mode_label = Label.new()
-	_mode_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	box.add_child(EventSheetPopupUI.panel_section(_mode_label))
+	var parts: Dictionary = EventSheetPopupUI.panel_window("Ask for events", Vector2i(620, 560), _dock,
+		"Add these events", _add_pressed)
+	_window = parts["window"]
+	_window.exclusive = false
+	_window.get_cancel_button().visible = false
+	var box: VBoxContainer = parts["box"]
+	_mode_note = EventSheetPopupUI.StateNote.new(EventSheetPalette.scaled_f(560.0))
+	box.add_child(_mode_note)
 	_prompt_edit = TextEdit.new()
 	_prompt_edit.placeholder_text = "when the player presses jump and is on the floor, jump and play the jump sound"
-	_prompt_edit.custom_minimum_size = Vector2(0, 62)
+	_prompt_edit.custom_minimum_size = Vector2(0, EventSheetPalette.scaled_f(62.0))
 	_prompt_edit.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
 	box.add_child(EventSheetPopupUI.titled_card("What do you want to happen?", _prompt_edit))
 	_proposal_label = RichTextLabel.new()
 	_proposal_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_proposal_label.custom_minimum_size = Vector2(0, 150)
+	_proposal_label.custom_minimum_size = Vector2(0, EventSheetPalette.scaled_f(150.0))
 	var proposal_card: PanelContainer = EventSheetPopupUI.titled_card("Proposed", _proposal_label)
 	proposal_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_child(proposal_card)
-	var buttons: HBoxContainer = HBoxContainer.new()
-	var ask_button: Button = Button.new()
-	ask_button.text = "Ask"
+	var strip: EventSheetPopupUI.HelpStrip = EventSheetPopupUI.help_strip(EventSheetL10n.translate("Proposed"),
+		EventSheetL10n.translate("Nothing is added until you press Add these events - one undo step."))
+	strip.follow(_prompt_edit, EventSheetL10n.translate("What do you want to happen?"),
+		EventSheetL10n.translate("One sentence in your own words. Nothing is sent until you press Ask."))
+	strip.follow(_proposal_label, EventSheetL10n.translate("Proposed"),
+		EventSheetL10n.translate("Nothing is added until you press Add these events - one undo step."))
+	strip.set_line(strip.add_line(EventSheetL10n.translate("SENDS TO")), EventSheetAsk.SETTING_ENDPOINT)
+	box.add_child(strip)
+	# add_button puts each new left-hand button first, so Ask goes in before Discard.
+	var ask_button: Button = _window.add_button("Ask", false)
 	ask_button.tooltip_text = "Nothing is sent until you press this."
 	ask_button.pressed.connect(_ask_pressed)
-	buttons.add_child(ask_button)
-	_add_button = Button.new()
-	_add_button.text = "Add these events"
-	_add_button.disabled = true
-	_add_button.pressed.connect(_add_pressed)
-	buttons.add_child(_add_button)
-	var discard_button: Button = Button.new()
-	discard_button.text = "Discard"
+	var discard_button: Button = _window.add_button("Discard", false)
+	discard_button.tooltip_text = "Drops the proposal. Your sentence stays, so you can reword it and ask again."
 	discard_button.pressed.connect(_discard_pressed)
-	buttons.add_child(discard_button)
-	box.add_child(buttons)
-	var body: MarginContainer = EventSheetPopupUI.margined(box)
-	body.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_window.add_child(body)
-	_dock.add_child(_window)
+	_add_button = EventSheetPopupUI.main_button(_window.get_ok_button())
+	_add_button.disabled = true
 
 
-## The one line that says, before anything is typed, whether this box can send at all.
+## The one line that says, before anything is typed, whether this box can send at all: the ok edge
+## while Ask is on, amber while it is off.
 func _refresh_mode() -> void:
 	if EventSheetAsk.is_on():
-		_mode_label.text = "Ask is on (%s). Your sentence, this sheet's objects and the words this sheet can write go to %s when you press Ask. Nothing else, and nothing until then." % [EventSheetAsk.mode(), EventSheetAsk.endpoint()]
+		_mode_note.say(EventSheetL10n.translate("Ask is on (%s). Your sentence, this sheet's objects and the words this sheet can write go to %s when you press Ask. Nothing else, and nothing until then.") % [EventSheetL10n.translate(EventSheetAsk.mode()), EventSheetAsk.endpoint()],
+			EventSheetPopupUI.TONE_OK)
 	else:
-		_mode_label.text = "Ask is off, so nothing will be sent. Turn it on in Project Settings ▸ EventSheets ▸ Ask and give it an endpoint that speaks the common chat format."
+		_mode_note.say(EventSheetL10n.translate("Ask is off, so nothing will be sent. Turn it on in Project Settings ▸ EventSheets ▸ Ask and give it an endpoint that speaks the common chat format."),
+			EventSheetPopupUI.TONE_WARNING)
 
 
 func _ask_pressed() -> void:
@@ -113,7 +116,7 @@ func _send_live(request: Dictionary, definitions: Array) -> void:
 	if _http == null:
 		_http = HTTPRequest.new()
 		_dock.add_child(_http)
-	_proposal_label.text = "Asking %s…" % EventSheetAsk.endpoint()
+	_proposal_label.text = EventSheetL10n.translate("Asking %s…") % EventSheetAsk.endpoint()
 	_set_proposal([])
 	var error: int = _http.request(EventSheetAsk.endpoint(), EventSheetAsk.request_headers(),
 		HTTPClient.METHOD_POST, JSON.stringify(request))
@@ -125,7 +128,7 @@ func _send_live(request: Dictionary, definitions: Array) -> void:
 	var status: int = int(result[1])
 	var body: String = (result[3] as PackedByteArray).get_string_from_utf8()
 	if status < 200 or status >= 300:
-		_proposal_label.text = "%s answered %d:\n%s" % [EventSheetAsk.endpoint(), status, body]
+		_proposal_label.text = EventSheetL10n.translate("%s answered %d:") % [EventSheetAsk.endpoint(), status] + "\n" + body
 		return
 	_show_answer(EventSheetAsk.reply_text_from_body(body), definitions)
 
@@ -143,7 +146,7 @@ func _show_answer(reply: String, definitions: Array) -> void:
 	var dropped: PackedStringArray = checked.get("dropped", PackedStringArray())
 	if not dropped.is_empty():
 		lines.append("")
-		lines.append("Dropped, because this project has no words for them:")
+		lines.append(EventSheetL10n.translate("Dropped, because this project has no words for them:"))
 		for reason: String in dropped:
 			lines.append("  %s" % reason)
 	_proposal_label.text = "\n".join(lines) if not lines.is_empty() else "Nothing this sheet can say came back."

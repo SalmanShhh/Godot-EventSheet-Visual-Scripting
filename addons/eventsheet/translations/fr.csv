@@ -8659,3 +8659,37 @@ Why this condition/action exists…,Pourquoi cette condition/action existe…
 "Enemy2, Enemy3","Enemy2, Enemy3"
 Live edit needs a streaming debug session (run the game with Live Values on).,La modification en direct nécessite une session de débogage en streaming (lancez le jeu avec les Valeurs en direct activées).
 Live edit: %s = %s sent to the running game.,Modification en direct : %s = %s envoyé au jeu en cours.
+STORED,ENREGISTRÉ
+SENDS TO,ENVOIE À
+"per user, on this machine - not in the project","par utilisateur, sur cette machine - pas dans le projet"
+Press the new key combination now. Esc cancels.,Appuyez maintenant sur la nouvelle combinaison de touches. Échap annule.
+"Click, then press the new key combination.","Cliquez, puis appuyez sur la nouvelle combinaison de touches."
+Reset to default (%s),Rétablir la valeur par défaut (%s)
+Reset,Réinitialiser
+%s is also '%s' - one of them won't fire. Rebind one.,%s est aussi '%s' - l'un des deux ne se déclenchera pas. Réassignez-en un.
+"%s is also %s, a fixed key - one of them won't fire. Rebind this one.","%s est aussi %s, une touche fixe - l'une des deux ne se déclenchera pas. Réassignez celle-ci."
+"with your editor settings, not the project - two people can read one sheet in different words","avec vos paramètres d'éditeur, pas dans le projet - deux personnes peuvent lire une feuille avec des mots différents"
+"Sets both halves at once: whether the nouns read in the sheet's words, and whether the verbs do.","Règle les deux moitiés à la fois : si les noms se lisent avec les mots de la feuille, et si les verbes aussi."
+with Familiar Words on: the word every row says. custom… lets you type your own.,avec les Mots familiers activés : le mot que dit chaque ligne. custom… vous laisse taper le vôtre.
+with Familiar Words off: the word every row says. custom… lets you type your own.,avec les Mots familiers désactivés : le mot que dit chaque ligne. custom… vous laisse taper le vôtre.
+"The rows land in this sheet at once, as one undo step.","Les lignes arrivent dans cette feuille d'un coup, en une seule étape d'annulation."
+Set eventsheets/ai/api_key in Project Settings first.,Renseignez d'abord eventsheets/ai/api_key dans les Paramètres du projet.
+AI request failed (HTTP %d). Check eventsheets/ai/* settings.,La requête IA a échoué (HTTP %d). Vérifiez les paramètres eventsheets/ai/*.
+AI response could not be parsed.,La réponse de l'IA n'a pas pu être lue.
+AI returned no usable text.,L'IA n'a renvoyé aucun texte exploitable.
+Nothing is added until you press Add these events - one undo step.,Rien n'est ajouté tant que vous n'appuyez pas sur Ajouter ces événements - une seule étape d'annulation.
+One sentence in your own words. Nothing is sent until you press Ask.,Une phrase avec vos propres mots. Rien n'est envoyé tant que vous n'appuyez pas sur Demander.
+"Ask is on (%s). Your sentence, this sheet's objects and the words this sheet can write go to %s when you press Ask. Nothing else, and nothing until then.","Demander est activé (%s). Votre phrase, les objets de cette feuille et les mots qu'elle peut écrire partent vers %s quand vous appuyez sur Demander. Rien d'autre, et rien avant."
+"Ask is off, so nothing will be sent. Turn it on in Project Settings ▸ EventSheets ▸ Ask and give it an endpoint that speaks the common chat format.","Demander est désactivé, donc rien ne sera envoyé. Activez-le dans Paramètres du projet ▸ EventSheets ▸ Ask et donnez-lui un point d'accès qui parle le format de chat courant."
+Asking %s…,Interrogation de %s…
+%s answered %d:,%s a répondu %d :
+"Dropped, because this project has no words for them:","Écarté, car ce projet n'a pas de mots pour cela :"
+Change the keyboard shortcuts,Modifier les raccourcis clavier
+Keys you can change,Touches modifiables
+Fixed keys (not rebindable),Touches fixes (non réassignables)
+Reset all to defaults,Tout réinitialiser
+Press a key…,Appuyez sur une touche…
+Words: choose what the sheet calls things,Mots : choisissez comment la feuille nomme les choses
+Ask for events,Demander des événements
+"Drops the proposal. Your sentence stays, so you can reword it and ask again.","Abandonne la proposition. Votre phrase reste, pour que vous puissiez la reformuler et redemander."
+Generate,Générer

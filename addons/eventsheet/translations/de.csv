@@ -8659,3 +8659,37 @@ Why this condition/action exists…,Warum es diese Bedingung/Aktion gibt…
 "Enemy2, Enemy3","Enemy2, Enemy3"
 Live edit needs a streaming debug session (run the game with Live Values on).,Live-Bearbeitung braucht eine streamende Debug-Sitzung (starte das Spiel mit eingeschalteten Live-Werten).
 Live edit: %s = %s sent to the running game.,Live-Bearbeitung: %s = %s an das laufende Spiel gesendet.
+STORED,GESPEICHERT
+SENDS TO,SENDET AN
+"per user, on this machine - not in the project","pro Benutzer, auf diesem Rechner - nicht im Projekt"
+Press the new key combination now. Esc cancels.,Drücke jetzt die neue Tastenkombination. Esc bricht ab.
+"Click, then press the new key combination.","Klicken, dann die neue Tastenkombination drücken."
+Reset to default (%s),Auf Standard zurücksetzen (%s)
+Reset,Zurücksetzen
+%s is also '%s' - one of them won't fire. Rebind one.,%s ist auch '%s' - eines davon wird nicht ausgelöst. Belege eines neu.
+"%s is also %s, a fixed key - one of them won't fire. Rebind this one.","%s ist auch %s, eine feste Taste - eines davon wird nicht ausgelöst. Belege diese neu."
+"with your editor settings, not the project - two people can read one sheet in different words","in deinen Editor-Einstellungen, nicht im Projekt - zwei Personen können ein Blatt in verschiedenen Wörtern lesen"
+"Sets both halves at once: whether the nouns read in the sheet's words, and whether the verbs do.",Stellt beide Hälften auf einmal ein: ob die Nomen in den Wörtern des Blatts gelesen werden und ob die Verben es tun.
+with Familiar Words on: the word every row says. custom… lets you type your own.,"bei eingeschalteten vertrauten Wörtern: das Wort, das jede Zeile sagt. custom… lässt dich ein eigenes eintippen."
+with Familiar Words off: the word every row says. custom… lets you type your own.,"bei ausgeschalteten vertrauten Wörtern: das Wort, das jede Zeile sagt. custom… lässt dich ein eigenes eintippen."
+"The rows land in this sheet at once, as one undo step.","Die Zeilen landen sofort in diesem Blatt, als ein Rückgängig-Schritt."
+Set eventsheets/ai/api_key in Project Settings first.,Setze zuerst eventsheets/ai/api_key in den Projekteinstellungen.
+AI request failed (HTTP %d). Check eventsheets/ai/* settings.,KI-Anfrage fehlgeschlagen (HTTP %d). Prüfe die Einstellungen eventsheets/ai/*.
+AI response could not be parsed.,Die KI-Antwort konnte nicht gelesen werden.
+AI returned no usable text.,Die KI hat keinen brauchbaren Text geliefert.
+Nothing is added until you press Add these events - one undo step.,"Nichts wird hinzugefügt, bis du Diese Ereignisse hinzufügen drückst - ein Rückgängig-Schritt."
+One sentence in your own words. Nothing is sent until you press Ask.,"Ein Satz in deinen eigenen Worten. Nichts wird gesendet, bis du Fragen drückst."
+"Ask is on (%s). Your sentence, this sheet's objects and the words this sheet can write go to %s when you press Ask. Nothing else, and nothing until then.","Fragen ist an (%s). Dein Satz, die Objekte dieses Blatts und die Wörter, die dieses Blatt schreiben kann, gehen an %s, wenn du Fragen drückst. Sonst nichts, und vorher nichts."
+"Ask is off, so nothing will be sent. Turn it on in Project Settings ▸ EventSheets ▸ Ask and give it an endpoint that speaks the common chat format.","Fragen ist aus, also wird nichts gesendet. Schalte es unter Projekteinstellungen ▸ EventSheets ▸ Ask ein und gib ihm einen Endpunkt, der das übliche Chat-Format spricht."
+Asking %s…,Frage %s…
+%s answered %d:,%s antwortete %d:
+"Dropped, because this project has no words for them:","Weggelassen, weil dieses Projekt keine Wörter dafür hat:"
+Change the keyboard shortcuts,Tastenkürzel ändern
+Keys you can change,"Tasten, die du ändern kannst"
+Fixed keys (not rebindable),Feste Tasten (nicht neu belegbar)
+Reset all to defaults,Alle auf Standard zurücksetzen
+Press a key…,Taste drücken…
+Words: choose what the sheet calls things,"Wörter: wähle, wie das Blatt Dinge nennt"
+Ask for events,Nach Ereignissen fragen
+"Drops the proposal. Your sentence stays, so you can reword it and ask again.","Verwirft den Vorschlag. Dein Satz bleibt, damit du ihn umformulieren und erneut fragen kannst."
+Generate,Erzeugen

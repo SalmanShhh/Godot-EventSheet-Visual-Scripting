@@ -8,8 +8,10 @@ extends RefCounted
 # dirty / status) through the _dock back-reference, the same pattern as the other dock/ helpers.
 
 var _dock: Control = null
-var _ai_window: Window = null
+var _ai_window: ConfirmationDialog = null
 var _ai_prompt_edit: TextEdit = null
+## Left of the buttons: why Generate cannot run, or what went wrong with the last request.
+var _note: EventSheetPopupUI.StateNote = null
 ## True while a live request is out; a click meanwhile sends nothing.
 var _request_in_flight: bool = false
 
@@ -25,53 +27,68 @@ func open() -> void:
 		_dock._set_status("Open or create a sheet first.", true)
 		return
 	if _ai_window == null:
-		_ai_window = Window.new()
-		_ai_window.title = "Generate Events from a Description"
-		_ai_window.size = Vector2i(580, 320)
-		_ai_window.close_requested.connect(func() -> void: _ai_window.hide())
-		var box: VBoxContainer = VBoxContainer.new()
-		box.set_anchors_preset(Control.PRESET_FULL_RECT)
-		box.add_theme_constant_override("separation", 8)
-		var hint: Label = Label.new()
-		hint.text = "Describe the behavior in plain English - it becomes GDScript, then editable events you can tweak."
-		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		box.add_child(hint)
-		_ai_prompt_edit = TextEdit.new()
-		_ai_prompt_edit.placeholder_text = "e.g. When the player presses jump and is on the floor, set velocity.y to -400 and play the jump sound."
-		_ai_prompt_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		box.add_child(_ai_prompt_edit)
-		var buttons: HBoxContainer = HBoxContainer.new()
-		buttons.alignment = BoxContainer.ALIGNMENT_END
-		var generate: Button = Button.new()
-		generate.text = "Generate"
-		generate.pressed.connect(_ai_generate_clicked)
-		buttons.add_child(generate)
-		box.add_child(buttons)
-		_ai_window.add_child(box)
-		_dock.add_child(_ai_window)
+		_build()
+	_refresh_gate()
 	_ai_window.popup_centered()
 	_ai_prompt_edit.grab_focus()
 
 
-func _ai_generate_clicked() -> void:
-	var description: String = _ai_prompt_edit.text.strip_edges()
-	if description.is_empty():
-		_dock._set_status("Type a description first.", true)
-		return
+## The window says where the description goes and, beside a greyed Generate, why it cannot run.
+func _build() -> void:
+	var parts: Dictionary = EventSheetPopupUI.action_window("Generate Events from a Description", "Generate",
+		"Cancel", Vector2i(580, 340), _dock)
+	_ai_window = parts["window"]
+	_note = parts["note"]
+	_ai_window.confirmed.connect(_ai_generate_clicked)
+	EventSheetPopupUI.main_button(_ai_window.get_ok_button())
+	var box: VBoxContainer = parts["box"]
+	box.add_child(EventSheetPopupUI.hint_label(
+		"Describe the behavior in plain English - it becomes GDScript, then editable events you can tweak.",
+		EventSheetPalette.scaled_f(540.0)))
+	_ai_prompt_edit = TextEdit.new()
+	_ai_prompt_edit.placeholder_text = "e.g. When the player presses jump and is on the floor, set velocity.y to -400 and play the jump sound."
+	_ai_prompt_edit.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	_ai_prompt_edit.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(70.0))
+	_ai_prompt_edit.text_changed.connect(_refresh_gate)
+	box.add_child(EventSheetPopupUI.titled_card("Description", _ai_prompt_edit))
+	var strip: EventSheetPopupUI.HelpStrip = EventSheetPopupUI.help_strip()
+	strip.follow(_ai_prompt_edit, EventSheetL10n.translate("Description"),
+		EventSheetL10n.translate("The rows land in this sheet at once, as one undo step."))
+	strip.set_line(strip.add_line(EventSheetL10n.translate("SENDS TO")), "eventsheets/ai/endpoint")
+	box.add_child(strip)
+
+
+## Why Generate cannot run right now, or "" when it can. An injected provider (the suite's seam)
+## sends nothing, so nothing stands in its way.
+func _blocked_reason() -> String:
 	if EventSheetAIGeneration.response_provider.is_valid():
-		_apply_ai_gdscript(EventSheetAIGeneration.resolve_gdscript(description, _dock._current_sheet))
-		return
+		return ""
 	# Ask's switch is the one switch for anything leaving this machine: off means nothing is sent,
 	# whatever key this window's own settings hold.
 	if EventSheetAsk.mode() == EventSheetAsk.MODE_OFF:
-		_dock._set_status(EventSheetL10n.translate("Ask is off, so nothing will be sent. Turn it on in Project Settings ▸ EventSheets ▸ Ask to generate in-editor - or use the MCP server."), true)
-		return
+		return EventSheetL10n.translate("Ask is off, so nothing will be sent. Turn it on in Project Settings ▸ EventSheets ▸ Ask to generate in-editor - or use the MCP server.")
 	if not EventSheetAIGeneration.is_live_configured():
-		_dock._set_status("Set eventsheets/ai/api_key (+ endpoint, model) in Project Settings to generate in-editor - or use the MCP server.", true)
-		return
+		return EventSheetL10n.translate("Set eventsheets/ai/api_key in Project Settings first.")
 	# One request at a time: a second click while the first is out would append its rows twice.
 	if _request_in_flight:
-		_dock._set_status(EventSheetL10n.translate("Still generating from your description…"))
+		return EventSheetL10n.translate("Still generating from your description…")
+	return ""
+
+
+## Greys Generate while there is nothing to send or it cannot be sent, and says the second on the window.
+func _refresh_gate() -> void:
+	var reason: String = _blocked_reason()
+	_note.say(reason, EventSheetPopupUI.TONE_WARNING)
+	_ai_window.get_ok_button().disabled = not reason.is_empty() or _ai_prompt_edit.text.strip_edges().is_empty()
+
+
+func _ai_generate_clicked() -> void:
+	var description: String = _ai_prompt_edit.text.strip_edges()
+	if description.is_empty() or not _blocked_reason().is_empty():
+		_refresh_gate()
+		return
+	if EventSheetAIGeneration.response_provider.is_valid():
+		_apply_ai_gdscript(EventSheetAIGeneration.resolve_gdscript(description, _dock._current_sheet))
 		return
 	_ai_request_live(description)
 
@@ -80,7 +97,7 @@ func _ai_generate_clicked() -> void:
 func _apply_ai_gdscript(gdscript_text: String) -> int:
 	var outcome: Dictionary = EventSheetAIGeneration.generate_rows("", _dock._current_sheet, gdscript_text)
 	if str(outcome.get("error", "")) != "":
-		_dock._set_status(str(outcome.get("error")), true)
+		_note.say(str(outcome.get("error")))
 		return 0
 	var rows: Array = outcome.get("rows", [])
 	if _dock._perform_undoable_sheet_edit("Generate Events (AI)", func() -> bool:
@@ -89,8 +106,7 @@ func _apply_ai_gdscript(gdscript_text: String) -> int:
 				_dock._current_sheet.events.append(row)
 		return true):
 		_dock._mark_dirty("Generated %d row(s) from your description." % rows.size())
-		if _ai_window != null:
-			_ai_window.hide()
+		_ai_window.hide()
 	return rows.size()
 
 
@@ -103,6 +119,7 @@ func _ai_request_live(description: String) -> void:
 	_dock.add_child(http)
 	http.request_completed.connect(func(_result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 		_request_in_flight = false
+		_refresh_gate()
 		_on_ai_live_response(code, body)
 		http.queue_free())
 	var headers: PackedStringArray = PackedStringArray([
@@ -118,25 +135,25 @@ func _ai_request_live(description: String) -> void:
 	if error != OK:
 		# A request that never started never completes, so nothing else would ever free this node.
 		http.free()
-		_dock._set_status(EventSheetL10n.translate("AI request could not start (%s). Nothing was sent.") % error_string(error), true)
+		_note.say(EventSheetL10n.translate("AI request could not start (%s). Nothing was sent.") % error_string(error))
 		return
 	_request_in_flight = true
-	_dock._set_status("Generating from your description…")
+	_refresh_gate()
 
 
 func _on_ai_live_response(code: int, body: PackedByteArray) -> void:
 	if code != 200:
-		_dock._set_status("AI request failed (HTTP %d). Check eventsheets/ai/* settings." % code, true)
+		_note.say(EventSheetL10n.translate("AI request failed (HTTP %d). Check eventsheets/ai/* settings.") % code)
 		return
 	var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
 	if not (parsed is Dictionary):
-		_dock._set_status("AI response could not be parsed.", true)
+		_note.say(EventSheetL10n.translate("AI response could not be parsed."))
 		return
 	var content: Variant = (parsed as Dictionary).get("content", [])
 	var text: String = ""
 	if content is Array and not (content as Array).is_empty() and (content[0] is Dictionary):
 		text = str((content[0] as Dictionary).get("text", ""))
 	if text.is_empty():
-		_dock._set_status("AI returned no usable text.", true)
+		_note.say(EventSheetL10n.translate("AI returned no usable text."))
 		return
 	_apply_ai_gdscript(text)

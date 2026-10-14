@@ -8659,3 +8659,37 @@ Why this condition/action exists…,Зачем нужно это условие/
 "Enemy2, Enemy3","Enemy2, Enemy3"
 Live edit needs a streaming debug session (run the game with Live Values on).,Для правки на лету нужен сеанс отладки с потоком значений (запустите игру с включёнными Живыми значениями).
 Live edit: %s = %s sent to the running game.,Правка на лету: %s = %s отправлено в запущенную игру.
+STORED,ХРАНИТСЯ
+SENDS TO,ОТПРАВЛЯЕТ В
+"per user, on this machine - not in the project","для каждого пользователя, на этом компьютере - не в проекте"
+Press the new key combination now. Esc cancels.,Нажмите новое сочетание клавиш. Esc - отмена.
+"Click, then press the new key combination.","Щёлкните, затем нажмите новое сочетание клавиш."
+Reset to default (%s),Сбросить на значение по умолчанию (%s)
+Reset,Сбросить
+%s is also '%s' - one of them won't fire. Rebind one.,%s также назначено на '%s' - одно из них не сработает. Переназначьте одно.
+"%s is also %s, a fixed key - one of them won't fire. Rebind this one.","%s - это также %s, фиксированная клавиша - одно из них не сработает. Переназначьте эту."
+"with your editor settings, not the project - two people can read one sheet in different words","в настройках вашего редактора, не в проекте - два человека могут читать один лист разными словами"
+"Sets both halves at once: whether the nouns read in the sheet's words, and whether the verbs do.",Задаёт обе половины сразу: читаются ли существительные словами листа и читаются ли так глаголы.
+with Familiar Words on: the word every row says. custom… lets you type your own.,"при включённых Привычных словах: слово, которое говорит каждая строка. custom… позволяет ввести своё."
+with Familiar Words off: the word every row says. custom… lets you type your own.,"при выключенных Привычных словах: слово, которое говорит каждая строка. custom… позволяет ввести своё."
+"The rows land in this sheet at once, as one undo step.","Строки попадают в этот лист сразу, одним шагом отмены."
+Set eventsheets/ai/api_key in Project Settings first.,Сначала задайте eventsheets/ai/api_key в настройках проекта.
+AI request failed (HTTP %d). Check eventsheets/ai/* settings.,Запрос к ИИ не удался (HTTP %d). Проверьте настройки eventsheets/ai/*.
+AI response could not be parsed.,Не удалось разобрать ответ ИИ.
+AI returned no usable text.,ИИ не вернул пригодного текста.
+Nothing is added until you press Add these events - one undo step.,"Ничего не добавляется, пока вы не нажмёте Добавить эти события - один шаг отмены."
+One sentence in your own words. Nothing is sent until you press Ask.,"Одно предложение своими словами. Ничего не отправляется, пока вы не нажмёте Спросить."
+"Ask is on (%s). Your sentence, this sheet's objects and the words this sheet can write go to %s when you press Ask. Nothing else, and nothing until then.","Спросить включено (%s). Ваше предложение, объекты этого листа и слова, которые он может написать, уходят на %s, когда вы нажмёте Спросить. Больше ничего, и ничего до этого."
+"Ask is off, so nothing will be sent. Turn it on in Project Settings ▸ EventSheets ▸ Ask and give it an endpoint that speaks the common chat format.","Спросить выключено, поэтому ничего не будет отправлено. Включите его в Настройки проекта ▸ EventSheets ▸ Ask и укажите конечную точку, понимающую обычный формат чата."
+Asking %s…,Запрос к %s…
+%s answered %d:,%s ответил %d:
+"Dropped, because this project has no words for them:","Отброшено, потому что в этом проекте нет для этого слов:"
+Change the keyboard shortcuts,Изменить сочетания клавиш
+Keys you can change,"Клавиши, которые можно изменить"
+Fixed keys (not rebindable),Фиксированные клавиши (не переназначаются)
+Reset all to defaults,Сбросить всё
+Press a key…,Нажмите клавишу…
+Words: choose what the sheet calls things,"Слова: выберите, как лист называет вещи"
+Ask for events,Запросить события
+"Drops the proposal. Your sentence stays, so you can reword it and ask again.","Отбрасывает предложение. Ваше предложение-запрос остаётся, его можно переформулировать и спросить снова."
+Generate,Сгенерировать

@@ -3,17 +3,18 @@ class_name EventSheetShortcutsDialog
 extends RefCounted
 # Tools ▸ Keyboard Shortcuts - an editable remapper for the authoring keys (click a binding, then press
 # the new combo). Built on EventSheetShortcuts (per-user persistence); the structural keys from the dock's
-# FIXED_KEYS table are shown read-only. Clashes are flagged inline but allowed (you resolve them by
-# rebinding one). Extracted from event_sheet_dock.gd; the only dock touch-points are add_child (to host
-# the dialog) and FIXED_KEYS, reached through the _dock back-reference. The dock keeps a one-line
-# _open_shortcuts_help delegate for the Tools menu.
+# FIXED_KEYS table are shown read-only. A clash - with another changeable key or with a fixed one - is
+# said in a note under the row, but allowed (you resolve it by rebinding one). The rows are built once
+# and only repainted after a change, so a button that is listening for a key is never freed under it.
+# The dock keeps a one-line _open_shortcuts_help delegate for the Tools menu.
 
 var _dock: Control = null
 var _shortcuts_dialog: AcceptDialog = null
-var _shortcuts_list: VBoxContainer = null
+## action -> {"button": Button, "note": StateNote}, one entry per changeable key.
+var _rows: Dictionary = {}
 var _shortcuts_capturing_action: String = ""
-var _shortcuts_capturing_button: Button = null
 var _preset_picker: OptionButton = null
+var _strip: EventSheetPopupUI.HelpStrip = null
 
 
 func init(dock: Control) -> void:
@@ -24,154 +25,169 @@ func init(dock: Control) -> void:
 ## persistence); the structural keys are shown read-only. Clashes are flagged inline but allowed.
 func open() -> void:
 	if _shortcuts_dialog == null:
-		_shortcuts_dialog = AcceptDialog.new()
-		_shortcuts_dialog.title = "Keyboard Shortcuts"
-		_shortcuts_dialog.ok_button_text = "Done"
-		_shortcuts_dialog.min_size = Vector2i(540, 600)
-		var outer: VBoxContainer = EventSheetPopupUI.form_box()
-		var intro: Label = Label.new()
-		intro.text = "Click a shortcut, then press the new key combination (Esc cancels). Custom keys are saved per-user, not in the project."
-		intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		# Width-bound so the autowrap label can't report a runaway min height and balloon the dialog.
-		intro.custom_minimum_size = Vector2(500.0, 0.0)
-		outer.add_child(intro)
-		# Preset ▾. A whole keyboard in one pick, for an author whose fingers already know
-		# another event-sheet editor's keys. The preset only rebinds what DIFFERS, and every key it
-		# touches stays rebindable underneath.
-		_preset_picker = OptionButton.new()
-		_preset_picker.name = "EventSheetShortcutPreset"
-		_preset_picker.tooltip_text = "Pick a whole set of keys at once. Only the keys that differ are rebound - everything stays rebindable afterwards, and Reset all to defaults comes back here."
-		for preset_index: int in EventSheetShortcuts.PRESET_ORDER.size():
-			_preset_picker.add_item(
-				EventSheetShortcuts.preset_label_for(str(EventSheetShortcuts.PRESET_ORDER[preset_index])),
-				preset_index)
-		_preset_picker.item_selected.connect(func(index: int) -> void:
-			if index < 0 or index >= EventSheetShortcuts.PRESET_ORDER.size():
-				return
-			EventSheetShortcuts.apply_preset(str(EventSheetShortcuts.PRESET_ORDER[index]))
-			_refresh_shortcuts_editor())
-		outer.add_child(EventSheetPopupUI.form_row("Preset", _preset_picker))
-		var scroll: ScrollContainer = ScrollContainer.new()
-		scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		scroll.custom_minimum_size = Vector2(0.0, 460.0)
-		_shortcuts_list = VBoxContainer.new()
-		_shortcuts_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_shortcuts_list.add_theme_constant_override("separation", 4)
-		scroll.add_child(_shortcuts_list)
-		outer.add_child(scroll)
-		var reset_all_button: Button = Button.new()
-		reset_all_button.text = "Reset all to defaults"
-		reset_all_button.pressed.connect(func() -> void:
-			EventSheetShortcuts.reset_all()
-			_refresh_shortcuts_editor())
-		outer.add_child(reset_all_button)
-		_shortcuts_dialog.add_child(EventSheetPopupUI.margined(outer))
+		_build()
 		_dock.add_child(_shortcuts_dialog)
 	_refresh_shortcuts_editor()
 	_shortcuts_dialog.popup_centered()
 
 
-## Rebuilds the editor rows from the live bindings - called on open and after every change, so the
-## displayed keys and conflict flags always reflect EventSheetShortcuts.
+func _build() -> void:
+	_shortcuts_dialog = AcceptDialog.new()
+	_shortcuts_dialog.title = "Change the keyboard shortcuts"
+	_shortcuts_dialog.ok_button_text = "Done"
+	EventSheetPopupUI.main_button(_shortcuts_dialog.get_ok_button())
+	_shortcuts_dialog.min_size = Vector2i(EventSheetPalette.scaled(540), EventSheetPalette.scaled(640))
+	var reset_all_button: Button = _shortcuts_dialog.add_button("Reset all to defaults", false)
+	reset_all_button.pressed.connect(func() -> void:
+		EventSheetShortcuts.reset_all()
+		_refresh_shortcuts_editor())
+	var outer: VBoxContainer = EventSheetPopupUI.form_box()
+	outer.add_child(EventSheetPopupUI.hint_label(
+		"Click a shortcut, then press the new key combination (Esc cancels). Custom keys are saved per-user, not in the project.",
+		EventSheetPalette.scaled_f(500.0)))
+	# Preset ▾. A whole keyboard in one pick, for an author whose fingers already know
+	# another event-sheet editor's keys. The preset only rebinds what DIFFERS, and every key it
+	# touches stays rebindable underneath.
+	_preset_picker = OptionButton.new()
+	_preset_picker.name = "EventSheetShortcutPreset"
+	_preset_picker.tooltip_text = "Pick a whole set of keys at once. Only the keys that differ are rebound - everything stays rebindable afterwards, and Reset all to defaults comes back here."
+	for preset_index: int in EventSheetShortcuts.PRESET_ORDER.size():
+		_preset_picker.add_item(
+			EventSheetShortcuts.preset_label_for(str(EventSheetShortcuts.PRESET_ORDER[preset_index])),
+			preset_index)
+	_preset_picker.item_selected.connect(func(index: int) -> void:
+		if index < 0 or index >= EventSheetShortcuts.PRESET_ORDER.size():
+			return
+		EventSheetShortcuts.apply_preset(str(EventSheetShortcuts.PRESET_ORDER[index]))
+		_refresh_shortcuts_editor())
+	outer.add_child(EventSheetPopupUI.titled_card("Preset", EventSheetPopupUI.form_row("Preset", _preset_picker)))
+	_strip = EventSheetPopupUI.help_strip()
+	_strip.follow(_preset_picker, EventSheetL10n.translate("Preset"), _preset_picker.tooltip_text)
+	var stored: Label = _strip.add_line(EventSheetL10n.translate("STORED"))
+	_strip.set_line(stored, EventSheetL10n.translate("per user, on this machine - not in the project"))
+	var changeable: VBoxContainer = VBoxContainer.new()
+	for action: String in EventSheetShortcuts.ORDER:
+		changeable.add_child(_key_row(action))
+	var fixed: GridContainer = GridContainer.new()
+	fixed.columns = 2
+	fixed.add_theme_constant_override("h_separation", int(EventSheetPalette.scaled_f(12.0)))
+	for pair: Array in _dock.FIXED_KEYS:
+		var what: Label = Label.new()
+		what.text = str(pair[1])
+		what.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		fixed.add_child(what)
+		var keys: Label = Label.new()
+		keys.text = str(pair[0])
+		keys.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
+		fixed.add_child(keys)
+	var lists: VBoxContainer = EventSheetPopupUI.form_box()
+	lists.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lists.add_child(EventSheetPopupUI.titled_card("Keys you can change", changeable))
+	lists.add_child(EventSheetPopupUI.titled_card("Fixed keys (not rebindable)", fixed))
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(380.0))
+	scroll.add_child(lists)
+	outer.add_child(scroll)
+	outer.add_child(_strip)
+	_shortcuts_dialog.add_child(EventSheetPopupUI.margined(outer))
+
+
+## One changeable key: its name, the binding button, a Reset, and the clash note under them.
+func _key_row(action: String) -> VBoxContainer:
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)
+	var label: Label = Label.new()
+	label.text = EventSheetShortcuts.label_for(action)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(label)
+	var capture: Button = Button.new()
+	capture.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(150.0), 0.0)
+	capture.pressed.connect(_begin_shortcut_capture.bind(action))
+	capture.gui_input.connect(_shortcut_capture_gui_input.bind(action))
+	_strip.follow(capture, EventSheetL10n.translate(label.text), "", func() -> String:
+		return EventSheetL10n.translate("Press the new key combination now. Esc cancels.") \
+			if _shortcuts_capturing_action == action \
+			else EventSheetL10n.translate("Click, then press the new key combination."))
+	row.add_child(capture)
+	var reset_button: Button = Button.new()
+	reset_button.text = "Reset"
+	reset_button.tooltip_text = EventSheetL10n.translate("Reset to default (%s)") % str(EventSheetShortcuts.DEFAULTS.get(action, ""))
+	reset_button.pressed.connect(func() -> void:
+		EventSheetShortcuts.reset(action)
+		_refresh_shortcuts_editor())
+	_strip.follow(reset_button, EventSheetL10n.translate("Reset"), reset_button.tooltip_text)
+	row.add_child(reset_button)
+	var note: EventSheetPopupUI.StateNote = EventSheetPopupUI.StateNote.new(EventSheetPalette.scaled_f(460.0))
+	var box: VBoxContainer = VBoxContainer.new()
+	box.add_child(row)
+	box.add_child(note)
+	_rows[action] = {"button": capture, "note": note}
+	return box
+
+
+## Repaints every row from the live bindings - called on open and after every change, so the
+## displayed keys and clash notes always reflect EventSheetShortcuts.
 func _refresh_shortcuts_editor() -> void:
-	if _shortcuts_list == null:
-		return
 	_shortcuts_capturing_action = ""
-	_shortcuts_capturing_button = null
 	# The picker follows the LIVE bindings, so rebinding one key by hand honestly drops the dialog
 	# back to "Godot EventSheets" rather than claiming a preset that is no longer in force.
 	if _preset_picker != null:
 		var active: int = EventSheetShortcuts.PRESET_ORDER.find(EventSheetShortcuts.active_preset())
 		_preset_picker.select(active if active >= 0 else 0)
-	for child: Node in _shortcuts_list.get_children():
-		child.queue_free()
-	for action: String in EventSheetShortcuts.ORDER:
-		var row: HBoxContainer = HBoxContainer.new()
-		row.add_theme_constant_override("separation", 8)
-		var label: Label = Label.new()
-		label.text = EventSheetShortcuts.label_for(action)
-		label.custom_minimum_size = Vector2(230.0, 0.0)
-		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(label)
-		var capture: Button = Button.new()
-		capture.custom_minimum_size = Vector2(150.0, 0.0)
-		_paint_capture(capture, action)
-		capture.pressed.connect(_begin_shortcut_capture.bind(action, capture))
-		capture.gui_input.connect(_shortcut_capture_gui_input.bind(action, capture))
-		row.add_child(capture)
-		var reset_button: Button = Button.new()
-		reset_button.text = "Reset"
-		reset_button.tooltip_text = "Reset to default (%s)" % str(EventSheetShortcuts.DEFAULTS.get(action, ""))
-		reset_button.pressed.connect(func() -> void:
-			EventSheetShortcuts.reset(action)
-			_refresh_shortcuts_editor())
-		row.add_child(reset_button)
-		_shortcuts_list.add_child(row)
-	_shortcuts_list.add_child(HSeparator.new())
-	var fixed_header: Label = Label.new()
-	fixed_header.text = "Fixed keys (not rebindable)"
-	fixed_header.modulate = Color(1.0, 1.0, 1.0, 0.6)
-	_shortcuts_list.add_child(fixed_header)
-	for pair: Array in _dock.FIXED_KEYS:
-		var fixed_row: HBoxContainer = HBoxContainer.new()
-		fixed_row.add_theme_constant_override("separation", 8)
-		var fixed_label: Label = Label.new()
-		fixed_label.text = str(pair[1])
-		fixed_label.custom_minimum_size = Vector2(230.0, 0.0)
-		fixed_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		fixed_row.add_child(fixed_label)
-		var fixed_keys_label: Label = Label.new()
-		fixed_keys_label.text = str(pair[0])
-		fixed_keys_label.modulate = Color(1.0, 1.0, 1.0, 0.6)
-		fixed_row.add_child(fixed_keys_label)
-		_shortcuts_list.add_child(fixed_row)
+	for action: String in _rows:
+		_paint_capture(action)
 
 
-## Shows one action's binding on its button, flagged when it clashes with another rebindable
-## action or with one of the fixed keys.
-func _paint_capture(capture: Button, action: String) -> void:
+## Shows one action's binding on its button, and under it the clash it makes with another
+## changeable key or with one of the fixed keys.
+func _paint_capture(action: String) -> void:
+	var capture: Button = _rows[action]["button"]
 	var binding: String = EventSheetShortcuts.binding_for(action)
 	capture.text = binding if not binding.is_empty() else "(none)"
-	capture.modulate = Color.WHITE
-	capture.tooltip_text = "Click, then press the new key combination."
 	var conflict: String = EventSheetShortcuts.conflicting_action(action, binding)
 	var fixed_conflict: String = EventSheetShortcuts.conflicting_fixed_key(binding)
+	var clash: String = ""
 	if not conflict.is_empty():
-		capture.modulate = Color(1.0, 0.7, 0.4)
-		capture.tooltip_text = "Also bound to '%s' - one of them won't fire. Rebind one." % EventSheetShortcuts.label_for(conflict)
+		clash = EventSheetL10n.translate("%s is also '%s' - one of them won't fire. Rebind one.") \
+			% [binding, EventSheetL10n.translate(EventSheetShortcuts.label_for(conflict))]
 	elif not fixed_conflict.is_empty():
-		capture.modulate = Color(1.0, 0.7, 0.4)
-		capture.tooltip_text = EventSheetL10n.translate("%s is a fixed key ('%s') - one of them won't fire. Pick another key.") % [binding, EventSheetL10n.translate(fixed_conflict)]
+		clash = EventSheetL10n.translate("%s is also %s, a fixed key - one of them won't fire. Rebind this one.") \
+			% [binding, EventSheetL10n.translate(fixed_conflict)]
+	(_rows[action]["note"] as EventSheetPopupUI.StateNote).say(clash, EventSheetPopupUI.TONE_WARNING)
+	if clash.is_empty():
+		capture.remove_theme_color_override("font_color")
+	else:
+		capture.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_WARNING))
 
 
 ## Click-to-rebind: the binding button enters "listening" mode; the next real key press is captured
 ## by _shortcut_capture_gui_input (a lone modifier keeps listening; Esc cancels).
-func _begin_shortcut_capture(action: String, capture: Button) -> void:
-	# Another binding was listening: put THAT button back to its key in place. Rebuilding the list
-	# here would free the button just clicked, leaving the capture listening on a dead button.
-	if is_instance_valid(_shortcuts_capturing_button) and _shortcuts_capturing_button != capture:
-		_paint_capture(_shortcuts_capturing_button, _shortcuts_capturing_action)
+func _begin_shortcut_capture(action: String) -> void:
+	# Another binding was listening: put THAT button back to its key.
+	if not _shortcuts_capturing_action.is_empty() and _shortcuts_capturing_action != action:
+		_paint_capture(_shortcuts_capturing_action)
 	_shortcuts_capturing_action = action
-	_shortcuts_capturing_button = capture
-	capture.text = "Press a key…  (Esc cancels)"
-	capture.modulate = Color(0.6, 0.9, 1.0)
+	var capture: Button = _rows[action]["button"]
+	capture.text = "Press a key…"
 	capture.grab_focus()
+	_strip.show_note(EventSheetL10n.translate(EventSheetShortcuts.label_for(action)),
+		EventSheetL10n.translate("Press the new key combination now. Esc cancels."))
 
 
-func _shortcut_capture_gui_input(event: InputEvent, action: String, capture: Button) -> void:
+func _shortcut_capture_gui_input(event: InputEvent, action: String) -> void:
 	if _shortcuts_capturing_action != action or not (event is InputEventKey):
 		return
 	var key_event: InputEventKey = event as InputEventKey
 	if not key_event.pressed or key_event.echo:
 		return
-	capture.accept_event()
+	(_rows[action]["button"] as Button).accept_event()
 	if key_event.keycode == KEY_ESCAPE:
-		_shortcuts_capturing_action = ""
 		_refresh_shortcuts_editor()
 		return
 	var binding: String = EventSheetShortcuts.format_event(key_event)
 	if binding.is_empty():
 		return
 	EventSheetShortcuts.set_binding(action, binding)
-	_shortcuts_capturing_action = ""
 	_refresh_shortcuts_editor()

@@ -8659,3 +8659,37 @@ Why this condition/action exists…,Por qué existe esta condición/acción…
 "Enemy2, Enemy3","Enemy2, Enemy3"
 Live edit needs a streaming debug session (run the game with Live Values on).,La edición en vivo necesita una sesión de depuración con transmisión (ejecuta el juego con Valores en vivo activado).
 Live edit: %s = %s sent to the running game.,Edición en vivo: %s = %s enviado al juego en ejecución.
+STORED,GUARDADO
+SENDS TO,ENVÍA A
+"per user, on this machine - not in the project","por usuario, en este equipo - no en el proyecto"
+Press the new key combination now. Esc cancels.,Pulsa ahora la nueva combinación de teclas. Esc cancela.
+"Click, then press the new key combination.",Haz clic y luego pulsa la nueva combinación de teclas.
+Reset to default (%s),Restablecer al valor predeterminado (%s)
+Reset,Restablecer
+%s is also '%s' - one of them won't fire. Rebind one.,%s también es '%s' - uno de los dos no se activará. Reasigna uno.
+"%s is also %s, a fixed key - one of them won't fire. Rebind this one.","%s también es %s, una tecla fija - uno de los dos no se activará. Reasigna esta."
+"with your editor settings, not the project - two people can read one sheet in different words","con la configuración de tu editor, no en el proyecto - dos personas pueden leer una hoja con palabras distintas"
+"Sets both halves at once: whether the nouns read in the sheet's words, and whether the verbs do.",Ajusta ambas mitades a la vez: si los sustantivos se leen con las palabras de la hoja y si los verbos también.
+with Familiar Words on: the word every row says. custom… lets you type your own.,con Palabras familiares activadas: la palabra que dice cada fila. custom… te deja escribir la tuya.
+with Familiar Words off: the word every row says. custom… lets you type your own.,con Palabras familiares desactivadas: la palabra que dice cada fila. custom… te deja escribir la tuya.
+"The rows land in this sheet at once, as one undo step.","Las filas llegan a esta hoja de una vez, como un solo paso de deshacer."
+Set eventsheets/ai/api_key in Project Settings first.,Primero define eventsheets/ai/api_key en la Configuración del proyecto.
+AI request failed (HTTP %d). Check eventsheets/ai/* settings.,La solicitud a la IA falló (HTTP %d). Revisa la configuración eventsheets/ai/*.
+AI response could not be parsed.,No se pudo interpretar la respuesta de la IA.
+AI returned no usable text.,La IA no devolvió texto utilizable.
+Nothing is added until you press Add these events - one undo step.,No se añade nada hasta que pulses Añadir estos eventos - un solo paso de deshacer.
+One sentence in your own words. Nothing is sent until you press Ask.,Una frase con tus propias palabras. No se envía nada hasta que pulses Preguntar.
+"Ask is on (%s). Your sentence, this sheet's objects and the words this sheet can write go to %s when you press Ask. Nothing else, and nothing until then.","Preguntar está activado (%s). Tu frase, los objetos de esta hoja y las palabras que puede escribir van a %s cuando pulses Preguntar. Nada más, y nada antes."
+"Ask is off, so nothing will be sent. Turn it on in Project Settings ▸ EventSheets ▸ Ask and give it an endpoint that speaks the common chat format.","Preguntar está desactivado, así que no se enviará nada. Actívalo en Configuración del proyecto ▸ EventSheets ▸ Ask y dale un endpoint que hable el formato de chat común."
+Asking %s…,Preguntando a %s…
+%s answered %d:,%s respondió %d:
+"Dropped, because this project has no words for them:","Descartado, porque este proyecto no tiene palabras para ello:"
+Change the keyboard shortcuts,Cambiar los atajos de teclado
+Keys you can change,Teclas que puedes cambiar
+Fixed keys (not rebindable),Teclas fijas (no reasignables)
+Reset all to defaults,Restablecer todo
+Press a key…,Pulsa una tecla…
+Words: choose what the sheet calls things,Palabras: elige cómo llama la hoja a las cosas
+Ask for events,Pedir eventos
+"Drops the proposal. Your sentence stays, so you can reword it and ask again.","Descarta la propuesta. Tu frase se queda, así puedes reformularla y volver a preguntar."
+Generate,Generar

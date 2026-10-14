@@ -8659,3 +8659,37 @@ Why this condition/action exists…,为什么需要这个条件/动作…
 "Enemy2, Enemy3","Enemy2, Enemy3"
 Live edit needs a streaming debug session (run the game with Live Values on).,实时编辑需要一个正在推送数据的调试会话 (请在开启实时数值的情况下运行游戏)。
 Live edit: %s = %s sent to the running game.,实时编辑: 已将 %s = %s 发送到正在运行的游戏。
+STORED,保存位置
+SENDS TO,发送到
+"per user, on this machine - not in the project",按用户保存在本机 - 不在项目中
+Press the new key combination now. Esc cancels.,现在按下新的组合键。按 Esc 取消。
+"Click, then press the new key combination.",单击，然后按下新的组合键。
+Reset to default (%s),恢复默认值 (%s)
+Reset,重置
+%s is also '%s' - one of them won't fire. Rebind one.,%s 也是 '%s' - 其中一个不会触发。请重新绑定其中一个。
+"%s is also %s, a fixed key - one of them won't fire. Rebind this one.",%s 也是固定键 %s - 其中一个不会触发。请重新绑定这一个。
+"with your editor settings, not the project - two people can read one sheet in different words",保存在你的编辑器设置中，而不是项目中 - 两个人可以用不同的词阅读同一张表
+"Sets both halves at once: whether the nouns read in the sheet's words, and whether the verbs do.",一次设定两半：名词是否用表格的词来读，动词是否也这样。
+with Familiar Words on: the word every row says. custom… lets you type your own.,开启熟悉词汇时：每一行所说的词。custom… 可让你输入自己的词。
+with Familiar Words off: the word every row says. custom… lets you type your own.,关闭熟悉词汇时：每一行所说的词。custom… 可让你输入自己的词。
+"The rows land in this sheet at once, as one undo step.",这些行会一次性放入此表，作为一个撤销步骤。
+Set eventsheets/ai/api_key in Project Settings first.,请先在项目设置中设置 eventsheets/ai/api_key。
+AI request failed (HTTP %d). Check eventsheets/ai/* settings.,AI 请求失败 (HTTP %d)。请检查 eventsheets/ai/* 设置。
+AI response could not be parsed.,无法解析 AI 的回复。
+AI returned no usable text.,AI 没有返回可用的文本。
+Nothing is added until you press Add these events - one undo step.,在你按下“添加这些事件”之前不会添加任何内容 - 一个撤销步骤。
+One sentence in your own words. Nothing is sent until you press Ask.,用你自己的话写一句。在你按下“提问”之前不会发送任何内容。
+"Ask is on (%s). Your sentence, this sheet's objects and the words this sheet can write go to %s when you press Ask. Nothing else, and nothing until then.",提问已开启 (%s)。按下“提问”时，你的句子、此表的对象以及此表能写的词会发送到 %s。不会发送其他内容，在此之前也不会发送。
+"Ask is off, so nothing will be sent. Turn it on in Project Settings ▸ EventSheets ▸ Ask and give it an endpoint that speaks the common chat format.",提问已关闭，因此不会发送任何内容。请在 项目设置 ▸ EventSheets ▸ Ask 中开启，并为它指定一个使用通用聊天格式的端点。
+Asking %s…,正在询问 %s…
+%s answered %d:,%s 返回 %d:
+"Dropped, because this project has no words for them:",已舍弃，因为此项目没有对应的词：
+Change the keyboard shortcuts,更改键盘快捷键
+Keys you can change,可更改的按键
+Fixed keys (not rebindable),固定按键 (不可重新绑定)
+Reset all to defaults,全部恢复默认
+Press a key…,请按一个键…
+Words: choose what the sheet calls things,词汇：选择表格对事物的称呼
+Ask for events,请求事件
+"Drops the proposal. Your sentence stays, so you can reword it and ask again.",丢弃该提议。你的句子会保留，便于改写后再次提问。
+Generate,生成

@@ -8659,3 +8659,37 @@ Why this condition/action exists…,この条件/アクションがある理由�
 "Enemy2, Enemy3","Enemy2, Enemy3"
 Live edit needs a streaming debug session (run the game with Live Values on).,ライブ編集にはストリーミング中のデバッグセッションが必要です (ライブ値をオンにしてゲームを実行してください)。
 Live edit: %s = %s sent to the running game.,ライブ編集: %s = %s を実行中のゲームに送信しました。
+STORED,保存先
+SENDS TO,送信先
+"per user, on this machine - not in the project",ユーザーごとにこのマシンに保存 - プロジェクトには含まれません
+Press the new key combination now. Esc cancels.,新しいキーの組み合わせを今押してください。Esc で取り消します。
+"Click, then press the new key combination.",クリックしてから、新しいキーの組み合わせを押してください。
+Reset to default (%s),既定値に戻す (%s)
+Reset,リセット
+%s is also '%s' - one of them won't fire. Rebind one.,%s は '%s' にも割り当てられています - どちらかが働きません。どちらかを割り当て直してください。
+"%s is also %s, a fixed key - one of them won't fire. Rebind this one.",%s は固定キーの %s でもあります - どちらかが働きません。こちらを割り当て直してください。
+"with your editor settings, not the project - two people can read one sheet in different words",プロジェクトではなくエディター設定に保存 - 2 人が同じシートを別の言葉で読めます
+"Sets both halves at once: whether the nouns read in the sheet's words, and whether the verbs do.",両方を一度に設定します: 名詞をシートの言葉で読むか、動詞もそうするか。
+with Familiar Words on: the word every row says. custom… lets you type your own.,なじみの言葉がオンのとき: すべての行が言う言葉。custom… で自分の言葉を入力できます。
+with Familiar Words off: the word every row says. custom… lets you type your own.,なじみの言葉がオフのとき: すべての行が言う言葉。custom… で自分の言葉を入力できます。
+"The rows land in this sheet at once, as one undo step.",行はこのシートに一度に入り、1 回の元に戻す操作になります。
+Set eventsheets/ai/api_key in Project Settings first.,まずプロジェクト設定で eventsheets/ai/api_key を設定してください。
+AI request failed (HTTP %d). Check eventsheets/ai/* settings.,AI リクエストが失敗しました (HTTP %d)。eventsheets/ai/* の設定を確認してください。
+AI response could not be parsed.,AI の応答を解析できませんでした。
+AI returned no usable text.,AI は使えるテキストを返しませんでした。
+Nothing is added until you press Add these events - one undo step.,「これらのイベントを追加」を押すまで何も追加されません - 元に戻す操作は 1 回です。
+One sentence in your own words. Nothing is sent until you press Ask.,自分の言葉で 1 文。「質問」を押すまで何も送信されません。
+"Ask is on (%s). Your sentence, this sheet's objects and the words this sheet can write go to %s when you press Ask. Nothing else, and nothing until then.",質問はオンです (%s)。「質問」を押すと、あなたの文、このシートのオブジェクト、このシートが書ける言葉が %s に送られます。それ以外は送られず、押すまで何も送られません。
+"Ask is off, so nothing will be sent. Turn it on in Project Settings ▸ EventSheets ▸ Ask and give it an endpoint that speaks the common chat format.",質問はオフなので、何も送信されません。プロジェクト設定 ▸ EventSheets ▸ Ask でオンにし、一般的なチャット形式を話すエンドポイントを指定してください。
+Asking %s…,%s に質問中…
+%s answered %d:,%s の応答 %d:
+"Dropped, because this project has no words for them:",このプロジェクトに当てはまる言葉がないため、外しました:
+Change the keyboard shortcuts,キーボードショートカットを変更
+Keys you can change,変更できるキー
+Fixed keys (not rebindable),固定キー (割り当て変更不可)
+Reset all to defaults,すべて既定値に戻す
+Press a key…,キーを押してください…
+Words: choose what the sheet calls things,言葉: シートでの呼び名を選ぶ
+Ask for events,イベントを質問
+"Drops the proposal. Your sentence stays, so you can reword it and ask again.",提案を破棄します。文は残るので、言い直してもう一度質問できます。
+Generate,生成

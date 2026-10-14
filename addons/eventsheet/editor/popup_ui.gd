@@ -1210,6 +1210,29 @@ static func mark_field(field: Control, problem: bool) -> void:
 	field.add_theme_stylebox_override("normal", style)
 
 
+## Recolours one of a window's own buttons: filled for the main verb, outlined for a risky one.
+static func paint_button(button: Button, fill: Color, text: Color, filled: bool) -> void:
+	for state: String in ["normal", "hover", "pressed", "focus"]:
+		var style: StyleBoxFlat = StyleBoxFlat.new()
+		var base: StyleBox = button.get_theme_stylebox(state)
+		if base is StyleBoxFlat:
+			style = (base as StyleBoxFlat).duplicate() as StyleBoxFlat
+		style.draw_center = filled and state != "focus"
+		style.bg_color = fill.lightened(0.12) if state == "hover" else fill
+		style.border_color = fill if filled and state != "focus" else text
+		style.set_border_width_all(1)
+		style.set_corner_radius_all(3)
+		button.add_theme_stylebox_override(state, style)
+	for color_name: String in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+		button.add_theme_color_override(color_name, text)
+
+
+## The window's main verb in the editor's blue, so the one button that does the work reads first.
+static func main_button(button: Button) -> Button:
+	paint_button(button, accent_color().darkened(0.3), Color.WHITE, true)
+	return button
+
+
 # ── The described dropdown ────────────────────────────────────────────────────────────────────
 #
 # Every choice in a dropdown carries the sentence that says what it means, as Godot's own item
@@ -1248,7 +1271,8 @@ static func add_described_item(dropdown: OptionButton, text: String, description
 static func follow_description(dropdown: OptionButton) -> void:
 	var told: String = dropdown.get_item_tooltip(dropdown.selected) if dropdown.selected >= 0 else ""
 	dropdown.tooltip_text = told if not told.is_empty() else str(dropdown.get_meta("described_fallback", ""))
-	var note: Label = dropdown.get_meta("chosen_note", null) as Label
+	# get_meta with a null default still reports a missing key as an error, so ask first.
+	var note: Label = dropdown.get_meta("chosen_note") as Label if dropdown.has_meta("chosen_note") else null
 	if note != null:
 		note.text = told
 

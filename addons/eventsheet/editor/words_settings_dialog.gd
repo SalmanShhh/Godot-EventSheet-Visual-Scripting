@@ -22,18 +22,23 @@ var _rows: Dictionary = {}
 var _preview_condition: Label = null
 var _preview_action: Label = null
 var _preset_option: OptionButton = null
-var _preset_note: Label = null
 var _preview_verbs: Label = null
+var _strip: EventSheetPopupUI.HelpStrip = null
 
 
 func _init() -> void:
-	title = "Words"
+	title = "Words: choose what the sheet calls things"
 	ok_button_text = "Close"
+	EventSheetPopupUI.main_button(get_ok_button())
+	var reset: Button = add_button("Reset to defaults", false)
+	reset.tooltip_text = "Drops every word you chose and goes back to the two defaults. The Familiar Words toggle itself is left alone."
+	reset.pressed.connect(_on_reset_pressed)
 	add_child(EventSheetPopupUI.margined(_build_body()))
 
 
 func _build_body() -> Control:
 	var page: VBoxContainer = EventSheetPopupUI.form_box()
+	_strip = EventSheetPopupUI.help_strip("", "", "", "", 620.0)
 	page.add_child(EventSheetPopupUI.hint_label(
 		"A few things have two honest names: the Godot one and the one every other event-sheet editor uses. Choose either, or type your own - the sheet reads the same word everywhere at once.", 620.0))
 	page.add_child(EventSheetPopupUI.titled_card("the whole vocabulary at once", _build_presets()))
@@ -45,18 +50,14 @@ func _build_body() -> Control:
 	table_scroll.custom_minimum_size = Vector2(0.0, TABLE_HEIGHT)
 	table_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	table_scroll.add_child(_build_table())
-	page.add_child(EventSheetPopupUI.titled_card("how the sheet talks", table_scroll))
+	var table_card: PanelContainer = EventSheetPopupUI.titled_card("how the sheet talks", table_scroll)
+	table_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	page.add_child(table_card)
 	page.add_child(EventSheetPopupUI.titled_card("live preview", _build_preview()))
-	var buttons: HBoxContainer = HBoxContainer.new()
-	buttons.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)
-	var reset: Button = Button.new()
-	reset.text = "Reset to defaults"
-	reset.tooltip_text = "Drops every word you chose and goes back to the two defaults. The Familiar Words toggle itself is left alone."
-	reset.pressed.connect(_on_reset_pressed)
-	buttons.add_child(reset)
-	page.add_child(buttons)
-	page.add_child(EventSheetPopupUI.hint_label(
-		"The choices are yours alone - they are stored with the editor settings, not in the project, so two people on one project can read the same sheet in different words.", 620.0))
+	# The choices are the reader's alone, which is worth saying wherever the pointer is.
+	var stored: Label = _strip.add_line(EventSheetL10n.translate("STORED"))
+	_strip.set_line(stored, EventSheetL10n.translate("with your editor settings, not the project - two people can read one sheet in different words"))
+	page.add_child(_strip)
 	return page
 
 
@@ -66,17 +67,14 @@ func _build_body() -> Control:
 ## a reader arriving from another event-sheet editor already types. Every one of them is reversible
 ## and none of them moves a byte of a sheet.
 func _build_presets() -> Control:
-	var box: VBoxContainer = EventSheetPopupUI.form_box()
-	_preset_option = OptionButton.new()
+	_preset_option = EventSheetPopupUI.described_option()
 	_preset_option.custom_minimum_size = Vector2(230.0, 0.0)
-	for index: int in EventSheetWords.PRESETS.size():
-		_preset_option.add_item(EventSheetWords.preset_label(EventSheetWords.PRESETS[index]), index)
+	for preset: String in EventSheetWords.PRESETS:
+		EventSheetPopupUI.add_described_item(_preset_option, EventSheetWords.preset_label(preset), _preset_description(preset))
 	_preset_option.item_selected.connect(_on_preset_selected)
-	box.add_child(EventSheetPopupUI.form_row("Words", _preset_option, 150.0,
-		"Sets both halves at once: whether the nouns read in the sheet's words, and whether the verbs do."))
-	_preset_note = EventSheetPopupUI.hint_label("", 620.0)
-	box.add_child(_preset_note)
-	return box
+	_strip.follow(_preset_option, EventSheetL10n.translate("Words"),
+		EventSheetL10n.translate("Sets both halves at once: whether the nouns read in the sheet's words, and whether the verbs do."))
+	return EventSheetPopupUI.form_row("Words", EventSheetPopupUI.described_field(_preset_option, 400.0), 150.0)
 
 
 func _build_table() -> Control:
@@ -117,6 +115,10 @@ func _build_field(key: String, familiar: bool) -> Control:
 	option.item_selected.connect(func(_index: int) -> void: _on_choice(key, familiar))
 	edit.text_submitted.connect(func(_text: String) -> void: _on_choice(key, familiar))
 	edit.focus_exited.connect(func() -> void: _on_choice(key, familiar))
+	var told: String = EventSheetL10n.translate("with Familiar Words on: the word every row says. custom… lets you type your own.") if familiar 		else EventSheetL10n.translate("with Familiar Words off: the word every row says. custom… lets you type your own.")
+	var heading: String = EventSheetL10n.translate(EventSheetWords.names_what(key))
+	_strip.follow(option, heading, told)
+	_strip.follow(edit, heading, told)
 	box.add_child(option)
 	box.add_child(edit)
 	_rows["%s|%s" % [key, EventSheetWords.state_key(familiar)]] = {"option": option, "edit": edit}
@@ -180,9 +182,8 @@ func _refresh_preset() -> void:
 	var current: String = EventSheetWords.preset()
 	var index: int = EventSheetWords.PRESETS.find(current)
 	if index >= 0:
-		_preset_option.select(_preset_option.get_item_index(index))
-	if _preset_note != null:
-		_preset_note.text = _preset_description(current)
+		_preset_option.select(index)
+		EventSheetPopupUI.follow_description(_preset_option)
 
 
 func _preset_description(preset: String) -> String:

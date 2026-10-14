@@ -805,35 +805,33 @@ static func _shortcut_clash_and_capture_checks() -> bool:
 	var dock: EventSheetDock = EventSheetDock.new()
 	var dialog: EventSheetShortcutsDialog = EventSheetShortcutsDialog.new()
 	dialog.init(dock)
-	dialog._shortcuts_list = VBoxContainer.new()
+	dialog._build()
 	EventSheetShortcuts.set_binding("copy", "Ctrl+F")
 	dialog._refresh_shortcuts_editor()
-	var copy_button: Button = _capture_button(dialog, "copy")
-	var paste_button: Button = _capture_button(dialog, "paste")
-	all_passed = _check("the dialog flags a binding that lands on a fixed key",
-		copy_button.tooltip_text if copy_button != null else "",
-		"Ctrl+F is a fixed key ('Find & Replace') - one of them won't fire. Pick another key.") and all_passed
+	all_passed = _check("the dialog says under the row that a binding lands on a fixed key",
+		[_clash_note(dialog, "copy"), _clash_note(dialog, "paste")],
+		["Ctrl+F is also Find & Replace, a fixed key - one of them won't fire. Rebind this one.", ""]) and all_passed
+	EventSheetShortcuts.set_binding("copy", "Ctrl+V")
+	dialog._refresh_shortcuts_editor()
+	all_passed = _check("and that two changeable keys share one binding",
+		_clash_note(dialog, "copy"), "Ctrl+V is also 'Paste rows' - one of them won't fire. Rebind one.") and all_passed
 	EventSheetShortcuts.reset("copy")
 	dialog._refresh_shortcuts_editor()
-	copy_button = _capture_button(dialog, "copy")
-	paste_button = _capture_button(dialog, "paste")
-	dialog._begin_shortcut_capture("copy", copy_button)
-	dialog._begin_shortcut_capture("paste", paste_button)
-	all_passed = _check("clicking a second binding listens on THAT live button, and the first shows its key again",
-		[paste_button.is_queued_for_deletion(), dialog._shortcuts_capturing_button == paste_button,
-			dialog._shortcuts_capturing_action, copy_button.text],
-		[false, true, "paste", "Ctrl+C"]) and all_passed
-	dialog._shortcuts_list.free()
+	var copy_button: Button = dialog._rows["copy"]["button"]
+	dialog._begin_shortcut_capture("copy")
+	dialog._begin_shortcut_capture("paste")
+	all_passed = _check("clicking a second binding listens on it, and the first shows its key again",
+		[dialog._shortcuts_capturing_action, copy_button.text, _clash_note(dialog, "copy")],
+		["paste", "Ctrl+C", ""]) and all_passed
+	dialog._shortcuts_dialog.free()
 	dock.free()
 	return all_passed
 
 
-static func _capture_button(dialog: EventSheetShortcutsDialog, action: String) -> Button:
-	for row: Node in dialog._shortcuts_list.get_children():
-		if row is HBoxContainer and row.get_child_count() == 3 \
-				and (row.get_child(0) as Label).text == EventSheetShortcuts.label_for(action):
-			return row.get_child(1) as Button
-	return null
+## The clash note under one key's row: what it says while it shows, and "" while it is hidden.
+static func _clash_note(dialog: EventSheetShortcutsDialog, action: String) -> String:
+	var note: EventSheetPopupUI.StateNote = dialog._rows[action]["note"]
+	return note.text if note.visible else ""
 
 
 ## The look ids the dialog's Inspector look dropdown offers right now.

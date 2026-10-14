@@ -134,9 +134,9 @@ static func _test_proposal() -> bool:
 	return ok
 
 
-## The two windows that can send words out: Discard in Ask keeps the typed sentence, and the
-## Generate Events window obeys Ask's off switch, sends one request at a time, and frees a request
-## that never started.
+## The two windows that can send words out: Discard in Ask keeps the typed sentence and Ask's mode
+## line wears its tone, and the Generate Events window obeys Ask's off switch, says on the window why
+## Generate is greyed, sends one request at a time, and frees a request that never started.
 static func _test_the_windows() -> bool:
 	var ok: bool = true
 	var dock: Control = _stand_in_dock()
@@ -149,6 +149,11 @@ static func _test_the_windows() -> bool:
 	ok = _check("Discard drops the proposal and keeps the sentence",
 		[ask_window._prompt_edit.text, ask_window._proposal.is_empty(), ask_window._add_button.disabled],
 		["make the player jump", true, true]) and ok
+	ProjectSettings.set_setting(EventSheetAsk.SETTING_MODE, EventSheetAsk.MODE_OFF)
+	ask_window._refresh_mode()
+	ok = _check("with Ask off the mode line is amber and Add these events is the window's main verb",
+		[ask_window._mode_note.tone, ask_window._window.title, ask_window._add_button.text],
+		[EventSheetPopupUI.TONE_WARNING, "Ask for events", "Add these events"]) and ok
 
 	var previous_key: Variant = ProjectSettings.get_setting("eventsheets/ai/api_key", null)
 	var previous_ai_endpoint: Variant = ProjectSettings.get_setting("eventsheets/ai/endpoint", null)
@@ -157,26 +162,33 @@ static func _test_the_windows() -> bool:
 	EventSheetAIGeneration.response_provider = Callable()
 	var generate: EventSheetAIGenerateWindow = EventSheetAIGenerateWindow.new()
 	generate.init(dock)
-	generate._ai_prompt_edit = TextEdit.new()
+	generate._build()
 	generate._ai_prompt_edit.text = "make the player jump"
 	ProjectSettings.set_setting(EventSheetAsk.SETTING_MODE, EventSheetAsk.MODE_OFF)
 	generate._ai_generate_clicked()
-	ok = _check("with Ask off, Generate sends nothing and says why",
-		[dock.find_children("*", "HTTPRequest", true, false).size(), str(dock.get("last_text")).begins_with("Ask is off")],
-		[0, true]) and ok
+	ok = _check("with Ask off, Generate sends nothing, is greyed and says why on the window",
+		[dock.find_children("*", "HTTPRequest", true, false).size(), generate._note.text.begins_with("Ask is off"),
+			generate._ai_window.get_ok_button().disabled],
+		[0, true, true]) and ok
+	ProjectSettings.set_setting(EventSheetAsk.SETTING_MODE, EventSheetAsk.MODE_LOCAL)
+	ProjectSettings.set_setting("eventsheets/ai/api_key", "")
+	generate._refresh_gate()
+	ok = _check("with no key, the window names the setting to fill",
+		[generate._note.text, generate._ai_window.get_ok_button().disabled],
+		["Set eventsheets/ai/api_key in Project Settings first.", true]) and ok
+	ProjectSettings.set_setting("eventsheets/ai/api_key", "test-key")
 	ProjectSettings.set_setting(EventSheetAsk.SETTING_MODE, EventSheetAsk.MODE_LOCAL)
 	# Out of the tree an HTTPRequest cannot start, which is exactly the failed start to pin.
 	generate._ai_generate_clicked()
 	ok = _check("a request that cannot start is freed and reported",
-		[dock.find_children("*", "HTTPRequest", true, false).size(), str(dock.get("last_text")).begins_with("AI request could not start"),
+		[dock.find_children("*", "HTTPRequest", true, false).size(), generate._note.text.begins_with("AI request could not start"),
 			generate._request_in_flight],
 		[0, true, false]) and ok
 	generate._request_in_flight = true
 	generate._ai_generate_clicked()
 	ok = _check("a second click while a request is out sends nothing",
-		[dock.find_children("*", "HTTPRequest", true, false).size(), str(dock.get("last_text"))],
+		[dock.find_children("*", "HTTPRequest", true, false).size(), generate._note.text],
 		[0, "Still generating from your description…"]) and ok
-	generate._ai_prompt_edit.free()
 	ProjectSettings.set_setting("eventsheets/ai/api_key", previous_key)
 	ProjectSettings.set_setting("eventsheets/ai/endpoint", previous_ai_endpoint)
 	dock.free()
