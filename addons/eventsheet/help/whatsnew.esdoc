@@ -18,7 +18,9 @@ What changed in the build you have installed (v0.18.0), in the words the release
 - Open, Save As, Export Generated GDScript, Save Sheet as Text, Include Sheet, Extract to an
   included sheet, Save as Test Sheet and the data table's CSV import and export open the same
   one-shot file picker. Dropping an object marked secret, locked or water asks its offer as the
-  same quick question every other one is, with the same three answers it had.
+  same quick question every other one is, with the same three answers it had. Row Comment, Save
+  View and Duplicate Events For are that quick question with one field, and Enter in the field
+  answers it.
 
 ### Changed: a behaviour names its host once
 
