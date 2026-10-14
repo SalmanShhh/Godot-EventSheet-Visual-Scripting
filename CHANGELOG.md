@@ -109,6 +109,21 @@
 - **Find Repeated Rows**: why a run cannot become one function (it uses an event-local or a For Each
   item) is said beside the greyed-out Make a Function button when the run is picked, not in the
   status bar after pressing it. The strip names the events the run sits in.
+### Changed: renaming a variable shows everything it touches first, and the refactor windows say more
+
+- A variable's Rename - from its menu or its name cell in the variables table - now opens the same
+  window a function's Rename does: the declaration and every row that says the name, as they read now
+  beside how they would read, the other files that call it by that name, and the sheets that include
+  this one and are saved with it. Cancel changes nothing, and a name the sheet would refuse says why
+  at the foot of the window. After the button, the small "Renamed" receipt lists the places it landed.
+- Change Type Everywhere puts the rows it will not guess at under their own heading, "Left for you to
+  check", instead of in the same list as the rows it rewrites, and its foot keeps the chosen type's
+  sentence and the declaration it would write in view. Its words now follow the editor language.
+- What Changed Since Save is a window with the editor's own buttons: Go to Row (or a double-click)
+  shows the picked row, Close closes, and the foot says whether the picked line is a changed row or a
+  saved line a save removes.
+- The file-changed-on-disk question lists, before you choose, whether this tab has unsaved edits and
+  when the file changed, and offers What Changed… to read the difference over the question itself.
 
 ### Fixed: a global made as a scene is found wherever the scene lives
 

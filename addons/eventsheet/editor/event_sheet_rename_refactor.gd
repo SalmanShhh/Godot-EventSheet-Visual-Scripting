@@ -5,11 +5,12 @@ extends RefCounted
 #  - the regex whole-word VARIABLE rename (rename_variable_references + its row / param / template
 #    walkers) which rewrites every embedded GDScript surface (ACE params, code blocks, pick-filter
 #    expressions) so a variable rename never silently breaks compiled code; called by the variables tree.
-#  - the "Rename Everywhere" gesture (open / rename_everywhere) which renames a symbol via the
-#    EventSheetRefactor core in the open sheet AND every project sheet that includes it (rename_in_includers).
+#  - the "Rename Everywhere" writer (rename_everywhere) which renames a symbol via the EventSheetRefactor
+#    core in the open sheet AND every project sheet that includes it (rename_in_includers). The window
+#    in front of it is the rename receipt (dock/rename_receipt.gd), for a variable and a function alike;
+#    the inline name fields call the writer directly.
 # Extracted from event_sheet_dock.gd; the sheet + path state, the mutation funnel, status, and title-strip
-# refresh it needs stay on the dock, reached through _dock. The dock keeps thin _rename_variable_references /
-# _open_rename_dialog / _rename_in_includers delegates for the variables-tree callers and tedium_test.
+# refresh it needs stay on the dock, reached through _dock.
 
 var _dock: Control = null
 ## The last rename's places - {moved, touched, callers} - which the receipt after it lists.
@@ -109,36 +110,46 @@ func _regex_rename(regex: RegEx, text: String, new_name: String, counter: Dictio
 	return regex.sub(text, new_name, true)
 
 
-## Opens the Rename question seeded with old_name (the variable context menu's Rename). Rename is
-## only pressable for a name the sheet would accept, and the sentence says why when it would not.
-func open(old_name: String) -> ConfirmationDialog:
-	if old_name.is_empty():
-		return null
-	var edit: LineEdit = LineEdit.new()
-	edit.text = old_name
-	var rename: Callable = func() -> void:
-		if rename_everywhere(old_name, edit.text.strip_edges()):
-			show_done(old_name, edit.text.strip_edges())
-	var dialog: ConfirmationDialog = load(_dock.SMALL_PROMPT_PATH).open(_dock, {
-		"title": EventSheetL10n.translate("Rename %s?") % old_name,
-		"body": EventSheetPopupUI.form_row(EventSheetL10n.translate("New name"), edit),
-		"note": EventSheetL10n.translate("Ctrl+Z undoes it in this sheet. Sheets that include this one are saved with it, each with a backup in Sheet Backups."),
-		"main": EventSheetL10n.translate("Rename"),
-		"on_main": rename,
-	})
-	dialog.register_text_enter(edit)
-	var sync: Callable = func(typed: String) -> void:
-		var problem: String = "" if typed.strip_edges() == old_name \
-			else EventSheetRefactor.validate_new_name(_dock._current_sheet, old_name, typed.strip_edges())
-		(dialog.find_child("Say", true, false) as Label).text = problem if not problem.is_empty() \
-			else EventSheetL10n.translate("Every use of %s in this sheet, and in every sheet that includes it, takes the new name.") % old_name
-		dialog.get_ok_button().disabled = not problem.is_empty() or typed.strip_edges() == old_name
-	edit.text_changed.connect(sync)
-	sync.call(old_name)
-	if edit.is_inside_tree():
-		edit.grab_focus()
-		edit.select_all()
-	return dialog
+## The full rename: validate, undoably rewrite the open sheet, then rewrite + save every project sheet
+## whose `includes` lists this one (Replace-in-Project contract: closed sheets save directly, the status
+## names every touched file). Public because the receipt's button and the inline name fields are the
+## same gesture, and two writers for one promise is how they come to disagree.
+func rename_everywhere(old_name: String, new_name: String) -> bool:
+	if _dock._current_sheet == null:
+		return false
+	var problem: String = EventSheetRefactor.validate_new_name(_dock._current_sheet, old_name, new_name)
+	if not problem.is_empty():
+		_dock._set_status(problem, true)
+		return false
+	var moved: Array[int] = [0]
+	var renamed: bool = _dock._perform_undoable_sheet_edit(
+		EventSheetL10n.translate("Rename %s") % old_name, func() -> bool:
+			moved[0] = EventSheetRefactor.rename_symbol(_dock._current_sheet, old_name, new_name)
+			return moved[0] > 0)
+	if not renamed:
+		_dock._set_status(EventSheetL10n.translate("\"%s\" appears nowhere in this sheet.") % old_name, true)
+		return false
+	var touched: PackedStringArray = PackedStringArray()
+	if not _dock._current_sheet_path.is_empty():
+		touched = rename_in_includers(old_name, new_name, EventSheetProjectFind.list_project_sheets())
+	var callers: PackedStringArray = hand_written_callers(old_name,
+		str(_dock._current_sheet.external_source_path))
+	_last_done = {"moved": moved[0], "touched": touched, "callers": callers}
+	_dock._refresh_title_strip()
+	_dock._set_status(done_text(moved[0], touched) + ("" if callers.is_empty() else " " + EventSheetL10n.translate(
+		"Hand-written code was not changed - check these, which call %s by that name: %s") % [
+			old_name, ", ".join(callers)]))
+	return true
+
+
+## The status line after a rename. "One Ctrl+Z takes all of it back" is only true while nothing
+## outside this sheet was written: an includer the rename saved to disk is outside this sheet's undo
+## step, so the sentence then says what Ctrl+Z reaches and names what it does not.
+static func done_text(moved: int, touched: PackedStringArray) -> String:
+	if touched.is_empty():
+		return EventSheetL10n.translate("%d row(s) renamed - one Ctrl+Z takes all of it back.") % moved
+	return EventSheetL10n.translate("%d row(s) renamed - one Ctrl+Z takes back this sheet's rows. Also written and saved, which Ctrl+Z does not undo: %s.") % [
+		moved, ", ".join(touched)]
 
 
 ## The receipt after the rename: what happened, and the places it happened in. The last rename's
@@ -151,7 +162,7 @@ func show_done(old_name: String, new_name: String) -> ConfirmationDialog:
 	for file: String in touched:
 		places.append([file, EventSheetL10n.translate("saved")])
 	for file: String in _last_done.get("callers", PackedStringArray()):
-		places.append([file, EventSheetL10n.translate("not changed - check it")])
+		places.append([EventSheetL10n.translate("%s - not changed") % file, EventSheetL10n.translate("check it")])
 	return load(_dock.SMALL_PROMPT_PATH).open(_dock, {
 		"title": EventSheetL10n.translate("Renamed %s to %s") % [old_name, new_name],
 		"say": EventSheetL10n.translate("Changed %d place(s) in %d sheet(s).") % [moved, 1 + touched.size()],
@@ -162,39 +173,6 @@ func show_done(old_name: String, new_name: String) -> ConfirmationDialog:
 		"main": EventSheetL10n.translate("OK"),
 		"cancel": "",
 	})
-
-
-## The full rename: validate, undoably rewrite the open sheet, then rewrite + save every project sheet
-## whose `includes` lists this one (Replace-in-Project contract: closed sheets save directly, the status
-## names every touched file). Public because the inline rename on a variable row is the same gesture
-## without the dialog, and two writers for one promise is how they come to disagree.
-func rename_everywhere(old_name: String, new_name: String) -> bool:
-	if _dock._current_sheet == null:
-		return false
-	var problem: String = EventSheetRefactor.validate_new_name(_dock._current_sheet, old_name, new_name)
-	if not problem.is_empty():
-		_dock._set_status(problem, true)
-		return false
-	var moved: Array[int] = [0]
-	var renamed: bool = _dock._perform_undoable_sheet_edit("Rename %s" % old_name, func() -> bool:
-		moved[0] = EventSheetRefactor.rename_symbol(_dock._current_sheet, old_name, new_name)
-		return moved[0] > 0)
-	if not renamed:
-		_dock._set_status("\"%s\" appears nowhere in this sheet." % old_name, true)
-		return false
-	var touched: PackedStringArray = PackedStringArray()
-	if not _dock._current_sheet_path.is_empty():
-		touched = rename_in_includers(old_name, new_name, EventSheetProjectFind.list_project_sheets())
-	var callers: PackedStringArray = hand_written_callers(old_name,
-		str(_dock._current_sheet.external_source_path) if _dock._current_sheet != null else "")
-	_last_done = {"moved": moved[0], "touched": touched, "callers": callers}
-	_dock._refresh_title_strip()
-	_dock._set_status("Renamed %s → %s%s.%s" % [old_name, new_name,
-		" (also in: %s)" % ", ".join(touched) if not touched.is_empty() else "",
-		"" if callers.is_empty() else " " + EventSheetL10n.translate(
-			"Hand-written code was not changed - check these, which call %s by that name: %s") % [
-				old_name, ", ".join(callers)]])
-	return true
 
 
 ## The code a rename did NOT touch: the project's own scripts that call the old name, by file name,

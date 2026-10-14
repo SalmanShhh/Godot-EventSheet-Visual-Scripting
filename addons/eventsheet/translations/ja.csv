@@ -8593,3 +8593,38 @@ No repeated runs - every action sequence on this sheet is written once.,繰り�
 "%d repeated run(s). Pick one and make it a function: extracted where it first appears, called everywhere else, one undo step.",%d 個の繰り返される並び。1 つ選んで関数にします: 最初の場所で抽出され、他のすべての場所で呼び出され、元に戻す操作は 1 回です。
 "This run uses an event-local or a For Each item, so the places cannot share one function. Extract it at one place instead.",この並びはイベントローカル変数か For Each の要素を使うため、各箇所で 1 つの関数を共有できません。代わりに 1 箇所で抽出してください。
 Events %s run the same %d action(s).,イベント %s は同じ %d 個のアクションを実行します。
+What Changed…,変更点…
+"The reference the scene's last save holds now, so it is not typed here.",シーンの最後の保存が今持っている参照なので、ここでは入力しません。
+A snake_case name nothing else in this sheet uses.,このシートで他に使われていない snake_case の名前。
+What Changed: this sheet has no saved file yet - everything is new.,変更点: このシートにはまだ保存されたファイルがありません - すべてが新規です。
+What Changed: nothing - saving would be byte-identical to %s.,変更点: なし - 保存しても %s とバイト単位で同一です。
+What changed since you saved %s,%s を保存してからの変更点
+%d row(s) change on save.,保存すると %d 行が変わります。
+%d row(s) change on save · %d line(s) removed.,保存すると %d 行が変わります · %d 行を削除。
+This row,この行
+This line,このコード行
+Changed: this event writes different lines from the saved file.,変更: このイベントは保存されたファイルとは異なる行を書き出します。
+"Removed: the saved file has this line, and saving takes it out.",削除: 保存されたファイルにはこの行があり、保存すると取り除かれます。
+Changes on save,保存時の変更
+Right-click a variable to change its type.,型を変えるには変数を右クリックしてください。
+Change the type of %s everywhere,%s の型をすべての場所で変更
+Change It Everywhere,すべての場所で変更
+"Changes the variable's type AND every row that sets or compares it, in one step you can undo. Values it cannot convert on its own are listed below rather than guessed at.",変数の型と、それを設定・比較するすべての行を、元に戻せる 1 ステップで変更します。自動で変換できない値は推測せずに下に一覧します。
+Make it a…,変更後の型…
+New type,新しい型
+What will change,変更される内容
+Left for you to check,確認が必要な箇所
+%s is not declared in this sheet.,%s はこのシートで宣言されていません。
+"Declaration: %s is %s, becomes %s",宣言: %s は %s、%s になります
+Default: %s becomes %s,既定値: %s が %s になります
+%s - %s %s: %s becomes %s,%s - %s %s: %s が %s になります
+%s - %s %s: %s left as written (%s),%s - %s %s: %s は書かれたまま残します (%s)
+"%d row(s) rewritten, %d left for you to check.",%d 行を書き換え、%d 行は確認が必要です。
+This tab - unsaved edits,このタブ - 未保存の編集あり
+This tab - nothing unsaved,このタブ - 未保存の内容なし
+On disk - changed at %s,ディスク上 - %s に変更
+On disk - changed,ディスク上 - 変更あり
+yours,あなたの版
+the file,ファイルの版
+%s - not changed,%s - 変更なし
+check it,要確認

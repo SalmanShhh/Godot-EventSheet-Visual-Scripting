@@ -72,6 +72,24 @@ static func run() -> bool:
 		Array(summary.get("removed_lines", PackedStringArray())).any(
 			func(line: Variant) -> bool: return str(line) == "if host == null:"), true) and ok
 	ok = _check("the diff NEVER wrote the real file", FileAccess.get_file_as_string(pack_path), disk_before) and ok
+	# The window: the count above the list, Go to Row the blue answer while a row is picked, and the
+	# foot saying what the picked line is - a removed line has no row to go to.
+	var window: RefCounted = dock._sheet_diff
+	window.open()
+	var row_read: Array = [window._dialog.title, window._summary_label.text, window._list.item_count,
+		window._dialog.ok_button_text, window._dialog.get_ok_button().disabled, window._strip.body_label.text,
+		window._strip.in_code_value.text == str((rows[0] as Dictionary).get("label", ""))]
+	window._list.item_selected.emit(window._list.item_count - 1)
+	ok = _check("What Changed lists the rows, goes to a row, and says what a removed line is",
+		[row_read, [window._dialog.get_ok_button().disabled, window._strip.body_label.text]],
+		[["What changed since you saved health_behavior.gd",
+			EventSheetSheetDiff.summary_text(1, summary.get("removed_lines", PackedStringArray()).size()),
+			1 + summary.get("removed_lines", PackedStringArray()).size(), "Go to Row", false,
+			"Changed: this event writes different lines from the saved file.", true],
+		[true, "Removed: the saved file has this line, and saving takes it out."]]) and ok
+	ok = _check("the summary sentence counts rows and removed lines",
+		[EventSheetSheetDiff.summary_text(3, 0), EventSheetSheetDiff.summary_text(3, 1)],
+		["3 row(s) change on save.", "3 row(s) change on save · 1 line(s) removed."]) and ok
 	dock.free()
 
 	# ── Exact row attribution on the EDITOR-AUTHORED (main) compile path, where the source map is

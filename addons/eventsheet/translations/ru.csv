@@ -8593,3 +8593,38 @@ No repeated runs - every action sequence on this sheet is written once.,Повт
 "%d repeated run(s). Pick one and make it a function: extracted where it first appears, called everywhere else, one undo step.","Повторяющихся последовательностей: %d. Выберите одну и сделайте из неё функцию: она будет вынесена там, где встречается впервые, вызвана во всех остальных местах, одним шагом отмены."
 "This run uses an event-local or a For Each item, so the places cannot share one function. Extract it at one place instead.","Эта последовательность использует локальную переменную события или элемент For Each, поэтому места не могут разделить одну функцию. Вынесите её в одном месте."
 Events %s run the same %d action(s).,События %s выполняют одни и те же действия (%d).
+What Changed…,Что изменилось…
+"The reference the scene's last save holds now, so it is not typed here.","Ссылка, которую сейчас хранит последнее сохранение сцены, поэтому здесь она не вводится."
+A snake_case name nothing else in this sheet uses.,"Имя в snake_case, которое больше нигде в этом листе не используется."
+What Changed: this sheet has no saved file yet - everything is new.,Что изменилось: у этого листа ещё нет сохранённого файла - всё новое.
+What Changed: nothing - saving would be byte-identical to %s.,Что изменилось: ничего - сохранение побайтно совпадёт с %s.
+What changed since you saved %s,Что изменилось с сохранения %s
+%d row(s) change on save.,%d строк(и) изменятся при сохранении.
+%d row(s) change on save · %d line(s) removed.,%d строк(и) изменятся при сохранении · удалено строк: %d.
+This row,Эта строка
+This line,Эта строка кода
+Changed: this event writes different lines from the saved file.,"Изменено: это событие пишет не те строки, что в сохранённом файле."
+"Removed: the saved file has this line, and saving takes it out.","Удалено: в сохранённом файле есть эта строка, и сохранение её уберёт."
+Changes on save,Изменения при сохранении
+Right-click a variable to change its type.,"Щёлкните правой кнопкой по переменной, чтобы изменить её тип."
+Change the type of %s everywhere,Изменить тип %s везде
+Change It Everywhere,Изменить везде
+"Changes the variable's type AND every row that sets or compares it, in one step you can undo. Values it cannot convert on its own are listed below rather than guessed at.","Меняет тип переменной И каждую строку, которая её задаёт или сравнивает, за один шаг, который можно отменить. Значения, которые нельзя преобразовать автоматически, перечислены ниже, а не угаданы."
+Make it a…,Сделать…
+New type,Новый тип
+What will change,Что изменится
+Left for you to check,Оставлено на вашу проверку
+%s is not declared in this sheet.,%s не объявлена в этом листе.
+"Declaration: %s is %s, becomes %s","Объявление: %s - %s, станет %s"
+Default: %s becomes %s,По умолчанию: %s станет %s
+%s - %s %s: %s becomes %s,%s - %s %s: %s станет %s
+%s - %s %s: %s left as written (%s),%s - %s %s: %s оставлено как написано (%s)
+"%d row(s) rewritten, %d left for you to check.","Переписано строк: %d, на вашу проверку: %d."
+This tab - unsaved edits,Эта вкладка - есть несохранённые правки
+This tab - nothing unsaved,Эта вкладка - всё сохранено
+On disk - changed at %s,На диске - изменён в %s
+On disk - changed,На диске - изменён
+yours,ваша
+the file,файл
+%s - not changed,%s - не изменён
+check it,проверьте

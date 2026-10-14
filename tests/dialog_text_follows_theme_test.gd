@@ -64,6 +64,9 @@ const DIALOG_FILES: Array[String] = [
 	"res://addons/eventsheet/editor/dock/project_find.gd",
 	"res://addons/eventsheet/editor/dock/find_references_panel.gd",
 	"res://addons/eventsheet/editor/dock/repeated_rows.gd",
+	"res://addons/eventsheet/editor/dock/rename_receipt.gd",
+	"res://addons/eventsheet/editor/dock/variable_retype_dialog.gd",
+	"res://addons/eventsheet/editor/dock/sheet_diff.gd",
 ]
 
 

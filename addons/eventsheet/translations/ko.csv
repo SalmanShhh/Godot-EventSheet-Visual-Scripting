@@ -8593,3 +8593,38 @@ No repeated runs - every action sequence on this sheet is written once.,반복�
 "%d repeated run(s). Pick one and make it a function: extracted where it first appears, called everywhere else, one undo step.","반복되는 묶음 %d 개. 하나를 골라 함수로 만드세요: 처음 나온 곳에서 추출되고 나머지 모든 곳에서 호출되며, 실행 취소는 한 번입니다."
 "This run uses an event-local or a For Each item, so the places cannot share one function. Extract it at one place instead.",이 묶음은 이벤트 지역 변수나 For Each 항목을 사용하므로 각 위치가 하나의 함수를 공유할 수 없습니다. 대신 한 곳에서 추출하세요.
 Events %s run the same %d action(s).,이벤트 %s 은(는) 같은 액션 %d 개를 실행합니다.
+What Changed…,변경 사항…
+"The reference the scene's last save holds now, so it is not typed here.",씬의 마지막 저장이 지금 가진 참조이므로 여기서 입력하지 않습니다.
+A snake_case name nothing else in this sheet uses.,이 시트에서 다른 곳에 쓰이지 않는 snake_case 이름.
+What Changed: this sheet has no saved file yet - everything is new.,변경 사항: 이 시트에는 아직 저장된 파일이 없습니다 - 모두 새것입니다.
+What Changed: nothing - saving would be byte-identical to %s.,변경 사항: 없음 - 저장해도 %s와 바이트 단위로 같습니다.
+What changed since you saved %s,%s 저장 이후 변경 사항
+%d row(s) change on save.,저장하면 %d개 행이 바뀝니다.
+%d row(s) change on save · %d line(s) removed.,저장하면 %d개 행이 바뀝니다 · %d줄 제거됨.
+This row,이 행
+This line,이 코드 줄
+Changed: this event writes different lines from the saved file.,변경됨: 이 이벤트는 저장된 파일과 다른 줄을 씁니다.
+"Removed: the saved file has this line, and saving takes it out.","제거됨: 저장된 파일에 이 줄이 있으며, 저장하면 빠집니다."
+Changes on save,저장 시 변경 사항
+Right-click a variable to change its type.,유형을 바꾸려면 변수를 마우스 오른쪽 버튼으로 클릭하세요.
+Change the type of %s everywhere,%s의 유형을 모든 곳에서 바꾸기
+Change It Everywhere,모든 곳에서 바꾸기
+"Changes the variable's type AND every row that sets or compares it, in one step you can undo. Values it cannot convert on its own are listed below rather than guessed at.",변수의 유형과 그것을 설정하거나 비교하는 모든 행을 실행 취소할 수 있는 한 단계로 바꿉니다. 스스로 변환할 수 없는 값은 추측하지 않고 아래에 나열합니다.
+Make it a…,바꿀 유형…
+New type,새 유형
+What will change,바뀌는 내용
+Left for you to check,직접 확인할 항목
+%s is not declared in this sheet.,%s은(는) 이 시트에 선언되어 있지 않습니다.
+"Declaration: %s is %s, becomes %s","선언: %s은(는) %s, %s(으)로 바뀜"
+Default: %s becomes %s,기본값: %s이(가) %s(으)로 바뀜
+%s - %s %s: %s becomes %s,%s - %s %s: %s이(가) %s(으)로 바뀜
+%s - %s %s: %s left as written (%s),%s - %s %s: %s은(는) 쓴 그대로 둠 (%s)
+"%d row(s) rewritten, %d left for you to check.","%d개 행을 다시 썼고, %d개는 직접 확인해야 합니다."
+This tab - unsaved edits,이 탭 - 저장하지 않은 편집 있음
+This tab - nothing unsaved,이 탭 - 저장하지 않은 내용 없음
+On disk - changed at %s,디스크 - %s에 변경됨
+On disk - changed,디스크 - 변경됨
+yours,내 버전
+the file,파일
+%s - not changed,%s - 바뀌지 않음
+check it,확인 필요

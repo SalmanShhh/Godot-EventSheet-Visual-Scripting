@@ -8593,3 +8593,38 @@ No repeated runs - every action sequence on this sheet is written once.,没有�
 "%d repeated run(s). Pick one and make it a function: extracted where it first appears, called everywhere else, one undo step.",%d 个重复段。选一个把它变成函数：在首次出现处提取，在其他所有位置调用，一步撤销。
 "This run uses an event-local or a For Each item, so the places cannot share one function. Extract it at one place instead.",这一段使用了事件局部变量或 For Each 项，因此这些位置不能共用一个函数。请改为在一处提取。
 Events %s run the same %d action(s).,事件 %s 运行相同的 %d 个动作。
+What Changed…,更改内容…
+"The reference the scene's last save holds now, so it is not typed here.",场景上次保存时记录的引用，因此不在这里输入。
+A snake_case name nothing else in this sheet uses.,此表中没有其他地方使用的 snake_case 名称。
+What Changed: this sheet has no saved file yet - everything is new.,更改内容：此表还没有保存的文件 - 全部都是新的。
+What Changed: nothing - saving would be byte-identical to %s.,更改内容：无 - 保存后将与 %s 逐字节相同。
+What changed since you saved %s,自你保存 %s 以来的更改
+%d row(s) change on save.,保存时有 %d 行会改变。
+%d row(s) change on save · %d line(s) removed.,保存时有 %d 行会改变 · 删除 %d 行。
+This row,此行
+This line,此代码行
+Changed: this event writes different lines from the saved file.,已更改：此事件写出的行与保存的文件不同。
+"Removed: the saved file has this line, and saving takes it out.",已删除：保存的文件中有这一行，保存时会将其移除。
+Changes on save,保存时的更改
+Right-click a variable to change its type.,右键单击变量以更改其类型。
+Change the type of %s everywhere,在所有位置更改 %s 的类型
+Change It Everywhere,全部更改
+"Changes the variable's type AND every row that sets or compares it, in one step you can undo. Values it cannot convert on its own are listed below rather than guessed at.",一次可撤销的操作即可更改变量的类型以及每个设置或比较它的行。无法自行转换的值会列在下方，而不是去猜。
+Make it a…,改为…
+New type,新类型
+What will change,将要更改的内容
+Left for you to check,留给你检查
+%s is not declared in this sheet.,%s 未在此表中声明。
+"Declaration: %s is %s, becomes %s",声明：%s 为 %s，变为 %s
+Default: %s becomes %s,默认值：%s 变为 %s
+%s - %s %s: %s becomes %s,%s - %s %s：%s 变为 %s
+%s - %s %s: %s left as written (%s),%s - %s %s：%s 保持原样 (%s)
+"%d row(s) rewritten, %d left for you to check.",已重写 %d 行，%d 行留给你检查。
+This tab - unsaved edits,此标签页 - 有未保存的编辑
+This tab - nothing unsaved,此标签页 - 没有未保存的内容
+On disk - changed at %s,磁盘上 - 于 %s 更改
+On disk - changed,磁盘上 - 已更改
+yours,你的
+the file,文件
+%s - not changed,%s - 未更改
+check it,请检查

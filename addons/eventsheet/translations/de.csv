@@ -8593,3 +8593,38 @@ No repeated runs - every action sequence on this sheet is written once.,Keine wi
 "%d repeated run(s). Pick one and make it a function: extracted where it first appears, called everywhere else, one undo step.","%d wiederholte Folge(n). Wähle eine und mach eine Funktion daraus: herausgelöst an der ersten Stelle, überall sonst aufgerufen, ein Rückgängig-Schritt."
 "This run uses an event-local or a For Each item, so the places cannot share one function. Extract it at one place instead.","Diese Folge nutzt eine Ereignis-Lokale oder ein For-Each-Element, also können die Stellen keine Funktion teilen. Löse sie stattdessen an einer Stelle heraus."
 Events %s run the same %d action(s).,Ereignisse %s führen dieselben %d Aktion(en) aus.
+What Changed…,Was hat sich geändert…
+"The reference the scene's last save holds now, so it is not typed here.","Der Verweis, den die letzte Speicherung der Szene jetzt enthält, daher wird er hier nicht eingetippt."
+A snake_case name nothing else in this sheet uses.,"Ein snake_case-Name, den sonst nichts in diesem Blatt verwendet."
+What Changed: this sheet has no saved file yet - everything is new.,Was hat sich geändert: Dieses Blatt hat noch keine gespeicherte Datei - alles ist neu.
+What Changed: nothing - saving would be byte-identical to %s.,Was hat sich geändert: nichts - Speichern wäre byte-identisch mit %s.
+What changed since you saved %s,"Was sich geändert hat, seit du %s gespeichert hast"
+%d row(s) change on save.,%d Zeile(n) ändern sich beim Speichern.
+%d row(s) change on save · %d line(s) removed.,%d Zeile(n) ändern sich beim Speichern · %d Zeile(n) entfernt.
+This row,Diese Zeile
+This line,Diese Codezeile
+Changed: this event writes different lines from the saved file.,Geändert: Dieses Ereignis schreibt andere Zeilen als die gespeicherte Datei.
+"Removed: the saved file has this line, and saving takes it out.","Entfernt: Die gespeicherte Datei hat diese Zeile, und Speichern nimmt sie heraus."
+Changes on save,Änderungen beim Speichern
+Right-click a variable to change its type.,"Rechtsklicke auf eine Variable, um ihren Typ zu ändern."
+Change the type of %s everywhere,Typ von %s überall ändern
+Change It Everywhere,Überall ändern
+"Changes the variable's type AND every row that sets or compares it, in one step you can undo. Values it cannot convert on its own are listed below rather than guessed at.","Ändert den Typ der Variable UND jede Zeile, die sie setzt oder vergleicht, in einem Schritt, den du rückgängig machen kannst. Werte, die es nicht selbst umwandeln kann, stehen unten, statt geraten zu werden."
+Make it a…,Mach daraus…
+New type,Neuer Typ
+What will change,Was sich ändert
+Left for you to check,Für dich zum Prüfen
+%s is not declared in this sheet.,%s ist in diesem Blatt nicht deklariert.
+"Declaration: %s is %s, becomes %s","Deklaration: %s ist %s, wird %s"
+Default: %s becomes %s,Standardwert: %s wird %s
+%s - %s %s: %s becomes %s,%s - %s %s: %s wird %s
+%s - %s %s: %s left as written (%s),%s - %s %s: %s bleibt wie geschrieben (%s)
+"%d row(s) rewritten, %d left for you to check.","%d Zeile(n) umgeschrieben, %d für dich zum Prüfen."
+This tab - unsaved edits,Dieser Tab - ungespeicherte Änderungen
+This tab - nothing unsaved,Dieser Tab - nichts ungespeichert
+On disk - changed at %s,Auf der Festplatte - geändert um %s
+On disk - changed,Auf der Festplatte - geändert
+yours,deine
+the file,die Datei
+%s - not changed,%s - nicht geändert
+check it,prüfen

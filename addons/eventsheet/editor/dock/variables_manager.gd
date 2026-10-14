@@ -177,7 +177,7 @@ func _on_variable_context_menu_id_pressed(id: int) -> void:
 		_dock.VARIABLE_MENU_EDIT:
 			_edit_context_variable()
 		_dock.VARIABLE_MENU_RENAME:
-			_dock._open_rename_dialog(str(_context_variable.get("name", "")))
+			_dock.open_rename_receipt(str(_context_variable.get("name", "")))
 		_dock.VARIABLE_MENU_CHANGE_TYPE:
 			_dock._variable_retype_dialog.open(_context_variable)
 		_dock.VARIABLE_MENU_CONVERT_SCOPE:

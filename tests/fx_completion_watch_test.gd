@@ -89,6 +89,18 @@ static func run() -> bool:
 		[clean_read, [dirty.ok_button_text, dirty.get_cancel_button().visible, danger.text]],
 		[["eventsheets_watch_sample.gd changed outside the editor", "Reload", true, true],
 		["Keep mine", false, "Use the file on disk"]]) and all_passed
+	# Before choosing, the question says whether this tab has edits to lose and when the file changed,
+	# and offers What Changed… beside the blue answer.
+	var before: TreeItem = (dirty.find_child("Places", true, false) as Tree).get_root()
+	var clean_before: TreeItem = (clean.find_child("Places", true, false) as Tree).get_root()
+	var look: Array = dirty.find_children("*", "Button", true, false).filter(
+		func(button: Button) -> bool: return button.text == "What Changed…")
+	all_passed = _check("the question lists this tab and the disk, and offers What Changed…",
+		[before.get_child(0).get_text(0), before.get_child(0).get_text(1), clean_before.get_child(0).get_text(0),
+			before.get_child(1).get_text(1), before.get_child(1).get_text(0).begins_with("On disk - changed at "),
+			look.size(), [danger.get_index() < (look[0] as Button).get_index(),
+				(look[0] as Button).get_index() < dirty.get_ok_button().get_index()] if not look.is_empty() else []],
+		["This tab - unsaved edits", "yours", "This tab - nothing unsaved", "the file", true, 1, [true, true]]) and all_passed
 	# Esc keeps the edits and remembers the change, so the question is not asked again.
 	dirty.canceled.emit()
 	all_passed = _check("Esc keeps the edits and stops asking", [editor._dirty, editor._external_sheet_changed_on_disk()], [true, false]) and all_passed

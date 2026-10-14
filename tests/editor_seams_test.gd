@@ -141,6 +141,14 @@ static func _run_change_type() -> bool:
 		Array(lines).has("Event 1 - Compare variable value: \"100\" becomes 100"), true) and all_passed
 	all_passed = _check("the preview says which row it will NOT touch",
 		Array(lines).has("Event 1 - Set value value: Text To Int(score) + 10 left as written (it is an expression, not a plain value)"), true) and all_passed
+	# The row it will not guess at has its own card, never mixed into what the button writes, and the
+	# foot keeps the chosen type's sentence and the declaration it would write in view.
+	all_passed = _check("the row left alone sits in its own card, the foot reads the declaration",
+		[dialog._review_list.item_count, dialog._review_card.visible,
+			dialog._preview_list.item_count + dialog._review_list.item_count == lines.size(),
+			dialog._strip.body_label.text == dialog._type_option.get_item_tooltip(int_index),
+			dialog._strip.in_code_value.text],
+		[1, true, true, true, "var score: int = 0"]) and all_passed
 
 	# ---- apply: one undo step, the whole sheet ----
 	dialog.confirm()

@@ -275,37 +275,57 @@ static func _test_the_receipt_lists_the_files_it_writes() -> bool:
 	# The status line after the button. It used to promise "one Ctrl+Z takes all of it back" even
 	# when the includers pass had saved other files to disk, which that Ctrl+Z never reaches.
 	ok = _check("with nothing written elsewhere, one Ctrl+Z is the whole of it",
-		EventSheetRenameReceipt.done_text(4, PackedStringArray()),
+		EventSheetRenameRefactor.done_text(4, PackedStringArray()),
 		"4 row(s) renamed - one Ctrl+Z takes all of it back.") and ok
 	ok = _check("with files saved elsewhere, the sentence says Ctrl+Z does not reach them",
-		EventSheetRenameReceipt.done_text(4, PackedStringArray(["pause.tres", "bars.tres"])),
+		EventSheetRenameRefactor.done_text(4, PackedStringArray(["pause.tres", "bars.tres"])),
 		"4 row(s) renamed - one Ctrl+Z takes back this sheet's rows. Also written and saved, which Ctrl+Z does not undo: pause.tres, bars.tres.") and ok
 	ok = _test_rename_everywhere_can_be_cancelled() and ok
 	return ok
 
 
-## The variable Rename question offers a way out that changes nothing, keeps Rename unpressable
-## until a name the sheet accepts is typed, and the receipt after it lists where the rename landed.
+## A variable's Rename opens the same receipt a function's does: a way out that changes nothing, the
+## declaration listed first, a refused name said out loud at the foot, and the button running the one
+## rename writer, then the small receipt naming where it landed.
 static func _test_rename_everywhere_can_be_cancelled() -> bool:
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
-	dock._current_sheet = EventSheetResource.new()
-	dock._current_sheet.variables = {"health": {"type": "int", "default": 0}}
-	var refactor := EventSheetRenameRefactor.new()
-	refactor.init(dock)
-	var dialog: ConfirmationDialog = refactor.open("health")
-	var edit: LineEdit = dialog.find_children("*", "LineEdit", true, false).back() as LineEdit
-	var ok: bool = _check("the question offers Cancel, and Rename waits for a new name",
-		[dialog.title, dialog.cancel_button_text, dialog.get_ok_button().disabled],
-		["Rename health?", "Cancel", true])
-	edit.text_changed.emit("hit_points")
-	ok = _check("a good name makes Rename pressable", dialog.get_ok_button().disabled, false) and ok
-	refactor._last_done = {"moved": 3, "touched": PackedStringArray(["hud.tres"]), "callers": PackedStringArray()}
-	var done: ConfirmationDialog = refactor.show_done("health", "hit_points")
-	var places: Tree = done.find_child("Places", true, false) as Tree
-	ok = _check("the receipt says what happened and lists the places",
-		[done.title, (done.find_child("Say", true, false) as Label).text, places.get_root().get_child_count(),
-		places.get_root().get_child(1).get_text(0)],
-		["Renamed health to hit_points", "Changed 3 place(s) in 2 sheet(s).", 2, "hud.tres"]) and ok
+	dock.set_undo_redo_manager(preload("res://tests/refactor_gestures_test.gd").RecordingUndoManager.new())
+	var sheet := EventSheetResource.new()
+	sheet.variables = {"zq_meter": {"type": "int", "default": 0}}
+	var reading := RawCodeRow.new()
+	reading.code = "print(zq_meter)"
+	sheet.events.append(reading)
+	dock.setup(sheet)
+	dock.open_rename_receipt("zq_meter")
+	var receipt: RefCounted = dock._rename_receipt
+	var dialog: AcceptDialog = receipt._dialog
+	var cancel: Array = dialog.find_children("*", "Button", true, false).filter(
+		func(button: Button) -> bool: return button.text == "Cancel")
+	var ok: bool = _check("the variable opens the receipt, with Cancel, and Rename waits for a new name",
+		[dialog.title, cancel.size(), dialog.get_ok_button().disabled, receipt._strip.tone],
+		["Rename zq_meter", 1, true, ""])
+	receipt._name_edit.text = "2bad"
+	receipt._name_edit.text_changed.emit("2bad")
+	ok = _check("a refused name says why at the foot, in the error voice",
+		[receipt._strip.body_label.text, receipt._strip.tone, dialog.get_ok_button().disabled],
+		["\"2bad\" is not a valid identifier.", "error", true]) and ok
+	receipt._name_edit.text = "zq_gauge"
+	receipt._name_edit.text_changed.emit("zq_gauge")
+	ok = _check("a good name lists the declaration first and shows the line it writes",
+		[Array(EventSheetRenameReceipt.row_lines(dock._current_sheet, "zq_meter", "zq_gauge")),
+			receipt._strip.in_code_value.text, dialog.get_ok_button().disabled],
+		[["var zq_meter → var zq_gauge", "print(zq_meter) → print(zq_gauge)"], "var zq_gauge", false]) and ok
+	receipt.confirm()
+	ok = _check("and the button renames the declaration and the row",
+		[dock._current_sheet.variables.keys(), (dock._current_sheet.events[0] as RawCodeRow).code],
+		[["zq_gauge"], "print(zq_gauge)"]) and ok
+	var done: Array = dock.find_children("*", "ConfirmationDialog", false, false).filter(
+		func(prompt: ConfirmationDialog) -> bool: return prompt.title == "Renamed zq_meter to zq_gauge")
+	var places: Tree = (done[0] as Node).find_child("Places", true, false) as Tree if not done.is_empty() else null
+	ok = _check("then the small receipt says what happened and lists the places",
+		[done.size(), (done[0] as Node).find_child("Say", true, false).text if not done.is_empty() else "",
+			places.get_root().get_child(0).get_text(1) if places != null else ""],
+		[1, "Changed 2 place(s) in 1 sheet(s).", "2 places"]) and ok
 	dock.free()
 	return ok
 
@@ -374,6 +394,11 @@ static func _test_the_rename_receipt() -> bool:
 	ok = _check("and the summary says who calls it and what this will not touch",
 		EventSheetRenameReceipt.summary_text(1, others),
 		"Called by enemy.gd · traps.gd - 6 row(s) in 2 other file(s). This rewrites the 1 row(s) in this sheet and leaves those exactly as they are.") and ok
+	var crowd: Array[Dictionary] = [{"path": "res://a.gd", "count": 1}, {"path": "res://b.gd", "count": 1},
+		{"path": "res://c.gd", "count": 1}, {"path": "res://d.gd", "count": 1}, {"path": "res://e.gd", "count": 1}]
+	ok = _check("a name called from many files names three in the sentence and counts the rest",
+		EventSheetRenameReceipt.summary_text(1, crowd),
+		"Called by a.gd · b.gd · c.gd · +2 - 5 row(s) in 5 other file(s). This rewrites the 1 row(s) in this sheet and leaves those exactly as they are.") and ok
 	ok = _check("a name nothing else calls says so instead",
 		EventSheetRenameReceipt.summary_text(3, []),
 		"3 row(s) in this sheet, and nothing else in the project calls it by that name.") and ok

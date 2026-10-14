@@ -14,9 +14,11 @@ extends RefCounted
 # names every touched row beats a clever hunk algorithm that costs O(n·m) on every open.
 
 var _dock: Control = null
-var _dialog: Window = null
+var _dialog: AcceptDialog = null
 var _list: ItemList = null
 var _summary_label: Label = null
+## The foot: what the picked line is, and the line itself as the file will hold it.
+var _strip: EventSheetPopupUI.HelpStrip = null
 var _entries: Array = []
 
 
@@ -94,12 +96,13 @@ static func saved_path_for(sheet: EventSheetResource) -> String:
 
 
 ## Sheet ▸ What Changed…: compute + show. The current sheet compiles to a TEMPORARY path (a diff must
-## never write the real file); the real file is only read.
-func open() -> void:
+## never write the real file); the real file is only read. `host` is the window it opens over - the
+## file-changed question opens it over itself, so the answer can be read before the choice is made.
+func open(host: Node = null) -> void:
 	var sheet: EventSheetResource = _dock._current_sheet
 	var saved_path: String = saved_path_for(sheet)
 	if saved_path.is_empty() or not FileAccess.file_exists(saved_path):
-		_dock._set_status("What Changed: this sheet has no saved file yet - everything is new.")
+		_dock._set_status(EventSheetL10n.translate("What Changed: this sheet has no saved file yet - everything is new."))
 		return
 	var result: Dictionary = SheetCompiler.compile(sheet, "user://eventforge_diff_preview.gd")
 	var summary: Dictionary = summarize(
@@ -107,22 +110,51 @@ func open() -> void:
 		result.get("source_map", []),
 		FileAccess.get_file_as_string(saved_path))
 	if bool(summary.get("identical", false)):
-		_dock._set_status("What Changed: nothing - saving would be byte-identical to %s." % saved_path.get_file())
+		_dock._set_status(EventSheetL10n.translate("What Changed: nothing - saving would be byte-identical to %s.") % saved_path.get_file())
 		return
+	_ensure_dialog(host if host != null else _dock)
+	_dialog.title = EventSheetL10n.translate("What changed since you saved %s") % saved_path.get_file()
 	_entries = summary.get("rows", [])
-	_ensure_dialog()
+	var removed: PackedStringArray = summary.get("removed_lines", PackedStringArray())
 	_list.clear()
 	for entry: Dictionary in _entries:
 		_list.add_item("± %s" % str(entry.get("label", "")))
-	var removed: PackedStringArray = summary.get("removed_lines", PackedStringArray())
 	for removed_line: String in removed:
 		_list.add_item("− %s" % removed_line)
-	var row_count: int = _entries.size()
-	_summary_label.text = "%d row%s change%s on save%s - double-click to jump." % [
-		row_count, "" if row_count == 1 else "s", "s" if row_count == 1 else "",
-		"" if removed.is_empty() else " · %d line%s removed" % [removed.size(), "" if removed.size() == 1 else "s"]]
+	_summary_label.text = summary_text(_entries.size(), removed.size())
+	if _list.item_count > 0:
+		_list.select(0)
+		_describe(0)
 	if _dialog.is_inside_tree():
-		_dialog.popup_centered(Vector2i(560, 380))
+		_dialog.popup_centered(Vector2i(int(EventSheetPalette.scaled_f(560.0)), int(EventSheetPalette.scaled_f(400.0))))
+
+
+## The sentence above the list: how many rows a save changes, and how many saved lines it removes.
+static func summary_text(rows: int, removed: int) -> String:
+	if removed == 0:
+		return EventSheetL10n.translate("%d row(s) change on save.") % rows
+	return EventSheetL10n.translate("%d row(s) change on save · %d line(s) removed.") % [rows, removed]
+
+
+## Says what the line at `index` is at the foot: a row a save rewrites, or a saved line it removes.
+func _describe(index: int) -> void:
+	var is_row: bool = index < _entries.size()
+	_strip.show_note(EventSheetL10n.translate("This row") if is_row else EventSheetL10n.translate("This line"),
+		EventSheetL10n.translate("Changed: this event writes different lines from the saved file.") if is_row
+		else EventSheetL10n.translate("Removed: the saved file has this line, and saving takes it out."))
+	_strip.set_reading("", _list.get_item_text(index).substr(2) if index < _list.item_count else "")
+	_dialog.get_ok_button().disabled = not is_row
+
+
+## Go to Row: shows the picked row on the sheet and closes. A removed line has no row to go to.
+func _go_to_row() -> void:
+	var picked: PackedInt32Array = _list.get_selected_items()
+	if picked.is_empty() or picked[0] >= _entries.size():
+		return
+	var view: EventSheetViewport = _dock._active_view()
+	if view != null and (_entries[picked[0]] as Dictionary).get("resource") is Resource:
+		view.reveal_resource((_entries[picked[0]] as Dictionary).get("resource"))
+	_dialog.hide()
 
 
 # ── Compare With… - the same row-language diff against ANY other side ─────────────────────────
@@ -291,27 +323,26 @@ static func _row_contains(row: Resource, candidate: Resource) -> bool:
 	return false
 
 
-func _ensure_dialog() -> void:
-	if _dialog != null:
+## Built under `host`, and built again when it is asked for over a different window - a window that
+## opens over the file-changed question goes when that question does.
+func _ensure_dialog(host: Node) -> void:
+	if is_instance_valid(_dialog) and _dialog.get_parent() == host:
 		return
-	_dialog = Window.new()
-	_dialog.title = "What Changed Since Save"
-	_dialog.visible = false
-	_dialog.min_size = Vector2i(480, 300)
-	_dialog.close_requested.connect(func() -> void: _dialog.hide())
-	_dock.add_child(_dialog)
+	if is_instance_valid(_dialog):
+		_dialog.queue_free()
+	_dialog = AcceptDialog.new()
+	_dialog.ok_button_text = EventSheetL10n.translate("Go to Row")
+	_dialog.add_cancel_button(EventSheetL10n.translate("Close"))
+	_dialog.confirmed.connect(_go_to_row)
 	var content: VBoxContainer = EventSheetPopupUI.form_box()
 	_summary_label = EventSheetPopupUI.hint_label("")
 	content.add_child(_summary_label)
-	_list = ItemList.new()
+	_list = EventSheetPopupUI.sized_list(200.0)
 	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_list.item_activated.connect(func(index: int) -> void:
-		if index < _entries.size() and (_entries[index] as Dictionary).get("resource") is Resource:
-			var view: EventSheetViewport = _dock._active_view()
-			if view != null:
-				view.reveal_resource((_entries[index] as Dictionary).get("resource"))
-			_dialog.hide())
-	content.add_child(_list)
-	var full_content: MarginContainer = EventSheetPopupUI.margined(content)
-	full_content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_dialog.add_child(full_content)
+	_list.item_selected.connect(_describe)
+	_list.item_activated.connect(func(_index: int) -> void: _go_to_row())
+	content.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("Changes on save"), _list))
+	_strip = EventSheetPopupUI.help_strip()
+	content.add_child(_strip)
+	_dialog.add_child(EventSheetPopupUI.margined(content))
+	host.add_child(_dialog)

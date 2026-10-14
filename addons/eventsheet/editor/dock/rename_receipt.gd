@@ -1,9 +1,10 @@
 # Godot EventSheets - RENAME, with everything it touches listed before it touches any of it.
 #
-# A function's own head row offers Rename, and the first thing the reader sees is not a text field
-# with an OK button: it is the list. Every row of this sheet that calls the name, as the words it
-# says now beside the words it would say. Every other file in the project that calls it by that name,
-# named, counted, and marked as one this will not touch. Only then the button.
+# A function's own head row offers Rename, and so does a variable's menu, and the first thing the
+# reader sees is not a text field with an OK button: it is the list. Every row of this sheet that
+# calls the name, as the words it says now beside the words it would say. Every other file in the
+# project that calls it by that name, named, counted, and marked as one this will not touch. Only
+# then the button.
 #
 # NEVER ON OPEN, NEVER ON SAVE. Nothing here happens by itself. A rename is one edit a person
 # approved after reading what it would do, applied through the sheet's own undo funnel, so one
@@ -38,6 +39,8 @@ var _dock: Node = null
 var _dialog: AcceptDialog = null
 var _name_edit: LineEdit = null
 var _summary_label: Label = null
+## The foot that says what the field wants, why a typed name is refused, and the line it writes.
+var _strip: EventSheetPopupUI.HelpStrip = null
 var _rows_list: ItemList = null
 var _elsewhere_card: Control = null
 var _elsewhere_list: ItemList = null
@@ -60,8 +63,9 @@ func init(dock: Node) -> void:
 	_dock = dock
 
 
-## Opens Rename over one of this sheet's functions. Nothing is changed until the button.
-func open(function_name: String) -> void:
+## Opens Rename over one of this sheet's functions or variables, the field holding `typed` when a
+## table cell already took the new name. Nothing is changed until the button.
+func open(function_name: String, typed: String = "") -> void:
 	if _dock == null or _dock._current_sheet == null:
 		return
 	_old_name = function_name.strip_edges()
@@ -71,10 +75,10 @@ func open(function_name: String) -> void:
 	_elsewhere = elsewhere_for(_old_name, str(_dock._current_sheet_path))
 	_build_dialog()
 	_name_edit.editable = true
-	_name_edit.text = _old_name
+	_name_edit.text = typed if not typed.is_empty() else _old_name
 	_fill()
 	if _dock.is_inside_tree():
-		_dialog.popup_centered(Vector2i(720, 480))
+		_dialog.popup_centered(Vector2i(int(EventSheetPalette.scaled_f(720.0)), int(EventSheetPalette.scaled_f(520.0))))
 		_name_edit.grab_focus()
 		_name_edit.select_all()
 
@@ -93,7 +97,7 @@ func open_for_finding(finding: Dictionary) -> void:
 	_name_edit.editable = false
 	_fill()
 	if _dock.is_inside_tree():
-		_dialog.popup_centered(Vector2i(720, 420))
+		_dialog.popup_centered(Vector2i(int(EventSheetPalette.scaled_f(720.0)), int(EventSheetPalette.scaled_f(420.0))))
 
 
 ## Every row of one sheet that says `old_name`, as the words it says now beside the words it would
@@ -103,6 +107,9 @@ static func row_lines(sheet: EventSheetResource, old_name: String,
 	var lines: PackedStringArray = PackedStringArray()
 	if sheet == null or old_name.strip_edges().is_empty():
 		return lines
+	# A sheet variable's declaration is not a row, and it is the first thing the button renames.
+	if sheet.variables.has(old_name):
+		lines.append("var %s → var %s" % [old_name, new_name])
 	for reference: Dictionary in EventSheetFindReferences.find_in_sheet(sheet, old_name):
 		var before: String = str(reference.get("preview", "")).strip_edges()
 		if before.is_empty():
@@ -189,50 +196,29 @@ static func summary_text(here: int, others: Array[Dictionary],
 	for entry: Dictionary in others:
 		names.append(str(entry["path"]).get_file())
 		rows += int(entry["count"])
+	# A common name is called from hundreds of files: the sentence names three and counts the rest,
+	# and the card under it lists every one.
+	if names.size() > 3:
+		names = names.slice(0, 3)
+		names.append("+%d" % (others.size() - 3))
 	return EventSheetL10n.translate("Called by %s - %d row(s) in %d other file(s). This rewrites the %d row(s) in this sheet and leaves those exactly as they are.") % [
 		" · ".join(names), rows, others.size(), here] + written
 
 
-## THE EDIT. One undoable step over this sheet - the declaration and every row that says the name -
-## and then the shipped includers pass, which rewrites and saves the closed sheets that include this
-## one. Nothing outside those is touched, which is what the receipt said before the button existed.
+## THE EDIT, through the one rename writer the inline name fields use too: one undoable step over
+## this sheet - the declaration and every row that says the name - and then the shipped includers
+## pass, which rewrites and saves the closed sheets that include this one. Nothing outside those is
+## touched, which is what the receipt said before the button existed. The small receipt after it
+## names the places it landed.
 func confirm() -> void:
 	if _dock == null or _dock._current_sheet == null:
 		return
-	var new_name: String = _name_edit.text.strip_edges()
 	if _is_node_gesture():
-		_point_the_nodes(new_name)
+		_point_the_nodes(_name_edit.text.strip_edges())
 		return
-	var problem: String = EventSheetRefactor.validate_new_name(_dock._current_sheet, _old_name,
-		new_name)
-	if not problem.is_empty():
-		_dock._set_status(problem, true)
-		return
-	var moved: Array[int] = [0]
-	if not _dock._perform_undoable_sheet_edit(
-			EventSheetL10n.translate("Rename %s") % _old_name, func() -> bool:
-				moved[0] = EventSheetRefactor.rename_symbol(_dock._current_sheet, _old_name,
-					new_name)
-				return moved[0] > 0):
-		_dock._set_status(EventSheetL10n.translate("\"%s\" appears nowhere in this sheet.")
-			% _old_name, true)
-		return
-	var touched: PackedStringArray = PackedStringArray()
-	if not str(_dock._current_sheet_path).is_empty():
-		touched = _dock._rename.rename_in_includers(_old_name, new_name,
-			EventSheetProjectFind.list_project_sheets())
-	_dock._refresh_title_strip()
-	_dock._set_status(done_text(moved[0], touched))
-
-
-## The status line after the button. "One Ctrl+Z takes all of it back" is only true while nothing
-## outside this sheet was written: an includer the rename saved to disk is outside this sheet's undo
-## step, so the sentence then says what Ctrl+Z reaches and names what it does not.
-static func done_text(moved: int, touched: PackedStringArray) -> String:
-	if touched.is_empty():
-		return EventSheetL10n.translate("%d row(s) renamed - one Ctrl+Z takes all of it back.") % moved
-	return EventSheetL10n.translate("%d row(s) renamed - one Ctrl+Z takes back this sheet's rows. Also written and saved, which Ctrl+Z does not undo: %s.") % [
-		moved, ", ".join(touched)]
+	var new_name: String = _name_edit.text.strip_edges()
+	if _dock._rename.rename_everywhere(_old_name, new_name):
+		_dock._rename.show_done(_old_name, new_name)
 
 
 ## The node half of the same button: every row of this sheet that reaches the old node, pointed at
@@ -254,8 +240,7 @@ func _point_the_nodes(new_reference: String) -> void:
 		_dock._set_status(EventSheetL10n.translate("\"%s\" appears nowhere in this sheet.")
 			% _old_name, true)
 		return
-	_dock._set_status(EventSheetL10n.translate("%d row(s) renamed - one Ctrl+Z takes all of it back.")
-		% moved[0])
+	_dock._set_status(EventSheetRenameRefactor.done_text(moved[0], PackedStringArray()))
 
 
 func _build_dialog() -> void:
@@ -283,6 +268,8 @@ func _build_dialog() -> void:
 		EventSheetL10n.translate("Also written, and saved - these sheets include this one, so Ctrl+Z here does not undo them"),
 		_includers_list)
 	content.add_child(_includers_card)
+	_strip = EventSheetPopupUI.help_strip()
+	content.add_child(_strip)
 	_dialog.add_child(EventSheetPopupUI.margined(content))
 	EventSheetL10n.apply_to(_dialog)
 	_dock.add_child(_dialog)
@@ -318,12 +305,18 @@ func _fill() -> void:
 	# A node reference is not an identifier, so the identifier rules are not the ones that decide it:
 	# what makes that gesture legal is the evidence behind it, which was decided before the door
 	# appeared. Only a typed rename is held to the sheet's own naming rules.
+	_strip.set_reading("", lines[0].get_slice(" → ", 1) if not lines.is_empty() else "")
 	if _is_node_gesture():
+		_strip.show_note(EventSheetL10n.translate("New name"),
+			EventSheetL10n.translate("The reference the scene's last save holds now, so it is not typed here."))
 		_dialog.get_ok_button().disabled = new_name.is_empty()
 		return
-	var problem: String = EventSheetRefactor.validate_new_name(_dock._current_sheet, _old_name,
-		new_name)
-	_dialog.get_ok_button().disabled = not problem.is_empty()
+	# The name it opened with is no problem yet - nothing has been typed - so it only keeps the button off.
+	var problem: String = "" if new_name == _old_name else EventSheetRefactor.validate_new_name(_dock._current_sheet, _old_name, new_name)
+	_strip.show_note(EventSheetL10n.translate("New name"), problem if not problem.is_empty()
+		else EventSheetL10n.translate("A snake_case name nothing else in this sheet uses."),
+		EventSheetPopupUI.HelpStrip.TONE_ERROR if not problem.is_empty() else EventSheetPopupUI.HelpStrip.TONE_NORMAL)
+	_dialog.get_ok_button().disabled = new_name == _old_name or not problem.is_empty()
 
 
 ## Draws the third card from a list of paths. Separate from the walk that finds them so the suite and

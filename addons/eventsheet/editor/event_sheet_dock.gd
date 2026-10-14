@@ -846,7 +846,7 @@ var _keep_as_code_dialog: RefCounted = null:  # the gone-verb strip's second doo
 			_keep_as_code_dialog = load("res://addons/eventsheet/editor/dock/keep_as_code_dialog.gd").new()
 			_keep_as_code_dialog.init(self)
 		return _keep_as_code_dialog
-var _rename_receipt: RefCounted = null:  # Rename on a function's own row, and the outside-rename door: every row and file listed before anything moves (dock/rename_receipt.gd)
+var _rename_receipt: RefCounted = null:  # Rename on a function's or variable's row, and the outside-rename door: every row and file listed before anything moves (dock/rename_receipt.gd)
 	get:
 		if _rename_receipt == null:
 			_rename_receipt = load("res://addons/eventsheet/editor/dock/rename_receipt.gd").new()
@@ -2801,10 +2801,6 @@ func _variable_rename_note(variable_name: String) -> String:
 	return load(FIND_REFERENCES_PATH).inline_rename_note(
 		load(FIND_REFERENCES_PATH).find_in_project_rows(
 			variable_name, load(FIND_REFERENCES_PATH).open_sheets_of(self)))
-
-
-func _open_rename_dialog(old_name: String) -> void:  # variable context menu
-	_rename.open(old_name)
 
 
 func _rename_in_includers(old_name: String, new_name: String, candidate_paths: PackedStringArray) -> PackedStringArray:  # tedium_test
@@ -8159,12 +8155,13 @@ func open_remint_receipt(token: String) -> bool:
 	return _remint_receipt.open(token)
 
 
-## RENAME, from a function's own row. The receipt comes first: every row of this sheet that says the
+## RENAME, from a function's own row, a variable's menu, or the variables table's name cell (which
+## passes the name already `typed`). The receipt comes first: every row of this sheet that says the
 ## name, as the words it says now beside the words it would say, and every other file in the project
 ## that calls it by that name, listed and marked as one this will not touch. The button behind that
 ## receipt is the only place a rename happens.
-func open_rename_receipt(function_name: String) -> void:
-	_rename_receipt.open(function_name)
+func open_rename_receipt(old_name: String, typed: String = "") -> void:
+	_rename_receipt.open(old_name, typed)
 
 
 ## "Point the rows there". The door under a row whose name was renamed out from under it, and only

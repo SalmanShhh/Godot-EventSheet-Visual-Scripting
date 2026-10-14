@@ -224,7 +224,7 @@ func add_variable() -> void:
 func _rename(variable_name: String, new_name: String) -> void:
 	if new_name.strip_edges().is_empty() or new_name == variable_name:
 		return
-	_dock._open_rename_dialog(variable_name)
+	_dock.open_rename_receipt(variable_name, new_name.strip_edges())
 
 
 func _retype(variable_name: String, type_name: String) -> void:
