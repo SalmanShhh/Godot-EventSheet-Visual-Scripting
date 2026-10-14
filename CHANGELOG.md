@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Fixed: kit windows paint their own background
+
+- The Outline, Sheet map, Bookmarks, History and the making windows built on the window kit painted
+  nothing behind their cards, so in a light editor theme the margins showed a mid-grey hole around
+  them. They now sit on the editor's own base colour, light or dark.
+
 ### Fixed: the Inspector preview shows the variable's own value
 
 - The Inspector preview a variable's hover and the Inspector Designer draw showed a fixed sample in

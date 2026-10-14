@@ -123,11 +123,24 @@ static func panel_window(title: String, size: Vector2i, host: Node, ok_text: Str
 	var card: Control = titled_card(title, box)
 	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var body: Control = margined(card)
-	body.set_anchors_preset(Control.PRESET_FULL_RECT)
-	window.add_child(body)
+	window.add_child(window_body(card))
 	host.add_child(window)
 	return {"window": window, "box": box}
+
+
+## A plain Window's whole body: `content` with the kit's margins on a backdrop painted in the editor's
+## own base colour. A Window paints nothing of its own, so without it the margins around the cards
+## showed the renderer's clear colour - a mid grey that reads as a hole in a light editor theme.
+static func window_body(content: Control) -> Control:
+	var backdrop: PanelContainer = PanelContainer.new()
+	var fill: StyleBoxFlat = StyleBoxFlat.new()
+	var theme: Theme = editor_theme()
+	fill.bg_color = theme.get_color("base_color", "Editor") if theme != null and theme.has_color("base_color", "Editor") \
+		else Color(0.13, 0.14, 0.17, 1.0)
+	backdrop.add_theme_stylebox_override("panel", fill)
+	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
+	backdrop.add_child(margined(content))
+	return backdrop
 
 
 ## A ONE-SHOT FILE PICKER over `host` on `filters` (each like "*.gd ; Sheet" or "*.svg, *.png"): calls

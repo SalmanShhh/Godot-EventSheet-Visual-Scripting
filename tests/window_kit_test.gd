@@ -15,6 +15,7 @@ static func run() -> bool:
 	passed = _result_card() and passed
 	passed = _state_note() and passed
 	passed = _row_band() and passed
+	passed = _window_backdrop() and passed
 	passed = _described_sentences_are_translatable() and passed
 	return passed
 
@@ -138,3 +139,19 @@ static func _row_band() -> bool:
 
 static func _edge(note: EventSheetPopupUI.StateNote) -> Color:
 	return (note.get_theme_stylebox("panel") as StyleBoxFlat).border_color
+
+
+## A kit window paints its own backdrop behind the margins, so a light editor theme never shows the
+## renderer's grey clear colour around the cards.
+static func _window_backdrop() -> bool:
+	var host: Node = Node.new()
+	var made: Dictionary = EventSheetPopupUI.panel_window("Outline", Vector2i(300, 200), host)
+	var body: Node = (made["window"] as Window).get_child(0)
+	var fill: StyleBox = (body as Control).get_theme_stylebox("panel") if body is PanelContainer else null
+	var rows: Array = [
+		["the window's body is a painted panel", body is PanelContainer, true],
+		["painted opaque", (fill as StyleBoxFlat).bg_color.a if fill is StyleBoxFlat else 0.0, 1.0],
+		["the box still sits inside it", body.is_ancestor_of(made["box"]), true],
+	]
+	host.free()
+	return SUPPORT.pins(NAME, rows)
