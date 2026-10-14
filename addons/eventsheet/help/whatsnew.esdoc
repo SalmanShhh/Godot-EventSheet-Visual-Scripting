@@ -6,6 +6,58 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Changed: the help, keys, words and asking windows say what they do on the window
+
+- Keyboard Shortcuts: a key put on a fixed key (Ctrl+F, Ctrl+P…) or on another changeable key says
+  so in an amber note under its row, not only in a tooltip. The rows are built once and repainted, so
+  the button listening for a key is never rebuilt under it. Reset all to defaults sits beside Done,
+  and a help strip names the key being changed and where custom keys are kept.
+- Words: each vocabulary choice describes itself on hover and keeps the chosen one's sentence under
+  the dropdown; Reset to defaults sits beside Close; the help strip follows every word's two fields.
+- Ask: the mode line wears the ok edge while Ask is on and amber while it is off, Add these events is
+  the window's blue main button, and the strip says which setting the sentence is sent to.
+- Generate Events from a Description: Generate is greyed while it cannot run, and the window itself
+  says why (Ask off, no key, a request still out) and what went wrong with the last request, instead
+  of only the dock's status line; the strip says which setting the description is sent to.
+- The Manual window drops its Read this online button: Open online under the guide tree does the same.
+- A described dropdown no longer prints a missing-metadata error each time an item is added.
+### Changed: the hand-built confirm dialogs open through the window kit
+
+- The window kit's form window takes `hide_on_ok` (OK closes it, for a form OK cannot refuse) and a
+  least size. Twenty-five dialogs that built the same confirm-dialog shell by hand now open through
+  it: Message, Send message, Modes, States, Compare, Add global variable, Edit comment, Scope Actions
+  To Node, the custom block form, Add child, Add an include, Optimise, Paste Retargeted, the three
+  Moment forms, Edit group, the sheet head's text line, Publish New Version, Connect a signal, New
+  Event Sheet, New Function, Edit Parameter, Save as snippet and Edit code block. Nothing they show or
+  do changes.
+
+### Fixed: Compare stops printing a missing-meta error
+
+- The Compare window's operator list asked for its code note in a way Godot answers with an engine
+  error whenever the note is not there; it now asks whether the note exists first.
+
+### Fixed: every other plain window reads in a light theme too
+
+- Nineteen more windows (the Replay Recorder, Compare With, the conflict view, Loose Ends, the Project
+  Doctor, the start page, the tour, the include manager, Import sheet, the Lift Workbench and its
+  drafts, the publish preview, Sheet Backups, the dropped-node preview, Custom ACE Providers, the
+  project view, New shared sheet, Why didn't this fire and the feedback card) now sit on the
+  editor's own base colour instead of showing the engine's grey margins in a light editor theme. The
+  six that painted a hand-built panel of their own take the same one body, so the fix is 62 lines
+  shorter than what it replaces.
+
+### Fixed: quick questions stop wiring Enter twice, and the debugger windows read in a light theme
+
+- Seven quick questions (Row Comment, Save View, Duplicate Events For, the two Add an Inspector button
+  questions, Move into a group, Group by prefix and Rename class) wired Enter in their field a second
+  time, so Godot printed \"already connected\" every time one opened. The quick question alone wires it.
+- The Debugger and Live Values windows paint the editor's base colour behind their cards, as every
+  other kit window does, instead of showing the engine's grey in a light editor theme.
+- A double-click on one of the Project Doctor's fix rows applies the fix once, not once per click.
+- Curate script shows its lines in a wider card that scrolls past twelve lines, instead of a narrow
+  card that grew the window off the screen.
+- The Row Comment question and the Live Values edit messages are translated.
+
 ### Fixed: kit windows paint their own background
 
 - The Outline, Sheet map, Bookmarks, History and the making windows built on the window kit painted
@@ -20,6 +72,16 @@ What changed in the build you have installed (v0.18.0), in the words the release
   the variable's value inside its own bounds (a `max_health` of 100 out of 0 to 200 reads half way),
   flags and number choices show the variable's own names ticked or chosen by its value, a colour
   shows its colour, a toggle row its chosen word, and a path, password or expression its own text.
+
+### Changed: eight more quick questions take the one small-prompt shape
+
+- Go to event, Extract to function, the conditional breakpoint, a Timeline step, a list or dictionary
+  entry, Run with arguments, Curate script and the unknown feature tag question were each a one-off
+  dialog. They now ask the way every quick question does: the title is the question (\"Go to which
+  event?\", \"Break only when?\"), one sentence says what happens, the note says whether Ctrl+Z undoes
+  it, and the blue button is the safe answer.
+- Enter in the field a quick question asks for presses its blue button, in every quick question.
+- The code block window is titled Edit code block.
 
 ### Changed: the making windows share one form shell and one described dropdown
 
@@ -82,6 +144,7 @@ What changed in the build you have installed (v0.18.0), in the words the release
   and went stale after any edit.
 - The Doctor, Why and Loose Ends windows draw the editor theme's panel behind their content, so they
   read in a light editor theme instead of showing dark text on the engine's grey.
+
 ### Changed: the Debugger says where the run is on every tab, and Live Values reads at a glance
 
 - A band over the Debugger's five tabs names the sheet, whether a run is reporting, whether Live
@@ -99,7 +162,9 @@ What changed in the build you have installed (v0.18.0), in the words the release
   edited (a behavior's, a list's items) reads muted instead of looking editable.
 - Fixed: double-clicking a Profile or Breakpoints row to go to it no longer marks the game as paused
   there, and the paused row is forgotten when the run ends.
+
 ### Changed: the find windows say where each hit is and what their main button does
+
 - **Command Palette** (Ctrl+P): the four prefix modes are tabs - Commands, `#` Sheets, `@` Symbols,
   `?` Docs - plus an Error line tab that waits for a pasted `res://file.gd:42`. Clicking a tab types
   its prefix. The foot has Cancel and Run, and a strip names the keys and the modes. Every mode shares
@@ -113,6 +178,7 @@ What changed in the build you have installed (v0.18.0), in the words the release
 - **Find Repeated Rows**: why a run cannot become one function (it uses an event-local or a For Each
   item) is said beside the greyed-out Make a Function button when the run is picked, not in the
   status bar after pressing it. The strip names the events the run sits in.
+
 ### Changed: renaming a variable shows everything it touches first, and the refactor windows say more
 
 - A variable's Rename - from its menu or its name cell in the variables table - now opens the same
