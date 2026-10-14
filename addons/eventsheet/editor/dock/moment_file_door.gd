@@ -111,11 +111,10 @@ func open_step(block: MomentBlockRow) -> void:
 	_step_block_name = block.moment_name
 	_step_block_place = _place_of_block(block)
 	if _step_dialog == null:
-		_step_dialog = ConfirmationDialog.new()
-		_step_dialog.title = "Add Moment Step"
-		_step_dialog.ok_button_text = "Add the step"
-		_step_dialog.min_size = Vector2i(420, 0)
-		var box: VBoxContainer = EventSheetPopupUI.form_box()
+		var parts: Dictionary = EventSheetPopupUI.panel_window("Add Moment Step", Vector2i(420, 0), _dock, "Add the step",
+			_apply_step, true)
+		_step_dialog = parts["window"]
+		var box: VBoxContainer = parts["box"]
 		_step_timing = OptionButton.new()
 		for word: String in TIMING_WORDS:
 			_step_timing.add_item(TIMING_WORDS[word])
@@ -128,9 +127,6 @@ func open_step(block: MomentBlockRow) -> void:
 		box.add_child(EventSheetPopupUI.form_row("Do", _step_code))
 		box.add_child(EventSheetPopupUI.hint_label("The step arrives as one row. Give it more "
 			+ "actions, or another step, the way you would anywhere else in the sheet."))
-		_step_dialog.add_child(EventSheetPopupUI.margined(box))
-		_step_dialog.confirmed.connect(_apply_step)
-		_dock.add_child(_step_dialog)
 	_step_dialog.popup_centered()
 	_step_number.grab_focus()
 
@@ -138,19 +134,15 @@ func open_step(block: MomentBlockRow) -> void:
 ## Opens the form that starts a new moment: a name, and nothing else. The steps come after.
 func open_new() -> void:
 	if _name_dialog == null:
-		_name_dialog = ConfirmationDialog.new()
-		_name_dialog.title = "New Moment"
-		_name_dialog.ok_button_text = "Add the block"
-		_name_dialog.min_size = Vector2i(400, 0)
-		var box: VBoxContainer = EventSheetPopupUI.form_box()
+		var parts: Dictionary = EventSheetPopupUI.panel_window("New Moment", Vector2i(400, 0), _dock, "Add the block",
+			_apply_new, true)
+		_name_dialog = parts["window"]
+		var box: VBoxContainer = parts["box"]
 		_name_edit = LineEdit.new()
 		_name_edit.placeholder_text = "impact"
 		box.add_child(EventSheetPopupUI.form_row("Called", _name_edit))
 		box.add_child(EventSheetPopupUI.hint_label("The name the Moment row plays it by, and the "
 			+ "name of the function it compiles to."))
-		_name_dialog.add_child(EventSheetPopupUI.margined(box))
-		_name_dialog.confirmed.connect(_apply_new)
-		_dock.add_child(_name_dialog)
 	_name_dialog.popup_centered()
 	_name_edit.grab_focus()
 
@@ -278,17 +270,14 @@ static func _file_word(moment_name: String) -> String:
 func _build_dialog() -> void:
 	if _dialog != null:
 		return
-	_dialog = ConfirmationDialog.new()
-	_dialog.min_size = Vector2i(460, 0)
-	var box: VBoxContainer = EventSheetPopupUI.form_box()
+	var parts: Dictionary = EventSheetPopupUI.panel_window("", Vector2i(460, 0), _dock, "OK", _apply, true)
+	_dialog = parts["window"]
+	var box: VBoxContainer = parts["box"]
 	_path_edit = LineEdit.new()
 	_path_edit.placeholder_text = SHIPPED_DIRECTORY + "impact.tres"
 	box.add_child(EventSheetPopupUI.form_row("File", _path_edit))
 	_note = EventSheetPopupUI.hint_label("")
 	box.add_child(_note)
-	_dialog.add_child(EventSheetPopupUI.margined(box))
-	_dialog.confirmed.connect(_apply)
-	_dock.add_child(_dialog)
 
 
 ## The button: whichever door is open, run it and say what happened.

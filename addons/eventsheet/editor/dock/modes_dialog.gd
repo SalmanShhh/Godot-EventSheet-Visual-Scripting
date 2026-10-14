@@ -90,16 +90,11 @@ func open() -> void:
 func _build() -> void:
 	if _dialog != null:
 		return
-	_dialog = ConfirmationDialog.new()
-	_dialog.title = EventSheetL10n.translate("Edit the game's modes")
-	_dialog.ok_button_text = EventSheetL10n.translate("Declare Modes")
-	_dialog.visible = false
 	# What OK has to say is said in the dialog, which stays open on what was typed.
-	_dialog.dialog_hide_on_ok = false
-	_dialog.confirmed.connect(_on_confirmed)
-	_dock.add_child(_dialog)
-	var form: VBoxContainer = EventSheetPopupUI.form_box()
-	_dialog.add_child(EventSheetPopupUI.margined(form))
+	var parts: Dictionary = EventSheetPopupUI.panel_window(EventSheetL10n.translate("Edit the game's modes"),
+		Vector2i.ZERO, _dock, EventSheetL10n.translate("Declare Modes"), _on_confirmed)
+	_dialog = parts["window"]
+	var form: VBoxContainer = parts["box"]
 
 	_modes_edit = LineEdit.new()
 	_modes_edit.placeholder_text = EventSheetL10n.translate("Playing · Paused · Cutscene · Menu")

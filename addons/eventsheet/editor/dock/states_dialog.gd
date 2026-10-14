@@ -60,18 +60,12 @@ func open() -> void:
 func _build() -> void:
 	if _dialog != null:
 		return
-	_dialog = ConfirmationDialog.new()
-	# EVERY WORD IN HERE IS KEYED, chrome included. A dialog whose fields are translated and whose
-	# title, button and help paragraphs are not is the one that reads half in the reader's language.
-	_dialog.title = EventSheetL10n.translate("Declare this object's states")
-	_dialog.ok_button_text = EventSheetL10n.translate("Declare States")
-	_dialog.visible = false
-	# A refusal keeps the dialog open on what was typed, so the fix is one edit rather than a re-entry.
-	_dialog.dialog_hide_on_ok = false
-	_dialog.confirmed.connect(_on_confirmed)
-	_dock.add_child(_dialog)
-	var form: VBoxContainer = EventSheetPopupUI.form_box()
-	_dialog.add_child(EventSheetPopupUI.margined(form))
+	# EVERY WORD IN HERE IS KEYED, chrome included. A refusal keeps the dialog open on what was typed,
+	# so the fix is one edit rather than a re-entry.
+	var parts: Dictionary = EventSheetPopupUI.panel_window(EventSheetL10n.translate("Declare this object's states"),
+		Vector2i.ZERO, _dock, EventSheetL10n.translate("Declare States"), _on_confirmed)
+	_dialog = parts["window"]
+	var form: VBoxContainer = parts["box"]
 
 	_states_edit = LineEdit.new()
 	_states_edit.placeholder_text = EventSheetL10n.translate("Patrol · Chase · Stagger")

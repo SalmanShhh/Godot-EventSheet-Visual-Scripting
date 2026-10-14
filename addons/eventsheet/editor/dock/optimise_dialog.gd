@@ -59,12 +59,9 @@ func open_batch() -> void:
 
 func _build() -> void:
 	if _dialog == null:
-		_dialog = ConfirmationDialog.new()
-		_dialog.visible = false
-		_dialog.confirmed.connect(_on_confirmed)
-		_dock.add_child(_dialog)
-		var form: VBoxContainer = EventSheetPopupUI.form_box()
-		_dialog.add_child(EventSheetPopupUI.margined(form))
+		var parts: Dictionary = EventSheetPopupUI.panel_window("", Vector2i.ZERO, _dock, "OK", _on_confirmed, true)
+		_dialog = parts["window"]
+		var form: VBoxContainer = parts["box"]
 		_body = EventSheetPopupUI.form_box()
 		form.add_child(_body)
 		_help_strip = EventSheetPopupUI.help_strip()

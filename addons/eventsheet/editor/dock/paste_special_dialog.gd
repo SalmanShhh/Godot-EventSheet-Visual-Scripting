@@ -54,13 +54,12 @@ func open(snippet_override: Dictionary = {}) -> void:
 func _build_dialog() -> void:
 	if _dialog != null:
 		return
-	_dialog = ConfirmationDialog.new()
-	_dialog.ok_button_text = EventSheetL10n.translate("Paste Retargeted")
 	# confirm() closes the window once the rows have landed; a refused paste keeps the form and every
 	# retarget typed into it, instead of closing on them.
-	_dialog.dialog_hide_on_ok = false
-	_dialog.confirmed.connect(func() -> void: confirm())
-	var content: VBoxContainer = EventSheetPopupUI.form_box()
+	var parts: Dictionary = EventSheetPopupUI.panel_window("", Vector2i.ZERO, _dock,
+		EventSheetL10n.translate("Paste Retargeted"), func() -> void: confirm())
+	_dialog = parts["window"]
+	var content: VBoxContainer = parts["box"]
 	_objects_box = EventSheetPopupUI.form_box()
 	_objects_card = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Objects"), _objects_box)
 	content.add_child(_objects_card)
@@ -72,9 +71,7 @@ func _build_dialog() -> void:
 	_strip = EventSheetPopupUI.help_strip(EventSheetL10n.translate("On the way in"),
 		EventSheetL10n.translate("Object references are rewritten token-safely ($Enemy never touches $EnemySpawner); a variable this sheet has is reused, one it lacks is created."))
 	content.add_child(_strip)
-	_dialog.add_child(EventSheetPopupUI.margined(content))
 	EventSheetL10n.apply_to(_dialog)
-	_dock.add_child(_dialog)
 
 
 ## One retarget row: the name the snippet carries on the left, its target field (with the

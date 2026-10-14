@@ -217,13 +217,13 @@ func _refresh_include_preview() -> void:
 ## .gd script cannot be an include.
 func _include_add_requested() -> void:
 	if _picker == null:
-		_picker = ConfirmationDialog.new()
-		_picker.ok_button_text = EventSheetL10n.translate("Include")
-		_picker.confirmed.connect(func() -> void:
-			var picked: TreeItem = _picker_list.get_selected()
-			if picked != null:
-				_add_include(str(picked.get_metadata(0))))
-		var box: VBoxContainer = EventSheetPopupUI.form_box()
+		var parts: Dictionary = EventSheetPopupUI.panel_window("", Vector2i.ZERO, _include_manager_window,
+			EventSheetL10n.translate("Include"), func() -> void:
+				var picked: TreeItem = _picker_list.get_selected()
+				if picked != null:
+					_add_include(str(picked.get_metadata(0))), true)
+		_picker = parts["window"]
+		var box: VBoxContainer = parts["box"]
 		box.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(480.0), EventSheetPalette.scaled_f(360.0))
 		_picker_list = _two_column_list()
 		_picker_list.item_selected.connect(_on_picker_selected)
@@ -233,8 +233,6 @@ func _include_add_requested() -> void:
 		box.add_child(_picker_list)
 		_picker_note = EventSheetPopupUI.StateNote.new(EventSheetPalette.scaled_f(440.0))
 		box.add_child(_picker_note)
-		_picker.add_child(EventSheetPopupUI.margined(box))
-		_include_manager_window.add_child(_picker)
 	_picker.title = EventSheetL10n.translate("Add an include to %s") % _sheet_name()
 	_picker_list.clear()
 	_picker_list.create_item()

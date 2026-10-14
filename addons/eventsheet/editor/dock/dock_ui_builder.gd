@@ -690,12 +690,11 @@ func ensure_editor_dialogs_initialized() -> void:
 func ensure_raw_code_dialog() -> void:
 	if _dock._raw_code_dialog != null:
 		return
-	_dock._raw_code_dialog = ConfirmationDialog.new()
-	_dock._raw_code_dialog.title = EventSheetL10n.translate("Edit code block")
 	# The button the lint and the guardrails call Save, so it says Save.
-	_dock._raw_code_dialog.ok_button_text = "Save"
-	# Standard popup margins, consistent with the other plugin dialogs.
-	var layout_box: VBoxContainer = EventSheetPopupUI.form_box()
+	var parts: Dictionary = EventSheetPopupUI.panel_window(EventSheetL10n.translate("Edit code block"), Vector2i.ZERO,
+		_dock, "Save", _dock._on_raw_code_dialog_confirmed, true)
+	_dock._raw_code_dialog = parts["window"]
+	var layout_box: VBoxContainer = parts["box"]
 	layout_box.custom_minimum_size = Vector2(640.0, 0.0)
 	layout_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	layout_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -727,8 +726,6 @@ func ensure_raw_code_dialog() -> void:
 	_dock._raw_code_lint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_dock._raw_code_lint_label.custom_minimum_size = Vector2(620.0, 0.0)
 	layout_box.add_child(_dock._raw_code_lint_label)
-	_dock._raw_code_dialog.add_child(EventSheetPopupUI.margined(layout_box))
-	_dock._raw_code_dialog.confirmed.connect(_dock._on_raw_code_dialog_confirmed)
 	# "Open in Godot" hands the block off to Godot's own script editor (more room, full tooling); the
 	# in-popup editor stays for quick inline edits. custom_action fires for non-OK/Cancel buttons.
 	var open_in_godot: Button = _dock._raw_code_dialog.add_button("Open in Godot Script Editor", false, "open_in_godot")
@@ -736,4 +733,3 @@ func ensure_raw_code_dialog() -> void:
 	_dock._raw_code_dialog.custom_action.connect(func(action: StringName) -> void:
 		if String(action) == "open_in_godot":
 			_dock._open_raw_code_block_in_godot())
-	_dock.add_child(_dock._raw_code_dialog)

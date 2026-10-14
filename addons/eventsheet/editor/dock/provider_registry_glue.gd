@@ -526,10 +526,10 @@ func open_publish_version_dialog() -> void:
 		_dock._set_status("Publish New Version is for addon packs - this sheet declares no @ace_version and lives outside eventsheet_addons/.", true)
 		return
 	if _version_dialog == null:
-		_version_dialog = ConfirmationDialog.new()
-		_version_dialog.title = "Publish New Version"
-		_version_dialog.ok_button_text = "Publish"
-		var form: VBoxContainer = EventSheetPopupUI.form_box()
+		var parts: Dictionary = EventSheetPopupUI.panel_window("Publish New Version", Vector2i.ZERO, _dock, "Publish",
+			_apply_version_bump, true)
+		_version_dialog = parts["window"]
+		var form: VBoxContainer = parts["box"]
 		_version_bump = OptionButton.new()
 		_version_bump.add_item("Patch - fixes, no new actions", 0)
 		_version_bump.add_item("Minor - new actions, nothing breaks", 1)
@@ -556,9 +556,6 @@ func open_publish_version_dialog() -> void:
 		reading_box.add_child(_reading_summary)
 		reading_box.add_child(_reading_failures)
 		form.add_child(EventSheetPopupUI.titled_card("Reading check", reading_box))
-		_version_dialog.add_child(EventSheetPopupUI.margined(form))
-		_version_dialog.confirmed.connect(_apply_version_bump)
-		_dock.add_child(_version_dialog)
 	_version_note.text = ""
 	_refresh_version_preview()
 	_refresh_reading_check(sheet_path)

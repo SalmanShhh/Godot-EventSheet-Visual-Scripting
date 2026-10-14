@@ -511,13 +511,11 @@ func open_file_options() -> void:
 func _prompt_for_text(band_kind: String, label_text: String, seed_text: String) -> void:
 	_text_band = band_kind
 	if _text_dialog == null:
-		_text_dialog = ConfirmationDialog.new()
-		var form: VBoxContainer = EventSheetPopupUI.form_box()
+		var parts: Dictionary = EventSheetPopupUI.panel_window("", Vector2i.ZERO, _dock, "OK",
+			func() -> void: apply_band_value(_text_band, _text_edit.text), true)
+		_text_dialog = parts["window"]
 		_text_edit = LineEdit.new()
-		form.add_child(EventSheetPopupUI.form_row("Text", _text_edit))
-		_text_dialog.add_child(EventSheetPopupUI.margined(form))
-		_text_dialog.confirmed.connect(func() -> void: apply_band_value(_text_band, _text_edit.text))
-		_dock.add_child(_text_dialog)
+		(parts["box"] as VBoxContainer).add_child(EventSheetPopupUI.form_row("Text", _text_edit))
 	_text_dialog.title = label_text
 	_text_edit.text = seed_text
 	_text_dialog.popup_centered(Vector2i(460, 0))

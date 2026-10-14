@@ -49,12 +49,9 @@ func _open(kind: EventSheetBlockKind, block: CustomBlockRow) -> void:
 	_target_kind = kind
 	_target_block = block
 	if _dialog == null:
-		_dialog = ConfirmationDialog.new()
-		_dialog.min_size = Vector2i(420, 0)
-		_fields_box = EventSheetPopupUI.form_box()
-		_dialog.add_child(EventSheetPopupUI.margined(_fields_box))
-		_dialog.confirmed.connect(_apply)
-		_dock.add_child(_dialog)
+		var parts: Dictionary = EventSheetPopupUI.panel_window("", Vector2i(420, 0), _dock, "Add", _apply, true)
+		_dialog = parts["window"]
+		_fields_box = parts["box"]
 	_dialog.title = ("Edit %s" if block != null else "Add %s") % kind.title
 	_dialog.ok_button_text = "Apply" if block != null else "Add"
 	# Rebuild the form for THIS kind's schema (the dialog is shared across kinds).

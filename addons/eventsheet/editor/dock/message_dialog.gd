@@ -140,14 +140,9 @@ func open_message(event_function: EventFunction) -> void:
 func _ensure_message_dialog() -> void:
 	if _message_dialog != null:
 		return
-	_message_dialog = ConfirmationDialog.new()
-	_message_dialog.title = "Message"
-	_message_dialog.ok_button_text = "OK"
-	_message_dialog.visible = false
-	_message_dialog.confirmed.connect(_apply_message)
-	_dock.add_child(_message_dialog)
-	var form: VBoxContainer = EventSheetPopupUI.form_box()
-	_message_dialog.add_child(EventSheetPopupUI.margined(form))
+	var parts: Dictionary = EventSheetPopupUI.panel_window("Message", Vector2i.ZERO, _dock, "OK", _apply_message, true)
+	_message_dialog = parts["window"]
+	var form: VBoxContainer = parts["box"]
 	# Whose message this is, said once at the top - the same line the Add variable dialog leads with.
 	_message_signature = EventSheetPopupUI.hint_label("")
 	form.add_child(_message_signature)
@@ -275,14 +270,9 @@ func open_send(context: Dictionary, ace_id: String = "", params: Dictionary = {}
 func _ensure_send_dialog() -> void:
 	if _send_dialog != null:
 		return
-	_send_dialog = ConfirmationDialog.new()
-	_send_dialog.title = "Send message"
-	_send_dialog.ok_button_text = "OK"
-	_send_dialog.visible = false
-	_send_dialog.confirmed.connect(_apply_send)
-	_dock.add_child(_send_dialog)
-	var form: VBoxContainer = EventSheetPopupUI.form_box()
-	_send_dialog.add_child(EventSheetPopupUI.margined(form))
+	var parts: Dictionary = EventSheetPopupUI.panel_window("Send message", Vector2i.ZERO, _dock, "OK", _apply_send, true)
+	_send_dialog = parts["window"]
+	var form: VBoxContainer = parts["box"]
 	_send_owner = EventSheetPopupUI.hint_label("")
 	form.add_child(_send_owner)
 	_send_strip = EventSheetPopupUI.help_strip()

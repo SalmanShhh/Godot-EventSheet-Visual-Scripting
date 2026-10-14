@@ -43,16 +43,12 @@ var _param_index: int = -1
 
 
 func init_dialog(parent_node: Node) -> void:
-	_dialog = ConfirmationDialog.new()
-	_dialog.title = EventSheetL10n.translate("Edit Parameter")
-	_dialog.ok_button_text = EventSheetL10n.translate("Apply")
 	# Apply closes the window itself, and only once the parameter is accepted.
-	_dialog.dialog_hide_on_ok = false
-	_dialog.confirmed.connect(_on_confirmed)
-	parent_node.add_child(_dialog)
-	var form: VBoxContainer = EventSheetPopupUI.form_box()
+	var parts: Dictionary = EventSheetPopupUI.panel_window(EventSheetL10n.translate("Edit Parameter"), Vector2i.ZERO,
+		parent_node, EventSheetL10n.translate("Apply"), _on_confirmed)
+	_dialog = parts["window"]
+	var form: VBoxContainer = parts["box"]
 	form.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(420.0), 0.0)
-	_dialog.add_child(EventSheetPopupUI.margined(form))
 	_band = EventSheetPopupUI.RowBand.new()
 	form.add_child(_band)
 	var card: VBoxContainer = EventSheetPopupUI.form_box()

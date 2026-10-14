@@ -215,10 +215,10 @@ func open() -> void:
 func _build_dialog() -> void:
 	if _dialog != null:
 		return
-	_dialog = ConfirmationDialog.new()
-	_dialog.title = EventSheetL10n.translate("Add global variable")
-	_dialog.ok_button_text = EventSheetL10n.translate("Add")
-	var form: VBoxContainer = EventSheetPopupUI.form_box()
+	var parts: Dictionary = EventSheetPopupUI.panel_window(EventSheetL10n.translate("Add global variable"), Vector2i.ZERO,
+		_dock, EventSheetL10n.translate("Add"), _on_confirmed, true)
+	_dialog = parts["window"]
+	var form: VBoxContainer = parts["box"]
 	_name_edit = LineEdit.new()
 	_name_edit.placeholder_text = "Score"
 	_name_edit.text_changed.connect(func(_text: String) -> void: _refresh_preview())
@@ -241,9 +241,6 @@ func _build_dialog() -> void:
 	form.add_child(EventSheetPopupUI.panel_section(_preview))
 	form.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate(
 		"A global lives on an autoload - one file the whole project can read.")))
-	_dialog.add_child(EventSheetPopupUI.margined(form))
-	_dialog.confirmed.connect(_on_confirmed)
-	_dock.add_child(_dialog)
 	EventSheetL10n.apply_to(_dialog)
 
 

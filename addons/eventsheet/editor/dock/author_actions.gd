@@ -294,11 +294,10 @@ func _open_save_snippet_dialog() -> void:
 		_dock._set_status("Select rows to save as a snippet.", true)
 		return
 	if _snippet_name_dialog == null:
-		_snippet_name_dialog = ConfirmationDialog.new()
-		_snippet_name_dialog.ok_button_text = EventSheetL10n.translate("Save to the project snippet library")
-		_snippet_name_dialog.dialog_hide_on_ok = false
-		_snippet_name_dialog.confirmed.connect(_confirm_save_snippet)
-		var form: VBoxContainer = EventSheetPopupUI.form_box()
+		var parts: Dictionary = EventSheetPopupUI.panel_window("", Vector2i.ZERO, _dock,
+			EventSheetL10n.translate("Save to the project snippet library"), _confirm_save_snippet)
+		_snippet_name_dialog = parts["window"]
+		var form: VBoxContainer = parts["box"]
 		_snippet_name_edit = LineEdit.new()
 		_snippet_name_edit.placeholder_text = "fade_and_free"
 		_snippet_name_edit.text_changed.connect(func(_typed: String) -> void: _refresh_snippet_name())
@@ -314,8 +313,6 @@ func _open_save_snippet_dialog() -> void:
 		strip.follow(_snippet_name_edit, EventSheetL10n.translate("Name"),
 			EventSheetL10n.translate("Insert Snippet… lists it by this name."))
 		form.add_child(strip)
-		_snippet_name_dialog.add_child(EventSheetPopupUI.margined(form))
-		_dock.add_child(_snippet_name_dialog)
 	_snippet_name_dialog.title = EventSheetL10n.translate("Save {n} row(s) as a snippet").replace("{n}", str(count))
 	_refresh_snippet_name()
 	if _dock.is_inside_tree():

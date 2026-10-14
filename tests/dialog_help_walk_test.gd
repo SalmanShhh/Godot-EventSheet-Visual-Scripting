@@ -39,9 +39,9 @@ const FOLLOW_CALLS: Array[String] = [".follow(", ".follow_option(", ".follow_for
 ## lines are its third and fourth.
 const READING_CALLS: Array[String] = [".set_reading(", "help_strip(\""]
 
-## The calls that make a dialog. A file may hold more than one (the Message dialog holds the message
-## and the send), and each of them is allowed its own strip - never two.
-const DIALOG_CALLS: Array[String] = ["ConfirmationDialog.new()", "AcceptDialog.new()"]
+## The calls that make a dialog, the window kit's included. A file may hold more than one (the Message
+## dialog holds the message and the send), and each of them is allowed its own strip - never two.
+const DIALOG_CALLS: Array[String] = ["ConfirmationDialog.new()", "AcceptDialog.new()", "panel_window(", "action_window("]
 
 ## The one dialog with NO reads-as line, and why: the Sheet type dialog's preview IS the head of the
 ## sheet it is about to write, so a sentence beside it would be the same words twice. Deliberate, and

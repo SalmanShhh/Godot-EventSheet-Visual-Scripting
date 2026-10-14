@@ -70,10 +70,11 @@ static func handler_line(signal_name: String, args: String) -> String:
 func _build() -> void:
 	if _dialog != null and is_instance_valid(_dialog):
 		_dialog.queue_free()
-	_dialog = ConfirmationDialog.new()
-	_dialog.title = EventSheetL10n.translate("Connect a signal of {node}").replace("{node}", str(_node.name))
-	_dialog.ok_button_text = EventSheetL10n.translate("Connect")
-	var form: VBoxContainer = EventSheetPopupUI.form_box()
+	var parts: Dictionary = EventSheetPopupUI.panel_window(
+		EventSheetL10n.translate("Connect a signal of {node}").replace("{node}", str(_node.name)), Vector2i.ZERO, _parent,
+		EventSheetL10n.translate("Connect"), _on_confirmed, true)
+	_dialog = parts["window"]
+	var form: VBoxContainer = parts["box"]
 	_band = EventSheetPopupUI.RowBand.new()
 	form.add_child(_band)
 	var content: VBoxContainer = EventSheetPopupUI.form_box()
@@ -101,12 +102,9 @@ func _build() -> void:
 		EventSheetL10n.translate("Narrows the list to the signals whose name holds what you type."))
 	_strip.follow(_list, EventSheetL10n.translate("This signal"),
 		EventSheetL10n.translate("An On <signal> event is added to the node's sheet; its actions run when the signal fires."))
-	_dialog.add_child(EventSheetPopupUI.margined(form))
-	_dialog.confirmed.connect(_on_confirmed)
 	# This window parents to the editor base control (outside the dock's translation domain), so it
 	# claims the plugin domain itself.
 	EventSheetL10n.apply_to(_dialog)
-	_parent.add_child(_dialog)
 
 
 func _apply_filter(query: String) -> void:

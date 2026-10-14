@@ -37,14 +37,11 @@ var _directory: String = "res://"
 func init_dialog(parent_node: Node) -> void:
 	if _dialog != null:
 		return
-	_dialog = ConfirmationDialog.new()
-	_dialog.ok_button_text = EventSheetL10n.translate("Create")
-	_dialog.confirmed.connect(_on_confirmed)
-	parent_node.add_child(_dialog)
-
-	var form: VBoxContainer = EventSheetPopupUI.form_box()
+	var parts: Dictionary = EventSheetPopupUI.panel_window("", Vector2i.ZERO, parent_node, EventSheetL10n.translate("Create"),
+		_on_confirmed, true)
+	_dialog = parts["window"]
+	var form: VBoxContainer = parts["box"]
 	form.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(440.0), 0.0)
-	_dialog.add_child(EventSheetPopupUI.margined(form))
 	_band = EventSheetPopupUI.RowBand.new(true)
 	form.add_child(_band)
 	_name_edit = LineEdit.new()

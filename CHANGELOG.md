@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Changed: the hand-built confirm dialogs open through the window kit
+
+- The window kit's form window takes `hide_on_ok` (OK closes it, for a form OK cannot refuse) and a
+  least size. Twenty-five dialogs that built the same confirm-dialog shell by hand now open through
+  it: Message, Send message, Modes, States, Compare, Add global variable, Edit comment, Scope Actions
+  To Node, the custom block form, Add child, Add an include, Optimise, Paste Retargeted, the three
+  Moment forms, Edit group, the sheet head's text line, Publish New Version, Connect a signal, New
+  Event Sheet, New Function, Edit Parameter, Save as snippet and Edit code block. Nothing they show or
+  do changes.
+
 ### Fixed: Compare stops printing a missing-meta error
 
 - The Compare window's operator list asked for its code note in a way Godot answers with an engine

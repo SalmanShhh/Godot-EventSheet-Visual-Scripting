@@ -144,11 +144,10 @@ func _offer_group_draft(group: EventGroup) -> void:
 
 
 func _build_group_edit_dialog() -> void:
-	_group_edit_dialog = ConfirmationDialog.new()
-	_group_edit_dialog.title = "Edit group"
-	_group_edit_dialog.ok_button_text = "Apply"
-	_group_edit_dialog.min_size = Vector2i(460, 0)
-	var box: VBoxContainer = EventSheetPopupUI.form_box()
+	var parts: Dictionary = EventSheetPopupUI.panel_window("Edit group", Vector2i(460, 0), _dock, "Apply",
+		_apply_group_edit, true)
+	_group_edit_dialog = parts["window"]
+	var box: VBoxContainer = parts["box"]
 	_group_help_strip = EventSheetPopupUI.help_strip(
 		GROUP_FIELD_ORDER[0], _group_field_help(GROUP_FIELD_ORDER[0]))
 	_group_name_edit = LineEdit.new()
@@ -212,9 +211,6 @@ func _build_group_edit_dialog() -> void:
 		}
 	)
 	box.add_child(_group_help_strip)
-	_group_edit_dialog.add_child(EventSheetPopupUI.margined(box))
-	_group_edit_dialog.confirmed.connect(_apply_group_edit)
-	_dock.add_child(_group_edit_dialog)
 
 
 ## What each field of the group dialog is, in one line. A table rather than five literals at the

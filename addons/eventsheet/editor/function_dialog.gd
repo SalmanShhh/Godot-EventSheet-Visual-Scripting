@@ -110,18 +110,14 @@ static func kind_choice_text(entry: Dictionary) -> String:
 func init_dialog(parent_node: Node) -> void:
 	if _dialog != null:
 		return
-	_dialog = ConfirmationDialog.new()
-	_dialog.title = EventSheetL10n.translate("New Function")
-	_dialog.ok_button_text = EventSheetL10n.translate("Create Function")
-	_dialog.cancel_button_text = EventSheetL10n.translate("Cancel")
 	# OK closes the window itself, and only when the function is accepted - a refused name keeps the
 	# form open with the reason under it rather than closing and popping back up.
-	_dialog.dialog_hide_on_ok = false
-	_dialog.confirmed.connect(_on_confirmed)
-	parent_node.add_child(_dialog)
-	var form: VBoxContainer = EventSheetPopupUI.form_box()
+	var parts: Dictionary = EventSheetPopupUI.panel_window(EventSheetL10n.translate("New Function"), Vector2i.ZERO,
+		parent_node, EventSheetL10n.translate("Create Function"), _on_confirmed)
+	_dialog = parts["window"]
+	_dialog.cancel_button_text = EventSheetL10n.translate("Cancel")
+	var form: VBoxContainer = parts["box"]
 	form.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(540.0), 0.0)
-	_dialog.add_child(EventSheetPopupUI.margined(form))
 	_help = EventSheetPopupUI.help_strip()
 
 	_band_label = Label.new()

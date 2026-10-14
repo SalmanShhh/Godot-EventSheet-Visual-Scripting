@@ -391,15 +391,9 @@ func open(context: Dictionary, ace_id: String = "", params: Dictionary = {}, neg
 func _ensure_dialog() -> void:
 	if _dialog != null:
 		return
-	_dialog = ConfirmationDialog.new()
-	_dialog.title = "Compare"
-	_dialog.ok_button_text = "OK"
-	_dialog.visible = false
-	_dialog.confirmed.connect(_on_confirmed)
-	_dock.add_child(_dialog)
-
-	var page: VBoxContainer = EventSheetPopupUI.form_box()
-	_dialog.add_child(EventSheetPopupUI.margined(page))
+	var parts: Dictionary = EventSheetPopupUI.panel_window("Compare", Vector2i.ZERO, _dock, "OK", _on_confirmed, true)
+	_dialog = parts["window"]
+	var page: VBoxContainer = parts["box"]
 	# The row itself at the top, the way the sheet will read it: whose comparison this is in the object
 	# column, the comparison beside it.
 	_band = EventSheetPopupUI.RowBand.new()

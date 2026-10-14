@@ -96,16 +96,19 @@ static func margined(content: Control, margin: int = CONTENT_MARGIN) -> MarginCo
 ##
 ## Give it `ok_text` and it is a FORM window instead: a ConfirmationDialog whose OK calls `on_ok` and
 ## leaves the window open, because what stops OK is said on the window itself (a StateNote under the
-## field) - `on_ok` hides it once the work is done. The title is on the window, so the form fills it
-## with no card heading repeating it.
+## field) - `on_ok` hides it once the work is done. `hide_on_ok` is for a form OK cannot refuse: OK
+## closes it, the way a plain ConfirmationDialog does. A non-zero `size` is the form's least size. The
+## title is on the window, so the form fills it with no card heading repeating it.
 static func panel_window(title: String, size: Vector2i, host: Node, ok_text: String = "",
-		on_ok: Callable = Callable()) -> Dictionary:
+		on_ok: Callable = Callable(), hide_on_ok: bool = false) -> Dictionary:
 	if not ok_text.is_empty():
 		var dialog: ConfirmationDialog = ConfirmationDialog.new()
 		dialog.title = title
 		dialog.visible = false
 		dialog.ok_button_text = ok_text
-		dialog.dialog_hide_on_ok = false
+		dialog.dialog_hide_on_ok = hide_on_ok
+		if size != Vector2i.ZERO:
+			dialog.min_size = size
 		if on_ok.is_valid():
 			dialog.confirmed.connect(on_ok)
 		var form: VBoxContainer = form_box()

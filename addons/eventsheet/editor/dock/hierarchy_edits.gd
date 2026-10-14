@@ -160,11 +160,10 @@ func edit_scene_requested(child_label: String) -> void:
 ## differs from a plain child is ever written, so the ordinary drop stays one clean line.
 func prompt_flags(child_label: String, flags: Dictionary, callback: Callable) -> void:
 	if _flags_dialog == null:
-		_flags_dialog = ConfirmationDialog.new()
-		_flags_dialog.title = EventSheetL10n.translate("Add child")
-		_flags_dialog.ok_button_text = EventSheetL10n.translate("Add child")
-		_flags_dialog.min_size = Vector2i(420, 0)
-		var box: VBoxContainer = EventSheetPopupUI.form_box()
+		var parts: Dictionary = EventSheetPopupUI.panel_window(EventSheetL10n.translate("Add child"), Vector2i(420, 0),
+			_dock, EventSheetL10n.translate("Add child"), _apply_flags, true)
+		_flags_dialog = parts["window"]
+		var box: VBoxContainer = parts["box"]
 		_flags_subject = Label.new()
 		box.add_child(_flags_subject)
 		var ticks: VBoxContainer = EventSheetPopupUI.form_box()
@@ -180,9 +179,6 @@ func prompt_flags(child_label: String, flags: Dictionary, callback: Callable) ->
 		box.add_child(EventSheetPopupUI.panel_section(ticks))
 		box.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate(
 			"All four on is a plain Godot child, and writes one line. Switching a transform off adds the node that drives the child instead; switching all three off is Ignore parent's movement. Unticking keeping its place snaps the child to its new parent.")))
-		_flags_dialog.add_child(EventSheetPopupUI.margined(box))
-		_flags_dialog.confirmed.connect(_apply_flags)
-		_dock.add_child(_flags_dialog)
 	_flags_subject.text = EventSheetL10n.translate("Add child %s") % child_label
 	for key: String in _flag_boxes:
 		(_flag_boxes[key] as CheckBox).button_pressed = bool(flags.get(key, true))

@@ -49,10 +49,10 @@ func open_comment_dialog(comment_resource: Resource) -> void:
 func _ensure_comment_dialog() -> void:
 	if _comment_dialog != null:
 		return
-	_comment_dialog = ConfirmationDialog.new()
-	_comment_dialog.title = EventSheetL10n.translate("Edit comment")
-	_comment_dialog.ok_button_text = EventSheetL10n.translate("Save")
-	var form: VBoxContainer = EventSheetPopupUI.form_box()
+	var parts: Dictionary = EventSheetPopupUI.panel_window(EventSheetL10n.translate("Edit comment"), Vector2i.ZERO,
+		_dock, EventSheetL10n.translate("Save"), _on_comment_dialog_confirmed, true)
+	_comment_dialog = parts["window"]
+	var form: VBoxContainer = parts["box"]
 	_comment_band = EventSheetPopupUI.RowBand.new()
 	form.add_child(_comment_band)
 	var card: VBoxContainer = EventSheetPopupUI.form_box()
@@ -101,9 +101,6 @@ func _ensure_comment_dialog() -> void:
 		EventSheetL10n.translate("A colour behind this comment on the sheet. Clear its alpha to 0 to go back to the theme default."))
 	_comment_strip.follow(_comment_manual_check, EventSheetL10n.translate("Shows in the manual"),
 		EventSheetL10n.translate("Writes ## instead of #. Notes left as # stay in this sheet - they are not documentation and nothing counts them as missing."))
-	_comment_dialog.add_child(EventSheetPopupUI.margined(form))
-	_comment_dialog.confirmed.connect(_on_comment_dialog_confirmed)
-	_dock.add_child(_comment_dialog)
 
 
 ## The comment's first line as the file will hold it - `#` or `##` before it - for the band and the
@@ -166,9 +163,10 @@ func open_with_node_dialog(event_resource: Resource) -> void:
 func _ensure_with_node_dialog() -> void:
 	if _with_node_dialog != null:
 		return
-	_with_node_dialog = ConfirmationDialog.new()
-	_with_node_dialog.title = "Scope Actions To Node"
-	var form: VBoxContainer = EventSheetPopupUI.form_box()
+	var parts: Dictionary = EventSheetPopupUI.panel_window("Scope Actions To Node", Vector2i.ZERO, _dock, "OK",
+		_on_with_node_dialog_confirmed, true)
+	_with_node_dialog = parts["window"]
+	var form: VBoxContainer = parts["box"]
 	# Width-bound hint (helper handles autowrap + width clamp) so the label can't balloon the dialog.
 	var hint: Label = EventSheetPopupUI.hint_label("Actions in this event act on this node instead of the host.\nUse $Enemy, get_node(\"UI/Score\"), or a variable. Leave blank to act on this node.", 420.0)
 	form.add_child(hint)
@@ -180,9 +178,6 @@ func _ensure_with_node_dialog() -> void:
 		_on_with_node_dialog_confirmed()
 	)
 	form.add_child(_with_node_target_edit)
-	_with_node_dialog.add_child(EventSheetPopupUI.margined(form))
-	_with_node_dialog.confirmed.connect(_on_with_node_dialog_confirmed)
-	_dock.add_child(_with_node_dialog)
 
 
 func _on_with_node_dialog_confirmed() -> void:
