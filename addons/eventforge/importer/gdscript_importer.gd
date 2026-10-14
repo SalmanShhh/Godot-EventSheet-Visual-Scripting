@@ -1131,7 +1131,7 @@ func _parse_range_hint(hint: String) -> Dictionary:
 		return {}
 	var arguments: PackedStringArray = hint.substr(open_paren + 1, close_paren - open_paren - 1).split(", ")
 	if arguments.size() == 2 and not arguments[0].strip_edges().is_empty() and not arguments[1].strip_edges().is_empty():
-		return {"min": arguments[0], "max": arguments[1], "step": ""}
+		return {"min": arguments[0], "max": arguments[1], "step": LocalVariable.RANGE_STEP_UNWRITTEN}
 	if arguments.size() < 3:
 		return {}
 	var range_spec: Dictionary = {"min": arguments[0], "max": arguments[1], "step": arguments[2]}

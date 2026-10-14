@@ -4238,13 +4238,11 @@ static func _structured_hint_prefix(attributes: Dictionary, type_name: String) -
 	if attributes.get("range") is Dictionary and numeric:
 		var range_spec: Dictionary = attributes.get("range")
 		var arguments: PackedStringArray = PackedStringArray([
-			str(range_spec.get("min", "0")), str(range_spec.get("max", "100")), str(range_spec.get("step", "1")),
+			str(range_spec.get("min", "0")), str(range_spec.get("max", "100")), LocalVariable.range_step(range_spec),
 		])
-		# An EMPTY step is one the source left to Godot (`@export_range(1, 3)`): it stays unwritten,
-		# unless a modifier follows, which needs the step written in front of it (Godot's default, 1).
-		var unwritten_step: bool = str(range_spec.get("step", "1")).strip_edges().is_empty()
-		if unwritten_step:
-			arguments[2] = "1"
+		# A step the source left to Godot (`@export_range(1, 3)`) stays unwritten, unless a modifier
+		# follows, which needs the step written in front of it (Godot's default).
+		var unwritten_step: bool = LocalVariable.range_step_unwritten(range_spec)
 		# Fixed modifier order keeps the byte gate deterministic; hand-written other orders
 		# stay verbatim hints (graceful degradation, never corruption).
 		if bool(range_spec.get("or_greater", false)):

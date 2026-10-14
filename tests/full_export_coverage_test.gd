@@ -106,6 +106,10 @@ static func run() -> bool:
 		["@export_range(1, 3) opens as a range with its step unwritten", short_range, {"min": "1", "max": "3", "step": ""}],
 		["and saves back byte-identically", str(SheetCompiler.compile(short_sheet, "user://export_short_range.gd").get("output", "")), short_source],
 		["an unwritten step before a modifier is written as Godot's default", str(SheetCompiler.compile(stepped, "user://export_stepped.gd").get("output", "")).contains("@export_range(0, 4, 1, \"or_greater\") var zoom: float = 1.0"), true],
+		# Every numeric reader asks for the step through one door, so none moves a slider by 0.
+		["a reader asks the unwritten step and gets Godot's default", LocalVariable.range_step(short_range), "1"],
+		["a written step reads as written", LocalVariable.range_step({"min": "0", "max": "1", "step": "0.05"}), "0.05"],
+		["the Inspector look's slider moves by Godot's default", EventSheetInspectorLooks.unfold({"range": short_range}), ["slider", {"min": "1", "max": "3", "step": "1", "unit": "", "or_greater": false, "or_less": false}]],
 	]) and all_passed
 
 	# ── The dict-variable (main) path emits the same canonical shapes ──

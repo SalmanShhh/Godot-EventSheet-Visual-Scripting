@@ -245,7 +245,7 @@ static func unfold(attributes: Dictionary, options: PackedStringArray = PackedSt
 			"icon": quoted[1] if quoted.size() > 1 else "", "args": str(button.get("args", ""))}]
 	var range_spec: Dictionary = attributes.get("range") if attributes.get("range") is Dictionary else {}
 	var bounds: Dictionary = {"min": str(range_spec.get("min", "0")), "max": str(range_spec.get("max", "100")),
-		"step": str(range_spec.get("step", "1"))}
+		"step": LocalVariable.range_step(range_spec)}
 	var drawer: String = str(attributes.get("drawer", ""))
 	match drawer:
 		"progress_bar", "min_max", "vector_dial":

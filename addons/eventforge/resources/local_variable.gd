@@ -99,12 +99,30 @@ extends Resource
 ##                     constant's name, the hint string, and the usage flags as written ("" = left out).
 ## A file picker's "file" spec also takes "plain_path": true for `@export_file_path`, which stores
 ## the path as typed where `@export_file` may store a `uid://` reference instead.
+## A "range" spec is {"min", "max", "step", ...} as written; its step is RANGE_STEP_UNWRITTEN when
+## the source left it to Godot (`@export_range(1, 3)`), so a reader asks `range_step` for it.
 @export var attributes: Dictionary = {}
+
+## The step a range spec carries when the source left it to Godot: the two-number `@export_range`.
+const RANGE_STEP_UNWRITTEN := ""
+## The step Godot moves a range by when none is written.
+const RANGE_STEP_DEFAULT := "1"
 
 
 ## Stable row-kind identifier so the compiler/editor can treat tree-placed variables uniformly.
 func get_row_kind() -> String:
 	return "variable"
+
+
+## The step a range spec moves by: the one written, or Godot's own default when the source left it out.
+static func range_step(range_spec: Dictionary) -> String:
+	return RANGE_STEP_DEFAULT if range_step_unwritten(range_spec) \
+		else str(range_spec.get("step", RANGE_STEP_DEFAULT)).strip_edges()
+
+
+## True when a range spec's step was left to Godot, so it saves back unwritten.
+static func range_step_unwritten(range_spec: Dictionary) -> bool:
+	return str(range_spec.get("step", RANGE_STEP_DEFAULT)).strip_edges() == RANGE_STEP_UNWRITTEN
 
 
 ## The class member a Static local compiles to: the row's own name, made private with a leading

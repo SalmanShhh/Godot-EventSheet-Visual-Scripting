@@ -104,7 +104,7 @@ static func variable_for(offer: Dictionary) -> LocalVariable:
 	if not low.is_empty():
 		made.default_value = low.to_int() if made.type_name == "int" else low.to_float()
 		# A whole number's step is Godot's default, so it stays unwritten: `@export_range(1, 3)`.
-		attributes["range"] = {"min": low, "max": str(offer.get("max", "")), "step": "" if made.type_name == "int" else "0.01"}
+		attributes["range"] = {"min": low, "max": str(offer.get("max", "")), "step": LocalVariable.RANGE_STEP_UNWRITTEN if made.type_name == "int" else "0.01"}
 	if bool(offer.get("storage", false)):
 		attributes["storage"] = true
 	if not str(offer.get("group", "")).is_empty():
