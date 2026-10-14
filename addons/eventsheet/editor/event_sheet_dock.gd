@@ -7582,38 +7582,32 @@ func _copy_selection_as_text() -> void:
 func _context_condition_is_negated() -> bool:
 	return _row_edit_ops._context_condition_is_negated()
 
+
 # ── Per-ACE comments (condition/action notes) ──────────────────────────────────────
-var _ace_comment_dialog: ConfirmationDialog = null
-var _ace_comment_edit: LineEdit = null
-var _ace_comment_target: Resource = null
-
-
 ## Event-sheet-style per-condition/action note: shown dimmed after the ACE text in the sheet.
 func _open_ace_comment_dialog(target: Resource) -> void:
 	if target == null:
 		_set_status("Right-click a condition or action to comment it.", true)
 		return
-	if _ace_comment_dialog == null:
-		_ace_comment_dialog = ConfirmationDialog.new()
-		_ace_comment_dialog.title = "Row Comment"
-		_ace_comment_edit = LineEdit.new()
-		_ace_comment_edit.placeholder_text = "Why this condition/action exists…"
-		_ace_comment_edit.custom_minimum_size = Vector2(360.0, 0.0)
-		var body_box: VBoxContainer = EventSheetPopupUI.form_box()
-		body_box.add_child(_ace_comment_edit)
-		_ace_comment_dialog.add_child(EventSheetPopupUI.margined(body_box))
-		_ace_comment_dialog.confirmed.connect(_on_ace_comment_confirmed)
-		add_child(_ace_comment_dialog)
-	_ace_comment_target = target
-	_ace_comment_edit.text = str(target.get("comment"))
-	_ace_comment_dialog.popup_centered(Vector2i(420, 110))
+	_ask_for_line("Row Comment", "Why this condition/action exists…", str(target.get("comment")),
+		_on_ace_comment_confirmed.bind(target))
 
 
-func _on_ace_comment_confirmed() -> void:
-	if _ace_comment_target == null:
-		return
-	var target: Resource = _ace_comment_target
-	var new_comment: String = _ace_comment_edit.text.strip_edges()
+## A one-line question - a row's comment, a view's name, the objects to copy events for: the quick
+## question with one text field, whose OK hands `on_ok` what was typed, trimmed.
+func _ask_for_line(title: String, placeholder: String, text: String, on_ok: Callable) -> void:
+	var edit: LineEdit = LineEdit.new()
+	edit.placeholder_text = placeholder
+	edit.text = text
+	edit.custom_minimum_size = Vector2(360.0, 0.0)
+	var dialog: ConfirmationDialog = load(SMALL_PROMPT_PATH).open(self, {"title": title, "body": edit,
+		"on_main": func() -> void: on_ok.call(edit.text.strip_edges())})
+	# The field is the whole question: no sentence above it.
+	dialog.find_child("Say", true, false).visible = false
+	dialog.register_text_enter(edit)
+
+
+func _on_ace_comment_confirmed(new_comment: String, target: Resource) -> void:
 	var changed: bool = _perform_undoable_sheet_edit("Edit Cell Note", func() -> bool:
 		target.set("comment", new_comment)
 		return true
@@ -8812,30 +8806,13 @@ func apply_saved_view(name: String) -> void:
 	_set_status(EventSheetL10n.translate("View: %s") % name)
 
 
-var _save_view_dialog: ConfirmationDialog = null
-var _save_view_edit: LineEdit = null
-
-
 ## Names the way the sheet is being read right now and keeps it in the View menu.
 func save_current_view_requested() -> void:
-	if _save_view_dialog == null:
-		_save_view_dialog = ConfirmationDialog.new()
-		_save_view_dialog.title = "Save View"
-		_save_view_edit = LineEdit.new()
-		_save_view_edit.placeholder_text = "Name this way of reading the sheet…"
-		_save_view_edit.custom_minimum_size = Vector2(360.0, 0.0)
-		var body_box: VBoxContainer = EventSheetPopupUI.form_box()
-		body_box.add_child(_save_view_edit)
-		_save_view_dialog.add_child(EventSheetPopupUI.margined(body_box))
-		_save_view_dialog.confirmed.connect(_on_save_view_confirmed)
-		add_child(_save_view_dialog)
-		EventSheetL10n.apply_to(_save_view_dialog)
-	_save_view_edit.text = ""
-	_save_view_dialog.popup_centered(Vector2i(420, 110))
+	_ask_for_line(EventSheetL10n.translate("Save View"), EventSheetL10n.translate("Name this way of reading the sheet…"),
+		"", _on_save_view_confirmed)
 
 
-func _on_save_view_confirmed() -> void:
-	var name: String = _save_view_edit.text.strip_edges()
+func _on_save_view_confirmed(name: String) -> void:
 	var view: EventSheetViewport = _active_view()
 	var blob: Dictionary = load(SAVED_VIEWS_PATH).describe(arrangement_mode(),
 		view.lens_query() if view != null else "", current_view_lenses())
@@ -8904,48 +8881,25 @@ func add_common_events_for(object_label: String) -> void:
 	_mark_dirty(EventSheetL10n.translate("Added %s.") % ", ".join(words))
 
 
-var _duplicate_events_dialog: ConfirmationDialog = null
-var _duplicate_events_edit: LineEdit = null
-var _duplicate_events_source: String = ""
-
-
 ## "Duplicate events for…": every event that names this object, copied once per object you list,
 ## each copy pointing at that object instead. One undo step for the whole batch.
 func open_duplicate_events_dialog(object_label: String) -> void:
 	if not _ensure_sheet_for_editing():
 		return
-	if _duplicate_events_dialog == null:
-		_duplicate_events_dialog = ConfirmationDialog.new()
-		_duplicate_events_dialog.title = "Duplicate Events For"
-		_duplicate_events_edit = LineEdit.new()
-		_duplicate_events_edit.placeholder_text = "Enemy2, Enemy3"
-		_duplicate_events_edit.custom_minimum_size = Vector2(360.0, 0.0)
-		var body_box: VBoxContainer = EventSheetPopupUI.form_box()
-		body_box.add_child(_duplicate_events_edit)
-		_duplicate_events_dialog.add_child(EventSheetPopupUI.margined(body_box))
-		_duplicate_events_dialog.confirmed.connect(_on_duplicate_events_confirmed)
-		add_child(_duplicate_events_dialog)
-		EventSheetL10n.apply_to(_duplicate_events_dialog)
-	_duplicate_events_source = object_label
-	_duplicate_events_edit.text = ""
-	# The dialog is built once and reused, so the object it is about has to be written on it EVERY
-	# open. Without this it reads "Duplicate Events For" over an empty box, and a sheet with four
-	# objects gives the reader no way to tell which one's events are about to be copied.
-	_duplicate_events_dialog.title = "%s %s" % [
-		EventSheetL10n.translate("Duplicate Events For"), object_label]
-	_duplicate_events_dialog.popup_centered(Vector2i(440, 120))
+	# The title names the object, so a sheet with four objects says whose events are about to be copied.
+	_ask_for_line("%s %s" % [EventSheetL10n.translate("Duplicate Events For"), object_label], "Enemy2, Enemy3", "",
+		_on_duplicate_events_confirmed.bind(object_label))
 
 
-func _on_duplicate_events_confirmed() -> void:
+func _on_duplicate_events_confirmed(typed: String, source: String) -> void:
 	var targets: PackedStringArray = PackedStringArray()
-	for piece: String in _duplicate_events_edit.text.split(","):
+	for piece: String in typed.split(","):
 		var clean: String = piece.strip_edges()
 		if not clean.is_empty():
 			targets.append(clean)
 	if targets.is_empty():
 		_set_status(EventSheetL10n.translate("Name at least one object to duplicate for."), true)
 		return
-	var source: String = _duplicate_events_source
 	var made: Dictionary = {"count": 0}
 	var changed: bool = _perform_undoable_sheet_edit("Duplicate Events For", func() -> bool:
 		var source_reference: String = load(DUPLICATE_EVENTS_PATH).reference_for(_current_sheet, source)
