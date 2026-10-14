@@ -562,8 +562,27 @@ static func _test_empty_to_blocks_ok() -> bool:
 	dialog._refresh()
 	passed = SUPPORT.check("comparison_rows_test", "a range waits for its other end too",
 		dialog._dialog.get_ok_button().disabled, true) and passed
+	# An operator list with no code note beside it rebuilds without a word: asking get_meta for a
+	# missing key with a null default prints an engine error every time the list fills.
+	dialog._operator_option.remove_meta("code_note")
+	var ear: MetaEar = MetaEar.new()
+	OS.add_logger(ear)
+	dialog._rebuild_operators(COMPARE.KIND_NUMBER, COMPARE.OPERATOR_BETWEEN)
+	OS.remove_logger(ear)
+	passed = SUPPORT.check("comparison_rows_test", "a list with no code note rebuilds without an error",
+		ear.heard, []) and passed
 	dock.free()
 	return passed
+
+
+## Hears the engine's errors while it is added, and keeps the ones about a missing meta key.
+class MetaEar extends Logger:
+	var heard: Array = []
+
+	func _log_error(_function: String, _file: String, _line: int, code: String, rationale: String,
+			_editor_notify: bool, _error_type: int, _script_backtraces: Array[ScriptBacktrace]) -> void:
+		if (code + rationale).contains("meta"):
+			heard.append(code + rationale)
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

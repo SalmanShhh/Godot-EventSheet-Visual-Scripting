@@ -523,7 +523,8 @@ func _rebuild_operators(kind: String, selected: String) -> void:
 			chosen = index
 			break
 	_operator_option.select(chosen if chosen >= 0 else 0)
-	var note: Variant = _operator_option.get_meta("code_note", null)
+	# has_meta first: Godot reads a null default as no default and prints an error for a missing key.
+	var note: Variant = _operator_option.get_meta("code_note") if _operator_option.has_meta("code_note") else null
 	if note is Label:
 		(note as Label).text = str(_operator_codes.get(_operator_option.selected, ""))
 

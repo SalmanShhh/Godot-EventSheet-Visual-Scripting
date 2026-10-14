@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Fixed: Compare stops printing a missing-meta error
+
+- The Compare window's operator list asked for its code note in a way Godot answers with an engine
+  error whenever the note is not there; it now asks whether the note exists first.
+
 ### Fixed: every other plain window reads in a light theme too
 
 - Nineteen more windows (the Replay Recorder, Compare With, the conflict view, Loose Ends, the Project
