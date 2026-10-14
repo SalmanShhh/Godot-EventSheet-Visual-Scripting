@@ -46,13 +46,33 @@ static func run() -> bool:
 	]
 	var values: Dictionary = {"hp": 4, "Sine.phase": 1.5, "Sine.amplitude": 20}
 	var rows: Array[Dictionary] = EventSheetDebuggerWindow.object_rows(census, values)
-	ok = _check("one row per object the sheet talks about", rows.size(), 2) and ok
-	ok = _check("an object the run reports on carries its values",
-		(rows[1]["live"] as PackedStringArray).size(), 2) and ok
-	ok = _check("and they are its own, in order",
-		",".join(rows[1]["live"] as PackedStringArray), "Sine.amplitude,Sine.phase") and ok
-	ok = _check("an object the run says nothing about promises nothing",
-		(rows[0]["live"] as PackedStringArray).size(), 0) and ok
+	ok = SUPPORT.pins("debugger_window_test", [
+		["the sheet's own variables lead, then one row per object the sheet talks about",
+			rows.map(func(row: Dictionary) -> String: return "%s=%s" % [row["label"], row["key"]]),
+			["This sheet's variables=", "Enemy=Enemy", "Sine=Sine"]],
+		["the sheet's row carries its own values", ",".join(rows[0]["live"] as PackedStringArray), "hp"],
+		["and says how many", rows[0]["detail"], "1 value"],
+		["in the plural past one", EventSheetDebuggerWindow.object_rows([], {"a": 1, "b": 2})[0]["detail"],
+			"2 values"],
+		["an object the run reports on carries its values, in order",
+			",".join(rows[2]["live"] as PackedStringArray), "Sine.amplitude,Sine.phase"],
+		["and counts them", rows[2]["detail"], "(2)"],
+		["an object the run says nothing about promises nothing",
+			[(rows[1]["live"] as PackedStringArray).size(), rows[1]["detail"]], [0, "no report"]],
+		["with no run the sheet's own row says so too",
+			EventSheetDebuggerWindow.object_rows([], {})[0]["detail"], "no report"],
+	]) and ok
+
+	# ── The run band over every tab ──
+	ok = SUPPORT.pins("debugger_window_test", [
+		["a paused run names the sheet, the streams and the row",
+			EventSheetDebuggerWindow.run_band("player.gd", true, true, true, "event 12 - when health <= 0"),
+			PackedStringArray(["player.gd", "running · Live Values on · Event Trace on",
+				"Paused at event 12 - when health <= 0"])],
+		["no run reporting says so, and a run that is not paused says nothing about pausing",
+			EventSheetDebuggerWindow.run_band("player.gd", false, true, false, ""),
+			PackedStringArray(["player.gd", "no run reporting · Live Values on · Event Trace off", ""])],
+	]) and ok
 
 	# ── Profile: the self-time model over a fixture window ──
 	# Two frames. Frame 1 fires a, b, c; frame 2 fires a, b. Stamps are microseconds.
@@ -115,6 +135,7 @@ static func run() -> bool:
 	ok = _check("a sheet with no breakpoints lists none",
 		EventSheetDebuggerWindow.breakpoint_rows([]).size(), 0) and ok
 	ok = _test_unticking_keeps_the_breakpoint_inactive() and ok
+	ok = _test_watch_table_and_value_rows() and ok
 
 	# ── The bridge parses the timings message it will really be handed ──
 	var window: Dictionary = EventSheetLiveValuesDebugger.parse_event_times(
@@ -179,6 +200,52 @@ static func _test_unticking_keeps_the_breakpoint_inactive() -> bool:
 		debugger.listed_uids(), {}) and ok
 	dock.free()
 	return ok
+
+
+## The watch table both windows draw, and the value rows both windows fill: an unreadable watch
+## says "cannot read" and why on its own line, and a value that cannot be edited reads muted.
+static func _test_watch_table_and_value_rows() -> bool:
+	var table: Tree = Tree.new()
+	table.columns = 2
+	var watched: Array[String] = ["health <= 0", "velocity.x > 0"]
+	EventSheetLiveValuesPanel.fill_watch_tree(table, watched, {"health": 1, "Sine.phase": 0.5})
+	var rows: Array[TreeItem] = table.get_root().get_children()
+	var why: TreeItem = rows[1].get_first_child()
+	var values: Tree = Tree.new()
+	values.columns = 2
+	var root: TreeItem = values.create_item()
+	var plain: TreeItem = values.create_item(root)
+	EventSheetLiveValuesPanel.fill_value_item(plain, 1)
+	var behaviour: TreeItem = values.create_item(root)
+	EventSheetLiveValuesPanel.fill_value_item(behaviour, 0.42, true)
+	var listed: TreeItem = values.create_item(root)
+	EventSheetLiveValuesPanel.fill_value_item(listed, [3, 7])
+	var ok: bool = SUPPORT.pins("debugger_window_test", [
+		["a readable watch shows its value", rows[0].get_text(1), "false"],
+		["an unreadable one says it cannot be read, not an engine error", rows[1].get_text(1), "cannot read"],
+		["and says why on its own line", why.get_text(0) if why != null else "", "velocity is not a streamed value."],
+		["before a run every watch reads as a dash",
+			_watch_cells_without_a_run(table, watched), "-,-"],
+		["a missing name is found past members and calls",
+			EventSheetLiveValuesPanel.missing_name("sin(speed) + pos.x + hp", PackedStringArray(["hp"])), "speed"],
+		["Expression's own words are never missing",
+			EventSheetLiveValuesPanel.missing_name("true and not PI", PackedStringArray()), ""],
+		["a sheet variable stays editable", [plain.is_editable(1), plain.get_text(1)], [true, "1"]],
+		["a behavior's value is read-only and muted",
+			[behaviour.is_editable(1), behaviour.get_custom_color(1) == EventSheetPopupUI.muted_text_color()],
+			[false, true]],
+		["a list opens into read-only items",
+			[listed.get_text(1), listed.is_editable(1), listed.get_child_count(), listed.get_child(1).get_text(0)],
+			["[…] 2 items", false, 2, "[1]"]],
+	])
+	table.free()
+	values.free()
+	return ok
+
+
+static func _watch_cells_without_a_run(table: Tree, watched: Array[String]) -> String:
+	EventSheetLiveValuesPanel.fill_watch_tree(table, watched, {})
+	return ",".join(table.get_root().get_children().map(func(item: TreeItem) -> String: return item.get_text(1)))
 
 
 static func _flat_of(event_row: EventRow, number: int) -> Dictionary:

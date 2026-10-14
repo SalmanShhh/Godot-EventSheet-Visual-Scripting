@@ -3857,6 +3857,8 @@ func _on_debug_session_ended() -> void:
 	# the file declares and nothing more, and the timed row goes back to reading exactly as it reads
 	# with nothing running. Stop the game and the sheet is the document it always was.
 	EventSheetStateWatch.clear()
+	# A game that is not running is not paused anywhere either.
+	_paused_row_uid = ""
 	_ensure_live_values_panel().clear_live_values()
 	if _debugger_window != null:
 		_debugger_window.clear_live_values()

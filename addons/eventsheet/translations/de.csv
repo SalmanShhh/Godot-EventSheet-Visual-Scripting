@@ -8517,3 +8517,35 @@ Copy Report,Bericht kopieren
 Why didn't event %d fire?,Warum wurde Ereignis %d nicht ausgelöst?
 Jump to This Row,Zu dieser Zeile springen
 This row has no conditions.,Diese Zeile hat keine Bedingungen.
+Nothing is drawn that no run has reported.,"Es wird nichts gezeigt, was kein Lauf gemeldet hat."
+running,läuft
+no run reporting,kein Lauf meldet
+Live Values on,Live-Werte an
+Live Values off,Live-Werte aus
+Event Trace on,Ereignis-Trace an
+Event Trace off,Ereignis-Trace aus
+Paused at %s,Angehalten bei %s
+Debug %s while it runs,%s während der Ausführung debuggen
+"Dim rows: this sheet names them, but the run has reported nothing for them yet.","Gedimmte Zeilen: Dieses Blatt nennt sie, aber der Lauf hat noch nichts für sie gemeldet."
+Sent,Gesendet
+no report,keine Meldung
+1 value,1 Wert
+%d values,%d Werte
+This sheet's variables,Variablen dieses Blatts
+Double-click a value to change it in the running game. A behavior's own values are shown but not editable.,"Doppelklicke einen Wert, um ihn im laufenden Spiel zu ändern. Die eigenen Werte eines Verhaltens werden angezeigt, sind aber nicht bearbeitbar."
+This value,Dieser Wert
+Expressions over the streamed values. Double-click a row to remove it.,"Ausdrücke über die gestreamten Werte. Doppelklicke eine Zeile, um sie zu entfernen."
+"Time per fire, busiest first. The last event of a frame is counted but not timed, so it reads ""-"".","Zeit pro Auslösung, die meistbeschäftigten zuerst. Das letzte Ereignis eines Frames wird gezählt, aber nicht gemessen, daher steht dort ""-""."
+Double-click a row to go to that event.,"Doppelklicke eine Zeile, um zu diesem Ereignis zu gehen."
+More ▸ Set Breakpoint Condition… pauses only when you say so.,"Mehr ▸ Haltepunktbedingung festlegen… hält nur an, wenn du es sagst."
+Live Values,Live-Werte
+Waiting for a running game…,Warte auf ein laufendes Spiel…
+Expressions over the streamed values above. The Debugger's Watch tab shows the same list.,Ausdrücke über die gestreamten Werte oben. Der Watch-Tab des Debuggers zeigt dieselbe Liste.
+Double-click a value to edit it live.,"Doppelklicke einen Wert, um ihn live zu bearbeiten."
+Edit %s's values while it runs,Werte von %s während der Ausführung bearbeiten
+Streaming · every 0.25 s,"Streamt · alle 0,25 s"
+Streaming from %s · every 0.25 s,"Streamt von %s · alle 0,25 s"
+How it got here: %s,Wie es hierher kam: %s
+cannot read,nicht lesbar
+%s is not a streamed value.,%s ist kein gestreamter Wert.
+%s = %s   # into the running game; the sheet is not changed,%s = %s   # ins laufende Spiel; das Blatt bleibt unverändert

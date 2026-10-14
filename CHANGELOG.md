@@ -57,6 +57,23 @@
   and went stale after any edit.
 - The Doctor, Why and Loose Ends windows draw the editor theme's panel behind their content, so they
   read in a light editor theme instead of showing dark text on the engine's grey.
+### Changed: the Debugger says where the run is on every tab, and Live Values reads at a glance
+
+- A band over the Debugger's five tabs names the sheet, whether a run is reporting, whether Live
+  Values and Event Trace are on, and - only while the game is paused at a row - which row. The
+  window is titled after the sheet ("Debug player.gd while it runs").
+- Inspect lists "This sheet's variables" first, with how many values the run reported for each
+  object beside it, and dims an object the run has said nothing about. A strip under the values
+  names the one under the cursor and, after an edit, shows exactly what was sent into the running
+  game (the sheet itself is never changed).
+- A watch that cannot be read says "cannot read" in the warning colour and why on its own line
+  ("velocity is not a streamed value."), instead of an engine error packed into the value cell. The
+  Debugger's Watch tab and the Live Values window draw the one table over the one list.
+- Profile draws each event's share of the run as a thin bar under its name.
+- Live Values puts how the game got to its mode on a line of its own, and a value that cannot be
+  edited (a behavior's, a list's items) reads muted instead of looking editable.
+- Fixed: double-clicking a Profile or Breakpoints row to go to it no longer marks the game as paused
+  there, and the paused row is forgotten when the run ends.
 
 ### Fixed: a global made as a scene is found wherever the scene lives
 

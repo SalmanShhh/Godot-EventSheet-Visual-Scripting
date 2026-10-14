@@ -8517,3 +8517,35 @@ Copy Report,Copier le rapport
 Why didn't event %d fire?,Pourquoi l'évènement %d ne s'est-il pas déclenché ?
 Jump to This Row,Aller à cette ligne
 This row has no conditions.,Cette ligne n'a aucune condition.
+Nothing is drawn that no run has reported.,Rien n'est affiché qu'aucune exécution n'a signalé.
+running,en cours
+no run reporting,aucune exécution ne signale
+Live Values on,Valeurs en direct activées
+Live Values off,Valeurs en direct désactivées
+Event Trace on,Trace des événements activée
+Event Trace off,Trace des événements désactivée
+Paused at %s,En pause à %s
+Debug %s while it runs,Déboguer %s pendant l'exécution
+"Dim rows: this sheet names them, but the run has reported nothing for them yet.","Lignes estompées : cette feuille les nomme, mais l'exécution n'a encore rien signalé pour elles."
+Sent,Envoyé
+no report,aucun rapport
+1 value,1 valeur
+%d values,%d valeurs
+This sheet's variables,Variables de cette feuille
+Double-click a value to change it in the running game. A behavior's own values are shown but not editable.,Double-cliquez sur une valeur pour la modifier dans le jeu en cours. Les valeurs propres d'un comportement sont affichées mais non modifiables.
+This value,Cette valeur
+Expressions over the streamed values. Double-click a row to remove it.,Expressions sur les valeurs diffusées. Double-cliquez sur une ligne pour la retirer.
+"Time per fire, busiest first. The last event of a frame is counted but not timed, so it reads ""-"".","Temps par déclenchement, les plus chargés d'abord. Le dernier événement d'une image est compté mais pas chronométré, il affiche donc ""-""."
+Double-click a row to go to that event.,Double-cliquez sur une ligne pour aller à cet événement.
+More ▸ Set Breakpoint Condition… pauses only when you say so.,Plus ▸ Définir la condition du point d'arrêt… ne met en pause que quand vous le décidez.
+Live Values,Valeurs en direct
+Waiting for a running game…,En attente d'un jeu en cours…
+Expressions over the streamed values above. The Debugger's Watch tab shows the same list.,Expressions sur les valeurs diffusées ci-dessus. L'onglet Watch du débogueur affiche la même liste.
+Double-click a value to edit it live.,Double-cliquez sur une valeur pour la modifier en direct.
+Edit %s's values while it runs,Modifier les valeurs de %s pendant l'exécution
+Streaming · every 0.25 s,"Diffusion · toutes les 0,25 s"
+Streaming from %s · every 0.25 s,"Diffusion depuis %s · toutes les 0,25 s"
+How it got here: %s,Comment il est arrivé ici : %s
+cannot read,illisible
+%s is not a streamed value.,%s n'est pas une valeur diffusée.
+%s = %s   # into the running game; the sheet is not changed,%s = %s   # dans le jeu en cours ; la feuille n'est pas modifiée

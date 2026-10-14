@@ -8517,3 +8517,35 @@ Copy Report,复制报告
 Why didn't event %d fire?,为什么事件 %d 没有触发？
 Jump to This Row,跳到此行
 This row has no conditions.,此行没有条件。
+Nothing is drawn that no run has reported.,不会显示任何运行未报告的内容。
+running,运行中
+no run reporting,没有运行在报告
+Live Values on,实时值 开
+Live Values off,实时值 关
+Event Trace on,事件跟踪 开
+Event Trace off,事件跟踪 关
+Paused at %s,已暂停于 %s
+Debug %s while it runs,在运行时调试 %s
+"Dim rows: this sheet names them, but the run has reported nothing for them yet.",暗淡的行：此表提到了它们，但运行尚未报告任何内容。
+Sent,已发送
+no report,无报告
+1 value,1 个值
+%d values,%d 个值
+This sheet's variables,此表的变量
+Double-click a value to change it in the running game. A behavior's own values are shown but not editable.,双击一个值即可在运行中的游戏里修改它。行为自身的值会显示，但不可编辑。
+This value,此值
+Expressions over the streamed values. Double-click a row to remove it.,基于流式值的表达式。双击一行即可移除。
+"Time per fire, busiest first. The last event of a frame is counted but not timed, so it reads ""-"".","每次触发的耗时，最繁忙的在前。一帧的最后一个事件会计数但不计时，因此显示 ""-""。"
+Double-click a row to go to that event.,双击一行即可跳到该事件。
+More ▸ Set Breakpoint Condition… pauses only when you say so.,更多 ▸ 设置断点条件… 只在你指定时暂停。
+Live Values,实时值
+Waiting for a running game…,正在等待运行中的游戏…
+Expressions over the streamed values above. The Debugger's Watch tab shows the same list.,基于上方流式值的表达式。调试器的 Watch 标签页显示同一列表。
+Double-click a value to edit it live.,双击一个值即可实时编辑。
+Edit %s's values while it runs,在运行时编辑 %s 的值
+Streaming · every 0.25 s,流式传输中 · 每 0.25 秒
+Streaming from %s · every 0.25 s,正在从 %s 流式传输 · 每 0.25 秒
+How it got here: %s,如何到达这里：%s
+cannot read,无法读取
+%s is not a streamed value.,%s 不是流式值。
+%s = %s   # into the running game; the sheet is not changed,%s = %s   # 发送到运行中的游戏；表不会改变

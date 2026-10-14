@@ -8517,3 +8517,35 @@ Copy Report,レポートをコピー
 Why didn't event %d fire?,イベント %d が動かなかったのはなぜ?
 Jump to This Row,この行へ移動
 This row has no conditions.,この行には条件がありません。
+Nothing is drawn that no run has reported.,実行が報告していないものは何も表示されません。
+running,実行中
+no run reporting,報告中の実行なし
+Live Values on,ライブ値 オン
+Live Values off,ライブ値 オフ
+Event Trace on,イベントトレース オン
+Event Trace off,イベントトレース オフ
+Paused at %s,%s で一時停止中
+Debug %s while it runs,実行中の %s をデバッグ
+"Dim rows: this sheet names them, but the run has reported nothing for them yet.",淡色の行: このシートが名前を挙げていますが、実行はまだ何も報告していません。
+Sent,送信済み
+no report,報告なし
+1 value,1 個の値
+%d values,%d 個の値
+This sheet's variables,このシートの変数
+Double-click a value to change it in the running game. A behavior's own values are shown but not editable.,値をダブルクリックすると実行中のゲームで変更できます。ビヘイビア自身の値は表示されますが編集できません。
+This value,この値
+Expressions over the streamed values. Double-click a row to remove it.,ストリームされた値に対する式。行をダブルクリックすると削除します。
+"Time per fire, busiest first. The last event of a frame is counted but not timed, so it reads ""-"".","発火ごとの時間、多い順。フレームの最後のイベントは数えられますが計測されないため ""-"" と表示されます。"
+Double-click a row to go to that event.,行をダブルクリックするとそのイベントへ移動します。
+More ▸ Set Breakpoint Condition… pauses only when you say so.,その他 ▸ ブレークポイント条件を設定… で、指定したときだけ一時停止します。
+Live Values,ライブ値
+Waiting for a running game…,実行中のゲームを待っています…
+Expressions over the streamed values above. The Debugger's Watch tab shows the same list.,上のストリーム値に対する式。デバッガーの Watch タブにも同じ一覧が表示されます。
+Double-click a value to edit it live.,値をダブルクリックするとライブで編集できます。
+Edit %s's values while it runs,実行中の %s の値を編集
+Streaming · every 0.25 s,ストリーム中 · 0.25 秒ごと
+Streaming from %s · every 0.25 s,%s からストリーム中 · 0.25 秒ごと
+How it got here: %s,ここまでの経緯: %s
+cannot read,読み取れません
+%s is not a streamed value.,%s はストリームされた値ではありません。
+%s = %s   # into the running game; the sheet is not changed,%s = %s   # 実行中のゲームへ。シートは変更されません

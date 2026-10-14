@@ -8517,3 +8517,35 @@ Copy Report,Copiar informe
 Why didn't event %d fire?,¿Por qué no se disparó el evento %d?
 Jump to This Row,Ir a esta fila
 This row has no conditions.,Esta fila no tiene condiciones.
+Nothing is drawn that no run has reported.,No se muestra nada que ninguna ejecución haya informado.
+running,en ejecución
+no run reporting,ninguna ejecución informa
+Live Values on,Valores en vivo activados
+Live Values off,Valores en vivo desactivados
+Event Trace on,Traza de eventos activada
+Event Trace off,Traza de eventos desactivada
+Paused at %s,En pausa en %s
+Debug %s while it runs,Depurar %s mientras se ejecuta
+"Dim rows: this sheet names them, but the run has reported nothing for them yet.","Filas atenuadas: esta hoja las nombra, pero la ejecución aún no ha informado nada sobre ellas."
+Sent,Enviado
+no report,sin informe
+1 value,1 valor
+%d values,%d valores
+This sheet's variables,Variables de esta hoja
+Double-click a value to change it in the running game. A behavior's own values are shown but not editable.,"Haz doble clic en un valor para cambiarlo en el juego en ejecución. Los valores propios de un comportamiento se muestran, pero no se pueden editar."
+This value,Este valor
+Expressions over the streamed values. Double-click a row to remove it.,Expresiones sobre los valores transmitidos. Haz doble clic en una fila para quitarla.
+"Time per fire, busiest first. The last event of a frame is counted but not timed, so it reads ""-"".","Tiempo por disparo, los más ocupados primero. El último evento de un fotograma se cuenta pero no se mide, así que muestra ""-""."
+Double-click a row to go to that event.,Haz doble clic en una fila para ir a ese evento.
+More ▸ Set Breakpoint Condition… pauses only when you say so.,Más ▸ Establecer condición de punto de interrupción… pausa solo cuando tú lo digas.
+Live Values,Valores en vivo
+Waiting for a running game…,Esperando un juego en ejecución…
+Expressions over the streamed values above. The Debugger's Watch tab shows the same list.,Expresiones sobre los valores transmitidos de arriba. La pestaña Watch del depurador muestra la misma lista.
+Double-click a value to edit it live.,Haz doble clic en un valor para editarlo en vivo.
+Edit %s's values while it runs,Editar los valores de %s mientras se ejecuta
+Streaming · every 0.25 s,"Transmitiendo · cada 0,25 s"
+Streaming from %s · every 0.25 s,"Transmitiendo desde %s · cada 0,25 s"
+How it got here: %s,Cómo llegó aquí: %s
+cannot read,no se puede leer
+%s is not a streamed value.,%s no es un valor transmitido.
+%s = %s   # into the running game; the sheet is not changed,%s = %s   # al juego en ejecución; la hoja no cambia

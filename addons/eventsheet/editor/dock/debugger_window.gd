@@ -6,16 +6,19 @@
 # for one window with tabs and found none. So: one window, the names they expect, and every tab a
 # thin view over a seam that was already there.
 #
-#   Inspect      every object type this sheet talks about, its running instances, and - for the one
-#                you pick - its instance variables (EDITABLE, straight into the running game) and
-#                its behaviors' values, over the Live Values stream
-#   Watch        the existing watch box, sharing ONE list of expressions with the Live Values
-#                window rather than keeping a second one that quietly disagrees with it
+#   Inspect      the sheet's own variables, every object type this sheet talks about, and - for the
+#                one you pick - its values (the sheet's are EDITABLE, straight into the running game;
+#                a behavior's are read-only), over the Live Values stream
+#   Watch        the existing watch box, sharing ONE list of expressions (and one table) with the
+#                Live Values window rather than keeping a second one that quietly disagrees with it
 #   Profile      per-event and per-function time from the Event Trace timings, busiest first, with
-#                each row's share of the run
+#                each row's share of the run drawn as a thin bar under it
 #   Trail        what this object's state machine has just done, as past-tense sentences in the
 #                sheet's own grammar, each one a door to the row it names
-#   Breakpoints  the F9 rows, with enable / disable / jump, and where the run is paused right now
+#   Breakpoints  the F9 rows, with enable / disable / jump
+#
+# Over every tab sits the RUN BAND - the sheet, whether a run is reporting, which streams are on, and
+# where the run is paused - so the one fact a reader opened the window for is never a tab away.
 #
 # THE ONE RULE they all obey: nothing is drawn that no run has reported. An empty tab says what to
 # do to fill it ("run the game with Live Values on"), because a table of zeroes and a table of
@@ -39,10 +42,12 @@ const EMPTY_STATES := {
 	"Breakpoints": "No breakpoints. Select a row and press F9 to pause the running game there; More ▸ Set Breakpoint Condition… pauses only when you say so.",
 }
 
-## The Trail tab's two hints. Constants because the preview harness photographs the tab and must
-## show the words the tab really carries, not a second copy of them.
-const TRAIL_HINT: String = "What this object's state machine has done, oldest first - it reads down, like the sheet. Double-click a line to go to the row it names. Each moment is counted off the game's report frames, so it is accurate to a quarter of a second and no finer. The game reports one state per running copy without saying which node sent it, so this describes ONE running object: with several stateful objects alive at once their reports interleave here."
-const TRAIL_PATTERNS_HINT: String = "Read from the trail above and from nothing else."
+## The Trail tab's hint. A constant because the preview harness photographs the tab and must show
+## the words the tab really carries, not a second copy of them.
+const TRAIL_HINT: String = "What this object's state machine has done, oldest first. Double-click a line to go to the row it names."
+
+## What the trail cannot know, on the hint's hover card rather than on screen all the time.
+const TRAIL_LIMITS: String = "Each moment is counted off the game's report frames, so it is accurate to a quarter of a second and no finer. The game reports one state per running copy without saying which node sent it, so this describes ONE running object: with several stateful objects alive at once their reports interleave here."
 
 ## What the patterns list says when the trail raised none - which is the ordinary case, and worth
 ## saying so it does not read as a panel that failed to load.
@@ -55,9 +60,14 @@ const TRAIL_RESTING: String = "No change of state in this run yet."
 var _dock: Control = null
 var window: Window = null
 var tabs: TabContainer = null
-## Inspect: the object/instance tree on the left, the picked instance's values on the right.
+## The run band over the tabs: the sheet, what is streaming, and where the run is paused.
+var band: EventSheetPopupUI.RowBand = null
+## Inspect: the object tree on the left, the picked object's values on the right, and under them the
+## strip that names the value under the cursor and says what an edit sent.
 var objects_tree: Tree = null
 var values_tree: Tree = null
+var value_strip: EventSheetPopupUI.HelpStrip = null
+var _sent_line: Label = null
 var watch_tree: Tree = null
 var watch_input: LineEdit = null
 var profile_tree: Tree = null
@@ -65,8 +75,7 @@ var profile_tree: Tree = null
 var trail_tree: Tree = null
 var trail_patterns_tree: Tree = null
 var breakpoints_tree: Tree = null
-var paused_label: Label = null
-## The object type the reader picked in the Inspect tab, or "" for "whatever this sheet is about".
+## The object the reader picked in the Inspect tab, or "" for the sheet's own variables.
 var _picked_object: String = ""
 ## The last streamed frame, so switching tabs redraws what is on screen instead of blanking it.
 var _last_values: Dictionary = {}
@@ -95,19 +104,28 @@ func open(tab: String = "") -> void:
 	if index >= 0:
 		tabs.current_tab = index
 	refresh()
-	window.popup_centered(Vector2i(720, 520))
+	window.popup_centered(Vector2i(720, 620))
 
 
 func ensure_window() -> void:
 	if window != null:
 		return
 	window = Window.new()
-	window.title = "Debugger"
-	window.size = Vector2i(720, 520)
-	window.close_requested.connect(func() -> void: window.hide())
+	window.title = EventSheetL10n.translate("Debugger")
+	window.size = Vector2i(720, 620)
+	window.close_requested.connect(window.hide)
+	var column: VBoxContainer = VBoxContainer.new()
+	band = EventSheetPopupUI.RowBand.new()
+	band.name = "EventSheetDebuggerRunBand"
+	band.note_label.add_theme_color_override("font_color",
+		EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_WARNING))
+	column.add_child(band)
 	tabs = TabContainer.new()
 	tabs.name = "EventSheetDebuggerTabs"
-	tabs.set_anchors_preset(Control.PRESET_FULL_RECT)
+	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	column.add_child(tabs)
+	column.add_child(EventSheetLiveValuesPanel.footer(window,
+		EventSheetL10n.translate("Nothing is drawn that no run has reported.")))
 	tabs.add_child(_build_inspect_tab())
 	tabs.add_child(_build_watch_tab())
 	tabs.add_child(_build_profile_tab())
@@ -117,9 +135,9 @@ func ensure_window() -> void:
 		tabs.set_tab_title(index, TAB_TITLES[index])
 	tabs.tab_changed.connect(func(_index: int) -> void: refresh())
 	# The margin wrapper is what the window actually holds, so IT is the thing that has to fill the
-	# window - anchoring the TabContainer inside a container that does not fill leaves four tabs in
-	# the top-left corner of an empty window.
-	var margined: MarginContainer = EventSheetPopupUI.margined(tabs)
+	# window - anchoring the column inside a container that does not fill leaves the tabs in the
+	# top-left corner of an empty window.
+	var margined: MarginContainer = EventSheetPopupUI.margined(column)
 	margined.set_anchors_preset(Control.PRESET_FULL_RECT)
 	window.add_child(margined)
 	_dock.add_child(window)
@@ -129,57 +147,112 @@ func ensure_window() -> void:
 	EventSheetL10n.apply_to(window)
 
 
+## A titled card that fills its share of the tab.
+static func _card(title: String, content: Control) -> PanelContainer:
+	var card: PanelContainer = EventSheetPopupUI.titled_card(title, content)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	return card
+
+
+## A two-column table with titles, filling the height it is given.
+static func _table(titles: PackedStringArray) -> Tree:
+	var table: Tree = Tree.new()
+	table.hide_root = true
+	table.columns = titles.size()
+	for index: int in titles.size():
+		table.set_column_title(index, titles[index])
+	table.column_titles_visible = true
+	table.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	table.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(160.0))
+	return table
+
+
+## ── The run band ──────────────────────────────────────────────────────────────────────────────
+## What the band says, as [sheet, state, paused]: the open sheet's file, whether a run is reporting
+## and which of the two streams the sheet asks for, and - only while the game is paused at a row -
+## the row it is paused at. Pure, so the suite pins the sentence without a window.
+static func run_band(file: String, reporting: bool, live_on: bool, trace_on: bool,
+		paused_at: String) -> PackedStringArray:
+	var said: PackedStringArray = PackedStringArray([
+		EventSheetL10n.translate("running") if reporting else EventSheetL10n.translate("no run reporting"),
+		EventSheetL10n.translate("Live Values on") if live_on else EventSheetL10n.translate("Live Values off"),
+		EventSheetL10n.translate("Event Trace on") if trace_on else EventSheetL10n.translate("Event Trace off"),
+	])
+	return PackedStringArray([file, " · ".join(said), "" if paused_at.is_empty()
+		else EventSheetL10n.translate("Paused at %s") % paused_at])
+
+
+func _refresh_band() -> void:
+	var sheet: EventSheetResource = _dock._current_sheet if _dock != null else null
+	var file: String = EventSheetLiveValuesPanel.sheet_file(_dock)
+	window.title = EventSheetL10n.translate("Debugger") if file.is_empty() \
+		else EventSheetL10n.translate("Debug %s while it runs") % file
+	var said: PackedStringArray = run_band(file, not _last_values.is_empty(),
+		sheet != null and sheet.emit_live_values, sheet != null and sheet.emit_event_trace,
+		"" if _dock._paused_row_uid.is_empty() else _paused_text())
+	band.show_row(said[0], said[1], said[2])
+
+
 ## ── Inspect ───────────────────────────────────────────────────────────────────────────────────
 func _build_inspect_tab() -> Control:
+	var page: VBoxContainer = EventSheetPopupUI.form_box()
+	page.name = "Inspect"
 	var split: HSplitContainer = HSplitContainer.new()
-	split.name = "Inspect"
+	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	page.add_child(split)
 	var objects_box: VBoxContainer = EventSheetPopupUI.form_box()
 	objects_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	objects_tree = Tree.new()
-	objects_tree.hide_root = true
-	objects_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	objects_tree.custom_minimum_size = Vector2(0.0, 240.0)
+	objects_tree = _table(PackedStringArray(["", ""]))
+	objects_tree.column_titles_visible = false
+	objects_tree.set_column_expand(1, false)
 	objects_tree.item_selected.connect(_on_object_picked)
 	objects_box.add_child(objects_tree)
-	var objects_card: PanelContainer = EventSheetPopupUI.titled_card("Objects", objects_box)
-	objects_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	objects_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	split.add_child(objects_card)
-	var values_box: VBoxContainer = EventSheetPopupUI.form_box()
-	values_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	values_box.add_child(EventSheetPopupUI.hint_label(
-		"Double-click a value to change it in the running game. A behavior's own values are shown but not editable."))
-	values_tree = Tree.new()
-	values_tree.hide_root = true
-	values_tree.columns = 2
-	values_tree.set_column_title(0, "Variable")
-	values_tree.set_column_title(1, "Value")
-	values_tree.column_titles_visible = true
-	values_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	values_tree.custom_minimum_size = Vector2(0.0, 240.0)
+	objects_box.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate(
+		"Dim rows: this sheet names them, but the run has reported nothing for them yet."), 0.0))
+	split.add_child(_card("Objects", objects_box))
+	values_tree = _table(PackedStringArray(["Variable", "Value"]))
 	values_tree.item_edited.connect(_on_value_edited)
-	values_box.add_child(values_tree)
-	var values_card: PanelContainer = EventSheetPopupUI.titled_card("Instance values", values_box)
-	values_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	values_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	split.add_child(values_card)
-	return split
+	values_tree.item_selected.connect(_describe_value)
+	split.add_child(_card("Instance values", values_tree))
+	value_strip = EventSheetPopupUI.help_strip()
+	_sent_line = value_strip.add_line(EventSheetL10n.translate("Sent"))
+	_describe_value()
+	page.add_child(value_strip)
+	return page
 
 
-## The Objects side of Inspect: one row per object type this sheet talks about, with the values the
-## run reports for it (the "(N)" beside its name counts those values - the stream names behavior
-## sections, never instances), and the sheet's own variables under a row of their own. Derived from the census
-## the Object bar already builds, so the two surfaces never disagree about what this sheet is about.
+## The Objects side of Inspect: first the sheet's own variables, then one row per object type this
+## sheet talks about, with the values the run reports for it (the "(N)" beside its name counts those
+## values - the stream names behavior sections, never instances). Derived from the census the
+## Object bar already builds, so the two surfaces never disagree about what this sheet is about.
+## Each row is {label, key, kind, live, detail}; `key` is "" for the sheet's own row.
 static func object_rows(census: Array, values: Dictionary) -> Array[Dictionary]:
-	var rows: Array[Dictionary] = []
+	var own: PackedStringArray = PackedStringArray(
+		EventSheetLiveValuesPanel.build_display_plan(values).get("plain", []))
+	var own_detail: String = EventSheetL10n.translate("no report")
+	if own.size() == 1:
+		own_detail = EventSheetL10n.translate("1 value")
+	elif own.size() > 1:
+		own_detail = EventSheetL10n.translate("%d values") % own.size()
+	var rows: Array[Dictionary] = [{
+		"label": EventSheetL10n.translate("This sheet's variables"),
+		"key": "",
+		"kind": "sheet",
+		"live": own,
+		"detail": own_detail,
+	}]
 	for entry: Variant in census:
 		var label: String = str((entry as Dictionary).get("label", ""))
 		if label.is_empty():
 			continue
+		var live: PackedStringArray = _live_section_for(label, values)
 		rows.append({
 			"label": label,
+			"key": label,
 			"kind": str((entry as Dictionary).get("kind", "")),
-			"live": _live_section_for(label, values),
+			"live": live,
+			"detail": ("(%d)" % live.size()) if not live.is_empty() else EventSheetL10n.translate("no report"),
 		})
 	return rows
 
@@ -198,54 +271,46 @@ static func _live_section_for(label: String, values: Dictionary) -> PackedString
 
 
 func _refresh_inspect() -> void:
-	if objects_tree == null:
-		return
 	objects_tree.clear()
 	values_tree.clear()
 	var sheet: EventSheetResource = _dock._current_sheet if _dock != null else null
 	if sheet == null:
 		return
-	var census: Array = EventSheetViewportReadingRows.object_census(sheet)
 	var root: TreeItem = objects_tree.create_item()
-	for row: Dictionary in object_rows(census, _last_values):
+	var dim: Color = EventSheetPopupUI.muted_text_color()
+	for row: Dictionary in object_rows(EventSheetViewportReadingRows.object_census(sheet), _last_values):
 		var item: TreeItem = objects_tree.create_item(root)
-		var live: PackedStringArray = row["live"]
-		item.set_text(0, "%s%s" % [str(row["label"]),
-			"" if live.is_empty() else " (%d)" % live.size()])
-		item.set_metadata(0, str(row["label"]))
-		if live.is_empty():
-			item.set_custom_color(0, EventSheetActiveTheme.reading().disabled_row_color)
-		if str(row["label"]) == _picked_object:
+		item.set_text(0, str(row["label"]))
+		item.set_text(1, str(row["detail"]))
+		item.set_custom_color(1, dim)
+		item.set_metadata(0, str(row["key"]))
+		if (row["live"] as PackedStringArray).is_empty():
+			item.set_custom_color(0, dim)
+		if str(row["key"]) == _picked_object:
 			item.select(0)
 	_refresh_values()
 
 
-## The picked object's values: the sheet's own variables when nothing is picked (they are what the
-## sheet is about), or that object's reported section when one is.
+## The picked object's values: the sheet's own variables when the sheet's row is picked (they are
+## what the sheet is about), or that object's reported section when one is - read-only and muted,
+## because a behavior's values are its own.
 func _refresh_values() -> void:
-	if values_tree == null:
-		return
 	values_tree.clear()
 	var root: TreeItem = values_tree.create_item()
 	if _last_values.is_empty():
 		var waiting: TreeItem = values_tree.create_item(root)
 		waiting.set_text(0, EMPTY_STATES["Inspect"])
+		waiting.set_autowrap_mode(0, TextServer.AUTOWRAP_WORD_SMART)
 		waiting.set_selectable(0, false)
 		return
 	var section: PackedStringArray = _live_section_for(_picked_object, _last_values)
-	if _picked_object.is_empty() or section.is_empty():
-		var plan: Dictionary = EventSheetLiveValuesPanel.build_display_plan(_last_values)
-		for key: Variant in (plan.get("plain", []) as Array):
-			var item: TreeItem = values_tree.create_item(root)
-			item.set_text(0, str(key))
-			item.set_text(1, str(_last_values[key]))
-			item.set_editable(1, true)
-		return
-	for key: String in section:
-		var leaf: TreeItem = values_tree.create_item(root)
-		leaf.set_text(0, key.get_slice(".", 1))
-		leaf.set_text(1, str(_last_values[key]))
-		leaf.set_editable(1, false)
+	var keys: Array = Array(section) if not section.is_empty() \
+		else EventSheetLiveValuesPanel.build_display_plan(_last_values).get("plain", [])
+	for key: Variant in keys:
+		var item: TreeItem = values_tree.create_item(root)
+		var dotted: bool = str(key).contains(".")
+		item.set_text(0, str(key).get_slice(".", 1) if dotted else str(key))
+		EventSheetLiveValuesPanel.fill_value_item(item, _last_values[key], dotted)
 
 
 func _on_object_picked() -> void:
@@ -254,54 +319,39 @@ func _on_object_picked() -> void:
 	_refresh_values()
 
 
+## The strip names the value under the cursor and says what double-clicking it does.
+func _describe_value() -> void:
+	var selected: TreeItem = values_tree.get_selected()
+	var said: String = EventSheetL10n.translate(
+		"Double-click a value to change it in the running game. A behavior's own values are shown but not editable.")
+	value_strip.describe(EventSheetL10n.translate("This value"),
+		said if selected == null else "%s: %s" % [selected.get_text(0), said])
+
+
 ## The edit-back path, the same one the Live Values window uses: a changed value is sent into the
-## running game rather than written to the sheet.
+## running game rather than written to the sheet, and the strip says exactly what was sent.
 func _on_value_edited() -> void:
 	var edited: TreeItem = values_tree.get_edited()
-	if edited == null or _dock == null:
-		return
-	var panel: EventSheetLiveValuesPanel = _dock._ensure_live_values_panel()
-	var value: Variant = EventSheetLiveValuesDebugger.parse_edited_value(edited.get_text(1))
-	if panel.debugger != null and panel.debugger.send_set_value(edited.get_text(0), value):
-		_dock._set_status("Live edit: %s = %s sent to the running game." % [edited.get_text(0),
-			str(value)])
-	else:
-		_dock._set_status("Live edit needs a streaming debug session (run the game with Live Values on).", true)
+	if edited != null and _dock != null:
+		value_strip.set_line(_sent_line,
+			_dock._ensure_live_values_panel().send_edit(edited.get_text(0), edited.get_text(1)))
 
 
 ## ── Watch ─────────────────────────────────────────────────────────────────────────────────────
+## The Live Values window's own Watch card, over the same list: one card, two windows.
 func _build_watch_tab() -> Control:
-	var box: VBoxContainer = EventSheetPopupUI.form_box()
-	box.name = "Watch"
-	box.add_child(EventSheetPopupUI.hint_label(
-		"Expressions over the streamed values (double-click a row to remove). The same list the Live Values window shows."))
-	var row: HBoxContainer = HBoxContainer.new()
-	watch_input = LineEdit.new()
-	watch_input.placeholder_text = "e.g. health <= 0"
-	watch_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var card: Dictionary = EventSheetLiveValuesPanel.watch_card(EventSheetL10n.translate(
+		"Expressions over the streamed values. Double-click a row to remove it."), false)
+	(card["root"] as Control).name = "Watch"
+	watch_input = card["input"]
 	watch_input.text_submitted.connect(func(_text: String) -> void: _add_watch())
-	row.add_child(watch_input)
-	var add_button: Button = Button.new()
-	add_button.text = "Watch"
-	add_button.pressed.connect(_add_watch)
-	row.add_child(add_button)
-	box.add_child(row)
-	watch_tree = Tree.new()
-	watch_tree.hide_root = true
-	watch_tree.columns = 2
-	watch_tree.set_column_title(0, "Expression")
-	watch_tree.set_column_title(1, "Value")
-	watch_tree.column_titles_visible = true
-	watch_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	watch_tree.custom_minimum_size = Vector2(0.0, 240.0)
+	(card["button"] as Button).pressed.connect(_add_watch)
+	watch_tree = card["tree"]
 	watch_tree.item_activated.connect(_remove_watch)
-	box.add_child(watch_tree)
-	return box
+	return card["root"]
 
 
 func _add_watch() -> void:
-	if watch_input == null or _dock == null:
-		return
 	_dock._ensure_live_values_panel().add_watch(watch_input.text)
 	watch_input.clear()
 	_refresh_watch()
@@ -309,55 +359,31 @@ func _add_watch() -> void:
 
 func _remove_watch() -> void:
 	var selected: TreeItem = watch_tree.get_selected()
-	if selected == null or _dock == null:
-		return
-	_dock._ensure_live_values_panel().remove_watch(str(selected.get_metadata(0)))
-	_refresh_watch()
+	if selected != null and selected.get_metadata(0) is String:
+		_dock._ensure_live_values_panel().remove_watch(str(selected.get_metadata(0)))
+		_refresh_watch()
 
 
 func _refresh_watch() -> void:
-	if watch_tree == null or _dock == null:
-		return
-	watch_tree.clear()
-	var root: TreeItem = watch_tree.create_item()
-	for expression: String in _dock._ensure_live_values_panel().watches():
-		var item: TreeItem = watch_tree.create_item(root)
-		item.set_text(0, expression)
-		item.set_metadata(0, expression)
-		if _last_values.is_empty():
-			item.set_text(1, "-")
-			continue
-		var verdict: Dictionary = EventSheetLiveValuesPanel.evaluate_watch(expression, _last_values)
-		if bool(verdict.get("ok", false)):
-			item.set_text(1, str(verdict.get("value")))
-		else:
-			item.set_text(1, "⚠ %s" % str(verdict.get("error", "error")))
+	EventSheetLiveValuesPanel.fill_watch_tree(watch_tree,
+		_dock._ensure_live_values_panel().watches(), _last_values)
 
 
 ## ── Profile ───────────────────────────────────────────────────────────────────────────────────
 func _build_profile_tab() -> Control:
 	var box: VBoxContainer = EventSheetPopupUI.form_box()
 	box.name = "Profile"
-	box.add_child(EventSheetPopupUI.hint_label(
-		"Time per fire, busiest first. A fire is timed by how long it ran before the next event started in the same frame, so the last event of a frame is counted but not timed - it reads \"-\" rather than 0."))
-	profile_tree = Tree.new()
-	profile_tree.hide_root = true
-	profile_tree.columns = 4
-	profile_tree.set_column_title(0, "Event")
-	profile_tree.set_column_title(1, "Per fire")
-	profile_tree.set_column_title(2, "Share of run")
-	profile_tree.set_column_title(3, "Fires")
-	profile_tree.column_titles_visible = true
-	profile_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	profile_tree.custom_minimum_size = Vector2(0.0, 240.0)
-	profile_tree.item_activated.connect(_jump_to_profile_row)
+	box.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate(
+		"Time per fire, busiest first. The last event of a frame is counted but not timed, so it reads \"-\"."), 0.0))
+	profile_tree = _table(PackedStringArray(["Event", "Per fire", "Share", "Fires"]))
+	profile_tree.item_activated.connect(_jump_to_selected.bind(profile_tree))
 	box.add_child(profile_tree)
+	box.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate(
+		"Double-click a row to go to that event."), 0.0))
 	return box
 
 
 func _refresh_profile() -> void:
-	if profile_tree == null:
-		return
 	profile_tree.clear()
 	var root: TreeItem = profile_tree.create_item()
 	if not EventSheetTraceTimings.has_run():
@@ -365,18 +391,38 @@ func _refresh_profile() -> void:
 		empty.set_text(0, EMPTY_STATES["Profile"])
 		empty.set_selectable(0, false)
 		return
-	var numbers: Dictionary = _event_numbers()
-	for row: Dictionary in EventSheetTraceTimings.rows(numbers):
+	var rows: Array[Dictionary] = EventSheetTraceTimings.rows(_event_numbers())
+	var busiest: float = 0.0
+	for row: Dictionary in rows:
+		busiest = maxf(busiest, float(row.get("share", 0.0)))
+	for row: Dictionary in rows:
 		var item: TreeItem = profile_tree.create_item(root)
 		var number: int = int(row.get("event_number", 0))
+		var share: float = float(row.get("share", 0.0))
+		var hot: bool = EventSheetTraceHitCounts.is_hot(str(row.get("uid", "")))
+		var tone: Color = EventSheetActiveTheme.reading().debugger_accent_color if hot \
+			else EventSheetPopupUI.muted_text_color()
+		item.set_cell_mode(0, TreeItem.CELL_MODE_CUSTOM)
+		item.custom_minimum_height = int(EventSheetPalette.scaled_f(28.0))
 		item.set_text(0, ("event %d" % number) if number > 0 else str(row.get("uid", "")))
 		item.set_metadata(0, str(row.get("uid", "")))
+		item.set_custom_draw_callback(0, _draw_share_bar.bind(
+			share / busiest if busiest > 0.0 else 0.0, tone))
 		var ms: float = float(row.get("ms", -1.0))
 		item.set_text(1, "-" if ms < 0.0 else "%.2f ms" % ms)
-		item.set_text(2, "%d%%" % int(round(float(row.get("share", 0.0)) * 100.0)))
+		item.set_text(2, "%d%%" % int(round(share * 100.0)))
 		item.set_text(3, EventSheetTraceHitCounts.format_count(int(row.get("calls", 0))))
-		if EventSheetTraceHitCounts.is_hot(str(row.get("uid", ""))):
-			item.set_custom_color(0, EventSheetActiveTheme.reading().debugger_accent_color)
+		if hot:
+			item.set_custom_color(0, tone)
+
+
+## The thin share bar under an event's name: as long as its share of the run against the busiest
+## event's, so the table's shape reads before a number is.
+func _draw_share_bar(_item: TreeItem, rect: Rect2, fraction: float, tone: Color) -> void:
+	var pad: float = EventSheetPalette.scaled_f(4.0)
+	var height: float = EventSheetPalette.scaled_f(2.0)
+	profile_tree.draw_rect(Rect2(rect.position.x + pad, rect.end.y - height,
+		(rect.size.x - pad * 2.0) * clampf(fraction, 0.0, 1.0), height), tone)
 
 
 ## uid -> the event number the sheet shows, for every event of the open sheet. The profile speaks
@@ -395,10 +441,12 @@ func _event_numbers() -> Dictionary:
 	return numbers
 
 
-func _jump_to_profile_row() -> void:
-	var selected: TreeItem = profile_tree.get_selected()
+## Going to a row from a list is a jump, never a pause: the run band says "Paused at" only when the
+## game itself said so.
+func _jump_to_selected(table: Tree) -> void:
+	var selected: TreeItem = table.get_selected()
 	if selected != null and _dock != null:
-		_dock.reveal_paused_row(str(selected.get_metadata(0)))
+		_dock.reveal_event_row(str(selected.get_metadata(0)))
 
 
 ## ── Trail ─────────────────────────────────────────────────────────────────────────────────────
@@ -411,19 +459,19 @@ func _jump_to_profile_row() -> void:
 static func build_trail_body() -> Dictionary:
 	var box: VBoxContainer = EventSheetPopupUI.form_box()
 	box.name = "Trail"
-	box.add_child(EventSheetPopupUI.hint_label(TRAIL_HINT))
+	var hint: Label = EventSheetPopupUI.hint_label(TRAIL_HINT, 0.0)
+	hint.tooltip_text = TRAIL_LIMITS
+	hint.mouse_filter = Control.MOUSE_FILTER_PASS
+	box.add_child(hint)
 	var sentences: Tree = Tree.new()
 	sentences.hide_root = true
 	sentences.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	sentences.custom_minimum_size = Vector2(0.0, 200.0)
+	sentences.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(200.0))
 	box.add_child(sentences)
-	var patterns_box: VBoxContainer = EventSheetPopupUI.form_box()
-	patterns_box.add_child(EventSheetPopupUI.hint_label(TRAIL_PATTERNS_HINT))
 	var patterns: Tree = Tree.new()
 	patterns.hide_root = true
-	patterns.custom_minimum_size = Vector2(0.0, 128.0)
-	patterns_box.add_child(patterns)
-	box.add_child(EventSheetPopupUI.titled_card("What this trail shows", patterns_box))
+	patterns.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(128.0))
+	box.add_child(EventSheetPopupUI.titled_card("What this trail shows", patterns))
 	return {"root": box, "sentences": sentences, "patterns": patterns}
 
 
@@ -431,8 +479,8 @@ func _build_trail_tab() -> Control:
 	var body: Dictionary = build_trail_body()
 	trail_tree = body["sentences"]
 	trail_patterns_tree = body["patterns"]
-	trail_tree.item_activated.connect(_jump_to_trail_row)
-	trail_patterns_tree.item_activated.connect(_jump_to_trail_pattern)
+	trail_tree.item_activated.connect(_jump_to_selected.bind(trail_tree))
+	trail_patterns_tree.item_activated.connect(_jump_to_selected.bind(trail_patterns_tree))
 	return body["root"]
 
 
@@ -487,46 +535,25 @@ static func fill_trail(sentences: Tree, patterns: Tree, ring: Array, rows: Dicti
 
 
 func _refresh_trail() -> void:
-	if trail_tree == null:
-		return
 	fill_trail(trail_tree, trail_patterns_tree, EventSheetStateTrail.all_entries(),
 		EventSheetStateFacts.trail_rows(_dock._current_sheet if _dock != null else null),
 		EventSheetStateTrail.has_run(), EventSheetStateWatch.band_reading(),
 		str(_dock._current_sheet_path) if _dock != null else "")
 
 
-func _jump_to_trail_row() -> void:
-	var selected: TreeItem = trail_tree.get_selected()
-	if selected != null and _dock != null:
-		_dock.reveal_event_row(str(selected.get_metadata(0)))
-
-
-func _jump_to_trail_pattern() -> void:
-	var selected: TreeItem = trail_patterns_tree.get_selected()
-	if selected != null and _dock != null:
-		_dock.reveal_event_row(str(selected.get_metadata(0)))
-
-
 ## ── Breakpoints ───────────────────────────────────────────────────────────────────────────────
 func _build_breakpoints_tab() -> Control:
 	var box: VBoxContainer = EventSheetPopupUI.form_box()
 	box.name = "Breakpoints"
-	paused_label = Label.new()
-	paused_label.name = "EventSheetDebuggerPaused"
-	box.add_child(paused_label)
 	box.add_child(EventSheetPopupUI.hint_label(
-		"Tick to arm a row, untick to leave it in place but inactive; double-click to go to it."))
-	breakpoints_tree = Tree.new()
-	breakpoints_tree.hide_root = true
-	breakpoints_tree.columns = 2
-	breakpoints_tree.set_column_title(0, "On")
-	breakpoints_tree.set_column_title(1, "Event")
-	breakpoints_tree.column_titles_visible = true
-	breakpoints_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	breakpoints_tree.custom_minimum_size = Vector2(0.0, 240.0)
+		"Tick to arm a row, untick to leave it in place but inactive; double-click to go to it.", 0.0))
+	breakpoints_tree = _table(PackedStringArray(["On", "Event"]))
+	breakpoints_tree.set_column_expand(0, false)
 	breakpoints_tree.item_edited.connect(_on_breakpoint_toggled)
-	breakpoints_tree.item_activated.connect(_jump_to_breakpoint)
+	breakpoints_tree.item_activated.connect(_jump_to_selected.bind(breakpoints_tree))
 	box.add_child(breakpoints_tree)
+	box.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate(
+		"More ▸ Set Breakpoint Condition… pauses only when you say so."), 0.0))
 	return box
 
 
@@ -563,11 +590,7 @@ static func breakpoint_text(row: Dictionary) -> String:
 
 
 func _refresh_breakpoints() -> void:
-	if breakpoints_tree == null:
-		return
 	breakpoints_tree.clear()
-	paused_label.text = "" if _dock._paused_row_uid.is_empty() else \
-		"⏸ Paused at %s" % _paused_text()
 	var root: TreeItem = breakpoints_tree.create_item()
 	var view: EventSheetViewport = _dock._active_view() if _dock != null else null
 	var rows: Array[Dictionary] = breakpoint_rows(view.get_flat_rows() if view != null else [],
@@ -597,8 +620,8 @@ func listed_uids() -> Dictionary:
 
 
 func _paused_text() -> String:
-	for row: Dictionary in breakpoint_rows(
-			_dock._active_view().get_flat_rows() if _dock._active_view() != null else []):
+	var view: EventSheetViewport = _dock._active_view()
+	for row: Dictionary in breakpoint_rows(view.get_flat_rows() if view != null else []):
 		if str(row.get("uid", "")) == _dock._paused_row_uid:
 			return breakpoint_text(row)
 	return _dock._paused_row_uid
@@ -640,12 +663,6 @@ func set_breakpoint_armed(uid: String, armed: bool) -> bool:
 	return changed
 
 
-func _jump_to_breakpoint() -> void:
-	var selected: TreeItem = breakpoints_tree.get_selected()
-	if selected != null and _dock != null:
-		_dock.reveal_paused_row(str(selected.get_metadata(0)))
-
-
 ## ── The feeds ─────────────────────────────────────────────────────────────────────────────────
 ## One streamed values frame. Held even while the window is closed, so opening it mid-run shows the
 ## run rather than an empty table.
@@ -663,11 +680,12 @@ func clear_live_values() -> void:
 		refresh()
 
 
-## Redraws whichever tab is showing. Only that one: rebuilding four trees on every 0.25 s frame
-## would spend the reader's editor on three tables nobody is looking at.
+## Redraws the band and whichever tab is showing. Only that one: rebuilding four trees on every
+## 0.25 s frame would spend the reader's editor on three tables nobody is looking at.
 func refresh() -> void:
 	if tabs == null:
 		return
+	_refresh_band()
 	match tabs.current_tab:
 		0:
 			_refresh_inspect()

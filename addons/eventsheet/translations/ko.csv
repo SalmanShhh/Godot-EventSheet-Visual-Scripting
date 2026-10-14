@@ -8517,3 +8517,35 @@ Copy Report,보고서 복사
 Why didn't event %d fire?,이벤트 %d이(가) 실행되지 않은 이유는?
 Jump to This Row,이 행으로 이동
 This row has no conditions.,이 행에는 조건이 없습니다.
+Nothing is drawn that no run has reported.,실행이 보고하지 않은 것은 아무것도 표시되지 않습니다.
+running,실행 중
+no run reporting,보고 중인 실행 없음
+Live Values on,실시간 값 켜짐
+Live Values off,실시간 값 꺼짐
+Event Trace on,이벤트 추적 켜짐
+Event Trace off,이벤트 추적 꺼짐
+Paused at %s,%s에서 일시 정지됨
+Debug %s while it runs,실행 중인 %s 디버그
+"Dim rows: this sheet names them, but the run has reported nothing for them yet.","흐린 행: 이 시트가 이름을 부르지만, 실행이 아직 아무것도 보고하지 않았습니다."
+Sent,보냄
+no report,보고 없음
+1 value,값 1개
+%d values,값 %d개
+This sheet's variables,이 시트의 변수
+Double-click a value to change it in the running game. A behavior's own values are shown but not editable.,값을 더블클릭하면 실행 중인 게임에서 변경합니다. 비헤이비어 자체의 값은 표시되지만 편집할 수 없습니다.
+This value,이 값
+Expressions over the streamed values. Double-click a row to remove it.,스트리밍된 값에 대한 식입니다. 행을 더블클릭하면 제거합니다.
+"Time per fire, busiest first. The last event of a frame is counted but not timed, so it reads ""-"".","발동당 시간, 가장 바쁜 것부터. 프레임의 마지막 이벤트는 세지만 측정하지 않으므로 ""-""로 표시됩니다."
+Double-click a row to go to that event.,행을 더블클릭하면 해당 이벤트로 이동합니다.
+More ▸ Set Breakpoint Condition… pauses only when you say so.,더 보기 ▸ 중단점 조건 설정…은 원할 때만 일시 정지합니다.
+Live Values,실시간 값
+Waiting for a running game…,실행 중인 게임을 기다리는 중…
+Expressions over the streamed values above. The Debugger's Watch tab shows the same list.,위의 스트리밍된 값에 대한 식입니다. 디버거의 Watch 탭에도 같은 목록이 표시됩니다.
+Double-click a value to edit it live.,값을 더블클릭하면 실시간으로 편집합니다.
+Edit %s's values while it runs,실행 중인 %s의 값 편집
+Streaming · every 0.25 s,스트리밍 중 · 0.25초마다
+Streaming from %s · every 0.25 s,%s에서 스트리밍 중 · 0.25초마다
+How it got here: %s,여기까지 온 경로: %s
+cannot read,읽을 수 없음
+%s is not a streamed value.,%s은(는) 스트리밍된 값이 아닙니다.
+%s = %s   # into the running game; the sheet is not changed,%s = %s   # 실행 중인 게임으로; 시트는 변경되지 않음

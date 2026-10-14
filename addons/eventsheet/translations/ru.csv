@@ -8517,3 +8517,35 @@ Copy Report,Копировать отчёт
 Why didn't event %d fire?,Почему событие %d не сработало?
 Jump to This Row,Перейти к этой строке
 This row has no conditions.,У этой строки нет условий.
+Nothing is drawn that no run has reported.,"Не показывается ничего, о чём не сообщил запуск."
+running,запущено
+no run reporting,нет отчёта от запуска
+Live Values on,Живые значения вкл.
+Live Values off,Живые значения выкл.
+Event Trace on,Трассировка событий вкл.
+Event Trace off,Трассировка событий выкл.
+Paused at %s,Пауза на %s
+Debug %s while it runs,Отладка %s во время работы
+"Dim rows: this sheet names them, but the run has reported nothing for them yet.","Тусклые строки: этот лист их называет, но запуск о них ещё ничего не сообщил."
+Sent,Отправлено
+no report,нет отчёта
+1 value,1 значение
+%d values,значений: %d
+This sheet's variables,Переменные этого листа
+Double-click a value to change it in the running game. A behavior's own values are shown but not editable.,"Дважды щёлкните значение, чтобы изменить его в запущенной игре. Собственные значения поведения показаны, но не редактируются."
+This value,Это значение
+Expressions over the streamed values. Double-click a row to remove it.,"Выражения над передаваемыми значениями. Дважды щёлкните строку, чтобы удалить её."
+"Time per fire, busiest first. The last event of a frame is counted but not timed, so it reads ""-"".","Время на срабатывание, самые загруженные первыми. Последнее событие кадра считается, но не замеряется, поэтому показывает ""-""."
+Double-click a row to go to that event.,"Дважды щёлкните строку, чтобы перейти к этому событию."
+More ▸ Set Breakpoint Condition… pauses only when you say so.,Ещё ▸ Задать условие точки останова… ставит на паузу только когда вы скажете.
+Live Values,Живые значения
+Waiting for a running game…,Ожидание запущенной игры…
+Expressions over the streamed values above. The Debugger's Watch tab shows the same list.,Выражения над передаваемыми значениями выше. Вкладка Watch отладчика показывает тот же список.
+Double-click a value to edit it live.,"Дважды щёлкните значение, чтобы изменить его на лету."
+Edit %s's values while it runs,Правка значений %s во время работы
+Streaming · every 0.25 s,"Передача · каждые 0,25 с"
+Streaming from %s · every 0.25 s,"Передача из %s · каждые 0,25 с"
+How it got here: %s,Как сюда попало: %s
+cannot read,не читается
+%s is not a streamed value.,%s не является передаваемым значением.
+%s = %s   # into the running game; the sheet is not changed,%s = %s   # в запущенную игру; лист не меняется

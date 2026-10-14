@@ -58,6 +58,8 @@ const DIALOG_FILES: Array[String] = [
 	"res://addons/eventsheet/editor/dock/test_report_panel.gd",
 	"res://addons/eventsheet/editor/dock/loose_ends_panel.gd",
 	"res://addons/eventsheet/editor/docs/doc_why_panel.gd",
+	"res://addons/eventsheet/editor/dock/debugger_window.gd",
+	"res://addons/eventsheet/editor/dock/live_values_panel.gd",
 ]
 
 
