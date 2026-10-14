@@ -28,6 +28,20 @@
   which takes about 2,500 lines of GDScript (six files) off the enable path. Enabling the plugin
   measured 703 to 1,289 ms before and 495 to 655 ms after on the same busy machine.
 
+### Added: the sheet panels say more and read in both themes
+
+- **Outline**: a Filter box narrows a long outline to the entries that hold the typed words, keeping
+  the folder each match lives in. Groups and the "To do" folder wear the FileSystem dock's folder
+  icon instead of a "▸" mark; a region and a function keep their "#" and "ƒ".
+- **Sheet map**: a key under the picture names each kind of box and line in the colour it is drawn
+  in, and Reset Layout puts every dragged box back in its column and forgets where it was dragged.
+- **Bookmarks**: a numbered entry leads with its event number and only an unnumbered one (a comment,
+  a group) wears the star; the foot says bookmarks last for this session only.
+- **History**: the first line reads "Opened player.gd" (the sheet's own file) instead of "Before
+  these edits".
+- Fixed: the History steps, the Outline kinds and the Bookmarks sheet header no longer keep their
+  dark-theme colours on a light editor theme, where the History text all but vanished.
+
 ### Fixed: a global made as a scene is found wherever the scene lives
 
 - An autoload that points at a scene whose root node carries the script - the way many existing

@@ -5,7 +5,8 @@
 # Find that explains it. A box is as wide as the name in it, because the map is a picture of names.
 # Boxes lay themselves out in columns by kind and can be dragged, and where
 # you drag one is remembered per project in editor metadata - the picture is derived, the
-# arrangement is yours.
+# arrangement is yours, and Reset Layout gives it back. A key under the picture names each kind of
+# box and line in its own colour.
 @tool
 class_name EventSheetSheetMapPanel
 extends RefCounted
@@ -33,6 +34,10 @@ var _dock: Control = null
 var window: Window = null
 var canvas: Control = null
 var summary_label: Label = null
+## The key under the picture: each kind of box and line named in the colour it is drawn in.
+var legend: HBoxContainer = null
+## Puts every dragged box back in its column and forgets where it was dragged.
+var reset_button: Button = null
 
 ## The graph as drawn: {nodes, edges, skipped} from EventSheetSheetMap.
 var found: Dictionary = {}
@@ -130,6 +135,23 @@ func build() -> void:
 	body_box.add_child(scroll)
 	summary_label = EventSheetPopupUI.hint_label(
 		"Click a sheet to open it. Click a line to find every place it comes from.", 640.0)
+	legend = HBoxContainer.new()
+	legend.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(12.0)))
+	for words: String in [EventSheetL10n.translate("sheet"), EventSheetL10n.translate("scene"),
+			EventSheetL10n.translate("global"), EventSheetL10n.translate("calls · includes · Go to layout"),
+			EventSheetL10n.translate("signals")]:
+		var key: Label = Label.new()
+		key.text = words
+		legend.add_child(key)
+	var spacer: Control = Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	legend.add_child(spacer)
+	reset_button = Button.new()
+	reset_button.text = EventSheetL10n.translate("Reset Layout")
+	reset_button.tooltip_text = EventSheetL10n.translate("Put every box back in its column and forget where it was dragged.")
+	reset_button.pressed.connect(reset_layout)
+	legend.add_child(reset_button)
+	body_box.add_child(legend)
 	body_box.add_child(summary_label)
 
 
@@ -146,15 +168,31 @@ func refresh() -> void:
 	widths = label_widths(found.get("nodes", []) as Array, _map_font(), _map_font_size(),
 		EventSheetPalette.scaled_f(1.0))
 	positions = default_positions(found.get("nodes", []) as Array, widths)
-	for id: String in _remembered_positions():
+	var remembered: Dictionary = _remembered_positions()
+	for id: String in remembered:
 		if positions.has(id):
-			positions[id] = _remembered_positions()[id]
+			positions[id] = remembered[id]
+	dress_legend(remembered.is_empty())
 	if summary_label != null:
 		summary_label.text = "%s. Click a sheet to open it. Click a line to find every place it comes from." \
 			% EventSheetSheetMap.summary(found)
 	if canvas != null:
 		canvas.custom_minimum_size = _canvas_extent()
 		canvas.queue_redraw()
+
+
+## Colours the key's words with the active theme's box and line colours (opaque, and readable on
+## the window's own panel), and offers Reset Layout only when there is a dragged box to forget.
+func dress_legend(nothing_dragged: bool) -> void:
+	if legend == null:
+		return
+	var chrome: EventSheetChromeStyle = EventSheetActiveTheme.chrome()
+	var inks: Array[Color] = [chrome.sheet_map_sheet_color, chrome.sheet_map_scene_color,
+		chrome.sheet_map_global_color, chrome.sheet_map_edge_color, chrome.sheet_map_signal_edge_color]
+	for index: int in inks.size():
+		(legend.get_child(index) as Label).add_theme_color_override("font_color",
+			EventSheetPopupUI.readable_on_panel(Color(inks[index], 1.0)))
+	reset_button.disabled = nothing_dragged
 
 
 func _canvas_extent() -> Vector2:
@@ -299,7 +337,9 @@ func _on_canvas_input(event: InputEvent) -> void:
 			# A press that never moved is a CLICK, and a click on a box opens that sheet - which is
 			# what the box is for. A press that moved is a rearrangement, and it is remembered.
 			if _drag_moved:
-				_remember_positions()
+				_remember_positions(positions)
+				if reset_button != null:
+					reset_button.disabled = false
 			else:
 				_open_node(released_id)
 			return
@@ -380,7 +420,13 @@ func _remembered_positions() -> Dictionary:
 	return EditorInterface.get_editor_settings().get_project_metadata("eventsheets", LAYOUT_META, {})
 
 
-func _remember_positions() -> void:
+func _remember_positions(placed: Dictionary) -> void:
 	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
 		return
-	EditorInterface.get_editor_settings().set_project_metadata("eventsheets", LAYOUT_META, positions)
+	EditorInterface.get_editor_settings().set_project_metadata("eventsheets", LAYOUT_META, placed)
+
+
+## Reset Layout: the boxes go back to their columns and the dragged places are forgotten.
+func reset_layout() -> void:
+	_remember_positions({})
+	refresh()

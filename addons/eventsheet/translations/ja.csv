@@ -7361,7 +7361,6 @@ AI request could not start (%s). Nothing was sent.,AI リクエストを開始�
 Clear All Bookmarks,すべてのブックマークを消去
 "Remove every bookmark from this sheet? Bookmarks are not part of undo, so they cannot be brought back.",このシートのブックマークをすべて削除しますか? ブックマークは元に戻すの対象外なので、復元できません。
 Keep Bookmarks,ブックマークを残す
-Before these edits,これらの編集の前
 Not saved.,保存されていません。
 "%d mode(s) declared. The On entering event of %s holds rows of your own, so it was kept - move or delete it, since that mode is gone.",%d 個のモードを宣言。%s の「入ったとき」イベントにはあなた自身の行があるため残しました - そのモードはもうないので、移動または削除してください。
 """%s"" isn't a usable class name - use letters/digits/underscore starting with a letter, and not a reserved or existing class name.","""%s"" は使えるクラス名ではありません - 文字で始まる文字/数字/アンダースコアを使い、予約済みや既存のクラス名は避けてください。"
@@ -8478,3 +8477,10 @@ Runs when an event calls it.,イベントが呼び出したときに実行され
 No description yet.,まだ説明がありません。
 Reads as: %s,表示: %s
 Double-click the name to edit the description.,名前をダブルクリックすると説明を編集できます。
+Opened %s,%s を開いた
+Bookmarks last for this session only.,ブックマークはこのセッションの間だけ残ります。
+sheet,シート
+signals,シグナル
+calls · includes · Go to layout,呼び出し · インクルード · レイアウトへ移動
+Reset Layout,配置をリセット
+Put every box back in its column and forget where it was dragged.,すべてのボックスを元の列に戻し、ドラッグした位置を忘れます。

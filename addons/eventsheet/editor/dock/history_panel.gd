@@ -3,8 +3,8 @@
 # Every edit you have made to this sheet, in the sheet's own words, newest last. Godot's own History
 # dock lists the same steps under their internal names; this one lists them the way the sheet named
 # them when it made them ("Add Group", "Extract to Function", "Move Variable Up"), with the event
-# they landed on beside them. Click one to undo or redo back to it (the first line is the sheet as it
-# was before any of them); hover one to see the rows it touched lit up on the canvas.
+# they landed on beside them. Click one to undo or redo back to it (the first line, "Opened", is the
+# sheet as it was before any of them); hover one to see the rows it touched lit up on the canvas.
 #
 # The log is the dock's own: it is written by the one funnel every sheet edit goes through, and the
 # cursor follows the snapshots that funnel restores - so Ctrl+Z from anywhere, the toolbar arrows
@@ -16,9 +16,6 @@ extends RefCounted
 ## The mark in front of an entry: applied, or undone and waiting to be redone.
 const MARK_APPLIED := "• "
 const MARK_UNDONE := "◦ "
-
-const COLOR_APPLIED := Color("#dfe4ec")
-const COLOR_UNDONE := Color("#8a90a0")
 
 ## The metadata of the list's first line, the sheet before any listed edit: travelling to it undoes
 ## every one of them.
@@ -182,8 +179,8 @@ func refresh() -> void:
 	# just after the first edit and no further.
 	if not entries.is_empty():
 		var start: TreeItem = tree.create_item(root)
-		start.set_text(0, MARK_APPLIED + EventSheetL10n.translate("Before these edits"))
-		start.set_custom_color(0, COLOR_APPLIED)
+		start.set_text(0, MARK_APPLIED + EventSheetL10n.translate("Opened %s") % _sheet_file())
+		start.set_custom_color(0, EventSheetPopupUI.text_color())
 		start.set_metadata(0, START_INDEX)
 	for index: int in entries.size():
 		var entry: Dictionary = entries[index]
@@ -191,10 +188,17 @@ func refresh() -> void:
 		var item: TreeItem = tree.create_item(root)
 		item.set_text(0, (MARK_UNDONE if undone else MARK_APPLIED) + entry_label(
 			str(entry.get("label", "")), int(entry.get("event_number", 0)), undone))
-		item.set_custom_color(0, COLOR_UNDONE if undone else COLOR_APPLIED)
+		# The theme's own text and muted text, so an undone step reads quieter on a light panel too.
+		item.set_custom_color(0, EventSheetPopupUI.muted_text_color() if undone else EventSheetPopupUI.text_color())
 		item.set_metadata(0, index)
 	if _empty_hint != null:
 		_empty_hint.visible = entries.is_empty()
+
+
+## The sheet's file as the tab names it, or "this sheet" before it has one.
+func _sheet_file() -> String:
+	var path: String = str(_dock.get("_current_sheet_path")) if _dock != null and "_current_sheet_path" in _dock else ""
+	return path.get_file() if not path.is_empty() else EventSheetL10n.translate("this sheet")
 
 
 ## Click = travel: undo back to the step before this one, or redo forward to it. The steps in

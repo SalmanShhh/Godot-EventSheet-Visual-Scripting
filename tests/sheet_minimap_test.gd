@@ -159,8 +159,8 @@ static func _history_travels_back_to_before_the_first_edit() -> bool:
 	panel.record("Add Blank Event", _sheet(["a"]), first_after, 1)
 	panel.record("Add Group", first_after, _sheet(["a", "b", "c"]), 2)
 	var first_line: TreeItem = panel.tree.get_root().get_first_child()
-	passed = _check("the list opens with the sheet before these edits",
-		first_line.get_text(0), "• Before these edits") and passed
+	passed = _check("the list opens with the sheet as it was opened",
+		first_line.get_text(0), "• Opened this sheet") and passed
 	# What a click on the line does (the selection handler, without a Tree selection that the
 	# rebuild would free mid-signal in a headless run).
 	panel.travel_to(int(first_line.get_metadata(0)) + 1)
@@ -178,7 +178,19 @@ static func _history_lights_rows_on_hover_not_on_click() -> bool:
 	var panel: EventSheetHistoryPanel = editor._ensure_history_panel()
 	panel.build()
 	panel.record("Add Group", _sheet(["a"]), _sheet(["a", "c"]), 1)
+	editor._current_sheet_path = "res://levels/player.gd"
+	panel.refresh()
+	passed = _check("the first line names the file the sheet was opened from",
+		panel.tree.get_root().get_first_child().get_text(0), "• Opened player.gd") and passed
 	var entry_line: TreeItem = panel.tree.get_root().get_first_child().get_next()
+	panel.cursor = 0
+	panel.refresh()
+	passed = _check("the steps read in the theme's own text, an undone one in its muted text",
+		[panel.tree.get_root().get_first_child().get_custom_color(0), panel.tree.get_root().get_child(1).get_custom_color(0)],
+		[EventSheetPopupUI.text_color(), EventSheetPopupUI.muted_text_color()]) and passed
+	panel.cursor = 1
+	panel.refresh()
+	entry_line = panel.tree.get_root().get_first_child().get_next()
 	# Selected without travelling, so the click below is the only thing that could light rows.
 	panel.tree.item_selected.disconnect(panel._on_entry_selected)
 	entry_line.select(0)

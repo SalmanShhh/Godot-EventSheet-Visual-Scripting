@@ -60,7 +60,15 @@ static func run() -> bool:
 	all_passed = _check("the first outline item is the region", first.get_text(0), "# Setup") and all_passed
 	var group_item: TreeItem = first.get_next()
 	all_passed = _check("the group item follows with its jump target", group_item.get_metadata(0), combat) and all_passed
-	all_passed = _check("the nested group indents under its parent", group_item.get_first_child().get_text(0), "▸ Bosses") and all_passed
+	all_passed = _check("the nested group indents under its parent", group_item.get_first_child().get_text(0), "Bosses") and all_passed
+	# The filter narrows the tree to what holds the words, keeping the folder a match lives in.
+	panel.filter_edit.text = "boss"
+	panel.refresh()
+	first = editor._outline_tree.get_root().get_first_child()
+	group_item = first.get_next()
+	all_passed = _check("a filter hides what does not hold its words but keeps the folder above a match",
+		[first.visible, group_item.visible, group_item.get_first_child().visible, group_item.get_next().visible],
+		[false, true, true, false]) and all_passed
 	all_passed = _check("the function closes the outline", group_item.get_next().get_text(0), "ƒ heal") and all_passed
 	editor.free()
 
@@ -82,8 +90,15 @@ static func run() -> bool:
 	all_passed = _check("a sub-event region stays TOP-LEVEL, never under the unrelated group",
 		int(nested_entry.get("parent", -99)), -1) and all_passed
 
-	all_passed = _check("a note reads as its words (its mark is an editor icon, not an emoji)",
-		EventSheetOutlinePanel._entry_prefix("todo"), "") and all_passed
+	all_passed = _check("groups and notes wear editor icons; a region and a function keep their code marks",
+		[EventSheetOutlinePanel.KINDS["group"][2], EventSheetOutlinePanel.KINDS["todo_folder"][2],
+			EventSheetOutlinePanel.KINDS["todo"], EventSheetOutlinePanel.KINDS["region"][0],
+			EventSheetOutlinePanel.KINDS["function"][0]],
+		["Folder", "Folder", ["", Color("#8b91a3"), "NodeInfo"], "# ", "ƒ "]) and all_passed
+	all_passed = _check("a filter keeps each match and every folder above it, in any case",
+		EventSheetOutlinePanel.filter_matches(entries, "BOSS"), [false, true, true, false]) and all_passed
+	all_passed = _check("an empty filter keeps everything",
+		EventSheetOutlinePanel.filter_matches(entries, "  "), [true, true, true, true]) and all_passed
 	all_passed = _jumps_land_in_the_active_pane() and all_passed
 	return all_passed
 

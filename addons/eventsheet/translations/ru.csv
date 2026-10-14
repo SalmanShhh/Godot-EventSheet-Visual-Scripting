@@ -7361,7 +7361,6 @@ AI request could not start (%s). Nothing was sent.,Запрос к ИИ не у�
 Clear All Bookmarks,Очистить все закладки
 "Remove every bookmark from this sheet? Bookmarks are not part of undo, so they cannot be brought back.","Удалить все закладки из этого листа? Закладки не входят в отмену, поэтому их нельзя будет вернуть."
 Keep Bookmarks,Оставить закладки
-Before these edits,До этих правок
 Not saved.,Не сохранено.
 "%d mode(s) declared. The On entering event of %s holds rows of your own, so it was kept - move or delete it, since that mode is gone.","Объявлено режимов: %d. Событие «При входе» для %s содержит ваши строки, поэтому оно сохранено - переместите или удалите его, раз этого режима больше нет."
 """%s"" isn't a usable class name - use letters/digits/underscore starting with a letter, and not a reserved or existing class name.","«%s» нельзя использовать как имя класса - используйте буквы/цифры/подчёркивание, начиная с буквы, и не зарезервированное или уже существующее имя класса."
@@ -8478,3 +8477,10 @@ Runs when an event calls it.,"Выполняется, когда её вызыв
 No description yet.,Описания пока нет.
 Reads as: %s,Читается как: %s
 Double-click the name to edit the description.,"Дважды щёлкните по имени, чтобы изменить описание."
+Opened %s,Открыт %s
+Bookmarks last for this session only.,Закладки хранятся только в этом сеансе.
+sheet,лист
+signals,сигналы
+calls · includes · Go to layout,вызывает · включает · Перейти к макету
+Reset Layout,Сбросить расположение
+Put every box back in its column and forget where it was dragged.,"Возвращает каждый блок в его столбец и забывает, куда он был перетащен."

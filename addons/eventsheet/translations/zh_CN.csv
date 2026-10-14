@@ -7361,7 +7361,6 @@ AI request could not start (%s). Nothing was sent.,AI 请求无法启动（%s）
 Clear All Bookmarks,清除所有书签
 "Remove every bookmark from this sheet? Bookmarks are not part of undo, so they cannot be brought back.",删除此表中的所有书签？书签不属于撤销范围，因此无法恢复。
 Keep Bookmarks,保留书签
-Before these edits,在这些编辑之前
 Not saved.,未保存。
 "%d mode(s) declared. The On entering event of %s holds rows of your own, so it was kept - move or delete it, since that mode is gone.",已声明 %d 个模式。%s 的“进入时”事件包含你自己的行，因此已保留 - 既然该模式已不存在，请移动或删除它。
 """%s"" isn't a usable class name - use letters/digits/underscore starting with a letter, and not a reserved or existing class name.",“%s”不是可用的类名 - 请使用以字母开头的字母/数字/下划线，且不要使用保留或已有的类名。
@@ -8478,3 +8477,10 @@ Runs when an event calls it.,在事件调用它时运行。
 No description yet.,暂无说明。
 Reads as: %s,读作：%s
 Double-click the name to edit the description.,双击名称即可编辑说明。
+Opened %s,已打开 %s
+Bookmarks last for this session only.,书签仅在本次会话中保留。
+sheet,表
+signals,信号
+calls · includes · Go to layout,调用 · 包含 · 转到布局
+Reset Layout,重置布局
+Put every box back in its column and forget where it was dragged.,把每个方框放回它的列，并忘记它被拖到的位置。

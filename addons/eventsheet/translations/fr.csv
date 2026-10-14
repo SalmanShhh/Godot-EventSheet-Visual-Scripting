@@ -7361,7 +7361,6 @@ AI request could not start (%s). Nothing was sent.,La requête IA n'a pas pu dé
 Clear All Bookmarks,Effacer tous les signets
 "Remove every bookmark from this sheet? Bookmarks are not part of undo, so they cannot be brought back.",Retirer tous les signets de cette feuille ? Les signets ne font pas partie de l'annulation et ne peuvent donc pas être récupérés.
 Keep Bookmarks,Garder les signets
-Before these edits,Avant ces modifications
 Not saved.,Non enregistré.
 "%d mode(s) declared. The On entering event of %s holds rows of your own, so it was kept - move or delete it, since that mode is gone.","%d mode(s) déclaré(s). L'événement À l'entrée de %s contient vos propres lignes, il a donc été conservé - déplacez-le ou supprimez-le, puisque ce mode n'existe plus."
 """%s"" isn't a usable class name - use letters/digits/underscore starting with a letter, and not a reserved or existing class name.","""%s"" n'est pas un nom de classe utilisable - utilisez lettres/chiffres/tiret bas en commençant par une lettre, et pas un nom de classe réservé ou existant."
@@ -8478,3 +8477,10 @@ Runs when an event calls it.,S'exécute quand un événement l'appelle.
 No description yet.,Pas encore de description.
 Reads as: %s,Se lit : %s
 Double-click the name to edit the description.,Double-clique sur le nom pour modifier la description.
+Opened %s,%s ouvert
+Bookmarks last for this session only.,Les signets ne durent que pour cette session.
+sheet,feuille
+signals,signaux
+calls · includes · Go to layout,appelle · inclut · Aller à la disposition
+Reset Layout,Réinitialiser la disposition
+Put every box back in its column and forget where it was dragged.,Remet chaque boîte dans sa colonne et oublie où elle avait été glissée.

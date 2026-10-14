@@ -60,6 +60,9 @@ static func run() -> bool:
 	panel.refresh()
 	var panel_root: TreeItem = editor._bookmarks_tree.get_root()
 	var header: TreeItem = panel_root.get_first_child()
+	all_passed = _check("the foot says bookmarks are not kept past this session",
+		[panel.session_note.text, panel.session_note.get_parent() == panel.tree.get_parent()],
+		["Bookmarks last for this session only.", true]) and all_passed
 	all_passed = _check("panel groups bookmarks under a sheet header", header != null and header.get_first_child() != null, true) and all_passed
 	all_passed = _check("the entry shows the bookmarked row's text", header.get_first_child().get_text(0).contains("row 0"), true) and all_passed
 	all_passed = _check("entries carry the jump target", header.get_first_child().get_metadata(0), sheet.events[0]) and all_passed

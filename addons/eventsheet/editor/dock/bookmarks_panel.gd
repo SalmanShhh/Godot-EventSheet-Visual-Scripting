@@ -11,16 +11,21 @@ extends RefCounted
 
 # Section-header tint shared with the ACE picker's object headers, so panels read as one family.
 const HEADER_COLOR := Color("#e0b070")
-## The mark beside each entry: the editor's own star, the one its FileSystem favorites wear (Godot
-## 4.7's editor theme carries no icon named "Bookmark"). Asked of the editor theme, so a run with no
+## The mark beside an entry with no event number to lead with (a comment, a group): the editor's own
+## star, the one its FileSystem favorites wear (Godot 4.7's editor theme carries no icon named
+## "Bookmark"). A numbered entry's number is its mark. Asked of the editor theme, so a run with no
 ## editor (the suite) simply shows the words.
 const ENTRY_ICON := "Favorites"
+## The sheet header's picture: the file the marks are in.
+const SHEET_ICON := "Script"
 
 var _dock: Control = null
 
 var window: Window = null
 var tree: Tree = null
 var _empty_hint: Label = null
+## The foot: what Clear All cannot get back, said where the list ends and not only in its confirmation.
+var session_note: Label = null
 ## Asks before Clear All: the marks are not sheet edits, so there is no undo that brings them back.
 var clear_confirm: ConfirmationDialog = null
 
@@ -66,6 +71,8 @@ func build() -> void:
 	body_box.add_child(tree)
 	_empty_hint = EventSheetPopupUI.hint_label("No bookmarks yet - select a row and press Ctrl+M to mark it. F4 / Shift+F4 cycle through marks.", 360.0)
 	body_box.add_child(_empty_hint)
+	session_note = EventSheetPopupUI.hint_label(EventSheetL10n.translate("Bookmarks last for this session only."), 360.0)
+	body_box.add_child(session_note)
 
 
 ## Lists every bookmarked row; activating one reveals it (Ctrl+M marks rows).
@@ -115,15 +122,18 @@ func refresh() -> void:
 		var entry_icon: Texture2D = EventSheetEditorIcons.icon(ENTRY_ICON)
 		var sheet_header: TreeItem = tree.create_item(root)
 		sheet_header.set_text(0, _sheet_label())
-		sheet_header.set_custom_color(0, HEADER_COLOR)
+		sheet_header.set_custom_color(0, EventSheetPopupUI.readable_on_panel(HEADER_COLOR))
 		sheet_header.set_selectable(0, false)
+		var sheet_icon: Texture2D = EventSheetEditorIcons.icon(SHEET_ICON)
+		if sheet_icon != null:
+			sheet_header.set_icon(0, sheet_icon)
 		for flat_entry: Dictionary in view.get_flat_rows():
 			var row_data: EventRowData = flat_entry.get("row")
 			if row_data == null or not row_data.bookmark_enabled or row_data.source_resource == null:
 				continue
 			var entry: TreeItem = tree.create_item(sheet_header)
 			entry.set_text(0, entry_label(row_data))
-			if entry_icon != null:
+			if entry_icon != null and row_data.event_number <= 0:
 				entry.set_icon(0, entry_icon)
 			entry.set_tooltip_text(0, _full_row_text(row_data))
 			entry.set_metadata(0, row_data.source_resource)

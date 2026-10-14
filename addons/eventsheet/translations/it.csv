@@ -7361,7 +7361,6 @@ AI request could not start (%s). Nothing was sent.,Impossibile avviare la richie
 Clear All Bookmarks,Cancella tutti i segnalibri
 "Remove every bookmark from this sheet? Bookmarks are not part of undo, so they cannot be brought back.","Rimuovere tutti i segnalibri da questo foglio? I segnalibri non fanno parte dell'annullamento, quindi non si possono recuperare."
 Keep Bookmarks,Mantieni i segnalibri
-Before these edits,Prima di queste modifiche
 Not saved.,Non salvato.
 "%d mode(s) declared. The On entering event of %s holds rows of your own, so it was kept - move or delete it, since that mode is gone.","%d modalità dichiarata/e. L'evento All'ingresso di %s contiene righe tue, quindi è stato mantenuto - spostalo o eliminalo, dato che quella modalità non c'è più."
 """%s"" isn't a usable class name - use letters/digits/underscore starting with a letter, and not a reserved or existing class name.","""%s"" non è un nome di classe utilizzabile - usa lettere/cifre/trattino basso iniziando con una lettera, e non un nome di classe riservato o esistente."
@@ -8478,3 +8477,10 @@ Runs when an event calls it.,Viene eseguita quando un evento la chiama.
 No description yet.,Ancora nessuna descrizione.
 Reads as: %s,Si legge come: %s
 Double-click the name to edit the description.,Fai doppio clic sul nome per modificare la descrizione.
+Opened %s,Aperto %s
+Bookmarks last for this session only.,I segnalibri valgono solo per questa sessione.
+sheet,foglio
+signals,segnali
+calls · includes · Go to layout,chiama · include · Vai al layout
+Reset Layout,Reimposta disposizione
+Put every box back in its column and forget where it was dragged.,Riporta ogni riquadro nella sua colonna e dimentica dove era stato trascinato.

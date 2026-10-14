@@ -7361,7 +7361,6 @@ AI request could not start (%s). Nothing was sent.,KI-Anfrage konnte nicht start
 Clear All Bookmarks,Alle Lesezeichen löschen
 "Remove every bookmark from this sheet? Bookmarks are not part of undo, so they cannot be brought back.",Jedes Lesezeichen aus diesem Blatt entfernen? Lesezeichen sind nicht Teil von Rückgängig und können daher nicht zurückgeholt werden.
 Keep Bookmarks,Lesezeichen behalten
-Before these edits,Vor diesen Änderungen
 Not saved.,Nicht gespeichert.
 "%d mode(s) declared. The On entering event of %s holds rows of your own, so it was kept - move or delete it, since that mode is gone.","%d Modus/Modi deklariert. Das Beim-Betreten-Ereignis von %s enthält eigene Zeilen und wurde daher behalten - verschiebe oder lösche es, da dieser Modus weg ist."
 """%s"" isn't a usable class name - use letters/digits/underscore starting with a letter, and not a reserved or existing class name.","""%s"" ist kein brauchbarer Klassenname - verwende Buchstaben/Ziffern/Unterstrich, beginnend mit einem Buchstaben, und keinen reservierten oder vorhandenen Klassennamen."
@@ -8478,3 +8477,10 @@ Runs when an event calls it.,"Läuft, wenn ein Ereignis sie aufruft."
 No description yet.,Noch keine Beschreibung.
 Reads as: %s,Liest sich als: %s
 Double-click the name to edit the description.,"Doppelklicke auf den Namen, um die Beschreibung zu bearbeiten."
+Opened %s,%s geöffnet
+Bookmarks last for this session only.,Lesezeichen gelten nur für diese Sitzung.
+sheet,Blatt
+signals,Signale
+calls · includes · Go to layout,ruft auf · bindet ein · Gehe zu Layout
+Reset Layout,Anordnung zurücksetzen
+Put every box back in its column and forget where it was dragged.,"Setzt jedes Feld zurück in seine Spalte und vergisst, wohin es gezogen wurde."

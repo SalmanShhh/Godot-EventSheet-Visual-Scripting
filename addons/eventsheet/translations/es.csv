@@ -7361,7 +7361,6 @@ AI request could not start (%s). Nothing was sent.,La solicitud de IA no pudo in
 Clear All Bookmarks,Borrar todos los marcadores
 "Remove every bookmark from this sheet? Bookmarks are not part of undo, so they cannot be brought back.","¿Quitar todos los marcadores de esta hoja? Los marcadores no forman parte de deshacer, así que no se pueden recuperar."
 Keep Bookmarks,Conservar marcadores
-Before these edits,Antes de estas ediciones
 Not saved.,No guardado.
 "%d mode(s) declared. The On entering event of %s holds rows of your own, so it was kept - move or delete it, since that mode is gone.","%d modo(s) declarado(s). El evento Al entrar de %s contiene filas tuyas, así que se conservó - muévelo o bórralo, ya que ese modo ya no existe."
 """%s"" isn't a usable class name - use letters/digits/underscore starting with a letter, and not a reserved or existing class name.","""%s"" no es un nombre de clase válido - usa letras/dígitos/guion bajo empezando por una letra, y no un nombre de clase reservado o existente."
@@ -8478,3 +8477,10 @@ Runs when an event calls it.,Se ejecuta cuando un evento la llama.
 No description yet.,Aún sin descripción.
 Reads as: %s,Se lee como: %s
 Double-click the name to edit the description.,Haz doble clic en el nombre para editar la descripción.
+Opened %s,Se abrió %s
+Bookmarks last for this session only.,Los marcadores solo duran esta sesión.
+sheet,hoja
+signals,señales
+calls · includes · Go to layout,llama · incluye · Ir al diseño
+Reset Layout,Restablecer disposición
+Put every box back in its column and forget where it was dragged.,Devuelve cada caja a su columna y olvida adónde se arrastró.

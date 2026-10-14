@@ -8,18 +8,26 @@
 class_name EventSheetOutlinePanel
 extends RefCounted
 
-const COLOR_GROUP := Color("#e0b070")     # amber - groups (the picker's section tint)
-const COLOR_REGION := Color("#7fb3d5")    # blue - region fences (the script editor's fold hue)
-const COLOR_FUNCTION := Color("#c79bf0")  # purple - published verbs (the picker's custom tint)
-const COLOR_TODO := Color("#8b91a3")      # muted - a note is quieter than the structure around it
-## The editor's own picture for a note, asked of the editor theme. A run with no editor (the suite)
-## shows the note's words alone, tinted by COLOR_TODO under its "To do" folder.
-const TODO_ICON := "NodeInfo"
+## How each kind of entry reads: [the mark in front of its words, its colour, the editor icon it
+## wears]. Groups and the "To do" folder wear the FileSystem dock's folder, a note the editor's info
+## mark; a region and a function keep the "#" and "ƒ" their code is written with. The colour is
+## darkened on a light panel (readable_on_panel). An icon is asked
+## of the editor theme, so a run with no editor (the suite) shows the words alone.
+const KINDS := {
+	"group": ["", Color("#e0b070"), "Folder"],
+	"region": ["# ", Color("#7fb3d5"), ""],
+	"function": ["ƒ ", Color("#c79bf0"), ""],
+	"todo_folder": ["", Color("#8b91a3"), "Folder"],
+	"todo": ["", Color("#8b91a3"), "NodeInfo"],
+}
 
 var _dock: Control = null
 
 var window: Window = null
 var tree: Tree = null
+## Narrows a long outline to the entries whose words hold what is typed, like the script editor's
+## method filter; an entry that stays keeps the folders above it.
+var filter_edit: LineEdit = null
 var _empty_hint: Label = null
 
 
@@ -118,6 +126,12 @@ func build() -> void:
 	var parts: Dictionary = EventSheetPopupUI.panel_window("Outline", Vector2i(360, 420), _dock)
 	window = parts["window"]
 	var body_box: VBoxContainer = parts["box"]
+	filter_edit = LineEdit.new()
+	filter_edit.placeholder_text = EventSheetL10n.translate("Filter")
+	filter_edit.clear_button_enabled = true
+	filter_edit.right_icon = EventSheetEditorIcons.icon("Search")
+	filter_edit.text_changed.connect(func(_text: String) -> void: refresh())
+	body_box.add_child(filter_edit)
 	tree = Tree.new()
 	tree.hide_root = true
 	tree.select_mode = Tree.SELECT_ROW
@@ -151,47 +165,38 @@ func refresh() -> void:
 	# mirrors the walk exactly (a depth-keyed map mis-nested entries reached through an
 	# EventRow's sub_events under whatever group happened to set that depth earlier).
 	var items: Array = []
-	for entry: Dictionary in entries:
+	var shown: Array[bool] = filter_matches(entries, filter_edit.text if filter_edit != null else "")
+	for index: int in entries.size():
+		var entry: Dictionary = entries[index]
 		var parent_index: int = int(entry.get("parent", -1))
 		var parent: TreeItem = items[parent_index] if parent_index >= 0 and parent_index < items.size() else root
 		var item: TreeItem = tree.create_item(parent)
-		var kind: String = str(entry.get("kind", ""))
-		item.set_text(0, _entry_prefix(kind) + str(entry.get("label", "")))
-		item.set_custom_color(0, _entry_color(kind))
-		if kind == "todo":
-			var note_icon: Texture2D = EventSheetEditorIcons.icon(TODO_ICON)
-			if note_icon != null:
-				item.set_icon(0, note_icon)
+		var look: Array = KINDS.get(str(entry.get("kind", "")), ["", Color.WHITE, ""])
+		item.set_text(0, str(look[0]) + str(entry.get("label", "")))
+		item.set_custom_color(0, EventSheetPopupUI.readable_on_panel(look[1]))
+		var icon: Texture2D = EventSheetEditorIcons.icon(str(look[2])) if not str(look[2]).is_empty() else null
+		if icon != null:
+			item.set_icon(0, icon)
 		item.set_metadata(0, entry.get("resource", null))
+		item.visible = shown[index]
 		items.append(item)
 	if _empty_hint != null:
 		_empty_hint.visible = entries.is_empty()
 
 
-static func _entry_prefix(kind: String) -> String:
-	match kind:
-		"group":
-			return "▸ "
-		"region":
-			return "# "
-		"function":
-			return "ƒ "
-		"todo_folder":
-			return "▸ "
-	return ""
-
-
-static func _entry_color(kind: String) -> Color:
-	match kind:
-		"group":
-			return COLOR_GROUP
-		"region":
-			return COLOR_REGION
-		"function":
-			return COLOR_FUNCTION
-		"todo_folder", "todo":
-			return COLOR_TODO
-	return Color.WHITE
+## Which entries a filter keeps, one bool per entry: those whose words hold `filter` (any case),
+## plus every folder above one of them, so a kept entry still reads where it lives. An empty filter
+## keeps everything. Parents always come before their children, so one pass backwards lifts them.
+static func filter_matches(entries: Array, filter: String) -> Array[bool]:
+	var wanted: String = filter.strip_edges()
+	var shown: Array[bool] = []
+	for entry: Variant in entries:
+		shown.append(wanted.is_empty() or str((entry as Dictionary).get("label", "")).containsn(wanted))
+	for index: int in range(entries.size() - 1, -1, -1):
+		var parent_index: int = int((entries[index] as Dictionary).get("parent", -1))
+		if shown[index] and parent_index >= 0:
+			shown[parent_index] = true
+	return shown
 
 
 func _on_entry_selected() -> void:

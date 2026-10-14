@@ -23,6 +23,7 @@ static func run() -> bool:
 	passed = _what_a_click_on_a_line_finds() and passed
 	passed = _lines_meet_the_facing_edges() and passed
 	passed = _every_line_says_what_it_is() and passed
+	passed = _the_key_and_reset_layout() and passed
 	passed = _a_click_on_a_scene_opens_it() and passed
 	EventSheetSignalFanout.clear_cache()
 	return passed
@@ -139,6 +140,33 @@ static func _every_line_says_what_it_is() -> bool:
 		{"text": "calls Game", "position": Vector2(192.0, 43.0)},
 		{"text": "Go to layout", "position": Vector2(90.0, 55.0)},
 	])
+
+
+## Under the picture a key names each kind of box and line in the colour it is drawn in, and Reset
+## Layout is offered only once a box has been dragged somewhere to forget.
+static func _the_key_and_reset_layout() -> bool:
+	var host: Control = Control.new()
+	var panel: EventSheetSheetMapPanel = EventSheetSheetMapPanel.new(host)
+	panel.build()
+	panel.dress_legend(true)
+	var chrome: EventSheetChromeStyle = EventSheetActiveTheme.chrome()
+	var words: Array = []
+	for index: int in 5:
+		var key: Label = panel.legend.get_child(index) as Label
+		words.append([key.text, key.get_theme_color("font_color")])
+	var passed: bool = _check("the key names every kind of box and line in its own colour", words, [
+		["sheet", EventSheetPopupUI.readable_on_panel(Color(chrome.sheet_map_sheet_color, 1.0))],
+		["scene", EventSheetPopupUI.readable_on_panel(Color(chrome.sheet_map_scene_color, 1.0))],
+		["global", EventSheetPopupUI.readable_on_panel(Color(chrome.sheet_map_global_color, 1.0))],
+		["calls · includes · Go to layout", EventSheetPopupUI.readable_on_panel(Color(chrome.sheet_map_edge_color, 1.0))],
+		["signals", EventSheetPopupUI.readable_on_panel(Color(chrome.sheet_map_signal_edge_color, 1.0))],
+	])
+	var offered_untouched: bool = panel.reset_button.disabled
+	panel.dress_legend(false)
+	passed = _check("Reset Layout waits for a dragged box", [panel.reset_button.text, offered_untouched,
+		panel.reset_button.disabled], ["Reset Layout", true, false]) and passed
+	host.free()
+	return passed
 
 
 ## A box is opened by clicking it, and that holds for a scene too: it goes to Godot's scene editor.
