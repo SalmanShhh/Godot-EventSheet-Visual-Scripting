@@ -46,7 +46,17 @@ const DIALOG_CALLS: Array[String] = ["ConfirmationDialog.new()", "AcceptDialog.n
 ## The one dialog with NO reads-as line, and why: the Sheet type dialog's preview IS the head of the
 ## sheet it is about to write, so a sentence beside it would be the same words twice. Deliberate, and
 ## therefore written down rather than quietly passing.
-const NO_READING_BY_DESIGN: Array[String] = ["sheet_type_dialog.gd"]
+const NO_READING_BY_DESIGN: Array[String] = ["sheet_type_dialog.gd", "command_palette.gd", "debugger_window.gd",
+	"repeated_rows.gd"]
+
+## The result windows, whose strip describes the PICKED line of a list (a hit, a use, a run) rather
+## than a focused field: the selection handler wires it by setting the strip's "This row" line, so
+## `.set_line(` counts as following for these files and for no other. The command palette's strip
+## is its key legend (Enter, the arrows, the four prefixes), the same whatever is picked, and so
+## follows nothing by design; the debugger names a running value and the repeated rows a run that
+## spans several rows, so neither has one row to read as (listed above).
+const RESULT_WINDOWS: Array[String] = ["find_references_panel.gd", "project_find.gd", "repeated_rows.gd"]
+const KEY_LEGEND_BY_DESIGN: Array[String] = ["command_palette.gd"]
 
 
 static func run() -> bool:
@@ -72,8 +82,11 @@ static func _test_dialogs_are_found() -> bool:
 		"res://addons/eventsheet/editor/chunk_tools_dialog.gd",
 		"res://addons/eventsheet/editor/connect_signal_dialog.gd",
 		"res://addons/eventsheet/editor/dock/author_actions.gd",
+		"res://addons/eventsheet/editor/dock/command_palette.gd",
 		"res://addons/eventsheet/editor/dock/comment_and_scope_dialogs.gd",
 		"res://addons/eventsheet/editor/dock/compare_condition_dialog.gd",
+		"res://addons/eventsheet/editor/dock/debugger_window.gd",
+		"res://addons/eventsheet/editor/dock/find_references_panel.gd",
 		"res://addons/eventsheet/editor/dock/import_sheet_wizard.gd",
 		"res://addons/eventsheet/editor/dock/include_manager.gd",
 		"res://addons/eventsheet/editor/dock/insert_snippet_dialog.gd",
@@ -82,8 +95,10 @@ static func _test_dialogs_are_found() -> bool:
 		"res://addons/eventsheet/editor/dock/new_resource_wizard.gd",
 		"res://addons/eventsheet/editor/dock/optimise_dialog.gd",
 		"res://addons/eventsheet/editor/dock/paste_special_dialog.gd",
+		"res://addons/eventsheet/editor/dock/project_find.gd",
 		"res://addons/eventsheet/editor/dock/quick_prompt_dialogs.gd",
 		"res://addons/eventsheet/editor/dock/rename_receipt.gd",
+		"res://addons/eventsheet/editor/dock/repeated_rows.gd",
 		"res://addons/eventsheet/editor/dock/sheet_diff.gd",
 		"res://addons/eventsheet/editor/dock/sheet_type_dialog.gd",
 		"res://addons/eventsheet/editor/dock/start_page.gd",
@@ -121,7 +136,9 @@ static func _test_every_strip_is_wired() -> bool:
 	var silent: PackedStringArray = PackedStringArray()
 	for path: String in _dialog_paths():
 		var source: String = FileAccess.get_file_as_string(path)
-		if not _mentions_any(source, FOLLOW_CALLS):
+		var picks: bool = RESULT_WINDOWS.has(path.get_file()) and source.contains(".set_line(")
+		var follows: bool = picks or _mentions_any(source, FOLLOW_CALLS) or KEY_LEGEND_BY_DESIGN.has(path.get_file())
+		if not follows:
 			unwired.append(path.get_file())
 		if not _mentions_any(source, READING_CALLS) and not NO_READING_BY_DESIGN.has(path.get_file()):
 			silent.append(path.get_file())
