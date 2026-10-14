@@ -123,7 +123,7 @@ func remeasure_open_rows() -> bool:
 
 func _resolve_row_height(row_data: EventRowData) -> float:
 	# Header-like rows reserve height_scale times their natural height (state headers, the
-	# Class setup bar, Host binding - the event-sheet Includes-bar presence); layout re-centers content.
+	# Class setup bar - the event-sheet Includes-bar presence); layout re-centers content.
 	return _resolve_row_height_natural(row_data) * clampf(row_data.height_scale if row_data != null else 1.0, 1.0, 3.0)
 
 

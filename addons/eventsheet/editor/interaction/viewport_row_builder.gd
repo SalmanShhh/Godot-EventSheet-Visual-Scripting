@@ -1352,7 +1352,7 @@ func fold_nested_verb_rows(rows: Array[EventRowData], nested: bool = false) -> v
 ## end as a grey wall. An event sheet puts that same material in four shapes, and this is the lens that
 ## reads it back as them:
 ##   1. ONE Include bar carrying the pack's identity (the slot an event sheet uses for "Include: Sheet") -
-##      the class-setup strip, the `host` variable and the Host binding bar fold INTO it.
+##      the class-setup strip and the `host` variable fold INTO it.
 ##   2. The class description ONCE, as a comment bar right underneath (never again at the end).
 ##   3. Foldable group bars - Triggers, one per @export_group in FILE order, Settings for exported
 ##      knobs declared before any group, and Internal state for what the pack keeps to itself.
@@ -1400,12 +1400,6 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 			continue
 		if source is RawCodeRow:
 			var code: String = (source as RawCodeRow).code
-			var bound_class: String = host_binding_class(code)
-			if not bound_class.is_empty():
-				host_class = bound_class
-				identity_seen = true
-				consumed = index + 1
-				continue
 			var code_lines: PackedStringArray = code.split("\n")
 			if is_blank_block(code_lines):
 				consumed = index + 1
@@ -4377,7 +4371,7 @@ func _build_enum_row(enum_row: EnumRow, indent: int) -> EventRowData:
 	row_data.breakpoint_enabled = bool(_viewport._breakpoint_rows.get(row_data.row_uid, false))
 	row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, true))
 	# The enum block is an IDENTITY bar (it is the state list a state machine runs on): the same
-	# 1.5x height + accent band the Class setup and Host binding bars wear. Event rows stay at
+	# 1.5x height + accent band the Class setup bar wears. Event rows stay at
 	# normal height - the presence belongs to the DEFINITION, not to every row that uses it.
 	row_data.height_scale = 1.5
 	row_data.custom_color = Color(event_style.behavior_accent_color.r, event_style.behavior_accent_color.g, event_style.behavior_accent_color.b, 0.22)
@@ -4858,10 +4852,10 @@ func _trigger_payload_span(chip_text: String, param_index: int, line_index: int)
 
 ## The host class ("" when not a match) if a RawCodeRow is EXACTLY the compiler's generated
 ## host-binding `_enter_tree` - the boilerplate every host-targeting behaviour pack emits to bind
-## `host = get_parent()`. It carries no authored logic (it's regenerated from the sheet's host), so
-## rendering it as a 4-line GDScript block reads as noise; matched, the row collapses to one muted
-## "Host binding · acts on <Class>" line instead. Strict exact-shape match so a hand-modified
-## _enter_tree stays a real editable block. Static + pure → unit-testable without a viewport.
+## `host = get_parent()`. It carries no authored logic (it's regenerated from the sheet's host), and
+## the `host` variable row already names the host, so a matched block draws no row at all. Strict
+## exact-shape match so a hand-modified _enter_tree stays a real editable block. Static + pure, so it
+## is unit-testable without a viewport.
 static func host_binding_class(code: String) -> String:
 	var lines: PackedStringArray = code.split("\n")
 	# Trim a single trailing blank the importer may keep on the block.
@@ -5959,59 +5953,6 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	row_data.source_resource = raw_row
 	row_data.row_uid = "raw_code_%d" % raw_row.get_instance_id()
 	row_data.disabled = not raw_row.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
-	# Host-binding boilerplate collapses to one muted "Host binding" line (pure view; the block's
-	# lines are all still there and still edit/round-trip as before).
-	var host_class: String = host_binding_class(raw_row.code)
-	if not host_class.is_empty():
-		# The generated `_enter_tree` host boilerplate reads as a first-class "Host binding" block: a badge,
-		# the host CLASS as a distinct chip, and a muted cue. On an opened pack this prelude is verbatim .gd
-		# (host is baked into the file), so the class stays read-only here - double-click opens the code
-		# editor to change it (the RawCodeRow double-click at viewport_input.gd), keeping the byte round-trip.
-		row_data.line_count = 1
-		row_data.language_block = true  # generated host boilerplate - language structure, not an event
-		# The same bar treatment the Class setup strip wears (band + 1.5x height + the host
-		# class's own editor icon in the badge slot): these identity rows must never be mistaken
-		# for a variable row - and the word pill is gone here too.
-		row_data.height_scale = 1.5
-		var host_accent: Color = _viewport._get_event_style().behavior_accent_color
-		row_data.custom_color = Color(host_accent.r, host_accent.g, host_accent.b, 0.22)
-		var host_badge_meta: Dictionary = {
-			"editable": false,
-			"badge": true,
-			"badge_style": "trigger",
-			"badge_bg": _viewport._get_reading_style().setup_badge_background_color,
-			"badge_fg": _viewport._get_reading_style().setup_badge_foreground_color,
-			"kind": "raw_code",
-			"line_index": 0
-		}
-		var host_icon: Texture2D = EventSheetACEIcons.editor_icon(host_class)
-		if host_icon != null:
-			host_badge_meta["badge_icon"] = host_icon
-		row_data.spans = [
-			_make_span("▣", SemanticSpan.SpanType.KEYWORD, host_badge_meta),
-			_make_span(EventSheetL10n.translate("Host binding"), SemanticSpan.SpanType.VALUE, {
-				"editable": false,
-				"kind": "raw_code",
-				"line_index": 0,
-				"text_color": _viewport._get_reading_style().primary_text_color
-			}),
-			_make_span(host_class, SemanticSpan.SpanType.KEYWORD, {
-				"editable": false,
-				"badge": true,
-				"badge_style": "scope",
-				"badge_bg": _viewport._get_reading_style().plain_chip_background_color,
-				"badge_fg": _viewport._get_reading_style().plain_chip_foreground_color,
-				"kind": "raw_code",
-				"line_index": 0
-			}),
-			_make_span("the node this behaviour is attached to · double-click to edit in code", SemanticSpan.SpanType.VALUE, {
-				"editable": false,
-				"kind": "raw_code",
-				"line_index": 0,
-				"text_color": _viewport._get_reading_style().muted_text_color
-			})
-		]
-		return row_data
 	var shell: Dictionary = define_shell_info(raw_row.code)
 	if not shell.is_empty():
 		row_data.line_count = 1  # visual collapse only - the underlying lines are all still there

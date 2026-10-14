@@ -3132,6 +3132,13 @@ var _tunable_uids: Dictionary = {}
 func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
 	if entry == null:
 		return null
+	# A behaviour shows its host ONCE, on the `host` variable row where the file declares it. The
+	# generated `_enter_tree` that binds it is not a second row: the title's hover already says what
+	# the behaviour works on. The block stays in the sheet and is emitted as before, so the file still
+	# round-trips byte for byte; one that fails to compile keeps its row so the error has a place.
+	if entry is RawCodeRow and not _row_diagnostics.has(str(entry.get_instance_id())) \
+			and not ViewportRowBuilder.host_binding_class((entry as RawCodeRow).code).is_empty():
+		return null
 	var row_data: EventRowData = null
 	if entry is EventGroup:
 		row_data = _build_group_row(entry as EventGroup, indent)

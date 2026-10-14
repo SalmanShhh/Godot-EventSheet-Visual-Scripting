@@ -134,7 +134,7 @@ var rule_below: bool = false
 var or_condition_lines: PackedInt32Array = PackedInt32Array()
 
 ## Vertical presence multiplier (1.0 = normal). Header-like rows (state headers, the Class
-## setup bar, Host binding) reserve extra height so they read as BARS, the way an event sheet's
+## setup bar) reserve extra height so they read as BARS, the way an event sheet's
 ## Includes strip does; content re-centers inside the taller rect at layout time.
 var height_scale: float = 1.0
 # True when the row DIRECTLY BELOW belongs to this one and must not be pushed away by the inter-block

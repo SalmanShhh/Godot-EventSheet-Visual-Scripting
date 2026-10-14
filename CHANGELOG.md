@@ -12,6 +12,14 @@
   was typed, the way the other making windows already did, instead of closing and saying it on
   the dock's status line.
 
+### Changed: a behaviour names its host once
+
+- A behaviour opened as a sheet showed its host twice: on the `host` variable row, and again as a
+  separate Host binding bar for the generated `_enter_tree` that sets it. Only the variable row is
+  left, where the file declares it; the title's hover still says what the behaviour works on. The
+  `_enter_tree` stays in the file and is written back exactly as it was, and one that fails to
+  compile still shows, so its error has a row.
+
 ### Fixed: enabling the plugin compiles less
 
 - The Inspector drawers' widgets and the translation layer behind them were compiled at every editor

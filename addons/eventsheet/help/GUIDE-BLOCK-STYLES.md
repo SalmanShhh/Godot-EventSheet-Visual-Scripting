@@ -71,8 +71,8 @@ a content row, so they can never be mistaken for one:
   head is its lines, the way the file is, and a `+ add` row under the stack offers only the
   lines this sheet could have and does not. A prelude line carrying an error still surfaces,
   marker and all.
-- **Host binding** (behavior sheets): the host class icon + "Host binding" + the class chip -
-  the node this behavior acts on.
+- **Host** (behavior sheets): the `host` variable row names the node this behavior acts on, once -
+  the generated `_enter_tree` that binds it draws no row of its own.
 - **Enum**: closed, a sentence - "State is one of PATROL, CHASE or FLEE" (long enums say
   "and N more"). Open, one row per value with its number (`PATROL = 0 · default`) and an
   Add value footer. The state list a state machine runs on is a definition, so it gets the bar.

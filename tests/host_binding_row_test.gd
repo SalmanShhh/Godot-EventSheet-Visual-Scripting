@@ -1,8 +1,9 @@
-# EventForge - the generated host-binding `_enter_tree` block renders as ONE muted "Host binding"
-# line instead of a 4-line GDScript block. It carries no authored logic (regenerated from the
-# sheet's host), so a behaviour pack opens reading as vocabulary, not boilerplate. Pins: the strict
-# exact-shape classifier (a hand-modified _enter_tree stays a real block), the collapsed rendering
-# over a real pack, and - covenant-critical - the byte round-trip is untouched (pure view).
+# EventForge - a behaviour shows its host ONCE: on the `host` variable row, where the file declares
+# it. The generated host-binding `_enter_tree` block carries no authored logic (it is regenerated
+# from the sheet's host), so it draws no row of its own - it used to be a second "Host binding" bar
+# saying the same thing. Pins: the strict exact-shape classifier (a hand-modified _enter_tree stays
+# a real block), the reading over a real pack, read-only and editable, and - covenant-critical -
+# the byte round-trip is untouched (pure view).
 @tool
 class_name HostBindingRowTest
 extends RefCounted
@@ -26,10 +27,7 @@ static func run() -> bool:
 	ok = _check("a different function is not a host binding",
 		ViewportRowBuilder.host_binding_class("func _ready() -> void:\n\tpass"), "") and ok
 
-	# ── Rendering over a real opened pack ──
-	# A read-only preview reads the pack in file order, so the binding is the same Host binding row
-	# an editable sheet draws, where the file has it - not folded into a bar the file does not have.
-	# The second half drives the same pack with the preview flag cleared.
+	# ── Reading over a real opened pack: the host is said once, read-only and editable alike ──
 	var pack_path: String = "res://eventsheet_addons/health/health_behavior.gd"
 	var source: String = (FileAccess.open(pack_path, FileAccess.READ)).get_as_text()
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
@@ -37,72 +35,61 @@ static func run() -> bool:
 	dock.setup(EventSheetResource.new())
 	dock._load_sheet_from_path(pack_path)
 	var view: EventSheetViewport = dock._active_view()
-	var preview_row: EventRowData = _host_binding_row(view)
-	ok = _check("a read-only preview reads the binding as its Host binding row", preview_row != null, true) and ok
-	ok = _check("the row still names the host class",
-		str(preview_row.spans[2].text) if preview_row != null and preview_row.spans.size() > 2 else "", "Node2D") and ok
-	ok = _check("no Include bar is drawn on a preview",
-		_row_with_uid(view._root_rows, "pack_include_bar_"), null) and ok
+	ok = _check("the binding block is still in the sheet", _binding_blocks(dock.get_current_sheet()), 1) and ok
+	ok = _check("a read-only preview draws no row for the binding", _binding_rows(view), 0) and ok
+	ok = _check("a read-only preview names the host on its variable row", _host_variable_rows(view), ["Node2D"]) and ok
 	var opened_sheet: EventSheetResource = dock.get_current_sheet()
 	opened_sheet.read_only = false
 	view.set_sheet(opened_sheet)
-	var host_row: EventRowData = null
-	for entry: Dictionary in view.get_flat_rows():
-		var row_data: EventRowData = entry.get("row")
-		# The row now leads with the icon badge span; "Host binding" is the first TEXT span.
-		if row_data != null and row_data.spans.size() >= 2 and str(row_data.spans[1].text) == "Host binding":
-			host_row = row_data
-	ok = _check("the pack shows a Host binding row", host_row != null, true) and ok
-	ok = _check("it collapses to one line", host_row.line_count if host_row != null else -1, 1) and ok
-	# First-class block: the host class is its OWN chip span (not buried in prose), followed by a cue that
-	# points at the double-click-to-edit-in-code affordance (the RawCodeRow editor keeps the .gd round-trip).
-	ok = _check("the host class is its own chip span", host_row != null and str(host_row.spans[2].text) == "Node2D", true) and ok
-	ok = _check("a muted cue explains the class edits in code",
-		host_row != null and host_row.spans.size() >= 4 and str(host_row.spans[3].text).contains("edit in code"), true) and ok
-	ok = _check("the row reserves bar presence (1.5x height)", host_row != null and is_equal_approx(host_row.height_scale, 1.5), true) and ok
-	ok = _check("no bare `func _enter_tree` GDScript block remains",
-		_has_enter_tree_block(view), false) and ok
-	ok = _check("the row keeps its RawCodeRow (still edits/round-trips)",
-		host_row != null and host_row.source_resource is RawCodeRow, true) and ok
+	ok = _check("an editable sheet draws no row for the binding", _binding_rows(view), 0) and ok
+	ok = _check("an editable sheet names the host on its variable row", _host_variable_rows(view), ["Node2D"]) and ok
+
+	# ── A binding that fails to compile keeps its row, so the error has a place to show ──
+	var binding: RawCodeRow = _binding_block(opened_sheet)
+	view._row_diagnostics = {str(binding.get_instance_id()): "Parse error"}
+	ok = _check("a binding carrying an error is drawn", view._build_row_from_resource(binding, 0) != null, true) and ok
+	view._row_diagnostics = {}
 
 	# ── Covenant: pure view - the pack still round-trips byte-identically ──
 	var reemitted: String = str(SheetCompiler.compile(dock.get_current_sheet(), pack_path).get("output", ""))
-	ok = _check("drift stays 0 with the host binding collapsed", reemitted == source, true) and ok
+	ok = _check("the pack re-emits byte for byte", reemitted == source, true) and ok
 
 	dock.free()
 	return ok
 
 
-static func _host_binding_row(view: EventSheetViewport) -> EventRowData:
+## How many rows in the view carry a host-binding block, at any depth.
+static func _binding_rows(view: EventSheetViewport) -> int:
+	var found: int = 0
 	for entry: Dictionary in view.get_flat_rows():
 		var row_data: EventRowData = entry.get("row")
-		if row_data != null and row_data.spans.size() >= 2 and str(row_data.spans[1].text) == "Host binding":
-			return row_data
+		if row_data != null and row_data.source_resource is RawCodeRow \
+				and not ViewportRowBuilder.host_binding_class((row_data.source_resource as RawCodeRow).code).is_empty():
+			found += 1
+	return found
+
+
+## The type each `host` variable row in the view declares, in order.
+static func _host_variable_rows(view: EventSheetViewport) -> Array:
+	var types: Array = []
+	for entry: Dictionary in view.get_flat_rows():
+		var row_data: EventRowData = entry.get("row")
+		if row_data != null and row_data.source_resource is LocalVariable \
+				and (row_data.source_resource as LocalVariable).name == "host":
+			types.append((row_data.source_resource as LocalVariable).type_name)
+	return types
+
+
+static func _binding_blocks(sheet: EventSheetResource) -> int:
+	return 1 if _binding_block(sheet) != null else 0
+
+
+static func _binding_block(sheet: EventSheetResource) -> RawCodeRow:
+	for entry: Variant in sheet.events:
+		if entry is RawCodeRow and not ViewportRowBuilder.host_binding_class((entry as RawCodeRow).code).is_empty():
+			return entry as RawCodeRow
 	return null
-
-
-static func _has_enter_tree_block(view: EventSheetViewport) -> bool:
-	for entry: Dictionary in view.get_flat_rows():
-		var row_data: EventRowData = entry.get("row")
-		# A raw block still rendered line-by-line would show its `func _enter_tree` text in a span.
-		if row_data == null:
-			continue
-		for span: SemanticSpan in row_data.spans:
-			if str(span.text).begins_with("func _enter_tree"):
-				return true
-	return false
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	return SUPPORT.check("host_binding_row_test", label, actual, expected)
-
-
-## The first row of a tree whose uid opens with `prefix`, at any depth, or null.
-static func _row_with_uid(rows: Array, prefix: String) -> EventRowData:
-	for row_data: EventRowData in rows:
-		if row_data.row_uid.begins_with(prefix):
-			return row_data
-		var deeper: EventRowData = _row_with_uid(row_data.children, prefix)
-		if deeper != null:
-			return deeper
-	return null

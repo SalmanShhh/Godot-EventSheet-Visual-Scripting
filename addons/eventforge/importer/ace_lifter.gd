@@ -2481,7 +2481,7 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 			# The host-binding `_enter_tree` a host-targeting behaviour pack ships. The compiler
 			# regenerates it from the sheet's host metadata, so lifting it to a trigger event would
 			# emit the function a second time and fail the byte-verify - reverting the WHOLE file to
-			# code blocks. Left raw, it keeps reading as the one-line "Host binding" row it already is.
+			# code blocks. Left raw, it draws no row: the `host` variable row already names the host.
 			return {"ok": false}
 		# On an EditorPlugin the same two callbacks are the plugin being switched on and off.
 		if _lift_host_class == "EditorPlugin" and PLUGIN_LIFECYCLE_TRIGGERS.has(trigger_id):
