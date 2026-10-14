@@ -11,8 +11,14 @@ const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/readin
 # the same pattern as the other dock/ helpers. Extracted from event_sheet_dock.gd to keep that file
 # maintainable; the dock keeps thin delegates so its shortcut caller and the tests don't change.
 
+## The palette's modes in tab order, each with the prefix that types it. The error-line mode has no
+## prefix: a pasted "res://file.gd:42" is recognised wherever it sits in the text.
+const MODE_PREFIXES: PackedStringArray = ["", "#", "@", "?", ""]
+const MODE_ERROR := 4
+
 var _dock: Control = null
-var _command_palette_window: Window = null
+var _command_palette_window: ConfirmationDialog = null
+var _command_palette_tabs: TabBar = null
 var _command_palette_search: LineEdit = null
 var _command_palette_list: ItemList = null
 var _command_palette_matches: Array = []
@@ -65,23 +71,23 @@ func _command_palette_commands() -> Array[Dictionary]:
 ## Pure fuzzy filter (testable): returns the commands whose title matches `query` as a
 ## prefix > substring > subsequence, best first. Empty query returns everything in order.
 static func filter_commands(commands: Array, query: String) -> Array:
+	return _fuzzy(commands, query, "title")
+
+
+## THE fuzzy order every palette mode shares: the entries whose `key` matches `query` as a prefix >
+## substring > subsequence, best first and otherwise in the order given. Empty query = all.
+static func _fuzzy(entries: Array, query: String, key: String) -> Array:
 	var q: String = query.strip_edges().to_lower()
-	if q.is_empty():
-		return commands.duplicate()
 	var scored: Array = []
-	for index: int in range(commands.size()):
-		var title: String = str((commands[index] as Dictionary).get("title", "")).to_lower()
-		var score: int = _command_match_score(title, q)
+	for index: int in range(entries.size()):
+		var score: int = 0 if q.is_empty() else _command_match_score(str((entries[index] as Dictionary).get(key, "")).to_lower(), q)
 		if score >= 0:
-			scored.append({"cmd": commands[index], "score": score, "index": index})
+			scored.append({"entry": entries[index], "score": score, "index": index})
 	scored.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		if a["score"] != b["score"]:
-			return a["score"] < b["score"]
-		return a["index"] < b["index"])
-	var result: Array = []
-	for entry: Dictionary in scored:
-		result.append(entry["cmd"])
-	return result
+		if int(a["score"]) != int(b["score"]):
+			return int(a["score"]) < int(b["score"])
+		return int(a["index"]) < int(b["index"]))
+	return scored.map(func(entry: Dictionary) -> Variant: return entry["entry"])
 
 
 static func _command_match_score(title: String, q: String) -> int:
@@ -108,21 +114,11 @@ static func _command_match_score(title: String, q: String) -> int:
 ## whose file name matches `query` (the leading `#` already stripped) as prefix > substring > subsequence,
 ## best first; empty query = all, name-sorted. Static → testable without a window, like filter_commands.
 static func filter_sheets(sheet_paths: PackedStringArray, query: String) -> Array:
-	var q: String = query.strip_edges().to_lower()
 	var entries: Array = []
 	for path: String in sheet_paths:
-		var sheet_name: String = path.get_file()
-		var score: int = 0 if q.is_empty() else _command_match_score(sheet_name.to_lower(), q)
-		if score >= 0:
-			entries.append({"title": sheet_name, "path": path, "score": score})
-	entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		if int(a["score"]) != int(b["score"]):
-			return int(a["score"]) < int(b["score"])
-		return str(a["title"]) < str(b["title"]))
-	var result: Array = []
-	for entry: Dictionary in entries:
-		result.append({"title": str(entry["title"]), "path": str(entry["path"])})
-	return result
+		entries.append({"title": path.get_file(), "path": path})
+	entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return str(a["title"]) < str(b["title"]))
+	return _fuzzy(entries, query, "title")
 
 
 ## The `#` mode's palette entries: every matching project sheet as a {title, run} that opens it - in
@@ -166,25 +162,9 @@ static func _collect_symbol_rows(rows: Array, symbols: Array) -> void:
 
 
 ## Pure fuzzy filter over collected symbols by their `name` (prefix > substring > subsequence), best
-## first, name-sorted. Empty query = all in collection order. Static → testable.
+## first. Empty query = all in collection order. Static → testable.
 static func filter_symbols(symbols: Array, query: String) -> Array:
-	var q: String = query.strip_edges().to_lower()
-	if q.is_empty():
-		return symbols.duplicate()
-	var scored: Array = []
-	for index: int in range(symbols.size()):
-		var name: String = str((symbols[index] as Dictionary).get("name", "")).to_lower()
-		var score: int = _command_match_score(name, q)
-		if score >= 0:
-			scored.append({"sym": symbols[index], "score": score, "index": index})
-	scored.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		if int(a["score"]) != int(b["score"]):
-			return int(a["score"]) < int(b["score"])
-		return int(a["index"]) < int(b["index"]))
-	var result: Array = []
-	for entry: Dictionary in scored:
-		result.append(entry["sym"])
-	return result
+	return _fuzzy(symbols, query, "name")
 
 
 ## The `@` mode's palette entries: matching symbols in the active sheet as {title, run} that reveal them.
@@ -221,34 +201,58 @@ func _open_command_palette() -> void:
 		_build_command_palette_window()
 	_command_palette_search.text = ""
 	_refresh_command_palette("")
-	_command_palette_window.popup_centered(Vector2i(520, 420))
+	_command_palette_window.popup_centered()
 	_command_palette_search.grab_focus()
 
 
+## The tab a query belongs to. Static + pure (testable without a window).
+static func mode_of(query: String) -> int:
+	if not parse_error_location(query).is_empty():
+		return MODE_ERROR
+	return maxi(MODE_PREFIXES.find(query.left(1), 1), 0) if not query.is_empty() else 0
+
+
 func _build_command_palette_window() -> void:
-	_command_palette_window = Window.new()
-	_command_palette_window.title = "Command Palette"
-	_command_palette_window.transient = true
-	_command_palette_window.exclusive = false
-	_command_palette_window.close_requested.connect(func() -> void: _command_palette_window.hide())
-	var margin := MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side: String in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_%s" % side, 8)
-	_command_palette_window.add_child(margin)
-	var box := VBoxContainer.new()
-	margin.add_child(box)
+	var parts: Dictionary = EventSheetPopupUI.action_window(EventSheetL10n.translate("Run a command"),
+		EventSheetL10n.translate("Run"), EventSheetL10n.translate("Cancel"), Vector2i(520, 420), _dock)
+	_command_palette_window = parts["window"]
+	_command_palette_window.confirmed.connect(_run_selected_command)
+	var box: VBoxContainer = parts["box"]
 	_command_palette_search = LineEdit.new()
-	_command_palette_search.placeholder_text = "Type a command…  (# sheet · @ symbol · ? docs · paste an error line)"
 	_command_palette_search.clear_button_enabled = true
 	_command_palette_search.text_changed.connect(_refresh_command_palette)
 	_command_palette_search.gui_input.connect(_on_command_palette_search_input)
 	box.add_child(_command_palette_search)
-	_command_palette_list = ItemList.new()
+	# The four prefix modes and the pasted error line, as tabs: clicking one types its prefix.
+	_command_palette_tabs = TabBar.new()
+	for title: String in [EventSheetL10n.translate("Commands"), EventSheetL10n.translate("# Sheets"),
+			EventSheetL10n.translate("@ Symbols"), EventSheetL10n.translate("? Docs"), EventSheetL10n.translate("Error line")]:
+		_command_palette_tabs.add_tab(title)
+	_command_palette_tabs.tab_clicked.connect(_choose_command_palette_mode)
+	box.add_child(_command_palette_tabs)
+	_command_palette_list = EventSheetPopupUI.sized_list(220.0)
 	_command_palette_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_command_palette_list.item_activated.connect(func(idx: int) -> void: _run_command_palette_index(idx))
+	_command_palette_list.item_activated.connect(_run_command_palette_index)
 	box.add_child(_command_palette_list)
-	_dock.add_child(_command_palette_window)
+	var strip: EventSheetPopupUI.HelpStrip = EventSheetPopupUI.help_strip()
+	strip.set_line(strip.add_line(EventSheetL10n.translate("KEYS")),
+		EventSheetL10n.translate("Enter runs the selected command · Up / Down moves · Esc closes"))
+	strip.set_line(strip.add_line(EventSheetL10n.translate("MODES")),
+		EventSheetL10n.translate("# opens any sheet · @ jumps to a symbol here · ? searches the docs · paste res://player.gd:42 to land on that row"))
+	box.add_child(strip)
+
+
+## A tab click swaps the query's prefix for the tab's own, keeping the words typed after it. The Error
+## line tab empties the field for the paste.
+func _choose_command_palette_mode(tab: int) -> void:
+	var query: String = _command_palette_search.text
+	var mode: int = mode_of(query)
+	var words: String = "" if MODE_ERROR in [mode, tab] else (query.substr(1) if mode > 0 else query)
+	_command_palette_search.text = MODE_PREFIXES[tab] + words
+	_command_palette_search.caret_column = _command_palette_search.text.length()
+	_refresh_command_palette(_command_palette_search.text, tab)
+	if _command_palette_search.is_inside_tree():
+		_command_palette_search.grab_focus()
 
 
 ## A script location in pasted text - "res://path.gd:42" anywhere inside it, so a whole error or
@@ -285,12 +289,17 @@ func _error_jump_matches(location: Dictionary) -> Array:
 			_dock.report_runtime_error(message, path, line)}]
 
 
-func _refresh_command_palette(query: String) -> void:
+## `chosen` is the tab just clicked: the Error line tab with nothing pasted yet lists nothing and
+## waits for the paste rather than falling back to the commands.
+func _refresh_command_palette(query: String, chosen: int = -1) -> void:
 	# Prefix modes: `#` opens any project sheet, `@` jumps to a symbol in the ACTIVE sheet
 	# (function / signal / variable), `?` searches the documentation, a pasted error/stack line
 	# jumps to the row that emitted it; anything else fuzzy-runs a command.
 	var error_location: Dictionary = parse_error_location(query)
-	if not error_location.is_empty():
+	var waiting_for_paste: bool = chosen == MODE_ERROR and error_location.is_empty()
+	if waiting_for_paste:
+		_command_palette_matches = []
+	elif not error_location.is_empty():
 		_command_palette_matches = _error_jump_matches(error_location)
 	elif query.begins_with("#"):
 		_command_palette_matches = _sheet_matches(query.substr(1))
@@ -302,6 +311,8 @@ func _refresh_command_palette(query: String) -> void:
 		_command_palette_matches = filter_commands(_command_palette_commands(), query)
 	if _command_palette_list == null:
 		return
+	_command_palette_tabs.current_tab = MODE_ERROR if waiting_for_paste else mode_of(query)
+	_command_palette_search.placeholder_text = EventSheetL10n.translate("Paste an error line, such as res://player.gd:42") 		if waiting_for_paste else EventSheetL10n.translate("Type a command…")
 	_command_palette_list.clear()
 	for cmd: Dictionary in _command_palette_matches:
 		_command_palette_list.add_item(str(cmd.get("title", "")))
@@ -317,8 +328,7 @@ func _on_command_palette_search_input(event: InputEvent) -> void:
 		KEY_ESCAPE:
 			_command_palette_window.hide()
 		KEY_ENTER, KEY_KP_ENTER:
-			var sel: PackedInt32Array = _command_palette_list.get_selected_items()
-			_run_command_palette_index(sel[0] if sel.size() > 0 else 0)
+			_run_selected_command()
 		KEY_DOWN:
 			_move_command_palette_selection(1)
 		KEY_UP:
@@ -333,6 +343,12 @@ func _move_command_palette_selection(delta: int) -> void:
 	var next: int = clampi(current + delta, 0, _command_palette_list.item_count - 1)
 	_command_palette_list.select(next)
 	_command_palette_list.ensure_current_is_visible()
+
+
+## Enter and the Run button: the selected command, or the first one when nothing is selected.
+func _run_selected_command() -> void:
+	var sel: PackedInt32Array = _command_palette_list.get_selected_items()
+	_run_command_palette_index(sel[0] if sel.size() > 0 else 0)
 
 
 func _run_command_palette_index(index: int) -> void:

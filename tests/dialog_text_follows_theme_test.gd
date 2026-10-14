@@ -60,6 +60,10 @@ const DIALOG_FILES: Array[String] = [
 	"res://addons/eventsheet/editor/docs/doc_why_panel.gd",
 	"res://addons/eventsheet/editor/dock/debugger_window.gd",
 	"res://addons/eventsheet/editor/dock/live_values_panel.gd",
+	"res://addons/eventsheet/editor/dock/command_palette.gd",
+	"res://addons/eventsheet/editor/dock/project_find.gd",
+	"res://addons/eventsheet/editor/dock/find_references_panel.gd",
+	"res://addons/eventsheet/editor/dock/repeated_rows.gd",
 ]
 
 

@@ -80,6 +80,20 @@
   edited (a behavior's, a list's items) reads muted instead of looking editable.
 - Fixed: double-clicking a Profile or Breakpoints row to go to it no longer marks the game as paused
   there, and the paused row is forgotten when the run ends.
+### Changed: the find windows say where each hit is and what their main button does
+- **Command Palette** (Ctrl+P): the four prefix modes are tabs - Commands, `#` Sheets, `@` Symbols,
+  `?` Docs - plus an Error line tab that waits for a pasted `res://file.gd:42`. Clicking a tab types
+  its prefix. The foot has Cancel and Run, and a strip names the keys and the modes. Every mode shares
+  one fuzzy order (prefix, then substring, then subsequence).
+- **Find in Project**: Find and Replace share one card, and results gain an Event column (the event's
+  margin number, or the line of a closed script) with a count under them. Picking a result names it
+  in the strip, with the matched text as it reads in code. That Replace in Project saves closed sheets
+  at once is said beside the button.
+- **Find References**: uses group under the sheet they sit in, with a count per sheet and in all. Go
+  to Row lands on the picked use, and the window is titled after the symbol.
+- **Find Repeated Rows**: why a run cannot become one function (it uses an event-local or a For Each
+  item) is said beside the greyed-out Make a Function button when the run is picked, not in the
+  status bar after pressing it. The strip names the events the run sits in.
 
 ### Fixed: a global made as a scene is found wherever the scene lives
 

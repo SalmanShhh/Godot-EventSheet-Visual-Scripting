@@ -242,8 +242,8 @@ static func _test_project_find_reads_gd_sheets() -> bool:
 	var found: Array = EventSheetProjectFind.find_in_project("TREASURE",
 		PackedStringArray([script_path]), {"res://open_sheet.tres": open_sheet})
 	all_passed = _check("a closed .gd is searched, and every result says where it is", found, [
-		{"path": "res://open_sheet.tres", "preview": "more treasure here", "uid": "evt-treasure", "line": 0},
-		{"path": script_path, "preview": "print(\"the hidden treasure\")", "uid": "", "line": 5},
+		{"path": "res://open_sheet.tres", "preview": "more treasure here", "uid": "evt-treasure", "line": 0, "event": 1},
+		{"path": script_path, "preview": "print(\"the hidden treasure\")", "uid": "", "line": 5, "event": 0},
 	]) and all_passed
 
 	var outcome: Dictionary = EventSheetProjectFind.replace_in_closed_sheets("treasure", "map",

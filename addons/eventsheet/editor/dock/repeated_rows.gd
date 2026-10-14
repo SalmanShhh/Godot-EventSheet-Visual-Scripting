@@ -21,10 +21,15 @@ extends RefCounted
 
 var _dock: Control = null
 
-var window: Window = null
+var window: ConfirmationDialog = null
 var tree: Tree = null
 var summary_label: Label = null
+## The window's own OK button.
 var make_verb_button: Button = null
+## Why the selected run cannot become a function, beside the greyed-out button.
+var reason_note: EventSheetPopupUI.StateNote = null
+var strip: EventSheetPopupUI.HelpStrip = null
+var this_row: Label = null
 
 var _runs: Array = []
 
@@ -180,41 +185,36 @@ static func _collect_events(rows: Array, events: Array) -> void:
 func build() -> void:
 	if window != null:
 		return
-	window = Window.new()
-	window.title = "Find Repeated Rows"
-	window.size = Vector2i(600, 480)
-	window.min_size = Vector2i(420, 320)
-	window.close_requested.connect(func() -> void: window.hide())
-	var body: VBoxContainer = EventSheetPopupUI.form_box()
-	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	summary_label = EventSheetPopupUI.hint_label(
-		"Runs of actions that appear more than once. Pick one and make it a function: it is extracted at the first place and called at the rest, in one undo step.", 460.0)
+	var parts: Dictionary = EventSheetPopupUI.action_window(
+		EventSheetL10n.translate("Make a function from repeated rows"), EventSheetL10n.translate("Make a Function…"),
+		EventSheetL10n.translate("Close"), Vector2i(600, 480), _dock)
+	window = parts["window"]
+	window.confirmed.connect(_on_make_verb_pressed)
+	make_verb_button = window.get_ok_button()
+	make_verb_button.tooltip_text = EventSheetL10n.translate("Name this run: it becomes one reusable function, extracted where it first appears and called everywhere else.")
+	reason_note = parts["note"]
+	var body: VBoxContainer = parts["box"]
+	summary_label = EventSheetPopupUI.hint_label("", 460.0)
 	body.add_child(summary_label)
 	tree = Tree.new()
 	tree.hide_root = true
 	tree.columns = 2
-	tree.set_column_title(0, "Repeated run")
-	tree.set_column_title(1, "Saves")
+	tree.set_column_title(0, EventSheetL10n.translate("Repeated run"))
+	tree.set_column_title(1, EventSheetL10n.translate("Saves"))
 	tree.column_titles_visible = true
 	tree.set_column_expand(1, false)
-	tree.set_column_custom_minimum_width(1, 110)
+	tree.set_column_custom_minimum_width(1, roundi(EventSheetPalette.scaled_f(110.0)))
 	tree.select_mode = Tree.SELECT_ROW
 	tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	tree.item_selected.connect(_on_run_selected)
 	tree.item_activated.connect(_on_run_activated)
-	var card: PanelContainer = EventSheetPopupUI.labelled_card("Repeats", tree)
+	var card: PanelContainer = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Repeats"), tree)
 	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(card)
-	make_verb_button = Button.new()
-	make_verb_button.text = "Make a Function…"
-	make_verb_button.tooltip_text = "Name this run: it becomes one reusable function, extracted where it first appears and called everywhere else."
-	make_verb_button.disabled = true
-	make_verb_button.pressed.connect(_on_make_verb_pressed)
-	body.add_child(make_verb_button)
-	var margined: MarginContainer = EventSheetPopupUI.margined(body)
-	margined.set_anchors_preset(Control.PRESET_FULL_RECT)
-	window.add_child(margined)
-	_dock.add_child(window)
+	strip = EventSheetPopupUI.help_strip()
+	this_row = strip.add_line(EventSheetL10n.translate("THIS ROW"), true)
+	strip.visible = false
+	body.add_child(strip)
 
 
 func open() -> void:
@@ -235,17 +235,21 @@ func refresh() -> int:
 		var run: Dictionary = _runs[run_index]
 		var item: TreeItem = tree.create_item(root)
 		var places: int = (run["occurrences"] as Array).size()
-		item.set_text(0, "%d places × %d rows%s" % [places, int(run["length"]),
-			"  (needs parameters)" if bool(run.get("needs_parameters", false)) else ""])
-		item.set_text(1, "%d rows" % int(run["rows_saved"]))
+		item.set_text(0, (EventSheetL10n.translate("%d places × %d rows  (needs parameters)")
+			if bool(run.get("needs_parameters", false)) else EventSheetL10n.translate("%d places × %d rows")) % [
+			places, int(run["length"])])
+		item.set_text(1, EventSheetL10n.translate("%d rows") % int(run["rows_saved"]))
 		item.set_metadata(0, run_index)
+		item.collapsed = run_index > 0
 		for label: String in (run["labels"] as PackedStringArray):
 			var child: TreeItem = tree.create_item(item)
 			child.set_text(0, label)
 			child.set_metadata(0, run_index)
 	make_verb_button.disabled = true
-	summary_label.text = "No repeated runs - every action sequence on this sheet is written once." if _runs.is_empty() \
-		else "%d repeated run(s). Pick one and make it a function: extracted where it first appears, called everywhere else, one undo step." % _runs.size()
+	reason_note.say("")
+	strip.visible = false
+	summary_label.text = EventSheetL10n.translate("No repeated runs - every action sequence on this sheet is written once.") if _runs.is_empty() \
+		else EventSheetL10n.translate("%d repeated run(s). Pick one and make it a function: extracted where it first appears, called everywhere else, one undo step.") % _runs.size()
 	return _runs.size()
 
 
@@ -256,9 +260,29 @@ func _selected_run_index() -> int:
 	return int(selected.get_metadata(0))
 
 
+## Picking a run names its places in the strip and, when it cannot become one function, says why
+## beside the greyed-out button rather than after it is pressed.
 func _on_run_selected() -> void:
 	var index: int = _selected_run_index()
-	make_verb_button.disabled = index < 0 or bool((_runs[index] as Dictionary).get("needs_parameters", false))
+	var blocked: bool = index >= 0 and bool((_runs[index] as Dictionary).get("needs_parameters", false))
+	make_verb_button.disabled = index < 0 or blocked
+	reason_note.say(EventSheetL10n.translate("This run uses an event-local or a For Each item, so the places cannot share one function. Extract it at one place instead.")
+		if blocked else "", EventSheetPopupUI.TONE_WARNING)
+	strip.visible = index >= 0
+	if index >= 0:
+		strip.set_line(this_row, EventSheetL10n.translate("Events %s run the same %d action(s).") % [
+			", ".join(_event_numbers_of(_runs[index] as Dictionary)), int((_runs[index] as Dictionary)["length"])])
+
+
+## The margin numbers of the events a run's places sit in, in sheet order.
+func _event_numbers_of(run: Dictionary) -> PackedStringArray:
+	var numbers: Dictionary = EventSheetResource.event_numbers(_dock._current_sheet.events, _dock._current_sheet.functions)
+	var named: PackedStringArray = PackedStringArray()
+	for occurrence: Dictionary in (run["occurrences"] as Array):
+		var number: String = str(int(numbers.get((occurrence["event"] as EventRow).get_instance_id(), 0)))
+		if not named.has(number):
+			named.append(number)
+	return named
 
 
 ## Double-click jumps to the run's first site, so a repeat can be read in place before it is named.
@@ -288,8 +312,8 @@ func make_verb(run_index: int, raw_name: String) -> bool:
 	if run_index < 0 or run_index >= _runs.size():
 		return false
 	var run: Dictionary = _runs[run_index]
+	# The window already says why beside the greyed-out button; this guards a call from code.
 	if bool(run.get("needs_parameters", false)):
-		_dock._set_status("That run uses an event-local or a For-Each item, so the sites can't share one function without parameters. Extract it at one site instead.", true)
 		return false
 	var occurrences: Array = run["occurrences"]
 	var length: int = int(run["length"])

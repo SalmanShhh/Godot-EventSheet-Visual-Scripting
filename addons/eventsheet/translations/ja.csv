@@ -8549,3 +8549,47 @@ How it got here: %s,ここまでの経緯: %s
 cannot read,読み取れません
 %s is not a streamed value.,%s はストリームされた値ではありません。
 %s = %s   # into the running game; the sheet is not changed,%s = %s   # 実行中のゲームへ。シートは変更されません
+Run a command,コマンドを実行
+Commands,コマンド
+# Sheets,# シート
+@ Symbols,@ シンボル
+? Docs,? ドキュメント
+Error line,エラー行
+KEYS,キー
+Enter runs the selected command · Up / Down moves · Esc closes,Enter で選択中のコマンドを実行 · 上 / 下 で移動 · Esc で閉じる
+MODES,モード
+# opens any sheet · @ jumps to a symbol here · ? searches the docs · paste res://player.gd:42 to land on that row,# で任意のシートを開く · @ でこのシートのシンボルへ移動 · ? でドキュメントを検索 · res://player.gd:42 を貼り付けるとその行へ移動
+"Paste an error line, such as res://player.gd:42",エラー行を貼り付け (例: res://player.gd:42)
+Type a command…,コマンドを入力…
+Find References,参照を検索
+Go to Row,行へ移動
+Find symbol,シンボルを検索
+Symbol,シンボル
+"Whole symbol, so move_speed never matches max_move_speed.",シンボル全体で照合するので、move_speed が max_move_speed に一致することはありません。
+THIS ROW,この行
+Find every use of %s,%s のすべての使用箇所を検索
+%d reference(s),%d 件の参照
+%d reference(s) in %d sheet(s),%d 件の参照 (%d 個のシート)
+No whole-symbol matches.,シンボル全体の一致はありません。
+"%s, in %s.",%s、%s 内。
+Find and replace in every sheet,すべてのシートで検索と置換
+Replace in Project,プロジェクト内で置換
+Closed sheets are saved at once; only the open sheet can be undone.,閉じているシートはすぐに保存されます。元に戻せるのは開いているシートだけです。
+Replace with,置換後
+Find and replace,検索と置換
+"%d match(es) for ""%s"" in %d sheet(s). Searched every sheet, .tres and .gd.","%d 件の一致 (""%s""、%d 個のシート)。すべてのシート (.tres と .gd) を検索しました。"
+"%s, outside any event. Double-click opens the sheet and fills the Find bar.",%s、どのイベントにも属しません。ダブルクリックでシートを開き、検索バーに入力します。
+"%s, %s. Double-click opens the sheet, lands on the row and fills the Find bar.",%s、%s。ダブルクリックでシートを開き、その行へ移動して検索バーに入力します。
+event %s,イベント %s
+Make a function from repeated rows,繰り返される行から関数を作る
+Make a Function…,関数を作る…
+"Name this run: it becomes one reusable function, extracted where it first appears and called everywhere else.",この並びに名前を付けます: 再利用できる関数になり、最初の場所で抽出され、他のすべての場所で呼び出されます。
+Repeated run,繰り返される並び
+Saves,削減
+Repeats,繰り返し
+%d places × %d rows  (needs parameters),%d 箇所 × %d 行  (パラメーターが必要)
+%d places × %d rows,%d 箇所 × %d 行
+No repeated runs - every action sequence on this sheet is written once.,繰り返される並びはありません - このシートのアクションの並びはどれも一度だけ書かれています。
+"%d repeated run(s). Pick one and make it a function: extracted where it first appears, called everywhere else, one undo step.",%d 個の繰り返される並び。1 つ選んで関数にします: 最初の場所で抽出され、他のすべての場所で呼び出され、元に戻す操作は 1 回です。
+"This run uses an event-local or a For Each item, so the places cannot share one function. Extract it at one place instead.",この並びはイベントローカル変数か For Each の要素を使うため、各箇所で 1 つの関数を共有できません。代わりに 1 箇所で抽出してください。
+Events %s run the same %d action(s).,イベント %s は同じ %d 個のアクションを実行します。

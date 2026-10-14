@@ -8549,3 +8549,47 @@ How it got here: %s,Cómo llegó aquí: %s
 cannot read,no se puede leer
 %s is not a streamed value.,%s no es un valor transmitido.
 %s = %s   # into the running game; the sheet is not changed,%s = %s   # al juego en ejecución; la hoja no cambia
+Run a command,Ejecutar un comando
+Commands,Comandos
+# Sheets,# Hojas
+@ Symbols,@ Símbolos
+? Docs,? Documentación
+Error line,Línea de error
+KEYS,TECLAS
+Enter runs the selected command · Up / Down moves · Esc closes,Intro ejecuta el comando seleccionado · Arriba / Abajo mueve · Esc cierra
+MODES,MODOS
+# opens any sheet · @ jumps to a symbol here · ? searches the docs · paste res://player.gd:42 to land on that row,# abre cualquier hoja · @ salta a un símbolo de aquí · ? busca en la documentación · pega res://player.gd:42 para llegar a esa fila
+"Paste an error line, such as res://player.gd:42","Pega una línea de error, como res://player.gd:42"
+Type a command…,Escribe un comando…
+Find References,Buscar referencias
+Go to Row,Ir a la fila
+Find symbol,Buscar símbolo
+Symbol,Símbolo
+"Whole symbol, so move_speed never matches max_move_speed.","Símbolo completo, así move_speed nunca coincide con max_move_speed."
+THIS ROW,ESTA FILA
+Find every use of %s,Buscar cada uso de %s
+%d reference(s),%d referencia(s)
+%d reference(s) in %d sheet(s),%d referencia(s) en %d hoja(s)
+No whole-symbol matches.,Sin coincidencias del símbolo completo.
+"%s, in %s.","%s, en %s."
+Find and replace in every sheet,Buscar y reemplazar en todas las hojas
+Replace in Project,Reemplazar en el proyecto
+Closed sheets are saved at once; only the open sheet can be undone.,Las hojas cerradas se guardan al instante; solo la hoja abierta se puede deshacer.
+Replace with,Reemplazar con
+Find and replace,Buscar y reemplazar
+"%d match(es) for ""%s"" in %d sheet(s). Searched every sheet, .tres and .gd.","%d coincidencia(s) de ""%s"" en %d hoja(s). Se buscó en todas las hojas, .tres y .gd."
+"%s, outside any event. Double-click opens the sheet and fills the Find bar.","%s, fuera de cualquier evento. Doble clic abre la hoja y rellena la barra de búsqueda."
+"%s, %s. Double-click opens the sheet, lands on the row and fills the Find bar.","%s, %s. Doble clic abre la hoja, llega a la fila y rellena la barra de búsqueda."
+event %s,evento %s
+Make a function from repeated rows,Crear una función a partir de filas repetidas
+Make a Function…,Crear una función…
+"Name this run: it becomes one reusable function, extracted where it first appears and called everywhere else.","Nombra esta secuencia: se convierte en una función reutilizable, extraída donde aparece primero y llamada en todos los demás sitios."
+Repeated run,Secuencia repetida
+Saves,Ahorra
+Repeats,Repeticiones
+%d places × %d rows  (needs parameters),%d sitios × %d filas  (necesita parámetros)
+%d places × %d rows,%d sitios × %d filas
+No repeated runs - every action sequence on this sheet is written once.,No hay secuencias repetidas - cada secuencia de acciones de esta hoja está escrita una vez.
+"%d repeated run(s). Pick one and make it a function: extracted where it first appears, called everywhere else, one undo step.","%d secuencia(s) repetida(s). Elige una y conviértela en función: extraída donde aparece primero, llamada en todos los demás sitios, un solo paso de deshacer."
+"This run uses an event-local or a For Each item, so the places cannot share one function. Extract it at one place instead.","Esta secuencia usa una variable local del evento o un elemento de For Each, así que los sitios no pueden compartir una función. Extráela en un solo sitio."
+Events %s run the same %d action(s).,Los eventos %s ejecutan las mismas %d acción(es).

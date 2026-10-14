@@ -8549,3 +8549,47 @@ How it got here: %s,Как сюда попало: %s
 cannot read,не читается
 %s is not a streamed value.,%s не является передаваемым значением.
 %s = %s   # into the running game; the sheet is not changed,%s = %s   # в запущенную игру; лист не меняется
+Run a command,Выполнить команду
+Commands,Команды
+# Sheets,# Листы
+@ Symbols,@ Символы
+? Docs,? Документация
+Error line,Строка ошибки
+KEYS,КЛАВИШИ
+Enter runs the selected command · Up / Down moves · Esc closes,Enter выполняет выбранную команду · Вверх / Вниз перемещает · Esc закрывает
+MODES,РЕЖИМЫ
+# opens any sheet · @ jumps to a symbol here · ? searches the docs · paste res://player.gd:42 to land on that row,"# открывает любой лист · @ переходит к символу здесь · ? ищет в документации · вставьте res://player.gd:42, чтобы попасть на эту строку"
+"Paste an error line, such as res://player.gd:42","Вставьте строку ошибки, например res://player.gd:42"
+Type a command…,Введите команду…
+Find References,Найти ссылки
+Go to Row,Перейти к строке
+Find symbol,Найти символ
+Symbol,Символ
+"Whole symbol, so move_speed never matches max_move_speed.","Символ целиком, поэтому move_speed никогда не совпадёт с max_move_speed."
+THIS ROW,ЭТА СТРОКА
+Find every use of %s,Найти каждое использование %s
+%d reference(s),Ссылок: %d
+%d reference(s) in %d sheet(s),"Ссылок: %d, листов: %d"
+No whole-symbol matches.,Совпадений символа целиком нет.
+"%s, in %s.","%s, в %s."
+Find and replace in every sheet,Найти и заменить во всех листах
+Replace in Project,Заменить в проекте
+Closed sheets are saved at once; only the open sheet can be undone.,Закрытые листы сохраняются сразу; отменить можно только изменения в открытом листе.
+Replace with,Заменить на
+Find and replace,Найти и заменить
+"%d match(es) for ""%s"" in %d sheet(s). Searched every sheet, .tres and .gd.","Совпадений: %d для ""%s"", листов: %d. Просмотрены все листы, .tres и .gd."
+"%s, outside any event. Double-click opens the sheet and fills the Find bar.","%s, вне событий. Двойной щелчок открывает лист и заполняет строку поиска."
+"%s, %s. Double-click opens the sheet, lands on the row and fills the Find bar.","%s, %s. Двойной щелчок открывает лист, переходит к строке и заполняет строку поиска."
+event %s,событие %s
+Make a function from repeated rows,Сделать функцию из повторяющихся строк
+Make a Function…,Сделать функцию…
+"Name this run: it becomes one reusable function, extracted where it first appears and called everywhere else.","Назовите эту последовательность: она станет функцией для повторного использования, вынесенной там, где встречается впервые, и вызываемой во всех остальных местах."
+Repeated run,Повторяющаяся последовательность
+Saves,Экономит
+Repeats,Повторы
+%d places × %d rows  (needs parameters),%d мест × %d строк  (нужны параметры)
+%d places × %d rows,%d мест × %d строк
+No repeated runs - every action sequence on this sheet is written once.,Повторяющихся последовательностей нет - каждая последовательность действий в этом листе записана один раз.
+"%d repeated run(s). Pick one and make it a function: extracted where it first appears, called everywhere else, one undo step.","Повторяющихся последовательностей: %d. Выберите одну и сделайте из неё функцию: она будет вынесена там, где встречается впервые, вызвана во всех остальных местах, одним шагом отмены."
+"This run uses an event-local or a For Each item, so the places cannot share one function. Extract it at one place instead.","Эта последовательность использует локальную переменную события или элемент For Each, поэтому места не могут разделить одну функцию. Вынесите её в одном месте."
+Events %s run the same %d action(s).,События %s выполняют одни и те же действия (%d).

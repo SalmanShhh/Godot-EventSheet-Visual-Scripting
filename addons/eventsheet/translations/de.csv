@@ -8549,3 +8549,47 @@ How it got here: %s,Wie es hierher kam: %s
 cannot read,nicht lesbar
 %s is not a streamed value.,%s ist kein gestreamter Wert.
 %s = %s   # into the running game; the sheet is not changed,%s = %s   # ins laufende Spiel; das Blatt bleibt unverändert
+Run a command,Befehl ausführen
+Commands,Befehle
+# Sheets,# Blätter
+@ Symbols,@ Symbole
+? Docs,? Doku
+Error line,Fehlerzeile
+KEYS,TASTEN
+Enter runs the selected command · Up / Down moves · Esc closes,Enter führt den gewählten Befehl aus · Auf / Ab bewegt · Esc schließt
+MODES,MODI
+# opens any sheet · @ jumps to a symbol here · ? searches the docs · paste res://player.gd:42 to land on that row,"# öffnet ein beliebiges Blatt · @ springt zu einem Symbol hier · ? durchsucht die Doku · res://player.gd:42 einfügen, um auf dieser Zeile zu landen"
+"Paste an error line, such as res://player.gd:42","Fehlerzeile einfügen, etwa res://player.gd:42"
+Type a command…,Befehl eingeben…
+Find References,Verwendungen finden
+Go to Row,Zur Zeile
+Find symbol,Symbol finden
+Symbol,Symbol
+"Whole symbol, so move_speed never matches max_move_speed.","Ganzes Symbol, also findet move_speed nie max_move_speed."
+THIS ROW,DIESE ZEILE
+Find every use of %s,Jede Verwendung von %s finden
+%d reference(s),%d Verwendung(en)
+%d reference(s) in %d sheet(s),%d Verwendung(en) in %d Blatt/Blättern
+No whole-symbol matches.,Keine Treffer für das ganze Symbol.
+"%s, in %s.","%s, in %s."
+Find and replace in every sheet,In jedem Blatt suchen und ersetzen
+Replace in Project,Im Projekt ersetzen
+Closed sheets are saved at once; only the open sheet can be undone.,Geschlossene Blätter werden sofort gespeichert; nur das offene Blatt lässt sich rückgängig machen.
+Replace with,Ersetzen durch
+Find and replace,Suchen und ersetzen
+"%d match(es) for ""%s"" in %d sheet(s). Searched every sheet, .tres and .gd.","%d Treffer für ""%s"" in %d Blatt/Blättern. Jedes Blatt durchsucht, .tres und .gd."
+"%s, outside any event. Double-click opens the sheet and fills the Find bar.","%s, außerhalb jedes Ereignisses. Doppelklick öffnet das Blatt und füllt die Suchleiste."
+"%s, %s. Double-click opens the sheet, lands on the row and fills the Find bar.","%s, %s. Doppelklick öffnet das Blatt, landet auf der Zeile und füllt die Suchleiste."
+event %s,Ereignis %s
+Make a function from repeated rows,Funktion aus wiederholten Zeilen machen
+Make a Function…,Funktion machen…
+"Name this run: it becomes one reusable function, extracted where it first appears and called everywhere else.","Diese Folge benennen: Sie wird eine wiederverwendbare Funktion, herausgelöst an ihrer ersten Stelle und überall sonst aufgerufen."
+Repeated run,Wiederholte Folge
+Saves,Spart
+Repeats,Wiederholungen
+%d places × %d rows  (needs parameters),%d Stellen × %d Zeilen  (braucht Parameter)
+%d places × %d rows,%d Stellen × %d Zeilen
+No repeated runs - every action sequence on this sheet is written once.,Keine wiederholten Folgen - jede Aktionsfolge in diesem Blatt steht nur einmal da.
+"%d repeated run(s). Pick one and make it a function: extracted where it first appears, called everywhere else, one undo step.","%d wiederholte Folge(n). Wähle eine und mach eine Funktion daraus: herausgelöst an der ersten Stelle, überall sonst aufgerufen, ein Rückgängig-Schritt."
+"This run uses an event-local or a For Each item, so the places cannot share one function. Extract it at one place instead.","Diese Folge nutzt eine Ereignis-Lokale oder ein For-Each-Element, also können die Stellen keine Funktion teilen. Löse sie stattdessen an einer Stelle heraus."
+Events %s run the same %d action(s).,Ereignisse %s führen dieselben %d Aktion(en) aus.

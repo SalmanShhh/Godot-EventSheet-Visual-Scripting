@@ -22,63 +22,76 @@ func _init(dock: Control) -> void:
 func open(initial_query: String = "") -> void:
 	_open_project_find(initial_query)
 
-var _project_find_window: Window = null
+var _project_find_window: ConfirmationDialog = null
 var _project_find_edit: LineEdit = null
 var _project_replace_edit: LineEdit = null
 var _project_find_results: Tree = null
+var _project_find_count: Label = null
+var _project_find_strip: EventSheetPopupUI.HelpStrip = null
+var _project_find_this_row: Label = null
 
 
 func _open_project_find(initial_query: String = "") -> void:
 	if _project_find_window == null:
-		_project_find_window = Window.new()
-		_project_find_window.title = "Find in Project"
-		_project_find_window.size = Vector2i(560, 460)
-		_project_find_window.close_requested.connect(func() -> void: _project_find_window.hide())
-		var box: VBoxContainer = VBoxContainer.new()
-		box.set_anchors_preset(Control.PRESET_FULL_RECT)
-		box.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)
-		var query_row: HBoxContainer = HBoxContainer.new()
-		_project_find_edit = LineEdit.new()
-		_project_find_edit.placeholder_text = "Find across every sheet in the project…"
-		_project_find_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_project_find_edit.text_submitted.connect(func(_t: String) -> void: _run_project_find())
-		query_row.add_child(_project_find_edit)
-		var find_button: Button = Button.new()
-		find_button.text = "Find"
-		find_button.pressed.connect(_run_project_find)
-		query_row.add_child(find_button)
-		box.add_child(EventSheetPopupUI.titled_card("Find", query_row))
-		var replace_row: HBoxContainer = HBoxContainer.new()
-		_project_replace_edit = LineEdit.new()
-		_project_replace_edit.placeholder_text = "Replace with… (applies to every match below)"
-		_project_replace_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		replace_row.add_child(_project_replace_edit)
-		var replace_button: Button = Button.new()
-		replace_button.text = "Replace in Project"
-		replace_button.pressed.connect(_run_project_replace)
-		replace_row.add_child(replace_button)
-		box.add_child(EventSheetPopupUI.titled_card("Replace", replace_row))
-		box.add_child(EventSheetPopupUI.hint_label("Replace in Project writes closed sheets to disk immediately - only the open sheet's change is undoable."))
-		_project_find_results = Tree.new()
-		_project_find_results.hide_root = true
-		_project_find_results.columns = 2
-		_project_find_results.set_column_title(0, "Sheet")
-		_project_find_results.set_column_title(1, "Match")
-		_project_find_results.column_titles_visible = true
-		_project_find_results.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		_project_find_results.item_activated.connect(_on_project_find_activated)
-		var results_card: PanelContainer = EventSheetPopupUI.titled_card("Results", _project_find_results)
-		results_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		results_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		box.add_child(results_card)
-		_project_find_window.add_child(EventSheetPopupUI.margined(box))
-		_dock.add_child(_project_find_window)
+		_build_project_find()
 	if not initial_query.is_empty():
 		_project_find_edit.text = initial_query
 	_project_find_window.popup_centered()
 	_project_find_edit.grab_focus()
 	if not initial_query.is_empty():
 		_run_project_find()
+
+
+## Builds the window without showing it, so a test can drive it headless.
+func _build_project_find() -> void:
+	var parts: Dictionary = EventSheetPopupUI.action_window(
+		EventSheetL10n.translate("Find and replace in every sheet"), EventSheetL10n.translate("Replace in Project"),
+		EventSheetL10n.translate("Close"), Vector2i(560, 480), _dock)
+	_project_find_window = parts["window"]
+	_project_find_window.confirmed.connect(_run_project_replace)
+	# What the main button cannot take back, said beside it.
+	(parts["note"] as EventSheetPopupUI.StateNote).say(EventSheetL10n.translate(
+		"Closed sheets are saved at once; only the open sheet can be undone."), EventSheetPopupUI.TONE_WARNING)
+	var box: VBoxContainer = parts["box"]
+	var form: VBoxContainer = EventSheetPopupUI.form_box()
+	var query_row: HBoxContainer = HBoxContainer.new()
+	_project_find_edit = LineEdit.new()
+	_project_find_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_project_find_edit.text_submitted.connect(func(_t: String) -> void: _run_project_find())
+	query_row.add_child(_project_find_edit)
+	var find_button: Button = Button.new()
+	find_button.text = EventSheetL10n.translate("Find")
+	find_button.pressed.connect(_run_project_find)
+	query_row.add_child(find_button)
+	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Find"), query_row))
+	_project_replace_edit = LineEdit.new()
+	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Replace with"), _project_replace_edit))
+	box.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("Find and replace"), form))
+	_project_find_results = Tree.new()
+	_project_find_results.hide_root = true
+	_project_find_results.columns = 3
+	_project_find_results.set_column_title(0, EventSheetL10n.translate("Sheet"))
+	_project_find_results.set_column_title(1, EventSheetL10n.translate("Event"))
+	_project_find_results.set_column_title(2, EventSheetL10n.translate("Match"))
+	_project_find_results.set_column_expand(1, false)
+	_project_find_results.set_column_custom_minimum_width(1, roundi(EventSheetPalette.scaled_f(64.0)))
+	_project_find_results.column_titles_visible = true
+	_project_find_results.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_project_find_results.custom_minimum_size.y = EventSheetPalette.scaled_f(170.0)
+	_project_find_results.item_selected.connect(_on_project_find_selected)
+	_project_find_results.item_activated.connect(_on_project_find_activated)
+	var results: VBoxContainer = EventSheetPopupUI.form_box()
+	results.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	results.add_child(_project_find_results)
+	_project_find_count = EventSheetPopupUI.hint_label("")
+	results.add_child(_project_find_count)
+	var results_card: PanelContainer = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Results"), results)
+	results_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(results_card)
+	_project_find_strip = EventSheetPopupUI.help_strip()
+	_project_find_this_row = _project_find_strip.add_line(EventSheetL10n.translate("THIS ROW"), true)
+	_project_find_strip.visible = false
+	box.add_child(_project_find_strip)
 
 
 ## Every .tres EventSheetResource under res:// (skips .godot and addons internals). `.tres` ONLY: a
@@ -148,12 +161,13 @@ static func find_in_script_text(source: String, needle: String) -> Array:
 	return matches
 
 
-## Every match of `needle` across `sheet_paths`, in path order: [{path, preview, uid, line}].
+## Every match of `needle` across `sheet_paths`, in path order: [{path, preview, uid, line, event}].
 ## `open_sheets` ({path: EventSheetResource}) are the live versions of their files - a word typed a
 ## second ago exists only in memory - so they are searched as sheets, and searched even when the walk
 ## did not list them. A closed `.gd` is searched as its text; a closed `.tres` loads. `uid` is the
-## event a match sits in ("" outside one); `line` is the file line of a closed `.gd` match (0
-## otherwise). Together they are where a result takes the reader.
+## event a match sits in ("" outside one) and `event` its number in the sheet's margin (0 outside
+## one, and for a closed `.gd`, which is never imported to be searched); `line` is the file line of
+## a closed `.gd` match (0 otherwise). Together they are where a result takes the reader.
 static func find_in_project(needle: String, sheet_paths: PackedStringArray,
 		open_sheets: Dictionary = {}) -> Array:
 	var found: Array = []
@@ -166,20 +180,38 @@ static func find_in_project(needle: String, sheet_paths: PackedStringArray,
 	paths.sort()
 	for sheet_path: String in paths:
 		var matches: Array = []
+		var sheet: EventSheetResource = null
 		if open_sheets.has(sheet_path):
-			matches = find_in_sheet(open_sheets[sheet_path] as EventSheetResource, needle)
+			sheet = open_sheets[sheet_path] as EventSheetResource
 		elif sheet_path.get_extension().to_lower() == "gd":
 			matches = find_in_script_text(FileAccess.get_file_as_string(sheet_path), needle)
 		else:
-			matches = find_in_sheet(load(sheet_path) as EventSheetResource, needle)
+			sheet = load(sheet_path) as EventSheetResource
+		if sheet != null:
+			matches = find_in_sheet(sheet, needle)
+		var numbers: Dictionary = _event_numbers_by_uid(sheet) if not matches.is_empty() else {}
 		for match_entry: Dictionary in matches:
 			found.append({
 				"path": sheet_path,
 				"preview": str(match_entry.get("preview", "")),
 				"uid": str(match_entry.get("uid", "")),
 				"line": int(match_entry.get("line", 0)),
+				"event": int(numbers.get(str(match_entry.get("uid", "")), 0)),
 			})
 	return found
+
+
+## uid -> the event's number in the sheet's margin, through the one numbering walk the margin uses.
+static func _event_numbers_by_uid(sheet: EventSheetResource) -> Dictionary:
+	var by_uid: Dictionary = {}
+	if sheet == null:
+		return by_uid
+	var numbers: Dictionary = EventSheetResource.event_numbers(sheet.events, sheet.functions)
+	for id: int in numbers:
+		var row: Object = instance_from_id(id)
+		if row is EventRow and not (row as EventRow).event_uid.is_empty():
+			by_uid[(row as EventRow).event_uid] = int(numbers[id])
+	return by_uid
 
 
 ## Replace across the CLOSED sheets among `sheet_paths` - every path in `skip` is left alone, because
@@ -321,23 +353,57 @@ static func _collect_findable_text(rows: Array, into: Array, uid: String = "") -
 			_collect_findable_text(event_row.sub_events, into, own_uid)
 
 
-func _run_project_find() -> void:
+## Fills the results and the count under them. Returns the number of matches (testable headless).
+func _run_project_find() -> int:
 	var needle: String = _project_find_edit.text
 	_project_find_results.clear()
+	_project_find_strip.visible = false
 	var root_item: TreeItem = _project_find_results.create_item()
+	_project_find_count.text = ""
 	if needle.strip_edges().is_empty():
-		return
-	var total: int = 0
-	for match_entry: Dictionary in find_in_project(needle, list_all_project_sheets(),
-			EventSheetFindReferences.open_sheets_of(_dock)):
+		return 0
+	var found: Array = find_in_project(needle, list_all_project_sheets(), EventSheetFindReferences.open_sheets_of(_dock))
+	var sheets: Dictionary = {}
+	for match_entry: Dictionary in found:
 		var item: TreeItem = _project_find_results.create_item(root_item)
 		item.set_text(0, str(match_entry["path"]).get_file())
-		item.set_text(1, "…%s…" % str(match_entry.get("preview", "")))
+		item.set_text(1, where_in_sheet(match_entry))
+		item.set_text(2, "…%s…" % str(match_entry.get("preview", "")))
 		# Where the match IS, not only which file: the event it sits in, or the line of a closed
 		# script, so activating the result lands on the row rather than at the top of the sheet.
 		item.set_metadata(0, match_entry)
-		total += 1
-	_dock._set_status("Find in Project: %d match(es) for \"%s\"." % [total, needle])
+		sheets[match_entry["path"]] = true
+	_project_find_count.text = EventSheetL10n.translate("%d match(es) for \"%s\" in %d sheet(s). Searched every sheet, .tres and .gd.") % [
+		found.size(), needle, sheets.size()]
+	return found.size()
+
+
+## The Event column of one result: the event's number, the line of a closed script, or "-" for
+## text that sits outside any event (a loose comment, a group's name).
+static func where_in_sheet(match_entry: Dictionary) -> String:
+	if int(match_entry.get("event", 0)) > 0:
+		return str(int(match_entry["event"]))
+	if int(match_entry.get("line", 0)) > 0:
+		return EventSheetL10n.translate("line %d") % int(match_entry["line"])
+	return "-"
+
+
+## The strip under the results names the selected one: which sheet, where in it, what a
+## double-click does, and the matched text as it reads in the code.
+func _on_project_find_selected() -> void:
+	var selected: TreeItem = _project_find_results.get_selected()
+	if selected == null or not (selected.get_metadata(0) is Dictionary):
+		return
+	var target: Dictionary = selected.get_metadata(0)
+	var sheet_name: String = str(target.get("path", "")).get_file()
+	var place: String = where_in_sheet(target)
+	var told: String = EventSheetL10n.translate("%s, outside any event. Double-click opens the sheet and fills the Find bar.") % sheet_name
+	if place != "-":
+		told = EventSheetL10n.translate("%s, %s. Double-click opens the sheet, lands on the row and fills the Find bar.") % [
+			sheet_name, (EventSheetL10n.translate("event %s") % place) if int(target.get("event", 0)) > 0 else place]
+	_project_find_strip.set_line(_project_find_this_row, told)
+	_project_find_strip.set_reading("", str(target.get("preview", "")))
+	_project_find_strip.visible = true
 
 
 func _on_project_find_activated() -> void:

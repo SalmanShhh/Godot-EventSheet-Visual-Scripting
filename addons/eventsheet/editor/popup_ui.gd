@@ -635,8 +635,9 @@ class HelpStrip extends PanelContainer:
 
 
 	## One more reading line under the two above, for a window with a third fact worth a caption of
-	## its own ("ALSO CALLED", "INSERTS"). Returns its value label; fill it with set_line().
-	func add_line(caption: String) -> Label:
+	## its own ("ALSO CALLED", "INSERTS"), or above them with `first`. Returns its value label; fill it
+	## with set_line().
+	func add_line(caption: String, first: bool = false) -> Label:
 		var row: HBoxContainer = _reading_row(caption)
 		var value: Label = row.get_child(1) as Label
 		value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -644,6 +645,8 @@ class HelpStrip extends PanelContainer:
 		# first pass and stretches the whole window; the paragraph's width keeps it sane.
 		value.custom_minimum_size = Vector2(body_label.custom_minimum_size.x * 0.75, 0.0)
 		in_code_row.get_parent().add_child(row)
+		if first:
+			row.get_parent().move_child(row, reads_as_row.get_index())
 		return value
 
 
@@ -653,10 +656,13 @@ class HelpStrip extends PanelContainer:
 		value.get_parent().visible = not text.strip_edges().is_empty()
 
 
-	## Says what the focused thing is. The heading names it, the paragraph explains it.
+	## Says what the focused thing is. The heading names it, the paragraph explains it. An empty one
+	## hides, so a strip made only of captioned lines starts with its first line.
 	func describe(heading: String, body: String) -> void:
 		heading_label.text = heading.to_upper()
+		heading_label.visible = not heading.is_empty()
 		body_label.text = body
+		body_label.visible = not body.is_empty()
 
 
 	## The two reading lines, set by the dialog whenever its values change. An empty line hides,
@@ -1097,6 +1103,29 @@ class StateNote extends PanelContainer:
 		_style.border_color = colour
 		_style.bg_color = Color(colour.r, colour.g, colour.b, 0.12)
 		visible = not sentence.strip_edges().is_empty()
+
+
+## A window that DOES one thing to what it lists (find, replace, go to a row, make a function): the
+## form window above, non-modal, with `close` as its Cancel and a state note in the button row, left
+## of the buttons, where the window says why its main button is greyed out or what it cannot undo.
+## Returns {window, box, note} - `box` is the column to fill.
+static func action_window(title: String, main: String, close: String, size: Vector2i, host: Node) -> Dictionary:
+	var parts: Dictionary = panel_window(title, size, host, main)
+	var window: ConfirmationDialog = parts["window"]
+	window.cancel_button_text = close
+	window.exclusive = false
+	window.min_size = Vector2i(EventSheetPalette.scaled(size.x), EventSheetPalette.scaled(size.y))
+	var note: StateNote = StateNote.new(EventSheetPalette.scaled_f(300.0))
+	note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# The row's own spacers expand too; the sentence takes most of what they leave, and the buttons
+	# keep their own height beside a sentence that wraps.
+	note.size_flags_stretch_ratio = 6.0
+	window.get_ok_button().add_sibling(note)
+	note.get_parent().move_child(note, 0)
+	for button: Button in [window.get_ok_button(), window.get_cancel_button()]:
+		button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	parts["note"] = note
+	return parts
 
 
 ## A ROW BAND: the line at the top of a window naming what it is about - the row a writing window

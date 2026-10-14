@@ -8549,3 +8549,47 @@ How it got here: %s,如何到达这里：%s
 cannot read,无法读取
 %s is not a streamed value.,%s 不是流式值。
 %s = %s   # into the running game; the sheet is not changed,%s = %s   # 发送到运行中的游戏；表不会改变
+Run a command,运行命令
+Commands,命令
+# Sheets,# 工作表
+@ Symbols,@ 符号
+? Docs,? 文档
+Error line,错误行
+KEYS,按键
+Enter runs the selected command · Up / Down moves · Esc closes,Enter 运行所选命令 · 上 / 下 移动 · Esc 关闭
+MODES,模式
+# opens any sheet · @ jumps to a symbol here · ? searches the docs · paste res://player.gd:42 to land on that row,# 打开任意工作表 · @ 跳到此处的符号 · ? 搜索文档 · 粘贴 res://player.gd:42 跳到该行
+"Paste an error line, such as res://player.gd:42",粘贴一行错误，例如 res://player.gd:42
+Type a command…,输入命令…
+Find References,查找引用
+Go to Row,转到行
+Find symbol,查找符号
+Symbol,符号
+"Whole symbol, so move_speed never matches max_move_speed.",按完整符号匹配，所以 move_speed 绝不会匹配 max_move_speed。
+THIS ROW,此行
+Find every use of %s,查找 %s 的每一处使用
+%d reference(s),%d 处引用
+%d reference(s) in %d sheet(s),%d 处引用，位于 %d 个工作表
+No whole-symbol matches.,没有完整符号的匹配。
+"%s, in %s.",%s，在 %s 中。
+Find and replace in every sheet,在所有工作表中查找并替换
+Replace in Project,在项目中替换
+Closed sheets are saved at once; only the open sheet can be undone.,已关闭的工作表会立即保存；只有打开的工作表可以撤销。
+Replace with,替换为
+Find and replace,查找并替换
+"%d match(es) for ""%s"" in %d sheet(s). Searched every sheet, .tres and .gd.","%d 处匹配（""%s""），位于 %d 个工作表。已搜索所有工作表，包括 .tres 和 .gd。"
+"%s, outside any event. Double-click opens the sheet and fills the Find bar.",%s，不在任何事件中。双击打开工作表并填入查找栏。
+"%s, %s. Double-click opens the sheet, lands on the row and fills the Find bar.",%s，%s。双击打开工作表、跳到该行并填入查找栏。
+event %s,事件 %s
+Make a function from repeated rows,用重复的行创建函数
+Make a Function…,创建函数…
+"Name this run: it becomes one reusable function, extracted where it first appears and called everywhere else.",为这一段命名：它会成为一个可复用的函数，在首次出现处提取，并在其他所有位置调用。
+Repeated run,重复段
+Saves,节省
+Repeats,重复
+%d places × %d rows  (needs parameters),%d 处 × %d 行（需要参数）
+%d places × %d rows,%d 处 × %d 行
+No repeated runs - every action sequence on this sheet is written once.,没有重复段 - 此工作表中每个动作序列都只写了一次。
+"%d repeated run(s). Pick one and make it a function: extracted where it first appears, called everywhere else, one undo step.",%d 个重复段。选一个把它变成函数：在首次出现处提取，在其他所有位置调用，一步撤销。
+"This run uses an event-local or a For Each item, so the places cannot share one function. Extract it at one place instead.",这一段使用了事件局部变量或 For Each 项，因此这些位置不能共用一个函数。请改为在一处提取。
+Events %s run the same %d action(s).,事件 %s 运行相同的 %d 个动作。

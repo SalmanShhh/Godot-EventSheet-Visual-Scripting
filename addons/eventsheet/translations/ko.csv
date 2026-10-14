@@ -8549,3 +8549,47 @@ How it got here: %s,여기까지 온 경로: %s
 cannot read,읽을 수 없음
 %s is not a streamed value.,%s은(는) 스트리밍된 값이 아닙니다.
 %s = %s   # into the running game; the sheet is not changed,%s = %s   # 실행 중인 게임으로; 시트는 변경되지 않음
+Run a command,명령 실행
+Commands,명령
+# Sheets,# 시트
+@ Symbols,@ 심볼
+? Docs,? 문서
+Error line,오류 줄
+KEYS,키
+Enter runs the selected command · Up / Down moves · Esc closes,Enter: 선택한 명령 실행 · 위 / 아래: 이동 · Esc: 닫기
+MODES,모드
+# opens any sheet · @ jumps to a symbol here · ? searches the docs · paste res://player.gd:42 to land on that row,# 아무 시트나 열기 · @ 이 시트의 심볼로 이동 · ? 문서 검색 · res://player.gd:42 를 붙여 넣으면 그 행으로 이동
+"Paste an error line, such as res://player.gd:42",오류 줄을 붙여 넣으세요 (예: res://player.gd:42)
+Type a command…,명령을 입력하세요…
+Find References,참조 찾기
+Go to Row,행으로 이동
+Find symbol,심볼 찾기
+Symbol,심볼
+"Whole symbol, so move_speed never matches max_move_speed.",심볼 전체로 찾으므로 move_speed 는 max_move_speed 와 일치하지 않습니다.
+THIS ROW,이 행
+Find every use of %s,%s 의 모든 사용 찾기
+%d reference(s),참조 %d 개
+%d reference(s) in %d sheet(s),참조 %d 개 (시트 %d 개)
+No whole-symbol matches.,심볼 전체가 일치하는 곳이 없습니다.
+"%s, in %s.","%s, %s 안."
+Find and replace in every sheet,모든 시트에서 찾아 바꾸기
+Replace in Project,프로젝트에서 바꾸기
+Closed sheets are saved at once; only the open sheet can be undone.,"닫힌 시트는 바로 저장되며, 열린 시트만 실행 취소할 수 있습니다."
+Replace with,바꿀 내용
+Find and replace,찾아 바꾸기
+"%d match(es) for ""%s"" in %d sheet(s). Searched every sheet, .tres and .gd.","일치 %d 개 (""%s"", 시트 %d 개). 모든 시트 (.tres 와 .gd) 를 검색했습니다."
+"%s, outside any event. Double-click opens the sheet and fills the Find bar.","%s, 어떤 이벤트에도 속하지 않음. 두 번 클릭하면 시트를 열고 찾기 막대를 채웁니다."
+"%s, %s. Double-click opens the sheet, lands on the row and fills the Find bar.","%s, %s. 두 번 클릭하면 시트를 열고 그 행으로 가서 찾기 막대를 채웁니다."
+event %s,이벤트 %s
+Make a function from repeated rows,반복되는 행으로 함수 만들기
+Make a Function…,함수 만들기…
+"Name this run: it becomes one reusable function, extracted where it first appears and called everywhere else.",이 묶음에 이름을 붙이세요: 재사용 가능한 함수가 되어 처음 나온 곳에서 추출되고 나머지 모든 곳에서 호출됩니다.
+Repeated run,반복되는 묶음
+Saves,절약
+Repeats,반복
+%d places × %d rows  (needs parameters),%d 곳 × %d 행  (매개변수 필요)
+%d places × %d rows,%d 곳 × %d 행
+No repeated runs - every action sequence on this sheet is written once.,반복되는 묶음이 없습니다 - 이 시트의 모든 액션 순서는 한 번씩만 쓰여 있습니다.
+"%d repeated run(s). Pick one and make it a function: extracted where it first appears, called everywhere else, one undo step.","반복되는 묶음 %d 개. 하나를 골라 함수로 만드세요: 처음 나온 곳에서 추출되고 나머지 모든 곳에서 호출되며, 실행 취소는 한 번입니다."
+"This run uses an event-local or a For Each item, so the places cannot share one function. Extract it at one place instead.",이 묶음은 이벤트 지역 변수나 For Each 항목을 사용하므로 각 위치가 하나의 함수를 공유할 수 없습니다. 대신 한 곳에서 추출하세요.
+Events %s run the same %d action(s).,이벤트 %s 은(는) 같은 액션 %d 개를 실행합니다.
