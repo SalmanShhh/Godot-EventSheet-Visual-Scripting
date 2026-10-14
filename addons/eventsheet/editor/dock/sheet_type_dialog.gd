@@ -39,8 +39,6 @@ var _identity_card: PanelContainer = null
 var _band: EventSheetPopupUI.RowBand = null
 ## The first problem the identity has, under the field it is about; OK waits while it shows.
 var _problem: EventSheetPopupUI.StateNote = null
-## The chosen kind's one line, kept in view under the dropdown.
-var _kind_hint: Label = null
 ## Beside OK and Cancel: which field to fix before OK will go.
 var _foot_note: Label = null
 ## What a new Name would rename elsewhere, said before OK writes other files - the same sentence the
@@ -49,7 +47,6 @@ var _rename_reach: Label = null
 var _rename_reach_text: String = ""
 var _more_toggle: Button = null
 var _more_card: PanelContainer = null
-var _icon_file_dialog: EditorFileDialog = null
 
 ## One plain-English line per type, shown under the dropdown - what the choice MEANS, not its jargon.
 const TYPE_HINTS: Array[String] = [
@@ -399,9 +396,10 @@ func _kind_help(item_index: int) -> Dictionary:
 func _ensure_sheet_type_dialog() -> void:
 	if _sheet_type_dialog != null:
 		return
-	_sheet_type_dialog = ConfirmationDialog.new()
-	_sheet_type_dialog.title = "Sheet Type"
-	var form: VBoxContainer = EventSheetPopupUI.form_box()
+	var parts: Dictionary = EventSheetPopupUI.panel_window("Sheet Type", Vector2i.ZERO, _dock, EventSheetL10n.translate("OK"),
+		_on_sheet_type_confirmed)
+	_sheet_type_dialog = parts["window"]
+	var form: VBoxContainer = parts["box"]
 	_band = EventSheetPopupUI.RowBand.new(true)
 	form.add_child(_band)
 	# Drop a Scene-dock node ANYWHERE on the dialog and the host field takes its class - the
@@ -415,9 +413,7 @@ func _ensure_sheet_type_dialog() -> void:
 		_sheet_type_option.add_item(TYPE_LABELS[type_index], type_index)
 		_sheet_type_option.set_item_tooltip(_sheet_type_option.item_count - 1, TYPE_HINTS[type_index])
 	_sheet_type_option.item_selected.connect(func(_index: int) -> void: _refresh_type_ui())
-	form.add_child(EventSheetPopupUI.form_row("Kind", _sheet_type_option))
-	_kind_hint = EventSheetPopupUI.hint_label("", 440.0)
-	form.add_child(_kind_hint)
+	form.add_child(EventSheetPopupUI.form_row("Kind", EventSheetPopupUI.described_field(_sheet_type_option, 320.0)))
 	# Identity card - only the fields the chosen type consumes are visible (see field_visibility).
 	var ident_box: VBoxContainer = EventSheetPopupUI.form_box()
 	_sheet_type_name_edit = _dock._add_sheet_type_field(ident_box, "Name", "PatrolBehavior")
@@ -450,7 +446,8 @@ func _ensure_sheet_type_dialog() -> void:
 	# Pick the icon straight from the FileSystem instead of typing a res:// path.
 	var icon_browse: Button = Button.new()
 	icon_browse.text = "Browse…"
-	icon_browse.pressed.connect(_open_icon_file_dialog)
+	icon_browse.pressed.connect(func() -> void: EventSheetPopupUI.browse_file(_dock, ["*.svg, *.png, *.webp"],
+		func(path: String) -> void: _sheet_type_icon_edit.text = path))
 	_sheet_type_icon_edit.get_parent().add_child(icon_browse)
 	_sheet_type_description_edit = _dock._sheet_type_glue.add_sheet_type_multiline_field(ident_box, "Description", "What this does - shown in Godot's Create Node dialog.")
 	_sheet_type_autoload_edit = _dock._add_sheet_type_field(ident_box, "Autoload name", "GameState - a global name every sheet can call")
@@ -522,14 +519,11 @@ func _ensure_sheet_type_dialog() -> void:
 		"The name every other sheet writes to reach this one. It lives in project.godot, not in this file.")
 	_help_strip.follow(_sheet_type_tool_check, "Runs in the editor too · @tool",
 		"The script runs inside the editor as well as in the game, so its events fire while you are building the scene.")
-	_sheet_type_dialog.add_child(EventSheetPopupUI.margined(form))
 	_foot_note = Label.new()
 	_foot_note.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
 	var foot: Node = _sheet_type_dialog.get_ok_button().get_parent()
 	foot.add_child(_foot_note)
 	foot.move_child(_foot_note, 0)
-	_sheet_type_dialog.confirmed.connect(_on_sheet_type_confirmed)
-	_dock.add_child(_sheet_type_dialog)
 
 
 ## Applies the chosen type's field set: hint text, row visibility, and the host label wording
@@ -554,7 +548,6 @@ func _refresh_type_ui() -> void:
 			_host_label.text = "Extends"
 	_host_menu.visible = type_index != 5  # the node shortlist makes no sense for a Resource host
 	EventSheetPopupUI.follow_description(_sheet_type_option)
-	_kind_hint.text = TYPE_HINTS[type_index]
 	_refresh_identity_preview()
 	if _sheet_type_dialog.visible:
 		_sheet_type_dialog.reset_size()
@@ -570,7 +563,6 @@ func _class_icon(class_id: String) -> Texture2D:
 	return _dock.get_theme_icon(icon_name, "EditorIcons") if _dock.has_theme_icon(icon_name, "EditorIcons") else null
 
 
-## The FileSystem picker for the class icon - browse res:// images instead of typing a path.
 ## Scene-dock node drag payloads carry {type: "nodes", nodes: [NodePath...]}.
 func _can_drop_node(_at_position: Vector2, data: Variant) -> bool:
 	return data is Dictionary and str((data as Dictionary).get("type", "")) == "nodes" \
@@ -598,18 +590,6 @@ func _drop_node(_at_position: Vector2, data: Variant) -> void:
 	_sheet_type_host_edit.text = host_class
 	_refresh_identity_preview()
 	_dock._set_status("Host set from the dropped node: %s (%s)." % [dropped.name, host_class])
-
-
-func _open_icon_file_dialog() -> void:
-	if _icon_file_dialog == null:
-		_icon_file_dialog = EditorFileDialog.new()
-		_icon_file_dialog.file_mode = EditorFileDialog.FILE_MODE_OPEN_FILE
-		_icon_file_dialog.access = EditorFileDialog.ACCESS_RESOURCES
-		_icon_file_dialog.add_filter("*.svg, *.png, *.webp", "Images")
-		_icon_file_dialog.file_selected.connect(func(path: String) -> void:
-			_sheet_type_icon_edit.text = path)
-		_dock.add_child(_icon_file_dialog)
-	_icon_file_dialog.popup_centered_ratio(0.5)
 
 
 func _refresh_identity_preview() -> void:
@@ -676,6 +656,7 @@ func _on_sheet_type_confirmed() -> void:
 			_sheet_type_host_edit.text, _sheet_type_autoload_edit.text,
 			_dock._current_sheet.custom_class_name if _dock._current_sheet != null else "")):
 		return
+	_sheet_type_dialog.hide()
 	_dock._apply_sheet_type_settings(
 		_selected_type(),
 		_sheet_type_name_edit.text,

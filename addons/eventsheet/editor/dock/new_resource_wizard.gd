@@ -104,16 +104,11 @@ static func _kind(type: String) -> Array:
 func _build_dialog() -> void:
 	if _dialog != null:
 		return
-	_dialog = ConfirmationDialog.new()
-	_dialog.title = EventSheetL10n.translate("New data table")
-	_dialog.ok_button_text = EventSheetL10n.translate("Insert")
-	_dialog.visible = false
-	# What stops Insert is said on the window, which stays open on what was typed.
-	_dialog.dialog_hide_on_ok = false
-	_dialog.confirmed.connect(_on_create)
+	var parts: Dictionary = EventSheetPopupUI.panel_window(EventSheetL10n.translate("New data table"), Vector2i.ZERO,
+		_dock, EventSheetL10n.translate("Insert"), _on_create)
+	_dialog = parts["window"]
 	_dialog.min_size = Vector2i(Vector2(EventSheetPalette.scaled_f(760.0), EventSheetPalette.scaled_f(520.0)))
-	_dock.add_child(_dialog)
-	var content: VBoxContainer = EventSheetPopupUI.form_box()
+	var content: VBoxContainer = parts["box"]
 
 	var head: HBoxContainer = HBoxContainer.new()
 	head.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(16.0)))
@@ -146,11 +141,7 @@ func _build_dialog() -> void:
 	_caption_label = Label.new()
 	_caption_label.add_theme_color_override("font_color", EventSheetPopupUI.text_color())
 	caption.add_child(_caption_label)
-	var how: Label = EventSheetPopupUI.hint_label(EventSheetL10n.translate("click a header to set its kind, a cell to type · Delete removes the selected row"), 0.0)
-	how.autowrap_mode = TextServer.AUTOWRAP_OFF
-	how.clip_text = true
-	how.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	caption.add_child(how)
+	caption.add_child(_line_label(EventSheetL10n.translate("click a header to set its kind, a cell to type · Delete removes the selected row")))
 	_table = Tree.new()
 	_table.hide_root = true
 	_table.column_titles_visible = true
@@ -170,10 +161,7 @@ func _build_dialog() -> void:
 		button.text = button_spec[0]
 		button.pressed.connect(button_spec[1])
 		grid_buttons.add_child(button)
-	_counts_label = EventSheetPopupUI.hint_label("", 0.0)
-	_counts_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_counts_label.clip_text = true
-	_counts_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_counts_label = _line_label("")
 	_counts_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	grid_buttons.add_child(_counts_label)
 
@@ -218,12 +206,17 @@ func _build_dialog() -> void:
 	_help_strip.follow(_warn_check, EventSheetL10n.translate("Warn in the Inspector"),
 		EventSheetL10n.translate("Adds a check the Inspector runs while the table is edited: it warns until the table has rows, and names the first row with an empty text cell."))
 
-	_files_label = EventSheetPopupUI.hint_label("", 0.0)
-	_files_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_files_label.clip_text = true
-	_files_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_files_label = _line_label("")
 	content.add_child(_files_label)
-	_dialog.add_child(content)
+
+
+## A muted one-line label that takes the width it is given and clips rather than wraps.
+static func _line_label(text: String) -> Label:
+	var label: Label = EventSheetPopupUI.hint_label(text, 0.0)
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	label.clip_text = true
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return label
 
 
 # ── The model: every edit lands here, and the grid is redrawn from it ─────────────────────────
@@ -667,19 +660,9 @@ static func create_problem(entry_name: String, resource_name: String, table_colu
 			return EventSheetL10n.translate("Column %s needs a name of its own: letters, digits and _.") % column_name
 		seen.append(column_name)
 	var chosen: String = class_name_for(resource_name, entry_name)
-	if class_name_taken(chosen):
+	if EventSheetHeadActions.class_name_taken(chosen):
 		return EventSheetL10n.translate("%s is already a class name - pick another Name.") % chosen
 	return ""
-
-
-## True when the name is already an engine class or a project class_name.
-static func class_name_taken(type_name: String) -> bool:
-	if ClassDB.class_exists(type_name):
-		return true
-	for entry: Dictionary in ProjectSettings.get_global_class_list():
-		if str(entry.get("class", "")) == type_name:
-			return true
-	return false
 
 
 ## The whole table as a pure function: row name + columns -> a Resource-host sheet whose grid

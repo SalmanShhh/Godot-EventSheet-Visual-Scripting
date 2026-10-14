@@ -194,17 +194,16 @@ func chosen() -> Dictionary:
 
 
 func _build() -> void:
-	_dialog = ConfirmationDialog.new()
-	_dialog.title = EventSheetL10n.translate("Insert new object")
-	_dialog.ok_button_text = EventSheetL10n.translate("Insert")
-	_dialog.confirmed.connect(_insert)
+	var parts: Dictionary = EventSheetPopupUI.panel_window(EventSheetL10n.translate("Insert new object"), Vector2i.ZERO,
+		_dock, EventSheetL10n.translate("Insert"), _insert)
+	_dialog = parts["window"]
 	# The window keeps this helper alive for as long as it is open, and lets it go with itself.
 	_dialog.set_meta("insert_object", self)
 	# Each open is a new window that frees itself, so nothing from the last one leaks into the next.
 	_dialog.visibility_changed.connect(func() -> void:
 		if not _dialog.visible:
 			_dialog.queue_free())
-	var form: VBoxContainer = EventSheetPopupUI.form_box()
+	var form: VBoxContainer = parts["box"]
 	var top: HBoxContainer = HBoxContainer.new()
 	_search = LineEdit.new()
 	_search.placeholder_text = EventSheetL10n.translate("Search object types…")
@@ -269,8 +268,6 @@ func _build() -> void:
 	form.add_child(_head_box)
 	_target_label = EventSheetPopupUI.hint_label("", EventSheetPalette.scaled_f(600.0))
 	form.add_child(_target_label)
-	_dialog.add_child(EventSheetPopupUI.margined(form))
-	_dock.add_child(_dialog)
 	_show_view(0)
 
 
@@ -401,8 +398,9 @@ func _insert() -> void:
 	var result: Dictionary = EventSheetWorkflow.write_sheet_file(
 		sheet_for(str(picked["class"]), str(picked["name"]), bool(picked["tool"])), _directory, str(picked["name"]))
 	if not bool(result.get("ok", false)):
-		_dock._set_status(str(result.get("message", "")), true)
+		_problem.say(str(result.get("message", "")))
 		return
+	_dialog.hide()
 	var path: String = str(result.get("sheet_path", ""))
 	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
 		EditorInterface.get_resource_filesystem().scan()

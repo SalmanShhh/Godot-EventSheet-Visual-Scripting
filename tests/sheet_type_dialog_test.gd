@@ -87,7 +87,8 @@ static func _test_ok_waits_for_a_valid_identity() -> bool:
 		["a valid identity is the band's class line, and the strip's IN CODE",
 			[dialog._band.words_label.text, dialog._problem.text, dialog._foot_note.text, dialog._help_strip.in_code_value.text],
 			["class_name Guard extends Node2D", "", "", "extends Node2D"]],
-		["the chosen kind's line stays in view", dialog._kind_hint.text, EventSheetSheetTypeDialog.TYPE_HINTS[1]],
+		["the chosen kind's line stays in view", (dialog._sheet_type_option.get_meta("chosen_note") as Label).text,
+			EventSheetSheetTypeDialog.TYPE_HINTS[1]],
 	]) and ok
 	ok = _check("OK comes back once the name is valid",
 		dialog._sheet_type_dialog.get_ok_button().disabled, false) and ok

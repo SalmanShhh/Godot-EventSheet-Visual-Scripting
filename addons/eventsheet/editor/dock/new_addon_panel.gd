@@ -76,13 +76,10 @@ func open_members() -> void:
 
 
 func _build_dialog() -> void:
-	_dialog = ConfirmationDialog.new()
-	_dialog.title = EventSheetL10n.translate("New global") if _global else EventSheetL10n.translate("New behaviour")
-	_dialog.ok_button_text = EventSheetL10n.translate("Create")
-	_dialog.dialog_hide_on_ok = false
-	_dialog.confirmed.connect(_on_create)
-	_dock.add_child(_dialog)
-	var form: VBoxContainer = EventSheetPopupUI.form_box()
+	var parts: Dictionary = EventSheetPopupUI.panel_window(EventSheetL10n.translate("New global") if _global
+		else EventSheetL10n.translate("New behaviour"), Vector2i.ZERO, _dock, EventSheetL10n.translate("Create"), _on_create)
+	_dialog = parts["window"]
+	var form: VBoxContainer = parts["box"]
 	form.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(560.0), 0.0)
 	_name_edit = LineEdit.new()
 	_name_edit.placeholder_text = "GameState" if _global else "Patrol"
@@ -104,17 +101,19 @@ func _build_dialog() -> void:
 	_kind_option.item_selected.connect(func(_index: int) -> void:
 		_fill_starts()
 		_refresh())
-	form.add_child(_described_row(EventSheetL10n.translate("Made as") if _global else EventSheetL10n.translate("Works on"), _kind_option))
+	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Made as") if _global else EventSheetL10n.translate("Works on"),
+		EventSheetPopupUI.described_field(_kind_option)))
 	_shelf_option = EventSheetPopupUI.described_option()
 	_fill_shelves()
-	form.add_child(_described_row(EventSheetL10n.translate("Picker heading") if _global else EventSheetL10n.translate("Category"), _shelf_option))
+	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Picker heading") if _global
+		else EventSheetL10n.translate("Category"), EventSheetPopupUI.described_field(_shelf_option)))
 	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Icon"), _build_icon_row()))
 	_desc_edit = LineEdit.new()
 	_desc_edit.placeholder_text = EventSheetL10n.translate("What it does, in one line.")
 	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Description"), _desc_edit))
 	_start_option = EventSheetPopupUI.described_option()
 	_start_option.item_selected.connect(func(_index: int) -> void: _refresh())
-	form.add_child(_described_row(EventSheetL10n.translate("Start from"), _start_option))
+	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Start from"), EventSheetPopupUI.described_field(_start_option)))
 	var script_row: HBoxContainer = HBoxContainer.new()
 	_script_edit = LineEdit.new()
 	_script_edit.placeholder_text = "res://player.gd"
@@ -132,22 +131,6 @@ func _build_dialog() -> void:
 	form.add_child(_rows[START_AUTOLOAD])
 	_path_label = EventSheetPopupUI.hint_label("")
 	form.add_child(_path_label)
-	_dialog.add_child(form)
-
-
-## A described dropdown with its chosen choice's sentence kept in view under it.
-func _described_row(label_text: String, dropdown: OptionButton) -> Control:
-	var box: VBoxContainer = VBoxContainer.new()
-	dropdown.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	box.add_child(dropdown)
-	var note: Label = EventSheetPopupUI.hint_label("")
-	box.add_child(note)
-	var follow: Callable = func(_index: int = 0) -> void:
-		note.text = dropdown.get_item_tooltip(dropdown.selected) if dropdown.selected >= 0 else ""
-	dropdown.item_selected.connect(follow)
-	dropdown.set_meta("chosen_note", note)
-	follow.call()
-	return EventSheetPopupUI.form_row(label_text, box)
 
 
 ## The kinds of object a behaviour can work on: [class, label, what it means].
@@ -223,7 +206,7 @@ func _fill_starts() -> void:
 		_start_item(EventSheetL10n.translate("From the selected node"), EventSheetL10n.translate(
 			"Uses the script on the node selected in the Scene dock, the same way as From a script I wrote."), START_NODE)
 	_start_option.select(0)
-	(_start_option.get_meta("chosen_note") as Label).text = _start_option.get_item_tooltip(0)
+	EventSheetPopupUI.follow_description(_start_option)
 
 
 func _start_item(label_text: String, description: String, kind: String, path: String = "") -> void:
@@ -261,24 +244,11 @@ func _build_icon_row() -> Control:
 	return row
 
 
-## A button opening the editor's own file picker on `filters`. Editor-only by construction: a
-## headless run types the path instead.
+## A button opening the editor's own file picker on `filters`.
 func _browse_button(filters: PackedStringArray, picked: Callable, text: String = "…") -> Button:
 	var button: Button = Button.new()
 	button.text = text
-	button.pressed.connect(func() -> void:
-		if not Engine.is_editor_hint():
-			return
-		var browser: EditorFileDialog = EditorFileDialog.new()
-		browser.file_mode = EditorFileDialog.FILE_MODE_OPEN_FILE
-		browser.access = EditorFileDialog.ACCESS_RESOURCES
-		browser.filters = filters
-		browser.file_selected.connect(func(path: String) -> void:
-			picked.call(path)
-			browser.queue_free())
-		browser.canceled.connect(browser.queue_free)
-		_dialog.add_child(browser)
-		browser.popup_centered_ratio(0.6))
+	button.pressed.connect(func() -> void: EventSheetPopupUI.browse_file(_dialog, filters, picked))
 	return button
 
 

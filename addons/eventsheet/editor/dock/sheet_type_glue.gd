@@ -28,35 +28,20 @@ func open_sheet_type_dialog() -> void:  # Sheet menu / identity-banner edit / To
 
 
 func add_sheet_type_field(form: VBoxContainer, label_text: String, placeholder: String) -> LineEdit:
-	var row: HBoxContainer = HBoxContainer.new()
-	var label: Label = Label.new()
-	label.text = label_text
-	label.custom_minimum_size = Vector2(130.0, 0.0)
-	row.add_child(label)
 	var edit: LineEdit = LineEdit.new()
 	edit.placeholder_text = placeholder
-	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(edit)
-	form.add_child(row)
+	form.add_child(EventSheetPopupUI.form_row(label_text, edit, 130.0))
 	return edit
 
 
 ## Like _add_sheet_type_field, but a small multi-line TextEdit - used for the class description,
 ## which compiles to a `##` doc comment (Godot's Create Node tooltip supports multiple lines).
 func add_sheet_type_multiline_field(form: VBoxContainer, label_text: String, placeholder: String) -> TextEdit:
-	var row: HBoxContainer = HBoxContainer.new()
-	var label: Label = Label.new()
-	label.text = label_text
-	label.custom_minimum_size = Vector2(130.0, 0.0)
-	label.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	row.add_child(label)
 	var edit: TextEdit = TextEdit.new()
 	edit.placeholder_text = placeholder
-	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	edit.custom_minimum_size = Vector2(0.0, 54.0)
 	edit.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
-	row.add_child(edit)
-	form.add_child(row)
+	form.add_child(EventSheetPopupUI.form_row(label_text, edit, 130.0))
 	return edit
 
 

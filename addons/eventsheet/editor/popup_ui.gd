@@ -93,7 +93,25 @@ static func margined(content: Control, margin: int = CONTENT_MARGIN) -> MarginCo
 ## A side window the dock keeps (History, Outline, Bookmarks, the sheet map): `title` on the window
 ## and on the one card that fills it, closing hides it, and it lives under `host`. Returns {window,
 ## box} - `box` is the card's column to fill.
-static func panel_window(title: String, size: Vector2i, host: Node) -> Dictionary:
+##
+## Give it `ok_text` and it is a FORM window instead: a ConfirmationDialog whose OK calls `on_ok` and
+## leaves the window open, because what stops OK is said on the window itself (a StateNote under the
+## field) - `on_ok` hides it once the work is done. The title is on the window, so the form fills it
+## with no card heading repeating it.
+static func panel_window(title: String, size: Vector2i, host: Node, ok_text: String = "",
+		on_ok: Callable = Callable()) -> Dictionary:
+	if not ok_text.is_empty():
+		var dialog: ConfirmationDialog = ConfirmationDialog.new()
+		dialog.title = title
+		dialog.visible = false
+		dialog.ok_button_text = ok_text
+		dialog.dialog_hide_on_ok = false
+		if on_ok.is_valid():
+			dialog.confirmed.connect(on_ok)
+		var form: VBoxContainer = form_box()
+		dialog.add_child(margined(form))
+		host.add_child(dialog)
+		return {"window": dialog, "box": form}
 	var window: Window = Window.new()
 	window.title = title
 	window.size = size
@@ -110,6 +128,24 @@ static func panel_window(title: String, size: Vector2i, host: Node) -> Dictionar
 	window.add_child(body)
 	host.add_child(window)
 	return {"window": window, "box": box}
+
+
+## Opens the editor's own file picker on `filters` (each like "*.svg, *.png") over `host`, and calls
+## `picked` with the chosen res:// path; the picker frees itself either way. Editor-only by
+## construction: outside the editor it does nothing, and a path is typed into the field instead.
+static func browse_file(host: Node, filters: PackedStringArray, picked: Callable) -> void:
+	if not Engine.is_editor_hint() or host == null or not host.is_inside_tree():
+		return
+	var browser: EditorFileDialog = EditorFileDialog.new()
+	browser.file_mode = EditorFileDialog.FILE_MODE_OPEN_FILE
+	browser.access = EditorFileDialog.ACCESS_RESOURCES
+	browser.filters = filters
+	browser.file_selected.connect(func(path: String) -> void:
+		picked.call(path)
+		browser.queue_free())
+	browser.canceled.connect(browser.queue_free)
+	host.add_child(browser)
+	browser.popup_centered_ratio(0.6)
 
 
 ## A muted helper/hint label (the small explanatory text under a field). The autowrap is WIDTH-BOUNDED
@@ -1147,10 +1183,30 @@ static func add_described_item(dropdown: OptionButton, text: String, description
 	return index
 
 
-## Sets the dropdown's tooltip to its chosen item's description (or the tooltip it started with).
+## Sets the dropdown's tooltip to its chosen item's description (or the tooltip it started with), and
+## the sentence a described_field() keeps under it.
 static func follow_description(dropdown: OptionButton) -> void:
 	var told: String = dropdown.get_item_tooltip(dropdown.selected) if dropdown.selected >= 0 else ""
 	dropdown.tooltip_text = told if not told.is_empty() else str(dropdown.get_meta("described_fallback", ""))
+	var note: Label = dropdown.get_meta("chosen_note", null) as Label
+	if note != null:
+		note.text = told
+
+
+## A DESCRIBED FIELD: the described dropdown with its chosen choice's sentence kept in view under it,
+## not only on hover - the field to hand form_row(). The sentence follows every pick, and a select()
+## from code is brought up to date by the follow_description() call that follows it.
+static func described_field(dropdown: OptionButton, wrap_width: float = HINT_WRAP_WIDTH) -> VBoxContainer:
+	if not dropdown.has_meta("described_fallback"):
+		described_option(dropdown)
+	var box: VBoxContainer = VBoxContainer.new()
+	dropdown.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.add_child(dropdown)
+	var note: Label = hint_label("", wrap_width)
+	box.add_child(note)
+	dropdown.set_meta("chosen_note", note)
+	follow_description(dropdown)
+	return box
 
 
 ## A VIEW SWITCH: Sheet | Code | Side by side as one segmented row of toggle buttons in a ButtonGroup.

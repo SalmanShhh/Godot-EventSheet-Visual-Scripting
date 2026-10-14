@@ -196,18 +196,7 @@ func _collect_fields(kind: EventSheetBlockKind) -> Dictionary:
 ## The editor's resource file picker, feeding the chosen res:// path back into the field.
 ## Editor-only by construction (EditorFileDialog); headless/test runs just type the path.
 func _open_resource_browser(path_edit: LineEdit) -> void:
-	if not Engine.is_editor_hint():
-		return
-	var browser: EditorFileDialog = EditorFileDialog.new()
-	browser.file_mode = EditorFileDialog.FILE_MODE_OPEN_FILE
-	browser.access = EditorFileDialog.ACCESS_RESOURCES
-	browser.file_selected.connect(func(path: String) -> void:
-		path_edit.text = path
-		browser.call_deferred("queue_free")
-	)
-	browser.canceled.connect(func() -> void: browser.queue_free())
-	_dialog.add_child(browser)
-	browser.popup_centered_ratio(0.6)
+	EventSheetPopupUI.browse_file(_dialog, [], func(path: String) -> void: path_edit.text = path)
 
 
 ## One-shot apply (guarded on the kind so confirmed + text_submitted can't double-fire).

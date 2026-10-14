@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Changed: the making windows share one form shell and one described dropdown
+
+- New data table, Insert new object, New behaviour, New global, Sheet Type and the class's
+  Properties are built from the window kit's form window and its described field (a dropdown
+  with the chosen choice's sentence kept in view under it) instead of each hand-building its own,
+  and every file picker they open is the kit's one picker. Nothing they ask or write changed.
+- Insert new object says a file it could not write on its own window, which stays open on what
+  was typed, the way the other making windows already did, instead of closing and saying it on
+  the dock's status line.
+
 ### Fixed: a global made as a scene is found wherever the scene lives
 
 - An autoload that points at a scene whose root node carries the script - the way many existing

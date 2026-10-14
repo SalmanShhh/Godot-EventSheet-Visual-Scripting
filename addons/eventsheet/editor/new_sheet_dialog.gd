@@ -30,7 +30,6 @@ var _name_edit: LineEdit = null
 var _starter_option: OptionButton = null
 var _band: EventSheetPopupUI.RowBand = null
 var _taken_note: EventSheetPopupUI.StateNote = null
-var _starter_pitch: Label = null
 var _strip: EventSheetPopupUI.HelpStrip = null
 var _directory: String = "res://"
 
@@ -62,10 +61,8 @@ func init_dialog(parent_node: Node) -> void:
 		EventSheetPopupUI.add_described_item(_starter_option, str(starter.get("label")),
 			EventSheetL10n.translate(starter_pitch(int(starter.get("id")))), int(starter.get("id")))
 	_starter_option.item_selected.connect(func(_index: int) -> void: _refresh())
-	fields.add_child(EventSheetPopupUI.form_row("Start from", _starter_option))
-	# The chosen starter's line stays in view, not only on hover.
-	_starter_pitch = EventSheetPopupUI.hint_label("", EventSheetPalette.scaled_f(420.0))
-	fields.add_child(_starter_pitch)
+	fields.add_child(EventSheetPopupUI.form_row("Start from",
+		EventSheetPopupUI.described_field(_starter_option, EventSheetPalette.scaled_f(300.0))))
 	form.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("New Event Sheet"), fields))
 	_strip = EventSheetPopupUI.help_strip("", "", "", "", EventSheetPalette.scaled_f(420.0))
 	_strip.follow(_name_edit, EventSheetL10n.translate("Name"),
@@ -115,7 +112,6 @@ func _refresh() -> void:
 	_taken_note.say(EventSheetL10n.translate("%s is already in this folder - pick another name.") % path.get_file() if taken else "")
 	EventSheetPopupUI.mark_field(_name_edit, taken)
 	_dialog.get_ok_button().disabled = taken
-	_starter_pitch.text = _starter_option.tooltip_text
 	var host: String = EventSheetStarterTemplates.build_starter(selected_starter_id()).host_class
 	_strip.set_reading("", "extends %s" % (host if not host.is_empty() else "Node"))
 

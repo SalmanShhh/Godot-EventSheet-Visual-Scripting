@@ -87,7 +87,6 @@ func build_into(form: GridContainer) -> void:
 		class_word if not class_word.is_empty() else EventSheetL10n.translate("(no class name)"),
 		EventSheetL10n.translate("Rename…"), _dock._head_actions.open_class_rename, editable),
 		EventSheetL10n.translate("Renames the class everywhere it is used, after showing every file."))
-	var type_box: VBoxContainer = VBoxContainer.new()
 	var types: OptionButton = EventSheetPopupUI.described_option()
 	var choices: PackedStringArray = TYPE_CHOICES.duplicate()
 	if not choices.has(base):
@@ -98,17 +97,13 @@ func build_into(form: GridContainer) -> void:
 	EventSheetPopupUI.add_described_item(types, EventSheetL10n.translate("Other class…"),
 		EventSheetL10n.translate("Any class Godot or this project has, picked in the Sheet Type window."), OTHER_TYPE)
 	EventSheetPopupUI.select_option(types, base)
-	EventSheetPopupUI.follow_description(types)
 	types.disabled = not editable
-	type_box.add_child(types)
-	# The chosen type's sentence stays visible under the dropdown, not only on hover.
-	type_box.add_child(EventSheetPopupUI.hint_label(types.tooltip_text, EventSheetPalette.scaled_f(190.0)))
 	types.item_selected.connect(func(index: int) -> void:
 		if str(types.get_item_metadata(index)) == OTHER_TYPE:
 			_dock._open_sheet_type_dialog()
 			return
 		change_type(types.get_item_text(index)))
-	_row(form, EventSheetL10n.translate("Type"), type_box,
+	_row(form, EventSheetL10n.translate("Type"), EventSheetPopupUI.described_field(types, EventSheetPalette.scaled_f(190.0)),
 		EventSheetL10n.translate("What it extends: its built-in properties and actions come from this."))
 	var description: LineEdit = LineEdit.new()
 	description.text = EventSheetHeadBands.description_line(str(head.get("description", "")))

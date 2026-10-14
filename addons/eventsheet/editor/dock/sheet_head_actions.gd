@@ -15,7 +15,6 @@ extends RefCounted
 # matching sheet field), so a band can never disagree with the line it echoes.
 
 var _dock: Control = null
-var _icon_dialog: EditorFileDialog = null
 var _add_menu: PopupMenu = null
 var _file_menu: PopupMenu = null
 var _add_offers: PackedStringArray = PackedStringArray()
@@ -445,15 +444,8 @@ func _mark_open_tabs_unsaved(elsewhere: Array[Dictionary]) -> void:
 
 ## The `@icon` band's swatch: a file dialog filtered to images, writing the annotation.
 func open_icon_dialog() -> void:
-	if _icon_dialog == null:
-		_icon_dialog = EditorFileDialog.new()
-		_icon_dialog.file_mode = EditorFileDialog.FILE_MODE_OPEN_FILE
-		_icon_dialog.access = EditorFileDialog.ACCESS_RESOURCES
-		_icon_dialog.add_filter("*.svg, *.png, *.webp", "Images")
-		_icon_dialog.file_selected.connect(func(path: String) -> void: apply_band_value(
-			EventSheetHeadBands.BAND_ICON, path))
-		_dock.add_child(_icon_dialog)
-	_icon_dialog.popup_centered_ratio(0.5)
+	EventSheetPopupUI.browse_file(_dock, ["*.svg, *.png, *.webp"], func(path: String) -> void:
+		apply_band_value(EventSheetHeadBands.BAND_ICON, path))
 
 
 ## The `@tool` band's switch: the annotation goes in or comes out, in one undo step.
