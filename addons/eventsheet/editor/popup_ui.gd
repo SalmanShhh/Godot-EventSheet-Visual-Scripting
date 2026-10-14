@@ -130,22 +130,37 @@ static func panel_window(title: String, size: Vector2i, host: Node, ok_text: Str
 	return {"window": window, "box": box}
 
 
-## Opens the editor's own file picker on `filters` (each like "*.svg, *.png") over `host`, and calls
-## `picked` with the chosen res:// path; the picker frees itself either way. Editor-only by
-## construction: outside the editor it does nothing, and a path is typed into the field instead.
-static func browse_file(host: Node, filters: PackedStringArray, picked: Callable) -> void:
-	if not Engine.is_editor_hint() or host == null or not host.is_inside_tree():
-		return
-	var browser: EditorFileDialog = EditorFileDialog.new()
-	browser.file_mode = EditorFileDialog.FILE_MODE_OPEN_FILE
-	browser.access = EditorFileDialog.ACCESS_RESOURCES
-	browser.filters = filters
-	browser.file_selected.connect(func(path: String) -> void:
+## A ONE-SHOT FILE PICKER over `host` on `filters` (each like "*.gd ; Sheet" or "*.svg, *.png"): calls
+## `picked` with the chosen path, and frees itself whether a file was picked or not. `options` may
+## carry "title", "save" (a Save dialog), "disk" (anywhere on disk, not only res://), "path" (the file
+## it starts on), "dir" (the folder it starts in) and "size" (else 60% of the screen). It is the
+## editor's own EditorFileDialog, which exists only in the editor - outside it nothing opens and a path
+## is typed into the field instead - unless "plain" asks for Godot's FileDialog. Returns the picker.
+static func browse_file(host: Node, filters: PackedStringArray, picked: Callable,
+		options: Dictionary = {}) -> ConfirmationDialog:
+	var plain: bool = bool(options.get("plain", false))
+	if not plain and (not Engine.is_editor_hint() or host == null or not host.is_inside_tree()):
+		return null
+	var browser: ConfirmationDialog = FileDialog.new() if plain else EditorFileDialog.new()
+	browser.set("file_mode", FileDialog.FILE_MODE_SAVE_FILE if bool(options.get("save", false)) else FileDialog.FILE_MODE_OPEN_FILE)
+	browser.set("access", FileDialog.ACCESS_FILESYSTEM if bool(options.get("disk", false)) else FileDialog.ACCESS_RESOURCES)
+	browser.set("filters", filters)
+	for key: String in ["dir", "path"]:
+		if options.has(key):
+			browser.set("current_" + key, str(options[key]))
+	# Last, because a file dialog retitles itself whenever its mode is set.
+	if options.has("title"):
+		browser.title = str(options["title"])
+	browser.connect("file_selected", func(path: String) -> void:
 		picked.call(path)
 		browser.queue_free())
 	browser.canceled.connect(browser.queue_free)
 	host.add_child(browser)
-	browser.popup_centered_ratio(0.6)
+	if options.has("size"):
+		browser.popup_centered(options["size"])
+	else:
+		browser.popup_centered_ratio(0.6)
+	return browser
 
 
 ## A muted helper/hint label (the small explanatory text under a field). The autowrap is WIDTH-BOUNDED

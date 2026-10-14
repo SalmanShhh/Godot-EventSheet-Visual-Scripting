@@ -169,18 +169,8 @@ static func summary_text(take: EventSheetReplayRecorder) -> String:
 
 
 func _save_as_test_sheet() -> void:
-	var dialog: FileDialog = FileDialog.new()
-	dialog.title = EventSheetL10n.translate("Save as Test Sheet")
-	dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
-	dialog.access = FileDialog.ACCESS_RESOURCES
-	dialog.filters = PackedStringArray(["*.gd ; Test sheet"])
-	dialog.current_file = "replay_test.gd"
-	dialog.file_selected.connect(func(path: String) -> void:
-		_write_test_sheet(path)
-		dialog.call_deferred("queue_free"))
-	dialog.canceled.connect(func() -> void: dialog.queue_free())
-	_dock.add_child(dialog)
-	dialog.popup_centered(Vector2i(820, 560))
+	EventSheetPopupUI.browse_file(_dock, ["*.gd ; Test sheet"], _write_test_sheet, {"plain": true, "save": true,
+		"title": EventSheetL10n.translate("Save as Test Sheet"), "size": Vector2i(820, 560)}).current_file = "replay_test.gd"
 
 
 func _write_test_sheet(path: String) -> void:

@@ -169,16 +169,12 @@ func _lead_sentence(is_global: bool) -> String:
 
 
 func _add_words(is_global: bool) -> String:
-	match _list:
-		"actions":
-			return EventSheetL10n.translate("+ Add action")
-		"conditions":
-			return EventSheetL10n.translate("+ Add condition")
-		"triggers":
-			return EventSheetL10n.translate("+ Add trigger")
-		"expressions":
-			return EventSheetL10n.translate("+ Add expression")
-	return EventSheetL10n.translate("+ Add global value") if is_global else EventSheetL10n.translate("+ Add property")
+	return {
+		"actions": EventSheetL10n.translate("+ Add action"),
+		"conditions": EventSheetL10n.translate("+ Add condition"),
+		"triggers": EventSheetL10n.translate("+ Add trigger"),
+		"expressions": EventSheetL10n.translate("+ Add expression"),
+	}.get(_list, EventSheetL10n.translate("+ Add global value") if is_global else EventSheetL10n.translate("+ Add property"))
 
 
 ## One offered member: its kind as a coloured word, its name (click to see the row), what it returns.
@@ -207,27 +203,16 @@ func _entry_row(entry: Dictionary) -> Control:
 
 ## The word a kind is labelled with.
 static func kind_word(kind: String) -> String:
-	match kind:
-		"action":
-			return EventSheetL10n.translate("Action")
-		"condition":
-			return EventSheetL10n.translate("Condition")
-		"trigger":
-			return EventSheetL10n.translate("Trigger")
-	return EventSheetL10n.translate("Expression")
+	return {"action": EventSheetL10n.translate("Action"), "condition": EventSheetL10n.translate("Condition"),
+		"trigger": EventSheetL10n.translate("Trigger")}.get(kind, EventSheetL10n.translate("Expression"))
 
 
 ## The colour a kind's word is written in: an action green, a condition blue, a trigger amber and an
 ## expression purple, each from the editor's own tones so it reads on a light theme as well.
 static func kind_color(kind: String) -> Color:
-	match kind:
-		"action":
-			return EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_OK)
-		"condition":
-			return EventSheetPopupUI.accent_color()
-		"trigger":
-			return EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_WARNING)
-	return EventSheetPopupUI.readable_on_panel(EventSheetPalette.COLOR_EXPRESSION)
+	return {"action": EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_OK), "condition": EventSheetPopupUI.accent_color(),
+		"trigger": EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_WARNING)}.get(kind,
+		EventSheetPopupUI.readable_on_panel(EventSheetPalette.COLOR_EXPRESSION))
 
 
 func _on_add() -> void:

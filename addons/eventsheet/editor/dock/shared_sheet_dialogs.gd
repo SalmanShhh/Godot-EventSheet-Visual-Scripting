@@ -101,17 +101,8 @@ func _create_shared_sheet() -> void:
 
 ## Add ▸ Include sheet…: browse to a shared sheet and wire the open script to it.
 func open_include_sheet() -> void:
-	var dialog: FileDialog = FileDialog.new()
-	dialog.title = EventSheetL10n.translate("Include Sheet")
-	dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
-	dialog.access = FileDialog.ACCESS_RESOURCES
-	dialog.filters = PackedStringArray(["*.gd ; Shared sheet"])
-	dialog.file_selected.connect(func(path: String) -> void:
-		include_shared_sheet(path)
-		dialog.call_deferred("queue_free"))
-	dialog.canceled.connect(func() -> void: dialog.queue_free())
-	_dock.add_child(dialog)
-	dialog.popup_centered(Vector2i(820, 560))
+	EventSheetPopupUI.browse_file(_dock, ["*.gd ; Shared sheet"], include_shared_sheet, {"plain": true,
+		"title": EventSheetL10n.translate("Include Sheet"), "size": Vector2i(820, 560)})
 
 
 ## Wires the open script to the shared sheet at `path`. Returns what happened, so the menu item and

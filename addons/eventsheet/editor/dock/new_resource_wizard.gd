@@ -561,17 +561,10 @@ func fit_column(index: int) -> void:
 
 
 func _pick_csv(saving: bool) -> void:
-	var picker: FileDialog = FileDialog.new()
-	picker.file_mode = FileDialog.FILE_MODE_SAVE_FILE if saving else FileDialog.FILE_MODE_OPEN_FILE
-	picker.access = FileDialog.ACCESS_FILESYSTEM
-	picker.filters = PackedStringArray(["*.csv ; CSV"])
-	picker.file_selected.connect(func(path: String) -> void:
-		var said: String = export_csv(path) if saving else import_csv(path)
-		show_problem(said, EventSheetPopupUI.TONE_OK)
-		picker.queue_free())
-	picker.canceled.connect(picker.queue_free)
-	_dialog.add_child(picker)
-	picker.popup_centered(Vector2i(Vector2(EventSheetPalette.scaled_f(760.0), EventSheetPalette.scaled_f(480.0))))
+	EventSheetPopupUI.browse_file(_dialog, ["*.csv ; CSV"], func(path: String) -> void:
+		show_problem(export_csv(path) if saving else import_csv(path), EventSheetPopupUI.TONE_OK),
+		{"plain": true, "save": saving, "disk": true,
+			"size": Vector2i(Vector2(EventSheetPalette.scaled_f(760.0), EventSheetPalette.scaled_f(480.0)))})
 
 
 # ── Insert ────────────────────────────────────────────────────────────────────────────────────

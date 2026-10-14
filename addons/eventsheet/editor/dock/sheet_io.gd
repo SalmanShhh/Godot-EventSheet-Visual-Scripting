@@ -581,40 +581,19 @@ func _on_save_as_requested(after_saved: Callable = Callable()) -> void:
 	if _dock._current_sheet == null:
 		_dock._set_status("Nothing to save.", true)
 		return
-	var dialog: FileDialog = FileDialog.new()
-	dialog.title = "Save EventSheet As"
-	dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
-	dialog.access = FileDialog.ACCESS_RESOURCES
-	dialog.filters = PackedStringArray(_dock.EVENT_SHEET_FILTERS)
-	dialog.current_path = _build_initial_save_path()
-	dialog.file_selected.connect(func(path: String) -> void:
+	EventSheetPopupUI.browse_file(_dock, PackedStringArray(_dock.EVENT_SHEET_FILTERS), func(path: String) -> void:
 		_save_sheet_to_path(path)
-		dialog.call_deferred("queue_free")
 		if after_saved.is_valid() and not _dock._dirty:
-			after_saved.call()
-	)
-	dialog.canceled.connect(func() -> void: dialog.queue_free())
-	_dock.add_child(dialog)
-	dialog.popup_centered(Vector2i(860, 580))
+			after_saved.call(), {"plain": true, "save": true, "title": "Save EventSheet As",
+		"path": _build_initial_save_path(), "size": Vector2i(860, 580)})
 
 
 func _export_gdscript_requested() -> void:
 	if _dock._current_sheet == null:
 		_dock._set_status("Open or create a sheet first.", true)
 		return
-	var dialog: FileDialog = FileDialog.new()
-	dialog.title = "Export Generated GDScript"
-	dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
-	dialog.access = FileDialog.ACCESS_RESOURCES
-	dialog.filters = PackedStringArray(["*.gd ; GDScript"])
-	dialog.current_path = "res://%s.gd" % _exported_script_basename()
-	dialog.file_selected.connect(func(path: String) -> void:
-		_write_exported_gdscript(path)
-		dialog.call_deferred("queue_free")
-	)
-	dialog.canceled.connect(func() -> void: dialog.queue_free())
-	_dock.add_child(dialog)
-	dialog.popup_centered(Vector2i(860, 580))
+	EventSheetPopupUI.browse_file(_dock, ["*.gd ; GDScript"], _write_exported_gdscript, {"plain": true, "save": true,
+		"title": "Export Generated GDScript", "path": "res://%s.gd" % _exported_script_basename(), "size": Vector2i(860, 580)})
 
 
 ## Sheet ▸ Save as text…: the whole sheet as the plain listing every event-sheet community pastes
@@ -625,19 +604,8 @@ func _save_sheet_as_text_requested() -> void:
 	if _dock._current_sheet == null:
 		_dock._set_status("Open or create a sheet first.", true)
 		return
-	var dialog: FileDialog = FileDialog.new()
-	dialog.title = "Save Sheet as Text"
-	dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
-	dialog.access = FileDialog.ACCESS_FILESYSTEM
-	dialog.filters = PackedStringArray(["*.md ; Markdown"])
-	dialog.current_path = "%s.md" % _exported_script_basename()
-	dialog.file_selected.connect(func(path: String) -> void:
-		_write_sheet_text(path)
-		dialog.call_deferred("queue_free")
-	)
-	dialog.canceled.connect(func() -> void: dialog.queue_free())
-	_dock.add_child(dialog)
-	dialog.popup_centered(Vector2i(860, 580))
+	EventSheetPopupUI.browse_file(_dock, ["*.md ; Markdown"], _write_sheet_text, {"plain": true, "save": true, "disk": true,
+		"title": "Save Sheet as Text", "path": "%s.md" % _exported_script_basename(), "size": Vector2i(860, 580)})
 
 
 func _write_sheet_text(path: String) -> void:

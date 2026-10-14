@@ -178,21 +178,11 @@ func _build_dialog() -> void:
 	_dock.add_child(_dialog)
 
 
-## The picker is built lazily: EditorFileDialog is editor-only, so the form itself never depends
-## on it and stays buildable headless.
+## The editor's own picker, opened only in the editor: the form never depends on it and stays
+## buildable headless.
 func _browse_into(edit: LineEdit, filter: String, label: String) -> void:
-	if not Engine.is_editor_hint() or not _dock.is_inside_tree():
-		return
-	var picker: EditorFileDialog = EditorFileDialog.new()
-	picker.access = EditorFileDialog.ACCESS_RESOURCES
-	picker.file_mode = EditorFileDialog.FILE_MODE_SAVE_FILE if filter == "*.csv" and _mode == "export" else EditorFileDialog.FILE_MODE_OPEN_FILE
-	picker.add_filter(filter, label)
-	picker.file_selected.connect(func(path: String) -> void:
-		edit.text = path
-		picker.queue_free())
-	picker.canceled.connect(func() -> void: picker.queue_free())
-	_dialog.add_child(picker)
-	picker.popup_file_dialog()
+	EventSheetPopupUI.browse_file(_dialog, ["%s ; %s" % [filter, label]], func(path: String) -> void: edit.text = path,
+		{"save": filter == "*.csv" and _mode == "export"})
 
 
 ## The separator character the picker currently means.

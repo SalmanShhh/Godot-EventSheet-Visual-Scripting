@@ -1909,19 +1909,8 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _on_open_requested() -> void:
-	var dialog: FileDialog = FileDialog.new()
-	dialog.title = "Open EventSheet"
-	dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
-	dialog.access = FileDialog.ACCESS_RESOURCES
-	dialog.filters = PackedStringArray(EVENT_SHEET_FILTERS)
-	dialog.current_dir = _suggest_sheet_directory()
-	dialog.file_selected.connect(func(path: String) -> void:
-		_load_sheet_from_path(path)
-		dialog.call_deferred("queue_free")
-	)
-	dialog.canceled.connect(func() -> void: dialog.queue_free())
-	add_child(dialog)
-	dialog.popup_centered(Vector2i(860, 580))
+	EventSheetPopupUI.browse_file(self, PackedStringArray(EVENT_SHEET_FILTERS), _load_sheet_from_path, {"plain": true,
+		"title": "Open EventSheet", "dir": _suggest_sheet_directory(), "size": Vector2i(860, 580)})
 
 
 # Theme delegates → dock/theme_manager.gd. menu_bar.gd's View menu drives _on_load_theme_requested /
@@ -2019,18 +2008,9 @@ func _extract_to_include_requested() -> void:
 	if rows.is_empty():
 		_set_status("Select one or more top-level events to extract into a library sheet.", true)
 		return
-	var dialog: FileDialog = FileDialog.new()
-	dialog.title = "Extract %d row(s) to a new included sheet" % rows.size()
-	dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
-	dialog.access = FileDialog.ACCESS_RESOURCES
-	dialog.filters = PackedStringArray(["*.tres ; EventSheet library"])
-	dialog.current_path = "res://shared_logic.tres"
-	dialog.file_selected.connect(func(path: String) -> void:
-		_do_extract_to_include(path, rows)
-		dialog.call_deferred("queue_free"))
-	dialog.canceled.connect(func() -> void: dialog.queue_free())
-	add_child(dialog)
-	dialog.popup_centered(Vector2i(860, 580))
+	EventSheetPopupUI.browse_file(self, ["*.tres ; EventSheet library"], _do_extract_to_include.bind(rows), {"plain": true,
+		"save": true, "title": "Extract %d row(s) to a new included sheet" % rows.size(), "path": "res://shared_logic.tres",
+		"size": Vector2i(860, 580)})
 
 
 ## The selection's TOP-LEVEL source rows (extraction operates on whole top-level events).
