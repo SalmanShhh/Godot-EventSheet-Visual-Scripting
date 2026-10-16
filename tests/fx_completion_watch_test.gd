@@ -59,30 +59,30 @@ static func run() -> bool:
 	editor.set_undo_redo_manager(NoopUndoManager.new())
 	editor._load_sheet_from_path(sample_path)
 	all_passed = _check("external sheet opened", editor._current_sheet != null and editor._current_sheet.external_source_path == sample_path, true) and all_passed
-	all_passed = _check("freshly opened file is not 'changed'", editor._external_sheet_changed_on_disk(), false) and all_passed
+	all_passed = _check("freshly opened file is not 'changed'", editor._external_watcher.sheet_changed_on_disk(), false) and all_passed
 	# Simulate an outside edit: rewrite the file and force a different stored mtime
 	# (filesystem mtime granularity can be 1s - too slow to wait for in tests).
 	var rewrite: FileAccess = FileAccess.open(sample_path, FileAccess.WRITE)
 	rewrite.store_string("extends Node\n\nvar hp: int = 2\n")
 	rewrite.close()
 	editor._external_mtime = 1
-	all_passed = _check("outside edits are detected", editor._external_sheet_changed_on_disk(), true) and all_passed
-	editor._reload_external_sheet()
+	all_passed = _check("outside edits are detected", editor._external_watcher.sheet_changed_on_disk(), true) and all_passed
+	editor._external_watcher.reload_external_sheet()
 	all_passed = _check("reload re-imports the new content",
 		str(SheetCompiler.compile(editor._current_sheet, "user://eventsheets_watch_rt.gd").get("output", "")).contains("var hp: int = 2"), true) and all_passed
-	all_passed = _check("reload resets the change flag", editor._external_sheet_changed_on_disk(), false) and all_passed
+	all_passed = _check("reload resets the change flag", editor._external_watcher.sheet_changed_on_disk(), false) and all_passed
 
 	# The reload question only offers to drop edits when there ARE edits to drop: on a clean tab
 	# Reload is the safe blue answer; with unsaved edits, keeping them is, and the disk is the red one.
 	editor._current_sheet.read_only = false
 	editor._dirty = false
 	editor._external_mtime = 1
-	editor._prompt_external_reload_if_changed()
+	editor._external_watcher.prompt_external_reload_if_changed()
 	var clean: ConfirmationDialog = editor._external_watcher._external_reload_dialog
 	var clean_read: Array = [clean.title, clean.ok_button_text, clean.get_cancel_button().visible,
 		clean.find_child("Danger", true, false) == null]
 	editor._dirty = true
-	editor._prompt_external_reload_if_changed()
+	editor._external_watcher.prompt_external_reload_if_changed()
 	var dirty: ConfirmationDialog = editor._external_watcher._external_reload_dialog
 	var danger: Button = dirty.find_child("Danger", true, false) as Button
 	all_passed = _check("a clean tab is offered Reload, a dirty one keeps its edits by default",
@@ -103,7 +103,7 @@ static func run() -> bool:
 		["This tab - unsaved edits", "yours", "This tab - nothing unsaved", "the file", true, 1, [true, true]]) and all_passed
 	# Esc keeps the edits and remembers the change, so the question is not asked again.
 	dirty.canceled.emit()
-	all_passed = _check("Esc keeps the edits and stops asking", [editor._dirty, editor._external_sheet_changed_on_disk()], [true, false]) and all_passed
+	all_passed = _check("Esc keeps the edits and stops asking", [editor._dirty, editor._external_watcher.sheet_changed_on_disk()], [true, false]) and all_passed
 	# Taking the file on disk first keeps the version in the editor as a backup, and says so.
 	for old_backup: String in EventSheetBackups.list_backups(sample_path):
 		DirAccess.remove_absolute(old_backup)
@@ -111,7 +111,7 @@ static func run() -> bool:
 	third.store_string("extends Node\n\nvar hp: int = 3\n")
 	third.close()
 	editor._external_mtime = 1
-	editor._prompt_external_reload_if_changed()
+	editor._external_watcher.prompt_external_reload_if_changed()
 	var taking: ConfirmationDialog = editor._external_watcher._external_reload_dialog
 	var note: String = (taking.find_child("Note", true, false) as Label).text
 	taking.custom_action.emit(load(editor.SMALL_PROMPT_PATH).DANGER_ACTION)

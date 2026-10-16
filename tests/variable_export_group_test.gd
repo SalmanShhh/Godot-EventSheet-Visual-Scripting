@@ -23,7 +23,7 @@ static func run() -> bool:
 		"attack": {"type": "int", "default": 10, "exported": true, "attributes": {"group": "Combat"}},
 		"speed": {"type": "float", "default": 5.0, "exported": true},
 	}
-	var rows: Array = viewport._build_global_variable_rows(sheet)
+	var rows: Array = viewport._row_builder._build_global_variable_rows(sheet)
 	all_passed = _check("an ungrouped variable sits in no folder",
 		_folder_holding(rows, "speed"), "") and all_passed
 
@@ -31,7 +31,7 @@ static func run() -> bool:
 	var sub_sheet: EventSheetResource = EventSheetResource.new()
 	sub_sheet.variables = {"melee_dmg": {"type": "int", "default": 5, "exported": true, "attributes": {"group": "Combat", "subgroup": "Melee"}}}
 	all_passed = _check("the strip names the subsection too",
-		_folder_holding(viewport._build_global_variable_rows(sub_sheet), "melee_dmg"), "Combat › Melee") and all_passed
+		_folder_holding(viewport._row_builder._build_global_variable_rows(sub_sheet), "melee_dmg"), "Combat › Melee") and all_passed
 	viewport.free()
 
 	return all_passed

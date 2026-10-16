@@ -494,7 +494,7 @@ func open_file_options() -> void:
 		_file_menu = PopupMenu.new()
 		_file_menu.id_pressed.connect(func(id: int) -> void:
 			if id == 0:
-				_dock._open_generated_in_godot()
+				_dock._preview_glue._open_generated_in_godot()
 			else:
 				browse_to_scene(str(_dock._current_sheet.external_source_path)))
 		_dock.add_child(_file_menu)

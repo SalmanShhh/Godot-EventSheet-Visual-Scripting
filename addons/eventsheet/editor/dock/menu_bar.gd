@@ -312,14 +312,14 @@ func build(root: Node) -> void:
 			20: _dock.open_insert_object()
 			0: _dock._open_template_menu()
 			1: _dock._on_open_requested()
-			2: _dock._on_save_requested()
-			3: _dock._on_save_as_requested()
+			2: _dock._sheet_io._on_save_requested()
+			3: _dock._sheet_io._on_save_as_requested()
 			4: _dock._open_sheet_type_dialog()
 			5: _dock._providers_glue.on_manage_ace_providers_requested()
-			6: _dock._export_addon_pack()
+			6: _dock._export_pack._export_addon_pack()
 			14: _dock._providers_glue.open_publish_version_dialog()
 			15: _dock._raw_call_namer.run()
-			7: _dock._export_gdscript_requested()
+			7: _dock._sheet_io._export_gdscript_requested()
 			8: _dock._open_include_manager()
 			9: _dock._new_addon_panel.open()
 			22: _dock._new_addon_panel.open(true)
@@ -350,7 +350,7 @@ func build(root: Node) -> void:
 	# until the icon seam started deriving the missing arrow from its twin. Undo and Redo also name
 	# the glyph they wear where there is no editor theme to ask at all; Save does not, because its
 	# icon is one the editor has always carried and its word is the one every reader knows.
-	var save_button: Button = _add_toolbar_button(_toolbar, "Save", _dock._on_save_requested,
+	var save_button: Button = _add_toolbar_button(_toolbar, "Save", _dock._sheet_io._on_save_requested,
 		_with_key("Save the sheet - compile-on-save keeps its generated script fresh.", "save"),
 		"Save", true)
 	save_button.name = "EventSheetSaveButton"
@@ -394,9 +394,9 @@ func build(root: Node) -> void:
 	_add_separator = _toolbar.get_child(_toolbar.get_child_count() - 1) as Control
 	_add_separator.name = "EventSheetAddSeparator"
 	# The core reflexes stay one click (E / C / A on the keyboard).
-	_add_event_button = _add_toolbar_button(_toolbar, "Add Event", _dock._on_add_event_requested, "Add an event (E).", "Add")
-	_add_condition_button = _add_toolbar_button(_toolbar, "Add Condition", _dock._on_add_condition_requested, "Add a condition to the selected event (C).", "MemberConstant")
-	_add_action_button = _add_toolbar_button(_toolbar, "Add Action", _dock._on_add_action_requested, "Add an action to the selected event (A).", "MemberMethod")
+	_add_event_button = _add_toolbar_button(_toolbar, "Add Event", _dock._add_rows.on_add_event_requested, "Add an event (E).", "Add")
+	_add_condition_button = _add_toolbar_button(_toolbar, "Add Condition", _dock._add_rows.on_add_condition_requested, "Add a condition to the selected event (C).", "MemberConstant")
+	_add_action_button = _add_toolbar_button(_toolbar, "Add Action", _dock._add_rows.on_add_action_requested, "Add an action to the selected event (A).", "MemberMethod")
 	# Kept as a reference: Simple Mode hides this deliberate drop-to-code surface entirely.
 	_dock._add_code_button = _add_toolbar_button(_toolbar, "Add Code", _dock._on_add_gdscript_action_requested, "Add a script block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.", "Script")
 	# Add ▸ - the whole authoring vocabulary, as a cascading submenu of the one Menu rather than as a
@@ -506,11 +506,11 @@ func build(root: Node) -> void:
 			8: _dock._on_add_project_global_requested()
 			9: load(PATTERN_MANUAL_PATH).open_page("")
 			10: _dock._shared_sheets.open_include_sheet()
-			12: _dock._on_add_event_requested()
-			13: _dock._on_add_condition_requested()
-			14: _dock._on_add_action_requested()
-			15: _dock._on_add_group_requested()
-			16: _dock._on_add_comment_requested()
+			12: _dock._add_rows.on_add_event_requested()
+			13: _dock._add_rows.on_add_condition_requested()
+			14: _dock._add_rows.on_add_action_requested()
+			15: _dock._add_rows.on_add_group_requested()
+			16: _dock._add_rows.on_add_comment_requested()
 			17: _dock._variable_gestures.prompt_inspector_button()
 	)
 	# Every key on this menu, printed from EventSheetShortcuts through the ONE seam that puts a key
@@ -768,8 +768,8 @@ func build(root: Node) -> void:
 		view_popup.set_item_checked(view_popup.get_item_index(12), load(MCP_SERVER_PATH).is_enabled()))
 	view_popup.id_pressed.connect(func(id: int) -> void:
 		match id:
-			0: _dock._toggle_code_panel()
-			1: _dock._toggle_split_view()
+			0: _dock._code_panel_glue.toggle_code_panel()
+			1: _dock._multi_view._toggle_split_view()
 			2: _dock._toggle_detached_view()
 			3: _dock._toggle_linked_views()
 			4: _dock._on_zoom_in_requested()
@@ -883,7 +883,7 @@ func build(root: Node) -> void:
 			11: _dock._attach_behavior_to_selection()
 			18: _dock.toggle_behavior_preview()
 			19: _dock._save_studio.open()
-			12: _dock._open_lift_report()
+			12: _dock._preview_glue._open_lift_report()
 			26: _dock.open_lift_workbench()
 			13: _dock.show_welcome()
 			17: _dock.start_tour()
@@ -929,7 +929,7 @@ func build(root: Node) -> void:
 	# GDScript stays a one-click toggle on the EXPANDED strip (the pairing thesis: honest output,
 	# always one click away), beside its twin in View ▸ GDScript Panel - the same toggle, the same
 	# handler, shown where the other panel toggles are named.
-	var code_panel_button: Button = _add_toolbar_button(_toolbar, "GDScript", _dock._toggle_code_panel, "Toggle the generated-GDScript panel - the sheet's honest compiled output, side by side.", "Script")
+	var code_panel_button: Button = _add_toolbar_button(_toolbar, "GDScript", _dock._code_panel_glue.toggle_code_panel, "Toggle the generated-GDScript panel - the sheet's honest compiled output, side by side.", "Script")
 	code_panel_button.name = "EventSheetCodePanelButton"
 	# The per-sheet theme picker is no longer an OptionButton on the strip: it is View ▸ Sheet theme,
 	# a submenu built from the very same preset list with the sheet's own theme ticked. The

@@ -116,10 +116,10 @@ static func run() -> bool:
 	# the workspace body's subtree, not that it is a DIRECT child (the rail wrapper is layout detail).
 	all_passed = _check("panel is mounted inside the workspace body",
 		editor._open_sheets_panel != null and editor._workspace_body.is_ancestor_of(editor._open_sheets_panel), true) and all_passed
-	editor._toggle_split_view()
+	editor._multi_view._toggle_split_view()
 	all_passed = _check("panel stays put across a Split View toggle (viewport reparent is isolated)",
 		editor._workspace_body.is_ancestor_of(editor._open_sheets_panel), true) and all_passed
-	editor._toggle_split_view()  # close the split again
+	editor._multi_view._toggle_split_view()  # close the split again
 	editor.free()
 
 	return all_passed

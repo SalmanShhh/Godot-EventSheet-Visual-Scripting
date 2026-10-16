@@ -128,9 +128,9 @@ static func run() -> bool:
 	# ── The containing region resolves from any row inside its range ──
 	viewport._fold_state.clear()
 	viewport.set_sheet(sweep_sheet)
-	ok = _check("a row inside region A resolves to A's opener", viewport._enclosing_region_flat_index(1), 0) and ok
-	ok = _check("the opener itself counts as inside", viewport._enclosing_region_flat_index(0), 0) and ok
-	ok = _check("a row inside region B resolves to B's opener", viewport._enclosing_region_flat_index(4), 3) and ok
+	ok = _check("a row inside region A resolves to A's opener", viewport._folding.enclosing_region_flat_index(1), 0) and ok
+	ok = _check("the opener itself counts as inside", viewport._folding.enclosing_region_flat_index(0), 0) and ok
+	ok = _check("a row inside region B resolves to B's opener", viewport._folding.enclosing_region_flat_index(4), 3) and ok
 
 	# ── Surround with Region: fences wrap the context row as one undo step ──
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
@@ -140,7 +140,7 @@ static func run() -> bool:
 	var alpha_row := EventRowData.new()
 	alpha_row.source_resource = dock_sheet.events[0]
 	dock._context_row = alpha_row
-	dock._surround_selection_with_region()
+	dock._input_dispatch.surround_selection_with_region()
 	var wrapped_kinds: Array = []
 	for entry: Resource in dock.get_current_sheet().events:
 		if entry is CustomBlockRow:
@@ -161,13 +161,13 @@ static func run() -> bool:
 		var row_data: EventRowData = entry.get("row")
 		multi_view._selected_row_uids[row_data.row_uid] = true
 		row_data.selected = true
-	multi_dock._build_row_context_menu(multi_view.get_flat_rows()[0].get("row"))
+	multi_dock._context_menus._build_row_context_menu(multi_view.get_flat_rows()[0].get("row"))
 	var has_region_item: bool = false
 	for item_index: int in range(multi_dock._row_context_menu.item_count):
 		if multi_dock._row_context_menu.get_item_id(item_index) == multi_dock.ROW_MENU_SURROUND_REGION:
 			has_region_item = true
 	ok = _check("a multi-selection's context menu offers Create Code Region top-level", has_region_item, true) and ok
-	multi_dock._surround_selection_with_region()
+	multi_dock._input_dispatch.surround_selection_with_region()
 	var multi_kinds: Array = []
 	for entry: Resource in multi_dock.get_current_sheet().events:
 		if entry is CustomBlockRow:

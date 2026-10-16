@@ -202,7 +202,7 @@ static func _history_lights_rows_on_hover_not_on_click() -> bool:
 	panel.highlight_entry(-1)
 	passed = _check("leaving the list clears the light", editor._viewport._row_highlight.keys(), []) and passed
 	# In split view the light lands in the pane the reader is working in, like the Outline's jumps.
-	editor._toggle_split_view()
+	editor._multi_view._toggle_split_view()
 	var split: EventSheetViewport = editor._multi_view._split_viewport
 	# The split is the pane the reader last worked in (a selection there makes it so).
 	editor._active_viewport_ref = split
@@ -210,7 +210,7 @@ static func _history_lights_rows_on_hover_not_on_click() -> bool:
 	passed = _check("in split view the hover lights the active pane, not the left one",
 		[split._row_highlight.keys(), editor._viewport._row_highlight.keys()], [["c"], []]) and passed
 	panel.highlight_entry(-1)
-	editor._toggle_split_view()
+	editor._multi_view._toggle_split_view()
 	editor.free()
 	return passed
 

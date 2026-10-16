@@ -254,11 +254,11 @@ func build_ui() -> void:
 		if _dock._mirroring_selection:
 			return  # a mirrored selection must not steal the active view
 		_dock._active_viewport_ref = _dock._viewport
-		_dock._mirror_selection(_dock._viewport, row_data)
+		_dock._multi_view._mirror_selection(_dock._viewport, row_data)
 	)
 	_dock._viewport.row_drop_requested.connect(_dock._on_row_drop_requested)
-	_dock._viewport.rows_drop_requested.connect(_dock._on_rows_drop_requested)
-	_dock._viewport.ace_preview_requested.connect(_dock._on_ace_preview_requested)
+	_dock._viewport.rows_drop_requested.connect(_dock._ace_apply._on_rows_drop_requested)
+	_dock._viewport.ace_preview_requested.connect(_dock._ace_apply._on_ace_preview_requested)
 	_dock._viewport.asset_dropped.connect(_dock._apply_asset_drop)
 	_dock._viewport.object_bar_dropped.connect(_dock.apply_object_bar_drop)
 	_dock._viewport.input_action_dropped.connect(_dock.apply_input_action_drop)
@@ -272,7 +272,7 @@ func build_ui() -> void:
 		if _dock._viewport != null:
 			_dock._viewport.queue_redraw())
 	_dock._viewport.property_dropped.connect(_dock._apply_property_drop)
-	_dock._viewport.ace_picker_requested.connect(_dock._on_viewport_ace_picker_requested)
+	_dock._viewport.ace_picker_requested.connect(_dock._ace_apply._on_viewport_ace_picker_requested)
 	_dock._viewport.rows_rebuilt.connect(_dock._update_sheet_counts_status)
 	_dock._viewport.span_edit_requested.connect(_dock._on_viewport_span_edit_requested)
 	_dock._viewport.navigate_requested.connect(_dock._navigate.navigate)
@@ -280,7 +280,7 @@ func build_ui() -> void:
 	_dock._viewport.rename_note_provider = _dock._variable_rename_note
 	_dock._viewport.editor_tool_action_requested.connect(_dock._editor_tool_bar.activate)
 	_dock._viewport.this_editor_action_requested.connect(_dock._this_editor_bar.activate)
-	_dock._viewport.ace_edit_requested.connect(_dock._on_viewport_ace_edit_requested)
+	_dock._viewport.ace_edit_requested.connect(_dock._ace_apply._on_viewport_ace_edit_requested)
 	_dock._viewport.param_value_edit_requested.connect(_dock._on_param_value_edit_requested)
 	_dock._viewport.param_value_edit_at_rect_requested.connect(func(ace: Resource, param_id: String, current_text: String, anchor_screen: Rect2) -> void:
 		_dock._inline_params.on_param_value_edit_requested(ace, param_id, current_text, anchor_screen))
@@ -288,7 +288,7 @@ func build_ui() -> void:
 	_dock._viewport.param_node_drop_requested.connect(_dock._on_param_node_drop_requested)
 	_dock._viewport.variable_edit_requested.connect(_dock._on_viewport_variable_edit_requested)
 	_dock._viewport.comment_edit_requested.connect(_dock._open_comment_dialog)
-	_dock._viewport.group_edit_requested.connect(_dock._on_group_edit_requested)
+	_dock._viewport.group_edit_requested.connect(_dock._add_rows.on_group_edit_requested)
 	_dock._viewport.pick_filter_edit_requested.connect(_dock._open_pick_filter_dialog)
 	_dock._viewport.with_node_edit_requested.connect(_dock._open_with_node_dialog)
 	_dock._viewport.enum_edit_requested.connect(_dock._open_enum_dialog)
@@ -311,16 +311,16 @@ func build_ui() -> void:
 	_dock._viewport.match_edit_requested.connect(_dock._open_match_dialog)
 	_dock._viewport.row_disable_toggle_requested.connect(_dock._toggle_selected_rows_enabled)
 	_dock._viewport.row_move_requested.connect(_dock._move_selected_row)
-	_dock._viewport.delete_requested.connect(_dock._delete_selected_content)
+	_dock._viewport.delete_requested.connect(_dock._row_edit_ops._delete_selected_content)
 	_dock._viewport.find_requested.connect(_dock._show_find_bar)
 	_dock._viewport.find_step_requested.connect(_dock._find_step)
 	_dock._apply_editor_native_defaults()
-	_dock._viewport.ace_drop_requested.connect(_dock._on_viewport_ace_drop_requested)
-	_dock._viewport.drag_status_requested.connect(_dock._on_viewport_drag_status_requested)
+	_dock._viewport.ace_drop_requested.connect(_dock._ace_apply._on_viewport_ace_drop_requested)
+	_dock._viewport.drag_status_requested.connect(_dock._ace_apply._on_viewport_drag_status_requested)
 	_dock._viewport.lane_ratio_changed.connect(_dock._on_viewport_lane_ratio_changed)
 	_dock._viewport.object_column_width_changed.connect(_dock._on_viewport_object_column_width_changed)
 	_dock._viewport.add_event_requested.connect(_dock._on_viewport_add_event_requested)
-	_dock._viewport.raw_code_edit_requested.connect(_dock._on_viewport_raw_code_edit_requested)
+	_dock._viewport.raw_code_edit_requested.connect(_dock._code_panel_glue.on_viewport_raw_code_edit_requested)
 	_dock._viewport.data_class_field_edit_requested.connect(_dock._on_data_class_field_edit_requested)
 	_dock._viewport.context_menu_requested.connect(_dock._on_viewport_context_menu_requested)
 	_dock._viewport.empty_space_double_clicked.connect(_dock._on_viewport_empty_space_double_clicked)
@@ -508,7 +508,7 @@ func build_provider_dialog() -> void:
 	var open_in_godot_button: Button = Button.new()
 	open_in_godot_button.text = "Open in Godot Script Editor"
 	open_in_godot_button.tooltip_text = "Open the selected provider script in Godot's script editor."
-	open_in_godot_button.pressed.connect(_dock._on_provider_open_in_godot_pressed)
+	open_in_godot_button.pressed.connect(_dock._preview_glue._on_provider_open_in_godot_pressed)
 	buttons.add_child(open_in_godot_button)
 
 	var providers_card: PanelContainer = EventSheetPopupUI.titled_card("Providers", providers_box)
@@ -575,7 +575,7 @@ func build_provider_dialog() -> void:
 	_dock._provider_params_button.text = "Parameters…"
 	_dock._provider_params_button.visible = false
 	_dock._provider_params_button.tooltip_text = "Shape the selected entry's parameters: a hint (try 'comparison'), a fixed set of choices, and what the row shows the moment it is dropped."
-	_dock._provider_params_button.pressed.connect(_dock._on_provider_params_pressed)
+	_dock._provider_params_button.pressed.connect(_dock._providers_glue.on_provider_params_pressed)
 	preview_actions.add_child(_dock._provider_params_button)
 	_dock._provider_shim_button = Button.new()
 	_dock._provider_shim_button.text = "Keep Old Name…"
@@ -626,7 +626,7 @@ func ensure_code_panel() -> void:
 	var open_in_godot_button: Button = Button.new()
 	open_in_godot_button.text = "Open in Godot Script Editor"
 	open_in_godot_button.tooltip_text = "Open the .gd source in Godot's own script editor (code-backed sheets). For a .tres sheet, Save As… a .gd first."
-	open_in_godot_button.pressed.connect(_dock._open_generated_in_godot)
+	open_in_godot_button.pressed.connect(_dock._preview_glue._open_generated_in_godot)
 	header.add_child(open_in_godot_button)
 	var copy_button: Button = Button.new()
 	copy_button.text = "Copy"
@@ -639,7 +639,7 @@ func ensure_code_panel() -> void:
 	var close_button: Button = Button.new()
 	close_button.text = "✕"
 	close_button.tooltip_text = "Close the GDScript panel"
-	close_button.pressed.connect(_dock._toggle_code_panel)
+	close_button.pressed.connect(_dock._code_panel_glue.toggle_code_panel)
 	header.add_child(close_button)
 	_dock._side_panel.add_child(header)
 	# Orientation for non-programmers: say what this panel even is before the code scares them off.
@@ -657,7 +657,7 @@ func ensure_code_panel() -> void:
 	if Engine.is_editor_hint() and ClassDB.class_exists("GDScriptSyntaxHighlighter"):
 		_dock._code_edit.syntax_highlighter = ClassDB.instantiate("GDScriptSyntaxHighlighter")
 	# Make the panel read like the actual script editor: its code font + the minimap.
-	_dock._apply_editor_code_settings(_dock._code_edit)
+	_dock._code_panel_glue.apply_editor_code_settings(_dock._code_edit)
 	_dock._code_edit.gui_input.connect(_dock._code_panel_glue.on_code_panel_gui_input)
 	_dock._side_panel.add_child(_dock._code_edit)
 	_dock._split.add_child(_dock._side_panel)
@@ -692,7 +692,7 @@ func ensure_raw_code_dialog() -> void:
 		return
 	# The button the lint and the guardrails call Save, so it says Save.
 	var parts: Dictionary = EventSheetPopupUI.panel_window(EventSheetL10n.translate("Edit code block"), Vector2i.ZERO,
-		_dock, "Save", _dock._on_raw_code_dialog_confirmed, true)
+		_dock, "Save", _dock._code_panel_glue.on_raw_code_dialog_confirmed, true)
 	_dock._raw_code_dialog = parts["window"]
 	var layout_box: VBoxContainer = parts["box"]
 	layout_box.custom_minimum_size = Vector2(640.0, 0.0)
@@ -719,7 +719,7 @@ func ensure_raw_code_dialog() -> void:
 		_dock._raw_code_edit.syntax_highlighter = ClassDB.instantiate("GDScriptSyntaxHighlighter")
 	_dock._raw_code_edit.code_completion_enabled = true
 	EventSheetPopupUI.configure_code_editor(_dock._raw_code_edit)  # auto-close brackets/quotes at the source
-	_dock._raw_code_edit.text_changed.connect(_dock._validate_raw_code)
+	_dock._raw_code_edit.text_changed.connect(_dock._code_panel_glue.validate_raw_code)
 	_dock._raw_code_edit.code_completion_requested.connect(_dock._code_panel_glue.populate_raw_code_completion)
 	layout_box.add_child(_dock._raw_code_edit)
 	_dock._raw_code_lint_label = Label.new()

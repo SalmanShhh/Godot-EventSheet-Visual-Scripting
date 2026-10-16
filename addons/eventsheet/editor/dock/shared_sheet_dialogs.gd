@@ -112,7 +112,7 @@ func include_shared_sheet(path: String) -> Dictionary:
 		var refusal: Dictionary = {"ok": false, "error": EventSheetL10n.translate("Save this sheet as a script first - an include is written into the file.")}
 		_dock._set_status(str(refusal["error"]), true)
 		return refusal
-	_dock._on_save_requested()
+	_dock._sheet_io._on_save_requested()
 	var result: Dictionary = EventSheetSharedSheets.apply_include(
 		FileAccess.get_file_as_string(target), FileAccess.get_file_as_string(path), path)
 	if not bool(result["ok"]):

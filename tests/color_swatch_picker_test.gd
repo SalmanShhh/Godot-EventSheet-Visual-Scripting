@@ -23,7 +23,7 @@ static func run() -> bool:
 	action.params = {"target": "$Sprite2D", "color": "Color(1, 0, 0, 1)"}
 
 	all_passed = _check("finds the Color param's key", viewport._first_color_param_id(action), "color") and all_passed
-	var read_color: Variant = viewport._first_color_in_params(action)
+	var read_color: Variant = viewport._row_builder._first_color_in_params(action)
 	all_passed = _check("reads the swatch Color value",
 		read_color is Color and (read_color as Color).is_equal_approx(Color(1, 0, 0, 1)), true) and all_passed
 

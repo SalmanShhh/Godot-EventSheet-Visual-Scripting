@@ -68,18 +68,6 @@ static func findings(sheet: EventSheetResource, script_path: String = "") -> Arr
 	return found
 
 
-## The findings anchored at one event row - what the canvas puts into the amber state. Matched by
-## IDENTITY, so the caller never has to name a row that has no name.
-static func for_event(found: Array[Dictionary], event_row: EventRow) -> Array[Dictionary]:
-	var mine: Array[Dictionary] = []
-	if event_row == null:
-		return mine
-	for entry: Dictionary in found:
-		if str(entry.get("anchor", "")) == ANCHOR_EVENT and is_same(entry.get("event"), event_row):
-			mine.append(entry)
-	return mine
-
-
 ## What asking the question first WOULD do to this sheet, as before/after pairs: the file the event
 ## builds, and the question it would ask about it. The reading the inbox chip shows before the reader
 ## is told anything worked, so a count is never the whole receipt.

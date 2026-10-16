@@ -376,12 +376,12 @@ static func _run_grid_csv() -> bool:
 	# The two grid items are on the variable menu, live-gated: enabled on a grid, disabled with the
 	# reason on anything else (there is no per-item visibility in a PopupMenu, so disabled it is).
 	editor._variables._context_variable = {"name": "score", "scope": "global", "type": "int", "attributes": {}}
-	editor._configure_context_menu(editor._variable_context_menu)
+	editor._context_menus._configure_context_menu(editor._variable_context_menu)
 	var export_index: int = editor._variable_context_menu.get_item_index(editor.VARIABLE_MENU_GRID_EXPORT)
 	all_passed = _check("the CSV command is disabled on a plain variable",
 		editor._variable_context_menu.is_item_disabled(export_index), true) and all_passed
 	editor._variables._context_variable = entry
-	editor._configure_context_menu(editor._variable_context_menu)
+	editor._context_menus._configure_context_menu(editor._variable_context_menu)
 	all_passed = _check("and enabled on a grid one",
 		editor._variable_context_menu.is_item_disabled(export_index), false) and all_passed
 	var grid_dialog: EventSheetGridCSVDialog = editor._grid_csv_dialog

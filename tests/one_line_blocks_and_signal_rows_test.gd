@@ -237,12 +237,12 @@ static func _readings(view: EventSheetViewport) -> PackedStringArray:
 
 static func _walk(view: EventSheetViewport, rows: Array, into: PackedStringArray) -> void:
 	for row_data: EventRowData in rows:
-		view._ensure_event_spans(row_data)
+		view._row_builder._ensure_event_spans(row_data)
 		var lines: Dictionary = {}
 		var order: Array[int] = []
 		var right: String = ""
 		for span: SemanticSpan in row_data.spans:
-			if view._resolve_span_lane(span) != "condition":
+			if view._row_builder._resolve_span_lane(span) != "condition":
 				right += span.text
 				continue
 			var line_index: int = int(span.metadata.get("line_index", 0))
@@ -276,7 +276,7 @@ static func _span_kinds(view: EventSheetViewport, trigger_text: String) -> Strin
 static func _sweep_span_kinds(view: EventSheetViewport, rows: Array, trigger_text: String,
 		found: PackedStringArray) -> void:
 	for row_data: EventRowData in rows:
-		view._ensure_event_spans(row_data)
+		view._row_builder._ensure_event_spans(row_data)
 		var kinds: PackedStringArray = PackedStringArray()
 		var matched: bool = false
 		for span: SemanticSpan in row_data.spans:
@@ -318,7 +318,7 @@ static func _conjunction_cells(view: EventSheetViewport) -> PackedStringArray:
 static func _sweep_conditions(view: EventSheetViewport, rows: Array, found: PackedStringArray) -> void:
 	for row_data: EventRowData in rows:
 		if row_data.row_type == EventRowData.RowType.EVENT:
-			view._ensure_event_spans(row_data)
+			view._row_builder._ensure_event_spans(row_data)
 			for span: SemanticSpan in row_data.spans:
 				if not (str(span.metadata.get("kind", "")) in ["condition", "trigger"]):
 					continue

@@ -40,15 +40,15 @@ static func run() -> bool:
 
 	# Indenting the first (top) event is a no-op - nothing above to nest under.
 	_select_resource(viewport, first)
-	all_passed = _check("indent of the top event is a no-op", editor._indent_selected_event(), false) and all_passed
+	all_passed = _check("indent of the top event is a no-op", editor._row_edit_ops._indent_selected_event(), false) and all_passed
 
 	# Outdenting a root event is a no-op - already top level.
 	_select_resource(viewport, second)
-	all_passed = _check("outdent of a root event is a no-op", editor._outdent_selected_event(), false) and all_passed
+	all_passed = _check("outdent of a root event is a no-op", editor._row_edit_ops._outdent_selected_event(), false) and all_passed
 
 	# Indent the second event under the first.
 	_select_resource(viewport, second)
-	all_passed = _check("indent returns true", editor._indent_selected_event(), true) and all_passed
+	all_passed = _check("indent returns true", editor._row_edit_ops._indent_selected_event(), true) and all_passed
 	all_passed = _check("root now holds a single event", sheet.events.size(), 1) and all_passed
 	all_passed = _check("first remains at root", sheet.events[0] == first, true) and all_passed
 	all_passed = _check("second is nested under first",
@@ -56,7 +56,7 @@ static func run() -> bool:
 
 	# Outdent the second event back to the root, after the first.
 	_select_resource(viewport, second)
-	all_passed = _check("outdent returns true", editor._outdent_selected_event(), true) and all_passed
+	all_passed = _check("outdent returns true", editor._row_edit_ops._outdent_selected_event(), true) and all_passed
 	all_passed = _check("root holds two events again", sheet.events.size(), 2) and all_passed
 	all_passed = _check("first no longer has sub-events", first.sub_events.is_empty(), true) and all_passed
 	all_passed = _check("second is placed after first", sheet.events[1] == second, true) and all_passed

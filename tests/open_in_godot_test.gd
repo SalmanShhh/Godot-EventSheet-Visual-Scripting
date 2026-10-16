@@ -37,7 +37,7 @@ static func run() -> bool:
 	# Generated "Open in Godot" on a non-backed sheet also just nudges to Save As - no throwaway files.
 	dock._ui_builder.ensure_code_panel()
 	dock._code_edit.text = "extends Node\nfunc _ready() -> void:\n\tpass\n"
-	dock._open_generated_in_godot()
+	dock._preview_glue._open_generated_in_godot()
 	all_passed = _check("non-backed 'Open in Godot' writes no throwaway files",
 		DirAccess.dir_exists_absolute("res://.eventsheets_tmp/"), false) and all_passed
 

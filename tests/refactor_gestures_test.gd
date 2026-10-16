@@ -99,7 +99,7 @@ static func _test_wrap_and_unwrap() -> bool:
 	# actions to re-parent. One undoable edit builds the guard AND moves the actions.
 	var always: ACEDefinition = editor._find_definition("Core", "Always")
 	all_passed = _check("the builtin Always condition resolves", always != null, true) and all_passed
-	editor._apply_ace_definition(always, {}, {
+	editor._ace_apply._apply_ace_definition(always, {}, {
 		"mode": "new_sub_condition_event",
 		"selected_resource": event,
 		"wrap_actions": event.actions.duplicate(),
@@ -121,7 +121,7 @@ static func _test_wrap_and_unwrap() -> bool:
 
 	# Wrap again, then unwrap: the pair is a true round trip.
 	var live: EventRow = editor._current_sheet.events[0] as EventRow
-	editor._apply_ace_definition(always, {}, {
+	editor._ace_apply._apply_ace_definition(always, {}, {
 		"mode": "new_sub_condition_event",
 		"selected_resource": live,
 		"wrap_actions": live.actions.duplicate(),
@@ -198,7 +198,7 @@ static func _test_wrap_refuses_a_trigger() -> bool:
 	if trigger != null:
 		all_passed = _check("…and it really is a trigger", trigger.ace_type, ACEDefinition.ACEType.TRIGGER) and all_passed
 		var live: EventRow = editor._current_sheet.events[0] as EventRow
-		editor._apply_ace_definition(trigger, {}, {
+		editor._ace_apply._apply_ace_definition(trigger, {}, {
 			"mode": "new_sub_condition_event",
 			"selected_resource": live,
 			"wrap_actions": live.actions.duplicate(),

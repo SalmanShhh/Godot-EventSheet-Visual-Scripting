@@ -85,7 +85,7 @@ static func run() -> bool:
 	for index in range(viewport.get_flat_rows().size()):
 		var row: EventRowData = viewport.get_flat_rows()[index].get("row")
 		if row != null and row.source_resource == hidden_group:
-			viewport._toggle_row_fold(index)
+			viewport._folding.toggle_row_fold(index)
 			break
 	editor._find_edit.text = "secret needle"
 	editor._find_step(1)

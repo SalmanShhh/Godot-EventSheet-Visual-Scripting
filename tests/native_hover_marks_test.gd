@@ -173,7 +173,7 @@ static func _group_head(theme_path: String, toggleable: bool = false) -> Diction
 			continue
 		var font: Font = view._get_font()
 		var font_size: int = view._get_font_size()
-		view._get_or_build_row_layout(index, 900.0, font, font_size)
+		view._layout_builder.get_or_build_row_layout(index, 900.0, font, font_size)
 		var texts: PackedStringArray = PackedStringArray()
 		var words: Array = []
 		var chrome: Array = []

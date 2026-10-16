@@ -29,7 +29,7 @@ func _on_frame() -> void:
 		_dock.setup(null)
 		var row: RawCodeRow = RawCodeRow.new()
 		row.code = "var damage := 10\nhost.take_damage(damage)\nprint(\"hit for \", damage)"
-		_dock._on_viewport_raw_code_edit_requested(row, true)
+		_dock._code_panel_glue.on_viewport_raw_code_edit_requested(row, true)
 		# Also size-check the other dialogs the balloon fix touched (no special state needed).
 		_dock._comments._ensure_with_node_dialog()
 		_dock._comments._with_node_dialog.popup_centered(Vector2i(460, 160))

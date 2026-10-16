@@ -251,7 +251,7 @@ static func _all_rows(view: EventSheetViewport) -> Array:
 
 static func _sweep_rows(view: EventSheetViewport, rows: Array, into: Array) -> void:
 	for row_data: EventRowData in rows:
-		view._ensure_event_spans(row_data)
+		view._row_builder._ensure_event_spans(row_data)
 		into.append({"row": row_data})
 		_sweep_rows(view, row_data.children, into)
 
@@ -289,7 +289,7 @@ static func _signal_rows(view: EventSheetViewport) -> Array[EventRowData]:
 static func _sweep_signal_rows(view: EventSheetViewport, rows: Array, found: Array[EventRowData]) -> void:
 	for row_data: EventRowData in rows:
 		if row_data.row_uid.begins_with("signal_"):
-			view._ensure_event_spans(row_data)
+			view._row_builder._ensure_event_spans(row_data)
 			found.append(row_data)
 		_sweep_signal_rows(view, row_data.children, found)
 

@@ -71,7 +71,7 @@ static func run() -> bool:
 	# Stale-slot guard setup: swap the grouped instance for a DIFFERENT ACE after enumeration,
 	# as if the user edited it between opening the menu and pressing OK.
 	grouped.actions[0] = _other_action()
-	editor._apply_ace_definition(definition, {"message": "\"batched\"", "level": "push_warning"}, {
+	editor._ace_apply._apply_ace_definition(definition, {"message": "\"batched\"", "level": "push_warning"}, {
 		"mode": "batch_edit_params",
 		"batch_kind": "action",
 		"batch_targets": batch.get("targets", []),
@@ -86,7 +86,7 @@ static func run() -> bool:
 
 	# ---- per-param apply: unchecked keys keep each instance's own value ----
 	# Retune only "level" across the survivors; "message" stays per-instance.
-	editor._apply_ace_definition(definition, {"message": "\"ignored\"", "level": "print_rich"}, {
+	editor._ace_apply._apply_ace_definition(definition, {"message": "\"ignored\"", "level": "print_rich"}, {
 		"mode": "batch_edit_params",
 		"batch_kind": "action",
 		"batch_targets": batch.get("targets", []),
@@ -102,7 +102,7 @@ static func run() -> bool:
 	# and the fresh one ----
 	var container_param: Array = ["a", "b"]
 	(first.actions[0] as ACEAction).params["message"] = container_param
-	editor._apply_ace_definition(definition, {"message": "\"again\"", "level": "print"}, {
+	editor._ace_apply._apply_ace_definition(definition, {"message": "\"again\"", "level": "print"}, {
 		"mode": "batch_edit_params",
 		"batch_kind": "action",
 		"batch_targets": [{"event": first, "index": 0}],

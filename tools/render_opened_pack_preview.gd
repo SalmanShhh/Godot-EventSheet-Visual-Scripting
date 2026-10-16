@@ -158,7 +158,7 @@ func _print_input_rows() -> void:
 			continue
 		if not uids.has((row_data.source_resource as EventRow).event_uid):
 			continue
-		_viewport._ensure_event_spans(row_data)
+		_viewport._row_builder._ensure_event_spans(row_data)
 		var texts: PackedStringArray = PackedStringArray()
 		for span: SemanticSpan in row_data.spans:
 			texts.append(span.text)

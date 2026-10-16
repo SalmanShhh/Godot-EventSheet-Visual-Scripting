@@ -32,9 +32,9 @@ static func run() -> bool:
 	viewport.get_row_layout_for_test(0, width)
 	viewport.get_row_layout_for_test(1, width)
 
-	var first_top: float = viewport._get_row_top(0)
-	var first_height: float = viewport._get_row_height(0)
-	var second_top: float = viewport._get_row_top(1)
+	var first_top: float = viewport._row_metrics_helper.row_top(0)
+	var first_height: float = viewport._row_metrics_helper.row_height(0)
+	var second_top: float = viewport._row_metrics_helper.row_top(1)
 	var gap_start: float = first_top + first_height
 	var gap_middle: float = (gap_start + second_top) * 0.5
 
@@ -86,8 +86,8 @@ static func run() -> bool:
 	]) and all_passed
 
 	# ── what a press actually does ──
-	viewport._handle_mouse_button(_press(Vector2(divider_x, middle_y), true))
-	viewport._handle_mouse_button(_press(Vector2(divider_x, middle_y), false))
+	viewport._input_handlers.handle_mouse_button(_press(Vector2(divider_x, middle_y), true))
+	viewport._input_handlers.handle_mouse_button(_press(Vector2(divider_x, middle_y), false))
 	var after_divider_press: Dictionary = viewport.get_editor_state_snapshot()
 	all_passed = SUPPORT.pins(PREFIX, [
 		["a press on the divider mid-sheet selects the event",
@@ -96,14 +96,14 @@ static func run() -> bool:
 		["it starts no divider drag", viewport._dragging_lane_divider, false],
 	]) and all_passed
 
-	viewport._handle_mouse_button(_press(Vector2(EventSheetPalette.GUTTER_WIDTH * 0.5, viewport._get_row_top(1) + viewport._get_row_height(1) * 0.5), true))
+	viewport._input_handlers.handle_mouse_button(_press(Vector2(EventSheetPalette.GUTTER_WIDTH * 0.5, viewport._row_metrics_helper.row_top(1) + viewport._row_metrics_helper.row_height(1) * 0.5), true))
 	var after_gutter_press: Dictionary = viewport.get_editor_state_snapshot()
 	all_passed = SUPPORT.pins(PREFIX, [
 		["a press in the gutter selects that event whole",
 			int(after_gutter_press.get("selected_row_count", 0)), 1],
 		["and no box selection began there", viewport._box_select_active, false],
 	]) and all_passed
-	viewport._handle_mouse_button(_press(Vector2(EventSheetPalette.GUTTER_WIDTH * 0.5, viewport._get_row_top(1) + viewport._get_row_height(1) * 0.5), false))
+	viewport._input_handlers.handle_mouse_button(_press(Vector2(EventSheetPalette.GUTTER_WIDTH * 0.5, viewport._row_metrics_helper.row_top(1) + viewport._row_metrics_helper.row_height(1) * 0.5), false))
 
 	# A press ON a cell still selects that cell alone - the difference the outline is drawn to show.
 	var cell: SemanticSpan = _first_condition_span(viewport)
@@ -112,16 +112,16 @@ static func run() -> bool:
 		var cell_point: Vector2 = cell.rect.get_center()
 		all_passed = SUPPORT.check(PREFIX, "a point on a cell answers the cell",
 			str(viewport.press_target_at(cell_point).get("target", "")), "cell") and all_passed
-		viewport._handle_mouse_button(_press(cell_point, true))
-		viewport._handle_mouse_button(_press(cell_point, false))
+		viewport._input_handlers.handle_mouse_button(_press(cell_point, true))
+		viewport._input_handlers.handle_mouse_button(_press(cell_point, false))
 		all_passed = SUPPORT.pins(PREFIX, [
 			["pressing a cell keeps per-cell selection",
 				int(viewport.get_editor_state_snapshot().get("selected_span_count", 0)), 1],
 			# The frame is the EVENT's mark, so a cell's selection must not wear it.
 			["a cell selection draws no card frame", viewport._statement_has_selected_span(0), true],
 		]) and all_passed
-		viewport._handle_mouse_button(_press(Vector2(EventSheetPalette.GUTTER_WIDTH * 0.5, viewport._get_row_top(0) + viewport._get_row_height(0) * 0.5), true))
-		viewport._handle_mouse_button(_press(Vector2(EventSheetPalette.GUTTER_WIDTH * 0.5, viewport._get_row_top(0) + viewport._get_row_height(0) * 0.5), false))
+		viewport._input_handlers.handle_mouse_button(_press(Vector2(EventSheetPalette.GUTTER_WIDTH * 0.5, viewport._row_metrics_helper.row_top(0) + viewport._row_metrics_helper.row_height(0) * 0.5), true))
+		viewport._input_handlers.handle_mouse_button(_press(Vector2(EventSheetPalette.GUTTER_WIDTH * 0.5, viewport._row_metrics_helper.row_top(0) + viewport._row_metrics_helper.row_height(0) * 0.5), false))
 		all_passed = SUPPORT.check(PREFIX, "selecting the event back draws the frame again",
 			viewport._statement_has_selected_span(0), false) and all_passed
 
@@ -136,7 +136,7 @@ static func run() -> bool:
 		viewport.context_menu_requested.disconnect(connection["callable"])
 	viewport.context_menu_requested.connect(
 		func(_row: EventRowData, menu_hit: Dictionary, _at: Vector2) -> void: menu_hits.append(menu_hit))
-	viewport._handle_mouse_button(_right_press(Vector2(or_band_x, middle_y)))
+	viewport._input_handlers.handle_mouse_button(_right_press(Vector2(or_band_x, middle_y)))
 	all_passed = SUPPORT.pins(PREFIX, [
 		["a right press beside the cells opens one menu", menu_hits.size(), 1],
 		["and it is the event's menu, not the cell's under the pointer",
@@ -146,18 +146,18 @@ static func run() -> bool:
 	]) and all_passed
 	if cell != null:
 		menu_hits.clear()
-		viewport._handle_mouse_button(_right_press(cell.rect.get_center()))
+		viewport._input_handlers.handle_mouse_button(_right_press(cell.rect.get_center()))
 		all_passed = SUPPORT.check(PREFIX, "a right press ON a cell still opens that cell's menu",
 			int((menu_hits[0] as Dictionary).get("span_index", -1)) >= 0, true) and all_passed
 
 	# ── box selection starts only outside every card ──
-	var below_last: float = viewport._get_row_top(1) + viewport._get_row_height(1) + 40.0
-	viewport._handle_mouse_button(_press(Vector2(width * 0.5, below_last), true))
+	var below_last: float = viewport._row_metrics_helper.row_top(1) + viewport._row_metrics_helper.row_height(1) + 40.0
+	viewport._input_handlers.handle_mouse_button(_press(Vector2(width * 0.5, below_last), true))
 	all_passed = SUPPORT.pins(PREFIX, [
 		["a press below the last card starts a box selection", viewport._box_select_active, true],
 		["that point belongs to no event", _event_at(viewport, Vector2(width * 0.5, below_last)), -1],
 	]) and all_passed
-	viewport._handle_mouse_button(_press(Vector2(width * 0.5, below_last), false))
+	viewport._input_handlers.handle_mouse_button(_press(Vector2(width * 0.5, below_last), false))
 
 	editor.free()
 	return all_passed

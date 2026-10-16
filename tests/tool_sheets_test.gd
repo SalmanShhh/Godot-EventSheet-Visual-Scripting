@@ -84,10 +84,10 @@ static func run() -> bool:
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(dialog_sheet)
 	editor.set_undo_redo_manager(NoopUndoManager.new())
-	editor._apply_sheet_type_settings(3, "MySceneTool", "", "", false)
+	editor._sheet_type_glue.apply_sheet_type_settings(3, "MySceneTool", "", "", false)
 	all_passed = _check("Editor Tool preset sets EditorScript + @tool",
 		dialog_sheet.host_class == "EditorScript" and dialog_sheet.tool_mode and not dialog_sheet.behavior_mode, true) and all_passed
-	editor._apply_sheet_type_settings(1, "GizmoNode", "", "Node2D", true)
+	editor._sheet_type_glue.apply_sheet_type_settings(1, "GizmoNode", "", "Node2D", true)
 	all_passed = _check("@tool checkbox works on other types",
 		dialog_sheet.tool_mode and dialog_sheet.host_class == "Node2D", true) and all_passed
 	editor.free()

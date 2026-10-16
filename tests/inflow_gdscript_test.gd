@@ -70,7 +70,7 @@ static func run() -> bool:
 		if row_data != null and row_data.source_resource == event:
 			event_index = i
 	var event_row_data: EventRowData = flat[event_index].get("row")
-	viewport._ensure_event_spans(event_row_data)
+	viewport._row_builder._ensure_event_spans(event_row_data)
 	var raw_spans: Array = []
 	for span in event_row_data.spans:
 		if span != null and span.metadata is Dictionary and bool((span.metadata as Dictionary).get("raw_action", false)):
@@ -80,7 +80,7 @@ static func run() -> bool:
 		raw_spans.size() == 2
 			and int((raw_spans[0].metadata as Dictionary).get("ace_index", -1)) == 0
 			and int((raw_spans[1].metadata as Dictionary).get("ace_index", -1)) == 0, true) and all_passed
-	all_passed = _check("line count accounts for the block's lines", viewport._count_event_lines(event) >= 3, true) and all_passed
+	all_passed = _check("line count accounts for the block's lines", viewport._row_builder._count_event_lines(event) >= 3, true) and all_passed
 
 	# Double-clicking a block cell routes to the code dialog with in_flow = true.
 	var captured: Dictionary = {"raw": null, "in_flow": false}
@@ -88,11 +88,11 @@ static func run() -> bool:
 		captured["raw"] = raw_resource
 		captured["in_flow"] = in_flow
 	)
-	viewport._get_or_build_row_layout(event_index, viewport.get_canvas_logical_width(), viewport._get_font(), viewport._get_font_size())
+	viewport._layout_builder.get_or_build_row_layout(event_index, viewport.get_canvas_logical_width(), viewport._get_font(), viewport._get_font_size())
 	var cell_center: Vector2 = (raw_spans[0] as SemanticSpan).rect.get_center()
-	viewport._handle_mouse_button(_button(cell_center, true, false))
-	viewport._handle_mouse_button(_button(cell_center, false, false))
-	viewport._handle_mouse_button(_button(cell_center, true, true))
+	viewport._input_handlers.handle_mouse_button(_button(cell_center, true, false))
+	viewport._input_handlers.handle_mouse_button(_button(cell_center, false, false))
+	viewport._input_handlers.handle_mouse_button(_button(cell_center, true, true))
 	all_passed = _check("double-click opens the block (in_flow)", captured["raw"] == inline_block and bool(captured["in_flow"]), true) and all_passed
 	viewport.free()
 

@@ -226,7 +226,7 @@ func _quick_add(query: String) -> bool:
 		"mode": mode,
 		"selected_resource": selected_resource
 	}
-	_dock._apply_ace_definition(definition, matched.get("params", {}), context)
+	_dock._ace_apply._apply_ace_definition(definition, matched.get("params", {}), context)
 	return true
 
 # ── Run Scene - sheet → playing game in one click ──────────────────────────
@@ -242,7 +242,7 @@ func _run_from_sheet() -> void:
 	if _dock._current_sheet.behavior_mode:
 		_dock._set_status("Behaviors run on a host - use Tools → Test Bench.", true)
 		return
-	_dock._on_save_requested()
+	_dock._sheet_io._on_save_requested()
 	if _dock._current_sheet_path.is_empty():
 		return  # Unsaved sheet: the Save As flow took over.
 	var script_path: String = _run_target_script_path()

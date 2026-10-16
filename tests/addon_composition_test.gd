@@ -126,14 +126,14 @@ static func run() -> bool:
 	var dialog_sheet: EventSheetResource = EventSheetResource.new()
 	editor.setup(dialog_sheet)
 	editor.set_undo_redo_manager(NoopUndoManager.new())
-	editor._apply_sheet_type_settings(2, "ComposedThing", "", "Node2D", false, PackedStringArray(["kit"]), PackedStringArray(["user://eventsheets_base_addon.tres"]))
+	editor._sheet_type_glue.apply_sheet_type_settings(2, "ComposedThing", "", "Node2D", false, PackedStringArray(["kit"]), PackedStringArray(["user://eventsheets_base_addon.tres"]))
 	all_passed = _check("Sheet Type applies includes",
 		dialog_sheet.includes.size() == 1 and dialog_sheet.includes[0] == "user://eventsheets_base_addon.tres", true) and all_passed
 
 	# Export bundling: the included sheet travels with the pack.
 	dialog_sheet.behavior_mode = true
 	dialog_sheet.host_class = "Node2D"
-	editor._export_addon_pack("user://eventsheets_pack_out")
+	editor._export_pack._export_addon_pack("user://eventsheets_pack_out")
 	all_passed = _check("Export Addon bundles the include",
 		FileAccess.file_exists("user://eventsheets_pack_out/eventsheets_base_addon.tres"), true) and all_passed
 	editor.free()
@@ -171,7 +171,7 @@ static func run() -> bool:
 	var uses_sheet: EventSheetResource = EventSheetResource.new()
 	uses_editor.setup(uses_sheet)
 	uses_editor.set_undo_redo_manager(NoopUndoManager.new())
-	uses_editor._apply_sheet_type_settings(2, "UsesThing", "", "Node2D", false, PackedStringArray(), PackedStringArray(), PackedStringArray(["ScreenShake"]))
+	uses_editor._sheet_type_glue.apply_sheet_type_settings(2, "UsesThing", "", "Node2D", false, PackedStringArray(), PackedStringArray(), PackedStringArray(["ScreenShake"]))
 	all_passed = _check("Sheet Type applies uses classes",
 		uses_sheet.uses_addons.size() == 1 and uses_sheet.uses_addons[0] == "ScreenShake", true) and all_passed
 	uses_editor.free()
@@ -200,7 +200,7 @@ static func run() -> bool:
 	var req_sheet: EventSheetResource = EventSheetResource.new()
 	req_editor.setup(req_sheet)
 	req_editor.set_undo_redo_manager(NoopUndoManager.new())
-	req_editor._apply_sheet_type_settings(2, "ReqThing", "", "Node2D", false, PackedStringArray(), PackedStringArray(), PackedStringArray(), PackedStringArray(["ScreenShake"]))
+	req_editor._sheet_type_glue.apply_sheet_type_settings(2, "ReqThing", "", "Node2D", false, PackedStringArray(), PackedStringArray(), PackedStringArray(), PackedStringArray(["ScreenShake"]))
 	all_passed = _check("Sheet Type applies sibling requirements",
 		req_sheet.requires_behaviors.size() == 1 and req_sheet.requires_behaviors[0] == "ScreenShake", true) and all_passed
 	req_editor.free()

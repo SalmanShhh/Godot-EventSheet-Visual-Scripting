@@ -66,7 +66,7 @@ static func run() -> bool:
 	# ── A drag of an inert field row is refused (it can never alias into sheet.events) ──
 	var drag_target: EventRowData = EventRowData.new()
 	drag_target.source_resource = dock.get_current_sheet().events[0]
-	dock._move_rows([cooldown_row], drag_target, "after", false)
+	dock._ace_apply._move_rows([cooldown_row], drag_target, "after", false)
 	ok = _check("dragging a field row is a no-op (null source, nothing aliased)",
 		not dock.get_current_sheet().events.has(null), true) and ok
 
@@ -108,13 +108,13 @@ static func run() -> bool:
 	# field items must be dispatched BEFORE the is_event branch or they never appear) ----
 	dock._context_row = class_row
 	dock._context_hit = {}
-	dock._build_row_context_menu(class_row)
+	dock._context_menus._build_row_context_menu(class_row)
 	ok = _check("the holder row's menu leads with Add Field", _menu_has(dock._row_context_menu, "Add Field…"), true) and ok
 	ok = _check("the holder row's menu is not the generic event menu", _menu_has(dock._row_context_menu, "Add blank sub-event (B)"), false) and ok
 	var field_row: EventRowData = class_row.children[0]
 	dock._context_row = field_row
 	dock._context_hit = {"span_metadata": {"kind": "data_class_field", "raw_row": class_row.source_resource, "field_index": 0}}
-	dock._build_row_context_menu(field_row)
+	dock._context_menus._build_row_context_menu(field_row)
 	ok = _check("a field row's menu offers Remove Field", _menu_has(dock._row_context_menu, "Remove Field"), true) and ok
 	# The synthetic field row's menu is SCOPED: universal Cut/Delete would act on the
 	# sheet root (source_resource is null), so they must not appear.
@@ -124,7 +124,7 @@ static func run() -> bool:
 	# field menu still appears - and the generic event menu (which would act on a
 	# null-source row) never does.
 	dock._context_hit = {}
-	dock._build_row_context_menu(field_row)
+	dock._context_menus._build_row_context_menu(field_row)
 	ok = _check("dead-space on a field row still offers Remove Field", _menu_has(dock._row_context_menu, "Remove Field"), true) and ok
 	ok = _check("dead-space on a field row never shows the event menu", _menu_has(dock._row_context_menu, "Add blank sub-event (B)"), false) and ok
 

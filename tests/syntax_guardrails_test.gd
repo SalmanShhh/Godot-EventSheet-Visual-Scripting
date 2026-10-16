@@ -66,11 +66,11 @@ static func run() -> bool:
 	dock._ensure_raw_code_dialog()
 	dock._raw_code_in_flow = true
 	dock._raw_code_edit.text = "velocity.x = (speed * 2"  # unbalanced
-	dock._validate_raw_code()
+	dock._code_panel_glue.validate_raw_code()
 	all_passed = _check("code-block Save is disabled while a bracket is unbalanced",
 		dock._raw_code_dialog.get_ok_button().disabled, true) and all_passed
 	dock._raw_code_edit.text = "velocity.x = speed * 2"  # balanced again
-	dock._validate_raw_code()
+	dock._code_panel_glue.validate_raw_code()
 	all_passed = _check("code-block Save re-enables once the structure is sound",
 		dock._raw_code_dialog.get_ok_button().disabled, false) and all_passed
 	all_passed = SUPPORT.check("syntax_guardrails_test", "the code-block button says Save",

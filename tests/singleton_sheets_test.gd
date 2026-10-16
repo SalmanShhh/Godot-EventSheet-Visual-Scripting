@@ -29,7 +29,7 @@ static func run() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	editor.setup(sheet)
 	editor.set_undo_redo_manager(NoopUndoManager.new())
-	editor._apply_sheet_type_settings(4, "", "", "", false, PackedStringArray(), PackedStringArray(), PackedStringArray(), PackedStringArray(), "GameState")
+	editor._sheet_type_glue.apply_sheet_type_settings(4, "", "", "", false, PackedStringArray(), PackedStringArray(), PackedStringArray(), PackedStringArray(), "GameState")
 	all_passed = _check("Sheet Type applies the autoload identity",
 		sheet.autoload_mode and sheet.autoload_name == "GameState" and sheet.host_class == "Node", true) and all_passed
 
@@ -117,7 +117,7 @@ static func run() -> bool:
 	bus_definition.id = "signal:spring_reached"
 	bus_definition.ace_type = ACEDefinition.ACEType.TRIGGER
 	var baked_event: EventRow = EventRow.new()
-	scan_editor._bake_trigger_signature(baked_event, bus_definition)
+	scan_editor._ace_apply._bake_trigger_signature(baked_event, bus_definition)
 	all_passed = _check("picked bus triggers bake the autoload source",
 		baked_event.trigger_source_path, "autoload:SpringDemo") and all_passed
 	scan_editor.free()

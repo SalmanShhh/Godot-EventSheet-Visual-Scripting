@@ -149,7 +149,7 @@ static func _test_the_finding_and_its_one_door() -> bool:
 	if found.is_empty():
 		return false
 	ok = _check("it hangs at the event, matched by identity",
-		EventSheetRenameFindings.for_event(found, sheet.events[0] as EventRow).size(), 1) and ok
+		ViewportRowBuilder.findings_at_event(found, sheet.events[0] as EventRow).size(), 1) and ok
 	ok = _check("it says which name went, out of which file, and what arrived beside it",
 		str(found[0].get("message", "")),
 		EventSheetRenameFindings.call_gone_message(OLD_NAME, "guard.gd", NEW_NAME)) and ok

@@ -178,7 +178,7 @@ func handle_mouse_motion(event: InputEventMouseMotion) -> void:
 	_viewport._drag_pointer_position = local_position
 	if not _viewport._drag_ace_entries.is_empty():
 		_viewport._drag_ace_copy_mode = event.ctrl_pressed or event.meta_pressed
-		_viewport._update_ace_drag_target(hit, local_position)
+		_viewport._drag.update_ace_drag_target(hit, local_position)
 	elif _viewport._drag_row_index >= 0:
 		_viewport._drag_row_copy_mode = event.ctrl_pressed or event.meta_pressed
 		# A ternary pair is one statement: a target that landed between its rows is snapped out to
@@ -424,7 +424,7 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			return
 		if bool(hit.get("fold", false)):
 			_viewport._select_from_click(row_index, span_index, false)
-			_viewport._toggle_row_fold(row_index)
+			_viewport._folding.toggle_row_fold(row_index)
 			return
 		# A published verb's Function-block header: ONE click opens its ACE properties. The header
 		# carries only ƒ, the name and the input chips, so everything else the verb IS has to be one
@@ -634,7 +634,7 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			# Accept so this control keeps receiving motion/release for the drag.
 			_viewport.accept_event()
 			return
-		_viewport._begin_row_drag(row_index)
+		_viewport._drag.begin_row_drag(row_index)
 		_viewport.accept_event()
 		return
 	# A boundary drag let go over the canvas finishes through the one call that owns it, so the
@@ -644,8 +644,8 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		return
 	if not _viewport._drag_ace_entries.is_empty():
 		_viewport._drag_ace_copy_mode = event.ctrl_pressed or event.meta_pressed
-		_viewport._complete_ace_drag()
-		_viewport._clear_ace_drag()
+		_viewport._drag.complete_ace_drag()
+		_viewport._drag.clear_ace_drag()
 		_viewport.queue_redraw()
 		return
 	# A variable row let go on a parameter VALUE writes what that field would need: bare for an
@@ -661,7 +661,7 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		if not dropped_text.is_empty():
 			_viewport.param_node_drop_requested.emit(
 				field.get("ace"), str(field.get("param_id", "")), dropped_text)
-			_viewport._clear_row_drag()
+			_viewport._drag.clear_row_drag()
 			_viewport.queue_redraw()
 			return
 	if _viewport._drag_row_index >= 0 and _viewport._drag_target_index >= 0 and not _viewport._drag_row_indices.has(_viewport._drag_target_index):
@@ -688,7 +688,7 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 						_viewport.variable_group_requested.emit(source_row, target_row)
 					else:
 						_viewport.row_drop_requested.emit(source_row, target_row, _viewport._drag_target_mode, _viewport._drag_row_copy_mode)
-	_viewport._clear_row_drag()
+	_viewport._drag.clear_row_drag()
 	_viewport.queue_redraw()
 
 
@@ -698,7 +698,7 @@ func handle_key(event: InputEventKey) -> void:
 	if not event.pressed or event.echo:
 		return
 	if _viewport._editing_row_index >= 0:
-		_viewport._input_handlers.handle_editing_key(event)
+		handle_editing_key(event)
 		return
 	# Param scope owns Tab / Esc / Enter / typing while active. The scope is entered explicitly
 	# (Enter below), so Tab at plain row scope still falls through to the dock's nest/outdent -
@@ -753,7 +753,7 @@ func handle_key(event: InputEventKey) -> void:
 		# With a cell focused OR nothing to fold, Left walks the cell focus instead
 		# (the event-sheet arrow-through-cells) - left_key_folds gates on both.
 		if _viewport.left_key_folds():
-			_viewport._toggle_row_fold(_viewport._selected_row_index)
+			_viewport._folding.toggle_row_fold(_viewport._selected_row_index)
 			_viewport.accept_event()
 		elif _viewport.step_cell_focus(-1):
 			_viewport.accept_event()
@@ -762,7 +762,7 @@ func handle_key(event: InputEventKey) -> void:
 		# focused OR nothing to unfold, Right walks the cell focus instead - the mirror
 		# of left_key_folds, so folding can't hijack the walk from either side.
 		if _viewport.right_key_unfolds():
-			_viewport._toggle_row_fold(_viewport._selected_row_index)
+			_viewport._folding.toggle_row_fold(_viewport._selected_row_index)
 			_viewport.accept_event()
 		elif _viewport.step_cell_focus(1):
 			_viewport.accept_event()

@@ -74,11 +74,11 @@ static func run() -> bool:
 		DirAccess.remove_absolute("user://backup_hook.tres")
 	for stale: String in EventSheetBackups.list_backups("user://backup_hook.tres"):
 		DirAccess.remove_absolute(stale)
-	editor._on_save_requested()
+	editor._sheet_io._on_save_requested()
 	all_passed = _check("the first save has no pre-save bytes to ring",
 		EventSheetBackups.list_backups("user://backup_hook.tres").is_empty(), true) and all_passed
 	hook_sheet.variables = {"hp": {"type": "int", "default": 2, "exported": true}}
-	editor._on_save_requested()
+	editor._sheet_io._on_save_requested()
 	all_passed = _check("the second save backs up the previous state",
 		EventSheetBackups.list_backups("user://backup_hook.tres").size(), 1) and all_passed
 	hook_sheet.variables = {"hp": {"type": "int", "default": 3, "exported": true}}

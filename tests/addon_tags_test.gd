@@ -63,9 +63,9 @@ static func run() -> bool:
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(dialog_sheet)
 	editor.set_undo_redo_manager(NoopUndoManager.new())
-	editor._apply_sheet_type_settings(2, "TaggedThing", "", "Node2D", false, PackedStringArray(["ai", "patrol"]))
+	editor._sheet_type_glue.apply_sheet_type_settings(2, "TaggedThing", "", "Node2D", false, PackedStringArray(["ai", "patrol"]))
 	all_passed = _check("Sheet Type applies tags", dialog_sheet.addon_tags, PackedStringArray(["ai", "patrol"])) and all_passed
-	editor._apply_sheet_type_settings(0, "", "", "", false, PackedStringArray(["stale"]))
+	editor._sheet_type_glue.apply_sheet_type_settings(0, "", "", "", false, PackedStringArray(["stale"]))
 	all_passed = _check("plain sheets clear tags (no stale never-emitted tags)",
 		dialog_sheet.addon_tags.is_empty(), true) and all_passed
 	editor.free()

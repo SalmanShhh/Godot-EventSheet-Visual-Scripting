@@ -50,7 +50,7 @@ static func run() -> bool:
 
 	# ── The context menu offers Make Else top-level in SIMPLE mode ──
 	dock._context_row = else_row
-	dock._build_row_context_menu(else_row)
+	dock._context_menus._build_row_context_menu(else_row)
 	ok = _check("Simple Mode offers Make Else top-level", _item_text(dock, dock.ROW_MENU_MAKE_ELSE) != "", true) and ok
 	ok = _check("Simple Mode offers Make Else-If top-level", _item_text(dock, dock.ROW_MENU_MAKE_ELIF) != "", true) and ok
 
@@ -59,8 +59,8 @@ static func run() -> bool:
 	else_row.selected = true
 	dock._row_edit_ops._set_context_else_mode(EventRow.ElseMode.ELSE)
 	ok = _check("Make Else sets the row's else_mode", else_event.else_mode, EventRow.ElseMode.ELSE) and ok
-	dock._build_row_context_menu(else_row)
-	dock._configure_context_menu(dock._row_context_menu)
+	dock._context_menus._build_row_context_menu(else_row)
+	dock._context_menus._configure_context_menu(dock._row_context_menu)
 	ok = _check("the label flips to Clear 'Else' on an else row", _item_text(dock, dock.ROW_MENU_MAKE_ELSE), "Clear 'Else'") and ok
 	ok = _check("the sibling stays Add 'Else If'", _item_text(dock, dock.ROW_MENU_MAKE_ELIF), "Add 'Else If'") and ok
 

@@ -127,7 +127,7 @@ static func _test_the_quiet_state_and_its_two_doors() -> bool:
 	ok = _check("filed under the id the Doctor files it under",
 		str(found[0].get("kind", "")), EventSheetMigrationDoctor.CHECK_VERB_GONE) and ok
 	ok = _check("anchored at the event that holds the row",
-		EventSheetMigrationFindings.for_event(found, event).size(), 1) and ok
+		ViewportRowBuilder.findings_at_event(found, event).size(), 1) and ok
 	ok = _check("naming the row's lane and slot, which is how the doors find it again",
 		[str(found[0].get("lane", "")), int(found[0].get("index", -1))], ["action", 0]) and ok
 	ok = _check("and the line it still compiles to, which is what the second door holds",

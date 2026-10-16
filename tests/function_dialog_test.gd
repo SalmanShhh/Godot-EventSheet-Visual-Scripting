@@ -46,7 +46,7 @@ static func run() -> bool:
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "Guard"
 	dock.setup(sheet)
-	dock._apply_function_data({
+	dock._function_dialog_glue._apply_function_data({
 		"name": "act", "return_type": TYPE_NIL, "description": "",
 		"params": [{"id": "amount", "type_name": "int", "default": "5", "description": "How much"}],
 		"guards": PackedStringArray(["host.enabled"]),

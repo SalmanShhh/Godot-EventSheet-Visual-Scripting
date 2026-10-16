@@ -305,7 +305,7 @@ static func _all_rows(view: EventSheetViewport) -> Array:
 
 static func _sweep_all(view: EventSheetViewport, rows: Array, into: Array) -> void:
 	for row_data: EventRowData in rows:
-		view._ensure_event_spans(row_data)
+		view._row_builder._ensure_event_spans(row_data)
 		into.append({"row": row_data})
 		_sweep_all(view, row_data.children, into)
 
@@ -340,7 +340,7 @@ static func _readings(view: EventSheetViewport) -> PackedStringArray:
 
 static func _sweep(view: EventSheetViewport, rows: Array, out: PackedStringArray) -> void:
 	for row_data: EventRowData in rows:
-		view._ensure_event_spans(row_data)
+		view._row_builder._ensure_event_spans(row_data)
 		var parts: PackedStringArray = PackedStringArray()
 		for span: SemanticSpan in row_data.spans:
 			var object_label: String = str(span.metadata.get("object_label", "")) if span.metadata is Dictionary else ""

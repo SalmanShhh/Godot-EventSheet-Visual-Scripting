@@ -83,7 +83,7 @@ func on_declare_enum_requested() -> void:
 		return
 	var new_enum: EnumRow = EnumRow.new()
 	var changed: bool = _dock._perform_undoable_sheet_edit("Add Enum", func() -> bool:
-		_dock._insert_row_below_selection(new_enum)
+		_dock._ace_apply._insert_row_below_selection(new_enum)
 		return true
 	)
 	if changed:
@@ -97,7 +97,7 @@ func on_declare_signal_requested() -> void:
 		return
 	var new_signal: SignalRow = SignalRow.new()
 	var changed: bool = _dock._perform_undoable_sheet_edit("Add Signal", func() -> bool:
-		_dock._insert_row_below_selection(new_signal)
+		_dock._ace_apply._insert_row_below_selection(new_signal)
 		return true
 	)
 	if changed:
@@ -111,7 +111,7 @@ func on_add_comment_requested() -> void:
 	var comment: CommentRow = CommentRow.new()
 	comment.text = "Comment"
 	var changed: bool = _dock._perform_undoable_sheet_edit("Add Comment", func() -> bool:
-		_dock._insert_row_below_selection(comment)
+		_dock._ace_apply._insert_row_below_selection(comment)
 		return true
 	)
 	if changed:
@@ -126,7 +126,7 @@ func on_add_group_requested() -> void:
 	# is nothing to wrap, so it adds an empty group at the cursor instead.
 	var selected: Array = _dock._top_level_selected_resources()
 	if not selected.is_empty():
-		var wrap_problem: String = _dock._bulk_group_rows(selected)
+		var wrap_problem: String = _dock._row_edit_ops._bulk_group_rows(selected)
 		if not wrap_problem.is_empty():
 			_dock._set_status(wrap_problem, true)
 			return
@@ -144,7 +144,7 @@ func on_add_group_requested() -> void:
 	group.name = "Group"
 	group.group_name = group.name
 	var changed: bool = _dock._perform_undoable_sheet_edit("Add Group", func() -> bool:
-		_dock._insert_row_below_selection(group)
+		_dock._ace_apply._insert_row_below_selection(group)
 		return true
 	)
 	if changed:
@@ -166,7 +166,7 @@ func _add_region_group() -> void:
 	closer.kind_id = "region"
 	closer.fields = {"label": "", "is_end": true}
 	var changed: bool = _dock._perform_undoable_sheet_edit("Add Group", func() -> bool:
-		_dock._insert_row_below_selection(opener)
+		_dock._ace_apply._insert_row_below_selection(opener)
 		var opener_index: int = _dock._current_sheet.events.find(opener)
 		if opener_index == -1:
 			_dock._current_sheet.events.append(closer)
@@ -192,7 +192,7 @@ func begin_group_rename(group: EventGroup) -> void:
 	var view: EventSheetViewport = _dock._active_view()
 	if view != null:
 		view.select_resource(group)
-	_dock._on_group_edit_requested(group)
+	_dock._add_rows.on_group_edit_requested(group)
 
 
 # Group editor popup → dock/quick_prompt_dialogs.gd; delegates keep signal wiring + tests stable.
@@ -211,15 +211,15 @@ func on_duplicate_requested() -> void:
 	# Ctrl+D on a GROUP head duplicates the group and everything in it, which is what the menu's
 	# own Duplicate already does; the key routes to the same writer rather than refusing.
 	if selected_resource is EventGroup:
-		_dock._bulk_duplicate_rows([selected_resource])
+		_dock._row_edit_ops._bulk_duplicate_rows([selected_resource])
 		return
 	if not (selected_resource is EventRow):
 		_dock._set_status("Select an event row to duplicate.", true)
 		return
 	var clone: EventRow = (selected_resource as EventRow).duplicate(true)
-	_dock._assign_fresh_event_uids(clone)
+	_dock._add_rows.assign_fresh_event_uids(clone)
 	var changed: bool = _dock._perform_undoable_sheet_edit("Duplicate Event", func() -> bool:
-		_dock._insert_row_below_selection(clone, selected_resource)
+		_dock._ace_apply._insert_row_below_selection(clone, selected_resource)
 		return true
 	)
 	if changed:
@@ -262,4 +262,4 @@ func assign_fresh_event_uids(row: EventRow) -> void:
 				baked.codegen_template = baked.codegen_template.replace(str(stale_uid), _dock._fresh_uid_token())
 	for sub_event in row.sub_events:
 		if sub_event is EventRow:
-			_dock._assign_fresh_event_uids(sub_event as EventRow)
+			_dock._add_rows.assign_fresh_event_uids(sub_event as EventRow)

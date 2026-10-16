@@ -38,13 +38,13 @@ static func run() -> bool:
 	var viewport: EventSheetViewport = editor.get_viewport_control()
 
 	# Adding a normal condition keeps the existing trigger and appends.
-	editor._apply_ace_definition(_def("Always", ACEDefinition.ACEType.CONDITION), {},
+	editor._ace_apply._apply_ace_definition(_def("Always", ACEDefinition.ACEType.CONDITION), {},
 		{"mode": "append_condition", "selected_resource": event})
 	all_passed = _check("trigger preserved when adding a condition", event.trigger == trigger, true) and all_passed
 	all_passed = _check("condition appended", event.conditions.size(), 1) and all_passed
 
 	# Adding even a TRIGGER-type ACE must NOT overwrite the existing trigger.
-	editor._apply_ace_definition(_def("OnReady", ACEDefinition.ACEType.TRIGGER), {},
+	editor._ace_apply._apply_ace_definition(_def("OnReady", ACEDefinition.ACEType.TRIGGER), {},
 		{"mode": "append_condition", "selected_resource": event})
 	all_passed = _check("existing trigger not overwritten by a trigger-type add", event.trigger == trigger, true) and all_passed
 	all_passed = _check("trigger-type add fell back to a condition", event.conditions.size(), 2) and all_passed

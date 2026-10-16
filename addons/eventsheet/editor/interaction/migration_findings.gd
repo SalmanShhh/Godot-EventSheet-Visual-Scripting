@@ -79,18 +79,6 @@ static func findings(sheet: EventSheetResource, script_path: String = "",
 	return found
 
 
-## The findings anchored at one event row - what the canvas puts into the amber state. Matched by
-## IDENTITY, so the caller never has to name a row that has no name.
-static func for_event(found: Array[Dictionary], event_row: EventRow) -> Array[Dictionary]:
-	var mine: Array[Dictionary] = []
-	if event_row == null:
-		return mine
-	for entry: Dictionary in found:
-		if str(entry.get("anchor", "")) == ANCHOR_EVENT and entry.get("event") == event_row:
-			mine.append(entry)
-	return mine
-
-
 ## How many EVENTS of this sheet hold a verb the vocabulary no longer has - the "ask you" half of the
 ## head band's counting line. Counted per event rather than per row, because the band counts rows a
 ## reader would go and look at.

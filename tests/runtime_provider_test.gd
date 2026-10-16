@@ -45,7 +45,7 @@ static func run() -> bool:
 	var announce_definition: ACEDefinition = editor._ace_registry.find_definition("DemoHealthAddon", "method:announce_heal")
 	all_passed = _check("template-less addon method publishes", announce_definition != null, true) and all_passed
 	if announce_definition != null:
-		var baked_action: ACEAction = editor._create_action_from_definition(announce_definition, {"amount": 7})
+		var baked_action: ACEAction = editor._ace_apply._create_action_from_definition(announce_definition, {"amount": 7})
 		all_passed = _check("instance-backed template baked",
 			baked_action.codegen_template, "__eventsheet_provider_DemoHealthAddon.announce_heal({amount})") and all_passed
 		# The picker/expression previews call the same synthesis the bake uses, so what
@@ -60,7 +60,7 @@ static func run() -> bool:
 		event.trigger_provider_id = "Core"
 		event.trigger_id = "OnReady"
 		event.actions.append(baked_action)
-		var second_action: ACEAction = editor._create_action_from_definition(announce_definition, {"amount": 9})
+		var second_action: ACEAction = editor._ace_apply._create_action_from_definition(announce_definition, {"amount": 9})
 		event.actions.append(second_action)
 		sheet.events.append(event)
 		var output: String = str(SheetCompiler.compile(sheet, "user://eventforge_instance_backed.gd").get("output", ""))

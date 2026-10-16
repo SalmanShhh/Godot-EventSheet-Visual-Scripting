@@ -12,7 +12,7 @@ extends RefCounted
 # Two methods are STATIC + pure (wrapped_line_count, _row_index_at_y) so they remain unit-testable
 # without a live viewport. The viewport keeps thin delegates + static forwarders so existing
 # internal callers and tests (which call e.g. EventSheetViewport.wrapped_line_count(...) by class
-# name, or viewport._get_row_top(i)) are unchanged.
+# name, or viewport._row_metrics_helper.row_top(i)) are unchanged.
 
 var _viewport: Control = null
 
@@ -219,8 +219,8 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 			continue
 		var line: int = int(metadata.get("line_index", 0))
 		max_line = maxi(max_line, line)
-		var lane: String = _viewport._resolve_span_lane(span)
-		var measured: float = _viewport._measure_span_width(span, span.text, font, font_size)
+		var lane: String = _viewport._row_builder._resolve_span_lane(span)
+		var measured: float = _viewport._row_builder._measure_span_width(span, span.text, font, font_size)
 		if lane == "action":
 			if bool(metadata.get("align_right", false)):
 				continue
@@ -322,7 +322,7 @@ func condition_trailing_width(row_data: EventRowData, line_index: int, font: Fon
 			continue
 		if int(metadata.get("line_index", 0)) != line_index:
 			continue
-		total += _viewport._measure_span_width(span, span.text, font, font_size) + 2.0 \
+		total += _viewport._row_builder._measure_span_width(span, span.text, font, font_size) + 2.0 \
 			+ maxf(_viewport._get_span_gap(span), EventSheetPalette.SPAN_GAP)
 	# A theme that lets the chips yield gives them at most two fifths of the lane, so the condition's
 	# own words keep their room and a long chip is the half that is cut short.
@@ -658,14 +658,14 @@ func _natural_lane_extents(row_data: EventRowData, width: float, font: Font, fon
 			continue
 		var line: int = int(metadata.get("line_index", 0))
 		var kind: String = str(metadata.get("kind", ""))
-		var measured: float = _viewport._measure_span_width(span, span.text, font, font_size)
+		var measured: float = _viewport._row_builder._measure_span_width(span, span.text, font, font_size)
 		var gap: float = _viewport._get_span_gap(span)
 		if row_data.row_type != EventRowData.RowType.EVENT:
 			var flat_start: float = float(flat_cursor.get(line, x))
 			flat_cursor[line] = flat_start + measured + 2.0 + gap
 			flat_right = maxf(flat_right, flat_cursor[line])
 			continue
-		if _viewport._resolve_span_lane(span) == "action":
+		if _viewport._row_builder._resolve_span_lane(span) == "action":
 			var action_start: float = float(action_cursor.get(line, 0.0))
 			# A plain action cell FILLS its lane and wraps inside it, so its natural size is the
 			# width at which it needs exactly one line - not the width of its text.

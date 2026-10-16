@@ -637,7 +637,7 @@ static func _test_the_row_state_and_its_door() -> bool:
 	ok = _check("filed under the id the Doctor files it under",
 		str(found[0].get("kind", "")), EventSheetFilesDoctor.CHECK_UNTRUSTED_SCENE) and ok
 	ok = _check("anchored at the event that builds it",
-		EventSheetSceneTrustFindings.for_event(found, event).size(), 1) and ok
+		ViewportRowBuilder.findings_at_event(found, event).size(), 1) and ok
 	ok = _check("naming the file, which is what the door needs",
 		str(found[0].get("subject", "")), "\"user://mods/level.tscn\"") and ok
 	ok = _check("and offering the question as its one door",

@@ -30,7 +30,7 @@ static func run() -> bool:
 	var font_size: int = viewport._get_font_size()
 
 	# Build + cache the layout (nothing selected/hovered yet).
-	var layout_initial: Dictionary = viewport._get_or_build_row_layout(index, width, font, font_size)
+	var layout_initial: Dictionary = viewport._layout_builder.get_or_build_row_layout(index, width, font, font_size)
 	all_passed = _check("initially no span selected", (layout_initial.get("selected_span_indices", []) as Array).is_empty(), true) and all_passed
 
 	var row_data: EventRowData = viewport._row_at(index)
@@ -44,19 +44,19 @@ static func run() -> bool:
 
 	# Select that span - the cached layout (same key) must reflect it, not stale [].
 	viewport._select_row(index, span_index)
-	var layout_after_select: Dictionary = viewport._get_or_build_row_layout(index, width, font, font_size)
+	var layout_after_select: Dictionary = viewport._layout_builder.get_or_build_row_layout(index, width, font, font_size)
 	all_passed = _check("cached layout reflects the new selection",
 		(layout_after_select.get("selected_span_indices", []) as Array).has(span_index), true) and all_passed
 
 	# Hover the span - the cached layout must reflect it, not stale -1.
 	viewport._set_hover_state(index, span_index)
-	var layout_after_hover: Dictionary = viewport._get_or_build_row_layout(index, width, font, font_size)
+	var layout_after_hover: Dictionary = viewport._layout_builder.get_or_build_row_layout(index, width, font, font_size)
 	all_passed = _check("cached layout reflects the new hover",
 		int(layout_after_hover.get("hovered_span_index", -1)), span_index) and all_passed
 
 	# Selecting the whole event (span -1) clears the span selection so the row fills as a block.
 	viewport._select_row(index, -1)
-	var layout_whole: Dictionary = viewport._get_or_build_row_layout(index, width, font, font_size)
+	var layout_whole: Dictionary = viewport._layout_builder.get_or_build_row_layout(index, width, font, font_size)
 	all_passed = _check("whole-event select clears span selection in layout",
 		(layout_whole.get("selected_span_indices", []) as Array).is_empty(), true) and all_passed
 

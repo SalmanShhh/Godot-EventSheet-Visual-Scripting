@@ -36,7 +36,7 @@ func collect_event_rows_recursive(resources: Array, output: Array[EventRow]) -> 
 			output.append(resource_entry as EventRow)
 			collect_event_rows_recursive((resource_entry as EventRow).sub_events, output)
 		elif resource_entry is EventGroup:
-			collect_event_rows_recursive(_dock._group_children_array(resource_entry as EventGroup), output)
+			collect_event_rows_recursive(_dock._ace_apply._group_children_array(resource_entry as EventGroup), output)
 
 
 func format_event_target_label(event_row: EventRow) -> String:

@@ -116,7 +116,7 @@ func _on_entry_activated(route: String, entry: Dictionary) -> void:
 		"this_editor_sheet":
 			_open_this_editor_file(path)
 		"script_editor":
-			_dock._open_gdscript_path_in_godot(path)
+			_dock._preview_glue._open_gdscript_path_in_godot(path)
 		"object_properties":
 			_dock.open_object_properties(str(entry.get("label", "")))
 		"pack_reference":

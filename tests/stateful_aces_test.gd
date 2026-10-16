@@ -36,13 +36,13 @@ static func run() -> bool:
 		if definition.id == "EveryXSeconds":
 			registry_definition = definition
 	all_passed = _check("Every X Seconds publishes", registry_definition != null, true) and all_passed
-	var condition: ACECondition = editor._create_condition_from_definition(registry_definition, {"seconds": "2.0"})
+	var condition: ACECondition = editor._ace_apply._create_condition_from_definition(registry_definition, {"seconds": "2.0"})
 	all_passed = _check("member bakes with a uid",
 		condition.member_declaration.begins_with("var __every_") and not condition.member_declaration.contains("{uid}"), true) and all_passed
 	var baked_name: String = condition.member_declaration.get_slice(":", 0).trim_prefix("var ")
 	all_passed = _check("template/prelude/on_true share the uid",
 		condition.codegen_template.contains(baked_name) and condition.codegen_prelude.contains(baked_name) and condition.codegen_on_true.contains(baked_name), true) and all_passed
-	var second: ACECondition = editor._create_condition_from_definition(registry_definition, {"seconds": "2.0"})
+	var second: ACECondition = editor._ace_apply._create_condition_from_definition(registry_definition, {"seconds": "2.0"})
 	all_passed = _check("each instance gets its own state",
 		second.member_declaration != condition.member_declaration, true) and all_passed
 	editor.free()

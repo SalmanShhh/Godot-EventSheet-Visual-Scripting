@@ -80,7 +80,7 @@ static func run() -> bool:
 		EventSheetBookmarksPanel.entry_label(plain), "Spawn the boss") and all_passed
 
 	# Split view: the panel lists and jumps in the pane the reader is working in.
-	editor._toggle_split_view()
+	editor._multi_view._toggle_split_view()
 	var split: EventSheetViewport = editor._multi_view._split_viewport
 	viewport._select_row(2, -1)
 	viewport.toggle_bookmark_selected()
@@ -96,7 +96,7 @@ static func run() -> bool:
 	all_passed = _check("picking a bookmark in split view lands in the active pane, not the left one",
 		[split.get_selected_context().get("source_resource", null), viewport.get_selected_context().get("source_resource", null)],
 		[sheet.events[2], sheet.events[1]]) and all_passed
-	editor._toggle_split_view()
+	editor._multi_view._toggle_split_view()
 
 	# Clear All asks first: OK keeps every mark, only the separate Clear All button removes them.
 	panel.ask_clear_all()

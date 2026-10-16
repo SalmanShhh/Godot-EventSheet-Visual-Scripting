@@ -109,7 +109,7 @@ func apply() -> bool:
 	# Saving marks the sheet dirty again on its way through, which would re-enter here through the
 	# auto-apply path; one apply is one apply.
 	_applying = true
-	_dock._on_save_requested()
+	_dock._sheet_io._on_save_requested()
 	_applying = false
 	var script_path: String = _script_path()
 	if _debugger() != null:

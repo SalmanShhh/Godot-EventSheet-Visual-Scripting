@@ -150,18 +150,6 @@ static func findings(sheet: EventSheetResource, scene_path: String = "") -> Arra
 	return found
 
 
-## The findings anchored at one event row - what the canvas hangs under it. Matched by IDENTITY, so
-## the caller never has to name a row that has no name.
-static func for_event(found: Array[Dictionary], event_row: EventRow) -> Array[Dictionary]:
-	var mine: Array[Dictionary] = []
-	if event_row == null:
-		return mine
-	for entry: Dictionary in found:
-		if str(entry.get("anchor", "")) == ANCHOR_EVENT and entry.get("event") == event_row:
-			mine.append(entry)
-	return mine
-
-
 ## Every action of the sheet with the facts a rule needs about WHERE it sits: the event it is in, the
 ## trigger that reaches it, the slot it occupies in its lane, and whether anything above it has
 ## already asked whether its object is still there. ONE walk, every rule - a second walk would be a

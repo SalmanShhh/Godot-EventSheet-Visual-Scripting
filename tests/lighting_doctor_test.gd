@@ -114,7 +114,7 @@ static func _test_a_world_that_is_not_there() -> bool:
 	ok = _check("there is nothing one click could write, so nothing is offered",
 		str(found[0].get("fix", "")), "") and ok
 	ok = _check("it hangs under the event that writes it",
-		EventSheetLightingFindings.for_event(found, sheet.events[0] as EventRow).size(), 1) and ok
+		ViewportRowBuilder.findings_at_event(found, sheet.events[0] as EventRow).size(), 1) and ok
 	# The same row on the crypt, whose scene DOES hold a WorldEnvironment, says nothing of the kind.
 	ok = _check("the same row on a scene that has one is not accused",
 		_kinds(EventSheetLightingFindings.findings(_sheet_writing_the_world(CRYPT))),

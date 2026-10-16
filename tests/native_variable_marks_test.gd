@@ -171,12 +171,12 @@ static func _test_builder_stamps_facts_and_keeps_words() -> bool:
 	var locked_value: SemanticSpan = _span_with(locked_row, "variable_value_span")
 	var offset_value: SemanticSpan = _span_with(offset_row, "variable_value_span")
 	var font: Font = ThemeDB.fallback_font
-	var with_marks_mark: float = viewport._measure_span_width(speed_mark, speed_mark.text, font, 14)
-	var with_marks_value: float = viewport._measure_span_width(locked_value, locked_value.text, font, 14)
+	var with_marks_mark: float = viewport._row_builder._measure_span_width(speed_mark, speed_mark.text, font, 14)
+	var with_marks_value: float = viewport._row_builder._measure_span_width(locked_value, locked_value.text, font, 14)
 	viewport.show_value_glyphs = false
 	viewport.show_variable_badges = false
-	var plain_mark: float = viewport._measure_span_width(speed_mark, speed_mark.text, font, 14)
-	var plain_value: float = viewport._measure_span_width(locked_value, locked_value.text, font, 14)
+	var plain_mark: float = viewport._row_builder._measure_span_width(speed_mark, speed_mark.text, font, 14)
+	var plain_value: float = viewport._row_builder._measure_span_width(locked_value, locked_value.text, font, 14)
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
 		["the type word keeps its words", speed_type.text, "number"],
 		["and carries its family", speed_type.metadata.get("variable_type_family"), "number"],

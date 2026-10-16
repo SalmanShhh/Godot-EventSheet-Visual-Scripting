@@ -24,7 +24,7 @@ static func run() -> bool:
 
 	# A function call gets the "ƒ" object chip (a named verb), not the generic "System".
 	all_passed = _check("function-call object chip is ƒ",
-		viewport._object_label_for("Core", "CallFunction"), "ƒ") and all_passed
+		viewport._row_builder._object_label_for("Core", "CallFunction"), "ƒ") and all_passed
 
 	# A call to a known Function reads the familiar way: the word Call plus the function's
 	# friendly display name. What this has always guarded against is the RAW form leaking into the
@@ -34,7 +34,7 @@ static func run() -> bool:
 	all_passed = _check("known function renders its friendly verb name",
 		viewport._function_call_label(call_known), "Call Apply Physics") and all_passed
 	all_passed = _check("the action descriptor shows the verb, not the raw name()",
-		viewport._format_action_descriptor_base(call_known), "Call Apply Physics") and all_passed
+		viewport._row_builder._format_action_descriptor_base(call_known), "Call Apply Physics") and all_passed
 	all_passed = _check("the raw function name never reaches the cell",
 		viewport._function_call_label(call_known).contains("apply_physics"), false) and all_passed
 
@@ -49,7 +49,7 @@ static func run() -> bool:
 	plain.ace_id = "AddVar"
 	plain.codegen_template = "score += 1"
 	all_passed = _check("a plain action is NOT treated as a function call",
-		viewport._is_function_call_action(plain), false) and all_passed
+		viewport._row_builder._is_function_call_action(plain), false) and all_passed
 
 	viewport.free()
 	return all_passed

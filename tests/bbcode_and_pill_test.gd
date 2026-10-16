@@ -34,9 +34,9 @@ static func run() -> bool:
 
 	# Hover tooltip: a custom rich widget only when the description has markup.
 	all_passed = _check("a BBCode description yields a custom tooltip widget",
-		viewport._make_custom_tooltip("[b]Bold[/b] help") != null, true) and all_passed
+		viewport._tooltip_helper.build_custom_tooltip("[b]Bold[/b] help") != null, true) and all_passed
 	all_passed = _check("a plain description uses the default tooltip (null)",
-		viewport._make_custom_tooltip("just plain help") == null, true) and all_passed
+		viewport._tooltip_helper.build_custom_tooltip("just plain help") == null, true) and all_passed
 
 	# No variable row shows a scope pill anymore.
 	var event: EventRow = EventRow.new()
@@ -46,7 +46,7 @@ static func run() -> bool:
 	local_var.default_value = 0
 	event.local_variables.append(local_var)
 	all_passed = _check("a local variable row shows no scope pill",
-		_has_scope_pill(viewport._build_local_variable_rows(event, 1)), false) and all_passed
+		_has_scope_pill(viewport._row_builder._build_local_variable_rows(event, 1)), false) and all_passed
 
 	viewport.free()
 

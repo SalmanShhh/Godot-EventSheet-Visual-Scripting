@@ -122,7 +122,7 @@ static func _test_upkeep_alone_stays() -> bool:
 	for index: int in range(viewport._flat_rows.size()):
 		var row: EventRowData = viewport._row_at(index)
 		if row != null and row.source_resource is EventRow:
-			viewport._ensure_event_spans(row)
+			viewport._row_builder._ensure_event_spans(row)
 			actions.append_array(_lane_words(row, "action"))
 	viewport.free()
 	return SUPPORT.pins(TEST_NAME, [
@@ -165,7 +165,7 @@ static func _event_lines(viewport: EventSheetViewport) -> Dictionary:
 			continue
 		if not (row.source_resource is EventRow):
 			continue
-		viewport._ensure_event_spans(row)
+		viewport._row_builder._ensure_event_spans(row)
 		var actions: Array = _lane_words(row, "action")
 		var conditions: Array = _lane_words(row, "condition")
 		for line: Variant in actions:
@@ -282,7 +282,7 @@ static func _loop_lines(viewport: EventSheetViewport) -> Array:
 		var row: EventRowData = viewport._row_at(index)
 		if row == null or not (row.source_resource is EventRow):
 			continue
-		viewport._ensure_event_spans(row)
+		viewport._row_builder._ensure_event_spans(row)
 		var conditions: Array = _lane_words(row, "condition")
 		var said: String = " | ".join(conditions)
 		if not started and not said.contains("For each"):

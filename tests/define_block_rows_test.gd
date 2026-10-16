@@ -157,7 +157,7 @@ static func run() -> bool:
 	var verb_header: EventRowData = _find_row_by_uid_prefix(tick_view, "define_fn_do_it")
 	var verb_body_row: EventRowData = verb_header.children[0] if verb_header != null and not verb_header.children.is_empty() else null
 	if verb_body_row != null:
-		tick_view._ensure_event_spans(verb_body_row)
+		tick_view._row_builder._ensure_event_spans(verb_body_row)
 	ok = _check("a condition-less row with nothing in it INSIDE a verb body reads 'Always'",
 		_row_has_span_text(verb_body_row, "Always"), true) and ok
 	ok = _check("it never claims to run 'Every Tick' inside a verb body",
@@ -165,7 +165,7 @@ static func run() -> bool:
 
 	var sheet_event_row: EventRowData = _find_row_by_resource(tick_view, sheet_level_event)
 	if sheet_event_row != null:
-		tick_view._ensure_event_spans(sheet_event_row)
+		tick_view._row_builder._ensure_event_spans(sheet_event_row)
 	# On the SHEET the same row reads BLANK: an event with no condition of its own already
 	# says it runs every tick by saying nothing, so the placeholder would talk over the reading.
 	ok = _check("the SHEET's own condition-less event reads blank, not 'Every Tick'",
@@ -276,7 +276,7 @@ static func run() -> bool:
 	# The live body row resolves into the FUNCTION'S events array (not sheet.events), so a delete / insert /
 	# drag routed through the undo funnel edits the verb's body rather than the main event loop.
 	var live_body_res: Resource = live_body.source_resource if live_body != null else null
-	var located: Dictionary = authored_dock._find_resource_location(live_body_res)
+	var located: Dictionary = authored_dock._ace_apply._find_resource_location(live_body_res)
 	ok = _check("a live body row resolves via the function-body search (found, not in sheet.events)",
 		not located.is_empty() and located.get("container", []) != authored_dock.get_current_sheet().events, true) and ok
 	ok = _check("the resolved container is the verb's own body and holds the row",
@@ -292,7 +292,7 @@ static func run() -> bool:
 	ok = _check("the authored verb body compiles into the function (print present)",
 		output_before.contains("print(\"ouch\")"), true) and ok
 	var edit_ok: bool = authored_dock._perform_undoable_sheet_edit("Delete Verb Body Row", func() -> bool:
-		var loc: Dictionary = authored_dock._find_resource_location(live_body_res)
+		var loc: Dictionary = authored_dock._ace_apply._find_resource_location(live_body_res)
 		if loc.is_empty():
 			return false
 		(loc.get("container") as Array).remove_at(int(loc.get("index")))
@@ -331,7 +331,7 @@ static func run() -> bool:
 	# not leaking into the main event loop.
 	var live_empty_verb: EventFunction = _find_function_by_name(guard_dock.get_current_sheet(), "reset")
 	var new_body_row: EventRow = EventRow.new()
-	guard_dock._insert_row_below_selection(new_body_row, live_empty_verb)
+	guard_dock._ace_apply._insert_row_below_selection(new_body_row, live_empty_verb)
 	ok = _check("adding on an authored verb HEADER grows that verb's body (empty body's first row)",
 		live_empty_verb != null and live_empty_verb.events.has(new_body_row), true) and ok
 	ok = _check("the header-anchored add did NOT leak into the main event loop",
@@ -345,7 +345,7 @@ static func run() -> bool:
 	var target_row_data: EventRowData = EventRowData.new()
 	target_row_data.source_resource = guard_dock.get_current_sheet().events[0]
 	if body_row_data != null:
-		guard_dock._move_rows([body_row_data], target_row_data, "after", false)
+		guard_dock._ace_apply._move_rows([body_row_data], target_row_data, "after", false)
 	var dragged_res: Resource = body_row_data.source_resource if body_row_data != null else null
 	ok = _check("a cross-tree drag (verb body -> main loop) is refused: body row stays in the verb",
 		live_verb != null and live_verb.events.has(dragged_res), true) and ok
@@ -567,7 +567,7 @@ static func _inert_rows_can_read(rows: Array) -> bool:
 static func _ensure_spans_deep(view: EventSheetViewport, row_data: EventRowData) -> void:
 	if row_data == null:
 		return
-	view._ensure_event_spans(row_data)
+	view._row_builder._ensure_event_spans(row_data)
 	for child: EventRowData in row_data.children:
 		_ensure_spans_deep(view, child)
 

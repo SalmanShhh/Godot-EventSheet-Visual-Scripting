@@ -167,7 +167,7 @@ static func _test_added_during_physics() -> bool:
 		_fix_of(found, EventSheetSpawnFindings.KIND_ADDED_DURING_PHYSICS),
 		EventSheetSpawnFindings.FIX_DEFER_THE_ADD) and passed
 	passed = _check("hanging under the event that has it",
-		EventSheetSpawnFindings.for_event(found, bad.events[0] as EventRow).size(), 1) and passed
+		ViewportRowBuilder.findings_at_event(found, bad.events[0] as EventRow).size(), 1) and passed
 
 	# AND IT DOES NOT CRY WOLF. The same line already deferred is the answer, not the problem.
 	var deferred: EventSheetResource = _sheet()

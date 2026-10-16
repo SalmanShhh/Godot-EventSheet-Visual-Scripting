@@ -44,9 +44,9 @@ static func run() -> bool:
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(sheet)
 	var viewport: EventSheetViewport = editor.get_viewport_control()
-	viewport._rebuild_row_metrics()
-	var short_height: float = viewport._get_row_height(0)
-	var long_height: float = viewport._get_row_height(1)
+	viewport._row_metrics_helper.rebuild()
+	var short_height: float = viewport._row_metrics_helper.row_height(0)
+	var long_height: float = viewport._row_metrics_helper.row_height(1)
 	all_passed = _check("a long comment row is taller than a short one (it wrapped vertically)",
 		long_height > short_height, true) and all_passed
 

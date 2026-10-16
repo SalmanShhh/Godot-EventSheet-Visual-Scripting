@@ -141,7 +141,7 @@ static func run() -> bool:
 	all_passed = _check("a plain signal publishes nothing", Array(signal_texts).has("internal"), true) and all_passed
 	all_passed = _check("the hover carries the real declaration",
 		ViewportTooltipHelper.signal_declaration_tooltip(hit), "signal hit(damage: int)") and all_passed
-	viewport._ensure_event_spans(match_event_row)
+	viewport._row_builder._ensure_event_spans(match_event_row)
 	var match_span_found: bool = false
 	for span in match_event_row.spans:
 		if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("match_action", false)) and span.text == "match state:":

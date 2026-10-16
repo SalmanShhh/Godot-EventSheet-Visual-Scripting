@@ -44,7 +44,7 @@ static func run() -> bool:
 	editor.setup(authored_sheet)
 	editor.set_undo_redo_manager(FakeNoopUndo.new())
 	var on_signal_def: ACEDefinition = editor._find_definition("Core", "OnSignal")
-	editor._apply_ace_definition(on_signal_def, {"signal_name": "player_died", "args": "score: int"}, {"mode": "new_condition_event", "insert_into": authored_sheet})
+	editor._ace_apply._apply_ace_definition(on_signal_def, {"signal_name": "player_died", "args": "score: int"}, {"mode": "new_condition_event", "insert_into": authored_sheet})
 	var authored_out: String = str(SheetCompiler.compile(authored_sheet, "user://on_signal_authored.gd").get("output", ""))
 	all_passed = _check("a picker-authored On Signal connects the USER'S signal", authored_out.contains("player_died.connect("), true) and all_passed
 	all_passed = _check("the dummy fallback signal never appears", authored_out.contains("eventforge_signal"), false) and all_passed

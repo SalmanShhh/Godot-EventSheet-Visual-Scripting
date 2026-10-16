@@ -104,7 +104,7 @@ static func run() -> bool:
 	editor.set_undo_redo_manager(NoopUndoManager.new())
 	var viewport: EventSheetViewport = editor.get_viewport_control()
 	var row_data: EventRowData = viewport.get_flat_rows()[0].get("row")
-	viewport._ensure_event_spans(row_data)
+	viewport._row_builder._ensure_event_spans(row_data)
 	var pick_span_text: String = ""
 	for span in row_data.spans:
 		if str((span.metadata if span.metadata is Dictionary else {}).get("kind", "")) == "pick_filter":
@@ -113,7 +113,7 @@ static func run() -> bool:
 	all_passed = _check("pick filter renders in the condition lane",
 		pick_span_text, "Pick where enemy.health < 50 · top 3") and all_passed
 	all_passed = _check("line counting includes pick rows",
-		viewport._count_event_lines(event), row_data.line_count) and all_passed
+		viewport._row_builder._count_event_lines(event), row_data.line_count) and all_passed
 
 	# Authoring dialog round-trip (add via the same path the row menu uses).
 	editor._pick._ensure_pick_dialog()

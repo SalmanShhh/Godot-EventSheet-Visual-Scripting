@@ -48,9 +48,9 @@ static func run() -> bool:
 	view.set_ace_registry(EventSheetACERegistry.new())
 	view.size = Vector2(900, 600)
 	view.set_sheet(sheet)
-	view._get_or_build_row_layout(0, view._get_logical_canvas_width(), view._get_font(), view._get_font_size())
-	var top: float = view._get_row_top(0)
-	var height: float = view._get_row_height(0)
+	view._layout_builder.get_or_build_row_layout(0, view._get_logical_canvas_width(), view._get_font(), view._get_font_size())
+	var top: float = view._row_metrics_helper.row_top(0)
+	var height: float = view._row_metrics_helper.row_height(0)
 	ok = _check("the action lane makes the event tall (>1 line)", height > view._get_event_line_height(view._get_font_size()) * 1.5, true) and ok
 
 	# Near the top (on the trigger text) hits the trigger; low in the empty condition band is whole-event.
@@ -62,7 +62,7 @@ static func run() -> bool:
 	ok = _check("…and that band IS the drag zone", EventSheetViewport.is_event_drag_zone(view._row_at(0), int(band_hit.get("span_index", 0))), true) and ok
 
 	# A press in the band begins a whole-event drag, and dragging onto the second event reorders it.
-	view._begin_row_drag(0)
+	view._drag.begin_row_drag(0)
 	ok = _check("a drag begins on the whole event", view._drag_row_index, 0) and ok
 	ok = _check("the drag carries just that event", view._drag_row_indices.size(), 1) and ok
 

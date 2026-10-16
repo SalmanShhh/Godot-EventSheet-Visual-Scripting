@@ -212,9 +212,9 @@ static func _editable_sheet_rows() -> bool:
 		view.step_selection_index(pair[2], -1), pair[0] - 1) and ok
 
 	# ── drag: any row of the pair drags the statement, and nothing drops between its rows ──
-	view._begin_row_drag(pair[2])
+	view._drag.begin_row_drag(pair[2])
 	ok = _check("grabbing the Else row drags the statement", view._drag_row_index, pair[0]) and ok
-	view._clear_row_drag()
+	view._drag.clear_row_drag()
 	ok = _check("a drop BEFORE any row of the pair lands above the whole pair",
 		_drop_target(view, pair[1], "before"), "%d/before" % pair[0]) and ok
 	ok = _check("a drop INTO a branch row snaps below the whole pair",
@@ -245,7 +245,7 @@ static func _editable_sheet_rows() -> bool:
 	# ── delete + undo, with the compiled GDScript as the witness ──
 	var before_output: String = _compiled(dock)
 	view._select_from_click(pair[1], -1, false)
-	dock._delete_selected_content()
+	dock._row_edit_ops._delete_selected_content()
 	ok = _check("deleting from a branch row removes the ONE event it reads",
 		_event_codes(dock), "print(\"start\") | print(\"between\") | Print") and ok
 	undo.undo()
@@ -373,11 +373,11 @@ static func _row_readings(view: EventSheetViewport) -> PackedStringArray:
 
 ## The condition lane of one row, its stacked cells joined with " > " in line order.
 static func _condition_lane(view: EventSheetViewport, row_data: EventRowData) -> String:
-	view._ensure_event_spans(row_data)
+	view._row_builder._ensure_event_spans(row_data)
 	var lines: Dictionary = {}
 	var order: Array[int] = []
 	for span: SemanticSpan in row_data.spans:
-		if view._resolve_span_lane(span) != "condition":
+		if view._row_builder._resolve_span_lane(span) != "condition":
 			continue
 		var line_index: int = int(span.metadata.get("line_index", 0))
 		if not lines.has(line_index):
@@ -403,10 +403,10 @@ static func _condition_lane(view: EventSheetViewport, row_data: EventRowData) ->
 
 
 static func _action_lane(view: EventSheetViewport, row_data: EventRowData) -> String:
-	view._ensure_event_spans(row_data)
+	view._row_builder._ensure_event_spans(row_data)
 	var right: String = ""
 	for span: SemanticSpan in row_data.spans:
-		if view._resolve_span_lane(span) != "condition":
+		if view._row_builder._resolve_span_lane(span) != "condition":
 			right += span.text
 	return right.strip_edges()
 
@@ -439,9 +439,9 @@ static func _branchy_action_cells(view: EventSheetViewport) -> PackedStringArray
 
 static func _sweep_rows(view: EventSheetViewport, rows: Array, found: PackedStringArray) -> void:
 	for row_data: EventRowData in rows:
-		view._ensure_event_spans(row_data)
+		view._row_builder._ensure_event_spans(row_data)
 		for span: SemanticSpan in row_data.spans:
-			if view._resolve_span_lane(span) != "action":
+			if view._row_builder._resolve_span_lane(span) != "action":
 				continue
 			# A verbatim GDScript cell is the escape hatch: it is SHOWN as code, so it may hold
 			# anything the file holds. Only a SENTENCE cell must never read as a branch.
@@ -558,7 +558,7 @@ static func _scaffolding_report(view: EventSheetViewport, indices: Array[int]) -
 	var parts: PackedStringArray = PackedStringArray()
 	for index: int in indices:
 		var row_data: EventRowData = _row_at(view, index)
-		view._ensure_event_spans(row_data)
+		view._row_builder._ensure_event_spans(row_data)
 		var kinds: PackedStringArray = PackedStringArray()
 		for span: SemanticSpan in row_data.spans:
 			var kind: String = str(span.metadata.get("kind", ""))

@@ -90,13 +90,13 @@ static func run() -> bool:
 	act_span.text = "Set the long_named_score_variable to long_named_score_variable + 100 points"
 	viewport.size = Vector2(520.0, 400.0)
 	viewport._flat_rows = [{"row": row_data}]
-	viewport._rebuild_row_metrics()
+	viewport._row_metrics_helper.rebuild()
 	var line_height: float = viewport._get_event_line_height(font_size)
 	var layout_width: float = viewport._get_logical_canvas_width()
 	var expected: Dictionary = metrics.event_line_extents(row_data, layout_width, font, font_size)
 	var expected_lines: int = int((expected.get("cond_count", {}) as Dictionary).get(0, 1))
 	ok = _check("layout-width extents wrap too", expected_lines > 1, true) and ok
-	ok = _check("row height reserves every visual line", viewport._get_row_height(0) >= float(int(expected.get("total", 1))) * line_height - 0.01, true) and ok
+	ok = _check("row height reserves every visual line", viewport._row_metrics_helper.row_height(0) >= float(int(expected.get("total", 1))) * line_height - 0.01, true) and ok
 	viewport._layout_builder.get_or_build_row_layout(0, layout_width, font, font_size)
 	ok = _check("layout stamps the wrap flag", bool((cond_span.metadata as Dictionary).get("comment_wrap", false)), true) and ok
 	ok = _check("the condition rect spans its visual lines", int(roundf((cond_span.rect.size.y + 1.0) / line_height)), expected_lines) and ok
@@ -105,7 +105,7 @@ static func run() -> bool:
 	# stamped break count matches the visual-line count the height reserved.
 	act_span.metadata["bbcode_segments"] = [{"text": act_span.text, "bold": true}]
 	viewport._layout_cache.clear()
-	viewport._rebuild_row_metrics()
+	viewport._row_metrics_helper.rebuild()
 	viewport._layout_builder.get_or_build_row_layout(0, layout_width, font, font_size)
 	var styled_extents: Dictionary = metrics.event_line_extents(row_data, layout_width, font, font_size)
 	var styled_act_lines: int = int((styled_extents.get("act_count", {}) as Dictionary).get(0, 1))

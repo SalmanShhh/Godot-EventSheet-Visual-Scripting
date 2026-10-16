@@ -152,7 +152,7 @@ static func run() -> bool:
 	editor._raw_code_target = guarded_block
 	editor._raw_code_in_flow = true
 	editor._raw_code_edit.text = "health +"
-	editor._on_raw_code_dialog_confirmed()
+	editor._code_panel_glue.on_raw_code_dialog_confirmed()
 	all_passed = _check("broken GDScript never commits", guarded_block.code, "print(1)") and all_passed
 	all_passed = _check("the dialog keeps the user's text for fixing", editor._raw_code_target, guarded_block) and all_passed
 

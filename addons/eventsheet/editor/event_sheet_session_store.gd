@@ -72,7 +72,7 @@ func restore() -> void:
 						and _dock._current_sheet.read_only \
 						and not _dock._current_sheet.blocked_by_conflict():
 					_dock._current_sheet.read_only = false
-					_dock._refresh_preview_banner()
+					_dock._preview_glue._refresh_preview_banner()
 		if active >= 0 and active < paths.size():
 			var active_path: String = paths[active]
 			for index in _dock._open_tabs.size():

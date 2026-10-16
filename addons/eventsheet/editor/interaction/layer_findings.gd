@@ -55,18 +55,6 @@ static func findings(sheet: EventSheetResource, script_path: String = "") -> Arr
 	return found
 
 
-## The findings anchored at one event row - what the canvas puts into the amber state. Matched by
-## IDENTITY, so the caller never has to name a row that has no name.
-static func for_event(found: Array[Dictionary], event_row: EventRow) -> Array[Dictionary]:
-	var mine: Array[Dictionary] = []
-	if event_row == null:
-		return mine
-	for entry: Dictionary in found:
-		if str(entry.get("anchor", "")) == ANCHOR_EVENT and is_same(entry.get("event"), event_row):
-			mine.append(entry)
-	return mine
-
-
 ## One walk of the rows. Each row is asked about ITS OWN emitted lines only, which is what pins the
 ## note to the row that says the number rather than to the sheet at large; sub-events answer for
 ## their own lines when the walk reaches them.

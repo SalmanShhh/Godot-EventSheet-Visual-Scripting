@@ -77,17 +77,17 @@ func build(root: Node) -> Control:
 func activate(button_id: String) -> void:
 	match button_id:
 		"add_event":
-			_dock._on_add_event_requested()
+			_dock._add_rows.on_add_event_requested()
 		"add_sub_event":
 			_dock._on_add_sub_condition_key()
 		"add_condition":
-			_dock._on_add_condition_requested()
+			_dock._add_rows.on_add_condition_requested()
 		"add_action":
-			_dock._on_add_action_requested()
+			_dock._add_rows.on_add_action_requested()
 		"add_group":
-			_dock._on_add_group_requested()
+			_dock._add_rows.on_add_group_requested()
 		"add_comment":
-			_dock._on_add_comment_requested()
+			_dock._add_rows.on_add_comment_requested()
 		"add_variable":
 			_dock._on_add_project_global_requested()
 		"add_function":

@@ -82,18 +82,6 @@ static func findings(sheet: EventSheetResource, script_path: String = "") -> Arr
 	return found
 
 
-## The findings anchored at one event row - what the canvas puts into the amber state. Matched by
-## IDENTITY, so the caller never has to name a row that has no name.
-static func for_event(found: Array[Dictionary], event_row: EventRow) -> Array[Dictionary]:
-	var mine: Array[Dictionary] = []
-	if event_row == null:
-		return mine
-	for entry: Dictionary in found:
-		if str(entry.get("anchor", "")) == ANCHOR_EVENT and is_same(entry.get("event"), event_row):
-			mine.append(entry)
-	return mine
-
-
 ## Every label every Feedback Player in one saved scene holds, sorted and without repeats. Read off
 ## the scene's own state rather than out of an instance: a packed scene answers what its nodes were
 ## saved with, which is exactly the list the reader is looking at in the Inspector, and reading it

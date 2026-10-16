@@ -279,7 +279,7 @@ func _apply_recipe(offer: Dictionary) -> void:
 		_dock._find_definition("Core", GhostRecipes.MOVE_ID),
 		_dock._fresh_uid_token(),
 		func(definition: ACEDefinition, params: Dictionary) -> ACEAction:
-			return _dock._create_action_from_definition(definition, params))
+			return _dock._ace_apply._create_action_from_definition(definition, params))
 	if built == null:
 		return
 	var selected_resource: Resource = _dock._active_view().get_selected_context().get("source_resource", null)
@@ -311,7 +311,7 @@ func _apply_definition(definition: ACEDefinition, params: Dictionary) -> void:
 	}
 	if _popup != null:
 		_popup.hide()
-	_dock._apply_ace_definition(definition, params, context)
+	_dock._ace_apply._apply_ace_definition(definition, params, context)
 	_continue_into_params(definition, params)
 
 # The just-applied ACE's first param the sentence did NOT fill, staged for the follow-up editor.
@@ -393,11 +393,11 @@ func _open_full_picker() -> void:
 		_popup.hide()
 	match _origin:
 		"event":
-			_dock._on_add_event_requested()
+			_dock._add_rows.on_add_event_requested()
 		"condition":
-			_dock._on_add_condition_requested()
+			_dock._add_rows.on_add_condition_requested()
 		_:
-			_dock._on_add_action_requested()
+			_dock._add_rows.on_add_action_requested()
 
 
 ## Just under the selected row (zoom-aware), so the suggestions appear where the new row will land;

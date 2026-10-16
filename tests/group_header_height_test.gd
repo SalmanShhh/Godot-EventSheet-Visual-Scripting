@@ -28,7 +28,7 @@ static func run() -> bool:
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(sheet)
 	var viewport: EventSheetViewport = editor.get_viewport_control()
-	viewport._rebuild_row_metrics()
+	viewport._row_metrics_helper.rebuild()
 	var line_height: float = viewport._get_event_line_height(viewport._get_font_size())
 	# Locate each header by its RESOURCE: a group also emits a trailing "+ Add event to ..." row, so
 	# flat-row indices do not line up with the sheet's own order.
@@ -38,8 +38,8 @@ static func run() -> bool:
 	if plain_index < 0 or described_index < 0:
 		editor.free()
 		return false
-	var plain_height: float = viewport._get_row_height(plain_index)
-	var described_height: float = viewport._get_row_height(described_index)
+	var plain_height: float = viewport._row_metrics_helper.row_height(plain_index)
+	var described_height: float = viewport._row_metrics_helper.row_height(described_index)
 	var described_row: EventRowData = viewport.get_flat_rows()[described_index].get("row")
 
 	all_passed = _check("a described group head is a ONE-line row", described_row.line_count, 1) and all_passed
@@ -53,7 +53,7 @@ static func run() -> bool:
 
 	# The invariant that actually matters: everything the head says is DRAWN inside the head. The
 	# counts and the switch are right-anchored, which is its own way to land outside the row.
-	var described_top: float = viewport._get_row_top(described_index)
+	var described_top: float = viewport._row_metrics_helper.row_top(described_index)
 	# Laying the row out is what writes each span's rect, so this must run before they are read.
 	viewport.get_row_layout_for_test(described_index)
 	var lowest_span_bottom: float = described_top

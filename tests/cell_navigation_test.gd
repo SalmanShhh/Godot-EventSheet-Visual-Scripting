@@ -98,7 +98,7 @@ static func run() -> bool:
 
 	# ---- Right vs unfold (the mirror): a folded parent still renders its OWN cells, so a
 	# focused cell must make Right step the walk, not unfold the row out from under it ----
-	viewport._toggle_row_fold(viewport._selected_row_index)
+	viewport._folding.toggle_row_fold(viewport._selected_row_index)
 	all_passed = _check("Right unfolds a folded parent at row scope", viewport.right_key_unfolds(), true) and all_passed
 	viewport.step_cell_focus(1)
 	all_passed = _check("with a cell focused, Right belongs to the cell walk (no unfold)", viewport.right_key_unfolds(), false) and all_passed

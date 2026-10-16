@@ -156,7 +156,7 @@ static func _test_sent_but_not_a_message() -> bool:
 		_fix_of(found, EventSheetMultiplayerFindings.KIND_NOT_A_MESSAGE),
 		EventSheetMultiplayerFindings.FIX_MAKE_MESSAGE) and ok
 	ok = _check("the note hangs under the event that sends it",
-		EventSheetMultiplayerFindings.for_event(found, sheet.events[0] as EventRow).size(), 1) and ok
+		ViewportRowBuilder.findings_at_event(found, sheet.events[0] as EventRow).size(), 1) and ok
 	# The same sheet with the annotation on it says nothing.
 	(sheet.functions[0] as EventFunction).annotation_lines = PackedStringArray(["@rpc(\"authority\", \"call_local\", \"reliable\")"])
 	ok = _check("once it is a message the finding is gone",

@@ -117,7 +117,7 @@ static func run() -> bool:
 		var row: EventRowData = entry.get("row")
 		if row != null and row.source_resource == event:
 			event_row_data = row
-	viewport._ensure_event_spans(event_row_data)
+	viewport._row_builder._ensure_event_spans(event_row_data)
 	var swatch_found: bool = false
 	for span in event_row_data.spans:
 		if span.metadata is Dictionary and (span.metadata as Dictionary).get("swatch_color") is Color:

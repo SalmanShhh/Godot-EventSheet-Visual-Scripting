@@ -695,8 +695,8 @@ static func _walk_context_menus(dock: Control, seen: Dictionary) -> void:
 		dock._simple_mode = simple
 		for mode: int in [EventRow.ElseMode.NONE, EventRow.ElseMode.ELSE, EventRow.ElseMode.ELIF]:
 			event_row.else_mode = mode
-			dock._build_row_context_menu(probe)
-			dock._configure_context_menu(dock._row_context_menu)
+			dock._context_menus._build_row_context_menu(probe)
+			dock._context_menus._configure_context_menu(dock._row_context_menu)
 			for menu: PopupMenu in [dock._row_context_menu, dock._row_insert_submenu, dock._row_more_submenu]:
 				if menu == null:
 					continue
@@ -707,7 +707,7 @@ static func _walk_context_menus(dock: Control, seen: Dictionary) -> void:
 		var typed_probe: EventRowData = EventRowData.new()
 		typed_probe.row_type = row_type
 		dock._context_row = typed_probe
-		dock._build_row_context_menu(typed_probe)
+		dock._context_menus._build_row_context_menu(typed_probe)
 		for index: int in range(dock._row_context_menu.item_count):
 			_remember(seen, dock._row_context_menu.get_item_text(index))
 

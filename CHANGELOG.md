@@ -74,6 +74,17 @@
   helper that does the work (the sheet file helper, the row edits, the variables manager, the code
   panel, the provider glue) instead of a dock method that only passed the call on. Nothing a user
   sees or does changes.
+- The sheet canvas drops its forty-six one-line forwarders the same way: the row builder, the
+  folding, the drag, the input handlers and the row metrics are called directly.
+- Nine finding families shared one copy each of the same "findings pinned to this event" filter; the
+  row builder holds it once (`ViewportRowBuilder.findings_at_event`).
+- The window kit gains `table` (a titled results Tree with a least height and narrow columns) and
+  `add_results` (a results card plus the strip naming the picked result). Find in Project, Find
+  References, Find Repeated Rows, the Debugger, Live Values, Outline, History, Bookmarks, Loose Ends,
+  the Doctor's inbox, the find results bar and the Lift Report build their lists through them.
+- Seven hand-built accept dialogs open through the kit's form window: Change type everywhere, the
+  rename receipt, What changed since you saved, Migrate rows, Adopt pattern, Keep as code and Re-mint.
+
 ### Added: the Save studio's file, slots, look-inside and player-settings tabs
 
 - File and format: the Save System node's own settings - a described dropdown over its six formats

@@ -117,7 +117,7 @@ static func _jumps_land_in_the_active_pane() -> bool:
 	editor.setup(sheet)
 	editor.set_undo_redo_manager(NoopUndoManager.new())
 	var primary: EventSheetViewport = editor.get_viewport_control()
-	editor._toggle_split_view()
+	editor._multi_view._toggle_split_view()
 	var split: EventSheetViewport = editor._multi_view._split_viewport
 	primary._select_row(0, -1)
 	# Selecting in the split makes it the active pane (selecting in the left pane would reclaim it).
@@ -130,7 +130,7 @@ static func _jumps_land_in_the_active_pane() -> bool:
 	panel._on_entry_selected()
 	var landed: Array = [split.get_selected_context().get("source_resource", null),
 		primary.get_selected_context().get("source_resource", null)]
-	editor._toggle_split_view()
+	editor._multi_view._toggle_split_view()
 	editor.free()
 	return _check("an outline jump in split view lands in the active pane", landed, [combat, lead])
 

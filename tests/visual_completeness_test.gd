@@ -78,14 +78,14 @@ static func run() -> bool:
 		var row: EventRowData = viewport._flat_rows[index].get("row")
 		if row != null and row.source_resource == event:
 			event_row_data = row
-	viewport._ensure_event_spans(event_row_data)
+	viewport._row_builder._ensure_event_spans(event_row_data)
 	var action_comment_spans: int = 0
 	for span in event_row_data.spans:
 		if bool((span.metadata if span.metadata is Dictionary else {}).get("action_comment", false)):
 			action_comment_spans += 1
 	all_passed = _check("action-cell comment spans render per line", action_comment_spans, 2) and all_passed
 	all_passed = _check("line counting includes action comments",
-		viewport._count_event_lines(event), event_row_data.line_count) and all_passed
+		viewport._row_builder._count_event_lines(event), event_row_data.line_count) and all_passed
 
 	# Detach: back to a standalone row directly below the event.
 	editor._detach_comment_to_row(comment)

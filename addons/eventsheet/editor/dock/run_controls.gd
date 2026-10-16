@@ -312,7 +312,7 @@ func _play_current() -> void:
 	if editor_interface == null or not editor_interface.has_method("play_current_scene"):
 		_dock._set_status("Preview needs the Godot editor - there is nothing to run from here.", true)
 		return
-	_dock._on_save_requested()
+	_dock._sheet_io._on_save_requested()
 	editor_interface.call("play_current_scene")
 
 
@@ -321,7 +321,7 @@ func _play_main() -> void:
 	if editor_interface == null or not editor_interface.has_method("play_main_scene"):
 		_dock._set_status("Preview needs the Godot editor - there is nothing to run from here.", true)
 		return
-	_dock._on_save_requested()
+	_dock._sheet_io._on_save_requested()
 	editor_interface.call("play_main_scene")
 
 

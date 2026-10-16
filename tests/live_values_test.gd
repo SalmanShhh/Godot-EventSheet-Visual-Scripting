@@ -137,7 +137,7 @@ static func run() -> bool:
 	var copy_editor: EventSheetEditor = EventSheetEditor.new()
 	copy_editor.setup(EventSheetResource.new())
 	copy_editor.set_undo_redo_manager(NoopUndoManager.new())
-	copy_editor._assign_fresh_event_uids(copy_event)
+	copy_editor._add_rows.assign_fresh_event_uids(copy_event)
 	all_passed = _check("duplicated stateful conditions re-bake their uid",
 		not stateful.member_declaration.contains("aaaa1111")
 		and stateful.codegen_template.contains(stateful.member_declaration.get_slice(":", 0).trim_prefix("var ")), true) and all_passed
@@ -147,7 +147,7 @@ static func run() -> bool:
 	spawn_copy.codegen_template = "var __spawn_bbbb2222 = load(\"res://x.tscn\").instantiate()\nadd_child(__spawn_bbbb2222)"
 	var spawn_event: EventRow = EventRow.new()
 	spawn_event.actions.append(spawn_copy)
-	copy_editor._assign_fresh_event_uids(spawn_event)
+	copy_editor._add_rows.assign_fresh_event_uids(spawn_event)
 	all_passed = _check("duplicated action templates re-bake their uid",
 		not spawn_copy.codegen_template.contains("bbbb2222")
 		and spawn_copy.codegen_template.count("__spawn_") == 2, true) and all_passed

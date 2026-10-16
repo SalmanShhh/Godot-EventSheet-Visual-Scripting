@@ -43,7 +43,7 @@ static func run() -> bool:
 	var viewport: EventSheetViewport = editor.get_viewport_control()
 
 	var index: int = _flat_index(viewport, event)
-	viewport._get_or_build_row_layout(index, viewport.get_canvas_logical_width(), viewport._get_font(), viewport._get_font_size())
+	viewport._layout_builder.get_or_build_row_layout(index, viewport.get_canvas_logical_width(), viewport._get_font(), viewport._get_font_size())
 	var row_data: EventRowData = viewport._row_at(index)
 	var condition_spans: Array = []
 	for s in range(row_data.spans.size()):
@@ -55,15 +55,15 @@ static func run() -> bool:
 	# Multi-select both conditions, then toggle.
 	viewport._select_from_click(index, int(condition_spans[0]), false)
 	viewport._select_from_click(index, int(condition_spans[1]), true)
-	editor._toggle_selected_enabled()
+	editor._row_edit_ops._toggle_selected_enabled()
 	all_passed = _check("both selected conditions disabled together", not cond_a.enabled and not cond_b.enabled, true) and all_passed
-	editor._toggle_selected_enabled()
+	editor._row_edit_ops._toggle_selected_enabled()
 	all_passed = _check("toggling again re-enables both", cond_a.enabled and cond_b.enabled, true) and all_passed
 
 	# A whole-event selection (no spans) disables the event itself.
 	viewport.clear_selection()
 	viewport._select_from_click(index, -1, false)
-	editor._toggle_selected_enabled()
+	editor._row_edit_ops._toggle_selected_enabled()
 	all_passed = _check("whole-event selection disables the event", not event.enabled, true) and all_passed
 
 	editor.free()

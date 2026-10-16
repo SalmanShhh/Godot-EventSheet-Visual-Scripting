@@ -121,7 +121,7 @@ static func _test_name_change_renames_uses() -> bool:
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(sheet)
 	editor.set_undo_redo_manager(NoopUndoManager.new())
-	editor._apply_sheet_type_settings(1, "ZzSheetTypeRenameNew", "", "Node2D")
+	editor._sheet_type_glue.apply_sheet_type_settings(1, "ZzSheetTypeRenameNew", "", "Node2D")
 	ok = _check("the class takes the new name", editor._current_sheet.custom_class_name, "ZzSheetTypeRenameNew") and ok
 	ok = _check("the row that used the old name follows it",
 		(editor._current_sheet.events[0] as RawCodeRow).code, "var leader: ZzSheetTypeRenameNew = null") and ok
@@ -136,7 +136,7 @@ static func _test_name_change_renames_uses() -> bool:
 	recorded.setup(second)
 	var recorder := RecordingUndoManager.new()
 	recorded.set_undo_redo_manager(recorder)
-	recorded._apply_sheet_type_settings(1, "ZzSheetTypeRenameNew", "", "Node2D", false,
+	recorded._sheet_type_glue.apply_sheet_type_settings(1, "ZzSheetTypeRenameNew", "", "Node2D", false,
 		PackedStringArray(), PackedStringArray(), PackedStringArray(), PackedStringArray(), "",
 		"Walks the guard route.")
 	ok = _check("a new Name and other settings on one OK are one undo step that carries both",

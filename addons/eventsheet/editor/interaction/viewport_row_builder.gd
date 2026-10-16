@@ -11029,37 +11029,40 @@ func _sheet_findings(family: String) -> Array[Dictionary]:
 	return _sheet_findings_cache[family]
 
 
+## The findings a family anchored at one event: the entries whose anchor is "event" and whose event is
+## this very row. Every family that pins a finding to an event pins it this way, so one filter serves
+## them all; the three that read differently (effects, performance, collisions) keep their own.
+static func findings_at_event(found: Array[Dictionary], event_row: EventRow) -> Array[Dictionary]:
+	var mine: Array[Dictionary] = []
+	if event_row == null:
+		return mine
+	for entry: Dictionary in found:
+		if str(entry.get("anchor", "")) == "event" and is_same(entry.get("event"), event_row):
+			mine.append(entry)
+	return mine
+
+
 ## Every family's findings about one event row, joined once - what the quiet amber state and the
 ## selected row's help strip both read, so the stripe, the strip and the Doctor's inbox line are the
 ## same finding under three roofs. Performance speaks only while the costs lens is on, which is the
 ## same rule its gutter chips live under: a sheet nobody asked about performance stays quiet.
 func _findings_about(event_row: EventRow) -> Array[Dictionary]:
 	var about: Array[Dictionary] = []
-	about.append_array(_tagged(FINDINGS_MULTIPLAYER,
-		EventSheetMultiplayerFindings.for_event(_sheet_findings(FINDINGS_MULTIPLAYER), event_row)))
-	about.append_array(_tagged(FINDINGS_LIGHTING,
-		EventSheetLightingFindings.for_event(_sheet_findings(FINDINGS_LIGHTING), event_row)))
-	about.append_array(_tagged(FINDINGS_EFFECTS,
-		EventSheetEffectFindings.for_event(_sheet_findings(FINDINGS_EFFECTS), event_row)))
-	about.append_array(_tagged(FINDINGS_SPAWNING,
-		EventSheetSpawnFindings.for_event(_sheet_findings(FINDINGS_SPAWNING), event_row)))
-	if _viewport != null and bool(_viewport.get("show_costs")):
-		about.append_array(_tagged(FINDINGS_PERFORMANCE,
-			EventSheetPerformanceFindings.for_event(_sheet_findings(FINDINGS_PERFORMANCE), event_row)))
-	about.append_array(_tagged(FINDINGS_COLLISIONS,
-		EventSheetCollisionFindings.for_event(_sheet_findings(FINDINGS_COLLISIONS), event_row)))
-	about.append_array(_tagged(FINDINGS_LAYERS,
-		EventSheetLayerFindings.for_event(_sheet_findings(FINDINGS_LAYERS), event_row)))
-	about.append_array(_tagged(FINDINGS_TOOL_EDITS,
-		EventSheetUndoableFindings.for_event(_sheet_findings(FINDINGS_TOOL_EDITS), event_row)))
-	about.append_array(_tagged(FINDINGS_SCENE_TRUST,
-		EventSheetSceneTrustFindings.for_event(_sheet_findings(FINDINGS_SCENE_TRUST), event_row)))
-	about.append_array(_tagged(FINDINGS_MIGRATION,
-		EventSheetMigrationFindings.for_event(_sheet_findings(FINDINGS_MIGRATION), event_row)))
-	about.append_array(_tagged(FINDINGS_RENAME,
-		EventSheetRenameFindings.for_event(_sheet_findings(FINDINGS_RENAME), event_row)))
-	about.append_array(_tagged(FINDINGS_FEEDBACK,
-		EventSheetFeedbackFindings.for_event(_sheet_findings(FINDINGS_FEEDBACK), event_row)))
+	for family: String in [FINDINGS_MULTIPLAYER, FINDINGS_LIGHTING, FINDINGS_EFFECTS, FINDINGS_SPAWNING,
+			FINDINGS_PERFORMANCE, FINDINGS_COLLISIONS, FINDINGS_LAYERS, FINDINGS_TOOL_EDITS,
+			FINDINGS_SCENE_TRUST, FINDINGS_MIGRATION, FINDINGS_RENAME, FINDINGS_FEEDBACK]:
+		var found: Array[Dictionary] = []
+		match family:
+			FINDINGS_EFFECTS:
+				found = EventSheetEffectFindings.for_event(_sheet_findings(family), event_row)
+			FINDINGS_PERFORMANCE:
+				if _viewport != null and bool(_viewport.get("show_costs")):
+					found = EventSheetPerformanceFindings.for_event(_sheet_findings(family), event_row)
+			FINDINGS_COLLISIONS:
+				found = EventSheetCollisionFindings.for_event(_sheet_findings(family), event_row)
+			_:
+				found = findings_at_event(_sheet_findings(family), event_row)
+		about.append_array(_tagged(family, found))
 	# The event whose trigger compiles to the function that replaced the shared base's.
 	if event_row != null:
 		var over: Array[Dictionary] = []
@@ -15645,7 +15648,7 @@ func _slice_event_spans(spans: Array[SemanticSpan], event_row: EventRow, slice_f
 	var kept: Array[SemanticSpan] = []
 	var used_lines: Array[int] = []
 	for span: SemanticSpan in spans:
-		var lane: String = _viewport._resolve_span_lane(span)
+		var lane: String = _resolve_span_lane(span)
 		if lane == "condition":
 			if hide_conditions:
 				continue
@@ -15667,7 +15670,7 @@ func _slice_event_spans(spans: Array[SemanticSpan], event_row: EventRow, slice_f
 	used_lines.sort()
 	var out: Array[SemanticSpan] = []
 	for span: SemanticSpan in kept:
-		if _viewport._resolve_span_lane(span) == "condition":
+		if _resolve_span_lane(span) == "condition":
 			out.append(span)
 			continue
 		var moved := SemanticSpan.new()

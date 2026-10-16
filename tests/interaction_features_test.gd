@@ -53,12 +53,12 @@ static func run() -> bool:
 	var invert_index: int = dock._condition_context_menu.get_item_index(4)  # CONDITION_MENU_INVERT
 
 	dock._context_hit = {"span_metadata": {"kind": "trigger", "ace_index": -1}}
-	dock._configure_context_menu(dock._condition_context_menu)
+	dock._context_menus._configure_context_menu(dock._condition_context_menu)
 	all_passed = _check("Invert is disabled when the clicked span is a trigger",
 		invert_index >= 0 and dock._condition_context_menu.is_item_disabled(invert_index), true) and all_passed
 
 	dock._context_hit = {"span_metadata": {"kind": "condition", "ace_index": 0}}
-	dock._configure_context_menu(dock._condition_context_menu)
+	dock._context_menus._configure_context_menu(dock._condition_context_menu)
 	all_passed = _check("Invert is enabled when the clicked span is a condition",
 		not dock._condition_context_menu.is_item_disabled(invert_index), true) and all_passed
 

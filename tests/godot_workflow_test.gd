@@ -503,7 +503,7 @@ static func run() -> bool:
 		var candidate: EventRowData = flat_entry.get("row")
 		if candidate != null and candidate.source_resource == block_event:
 			block_row = candidate
-	block_viewport._ensure_event_spans(block_row)
+	block_viewport._row_builder._ensure_event_spans(block_row)
 	var code_lines: int = 0
 	var comment_lines: int = 0
 	var comment_has_chip_chrome: bool = false
@@ -584,7 +584,7 @@ static func run() -> bool:
 	function_sheet.host_class = "Node"
 	function_editor.setup(function_sheet)
 	function_editor.set_undo_redo_manager(NoopUndoManager.new())
-	function_editor._apply_function_data({"name": "boost", "return_type": TYPE_NIL,
+	function_editor._function_dialog_glue._apply_function_data({"name": "boost", "return_type": TYPE_NIL,
 		"params": [{"id": "amount", "type_name": "float"}], "expose": true,
 		"ace_display_name": "Boost", "ace_category": "Combat"})
 	var created_function: EventFunction = function_sheet.functions[0] as EventFunction
@@ -690,7 +690,7 @@ static func run() -> bool:
 	code_editor.setup(EventSheetResource.new())
 	code_editor.set_undo_redo_manager(NoopUndoManager.new())
 	var probe_code_edit: CodeEdit = CodeEdit.new()
-	code_editor._apply_editor_code_settings(probe_code_edit)
+	code_editor._code_panel_glue.apply_editor_code_settings(probe_code_edit)
 	all_passed = _check("the code panel adopts script-editor chrome (minimap, current line)",
 		probe_code_edit.minimap_draw and probe_code_edit.highlight_current_line, true) and all_passed
 	probe_code_edit.free()
@@ -706,7 +706,7 @@ static func run() -> bool:
 	# (a data-class field row) and gets no event menu, so the fixture must be genuine.
 	event_row.source_resource = EventRow.new()
 	menu_editor._context_row = event_row
-	menu_editor._build_row_context_menu(event_row)
+	menu_editor._context_menus._build_row_context_menu(event_row)
 	var event_labels: PackedStringArray = _menu_labels(menu_editor._row_context_menu)
 	all_passed = _check("event menu is short and type-specific",
 		event_labels.size() <= 13  # +1: Cut joined Copy/Paste (event-sheet parity)
@@ -721,7 +721,7 @@ static func run() -> bool:
 	var group_row: EventRowData = EventRowData.new()
 	group_row.row_type = EventRowData.RowType.GROUP
 	menu_editor._context_row = group_row
-	menu_editor._build_row_context_menu(group_row)
+	menu_editor._context_menus._build_row_context_menu(group_row)
 	var group_labels: PackedStringArray = _menu_labels(menu_editor._row_context_menu)
 	all_passed = _check("group menu shows group items, hides event-only ones",
 		group_labels.has("Group Color…") and group_labels.has("Edit Group…")
@@ -730,14 +730,14 @@ static func run() -> bool:
 	var comment_row: EventRowData = EventRowData.new()
 	comment_row.row_type = EventRowData.RowType.COMMENT
 	menu_editor._context_row = comment_row
-	menu_editor._build_row_context_menu(comment_row)
+	menu_editor._context_menus._build_row_context_menu(comment_row)
 	var comment_labels: PackedStringArray = _menu_labels(menu_editor._row_context_menu)
 	all_passed = _check("comment menu shows comment items, hides group/event ones",
 		comment_labels.has("Edit Comment…") and comment_labels.has("Attach To Event Above")
 		and not comment_labels.has("Group Color…") and not comment_labels.has("Add blank sub-event (B)"), true) and all_passed
 	# The advanced/event-only authoring lives in More, not at the top.
 	menu_editor._context_row = event_row
-	menu_editor._build_row_more_submenu(true)
+	menu_editor._context_menus._build_row_more_submenu(true)
 	all_passed = _check("advanced authoring is folded into More",
 		_menu_labels(menu_editor._row_more_submenu).has("Add Pick Filter (For Each)…"), true) and all_passed
 	menu_editor.free()

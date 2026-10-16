@@ -51,20 +51,20 @@ static func run() -> bool:
 	# the order the moves below start from.
 	var event_row: EventRowData = _find_row(viewport, event)
 	all_passed = _check("event row resolved", event_row != null, true) and all_passed
-	editor._on_viewport_ace_drop_requested(
+	editor._ace_apply._on_viewport_ace_drop_requested(
 		[{"source_resource": event, "kind": "condition", "ace_index": 0}],
 		event_row, "condition", 1, "after", false)
 
 	# Move across events: drag condition A (now index 1) onto event2.
 	var event2_row: EventRowData = _find_row(viewport, event2)
-	editor._on_viewport_ace_drop_requested(
+	editor._ace_apply._on_viewport_ace_drop_requested(
 		[{"source_resource": event, "kind": "condition", "ace_index": 1}],
 		event2_row, "condition", -1, "append", false)
 	all_passed = _check("source event keeps only B", event.conditions.size() == 1 and event.conditions[0] == cond_b, true) and all_passed
 	all_passed = _check("condition A moved to event2", event2.conditions.has(cond_a), true) and all_passed
 
 	# Copy (Ctrl-drag): copy B into event2 without removing it from the source.
-	editor._on_viewport_ace_drop_requested(
+	editor._ace_apply._on_viewport_ace_drop_requested(
 		[{"source_resource": event, "kind": "condition", "ace_index": 0}],
 		event2_row, "condition", -1, "append", true)
 	all_passed = _check("copy leaves B in source", event.conditions.has(cond_b), true) and all_passed

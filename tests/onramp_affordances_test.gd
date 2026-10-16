@@ -41,15 +41,15 @@ static func run() -> bool:
 	# 3. "+ Add condition" span on built event rows.
 	var viewport: EventSheetViewport = EventSheetViewport.new()
 	var populated: EventRow = _make_row("on_tick", 1, 1)
-	var populated_span: Dictionary = _find_span_metadata(viewport._build_event_spans(populated), "add_condition")
+	var populated_span: Dictionary = _find_span_metadata(viewport._row_builder._build_event_spans(populated), "add_condition")
 	all_passed = _check("populated row has an add_condition span", populated_span.is_empty(), false) and all_passed
 	all_passed = _check("add_condition lives in the condition lane", str(populated_span.get("lane", "")), "condition") and all_passed
 	all_passed = _check("add_condition sits below trigger + condition", int(populated_span.get("line_index", -1)), 2) and all_passed
 	var empty_event: EventRow = _make_row("", 0, 0)
-	var empty_span: Dictionary = _find_span_metadata(viewport._build_event_spans(empty_event), "add_condition")
+	var empty_span: Dictionary = _find_span_metadata(viewport._row_builder._build_event_spans(empty_event), "add_condition")
 	all_passed = _check("empty event keeps the add_condition span", empty_span.is_empty(), false) and all_passed
 	all_passed = _check("add_condition sits below the Every Tick placeholder", int(empty_span.get("line_index", -1)), 1) and all_passed
-	var action_span: Dictionary = _find_span_metadata(viewport._build_event_spans(populated), "add_action")
+	var action_span: Dictionary = _find_span_metadata(viewport._row_builder._build_event_spans(populated), "add_action")
 	all_passed = _check("add_action affordance still present", action_span.is_empty(), false) and all_passed
 	viewport.free()
 

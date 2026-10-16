@@ -61,7 +61,7 @@ static func run() -> bool:
 
 	# Reverse provenance through the dock: clicking a generated line selects its row;
 	# in-flow block lines fall back to their enclosing event (the block has no row).
-	editor._toggle_code_panel()
+	editor._code_panel_glue.toggle_code_panel()
 	var source_map: Array = editor._code_source_map
 	all_passed = _check("code panel produced a source map", source_map.is_empty(), false) and all_passed
 	var inline_entry: Dictionary = {}
@@ -72,10 +72,10 @@ static func run() -> bool:
 		elif str(entry.get("uid", "")) == str(first_event.get_instance_id()):
 			first_entry = entry
 	all_passed = _check("in-flow block is source-mapped", inline_entry.is_empty(), false) and all_passed
-	editor._select_sheet_row_for_code_line(int(first_entry.get("start", 0)))
+	editor._code_panel_glue.select_sheet_row_for_code_line(int(first_entry.get("start", 0)))
 	all_passed = _check("clicking an event's line selects that event",
 		viewport.get_selected_context().get("source_resource", null) == first_event, true) and all_passed
-	editor._select_sheet_row_for_code_line(int(inline_entry.get("start", 0)))
+	editor._code_panel_glue.select_sheet_row_for_code_line(int(inline_entry.get("start", 0)))
 	all_passed = _check("clicking an in-flow block's line selects its event (fallback outward)",
 		viewport.get_selected_context().get("source_resource", null) == second_event, true) and all_passed
 
@@ -105,19 +105,19 @@ static func run() -> bool:
 	icon_editor.setup(icon_sheet)
 	icon_editor.set_undo_redo_manager(NoopUndoManager.new())
 	var icon_viewport: EventSheetViewport = icon_editor.get_viewport_control()
-	var heal_icon: Texture2D = icon_viewport._object_icon_for("DemoHealthAddon", "method:heal")
+	var heal_icon: Texture2D = icon_viewport._row_builder._object_icon_for("DemoHealthAddon", "method:heal")
 	all_passed = _check("@ace_icon resolves for row cells", heal_icon != null, true) and all_passed
 	var icon_span: SemanticSpan = SemanticSpan.new()
 	icon_span.metadata = {"object_icon": heal_icon}
 	var plain_span: SemanticSpan = SemanticSpan.new()
 	plain_span.metadata = {}
 	var font: Font = ThemeDB.fallback_font
-	var with_icon: float = icon_viewport._measure_span_width(icon_span, "Heal 5 HP", font, 13)
-	var without_icon: float = icon_viewport._measure_span_width(plain_span, "Heal 5 HP", font, 13)
+	var with_icon: float = icon_viewport._row_builder._measure_span_width(icon_span, "Heal 5 HP", font, 13)
+	var without_icon: float = icon_viewport._row_builder._measure_span_width(plain_span, "Heal 5 HP", font, 13)
 	all_passed = _check("icon widens the measured span by the fixed advance",
 		is_equal_approx(with_icon - without_icon, EventRowRenderer.OBJECT_ICON_ADVANCE), true) and all_passed
 	all_passed = _check("icon resolution is cached",
-		icon_viewport._object_icon_for("DemoHealthAddon", "method:heal") == heal_icon, true) and all_passed
+		icon_viewport._row_builder._object_icon_for("DemoHealthAddon", "method:heal") == heal_icon, true) and all_passed
 
 	editor.free()
 	icon_editor.free()

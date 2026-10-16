@@ -119,7 +119,7 @@ static func run() -> bool:
 	trigger_definition.id = "signal:healed"
 	trigger_definition.ace_type = ACEDefinition.ACEType.TRIGGER
 	trigger_definition.parameters = [{"id": "amount", "type": TYPE_INT}]
-	editor._apply_ace_definition(trigger_definition, {}, {"mode": "new_condition_event"})
+	editor._ace_apply._apply_ace_definition(trigger_definition, {}, {"mode": "new_condition_event"})
 	var created: EventRow = dock_sheet.events[dock_sheet.events.size() - 1] as EventRow
 	all_passed = _check("apply bakes trigger id", created != null and created.trigger_id == "signal:healed", true) and all_passed
 	all_passed = _check("apply bakes trigger args", created != null and created.trigger_args == "amount: int", true) and all_passed

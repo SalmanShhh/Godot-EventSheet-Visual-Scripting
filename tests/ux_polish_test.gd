@@ -84,7 +84,7 @@ static func run() -> bool:
 	editor._find_edit.text = "remember"
 	editor._find_resource_matches = editor.get_viewport_control().search_all("remember")
 	editor._find_cursor = 0
-	editor._open_match_in_split()
+	editor._multi_view._open_match_in_split()
 	all_passed = _check("find match opens in the split pane",
 		editor._multi_view._split_viewport != null and editor._multi_view._split_viewport.get_flat_rows().size() > 0, true) and all_passed
 	editor.free()
@@ -201,12 +201,12 @@ static func run() -> bool:
 	cos_editor._current_sheet_path = "user://eventsheets_cos.tres"
 	if FileAccess.file_exists("user://eventsheets_cos_generated.gd"):
 		DirAccess.remove_absolute("user://eventsheets_cos_generated.gd")
-	cos_editor._on_save_requested()
+	cos_editor._sheet_io._on_save_requested()
 	all_passed = _check("save also compiles the generated script",
 		FileAccess.file_exists("user://eventsheets_cos_generated.gd"), true) and all_passed
 	ProjectSettings.set_setting("eventsheets/editor/compile_on_save", false)
 	DirAccess.remove_absolute("user://eventsheets_cos_generated.gd")
-	cos_editor._on_save_requested()
+	cos_editor._sheet_io._on_save_requested()
 	all_passed = _check("the setting disables compile-on-save",
 		FileAccess.file_exists("user://eventsheets_cos_generated.gd"), false) and all_passed
 	ProjectSettings.set_setting("eventsheets/editor/compile_on_save", null)

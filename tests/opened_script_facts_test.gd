@@ -269,7 +269,7 @@ static func _all_rows(view: EventSheetViewport) -> Array:
 
 static func _sweep_all(view: EventSheetViewport, rows: Array, into: Array) -> void:
 	for row_data: EventRowData in rows:
-		view._ensure_event_spans(row_data)
+		view._row_builder._ensure_event_spans(row_data)
 		into.append({"row": row_data})
 		_sweep_all(view, row_data.children, into)
 

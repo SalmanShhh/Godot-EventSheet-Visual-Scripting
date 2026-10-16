@@ -80,7 +80,7 @@ static func _test_sheet_reading() -> bool:
 		if row == null:
 			continue
 		if row.source_resource is EventRow:
-			viewport._ensure_event_spans(row)
+			viewport._row_builder._ensure_event_spans(row)
 			for span: SemanticSpan in row.spans:
 				if str(span.metadata.get("kind", "")) == "match_head":
 					head_texts.append(span.text)

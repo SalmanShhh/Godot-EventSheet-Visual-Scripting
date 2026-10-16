@@ -39,7 +39,7 @@ func _on_frame() -> void:
 		_table = _capture(_dock._provider_dialog)
 		# Phase 3: shaping a parameter, which is the half the table cannot show on its own.
 		_select_member("method:start_wave")
-		_dock._on_provider_params_pressed()
+		_dock._providers_glue.on_provider_params_pressed()
 		return
 	if _frames < 20 or _table == null:
 		return

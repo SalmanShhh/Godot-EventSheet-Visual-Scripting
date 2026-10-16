@@ -133,14 +133,14 @@ func refresh_code_panel() -> void:
 		_dock._code_edit.text = str(cached.get("text", ""))
 		_dock._code_source_map = cached.get("map", [])
 		_dock._code_panel_highlight = Vector2i(-1, -1)
-		_dock._update_code_panel_highlight()
+		_dock._code_panel_glue.update_code_panel_highlight()
 		return
 	var compile_result: Dictionary = load(SHEET_COMPILER_PATH).compile(_dock._current_sheet, "user://eventforge_code_panel_preview.gd")
 	_dock._code_edit.text = str(compile_result.get("output", ""))
 	_dock._code_source_map = compile_result.get("source_map", [])
 	_dock._tab_state.store_code(_dock._code_edit.text, _dock._code_source_map)
 	_dock._code_panel_highlight = Vector2i(-1, -1)
-	_dock._update_code_panel_highlight()
+	_dock._code_panel_glue.update_code_panel_highlight()
 
 
 ## Repopulates the Functions overview list from the active sheet (signature + an ✦ for ACE-exposed
@@ -239,7 +239,7 @@ func update_code_panel_highlight() -> void:
 
 ## Reverse provenance: clicking a line of generated code selects the sheet row that
 ## produced it. Reacts only to mouse releases (never caret moves), so the forward
-## direction - selection setting the caret in _dock._update_code_panel_highlight - cannot loop.
+## direction - selection setting the caret in _dock._code_panel_glue.update_code_panel_highlight - cannot loop.
 func on_code_panel_gui_input(event: InputEvent) -> void:
 	if not (event is InputEventMouseButton):
 		return
@@ -247,7 +247,7 @@ func on_code_panel_gui_input(event: InputEvent) -> void:
 	if mouse.button_index != MOUSE_BUTTON_LEFT or mouse.pressed:
 		return
 	# The click already moved the caret; source maps are 1-based.
-	_dock._select_sheet_row_for_code_line(_dock._code_edit.get_caret_line() + 1)
+	_dock._code_panel_glue.select_sheet_row_for_code_line(_dock._code_edit.get_caret_line() + 1)
 
 
 ## The code echo beside a variable row, activated: show the GDScript panel and put the caret on
@@ -258,13 +258,13 @@ func open_at_row(row_data: EventRowData) -> void:
 		return
 	_dock._ui_builder.ensure_code_panel()
 	if not _dock._side_panel.visible:
-		_dock._toggle_code_panel()
+		_dock._code_panel_glue.toggle_code_panel()
 	else:
 		refresh_code_panel()
 	var emitted: Vector2i = EventSheetLineRowMapper.range_for_resource(_dock._code_source_map, row_data.source_resource)
 	if _dock._code_edit != null and emitted.x > 0:
 		_dock._code_edit.set_caret_line(maxi(emitted.x - 1, 0))
-	_dock._update_code_panel_highlight()
+	_dock._code_panel_glue.update_code_panel_highlight()
 
 
 ## The script editor's "Go to Sheet Row": shows the GDScript panel, refreshes the
@@ -273,12 +273,12 @@ func open_at_row(row_data: EventRowData) -> void:
 func goto_generated_line(line: int) -> void:
 	_dock._ui_builder.ensure_code_panel()
 	if not _dock._side_panel.visible:
-		_dock._toggle_code_panel()
+		_dock._code_panel_glue.toggle_code_panel()
 	else:
 		refresh_code_panel()
 	if _dock._code_edit != null and line > 0:
 		_dock._code_edit.set_caret_line(maxi(line - 1, 0))
-	_dock._select_sheet_row_for_code_line(line)
+	_dock._code_panel_glue.select_sheet_row_for_code_line(line)
 
 
 ## Most-specific-first line→row lookup (the shared mapper), walking outward until something
@@ -294,7 +294,7 @@ func select_sheet_row_for_code_line(line: int) -> void:
 		# reveal_resource falls back where plain selection can't reach (e.g. a resource nested inside a
 		# folded section like the Class-setup strip); it unfolds ancestors before selecting.
 		if _dock._viewport.select_resource(resource) or _dock._viewport.reveal_resource(resource):
-			_dock._update_code_panel_highlight()
+			_dock._code_panel_glue.update_code_panel_highlight()
 			return
 
 
@@ -314,7 +314,7 @@ func on_viewport_raw_code_edit_requested(raw_resource: Resource, in_flow: bool) 
 		else "Top-level GDScript - helper functions, @onready vars, signals… anything no built-in action covers. Written verbatim into the .gd and callable from your events."
 	)
 	_dock._raw_code_edit.text = raw_row.code
-	_dock._validate_raw_code()
+	_dock._code_panel_glue.validate_raw_code()
 	_dock._raw_code_dialog.popup_centered(Vector2i(680, 460))
 	_dock._raw_code_edit.grab_focus()
 

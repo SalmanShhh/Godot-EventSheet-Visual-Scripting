@@ -429,7 +429,7 @@ static func _test_row_owner_and_notes() -> bool:
 	var owned_row: EventRowData = _row_with_uid(dock, "owned")
 	ok = _check("the event was built", owned_row != null, true) and ok
 	if owned_row != null:
-		dock._viewport._ensure_event_spans(owned_row)
+		dock._viewport._row_builder._ensure_event_spans(owned_row)
 		ok = _check("a step that changes hp leads with the object that HAS an hp",
 			_object_label_of(owned_row), "Player") and ok
 

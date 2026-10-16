@@ -26,8 +26,8 @@ func init(viewport: Control) -> void:
 
 
 func begin_box_selection(position: Vector2, additive: bool) -> void:
-	_viewport._clear_row_drag()
-	_viewport._clear_ace_drag()
+	clear_row_drag()
+	clear_ace_drag()
 	_viewport._box_select_active = true
 	_viewport._box_select_additive = additive
 	_viewport._box_select_start = position
@@ -46,7 +46,7 @@ func complete_box_selection() -> void:
 		_viewport._box_select_additive = false
 		_viewport.queue_redraw()
 		return
-	_viewport._apply_box_selection(selection_rect, _viewport._box_select_additive)
+	apply_box_selection(selection_rect, _viewport._box_select_additive)
 	_viewport._box_select_active = false
 	_viewport._box_select_additive = false
 	_viewport.queue_redraw()
@@ -85,10 +85,10 @@ func apply_box_selection(selection_rect: Rect2, additive: bool) -> void:
 		# Skip rows whose vertical extent does not overlap the selection box using the
 		# cheap precomputed metrics, so a box drag never builds layout/spans for the
 		# whole sheet (only for rows the box actually touches).
-		var row_top: float = _viewport._get_row_top(row_index)
-		if row_top + _viewport._get_row_height(row_index) < sel_top or row_top > sel_bottom:
+		var row_top: float = _viewport._row_metrics_helper.row_top(row_index)
+		if row_top + _viewport._row_metrics_helper.row_height(row_index) < sel_top or row_top > sel_bottom:
 			continue
-		var layout: Dictionary = _viewport._get_or_build_row_layout(
+		var layout: Dictionary = _viewport._layout_builder.get_or_build_row_layout(
 			row_index,
 			_viewport._get_logical_canvas_width(),
 			_viewport._get_font(),
@@ -145,7 +145,7 @@ func is_selection_hit(row_index: int, span_index: int) -> bool:
 ## pair leads with, so the payload is the one event and the pair travels together.
 func begin_row_drag(row_index: int) -> void:
 	if row_index < 0:
-		_viewport._clear_row_drag()
+		clear_row_drag()
 		return
 	row_index = _viewport.statement_lead_index(row_index)
 	var selected_indices: Array[int] = _viewport._get_selected_row_indices()
@@ -159,7 +159,7 @@ func begin_row_drag(row_index: int) -> void:
 	_viewport._drag_ghost_label = (
 		"%d rows" % _viewport._drag_row_indices.size()
 		if _viewport._drag_row_indices.size() > 1
-		else _viewport._drag.row_ghost_label(_viewport._row_at(row_index))
+		else row_ghost_label(_viewport._row_at(row_index))
 	)
 
 
@@ -187,34 +187,34 @@ func clear_row_drag() -> void:
 
 func maybe_begin_ace_drag(hit: Dictionary, row_index: int) -> bool:
 	if row_index < 0:
-		_viewport._clear_ace_drag()
+		clear_ace_drag()
 		return false
 	var row_data: EventRowData = _viewport._row_at(row_index)
 	if row_data == null:
-		_viewport._clear_ace_drag()
+		clear_ace_drag()
 		return false
 	var metadata: Dictionary = hit.get("span_metadata", {})
 	var kind: String = str(metadata.get("kind", ""))
 	if not ["trigger", "condition", "action"].has(kind):
-		_viewport._clear_ace_drag()
+		clear_ace_drag()
 		return false
 	var span_index: int = int(hit.get("span_index", -1))
 	var ace_index: int = int(metadata.get("ace_index", -1))
 	if ace_index < 0:
-		_viewport._clear_ace_drag()
+		clear_ace_drag()
 		return false
 	_viewport._drag_ace_entries = _viewport._get_draggable_ace_entries(row_data, kind, ace_index, span_index)
 	if _viewport._drag_ace_entries.is_empty():
-		_viewport._clear_ace_drag()
+		clear_ace_drag()
 		return false
 	_viewport._drag_ace_target_row_index = -1
 	_viewport._drag_ace_target_lane = ""
 	_viewport._drag_ace_target_ace_index = -1
 	_viewport._drag_ace_insert_mode = "append"
 	_viewport._drag_ace_drop_valid = true
-	_viewport._drag.clear_drag_feedback()
-	_viewport._clear_row_drag()
-	# Ghost label set after _viewport._clear_row_drag(), which resets it.
+	clear_drag_feedback()
+	clear_row_drag()
+	# Ghost label set after clear_row_drag(), which resets it.
 	if _viewport._drag_ace_entries.size() > 1:
 		_viewport._drag_ghost_label = "%d selected" % _viewport._drag_ace_entries.size()
 	elif span_index >= 0 and span_index < row_data.spans.size() and row_data.spans[span_index] != null:
@@ -233,7 +233,7 @@ func clear_ace_drag() -> void:
 	_viewport._drag_ace_copy_mode = false
 	_viewport._drag_ace_drop_valid = true
 	_viewport._drag_ghost_label = ""
-	_viewport._drag.clear_drag_feedback()
+	clear_drag_feedback()
 
 
 func clear_drag_feedback() -> void:
@@ -248,7 +248,7 @@ func update_ace_drag_target(hit: Dictionary, position: Vector2) -> void:
 	_viewport._drag_ace_target_ace_index = -1
 	_viewport._drag_ace_insert_mode = "append"
 	_viewport._drag_ace_drop_valid = true
-	_viewport._drag.clear_drag_feedback()
+	clear_drag_feedback()
 	if _viewport._drag_ace_entries.is_empty():
 		return
 	var row_index: int = int(hit.get("row_index", -1))

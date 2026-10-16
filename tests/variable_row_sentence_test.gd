@@ -382,17 +382,17 @@ static func _test_the_scope_word_is_derived() -> bool:
 	node_sheet.host_class = "Node2D"
 	node_sheet.variables = {"hp": {"type": "int", "default": 100, "exported": false}}
 	ok = _check("a node script says Instance",
-		_scope_word(view._build_global_variable_rows(node_sheet), "hp"), "Instance") and ok
+		_scope_word(view._row_builder._build_global_variable_rows(node_sheet), "hp"), "Instance") and ok
 	var resource_sheet: EventSheetResource = EventSheetResource.new()
 	resource_sheet.host_class = "Resource"
 	resource_sheet.variables = {"damage": {"type": "float", "default": 10.0, "exported": true}}
 	ok = _check("a Resource script says Field",
-		_scope_word(view._build_global_variable_rows(resource_sheet), "damage"), "Field") and ok
+		_scope_word(view._row_builder._build_global_variable_rows(resource_sheet), "damage"), "Field") and ok
 	var const_sheet: EventSheetResource = EventSheetResource.new()
 	const_sheet.host_class = "Node2D"
 	const_sheet.variables = {"MAX_HP": {"type": "int", "default": 100, "const": true, "exported": false}}
 	ok = _check("a const says Constant",
-		_scope_word(view._build_global_variable_rows(const_sheet), "MAX_HP"), "Constant") and ok
+		_scope_word(view._row_builder._build_global_variable_rows(const_sheet), "MAX_HP"), "Constant") and ok
 	view.free()
 	return ok
 
@@ -407,7 +407,7 @@ static func _test_the_list_keeps_the_order_it_was_written_in() -> bool:
 		"alive": {"type": "bool", "default": true, "exported": false},
 	}
 	var names: PackedStringArray = PackedStringArray()
-	for row: Variant in view._build_global_variable_rows(sheet):
+	for row: Variant in view._row_builder._build_global_variable_rows(sheet):
 		names.append(_name_of(row as EventRowData))
 	view.free()
 	return _check("the rows are in the order they were written",
@@ -422,7 +422,7 @@ static func _test_the_row_reads_as_one_sentence() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Node2D"
 	sheet.variables = {"speed": {"type": "float", "default": 200.0, "exported": true}}
-	var rows: Array = view._build_global_variable_rows(sheet)
+	var rows: Array = view._row_builder._build_global_variable_rows(sheet)
 	var row: EventRowData = rows[0]
 	ok = _check("the row is a variable row the theme can wash", row.variable_row, true) and ok
 	ok = _check("the sentence reads scope, type, name, value",
@@ -453,14 +453,14 @@ static func _test_the_view_dial_decides_what_the_row_carries() -> bool:
 	sheet.variables = {"hp": {"type": "int", "default": 100, "exported": false}}
 	view.variable_row_view = EventSheetCodeEcho.VIEW_SENTENCE
 	ok = _check("sentence: nothing on the row is spelled the GDScript way",
-		_texts(view._build_global_variable_rows(sheet)[0]), "x | Instance | whole number | hp | = | 100") and ok
+		_texts(view._row_builder._build_global_variable_rows(sheet)[0]), "x | Instance | whole number | hp | = | 100") and ok
 	view.variable_row_view = EventSheetCodeEcho.VIEW_BOTH
 	ok = _check("both: the sentence leads and the declaration echoes",
-		_texts(view._build_global_variable_rows(sheet)[0]),
+		_texts(view._row_builder._build_global_variable_rows(sheet)[0]),
 		"x | Instance | whole number | hp | = | 100 | var hp: int = 100") and ok
 	view.variable_row_view = EventSheetCodeEcho.VIEW_CODE
 	ok = _check("code: the row IS the line, and keeps its badge",
-		_texts(view._build_global_variable_rows(sheet)[0]), "x | var hp: int = 100") and ok
+		_texts(view._row_builder._build_global_variable_rows(sheet)[0]), "x | var hp: int = 100") and ok
 	view.free()
 	return ok
 
@@ -477,7 +477,7 @@ static func _test_an_inspector_group_is_a_folder_strip_over_unindented_rows() ->
 		"speed": {"type": "float", "default": 200.0, "exported": true, "attributes": {"group": "Movement"}},
 		"jump": {"type": "float", "default": 400.0, "exported": true, "attributes": {"group": "Movement"}},
 	}
-	var rows: Array = view._build_global_variable_rows(sheet)
+	var rows: Array = view._row_builder._build_global_variable_rows(sheet)
 	ok = _check("the group is one strip, not a chip on every row", rows.size(), 2) and ok
 	var strip: EventRowData = rows[1]
 	ok = _check("the strip is named for the folder", _texts(strip), "Movement") and ok

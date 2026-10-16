@@ -114,11 +114,11 @@ static func run() -> bool:
 	var nested_viewport: EventSheetViewport = EventSheetViewport.new()
 	nested_viewport._sheet = nested_sheet
 	all_passed = _check("a blank sub-event says nothing in the condition lane",
-		_has_span_text(nested_viewport._build_event_spans(blank_sub), "Every Tick"), false) and all_passed
+		_has_span_text(nested_viewport._row_builder._build_event_spans(blank_sub), "Every Tick"), false) and all_passed
 	all_passed = _check("the sub-event with a condition keeps its own words",
-		_has_span_text(nested_viewport._build_event_spans(guarded), "Every Tick"), false) and all_passed
+		_has_span_text(nested_viewport._row_builder._build_event_spans(guarded), "Every Tick"), false) and all_passed
 	all_passed = _check("a row the sheet does not hold under anything keeps the placeholder",
-		_has_span_text(nested_viewport._build_event_spans(EventRow.new()), "Every Tick"), true) and all_passed
+		_has_span_text(nested_viewport._row_builder._build_event_spans(EventRow.new()), "Every Tick"), true) and all_passed
 	all_passed = _check("and the hover says which blank rule this one is",
 		EventSheetViewportReadingRows.BLANK_SUB_EVENT_HOVER, "follows its parent, in order") and all_passed
 	nested_viewport.free()

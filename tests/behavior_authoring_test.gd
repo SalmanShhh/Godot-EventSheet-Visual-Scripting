@@ -104,7 +104,7 @@ static func run() -> bool:
 	all_passed = _check("banner visible for plain sheets too", second_editor._identity_banner.visible, true) and all_passed
 	all_passed = _check("plain-sheet banner says what it is",
 		second_editor._identity_banner._label.begins_with("Event Sheet · "), true) and all_passed
-	second_editor._apply_sheet_type_settings(2, "GuardBrain", "res://addons/eventsheet/icons/eventsheet.svg", "Area2D")
+	second_editor._sheet_type_glue.apply_sheet_type_settings(2, "GuardBrain", "res://addons/eventsheet/icons/eventsheet.svg", "Area2D")
 	all_passed = _check("dialog apply sets behavior mode", plain_sheet.behavior_mode, true) and all_passed
 	all_passed = _check("dialog apply sets name/host",
 		plain_sheet.custom_class_name == "GuardBrain" and plain_sheet.host_class == "Area2D", true) and all_passed

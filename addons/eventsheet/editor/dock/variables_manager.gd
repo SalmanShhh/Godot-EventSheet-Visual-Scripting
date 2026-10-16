@@ -564,7 +564,7 @@ func _on_variable_dialog_confirmed(
 			_apply_property_accessors(tree_var, attributes)
 			var anchor: Variant = context.get("insert_below", null)
 			if anchor is Resource:
-				var location: Dictionary = _dock._find_resource_location(anchor as Resource)
+				var location: Dictionary = _dock._ace_apply._find_resource_location(anchor as Resource)
 				var container: Array = location.get("container", _dock._current_sheet.events)
 				var anchor_index: int = int(location.get("index", container.size() - 1))
 				container.insert(anchor_index + 1, tree_var)
@@ -1058,7 +1058,7 @@ func _resource_uses_variable(resource_entry: Resource, var_name: String) -> bool
 	if resource_entry is EventRow:
 		return _event_row_uses_variable(resource_entry as EventRow, var_name)
 	if resource_entry is EventGroup:
-		return _resource_array_uses_variable(_dock._group_children_array(resource_entry as EventGroup), var_name)
+		return _resource_array_uses_variable(_dock._ace_apply._group_children_array(resource_entry as EventGroup), var_name)
 	return false
 
 

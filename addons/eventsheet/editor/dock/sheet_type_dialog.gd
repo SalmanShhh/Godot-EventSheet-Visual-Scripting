@@ -657,7 +657,7 @@ func _on_sheet_type_confirmed() -> void:
 			_dock._current_sheet.custom_class_name if _dock._current_sheet != null else "")):
 		return
 	_sheet_type_dialog.hide()
-	_dock._apply_sheet_type_settings(
+	_dock._sheet_type_glue.apply_sheet_type_settings(
 		_selected_type(),
 		_sheet_type_name_edit.text,
 		_sheet_type_icon_edit.text,

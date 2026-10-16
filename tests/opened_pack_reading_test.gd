@@ -67,7 +67,7 @@ static func run() -> bool:
 	ok = _check("no '+ Add parameter' cell in a read-only preview", _any_span_contains(view, "+ Add parameter"), false) and ok
 	var body_row: EventRowData = action_row.children[0] if action_row != null and not action_row.children.is_empty() else null
 	if body_row != null:
-		view._ensure_event_spans(body_row)
+		view._row_builder._ensure_event_spans(body_row)
 	ok = _check("a body-only row leaves its left cell blank (no 'Always')",
 		_row_has_text(body_row, "Always"), false) and ok
 	ok = _check("and it never claims 'Every Tick' either", _row_has_text(body_row, "Every Tick"), false) and ok
@@ -257,7 +257,7 @@ static func _any_span_contains(view: EventSheetViewport, needle: String) -> bool
 		var row_data: EventRowData = entry.get("row")
 		if row_data == null:
 			continue
-		view._ensure_event_spans(row_data)
+		view._row_builder._ensure_event_spans(row_data)
 		for span: SemanticSpan in row_data.spans:
 			if str(span.text).contains(needle):
 				return true

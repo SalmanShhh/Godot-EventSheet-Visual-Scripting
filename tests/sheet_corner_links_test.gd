@@ -157,11 +157,11 @@ static func _test_the_links_own_their_band() -> bool:
 	var offset: float = editor._viewport.content_top_offset()
 	ok = _check("an editing surface owes the links a band", offset > 0.0, true) and ok
 	ok = _check("and row 1 starts under it, not through it",
-		editor._viewport._get_row_top(0), offset) and ok
+		editor._viewport._row_metrics_helper.row_top(0), offset) and ok
 	ok = _check("a click in the band is a click on no row",
-		editor._viewport._find_row_index_at_y(offset * 0.5), -1) and ok
+		editor._viewport._row_metrics_helper.row_index_at_y(offset * 0.5), -1) and ok
 	ok = _check("and a click just under it is row 1",
-		editor._viewport._find_row_index_at_y(offset + 2.0), 0) and ok
+		editor._viewport._row_metrics_helper.row_index_at_y(offset + 2.0), 0) and ok
 	editor.free()
 	return ok
 
@@ -176,11 +176,11 @@ static func _test_a_sheet_being_read_offers_nothing() -> bool:
 	var ok: bool = _check("an editable sheet carries them",
 		ViewportCornerLinks.shown_on(editor._viewport), true)
 	editor._current_sheet.read_only = true
-	editor._viewport._rebuild_row_metrics()
+	editor._viewport._row_metrics_helper.rebuild()
 	ok = _check("a read-only sheet does not", ViewportCornerLinks.shown_on(editor._viewport), false) and ok
 	ok = _check("and owes them no band", editor._viewport.content_top_offset(), 0.0) and ok
 	ok = _check("so its first row starts at the top",
-		editor._viewport._get_row_top(0), 0.0) and ok
+		editor._viewport._row_metrics_helper.row_top(0), 0.0) and ok
 	editor._current_sheet.read_only = false
 	editor._viewport.reading_mode = true
 	ok = _check("reading mode does not either",

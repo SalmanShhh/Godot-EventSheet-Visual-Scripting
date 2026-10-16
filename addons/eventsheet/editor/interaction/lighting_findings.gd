@@ -94,18 +94,6 @@ static func findings(sheet: EventSheetResource) -> Array[Dictionary]:
 	return found
 
 
-## The findings anchored at one event row - what the canvas hangs under it. Matched by IDENTITY, so
-## the caller never has to name a row that has no name.
-static func for_event(found: Array[Dictionary], event_row: EventRow) -> Array[Dictionary]:
-	var mine: Array[Dictionary] = []
-	if event_row == null:
-		return mine
-	for entry: Dictionary in found:
-		if str(entry.get("anchor", "")) == ANCHOR_EVENT and is_same(entry.get("event"), event_row):
-			mine.append(entry)
-	return mine
-
-
 # -- The three scene rules ----------------------------------------------------------------------
 
 

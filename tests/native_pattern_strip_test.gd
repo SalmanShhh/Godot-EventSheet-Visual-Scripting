@@ -152,7 +152,7 @@ static func _pattern_chips(viewport: EventSheetViewport) -> Array:
 		var row: EventRowData = viewport._row_at(index)
 		if row == null or not (row.source_resource is EventRow):
 			continue
-		viewport._ensure_event_spans(row)
+		viewport._row_builder._ensure_event_spans(row)
 		for span: SemanticSpan in row.spans:
 			if span != null and span.metadata is Dictionary \
 					and str((span.metadata as Dictionary).get("kind", "")) == "pattern_chip":

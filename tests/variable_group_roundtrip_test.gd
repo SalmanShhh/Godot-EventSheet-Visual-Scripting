@@ -42,7 +42,7 @@ static func run() -> bool:
 		# gone (the folder strip over the run names it once), so the fact rides in the row metadata -
 		# which is exactly what the folder outline, the drag-into-folder drop and the rename all read.
 		var viewport: EventSheetViewport = EventSheetViewport.new()
-		var row: EventRowData = viewport._build_tree_variable_row(lifted, 0)
+		var row: EventRowData = viewport._row_builder._build_tree_variable_row(lifted, 0)
 		var row_meta: Dictionary = row.spans[0].metadata if row.spans[0].metadata is Dictionary else {}
 		all_passed = _check("reopened grouped tree var keeps its Inspector section",
 			str(row_meta.get("variable_group", "")), "Combat") and all_passed

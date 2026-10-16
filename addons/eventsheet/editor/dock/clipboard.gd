@@ -33,14 +33,14 @@ extends RefCounted
 #
 # CLOSURE NOTES - 4 undoable lambdas:
 #   • `_on_paste_requested`'s lambda captures the LOCALS `clip_type` / `payload` / `selected_resource`
-#     / `result` and calls `_dock._insert_row_below_selection`,
+#     / `result` and calls `_dock._ace_apply._insert_row_below_selection`,
 #   • `_paste_snippet_text`'s lambda captures `required_variables` / `counters` / `rows` and reaches
-#     `_dock._current_sheet.variables` / `_dock._active_view` / `_dock._assign_fresh_event_uids` /
-#     `_dock._insert_row_below_selection`. The `counters` / `result` mutate-by-Dictionary idiom (GDScript
+#     `_dock._current_sheet.variables` / `_dock._active_view` / `_dock._add_rows.assign_fresh_event_uids` /
+#     `_dock._ace_apply._insert_row_below_selection`. The `counters` / `result` mutate-by-Dictionary idiom (GDScript
 #     lambdas capture by value, so a Dictionary is how the closure writes a running total back out) is
 #     preserved EXACTLY - not reindented or renamed,
 #   • `_add_gdscript_action_to_context_row`'s lambda captures the LOCAL `target_event` (clean),
-#   • `_paste_gdscript_text`'s lambda captures `rows` / `anchor` and calls `_dock._insert_row_below_selection`.
+#   • `_paste_gdscript_text`'s lambda captures `rows` / `anchor` and calls `_dock._ace_apply._insert_row_below_selection`.
 #   Inside each lambda: dock state/STAY-methods → `_dock.`; moved siblings
 #   (`_top_level_selected_resources`, `_looks_like_gdscript`) stay bare.
 
@@ -199,7 +199,7 @@ func _on_paste_requested() -> void:
 		match clip_type:
 			"row":
 				if payload is Resource:
-					_dock._insert_row_below_selection((payload as Resource).duplicate(true))
+					_dock._ace_apply._insert_row_below_selection((payload as Resource).duplicate(true))
 					result["label"] = "Pasted row."
 					return true
 			"condition":
@@ -265,8 +265,8 @@ func paste_snippet(snippet: Dictionary, action_name: String = "Paste Snippet", e
 		var anchor: Resource = _dock._active_view().get_selected_context().get("source_resource", null)
 		for row in rows:
 			if row is EventRow:
-				_dock._assign_fresh_event_uids(row as EventRow)
-			_dock._insert_row_below_selection(row, anchor)
+				_dock._add_rows.assign_fresh_event_uids(row as EventRow)
+			_dock._ace_apply._insert_row_below_selection(row, anchor)
 			anchor = row  # keeps pasted rows in their original order, each after the last
 		return true
 	)
@@ -358,7 +358,7 @@ func _add_gdscript_action_to_event(target: Variant) -> void:
 	# Open the editor on it immediately (event-sheet style). Headless tests can't pop a window, so guard -
 	# the block was still appended, which is what those tests assert.
 	if added != null and _dock.is_inside_tree():
-		_dock._on_viewport_raw_code_edit_requested(added, true)
+		_dock._code_panel_glue.on_viewport_raw_code_edit_requested(added, true)
 
 
 ## The last in-flow RawCodeRow action on the event whose stable uid matches - the block just appended
@@ -417,8 +417,8 @@ func _paste_gdscript_text(text: String) -> bool:
 		var insert_after: Resource = anchor
 		for row: Variant in rows:
 			if row is EventRow:
-				_dock._assign_fresh_event_uids(row)
-			_dock._insert_row_below_selection(row, insert_after)
+				_dock._add_rows.assign_fresh_event_uids(row)
+			_dock._ace_apply._insert_row_below_selection(row, insert_after)
 			insert_after = row
 		return true
 	)

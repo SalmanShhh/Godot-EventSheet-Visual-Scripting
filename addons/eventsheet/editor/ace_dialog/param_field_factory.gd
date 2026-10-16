@@ -70,7 +70,7 @@ func _configure(builder: Object) -> void:
 	builder.set_lint_context_provider(func() -> EventSheetResource: return dock._current_sheet)
 	# The variable dropdowns read the sheet's own variables through the same provider the dialog uses,
 	# so a `variable_reference` parameter offers the same names in the bar as in the dialog.
-	builder._variable_names_provider = dock._collect_sheet_variable_names
+	builder._variable_names_provider = dock._variables._collect_sheet_variable_names
 
 
 ## The editor for one parameter. `descriptor` is the shipped parameter dictionary (id, type, hint,

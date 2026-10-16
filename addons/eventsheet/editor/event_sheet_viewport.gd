@@ -511,8 +511,8 @@ func set_sheet(sheet: EventSheetResource) -> void:
 	if sheet != _sheet:
 		clear_tunable_events()
 	_sheet = sheet
-	_load_persisted_region_folds()
-	_load_persisted_collapse_level()
+	_folding.load_persisted_region_folds()
+	_folding.load_persisted_collapse_level()
 	_editor_style = _resolve_editor_style(sheet)
 	_update_layout_style_signature(_get_font_size())
 	_refresh_rows()
@@ -663,14 +663,6 @@ var persisted_collapse_level: int = 0
 var _applied_collapse_sheet: EventSheetResource = null
 
 
-func _load_persisted_region_folds() -> void:
-	_folding.load_persisted_region_folds()
-
-
-func _load_persisted_collapse_level() -> void:
-	_folding.load_persisted_collapse_level()
-
-
 ## Collapse every row that holds other rows (Ctrl+Shift+[).
 func collapse_all() -> void:
 	_folding.set_all_folds(true)
@@ -754,11 +746,11 @@ func get_row_data(index: int) -> EventRowData:
 
 
 func get_row_top(index: int) -> float:
-	return _get_row_top(index)
+	return _row_metrics_helper.row_top(index)
 
 
 func get_row_height(index: int) -> float:
-	return _get_row_height(index)
+	return _row_metrics_helper.row_height(index)
 
 
 ## The height of the window onto the sheet (the scroll container's, not the canvas's), and where
@@ -853,7 +845,7 @@ func _collect_rows_for_resources(row_data: EventRowData, resources: Array, into:
 
 
 func _ensure_spans_deep(row_data: EventRowData) -> void:
-	_ensure_event_spans(row_data)
+	_row_builder._ensure_event_spans(row_data)
 	for child: EventRowData in row_data.children:
 		_ensure_spans_deep(child)
 
@@ -1169,7 +1161,7 @@ func object_column_boundary_for_lane(lane: String) -> Dictionary:
 		var row_data: EventRowData = _row_at(index)
 		if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
 			continue
-		_get_or_build_row_layout(index, width, font, font_size)
+		_layout_builder.get_or_build_row_layout(index, width, font, font_size)
 		for span: SemanticSpan in row_data.spans:
 			var boundary: Dictionary = _object_column_boundary_of(span)
 			if not boundary.is_empty() and str(boundary.get("lane", "")) == lane:
@@ -1254,7 +1246,7 @@ func end_column_header_drag() -> bool:
 func event_boundary_grab_at(local_position: Vector2) -> Dictionary:
 	if figure_mode or not workspace_bands_folded():
 		return {}
-	var row_data: EventRowData = _row_at(_find_row_index_at_y(local_position.y))
+	var row_data: EventRowData = _row_at(_row_metrics_helper.row_index_at_y(local_position.y))
 	if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
 		return {}
 	if _is_near_lane_divider(local_position.x):
@@ -1303,7 +1295,7 @@ func reset_lane_split() -> void:
 	_get_event_style().condition_lane_ratio = default_ratio
 	_update_layout_style_signature(_get_font_size())
 	# Cells wrap to their lane, so moving the split changes row heights, not just span rects.
-	_rebuild_row_metrics()
+	_row_metrics_helper.rebuild()
 	_layout_cache.clear()
 	_update_canvas_min_size()
 	queue_redraw()
@@ -1327,7 +1319,7 @@ func _set_object_column_width_from_x(local_x: float) -> void:
 	_update_layout_style_signature(_get_font_size())
 	# Cell text wraps to the lane, so moving a lane boundary can change row HEIGHTS, not
 	# just span rects - rebuild metrics live or rows clip until the next full rebuild.
-	_rebuild_row_metrics()
+	_row_metrics_helper.rebuild()
 	_layout_cache.clear()
 	_update_canvas_min_size()
 	queue_redraw()
@@ -1343,7 +1335,7 @@ func _set_lane_ratio_from_x(local_x: float) -> void:
 	_update_layout_style_signature(_get_font_size())
 	# Condition/action cells wrap to their lane, so dragging the divider changes row
 	# heights too - rebuild metrics live so the canvas grows/shrinks under the cursor.
-	_rebuild_row_metrics()
+	_row_metrics_helper.rebuild()
 	_layout_cache.clear()
 	_update_canvas_min_size()
 	queue_redraw()
@@ -1444,7 +1436,7 @@ func get_row_layout_for_test(row_index: int, width: float = -1.0) -> Dictionary:
 	var resolved_width: float = (
 		width if width > 0.0 else _get_logical_canvas_width()
 	)
-	return _get_or_build_row_layout(row_index, resolved_width, _get_font(), _get_font_size())
+	return _layout_builder.get_or_build_row_layout(row_index, resolved_width, _get_font(), _get_font_size())
 
 
 func set_external_span_edit_handler_enabled(enabled: bool) -> void:
@@ -1492,8 +1484,8 @@ func get_visible_row_range() -> Vector2i:
 	var zoom: float = max(_zoom_factor, 0.001)
 	var viewport_height: float = max(_get_viewport_height() / zoom, _get_event_line_height(_get_font_size()))
 	var scroll_offset: float = float(_get_scroll_offset()) / zoom
-	var start_index: int = _find_row_index_at_y(scroll_offset)
-	var end_index: int = _find_row_index_at_y(scroll_offset + viewport_height)
+	var start_index: int = _row_metrics_helper.row_index_at_y(scroll_offset)
+	var end_index: int = _row_metrics_helper.row_index_at_y(scroll_offset + viewport_height)
 	if start_index < 0:
 		start_index = 0
 	if end_index < 0:
@@ -1822,7 +1814,7 @@ func _param_value_screen_rect(entry: Dictionary) -> Rect2:
 		return Rect2()
 	var font: Font = _get_font()
 	var font_size: int = _get_font_size()
-	_get_or_build_row_layout(_selected_row_index, _get_logical_canvas_width(), font, font_size)
+	_layout_builder.get_or_build_row_layout(_selected_row_index, _get_logical_canvas_width(), font, font_size)
 	var local: Rect2 = _param_value_logical_rect(row_data, entry, font, font_size)
 	var zoom: float = max(_zoom_factor, 0.001)
 	# Headless/detached (tests): no window to be relative to - the zoomed local rect still carries
@@ -2126,7 +2118,7 @@ func _search_row_tree(row_data: EventRowData, needle: String, into: Array[Resour
 	if row_data == null:
 		return
 	if row_data.row_type == EventRowData.RowType.EVENT and row_data.spans.is_empty():
-		_ensure_event_spans(row_data)
+		_row_builder._ensure_event_spans(row_data)
 	var haystack: String = ""
 	for span: SemanticSpan in row_data.spans:
 		haystack += span.text + " "
@@ -2188,7 +2180,7 @@ func search_rows(query: String) -> Array[int]:
 		if row_data == null:
 			continue
 		if row_data.row_type == EventRowData.RowType.EVENT and row_data.spans.is_empty():
-			_ensure_event_spans(row_data)
+			_row_builder._ensure_event_spans(row_data)
 		var haystack: String = ""
 		for span: SemanticSpan in row_data.spans:
 			haystack += span.text + " "
@@ -2263,8 +2255,8 @@ func ensure_selection_visible() -> void:
 	var scroll: ScrollContainer = _get_scroll_container()
 	if scroll == null:
 		return
-	var row_top: int = int(round(_get_row_top(_selected_row_index) * _zoom_factor))
-	var row_bottom: int = int(round((_get_row_top(_selected_row_index) + _get_row_height(_selected_row_index)) * _zoom_factor))
+	var row_top: int = int(round(_row_metrics_helper.row_top(_selected_row_index) * _zoom_factor))
+	var row_bottom: int = int(round((_row_metrics_helper.row_top(_selected_row_index) + _row_metrics_helper.row_height(_selected_row_index)) * _zoom_factor))
 	if row_top < scroll.scroll_vertical:
 		scroll.scroll_vertical = row_top
 	elif row_bottom > scroll.scroll_vertical + int(_get_viewport_height()):
@@ -2277,7 +2269,7 @@ func _notification(what: int) -> void:
 		# therefore the row layout) must be recomputed. Guard on the LOGICAL width so the
 		# height-driven size changes _update_canvas_min_size() makes don't loop back in.
 		if not _row_metrics_helper.is_empty() and absf(_get_logical_canvas_width() - _row_metrics_helper.metrics_width()) > 0.5:
-			_rebuild_row_metrics()
+			_row_metrics_helper.rebuild()
 			_layout_cache.clear()
 		_update_canvas_min_size()
 		queue_redraw()
@@ -2333,7 +2325,7 @@ func _draw() -> void:
 		var row_data: EventRowData = row_info.get("row")
 		if row_data == null:
 			continue
-		var layout: Dictionary = _get_or_build_row_layout(index, width, font, font_size)
+		var layout: Dictionary = _layout_builder.get_or_build_row_layout(index, width, font, font_size)
 		_renderer.draw_row(self, layout, row_data, font, font_size, _editor_style)
 		# The laid-out band of THIS row. Read under the name the layout builder writes it as: a
 		# mistaken key here fails silently as an empty rect at the top of the canvas, which is
@@ -2363,7 +2355,7 @@ func _draw() -> void:
 	_draw_variable_group_bubbles(width)
 	_draw_group_brackets(width)
 	_draw_region_drop_glow(width)
-	_draw_box_selection_overlay()
+	_drag.draw_box_selection_overlay()
 	_draw_divider_guide(width)
 	_draw_param_cursor(font, font_size)
 	_group_breadcrumb.draw(width, font, font_size)
@@ -2371,7 +2363,7 @@ func _draw() -> void:
 	# showing, so the links move down by its height rather than being drawn through it.
 	_corner_links.draw(font, font_size,
 		ViewportGroupBreadcrumb.STRIP_HEIGHT if _group_breadcrumb.is_showing() else 0.0)
-	_draw_drag_ghost(font, font_size)
+	_drag.draw_drag_ghost(font, font_size)
 
 
 ## THE EVENT CARD: one border per event, drawn AFTER the row loop and once per EVENT rather than
@@ -2477,8 +2469,8 @@ func _draw_variable_group_bubbles(width: float) -> void:
 	for run: Dictionary in runs:
 		var start_index: int = int(run.get("start"))
 		var end_index: int = int(run.get("end"))
-		var top: float = _get_row_top(start_index)
-		var bottom: float = _get_row_top(end_index) + _get_row_height(end_index)
+		var top: float = _row_metrics_helper.row_top(start_index)
+		var bottom: float = _row_metrics_helper.row_top(end_index) + _row_metrics_helper.row_height(end_index)
 		bubble.draw(get_canvas_item(), Rect2(3.0, top + 1.0, width - 6.0, bottom - top - 2.0))
 		# The folder says its own name. A list the sheet builds leads its run with a folder
 		# STRIP that already carries the label (and the fold arrow); a run of declarations lifted
@@ -2503,8 +2495,8 @@ func _draw_group_brackets(width: float) -> void:
 				EventRowData.RowType.GROUP, EventRowData.RowType.REGION
 			],
 			"indent": row_data.indent if row_data != null else 0,
-			"top": _get_row_top(index),
-			"height": _get_row_height(index)
+			"top": _row_metrics_helper.row_top(index),
+			"height": _row_metrics_helper.row_height(index)
 		})
 	var reading_style: EventSheetReadingStyle = _get_reading_style()
 	var theme_color: Color = _get_event_style().group_title_color
@@ -2580,7 +2572,7 @@ func _draw_region_drop_glow(width: float) -> void:
 			continue
 		if not _row_builder._is_region_row(row_data):
 			continue
-		var last_index: int = index + _visible_descendant_count(row_data)
+		var last_index: int = index + _folding.visible_descendant_count(row_data)
 		if last_index <= index or last_index >= _flat_rows.size():
 			continue
 		if drag_target <= index or drag_target > last_index + 1:
@@ -2594,8 +2586,8 @@ func _draw_region_drop_glow(width: float) -> void:
 		glow.set_border_width_all(_get_event_style().region_line_width)
 		glow.set_corner_radius_all(_get_event_style().region_corner_radius)
 		var left: float = 3.0 + float(row_data.indent * indent_width())
-		var top: float = _get_row_top(index)
-		var bottom: float = _get_row_top(last_index) + _get_row_height(last_index)
+		var top: float = _row_metrics_helper.row_top(index)
+		var bottom: float = _row_metrics_helper.row_top(last_index) + _row_metrics_helper.row_height(last_index)
 		glow.draw(get_canvas_item(), Rect2(left, top + 1.0, width - left - 3.0, bottom - top - 2.0))
 
 
@@ -2620,19 +2612,6 @@ func any_region_open() -> bool:
 	return _folding.any_region_open()
 
 
-func _enclosing_region_flat_index(flat_index: int) -> int:
-	return _folding.enclosing_region_flat_index(flat_index)
-
-
-func _visible_descendant_count(row_data: EventRowData) -> int:
-	return _folding.visible_descendant_count(row_data)
-
-
-func _draw_drag_ghost(font: Font, font_size: int) -> void:
-	_drag.draw_drag_ghost(font, font_size)
-
-
-
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
 		var motion: InputEventMouseMotion = event as InputEventMouseMotion
@@ -2640,7 +2619,7 @@ func _gui_input(event: InputEvent) -> void:
 			drag_column_header_to(_to_logical_position(motion.position).x)
 			accept_event()
 			return
-		_handle_mouse_motion(motion)
+		_input_handlers.handle_mouse_motion(motion)
 		_show_event_boundary_cursor(motion.position)
 		return
 	if event is InputEventMouseButton:
@@ -2661,10 +2640,10 @@ func _gui_input(event: InputEvent) -> void:
 				corner_link_activated.emit(corner_link, DisplayServer.mouse_get_position())
 				accept_event()
 				return
-		_handle_mouse_button(mouse_button)
+		_input_handlers.handle_mouse_button(mouse_button)
 		return
 	if event is InputEventKey:
-		_handle_key(event as InputEventKey)
+		_input_handlers.handle_key(event as InputEventKey)
 
 # The dock installs this probe: (row_data, span_metadata) -> bool, true when Ctrl+Clicking that cell
 # can jump somewhere real (e.g. a behaviour-pack verb opens its behaviour as a sheet). Kept as a probe
@@ -2676,26 +2655,6 @@ var navigation_probe: Callable = Callable()
 # project-wide walk, so it is asked ONCE as the field opens and never per keystroke; unwired, the
 # field opens without a count rather than not opening.
 var rename_note_provider: Callable = Callable()
-
-
-func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
-	_input_handlers.handle_mouse_motion(event)
-
-
-
-func _handle_mouse_button(event: InputEventMouseButton) -> void:
-	_input_handlers.handle_mouse_button(event)
-
-
-
-func _draw_box_selection_overlay() -> void:
-	_drag.draw_box_selection_overlay()
-
-
-
-func _apply_box_selection(selection_rect: Rect2, additive: bool) -> void:
-	_drag.apply_box_selection(selection_rect, additive)
-
 
 
 ## True when a hover/press landed on an EVENT row but NOT on one of its ACE cells (span_index < 0) -
@@ -2715,36 +2674,6 @@ static func is_event_drag_zone(row_data: EventRowData, span_index: int) -> bool:
 		and not (row_data.source_resource is SignalRow)
 		and span_index < 0
 	)
-
-
-func _begin_row_drag(row_index: int) -> void:
-	_drag.begin_row_drag(row_index)
-
-
-
-func _clear_row_drag() -> void:
-	_drag.clear_row_drag()
-
-
-
-func _clear_ace_drag() -> void:
-	_drag.clear_ace_drag()
-
-
-
-func _update_ace_drag_target(hit: Dictionary, position: Vector2) -> void:
-	_drag.update_ace_drag_target(hit, position)
-
-
-
-func _complete_ace_drag() -> bool:
-	return _drag.complete_ace_drag()
-
-
-
-func _handle_key(event: InputEventKey) -> void:
-	_input_handlers.handle_key(event)
-
 
 
 func _refresh_rows() -> void:
@@ -2795,8 +2724,8 @@ func _refresh_rows() -> void:
 	# byte-identical to the non-virtualized path. Large sheets keep spans lazy.
 	if _flat_rows.size() <= EAGER_SPAN_LIMIT:
 		for entry in _flat_rows:
-			_ensure_event_spans(entry.get("row"))
-	_rebuild_row_metrics()
+			_row_builder._ensure_event_spans(entry.get("row"))
+	_row_metrics_helper.rebuild()
 	var event_numbers: Dictionary = event_numbers_for(_sheet.events if _sheet != null else [], _sheet.functions if _sheet != null else [])
 	for index in range(_flat_rows.size()):
 		var line_row: EventRowData = _flat_rows[index].get("row")
@@ -2942,7 +2871,7 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	if scaffold_lines >= 3 or (scaffold_has_identity and scaffold_lines >= 1):
 		var scaffold_rows: Array[EventRowData] = []
 		for scaffold_index in range(scaffold_end):
-			# Build through the shared dispatcher (not _build_raw_code_row directly) so a compile-error
+			# Build through the shared dispatcher (not _row_builder._build_raw_code_row directly) so a compile-error
 			# marker on a prelude block survives beside the head instead of being dropped.
 			var child: EventRowData = _build_row_from_resource(sheet.events[scaffold_index], 1)
 			if child != null:
@@ -2954,7 +2883,7 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# first the globals this sheet only BORROWS (with a hairline closing that block), then the ones
 	# it declares itself. A reader meets `Game.Score` where it is used, not only where it lives.
 	root_rows.append_array(_row_builder.build_globals_used_here_rows(sheet))
-	root_rows.append_array(_build_global_variable_rows(sheet))
+	root_rows.append_array(_row_builder._build_global_variable_rows(sheet))
 	# An Inspector-style sheet (inspector_variable_rows) reads a `##` line kept on its own above a plain
 	# `var` as that variable's note, so the line is not listed twice. View only: the file keeps it.
 	var inspector_rows: bool = _get_event_style().inspector_variable_rows
@@ -3035,7 +2964,7 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# preview, where it is an offer the view cannot honour.
 	if add_event_footer_wanted(sheet != null and not sheet.events.is_empty()) \
 			and not (sheet != null and sheet.read_only):
-		root_rows.append(_build_add_event_footer_row(sheet, 0, "+ Add event…"))
+		root_rows.append(_row_builder._build_add_event_footer_row(sheet, 0, "+ Add event…"))
 	return root_rows
 
 
@@ -3084,21 +3013,8 @@ func _prefix_scene_row_uids(rows: Array[EventRowData], prefix: String) -> void:
 		_prefix_scene_row_uids(row_data.children, prefix)
 
 
-## A clickable footer row that appends a new event into owner_resource (a group or the
-## sheet). source_resource stays null on purpose so selection/delete/drag paths (which act on
-## the source resource) treat it as inert; the owner travels in span metadata instead.
-func _build_add_event_footer_row(owner_resource: Resource, indent: int, label: String) -> EventRowData:
-	return _row_builder._build_add_event_footer_row(owner_resource, indent, label)
-
-
 func _row_is_add_event_footer(row_data: EventRowData) -> bool:
 	return row_data != null and row_data.row_uid.begins_with("add_event_footer_")
-
-
-## First Color(...) literal among an ACE's param values (null when none) - drives the
-## little color swatch drawn after the condition/action text.
-func _first_color_in_params(ace: Resource) -> Variant:
-	return _row_builder._first_color_in_params(ace)
 
 
 ## The param KEY holding that first Color literal ("" when none) - needed to write a picked colour back.
@@ -3141,17 +3057,17 @@ func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
 		return null
 	var row_data: EventRowData = null
 	if entry is EventGroup:
-		row_data = _build_group_row(entry as EventGroup, indent)
+		row_data = _row_builder._build_group_row(entry as EventGroup, indent)
 	elif entry is CommentRow:
-		row_data = _build_comment_row(entry as CommentRow, indent)
+		row_data = _row_builder._build_comment_row(entry as CommentRow, indent)
 	elif entry is LocalVariable:
-		row_data = _build_tree_variable_row(entry as LocalVariable, indent)
+		row_data = _row_builder._build_tree_variable_row(entry as LocalVariable, indent)
 	elif entry is RawCodeRow:
-		row_data = _build_raw_code_row(entry as RawCodeRow, indent)
+		row_data = _row_builder._build_raw_code_row(entry as RawCodeRow, indent)
 	elif entry is EnumRow:
-		row_data = _build_enum_row(entry as EnumRow, indent)
+		row_data = _row_builder._build_enum_row(entry as EnumRow, indent)
 	elif entry is SignalRow:
-		row_data = _build_signal_row(entry as SignalRow, indent)
+		row_data = _row_builder._build_signal_row(entry as SignalRow, indent)
 	elif entry is CustomBlockRow:
 		row_data = _row_builder._build_custom_block_row(entry as CustomBlockRow, indent)
 	elif entry is MomentBlockRow:
@@ -3161,7 +3077,7 @@ func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
 	elif entry is FunctionAnchorRow:
 		row_data = _row_builder._build_function_anchor_row(entry as FunctionAnchorRow, indent)
 	elif entry is EventRow:
-		row_data = _build_event_row(entry as EventRow, indent)
+		row_data = _row_builder._build_event_row(entry as EventRow, indent)
 	if row_data != null and not _row_diagnostics.is_empty():
 		row_data.error_message = str(_row_diagnostics.get(str(entry.get_instance_id()), ""))
 	if row_data != null and entry is EventRow and (not _fired_uids.is_empty() or not _fired_intensity.is_empty()):
@@ -3296,18 +3212,6 @@ func reveal_and_select_first_diagnostic() -> bool:
 	return false
 
 
-## An enum row: rendered like a variable declaration ("enum  State { IDLE, RUN }");
-## double-click opens the enum dialog.
-func _build_enum_row(enum_row: EnumRow, indent: int) -> EventRowData:
-	return _row_builder._build_enum_row(enum_row, indent)
-
-
-## A signal row: rendered like a declaration ("signal  hit(damage: int)"); double-click
-## opens the signal dialog.
-func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
-	return _row_builder._build_signal_row(signal_row, indent)
-
-
 ## True when a top-level GDScript block is pure class SCAFFOLDING - the structural boilerplate a
 ## behaviour / custom-node / family sheet always carries (class prelude, `## …` doc + `## @ace_*`
 ## annotations, a `const X := preload(…)` import, the generated host-binding `_enter_tree`, blank
@@ -3342,53 +3246,6 @@ static func is_scaffolding_code(code: String) -> bool:
 	return true
 
 
-## A GDScript block row: verbatim code shown line-by-line, edited via the dock's code dialog
-## (double-click), compiled at class level. The event-sheet-style "inline code" escape hatch.
-func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
-	return _row_builder._build_raw_code_row(raw_row, indent)
-
-
-## Builds a row for a variable placed directly in the event tree (movable like an event).
-func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowData:
-	return _row_builder._build_tree_variable_row(variable, indent)
-
-
-func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
-	return _row_builder._build_group_row(group, indent)
-
-
-func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
-	return _row_builder._build_comment_row(comment_row, indent)
-
-
-func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
-	return _row_builder._build_event_row(event_row, indent)
-
-
-func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowData]:
-	return _row_builder._build_global_variable_rows(sheet)
-
-
-func _build_local_variable_rows(event_row: EventRow, indent: int) -> Array[EventRowData]:
-	return _row_builder._build_local_variable_rows(event_row, indent)
-
-
-func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
-	return _row_builder._build_event_spans(event_row)
-
-
-func _count_event_lines(event_row: EventRow) -> int:
-	return _row_builder._count_event_lines(event_row)
-
-
-func _ensure_event_spans(row_data: EventRowData) -> void:
-	_row_builder._ensure_event_spans(row_data)
-
-
-func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, font_size: int) -> float:
-	return _row_builder._measure_span_width(span, display_text, font, font_size)
-
-
 func _build_action_line_reservations(
 	row_data: EventRowData,
 	action_lane_rect: Rect2,
@@ -3404,10 +3261,10 @@ func _build_action_line_reservations(
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
-		if _resolve_span_lane(span) != "action" or not bool(metadata.get("align_right", false)):
+		if _row_builder._resolve_span_lane(span) != "action" or not bool(metadata.get("align_right", false)):
 			continue
 		var display_text: String = span.text
-		var span_width: float = _measure_span_width(span, display_text, font, font_size)
+		var span_width: float = _row_builder._measure_span_width(span, display_text, font, font_size)
 		var span_x: float = max(
 			action_lane_rect.position.x + action_lane_padding,
 			action_lane_rect.end.x - action_lane_padding - span_width - 2.0
@@ -3434,10 +3291,6 @@ func _flatten_row(row_data: EventRowData, parent_row: EventRowData) -> void:
 		return
 	for child in row_data.children:
 		_flatten_row(child, row_data)
-
-
-func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: int) -> Dictionary:
-	return _layout_builder.get_or_build_row_layout(index, width, font, font_size)
 
 
 ## Identity context for the pinned column header: behavior sheets show their host class so
@@ -3680,7 +3533,7 @@ func _select_row(row_index: int, span_index: int = -1) -> void:
 	var selected_row: EventRowData = _row_at(_selected_row_index)
 	# Keyboard/programmatic selection can target a row that has not been drawn yet,
 	# so ensure its spans before selection consumers read them.
-	_ensure_event_spans(selected_row)
+	_row_builder._ensure_event_spans(selected_row)
 	_sync_row_selection_flags()
 	# The canvas is one Control, so the only thing a screen reader can be told about it is what is
 	# focused right now. The row's own sentence is that thing: whatever the reader would have read
@@ -3712,7 +3565,7 @@ func _select_range(target_index: int) -> void:
 	_selected_span_index = -1
 	_selection_anchor_index = anchor
 	var lead_row: EventRowData = _row_at(target_index)
-	_ensure_event_spans(lead_row)
+	_row_builder._ensure_event_spans(lead_row)
 	_sync_row_selection_flags()
 	selection_changed.emit(lead_row)
 	queue_redraw()
@@ -3729,7 +3582,7 @@ func _select_from_click(row_index: int, span_index: int, toggle: bool) -> void:
 	var row_data: EventRowData = _row_at(row_index)
 	if row_data == null:
 		return
-	_ensure_event_spans(row_data)
+	_row_builder._ensure_event_spans(row_data)
 	# Whole-row membership is keyed on the STATEMENT (a ternary pair toggles as one); span membership
 	# stays keyed on the clicked row, because a span index is only meaningful against its own row.
 	var row_uid: String = row_data.statement_uid()
@@ -3874,10 +3727,6 @@ func _compute_hover_matches(row_index: int, span_index: int) -> Dictionary:
 		if not span_indices.is_empty():
 			matches[index] = span_indices
 	return matches
-
-
-func _toggle_row_fold(row_index: int) -> void:
-	_folding.toggle_row_fold(row_index)
 
 
 func _begin_edit(row_index: int, span_index: int) -> void:
@@ -4183,7 +4032,7 @@ func _trigger_icon_tooltip(row_index: int, logical_position: Vector2) -> String:
 	var kind: String = NativeRowMarks.trigger_kind(row_data)
 	if kind.is_empty():
 		return ""
-	var row_rect := Rect2(0.0, _get_row_top(row_index), _get_logical_canvas_width(), _get_row_height(row_index))
+	var row_rect := Rect2(0.0, _row_metrics_helper.row_top(row_index), _get_logical_canvas_width(), _row_metrics_helper.row_height(row_index))
 	var first_line: float = _get_event_line_height(_get_font_size()) if _get_event_style().trigger_icon_in_gutter else 0.0
 	var icon_rect: Rect2 = NativeRowMarks.trigger_icon_rect(row_rect, row_data.indent, indent_width(), first_line)
 	return NativeRowMarks.trigger_tooltip(kind) if icon_rect.grow(2.0).has_point(logical_position) else ""
@@ -4272,7 +4121,7 @@ func _get_tooltip(at_position: Vector2) -> String:
 					return (raw_source as RawCodeRow).code
 				return "%s\n\n%s" % [derived_words, (raw_source as RawCodeRow).code]
 	# An EXPORTED variable row hovers as a live mock of its Inspector (drawers, decor, grouping) -
-	# the payload stages here and _make_custom_tooltip swaps the sentinel for the preview card.
+	# the payload stages here and _tooltip_helper.build_custom_tooltip swaps the sentinel for the preview card.
 	if kind == "variable":
 		var preview_payload: Dictionary = _inspector_preview_payload(hit, metadata)
 		if not preview_payload.is_empty():
@@ -4349,7 +4198,7 @@ func _get_tooltip(at_position: Vector2) -> String:
 				description = _tooltip_helper.ace_description(condition.provider_id, condition.ace_id)
 			elif ace_resource is ACEAction:
 				var action: ACEAction = ace_resource as ACEAction
-				description = _tooltip_helper.function_call_description(action) if _is_function_call_action(action) else _tooltip_helper.ace_description(action.provider_id, action.ace_id)
+				description = _tooltip_helper.function_call_description(action) if _row_builder._is_function_call_action(action) else _tooltip_helper.ace_description(action.provider_id, action.ace_id)
 			if not description.strip_edges().is_empty():
 				return sentence_prefix + description
 			# No description (rare) → fall back to the GDScript the row compiles to, so hover is never empty.
@@ -4421,13 +4270,6 @@ func _mark_tooltip(hit: Dictionary) -> String:
 %s" % [help, EventSheetL10n.translate("Press F1 for the Manual's page on the marks.")]
 
 
-## Render a hover tooltip's BBCode ([b]/[i]/[color]) when the text carries any - so an ACE/function
-## description authored with markup reads styled, not as raw tags. Plain descriptions (the common case) and
-## the GDScript-preview fallback have no markup, so this returns null and Godot uses its default tooltip.
-func _make_custom_tooltip(for_text: String) -> Object:
-	return _tooltip_helper.build_custom_tooltip(for_text)
-
-
 ## The hover-preview payload for a variable row, or {} when the variable is not exported (nothing to
 ## preview - the Inspector never shows it). Tree variables carry themselves as source_resource; dict
 ## (sheet-level) variables resolve through the sheet's descriptor, with combo options riding along so
@@ -4475,10 +4317,10 @@ static func fill_codegen_template(template: String, params: Dictionary) -> Strin
 
 
 func _hit_test(position: Vector2) -> Dictionary:
-	var row_index: int = _find_row_index_at_y(position.y)
+	var row_index: int = _row_metrics_helper.row_index_at_y(position.y)
 	if row_index < 0 or row_index >= _flat_rows.size():
 		return {}
-	var layout: Dictionary = _get_or_build_row_layout(
+	var layout: Dictionary = _layout_builder.get_or_build_row_layout(
 		row_index,
 		_get_logical_canvas_width(),
 		_get_font(),
@@ -4490,7 +4332,7 @@ func _hit_test(position: Vector2) -> Dictionary:
 		row_index,
 		layout,
 		row_data,
-		_resolve_span_lane,
+		_row_builder._resolve_span_lane,
 		_find_condition_span_index
 	)
 
@@ -4531,8 +4373,8 @@ func event_card_rect(row_index: int) -> Rect2:
 		return Rect2()
 	var lead: int = statement_lead_index(row_index)
 	var last: int = statement_last_index(row_index)
-	var top: float = _get_row_top(lead)
-	var bottom: float = _get_row_top(last) + _get_row_height(last)
+	var top: float = _row_metrics_helper.row_top(lead)
+	var bottom: float = _row_metrics_helper.row_top(last) + _row_metrics_helper.row_height(last)
 	return Rect2(0.0, top, _get_logical_canvas_width(), maxf(bottom - top, 0.0))
 
 
@@ -4583,7 +4425,7 @@ func _maybe_request_variable_edit(hit: Dictionary, row_index: int) -> bool:
 		if span != null and span.metadata is Dictionary:
 			metadata = (span.metadata as Dictionary).duplicate(true)
 	if str(metadata.get("kind", "")) != "variable":
-		metadata = _get_variable_metadata_for_row(row_data)
+		metadata = _row_builder._get_variable_metadata_for_row(row_data)
 	if str(metadata.get("kind", "")) != "variable":
 		return false
 	variable_edit_requested.emit(row_data, metadata)
@@ -4595,8 +4437,8 @@ func _resolve_drop_mode(hit: Dictionary, position: Vector2) -> String:
 	var row_data: EventRowData = _row_at(row_index)
 	if row_data == null:
 		return "before"
-	var row_top: float = _get_row_top(row_index)
-	var row_height: float = _get_row_height(row_index)
+	var row_top: float = _row_metrics_helper.row_top(row_index)
+	var row_height: float = _row_metrics_helper.row_height(row_index)
 	var relative_y: float = clampf(position.y - row_top, 0.0, row_height)
 	var inside_zone_top: float = row_height * DROP_ZONE_INSIDE_TOP
 	var inside_zone_bottom: float = row_height * DROP_ZONE_INSIDE_BOTTOM
@@ -4722,28 +4564,6 @@ func _stranded_drag_name(target_event: EventRow) -> String:
 	if resources.is_empty():
 		return ""
 	return EventSheetLocalScope.stranded_name(_sheet as EventSheetResource, target_event, resources)
-
-
-# ── Row metrics: thin delegates to ViewportRowMetrics. Internal callers and tests call these
-# names unchanged (e.g. viewport._get_row_top(i)); the layout itself lives in the helper. ──
-func _rebuild_row_metrics() -> void:
-	_row_metrics_helper.rebuild()
-
-
-func _resolve_row_height(row_data: EventRowData) -> float:
-	return _row_metrics_helper._resolve_row_height(row_data)
-
-
-func _get_row_top(index: int) -> float:
-	return _row_metrics_helper.row_top(index)
-
-
-func _get_row_height(index: int) -> float:
-	return _row_metrics_helper.row_height(index)
-
-
-func _find_row_index_at_y(y: float) -> int:
-	return _row_metrics_helper.row_index_at_y(y)
 
 
 # Static forwarders: tests call these BY CLASS NAME (EventSheetViewport.wrapped_line_count / 
@@ -5074,14 +4894,6 @@ func _group_name(group: EventGroup) -> String:
 	return EventSheetGroupFacts.display_name(group)
 
 
-func _object_label_for(provider_id: String, ace_id: String) -> String:
-	return _row_builder._object_label_for(provider_id, ace_id)
-
-
-func _is_function_call_action(action: ACEAction) -> bool:
-	return _row_builder._is_function_call_action(action)
-
-
 func _function_call_label(action: ACEAction) -> String:
 	return _row_builder._function_call_label(action)
 
@@ -5090,15 +4902,11 @@ func _format_condition_descriptor(condition: ACECondition) -> String:
 	return _row_builder._format_condition_descriptor(condition)
 
 
-func _is_trigger_condition(condition: ACECondition) -> bool:
-	return _row_builder._is_trigger_condition(condition)
-
-
 func _entry_is_trigger_like(entry: Dictionary) -> bool:
 	if str(entry.get("kind", "")) == "trigger":
 		return true
 	var ace_resource: Resource = entry.get("ace_resource", null) as Resource
-	return ace_resource is ACECondition and _is_trigger_condition(ace_resource as ACECondition)
+	return ace_resource is ACECondition and _row_builder._is_trigger_condition(ace_resource as ACECondition)
 
 
 func _event_has_trigger_like(event_row: EventRow, excluded_resources: Array = []) -> bool:
@@ -5113,17 +4921,9 @@ func _event_has_trigger_like(event_row: EventRow, excluded_resources: Array = []
 			continue
 		if excluded_resources.has(condition):
 			continue
-		if _is_trigger_condition(condition as ACECondition):
+		if _row_builder._is_trigger_condition(condition as ACECondition):
 			return true
 	return false
-
-
-func _format_action_descriptor(action: ACEAction) -> String:
-	return _row_builder._format_action_descriptor(action)
-
-
-func _format_action_descriptor_base(action: ACEAction) -> String:
-	return _row_builder._format_action_descriptor_base(action)
 
 
 # Static forwarder: value-range extraction is a pure text → ranges helper that now lives on
@@ -5152,21 +4952,13 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 	return _row_builder._make_span(text, span_type, metadata)
 
 
-func _get_variable_metadata_for_row(row_data: EventRowData) -> Dictionary:
-	return _row_builder._get_variable_metadata_for_row(row_data)
-
-
-func _resolve_span_lane(span: SemanticSpan) -> String:
-	return _row_builder._resolve_span_lane(span)
-
-
 func _resolve_lane_for_row(row_data: EventRowData, span_index: int) -> String:
 	if row_data == null:
 		return "condition"
 	if row_data.row_type != EventRowData.RowType.EVENT:
 		return "condition"
 	if span_index >= 0 and span_index < row_data.spans.size():
-		return _resolve_span_lane(row_data.spans[span_index])
+		return _row_builder._resolve_span_lane(row_data.spans[span_index])
 	return _focused_lane
 
 
@@ -5226,10 +5018,6 @@ func _find_definition(provider_id: String, ace_id: String) -> ACEDefinition:
 	if _ace_registry == null:
 		return null
 	return _ace_registry.find_definition(provider_id, ace_id)
-
-
-func _object_icon_for(provider_id: String, ace_id: String) -> Texture2D:
-	return _row_builder._object_icon_for(provider_id, ace_id)
 
 
 func _get_font() -> Font:
@@ -5317,7 +5105,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	# An Input Map action dropped on the canvas starts the event it is for: "On <action>
 	# pressed". Where it lands only decides where the new event goes.
 	if is_input_action_drag(data):
-		var action_row_index: int = _find_row_index_at_y(at_position.y)
+		var action_row_index: int = _row_metrics_helper.row_index_at_y(at_position.y)
 		var action_row: EventRowData = _row_at(action_row_index) if action_row_index >= 0 else null
 		input_action_dropped.emit(str((data as Dictionary).get("label", "")),
 			action_row.source_resource if action_row != null else null)
@@ -5326,7 +5114,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	# already said so in the payload: a class starts an event on it, a sound is a Play sound action, a
 	# scene is a Go to layout action. Where it landed only decides which event it joins.
 	if is_project_bar_drag(data):
-		var project_row_index: int = _find_row_index_at_y(at_position.y)
+		var project_row_index: int = _row_metrics_helper.row_index_at_y(at_position.y)
 		var project_row: EventRowData = _row_at(project_row_index) if project_row_index >= 0 else null
 		project_entry_dropped.emit(data as Dictionary,
 			project_row.source_resource if project_row != null else null)
@@ -5334,7 +5122,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	# An object dropped from the Object bar. Landing on an existing event's ACTION lane means
 	# "do something to it here"; landing anywhere else means "start an event on it".
 	if is_object_bar_drag(data):
-		var object_row_index: int = _find_row_index_at_y(at_position.y)
+		var object_row_index: int = _row_metrics_helper.row_index_at_y(at_position.y)
 		var object_row: EventRowData = _row_at(object_row_index) if object_row_index >= 0 else null
 		var in_action_lane: bool = object_row != null \
 			and _to_logical_position(at_position).x > size.x * 0.5 \
@@ -5360,7 +5148,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 		if not value_target.is_empty() and _param_accepts_node_ref(value_target.get("ace"), str(value_target.get("param_id", ""))):
 			param_node_drop_requested.emit(value_target.get("ace"), str(value_target.get("param_id", "")), str(parts.get("access", "")))
 			return
-		var property_row_index: int = _find_row_index_at_y(at_position.y)
+		var property_row_index: int = _row_metrics_helper.row_index_at_y(at_position.y)
 		var property_row: EventRowData = _row_at(property_row_index) if property_row_index >= 0 else null
 		property_dropped.emit(property_row.source_resource if property_row != null else null,
 			str(parts.get("reference", "")), str(parts.get("property", "")), str(parts.get("value", "")))
@@ -5371,7 +5159,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	# silently bouncing.
 	var asset_paths: PackedStringArray = _resolve_dropped_asset_paths(data)
 	if not asset_paths.is_empty():
-		var row_index: int = _find_row_index_at_y(at_position.y)
+		var row_index: int = _row_metrics_helper.row_index_at_y(at_position.y)
 		var row_data: EventRowData = _row_at(row_index) if row_index >= 0 else null
 		asset_dropped.emit(row_data.source_resource if row_data != null else null, asset_paths)
 		return
@@ -5595,7 +5383,7 @@ func accessible_name_for_row(row_index: int) -> String:
 	var row_data: EventRowData = _row_at(row_index)
 	if row_data == null:
 		return ""
-	_ensure_event_spans(row_data)
+	_row_builder._ensure_event_spans(row_data)
 	var parts: PackedStringArray = PackedStringArray()
 	for line: String in load(TEXT_LISTING_PATH).lines_for_rows([row_data]):
 		var trimmed: String = line.strip_edges()
@@ -5617,7 +5405,7 @@ func object_label_for_selected_row() -> String:
 	var row_data: EventRowData = _row_at(_selected_row_index)
 	if row_data == null:
 		return ""
-	_ensure_event_spans(row_data)
+	_row_builder._ensure_event_spans(row_data)
 	for span: SemanticSpan in row_data.spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue

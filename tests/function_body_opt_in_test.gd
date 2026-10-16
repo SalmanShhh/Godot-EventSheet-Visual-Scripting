@@ -48,7 +48,7 @@ static func run() -> bool:
 	var alpha_body: Resource = _first_body_resource(view, "alpha")
 	ok = _check("alpha's live body row is reachable", alpha_body != null, true) and ok
 	var edited: bool = dock._perform_undoable_sheet_edit("Edit Alpha Body", func() -> bool:
-		var loc: Dictionary = dock._find_resource_location(alpha_body)
+		var loc: Dictionary = dock._ace_apply._find_resource_location(alpha_body)
 		if loc.is_empty():
 			return false
 		(loc.get("container") as Array).remove_at(int(loc.get("index")))
@@ -96,7 +96,7 @@ static func run() -> bool:
 	ok = _check("the gamma Define header row is present", header_index >= 0, true) and ok
 	if header_index >= 0:
 		pview._select_row(header_index)
-	pdock._delete_selected_rows()
+	pdock._row_edit_ops._delete_selected_rows()
 	ok = _check("deleting a Define header leaves the verb intact (nothing removed)",
 		_find_function_named(pdock, "gamma") != null, true) and ok
 	ok = _check("deleting a Define header does NOT unlock a read-only preview",

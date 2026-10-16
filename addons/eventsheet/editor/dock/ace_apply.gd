@@ -17,9 +17,9 @@ extends RefCounted
 #
 # The dock keeps thin one-line delegates (original names + signatures) for every method that is
 # reached from outside this helper - the connect() sites in _build_ui, the tests, the sibling
-# dock/ helpers (variables_manager / comment_and_scope_dialogs reach `_dock._find_resource_location`
-# and `_dock._group_children_array`), and multi_view_manager (which connects
-# `_dock._on_viewport_ace_picker_requested` / `_dock._on_viewport_ace_edit_requested` by name).
+# dock/ helpers (variables_manager / comment_and_scope_dialogs reach `_dock._ace_apply._find_resource_location`
+# and `_dock._ace_apply._group_children_array`), and multi_view_manager (which connects
+# `_dock._ace_apply._on_viewport_ace_picker_requested` / `_dock._ace_apply._on_viewport_ace_edit_requested` by name).
 # So those callers do not change.
 #
 # CLOSURE NOTE: `_apply_ace_definition`, `_move_rows`, and `_on_viewport_ace_drop_requested`
@@ -131,7 +131,7 @@ func _on_ace_params_back_requested(definition: ACEDefinition, context: Dictionar
 ## still never overwrite a file you only opened to look at.
 func _unlock_preview_for_edit() -> void:
 	if _dock._current_sheet != null and _dock._current_sheet.read_only:
-		_dock._on_preview_edit_requested()
+		_dock._preview_glue._on_preview_edit_requested()
 
 
 func _on_viewport_ace_picker_requested(row_data: EventRowData, lane: String) -> void:

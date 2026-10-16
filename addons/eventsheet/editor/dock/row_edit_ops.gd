@@ -39,7 +39,7 @@ extends RefCounted
 # INSIDE the lambda and MUST prefix it: `_toggle_context_row_enabled`,
 # `_insert_child_event_for_context_row`, `_insert_child_comment_for_context_row`,
 # `_insert_context_row_below`. `_bulk_duplicate_rows`'s lambda calls `_dock._refresh_clone_uids` +
-# `_dock._find_resource_location`, and `_delete_selected_rows`'s lambda calls `_dock._find_resource_location`
+# `_dock._ace_apply._find_resource_location`, and `_delete_selected_rows`'s lambda calls `_dock._ace_apply._find_resource_location`
 # (with bare `_resource_sort_key` / `_delete_context_row`, which live here).
 
 var _dock: Control = null
@@ -82,7 +82,7 @@ func _bulk_duplicate_rows(targets: Array) -> void:
 	var changed: bool = _dock._perform_undoable_sheet_edit("Duplicate Selection", func() -> bool:
 		var any: bool = false
 		for resource: Variant in targets:
-			var location: Dictionary = _dock._find_resource_location(resource)
+			var location: Dictionary = _dock._ace_apply._find_resource_location(resource)
 			if location.is_empty():
 				continue
 			var copy: Resource = (resource as Resource).duplicate(true)
@@ -108,14 +108,14 @@ func _bulk_group_rows(targets: Array) -> String:
 	# Authoring symmetry - a group on a .gd sheet is written the file's own way, as a
 	# `#region` / `#endregion` fence pair, which reads back as the same bar.
 	if _dock._current_sheet != null and not str(_dock._current_sheet.external_source_path).is_empty():
-		_dock._surround_selection_with_region()
+		_dock._input_dispatch.surround_selection_with_region()
 		return ""
-	var first_location: Dictionary = _dock._find_resource_location(targets[0])
+	var first_location: Dictionary = _dock._ace_apply._find_resource_location(targets[0])
 	if first_location.is_empty():
 		return "Couldn't locate the selection."
 	var container: Array = first_location.get("container")
 	for resource: Variant in targets:
-		var location: Dictionary = _dock._find_resource_location(resource)
+		var location: Dictionary = _dock._ace_apply._find_resource_location(resource)
 		# is_same: Array == compares CONTENTS; the parent rail needs identity.
 		if location.is_empty() or not is_same(location.get("container"), container):
 			return "Group Selection needs rows with the same parent."
@@ -546,7 +546,7 @@ func _delete_context_row() -> void:
 	if _dock._context_row == null or _dock._context_row.source_resource == null:
 		return
 	var target_resource: Resource = _dock._context_row.source_resource
-	var location: Dictionary = _dock._find_resource_location(target_resource)
+	var location: Dictionary = _dock._ace_apply._find_resource_location(target_resource)
 	if location.is_empty():
 		return
 	var container: Array = location.get("container", [])
@@ -647,7 +647,7 @@ func _delete_selected_rows() -> void:
 	# read-only preview or false-dirty the sheet for a delete that changes nothing.
 	var deletable: Array[Resource] = []
 	for resource_entry in resources_to_delete:
-		if not _dock._find_resource_location(resource_entry).is_empty():
+		if not _dock._ace_apply._find_resource_location(resource_entry).is_empty():
 			deletable.append(resource_entry)
 	if deletable.is_empty():
 		return
@@ -656,7 +656,7 @@ func _delete_selected_rows() -> void:
 			return _resource_sort_key(a) > _resource_sort_key(b)
 		)
 		for resource_entry in deletable:
-			var location: Dictionary = _dock._find_resource_location(resource_entry)
+			var location: Dictionary = _dock._ace_apply._find_resource_location(resource_entry)
 			if location.is_empty():
 				continue
 			var container: Array = location.get("container", [])
@@ -720,7 +720,7 @@ func _indent_selected_event() -> bool:
 	var target: EventRow = _selected_event_resource()
 	if target == null:
 		return false
-	var location: Dictionary = _dock._find_resource_location(target)
+	var location: Dictionary = _dock._ace_apply._find_resource_location(target)
 	var container: Array = location.get("container", [])
 	var index: int = int(location.get("index", -1))
 	if index <= 0:
@@ -754,7 +754,7 @@ func _outdent_selected_event() -> bool:
 		_dock._set_status("Event is already at the top level.", true)
 		return false
 	var parent_event: EventRow = parent as EventRow
-	var parent_location: Dictionary = _dock._find_resource_location(parent_event)
+	var parent_location: Dictionary = _dock._ace_apply._find_resource_location(parent_event)
 	var parent_container: Array = parent_location.get("container", [])
 	var parent_index: int = int(parent_location.get("index", -1))
 	if parent_index < 0:
@@ -782,7 +782,7 @@ func _find_parent_event_recursive(target: Resource, container: Array, parent: Ev
 		if entry == target:
 			return {"found": true, "parent": parent}
 		if entry is EventGroup:
-			var grouped: Dictionary = _find_parent_event_recursive(target, _dock._group_children_array(entry as EventGroup), null)
+			var grouped: Dictionary = _find_parent_event_recursive(target, _dock._ace_apply._group_children_array(entry as EventGroup), null)
 			if bool(grouped.get("found", false)):
 				return grouped
 		elif entry is EventRow:
@@ -796,7 +796,7 @@ func _insert_context_row_below(resource_entry: Resource, message: String) -> voi
 	if resource_entry == null or _dock._context_row == null:
 		return
 	var changed: bool = _dock._perform_undoable_sheet_edit("Insert Row", func() -> bool:
-		_dock._insert_row_below_selection(resource_entry, _dock._context_row.source_resource)
+		_dock._ace_apply._insert_row_below_selection(resource_entry, _dock._context_row.source_resource)
 		return true
 	)
 	if changed:
@@ -807,7 +807,7 @@ func _insert_context_row_above(resource_entry: Resource, message: String) -> voi
 	if resource_entry == null or _dock._context_row == null:
 		return
 	var changed: bool = _dock._perform_undoable_sheet_edit("Insert Row", func() -> bool:
-		_dock._insert_row_above_selection(resource_entry, _dock._context_row.source_resource)
+		_dock._ace_apply._insert_row_above_selection(resource_entry, _dock._context_row.source_resource)
 		return true
 	)
 	if changed:

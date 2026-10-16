@@ -221,14 +221,14 @@ static func run() -> bool:
 		bulk_event.trigger_id = "OnProcess"
 		bulk_sheet.events.append(bulk_event)
 		bulk_rows.append(bulk_event)
-	insert_editor._bulk_set_enabled_on(bulk_rows)
+	insert_editor._row_edit_ops._bulk_set_enabled_on(bulk_rows)
 	all_passed = _check("bulk disable lands uniformly",
 		not (bulk_rows[0] as EventRow).enabled and not (bulk_rows[2] as EventRow).enabled, true) and all_passed
-	insert_editor._bulk_set_enabled_on(bulk_rows)
+	insert_editor._row_edit_ops._bulk_set_enabled_on(bulk_rows)
 	all_passed = _check("bulk toggle re-enables uniformly",
 		(bulk_rows[0] as EventRow).enabled and (bulk_rows[2] as EventRow).enabled, true) and all_passed
 	var before_count: int = bulk_sheet.events.size()
-	insert_editor._bulk_duplicate_rows(bulk_rows)
+	insert_editor._row_edit_ops._bulk_duplicate_rows(bulk_rows)
 	all_passed = _check("bulk duplicate copies each row in place",
 		bulk_sheet.events.size(), before_count + 3) and all_passed
 	var first_duplicate: EventRow = bulk_sheet.events[bulk_sheet.events.find(bulk_rows[0]) + 1] as EventRow
@@ -239,8 +239,8 @@ static func run() -> bool:
 	var nested_child: EventRow = EventRow.new()
 	nested_parent.sub_events.append(nested_child)
 	all_passed = _check("mixed-parent selections refuse to group",
-		insert_editor._bulk_group_rows([bulk_rows[1], nested_child]).is_empty(), false) and all_passed
-	var group_problem: String = insert_editor._bulk_group_rows([bulk_rows[1], bulk_rows[2]])
+		insert_editor._row_edit_ops._bulk_group_rows([bulk_rows[1], nested_child]).is_empty(), false) and all_passed
+	var group_problem: String = insert_editor._row_edit_ops._bulk_group_rows([bulk_rows[1], bulk_rows[2]])
 	var grouped: EventGroup = null
 	for row: Variant in bulk_sheet.events:
 		if row is EventGroup:

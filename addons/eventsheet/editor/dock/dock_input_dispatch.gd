@@ -50,7 +50,7 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 		_dock.ROW_MENU_ADD_SUB_EVENT:
 			_dock._row_edit_ops._insert_child_event_for_context_row()
 		_dock.ROW_MENU_ADD_COMMENT_SUB_EVENT:
-			_dock._insert_child_comment_for_context_row()
+			_dock._row_edit_ops._insert_child_comment_for_context_row()
 		_dock.ROW_MENU_ADD_EVENT_BELOW:
 			_dock._row_edit_ops._insert_context_row_below(EventRow.new(), "Added event.")
 		_dock.ROW_MENU_ADD_EVENT_ABOVE:
@@ -89,9 +89,9 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 		_dock.ROW_MENU_CUT:
 			_dock._cut_selected_rows()
 		_dock.ROW_MENU_COPY_AS_TEXT:
-			_dock._copy_selection_as_text()
+			_dock._clipboard_glue._copy_selection_as_text()
 		_dock.ROW_MENU_SURROUND_REGION:
-			_dock._surround_selection_with_region()
+			_dock._input_dispatch.surround_selection_with_region()
 		_dock.ROW_MENU_REPLACE_OBJECT:
 			_dock._open_replace_object_dialog()
 		_dock.ROW_MENU_PASTE_SPECIAL:
@@ -105,7 +105,7 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 		_dock.ROW_MENU_PASTE:
 			_dock._on_paste_requested()
 		_dock.ROW_MENU_DELETE:
-			_dock._delete_selected_rows()
+			_dock._row_edit_ops._delete_selected_rows()
 		_dock.ROW_MENU_TOGGLE_CONDITION_BLOCK:
 			_dock._row_edit_ops._toggle_context_condition_block()
 		_dock.ROW_MENU_TOGGLE_GROUP_FOLD:
@@ -221,11 +221,11 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 		_dock.ROW_MENU_REGION_REMOVE:
 			_dock._remove_context_region()
 		_dock.ROW_MENU_BULK_TOGGLE_ENABLED:
-			_dock._bulk_set_enabled_on(_dock._top_level_selected_resources())
+			_dock._row_edit_ops._bulk_set_enabled_on(_dock._top_level_selected_resources())
 		_dock.ROW_MENU_BULK_DUPLICATE:
-			_dock._bulk_duplicate_rows(_dock._top_level_selected_resources())
+			_dock._row_edit_ops._bulk_duplicate_rows(_dock._top_level_selected_resources())
 		_dock.ROW_MENU_BULK_GROUP:
-			var group_problem: String = _dock._bulk_group_rows(_dock._top_level_selected_resources())
+			var group_problem: String = _dock._row_edit_ops._bulk_group_rows(_dock._top_level_selected_resources())
 			if not group_problem.is_empty():
 				_dock._set_status(group_problem, true)
 		_dock.ROW_MENU_SAVE_SNIPPET:
@@ -272,26 +272,26 @@ func unhandled_key_input(event: InputEvent) -> void:
 	# C condition, A action (each opens the Ghost Row - the type-a-sentence add popup; the Ctrl
 	# chords + toolbar keep the classic pickers), Q comment, G group, X toggle.
 	for entry: Array in [
-		["add_condition_chord", true, _dock._on_add_condition_requested],
-		["add_action_chord", true, _dock._on_add_action_requested],
+		["add_condition_chord", true, _dock._add_rows.on_add_condition_requested],
+		["add_action_chord", true, _dock._add_rows.on_add_action_requested],
 		["add_variable_chord", true, _dock._on_add_global_variable_requested],
-		["add_event_chord", true, _dock._on_add_event_requested],
-		["duplicate", true, _dock._on_duplicate_requested],
+		["add_event_chord", true, _dock._add_rows.on_add_event_requested],
+		["duplicate", true, _dock._add_rows.on_duplicate_requested],
 		["apply_to_running_game", false, _dock._live_edit_bar.apply],
-		["save_as", false, _dock._on_save_as_requested],
-		["save", false, _dock._on_save_requested],
+		["save_as", false, _dock._sheet_io._on_save_as_requested],
+		["save", false, _dock._sheet_io._on_save_requested],
 		["open", false, _dock._on_open_requested],
 		["copy", false, _dock._on_copy_requested],
-		["copy_as_text", false, _dock._copy_selection_as_text],
+		["copy_as_text", false, _dock._clipboard_glue._copy_selection_as_text],
 		["paste", false, _dock._on_paste_requested],
 		["redo", false, _dock._on_redo_requested],
 		["undo", false, _dock._on_undo_requested],
-		["add_comment", true, _dock._on_add_comment_requested],
+		["add_comment", true, _dock._add_rows.on_add_comment_requested],
 		["add_event", true, _dock._open_ghost_event],
 		["add_condition", true, _dock._open_ghost_condition],
 		["add_action", true, _dock._open_ghost_action],
-		["add_group", true, _dock._on_add_group_requested],
-		["toggle_enabled", true, _dock._toggle_selected_enabled],
+		["add_group", true, _dock._add_rows.on_add_group_requested],
+		["toggle_enabled", true, _dock._row_edit_ops._toggle_selected_enabled],
 		["add_blank_subevent", true, _dock._on_add_blank_subevent_key],
 		["add_sub_condition", true, _dock._on_add_sub_condition_key],
 		["add_variable", true, _dock._on_add_project_global_requested],
@@ -351,16 +351,16 @@ func unhandled_key_input(event: InputEvent) -> void:
 	if key_event.keycode == KEY_TAB and shift:
 		# Outdent (un-nest); only consume Tab when the move actually applies so normal
 		# focus traversal still works when there is nothing to outdent.
-		if _dock._outdent_selected_event():
+		if _dock._row_edit_ops._outdent_selected_event():
 			_dock.accept_event()
 	elif key_event.keycode == KEY_TAB:
-		if _dock._indent_selected_event():
+		if _dock._row_edit_ops._indent_selected_event():
 			_dock.accept_event()
 	elif key_event.keycode == KEY_BACKTAB:
-		if _dock._outdent_selected_event():
+		if _dock._row_edit_ops._outdent_selected_event():
 			_dock.accept_event()
 	elif key_event.keycode in [KEY_DELETE, KEY_BACKSPACE]:
-		_dock._delete_selected_content()
+		_dock._row_edit_ops._delete_selected_content()
 		_dock.accept_event()
 	elif key_event.keycode in [KEY_ENTER, KEY_KP_ENTER]:
 		# Same param-scope-aware funnel as the viewport's own Enter, so both paths agree.

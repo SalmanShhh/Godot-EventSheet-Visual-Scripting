@@ -42,7 +42,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	# Build this row's spans on demand. This is the single choke point for both
 	# drawing (_draw) and hit-testing (_hit_test), so any laid-out/interacted row
 	# always has its spans before they are read downstream.
-	_viewport._ensure_event_spans(row_data)
+	_viewport._row_builder._ensure_event_spans(row_data)
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var line_height: float = _viewport._get_event_line_height(font_size)
 	# Cache key components: row uid, visible row index, canvas width, active drag
@@ -72,8 +72,8 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 		cached_layout["editing_select_anchor"] = _viewport._editing_select_anchor if index == _viewport._editing_row_index else -1
 		cached_layout["editing_note"] = _viewport._editing_note if index == _viewport._editing_row_index else ""
 		return cached_layout
-	var row_top: float = _viewport._get_row_top(index)
-	var row_height: float = _viewport._get_row_height(index)
+	var row_top: float = _viewport._row_metrics_helper.row_top(index)
+	var row_height: float = _viewport._row_metrics_helper.row_height(index)
 	var row_rect := Rect2(0.0, row_top, width, row_height)
 	# A height-scaled header row centers its content in the taller rect (the extra space
 	# splits above and below), so the bar presence never reads as misaligned text.
@@ -176,7 +176,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 		var span: SemanticSpan = row_data.spans[span_index]
 		if span == null:
 			continue
-		var span_lane: String = _viewport._resolve_span_lane(span)
+		var span_lane: String = _viewport._row_builder._resolve_span_lane(span)
 		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 		if bool(metadata.get("code_echo", false)) and width < CODE_ECHO_MIN_ROW_WIDTH:
 			span.rect = Rect2()
@@ -239,7 +239,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				metadata.erase("object_column_px")
 				metadata.erase("object_column_base")
 		var display_text: String = _viewport._editing_buffer if index == _viewport._editing_row_index and span_index == _viewport._editing_span_index else span.text
-		var span_width: float = _viewport._measure_span_width(span, display_text, font, font_size)
+		var span_width: float = _viewport._row_builder._measure_span_width(span, display_text, font, font_size)
 		if lane_divider_x > 0.0 and span_lane != "action":
 			var max_condition_right: float = ViewportRowMetrics.condition_right_limit(
 				row_data, width, lane_divider_x, float(event_style.condition_lane_padding)
@@ -491,7 +491,7 @@ func _flow_right_anchor(row_data: EventRowData, row_right_limit: float, width: f
 			continue
 		if run > 0.0:
 			run += _viewport._get_span_gap(span)
-		run += _viewport._measure_span_width(span, span.text, font, font_size) + 2.0
+		run += _viewport._row_builder._measure_span_width(span, span.text, font, font_size) + 2.0
 	var badge_reserve: float = _badge_reserve(row_data)
 	if badge_reserve > 0.0:
 		run += badge_reserve + (EventSheetPalette.SPAN_GAP if run > 0.0 else 0.0)
@@ -506,7 +506,7 @@ func _right_run_after(row_data: EventRowData, span_index: int, font: Font, font_
 		var span: SemanticSpan = row_data.spans[index]
 		if span == null or not (span.metadata is Dictionary) or not bool((span.metadata as Dictionary).get("align_right", false)):
 			continue
-		tail += _viewport._get_span_gap(span) + _viewport._measure_span_width(span, span.text, font, font_size) + 2.0
+		tail += _viewport._get_span_gap(span) + _viewport._row_builder._measure_span_width(span, span.text, font, font_size) + 2.0
 	return tail
 
 

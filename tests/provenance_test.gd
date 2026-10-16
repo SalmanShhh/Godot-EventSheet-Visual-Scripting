@@ -73,7 +73,7 @@ static func run() -> bool:
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(sheet)
 	editor.set_undo_redo_manager(NoopUndoManager.new())
-	editor._toggle_code_panel()
+	editor._code_panel_glue.toggle_code_panel()
 	all_passed = _check("panel toggles visible", editor.is_code_panel_visible(), true) and all_passed
 	all_passed = _check("panel shows the generated script", editor._code_edit.text.contains("func _process"), true) and all_passed
 	all_passed = _check("viewport still reachable after split insertion", editor.get_viewport_control() != null, true) and all_passed
@@ -94,11 +94,11 @@ static func run() -> bool:
 	all_passed = _check("highlighted panel lines contain the event's action", highlighted.contains("queue_free()"), true) and all_passed
 
 	viewport.clear_selection()
-	editor._update_code_panel_highlight()
+	editor._code_panel_glue.update_code_panel_highlight()
 	all_passed = _check("clearing selection clears the highlight", editor._code_panel_highlight, Vector2i(-1, -1)) and all_passed
 
 	# Toggle off hides the panel.
-	editor._toggle_code_panel()
+	editor._code_panel_glue.toggle_code_panel()
 	all_passed = _check("panel toggles hidden", editor.is_code_panel_visible(), false) and all_passed
 	editor.free()
 

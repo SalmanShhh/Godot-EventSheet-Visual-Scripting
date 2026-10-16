@@ -113,7 +113,7 @@ func _open_blocked_by_conflict(path: String) -> bool:
 	_dock._dirty = false
 	_dock._refresh_title_strip()
 	_dock._external_mtime = FileAccess.get_modified_time(path)
-	_dock._refresh_preview_banner()
+	_dock._preview_glue._refresh_preview_banner()
 	_dock._set_status(EventSheetConflictGuard.banner_text(path.get_file(), markers), true)
 	return true
 
@@ -161,7 +161,7 @@ func _begin_async_gd_open(resolved_path: String) -> void:
 	_dock._dirty = false
 	_dock._refresh_title_strip()
 	_dock._external_mtime = FileAccess.get_modified_time(resolved_path)
-	_dock._refresh_preview_banner()
+	_dock._preview_glue._refresh_preview_banner()
 	# A script its owner marked to stay code is shown and never worked on: no lift, no offers, and
 	# the read-only open above is the whole of it. The mark is a comment line in the file, so this is
 	# a decision the file itself carries rather than one this plugin remembers about it.
@@ -207,7 +207,7 @@ func _open_scene_as_sheet(resolved_path: String) -> void:
 	_dock._current_sheet_path = resolved_path
 	_dock._dirty = false
 	_dock._refresh_title_strip()
-	_dock._refresh_preview_banner()
+	_dock._preview_glue._refresh_preview_banner()
 	_dock._set_status("Opening %s - reading every script the scene uses…" % resolved_path.get_file())
 	if not _dock.is_inside_tree():
 		# No tree (a headless test driving the dock directly): there are no frames to spread over.
@@ -346,7 +346,7 @@ func _finish_gd_open(sheet: EventSheetResource, raw_sheet: EventSheetResource, r
 		# The lift report explains the structure/code boundary per block - the teaching
 		# surface for what GDScript maps to which events (the banner recomputes its own copy
 		# from the active sheet, so tab switches always show the right counts).
-		_dock._refresh_preview_banner()
+		_dock._preview_glue._refresh_preview_banner()
 		_flag_parse_error_rows(sheet, resolved_path)
 	DOCK_REGISTRY.notify_lifecycle("opened", {"sheet": sheet, "path": resolved_path})
 	# A "show the events behind this" that was waiting for this file finishes here, now that
@@ -409,7 +409,7 @@ func _open_new_sheet(path: String) -> void:
 	_dock._dirty = false
 	_dock._refresh_title_strip()
 	_dock._external_mtime = FileAccess.get_modified_time(resolved_path)
-	_dock._refresh_preview_banner()
+	_dock._preview_glue._refresh_preview_banner()
 	_dock._set_status("Created %s - start adding events, then Save." % resolved_path.get_file())
 
 
@@ -705,7 +705,7 @@ func _save_sheet_as_gdscript(path: String) -> bool:
 		_dock._current_sheet_path = path
 		_dock._dirty = false
 	_dock._external_mtime = FileAccess.get_modified_time(path)
-	_dock._refresh_preview_banner()
+	_dock._preview_glue._refresh_preview_banner()
 	_dock._set_status("Saved as GDScript: %s - the .gd is now the source of truth." % path.get_file())
 	return true
 

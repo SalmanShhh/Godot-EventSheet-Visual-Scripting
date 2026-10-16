@@ -63,8 +63,8 @@ static func run() -> bool:
 	var raw_row_data: EventRowData = flat[raw_index].get("row")
 	all_passed = _check("raw block line_count matches its code", raw_row_data.line_count, 2) and all_passed
 	all_passed = _check("raw block row is taller than one line",
-		viewport._resolve_row_height(raw_row_data) > float(EventSheetPalette.ROW_HEIGHT), true) and all_passed
-	viewport._get_or_build_row_layout(raw_index, viewport.get_canvas_logical_width(), viewport._get_font(), viewport._get_font_size())
+		viewport._row_metrics_helper._resolve_row_height(raw_row_data) > float(EventSheetPalette.ROW_HEIGHT), true) and all_passed
+	viewport._layout_builder.get_or_build_row_layout(raw_index, viewport.get_canvas_logical_width(), viewport._get_font(), viewport._get_font_size())
 	var line0_y: float = -1.0
 	var line1_y: float = -1.0
 	for span in raw_row_data.spans:

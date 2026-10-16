@@ -208,7 +208,7 @@ func _locate_row_container(rows: Array, target: Resource) -> Dictionary:
 			if not found.is_empty():
 				return found
 		elif row is EventGroup:
-			var group_children: Array = _dock._group_children_array(row as EventGroup)
+			var group_children: Array = _dock._ace_apply._group_children_array(row as EventGroup)
 			var found_in_group: Dictionary = _locate_row_container(group_children, target)
 			if not found_in_group.is_empty():
 				return found_in_group
@@ -225,7 +225,7 @@ func _locate_owning_event(rows: Array, target: Resource) -> EventRow:
 			if nested != null:
 				return nested
 		elif row is EventGroup:
-			var found: EventRow = _locate_owning_event(_dock._group_children_array(row as EventGroup), target)
+			var found: EventRow = _locate_owning_event(_dock._ace_apply._group_children_array(row as EventGroup), target)
 			if found != null:
 				return found
 	return null

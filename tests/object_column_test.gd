@@ -57,10 +57,10 @@ static func run() -> bool:
 	var display_text: String = span.text
 
 	live_style.condition_object_column_width = 0
-	var flow_width: float = viewport._measure_span_width(span, display_text, font, font_size)
+	var flow_width: float = viewport._row_builder._measure_span_width(span, display_text, font, font_size)
 	var flow_origin: float = viewport._span_text_origin_x(span, font, font_size)
 	live_style.condition_object_column_width = 150
-	var fixed_width: float = viewport._measure_span_width(span, display_text, font, font_size)
+	var fixed_width: float = viewport._row_builder._measure_span_width(span, display_text, font, font_size)
 	var fixed_origin: float = viewport._span_text_origin_x(span, font, font_size)
 	# The EFFECTIVE column, not the raw token: a column is bounded by the room its lane actually has,
 	# so a themed 150 on a narrow canvas resolves to less. Draw, measure and hit-test must all use this

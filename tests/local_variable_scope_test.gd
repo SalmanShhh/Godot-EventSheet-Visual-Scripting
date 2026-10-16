@@ -161,7 +161,7 @@ static func _span_index_with_text(view: EventSheetViewport, row_index: int, word
 	var row_data: EventRowData = view.get_flat_rows()[row_index].get("row")
 	if row_data == null:
 		return -1
-	view._ensure_event_spans(row_data)
+	view._row_builder._ensure_event_spans(row_data)
 	for index in row_data.spans.size():
 		if row_data.spans[index].text.strip_edges() == word:
 			return index

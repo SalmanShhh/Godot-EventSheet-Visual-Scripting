@@ -117,13 +117,13 @@ static func run() -> bool:
 	for preview_entry in editor._current_sheet.events:
 		if preview_entry is LocalVariable and (preview_entry as LocalVariable).name == "hp":
 			(preview_entry as LocalVariable).default_value = 999
-	editor._on_save_requested()
+	editor._sheet_io._on_save_requested()
 	all_passed = _check("preview save does not overwrite the source file",
 		FileAccess.get_file_as_string(sample_path) == SAMPLE_SOURCE, true) and all_passed
 	# "Edit Events" unlocks editing; the two-way GDScript-backed save then writes the change.
-	editor._on_preview_edit_requested()
+	editor._preview_glue._on_preview_edit_requested()
 	all_passed = _check("Edit Events unlocks editing", editor._current_sheet.read_only, false) and all_passed
-	editor._on_save_requested()
+	editor._sheet_io._on_save_requested()
 	all_passed = _check("dock save writes the edit back to disk after unlock",
 		FileAccess.get_file_as_string(sample_path).contains("var hp: int = 999"), true) and all_passed
 	editor.free()

@@ -44,7 +44,7 @@ static func run() -> bool:
 
 	var index: int = _flat_index(viewport, event)
 	var width: float = viewport.get_canvas_logical_width()
-	viewport._get_or_build_row_layout(index, width, viewport._get_font(), viewport._get_font_size())
+	viewport._layout_builder.get_or_build_row_layout(index, width, viewport._get_font(), viewport._get_font_size())
 	var row_data: EventRowData = viewport._row_at(index)
 	var a_rect: Rect2 = _cell_rect(row_data, 0)
 	var b_rect: Rect2 = _cell_rect(row_data, 1)
@@ -54,11 +54,11 @@ static func run() -> bool:
 	# Drag A onto the lower half of B -> "after" -> [B, A].
 	var start: Vector2 = a_rect.get_center()
 	var drop: Vector2 = Vector2(b_rect.get_center().x, b_rect.position.y + b_rect.size.y * 0.8)
-	viewport._handle_mouse_button(_button(start, true))
+	viewport._input_handlers.handle_mouse_button(_button(start, true))
 	all_passed = _check("ace drag started", not viewport._drag_ace_entries.is_empty(), true) and all_passed
-	viewport._handle_mouse_motion(_motion(drop))
+	viewport._input_handlers.handle_mouse_motion(_motion(drop))
 	all_passed = _check("insert mode resolves to 'after' for lower-half drop", viewport._drag_ace_insert_mode, "after") and all_passed
-	viewport._handle_mouse_button(_button(drop, false))
+	viewport._input_handlers.handle_mouse_button(_button(drop, false))
 	all_passed = _check("conditions reordered to [B, A] after drag", event.conditions[0] == cond_b and event.conditions[1] == cond_a, true) and all_passed
 
 	editor.free()

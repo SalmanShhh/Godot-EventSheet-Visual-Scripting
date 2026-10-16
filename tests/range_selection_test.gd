@@ -46,7 +46,7 @@ static func run() -> bool:
 	shift_down.keycode = KEY_DOWN
 	shift_down.shift_pressed = true
 	shift_down.pressed = true
-	viewport._handle_key(shift_down)
+	viewport._input_handlers.handle_key(shift_down)
 	all_passed = _check("Shift+Down from empty selects the first row", viewport._row_at(0).selected, true) and all_passed
 	all_passed = _check("Shift+Down from empty selects exactly one row", _selected_count(viewport), 1) and all_passed
 

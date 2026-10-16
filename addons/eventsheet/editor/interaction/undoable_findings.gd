@@ -77,18 +77,6 @@ static func edits_the_open_scene(sheet: EventSheetResource) -> bool:
 	return false
 
 
-## The findings anchored at one event row - what the canvas puts into the amber state. Matched by
-## IDENTITY, so the caller never has to name a row that has no name.
-static func for_event(found: Array[Dictionary], event_row: EventRow) -> Array[Dictionary]:
-	var mine: Array[Dictionary] = []
-	if event_row == null:
-		return mine
-	for entry: Dictionary in found:
-		if str(entry.get("anchor", "")) == ANCHOR_EVENT and is_same(entry.get("event"), event_row):
-			mine.append(entry)
-	return mine
-
-
 ## What making these edits undoable WOULD do to this sheet, as before/after pairs: the row as it is
 ## and the row it becomes. The reading the inbox chip shows before the reader is told anything
 ## worked, so a count is never the whole receipt. Only the rows that HAVE a twin are pairs - an edit

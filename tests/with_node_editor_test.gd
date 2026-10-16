@@ -44,13 +44,13 @@ static func run() -> bool:
 	var row_data: EventRowData = _row_for(viewport, event)
 	all_passed = _check("the event row is rendered", row_data != null, true) and all_passed
 	if row_data != null:
-		viewport._ensure_event_spans(row_data)
+		viewport._row_builder._ensure_event_spans(row_data)
 		var chip_text: String = ""
 		for span in row_data.spans:
 			if str((span.metadata if span.metadata is Dictionary else {}).get("kind", "")) == "with_node":
 				chip_text = span.text
 		all_passed = _check("With-node scope renders a chip in the condition lane", chip_text, "With node  $Enemy") and all_passed
-		all_passed = _check("line counting includes the scope row", viewport._count_event_lines(event), row_data.line_count) and all_passed
+		all_passed = _check("line counting includes the scope row", viewport._row_builder._count_event_lines(event), row_data.line_count) and all_passed
 
 	# Dialog round-trip (no popup): the dialog the chip + "Scope Actions To Node…" menu open writes back.
 	editor._comments._ensure_with_node_dialog()

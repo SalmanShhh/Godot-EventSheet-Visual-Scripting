@@ -23,13 +23,13 @@ static func run() -> bool:
 	for case in _build_cases():
 		var label: String = case["name"]
 		var event_row: EventRow = case["row"]
-		var spans: Array = viewport._build_event_spans(event_row)
+		var spans: Array = viewport._row_builder._build_event_spans(event_row)
 		var max_line_index: int = -1
 		for span in spans:
 			if span != null and span.metadata is Dictionary:
 				max_line_index = maxi(max_line_index, int((span.metadata as Dictionary).get("line_index", 0)))
 		var spans_lines: int = max_line_index + 1
-		var counted: int = viewport._count_event_lines(event_row)
+		var counted: int = viewport._row_builder._count_event_lines(event_row)
 		all_passed = _check(
 			"line count matches spans for '%s' (counted=%d, spans=%d)" % [label, counted, spans_lines],
 			counted == spans_lines, true) and all_passed
@@ -44,7 +44,7 @@ static func run() -> bool:
 	all_passed = _check("event spans are lazy (empty) right after load (large sheet)", first != null and first.spans.is_empty(), true) and all_passed
 	all_passed = _check("line_count precomputed for lazy row", first != null and first.line_count >= 1, true) and all_passed
 	if first != null:
-		viewport._ensure_event_spans(first)
+		viewport._row_builder._ensure_event_spans(first)
 		all_passed = _check("ensure builds the event spans", not first.spans.is_empty(), true) and all_passed
 
 	# Integration: interacting with a lazy (off-screen) row must build its spans via
@@ -53,7 +53,7 @@ static func run() -> bool:
 	var hit_index: int = 4
 	var hit_row: EventRowData = viewport.get_flat_rows()[hit_index].get("row")
 	all_passed = _check("lazy row has no spans before interaction", hit_row != null and hit_row.spans.is_empty(), true) and all_passed
-	var hit_y: float = viewport._get_row_top(hit_index) + 2.0
+	var hit_y: float = viewport._row_metrics_helper.row_top(hit_index) + 2.0
 	viewport._hit_test(Vector2(40.0, hit_y))
 	all_passed = _check("hit-test builds spans for the touched row", hit_row != null and not hit_row.spans.is_empty(), true) and all_passed
 

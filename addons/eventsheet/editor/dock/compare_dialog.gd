@@ -253,7 +253,7 @@ func bring_row_over(index: int) -> bool:
 ## Fresh event uids across a copied top-level row, whether it is one event or a whole group.
 func _refresh_event_uids(copy: Resource) -> void:
 	if copy is EventRow:
-		_dock._assign_fresh_event_uids(copy as EventRow)
+		_dock._add_rows.assign_fresh_event_uids(copy as EventRow)
 		return
 	if copy is EventGroup:
 		var group: EventGroup = copy as EventGroup

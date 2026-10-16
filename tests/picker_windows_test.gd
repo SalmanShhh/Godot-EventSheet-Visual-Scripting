@@ -101,7 +101,7 @@ static func _the_dock_opens_on_the_event() -> bool:
 		if candidate != null and candidate.source_resource is EventRow:
 			event_row = candidate
 			break
-	dock._on_viewport_ace_picker_requested(event_row, "action")
+	dock._ace_apply._on_viewport_ace_picker_requested(event_row, "action")
 	var picker: ACEPickerDialog = dock._ace_picker
 	var rows: Array = [
 		["the title names the object", picker._window.title, "Add an action to Player"],

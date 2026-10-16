@@ -42,7 +42,7 @@ static func run() -> bool:
 		var candidate: EventRowData = entry.get("row")
 		if candidate != null and candidate.source_resource == event:
 			row_data = candidate
-	view._ensure_event_spans(row_data)
+	view._row_builder._ensure_event_spans(row_data)
 	var car_meta: Dictionary = {}
 	var core_meta: Dictionary = {}
 	for span: SemanticSpan in row_data.spans:

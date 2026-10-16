@@ -113,14 +113,14 @@ static func _test_shooter_events() -> bool:
 	var events: Array[int] = _top_level_events(native_view)
 	var jump: EventRowData = native_view._row_at(events[0])
 	var line: float = native_view._get_event_line_height(native_view._get_font_size())
-	var at_rest: Array = [native_view._get_row_height(events[0]), native_view._get_row_height(events[1])]
-	var second_top: float = native_view._get_row_top(events[1])
+	var at_rest: Array = [native_view._row_metrics_helper.row_height(events[0]), native_view._row_metrics_helper.row_height(events[1])]
+	var second_top: float = native_view._row_metrics_helper.row_top(events[1])
 	native_view._set_hover_state(events[0], -1)
-	var hovered: Array = [native_view._get_row_height(events[0]), native_view._get_row_top(events[1]) - second_top]
+	var hovered: Array = [native_view._row_metrics_helper.row_height(events[0]), native_view._row_metrics_helper.row_top(events[1]) - second_top]
 	native_view._set_hover_state(events[1], -1)
-	var moved_on: Array = [native_view._get_row_height(events[0]), native_view._get_row_height(events[1])]
+	var moved_on: Array = [native_view._row_metrics_helper.row_height(events[0]), native_view._row_metrics_helper.row_height(events[1])]
 	native_view._select_row(events[0], -1)
-	var selected: float = native_view._get_row_height(events[0])
+	var selected: float = native_view._row_metrics_helper.row_height(events[0])
 	var shoot: EventRowData = native_view._row_at(events[2])
 	var shoot_trailing: float = native_view._row_metrics_helper.condition_trailing_width(
 		shoot, 0, native_view._get_font(), native_view._get_font_size())
@@ -143,7 +143,7 @@ static func _test_shooter_events() -> bool:
 	var classic_view: EventSheetViewport = _view_of(SHOOTER, CLASSIC_THEME)
 	var classic_events: Array[int] = _top_level_events(classic_view)
 	var classic_jump: EventRowData = classic_view._row_at(classic_events[0])
-	var classic_rest: float = classic_view._get_row_height(classic_events[0])
+	var classic_rest: float = classic_view._row_metrics_helper.row_height(classic_events[0])
 	var classic_blank_tick: EventRowData = _event_with(classic_view, classic_events, "Keep ")
 	classic_view._set_hover_state(classic_events[0], -1)
 	result = SUPPORT.pins(TEST_NAME, [
@@ -154,7 +154,7 @@ static func _test_shooter_events() -> bool:
 		["and the blank physics tick as its muted note, no column", [_texts(classic_blank_tick).begins_with(
 			"every tick (physics)"), _object_of(classic_blank_tick, "every tick")], [true, ""]],
 		["and the add line reserved, hovered or not",
-			[classic_rest, classic_view._get_row_height(classic_events[0])], [64.0, 64.0]],
+			[classic_rest, classic_view._row_metrics_helper.row_height(classic_events[0])], [64.0, 64.0]],
 	]) and result
 	classic_view.free()
 	return result
@@ -202,7 +202,7 @@ static func _top_level_events(view: EventSheetViewport) -> Array[int]:
 	for index: int in range(view.get_flat_rows().size()):
 		var row_data: EventRowData = view._row_at(index)
 		if row_data != null and row_data.row_type == EventRowData.RowType.EVENT and row_data.indent == 0:
-			view._ensure_event_spans(row_data)
+			view._row_builder._ensure_event_spans(row_data)
 			found.append(index)
 	return found
 

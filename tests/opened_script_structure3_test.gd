@@ -218,7 +218,7 @@ static func _read_rows(path: String) -> PackedStringArray:
 		var row_data: EventRowData = entry.get("row")
 		if row_data == null:
 			continue
-		viewport._ensure_event_spans(row_data)
+		viewport._row_builder._ensure_event_spans(row_data)
 		var texts: PackedStringArray = PackedStringArray()
 		for span: SemanticSpan in row_data.spans:
 			if span.text.strip_edges().is_empty():

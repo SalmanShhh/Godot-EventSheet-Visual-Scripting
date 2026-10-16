@@ -49,13 +49,13 @@ static func _routes_for(source_path: String, read_only: bool = false) -> Diction
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(sheet)
 	var viewport: EventSheetViewport = editor.get_viewport_control()
-	viewport._rebuild_row_metrics()
+	viewport._row_metrics_helper.rebuild()
 	var result := {"add_param": false, "add_event": false, "owner_is_function": false}
 	for entry: Dictionary in viewport.get_flat_rows():
 		var row: EventRowData = entry.get("row")
 		if row == null:
 			continue
-		viewport._ensure_event_spans(row)
+		viewport._row_builder._ensure_event_spans(row)
 		for span: SemanticSpan in row.spans:
 			var meta: Dictionary = span.metadata if span.metadata is Dictionary else {}
 			match str(meta.get("kind", "")):

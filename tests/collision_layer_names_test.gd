@@ -393,7 +393,7 @@ static func _test_the_rows_wear_the_state() -> bool:
 	ok = _check("offering no door",
 		[str(found[0].get("fix", "")), str(found[0].get("fix_label", ""))], ["", ""] as Array) and ok
 	ok = _check("a row whose layer is an expression is nobody's guess",
-		EventSheetLayerFindings.for_event(found, spoken_row), [] as Array[Dictionary]) and ok
+		ViewportRowBuilder.findings_at_event(found, spoken_row), [] as Array[Dictionary]) and ok
 	# The canvas half: the two rows wear the quiet amber state, the third stays clean, and nothing
 	# else appears in the sheet - the words wait in the stamp for the help strip.
 	ok = _check("the two rows wear the quiet amber state and the third stays clean",

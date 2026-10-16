@@ -69,13 +69,13 @@ static func run() -> bool:
 		captured["owner"] = owner_resource
 	)
 	var footer_index: int = flat.size() - 1
-	viewport._get_or_build_row_layout(footer_index, viewport.get_canvas_logical_width(), viewport._get_font(), viewport._get_font_size())
+	viewport._layout_builder.get_or_build_row_layout(footer_index, viewport.get_canvas_logical_width(), viewport._get_font(), viewport._get_font_size())
 	var click_at: Vector2 = last_row.spans[0].rect.get_center()
-	viewport._handle_mouse_button(_button(click_at, true))
+	viewport._input_handlers.handle_mouse_button(_button(click_at, true))
 	all_passed = _check("clicking the footer requests add-event for the sheet", captured["owner"] == sheet, true) and all_passed
 
 	# Box selection never includes footers.
-	viewport._apply_box_selection(Rect2(0, 0, 4000, 100000), false)
+	viewport._drag.apply_box_selection(Rect2(0, 0, 4000, 100000), false)
 	all_passed = _check("box selection skips footers",
 		not viewport._selected_row_uids.has(last_row.row_uid) and not viewport._selected_row_uids.has(group_footer.row_uid), true) and all_passed
 
@@ -85,7 +85,7 @@ static func run() -> bool:
 		var row_data: EventRowData = entry.get("row")
 		if row_data != null and row_data.source_resource == negated_event:
 			negated_row = row_data
-	viewport._ensure_event_spans(negated_row)
+	viewport._row_builder._ensure_event_spans(negated_row)
 	var marker_meta: Dictionary = {}
 	for span in negated_row.spans:
 		if span != null and span.text == ViewportRowBuilder.NEGATED_MARK and span.metadata is Dictionary:
@@ -107,11 +107,11 @@ static func run() -> bool:
 	definition.provider_id = "Core"
 	definition.id = "Always"
 	definition.ace_type = ACEDefinition.ACEType.CONDITION
-	editor._apply_ace_definition(definition, {}, {"mode": "new_condition_event", "insert_into": edit_group})
-	var group_children: Array = editor._group_children_array(edit_group)
+	editor._ace_apply._apply_ace_definition(definition, {}, {"mode": "new_condition_event", "insert_into": edit_group})
+	var group_children: Array = editor._ace_apply._group_children_array(edit_group)
 	all_passed = _check("footer add inserts the new event into the group",
 		group_children.size() == 1 and group_children[0] is EventRow, true) and all_passed
-	editor._apply_ace_definition(definition, {}, {"mode": "new_condition_event", "insert_into": edit_sheet})
+	editor._ace_apply._apply_ace_definition(definition, {}, {"mode": "new_condition_event", "insert_into": edit_sheet})
 	all_passed = _check("sheet footer add appends at the sheet end",
 		edit_sheet.events.size() == 2 and edit_sheet.events[1] is EventRow, true) and all_passed
 	editor.free()

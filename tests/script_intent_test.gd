@@ -58,10 +58,10 @@ static func run() -> bool:
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	dock.setup(EventSheetResource.new())
-	dock._apply_sheet_type_settings(5, "LootTable", "", "Node2D")
+	dock._sheet_type_glue.apply_sheet_type_settings(5, "LootTable", "", "Node2D")
 	all_passed = _check("Custom Resource type forces a Resource host (node host rejected)",
 		dock._current_sheet.host_class, "Resource") and all_passed
-	dock._apply_sheet_type_settings(5, "MusicBank", "", "AudioStream")
+	dock._sheet_type_glue.apply_sheet_type_settings(5, "MusicBank", "", "AudioStream")
 	all_passed = _check("a Resource-subclass host is kept",
 		dock._current_sheet.host_class, "AudioStream") and all_passed
 	all_passed = _check("the applied sheet classifies as CUSTOM_RESOURCE",
@@ -69,7 +69,7 @@ static func run() -> bool:
 	# Review regression: switching a node-hosted sheet to Autoload must force the Node host -
 	# the dialog's prefilled host text used to overwrite it back (extends CharacterBody2D on
 	# a singleton).
-	dock._apply_sheet_type_settings(4, "", "", "CharacterBody2D", false, PackedStringArray(), PackedStringArray(), PackedStringArray(), PackedStringArray(), "GameState")
+	dock._sheet_type_glue.apply_sheet_type_settings(4, "", "", "CharacterBody2D", false, PackedStringArray(), PackedStringArray(), PackedStringArray(), PackedStringArray(), "GameState")
 	all_passed = _check("autoload preset keeps its forced Node host", dock._current_sheet.host_class, "Node") and all_passed
 	dock.free()
 

@@ -85,7 +85,7 @@ func _ensure_find_bar() -> void:
 	var split_match_button: Button = Button.new()
 	split_match_button.text = "Open in Split"
 	split_match_button.tooltip_text = "Open the current match in the split pane."
-	split_match_button.pressed.connect(_dock._open_match_in_split)
+	split_match_button.pressed.connect(_dock._multi_view._open_match_in_split)
 	_dock._find_bar.add_child(split_match_button)
 	# The event-sheet live filter: toggling FILTERS the sheet to matching events instead of just
 	# stepping through them - everything else hides until the lens clears (Esc / the bar).

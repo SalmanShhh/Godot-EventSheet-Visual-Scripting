@@ -318,7 +318,7 @@ static func _test_the_quiet_finding() -> bool:
 	ok = _check("its sentence says the file and the line",
 		str(finding.get("message", "")).contains("tidy.gd") \
 			and str(finding.get("message", "")).contains("Set Property (Undoable)"), true) and ok
-	ok = _check("it is anchored at the event", EventSheetUndoableFindings.for_event(
+	ok = _check("it is anchored at the event", ViewportRowBuilder.findings_at_event(
 		found, sheet.events[0] as EventRow).size(), 1) and ok
 	# The door: the same row, respelled - values untouched, baked spelling cleared so the twin's own
 	# template answers.

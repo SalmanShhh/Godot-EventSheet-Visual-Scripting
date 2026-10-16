@@ -109,7 +109,7 @@ static func _select_condition(view: EventSheetViewport, event: EventRow) -> bool
 	if not _select_row(view, event):
 		return false
 	var row_data: EventRowData = view.get_selected_row_data()
-	view._ensure_event_spans(row_data)
+	view._row_builder._ensure_event_spans(row_data)
 	for span_index: int in range(row_data.spans.size()):
 		if str((row_data.spans[span_index].metadata as Dictionary).get("kind", "")) == "condition":
 			view._selected_span_index = span_index

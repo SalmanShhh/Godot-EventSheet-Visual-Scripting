@@ -36,7 +36,7 @@ static func run() -> bool:
 		# Footer "Add event…" affordances are single-span by design.
 		if viewport._row_is_add_event_footer(row_data):
 			continue
-		viewport._get_or_build_row_layout(i, 1200.0, font, font_size)
+		viewport._layout_builder.get_or_build_row_layout(i, 1200.0, font, font_size)
 		var overlapped: bool = false
 		var spans_with_width: int = 0
 		for s in range(row_data.spans.size()):
@@ -83,7 +83,7 @@ static func run() -> bool:
 			continue
 		if viewport._row_is_add_event_footer(hidpi_row) or hidpi_row.line_count > 1:
 			continue
-		var reserved: float = viewport._get_row_height(i)
+		var reserved: float = viewport._row_metrics_helper.row_height(i)
 		all_passed = _check("a single-line row reserves the FONT's line height at a HiDPI font size",
 			reserved >= hidpi_line_height, true) and all_passed
 		all_passed = _check("so its reserved band exceeds the bare ROW_HEIGHT constant",

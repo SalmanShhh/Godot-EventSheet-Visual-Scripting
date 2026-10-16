@@ -34,8 +34,8 @@ static func run() -> bool:
 	var font_size: int = viewport._get_font_size()
 	var event_index: int = _flat_index(viewport, event)
 	all_passed = _check("event row found", event_index >= 0, true) and all_passed
-	viewport._get_or_build_row_layout(event_index, width, font, font_size)
-	var row_top: float = viewport._get_row_top(event_index)
+	viewport._layout_builder.get_or_build_row_layout(event_index, width, font, font_size)
+	var row_top: float = viewport._row_metrics_helper.row_top(event_index)
 	var line_height: float = viewport._get_event_line_height(font_size)
 	var divider: float = viewport.get_lane_divider_x(width)
 

@@ -329,7 +329,7 @@ func summary_piece(row_data: EventRowData) -> String:
 	if row_data == null or row_data.row_uid.begins_with("add_event_footer"):
 		return ""
 	if row_data.row_type == EventRowData.RowType.EVENT and row_data.spans.is_empty():
-		_viewport._ensure_event_spans(row_data)
+		_viewport._row_builder._ensure_event_spans(row_data)
 	var conditions: PackedStringArray = PackedStringArray()
 	var actions: PackedStringArray = PackedStringArray()
 	var plain: PackedStringArray = PackedStringArray()

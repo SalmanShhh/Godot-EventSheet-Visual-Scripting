@@ -217,7 +217,7 @@ func _apply() -> void:
 	added_block.kind_id = kind.kind_id
 	added_block.fields = new_fields
 	var added: bool = _dock._perform_undoable_sheet_edit("Add %s" % kind.title, func() -> bool:
-		_dock._insert_row_below_selection(added_block)
+		_dock._ace_apply._insert_row_below_selection(added_block)
 		return true
 	)
 	if added:

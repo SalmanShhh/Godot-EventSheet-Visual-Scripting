@@ -52,24 +52,24 @@ static func run() -> bool:
 		if candidate != null and candidate.source_resource == event_row:
 			row_data = candidate
 	dock._context_row = row_data
-	dock._build_row_context_menu(row_data)
+	dock._context_menus._build_row_context_menu(row_data)
 	ok = _check("the blank sub-event says the key that makes one",
 		_item_text(dock, dock.ROW_MENU_ADD_SUB_EVENT), "Add blank sub-event (B)") and ok
 	dock._active_view()._selected_row_uids[row_data.row_uid] = true
 	row_data.selected = true
-	dock._configure_context_menu(dock._row_context_menu)
+	dock._context_menus._configure_context_menu(dock._row_context_menu)
 	ok = _check("an AND event offers Make 'Or' block",
 		_item_text(dock, dock.ROW_MENU_TOGGLE_CONDITION_BLOCK), "Make 'Or' block") and ok
 	ok = _check("Else is offered by the word the sheet reads",
 		_item_text(dock, dock.ROW_MENU_MAKE_ELSE), "Add 'Else'") and ok
 	event_row.condition_mode = EventRow.ConditionMode.OR
-	dock._configure_context_menu(dock._row_context_menu)
+	dock._context_menus._configure_context_menu(dock._row_context_menu)
 	ok = _check("an OR event offers the way back",
 		_item_text(dock, dock.ROW_MENU_TOGGLE_CONDITION_BLOCK), "Make 'And' block") and ok
 
 	# ── A read-only preview greys all three: a preview never rewrites the file ──
 	sheet.read_only = true
-	dock._configure_context_menu(dock._row_context_menu)
+	dock._context_menus._configure_context_menu(dock._row_context_menu)
 	ok = _check("Make 'Or' block is greyed on a preview",
 		_item_disabled(dock, dock.ROW_MENU_TOGGLE_CONDITION_BLOCK), true) and ok
 	ok = _check("Add blank sub-event is greyed on a preview",
@@ -77,7 +77,7 @@ static func run() -> bool:
 	ok = _check("Add 'Else' is greyed on a preview",
 		_item_disabled(dock, dock.ROW_MENU_MAKE_ELSE), true) and ok
 	sheet.read_only = false
-	dock._configure_context_menu(dock._row_context_menu)
+	dock._context_menus._configure_context_menu(dock._row_context_menu)
 	ok = _check("an editable sheet offers them again",
 		_item_disabled(dock, dock.ROW_MENU_ADD_SUB_EVENT), false) and ok
 

@@ -31,7 +31,7 @@ static func run() -> bool:
 	# Comment: double-clicking it opens the comment dialog (text + colour), not an inline caret that
 	# reads as a whole-row highlight - the dialog is requested and no inline edit starts.
 	var comment_index: int = _flat_index(viewport, comment)
-	viewport._get_or_build_row_layout(comment_index, width, font, font_size)
+	viewport._layout_builder.get_or_build_row_layout(comment_index, width, font, font_size)
 	var comment_row: EventRowData = viewport._row_at(comment_index)
 	var requested_comment: Array = [null]
 	viewport.comment_edit_requested.connect(func(c: Resource) -> void: requested_comment[0] = c)
@@ -45,7 +45,7 @@ static func run() -> bool:
 	# Group: double-clicking a group header opens the group editor popup (group_edit_requested),
 	# not an inline title field - so the description (only rendered once non-empty) is reachable.
 	var group_index: int = _flat_index(viewport, group)
-	viewport._get_or_build_row_layout(group_index, width, font, font_size)
+	viewport._layout_builder.get_or_build_row_layout(group_index, width, font, font_size)
 	var group_row: EventRowData = viewport._row_at(group_index)
 	all_passed = _check("group header renders its title span", group_row.spans.size() >= 1, true) and all_passed
 	var requested_group: Array = [null]
@@ -83,9 +83,9 @@ static func run() -> bool:
 
 
 static func _double_click(viewport: EventSheetViewport, at: Vector2) -> void:
-	viewport._handle_mouse_button(_button(at, true, false))
-	viewport._handle_mouse_button(_button(at, false, false))
-	viewport._handle_mouse_button(_button(at, true, true))
+	viewport._input_handlers.handle_mouse_button(_button(at, true, false))
+	viewport._input_handlers.handle_mouse_button(_button(at, false, false))
+	viewport._input_handlers.handle_mouse_button(_button(at, true, true))
 
 
 static func _button(at: Vector2, pressed: bool, double_click: bool) -> InputEventMouseButton:

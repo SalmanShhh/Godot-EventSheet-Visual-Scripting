@@ -89,7 +89,7 @@ func draw(width: float, font: Font, font_size: int) -> void:
 	if scroll_offset <= 0.0:
 		return
 	_ensure_map()
-	var first_visible: int = _viewport._find_row_index_at_y(scroll_offset + 1.0)
+	var first_visible: int = _viewport._row_metrics_helper.row_index_at_y(scroll_offset + 1.0)
 	var chain: PackedInt32Array = chain_for(_map, first_visible)
 	if chain.is_empty():
 		return
@@ -236,7 +236,7 @@ func handle_click(local_position: Vector2) -> bool:
 	var canvas_x: float = local_position.x / zoom
 	var width: float = _viewport._get_logical_canvas_width()
 	if canvas_x <= FOLD_ZONE_WIDTH:
-		_viewport._toggle_row_fold(_jump_index)
+		_viewport._folding.toggle_row_fold(_jump_index)
 		_scroll_to_row(_jump_index, zoom)
 		return true
 	# A parent name is a door back out to that group: clicking it scrolls to its own head,

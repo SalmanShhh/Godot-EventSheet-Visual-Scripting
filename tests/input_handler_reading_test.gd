@@ -199,7 +199,7 @@ static func _readings(sheet: EventSheetResource, wanted: Dictionary) -> Array[Pa
 			continue
 		if not wanted.has((row_data.source_resource as EventRow).event_uid):
 			continue
-		view._ensure_event_spans(row_data)
+		view._row_builder._ensure_event_spans(row_data)
 		var texts: PackedStringArray = PackedStringArray()
 		for span: SemanticSpan in row_data.spans:
 			if span.text.begins_with("+ Add ") or span.metadata is not Dictionary:

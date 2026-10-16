@@ -229,7 +229,7 @@ func _on_add() -> void:
 			var trigger: SignalRow = SignalRow.new()
 			trigger.trigger = true
 			if _dock._perform_undoable_sheet_edit("Add trigger", func() -> bool:
-					_dock._insert_row_below_selection(trigger)
+					_dock._ace_apply._insert_row_below_selection(trigger)
 					return true):
 				_dock._mark_dirty(EventSheetL10n.translate("Added a trigger."))
 				_dock._open_signal_dialog(trigger)

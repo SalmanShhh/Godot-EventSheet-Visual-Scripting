@@ -40,7 +40,7 @@ static func run() -> bool:
 	dock_a._session._session_tracking = true  # restore normally flips this on; do it manually for the test
 	dock_a._load_sheet_from_path(PROBE)
 	all_passed = _check("opening a .gd is a read-only preview", dock_a._current_sheet.read_only, true) and all_passed
-	dock_a._on_preview_edit_requested()
+	dock_a._preview_glue._on_preview_edit_requested()
 	all_passed = _check("Edit Events unlocks it", dock_a._current_sheet.read_only, false) and all_passed
 	dock_a.free()
 

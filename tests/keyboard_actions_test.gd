@@ -37,20 +37,20 @@ static func run() -> bool:
 
 	# G - add group (no selection -> appended at root).
 	var before_group: int = sheet.events.size()
-	editor._on_add_group_requested()
+	editor._add_rows.on_add_group_requested()
 	all_passed = _check("add group grows events", sheet.events.size(), before_group + 1) and all_passed
 	all_passed = _check("added row is a group", sheet.events[sheet.events.size() - 1] is EventGroup, true) and all_passed
 
 	# Q - add comment.
 	var before_comment: int = sheet.events.size()
-	editor._on_add_comment_requested()
+	editor._add_rows.on_add_comment_requested()
 	all_passed = _check("add comment grows events", sheet.events.size(), before_comment + 1) and all_passed
 	all_passed = _check("added row is a comment", sheet.events[sheet.events.size() - 1] is CommentRow, true) and all_passed
 
 	# Ctrl+D - duplicate requires an EventRow selection; no selection is a no-op.
 	var before_noop: int = sheet.events.size()
 	editor.get_viewport_control().clear_selection()
-	editor._on_duplicate_requested()
+	editor._add_rows.on_duplicate_requested()
 	all_passed = _check("duplicate no-ops without event selection", sheet.events.size(), before_noop) and all_passed
 
 	# Ctrl+D - with the event row selected, clone is inserted after it with a fresh UID.
@@ -61,7 +61,7 @@ static func run() -> bool:
 	if flat_index >= 0:
 		editor.get_viewport_control()._select_row(flat_index)
 		var before_dup: int = sheet.events.size()
-		editor._on_duplicate_requested()
+		editor._add_rows.on_duplicate_requested()
 		all_passed = _check("duplicate grows events", sheet.events.size(), before_dup + 1) and all_passed
 		var clone: Variant = sheet.events[source_index + 1]
 		all_passed = _check("clone is an event row", clone is EventRow, true) and all_passed

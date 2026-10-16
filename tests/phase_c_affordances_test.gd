@@ -41,7 +41,7 @@ static func run() -> bool:
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(sheet)
 	editor.set_undo_redo_manager(NoopUndoManager.new())
-	editor._export_addon_pack("user://eventsheets_export_pack")
+	editor._export_pack._export_addon_pack("user://eventsheets_export_pack")
 	var exported_script: String = FileAccess.get_file_as_string("user://eventsheets_export_pack/exported_spinner.gd")
 	all_passed = _check("export writes the compiled script",
 		exported_script.contains("class_name ExportedSpinner"), true) and all_passed
@@ -55,7 +55,7 @@ static func run() -> bool:
 	# Guardrail: non-behavior sheets refuse.
 	var plain: EventSheetResource = EventSheetResource.new()
 	editor._current_sheet = plain
-	editor._export_addon_pack("user://eventsheets_export_bad")
+	editor._export_pack._export_addon_pack("user://eventsheets_export_bad")
 	all_passed = _check("non-behavior sheets are refused",
 		FileAccess.file_exists("user://eventsheets_export_bad/.tres"), false) and all_passed
 	editor.free()

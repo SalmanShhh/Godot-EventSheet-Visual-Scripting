@@ -57,7 +57,7 @@ static func run() -> bool:
 	editor.set_undo_redo_manager(NoopUndoManager.new())
 	var viewport: EventSheetViewport = editor.get_viewport_control()
 	var row_data: EventRowData = viewport.get_flat_rows()[0].get("row")
-	viewport._ensure_event_spans(row_data)
+	viewport._row_builder._ensure_event_spans(row_data)
 	var action_span: int = -1
 	for index in range(row_data.spans.size()):
 		var metadata: Dictionary = row_data.spans[index].metadata if row_data.spans[index].metadata is Dictionary else {}

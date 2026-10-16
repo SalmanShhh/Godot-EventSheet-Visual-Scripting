@@ -60,7 +60,7 @@ static func run() -> bool:
 	editor.setup(edit_sheet)
 	editor.set_undo_redo_manager(NoopUndoManager.new())
 	editor._context_row = _row_for(editor.get_viewport_control(), host_event)
-	editor._insert_child_comment_for_context_row()
+	editor._row_edit_ops._insert_child_comment_for_context_row()
 	all_passed = _check("context menu nests a comment sub-event",
 		host_event.sub_events.size() == 1 and host_event.sub_events[0] is CommentRow, true) and all_passed
 	editor.free()

@@ -31,9 +31,9 @@ static func run() -> bool:
 	all_passed = _check("starts default-themed (no editor style)", sheet.editor_style == null, true) and all_passed
 
 	# A press on the same line DOWN THE SHEET is not a resize any more - it is a press on the event.
-	viewport._handle_mouse_button(_button(initial_divider, 24.0, true))
+	viewport._input_handlers.handle_mouse_button(_button(initial_divider, 24.0, true))
 	all_passed = _check("a press on the divider mid-sheet starts no drag", viewport._dragging_lane_divider, false) and all_passed
-	viewport._handle_mouse_button(_button(initial_divider, 24.0, false))
+	viewport._input_handlers.handle_mouse_button(_button(initial_divider, 24.0, false))
 
 	# Press the header's grabber.
 	header.handle_pointer(_button(header.header_x_at(initial_divider), 8.0, true))
