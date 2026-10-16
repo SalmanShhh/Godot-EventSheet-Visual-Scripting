@@ -132,11 +132,8 @@ func build() -> void:
 	filter_edit.right_icon = EventSheetEditorIcons.icon("Search")
 	filter_edit.text_changed.connect(func(_text: String) -> void: refresh())
 	body_box.add_child(filter_edit)
-	tree = Tree.new()
-	tree.hide_root = true
+	tree = EventSheetPopupUI.table(PackedStringArray(), 240.0)
 	tree.select_mode = Tree.SELECT_ROW
-	tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	tree.custom_minimum_size = Vector2(0.0, 240.0)
 	tree.item_selected.connect(_on_entry_selected)
 	body_box.add_child(tree)
 	_empty_hint = EventSheetPopupUI.hint_label("Nothing structural yet - groups, #region fences, and published functions appear here as you add them.", 320.0)

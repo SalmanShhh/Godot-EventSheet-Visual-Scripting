@@ -151,19 +151,6 @@ static func _card(title: String, content: Control) -> PanelContainer:
 	return card
 
 
-## A two-column table with titles, filling the height it is given.
-static func _table(titles: PackedStringArray) -> Tree:
-	var table: Tree = Tree.new()
-	table.hide_root = true
-	table.columns = titles.size()
-	for index: int in titles.size():
-		table.set_column_title(index, titles[index])
-	table.column_titles_visible = true
-	table.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	table.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(160.0))
-	return table
-
-
 ## ── The run band ──────────────────────────────────────────────────────────────────────────────
 ## What the band says, as [sheet, state, paused]: the open sheet's file, whether a run is reporting
 ## and which of the two streams the sheet asks for, and - only while the game is paused at a row -
@@ -199,7 +186,7 @@ func _build_inspect_tab() -> Control:
 	page.add_child(split)
 	var objects_box: VBoxContainer = EventSheetPopupUI.form_box()
 	objects_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	objects_tree = _table(PackedStringArray(["", ""]))
+	objects_tree = EventSheetPopupUI.table(PackedStringArray(["", ""]), 160.0)
 	objects_tree.column_titles_visible = false
 	objects_tree.set_column_expand(1, false)
 	objects_tree.item_selected.connect(_on_object_picked)
@@ -207,7 +194,7 @@ func _build_inspect_tab() -> Control:
 	objects_box.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate(
 		"Dim rows: this sheet names them, but the run has reported nothing for them yet."), 0.0))
 	split.add_child(_card("Objects", objects_box))
-	values_tree = _table(PackedStringArray(["Variable", "Value"]))
+	values_tree = EventSheetPopupUI.table(PackedStringArray(["Variable", "Value"]), 160.0)
 	values_tree.item_edited.connect(_on_value_edited)
 	values_tree.item_selected.connect(_describe_value)
 	split.add_child(_card("Instance values", values_tree))
@@ -371,7 +358,7 @@ func _build_profile_tab() -> Control:
 	box.name = "Profile"
 	box.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate(
 		"Time per fire, busiest first. The last event of a frame is counted but not timed, so it reads \"-\"."), 0.0))
-	profile_tree = _table(PackedStringArray(["Event", "Per fire", "Share", "Fires"]))
+	profile_tree = EventSheetPopupUI.table(PackedStringArray(["Event", "Per fire", "Share", "Fires"]), 160.0)
 	profile_tree.item_activated.connect(_jump_to_selected.bind(profile_tree))
 	box.add_child(profile_tree)
 	box.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate(
@@ -459,10 +446,7 @@ static func build_trail_body() -> Dictionary:
 	hint.tooltip_text = TRAIL_LIMITS
 	hint.mouse_filter = Control.MOUSE_FILTER_PASS
 	box.add_child(hint)
-	var sentences: Tree = Tree.new()
-	sentences.hide_root = true
-	sentences.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	sentences.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(200.0))
+	var sentences: Tree = EventSheetPopupUI.table(PackedStringArray(), 200.0)
 	box.add_child(sentences)
 	var patterns: Tree = Tree.new()
 	patterns.hide_root = true
@@ -543,7 +527,7 @@ func _build_breakpoints_tab() -> Control:
 	box.name = "Breakpoints"
 	box.add_child(EventSheetPopupUI.hint_label(
 		"Tick to arm a row, untick to leave it in place but inactive; double-click to go to it.", 0.0))
-	breakpoints_tree = _table(PackedStringArray(["On", "Event"]))
+	breakpoints_tree = EventSheetPopupUI.table(PackedStringArray(["On", "Event"]), 160.0)
 	breakpoints_tree.set_column_expand(0, false)
 	breakpoints_tree.item_edited.connect(_on_breakpoint_toggled)
 	breakpoints_tree.item_activated.connect(_jump_to_selected.bind(breakpoints_tree))

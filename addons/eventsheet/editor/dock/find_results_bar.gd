@@ -238,16 +238,8 @@ func _ensure_bar() -> void:
 	close_button.pressed.connect(close)
 	header.add_child(close_button)
 	bar.add_child(header)
-	tree = Tree.new()
+	tree = EventSheetPopupUI.table(PackedStringArray(["Where", "Match"]), 0.0, {0: 120.0})
 	tree.name = "EventSheetFindResultsTree"
-	tree.hide_root = true
-	tree.columns = 2
-	tree.set_column_title(0, "Where")
-	tree.set_column_title(1, "Match")
-	tree.set_column_expand(0, false)
-	tree.set_column_custom_minimum_width(0, int(EventSheetPalette.scaled_f(120.0)))
-	tree.column_titles_visible = true
-	tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	tree.item_activated.connect(_on_activated)
 	bar.add_child(tree)
 	_dock._content_host.add_child(bar)

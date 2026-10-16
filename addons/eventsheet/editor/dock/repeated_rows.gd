@@ -196,25 +196,14 @@ func build() -> void:
 	var body: VBoxContainer = parts["box"]
 	summary_label = EventSheetPopupUI.hint_label("", 460.0)
 	body.add_child(summary_label)
-	tree = Tree.new()
-	tree.hide_root = true
-	tree.columns = 2
-	tree.set_column_title(0, EventSheetL10n.translate("Repeated run"))
-	tree.set_column_title(1, EventSheetL10n.translate("Saves"))
-	tree.column_titles_visible = true
-	tree.set_column_expand(1, false)
-	tree.set_column_custom_minimum_width(1, roundi(EventSheetPalette.scaled_f(110.0)))
+	tree = EventSheetPopupUI.table(PackedStringArray([EventSheetL10n.translate("Repeated run"),
+		EventSheetL10n.translate("Saves")]), 0.0, {1: 110.0})
 	tree.select_mode = Tree.SELECT_ROW
-	tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	tree.item_selected.connect(_on_run_selected)
 	tree.item_activated.connect(_on_run_activated)
-	var card: PanelContainer = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Repeats"), tree)
-	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.add_child(card)
-	strip = EventSheetPopupUI.help_strip()
-	this_row = strip.add_line(EventSheetL10n.translate("THIS ROW"), true)
-	strip.visible = false
-	body.add_child(strip)
+	var results: Dictionary = EventSheetPopupUI.add_results(body, EventSheetL10n.translate("Repeats"), tree)
+	strip = results["strip"]
+	this_row = results["this_row"]
 
 
 func open() -> void:

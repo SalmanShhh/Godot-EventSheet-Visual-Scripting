@@ -106,19 +106,8 @@ func _build() -> void:
 ## The inbox's four columns: the mark (a severity edge and a new dot, read before a word is), the
 ## section, where, and the finding. Static so a preview draws the same tree the window does.
 static func inbox_tree() -> Tree:
-	var tree: Tree = Tree.new()
-	tree.hide_root = true
-	tree.columns = 4
-	var titles: Array[String] = ["", EventSheetL10n.translate("Section"), EventSheetL10n.translate("Where"),
-		EventSheetL10n.translate("Finding")]
-	var widths: Array[float] = [26.0, 190.0, 170.0, 0.0]
-	for column: int in 4:
-		tree.set_column_title(column, titles[column])
-		tree.set_column_expand(column, column == 3)
-		tree.set_column_custom_minimum_width(column, roundi(EventSheetPalette.scaled_f(widths[column])))
-	tree.column_titles_visible = true
-	tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	return tree
+	return EventSheetPopupUI.table(PackedStringArray(["", EventSheetL10n.translate("Section"),
+		EventSheetL10n.translate("Where"), EventSheetL10n.translate("Finding")]), 0.0, {0: 26.0, 1: 190.0, 2: 170.0})
 
 
 static func _button(text: String, pressed: Callable) -> Button:

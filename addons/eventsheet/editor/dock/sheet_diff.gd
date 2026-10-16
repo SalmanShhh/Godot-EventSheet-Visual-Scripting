@@ -330,11 +330,11 @@ func _ensure_dialog(host: Node) -> void:
 		return
 	if is_instance_valid(_dialog):
 		_dialog.queue_free()
-	_dialog = AcceptDialog.new()
-	_dialog.ok_button_text = EventSheetL10n.translate("Go to Row")
-	_dialog.add_cancel_button(EventSheetL10n.translate("Close"))
-	_dialog.confirmed.connect(_go_to_row)
-	var content: VBoxContainer = EventSheetPopupUI.form_box()
+	var parts: Dictionary = EventSheetPopupUI.panel_window("", Vector2i.ZERO, host,
+		EventSheetL10n.translate("Go to Row"), _go_to_row, true)
+	_dialog = parts["window"]
+	_dialog.cancel_button_text = EventSheetL10n.translate("Close")
+	var content: VBoxContainer = parts["box"]
 	_summary_label = EventSheetPopupUI.hint_label("")
 	content.add_child(_summary_label)
 	_list = EventSheetPopupUI.sized_list(200.0)
@@ -344,5 +344,3 @@ func _ensure_dialog(host: Node) -> void:
 	content.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("Changes on save"), _list))
 	_strip = EventSheetPopupUI.help_strip()
 	content.add_child(_strip)
-	_dialog.add_child(EventSheetPopupUI.margined(content))
-	host.add_child(_dialog)

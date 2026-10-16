@@ -62,11 +62,8 @@ func build() -> void:
 	clear_button.pressed.connect(ask_clear_all)
 	toolbar.add_child(clear_button)
 	body_box.add_child(toolbar)
-	tree = Tree.new()
-	tree.hide_root = true
+	tree = EventSheetPopupUI.table(PackedStringArray(), 180.0)
 	tree.select_mode = Tree.SELECT_ROW
-	tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	tree.custom_minimum_size = Vector2(0.0, 180.0)
 	tree.item_selected.connect(_on_entry_selected)
 	body_box.add_child(tree)
 	_empty_hint = EventSheetPopupUI.hint_label("No bookmarks yet - select a row and press Ctrl+M to mark it. F4 / Shift+F4 cycle through marks.", 360.0)

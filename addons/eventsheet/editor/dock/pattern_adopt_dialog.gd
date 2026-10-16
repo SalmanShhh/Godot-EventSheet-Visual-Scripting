@@ -73,11 +73,9 @@ func _column_label() -> Label:
 func _build_dialog() -> void:
 	if _dialog != null:
 		return
-	_dialog = AcceptDialog.new()
-	_dialog.ok_button_text = "Adopt"
-	_dialog.add_cancel_button("Cancel")
-	_dialog.confirmed.connect(confirm)
-	var content: VBoxContainer = EventSheetPopupUI.form_box()
+	var parts: Dictionary = EventSheetPopupUI.panel_window("", Vector2i.ZERO, _dock, "Adopt", confirm, true)
+	_dialog = parts["window"]
+	var content: VBoxContainer = parts["box"]
 	_summary_label = EventSheetPopupUI.hint_label("")
 	content.add_child(_summary_label)
 	# The two halves sit side by side because they are meant to be COMPARED, and each is a wrapping
@@ -94,9 +92,7 @@ func _build_dialog() -> void:
 	content.add_child(columns)
 	_checks_label = EventSheetPopupUI.hint_label("")
 	content.add_child(EventSheetPopupUI.titled_card("Keeps working because", _checks_label))
-	_dialog.add_child(EventSheetPopupUI.margined(content))
 	EventSheetL10n.apply_to(_dialog)
-	_dock.add_child(_dialog)
 
 
 ## Draw one plan. A refusal fills the summary and empties everything else, and the button is

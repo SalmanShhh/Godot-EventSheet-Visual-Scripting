@@ -309,18 +309,9 @@ func _open_lift_report() -> void:
 		_lift_report_window.title = "Lift Report - what became events, what stayed code"
 		_lift_report_window.size = Vector2i(640, 400)
 		_lift_report_window.close_requested.connect(func() -> void: _lift_report_window.hide())
-		_lift_report_tree = Tree.new()
+		_lift_report_tree = EventSheetPopupUI.table(PackedStringArray(["Kind", "Row",
+			"Why it stayed code (and the structured equivalent)"]), 0.0, {0: 80.0, 1: 220.0})
 		_lift_report_tree.set_anchors_preset(Control.PRESET_FULL_RECT)
-		_lift_report_tree.hide_root = true
-		_lift_report_tree.columns = 3
-		_lift_report_tree.set_column_title(0, "Kind")
-		_lift_report_tree.set_column_title(1, "Row")
-		_lift_report_tree.set_column_title(2, "Why it stayed code (and the structured equivalent)")
-		_lift_report_tree.set_column_expand(0, false)
-		_lift_report_tree.set_column_custom_minimum_width(0, 80)
-		_lift_report_tree.set_column_expand(1, false)
-		_lift_report_tree.set_column_custom_minimum_width(1, 220)
-		_lift_report_tree.column_titles_visible = true
 		_lift_report_window.add_child(_lift_report_tree)
 		_dock.add_child(_lift_report_window)
 	_lift_report_tree.clear()

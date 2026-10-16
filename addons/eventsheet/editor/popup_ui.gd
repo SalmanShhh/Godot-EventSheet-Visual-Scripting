@@ -1062,6 +1062,51 @@ static func sized_list(rows_high: float) -> ItemList:
 	return list
 
 
+## A TABLE: a Tree with its root hidden and one titled column per title (no title row when there are
+## none), taking the height its column gives it and never less than `min_height` at the editor's own
+## scale. `fixed` keeps a narrow column narrow: {column: width}. The shape every result, watch and
+## finding list in the plugin shares.
+static func table(titles: PackedStringArray = PackedStringArray(), min_height: float = 0.0,
+		fixed: Dictionary = {}) -> Tree:
+	var tree: Tree = Tree.new()
+	tree.hide_root = true
+	tree.columns = maxi(titles.size(), 1)
+	for index: int in titles.size():
+		tree.set_column_title(index, titles[index])
+	tree.column_titles_visible = not titles.is_empty()
+	for column: int in fixed:
+		tree.set_column_expand(column, false)
+		tree.set_column_custom_minimum_width(column, roundi(EventSheetPalette.scaled_f(float(fixed[column]))))
+	tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	tree.custom_minimum_size.y = EventSheetPalette.scaled_f(min_height)
+	return tree
+
+
+## A window's list of results, added to the end of `box`: the table in a titled card that takes the
+## window's spare height, then a strip that names the selected result on its THIS ROW line (hidden
+## until something is selected). With `count`, a quiet line under the table says how many there are.
+## Returns {card, count, strip, this_row}.
+static func add_results(box: Container, title: String, results: Tree, count: bool = false) -> Dictionary:
+	var parts: Dictionary = {}
+	var content: Control = results
+	if count:
+		content = form_box()
+		content.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		content.add_child(results)
+		parts["count"] = hint_label("")
+		content.add_child(parts["count"])
+	var card: PanelContainer = titled_card(title, content)
+	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(card)
+	var strip: HelpStrip = help_strip()
+	parts["this_row"] = strip.add_line(EventSheetL10n.translate("THIS ROW"), true)
+	strip.visible = false
+	box.add_child(strip)
+	parts["card"] = card
+	parts["strip"] = strip
+	return parts
+
+
 # ── The window kit's state parts ──────────────────────────────────────────────────────────────
 #
 # A window says how things stand in three tones and no more: ok (green), a warning (amber - it

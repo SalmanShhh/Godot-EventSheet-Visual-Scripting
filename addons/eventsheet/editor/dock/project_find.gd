@@ -19,9 +19,6 @@ func _init(dock: Control) -> void:
 	_dock = dock
 
 
-func open(initial_query: String = "") -> void:
-	_open_project_find(initial_query)
-
 var _project_find_window: ConfirmationDialog = null
 var _project_find_edit: LineEdit = null
 var _project_replace_edit: LineEdit = null
@@ -31,7 +28,7 @@ var _project_find_strip: EventSheetPopupUI.HelpStrip = null
 var _project_find_this_row: Label = null
 
 
-func _open_project_find(initial_query: String = "") -> void:
+func open(initial_query: String = "") -> void:
 	if _project_find_window == null:
 		_build_project_find()
 	if not initial_query.is_empty():
@@ -67,31 +64,14 @@ func _build_project_find() -> void:
 	_project_replace_edit = LineEdit.new()
 	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Replace with"), _project_replace_edit))
 	box.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("Find and replace"), form))
-	_project_find_results = Tree.new()
-	_project_find_results.hide_root = true
-	_project_find_results.columns = 3
-	_project_find_results.set_column_title(0, EventSheetL10n.translate("Sheet"))
-	_project_find_results.set_column_title(1, EventSheetL10n.translate("Event"))
-	_project_find_results.set_column_title(2, EventSheetL10n.translate("Match"))
-	_project_find_results.set_column_expand(1, false)
-	_project_find_results.set_column_custom_minimum_width(1, roundi(EventSheetPalette.scaled_f(64.0)))
-	_project_find_results.column_titles_visible = true
-	_project_find_results.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_project_find_results.custom_minimum_size.y = EventSheetPalette.scaled_f(170.0)
+	_project_find_results = EventSheetPopupUI.table(PackedStringArray([EventSheetL10n.translate("Sheet"),
+		EventSheetL10n.translate("Event"), EventSheetL10n.translate("Match")]), 170.0, {1: 64.0})
 	_project_find_results.item_selected.connect(_on_project_find_selected)
 	_project_find_results.item_activated.connect(_on_project_find_activated)
-	var results: VBoxContainer = EventSheetPopupUI.form_box()
-	results.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	results.add_child(_project_find_results)
-	_project_find_count = EventSheetPopupUI.hint_label("")
-	results.add_child(_project_find_count)
-	var results_card: PanelContainer = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Results"), results)
-	results_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	box.add_child(results_card)
-	_project_find_strip = EventSheetPopupUI.help_strip()
-	_project_find_this_row = _project_find_strip.add_line(EventSheetL10n.translate("THIS ROW"), true)
-	_project_find_strip.visible = false
-	box.add_child(_project_find_strip)
+	var results: Dictionary = EventSheetPopupUI.add_results(box, EventSheetL10n.translate("Results"), _project_find_results, true)
+	_project_find_count = results["count"]
+	_project_find_strip = results["strip"]
+	_project_find_this_row = results["this_row"]
 
 
 ## Every .tres EventSheetResource under res:// (skips .godot and addons internals). `.tres` ONLY: a

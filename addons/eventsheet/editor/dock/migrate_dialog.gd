@@ -164,11 +164,10 @@ static func _said(entry: Dictionary, key: String) -> String:
 func _build_dialog() -> void:
 	if _dialog != null:
 		return
-	_dialog = AcceptDialog.new()
-	_dialog.ok_button_text = EventSheetL10n.translate("Migrate These Rows")
-	_dialog.add_cancel_button(EventSheetL10n.translate("Cancel"))
-	_dialog.confirmed.connect(confirm)
-	var content: VBoxContainer = EventSheetPopupUI.form_box()
+	var parts: Dictionary = EventSheetPopupUI.panel_window("", Vector2i.ZERO, _dock,
+		EventSheetL10n.translate("Migrate These Rows"), confirm, true)
+	_dialog = parts["window"]
+	var content: VBoxContainer = parts["box"]
 	_summary_label = EventSheetPopupUI.hint_label("")
 	content.add_child(_summary_label)
 	_rewrite_list = EventSheetPopupUI.sized_list(180.0)
@@ -176,9 +175,7 @@ func _build_dialog() -> void:
 	_left_alone_list = EventSheetPopupUI.sized_list(90.0)
 	_left_alone_card = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Left exactly as they are"), _left_alone_list)
 	content.add_child(_left_alone_card)
-	_dialog.add_child(EventSheetPopupUI.margined(content))
 	EventSheetL10n.apply_to(_dialog)
-	_dock.add_child(_dialog)
 
 
 ## Draws the receipt for the plan this dialog was opened on. What is shown is what would land: both

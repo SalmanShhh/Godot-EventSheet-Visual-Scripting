@@ -21,9 +21,10 @@ class_name DialogHelpWalkTest
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
-## Where the editor's dialogs live, and the call that makes a strip.
+## Where the editor's dialogs live, and the calls that make a strip: the strip itself, and a result
+## list, which brings its own strip naming the picked result.
 const EDITOR_DIR: String = "res://addons/eventsheet/editor"
-const STRIP_CALL: String = "EventSheetPopupUI.help_strip("
+const STRIP_CALLS: Array[String] = ["EventSheetPopupUI.help_strip(", "EventSheetPopupUI.add_results("]
 
 ## The component itself, which of course names the call it defines.
 const THE_COMPONENT: String = "res://addons/eventsheet/editor/popup_ui.gd"
@@ -133,7 +134,9 @@ static func _test_one_strip_per_dialog() -> bool:
 	var offenders: PackedStringArray = PackedStringArray()
 	for path: String in _dialog_paths():
 		var source: String = FileAccess.get_file_as_string(path)
-		var strips: int = source.count(STRIP_CALL)
+		var strips: int = 0
+		for call_text: String in STRIP_CALLS:
+			strips += source.count(call_text)
 		var dialogs: int = 0
 		for call_text: String in DIALOG_CALLS:
 			dialogs += source.count(call_text)
@@ -230,7 +233,7 @@ static func _scan(directory: String, found: PackedStringArray) -> void:
 		var path: String = "%s/%s" % [directory, name]
 		if not name.ends_with(".gd") or path == THE_COMPONENT:
 			continue
-		if FileAccess.get_file_as_string(path).contains(STRIP_CALL):
+		if _mentions_any(FileAccess.get_file_as_string(path), STRIP_CALLS):
 			found.append(path)
 	for sub_directory: String in dir.get_directories():
 		_scan("%s/%s" % [directory, sub_directory], found)

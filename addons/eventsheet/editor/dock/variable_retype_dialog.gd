@@ -56,11 +56,10 @@ func open(entry: Dictionary) -> void:
 func _build_dialog() -> void:
 	if _dialog != null:
 		return
-	_dialog = AcceptDialog.new()
-	_dialog.ok_button_text = EventSheetL10n.translate("Change It Everywhere")
-	_dialog.add_cancel_button(EventSheetL10n.translate("Cancel"))
-	_dialog.confirmed.connect(confirm)
-	var content: VBoxContainer = EventSheetPopupUI.form_box()
+	var parts: Dictionary = EventSheetPopupUI.panel_window("", Vector2i.ZERO, _dock,
+		EventSheetL10n.translate("Change It Everywhere"), confirm, true)
+	_dialog = parts["window"]
+	var content: VBoxContainer = parts["box"]
 	content.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("Changes the variable's type AND every row that sets or compares it, in one step you can undo. Values it cannot convert on its own are listed below rather than guessed at.")))
 	_type_option = EventSheetPopupUI.described_option()
 	VariableDialog.add_type_items(_type_option)
@@ -78,8 +77,6 @@ func _build_dialog() -> void:
 	content.add_child(_review_card)
 	_strip = EventSheetPopupUI.help_strip()
 	content.add_child(_strip)
-	_dialog.add_child(EventSheetPopupUI.margined(content))
-	_dock.add_child(_dialog)
 
 
 ## The Godot type the dropdown currently means.

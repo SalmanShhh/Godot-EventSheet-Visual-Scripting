@@ -55,30 +55,14 @@ func _build() -> void:
 	# What "whole symbol" means is a question for the title, not a line the window always shows.
 	card.tooltip_text = EventSheetL10n.translate("Whole symbol, so move_speed never matches max_move_speed.")
 	box.add_child(card)
-	_find_refs_tree = Tree.new()
-	_find_refs_tree.hide_root = true
-	_find_refs_tree.columns = 2
-	_find_refs_tree.set_column_title(0, EventSheetL10n.translate("Where"))
-	_find_refs_tree.set_column_title(1, EventSheetL10n.translate("Match"))
-	_find_refs_tree.set_column_expand(0, false)
-	_find_refs_tree.set_column_custom_minimum_width(0, roundi(EventSheetPalette.scaled_f(170.0)))
-	_find_refs_tree.column_titles_visible = true
-	_find_refs_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_find_refs_tree.custom_minimum_size.y = EventSheetPalette.scaled_f(170.0)
+	_find_refs_tree = EventSheetPopupUI.table(PackedStringArray([EventSheetL10n.translate("Where"),
+		EventSheetL10n.translate("Match")]), 170.0, {0: 170.0})
 	_find_refs_tree.item_selected.connect(_on_find_reference_selected)
 	_find_refs_tree.item_activated.connect(_on_find_reference_activated)
-	var results: VBoxContainer = EventSheetPopupUI.form_box()
-	results.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	results.add_child(_find_refs_tree)
-	_find_refs_count = EventSheetPopupUI.hint_label("")
-	results.add_child(_find_refs_count)
-	var results_card: PanelContainer = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Results"), results)
-	results_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	box.add_child(results_card)
-	_find_refs_strip = EventSheetPopupUI.help_strip()
-	_find_refs_this_row = _find_refs_strip.add_line(EventSheetL10n.translate("THIS ROW"), true)
-	_find_refs_strip.visible = false
-	box.add_child(_find_refs_strip)
+	var results: Dictionary = EventSheetPopupUI.add_results(box, EventSheetL10n.translate("Results"), _find_refs_tree, true)
+	_find_refs_count = results["count"]
+	_find_refs_strip = results["strip"]
+	_find_refs_this_row = results["this_row"]
 
 
 ## Populates the references tree: one item per sheet, its uses under it. Returns the total count (so

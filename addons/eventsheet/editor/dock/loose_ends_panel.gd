@@ -239,16 +239,8 @@ func build() -> void:
 	summary_label = EventSheetPopupUI.hint_label(
 		"Everything you left half-done, in one list. Nothing here is drawn on the sheet - click an entry to jump to the row.", 420.0)
 	body.add_child(summary_label)
-	tree = Tree.new()
-	tree.hide_root = true
-	tree.columns = 2
-	tree.set_column_title(0, "What")
-	tree.set_column_title(1, "Where")
-	tree.column_titles_visible = true
-	tree.set_column_expand(1, false)
-	tree.set_column_custom_minimum_width(1, 190)
+	tree = EventSheetPopupUI.table(PackedStringArray(["What", "Where"]), 0.0, {1: 190.0})
 	tree.select_mode = Tree.SELECT_ROW
-	tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	tree.item_selected.connect(_on_entry_selected)
 	var card: PanelContainer = EventSheetPopupUI.labelled_card("Loose ends", tree)
 	card.size_flags_vertical = Control.SIZE_EXPAND_FILL

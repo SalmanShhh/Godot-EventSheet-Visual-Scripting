@@ -246,11 +246,10 @@ func _point_the_nodes(new_reference: String) -> void:
 func _build_dialog() -> void:
 	if _dialog != null:
 		return
-	_dialog = AcceptDialog.new()
-	_dialog.ok_button_text = EventSheetL10n.translate("Rename")
-	_dialog.add_cancel_button(EventSheetL10n.translate("Cancel"))
-	_dialog.confirmed.connect(confirm)
-	var content: VBoxContainer = EventSheetPopupUI.form_box()
+	var parts: Dictionary = EventSheetPopupUI.panel_window("", Vector2i.ZERO, _dock,
+		EventSheetL10n.translate("Rename"), confirm, true)
+	_dialog = parts["window"]
+	var content: VBoxContainer = parts["box"]
 	_name_edit = LineEdit.new()
 	_name_edit.text_changed.connect(func(_text: String) -> void: _fill())
 	content.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("New name"), _name_edit))
@@ -270,9 +269,7 @@ func _build_dialog() -> void:
 	content.add_child(_includers_card)
 	_strip = EventSheetPopupUI.help_strip()
 	content.add_child(_strip)
-	_dialog.add_child(EventSheetPopupUI.margined(content))
 	EventSheetL10n.apply_to(_dialog)
-	_dock.add_child(_dialog)
 
 
 ## Draws the receipt for the name currently typed. What is shown is what would land: the list and the

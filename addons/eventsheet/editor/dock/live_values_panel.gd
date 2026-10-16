@@ -120,14 +120,7 @@ func ensure_window() -> void:
 	trail_label = EventSheetPopupUI.hint_label("", 0.0)
 	trail_label.visible = false
 	stream_box.add_child(trail_label)
-	tree = Tree.new()
-	tree.hide_root = true
-	tree.columns = 2
-	tree.set_column_title(0, "Variable")
-	tree.set_column_title(1, "Value (editable)")
-	tree.column_titles_visible = true
-	tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	tree.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(160.0))
+	tree = EventSheetPopupUI.table(PackedStringArray(["Variable", "Value (editable)"]), 160.0)
 	tree.item_edited.connect(_on_live_value_edited)
 	stream_box.add_child(tree)
 	var stream_card: PanelContainer = EventSheetPopupUI.titled_card("Live Values", stream_box)
@@ -162,14 +155,7 @@ static func watch_card(hint: String, titled: bool = true) -> Dictionary:
 	button.text = "Watch"
 	row.add_child(button)
 	box.add_child(row)
-	var table: Tree = Tree.new()
-	table.hide_root = true
-	table.columns = 2
-	table.set_column_title(0, "Expression")
-	table.set_column_title(1, "Value")
-	table.column_titles_visible = true
-	table.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	table.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(80.0))
+	var table: Tree = EventSheetPopupUI.table(PackedStringArray(["Expression", "Value"]), 80.0)
 	box.add_child(table)
 	var card: PanelContainer = EventSheetPopupUI.titled_card("Watch", box) if titled \
 		else EventSheetPopupUI.panel_section(box)
