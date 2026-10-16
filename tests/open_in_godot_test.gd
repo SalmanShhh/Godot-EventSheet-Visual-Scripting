@@ -31,11 +31,11 @@ static func run() -> bool:
 	dock._ensure_raw_code_dialog()
 	dock._raw_code_target = block
 	dock._raw_code_edit.text = "print(\"edited in popup\")"
-	dock._open_raw_code_block_in_godot()
+	dock._preview_glue._open_raw_code_block_in_godot()
 	all_passed = _check("block in a .tres sheet is left untouched (no file to open)", block.code, "print(\"original\")") and all_passed
 
 	# Generated "Open in Godot" on a non-backed sheet also just nudges to Save As - no throwaway files.
-	dock._ensure_code_panel()
+	dock._ui_builder.ensure_code_panel()
 	dock._code_edit.text = "extends Node\nfunc _ready() -> void:\n\tpass\n"
 	dock._open_generated_in_godot()
 	all_passed = _check("non-backed 'Open in Godot' writes no throwaway files",
@@ -44,7 +44,7 @@ static func run() -> bool:
 	# Affordances are wired: the block popup, provider dialog, and generated panel each expose "Open in Godot".
 	all_passed = _check("block popup has an 'Open in Godot' button",
 		_find_button(dock._raw_code_dialog, "Open in Godot Script Editor") != null, true) and all_passed
-	dock._build_provider_dialog()
+	dock._ui_builder.build_provider_dialog()
 	all_passed = _check("provider dialog has an 'Open in Godot' button",
 		_find_button(dock._provider_dialog, "Open in Godot Script Editor") != null, true) and all_passed
 	all_passed = _check("generated panel has an 'Open in Godot' button",

@@ -20,8 +20,8 @@ static func run() -> bool:
 	var ok: bool = true
 
 	var dock: EventSheetDock = EventSheetDock.new()
-	dock._build_provider_dialog()
-	dock._preview_provider_script(UNTYPED, true)
+	dock._ui_builder.build_provider_dialog()
+	dock._providers_glue.preview_provider_script(UNTYPED, true)
 
 	var glue: EventSheetProviderRegistryGlue = dock._providers_glue
 	# Worth pinning literally: ONE numeric `@export` publishes four rows (read, set, add, subtract),
@@ -91,7 +91,7 @@ static func run() -> bool:
 	ok = _check("clearing a spec drops it", glue.param_specs_for("start_wave"), {}) and ok
 	# Specs are per-script: carrying them across would annotate a member that merely shares a name.
 	glue.set_param_spec("start_wave", "index", {"hint": "comparison"})
-	dock._preview_provider_script("res://tests/fixtures/typed_provider_fixture.gd", false)
+	dock._providers_glue.preview_provider_script("res://tests/fixtures/typed_provider_fixture.gd", false)
 	ok = _check("switching provider clears pending specs", glue.param_specs_for("start_wave"), {}) and ok
 
 	# Keep old events working: the button waits for the name it forwards from, and the exact

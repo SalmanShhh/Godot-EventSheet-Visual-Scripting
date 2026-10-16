@@ -30,8 +30,8 @@ func _on_frame() -> void:
 	if _frames == 2:
 		_dock = EventSheetDock.new()
 		root.add_child(_dock)
-		_dock._build_provider_dialog()
-		_dock._preview_provider_script(UNTYPED, true)
+		_dock._ui_builder.build_provider_dialog()
+		_dock._providers_glue.preview_provider_script(UNTYPED, true)
 		_dock._provider_dialog.popup_centered(Vector2i(780, 560))
 		_curate()
 		return

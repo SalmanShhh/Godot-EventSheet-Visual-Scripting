@@ -49,7 +49,7 @@ static func run() -> bool:
 
 	# ── Right-click delete removes it from the sheet (undoable) and refreshes list + count ──
 	dock._functions_list.select(0)
-	dock._delete_selected_function()
+	dock._code_panel_glue.delete_selected_function()
 	ok = _check("delete removes the function from the sheet", sheet.functions.size(), 1) and ok
 	ok = _check("list refreshes after delete", dock._functions_list.item_count, 1) and ok
 	ok = _check("the remaining function is the survivor", (sheet.functions[0] as EventFunction).function_name, "compute") and ok

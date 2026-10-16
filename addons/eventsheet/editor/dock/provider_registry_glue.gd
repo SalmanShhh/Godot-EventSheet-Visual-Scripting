@@ -108,7 +108,7 @@ func add_ace_provider_script(path: String) -> bool:
 	)
 	if changed:
 		_dock._refresh_ace_registry()
-		_dock._providers_glue.refresh_provider_list()
+		refresh_provider_list()
 		_dock._mark_dirty("Added ACE provider: %s" % clean_path.get_file())
 	return changed
 
@@ -125,7 +125,7 @@ func remove_ace_provider_script(path: String) -> bool:
 	)
 	if changed:
 		_dock._refresh_ace_registry()
-		_dock._providers_glue.refresh_provider_list()
+		refresh_provider_list()
 		_dock._mark_dirty("Removed ACE provider: %s" % path.get_file())
 	return changed
 
@@ -142,8 +142,8 @@ func get_ace_provider_scripts() -> PackedStringArray:
 func on_manage_ace_providers_requested() -> void:
 	if not _dock._ensure_sheet_for_editing():
 		return
-	_dock._build_provider_dialog()
-	_dock._providers_glue.refresh_provider_list()
+	_dock._ui_builder.build_provider_dialog()
+	refresh_provider_list()
 	# Roomier than the old list-only dialog: it now carries the "what it publishes" preview table too.
 	_dock._provider_dialog.popup_centered(Vector2i(760, 640))
 

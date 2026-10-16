@@ -18,10 +18,10 @@ static func run() -> bool:
 	dock.setup(null)
 
 	# .gd is the default: bare/odd extensions normalize to .gd; .tres/.res/.gd are preserved.
-	all_passed = _check("extensionless path defaults to .gd", dock._normalize_sheet_save_path("res://foo"), "res://foo.gd") and all_passed
-	all_passed = _check("foreign extension coerces to .gd", dock._normalize_sheet_save_path("res://foo.txt"), "res://foo.gd") and all_passed
-	all_passed = _check(".gd is preserved", dock._normalize_sheet_save_path("res://foo.gd"), "res://foo.gd") and all_passed
-	all_passed = _check(".tres is still preserved", dock._normalize_sheet_save_path("res://foo.tres"), "res://foo.tres") and all_passed
+	all_passed = _check("extensionless path defaults to .gd", dock._sheet_io._normalize_sheet_save_path("res://foo"), "res://foo.gd") and all_passed
+	all_passed = _check("foreign extension coerces to .gd", dock._sheet_io._normalize_sheet_save_path("res://foo.txt"), "res://foo.gd") and all_passed
+	all_passed = _check(".gd is preserved", dock._sheet_io._normalize_sheet_save_path("res://foo.gd"), "res://foo.gd") and all_passed
+	all_passed = _check(".tres is still preserved", dock._sheet_io._normalize_sheet_save_path("res://foo.tres"), "res://foo.tres") and all_passed
 	all_passed = _check("the default save filter is .gd", EventSheetDock.EVENT_SHEET_FILTERS[0].begins_with("*.gd"), true) and all_passed
 
 	# Build a structured sheet and save it as .gd.
@@ -38,7 +38,7 @@ static func run() -> bool:
 	_remove_probe()
 
 	var tabs_before: int = dock._open_tabs.size()
-	var saved: bool = dock._save_sheet_as_gdscript(PROBE_PATH)
+	var saved: bool = dock._sheet_io._save_sheet_as_gdscript(PROBE_PATH)
 	all_passed = _check("save as .gd succeeds", saved, true) and all_passed
 	all_passed = _check("the .gd file was written", FileAccess.file_exists(PROBE_PATH), true) and all_passed
 	# The sheet is now GDScript-backed and editable (not a read-only preview).

@@ -401,7 +401,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	# and would act on null. Captions are identified by their span kind, not by a null resource: plenty
 	# of ordinary comment rows are built without one.
 	var is_comment: bool = row_type == EventRowData.RowType.COMMENT and not _is_caption_row(row_data)
-	var multi: bool = _dock._get_selected_rows_from_context().size() > 1
+	var multi: bool = _dock._queries.get_selected_rows_from_context().size() > 1
 	# Type-specific authoring first. (Open/Close Group and the disable label below are
 	# relabeled to the live state by _configure_context_menu before the popup shows.)
 	# Data-class rows are checked BEFORE the row-type chain: both the holder and its field
@@ -720,12 +720,12 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 			var inverting_trigger: bool = str(_dock._context_hit.get("span_metadata", {}).get("kind", "")) == "trigger"
 			menu.set_item_disabled(invert_index, inverting_trigger)
 			menu.set_item_tooltip(invert_index, "Triggers can't be inverted - there's no \"not On X\"." if inverting_trigger else "")
-			menu.set_item_text(invert_index, "Remove Inversion" if _dock._context_condition_is_negated() else "Invert Condition")
+			menu.set_item_text(invert_index, "Remove Inversion" if _dock._row_edit_ops._context_condition_is_negated() else "Invert Condition")
 		var condition_toggle_index: int = menu.get_item_index(_dock.CONDITION_MENU_TOGGLE_ENABLED)
 		if condition_toggle_index >= 0:
 			menu.set_item_text(
 				condition_toggle_index,
-				"Enable Condition" if _dock._context_ace_is_disabled() else "Disable Condition"
+				"Enable Condition" if _dock._row_edit_ops._context_ace_is_disabled() else "Disable Condition"
 			)
 	elif menu == _dock._row_context_menu:
 		# A read-only preview reads the file but never rewrites it, so the three event-shape
@@ -734,7 +734,7 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 		var preview_reason: String = "This is a read-only preview - press Edit Events to change the file." if previewing else ""
 		var toggle_index: int = menu.get_item_index(_dock.ROW_MENU_TOGGLE_CONDITION_BLOCK)
 		if toggle_index >= 0:
-			var selected_events: Array[EventRow] = _dock._get_selected_event_rows_from_context()
+			var selected_events: Array[EventRow] = _dock._queries.get_selected_event_rows_from_context()
 			var has_events: bool = not selected_events.is_empty()
 			menu.set_item_disabled(toggle_index, previewing or not has_events)
 			menu.set_item_tooltip(toggle_index, preview_reason)
@@ -743,7 +743,7 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 					toggle_index,
 					(
 						"Make 'And' block"
-						if _dock._event_rows_use_or_mode(selected_events)
+						if _dock._queries.event_rows_use_or_mode(selected_events)
 						else "Make 'Or' block"
 					)
 				)
@@ -756,7 +756,7 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 		var else_index: int = menu.get_item_index(_dock.ROW_MENU_MAKE_ELSE)
 		var elif_index: int = menu.get_item_index(_dock.ROW_MENU_MAKE_ELIF)
 		if else_index >= 0 or elif_index >= 0:
-			var else_events: Array[EventRow] = _dock._get_selected_event_rows_from_context()
+			var else_events: Array[EventRow] = _dock._queries.get_selected_event_rows_from_context()
 			var has_else_events: bool = not else_events.is_empty()
 			var all_else: bool = has_else_events
 			var all_elif: bool = has_else_events
@@ -797,7 +797,7 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 		if row_toggle_index >= 0:
 			menu.set_item_text(
 				row_toggle_index,
-				"Enable Row" if _dock._context_row_is_disabled() else "Disable Row"
+				"Enable Row" if _dock._row_edit_ops._context_row_is_disabled() else "Disable Row"
 			)
 	elif menu == _dock._variable_context_menu:
 		var has_variable: bool = not _dock._variables._context_variable.is_empty()
@@ -872,7 +872,7 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 		if action_toggle_index >= 0:
 			menu.set_item_text(
 				action_toggle_index,
-				"Enable Action" if _dock._context_ace_is_disabled() else "Disable Action"
+				"Enable Action" if _dock._row_edit_ops._context_ace_is_disabled() else "Disable Action"
 			)
 
 

@@ -198,7 +198,7 @@ static func run() -> bool:
     all_passed = _check("switching sheets updates title path hint", title_path_label.text, "res://demo/sheets/test_title_sheet.tres") and all_passed
     dock._mark_dirty("Changed title state")
     all_passed = _check("dirty edit shows title dirty indicator", title_dirty_dot.visible, true) and all_passed
-    dock._save_sheet_to_path("user://event_sheet_editor_title_roundtrip.tres")
+    dock._sheet_io._save_sheet_to_path("user://event_sheet_editor_title_roundtrip.tres")
     all_passed = _check("saving sheet hides dirty indicator", title_dirty_dot.visible, false) and all_passed
     all_passed = _check("saving sheet updates title tab text", title_tab_label.text, "event_sheet_editor_title_roundtrip") and all_passed
     all_passed = _check("saving sheet updates title path hint", title_path_label.text, "user://event_sheet_editor_title_roundtrip.tres") and all_passed
@@ -1419,7 +1419,7 @@ static func run() -> bool:
     all_passed = _check("redo restores local variable creation", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 1) and all_passed
     # The one way a variable is opened for editing: the row the reader picked, through the context.
     dock._variables._context_variable = {"scope": "global", "name": "ammo", "type": "int", "default": 12}
-    dock._edit_context_variable()
+    dock._variables._edit_context_variable()
     all_passed = _check("editing global variable in use locks type selector", dock._variable_dlg._type_option.disabled, true) and all_passed
     dock._on_variable_dialog_confirmed("ammo", "int", 99, "global", {"editing": true, "original_name": "ammo"}, true)
     all_passed = _check("editing global variable updates default", dock.get_current_sheet().variables["ammo"].get("default", 0), 99) and all_passed
@@ -1451,14 +1451,14 @@ static func run() -> bool:
     all_passed = _check("variable double-click populates current variable name", dock._variable_dlg.get_last_name_text(), "ammo") and all_passed
     dock._variable_dlg._dialog.hide()
     dock._variables._context_variable = {"scope": "global", "name": "ammo", "type": "int", "is_constant": true, "supports_const": true}
-    dock._toggle_context_variable_constant()
+    dock._variables._toggle_context_variable_constant()
     all_passed = _check("context toggle can unset global const flag", dock.get_current_sheet().variables["ammo"].get("const", true), false) and all_passed
     dock._on_undo_requested()
     all_passed = _check("undo restores const toggle action", dock.get_current_sheet().variables["ammo"].get("const", false), true) and all_passed
     dock._on_redo_requested()
     all_passed = _check("redo reapplies const toggle action", dock.get_current_sheet().variables["ammo"].get("const", true), false) and all_passed
     dock._variables._context_variable = {"scope": "global", "name": "ammo", "type": "int", "is_constant": false, "supports_const": true}
-    dock._toggle_context_variable_constant()
+    dock._variables._toggle_context_variable_constant()
     all_passed = _check("context toggle can set global const flag again", dock.get_current_sheet().variables["ammo"].get("const", false), true) and all_passed
 
     var conversion_event_uid: String = (dock.get_current_sheet().events[0] as EventRow).event_uid
@@ -1616,7 +1616,7 @@ static func run() -> bool:
     save_sheet.variables = {"ammo": {"type": "int", "default": 12, "exported": true, "const": true}}
     var temp_path: String = "user://event_sheet_editor_test.tres"
     dock.setup(save_sheet)
-    dock._save_sheet_to_path(temp_path)
+    dock._sheet_io._save_sheet_to_path(temp_path)
     var exists_after_save: bool = FileAccess.file_exists(temp_path)
     all_passed = _check("save workflow writes EventSheet resource", exists_after_save, true) and all_passed
     if exists_after_save:
@@ -1626,8 +1626,8 @@ static func run() -> bool:
     # Default-filename normalization derives from an unsaved/unnamed sheet, so it falls back to the
     # generic event_sheet.gd (the default sheet format - no .tres needed) rather than the loaded name.
     dock.setup(EventSheetResource.new())
-    all_passed = _check("save normalization adds default filename", dock._normalize_sheet_save_path("res://"), "res://event_sheet.gd") and all_passed
-    all_passed = _check("save normalization appends gd extension", dock._normalize_sheet_save_path("res://sheets/editor_sheet"), "res://sheets/editor_sheet.gd") and all_passed
+    all_passed = _check("save normalization adds default filename", dock._sheet_io._normalize_sheet_save_path("res://"), "res://event_sheet.gd") and all_passed
+    all_passed = _check("save normalization appends gd extension", dock._sheet_io._normalize_sheet_save_path("res://sheets/editor_sheet"), "res://sheets/editor_sheet.gd") and all_passed
 
     # Drag-drop ACE preview opens popup window content.
     var preview_defs: Array[ACEDefinition] = []
@@ -1676,7 +1676,7 @@ static func run() -> bool:
     export_sheet.events = [export_event]
     dock.setup(export_sheet)
     var export_path := "user://event_sheet_export_test.gd"
-    dock._write_exported_gdscript(export_path)
+    dock._sheet_io._write_exported_gdscript(export_path)
     all_passed = _check("export GDScript writes a file", FileAccess.file_exists(export_path), true) and all_passed
     if FileAccess.file_exists(export_path):
         var exported_src: String = FileAccess.get_file_as_string(export_path)

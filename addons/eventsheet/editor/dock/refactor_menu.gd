@@ -154,7 +154,7 @@ static func inline_everywhere_requested(dock: Control) -> void:
 		return int(folded["sites"]) >= 0
 	)
 	if changed:
-		dock._refresh_functions_list()
+		dock._code_panel_glue.refresh_functions_list()
 		dock._mark_dirty(EventSheetInlineOps.summary(verb_name, int(folded["sites"]), body_rows))
 
 

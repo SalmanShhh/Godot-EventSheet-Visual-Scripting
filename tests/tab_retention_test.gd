@@ -265,7 +265,7 @@ static func _run_code_panel_cached() -> bool:
 	dock._open_sheet_in_tab(_sheet("second"), "")
 	dock._activate_tab(0)
 	dock._toggle_code_panel()
-	dock._refresh_code_panel()
+	dock._code_panel_glue.refresh_code_panel()
 	var shown: String = dock._code_edit.text
 	all_passed = _check("the panel compiled something", shown.is_empty(), false) and all_passed
 	all_passed = _check("and the tab kept that compile",

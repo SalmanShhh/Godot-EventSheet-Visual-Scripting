@@ -62,11 +62,11 @@ func _ensure_pick_dialog() -> void:
 	var form: VBoxContainer = EventSheetPopupUI.form_box()
 	form.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var loop_box: VBoxContainer = EventSheetPopupUI.form_box()
-	_pick_iterator_edit = _dock._add_sheet_type_field(loop_box, "Iterator name", "item")
+	_pick_iterator_edit = _dock._sheet_type_glue.add_sheet_type_field(loop_box, "Iterator name", "item")
 	# Event-sheet loop index, opt-in per loop: name it and the loop counts 0,1,2... in a
 	# local of that name (the Loop Index expressions read it). Distinct names on nested loops
 	# give each its own loop index counter. Empty = no counter (output unchanged).
-	_pick_index_edit = _dock._add_sheet_type_field(loop_box, "Loop index (optional)", "loop_index")
+	_pick_index_edit = _dock._sheet_type_glue.add_sheet_type_field(loop_box, "Loop index (optional)", "loop_index")
 	_pick_index_edit.tooltip_text = "Name a counter that runs 0, 1, 2... each pass. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of."
 	var kind_row: HBoxContainer = HBoxContainer.new()
 	var kind_label: Label = Label.new()
@@ -82,7 +82,7 @@ func _ensure_pick_dialog() -> void:
 	_pick_kind_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	kind_row.add_child(_pick_kind_option)
 	loop_box.add_child(kind_row)
-	_pick_collection_edit = _dock._add_sheet_type_field(loop_box, "Group / expression", "enemies   or   range(3)")
+	_pick_collection_edit = _dock._sheet_type_glue.add_sheet_type_field(loop_box, "Group / expression", "enemies   or   range(3)")
 	form.add_child(EventSheetPopupUI.titled_card("Loop", loop_box))
 	var filter_box: VBoxContainer = EventSheetPopupUI.form_box()
 	_pick_predicate_edit = _add_expression_field(filter_box, "Where (GDScript)", "item.health < 50   (optional)")

@@ -175,7 +175,7 @@ func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, me
 		if comment_index >= 0 and comment_index < event_row.actions.size() and event_row.actions[comment_index] is CommentRow:
 			_dock._open_comment_dialog(event_row.actions[comment_index])
 			return
-	var edit_context: Dictionary = _dock._build_ace_edit_context(event_row, span_index, metadata)
+	var edit_context: Dictionary = _dock._queries.build_ace_edit_context(event_row, span_index, metadata)
 	if edit_context.is_empty():
 		return
 	var definition: ACEDefinition = edit_context.get("definition", null)

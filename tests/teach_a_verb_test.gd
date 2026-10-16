@@ -67,7 +67,7 @@ static func run() -> bool:
 
 	# The un-teach: the Manage Providers dialog lists the taught entry, and Remove is
 	# the inverse gesture - settings only, the sheet and its verbs untouched.
-	dock._build_provider_dialog()
+	dock._ui_builder.build_provider_dialog()
 	dock._providers_glue.refresh_provider_list()
 	var taught_row: int = -1
 	for row_index in range(dock._provider_list.item_count):

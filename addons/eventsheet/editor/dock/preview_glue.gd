@@ -190,7 +190,7 @@ func _paint_banner_ground(background: Color, border: Color) -> void:
 func _on_show_conflicts_requested() -> void:
 	if _dock._current_sheet == null or _dock._current_sheet.external_source_path.is_empty():
 		return
-	_dock._open_conflict_view(_dock._current_sheet.external_source_path)
+	_dock._sheet_io._open_conflict_view(_dock._current_sheet.external_source_path)
 
 
 ## "Edit Events": turn the preview into a normal GDScript-backed sheet (Save then compiles
@@ -273,7 +273,7 @@ func _open_raw_code_block_in_godot() -> void:
 		return true)
 	# Refuse to open a stale source: if the sheet doesn't compile, _save_backed_sheet() left a
 	# "Save failed: …" status and the .gd on disk is unchanged. Keep the popup open to fix it.
-	if not _dock._save_backed_sheet():
+	if not _dock._sheet_io._save_backed_sheet():
 		return
 	_dock._raw_code_dialog.hide()
 	if _open_gdscript_path_in_godot(source_path):

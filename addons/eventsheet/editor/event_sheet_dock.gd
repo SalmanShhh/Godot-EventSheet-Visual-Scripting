@@ -931,7 +931,7 @@ func _init() -> void:
 	# Wire the file-IO helper's back-reference up front (init() only stores _dock - nothing
 	# tree-bound), so a delegate like _load_sheet_from_path works even when a test calls it on a
 	# fresh .new() editor BEFORE _ready/setup run the rest of the lazy init cluster. The helper's
-	# _dock.setup() then triggers _ensure_editor_dialogs_initialized() exactly as the inline body did.
+	# _dock.setup() then triggers _ui_builder.ensure_editor_dialogs_initialized() exactly as the inline body did.
 	_sheet_io.init(self)
 	# What each open tab keeps while another is on screen (its reading, its scroll and selection,
 	# its edit log, its compiled output) and the stamp that says whether any of it is still true.
@@ -975,8 +975,8 @@ func _init() -> void:
 	DOCK_REGISTRY.register_palette_command("Expand To Level 1", func() -> void: _viewport.expand_to_level(1))
 	DOCK_REGISTRY.register_palette_command("Expand To Level 2", func() -> void: _viewport.expand_to_level(2))
 	DOCK_REGISTRY.register_palette_command("Expand To Level 3", func() -> void: _viewport.expand_to_level(3))
-	DOCK_REGISTRY.register_palette_command("Save Studio", func() -> void: _open_save_studio())
-	DOCK_REGISTRY.register_palette_command("Translation Studio", func() -> void: _open_translation_studio(), "Translation")
+	DOCK_REGISTRY.register_palette_command("Save Studio", func() -> void: _save_studio.open())
+	DOCK_REGISTRY.register_palette_command("Translation Studio", func() -> void: _translation_studio.open(), "Translation")
 	# The two chunk tools the Streamer packs ship with. They live on the palette rather than in a
 	# menu because they are a world-building errand somebody runs twice in a project's life, and the
 	# palette is where this editor already keeps those - the same door the guide tells a reader about.
@@ -1026,10 +1026,6 @@ func _init() -> void:
 var _editor_dialogs_initialized: bool = false
 
 
-func _ensure_editor_dialogs_initialized() -> void:
-	_ui_builder.ensure_editor_dialogs_initialized()
-
-
 
 func _ready() -> void:
 	# The plugin's translation domain covers the whole dock subtree (windows and dialogs parent
@@ -1064,7 +1060,7 @@ func _ready() -> void:
 	# and the warm schedules nothing at all outside the editor.
 	EventSheetPickerWarmup.request()
 	_build_ui()
-	_ensure_editor_dialogs_initialized()
+	_ui_builder.ensure_editor_dialogs_initialized()
 	_refresh_ace_registry()
 	# Restore last session's tabs FIRST (editor only; headless tests drive setup() directly). Only fall
 	# back to a blank starting sheet when nothing came back - otherwise an untitled sheet stacks on top
@@ -1196,7 +1192,7 @@ func _on_project_settings_changed() -> void:
 
 func setup(sheet: EventSheetResource = null) -> void:
 	_build_ui()
-	_ensure_editor_dialogs_initialized()
+	_ui_builder.ensure_editor_dialogs_initialized()
 	# Idempotent initial state: a null setup() asks for "a blank starting sheet". If tabs already exist
 	# (the plugin calls setup() right after add_child(), which already ran _ready), don't stack a second
 	# untitled sheet - keep what is open. A null setup() with no tabs still seeds one blank sheet.
@@ -1257,9 +1253,9 @@ func _activate_tab(index: int) -> void:
 	var seating: String = _tab_state.seat(index)
 	_menu_bar.refresh_history_buttons()
 	_apply_minimap_pref()
-	_sync_split_sheet()
+	_multi_view._sync_split_sheet()
 	_refresh_anatomy_panel()
-	_refresh_functions_list()
+	_code_panel_glue.refresh_functions_list()
 	_theme_manager._sync_active_theme_binding()
 	_refresh_title_strip()
 	_theme_manager._refresh_theme_menu_selection()
@@ -1271,7 +1267,7 @@ func _activate_tab(index: int) -> void:
 		_toggle_code_panel()
 	# If the GDScript panel is already open, recompile it for the sheet we just switched to so it
 	# never shows the previous sheet's output. Self-guards on visibility, so it's a no-op when hidden.
-	_refresh_code_panel()
+	_code_panel_glue.refresh_code_panel()
 	# A switch is not a load, so it says nothing: the tab was already open and its reading was
 	# waiting for it. The two things worth saying are a first reading of the tab, and a file that
 	# changed on disk behind it while the reader was somewhere else.
@@ -1652,10 +1648,6 @@ func set_undo_redo_manager(undo_redo: Variant) -> void:
 		_exposed_node.row_param_changed.connect(_on_exposed_row_param_changed)
 
 
-func set_auto_ace_sources(sources: Array[Object]) -> void:
-	_providers_glue.set_auto_ace_sources(sources)
-
-
 
 func add_ace_provider_script(path: String) -> bool:
 	return _providers_glue.add_ace_provider_script(path)
@@ -1665,10 +1657,6 @@ func add_ace_provider_script(path: String) -> bool:
 func remove_ace_provider_script(path: String) -> bool:
 	return _providers_glue.remove_ace_provider_script(path)
 
-
-
-func get_ace_provider_scripts() -> PackedStringArray:
-	return _providers_glue.get_ace_provider_scripts()
 
 
 
@@ -1723,16 +1711,6 @@ func _designer_move_variable_up(var_name: String) -> void:
 		return load(INSPECTOR_DESIGNER_DIALOG_PATH).move_up_among_exported(_current_sheet.events, var_name))
 
 
-
-func _build_provider_dialog() -> void:
-	_ui_builder.build_provider_dialog()
-
-
-
-## Renders "what this script publishes" into the provider dialog. offer_register is true for a script
-## the user just browsed to (not registered yet), false when reading an already-registered one.
-func _preview_provider_script(path: String, offer_register: bool) -> void:
-	_providers_glue.preview_provider_script(path, offer_register)
 
 
 func _on_provider_params_pressed() -> void:
@@ -1907,7 +1885,7 @@ func _gui_input(event: InputEvent) -> void:
 
 func _on_open_requested() -> void:
 	EventSheetPopupUI.browse_file(self, PackedStringArray(EVENT_SHEET_FILTERS), _load_sheet_from_path, {"plain": true,
-		"title": "Open EventSheet", "dir": _suggest_sheet_directory(), "size": Vector2i(860, 580)})
+		"title": "Open EventSheet", "dir": _sheet_io._suggest_sheet_directory(), "size": Vector2i(860, 580)})
 
 
 # Theme delegates → dock/theme_manager.gd. menu_bar.gd's View menu drives _on_load_theme_requested /
@@ -1916,10 +1894,6 @@ func _on_open_requested() -> void:
 # pickable and the tick is current).
 func _on_load_theme_requested() -> void:  # menu_bar.gd View menu
 	_theme_manager._on_load_theme_requested()
-
-
-func _on_set_default_theme_requested() -> void:
-	_theme_manager._on_set_default_theme_requested()
 
 
 func _on_reload_theme_requested() -> void:  # menu_bar.gd View menu
@@ -1934,10 +1908,6 @@ func _populate_sheet_theme_menu() -> void:  # menu_bar.gd (every time the View m
 	_theme_manager._populate_theme_menu()
 
 
-func _refresh_theme_menu_selection() -> void:
-	_theme_manager._refresh_theme_menu_selection()
-
-
 # Sheet FILE-IO delegates → dock/sheet_io.gd (EventSheetSheetIO). Bodies live there; the dock keeps
 # these thin forwarders so external callers (plugin.gd, the dock/ helpers, menu_bar, command_palette)
 # and the tests reach the same names + signatures unchanged. Methods called only from within the IO
@@ -1946,23 +1916,10 @@ func _load_sheet_from_path(path: String) -> void:
 	_sheet_io._load_sheet_from_path(path)
 
 
-## The side-by-side reading of a blocked file's conflicts, opened from its head banner. Returns false
-## when the file has no well-formed region to read.
-func _open_conflict_view(path: String) -> bool:
-	return _sheet_io._open_conflict_view(path)
-
-
 ## Opens a freshly-created .gd editable (not the read-only preview a casual Open gives). The plugin's
 ## "Create New > Event Sheet" glue calls this after writing + rescanning the new file.
 func open_new_sheet(path: String) -> void:
 	_sheet_io._open_new_sheet(path)
-
-
-## Compiles a GDScript-backed sheet to its .gd source. Returns whether the compile succeeded (and
-## sets a failure status when it does not). Shared by Save and "Open in Godot" so the latter can
-## refuse to open a stale source when the sheet doesn't currently compile.
-func _save_backed_sheet() -> bool:
-	return _sheet_io._save_backed_sheet()
 
 
 func _on_save_requested() -> void:
@@ -2013,7 +1970,7 @@ func _extract_to_include_requested() -> void:
 ## The selection's TOP-LEVEL source rows (extraction operates on whole top-level events).
 func _selected_top_level_rows() -> Array[Resource]:
 	var rows: Array[Resource] = []
-	for row_data: EventRowData in _get_selected_rows_from_context():
+	for row_data: EventRowData in _queries.get_selected_rows_from_context():
 		var resource: Resource = row_data.source_resource
 		if resource != null and _current_sheet.events.has(resource) and not rows.has(resource):
 			rows.append(resource)
@@ -2081,34 +2038,11 @@ static func _unique_extracted_function_name(sheet: EventSheetResource, base: Str
 	return "%s_%d" % [base, suffix]
 
 
-func _extract_to_function_requested() -> void:
-	_extract_ops.extract_to_function_requested()
-
-
-
-func _prompt_extract_function_name(callback: Callable) -> void:
-	_extract_ops.prompt_extract_function_name(callback)
-
-
-
-func _set_breakpoint_condition_requested() -> void:
-	_quick_prompts.set_breakpoint_condition_requested()
-
-
-## Find References (whole-symbol uses across every sheet, with jump-to-sheet) - see EventSheetFindReferencesPanel.
-func _find_references_requested() -> void:
-	_find_refs.open()
 
 
 ## Generate Events from a Description (AI) → dock/ai_generate_window.gd ──
 func _open_ai_generate() -> void:  # Edit menu
 	_ai.open()
-
-
-## Ask (View menu, id 42) → dock/ask_window.gd. Off until the project turns it on; the window
-## itself says so before a word is typed.
-func _open_ask() -> void:
-	_ask.open()
 
 
 ## Reduced Motion (View menu, id 43). Nothing about the sheet changes except that it stops moving:
@@ -2153,32 +2087,9 @@ func _export_gdscript_requested() -> void:
 	_sheet_io._export_gdscript_requested()
 
 
-func _save_sheet_as_text_requested() -> void:
-	_sheet_io._save_sheet_as_text_requested()
-
-
-func _write_exported_gdscript(path: String) -> void:
-	_sheet_io._write_exported_gdscript(path)
-
-
-func _save_sheet_to_path(path: String) -> void:
-	_sheet_io._save_sheet_to_path(path)
-
-
-## Saves the sheet as a plain .gd (no .tres): compiles it to that path, then re-opens the .gd as the
-## GDScript-backed source of truth, so the file IS the sheet and future edits round-trip through it.
-## Returns whether it saved.
-func _save_sheet_as_gdscript(path: String) -> bool:
-	return _sheet_io._save_sheet_as_gdscript(path)
-
-
 func _on_add_event_requested() -> void:
 	_add_rows.on_add_event_requested()
 
-
-
-func _on_add_signal_event_requested() -> void:
-	_add_rows.on_add_signal_event_requested()
 
 
 
@@ -2466,10 +2377,6 @@ func _on_ace_params_back_requested(definition: ACEDefinition, context: Dictionar
 	_ace_apply._on_ace_params_back_requested(definition, context)
 
 
-func _unlock_preview_for_edit() -> void:
-	_ace_apply._unlock_preview_for_edit()
-
-
 func _on_viewport_ace_picker_requested(row_data: EventRowData, lane: String) -> void:
 	_ace_apply._on_viewport_ace_picker_requested(row_data, lane)
 
@@ -2510,14 +2417,6 @@ func _create_action_from_definition(definition: ACEDefinition, params: Dictionar
 	return _ace_apply._create_action_from_definition(definition, params)
 
 
-func _baked_template_for(definition: ACEDefinition) -> String:
-	return _ace_apply._baked_template_for(definition)
-
-
-func _resolve_definition_params(definition: ACEDefinition, row_params: Dictionary) -> Dictionary:
-	return _ace_apply._resolve_definition_params(definition, row_params)
-
-
 func _insert_row_below_selection(row_resource: Resource, explicit_selected_resource: Resource = null) -> void:
 	_ace_apply._insert_row_below_selection(row_resource, explicit_selected_resource)
 
@@ -2528,10 +2427,6 @@ func _insert_row_above_selection(row_resource: Resource, explicit_selected_resou
 
 func _find_resource_location(target: Resource) -> Dictionary:
 	return _ace_apply._find_resource_location(target)
-
-
-func _find_resource_location_in_array(target: Resource, container: Array) -> Dictionary:
-	return _ace_apply._find_resource_location_in_array(target, container)
 
 
 func _group_children_array(group: EventGroup) -> Array:
@@ -2563,32 +2458,12 @@ func _on_viewport_ace_drop_requested(source_entries: Array, target_row: EventRow
 	_ace_apply._on_viewport_ace_drop_requested(source_entries, target_row, target_lane, target_ace_index, insert_mode, copy_mode)
 
 
-func _normalize_ace_drag_entries(source_entries: Array, lane: String) -> Array:
-	return _ace_apply._normalize_ace_drag_entries(source_entries, lane)
-
-
-func _remove_drag_entry_from_source(entry: Dictionary) -> void:
-	_ace_apply._remove_drag_entry_from_source(entry)
-
-
-func _drag_entry_is_trigger_like(entry: Dictionary) -> bool:
-	return _ace_apply._drag_entry_is_trigger_like(entry)
-
-
 func _event_has_trigger_like(event_row: EventRow, excluded_resources: Array = []) -> bool:
 	return _ace_apply._event_has_trigger_like(event_row, excluded_resources)
 
 
 func _is_trigger_condition(condition: ACECondition) -> bool:
 	return _ace_apply._is_trigger_condition(condition)
-
-
-func _event_ace_array(event_row: EventRow, lane: String) -> Array:
-	return _ace_apply._event_ace_array(event_row, lane)
-
-
-func _resolve_event_ace_resource(event_row: EventRow, lane: String, ace_index: int) -> Resource:
-	return _ace_apply._resolve_event_ace_resource(event_row, lane, ace_index)
 
 
 func _on_ace_preview_requested(source_label: String, definitions: Array[ACEDefinition]) -> void:
@@ -2602,16 +2477,6 @@ func _ace_type_label(ace_type: int) -> String:
 func _on_viewport_drag_status_requested(message: String, is_error: bool) -> void:
 	_ace_apply._on_viewport_drag_status_requested(message, is_error)
 
-
-## Returns the best available EventSheet file name suggestion for save dialogs.
-## Returns the preferred directory for open/save dialogs, defaulting to res:// (open + theme dialogs).
-func _suggest_sheet_directory() -> String:
-	return _sheet_io._suggest_sheet_directory()
-
-
-## Ensures save paths always include a valid filename and EventSheet resource extension.
-func _normalize_sheet_save_path(path: String) -> String:
-	return _sheet_io._normalize_sheet_save_path(path)
 
 var _raw_code_dialog: ConfirmationDialog = null
 var _raw_code_edit: CodeEdit = null
@@ -2652,28 +2517,12 @@ func is_code_panel_visible() -> bool:
 	return _side_panel != null and _side_panel.visible
 
 
-func _ensure_code_panel() -> void:
-	_ui_builder.ensure_code_panel()
-
-
 
 func _apply_editor_code_settings(code_edit: CodeEdit) -> void:
 	_code_panel_glue.apply_editor_code_settings(code_edit)
 
 
 
-func _refresh_code_panel() -> void:
-	_code_panel_glue.refresh_code_panel()
-
-
-
-func _refresh_functions_list() -> void:
-	_code_panel_glue.refresh_functions_list()
-
-
-
-func _delete_selected_function() -> void:
-	_code_panel_glue.delete_selected_function()
 
 
 
@@ -2835,18 +2684,6 @@ func _on_variable_dialog_global_requested(var_name: String, type_name: String, v
 	_global_variables.add_global(var_name, type_name, value_text, target)
 
 
-func _on_add_local_variable_requested() -> void:
-	_variables._on_add_local_variable_requested()
-
-
-func _on_add_instance_variable_requested() -> void:
-	_variables._on_add_instance_variable_requested()
-
-
-func _add_tree_variable_below_context_row() -> void:
-	_variables._add_tree_variable_below_context_row()
-
-
 func _on_viewport_variable_edit_requested(row_data: EventRowData, metadata: Dictionary) -> void:
 	_variables._on_viewport_variable_edit_requested(row_data, metadata)
 
@@ -2871,20 +2708,9 @@ func _collect_sheet_variable_names() -> PackedStringArray:
 	return _variables._collect_sheet_variable_names()
 
 
-func _context_variable_entry_from_metadata(row_data: EventRowData, metadata: Dictionary) -> Dictionary:
-	return _variables._context_variable_entry_from_metadata(row_data, metadata)
-
-
-func _toggle_context_variable_constant() -> void:
-	_variables._toggle_context_variable_constant()
-
-
 func _convert_variable_scope(entry: Dictionary, target_scope: String, target_event_uid: String = "") -> bool:
 	return _variables._convert_variable_scope(entry, target_scope, target_event_uid)
 
-
-func _edit_context_variable() -> void:
-	_variables._edit_context_variable()
 
 # ── Multi-view: split view (same sheet, two panes - VSCode-style) → dock/multi_view_manager.gd ──
 # The split widgets + split-pane lifecycle live on _multi_view; the view-access core below
@@ -3532,14 +3358,6 @@ func _toggle_linked_views() -> void:
 # linked/mirroring flags (kept above) and is also called from the primary pane's _build_ui lambda.
 func _mirror_selection(from_view: EventSheetViewport, row_data: EventRowData) -> void:
 	_multi_view._mirror_selection(from_view, row_data)
-
-
-func _close_split_view() -> void:
-	_multi_view._close_split_view()
-
-
-func _sync_split_sheet() -> void:
-	_multi_view._sync_split_sheet()
 
 
 # ── Export as Addon Pack (coverage Phase C) → dock/export_pack.gd ─────────────────────
@@ -5081,10 +4899,6 @@ const FIXED_KEYS: Array = [
 
 
 # ── Keyboard Shortcuts editor (Tools menu; FIXED_KEYS above stays here) → event_sheet_shortcuts_dialog.gd ──
-func _open_shortcuts_help() -> void:
-	_shortcuts.open()
-
-
 ## Tools ▸ Manual…, F1, and EventSheets.open_docs all land here. With no id, whatever the reader
 ## has SELECTED answers - a condition or action row with its entry, an object label with the
 ## object's reference page, a group with the Manual's page on groups, a behavior's Include bar
@@ -5245,12 +5059,6 @@ func _generate_vocabulary_doc() -> void:
 	_set_status("Vocabulary doc written to %s." % doc_path)
 
 
-## Tools ▸ Save Studio: format preview, slot browser/export, and the save_state()/
-## load_state() generator for addon authors (dock/save_studio.gd).
-func _open_save_studio() -> void:
-	_save_studio.open()
-
-
 ## Command palette ▸ Split Scene Into Chunks / Merge Chunks: the two world-building errands the
 ## Streamer packs ship with. Built on first open, so a workspace that never streams pays nothing,
 ## and parented to the editor base control the way every other dialog here is.
@@ -5283,13 +5091,6 @@ func open_lift_workbench() -> void:
 		_lift_workbench = load("res://addons/eventsheet/editor/dock/lift_workbench.gd").new()
 		_lift_workbench.init(self)
 	_lift_workbench.open()
-
-
-## Tools ▸ Translation Studio: the whole handoff to a translator - extract the strings, read the
-## notes each key travels with, merge a returned file and register the catalogs
-## (dock/translation_studio.gd).
-func _open_translation_studio() -> void:
-	_translation_studio.open()
 
 
 ## View ▸ Preview In Language: renders every globe-marked value in the sheet in the chosen locale
@@ -5739,10 +5540,6 @@ func _open_sheet_type_dialog() -> void:
 
 
 
-func _add_sheet_type_field(form: VBoxContainer, label_text: String, placeholder: String) -> LineEdit:
-	return _sheet_type_glue.add_sheet_type_field(form, label_text, placeholder)
-
-
 
 func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_path: String, host_class_text: String, tool_enabled: bool = false, addon_tags: PackedStringArray = PackedStringArray(), include_paths: PackedStringArray = PackedStringArray(), uses_classes: PackedStringArray = PackedStringArray(), requires_classes: PackedStringArray = PackedStringArray(), autoload_name_text: String = "", class_description_text: String = "", family_enabled: bool = false) -> void:
 	_sheet_type_glue.apply_sheet_type_settings(type_index, class_name_text, icon_path, host_class_text, tool_enabled, addon_tags, include_paths, uses_classes, requires_classes, autoload_name_text, class_description_text, family_enabled)
@@ -5804,7 +5601,7 @@ func _on_viewport_context_menu_requested(row_data: EventRowData, hit: Dictionary
 		return
 	var metadata: Dictionary = hit.get("span_metadata", {})
 	if str(metadata.get("kind", "")) == "variable":
-		_variables._context_variable = _context_variable_entry_from_metadata(row_data, metadata)
+		_variables._context_variable = _variables._context_variable_entry_from_metadata(row_data, metadata)
 		if not _variables._context_variable.is_empty():
 			_show_popup_menu(_variable_context_menu, global_position)
 			return
@@ -5907,9 +5704,9 @@ func _on_empty_space_context_menu_id_pressed(id: int) -> void:
 		EMPTY_MENU_ADD_VARIABLE:
 			_on_add_global_variable_requested()
 		EMPTY_MENU_ADD_LOCAL_VARIABLE:
-			_on_add_local_variable_requested()
+			_variables._on_add_local_variable_requested()
 		EMPTY_MENU_ADD_INSTANCE_VARIABLE:
-			_on_add_instance_variable_requested()
+			_variables._on_add_instance_variable_requested()
 		EMPTY_MENU_ADD_INSPECTOR_BUTTON:
 			_variable_gestures.prompt_inspector_button()
 		EMPTY_MENU_INSERT_SNIPPET:
@@ -6005,18 +5802,18 @@ func _on_condition_context_menu_id_pressed(id: int) -> void:
 		CONDITION_MENU_ADD:
 			_ace_picker.open("append_condition", false, _context_row.source_resource)
 		CONDITION_MENU_REPLACE:
-			var replace_context: Dictionary = _build_ace_edit_context(_context_row.source_resource as EventRow, int(_context_hit.get("span_index", -1)), _context_hit.get("span_metadata", {}))
+			var replace_context: Dictionary = _queries.build_ace_edit_context(_context_row.source_resource as EventRow, int(_context_hit.get("span_index", -1)), _context_hit.get("span_metadata", {}))
 			if not replace_context.is_empty():
 				var replace_def: ACEDefinition = replace_context.get("definition", null)
 				if replace_def != null:
 					replace_context["preselect_ace_id"] = replace_def.id
 				_ace_picker.open(str(replace_context.get("mode", "replace_condition")), false, _context_row.source_resource, replace_context)
 		CONDITION_MENU_INVERT:
-			_toggle_context_condition_inversion()
+			_row_edit_ops._toggle_context_condition_inversion()
 		CONDITION_MENU_EDIT_ACE_COMMENT:
-			_open_ace_comment_dialog(_context_ace_resource("condition"))
+			_open_ace_comment_dialog(_row_edit_ops._context_ace_resource("condition"))
 		CONDITION_MENU_TOGGLE_ENABLED:
-			_toggle_context_ace_enabled()
+			_row_edit_ops._toggle_context_ace_enabled()
 		ACE_MENU_SELECT_ALL_MATCHING:
 			_select_all_matching_from_context("condition")
 		CONDITION_MENU_DELETE:
@@ -6032,7 +5829,7 @@ func _refresh_convert_to_verb_item() -> void:
 	var existing: int = _action_context_menu.get_item_index(ACTION_MENU_CONVERT_TO_VERB)
 	if existing >= 0:
 		_action_context_menu.remove_item(existing)
-	var suggestion: Dictionary = suggested_verb_for_action(_context_ace_resource("action"))
+	var suggestion: Dictionary = suggested_verb_for_action(_row_edit_ops._context_ace_resource("action"))
 	if suggestion.is_empty():
 		return
 	_action_context_menu.add_item("Convert to %s ▸ %s" % [str(suggestion["provider_id"]),
@@ -6051,7 +5848,7 @@ func _refresh_collection_decl_items() -> void:
 		var existing_index: int = _action_context_menu.get_item_index(decl_id)
 		if existing_index >= 0:
 			_action_context_menu.remove_item(existing_index)
-	var decl: CollectionDeclRow = _context_ace_resource("action") as CollectionDeclRow
+	var decl: CollectionDeclRow = _row_edit_ops._context_ace_resource("action") as CollectionDeclRow
 	if decl == null:
 		return
 	_action_context_menu.add_item("Add Entry…", ACTION_MENU_DECL_ADD_ENTRY)
@@ -6077,7 +5874,7 @@ func _refresh_timeline_items() -> void:
 ## The Timeline the context click targets: the right-clicked ACTION when it is one, else the
 ## row's own resource (a beat child row carries its TimelineRow as source_resource).
 func _context_timeline() -> TimelineRow:
-	var action_timeline: TimelineRow = _context_ace_resource("action") as TimelineRow
+	var action_timeline: TimelineRow = _row_edit_ops._context_ace_resource("action") as TimelineRow
 	if action_timeline != null:
 		return action_timeline
 	if _context_row != null:
@@ -6102,7 +5899,7 @@ func _apply_timeline_step(timeline: TimelineRow, at_seconds: float, code_line: S
 ## in-body form), else the row's own resource (the top-level form). One resolver so the action
 ## menu and the row menu share the same three handlers.
 func _context_decl() -> CollectionDeclRow:
-	var action_decl: CollectionDeclRow = _context_ace_resource("action") as CollectionDeclRow
+	var action_decl: CollectionDeclRow = _row_edit_ops._context_ace_resource("action") as CollectionDeclRow
 	if action_decl != null:
 		return action_decl
 	if _context_row != null:
@@ -6168,7 +5965,7 @@ func suggested_verb_for_action(action: Resource) -> Dictionary:
 ## path - so the template bakes at apply time and the row is indistinguishable from one
 ## picked out of the picker. One undo step, and never automatic: the user asked for it.
 func _convert_context_action_to_verb() -> void:
-	var action: Resource = _context_ace_resource("action")
+	var action: Resource = _row_edit_ops._context_ace_resource("action")
 	var suggestion: Dictionary = suggested_verb_for_action(action)
 	if suggestion.is_empty():
 		return
@@ -6194,13 +5991,6 @@ func _convert_context_action_to_verb() -> void:
 	_set_status("Converted to %s." % str(suggestion["display_name"]))
 
 
-## Sheet > Name Raw Calls...: the whole-sheet twin of the row-by-row conversion above. Same
-## conservatism (one candidate or nothing), plus a per-row byte gate, one undo step, and a
-## count of what it left alone. Never automatic - the user asks for it.
-func _name_raw_calls_requested() -> void:
-	_raw_call_namer.run()
-
-
 func _on_action_context_menu_id_pressed(id: int) -> void:
 	if _context_row == null or not (_context_row.source_resource is EventRow):
 		return
@@ -6210,7 +6000,7 @@ func _on_action_context_menu_id_pressed(id: int) -> void:
 		ACTION_MENU_ADD:
 			_ace_picker.open("append_action", false, _context_row.source_resource)
 		ACTION_MENU_REPLACE:
-			var replace_context: Dictionary = _build_ace_edit_context(_context_row.source_resource as EventRow, int(_context_hit.get("span_index", -1)), _context_hit.get("span_metadata", {}))
+			var replace_context: Dictionary = _queries.build_ace_edit_context(_context_row.source_resource as EventRow, int(_context_hit.get("span_index", -1)), _context_hit.get("span_metadata", {}))
 			if not replace_context.is_empty():
 				var replace_def: ACEDefinition = replace_context.get("definition", null)
 				if replace_def != null:
@@ -6219,9 +6009,9 @@ func _on_action_context_menu_id_pressed(id: int) -> void:
 		ACTION_MENU_CONVERT_TO_VERB:
 			_convert_context_action_to_verb()
 		ACTION_MENU_EDIT_ACE_COMMENT:
-			_open_ace_comment_dialog(_context_ace_resource("action"))
+			_open_ace_comment_dialog(_row_edit_ops._context_ace_resource("action"))
 		ACTION_MENU_TOGGLE_ENABLED:
-			_toggle_context_ace_enabled()
+			_row_edit_ops._toggle_context_ace_enabled()
 		ACE_MENU_SELECT_ALL_MATCHING:
 			_select_all_matching_from_context("action")
 		ACTION_MENU_DETACH_COMMENT:
@@ -6234,7 +6024,7 @@ func _on_action_context_menu_id_pressed(id: int) -> void:
 		ACTION_MENU_DELETE:
 			_delete_context_ace()
 		ACTION_MENU_EXTRACT_FN:
-			_extract_to_function_requested()
+			_extract_ops.extract_to_function_requested()
 		ACTION_MENU_DECL_ADD_ENTRY:
 			_quick_prompts.prompt_collection_entry(_context_decl(), -1)
 		ACTION_MENU_DECL_EDIT_ENTRY:
@@ -6258,7 +6048,7 @@ func _select_all_matching_from_context(lane: String) -> void:
 		return
 	var provider_id: String = ""
 	var ace_id: String = ""
-	var ace: Resource = _context_ace_resource(lane)
+	var ace: Resource = _row_edit_ops._context_ace_resource(lane)
 	if ace != null:
 		provider_id = str(ace.get("provider_id"))
 		ace_id = str(ace.get("ace_id"))
@@ -6449,10 +6239,6 @@ func _on_preview_edit_requested() -> void:
 
 func _open_gdscript_path_in_godot(path: String, line: int = -1) -> bool:
 	return _preview_glue._open_gdscript_path_in_godot(path, line)
-
-
-func _open_raw_code_block_in_godot() -> void:
-	_preview_glue._open_raw_code_block_in_godot()
 
 
 func _open_generated_in_godot() -> void:
@@ -6940,10 +6726,6 @@ func hierarchy_unparent(child_label: String) -> void:
 		_hierarchy_edits.unparent_requested(child_label)
 
 
-func hierarchy_edit_scene(child_label: String) -> void:
-	_hierarchy_edits.edit_scene_requested(child_label)
-
-
 ## Show only the rows that use one object, through the SAME filter lens the Filter button
 ## drives, so there is one notion of "the sheet is filtered" and one way out of it. Asking for the
 ## object that is already highlighted clears the filter, which is what makes the rail entry a toggle.
@@ -7393,44 +7175,8 @@ func _delete_context_ace() -> void:
 	_row_edit_ops._delete_context_ace()
 
 
-func _toggle_context_condition_inversion() -> void:
-	_row_edit_ops._toggle_context_condition_inversion()
-
-
-func _context_ace_resource(lane: String) -> Resource:
-	return _row_edit_ops._context_ace_resource(lane)
-
-
-func _context_ace_is_disabled() -> bool:
-	return _row_edit_ops._context_ace_is_disabled()
-
-
-func _toggle_context_ace_enabled() -> void:
-	_row_edit_ops._toggle_context_ace_enabled()
-
-
 func _toggle_selected_enabled() -> void:
 	_row_edit_ops._toggle_selected_enabled()
-
-
-func _context_row_is_disabled() -> bool:
-	return _row_edit_ops._context_row_is_disabled()
-
-
-func _toggle_context_row_enabled() -> void:
-	_row_edit_ops._toggle_context_row_enabled()
-
-
-func _toggle_context_condition_block() -> void:
-	_row_edit_ops._toggle_context_condition_block()
-
-
-func _set_context_else_mode(mode: int) -> void:
-	_row_edit_ops._set_context_else_mode(mode)
-
-
-func _toggle_context_group_fold() -> void:
-	_row_edit_ops._toggle_context_group_fold()
 
 
 func _delete_selected_content() -> void:
@@ -7439,10 +7185,6 @@ func _delete_selected_content() -> void:
 
 func _delete_selected_rows() -> void:
 	_row_edit_ops._delete_selected_rows()
-
-
-func _insert_child_event_for_context_row() -> void:
-	_row_edit_ops._insert_child_event_for_context_row()
 
 
 func _insert_child_comment_for_context_row() -> void:
@@ -7470,7 +7212,7 @@ func _on_add_blank_subevent_key() -> void:
 	if not _seed_context_from_selection() or _context_row == null or not (_context_row.source_resource is EventRow):
 		_set_status("Select an event first - B adds a blank sub-event under it.", true)
 		return
-	_insert_child_event_for_context_row()
+	_row_edit_ops._insert_child_event_for_context_row()
 
 
 ## Add ▸ Make 'Or' block: the right-click command, driven from the SELECTION rather than a
@@ -7481,7 +7223,7 @@ func _make_or_block_from_selection() -> void:
 	if not _seed_context_from_selection() or _context_row == null or not (_context_row.source_resource is EventRow):
 		_set_status("Select an event first - an 'Or' block joins that event's conditions.", true)
 		return
-	_toggle_context_condition_block()
+	_row_edit_ops._toggle_context_condition_block()
 
 
 ## Add ▸ Add 'Else': the same command as the row menu's, driven from the selection.
@@ -7489,7 +7231,7 @@ func _make_else_from_selection() -> void:
 	if not _seed_context_from_selection() or _context_row == null or not (_context_row.source_resource is EventRow):
 		_set_status("Select an event first - 'Else' runs when the event above it did not.", true)
 		return
-	_set_context_else_mode(EventRow.ElseMode.ELSE)
+	_row_edit_ops._set_context_else_mode(EventRow.ElseMode.ELSE)
 
 
 ## S - add a picker-backed sub-event under the selected event (the event-sheet add-sub-event key).
@@ -7497,7 +7239,7 @@ func _on_add_sub_condition_key() -> void:
 	if not _seed_context_from_selection() or _context_row == null or not (_context_row.source_resource is EventRow):
 		_set_status("Select an event first - S adds a sub-event under it.", true)
 		return
-	_open_sub_condition_picker_for_context_row()
+	_row_edit_ops._open_sub_condition_picker_for_context_row()
 
 
 ## I - invert the selected condition (click its cell, then press I; compiles as `not (…)`).
@@ -7511,7 +7253,7 @@ func _on_invert_condition_key() -> void:
 	if kind != "condition":
 		_set_status("Select a condition cell first - I inverts it.", true)
 		return
-	_toggle_context_condition_inversion()
+	_row_edit_ops._toggle_context_condition_inversion()
 
 
 ## R - replace the selected trigger / condition / action via the picker, pre-selected on the current
@@ -7520,7 +7262,7 @@ func _on_replace_ace_key() -> void:
 	if not _seed_context_from_selection() or _context_row == null or not (_context_row.source_resource is EventRow):
 		_set_status("Select a trigger, condition, or action cell first - R replaces it.", true)
 		return
-	var replace_context: Dictionary = _build_ace_edit_context(_context_row.source_resource as EventRow, int(_context_hit.get("span_index", -1)), _context_hit.get("span_metadata", {}))
+	var replace_context: Dictionary = _queries.build_ace_edit_context(_context_row.source_resource as EventRow, int(_context_hit.get("span_index", -1)), _context_hit.get("span_metadata", {}))
 	if replace_context.is_empty():
 		_set_status("Select a trigger, condition, or action cell first - R replaces it.", true)
 		return
@@ -7530,24 +7272,12 @@ func _on_replace_ace_key() -> void:
 	_ace_picker.open(str(replace_context.get("mode", "replace_condition")), false, _context_row.source_resource, replace_context)
 
 
-func _open_sub_condition_picker_for_context_row() -> void:
-	_row_edit_ops._open_sub_condition_picker_for_context_row()
-
-
 func _indent_selected_event() -> bool:
 	return _row_edit_ops._indent_selected_event()
 
 
 func _outdent_selected_event() -> bool:
 	return _row_edit_ops._outdent_selected_event()
-
-
-func _insert_context_row_below(resource_entry: Resource, message: String) -> void:
-	_row_edit_ops._insert_context_row_below(resource_entry, message)
-
-
-func _insert_context_row_above(resource_entry: Resource, message: String) -> void:
-	_row_edit_ops._insert_context_row_above(resource_entry, message)
 
 
 ## Cut = Copy + Delete: the copy is clipboard-only state, so the delete is the ONE undo step
@@ -7559,10 +7289,6 @@ func _cut_selected_rows() -> void:
 
 func _copy_selection_as_text() -> void:
 	_clipboard_glue._copy_selection_as_text()
-
-
-func _context_condition_is_negated() -> bool:
-	return _row_edit_ops._context_condition_is_negated()
 
 
 # ── Per-ACE comments (condition/action notes) ──────────────────────────────────────
@@ -7744,23 +7470,7 @@ func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String,
 		_mark_dirty("Updated row text.")
 
 
-func _event_rows_use_or_mode(event_rows: Array[EventRow]) -> bool:
-	return _queries.event_rows_use_or_mode(event_rows)
 
-
-
-func _get_selected_rows_from_context() -> Array[EventRowData]:
-	return _queries.get_selected_rows_from_context()
-
-
-
-func _get_selected_event_rows_from_context() -> Array[EventRow]:
-	return _queries.get_selected_event_rows_from_context()
-
-
-
-func _build_ace_edit_context(event_row: EventRow, span_index: int, metadata: Dictionary) -> Dictionary:
-	return _queries.build_ace_edit_context(event_row, span_index, metadata)
 
 
 
@@ -7788,21 +7498,14 @@ func _refresh_after_edit() -> void:
 	# refreshes a sheet it edited in place.
 	_clear_if_loaded(COMPLETIONS_PATH, "invalidate", [_current_sheet])
 	_viewport.set_sheet(_current_sheet)
-	_sync_split_sheet()
+	_multi_view._sync_split_sheet()
 	_theme_manager._sync_active_theme_binding()
 	_refresh_exposed_node()
-	_refresh_code_panel()
+	_code_panel_glue.refresh_code_panel()
 	_refresh_anatomy_panel()
-	_refresh_functions_list()
+	_code_panel_glue.refresh_functions_list()
 	_properties_bar.refresh()
 	_apply_minimap_pref()
-
-
-# Live-reload binding to the active theme .tres → dock/theme_manager.gd. Called from _activate_tab /
-# _refresh_after_edit (via _theme_manager._sync_active_theme_binding directly); the delegate stays for
-# any external caller reaching the original name.
-func _sync_active_theme_binding() -> void:
-	_theme_manager._sync_active_theme_binding()
 
 
 func _mark_dirty(message: String) -> void:
@@ -8525,7 +8228,7 @@ func _perform_undoable_sheet_edit(action_name: String, operation: Callable) -> b
 	# A .gd preview unlocks on the first real edit (this is the mutation funnel), so editing your
 	# own sheet never hits a "click Edit Events" wall. Saving keeps its own read-only guard, so a
 	# casual look + Ctrl+S still can't overwrite a file you only opened to view.
-	_unlock_preview_for_edit()
+	_ace_apply._unlock_preview_for_edit()
 	var before: EventSheetResource = _capture_sheet_snapshot()
 	var changed: bool = bool(operation.call())
 	if not changed:

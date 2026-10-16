@@ -85,17 +85,17 @@ func refresh_rail_census() -> void:
 func apply_open_sheets_panel_prefs() -> void:
 	if _dock._open_sheets_panel == null:
 		return
-	_dock._code_panel_glue.refresh_open_sheets_panel()
+	refresh_open_sheets_panel()
 
 
 func toggle_code_panel() -> void:
-	_dock._ensure_code_panel()
+	_dock._ui_builder.ensure_code_panel()
 	_dock._side_panel.visible = not _dock._side_panel.visible
 	_dock._split.dragger_visibility = (
 		SplitContainer.DRAGGER_VISIBLE if _dock._side_panel.visible else SplitContainer.DRAGGER_HIDDEN_COLLAPSED
 	)
 	if _dock._side_panel.visible:
-		_dock._refresh_code_panel()
+		refresh_code_panel()
 
 
 ## Adopts the editor's code-editor look on a CodeEdit (the GDScript panel): the same
@@ -119,7 +119,7 @@ func apply_editor_code_settings(code_edit: CodeEdit) -> void:
 func refresh_code_panel() -> void:
 	if _dock._code_edit == null or _dock._side_panel == null or not _dock._side_panel.visible:
 		return
-	_dock._refresh_functions_list()
+	refresh_functions_list()
 	if _dock._current_sheet == null:
 		_dock._code_edit.text = ""
 		_dock._code_source_map = []
@@ -154,7 +154,7 @@ func refresh_functions_list() -> void:
 		for function_resource: Variant in _dock._current_sheet.functions:
 			if function_resource is EventFunction:
 				var event_function: EventFunction = function_resource as EventFunction
-				_dock._functions_list.add_item(_dock._code_panel_glue.format_function_signature(event_function))
+				_dock._functions_list.add_item(format_function_signature(event_function))
 				# The one description this function carries, on its entry: what it is for, or the
 				# soft nudge that it has not been said yet. Read from the function's own doc line,
 				# never from a second store, so the list and the file cannot disagree.
@@ -188,7 +188,7 @@ func on_functions_list_item_clicked(index: int, at_position: Vector2, mouse_butt
 
 func on_functions_menu_id_pressed(id: int) -> void:
 	if id == 0:
-		_dock._delete_selected_function()
+		delete_selected_function()
 
 
 ## Removes the selected function from the sheet (undoable) and refreshes the list + preview.
@@ -211,7 +211,7 @@ func delete_selected_function() -> void:
 		return false)
 	if changed:
 		_dock._mark_dirty("Deleted function %s()." % removed_name)
-		_dock._refresh_functions_list()
+		refresh_functions_list()
 
 
 ## Highlights the generated lines for the currently selected sheet row and scrolls to them.
@@ -256,11 +256,11 @@ func on_code_panel_gui_input(event: InputEvent) -> void:
 func open_at_row(row_data: EventRowData) -> void:
 	if row_data == null or row_data.source_resource == null:
 		return
-	_dock._ensure_code_panel()
+	_dock._ui_builder.ensure_code_panel()
 	if not _dock._side_panel.visible:
 		_dock._toggle_code_panel()
 	else:
-		_dock._refresh_code_panel()
+		refresh_code_panel()
 	var emitted: Vector2i = EventSheetLineRowMapper.range_for_resource(_dock._code_source_map, row_data.source_resource)
 	if _dock._code_edit != null and emitted.x > 0:
 		_dock._code_edit.set_caret_line(maxi(emitted.x - 1, 0))
@@ -271,11 +271,11 @@ func open_at_row(row_data: EventRowData) -> void:
 ## source map and selects the row that emitted the given 1-based generated line -
 ## errors and stack traces land on rows, not on generated code.
 func goto_generated_line(line: int) -> void:
-	_dock._ensure_code_panel()
+	_dock._ui_builder.ensure_code_panel()
 	if not _dock._side_panel.visible:
 		_dock._toggle_code_panel()
 	else:
-		_dock._refresh_code_panel()
+		refresh_code_panel()
 	if _dock._code_edit != null and line > 0:
 		_dock._code_edit.set_caret_line(maxi(line - 1, 0))
 	_dock._select_sheet_row_for_code_line(line)

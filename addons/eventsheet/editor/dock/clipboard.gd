@@ -160,7 +160,7 @@ func _append_resource_text(resource_entry: Resource, lines: PackedStringArray, d
 ## they already travel inside their parent's serialized form.
 func _top_level_selected_resources() -> Array:
 	var resources: Array = []
-	for row_data in _dock._get_selected_rows_from_context():
+	for row_data in _dock._queries.get_selected_rows_from_context():
 		if row_data == null or row_data.source_resource == null:
 			continue
 		if not resources.has(row_data.source_resource):

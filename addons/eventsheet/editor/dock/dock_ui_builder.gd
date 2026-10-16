@@ -518,7 +518,7 @@ func build_provider_dialog() -> void:
 		var entry: Variant = _dock._provider_list.get_item_metadata(index)
 		var listed_path: String = str((entry as Dictionary).get("path", "")) if entry is Dictionary else ""
 		# Already registered, so this is a read of what it contributes - no Register button.
-		_dock._preview_provider_script(listed_path, false))
+		_dock._providers_glue.preview_provider_script(listed_path, false))
 
 	# "What it publishes": the scan of the highlighted (or just-browsed) script. Browsing previews only -
 	# Register is the second, deliberate click - so a script never joins the vocabulary unseen.
@@ -732,4 +732,4 @@ func ensure_raw_code_dialog() -> void:
 	open_in_godot.tooltip_text = "Edit this block in Godot's script editor - your changes return when you come back to the sheet."
 	_dock._raw_code_dialog.custom_action.connect(func(action: StringName) -> void:
 		if String(action) == "open_in_godot":
-			_dock._open_raw_code_block_in_godot())
+			_dock._preview_glue._open_raw_code_block_in_godot())

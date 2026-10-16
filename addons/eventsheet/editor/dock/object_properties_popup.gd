@@ -697,7 +697,7 @@ func _hierarchy_section_for(sheet: EventSheetResource, entry: Dictionary, label:
 		"select": func(child_label: String) -> void: _run_and_close(
 			func() -> void: _dock.select_object_in_scene(child_label)),
 		"edit_scene": func(child_label: String) -> void: _run_and_close(
-			func() -> void: _dock.hierarchy_edit_scene(child_label))
+			func() -> void: _dock._hierarchy_edits.edit_scene_requested(child_label))
 	})
 
 

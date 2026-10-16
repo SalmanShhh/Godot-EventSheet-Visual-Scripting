@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Changed: the third code pay-back
+
+- The dock drops its one-line forwarders: the menus, shortcuts, context menus and tests call the
+  helper that does the work (the sheet file helper, the row edits, the variables manager, the code
+  panel, the provider glue) instead of a dock method that only passed the call on. Nothing a user
+  sees or does changes.
+
 ### Changed: the help, keys, words and asking windows say what they do on the window
 
 - Keyboard Shortcuts: a key put on a fixed key (Ctrl+F, Ctrl+P…) or on another changeable key says

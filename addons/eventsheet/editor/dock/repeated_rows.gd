@@ -364,7 +364,7 @@ func make_verb(run_index: int, raw_name: String) -> bool:
 		return true
 	)
 	if changed:
-		_dock._refresh_functions_list()
+		_dock._code_panel_glue.refresh_functions_list()
 		_dock._mark_dirty("\"%s\" is a function now - defined once, called at %d places." % [raw_name.strip_edges(), sites])
 		refresh()
 	else:

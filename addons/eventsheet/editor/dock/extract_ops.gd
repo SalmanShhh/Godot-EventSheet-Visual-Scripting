@@ -216,7 +216,7 @@ func extract_to_function_requested() -> void:
 			return extract_actions_to_function(_dock._current_sheet, event, to_extract, entered_name) != null
 		)
 		if changed:
-			_dock._refresh_functions_list()
+			_dock._code_panel_glue.refresh_functions_list()
 			var note: String = "" if capture_names.is_empty() else " Event-scoped %s became parameter(s) - the call passes the live value(s)." % ", ".join(capture_names)
 			_dock._mark_dirty("Extracted %d action(s) into a reusable Function - now callable from the picker (Functions).%s" % [to_extract.size(), note])
 	)

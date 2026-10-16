@@ -416,8 +416,8 @@ func _ensure_sheet_type_dialog() -> void:
 	form.add_child(EventSheetPopupUI.form_row("Kind", EventSheetPopupUI.described_field(_sheet_type_option, 320.0)))
 	# Identity card - only the fields the chosen type consumes are visible (see field_visibility).
 	var ident_box: VBoxContainer = EventSheetPopupUI.form_box()
-	_sheet_type_name_edit = _dock._add_sheet_type_field(ident_box, "Name", "PatrolBehavior")
-	_sheet_type_host_edit = _dock._add_sheet_type_field(ident_box, "Extends", "CharacterBody2D")
+	_sheet_type_name_edit = _dock._sheet_type_glue.add_sheet_type_field(ident_box, "Name", "PatrolBehavior")
+	_sheet_type_host_edit = _dock._sheet_type_glue.add_sheet_type_field(ident_box, "Extends", "CharacterBody2D")
 	var host_row: HBoxContainer = _sheet_type_host_edit.get_parent()
 	_host_label = host_row.get_child(0)
 	# As-you-type class suggestions, through the ONE completion popup every field in this editor
@@ -442,7 +442,7 @@ func _ensure_sheet_type_dialog() -> void:
 		_sheet_type_host_edit.text = str(COMMON_HOSTS[index]["host"])
 		_refresh_identity_preview())
 	host_row.add_child(_host_menu)
-	_sheet_type_icon_edit = _dock._add_sheet_type_field(ident_box, "Icon", "res://icons/patrol.svg")
+	_sheet_type_icon_edit = _dock._sheet_type_glue.add_sheet_type_field(ident_box, "Icon", "res://icons/patrol.svg")
 	# Pick the icon straight from the FileSystem instead of typing a res:// path.
 	var icon_browse: Button = Button.new()
 	icon_browse.text = "Browse…"
@@ -450,7 +450,7 @@ func _ensure_sheet_type_dialog() -> void:
 		func(path: String) -> void: _sheet_type_icon_edit.text = path))
 	_sheet_type_icon_edit.get_parent().add_child(icon_browse)
 	_sheet_type_description_edit = _dock._sheet_type_glue.add_sheet_type_multiline_field(ident_box, "Description", "What this does - shown in Godot's Create Node dialog.")
-	_sheet_type_autoload_edit = _dock._add_sheet_type_field(ident_box, "Autoload name", "GameState - a global name every sheet can call")
+	_sheet_type_autoload_edit = _dock._sheet_type_glue.add_sheet_type_field(ident_box, "Autoload name", "GameState - a global name every sheet can call")
 	# "Runs in the editor too" reads as a field of the sheet's identity, not as a power option:
 	# it is one of the lines the head shows, so it is edited where the other lines are.
 	_sheet_type_tool_check = CheckBox.new()
@@ -494,10 +494,10 @@ func _ensure_sheet_type_dialog() -> void:
 	_more_toggle.toggled.connect(func(pressed: bool) -> void: _set_more_expanded(pressed))
 	form.add_child(_more_toggle)
 	var more_box: VBoxContainer = EventSheetPopupUI.form_box()
-	_sheet_type_tags_edit = _dock._add_sheet_type_field(more_box, "Tags (comma-separated)", "movement, retro, jam")
-	_sheet_type_includes_edit = _dock._add_sheet_type_field(more_box, "Includes (addon sheets)", "res://eventsheet_addons/screen_shake/screen_shake.tres, …")
-	_sheet_type_uses_edit = _dock._add_sheet_type_field(more_box, "Uses (addon classes)", "ScreenShake, MathHelpers - owned helper instances")
-	_sheet_type_requires_edit = _dock._add_sheet_type_field(more_box, "Requires (sibling behaviors)", "ScreenShake - shows a warning badge when missing")
+	_sheet_type_tags_edit = _dock._sheet_type_glue.add_sheet_type_field(more_box, "Tags (comma-separated)", "movement, retro, jam")
+	_sheet_type_includes_edit = _dock._sheet_type_glue.add_sheet_type_field(more_box, "Includes (addon sheets)", "res://eventsheet_addons/screen_shake/screen_shake.tres, …")
+	_sheet_type_uses_edit = _dock._sheet_type_glue.add_sheet_type_field(more_box, "Uses (addon classes)", "ScreenShake, MathHelpers - owned helper instances")
+	_sheet_type_requires_edit = _dock._sheet_type_glue.add_sheet_type_field(more_box, "Requires (sibling behaviors)", "ScreenShake - shows a warning badge when missing")
 	_more_card = EventSheetPopupUI.titled_card("More options", more_box)
 	_more_card.visible = false
 	form.add_child(_more_card)

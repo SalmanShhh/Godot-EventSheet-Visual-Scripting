@@ -57,7 +57,7 @@ static func run() -> bool:
 	# ── The menu handler makes the row an Else; the label then reads Clear Else ──
 	view._selected_row_uids[else_row.row_uid] = true
 	else_row.selected = true
-	dock._set_context_else_mode(EventRow.ElseMode.ELSE)
+	dock._row_edit_ops._set_context_else_mode(EventRow.ElseMode.ELSE)
 	ok = _check("Make Else sets the row's else_mode", else_event.else_mode, EventRow.ElseMode.ELSE) and ok
 	dock._build_row_context_menu(else_row)
 	dock._configure_context_menu(dock._row_context_menu)
@@ -78,7 +78,7 @@ static func run() -> bool:
 		str(SheetCompiler.compile(reimported, "user://else_menu_rt.gd").get("output", "")) == source, true) and ok
 
 	# ── Clicking Make Else again clears it (the toggle) ──
-	dock._set_context_else_mode(EventRow.ElseMode.ELSE)
+	dock._row_edit_ops._set_context_else_mode(EventRow.ElseMode.ELSE)
 	var live_else: EventRow = dock.get_current_sheet().events[1] as EventRow
 	ok = _check("Make Else on an else row clears it (toggle)", live_else.else_mode, EventRow.ElseMode.NONE) and ok
 

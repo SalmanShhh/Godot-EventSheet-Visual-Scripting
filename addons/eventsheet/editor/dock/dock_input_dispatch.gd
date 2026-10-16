@@ -48,24 +48,24 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 		_dock.ACTION_MENU_DECL_REMOVE_ENTRY:
 			_dock._remove_collection_entry(_dock._context_decl(), _dock._context_decl_entry_index())
 		_dock.ROW_MENU_ADD_SUB_EVENT:
-			_dock._insert_child_event_for_context_row()
+			_dock._row_edit_ops._insert_child_event_for_context_row()
 		_dock.ROW_MENU_ADD_COMMENT_SUB_EVENT:
 			_dock._insert_child_comment_for_context_row()
 		_dock.ROW_MENU_ADD_EVENT_BELOW:
-			_dock._insert_context_row_below(EventRow.new(), "Added event.")
+			_dock._row_edit_ops._insert_context_row_below(EventRow.new(), "Added event.")
 		_dock.ROW_MENU_ADD_EVENT_ABOVE:
-			_dock._insert_context_row_above(EventRow.new(), "Added event above.")
+			_dock._row_edit_ops._insert_context_row_above(EventRow.new(), "Added event above.")
 		_dock.ROW_MENU_ADD_GROUP_BELOW:
 			var group: EventGroup = EventGroup.new()
 			group.name = "Group"
 			group.group_name = group.name
-			_dock._insert_context_row_below(group, "Added group.")
+			_dock._row_edit_ops._insert_context_row_below(group, "Added group.")
 		_dock.ROW_MENU_ADD_COMMENT_BELOW:
 			var comment: CommentRow = CommentRow.new()
 			comment.text = "Comment"
-			_dock._insert_context_row_below(comment, "Added comment.")
+			_dock._row_edit_ops._insert_context_row_below(comment, "Added comment.")
 		_dock.ROW_MENU_ADD_VARIABLE_BELOW:
-			_dock._add_tree_variable_below_context_row()
+			_dock._variables._add_tree_variable_below_context_row()
 		_dock.ROW_MENU_ADD_TIMELINE_BELOW:
 			# A Timeline suspends, so it arrives inside its own ready-trigger event with one
 			# starter beat; right-click the beat (or the caption) for "Add Step...".
@@ -77,11 +77,11 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 			starter.code = "print(\"timeline started\")"
 			timeline.add_step(0.0, starter)
 			timeline_event.actions.append(timeline)
-			_dock._insert_context_row_below(timeline_event, "Added timeline.")
+			_dock._row_edit_ops._insert_context_row_below(timeline_event, "Added timeline.")
 		_dock.ROW_MENU_ADD_GDSCRIPT_BELOW:
 			var raw_block: RawCodeRow = RawCodeRow.new()
 			raw_block.code = "# GDScript - emitted verbatim at class level"
-			_dock._insert_context_row_below(raw_block, "Added script block.")
+			_dock._row_edit_ops._insert_context_row_below(raw_block, "Added script block.")
 		_dock.ROW_MENU_ADD_GDSCRIPT_ACTION:
 			_dock._add_gdscript_action_to_context_row()
 		_dock.ROW_MENU_COPY:
@@ -107,21 +107,21 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 		_dock.ROW_MENU_DELETE:
 			_dock._delete_selected_rows()
 		_dock.ROW_MENU_TOGGLE_CONDITION_BLOCK:
-			_dock._toggle_context_condition_block()
+			_dock._row_edit_ops._toggle_context_condition_block()
 		_dock.ROW_MENU_TOGGLE_GROUP_FOLD:
-			_dock._toggle_context_group_fold()
+			_dock._row_edit_ops._toggle_context_group_fold()
 		_dock.ROW_MENU_ADD_SUB_CONDITION:
-			_dock._open_sub_condition_picker_for_context_row()
+			_dock._row_edit_ops._open_sub_condition_picker_for_context_row()
 		_dock.ROW_MENU_MAKE_ELSE:
-			_dock._set_context_else_mode(EventRow.ElseMode.ELSE)
+			_dock._row_edit_ops._set_context_else_mode(EventRow.ElseMode.ELSE)
 		_dock.ROW_MENU_MAKE_ELIF:
-			_dock._set_context_else_mode(EventRow.ElseMode.ELIF)
+			_dock._row_edit_ops._set_context_else_mode(EventRow.ElseMode.ELIF)
 		_dock.ROW_MENU_EXTRACT_GDSCRIPT_FN:
-			_dock._extract_to_function_requested()
+			_dock._extract_ops.extract_to_function_requested()
 		_dock.ROW_MENU_BREAKPOINT_CONDITION:
-			_dock._set_breakpoint_condition_requested()
+			_dock._quick_prompts.set_breakpoint_condition_requested()
 		_dock.ROW_MENU_TOGGLE_ENABLED:
-			_dock._toggle_context_row_enabled()
+			_dock._row_edit_ops._toggle_context_row_enabled()
 		_dock.ROW_MENU_EDIT_COMMENT:
 			if _dock._context_row.source_resource is CommentRow:
 				_dock._open_comment_dialog(_dock._context_row.source_resource)
@@ -171,13 +171,13 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 				_dock._open_with_node_dialog(_dock._context_row.source_resource)
 		_dock.ROW_MENU_ADD_ENUM:
 			var new_enum: EnumRow = EnumRow.new()
-			_dock._insert_context_row_below(new_enum, "Added enum.")
+			_dock._row_edit_ops._insert_context_row_below(new_enum, "Added enum.")
 			_dock._open_enum_dialog(new_enum)
 		_dock.ROW_MENU_OPEN_IN_SPLIT:
 			_dock._open_row_in_split(_dock._context_row)
 		_dock.ROW_MENU_ADD_SIGNAL:
 			var new_signal: SignalRow = SignalRow.new()
-			_dock._insert_context_row_below(new_signal, "Added signal.")
+			_dock._row_edit_ops._insert_context_row_below(new_signal, "Added signal.")
 			_dock._open_signal_dialog(new_signal)
 		_dock.ROW_MENU_ADD_MATCH:
 			if _dock._context_row.source_resource is EventRow:

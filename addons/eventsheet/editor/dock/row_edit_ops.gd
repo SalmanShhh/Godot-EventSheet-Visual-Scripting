@@ -319,7 +319,7 @@ func _toggle_selected_enabled() -> void:
 	var span_targets: Array = _dock._active_view().get_selected_span_targets()
 	var row_targets: Array[EventRowData] = []
 	if span_targets.is_empty():
-		row_targets = _dock._get_selected_rows_from_context()
+		row_targets = _dock._queries.get_selected_rows_from_context()
 	if span_targets.is_empty() and row_targets.is_empty():
 		return
 	var any_enabled: bool = false
@@ -494,12 +494,12 @@ func _toggle_context_row_enabled() -> void:
 
 
 func _toggle_context_condition_block() -> void:
-	var selected_events: Array[EventRow] = _dock._get_selected_event_rows_from_context()
+	var selected_events: Array[EventRow] = _dock._queries.get_selected_event_rows_from_context()
 	if selected_events.is_empty():
 		return
 	var target_mode: int = (
 		EventRow.ConditionMode.AND
-		if _dock._event_rows_use_or_mode(selected_events)
+		if _dock._queries.event_rows_use_or_mode(selected_events)
 		else EventRow.ConditionMode.OR
 	)
 	var toggled: bool = _dock._perform_undoable_sheet_edit("Toggle Condition Block", func() -> bool:
@@ -515,7 +515,7 @@ func _toggle_context_condition_block() -> void:
 ## `else:` / `elif:` chained onto the previous sibling's `if` (sheet_compiler ~873) and the
 ## viewport prefixes them with "Else"/"Else if". Clicking the active mode again clears it.
 func _set_context_else_mode(mode: int) -> void:
-	var selected_events: Array[EventRow] = _dock._get_selected_event_rows_from_context()
+	var selected_events: Array[EventRow] = _dock._queries.get_selected_event_rows_from_context()
 	if selected_events.is_empty():
 		return
 	var all_already: bool = true
@@ -616,7 +616,7 @@ func _delete_selected_spans() -> bool:
 
 
 func _delete_selected_rows() -> void:
-	var selected_rows: Array[EventRowData] = _dock._get_selected_rows_from_context()
+	var selected_rows: Array[EventRowData] = _dock._queries.get_selected_rows_from_context()
 	if selected_rows.is_empty():
 		_delete_context_row()
 		return
