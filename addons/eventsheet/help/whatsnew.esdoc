@@ -6,6 +6,28 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Added: translations in pieces, and a table that stays fast at a million lines
+
+- Translation Studio can write ONE CATALOG PER PROJECT FOLDER: name a folder instead of a .csv and a
+  key said in `res://dialogue/chapter_03/` lands in `i18n/dialogue/chapter_03.csv`, one said in
+  `res://ui/` in `i18n/ui.csv`, and the top of the project in `i18n/strings.csv`. A project that
+  already has its `i18n/strings.csv` keeps it exactly as before, and a key some catalog already holds
+  is never moved out of it. Coverage, orphans, importing a translator's file and the pseudo column
+  all work over the whole folder; an import leaves a catalog nothing landed in byte for byte alone.
+- Register Translation Catalogs now finds the `.translation` files in every folder under the one you
+  name, so each catalog Godot imports is added under Project Settings > Localization.
+- The Notes tab is a translation table: pick a catalog, find text or a key, and switch between All
+  lines, Missing only (empty cells read \"missing\" in amber, and the status line counts what each
+  language still lacks) and Fake language (each line beside its pseudo text, a test column players
+  never see). Only the rows on screen are drawn and a row is only read when it scrolls into view, so a 200,000-line catalog opens in about a fifth of a second.
+
+### Changed: the third code pay-back
+
+- The dock drops its one-line forwarders: the menus, shortcuts, context menus and tests call the
+  helper that does the work (the sheet file helper, the row edits, the variables manager, the code
+  panel, the provider glue) instead of a dock method that only passed the call on. Nothing a user
+  sees or does changes.
+
 ### Changed: one Save choice per variable replaces Add Save Support and Remember Between Runs
 
 - The Save Studio opens on a new **What gets saved** tab: pick an open sheet as the Object, and give
@@ -52,6 +74,12 @@ What changed in the build you have installed (v0.18.0), in the words the release
   Moment forms, Edit group, the sheet head's text line, Publish New Version, Connect a signal, New
   Event Sheet, New Function, Edit Parameter, Save as snippet and Edit code block. Nothing they show or
   do changes.
+
+### Fixed: a warning badge reads in a light editor
+
+- A small badge beside a title (the line window's Missing, for one) lifted its words lighter than its
+  tint, so in a light editor amber words sat on an amber wash at a contrast of about 2. On a light
+  panel the words are now pressed darker than the tint (about 4.9); a dark editor is unchanged.
 
 ### Fixed: a sheet with no theme reads in a light editor
 
