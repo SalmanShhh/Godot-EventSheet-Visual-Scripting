@@ -1,6 +1,6 @@
 # Using the Save Studio
 
-Working on a game's save files usually means running the game, saving, hunting for the file under `user://`, and opening it in a text editor to see what actually landed on disk. The Save Studio collapses that whole loop into one editor window. It is a panel with three tabs, titled "Save Studio", that lets you preview exactly what a save file will look like before you commit to a format, browse and export the real save files your project has already written, and generate the save-and-load plumbing for your own scripts in a few clicks. It is built directly on the Save System addon and the project-wide save-state seam, so everything it shows you is the real thing, not an approximation.
+Working on a game's save files usually means running the game, saving, hunting for the file under `user://`, and opening it in a text editor to see what actually landed on disk. The Save Studio collapses that whole loop into one editor window. It is a panel with three tabs, titled "Save Studio", that lets you choose when each variable of a sheet is saved, preview exactly what a save file will look like before you commit to a format, and browse and export the real save files your project has already written. It is built directly on the Save System addon and the project-wide save-state seam, so everything it shows you is the real thing, not an approximation.
 
 This guide walks through each tab in order, shows the matching code API for people who want to script it, and finishes with concrete use cases and a list of common pitfalls. For the bigger picture of how saving works across a whole project - the persist group, the lifecycle triggers, targeted versus whole-game saving - see the "Saving and Loading Your Game" guide, which is the companion to this one.
 
@@ -10,9 +10,9 @@ This guide walks through each tab in order, shows the matching code API for peop
 
 1. [Opening the Save Studio](#1-opening-the-save-studio)
 2. [Background you need first](#2-background-you-need-first)
-3. [Tab 1: Format Preview](#3-tab-1-format-preview)
-4. [Tab 2: Save Slots](#4-tab-2-save-slots)
-5. [Tab 3: Add Save Support](#5-tab-3-add-save-support)
+3. [Tab 1: What gets saved](#3-tab-1-what-gets-saved)
+4. [Tab 2: Format Preview](#4-tab-2-format-preview)
+5. [Tab 3: Save Slots](#5-tab-3-save-slots)
 6. [Doing it from code](#6-doing-it-from-code)
 7. [Use Cases](#7-use-cases)
 8. [Tips and Common Mistakes](#8-tips-and-common-mistakes)
@@ -24,7 +24,7 @@ There are two ways to open the window.
 - In the event sheet dock, open the **Tools** menu and choose **Save Studio...**.
 - Press **Ctrl+P** to open the Command Palette, type **Save Studio**, and run the matching command.
 
-Either route opens the same window. It does not need the game to be running, and it does not modify your project just by being open. The three tabs across the top are **Format Preview**, **Save Slots**, and **Add Save Support**.
+Either route opens the same window. It does not need the game to be running, and it does not modify your project just by being open. The three tabs across the top are **What gets saved**, **Format Preview**, and **Save Slots**. Right-clicking a variable on the sheet and choosing **Save Choice...** opens the same window on the first tab.
 
 ## 2. Background you need first
 
@@ -43,7 +43,65 @@ The second is the set of **save formats**. The Save System writes its slot files
 
 The Save Studio is largely about seeing and moving data between these six formats, and about wiring new scripts into the seam.
 
-## 3. Tab 1: Format Preview
+## 3. Tab 1: What gets saved
+
+**Quick start:** set a variable's **Save** to **Auto**. That is the whole job: the variable is saved when the object leaves the game and loaded when it comes back.
+
+![The What gets saved tab: the Player sheet's variables, each with a Save dropdown, the sentence that sums up what is saved, the legend of the five choices and the Where it is kept table](images/save-studio-what-gets-saved.png)
+
+The **Object** dropdown lists the open sheets; picking one switches the editor to it. Under it is one line per variable of that sheet - its type and name exactly as written, its own description, and a **Save** dropdown. Constants and object references (a Node, a Texture, anything that points at a thing rather than holding a value) are not listed, because there is nothing in them to save. Hover any choice in the dropdown to read what it does and what it is usually for; the closed dropdown's own tooltip is the chosen one's sentence.
+
+| Save | What it does | Use for |
+|---|---|---|
+| **Never** | Not saved. It starts from its default every time. | timers, cooldowns, anything worked out again each run |
+| **Auto** | Loaded when the object enters the game, saved when it leaves (and when the game quits). | health, coins, unlocked doors |
+| **Load only** | Loaded automatically, but only saved when your events say Save Game. | settings you write yourself at a menu |
+| **Save only** | Saved automatically, never loaded back. | play time, total jumps, stats you read elsewhere |
+| **Manually** | Only when your events say Save Game / Load Game. | checkpoint position, save-slot games |
+
+Under the list one sentence tells the whole story in words, for example *Player: health, coins come back by themselves; position only at your Save Game / Load Game.* Every pick is one undo step.
+
+**What it writes.** The choice is stored on the variable, and saving the sheet writes plain Godot code for it at the end of the script - nothing in it needs the plugin:
+
+```gdscript
+## Saved by each variable's Save choice (Save Studio > What gets saved) - change the choice, not these lines.
+@onready var __ef_save_boot: bool = _ef_load_saved()
+
+func _ef_load_saved() -> bool:
+	add_to_group("persist")
+	var __remember_cfg: ConfigFile = ConfigFile.new()
+	if __remember_cfg.load("user://remembered.cfg") == OK:
+		health = __remember_cfg.get_value("Player", "health", health)
+	tree_exiting.connect(_ef_store_saved)
+	return true
+
+func _ef_store_saved(at_save_game: bool = false) -> void:
+	var __remember_cfg: ConfigFile = ConfigFile.new()
+	__remember_cfg.load("user://remembered.cfg")
+	__remember_cfg.set_value("Player", "health", health)
+	__remember_cfg.save("user://remembered.cfg")
+
+func save_state() -> Dictionary:
+	return {
+		"health": health,
+		"position": position
+	}
+
+func load_state(state: Dictionary) -> void:
+	if state.is_empty():
+		return
+	health = int(state.get("health", health))
+	position = state.get("position", position)
+```
+
+**Where it is kept.** The bottom of the tab says which step writes which file:
+
+- In the editor, once: the Save choices add `save_state()` and `load_state()` to the object's script, listing exactly those variables, and the same script puts the object in the `persist` group as it starts, so Save Game finds it.
+- In the game, every run: Auto and Load only variables load from `user://remembered.cfg` when the object enters the tree (`_ready`); Auto and Save only ones are written there when it leaves (`_exit_tree`) or the game quits. **Save Game** asks every `persist` object for `save_state()` and writes one file per slot (`user://save_0.cfg`), **Load Game** reads that slot back through `load_state()` and then fires On After Load, and **Save Number** / **Save Value** keep single values in the same slot file under their own name. Everything lives on the player's computer, never in `res://`.
+
+The values live under the sheet's class name in `user://remembered.cfg` (or under `vars` for a sheet with no class name), the same file and section the older **Remember Between Runs** option used, so a game that remembered values before keeps them. A sheet that already writes its own `save_state()` or `load_state()` keeps it: the compiler adds nothing and says so in the compile warnings. Opened again, the generated block reads back as the choices it came from, and the file saves byte for byte.
+
+## 4. Tab 2: Format Preview
 
 The Format Preview tab answers a single question: what will this addon's save file actually look like on disk, in a given format, before I commit to that format? It runs the real Save System backend on a real snapshot, so what you see is byte-for-byte what would ship.
 
@@ -56,7 +114,7 @@ Work through the controls top to bottom:
 
 One caveat is important enough to keep in mind every time you use this tab: the preview is built from the addon's **default values**, that is, a fresh snapshot. It shows you the shape and the types of the data, not the numbers from a live play session. If you want to see the actual coins, health, or buffs a player accumulated, run the game, let it save, and inspect the real file on the Save Slots tab instead.
 
-## 4. Tab 2: Save Slots
+## 5. Tab 3: Save Slots
 
 The Save Slots tab browses, inspects, and exports the real save files your project has already written under `user://`.
 
@@ -68,26 +126,12 @@ The Save Slots tab browses, inspects, and exports the real save files your proje
 - **The convert dropdown** offers **keep format**, or one of **as config**, **as json**, **as binary**, **as csv**, **as ini**, or **as xml**.
 - **Export...** opens a file dialog so you can save the selected slot anywhere on disk. If you picked a convert format, the file is read back through the Save System backend and rewritten in the new format on the way out, so this doubles as a converter between any two of the six formats. Encrypted saves are the one exception: they export with **keep format** only.
 
-## 5. Tab 3: Add Save Support
-
-The Add Save Support tab generates the `save_state` / `load_state` seam for one of your own scripts - an addon, an editor tool, or a plain node - so that it joins the exact same save convention the built-in behaviors use.
-
-![The Add Save Support tab: a scanned Timer script with its variables in a checklist (host left off, duration and remaining ticked) and the generated save_state pair below](images/save-studio-add-support.png)
-
-1. **Path field and Browse... button.** Type or pick the path to a `.gd` file.
-2. **Scan Variables button.** Scanning fills a table with three columns: a **Save** checkbox, a **Variable** name, and its **Type**, with one row per top-level variable in the script. Plain-data variables (numbers, text, dictionaries, arrays, Vector2, Color, and so on) are pre-ticked. Object references - a Node, a Resource, a RandomNumberGenerator, anything that is a pointer rather than data - are left unticked, because a live object must never go into a save file.
-3. **Generate save_state / load_state button.** This builds the method pair from the ticked rows only, following the repo convention: snapshot keys drop a leading underscore, collections are deep-copied so the save never aliases live data, and loads coerce each value by type and tolerate a missing key so an older save never crashes a newer build.
-4. **The output panel, titled "Generated seam (paste into the script)".** The generated pair appears here.
-5. **Copy to Clipboard button.** Copies the generated code so you can paste it straight into your script.
-
-Once you paste the pair into your script, the Save System finds it automatically, either because the node is in the persist group or because a sheet calls the Save Node State action on it. The two methods it generates are a solid, correct starting point, and because they are plain GDScript you are free to edit them afterwards.
-
 ## 6. Doing it from code
 
 Everything the Save Studio does by hand is also available on the public `EventSheets` API, which is what build tools and tests call:
 
-- `EventSheets.save_state_code(fields)` returns the generated `save_state` / `load_state` source, the same output as the Add Save Support tab.
-- `EventSheets.persistable_fields(path)` scans a script and returns its variables with the plain-data / object-reference classification, the same data the scan table shows.
+- `EventSheets.save_state_code(fields)` returns a `save_state` / `load_state` pair for any list of fields, in the same convention the Save choices write.
+- `EventSheets.persistable_fields(path)` scans a script and returns its variables with the plain-data / object-reference classification.
 - `EventSheets.preview_save(data, format)` renders a snapshot in a chosen format, the same text the Format Preview tab shows.
 - `EventSheets.save_capable_scripts()` lists the bundled addons that ship the seam, the same set the Addon dropdown offers.
 
@@ -103,7 +147,7 @@ If you want to fold any of this into your own build scripts or automated checks,
 
 4. **Check what a StatForge node actually stores.** Pick StatForge in the Addon dropdown and preview it. The output panel shows precisely which fields StatForge writes and in what shape, which is far faster than reading the pack source.
 
-5. **Add save support to your own inventory script in three clicks.** On the Add Save Support tab, Browse to your inventory `.gd`, Scan Variables, and Generate. Paste the result in and your inventory now saves and loads exactly like the bundled behaviors, with no hand-written boilerplate.
+5. **Keep coins and health between play sessions in one click each.** Open the player's sheet, go to What gets saved, and set `coins` and `health` to **Auto**. Close the game and start it again: they come back by themselves.
 
 6. **Preview an XML save for an external pipeline.** If a separate tool in your pipeline consumes XML, preview any addon as xml to see the exact tag structure it will receive. You can hand that sample to whoever writes the consumer.
 
@@ -111,7 +155,7 @@ If you want to fold any of this into your own build scripts or automated checks,
 
 8. **Open a save in a spreadsheet.** Select a save, convert **as csv**, and Export. Opening the CSV in a spreadsheet program lets you scan rows of saved values in a familiar grid, useful for balancing or sanity-checking numbers.
 
-9. **Generate the seam for a tool script.** The Add Save Support tab works on any `.gd` file, not just gameplay nodes. Point it at an editor tool script, scan, and generate to give that tool the same save convention everything else uses.
+9. **A checkpoint that only moves when you say so.** Set the player's `position` to **Manually** and put Save Game on the checkpoint's On Enter event. The position is written only there, and Load Game puts the player back on it.
 
 10. **Pick the smallest format by eyeballing it.** Preview the same composition across binary and the text formats and note how compact the binary hex preview is next to the text. If save size matters for your target platform, this is the quickest way to choose.
 
@@ -123,12 +167,12 @@ If you want to fold any of this into your own build scripts or automated checks,
 
 - **The preview shows defaults, not live data.** The Format Preview tab builds its output from a fresh snapshot using each addon's default values. It is perfect for seeing the shape and types of a save, but it will not show the coins or health from an actual play session. For real numbers, run the game and use the Save Slots tab.
 
-- **Object references are left out on purpose.** When Scan Variables leaves a Node, Resource, or RandomNumberGenerator unticked, that is correct behavior, not an oversight. Those are live pointers, not plain data, and forcing one into a save file would store something meaningless. Leave them unticked and save only the plain-data fields that describe state.
+- **Object references are left out on purpose.** What gets saved does not list a Node, Resource, or RandomNumberGenerator variable. Those are live pointers, not plain data, and forcing one into a save file would store something meaningless.
 
 - **The section name must match to convert.** Converting a file between formats on the Save Slots tab reads it back through the Save System backend, which needs the section the file was written under. The field defaults to `save`; if your project writes under a different section, set it to match, or the conversion will not find the data.
 
 - **Encrypted saves export with keep-format only.** An encrypted save cannot be read back and rewritten in a different format, so the convert options do not apply to it. Export it with **keep format** and it comes out intact.
 
-- **The generated pair is a starting point.** The `save_state` / `load_state` methods the Add Save Support tab produces are plain, correct GDScript. If your script needs to save something the scanner could not infer, or to massage a value on the way in or out, edit the generated methods freely - they are yours once pasted.
+- **Change the choice, not the generated lines.** The block at the end of the script is rewritten from the Save choices every time the sheet is saved. If your script needs to save something a variable cannot hold, or to massage a value on the way in or out, write your own `save_state()` / `load_state()` instead - a sheet that has its own pair keeps it, and the choices then add nothing.
 
 - **Refresh after the game writes a save.** The Save Slots list reads the folder when you open it or press Refresh, not continuously. If you saved in a running game and do not see the file, press Refresh to re-read `user://`.

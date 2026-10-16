@@ -151,7 +151,7 @@ If your behaviour holds state that should survive a save - a stat total, a coold
 
 There is no base class and no registration. The Save System duck-types the pair, so once your behaviour has it, a node carrying your behaviour is saved automatically when it sits in the persist group, or on demand with **Save Node State**. Your behaviour's own state travels with the rest of the game's save, in whatever format the project uses.
 
-You do not have to hand-write the pair. Open **Tools > Save Studio > Add Save Support**, point it at your behaviour's script, and it lists every variable with a checkbox - plain data pre-ticked, node references left off. Tick what should persist and it generates the `save_state`/`load_state` methods in the exact convention (underscore-stripped keys, deep-copied collections, typed coercion on load). Copy them into your script and you are done. Every bundled stateful pack - StatForge, Health, the incremental packs, Weapon Kit, and more - already carries this pair, so they persist out of the box.
+You do not have to hand-write the pair. Open **Tools > Save Studio > What gets saved** with your behaviour's sheet open, and give each variable that should persist a Save choice (Auto, or Manually for what only Save Game writes). Saving the sheet writes the `save_state`/`load_state` methods in the exact convention (underscore-stripped keys, deep-copied collections, typed coercion on load). Every bundled stateful pack - StatForge, Health, the incremental packs, Weapon Kit, and more - already carries this pair, so they persist out of the box.
 
 ---
 

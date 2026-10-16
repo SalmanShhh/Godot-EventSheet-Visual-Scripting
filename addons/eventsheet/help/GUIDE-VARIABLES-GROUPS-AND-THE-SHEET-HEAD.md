@@ -352,7 +352,7 @@ The right-click menu on a variable row:
 | Change Type Everywhere… | retypes it and rewrites every row that sets or compares it |
 | Convert Scope | moves it between Global, Local and Instance |
 | Toggle Constant | `var` to `const` and back |
-| Remember Between Runs | keeps its value between plays (the head grows a *remember* band) |
+| Save Choice... | when it is saved - Never, Auto, Load only, Save only or Manually (the head grows a *remember* band) |
 | Group Under a Heading… | the Inspector folder strip |
 | Sort A-Z | writes alphabetical order |
 | Copy as Expression | puts the name a field or a hand-written line needs on the clipboard - a global as `Game.Score`, which is the spelling that runs |
@@ -589,7 +589,7 @@ opens with, in reading order. Nothing folds. One fact, one control and one code 
 | ## | the description | `## The player avatar: movement and health.` | edits in place; Enter commits |
 | autoload | the singleton name, `Game` | `project.godot: autoload/Game = "*res://game.gd"` | `Project Settings…` |
 | host | "acts on its parent" | `var host: Node2D · _enter_tree: host = get_parent()` | (none - it comes from the kind) |
-| remember | "high_score, unlocked kept between runs" | `@onready var __ef_remember_boot: bool = _ef_recall_remembered()` | (the row menu's Remember Between Runs) |
+| remember | "high_score, unlocked saved" | `@onready var __ef_save_boot: bool = _ef_load_saved()` | (the row menu's Save Choice...) |
 | include | the included sheets, by file name | (no line - an include is merged at compile time) | `open` |
 | keeps in step | `PlayerSync · position, hp always · nickname at spawn · every 0.05 s · seen by everyone` | (no line of the script - the `.tscn`'s `MultiplayerSynchronizer`) | `Replication panel…` |
 | spawned by | `Spawner in level.tscn · from spawn_player()` | (no line of the script - the `.tscn`'s `MultiplayerSpawner`) | `select the spawner` |

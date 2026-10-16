@@ -56,7 +56,7 @@ plugin dependency at runtime.
   Remember in one row and a Restore in a completely different event agree with no declared variable
   between them and no member state.
 - **Remembering lasts for this run only.** Nothing here survives closing the game. For memory that
-  does, use the **Remember Between Runs** option on the variable, the **Only Once Ever** condition, or
+  does, give the variable a **Save** choice of Auto, the **Only Once Ever** condition, or
   the Save System pack.
 
 ## How share codes work
@@ -383,7 +383,7 @@ Forgetting a name that was never remembered is harmless.
   two different enemies each have their own. Typos are silent - `"hat"` and `"Hat"` are two different
   memories, and the second one has nothing in it.
 - **Nothing remembered survives closing the game.** Remember Value As is in-memory only. For memory
-  that persists, use the Remember Between Runs option on a sheet variable, the Only Once Ever
+  that persists, give a sheet variable a Save choice of Auto, the Only Once Ever
   condition, or the Save System pack.
 - **Restore Value Into leaves the variable alone when nothing was remembered.** That is the safe
   behaviour, and it also means a Restore that seems to do nothing is usually a name mismatch rather

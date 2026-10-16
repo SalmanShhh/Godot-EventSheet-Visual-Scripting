@@ -899,6 +899,7 @@ static func _table_parser(separator: String) -> GDScript:
 ## snapshot. Used to pre-tick the safe fields in persistable_fields().
 const _NON_DATA_TYPES: PackedStringArray = ["Node", "Node2D", "Node3D", "Control", "Tween", "Timer", "Resource", "Texture2D", "PackedScene", "RandomNumberGenerator", "FastNoiseLite", "Mutex", "Thread", "Camera2D", "Camera3D", "SubViewport", "Sprite2D", "Line2D", "AudioStreamPlayer", "Callable", "Signal"]
 const _SAVE_SYSTEM_SCRIPT: String = "res://eventsheet_addons/save_system/save_system_addon.gd"
+const _SAVE_CHOICES := preload("res://addons/eventforge/compiler/save_choices.gd")
 
 
 ## Generates the save_state()/load_state() pair from a list of fields, in the repo-wide
@@ -908,46 +909,13 @@ const _SAVE_SYSTEM_SCRIPT: String = "res://eventsheet_addons/save_system/save_sy
 ## (int/float/bool/String/Dictionary/Array, anything else passes through). Returns the
 ## two methods as one pastable block, or "" when fields is empty.
 static func save_state_code(fields: Array) -> String:
-	var save_lines: PackedStringArray = PackedStringArray()
-	var load_lines: PackedStringArray = PackedStringArray()
-	for field: Variant in fields:
-		if not field is Dictionary:
-			continue
-		var var_name: String = str((field as Dictionary).get("name", ""))
-		var var_type: String = str((field as Dictionary).get("type", "Variant"))
-		var key: String = var_name.trim_prefix("_")
-		# A TYPED collection (Array[String], Dictionary[String, int]) refuses a plain assignment of
-		# the untyped collection a loaded state holds, so it is filled in place with assign().
-		var typed_base: String = var_type.get_slice("[", 0) if var_type.ends_with("]") else ""
-		if typed_base == "Array" or typed_base == "Dictionary":
-			save_lines.append("\t\t\"%s\": %s.duplicate(true)," % [key, var_name])
-			load_lines.append("\t%s.assign((state.get(\"%s\", %s) as %s).duplicate(true))" % [var_name, key, var_name, typed_base])
-			continue
-		match var_type:
-			"Dictionary":
-				save_lines.append("\t\t\"%s\": %s.duplicate(true)," % [key, var_name])
-				load_lines.append("\t%s = (state.get(\"%s\", {}) as Dictionary).duplicate(true)" % [var_name, key])
-			"Array":
-				save_lines.append("\t\t\"%s\": %s.duplicate(true)," % [key, var_name])
-				load_lines.append("\t%s = (state.get(\"%s\", []) as Array).duplicate(true)" % [var_name, key])
-			"int":
-				save_lines.append("\t\t\"%s\": %s," % [key, var_name])
-				load_lines.append("\t%s = int(state.get(\"%s\", %s))" % [var_name, key, var_name])
-			"float":
-				save_lines.append("\t\t\"%s\": %s," % [key, var_name])
-				load_lines.append("\t%s = float(state.get(\"%s\", %s))" % [var_name, key, var_name])
-			"bool":
-				save_lines.append("\t\t\"%s\": %s," % [key, var_name])
-				load_lines.append("\t%s = bool(state.get(\"%s\", %s))" % [var_name, key, var_name])
-			"String":
-				save_lines.append("\t\t\"%s\": %s," % [key, var_name])
-				load_lines.append("\t%s = str(state.get(\"%s\", %s))" % [var_name, key, var_name])
-			_:
-				save_lines.append("\t\t\"%s\": %s," % [key, var_name])
-				load_lines.append("\t%s = state.get(\"%s\", %s)" % [var_name, key, var_name])
+	# The entries are the compiler's own, so this pair and the one a variable's Save choice writes
+	# can never drift apart.
+	var seam: Dictionary = _SAVE_CHOICES.seam_entries(fields)
+	var save_lines: PackedStringArray = seam["save"]
+	var load_lines: PackedStringArray = seam["load"]
 	if save_lines.is_empty():
 		return ""
-	save_lines[save_lines.size() - 1] = str(save_lines[save_lines.size() - 1]).trim_suffix(",")
 	var lines: PackedStringArray = PackedStringArray([
 		"# Save-state seam: the Save System walks any node in its persist group (or targeted",
 		"# by Save/Load Node State) and duck-types these two methods. Plain data only.",
@@ -1071,7 +1039,7 @@ static func preview_save(data: Dictionary, format: String, key: String = "state"
 
 ## What one script's SOURCE says about save keys: {"saved", "slot_keys", "loaded", "remembered"},
 ## each a sorted PackedStringArray of the literal keys it writes, writes as a TOP-LEVEL slot key,
-## reads back, and persists through Remember Between Runs. This is the Doctor's own
+## reads back, and persists through a variable's Save choice. This is the Doctor's own
 ## save-key-symmetry rule, exposed so a save browser, a migration tool or a pack's own check reads
 ## the same keys the built-in check does instead of writing a second regex that disagrees with it.
 ##

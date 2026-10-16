@@ -480,7 +480,7 @@ no member state to maintain.
 Three neighbours read similarly and it is worth being clear which is which:
 
 - **Remember Value As** - this run only, in memory. Closing the game forgets it.
-- **Remember Between Runs** (on the variable's own menu) - persists to disk across runs.
+- **Save Choice...** (on the variable's own menu) - Auto persists to disk across runs.
 - The **Save System pack** - a full slot on disk, with formats, backups and a load menu.
 
 ---
@@ -656,7 +656,7 @@ asset stays clean).
   slot nobody filled in - so check it with Is Nothing if silence would hide a bug.
 - **Ask Share Code Is Valid on a change, not every frame.** A malformed but correctly shaped code
   reaches the decoder, and the engine logs a line each time it is refused.
-- **Remember Value As does not survive closing the game.** For that, use Remember Between Runs on the
+- **Remember Value As does not survive closing the game.** For that, give the variable a Save choice of Auto on the
   variable, or the Save System pack.
 - **Restore Value Into leaves the variable alone** when nothing was remembered under that name, so a
   Cancel button that never previewed does nothing rather than writing a null.

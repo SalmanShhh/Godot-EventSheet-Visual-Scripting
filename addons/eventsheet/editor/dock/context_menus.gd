@@ -189,7 +189,9 @@ func build_all() -> void:
 	_dock._variable_context_menu.add_item("Change Type Everywhere…", _dock.VARIABLE_MENU_CHANGE_TYPE)
 	_dock._variable_context_menu.add_item("Convert Scope", _dock.VARIABLE_MENU_CONVERT_SCOPE)
 	_dock._variable_context_menu.add_item("Toggle Constant", _dock.VARIABLE_MENU_TOGGLE_CONST)
-	_dock._variable_context_menu.add_item("Remember Between Runs", _dock.VARIABLE_MENU_REMEMBER)
+	# When the variable is saved (Never / Auto / Load only / Save only / Manual) is chosen in the Save
+	# Studio, beside the sheet's other variables, so the choice and its sentence are read together.
+	_dock._variable_context_menu.add_item("Save Choice…", _dock.VARIABLE_MENU_SAVE_CHOICE)
 	# The list is in the order it was written; this is how you ask for alphabetical, and it
 	# WRITES that order rather than sorting the view behind your back.
 	_dock._variable_context_menu.add_item("Sort A-Z", _dock.VARIABLE_MENU_SORT_AZ)

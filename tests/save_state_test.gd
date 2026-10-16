@@ -210,12 +210,12 @@ static func _remove_slot(sv: Node) -> void:
 		DirAccess.remove_absolute(path)
 
 
-## The Save Studio "Add Save Support" generator: its pure core must emit the exact
+## The save_state()/load_state() generator (EventSheets.save_state_code): it must emit the exact
 ## convention (underscore-stripped keys, typed coercion, duplicate(true) on collections)
 ## AND the emitted pair must be valid GDScript that actually round-trips a live node.
 static func _studio_generator() -> bool:
 	var all_passed: bool = true
-	var code: String = EventSheetSaveStudio.build_seam_code([
+	var code: String = EventSheets.save_state_code([
 		{"name": "_wallet", "type": "Dictionary"},
 		{"name": "level", "type": "int"},
 		{"name": "speed", "type": "float"},

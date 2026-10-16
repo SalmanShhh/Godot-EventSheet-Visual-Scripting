@@ -24,6 +24,28 @@
   panel, the provider glue) instead of a dock method that only passed the call on. Nothing a user
   sees or does changes.
 
+### Changed: one Save choice per variable replaces Add Save Support and Remember Between Runs
+
+- The Save Studio opens on a new **What gets saved** tab: pick an open sheet as the Object, and give
+  each of its variables a **Save** choice - Never, Auto, Load only, Save only or Manually. Every
+  option says what it does on hover, the closed dropdown keeps the chosen one's sentence, and one
+  line under the list tells the whole story ("Player: health, coins come back by themselves;
+  spawn_point only at your Save Game / Load Game."). A **Where it is kept** table says which step
+  writes which file. Right-click a variable and choose **Save Choice...** to open it.
+- The choice is stored on the variable and compiles to plain Godot at the end of the script: Auto
+  loads when the node is ready and saves when it leaves the tree or the game quits, Load only loads
+  by itself and is written back only at Save Game, Save only is written and never read back, and
+  every saved variable is in a generated `save_state()` / `load_state()` pair with the node joining
+  the `persist` group, so the Save System's Save Game and Load Game carry it. The values stay in
+  `user://remembered.cfg` under the class name, where Remember Between Runs kept them, and a
+  variable marked Remember Between Runs reads as Auto.
+- An opened script reads that block back as the choices it came from and saves byte for byte; a
+  hand-written `save_state()` / `load_state()` is never claimed, and a sheet that has its own keeps
+  it (the compile says so) instead of getting a second one.
+- Removed: the **Add Save Support** tab (scan a script, tick variables, paste the generated pair) and
+  the **Remember Between Runs** menu toggle - the Save choice does both. `EventSheets.save_state_code`,
+  `persistable_fields` and `add_save_support` are unchanged and share the compiler's generator.
+
 ### Changed: the help, keys, words and asking windows say what they do on the window
 
 - Keyboard Shortcuts: a key put on a fixed key (Ctrl+F, Ctrl+P…) or on another changeable key says

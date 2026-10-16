@@ -622,7 +622,7 @@ signature, takes priority over the static.
 
 ### 15. Add save support to your pack's node with one call
 
-**Scenario:** your pack ships a behavior that holds runtime state (a stat pool, a cooldown, an owned-items dictionary) and you want it to survive a save. A setup command scans the script and drops the generated `save_state`/`load_state` pair on the clipboard, so wiring persistence in is paste-and-done - the same generator the built-in Save Studio uses.
+**Scenario:** your pack ships a behavior that holds runtime state (a stat pool, a cooldown, an owned-items dictionary) and you want it to survive a save. A setup command scans the script and drops the generated `save_state`/`load_state` pair on the clipboard, so wiring persistence in is paste-and-done - the same convention a variable's Save choice writes.
 
 ```gdscript
 EventSheets.register_palette_command("My Pack: Add Save Support", func() -> void:

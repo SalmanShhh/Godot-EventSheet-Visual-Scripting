@@ -8711,3 +8711,48 @@ missing,未翻訳
 Text in the game,ゲーム内のテキスト
 Fake (test only),テスト用（テスト専用）
 Where it is said: %s,使われている場所: %s
+Auto,自動
+Load only,読み込みのみ
+Save only,保存のみ
+Never,しない
+"Loaded when the object enters the game, saved when it leaves (and when the game quits). The easy default.",オブジェクトがゲームに入ったときに読み込み、出ていくとき（とゲーム終了時）に保存します。手軽な既定の選択です。
+"Loaded automatically, but only saved when your events say Save Game.",自動で読み込みますが、保存はイベントが Save Game と言ったときだけです。
+"Saved automatically, never loaded back: good for stats or play time.",自動で保存し、読み戻すことはありません。統計やプレイ時間に向いています。
+Only when your events say Save Game / Load Game: checkpoints and save slots.,イベントが Save Game / Load Game と言ったときだけ。チェックポイントやセーブスロット向けです。
+Not saved. It starts from its default every time.,保存しません。毎回既定値から始まります。
+"Use for: health, coins, unlocked doors.",用途：体力、コイン、開けた扉。
+Use for: settings you write yourself at a menu.,用途：メニューで自分で書き込む設定。
+"Use for: play time, total jumps, stats you read elsewhere.",用途：プレイ時間、ジャンプ総数、別の場所で読む統計。
+"Use for: checkpoint position, save-slot games.",用途：チェックポイントの位置、セーブスロットのあるゲーム。
+"Use for: timers, cooldowns, anything worked out again each run.",用途：タイマー、クールダウン、毎回計算し直すもの。
+%s comes back by itself,%s は自動で戻ります
+%s come back by themselves,%s は自動で戻ります
+%s only at your Save Game / Load Game,%s は Save Game / Load Game のときだけ
+%s loads by itself,%s は自動で読み込まれます
+%s load by themselves,%s は自動で読み込まれます
+%s is only written,%s は書き込むだけです
+%s are only written,%s は書き込むだけです
+Nothing is saved: %s starts fresh every time.,何も保存しません。%s は毎回まっさらな状態から始まります。
+%s: %s.,%s：%s。
+[b]Quick start:[/b] set a variable's [b]Save[/b] to [b]Auto[/b]. That's it: it is saved when the object leaves the game and loaded when it comes back.,[b]クイックスタート：[/b]変数の[b]保存[/b]を[b]自動[/b]にします。それだけで、オブジェクトがゲームを離れるときに保存され、戻ってきたときに読み込まれます。
+"Pick when each variable is saved. Hover the choice, or any option in its list, to see what it does.",各変数をいつ保存するかを選びます。選択やリストの項目にマウスを乗せると、その働きが表示されます。
+What it does,働き
+Where it is kept,保存場所
+What gets saved,保存する内容
+Open a sheet to choose what it saves.,シートを開くと、何を保存するか選べます。
+%s is now saved: %s.,%s の保存：%s。
+the object's script,オブジェクトのスクリプト
+What happens,起きること
+"In the editor (once, while you build)",エディターで（作っている間に一度）
+"A variable's Save choice adds save_state() and load_state() to the object's script, listing exactly those variables.",変数の保存の選択によって、オブジェクトのスクリプトに save_state() と load_state() が加わり、その変数だけが並びます。
+"The same script puts the object in the ""persist"" group as it starts, so Save Game finds it.","同じスクリプトが開始時にオブジェクトを ""persist"" グループに入れるので、Save Game がそれを見つけます。"
+In the game (every time it runs),ゲーム内で（実行するたびに）
+Auto and Load only variables load when their object enters the tree (_ready); Auto and Save only ones save when it leaves (_exit_tree) or the game quits.,自動と読み込みのみの変数は、オブジェクトがツリーに入るとき（_ready）に読み込まれます。自動と保存のみの変数は、ツリーを離れるとき（_exit_tree）かゲーム終了時に保存されます。
+"Save Game asks every ""persist"" object for save_state() and writes one file per slot.","Save Game は ""persist"" の各オブジェクトに save_state() を求め、スロットごとに 1 つのファイルを書き込みます。"
+"Load Game reads that slot, hands each object its part through load_state(), then fires On After Load.",Load Game はそのスロットを読み、load_state() で各オブジェクトに自分の分を渡してから On After Load を発生させます。
+"Save Number / Save Value keep single values in the same slot file, under their own name.",Save Number / Save Value は、単独の値をそれぞれの名前で同じスロットファイルに保存します。
+"Everything a save holds lives on the player's computer, never in res://: deleting a save never touches your project.",セーブの中身はすべてプレイヤーのコンピューターにあり、res:// には置かれません。セーブを消してもプロジェクトには一切影響しません。
+%s saved,%s を保存
+"Copies any value aside under a name, in memory, for this run - the before-value for a preview, a buff or a cutscene. For memory that survives closing the game give the variable a Save choice, or use the Save System pack.",任意の値を名前を付けてメモリに取っておきます（この実行中のみ）。プレビューやバフ、カットシーンの前の値に。ゲームを閉じても残したいなら、変数に保存の選択を付けるか、Save System パックを使ってください。
+Manually,手動
+Save Choice…,保存の選択…

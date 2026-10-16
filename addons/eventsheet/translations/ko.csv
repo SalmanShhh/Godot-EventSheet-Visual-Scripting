@@ -8711,3 +8711,48 @@ missing,없음
 Text in the game,게임 속 텍스트
 Fake (test only),가짜 (테스트 전용)
 Where it is said: %s,말하는 곳: %s
+Auto,자동
+Load only,불러오기만
+Save only,저장만
+Never,안 함
+"Loaded when the object enters the game, saved when it leaves (and when the game quits). The easy default.","오브젝트가 게임에 들어올 때 불러오고, 나갈 때(그리고 게임을 끝낼 때) 저장합니다. 손쉬운 기본값입니다."
+"Loaded automatically, but only saved when your events say Save Game.","자동으로 불러오지만, 저장은 이벤트가 Save Game이라고 할 때만 합니다."
+"Saved automatically, never loaded back: good for stats or play time.",자동으로 저장하고 다시 불러오지 않습니다. 통계나 플레이 시간에 좋습니다.
+Only when your events say Save Game / Load Game: checkpoints and save slots.,이벤트가 Save Game / Load Game이라고 할 때만. 체크포인트와 저장 슬롯용입니다.
+Not saved. It starts from its default every time.,저장하지 않습니다. 매번 기본값에서 시작합니다.
+"Use for: health, coins, unlocked doors.","용도: 체력, 코인, 열린 문."
+Use for: settings you write yourself at a menu.,용도: 메뉴에서 직접 기록하는 설정.
+"Use for: play time, total jumps, stats you read elsewhere.","용도: 플레이 시간, 총 점프 수, 다른 곳에서 읽는 통계."
+"Use for: checkpoint position, save-slot games.","용도: 체크포인트 위치, 저장 슬롯이 있는 게임."
+"Use for: timers, cooldowns, anything worked out again each run.","용도: 타이머, 쿨다운, 실행할 때마다 다시 계산하는 것."
+%s comes back by itself,%s은(는) 저절로 돌아옵니다
+%s come back by themselves,%s은(는) 저절로 돌아옵니다
+%s only at your Save Game / Load Game,%s은(는) Save Game / Load Game 때만
+%s loads by itself,%s은(는) 저절로 불러옵니다
+%s load by themselves,%s은(는) 저절로 불러옵니다
+%s is only written,%s은(는) 기록만 합니다
+%s are only written,%s은(는) 기록만 합니다
+Nothing is saved: %s starts fresh every time.,아무것도 저장하지 않습니다. %s은(는) 매번 새로 시작합니다.
+%s: %s.,%s: %s.
+[b]Quick start:[/b] set a variable's [b]Save[/b] to [b]Auto[/b]. That's it: it is saved when the object leaves the game and loaded when it comes back.,[b]빠른 시작:[/b] 변수의 [b]저장[/b]을 [b]자동[/b]으로 설정하세요. 그게 전부입니다. 오브젝트가 게임을 떠날 때 저장되고 돌아올 때 불러옵니다.
+"Pick when each variable is saved. Hover the choice, or any option in its list, to see what it does.",각 변수를 언제 저장할지 고르세요. 선택이나 목록의 항목 위에 마우스를 올리면 무엇을 하는지 보입니다.
+What it does,하는 일
+Where it is kept,저장 위치
+What gets saved,저장되는 것
+Open a sheet to choose what it saves.,시트를 열어 무엇을 저장할지 고르세요.
+%s is now saved: %s.,%s 저장: %s.
+the object's script,오브젝트의 스크립트
+What happens,일어나는 일
+"In the editor (once, while you build)",에디터에서 (만드는 동안 한 번)
+"A variable's Save choice adds save_state() and load_state() to the object's script, listing exactly those variables.","변수의 저장 선택은 오브젝트의 스크립트에 save_state()와 load_state()를 추가하며, 정확히 그 변수들만 나열합니다."
+"The same script puts the object in the ""persist"" group as it starts, so Save Game finds it.","같은 스크립트가 시작할 때 오브젝트를 ""persist"" 그룹에 넣으므로 Save Game이 찾을 수 있습니다."
+In the game (every time it runs),게임에서 (실행할 때마다)
+Auto and Load only variables load when their object enters the tree (_ready); Auto and Save only ones save when it leaves (_exit_tree) or the game quits.,"자동과 불러오기만 변수는 오브젝트가 트리에 들어올 때(_ready) 불러오고, 자동과 저장만 변수는 트리를 떠날 때(_exit_tree)나 게임을 끝낼 때 저장합니다."
+"Save Game asks every ""persist"" object for save_state() and writes one file per slot.","Save Game은 ""persist""의 모든 오브젝트에 save_state()를 요청하고 슬롯마다 파일 하나를 씁니다."
+"Load Game reads that slot, hands each object its part through load_state(), then fires On After Load.","Load Game은 그 슬롯을 읽고, load_state()로 각 오브젝트에 제 몫을 건넨 다음 On After Load를 발생시킵니다."
+"Save Number / Save Value keep single values in the same slot file, under their own name.",Save Number / Save Value는 개별 값을 각자의 이름으로 같은 슬롯 파일에 보관합니다.
+"Everything a save holds lives on the player's computer, never in res://: deleting a save never touches your project.",저장 파일의 내용은 모두 플레이어의 컴퓨터에 있고 res://에는 없습니다. 저장을 지워도 프로젝트에는 전혀 영향이 없습니다.
+%s saved,%s 저장
+"Copies any value aside under a name, in memory, for this run - the before-value for a preview, a buff or a cutscene. For memory that survives closing the game give the variable a Save choice, or use the Save System pack.","아무 값이나 이름을 붙여 메모리에 따로 보관합니다(이번 실행 동안). 미리보기, 버프, 컷신 이전의 값입니다. 게임을 닫아도 남아야 한다면 변수에 저장 선택을 주거나 Save System 팩을 쓰세요."
+Manually,수동
+Save Choice…,저장 선택…

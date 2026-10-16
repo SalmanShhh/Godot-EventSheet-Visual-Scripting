@@ -9,7 +9,7 @@
 # The four settings (effect strength, no flashing, text size scale, aim assist radius) are kept as
 # metadata on Engine, which is plain Godot with no autoload to add and no plugin to depend on: any
 # script, any behaviour pack and any shader driver can read them with one line, and a project that
-# never sets one gets the default the reader asks for. Ticking Remember Between Runs on the sheet
+# never sets one gets the default the reader asks for. A Save choice of Auto on the sheet
 # variables the sliders write is what makes them survive a restart.
 #
 # Captions ride a SIBLING of Play Sound rather than Play Sound itself: that row's emitted bytes are a

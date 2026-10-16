@@ -207,7 +207,7 @@ const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
 const VARIABLE_MENU_RENAME := 4
 const VARIABLE_MENU_GROUP := 5
-const VARIABLE_MENU_REMEMBER := 6
+const VARIABLE_MENU_SAVE_CHOICE := 6
 ## Change Type Everywhere / the grid CSV round trip (dock/variable_retype_dialog.gd,
 ## dock/grid_csv_dialog.gd).
 const VARIABLE_MENU_CHANGE_TYPE := 7
@@ -755,7 +755,7 @@ var _export_pack: RefCounted = null:  # Sheet ▸ Export Addon Pack: writes even
 			_export_pack = load("res://addons/eventsheet/editor/dock/export_pack.gd").new()
 			_export_pack.init(self)
 		return _export_pack
-var _save_studio: RefCounted = null:  # Tools ▸ Save Studio: format preview + slot browser/export + save_state generator (dock/save_studio.gd)
+var _save_studio: RefCounted = null:  # Tools ▸ Save Studio: what gets saved + format preview + slot browser/export (dock/save_studio.gd)
 	get:
 		if _save_studio == null:
 			_save_studio = load("res://addons/eventsheet/editor/dock/save_studio.gd").new()

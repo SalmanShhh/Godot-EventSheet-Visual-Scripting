@@ -3743,7 +3743,7 @@ Copying: share codes, the OS clipboard both ways, cloning a node, and
 #### Actions
 - **Copy Share Code To Clipboard** (`value: String`) - Encodes any value as a share code and puts it straight on the operating system clipboard, ready to paste.
 - **Clone Into** (`source: String, parent: String, at: String, group: String`) - Copies a live node, adds the copy to a parent, places it and optionally puts it in a group - the one-row form of Duplicate Node plus Add Child plus Set Position. Use Spawn Scene when you are starting from a .tscn file instead.
-- **Remember Value As** (`name: String, value: String`) - Copies any value aside under a name, in memory, for this run - the before-value for a preview, a buff or a cutscene. For memory that survives closing the game use Remember Between Runs on the variable, or the Save System pack.
+- **Remember Value As** (`name: String, value: String`) - Copies any value aside under a name, in memory, for this run - the before-value for a preview, a buff or a cutscene. For memory that survives closing the game give the variable a Save choice, or use the Save System pack.
 - **Restore Value Into** (`name: String, var_name: String`) - Pours a remembered value back into a variable. When nothing was remembered under that name the variable keeps what it already had.
 - **Forget Remembered** (`name: String`) - Drops a remembered value, so Has Remembered reads false again. Forgetting a name that was never remembered is harmless.
 

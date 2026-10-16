@@ -81,7 +81,7 @@ Two rows fix it.
 | **Game** ▸ On created | **Keyboard** ▸ Load bindings |
 
 **Save bindings** writes every control's bindings to a plain settings file under `user://` - the same
-kind of file Remember Between Runs uses, readable and deletable by hand. **Load bindings** puts them
+kind of file a variable's Save choice uses, readable and deletable by hand. **Load bindings** puts them
 back. On a first run there is no file yet, so Load does nothing and the player gets the project's own
 bindings, which is exactly right.
 

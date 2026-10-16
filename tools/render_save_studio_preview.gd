@@ -1,58 +1,78 @@
 # EventForge - visual render harness for the Save Studio window (dev tool).
-# Instantiates EventSheetSaveStudio against a stub dock, runs a Format Preview and a
-# generated save_state snippet, and screenshots all three tabs. Run NON-headless:
-#   godot --path . --script tools/render_save_studio_preview.gd
+# Instantiates EventSheetSaveStudio against a stub dock holding one Player sheet, screenshots the
+# What gets saved tab, then runs a Format Preview and screenshots that tab. Run NON-headless; add
+# --editor for the editor's own theme (the dark or light one its settings pick):
+#   godot --editor --path . --script tools/render_save_studio_preview.gd -- out=<folder> tag=<name>
 @tool
 extends SceneTree
 
 var _frames: int = 0
 var _studio: EventSheetSaveStudio = null
 var _dock_stub: Control = null
+var _out: String = "res://"
+var _tag: String = "preview"
 
 
 func _init() -> void:
-	root.title = "EventForge Save Studio Preview"
-	root.size = Vector2i(880, 680)
-	root.gui_embed_subwindows = true
-	var background: ColorRect = ColorRect.new()
-	background.color = Color("#2b2b2b")
-	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root.add_child(background)
-	_dock_stub = Control.new()
-	_dock_stub.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_dock_stub.set_script(load("res://tools/render_save_studio_stub.gd"))
-	root.add_child(_dock_stub)
-	_studio = EventSheetSaveStudio.new()
-	_studio.init(_dock_stub)
+	for argument: String in OS.get_cmdline_user_args():
+		if argument.begins_with("out="):
+			_out = argument.trim_prefix("out=").trim_suffix("/") + "/"
+		elif argument.begins_with("tag="):
+			_tag = argument.trim_prefix("tag=")
 	process_frame.connect(_on_frame)
 
 
 func _on_frame() -> void:
 	_frames += 1
 	if _frames == 2:
+		# Built from the first frame, so an --editor run has its editor and theme by now.
+		root.size = Vector2i(880, 760)
+		root.gui_embed_subwindows = true
+		var background: Panel = Panel.new()
+		background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		root.add_child(background)
+		_dock_stub = Control.new()
+		_dock_stub.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		_dock_stub.set_script(load("res://tools/render_save_studio_stub.gd"))
+		root.add_child(_dock_stub)
+		_dock_stub.call("open_player")
+		_studio = EventSheetSaveStudio.new()
+		_studio.init(_dock_stub)
 		_studio.open()
-	if _frames == 4:
-		# Drive the Format Preview so the screenshot shows real save output.
+		_studio._window.size = Vector2i(840, 720)
+		_studio._window.position = Vector2i(20, 20)
+	if _frames == 8:
+		_shoot("save_studio_what")
+		# Down to the foot of the tab: the legend and Where it is kept.
+		var scroll: ScrollContainer = _find_tabs(_studio._window).get_child(0) as ScrollContainer
+		scroll.scroll_vertical = 100000
+	if _frames == 11:
+		_shoot("save_studio_where")
+		var tabs: TabContainer = _find_tabs(_studio._window)
+		tabs.current_tab = 1
 		_studio._preview_addon_picker.selected = _pick_addon_index("Stat")
 		_studio._preview_format_picker.selected = 1  # json
 		_studio._run_format_preview()
-		# Populate the generator tab too.
-		_studio._support_path_edit.text = "res://eventsheet_addons/timer/timer_behavior.gd"
-		_studio._scan_support_script()
-		_studio._generate_support_code()
-	if _frames == 8:
-		var image: Image = root.get_texture().get_image()
-		image.save_png("res://_save_studio_preview.png")
-		print("[save_studio_preview] saved res://_save_studio_preview.png (%dx%d)" % [image.get_width(), image.get_height()])
-		# Flip to the Add Save Support tab for a second shot of the generator.
-		var tabs: TabContainer = _studio._window.get_child(0).get_child(0)
-		tabs.current_tab = 2
-	if _frames < 12:
+	if _frames < 17:
 		return
-	var support_image: Image = root.get_texture().get_image()
-	support_image.save_png("res://_save_studio_support_preview.png")
-	print("[save_studio_preview] saved res://_save_studio_support_preview.png (%dx%d)" % [support_image.get_width(), support_image.get_height()])
+	_shoot("save_studio_format")
 	quit(0)
+
+
+func _shoot(name: String) -> void:
+	var path: String = "%s%s_%s.png" % [_out, name, _tag]
+	root.get_texture().get_image().save_png(path)
+	print("[save_studio_preview] saved %s" % path)
+
+
+func _find_tabs(node: Node) -> TabContainer:
+	if node is TabContainer:
+		return node
+	for child: Node in node.get_children():
+		var found: TabContainer = _find_tabs(child)
+		if found != null:
+			return found
+	return null
 
 
 func _pick_addon_index(needle: String) -> int:

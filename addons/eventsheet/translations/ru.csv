@@ -8711,3 +8711,48 @@ missing,нет
 Text in the game,Текст в игре
 Fake (test only),Тестовый (только для проверки)
 Where it is said: %s,Где это сказано: %s
+Auto,Авто
+Load only,Только загрузка
+Save only,Только сохранение
+Never,Никогда
+"Loaded when the object enters the game, saved when it leaves (and when the game quits). The easy default.","Загружается, когда объект появляется в игре, и сохраняется, когда он уходит (и при выходе из игры). Простой вариант по умолчанию."
+"Loaded automatically, but only saved when your events say Save Game.","Загружается автоматически, а сохраняется только когда ваши события говорят Save Game."
+"Saved automatically, never loaded back: good for stats or play time.",Сохраняется автоматически и никогда не загружается обратно: подходит для статистики или времени игры.
+Only when your events say Save Game / Load Game: checkpoints and save slots.,Только когда ваши события говорят Save Game / Load Game: контрольные точки и слоты сохранения.
+Not saved. It starts from its default every time.,Не сохраняется. Каждый раз начинается со значения по умолчанию.
+"Use for: health, coins, unlocked doors.","Для: здоровья, монет, открытых дверей."
+Use for: settings you write yourself at a menu.,"Для: настроек, которые вы сами записываете в меню."
+"Use for: play time, total jumps, stats you read elsewhere.","Для: времени игры, общего числа прыжков, статистики, которую вы читаете в другом месте."
+"Use for: checkpoint position, save-slot games.","Для: позиции контрольной точки, игр со слотами сохранения."
+"Use for: timers, cooldowns, anything worked out again each run.","Для: таймеров, перезарядок, всего, что заново вычисляется при каждом запуске."
+%s comes back by itself,%s возвращается сама
+%s come back by themselves,%s возвращаются сами
+%s only at your Save Game / Load Game,%s только при вашем Save Game / Load Game
+%s loads by itself,%s загружается сама
+%s load by themselves,%s загружаются сами
+%s is only written,%s только записывается
+%s are only written,%s только записываются
+Nothing is saved: %s starts fresh every time.,Ничего не сохраняется: %s каждый раз начинает заново.
+%s: %s.,%s: %s.
+[b]Quick start:[/b] set a variable's [b]Save[/b] to [b]Auto[/b]. That's it: it is saved when the object leaves the game and loaded when it comes back.,"[b]Быстрый старт:[/b] поставьте у переменной [b]Сохранить[/b] в значение [b]Авто[/b]. Вот и всё: она сохраняется, когда объект покидает игру, и загружается, когда он возвращается."
+"Pick when each variable is saved. Hover the choice, or any option in its list, to see what it does.","Выберите, когда сохраняется каждая переменная. Наведите на вариант или на любой пункт его списка, чтобы увидеть, что он делает."
+What it does,Что делает
+Where it is kept,Где хранится
+What gets saved,Что сохраняется
+Open a sheet to choose what it saves.,"Откройте лист, чтобы выбрать, что он сохраняет."
+%s is now saved: %s.,%s теперь сохраняется: %s.
+the object's script,скрипт объекта
+What happens,Что происходит
+"In the editor (once, while you build)","В редакторе (один раз, пока вы делаете игру)"
+"A variable's Save choice adds save_state() and load_state() to the object's script, listing exactly those variables.","Выбор сохранения у переменной добавляет в скрипт объекта save_state() и load_state(), перечисляющие ровно эти переменные."
+"The same script puts the object in the ""persist"" group as it starts, so Save Game finds it.","Тот же скрипт при запуске добавляет объект в группу ""persist"", чтобы Save Game его нашёл."
+In the game (every time it runs),В игре (при каждом запуске)
+Auto and Load only variables load when their object enters the tree (_ready); Auto and Save only ones save when it leaves (_exit_tree) or the game quits.,"Переменные «Авто» и «Только загрузка» загружаются, когда их объект входит в дерево (_ready); «Авто» и «Только сохранение» сохраняются, когда он его покидает (_exit_tree) или игра закрывается."
+"Save Game asks every ""persist"" object for save_state() and writes one file per slot.","Save Game запрашивает save_state() у каждого объекта ""persist"" и пишет по одному файлу на слот."
+"Load Game reads that slot, hands each object its part through load_state(), then fires On After Load.","Load Game читает этот слот, передаёт каждому объекту его часть через load_state(), а затем вызывает On After Load."
+"Save Number / Save Value keep single values in the same slot file, under their own name.","Save Number / Save Value хранят отдельные значения в том же файле слота, под их собственным именем."
+"Everything a save holds lives on the player's computer, never in res://: deleting a save never touches your project.","Всё, что хранит сохранение, лежит на компьютере игрока, никогда в res://: удаление сохранения никогда не затрагивает ваш проект."
+%s saved,%s сохраняются
+"Copies any value aside under a name, in memory, for this run - the before-value for a preview, a buff or a cutscene. For memory that survives closing the game give the variable a Save choice, or use the Save System pack.","Откладывает любое значение под именем в память на этот запуск - прежнее значение для предпросмотра, усиления или катсцены. Чтобы память пережила закрытие игры, задайте переменной выбор сохранения или используйте пакет Save System."
+Manually,Вручную
+Save Choice…,Выбор сохранения…

@@ -289,4 +289,4 @@ ACE, so a future change to the template is caught.
 - **Feature sparingly.** `.featured()` is for the one or two rows a beginner reaches for first, not every ACE.
 - **Group sensibly.** Reuse an existing category name to join it, or make a new one and give it a `section_descriptions()` blurb.
 - **A new `class_name` needs a class-cache regen** (`--editor --headless --quit-after 3`, then revert `project.godot`) before the suite sees your module.
-- **Modules are stateless vocabulary.** If your ACEs target a stateful host that should survive a save, give that host script the save convention - `save_state() -> Dictionary` and `load_state(state)` - and the Save System persists it. **Tools > Save Studio > Add Save Support** generates the pair for you.
+- **Modules are stateless vocabulary.** If your ACEs target a stateful host that should survive a save, give that host script the save convention - `save_state() -> Dictionary` and `load_state(state)` - and the Save System persists it. When the host is a sheet, a Save choice on its variables (**Tools > Save Studio > What gets saved**) writes the pair for you.

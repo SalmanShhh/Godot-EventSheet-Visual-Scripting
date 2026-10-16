@@ -8711,3 +8711,48 @@ missing,缺失
 Text in the game,游戏中的文本
 Fake (test only),测试语言（仅测试）
 Where it is said: %s,出现位置：%s
+Auto,自动
+Load only,仅读取
+Save only,仅保存
+Never,从不
+"Loaded when the object enters the game, saved when it leaves (and when the game quits). The easy default.",对象进入游戏时读取，离开时（以及游戏退出时）保存。最省事的默认选择。
+"Loaded automatically, but only saved when your events say Save Game.",自动读取，但只在你的事件说 Save Game 时才保存。
+"Saved automatically, never loaded back: good for stats or play time.",自动保存，从不读回：适合统计数据或游戏时长。
+Only when your events say Save Game / Load Game: checkpoints and save slots.,只在你的事件说 Save Game / Load Game 时：适合检查点和存档槽位。
+Not saved. It starts from its default every time.,不保存。每次都从默认值开始。
+"Use for: health, coins, unlocked doors.",适用于：生命值、金币、已解锁的门。
+Use for: settings you write yourself at a menu.,适用于：你在菜单里自己写入的设置。
+"Use for: play time, total jumps, stats you read elsewhere.",适用于：游戏时长、总跳跃次数、在别处读取的统计数据。
+"Use for: checkpoint position, save-slot games.",适用于：检查点位置、带存档槽位的游戏。
+"Use for: timers, cooldowns, anything worked out again each run.",适用于：计时器、冷却，以及每次运行都重新算出的东西。
+%s comes back by itself,%s 会自动恢复
+%s come back by themselves,%s 会自动恢复
+%s only at your Save Game / Load Game,%s 只在你的 Save Game / Load Game 时
+%s loads by itself,%s 会自动读取
+%s load by themselves,%s 会自动读取
+%s is only written,%s 只写入
+%s are only written,%s 只写入
+Nothing is saved: %s starts fresh every time.,什么都不保存：%s 每次都从头开始。
+%s: %s.,%s：%s。
+[b]Quick start:[/b] set a variable's [b]Save[/b] to [b]Auto[/b]. That's it: it is saved when the object leaves the game and loaded when it comes back.,[b]快速上手：[/b]把变量的[b]保存[/b]设为[b]自动[/b]。就这样：对象离开游戏时保存，回来时读取。
+"Pick when each variable is saved. Hover the choice, or any option in its list, to see what it does.",选择每个变量何时保存。把鼠标停在选项或其列表中的任一项上，即可看到它的作用。
+What it does,作用
+Where it is kept,存放位置
+What gets saved,保存哪些内容
+Open a sheet to choose what it saves.,打开一个表来选择它保存什么。
+%s is now saved: %s.,%s 现在的保存方式：%s。
+the object's script,对象的脚本
+What happens,发生什么
+"In the editor (once, while you build)",在编辑器中（制作时一次）
+"A variable's Save choice adds save_state() and load_state() to the object's script, listing exactly those variables.",变量的保存选择会在对象的脚本中加入 save_state() 和 load_state()，其中正好列出这些变量。
+"The same script puts the object in the ""persist"" group as it starts, so Save Game finds it.","同一个脚本在开始时把对象放进 ""persist"" 组，这样 Save Game 就能找到它。"
+In the game (every time it runs),在游戏中（每次运行）
+Auto and Load only variables load when their object enters the tree (_ready); Auto and Save only ones save when it leaves (_exit_tree) or the game quits.,自动和仅读取的变量在对象进入场景树时读取（_ready）；自动和仅保存的变量在对象离开时（_exit_tree）或游戏退出时保存。
+"Save Game asks every ""persist"" object for save_state() and writes one file per slot.","Save Game 向每个 ""persist"" 对象索取 save_state()，并为每个槽位写一个文件。"
+"Load Game reads that slot, hands each object its part through load_state(), then fires On After Load.",Load Game 读取该槽位，通过 load_state() 把每个对象的那一份交给它，然后触发 On After Load。
+"Save Number / Save Value keep single values in the same slot file, under their own name.",Save Number / Save Value 以各自的名字把单个值存在同一个槽位文件里。
+"Everything a save holds lives on the player's computer, never in res://: deleting a save never touches your project.",存档里的一切都在玩家的电脑上，从不在 res:// 中：删除存档永远不会碰到你的项目。
+%s saved,%s 会保存
+"Copies any value aside under a name, in memory, for this run - the before-value for a preview, a buff or a cutscene. For memory that survives closing the game give the variable a Save choice, or use the Save System pack.",把任意值以一个名字暂存在内存里，只在本次运行期间有效 - 预览、增益或过场动画之前的那个值。若需要关掉游戏后仍然保留，请给变量设定保存选择，或使用存档系统包。
+Manually,手动
+Save Choice…,保存选择…

@@ -51,17 +51,18 @@ event from stacking a second copy of itself while the first is still going.
 
 ## Remember a variable between runs
 
-Right-click any sheet variable and choose **Remember Between Runs**. That is the whole feature:
+Right-click any sheet variable, choose **Save Choice...**, and set its **Save** to **Auto**. That
+is the whole feature:
 
 - The variable loads its last saved value when the node enters the scene.
-- Every remembered variable saves back automatically when the node leaves the tree (scene
-  change or quitting the game), to `user://remembered.cfg`.
+- It saves back automatically when the node leaves the tree (scene change or quitting the
+  game), to `user://remembered.cfg`.
 - A sheet with a class name saves under that name, so two sheets' variables never collide.
 
-The fifteen lines of ConfigFile ritual this replaces are generated into your file where you can
-read them - open the compiled script and look for `_ef_recall_remembered`. For whole save-game
-systems (slots, versioning, migration), the Save Studio is the bigger tool; Remember Between
-Runs is for "the high score should survive closing the game" and nothing heavier.
+The ConfigFile ritual this replaces is generated into your file where you can read it - open the
+compiled script and look for `_ef_load_saved`. The same window offers Load only, Save only and
+Manually for the cases Auto does not fit, and Manually is the door into whole save-game systems
+(slots, versioning, migration) through Save Game and Load Game.
 
 ## A state machine you can read
 

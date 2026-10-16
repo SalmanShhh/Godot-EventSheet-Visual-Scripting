@@ -142,7 +142,7 @@ rather than rows you assemble. They are in the workspace's **New Sheet** menu an
 A starter is an ordinary unsaved sheet - Save As puts it where you want it, and every row in it is one
 you could have dropped yourself. Each one opens with a comment row at the top saying which pack takes
 the shape further: Advanced Random's Roll With Pity for a seeded chest, Line Of Sight 3D and Nav Agent
-3D for the guard, HUD Kit for the boss bar, and Remember Between Runs for a clock that survives a quit.
+3D for the guard, HUD Kit for the boss bar, and a Save choice of Auto for a clock that survives a quit.
 
 ## Use cases
 
@@ -209,7 +209,7 @@ the same pair as suspicion, pointed at a different feeling.
 **A deadline that is not wall time.** Compare your own day/night clock variable against nightfall
 instead of counting seconds down; the rows around it do not change.
 
-**A pity counter that survives a quit.** Tick Remember Between Runs on the counter variable, or let
+**A pity counter that survives a quit.** Set the counter variable's Save choice to Auto, or let
 Advanced Random's save state carry every named counter at once.
 
 **An alarm that stays raised.** Drain the meter down to 40 rather than 0, so a guard who has seen you

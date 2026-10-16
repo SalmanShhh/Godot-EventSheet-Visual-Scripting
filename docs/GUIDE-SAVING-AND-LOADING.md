@@ -141,9 +141,9 @@ Beyond reading one key at a time with Load Value, three helpers read a save in b
 
 Save Studio is a tool window you open from the editor's Tools menu. It has three tabs (for a full walkthrough, see the "Using the Save Studio" guide):
 
-1. **Format Preview** lets you pick an addon and a format and see exactly what its save file will look like on disk, before you commit to anything.
-2. **Save Slots** browses the real `user://` save files in your project, shows their contents, and exports them to disk in any format, optionally converting the format on the way out.
-3. **Add Save Support** points at any script, lets you tick the variables worth persisting (data is pre-ticked while node references are left off by default), and generates a copy-paste `save_state` and `load_state` pair that follows the convention. This is how you give your own addons and tools save support without writing the boilerplate by hand.
+1. **What gets saved** gives every variable of the open sheet one Save choice: Never, Auto, Load only, Save only or Manually. Auto loads when the object enters the game and saves when it leaves; Manually is only at your Save Game / Load Game. The choice writes the `save_state` and `load_state` pair into the sheet's script for you, so the object joins the seam without any boilerplate.
+2. **Format Preview** lets you pick an addon and a format and see exactly what its save file will look like on disk, before you commit to anything.
+3. **Save Slots** browses the real `user://` save files in your project, shows their contents, and exports them to disk in any format, optionally converting the format on the way out.
 
 ### Where a file goes: user:// and res://
 
@@ -252,9 +252,9 @@ Set the `autosave_interval` Inspector property to a number of seconds, for examp
 
 At each checkpoint trigger in a level, call `SaveSystem: Save Game` (or Save Node State on the player if you only want to snapshot them). Because On Before Save broadcasts to every sheet, the checkpoint captures the full game state at that moment. On death, call Load Game to send the player back to the last checkpoint with everything as it was.
 
-### 20. Add save support to your own script
+### 20. Add save support to your own sheet
 
-Open Save Studio from the Tools menu, go to the Add Save Support tab, and point it at one of your own scripts. Tick the variables worth persisting; data fields come pre-ticked while node references are left unticked because references should not be saved. Save Studio generates a matching `save_state` and `load_state` pair that you paste into your script. From that moment your node is part of the seam and the Save System will snapshot it exactly like a bundled pack.
+Open Save Studio from the Tools menu, stay on What gets saved, and give the variables worth keeping a Save choice - Auto for progress that should come back by itself, Manually for what only Save Game should write. Saving the sheet writes a matching `save_state` and `load_state` pair into its script. From that moment your node is part of the seam and the Save System will snapshot it exactly like a bundled pack.
 
 ### 21. Preview a format before committing
 
@@ -325,5 +325,5 @@ chapter is meant to start already knowing something.
 - **Node references are not saved, only plain data.** The seam snapshots plain values. A saved dictionary should never contain a live node, a Callable, or another non-data object. If you need to remember which node something pointed at, store a stable identifier such as a name or path and re-resolve it after load.
 - **The persist group is matched back by node path.** On load, each snapshot is reunited with its node by that node's path in the scene tree. The node must already exist at the same path when Load Game runs, so restore into the same scene layout you saved from, or spawn the nodes before loading.
 - **All six formats preserve exact types.** An integer comes back as an integer, a float as a float, a Vector2 as a Vector2, in every format including json, csv, ini, and xml. You do not need to convert numbers on load. If you hand-edit a json save, note that a value you write as a wrapped object is how the system stores an integer or a rich type.
-- **`save_state` must return plain data only.** When you write your own `save_state`, build the dictionary from numbers, strings, booleans, arrays, dictionaries, and the wrapped Variants the system understands. Returning anything that cannot be serialised will break the save. Save Studio's Add Save Support generator picks safe fields for you, which is the easiest way to stay on the right side of this rule.
-- **The Project Doctor nudges you when a stateful behavior has no seam.** If a behavior or autoload declares State (non-exported) variables but ships no `save_state`/`load_state`, the Doctor lists it as an info-level "save-support" finding, since that runtime state would not survive Save Game. It is advisory - transient state that does not need saving is fine to ignore - and the one-click fix is Tools > Save Studio > Add Save Support.
+- **`save_state` must return plain data only.** When you write your own `save_state`, build the dictionary from numbers, strings, booleans, arrays, dictionaries, and the wrapped Variants the system understands. Returning anything that cannot be serialised will break the save. Save Studio's What gets saved tab only offers plain-data variables, which is the easiest way to stay on the right side of this rule.
+- **The Project Doctor nudges you when a stateful behavior has no seam.** If a behavior or autoload declares State (non-exported) variables but ships no `save_state`/`load_state`, the Doctor lists it as an info-level "save-support" finding, since that runtime state would not survive Save Game. It is advisory - transient state that does not need saving is fine to ignore - and the fix is a Save choice on those variables in Tools > Save Studio > What gets saved.

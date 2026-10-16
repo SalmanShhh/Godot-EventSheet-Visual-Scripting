@@ -116,7 +116,7 @@ with Godot's own spelling one hover away, the value is tinted, and a colour is a
 can click. Expression defaults show as code, never quoted.
 
 An **Inspector** chip marks the variables a designer can edit; the walrus spelling (`:=`)
-round-trips exactly. Right-click for Toggle Constant, Remember Between Runs (persists via
+round-trips exactly. Right-click for Toggle Constant, Save Choice... (persists via
 `user://remembered.cfg`), Add setter / Add getter, grouping, and rename-everywhere. A setter
 reads as an `➜ On <name> set` trigger under the row and a getter as an expression block.
 

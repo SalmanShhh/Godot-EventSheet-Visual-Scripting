@@ -8711,3 +8711,48 @@ missing,manquant
 Text in the game,Texte du jeu
 Fake (test only),Factice (test seulement)
 Where it is said: %s,Où c'est dit : %s
+Auto,Automatique
+Load only,Charger seulement
+Save only,Enregistrer seulement
+Never,Jamais
+"Loaded when the object enters the game, saved when it leaves (and when the game quits). The easy default.","Chargé quand l'objet entre dans le jeu, enregistré quand il en sort (et quand le jeu se ferme). Le choix simple par défaut."
+"Loaded automatically, but only saved when your events say Save Game.","Chargé automatiquement, mais enregistré seulement quand vos événements disent Save Game."
+"Saved automatically, never loaded back: good for stats or play time.","Enregistré automatiquement, jamais rechargé : pratique pour les statistiques ou le temps de jeu."
+Only when your events say Save Game / Load Game: checkpoints and save slots.,Seulement quand vos événements disent Save Game / Load Game : points de contrôle et emplacements de sauvegarde.
+Not saved. It starts from its default every time.,Pas enregistré. Il repart de sa valeur par défaut à chaque fois.
+"Use for: health, coins, unlocked doors.","Pour : la santé, les pièces, les portes débloquées."
+Use for: settings you write yourself at a menu.,Pour : les réglages que vous écrivez vous-même dans un menu.
+"Use for: play time, total jumps, stats you read elsewhere.","Pour : le temps de jeu, le total des sauts, les statistiques lues ailleurs."
+"Use for: checkpoint position, save-slot games.","Pour : la position du point de contrôle, les jeux à emplacements de sauvegarde."
+"Use for: timers, cooldowns, anything worked out again each run.","Pour : les minuteurs, les temps de recharge, tout ce qui est recalculé à chaque partie."
+%s comes back by itself,%s revient tout seul
+%s come back by themselves,%s reviennent tout seuls
+%s only at your Save Game / Load Game,%s seulement à votre Save Game / Load Game
+%s loads by itself,%s se charge tout seul
+%s load by themselves,%s se chargent tout seuls
+%s is only written,%s est seulement écrit
+%s are only written,%s sont seulement écrits
+Nothing is saved: %s starts fresh every time.,Rien n'est enregistré : %s repart de zéro à chaque fois.
+%s: %s.,%s : %s.
+[b]Quick start:[/b] set a variable's [b]Save[/b] to [b]Auto[/b]. That's it: it is saved when the object leaves the game and loaded when it comes back.,[b]Démarrage rapide :[/b] réglez l'option [b]Enregistrer[/b] d'une variable sur [b]Automatique[/b]. C'est tout : elle est enregistrée quand l'objet quitte le jeu et chargée quand il revient.
+"Pick when each variable is saved. Hover the choice, or any option in its list, to see what it does.","Choisissez quand chaque variable est enregistrée. Survolez le choix, ou n'importe quelle option de sa liste, pour voir ce qu'il fait."
+What it does,Ce que ça fait
+Where it is kept,Où c'est conservé
+What gets saved,Ce qui est enregistré
+Open a sheet to choose what it saves.,Ouvrez une feuille pour choisir ce qu'elle enregistre.
+%s is now saved: %s.,%s est maintenant enregistré : %s.
+the object's script,le script de l'objet
+What happens,Ce qui se passe
+"In the editor (once, while you build)","Dans l'éditeur (une fois, pendant que vous construisez)"
+"A variable's Save choice adds save_state() and load_state() to the object's script, listing exactly those variables.","Le choix d'enregistrement d'une variable ajoute save_state() et load_state() au script de l'objet, avec exactement ces variables."
+"The same script puts the object in the ""persist"" group as it starts, so Save Game finds it.","Le même script place l'objet dans le groupe ""persist"" au démarrage, pour que Save Game le trouve."
+In the game (every time it runs),Dans le jeu (à chaque lancement)
+Auto and Load only variables load when their object enters the tree (_ready); Auto and Save only ones save when it leaves (_exit_tree) or the game quits.,Les variables Automatique et Charger seulement se chargent quand leur objet entre dans l'arbre (_ready) ; les variables Automatique et Enregistrer seulement s'enregistrent quand il en sort (_exit_tree) ou que le jeu se ferme.
+"Save Game asks every ""persist"" object for save_state() and writes one file per slot.","Save Game demande save_state() à chaque objet ""persist"" et écrit un fichier par emplacement."
+"Load Game reads that slot, hands each object its part through load_state(), then fires On After Load.","Load Game lit cet emplacement, remet à chaque objet sa part via load_state(), puis déclenche On After Load."
+"Save Number / Save Value keep single values in the same slot file, under their own name.","Save Number / Save Value conservent des valeurs isolées dans le même fichier d'emplacement, sous leur propre nom."
+"Everything a save holds lives on the player's computer, never in res://: deleting a save never touches your project.","Tout ce que contient une sauvegarde vit sur l'ordinateur du joueur, jamais dans res:// : supprimer une sauvegarde ne touche jamais votre projet."
+%s saved,%s enregistrés
+"Copies any value aside under a name, in memory, for this run - the before-value for a preview, a buff or a cutscene. For memory that survives closing the game give the variable a Save choice, or use the Save System pack.","Met n'importe quelle valeur de côté sous un nom, en mémoire, pour cette partie - la valeur d'avant pour un aperçu, un bonus ou une cinématique. Pour une mémoire qui survit à la fermeture du jeu, donnez un choix d'enregistrement à la variable, ou utilisez le pack Save System."
+Manually,À la main
+Save Choice…,Choix d'enregistrement…

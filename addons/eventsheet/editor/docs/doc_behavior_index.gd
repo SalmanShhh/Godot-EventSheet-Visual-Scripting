@@ -179,14 +179,14 @@ const BEHAVIORS: Array[Dictionary] = [
 	{
 		"key": "persist",
 		"name": "Persist",
-		"here": "The Save System pack, whose reading is Remember Between Runs: what is remembered, and when it is written.",
+		"here": "The Save System pack, whose reading is each variable's Save choice: what is saved, and when it is written.",
 		"pack": "save_system",
 		"reading": "A config-file or JSON save-and-load pair reads as Remember / Restore rows addressed by name.",
 	},
 	{
 		"key": "no-save",
 		"name": "No save",
-		"here": "The opt-out of Remember Between Runs: a variable marked not remembered is simply left out of the save.",
+		"here": "A Save choice of Never: a variable marked that way is simply left out of the save.",
 		"pack": "save_system",
 		"reading": "A variable that the save writer skips reads as not remembered, on the variable's own row.",
 	},

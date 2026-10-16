@@ -15,11 +15,16 @@ extends RefCounted
 ## only for a file that carries the generated function's doc line, so the first open of every other
 ## file never compiles it.
 const INSPECTOR_CONDITION_LIFT_PATH := "res://addons/eventforge/importer/inspector_condition_lift.gd"
+## The lift that reads the block a variable's Save choice writes back into the choices. Loaded by path
+## for the same reason, and only for a file carrying that block's doc line.
+const SAVE_CHOICE_LIFT_PATH := "res://addons/eventforge/importer/save_choice_lift.gd"
 
 ## Whether the file being read writes its own `_validate_property`. A group show-if comment is read as
 ## the variable's option only then: with no function behind it the compile would write one the file
 ## does not have, so the comment stays the plain line it is.
 var _source_writes_validate_property: bool = false
+## Off only while a file is read again whole, after its Save choice block failed to read back.
+var _cut_save_block: bool = true
 
 
 ## ── GDScript-backed sheets (open ANY .gd as a sheet, losslessly) ─────────────
@@ -92,7 +97,11 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = _parse_host_class(source)
 	_source_writes_validate_property = source.contains("func _validate_property(")
-	var lines: PackedStringArray = source.split("\n")
+	# The Save choice block is cut off the tail first and read back onto the variables below.
+	var save_cut: Dictionary = {}
+	if _cut_save_block and source.contains(SheetCompiler.SaveChoices.DOC):
+		save_cut = load(SAVE_CHOICE_LIFT_PATH).cut(source)
+	var lines: PackedStringArray = str(save_cut.get("prefix", source)).split("\n")
 	# A trailing "\n" yields one empty trailing element; the compiler re-appends the final
 	# newline, so drop exactly that element to keep round-trips byte-identical.
 	if lines.size() > 0 and lines[lines.size() - 1].is_empty():
@@ -317,6 +326,11 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 		if host_match != null:
 			sheet.behavior_mode = true
 			sheet.host_class = host_match.get_string(1)
+	if not save_cut.is_empty() and not load(SAVE_CHOICE_LIFT_PATH).apply(sheet, save_cut, source):
+		_cut_save_block = false
+		var whole: EventSheetResource = import_external_source(source, lift, script_path)
+		_cut_save_block = true
+		return whole
 	# A generated _validate_property goes back onto the variables it came from (byte-gated inside), before
 	# the statement lift below would read it as an ordinary function.
 	if source.contains("

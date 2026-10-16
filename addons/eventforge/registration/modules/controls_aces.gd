@@ -62,7 +62,7 @@ const SENSOR_AXIS_OPTIONS: Array = [
 	{"key": "z", "label": "Z"},
 ]
 
-## Where saved bindings live. A plain ConfigFile under user://, the same shape Remember Between Runs
+## Where saved bindings live. A plain ConfigFile under user://, the same shape a variable's Save choice
 ## writes, so a player's remapped controls survive a restart and can be deleted by hand.
 const BINDINGS_FILE := "\"user://bindings.cfg\""
 

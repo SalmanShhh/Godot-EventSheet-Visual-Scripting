@@ -142,7 +142,7 @@ That is occasionally what you want (a "tracked" marker), but usually it means th
 ## Saving between runs
 
 **Save Quests** and **Load Quests** use `user://remembered.cfg` - the same file the variable option
-**Remember Between Runs** writes to - under a section named `Quests`. Two things are stored: the active
+a variable's **Save** choice of Auto writes to - under a section named `Quests`. Two things are stored: the active
 quests with their progress, and the completed list. Quest DEFINITIONS are not saved, because they live
 in your project as `.tres` files: register or start them as usual on startup, then call **Load Quests**
 to lay the player's progress back on top.

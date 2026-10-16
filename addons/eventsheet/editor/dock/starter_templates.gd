@@ -338,7 +338,7 @@ static func _build_mission_timer_starter() -> EventSheetResource:
 			"attributes": {"tooltip": "The HUD label that shows the time left."}}
 	}
 	var note: CommentRow = CommentRow.new()
-	note.text = "[b]Mission Timer[/b] - a clock with a deadline. The countdown, the m:ss the player reads, and the fail event are one shape.\nTo carry the clock across scenes put [code]mission_time_left[/code] on an autoload; to survive a quit, tick Remember Between Runs on it. For a deadline that is not wall time (\"by nightfall\"), compare against your own clock variable instead."
+	note.text = "[b]Mission Timer[/b] - a clock with a deadline. The countdown, the m:ss the player reads, and the fail event are one shape.\nTo carry the clock across scenes put [code]mission_time_left[/code] on an autoload; to survive a quit, set its Save choice to Auto. For a deadline that is not wall time (\"by nightfall\"), compare against your own clock variable instead."
 	sheet.events.append(note)
 	var failed: RawCodeRow = RawCodeRow.new()
 	failed.code = "## @ace_trigger\n## @ace_name(\"On Mission Time Up\")\n## @ace_category(\"Missions\")\nsignal mission_time_up"

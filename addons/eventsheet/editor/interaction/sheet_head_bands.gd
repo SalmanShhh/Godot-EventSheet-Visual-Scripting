@@ -43,6 +43,8 @@ const BAND_MODES: String = "modes"
 ## and each object has a state, and both are an enum plus a variable this file declares.
 const BAND_STATES: String = "states"
 const BAND_REMEMBER: String = "remember"
+## What a variable's Save choice compiles to - read here for which variables the save block names.
+const SAVE_CHOICES := preload("res://addons/eventforge/compiler/save_choices.gd")
 const BAND_INCLUDE: String = "include"
 ## The one counting line a sheet gets when some of its rows have a newer spelling. It stands for no
 ## line of the file - it is derived from the rows themselves - and it is the ONLY place in the sheet
@@ -254,19 +256,13 @@ static func line_text(band_kind: String, new_value: String) -> String:
 	return "" if value.is_empty() else str(shape["format"]) % value
 
 
-## The variables this sheet keeps between runs, in declaration order - the fact the compiler's
-## persistence trio is written for, said once on its own band.
+## The variables this sheet saves (any Save choice but Never), in declaration order - the fact the
+## compiler's save block is written for, said once on its own band.
 static func remembered_variables(sheet: EventSheetResource) -> PackedStringArray:
 	var names: PackedStringArray = PackedStringArray()
-	if sheet == null:
-		return names
-	for var_key: Variant in sheet.variables.keys():
-		var descriptor: Variant = sheet.variables.get(var_key)
-		if not (descriptor is Dictionary):
-			continue
-		var attributes: Variant = (descriptor as Dictionary).get("attributes")
-		if attributes is Dictionary and bool((attributes as Dictionary).get("remember", false)):
-			names.append(str(var_key))
+	for variable: Dictionary in SAVE_CHOICES.variables_of(sheet):
+		if not str(variable["choice"]).is_empty():
+			names.append(str(variable["name"]))
 	return names
 
 
@@ -504,8 +500,8 @@ static func _band(kind: String, head_facts: Dictionary) -> Dictionary:
 			var remembered: PackedStringArray = head_facts.get("remembered", PackedStringArray())
 			if remembered.is_empty():
 				return {}
-			return _make(kind, EventSheetL10n.translate("%s kept between runs") % ", ".join(remembered),
-				"@onready var __ef_remember_boot: bool = _ef_recall_remembered()")
+			return _make(kind, EventSheetL10n.translate("%s saved") % ", ".join(remembered),
+				"@onready var __ef_save_boot: bool = _ef_load_saved()")
 		BAND_INCLUDE:
 			var includes: PackedStringArray = head_facts.get("includes", PackedStringArray())
 			if includes.is_empty():

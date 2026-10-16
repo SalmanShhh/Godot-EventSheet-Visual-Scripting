@@ -493,8 +493,8 @@ static func required_gaps_in_container(text: String, watched: Dictionary) -> Arr
 ## Save support: a behavior or autoload that declares State (non-exported) variables but
 ## whose compiled script has no save_state/load_state seam won't survive Save Game - that
 ## runtime state lives only in the node and is unreachable by the Save System's verbs. The
-## fix is one click (Tools > Save Studio > Add Save Support, which generates the pair, or
-## the seam by hand). Info-tier and honest: plenty of State is transient and rightly
+## fix is one choice (Tools > Save Studio > What gets saved: a Save choice on the variables
+## writes the pair), or the seam by hand. Info-tier and honest: plenty of State is transient and rightly
 ## unsaved, so this nudges, never fails CI. Statefulness reads the sheet's own Properties/
 ## State split (a declared State variable is the author saying "this is runtime state");
 ## the seam is detected in the compiled OUTPUT, so a hand-written save_state counts too.
@@ -516,7 +516,7 @@ static func check_missing_save_support(sheet_paths: PackedStringArray, findings:
 			continue
 		var kind: String = "autoload" if sheet.autoload_mode else "behavior"
 		_add(findings, "info", "save-support", sheet_path,
-			"This %s holds %d State variable(s) but has no save_state/load_state seam, so its runtime state won't survive Save Game - Tools > Save Studio > Add Save Support generates the pair (ignore if the state is transient)." % [kind, state_vars])
+			"This %s holds %d State variable(s) but has no save_state/load_state seam, so its runtime state won't survive Save Game - give those variables a Save choice in Tools > Save Studio > What gets saved and the pair is written for you (ignore if the state is transient)." % [kind, state_vars])
 
 
 ## Save-key symmetry: the commonest save bug is not a crash, it is a SILENCE. A sheet loads
@@ -544,7 +544,7 @@ static func check_missing_save_support(sheet_paths: PackedStringArray, findings:
 ## to compare, and the save backend's own "__" reserved keys are never blamed on anyone.
 ##
 ## Two findings come out. A key read with no writer anywhere is a `warning` (a wiring gap with a
-## one-step fix, named on the script that reads it). A name that is BOTH a Remember Between Runs
+## one-step fix, named on the script that reads it). A name that is BOTH a Save-choice
 ## variable and a top-level Save System key is an `info`: one value, two files, two lifetimes, and
 ## after a slot load the two copies can disagree - nobody spots that by eye. That second one is
 ## deliberately narrower than the first: it needs a PROJECT script (never a pack) using the name as
@@ -612,7 +612,7 @@ static func save_key_findings(usage_by_path: Dictionary) -> Array[Dictionary]:
 		if reader_path.is_empty() or saved.has(key) or remembered.has(key) or _is_reserved_save_key(key):
 			continue
 		_add(findings, "warning", "save-key-symmetry", reader_path,
-			"\"%s\" is read back here, but nothing in this project ever saves it - so it reads its default on every run and the game looks fine while quietly forgetting. Add the matching save action wherever the game saves (Save System > Save Number / Save Value / Save Node State), or tick Remember Between Runs on the variable instead (ignore this if something outside the project writes that file)." % key)
+			"\"%s\" is read back here, but nothing in this project ever saves it - so it reads its default on every run and the game looks fine while quietly forgetting. Add the matching save action wherever the game saves (Save System > Save Number / Save Value / Save Node State), or set the variable's Save choice to Auto instead (ignore this if something outside the project writes that file)." % key)
 	var remembered_keys: Array = remembered.keys()
 	remembered_keys.sort()
 	for key: String in remembered_keys:
@@ -623,7 +623,7 @@ static func save_key_findings(usage_by_path: Dictionary) -> Array[Dictionary]:
 		if owner_path.is_empty() or _is_reserved_save_key(key) or not (slot_saved.has(key) or read_by_project):
 			continue
 		_add(findings, "info", "save-key-symmetry", owner_path,
-			"\"%s\" is kept in two places at once: Remember Between Runs stores it in user://remembered.cfg, and the Save System stores a \"%s\" key in the save slot. The two have different lifetimes, so after loading a slot the copies can disagree. Pick one home - untick Remember Between Runs on the variable, or drop the save/load rows for that key." % [key, key])
+			"\"%s\" is kept in two places at once: the variable's Save choice stores it in user://remembered.cfg, and the Save System stores a \"%s\" key in the save slot. The two have different lifetimes, so after loading a slot the copies can disagree. Pick one home - set the variable's Save choice to Manual or Never, or drop the save/load rows for that key." % [key, key])
 	return findings
 
 

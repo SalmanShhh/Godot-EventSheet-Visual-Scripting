@@ -54,7 +54,7 @@ people get wrong.
 | The row | The code burden it deletes |
 | --- | --- |
 | the **State Machine** pack + the `◆ State:` reading | enum + match + transition bookkeeping + enter/exit hooks |
-| **Remember Between Runs** (one right-click) | fifteen lines of ConfigFile ritual |
+| **Save: Auto** (one choice in the Save Studio) | fifteen lines of ConfigFile ritual |
 | the **Object Pool** pack (+ its `reset()` seam) | instantiate/queue_free churn, the stutter, the reset checklist |
 | `Grant invincibility 1s` / `is invincible` | i-frame timestamps, wired into damage so it cannot be forgotten |
 | `Chance(10)` / shuffle bags / weighted tables | probability code, seeded for replayable runs |

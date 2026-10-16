@@ -431,7 +431,7 @@ On Ready
     -> Set Text  "Press Shift to dash"
 ```
 
-The memory lives in `user://remembered.cfg`, the same file the variable option Remember Between Runs
+The memory lives in `user://remembered.cfg`, the same file a variable's Save choice of Auto
 uses. While testing, drop a **Forget First Time** row with the same **Name** to reset it - it takes
 effect on the next run, because rows already running keep their cached answer for the session.
 
