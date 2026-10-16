@@ -8768,3 +8768,121 @@ Theme preset saved: %s,Preajuste de tema guardado: %s
 Sheet variables keep the file's order,Las variables de la hoja mantienen el orden del archivo
 %s: ✎ opens it in the Variable dialog.,%s: ✎ la abre en el diálogo de variable.
 "%s: ✎ opens it in the Variable dialog; ▲ moves it above %s, as one undo step.","%s: ✎ la abre en el diálogo de variable; ▲ la sube por encima de %s, en un solo paso de deshacer."
+Godot settings file,Archivo de ajustes de Godot
+Binary,Binario
+Saving your game,Guardar tu juego
+"Choose what to remember between play sessions, then save and load from your events with the Save System's actions.",Elige qué recordar entre sesiones de juego y luego guarda y carga desde tus eventos con las acciones del Save System.
+File and format,Archivo y formato
+"How the save files are written. These are the Save System node's own settings, so they also show in its Inspector.","Cómo se escriben los archivos de guardado. Son los ajustes propios del nodo Save System, así que también aparecen en su Inspector."
+Keep them in a scene,Guardarlos en una escena
+"Saves the Save System node as save_system.tscn and points the SaveSystem global at it, so its settings can change here and in the Inspector.","Guarda el nodo Save System como save_system.tscn y apunta el global SaveSystem a él, para que sus ajustes puedan cambiar aquí y en el Inspector."
+File format,Formato de archivo
+The kind of file each save slot is written as.,El tipo de archivo con el que se escribe cada ranura de guardado.
+File name,Nombre de archivo
+Each slot gets its own file; the number is the slot. The ending follows the format.,Cada ranura tiene su propio archivo; el número es la ranura. La extensión sigue al formato.
+Where save files go. user:// is the player's own data folder.,Dónde van los archivos de guardado. user:// es la carpeta de datos del propio jugador.
+(none: the file stays readable),(ninguna: el archivo sigue legible)
+Encryption key,Clave de cifrado
+"Optional. With a key, the file is encrypted, so players cannot read or edit it in a text editor.","Opcional. Con una clave, el archivo se cifra y los jugadores no pueden leerlo ni editarlo en un editor de texto."
+Backups to keep,Copias de seguridad a conservar
+"How many older copies of each slot to keep, for Restore Slot From Backup.","Cuántas copias antiguas de cada ranura conservar, para Restore Slot From Backup."
+seconds (0 = off),segundos (0 = desactivado)
+Autosave every,Autoguardado cada
+Save by itself every few seconds. 0 means only when your events say Save Game.,Guarda por sí solo cada pocos segundos. 0 significa solo cuando tus eventos dicen Save Game.
+Each change is saved into the Save System's scene at once; change it back here or in its Inspector to undo it.,Cada cambio se guarda al momento en la escena del Save System; cámbialo de nuevo aquí o en su Inspector para deshacerlo.
+Could not save %s (error %d).,No se pudo guardar %s (error %d).
+The Save System pack is not installed (eventsheet_addons/save_system/).,El paquete Save System no está instalado (eventsheet_addons/save_system/).
+"The SaveSystem global is its script, so these are the pack's defaults and cannot change here. Keep them in a scene to change them here and in the Inspector.","El global SaveSystem es su script, así que estos son los valores por defecto del paquete y no pueden cambiar aquí. Guárdalos en una escena para cambiarlos aquí y en el Inspector."
+"The Save System is not a global yet, so these are the pack's defaults. Keep them in a scene: it is added to Project Settings > Globals as SaveSystem.","El Save System aún no es un global, así que estos son los valores por defecto del paquete. Guárdalos en una escena: se añade en Configuración del proyecto > Globales como SaveSystem."
+What %s looks like in this format,Así se ve %s en este formato
+Saved %s into %s.,Se guardó %s en %s.
+The SaveSystem global now runs save_system.tscn; its settings change here and in its Inspector.,El global SaveSystem ahora ejecuta save_system.tscn; sus ajustes cambian aquí y en su Inspector.
+Save slots,Ranuras de guardado
+"Each save slot is one file on the player's computer. Saves live in Godot's user:// folder, not in your project.","Cada ranura de guardado es un archivo en el ordenador del jugador. Las partidas viven en la carpeta user:// de Godot, no en tu proyecto."
+Open the save folder,Abrir la carpeta de guardado
+"For your players, in the game","Para tus jugadores, en el juego"
+Players can open their save folder,Los jugadores pueden abrir su carpeta de guardado
+"Adds an Open Save Folder action. A button in your menu can then show players the folder that holds their saves in their own file manager (Explorer, Finder, Files), so they can back up, share or delete them.","Añade una acción Open Save Folder. Un botón de tu menú puede mostrar a los jugadores la carpeta con sus partidas en su propio gestor de archivos (Explorador, Finder, Archivos), para que hagan copias, las compartan o las borren."
+"No saves yet. Run the game and save, and each slot shows here.","Aún no hay partidas. Ejecuta el juego y guarda, y cada ranura aparecerá aquí."
+Slot %s,Ranura %s
+Look inside,Ver dentro
+Saved %s,Guardado %s
+Saved today at %s,Guardado hoy a las %s
+Saved yesterday at %s,Guardado ayer a las %s
+Deleted %s.,Se borró %s.
+Delete this save?,¿Borrar esta partida?
+The slot's file is removed from the save folder. The next Load Game of that slot finds nothing.,El archivo de la ranura se quita de la carpeta de guardado. El próximo Load Game de esa ranura no encontrará nada.
+Ctrl+Z cannot bring a deleted save back.,Ctrl+Z no puede recuperar una partida borrada.
+Copied %s to %s.,Se copió %s a %s.
+Copy a slot out,Copiar una ranura fuera
+The copy failed (error %d).,La copia falló (error %d).
+Nothing readable in %s.,Nada legible en %s.
+"Off: the action stays out of Add Action, and players never see where saves are kept.",Desactivado: la acción no aparece en Añadir acción y los jugadores nunca ven dónde se guardan las partidas.
+"Opens %s, which on this computer is %s. Works on Windows, macOS and Linux. On the web and on phones there is no folder to show: the action does nothing there, and the Can Open Save Folder condition lets you hide the button.","Abre %s, que en este ordenador es %s. Funciona en Windows, macOS y Linux. En la web y en móviles no hay carpeta que mostrar: allí la acción no hace nada, y la condición Can Open Save Folder te permite ocultar el botón."
+Look inside a save,Ver dentro de una partida
+Save of,Partida de
+"A save slot on disk, the node selected in the scene, or a bundled pack.","Una ranura de guardado en disco, el nodo seleccionado en la escena o un paquete incluido."
+Show the file as Godot writes it,Mostrar el archivo como lo escribe Godot
+"A save file on disk, read the way Load Game reads it.","Un archivo de guardado en disco, leído como lo lee Load Game."
+Selected node: %s,Nodo seleccionado: %s
+What Save Game would write for this node and its behaviors right now.,Lo que Save Game escribiría ahora mismo para este nodo y sus comportamientos.
+"What this pack saves of itself, from its default values.","Lo que este paquete guarda de sí mismo, con sus valores por defecto."
+Nothing to look inside yet.,Aún no hay nada que ver.
+"What %s holds, in plain words:","Lo que contiene %s, en palabras sencillas:"
+"What a save of %s would hold right now, in plain words:","Lo que contendría ahora una partida de %s, en palabras sencillas:"
+It holds nothing yet. A node joins a save by exposing save_state(); Add Save Support writes the pair.,Aún no contiene nada. Un nodo entra en una partida exponiendo save_state(); Add Save Support escribe el par.
+"Binary file, %d bytes (not text). First bytes:","Archivo binario, %d bytes (no es texto). Primeros bytes:"
+a list of %d,una lista de %d
+Player settings,Ajustes del jugador
+"Options, key bindings and graphics are kept in their own files, apart from save slots, so starting a new game never resets the volume or the controls.","Las opciones, los controles y los gráficos se guardan en sus propios archivos, aparte de las ranuras, para que empezar una partida nueva nunca reinicie el volumen ni los controles."
+Each use as the rows on a sheet.,Cada uso como las filas de una hoja.
+Each use as the GDScript it compiles to.,Cada uso como el GDScript en que se compila.
+Both,Ambos
+The rows and the code together.,Las filas y el código juntos.
+"The game itself: where the player is, what they carry. One file per slot.",El juego en sí: dónde está el jugador y qué lleva. Un archivo por ranura.
+"Save Game, Save Value","Save Game, Save Value"
+Load Game,Load Game
+Starts empty (a new slot),Empieza vacío (una ranura nueva)
+Options and graphics,Opciones y gráficos
+"Every declared setting: volume, subtitles, fullscreen, quality. One file for the whole game.","Cada ajuste declarado: volumen, subtítulos, pantalla completa, calidad. Un archivo para todo el juego."
+"Save All Settings, Save Setting","Save All Settings, Save Setting"
+Load All Settings,Load All Settings
+Kept as it is,Se queda como está
+Key bindings,Controles
+Which key or button does each action in the Input Map. One file for the whole game.,Qué tecla o botón hace cada acción del Input Map. Un archivo para todo el juego.
+Save Bindings,Save Bindings
+Load Bindings,Load Bindings
+"Name each setting once, then load them",Nombra cada ajuste una vez y luego cárgalos
+"At start: declare each setting with its default, read the saved values, apply them, and put the saved keys back.","Al empezar: declara cada ajuste con su valor por defecto, lee los valores guardados, aplícalos y devuelve las teclas guardadas."
+"Declare Setting ""master_volume"" default 80, percent","Declare Setting ""master_volume"" por defecto 80, percent"
+"Declare Setting ""fullscreen"" default false, toggle","Declare Setting ""fullscreen"" por defecto false, toggle"
+Apply All Settings,Apply All Settings
+"Load bindings from ""user://bindings.cfg""","Cargar controles de ""user://bindings.cfg"""
+Do what a setting means,Hacer lo que significa un ajuste
+"One reaction per setting. Start-up and the options screen both arrive here, so they never disagree.","Una reacción por ajuste. El arranque y la pantalla de opciones llegan aquí, así que nunca discrepan."
+On Setting Changed,On Setting Changed
+"Changed Setting Is ""master_volume""","Changed Setting Is ""master_volume"""
+"Set bus ""Master"" volume to Setting Value(""master_volume"") %","Poner el volumen del bus ""Master"" a Setting Value(""master_volume"") %"
+A slider on the options screen,Un deslizador en la pantalla de opciones
+Dragging it changes the setting; the reaction above does the rest.,Arrastrarlo cambia el ajuste; la reacción de arriba hace el resto.
+On value changed,Al cambiar el valor
+"Set Setting ""master_volume"" to value","Set Setting ""master_volume"" a value"
+Keep them when the menu closes,Guardarlos al cerrar el menú
+Writes settings.cfg. Save slots are not touched.,Escribe settings.cfg. Las ranuras no se tocan.
+On pressed,Al pulsar
+Save All Settings,Save All Settings
+Hide,Ocultar
+Let players rebind a key,Dejar que los jugadores cambien una tecla
+"The button sets waiting_for to ""jump""; the next key pressed becomes the new jump key and is saved.","El botón pone waiting_for a ""jump""; la siguiente tecla pulsada pasa a ser la nueva tecla de salto y se guarda."
+On any key pressed,Al pulsar cualquier tecla
+"Rebind Control To waiting_for, the key pressed","Rebind Control To waiting_for, la tecla pulsada"
+"Save bindings to ""user://bindings.cfg""","Guardar controles en ""user://bindings.cfg"""
+"Set waiting_for to """"","Poner waiting_for a """""
+Graphics with a way back,Gráficos con vuelta atrás
+"Apply a quality preset with a 10 second countdown; if the screen goes wrong, it goes back by itself.","Aplica un preajuste de calidad con una cuenta atrás de 10 segundos; si la pantalla falla, vuelve sola."
+"Apply Quality ""High""","Apply Quality ""High"""
+Apply With A Way Back (10 seconds),Apply With A Way Back (10 segundos)
+Written by,Escrito por
+Read by,Leído por
+New game,Partida nueva
+Copy a slot out…,Copiar una ranura fuera…

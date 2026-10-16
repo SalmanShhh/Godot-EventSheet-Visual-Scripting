@@ -52,6 +52,24 @@
   helper that does the work (the sheet file helper, the row edits, the variables manager, the code
   panel, the provider glue) instead of a dock method that only passed the call on. Nothing a user
   sees or does changes.
+### Added: the Save studio's file, slots, look-inside and player-settings tabs
+
+- File and format: the Save System node's own settings - a described dropdown over its six formats
+  (the chosen one's sentence stays under it), the file name whose ending follows the format, folder,
+  encryption key, backups and autosave - with a live sample of the file the format writes. They are
+  written onto the scene the SaveSystem global names, so its Inspector shows the same values; a
+  global that is a bare script says so and offers Keep them in a scene.
+- Save slots: each slot file with when it was saved and its size, Look inside and Delete per slot,
+  Open the save folder, and Copy a slot out… (converted through the pack's own backends when the
+  copy's ending names another format).
+- For your players: the Save System pack gains Open Save Folder and Can Open Save Folder (false on
+  the web and on phones). Switching the option off hides the action from Add Action through the
+  reader's own hide list, which now also applies to authored rows.
+- Look inside a save: a slot, the selected node or a bundled pack, in plain words, with the file as
+  Godot writes it one click away.
+- Player settings: the three files a game keeps (save slots, settings.cfg through the Game Settings
+  pack, bindings.cfg through the built-in bindings rows) and six uses as Events | Code | Both cards.
+- These four tabs replace the old Format Preview and Save Slots tabs beside What gets saved.
 
 ### Changed: one Save choice per variable replaces Add Save Support and Remember Between Runs
 

@@ -8768,3 +8768,121 @@ Theme preset saved: %s,テーマプリセットを保存しました: %s
 Sheet variables keep the file's order,シート変数はファイルの順序のままです
 %s: ✎ opens it in the Variable dialog.,%s: ✎ で変数ダイアログで開きます。
 "%s: ✎ opens it in the Variable dialog; ▲ moves it above %s, as one undo step.",%s: ✎ で変数ダイアログで開きます。▲ で %s の上に移動します (取り消し 1 回分)。
+Godot settings file,Godot 設定ファイル
+Binary,バイナリ
+Saving your game,ゲームのセーブ
+"Choose what to remember between play sessions, then save and load from your events with the Save System's actions.",プレイの合間に何を覚えておくかを選び、Save System のアクションでイベントからセーブとロードをします。
+File and format,ファイルと形式
+"How the save files are written. These are the Save System node's own settings, so they also show in its Inspector.",セーブファイルの書き方です。Save System ノード自身の設定なので、そのインスペクターにも表示されます。
+Keep them in a scene,シーンに保存する
+"Saves the Save System node as save_system.tscn and points the SaveSystem global at it, so its settings can change here and in the Inspector.",Save System ノードを save_system.tscn として保存し、SaveSystem グローバルをそこに向けます。設定をここでもインスペクターでも変更できるようになります。
+File format,ファイル形式
+The kind of file each save slot is written as.,各セーブスロットを書き出すファイルの種類です。
+File name,ファイル名
+Each slot gets its own file; the number is the slot. The ending follows the format.,スロットごとにファイルが分かれ、番号がスロットです。拡張子は形式に合わせます。
+Where save files go. user:// is the player's own data folder.,セーブファイルの置き場所です。user:// はプレイヤー自身のデータフォルダーです。
+(none: the file stays readable),(なし: ファイルは読めるまま)
+Encryption key,暗号化キー
+"Optional. With a key, the file is encrypted, so players cannot read or edit it in a text editor.",任意です。キーがあるとファイルが暗号化され、プレイヤーはテキストエディターで読んだり編集したりできません。
+Backups to keep,保持するバックアップ数
+"How many older copies of each slot to keep, for Restore Slot From Backup.",Restore Slot From Backup 用に、各スロットの古いコピーをいくつ残すかです。
+seconds (0 = off),秒 (0 = オフ)
+Autosave every,自動セーブの間隔
+Save by itself every few seconds. 0 means only when your events say Save Game.,数秒ごとに自動でセーブします。0 はイベントが Save Game と言ったときだけです。
+Each change is saved into the Save System's scene at once; change it back here or in its Inspector to undo it.,変更はすぐに Save System のシーンに保存されます。元に戻すには、ここかインスペクターで戻してください。
+Could not save %s (error %d).,%s を保存できませんでした (エラー %d)。
+The Save System pack is not installed (eventsheet_addons/save_system/).,Save System パックがインストールされていません (eventsheet_addons/save_system/)。
+"The SaveSystem global is its script, so these are the pack's defaults and cannot change here. Keep them in a scene to change them here and in the Inspector.",SaveSystem グローバルはスクリプトそのものなので、これはパックの既定値で、ここでは変更できません。シーンに保存すると、ここでもインスペクターでも変更できます。
+"The Save System is not a global yet, so these are the pack's defaults. Keep them in a scene: it is added to Project Settings > Globals as SaveSystem.",Save System はまだグローバルではないので、これはパックの既定値です。シーンに保存すると、プロジェクト設定 > グローバルに SaveSystem として追加されます。
+What %s looks like in this format,この形式での %s の中身
+Saved %s into %s.,%s を %s に保存しました。
+The SaveSystem global now runs save_system.tscn; its settings change here and in its Inspector.,SaveSystem グローバルは save_system.tscn を実行するようになりました。設定はここでもインスペクターでも変更できます。
+Save slots,セーブスロット
+"Each save slot is one file on the player's computer. Saves live in Godot's user:// folder, not in your project.",セーブスロットはそれぞれプレイヤーのコンピューター上の 1 つのファイルです。セーブはプロジェクトではなく Godot の user:// フォルダーにあります。
+Open the save folder,セーブフォルダーを開く
+"For your players, in the game",ゲーム内のプレイヤー向け
+Players can open their save folder,プレイヤーがセーブフォルダーを開ける
+"Adds an Open Save Folder action. A button in your menu can then show players the folder that holds their saves in their own file manager (Explorer, Finder, Files), so they can back up, share or delete them.",Open Save Folder アクションを追加します。メニューのボタンから、プレイヤー自身のファイルマネージャー (エクスプローラー、Finder、ファイル) でセーブのあるフォルダーを見せられ、バックアップ・共有・削除ができます。
+"No saves yet. Run the game and save, and each slot shows here.",まだセーブがありません。ゲームを実行してセーブすると、各スロットがここに表示されます。
+Slot %s,スロット %s
+Look inside,中を見る
+Saved %s,%s にセーブ
+Saved today at %s,今日 %s にセーブ
+Saved yesterday at %s,昨日 %s にセーブ
+Deleted %s.,%s を削除しました。
+Delete this save?,このセーブを削除しますか?
+The slot's file is removed from the save folder. The next Load Game of that slot finds nothing.,スロットのファイルがセーブフォルダーから削除されます。次にそのスロットを Load Game しても何も見つかりません。
+Ctrl+Z cannot bring a deleted save back.,Ctrl+Z では削除したセーブは戻りません。
+Copied %s to %s.,%s を %s にコピーしました。
+Copy a slot out,スロットを書き出しコピー
+The copy failed (error %d).,コピーに失敗しました (エラー %d)。
+Nothing readable in %s.,%s に読めるものがありません。
+"Off: the action stays out of Add Action, and players never see where saves are kept.",オフ: このアクションはアクション追加に出ず、プレイヤーはセーブの場所を目にしません。
+"Opens %s, which on this computer is %s. Works on Windows, macOS and Linux. On the web and on phones there is no folder to show: the action does nothing there, and the Can Open Save Folder condition lets you hide the button.",%s を開きます。このコンピューターでは %s です。Windows、macOS、Linux で動きます。Web やスマートフォンには見せるフォルダーがないので何もしません。Can Open Save Folder 条件でボタンを隠せます。
+Look inside a save,セーブの中を見る
+Save of,セーブ対象
+"A save slot on disk, the node selected in the scene, or a bundled pack.",ディスク上のセーブスロット、シーンで選択中のノード、または同梱パックです。
+Show the file as Godot writes it,Godot が書く形のファイルを表示
+"A save file on disk, read the way Load Game reads it.",ディスク上のセーブファイルを、Load Game と同じ方法で読みます。
+Selected node: %s,選択中のノード: %s
+What Save Game would write for this node and its behaviors right now.,今 Save Game がこのノードとその振る舞いについて書き出す内容です。
+"What this pack saves of itself, from its default values.",このパックが既定値から自分自身について保存する内容です。
+Nothing to look inside yet.,まだ中を見るものがありません。
+"What %s holds, in plain words:",%s の中身を平易な言葉で:
+"What a save of %s would hold right now, in plain words:",今 %s をセーブしたときの中身を平易な言葉で:
+It holds nothing yet. A node joins a save by exposing save_state(); Add Save Support writes the pair.,まだ何も入っていません。ノードは save_state() を公開するとセーブに加わります。Add Save Support がその組を書きます。
+"Binary file, %d bytes (not text). First bytes:",バイナリファイル、%d バイト (テキストではありません)。先頭のバイト:
+a list of %d,%d 個のリスト
+Player settings,プレイヤー設定
+"Options, key bindings and graphics are kept in their own files, apart from save slots, so starting a new game never resets the volume or the controls.",オプション、キー割り当て、グラフィックはセーブスロットとは別のファイルに保存されるので、新しいゲームを始めても音量や操作がリセットされません。
+Each use as the rows on a sheet.,それぞれの使い方をシートの行として。
+Each use as the GDScript it compiles to.,それぞれの使い方をコンパイル後の GDScript として。
+Both,両方
+The rows and the code together.,行とコードを一緒に。
+"The game itself: where the player is, what they carry. One file per slot.",ゲームそのもの: プレイヤーの居場所と持ち物。スロットごとに 1 ファイル。
+"Save Game, Save Value",Save Game、Save Value
+Load Game,Load Game
+Starts empty (a new slot),空から始まる (新しいスロット)
+Options and graphics,オプションとグラフィック
+"Every declared setting: volume, subtitles, fullscreen, quality. One file for the whole game.",宣言したすべての設定: 音量、字幕、フルスクリーン、画質。ゲーム全体で 1 ファイル。
+"Save All Settings, Save Setting",Save All Settings、Save Setting
+Load All Settings,Load All Settings
+Kept as it is,そのまま残る
+Key bindings,キー割り当て
+Which key or button does each action in the Input Map. One file for the whole game.,Input Map の各アクションをどのキーやボタンで行うか。ゲーム全体で 1 ファイル。
+Save Bindings,Save Bindings
+Load Bindings,Load Bindings
+"Name each setting once, then load them",各設定を一度だけ名付けてから読み込む
+"At start: declare each setting with its default, read the saved values, apply them, and put the saved keys back.",開始時: 各設定を既定値付きで宣言し、保存値を読み、適用し、保存したキーを戻します。
+"Declare Setting ""master_volume"" default 80, percent","Declare Setting ""master_volume"" 既定 80、percent"
+"Declare Setting ""fullscreen"" default false, toggle","Declare Setting ""fullscreen"" 既定 false、toggle"
+Apply All Settings,Apply All Settings
+"Load bindings from ""user://bindings.cfg""","""user://bindings.cfg"" から割り当てを読み込む"
+Do what a setting means,設定の意味どおりに動かす
+"One reaction per setting. Start-up and the options screen both arrive here, so they never disagree.",設定ごとに反応は 1 つ。起動時もオプション画面もここに来るので、食い違いません。
+On Setting Changed,On Setting Changed
+"Changed Setting Is ""master_volume""","Changed Setting Is ""master_volume"""
+"Set bus ""Master"" volume to Setting Value(""master_volume"") %","バス ""Master"" の音量を Setting Value(""master_volume"") % にする"
+A slider on the options screen,オプション画面のスライダー
+Dragging it changes the setting; the reaction above does the rest.,ドラッグすると設定が変わり、残りは上の反応が行います。
+On value changed,値が変わったとき
+"Set Setting ""master_volume"" to value","Set Setting ""master_volume"" を value に"
+Keep them when the menu closes,メニューを閉じるときに保存する
+Writes settings.cfg. Save slots are not touched.,settings.cfg を書きます。セーブスロットには触れません。
+On pressed,押されたとき
+Save All Settings,Save All Settings
+Hide,隠す
+Let players rebind a key,プレイヤーにキーを割り当て直させる
+"The button sets waiting_for to ""jump""; the next key pressed becomes the new jump key and is saved.","ボタンで waiting_for を ""jump"" にし、次に押したキーが新しいジャンプキーになって保存されます。"
+On any key pressed,いずれかのキーが押されたとき
+"Rebind Control To waiting_for, the key pressed",Rebind Control To waiting_for、押されたキー
+"Save bindings to ""user://bindings.cfg""","""user://bindings.cfg"" に割り当てを保存"
+"Set waiting_for to """"","waiting_for を """" にする"
+Graphics with a way back,元に戻せるグラフィック設定
+"Apply a quality preset with a 10 second countdown; if the screen goes wrong, it goes back by itself.",10 秒のカウントダウン付きで画質プリセットを適用し、画面がおかしくなったら自動で戻ります。
+"Apply Quality ""High""","Apply Quality ""High"""
+Apply With A Way Back (10 seconds),Apply With A Way Back (10 秒)
+Written by,書くもの
+Read by,読むもの
+New game,新しいゲーム
+Copy a slot out…,スロットを外にコピー…

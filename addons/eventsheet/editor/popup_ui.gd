@@ -1313,7 +1313,9 @@ class ViewSwitch extends HBoxContainer:
 	var buttons: Dictionary = {}
 
 
-	func _init(start: String = SHEET) -> void:
+	## `words` renames the three for a switch that is not about a file - {id: [label, tooltip]},
+	## already translated - so a page of examples can say Events | Code | Both.
+	func _init(start: String = SHEET, words: Dictionary = {}) -> void:
 		add_theme_constant_override("separation", 0)
 		var group: ButtonGroup = ButtonGroup.new()
 		var labels: Dictionary = {
@@ -1326,6 +1328,9 @@ class ViewSwitch extends HBoxContainer:
 			CODE: EventSheetL10n.translate("The file as code, byte for byte."),
 			BOTH: EventSheetL10n.translate("Rows and code next to each other."),
 		}
+		for id: String in words:
+			labels[id] = words[id][0]
+			tips[id] = words[id][1]
 		for id: String in labels:
 			var button: Button = Button.new()
 			button.text = str(labels[id])

@@ -1001,6 +1001,29 @@ func save_key_at(index: int) -> String:
 	var keys: Array = _read_all().keys()
 	return str(keys[index]) if index >= 0 and index < keys.size() else ""
 
+## @ace_action
+## @ace_name("Open Save Folder")
+## @ace_category("Save System")
+## @ace_description("Shows the folder that holds the saves (the Save Directory) in the player's own file manager - Explorer, Finder or Files - so they can back up, share or delete a save. On the web and on phones there is no folder to show, and it does nothing.")
+## @ace_display_template("show the save folder in the player's file manager")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
+## @ace_codegen_template("SaveSystem.open_save_folder()")
+func open_save_folder() -> void:
+	# The web and phones have no file manager to show a folder in, so the row is a quiet no-op
+	# there rather than an error a player could meet.
+	if can_open_save_folder():
+		OS.shell_show_in_file_manager(ProjectSettings.globalize_path(save_directory))
+
+## @ace_condition
+## @ace_name("Can Open Save Folder")
+## @ace_category("Save System")
+## @ace_description("Whether this platform has a save folder to show: true on Windows, macOS and Linux, false on the web and on phones. Hide the button that opens the folder where it cannot work.")
+## @ace_display_template("the save folder can be shown here")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
+## @ace_codegen_template("SaveSystem.can_open_save_folder()")
+func can_open_save_folder() -> bool:
+	return not (OS.has_feature("web") or OS.has_feature("mobile"))
+
 func _slot_path(target_slot: int = -1) -> String:
 	var chosen: int = slot if target_slot < 0 else target_slot
 	return save_directory.path_join(file_pattern.replace("{slot}", str(chosen)))

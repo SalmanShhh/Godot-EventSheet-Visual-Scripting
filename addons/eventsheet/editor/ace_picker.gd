@@ -451,6 +451,8 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 
 ## Provider returning true when Simple Mode is on (wired by the dock) - gates the denylist below.
 var _simple_mode_provider: Callable = Callable()
+## The entries the reader hid ("Provider::ace_id"), read once per refresh rather than per entry.
+var _readers_hidden: Dictionary = {}
 ## Returns the class name whose reflected "All of <Class>" section the picker
 ## should offer (the current sheet's host class); invalid = no reflection.
 var _reflect_class_provider: Callable = Callable()
@@ -1972,6 +1974,7 @@ func _refresh_tree() -> void:
 	if _tree == null or _registry == null:
 		return
 	_tree.clear()
+	_readers_hidden = EventSheetVocabularyCatalog.hidden_keys()
 	var root: TreeItem = _tree.create_item()
 	# The whole sentence a reader typed - object, verb and value - filtered by its WORDS. A value
 	# ("0.4", "\"boss\"") is not a word any row's name contains, so leaving it in the filter is what
@@ -2670,6 +2673,9 @@ func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only:
 	# from the open scene instead, one per node, both halves already answered). Asked of the gates so
 	# there is one closed list of what may vanish, and the suite walks it.
 	if not EventSheetPickerGates.hidden_reason(definition).is_empty():
+		return false
+	# The reader's own choice: an entry they hid, authored or derived.
+	if _readers_hidden.has(EventSheetVocabularyCatalog.key_for(definition.provider_id, definition.id)):
 		return false
 	# Simple Mode hides the advanced / code-drop ACEs (Run GDScript, Evaluate, Breakpoint, …).
 	if _simple_mode_provider.is_valid() and bool(_simple_mode_provider.call()) and _SIMPLE_MODE_DENYLIST.has(definition.provider_id + "::" + definition.id):

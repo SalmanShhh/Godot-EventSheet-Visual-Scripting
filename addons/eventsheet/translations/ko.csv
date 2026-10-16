@@ -8768,3 +8768,121 @@ Theme preset saved: %s,테마 프리셋을 저장했습니다: %s
 Sheet variables keep the file's order,시트 변수는 파일의 순서를 유지합니다
 %s: ✎ opens it in the Variable dialog.,%s: ✎ 를 누르면 변수 대화 상자에서 엽니다.
 "%s: ✎ opens it in the Variable dialog; ▲ moves it above %s, as one undo step.",%s: ✎ 를 누르면 변수 대화 상자에서 엽니다. ▲ 를 누르면 %s 위로 옮깁니다 (실행 취소 한 단계).
+Godot settings file,Godot 설정 파일
+Binary,바이너리
+Saving your game,게임 저장하기
+"Choose what to remember between play sessions, then save and load from your events with the Save System's actions.","플레이 세션 사이에 무엇을 기억할지 고른 뒤, Save System 액션으로 이벤트에서 저장하고 불러옵니다."
+File and format,파일과 형식
+"How the save files are written. These are the Save System node's own settings, so they also show in its Inspector.",저장 파일을 쓰는 방식입니다. Save System 노드 자체의 설정이라 인스펙터에도 표시됩니다.
+Keep them in a scene,씬에 보관하기
+"Saves the Save System node as save_system.tscn and points the SaveSystem global at it, so its settings can change here and in the Inspector.","Save System 노드를 save_system.tscn으로 저장하고 SaveSystem 전역이 그것을 가리키게 하여, 설정을 여기와 인스펙터에서 바꿀 수 있게 합니다."
+File format,파일 형식
+The kind of file each save slot is written as.,각 저장 슬롯을 기록하는 파일 종류입니다.
+File name,파일 이름
+Each slot gets its own file; the number is the slot. The ending follows the format.,슬롯마다 파일이 따로 있고 숫자가 슬롯입니다. 확장자는 형식을 따릅니다.
+Where save files go. user:// is the player's own data folder.,저장 파일이 들어가는 곳입니다. user://는 플레이어 자신의 데이터 폴더입니다.
+(none: the file stays readable),(없음: 파일을 읽을 수 있음)
+Encryption key,암호화 키
+"Optional. With a key, the file is encrypted, so players cannot read or edit it in a text editor.",선택 사항입니다. 키가 있으면 파일이 암호화되어 플레이어가 텍스트 편집기로 읽거나 고칠 수 없습니다.
+Backups to keep,보관할 백업 수
+"How many older copies of each slot to keep, for Restore Slot From Backup.",Restore Slot From Backup를 위해 각 슬롯의 예전 사본을 몇 개 남길지입니다.
+seconds (0 = off),초 (0 = 끔)
+Autosave every,자동 저장 간격
+Save by itself every few seconds. 0 means only when your events say Save Game.,몇 초마다 스스로 저장합니다. 0이면 이벤트가 Save Game을 할 때만 저장합니다.
+Each change is saved into the Save System's scene at once; change it back here or in its Inspector to undo it.,변경은 즉시 Save System의 씬에 저장됩니다. 되돌리려면 여기나 인스펙터에서 다시 바꾸세요.
+Could not save %s (error %d).,%s을(를) 저장하지 못했습니다 (오류 %d).
+The Save System pack is not installed (eventsheet_addons/save_system/).,Save System 팩이 설치되어 있지 않습니다 (eventsheet_addons/save_system/).
+"The SaveSystem global is its script, so these are the pack's defaults and cannot change here. Keep them in a scene to change them here and in the Inspector.",SaveSystem 전역이 스크립트 자체라서 이 값들은 팩의 기본값이며 여기서 바꿀 수 없습니다. 씬에 보관하면 여기와 인스펙터에서 바꿀 수 있습니다.
+"The Save System is not a global yet, so these are the pack's defaults. Keep them in a scene: it is added to Project Settings > Globals as SaveSystem.",Save System이 아직 전역이 아니라서 이 값들은 팩의 기본값입니다. 씬에 보관하면 프로젝트 설정 > 전역에 SaveSystem으로 추가됩니다.
+What %s looks like in this format,이 형식에서 %s의 모습
+Saved %s into %s.,%s을(를) %s에 저장했습니다.
+The SaveSystem global now runs save_system.tscn; its settings change here and in its Inspector.,이제 SaveSystem 전역이 save_system.tscn을 실행합니다. 설정은 여기와 인스펙터에서 바꿀 수 있습니다.
+Save slots,저장 슬롯
+"Each save slot is one file on the player's computer. Saves live in Godot's user:// folder, not in your project.",저장 슬롯은 각각 플레이어 컴퓨터의 파일 하나입니다. 저장 파일은 프로젝트가 아니라 Godot의 user:// 폴더에 있습니다.
+Open the save folder,저장 폴더 열기
+"For your players, in the game",게임 속 플레이어를 위해
+Players can open their save folder,플레이어가 저장 폴더를 열 수 있음
+"Adds an Open Save Folder action. A button in your menu can then show players the folder that holds their saves in their own file manager (Explorer, Finder, Files), so they can back up, share or delete them.","Open Save Folder 액션을 추가합니다. 메뉴의 버튼으로 플레이어 자신의 파일 관리자(탐색기, Finder, 파일)에서 저장 폴더를 보여 줄 수 있어 백업, 공유, 삭제가 가능합니다."
+"No saves yet. Run the game and save, and each slot shows here.",아직 저장이 없습니다. 게임을 실행해 저장하면 각 슬롯이 여기에 표시됩니다.
+Slot %s,슬롯 %s
+Look inside,안 보기
+Saved %s,%s 저장됨
+Saved today at %s,오늘 %s에 저장됨
+Saved yesterday at %s,어제 %s에 저장됨
+Deleted %s.,%s을(를) 삭제했습니다.
+Delete this save?,이 저장을 삭제할까요?
+The slot's file is removed from the save folder. The next Load Game of that slot finds nothing.,슬롯의 파일이 저장 폴더에서 제거됩니다. 그 슬롯의 다음 Load Game은 아무것도 찾지 못합니다.
+Ctrl+Z cannot bring a deleted save back.,Ctrl+Z로 삭제한 저장을 되돌릴 수 없습니다.
+Copied %s to %s.,%s을(를) %s(으)로 복사했습니다.
+Copy a slot out,슬롯을 밖으로 복사
+The copy failed (error %d).,복사하지 못했습니다 (오류 %d).
+Nothing readable in %s.,%s에 읽을 수 있는 내용이 없습니다.
+"Off: the action stays out of Add Action, and players never see where saves are kept.","끔: 이 액션은 액션 추가에 나오지 않고, 플레이어는 저장 위치를 보지 못합니다."
+"Opens %s, which on this computer is %s. Works on Windows, macOS and Linux. On the web and on phones there is no folder to show: the action does nothing there, and the Can Open Save Folder condition lets you hide the button.","%s을(를) 엽니다. 이 컴퓨터에서는 %s입니다. Windows, macOS, Linux에서 작동합니다. 웹과 휴대폰에는 보여 줄 폴더가 없어 아무 일도 하지 않으며, Can Open Save Folder 조건으로 버튼을 숨길 수 있습니다."
+Look inside a save,저장 안을 보기
+Save of,저장 대상
+"A save slot on disk, the node selected in the scene, or a bundled pack.","디스크의 저장 슬롯, 씬에서 선택한 노드, 또는 포함된 팩입니다."
+Show the file as Godot writes it,Godot가 쓰는 그대로 파일 보기
+"A save file on disk, read the way Load Game reads it.",디스크의 저장 파일을 Load Game이 읽는 방식대로 읽습니다.
+Selected node: %s,선택한 노드: %s
+What Save Game would write for this node and its behaviors right now.,지금 Save Game이 이 노드와 그 행동에 대해 쓸 내용입니다.
+"What this pack saves of itself, from its default values.",이 팩이 기본값으로 자신에 대해 저장하는 내용입니다.
+Nothing to look inside yet.,아직 볼 것이 없습니다.
+"What %s holds, in plain words:",%s에 담긴 내용을 쉬운 말로:
+"What a save of %s would hold right now, in plain words:",지금 %s을(를) 저장하면 담길 내용을 쉬운 말로:
+It holds nothing yet. A node joins a save by exposing save_state(); Add Save Support writes the pair.,"아직 아무것도 없습니다. 노드는 save_state()를 노출하면 저장에 참여하며, Add Save Support가 그 쌍을 작성합니다."
+"Binary file, %d bytes (not text). First bytes:","바이너리 파일, %d바이트 (텍스트 아님). 처음 바이트:"
+a list of %d,%d개짜리 목록
+Player settings,플레이어 설정
+"Options, key bindings and graphics are kept in their own files, apart from save slots, so starting a new game never resets the volume or the controls.","옵션, 키 설정, 그래픽은 저장 슬롯과 따로 자체 파일에 보관되므로, 새 게임을 시작해도 볼륨이나 조작이 초기화되지 않습니다."
+Each use as the rows on a sheet.,각 사용법을 시트의 행으로.
+Each use as the GDScript it compiles to.,각 사용법을 컴파일된 GDScript로.
+Both,둘 다
+The rows and the code together.,행과 코드를 함께.
+"The game itself: where the player is, what they carry. One file per slot.",게임 그 자체: 플레이어의 위치와 소지품. 슬롯마다 파일 하나.
+"Save Game, Save Value","Save Game, Save Value"
+Load Game,Load Game
+Starts empty (a new slot),비어서 시작 (새 슬롯)
+Options and graphics,옵션과 그래픽
+"Every declared setting: volume, subtitles, fullscreen, quality. One file for the whole game.","선언한 모든 설정: 볼륨, 자막, 전체 화면, 품질. 게임 전체에 파일 하나."
+"Save All Settings, Save Setting","Save All Settings, Save Setting"
+Load All Settings,Load All Settings
+Kept as it is,그대로 유지
+Key bindings,키 설정
+Which key or button does each action in the Input Map. One file for the whole game.,Input Map의 각 액션을 어떤 키나 버튼으로 하는지. 게임 전체에 파일 하나.
+Save Bindings,Save Bindings
+Load Bindings,Load Bindings
+"Name each setting once, then load them",각 설정을 한 번만 이름 짓고 불러오기
+"At start: declare each setting with its default, read the saved values, apply them, and put the saved keys back.","시작할 때: 각 설정을 기본값과 함께 선언하고, 저장된 값을 읽어 적용하고, 저장된 키를 되돌립니다."
+"Declare Setting ""master_volume"" default 80, percent","Declare Setting ""master_volume"" 기본값 80, percent"
+"Declare Setting ""fullscreen"" default false, toggle","Declare Setting ""fullscreen"" 기본값 false, toggle"
+Apply All Settings,Apply All Settings
+"Load bindings from ""user://bindings.cfg""","""user://bindings.cfg""에서 키 설정 불러오기"
+Do what a setting means,설정이 뜻하는 일 하기
+"One reaction per setting. Start-up and the options screen both arrive here, so they never disagree.",설정마다 반응 하나. 시작과 옵션 화면이 모두 여기로 와서 서로 어긋나지 않습니다.
+On Setting Changed,On Setting Changed
+"Changed Setting Is ""master_volume""","Changed Setting Is ""master_volume"""
+"Set bus ""Master"" volume to Setting Value(""master_volume"") %","버스 ""Master"" 볼륨을 Setting Value(""master_volume"") %로 설정"
+A slider on the options screen,옵션 화면의 슬라이더
+Dragging it changes the setting; the reaction above does the rest.,"끌면 설정이 바뀌고, 나머지는 위의 반응이 합니다."
+On value changed,값이 바뀌었을 때
+"Set Setting ""master_volume"" to value","Set Setting ""master_volume""를 value로"
+Keep them when the menu closes,메뉴를 닫을 때 보관하기
+Writes settings.cfg. Save slots are not touched.,settings.cfg를 씁니다. 저장 슬롯은 건드리지 않습니다.
+On pressed,눌렸을 때
+Save All Settings,Save All Settings
+Hide,숨기기
+Let players rebind a key,플레이어가 키를 다시 지정하게 하기
+"The button sets waiting_for to ""jump""; the next key pressed becomes the new jump key and is saved.","버튼이 waiting_for를 ""jump""로 정하면, 다음에 누른 키가 새 점프 키가 되어 저장됩니다."
+On any key pressed,아무 키나 눌렸을 때
+"Rebind Control To waiting_for, the key pressed","Rebind Control To waiting_for, 누른 키"
+"Save bindings to ""user://bindings.cfg""","""user://bindings.cfg""에 키 설정 저장"
+"Set waiting_for to """"","waiting_for를 """"로 설정"
+Graphics with a way back,되돌릴 수 있는 그래픽
+"Apply a quality preset with a 10 second countdown; if the screen goes wrong, it goes back by itself.","10초 카운트다운과 함께 품질 프리셋을 적용하고, 화면이 잘못되면 저절로 되돌아갑니다."
+"Apply Quality ""High""","Apply Quality ""High"""
+Apply With A Way Back (10 seconds),Apply With A Way Back (10초)
+Written by,쓰는 쪽
+Read by,읽는 쪽
+New game,새 게임
+Copy a slot out…,슬롯을 밖으로 복사…

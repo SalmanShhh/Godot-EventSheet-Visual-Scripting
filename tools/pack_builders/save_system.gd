@@ -231,6 +231,12 @@ static func build() -> bool:
 	src.expression("save_key_at", "Save Key At",
 		"The key at this position in the active slot, for a numbered or paged list (\"\" when the position is past the end). Loop List Save Keys instead when you just want them all.",
 		[["index", "int"]], TYPE_STRING)
+	src.verb("open_save_folder", "Open Save Folder",
+		"Shows the folder that holds the saves (the Save Directory) in the player's own file manager - Explorer, Finder or Files - so they can back up, share or delete a save. On the web and on phones there is no folder to show, and it does nothing.",
+		[])
+	src.condition("can_open_save_folder", "Can Open Save Folder",
+		"Whether this platform has a save folder to show: true on Windows, macOS and Linux, false on the web and on phones. Hide the button that opens the folder where it cannot work.",
+		[])
 	Lib.verb_sentences(src.sheet, {
 		"set_slot_detail": "remember [b]{detail_name}[/b] = [b]{value}[/b] on this slot",
 		"capture_slot_thumbnail": "photograph this slot at [b]{width}[/b] x [b]{height}[/b]",
@@ -246,6 +252,8 @@ static func build() -> bool:
 		"remove_save_key": "forget [b]{key}[/b] from this slot",
 		"clear_slot_keys": "forget everything this slot saved",
 		"check_save_key": "ask whether [b]{key}[/b] is saved",
+		"open_save_folder": "show the save folder in the player's file manager",
+		"can_open_save_folder": "the save folder can be shown here",
 	})
 	Lib.feature_verbs(src.sheet, ["save_game", "load_game", "save_all_addons"])
 	return Lib.publish(src, "res://eventsheet_addons/save_system/save_system_addon")

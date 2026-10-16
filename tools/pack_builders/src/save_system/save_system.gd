@@ -1140,3 +1140,12 @@ func save_key_count() -> int:
 func save_key_at(index: int) -> String:
 	var keys: Array = _read_all().keys()
 	return str(keys[index]) if index >= 0 and index < keys.size() else ""
+
+func open_save_folder() -> void:
+	# The web and phones have no file manager to show a folder in, so the row is a quiet no-op
+	# there rather than an error a player could meet.
+	if can_open_save_folder():
+		OS.shell_show_in_file_manager(ProjectSettings.globalize_path(save_directory))
+
+func can_open_save_folder() -> bool:
+	return not (OS.has_feature("web") or OS.has_feature("mobile"))

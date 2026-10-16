@@ -131,6 +131,19 @@ static func is_class_excluded(class_id: String) -> bool:
 	return load_catalog().excluded_classes.has(class_id)
 
 
+## Every "Provider::ace_id" the reader hid, as a set. Unlike a rename, a hide is honoured for EVERY
+## entry, authored ones included: it changes no id and no call, only whether the picker offers it -
+## the one reader's choice an authored verb has to answer to (a pack's Open Save Folder, switched
+## off in the Save studio).
+static func hidden_keys() -> Dictionary:
+	var hidden: Dictionary = {}
+	var overrides: Dictionary = load_catalog().overrides
+	for key: Variant in overrides:
+		if bool((overrides[key] as Dictionary).get("hidden", false)):
+			hidden[str(key)] = true
+	return hidden
+
+
 ## The catalog's view of a reflected definition set: renamed, recategorized, hidden entries
 ## dropped. Definitions WITHOUT an override pass through by reference (no needless copies);
 ## overridden ones are duplicated first, so the shared cached definition is never mutated.
