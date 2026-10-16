@@ -7421,7 +7421,7 @@ Make %s local to one event?,%s을(를) 한 이벤트의 로컬로 만들까요?
 Ctrl+Z undoes it.,Ctrl+Z로 되돌릴 수 있습니다.
 Make it local,로컬로 만들기
 Rename the translation key too?,번역 키도 이름을 바꿀까요?
-Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Notes ▸ Find Orphans lists it.,거절하면 이전 키가 카탈로그에 고아로 남습니다 - Translation Studio ▸ 메모 ▸ 고아 찾기에 표시됩니다.
+Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Check lists it.,거절하면 이전 키가 카탈로그에 고아로 남습니다 - Translation Studio ▸ 확인에 표시됩니다.
 Update the catalogs,카탈로그 업데이트
 Leave them,그대로 두기
 Looking for every place it is used...,사용된 모든 곳을 찾는 중...
@@ -8886,3 +8886,72 @@ Written by,쓰는 쪽
 Read by,읽는 쪽
 New game,새 게임
 Copy a slot out…,슬롯을 밖으로 복사…
++ Add a language,+ 언어 추가
+Your game in other languages,다른 언어로 된 내 게임
+Languages in this game,이 게임의 언어
+Find the text in your game,게임 속 텍스트 찾기
+"Collects every piece of text players read (labels, dialogue, buttons) into the table.","플레이어가 읽는 모든 텍스트(레이블, 대화, 버튼)를 표에 모읍니다."
+Find text,텍스트 찾기
+Found the text in your game,게임 속 텍스트를 찾았습니다
+Fill in each language,언어별로 채우기
+"Type the translations into the table, or bring in a spreadsheet from a translator.",표에 번역을 입력하거나 번역가의 스프레드시트를 가져옵니다.
+Add a language,언어 추가
+Added a language,언어를 추가했습니다
+Bring in a spreadsheet…,스프레드시트 가져오기…
+Brought in a spreadsheet from a translator,번역가의 스프레드시트를 가져왔습니다
+Check what is missing,빠진 것 확인
+"Shows how much of each language is done, and which text no longer appears in the game.",언어별 진행 정도와 더 이상 게임에 나오지 않는 텍스트를 보여 줍니다.
+Checked what is missing,빠진 것을 확인했습니다
+Try a fake language,가짜 언어로 시험하기
+Made a fake language to test with,시험용 가짜 언어를 만들었습니다
+Use it in the game,게임에서 사용하기
+"Tells Godot about the languages, so your events can switch the game into any of them.","Godot에 언어를 알려, 이벤트가 게임을 어느 언어로든 바꿀 수 있게 합니다."
+Turn on in the game,게임에서 켜기
+Turned it on in the game,게임에서 켰습니다
+Not started,시작 전
+Source,원문
+Nearly done,거의 완료
+In progress,진행 중
+%d of %d lines. %d missing.,%d / %d줄. %d줄 없음.
+Players see it: yes,플레이어에게 보임: 예
+Players see it: not yet (turn it on in step 4),플레이어에게 보임: 아직 아님 (4단계에서 켜기)
+Search languages…,언어 검색…
+"Each language is one more column in the table, and one more translation file Godot makes from it.","언어마다 표에 열이 하나 늘고, Godot가 그것으로 만드는 번역 파일도 하나 늘어납니다."
+"%d new lines were added, each with the file and line it came from, for the translator.",새 줄 %d개를 추가했습니다. 번역가를 위해 각 줄이 나온 파일과 줄 번호를 함께 적었습니다.
+%d lines already in the table were kept as they were: nothing is overwritten.,표에 이미 있던 %d줄은 그대로 두었습니다. 아무것도 덮어쓰지 않습니다.
+%d lines are no longer said anywhere. They stay in the table until you remove them (Check shows them).,%d줄은 더 이상 어디에서도 쓰이지 않습니다. 직접 지울 때까지 표에 남습니다 (확인에서 보입니다).
+%d lines,%d줄
+%d new,새 줄 %d
+"Every line got an empty %s column. Godot makes a translation file for it, next to the others.",모든 줄에 빈 %s 열이 생겼습니다. Godot가 다른 파일 옆에 그 번역 파일을 만듭니다.
+It shows as 0% until text is filled in. Players cannot pick it until it is turned on in step 4.,텍스트를 채울 때까지 0%로 표시됩니다. 4단계에서 켜기 전에는 플레이어가 고를 수 없습니다.
+1 new column,새 열 1개
+%d cells were filled in from the translator's file.,번역가의 파일로 셀 %d개를 채웠습니다.
+Blank cells in that file left yours alone.,그 파일의 빈 셀은 기존 셀을 건드리지 않았습니다.
+"%d lines in that file are in no script, so they were not added: %s.",그 파일의 %d줄은 어떤 스크립트에도 없어 추가하지 않았습니다: %s.
+%d cells filled,셀 %d개 채움
+%s: every line is done.,%s: 모든 줄이 완료되었습니다.
+%s: %d lines are missing.,%s: %d줄이 없습니다.
+The table has no language besides the English yet: Add a language gives it one.,표에는 아직 영어 말고 다른 언어가 없습니다. 언어 추가로 하나 넣을 수 있습니다.
+Every line in the table is still said somewhere.,표의 모든 줄이 아직 어딘가에서 쓰이고 있습니다.
+"%d lines are no longer said anywhere: %s. A line your game builds while it runs cannot be seen from here, so read this list rather than deleting on it.","%d줄은 더 이상 어디에서도 쓰이지 않습니다: %s. 게임이 실행 중에 만드는 줄은 여기서 보이지 않으니, 이 목록을 보고 바로 지우지 말고 읽어 보세요."
+"The table shows the fake column. Play the game in it with Set Language (qps): text still in plain English was never marked for translation, and anything cut off needs a wider box.","표에 가짜 열이 보입니다. Set Language (qps)로 게임을 해 보세요. 그대로 영어로 남은 텍스트는 번역 대상으로 표시되지 않은 것이고, 잘린 것은 상자를 더 넓혀야 합니다."
+It is a test column: leave qps out of any language list your players see.,시험용 열입니다. 플레이어가 보는 언어 목록에는 qps를 넣지 마세요.
+"+40% longer, accented","+40% 더 길게, 악센트 포함"
+Every translation file next to the table was already turned on.,표 옆의 번역 파일은 모두 이미 켜져 있었습니다.
+"Added to Project Settings > Localization, so Godot loads them when the game starts.",프로젝트 설정 > 현지화에 추가했으므로 게임이 시작될 때 Godot가 불러옵니다.
+Players can pick: %s.,플레이어가 고를 수 있는 언어: %s.
+No language has a translation file yet. Godot makes one per column when it imports the table.,아직 번역 파일이 있는 언어가 없습니다. Godot가 표를 가져올 때 열마다 하나씩 만듭니다.
+%d languages,언어 %d개
+◀ Previous line,◀ 이전 줄
+Next line ▶,다음 줄 ▶
+Line %s  #%d,줄 %s  #%d
+English (source),영어 (원문)
+Where players see it,플레이어가 보는 곳
+Said by %s,말하는 쪽: %s
+Note for translators: %s,번역가를 위한 메모: %s
+Every language,모든 언어
+Missing,없음
+Too long,너무 김
+Not translated yet,아직 번역되지 않음
+%d / %d characters,%d / %d자
+"Each line has the room of its English plus 40%, the stretch the fake language tests, so a line that would be cut off shows as too long before anyone plays it.","각 줄의 자리는 영어 길이에 40%를 더한 만큼(가짜 언어가 시험하는 늘어남)이라, 잘릴 줄은 누가 플레이하기 전에 너무 김으로 표시됩니다."

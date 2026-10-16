@@ -31,10 +31,32 @@
 - The Inspector preview, here and in the variable window, names a variable exactly as the code
   writes it (`max_speed`, no longer Max Speed).
 
+### Changed: Translation Studio reads as four steps, with your languages on top
+
+- Tools > Translation Studio opens as "Your game in other languages": one page instead of three tabs.
+  A strip at the top holds a card per language with its code, how much is done, a bar and its state
+  (Source, Done, Nearly done, In progress, Not started); hovering a card gives the exact counts and
+  whether players can pick it yet (its translation file is turned on under Localization).
+- Four numbered steps run the same work as before: Find text, Add a language (new: a searchable list
+  of every language Godot knows, adding an empty column), Bring in a spreadsheet, Check, Try a fake
+  language, and Turn on in the game. Each button writes a result card under itself saying what just
+  happened, in figures and one line per outcome.
+- The translation table sits under the steps, with its own catalog picker in place of the old file
+  field: a project with an i18n/strings.csv works on it, and one without gets one catalog per
+  folder under i18n/. Check switches the table to Missing only, and Try a fake language to Fake
+  language. Clicking a line opens it in its own window: the English, where players see it, who
+  says it (the line's tr() context, else the script that says it), the translator's note, and every
+  language marked Done, Missing or Too long against the room the English leaves plus 40%, with
+  Previous and Next walking the lines the table shows. A long list of keys in a result card names
+  the first five.
+- The sweep's folder, the notes toggle and the fake column's code and stretch are no longer fields:
+  the sweep reads the whole project, always writes where each line is used, and the fake column is
+  always qps at 40% longer. Add a language adds its column to every catalog of a folder.
+
 ### Added: translations in pieces, and a table that stays fast at a million lines
 
-- Translation Studio can write ONE CATALOG PER PROJECT FOLDER: name a folder instead of a .csv and a
-  key said in `res://dialogue/chapter_03/` lands in `i18n/dialogue/chapter_03.csv`, one said in
+- Translation Studio can write ONE CATALOG PER PROJECT FOLDER: in a project with no
+  `i18n/strings.csv` a key said in `res://dialogue/chapter_03/` lands in `i18n/dialogue/chapter_03.csv`, one said in
   `res://ui/` in `i18n/ui.csv`, and the top of the project in `i18n/strings.csv`. A project that
   already has its `i18n/strings.csv` keeps it exactly as before, and a key some catalog already holds
   is never moved out of it. Coverage, orphans, importing a translator's file and the pseudo column

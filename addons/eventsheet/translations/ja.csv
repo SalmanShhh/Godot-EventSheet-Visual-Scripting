@@ -7421,7 +7421,7 @@ Make %s local to one event?,%s を 1 つのイベントのローカルにしま�
 Ctrl+Z undoes it.,Ctrl+Z で戻せます。
 Make it local,ローカルにする
 Rename the translation key too?,翻訳キーも名前変更しますか?
-Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Notes ▸ Find Orphans lists it.,断ると古いキーは孤立したままカタログに残ります - Translation Studio ▸ メモ ▸ 孤立キーを探す に一覧されます。
+Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Check lists it.,断ると古いキーは孤立したままカタログに残ります - Translation Studio ▸ 確認 に一覧されます。
 Update the catalogs,カタログを更新
 Leave them,そのままにする
 Looking for every place it is used...,使われている場所をすべて探しています...
@@ -8886,3 +8886,72 @@ Written by,書くもの
 Read by,読むもの
 New game,新しいゲーム
 Copy a slot out…,スロットを外にコピー…
++ Add a language,+ 言語を追加
+Your game in other languages,ゲームをほかの言語で
+Languages in this game,このゲームの言語
+Find the text in your game,ゲーム内のテキストを見つける
+"Collects every piece of text players read (labels, dialogue, buttons) into the table.",プレイヤーが読むすべてのテキスト（ラベル、会話、ボタン）を表に集めます。
+Find text,テキストを探す
+Found the text in your game,ゲーム内のテキストを見つけました
+Fill in each language,各言語を埋める
+"Type the translations into the table, or bring in a spreadsheet from a translator.",表に翻訳を入力するか、翻訳者のスプレッドシートを取り込みます。
+Add a language,言語を追加
+Added a language,言語を追加しました
+Bring in a spreadsheet…,スプレッドシートを取り込む…
+Brought in a spreadsheet from a translator,翻訳者のスプレッドシートを取り込みました
+Check what is missing,足りないものを確認
+"Shows how much of each language is done, and which text no longer appears in the game.",各言語がどこまで済んだか、もうゲームに出てこないテキストはどれかを表示します。
+Checked what is missing,足りないものを確認しました
+Try a fake language,テスト用の言語を試す
+Made a fake language to test with,テスト用の言語を作りました
+Use it in the game,ゲームで使う
+"Tells Godot about the languages, so your events can switch the game into any of them.",言語を Godot に知らせ、イベントからゲームをどの言語にも切り替えられるようにします。
+Turn on in the game,ゲームで有効にする
+Turned it on in the game,ゲームで有効にしました
+Not started,未着手
+Source,原文
+Nearly done,ほぼ完了
+In progress,進行中
+%d of %d lines. %d missing.,%d / %d 行。残り %d 行。
+Players see it: yes,プレイヤーに表示：はい
+Players see it: not yet (turn it on in step 4),プレイヤーに表示：まだ（手順 4 で有効にする）
+Search languages…,言語を検索…
+"Each language is one more column in the table, and one more translation file Godot makes from it.",言語を 1 つ足すと、表に列が 1 つ増え、Godot がそこから作る翻訳ファイルも 1 つ増えます。
+"%d new lines were added, each with the file and line it came from, for the translator.",新しい行を %d 行追加しました。翻訳者のために、どのファイルの何行目かも添えています。
+%d lines already in the table were kept as they were: nothing is overwritten.,表にあった %d 行はそのまま残しました。何も上書きしません。
+%d lines are no longer said anywhere. They stay in the table until you remove them (Check shows them).,%d 行はもうどこにも使われていません。削除するまで表に残ります（確認で表示されます）。
+%d lines,%d 行
+%d new,新規 %d
+"Every line got an empty %s column. Godot makes a translation file for it, next to the others.",すべての行に空の %s 列を追加しました。Godot はほかと並べてその翻訳ファイルを作ります。
+It shows as 0% until text is filled in. Players cannot pick it until it is turned on in step 4.,テキストを埋めるまで 0% と表示されます。手順 4 で有効にするまで、プレイヤーは選べません。
+1 new column,新しい列 1 つ
+%d cells were filled in from the translator's file.,翻訳者のファイルから %d 個のセルを埋めました。
+Blank cells in that file left yours alone.,そのファイルの空のセルは、あなたのセルに手を付けていません。
+"%d lines in that file are in no script, so they were not added: %s.",そのファイルの %d 行はどのスクリプトにもないため、追加していません：%s。
+%d cells filled,%d セルを入力
+%s: every line is done.,%s：すべての行が完了しています。
+%s: %d lines are missing.,%s：%d 行が足りません。
+The table has no language besides the English yet: Add a language gives it one.,表にはまだ英語以外の言語がありません。「言語を追加」で追加できます。
+Every line in the table is still said somewhere.,表のすべての行が、まだどこかで使われています。
+"%d lines are no longer said anywhere: %s. A line your game builds while it runs cannot be seen from here, so read this list rather than deleting on it.",%d 行はもうどこにも使われていません：%s。ゲームが実行中に組み立てる行はここからは見えないので、この一覧は削除の根拠ではなく、読むためのものです。
+"The table shows the fake column. Play the game in it with Set Language (qps): text still in plain English was never marked for translation, and anything cut off needs a wider box.",表にテスト用の列を表示しています。Set Language (qps) でその言語にしてゲームを遊んでください。普通の英語のまま残るテキストは翻訳対象に指定されておらず、切れて見えるものは枠を広げる必要があります。
+It is a test column: leave qps out of any language list your players see.,これはテスト用の列です。プレイヤーが見る言語一覧には qps を入れないでください。
+"+40% longer, accented",+40% 長く、アクセント付き
+Every translation file next to the table was already turned on.,表の隣にある翻訳ファイルはすべて有効になっていました。
+"Added to Project Settings > Localization, so Godot loads them when the game starts.",プロジェクト設定 > ローカライズ に追加しました。ゲーム開始時に Godot が読み込みます。
+Players can pick: %s.,プレイヤーが選べる言語：%s。
+No language has a translation file yet. Godot makes one per column when it imports the table.,まだ翻訳ファイルのある言語はありません。Godot は表を取り込むときに列ごとに 1 つ作ります。
+%d languages,%d 言語
+◀ Previous line,◀ 前の行
+Next line ▶,次の行 ▶
+Line %s  #%d,行 %s  #%d
+English (source),英語（原文）
+Where players see it,プレイヤーが目にする場所
+Said by %s,話し手：%s
+Note for translators: %s,翻訳者へのメモ：%s
+Every language,すべての言語
+Missing,未翻訳
+Too long,長すぎ
+Not translated yet,まだ翻訳されていません
+%d / %d characters,%d / %d 文字
+"Each line has the room of its English plus 40%, the stretch the fake language tests, so a line that would be cut off shows as too long before anyone plays it.",各行の枠は英語の長さに 40% を足したもの（テスト用の言語が試す伸び）です。切れてしまう行は、誰かが遊ぶ前に「長すぎ」と表示されます。

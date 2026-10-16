@@ -86,14 +86,14 @@ func offer(old_key: String, new_key: String) -> bool:
 		# saying nothing is how that goes unnoticed. rename_plan words it; this is where it is heard.
 		var blocked: String = str(_plan.get("blocked", ""))
 		if not blocked.is_empty():
-			last_refusal = "%s The row now says the new sentence, and the old key keeps its translations - Translation Studio ▸ Notes ▸ Find Orphans lists it." % blocked
+			last_refusal = "%s The row now says the new sentence, and the old key keeps its translations - Translation Studio ▸ Check lists it." % blocked
 			if _dock != null:
 				_dock._set_status(last_refusal, true)
 		return false
 	_dialog = load(_dock.SMALL_PROMPT_PATH).open(_dock, {
 		"title": EventSheetL10n.translate("Rename the translation key too?"),
 		"say": EventSheetTranslationScan.rename_sentence(_plan, old_key),
-		"note": EventSheetL10n.translate("Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Notes ▸ Find Orphans lists it."),
+		"note": EventSheetL10n.translate("Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Check lists it."),
 		"glyph": "i",
 		"main": EventSheetL10n.translate("Update the catalogs"),
 		"cancel": EventSheetL10n.translate("Leave them"),

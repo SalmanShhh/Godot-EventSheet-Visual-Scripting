@@ -772,7 +772,7 @@ var _chunk_tools_dialog: RefCounted = null
 ## project that never ships mod support should not cost a window, and loading it by path keeps it
 ## off the boot path.
 var _mod_template_dialog: RefCounted = null
-var _translation_studio: RefCounted = null:  # Tools ▸ Translation Studio: extract / notes+orphans / import+register+coverage (dock/translation_studio.gd)
+var _translation_studio: RefCounted = null:  # Tools ▸ Translation Studio: find, fill, check and turn on a game's languages (dock/translation_studio.gd)
 	get:
 		if _translation_studio == null:
 			_translation_studio = load("res://addons/eventsheet/editor/dock/translation_studio.gd").new()

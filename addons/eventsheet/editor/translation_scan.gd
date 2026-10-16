@@ -492,15 +492,39 @@ static func merge_keys(csv_path: String, keys: PackedStringArray, notes: Diction
 			carried[column] = str((row as Dictionary).get(column, ""))
 		rows.append(carried)
 		kept_missing += 1
-	var column_specs: Array = []
-	for column: String in columns:
-		column_specs.append({"name": column, "type": "String"})
-	var outcome: Dictionary = EventSheetGridCSV.write_csv(csv_path, rows, column_specs, separator)
+	var outcome: Dictionary = write_catalog(csv_path, rows, columns, separator)
 	if not bool(outcome.get("ok", false)):
 		return outcome
 	return {"ok": true, "keys": rows.size(), "added": added, "kept": kept_missing,
 		"message": "%d key(s) in %s - %d new, %d already translated and kept%s." % [rows.size(), csv_path,
 			added, rows.size() - added, ", %d no script says any more" % kept_missing if kept_missing > 0 else ""]}
+
+
+## Writes `rows` under `columns` in the grid codec: the one write every change to a catalog makes.
+static func write_catalog(csv_path: String, rows: Array, columns: PackedStringArray, separator: String = ",") -> Dictionary:
+	var column_specs: Array = []
+	for column: String in columns:
+		column_specs.append({"name": column, "type": "String"})
+	return EventSheetGridCSV.write_csv(csv_path, rows, column_specs, separator)
+
+
+## Adds an empty `locale` column for a translator to fill, to the one catalog or to every catalog in
+## a folder of them. Godot's importer turns each into one more .translation beside the others; a
+## catalog that already has the column is refused rather than doubled.
+static func add_locale(target: String, locale: String, separator: String = ",") -> Dictionary:
+	var paths: PackedStringArray = catalog_files(target)
+	for path: String in paths if not paths.is_empty() else PackedStringArray([target]):
+		var catalog: Dictionary = read_catalog(path, separator)
+		if not bool(catalog.get("ok", false)):
+			return catalog
+		var columns: PackedStringArray = catalog.get("columns", PackedStringArray())
+		if columns.has(locale):
+			return {"ok": false, "message": "%s already has a %s column." % [path, locale]}
+		columns.append(locale)
+		var written: Dictionary = write_catalog(path, catalog.get("rows", []), columns, separator)
+		if not bool(written.get("ok", false)):
+			return written
+	return {"ok": true, "message": "Added an empty %s column to %s." % [locale, target]}
 
 
 ## Folds repeated sightings of one key into a single entry, whose note names every place it is said
@@ -572,15 +596,6 @@ static func coverage(csv_path: String, separator: String = ",") -> Array:
 		report.append({"locale": locale, "total": rows.size(), "covered": rows.size() - missing_keys.size(),
 			"missing": missing_keys.size(), "missing_keys": missing_keys})
 	return report
-
-
-## One coverage line in words, the way every other outcome in these dialogs reads.
-static func coverage_sentence(entry: Dictionary) -> String:
-	var missing: int = int(entry.get("missing", 0))
-	if missing == 0:
-		return "%s: %d key(s), all covered." % [str(entry.get("locale", "")), int(entry.get("total", 0))]
-	return "%s: %d key(s), %d covered, %d missing." % [str(entry.get("locale", "")),
-		int(entry.get("total", 0)), int(entry.get("covered", 0)), missing]
 
 
 ## Reads a returned CSV back into the master catalog: every cell the translator filled lands, every

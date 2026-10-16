@@ -6,10 +6,61 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Changed: the Theme Editor names each token as the code does, and folds
+
+- A token row reads as the style file names it (`condition_lane_ratio`, no longer Condition Lane
+  Ratio), in the code font, and is never translated.
+- Every section folds under its title. Quick Style, Reading Comfort, the editor-wide switches and
+  Sheet & rows start open; the cell, reading-mark, bar and Manual sections start folded.
+- The description that was a hover tooltip now reads in the strip at the window's foot: THIS FIELD
+  says what the token under the pointer does, IN FILE the line it writes into a saved preset
+  (`condition_lane_ratio = 0.45`), updated as it is edited.
+- Save As Preset…, Close and Apply To Current Sheet sit in the window's own button row, beside a
+  note saying Apply writes the look into the open sheet only. A preset that saves, or fails to, says
+  so in that note as well as on the status bar.
+- Save As Preset… opens the editor's own save dialog, with a line at its foot naming the file a
+  Save would replace.
+- A float token with no range of its own steps 0.01 instead of 0.5 (every shipped number token
+  already declares its own range and step).
+- Fixed: with no theme on the sheet, the Theme Editor seeded the cell styles after moving the
+  colours onto the editor's, so its cell colours were not the ones the sheet paints.
+
+### Changed: the Inspector Designer says what each row's buttons do
+
+- A strip at the window's foot names the variable under the pointer: THIS FIELD says what ✎ does
+  and, for a variable that can move, which variable ▲ puts it above (one undo step); IN CODE is
+  the line it is in the file (`@export var jump_strength: float = 480.0`).
+- Beside Close, a note says the sheet variables at the top keep the file's order, which is why
+  they carry no ▲.
+- The Inspector preview, here and in the variable window, names a variable exactly as the code
+  writes it (`max_speed`, no longer Max Speed).
+
+### Changed: Translation Studio reads as four steps, with your languages on top
+
+- Tools > Translation Studio opens as \"Your game in other languages\": one page instead of three tabs.
+  A strip at the top holds a card per language with its code, how much is done, a bar and its state
+  (Source, Done, Nearly done, In progress, Not started); hovering a card gives the exact counts and
+  whether players can pick it yet (its translation file is turned on under Localization).
+- Four numbered steps run the same work as before: Find text, Add a language (new: a searchable list
+  of every language Godot knows, adding an empty column), Bring in a spreadsheet, Check, Try a fake
+  language, and Turn on in the game. Each button writes a result card under itself saying what just
+  happened, in figures and one line per outcome.
+- The translation table sits under the steps, with its own catalog picker in place of the old file
+  field: a project with an i18n/strings.csv works on it, and one without gets one catalog per
+  folder under i18n/. Check switches the table to Missing only, and Try a fake language to Fake
+  language. Clicking a line opens it in its own window: the English, where players see it, who
+  says it (the line's tr() context, else the script that says it), the translator's note, and every
+  language marked Done, Missing or Too long against the room the English leaves plus 40%, with
+  Previous and Next walking the lines the table shows. A long list of keys in a result card names
+  the first five.
+- The sweep's folder, the notes toggle and the fake column's code and stretch are no longer fields:
+  the sweep reads the whole project, always writes where each line is used, and the fake column is
+  always qps at 40% longer. Add a language adds its column to every catalog of a folder.
+
 ### Added: translations in pieces, and a table that stays fast at a million lines
 
-- Translation Studio can write ONE CATALOG PER PROJECT FOLDER: name a folder instead of a .csv and a
-  key said in `res://dialogue/chapter_03/` lands in `i18n/dialogue/chapter_03.csv`, one said in
+- Translation Studio can write ONE CATALOG PER PROJECT FOLDER: in a project with no
+  `i18n/strings.csv` a key said in `res://dialogue/chapter_03/` lands in `i18n/dialogue/chapter_03.csv`, one said in
   `res://ui/` in `i18n/ui.csv`, and the top of the project in `i18n/strings.csv`. A project that
   already has its `i18n/strings.csv` keeps it exactly as before, and a key some catalog already holds
   is never moved out of it. Coverage, orphans, importing a translator's file and the pseudo column
@@ -27,6 +78,24 @@ What changed in the build you have installed (v0.18.0), in the words the release
   helper that does the work (the sheet file helper, the row edits, the variables manager, the code
   panel, the provider glue) instead of a dock method that only passed the call on. Nothing a user
   sees or does changes.
+### Added: the Save studio's file, slots, look-inside and player-settings tabs
+
+- File and format: the Save System node's own settings - a described dropdown over its six formats
+  (the chosen one's sentence stays under it), the file name whose ending follows the format, folder,
+  encryption key, backups and autosave - with a live sample of the file the format writes. They are
+  written onto the scene the SaveSystem global names, so its Inspector shows the same values; a
+  global that is a bare script says so and offers Keep them in a scene.
+- Save slots: each slot file with when it was saved and its size, Look inside and Delete per slot,
+  Open the save folder, and Copy a slot out… (converted through the pack's own backends when the
+  copy's ending names another format).
+- For your players: the Save System pack gains Open Save Folder and Can Open Save Folder (false on
+  the web and on phones). Switching the option off hides the action from Add Action through the
+  reader's own hide list, which now also applies to authored rows.
+- Look inside a save: a slot, the selected node or a bundled pack, in plain words, with the file as
+  Godot writes it one click away.
+- Player settings: the three files a game keeps (save slots, settings.cfg through the Game Settings
+  pack, bindings.cfg through the built-in bindings rows) and six uses as Events | Code | Both cards.
+- These four tabs replace the old Format Preview and Save Slots tabs beside What gets saved.
 
 ### Changed: one Save choice per variable replaces Add Save Support and Remember Between Runs
 

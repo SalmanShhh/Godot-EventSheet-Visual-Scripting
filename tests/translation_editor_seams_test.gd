@@ -193,7 +193,7 @@ static func _run_language_variants() -> bool:
 	editor.set_undo_redo_manager(RecordingUndoManager.new())
 	editor.setup(EventSheetResource.new())
 	editor._translation_studio._build_window()
-	editor._translation_studio._extract_csv_edit.text = CATALOG_PATH
+	editor._translation_studio.catalog_target = CATALOG_PATH
 	var dialog: EventSheetLanguageVariantsDialog = editor._language_variants_dialog
 	dialog.open(row)
 	all_passed = _check("the dialog offers the files the row names", dialog.base_path(), "res://art/sign.png") and all_passed
@@ -255,8 +255,8 @@ static func _run_studio() -> bool:
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	var studio: EventSheetTranslationStudio = editor._translation_studio
 	studio._build_window()
-	studio._extract_root_edit.text = PROJECT_DIR
-	studio._extract_csv_edit.text = CATALOG_PATH
+	studio.scan_folder = PROJECT_DIR
+	studio.catalog_target = CATALOG_PATH
 	var first: Dictionary = studio.run_extract()
 	all_passed = _check("the first extraction writes the catalog", first.get("ok", false), true) and all_passed
 	var catalog: Dictionary = EventSheetTranslationScan.read_catalog(CATALOG_PATH)
@@ -300,12 +300,6 @@ static func _run_studio() -> bool:
 		int(french.get("covered", 0)), 2) and all_passed
 	all_passed = _check("and everything else is named as missing", int(french.get("missing", 0)),
 		int(french.get("total", 0)) - 2) and all_passed
-	all_passed = _check("the sentence reads the way every other outcome does",
-		EventSheetTranslationScan.coverage_sentence({"locale": "ja", "total": 142, "covered": 138, "missing": 4}),
-		"ja: 142 key(s), 138 covered, 4 missing.") and all_passed
-	all_passed = _check("a finished language says so instead of counting to zero",
-		EventSheetTranslationScan.coverage_sentence({"locale": "fr", "total": 12, "covered": 12, "missing": 0}),
-		"fr: 12 key(s), all covered.") and all_passed
 
 	# ---- a file comes back: blanks never overwrite, a new language becomes a column ----
 	var returned: Array = [
@@ -315,8 +309,7 @@ static func _run_studio() -> bool:
 	]
 	EventSheetGridCSV.write_csv(RETURNED_PATH, returned,
 		[{"name": "keys", "type": "String"}, {"name": "fr", "type": "String"}, {"name": "de", "type": "String"}])
-	studio._import_returned_edit.text = RETURNED_PATH
-	var imported: Dictionary = studio.run_import()
+	var imported: Dictionary = studio.run_import(RETURNED_PATH)
 	var after: Dictionary = EventSheetTranslationScan.read_catalog(CATALOG_PATH)
 	all_passed = _check("a blank cell in the returned file leaves the finished one alone",
 		str((after.get("by_key", {}).get("Play", {}) as Dictionary).get("fr", "")), "Jouer") and all_passed
@@ -327,32 +320,91 @@ static func _run_studio() -> bool:
 	all_passed = _check("a key from somebody else's file is reported, never invented",
 		", ".join(imported.get("unknown", PackedStringArray())), "A key from another game") and all_passed
 	all_passed = _check("the import says how many cells it really filled", int(imported.get("filled", 0)), 2) and all_passed
-	# Report Coverage pressed again replaces its own report rather than stacking a second copy.
-	var after_import: String = studio._import_output.text
-	studio.run_coverage()
-	studio.run_coverage()
-	all_passed = _check("pressing Report Coverage again shows one report, not two",
-		studio._import_output.text, after_import) and all_passed
+	all_passed = _check("the spreadsheet's card is the one showing", _visible_cards(studio), "bring") and all_passed
+	all_passed = _check("and it says what landed and what it refused", _card_lines(studio, "bring"), PackedStringArray([
+		"✓ 2 cells were filled in from the translator's file. [eventforge_l10n_strings.csv]", "✓ Blank cells in that file left yours alone.",
+		"! 1 lines in that file are in no script, so they were not added: A key from another game."])) and all_passed
 
-	# ---- orphans: the key nobody says any more ----
-	var orphans: PackedStringArray = studio.run_orphans()
-	all_passed = _check("the orphan report names the deleted line",
-		orphans.has("A line we deleted"), true) and all_passed
-	all_passed = _check("and does not accuse a key the game still says", orphans.has("Play"), false) and all_passed
-	all_passed = _check("the panel says out loud that a runtime-built key cannot be seen from here",
-		studio._notes_output.text.contains("builds at runtime"), true) and all_passed
-	# The Notes tab is the provenance a translator actually needs, read from the file on disk.
-	studio._refresh_notes()
-	all_passed = _check("the notes tab shows the catalog's first key", studio._notes_table.table.key(0), "Play") and all_passed
-	all_passed = _check("with every language it has so far", [studio._notes_table.table.cell(0, "fr"),
-		studio._notes_table.table.cell(0, "de")], ["Jouer", "Spielen"]) and all_passed
-
-	# ---- registering the catalogs: the step everyone forgets ----
+	# ---- the language strip: a card per real language, how far along, and whether players can pick it ----
+	var strip: PackedStringArray = PackedStringArray()
+	for card: Node in studio._languages.get_children():
+		strip.append((card as Control).tooltip_text.get_slice("\n", 0) if card is PanelContainer else (card as Button).text)
+	all_passed = _check("the strip has a card per language, then the way to add one", strip,
+		PackedStringArray(["English (en)", "French (fr)", "German (de)", "+ Add a language"])) and all_passed
 	var registered_before: PackedStringArray = EventSheetGameCatalog.registered_translations()
-	studio._import_folder_edit.text = PROJECT_DIR
-	var register: Dictionary = studio.run_register(false)
-	all_passed = _check("a folder with no compiled catalog in it says so rather than looking busy",
-		str(register.get("message", "")), "Nothing new in %s - every catalog there is already registered." % PROJECT_DIR) and all_passed
+	ProjectSettings.set_setting(EventSheetGameCatalog.TRANSLATIONS_SETTING, PackedStringArray(["res://i18n/strings.fr.translation"]))
+	var french_state: Dictionary = studio.language_state({"locale": "fr", "total": 8, "covered": 2})
+	all_passed = _check("a quarter-done language reads as under way, with its exact counts", [french_state["percent"], french_state["state"],
+		french_state["detail"], french_state["players"]], [25, "In progress", "2 of 8 lines. 6 missing.", "Players see it: yes"]) and all_passed
+	all_passed = _check("a language with no registered translation file is not one players can pick yet",
+		studio.language_state({"locale": "de", "total": 8, "covered": 7})["players"], "Players see it: not yet (turn it on in step 4)") and all_passed
+	all_passed = _check("the source language is the source, and finished ones say so", [
+		studio.language_state({"locale": "en", "total": 8, "covered": 8})["state"],
+		studio.language_state({"locale": "ja", "total": 8, "covered": 8})["state"],
+		studio.language_state({"locale": "ko", "total": 8, "covered": 7})["state"],
+		studio.language_state({"locale": "it", "total": 8, "covered": 0})["state"]], ["Source", "Done", "Nearly done", "Not started"]) and all_passed
+
+	# ---- Add a language: one more empty column, said in the card under the button ----
+	var added: Dictionary = studio.run_add_language("ja")
+	all_passed = _check("adding a language writes an empty column for it",
+		", ".join(EventSheetTranslationScan.read_catalog(CATALOG_PATH).get("locales", PackedStringArray())), "en, fr, de, ja") and all_passed
+	all_passed = _check("and its card names the translation file Godot will make", _card_lines(studio, "add")[0],
+		"✓ Every line got an empty ja column. Godot makes a translation file for it, next to the others. [eventforge_l10n_strings.ja.translation]") and all_passed
+	all_passed = _check("adding it twice is refused out loud", [studio.run_add_language("ja").get("ok", true), _card_lines(studio, "add")],
+		[false, PackedStringArray(["✕ %s already has a ja column." % CATALOG_PATH])]) and all_passed
+	all_passed = _check("the add outcome is ok the first time", added.get("ok", false), true) and all_passed
+
+	# ---- Check: coverage and the keys nobody says any more, with the table on the missing lines ----
+	var checked: Dictionary = studio.run_check()
+	var orphans: PackedStringArray = checked.get("orphans", PackedStringArray())
+	all_passed = _check("the orphan report names the deleted line, and not a key the game still says",
+		[orphans.has("A line we deleted"), orphans.has("Play")], [true, false]) and all_passed
+	all_passed = _check("Check switches the table to the missing lines", studio._table._filter, "missing") and all_passed
+	var total: int = int((EventSheetTranslationScan.read_catalog(CATALOG_PATH).get("rows", []) as Array).size())
+	all_passed = _check("every line misses Japanese, so every line is shown", studio._table.shown_count(), total) and all_passed
+	all_passed = _check("its card reads each language and says a runtime-built key cannot be seen", _card_lines(studio, "check")[3].contains("builds while it runs"), true) and all_passed
+	all_passed = _check("with the share done per language as its figures",
+		(studio._results["check"] as EventSheetPopupUI.ResultCard).figures_label.text, "fr 37%  →  de 12%  →  ja 0%") and all_passed
+
+	# ---- the fake language column ----
+	studio.run_pseudo()
+	var titles: PackedStringArray = PackedStringArray()
+	for column: Dictionary in studio._table._layout(600.0):
+		titles.append(str(column.title))
+	all_passed = _check("the fake language shows beside the English, never as a language players get",
+		titles, PackedStringArray(["#", "Text in the game", "English", "Fake (test only)"])) and all_passed
+	all_passed = _check("its cells are the English, accented", studio._table._pseudo.get("Play", ""), "[Ṕłáý]") and all_passed
+	all_passed = _check("and the strip never offers it as a language", studio._languages.get_child_count(), 5) and all_passed
+
+	# ---- the line window: one line, every language, measured against its room ----
+	studio.show_filter("all")
+	studio.open_line(0)
+	var line: Dictionary = studio.line_details({"keys": "Play", "en": "Play", "fr": "Jouer",
+		"notes": studio._table.table.cell(0, EventSheetTranslationScan.NOTES_COLUMN)})
+	all_passed = _check("a line says where players see it, who says it and the translator's note",
+		[line["key"], line["where"], line["who"], line["note"], line["room"]],
+		["Play", "menu_sheet.gd:6", "menu_sheet.gd", "The button on the title screen.", 6]) and all_passed
+	var spoken: Dictionary = studio.line_details({"keys": "Hello", "notes": "inn.gd:14 - friendly context: Innkeeper"})
+	all_passed = _check("a line with a tr() context is said by that context, apart from the note",
+		[spoken["who"], spoken["note"]], ["Innkeeper", "friendly"]) and all_passed
+	var statuses: PackedStringArray = PackedStringArray()
+	for entry: Variant in (studio.line_details({"keys": "Go", "en": "Go", "fr": "Allez-y !", "de": "Los", "ja": ""})["languages"] as Array):
+		statuses.append("%s %s" % [entry["locale"], entry["status"]])
+	all_passed = _check("each language is done, missing, or too long for the room the English leaves",
+		statuses, PackedStringArray(["fr too_long", "de done", "ja missing"])) and all_passed
+	all_passed = _check("a clicked line opens in its own window, titled with its key and number",
+		studio._line_window.title, "Line Play  #1") and all_passed
+	studio._table.step_line(-1)
+	all_passed = _check("Previous from the first line wraps to the last", [studio._line_row, studio._line_window.title],
+		[total - 1, "Line A line we deleted  #%d" % total]) and all_passed
+
+	# ---- Turn on in the game: the step everyone forgets ----
+	# The table's own folder is what is turned on; this one holds no compiled catalog.
+	studio.catalog_target = PROJECT_DIR + "/strings.csv"
+	studio.run_register(false)
+	all_passed = _check("turning on a folder with no compiled catalog says so rather than looking busy",
+		_card_lines(studio, "ship"), PackedStringArray(["✓ Every translation file next to the table was already turned on.",
+			"! No language has a translation file yet. Godot makes one per column when it imports the table."])) and all_passed
 	all_passed = _check("a folder that is not there answers in words",
 		str(EventSheetGameCatalog.register_catalogs("user://eventforge_l10n_nowhere", false).get("message", "")),
 		"There is no folder at user://eventforge_l10n_nowhere to register.") and all_passed
@@ -422,7 +474,7 @@ static func _run_preview() -> bool:
 	editor.set_undo_redo_manager(RecordingUndoManager.new())
 	editor.setup(EventSheetResource.new())
 	editor._translation_studio._build_window()
-	editor._translation_studio._extract_csv_edit.text = CATALOG_PATH
+	editor._translation_studio.catalog_target = CATALOG_PATH
 	var languages: PackedStringArray = editor._preview_languages()
 	all_passed = _check("the languages offered are the catalog's own columns plus pseudo",
 		", ".join(languages), "fr, qps") and all_passed
@@ -656,12 +708,12 @@ static func _run_key_rename() -> bool:
 	# at all, which must never see a popup.
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor._translation_studio._build_window()
-	editor._translation_studio._extract_csv_edit.text = CATALOG_PATH
+	editor._translation_studio.catalog_target = CATALOG_PATH
 	var offered: bool = editor._translation_key_dialog.offer("Play", "Start")
 	all_passed = _check("the offer appears when a catalog really holds the old key", offered, true) and all_passed
 	all_passed = _check("and it says what declining costs",
 		(editor._translation_key_dialog._dialog.find_child("Note", true, false) as Label).text,
-		"Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Notes ▸ Find Orphans lists it.") and all_passed
+		"Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Check lists it.") and all_passed
 	var committed: Dictionary = editor._translation_key_dialog.confirm()
 	all_passed = _check("confirming rewrites the catalog",
 		str(EventSheetTranslationScan.read_catalog(CATALOG_PATH).get("by_key", {}).keys()[1]), "Start") and all_passed
@@ -682,7 +734,7 @@ static func _run_key_rename() -> bool:
 		editor._translation_key_dialog.offer("Press any key", "Press any key to start"), false) and all_passed
 	all_passed = _check("but it IS spoken, naming the file and what happens to the old key",
 		editor._translation_key_dialog.last_refusal,
-		"%s already holds \"Press any key to start\" - renaming onto it would merge two sentences into one. The row now says the new sentence, and the old key keeps its translations - Translation Studio ▸ Notes ▸ Find Orphans lists it." % CATALOG_PATH) and all_passed
+		"%s already holds \"Press any key to start\" - renaming onto it would merge two sentences into one. The row now says the new sentence, and the old key keeps its translations - Translation Studio ▸ Check lists it." % CATALOG_PATH) and all_passed
 	all_passed = _check("and neither key was touched",
 		str((EventSheetTranslationScan.read_catalog(CATALOG_PATH).get("by_key", {}).get("Press any key", {}) as Dictionary).get("fr", "")),
 		"Appuyez sur une touche") and all_passed
@@ -710,6 +762,26 @@ static func _entry_for(report: Array, locale: String) -> Dictionary:
 		if str((entry as Dictionary).get("locale", "")) == locale:
 			return entry as Dictionary
 	return {}
+
+
+## The studio's result cards that are showing, by button id.
+static func _visible_cards(studio: EventSheetTranslationStudio) -> String:
+	var showing: PackedStringArray = PackedStringArray()
+	for id: String in studio._results:
+		if (studio._results[id] as Control).visible:
+			showing.append(id)
+	return ", ".join(showing)
+
+
+## One result card's lines as read: the mark, the words, then the file it touched in brackets.
+static func _card_lines(studio: EventSheetTranslationStudio, id: String) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	for row: Node in (studio._results[id] as EventSheetPopupUI.ResultCard).lines_box.get_children():
+		var text: String = "%s %s" % [(row.get_child(0) as Label).text, (row.get_child(1) as Label).text]
+		if row.get_child_count() > 2:
+			text += " [%s]" % (row.get_child(2) as Control).tooltip_text.get_file()
+		lines.append(text)
+	return lines
 
 
 static func _cleanup() -> void:

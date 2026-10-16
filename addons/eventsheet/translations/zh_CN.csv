@@ -7421,7 +7421,7 @@ Make %s local to one event?,将 %s 设为某个事件的局部变量？
 Ctrl+Z undoes it.,Ctrl+Z 可撤销。
 Make it local,设为局部
 Rename the translation key too?,也重命名翻译键吗？
-Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Notes ▸ Find Orphans lists it.,如果拒绝，旧键会作为孤立项留在你的目录中 - Translation Studio ▸ 备注 ▸ 查找孤立项会列出它。
+Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Check lists it.,如果拒绝，旧键会作为孤立项留在你的目录中 - Translation Studio ▸ 检查会列出它。
 Update the catalogs,更新目录
 Leave them,保持不变
 Looking for every place it is used...,正在查找所有用到它的地方...
@@ -8886,3 +8886,72 @@ Written by,写入方
 Read by,读取方
 New game,新游戏
 Copy a slot out…,将存档槽复制出去…
++ Add a language,+ 添加语言
+Your game in other languages,让游戏支持其他语言
+Languages in this game,此游戏的语言
+Find the text in your game,找出游戏中的文本
+"Collects every piece of text players read (labels, dialogue, buttons) into the table.",把玩家读到的所有文本（标签、对话、按钮）收集到表格中。
+Find text,查找文本
+Found the text in your game,已找到游戏中的文本
+Fill in each language,填写每种语言
+"Type the translations into the table, or bring in a spreadsheet from a translator.",在表格中输入译文，或导入译者发回的电子表格。
+Add a language,添加语言
+Added a language,已添加语言
+Bring in a spreadsheet…,导入电子表格…
+Brought in a spreadsheet from a translator,已导入译者的电子表格
+Check what is missing,检查缺少的内容
+"Shows how much of each language is done, and which text no longer appears in the game.",显示每种语言完成了多少，以及哪些文本已不再出现在游戏中。
+Checked what is missing,已检查缺少的内容
+Try a fake language,试用假语言
+Made a fake language to test with,已生成用于测试的假语言
+Use it in the game,在游戏中使用
+"Tells Godot about the languages, so your events can switch the game into any of them.",把这些语言告诉 Godot，让你的事件可以把游戏切换到其中任意一种。
+Turn on in the game,在游戏中启用
+Turned it on in the game,已在游戏中启用
+Not started,未开始
+Source,源语言
+Nearly done,接近完成
+In progress,进行中
+%d of %d lines. %d missing.,%d / %d 行。缺少 %d 行。
+Players see it: yes,玩家可见：是
+Players see it: not yet (turn it on in step 4),玩家可见：尚未（在第 4 步启用）
+Search languages…,搜索语言…
+"Each language is one more column in the table, and one more translation file Godot makes from it.",每种语言就是表格中多出的一列，也是 Godot 据此多生成的一个翻译文件。
+"%d new lines were added, each with the file and line it came from, for the translator.",已添加 %d 行新文本，每行都附上来源文件和行号，方便译者。
+%d lines already in the table were kept as they were: nothing is overwritten.,表格中原有的 %d 行保持不变：不会覆盖任何内容。
+%d lines are no longer said anywhere. They stay in the table until you remove them (Check shows them).,有 %d 行已不在任何地方出现。它们会留在表格中，直到你删除为止（检查会列出它们）。
+%d lines,%d 行
+%d new,新增 %d
+"Every line got an empty %s column. Godot makes a translation file for it, next to the others.",每一行都多了一个空的 %s 列。Godot 会在其他文件旁边为它生成一个翻译文件。
+It shows as 0% until text is filled in. Players cannot pick it until it is turned on in step 4.,在填入文本之前它显示为 0%。在第 4 步启用之前，玩家无法选择它。
+1 new column,新增 1 列
+%d cells were filled in from the translator's file.,已用译者的文件填写了 %d 个单元格。
+Blank cells in that file left yours alone.,该文件中的空单元格没有改动你的内容。
+"%d lines in that file are in no script, so they were not added: %s.",该文件中有 %d 行不在任何脚本里，因此没有添加：%s。
+%d cells filled,已填写 %d 个单元格
+%s: every line is done.,%s：所有行都已完成。
+%s: %d lines are missing.,%s：缺少 %d 行。
+The table has no language besides the English yet: Add a language gives it one.,表格中除英语外还没有其他语言：点击“添加语言”即可加入一种。
+Every line in the table is still said somewhere.,表格中的每一行仍在某处使用。
+"%d lines are no longer said anywhere: %s. A line your game builds while it runs cannot be seen from here, so read this list rather than deleting on it.",有 %d 行已不在任何地方出现：%s。游戏运行时才拼出的行在这里看不到，所以请阅读这份列表，而不要据此删除。
+"The table shows the fake column. Play the game in it with Set Language (qps): text still in plain English was never marked for translation, and anything cut off needs a wider box.",表格显示的是假语言列。用 Set Language (qps) 切换后玩一遍游戏：仍是普通英文的文本从未标记为待翻译，被截断的内容需要更宽的框。
+It is a test column: leave qps out of any language list your players see.,这是测试列：不要把 qps 放进玩家能看到的语言列表。
+"+40% longer, accented",长 40%，带重音符号
+Every translation file next to the table was already turned on.,表格旁的所有翻译文件都已启用。
+"Added to Project Settings > Localization, so Godot loads them when the game starts.",已添加到 项目设置 > 本地化，Godot 会在游戏启动时加载它们。
+Players can pick: %s.,玩家可以选择：%s。
+No language has a translation file yet. Godot makes one per column when it imports the table.,还没有任何语言拥有翻译文件。Godot 导入表格时会为每一列生成一个。
+%d languages,%d 种语言
+◀ Previous line,◀ 上一行
+Next line ▶,下一行 ▶
+Line %s  #%d,行 %s  #%d
+English (source),英语（源语言）
+Where players see it,玩家在哪里看到
+Said by %s,说话者：%s
+Note for translators: %s,给译者的备注：%s
+Every language,所有语言
+Missing,缺少
+Too long,过长
+Not translated yet,尚未翻译
+%d / %d characters,%d / %d 个字符
+"Each line has the room of its English plus 40%, the stretch the fake language tests, so a line that would be cut off shows as too long before anyone plays it.",每行的空间是其英文长度再加 40%（假语言测试的拉长幅度），因此会被截断的行在任何人游玩之前就会显示为过长。

@@ -7421,7 +7421,7 @@ Make %s local to one event?,Сделать %s локальной для одно
 Ctrl+Z undoes it.,Ctrl+Z отменяет это.
 Make it local,Сделать локальной
 Rename the translation key too?,Переименовать и ключ перевода?
-Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Notes ▸ Find Orphans lists it.,"Если отказаться, старый ключ останется в каталогах сиротой - Translation Studio ▸ Заметки ▸ Найти сирот покажет его."
+Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Check lists it.,"Если отказаться, старый ключ останется в каталогах сиротой - Translation Studio ▸ Проверить покажет его."
 Update the catalogs,Обновить каталоги
 Leave them,Оставить как есть
 Looking for every place it is used...,"Ищем каждое место, где он используется..."
@@ -8886,3 +8886,72 @@ Written by,Пишет
 Read by,Читает
 New game,Новая игра
 Copy a slot out…,Скопировать слот наружу…
++ Add a language,+ Добавить язык
+Your game in other languages,Твоя игра на других языках
+Languages in this game,Языки этой игры
+Find the text in your game,Найти текст в игре
+"Collects every piece of text players read (labels, dialogue, buttons) into the table.","Собирает в таблицу весь текст, который читают игроки (надписи, диалоги, кнопки)."
+Find text,Найти текст
+Found the text in your game,Текст игры найден
+Fill in each language,Заполнить каждый язык
+"Type the translations into the table, or bring in a spreadsheet from a translator.",Впиши переводы в таблицу или загрузи таблицу от переводчика.
+Add a language,Добавить язык
+Added a language,Язык добавлен
+Bring in a spreadsheet…,Загрузить таблицу…
+Brought in a spreadsheet from a translator,Таблица от переводчика загружена
+Check what is missing,"Проверить, чего не хватает"
+"Shows how much of each language is done, and which text no longer appears in the game.","Показывает, сколько готово в каждом языке и какой текст больше не встречается в игре."
+Checked what is missing,"Проверено, чего не хватает"
+Try a fake language,Попробовать фальшивый язык
+Made a fake language to test with,Создан фальшивый язык для проверки
+Use it in the game,Использовать в игре
+"Tells Godot about the languages, so your events can switch the game into any of them.","Сообщает Godot о языках, чтобы события могли переключить игру на любой из них."
+Turn on in the game,Включить в игре
+Turned it on in the game,Включено в игре
+Not started,Не начат
+Source,Исходный
+Nearly done,Почти готов
+In progress,В работе
+%d of %d lines. %d missing.,%d из %d строк. Не хватает %d.
+Players see it: yes,Игроки видят его: да
+Players see it: not yet (turn it on in step 4),Игроки видят его: пока нет (включи на шаге 4)
+Search languages…,Искать язык…
+"Each language is one more column in the table, and one more translation file Godot makes from it.","Каждый язык - это ещё один столбец в таблице и ещё один файл перевода, который Godot из него делает."
+"%d new lines were added, each with the file and line it came from, for the translator.","Добавлено новых строк: %d, у каждой - файл и строка, откуда она взята, для переводчика."
+%d lines already in the table were kept as they were: nothing is overwritten.,"Строки, уже бывшие в таблице (%d), остались как были: ничего не перезаписано."
+%d lines are no longer said anywhere. They stay in the table until you remove them (Check shows them).,"Строки, которые больше нигде не звучат: %d. Они остаются в таблице, пока ты их не удалишь (их покажет «Проверить»)."
+%d lines,Строк: %d
+%d new,Новых: %d
+"Every line got an empty %s column. Godot makes a translation file for it, next to the others.",У каждой строки появился пустой столбец %s. Godot сделает для него файл перевода рядом с остальными.
+It shows as 0% until text is filled in. Players cannot pick it until it is turned on in step 4.,"Пока текст не заполнен, он показан как 0%. Игроки смогут выбрать его только после включения на шаге 4."
+1 new column,1 новый столбец
+%d cells were filled in from the translator's file.,Из файла переводчика заполнено ячеек: %d.
+Blank cells in that file left yours alone.,Пустые ячейки того файла твои не тронули.
+"%d lines in that file are in no script, so they were not added: %s.","Строк из того файла нет ни в одном скрипте, поэтому они не добавлены (%d): %s."
+%d cells filled,Заполнено ячеек: %d
+%s: every line is done.,%s: все строки готовы.
+%s: %d lines are missing.,%s: не хватает строк: %d.
+The table has no language besides the English yet: Add a language gives it one.,"В таблице пока нет языков, кроме английского: «Добавить язык» даст ей ещё один."
+Every line in the table is still said somewhere.,Каждая строка таблицы всё ещё где-то звучит.
+"%d lines are no longer said anywhere: %s. A line your game builds while it runs cannot be seen from here, so read this list rather than deleting on it.","Строк, которые больше нигде не звучат: %d: %s. Строку, которую игра собирает во время работы, отсюда не видно, так что читай этот список, а не удаляй по нему."
+"The table shows the fake column. Play the game in it with Set Language (qps): text still in plain English was never marked for translation, and anything cut off needs a wider box.","Таблица показывает фальшивый столбец. Сыграй в игру на нём через Set Language (qps): текст, оставшийся обычным английским, не был отмечен для перевода, а всё обрезанное требует поля пошире."
+It is a test column: leave qps out of any language list your players see.,"Это проверочный столбец: не показывай qps в списках языков, которые видят игроки."
+"+40% longer, accented","на 40% длиннее, с диакритикой"
+Every translation file next to the table was already turned on.,Все файлы перевода рядом с таблицей уже были включены.
+"Added to Project Settings > Localization, so Godot loads them when the game starts.","Добавлено в Настройки проекта > Локализация, чтобы Godot загружал их при запуске игры."
+Players can pick: %s.,Игроки могут выбрать: %s.
+No language has a translation file yet. Godot makes one per column when it imports the table.,"Ни у одного языка ещё нет файла перевода. Godot делает по одному на столбец, когда импортирует таблицу."
+%d languages,Языков: %d
+◀ Previous line,◀ Предыдущая строка
+Next line ▶,Следующая строка ▶
+Line %s  #%d,Строка %s  #%d
+English (source),Английский (исходный)
+Where players see it,Где её видят игроки
+Said by %s,Говорит: %s
+Note for translators: %s,Заметка для переводчиков: %s
+Every language,Все языки
+Missing,Нет
+Too long,Слишком длинная
+Not translated yet,Ещё не переведено
+%d / %d characters,%d / %d символов
+"Each line has the room of its English plus 40%, the stretch the fake language tests, so a line that would be cut off shows as too long before anyone plays it.","У каждой строки есть место её английского плюс 40% - то удлинение, которое проверяет фальшивый язык, - так что строка, которая обрежется, видна как слишком длинная ещё до игры."

@@ -7421,7 +7421,7 @@ Make %s local to one event?,¿Hacer %s local a un evento?
 Ctrl+Z undoes it.,Ctrl+Z lo deshace.
 Make it local,Hacerla local
 Rename the translation key too?,¿Renombrar también la clave de traducción?
-Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Notes ▸ Find Orphans lists it.,"Si lo rechazas, la clave antigua queda huérfana en tus catálogos - Translation Studio ▸ Notas ▸ Buscar huérfanas la muestra."
+Decline and the old key stays in your catalogs as an orphan - Translation Studio ▸ Check lists it.,"Si lo rechazas, la clave antigua queda huérfana en tus catálogos - Translation Studio ▸ Comprobar la muestra."
 Update the catalogs,Actualizar los catálogos
 Leave them,Dejarlos
 Looking for every place it is used...,Buscando cada lugar donde se usa...
@@ -8886,3 +8886,72 @@ Written by,Escrito por
 Read by,Leído por
 New game,Partida nueva
 Copy a slot out…,Copiar una ranura fuera…
++ Add a language,+ Añadir un idioma
+Your game in other languages,Tu juego en otros idiomas
+Languages in this game,Idiomas de este juego
+Find the text in your game,Encuentra el texto de tu juego
+"Collects every piece of text players read (labels, dialogue, buttons) into the table.","Reúne en la tabla todo el texto que leen los jugadores (etiquetas, diálogos, botones)."
+Find text,Buscar texto
+Found the text in your game,Texto del juego encontrado
+Fill in each language,Rellena cada idioma
+"Type the translations into the table, or bring in a spreadsheet from a translator.",Escribe las traducciones en la tabla o trae una hoja de cálculo de un traductor.
+Add a language,Añadir un idioma
+Added a language,Idioma añadido
+Bring in a spreadsheet…,Traer una hoja de cálculo…
+Brought in a spreadsheet from a translator,Hoja de cálculo de un traductor importada
+Check what is missing,Comprueba lo que falta
+"Shows how much of each language is done, and which text no longer appears in the game.",Muestra cuánto de cada idioma está hecho y qué texto ya no aparece en el juego.
+Checked what is missing,Comprobado lo que falta
+Try a fake language,Probar un idioma falso
+Made a fake language to test with,Idioma falso de prueba creado
+Use it in the game,Úsalo en el juego
+"Tells Godot about the languages, so your events can switch the game into any of them.","Le indica a Godot los idiomas, para que tus eventos puedan cambiar el juego a cualquiera de ellos."
+Turn on in the game,Activar en el juego
+Turned it on in the game,Activado en el juego
+Not started,Sin empezar
+Source,Origen
+Nearly done,Casi terminado
+In progress,En curso
+%d of %d lines. %d missing.,%d de %d líneas. Faltan %d.
+Players see it: yes,Los jugadores lo ven: sí
+Players see it: not yet (turn it on in step 4),Los jugadores lo ven: aún no (actívalo en el paso 4)
+Search languages…,Buscar idiomas…
+"Each language is one more column in the table, and one more translation file Godot makes from it.",Cada idioma es una columna más en la tabla y un archivo de traducción más que Godot crea a partir de ella.
+"%d new lines were added, each with the file and line it came from, for the translator.","Se añadieron %d líneas nuevas, cada una con el archivo y la línea de donde viene, para el traductor."
+%d lines already in the table were kept as they were: nothing is overwritten.,Las %d líneas que ya estaban en la tabla se quedaron como estaban: no se sobrescribe nada.
+%d lines are no longer said anywhere. They stay in the table until you remove them (Check shows them).,%d líneas ya no se dicen en ningún sitio. Se quedan en la tabla hasta que las quites (Comprobar las muestra).
+%d lines,%d líneas
+%d new,%d nuevas
+"Every line got an empty %s column. Godot makes a translation file for it, next to the others.","Cada línea recibió una columna %s vacía. Godot crea un archivo de traducción para ella, junto a los demás."
+It shows as 0% until text is filled in. Players cannot pick it until it is turned on in step 4.,Aparece al 0% hasta que se rellene el texto. Los jugadores no pueden elegirlo hasta que se active en el paso 4.
+1 new column,1 columna nueva
+%d cells were filled in from the translator's file.,Se rellenaron %d celdas con el archivo del traductor.
+Blank cells in that file left yours alone.,Las celdas vacías de ese archivo no tocaron las tuyas.
+"%d lines in that file are in no script, so they were not added: %s.","%d líneas de ese archivo no están en ningún script, así que no se añadieron: %s."
+%d cells filled,%d celdas rellenadas
+%s: every line is done.,%s: todas las líneas están hechas.
+%s: %d lines are missing.,%s: faltan %d líneas.
+The table has no language besides the English yet: Add a language gives it one.,La tabla aún no tiene ningún idioma aparte del inglés: Añadir un idioma le da uno.
+Every line in the table is still said somewhere.,Todas las líneas de la tabla se siguen diciendo en algún sitio.
+"%d lines are no longer said anywhere: %s. A line your game builds while it runs cannot be seen from here, so read this list rather than deleting on it.","%d líneas ya no se dicen en ningún sitio: %s. Una línea que tu juego construye mientras se ejecuta no se ve desde aquí, así que lee esta lista en vez de borrar según ella."
+"The table shows the fake column. Play the game in it with Set Language (qps): text still in plain English was never marked for translation, and anything cut off needs a wider box.","La tabla muestra la columna falsa. Juega con ella usando Set Language (qps): el texto que siga en inglés normal nunca se marcó para traducir, y lo que salga cortado necesita una caja más ancha."
+It is a test column: leave qps out of any language list your players see.,Es una columna de prueba: deja qps fuera de cualquier lista de idiomas que vean tus jugadores.
+"+40% longer, accented","+40% más largo, con acentos"
+Every translation file next to the table was already turned on.,Todos los archivos de traducción junto a la tabla ya estaban activados.
+"Added to Project Settings > Localization, so Godot loads them when the game starts.","Añadido a Ajustes del proyecto > Localización, para que Godot los cargue al empezar el juego."
+Players can pick: %s.,Los jugadores pueden elegir: %s.
+No language has a translation file yet. Godot makes one per column when it imports the table.,Ningún idioma tiene todavía archivo de traducción. Godot crea uno por columna al importar la tabla.
+%d languages,%d idiomas
+◀ Previous line,◀ Línea anterior
+Next line ▶,Línea siguiente ▶
+Line %s  #%d,Línea %s  #%d
+English (source),Inglés (origen)
+Where players see it,Dónde la ven los jugadores
+Said by %s,La dice %s
+Note for translators: %s,Nota para los traductores: %s
+Every language,Todos los idiomas
+Missing,Falta
+Too long,Demasiado larga
+Not translated yet,Aún sin traducir
+%d / %d characters,%d / %d caracteres
+"Each line has the room of its English plus 40%, the stretch the fake language tests, so a line that would be cut off shows as too long before anyone plays it.","Cada línea tiene el espacio de su inglés más un 40%, lo que estira el idioma falso, así que una línea que quedaría cortada aparece como demasiado larga antes de que nadie juegue."
