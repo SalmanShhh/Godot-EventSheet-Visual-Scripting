@@ -360,6 +360,13 @@ static func locales_of(columns: PackedStringArray) -> PackedStringArray:
 ## The whole extraction: sweep `root`, fold the keys, merge with the catalog already there, and
 ## write it back. Filled cells are kept exactly as they were - the returned file is never clobbered,
 ## which is the only reason this is safe to run on a schedule.
+##
+## `csv_path` is either ONE catalog (a .csv: the single-file shape every existing project has, kept
+## exactly as it always worked) or a FOLDER of them, one per folder of the project: a key said in
+## res://dialogue/chapter_03/inn.gd lands in <folder>/dialogue/chapter_03.csv, one said at the top
+## of the project in <folder>/strings.csv. A key some catalog under the folder already holds stays
+## in that catalog - a finished translation is never moved, and a project that grew out of one
+## strings.csv keeps every key it had there.
 static func extract(root: String, csv_path: String, include_notes: bool = true, separator: String = ",") -> Dictionary:
 	var discovered: Array = scan_scripts(root)
 	discovered.append_array(scan_data_assets(root))
@@ -369,7 +376,63 @@ static func extract(root: String, csv_path: String, include_notes: bool = true, 
 	for key: Variant in folded.keys():
 		keys.append(str(key))
 		notes[str(key)] = str((folded[key] as Dictionary).get("note", ""))
-	return merge_keys(csv_path, keys, notes, include_notes, separator)
+	if is_single_catalog(csv_path):
+		return merge_keys(csv_path, keys, notes, include_notes, separator)
+	var owners: Dictionary = {}
+	for path: String in catalog_files(csv_path):
+		for key: Variant in (read_catalog(path, separator).get("by_key", {}) as Dictionary):
+			owners[key] = path
+	var groups: Dictionary = {}
+	for key: String in keys:
+		var first_site: Dictionary = ((folded[key] as Dictionary).get("sites", []) as Array)[0]
+		var home: String = str(owners.get(key, folder_catalog(str(first_site.get("path", "")), root, csv_path)))
+		if not groups.has(home):
+			groups[home] = []
+		(groups[home] as Array).append(key)
+	var homes: Array = groups.keys()
+	homes.sort()
+	var totals: Dictionary = {"keys": 0, "added": 0, "kept": 0}
+	for home: String in homes:
+		DirAccess.make_dir_recursive_absolute(home.get_base_dir())
+		var outcome: Dictionary = merge_keys(home, PackedStringArray(groups[home]), notes, include_notes, separator)
+		if not bool(outcome.get("ok", false)):
+			return outcome
+		for count: String in totals:
+			totals[count] += int(outcome.get(count, 0))
+	totals["ok"] = true
+	totals["catalogs"] = PackedStringArray(homes)
+	var kept: int = int(totals["kept"])
+	totals["message"] = "%d key(s) in %d catalog(s) under %s - %d new, %d already translated and kept%s." % [totals["keys"],
+		homes.size(), csv_path, totals["added"], int(totals["keys"]) - int(totals["added"]),
+		", %d no script says any more" % kept if kept > 0 else ""]
+	return totals
+
+
+## True for a target that is one catalog file rather than a folder of them.
+static func is_single_catalog(target: String) -> bool:
+	return target.get_extension().to_lower() == "csv"
+
+
+## Every catalog a target names: the one file, or each .csv under the folder (sorted). A file that is
+## not there yet is no catalog.
+static func catalog_files(target: String) -> PackedStringArray:
+	if is_single_catalog(target):
+		return PackedStringArray([target]) if FileAccess.file_exists(target) else PackedStringArray()
+	return files_under(target, ["csv"])
+
+
+## Where a project starts: the strings.csv it already has keeps being THE catalog, and a project with
+## none gets the folder, one catalog per folder of the game.
+static func default_catalog_target() -> String:
+	return "res://i18n/strings.csv" if FileAccess.file_exists("res://i18n/strings.csv") else "res://i18n"
+
+
+## The catalog a key said in `source_path` lands in when `folder` holds one per project folder: the
+## source's folder relative to `root`, as a file name - res://dialogue/chapter_03/inn.gd ->
+## <folder>/dialogue/chapter_03.csv. The top of the project is strings.csv.
+static func folder_catalog(source_path: String, root: String, folder: String) -> String:
+	var relative: String = source_path.get_base_dir().trim_prefix(root.rstrip("/")).lstrip("/")
+	return "%s/%s.csv" % [folder.rstrip("/"), relative if not relative.is_empty() else "strings"]
 
 
 ## Merging a set of keys INTO the catalog already at `csv_path`, which is the only write shape this
@@ -489,19 +552,24 @@ static func _note_for_sites(sites: Array) -> String:
 
 ## Per-language coverage: [{locale, total, covered, missing, missing_keys}]. The sentence the
 ## dialog shows ("142 keys, 138 covered, 4 missing in ja") is built from this, never from a guess.
+## A folder of catalogs is summed into one line per language over every file, and a file without a
+## language's column counts every one of its lines as missing in it.
 static func coverage(csv_path: String, separator: String = ",") -> Array:
-	var catalog: Dictionary = read_catalog(csv_path, separator)
+	var rows: Array = []
+	var locales: PackedStringArray = PackedStringArray()
+	for path: String in catalog_files(csv_path):
+		var catalog: Dictionary = read_catalog(path, separator)
+		rows.append_array(catalog.get("rows", []))
+		for locale: String in (catalog.get("locales", PackedStringArray()) as PackedStringArray):
+			if not locales.has(locale):
+				locales.append(locale)
 	var report: Array = []
-	var rows: Array = catalog.get("rows", [])
-	for locale: String in (catalog.get("locales", PackedStringArray()) as PackedStringArray):
-		var covered: int = 0
+	for locale: String in locales:
 		var missing_keys: PackedStringArray = PackedStringArray()
 		for row: Variant in rows:
 			if str((row as Dictionary).get(locale, "")).strip_edges().is_empty():
 				missing_keys.append(str((row as Dictionary).get(KEY_COLUMN, "")))
-			else:
-				covered += 1
-		report.append({"locale": locale, "total": rows.size(), "covered": covered,
+		report.append({"locale": locale, "total": rows.size(), "covered": rows.size() - missing_keys.size(),
 			"missing": missing_keys.size(), "missing_keys": missing_keys})
 	return report
 
@@ -518,14 +586,42 @@ static func coverage_sentence(entry: Dictionary) -> String:
 ## Reads a returned CSV back into the master catalog: every cell the translator filled lands, every
 ## cell they left blank leaves what was already there alone, and a language the master never had
 ## becomes a new column. Keys the master does not know are reported, not invented.
+##
+## A FOLDER target merges into every catalog under it: each key lands in whichever file holds it, and
+## only a key no file holds is reported. A file nothing landed in is not rewritten.
 static func import_catalog(returned_csv: String, target_csv: String, separator: String = ",") -> Dictionary:
 	var returned: Dictionary = read_catalog(returned_csv, separator)
 	if not bool(returned.get("ok", false)):
 		return returned
+	var filled: int = 0
+	var unknown: Variant = null
+	var targets: PackedStringArray = PackedStringArray([target_csv]) if is_single_catalog(target_csv) else catalog_files(target_csv)
+	if targets.is_empty():
+		return {"ok": false, "message": "There is no catalog under %s yet to merge into." % target_csv}
+	for path: String in targets:
+		var outcome: Dictionary = _import_into(returned, path, separator)
+		if not bool(outcome.get("ok", false)):
+			return outcome
+		filled += int(outcome.get("filled", 0))
+		var theirs: PackedStringArray = outcome.get("unknown", PackedStringArray())
+		var still: PackedStringArray = PackedStringArray()
+		for key: String in (theirs if unknown == null else unknown as PackedStringArray):
+			if theirs.has(key):
+				still.append(key)
+		unknown = still
+	var unknown_keys: PackedStringArray = unknown if unknown != null else PackedStringArray()
+	var unknown_note: String = "" if unknown_keys.is_empty() \
+		else " %d key(s) in that file are in no script - %s." % [unknown_keys.size(), ", ".join(unknown_keys)]
+	return {"ok": true, "filled": filled, "unknown": unknown_keys,
+		"message": "Merged %s into %s - %d cell(s) filled.%s" % [returned_csv.get_file(), target_csv, filled, unknown_note]}
+
+
+static func _import_into(returned: Dictionary, target_csv: String, separator: String) -> Dictionary:
 	var target: Dictionary = read_catalog(target_csv, separator)
 	if not bool(target.get("ok", false)):
 		return target
 	var columns: PackedStringArray = target.get("columns", PackedStringArray())
+	var widths: int = columns.size()
 	for locale: String in (returned.get("locales", PackedStringArray()) as PackedStringArray):
 		if not columns.has(locale):
 			columns.append(locale)
@@ -546,6 +642,8 @@ static func import_catalog(returned_csv: String, target_csv: String, separator: 
 			master[locale] = value
 			filled += 1
 		by_key[key] = master
+	if filled == 0 and columns.size() == widths:
+		return {"ok": true, "filled": 0, "unknown": unknown}
 	var rows: Array = []
 	for row: Variant in (target.get("rows", []) as Array):
 		var record: Dictionary = row as Dictionary
@@ -560,17 +658,16 @@ static func import_catalog(returned_csv: String, target_csv: String, separator: 
 	var written: Dictionary = EventSheetGridCSV.write_csv(target_csv, rows, column_specs, separator)
 	if not bool(written.get("ok", false)):
 		return written
-	var unknown_note: String = "" if unknown.is_empty() \
-		else " %d key(s) in that file are in no script - %s." % [unknown.size(), ", ".join(unknown)]
-	return {"ok": true, "filled": filled, "unknown": unknown,
-		"message": "Merged %s into %s - %d cell(s) filled.%s" % [returned_csv.get_file(), target_csv, filled, unknown_note]}
+	return {"ok": true, "filled": filled, "unknown": unknown}
 
 
 ## Keys the catalog holds that NO script emits any more - a renamed string, or a deleted feature.
 ## The honest limitation lives in the message the caller writes: a key built at runtime is
 ## undecidable, so this is a report to read, never a delete to run.
 static func orphans(csv_path: String, root: String, separator: String = ",") -> PackedStringArray:
-	var catalog: Dictionary = read_catalog(csv_path, separator)
+	var rows: Array = []
+	for path: String in catalog_files(csv_path):
+		rows.append_array(read_catalog(path, separator).get("rows", []))
 	var live: Dictionary = {}
 	for entry: Variant in scan_scripts(root):
 		live[str((entry as Dictionary).get("key", ""))] = true
@@ -580,7 +677,7 @@ static func orphans(csv_path: String, root: String, separator: String = ",") -> 
 	for entry: Variant in scan_data_assets(root):
 		live[str((entry as Dictionary).get("key", ""))] = true
 	var found: PackedStringArray = PackedStringArray()
-	for row: Variant in (catalog.get("rows", []) as Array):
+	for row: Variant in rows:
 		var key: String = str((row as Dictionary).get(KEY_COLUMN, "")).strip_edges()
 		if not key.is_empty() and not live.has(key):
 			found.append(key)

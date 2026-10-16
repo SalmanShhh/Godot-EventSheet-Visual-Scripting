@@ -23,6 +23,8 @@ extends RefCounted
 # itself is EventSheetTranslationScan / EventSheetGameCatalog - this is the form around it, and
 # every button calls exactly what the suite calls.
 
+const TABLE_VIEW_PATH := "res://addons/eventsheet/editor/dock/translation_table_view.gd"
+
 var _dock: Control = null
 var _window: Window = null
 var _extract_root_edit: LineEdit = null
@@ -31,7 +33,8 @@ var _extract_notes_check: CheckBox = null
 var _extract_output: CodeEdit = null
 var _pseudo_locale_edit: LineEdit = null
 var _pseudo_expansion: SpinBox = null
-var _notes_tree: Tree = null
+## The Notes tab's table: one catalog at a time, only the rows on screen drawn.
+var _notes_table: VBoxContainer = null
 var _notes_output: Label = null
 var _import_returned_edit: LineEdit = null
 var _import_folder_edit: LineEdit = null
@@ -55,7 +58,7 @@ func open() -> void:
 ## extract into one file and import into another by accident.
 func catalog_path() -> String:
 	var path: String = _extract_csv_edit.text.strip_edges() if _extract_csv_edit != null else ""
-	return path if not path.is_empty() else "res://i18n/strings.csv"
+	return path if not path.is_empty() else EventSheetTranslationScan.default_catalog_target()
 
 
 func scan_root() -> String:
@@ -91,9 +94,9 @@ func _build_extract_tab() -> Control:
 	form.add_child(EventSheetPopupUI.form_row("Scan", _extract_root_edit, EventSheetPopupUI.LABEL_MIN_WIDTH,
 		"Which folder to sweep. The plugin's own code and the bundled behaviour packs are skipped - their strings are not your game's."))
 	_extract_csv_edit = LineEdit.new()
-	_extract_csv_edit.text = "res://i18n/strings.csv"
+	_extract_csv_edit.text = EventSheetTranslationScan.default_catalog_target()
 	form.add_child(EventSheetPopupUI.form_row("Write to", _extract_csv_edit, EventSheetPopupUI.LABEL_MIN_WIDTH,
-		"The translator's file. One row per key, one column per language - the shape Godot imports as a .translation when you drop it in."))
+		"The translator's file, or a folder of them. One row per key, one column per language - the shape Godot imports as a .translation when you drop it in. A folder gets one file per folder of your project, so a big game's text stays in pieces a translator can open."))
 	_extract_notes_check = CheckBox.new()
 	_extract_notes_check.button_pressed = true
 	_extract_notes_check.text = "Write where each key is used"
@@ -135,18 +138,9 @@ func _build_extract_tab() -> Control:
 func _build_notes_tab() -> Control:
 	var box: VBoxContainer = EventSheetPopupUI.form_box()
 	box.name = "Notes"
-	box.add_child(EventSheetPopupUI.hint_label("Every key in the catalog with where it is said and how many languages have it. The note is what turns \"Open\" into a sentence a translator can render correctly - is it a verb on a button, or an adjective on a door?"))
-	_notes_tree = Tree.new()
-	_notes_tree.columns = 3
-	_notes_tree.set_column_title(0, "Key")
-	_notes_tree.set_column_title(1, "Where it is said")
-	_notes_tree.set_column_title(2, "Languages")
-	_notes_tree.column_titles_visible = true
-	_notes_tree.hide_root = true
-	_notes_tree.set_column_expand(2, false)
-	_notes_tree.set_column_custom_minimum_width(2, 90)
-	_notes_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var tree_card: PanelContainer = EventSheetPopupUI.panel_section(_notes_tree)
+	box.add_child(EventSheetPopupUI.hint_label("Every line of every catalog, one file at a time - hover a line for where it is said."))
+	_notes_table = load(TABLE_VIEW_PATH).new()
+	var tree_card: PanelContainer = EventSheetPopupUI.panel_section(_notes_table)
 	tree_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_child(tree_card)
 	var actions: HBoxContainer = HBoxContainer.new()
@@ -272,28 +266,13 @@ func run_orphans() -> PackedStringArray:
 	return orphans
 
 
-## Fills the Notes tab from the catalog on disk: the key, its note, and how many languages have it.
+## Shows the catalogs on disk in the Notes tab's table: every file the target names, the one that was
+## on show kept on show.
 func _refresh_notes() -> void:
-	if _notes_tree == null:
-		return
-	_notes_tree.clear()
-	var catalog: Dictionary = EventSheetTranslationScan.read_catalog(catalog_path())
-	var root: TreeItem = _notes_tree.create_item()
-	var locales: PackedStringArray = catalog.get("locales", PackedStringArray())
-	for row: Variant in (catalog.get("rows", []) as Array):
-		var record: Dictionary = row as Dictionary
-		var covered: int = 0
-		var countable: int = 0
-		for locale: String in locales:
-			if locale == EventSheetTranslationScan.SOURCE_COLUMN:
-				continue
-			countable += 1
-			if not str(record.get(locale, "")).strip_edges().is_empty():
-				covered += 1
-		var item: TreeItem = _notes_tree.create_item(root)
-		item.set_text(0, str(record.get(EventSheetTranslationScan.KEY_COLUMN, "")))
-		item.set_text(1, str(record.get(EventSheetTranslationScan.NOTES_COLUMN, "")))
-		item.set_text(2, "%d / %d" % [covered, countable])
+	if _notes_table != null:
+		var target: String = catalog_path()
+		_notes_table.show_catalogs(EventSheetTranslationScan.catalog_files(target),
+			"" if EventSheetTranslationScan.is_single_catalog(target) else target, _notes_table.table.path)
 
 
 func _report(output: CodeEdit, outcome: Dictionary) -> void:

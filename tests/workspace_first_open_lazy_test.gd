@@ -34,6 +34,8 @@ const CLICK_ONLY := [
 	"res://addons/eventsheet/editor/dock/project_doctor_panel.gd",
 	"res://addons/eventsheet/editor/dock/save_studio.gd",
 	"res://addons/eventsheet/editor/dock/translation_studio.gd",
+	"res://addons/eventsheet/editor/dock/translation_table_view.gd",
+	"res://addons/eventsheet/editor/translation_table.gd",
 	"res://addons/eventsheet/editor/dock/starter_templates.gd",
 	"res://addons/eventsheet/editor/dock/find_references_panel.gd",
 	"res://addons/eventsheet/editor/dock/import_sheet_wizard.gd",

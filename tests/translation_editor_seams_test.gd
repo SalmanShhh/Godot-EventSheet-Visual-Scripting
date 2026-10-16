@@ -343,9 +343,9 @@ static func _run_studio() -> bool:
 		studio._notes_output.text.contains("builds at runtime"), true) and all_passed
 	# The Notes tab is the provenance a translator actually needs, read from the file on disk.
 	studio._refresh_notes()
-	var first_item: TreeItem = studio._notes_tree.get_root().get_first_child()
-	all_passed = _check("the notes tab shows the key", first_item.get_text(0), "Play") and all_passed
-	all_passed = _check("with how many languages have it so far", first_item.get_text(2), "2 / 2") and all_passed
+	all_passed = _check("the notes tab shows the catalog's first key", studio._notes_table.table.key(0), "Play") and all_passed
+	all_passed = _check("with every language it has so far", [studio._notes_table.table.cell(0, "fr"),
+		studio._notes_table.table.cell(0, "de")], ["Jouer", "Spielen"]) and all_passed
 
 	# ---- registering the catalogs: the step everyone forgets ----
 	var registered_before: PackedStringArray = EventSheetGameCatalog.registered_translations()

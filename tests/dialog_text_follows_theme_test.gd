@@ -72,6 +72,7 @@ const DIALOG_FILES: Array[String] = [
 	"res://addons/eventsheet/editor/dock/ask_window.gd",
 	"res://addons/eventsheet/editor/dock/ai_generate_window.gd",
 	"res://addons/eventsheet/editor/docs/doc_window.gd",
+	"res://addons/eventsheet/editor/dock/translation_table_view.gd",
 ]
 
 

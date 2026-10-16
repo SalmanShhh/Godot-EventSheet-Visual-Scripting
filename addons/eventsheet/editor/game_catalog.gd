@@ -118,26 +118,37 @@ static func preview_param(value: Variant) -> String:
 ## per distinct string. The cache is dropped whenever the preview changes, and capped so a long
 ## session cannot grow it without bound.
 static func pseudolocalize(text: String, expansion: float = DEFAULT_EXPANSION) -> String:
-	if text.is_empty():
-		return text
-	var cache_key: String = "%s|%s" % [expansion, text]
-	if _pseudo_cache.has(cache_key):
-		return str(_pseudo_cache[cache_key])
-	var masked: Dictionary = _mask_slots(text)
+	return pseudolocalize_all(PackedStringArray([text]), expansion)[0]
+
+
+## Many strings at once, paying the setting override (and its two tree-wide broadcasts) once for the
+## whole batch rather than once per string - what a table of forty visible lines asks for.
+static func pseudolocalize_all(texts: PackedStringArray, expansion: float = DEFAULT_EXPANSION) -> PackedStringArray:
+	var fresh: PackedStringArray = PackedStringArray()
+	for text: String in texts:
+		if not text.is_empty() and not _pseudo_cache.has("%s|%s" % [expansion, text]) and not fresh.has(text):
+			fresh.append(text)
+	if _pseudo_cache.size() + fresh.size() > PSEUDO_CACHE_LIMIT:
+		_pseudo_cache.clear()
+		fresh = texts
 	var previous_expansion: Variant = ProjectSettings.get_setting(PSEUDO_EXPANSION_SETTING, 0.0)
-	var override: bool = expansion >= 0.0 and not is_equal_approx(float(previous_expansion), expansion)
+	var override: bool = not fresh.is_empty() and expansion >= 0.0 and not is_equal_approx(float(previous_expansion), expansion)
 	if override:
 		ProjectSettings.set_setting(PSEUDO_EXPANSION_SETTING, expansion)
 		TranslationServer.reload_pseudolocalization()
-	var pseudo: String = TranslationServer.pseudolocalize(str(masked.get("text", text)))
+	for text: String in fresh:
+		if text.is_empty():
+			continue
+		var masked: Dictionary = _mask_slots(text)
+		var pseudo: String = TranslationServer.pseudolocalize(str(masked.get("text", text)))
+		_pseudo_cache["%s|%s" % [expansion, text]] = _restore_slots(pseudo, masked.get("restore", []) as Array)
 	if override:
 		ProjectSettings.set_setting(PSEUDO_EXPANSION_SETTING, previous_expansion)
 		TranslationServer.reload_pseudolocalization()
-	var result: String = _restore_slots(pseudo, masked.get("restore", []) as Array)
-	if _pseudo_cache.size() >= PSEUDO_CACHE_LIMIT:
-		_pseudo_cache.clear()
-	_pseudo_cache[cache_key] = result
-	return result
+	var results: PackedStringArray = PackedStringArray()
+	for text: String in texts:
+		results.append(str(_pseudo_cache.get("%s|%s" % [expansion, text], text)))
+	return results
 
 
 ## Replaces every {slot} with the ONE escape Godot's pseudolocalizer really passes through - a bare
@@ -193,30 +204,39 @@ static func write_pseudo_column(csv_path: String, locale: String = PSEUDO_LOCALE
 	if not is_pseudo_locale(column):
 		return {"ok": false, "message": "\"%s\" is a real language - pseudo text only ever goes in a throwaway column (qps)." % column}
 	var scan: Script = ReadingDoors.translation_scan()
-	var catalog: Dictionary = scan.read_catalog(csv_path, separator)
-	if not bool(catalog.get("ok", false)):
-		return catalog
-	var columns: PackedStringArray = catalog.get("columns", PackedStringArray())
-	if not columns.has(column):
-		columns.append(column)
-	var rows: Array = []
-	for row: Variant in (catalog.get("rows", []) as Array):
-		var record: Dictionary = (row as Dictionary).duplicate()
-		var key: String = str(record.get(scan.KEY_COLUMN, ""))
-		var source: String = str(record.get(scan.SOURCE_COLUMN, ""))
-		record[column] = pseudolocalize(source if not source.is_empty() else key, expansion)
-		var out: Dictionary = {}
+	var paths: PackedStringArray = scan.catalog_files(csv_path)
+	if paths.is_empty():
+		return scan.read_catalog(csv_path, separator)
+	var total: int = 0
+	for path: String in paths:
+		var catalog: Dictionary = scan.read_catalog(path, separator)
+		if not bool(catalog.get("ok", false)):
+			return catalog
+		var columns: PackedStringArray = catalog.get("columns", PackedStringArray())
+		if not columns.has(column):
+			columns.append(column)
+		var sources: PackedStringArray = PackedStringArray()
+		for row: Variant in (catalog.get("rows", []) as Array):
+			var source: String = str((row as Dictionary).get(scan.SOURCE_COLUMN, ""))
+			sources.append(source if not source.is_empty() else str((row as Dictionary).get(scan.KEY_COLUMN, "")))
+		var pseudo: PackedStringArray = pseudolocalize_all(sources, expansion)
+		var rows: Array = []
+		for index: int in (catalog.get("rows", []) as Array).size():
+			var record: Dictionary = (catalog["rows"][index] as Dictionary).duplicate()
+			record[column] = pseudo[index]
+			var out: Dictionary = {}
+			for name: String in columns:
+				out[name] = str(record.get(name, ""))
+			rows.append(out)
+		var column_specs: Array = []
 		for name: String in columns:
-			out[name] = str(record.get(name, ""))
-		rows.append(out)
-	var column_specs: Array = []
-	for name: String in columns:
-		column_specs.append({"name": name, "type": "String"})
-	var written: Dictionary = ReadingDoors.grid_csv().write_csv(csv_path, rows, column_specs, separator)
-	if not bool(written.get("ok", false)):
-		return written
-	return {"ok": true, "rows": rows.size(),
-		"message": "Wrote a \"%s\" pseudo column for %d key(s) in %s - switch to it with Set Language to see what clips." % [column, rows.size(), csv_path]}
+			column_specs.append({"name": name, "type": "String"})
+		var written: Dictionary = ReadingDoors.grid_csv().write_csv(path, rows, column_specs, separator)
+		if not bool(written.get("ok", false)):
+			return written
+		total += rows.size()
+	return {"ok": true, "rows": total,
+		"message": "Wrote a \"%s\" pseudo column for %d key(s) in %s - switch to it with Set Language to see what clips." % [column, total, csv_path]}
 
 
 ## True for a locale that is a test language rather than one a player ever picks. Godot standardizes
@@ -234,21 +254,17 @@ static func registered_translations() -> PackedStringArray:
 	return PackedStringArray(setting) if setting is PackedStringArray or setting is Array else PackedStringArray()
 
 
-## Registers every catalog in `folder` under Localization - the step everyone forgets after a
-## translator sends a file back. Existing entries are kept and never duplicated. `save` writes
-## project.godot; pass false to compute the list without touching the file.
+## Registers every catalog in `folder` AND the folders under it under Localization - the step
+## everyone forgets after a translator sends a file back. A project with one catalog per folder
+## (i18n/dialogue/chapter_03.csv beside i18n/ui.csv) gets a .translation per file per language from
+## Godot's importer, each next to its CSV, so the walk goes down. Existing entries are kept and never
+## duplicated. `save` writes project.godot; pass false to compute the list without touching it.
 static func register_catalogs(folder: String, save: bool = true) -> Dictionary:
-	var directory: DirAccess = DirAccess.open(folder)
-	if directory == null:
+	if DirAccess.open(folder) == null:
 		return {"ok": false, "message": "There is no folder at %s to register." % folder}
 	var registered: PackedStringArray = registered_translations()
 	var added: PackedStringArray = PackedStringArray()
-	var names: PackedStringArray = directory.get_files()
-	names.sort()
-	for name: String in names:
-		if not ["translation", "po"].has(name.get_extension().to_lower()):
-			continue
-		var path: String = "%s/%s" % [folder.rstrip("/"), name]
+	for path: String in ReadingDoors.translation_scan().files_under(folder, ["translation", "po"]):
 		if registered.has(path):
 			continue
 		registered.append(path)

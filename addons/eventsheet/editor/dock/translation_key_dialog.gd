@@ -38,9 +38,7 @@ func init(dock: Control) -> void:
 func catalog_paths() -> PackedStringArray:
 	var paths: PackedStringArray = PackedStringArray()
 	if _dock != null and _dock.get("_translation_studio") != null:
-		var studio_path: String = str(_dock._translation_studio.catalog_path())
-		if FileAccess.file_exists(studio_path):
-			paths.append(studio_path)
+		paths = EventSheetTranslationScan.catalog_files(str(_dock._translation_studio.catalog_path()))
 	for path: String in EventSheetGameCatalog.registered_translations():
 		if path.get_extension().to_lower() == "csv" and not paths.has(path):
 			paths.append(path)

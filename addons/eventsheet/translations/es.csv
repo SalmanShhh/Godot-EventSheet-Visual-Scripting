@@ -8693,3 +8693,21 @@ Words: choose what the sheet calls things,Palabras: elige cómo llama la hoja a 
 Ask for events,Pedir eventos
 "Drops the proposal. Your sentence stays, so you can reword it and ask again.","Descarta la propuesta. Tu frase se queda, así puedes reformularla y volver a preguntar."
 Generate,Generar
+Find text or key…,Buscar texto o clave…
+All lines,Todas las líneas
+Every line in this file.,Cada línea de este archivo.
+Missing only,Solo las que faltan
+"Only the lines a language still has no text for. Their empty cells read ""missing"" in amber.","Solo las líneas a las que aún les falta texto en algún idioma. Sus celdas vacías dicen ""falta"" en ámbar."
+Fake language,Idioma de prueba
+"Each line beside a fake version of it: accented and longer, to find text that gets cut off or was never sent for translation. A test column only - players are never offered it.","Cada línea junto a una versión falsa: con acentos y más larga, para encontrar texto que se corta o que nunca se envió a traducir. Solo es una columna de prueba: nunca se ofrece a los jugadores."
+"Only these rows are drawn · scroll, search and filters stay instant","Solo se dibujan estas filas · desplazar, buscar y filtrar siguen siendo instantáneos"
+The text the files at the top of the project say.,El texto que dicen los archivos de la raíz del proyecto.
+The text the files in %s say.,El texto que dicen los archivos de %s.
+No lines in %s yet - Find text fills it.,Aún no hay líneas en %s - Buscar texto lo rellena.
+Missing only: %s lines · in %s,Solo las que faltan: %s líneas · en %s
+"%s of %s lines hold ""%s"" · in %s","%s de %s líneas contienen ""%s"" · en %s"
+Lines %s to %s of %s · in %s,Líneas %s a %s de %s · en %s
+missing,falta
+Text in the game,Texto en el juego
+Fake (test only),Idioma de prueba (solo pruebas)
+Where it is said: %s,Dónde se dice: %s

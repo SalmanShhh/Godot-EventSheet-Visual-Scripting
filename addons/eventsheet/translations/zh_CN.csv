@@ -8693,3 +8693,21 @@ Words: choose what the sheet calls things,词汇：选择表格对事物的称�
 Ask for events,请求事件
 "Drops the proposal. Your sentence stays, so you can reword it and ask again.",丢弃该提议。你的句子会保留，便于改写后再次提问。
 Generate,生成
+Find text or key…,查找文本或键…
+All lines,所有行
+Every line in this file.,此文件中的每一行。
+Missing only,仅缺失
+"Only the lines a language still has no text for. Their empty cells read ""missing"" in amber.",只显示某种语言仍缺少文本的行。它们的空单元格以琥珀色显示“缺失”。
+Fake language,测试语言
+"Each line beside a fake version of it: accented and longer, to find text that gets cut off or was never sent for translation. A test column only - players are never offered it.",每行旁边显示一个假的版本：带重音且更长，用来找出会被截断或从未送去翻译的文本。这只是测试列，永远不会提供给玩家。
+"Only these rows are drawn · scroll, search and filters stay instant",只绘制这些行 · 滚动、搜索和筛选都保持即时
+The text the files at the top of the project say.,项目根目录下的文件所说的文本。
+The text the files in %s say.,%s 中的文件所说的文本。
+No lines in %s yet - Find text fills it.,%s 中还没有行 - “查找文本”会填充它。
+Missing only: %s lines · in %s,仅缺失：%s 行 · 在 %s
+"%s of %s lines hold ""%s"" · in %s",%s / %s 行包含“%s” · 在 %s
+Lines %s to %s of %s · in %s,第 %s 至 %s 行，共 %s 行 · 在 %s
+missing,缺失
+Text in the game,游戏中的文本
+Fake (test only),测试语言（仅测试）
+Where it is said: %s,出现位置：%s

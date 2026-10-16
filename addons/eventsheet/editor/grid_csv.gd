@@ -119,14 +119,14 @@ static func to_csv(rows: Array, columns: Array, separator: String = ",") -> Stri
 	var lines: PackedStringArray = PackedStringArray()
 	var header: PackedStringArray = PackedStringArray()
 	for column: Variant in columns:
-		header.append(_escape_cell(str((column as Dictionary).get("name", "")), separator))
+		header.append(escape_cell(str((column as Dictionary).get("name", "")), separator))
 	lines.append(separator.join(header))
 	for row: Variant in rows:
 		var record: Dictionary = row as Dictionary if row is Dictionary else {}
 		var cells: PackedStringArray = PackedStringArray()
 		for column: Variant in columns:
 			var column_name: String = str((column as Dictionary).get("name", ""))
-			cells.append(_escape_cell(cell_text(record.get(column_name, "")), separator))
+			cells.append(escape_cell(cell_text(record.get(column_name, "")), separator))
 		lines.append(separator.join(cells))
 	return "\n".join(lines) + "\n"
 
@@ -353,7 +353,7 @@ static func import_from_csv(csv_path: String, resource_path: String, property_na
 
 ## Doubles the quotes and wraps the cell only when it has to - a separator, a quote or a line break
 ## inside it. Everything else stays bare, so the file stays diffable.
-static func _escape_cell(text: String, separator: String) -> String:
+static func escape_cell(text: String, separator: String) -> String:
 	if text.contains(separator) or text.contains("\"") or text.contains("\n") or text.contains("\r"):
 		return "\"%s\"" % text.replace("\"", "\"\"")
 	return text

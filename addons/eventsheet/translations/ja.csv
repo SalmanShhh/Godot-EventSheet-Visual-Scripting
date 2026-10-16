@@ -8693,3 +8693,21 @@ Words: choose what the sheet calls things,言葉: シートでの呼び名を選
 Ask for events,イベントを質問
 "Drops the proposal. Your sentence stays, so you can reword it and ask again.",提案を破棄します。文は残るので、言い直してもう一度質問できます。
 Generate,生成
+Find text or key…,テキストまたはキーを検索…
+All lines,すべての行
+Every line in this file.,このファイルのすべての行。
+Missing only,未翻訳のみ
+"Only the lines a language still has no text for. Their empty cells read ""missing"" in amber.",まだテキストのない言語がある行だけ。空のセルは琥珀色で「未翻訳」と表示されます。
+Fake language,テスト用の言語
+"Each line beside a fake version of it: accented and longer, to find text that gets cut off or was never sent for translation. A test column only - players are never offered it.",各行の横に偽の版を表示します。アクセント付きで長くなり、切れてしまう文や翻訳に出し忘れた文が見つかります。テスト用の列で、プレイヤーには表示されません。
+"Only these rows are drawn · scroll, search and filters stay instant",描画するのはこの行だけ · スクロール・検索・絞り込みは即座に反応します
+The text the files at the top of the project say.,プロジェクト直下のファイルが話すテキスト。
+The text the files in %s say.,%s 内のファイルが話すテキスト。
+No lines in %s yet - Find text fills it.,%s にはまだ行がありません - 「テキストを探す」で埋まります。
+Missing only: %s lines · in %s,未翻訳のみ: %s 行 · %s
+"%s of %s lines hold ""%s"" · in %s",%s / %s 行が「%s」を含みます · %s
+Lines %s to %s of %s · in %s,%s〜%s 行目 / %s 行 · %s
+missing,未翻訳
+Text in the game,ゲーム内のテキスト
+Fake (test only),テスト用（テスト専用）
+Where it is said: %s,使われている場所: %s

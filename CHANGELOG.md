@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Added: translations in pieces, and a table that stays fast at a million lines
+
+- Translation Studio can write ONE CATALOG PER PROJECT FOLDER: name a folder instead of a .csv and a
+  key said in `res://dialogue/chapter_03/` lands in `i18n/dialogue/chapter_03.csv`, one said in
+  `res://ui/` in `i18n/ui.csv`, and the top of the project in `i18n/strings.csv`. A project that
+  already has its `i18n/strings.csv` keeps it exactly as before, and a key some catalog already holds
+  is never moved out of it. Coverage, orphans, importing a translator's file and the pseudo column
+  all work over the whole folder; an import leaves a catalog nothing landed in byte for byte alone.
+- Register Translation Catalogs now finds the `.translation` files in every folder under the one you
+  name, so each catalog Godot imports is added under Project Settings > Localization.
+- The Notes tab is a translation table: pick a catalog, find text or a key, and switch between All
+  lines, Missing only (empty cells read "missing" in amber, and the status line counts what each
+  language still lacks) and Fake language (each line beside its pseudo text, a test column players
+  never see). Only the rows on screen are drawn and a row is only read when it scrolls into view, so a 200,000-line catalog opens in about a fifth of a second.
+
 ### Changed: the third code pay-back
 
 - The dock drops its one-line forwarders: the menus, shortcuts, context menus and tests call the
