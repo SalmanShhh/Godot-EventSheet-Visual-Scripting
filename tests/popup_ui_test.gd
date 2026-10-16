@@ -80,6 +80,16 @@ static func _test_reference_primitives() -> bool:
 	all_passed = _check("metadata_badge carries its one label",
 		(badge.get_child(0) as Label).text, "Action") and all_passed
 	badge.free()
+	# A warning badge on a light panel: its words read against its own amber wash (the 4.5 contrast
+	# body text asks for), where the lifted amber they used to take read at about 2.
+	var light_panel: Color = Color("#e0e0e0")
+	var warning: Color = EventSheetPalette.COLOR_HEALTH_WARN.darkened(0.45)
+	var wash: Color = light_panel.lerp(Color(warning, 1.0), 0.18)
+	all_passed = _check("a warning badge's words read on a light panel",
+		snappedf(EventSheetEditorThemeDeriver.contrast_ratio(
+			EventSheetPopupUI.badge_text_color(warning, true), wash), 0.1) >= 4.5, true) and all_passed
+	all_passed = _check("and stay lifted on a dark one",
+		EventSheetPopupUI.badge_text_color(warning, false), warning.lightened(0.25)) and all_passed
 
 	# The table is a GRID, and its cell count is header + one row per entry, so a table that
 	# silently dropped its header row (or a column) fails here rather than on a screenshot.

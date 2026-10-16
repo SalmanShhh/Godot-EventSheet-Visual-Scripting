@@ -411,9 +411,15 @@ static func metadata_badge(text: String, tone: Color = Color(0.0, 0.0, 0.0, 0.0)
 	var label: Label = Label.new()
 	label.text = text
 	label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
-	label.add_theme_color_override("font_color", color.lightened(0.25))
+	label.add_theme_color_override("font_color", badge_text_color(color, panel_fill().get_luminance() >= 0.5))
 	panel.add_child(label)
 	return panel
+
+
+## A badge's words over its own tint: lifted off a dark panel, pressed darker into a light one, where
+## a lifted amber on an amber wash all but vanished.
+static func badge_text_color(tone: Color, light_panel: bool) -> Color:
+	return tone.darkened(0.25) if light_panel else tone.lightened(0.25)
 
 
 ## A CODE CARD - monospace text in an inset panel with a copy button in its top-right corner.

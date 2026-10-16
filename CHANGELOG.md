@@ -49,6 +49,12 @@
   Event Sheet, New Function, Edit Parameter, Save as snippet and Edit code block. Nothing they show or
   do changes.
 
+### Fixed: a warning badge reads in a light editor
+
+- A small badge beside a title (the line window's Missing, for one) lifted its words lighter than its
+  tint, so in a light editor amber words sat on an amber wash at a contrast of about 2. On a light
+  panel the words are now pressed darker than the tint (about 4.9); a dark editor is unchanged.
+
 ### Fixed: a sheet with no theme reads in a light editor
 
 - A sheet that keeps the editor-matched default look, in a light editor theme, kept the dark
