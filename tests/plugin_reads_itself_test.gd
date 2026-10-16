@@ -141,9 +141,10 @@ const KNOWN_DRIFT: PackedStringArray = []
 const DERIVED_FLOOR: Dictionary = {
 	"res://addons/eventforge/compiler/sheet_compiler.gd": 6,
 	"res://addons/eventsheet/editor/dock/multi_view_manager.gd": 11,
-	# 3: the four quick questions here now ask through the shared small prompt, so the dialog-building
-	# generic calls they named (popup_centered, add_child and the rest) left the file with them.
-	"res://addons/eventsheet/editor/dock/quick_prompt_dialogs.gd": 3,
+	# 1: the four quick questions here ask through the shared small prompt, and the group window opens
+	# through the kit's form window, so the dialog-building generic calls they named (popup_centered,
+	# add_child, confirmed.connect and the rest) left the file with them.
+	"res://addons/eventsheet/editor/dock/quick_prompt_dialogs.gd": 1,
 	"res://addons/eventsheet/editor/event_sheet_exposed_node.gd": 8,
 	"res://addons/eventsheet/editor/objects_panel.gd": 10,
 }
