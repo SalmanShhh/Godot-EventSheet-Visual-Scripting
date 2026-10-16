@@ -8756,3 +8756,15 @@ Auto and Load only variables load when their object enters the tree (_ready); Au
 "Copies any value aside under a name, in memory, for this run - the before-value for a preview, a buff or a cutscene. For memory that survives closing the game give the variable a Save choice, or use the Save System pack.",任意の値を名前を付けてメモリに取っておきます（この実行中のみ）。プレビューやバフ、カットシーンの前の値に。ゲームを閉じても残したいなら、変数に保存の選択を付けるか、Save System パックを使ってください。
 Manually,手動
 Save Choice…,保存の選択…
+Replaces %s,%s を置き換えます
+Apply writes this look into the open sheet only,適用はこの見た目を開いているシートにだけ書き込みます
+THIS FIELD,この項目
+IN FILE,ファイル内
+"Personal, not part of the theme file - these follow you, not the project.",個人設定で、テーマファイルには含まれません - プロジェクトではなくあなたに付いていきます。
+Opens the letters and the word spaces up. Works with any font.,文字と単語の間隔を広げます。どのフォントでも使えます。
+res://… .ttf or .otf - blank keeps the editor's own font,res://… .ttf または .otf - 空欄ならエディターのフォントのまま
+Save Theme Preset,テーマプリセットを保存
+Theme preset saved: %s,テーマプリセットを保存しました: %s
+Sheet variables keep the file's order,シート変数はファイルの順序のままです
+%s: ✎ opens it in the Variable dialog.,%s: ✎ で変数ダイアログで開きます。
+"%s: ✎ opens it in the Variable dialog; ▲ moves it above %s, as one undo step.",%s: ✎ で変数ダイアログで開きます。▲ で %s の上に移動します (取り消し 1 回分)。

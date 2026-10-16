@@ -12,8 +12,12 @@ class_name EventSheetInspectorDesignerDialog
 extends AcceptDialog
 
 var _column: VBoxContainer = null
-var _empty_hint: Label = null
 var _row_card_count: int = 0
+# The foot: the strip says what the row under the pointer does and the line it is in the file; the
+# note beside Close says why the sheet variables at the top carry no ▲.
+var _strip: EventSheetPopupUI.HelpStrip = null
+var _this_field: Label = null
+var _order_note: Label = null
 # Editing seams, wired by the dock: ✎ routes the entry to the shared Variable dialog, ▲ moves a
 # tree variable above the exported one before it (move_up_among_exported), and live_sheet re-fetches the CURRENT
 # sheet on refresh (the funnel replaces resources - a cached sheet reference goes stale).
@@ -39,14 +43,25 @@ func _init() -> void:
 	title = EventSheetL10n.translate("Inspector Designer")
 	ok_button_text = EventSheetL10n.translate("Close")
 	min_size = Vector2i(560, 620)
+	var body: VBoxContainer = VBoxContainer.new()
+	add_child(body)
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(520.0, 560.0)
+	scroll.custom_minimum_size = Vector2(520.0, 460.0)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	add_child(scroll)
+	body.add_child(scroll)
 	_column = VBoxContainer.new()
 	_column.add_theme_constant_override("separation", 6)
 	_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_column)
+	_strip = EventSheetPopupUI.help_strip()
+	_this_field = _strip.add_line(EventSheetL10n.translate("THIS FIELD"), true)
+	body.add_child(_strip)
+	_order_note = Label.new()
+	_order_note.text = EventSheetL10n.translate("Sheet variables keep the file's order")
+	_order_note.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
+	get_ok_button().add_sibling(_order_note)
+	_order_note.get_parent().move_child(_order_note, 0)
 
 
 ## Every Inspector-visible variable of the sheet, in Inspector order: sheet-level (dict) variables
@@ -74,7 +89,8 @@ static func collect_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 			"type_name": str(descriptor_dict.get("type", "Variant")),
 			"default_text": VariableDialog._default_display_text(descriptor_dict.get("default")),
 			"attributes": attributes,
-			"constant": false
+			"constant": false,
+			"code": EventSheetCodeEcho.line_for_descriptor(str(var_name), descriptor_dict)
 		})
 	for entry: Variant in sheet.events:
 		if entry is LocalVariable and (entry as LocalVariable).exported:
@@ -85,7 +101,8 @@ static func collect_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 				"type_name": tree_var.type_name,
 				"default_text": VariableDialog._default_display_text(tree_var.default_value),
 				"attributes": (tree_var.attributes as Dictionary).duplicate(true) if tree_var.attributes is Dictionary else {},
-				"constant": tree_var.is_constant
+				"constant": tree_var.is_constant,
+				"code": EventSheetCodeEcho.line_for(tree_var)
 			})
 	return entries
 
@@ -96,26 +113,20 @@ func rebuild_for_sheet(sheet: EventSheetResource) -> void:
 		var stale: Node = _column.get_child(0)
 		_column.remove_child(stale)
 		stale.free()
-	_empty_hint = null
 	_row_card_count = 0
+	_strip.set_line(_this_field, "")
+	_strip.set_reading("", "")
 	var handle_chips: PackedStringArray = declared_handle_chips(sheet)
 	if not handle_chips.is_empty():
 		_column.add_child(_build_handle_chips(handle_chips))
 	var entries: Array[Dictionary] = collect_entries(sheet)
+	_order_note.visible = _move_up_handler.is_valid() and entries.any(func(entry: Dictionary) -> bool: return entry.get("scope") == "global")
 	if entries.is_empty():
-		_empty_hint = Label.new()
-		_empty_hint.text = EventSheetL10n.translate("No Inspector-visible variables yet - tick \"Editable in the Inspector\" on a variable and it appears here.")
-		_empty_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		_column.add_child(_empty_hint)
+		_column.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("No Inspector-visible variables yet - tick \"Editable in the Inspector\" on a variable and it appears here.")))
 		return
-	var intro: Label = Label.new()
-	intro.text = EventSheetL10n.translate("Every Inspector-visible variable, exactly as Godot will show it. ✎ edits a variable; ▲ moves a sheet variable up (the list is in the order the file declares them).") \
-		if _edit_handler.is_valid() else EventSheetL10n.translate("Every Inspector-visible variable, exactly as Godot will show it. Edit a variable from its row in the sheet (hover it there for this same preview).")
-	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	intro.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
-	intro.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
-	_column.add_child(intro)
-	var first_tree_entry: bool = true
+	_column.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("Every Inspector-visible variable, exactly as Godot will show it. ✎ edits a variable; ▲ moves a sheet variable up (the list is in the order the file declares them).") \
+		if _edit_handler.is_valid() else EventSheetL10n.translate("Every Inspector-visible variable, exactly as Godot will show it. Edit a variable from its row in the sheet (hover it there for this same preview).")))
+	var previous_tree: String = ""
 	for entry: Dictionary in entries:
 		var card: EventSheetInspectorPreviewCard = EventSheetInspectorPreviewCard.new()
 		card.hide_caption()
@@ -129,6 +140,13 @@ func rebuild_for_sheet(sheet: EventSheetResource) -> void:
 		)
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_row_card_count += 1
+		var above: String = previous_tree
+		var said: String = row_sentence(entry, above) if _edit_handler.is_valid() else ""
+		card.mouse_entered.connect(_point_at.bind(said, str(entry.get("code", ""))))
+		if _row_card_count == 1:
+			_point_at(said, str(entry.get("code", "")))
+		if str(entry.get("scope", "")) == "tree":
+			previous_tree = str(entry.get("name"))
 		if not _edit_handler.is_valid():
 			_column.add_child(card)
 			continue
@@ -144,13 +162,29 @@ func rebuild_for_sheet(sheet: EventSheetResource) -> void:
 			var up_button: Button = Button.new()
 			up_button.text = "▲"
 			up_button.tooltip_text = EventSheetL10n.translate("Move this variable up in the Inspector (one undo step)")
-			up_button.disabled = first_tree_entry
+			up_button.disabled = above.is_empty()
 			up_button.pressed.connect(_on_move_up_pressed.bind(str(entry.get("name"))))
 			buttons.add_child(up_button)
-		if str(entry.get("scope", "")) == "tree":
-			first_tree_entry = false
+		for button: Node in buttons.get_children():
+			(button as Button).mouse_entered.connect(_point_at.bind(said, str(entry.get("code", ""))))
+			(button as Button).focus_entered.connect(_point_at.bind(said, str(entry.get("code", ""))))
 		row.add_child(buttons)
 		_column.add_child(row)
+
+
+## What the strip says about one row: ✎ opens it, and for a variable that can move, ▲ puts it above
+## `above` (the exported variable before it). Static so the suite pins the wording.
+static func row_sentence(entry: Dictionary, above: String) -> String:
+	var var_name: String = str(entry.get("name"))
+	if str(entry.get("scope", "")) != "tree" or above.is_empty():
+		return EventSheetL10n.translate("%s: ✎ opens it in the Variable dialog.") % var_name
+	return EventSheetL10n.translate("%s: ✎ opens it in the Variable dialog; ▲ moves it above %s, as one undo step.") % [var_name, above]
+
+
+## Puts one row in the strip: what its buttons do, and the line it is in the file.
+func _point_at(said: String, code: String) -> void:
+	_strip.set_line(_this_field, said)
+	_strip.set_reading("", code)
 
 
 ## The viewport handles this sheet's own script declares, as chips. They come from the FILE rather

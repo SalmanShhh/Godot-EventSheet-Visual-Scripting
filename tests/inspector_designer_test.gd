@@ -88,7 +88,7 @@ static func run() -> bool:
 		order_refused, PackedStringArray(["beta", "alpha"])) and all_passed
 	dock.free()
 
-	return _move_past_hidden() and _speaks_the_editor_language() and all_passed
+	return _move_past_hidden() and _speaks_the_editor_language() and _the_foot_explains() and all_passed
 
 
 ## ▲ moves a variable past the ones the Inspector does not show: the next one UP in the Inspector is
@@ -108,6 +108,50 @@ static func _move_past_hidden() -> bool:
 		["moving up past a hidden variable lands above the exported one", [moved, order],
 			[true, PackedStringArray(["gamma", "alpha", "cache"])]],
 		["the first exported variable stays put", EventSheetInspectorDesignerDialog.move_up_among_exported(events, "gamma"), false],
+	])
+
+
+## The foot: the strip names the row under the pointer (what ✎ and ▲ do to it, and its line in the
+## file), the note beside Close says why the sheet variables at the top have no ▲, and a name reads
+## exactly as the code writes it.
+static func _the_foot_explains() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.variables = {"health": {"type": "int", "default": 100, "exported": true}}
+	for tree_name: String in ["max_speed", "jump_strength"]:
+		var declared: LocalVariable = LocalVariable.new()
+		declared.name = tree_name
+		declared.type_name = "float"
+		declared.default_value = 220.0
+		declared.exported = true
+		sheet.events.append(declared)
+	var dialog: EventSheetInspectorDesignerDialog = EventSheetInspectorDesignerDialog.new()
+	dialog.rebuild_for_sheet(sheet)
+	var unwired: Array = [dialog._this_field.get_parent().visible, dialog._strip.in_code_value.text, dialog._order_note.visible]
+	dialog.wire_editing(func(_entry: Dictionary) -> void: pass, func(_name: String) -> void: pass, Callable())
+	dialog.rebuild_for_sheet(sheet)
+	var ups: Array = []
+	var names: Array = []
+	for button: Node in dialog.find_children("*", "Button", true, false):
+		if (button as Button).text == "▲":
+			ups.append((button as Button).disabled)
+	for card: Node in dialog.find_children("*", "EventSheetInspectorPreviewCard", true, false):
+		names.append(((card as Control).find_children("*", "Label", true, false)[1] as Label).text)
+	var cards: Array = dialog.find_children("*", "EventSheetInspectorPreviewCard", true, false)
+	(cards[2] as Control).mouse_entered.emit()
+	var pointed: Array = [dialog._this_field.text, dialog._strip.in_code_value.text]
+	var wired_note: bool = dialog._order_note.visible
+	dialog.free()
+	return SUPPORT.pins("inspector_designer_test", [
+		["unwired, the strip has no buttons to explain, only the first row's line, and no order note", unwired,
+			[false, "@export var health: int = 100", false]],
+		["wired, the note says why the sheet variables have no ▲", wired_note, true],
+		["only the tree variables move, and the first of them cannot", ups, [true, false]],
+		["the names read exactly as the code writes them", names, ["health", "max_speed", "jump_strength"]],
+		["pointing at a row says what its buttons do and the line it is in the file", pointed,
+			["jump_strength: ✎ opens it in the Variable dialog; ▲ moves it above max_speed, as one undo step.",
+				"@export var jump_strength: float = 220.0"]],
+		["a row that cannot move says only what ✎ does", EventSheetInspectorDesignerDialog.row_sentence({"name": "health", "scope": "global"}, ""),
+			"health: ✎ opens it in the Variable dialog."],
 	])
 
 

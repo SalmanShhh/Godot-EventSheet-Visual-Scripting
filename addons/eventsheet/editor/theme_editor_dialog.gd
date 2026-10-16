@@ -4,21 +4,28 @@
 # exported properties (Color → color picker, float/int → spinbox, bool → checkbox), so new
 # tokens added to the style classes appear here automatically - no editor changes needed.
 # Edits write into a duplicated working style and repaint live; "Apply" assigns it to the
-# current sheet, "Save As Preset…" writes a shareable .tres.
+# current sheet, "Save As Preset…" writes a shareable .tres. Every section folds, a token row is named
+# as the code names it, and the strip at the foot says what the token under the pointer does.
 @tool
 class_name EventSheetThemeEditor
 extends RefCounted
 
-var _dialog: AcceptDialog = null
+var _dialog: ConfirmationDialog = null
 var _preview_viewport: EventSheetViewport = null
 var _working_style: EventSheetEditorStyle = null
 var _dock: Control = null
-var _save_dialog: FileDialog = null
 # Quick Style: derive the whole palette from a few colours (no token-by-token tweaking).
 var _detail_form: VBoxContainer = null
 var _quick_base: ColorPickerButton = null
 var _quick_accent: ColorPickerButton = null
 var _quick_font: ColorPickerButton = null
+# The foot: the strip names the token under the pointer, the note says what Apply and a save did.
+var _strip: EventSheetPopupUI.HelpStrip = null
+var _this_field: Label = null
+var _in_file: Label = null
+var _note: EventSheetPopupUI.StateNote = null
+var _focus_name: String = ""
+var _focus_resource: Resource = null
 
 
 ## Opens the theme editor seeded from the dock's active style (or defaults).
@@ -27,7 +34,7 @@ func open(dock: Control, base_style: EventSheetEditorStyle) -> void:
 	_working_style = duplicate_style(base_style)
 	_ensure_dialog()
 	_preview_viewport.set_sheet(build_sample_sheet(_working_style))
-	_dialog.popup_centered(Vector2i(1080, 620))
+	_dialog.popup_centered(Vector2i(EventSheetPalette.scaled(1080), EventSheetPalette.scaled(640)))
 
 
 ## Deep-duplicates a style so live edits never touch the original resource.
@@ -36,24 +43,13 @@ static func duplicate_style(base_style: EventSheetEditorStyle) -> EventSheetEdit
 	# a bare resource, is what the workbench has to open on. Otherwise the preview shows a look the
 	# user is not looking at, and every token that ships with no opinion (all of the Manual's) opens
 	# as an empty swatch, which reads as broken rather than as "follow the editor".
-	var style: EventSheetEditorStyle = (
-		base_style.duplicate(true)
-		if base_style != null
-		else EventSheetThemeDerivation.fill_derived_tokens(
-			EventSheetGodotTheme.adapt_to_editor(EventSheetEditorStyle.new())
-		)
-	)
-	if style.event_style == null:
-		style.event_style = EventSheetEventStyle.new()
-	if style.condition_style == null:
-		style.condition_style = EventSheetElementStyle.new()
-	if style.action_style == null:
-		style.action_style = EventSheetElementStyle.new()
-	# A preset saved before the reading / chrome / Manual tokens existed carries no sub-style for
-	# them; seeding here means every section of the form has something to edit, whatever the theme
-	# was written against.
+	# Missing sub-styles are seeded first, as the sheet seeds them, so a preset saved before the
+	# reading / chrome / Manual tokens existed still has every section to edit.
+	var style: EventSheetEditorStyle = base_style.duplicate(true) if base_style != null else EventSheetEditorStyle.new()
 	style.ensure_defaults()
-	return style
+	if base_style != null:
+		return style
+	return EventSheetThemeDerivation.fill_derived_tokens(EventSheetGodotTheme.adapt_to_editor(style))
 
 
 ## The sample sheet shown in the preview: one of everything the theme touches.
@@ -64,22 +60,12 @@ static func build_sample_sheet(style: EventSheetEditorStyle) -> EventSheetResour
 	var group: EventGroup = EventGroup.new()
 	group.name = "Gameplay"
 	group.group_name = "Gameplay"
-	var event: EventRow = EventRow.new()
-	event.trigger_provider_id = "Core"
-	event.trigger_id = "OnProcess"
-	var condition: ACECondition = ACECondition.new()
-	condition.provider_id = "Core"
-	condition.ace_id = "IsOnFloor"
-	event.conditions.append(condition)
-	var negated: ACECondition = ACECondition.new()
-	negated.provider_id = "Core"
-	negated.ace_id = "IsOnFloor"
+	var event: EventRow = _sample_event("OnProcess")
+	event.conditions.append(_core(ACECondition.new(), "IsOnFloor"))
+	var negated: ACECondition = _core(ACECondition.new(), "IsOnFloor")
 	negated.negated = true
 	event.conditions.append(negated)
-	var action: ACEAction = ACEAction.new()
-	action.provider_id = "Core"
-	action.ace_id = "QueueFree"
-	event.actions.append(action)
+	event.actions.append(_core(ACEAction.new(), "QueueFree"))
 	var note: CommentRow = CommentRow.new()
 	note.text = "Sub-event comment"
 	event.sub_events.append(note)
@@ -99,12 +85,8 @@ static func build_sample_sheet(style: EventSheetEditorStyle) -> EventSheetResour
 	sample_signal.signal_name = "hit"
 	sample_signal.params = PackedStringArray(["damage: int"])
 	sheet.events.append(sample_signal)
-	var tint_event: EventRow = EventRow.new()
-	tint_event.trigger_provider_id = "Core"
-	tint_event.trigger_id = "OnReady"
-	var tint: ACEAction = ACEAction.new()
-	tint.provider_id = "Core"
-	tint.ace_id = "SetModulate"
+	var tint_event: EventRow = _sample_event("OnReady")
+	var tint: ACEAction = _core(ACEAction.new(), "SetModulate")
 	tint.codegen_template = "modulate = {color}"
 	tint.params = {"color": "Color(0.4, 0.7, 1.0, 1.0)"}
 	tint.comment = "Cell note (⊳)"
@@ -124,14 +106,9 @@ static func build_sample_sheet(style: EventSheetEditorStyle) -> EventSheetResour
 	var language_sample: RawCodeRow = RawCodeRow.new()
 	language_sample.code = "class Sample:\n\tvar speed: float = 1.0"
 	sheet.events.append(language_sample)
-	var disabled_event: EventRow = EventRow.new()
-	disabled_event.trigger_provider_id = "Core"
-	disabled_event.trigger_id = "OnReady"
+	var disabled_event: EventRow = _sample_event("OnReady")
 	disabled_event.enabled = false
-	var disabled_action: ACEAction = ACEAction.new()
-	disabled_action.provider_id = "Core"
-	disabled_action.ace_id = "QueueFree"
-	disabled_event.actions.append(disabled_action)
+	disabled_event.actions.append(_core(ACEAction.new(), "QueueFree"))
 	sheet.events.append(disabled_event)
 	# PUBLISHED VERBS live in sheet.functions - a separate array from sheet.events - and render through
 	# build_trailing_verb_rows, so they need no anchor row here. One verb per ROLE, because a role's
@@ -146,21 +123,11 @@ static func build_sample_sheet(style: EventSheetEditorStyle) -> EventSheetResour
 	action_verb.expose_as_ace = true
 	action_verb.is_async = true
 	action_verb.featured = true
-	var where_param: ACEParam = ACEParam.new()
-	where_param.id = "where"
-	where_param.type_name = "Vector2"
-	action_verb.params.append(where_param)
-	var kind_param: ACEParam = ACEParam.new()
-	kind_param.id = "pickup_kind"
-	kind_param.type_name = "String"
-	kind_param.gdscript_default = "\"coin\""
-	action_verb.params.append(kind_param)
+	action_verb.params.append(_sample_param("where", "Vector2"))
+	action_verb.params.append(_sample_param("pickup_kind", "String", "\"coin\""))
 	# A body row, so the verb's open block (and the in-body "Always" cell) restyles live too.
 	var verb_body_event: EventRow = EventRow.new()
-	var verb_body_action: ACEAction = ACEAction.new()
-	verb_body_action.provider_id = "Core"
-	verb_body_action.ace_id = "QueueFree"
-	verb_body_event.actions.append(verb_body_action)
+	verb_body_event.actions.append(_core(ACEAction.new(), "QueueFree"))
 	action_verb.events.append(verb_body_event)
 	sheet.functions.append(action_verb)
 	var condition_verb: EventFunction = EventFunction.new()
@@ -169,10 +136,7 @@ static func build_sample_sheet(style: EventSheetEditorStyle) -> EventSheetResour
 	condition_verb.description = "Answers whether the player can pay a price."
 	condition_verb.return_type = TYPE_BOOL
 	condition_verb.expose_as_ace = true
-	var cost_param: ACEParam = ACEParam.new()
-	cost_param.id = "cost"
-	cost_param.type_name = "int"
-	condition_verb.params.append(cost_param)
+	condition_verb.params.append(_sample_param("cost", "int"))
 	sheet.functions.append(condition_verb)
 	var expression_verb: EventFunction = EventFunction.new()
 	expression_verb.function_name = "distance_to_goal"
@@ -184,7 +148,31 @@ static func build_sample_sheet(style: EventSheetEditorStyle) -> EventSheetResour
 	return sheet
 
 
-## Plain-language descriptions of what each theme token does, shown as a hover tooltip on its row.
+## A sample event started by one of the core triggers.
+static func _sample_event(trigger_id: String) -> EventRow:
+	var event: EventRow = EventRow.new()
+	event.trigger_provider_id = "Core"
+	event.trigger_id = trigger_id
+	return event
+
+
+## A sample condition or action cell naming one of the core verbs.
+static func _core(cell: Resource, ace_id: String) -> Resource:
+	cell.set("provider_id", "Core")
+	cell.set("ace_id", ace_id)
+	return cell
+
+
+## A sample published-function parameter.
+static func _sample_param(param_id: String, type_name: String, default_code: String = "") -> ACEParam:
+	var param: ACEParam = ACEParam.new()
+	param.id = param_id
+	param.type_name = type_name
+	param.gdscript_default = default_code
+	return param
+
+
+## Plain-language descriptions of what each theme token does, shown in the strip when its row is pointed at.
 ## A token not listed here falls back to its humanized name (still readable, just less descriptive).
 const _TOKEN_DESCRIPTIONS := {
 	"sheet_background_color": "The colour behind the whole sheet, outside the rows.",
@@ -438,7 +426,7 @@ const _TOKEN_DESCRIPTIONS := {
 }
 
 
-## The hover description for a token (falls back to its humanized name).
+## The description for a token (falls back to its humanized name).
 static func _token_description(token_name: String) -> String:
 	return str(_TOKEN_DESCRIPTIONS.get(token_name, token_name.capitalize()))
 
@@ -463,10 +451,10 @@ static func editable_tokens(style_resource: Resource) -> Array[Dictionary]:
 
 
 ## The spin box range for one number token: the token's own @export_range when it declares one
-## (min, max and step), otherwise a wide default. A float token with no range steps 0.5, an int 1.
+## (min, max and step), otherwise a wide default. A float token with no range steps 0.01, an int 1.
 static func spin_range(token: Dictionary) -> Dictionary:
 	var is_float: bool = int(token.get("type")) == TYPE_FLOAT
-	var spin_bounds: Dictionary = {"min": -4096.0, "max": 4096.0, "step": 0.5 if is_float else 1.0}
+	var spin_bounds: Dictionary = {"min": -4096.0, "max": 4096.0, "step": 0.01 if is_float else 1.0}
 	if int(token.get("hint", PROPERTY_HINT_NONE)) != PROPERTY_HINT_RANGE:
 		return spin_bounds
 	var parts: PackedStringArray = str(token.get("hint_string", "")).split(",")
@@ -486,85 +474,97 @@ static func apply_token(style_resource: Resource, token_name: String, value: Var
 	return true
 
 
+## What a save to `path` will do, for the foot of the save dialog: it names the file it replaces, and
+## says nothing for a new one.
+static func save_note(path: String) -> String:
+	if path.get_file().is_empty() or not FileAccess.file_exists(path):
+		return ""
+	return EventSheetL10n.translate("Replaces %s") % path.get_file()
+
+
+## The line a token writes into a saved preset, as the .tres spells it.
+static func file_line(style_resource: Resource, token_name: String) -> String:
+	return "%s = %s" % [token_name, var_to_str(style_resource.get(token_name))]
+
+
 func _ensure_dialog() -> void:
 	if _dialog != null:
 		return
-	_dialog = AcceptDialog.new()
-	_dialog.title = "Theme Editor"
-	_dialog.ok_button_text = "Close"
+	var parts: Dictionary = EventSheetPopupUI.action_window(EventSheetL10n.translate("Theme Editor"),
+		EventSheetL10n.translate("Apply To Current Sheet"), EventSheetL10n.translate("Close"), Vector2i(1000, 600), _dock)
+	_dialog = parts["window"]
+	_dialog.confirmed.connect(_apply_to_sheet)
+	_note = parts["note"]
+	# Save As Preset… sits between the note and the two closing buttons.
+	var save_button: Button = _dialog.add_button(EventSheetL10n.translate("Save As Preset…"), false, "save_preset")
+	save_button.get_parent().move_child(save_button, _note.get_index() + 1)
+	save_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_dialog.custom_action.connect(func(_action: StringName) -> void: _open_save_dialog())
+	_note.say(EventSheetL10n.translate("Apply writes this look into the open sheet only"), EventSheetPopupUI.TONE_WARNING)
 	var split: HSplitContainer = HSplitContainer.new()
-	split.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	# Both panes carry REAL minimum sizes (field-test catch: with none, the dialog
-	# auto-sized to the preview alone and the token controls collapsed to a sliver -
-	# the editor looked like "just highlighting things").
-	split.split_offset = 560
-	split.custom_minimum_size = Vector2(1000.0, 540.0)
-
+	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var preview_scroll: ScrollContainer = ScrollContainer.new()
-	preview_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	preview_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	preview_scroll.custom_minimum_size = Vector2(420.0, 0.0)
+	preview_scroll.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(560.0), EventSheetPalette.scaled_f(440.0))
 	_preview_viewport = EventSheetViewport.new()
 	preview_scroll.add_child(_preview_viewport)
 	split.add_child(preview_scroll)
-
 	var form_scroll: ScrollContainer = ScrollContainer.new()
-	form_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	form_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	form_scroll.custom_minimum_size = Vector2(380.0, 0.0)
+	form_scroll.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(460.0), 0.0)
 	form_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	var form: VBoxContainer = VBoxContainer.new()
+	var form: VBoxContainer = EventSheetPopupUI.form_box()
 	form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	# Quick Style (whole-palette recolour) on top, then how the letters are SHAPED, then the
 	# per-token detail form below both.
 	_build_quick_style(form)
 	_build_reading_comfort(form)
-	_detail_form = VBoxContainer.new()
-	_detail_form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_detail_form = EventSheetPopupUI.form_box()
 	form.add_child(_detail_form)
-	_rebuild_detail_form()
-	var buttons: HBoxContainer = HBoxContainer.new()
-	var apply_button: Button = Button.new()
-	apply_button.text = "Apply To Current Sheet"
-	apply_button.pressed.connect(_apply_to_sheet)
-	buttons.add_child(apply_button)
-	var save_button: Button = Button.new()
-	save_button.text = "Save As Preset…"
-	save_button.pressed.connect(_open_save_dialog)
-	buttons.add_child(save_button)
-	form.add_child(buttons)
 	form_scroll.add_child(form)
 	split.add_child(form_scroll)
-	_dialog.add_child(split)
-	_dock.add_child(_dialog)
+	var box: VBoxContainer = parts["box"]
+	box.add_child(split)
+	# The strip says what the token under the pointer does and the line it writes into a preset.
+	_strip = EventSheetPopupUI.help_strip()
+	_this_field = _strip.add_line(EventSheetL10n.translate("THIS FIELD"), true)
+	_in_file = _strip.add_line(EventSheetL10n.translate("IN FILE"))
+	_in_file.add_theme_font_override("font", _strip.in_code_value.get_theme_font("font"))
+	box.add_child(_strip)
+	_rebuild_detail_form()
+
+
+## A section of the form that folds under its title, open or folded to start.
+static func _fold(title: String, content: Control, open: bool) -> FoldableContainer:
+	var fold: FoldableContainer = FoldableContainer.new()
+	fold.title = title
+	fold.folded = not open
+	fold.add_child(content)
+	return fold
 
 
 ## Quick Style - three colours drive the whole palette (base tone, accent, text). One
 ## button regenerates every colour token via EventSheetGodotTheme.apply, so re-skinning is
 ## "pick a colour, click Generate" instead of tuning thirty fields by hand.
 func _build_quick_style(form: VBoxContainer) -> void:
-	# Quick Style as a themed inset card with an accent header (consistent with the token sections below).
 	var quick_box: VBoxContainer = EventSheetPopupUI.form_box()
-	quick_box.add_child(EventSheetPopupUI.hint_label("Pick a base + accent, then Generate. Fine-tune individual tokens below."))
-	_quick_base = _quick_color_row(quick_box, "Base (background tone)", Color("#252525"))
-	_quick_accent = _quick_color_row(quick_box, "Accent (groups, selection)", Color("#569eff"))
-	_quick_font = _quick_color_row(quick_box, "Text", Color("#ced0d2"))
+	quick_box.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("Pick a base + accent, then Generate. Fine-tune individual tokens below.")))
+	_quick_base = _quick_color_row(quick_box, EventSheetL10n.translate("Base (background tone)"), Color("#252525"))
+	_quick_accent = _quick_color_row(quick_box, EventSheetL10n.translate("Accent (groups, selection)"), Color("#569eff"))
+	_quick_font = _quick_color_row(quick_box, EventSheetL10n.translate("Text"), Color("#ced0d2"))
 	var buttons: HBoxContainer = HBoxContainer.new()
-	var generate: Button = Button.new()
-	generate.text = "Generate Theme"
-	generate.tooltip_text = "Rebuild every colour token from the three colours above."
-	generate.pressed.connect(_generate_quick_style)
-	buttons.add_child(generate)
 	var reset: Button = Button.new()
-	reset.text = "Reset To Default"
-	reset.tooltip_text = "Restore the bundled default look."
+	reset.text = EventSheetL10n.translate("Reset To Default")
+	reset.tooltip_text = EventSheetL10n.translate("Restore the bundled default look.")
 	reset.pressed.connect(_reset_to_default)
 	buttons.add_child(reset)
+	var generate: Button = Button.new()
+	generate.text = EventSheetL10n.translate("Generate Theme")
+	generate.tooltip_text = EventSheetL10n.translate("Rebuild every colour token from the three colours above.")
+	generate.pressed.connect(_generate_quick_style)
+	buttons.add_child(generate)
 	quick_box.add_child(buttons)
-	form.add_child(EventSheetPopupUI.titled_card("Quick Style - recolour everything at once", quick_box))
+	form.add_child(_fold(EventSheetL10n.translate("Quick Style - recolour everything at once"), quick_box, true))
 
 
-## One labelled colour picker, returned so Quick Style can read it back on Generate.
 ## How the letters are shaped, as opposed to what colour they are. Two settings, both personal
 ## rather than part of the theme file: they follow the reader from project to project instead of
 ## arriving in a teammate's checkout inside a saved preset.
@@ -576,113 +576,90 @@ func _build_quick_style(form: VBoxContainer) -> void:
 ## the two usually meant) point the field at it.
 func _build_reading_comfort(form: VBoxContainer) -> void:
 	var box: VBoxContainer = EventSheetPopupUI.form_box()
-	box.add_child(EventSheetPopupUI.hint_label("Personal, not part of the theme file - these follow you, not the project."))
+	box.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("Personal, not part of the theme file - these follow you, not the project.")))
 	var dyslexia_check: CheckBox = CheckBox.new()
-	dyslexia_check.text = "Dyslexia-friendly text"
-	dyslexia_check.tooltip_text = "Opens the letters and the word spaces up. Works with any font."
+	dyslexia_check.text = EventSheetL10n.translate("Dyslexia-friendly text")
+	dyslexia_check.tooltip_text = EventSheetL10n.translate("Opens the letters and the word spaces up. Works with any font.")
 	dyslexia_check.button_pressed = EventSheetAccessibility.dyslexia_friendly_text()
 	dyslexia_check.toggled.connect(func(pressed: bool) -> void:
 		EventSheetAccessibility.set_dyslexia_friendly_text(pressed)
 		_apply_to_sheet())
 	box.add_child(dyslexia_check)
 	var font_edit: LineEdit = LineEdit.new()
-	font_edit.placeholder_text = "res://… .ttf or .otf - blank keeps the editor's own font"
+	font_edit.placeholder_text = EventSheetL10n.translate("res://… .ttf or .otf - blank keeps the editor's own font")
 	font_edit.text = EventSheetAccessibility.reading_font_path()
 	font_edit.text_submitted.connect(func(path: String) -> void:
 		EventSheetAccessibility.set_reading_font_path(path)
 		_apply_to_sheet())
-	box.add_child(EventSheetPopupUI.form_row("Reading font", font_edit))
-	form.add_child(EventSheetPopupUI.titled_card("Reading Comfort", box))
+	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Reading font"), font_edit))
+	form.add_child(_fold(EventSheetL10n.translate("Reading Comfort"), box, true))
 
 
+## One labelled colour picker, returned so Quick Style can read it back on Generate.
 func _quick_color_row(form: VBoxContainer, label_text: String, default_color: Color) -> ColorPickerButton:
-	var row: HBoxContainer = HBoxContainer.new()
-	var label: Label = Label.new()
-	label.text = label_text
-	label.custom_minimum_size = Vector2(230.0, 0.0)
-	row.add_child(label)
 	var picker: ColorPickerButton = ColorPickerButton.new()
 	picker.color = default_color
-	picker.custom_minimum_size = Vector2(72.0, 0.0)
-	row.add_child(picker)
-	form.add_child(row)
+	form.add_child(EventSheetPopupUI.form_row(label_text, picker))
 	return picker
 
 
 ## Derives the two dark tones from the base, regenerates the whole sheet palette, and
 ## refreshes the detail form + live preview.
 func _generate_quick_style() -> void:
-	if _working_style == null:
-		return
 	var base: Color = _quick_base.color
 	EventSheetGodotTheme.apply(_working_style, base, base.darkened(0.15), base.darkened(0.25), _quick_accent.color, _quick_font.color)
-	_rebuild_detail_form()
-	if _preview_viewport != null:
-		_preview_viewport.set_sheet(build_sample_sheet(_working_style))
+	_reset_to_default(_working_style)
 
 
-## Restores the bundled default look - a clean starting point.
-func _reset_to_default() -> void:
-	_working_style = duplicate_style(null)
-	if _working_style.has_method("ensure_defaults"):
-		_working_style.call("ensure_defaults")
+## Restores the bundled default look - a clean starting point - or shows `style` afresh.
+func _reset_to_default(style: EventSheetEditorStyle = duplicate_style(null)) -> void:
+	_working_style = style
 	_rebuild_detail_form()
-	if _preview_viewport != null:
-		_preview_viewport.set_sheet(build_sample_sheet(_working_style))
+	_preview_viewport.set_sheet(build_sample_sheet(_working_style))
 
 
 ## (Re)builds the reflective per-token form into _detail_form, clearing any prior fields so
-## the spinboxes/pickers always reflect the current (possibly just-regenerated) style.
+## the spinboxes/pickers always reflect the current (possibly just-regenerated) style. The token
+## the strip was describing is described again from the rebuilt style.
 func _rebuild_detail_form() -> void:
-	if _detail_form == null:
-		return
 	for child: Node in _detail_form.get_children():
 		_detail_form.remove_child(child)
 		child.queue_free()
-	_build_section(_detail_form, "Editor (hover, selection, lanes)", _working_style)
-	_build_section(_detail_form, "Sheet & rows (event style)", _working_style.event_style)
-	_build_section(_detail_form, "Condition cells", _working_style.condition_style)
-	_build_section(_detail_form, "Action cells", _working_style.action_style)
-	_build_section(_detail_form, "Reading marks - chips, badges, guides, stripes", _working_style.reading_style)
-	_build_section(_detail_form, "Bars around the sheet - Object bar, status strip, tab title", _working_style.chrome_style)
-	_build_section(_detail_form, "Manual pages", _working_style.manual_style)
+	_focus_resource = null
+	_build_section(_detail_form, EventSheetL10n.translate("Editor (hover, selection, lanes)"), _working_style, true)
+	_build_section(_detail_form, EventSheetL10n.translate("Sheet & rows (event style)"), _working_style.event_style, true)
+	_build_section(_detail_form, EventSheetL10n.translate("Condition cells"), _working_style.condition_style, false)
+	_build_section(_detail_form, EventSheetL10n.translate("Action cells"), _working_style.action_style, false)
+	_build_section(_detail_form, EventSheetL10n.translate("Reading marks - chips, badges, guides, stripes"), _working_style.reading_style, false)
+	_build_section(_detail_form, EventSheetL10n.translate("Bars around the sheet - Object bar, status strip, tab title"), _working_style.chrome_style, false)
+	_build_section(_detail_form, EventSheetL10n.translate("Manual pages"), _working_style.manual_style, false)
 
 
-## One labeled control per editable token, reflectively.
-func _build_section(form: VBoxContainer, title: String, style_resource: Resource) -> void:
+## One row per editable token, reflectively, in a section that folds. A row is named exactly as the
+## code names the token, and pointing at it puts its description and its preset line in the strip.
+func _build_section(form: VBoxContainer, title: String, style_resource: Resource, open: bool) -> void:
 	# A section with nothing to edit is not shown at all. The top-level style carries only the
 	# sub-styles themselves, so its card came up empty under a heading that promised hover and
 	# selection colours - a designer reasonably read that as "the tokens failed to load".
 	var section_tokens: Array[Dictionary] = editable_tokens(style_resource)
 	if section_tokens.is_empty():
 		return
-	# Each style section is a themed inset card with an accent header (matches the picker's panels).
 	var section_box: VBoxContainer = EventSheetPopupUI.form_box()
+	var mono: Font = EventSheetPopupUI.editor_font("doc_source")
 	for token: Dictionary in section_tokens:
 		var token_name: String = str(token.get("name"))
-		var description: String = _token_description(token_name)
-		var row: HBoxContainer = HBoxContainer.new()
-		row.tooltip_text = description
-		var label: Label = Label.new()
-		label.text = token_name.capitalize()
-		label.custom_minimum_size = Vector2(230.0, 0.0)
-		label.tooltip_text = description
-		label.mouse_filter = Control.MOUSE_FILTER_PASS
-		row.add_child(label)
+		var field: Control = null
 		match int(token.get("type")):
 			TYPE_COLOR:
 				var picker: ColorPickerButton = ColorPickerButton.new()
 				picker.color = style_resource.get(token_name)
-				picker.custom_minimum_size = Vector2(72.0, 0.0)
-				picker.tooltip_text = description
 				picker.color_changed.connect(func(value: Color) -> void: _on_token_edited(style_resource, token_name, value))
-				row.add_child(picker)
+				field = picker
 			TYPE_BOOL:
 				var check: CheckBox = CheckBox.new()
 				check.button_pressed = bool(style_resource.get(token_name))
-				check.tooltip_text = description
 				check.toggled.connect(func(value: bool) -> void: _on_token_edited(style_resource, token_name, value))
-				row.add_child(check)
+				field = check
 			_:
 				var spin: SpinBox = SpinBox.new()
 				var spin_bounds: Dictionary = spin_range(token)
@@ -690,11 +667,29 @@ func _build_section(form: VBoxContainer, title: String, style_resource: Resource
 				spin.min_value = float(spin_bounds["min"])
 				spin.max_value = float(spin_bounds["max"])
 				spin.value = float(style_resource.get(token_name))
-				spin.tooltip_text = description
 				spin.value_changed.connect(func(value: float) -> void: _on_token_edited(style_resource, token_name, value if int(token.get("type")) == TYPE_FLOAT else int(value)))
-				row.add_child(spin)
+				field = spin
+		var row: HBoxContainer = EventSheetPopupUI.form_row(token_name, field)
+		# The name is the code's own, so it is never translated.
+		row.get_child(0).auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+		if mono != null:
+			row.get_child(0).add_theme_font_override("font", mono)
+		for part: Control in [row, row.get_child(0), field]:
+			part.mouse_entered.connect(_focus_token.bind(style_resource, token_name))
+		field.focus_entered.connect(_focus_token.bind(style_resource, token_name))
+		if _focus_resource == null and (_focus_name.is_empty() or _focus_name == token_name):
+			_focus_token(style_resource, token_name)
 		section_box.add_child(row)
-	form.add_child(EventSheetPopupUI.titled_card(title, section_box))
+	form.add_child(_fold(title, section_box, open))
+
+
+## Puts one token in the strip: what it does, and the line it writes into a saved preset.
+func _focus_token(style_resource: Resource, token_name: String) -> void:
+	_focus_name = token_name
+	_focus_resource = style_resource
+	if _strip != null:
+		_strip.set_line(_this_field, "%s: %s" % [token_name, EventSheetL10n.translate(_token_description(token_name))])
+		_strip.set_line(_in_file, file_line(style_resource, token_name))
 
 
 func _on_token_edited(style_resource: Resource, token_name: String, value: Variant) -> void:
@@ -702,6 +697,7 @@ func _on_token_edited(style_resource: Resource, token_name: String, value: Varia
 		# Rebuild the sample sheet so BOTH colour and STRUCTURAL tokens (row height, corner radii, lane
 		# widths, line thickness) show live - a plain repaint keeps the old cached layout.
 		_preview_viewport.set_sheet(build_sample_sheet(_working_style))
+		_focus_token(style_resource, token_name)
 
 
 func _apply_to_sheet() -> void:
@@ -709,25 +705,33 @@ func _apply_to_sheet() -> void:
 		_dock.call("apply_theme_style", _working_style.duplicate(true))
 
 
+## The editor's own save dialog, with one line at its foot naming the file a Save would replace.
 func _open_save_dialog() -> void:
-	if _save_dialog == null:
-		_save_dialog = FileDialog.new()
-		_save_dialog.title = "Save Theme Preset"
-		_save_dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
-		_save_dialog.access = FileDialog.ACCESS_RESOURCES
-		_save_dialog.filters = PackedStringArray(["*.tres ; EventSheetEditorStyle"])
-		_save_dialog.file_selected.connect(save_preset)
-		_dialog.add_child(_save_dialog)
-	_save_dialog.popup_centered(Vector2i(720, 480))
+	var browser: ConfirmationDialog = EventSheetPopupUI.browse_file(_dialog, PackedStringArray(["*.tres ; EventSheetEditorStyle"]),
+		func(path: String) -> void: save_preset(path), {"title": EventSheetL10n.translate("Save Theme Preset"), "save": true, "size": Vector2i(720, 480)})
+	if browser == null:
+		return
+	var reason: Label = Label.new()
+	reason.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	reason.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_WARNING))
+	browser.call("get_vbox").add_child(reason)
+	# The dialog reports no signal when a file in its list is clicked, so the line is re-read on a
+	# short timer while the dialog is up.
+	var poll: Timer = Timer.new()
+	poll.wait_time = 0.2
+	poll.autostart = true
+	poll.timeout.connect(func() -> void: reason.text = save_note(str(browser.get("current_path"))))
+	browser.add_child(poll)
 
 
-## Saves the working style as a shareable preset .tres. Returns OK on success.
+## Saves the working style as a shareable preset .tres, and says how it went in the window's foot and
+## on the status bar. Returns OK on success.
 func save_preset(path: String) -> Error:
-	var to_save: EventSheetEditorStyle = _working_style.duplicate(true)
-	var error: Error = ResourceSaver.save(to_save, path)
+	var error: Error = ResourceSaver.save(_working_style.duplicate(true), path)
+	var said: String = EventSheetL10n.translate("Theme preset saved: %s") % path.get_file() if error == OK \
+		else EventSheetL10n.translate("Theme preset could not be saved: %s (%s)") % [path.get_file(), error_string(error)]
+	if _note != null:
+		_note.say(said, EventSheetPopupUI.TONE_OK if error == OK else EventSheetPopupUI.TONE_ERROR)
 	if _dock != null and _dock.has_method("_set_status"):
-		if error == OK:
-			_dock.call("_set_status", "Theme preset saved: %s" % path.get_file())
-		else:
-			_dock.call("_set_status", EventSheetL10n.translate("Theme preset could not be saved: %s (%s)") % [path.get_file(), error_string(error)], true)
+		_dock.call("_set_status", said, error != OK)
 	return error

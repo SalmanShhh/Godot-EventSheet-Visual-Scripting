@@ -44,6 +44,7 @@ const DIALOG_FILES: Array[String] = [
 	"res://addons/eventsheet/editor/dock/insert_object_dialog.gd",
 	"res://addons/eventsheet/editor/dock/class_properties.gd",
 	"res://addons/eventsheet/editor/inspector_designer_dialog.gd",
+	"res://addons/eventsheet/editor/theme_editor_dialog.gd",
 	"res://addons/eventsheet/editor/dock/start_page.gd",
 	"res://addons/eventsheet/editor/dock/tour_window.gd",
 	"res://addons/eventsheet/editor/new_sheet_dialog.gd",

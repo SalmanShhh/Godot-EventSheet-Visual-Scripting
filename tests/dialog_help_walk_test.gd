@@ -46,19 +46,23 @@ const DIALOG_CALLS: Array[String] = ["ConfirmationDialog.new()", "AcceptDialog.n
 ## The dialogs with NO reads-as line, and why: the Sheet type dialog's preview IS the head of the
 ## sheet it is about to write, so a sentence beside it would be the same words twice; the Words page
 ## draws its live preview and Ask its Proposed card, which are their reading; and the shortcuts window
-## and Generate write no row they could name before it exists. Deliberate, and therefore written down
-## rather than quietly passing.
+## and Generate write no row they could name before it exists; and the Theme Editor writes no row at
+## all: its strip's two lines are the pointed token (THIS FIELD) and the line it writes into a preset
+## (IN FILE). Deliberate, and therefore written down rather than quietly passing.
 const NO_READING_BY_DESIGN: Array[String] = ["sheet_type_dialog.gd", "command_palette.gd", "debugger_window.gd",
 	"repeated_rows.gd", "event_sheet_shortcuts_dialog.gd", "words_settings_dialog.gd", "ask_window.gd",
-	"ai_generate_window.gd"]
+	"ai_generate_window.gd", "theme_editor_dialog.gd"]
 
 ## The result windows, whose strip describes the PICKED line of a list (a hit, a use, a run) rather
 ## than a focused field: the selection handler wires it by setting the strip's "This row" line, so
 ## `.set_line(` counts as following for these files and for no other. The command palette's strip
 ## is its key legend (Enter, the arrows, the four prefixes), the same whatever is picked, and so
 ## follows nothing by design; the debugger names a running value and the repeated rows a run that
-## spans several rows, so neither has one row to read as (listed above).
-const RESULT_WINDOWS: Array[String] = ["find_references_panel.gd", "project_find.gd", "repeated_rows.gd"]
+## spans several rows, so neither has one row to read as (listed above). The Theme Editor's strip
+## follows the token row under the pointer the same way, through its two lines, and the Inspector
+## Designer's the variable under the pointer.
+const RESULT_WINDOWS: Array[String] = ["find_references_panel.gd", "project_find.gd", "repeated_rows.gd",
+	"theme_editor_dialog.gd", "inspector_designer_dialog.gd"]
 const KEY_LEGEND_BY_DESIGN: Array[String] = ["command_palette.gd"]
 
 
@@ -113,9 +117,11 @@ static func _test_dialogs_are_found() -> bool:
 		"res://addons/eventsheet/editor/dock/welcome_window.gd",
 		"res://addons/eventsheet/editor/event_sheet_shortcuts_dialog.gd",
 		"res://addons/eventsheet/editor/function_dialog.gd",
+		"res://addons/eventsheet/editor/inspector_designer_dialog.gd",
 		"res://addons/eventsheet/editor/mod_template_dialog.gd",
 		"res://addons/eventsheet/editor/new_sheet_dialog.gd",
 		"res://addons/eventsheet/editor/param_dialog.gd",
+		"res://addons/eventsheet/editor/theme_editor_dialog.gd",
 		"res://addons/eventsheet/editor/variable_dialog.gd",
 		"res://addons/eventsheet/editor/words_settings_dialog.gd"
 	]))

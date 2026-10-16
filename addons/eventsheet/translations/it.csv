@@ -8756,3 +8756,15 @@ Auto and Load only variables load when their object enters the tree (_ready); Au
 "Copies any value aside under a name, in memory, for this run - the before-value for a preview, a buff or a cutscene. For memory that survives closing the game give the variable a Save choice, or use the Save System pack.","Mette da parte qualsiasi valore sotto un nome, in memoria, per questa partita - il valore precedente per un'anteprima, un potenziamento o una scena. Per una memoria che sopravviva alla chiusura del gioco dai alla variabile una scelta di salvataggio, oppure usa il pacchetto Save System."
 Manually,A mano
 Save Choice…,Scelta di salvataggio…
+Replaces %s,Sostituisce %s
+Apply writes this look into the open sheet only,Applica scrive questo aspetto solo nel foglio aperto
+THIS FIELD,QUESTO CAMPO
+IN FILE,NEL FILE
+"Personal, not part of the theme file - these follow you, not the project.","Personale, non fa parte del file del tema - ti seguono, non il progetto."
+Opens the letters and the word spaces up. Works with any font.,Allarga lo spazio tra lettere e parole. Funziona con qualsiasi font.
+res://… .ttf or .otf - blank keeps the editor's own font,res://… .ttf o .otf - vuoto mantiene il font dell'editor
+Save Theme Preset,Salva preset del tema
+Theme preset saved: %s,Preset del tema salvato: %s
+Sheet variables keep the file's order,Le variabili del foglio mantengono l'ordine del file
+%s: ✎ opens it in the Variable dialog.,%s: ✎ la apre nella finestra Variabile.
+"%s: ✎ opens it in the Variable dialog; ▲ moves it above %s, as one undo step.","%s: ✎ la apre nella finestra Variabile; ▲ la sposta sopra %s, in un solo passo di annullamento."

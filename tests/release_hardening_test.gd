@@ -110,34 +110,55 @@ static func run() -> bool:
 	all_passed = _check("preset round-trips with the edited token",
 		loaded.event_style.behavior_accent_color if loaded != null and loaded.event_style != null else Color.BLACK, Color.BLUE) and all_passed
 
-	# A preset that cannot be written says so on the status bar instead of saying nothing.
+	# The window itself: every section folds, a token row is named as the code names it, the strip
+	# names the token under the pointer and its preset line, and a save says how it went in the foot.
 	var status_dock: Control = _status_recorder()
 	theme_editor._dock = status_dock
-	var failed_save: Error = theme_editor.save_preset("res://no_such_folder_for_presets/preset.tres")
-	all_passed = _check("a preset written into a missing folder fails", failed_save != OK, true) and all_passed
-	all_passed = _check("and the failure reaches the status bar as an error",
-		[str(status_dock.get("last_text")).begins_with("Theme preset could not be saved: preset.tres"), status_dock.get("last_is_error")], [true, true]) and all_passed
-	theme_editor._dock = null
-	status_dock.free()
-
+	theme_editor._working_style = EventSheetThemeEditor.duplicate_style(null)
+	theme_editor._ensure_dialog()
+	var folds: Array = []
+	for fold: Node in theme_editor._dialog.find_children("*", "FoldableContainer", true, false):
+		folds.append([(fold as FoldableContainer).title, (fold as FoldableContainer).folded])
+	all_passed = _check("each section folds under its title, the everyday ones open", folds, [
+		["Quick Style - recolour everything at once", false], ["Reading Comfort", false],
+		["Editor (hover, selection, lanes)", false], ["Sheet & rows (event style)", false],
+		["Condition cells", true], ["Action cells", true], ["Reading marks - chips, badges, guides, stripes", true],
+		["Bars around the sheet - Object bar, status strip, tab title", true], ["Manual pages", true]]) and all_passed
+	var spins: Dictionary = {}
+	for spin_node: Node in theme_editor._detail_form.find_children("*", "SpinBox", true, false):
+		spins[(spin_node.get_parent().get_child(0) as Label).text] = spin_node
+	var lane_spin: SpinBox = spins.get("condition_lane_ratio") as SpinBox
+	all_passed = _check("a token row reads as the code names it", lane_spin != null, true) and all_passed
 	# Each number token's spin box takes the token's OWN range and step, so a 0.20-0.80 ratio
 	# stepping 0.01 can be set to 0.45 instead of snapping to the 0.5 grid of a -4096..4096 box.
-	var token_form: VBoxContainer = VBoxContainer.new()
-	theme_editor._build_section(token_form, "Sheet", EventSheetEventStyle.new())
-	var spins: Dictionary = {}
-	for spin_node: Node in token_form.find_children("*", "SpinBox", true, false):
-		var spin_row: Node = spin_node.get_parent()
-		spins[(spin_row.get_child(0) as Label).text] = spin_node
-	var lane_spin: SpinBox = spins.get("Condition Lane Ratio") as SpinBox
 	all_passed = _check("the lane ratio spin box carries the token's range and step",
 		[lane_spin.min_value, lane_spin.max_value, lane_spin.step] if lane_spin != null else [], [0.2, 0.8, 0.01]) and all_passed
-	if lane_spin != null:
-		lane_spin.value = 0.45
-	all_passed = _check("so 0.45 can be set", lane_spin.value if lane_spin != null else 0.0, 0.45) and all_passed
-	var height_spin: SpinBox = spins.get("Minimum Conditions Lane Width") as SpinBox
+	var width_spin: SpinBox = spins.get("minimum_conditions_lane_width") as SpinBox
 	all_passed = _check("an int token keeps its own bounds too",
-		[height_spin.min_value, height_spin.max_value, height_spin.step] if height_spin != null else [], [120.0, 480.0, 1.0]) and all_passed
-	token_form.free()
+		[width_spin.min_value, width_spin.max_value, width_spin.step] if width_spin != null else [], [120.0, 480.0, 1.0]) and all_passed
+	all_passed = _check("a float token with no range of its own steps 0.01",
+		EventSheetThemeEditor.spin_range({"type": TYPE_FLOAT}).get("step"), 0.01) and all_passed
+	if lane_spin != null:
+		lane_spin.focus_entered.emit()
+		lane_spin.value = 0.45
+		# A Range outside the tree changes without saying so; the window's own spin box would.
+		lane_spin.value_changed.emit(lane_spin.value)
+	all_passed = _check("the strip says what the pointed token does and the line it writes",
+		[theme_editor._this_field.text, theme_editor._in_file.text],
+		["condition_lane_ratio: How much of the row width the conditions lane takes (0.2 - 0.8).", "condition_lane_ratio = 0.45"]) and all_passed
+	all_passed = _check("the foot says Apply reaches the open sheet only",
+		[theme_editor._note.text, theme_editor._note.tone], ["Apply writes this look into the open sheet only", "warning"]) and all_passed
+	all_passed = _check("the save dialog names the file a Save replaces, and nothing for a new one",
+		[EventSheetThemeEditor.save_note("user://eventsheets_theme_preset.tres"), EventSheetThemeEditor.save_note("user://no_such_preset.tres")],
+		["Replaces eventsheets_theme_preset.tres", ""]) and all_passed
+	var failed_save: Error = theme_editor.save_preset("res://no_such_folder_for_presets/preset.tres")
+	all_passed = _check("a preset written into a missing folder fails", failed_save != OK, true) and all_passed
+	all_passed = _check("and the failure is said in the window's foot and on the status bar as an error",
+		[theme_editor._note.text.begins_with("Theme preset could not be saved: preset.tres"), theme_editor._note.tone,
+			str(status_dock.get("last_text")).begins_with("Theme preset could not be saved: preset.tres"), status_dock.get("last_is_error")],
+		[true, "error", true, true]) and all_passed
+	theme_editor._dock = null
+	status_dock.free()
 
 	# Quick Style - the no-token-fiddling path: EventSheetGodotTheme.apply regenerates the
 	# entire chrome from base/accent/text, so one colour change re-skins the whole sheet.

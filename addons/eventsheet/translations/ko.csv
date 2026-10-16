@@ -8756,3 +8756,15 @@ Auto and Load only variables load when their object enters the tree (_ready); Au
 "Copies any value aside under a name, in memory, for this run - the before-value for a preview, a buff or a cutscene. For memory that survives closing the game give the variable a Save choice, or use the Save System pack.","아무 값이나 이름을 붙여 메모리에 따로 보관합니다(이번 실행 동안). 미리보기, 버프, 컷신 이전의 값입니다. 게임을 닫아도 남아야 한다면 변수에 저장 선택을 주거나 Save System 팩을 쓰세요."
 Manually,수동
 Save Choice…,저장 선택…
+Replaces %s,%s 파일을 대체합니다
+Apply writes this look into the open sheet only,적용은 이 모양을 열린 시트에만 씁니다
+THIS FIELD,이 필드
+IN FILE,파일 내
+"Personal, not part of the theme file - these follow you, not the project.",개인 설정이며 테마 파일에 포함되지 않습니다 - 프로젝트가 아니라 사용자를 따라갑니다.
+Opens the letters and the word spaces up. Works with any font.,글자와 단어 사이 간격을 넓힙니다. 어떤 글꼴에서도 작동합니다.
+res://… .ttf or .otf - blank keeps the editor's own font,res://… .ttf 또는 .otf - 비워 두면 에디터 글꼴 유지
+Save Theme Preset,테마 프리셋 저장
+Theme preset saved: %s,테마 프리셋을 저장했습니다: %s
+Sheet variables keep the file's order,시트 변수는 파일의 순서를 유지합니다
+%s: ✎ opens it in the Variable dialog.,%s: ✎ 를 누르면 변수 대화 상자에서 엽니다.
+"%s: ✎ opens it in the Variable dialog; ▲ moves it above %s, as one undo step.",%s: ✎ 를 누르면 변수 대화 상자에서 엽니다. ▲ 를 누르면 %s 위로 옮깁니다 (실행 취소 한 단계).

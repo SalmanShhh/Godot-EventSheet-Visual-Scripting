@@ -93,7 +93,7 @@ func update_preview(variable_name: String, type_name: String, default_text: Stri
 	elif not group_name.is_empty():
 		property_row.add_child(_spacer(12.0))
 	var name_label := Label.new()
-	name_label.text = variable_name.capitalize()
+	name_label.text = variable_name
 	name_label.custom_minimum_size = Vector2(110.0, 0.0)
 	name_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(12))
 	property_row.add_child(name_label)

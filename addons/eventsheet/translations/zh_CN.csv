@@ -8756,3 +8756,15 @@ Auto and Load only variables load when their object enters the tree (_ready); Au
 "Copies any value aside under a name, in memory, for this run - the before-value for a preview, a buff or a cutscene. For memory that survives closing the game give the variable a Save choice, or use the Save System pack.",把任意值以一个名字暂存在内存里，只在本次运行期间有效 - 预览、增益或过场动画之前的那个值。若需要关掉游戏后仍然保留，请给变量设定保存选择，或使用存档系统包。
 Manually,手动
 Save Choice…,保存选择…
+Replaces %s,将替换 %s
+Apply writes this look into the open sheet only,应用只会把此外观写入当前打开的表
+THIS FIELD,此字段
+IN FILE,文件中
+"Personal, not part of the theme file - these follow you, not the project.",个人设置，不属于主题文件 - 它们跟随你，而不是项目。
+Opens the letters and the word spaces up. Works with any font.,加大字母和单词之间的间距。适用于任何字体。
+res://… .ttf or .otf - blank keeps the editor's own font,res://… .ttf 或 .otf - 留空则保留编辑器字体
+Save Theme Preset,保存主题预设
+Theme preset saved: %s,已保存主题预设：%s
+Sheet variables keep the file's order,表格变量保持文件中的顺序
+%s: ✎ opens it in the Variable dialog.,%s：✎ 在变量对话框中打开它。
+"%s: ✎ opens it in the Variable dialog; ▲ moves it above %s, as one undo step.",%s：✎ 在变量对话框中打开它；▲ 将它移到 %s 上方，作为一次撤销步骤。

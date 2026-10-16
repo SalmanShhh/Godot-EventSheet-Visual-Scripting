@@ -8756,3 +8756,15 @@ Auto and Load only variables load when their object enters the tree (_ready); Au
 "Copies any value aside under a name, in memory, for this run - the before-value for a preview, a buff or a cutscene. For memory that survives closing the game give the variable a Save choice, or use the Save System pack.","Откладывает любое значение под именем в память на этот запуск - прежнее значение для предпросмотра, усиления или катсцены. Чтобы память пережила закрытие игры, задайте переменной выбор сохранения или используйте пакет Save System."
 Manually,Вручную
 Save Choice…,Выбор сохранения…
+Replaces %s,Заменит %s
+Apply writes this look into the open sheet only,«Применить» записывает этот вид только в открытый лист
+THIS FIELD,ЭТО ПОЛЕ
+IN FILE,В ФАЙЛЕ
+"Personal, not part of the theme file - these follow you, not the project.","Личные, не входят в файл темы - они следуют за вами, а не за проектом."
+Opens the letters and the word spaces up. Works with any font.,Раздвигает буквы и пробелы между словами. Работает с любым шрифтом.
+res://… .ttf or .otf - blank keeps the editor's own font,res://… .ttf или .otf - пусто: шрифт редактора
+Save Theme Preset,Сохранить пресет темы
+Theme preset saved: %s,Пресет темы сохранён: %s
+Sheet variables keep the file's order,Переменные листа сохраняют порядок файла
+%s: ✎ opens it in the Variable dialog.,%s: ✎ открывает её в окне переменной.
+"%s: ✎ opens it in the Variable dialog; ▲ moves it above %s, as one undo step.","%s: ✎ открывает её в окне переменной; ▲ ставит её над %s, одним шагом отмены."

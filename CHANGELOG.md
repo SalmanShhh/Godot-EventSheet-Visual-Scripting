@@ -2,6 +2,35 @@
 
 ## [Unreleased]
 
+### Changed: the Theme Editor names each token as the code does, and folds
+
+- A token row reads as the style file names it (`condition_lane_ratio`, no longer Condition Lane
+  Ratio), in the code font, and is never translated.
+- Every section folds under its title. Quick Style, Reading Comfort, the editor-wide switches and
+  Sheet & rows start open; the cell, reading-mark, bar and Manual sections start folded.
+- The description that was a hover tooltip now reads in the strip at the window's foot: THIS FIELD
+  says what the token under the pointer does, IN FILE the line it writes into a saved preset
+  (`condition_lane_ratio = 0.45`), updated as it is edited.
+- Save As Preset…, Close and Apply To Current Sheet sit in the window's own button row, beside a
+  note saying Apply writes the look into the open sheet only. A preset that saves, or fails to, says
+  so in that note as well as on the status bar.
+- Save As Preset… opens the editor's own save dialog, with a line at its foot naming the file a
+  Save would replace.
+- A float token with no range of its own steps 0.01 instead of 0.5 (every shipped number token
+  already declares its own range and step).
+- Fixed: with no theme on the sheet, the Theme Editor seeded the cell styles after moving the
+  colours onto the editor's, so its cell colours were not the ones the sheet paints.
+
+### Changed: the Inspector Designer says what each row's buttons do
+
+- A strip at the window's foot names the variable under the pointer: THIS FIELD says what ✎ does
+  and, for a variable that can move, which variable ▲ puts it above (one undo step); IN CODE is
+  the line it is in the file (`@export var jump_strength: float = 480.0`).
+- Beside Close, a note says the sheet variables at the top keep the file's order, which is why
+  they carry no ▲.
+- The Inspector preview, here and in the variable window, names a variable exactly as the code
+  writes it (`max_speed`, no longer Max Speed).
+
 ### Added: translations in pieces, and a table that stays fast at a million lines
 
 - Translation Studio can write ONE CATALOG PER PROJECT FOLDER: name a folder instead of a .csv and a
