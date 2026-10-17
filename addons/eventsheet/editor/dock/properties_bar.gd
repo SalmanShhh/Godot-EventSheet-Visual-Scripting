@@ -48,7 +48,7 @@ var _shown_resource: Resource = null
 # Parameter dialog uses, so a colour, an enum, a node reference or an input action edits in place
 # here exactly as it does there.
 var _field_factory: EventSheetParamFieldFactory = EventSheetParamFieldFactory.new()
-# The fields of a selected function, kept alive while they are on screen (their signals call it).
+# The selected function as Godot's Inspector edits it, kept alive while the Inspector shows it.
 var _function_inspector: RefCounted = null
 # The fields of the class this file declares, kept alive the same way.
 var _class_properties: RefCounted = null
@@ -140,10 +140,9 @@ func set_open(open: bool) -> void:
 ## Rebuilds the form for whatever is selected now. Cheap and idempotent - called from the
 ## selection change and after every edit.
 func refresh() -> void:
-	if panel == null or not panel.visible:
-		return
-	var view: EventSheetViewport = _dock._active_view()
-	if view == null:
+	var view: EventSheetViewport = _dock._active_view() if _dock != null else null
+	_follow_function(view)
+	if panel == null or not panel.visible or view == null:
 		return
 	var ace: Resource = view.get_selected_ace_resource()
 	if ace != null:
@@ -154,7 +153,8 @@ func refresh() -> void:
 		_show_group(selected as EventGroup)
 		return
 	if selected is EventFunction:
-		_show_function(selected as EventFunction)
+		# A function is edited in Godot's own Inspector (_follow_function), not in the bar.
+		_show_nothing()
 		return
 	var object_label: String = str(view.get_selected_context().get("span_metadata", {}).get("object_label", "")).strip_edges()
 	if not object_label.is_empty():
@@ -324,15 +324,17 @@ func _apply_group_enabled(enabled: bool) -> void:
 	refresh()
 
 
-## A selected function: its name, description, what it returns, its three settings and its
-## parameters, each a field that writes one undo step (dock/function_inspector.gd).
-func _show_function(event_function: EventFunction) -> void:
-	_shown_resource = event_function
-	_clear_form()
-	_open_for_selection()
-	_heading.text = heading_for(event_function.function_name, EventSheetL10n.translate("function"))
-	_function_inspector = load(FUNCTION_INSPECTOR_PATH).new(_dock, event_function)
-	_function_inspector.build_into(_form)
+## A selected function on a sheet that can be written is handed to Godot's Inspector, which edits
+## its name, description, return, settings and parameters (dock/function_inspector.gd). Every
+## refresh after that lets the Inspector read the fields again, so an edit or an undo shows there.
+func _follow_function(view: EventSheetViewport) -> void:
+	var selected: Variant = view.get_selected_context().get("source_resource", null) if view != null else null
+	if selected is EventFunction and _dock._current_sheet != null and not _dock._current_sheet.read_only \
+			and (_function_inspector == null or not _function_inspector.edits(selected as EventFunction)):
+		_function_inspector = load(FUNCTION_INSPECTOR_PATH).new(_dock, selected as EventFunction)
+		_function_inspector.inspect()
+	elif _function_inspector != null:
+		_function_inspector.refresh()
 
 
 ## A selected object reads what the Object properties popup reads - the same facts, in the bar.

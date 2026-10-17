@@ -9338,3 +9338,5 @@ Remembered (older style),Запоминается (старый способ)
 Loaded and saved every run by the Remember Between Runs code an older version wrote. Update to Auto to choose its Save here.,"Загружается и сохраняется при каждом запуске кодом «Запоминать между запусками», который написала более старая версия. Переведите на Авто, чтобы выбрать сохранение здесь."
 "An older version wrote code into this script that saves %s. Update to Auto turns that code into the Auto Save choice in one step (Ctrl+Z undoes it), with the same file and names, so values players already saved keep loading.","Более старая версия записала в этот скрипт код, который сохраняет %s. «Перевести на Авто» за один шаг превращает этот код в вариант сохранения Авто (Ctrl+Z отменяет), с тем же файлом и теми же именами, поэтому значения, которые игроки уже сохранили, по-прежнему загружаются."
 Values players already saved for %s will not load after the rename: their save files keep them under %s.,"Значения, которые игроки уже сохранили для %s, после переименования не загрузятся: в их файлах сохранений они остаются в %s."
+Function %s,Функция %s
+Move Up,Переместить вверх

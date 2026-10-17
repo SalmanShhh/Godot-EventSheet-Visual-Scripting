@@ -63,6 +63,21 @@
   then the three are rewritten as the Auto block in one undo step, with the same file and keys, so
   values the old code saved load through the new block. A section the class has since left is kept
   loading.
+### Changed: a function is edited in Godot's own Inspector, and branching first steps sit beside the head
+
+- Selecting a function's head hands it to Godot's Inspector: Name, Description, Returns, In Add
+  Action, Category, Waits, Shared, and under Parameters each one's name, Type and Default, a Move
+  Up button and Add Parameter. It replaces the function panel of the Properties bar. Each change is
+  one undo step (the Inspector's own history entry is handed back, so one Ctrl+Z still undoes one
+  change), and typed text - a rename above all, which renames every call - is written once, when
+  its field is left, not on every key. The Inspector cannot describe the choices of a dropdown one
+  by one, so those sentences are gone; parameters are numbered rather than named in its sections,
+  because the Inspector capitalises section names and a parameter is shown exactly as written.
+- A function whose first step branches (`return 1 if ready else 0`) now draws that step beside its
+  head like any other first step, with the branch rows as its sub-events and no empty "Always" row
+  between them, and a step's pattern chip comes up with its actions. 214 functions in the shipped
+  packs read this way now; the 11 whose first step holds a `match` keep their own row, because a
+  match can read as branches whose head belongs on a condition lane the function already uses.
 
 ### Fixed: Insert keeps Godot's whole Recent list, and four smaller edges
 

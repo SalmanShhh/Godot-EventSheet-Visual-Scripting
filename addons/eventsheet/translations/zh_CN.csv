@@ -9338,3 +9338,5 @@ Remembered (older style),已记住（旧方式）
 Loaded and saved every run by the Remember Between Runs code an older version wrote. Update to Auto to choose its Save here.,由旧版本写下的“在运行之间记住”代码在每次运行时加载并保存。更新为自动后即可在这里选择它的保存方式。
 "An older version wrote code into this script that saves %s. Update to Auto turns that code into the Auto Save choice in one step (Ctrl+Z undoes it), with the same file and names, so values players already saved keep loading.",旧版本在此脚本中写入了保存 %s 的代码。“更新为自动”会一步将这段代码改为保存选项“自动”（Ctrl+Z 可撤销），文件和名字保持不变，因此玩家已经保存的值会继续加载。
 Values players already saved for %s will not load after the rename: their save files keep them under %s.,玩家已经为 %s 保存的值，在重命名后将不会被加载：他们的存档文件仍把这些值保存在 %s 下。
+Function %s,函数 %s
+Move Up,上移

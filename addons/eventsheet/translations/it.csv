@@ -9338,3 +9338,5 @@ Remembered (older style),Ricordato (stile precedente)
 Loaded and saved every run by the Remember Between Runs code an older version wrote. Update to Auto to choose its Save here.,Caricato e salvato a ogni esecuzione dal codice Ricorda tra le esecuzioni scritto da una versione precedente. Passa ad Automatico per sceglierne qui il salvataggio.
 "An older version wrote code into this script that saves %s. Update to Auto turns that code into the Auto Save choice in one step (Ctrl+Z undoes it), with the same file and names, so values players already saved keep loading.","Una versione precedente ha scritto in questo script del codice che salva %s. Passa ad Automatico trasforma quel codice nella scelta di salvataggio Automatico in un solo passo (Ctrl+Z lo annulla), con lo stesso file e gli stessi nomi, così i valori che i giocatori hanno già salvato continuano a essere caricati."
 Values players already saved for %s will not load after the rename: their save files keep them under %s.,I valori che i giocatori hanno già salvato per %s non verranno caricati dopo la rinomina: i loro file di salvataggio li tengono in %s.
+Function %s,Funzione %s
+Move Up,Sposta su

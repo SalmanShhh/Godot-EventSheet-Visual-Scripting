@@ -1,27 +1,39 @@
 @tool
 extends RefCounted
-# The selected function, edited in the Properties bar beside the canvas.
+# The selected function, edited in Godot's own Inspector. This object is what the Inspector shows:
 #
+#   Function take_damage
 #   Name           take_damage
 #   Description    Removes health, flashes the sprite, and dies at zero.
 #   Returns        Nothing ▾
-#   In Add Action  Listed ▾
-#   Category       Player ▾
-#   Waits          Finishes at once ▾
-#   Shared         One per object ▾
-#   Parameters                       + Add
-#   ⋮⋮ amount      int ▾      1
+#   In Add Action  ☑
+#   Category       Player
+#   Waits          ☐
+#   Shared         ☐
+#   ▾ Parameters
+#     ▾ 1   Name amount · Type int ▾ · Default 1
+#     ▾ 2   Name critical · Type bool ▾ · Default false · [Move Up]
+#     [Add Parameter]
 #
-# Every dropdown carries the sentence that says what each choice means (the window kit's described
-# dropdown), which is why this is built from the kit rather than handed to Godot's EditorInspector:
-# the stock Inspector has no way to describe a single choice, cannot reorder a list a script declares,
-# and does not exist in a headless run, so none of this could be pinned by the suite.
+# _get_property_list says the fields, _get reads them off the live function and _set writes each
+# change as ONE undo step through the dock's edit funnel, applied by the function's NAME and
+# re-fetched every time (the funnel replaces resources on commit). A field that ends up holding what
+# it held writes nothing, so an opened .gd stays byte-exact until something really changes.
 #
-# Every change is ONE undo step through the dock's edit funnel, applied by the function's NAME and
-# re-fetched each time (the funnel replaces resources on commit). A field that ends up holding what it
-# held writes nothing, so an opened .gd stays byte-exact until something really changes.
+# Three habits of the Inspector are answered here rather than worked around elsewhere:
+# - It records every change in the editor's own history. The funnel already makes the undo step,
+#   so _dont_undo_redo hands the Inspector's step back - otherwise each change took two Ctrl+Z.
+# - A text field hands over every keystroke. A rename renames every call (and saves the sheets that
+#   include this one), so a typed value is held until its field is left - Enter, or the focus moving
+#   on - and then written once.
+# - Its own array list moves elements through the editor's history directly, outside the sheet's
+#   undo, so the order is changed with a Move Up button on each parameter instead.
+# The Inspector cannot describe the choices of a dropdown one by one, which the Properties bar
+# panel this replaces did; the name's hover on the sheet still says what the function is for.
+# A section is named by the parameter's place rather than its name because the Inspector
+# capitalises section names, and a parameter is shown exactly as the code writes it.
 #
-# Loaded BY PATH from the Properties bar on the first function selection, never on the boot path.
+# Loaded BY PATH on the first function selection, never on the boot path.
 
 ## The return and parameter types the dropdowns offer, as the code writes them. "Nothing" is the
 ## function that hands nothing back (`-> void`); a type outside the list is kept and offered as itself.
@@ -31,44 +43,23 @@ const TYPE_WORDS: PackedStringArray = ["Nothing", "bool", "int", "float", "Strin
 ## The one shape every quick question takes, loaded when the description window first opens.
 const SMALL_PROMPT_PATH := "res://addons/eventsheet/editor/small_prompt.gd"
 
+## How often a held text value checks whether its field has been left, in seconds.
+const HOLD_CHECK_SECONDS := 0.25
+
 var _dock: Control = null
 var _function_name: String = ""
+# Property name as the Inspector shows it -> the field it is ("name", "param:1:type", ...). Rebuilt
+# with the property list, since the names are the translated words.
+var _keys: Dictionary = {}
+# Typed text not written yet: field -> value. Read back by _get, so the Inspector's own refresh never
+# puts the old value back under the cursor.
+var _pending: Dictionary = {}
+var _watching: bool = false
 
 
 func _init(dock: Control, event_function: EventFunction) -> void:
 	_dock = dock
 	_function_name = event_function.function_name
-
-
-## The sentence a type choice shows as the pointer rests on it. Each is spelled out inside its own
-## translate() call so the translation harvest finds it.
-static func type_description(type_word: String) -> String:
-	match type_word:
-		"Nothing":
-			return EventSheetL10n.translate("Hands nothing back. Use it as an action.")
-		"bool":
-			return EventSheetL10n.translate("True or false: answers a yes/no question.")
-		"int":
-			return EventSheetL10n.translate("A whole number: counts, health, coins.")
-		"float":
-			return EventSheetL10n.translate("A number with a fraction: speeds, distances, seconds.")
-		"String":
-			return EventSheetL10n.translate("Text, like a name or a line of dialogue.")
-		"Vector2":
-			return EventSheetL10n.translate("A 2D point or direction (x, y).")
-		"Vector3":
-			return EventSheetL10n.translate("A 3D point or direction (x, y, z).")
-		"Color":
-			return EventSheetL10n.translate("A color, with transparency.")
-		"Array":
-			return EventSheetL10n.translate("A list of values, in order.")
-		"Dictionary":
-			return EventSheetL10n.translate("Values stored under names, looked up by name.")
-		"Node":
-			return EventSheetL10n.translate("Any node in the scene, like the nearest enemy.")
-		"Variant":
-			return EventSheetL10n.translate("Any type at all. The editor cannot check it for you.")
-	return EventSheetL10n.translate("A type of your own project, kept as it is written.")
 
 
 ## The return word a function shows in the Returns dropdown: "Nothing" for `-> void`, otherwise the
@@ -93,29 +84,7 @@ static func return_fields(type_word: String) -> Array:
 	return [TYPE_MAX, type_word]
 
 
-## The described choices of the three yes/no settings, as [word, sentence] pairs: the first is
-## "off", the second "on". Kept as data so a test can read what each one says.
-static func flag_choices(flag: String) -> Array:
-	match flag:
-		"in_add_action":
-			return [
-				[EventSheetL10n.translate("Not listed"), EventSheetL10n.translate("Only callable by name from this sheet, or from code.")],
-				[EventSheetL10n.translate("Listed"), EventSheetL10n.translate("Shown in Add Action under its Category, with its description as help.")],
-			]
-		"waits":
-			return [
-				[EventSheetL10n.translate("Finishes at once"), EventSheetL10n.translate("Runs start to end in one frame. Callers carry on straight after.")],
-				[EventSheetL10n.translate("Can wait"), EventSheetL10n.translate("May pause on a Wait (timer, signal, tween). Callers can wait for it to finish before carrying on.")],
-			]
-		"shared":
-			return [
-				[EventSheetL10n.translate("One per object"), EventSheetL10n.translate("Each object runs its own copy and can use its own variables, like health.")],
-				[EventSheetL10n.translate("One for the script"), EventSheetL10n.translate("Called without picking an object. It cannot read one object's variables, so it suits helpers like maths.")],
-			]
-	return []
-
-
-## The categories the Category dropdown offers: the ones this sheet's functions already file under,
+## The categories the Category field suggests: the ones this sheet's functions already file under,
 ## then "Functions" (the heading a function with none is listed under), then the function's own.
 static func category_choices(sheet: EventSheetResource, current: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
@@ -130,6 +99,18 @@ static func category_choices(sheet: EventSheetResource, current: String) -> Pack
 	if not current.strip_edges().is_empty() and not found.has(current.strip_edges()):
 		found.append(current.strip_edges())
 	return found
+
+
+## The words a type dropdown offers: TYPE_WORDS, plus the current type when it is not one of them.
+## `with_nothing` keeps "Nothing", which only a return type can be.
+static func type_words(current: String, with_nothing: bool) -> PackedStringArray:
+	var words: PackedStringArray = PackedStringArray()
+	for word: String in TYPE_WORDS:
+		if word != "Nothing" or with_nothing:
+			words.append(word)
+	if not current.is_empty() and not words.has(current):
+		words.append(current)
+	return words
 
 
 ## The small window a double-click on a function's name opens beside the row: the description in a
@@ -157,7 +138,7 @@ static func open_description_editor(dock: Control, event_function: EventFunction
 	return dialog
 
 
-## The function this panel edits, re-fetched from the live sheet (never held across an edit).
+## The function this object edits, re-fetched from the live sheet (never held across an edit).
 func live_function() -> EventFunction:
 	if _dock == null or _dock._current_sheet == null:
 		return null
@@ -167,157 +148,211 @@ func live_function() -> EventFunction:
 	return null
 
 
-## Builds the fields into the bar's two-column grid. A read-only sheet shows them disabled.
-func build_into(form: GridContainer) -> void:
+## True when this object is the one editing `event_function`.
+func edits(event_function: EventFunction) -> bool:
+	return event_function != null and event_function.function_name == _function_name
+
+
+## Hands this object to Godot's Inspector. Only in the editor: a headless run has no Inspector.
+func inspect() -> void:
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		EditorInterface.inspect_object(self, "", true)
+
+
+## The sheet changed under the Inspector (an edit, an undo): it reads the fields again.
+func refresh() -> void:
+	notify_property_list_changed()
+
+
+# ── What the Inspector shows ─────────────────────────────────────────────────────────────────────
+
+
+func _dont_undo_redo() -> bool:
+	return true
+
+
+func _get_property_list() -> Array[Dictionary]:
+	_keys.clear()
+	var properties: Array[Dictionary] = []
 	var event_function: EventFunction = live_function()
 	if event_function == null:
-		return
-	var editable: bool = not _dock._current_sheet.read_only
-	var name_edit: LineEdit = LineEdit.new()
-	name_edit.text = event_function.function_name
-	_commit_on_submit(name_edit, func(text: String) -> void: apply_name(text))
-	_row(form, EventSheetL10n.translate("Name"), name_edit,
-		EventSheetL10n.translate("Exactly as written in code. Renaming it renames every call."), editable)
-	var description_edit: LineEdit = LineEdit.new()
-	description_edit.text = event_function.description
-	_commit_on_submit(description_edit, func(text: String) -> void: apply_field("description", text.strip_edges()))
-	_row(form, EventSheetL10n.translate("Description"), description_edit,
-		EventSheetL10n.translate("Shown when hovering the name, in Add Action and as the ## comment above the function."), editable)
-	var returns: OptionButton = type_dropdown(return_word(event_function), true)
-	returns.item_selected.connect(func(index: int) -> void: apply_returns(returns.get_item_text(index)))
-	_row(form, EventSheetL10n.translate("Returns"), returns,
-		EventSheetL10n.translate("What the function hands back. Nothing makes it an action; any type makes it usable inside expressions, and its last action is Return."), editable)
-	_flag_row(form, "in_add_action", EventSheetL10n.translate("In Add Action"), event_function.expose_as_ace,
-		EventSheetL10n.translate("Whether other events can pick it from Add Action like a built-in."), editable)
-	var category: OptionButton = EventSheetPopupUI.described_option()
-	for word: String in category_choices(_dock._current_sheet, event_function.ace_category):
-		EventSheetPopupUI.add_described_item(category, word,
-			EventSheetL10n.translate("The default heading for your own functions.") if word == "Functions"
-				else EventSheetL10n.translate("Listed under %s in Add Action.") % word)
-	EventSheetPopupUI.select_option(category, event_function.ace_category.strip_edges() if not event_function.ace_category.strip_edges().is_empty() else "Functions")
-	EventSheetPopupUI.follow_description(category)
-	category.item_selected.connect(func(index: int) -> void:
-		var word: String = category.get_item_text(index)
-		var current: String = live_function().ace_category.strip_edges() if live_function() != null else ""
-		# "Functions" is the heading an uncategorised function is already listed under, so picking it
-		# for one with none is no change at all.
-		if not (word == "Functions" and current.is_empty()):
-			apply_field("ace_category", word))
-	_row(form, EventSheetL10n.translate("Category"), category,
-		EventSheetL10n.translate("The heading it is listed under in Add Action."), editable)
-	_flag_row(form, "waits", EventSheetL10n.translate("Waits"), event_function.is_async,
-		EventSheetL10n.translate("Whether the function can pause part way. Chosen for you when it contains a Wait."), editable)
-	_flag_row(form, "shared", EventSheetL10n.translate("Shared"), event_function.is_static,
-		EventSheetL10n.translate("Whether it belongs to each object or to the script itself."), editable)
-	_build_parameters(form, event_function, editable)
-
-
-## A type dropdown: every word of TYPE_WORDS described, plus the current type when it is not one of
-## them. `with_nothing` keeps "Nothing", which only a return type can be.
-static func type_dropdown(current: String, with_nothing: bool) -> OptionButton:
-	var dropdown: OptionButton = EventSheetPopupUI.described_option()
-	for word: String in TYPE_WORDS:
-		if word == "Nothing" and not with_nothing:
-			continue
-		EventSheetPopupUI.add_described_item(dropdown, word, type_description(word))
-	if not current.is_empty() and not Array(TYPE_WORDS).has(current):
-		EventSheetPopupUI.add_described_item(dropdown, current, type_description(current))
-	EventSheetPopupUI.select_option(dropdown, current if not current.is_empty() else "Variant")
-	EventSheetPopupUI.follow_description(dropdown)
-	return dropdown
-
-
-func _row(form: GridContainer, label_text: String, field: Control, tooltip: String, editable: bool) -> void:
-	var label: Label = Label.new()
-	label.text = label_text
-	label.tooltip_text = tooltip
-	label.mouse_filter = Control.MOUSE_FILTER_STOP
-	form.add_child(label)
-	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	if field.tooltip_text.is_empty():
-		field.tooltip_text = tooltip
-	_set_editable(field, editable)
-	form.add_child(field)
-
-
-static func _set_editable(field: Control, editable: bool) -> void:
-	if field is LineEdit:
-		(field as LineEdit).editable = editable
-	elif field is BaseButton:
-		(field as BaseButton).disabled = not editable
-
-
-func _flag_row(form: GridContainer, flag: String, label_text: String, on: bool, tooltip: String, editable: bool) -> void:
-	var dropdown: OptionButton = EventSheetPopupUI.described_option()
-	for choice: Array in flag_choices(flag):
-		EventSheetPopupUI.add_described_item(dropdown, str(choice[0]), str(choice[1]))
-	dropdown.select(1 if on else 0)
-	EventSheetPopupUI.follow_description(dropdown)
-	dropdown.item_selected.connect(func(index: int) -> void: apply_flag(flag, index == 1))
-	_row(form, label_text, dropdown, tooltip, editable)
-
-
-## A text field commits when Enter is pressed and when focus leaves it - the Inspector's own habit.
-static func _commit_on_submit(edit: LineEdit, commit: Callable) -> void:
-	edit.text_submitted.connect(func(text: String) -> void: commit.call(text))
-	edit.focus_exited.connect(func() -> void: commit.call(edit.text))
-
-
-# ── Parameters: one line each, dragged by the handle to reorder ─────────────────────────────────
-
-
-func _build_parameters(form: GridContainer, event_function: EventFunction, editable: bool) -> void:
-	var heading: Label = EventSheetPopupUI.small_caps_label(EventSheetL10n.translate("Parameters"))
-	form.add_child(heading)
-	var add_button: Button = Button.new()
-	add_button.text = EventSheetL10n.translate("+ Add")
-	add_button.tooltip_text = EventSheetL10n.translate("Adds an input this function is called with.")
-	add_button.size_flags_horizontal = Control.SIZE_SHRINK_END
-	add_button.disabled = not editable
-	add_button.pressed.connect(func() -> void:
-		var target: EventFunction = live_function()
-		if target != null:
-			_dock._function_dialog_glue._open_function_dialog_add_param(target))
-	form.add_child(add_button)
+		return properties
+	properties.append({"name": EventSheetL10n.translate("Function %s") % event_function.function_name,
+		"type": TYPE_NIL, "usage": PROPERTY_USAGE_CATEGORY})
+	_add(properties, "name", EventSheetL10n.translate("Name"), TYPE_STRING)
+	_add(properties, "description", EventSheetL10n.translate("Description"), TYPE_STRING, PROPERTY_HINT_MULTILINE_TEXT)
+	_add(properties, "returns", EventSheetL10n.translate("Returns"), TYPE_INT, PROPERTY_HINT_ENUM,
+		",".join(_return_choices(event_function)))
+	_add(properties, "in_add_action", EventSheetL10n.translate("In Add Action"), TYPE_BOOL)
+	_add(properties, "category", EventSheetL10n.translate("Category"), TYPE_STRING, PROPERTY_HINT_ENUM_SUGGESTION,
+		",".join(category_choices(_dock._current_sheet, event_function.ace_category)))
+	_add(properties, "waits", EventSheetL10n.translate("Waits"), TYPE_BOOL)
+	_add(properties, "shared", EventSheetL10n.translate("Shared"), TYPE_BOOL)
+	var section: String = EventSheetL10n.translate("Parameters")
 	for index: int in range(event_function.params.size()):
 		var param: ACEParam = event_function.params[index]
-		var handle: Label = Label.new()
-		handle.text = "⋮⋮  %s" % param.id
-		handle.tooltip_text = EventSheetL10n.translate("Drag to move this parameter. Callers pass inputs in this order.")
-		handle.mouse_filter = Control.MOUSE_FILTER_STOP
-		handle.mouse_default_cursor_shape = Control.CURSOR_DRAG
-		var fields: HBoxContainer = HBoxContainer.new()
-		var type_option: OptionButton = type_dropdown(param.type_name.strip_edges(), false)
-		type_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var param_index: int = index
-		type_option.item_selected.connect(func(choice: int) -> void:
-			apply_param_type(param_index, type_option.get_item_text(choice)))
-		var default_edit: LineEdit = LineEdit.new()
-		default_edit.text = param.gdscript_default
-		default_edit.placeholder_text = EventSheetL10n.translate("required")
-		default_edit.tooltip_text = EventSheetL10n.translate("The value it has when a call leaves it out. Empty makes it required.")
-		default_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_commit_on_submit(default_edit, func(text: String) -> void: apply_param_default(param_index, text.strip_edges()))
-		_set_editable(type_option, editable)
-		_set_editable(default_edit, editable)
-		fields.add_child(type_option)
-		fields.add_child(default_edit)
-		if editable:
-			# Godot's own drag-and-drop, forwarded: the handle hands over its index, and the line it is
-			# dropped on takes that index's place.
-			var can_drop: Callable = func(_at: Vector2, data: Variant) -> bool:
-				return data is Dictionary and (data as Dictionary).has("function_parameter")
-			var drop: Callable = func(_at: Vector2, data: Variant) -> void:
-				move_param(int((data as Dictionary).get("function_parameter", -1)), param_index)
-			var param_name: String = param.id
-			handle.set_drag_forwarding(func(_at: Vector2) -> Variant:
-				var preview: Label = Label.new()
-				preview.text = param_name
-				handle.set_drag_preview(preview)
-				return {"function_parameter": param_index}, can_drop, drop)
-			fields.set_drag_forwarding(Callable(), can_drop, drop)
-		form.add_child(handle)
-		form.add_child(fields)
+		var place: String = "%s/%d/" % [section, index + 1]
+		_add(properties, "param:%d:name" % index, place + EventSheetL10n.translate("Name"), TYPE_STRING,
+			PROPERTY_HINT_NONE, "", PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY)
+		_add(properties, "param:%d:type" % index, place + EventSheetL10n.translate("Type"), TYPE_INT, PROPERTY_HINT_ENUM,
+			",".join(type_words(param.type_name.strip_edges(), false)))
+		_add(properties, "param:%d:default" % index, place + EventSheetL10n.translate("Default"), TYPE_STRING,
+			PROPERTY_HINT_PLACEHOLDER_TEXT, EventSheetL10n.translate("required"))
+		if index > 0:
+			_add(properties, "param:%d:up" % index, place + EventSheetL10n.translate("Move Up"), TYPE_CALLABLE,
+				PROPERTY_HINT_TOOL_BUTTON, EventSheetL10n.translate("Move Up") + ",MoveUp")
+	_add(properties, "add_param", "%s/%s" % [section, EventSheetL10n.translate("Add Parameter")], TYPE_CALLABLE,
+		PROPERTY_HINT_TOOL_BUTTON, EventSheetL10n.translate("Add Parameter") + ",Add")
+	return properties
+
+
+func _add(properties: Array[Dictionary], key: String, shown: String, type: int,
+		hint: int = PROPERTY_HINT_NONE, hint_string: String = "", usage: int = PROPERTY_USAGE_EDITOR) -> void:
+	_keys[shown] = key
+	properties.append({"name": shown, "type": type, "hint": hint, "hint_string": hint_string, "usage": usage})
+
+
+## The Returns choices as the dropdown shows them: "Nothing" in the editor's language, every type as
+## the code writes it.
+func _return_choices(event_function: EventFunction) -> PackedStringArray:
+	var shown: PackedStringArray = type_words(return_word(event_function), true)
+	shown[0] = EventSheetL10n.translate("Nothing")
+	return shown
+
+
+func _get(property: StringName) -> Variant:
+	var key: String = str(_keys.get(str(property), ""))
+	var event_function: EventFunction = live_function()
+	if key.is_empty() or event_function == null:
+		return null
+	if _pending.has(key):
+		return _pending[key]
+	match key:
+		"name":
+			return event_function.function_name
+		"description":
+			return event_function.description
+		"returns":
+			return Array(type_words(return_word(event_function), true)).find(return_word(event_function))
+		"in_add_action":
+			return event_function.expose_as_ace
+		"category":
+			return event_function.ace_category
+		"waits":
+			return event_function.is_async
+		"shared":
+			return event_function.is_static
+		"add_param":
+			return add_param
+	var index: int = int(key.get_slice(":", 1))
+	if index < 0 or index >= event_function.params.size():
+		return null
+	var param: ACEParam = event_function.params[index]
+	match key.get_slice(":", 2):
+		"name":
+			return param.id
+		"type":
+			return Array(type_words(param.type_name.strip_edges(), false)).find(param.type_name.strip_edges())
+		"default":
+			return param.gdscript_default
+		"up":
+			return move_param.bind(index, index - 1)
+	return null
+
+
+func _set(property: StringName, value: Variant) -> bool:
+	var key: String = str(_keys.get(str(property), ""))
+	var event_function: EventFunction = live_function()
+	if key.is_empty() or event_function == null:
+		return false
+	match key:
+		"name", "description", "category":
+			_hold_until_left(key, str(value))
+		"returns":
+			var words: PackedStringArray = type_words(return_word(event_function), true)
+			if int(value) >= 0 and int(value) < words.size():
+				apply_returns(words[int(value)])
+		"in_add_action", "waits", "shared":
+			apply_flag(key, bool(value))
+		_:
+			var index: int = int(key.get_slice(":", 1))
+			if index < 0 or index >= event_function.params.size():
+				return false
+			match key.get_slice(":", 2):
+				"type":
+					var param_words: PackedStringArray = type_words(event_function.params[index].type_name.strip_edges(), false)
+					if int(value) >= 0 and int(value) < param_words.size():
+						apply_param_type(index, param_words[int(value)])
+				"default":
+					_hold_until_left(key, str(value))
+				_:
+					return false
+	return true
+
+
+# ── Typed text waits until its field is left ───────────────────────────────────────────────────
+
+
+## Keeps a typed value without writing it. It is written by commit_pending, once its field is left.
+func hold(key: String, value: String) -> void:
+	_pending[key] = value
+
+
+func _hold_until_left(key: String, value: String) -> void:
+	hold(key, value)
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface") or _dock == null \
+			or not _dock.is_inside_tree():
+		# No Inspector field to leave: the value is written as it comes.
+		commit_pending()
+		return
+	if not _watching:
+		_watching = true
+		_dock.get_tree().create_timer(HOLD_CHECK_SECONDS).timeout.connect(_check_held)
+
+
+func _check_held() -> void:
+	_watching = false
+	if _pending.is_empty():
+		return
+	if _pending.has(_typing_in()):
+		_watching = true
+		_dock.get_tree().create_timer(HOLD_CHECK_SECONDS).timeout.connect(_check_held)
+		return
+	commit_pending()
+
+
+## The field the Inspector's focused text box belongs to, or "" when the focus is anywhere else.
+func _typing_in() -> String:
+	var inspector: Control = EditorInterface.get_inspector()
+	var focused: Control = inspector.get_viewport().gui_get_focus_owner() if inspector != null else null
+	while focused != null and not focused.is_class("EditorProperty"):
+		focused = focused.get_parent() as Control
+	if focused == null or focused.call("get_edited_object") != self:
+		return ""
+	return str(_keys.get(str(focused.call("get_edited_property")), ""))
+
+
+## Writes every held value, each as its own undo step, then lets the Inspector read what was really
+## written - a name the sheet refused goes back to the one it has.
+func commit_pending() -> void:
+	var held: Dictionary = _pending.duplicate()
+	_pending.clear()
+	for key: String in held:
+		var text: String = str(held[key]).strip_edges()
+		match key:
+			"name":
+				apply_name(text)
+			"description":
+				apply_field("description", text)
+			"category":
+				var current: String = live_function().ace_category.strip_edges() if live_function() != null else ""
+				# "Functions" is the heading an uncategorised function is already listed under, so
+				# choosing it for one with none is no change at all.
+				if text != current and not (text == "Functions" and current.is_empty()):
+					apply_field("ace_category", text)
+			_:
+				apply_param_default(int(key.get_slice(":", 1)), text)
+	refresh()
 
 
 # ── The writes: one undo step each, nothing written when nothing changed ────────────────────────
@@ -390,6 +425,13 @@ func _apply_param(index: int, key: String, value: String) -> void:
 	_dock._function_dialog_glue._apply_param_edit(data)
 
 
+## Add Parameter: the parameter window, the same one a function row's "+ Add parameter" opens.
+func add_param() -> void:
+	var target: EventFunction = live_function()
+	if target != null:
+		_dock._function_dialog_glue._open_function_dialog_add_param(target)
+
+
 ## Moves one parameter to another place in the list. Refused when the new order would put a
 ## parameter with a default before one without, which GDScript does not parse.
 func move_param(from_index: int, to_index: int) -> bool:
@@ -409,7 +451,7 @@ func move_param(from_index: int, to_index: int) -> bool:
 			return false
 		seen_default = seen_default or has_default
 	var function_name: String = _function_name
-	return _dock._perform_undoable_sheet_edit("Move Parameter", func() -> bool:
+	var moved_one: bool = _dock._perform_undoable_sheet_edit("Move Parameter", func() -> bool:
 		for entry: Variant in _dock._current_sheet.functions:
 			if entry is EventFunction and (entry as EventFunction).function_name == function_name:
 				var params: Array[ACEParam] = (entry as EventFunction).params
@@ -417,3 +459,5 @@ func move_param(from_index: int, to_index: int) -> bool:
 				params.insert(to_index, param)
 				return true
 		return false)
+	refresh()
+	return moved_one

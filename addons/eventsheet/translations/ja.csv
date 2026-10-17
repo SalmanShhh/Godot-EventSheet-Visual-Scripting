@@ -9338,3 +9338,5 @@ Remembered (older style),記憶（旧形式）
 Loaded and saved every run by the Remember Between Runs code an older version wrote. Update to Auto to choose its Save here.,以前のバージョンが書いた「実行間で記憶」のコードが、毎回の実行で読み込みと保存をしています。「自動に更新」を押すと、ここで保存方法を選べます。
 "An older version wrote code into this script that saves %s. Update to Auto turns that code into the Auto Save choice in one step (Ctrl+Z undoes it), with the same file and names, so values players already saved keep loading.",以前のバージョンが、%s を保存するコードをこのスクリプトに書き込みました。「自動に更新」はそのコードを一度の操作で保存の選択「自動」に置き換えます（Ctrl+Z で元に戻せます）。ファイルも名前も同じなので、プレイヤーがすでに保存した値はそのまま読み込まれます。
 Values players already saved for %s will not load after the rename: their save files keep them under %s.,プレイヤーが %s についてすでに保存した値は、名前を変えた後は読み込まれません。セーブファイルには %s の下に残っています。
+Function %s,関数 %s
+Move Up,上へ移動

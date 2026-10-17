@@ -1,9 +1,9 @@
 @tool
 extends RefCounted
-# Godot EventSheets - a selected function edited in the Properties bar, and the New Function window
-# on the window kit. Pins the fields the bar builds, that every dropdown describes each choice, and
-# that each field writes exactly one change (and nothing when nothing changed); then the window's
-# band, code name, title, help strip and IN CODE line.
+# Godot EventSheets - a selected function edited in Godot's own Inspector, and the New Function window
+# on the window kit. Pins the fields the Inspector is handed, that typed text waits until its field is
+# left, and that each field writes exactly one change (and nothing when nothing changed); then the
+# window's band, code name, title, help strip and IN CODE line.
 
 
 const SUPPORT := preload("res://tests/support.gd")
@@ -34,30 +34,40 @@ static func _test_inspector() -> bool:
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	dock.setup(sheet)
 	var inspector: RefCounted = load(INSPECTOR_PATH).new(dock, event_function)
-	var form: GridContainer = GridContainer.new()
-	form.columns = 2
-	inspector.build_into(form)
-	var labels: PackedStringArray = PackedStringArray()
-	var undescribed: int = 0
-	var children: Array[Node] = form.get_children()
-	for index: int in children.size():
-		var child: Node = children[index]
-		if index % 2 == 0 and child is Label:
-			labels.append((child as Label).text.get_slice("  ", 0))
-		for dropdown: Node in [child] + child.get_children():
-			if dropdown is OptionButton:
-				for item: int in (dropdown as OptionButton).item_count:
-					if (dropdown as OptionButton).get_item_tooltip(item).is_empty():
-						undescribed += 1
+	var shown: PackedStringArray = PackedStringArray()
+	for property: Dictionary in inspector.get_property_list():
+		if int(property.get("usage", 0)) & (PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_CATEGORY):
+			shown.append(str(property.get("name", "")))
 	var ok: bool = SUPPORT.pins(NAME, [
-		["the bar's fields, in the design's order", labels,
-			PackedStringArray(["Name", "Description", "Returns", "In Add Action", "Category", "Waits", "Shared", "PARAMETERS", "⋮⋮", "⋮⋮"])],
-		["every choice of every dropdown is described", undescribed, 0],
+		["the Inspector's fields, in the design's order", shown.slice(shown.find("Function take_damage")),
+			PackedStringArray(["Function take_damage", "Name", "Description", "Returns", "In Add Action", "Category",
+				"Waits", "Shared", "Parameters/1/Name", "Parameters/1/Type", "Parameters/1/Default",
+				"Parameters/2/Name", "Parameters/2/Type", "Parameters/2/Default", "Parameters/2/Move Up",
+				"Parameters/Add Parameter"])],
+		["the Inspector's own undo step is handed back to the funnel", inspector._dont_undo_redo(), true],
+		["a parameter shows its name exactly as written", inspector.get("Parameters/1/Name"), "amount"],
+		["Returns reads Nothing", inspector.get("Returns"), 0],
+		["In Add Action reads the flag", inspector.get("In Add Action"), true],
 		["a void function returns Nothing", load(INSPECTOR_PATH).return_word(event_function), "Nothing"],
 		["a builtin return word is stored as its type", load(INSPECTOR_PATH).return_fields("float"), [TYPE_FLOAT, ""]],
 		["Node rides in the type name", load(INSPECTOR_PATH).return_fields("Node"), [TYPE_MAX, "Node"]],
 		["a project class is kept as written", load(INSPECTOR_PATH).return_fields("HealthPool"), [TYPE_MAX, "HealthPool"]],
+		["a project class is offered as itself", load(INSPECTOR_PATH).type_words("HealthPool", false)[-1], "HealthPool"],
 	])
+	# Typed text is held until its field is left, then written once.
+	inspector.hold("description", "Hurts a lot.")
+	ok = SUPPORT.check(NAME, "a held description is not written yet", inspector.live_function().description, "Removes health.") and ok
+	ok = SUPPORT.check(NAME, "but the field shows what was typed", inspector.get("Description"), "Hurts a lot.") and ok
+	inspector.commit_pending()
+	ok = SUPPORT.check(NAME, "leaving the field writes it", inspector.live_function().description, "Hurts a lot.") and ok
+	inspector.set("Returns", 3)
+	ok = SUPPORT.check(NAME, "the Returns field writes", CompilerSpellingsProbe.return_name(inspector.live_function()), "float") and ok
+	inspector.set("Waits", true)
+	ok = SUPPORT.check(NAME, "the Waits field writes is_async", inspector.live_function().is_async, true) and ok
+	inspector.set("Parameters/2/Type", 2)
+	ok = SUPPORT.check(NAME, "a parameter's Type field writes", inspector.live_function().params[1].type_name, "float") and ok
+	inspector.set("Returns", 0)
+	inspector.set("Waits", false)
 	ok = SUPPORT.check(NAME, "the same return writes nothing", inspector.apply_returns("Nothing"), false) and ok
 	ok = SUPPORT.check(NAME, "a new return writes", inspector.apply_returns("float"), true) and ok
 	ok = SUPPORT.check(NAME, "the function now returns a float",
@@ -82,7 +92,6 @@ static func _test_inspector() -> bool:
 	ok = SUPPORT.check(NAME, "a rename writes", inspector.apply_name("hurt"), true) and ok
 	ok = SUPPORT.check(NAME, "and the fields follow the function by its new name", inspector.live_function() != null
 		and inspector.live_function().function_name == "hurt", true) and ok
-	form.free()
 	dock.free()
 	return ok
 

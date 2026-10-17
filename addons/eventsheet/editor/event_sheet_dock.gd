@@ -5924,12 +5924,10 @@ func _open_function_dialog() -> void:
 
 
 # ── ACE properties: a published verb's header click → dock/verb_properties_popup.gd ─────
-## Clicking a function's header shows what it is. On a sheet you are writing, the click selects the function and the Properties bar edits it; a
-## read-only preview keeps the popup, which only reads.
+## Clicking a function's header shows what it is. On a sheet you are writing, the click selects the
+## function and Godot's Inspector edits it; a read-only preview keeps the popup, which only reads.
 func open_verb_properties(event_function: Resource) -> void:
 	if _current_sheet != null and not _current_sheet.read_only:
-		if not _properties_bar.is_open():
-			_properties_bar.set_open(true)
 		_properties_bar.refresh()
 		return
 	_verb_properties.open_for(event_function)
