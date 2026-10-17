@@ -19,7 +19,25 @@ static func run() -> bool:
 static func _test_insert_rules() -> bool:
 	var insert: Script = load(INSERT_PATH)
 	var tree: Array = insert.tree_rows(PackedStringArray(["CharacterBody2D", "Area2D"]))
+	# Insert writes Godot's own Recent list the way Create New Node does: newest first, once each.
+	var lists: String = "user://script_class_lists_%d" % OS.get_process_id()
+	DirAccess.make_dir_recursive_absolute(lists)
+	FileAccess.open(lists.path_join("create_recent.Node"), FileAccess.WRITE).store_string("Sprite2D\nArea2D\nMyHandMadeClass\n")
+	insert.remember_recent("Area2D", lists)
+	insert.remember_recent("Resource", lists)
+	var recent_file: String = FileAccess.get_file_as_string(lists.path_join("create_recent.Node"))
+	var recent_read: PackedStringArray = insert.godot_class_list("create_recent", lists)
+	var nodes: PackedStringArray = ClassDB.get_inheriters_from_class("Node2D")
+	nodes.sort()
+	for class_id: String in nodes.slice(0, 20):
+		insert.remember_recent(class_id, lists)
+	var recent_kept: int = FileAccess.get_file_as_string(lists.path_join("create_recent.Node")).split("\n", false).size()
+	DirAccess.remove_absolute(lists.path_join("create_recent.Node"))
+	DirAccess.remove_absolute(lists)
 	return SUPPORT.pins(NAME, [
+		["Insert puts its class first in Godot's Recent list, keeping the rest as written", recent_file, "Area2D\nSprite2D\nMyHandMadeClass\n"],
+		["...and the window reads it back first", recent_read, PackedStringArray(["Area2D", "Sprite2D"])],
+		["the list never grows past Godot's fifteen", recent_kept, 15],
 		["an empty name asks for one", insert.name_problem("", "res://tests/"), "Name it to insert it."],
 		["a name code cannot write is refused", insert.name_problem("2fast", "res://tests/"), "\"2fast\" cannot be a class name."],
 		["a class Godot has is refused", insert.name_problem("Node2D", "res://tests/"), "\"Node2D\" is already the name of another class."],

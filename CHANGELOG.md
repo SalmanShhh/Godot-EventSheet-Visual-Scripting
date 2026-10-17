@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Added: Insert new object remembers its class in Godot's Recent list
+
+- A class made with Insert new object goes to the top of Godot's own Recent list, the one Create
+  New Node shows, the way Create New Node puts it there: newest first, each class once, fifteen at
+  most. Both windows then offer it again from Recent. Only node classes are added, since that list
+  offers only nodes.
+
 ### Fixed: Preview In Language reads a folder of catalogs, and the save words name what is there
 
 - View > Preview In Language offered only pseudo in a project with no `strings.csv`, whose catalog
