@@ -421,6 +421,21 @@ static func _test_the_running_script_is_not_reloaded() -> bool:
 	ok = _check("named the way git prints it, which is the same file",
 		EventSheetVerify.parse_failures("res://tools/verify_sheets.gd", "tools/verify_sheets.gd"),
 		([] as Array[Dictionary])) and ok
+	# The checker's own file is executing whenever it is asked anything, so it is answered the same
+	# way. A reload of it from inside itself leaves the running class half replaced, and the NEXT
+	# file's load takes the process down - so this is asked of the command in a process of its own,
+	# with the checker first and another file after it, exactly as the whole-project form reads them.
+	var output: Array = []
+	OS.execute(OS.get_executable_path(), PackedStringArray(["--headless", "--path",
+		ProjectSettings.globalize_path("res://"), "--script", "res://tools/verify_sheets.gd", "--",
+		"res://addons/eventforge/verify.gd", "res://addons/eventsheet/editor/identifier_rules.gd"]),
+		output, true)
+	var verdict: String = "the command printed no verdict"
+	for line: String in str(output[0] if not output.is_empty() else "").split("\n"):
+		if line.begins_with("verify: "):
+			verdict = line.strip_edges()
+	ok = _check("the checker's own file and the one after it are both read", verdict,
+		"verify: 2 file(s) read, nothing to answer.") and ok
 	DirAccess.remove_absolute(BROKEN_PATH)
 	return ok
 

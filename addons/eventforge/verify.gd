@@ -278,8 +278,14 @@ static func marker_failures(path: String, source: String) -> Array[Dictionary]:
 ## gate script lives in the project. That one file is answered by the fact that it is executing: a
 ## file the engine is running is a file the engine read. Its other three checks are asked as normal,
 ## so nothing about it goes unexamined.
+##
+## THIS FILE IS RUNNING TOO, whenever this function is: reloading it from here leaves the class
+## that is executing half replaced, and the next file's load takes the process down. So it is
+## answered the same way as the main script.
 static func parse_failures(path: String, running_script: String = "") -> Array[Dictionary]:
 	if not running_script.is_empty() and path == in_project(running_script):
+		return []
+	if path == (EventSheetVerify as Script).resource_path:
 		return []
 	var loaded: Variant = ResourceLoader.load(path, "GDScript", ResourceLoader.CACHE_MODE_IGNORE)
 	if loaded is GDScript and not (loaded as GDScript).get_instance_base_type().is_empty():

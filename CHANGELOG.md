@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Fixed: the plugin opens its own code cleanly
+
+- Opening the first sheet of a session no longer prints the engine warning "OptimizedTranslation
+  does not store the message texts". The shipped translations import compressed, and a compressed
+  translation has no message texts to list; the CSV beside it is read instead, as it always was.
+- `tools/verify_sheets.gd` no longer crashes when its files include the checker's own
+  `addons/eventforge/verify.gd`, so the whole-project form reads every file again. The checker's
+  own file is answered by the fact that it is running, like the command script already was.
+
 ### Fixed: six edges of the variables, functions, translation and save slices
 
 - Group ▸ New group… is greyed for a variable declared in another file, with the same hover as End

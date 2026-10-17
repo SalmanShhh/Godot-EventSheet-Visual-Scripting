@@ -17,6 +17,8 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 const TEST_CSV := "user://eventforge_l10n_test.csv"
+## Reads the translations first in a process of its own, where the engine has not warned yet.
+const FIRST_READ_PROBE := "res://tests/l10n_first_read_probe.gd"
 
 
 static func run() -> bool:
@@ -76,6 +78,24 @@ static func run() -> bool:
 	all_passed = _check("API lists the languages", Array(EventSheets.available_languages()).has("fr"), true) and all_passed
 	EventSheets.set_editor_language("en")
 	all_passed = _check("API restores the English default", EventSheets.translate("Save"), "Save") and all_passed
+
+	# 3b. The shipped CSVs import compressed, as OptimizedTranslation files beside them. Those keep
+	# hashes rather than texts, so there is nothing to list - and asking one prints an engine warning
+	# the first time the translations are read. The warning prints once per process, and this one has
+	# read them long ago, so the first read is made in a process of its own.
+	var output: Array = []
+	OS.execute(OS.get_executable_path(), PackedStringArray(["--headless", "--path",
+		ProjectSettings.globalize_path("res://"), "--script", FIRST_READ_PROBE]), output, true)
+	var heard: PackedStringArray = PackedStringArray()
+	var verdict: String = "the probe printed no verdict"
+	for line: String in str(output[0] if not output.is_empty() else "").split("\n"):
+		if line.begins_with("l10n_probe_heard "):
+			heard.append(line.trim_prefix("l10n_probe_heard ").strip_edges())
+		elif line.begins_with("l10n_probe heard="):
+			verdict = line.strip_edges()
+	all_passed = _check("the first read of the translations runs to its end", verdict,
+		"l10n_probe heard=%d" % heard.size()) and all_passed
+	all_passed = _check("and says nothing to the engine log", heard, PackedStringArray()) and all_passed
 
 	# 4. Cleanup: the catalogs are static session state - restore pristine English for the rest
 	# of the suite (rescan drops the user:// test file's messages; only scan-dir files reload).

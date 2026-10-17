@@ -169,7 +169,10 @@ static func _load_translation_resource(path: String) -> bool:
 	if not ResourceLoader.exists(path):
 		return false
 	var resource: Resource = load(path)
-	if not (resource is Translation):
+	# A CSV imported with compression on becomes an OptimizedTranslation, which keeps hashes rather
+	# than its message texts: it has nothing to list, and asking it prints an engine warning. The CSV
+	# it was imported from sits in the same folder and is read in its place.
+	if not (resource is Translation) or resource is OptimizedTranslation:
 		return false
 	var translation: Translation = resource as Translation
 	var locale: String = translation.locale.strip_edges()
