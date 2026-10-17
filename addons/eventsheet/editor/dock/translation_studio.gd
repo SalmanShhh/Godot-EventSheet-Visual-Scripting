@@ -274,7 +274,7 @@ func run_extract() -> Dictionary:
 		_line(EventSheetL10n.translate("%d lines already in the table were kept as they were: nothing is overwritten.") % (keys - added))]
 	if int(outcome.get("kept", 0)) > 0:
 		lines.append(_line(EventSheetL10n.translate("%d lines are no longer said anywhere. They stay in the table until you remove them (Check shows them).") % int(outcome["kept"]), EventSheetPopupUI.TONE_WARNING))
-	_show_result("find", lines, PackedStringArray([EventSheetL10n.translate("%d lines") % keys, EventSheetL10n.translate("%d new") % added]))
+	_show_result("find", _left_alone(lines, outcome), PackedStringArray([EventSheetL10n.translate("%d lines") % keys, EventSheetL10n.translate("%d new") % added]))
 	return outcome
 
 
@@ -283,9 +283,9 @@ func run_add_language(locale: String) -> Dictionary:
 	var outcome: Dictionary = EventSheetTranslationScan.add_locale(catalog_path(), locale)
 	if _failed("add", outcome):
 		return outcome
-	_show_result("add", [_line(EventSheetL10n.translate("Every line got an empty %s column. Godot makes a translation file for it, next to the others.") % locale,
+	_show_result("add", _left_alone([_line(EventSheetL10n.translate("Every line got an empty %s column. Godot makes a translation file for it, next to the others.") % locale,
 			EventSheetPopupUI.TONE_OK, "%s.%s.translation" % [_first_catalog().get_basename(), locale]),
-		_line(EventSheetL10n.translate("It shows as 0% until text is filled in. Players cannot pick it until it is turned on in step 4."), EventSheetPopupUI.TONE_WARNING)],
+		_line(EventSheetL10n.translate("It shows as 0% until text is filled in. Players cannot pick it until it is turned on in step 4."), EventSheetPopupUI.TONE_WARNING)], outcome),
 		PackedStringArray([TranslationServer.get_locale_name(locale), EventSheetL10n.translate("1 new column")]))
 	return outcome
 
@@ -301,7 +301,7 @@ func run_import(returned: String) -> Dictionary:
 		_line(EventSheetL10n.translate("Blank cells in that file left yours alone."))]
 	if not unknown.is_empty():
 		lines.append(_line(EventSheetL10n.translate("%d lines in that file are in no script, so they were not added: %s.") % [unknown.size(), _first_few(unknown)], EventSheetPopupUI.TONE_WARNING))
-	_show_result("bring", lines, PackedStringArray([returned.get_file(), EventSheetL10n.translate("%d cells filled") % filled]))
+	_show_result("bring", _left_alone(lines, outcome),PackedStringArray([returned.get_file(), EventSheetL10n.translate("%d cells filled") % filled]))
 	return outcome
 
 
@@ -340,8 +340,8 @@ func run_pseudo() -> Dictionary:
 	if _failed("pseudo", outcome):
 		return outcome
 	show_filter("pseudo")
-	_show_result("pseudo", [_line(EventSheetL10n.translate("The table shows the fake column. Play the game in it with Set Language (qps): text still in plain English was never marked for translation, and anything cut off needs a wider box."), EventSheetPopupUI.TONE_OK, catalog_path()),
-		_line(EventSheetL10n.translate("It is a test column: leave qps out of any language list your players see."), EventSheetPopupUI.TONE_WARNING)],
+	_show_result("pseudo", _left_alone([_line(EventSheetL10n.translate("The table shows the fake column. Play the game in it with Set Language (qps): text still in plain English was never marked for translation, and anything cut off needs a wider box."), EventSheetPopupUI.TONE_OK, catalog_path()),
+		_line(EventSheetL10n.translate("It is a test column: leave qps out of any language list your players see."), EventSheetPopupUI.TONE_WARNING)], outcome),
 		PackedStringArray([EventSheetL10n.translate("%d lines") % int(outcome.get("rows", 0)), EventSheetL10n.translate("+40% longer, accented")]))
 	return outcome
 
@@ -391,6 +391,17 @@ func _show_result(id: String, lines: Array, figures: PackedStringArray = PackedS
 
 func _line(text: String, tone: String = EventSheetPopupUI.TONE_OK, file: String = "") -> Dictionary:
 	return {"text": text, "tone": tone, "file": file}
+
+
+## `lines` plus, when a step left hand-made catalogs alone, one more line naming every one of them
+## by its place in the folder: the studio never writes a catalog it did not make.
+func _left_alone(lines: Array, outcome: Dictionary) -> Array:
+	var places: PackedStringArray = PackedStringArray()
+	for path: String in (outcome.get("left_alone", PackedStringArray()) as PackedStringArray):
+		places.append(path.trim_prefix(catalog_path().rstrip("/") + "/"))
+	if not places.is_empty():
+		lines.append(_line(EventSheetL10n.translate("%d catalogs here were made by hand, so nothing was written to them: %s.") % [places.size(), ", ".join(places)], EventSheetPopupUI.TONE_WARNING))
+	return lines
 
 
 ## The real languages of a column list: no source column, no fake one.

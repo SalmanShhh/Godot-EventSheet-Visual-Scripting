@@ -18,11 +18,18 @@ const FOLDER := "user://eventforge_catalogs_i18n"
 const SINGLE := "user://eventforge_catalogs_single.csv"
 const RETURNED := "user://eventforge_catalogs_returned.csv"
 const TABLE_FILE := "user://eventforge_catalogs_table.csv"
+const HAND_PROJECT := "user://eventforge_hand_made_project"
+const HAND_FOLDER := "user://eventforge_hand_made_i18n"
+## Godot's own catalog shape, written by hand: keys plus languages, Windows line endings, a quoted
+## cell the codec would not have quoted. Any rewrite at all would change at least one byte.
+const HAND_UI := "keys,en,fr\r\nBuy,Buy,Acheter\r\n\"Refund\",Refund,Rembourser\r\n"
+const HAND_STRINGS := "keys,en\nPlay,Play\n"
 
 
 static func run() -> bool:
 	_clean()
 	var all_passed: bool = _run_folders()
+	all_passed = _run_hand_made() and all_passed
 	all_passed = _run_table() and all_passed
 	all_passed = _run_view() and all_passed
 	_clean()
@@ -34,8 +41,8 @@ static func _run_folders() -> bool:
 	_write(PROJECT + "/ui/shop.gd", "extends Node\n\n\nfunc _ready() -> void:\n\t$Buy.text = tr(\"Buy\")\n")
 	_write(PROJECT + "/dialogue/chapter_03/inn.gd",
 		"extends Node\n\n\nfunc _ready() -> void:\n\t# The innkeeper, a little tired.\n\t$Line.text = tr(\"Welcome, traveller.\")\n")
-	# The project grew out of one strings.csv, and Buy was finished in it before the split.
-	_write(FOLDER + "/strings.csv", "keys,en,fr\nBuy,Buy,Acheter\n")
+	# The project grew out of the strings.csv the studio wrote, and Buy was finished in it before the split.
+	_write(FOLDER + "/strings.csv", "keys,en,fr,notes\nBuy,Buy,Acheter,shop.gd:5\n")
 	var scan: Script = EventSheetTranslationScan
 	var outcome: Dictionary = scan.extract(PROJECT, FOLDER)
 	var single: Dictionary = scan.extract(PROJECT, SINGLE)
@@ -88,6 +95,69 @@ static func _run_folders() -> bool:
 		["a batch of pseudo text is the one-at-a-time text", EventSheetGameCatalog.pseudolocalize_all(PackedStringArray(["Play", ""])),
 			PackedStringArray([EventSheetGameCatalog.pseudolocalize("Play"), ""])],
 	]) and all_passed
+	return all_passed
+
+
+# A hand-made catalog under the folder is read but never written: a new key its folder says goes to
+# a studio catalog beside it, and every step names the hand-made ones it left alone.
+static func _run_hand_made() -> bool:
+	_write(HAND_PROJECT + "/main.gd", "extends Node\n\n\nfunc _ready() -> void:\n\t$Play.text = tr(\"Play\")\n\t$Quit.text = tr(\"Quit\")\n")
+	_write(HAND_PROJECT + "/ui/shop.gd", "extends Node\n\n\nfunc _ready() -> void:\n\t$Buy.text = tr(\"Buy\")\n\t$Sell.text = tr(\"Sell\")\n")
+	_write(HAND_FOLDER + "/ui.csv", HAND_UI)
+	_write(HAND_FOLDER + "/strings.csv", HAND_STRINGS)
+	var scan: Script = EventSheetTranslationScan
+	var editor: EventSheetEditor = EventSheetEditor.new()
+	var studio: EventSheetTranslationStudio = editor._translation_studio
+	studio._build_window()
+	studio.scan_folder = HAND_PROJECT
+	studio.catalog_target = HAND_FOLDER
+	# Notes off: folder mode still writes the notes column, the mark the studio knows its own by.
+	var outcome: Dictionary = scan.extract(HAND_PROJECT, HAND_FOLDER, false)
+	var again: Dictionary = studio.run_extract()
+	var card: PackedStringArray = PackedStringArray()
+	for row: Node in (studio._results["find"] as EventSheetPopupUI.ResultCard).lines_box.get_children():
+		card.append((row.get_child(1) as Label).text)
+	var all_passed: bool = SUPPORT.pins(NAME, [
+		["the hand-made catalogs are byte for byte as written", [FileAccess.get_file_as_string(HAND_FOLDER + "/ui.csv"),
+			FileAccess.get_file_as_string(HAND_FOLDER + "/strings.csv")], [HAND_UI, HAND_STRINGS]],
+		["a new key their folders say goes to a studio catalog beside each", scan.catalog_files(HAND_FOLDER), PackedStringArray([
+			HAND_FOLDER + "/strings.csv", HAND_FOLDER + "/strings.extracted.csv", HAND_FOLDER + "/ui.csv", HAND_FOLDER + "/ui.extracted.csv"])],
+		["holding only the keys no catalog had, with the notes column", [FileAccess.get_file_as_string(HAND_FOLDER + "/ui.extracted.csv"),
+			FileAccess.get_file_as_string(HAND_FOLDER + "/strings.extracted.csv")],
+			["keys,en,notes\nSell,Sell,shop.gd:6\n", "keys,en,notes\nQuit,Quit,main.gd:6\n"]],
+		["the outcome names every hand-made catalog it left alone", outcome.get("left_alone", PackedStringArray()),
+			PackedStringArray([HAND_FOLDER + "/strings.csv", HAND_FOLDER + "/ui.csv"])],
+		["and says so", str(outcome.get("message", "")),
+			"2 key(s) in 2 catalog(s) under %s - 2 new, 0 already translated and kept. 2 hand-made catalog(s) left as they were: %s/strings.csv, %s/ui.csv."
+			% [HAND_FOLDER, HAND_FOLDER, HAND_FOLDER]],
+		["a second Find text finds its own catalogs again and adds nothing", [int(again.get("added", -1)), int(again.get("keys", 0))], [0, 2]],
+		["the result card names every hand-made catalog", card[card.size() - 1],
+			"2 catalogs here were made by hand, so nothing was written to them: strings.csv, ui.csv."],
+		["the studio's own catalog is recognised, a Godot one is not",
+			[scan.is_studio_catalog(HAND_FOLDER + "/ui.extracted.csv"), scan.is_studio_catalog(HAND_FOLDER + "/ui.csv")], [true, false]],
+		["a hand-made strings.csv does not make the project a one-file target", scan.default_catalog_target(HAND_FOLDER), HAND_FOLDER],
+		["a studio-made one does", scan.default_catalog_target(FOLDER), FOLDER + "/strings.csv"],
+	])
+	# Bringing a file back, adding a language and the fake column write only the studio's catalogs.
+	_write(RETURNED, "keys,fr\nSell,Vendre\nBuy,Acheter encore\n")
+	var imported: Dictionary = scan.import_catalog(RETURNED, HAND_FOLDER)
+	var added: Dictionary = scan.add_locale(HAND_FOLDER, "de")
+	var pseudo: Dictionary = EventSheetGameCatalog.write_pseudo_column(HAND_FOLDER)
+	var view: VBoxContainer = load(VIEW_PATH).new()
+	view.show_catalogs(scan.catalog_files(HAND_FOLDER), HAND_FOLDER)
+	all_passed = SUPPORT.pins(NAME, [
+		["after all three the hand-made catalogs are still byte for byte as written",
+			[FileAccess.get_file_as_string(HAND_FOLDER + "/ui.csv"), FileAccess.get_file_as_string(HAND_FOLDER + "/strings.csv")], [HAND_UI, HAND_STRINGS]],
+		["the returned line lands in the studio catalog", FileAccess.get_file_as_string(HAND_FOLDER + "/ui.extracted.csv"),
+			"keys,en,notes,fr,de,qps\nSell,Sell,shop.gd:6,Vendre,,%s\n" % EventSheetGameCatalog.pseudolocalize("Sell")],
+		["a line a hand-made catalog holds is not reported as in no script", imported.get("unknown", PackedStringArray()), PackedStringArray()],
+		["each step names the catalogs it left alone", [imported.get("left_alone"), added.get("left_alone"), pseudo.get("left_alone")],
+			[outcome.get("left_alone"), outcome.get("left_alone"), outcome.get("left_alone")]],
+		["the picker says a studio catalog beside a hand-made one holds that folder's text", view._picker.get_item_tooltip(3),
+			"The text the files in res://ui/ say."],
+	]) and all_passed
+	view.free()
+	editor.free()
 	return all_passed
 
 
@@ -159,7 +229,7 @@ static func _write(path: String, text: String) -> void:
 
 
 static func _clean() -> void:
-	for root: String in [PROJECT, FOLDER]:
+	for root: String in [PROJECT, FOLDER, HAND_PROJECT, HAND_FOLDER]:
 		for path: String in EventSheetTranslationScan.files_under(root, ["gd", "csv", "translation"]):
 			DirAccess.remove_absolute(path)
 	for path: String in [SINGLE, RETURNED, TABLE_FILE]:

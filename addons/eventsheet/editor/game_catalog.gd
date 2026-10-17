@@ -197,14 +197,15 @@ static func _restore_slots(pseudo: String, restore: Array) -> String:
 
 ## Writes a pseudo column into a translator CSV. It REFUSES to write into a real language's column:
 ## pseudo text in a shipped locale is a bug nobody would ever find by reading the file, so the only
-## column this will fill is a pseudo one.
+## column this will fill is a pseudo one. In a folder of catalogs it writes only the studio-made
+## ones; `left_alone` names the hand-made ones it did not touch.
 static func write_pseudo_column(csv_path: String, locale: String = PSEUDO_LOCALE,
 		expansion: float = DEFAULT_EXPANSION, separator: String = ",") -> Dictionary:
 	var column: String = locale.strip_edges()
 	if not is_pseudo_locale(column):
 		return {"ok": false, "message": "\"%s\" is a real language - pseudo text only ever goes in a throwaway column (qps)." % column}
 	var scan: Script = ReadingDoors.translation_scan()
-	var paths: PackedStringArray = scan.catalog_files(csv_path)
+	var paths: PackedStringArray = scan.studio_catalogs(csv_path, separator)
 	if paths.is_empty():
 		return scan.read_catalog(csv_path, separator)
 	var total: int = 0
@@ -235,8 +236,8 @@ static func write_pseudo_column(csv_path: String, locale: String = PSEUDO_LOCALE
 		if not bool(written.get("ok", false)):
 			return written
 		total += rows.size()
-	return {"ok": true, "rows": total,
-		"message": "Wrote a \"%s\" pseudo column for %d key(s) in %s - switch to it with Set Language to see what clips." % [column, total, csv_path]}
+	return {"ok": true, "rows": total, "left_alone": scan.hand_made_catalogs(csv_path, separator),
+		"message":"Wrote a \"%s\" pseudo column for %d key(s) in %s - switch to it with Set Language to see what clips." % [column, total, csv_path]}
 
 
 ## True for a locale that is a test language rather than one a player ever picks. Godot standardizes

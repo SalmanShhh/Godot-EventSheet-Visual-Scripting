@@ -23,6 +23,15 @@
 # MERGING NEVER CLOBBERS. Re-extracting keeps every filled cell that is already there and only adds
 # the keys that are new, because the file a translator sent back is the one thing this must never
 # overwrite.
+#
+# A HAND-MADE CATALOG IS NEVER REWRITTEN. In a folder target every write goes to a catalog the
+# studio made itself, and the studio knows its own by the header it writes: a first column named
+# "keys" AND a "notes" column. Godot's own CSV format is the key column plus one column per
+# language, so a catalog somebody wrote by hand for Godot has no "notes" column - which is why
+# folder mode writes that column into every catalog it makes, notes on or off. A hand-made catalog
+# is still READ (a key it holds counts as held, so it is never copied into a second file), but
+# nothing writes it: a new key whose folder's catalog is hand-made goes to a studio catalog beside
+# it, <name>.extracted.csv, and every outcome names the hand-made catalogs it left alone.
 @tool
 class_name EventSheetTranslationScan
 extends RefCounted
@@ -38,6 +47,8 @@ const NOTES_COLUMN := "notes"
 const NON_LOCALE_COLUMNS: Array[String] = [KEY_COLUMN, NOTES_COLUMN]
 ## The translating calls the sweep recognises, longest first so `tr_n` is never read as `tr`.
 const TRANSLATE_CALLS: Array[String] = ["tr_n", "atr_n", "tr", "atr"]
+## What a studio catalog made beside a hand-made one adds to the hand-made one's name.
+const EXTRACTED_SUFFIX := ".extracted"
 
 # ── Scanning source text ─────────────────────────────────────────────────────
 
@@ -366,7 +377,9 @@ static func locales_of(columns: PackedStringArray) -> PackedStringArray:
 ## res://dialogue/chapter_03/inn.gd lands in <folder>/dialogue/chapter_03.csv, one said at the top
 ## of the project in <folder>/strings.csv. A key some catalog under the folder already holds stays
 ## in that catalog - a finished translation is never moved, and a project that grew out of one
-## strings.csv keeps every key it had there.
+## strings.csv keeps every key it had there. Folder mode always writes the notes column (it is how
+## the studio knows its own catalogs again) and never writes a hand-made catalog: `left_alone`
+## names each one.
 static func extract(root: String, csv_path: String, include_notes: bool = true, separator: String = ",") -> Dictionary:
 	var discovered: Array = scan_scripts(root)
 	discovered.append_array(scan_data_assets(root))
@@ -378,6 +391,7 @@ static func extract(root: String, csv_path: String, include_notes: bool = true, 
 		notes[str(key)] = str((folded[key] as Dictionary).get("note", ""))
 	if is_single_catalog(csv_path):
 		return merge_keys(csv_path, keys, notes, include_notes, separator)
+	var hand_made: PackedStringArray = hand_made_catalogs(csv_path, separator)
 	var owners: Dictionary = {}
 	for path: String in catalog_files(csv_path):
 		for key: Variant in (read_catalog(path, separator).get("by_key", {}) as Dictionary):
@@ -386,6 +400,10 @@ static func extract(root: String, csv_path: String, include_notes: bool = true, 
 	for key: String in keys:
 		var first_site: Dictionary = ((folded[key] as Dictionary).get("sites", []) as Array)[0]
 		var home: String = str(owners.get(key, folder_catalog(str(first_site.get("path", "")), root, csv_path)))
+		if owners.has(key) and hand_made.has(home):
+			continue
+		while hand_made.has(home):
+			home = "%s%s.csv" % [home.get_basename(), EXTRACTED_SUFFIX]
 		if not groups.has(home):
 			groups[home] = []
 		(groups[home] as Array).append(key)
@@ -394,18 +412,56 @@ static func extract(root: String, csv_path: String, include_notes: bool = true, 
 	var totals: Dictionary = {"keys": 0, "added": 0, "kept": 0}
 	for home: String in homes:
 		DirAccess.make_dir_recursive_absolute(home.get_base_dir())
-		var outcome: Dictionary = merge_keys(home, PackedStringArray(groups[home]), notes, include_notes, separator)
+		var outcome: Dictionary = merge_keys(home, PackedStringArray(groups[home]), notes, true, separator)
 		if not bool(outcome.get("ok", false)):
 			return outcome
 		for count: String in totals:
 			totals[count] += int(outcome.get(count, 0))
 	totals["ok"] = true
 	totals["catalogs"] = PackedStringArray(homes)
+	totals["left_alone"] = hand_made
 	var kept: int = int(totals["kept"])
-	totals["message"] = "%d key(s) in %d catalog(s) under %s - %d new, %d already translated and kept%s." % [totals["keys"],
+	totals["message"] = "%d key(s) in %d catalog(s) under %s - %d new, %d already translated and kept%s.%s" % [totals["keys"],
 		homes.size(), csv_path, totals["added"], int(totals["keys"]) - int(totals["added"]),
-		", %d no script says any more" % kept if kept > 0 else ""]
+		", %d no script says any more" % kept if kept > 0 else "", _left_alone_note(hand_made)]
 	return totals
+
+
+## True for a catalog the studio made: its header's first column is "keys" and it has a "notes"
+## column (the rule, and why, is at the top of this file). A file that is not there is not one.
+static func is_studio_catalog(path: String, separator: String = ",") -> bool:
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return false
+	var names: PackedStringArray = PackedStringArray()
+	for cell: String in EventSheetGridCSV.split_cells(file.get_line().strip_edges(), separator):
+		names.append(cell.strip_edges())
+	return not names.is_empty() and names[0] == KEY_COLUMN and names.has(NOTES_COLUMN)
+
+
+## The catalogs under a folder target that somebody made by hand - read, never written. A one-file
+## target has none: the file named is the file written, as it always was.
+static func hand_made_catalogs(target: String, separator: String = ",") -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	if is_single_catalog(target):
+		return found
+	for path: String in catalog_files(target):
+		if not is_studio_catalog(path, separator):
+			found.append(path)
+	return found
+
+
+## The catalogs a target lets the studio write: the one file, or the folder's studio-made ones.
+static func studio_catalogs(target: String, separator: String = ",") -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for path: String in catalog_files(target):
+		if is_single_catalog(target) or is_studio_catalog(path, separator):
+			found.append(path)
+	return found
+
+
+static func _left_alone_note(hand_made: PackedStringArray) -> String:
+	return "" if hand_made.is_empty() else " %d hand-made catalog(s) left as they were: %s." % [hand_made.size(), ", ".join(hand_made)]
 
 
 ## True for a target that is one catalog file rather than a folder of them.
@@ -435,10 +491,12 @@ static func catalog_files(target: String) -> PackedStringArray:
 	return files_under(target, ["csv"])
 
 
-## Where a project starts: the strings.csv it already has keeps being THE catalog, and a project with
-## none gets the folder, one catalog per folder of the game.
-static func default_catalog_target() -> String:
-	return "res://i18n/strings.csv" if FileAccess.file_exists("res://i18n/strings.csv") else "res://i18n"
+## Where a project starts: the strings.csv the studio already made keeps being THE catalog, and a
+## project with none - or with one written by hand, which the studio never rewrites - gets the
+## folder, one catalog per folder of the game.
+static func default_catalog_target(folder: String = "res://i18n") -> String:
+	var single: String = "%s/strings.csv" % folder
+	return single if is_studio_catalog(single) else folder
 
 
 ## The catalog a key said in `source_path` lands in when `folder` holds one per project folder: the
@@ -526,7 +584,7 @@ static func write_catalog(csv_path: String, rows: Array, columns: PackedStringAr
 ## a folder of them. Godot's importer turns each into one more .translation beside the others; a
 ## catalog that already has the column is refused rather than doubled.
 static func add_locale(target: String, locale: String, separator: String = ",") -> Dictionary:
-	var paths: PackedStringArray = catalog_files(target)
+	var paths: PackedStringArray = studio_catalogs(target, separator)
 	for path: String in paths if not paths.is_empty() else PackedStringArray([target]):
 		var catalog: Dictionary = read_catalog(path, separator)
 		if not bool(catalog.get("ok", false)):
@@ -538,7 +596,9 @@ static func add_locale(target: String, locale: String, separator: String = ",") 
 		var written: Dictionary = write_catalog(path, catalog.get("rows", []), columns, separator)
 		if not bool(written.get("ok", false)):
 			return written
-	return {"ok": true, "message": "Added an empty %s column to %s." % [locale, target]}
+	var hand_made: PackedStringArray = hand_made_catalogs(target, separator)
+	return {"ok": true, "left_alone": hand_made,
+		"message": "Added an empty %s column to %s.%s" % [locale, target, _left_alone_note(hand_made)]}
 
 
 ## Folds repeated sightings of one key into a single entry, whose note names every place it is said
@@ -619,7 +679,7 @@ static func import_catalog(returned_csv: String, target_csv: String, separator: 
 		return returned
 	var filled: int = 0
 	var unknown: Variant = null
-	var targets: PackedStringArray = PackedStringArray([target_csv]) if is_single_catalog(target_csv) else catalog_files(target_csv)
+	var targets: PackedStringArray = PackedStringArray([target_csv]) if is_single_catalog(target_csv) else studio_catalogs(target_csv, separator)
 	if targets.is_empty():
 		return {"ok": false, "message": "There is no catalog under %s yet to merge into." % target_csv}
 	for path: String in targets:
@@ -634,10 +694,16 @@ static func import_catalog(returned_csv: String, target_csv: String, separator: 
 				still.append(key)
 		unknown = still
 	var unknown_keys: PackedStringArray = unknown if unknown != null else PackedStringArray()
+	var hand_made: PackedStringArray = hand_made_catalogs(target_csv, separator)
+	for path: String in hand_made:
+		# A line a hand-made catalog holds is known - it was left alone, not missing from the game.
+		for key: Variant in (read_catalog(path, separator).get("by_key", {}) as Dictionary):
+			unknown_keys.erase(str(key))
 	var unknown_note: String = "" if unknown_keys.is_empty() \
 		else " %d key(s) in that file are in no script - %s." % [unknown_keys.size(), ", ".join(unknown_keys)]
-	return {"ok": true, "filled": filled, "unknown": unknown_keys,
-		"message": "Merged %s into %s - %d cell(s) filled.%s" % [returned_csv.get_file(), target_csv, filled, unknown_note]}
+	return {"ok": true, "filled": filled, "unknown": unknown_keys, "left_alone": hand_made,
+		"message": "Merged %s into %s - %d cell(s) filled.%s%s" % [returned_csv.get_file(), target_csv, filled, unknown_note,
+			_left_alone_note(hand_made)]}
 
 
 static func _import_into(returned: Dictionary, target_csv: String, separator: String) -> Dictionary:

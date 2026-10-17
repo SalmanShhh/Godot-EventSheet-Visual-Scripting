@@ -120,7 +120,8 @@ func show_catalogs(paths: PackedStringArray, root: String = "", chosen: String =
 	_picker.clear()
 	for path: String in paths:
 		var place: String = path.trim_prefix(root.rstrip("/")).lstrip("/") if not root.is_empty() else path.get_file()
-		var folder: String = place.get_basename()
+		# A studio catalog made beside a hand-made one says the same folder's text.
+		var folder: String = place.get_basename().trim_suffix(_scan().EXTRACTED_SUFFIX)
 		EventSheetPopupUI.add_described_item(_picker, place,
 			EventSheetL10n.translate("The text the files at the top of the project say.") if folder == "strings"
 			else EventSheetL10n.translate("The text the files in %s say.") % ("res://%s/" % folder), path)

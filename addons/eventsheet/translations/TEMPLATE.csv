@@ -9310,3 +9310,4 @@ No breakpoints. Select a row and press F9 to pause the running game there; More 
 "Each moment is counted off the game's report frames, so it is accurate to a quarter of a second and no finer. The game reports one state per running copy without saying which node sent it, so this describes ONE running object: with several stateful objects alive at once their reports interleave here.",
 Nothing to point at in this trail.,
 No change of state in this run yet.,
+"%d catalogs here were made by hand, so nothing was written to them: %s.",

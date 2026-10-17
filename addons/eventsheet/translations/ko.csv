@@ -9326,3 +9326,4 @@ No breakpoints. Select a row and press F9 to pause the running game there; More 
 "Each moment is counted off the game's report frames, so it is accurate to a quarter of a second and no finer. The game reports one state per running copy without saying which node sent it, so this describes ONE running object: with several stateful objects alive at once their reports interleave here.","각 순간은 게임의 보고 프레임으로 세므로 정밀도는 0.25초까지입니다. 게임은 실행 중인 사본마다 상태 하나를 보고하지만 어느 노드가 보냈는지는 말하지 않으므로, 이것은 실행 중인 오브젝트 하나를 설명합니다. 상태를 가진 오브젝트가 동시에 여럿 있으면 보고가 여기서 섞입니다."
 Nothing to point at in this trail.,이 기록에서 짚을 것이 없습니다.
 No change of state in this run yet.,이번 실행에서는 아직 상태 변화가 없습니다.
+"%d catalogs here were made by hand, so nothing was written to them: %s.","%d개의 카탈로그는 직접 만든 것이라 아무것도 쓰지 않았습니다: %s."

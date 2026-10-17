@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Fixed: the Translation Studio never rewrites a catalog you wrote by hand
+
+- With a folder of catalogs (`res://i18n`), Find text, Add a language, bringing a file back and the
+  fake language now write only the catalogs the studio made itself. It knows them by the header it
+  writes: `keys` first and a `notes` column, which a catalog written by hand for Godot does not
+  have. A hand-made `.csv` under the folder is still read, so a line it holds is never copied into
+  a second file, but it stays byte for byte as you wrote it.
+- A new line whose folder's catalog is hand-made goes into a studio catalog beside it
+  (`ui.extracted.csv` next to `ui.csv`), and each step's result card names every hand-made
+  catalog it left alone. Folder mode always writes the `notes` column, notes on or off, since it is
+  how the studio knows its own catalogs again.
+- A hand-made `i18n/strings.csv` no longer makes the studio treat the project as a one-file
+  target; it starts on the folder instead. A line a hand-made catalog holds is no longer reported as
+  "in no script" when a translator's file brings it back.
+
 ### Fixed: Insert keeps Godot's whole Recent list, and four smaller edges
 
 - Insert new object put its class first in Godot's own Create New Node Recent list and then kept

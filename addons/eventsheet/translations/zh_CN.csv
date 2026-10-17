@@ -9326,3 +9326,4 @@ No breakpoints. Select a row and press F9 to pause the running game there; More 
 "Each moment is counted off the game's report frames, so it is accurate to a quarter of a second and no finer. The game reports one state per running copy without saying which node sent it, so this describes ONE running object: with several stateful objects alive at once their reports interleave here.",每个时刻按游戏的报告帧计数，因此精确到四分之一秒，不会更细。游戏为每个运行中的副本报告一个状态，但不说明是哪个节点发送的，所以这里描述的是“一个”运行中的对象：若同时存在多个有状态的对象，它们的报告会在这里交错。
 Nothing to point at in this trail.,这段轨迹中没有需要指出的。
 No change of state in this run yet.,本次运行中还没有状态变化。
+"%d catalogs here were made by hand, so nothing was written to them: %s.",有 %d 个目录是手工制作的，因此没有向其中写入任何内容：%s。
