@@ -126,7 +126,7 @@ static func sheet_for(class_id: String, typed_name: String, tool_on: bool) -> Ev
 
 ## The top of the file Insert writes, exactly as the compiler writes it.
 static func file_head(class_id: String, typed_name: String, tool_on: bool) -> String:
-	return str(SheetCompiler.compile(sheet_for(class_id, typed_name, tool_on), "", true).get("output", "")).strip_edges()
+	return str(SheetCompiler.echo(sheet_for(class_id, typed_name, tool_on), true).get("output", "")).strip_edges()
 
 
 ## The class tree list view shows for `classes`: each with every ancestor up to a root, in tree

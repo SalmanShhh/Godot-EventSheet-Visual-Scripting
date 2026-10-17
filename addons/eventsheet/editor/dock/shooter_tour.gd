@@ -88,7 +88,7 @@ static func steps() -> Array[Dictionary]:
 static func _writes(sheet: EventSheetResource, snippets: Array) -> bool:
 	if sheet == null:
 		return false
-	var output: String = str(SheetCompiler.compile(sheet, "").get("output", ""))
+	var output: String = str(SheetCompiler.echo(sheet).get("output", ""))
 	for snippet: Variant in snippets:
 		if not output.contains(str(snippet)):
 			return false

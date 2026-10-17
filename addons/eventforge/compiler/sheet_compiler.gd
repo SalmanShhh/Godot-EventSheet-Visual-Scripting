@@ -159,10 +159,12 @@ static var _behavior_host_default: String = ""
 # file a verify compile writes) are shared process-wide, and opening a .gd as a sheet now runs its
 # lift - which recompiles the whole sheet to byte-verify it - on a WORKER THREAD while the editor
 # keeps painting. A compile-on-save or a Project Doctor pass on the main thread would otherwise stomp
-# that working state mid-emission. Locked at the two PUBLIC entry points ONLY (compile and
-# emit_function_block_text); no helper takes it, and neither entry point calls the other, so the
-# lock is never taken twice on one thread and cannot deadlock.
+# that working state mid-emission. Locked at the PUBLIC entry points ONLY (compile and echo, through
+# _compile_locked, and emit_function_block_text); no helper takes it, and no entry point calls
+# another, so the lock is never taken twice on one thread and cannot deadlock.
 static var _compile_mutex: Mutex = Mutex.new()
+## False while echo() compiles: the output is returned and written nowhere. Set under the lock.
+static var _writes_output: bool = true
 
 ## What the removal guard knows about THIS sheet's names (see EventForgeRemovalGuard.facts): which
 ## ones hold a node across frames, and which events have already asked whether one is still here.
@@ -207,16 +209,33 @@ static func _reset_per_compile_state(sheet: EventSheetResource = null) -> void:
 ## Compiles an event sheet resource to a GDScript output file.
 ## omit_generated_banner drops the "AUTO-GENERATED / DO NOT EDIT" header - used when the .gd IS the
 ## user's source of truth (Save As .gd), not a regenerated companion of a .tres sheet.
+## With no output_path the file is the sheet's own: a script-backed sheet's .gd, else a generated
+## file beside it (or res://event_sheet_generated.gd for a sheet with no path). To READ what a sheet
+## compiles to, ask echo(), which writes nothing.
+static func compile(sheet: EventSheetResource, output_path: String = "", omit_generated_banner: bool = false) -> Dictionary:
+	return _compile_locked(sheet, output_path, omit_generated_banner, true)
+
+
+## What `sheet` compiles to - the same result compile() returns - written NOWHERE. A window that only
+## shows the code, counts its lines or checks it parses asks this: through compile() with no path it
+## saved the open sheet's unsaved edits into its file, and a sheet with no file left a stray
+## res://event_sheet_generated.gd declaring its class_name in the reader's project.
+static func echo(sheet: EventSheetResource, omit_generated_banner: bool = false) -> Dictionary:
+	return _compile_locked(sheet, "", omit_generated_banner, false)
+
+
 ## The body lives in _compile_body so this can hold the compile lock across every early return
 ## (GDScript has no try/finally, so a wrapper is the only leak-proof shape).
-static func compile(sheet: EventSheetResource, output_path: String = "", omit_generated_banner: bool = false) -> Dictionary:
+static func _compile_locked(sheet: EventSheetResource, output_path: String, omit_generated_banner: bool, writes: bool) -> Dictionary:
 	_compile_mutex.lock()
+	_writes_output = writes
 	var locked_result: Dictionary = _compile_body(sheet, output_path, omit_generated_banner)
 	# A Reset row naming a variable this sheet does not declare wrote nothing, so it says why here.
 	for unresolved: String in ActionCodegen.unresolved_starting_values:
 		(locked_result["warnings"] as Array).append("Reset Variable: %s is not declared on this sheet, so there is no starting value to put back - the row writes nothing." % unresolved)
 	ActionCodegen.starting_values = {}
 	ActionCodegen.unresolved_starting_values = PackedStringArray()
+	_writes_output = true
 	_compile_mutex.unlock()
 	return locked_result
 
@@ -883,7 +902,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	result["output"] = output
 
 	var final_output_path: String = _resolve_output_path(sheet, output_path)
-	if not _write_output_if_changed(final_output_path, output):
+	if _writes_output and not _write_output_if_changed(final_output_path, output):
 		result["success"] = false
 		(result["errors"] as Array[String]).append("Failed to open output path: %s" % final_output_path)
 		return result
@@ -1113,7 +1132,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output
 	var final_output_path: String = output_path if not output_path.is_empty() else sheet.external_source_path
-	if not _write_output_if_changed(final_output_path, output):
+	if _writes_output and not _write_output_if_changed(final_output_path, output):
 		result["success"] = false
 		(result["errors"] as Array[String]).append("Failed to open output path: %s" % final_output_path)
 		return result

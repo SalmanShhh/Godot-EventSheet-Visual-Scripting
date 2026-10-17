@@ -144,7 +144,7 @@ func change_type(new_host: String) -> void:
 	var old_host: String = str(_dock._head_actions.head_facts().get("extends", ""))
 	if new_host == old_host:
 		return
-	var code: String = str(SheetCompiler.compile(_dock._current_sheet, "", true).get("output", ""))
+	var code: String = str(SheetCompiler.echo(_dock._current_sheet, true).get("output", ""))
 	var lost: PackedStringArray = members_lost(code, old_host, new_host)
 	if lost.is_empty():
 		_dock._head_actions.apply_band_value(EventSheetHeadBands.BAND_EXTENDS, new_host)

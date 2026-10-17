@@ -78,7 +78,7 @@ static func global_sheet(description: String) -> EventSheetResource:
 
 ## The file a sheet becomes, exactly as the sheet writes it on save.
 static func source_of(sheet: EventSheetResource) -> String:
-	return str(SheetCompiler.compile(sheet, "", true).get("output", ""))
+	return str(SheetCompiler.echo(sheet, true).get("output", ""))
 
 
 ## `variables` added to a new sheet, in their order - what "From a script I wrote" carries over.

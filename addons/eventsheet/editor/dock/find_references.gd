@@ -180,7 +180,7 @@ static func open_sheets_of(dock: Control) -> Dictionary:
 static func stamp_source_lines(sheet: EventSheetResource, references: Array) -> void:
 	if sheet == null or references.is_empty():
 		return
-	var source_map: Array = SheetCompiler.compile(sheet, "").get("source_map", []) as Array
+	var source_map: Array = SheetCompiler.echo(sheet).get("source_map", []) as Array
 	if source_map.is_empty():
 		return
 	for reference: Dictionary in references:

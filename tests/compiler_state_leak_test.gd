@@ -36,7 +36,8 @@ const DURABLE_STATICS: Dictionary = {
 	"_compile_mutex": "the lock itself - serializing compiles is what protects the working state below",
 	"_template_re": "a compiled RegEx cached for the session; it has no per-compile state",
 	"_segment_re": "a compiled RegEx cached for the session; it has no per-compile state",
-	"_verbatim_declaration_re": "a compiled RegEx cached for the session; it has no per-compile state"
+	"_verbatim_declaration_re": "a compiled RegEx cached for the session; it has no per-compile state",
+	"_writes_output": "whether the call writes its file at all: set by the entry point under the lock on every call, and never read by an emitter"
 }
 
 ## Every working-state static the sweep expects to find, pinned as a VALUE rather than counted. A static
@@ -209,6 +210,10 @@ static func _emission_runners() -> Array[Dictionary]:
 		{
 			"name": "an opened .gd saved back", "entry_point": "compile",
 			"emit": func() -> String: return str(SheetCompiler.compile(opened, "").get("output", ""))
+		},
+		{
+			"name": "a sheet read without writing", "entry_point": "echo",
+			"emit": func() -> String: return str(SheetCompiler.echo(opened).get("output", ""))
 		},
 		{
 			"name": "the lift's function-block gate", "entry_point": "emit_function_block_text",

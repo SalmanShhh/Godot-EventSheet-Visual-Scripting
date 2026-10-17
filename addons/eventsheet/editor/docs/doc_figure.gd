@@ -181,7 +181,7 @@ func show_sheet(sheet: EventSheetResource) -> bool:
 func _fill_gdscript_hover() -> void:
 	if _sheet == null or not _gdscript_hover.is_empty():
 		return
-	var result: Dictionary = EventSheets.compile(_sheet)
+	var result: Dictionary = SheetCompiler.echo(_sheet)
 	_gdscript_hover = str(result.get("output", "")).strip_edges()
 	if _gdscript_hover.is_empty():
 		return
