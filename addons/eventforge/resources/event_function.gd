@@ -38,6 +38,18 @@ extends Resource
 ## A template that is NOT of the `<prefix>name({args})` shape (an `await ...` wrapper, a reordered call):
 ## kept verbatim and re-emitted as-is, so the file round-trips; the picker still reads it from the file.
 @export var codegen_template_override: String = ""
+## The opened file wrote NO `## @ace_codegen_template` line for this published verb - a pack source
+## whose builder derives the call when it assembles the pack. Emission leaves the line off, so the file
+## comes back byte for byte. Default false: every verb authored on a sheet keeps the line it always had.
+@export var no_codegen_annotation: bool = false
+## The iterator a LOOPING published verb names (`## @ace_looping(entry)`): applying it runs the
+## event's actions once per item the function returns. Written in place of the action / condition /
+## expression line the return type would pick. Empty = not a looping verb.
+@export var looping_iterator: String = ""
+## The icon this verb's own `## @ace_icon(...)` line names, kept when the sheet has no class icon to
+## regenerate it from (a pack source marks each verb rather than the class). The sheet's icon, when it
+## has one, still wins - one icon set once. Empty = none of its own.
+@export var ace_icon: String = ""
 ## Inspector button: a non-empty label emits
 ## `@export_tool_button("Label") var _btn_<name>: Callable = <name>` so the Inspector
 ## shows a clickable button running this function. Needs a @tool sheet to act in-editor

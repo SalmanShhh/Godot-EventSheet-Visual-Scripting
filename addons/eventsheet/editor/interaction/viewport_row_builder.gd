@@ -3420,6 +3420,10 @@ func _verb_chip_colors() -> Array:
 ## bool answers a question (Condition), any other value is handed out (Expression). This mirrors
 ## the ACE Studio's three cards, so the row badge always matches the card that would edit it.
 static func define_role_for(event_function: EventFunction) -> String:
+	# A looping verb is picked with the conditions whatever it returns: it decides which items the
+	# event's actions run for.
+	if not event_function.looping_iterator.is_empty():
+		return "condition"
 	if event_function.return_type == TYPE_NIL:
 		return "action"
 	if event_function.return_type == TYPE_BOOL:

@@ -47,8 +47,12 @@ static func measure(sheet: EventSheetResource) -> Dictionary:
 	if sheet == null:
 		return {"generic": 0, "rows": 0, "percent": 0}
 	_walk(sheet.events, true, tally)
+	# Each function is one row, its head, wherever the lift put it - at the file's end or anchored in
+	# place (an anchor is its slot, not a row of its own; see _walk). Counting only the anchored heads
+	# moved a file's share whenever the same functions were lifted by the other pass.
 	for function_entry: Variant in sheet.functions:
 		if function_entry is EventFunction:
+			tally["rows"] = int(tally["rows"]) + 1
 			_walk((function_entry as EventFunction).events, false, tally)
 	var rows: int = int(tally["rows"])
 	var generic: int = int(tally["generic"])
@@ -218,5 +222,7 @@ static func _walk(items: Array, top_level: bool, tally: Dictionary) -> void:
 			_walk((item as EventFunction).events, false, tally)
 		elif item is EventGroup:
 			_walk((item as EventGroup).events, top_level, tally)
+		elif item is FunctionAnchorRow:
+			continue  # the function it holds the place of is counted once, with sheet.functions
 		elif item != null:
 			tally["rows"] = int(tally["rows"]) + 1

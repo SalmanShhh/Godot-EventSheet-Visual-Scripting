@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Fixed: the plugin's own scripts open as rows, not as code
+
+- A doc comment with a blank `##` line between its paragraphs no longer sends the whole file back to
+  code. It was read as a stray block above the function and written twice; the row builder's 563
+  functions, and seven other files, now open as functions.
+- Two blank lines after a multi-line `const` list or dictionary stay two before the documented
+  function under them, so files laid out that way (eight in the plugin) open as rows.
+- A `_init` or `_validate_property` in the middle of a file opens as its function, the way it
+  already did at the end of one. A command tool's `_init` reads as Command tool ▸ On run.
+- A function wired to a signal that returns a value (`button.pressed.connect(apply)` with
+  `func apply() -> bool`) opens as a function instead of code.
+- A published verb that names its own `## @ace_icon(...)`, loops with `## @ace_looping(item)`, or
+  has no `## @ace_codegen_template(...)` line keeps those lines exactly as written, so pack sources
+  such as Post Kit, Codex and Save System open with their verbs as functions.
+- When one function still cannot be written back byte for byte, only that function (up to four of
+  them) stays code; the rest of the file opens as rows instead of all of it falling back.
+- The wordless-row share counts a function as one row whichever way it was opened, so the number no
+  longer moves when the same function is read in a different place.
+
 ### Changed: a table handed to `return` or to a call opens as one row
 
 - `return {`, `rows.append({`, `table[key] = {`, `print_rich(x, [` and every other statement that

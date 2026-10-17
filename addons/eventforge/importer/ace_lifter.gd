@@ -342,7 +342,10 @@ static func _note_function_progress() -> void:
 	progress_functions_done = mini(progress_functions_done + 1, progress_functions_total)
 
 
-static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_functions: bool = true) -> bool:
+## `held_back` names the functions an earlier attempt over this same file found at the seam where its
+## re-emission first went wrong (see _seam_functions). They stay code blocks on this attempt, so one
+## seam costs its own function rather than every function in the file.
+static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_functions: bool = true, held_back: Dictionary = {}) -> bool:
 	if sheet == null:
 		return false
 	# The file's own object-typed members, read before any line is matched: they are what tells
@@ -490,7 +493,10 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 				# through - without this the count was dropped and emission re-added a single blank,
 				# so every style-guide file (two blanks between top-level functions) failed the
 				# byte-verify and reverted to raw blocks, one line short per documented function.
-				pending_blank_count = _leading_blank_count(row.code)
+				# Plus a blank row standing on its own right above: the importer hands the two blank
+				# lines after a closing `]` or `}` over as a row of their own, and dropping their count
+				# re-emitted the gap as one line.
+				pending_blank_count += _leading_blank_count(row.code)
 				pending_annotations = _parse_annotations(row.code)
 				pending_annotation_lines = _collect_gd_annotation_lines(row.code)
 				pending_doc_comment = _collect_doc_comment_text(row.code)
@@ -531,6 +537,8 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 				if consumed_async != null and inlined_async_uids.has(consumed_async.get_string(1)):
 					pending_blank_count = 0
 					continue
+				if held_back.has(_header_function_name(header)):
+					failed = true
 				if _is_lifecycle_header(header) or _is_connected_handler(header, connections):
 					if not pending_annotations.is_empty() or not pending_annotation_lines.is_empty() or not pending_doc_comment.is_empty():
 						failed = true  # a lifecycle handler lifts to events, not an EventFunction, so it can't carry a doc
@@ -770,7 +778,13 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 				return false
 			_note_function_progress()
 			var mid_header: String = mid_row.code.split("\n")[0]
+			var handler_events: Array = []
+			if held_back.has(_header_function_name(mid_header)):
+				mid_index += 1
+				continue
 			if _is_lifecycle_header(mid_header) or _is_connected_handler(mid_header, all_connections):
+				handler_events = _anchor_handler_events(mid_row, all_connections, sheet.tool_mode)
+			if not handler_events.is_empty():
 				# A lifecycle/signal handler stranded between raw blocks. The trailing scan above
 				# cannot lift it (emission writes events BEFORE the trailing functions, so lifting
 				# it there would hoist the handler above every verb below it and break the verify),
@@ -779,10 +793,11 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 				# lifted EventRows follow it in the array, and the external compile path emits one
 				# function for them right there. Gated exactly like a mid-file function - the
 				# re-emitted handler text must equal this row's bytes, or it stays raw.
-				var handler_events: Array = _anchor_handler_events(mid_row, all_connections, sheet.tool_mode)
-				if handler_events.is_empty():
-					mid_index += 1
-					continue
+				#
+				# A handler that cannot read as its trigger falls through to the function anchor below
+				# instead: `button.pressed.connect(apply)` wires a verb that RETURNS a value, and an event
+				# has nowhere to keep `-> bool`, so it used to stay a code block although it lifts as the
+				# function it also is. A lifecycle header stays as it was.
 				var event_anchor: EventAnchorRow = EventAnchorRow.new()
 				event_anchor.trigger_id = (handler_events[0] as EventRow).trigger_id
 				var handler_uids: PackedStringArray = PackedStringArray()
@@ -794,6 +809,9 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 					sheet.events.insert(mid_index + 1 + insert_offset, handler_events[insert_offset])
 				anchored_count += 1
 				mid_index += 1 + handler_events.size()
+				continue
+			if _is_lifecycle_header(mid_header):
+				mid_index += 1
 				continue
 			# Engine virtual callbacks are STRUCTURE, not sheet vocabulary: `_enter_tree` is the
 			# host binding (folds to metadata on open), `_get_configuration_warnings` is the
@@ -914,7 +932,67 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 				break
 		print("[lift-debug] src=", src_lines.size(), " out=", out_lines.size(), " lines")
 	_revert_lift(sheet, backup, functions_backup, boundary, boundary_code, peeled_rows)
+	# Before giving up on every function, hold back the one at the seam and try again: a file of six
+	# hundred functions used to open as six hundred code blocks because ONE of them re-emitted a line
+	# differently. Bounded, because each round is a whole lift and a whole compile.
+	if lift_functions and held_back.size() < SEAM_HOLD_BACK_LIMIT:
+		var seam: Dictionary = _seam_functions(source, output)
+		var widened: Dictionary = held_back.duplicate()
+		widened.merge(seam)
+		if widened.size() > held_back.size():
+			return _attempt_lift_body(sheet, source, true, widened)
 	return _retry_or_fail(sheet, source, lift_functions)
+
+
+## How many functions one file may hold back at its seams before the lift gives up and opens it with
+## events only. Each round is a whole lift and a whole compile of the file.
+const SEAM_HOLD_BACK_LIMIT: int = 4
+
+
+## The functions at the seam where `output` first stops reproducing `source`, read off both texts:
+## a differing line inside a body belongs to the function above it, and one at column 0 (a doc
+## line, a blank, a header) to the function it sits over. Empty when the texts never differ or no
+## function stands at the seam.
+static func _seam_functions(source: String, output: String) -> Dictionary:
+	var source_lines: PackedStringArray = source.split("\n")
+	var output_lines: PackedStringArray = output.split("\n")
+	var first_difference: int = -1
+	for line_index: int in range(maxi(source_lines.size(), output_lines.size())):
+		if line_index >= source_lines.size() or line_index >= output_lines.size() \
+				or source_lines[line_index] != output_lines[line_index]:
+			first_difference = line_index
+			break
+	var seam: Dictionary = {}
+	if first_difference < 0:
+		return seam
+	for lines: PackedStringArray in [source_lines, output_lines]:
+		var name: String = _function_at_line(lines, mini(first_difference, lines.size() - 1))
+		if not name.is_empty():
+			seam[name] = true
+	return seam
+
+
+## The function a line belongs to: the header above an indented line, the next header below any other.
+static func _function_at_line(lines: PackedStringArray, line_index: int) -> String:
+	if line_index < 0:
+		return ""
+	var step: int = -1 if lines[line_index].begins_with("\t") or lines[line_index].begins_with(" ") else 1
+	var scan: int = line_index
+	while scan >= 0 and scan < lines.size():
+		var name: String = _header_function_name(lines[scan])
+		if not name.is_empty():
+			return name
+		scan += step
+	return ""
+
+
+## The name a top-level `func` / `static func` header declares, or "" for any other line.
+static func _header_function_name(header: String) -> String:
+	var bare: String = header.substr(7) if header.begins_with("static func ") else header
+	if not bare.begins_with("func "):
+		return ""
+	var name_end: int = bare.find("(")
+	return bare.substr(5, name_end - 5).strip_edges() if name_end > 5 else ""
 
 
 ## The one reading that is taken AFTER the file has already proved it reproduces: the arms of a
@@ -1009,12 +1087,16 @@ static func _is_engine_virtual_header(header: String) -> bool:
 	var function_name: String = bare.substr(5, name_end - 5).strip_edges()
 	# `_get_property_list` is not on this list: nothing regenerates it from sheet metadata, and the
 	# list it builds is ordinary statements, so it opens as the function row it is, in its place.
+	# `_init` and `_validate_property` are NOT here: nothing regenerates either from metadata (a sheet
+	# that writes its own `_validate_property` makes the generated one stand aside), and the trailing
+	# run already lifts both as functions. Stranded mid-file - a command tool's `_init` under its
+	# constants, a Control's constructor above its helpers - they stayed code for position alone.
 	return function_name in [
-		"_init", "_static_init", "_ready", "_enter_tree", "_exit_tree", "_process", "_physics_process",
+		"_static_init", "_ready", "_enter_tree", "_exit_tree", "_process", "_physics_process",
 		"_input", "_unhandled_input", "_unhandled_key_input", "_shortcut_input", "_gui_input",
 		"_input_event",
 		"_draw", "_notification", "_get_configuration_warnings", "_to_string",
-		"_validate_property", "_property_can_revert", "_property_get_revert",
+		"_property_can_revert", "_property_get_revert",
 		"_integrate_forces", "_physics_process_internal",
 	]
 
@@ -1442,6 +1524,11 @@ static func lift_function_declarations(sheet: EventSheetResource, byte_gated: bo
 	var backup_functions: Array[Resource] = sheet.functions.duplicate()
 	sheet.events = new_events
 	for produced: Variant in harvested:
+		if not byte_gated and produced is EventFunction:
+			# A pack build REGENERATES these lines from the sheet (its call, its class icon), so what the
+			# source happened to leave out or name per verb is not kept - that is only for opening a file.
+			(produced as EventFunction).no_codegen_annotation = false
+			(produced as EventFunction).ace_icon = ""
 		sheet.functions.append(produced as Resource)
 	if byte_gated:
 		var after: String = str(SheetCompiler.compile(sheet, verify_path).get("output", ""))
@@ -1589,7 +1676,10 @@ static func _run_row_kind(code: String, lift_functions: bool) -> String:
 	for line: String in code.split("\n"):
 		if line.strip_edges().is_empty():
 			continue
-		if line.begins_with("## "):
+		# A bare `##` is the paragraph break of a doc block, not the end of one. Read as "other", it cut
+		# a multi-paragraph doc off the run as a prelude row, and the function under it lifted with
+		# the same doc riding on it - written twice, refused by the whole-file verify.
+		if line.begins_with("## ") or line == "##":
 			saw_annotation = true
 		elif line.begins_with("# "):
 			saw_comment = true
@@ -1667,6 +1757,12 @@ static func _parse_annotations(code: String) -> Dictionary:
 			recognized = true
 		elif text == "## @ace_featured":
 			fields["featured"] = true
+		elif text.begins_with("## @ace_looping(") and text.ends_with(")"):
+			# A LOOPING verb: exposed like the three below, and its iterator is written back in place of
+			# the directive the return type would pick.
+			fields["expose"] = true
+			fields["looping_iterator"] = text.substr(16, text.length() - 17)
+			recognized = true
 		elif text == "## @ace_action" or text == "## @ace_condition" or text == "## @ace_expression":
 			# Three-way expose (action / condition / expression). The exposed TYPE is re-derived from the
 			# function's return type on emit, so all three directives simply mark the function exposed.
@@ -1720,6 +1816,10 @@ static func _parse_annotations(code: String) -> Dictionary:
 			# Kept: the call prefix (or a custom template) is re-emitted from the function, because a
 			# pack opened outside its own project cannot re-derive an autoload / static prefix.
 			fields["codegen_template"] = text.substr(26, text.length() - 28)
+		elif text.begins_with("## @ace_icon(\"") and text.ends_with("\")"):
+			# Regenerated from the sheet's class icon when it has one; kept on the verb for a file that
+			# marks each verb instead. The byte gate confirms whichever it was.
+			fields["icon"] = text.substr(14, text.length() - 16)
 		elif text.begins_with("## @ace_icon("):
 			pass  # regenerated from the sheet's custom_class_icon; byte-verify confirms
 		elif text.begins_with("## @"):
@@ -2001,6 +2101,11 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 	event_function.successor_ace_id = str(annotations.get("successor_ace_id", ""))
 	event_function.successor_param_renames = annotations.get("successor_param_renames", {})
 	event_function.successor_param_defaults = annotations.get("successor_param_defaults", {})
+	event_function.looping_iterator = str(annotations.get("looping_iterator", ""))
+	event_function.ace_icon = str(annotations.get("icon", ""))
+	# A published verb whose block carries no call line keeps it that way (a pack source's builder
+	# derives the call); an unpublished helper writes none in any case.
+	event_function.no_codegen_annotation = event_function.expose_as_ace and not annotations.has("codegen_template")
 	# The source's call template: `<prefix>name({a}, {b})` keeps just the prefix (renames and
 	# parameter edits still track); any other shape is kept verbatim.
 	var source_template: String = str(annotations.get("codegen_template", ""))

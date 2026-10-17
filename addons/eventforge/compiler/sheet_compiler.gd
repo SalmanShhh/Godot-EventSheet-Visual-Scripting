@@ -2992,13 +2992,17 @@ static func _emit_expose_annotations(event_function: EventFunction, sheet: Event
 	# other value = expression (one method → one ACE, so exactly ONE directive). The shared
 	# @ace_codegen_template ($Class.fn(args)) serves all three: a method call returning bool/value is a
 	# valid condition/expression. The lifter re-derives the type from the return type on round-trip.
-	match event_function.return_type:
-		TYPE_NIL:
-			lines.append("## @ace_action")
-		TYPE_BOOL:
-			lines.append("## @ace_condition")
-		_:
-			lines.append("## @ace_expression")
+	# A looping verb names its iterator instead: it sits with the conditions whatever it returns.
+	if not event_function.looping_iterator.is_empty():
+		lines.append("## @ace_looping(%s)" % event_function.looping_iterator)
+	else:
+		match event_function.return_type:
+			TYPE_NIL:
+				lines.append("## @ace_action")
+			TYPE_BOOL:
+				lines.append("## @ace_condition")
+			_:
+				lines.append("## @ace_expression")
 	# Featured rides directly on the expose directive (starred + bold in the picker).
 	if event_function.featured:
 		lines.append("## @ace_featured")
@@ -3033,6 +3037,11 @@ static func _emit_expose_annotations(event_function: EventFunction, sheet: Event
 	# The sheet's icon flows to the published ACE (one icon, set once, shown everywhere).
 	if not sheet.custom_class_icon.strip_edges().is_empty():
 		lines.append("## @ace_icon(\"%s\")" % sheet.custom_class_icon.strip_edges())
+	elif not event_function.ace_icon.is_empty():
+		lines.append("## @ace_icon(\"%s\")" % event_function.ace_icon)
+	# The opened file wrote no call line (its pack builder derives one), so none is written back.
+	if event_function.no_codegen_annotation:
+		return
 	# Default codegen template so consumer sheets compile a direct call: behaviors are
 	# child nodes (default node name = class name) → `$Class.fn({args})`; custom-node /
 	# plain sheets expose self methods → `fn({args})`. Authors can refine via re-annotation.
