@@ -53,8 +53,10 @@ static func run() -> bool:
 			_summary(WIRED_VALUE_RETURNER), {"functions": ["apply"], "raw": ["func _ready() -> void:"], "round_trips": true}],
 		["a pack source's own verb lines all come back",
 			_summary(PACK_SOURCE_VERBS), {"functions": ["add_one", "each_entry", "is_full"], "raw": [], "round_trips": true}],
-		["one function that re-emits differently stays code alone",
-			_summary(ONE_BAD_SEAM), {"functions": ["get_health", "is_dead"], "raw": ["func heal(amount: int) -> void:"], "round_trips": true}],
+		# The doc line above heal (`## @ace_category Combat`, no brackets) stays text, and its gap is
+		# its own: heal no longer re-emits a second blank under it, so all three functions open.
+		["a doc line left as text above a function keeps its gap, and every function opens",
+			_summary(ONE_BAD_SEAM), {"functions": ["get_health", "heal", "is_dead"], "raw": [], "round_trips": true}],
 	])
 	var verbs: Dictionary = _functions_by_name(SUPPORT.reopen(PACK_SOURCE_VERBS))
 	var looping: EventFunction = verbs.get("each_entry") as EventFunction

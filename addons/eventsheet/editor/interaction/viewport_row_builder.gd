@@ -5964,13 +5964,16 @@ func _build_collection_decl_row(decl: CollectionDeclRow, indent: int) -> EventRo
 	}))
 	for entry_index: int in decl.entry_values.size():
 		var entry_key: String = decl.entry_keys[entry_index] if entry_index < decl.entry_keys.size() else ""
-		var entry_text: String = "        %s" % decl.entry_values[entry_index]
+		# An entry written over several lines is one entry, shown on its one line; it is edited as code,
+		# because a one-line edit of it would rewrite the lines the file has.
+		var entry_value: String = decl.entry_value_on_one_line(entry_index)
+		var entry_text: String = "        %s" % entry_value
 		if not entry_key.is_empty():
-			entry_text = "        %s = %s" % [entry_key, decl.entry_values[entry_index]]
+			entry_text = "        %s = %s" % [entry_key, entry_value]
 		spans.append(_make_span(entry_text, SemanticSpan.SpanType.VALUE, {
 			"kind": "collection_decl",
 			"decl_entry_index": entry_index,
-			"editable": true,
+			"editable": not decl.entry_spans_lines(entry_index),
 			"edit_kind": "decl_entry_line:-1:%d" % entry_index,
 			"line_index": entry_index + 1,
 			"text_color": decl_style.value_highlight_color

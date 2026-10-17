@@ -41,6 +41,9 @@ const Spellings := preload("res://addons/eventforge/compiler/compiler_spellings.
 const SaveChoices := preload("res://addons/eventforge/compiler/save_choices.gd")
 
 const VERSION: String = "0.18.0"
+## How many blank lines an opened file ended with under its last lifted function, as transient meta
+## on the sheet. The lift writes it and the external path writes the lines back.
+const TRAILING_BLANKS_META: StringName = &"__source_trailing_blanks"
 ## The doc line above the generated _validate_property. Frozen: files already carry it, and the
 ## importer reads it to know the function below is the generated one.
 const INSPECTOR_CONDITIONS_DOC: String = "## Inspector conditions (Show If / Lock Unless) — generated; edit via the Variable dialog."
@@ -1116,6 +1119,10 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	for comment_line: String in deferred_comment_lines_external:
 		lines.append("")
 		lines.append("# %s" % comment_line)
+	# Blank lines the opened file ended with, under its last function. They are layout, so the lift
+	# counts them rather than keeping a row for them; absent, the file ends on its final newline.
+	for _trailing_blank: int in range(maxi(int(sheet.get_meta(TRAILING_BLANKS_META, 0)), 0)):
+		lines.append("")
 	_insert_missing_member_declarations(lines, sheet, result.get("source_map", []))
 	_insert_provider_member_declarations(lines, result)
 	_keep_distance_travelled(lines, sheet, result)

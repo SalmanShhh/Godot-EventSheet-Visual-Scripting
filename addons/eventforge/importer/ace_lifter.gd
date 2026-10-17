@@ -476,15 +476,20 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 	# beside a still-verbatim `_ready` writes that line twice. Cleared with everything else on a
 	# re-anchor, because the restarted run no longer owns the `_ready` behind it.
 	var ready_lifted: bool = false
+	# The blank lines the file ENDS with, under its last function: a blank row with nothing after it.
+	# Layout, like every other gap here, so it is counted onto the sheet rather than kept as a row.
+	var trailing_blanks: int = 0
 	for index in range(first_run_index, sheet.events.size()):
 		var row: RawCodeRow = sheet.events[index] as RawCodeRow
 		var failed: bool = false
 		var row_kind: String = _run_row_kind(row.code, lift_functions)
+		trailing_blanks = 0
 		match row_kind:
 			"blank":
 				# N blank lines import as a joined "\n"*(N-1) block, so size() == N. Stamped onto the next
 				# lifted function's first event below; the compiler re-emits it on the external path.
 				pending_blank_count = row.code.split("\n").size()
+				trailing_blanks = pending_blank_count
 				continue  # separator; emission re-adds it
 			"annotations":
 				# The gap before a DOCUMENTED function lives here, not in a "blank" row: the import
@@ -690,6 +695,10 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 			connects_ready_blanks = 0
 			ready_lifted = false
 			connects_ready_header = ""
+			# A row that stays raw keeps the gap above it as its own lines, so the gap is spent here.
+			# An annotations row is the one kind that carries its gap forward below, and when IT is
+			# the row that stayed raw, carrying it on doubled the blank lines under it.
+			pending_blank_count = 0
 			anchor_index = index + 1
 		# A blank separator's count was just consumed by (or is irrelevant to) this non-blank row - clear it
 		# so it never leaks onto a later function. The "blank" branch continues past here, keeping its
@@ -752,6 +761,8 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 			sheet.events.append(comment)
 		for function: Variant in lifted_functions:
 			sheet.functions.append(function)
+		if trailing_blanks > 0:
+			sheet.set_meta(SheetCompiler.TRAILING_BLANKS_META, trailing_blanks)
 
 	# MID-FILE helper functions: the trailing run above can only lift functions at the file's
 	# end (they emit in the trailing functions section). A helper stranded between raw blocks
@@ -1019,6 +1030,7 @@ static func _adopt_state_change_triggers(sheet: EventSheetResource, source: Stri
 static func _revert_lift(sheet: EventSheetResource, backup: Array[Resource], functions_backup: Array[Resource], boundary: RawCodeRow, boundary_code: String, peeled_rows: Array) -> void:
 	sheet.events = backup
 	sheet.functions = functions_backup
+	sheet.remove_meta(SheetCompiler.TRAILING_BLANKS_META)
 	if boundary != null:
 		boundary.code = boundary_code
 	for peeled: Array in peeled_rows:

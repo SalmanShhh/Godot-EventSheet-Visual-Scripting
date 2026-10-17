@@ -1410,7 +1410,7 @@ func _flush_pending(pending: PackedStringArray, sheet: EventSheetResource) -> vo
 		# A canonical top-level literal becomes the same structured Declare row a body literal
 		# does - one row per entry, no bracket lines, const included. parse() carries its own
 		# byte gate, so anything it cannot reproduce exactly stays a verbatim block.
-		var decl: CollectionDeclRow = CollectionDeclRow.parse(piece)
+		var decl: CollectionDeclRow = CollectionDeclRow.parse(piece, false, true)
 		if decl != null:
 			sheet.events.append(decl)
 			continue

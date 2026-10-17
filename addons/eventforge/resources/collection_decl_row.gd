@@ -14,8 +14,10 @@
 # THE BYTE GATE LIVES IN parse(): a literal is only claimed when re-emitting the structured
 # model reproduces the source lines exactly, so the head and closer are stored verbatim and the
 # entries must be canonical (one tab deep, comma-terminated, one per line). Anything else - a
-# nested multi-line value, a missing trailing comma, an inline comment - stays as per-line
-# verbatim rows, and the lossless round-trip is never at risk.
+# missing trailing comma between entries, an inline comment - stays verbatim, and the lossless
+# round-trip is never at risk. A FILE-SCOPE table may also hold entries that span lines (a list of
+# dictionaries, each written out one key per line): such an entry is still one entry, its value
+# holding its own lines exactly as written, and it is shown on one line and edited as code.
 #
 # Every field is @export because sheet snapshots duplicate resources, and duplicate() copies
 # exported properties only - a plain var here would silently vanish on the first undo.
@@ -30,7 +32,8 @@ extends Resource
 @export var close: String = "}"
 ## Dictionary keys, verbatim ("" for an array entry). Parallel to entry_values.
 @export var entry_keys: PackedStringArray = PackedStringArray()
-## Entry value expressions, verbatim.
+## Entry value expressions, verbatim. A value that spans lines holds them joined with "\n", each
+## line after the first with its own indentation exactly as the file has it.
 @export var entry_values: PackedStringArray = PackedStringArray()
 ## Whether the FINAL entry was written without a trailing comma - both styles are common, and
 ## emission must reproduce whichever the file used. Adding an entry after a bare last one gives
@@ -74,11 +77,27 @@ func emit_lines() -> PackedStringArray:
 		var key: String = entry_keys[entry_index] if entry_index < entry_keys.size() else ""
 		var comma: String = "" if last_entry_bare and entry_index == entry_values.size() - 1 else ","
 		if key.is_empty():
-			out.append("\t%s%s" % [entry_values[entry_index], comma])
+			out.append_array(("\t%s%s" % [entry_values[entry_index], comma]).split("\n"))
 		else:
-			out.append("\t%s: %s%s" % [key, entry_values[entry_index], comma])
+			out.append_array(("\t%s: %s%s" % [key, entry_values[entry_index], comma]).split("\n"))
 	out.append(close)
 	return out
+
+
+## True when this entry's value spans lines, which is only ever read from a file-scope table.
+func entry_spans_lines(entry_index: int) -> bool:
+	return entry_index >= 0 and entry_index < entry_values.size() and entry_values[entry_index].contains("\n")
+
+
+## One entry's value on one line, for a row that has one line to show it in: each line's own
+## indentation dropped and the lines joined with a space. A view only - the file keeps its lines.
+func entry_value_on_one_line(entry_index: int) -> String:
+	if entry_index < 0 or entry_index >= entry_values.size():
+		return ""
+	var pieces: PackedStringArray = PackedStringArray()
+	for value_line: String in entry_values[entry_index].split("\n"):
+		pieces.append(value_line.strip_edges())
+	return " ".join(pieces)
 
 
 ## Every piece of source text this row holds - head, keys, values, closer - put through `rewrite`
@@ -144,7 +163,12 @@ func set_entry_text(entry_index: int, line_text: String) -> bool:
 ## function body writes a table that way at least as often as it declares one, and the head and the
 ## closer are kept verbatim either way, so the gate is the same one. File scope never passes it: a
 ## head there that is not a declaration is an `enum`, which is not this row.
-static func parse(lines: PackedStringArray, statement_heads: bool = false) -> CollectionDeclRow:
+##
+## `entries_may_span_lines` lets an entry continue onto deeper lines while its own brackets are open
+## (the file-scope tables pass it). Only for a plain declaration head - `const WORDS: Array = [` - so
+## a literal handed to an expression is never shown as if it were the whole value.
+static func parse(lines: PackedStringArray, statement_heads: bool = false,
+		entries_may_span_lines: bool = false) -> CollectionDeclRow:
 	if lines.size() < 3:
 		return null
 	var head_text: String = lines[0]
@@ -161,16 +185,17 @@ static func parse(lines: PackedStringArray, statement_heads: bool = false) -> Co
 	row.head = head_text
 	row.close = lines[lines.size() - 1]
 	var wants_key: bool = stripped_head.ends_with("{")
-	for line_index: int in range(1, lines.size() - 1):
-		var line: String = lines[line_index]
-		# Exactly one tab deep: a deeper line is a nested multi-line value, whose per-entry
-		# model this row deliberately does not pretend to have.
-		if not line.begins_with("\t") or line.begins_with("\t\t"):
+	var entry_lines: Array[PackedStringArray] = _entry_line_groups(lines, entries_may_span_lines)
+	if entry_lines.is_empty():
+		return null
+	for entry_index: int in entry_lines.size():
+		var group: PackedStringArray = entry_lines[entry_index]
+		if group.size() > 1 and not _plain_declaration_head(stripped_head):
 			return null
-		var body: String = line.substr(1)
+		var body: String = "\n".join(group).substr(1)
 		if body.ends_with(","):
 			body = body.substr(0, body.length() - 1)
-		elif line_index == lines.size() - 2:
+		elif entry_index == entry_lines.size() - 1:
 			row.last_entry_bare = true  # a bare FINAL entry is ordinary style; middle ones are not
 		else:
 			return null
@@ -204,6 +229,65 @@ static func _is_statement_head(head_text: String, close_text: String) -> bool:
 		if not (character in "}]),"):
 			return false
 	return true
+
+
+## The entry lines between the head and the closer, one group per entry, or [] when one is not
+## canonical. An entry starts exactly one tab deep. With `may_span`, an entry whose own brackets are
+## still open at the end of its line takes the lines below it until they close; without it, a
+## deeper line is a nested value this row does not model, and the whole literal is refused.
+static func _entry_line_groups(lines: PackedStringArray, may_span: bool) -> Array[PackedStringArray]:
+	var groups: Array[PackedStringArray] = []
+	var line_index: int = 1
+	while line_index < lines.size() - 1:
+		var line: String = lines[line_index]
+		if not line.begins_with("\t") or line.begins_with("\t\t"):
+			return []
+		var group: PackedStringArray = PackedStringArray([line])
+		var depth: int = _bracket_depth(line) if may_span else 0
+		line_index += 1
+		while depth > 0 and line_index < lines.size() - 1:
+			if not lines[line_index].begins_with("\t"):
+				return []
+			group.append(lines[line_index])
+			depth += _bracket_depth(lines[line_index])
+			line_index += 1
+		# Still open at the closer: the entry never ended. A line that closes MORE than it opens is the
+		# shape a one-line literal ends in, which the byte gate below already answers for.
+		if depth > 0:
+			return []
+		groups.append(group)
+	return groups
+
+
+## A head that declares the literal and nothing else: `const NAME = [`, `var NAME: Type := {`.
+static func _plain_declaration_head(stripped_head: String) -> bool:
+	return RegEx.create_from_string(
+		"^(var|const) [A-Za-z_][A-Za-z0-9_]*(\\s*:\\s*[^=]*)?\\s*:?=\\s*[\\[{]$").search(stripped_head) != null
+
+
+## The net bracket depth one line opens, outside strings and comments.
+static func _bracket_depth(text: String) -> int:
+	var depth: int = 0
+	var quote: String = ""
+	var index: int = 0
+	while index < text.length():
+		var character: String = text[index]
+		if not quote.is_empty():
+			if character == "\\":
+				index += 2
+				continue
+			if character == quote:
+				quote = ""
+		elif character == "\"" or character == "'":
+			quote = character
+		elif character == "#":
+			break
+		elif character == "(" or character == "[" or character == "{":
+			depth += 1
+		elif character == ")" or character == "]" or character == "}":
+			depth -= 1
+		index += 1
+	return depth
 
 
 ## The index of the first `:` at bracket/quote depth 0, or -1.

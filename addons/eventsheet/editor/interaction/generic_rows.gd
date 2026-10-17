@@ -13,7 +13,10 @@ extends RefCounted
 # against every row in the file. Three shapes, and only three, because each one is a row a reader
 # learns nothing from:
 #
-#   1. A raw literal entry. One line of a list or a dictionary, standing alone as its own row.
+#   1. A raw literal entry. One line of a list or a dictionary, standing alone as its own row. The
+#      lines of a literal handed to a statement (`return {`, `x.append({`, `"\n".join([`) are not
+#      rows at all on the canvas: they fold into that statement's one row as chips, so they are
+#      counted as that one row, with words, exactly as they are drawn.
 #   2. A bare call. `queue_redraw()`, `_dock._refresh_after_edit()` - a row that says "something was
 #      called" and stops.
 #   3. A set to a bare function name. `var found = _collect_rows()` - the name of the call is the
@@ -182,12 +185,15 @@ static func health_message(entry: Dictionary) -> String:
 ## True when one verbatim row's code reads as a row with no words of its own. Pure and public, so the
 ## gate, the Doctor and a test all ask the same question of the same string.
 static func is_generic_code(code: String) -> bool:
+	var text: String = code.strip_edges()
+	# A note is words, wherever it is written - among a literal's entries as much as anywhere.
+	if not code.contains("\n") and text.begins_with("#"):
+		return false
 	if ViewportRowBuilder.is_literal_part(code):
 		return true
 	if code.contains("\n"):
 		return false
-	var text: String = code.strip_edges()
-	if text.is_empty() or text.begins_with("#"):
+	if text.is_empty():
 		return false
 	_ensure_patterns()
 	if _bare_call.search(text) != null:
@@ -215,7 +221,7 @@ static func _walk(items: Array, top_level: bool, tally: Dictionary) -> void:
 		elif item is EventRow:
 			var event: EventRow = item as EventRow
 			tally["rows"] = int(tally["rows"]) + 1 + event.conditions.size()
-			_walk(event.actions, false, tally)
+			_walk_actions(event.actions, tally)
 			_walk(event.sub_events, false, tally)
 		elif item is EventFunction:
 			tally["rows"] = int(tally["rows"]) + 1
@@ -226,3 +232,19 @@ static func _walk(items: Array, top_level: bool, tally: Dictionary) -> void:
 			continue  # the function it holds the place of is counted once, with sheet.functions
 		elif item != null:
 			tally["rows"] = int(tally["rows"]) + 1
+
+
+## One event's actions, the way the row builder draws them: a run of verbatim rows that together
+## hand one multi-line literal to a statement is ONE row reading as that statement with its entries
+## as chips, so it counts once, as a row that says something, and the lines it folds are not rows.
+static func _walk_actions(actions: Array, tally: Dictionary) -> void:
+	var literal_groups: Dictionary = EventSheetValueLiteralRows.groups(actions)
+	var consumed: Dictionary = literal_groups.get("consumed", {})
+	var leads: Dictionary = literal_groups.get("leads", {})
+	for index: int in actions.size():
+		if consumed.has(index):
+			continue
+		if leads.has(index):
+			tally["rows"] = int(tally["rows"]) + 1
+			continue
+		_walk([actions[index]], false, tally)

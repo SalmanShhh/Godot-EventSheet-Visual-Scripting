@@ -65,6 +65,22 @@
 - `tools/verify_sheets.gd` no longer crashes when its files include the checker's own
   `addons/eventforge/verify.gd`, so the whole-project form reads every file again. The checker's
   own file is answered by the fact that it is running, like the command script already was.
+- A file that ends with blank lines under its last function opens as rows: the blank lines are
+  counted and written back, where before the whole file stayed code (four of the plugin's files,
+  `project_find.gd` and `run_controls.gd` among them). A doc line that stays text above a function
+  (`## @ace_category Combat`, without the brackets the annotation takes) keeps the gap above it as
+  its own, so the function under it opens too instead of being held back as code.
+- A file-scope table whose entries are written over several lines, such as a list of dictionaries
+  with one key per line, opens as one Declare row with one entry per dictionary. The entry keeps its
+  lines in the file, shows on one line, and is edited as code. A table with a comment among its
+  entries, or several entries on one line, still shows folded as before.
+- The share of rows that say nothing of their own now counts what the canvas draws. A table handed
+  to a statement that stays a line per row (a nested value inside it) is drawn as one row with its
+  entries as chips, and is counted as that one row; a note written among a table's entries is
+  counted as words. Over all 1,120 files under `addons/` and `tools/`, on top of the other self-reading
+  changes, rows with no words of their own fell from 5,418 to 1,998, lines still held as code from
+  87,890 to 84,630, and functions shown as a block of code from 68 to 9. Every file still
+  round-trips.
 
 ### Fixed: a statement continued with `\` is one row
 
