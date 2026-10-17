@@ -26,6 +26,14 @@ func init(dock: Control) -> void:
 	_dock = dock
 
 
+## A callable for a signal whose handler lives on a dock helper that is built on first use: the
+## helper is reached when the signal fires, not when it is connected. Wiring the canvas this way
+## keeps the ACE helper, which names the picker, the parameters dialog and the Doctor, out of the
+## first open of the workspace.
+func later(helper: String, method: String) -> Callable:
+	return func(...arguments: Array) -> void: (_dock.get(helper) as Object).callv(method, arguments)
+
+
 func build_ui() -> void:
 	if _dock._toolbar != null:
 		return
@@ -257,8 +265,8 @@ func build_ui() -> void:
 		_dock._multi_view._mirror_selection(_dock._viewport, row_data)
 	)
 	_dock._viewport.row_drop_requested.connect(_dock._on_row_drop_requested)
-	_dock._viewport.rows_drop_requested.connect(_dock._ace_apply._on_rows_drop_requested)
-	_dock._viewport.ace_preview_requested.connect(_dock._ace_apply._on_ace_preview_requested)
+	_dock._viewport.rows_drop_requested.connect(later("_ace_apply", "_on_rows_drop_requested"))
+	_dock._viewport.ace_preview_requested.connect(later("_ace_apply", "_on_ace_preview_requested"))
 	_dock._viewport.asset_dropped.connect(_dock._apply_asset_drop)
 	_dock._viewport.object_bar_dropped.connect(_dock.apply_object_bar_drop)
 	_dock._viewport.input_action_dropped.connect(_dock.apply_input_action_drop)
@@ -272,7 +280,7 @@ func build_ui() -> void:
 		if _dock._viewport != null:
 			_dock._viewport.queue_redraw())
 	_dock._viewport.property_dropped.connect(_dock._apply_property_drop)
-	_dock._viewport.ace_picker_requested.connect(_dock._ace_apply._on_viewport_ace_picker_requested)
+	_dock._viewport.ace_picker_requested.connect(later("_ace_apply", "_on_viewport_ace_picker_requested"))
 	_dock._viewport.rows_rebuilt.connect(_dock._update_sheet_counts_status)
 	_dock._viewport.span_edit_requested.connect(_dock._on_viewport_span_edit_requested)
 	_dock._viewport.navigate_requested.connect(_dock._navigate.navigate)
@@ -280,7 +288,7 @@ func build_ui() -> void:
 	_dock._viewport.rename_note_provider = _dock._variable_rename_note
 	_dock._viewport.editor_tool_action_requested.connect(_dock._editor_tool_bar.activate)
 	_dock._viewport.this_editor_action_requested.connect(_dock._this_editor_bar.activate)
-	_dock._viewport.ace_edit_requested.connect(_dock._ace_apply._on_viewport_ace_edit_requested)
+	_dock._viewport.ace_edit_requested.connect(later("_ace_apply", "_on_viewport_ace_edit_requested"))
 	_dock._viewport.param_value_edit_requested.connect(_dock._on_param_value_edit_requested)
 	_dock._viewport.param_value_edit_at_rect_requested.connect(func(ace: Resource, param_id: String, current_text: String, anchor_screen: Rect2) -> void:
 		_dock._inline_params.on_param_value_edit_requested(ace, param_id, current_text, anchor_screen))
@@ -288,7 +296,7 @@ func build_ui() -> void:
 	_dock._viewport.param_node_drop_requested.connect(_dock._on_param_node_drop_requested)
 	_dock._viewport.variable_edit_requested.connect(_dock._on_viewport_variable_edit_requested)
 	_dock._viewport.comment_edit_requested.connect(_dock._open_comment_dialog)
-	_dock._viewport.group_edit_requested.connect(_dock._add_rows.on_group_edit_requested)
+	_dock._viewport.group_edit_requested.connect(later("_add_rows", "on_group_edit_requested"))
 	_dock._viewport.pick_filter_edit_requested.connect(_dock._open_pick_filter_dialog)
 	_dock._viewport.with_node_edit_requested.connect(_dock._open_with_node_dialog)
 	_dock._viewport.enum_edit_requested.connect(_dock._open_enum_dialog)
@@ -311,12 +319,12 @@ func build_ui() -> void:
 	_dock._viewport.match_edit_requested.connect(_dock._open_match_dialog)
 	_dock._viewport.row_disable_toggle_requested.connect(_dock._toggle_selected_rows_enabled)
 	_dock._viewport.row_move_requested.connect(_dock._move_selected_row)
-	_dock._viewport.delete_requested.connect(_dock._row_edit_ops._delete_selected_content)
+	_dock._viewport.delete_requested.connect(later("_row_edit_ops", "_delete_selected_content"))
 	_dock._viewport.find_requested.connect(_dock._show_find_bar)
 	_dock._viewport.find_step_requested.connect(_dock._find_step)
 	_dock._apply_editor_native_defaults()
-	_dock._viewport.ace_drop_requested.connect(_dock._ace_apply._on_viewport_ace_drop_requested)
-	_dock._viewport.drag_status_requested.connect(_dock._ace_apply._on_viewport_drag_status_requested)
+	_dock._viewport.ace_drop_requested.connect(later("_ace_apply", "_on_viewport_ace_drop_requested"))
+	_dock._viewport.drag_status_requested.connect(later("_ace_apply", "_on_viewport_drag_status_requested"))
 	_dock._viewport.lane_ratio_changed.connect(_dock._on_viewport_lane_ratio_changed)
 	_dock._viewport.object_column_width_changed.connect(_dock._on_viewport_object_column_width_changed)
 	_dock._viewport.add_event_requested.connect(_dock._on_viewport_add_event_requested)

@@ -178,7 +178,7 @@ func build_all() -> void:
 	_dock._group_runs_on_submenu = PopupMenu.new()
 	_dock._group_runs_on_submenu.name = "GroupRunsOnSubmenu"
 	_dock._group_runs_on_submenu.about_to_popup.connect(_fill_group_runs_on_submenu)
-	_dock._group_runs_on_submenu.id_pressed.connect(_dock._quick_prompts.on_group_runs_on_chosen)
+	_dock._group_runs_on_submenu.id_pressed.connect(_dock._ui_builder.later("_quick_prompts", "on_group_runs_on_chosen"))
 	_dock._row_context_menu.add_child(_dock._group_runs_on_submenu)
 
 	_dock._variable_context_menu = PopupMenu.new()
@@ -214,7 +214,7 @@ func build_all() -> void:
 	_dock._variable_sync_submenu = PopupMenu.new()
 	_dock._variable_sync_submenu.name = "VariableSyncSubmenu"
 	_dock._variable_sync_submenu.about_to_popup.connect(_fill_variable_sync_submenu)
-	_dock._variable_sync_submenu.id_pressed.connect(_dock._variables._on_variable_sync_menu_id_pressed)
+	_dock._variable_sync_submenu.id_pressed.connect(_dock._ui_builder.later("_variables", "_on_variable_sync_menu_id_pressed"))
 	_dock._variable_context_menu.add_submenu_node_item("Keep in Step", _dock._variable_sync_submenu,
 		_dock.VARIABLE_MENU_KEEP_IN_STEP)
 	# The two accessor events. A setter fires when the value is set, so it reads as a trigger;
@@ -233,7 +233,7 @@ func build_all() -> void:
 	_dock._variable_context_menu.add_item("Import Translations…", _dock.VARIABLE_MENU_TEXT_IMPORT)
 	# The keys that do the same thing, at the right of the items that do it.
 	hint_key(_dock._variable_context_menu, _dock.VARIABLE_MENU_RENAME, "F2", true)
-	_dock._variable_context_menu.id_pressed.connect(_dock._variables._on_variable_context_menu_id_pressed)
+	_dock._variable_context_menu.id_pressed.connect(_dock._ui_builder.later("_variables", "_on_variable_context_menu_id_pressed"))
 	_dock.add_child(_dock._variable_context_menu)
 
 	_dock._empty_space_context_menu = PopupMenu.new()

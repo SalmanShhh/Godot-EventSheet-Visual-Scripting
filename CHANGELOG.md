@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Fixed: the first open of the workspace stops compiling the picker, the Doctor and the Manual
+
+- Wiring the canvas and its menus reached six dock helpers that are built on first use (the ACE,
+  add-rows, row-edit, variables, group-prompt and split helpers) the moment the editor was built,
+  and the ACE helper names the picker, the parameters dialog, the Doctor, the public API and the
+  Manual. Those signals now reach their helper when they fire, so the first open of the workspace
+  is back to leaving all of them uncompiled.
+
 ### Changed: the Theme Editor names each token as the code does, and folds
 
 - A token row reads as the style file names it (`condition_lane_ratio`, no longer Condition Lane
