@@ -30,8 +30,9 @@ var _results: Dictionary = {}
 var _table: VBoxContainer = null
 var _line_window: Window = null
 var _line_box: VBoxContainer = null
-## The catalog row the line window shows.
+## The catalog row the line window shows, and its key.
 var _line_row: int = -1
+var _line_key: String = ""
 
 
 func init(dock: Control) -> void:
@@ -463,7 +464,8 @@ func open_line(row: int) -> void:
 		column.add_child(scroll)
 		var buttons: HBoxContainer = HBoxContainer.new()
 		for spec: Array in [[EventSheetL10n.translate("◀ Previous line"), _table.step_line.bind(-1)],
-				[EventSheetL10n.translate("Next line ▶"), _table.step_line.bind(1)], [EventSheetL10n.translate("Done"), _line_window.hide]]:
+				[EventSheetL10n.translate("Next line ▶"), _table.step_line.bind(1)],
+				[EventSheetL10n.translate("Open where it is used"), _open_where_used], [EventSheetL10n.translate("Done"), _line_window.hide]]:
 			buttons.add_child(_button(str(spec[0]), spec[1] as Callable))
 		buttons.get_child(2).size_flags_horizontal = Control.SIZE_SHRINK_END | Control.SIZE_EXPAND
 		column.add_child(buttons)
@@ -478,7 +480,31 @@ func open_line(row: int) -> void:
 		_line_window.popup_centered(Vector2i(EventSheetPalette.scaled(640), EventSheetPalette.scaled(480)))
 
 
+## Where the swept folder first says catalog key `key`: [path, line] for a script (line from 1), [path,
+## 0] for a data asset's own text, [] when nothing under it says the key any more. Read fresh on each
+## press rather than kept from the last Find text, so a line moved since then is still found.
+func first_place(key: String) -> Array:
+	for entry: Variant in EventSheetTranslationScan.scan_scripts(scan_folder) + EventSheetTranslationScan.scan_data_assets(scan_folder):
+		var record: Dictionary = entry as Dictionary
+		if str(record.get("key", "")) == key:
+			return [str(record.get("path", "")), int(record.get("line", 0))]
+	return []
+
+
+## The line window's Open where it is used: the script in Godot's script editor at the line that says
+## it, or the data asset in the Inspector.
+func _open_where_used() -> void:
+	var place: Array = first_place(_line_key)
+	if place.is_empty():
+		_dock._set_status(EventSheetL10n.translate("Nothing under %s says this line any more.") % scan_folder, true)
+	elif str(place[0]).get_extension() == "gd":
+		_dock._preview_glue._open_gdscript_path_in_godot(str(place[0]), int(place[1]))
+	elif Engine.is_editor_hint():
+		EditorInterface.edit_resource(load(str(place[0])))
+
+
 func _fill_line(line: Dictionary) -> void:
+	_line_key = str(line["key"])
 	_line_window.title = EventSheetL10n.translate("Line %s  #%d") % [line["key"], _line_row + 1]
 	_clear(_line_box)
 	var muted: Color = EventSheetPopupUI.muted_text_color()

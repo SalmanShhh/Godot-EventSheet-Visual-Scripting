@@ -9,6 +9,13 @@
   most. Both windows then offer it again from Recent. Only node classes are added, since that list
   offers only nodes.
 
+### Added: the Translation Studio's line window opens where its line is used
+
+- The window a clicked line opens in has Open where it is used beside Done: the script that says
+  the line opens in Godot's script editor at that line, or the data asset whose text it is opens in
+  the Inspector. The place is read fresh on each press, so a line moved since the last Find text is
+  still found, and a line nothing says any more says so on the status bar.
+
 ### Fixed: Preview In Language reads a folder of catalogs, and the save words name what is there
 
 - View > Preview In Language offered only pseudo in a project with no `strings.csv`, whose catalog

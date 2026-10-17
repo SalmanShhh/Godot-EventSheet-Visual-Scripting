@@ -8952,3 +8952,5 @@ Too long,Слишком длинная
 Not translated yet,Ещё не переведено
 %d / %d characters,%d / %d символов
 "Each line has the room of its English plus 40%, the stretch the fake language tests, so a line that would be cut off shows as too long before anyone plays it.","У каждой строки есть место её английского плюс 40% - то удлинение, которое проверяет фальшивый язык, - так что строка, которая обрежется, видна как слишком длинная ещё до игры."
+Open where it is used,"Открыть там, где она используется"
+Nothing under %s says this line any more.,В %s эту строку больше ничто не произносит.

@@ -403,6 +403,14 @@ static func _run_studio() -> bool:
 	studio._table.step_line(-1)
 	all_passed = _check("Previous from the first line wraps to the last", [studio._line_row, studio._line_window.title],
 		[total - 1, "Line A line we deleted  #%d" % total]) and all_passed
+	var foot: PackedStringArray = PackedStringArray()
+	for button: Node in (studio._line_window.find_children("*", "Button", true, false)):
+		foot.append((button as Button).text)
+	all_passed = _check("the line window's foot walks the lines, opens where one is used, and closes", foot,
+		PackedStringArray(["◀ Previous line", "Next line ▶", "Open where it is used", "Done"])) and all_passed
+	all_passed = _check("where it is used is the script and line that say it, a data asset's cell, or nothing",
+		[studio.first_place("Play"), studio.first_place("Bandit camp").slice(1), studio.first_place("A line we deleted")],
+		[[PROJECT_DIR + "/menu_sheet.gd", 6], [0], []]) and all_passed
 
 	# ---- Turn on in the game: the step everyone forgets ----
 	# The table's own folder is what is turned on; this one holds no compiled catalog.

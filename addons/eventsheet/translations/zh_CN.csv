@@ -8952,3 +8952,5 @@ Too long,过长
 Not translated yet,尚未翻译
 %d / %d characters,%d / %d 个字符
 "Each line has the room of its English plus 40%, the stretch the fake language tests, so a line that would be cut off shows as too long before anyone plays it.",每行的空间是其英文长度再加 40%（假语言测试的拉长幅度），因此会被截断的行在任何人游玩之前就会显示为过长。
+Open where it is used,打开使用它的位置
+Nothing under %s says this line any more.,%s 下已没有任何地方使用这一行。

@@ -8952,3 +8952,5 @@ Too long,長すぎ
 Not translated yet,まだ翻訳されていません
 %d / %d characters,%d / %d 文字
 "Each line has the room of its English plus 40%, the stretch the fake language tests, so a line that would be cut off shows as too long before anyone plays it.",各行の枠は英語の長さに 40% を足したもの（テスト用の言語が試す伸び）です。切れてしまう行は、誰かが遊ぶ前に「長すぎ」と表示されます。
+Open where it is used,使われている場所を開く
+Nothing under %s says this line any more.,%s の下でこの行を使っている場所はもうありません。

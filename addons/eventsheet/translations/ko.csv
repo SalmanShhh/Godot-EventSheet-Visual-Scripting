@@ -8952,3 +8952,5 @@ Too long,너무 김
 Not translated yet,아직 번역되지 않음
 %d / %d characters,%d / %d자
 "Each line has the room of its English plus 40%, the stretch the fake language tests, so a line that would be cut off shows as too long before anyone plays it.","각 줄의 자리는 영어 길이에 40%를 더한 만큼(가짜 언어가 시험하는 늘어남)이라, 잘릴 줄은 누가 플레이하기 전에 너무 김으로 표시됩니다."
+Open where it is used,쓰이는 곳 열기
+Nothing under %s says this line any more.,%s 아래에는 이 줄을 쓰는 곳이 더 이상 없습니다.
