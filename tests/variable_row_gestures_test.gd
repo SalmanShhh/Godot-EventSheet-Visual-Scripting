@@ -211,11 +211,19 @@ static func _declared_elsewhere() -> bool:
 		[menu.is_item_disabled(end_at), menu.get_item_tooltip(end_at)],
 		[true, "This variable lives in globals.gd; open that file to end its group."]])
 	rows.append(["...the groups it could move into are greyed too", menu.is_item_disabled(menu.get_item_index(GESTURES.GROUP_MENU_FIRST)), true])
+	var new_at: int = menu.get_item_index(GESTURES.GROUP_MENU_NEW)
+	rows.append(["...and so is New group…, with the same hover",
+		[menu.is_item_disabled(new_at), menu.get_item_tooltip(new_at)],
+		[true, "This variable lives in globals.gd; open that file to end its group."]])
 	rows.append(["...and the last item opens that file",
 		[menu.get_item_text(menu.item_count - 1), menu.get_item_id(menu.item_count - 1), dock._variable_gestures._menu_file],
 		["Open globals.gd", GESTURES.GROUP_MENU_OPEN_FILE, "res://game/globals.gd"]])
 	menu.free()
 	var before: String = _members(dock._current_sheet)
+	dock._variable_grouping.on_group_rows_requested([elsewhere])
+	dock._variable_grouping.on_group_requested(elsewhere, _member_row(dock._current_sheet, "reload_time", "Gun"))
+	rows.append(["grouping it, from the menu or by a drop, leaves this sheet's own spread as it was",
+		_members(dock._current_sheet), before])
 	var end_line: EventRowData = EventRowData.new()
 	end_line.spans.append(SemanticSpan.new())
 	end_line.spans[0].metadata = {"kind": "variable", "variable_name": "", "group_end_owner": "reload_time"}

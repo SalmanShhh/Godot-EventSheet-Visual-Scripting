@@ -524,7 +524,9 @@ func fill_group_menu(menu: PopupMenu) -> void:
 	menu.add_item(EventSheetL10n.translate("End group here"), GROUP_MENU_END_HERE)
 	menu.set_item_disabled(menu.get_item_index(GROUP_MENU_END_HERE), not can_end_group_here(row_data, _dock._current_sheet))
 	if not _menu_file.is_empty():
-		menu.set_item_tooltip(menu.get_item_index(GROUP_MENU_END_HERE), elsewhere_note(_menu_file))
+		for id: int in [GROUP_MENU_NEW, GROUP_MENU_END_HERE]:
+			menu.set_item_disabled(menu.get_item_index(id), true)
+			menu.set_item_tooltip(menu.get_item_index(id), elsewhere_note(_menu_file))
 		menu.add_item(EventSheetL10n.translate("Open %s") % _menu_file.get_file(), GROUP_MENU_OPEN_FILE)
 
 

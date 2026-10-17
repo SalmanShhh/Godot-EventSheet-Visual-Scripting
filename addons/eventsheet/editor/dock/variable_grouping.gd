@@ -172,12 +172,13 @@ static func _rename_tree_groups(rows: Array, from: String, to: String) -> int:
 
 
 ## The identity a variable row's spans carry: {scope, name, resource} - resource only for tree vars
-## (a global row's source_resource is the sheet itself).
+## (a global row's source_resource is the sheet itself). {} for a row standing for a declaration in
+## another file: its name may match one this sheet declares, and no gesture here may write that one.
 static func row_identity(row_data: EventRowData) -> Dictionary:
 	if row_data == null or row_data.spans.is_empty() or not (row_data.spans[0].metadata is Dictionary):
 		return {}
 	var metadata: Dictionary = row_data.spans[0].metadata
-	if str(metadata.get("kind", "")) != "variable":
+	if str(metadata.get("kind", "")) != "variable" or not str(metadata.get("include_path", "")).strip_edges().is_empty():
 		return {}
 	return {
 		"scope": str(metadata.get("variable_scope", "")),
