@@ -9340,3 +9340,29 @@ Loaded and saved every run by the Remember Between Runs code an older version wr
 Values players already saved for %s will not load after the rename: their save files keep them under %s.,玩家已经为 %s 保存的值，在重命名后将不会被加载：他们的存档文件仍把这些值保存在 %s 下。
 Function %s,函数 %s
 Move Up,上移
+The name the function's actions use for this input.,函数的动作对这个输入使用的名称。
+The kind of value a call passes in for this input.,调用为这个输入传入的值的种类。
+"%s hands back %s, but no event in it says Return yet. Add a Return action as its last step, or callers get %s.",%s 返回 %s，但其中还没有事件写“返回”。请在最后一步添加“返回”动作，否则调用方会得到 %s。
+"Nothing in %s waits yet, so Can wait only makes callers write await. Add a Wait, or pick Finishes at once.",%s 中还没有等待的内容，所以“可以等待”只会让调用方写 await。请添加一个等待，或选择“立即完成”。
+"%s has a Wait inside, so it always pauses part way. It stays Can wait; remove the Wait first to change this.",%s 内有等待，所以它总会中途暂停。它保持“可以等待”；要更改，请先移除等待。
+"%s uses %s, which each object has its own copy of. A shared function cannot reach it, so this stays One per object.",%s 使用了 %s，而每个对象都有它自己的副本。共享函数无法访问它，所以保持“每个对象一份”。
+A function needs a name. Nothing was changed.,函数需要一个名称。没有做任何更改。
+"""%s"" is a word GDScript keeps for itself. Try %s. Nothing was changed.","""%s"" 是 GDScript 保留的词。试试 %s。没有做任何更改。"
+"""%s"" cannot be a name: use letters, numbers and _, and do not start with a number. Try %s. Nothing was changed.","""%s"" 不能作为名称：请使用字母、数字和 _，且不要以数字开头。试试 %s。没有做任何更改。"
+"There is already a function %s on this sheet, so calls could not tell them apart. Try %s. Nothing was changed.",此表中已经有函数 %s，调用将无法区分它们。试试 %s。没有做任何更改。
+"""%s"" is already the variable %s on this sheet, and two things with one name break the script. Try %s. Nothing was changed.","""%s"" 已经是此表的变量 %s，两个同名的东西会让脚本出错。试试 %s。没有做任何更改。"
+"""%s"" is already the signal %s on this sheet, and two things with one name break the script. Try %s. Nothing was changed.","""%s"" 已经是此表的信号 %s，两个同名的东西会让脚本出错。试试 %s。没有做任何更改。"
+"When you leave the field: renames %s to %s, and its %d calls with it. Ctrl+Z undoes it.",离开此字段时：将 %s 重命名为 %s，并一同更改它的 %d 处调用。Ctrl+Z 可撤销。
+"GDScript needs parameters without a default first, and %s before it has one. Give %s a default, or move it up. Nothing was changed.",GDScript 要求没有默认值的参数在前，而前面的 %s 有默认值。请给 %s 一个默认值，或把它上移。没有做任何更改。
+"GDScript needs parameters without a default first, and %s after it has none. Give %s a default too, or move %s down. Nothing was changed.",GDScript 要求没有默认值的参数在前，而后面的 %s 没有默认值。请也给 %s 一个默认值，或把 %s 下移。没有做任何更改。
+Required: every call to %s must give %s.,必填：每次调用 %s 都必须提供 %s。
+"""%s"" is not %s, so %s (%s) cannot start as it. Nothing was changed.","""%s"" 不是 %s，所以 %s (%s) 不能以它开始。没有做任何更改。"
+a whole number (like 1),整数（如 1）
+a number (like 0.5),数字（如 0.5）
+"text in quotes (like ""Ready"")","带引号的文本（如 ""Ready""）"
+"Vector2(0, 0) or Vector2.ZERO","Vector2(0, 0) 或 Vector2.ZERO"
+"Vector3(0, 0, 0) or Vector3.ZERO","Vector3(0, 0, 0) 或 Vector3.ZERO"
+a color (like Color.WHITE),颜色（如 Color.WHITE）
+a list (like []),列表（如 []）
+a dictionary (like {}),字典（如 {}）
+null (no object yet),null（还没有对象）

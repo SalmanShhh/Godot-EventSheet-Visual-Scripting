@@ -9340,3 +9340,29 @@ Loaded and saved every run by the Remember Between Runs code an older version wr
 Values players already saved for %s will not load after the rename: their save files keep them under %s.,"Werte, die Spieler bereits für %s gespeichert haben, werden nach dem Umbenennen nicht geladen: Ihre Speicherdateien führen sie unter %s."
 Function %s,Funktion %s
 Move Up,Nach oben
+The name the function's actions use for this input.,"Der Name, unter dem die Aktionen der Funktion diese Eingabe verwenden."
+The kind of value a call passes in for this input.,"Die Art von Wert, die ein Aufruf für diese Eingabe übergibt."
+"%s hands back %s, but no event in it says Return yet. Add a Return action as its last step, or callers get %s.","%s gibt %s zurück, aber noch sagt kein Ereignis darin Zurückgeben. Füge als letzten Schritt eine Aktion Zurückgeben hinzu, sonst bekommen Aufrufer %s."
+"Nothing in %s waits yet, so Can wait only makes callers write await. Add a Wait, or pick Finishes at once.","Noch wartet nichts in %s, also bringt Kann warten Aufrufer nur dazu, await zu schreiben. Füge ein Warten hinzu oder wähle Endet sofort."
+"%s has a Wait inside, so it always pauses part way. It stays Can wait; remove the Wait first to change this.","%s enthält ein Warten, also pausiert sie immer mittendrin. Sie bleibt Kann warten; entferne zuerst das Warten, um das zu ändern."
+"%s uses %s, which each object has its own copy of. A shared function cannot reach it, so this stays One per object.","%s verwendet %s, wovon jedes Objekt seine eigene Kopie hat. Eine gemeinsame Funktion kommt nicht daran, also bleibt sie Eine pro Objekt."
+A function needs a name. Nothing was changed.,Eine Funktion braucht einen Namen. Nichts wurde geändert.
+"""%s"" is a word GDScript keeps for itself. Try %s. Nothing was changed.","""%s"" ist ein Wort, das GDScript für sich behält. Versuche %s. Nichts wurde geändert."
+"""%s"" cannot be a name: use letters, numbers and _, and do not start with a number. Try %s. Nothing was changed.","""%s"" kann kein Name sein: nimm Buchstaben, Zahlen und _, und beginne nicht mit einer Zahl. Versuche %s. Nichts wurde geändert."
+"There is already a function %s on this sheet, so calls could not tell them apart. Try %s. Nothing was changed.","Es gibt schon eine Funktion %s auf diesem Blatt, also könnten Aufrufe sie nicht unterscheiden. Versuche %s. Nichts wurde geändert."
+"""%s"" is already the variable %s on this sheet, and two things with one name break the script. Try %s. Nothing was changed.","""%s"" ist schon die Variable %s auf diesem Blatt, und zwei Dinge mit einem Namen machen das Skript kaputt. Versuche %s. Nichts wurde geändert."
+"""%s"" is already the signal %s on this sheet, and two things with one name break the script. Try %s. Nothing was changed.","""%s"" ist schon das Signal %s auf diesem Blatt, und zwei Dinge mit einem Namen machen das Skript kaputt. Versuche %s. Nichts wurde geändert."
+"When you leave the field: renames %s to %s, and its %d calls with it. Ctrl+Z undoes it.","Wenn du das Feld verlässt: benennt %s in %s um, und ihre %d Aufrufe mit. Strg+Z macht es rückgängig."
+"GDScript needs parameters without a default first, and %s before it has one. Give %s a default, or move it up. Nothing was changed.","GDScript braucht Parameter ohne Standardwert zuerst, und %s davor hat einen. Gib %s einen Standardwert oder schiebe ihn nach oben. Nichts wurde geändert."
+"GDScript needs parameters without a default first, and %s after it has none. Give %s a default too, or move %s down. Nothing was changed.","GDScript braucht Parameter ohne Standardwert zuerst, und %s danach hat keinen. Gib auch %s einen Standardwert oder schiebe %s nach unten. Nichts wurde geändert."
+Required: every call to %s must give %s.,Erforderlich: jeder Aufruf von %s muss %s angeben.
+"""%s"" is not %s, so %s (%s) cannot start as it. Nothing was changed.","""%s"" ist nicht %s, also kann %s (%s) nicht damit beginnen. Nichts wurde geändert."
+a whole number (like 1),eine ganze Zahl (wie 1)
+a number (like 0.5),eine Zahl (wie 0.5)
+"text in quotes (like ""Ready"")","Text in Anführungszeichen (wie ""Ready"")"
+"Vector2(0, 0) or Vector2.ZERO","Vector2(0, 0) oder Vector2.ZERO"
+"Vector3(0, 0, 0) or Vector3.ZERO","Vector3(0, 0, 0) oder Vector3.ZERO"
+a color (like Color.WHITE),eine Farbe (wie Color.WHITE)
+a list (like []),eine Liste (wie [])
+a dictionary (like {}),ein Wörterbuch (wie {})
+null (no object yet),null (noch kein Objekt)

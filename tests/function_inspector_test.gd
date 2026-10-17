@@ -9,10 +9,191 @@ extends RefCounted
 const SUPPORT := preload("res://tests/support.gd")
 const NAME := "function_inspector_test"
 const INSPECTOR_PATH := "res://addons/eventsheet/editor/dock/function_inspector.gd"
+const PLUGIN_PATH := "res://addons/eventsheet/editor/inspector/function_inspector_plugin.gd"
 
 
 static func run() -> bool:
-	return _test_inspector() and _test_window()
+	return _test_inspector() and _test_window() and _test_described_fields() and _test_guards()
+
+
+## The sheet the described fields and the guards are read against: take_damage(amount: int,
+## critical: bool = false) -> int with an empty body, beside a jump function, a health variable and a
+## died signal; jump calls take_damage once.
+static func _guarded_dock() -> EventSheetDock:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	var health: LocalVariable = LocalVariable.new()
+	health.name = "health"
+	health.type = TYPE_INT
+	health.type_name = "int"
+	health.default_value = 3
+	sheet.events.append(health)
+	var died: SignalRow = SignalRow.new()
+	died.signal_name = "died"
+	sheet.events.append(died)
+	var event_function: EventFunction = EventFunction.new()
+	event_function.function_name = "take_damage"
+	event_function.return_type = TYPE_INT
+	for spec: Array in [["amount", "int", ""], ["critical", "bool", "false"]]:
+		var param: ACEParam = ACEParam.new()
+		param.id = spec[0]
+		param.type_name = spec[1]
+		param.gdscript_default = spec[2]
+		event_function.params.append(param)
+	sheet.functions.append(event_function)
+	var jump: EventFunction = EventFunction.new()
+	jump.function_name = "jump"
+	var call: RawCodeRow = RawCodeRow.new()
+	call.code = "take_damage(1)"
+	jump.events.append(call)
+	sheet.functions.append(jump)
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(sheet)
+	return dock
+
+
+## Every dropdown describes each choice, the chosen one's sentence follows the pick, and the Inspector
+## plugin that draws them claims the function proxy and nothing else.
+static func _test_described_fields() -> bool:
+	var dock: EventSheetDock = _guarded_dock()
+	var inspector: RefCounted = load(INSPECTOR_PATH).new(dock, dock._current_sheet.functions[0])
+	inspector.get_property_list()
+	var plugin: Script = load(PLUGIN_PATH)
+	var dropdown: OptionButton = OptionButton.new()
+	plugin.FunctionField.fill_choices(dropdown, inspector.choices("waits"), 1)
+	var undescribed: Array = []
+	for key: String in ["returns", "in_add_action", "category", "waits", "shared", "param:0:type"]:
+		for pair: Array in inspector.choices(key):
+			if str(pair[1]).is_empty():
+				undescribed.append("%s/%s" % [key, pair[0]])
+	var ok: bool = SUPPORT.pins(NAME, [
+		["the plugin claims the function proxy", plugin.handles(inspector), true],
+		["and no other object", [plugin.handles(Resource.new()), plugin.handles(RefCounted.new()), plugin.handles(null)],
+			[false, false, false]],
+		["every Inspector property maps to its field", inspector.field_of("Parameters/1/Type"), "param:0:type"],
+		["Returns, Category, the Types and the settings are drawn as described dropdowns",
+			[plugin.shape_of("returns"), plugin.shape_of("category"), plugin.shape_of("param:0:type"),
+				plugin.shape_of("waits"), plugin.shape_of("name"), plugin.shape_of("add_param")],
+			["choice", "suggested", "choice", "choice", "text", ""]],
+		["no choice of any dropdown goes undescribed", undescribed, []],
+		["Returns says what Nothing means", inspector.choices("returns")[0],
+			["Nothing", "Hands nothing back. Use it as an action."]],
+		["a parameter Type says what int means", inspector.choices("param:0:type")[1],
+			["int", "A whole number: counts, health, coins."]],
+		["Shared says what each choice means", inspector.choices("shared"),
+			[["One per object", "Each object runs its own copy and can use its own variables, like health."],
+			["One for the script", "Called without picking an object. It cannot read one object's variables, so it suits helpers like maths."]]],
+		["a category with none is under the default heading", inspector.note("category", ""),
+			"The default heading for your own functions."],
+		["each item of the drawn dropdown carries its sentence", dropdown.get_item_tooltip(0),
+			"Runs start to end in one frame. Callers carry on straight after."],
+		["and the chosen one's sentence stays on the field", dropdown.tooltip_text,
+			"May pause on a Wait (timer, signal, tween). Callers can wait for it to finish before carrying on."],
+		["each label says what its field is for", inspector.purpose("category"), "The heading it is listed under in Add Action."],
+		["a parameter's Type label too", inspector.purpose("param:1:type"), "The kind of value a call passes in for this input."],
+	])
+	dropdown.free()
+	dock.free()
+	return ok
+
+
+## The line under each field: each guard fires on the bad value, in its strength, and is silent (or
+## confirms) on a good one; a refused Name or Default writes nothing while its field keeps the typed
+## text, and a refused Waits or Shared pick leaves the setting as it was.
+static func _test_guards() -> bool:
+	var dock: EventSheetDock = _guarded_dock()
+	var inspector: RefCounted = load(INSPECTOR_PATH).new(dock, dock._current_sheet.functions[0])
+	inspector.get_property_list()
+	var refused: String = EventSheetPopupUI.TONE_ERROR
+	var hint: String = "hint"
+	var ok: bool = SUPPORT.pins(NAME, [
+		["a free name says what leaving the field does", inspector.warning("name", "hurt"),
+			[EventSheetPopupUI.TONE_OK, "When you leave the field: renames take_damage to hurt, and its 1 calls with it. Ctrl+Z undoes it."]],
+		["the function's own name says nothing", inspector.warning("name", "take_damage"), ["", ""]],
+		["a name that is not an identifier", inspector.warning("name", "2x"),
+			[refused, "\"2x\" cannot be a name: use letters, numbers and _, and do not start with a number. Try _2x. Nothing was changed."]],
+		["a GDScript keyword", inspector.warning("name", "func"),
+			[refused, "\"func\" is a word GDScript keeps for itself. Try func_2. Nothing was changed."]],
+		["another function's name", inspector.warning("name", "jump"),
+			[refused, "There is already a function jump on this sheet, so calls could not tell them apart. Try jump_2. Nothing was changed."]],
+		["a variable's name", inspector.warning("name", "health"),
+			[refused, "\"health\" is already the variable health on this sheet, and two things with one name break the script. Try health_2. Nothing was changed."]],
+		["a signal's name", inspector.warning("name", "died"),
+			[refused, "\"died\" is already the signal died on this sheet, and two things with one name break the script. Try died_2. Nothing was changed."]],
+		["a suggestion is lowercase with _ for the rest", inspector.free_name("Take Damage!"), "take_damage_"],
+		["and skips every name already taken", inspector.free_name("Jump"), "jump_2"],
+		["a default its type holds passes", inspector.warning("param:1:default", "true"), ["", ""]],
+		["a default its type cannot hold", inspector.warning("param:0:default", "abc"),
+			[refused, "\"abc\" is not a whole number (like 1), so amount (int) cannot start as it. Nothing was changed."]],
+		["a fraction for a whole number", inspector.default_problem(0, "1.5"),
+			[refused, "\"1.5\" is not a whole number (like 1), so amount (int) cannot start as it. Nothing was changed."]],
+		["a bare word for a bool", inspector.default_problem(1, "yes"),
+			[refused, "\"yes\" is not true or false, so critical (bool) cannot start as it. Nothing was changed."]],
+		["a whole number for a whole number", inspector.default_problem(0, "1"), ["", ""]],
+		["a constant-style word is left to GDScript", inspector.default_problem(1, "DEFAULT_CRIT"), ["", ""]],
+		["an expression is left to GDScript", inspector.default_problem(1, "Vector2.ZERO.x > 0"), ["", ""]],
+		["a variable of the sheet may be named", inspector.default_problem(0, "health"), ["", ""]],
+		["an empty default says the parameter is required", inspector.warning("param:0:default", ""),
+			[hint, "Required: every call to take_damage must give amount."]],
+	])
+	# The order guard reads the parameters around the one typed into.
+	var target: EventFunction = dock._current_sheet.functions[0]
+	target.params[1].gdscript_default = ""
+	ok = SUPPORT.check(NAME, "a default before a required parameter is refused", inspector.warning("param:0:default", "1"),
+		[refused, "GDScript needs parameters without a default first, and critical after it has none. Give critical a default too, or move amount down. Nothing was changed."]) and ok
+	target.params[0].gdscript_default = "1"
+	ok = SUPPORT.check(NAME, "a required parameter after a defaulted one is refused", inspector.warning("param:1:default", ""),
+		[refused, "GDScript needs parameters without a default first, and amount before it has one. Give critical a default, or move it up. Nothing was changed."]) and ok
+	target.params[0].gdscript_default = ""
+	target.params[1].gdscript_default = "false"
+	# Returns and Waits are hints about the body.
+	ok = SUPPORT.check(NAME, "Returns with no Return in the body", inspector.warning("returns", ""),
+		[hint, "take_damage hands back int, but no event in it says Return yet. Add a Return action as its last step, or callers get 0."]) and ok
+	var body: EventRow = EventRow.new()
+	var give_back: ACEAction = ACEAction.new()
+	give_back.ace_id = "ReturnValue"
+	body.actions.append(give_back)
+	target.events.append(body)
+	ok = SUPPORT.check(NAME, "and silent once the body returns", inspector.warning("returns", ""), ["", ""]) and ok
+	target.is_async = true
+	ok = SUPPORT.check(NAME, "Waits with nothing that waits", inspector.warning("waits", ""),
+		[hint, "Nothing in take_damage waits yet, so Can wait only makes callers write await. Add a Wait, or pick Finishes at once."]) and ok
+	var pause: RawCodeRow = RawCodeRow.new()
+	pause.code = "await get_tree().process_frame\nhealth -= amount"
+	body.sub_events.append(pause)
+	ok = SUPPORT.check(NAME, "and silent once something in it waits", inspector.warning("waits", ""), ["", ""]) and ok
+	# Two picks the body rules out are refused: the setting stays, and the line says why.
+	inspector.set("Waits", false)
+	inspector.set("Shared", true)
+	ok = SUPPORT.pins(NAME, [
+		["a function with a Wait inside stays Can wait", target.is_async, true],
+		["and says why", inspector.warning("waits", ""),
+			[refused, "take_damage has a Wait inside, so it always pauses part way. It stays Can wait; remove the Wait first to change this."]],
+		["a function using an object's variable stays One per object", target.is_static, false],
+		["and says which variable", inspector.warning("shared", ""),
+			[refused, "take_damage uses health, which each object has its own copy of. A shared function cannot reach it, so this stays One per object."]],
+		["a parameter Type note reads the type, then its sentence", inspector.note("param:0:type", "int"),
+			"int: A whole number: counts, health, coins."],
+	]) and ok
+	body.sub_events.clear()
+	target.is_async = false
+	# A refused name or default writes nothing: the sheet compiles to the same bytes, and the field
+	# keeps what was typed.
+	var before: String = SUPPORT.compile_output(dock._current_sheet)
+	inspector.set("Name", "health")
+	inspector.set("Parameters/2/Default", "abc")
+	ok = SUPPORT.pins(NAME, [
+		["a refused name and default write nothing", SUPPORT.compile_output(dock._current_sheet) == before, true],
+		["the Name field keeps the typed text", inspector.get("Name"), "health"],
+		["the Default field keeps the typed text", inspector.get("Parameters/2/Default"), "abc"],
+		["the function keeps its name", (dock._current_sheet.functions[0] as EventFunction).function_name, "take_damage"],
+	]) and ok
+	inspector.set("Name", "hurt")
+	ok = SUPPORT.check(NAME, "a free name typed over a refused one is written",
+		(dock._current_sheet.functions[0] as EventFunction).function_name, "hurt") and ok
+	dock.free()
+	return ok
 
 
 static func _test_inspector() -> bool:

@@ -9340,3 +9340,29 @@ Loaded and saved every run by the Remember Between Runs code an older version wr
 Values players already saved for %s will not load after the rename: their save files keep them under %s.,플레이어가 %s에 대해 이미 저장한 값은 이름을 바꾼 뒤에는 불러오지 않습니다. 저장 파일에는 %s 아래에 남아 있습니다.
 Function %s,함수 %s
 Move Up,위로 이동
+The name the function's actions use for this input.,함수의 액션이 이 입력에 쓰는 이름.
+The kind of value a call passes in for this input.,호출이 이 입력에 넘기는 값의 종류.
+"%s hands back %s, but no event in it says Return yet. Add a Return action as its last step, or callers get %s.","%s는 %s를 돌려주지만, 안의 이벤트 중 아직 반환하는 것이 없습니다. 마지막 단계로 반환 액션을 추가하세요. 그렇지 않으면 호출하는 쪽은 %s를 받습니다."
+"Nothing in %s waits yet, so Can wait only makes callers write await. Add a Wait, or pick Finishes at once.","%s에는 아직 기다리는 것이 없어서, 기다릴 수 있음은 호출하는 쪽이 await를 쓰게 만들 뿐입니다. 대기를 추가하거나 바로 끝남을 고르세요."
+"%s has a Wait inside, so it always pauses part way. It stays Can wait; remove the Wait first to change this.",%s 안에 대기가 있어서 항상 중간에 멈춥니다. 기다릴 수 있음으로 남습니다. 바꾸려면 먼저 대기를 지우세요.
+"%s uses %s, which each object has its own copy of. A shared function cannot reach it, so this stays One per object.","%s는 %s를 쓰는데, 이것은 각 오브젝트가 자기 사본을 가진 변수입니다. 공유 함수는 닿을 수 없으므로 오브젝트마다 하나로 남습니다."
+A function needs a name. Nothing was changed.,함수에는 이름이 필요합니다. 아무것도 바뀌지 않았습니다.
+"""%s"" is a word GDScript keeps for itself. Try %s. Nothing was changed.","""%s""는 GDScript가 따로 쓰는 단어입니다. %s를 써 보세요. 아무것도 바뀌지 않았습니다."
+"""%s"" cannot be a name: use letters, numbers and _, and do not start with a number. Try %s. Nothing was changed.","""%s""는 이름이 될 수 없습니다: 글자, 숫자, _를 쓰고 숫자로 시작하지 마세요. %s를 써 보세요. 아무것도 바뀌지 않았습니다."
+"There is already a function %s on this sheet, so calls could not tell them apart. Try %s. Nothing was changed.",이 시트에 이미 함수 %s가 있어서 호출이 둘을 구분할 수 없습니다. %s를 써 보세요. 아무것도 바뀌지 않았습니다.
+"""%s"" is already the variable %s on this sheet, and two things with one name break the script. Try %s. Nothing was changed.","""%s""는 이미 이 시트의 변수 %s이고, 이름이 같은 두 가지는 스크립트를 망가뜨립니다. %s를 써 보세요. 아무것도 바뀌지 않았습니다."
+"""%s"" is already the signal %s on this sheet, and two things with one name break the script. Try %s. Nothing was changed.","""%s""는 이미 이 시트의 시그널 %s이고, 이름이 같은 두 가지는 스크립트를 망가뜨립니다. %s를 써 보세요. 아무것도 바뀌지 않았습니다."
+"When you leave the field: renames %s to %s, and its %d calls with it. Ctrl+Z undoes it.","필드를 떠나면: %s의 이름을 %s로 바꾸고, %d개의 호출도 함께 바꿉니다. Ctrl+Z로 되돌릴 수 있습니다."
+"GDScript needs parameters without a default first, and %s before it has one. Give %s a default, or move it up. Nothing was changed.","GDScript는 기본값 없는 매개변수가 먼저 와야 하는데, 앞의 %s에 기본값이 있습니다. %s에 기본값을 주거나 위로 옮기세요. 아무것도 바뀌지 않았습니다."
+"GDScript needs parameters without a default first, and %s after it has none. Give %s a default too, or move %s down. Nothing was changed.","GDScript는 기본값 없는 매개변수가 먼저 와야 하는데, 뒤의 %s에 기본값이 없습니다. %s에도 기본값을 주거나 %s를 아래로 옮기세요. 아무것도 바뀌지 않았습니다."
+Required: every call to %s must give %s.,필수: %s의 모든 호출은 %s를 넘겨야 합니다.
+"""%s"" is not %s, so %s (%s) cannot start as it. Nothing was changed.","""%s""는 %s가 아니어서 %s (%s)는 그것으로 시작할 수 없습니다. 아무것도 바뀌지 않았습니다."
+a whole number (like 1),정수 (예: 1)
+a number (like 0.5),숫자 (예: 0.5)
+"text in quotes (like ""Ready"")","따옴표로 감싼 텍스트 (예: ""Ready"")"
+"Vector2(0, 0) or Vector2.ZERO","Vector2(0, 0) 또는 Vector2.ZERO"
+"Vector3(0, 0, 0) or Vector3.ZERO","Vector3(0, 0, 0) 또는 Vector3.ZERO"
+a color (like Color.WHITE),색 (예: Color.WHITE)
+a list (like []),리스트 (예: [])
+a dictionary (like {}),딕셔너리 (예: {})
+null (no object yet),null (아직 오브젝트 없음)

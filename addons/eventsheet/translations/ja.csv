@@ -9340,3 +9340,29 @@ Loaded and saved every run by the Remember Between Runs code an older version wr
 Values players already saved for %s will not load after the rename: their save files keep them under %s.,プレイヤーが %s についてすでに保存した値は、名前を変えた後は読み込まれません。セーブファイルには %s の下に残っています。
 Function %s,関数 %s
 Move Up,上へ移動
+The name the function's actions use for this input.,関数のアクションがこの入力に使う名前。
+The kind of value a call passes in for this input.,呼び出しがこの入力に渡す値の種類。
+"%s hands back %s, but no event in it says Return yet. Add a Return action as its last step, or callers get %s.",%s は %s を返しますが、まだ中のイベントに「返す」がありません。最後のステップに「返す」アクションを置いてください。そうしないと呼び出し側は %s を受け取ります。
+"Nothing in %s waits yet, so Can wait only makes callers write await. Add a Wait, or pick Finishes at once.",%s にはまだ待つものがないので、「待つことがある」は呼び出し側に await を書かせるだけです。待機を追加するか、「すぐに終わる」を選んでください。
+"%s has a Wait inside, so it always pauses part way. It stays Can wait; remove the Wait first to change this.",%s には待機が入っているので、必ず途中で一時停止します。「待つことがある」のままです。変えるには先に待機を取り除いてください。
+"%s uses %s, which each object has its own copy of. A shared function cannot reach it, so this stays One per object.",%s は %s を使っていて、これは各オブジェクトが自分のコピーを持つものです。共有関数からは届かないので、「オブジェクトごとに 1 つ」のままです。
+A function needs a name. Nothing was changed.,関数には名前が必要です。何も変更されていません。
+"""%s"" is a word GDScript keeps for itself. Try %s. Nothing was changed.","""%s"" は GDScript が予約している語です。%s を試してください。何も変更されていません。"
+"""%s"" cannot be a name: use letters, numbers and _, and do not start with a number. Try %s. Nothing was changed.","""%s"" は名前にできません: 英字、数字、_ を使い、数字で始めないでください。%s を試してください。何も変更されていません。"
+"There is already a function %s on this sheet, so calls could not tell them apart. Try %s. Nothing was changed.",このシートにはすでに関数 %s があるので、呼び出しが区別できません。%s を試してください。何も変更されていません。
+"""%s"" is already the variable %s on this sheet, and two things with one name break the script. Try %s. Nothing was changed.","""%s"" はすでにこのシートの変数 %s で、同じ名前のものが 2 つあるとスクリプトが壊れます。%s を試してください。何も変更されていません。"
+"""%s"" is already the signal %s on this sheet, and two things with one name break the script. Try %s. Nothing was changed.","""%s"" はすでにこのシートのシグナル %s で、同じ名前のものが 2 つあるとスクリプトが壊れます。%s を試してください。何も変更されていません。"
+"When you leave the field: renames %s to %s, and its %d calls with it. Ctrl+Z undoes it.",フィールドを離れると: %s を %s に名前変更し、その %d 個の呼び出しも変更します。Ctrl+Z で元に戻せます。
+"GDScript needs parameters without a default first, and %s before it has one. Give %s a default, or move it up. Nothing was changed.",GDScript では既定値のない引数が先に来る必要があり、前の %s には既定値があります。%s に既定値を付けるか、上へ移動してください。何も変更されていません。
+"GDScript needs parameters without a default first, and %s after it has none. Give %s a default too, or move %s down. Nothing was changed.",GDScript では既定値のない引数が先に来る必要があり、後ろの %s には既定値がありません。%s にも既定値を付けるか、%s を下へ移動してください。何も変更されていません。
+Required: every call to %s must give %s.,必須: %s のすべての呼び出しは %s を渡す必要があります。
+"""%s"" is not %s, so %s (%s) cannot start as it. Nothing was changed.","""%s"" は %s ではないので、%s (%s) はそれで始められません。何も変更されていません。"
+a whole number (like 1),整数 (例: 1)
+a number (like 0.5),数値 (例: 0.5)
+"text in quotes (like ""Ready"")","引用符で囲んだテキスト (例: ""Ready"")"
+"Vector2(0, 0) or Vector2.ZERO","Vector2(0, 0) または Vector2.ZERO"
+"Vector3(0, 0, 0) or Vector3.ZERO","Vector3(0, 0, 0) または Vector3.ZERO"
+a color (like Color.WHITE),色 (例: Color.WHITE)
+a list (like []),リスト (例: [])
+a dictionary (like {}),辞書 (例: {})
+null (no object yet),null (まだオブジェクトなし)

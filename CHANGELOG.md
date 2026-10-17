@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+### Added: a selected function's Inspector describes its choices and warns before a mistake is written
+
+- Returns, Category, each parameter's Type, and In Add Action, Waits and Shared are described
+  dropdowns again: every choice says what it means as the pointer rests on it, and the chosen
+  choice's sentence stays under the field as a muted line (a parameter Type reads "int: A whole
+  number..."). Waits reads Finishes at once / Can wait, Shared reads One per object / One for the
+  script, In Add Action reads Not listed / Listed. Category keeps its text box, with the sheet's
+  categories one click away beside it. Every field's label says what the field is for on hover.
+- A line under a field steers off an error before anything is written, in three strengths. Refused
+  (red edge, nothing written): a Name that is not a valid name, is a GDScript keyword, or is already
+  a function, variable or signal of this sheet, each with a free name to try (`health` - "Try
+  health_2"); a parameter Default its Type cannot hold (`abc` for an int) or that breaks GDScript's
+  defaults-last order; Waits set to Finishes at once while the body has a Wait; Shared turned on while
+  the body uses a variable each object has its own copy of. A refused Name or Default keeps the typed
+  text in its field and the sheet keeps its bytes. Hint (accent edge, allowed): Returns set while no
+  event in the body says Return (and what callers get instead), Waits on with nothing that waits, a
+  parameter left required. Confirmation (green): a free Name says the rename and how many calls
+  leaving the field will change.
+- The fields are drawn by an Inspector plugin that handles only the function being edited,
+  registered on the first function selection, so neither the editor's start nor a sheet's first
+  open loads it.
 ### Fixed: the plugin opens its own code cleanly
 
 - Opening the first sheet of a session no longer prints the engine warning "OptimizedTranslation

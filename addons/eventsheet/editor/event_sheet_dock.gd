@@ -450,6 +450,10 @@ var _ace_params_built: bool = false
 ## The Live Values debugger the plugin handed over, kept for the parameters dialog's expression
 ## picker until that dialog is built.
 var _params_live_debugger: EditorDebuggerPlugin = null
+## Registers the Inspector plugin that draws a selected function's fields. Handed over by the editor
+## plugin (only it may add an Inspector plugin) and called on the first function selection, so the
+## plugin's file loads then and not with the workspace.
+var function_fields_door: Callable = Callable()
 var _variable_dlg: RefCounted = null:
 	get:
 		if _variable_dlg == null:

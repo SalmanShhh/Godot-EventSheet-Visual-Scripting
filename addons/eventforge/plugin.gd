@@ -20,6 +20,7 @@ const STARTER_TEMPLATES_PATH: String = "res://addons/eventsheet/editor/dock/star
 const NEW_SHEET_DIALOG_PATH: String = "res://addons/eventsheet/editor/new_sheet_dialog.gd"
 const CONNECT_SIGNAL_DIALOG_PATH: String = "res://addons/eventsheet/editor/connect_signal_dialog.gd"
 const ACE_PARAM_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/ace_param_inspector_plugin.gd"
+const FUNCTION_FIELDS_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/function_inspector_plugin.gd"
 const INSTANCE_VARIABLES_INSPECTOR_PATH: String = "res://addons/eventforge/editor/instance_variables_inspector_plugin.gd"
 const DRAWING_PREFAB_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_inspector_plugin.gd"
 const DRAWING_PREFAB_PREVIEW_GEN_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_preview_generator.gd"
@@ -64,6 +65,7 @@ var _live_values_debugger: EventSheetLiveValuesDebugger = null
 # Typed loosely on purpose (see the path consts above): their concrete class names must not
 # appear in this file, or their subtrees join the boot compile.
 var _ace_param_inspector_plugin: EditorInspectorPlugin = null
+var _function_fields_plugin: EditorInspectorPlugin = null
 var _attribute_drawers_plugin: EventSheetAttributeDrawers = null
 # Loosely typed on purpose (boot-lazy): loaded by path in _enter_tree so their subtrees stay off the boot compile.
 var _drawing_prefab_inspector: EditorInspectorPlugin = null
@@ -537,9 +539,19 @@ func _ensure_editor() -> void:
 			_ace_param_inspector_plugin = load(ACE_PARAM_INSPECTOR_PATH).new()
 			_ace_param_inspector_plugin.call("set_param_store", store)
 			add_inspector_plugin(_ace_param_inspector_plugin)
+	# The selected function's fields: registered on the first function selection, through this door.
+	if "function_fields_door" in editor:
+		editor.set("function_fields_door", _register_function_fields)
 	# Commit only after the whole build succeeds - see the docstring's clean-retry contract.
 	_event_sheet_editor = editor
 	_maybe_show_welcome()
+
+
+## Adds the Inspector plugin that draws a selected function's fields, once. Loaded by path.
+func _register_function_fields() -> void:
+	if _function_fields_plugin == null:
+		_function_fields_plugin = load(FUNCTION_FIELDS_INSPECTOR_PATH).new()
+		add_inspector_plugin(_function_fields_plugin)
 
 
 # ── First-run welcome: the 60-second hook. The window lives on the dock (it owns
@@ -615,6 +627,9 @@ func _exit_tree() -> void:
 	if _ace_param_inspector_plugin != null:
 		remove_inspector_plugin(_ace_param_inspector_plugin)
 		_ace_param_inspector_plugin = null
+	if _function_fields_plugin != null:
+		remove_inspector_plugin(_function_fields_plugin)
+		_function_fields_plugin = null
 	if _new_sheet_dialog != null:
 		_new_sheet_dialog.free_dialog()
 		_new_sheet_dialog = null
