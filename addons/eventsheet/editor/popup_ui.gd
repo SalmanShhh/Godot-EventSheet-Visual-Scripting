@@ -150,19 +150,31 @@ static func window_body(content: Control) -> Control:
 ## The backdrop window_body puts under a plain Window, and the two things a dialog does that a bare
 ## Window does not. It GROWS TO FIT what it holds once it is shown: a Window keeps the size it was
 ## given, so a fixed size smaller than the content cut its foot off (the Bookmarks card, the Replay
-## Recorder's checkpoint button), and words in a longer language cut more. Measured a frame after the
+## Recorder's checkpoint button), and words in a longer language cut more. Measured a moment after the
 ## window shows, once its labels have wrapped at their real width - following the content all along
-## (wrap_controls) grew the Debugger three screens tall from the first layout's one-word-a-line
-## guess, and a window never shrinks back. And ESC CLOSES IT, when nothing inside used the key first,
-## through the window's own close_requested, so a window that does something on close (the Doctor
-## writes down what was read) still does it.
+## (wrap_controls), or measuring at the end of the frame that showed it, grew the Debugger three
+## screens tall from the first layout's one-word-a-line guess, and a window never shrinks back. And
+## ESC CLOSES IT, when nothing inside used the key first, through the window's own close_requested,
+## so a window that does something on close (the Doctor writes down what was read) still does it.
 class WindowBackdrop extends PanelContainer:
 
+	## How long after showing the window is measured: long enough for its labels to have wrapped
+	## at the width they were given, so a label is never read at the one-word-a-line first guess.
+	const SETTLE_SECONDS := 0.1
+
+
+	## Each time the window shows: when it is shown, and when it enters the tree already showing (a
+	## Window is visible from birth, so one added and popped in the same breath never changes).
 	func _notification(what: int) -> void:
 		if what == NOTIFICATION_PARENTED and get_parent() is Window:
-			(get_parent() as Window).visibility_changed.connect(func() -> void:
-				if is_instance_valid(self) and get_parent() is Window and (get_parent() as Window).visible:
-					fit_window.call_deferred())
+			(get_parent() as Window).visibility_changed.connect(_fit_once_settled)
+		elif what == NOTIFICATION_ENTER_TREE:
+			_fit_once_settled()
+
+
+	func _fit_once_settled() -> void:
+		if is_inside_tree() and get_parent() is Window and (get_parent() as Window).visible:
+			get_tree().create_timer(SETTLE_SECONDS).timeout.connect(fit_window)
 
 
 	## Makes the window at least as big as what it holds, and no smaller than it already is.

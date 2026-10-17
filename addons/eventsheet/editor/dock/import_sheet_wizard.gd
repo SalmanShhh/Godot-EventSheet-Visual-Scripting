@@ -118,6 +118,11 @@ func _build_dialog() -> void:
 	content.add_child(EventSheetPopupUI.responsive_band(
 		EventSheetPopupUI.titled_card("What it reads like", preview_box),
 		EventSheetPopupUI.titled_card("What came across", report_box)))
+	# The strip and the buttons sit at the window's foot, as a dialog's do: without the spacer they
+	# floated under the cards with the rest of the window blank below them.
+	var foot_spacer: Control = Control.new()
+	foot_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content.add_child(foot_spacer)
 	content.add_child(_strip)
 
 	var buttons: HBoxContainer = HBoxContainer.new()
@@ -141,6 +146,7 @@ func _build_dialog() -> void:
 
 	var scroll: ScrollContainer = ScrollContainer.new()
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.add_child(content)
 	_dialog.add_child(EventSheetPopupUI.window_body(scroll))
 

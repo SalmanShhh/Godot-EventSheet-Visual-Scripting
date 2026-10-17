@@ -101,6 +101,9 @@ static func _wizard() -> bool:
 	var wizard: EventSheetImportSheetWizard = EventSheetImportSheetWizard.new()
 	wizard.init(host)
 	wizard.open()
+	var before_strip: Control = wizard._strip.get_parent().get_child(wizard._strip.get_index() - 1) as Control
+	passed = _check("the strip and the buttons sit at the window's foot, under a spacer that takes the rest",
+		before_strip.size_flags_vertical, Control.SIZE_EXPAND_FILL) and passed
 	passed = _check("the wizard reads the exported sheet", wizard.load_source(FIXTURE), "") and passed
 	passed = _check("the wizard lists the sheet's objects", str(wizard.object_map().keys()),
 		"[\"Enemy\", \"Player\", \"ScoreLabel\"]") and passed

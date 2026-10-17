@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Fixed: the Theme Editor's preview reads, and two windows keep their foot in place
+
+- The Theme Editor's sample sheet wrapped every condition a letter a line ("Ev / ery / tic / k")
+  in a 560 px preview; the window opens wider and gives the preview 720 px.
+- A plain window measures what it holds a moment after it shows, once its labels have wrapped: the
+  Debugger otherwise grew three screens tall from the first layout's one-word-a-line guess.
+- Import event sheet keeps its strip and buttons at the window's foot instead of floating under the
+  cards with the rest of the window blank.
+
 ### Added: a data table column has its own Default and Description, and a Texture kind
 
 - New Data Table's column panel gives the selected column a **Default** (what a new row starts with

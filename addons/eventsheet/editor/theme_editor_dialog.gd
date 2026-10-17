@@ -34,7 +34,7 @@ func open(dock: Control, base_style: EventSheetEditorStyle) -> void:
 	_working_style = duplicate_style(base_style)
 	_ensure_dialog()
 	_preview_viewport.set_sheet(build_sample_sheet(_working_style))
-	_dialog.popup_centered(Vector2i(EventSheetPalette.scaled(1080), EventSheetPalette.scaled(640)))
+	_dialog.popup_centered(Vector2i(EventSheetPalette.scaled(1240), EventSheetPalette.scaled(640)))
 
 
 ## Deep-duplicates a style so live edits never touch the original resource.
@@ -504,7 +504,7 @@ func _ensure_dialog() -> void:
 	var split: HSplitContainer = HSplitContainer.new()
 	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var preview_scroll: ScrollContainer = ScrollContainer.new()
-	preview_scroll.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(560.0), EventSheetPalette.scaled_f(440.0))
+	preview_scroll.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(720.0), EventSheetPalette.scaled_f(440.0))
 	_preview_viewport = EventSheetViewport.new()
 	preview_scroll.add_child(_preview_viewport)
 	split.add_child(preview_scroll)

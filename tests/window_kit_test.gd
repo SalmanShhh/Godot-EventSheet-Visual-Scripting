@@ -179,6 +179,8 @@ static func _window_backdrop() -> bool:
 		["painted opaque", (fill as StyleBoxFlat).bg_color.a if fill is StyleBoxFlat else 0.0, 1.0],
 		["the box still sits inside it", body.is_ancestor_of(made["box"]), true],
 		["the window grows to fit what it holds", _grown_height(made["window"]) >= 400, true],
+		["and measures again each time it shows",
+			(made["window"] as Window).visibility_changed.is_connected(Callable(body, "_fit_once_settled")), true],
 		["Esc closes it through its own close request", _escape_closes(made["window"]), 1],
 	]
 	host.free()
