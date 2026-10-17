@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Fixed: six edges of the variables, functions, translation and save slices
+
+- Group ▸ New group… is greyed for a variable declared in another file, with the same hover as End
+  group here, and neither the menu nor a drop onto it groups it any more: a sheet variable of the
+  same name keeps its group.
+- Selecting another row, or closing the sheet, takes a function out of Godot's Inspector instead of
+  leaving an empty object there. Text typed into one of its fields and not yet left is written first.
+- In a translation folder whose catalogs are all hand-made, adding a language and writing the fake
+  column now write nothing, report no failure, and name the catalogs they left alone. A one-file
+  extract with notes off writes Godot's plain catalog shape, which the studio reads as hand-made
+  from then on; that is now written down and pinned.
+- Keep loading on a Manual variable stores only the old key, because Load Game's state has no
+  sections; a class rename no longer stores anything on it.
+- The Save studio compares numbers as numbers, so leaving an unchanged spin box (600.0 against a
+  scene's 600) no longer rewrites the scene.
+
 ### Changed: the Save studio's Player settings cards are read off the rows they teach
 
 - Each Game Settings row on a Player settings card (Declare Setting, Load All Settings, Changed
@@ -63,6 +79,7 @@
   then the three are rewritten as the Auto block in one undo step, with the same file and keys, so
   values the old code saved load through the new block. A section the class has since left is kept
   loading.
+
 ### Changed: a function is edited in Godot's own Inspector, and branching first steps sit beside the head
 
 - Selecting a function's head hands it to Godot's Inspector: Name, Description, Returns, In Add
