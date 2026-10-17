@@ -165,6 +165,13 @@ static func _the_key_and_reset_layout() -> bool:
 	panel.dress_legend(false)
 	passed = _check("Reset Layout waits for a dragged box", [panel.reset_button.text, offered_untouched,
 		panel.reset_button.disabled], ["Reset Layout", true, false]) and passed
+	var ok_button: Button = panel.window.get_ok_button()
+	var before_pick: Array = [panel.strip.visible, ok_button.text, ok_button.disabled,
+		(panel.window as ConfirmationDialog).get_cancel_button().text]
+	panel.pick("res://player.gd")
+	passed = _check("Open Sheet waits for a pressed box, which the strip then names", [before_pick,
+		[panel.strip.visible, panel._this_box.text, ok_button.disabled]], [[false, "Open Sheet", true, "Close"],
+		[true, "player.gd. Click opens it; drag moves it, and where you put it is remembered for this project.", false]]) and passed
 	host.free()
 	return passed
 

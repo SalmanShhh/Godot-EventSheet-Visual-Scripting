@@ -60,9 +60,11 @@ static func run() -> bool:
 	panel.refresh()
 	var panel_root: TreeItem = editor._bookmarks_tree.get_root()
 	var header: TreeItem = panel_root.get_first_child()
-	all_passed = _check("the foot says bookmarks are not kept past this session",
-		[panel.session_note.text, panel.session_note.get_parent() == panel.tree.get_parent()],
-		["Bookmarks last for this session only.", true]) and all_passed
+	all_passed = _check("the foot says bookmarks are not kept past this session, beside Close and Go to Row",
+		[panel.session_note.text, panel.session_note.get_parent() == panel.window.get_ok_button().get_parent(),
+			panel.window.get_ok_button().text, (panel.window as ConfirmationDialog).get_cancel_button().text],
+		["Bookmarks last for this session only.", true, "Go to Row", "Close"]) and all_passed
+	all_passed = _check("the window names the sheet the marks are in", panel.window.title, "Bookmarks in this sheet") and all_passed
 	all_passed = _check("panel groups bookmarks under a sheet header", header != null and header.get_first_child() != null, true) and all_passed
 	all_passed = _check("the entry shows the bookmarked row's text", header.get_first_child().get_text(0).contains("row 0"), true) and all_passed
 	all_passed = _check("entries carry the jump target", header.get_first_child().get_metadata(0), sheet.events[0]) and all_passed
@@ -78,6 +80,20 @@ static func run() -> bool:
 	plain.spans.append(plain_span)
 	all_passed = _check("a row with no event number reads as its words (the mark is an editor icon, not an emoji)",
 		EventSheetBookmarksPanel.entry_label(plain), "Spawn the boss") and all_passed
+	# An event with no condition yet leads with the canvas's "+ Add condition" offer, which is not its words.
+	var bare: EventRowData = EventRowData.new()
+	bare.event_number = 3
+	var offer: SemanticSpan = SemanticSpan.new()
+	offer.text = "+ Add condition"
+	offer.metadata = {"kind": "add_condition"}
+	var action_span: SemanticSpan = SemanticSpan.new()
+	action_span.text = "Destroy"
+	bare.spans.append_array([offer, action_span])
+	all_passed = _check("a mark reads as the row's words, never the + Add condition offer",
+		EventSheetBookmarksPanel.entry_label(bare), "3 · Destroy") and all_passed
+	all_passed = _check("the strip names a picked mark by its event number, or by its words",
+		[EventSheetBookmarksPanel.entry_sentence(numbered), EventSheetBookmarksPanel.entry_sentence(plain)],
+		["Event 12. Click reveals and selects it on the sheet.", "Spawn the boss. Click reveals and selects it on the sheet."]) and all_passed
 
 	# Split view: the panel lists and jumps in the pane the reader is working in.
 	editor._multi_view._toggle_split_view()

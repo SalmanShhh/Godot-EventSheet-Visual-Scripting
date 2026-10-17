@@ -33,7 +33,7 @@ static func run() -> bool:
 	passed = _history_touched_rows() and passed
 	passed = _history_cursor_follows_the_snapshots() and passed
 	passed = _history_travels_back_to_before_the_first_edit() and passed
-	passed = _history_lights_rows_on_hover_not_on_click() and passed
+	passed = _history_lights_rows_on_click() and passed
 	return passed
 
 
@@ -108,13 +108,17 @@ static func _auto_show_rule() -> bool:
 
 static func _history_labels() -> bool:
 	var passed: bool = true
-	passed = _check("an edit reads by its own name and the event it landed on",
-		EventSheetHistoryPanel.entry_label("Add Group", 12, false), "Add Group   event 12") and passed
+	passed = _check("an edit reads by its own name, the event it landed on in a column of its own",
+		[EventSheetHistoryPanel.entry_label("Add Group", false), EventSheetHistoryPanel.event_label(12)],
+		["Add Group", "event 12"]) and passed
 	passed = _check("an undone edit says so",
-		EventSheetHistoryPanel.entry_label("Extract to Function", 4, true),
-		"Extract to Function   event 4   (undone)") and passed
-	passed = _check("an edit with no event beside it says only its name",
-		EventSheetHistoryPanel.entry_label("Group Variables", 0, false), "Group Variables") and passed
+		EventSheetHistoryPanel.entry_label("Extract to Function", true), "Extract to Function   (undone)") and passed
+	passed = _check("an edit with no event beside it leaves the Event column blank",
+		EventSheetHistoryPanel.event_label(0), "") and passed
+	passed = _check("the strip says what a click on a step does",
+		[EventSheetHistoryPanel.entry_sentence("Extract to Function", 9), EventSheetHistoryPanel.entry_sentence("Add Group", 0)],
+		["Extract to Function, event 9. Click undoes back to just after it; the rows it touched light up.",
+			"Add Group. Click undoes back to just after it; the rows it touched light up."]) and passed
 	return passed
 
 
@@ -169,9 +173,9 @@ static func _history_travels_back_to_before_the_first_edit() -> bool:
 	return passed
 
 
-## The touched rows light while the pointer is OVER an entry and go dark when it leaves - a click
-## travels, it does not light anything.
-static func _history_lights_rows_on_hover_not_on_click() -> bool:
+## A click on a step travels to it AND lights the rows it touched, until the window closes; the
+## pointer passing over the list lights nothing.
+static func _history_lights_rows_on_click() -> bool:
 	var passed: bool = true
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(EventSheetResource.new())
@@ -180,9 +184,13 @@ static func _history_lights_rows_on_hover_not_on_click() -> bool:
 	panel.record("Add Group", _sheet(["a"]), _sheet(["a", "c"]), 1)
 	editor._current_sheet_path = "res://levels/player.gd"
 	panel.refresh()
-	passed = _check("the first line names the file the sheet was opened from",
-		panel.tree.get_root().get_first_child().get_text(0), "• Opened player.gd") and passed
-	var entry_line: TreeItem = panel.tree.get_root().get_first_child().get_next()
+	passed = _check("the first line names the file the sheet was opened from, and the window the file it is the history of",
+		[panel.tree.get_root().get_first_child().get_text(0), panel.window.title],
+		["• Opened player.gd", "History of player.gd"]) and passed
+	passed = _check("the window is the kit's action window: Go Back to This Step and Close, a Step and an Event column",
+		[panel.window.get_ok_button().text, (panel.window as ConfirmationDialog).get_cancel_button().text,
+			panel.tree.get_column_title(0), panel.tree.get_column_title(1)],
+		["Go Back to This Step", "Close", "Step", "Event"]) and passed
 	panel.cursor = 0
 	panel.refresh()
 	passed = _check("the steps read in the theme's own text, an undone one in its muted text",
@@ -190,24 +198,20 @@ static func _history_lights_rows_on_hover_not_on_click() -> bool:
 		[EventSheetPopupUI.text_color(), EventSheetPopupUI.muted_text_color()]) and passed
 	panel.cursor = 1
 	panel.refresh()
-	entry_line = panel.tree.get_root().get_first_child().get_next()
-	# Selected without travelling, so the click below is the only thing that could light rows.
-	panel.tree.item_selected.disconnect(panel._on_entry_selected)
-	entry_line.select(0)
-	panel.tree.item_selected.connect(panel._on_entry_selected)
-	panel.tree.item_mouse_selected.emit(Vector2.ZERO, MOUSE_BUTTON_LEFT)
-	passed = _check("a click lights nothing", editor._viewport._row_highlight.keys(), []) and passed
-	panel.highlight_entry(0)
-	passed = _check("hovering the edit lights the row it added", editor._viewport._row_highlight.keys(), ["c"]) and passed
-	panel.highlight_entry(-1)
-	passed = _check("leaving the list clears the light", editor._viewport._row_highlight.keys(), []) and passed
+	passed = _check("nothing is lit before a click", editor._viewport._row_highlight.keys(), []) and passed
+	panel.tree.get_root().get_first_child().get_next().select(0)
+	passed = _check("a click lights the row the step added and names the step on the strip",
+		[editor._viewport._row_highlight.keys(), panel._this_row.text],
+		[["c"], "Add Group, event 1. Click undoes back to just after it; the rows it touched light up."]) and passed
+	panel.window.visibility_changed.emit()
+	passed = _check("closing the window puts the light out", editor._viewport._row_highlight.keys(), []) and passed
 	# In split view the light lands in the pane the reader is working in, like the Outline's jumps.
 	editor._multi_view._toggle_split_view()
 	var split: EventSheetViewport = editor._multi_view._split_viewport
 	# The split is the pane the reader last worked in (a selection there makes it so).
 	editor._active_viewport_ref = split
 	panel.highlight_entry(0)
-	passed = _check("in split view the hover lights the active pane, not the left one",
+	passed = _check("in split view the light lands in the active pane, not the left one",
 		[split._row_highlight.keys(), editor._viewport._row_highlight.keys()], [["c"], []]) and passed
 	panel.highlight_entry(-1)
 	editor._multi_view._toggle_split_view()

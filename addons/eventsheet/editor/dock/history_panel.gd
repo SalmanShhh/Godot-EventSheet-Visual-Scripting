@@ -4,7 +4,8 @@
 # dock lists the same steps under their internal names; this one lists them the way the sheet named
 # them when it made them ("Add Group", "Extract to Function", "Move Variable Up"), with the event
 # they landed on beside them. Click one to undo or redo back to it (the first line, "Opened", is the
-# sheet as it was before any of them); hover one to see the rows it touched lit up on the canvas.
+# sheet as it was before any of them) and the rows it touched light up on the canvas until the
+# window closes; Go Back to This Step does the same for a line picked with the keys.
 #
 # The log is the dock's own: it is written by the one funnel every sheet edit goes through, and the
 # cursor follows the snapshots that funnel restores - so Ctrl+Z from anywhere, the toolbar arrows
@@ -31,6 +32,9 @@ var cursor: int = 0
 var window: Window = null
 var tree: Tree = null
 var _empty_hint: Label = null
+## The strip under the list: the clicked step (THIS ROW) over the keys that move the same marker.
+var strip: EventSheetPopupUI.HelpStrip = null
+var _this_row: Label = null
 
 
 func _init(dock: Control) -> void:
@@ -133,30 +137,47 @@ static func _walk_uids(rows: Array, into: Dictionary) -> void:
 			_walk_uids(group.events if not group.events.is_empty() else group.rows, into)
 
 
-## One entry as the list writes it: the sheet's own name for the edit, then the event it landed on,
-## then "(undone)" when it is waiting to be redone. Pure, so the wording is pinned headless.
-static func entry_label(label: String, event_number: int, undone: bool) -> String:
-	var text: String = label
+## One entry's Step column: the sheet's own name for the edit, then "(undone)" when it is waiting to
+## be redone. Pure, so the wording is pinned headless.
+static func entry_label(label: String, undone: bool) -> String:
+	return label + ("   " + EventSheetL10n.translate("(undone)") if undone else "")
+
+
+## One entry's Event column: the event the edit landed on, blank for an edit made on no event.
+static func event_label(event_number: int) -> String:
+	return EventSheetL10n.translate("event %d") % event_number if event_number > 0 else ""
+
+
+## What a clicked step did, for the strip's THIS ROW line. Pure, so tests pin it.
+static func entry_sentence(label: String, event_number: int) -> String:
 	if event_number > 0:
-		text += "   event %d" % event_number
-	if undone:
-		text += "   (undone)"
-	return text
+		return EventSheetL10n.translate("%s, event %d. Click undoes back to just after it; the rows it touched light up.") % [label, event_number]
+	return EventSheetL10n.translate("%s. Click undoes back to just after it; the rows it touched light up.") % label
 
 
 func build() -> void:
 	if window != null:
 		return
-	var parts: Dictionary = EventSheetPopupUI.panel_window("History", Vector2i(420, 420), _dock)
+	var parts: Dictionary = EventSheetPopupUI.action_window(EventSheetL10n.translate("History"),
+		EventSheetL10n.translate("Go Back to This Step"), EventSheetL10n.translate("Close"), Vector2i(440, 460), _dock)
 	window = parts["window"]
+	window.confirmed.connect(_on_entry_selected)
+	# The light is the clicked step's; it goes dark when the window does.
+	window.visibility_changed.connect(func() -> void:
+		if not window.visible:
+			highlight_entry(-1))
 	var body_box: VBoxContainer = parts["box"]
-	tree = EventSheetPopupUI.table(PackedStringArray(), 260.0)
+	tree = EventSheetPopupUI.table(PackedStringArray([EventSheetL10n.translate("Step"),
+		EventSheetL10n.translate("Event")]), 260.0, {1: 90})
 	tree.select_mode = Tree.SELECT_ROW
 	tree.item_selected.connect(_on_entry_selected)
-	tree.gui_input.connect(_on_tree_input)
-	tree.mouse_exited.connect(func() -> void: highlight_entry(-1))
-	body_box.add_child(tree)
-	_empty_hint = EventSheetPopupUI.hint_label("No edits yet. Every change you make to this sheet is listed here, in the sheet's own words.", 360.0)
+	var results: Dictionary = EventSheetPopupUI.add_results(body_box, EventSheetL10n.translate("History"), tree)
+	strip = results["strip"]
+	_this_row = results["this_row"]
+	strip.set_line(strip.add_line(EventSheetL10n.translate("KEYS")),
+		EventSheetL10n.translate("Ctrl+Z and the toolbar arrows move the same marker"))
+	strip.visible = true
+	_empty_hint = EventSheetPopupUI.hint_label(EventSheetL10n.translate("No edits yet. Every change you make to this sheet is listed here, in the sheet's own words."), 360.0)
 	body_box.add_child(_empty_hint)
 
 
@@ -166,28 +187,38 @@ func open() -> void:
 	window.popup_centered()
 
 
-## Rebuilds the list from the log (popup-free, so tests pin it headless).
+## Fills the list from the log (popup-free, so tests pin it headless). The lines are rewritten IN
+## PLACE when there are as many as before: a click travels through undo and redo, which lands back
+## here while the Tree is still selecting the clicked line, and freeing that line mid-selection takes
+## the editor down.
 func refresh() -> void:
 	if tree == null:
 		return
-	tree.clear()
-	var root: TreeItem = tree.create_item()
+	window.title = EventSheetL10n.translate("History of %s") % _sheet_file()
 	# The sheet before the first listed edit: without a line of its own the list could undo back to
 	# just after the first edit and no further.
-	if not entries.is_empty():
-		var start: TreeItem = tree.create_item(root)
-		start.set_text(0, MARK_APPLIED + EventSheetL10n.translate("Opened %s") % _sheet_file())
-		start.set_custom_color(0, EventSheetPopupUI.text_color())
-		start.set_metadata(0, START_INDEX)
-	for index: int in entries.size():
-		var entry: Dictionary = entries[index]
+	var wanted: int = entries.size() + (0 if entries.is_empty() else 1)
+	var root: TreeItem = tree.get_root()
+	if root == null or root.get_child_count() != wanted:
+		tree.clear()
+		root = tree.create_item()
+		for _line: int in wanted:
+			tree.create_item(root)
+	var lines: Array[TreeItem] = root.get_children()
+	for line_index: int in lines.size():
+		var item: TreeItem = lines[line_index]
+		var index: int = line_index - 1
 		var undone: bool = index >= cursor
-		var item: TreeItem = tree.create_item(root)
-		item.set_text(0, (MARK_UNDONE if undone else MARK_APPLIED) + entry_label(
-			str(entry.get("label", "")), int(entry.get("event_number", 0)), undone))
+		if index < 0:
+			item.set_text(0, MARK_APPLIED + EventSheetL10n.translate("Opened %s") % _sheet_file())
+		else:
+			var entry: Dictionary = entries[index]
+			item.set_text(0, (MARK_UNDONE if undone else MARK_APPLIED) + entry_label(str(entry.get("label", "")), undone))
+			item.set_text(1, event_label(int(entry.get("event_number", 0))))
 		# The theme's own text and muted text, so an undone step reads quieter on a light panel too.
-		item.set_custom_color(0, EventSheetPopupUI.muted_text_color() if undone else EventSheetPopupUI.text_color())
-		item.set_metadata(0, index)
+		for column: int in 2:
+			item.set_custom_color(column, EventSheetPopupUI.muted_text_color() if undone else EventSheetPopupUI.text_color())
+		item.set_metadata(0, START_INDEX if index < 0 else index)
 	if _empty_hint != null:
 		_empty_hint.visible = entries.is_empty()
 
@@ -198,13 +229,19 @@ func _sheet_file() -> String:
 	return path.get_file() if not path.is_empty() else EventSheetL10n.translate("this sheet")
 
 
-## Click = travel: undo back to the step before this one, or redo forward to it. The steps in
-## between are replayed by the undo stack itself, so nothing here reimplements an edit.
+## Click = travel: undo back to the step before this one, or redo forward to it, and light the rows
+## that step touched. The steps in between are replayed by the undo stack itself, so nothing here
+## reimplements an edit.
 func _on_entry_selected() -> void:
 	var selected: TreeItem = tree.get_selected()
 	if selected == null:
 		return
-	travel_to(int(selected.get_metadata(0)) + 1)
+	var index: int = int(selected.get_metadata(0))
+	if strip != null:
+		strip.set_line(_this_row, EventSheetL10n.translate("The sheet as it was opened. Click undoes every step below it.")
+			if index < 0 else entry_sentence(str(entries[index].get("label", "")), int(entries[index].get("event_number", 0))))
+	travel_to(index + 1)
+	highlight_entry(index)
 
 
 func travel_to(target_cursor: int) -> void:
@@ -223,15 +260,6 @@ func travel_to(target_cursor: int) -> void:
 		if cursor == was_redo:
 			break
 	refresh()
-
-
-## Hover = the rows that edit touched, lit on the canvas: the entry under the pointer as it moves,
-## not the one last clicked. Leaving the list clears the light.
-func _on_tree_input(event: InputEvent) -> void:
-	if not (event is InputEventMouseMotion):
-		return
-	var hovered: TreeItem = tree.get_item_at_position((event as InputEventMouseMotion).position)
-	highlight_entry(int(hovered.get_metadata(0)) if hovered != null else -1)
 
 
 ## Lights the rows entry `index` touched; anything that is not an edit (the start line, empty space,

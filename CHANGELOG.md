@@ -16,6 +16,19 @@
   the Inspector. The place is read fresh on each press, so a line moved since the last Find text is
   still found, and a line nothing says any more says so on the status bar.
 
+### Changed: the Outline, Bookmarks, History and Sheet map windows name their sheet and say what is picked
+
+- Each of the four sheet panels is titled by its sheet ("Outline of player.gd", "Bookmarks in
+  player.gd", "History of player.gd") and has the kit's foot: Close beside Go to Row (Go Back to This
+  Step in History, Open Sheet in the Sheet map), and a strip under the list naming the picked entry,
+  mark, step or box. The Outline's strip shows a region's or a note's line in code; Bookmarks and
+  History say their keys there.
+- History lists each step and the event it landed on in two columns. A click on a step travels to
+  it and lights the rows it touched until the window closes; passing the pointer over the list no
+  longer lights anything.
+- A bookmark on an event with no condition yet reads as the event's words, not "+ Add condition".
+- The four panels' buttons, hints and the Sheet map's summary go through translation.
+
 ### Fixed: Preview In Language reads a folder of catalogs, and the save words name what is there
 
 - View > Preview In Language offered only pseudo in a project with no `strings.csv`, whose catalog

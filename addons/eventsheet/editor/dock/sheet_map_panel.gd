@@ -6,7 +6,8 @@
 # Boxes lay themselves out in columns by kind and can be dragged, and where
 # you drag one is remembered per project in editor metadata - the picture is derived, the
 # arrangement is yours, and Reset Layout gives it back. A key under the picture names each kind of
-# box and line in its own colour.
+# box and line in its own colour, the strip under it names the box last pressed, and Open Sheet
+# opens that box the way a click does.
 @tool
 class_name EventSheetSheetMapPanel
 extends RefCounted
@@ -38,6 +39,10 @@ var summary_label: Label = null
 var legend: HBoxContainer = null
 ## Puts every dragged box back in its column and forgets where it was dragged.
 var reset_button: Button = null
+## The strip under the map: the box last pressed (THIS BOX), which Open Sheet opens.
+var strip: EventSheetPopupUI.HelpStrip = null
+var _this_box: Label = null
+var picked_id: String = ""
 
 ## The graph as drawn: {nodes, edges, skipped} from EventSheetSheetMap.
 var found: Dictionary = {}
@@ -119,9 +124,16 @@ static func width_for_label(label: String, font: Font, font_size: int, scale: fl
 func build() -> void:
 	if window != null:
 		return
-	var parts: Dictionary = EventSheetPopupUI.panel_window("Sheet map", Vector2i(760, 520), _dock)
+	var parts: Dictionary = EventSheetPopupUI.action_window(
+		EventSheetL10n.translate("Sheet map: how the project's sheets reach each other"),
+		EventSheetL10n.translate("Open Sheet"), EventSheetL10n.translate("Close"), Vector2i(760, 560), _dock)
 	window = parts["window"]
-	var body_box: VBoxContainer = parts["box"]
+	window.confirmed.connect(func() -> void: _open_node(picked_id))
+	var body_box: VBoxContainer = EventSheetPopupUI.form_box()
+	body_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var card: PanelContainer = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Sheet map"), body_box)
+	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	(parts["box"] as VBoxContainer).add_child(card)
 	var scroll: ScrollContainer = ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -133,8 +145,7 @@ func build() -> void:
 	canvas.gui_input.connect(_on_canvas_input)
 	scroll.add_child(canvas)
 	body_box.add_child(scroll)
-	summary_label = EventSheetPopupUI.hint_label(
-		"Click a sheet to open it. Click a line to find every place it comes from.", 640.0)
+	summary_label = EventSheetPopupUI.hint_label("", 640.0)
 	legend = HBoxContainer.new()
 	legend.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(12.0)))
 	for words: String in [EventSheetL10n.translate("sheet"), EventSheetL10n.translate("scene"),
@@ -153,6 +164,11 @@ func build() -> void:
 	legend.add_child(reset_button)
 	body_box.add_child(legend)
 	body_box.add_child(summary_label)
+	strip = EventSheetPopupUI.help_strip()
+	_this_box = strip.add_line(EventSheetL10n.translate("THIS BOX"), true)
+	strip.visible = false
+	(parts["box"] as VBoxContainer).add_child(strip)
+	pick("")
 
 
 func open() -> void:
@@ -174,7 +190,7 @@ func refresh() -> void:
 			positions[id] = remembered[id]
 	dress_legend(remembered.is_empty())
 	if summary_label != null:
-		summary_label.text = "%s. Click a sheet to open it. Click a line to find every place it comes from." \
+		summary_label.text = EventSheetL10n.translate("%s. Click a sheet to open it. Click a line to find every place it comes from.") \
 			% EventSheetSheetMap.summary(found)
 	if canvas != null:
 		canvas.custom_minimum_size = _canvas_extent()
@@ -346,6 +362,7 @@ func _on_canvas_input(event: InputEvent) -> void:
 		_drag_moved = false
 		var hit_id: String = node_at(at)
 		if not hit_id.is_empty():
+			pick(hit_id)
 			_dragging_id = hit_id
 			_drag_offset = at - (positions[hit_id] as Vector2)
 			return
@@ -381,6 +398,24 @@ func edge_at(at: Vector2) -> Dictionary:
 		if Geometry2D.get_closest_point_to_segment(at, points[0], points[1]).distance_to(at) <= HIT_TOLERANCE:
 			return edge
 	return {}
+
+
+## Names a box on the strip and makes it the one Open Sheet opens; "" names none and greys the button.
+func pick(id: String) -> void:
+	picked_id = id
+	if strip == null:
+		return
+	strip.set_line(_this_box, box_sentence(id))
+	strip.visible = not id.is_empty()
+	window.get_ok_button().disabled = id.is_empty()
+
+
+## What a pressed box is, for the strip's THIS BOX line. Pure, so tests pin it.
+static func box_sentence(id: String) -> String:
+	if id.is_empty():
+		return ""
+	return EventSheetL10n.translate("%s. Click opens it; drag moves it, and where you put it is remembered for this project.") \
+		% id.get_file()
 
 
 ## A double-click-free open: a single click on a box opens what the box stands for, because opening

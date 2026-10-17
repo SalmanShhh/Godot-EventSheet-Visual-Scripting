@@ -8954,3 +8954,31 @@ Not translated yet,Aún sin traducir
 "Each line has the room of its English plus 40%, the stretch the fake language tests, so a line that would be cut off shows as too long before anyone plays it.","Cada línea tiene el espacio de su inglés más un 40%, lo que estira el idioma falso, así que una línea que quedaría cortada aparece como demasiado larga antes de que nadie juegue."
 Open where it is used,Abrir donde se usa
 Nothing under %s says this line any more.,Nada en %s dice ya esta línea.
+Jump to the previous bookmark (Shift+F4).,Ir al marcador anterior (Mayús+F4).
+Jump to the next bookmark (F4).,Ir al marcador siguiente (F4).
+Remove every bookmark from this sheet.,Quitar todos los marcadores de esta hoja.
+Ctrl+M marks the selected row · F4 next · Shift+F4 previous,Ctrl+M marca la fila seleccionada · F4 siguiente · Mayús+F4 anterior
+No bookmarks yet - select a row and press Ctrl+M to mark it. F4 / Shift+F4 cycle through marks.,Aún no hay marcadores - selecciona una fila y pulsa Ctrl+M para marcarla. F4 / Mayús+F4 recorren las marcas.
+Bookmarks in %s,Marcadores en %s
+Event %d. Click reveals and selects it on the sheet.,Evento %d. Un clic lo muestra y lo selecciona en la hoja.
+%s. Click reveals and selects it on the sheet.,%s. Un clic lo muestra y lo selecciona en la hoja.
+(undone),(deshecho)
+"%s, event %d. Click undoes back to just after it; the rows it touched light up.","%s, evento %d. Un clic deshace hasta justo después; las filas que tocó se iluminan."
+%s. Click undoes back to just after it; the rows it touched light up.,%s. Un clic deshace hasta justo después; las filas que tocó se iluminan.
+Go Back to This Step,Volver a este paso
+Ctrl+Z and the toolbar arrows move the same marker,Ctrl+Z y las flechas de la barra mueven el mismo marcador
+History of %s,Historial de %s
+The sheet as it was opened. Click undoes every step below it.,La hoja tal como se abrió. Un clic deshace todos los pasos de debajo.
+"Nothing structural yet - groups, #region fences, and published functions appear here as you add them.","Aún no hay estructura - los grupos, las vallas #region y las funciones publicadas aparecen aquí al añadirlos."
+Outline of %s,Esquema de %s
+%s: a group. Click reveals and selects it.,%s: un grupo. Un clic lo muestra y lo selecciona.
+%s: a #region fence. Click reveals and selects it.,%s: una valla #region. Un clic la muestra y la selecciona.
+%s: a function of this sheet. Click reveals and selects it.,%s: una función de esta hoja. Un clic la muestra y la selecciona.
+"Every TODO, FIXME, HACK and NOTE comment in this sheet.","Cada comentario TODO, FIXME, HACK y NOTE de esta hoja."
+%s: a note left in a comment. Click reveals and selects it.,%s: una nota dejada en un comentario. Un clic la muestra y la selecciona.
+%s: an event. Click reveals and selects it.,%s: un evento. Un clic lo muestra y lo selecciona.
+Sheet map: how the project's sheets reach each other,Mapa de hojas: cómo se alcanzan entre sí las hojas del proyecto
+Open Sheet,Abrir hoja
+THIS BOX,ESTA CAJA
+%s. Click a sheet to open it. Click a line to find every place it comes from.,%s. Haz clic en una hoja para abrirla. Haz clic en una línea para encontrar cada lugar de donde viene.
+"%s. Click opens it; drag moves it, and where you put it is remembered for this project.","%s. Un clic lo abre; arrastrar lo mueve, y el lugar donde lo dejas se recuerda para este proyecto."

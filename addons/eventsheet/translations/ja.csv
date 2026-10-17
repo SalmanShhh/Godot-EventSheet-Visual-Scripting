@@ -8954,3 +8954,31 @@ Not translated yet,まだ翻訳されていません
 "Each line has the room of its English plus 40%, the stretch the fake language tests, so a line that would be cut off shows as too long before anyone plays it.",各行の枠は英語の長さに 40% を足したもの（テスト用の言語が試す伸び）です。切れてしまう行は、誰かが遊ぶ前に「長すぎ」と表示されます。
 Open where it is used,使われている場所を開く
 Nothing under %s says this line any more.,%s の下でこの行を使っている場所はもうありません。
+Jump to the previous bookmark (Shift+F4).,前のブックマークへ移動 (Shift+F4)。
+Jump to the next bookmark (F4).,次のブックマークへ移動 (F4)。
+Remove every bookmark from this sheet.,このシートのブックマークをすべて削除します。
+Ctrl+M marks the selected row · F4 next · Shift+F4 previous,Ctrl+M で選択行に印 · F4 次へ · Shift+F4 前へ
+No bookmarks yet - select a row and press Ctrl+M to mark it. F4 / Shift+F4 cycle through marks.,ブックマークはまだありません - 行を選んで Ctrl+M で印を付けます。F4 / Shift+F4 で印を順に移動します。
+Bookmarks in %s,%s のブックマーク
+Event %d. Click reveals and selects it on the sheet.,イベント %d。クリックするとシート上で表示して選択します。
+%s. Click reveals and selects it on the sheet.,%s。クリックするとシート上で表示して選択します。
+(undone),(取り消し済み)
+"%s, event %d. Click undoes back to just after it; the rows it touched light up.",%s、イベント %d。クリックするとその直後まで戻し、触れた行が光ります。
+%s. Click undoes back to just after it; the rows it touched light up.,%s。クリックするとその直後まで戻し、触れた行が光ります。
+Go Back to This Step,この手順まで戻る
+Ctrl+Z and the toolbar arrows move the same marker,Ctrl+Z とツールバーの矢印は同じ位置を動かします
+History of %s,%s の履歴
+The sheet as it was opened. Click undoes every step below it.,開いたときのシート。クリックすると下の手順をすべて取り消します。
+"Nothing structural yet - groups, #region fences, and published functions appear here as you add them.",まだ構造がありません - グループ、#region の囲み、公開した関数は追加するとここに表示されます。
+Outline of %s,%s のアウトライン
+%s: a group. Click reveals and selects it.,%s: グループ。クリックすると表示して選択します。
+%s: a #region fence. Click reveals and selects it.,%s: #region の囲み。クリックすると表示して選択します。
+%s: a function of this sheet. Click reveals and selects it.,%s: このシートの関数。クリックすると表示して選択します。
+"Every TODO, FIXME, HACK and NOTE comment in this sheet.",このシートの TODO・FIXME・HACK・NOTE コメントすべて。
+%s: a note left in a comment. Click reveals and selects it.,%s: コメントに残したメモ。クリックすると表示して選択します。
+%s: an event. Click reveals and selects it.,%s: イベント。クリックすると表示して選択します。
+Sheet map: how the project's sheets reach each other,シートマップ: プロジェクトのシートどうしのつながり
+Open Sheet,シートを開く
+THIS BOX,このボックス
+%s. Click a sheet to open it. Click a line to find every place it comes from.,%s。シートをクリックすると開きます。線をクリックすると、その出どころをすべて検索します。
+"%s. Click opens it; drag moves it, and where you put it is remembered for this project.",%s。クリックで開き、ドラッグで動かします。置いた場所はこのプロジェクトで記憶されます。

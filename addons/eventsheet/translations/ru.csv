@@ -8954,3 +8954,31 @@ Not translated yet,Ещё не переведено
 "Each line has the room of its English plus 40%, the stretch the fake language tests, so a line that would be cut off shows as too long before anyone plays it.","У каждой строки есть место её английского плюс 40% - то удлинение, которое проверяет фальшивый язык, - так что строка, которая обрежется, видна как слишком длинная ещё до игры."
 Open where it is used,"Открыть там, где она используется"
 Nothing under %s says this line any more.,В %s эту строку больше ничто не произносит.
+Jump to the previous bookmark (Shift+F4).,Перейти к предыдущей закладке (Shift+F4).
+Jump to the next bookmark (F4).,Перейти к следующей закладке (F4).
+Remove every bookmark from this sheet.,Удалить все закладки с этого листа.
+Ctrl+M marks the selected row · F4 next · Shift+F4 previous,Ctrl+M отмечает выбранную строку · F4 следующая · Shift+F4 предыдущая
+No bookmarks yet - select a row and press Ctrl+M to mark it. F4 / Shift+F4 cycle through marks.,"Закладок пока нет - выберите строку и нажмите Ctrl+M, чтобы отметить её. F4 / Shift+F4 переходят по отметкам."
+Bookmarks in %s,Закладки в %s
+Event %d. Click reveals and selects it on the sheet.,Событие %d. Щелчок показывает и выделяет его на листе.
+%s. Click reveals and selects it on the sheet.,%s. Щелчок показывает и выделяет это на листе.
+(undone),(отменено)
+"%s, event %d. Click undoes back to just after it; the rows it touched light up.","%s, событие %d. Щелчок отменяет всё до момента сразу после него; затронутые строки подсвечиваются."
+%s. Click undoes back to just after it; the rows it touched light up.,%s. Щелчок отменяет всё до момента сразу после него; затронутые строки подсвечиваются.
+Go Back to This Step,Вернуться к этому шагу
+Ctrl+Z and the toolbar arrows move the same marker,Ctrl+Z и стрелки панели двигают одну и ту же отметку
+History of %s,История %s
+The sheet as it was opened. Click undoes every step below it.,Лист в момент открытия. Щелчок отменяет все шаги ниже.
+"Nothing structural yet - groups, #region fences, and published functions appear here as you add them.","Структуры пока нет - группы, ограды #region и опубликованные функции появятся здесь, когда вы их добавите."
+Outline of %s,Структура %s
+%s: a group. Click reveals and selects it.,%s: группа. Щелчок показывает и выделяет её.
+%s: a #region fence. Click reveals and selects it.,%s: ограда #region. Щелчок показывает и выделяет её.
+%s: a function of this sheet. Click reveals and selects it.,%s: функция этого листа. Щелчок показывает и выделяет её.
+"Every TODO, FIXME, HACK and NOTE comment in this sheet.","Все комментарии TODO, FIXME, HACK и NOTE на этом листе."
+%s: a note left in a comment. Click reveals and selects it.,%s: заметка в комментарии. Щелчок показывает и выделяет её.
+%s: an event. Click reveals and selects it.,%s: событие. Щелчок показывает и выделяет его.
+Sheet map: how the project's sheets reach each other,Карта листов: как листы проекта связаны друг с другом
+Open Sheet,Открыть лист
+THIS BOX,ЭТОТ БЛОК
+%s. Click a sheet to open it. Click a line to find every place it comes from.,"%s. Щёлкните лист, чтобы открыть его. Щёлкните линию, чтобы найти все места, откуда она идёт."
+"%s. Click opens it; drag moves it, and where you put it is remembered for this project.","%s. Щелчок открывает его; перетаскивание двигает, и место запоминается для этого проекта."

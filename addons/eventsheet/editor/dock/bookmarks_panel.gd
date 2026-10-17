@@ -3,8 +3,9 @@
 # The event-sheet bookmarks bar: a toolbar (Previous / Next / Clear All) over a tree
 # of every Ctrl+M'd row, grouped under a colored sheet header, each entry carrying its
 # margin event number so "event 12" in the panel matches the number in the gutter.
-# Clicking an entry jumps to (reveals + selects) the row; Previous/Next reuse the
-# viewport's F4 / Shift+F4 cycling. The tree builds popup-free so tests pin it headless.
+# Clicking an entry jumps to (reveals + selects) the row and the strip under the list names it;
+# Go to Row jumps and closes the window. Previous/Next reuse the viewport's F4 / Shift+F4 cycling.
+# The tree builds popup-free so tests pin it headless.
 @tool
 class_name EventSheetBookmarksPanel
 extends RefCounted
@@ -24,8 +25,11 @@ var _dock: Control = null
 var window: Window = null
 var tree: Tree = null
 var _empty_hint: Label = null
-## The foot: what Clear All cannot get back, said where the list ends and not only in its confirmation.
-var session_note: Label = null
+## The foot: what Clear All cannot get back, said beside the buttons and not only in its confirmation.
+var session_note: EventSheetPopupUI.StateNote = null
+## The strip under the list: the picked mark (THIS ROW) over the keys that make and cycle marks.
+var strip: EventSheetPopupUI.HelpStrip = null
+var _this_row: Label = null
 ## Asks before Clear All: the marks are not sheet edits, so there is no undo that brings them back.
 var clear_confirm: ConfirmationDialog = null
 
@@ -38,38 +42,46 @@ func _init(dock: Control) -> void:
 func build() -> void:
 	if window != null:
 		return
-	var parts: Dictionary = EventSheetPopupUI.panel_window("Bookmarks", Vector2i(400, 340), _dock)
+	var parts: Dictionary = EventSheetPopupUI.action_window(EventSheetL10n.translate("Bookmarks"),
+		EventSheetL10n.translate("Go to Row"), EventSheetL10n.translate("Close"), Vector2i(420, 380), _dock)
 	window = parts["window"]
+	window.confirmed.connect(go_to_row)
 	var body_box: VBoxContainer = parts["box"]
 	var toolbar: HBoxContainer = HBoxContainer.new()
-	toolbar.add_theme_constant_override("separation", 6)
+	toolbar.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
 	var previous_button: Button = Button.new()
-	previous_button.text = "◂ Previous"
-	previous_button.tooltip_text = "Jump to the previous bookmark (Shift+F4)."
+	previous_button.text = EventSheetL10n.translate("◂ Previous")
+	previous_button.tooltip_text = EventSheetL10n.translate("Jump to the previous bookmark (Shift+F4).")
 	previous_button.pressed.connect(func() -> void: _cycle(-1))
 	toolbar.add_child(previous_button)
 	var next_button: Button = Button.new()
-	next_button.text = "Next ▸"
-	next_button.tooltip_text = "Jump to the next bookmark (F4)."
+	next_button.text = EventSheetL10n.translate("Next ▸")
+	next_button.tooltip_text = EventSheetL10n.translate("Jump to the next bookmark (F4).")
 	next_button.pressed.connect(func() -> void: _cycle(1))
 	toolbar.add_child(next_button)
 	var spacer: Control = Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	toolbar.add_child(spacer)
 	var clear_button: Button = Button.new()
-	clear_button.text = "Clear All"
-	clear_button.tooltip_text = "Remove every bookmark from this sheet."
+	clear_button.text = EventSheetL10n.translate("Clear All")
+	clear_button.tooltip_text = EventSheetL10n.translate("Remove every bookmark from this sheet.")
 	clear_button.pressed.connect(ask_clear_all)
 	toolbar.add_child(clear_button)
 	body_box.add_child(toolbar)
 	tree = EventSheetPopupUI.table(PackedStringArray(), 180.0)
 	tree.select_mode = Tree.SELECT_ROW
 	tree.item_selected.connect(_on_entry_selected)
-	body_box.add_child(tree)
-	_empty_hint = EventSheetPopupUI.hint_label("No bookmarks yet - select a row and press Ctrl+M to mark it. F4 / Shift+F4 cycle through marks.", 360.0)
+	tree.item_activated.connect(go_to_row)
+	var results: Dictionary = EventSheetPopupUI.add_results(body_box, EventSheetL10n.translate("Bookmarks"), tree)
+	strip = results["strip"]
+	_this_row = results["this_row"]
+	strip.set_line(strip.add_line(EventSheetL10n.translate("KEYS")),
+		EventSheetL10n.translate("Ctrl+M marks the selected row · F4 next · Shift+F4 previous"))
+	strip.visible = true
+	_empty_hint = EventSheetPopupUI.hint_label(EventSheetL10n.translate("No bookmarks yet - select a row and press Ctrl+M to mark it. F4 / Shift+F4 cycle through marks."), 360.0)
 	body_box.add_child(_empty_hint)
-	session_note = EventSheetPopupUI.hint_label(EventSheetL10n.translate("Bookmarks last for this session only."), 360.0)
-	body_box.add_child(session_note)
+	session_note = parts["note"]
+	session_note.say(EventSheetL10n.translate("Bookmarks last for this session only."), "")
 
 
 ## Lists every bookmarked row; activating one reveals it (Ctrl+M marks rows).
@@ -112,6 +124,8 @@ func refresh() -> void:
 	if tree == null:
 		return
 	tree.clear()
+	window.title = EventSheetL10n.translate("Bookmarks in %s") % _sheet_label()
+	strip.set_line(_this_row, "")
 	var root: TreeItem = tree.create_item()
 	var marked: int = 0
 	var view: EventSheetViewport = _view()
@@ -134,6 +148,7 @@ func refresh() -> void:
 				entry.set_icon(0, entry_icon)
 			entry.set_tooltip_text(0, _full_row_text(row_data))
 			entry.set_metadata(0, row_data.source_resource)
+			entry.set_meta("sentence", entry_sentence(row_data))
 			marked += 1
 		if marked == 0:
 			sheet_header.free()
@@ -143,13 +158,15 @@ func refresh() -> void:
 
 ## The event-sheet entry line: the margin event number first (when the row has one), then the
 ## row's readable text - so the panel and the gutter agree on what "event 12" is. Icon-only
-## spans (the trigger glyph cell) are skipped so the entry reads as words, not "▶".
+## spans (the trigger glyph cell) are skipped so the entry reads as words, not "▶", and so are the
+## canvas's "+ Add condition" offers, which are not the row's words.
 ## Static-shaped for tests: pure function of the row data.
 static func entry_label(row_data: EventRowData) -> String:
 	var text: String = "(row)"
 	for span: Variant in row_data.spans:
 		var span_text: String = str(span.text).strip_edges()
-		if span_text.length() > 2:
+		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
+		if span_text.length() > 2 and not str(metadata.get("kind", "")).begins_with("add_"):
 			text = span_text.left(60)
 			break
 	if row_data.event_number > 0:
@@ -159,10 +176,11 @@ static func entry_label(row_data: EventRowData) -> String:
 
 func _sheet_label() -> String:
 	var sheet: EventSheetResource = _dock._current_sheet
-	if sheet == null:
-		return "Current sheet"
-	var path: String = sheet.external_source_path if not sheet.external_source_path.is_empty() else sheet.resource_path
-	return path.get_file() if not path.is_empty() else "Current sheet"
+	# The tab's own path first, the one the Outline and History windows are titled by.
+	var path: String = str(_dock.get("_current_sheet_path")) if "_current_sheet_path" in _dock else ""
+	if path.is_empty() and sheet != null:
+		path = sheet.external_source_path if not sheet.external_source_path.is_empty() else sheet.resource_path
+	return path.get_file() if not path.is_empty() else EventSheetL10n.translate("this sheet")
 
 
 func _full_row_text(row_data: EventRowData) -> String:
@@ -174,15 +192,36 @@ func _full_row_text(row_data: EventRowData) -> String:
 	return " | ".join(parts)
 
 
+## A click reveals and selects the mark's row and names it on the strip; the window stays open.
 func _on_entry_selected() -> void:
 	var selected: TreeItem = tree.get_selected()
 	if selected == null:
 		return
-	var target: Resource = selected.get_metadata(0)
+	strip.set_line(_this_row, selected.get_meta("sentence", ""))
+	_reveal(selected.get_metadata(0))
+
+
+## Go to Row (or a double-click): the picked mark's row, and the window out of the way.
+func go_to_row() -> void:
+	var selected: TreeItem = tree.get_selected() if tree != null else null
+	if selected == null or selected.get_metadata(0) == null:
+		return
+	_reveal(selected.get_metadata(0))
+	window.hide()
+
+
+func _reveal(target: Variant) -> void:
 	var view: EventSheetViewport = _view()
-	if target != null and view != null:
-		view.reveal_resource(target)
-		view.select_resource(target)
+	if target is Resource and view != null:
+		view.reveal_resource(target as Resource)
+		view.select_resource(target as Resource)
+
+
+## What a picked mark is, for the strip's THIS ROW line. Pure, so tests pin it.
+static func entry_sentence(row_data: EventRowData) -> String:
+	if row_data.event_number > 0:
+		return EventSheetL10n.translate("Event %d. Click reveals and selects it on the sheet.") % row_data.event_number
+	return EventSheetL10n.translate("%s. Click reveals and selects it on the sheet.") % entry_label(row_data)
 
 
 func _cycle(direction: int) -> void:

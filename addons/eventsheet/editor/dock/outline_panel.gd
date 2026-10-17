@@ -3,7 +3,9 @@
 # The script editor's method-list, for sheets: a slim jump tree of the STRUCTURAL rows -
 # groups (nested), region fences, and published functions - so a ballooning sheet
 # navigates by the names you remember, not by scrolling. Clicking an entry reveals +
-# selects the row. The entry walk is static and pure, so tests pin it headless.
+# selects the row, and the strip under the list says what the picked entry is and the line it is
+# in code; Go to Row jumps there and closes the window. The entry walk is static and pure, so tests
+# pin it headless.
 @tool
 class_name EventSheetOutlinePanel
 extends RefCounted
@@ -29,6 +31,9 @@ var tree: Tree = null
 ## method filter; an entry that stays keeps the folders above it.
 var filter_edit: LineEdit = null
 var _empty_hint: Label = null
+## The strip under the list: what the picked entry is (THIS ROW) and its line in code (IN CODE).
+var strip: EventSheetPopupUI.HelpStrip = null
+var _this_row: Label = null
 
 
 func _init(dock: Control) -> void:
@@ -123,8 +128,10 @@ static func _collect_outline(rows: Array, depth: int, parent_index: int, entries
 func build() -> void:
 	if window != null:
 		return
-	var parts: Dictionary = EventSheetPopupUI.panel_window("Outline", Vector2i(360, 420), _dock)
+	var parts: Dictionary = EventSheetPopupUI.action_window(EventSheetL10n.translate("Outline"),
+		EventSheetL10n.translate("Go to Row"), EventSheetL10n.translate("Close"), Vector2i(380, 460), _dock)
 	window = parts["window"]
+	window.confirmed.connect(go_to_row)
 	var body_box: VBoxContainer = parts["box"]
 	filter_edit = LineEdit.new()
 	filter_edit.placeholder_text = EventSheetL10n.translate("Filter")
@@ -135,8 +142,11 @@ func build() -> void:
 	tree = EventSheetPopupUI.table(PackedStringArray(), 240.0)
 	tree.select_mode = Tree.SELECT_ROW
 	tree.item_selected.connect(_on_entry_selected)
-	body_box.add_child(tree)
-	_empty_hint = EventSheetPopupUI.hint_label("Nothing structural yet - groups, #region fences, and published functions appear here as you add them.", 320.0)
+	tree.item_activated.connect(go_to_row)
+	var results: Dictionary = EventSheetPopupUI.add_results(body_box, EventSheetL10n.translate("Outline"), tree)
+	strip = results["strip"]
+	_this_row = results["this_row"]
+	_empty_hint = EventSheetPopupUI.hint_label(EventSheetL10n.translate("Nothing structural yet - groups, #region fences, and published functions appear here as you add them."), 320.0)
 	body_box.add_child(_empty_hint)
 
 
@@ -154,6 +164,9 @@ func refresh() -> void:
 	var root: TreeItem = tree.create_item()
 	# The Outline follows the arrangement - when the sheet is read by object / trigger / group,
 	# so is its jump tree.
+	window.title = EventSheetL10n.translate("Outline of %s") % _sheet_file()
+	if strip != null:
+		strip.visible = false
 	var view: EventSheetViewport = _dock._active_view()
 	var entries: Array = outline_entries(_dock._current_sheet)
 	if view != null and view.arrangement_mode != EventSheetArrangement.MODE_FILE_ORDER:
@@ -175,6 +188,7 @@ func refresh() -> void:
 		if icon != null:
 			item.set_icon(0, icon)
 		item.set_metadata(0, entry.get("resource", null))
+		item.set_meta("entry", entry)
 		item.visible = shown[index]
 		items.append(item)
 	if _empty_hint != null:
@@ -196,17 +210,73 @@ static func filter_matches(entries: Array, filter: String) -> Array[bool]:
 	return shown
 
 
+## The sheet's file as its tab names it, or "this sheet" before it has one.
+func _sheet_file() -> String:
+	var path: String = str(_dock.get("_current_sheet_path")) if "_current_sheet_path" in _dock else ""
+	return path.get_file() if not path.is_empty() else EventSheetL10n.translate("this sheet")
+
+
+## A click reveals and selects the entry's row (the window stays open, so the next click can go on
+## looking) and the strip says what the entry is and its line in code.
 func _on_entry_selected() -> void:
 	var selected: TreeItem = tree.get_selected()
 	if selected == null:
 		return
-	var target: Resource = selected.get_metadata(0)
-	# The pane the outline was built from (refresh reads the active view's arrangement), so in split
-	# view the jump lands where the reader is looking, not always in the left pane.
+	var entry: Dictionary = selected.get_meta("entry", {})
+	if strip != null:
+		strip.set_line(_this_row, entry_sentence(entry))
+		strip.set_reading("", entry_code(entry))
+		strip.visible = true
+	_reveal(selected.get_metadata(0))
+
+
+## Go to Row (or a double-click): the picked entry's row, revealed and selected, and the window out
+## of the way so the row can be read.
+func go_to_row() -> void:
+	var selected: TreeItem = tree.get_selected() if tree != null else null
+	if selected == null or selected.get_metadata(0) == null:
+		return
+	_reveal(selected.get_metadata(0))
+	window.hide()
+
+
+## The pane the outline was built from (refresh reads the active view's arrangement), so in split
+## view the jump lands where the reader is looking, not always in the left pane.
+func _reveal(target: Variant) -> void:
 	var view: EventSheetViewport = _dock._active_view()
-	if target != null and view != null:
-		view.reveal_resource(target)
-		view.select_resource(target)
+	if target is Resource and view != null:
+		view.reveal_resource(target as Resource)
+		view.select_resource(target as Resource)
+
+
+## What a picked entry is, in one sentence for the strip's THIS ROW line. Pure, so tests pin it.
+static func entry_sentence(entry: Dictionary) -> String:
+	var label: String = str(entry.get("label", ""))
+	match str(entry.get("kind", "")):
+		"group":
+			return EventSheetL10n.translate("%s: a group. Click reveals and selects it.") % label
+		"region":
+			return EventSheetL10n.translate("%s: a #region fence. Click reveals and selects it.") % label
+		"function":
+			return EventSheetL10n.translate("%s: a function of this sheet. Click reveals and selects it.") % label
+		"todo_folder":
+			return EventSheetL10n.translate("Every TODO, FIXME, HACK and NOTE comment in this sheet.")
+		"todo":
+			return EventSheetL10n.translate("%s: a note left in a comment. Click reveals and selects it.") % label
+		"event":
+			return EventSheetL10n.translate("%s: an event. Click reveals and selects it.") % label
+	return ""
+
+
+## The line a picked entry is in code, where the entry carries it whole: a region's fence and a
+## note's comment. A group or a function is a block of lines, so it has no one line to show.
+static func entry_code(entry: Dictionary) -> String:
+	match str(entry.get("kind", "")):
+		"region":
+			return "#region %s" % str(entry.get("label", ""))
+		"todo":
+			return "# %s" % str(entry.get("label", ""))
+	return ""
 
 
 ## The Outline under an arrangement. When the sheet is being read Arranged By something, the

@@ -70,6 +70,20 @@ static func run() -> bool:
 		[first.visible, group_item.visible, group_item.get_first_child().visible, group_item.get_next().visible],
 		[false, true, true, false]) and all_passed
 	all_passed = _check("the function closes the outline", group_item.get_next().get_text(0), "ƒ heal") and all_passed
+	all_passed = _check("the window names its sheet and wears the kit's Go to Row and Close",
+		[panel.window.title, panel.window.get_ok_button().text, (panel.window as ConfirmationDialog).get_cancel_button().text],
+		["Outline of this sheet", "Go to Row", "Close"]) and all_passed
+	panel.filter_edit.text = ""
+	panel.refresh()
+	editor._outline_tree.get_root().get_first_child().select(0)
+	all_passed = _check("picking an entry names it on the strip, with the line it is in code",
+		[panel.strip.visible, panel._this_row.text, panel.strip.in_code_value.text],
+		[true, "Setup: a #region fence. Click reveals and selects it.", "#region Setup"]) and all_passed
+	all_passed = _check("a group and a note say what they are; only a whole line shows in code",
+		[EventSheetOutlinePanel.entry_sentence({"kind": "group", "label": "Combat"}),
+			EventSheetOutlinePanel.entry_code({"kind": "todo", "label": "TODO: coyote time"}),
+			EventSheetOutlinePanel.entry_code({"kind": "function", "label": "heal"})],
+		["Combat: a group. Click reveals and selects it.", "# TODO: coyote time", ""]) and all_passed
 	editor.free()
 
 	# ---- explicit parentage (review regression): a region inside a SIBLING event's

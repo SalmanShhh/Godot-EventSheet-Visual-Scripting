@@ -49,10 +49,12 @@ const DIALOG_CALLS: Array[String] = ["ConfirmationDialog.new()", "AcceptDialog.n
 ## draws its live preview and Ask its Proposed card, which are their reading; and the shortcuts window
 ## and Generate write no row they could name before it exists; and the Theme Editor writes no row at
 ## all: its strip's two lines are the pointed token (THIS FIELD) and the line it writes into a preset
-## (IN FILE). Deliberate, and therefore written down rather than quietly passing.
+## (IN FILE). Bookmarks, History and the Sheet map name a mark, a step and a box: none of them is a
+## row being written, so their strips name the picked line and the keys, not a reading. Deliberate,
+## and therefore written down rather than quietly passing.
 const NO_READING_BY_DESIGN: Array[String] = ["sheet_type_dialog.gd", "command_palette.gd", "debugger_window.gd",
 	"repeated_rows.gd", "event_sheet_shortcuts_dialog.gd", "words_settings_dialog.gd", "ask_window.gd",
-	"ai_generate_window.gd", "theme_editor_dialog.gd"]
+	"ai_generate_window.gd", "theme_editor_dialog.gd", "bookmarks_panel.gd", "history_panel.gd", "sheet_map_panel.gd"]
 
 ## The result windows, whose strip describes the PICKED line of a list (a hit, a use, a run) rather
 ## than a focused field: the selection handler wires it by setting the strip's "This row" line, so
@@ -61,9 +63,11 @@ const NO_READING_BY_DESIGN: Array[String] = ["sheet_type_dialog.gd", "command_pa
 ## follows nothing by design; the debugger names a running value and the repeated rows a run that
 ## spans several rows, so neither has one row to read as (listed above). The Theme Editor's strip
 ## follows the token row under the pointer the same way, through its two lines, and the Inspector
-## Designer's the variable under the pointer.
+## Designer's the variable under the pointer. The four sheet panels (Outline, Bookmarks, History,
+## Sheet map) name the picked entry, mark, step or box the same way.
 const RESULT_WINDOWS: Array[String] = ["find_references_panel.gd", "project_find.gd", "repeated_rows.gd",
-	"theme_editor_dialog.gd", "inspector_designer_dialog.gd"]
+	"theme_editor_dialog.gd", "inspector_designer_dialog.gd", "outline_panel.gd", "bookmarks_panel.gd",
+	"history_panel.gd", "sheet_map_panel.gd"]
 const KEY_LEGEND_BY_DESIGN: Array[String] = ["command_palette.gd"]
 
 
@@ -92,11 +96,13 @@ static func _test_dialogs_are_found() -> bool:
 		"res://addons/eventsheet/editor/dock/ai_generate_window.gd",
 		"res://addons/eventsheet/editor/dock/ask_window.gd",
 		"res://addons/eventsheet/editor/dock/author_actions.gd",
+		"res://addons/eventsheet/editor/dock/bookmarks_panel.gd",
 		"res://addons/eventsheet/editor/dock/command_palette.gd",
 		"res://addons/eventsheet/editor/dock/comment_and_scope_dialogs.gd",
 		"res://addons/eventsheet/editor/dock/compare_condition_dialog.gd",
 		"res://addons/eventsheet/editor/dock/debugger_window.gd",
 		"res://addons/eventsheet/editor/dock/find_references_panel.gd",
+		"res://addons/eventsheet/editor/dock/history_panel.gd",
 		"res://addons/eventsheet/editor/dock/import_sheet_wizard.gd",
 		"res://addons/eventsheet/editor/dock/include_manager.gd",
 		"res://addons/eventsheet/editor/dock/insert_snippet_dialog.gd",
@@ -104,12 +110,14 @@ static func _test_dialogs_are_found() -> bool:
 		"res://addons/eventsheet/editor/dock/modes_dialog.gd",
 		"res://addons/eventsheet/editor/dock/new_resource_wizard.gd",
 		"res://addons/eventsheet/editor/dock/optimise_dialog.gd",
+		"res://addons/eventsheet/editor/dock/outline_panel.gd",
 		"res://addons/eventsheet/editor/dock/paste_special_dialog.gd",
 		"res://addons/eventsheet/editor/dock/project_find.gd",
 		"res://addons/eventsheet/editor/dock/quick_prompt_dialogs.gd",
 		"res://addons/eventsheet/editor/dock/rename_receipt.gd",
 		"res://addons/eventsheet/editor/dock/repeated_rows.gd",
 		"res://addons/eventsheet/editor/dock/sheet_diff.gd",
+		"res://addons/eventsheet/editor/dock/sheet_map_panel.gd",
 		"res://addons/eventsheet/editor/dock/sheet_type_dialog.gd",
 		"res://addons/eventsheet/editor/dock/start_page.gd",
 		"res://addons/eventsheet/editor/dock/states_dialog.gd",

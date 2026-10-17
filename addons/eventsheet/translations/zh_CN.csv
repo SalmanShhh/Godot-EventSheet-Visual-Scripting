@@ -8954,3 +8954,31 @@ Not translated yet,尚未翻译
 "Each line has the room of its English plus 40%, the stretch the fake language tests, so a line that would be cut off shows as too long before anyone plays it.",每行的空间是其英文长度再加 40%（假语言测试的拉长幅度），因此会被截断的行在任何人游玩之前就会显示为过长。
 Open where it is used,打开使用它的位置
 Nothing under %s says this line any more.,%s 下已没有任何地方使用这一行。
+Jump to the previous bookmark (Shift+F4).,跳到上一个书签（Shift+F4）。
+Jump to the next bookmark (F4).,跳到下一个书签（F4）。
+Remove every bookmark from this sheet.,移除此表中的所有书签。
+Ctrl+M marks the selected row · F4 next · Shift+F4 previous,Ctrl+M 标记所选行 · F4 下一个 · Shift+F4 上一个
+No bookmarks yet - select a row and press Ctrl+M to mark it. F4 / Shift+F4 cycle through marks.,还没有书签 - 选择一行并按 Ctrl+M 标记它。F4 / Shift+F4 在标记间循环。
+Bookmarks in %s,%s 中的书签
+Event %d. Click reveals and selects it on the sheet.,事件 %d。单击会在表中显示并选中它。
+%s. Click reveals and selects it on the sheet.,%s。单击会在表中显示并选中它。
+(undone),（已撤销）
+"%s, event %d. Click undoes back to just after it; the rows it touched light up.",%s，事件 %d。单击会撤销到它刚完成之后；它改动的行会亮起。
+%s. Click undoes back to just after it; the rows it touched light up.,%s。单击会撤销到它刚完成之后；它改动的行会亮起。
+Go Back to This Step,回到这一步
+Ctrl+Z and the toolbar arrows move the same marker,Ctrl+Z 和工具栏箭头移动的是同一个标记
+History of %s,%s 的历史
+The sheet as it was opened. Click undoes every step below it.,打开时的表。单击会撤销下面的每一步。
+"Nothing structural yet - groups, #region fences, and published functions appear here as you add them.",还没有结构 - 添加分组、#region 区块和公开函数后会出现在这里。
+Outline of %s,%s 的大纲
+%s: a group. Click reveals and selects it.,%s：一个分组。单击会显示并选中它。
+%s: a #region fence. Click reveals and selects it.,%s：一个 #region 区块。单击会显示并选中它。
+%s: a function of this sheet. Click reveals and selects it.,%s：此表的一个函数。单击会显示并选中它。
+"Every TODO, FIXME, HACK and NOTE comment in this sheet.",此表中的每条 TODO、FIXME、HACK 和 NOTE 注释。
+%s: a note left in a comment. Click reveals and selects it.,%s：留在注释里的备注。单击会显示并选中它。
+%s: an event. Click reveals and selects it.,%s：一个事件。单击会显示并选中它。
+Sheet map: how the project's sheets reach each other,表地图：项目中的表如何相互连接
+Open Sheet,打开表
+THIS BOX,此方框
+%s. Click a sheet to open it. Click a line to find every place it comes from.,%s。单击表即可打开。单击连线可查找它来自的每一处。
+"%s. Click opens it; drag moves it, and where you put it is remembered for this project.",%s。单击打开；拖动可移动，放置的位置会为此项目记住。

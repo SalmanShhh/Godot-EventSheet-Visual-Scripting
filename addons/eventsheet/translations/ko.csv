@@ -8954,3 +8954,31 @@ Not translated yet,아직 번역되지 않음
 "Each line has the room of its English plus 40%, the stretch the fake language tests, so a line that would be cut off shows as too long before anyone plays it.","각 줄의 자리는 영어 길이에 40%를 더한 만큼(가짜 언어가 시험하는 늘어남)이라, 잘릴 줄은 누가 플레이하기 전에 너무 김으로 표시됩니다."
 Open where it is used,쓰이는 곳 열기
 Nothing under %s says this line any more.,%s 아래에는 이 줄을 쓰는 곳이 더 이상 없습니다.
+Jump to the previous bookmark (Shift+F4).,이전 책갈피로 이동 (Shift+F4).
+Jump to the next bookmark (F4).,다음 책갈피로 이동 (F4).
+Remove every bookmark from this sheet.,이 시트의 책갈피를 모두 제거합니다.
+Ctrl+M marks the selected row · F4 next · Shift+F4 previous,Ctrl+M 선택한 행 표시 · F4 다음 · Shift+F4 이전
+No bookmarks yet - select a row and press Ctrl+M to mark it. F4 / Shift+F4 cycle through marks.,아직 책갈피가 없습니다 - 행을 선택하고 Ctrl+M을 눌러 표시하세요. F4 / Shift+F4로 표시를 순환합니다.
+Bookmarks in %s,%s의 책갈피
+Event %d. Click reveals and selects it on the sheet.,이벤트 %d. 클릭하면 시트에서 보여 주고 선택합니다.
+%s. Click reveals and selects it on the sheet.,%s. 클릭하면 시트에서 보여 주고 선택합니다.
+(undone),(실행 취소됨)
+"%s, event %d. Click undoes back to just after it; the rows it touched light up.","%s, 이벤트 %d. 클릭하면 바로 다음 시점까지 되돌리고, 건드린 행이 강조됩니다."
+%s. Click undoes back to just after it; the rows it touched light up.,"%s. 클릭하면 바로 다음 시점까지 되돌리고, 건드린 행이 강조됩니다."
+Go Back to This Step,이 단계로 돌아가기
+Ctrl+Z and the toolbar arrows move the same marker,Ctrl+Z와 도구 모음 화살표는 같은 표시를 움직입니다
+History of %s,%s의 기록
+The sheet as it was opened. Click undoes every step below it.,열었을 때의 시트. 클릭하면 아래의 모든 단계를 되돌립니다.
+"Nothing structural yet - groups, #region fences, and published functions appear here as you add them.","아직 구조가 없습니다 - 그룹, #region 구역, 공개 함수가 추가되면 여기에 나타납니다."
+Outline of %s,%s의 개요
+%s: a group. Click reveals and selects it.,%s: 그룹. 클릭하면 보여 주고 선택합니다.
+%s: a #region fence. Click reveals and selects it.,%s: #region 구역. 클릭하면 보여 주고 선택합니다.
+%s: a function of this sheet. Click reveals and selects it.,%s: 이 시트의 함수. 클릭하면 보여 주고 선택합니다.
+"Every TODO, FIXME, HACK and NOTE comment in this sheet.","이 시트의 모든 TODO, FIXME, HACK, NOTE 주석."
+%s: a note left in a comment. Click reveals and selects it.,%s: 주석에 남긴 메모. 클릭하면 보여 주고 선택합니다.
+%s: an event. Click reveals and selects it.,%s: 이벤트. 클릭하면 보여 주고 선택합니다.
+Sheet map: how the project's sheets reach each other,시트 지도: 프로젝트의 시트가 서로 닿는 방식
+Open Sheet,시트 열기
+THIS BOX,이 상자
+%s. Click a sheet to open it. Click a line to find every place it comes from.,%s. 시트를 클릭하면 열립니다. 선을 클릭하면 그것이 나오는 모든 곳을 찾습니다.
+"%s. Click opens it; drag moves it, and where you put it is remembered for this project.","%s. 클릭하면 열리고, 끌면 이동하며, 놓은 위치는 이 프로젝트에 기억됩니다."

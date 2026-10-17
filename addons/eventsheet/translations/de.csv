@@ -8954,3 +8954,31 @@ Not translated yet,Noch nicht übersetzt
 "Each line has the room of its English plus 40%, the stretch the fake language tests, so a line that would be cut off shows as too long before anyone plays it.","Jede Zeile hat den Platz ihres Englischen plus 40 %, die Dehnung, die die Testsprache prüft - eine Zeile, die abgeschnitten würde, zeigt sich also als zu lang, bevor jemand spielt."
 Open where it is used,"Dort öffnen, wo sie verwendet wird"
 Nothing under %s says this line any more.,Unter %s sagt niemand diese Zeile mehr.
+Jump to the previous bookmark (Shift+F4).,Zum vorherigen Lesezeichen springen (Umschalt+F4).
+Jump to the next bookmark (F4).,Zum nächsten Lesezeichen springen (F4).
+Remove every bookmark from this sheet.,Alle Lesezeichen aus diesem Blatt entfernen.
+Ctrl+M marks the selected row · F4 next · Shift+F4 previous,Strg+M markiert die gewählte Zeile · F4 nächste · Umschalt+F4 vorherige
+No bookmarks yet - select a row and press Ctrl+M to mark it. F4 / Shift+F4 cycle through marks.,"Noch keine Lesezeichen - wähle eine Zeile und drücke Strg+M, um sie zu markieren. F4 / Umschalt+F4 gehen die Marken durch."
+Bookmarks in %s,Lesezeichen in %s
+Event %d. Click reveals and selects it on the sheet.,Ereignis %d. Ein Klick zeigt und wählt es im Blatt.
+%s. Click reveals and selects it on the sheet.,%s. Ein Klick zeigt und wählt es im Blatt.
+(undone),(rückgängig gemacht)
+"%s, event %d. Click undoes back to just after it; the rows it touched light up.","%s, Ereignis %d. Ein Klick macht bis direkt danach rückgängig; die berührten Zeilen leuchten auf."
+%s. Click undoes back to just after it; the rows it touched light up.,%s. Ein Klick macht bis direkt danach rückgängig; die berührten Zeilen leuchten auf.
+Go Back to This Step,Zu diesem Schritt zurück
+Ctrl+Z and the toolbar arrows move the same marker,Strg+Z und die Pfeile der Werkzeugleiste bewegen dieselbe Marke
+History of %s,Verlauf von %s
+The sheet as it was opened. Click undoes every step below it.,"Das Blatt, wie es geöffnet wurde. Ein Klick macht jeden Schritt darunter rückgängig."
+"Nothing structural yet - groups, #region fences, and published functions appear here as you add them.","Noch keine Gliederung - Gruppen, #region-Abschnitte und veröffentlichte Funktionen erscheinen hier, sobald du sie hinzufügst."
+Outline of %s,Gliederung von %s
+%s: a group. Click reveals and selects it.,%s: eine Gruppe. Ein Klick zeigt und wählt sie.
+%s: a #region fence. Click reveals and selects it.,%s: ein #region-Abschnitt. Ein Klick zeigt und wählt ihn.
+%s: a function of this sheet. Click reveals and selects it.,%s: eine Funktion dieses Blatts. Ein Klick zeigt und wählt sie.
+"Every TODO, FIXME, HACK and NOTE comment in this sheet.","Jeder TODO-, FIXME-, HACK- und NOTE-Kommentar in diesem Blatt."
+%s: a note left in a comment. Click reveals and selects it.,%s: eine Notiz in einem Kommentar. Ein Klick zeigt und wählt sie.
+%s: an event. Click reveals and selects it.,%s: ein Ereignis. Ein Klick zeigt und wählt es.
+Sheet map: how the project's sheets reach each other,Blattkarte: wie die Blätter des Projekts einander erreichen
+Open Sheet,Blatt öffnen
+THIS BOX,DIESES FELD
+%s. Click a sheet to open it. Click a line to find every place it comes from.,"%s. Klicke ein Blatt, um es zu öffnen. Klicke eine Linie, um jede Stelle zu finden, von der sie kommt."
+"%s. Click opens it; drag moves it, and where you put it is remembered for this project.","%s. Ein Klick öffnet es; Ziehen verschiebt es, und wo du es hinlegst, merkt sich dieses Projekt."
