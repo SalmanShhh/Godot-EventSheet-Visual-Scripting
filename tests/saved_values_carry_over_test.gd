@@ -113,6 +113,12 @@ static func _a_renamed_variable_keeps_loading() -> bool:
 		["Save only drops the old name it can never read", _choice_drops_old_name("save"), false],
 		["Never drops it too", _choice_drops_old_name(""), false],
 		["Manual keeps it", _choice_drops_old_name("manual"), true],
+		["a class rename stores nothing on a Manual variable, whose state has no sections",
+			_kept_after("manual", ["OldPlayer", "stage"]), {"save": "manual"}],
+		["a Manual rename keeps the old key alone", _kept_after("manual", ["OldPlayer", "level"]),
+			{"save": "manual", "saved_as": {"section": "", "key": "level"}}],
+		["an Auto one keeps the old section", _kept_after("auto", ["OldPlayer", "stage"]),
+			{"save": "auto", "saved_as": {"section": "OldPlayer", "key": "stage"}}],
 	])
 	var script: GDScript = GDScript.new()
 	script.source_code = output
@@ -136,6 +142,14 @@ static func _a_renamed_variable_keeps_loading() -> bool:
 		["a save slot written before the rename loads", from_slot, [3, 9]],
 		["once the new name is saved it wins", second, [5, 8]],
 	]) and ok
+
+
+## The attributes of a variable `stage` saved by `choice` once Keep loading has run with `was` [section, key].
+static func _kept_after(choice: String, was: Array) -> Dictionary:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.variables = {"stage": {"type": "int", "default": 1, "attributes": {"save": choice}}}
+	SaveChoices.keep_loading(sheet, "stage", was[0], was[1])
+	return sheet.variables["stage"]["attributes"]
 
 
 static func _choice_drops_old_name(choice: String) -> bool:

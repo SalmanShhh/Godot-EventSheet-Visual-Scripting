@@ -355,8 +355,16 @@ func _write_field(property: String) -> void:
 	var value: Variant = _form.value(property)
 	if value is String:
 		value = (value as String).strip_edges()
-	if _form.control(property).get("editable") and str(value) != str(_settings.get(property, "")):
+	if _form.control(property).get("editable") and differs(value, _settings.get(property, "")):
 		_write(property, value)
+
+
+## True when a field's value is not what the scene holds. Numbers compare as numbers, so a scene's
+## 600 is the spin box's 600.0 and leaving the field rewrites nothing; anything else compares as text.
+static func differs(value: Variant, current: Variant) -> bool:
+	if (value is float or value is int) and (current is float or current is int):
+		return not is_equal_approx(float(value), float(current))
+	return str(value) != str(current)
 
 
 func _write(property: String, value: Variant) -> void:

@@ -69,6 +69,10 @@ static func _settings_scene() -> bool:
 		["a setting is written onto the scene", wrote, OK],
 		["and reads back from it", written["format"], "json"],
 		["leaving the others as they were", written["file_pattern"], "save_{slot}.cfg"],
+		["a spin box's 600.0 is the scene's 600, so leaving it writes nothing, while 601 and a missing value are changes",
+			[EventSheetSaveStudio.differs(600.0, 600), EventSheetSaveStudio.differs(601.0, 600), EventSheetSaveStudio.differs(600.0, "")],
+			[false, true, true]],
+		["text compares as text", [EventSheetSaveStudio.differs("json", "json"), EventSheetSaveStudio.differs("json", "config")], [false, true]],
 	])
 
 

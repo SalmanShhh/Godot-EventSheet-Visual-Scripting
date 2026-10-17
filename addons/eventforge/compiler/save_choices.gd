@@ -84,21 +84,27 @@ static func set_choice(attributes: Dictionary, choice: String) -> void:
 ## Makes `variable_name` on `sheet` keep loading what was saved under `old_key` in `old_section` ("" for
 ## its own section): the one-time fallback read the block writes. False when the sheet has no such
 ## variable. The newest rename replaces an older one - one name back is the one players last saved.
+## A Manual variable is only ever read from the state Load Game hands it, which has no sections: it
+## keeps the old key alone, and a class rename (its own key in another section) changes nothing for it.
 static func keep_loading(sheet: EventSheetResource, variable_name: String, old_section: String, old_key: String) -> bool:
-	var was: Dictionary = {"section": old_section, "key": old_key}
-	if sheet.variables.get(variable_name) is Dictionary:
-		var descriptor: Dictionary = sheet.variables[variable_name]
-		var attributes: Dictionary = (descriptor.get("attributes") as Dictionary).duplicate() if descriptor.get("attributes") is Dictionary else {}
-		attributes[SAVED_AS] = was
-		descriptor["attributes"] = attributes
+	var descriptor: Variant = sheet.variables.get(variable_name)
+	var row: LocalVariable = null
+	for entry: Variant in sheet.events if not descriptor is Dictionary else []:
+		if row == null and entry is LocalVariable and (entry as LocalVariable).name == variable_name:
+			row = entry as LocalVariable
+	if row == null and not descriptor is Dictionary:
+		return false
+	var held: Variant = row.attributes if row != null else (descriptor as Dictionary).get("attributes")
+	var attributes: Dictionary = (held as Dictionary).duplicate() if held is Dictionary else {}
+	var manual: bool = choice_of(attributes) == "manual"
+	if manual and old_key == variable_name:
 		return true
-	for entry: Variant in sheet.events:
-		if entry is LocalVariable and (entry as LocalVariable).name == variable_name:
-			var row_attributes: Dictionary = (entry as LocalVariable).attributes.duplicate()
-			row_attributes[SAVED_AS] = was
-			(entry as LocalVariable).attributes = row_attributes
-			return true
-	return false
+	attributes[SAVED_AS] = {"section": "" if manual else old_section, "key": old_key}
+	if row != null:
+		row.attributes = attributes
+	else:
+		(descriptor as Dictionary)["attributes"] = attributes
+	return true
 
 
 ## The sheet's own variables, in the order they are written, as [{name, type, choice, saved_as, description}]:
