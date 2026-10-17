@@ -354,6 +354,7 @@ static func run() -> bool:
 	guard_dock.free()
 	ok = _own_actions_beside_the_head() and ok
 	ok = _function_heads_are_numbered() and ok
+	ok = _branching_steps_beside_the_head() and ok
 	ok = _description_editor() and ok
 	return ok
 
@@ -399,6 +400,43 @@ static func _own_actions_beside_the_head() -> bool:
 		["a step with a condition of its own is not drawn beside the head", (asks.lane_event() == null), true],
 		["so that function's head keeps an empty action lane", _has_action_span(asks_head), false],
 	])
+	dock.free()
+	return passed
+
+
+## A first step whose value branches (`return 1 if ready else 0`) reads as a pair, and the pair's own
+## row is the step: it steps aside for the head, and the branch rows hang under the head unnumbered.
+## The ⟡ chip naming the pattern a step's code is rides up with its actions (read off a shipped pack).
+static func _branching_steps_beside_the_head() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	var pick: EventFunction = _make_function("pick", TYPE_INT, true, "", "")
+	var step: EventRow = EventRow.new()
+	var line: RawCodeRow = RawCodeRow.new()
+	line.code = "return 1 if ready else 0"
+	step.actions.append(line)
+	pick.events.append(step)
+	sheet.functions.append(pick)
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(sheet)
+	var head: EventRowData = _find_row_by_uid_prefix(dock._active_view(), "define_fn_pick")
+	var first: EventRowData = head.children[0] if head != null and not head.children.is_empty() else null
+	var pack: EventSheetResource = GDScriptImporter.new().import_external(
+		"res://eventsheet_addons/advanced_random/advanced_random_addon.gd")
+	var viewport: EventSheetViewport = EventSheetViewport.new()
+	viewport.set_ace_registry(EventSheetACERegistry.new())
+	viewport.set_sheet(pack)
+	var seeded: EventRowData = _find_row_by_uid_prefix(viewport, "define_fn_set_random_seed")
+	var passed: bool = SUPPORT.pins("define_block_rows_test", [
+		["no 'Always' row is left under a branching step's head", _child_has_text(head, "Always"), false],
+		["the head's first sub-event is the branch", first.row_uid.contains("_branch_") if first != null else false, true],
+		["the head wears the step's number", head.event_number if head != null else -1, 1],
+		["the branch rows wear none", first.event_number if first != null else -1, 0],
+		["the pattern chip rides up to the head", _row_has_span_text(seeded, "⟡ Seeded randomness and noise"), true],
+		["so that head keeps no 'Always' row either", _child_has_text(seeded, "Always"), false],
+	])
+	viewport.free()
 	dock.free()
 	return passed
 

@@ -4224,12 +4224,15 @@ func _append_verb_body_rows(row_data: EventRowData, event_function: EventFunctio
 ## up with it. A live step stays addressable: EventFunction.lane_event() names it from the data, so
 ## a click on one of these actions, its Add action and its edits reach the step's own EventRow. A
 ## property setter's trigger row reads its first step the same way, while that step is a reading only.
+## A step whose value branches (`return a if c else b`) reads as a pair: its own row leads it and the
+## branch rows hang under that row, so the lead moves into the head and the branch rows come up as
+## the head's sub-events. The ⟡ chip naming the pattern the step's code is comes along with them.
 func _merge_first_body_step_into_header(row_data: EventRowData) -> void:
 	if row_data.children.is_empty():
 		return
 	var first_step: EventRowData = row_data.children[0]
 	if first_step == null or first_step.row_type != EventRowData.RowType.EVENT \
-			or not first_step.ternary_anchor_uid.is_empty():
+			or (not first_step.ternary_anchor_uid.is_empty() and not first_step.ternary_lead):
 		return
 	var head_function: EventFunction = row_data.source_resource as EventFunction
 	if (head_function != null and head_function.lane_event() == null) \
@@ -4248,10 +4251,11 @@ func _merge_first_body_step_into_header(row_data: EventRowData) -> void:
 		if head_function != null and (bool(metadata.get("placeholder", false)) \
 				or str(metadata.get("kind", "")) == "add_condition"):
 			continue
-		if str(metadata.get("lane", "")) != "action":
+		if str(metadata.get("lane", "")) != "action" and str(metadata.get("kind", "")) != "pattern_chip":
 			return
 		moved.append(span)
-	if moved.is_empty():
+	# A pair's lead that draws nothing of its own still steps aside, so its branch rows come up.
+	if moved.is_empty() and not first_step.ternary_lead:
 		return
 	row_data.spans.append_array(moved)
 	row_data.line_count = maxi(row_data.line_count, first_step.line_count)

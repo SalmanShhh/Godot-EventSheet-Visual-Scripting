@@ -74,9 +74,10 @@ static func _test_undo_step() -> bool:
 	var ok: bool = true
 	var view: EventSheetViewport = _open(UNDO_PATH)
 	var readings: PackedStringArray = _readings(view)
+	# The step is the function's own first step, so it reads beside the function's head.
 	ok = _check("the edit reads as one undoable step, named by the label",
 		_first_containing(readings, "Edit sheet undoably"),
-		"Local boolean | changed | = Dock ▸ Edit sheet undoably \"Apply Cell Edit\" | ↓ the steps below are the edit | ⟡ one undoable step, the edit under it") and ok
+		"Action | Function | On apply | Local boolean | changed | = Dock ▸ Edit sheet undoably \"Apply Cell Edit\" | ↓ the steps below are the edit | ⟡ one undoable step, the edit under it") and ok
 	ok = _check("the edit's own lines hang under it as sub-events",
 		_first_containing(readings, "Append Condition Entry"),
 		"System ▸ mode = \"new_condition_event\" | ƒ ▸ Call Append Condition Entry | System ▸ Answer true") and ok

@@ -189,10 +189,11 @@ static func _rows() -> bool:
 		"i3 [System> Else | Set reward to 0]") and ok
 	# Three statements, one row, named after the scene's root and carrying the local name.
 	# Re-pin: a property set on the way IN is part of making the thing, so it rides the same row as
-	# a chip rather than following it as an action of its own.
+	# a chip rather than following it as an action of its own. It is the function's own first step,
+	# so it reads beside the function's head.
 	ok = _check("the spawn trio reads as one Create object",
 		_row_containing(rows, "Create object"),
-		"i2 [System> Create object Enemy at spawn point (as enemy)   speed = 40 | System> Add 1 to spawned | ⟡ Making an object and putting it somewhere]") and ok
+		"i1 [Action | Function | On spawn_wave | System> Create object Enemy at spawn point (as enemy)   speed = 40 | System> Add 1 to spawned | ⟡ Making an object and putting it somewhere]") and ok
 	return ok
 
 
