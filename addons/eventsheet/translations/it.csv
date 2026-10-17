@@ -9327,3 +9327,4 @@ No breakpoints. Select a row and press F9 to pause the running game there; More 
 Nothing to point at in this trail.,Niente da segnalare in questa traccia.
 No change of state in this run yet.,Ancora nessun cambio di stato in questa esecuzione.
 "%d catalogs here were made by hand, so nothing was written to them: %s.","%d cataloghi qui sono stati fatti a mano, quindi non vi è stato scritto nulla: %s."
+This variable lives in %s; open that file to end its group.,Questa variabile si trova in %s; apri quel file per chiudere il suo gruppo.

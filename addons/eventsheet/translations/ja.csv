@@ -9327,3 +9327,4 @@ No breakpoints. Select a row and press F9 to pause the running game there; More 
 Nothing to point at in this trail.,この履歴に指摘することはありません。
 No change of state in this run yet.,この実行ではまだ状態の変化がありません。
 "%d catalogs here were made by hand, so nothing was written to them: %s.",%d 個のカタログは手作業で作られたため、何も書き込まれていません：%s。
+This variable lives in %s; open that file to end its group.,この変数は %s にあります。グループを終えるにはそのファイルを開いてください。

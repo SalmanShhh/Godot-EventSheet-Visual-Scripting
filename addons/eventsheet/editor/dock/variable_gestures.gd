@@ -1,6 +1,7 @@
 # EventSheet - what a variable row offers besides its window: the help strip's doors under a selected
 # member, the Inspector look and Group submenus of its right-click menu, Group by prefix, End group
-# here and the end line dragged onto another member, and Add > Inspector button.
+# here and the end line dragged onto another member, and Add > Inspector button. A member declared in
+# ANOTHER file (an autoload's global used here) is only ever pointed at: its group changes in that file.
 #
 # Nothing here is a new data model. Every write lands on the attribute keys the compiler already reads
 # and the importer already lifts back - a group is `group` (and `group_prefix`) on the member it opens
@@ -25,12 +26,23 @@ const LINK_PROPERTIES := "properties"
 const GROUP_MENU_NEW := 1
 const GROUP_MENU_BY_PREFIX := 2
 const GROUP_MENU_END_HERE := 3
+const GROUP_MENU_OPEN_FILE := 4
 const GROUP_MENU_FIRST := 100
+
+## The fewest characters of the help strip's sentence a narrow dock still shows: the counts give way
+## first, then the doors fold into one "…" menu. The whole sentence stays on the strip's hover.
+const STRIP_SENTENCE_CHARS := 60
 
 var _dock: Control = null
 ## What the two submenus offered when they last opened, by item id.
 var _menu_looks: PackedStringArray = PackedStringArray()
 var _menu_groups: PackedStringArray = PackedStringArray()
+## The file the Group submenu's "Open" item opens, for a member declared in another file.
+var _menu_file: String = ""
+## The doors folded into one menu at a narrow dock, made the first time a variable's strip is fitted;
+## and the strip width the last fit was for, so a resize that changes nothing fits nothing.
+var _more_door: MenuButton = null
+var _fitted_width: float = -1.0
 
 
 func init(dock: Control) -> void:
@@ -185,6 +197,78 @@ func open_window(row_data: EventRowData, part: String = "", look_id: String = ""
 	if not part.is_empty():
 		_dock._variable_dlg.focus_part(part, look_id)
 
+
+## Fits the strip to the status bar's width (`width`, or the bar's own when 0): everything shows while
+## the sentence has room for STRIP_SENTENCE_CHARS characters; short of that the counts give way, then
+## the doors fold into one "…" menu. Puts the counts and the doors back whenever no variable's strip
+## is showing.
+func fit_strip(width: float = 0.0) -> void:
+	var label: Label = _dock._row_help_label
+	var strip: HBoxContainer = label.get_parent() as HBoxContainer if label != null else null
+	if strip == null:
+		return
+	if _more_door == null:
+		_more_door = MenuButton.new()
+		_more_door.name = "EventSheetRowHelpMore"
+		_more_door.text = "…"
+		_more_door.flat = true
+		_more_door.get_popup().id_pressed.connect(func(id: int) -> void: _dock._run_variable_link(id))
+		strip.add_child(_more_door)
+		strip.move_child(_more_door, _dock._row_help_button_third.get_index() + 1)
+		strip.resized.connect(_on_strip_resized)
+	_more_door.visible = false
+	_more_door.get_popup().clear()
+	var counts: Array = [_dock._problem_count_label, _dock._event_count_label]
+	for count: Label in counts:
+		count.visible = _dock._current_sheet != null
+	_fitted_width = -1.0
+	if not label.visible or str(_dock._row_help_finding.get("family", "")) != _dock.VARIABLE_LINKS_FAMILY:
+		return
+	_fitted_width = width if width > 0.0 else strip.size.x
+	var need: float = label.get_theme_font("font").get_string_size(label.text.left(STRIP_SENTENCE_CHARS),
+		HORIZONTAL_ALIGNMENT_LEFT, -1, label.get_theme_font_size("font_size")).x
+	if _sentence_room(strip, _fitted_width) >= need:
+		return
+	for count: Label in counts:
+		count.visible = false
+	if _sentence_room(strip, _fitted_width) >= need:
+		return
+	var popup: PopupMenu = _more_door.get_popup()
+	var doors: Array = [_dock._row_help_button, _dock._row_help_button_second, _dock._row_help_button_third]
+	for index: int in doors.size():
+		if (doors[index] as Button).visible:
+			popup.add_item((doors[index] as Button).text, index)
+			(doors[index] as Button).visible = false
+	_more_door.visible = true
+
+
+## The width the strip's sentence gets at `width`, the way the bar shares it out: what is left after
+## every shown piece's own width and the gaps, split between the labels that stretch.
+static func _sentence_room(strip: HBoxContainer, width: float) -> float:
+	var taken: float = 0.0
+	var ratios: float = 0.0
+	var shown: int = 0
+	var share: float = 0.0
+	for child: Node in strip.get_children():
+		var control: Control = child as Control
+		if control == null or not control.visible:
+			continue
+		shown += 1
+		taken += control.get_combined_minimum_size().x
+		if control.size_flags_horizontal & Control.SIZE_EXPAND:
+			ratios += control.size_flags_stretch_ratio
+			if control.name == "EventSheetRowHelp":
+				share = control.size_flags_stretch_ratio
+	taken += strip.get_theme_constant("separation") * maxi(shown - 1, 0)
+	return maxf(width - taken, 0.0) * share / maxf(ratios, 1.0)
+
+
+func _on_strip_resized() -> void:
+	var strip: Control = _more_door.get_parent() as Control
+	if _fitted_width < 0.0 or strip == null or is_equal_approx(strip.size.x, _fitted_width):
+		return
+	_dock._update_row_help_strip.call_deferred(_dock._row_help_finding.get("row") as EventRowData)
+
 # ── Groups ────────────────────────────────────────────────────────────────────────────────────────
 
 
@@ -241,9 +325,23 @@ static func group_by_prefix(sheet: EventSheetResource, names: PackedStringArray,
 	return not ordered.is_empty()
 
 
-## True when "End group here" means something on this member: it is in the Inspector, sits inside a
-## group, and neither opens a group nor already ends one.
+## The file a member row stands for when its declaration is written in ANOTHER file, "" for a member
+## this sheet declares. Its group can only change in that file, so nothing here writes one for it.
+static func declared_in(row_data: EventRowData) -> String:
+	if row_data == null or row_data.spans.is_empty() or not (row_data.spans[0].metadata is Dictionary):
+		return ""
+	return str((row_data.spans[0].metadata as Dictionary).get("include_path", "")).strip_edges()
+
+
+static func elsewhere_note(path: String) -> String:
+	return EventSheetL10n.translate("This variable lives in %s; open that file to end its group.") % path.get_file()
+
+
+## True when "End group here" means something on this member: it is declared in this sheet and in the
+## Inspector, sits inside a group, and neither opens a group nor already ends one.
 static func can_end_group_here(row_data: EventRowData, sheet: EventSheetResource) -> bool:
+	if not declared_in(row_data).is_empty():
+		return false
 	var identity: Dictionary = identity_of(row_data)
 	var found: Variant = member(sheet, str(identity.get("name", "")))
 	if not (found is LocalVariable) or not is_exported(found):
@@ -294,6 +392,9 @@ func drop_group_end(source_row: EventRowData, target_row: EventRowData, drop_mod
 		var members: Array = sheet.events.filter(func(entry: Variant) -> bool: return entry is LocalVariable)
 		var at: int = members.find(target)
 		target = members[at + 1] if at >= 0 and at + 1 < members.size() else null
+	if not declared_in(target_row).is_empty():
+		_dock._set_status(elsewhere_note(declared_in(target_row)), true)
+		return true
 	if target == null:
 		_dock._set_status(EventSheetL10n.translate("Drop the end line on the variable the group should end above."), true)
 		return true
@@ -401,11 +502,14 @@ func group_names(names: PackedStringArray, title: String, prefix: String) -> boo
 
 
 ## Group ▸ for the right-clicked member: a new group, each group the sheet has (ticked at its own),
-## Group by prefix and End group here.
+## Group by prefix and End group here - greyed, with the reason and an "Open" item, for a member
+## declared in another file.
 func fill_group_menu(menu: PopupMenu) -> void:
 	menu.clear()
 	var row_data: EventRowData = _dock._context_row
-	var found: Variant = member(_dock._current_sheet, str(identity_of(row_data).get("name", ""))) if row_data != null else null
+	_menu_file = declared_in(row_data)
+	var found: Variant = member(_dock._current_sheet, str(identity_of(row_data).get("name", ""))) \
+		if row_data != null and _menu_file.is_empty() else null
 	menu.add_item(EventSheetL10n.translate("New group…"), GROUP_MENU_NEW)
 	_menu_groups = sheet_groups(_dock._current_sheet)
 	if not _menu_groups.is_empty():
@@ -419,6 +523,9 @@ func fill_group_menu(menu: PopupMenu) -> void:
 	menu.add_item(EventSheetL10n.translate("Group by prefix…"), GROUP_MENU_BY_PREFIX)
 	menu.add_item(EventSheetL10n.translate("End group here"), GROUP_MENU_END_HERE)
 	menu.set_item_disabled(menu.get_item_index(GROUP_MENU_END_HERE), not can_end_group_here(row_data, _dock._current_sheet))
+	if not _menu_file.is_empty():
+		menu.set_item_tooltip(menu.get_item_index(GROUP_MENU_END_HERE), elsewhere_note(_menu_file))
+		menu.add_item(EventSheetL10n.translate("Open %s") % _menu_file.get_file(), GROUP_MENU_OPEN_FILE)
 
 
 func on_group_menu(id: int) -> void:
@@ -428,6 +535,8 @@ func on_group_menu(id: int) -> void:
 			_dock._variables._group_context_selection()
 		GROUP_MENU_BY_PREFIX:
 			prompt_group_by_prefix()
+		GROUP_MENU_OPEN_FILE:
+			_dock.open_object_file_as_sheet(_menu_file)
 		GROUP_MENU_END_HERE:
 			_write(EventSheetL10n.translate("End the group above %s") % var_name,
 				EventSheetL10n.translate("The group now ends above %s.") % var_name,

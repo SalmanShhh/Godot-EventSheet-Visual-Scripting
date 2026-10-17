@@ -7292,6 +7292,10 @@ func _update_row_help_strip(row_data: EventRowData) -> void:
 	for door: Button in [_row_help_button_second, _row_help_button_third]:
 		if door != null:
 			door.visible = false
+	# A narrow dock hid the counts and folded a variable's doors into one menu: they come back here,
+	# asked only once that menu exists, so a dock that never fitted a strip loads nothing for it.
+	if _row_help_label.get_parent().has_node("EventSheetRowHelpMore"):
+		_variable_gestures.fit_strip()
 	if row_data == null or _current_sheet == null:
 		return
 	# The findings were joined onto the row when the sheet was built - one join, read back here, so
@@ -7362,6 +7366,7 @@ func _show_successor_hint(row_data: EventRowData) -> bool:
 			if doors[index] != null:
 				(doors[index] as Button).visible = index < links.size()
 				(doors[index] as Button).text = _variable_gestures.link_label(links[index]) if index < links.size() else ""
+		_variable_gestures.fit_strip()
 	return true
 
 

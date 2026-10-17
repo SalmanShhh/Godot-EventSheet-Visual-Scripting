@@ -9311,3 +9311,4 @@ No breakpoints. Select a row and press F9 to pause the running game there; More 
 Nothing to point at in this trail.,
 No change of state in this run yet.,
 "%d catalogs here were made by hand, so nothing was written to them: %s.",
+This variable lives in %s; open that file to end its group.,

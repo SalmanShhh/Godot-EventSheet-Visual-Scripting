@@ -8,6 +8,9 @@
 #   5. Add > Inspector button writes the button and the function it runs.
 #   6. The Ghost Row reads "max_jumps is a whole number from 1 to 3, in the Inspector".
 #   7. The variable window searches its types, and fills node and resource slots (Pick, Load, New).
+#   8. A member declared in another file keeps End group here and the end line's drop greyed, says
+#      why, and offers to open that file - never writing a group for it here.
+#   9. At a narrow dock the counts give way first, then the doors fold into one "…" menu.
 # Each written file is opened again and saved again, byte for byte.
 @tool
 extends RefCounted
@@ -28,6 +31,8 @@ static func run() -> bool:
 	ok = _dock_gestures() and ok
 	ok = _ghost_sentence() and ok
 	ok = _window() and ok
+	ok = _declared_elsewhere() and ok
+	ok = _narrow_dock() and ok
 	return ok
 
 
@@ -183,6 +188,89 @@ static func _window() -> bool:
 	rows.append(["Edit range opens on the slider's first detail", [dialog._selected_look_id(), focused is LineEdit], ["slider", true]])
 	host.free()
 	return SUPPORT.pins(P, rows)
+
+
+## A row standing for a declaration in another file, named like a member this sheet declares too:
+## nothing here may end a group for it, whichever member the name finds.
+static func _declared_elsewhere() -> bool:
+	var rows: Array = []
+	var sheet: EventSheetResource = _opened(GUN)
+	GESTURES.end_group_here(sheet, "reload_time")
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(sheet)
+	var elsewhere: EventRowData = _member_row(dock._current_sheet, "spread", "Gun")
+	(elsewhere.spans[0].metadata as Dictionary)["include_path"] = "res://game/globals.gd"
+	rows.append(["End group here is not offered for a member declared in another file",
+		GESTURES.can_end_group_here(elsewhere, dock._current_sheet), false])
+	dock._context_row = elsewhere
+	var menu: PopupMenu = PopupMenu.new()
+	dock._variable_gestures.fill_group_menu(menu)
+	var end_at: int = menu.get_item_index(GESTURES.GROUP_MENU_END_HERE)
+	rows.append(["...its menu item is greyed and its hover says why",
+		[menu.is_item_disabled(end_at), menu.get_item_tooltip(end_at)],
+		[true, "This variable lives in globals.gd; open that file to end its group."]])
+	rows.append(["...the groups it could move into are greyed too", menu.is_item_disabled(menu.get_item_index(GESTURES.GROUP_MENU_FIRST)), true])
+	rows.append(["...and the last item opens that file",
+		[menu.get_item_text(menu.item_count - 1), menu.get_item_id(menu.item_count - 1), dock._variable_gestures._menu_file],
+		["Open globals.gd", GESTURES.GROUP_MENU_OPEN_FILE, "res://game/globals.gd"]])
+	menu.free()
+	var before: String = _members(dock._current_sheet)
+	var end_line: EventRowData = EventRowData.new()
+	end_line.spans.append(SemanticSpan.new())
+	end_line.spans[0].metadata = {"kind": "variable", "variable_name": "", "group_end_owner": "reload_time"}
+	elsewhere.source_resource = GESTURES.member(dock._current_sheet, "spread")
+	dock._on_row_drop_requested(end_line, elsewhere, "before")
+	rows.append(["the end line dropped on it moves nothing, and says why",
+		[_members(dock._current_sheet) == before, dock._status_label.text],
+		[true, "⚠  This variable lives in globals.gd; open that file to end its group."]])
+	dock.free()
+	return SUPPORT.pins(P, rows)
+
+
+## The selected variable's strip at two dock widths: what the bar still shows, and what the "…" holds.
+static func _narrow_dock() -> bool:
+	var sheet: EventSheetResource = _opened("extends Node
+
+@export_group(\"Bullet\", \"bullet\")
+@export var bullet_count = 3
+"
+		+ "@export var health = 10
+")
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(sheet)
+	var health: EventRowData = null
+	for entry: Dictionary in dock._viewport.get_flat_rows():
+		var row: EventRowData = entry.get("row") as EventRowData
+		if row != null and str(GESTURES.identity_of(row).get("name", "")) == "health":
+			health = row
+	var strip: Control = dock._row_help_label.get_parent() as Control
+	var shown: Dictionary = {}
+	for width: int in [1200, 900, 1200, 1000]:
+		strip.set_block_signals(true)
+		strip.size = Vector2(width, strip.size.y)
+		strip.set_block_signals(false)
+		dock._update_row_help_strip(health)
+		var more: MenuButton = strip.get_node("EventSheetRowHelpMore") as MenuButton
+		var items: Array = []
+		for index: int in more.get_popup().item_count:
+			items.append(more.get_popup().get_item_text(index))
+		shown[shown.size()] = [dock._row_help_label.text.length(), dock._event_count_label.visible,
+			[dock._row_help_button.visible, dock._row_help_button_second.visible], more.visible, items]
+	var hover: String = dock._row_help_label.tooltip_text
+	dock._update_row_help_strip(null)
+	var after: Array = [dock._event_count_label.visible, (strip.get_node("EventSheetRowHelpMore") as Control).visible]
+	dock.free()
+	return SUPPORT.pins(P, [
+		["at 1200 px the sentence, the counts and both doors all show", shown.get(0), [59, true, [true, true], false, []]],
+		["at 900 px the counts give way, then the doors fold into the one menu", shown.get(1), [59, false, [false, false], true, ["Move into a group…", "Properties…"]]],
+		["widening the dock again puts them back", shown.get(2), shown.get(0)],
+		["the whole sentence stays on the hover", hover,
+			"int health = 10 · in the Inspector · not in a group  Not in Bullet: that group only takes names starting bullet."],
+		["at 1000 px only the counts give way: the sentence keeps its room beside both doors", shown.get(3), [59, false, [true, true], false, []]],
+		["selecting nothing puts the counts back and the menu away", after, [true, false]],
+	])
 
 
 static func _slot_buttons(dialog: VariableDialog) -> Array:

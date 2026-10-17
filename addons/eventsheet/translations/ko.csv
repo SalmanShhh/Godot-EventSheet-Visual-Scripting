@@ -9327,3 +9327,4 @@ No breakpoints. Select a row and press F9 to pause the running game there; More 
 Nothing to point at in this trail.,이 기록에서 짚을 것이 없습니다.
 No change of state in this run yet.,이번 실행에서는 아직 상태 변화가 없습니다.
 "%d catalogs here were made by hand, so nothing was written to them: %s.","%d개의 카탈로그는 직접 만든 것이라 아무것도 쓰지 않았습니다: %s."
+This variable lives in %s; open that file to end its group.,이 변수는 %s에 있습니다. 그룹을 끝내려면 그 파일을 여세요.

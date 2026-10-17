@@ -9327,3 +9327,4 @@ No breakpoints. Select a row and press F9 to pause the running game there; More 
 Nothing to point at in this trail.,这段轨迹中没有需要指出的。
 No change of state in this run yet.,本次运行中还没有状态变化。
 "%d catalogs here were made by hand, so nothing was written to them: %s.",有 %d 个目录是手工制作的，因此没有向其中写入任何内容：%s。
+This variable lives in %s; open that file to end its group.,此变量位于 %s 中；打开该文件以结束它的分组。

@@ -17,6 +17,18 @@
   target; it starts on the folder instead. A line a hand-made catalog holds is no longer reported as
   "in no script" when a translator's file brings it back.
 
+### Changed: a variable from another file says where its group ends, and the strip fits a narrow dock
+
+- A variable row standing for a declaration in another file (a global used here) keeps End group
+  here greyed, and the item's hover says why: "This variable lives in globals.gd; open that file to
+  end its group." An "Open globals.gd" item beside it opens that file. A group's end line dropped on
+  such a row moves nothing and says the same. Nothing here writes a group for a member another file
+  declares, even when this sheet has one of the same name.
+- The help strip under a selected variable keeps room for at least sixty characters of its sentence
+  at a narrow dock: the sheet's counts give way first, then its doors fold into one "…" menu holding
+  the same items. The whole sentence stays on the strip's hover, and widening the dock puts the
+  counts and the doors back.
+
 ### Fixed: Insert keeps Godot's whole Recent list, and four smaller edges
 
 - Insert new object put its class first in Godot's own Create New Node Recent list and then kept
