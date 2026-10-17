@@ -779,7 +779,6 @@ At,À
 World position for the copy (a Vector3 for a 3D node). Only used when the copy has a position.,Position dans le monde pour la copie (un Vector3 pour un nœud 3D). Utilisée seulement lorsque la copie possède une position.
 Optional group for the copy (blank = none).,Groupe facultatif pour la copie (vide = aucun).
 Remember Value As,Mémoriser la valeur sous
-"Copies any value aside under a name, in memory, for this run - the before-value for a preview, a buff or a cutscene. For memory that survives closing the game use Remember Between Runs on the variable, or the Save System pack.","Met de côté n'importe quelle valeur sous un nom, en mémoire, pour cette partie - la valeur d'avant pour un aperçu, un bonus ou une cinématique. Pour une mémoire qui survit à la fermeture du jeu, utilisez Mémoriser entre les parties sur la variable, ou le pack Système de sauvegarde."
 Run Context,Contexte d'exécution
 remember [b]{value}[/b] as [b]{name}[/b],mémoriser [b]{value}[/b] sous [b]{name}[/b]
 Any label you also use in Restore Value Into.,N'importe quelle étiquette que vous réutilisez dans Restaurer la valeur dans.

@@ -779,7 +779,6 @@ At,В точке
 World position for the copy (a Vector3 for a 3D node). Only used when the copy has a position.,Мировая позиция копии (Vector3 для 3D-узла). Используется только если у копии вообще есть позиция.
 Optional group for the copy (blank = none).,Необязательная группа для копии (пусто = без группы).
 Remember Value As,Запомнить значение как
-"Copies any value aside under a name, in memory, for this run - the before-value for a preview, a buff or a cutscene. For memory that survives closing the game use Remember Between Runs on the variable, or the Save System pack.","Откладывает любое значение под именем в памяти на время этого запуска - значение «до» для предпросмотра, бафа или катсцены. Для памяти, переживающей закрытие игры, включите на переменной Помнить между запусками или возьмите пак Системы сохранений."
 Run Context,Контекст запуска
 remember [b]{value}[/b] as [b]{name}[/b],запомнить [b]{value}[/b] как [b]{name}[/b]
 Any label you also use in Restore Value Into.,"Любая метка, которую вы используете и в Вернуть значение в."

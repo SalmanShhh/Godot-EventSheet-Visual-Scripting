@@ -26,6 +26,7 @@ static func run() -> bool:
 	ok = _test_a_verbatim_literal_keeps_its_spaces() and ok
 	ok = _test_the_harvest_has_nothing_to_write() and ok
 	ok = _test_no_key_is_listed_twice() and ok
+	ok = _test_no_kept_row_names_a_retired_option() and ok
 	return ok
 
 
@@ -75,6 +76,18 @@ static func _test_no_key_is_listed_twice() -> bool:
 				doubled.append("%s: %s" % [file_name, row[0]])
 			seen[row[0]] = true
 	return _check("no catalog lists a key twice", doubled, PackedStringArray())
+
+
+## The harvest never deletes, so a row whose source sentence was reworded stays in all nine files,
+## still telling a translator about a menu option the editor no longer has. The two options the
+## Save choice replaced are the ones a reworded sentence is most likely to leave behind.
+static func _test_no_kept_row_names_a_retired_option() -> bool:
+	var plan: HARVEST.Plan = HARVEST.plan([HARVEST.editor_literals(), HARVEST.owed_vocabulary()])
+	var stale: PackedStringArray = PackedStringArray()
+	for key: String in plan.kept_by_hand:
+		if key.contains("Remember Between Runs") or key.contains("Add Save Support"):
+			stale.append(key)
+	return _check("no row kept by hand names Remember Between Runs or Add Save Support", stale, PackedStringArray())
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

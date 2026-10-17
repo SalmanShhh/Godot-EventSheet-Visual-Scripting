@@ -779,7 +779,6 @@ At,位置
 World position for the copy (a Vector3 for a 3D node). Only used when the copy has a position.,コピーのワールド座標 (3D ノードなら Vector3)。コピーが位置を持つ場合にのみ使われます。
 Optional group for the copy (blank = none).,コピー用の任意のグループ (空 = なし)。
 Remember Value As,値を名前を付けて覚える
-"Copies any value aside under a name, in memory, for this run - the before-value for a preview, a buff or a cutscene. For memory that survives closing the game use Remember Between Runs on the variable, or the Save System pack.",任意の値を名前を付けてメモリに退避します。このラン限りで、プレビュー・バフ・カットシーンの「前の値」に使えます。ゲームを閉じても残る記憶が必要なら、変数の ラン間で記憶 かセーブシステムのパックを使ってください。
 Run Context,実行コンテキスト
 remember [b]{value}[/b] as [b]{name}[/b],[b]{value}[/b] を [b]{name}[/b] として覚える
 Any label you also use in Restore Value Into.,値を戻す先 でも同じものを使う、任意のラベル。

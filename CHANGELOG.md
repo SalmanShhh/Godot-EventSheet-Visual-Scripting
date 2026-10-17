@@ -11,6 +11,8 @@
   at Add Save Support or a Remember Between Runs option, both gone; the Inspector Designer
   says its names read as the file declares them, which is what it shows.
 - Save As Preset…'s file-name poll stops once its dialog is closed.
+- The translation catalogs drop the last row still telling translators to use Remember Between
+  Runs: Remember Value As already says to give the variable a Save choice.
 
 ### Fixed: the first open of the workspace stops compiling the picker, the Doctor and the Manual
 

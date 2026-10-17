@@ -779,7 +779,6 @@ At,위치
 World position for the copy (a Vector3 for a 3D node). Only used when the copy has a position.,사본의 월드 위치 (3D 노드라면 Vector3). 사본에 위치가 있을 때만 사용됩니다.
 Optional group for the copy (blank = none).,사본에 붙일 선택적 그룹 (비우면 없음).
 Remember Value As,값을 이름으로 기억
-"Copies any value aside under a name, in memory, for this run - the before-value for a preview, a buff or a cutscene. For memory that survives closing the game use Remember Between Runs on the variable, or the Save System pack.","임의의 값을 이름을 붙여 메모리에 따로 보관합니다. 이번 실행 동안만 유지되며, 미리보기나 버프, 컷신의 '이전 값'으로 쓰입니다. 게임을 껐다 켜도 남는 기억이 필요하면 변수의 실행 간 기억 이나 세이브 시스템 팩을 쓰세요."
 Run Context,실행 컨텍스트
 remember [b]{value}[/b] as [b]{name}[/b],[b]{value}[/b] 를 [b]{name}[/b] 로 기억
 Any label you also use in Restore Value Into.,값을 되돌려 넣기 에서도 같이 쓰는 아무 이름표.
