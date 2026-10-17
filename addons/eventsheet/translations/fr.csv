@@ -8466,7 +8466,6 @@ works on %s,agit sur %s
 listed under %s,rangé sous %s
 %d properties,%d propriétés
 "%d actions, %d conditions, %d triggers, %d expressions","%d actions, %d conditions, %d déclencheurs, %d expressions"
-Click the name to open it in the script editor or show it in the FileSystem.,Clique sur le nom pour l'ouvrir dans l'éditeur de script ou l'afficher dans le système de fichiers.
 This function hands back a %s.,Cette fonction renvoie un %s.
 "Returns true or false, and the event only runs while it is true.","Renvoie vrai ou faux, et l'événement ne s'exécute que tant que c'est vrai."
 "Usable inside any value: a number, text or object the function hands back.","Utilisable dans n'importe quelle valeur : un nombre, un texte ou un objet que la fonction renvoie."
@@ -8982,3 +8981,34 @@ Open Sheet,Ouvrir la feuille
 THIS BOX,CETTE BOÎTE
 %s. Click a sheet to open it. Click a line to find every place it comes from.,%s. Cliquez sur une feuille pour l'ouvrir. Cliquez sur une ligne pour trouver chaque endroit d'où elle vient.
 "%s. Click opens it; drag moves it, and where you put it is remembered for this project.","%s. Un clic l'ouvre ; un glisser le déplace, et l'endroit où vous le posez est retenu pour ce projet."
+Global settings…,Réglages du global…
++ New behaviour…,+ Nouveau comportement…
+"Make a behaviour of your own for this object: Works on is already its kind, and it is added here once made.","Créez votre propre comportement pour cet objet : « Agit sur » est déjà son type, et il est ajouté ici une fois créé."
+Behaviour settings…,Réglages du comportement…
+Open as sheet,Ouvrir comme feuille
+The kind of object %s is.,Le type d'objet qu'est %s.
+The kind of object it works on now.,Le type d'objet sur lequel il agit maintenant.
+Where it is listed now.,Où il est rangé maintenant.
+None,Aucune
+%s · Global settings,%s · Réglages du global
+%s · Behaviour settings,%s · Réglages du comportement
+Save changes,Enregistrer les modifications
+Made from,Créé à partir de
+Not kept in the file - it is not linked to what it started from.,Non conservé dans le fichier - il n'est pas lié à ce dont il est parti.
+"Saves into %s itself: its ## @ace_category line, @icon, the ## description line and its row in Project Settings > Globals > Autoload.","Enregistre dans %s lui-même : sa ligne ## @ace_category, @icon, la ligne de description ## et sa ligne dans Paramètres du projet > Globals > Autoload."
+"Saves into %s itself: its ## @ace_category line, @icon, the ## description line and the type of its host.","Enregistre dans %s lui-même : sa ligne ## @ace_category, @icon, la ligne de description ## et le type de son host."
+Made the behaviour %s at %s and added it to %s.,Comportement %s créé dans %s et ajouté à %s.
+Change global %s,Modifier le global %s
+Global settings,Réglages du global
+Behaviour settings,Réglages du comportement
+Nothing changed.,Rien n'a changé.
+Saved the settings of %s.,Réglages de %s enregistrés.
+Its row in Project Settings > Globals > Autoload now loads %s as %s; Edit > Undo in Godot puts it back.,Sa ligne dans Paramètres du projet > Globals > Autoload charge maintenant %s sous le nom %s ; Édition > Annuler dans Godot la rétablit.
+The New global form.,Le formulaire Nouveau global.
+The New behaviour form.,Le formulaire Nouveau comportement.
+"Click the name for its settings, to open it in the script editor or to show it in the FileSystem.","Cliquez sur le nom pour ses réglages, pour l'ouvrir dans l'éditeur de scripts ou pour le montrer dans le Système de fichiers."
+Your own,Le vôtre
+"Make a behaviour of your own: its name, what it works on, where it is listed, then open it as a sheet.","Créez votre propre comportement : son nom, ce sur quoi il agit, où il est rangé, puis ouvrez-le comme feuille."
+"Make a global of your own: its name, script or scene, then turn it on in Project Settings > Globals.","Créez votre propre global : son nom, script ou scène, puis activez-le dans Paramètres du projet > Globals."
+Renaming changes its class name and every use in one undo step; the places are listed before anything is written. The file keeps its name.,Renommer change son nom de classe et chaque utilisation en une seule étape d'annulation ; les endroits sont listés avant toute écriture. Le fichier garde son nom.
+Renaming changes its name in Project Settings > Globals and every use; the places are listed before anything is written. The file keeps its name.,Renommer change son nom dans Paramètres du projet > Globals et chaque utilisation ; les endroits sont listés avant toute écriture. Le fichier garde son nom.

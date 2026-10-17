@@ -8466,7 +8466,6 @@ works on %s,%s に作用する
 listed under %s,%s の下に並ぶ
 %d properties,プロパティ %d 個
 "%d actions, %d conditions, %d triggers, %d expressions",アクション %d、条件 %d、トリガー %d、式 %d
-Click the name to open it in the script editor or show it in the FileSystem.,名前をクリックすると、スクリプトエディタで開くか、ファイルシステムで表示できます。
 This function hands back a %s.,この関数は %s を返します。
 "Returns true or false, and the event only runs while it is true.",true か false を返し、true の間だけイベントが実行されます。
 "Usable inside any value: a number, text or object the function hands back.",どの値の中でも使えます。関数が返す数値、テキスト、オブジェクトです。
@@ -8982,3 +8981,34 @@ Open Sheet,シートを開く
 THIS BOX,このボックス
 %s. Click a sheet to open it. Click a line to find every place it comes from.,%s。シートをクリックすると開きます。線をクリックすると、その出どころをすべて検索します。
 "%s. Click opens it; drag moves it, and where you put it is remembered for this project.",%s。クリックで開き、ドラッグで動かします。置いた場所はこのプロジェクトで記憶されます。
+Global settings…,グローバルの設定…
++ New behaviour…,+ 新しいビヘイビア…
+"Make a behaviour of your own for this object: Works on is already its kind, and it is added here once made.",このオブジェクト用の自分のビヘイビアを作ります。対象はすでにこのオブジェクトの種類で、作るとここに追加されます。
+Behaviour settings…,ビヘイビアの設定…
+Open as sheet,シートとして開く
+The kind of object %s is.,%s のオブジェクトの種類です。
+The kind of object it works on now.,今の対象のオブジェクトの種類です。
+Where it is listed now.,今の一覧での場所です。
+None,なし
+%s · Global settings,%s · グローバルの設定
+%s · Behaviour settings,%s · ビヘイビアの設定
+Save changes,変更を保存
+Made from,作成元
+Not kept in the file - it is not linked to what it started from.,ファイルには残りません - 元にしたものとはつながっていません。
+"Saves into %s itself: its ## @ace_category line, @icon, the ## description line and its row in Project Settings > Globals > Autoload.",%s そのものに保存します: ## @ace_category の行、@icon、## の説明行、そしてプロジェクト設定 > Globals > Autoload の行です。
+"Saves into %s itself: its ## @ace_category line, @icon, the ## description line and the type of its host.",%s そのものに保存します: ## @ace_category の行、@icon、## の説明行、そして host の型です。
+Made the behaviour %s at %s and added it to %s.,ビヘイビア %s を %s に作り、%s に追加しました。
+Change global %s,グローバル %s を変更
+Global settings,グローバルの設定
+Behaviour settings,ビヘイビアの設定
+Nothing changed.,何も変わっていません。
+Saved the settings of %s.,%s の設定を保存しました。
+Its row in Project Settings > Globals > Autoload now loads %s as %s; Edit > Undo in Godot puts it back.,プロジェクト設定 > Globals > Autoload の行は %s を %s として読み込むようになりました。Godot の 編集 > 元に戻す で戻せます。
+The New global form.,「新しいグローバル」フォームです。
+The New behaviour form.,「新しいビヘイビア」フォームです。
+"Click the name for its settings, to open it in the script editor or to show it in the FileSystem.",名前をクリックすると、設定を開く、スクリプトエディターで開く、ファイルシステムで表示する、を選べます。
+Your own,自分用
+"Make a behaviour of your own: its name, what it works on, where it is listed, then open it as a sheet.",自分のビヘイビアを作ります: 名前、対象、一覧での場所を決めて、シートとして開きます。
+"Make a global of your own: its name, script or scene, then turn it on in Project Settings > Globals.",自分のグローバルを作ります: 名前、スクリプトかシーンかを決めて、プロジェクト設定 > Globals で有効にします。
+Renaming changes its class name and every use in one undo step; the places are listed before anything is written. The file keeps its name.,名前を変えると、クラス名とすべての使用箇所が 1 回の元に戻す単位で変わります。書き込む前に場所が一覧されます。ファイル名はそのままです。
+Renaming changes its name in Project Settings > Globals and every use; the places are listed before anything is written. The file keeps its name.,名前を変えると、プロジェクト設定 > Globals での名前とすべての使用箇所が変わります。書き込む前に場所が一覧されます。ファイル名はそのままです。

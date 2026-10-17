@@ -1973,7 +1973,7 @@ static func script_facts_card(sheet: EventSheetResource) -> String:
 	return "\n".join(PackedStringArray([
 		"%s · %s" % [title, kind],
 		" · ".join(facts),
-		EventSheetL10n.translate("Click the name to open it in the script editor or show it in the FileSystem."),
+		EventSheetL10n.translate("Click the name for its settings, to open it in the script editor or to show it in the FileSystem."),
 	]))
 
 

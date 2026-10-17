@@ -420,6 +420,7 @@ var _ace_picker: RefCounted = null:
 				return str(load(DOC_EXPLAIN_PATH).guide_label(definition.provider_id)) if definition != null else "")
 			_ace_picker.guide_requested.connect(_on_picker_guide_requested)
 			_ace_picker.help_requested.connect(_on_picker_help_requested)
+			_ace_picker.global_settings_requested.connect(_ui_builder.later("_new_addon_panel", "open_settings"))
 			_ace_picker_built = true
 			# The idle warm skips the row icons while the picker is uncompiled, so it is asked again
 			# now that the picker exists. Outside the editor this schedules nothing.
@@ -7960,13 +7961,30 @@ func open_docs_housekeeping() -> void:
 	_docs_housekeeping_dialog.popup_centered(Vector2i(720, 560))
 
 
-## Object bar ▸ right-click an object ▸ Add behavior…: every pack, in one dialog.
+## Object bar ▸ right-click an object ▸ Add behavior…: every pack, in one dialog. Its "+ New
+## behaviour…" opens the New behaviour form for that object, and a behaviour's right-click opens its
+## settings or its file as a sheet.
 func open_add_behavior_dialog(object_label: String) -> void:
 	if _add_behavior_dialog == null:
 		_add_behavior_dialog = load(ADD_BEHAVIOR_DIALOG_PATH).new()
-		_add_behavior_dialog.configure(_apply_add_behavior)
+		_add_behavior_dialog.configure(_apply_add_behavior,
+			func(label: String, host_class: String) -> void: _new_addon_panel.open(false, {"label": label, "class": host_class}),
+			func(path: String, settings: bool) -> void:
+				if settings:
+					_new_addon_panel.open_settings(path)
+					return
+				_navigate.record_current()
+				_navigate.open_or_focus(path))
 		add_child(_add_behavior_dialog)
 	_add_behavior_dialog.open_for(object_label, _scene_node_for_object(object_label))
+
+
+## A behaviour the New behaviour form just made from an object's Behaviours list, added to that object
+## the way picking it in the list adds it.
+func _add_made_behaviour(script_path: String, object_label: String) -> void:
+	var pack: Dictionary = EventSheetPackCatalog.describe(script_path.get_base_dir().get_file())
+	if not pack.is_empty():
+		_apply_add_behavior(pack, {}, false, object_label)
 
 
 ## The Add button's landing: the node path goes into the open scene, the inline path goes through

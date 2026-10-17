@@ -242,11 +242,15 @@ static func rename_reach_text(reach: Dictionary) -> String:
 ## The head's name band, renamed everywhere: the class line of this file plus every row of every
 ## sheet that names the class.
 ## The question names every file the rename will change before it changes any of them, and refuses
-## a name that is not a class name or that another class already has.
-func open_class_rename() -> void:
-	var current: String = _current_class_name()
+## a name that is not a class name or that another class already has. A form that changes more than
+## the name asks the same question: `current` is the name being replaced (this sheet's class name
+## unless given - a global's is its autoload name), `seed` the name the field starts on, and
+## `on_rename` what Rename does with the typed name (the class rename unless given).
+func open_class_rename(current: String = "", seed: String = "", on_rename: Callable = Callable()) -> void:
+	if current.is_empty():
+		current = _current_class_name()
 	var edit: LineEdit = LineEdit.new()
-	edit.text = current
+	edit.text = seed if not seed.is_empty() else current
 	_rename_dialog = load(_dock.SMALL_PROMPT_PATH).open(_dock, {
 		# The walk reads every script in the project, so the question shows first and the places
 		# follow a frame later - a big project never stalls the click.
@@ -254,10 +258,14 @@ func open_class_rename() -> void:
 		"body": EventSheetPopupUI.form_row(EventSheetL10n.translate("Class name"), edit),
 		"note": class_rename_note(),
 		"main": EventSheetL10n.translate("Rename"),
-		"on_main": func() -> void: apply_class_rename_to(edit.text),
+		"on_main": func() -> void:
+			if on_rename.is_valid():
+				on_rename.call(edit.text.strip_edges())
+			else:
+				apply_class_rename_to(edit.text),
 	})
 	edit.text_changed.connect(func(typed: String) -> void: _sync_class_rename(current, typed))
-	_sync_class_rename(current, current)
+	_sync_class_rename(current, edit.text)
 	if edit.is_inside_tree():
 		# After the frame that draws the question, not merely later in the same one.
 		RenderingServer.frame_post_draw.connect(fill_class_rename_places.bind(_rename_dialog, current),
@@ -347,7 +355,7 @@ func apply_class_rename_to(new_name_text: String, action_name: String = "Rename 
 		_dock._set_status(EventSheetL10n.translate("\"%s\" is already the name of another class.") % new_name, true)
 		return false
 	var written: bool = _dock._perform_undoable_sheet_edit(action_name, func() -> bool:
-		_write_head_line(EventSheetHeadBands.BAND_NAME, new_name)
+		write_head_line(EventSheetHeadBands.BAND_NAME, new_name)
 		_dock._current_sheet.custom_class_name = new_name
 		if not old_name.is_empty():
 			EventSheetRefactor.rename_symbol(_dock._current_sheet, old_name, new_name, true)
@@ -366,7 +374,7 @@ func apply_class_rename_to(new_name_text: String, action_name: String = "Rename 
 		elsewhere = rename_class_across(old_name, new_name,
 			EventSheetFindReferences.open_sheets_of(_dock), skip,
 			EventSheetProjectFind.list_all_project_sheets(), true)
-	_mark_open_tabs_unsaved(elsewhere)
+	mark_open_tabs_unsaved(elsewhere)
 	_dock._refresh_after_edit()
 	_dock._refresh_title_strip()
 	_dock._mark_dirty(EventSheetL10n.translate("Renamed %s to %s.") % [old_name, new_name] \
@@ -426,7 +434,7 @@ func _generated_paths() -> PackedStringArray:
 
 ## Marks each open tab the class rename rewrote in memory as unsaved, so its new text is saved with
 ## the tab rather than lost when it closes.
-func _mark_open_tabs_unsaved(elsewhere: Array[Dictionary]) -> void:
+func mark_open_tabs_unsaved(elsewhere: Array[Dictionary]) -> void:
 	var open_sheets: Dictionary = EventSheetFindReferences.open_sheets_of(_dock)
 	var changed: bool = false
 	for entry: Dictionary in elsewhere:
@@ -484,8 +492,9 @@ func _on_add_menu_pressed(index: int) -> void:
 	handle(_add_offers[index])
 
 
-## What a click on a behaviour's or a global's name offers: the same file in Godot's own script
-## editor, or shown where it lives in the FileSystem dock.
+## What a click on a behaviour's or a global's name offers: the form it was made with, reopened with
+## its answers filled in, the same file in Godot's own script editor, or the file shown where it lives
+## in the FileSystem dock.
 func open_file_options() -> void:
 	var path: String = str(_dock._current_sheet.external_source_path)
 	if path.is_empty():
@@ -493,17 +502,22 @@ func open_file_options() -> void:
 	if _file_menu == null:
 		_file_menu = PopupMenu.new()
 		_file_menu.id_pressed.connect(func(id: int) -> void:
-			if id == 0:
+			if id == 2:
+				_dock._new_addon_panel.open_settings(str(_dock._current_sheet.external_source_path))
+			elif id == 0:
 				_dock._preview_glue._open_generated_in_godot()
 			else:
 				browse_to_scene(str(_dock._current_sheet.external_source_path)))
 		_dock.add_child(_file_menu)
 	_file_menu.clear()
+	_file_menu.add_item(EventSheetL10n.translate("Global settings…") if ViewportRowBuilder.is_autoload(_dock._current_sheet)
+		else EventSheetL10n.translate("Behaviour settings…"), 2)
 	_file_menu.add_item(EventSheetL10n.translate("Open in the script editor"), 0)
 	_file_menu.add_item(EventSheetL10n.translate("Show in FileSystem"), 1)
-	_file_menu.position = Vector2i(_dock.get_screen_position() + _dock.get_local_mouse_position())
-	_file_menu.reset_size()
-	_file_menu.popup()
+	if _dock.is_inside_tree():
+		_file_menu.position = Vector2i(_dock.get_screen_position() + _dock.get_local_mouse_position())
+		_file_menu.reset_size()
+		_file_menu.popup()
 
 
 ## A one-field prompt for a band whose value is free text (the description). Kept here rather than
@@ -529,7 +543,7 @@ func apply_band_value(band_kind: String, new_value: String) -> void:
 	if _dock._current_sheet == null:
 		return
 	var written: bool = _dock._perform_undoable_sheet_edit("Edit Sheet Head", func() -> bool:
-		return _write_head_line(band_kind, new_value)
+		return write_head_line(band_kind, new_value)
 	)
 	if not written:
 		return
@@ -559,7 +573,7 @@ static func head_status_text(band_kind: String, new_value: String) -> String:
 ## Writes one band's line into the sheet - the prelude row it lives in for a `.gd` sheet, the
 ## matching field for both. Runs INSIDE the undo funnel, and re-reads the live sheet rather than
 ## holding a row from before the edit.
-func _write_head_line(band_kind: String, new_value: String) -> bool:
+func write_head_line(band_kind: String, new_value: String) -> bool:
 	var sheet: EventSheetResource = _dock._current_sheet
 	if sheet == null:
 		return false

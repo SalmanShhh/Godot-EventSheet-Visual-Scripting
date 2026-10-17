@@ -13,6 +13,10 @@ extends ConfirmationDialog
 #
 # After adding, the picker under the object lists the behavior's conditions, actions and
 # expressions, the head's Behaviors folder shows it, and the Doctor checks the host the pack needs.
+#
+# The list ends with "+ New behaviour…", which makes one for this object (Works on is already its
+# kind, and the new behaviour is added to it), and right-clicking a behaviour offers its settings or
+# its file opened as a sheet - the doors to a behaviour that live where the behaviours are listed.
 
 var _object_label: String = ""
 ## The node the behaviour is being added to, when the scene is open - what the cards are measured against.
@@ -28,6 +32,12 @@ var _where: OptionButton = null
 var _strip: EventSheetPopupUI.HelpStrip = null
 var _fields: Dictionary = {}
 var _on_add: Callable = Callable()
+## (object_label, host_class) - "+ New behaviour…" for this object.
+var _on_new: Callable = Callable()
+## (script_path, settings) - a behaviour's right-click: its settings, or its file opened as a sheet.
+var _on_open: Callable = Callable()
+var _card_menu: PopupMenu = null
+var _card_menu_path: String = ""
 ## Each listed pack's script text, read once per opening: the list is rebuilt on every keystroke of
 ## the search, and a big project has well over a hundred packs.
 var _pack_sources: Dictionary = {}
@@ -41,9 +51,12 @@ func _init() -> void:
 
 
 ## `on_add` is called with (pack: Dictionary, values: Dictionary, inline: bool) - the dock does
-## the scene write and the undo, because a window has no business touching either.
-func configure(on_add: Callable) -> void:
+## the scene write and the undo, because a window has no business touching either. `on_new` and
+## `on_open` are the list's doors to the New behaviour form and to a behaviour's own file.
+func configure(on_add: Callable, on_new: Callable = Callable(), on_open: Callable = Callable()) -> void:
 	_on_add = on_add
+	_on_new = on_new
+	_on_open = on_open
 
 
 ## Opens for one object. The label is the object the picker and the head will show it under; `host` is
@@ -175,6 +188,16 @@ func _rebuild_list() -> void:
 		_list.add_child(_build_card(pack, refusals[str(pack.get("dir", ""))]))
 	if shown.is_empty():
 		_list.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("No pack here matches that."), 260.0))
+	if _on_new.is_valid():
+		var make: Button = Button.new()
+		make.text = EventSheetL10n.translate("+ New behaviour…")
+		make.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		make.flat = true
+		make.tooltip_text = EventSheetL10n.translate("Make a behaviour of your own for this object: Works on is already its kind, and it is added here once made.")
+		make.pressed.connect(func() -> void:
+			hide()
+			_on_new.call(_object_label, _host.get_class() if _host != null else ""))
+		_list.add_child(make)
 	# The card on the right always belongs to a pack the list shows: a search that hides the chosen one
 	# moves the choice to the first match.
 	var still_shown: bool = false
@@ -206,10 +229,32 @@ func _build_card(pack: Dictionary, why_not: String) -> Control:
 	button.text = str(pack.get("name", "")) if pitch.is_empty() else "%s  -  %s" % [str(pack.get("name", "")), pitch]
 	button.tooltip_text = pitch
 	button.pressed.connect(func() -> void: _select_pack(pack))
+	button.gui_input.connect(func(event: InputEvent) -> void:
+		var click: InputEventMouseButton = event as InputEventMouseButton
+		if click != null and click.pressed and click.button_index == MOUSE_BUTTON_RIGHT:
+			open_card_menu(str(pack.get("path", ""))))
 	if not why_not.is_empty():
 		button.disabled = true
 		button.tooltip_text = why_not
 	return button
+
+
+## A behaviour's right-click: Behaviour settings… or Open as sheet, for the script at `path`. Offered
+## on a greyed one too, because changing what it works on is how one made for another object fits.
+func open_card_menu(path: String) -> void:
+	if not _on_open.is_valid() or path.is_empty():
+		return
+	_card_menu_path = path
+	if _card_menu == null:
+		_card_menu = PopupMenu.new()
+		_card_menu.add_item(EventSheetL10n.translate("Behaviour settings…"), 0)
+		_card_menu.add_item(EventSheetL10n.translate("Open as sheet"), 1)
+		_card_menu.id_pressed.connect(func(id: int) -> void:
+			hide()
+			_on_open.call(_card_menu_path, id == 0))
+		add_child(_card_menu)
+	if is_inside_tree():
+		_card_menu.popup(Rect2i(Vector2i(get_mouse_position()) + position, Vector2i.ZERO))
 
 
 ## Why `pack` cannot be added to `host`, or "" when it can: it is a global (turned on in Godot's

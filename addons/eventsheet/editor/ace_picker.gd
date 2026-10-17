@@ -42,6 +42,10 @@ signal gate_fix_requested(gate: Dictionary, definition: ACEDefinition, context: 
 ## the guides, inserted into the open sheet as real rows (see EventSheetPickerRecipes).
 signal recipe_insert_requested(recipe: Dictionary)
 
+## Emitted from a global's right-click, Global settings…: the script that global runs. The form that
+## changes it is the dock's; the picker has closed by then, because the form opens that file.
+signal global_settings_requested(script_path: String)
+
 ## Recents (familiar ACEs surface first): last-used ACE ids, newest first. Persisted PER-USER and
 ## PER-PROJECT in a user:// file - NOT project.godot: recents change on every ACE use and would churn
 ## the version-controlled file constantly (Favorites live in ProjectSettings because they change rarely).
@@ -1925,11 +1929,43 @@ func _project_definitions_for(provider: String) -> Array[ACEDefinition]:
 ## The pointer resting on an object row describes it in the strip - the row's own tooltip, said
 ## where the reader is already looking.
 func _on_objects_tree_gui_input(input_event: InputEvent) -> void:
+	var click: InputEventMouseButton = input_event as InputEventMouseButton
+	if click != null and click.pressed and click.button_index == MOUSE_BUTTON_RIGHT:
+		var clicked: TreeItem = _objects_tree.get_item_at_position(click.position)
+		open_global_menu(global_script_for(str(clicked.get_metadata(0)) if clicked != null else ""))
+		return
 	if not (input_event is InputEventMouseMotion):
 		return
 	var hovered: TreeItem = _objects_tree.get_item_at_position((input_event as InputEventMouseMotion).position)
 	if hovered != null and not hovered.get_tooltip_text(0).is_empty():
 		_say(hovered.get_text(0), hovered.get_tooltip_text(0))
+
+
+## The script the global an object card stands for runs - its Autoload row's script, or the script on
+## the root of its scene - or "" when the card is not a global.
+static func global_script_for(card: String) -> String:
+	var target: String = str(ProjectSettings.get_setting("autoload/" + card, "")).trim_prefix("*") \
+		if not card.is_empty() else ""
+	if target.is_empty():
+		# The cards of globals the vocabulary does not publish are named by their class_name.
+		for entry: Dictionary in EventSheetProjectScanner.list_autoloads() if not card.is_empty() else []:
+			if str(entry.get("name", "")) == card:
+				target = str(entry.get("path", ""))
+	return EventSheetACEGenerator.scene_root_script(target) if target.get_extension() == "tscn" else target
+
+
+## A global's right-click: Global settings…, the form it was made with, reopened on its script.
+func open_global_menu(script_path: String) -> void:
+	if script_path.is_empty():
+		return
+	var menu: PopupMenu = PopupMenu.new()
+	menu.add_item(EventSheetL10n.translate("Global settings…"), 0)
+	menu.id_pressed.connect(func(_id: int) -> void:
+		close()
+		global_settings_requested.emit(script_path))
+	menu.popup_hide.connect(menu.queue_free, CONNECT_DEFERRED)
+	_window.add_child(menu)
+	menu.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), Vector2i.ZERO))
 
 
 func _on_object_tree_selected() -> void:

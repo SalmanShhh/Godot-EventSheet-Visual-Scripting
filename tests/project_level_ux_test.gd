@@ -280,6 +280,15 @@ static func _shortcut_preset() -> bool:
 ## leads with the reader's own project ("Open an existing script…"), then every starter of the
 ## New-Sheet menu by shelf - 3D, menus and autoloads included - each row carrying its kind beside
 ## its name and its pitch for the help strip, then the showcases.
+## The first row of `shelf` in the template column, as "label · kind · target".
+static func _first_on(templates: Array, shelf: String) -> String:
+	for entry: Variant in templates:
+		var row: Dictionary = entry as Dictionary
+		if str(row.get("shelf", "")) == shelf:
+			return " · ".join([str(row.get("label", "")), str(row.get("kind", "")), str(row.get("target", ""))])
+	return ""
+
+
 static func _start_page_columns() -> bool:
 	var columns: Array = EventSheetStartPage.columns(PackedStringArray(["starfall"]), ["res://player.gd"])
 	var titles: PackedStringArray = PackedStringArray()
@@ -311,6 +320,10 @@ static func _start_page_columns() -> bool:
 		["and the strip says what Open does with it", EventSheetStartPage.opens_line(behaviour),
 			"Behavior Component as a new unsaved sheet - Save As… keeps it."],
 		["the Systems starter is offered", str((by_label.get("Entity System", {}) as Dictionary).get("tag", "")), "System"],
+		# The Behaviours and Project-wide shelves each open on the form that makes one of your own.
+		["the Behaviours shelf leads with New behaviour…", _first_on(templates, "Behaviours"), "New behaviour… · maker · behaviour"],
+		["the Project-wide shelf with New global…", _first_on(templates, "Project-wide (autoloads)"), "New global… · maker · global"],
+		["and the strip says which form opens", EventSheetStartPage.opens_line(by_label.get("New global…", {})), "The New global form."],
 		["a showcase sits in the same column, on its genre",
 			[str((templates[templates.size() - 1] as Dictionary).get("label", "")),
 				str((templates[templates.size() - 1] as Dictionary).get("tag", "")),

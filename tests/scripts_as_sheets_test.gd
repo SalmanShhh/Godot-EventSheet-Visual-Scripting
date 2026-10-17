@@ -42,7 +42,7 @@ static func _a_behaviour_reads_in_file_order() -> bool:
 			_last_function_uid(rows), "define_fn_editor_preview_sample"],
 		["hovering the name shows the facts and what a click offers",
 			str(name_span.metadata.get("hover_note", "")) if name_span != null else "",
-			"SineBehavior · Behaviour\nworks on Node2D · listed under Sine · 6 properties · 4 actions, 0 conditions, 0 triggers, 0 expressions\nClick the name to open it in the script editor or show it in the FileSystem."],
+			"SineBehavior · Behaviour\nworks on Node2D · listed under Sine · 6 properties · 4 actions, 0 conditions, 0 triggers, 0 expressions\nClick the name for its settings, to open it in the script editor or to show it in the FileSystem."],
 		["a click on the name offers the file's options",
 			bool(name_span.metadata.get("file_options", false)) if name_span != null else false, true],
 		["any other script still says Script",

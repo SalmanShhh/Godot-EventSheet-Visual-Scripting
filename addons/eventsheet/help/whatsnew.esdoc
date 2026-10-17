@@ -6,6 +6,24 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Added: Behaviour settings… and Global settings…, and every door to the makers
+
+- The New behaviour and New global forms reopen on a file that exists, titled `Patrol · Behaviour
+  settings` (or `GameState · Global settings`), every answer filled in and Save changes in place of
+  Create. The answers are read from the file's own header - `## @ace_category`, `@icon`, the `##`
+  description line, the type of its `host`, and for a global its row in Project Settings > Globals >
+  Autoload - so a file written by hand opens the same way. Save changes writes only what changed,
+  as one undo step, and saves the file; a new name first asks the rename everywhere, which lists the
+  places it changes before anything is written. Made from says how it began is not kept in the file.
+- Reached from the file name's click menu on the open sheet (it leads with the settings now), from
+  right-clicking a behaviour in an object's Add behaviour list (Behaviour settings… or Open as sheet),
+  and from right-clicking a global's card in the picker (Global settings…).
+- The Add behaviour list ends with + New behaviour…: Works on starts on that object's kind and the
+  new behaviour is added to the object once made.
+- The Start page's Behaviours shelf leads with New behaviour…, its Project-wide shelf with New
+  global…, for when no sheet is open yet.
+- Fixed: every opening of the New behaviour or New global form left the previous window behind.
+
 ### Added: Insert new object remembers its class in Godot's Recent list
 
 - A class made with Insert new object goes to the top of Godot's own Recent list, the one Create

@@ -132,6 +132,14 @@ static func _set_opens_on_startup(on: bool) -> void:
 const SHELF_YOUR_PROJECT: String = "Your project"
 const SHELF_EDITOR_TOOLS: String = "Editor tools"
 const SHELF_SHOWCASES: String = "Showcases"
+## The first row of the Behaviours and the Project-wide shelves, by shelf: the New behaviour and New
+## global forms, for when no sheet is open yet to reach them from the Sheet menu.
+const MAKERS: Dictionary = {
+	"Behaviours": {"label": "New behaviour…", "tag": "Your own", "target": "behaviour",
+		"pitch": "Make a behaviour of your own: its name, what it works on, where it is listed, then open it as a sheet."},
+	"Project-wide (autoloads)": {"label": "New global…", "tag": "Your own", "target": "global",
+		"pitch": "Make a global of your own: its name, script or scene, then turn it on in Project Settings > Globals."},
+}
 
 
 ## The three columns, as [{id, title, entries}] where each entry is
@@ -151,6 +159,10 @@ static func columns(showcases: PackedStringArray, recents: Array,
 		"pitch": "Any script in this project reads as a sheet, and saving it untouched leaves the file exactly as it was.",
 		"shelf": SHELF_YOUR_PROJECT, "target": ""}]
 	for starter: Dictionary in EventSheetStarterTemplates.MENU_STARTERS:
+		# The Behaviours and Project-wide shelves open on the form that makes one of your own.
+		var maker: Dictionary = MAKERS.get(str(starter["shelf"]), {})
+		if not maker.is_empty() and shelves(templates).find(str(starter["shelf"])) < 0:
+			templates.append(maker.merged({"kind": "maker", "shelf": str(starter["shelf"])}))
 		templates.append({"kind": "template", "label": str(starter["label"]).get_slice(" (", 0),
 			"tag": str(starter["kind"]), "pitch": str(starter["pitch"]), "shelf": str(starter["shelf"]),
 			"target": str(starter["id"])})
@@ -214,6 +226,9 @@ static func opens_line(entry: Dictionary) -> String:
 			return EventSheetL10n.translate("The file picker, at this project's scripts.")
 		"template":
 			return EventSheetL10n.translate("%s as a new unsaved sheet - Save As… keeps it.") % str(entry.get("label", ""))
+		"maker":
+			return EventSheetL10n.translate("The New global form.") if target == "global" \
+				else EventSheetL10n.translate("The New behaviour form.")
 		"editor_tool":
 			return EventSheetL10n.translate("The list of editor tool kinds, to pick which one to start from.")
 		"showcase":
@@ -495,6 +510,8 @@ func activate(entry: Dictionary) -> void:
 			_dock._on_open_requested()
 		"template":
 			_dock._starter._new_sheet_from_template(int(target))
+		"maker":
+			_dock._new_addon_panel.open(target == "global")
 		"editor_tool":
 			_pick_editor_tool()
 			return

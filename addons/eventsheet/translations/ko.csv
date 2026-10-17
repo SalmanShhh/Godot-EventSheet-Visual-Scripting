@@ -8466,7 +8466,6 @@ works on %s,%s에 작동
 listed under %s,%s 아래에 표시됨
 %d properties,속성 %d개
 "%d actions, %d conditions, %d triggers, %d expressions","동작 %d, 조건 %d, 트리거 %d, 식 %d"
-Click the name to open it in the script editor or show it in the FileSystem.,이름을 클릭하면 스크립트 편집기에서 열거나 파일시스템에서 볼 수 있습니다.
 This function hands back a %s.,이 함수는 %s을(를) 돌려줍니다.
 "Returns true or false, and the event only runs while it is true.","참 또는 거짓을 돌려주며, 참인 동안에만 이벤트가 실행됩니다."
 "Usable inside any value: a number, text or object the function hands back.","어떤 값 안에서든 쓸 수 있습니다: 함수가 돌려주는 숫자, 텍스트 또는 오브젝트."
@@ -8982,3 +8981,34 @@ Open Sheet,시트 열기
 THIS BOX,이 상자
 %s. Click a sheet to open it. Click a line to find every place it comes from.,%s. 시트를 클릭하면 열립니다. 선을 클릭하면 그것이 나오는 모든 곳을 찾습니다.
 "%s. Click opens it; drag moves it, and where you put it is remembered for this project.","%s. 클릭하면 열리고, 끌면 이동하며, 놓은 위치는 이 프로젝트에 기억됩니다."
+Global settings…,전역 개체 설정…
++ New behaviour…,+ 새 비헤이비어…
+"Make a behaviour of your own for this object: Works on is already its kind, and it is added here once made.","이 개체를 위한 나만의 비헤이비어를 만듭니다. 적용 대상은 이미 이 개체의 종류이며, 만들면 여기에 추가됩니다."
+Behaviour settings…,비헤이비어 설정…
+Open as sheet,시트로 열기
+The kind of object %s is.,%s 개체의 종류입니다.
+The kind of object it works on now.,지금 적용되는 개체의 종류입니다.
+Where it is listed now.,지금 나열되는 곳입니다.
+None,없음
+%s · Global settings,%s · 전역 개체 설정
+%s · Behaviour settings,%s · 비헤이비어 설정
+Save changes,변경 사항 저장
+Made from,만든 바탕
+Not kept in the file - it is not linked to what it started from.,파일에 남지 않습니다 - 시작한 바탕과 연결되어 있지 않습니다.
+"Saves into %s itself: its ## @ace_category line, @icon, the ## description line and its row in Project Settings > Globals > Autoload.","%s 자체에 저장합니다: ## @ace_category 줄, @icon, ## 설명 줄, 그리고 프로젝트 설정 > Globals > Autoload의 행입니다."
+"Saves into %s itself: its ## @ace_category line, @icon, the ## description line and the type of its host.","%s 자체에 저장합니다: ## @ace_category 줄, @icon, ## 설명 줄, 그리고 host의 타입입니다."
+Made the behaviour %s at %s and added it to %s.,비헤이비어 %s 을(를) %s 에 만들고 %s 에 추가했습니다.
+Change global %s,전역 개체 %s 변경
+Global settings,전역 개체 설정
+Behaviour settings,비헤이비어 설정
+Nothing changed.,바뀐 것이 없습니다.
+Saved the settings of %s.,%s 의 설정을 저장했습니다.
+Its row in Project Settings > Globals > Autoload now loads %s as %s; Edit > Undo in Godot puts it back.,프로젝트 설정 > Globals > Autoload의 행이 이제 %s 을(를) %s (으)로 불러옵니다. Godot의 편집 > 되돌리기로 되돌릴 수 있습니다.
+The New global form.,새 전역 개체 양식입니다.
+The New behaviour form.,새 비헤이비어 양식입니다.
+"Click the name for its settings, to open it in the script editor or to show it in the FileSystem.","이름을 클릭하면 설정을 열거나, 스크립트 편집기에서 열거나, 파일시스템에서 보여 줄 수 있습니다."
+Your own,나만의 것
+"Make a behaviour of your own: its name, what it works on, where it is listed, then open it as a sheet.","나만의 비헤이비어를 만듭니다: 이름, 적용 대상, 나열될 곳을 정하고 시트로 엽니다."
+"Make a global of your own: its name, script or scene, then turn it on in Project Settings > Globals.","나만의 전역 개체를 만듭니다: 이름, 스크립트 또는 씬을 정하고 프로젝트 설정 > Globals에서 켭니다."
+Renaming changes its class name and every use in one undo step; the places are listed before anything is written. The file keeps its name.,이름을 바꾸면 클래스 이름과 모든 사용처가 한 번의 되돌리기 단위로 바뀝니다. 무엇이든 쓰기 전에 위치가 나열됩니다. 파일 이름은 그대로입니다.
+Renaming changes its name in Project Settings > Globals and every use; the places are listed before anything is written. The file keeps its name.,이름을 바꾸면 프로젝트 설정 > Globals의 이름과 모든 사용처가 바뀝니다. 무엇이든 쓰기 전에 위치가 나열됩니다. 파일 이름은 그대로입니다.

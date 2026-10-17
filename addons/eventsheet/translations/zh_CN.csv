@@ -8466,7 +8466,6 @@ works on %s,作用于 %s
 listed under %s,列在 %s 下
 %d properties,%d 个属性
 "%d actions, %d conditions, %d triggers, %d expressions",%d 个动作、%d 个条件、%d 个触发器、%d 个表达式
-Click the name to open it in the script editor or show it in the FileSystem.,点击名称，可在脚本编辑器中打开，或在文件系统中显示。
 This function hands back a %s.,此函数返回一个 %s。
 "Returns true or false, and the event only runs while it is true.",返回真或假，只有为真时事件才会运行。
 "Usable inside any value: a number, text or object the function hands back.",可用于任何值中：函数返回的数字、文本或对象。
@@ -8982,3 +8981,34 @@ Open Sheet,打开表
 THIS BOX,此方框
 %s. Click a sheet to open it. Click a line to find every place it comes from.,%s。单击表即可打开。单击连线可查找它来自的每一处。
 "%s. Click opens it; drag moves it, and where you put it is remembered for this project.",%s。单击打开；拖动可移动，放置的位置会为此项目记住。
+Global settings…,全局设置…
++ New behaviour…,+ 新建行为…
+"Make a behaviour of your own for this object: Works on is already its kind, and it is added here once made.",为这个对象做一个你自己的行为：作用对象已经是它的类型，做好后会加到这里。
+Behaviour settings…,行为设置…
+Open as sheet,作为表打开
+The kind of object %s is.,%s 的对象类型。
+The kind of object it works on now.,它现在作用的对象类型。
+Where it is listed now.,它现在列在哪里。
+None,无
+%s · Global settings,%s · 全局设置
+%s · Behaviour settings,%s · 行为设置
+Save changes,保存更改
+Made from,基于
+Not kept in the file - it is not linked to what it started from.,文件中不保留 - 它与最初的来源没有关联。
+"Saves into %s itself: its ## @ace_category line, @icon, the ## description line and its row in Project Settings > Globals > Autoload.",直接保存到 %s 本身：它的 ## @ace_category 行、@icon、## 描述行，以及它在 项目设置 > Globals > Autoload 中的那一行。
+"Saves into %s itself: its ## @ace_category line, @icon, the ## description line and the type of its host.",直接保存到 %s 本身：它的 ## @ace_category 行、@icon、## 描述行，以及它的 host 的类型。
+Made the behaviour %s at %s and added it to %s.,已创建行为 %s（位于 %s）并加到 %s。
+Change global %s,更改全局 %s
+Global settings,全局设置
+Behaviour settings,行为设置
+Nothing changed.,没有任何更改。
+Saved the settings of %s.,已保存 %s 的设置。
+Its row in Project Settings > Globals > Autoload now loads %s as %s; Edit > Undo in Godot puts it back.,它在 项目设置 > Globals > Autoload 中的那一行现在加载 %s，名为 %s；在 Godot 中 编辑 > 撤销 可以复原。
+The New global form.,新建全局表单。
+The New behaviour form.,新建行为表单。
+"Click the name for its settings, to open it in the script editor or to show it in the FileSystem.",点击名称可打开它的设置、在脚本编辑器中打开它，或在文件系统中显示它。
+Your own,你自己的
+"Make a behaviour of your own: its name, what it works on, where it is listed, then open it as a sheet.",做一个你自己的行为：名称、作用对象、列在哪里，然后作为表打开。
+"Make a global of your own: its name, script or scene, then turn it on in Project Settings > Globals.",做一个你自己的全局：名称、脚本或场景，然后在 项目设置 > Globals 中启用。
+Renaming changes its class name and every use in one undo step; the places are listed before anything is written. The file keeps its name.,重命名会在一次撤销步骤中更改类名和每处用法；写入任何内容之前会先列出这些位置。文件保留原名。
+Renaming changes its name in Project Settings > Globals and every use; the places are listed before anything is written. The file keeps its name.,重命名会更改它在 项目设置 > Globals 中的名称和每处用法；写入任何内容之前会先列出这些位置。文件保留原名。

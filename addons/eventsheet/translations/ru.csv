@@ -8466,7 +8466,6 @@ works on %s,работает на %s
 listed under %s,в разделе %s
 %d properties,свойств: %d
 "%d actions, %d conditions, %d triggers, %d expressions","действий: %d, условий: %d, триггеров: %d, выражений: %d"
-Click the name to open it in the script editor or show it in the FileSystem.,"Щёлкните по имени, чтобы открыть файл в редакторе скриптов или показать его в файловой системе."
 This function hands back a %s.,Эта функция возвращает %s.
 "Returns true or false, and the event only runs while it is true.","Возвращает истину или ложь, и событие выполняется, только пока это истина."
 "Usable inside any value: a number, text or object the function hands back.","Можно использовать внутри любого значения: число, текст или объект, который возвращает функция."
@@ -8982,3 +8981,34 @@ Open Sheet,Открыть лист
 THIS BOX,ЭТОТ БЛОК
 %s. Click a sheet to open it. Click a line to find every place it comes from.,"%s. Щёлкните лист, чтобы открыть его. Щёлкните линию, чтобы найти все места, откуда она идёт."
 "%s. Click opens it; drag moves it, and where you put it is remembered for this project.","%s. Щелчок открывает его; перетаскивание двигает, и место запоминается для этого проекта."
+Global settings…,Настройки глобального объекта…
++ New behaviour…,+ Новое поведение…
+"Make a behaviour of your own for this object: Works on is already its kind, and it is added here once made.","Создать своё поведение для этого объекта: «Работает с» уже его тип, и после создания оно добавится сюда."
+Behaviour settings…,Настройки поведения…
+Open as sheet,Открыть как лист
+The kind of object %s is.,Тип объекта %s.
+The kind of object it works on now.,"Тип объекта, с которым оно работает сейчас."
+Where it is listed now.,Где оно указано сейчас.
+None,Нет
+%s · Global settings,%s · Настройки глобального объекта
+%s · Behaviour settings,%s · Настройки поведения
+Save changes,Сохранить изменения
+Made from,Создано из
+Not kept in the file - it is not linked to what it started from.,"В файле не хранится - оно не связано с тем, из чего создано."
+"Saves into %s itself: its ## @ace_category line, @icon, the ## description line and its row in Project Settings > Globals > Autoload.","Сохраняется в сам %s: строка ## @ace_category, @icon, строка описания ## и его строка в Настройках проекта > Globals > Autoload."
+"Saves into %s itself: its ## @ace_category line, @icon, the ## description line and the type of its host.","Сохраняется в сам %s: строка ## @ace_category, @icon, строка описания ## и тип его host."
+Made the behaviour %s at %s and added it to %s.,Поведение %s создано в %s и добавлено к %s.
+Change global %s,Изменить глобальный объект %s
+Global settings,Настройки глобального объекта
+Behaviour settings,Настройки поведения
+Nothing changed.,Ничего не изменилось.
+Saved the settings of %s.,Настройки %s сохранены.
+Its row in Project Settings > Globals > Autoload now loads %s as %s; Edit > Undo in Godot puts it back.,Его строка в Настройках проекта > Globals > Autoload теперь загружает %s как %s; Правка > Отменить в Godot вернёт её.
+The New global form.,Форма «Новый глобальный объект».
+The New behaviour form.,Форма «Новое поведение».
+"Click the name for its settings, to open it in the script editor or to show it in the FileSystem.","Нажмите на имя, чтобы открыть его настройки, открыть его в редакторе скриптов или показать в Файловой системе."
+Your own,Своё
+"Make a behaviour of your own: its name, what it works on, where it is listed, then open it as a sheet.","Создать своё поведение: имя, с чем оно работает, где указано, - и открыть его как лист."
+"Make a global of your own: its name, script or scene, then turn it on in Project Settings > Globals.","Создать свой глобальный объект: имя, скрипт или сцена, - и включить его в Настройках проекта > Globals."
+Renaming changes its class name and every use in one undo step; the places are listed before anything is written. The file keeps its name.,Переименование меняет имя класса и каждое использование за один шаг отмены; места перечисляются до любой записи. Файл сохраняет своё имя.
+Renaming changes its name in Project Settings > Globals and every use; the places are listed before anything is written. The file keeps its name.,Переименование меняет его имя в Настройках проекта > Globals и каждое использование; места перечисляются до любой записи. Файл сохраняет своё имя.
