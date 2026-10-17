@@ -20,7 +20,10 @@
 #
 # The declaration form of the same shape (`var waves := {` at the head of a body) is already held as
 # structure by CollectionDeclRow; this is the other half, for a literal handed to `return`, to a
-# signal, to `append`, or to any other call.
+# signal, to `append`, or to any other call. A CANONICAL one of those (one entry per line, one tab
+# deep) is held as structure too now, and of_statement() gives it this same reading, so the run of
+# lines below is what a literal the structure cannot hold (a nested value, a comment among the
+# entries) still arrives as.
 @tool
 class_name EventSheetValueLiteralRows
 extends RefCounted
@@ -105,6 +108,25 @@ static func _run_at(actions: Array, start: int) -> Dictionary:
 		"entries": parse_entries(lines, rows),
 		"indices": indices,
 		"end": scan
+	}
+
+
+## The same reading for a literal the importer already holds as STRUCTURE: a CollectionDeclRow whose
+## head is a statement (`return {`, `rows.append({`). Each entry's `row` is its ENTRY index, and the
+## chips edit through the declaration (`edit_prefix`), so the row reads exactly as the run of lines it
+## replaced and a chip still rewrites one entry.
+static func of_statement(decl: CollectionDeclRow) -> Dictionary:
+	var entries: Array = []
+	for entry_index: int in decl.entry_values.size():
+		var key: String = decl.entry_keys[entry_index] if entry_index < decl.entry_keys.size() else ""
+		entries.append({"key": key, "value": decl.entry_values[entry_index], "row": entry_index,
+			"open": "", "nested": []})
+	return {
+		"statement": _flattened(decl.head, decl.close.strip_edges()),
+		"open": "{" if decl.is_dictionary() else "[",
+		"entries": entries,
+		"edit_prefix": "decl_entry_line",
+		"enabled": decl.enabled
 	}
 
 

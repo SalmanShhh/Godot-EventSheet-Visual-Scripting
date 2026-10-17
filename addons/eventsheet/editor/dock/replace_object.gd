@@ -113,6 +113,9 @@ static func _collect_texts(rows: Array, into: PackedStringArray) -> void:
 			for ace: Variant in aces:
 				if ace is RawCodeRow:
 					into.append((ace as RawCodeRow).code)
+				elif ace is CollectionDeclRow:
+					into.append("
+".join((ace as CollectionDeclRow).emit_lines()))
 				elif ace is Resource and ace.get("params") is Dictionary:
 					for value: Variant in (ace.get("params") as Dictionary).values():
 						if value is String:

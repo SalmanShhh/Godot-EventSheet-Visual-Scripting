@@ -1055,6 +1055,10 @@ static func _append_behavior_lines(entry: Variant, lines: PackedStringArray, dep
 	if entry is RawCodeRow:
 		lines.append_array((entry as RawCodeRow).code.split("\n"))
 		return
+	# A table a statement hands on is held as structure; its lines are exactly what it writes.
+	if entry is CollectionDeclRow and (entry as CollectionDeclRow).is_statement():
+		lines.append_array((entry as CollectionDeclRow).emit_lines())
+		return
 	if entry is LocalVariable:
 		var variable: LocalVariable = entry as LocalVariable
 		lines.append("var %s = %s" % [variable.name, str(variable.default_value)])
@@ -1443,6 +1447,10 @@ static func _append_file_lines(entry: Variant, lines: PackedStringArray, depth: 
 		return
 	if entry is RawCodeRow:
 		lines.append_array((entry as RawCodeRow).code.split("\n"))
+		return
+	# A table a statement hands on is held as structure, and its lines are exactly what it writes.
+	if entry is CollectionDeclRow and (entry as CollectionDeclRow).is_statement():
+		lines.append_array((entry as CollectionDeclRow).emit_lines())
 		return
 	# A line the importer already claimed is not raw text any more, so the statement it stands for is
 	# rebuilt from the row - in exactly the spelling the row's own reading is built from, which is what

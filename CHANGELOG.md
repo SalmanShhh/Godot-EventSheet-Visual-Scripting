@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Changed: a table handed to `return` or to a call opens as one row
+
+- `return {`, `rows.append({`, `table[key] = {`, `print_rich(x, [` and every other statement that
+  hands a multi-line table or list on, written one entry per line, now opens as ONE structured row
+  instead of a row per line. It reads exactly as before (the statement, then `table` or `list` and
+  the entries as chips), but it moves, switches off and is deleted as the one statement it is, and a
+  chip edits its entry through the row menu's Add, Edit and Remove Entry. A list of one-line records
+  works the same way. A table whose entries span lines (a nested value, a comment among the entries)
+  keeps the lines it was, which the canvas already reads as one row.
+- A variable rename, Replace All, Find References and project Find reach the text such a table
+  writes, and so do they for a `var x := {` table declared the same way.
+- Measured over the plugin's own `addons/` and `tools/` (1,119 files, all still byte-identical on
+  save): rows with no words of their own fall from 26,591 to 5,026, and the lines still held as
+  verbatim code from 124,971 to 104,494, with this and the two changes below. The wordless-row
+  ceilings of the editor's own reading gate come down to match.
 ### Added: a selected function's Inspector describes its choices and warns before a mistake is written
 
 - Returns, Category, each parameter's Type, and In Add Action, Waits and Shared are described

@@ -9140,7 +9140,13 @@ func _recipe_head_groups(actions: Array) -> Dictionary:
 	if not _sheet_is_pack_recipe():
 		return {"leads": {}, "consumed": consumed}
 	for action_index: int in actions.size():
-		if _is_recipe_head_line(_group_line_text(actions[action_index])):
+		var head_text: String = _group_line_text(actions[action_index])
+		# A fact written over several lines (`sheet.pack_tags = [`) is one structured row now, and the
+		# bar says it the same as the one-line spelling.
+		var fact_decl: CollectionDeclRow = actions[action_index] as CollectionDeclRow
+		if fact_decl != null and fact_decl.enabled:
+			head_text = fact_decl.head.strip_edges()
+		if _is_recipe_head_line(head_text):
 			consumed[action_index] = true
 	return {"leads": {}, "consumed": consumed}
 
@@ -13849,6 +13855,14 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 						}
 					)
 				)
+			elif action_resource is CollectionDeclRow and (action_resource as CollectionDeclRow).is_statement():
+				# A literal a STATEMENT hands on (`return {`, `rows.append({`) has no name to declare:
+				# it reads as the statement, with the entries as chips where the literal sat - the same
+				# row the run of lines it was read from used to draw.
+				_append_value_literal_spans(spans,
+					EventSheetValueLiteralRows.of_statement(action_resource as CollectionDeclRow),
+					action_index, action_line_index, action_style_meta)
+				action_line_index += 1
 			elif action_resource is CollectionDeclRow:
 				# Option 1 of the collection-declaration work: ONE "Declare <name>" action row with each
 				# entry on a single-cell line of its own - no bracket rows, and the same one-span cell
@@ -14227,8 +14241,10 @@ func _count_event_lines(event_row: EventRow) -> int:
 			else:
 				action_count += maxi(raw_code.split("\n").size(), 1)
 		elif action_resource is CollectionDeclRow:
-			# Header line + one line per entry; the brackets never render, so they never count.
-			action_count += 1 + (action_resource as CollectionDeclRow).entry_values.size()
+			# Header line + one line per entry; the brackets never render, so they never count. A
+			# statement's literal is one line, its entries chips on it.
+			var counted_decl: CollectionDeclRow = action_resource as CollectionDeclRow
+			action_count += 1 if counted_decl.is_statement() else 1 + counted_decl.entry_values.size()
 		elif action_resource is MatchRow:
 			var match_resource: MatchRow = action_resource as MatchRow
 			if match_reads_as_branches(match_resource, event_row):
@@ -17602,7 +17618,7 @@ func _append_literal_chip_spans(spans: Array, literal: Dictionary, action_index:
 		"lane": "action",
 		"kind": "action",
 		"ace_index": action_index,
-		"ace_enabled": true,
+		"ace_enabled": bool(literal.get("enabled", true)),
 		"chip": true,
 		"raw_action": true,
 		"code_cell": false,
@@ -17629,7 +17645,11 @@ func _append_literal_chip_spans(spans: Array, literal: Dictionary, action_index:
 		# ten independently editable values rather than one blob of code.
 		if (entry.get("nested", []) as Array).is_empty():
 			chip_meta["editable"] = true
-			chip_meta["edit_kind"] = "literal_entry_line:%d:%d" % [action_index, int(entry.get("row", -1))]
+			chip_meta["edit_kind"] = "%s:%d:%d" % [str(literal.get("edit_prefix", "literal_entry_line")),
+				action_index, int(entry.get("row", -1))]
+			# A structured literal's chip IS one entry, so the row menu's Edit and Remove Entry act on it.
+			if literal.has("edit_prefix"):
+				chip_meta["decl_entry_index"] = int(entry.get("row", -1))
 			# The field opens on the FILE's own spelling, not on the reading: a chip that reads
 			# `span index = 3` is written `"span_index": 3`, and editing the reading would quietly
 			# turn a quoted key into a bare one.
@@ -17652,6 +17672,7 @@ func _append_value_literal_spans(spans: Array, literal: Dictionary, action_index
 		line_index: int, action_style_meta: Dictionary) -> void:
 	var synthetic := RawCodeRow.new()
 	synthetic.code = str(literal.get("statement", ""))
+	synthetic.enabled = bool(literal.get("enabled", true))
 	if _append_sentence_spans(spans, synthetic, action_index, line_index, action_style_meta, literal):
 		return
 	var head_text: String = synthetic.code.strip_edges().replace(

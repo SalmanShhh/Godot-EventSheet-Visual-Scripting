@@ -18,8 +18,8 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 ## A function body holding the four shapes a table can be written as: a returned table, a table passed to a
-## call, a nested table, and a declared list. Every one of them is written over several lines, which
-## is what the importer splits into one verbatim row per line.
+## call, a nested table, and a declared list. Every one of them is written over several lines and is
+## canonical, which the importer holds as one structured row giving the view the same reading.
 const LITERAL_SOURCE := """extends Node
 
 
@@ -57,17 +57,17 @@ static func run() -> bool:
 	ok = _check("the opened file reproduces byte-identically",
 		str(SheetCompiler.compile(sheet, "user://w12_literal.gd").get("output", "")), LITERAL_SOURCE) and ok
 
+	# A CANONICAL literal is held as structure (one CollectionDeclRow), and the reading it gives the
+	# view is the very one the run of lines gave: same statement, same hole, same entries.
 	var snapshot_actions: Array = _actions_of(sheet, "snapshot")
-	var snapshot_groups: Dictionary = EventSheetValueLiteralRows.groups(snapshot_actions)
-	ok = _check("the returned table is one run", (snapshot_groups["leads"] as Dictionary).size(), 1) and ok
-	var returned: Dictionary = _lead(snapshot_groups)
+	ok = _check("the returned table is one structured action", snapshot_actions.size() == 1
+		and snapshot_actions[0] is CollectionDeclRow, true) and ok
+	var returned: Dictionary = _statement_reading(snapshot_actions, 0)
 	ok = _check("the statement reads with a hole where the literal sat",
 		str(returned.get("statement", "")).strip_edges(), "return ⟦⟧") and ok
 	ok = _check("it is a table", str(returned.get("open", "")), "{") and ok
 	ok = _check("every entry line became an entry",
 		(returned.get("entries", []) as Array).size(), 4) and ok
-	ok = _check("the closing bracket row is consumed, not rendered",
-		(snapshot_groups["consumed"] as Dictionary).size(), 5) and ok
 	ok = _check("a table entry reads key = value",
 		EventSheetValueLiteralRows.chip_text((returned.get("entries", []) as Array)[1], true),
 		"span index = span index") and ok
@@ -75,9 +75,7 @@ static func run() -> bool:
 		EventSheetValueLiteralRows.chip_text((returned.get("entries", []) as Array)[1], false),
 		"\"span_index\" = span_index") and ok
 
-	var request_actions: Array = _actions_of(sheet, "request")
-	var request_groups: Dictionary = EventSheetValueLiteralRows.groups(request_actions)
-	var appended: Dictionary = _lead(request_groups)
+	var appended: Dictionary = _statement_reading(_actions_of(sheet, "request"), 0)
 	ok = _check("a literal passed to a call keeps the call around the hole",
 		str(appended.get("statement", "")).strip_edges(), "targets.append(⟦⟧)") and ok
 	ok = _check("a string value keeps its quotes and reads as words",
@@ -85,15 +83,25 @@ static func run() -> bool:
 		"mode = \"replace action\"") and ok
 
 	var widths_actions: Array = _actions_of(sheet, "widths")
-	var widths_groups: Dictionary = EventSheetValueLiteralRows.groups(widths_actions)
-	ok = _check("the returned list is one run", (widths_groups["leads"] as Dictionary).size(), 1) and ok
-	var listed: Dictionary = _lead(widths_groups)
+	var listed: Dictionary = _statement_reading(widths_actions, 1)
 	ok = _check("a returned list is a list", str(listed.get("open", "")), "[") and ok
 	ok = _check("a list entry is its value alone",
 		EventSheetValueLiteralRows.chip_text((listed.get("entries", []) as Array)[0], true),
 		"first width") and ok
-	ok = _check("the statement BEFORE the literal is not part of the run",
-		(widths_groups["consumed"] as Dictionary).has(0), false) and ok
+	ok = _check("the statement BEFORE the literal is not part of it",
+		widths_actions.size(), 2) and ok
+
+	# The SAME literal as a run of lines - the shape a non-canonical one still arrives as - groups to
+	# the same reading, and its entry and closing rows vanish into the lead.
+	var run_groups: Dictionary = EventSheetValueLiteralRows.groups(_raw_rows(["return {",
+		"\t\"row_index\": row_index,", "\t\"span_index\": span_index,", "\t\"kind\": kind,",
+		"\t\"source_resource\": source,", "}"]))
+	ok = _check("the run is one lead", (run_groups["leads"] as Dictionary).size(), 1) and ok
+	ok = _check("the closing bracket row is consumed, not rendered",
+		(run_groups["consumed"] as Dictionary).size(), 5) and ok
+	ok = _check("and it reads exactly as the structured row does",
+		[str(_lead(run_groups).get("statement", "")), (_lead(run_groups).get("entries", []) as Array).size()],
+		[str(returned.get("statement", "")), 4]) and ok
 
 	# ── the classifier refuses what it cannot account for ───────
 	ok = _check("a wrapped CALL is not a literal",
@@ -117,7 +125,7 @@ static func run() -> bool:
 		EventSheetValueLiteralRows.full_text(long_lead.get("entries", []), "{", true),
 		"table: a = 1 · b = 2 · c = 3 · d = 4") and ok
 
-	# ── authoring: a chip edit rewrites ITS row, and the file still round-trips ──────
+	# ── authoring: a chip edit rewrites ITS entry, and the file still round-trips ──────
 	var edit_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(LITERAL_SOURCE)
 	edit_sheet.external_source_path = "user://w12_edited.gd"
 	var edit_event: EventRow = _event_of(edit_sheet, "snapshot")
@@ -127,17 +135,23 @@ static func run() -> bool:
 		EventSheetValueLiteralRows.chip_text(
 			(returned.get("entries", []) as Array)[1], false),
 		"\"span_index\" = span_index") and ok
-	ok = _check("editing a chip is accepted", EventSheetValueLiteralRows.apply_entry_edit(
-		edit_event, "literal_entry_line:0:2", "\"span_index\" = 7"), true) and ok
-	ok = _check("the edited row keeps its indent and its comma",
-		(edit_event.actions[2] as RawCodeRow).code, "\t\"span_index\": 7,") and ok
-	ok = _check("an empty edit is refused", EventSheetValueLiteralRows.apply_entry_edit(
-		edit_event, "literal_entry_line:0:2", "   "), false) and ok
-	ok = _check("a multi-line edit is refused", EventSheetValueLiteralRows.apply_entry_edit(
-		edit_event, "literal_entry_line:0:2", "a\nb"), false) and ok
+	ok = _check("editing a structured chip is accepted", EventSheetViewport._apply_decl_entry_edit(
+		edit_event, "decl_entry_line:0:1", "\"span_index\" = 7"), true) and ok
 	ok = _check("the edited file still compiles to exactly what the rows say",
 		str(SheetCompiler.compile(edit_sheet, "user://w12_edited.gd").get("output", "")),
 		LITERAL_SOURCE.replace("\t\t\"span_index\": span_index,", "\t\t\"span_index\": 7,")) and ok
+	# A run of lines edits through the row its entry came from.
+	var run_event: EventRow = EventRow.new()
+	for run_row: Variant in _raw_rows(["return {", "\t\"row_index\": row_index,", "\t\"span_index\": span_index,", "}"]):
+		run_event.actions.append(run_row)
+	ok = _check("editing a run's chip is accepted", EventSheetValueLiteralRows.apply_entry_edit(
+		run_event, "literal_entry_line:0:2", "\"span_index\" = 7"), true) and ok
+	ok = _check("the edited row keeps its indent and its comma",
+		(run_event.actions[2] as RawCodeRow).code, "\t\"span_index\": 7,") and ok
+	ok = _check("an empty edit is refused", EventSheetValueLiteralRows.apply_entry_edit(
+		run_event, "literal_entry_line:0:2", "   "), false) and ok
+	ok = _check("a multi-line edit is refused", EventSheetValueLiteralRows.apply_entry_edit(
+		run_event, "literal_entry_line:0:2", "a\nb"), false) and ok
 
 	# ── measured: the plugin's own biggest file, before and after ──────
 	# The number that matters is that the collapse CLAIMS the shape at all on real code: these are
@@ -274,6 +288,14 @@ static func _rows_of(viewport: EventSheetViewport) -> Array:
 	return found
 
 
+## The reading a structured statement literal gives the view, or {} when the action at `index` is
+## not one - so a lift that stopped claiming it fails the check above instead of crashing the suite.
+static func _statement_reading(actions: Array, index: int) -> Dictionary:
+	if index >= actions.size() or not (actions[index] is CollectionDeclRow):
+		return {}
+	return EventSheetValueLiteralRows.of_statement(actions[index] as CollectionDeclRow)
+
+
 ## The one lead of a group result, or {} - so a classifier that claims nothing fails the check
 ## above it instead of crashing the whole suite on an empty list.
 static func _lead(groups: Dictionary) -> Dictionary:
@@ -324,7 +346,11 @@ static func _walk(items: Array, tally: Dictionary) -> void:
 	tally["claimed"] = int(tally["claimed"]) + (groups["consumed"] as Dictionary).size() \
 		+ (groups["leads"] as Dictionary).size()
 	for item: Variant in items:
-		if item is EventRow:
+		# A canonical literal arrives as ONE structured row: the same run, claimed whole.
+		if item is CollectionDeclRow and (item as CollectionDeclRow).is_statement():
+			tally["runs"] = int(tally["runs"]) + 1
+			tally["claimed"] = int(tally["claimed"]) + (item as CollectionDeclRow).emit_lines().size()
+		elif item is EventRow:
 			_walk((item as EventRow).actions, tally)
 			_walk((item as EventRow).sub_events, tally)
 		elif item is EventFunction:

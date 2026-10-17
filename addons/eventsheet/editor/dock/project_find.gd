@@ -320,6 +320,9 @@ static func _collect_findable_text(rows: Array, into: Array, uid: String = "") -
 			for ace: Variant in event_row.conditions + event_row.actions:
 				if ace is RawCodeRow:
 					into.append({"text": (ace as RawCodeRow).code, "uid": own_uid})
+				elif ace is CollectionDeclRow:
+					into.append({"text": "
+".join((ace as CollectionDeclRow).emit_lines()), "uid": own_uid})
 				elif ace is Resource and ace.get("params") is Dictionary:
 					if ace.get("comment") is String and not str(ace.get("comment")).is_empty():
 						into.append({"text": str(ace.get("comment")), "uid": own_uid})

@@ -51,6 +51,13 @@ func is_constant() -> bool:
 	return head.begins_with("const ")
 
 
+## True when the head is not a declaration but a statement that hands the literal on: `return {`,
+## `rows.append({`, `table[key] = [`. Such a row has no name to declare, so it reads as the
+## statement it is, with the entries where the literal sat.
+func is_statement() -> bool:
+	return not (head.begins_with("var ") or head.begins_with("const "))
+
+
 ## The declared name, parsed from the head (`var waves := {` / `const RULES := {`).
 func variable_name() -> String:
 	var name_regex: RegEx = RegEx.create_from_string("^(?:var|const) ([A-Za-z_][A-Za-z0-9_]*)")
@@ -72,6 +79,18 @@ func emit_lines() -> PackedStringArray:
 			out.append("\t%s: %s%s" % [key, entry_values[entry_index], comma])
 	out.append(close)
 	return out
+
+
+## Every piece of source text this row holds - head, keys, values, closer - put through `rewrite`
+## (String -> String) and stored back. The one door a whole-sheet text edit (a variable rename,
+## Replace All) uses, so the lines a table writes follow it exactly as a verbatim row's lines do.
+func rewrite_text(rewrite: Callable) -> void:
+	head = str(rewrite.call(head))
+	close = str(rewrite.call(close))
+	for entry_index: int in entry_values.size():
+		entry_values[entry_index] = str(rewrite.call(entry_values[entry_index]))
+		if entry_index < entry_keys.size():
+			entry_keys[entry_index] = str(rewrite.call(entry_keys[entry_index]))
 
 
 ## Writes (entry_index >= 0) or appends (entry_index -1) one entry. Refuses what would break
@@ -119,14 +138,21 @@ func set_entry_text(entry_index: int, line_text: String) -> bool:
 ## Parses depth-stripped literal lines into a structured row, or null when the shape is not
 ## canonical. The final emit_lines() comparison IS the byte gate: whatever this cannot
 ## reproduce exactly is not claimed, so a fussy source stays verbatim rather than corrupt.
-static func parse(lines: PackedStringArray) -> CollectionDeclRow:
+##
+## `statement_heads` also takes a head that is a statement rather than a declaration - `return {`,
+## `sources.append({`, `connections[handler] = {` - with a closer of brackets only (`}`, `})`). A
+## function body writes a table that way at least as often as it declares one, and the head and the
+## closer are kept verbatim either way, so the gate is the same one. File scope never passes it: a
+## head there that is not a declaration is an `enum`, which is not this row.
+static func parse(lines: PackedStringArray, statement_heads: bool = false) -> CollectionDeclRow:
 	if lines.size() < 3:
 		return null
 	var head_text: String = lines[0]
 	if head_text.begins_with("\t") or head_text.begins_with(" "):
 		return null
 	# `var` in a body, `var` or `const` at file scope - the same structure either way.
-	if not (head_text.begins_with("var ") or head_text.begins_with("const ")):
+	var declares: bool = head_text.begins_with("var ") or head_text.begins_with("const ")
+	if not declares and not (statement_heads and _is_statement_head(head_text, lines[lines.size() - 1])):
 		return null
 	var stripped_head: String = head_text.strip_edges()
 	if not (stripped_head.ends_with("{") or stripped_head.ends_with("[")):
@@ -166,6 +192,18 @@ static func parse(lines: PackedStringArray) -> CollectionDeclRow:
 	if row.emit_lines() != lines:
 		return null
 	return row
+
+
+## True when a statement head and its closer bracket exactly ONE literal: the head is not a comment,
+## not a block header (a `for x in [` closes on `]:`, which carries more than brackets), and the
+## closer holds nothing but closing brackets and a comma.
+static func _is_statement_head(head_text: String, close_text: String) -> bool:
+	if head_text.begins_with("#") or close_text.is_empty():
+		return false
+	for character: String in close_text:
+		if not (character in "}]),"):
+			return false
+	return true
 
 
 ## The index of the first `:` at bracket/quote depth 0, or -1.

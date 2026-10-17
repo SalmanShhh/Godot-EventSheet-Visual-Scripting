@@ -303,6 +303,10 @@ static func _collect(rows: Array, into: Array) -> void:
 			for ace: Variant in event_row.conditions + event_row.actions:
 				if ace is RawCodeRow:
 					into.append({"text": (ace as RawCodeRow).code, "kind": "code", "row": event_row})
+				elif ace is CollectionDeclRow:
+					# A table is held as structure; what it writes is still code a name can be used in.
+					into.append({"text": "
+".join((ace as CollectionDeclRow).emit_lines()), "kind": "code", "row": event_row})
 				elif ace is Resource and ace.get("params") is Dictionary:
 					if ace.get("comment") is String and not str(ace.get("comment")).is_empty():
 						into.append({"text": str(ace.get("comment")), "kind": "comment", "row": event_row})

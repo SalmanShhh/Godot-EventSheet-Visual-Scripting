@@ -59,6 +59,9 @@ func _rename_in_rows(rows: Array, regex: RegEx, new_name: String, counter: Dicti
 					_rename_in_params(action, regex, new_name, counter)
 				elif action is RawCodeRow:
 					(action as RawCodeRow).code = _regex_rename(regex, (action as RawCodeRow).code, new_name, counter)
+				elif action is CollectionDeclRow:
+					(action as CollectionDeclRow).rewrite_text(func(text: String) -> String:
+						return _regex_rename(regex, text, new_name, counter))
 			for pick: Variant in event_row.pick_filters:
 				if pick is PickFilter:
 					(pick as PickFilter).collection_value = _regex_rename(regex, (pick as PickFilter).collection_value, new_name, counter)

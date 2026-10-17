@@ -3011,7 +3011,11 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 				# entries are rows of their own - no bracket rows at all. parse() carries its own byte
 				# gate (emit_lines() must reproduce the source exactly), so anything it cannot claim
 				# falls to the per-line rows below, and the whole-file verify still gates everything.
-				var decl: CollectionDeclRow = CollectionDeclRow.parse(decl_lines)
+				# The same holds for a literal a STATEMENT hands on (`return {`, `rows.append({`): one
+				# action whose entries are structure, so the statement moves, switches off and edits as
+				# the one thing it is. Not inside a triple-quoted string, whose lines only look like code.
+				var decl: CollectionDeclRow = CollectionDeclRow.parse(decl_lines,
+					not _inside_long_string(lines, index))
 				if decl != null:
 					_stamp_body_blanks(decl, blank_box)
 					current.actions.append(decl)
@@ -3755,6 +3759,15 @@ static func _body_literal_close(lines: PackedStringArray, start: int, depth: int
 				return -1
 		return scan if scan > start + 1 else -1
 	return -1
+
+
+## True when line `index` sits inside a triple-quoted string opened above it in `lines`.
+static func _inside_long_string(lines: PackedStringArray, index: int) -> bool:
+	var inside: bool = false
+	for scan: int in range(mini(index, lines.size())):
+		if lines[scan].count("\"\"\"") % 2 == 1:
+			inside = not inside
+	return inside
 
 
 ## Action line → ACEAction when a template matches; otherwise queued as raw GDScript so the

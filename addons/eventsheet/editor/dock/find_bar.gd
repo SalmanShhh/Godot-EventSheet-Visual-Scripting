@@ -185,6 +185,10 @@ func _replace_in_rows(rows: Array, find_text: String, replace_text: String, coun
 				if ace is RawCodeRow:
 					counter["count"] = int(counter.get("count", 0)) + (ace as RawCodeRow).code.count(find_text)
 					(ace as RawCodeRow).code = (ace as RawCodeRow).code.replace(find_text, replace_text)
+				elif ace is CollectionDeclRow:
+					(ace as CollectionDeclRow).rewrite_text(func(text: String) -> String:
+						counter["count"] = int(counter.get("count", 0)) + text.count(find_text)
+						return text.replace(find_text, replace_text))
 				elif ace is MatchRow:
 					counter["count"] = int(counter.get("count", 0)) + (ace as MatchRow).branches_text.count(find_text)
 					(ace as MatchRow).branches_text = (ace as MatchRow).branches_text.replace(find_text, replace_text)
