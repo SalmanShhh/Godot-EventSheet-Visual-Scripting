@@ -135,16 +135,20 @@ static func _player_settings_cards() -> bool:
 				words += str(line[1]) + "\n"
 	var game_settings: String = FileAccess.get_file_as_string(GAME_SETTINGS_PACK)
 	var missing: Array = []
+	# The pack's rows read in their own sentence case ("Declare setting ..."), so the name is matched
+	# without regard to case.
 	for row: String in ["Declare Setting", "Load All Settings", "Apply All Settings", "On Setting Changed", "Changed Setting Is",
 			"Set Setting", "Save All Settings", "Apply Quality", "Apply With A Way Back", "Setting Value"]:
-		if not words.contains(row) or not game_settings.contains("@ace_name(\"%s\")" % row):
+		if not words.to_lower().contains(row.to_lower()) or not game_settings.contains("@ace_name(\"%s\")" % row):
 			missing.append(row)
 	if not words.contains("Rebind Control To") or not FileAccess.get_file_as_string(REBIND_MODULE).contains("\"Rebind Control To\""):
 		missing.append("Rebind Control To")
 	var bindings: String = FileAccess.get_file_as_string(BINDINGS_MODULE)
 	var files: Array = []
-	for card: Array in EventSheetSaveStudio.settings_files():
+	var cards: Array = EventSheetSaveStudio.settings_files()
+	for card: Array in cards:
 		files.append(card[1])
+	var uses: Array = EventSheetSaveStudio.settings_uses()
 	var switch: EventSheetPopupUI.ViewSwitch = EventSheetPopupUI.ViewSwitch.new(EventSheetPopupUI.ViewSwitch.BOTH,
 		{EventSheetPopupUI.ViewSwitch.SHEET: ["Events", "As rows."]})
 	var switch_words: Array = [(switch.buttons[EventSheetPopupUI.ViewSwitch.SHEET] as Button).text, switch.view]
@@ -155,4 +159,9 @@ static func _player_settings_cards() -> bool:
 		["settings.cfg is the Game Settings pack's file", game_settings.contains("SETTINGS_FILE: String = \"user://settings.cfg\""), true],
 		["bindings.cfg is the bindings rows' file", bindings.contains("const BINDINGS_FILE := \"\\\"user://bindings.cfg\\\"\""), true],
 		["a view switch can say Events | Code | Both", switch_words, ["Events", "both"]],
+		# The Game Settings rows are read off the pack: the sheet's own reading, the template's own code.
+		["a pack row reads the way the sheet reads it", uses[0][3][0], ["Settings", "Declare setting \"master_volume\" default 80 kind percent"]],
+		["and its code is what its template writes", uses[0][4].contains("Settings.declare_setting(\"master_volume\", 80, \"percent\", \"\", \"\", \"\")"), true],
+		["a condition row becomes the use's if", uses[1][4], "func _on_setting_changed(setting_name: String, value: Variant) -> void:\n\tif Settings.changed_setting_is(\"master_volume\"):\n\t\tAudioServer.set_bus_volume_db(0, linear_to_db(value / 100.0))"],
+		["the settings sample is the file Godot writes", cards[1][3], "[settings]\n\nmaster_volume=80\nfullscreen=true\nquality=\"High\""],
 	])

@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Changed: the Save studio's Player settings cards are read off the rows they teach
+
+- Each Game Settings row on a Player settings card (Declare Setting, Load All Settings, Changed
+  Setting Is, Set Setting, Apply Quality...) is now read off the pack's own definition: the words
+  are the row's own reading and the code is what its template writes, so a card can no longer show
+  a call the pack does not make. The settings.cfg and save-slot samples are the files Godot and the
+  Save System really write, and the bindings card names the file through the bindings rows' own
+  constant.
+- The File and format fields are built through the window kit's field form, slot files are matched
+  without a hand-escaped pattern, and Look inside reads a selected node through the Save System's
+  own walk instead of a copy of it. Nothing else in the window changes.
+- The Player settings cards are built the first time that tab is shown, not every time the window
+  opens. `tools/render_save_studio_preview.gd` shoots every tab again.
+
 ### Fixed: the Translation Studio never rewrites a catalog you wrote by hand
 
 - With a folder of catalogs (`res://i18n`), Find text, Add a language, bringing a file back and the

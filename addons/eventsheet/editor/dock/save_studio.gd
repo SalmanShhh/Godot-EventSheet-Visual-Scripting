@@ -1,28 +1,21 @@
 @tool
 class_name EventSheetSaveStudio
 extends RefCounted
-# Saving your game (Tools menu, "Save Studio"): everything about game saves in one window.
+# Saving your game (Tools menu, "Save Studio"), one tab each: What gets saved (a Save choice per
+# variable, which compiler/save_choices.gd turns into code), File and format (the Save System node's
+# own settings, on the scene the SaveSystem autoload names), Save slots (the files in user://), Look
+# inside a save (a slot, the selected node or a pack, in plain words) and Player settings (the
+# settings.cfg and bindings.cfg files kept apart from the slots). Everything shown is read through
+# the shipping code - the Save System's backends, Godot's ConfigFile, the Game Settings pack's own
+# rows - so the window cannot drift from what a game really writes.
 #
-#   What gets saved - one Save choice per variable of the open sheet (Never / Auto / Load only /
-#      Save only / Manual). The choice is stored on the variable and the compiler writes the plain
-#      code for it (compiler/save_choices.gd); a row here is the whole gesture.
-#   File and format - the Save System node's own settings (format, file pattern, folder,
-#      encryption key, backups, autosave), with a live sample of the file the format writes. They
-#      live on the node the SaveSystem autoload names, so its Inspector shows the same values.
-#   Save slots - the project's save files in user://: look inside one, copy it out (converted when
-#      the copy's ending names another format), delete it, open the folder; and whether players get
-#      an Open Save Folder action of their own.
-#   Look inside a save - what a save holds, in plain words: a slot on disk, the selected scene node,
-#      or a bundled pack, through the real Save System backend, with the file as Godot writes it.
-#   Player settings - the two files that live apart from the save slots (settings.cfg through the
-#      Game Settings pack, bindings.cfg through the built-in bindings rows) and how to use them,
-#      each use as events, as code, or both.
-#
-# The seam contract this window teaches: a node participates in saves by exposing
-# `save_state() -> Dictionary` and `load_state(state: Dictionary)`. No base class, no
-# registration - the Save System duck-types the pair (persist group, Save Node State).
+# The seam this window teaches: a node joins a save by exposing `save_state() -> Dictionary` and
+# `load_state(state: Dictionary)`. No base class, no registration - the Save System duck-types it.
 
 const SAVE_SYSTEM_SCRIPT: String = "res://eventsheet_addons/save_system/save_system_addon.gd"
+const GAME_SETTINGS_SCRIPT: String = "res://eventsheet_addons/game_settings/game_settings_addon.gd"
+## The built-in bindings rows, whose BINDINGS_FILE names the file Save Bindings writes.
+const BINDINGS_MODULE: String = "res://addons/eventforge/registration/modules/controls_aces.gd"
 const SAVE_AUTOLOAD: String = "SaveSystem"
 ## Where "Keep them in a scene" puts the Save System node when the autoload is a bare script.
 const SETTINGS_SCENE: String = "res://save_system.tscn"
@@ -47,10 +40,8 @@ var _tabs: TabContainer = null
 var _settings: Dictionary = {}
 var _format_pick: OptionButton = null
 var _file_name: Label = null
-var _folder_edit: LineEdit = null
-var _key_edit: LineEdit = null
-var _backups_spin: SpinBox = null
-var _autosave_spin: SpinBox = null
+## The folder, key, backups and autosave fields, keyed by the Save System property each one writes.
+var _form: EventSheetFieldForm = null
 var _format_preview: CodeEdit = null
 var _preview_title: Label = null
 var _scene_note: EventSheetPopupUI.StateNote = null
@@ -65,7 +56,6 @@ var _peek_heading: Label = null
 var _peek_table: Control = null
 var _peek_file: CodeEdit = null
 var _settings_views: Array = []
-var _settings_switch: EventSheetPopupUI.ViewSwitch = null
 var _what_object_picker: OptionButton = null
 var _what_rows: GridContainer = null
 var _what_summary: Label = null
@@ -127,14 +117,9 @@ func _build_window() -> void:
 		_refresh_what()
 		_refresh_slots())
 	_tabs = TabContainer.new()
-	_tabs.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_tabs.add_child(_build_what_tab())
-	_tabs.add_child(_build_file_tab())
-	_tabs.add_child(_build_slots_tab())
-	_tabs.add_child(_build_peek_tab())
-	_tabs.add_child(_build_player_settings_tab())
-	for index: int in range(_tabs.get_tab_count()):
-		_tabs.set_tab_title(index, str(_tabs.get_child(index).get_meta("title")))
+	for page: Control in [_build_what_tab(), _build_file_tab(), _build_slots_tab(), _build_peek_tab(), _build_player_settings_tab()]:
+		_tabs.add_child(page)
+		_tabs.set_tab_title(_tabs.get_tab_count() - 1, str(page.get_meta("title")))
 	var body: VBoxContainer = EventSheetPopupUI.form_box()
 	body.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("Choose what to remember between play sessions, then save and load from your events with the Save System's actions.")))
 	_tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -157,12 +142,45 @@ static func _muted(text: String, wrap_width: float = EventSheetPopupUI.HINT_WRAP
 	return label
 
 
+## A plain label, in one of the window kit's text colours when `color` is given.
+static func _label(text: String, color: Color = Color(0.0, 0.0, 0.0, 0.0)) -> Label:
+	var label: Label = Label.new()
+	label.text = text
+	if color.a > 0.0:
+		label.add_theme_color_override("font_color", color)
+	return label
+
+
 static func _code_box(lines_high: float) -> CodeEdit:
 	var code: CodeEdit = CodeEdit.new()
 	EventSheetPopupUI.configure_code_editor(code)
 	code.editable = false
 	code.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(18.0 * lines_high))
+	code.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	return code
+
+
+## `content` in a scroll that only scrolls down and takes the tab's spare height.
+static func _scrolled(content: Control) -> ScrollContainer:
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.add_child(content)
+	return scroll
+
+
+## A card that takes the width it is given.
+static func _card(content: Control) -> PanelContainer:
+	var panel: PanelContainer = EventSheetPopupUI.panel_section(content)
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return panel
+
+
+static func _button(text: String, pressed: Callable) -> Button:
+	var button: Button = Button.new()
+	button.text = text
+	button.pressed.connect(pressed)
+	return button
 
 
 # ── File and format: the Save System node's own settings ────────────────────────────
@@ -173,11 +191,9 @@ func _build_file_tab() -> Control:
 	box.add_child(_muted(EventSheetL10n.translate("How the save files are written. These are the Save System node's own settings, so they also show in its Inspector.")))
 	_scene_note = EventSheetPopupUI.StateNote.new()
 	box.add_child(_scene_note)
-	_scene_button = Button.new()
-	_scene_button.text = EventSheetL10n.translate("Keep them in a scene")
+	_scene_button = _button(EventSheetL10n.translate("Keep them in a scene"), _keep_settings_in_scene)
 	_scene_button.tooltip_text = EventSheetL10n.translate("Saves the Save System node as save_system.tscn and points the SaveSystem global at it, so its settings can change here and in the Inspector.")
 	_scene_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	_scene_button.pressed.connect(_keep_settings_in_scene)
 	box.add_child(_scene_button)
 	_format_pick = EventSheetPopupUI.described_option()
 	for fmt: String in FORMATS:
@@ -192,45 +208,33 @@ func _build_file_tab() -> Control:
 		_file_name.add_theme_font_override("font", mono)
 	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("File name"), _file_name,
 		EventSheetPopupUI.LABEL_MIN_WIDTH, EventSheetL10n.translate("Each slot gets its own file; the number is the slot. The ending follows the format.")))
-	_folder_edit = _setting_edit("save_directory")
-	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Folder"), _folder_edit,
-		EventSheetPopupUI.LABEL_MIN_WIDTH, EventSheetL10n.translate("Where save files go. user:// is the player's own data folder.")))
-	_key_edit = _setting_edit("encryption_key")
-	_key_edit.placeholder_text = EventSheetL10n.translate("(none: the file stays readable)")
-	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Encryption key"), _key_edit,
-		EventSheetPopupUI.LABEL_MIN_WIDTH, EventSheetL10n.translate("Optional. With a key, the file is encrypted, so players cannot read or edit it in a text editor.")))
-	_backups_spin = _setting_spin("backup_count", 50.0, "")
-	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Backups to keep"), _backups_spin,
-		EventSheetPopupUI.LABEL_MIN_WIDTH, EventSheetL10n.translate("How many older copies of each slot to keep, for Restore Slot From Backup.")))
-	_autosave_spin = _setting_spin("autosave_interval", 600.0, EventSheetL10n.translate("seconds (0 = off)"))
-	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Autosave every"), _autosave_spin,
-		EventSheetPopupUI.LABEL_MIN_WIDTH, EventSheetL10n.translate("Save by itself every few seconds. 0 means only when your events say Save Game.")))
+	var fields: Array[EventSheetFieldSpec] = [
+		EventSheetPopupUI.text_field("save_directory", EventSheetL10n.translate("Folder")).tooltip(
+			EventSheetL10n.translate("Where save files go. user:// is the player's own data folder.")),
+		EventSheetPopupUI.text_field("encryption_key", EventSheetL10n.translate("Encryption key")).placeholder(
+			EventSheetL10n.translate("(none: the file stays readable)")).tooltip(
+			EventSheetL10n.translate("Optional. With a key, the file is encrypted, so players cannot read or edit it in a text editor.")),
+		EventSheetPopupUI.number_field("backup_count", EventSheetL10n.translate("Backups to keep")).at_most(50.0).stepping(1.0, true).tooltip(
+			EventSheetL10n.translate("How many older copies of each slot to keep, for Restore Slot From Backup.")),
+		EventSheetPopupUI.number_field("autosave_interval", EventSheetL10n.translate("Autosave every")).at_most(600.0).tooltip(
+			EventSheetL10n.translate("Save by itself every few seconds. 0 means only when your events say Save Game.")),
+	]
+	_form = EventSheetPopupUI.form(box, fields, "Save studio")
+	(_form.control("autosave_interval") as SpinBox).suffix = EventSheetL10n.translate("seconds (0 = off)")
+	# A typed setting is written when it is submitted or left; a number as soon as it changes.
+	for property: String in _form.field_ids():
+		var field: Control = _form.control(property)
+		if field is LineEdit:
+			(field as LineEdit).text_submitted.connect(func(_text: String) -> void: _write_field(property))
+			field.focus_exited.connect(_write_field.bind(property))
+		else:
+			(field as SpinBox).value_changed.connect(func(_value: float) -> void: _write_field(property))
 	_preview_title = EventSheetPopupUI.small_caps_label("", EventSheetPopupUI.muted_text_color())
 	box.add_child(_preview_title)
 	_format_preview = _code_box(6.0)
-	_format_preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_child(_format_preview)
 	box.add_child(_muted(EventSheetL10n.translate("Each change is saved into the Save System's scene at once; change it back here or in its Inspector to undo it.")))
 	return box
-
-
-func _setting_edit(property: String) -> LineEdit:
-	var edit: LineEdit = LineEdit.new()
-	edit.text_submitted.connect(func(_text: String) -> void: _write(property, edit.text.strip_edges()))
-	edit.focus_exited.connect(func() -> void:
-		if edit.editable and str(_settings.get(property, "")) != edit.text.strip_edges():
-			_write(property, edit.text.strip_edges()))
-	return edit
-
-
-func _setting_spin(property: String, most: float, suffix: String) -> SpinBox:
-	var spin: SpinBox = SpinBox.new()
-	spin.max_value = most
-	spin.suffix = suffix
-	spin.value_changed.connect(func(value: float) -> void:
-		if spin.editable and float(_settings.get(property, 0)) != value:
-			_write(property, int(value) if property == "backup_count" else value))
-	return spin
 
 
 ## Where the Save System's settings live: the scene the SaveSystem autoload names, or "" when the
@@ -296,31 +300,36 @@ func _scene_path() -> String:
 	return settings_scene(str(ProjectSettings.get_setting("autoload/%s" % SAVE_AUTOLOAD, "")))
 
 
+func _pattern() -> String:
+	return str(_settings.get("file_pattern", "save_{slot}.cfg"))
+
+
 func _load_settings() -> void:
 	var scene_path: String = _scene_path()
 	_settings = read_settings(scene_path)
-	var registered: bool = ProjectSettings.has_setting("autoload/%s" % SAVE_AUTOLOAD)
-	if not ResourceLoader.exists(SAVE_SYSTEM_SCRIPT):
+	var installed: bool = ResourceLoader.exists(SAVE_SYSTEM_SCRIPT)
+	if not installed:
 		_scene_note.say(EventSheetL10n.translate("The Save System pack is not installed (eventsheet_addons/save_system/)."))
-	elif scene_path.is_empty() and registered:
+	elif scene_path.is_empty() and ProjectSettings.has_setting("autoload/%s" % SAVE_AUTOLOAD):
 		_scene_note.say(EventSheetL10n.translate("The SaveSystem global is its script, so these are the pack's defaults and cannot change here. Keep them in a scene to change them here and in the Inspector."), EventSheetPopupUI.TONE_WARNING)
 	elif scene_path.is_empty():
 		_scene_note.say(EventSheetL10n.translate("The Save System is not a global yet, so these are the pack's defaults. Keep them in a scene: it is added to Project Settings > Globals as SaveSystem."), EventSheetPopupUI.TONE_WARNING)
 	else:
 		_scene_note.say("")
-	_scene_button.visible = scene_path.is_empty() and ResourceLoader.exists(SAVE_SYSTEM_SCRIPT)
+	_scene_button.visible = scene_path.is_empty() and installed
 	var editable: bool = not scene_path.is_empty()
 	var fmt: String = str(_settings.get("format", "config"))
 	EventSheetPopupUI.select_option(_format_pick, format_label(fmt))
 	EventSheetPopupUI.follow_description(_format_pick)
 	_format_pick.disabled = not editable
-	_folder_edit.text = str(_settings.get("save_directory", "user://"))
-	_key_edit.text = str(_settings.get("encryption_key", ""))
-	_backups_spin.set_value_no_signal(float(_settings.get("backup_count", 0)))
-	_autosave_spin.set_value_no_signal(float(_settings.get("autosave_interval", 0.0)))
-	for field: Control in [_folder_edit, _key_edit, _backups_spin, _autosave_spin]:
+	for property: String in _form.field_ids():
+		var field: Control = _form.control(property)
 		field.set("editable", editable)
-	var file_name: String = str(_settings.get("file_pattern", "save_{slot}.cfg")).replace("{slot}", "0")
+		if field is SpinBox:
+			(field as SpinBox).set_value_no_signal(float(_settings.get(property, 0)))
+		else:
+			(field as LineEdit).text = str(_settings.get(property, ""))
+	var file_name: String = _pattern().replace("{slot}", "0")
 	_file_name.text = file_name
 	# Upper case like every small-caps heading, but the file name reads exactly as written.
 	_preview_title.text = EventSheetL10n.translate("What %s looks like in this format").to_upper().replace("%S", "%s") % file_name
@@ -328,9 +337,17 @@ func _load_settings() -> void:
 
 
 func _choose_format(fmt: String) -> void:
-	var pattern: String = pattern_for_format(str(_settings.get("file_pattern", "save_{slot}.cfg")), fmt)
-	if write_setting(_scene_path(), "file_pattern", pattern) == OK:
+	if write_setting(_scene_path(), "file_pattern", pattern_for_format(_pattern(), fmt)) == OK:
 		_write("format", fmt)
+
+
+## Writes what one of the form's fields now says, when it can be written and differs from the scene's.
+func _write_field(property: String) -> void:
+	var value: Variant = _form.value(property)
+	if value is String:
+		value = (value as String).strip_edges()
+	if _form.control(property).get("editable") and str(value) != str(_settings.get(property, "")):
+		_write(property, value)
 
 
 func _write(property: String, value: Variant) -> void:
@@ -360,11 +377,7 @@ func _build_slots_tab() -> Control:
 	box.add_child(_muted(EventSheetL10n.translate("Each save slot is one file on the player's computer. Saves live in Godot's user:// folder, not in your project.")))
 	_slot_rows = EventSheetPopupUI.form_box()
 	_slot_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var scroll: ScrollContainer = ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.add_child(_slot_rows)
-	box.add_child(scroll)
+	box.add_child(_scrolled(_slot_rows))
 	var actions: HBoxContainer = HBoxContainer.new()
 	actions.add_child(_button(EventSheetL10n.translate("Open the save folder"), func() -> void:
 		OS.shell_show_in_file_manager(ProjectSettings.globalize_path(_save_directory()))))
@@ -393,37 +406,27 @@ func _build_slots_tab() -> Control:
 	return box
 
 
-static func _button(text: String, pressed: Callable) -> Button:
-	var button: Button = Button.new()
-	button.text = text
-	button.pressed.connect(pressed)
-	return button
-
-
 func _save_directory() -> String:
 	return str(_settings.get("save_directory", "user://"))
 
 
 func _slot_paths() -> PackedStringArray:
-	var folder: String = _save_directory()
 	var paths: PackedStringArray = PackedStringArray()
-	for file: String in slot_files(DirAccess.get_files_at(folder), str(_settings.get("file_pattern", "save_{slot}.cfg"))):
-		paths.append(folder.path_join(file))
+	for file: String in slot_files(DirAccess.get_files_at(_save_directory()), _pattern()):
+		paths.append(_save_directory().path_join(file))
 	return paths
 
 
 func _refresh_slots() -> void:
 	for old: Node in _slot_rows.get_children():
 		old.queue_free()
-	var pattern: String = str(_settings.get("file_pattern", "save_{slot}.cfg"))
 	var paths: PackedStringArray = _slot_paths()
 	if paths.is_empty():
 		_slot_rows.add_child(_muted(EventSheetL10n.translate("No saves yet. Run the game and save, and each slot shows here.")))
 	for path: String in paths:
 		var words: VBoxContainer = VBoxContainer.new()
 		words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var title: Label = Label.new()
-		title.text = EventSheetL10n.translate("Slot %s") % slot_number(path.get_file(), pattern)
+		var title: Label = _label(EventSheetL10n.translate("Slot %s") % slot_number(path.get_file(), _pattern()))
 		title.tooltip_text = path
 		title.mouse_filter = Control.MOUSE_FILTER_STOP
 		words.add_child(title)
@@ -431,10 +434,10 @@ func _refresh_slots() -> void:
 			int(Time.get_unix_time_from_system()))))
 		var row: HBoxContainer = HBoxContainer.new()
 		row.add_child(words)
-		row.add_child(_button(EventSheetL10n.translate("Look inside"), _look_inside.bind(path)))
-		row.add_child(_button(EventSheetL10n.translate("Delete"), _ask_delete.bind(path)))
-		for button: Control in row.get_children().slice(1):
+		for button: Button in [_button(EventSheetL10n.translate("Look inside"), _look_inside.bind(path)),
+				_button(EventSheetL10n.translate("Delete"), _ask_delete.bind(path))]:
 			button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			row.add_child(button)
 		_slot_rows.add_child(EventSheetPopupUI.panel_section(row))
 	var shown: bool = not EventSheetVocabularyCatalog.hidden_keys().has(
 		EventSheetVocabularyCatalog.key_for(OPEN_FOLDER_PROVIDER, OPEN_FOLDER_ACE))
@@ -447,22 +450,17 @@ func _refresh_slots() -> void:
 ## save format's. The editor's own settings files and anything else in user:// stay out.
 static func slot_files(file_names: PackedStringArray, pattern: String) -> PackedStringArray:
 	var stem: String = pattern.get_basename()
-	var extensions: PackedStringArray = PackedStringArray(FORMAT_EXTENSIONS.values())
-	if not pattern.get_extension().is_empty() and not extensions.has(".%s" % pattern.get_extension()):
+	var extensions: Array = FORMAT_EXTENSIONS.values()
+	if not pattern.get_extension().is_empty():
 		extensions.append(".%s" % pattern.get_extension())
-	var matcher: RegEx = RegEx.create_from_string("^%s$" % _regex_escape(stem).replace("\\{slot\\}", "\\d+"))
 	var found: PackedStringArray = PackedStringArray()
 	for file: String in file_names:
-		if extensions.has(".%s" % file.get_extension()) and matcher.search(file.get_basename()) != null:
+		# The slot is all digits, and the name is exactly the stem with that number in it.
+		var number: String = slot_number(file, pattern)
+		var digits: bool = number.lstrip("0123456789").is_empty() and (not number.is_empty() or not stem.contains("{slot}"))
+		if extensions.has(".%s" % file.get_extension()) and digits and file.get_basename() == stem.replace("{slot}", number):
 			found.append(file)
 	return found
-
-
-static func _regex_escape(text: String) -> String:
-	var escaped: String = ""
-	for character: String in text:
-		escaped += ("\\" + character) if "\\^$.|?*+()[]{}".contains(character) else character
-	return escaped
 
 
 ## The slot number a file name carries under the pattern: "save_12.json" under "save_{slot}.cfg" is "12".
@@ -475,13 +473,11 @@ static func slot_number(file_name: String, pattern: String) -> String:
 static func slot_meta(saved_unix: int, size_bytes: int, now_unix: int) -> String:
 	var bias: int = int(Time.get_time_zone_from_system().get("bias", 0)) * 60
 	var saved: String = Time.get_datetime_string_from_unix_time(saved_unix + bias, true)
-	var today: String = Time.get_date_string_from_unix_time(now_unix + bias)
-	var yesterday: String = Time.get_date_string_from_unix_time(now_unix + bias - 86400)
 	var clock: String = saved.substr(11, 5)
 	var when: String = EventSheetL10n.translate("Saved %s") % saved.substr(0, 16)
-	if saved.begins_with(today):
+	if saved.begins_with(Time.get_date_string_from_unix_time(now_unix + bias)):
 		when = EventSheetL10n.translate("Saved today at %s") % clock
-	elif saved.begins_with(yesterday):
+	elif saved.begins_with(Time.get_date_string_from_unix_time(now_unix + bias - 86400)):
 		when = EventSheetL10n.translate("Saved yesterday at %s") % clock
 	return "%s · %.1f KB" % [when, size_bytes / 1024.0]
 
@@ -557,10 +553,8 @@ static func _save_system(settings: Dictionary) -> Node:
 
 
 static func format_for_extension(path: String) -> String:
-	for fmt: String in FORMATS:
-		if ".%s" % path.get_extension().to_lower() == str(FORMAT_EXTENSIONS[fmt]):
-			return fmt
-	return "binary"
+	var fmt: Variant = FORMAT_EXTENSIONS.find_key(".%s" % path.get_extension().to_lower())
+	return "binary" if fmt == null else str(fmt)
 
 
 ## Shows or hides the pack's Open Save Folder row in Add Action - the reader's own hide, the same
@@ -599,7 +593,6 @@ func _build_peek_tab() -> Control:
 	reveal.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	box.add_child(reveal)
 	_peek_file = _code_box(8.0)
-	_peek_file.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_peek_file.visible = false
 	reveal.toggled.connect(func(on: bool) -> void: _peek_file.visible = on)
 	box.add_child(_peek_file)
@@ -637,23 +630,25 @@ func _show_peek() -> void:
 		_peek_file.text = ""
 		return
 	var entry: Dictionary = _peek_sources[index]
+	# Read the way the game reads it: a file through the Save System's backends, a node through the
+	# same walk Save Node State takes (the node and its behavior children).
+	var reader: Node = _save_system(_settings)
 	var data: Dictionary = {}
 	if entry.has("file"):
 		var path: String = str(entry["file"])
-		var reader: Node = _save_system(_settings)
 		data = reader.call("read_file", path, reader.call("save_file_format", path))
-		reader.free()
 		_peek_heading.text = EventSheetL10n.translate("What %s holds, in plain words:") % path.get_file()
 		_peek_file.text = file_text(FileAccess.get_file_as_bytes(path))
 	else:
 		if entry.has("node"):
-			data = _collect_like_save_system(entry["node"] as Node)
+			data = reader.call("_collect_node_state", entry["node"])
 		else:
 			var instance: Node = (load(str(entry["script"])) as GDScript).new()
 			data = instance.call("save_state")
 			instance.free()
 		_peek_heading.text = EventSheetL10n.translate("What a save of %s would hold right now, in plain words:") % entry["label"]
 		_peek_file.text = EventSheets.preview_save(data, str(_settings.get("format", "config")), str(entry["label"]))
+	reader.free()
 	var rows: Array = plain_rows(data)
 	if rows.is_empty():
 		_peek_table.add_child(_muted(EventSheetL10n.translate("It holds nothing yet. A node joins a save by exposing save_state(); a Save choice on its variables writes the pair.")))
@@ -707,17 +702,6 @@ static func _number(value: float) -> String:
 	return str(int(value)) if is_equal_approx(value, roundf(value)) and absf(value) < 1e15 else str(value)
 
 
-## The same duck-typed walk Save Node State performs (node + behavior children).
-func _collect_like_save_system(node: Node) -> Dictionary:
-	var states: Dictionary = {}
-	if node.has_method("save_state"):
-		states["."] = node.call("save_state")
-	for child: Node in node.get_children():
-		if child.has_method("save_state"):
-			states[str(child.name)] = child.call("save_state")
-	return states
-
-
 # ── Player settings: the files that live apart from the save slots ──────────────────
 
 
@@ -733,94 +717,140 @@ func _build_player_settings_tab() -> Control:
 		EventSheetPopupUI.ViewSwitch.BOTH: [EventSheetL10n.translate("Both"), EventSheetL10n.translate("The rows and the code together.")],
 	})
 	switch.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	_settings_switch = switch
 	switch.view_chosen.connect(_show_settings_view)
 	head.add_child(switch)
 	var column: VBoxContainer = EventSheetPopupUI.form_box()
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	column.add_child(head)
 	var files: HBoxContainer = HBoxContainer.new()
-	for card: Array in settings_files():
-		files.add_child(_file_card(card))
 	column.add_child(files)
-	for use: Array in settings_uses():
-		column.add_child(_use_card(use))
-	var scroll: ScrollContainer = ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.add_child(column)
-	box.add_child(scroll)
+	box.add_child(_scrolled(column))
+	# The cards read the Game Settings pack's own rows, which means reflecting the pack: done the
+	# first time the tab is shown rather than every time the window opens.
+	box.visibility_changed.connect(func() -> void:
+		if not box.is_visible_in_tree() or files.get_child_count() > 0:
+			return
+		for card: Array in settings_files():
+			files.add_child(_file_card(card))
+		for use: Array in settings_uses():
+			column.add_child(_use_card(use))
+		_show_settings_view(switch.view))
 	return box
 
 
 ## The three files a game keeps for its player: [title, file, what, sample, written by, read by,
-## what a new game does to it].
+## what a new game does to it]. Each file and its sample are the ones the shipping code writes: the
+## Save System's default slot in its default format, and the two ConfigFiles as Godot encodes them.
 static func settings_files() -> Array:
+	var slot: Dictionary = read_settings("")
+	var settings_pack: Dictionary = (load(GAME_SETTINGS_SCRIPT) as Script).get_script_constant_map() if ResourceLoader.exists(GAME_SETTINGS_SCRIPT) else {}
+	var settings: ConfigFile = ConfigFile.new()
+	for setting: Array in [["master_volume", 80], ["fullscreen", true], ["quality", "High"]]:
+		settings.set_value(str(settings_pack.get("SETTINGS_SECTION", "settings")), setting[0], setting[1])
+	var space: InputEventKey = InputEventKey.new()
+	space.keycode = KEY_SPACE
+	var bindings: ConfigFile = ConfigFile.new()
+	bindings.set_value("bindings", "jump", [space])
 	return [
-		[EventSheetL10n.translate("Save slots"), "user://save_0.cfg",
+		[EventSheetL10n.translate("Save slots"), str(slot["save_directory"]).path_join(str(slot["file_pattern"]).replace("{slot}", "0")),
 			EventSheetL10n.translate("The game itself: where the player is, what they carry. One file per slot."),
-			"[player]\nhealth=3\ncoins=42", EventSheetL10n.translate("Save Game, Save Value"),
-			EventSheetL10n.translate("Load Game"), EventSheetL10n.translate("Starts empty (a new slot)")],
-		[EventSheetL10n.translate("Options and graphics"), "user://settings.cfg",
+			EventSheets.preview_save({"health": 3, "coins": 42}, str(slot["format"]), "player").strip_edges(),
+			EventSheetL10n.translate("Save Game, Save Value"), EventSheetL10n.translate("Load Game"), EventSheetL10n.translate("Starts empty (a new slot)")],
+		[EventSheetL10n.translate("Options and graphics"), str(settings_pack.get("SETTINGS_FILE", "")),
 			EventSheetL10n.translate("Every declared setting: volume, subtitles, fullscreen, quality. One file for the whole game."),
-			"[settings]\nmaster_volume=80\nfullscreen=true\nquality=\"High\"",
-			EventSheetL10n.translate("Save All Settings, Save Setting"), EventSheetL10n.translate("Load All Settings"),
-			EventSheetL10n.translate("Kept as it is")],
-		[EventSheetL10n.translate("Key bindings"), "user://bindings.cfg",
+			settings.encode_to_text().strip_edges(), EventSheetL10n.translate("Save All Settings, Save Setting"),
+			EventSheetL10n.translate("Load All Settings"), EventSheetL10n.translate("Kept as it is")],
+		[EventSheetL10n.translate("Key bindings"), str((load(BINDINGS_MODULE) as Script).get_script_constant_map().get("BINDINGS_FILE", "")).trim_prefix("\"").trim_suffix("\""),
 			EventSheetL10n.translate("Which key or button does each action in the Input Map. One file for the whole game."),
-			"[bindings]\njump=[InputEventKey: Space]\nfire=[InputEventJoypadButton: 2]",
-			EventSheetL10n.translate("Save Bindings"), EventSheetL10n.translate("Load Bindings"),
-			EventSheetL10n.translate("Kept as it is")],
+			# A key is stored as its whole object, every field spelled out; its class says enough here.
+			bindings.encode_to_text().get_slice(",", 0) + ", …)]", EventSheetL10n.translate("Save Bindings"),
+			EventSheetL10n.translate("Load Bindings"), EventSheetL10n.translate("Kept as it is")],
 	]
 
 
 ## The settings uses, each as [title, why, conditions, actions, code]; a condition or action is
-## [object, the words the sheet reads]. The rows name the Game Settings pack's own actions and the
-## built-in bindings rows, so each card is something a reader can build from Add Action as it reads.
+## [object, the words the sheet reads]. A Game Settings row is written [its name, {param: value}] and
+## read off the pack's own definition - its reading and its codegen template - so the card is the row
+## a reader gets from Add Action. A built-in row is [object, words, its line of code]. The code is the
+## trigger's function line, the conditions as one `if`, then the actions.
 static func settings_uses() -> Array:
-	return [
+	var rows: Array = EventSheetPackReadingCheck.definitions_for_script(GAME_SETTINGS_SCRIPT)
+	var uses: Array = []
+	for use: Array in [
 		[EventSheetL10n.translate("Name each setting once, then load them"),
 			EventSheetL10n.translate("At start: declare each setting with its default, read the saved values, apply them, and put the saved keys back."),
-			[["System", EventSheetL10n.translate("On created")]],
-			[["Settings", EventSheetL10n.translate("Declare Setting \"master_volume\" default 80, percent")],
-				["Settings", EventSheetL10n.translate("Declare Setting \"fullscreen\" default false, toggle")],
-				["Settings", EventSheetL10n.translate("Load All Settings")], ["Settings", EventSheetL10n.translate("Apply All Settings")],
-				["Input", EventSheetL10n.translate("Load bindings from \"user://bindings.cfg\"")]],
-			"func _ready() -> void:\n\tSettings.declare_setting(\"master_volume\", 80, \"percent\")\n\tSettings.declare_setting(\"fullscreen\", false, \"toggle\")\n\tSettings.load_all_settings()\n\tSettings.apply_all_settings()\n\t# Load Bindings: the Input Map gets the saved keys back from user://bindings.cfg"],
+			"func _ready() -> void:", [["System", EventSheetL10n.translate("On created"), ""]],
+			[["Declare Setting", {"setting_name": "\"master_volume\"", "default_value": "80"}],
+				["Declare Setting", {"setting_name": "\"fullscreen\"", "default_value": "false", "kind": "toggle"}],
+				["Load All Settings", {}], ["Apply All Settings", {}],
+				["Input", EventSheetL10n.translate("Load bindings from \"user://bindings.cfg\""), "# Load Bindings: the Input Map gets the saved keys back from user://bindings.cfg"]]],
 		[EventSheetL10n.translate("Do what a setting means"),
 			EventSheetL10n.translate("One reaction per setting. Start-up and the options screen both arrive here, so they never disagree."),
-			[["Settings", EventSheetL10n.translate("On Setting Changed")], ["Settings", EventSheetL10n.translate("Changed Setting Is \"master_volume\"")]],
-			[["Audio", EventSheetL10n.translate("Set bus \"Master\" volume to Setting Value(\"master_volume\") %")]],
-			"func _on_setting_changed(setting_name: String, value: Variant) -> void:\n\tif setting_name == \"master_volume\":\n\t\tAudioServer.set_bus_volume_db(0, linear_to_db(value / 100.0))"],
+			"func _on_setting_changed(setting_name: String, value: Variant) -> void:",
+			[["On Setting Changed", {}], ["Changed Setting Is", {"setting_name": "\"master_volume\""}]],
+			[["Audio", EventSheetL10n.translate("Set bus \"Master\" volume to Setting Value(\"master_volume\") %"), "AudioServer.set_bus_volume_db(0, linear_to_db(value / 100.0))"]]],
 		[EventSheetL10n.translate("A slider on the options screen"),
 			EventSheetL10n.translate("Dragging it changes the setting; the reaction above does the rest."),
-			[["VolumeSlider", EventSheetL10n.translate("On value changed")]],
-			[["Settings", EventSheetL10n.translate("Set Setting \"master_volume\" to value")]],
-			"func _on_volume_slider_value_changed(value: float) -> void:\n\tSettings.set_setting(\"master_volume\", value)"],
+			"func _on_volume_slider_value_changed(value: float) -> void:", [["VolumeSlider", EventSheetL10n.translate("On value changed"), ""]],
+			[["Set Setting", {"setting_name": "\"master_volume\"", "value": "value"}]]],
 		[EventSheetL10n.translate("Keep them when the menu closes"),
 			EventSheetL10n.translate("Writes settings.cfg. Save slots are not touched."),
-			[["BackButton", EventSheetL10n.translate("On pressed")]],
-			[["Settings", EventSheetL10n.translate("Save All Settings")], ["Options", EventSheetL10n.translate("Hide")]],
-			"func _on_back_button_pressed() -> void:\n\tSettings.save_all_settings()\n\t$Options.hide()"],
+			"func _on_back_button_pressed() -> void:", [["BackButton", EventSheetL10n.translate("On pressed"), ""]],
+			[["Save All Settings", {}], ["Options", EventSheetL10n.translate("Hide"), "$Options.hide()"]]],
 		[EventSheetL10n.translate("Let players rebind a key"),
 			EventSheetL10n.translate("The button sets waiting_for to \"jump\"; the next key pressed becomes the new jump key and is saved."),
-			[["Input", EventSheetL10n.translate("On any key pressed")], ["System", "waiting_for != \"\""]],
-			[["Input", EventSheetL10n.translate("Rebind Control To waiting_for, the key pressed")],
-				["Input", EventSheetL10n.translate("Save bindings to \"user://bindings.cfg\"")], ["System", EventSheetL10n.translate("Set waiting_for to \"\"")]],
-			"func _unhandled_input(event: InputEvent) -> void:\n\tif waiting_for != \"\" and event is InputEventKey and event.pressed:\n\t\tInputMap.action_erase_events(waiting_for)\n\t\tInputMap.action_add_event(waiting_for, event)\n\t\t# Save Bindings writes user://bindings.cfg\n\t\twaiting_for = \"\""],
+			"func _unhandled_input(event: InputEvent) -> void:",
+			[["Input", EventSheetL10n.translate("On any key pressed"), ""],
+				["System", "waiting_for != \"\"", "waiting_for != \"\" and event is InputEventKey and event.pressed"]],
+			[["Input", EventSheetL10n.translate("Rebind Control To waiting_for, the key pressed"), "InputMap.action_erase_events(waiting_for)\nInputMap.action_add_event(waiting_for, event)"],
+				["Input", EventSheetL10n.translate("Save bindings to \"user://bindings.cfg\""), "# Save Bindings writes user://bindings.cfg"],
+				["System", EventSheetL10n.translate("Set waiting_for to \"\""), "waiting_for = \"\""]]],
 		[EventSheetL10n.translate("Graphics with a way back"),
 			EventSheetL10n.translate("Apply a quality preset with a 10 second countdown; if the screen goes wrong, it goes back by itself."),
-			[["ApplyButton", EventSheetL10n.translate("On pressed")]],
-			[["Settings", EventSheetL10n.translate("Apply Quality \"High\"")], ["Settings", EventSheetL10n.translate("Apply With A Way Back (10 seconds)")]],
-			"func _on_apply_button_pressed() -> void:\n\tSettings.apply_quality(\"High\")\n\tSettings.keep_a_way_back(10.0)\n\t# Keep These Settings stops the countdown;\n\t# On Settings Reverted fires if it runs out."],
-	]
+			"func _on_apply_button_pressed() -> void:", [["ApplyButton", EventSheetL10n.translate("On pressed"), ""]],
+			[["Apply Quality", {"preset": "\"High\""}], ["Apply With A Way Back", {"seconds": "10.0"}]]],
+	]:
+		var halves: Array = [[], []]
+		var tests: Array = []
+		var body: Array = []
+		for half: int in range(2):
+			for line: Array in use[3 + half]:
+				var row: Array = line if line.size() == 3 else _pack_row(rows, str(line[0]), line[1])
+				halves[half].append([row[0], row[1]])
+				if not str(row[2]).is_empty():
+					(tests if half == 0 else body).append(str(row[2]))
+		var code: String = str(use[2])
+		var indent: String = "\n\t"
+		if not tests.is_empty():
+			code += "%sif %s:" % [indent, " and ".join(PackedStringArray(tests))]
+			indent += "\t"
+		for line: String in body:
+			code += indent + line.replace("\n", indent)
+		uses.append([use[0], use[1], halves[0], halves[1], code])
+	return uses
+
+
+## One Game Settings row as [object, the words the sheet reads, its line of code], read off the pack
+## definition named `ace_name` with `values` in its parameters (a parameter left out keeps its default).
+static func _pack_row(definitions: Array, ace_name: String, values: Dictionary) -> Array:
+	for definition: ACEDefinition in definitions:
+		if definition.display_name != ace_name:
+			continue
+		var words: String = EventSheetL10n.translate(str(definition.metadata.get("display_template", ace_name)))
+		var code: String = str(definition.metadata.get("codegen_template", ""))
+		for parameter: Dictionary in definition.parameters:
+			var slot: String = "{%s}" % parameter.get("id", "")
+			var value: String = str(values.get(parameter.get("id", ""), parameter.get("default_value", parameter.get("default", ""))))
+			words = words.replace(slot, value)
+			code = code.replace(slot, value)
+		return ["Settings", words.replace("[b]", "").replace("[/b]", ""), code]
+	return ["Settings", ace_name, ""]
 
 
 func _file_card(card: Array) -> Control:
 	var box: VBoxContainer = EventSheetPopupUI.form_box()
 	var head: HBoxContainer = HBoxContainer.new()
-	var title: Label = Label.new()
-	title.text = str(card[0])
+	var title: Label = _label(str(card[0]))
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(title)
 	head.add_child(EventSheetPopupUI.metadata_badge(str(card[1])))
@@ -831,60 +861,41 @@ func _file_card(card: Array) -> Control:
 	facts.columns = 2
 	var names: Array = [EventSheetL10n.translate("Written by"), EventSheetL10n.translate("Read by"), EventSheetL10n.translate("New game")]
 	for index: int in range(3):
-		var fact_name: Label = Label.new()
-		fact_name.text = str(names[index])
-		fact_name.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
-		facts.add_child(fact_name)
+		facts.add_child(_label(str(names[index]), EventSheetPopupUI.muted_text_color()))
 		var fact: Label = _muted(str(card[4 + index]), EventSheetPalette.scaled_f(80.0))
 		fact.add_theme_color_override("font_color", EventSheetPopupUI.text_color())
 		fact.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		facts.add_child(fact)
 	box.add_child(facts)
-	var panel: PanelContainer = EventSheetPopupUI.panel_section(box)
-	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	return panel
+	return _card(box)
 
 
 func _use_card(use: Array) -> Control:
 	var box: VBoxContainer = EventSheetPopupUI.form_box()
-	var title: Label = Label.new()
-	title.text = str(use[0])
-	box.add_child(title)
+	box.add_child(_label(str(use[0])))
 	box.add_child(_muted(str(use[1]), EventSheetPalette.scaled_f(560.0)))
 	var events: HBoxContainer = HBoxContainer.new()
 	for half: Array in [use[2], use[3]]:
 		var lines: VBoxContainer = VBoxContainer.new()
-		lines.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		for line: Array in half:
-			lines.add_child(_event_line(str(line[0]), str(line[1])))
-		events.add_child(EventSheetPopupUI.panel_section(lines))
-		(events.get_child(-1) as Control).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			# One condition or action as the sheet reads it: the object in the quiet object column, then its words.
+			var row: HBoxContainer = HBoxContainer.new()
+			var object_label: Label = _label(str(line[0]), EventSheetPopupUI.secondary_text_color())
+			object_label.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+			row.add_child(object_label)
+			var said: Label = _label(str(line[1]), EventSheetPopupUI.text_color())
+			said.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			said.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			said.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(160.0), 0.0)
+			row.add_child(said)
+			lines.add_child(row)
+		events.add_child(_card(lines))
 	box.add_child(events)
 	# A Label draws no tab stops, so the code's indentation is spelled in spaces.
-	var code: PanelContainer = EventSheetPopupUI.code_card(str(use[4]).replace("	", "    "), EventSheetPalette.scaled_f(560.0))
+	var code: PanelContainer = EventSheetPopupUI.code_card(str(use[4]).replace("\t", "    "), EventSheetPalette.scaled_f(560.0))
 	box.add_child(code)
 	_settings_views.append([events, code])
-	var panel: PanelContainer = EventSheetPopupUI.panel_section(box)
-	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	return panel
-
-
-## One condition or action as the sheet reads it: the object in the quiet object column, then its words.
-static func _event_line(object_name: String, words: String) -> HBoxContainer:
-	var line: HBoxContainer = HBoxContainer.new()
-	var object_label: Label = Label.new()
-	object_label.text = object_name
-	object_label.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	object_label.add_theme_color_override("font_color", EventSheetPopupUI.secondary_text_color())
-	line.add_child(object_label)
-	var said: Label = Label.new()
-	said.text = words
-	said.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	said.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	said.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(160.0), 0.0)
-	said.add_theme_color_override("font_color", EventSheetPopupUI.text_color())
-	line.add_child(said)
-	return line
+	return _card(box)
 
 
 func _show_settings_view(view: String) -> void:
@@ -898,45 +909,37 @@ func _show_settings_view(view: String) -> void:
 
 ## The name a Save choice shows in its dropdown and in the legend.
 static func save_choice_name(choice: String) -> String:
-	match choice:
-		"auto":
-			return EventSheetL10n.translate("Auto")
-		"load":
-			return EventSheetL10n.translate("Load only")
-		"save":
-			return EventSheetL10n.translate("Save only")
-		"manual":
-			return EventSheetL10n.translate("Manually")
-	return EventSheetL10n.translate("Never")
+	return _choice_words(choice)[0]
 
 
-## What a Save choice does, in one sentence - the line its option shows on hover and the legend
-## repeats. Each sentence is written out inside its translate() call so the translation harvest finds it.
+## What a Save choice does, in one sentence - the line its option shows on hover and the legend repeats.
 static func save_choice_description(choice: String) -> String:
-	match choice:
-		"auto":
-			return EventSheetL10n.translate("Loaded when the object enters the game, saved when it leaves (and when the game quits). The easy default.")
-		"load":
-			return EventSheetL10n.translate("Loaded automatically, but only saved when your events say Save Game.")
-		"save":
-			return EventSheetL10n.translate("Saved automatically, never loaded back: good for stats or play time.")
-		"manual":
-			return EventSheetL10n.translate("Only when your events say Save Game / Load Game: checkpoints and save slots.")
-	return EventSheetL10n.translate("Not saved. It starts from its default every time.")
+	return _choice_words(choice)[1]
 
 
 ## What a Save choice is usually for - the second line of its option's hover.
 static func save_choice_use(choice: String) -> String:
+	return _choice_words(choice)[2]
+
+
+## A Save choice's [name, what it does, what it is for]. Each sentence is written out inside its
+## translate() call so the translation harvest finds it.
+static func _choice_words(choice: String) -> Array:
 	match choice:
 		"auto":
-			return EventSheetL10n.translate("Use for: health, coins, unlocked doors.")
+			return [EventSheetL10n.translate("Auto"), EventSheetL10n.translate("Loaded when the object enters the game, saved when it leaves (and when the game quits). The easy default."),
+				EventSheetL10n.translate("Use for: health, coins, unlocked doors.")]
 		"load":
-			return EventSheetL10n.translate("Use for: settings you write yourself at a menu.")
+			return [EventSheetL10n.translate("Load only"), EventSheetL10n.translate("Loaded automatically, but only saved when your events say Save Game."),
+				EventSheetL10n.translate("Use for: settings you write yourself at a menu.")]
 		"save":
-			return EventSheetL10n.translate("Use for: play time, total jumps, stats you read elsewhere.")
+			return [EventSheetL10n.translate("Save only"), EventSheetL10n.translate("Saved automatically, never loaded back: good for stats or play time."),
+				EventSheetL10n.translate("Use for: play time, total jumps, stats you read elsewhere.")]
 		"manual":
-			return EventSheetL10n.translate("Use for: checkpoint position, save-slot games.")
-	return EventSheetL10n.translate("Use for: timers, cooldowns, anything worked out again each run.")
+			return [EventSheetL10n.translate("Manually"), EventSheetL10n.translate("Only when your events say Save Game / Load Game: checkpoints and save slots."),
+				EventSheetL10n.translate("Use for: checkpoint position, save-slot games.")]
+	return [EventSheetL10n.translate("Never"), EventSheetL10n.translate("Not saved. It starts from its default every time."),
+		EventSheetL10n.translate("Use for: timers, cooldowns, anything worked out again each run.")]
 
 
 ## The variables of `sheet` a Save choice can be given: every variable but the constants and the
@@ -1027,9 +1030,8 @@ func _build_what_tab() -> Control:
 	_what_rows.columns = 4
 	_what_rows.add_theme_constant_override("h_separation", EventSheetPalette.scaled(12))
 	box.add_child(EventSheetPopupUI.panel_section(_what_rows))
-	_what_summary = Label.new()
+	_what_summary = _label("", EventSheetPopupUI.text_color())
 	_what_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_what_summary.add_theme_color_override("font_color", EventSheetPopupUI.text_color())
 	box.add_child(_what_summary)
 	var legend: Array = []
 	for choice: String in SAVE_CHOICE_ORDER:
@@ -1038,10 +1040,8 @@ func _build_what_tab() -> Control:
 		EventSheetL10n.translate("What it does")]), legend, 1))
 	_where_kept = VBoxContainer.new()
 	box.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("Where it is kept"), _where_kept))
-	var scroll: ScrollContainer = ScrollContainer.new()
+	var scroll: ScrollContainer = _scrolled(box)
 	scroll.set_meta("title", EventSheetL10n.translate("What gets saved"))
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.add_child(box)
 	return scroll
 
 
@@ -1064,9 +1064,7 @@ func _refresh_what() -> void:
 	for variable: Dictionary in variables:
 		# Type and name in the code font, as written; the variable's own description beside them.
 		for cell: Array in [[variable["type"], true, true], [variable["name"], true, false], [variable["description"], false, true]]:
-			var label: Label = Label.new()
-			label.text = str(cell[0])
-			label.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color() if cell[2] else EventSheetPopupUI.text_color())
+			var label: Label = _label(str(cell[0]), EventSheetPopupUI.muted_text_color() if cell[2] else EventSheetPopupUI.text_color())
 			if cell[1] and mono != null:
 				label.add_theme_font_override("font", mono)
 			_what_rows.add_child(label)
@@ -1105,7 +1103,7 @@ func _fill_where_kept() -> void:
 		child.queue_free()
 	var script_file: String = _dock._current_sheet_path.get_file() if not _dock._current_sheet_path.is_empty() \
 		else EventSheetL10n.translate("the object's script")
-	var slot_file: String = _save_directory().path_join(str(_settings.get("file_pattern", "save_{slot}.cfg")).replace("{slot}", "0"))
+	var slot_file: String = _save_directory().path_join(_pattern().replace("{slot}", "0"))
 	var columns: PackedStringArray = PackedStringArray([EventSheetL10n.translate("What happens"), EventSheetL10n.translate("File")])
 	_where_kept.add_child(EventSheetPopupUI.small_caps_label(EventSheetL10n.translate("In the editor (once, while you build)")))
 	_where_kept.add_child(EventSheetPopupUI.compact_table(columns, [
