@@ -392,6 +392,8 @@ func _try_lift_property(lines: PackedStringArray, index: int) -> Dictionary:
 	lifted.setter_param = str(accessors.get("setter_param", "value"))
 	lifted.setter_name = str(accessors.get("setter_name", ""))
 	lifted.getter_name = str(accessors.get("getter_name", ""))
+	if accessors.has("layout"):
+		lifted.set_meta(SheetCompiler.ACCESSOR_LAYOUT_META, accessors["layout"])
 	# Byte-gate: the re-emitted property (declaration + accessors) must reproduce the collected block exactly.
 	if SheetCompiler._emit_tree_variable_line(lifted) != "\n".join(block):
 		return {}
@@ -413,32 +415,53 @@ func _parse_property_accessors(block: PackedStringArray) -> Dictionary:
 	var mode: String = ""  # "set" / "get"
 	var saw_setter: bool = false
 	var saw_getter: bool = false
+	# The accessors in the order written, and which were written on their header's own line
+	# (`get: return _panel().tree`). Handed to emission only when it is not the canonical shape.
+	var layout: PackedStringArray = PackedStringArray()
 	for i: int in range(1, block.size()):
 		var line: String = block[i]
-		if line.begins_with("\tset(") and line.ends_with("):"):
+		var inline_setter: int = line.find("): ") if line.begins_with("\tset(") else -1
+		if line.begins_with("\tset(") and line.ends_with("):") and not saw_setter:
 			mode = "set"
 			saw_setter = true
 			setter_param = line.substr(5, line.length() - 7)  # between "\tset(" and "):"
-		elif line == "\tget:":
+			layout.append("set")
+		elif line == "\tget:" and not saw_getter:
 			mode = "get"
 			saw_getter = true
-		elif line.begins_with("\t\t") or line.strip_edges().is_empty():
+			layout.append("get")
+		elif inline_setter > 5 and not saw_setter and not line.substr(inline_setter + 3).strip_edges().is_empty():
+			mode = ""
+			saw_setter = true
+			setter_param = line.substr(5, inline_setter - 5)
+			setter_lines.append(line.substr(inline_setter + 3))
+			layout.append("set" + SheetCompiler.INLINE_ACCESSOR)
+		elif line.begins_with("\tget: ") and not saw_getter and not line.substr(6).strip_edges().is_empty():
+			mode = ""
+			saw_getter = true
+			getter_lines.append(line.substr(6))
+			layout.append("get" + SheetCompiler.INLINE_ACCESSOR)
+		elif (line.begins_with("\t\t") or line.strip_edges().is_empty()) and not mode.is_empty():
 			var body: String = line.substr(2) if line.begins_with("\t\t") else line  # dedent two tabs
 			if mode == "set":
 				setter_lines.append(body)
-			elif mode == "get":
-				getter_lines.append(body)
 			else:
-				return {}  # a two-tab line before any accessor header - not our shape
+				getter_lines.append(body)
 		else:
-			return {}  # an unexpected one-tab line (a second property member, etc.) - stay verbatim
+			# An unexpected one-tab line (a second property member, etc.), or a two-tab line before any
+			# accessor header or under a one-line one - not our shape, so it stays verbatim.
+			return {}
 	if not saw_setter and not saw_getter:
 		return {}
-	return {
+	var accessors: Dictionary = {
 		"setter_body": "\n".join(setter_lines),
 		"getter_body": "\n".join(getter_lines),
 		"setter_param": setter_param,
 	}
+	if layout != PackedStringArray(["set", "get"]) and layout != PackedStringArray(["set"]) \
+			and layout != PackedStringArray(["get"]):
+		accessors["layout"] = layout
+	return accessors
 
 
 ## The NAMED spelling of a property, or {} when the block is not written that way:

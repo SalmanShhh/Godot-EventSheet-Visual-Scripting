@@ -1283,6 +1283,8 @@ static func _emit_notification_match(events: Array, lines: PackedStringArray, so
 		constants.append(constant)
 	if constants.is_empty():
 		return false
+	if _emit_notification_chain(events, constants, lines, source_map, warnings):
+		return true
 	lines.append("\tmatch what:")
 	for case_index: int in range(events.size()):
 		lines.append("\t\t%s:" % constants[case_index])
@@ -1290,6 +1292,42 @@ static func _emit_notification_match(events: Array, lines: PackedStringArray, so
 		_emit_event_body([events[case_index]], lines, source_map, 3, warnings)
 		if not _has_statement(lines, case_body_start):
 			lines.append("\t\t\tpass")
+	return true
+
+
+## The meta an event opened from an `if what == NOTIFICATION_X:` arm carries: that arm's number in
+## its chain. Set by the importer, read only by the emitter below.
+const NOTIFICATION_CHAIN_META := "__notification_if_chain"
+
+
+## The same handler in the spelling a hand-written file opened it with: `if what == X:` then
+## `elif what == Y:`, one arm per run of events that came from one arm. Only when EVERY event carries
+## the arm number the importer gave it, and no notification is split over two runs (an `elif` naming
+## a notification an earlier arm already took would never run) - otherwise the `match` above is the
+## shape, as it is for every handler a sheet authored.
+static func _emit_notification_chain(events: Array, constants: PackedStringArray, lines: PackedStringArray,
+		source_map: Array, warnings: Array) -> bool:
+	var arms: Array = []
+	var seen: Dictionary = {}
+	for event_index: int in range(events.size()):
+		var event_row: EventRow = events[event_index] as EventRow
+		if not event_row.has_meta(NOTIFICATION_CHAIN_META):
+			return false
+		var arm_number: int = int(event_row.get_meta(NOTIFICATION_CHAIN_META))
+		var last: Dictionary = arms.back() if not arms.is_empty() else {}
+		if not last.is_empty() and int(last["arm"]) == arm_number and str(last["constant"]) == constants[event_index]:
+			(last["events"] as Array).append(event_row)
+			continue
+		if seen.has(constants[event_index]):
+			return false
+		seen[constants[event_index]] = true
+		arms.append({"arm": arm_number, "constant": constants[event_index], "events": [event_row]})
+	for arm_index: int in range(arms.size()):
+		lines.append("\t%s what == %s:" % ["if" if arm_index == 0 else "elif", str(arms[arm_index]["constant"])])
+		var arm_body_start: int = lines.size()
+		_emit_event_body(arms[arm_index]["events"], lines, source_map, 2, warnings)
+		if not _has_statement(lines, arm_body_start):
+			lines.append("\t\tpass")
 	return true
 
 
@@ -4469,16 +4507,35 @@ static func _append_property_accessors(local_var: LocalVariable, declaration_lin
 		for index: int in range(named.size()):
 			out.append(named[index] + ("," if index < named.size() - 1 else ""))
 		return "\n".join(out)
-	if not local_var.setter_body.strip_edges().is_empty():
-		var param: String = local_var.setter_param.strip_edges() if not local_var.setter_param.strip_edges().is_empty() else "value"
-		out.append("\tset(%s):" % param)
-		for body_line: String in local_var.setter_body.split("\n"):
-			out.append("\t\t%s" % body_line)
-	if not local_var.getter_body.strip_edges().is_empty():
-		out.append("\tget:")
-		for body_line: String in local_var.getter_body.split("\n"):
+	# The order and the one-line spelling a hand-written property was opened with (`get: return x`
+	# above `set(value): x = value`), when it was; the canonical setter-then-getter blocks otherwise.
+	# An accessor whose body has grown past one line writes the block form, whatever it was before.
+	var layout: PackedStringArray = PackedStringArray(local_var.get_meta(ACCESSOR_LAYOUT_META, PackedStringArray(["set", "get"])))
+	for accessor: String in ["set", "get"]:
+		if not layout.has(accessor) and not layout.has(accessor + INLINE_ACCESSOR):
+			layout.append(accessor)
+	for accessor: String in layout:
+		var body: String = local_var.setter_body if accessor.begins_with("set") else local_var.getter_body
+		if body.strip_edges().is_empty():
+			continue
+		var accessor_header: String = "\tget:"
+		if accessor.begins_with("set"):
+			accessor_header = "\tset(%s):" % (local_var.setter_param.strip_edges()
+				if not local_var.setter_param.strip_edges().is_empty() else "value")
+		if accessor.ends_with(INLINE_ACCESSOR) and not body.contains("\n"):
+			out.append("%s %s" % [accessor_header, body])
+			continue
+		out.append(accessor_header)
+		for body_line: String in body.split("\n"):
 			out.append("\t\t%s" % body_line)
 	return "\n".join(out)
+
+
+## The meta a property opened from a file carries when its accessors were not the canonical
+## setter-then-getter blocks: the accessors in written order, `set` / `get`, each with INLINE_ACCESSOR
+## on the end when it was written on its header's own line. Set by the importer, read above.
+const ACCESSOR_LAYOUT_META := "__accessor_layout"
+const INLINE_ACCESSOR := "_inline"
 
 
 ## Decodes a table-column enum type token: "enum(circle|ring|rect)" -> ["circle", "ring", "rect"];

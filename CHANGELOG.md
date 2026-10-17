@@ -55,6 +55,17 @@
 - A note written inside a callback or a branch that stays code opens as a comment row, its indent
   kept so the file comes back exactly as written.
 
+### Changed: engine callbacks written the engine docs' way open as rows
+
+- `_notification` written as `if what == NOTIFICATION_X:` / `elif what == NOTIFICATION_Y:` opens as
+  one trigger per notification, exactly as the `match what:` spelling does, and saves back as the
+  chain it was. An arm may hold several rows. An arm that tests more than `what`, and the
+  translation-changed arm that On Language Changed itself writes, keep the handler as it was.
+- `_get_property_list` written between other functions opens as the function row it is, in place.
+- A property whose accessors sit on their headers' own line (`get: return panel.tree`), or whose
+  getter comes before its setter, opens as the property row with its get and set, and saves back in
+  that spelling. An accessor grown past one line saves as its block.
+
 ### Fixed: six edges of the variables, functions, translation and save slices
 
 - Group ▸ New group… is greyed for a variable declared in another file, with the same hover as End

@@ -1007,12 +1007,14 @@ static func _is_engine_virtual_header(header: String) -> bool:
 	if name_end < 0:
 		return false
 	var function_name: String = bare.substr(5, name_end - 5).strip_edges()
+	# `_get_property_list` is not on this list: nothing regenerates it from sheet metadata, and the
+	# list it builds is ordinary statements, so it opens as the function row it is, in its place.
 	return function_name in [
 		"_init", "_static_init", "_ready", "_enter_tree", "_exit_tree", "_process", "_physics_process",
 		"_input", "_unhandled_input", "_unhandled_key_input", "_shortcut_input", "_gui_input",
 		"_input_event",
 		"_draw", "_notification", "_get_configuration_warnings", "_to_string",
-		"_get_property_list", "_validate_property", "_property_can_revert", "_property_get_revert",
+		"_validate_property", "_property_can_revert", "_property_get_revert",
 		"_integrate_forces", "_physics_process_internal",
 	]
 
@@ -2381,10 +2383,13 @@ static func _is_host_binding_body(function_lines: PackedStringArray) -> bool:
 ## `_notification(what)` whose whole body is a `match what:` over NOTIFICATION_* constants: one
 ## trigger event per case, id "OnNotification:<CONSTANT>". The engine calls the ONE handler for every
 ## notification, so the cases - not a function each - are what the sheet's events map onto, and the
-## compiler re-emits exactly this shape back from those ids. Anything else in the body (the `if what
-## == ...` spelling, a statement beside the match, a case that is not a NOTIFICATION_ constant, or a
-## case needing more than one event row) fails the lift and the function stays a code block.
+## compiler re-emits exactly this shape back from those ids. The `if what == ...` spelling is handed
+## to _lift_notification_chain below; anything else in the body (a statement beside the match, a
+## case that is not a NOTIFICATION_ constant, or a case needing more than one event row) fails the
+## lift and the function stays a code block.
 static func _lift_notification_function(function_lines: PackedStringArray) -> Dictionary:
+	if function_lines.size() >= 3 and function_lines[1].begins_with("\tif what == "):
+		return _lift_notification_chain(function_lines)
 	if function_lines.size() < 3 or function_lines[1] != "\tmatch what:":
 		return {"ok": false}
 	var case_regex: RegEx = RegEx.create_from_string("^\\t\\t(NOTIFICATION_[A-Z0-9_]+):$")
@@ -2417,9 +2422,54 @@ static func _lift_notification_function(function_lines: PackedStringArray) -> Di
 	return {"ok": true, "events": events}
 
 
-## The one `_notification` header a match lift reads. Any other spelling stays a code block, which is
-## also what keeps the `if what == NOTIFICATION_TRANSLATION_CHANGED:` shape of the language-changed
-## trigger on the path it already had.
+## The other way the same handler is written - the way the engine's own docs write it:
+##
+##	func _notification(what: int) -> void:
+##		if what == NOTIFICATION_RESIZED:
+##			…
+##		elif what == NOTIFICATION_MOUSE_EXIT:
+##			…
+##
+## Each arm is its notification's trigger, exactly as a `match` case is, and may hold several rows
+## (a branch inside an arm is a row of its own). Every event carries the number of the arm it came
+## from in SheetCompiler.NOTIFICATION_CHAIN_META, which is what tells emission to write this chain back rather than
+## a `match`. An arm that tests anything besides `what` (`elif what == X and is_inside_tree():`) keeps
+## the whole handler a code block, and the per-function byte gate decides the rest.
+static func _lift_notification_chain(function_lines: PackedStringArray) -> Dictionary:
+	var arm_regex: RegEx = RegEx.create_from_string("^\\t(if|elif) what == (NOTIFICATION_[A-Z0-9_]+):$")
+	var reverse_entries: Array = _build_reverse_entries()
+	var events: Array = []
+	var index: int = 1
+	var arm_number: int = 0
+	while index < function_lines.size():
+		var arm: RegExMatch = arm_regex.search(function_lines[index])
+		if arm == null or (arm.get_string(1) == "if") != (arm_number == 0):
+			return {"ok": false}
+		# The translation arm is what On Language Changed itself compiles to, gate and all, and it
+		# keeps the path that row already has rather than becoming a second spelling of it.
+		if arm.get_string(2) == "NOTIFICATION_TRANSLATION_CHANGED":
+			return {"ok": false}
+		var trigger_id: String = "OnNotification:%s" % arm.get_string(2)
+		var parsed: Dictionary = _parse_body(function_lines, index + 1, 2, trigger_id, "Core", "", "",
+			reverse_entries, true, false, trigger_id)
+		var next_index: int = int(parsed.get("next", index + 1))
+		var arm_rows: Array = parsed.get("rows", [])
+		if not bool(parsed.get("ok", false)) or arm_rows.is_empty() or next_index <= index:
+			return {"ok": false}
+		for arm_row: Variant in arm_rows:
+			if not (arm_row is EventRow):
+				return {"ok": false}
+			(arm_row as EventRow).set_meta(SheetCompiler.NOTIFICATION_CHAIN_META, arm_number)
+		events.append_array(arm_rows)
+		arm_number += 1
+		index = next_index
+	return {"ok": true, "events": events}
+
+
+## The one `_notification` header the two notification lifts (a `match`, an `if`/`elif` chain) read.
+## Any other spelling stays a code block, and the chain lift refuses the
+## `if what == NOTIFICATION_TRANSLATION_CHANGED:` arm, which keeps the language-changed trigger on
+## the path it already had.
 const NOTIFICATION_HEADER: String = "func _notification(what: int) -> void:"
 
 

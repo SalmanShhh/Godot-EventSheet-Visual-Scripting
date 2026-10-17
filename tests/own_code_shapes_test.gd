@@ -86,10 +86,62 @@ func open_for(object_label: String) -> void:
 """
 
 
+## The engine callbacks the editor writes in the engine docs' own spelling: a notification handler
+## as an `if`/`elif` chain (each arm holding more than one row), a property list built by hand
+## between other functions, and properties whose accessors sit on their headers' own lines.
+const CALLBACKS_SOURCE := """extends Control
+
+var _panel: Node = null
+var _resizes: int = 0
+
+
+func _ready() -> void:
+	_panel = Node.new()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED:
+		# Count it, and only redraw once there is a panel to redraw.
+		_resizes += 1
+		if _panel != null:
+			queue_redraw()
+		update_minimum_size()
+	elif what == NOTIFICATION_MOUSE_EXIT:
+		queue_redraw()
+
+
+func _get_property_list() -> Array[Dictionary]:
+	var properties: Array[Dictionary] = []
+	properties.append({"name": "resizes", "type": TYPE_INT})
+	return properties
+
+
+func helper() -> void:
+	pass
+
+var _tree: Tree:
+	get: return _panel.get_child(0)
+	set(value): _panel.add_child(value)
+
+var _only_read: int:
+	get: return _resizes
+"""
+
+## The language-changed trigger's own compiled shape, which keeps the path it already had.
+const TRANSLATION_SOURCE := """extends Node
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED:
+		print("language")
+"""
+
+
 static func run() -> bool:
 	var ok: bool = true
 	ok = _test_handed_on_literals() and ok
 	ok = _test_continued_statements() and ok
+	ok = _test_engine_callbacks() and ok
 	return ok
 
 
@@ -223,6 +275,61 @@ static func _test_continued_statements() -> bool:
 		["nor one inside a string", EventSheetACELifter.ends_in_continuation("x = \"a \\"), false],
 		["a trailing backslash does", EventSheetACELifter.ends_in_continuation("x = a + \\"), true],
 	]) and ok
+	return ok
+
+
+## The `if`/`elif` notification chain opens as its notifications' triggers and writes the chain back;
+## `_get_property_list` is a function row in its place; one-line accessors are the property's get/set.
+static func _test_engine_callbacks() -> bool:
+	var ok: bool = true
+	var sheet: EventSheetResource = SUPPORT.reopen(CALLBACKS_SOURCE)
+	sheet.external_source_path = "user://own_code_shapes_callbacks.gd"
+	ok = _check("a file of engine callbacks reproduces byte-identically",
+		SUPPORT.compile_output(sheet, "user://own_code_shapes_callbacks.gd"), CALLBACKS_SOURCE) and ok
+	var triggers: Array = []
+	for entry: Variant in sheet.events:
+		if entry is EventRow and (entry as EventRow).trigger_id.begins_with("OnNotification:"):
+			triggers.append((entry as EventRow).trigger_id)
+	ok = _check("each arm is its notification's trigger, a branch inside one its own row", triggers,
+		["OnNotification:NOTIFICATION_RESIZED", "OnNotification:NOTIFICATION_RESIZED",
+			"OnNotification:NOTIFICATION_RESIZED", "OnNotification:NOTIFICATION_MOUSE_EXIT"]) and ok
+	var raw_blocks: Array = []
+	for entry: Variant in sheet.events:
+		if entry is RawCodeRow and (entry as RawCodeRow).code.strip_edges().begins_with("func "):
+			raw_blocks.append((entry as RawCodeRow).code.split("\n")[0])
+	ok = _check("no callback is left a block of code", raw_blocks, []) and ok
+	var property_list: EventFunction = null
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction and (entry as EventFunction).function_name == "_get_property_list":
+			property_list = entry
+	ok = _check("the hand-built property list is a function row", property_list != null, true) and ok
+	var accessors: Array = []
+	for variable: Variant in sheet.events:
+		var local_var: LocalVariable = variable as LocalVariable
+		if local_var != null and local_var.has_accessor_bodies():
+			accessors.append([local_var.name, local_var.getter_body, local_var.setter_body])
+	ok = _check("one-line accessors are the property's get and set", accessors, [
+		["_tree", "return _panel.get_child(0)", "_panel.add_child(value)"],
+		["_only_read", "return _resizes", ""],
+	]) and ok
+	# A getter grown past one line writes the block form: the one-line spelling is the file's, not a rule.
+	var tree_var: LocalVariable = null
+	for variable: Variant in sheet.events:
+		if variable is LocalVariable and (variable as LocalVariable).name == "_tree":
+			tree_var = variable
+	if tree_var != null:
+		tree_var.getter_body = "var first: Node = _panel.get_child(0)\nreturn first"
+	ok = _check("a getter grown past one line writes its block", SUPPORT.compile_output(sheet,
+		"user://own_code_shapes_callbacks.gd").contains("\tget:\n\t\tvar first: Node = _panel.get_child(0)\n\t\treturn first\n\tset(value): _panel.add_child(value)"),
+		true) and ok
+	var translated: EventSheetResource = SUPPORT.reopen(TRANSLATION_SOURCE)
+	var translated_triggers: Array = []
+	for entry: Variant in translated.events:
+		if entry is EventRow:
+			translated_triggers.append((entry as EventRow).trigger_id)
+	ok = _check("the language-changed arm keeps the path it had", translated_triggers, []) and ok
+	ok = _check("and still reproduces byte-identically",
+		SUPPORT.reemit(TRANSLATION_SOURCE, "user://own_code_shapes_translation.gd"), TRANSLATION_SOURCE) and ok
 	return ok
 
 

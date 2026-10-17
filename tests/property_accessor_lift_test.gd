@@ -5,10 +5,10 @@
 # so it reads `On <name> set` with a `v` payload chip and its body as actions and sub-events; a `get:` block
 # gives a value, so it reads as an expression block whose body says "Set return value to …". Emit: the
 # declaration gains a `:` suffix and the accessor blocks emit beneath it (canonical set-then-get). The lift
-# is byte-gated - a property whose re-emission does not reproduce the source (odd spacing,
-# getter-before-setter) stays a verbatim block, and an accessor body the reading cannot lift keeps the
-# verbatim accessor block. Pins: emit, both-accessors and one-accessor round-trips, the event rendering of
-# both accessors, and two degrade cases.
+# is byte-gated - a property whose re-emission does not reproduce the source (odd spacing) stays a
+# verbatim block, a getter written before its setter keeps that order, and an accessor body the reading
+# cannot lift keeps the verbatim accessor block. Pins: emit, both-accessors and one-accessor round-trips,
+# the event rendering of both accessors, the getter-first order, and a degrade case.
 @tool
 class_name PropertyAccessorLiftTest
 extends RefCounted
@@ -148,13 +148,12 @@ static func run() -> bool:
 		str(SheetCompiler.compile(odd_body, "user://prop_odd_body.gd").get("output", "")),
 		"extends Node\n\nvar tint: Color = Color.WHITE:\n\tset(value):\n\t\ttint = value\n\t\tmaterial.set_shader_parameter(&\"tint\", value)\n") and ok
 
-	# ── Degrade: a getter-before-setter (non-canonical order) does NOT lift as a structured property - the
-	# accessor bodies stay a verbatim block (no setter_body/getter_body recovered) and it round-trips. ──
+	# ── A getter written before its setter lifts with both bodies, and writes back in that order. ──
 	var odd: String = "extends Node\n\nvar v: int = 0:\n\tget:\n\t\treturn v\n\tset(value):\n\t\tv = value\n"
 	var odd_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(odd)
 	var odd_var: LocalVariable = _find_var(odd_sheet, "v")
-	ok = _check("a getter-before-setter property has NO structured accessors (stays verbatim)",
-		odd_var == null or not odd_var.has_property_accessors(), true) and ok
+	ok = _check("a getter-before-setter property lifts with both of its bodies",
+		[odd_var.getter_body, odd_var.setter_body] if odd_var != null else [], ["return v", "v = value"]) and ok
 	odd_sheet.external_source_path = "user://prop_odd.gd"
 	ok = _check("the non-canonical property still round-trips byte-identically",
 		str(SheetCompiler.compile(odd_sheet, "user://prop_odd.gd").get("output", "")) == odd, true) and ok
