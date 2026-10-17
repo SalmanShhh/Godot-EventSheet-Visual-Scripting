@@ -122,8 +122,24 @@ static func run() -> bool:
 		str(SheetCompiler.compile(editor._current_sheet, "user://eventsheets_watch_rt.gd").get("output", "")).contains("var hp: int = 3")],
 		["Using the file on disk keeps your unsaved edits as a backup in Sheet Backups first; Ctrl+Z cannot bring them back.",
 		true, false, true]) and all_passed
+	# When the version in the editor cannot be kept (here a file sits where its backup folder goes),
+	# the file on disk is NOT loaded over it: the answer promised a backup first, and without one the
+	# edits stay on screen.
 	for made: String in EventSheetBackups.list_backups(sample_path):
 		DirAccess.remove_absolute(made)
+	var backup_dir: String = EventSheetBackups.backup_dir_for(sample_path)
+	DirAccess.remove_absolute(backup_dir)
+	FileAccess.open(backup_dir, FileAccess.WRITE).close()
+	var unkept: EventSheetResource = editor._current_sheet
+	var fourth: FileAccess = FileAccess.open(sample_path, FileAccess.WRITE)
+	fourth.store_string("extends Node\n\nvar hp: int = 4\n")
+	fourth.close()
+	editor._external_mtime = 1
+	var reloaded: bool = editor._external_watcher.use_file_on_disk()
+	DirAccess.remove_absolute(backup_dir)
+	all_passed = _check("edits that cannot be kept as a backup are not replaced by the file on disk",
+		[reloaded, editor._current_sheet == unkept, editor._external_watcher.sheet_changed_on_disk()],
+		[false, true, true]) and all_passed
 	editor.free()
 
 	return all_passed

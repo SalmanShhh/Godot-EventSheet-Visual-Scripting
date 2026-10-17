@@ -333,9 +333,7 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 		return whole
 	# A generated _validate_property goes back onto the variables it came from (byte-gated inside), before
 	# the statement lift below would read it as an ordinary function.
-	if source.contains("
-" + SheetCompiler.INSPECTOR_CONDITIONS_DOC + "
-"):
+	if source.contains("\n" + SheetCompiler.INSPECTOR_CONDITIONS_DOC + "\n"):
 		load(INSPECTOR_CONDITION_LIFT_PATH).lift(sheet, source)
 	# Tier 2: reverse template matching lifts trailing trigger functions, sheet functions
 	# (with their @ace annotation blocks), and trailing comments into real rows - verified
@@ -508,6 +506,12 @@ func _try_lift_variable(line: String) -> LocalVariable:
 	# verbatim block. Scoped to the static path: the drawer/clamp machinery deliberately lifts a hinted
 	# setter-suffixed var (`@export_custom(...) var hp: int = 120:`) and re-emits it byte-exactly.
 	if static_prefixed and declaration.strip_edges().ends_with(":"):
+		return null
+	# A value that leaves a bracket open goes on over the next lines (`var waves = [` then `\t1,` then
+	# `]`). This line alone would read as a variable whose value is `[`, with the rest of it stranded
+	# in code blocks after it, so moving or editing that row writes a file that no longer parses. The
+	# whole declaration stays one block of code; the multi-line collection lift may still claim it.
+	if EventSheetACELifter._bracket_delta(declaration) > 0:
 		return null
 	# The inferred-type walrus (`var hp := 100`, `const SPEED := 2.5`, `@export var x := ...`):
 	# beginner-style files declare everything this way, and the typed parser cannot represent it.

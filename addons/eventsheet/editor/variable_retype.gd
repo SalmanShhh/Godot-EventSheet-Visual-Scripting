@@ -164,6 +164,11 @@ static func _scan(sheet: EventSheetResource, variable_name: String, new_type: St
 				resource.type_name = new_type
 				resource.type = variant_type_for(new_type)
 				resource.default_value = new_default
+				# A declaration written with no type (`var target = null`, `var hp := 0`) would keep
+				# leaving it out, so the file would still say what it said and reopen as the old type.
+				# The type asked for is written.
+				resource.untyped = false
+				resource.inferred_type = false
 	var usages: Array = []
 	_collect_usages(sheet.events, "", usages)
 	for function_entry: Variant in sheet.functions:

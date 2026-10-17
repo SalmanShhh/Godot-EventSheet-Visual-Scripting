@@ -9013,3 +9013,4 @@ Renaming changes its class name and every use in one undo step; the places are l
 Renaming changes its name in Project Settings > Globals and every use; the places are listed before anything is written. The file keeps its name.,重命名会更改它在 项目设置 > Globals 中的名称和每处用法；写入任何内容之前会先列出这些位置。文件保留原名。
 "Click one to see its properties, double-click to add it. Ones made for another kind of object are greyed, with the reason on hover.",单击查看其属性，双击直接添加。为其他种类对象制作的会变灰，悬停可看原因。
 No lines yet - Find text fills it.,还没有行 - “查找文本”会填充它们。
+"Your unsaved edits could not be kept as a backup, so the file on disk was not loaded. Save this version, or fix what stops it compiling, and choose again.",未保存的编辑无法存为备份，所以没有载入磁盘上的文件。请保存这个版本，或修正导致无法编译的问题，然后再选一次。

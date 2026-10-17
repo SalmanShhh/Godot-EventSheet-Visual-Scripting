@@ -59,6 +59,7 @@
   longer lights anything.
 - A bookmark on an event with no condition yet reads as the event's words, not "+ Add condition".
 - The four panels' buttons, hints and the Sheet map's summary go through translation.
+
 ### Fixed: reading a sheet's code no longer saves it, and the windows fit, close and say what they hold
 
 - Opening the Manual on a verb, Find References, the Properties window, Change type, Loose Ends and
@@ -77,6 +78,20 @@
   empty canvas offering Add your first event and New from template to no sheet.
 - The Translation Studio's table in a project with no catalog yet reads "No lines yet" instead of
   "No lines in  yet".
+
+### Fixed: an opened script keeps what it says when it is read, retyped or previewed
+
+- A declaration whose value runs over several lines (`var waves = [` then its items, then `]`) no
+  longer opens as a variable whose value is `[` with the rest stranded in code blocks after it,
+  where moving or editing that row wrote a file that did not parse. It stays one block of code, or
+  opens as a Declare row the way `var waves := [` already did.
+- Change Type Everywhere on a variable written with no type (`var target = null`) or an inferred one
+  (`var slot := 0`) writes the new type into the declaration. It used to leave the line as it was,
+  so the file reopened as the old type.
+- "Use the file on disk" only loads the file once the unsaved version is in Sheet Backups, as the
+  question promises; when that backup cannot be written, the edits stay and the status says why.
+- `tests/fixtures/existing_project_large/` holds five more hand-written scripts in the shapes a grown
+  project collects, and the round-trip gate opens and saves each byte for byte.
 
 ### Fixed: Preview In Language reads a folder of catalogs, and the save words name what is there
 

@@ -63,9 +63,7 @@ func prompt_external_reload_if_changed() -> void:
 			_dock._external_mtime = FileAccess.get_modified_time(_dock._current_sheet.external_source_path)
 	ask["on_cancel"] = keep
 	ask["on_main"] = keep if dirty else reload_external_sheet
-	ask["on_danger"] = func() -> void:
-		keep_unsaved_in_backups()
-		reload_external_sheet()
+	ask["on_danger"] = use_file_on_disk
 	_external_reload_dialog = load(_dock.SMALL_PROMPT_PATH).open(_dock, ask)
 	# What Changed… opens the row-language diff OVER the question, so it is read before choosing; it
 	# sits beside the blue answer and never closes the question by itself.
@@ -75,6 +73,17 @@ func prompt_external_reload_if_changed() -> void:
 	dialog.custom_action.connect(func(action: StringName) -> void:
 		if action == WHAT_CHANGED_ACTION:
 			_dock._sheet_diff.open(dialog))
+
+
+## "Use the file on disk": the version in the editor goes into the backup ring first, as the question
+## promised. When it cannot be kept (the sheet does not compile, or the backup cannot be written),
+## nothing is reloaded - the edits stay on screen and the status says why. Returns whether it reloaded.
+func use_file_on_disk() -> bool:
+	if keep_unsaved_in_backups().is_empty() and EventSheetBackups.backup_count() > 0:
+		_dock._set_status(EventSheetL10n.translate("Your unsaved edits could not be kept as a backup, so the file on disk was not loaded. Save this version, or fix what stops it compiling, and choose again."), true)
+		return false
+	reload_external_sheet()
+	return true
 
 
 ## Puts the version in the editor - unsaved edits and all - into the file's backup ring, so taking

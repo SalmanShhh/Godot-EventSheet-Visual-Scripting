@@ -6,6 +6,19 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Changed: Add behaviour is a shelf of tiles, your own behaviours first
+
+- The Add behaviour window lists the packs as tiles, three to a row: each tile is the pack's
+  picture, its name as the pack writes it, and the kind of object it works on. The tiles sit on one
+  shelf per kind of object - your own behaviours first, then the kinds the chosen object is, then
+  the ones for any node, then the rest. One made for another kind of object is greyed, with the
+  reason on hover.
+- A click shows the pack's properties as before; a double-click adds it straight away.
+- The category buttons beside the search are gone: almost every pack names a category of its own,
+  so they were one button per pack. The search now only shows and hides tiles, so a keystroke no
+  longer rebuilds the list (about 8 ms instead of the whole list's 150-300 ms).
+- The tile pictures come through the picker's own picture cache, so they load once per session.
+
 ### Added: Behaviour settings… and Global settings…, and every door to the makers
 
 - The New behaviour and New global forms reopen on a file that exists, titled `Patrol · Behaviour
@@ -50,6 +63,39 @@ What changed in the build you have installed (v0.18.0), in the words the release
   longer lights anything.
 - A bookmark on an event with no condition yet reads as the event's words, not \"+ Add condition\".
 - The four panels' buttons, hints and the Sheet map's summary go through translation.
+
+### Fixed: reading a sheet's code no longer saves it, and the windows fit, close and say what they hold
+
+- Opening the Manual on a verb, Find References, the Properties window, Change type, Loose Ends and
+  the Insert new object preview read the code a sheet compiles to through the compiler's save path:
+  on a script-backed sheet that wrote the open sheet's unsaved edits into its `.gd`, and a sheet with
+  no file left a stray `res://event_sheet_generated.gd` declaring its `class_name` in the project.
+  They read it through `SheetCompiler.echo()` now, which compiles and writes nothing.
+- Every plain window (Bookmarks, Replay Recorder, Outline, History, the Start page, the studios, the
+  Debugger and the rest) closes on Esc, through its own close, and grows to fit what it holds once
+  shown: Bookmarks and the Replay Recorder opened cutting off their foot.
+- Optimise this sheet scrolls its findings inside the window: a dozen findings opened it taller than
+  the editor, with Apply below the screen. Add global variable opens at the height of its form.
+- Loose Ends reads the whole script first: on a sheet whose file compiles it no longer lists rows
+  that use a variable a code block declares as \"doesn't compile\", nor prints a parse error for each.
+- Manage Includes' Contents preview is read-only and hidden until an include is picked; it showed an
+  empty canvas offering Add your first event and New from template to no sheet.
+- The Translation Studio's table in a project with no catalog yet reads \"No lines yet\" instead of
+  \"No lines in  yet\".
+
+### Fixed: an opened script keeps what it says when it is read, retyped or previewed
+
+- A declaration whose value runs over several lines (`var waves = [` then its items, then `]`) no
+  longer opens as a variable whose value is `[` with the rest stranded in code blocks after it,
+  where moving or editing that row wrote a file that did not parse. It stays one block of code, or
+  opens as a Declare row the way `var waves := [` already did.
+- Change Type Everywhere on a variable written with no type (`var target = null`) or an inferred one
+  (`var slot := 0`) writes the new type into the declaration. It used to leave the line as it was,
+  so the file reopened as the old type.
+- \"Use the file on disk\" only loads the file once the unsaved version is in Sheet Backups, as the
+  question promises; when that backup cannot be written, the edits stay and the status says why.
+- `tests/fixtures/existing_project_large/` holds five more hand-written scripts in the shapes a grown
+  project collects, and the round-trip gate opens and saves each byte for byte.
 
 ### Fixed: Preview In Language reads a folder of catalogs, and the save words name what is there
 
