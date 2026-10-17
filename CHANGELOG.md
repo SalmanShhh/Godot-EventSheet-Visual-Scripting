@@ -21,9 +21,9 @@
 
 ### Fixed: opening a real sheet stops compiling the Doctor, the dialogs and the Manual
 
-- The workspace's first open measured 18.0 to 24.2 seconds (median 21.7) against 23.6 to 38.7
-  (median 27.3) before, five alternating runs each in a copy of the project outside OneDrive. The
-  gate only ever opened a blank sheet, and the reading of real rows reached four things a click
+- The workspace's first open in a real editor measured 16,300 to 16,348 ms against 21,023 to
+  21,154 before (and 20,742 to 20,819 at the end of the first wave), three alternating quiet runs
+  each in a copy of the project outside OneDrive. The gate only ever opened a blank sheet, and the reading of real rows reached four things a click
   needs: the share index asked the Project Doctor for the project's script list (about five
   seconds of compiling for a list of paths), the Interop section's "stays code" check read its file
   through the Doctor, a variable's default value was written by the variable dialog (which names the

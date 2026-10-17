@@ -4,8 +4,8 @@
 # question - which files does this project hold - and the answer used to live inside the Doctor. A
 # sheet's first rows ask it too: the "called by" band starts the share index, and the share index
 # needs the project's scripts. Asking the Doctor compiled it, and every section it names, into the
-# first open of the workspace, which measured five seconds of a twenty-eight second first open for a
-# list of file paths. So the walk lives here, in a file that names no plugin class, and the Doctor
+# first open of the workspace - four and a half to five seconds of compiling, measured, for a list of
+# file paths. So the walk lives here, in a file that names no plugin class, and the Doctor
 # walks through it like everybody else.
 #
 # DELIBERATELY NO `class_name`, so loading it compiles nothing more: reach it with a const preload.
