@@ -44,7 +44,7 @@ func build() -> void:
 	if window != null:
 		return
 	window = Window.new()
-	window.title = "Compare With"
+	window.title = EventSheetL10n.translate("Compare With")
 	window.size = Vector2i(760, 520)
 	window.min_size = Vector2i(520, 360)
 	window.close_requested.connect(func() -> void: window.hide())
@@ -55,38 +55,38 @@ func build() -> void:
 	picker_row.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)
 	target_picker = OptionButton.new()
 	target_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	target_picker.tooltip_text = "The other side of the comparison: this sheet's last save, a backup from the ring, or another sheet in the project."
+	target_picker.tooltip_text = EventSheetL10n.translate("The other side of the comparison: this sheet's last save, a backup from the ring, or another sheet in the project.")
 	picker_row.add_child(target_picker)
 	var browse_button: Button = Button.new()
-	browse_button.text = "Browse…"
-	browse_button.tooltip_text = "Compare against any .gd or .tres sheet on disk - a teammate's file, a downloaded pack, an older copy."
+	browse_button.text = EventSheetL10n.translate("Browse…")
+	browse_button.tooltip_text = EventSheetL10n.translate("Compare against any .gd or .tres sheet on disk - a teammate's file, a downloaded pack, an older copy.")
 	browse_button.pressed.connect(_open_browse_dialog)
 	picker_row.add_child(browse_button)
 	var compare_button: Button = Button.new()
-	compare_button.text = "Compare"
+	compare_button.text = EventSheetL10n.translate("Compare")
 	compare_button.pressed.connect(func() -> void: compare_with(selected_target_path()))
 	picker_row.add_child(compare_button)
-	body.add_child(EventSheetPopupUI.labelled_card("Compare against", picker_row))
+	body.add_child(EventSheetPopupUI.labelled_card(EventSheetL10n.translate("Compare against"), picker_row))
 
 	summary_label = EventSheetPopupUI.hint_label(
-		"Pick a side and press Compare. Double-click a row to jump to it; a row that only exists on the other side can be brought over.", 520.0)
+		EventSheetL10n.translate("Pick a side and press Compare. Double-click a row to jump to it; a row that only exists on the other side can be brought over."), 520.0)
 	body.add_child(summary_label)
 
-	here_list = _build_list("Nothing on this side yet.")
+	here_list = _build_list(EventSheetL10n.translate("Nothing on this side yet."))
 	here_list.item_activated.connect(func(index: int) -> void: _jump_to_entry(_here_entries, index))
-	there_list = _build_list("Nothing on the compared side yet.")
+	there_list = _build_list(EventSheetL10n.translate("Nothing on the compared side yet."))
 	there_list.item_activated.connect(func(index: int) -> void: bring_row_over(index))
-	var here_card: PanelContainer = EventSheetPopupUI.labelled_card("Only here / different here", here_list)
+	var here_card: PanelContainer = EventSheetPopupUI.labelled_card(EventSheetL10n.translate("Only here / different here"), here_list)
 	here_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var there_card: PanelContainer = EventSheetPopupUI.labelled_card("Only there / different there", there_list)
+	var there_card: PanelContainer = EventSheetPopupUI.labelled_card(EventSheetL10n.translate("Only there / different there"), there_list)
 	there_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var band: BoxContainer = EventSheetPopupUI.responsive_band(here_card, there_card)
 	band.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(band)
 
 	bring_button = Button.new()
-	bring_button.text = "Bring This Row Over"
-	bring_button.tooltip_text = "Copy the selected row from the compared sheet into this one as ordinary rows - one undo step."
+	bring_button.text = EventSheetL10n.translate("Bring This Row Over")
+	bring_button.tooltip_text = EventSheetL10n.translate("Copy the selected row from the compared sheet into this one as ordinary rows - one undo step.")
 	bring_button.disabled = true
 	bring_button.pressed.connect(func() -> void:
 		var selected: PackedInt32Array = there_list.get_selected_items()
@@ -123,12 +123,12 @@ func refresh_targets() -> void:
 		return
 	_targets = EventSheetSheetDiff.compare_targets(_dock._current_sheet, _dock._current_sheet_path)
 	if not _browsed_path.is_empty():
-		_targets.push_front({"label": "Browsed - %s" % _browsed_path.get_file(), "path": _browsed_path, "kind": "browse"})
+		_targets.push_front({"label": EventSheetL10n.translate("Browsed - %s") % _browsed_path.get_file(), "path": _browsed_path, "kind": "browse"})
 	target_picker.clear()
 	for index: int in range(_targets.size()):
 		target_picker.add_item(str((_targets[index] as Dictionary).get("label", "")), index)
 	if _targets.is_empty():
-		target_picker.add_item("(nothing to compare against yet - save this sheet first)", 0)
+		target_picker.add_item(EventSheetL10n.translate("(nothing to compare against yet - save this sheet first)"), 0)
 		target_picker.disabled = true
 	else:
 		target_picker.disabled = false
@@ -148,7 +148,7 @@ func _open_browse_dialog() -> void:
 		_browse_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
 		_browse_dialog.access = FileDialog.ACCESS_RESOURCES
 		_browse_dialog.filters = PackedStringArray(["*.gd ; GDScript sheet", "*.tres ; Event sheet resource"])
-		_browse_dialog.title = "Compare against…"
+		_browse_dialog.title = EventSheetL10n.translate("Compare against…")
 		_browse_dialog.file_selected.connect(func(path: String) -> void:
 			_browsed_path = path
 			refresh_targets()
@@ -169,9 +169,9 @@ func compare_with(other_path: String) -> Dictionary:
 	there_list.clear()
 	bring_button.disabled = true
 	if _dock._current_sheet == null:
-		return _report_error("Open a sheet first.")
+		return _report_error(EventSheetL10n.translate("Open a sheet first."))
 	if other_path.strip_edges().is_empty():
-		return _report_error("Pick something to compare against first.")
+		return _report_error(EventSheetL10n.translate("Pick something to compare against first."))
 	var other_side: Dictionary = EventSheetSheetDiff.load_side(other_path)
 	if other_side.has("error"):
 		return _report_error(str(other_side.get("error")))
@@ -187,9 +187,9 @@ func compare_with(other_path: String) -> Dictionary:
 	for entry: Dictionary in _there_entries:
 		there_list.add_item("← %s" % str(entry.get("label", "")))
 	if bool(result.get("identical", false)):
-		summary_label.text = "Identical - this sheet and %s compile to the same script." % other_path.get_file()
+		summary_label.text = EventSheetL10n.translate("Identical - this sheet and %s compile to the same script.") % other_path.get_file()
 	else:
-		summary_label.text = "%d row(s) differ here, %d row(s) differ in %s. Double-click a row on the left to jump to it, or one on the right to bring it over." % [
+		summary_label.text = EventSheetL10n.translate("%d row(s) differ here, %d row(s) differ in %s. Double-click a row on the left to jump to it, or one on the right to bring it over.") % [
 			_here_entries.size(), _there_entries.size(), other_path.get_file()]
 	return result
 

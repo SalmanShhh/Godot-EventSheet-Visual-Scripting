@@ -9017,3 +9017,292 @@ No lines yet - Find text fills it.,아직 줄이 없습니다 - 텍스트 찾기
 "A picture: an icon, a portrait, a sprite. The cell holds its file path; drag one in from the FileSystem dock.","그림: 아이콘, 초상화, 스프라이트. 셀에는 파일 경로가 들어갑니다. 파일시스템 독에서 끌어 넣으세요."
 "What a new row starts with in this column, here and in the Inspector's Add Row.",새 행이 이 열에서 처음 갖는 값입니다. 여기와 인스펙터의 행 추가 모두에서 쓰입니다.
 "What the column holds, said on its header in the Inspector.","이 열이 담는 것으로, 인스펙터의 열 머리글에 표시됩니다."
+Split,분할
+Merge,병합
+What this moves,이것이 옮기는 것
+"A scene in, a folder of chunk scenes out",씬 하나를 넣으면 청크 씬 폴더가 나옵니다
+"A folder of chunk scenes in, one scene out",청크 씬 폴더를 넣으면 씬 하나가 나옵니다
+The scene to read. It is never changed - the chunks are written beside it.,읽을 씬입니다. 바뀌지 않으며 청크는 그 옆에 저장됩니다.
+Chunk folder,청크 폴더
+"The folder of chunk scenes: written by Split, read by Merge, and by the Streamer's own Stream Chunks Around.","청크 씬 폴더입니다. 분할이 쓰고, 병합과 Streamer의 Stream Chunks Around가 읽습니다."
+Into scene,대상 씬
+The one scene the chunks are put back together into.,청크를 다시 합쳐 넣을 씬 하나입니다.
+Cell width,셀 너비
+"How wide one chunk is, in the scene's own units. Match the Streamer's Cell Size.",청크 하나의 너비(씬 단위)입니다. Streamer의 Cell Size와 맞추세요.
+Cell height,셀 높이
+"How tall one chunk is. Ignored on a 2D scene, and on a 3D one until height is a cell axis.","청크 하나의 높이입니다. 2D 씬에서는 무시되고, 3D 씬에서는 높이를 셀 축으로 삼기 전까지 무시됩니다."
+Cell depth,셀 깊이
+How deep one chunk is. A 2D scene's depth axis is its own y.,청크 하나의 깊이입니다. 2D 씬의 깊이 축은 그 씬의 y입니다.
+Name prefix,이름 접두사
+The words before the cell numbers: chunk_3_-2.tscn. Do not end it with a number - the numbers at the end of the name ARE the address.,셀 번호 앞에 붙는 말입니다: chunk_3_-2.tscn. 숫자로 끝내지 마세요 - 이름 끝의 숫자가 곧 주소입니다.
+Height is a cell axis,높이를 셀 축으로
+"Off, the grid is flat and every cell's height is 0 - what an open world wants. On, cells stack, for a station, a cave or a tower.","끄면 격자가 평평하고 모든 셀의 높이가 0입니다(오픈 월드용). 켜면 셀이 쌓입니다(기지, 동굴, 탑용)."
+"Split %s into %s, one scene per %s cell","%s을(를) %s에 분할, %s 셀마다 씬 하나"
+"Merge the cells in %s into %s, placed %s apart","%s의 셀을 %s로 병합, %s 간격으로 배치"
+"Each DIRECT CHILD of the scene's root moves into the chunk its own position falls in, re-based to that cell's origin. A child with no position - a Control, a Timer, an audio player - has no cell, so it stays where it is and is named in the receipt. A tilemap is one node holding a whole world of cells: splitting it would mean rewriting its data, so it is left alone.","씬 루트의 직접 자식은 각각 자기 위치가 속한 청크로 옮겨지고, 그 셀의 원점 기준으로 다시 놓입니다. 위치가 없는 자식(Control, Timer, 오디오 플레이어)은 셀이 없으므로 그대로 남고 결과 목록에 이름이 표시됩니다. 타일맵은 셀 세계 전체를 담은 노드 하나라서, 나누려면 데이터를 다시 써야 하므로 그대로 둡니다."
+"Every scene in the folder named like a cell is opened, its children moved back to where the cell puts them, and the result saved as one scene. The chunk scenes are not changed, so a merge is always reversible by splitting again.","폴더에서 셀 이름을 가진 씬을 모두 열어, 자식을 셀이 정한 자리로 되돌리고, 결과를 씬 하나로 저장합니다. 청크 씬은 바뀌지 않으므로 병합은 다시 분할하면 언제든 되돌릴 수 있습니다."
+Generate Events from a Description,설명으로 이벤트 생성
+"Describe the behavior in plain English - it becomes GDScript, then editable events you can tweak.","동작을 쉬운 말로 설명하세요. GDScript가 되고, 그다음 다듬을 수 있는 편집 가능한 이벤트가 됩니다."
+"e.g. When the player presses jump and is on the floor, set velocity.y to -400 and play the jump sound.",예: 플레이어가 점프를 누르고 바닥에 있으면 velocity.y를 -400으로 하고 점프 소리를 재생.
+Give or take,오차 범위
+Invert - true when it is NOT the case,반전 - 그렇지 않을 때 참
+"Pick what to compare, how, and to what. The row you get is whichever condition matches - the ids and the code are the sheet's own.","무엇을, 어떻게, 무엇과 비교할지 고르세요. 만들어지는 행은 일치하는 조건이며, id와 코드는 시트의 것입니다."
+"The left side of the question. Pick one of this sheet's variables, or choose the last entry to type any expression - then the row is a plain value comparison.","질문의 왼쪽입니다. 이 시트의 변수 하나를 고르거나, 마지막 항목을 골라 아무 식이나 입력하세요. 그러면 행은 단순한 값 비교가 됩니다."
+"Any expression: a property, a call, arithmetic. Typed values compare as values, so this writes Compare Values rather than Compare variable.","아무 식이나: 속성, 호출, 계산. 입력한 값은 값으로 비교되므로 Compare variable이 아니라 Compare Values가 써집니다."
+"How the two sides are compared. The ranges at the foot ask for two values, or for a value and how far off it may be.","양쪽을 어떻게 비교할지입니다. 아래쪽의 범위는 값 두 개, 또는 값 하나와 허용 오차를 요구합니다."
+"What to compare against - a number, a piece of text in quotes, or another expression.","비교할 대상입니다. 숫자, 따옴표로 묶은 텍스트, 또는 다른 식."
+The other end of the range. Both ends count as inside it.,범위의 다른 끝입니다. 양 끝 모두 범위 안으로 칩니다.
+"How far apart the two values may be and still count as equal. Decimal numbers almost never land exactly equal, which is what this is for.",두 값이 얼마나 달라도 같다고 볼지입니다. 소수는 거의 정확히 같아지지 않기 때문에 이것이 필요합니다.
+"Treat capitals and lowercase as the same. It writes to_lower() on both sides, which is what a hand-written check does.",대문자와 소문자를 같게 봅니다. 양쪽에 to_lower()를 씁니다. 직접 작성하는 검사와 같습니다.
+True when the question is NOT. A comparison with a clean opposite simply shows the opposite instead - hp > 0 rather than not (hp <= 0).,질문이 성립하지 않을 때 참입니다. 반대가 명확한 비교는 그 반대를 그대로 보여 줍니다. not (hp <= 0) 대신 hp > 0.
+Compare With,비교 대상
+"The other side of the comparison: this sheet's last save, a backup from the ring, or another sheet in the project.","비교의 다른 쪽입니다. 이 시트의 마지막 저장본, 백업 링의 백업, 또는 프로젝트의 다른 시트."
+"Compare against any .gd or .tres sheet on disk - a teammate's file, a downloaded pack, an older copy.","디스크의 아무 .gd 또는 .tres 시트와 비교합니다. 팀원의 파일, 내려받은 팩, 예전 사본 등."
+Compare against,비교할 대상
+Pick a side and press Compare. Double-click a row to jump to it; a row that only exists on the other side can be brought over.,"한쪽을 고르고 비교를 누르세요. 행을 더블클릭하면 그 행으로 이동하고, 다른 쪽에만 있는 행은 가져올 수 있습니다."
+Nothing on this side yet.,이쪽에는 아직 아무것도 없습니다.
+Nothing on the compared side yet.,비교 대상 쪽에는 아직 아무것도 없습니다.
+Only here / different here,여기에만 / 여기가 다름
+Only there / different there,저기에만 / 저기가 다름
+Bring This Row Over,이 행 가져오기
+Copy the selected row from the compared sheet into this one as ordinary rows - one undo step.,선택한 행을 비교 대상 시트에서 이 시트로 일반 행으로 복사합니다. 실행 취소 한 번입니다.
+Browsed - %s,찾아본 파일 - %s
+(nothing to compare against yet - save this sheet first),(아직 비교할 대상이 없습니다 - 먼저 이 시트를 저장하세요)
+Compare against…,비교할 대상…
+Pick something to compare against first.,먼저 비교할 대상을 고르세요.
+Identical - this sheet and %s compile to the same script.,동일합니다 - 이 시트와 %s은(는) 같은 스크립트로 컴파일됩니다.
+"%d row(s) differ here, %d row(s) differ in %s. Double-click a row on the left to jump to it, or one on the right to bring it over.","여기서 %d개 행, %d개 행이 %s에서 다릅니다. 왼쪽 행을 더블클릭하면 그 행으로, 오른쪽 행을 더블클릭하면 가져옵니다."
+Custom ACE Providers,사용자 ACE 제공자
+"Register GDScript files whose methods, signals and exported variables become custom ACEs.
+Zero-config alternative: drop scripts into res://eventsheet_addons/ and they register project-wide automatically.","메서드, 시그널, 내보낸 변수가 사용자 ACE가 되는 GDScript 파일을 등록합니다.
+설정 없이: res://eventsheet_addons/에 스크립트를 넣으면 프로젝트 전체에 자동 등록됩니다."
+Remove Selected,선택 항목 제거
+"Select a provider, or press Add to preview a script.","제공자를 고르거나, 추가를 눌러 스크립트를 미리 보세요."
+What it publishes,공개하는 것
+Open Source Sheet…,원본 시트 열기…
+Open the included sheet to edit it (changes flow to every sheet that includes it).,포함된 시트를 열어 편집합니다(변경은 그 시트를 포함하는 모든 시트에 반영됩니다).
+Select an include to preview what it contributes.,포함 항목을 고르면 그것이 더하는 것을 미리 봅니다.
+"[b]%s[/b]
+%s
+Events: %d
+Functions: %s
+Variables: %s","[b]%s[/b]
+이벤트: %d
+함수: %s
+변수: %s"
+"Group ""%s"" is turned off","그룹 ""%s""이(가) 꺼져 있습니다"
+nothing inside it runs,안의 어떤 것도 실행되지 않습니다
+"Comment ""%s"" is turned off","주석 ""%s""이(가) 꺼져 있습니다"
+in a script block %s,스크립트 블록 안 %s
+A script block is turned off,스크립트 블록이 꺼져 있습니다
+%s is turned off,%s이(가) 꺼져 있습니다
+%s breaks into the debugger,%s에서 디버거가 멈춥니다
+%s has conditions and no actions,%s에 조건은 있고 액션이 없습니다
+An action of %s is turned off,%s의 액션 하나가 꺼져 있습니다
+A condition of %s is turned off,%s의 조건 하나가 꺼져 있습니다
+"""%s"" is never called","""%s""은(는) 한 번도 호출되지 않습니다"
+published function,공개 함수
+before the first event,첫 이벤트 앞
+after event %d,이벤트 %d 뒤
+no trigger,트리거 없음
+Loose Ends,미처리 항목
+"Everything you left half-done, in one list. Nothing here is drawn on the sheet - click an entry to jump to the row.",하다 만 것을 모두 한 목록에 모았습니다. 여기 있는 것은 시트에 그려지지 않습니다. 항목을 클릭하면 그 행으로 이동합니다.
+What,무엇
+Loose ends,미처리 항목
+"Nothing left hanging - no TODOs, no disabled rows, no half-written events.","남은 것이 없습니다. TODO도, 꺼진 행도, 쓰다 만 이벤트도 없습니다."
+%d loose end(s). Nothing here is drawn on the sheet - click an entry to jump to the row.,미처리 항목 %d개. 여기 있는 것은 시트에 그려지지 않습니다. 항목을 클릭하면 그 행으로 이동합니다.
+%d sheet,시트 %d개
+%d scene,씬 %d개
+%d scenes,씬 %d개
+%d global,전역 %d개
+%d globals,전역 %d개
+%d connection,연결 %d개
+%d connections,연결 %d개
+(%d more not drawn),(%d개 더 그리지 않음)
+Kind · %s,종류 · %s
+Sheet Type,시트 종류
+Extends,상속
+Choose…,고르기…
+What this does - shown in Godot's Create Node dialog.,이것이 하는 일 - Godot의 노드 만들기 대화 상자에 표시됩니다.
+Autoload name,오토로드 이름
+GameState - a global name every sheet can call,GameState - 모든 시트가 부를 수 있는 전역 이름
+Runs in the editor too  -  @tool,에디터에서도 실행  -  @tool
+Family - one rule can target every instance at once,패밀리 - 규칙 하나로 모든 인스턴스를 한 번에 대상으로
+"What this plugin adds to the editor. Each tick arrives as a pair of events: added when the plugin is enabled, removed when it is disabled.","이 플러그인이 에디터에 더하는 것입니다. 체크마다 이벤트 한 쌍이 생깁니다: 플러그인을 켤 때 추가, 끌 때 제거."
+Identity,정체성
+"More (tags, includes, uses, requires)","더 보기(태그, 포함, uses, requires)"
+Tags (comma-separated),태그(쉼표로 구분)
+Includes (addon sheets),포함(애드온 시트)
+Uses (addon classes),Uses(애드온 클래스)
+"ScreenShake, MathHelpers - owned helper instances","ScreenShake, MathHelpers - 직접 갖는 도우미 인스턴스"
+Requires (sibling behaviors),Requires(형제 비헤이비어)
+ScreenShake - shows a warning badge when missing,ScreenShake - 없으면 경고 배지를 표시
+More options,추가 옵션
+Name · class_name,이름 · class_name
+"How this script is known to the project and the Add Node dialog. Letters, digits and underscores; it must not be a class Godot already has.","프로젝트와 노드 추가 대화 상자에서 이 스크립트를 부르는 이름입니다. 글자, 숫자, 밑줄만 쓰며, Godot에 이미 있는 클래스 이름이면 안 됩니다."
+"The class this sheet builds on: everything that class can do, this sheet can do. Type to get suggestions, or drop a node from the Scene dock onto this dialog.","이 시트가 바탕으로 삼는 클래스입니다. 그 클래스가 할 수 있는 것은 이 시트도 할 수 있습니다. 입력하면 제안이 나오고, 씬 독의 노드를 이 대화 상자에 끌어다 놓아도 됩니다."
+Icon · @icon,아이콘 · @icon
+The image Godot shows for this class in the Scene dock and the Add Node dialog. Any res:// image; Browse… picks one.,"씬 독과 노드 추가 대화 상자에서 Godot가 이 클래스에 보여 주는 이미지입니다. 아무 res:// 이미지나 되며, 찾아보기…로 고릅니다."
+Description · ##,설명 · ##
+"One or two sentences saying what this sheet is. Godot shows them in the Create Node dialog, and the sheet's head shows them on its own band.","이 시트가 무엇인지 말하는 한두 문장입니다. Godot는 노드 만들기 대화 상자에 보여 주고, 시트 머리는 자기 띠에 보여 줍니다."
+"The name every other sheet writes to reach this one. It lives in project.godot, not in this file.",다른 모든 시트가 이 시트에 닿으려고 쓰는 이름입니다. 이 파일이 아니라 project.godot에 있습니다.
+Runs in the editor too · @tool,에디터에서도 실행 · @tool
+"The script runs inside the editor as well as in the game, so its events fire while you are building the scene.","스크립트가 게임뿐 아니라 에디터 안에서도 실행되므로, 씬을 만드는 동안 이벤트가 발생합니다."
+Acts on (parent),대상(부모)
+Extends (data type),상속(데이터 타입)
+"Every rule is one row. WHEN the left side is true (the conditions), DO the right side (the actions). Nothing is hidden: the plain GDScript your game ships is always one click away.",규칙 하나가 행 하나입니다. 왼쪽(조건)이 참이면 오른쪽(액션)을 실행합니다. 숨겨진 것은 없습니다. 게임에 들어가는 평범한 GDScript는 언제나 클릭 한 번 거리에 있습니다.
+"Look at the sheet: conditions live in the left lane, actions in the right.","시트를 보세요. 조건은 왼쪽 레인에, 액션은 오른쪽 레인에 있습니다."
+An event starts with a trigger - the moment it runs. On Ready fires once when the object appears; Every Frame runs continuously.,"이벤트는 트리거, 즉 실행되는 순간으로 시작합니다. On Ready는 오브젝트가 나타날 때 한 번, Every Frame은 계속 실행됩니다."
+"Click ""Add event"" in the sheet's top-left corner (or the trailing ""+ Add event…"" row) and pick a trigger - try On Ready.","시트 왼쪽 위의 ""이벤트 추가""(또는 끝의 ""+ 이벤트 추가…"" 행)를 클릭하고 트리거를 고르세요. On Ready를 해 보세요."
+Conditions decide WHEN the row runs this tick. Stack several and ALL must hold; conditions like Every X Seconds even keep their own timer.,"조건은 이번 틱에 행이 언제 실행될지 정합니다. 여러 개를 쌓으면 모두 성립해야 하며, Every X Seconds 같은 조건은 자기 타이머까지 갖습니다."
+Select your event and double-click the left lane (or press C). Try Every X Seconds.,이벤트를 선택하고 왼쪽 레인을 더블클릭하세요(또는 C). Every X Seconds를 해 보세요.
+Actions are what happens - they run top to bottom whenever the conditions pass.,액션은 일어나는 일입니다. 조건이 통과할 때마다 위에서 아래로 실행됩니다.
+"Double-click the right lane (or press A) and pick Print Message, then type something friendly.","오른쪽 레인을 더블클릭(또는 A)해 Print Message를 고르고, 다정한 말을 입력하세요."
+"Your sheet IS a plain Godot script - no runtime, no magic. Clicking a code line jumps to the row that made it, so the sheet and the script always explain each other.","시트는 그 자체로 평범한 Godot 스크립트입니다. 런타임도, 마법도 없습니다. 코드 줄을 클릭하면 그 줄을 만든 행으로 이동하므로, 시트와 스크립트는 언제나 서로를 설명합니다."
+Open Menu ▸ View ▸ GDScript Panel and find the line your action just added.,"메뉴 ▸ 보기 ▸ GDScript 패널을 열고, 방금 액션이 추가한 줄을 찾아보세요."
+"Events + conditions + actions, compiled to code you can read. From here: Sheet > New From Template opens full starters, Tools > Welcome has the playable showcase, and Add > Variable gives your sheet memory. Take this tour again any time: Tools > Start the Tour. Have fun!","이벤트 + 조건 + 액션이 읽을 수 있는 코드로 컴파일됩니다. 이제: 시트 > 템플릿에서 새로 만들기는 완성된 스타터를 열고, 도구 > 환영에는 플레이할 수 있는 쇼케이스가 있으며, 추가 > 변수는 시트에 기억을 줍니다. 이 투어는 언제든 도구 > 투어 시작으로 다시 할 수 있습니다. 즐기세요!"
+Try it,해 보기
+Classic sheet theme,클래식 시트 테마
+the editor-matching theme,에디터에 맞춘 테마
+Project bar on,프로젝트 막대 켜기
+the GDScript panel beside every sheet,모든 시트 옆의 GDScript 패널
+the migration guide open in the Manual,매뉴얼에 열린 이전 가이드
+the tour,투어
+Sets: %s. Change any of it later in Settings ▸ Words and the View menu.,설정: %s. 나중에 설정 ▸ 단어와 보기 메뉴에서 바꿀 수 있습니다.
+How do you usually make games?,평소에 게임을 어떻게 만드나요?
+Get Started,시작하기
+New to event sheets? Simple mode keeps the picker and menus to the essentials. Everything still works in Expert mode - toggle any time in View → Simple Mode.,"이벤트 시트가 처음인가요? 간단 모드는 선택기와 메뉴를 꼭 필요한 것만 남깁니다. 전문가 모드에서도 모두 동작하며, 보기 → 간단 모드에서 언제든 바꿀 수 있습니다."
+The Godot-native default: every sheet opens with its generated script beside it (eventsheets/editor/open_code_panel_by_default).,Godot 방식의 기본값입니다. 모든 시트가 생성된 스크립트를 옆에 두고 열립니다(eventsheets/editor/open_code_panel_by_default).
+"Opens the plugin's issue tracker in your browser, with your Godot and plugin versions pre-filled.",브라우저에서 플러그인의 이슈 트래커를 엽니다. Godot와 플러그인 버전이 미리 채워집니다.
+Restore into editor (unsaved - Save to keep),에디터로 복원(저장 안 됨 - 유지하려면 저장)
+"Click a shortcut, then press the new key combination (Esc cancels). Custom keys are saved per-user, not in the project.",단축키를 클릭한 뒤 새 키 조합을 누르세요(Esc는 취소). 사용자 키는 프로젝트가 아니라 사용자별로 저장됩니다.
+"Pick a whole set of keys at once. Only the keys that differ are rebound - everything stays rebindable afterwards, and Reset all to defaults comes back here.","키 세트 전체를 한 번에 고릅니다. 다른 키만 다시 지정되며, 그 뒤에도 모두 다시 지정할 수 있고, 모두 기본값으로 재설정하면 여기로 돌아옵니다."
+Write template,템플릿 쓰기
+What this writes,이것이 쓰는 것
+"The folder a modder copies, with its manifest already filled in","모드 제작자가 복사할 폴더, 매니페스트는 이미 채워짐"
+Template folder,템플릿 폴더
+"Where the template is written. Keep it out of the folder the game loads mods from - it is the example, not a mod.",템플릿을 쓸 곳입니다. 게임이 모드를 읽는 폴더 밖에 두세요. 이것은 예시이지 모드가 아닙니다.
+Mod name,모드 이름
+What a mod list calls it. A modder renames this first; blank means the folder's own name is used.,"모드 목록에서 부르는 이름입니다. 모드 제작자가 가장 먼저 바꾸며, 비워 두면 폴더 이름을 씁니다."
+"The mod's own version, in whatever spelling its author uses. Nothing here compares two of them.","모드 자체의 버전으로, 표기는 작성자 마음대로입니다. 여기서는 두 버전을 비교하지 않습니다."
+Author,작성자
+The credit line beside the name.,이름 옆의 크레딧 줄입니다.
+Replaces,대체하는 것
+"What the mod replaces, in the author's own words. Nothing reads it: it is the sentence a player reads before switching two mods on together.","모드가 대체하는 것을 작성자의 말로 적습니다. 아무것도 이것을 읽지 않으며, 플레이어가 두 모드를 함께 켜기 전에 읽는 문장입니다."
+Content folder,콘텐츠 폴더
+"The subfolder the template suggests for a mod's data assets, made empty beside the manifest. Leave it blank for no suggestion.","템플릿이 모드의 데이터 에셋용으로 제안하는 하위 폴더로, 매니페스트 옆에 비어 있는 채로 만들어집니다. 비워 두면 제안하지 않습니다."
+Carries code,코드 포함
+"Ticks the manifest's scripts flag. A data-only load refuses such a mod - and it checks the mod's actual files as well, so leaving this off hides nothing.","매니페스트의 scripts 플래그를 켭니다. 데이터 전용 로드는 이런 모드를 거부하고, 모드의 실제 파일도 검사하므로 끄더라도 숨겨지는 것은 없습니다."
+Also save a mod.tres,mod.tres도 저장
+"Saves the same five fields as a ModManifest resource beside the JSON, for a modder who works inside Godot. Needs the ModManifest the Mods pack ships.","같은 다섯 필드를 ModManifest 리소스로 JSON 옆에 저장합니다. Godot 안에서 작업하는 모드 제작자용이며, Mods 팩의 ModManifest가 필요합니다."
+carrying code,코드 포함
+data only,데이터만
+"Write %s %s into %s, %s","%s %s을(를) %s에 쓰기, %s"
+"Three things go into the folder: mod.json with these fields in it, a README saying what each field means and what a mod carrying code costs the player who runs it, and an empty content folder. Nothing is written over: a folder that already holds a manifest is refused whole, because it is already somebody's mod.","폴더에는 세 가지가 들어갑니다: 이 필드가 담긴 mod.json, 각 필드의 뜻과 코드를 포함한 모드가 플레이어에게 무엇을 요구하는지 설명하는 README, 빈 콘텐츠 폴더. 덮어쓰지 않습니다: 이미 매니페스트가 있는 폴더는 누군가의 모드이므로 통째로 거부합니다."
+Drops every word you chose and goes back to the two defaults. The Familiar Words toggle itself is left alone.,고른 단어를 모두 버리고 두 기본값으로 돌아갑니다. 익숙한 단어 토글 자체는 그대로 둡니다.
+"A few things have two honest names: the Godot one and the one every other event-sheet editor uses. Choose either, or type your own - the sheet reads the same word everywhere at once.",몇몇은 정당한 이름이 둘입니다: Godot의 이름과 다른 이벤트 시트 에디터들이 쓰는 이름. 둘 중 하나를 고르거나 직접 입력하세요. 시트는 어디서나 같은 단어를 한꺼번에 씁니다.
+the whole vocabulary at once,어휘 전체를 한 번에
+"One event, in the words you have chosen for the state the toggle is in right now.",토글의 현재 상태에 고른 단어로 쓴 이벤트 하나입니다.
+Godot's own words throughout - the nouns and the verbs the engine uses.,어디서나 Godot의 단어 - 엔진이 쓰는 명사와 동사.
+"The nouns in the sheet's words (Family, Layout); the verbs stay Godot's.","명사는 시트의 단어(Family, Layout), 동사는 Godot의 것 그대로."
+"The nouns AND the verbs in the sheet's words - a row reads Create object where Godot says Spawn A Copy. The Godot spelling stays beside it in the picker, and the code panel and the tooltips never change.","명사와 동사 모두 시트의 단어입니다. Godot가 Spawn A Copy라고 하는 곳에서 행은 Create object라고 읽습니다. Godot 표기는 선택기에서 옆에 남고, 코드 패널과 툴팁은 바뀌지 않습니다."
+"Your own mixture - a word you typed, or one half of a preset. Pick one above to go back to a named vocabulary.",나만의 조합입니다. 직접 입력한 단어나 프리셋의 절반. 위에서 하나를 고르면 이름 있는 어휘로 돌아갑니다.
+Plain events on whatever node this sheet is attached to.,이 시트가 붙은 노드에서 도는 평범한 이벤트.
+A new node type: appears in Godot's Add Node dialog with your icon.,새 노드 타입입니다. Godot의 노드 추가 대화 상자에 내 아이콘과 함께 나타납니다.
+Attach under any node as a child - its events act on that parent.,아무 노드 아래 자식으로 붙습니다. 이벤트는 그 부모에게 작용합니다.
+"Runs inside the editor (File > Run), not in the game. Experimental.",게임이 아니라 에디터 안에서 실행됩니다(파일 > 실행). 실험적 기능.
+One always-on instance the whole game can call by name.,"게임 전체가 이름으로 부를 수 있는, 늘 켜져 있는 인스턴스 하나."
+A data asset type: each saved file of it is edited in the Inspector.,데이터 에셋 타입입니다. 저장한 각 파일을 인스펙터에서 편집합니다.
+Claims about your game that a runner checks and reports pass/fail on.,게임에 대한 주장입니다. 실행기가 검사하고 통과/실패를 보고합니다.
+"A plugin the editor switches on: it adds a dock, a Tools menu item, an object type.","에디터가 켜는 플러그인입니다. 독, 도구 메뉴 항목, 오브젝트 타입을 더합니다."
+Runs when files are imported - fix up or check what just landed in the project.,파일을 가져올 때 실행됩니다. 프로젝트에 막 들어온 것을 고치거나 검사합니다.
+"Runs when the project is exported - stamp a build, bake a file, strip debug content.","프로젝트를 내보낼 때 실행됩니다. 빌드에 표시하고, 파일을 굽고, 디버그 내용을 뺍니다."
+Test (asserts + verdict),테스트(단언 + 판정)
+a dock,독
+a Tools menu item,도구 메뉴 항목
+a custom object type,사용자 오브젝트 타입
+an Inspector button,인스펙터 버튼
+2D Character - moves and collides (CharacterBody2D),2D 캐릭터 - 움직이고 충돌함(CharacterBody2D)
+"2D Object - a sprite, prop, or point (Node2D)","2D 오브젝트 - 스프라이트, 소품, 점(Node2D)"
+2D Physics Object - pushed by forces (RigidBody2D),2D 물리 오브젝트 - 힘으로 움직임(RigidBody2D)
+2D Area / Trigger - detects overlaps (Area2D),2D 영역 / 트리거 - 겹침 감지(Area2D)
+"UI Control - buttons, labels, menus (Control)","UI 컨트롤 - 버튼, 라벨, 메뉴(Control)"
+3D Character (CharacterBody3D),3D 캐릭터(CharacterBody3D)
+3D Object (Node3D),3D 오브젝트(Node3D)
+Invisible Manager - logic only (Node),보이지 않는 관리자 - 로직만(Node)
+I come from another event-sheet editor,다른 이벤트 시트 에디터에서 왔어요
+I write GDScript,GDScript를 써요
+I'm new to event sheets,이벤트 시트는 처음이에요
+Build a top-down shooter (10 steps),탑다운 슈팅 게임 만들기(10단계)
+Open the playable showcase scene,플레이할 수 있는 쇼케이스 씬 열기
+New sheet from a starter template,스타터 템플릿에서 새 시트
+Add comment,주석 추가
+Group the selection (or add an empty group),선택 항목 그룹화(또는 빈 그룹 추가)
+Toggle enabled / disabled,켜기 / 끄기 전환
+Add blank sub-event,빈 하위 이벤트 추가
+Add sub-event (picker),하위 이벤트 추가(선택기)
+Add function,함수 추가
+Collapse / expand the selected block,선택한 블록 접기 / 펼치기
+Preview layout (run this sheet's scene),레이아웃 미리보기(이 시트의 씬 실행)
+Preview project (run the main scene),프로젝트 미리보기(메인 씬 실행)
+Debug layout (run with the sheet's debugger armed),레이아웃 디버그(시트의 디버거를 켜고 실행)
+Invert selected condition,선택한 조건 반전
+Search all sheets,모든 시트 검색
+Replace selected trigger / condition / action,선택한 트리거 / 조건 / 액션 교체
+Jump back (navigation history),뒤로 이동(탐색 기록)
+Jump forward (navigation history),앞으로 이동(탐색 기록)
+Duplicate event,이벤트 복제
+Copy rows,행 복사
+Paste rows,행 붙여넣기
+Apply to running game,실행 중인 게임에 적용
+Add event (Ctrl alternate),이벤트 추가(Ctrl 대체 키)
+Add condition (Ctrl alternate),조건 추가(Ctrl 대체 키)
+Add action (Ctrl alternate),액션 추가(Ctrl 대체 키)
+Add instance variable,인스턴스 변수 추가
+Copy as text,텍스트로 복사
+Edit the selected row,선택한 행 편집
+Nest / un-nest the event,이벤트 중첩 / 중첩 해제
+Move the row up / down,행을 위 / 아래로 이동
+Collapse / expand a group,그룹 접기 / 펼치기
+Select previous / next row,이전 / 다음 행 선택
+Extend the row selection,행 선택 확장
+Delete the selection,선택 항목 삭제
+Find & Replace,찾기 및 바꾸기
+Find next / previous,다음 / 이전 찾기
+Command Palette,명령 팔레트
+Toggle breakpoint,중단점 전환
+Toggle bookmark,책갈피 전환
+Zoom in / out (also Ctrl + mouse wheel),확대 / 축소(Ctrl + 마우스 휠도 가능)
+Reset zoom to 100%,확대/축소를 100%로 재설정
+Close a popup / cancel an edit,팝업 닫기 / 편집 취소
+an inheritance set,상속으로 묶인 집합
+a scene,씬
+an attached pack,붙인 팩
+a Godot group,Godot 그룹
+the reader,읽을거리
+what the editor switches on,에디터가 켜는 것
+"the editor itself, as an object",오브젝트로서의 에디터 자신
+a panel docked in the editor,에디터에 도킹한 패널
+the properties panel and its add-ons,속성 패널과 그 애드온
+the tree of the open scene,열린 씬의 트리
+the project's file list,프로젝트의 파일 목록
+what Ctrl+Z walks back,Ctrl+Z가 되돌리는 것
+the user's own editor settings,사용자 자신의 에디터 설정
+the settings saved with the project,프로젝트와 함께 저장되는 설정
+how a control is drawn,컨트롤이 그려지는 방식
+a node you can see and click,보이고 클릭할 수 있는 노드
+a script that also runs in the editor,에디터에서도 실행되는 스크립트
+a script run from the command line,명령줄에서 실행하는 스크립트
+what runs when files are imported,파일을 가져올 때 실행되는 것
+what runs when the project is exported,프로젝트를 내보낼 때 실행되는 것
+something drawn over the 2D or 3D view,2D 또는 3D 뷰 위에 그리는 것
+what draws a file's preview picture,파일의 미리보기 그림을 그리는 것
+a tab in the Debugger while the game runs,게임 실행 중 디버거의 탭
+a node of your own in Create Node,노드 만들기에 나오는 나만의 노드
+one always-on instance the project shares,프로젝트가 함께 쓰는 늘 켜진 인스턴스
+one copy for the whole editor,에디터 전체에 하나뿐인 사본
+a helper that points back at what it helps,자신이 돕는 대상을 가리키는 도우미
+one of the editor's top tabs,에디터 위쪽 탭 중 하나
+Region name,영역 이름
+Bubble color,말풍선 색
+Closing fence (#endregion),닫는 경계(#endregion)

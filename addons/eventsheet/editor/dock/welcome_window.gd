@@ -66,16 +66,17 @@ static func choice_summary(choice: String) -> String:
 	var settings: Dictionary = choice_settings(choice)
 	var said: PackedStringArray = PackedStringArray()
 	said.append(EventSheetWords.preset_label(str(settings["words"])))
-	said.append("Classic sheet theme" if not str(settings["theme"]).is_empty() else "the editor-matching theme")
+	said.append(EventSheetL10n.translate("Classic sheet theme") if not str(settings["theme"]).is_empty()
+		else EventSheetL10n.translate("the editor-matching theme"))
 	if bool(settings["project_bar"]):
-		said.append("Project bar on")
+		said.append(EventSheetL10n.translate("Project bar on"))
 	if bool(settings["code_panel"]):
-		said.append("the GDScript panel beside every sheet")
+		said.append(EventSheetL10n.translate("the GDScript panel beside every sheet"))
 	if not str(settings["guide"]).is_empty():
-		said.append("the migration guide open in the Manual")
+		said.append(EventSheetL10n.translate("the migration guide open in the Manual"))
 	if bool(settings["tour"]):
-		said.append("the tour")
-	return "Sets: %s. Change any of it later in Settings ▸ Words and the View menu." % ", ".join(said)
+		said.append(EventSheetL10n.translate("the tour"))
+	return EventSheetL10n.translate("Sets: %s. Change any of it later in Settings ▸ Words and the View menu.") % ", ".join(said)
 
 
 ## The SETS line of the help strip: every setting an answer writes, each with the value it gets.
@@ -154,7 +155,7 @@ func _build() -> void:
 	box.add_child(band)
 	# The one question that sets the words, the look and the panels a reader already expects,
 	# instead of three settings in three menus they would have to know existed.
-	box.add_child(EventSheetPopupUI.titled_card("How do you usually make games?", _build_came_from()))
+	box.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("How do you usually make games?"), _build_came_from()))
 	# The four doors, two by two, so the window keeps its width.
 	var start_grid: GridContainer = GridContainer.new()
 	start_grid.columns = 2
@@ -170,25 +171,25 @@ func _build() -> void:
 		["New sheet from a starter template", func() -> void: _dock._open_template_menu()],
 	]:
 		var door_button: Button = Button.new()
-		door_button.text = str(door[0])
+		door_button.text = EventSheetL10n.translate(str(door[0]))
 		door_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var go: Callable = door[1]
 		door_button.pressed.connect(func() -> void:
 			_welcome_window.hide()
 			go.call())
 		start_grid.add_child(door_button)
-	box.add_child(EventSheetPopupUI.titled_card("Get Started", start_grid))
+	box.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("Get Started"), start_grid))
 	# Surface the Simple/Expert choice on the one newcomer-guaranteed surface (the Welcome). Simple Mode is the
 	# canonical audience flag but is otherwise off-by-default and menu-buried.
 	var prefs_box: VBoxContainer = EventSheetPopupUI.form_box()
 	_simple_check = CheckBox.new()
 	_simple_check.text = "Simple mode - hide advanced rows & menu items"
-	_simple_check.tooltip_text = "New to event sheets? Simple mode keeps the picker and menus to the essentials. Everything still works in Expert mode - toggle any time in View → Simple Mode."
+	_simple_check.tooltip_text = EventSheetL10n.translate("New to event sheets? Simple mode keeps the picker and menus to the essentials. Everything still works in Expert mode - toggle any time in View → Simple Mode.")
 	_simple_check.toggled.connect(func(on: bool) -> void: _dock.set_simple_mode(on))
 	prefs_box.add_child(_simple_check)
 	_native_check = CheckBox.new()
 	_native_check.text = "Open the GDScript panel with every sheet"
-	_native_check.tooltip_text = "The Godot-native default: every sheet opens with its generated script beside it (eventsheets/editor/open_code_panel_by_default)."
+	_native_check.tooltip_text = EventSheetL10n.translate("The Godot-native default: every sheet opens with its generated script beside it (eventsheets/editor/open_code_panel_by_default).")
 	_native_check.toggled.connect(func(on: bool) -> void:
 		ProjectSettings.set_setting("eventsheets/editor/open_code_panel_by_default", true if on else null))
 	prefs_box.add_child(_native_check)
@@ -218,7 +219,7 @@ func _build() -> void:
 	var issue_button: Button = Button.new()
 	issue_button.text = "Report an issue"
 	issue_button.flat = true
-	issue_button.tooltip_text = "Opens the plugin's issue tracker in your browser, with your Godot and plugin versions pre-filled."
+	issue_button.tooltip_text = EventSheetL10n.translate("Opens the plugin's issue tracker in your browser, with your Godot and plugin versions pre-filled.")
 	issue_button.pressed.connect(func() -> void: _dock._report_issue())
 	issue_row.add_child(issue_button)
 	var reopen: Label = Label.new()
@@ -243,7 +244,7 @@ func _build_came_from() -> VBoxContainer:
 	var group: ButtonGroup = ButtonGroup.new()
 	for choice: String in CAME_FROM_CHOICES:
 		var answer: Button = Button.new()
-		answer.text = str(choice_settings(choice)["label"])
+		answer.text = EventSheetL10n.translate(str(choice_settings(choice)["label"]))
 		answer.toggle_mode = true
 		answer.button_group = group
 		answer.alignment = HORIZONTAL_ALIGNMENT_LEFT

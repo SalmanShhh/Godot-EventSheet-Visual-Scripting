@@ -108,8 +108,8 @@ func _build_include_manager() -> void:
 	_include_preview_viewport.show_add_event_footers = false
 	preview_scroll.add_child(_include_preview_viewport)
 	var open_source: Button = Button.new()
-	open_source.text = "Open Source Sheet…"
-	open_source.tooltip_text = "Open the included sheet to edit it (changes flow to every sheet that includes it)."
+	open_source.text = EventSheetL10n.translate("Open Source Sheet…")
+	open_source.tooltip_text = EventSheetL10n.translate("Open the included sheet to edit it (changes flow to every sheet that includes it).")
 	open_source.pressed.connect(_open_selected_include_source)
 	var contents_box: VBoxContainer = EventSheetPopupUI.form_box()
 	contents_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -190,7 +190,7 @@ func _refresh_include_preview() -> void:
 		_include_preview_viewport.get_parent().visible = false
 	var path: String = _selected_path()
 	if path.is_empty():
-		_include_preview.text = "Select an include to preview what it contributes."
+		_include_preview.text = EventSheetL10n.translate("Select an include to preview what it contributes.")
 		_strip.describe(EventSheetL10n.translate("This sheet"),
 			EventSheetL10n.translate("Pick an include to see what it brings; Add… includes another sheet."))
 		_strip.set_line(_adds_value, "")
@@ -208,10 +208,10 @@ func _refresh_include_preview() -> void:
 	var functions: Array = summary.get("functions", [])
 	var variables: Array = summary.get("variables", [])
 	var class_line: String = ("class %s\n" % str(summary.get("class"))) if str(summary.get("class", "")) != "" else ""
-	_include_preview.text = "[b]%s[/b]\n%s\nEvents: %d\nFunctions: %s\nVariables: %s" % [
+	_include_preview.text = EventSheetL10n.translate("[b]%s[/b]\n%s\nEvents: %d\nFunctions: %s\nVariables: %s") % [
 		path, class_line, int(summary.get("events", 0)),
-		", ".join(PackedStringArray(functions)) if not functions.is_empty() else "(none)",
-		", ".join(PackedStringArray(variables)) if not variables.is_empty() else "(none)"]
+		", ".join(PackedStringArray(functions)) if not functions.is_empty() else EventSheetL10n.translate("(none)"),
+		", ".join(PackedStringArray(variables)) if not variables.is_empty() else EventSheetL10n.translate("(none)")]
 	var included: EventSheetResource = load(path) as EventSheetResource
 	if _include_preview_viewport != null and included != null:
 		_include_preview_viewport.set_sheet(included)  # read-only provenance view

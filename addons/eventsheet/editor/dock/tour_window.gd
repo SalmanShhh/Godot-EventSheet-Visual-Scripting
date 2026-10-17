@@ -31,44 +31,44 @@ static func steps() -> Array[Dictionary]:
 	return [
 		{
 			"title": "Read a sheet like a sentence",
-			"body": "Every rule is one row. WHEN the left side is true (the conditions), DO the right side (the actions). Nothing is hidden: the plain GDScript your game ships is always one click away.",
-			"task": "Look at the sheet: conditions live in the left lane, actions in the right.",
+			"body": EventSheetL10n.translate("Every rule is one row. WHEN the left side is true (the conditions), DO the right side (the actions). Nothing is hidden: the plain GDScript your game ships is always one click away."),
+			"task": EventSheetL10n.translate("Look at the sheet: conditions live in the left lane, actions in the right."),
 			"check": Callable(),
 		},
 		{
 			"title": "Add your first event",
-			"body": "An event starts with a trigger - the moment it runs. On Ready fires once when the object appears; Every Frame runs continuously.",
-			"task": "Click \"Add event\" in the sheet's top-left corner (or the trailing \"+ Add event…\" row) and pick a trigger - try On Ready.",
+			"body": EventSheetL10n.translate("An event starts with a trigger - the moment it runs. On Ready fires once when the object appears; Every Frame runs continuously."),
+			"task": EventSheetL10n.translate("Click \"Add event\" in the sheet's top-left corner (or the trailing \"+ Add event…\" row) and pick a trigger - try On Ready."),
 			"check": func(sheet: EventSheetResource) -> bool: return _sheet_has_event(sheet),
 		},
 		{
 			"title": "Give it a condition",
-			"body": "Conditions decide WHEN the row runs this tick. Stack several and ALL must hold; conditions like Every X Seconds even keep their own timer.",
-			"task": "Select your event and double-click the left lane (or press C). Try Every X Seconds.",
+			"body": EventSheetL10n.translate("Conditions decide WHEN the row runs this tick. Stack several and ALL must hold; conditions like Every X Seconds even keep their own timer."),
+			"task": EventSheetL10n.translate("Select your event and double-click the left lane (or press C). Try Every X Seconds."),
 			"check": func(sheet: EventSheetResource) -> bool: return _sheet_has_condition(sheet),
 		},
 		{
 			"title": "Make it DO something",
-			"body": "Actions are what happens - they run top to bottom whenever the conditions pass.",
-			"task": "Double-click the right lane (or press A) and pick Print Message, then type something friendly.",
+			"body": EventSheetL10n.translate("Actions are what happens - they run top to bottom whenever the conditions pass."),
+			"task": EventSheetL10n.translate("Double-click the right lane (or press A) and pick Print Message, then type something friendly."),
 			"check": func(sheet: EventSheetResource) -> bool: return _sheet_has_action(sheet),
 		},
 		{
 			"title": "See the honest GDScript",
-			"body": "Your sheet IS a plain Godot script - no runtime, no magic. Clicking a code line jumps to the row that made it, so the sheet and the script always explain each other.",
-			"task": "Open Menu ▸ View ▸ GDScript Panel and find the line your action just added.",
+			"body": EventSheetL10n.translate("Your sheet IS a plain Godot script - no runtime, no magic. Clicking a code line jumps to the row that made it, so the sheet and the script always explain each other."),
+			"task": EventSheetL10n.translate("Open Menu ▸ View ▸ GDScript Panel and find the line your action just added."),
 			"check": Callable(),
 		},
 		{
 			"title": "Make your own data asset",
-			"body": "Sheets aren't only for gameplay: Sheet > New Data Table… is a small spreadsheet - name what one row is, give each column a kind, type the rows - and Insert writes a data asset whose Inspector is that same table, plus a .tres holding your rows - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.",
-			"task": "Peek at Sheet > New Data Table… (Esc closes it without creating anything).",
+			"body": EventSheetL10n.translate("Sheets aren't only for gameplay: Sheet > New Data Table… is a small spreadsheet - name what one row is, give each column a kind, type the rows - and Insert writes a data asset whose Inspector is that same table, plus a .tres holding your rows - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way."),
+			"task": EventSheetL10n.translate("Peek at Sheet > New Data Table… (Esc closes it without creating anything)."),
 			"check": Callable(),
 		},
 		{
 			"title": "You know the loop",
-			"body": "Events + conditions + actions, compiled to code you can read. From here: Sheet > New From Template opens full starters, Tools > Welcome has the playable showcase, and Add > Variable gives your sheet memory. Take this tour again any time: Tools > Start the Tour. Have fun!",
-			"task": "Hit Finish and go make something.",
+			"body": EventSheetL10n.translate("Events + conditions + actions, compiled to code you can read. From here: Sheet > New From Template opens full starters, Tools > Welcome has the playable showcase, and Add > Variable gives your sheet memory. Take this tour again any time: Tools > Start the Tour. Have fun!"),
+			"task": EventSheetL10n.translate("Hit Finish and go make something."),
 			"check": Callable(),
 		},
 	]
@@ -172,7 +172,7 @@ func _build() -> void:
 	_done_label = Label.new()
 	_done_label.visible = false
 	task_box.add_child(_done_label)
-	box.add_child(EventSheetPopupUI.titled_card("Try it", task_box))
+	box.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("Try it"), task_box))
 	# Back on the left of the foot; the progress, Skip tour and Next on the right.
 	var buttons: HBoxContainer = HBoxContainer.new()
 	_back_button = Button.new()

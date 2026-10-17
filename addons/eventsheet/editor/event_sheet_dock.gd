@@ -4924,7 +4924,7 @@ func _open_sheet_backups() -> void:
 		list_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		box.add_child(list_card)
 		var restore_button: Button = Button.new()
-		restore_button.text = "Restore into editor (unsaved - Save to keep)"
+		restore_button.text = EventSheetL10n.translate("Restore into editor (unsaved - Save to keep)")
 		restore_button.pressed.connect(_on_restore_backup_pressed)
 		box.add_child(restore_button)
 		_backups_window.add_child(EventSheetPopupUI.window_body(box))

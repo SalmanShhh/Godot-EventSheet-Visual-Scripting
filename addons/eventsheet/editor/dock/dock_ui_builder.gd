@@ -484,7 +484,7 @@ func build_provider_dialog() -> void:
 	if _dock._provider_dialog != null:
 		return
 	_dock._provider_dialog = Window.new()
-	_dock._provider_dialog.title = "Custom ACE Providers"
+	_dock._provider_dialog.title = EventSheetL10n.translate("Custom ACE Providers")
 	_dock._provider_dialog.visible = false
 	_dock._provider_dialog.min_size = Vector2i(720, 620)
 	_dock._provider_dialog.close_requested.connect(func() -> void: _dock._provider_dialog.hide())
@@ -493,7 +493,7 @@ func build_provider_dialog() -> void:
 	var content: VBoxContainer = EventSheetPopupUI.form_box()
 	_dock._provider_dialog.add_child(EventSheetPopupUI.window_body(content))
 
-	content.add_child(EventSheetPopupUI.hint_label("Register GDScript files whose methods, signals and exported variables become custom ACEs.\nZero-config alternative: drop scripts into res://eventsheet_addons/ and they register project-wide automatically."))
+	content.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("Register GDScript files whose methods, signals and exported variables become custom ACEs.\nZero-config alternative: drop scripts into res://eventsheet_addons/ and they register project-wide automatically.")))
 
 	var providers_box: VBoxContainer = EventSheetPopupUI.form_box()
 
@@ -510,7 +510,7 @@ func build_provider_dialog() -> void:
 	add_button.pressed.connect(_dock._providers_glue.on_provider_add_pressed)
 	buttons.add_child(add_button)
 	var remove_button: Button = Button.new()
-	remove_button.text = "Remove Selected"
+	remove_button.text = EventSheetL10n.translate("Remove Selected")
 	remove_button.pressed.connect(_dock._providers_glue.on_provider_remove_pressed)
 	buttons.add_child(remove_button)
 	var open_in_godot_button: Button = Button.new()
@@ -531,7 +531,7 @@ func build_provider_dialog() -> void:
 	# "What it publishes": the scan of the highlighted (or just-browsed) script. Browsing previews only -
 	# Register is the second, deliberate click - so a script never joins the vocabulary unseen.
 	var preview_box: VBoxContainer = EventSheetPopupUI.form_box()
-	_dock._provider_preview_summary = EventSheetPopupUI.hint_label("Select a provider, or press Add to preview a script.")
+	_dock._provider_preview_summary = EventSheetPopupUI.hint_label(EventSheetL10n.translate("Select a provider, or press Add to preview a script."))
 	preview_box.add_child(_dock._provider_preview_summary)
 	_dock._provider_preview_warnings = VBoxContainer.new()
 	_dock._provider_preview_warnings.add_theme_constant_override("separation", 2)
@@ -591,7 +591,7 @@ func build_provider_dialog() -> void:
 	_dock._provider_shim_button.tooltip_text = "Renamed this function? Add a deprecated stand-in under its old name so sheets that already use it keep working.\nNothing existing is edited - the stand-in just forwards."
 	_dock._provider_shim_button.pressed.connect(_dock._providers_glue.on_provider_shim_pressed)
 	preview_actions.add_child(_dock._provider_shim_button)
-	var preview_card: PanelContainer = EventSheetPopupUI.titled_card("What it publishes", preview_box)
+	var preview_card: PanelContainer = EventSheetPopupUI.titled_card(EventSheetL10n.translate("What it publishes"), preview_box)
 	preview_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content.add_child(preview_card)
 

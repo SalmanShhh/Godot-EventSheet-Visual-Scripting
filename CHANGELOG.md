@@ -17,6 +17,17 @@
   sheet keeps them byte for byte, and the variable window's Columns field keeps them too.
 - The Inspector table's headers read each column's name as the code writes it (`max_jumps`, no
   longer Max Jumps).
+### Fixed: the windows the canvas build touched speak the editor's language
+
+- Opened in a German or Japanese editor, Sheet Type, the Welcome window and the tour, Compare With,
+  Loose Ends, Manage Includes, the sheet map's count, Custom ACE Providers, Sheet Backups' restore,
+  Generate, the Compare dialog's help, the shortcut and fixed-key names, the Words page's left
+  column and descriptions, the region editor's fields, Split Scene Into Chunks and Export Mod
+  Template read in English: their sentences were never handed to the translation tables, or were
+  set straight from a table with no translate call. About 280 sentences are now translated in all
+  eight languages.
+- An event's hover sentence reads a value-emphasising row as plain words (Keep hp between 0 and
+  100), not as `[b]hp[/b]` tags.
 
 ### Changed: Add behaviour is a shelf of tiles, your own behaviours first
 

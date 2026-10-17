@@ -390,13 +390,14 @@ func _kind_help(item_index: int) -> Dictionary:
 	var type_index: int = _sheet_type_option.get_item_id(item_index)
 	if type_index < 0 or type_index >= TYPE_HINTS.size():
 		return {}
-	return {"heading": "Kind · %s" % TYPE_LABELS[type_index], "body": TYPE_HINTS[type_index]}
+	return {"heading": EventSheetL10n.translate("Kind · %s") % EventSheetL10n.translate(TYPE_LABELS[type_index]),
+		"body": EventSheetL10n.translate(TYPE_HINTS[type_index])}
 
 
 func _ensure_sheet_type_dialog() -> void:
 	if _sheet_type_dialog != null:
 		return
-	var parts: Dictionary = EventSheetPopupUI.panel_window("Sheet Type", Vector2i.ZERO, _dock, EventSheetL10n.translate("OK"),
+	var parts: Dictionary = EventSheetPopupUI.panel_window(EventSheetL10n.translate("Sheet Type"), Vector2i.ZERO, _dock, EventSheetL10n.translate("OK"),
 		_on_sheet_type_confirmed)
 	_sheet_type_dialog = parts["window"]
 	var form: VBoxContainer = parts["box"]
@@ -411,13 +412,13 @@ func _ensure_sheet_type_dialog() -> void:
 			_sheet_type_option.add_separator()
 			continue
 		_sheet_type_option.add_item(TYPE_LABELS[type_index], type_index)
-		_sheet_type_option.set_item_tooltip(_sheet_type_option.item_count - 1, TYPE_HINTS[type_index])
+		_sheet_type_option.set_item_tooltip(_sheet_type_option.item_count - 1, EventSheetL10n.translate(TYPE_HINTS[type_index]))
 	_sheet_type_option.item_selected.connect(func(_index: int) -> void: _refresh_type_ui())
 	form.add_child(EventSheetPopupUI.form_row("Kind", EventSheetPopupUI.described_field(_sheet_type_option, 320.0)))
 	# Identity card - only the fields the chosen type consumes are visible (see field_visibility).
 	var ident_box: VBoxContainer = EventSheetPopupUI.form_box()
 	_sheet_type_name_edit = _dock._sheet_type_glue.add_sheet_type_field(ident_box, "Name", "PatrolBehavior")
-	_sheet_type_host_edit = _dock._sheet_type_glue.add_sheet_type_field(ident_box, "Extends", "CharacterBody2D")
+	_sheet_type_host_edit = _dock._sheet_type_glue.add_sheet_type_field(ident_box, EventSheetL10n.translate("Extends"), "CharacterBody2D")
 	var host_row: HBoxContainer = _sheet_type_host_edit.get_parent()
 	_host_label = host_row.get_child(0)
 	# As-you-type class suggestions, through the ONE completion popup every field in this editor
@@ -434,10 +435,10 @@ func _ensure_sheet_type_dialog() -> void:
 	# "Choose…" fills the host field from the curated shortlist - pick by meaning, type only if you
 	# already know the exact class.
 	_host_menu = MenuButton.new()
-	_host_menu.text = "Choose…"
+	_host_menu.text = EventSheetL10n.translate("Choose…")
 	_host_menu.flat = false
 	for entry: Dictionary in COMMON_HOSTS:
-		_host_menu.get_popup().add_item(str(entry["label"]))
+		_host_menu.get_popup().add_item(EventSheetL10n.translate(str(entry["label"])))
 	_host_menu.get_popup().index_pressed.connect(func(index: int) -> void:
 		_sheet_type_host_edit.text = str(COMMON_HOSTS[index]["host"])
 		_refresh_identity_preview())
@@ -445,21 +446,23 @@ func _ensure_sheet_type_dialog() -> void:
 	_sheet_type_icon_edit = _dock._sheet_type_glue.add_sheet_type_field(ident_box, "Icon", "res://icons/patrol.svg")
 	# Pick the icon straight from the FileSystem instead of typing a res:// path.
 	var icon_browse: Button = Button.new()
-	icon_browse.text = "Browse…"
+	icon_browse.text = EventSheetL10n.translate("Browse…")
 	icon_browse.pressed.connect(func() -> void: EventSheetPopupUI.browse_file(_dock, ["*.svg, *.png, *.webp"],
 		func(path: String) -> void: _sheet_type_icon_edit.text = path))
 	_sheet_type_icon_edit.get_parent().add_child(icon_browse)
-	_sheet_type_description_edit = _dock._sheet_type_glue.add_sheet_type_multiline_field(ident_box, "Description", "What this does - shown in Godot's Create Node dialog.")
-	_sheet_type_autoload_edit = _dock._sheet_type_glue.add_sheet_type_field(ident_box, "Autoload name", "GameState - a global name every sheet can call")
+	_sheet_type_description_edit = _dock._sheet_type_glue.add_sheet_type_multiline_field(ident_box, EventSheetL10n.translate("Description"),
+		EventSheetL10n.translate("What this does - shown in Godot's Create Node dialog."))
+	_sheet_type_autoload_edit = _dock._sheet_type_glue.add_sheet_type_field(ident_box, EventSheetL10n.translate("Autoload name"),
+		EventSheetL10n.translate("GameState - a global name every sheet can call"))
 	# "Runs in the editor too" reads as a field of the sheet's identity, not as a power option:
 	# it is one of the lines the head shows, so it is edited where the other lines are.
 	_sheet_type_tool_check = CheckBox.new()
-	_sheet_type_tool_check.text = "Runs in the editor too  -  @tool"
+	_sheet_type_tool_check.text = EventSheetL10n.translate("Runs in the editor too  -  @tool")
 	ident_box.add_child(_sheet_type_tool_check)
 	# Family flag (horizontal abstraction): a named sheet's instances are collected into
 	# group family_<class>, so other sheets can write ONE rule over all of them ("for each Enemy: …").
 	_sheet_type_family_check = CheckBox.new()
-	_sheet_type_family_check.text = "Family - one rule can target every instance at once"
+	_sheet_type_family_check.text = EventSheetL10n.translate("Family - one rule can target every instance at once")
 	ident_box.add_child(_sheet_type_family_check)
 	# What an Editor plugin ADDS to the editor. Ticking a box is the whole authoring gesture: on
 	# OK the sheet arrives with the pair of events that capability needs (add it when the plugin is
@@ -467,10 +470,10 @@ func _ensure_sheet_type_dialog() -> void:
 	# whose actions are already on the sheet writes nothing, so reopening the dialog is safe.
 	_plugin_capabilities_box = VBoxContainer.new()
 	_plugin_capabilities_box.add_child(EventSheetPopupUI.hint_label(
-		"What this plugin adds to the editor. Each tick arrives as a pair of events: added when the plugin is enabled, removed when it is disabled.", 440.0))
+		EventSheetL10n.translate("What this plugin adds to the editor. Each tick arrives as a pair of events: added when the plugin is enabled, removed when it is disabled."), 440.0))
 	for capability: Dictionary in PLUGIN_CAPABILITIES:
 		var check: CheckBox = CheckBox.new()
-		check.text = str(capability["label"])
+		check.text = EventSheetL10n.translate(str(capability["label"]))
 		_plugin_capabilities_box.add_child(check)
 		_plugin_capability_checks[str(capability["key"])] = check
 	ident_box.add_child(_plugin_capabilities_box)
@@ -480,7 +483,7 @@ func _ensure_sheet_type_dialog() -> void:
 	_rename_reach = EventSheetPopupUI.hint_label("", 440.0)
 	_rename_reach.visible = false
 	ident_box.add_child(_rename_reach)
-	_identity_card = EventSheetPopupUI.titled_card("Identity", ident_box)
+	_identity_card = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Identity"), ident_box)
 	form.add_child(_identity_card)
 	for edit: LineEdit in [_sheet_type_name_edit, _sheet_type_host_edit, _sheet_type_autoload_edit]:
 		edit.text_changed.connect(func(_text: String) -> void: _refresh_identity_preview())
@@ -490,35 +493,38 @@ func _ensure_sheet_type_dialog() -> void:
 	_more_toggle.toggle_mode = true
 	_more_toggle.flat = true
 	_more_toggle.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_more_toggle.text = "▸ More (tags, includes, uses, requires)"
+	_more_toggle.text = "▸ " + EventSheetL10n.translate("More (tags, includes, uses, requires)")
 	_more_toggle.toggled.connect(func(pressed: bool) -> void: _set_more_expanded(pressed))
 	form.add_child(_more_toggle)
 	var more_box: VBoxContainer = EventSheetPopupUI.form_box()
-	_sheet_type_tags_edit = _dock._sheet_type_glue.add_sheet_type_field(more_box, "Tags (comma-separated)", "movement, retro, jam")
-	_sheet_type_includes_edit = _dock._sheet_type_glue.add_sheet_type_field(more_box, "Includes (addon sheets)", "res://eventsheet_addons/screen_shake/screen_shake.tres, …")
-	_sheet_type_uses_edit = _dock._sheet_type_glue.add_sheet_type_field(more_box, "Uses (addon classes)", "ScreenShake, MathHelpers - owned helper instances")
-	_sheet_type_requires_edit = _dock._sheet_type_glue.add_sheet_type_field(more_box, "Requires (sibling behaviors)", "ScreenShake - shows a warning badge when missing")
-	_more_card = EventSheetPopupUI.titled_card("More options", more_box)
+	_sheet_type_tags_edit = _dock._sheet_type_glue.add_sheet_type_field(more_box, EventSheetL10n.translate("Tags (comma-separated)"), "movement, retro, jam")
+	_sheet_type_includes_edit = _dock._sheet_type_glue.add_sheet_type_field(more_box, EventSheetL10n.translate("Includes (addon sheets)"), "res://eventsheet_addons/screen_shake/screen_shake.tres, …")
+	_sheet_type_uses_edit = _dock._sheet_type_glue.add_sheet_type_field(more_box, EventSheetL10n.translate("Uses (addon classes)"),
+		EventSheetL10n.translate("ScreenShake, MathHelpers - owned helper instances"))
+	_sheet_type_requires_edit = _dock._sheet_type_glue.add_sheet_type_field(more_box, EventSheetL10n.translate("Requires (sibling behaviors)"),
+		EventSheetL10n.translate("ScreenShake - shows a warning badge when missing"))
+	_more_card = EventSheetPopupUI.titled_card(EventSheetL10n.translate("More options"), more_box)
 	_more_card.visible = false
 	form.add_child(_more_card)
 	# ONE help strip at the foot, describing whatever field or kind is focused. No READS AS
 	# line: the sheet's own head, right above this dialog, IS the preview of what these fields write.
 	_help_strip = EventSheetPopupUI.help_strip(
-		"Kind · %s" % TYPE_LABELS[0], TYPE_HINTS[0], "", "", 440.0)
+		EventSheetL10n.translate("Kind · %s") % EventSheetL10n.translate(TYPE_LABELS[0]),
+		EventSheetL10n.translate(TYPE_HINTS[0]), "", "", 440.0)
 	form.add_child(_help_strip)
 	_help_strip.follow_option(_sheet_type_option, _kind_help)
-	_help_strip.follow(_sheet_type_name_edit, "Name · class_name",
-		"How this script is known to the project and the Add Node dialog. Letters, digits and underscores; it must not be a class Godot already has.")
-	_help_strip.follow(_sheet_type_host_edit, "Extends",
-		"The class this sheet builds on: everything that class can do, this sheet can do. Type to get suggestions, or drop a node from the Scene dock onto this dialog.")
-	_help_strip.follow(_sheet_type_icon_edit, "Icon · @icon",
-		"The image Godot shows for this class in the Scene dock and the Add Node dialog. Any res:// image; Browse… picks one.")
-	_help_strip.follow(_sheet_type_description_edit, "Description · ##",
-		"One or two sentences saying what this sheet is. Godot shows them in the Create Node dialog, and the sheet's head shows them on its own band.")
-	_help_strip.follow(_sheet_type_autoload_edit, "Autoload name",
-		"The name every other sheet writes to reach this one. It lives in project.godot, not in this file.")
-	_help_strip.follow(_sheet_type_tool_check, "Runs in the editor too · @tool",
-		"The script runs inside the editor as well as in the game, so its events fire while you are building the scene.")
+	_help_strip.follow(_sheet_type_name_edit, EventSheetL10n.translate("Name · class_name"),
+		EventSheetL10n.translate("How this script is known to the project and the Add Node dialog. Letters, digits and underscores; it must not be a class Godot already has."))
+	_help_strip.follow(_sheet_type_host_edit, EventSheetL10n.translate("Extends"),
+		EventSheetL10n.translate("The class this sheet builds on: everything that class can do, this sheet can do. Type to get suggestions, or drop a node from the Scene dock onto this dialog."))
+	_help_strip.follow(_sheet_type_icon_edit, EventSheetL10n.translate("Icon · @icon"),
+		EventSheetL10n.translate("The image Godot shows for this class in the Scene dock and the Add Node dialog. Any res:// image; Browse… picks one."))
+	_help_strip.follow(_sheet_type_description_edit, EventSheetL10n.translate("Description · ##"),
+		EventSheetL10n.translate("One or two sentences saying what this sheet is. Godot shows them in the Create Node dialog, and the sheet's head shows them on its own band."))
+	_help_strip.follow(_sheet_type_autoload_edit, EventSheetL10n.translate("Autoload name"),
+		EventSheetL10n.translate("The name every other sheet writes to reach this one. It lives in project.godot, not in this file."))
+	_help_strip.follow(_sheet_type_tool_check, EventSheetL10n.translate("Runs in the editor too · @tool"),
+		EventSheetL10n.translate("The script runs inside the editor as well as in the game, so its events fire while you are building the scene."))
 	_foot_note = Label.new()
 	_foot_note.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
 	var foot: Node = _sheet_type_dialog.get_ok_button().get_parent()
@@ -541,11 +547,11 @@ func _refresh_type_ui() -> void:
 	_plugin_capabilities_box.visible = bool(shown["plugin_capabilities"])
 	match type_index:
 		2:
-			_host_label.text = "Acts on (parent)"
+			_host_label.text = EventSheetL10n.translate("Acts on (parent)")
 		5:
-			_host_label.text = "Extends (data type)"
+			_host_label.text = EventSheetL10n.translate("Extends (data type)")
 		_:
-			_host_label.text = "Extends"
+			_host_label.text = EventSheetL10n.translate("Extends")
 	_host_menu.visible = type_index != 5  # the node shortlist makes no sense for a Resource host
 	EventSheetPopupUI.follow_description(_sheet_type_option)
 	_refresh_identity_preview()
@@ -645,7 +651,7 @@ func _set_more_expanded(expanded: bool) -> void:
 	if _more_toggle == null:
 		return
 	_more_toggle.set_pressed_no_signal(expanded)
-	_more_toggle.text = ("▾" if expanded else "▸") + " More (tags, includes, uses, requires)"
+	_more_toggle.text = ("▾ " if expanded else "▸ ") + EventSheetL10n.translate("More (tags, includes, uses, requires)")
 	_more_card.visible = expanded
 	if _sheet_type_dialog != null and _sheet_type_dialog.visible:
 		_sheet_type_dialog.reset_size()

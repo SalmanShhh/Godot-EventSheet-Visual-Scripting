@@ -9017,3 +9017,292 @@ No lines yet - Find text fills it.,まだ行がありません - 「テキスト
 "A picture: an icon, a portrait, a sprite. The cell holds its file path; drag one in from the FileSystem dock.",画像：アイコン、肖像、スプライトなど。セルにはファイルパスが入ります。ファイルシステムドックからドラッグして入れられます。
 "What a new row starts with in this column, here and in the Inspector's Add Row.",新しい行がこの列で最初に持つ値です。ここでも、インスペクターの「行を追加」でも使われます。
 "What the column holds, said on its header in the Inspector.",この列が何を保持するか。インスペクターの列見出しに表示されます。
+Split,分割
+Merge,結合
+What this moves,これが移動するもの
+"A scene in, a folder of chunk scenes out",シーン1つから、チャンクシーンのフォルダーへ
+"A folder of chunk scenes in, one scene out",チャンクシーンのフォルダーから、シーン1つへ
+The scene to read. It is never changed - the chunks are written beside it.,読み込むシーン。変更はされません - チャンクはその横に書き出されます。
+Chunk folder,チャンクフォルダー
+"The folder of chunk scenes: written by Split, read by Merge, and by the Streamer's own Stream Chunks Around.",チャンクシーンのフォルダー。分割が書き込み、結合と Streamer の Stream Chunks Around が読み込みます。
+Into scene,出力先シーン
+The one scene the chunks are put back together into.,チャンクを組み直して入れる1つのシーン。
+Cell width,セルの幅
+"How wide one chunk is, in the scene's own units. Match the Streamer's Cell Size.",チャンク1つの幅（シーン自身の単位）。Streamer の Cell Size に合わせます。
+Cell height,セルの高さ
+"How tall one chunk is. Ignored on a 2D scene, and on a 3D one until height is a cell axis.",チャンク1つの高さ。2Dシーンでは無視され、3Dシーンでも高さをセル軸にするまでは無視されます。
+Cell depth,セルの奥行き
+How deep one chunk is. A 2D scene's depth axis is its own y.,チャンク1つの奥行き。2Dシーンの奥行き軸はそのシーンの y です。
+Name prefix,名前の接頭辞
+The words before the cell numbers: chunk_3_-2.tscn. Do not end it with a number - the numbers at the end of the name ARE the address.,セル番号の前に付く語: chunk_3_-2.tscn。数字で終わらせないでください - 名前の末尾の数字がアドレスそのものです。
+Height is a cell axis,高さをセル軸にする
+"Off, the grid is flat and every cell's height is 0 - what an open world wants. On, cells stack, for a station, a cave or a tower.",オフならグリッドは平らで、どのセルの高さも 0（オープンワールド向け）。オンならセルが積み重なります（ステーション、洞窟、塔向け）。
+"Split %s into %s, one scene per %s cell",%s を %s に分割、%s のセルごとに1シーン
+"Merge the cells in %s into %s, placed %s apart",%s のセルを %s に結合、%s 間隔で配置
+"Each DIRECT CHILD of the scene's root moves into the chunk its own position falls in, re-based to that cell's origin. A child with no position - a Control, a Timer, an audio player - has no cell, so it stays where it is and is named in the receipt. A tilemap is one node holding a whole world of cells: splitting it would mean rewriting its data, so it is left alone.",シーンのルートの直接の子はそれぞれ、自分の位置が入るチャンクへ移り、そのセルの原点基準に置き直されます。位置を持たない子（Control、Timer、オーディオプレーヤーなど）はセルがないのでその場に残り、結果の一覧に名前が載ります。タイルマップはセルの世界全体を持つ1つのノードで、分割するとデータの書き換えになるため、そのままにします。
+"Every scene in the folder named like a cell is opened, its children moved back to where the cell puts them, and the result saved as one scene. The chunk scenes are not changed, so a merge is always reversible by splitting again.",フォルダー内のセル名のシーンをすべて開き、子をセルが示す位置へ戻し、結果を1つのシーンとして保存します。チャンクシーンは変更されないので、結合はもう一度分割すればいつでも元に戻せます。
+Generate Events from a Description,説明からイベントを生成
+"Describe the behavior in plain English - it becomes GDScript, then editable events you can tweak.",動作をふつうの言葉で説明してください - GDScript になり、その後に調整できる編集可能なイベントになります。
+"e.g. When the player presses jump and is on the floor, set velocity.y to -400 and play the jump sound.",例: プレイヤーがジャンプを押して床の上にいるとき、velocity.y を -400 にしてジャンプ音を鳴らす。
+Give or take,許容差
+Invert - true when it is NOT the case,反転 - そうでないときに真
+"Pick what to compare, how, and to what. The row you get is whichever condition matches - the ids and the code are the sheet's own.",何を、どう、何と比較するかを選びます。できる行は一致する条件そのもので、ID とコードはシートのものです。
+"The left side of the question. Pick one of this sheet's variables, or choose the last entry to type any expression - then the row is a plain value comparison.",問いの左辺。このシートの変数を選ぶか、最後の項目を選んで任意の式を入力します - その場合の行は単純な値の比較です。
+"Any expression: a property, a call, arithmetic. Typed values compare as values, so this writes Compare Values rather than Compare variable.",任意の式: プロパティ、呼び出し、計算。入力した値は値として比較されるので、Compare variable ではなく Compare Values が書かれます。
+"How the two sides are compared. The ranges at the foot ask for two values, or for a value and how far off it may be.",両辺をどう比較するか。末尾の範囲は2つの値、または値とずれてよい幅を求めます。
+"What to compare against - a number, a piece of text in quotes, or another expression.",比較する相手 - 数値、引用符で囲んだテキスト、または別の式。
+The other end of the range. Both ends count as inside it.,範囲のもう一方の端。両端とも範囲内として扱います。
+"How far apart the two values may be and still count as equal. Decimal numbers almost never land exactly equal, which is what this is for.",2つの値がどれだけ離れていても等しいとみなすか。小数はほとんど完全には一致しないので、そのための設定です。
+"Treat capitals and lowercase as the same. It writes to_lower() on both sides, which is what a hand-written check does.",大文字と小文字を同じに扱います。両辺に to_lower() を書きます。手書きのチェックと同じです。
+True when the question is NOT. A comparison with a clean opposite simply shows the opposite instead - hp > 0 rather than not (hp <= 0).,問いが成り立たないときに真。はっきりした逆がある比較は、その逆をそのまま表示します - not (hp <= 0) ではなく hp > 0。
+Compare With,比較対象
+"The other side of the comparison: this sheet's last save, a backup from the ring, or another sheet in the project.",比較のもう一方: このシートの最後の保存、バックアップリングのバックアップ、またはプロジェクト内の別のシート。
+"Compare against any .gd or .tres sheet on disk - a teammate's file, a downloaded pack, an older copy.",ディスク上の任意の .gd または .tres シートと比較 - チームメイトのファイル、ダウンロードしたパック、古いコピーなど。
+Compare against,比較する相手
+Pick a side and press Compare. Double-click a row to jump to it; a row that only exists on the other side can be brought over.,相手を選んで「比較」を押します。行をダブルクリックするとそこへ移動し、相手側にしかない行はこちらへ持ってこられます。
+Nothing on this side yet.,こちら側にはまだ何もありません。
+Nothing on the compared side yet.,比較相手の側にはまだ何もありません。
+Only here / different here,こちらだけ / こちらが異なる
+Only there / different there,相手側だけ / 相手側が異なる
+Bring This Row Over,この行を持ってくる
+Copy the selected row from the compared sheet into this one as ordinary rows - one undo step.,選んだ行を比較相手のシートからこのシートへ通常の行としてコピーします - 元に戻すは1回です。
+Browsed - %s,参照 - %s
+(nothing to compare against yet - save this sheet first),（まだ比較できるものがありません - 先にこのシートを保存してください）
+Compare against…,比較する相手…
+Pick something to compare against first.,先に比較する相手を選んでください。
+Identical - this sheet and %s compile to the same script.,同一 - このシートと %s は同じスクリプトにコンパイルされます。
+"%d row(s) differ here, %d row(s) differ in %s. Double-click a row on the left to jump to it, or one on the right to bring it over.",こちらで %d 行、%d 行が %s で異なります。左の行をダブルクリックでその行へ、右の行をダブルクリックでこちらへ持ってきます。
+Custom ACE Providers,カスタム ACE プロバイダー
+"Register GDScript files whose methods, signals and exported variables become custom ACEs.
+Zero-config alternative: drop scripts into res://eventsheet_addons/ and they register project-wide automatically.","メソッド、シグナル、エクスポート変数がカスタム ACE になる GDScript ファイルを登録します。
+設定不要の方法: res://eventsheet_addons/ にスクリプトを置けば、プロジェクト全体に自動で登録されます。"
+Remove Selected,選択を削除
+"Select a provider, or press Add to preview a script.",プロバイダーを選ぶか、「追加」を押してスクリプトをプレビューします。
+What it publishes,公開されるもの
+Open Source Sheet…,元のシートを開く…
+Open the included sheet to edit it (changes flow to every sheet that includes it).,インクルードしたシートを開いて編集します（変更はそれをインクルードするすべてのシートに反映されます）。
+Select an include to preview what it contributes.,インクルードを選ぶと、それが加えるものをプレビューします。
+"[b]%s[/b]
+%s
+Events: %d
+Functions: %s
+Variables: %s","[b]%s[/b]
+イベント: %d
+関数: %s
+変数: %s"
+"Group ""%s"" is turned off",グループ「%s」がオフです
+nothing inside it runs,中のものは何も実行されません
+"Comment ""%s"" is turned off",コメント「%s」がオフです
+in a script block %s,スクリプトブロック内 %s
+A script block is turned off,スクリプトブロックがオフです
+%s is turned off,%s がオフです
+%s breaks into the debugger,%s でデバッガーが止まります
+%s has conditions and no actions,%s には条件があってアクションがありません
+An action of %s is turned off,%s のアクションの1つがオフです
+A condition of %s is turned off,%s の条件の1つがオフです
+"""%s"" is never called",「%s」は一度も呼ばれていません
+published function,公開関数
+before the first event,最初のイベントより前
+after event %d,イベント %d の後
+no trigger,トリガーなし
+Loose Ends,やり残し
+"Everything you left half-done, in one list. Nothing here is drawn on the sheet - click an entry to jump to the row.",やりかけのものをすべて1つの一覧に。ここに載るものはシート上には描かれません - 項目をクリックするとその行へ移動します。
+What,内容
+Loose ends,やり残し
+"Nothing left hanging - no TODOs, no disabled rows, no half-written events.",やり残しはありません - TODO も、オフの行も、書きかけのイベントもありません。
+%d loose end(s). Nothing here is drawn on the sheet - click an entry to jump to the row.,やり残しが %d 件。ここに載るものはシート上には描かれません - 項目をクリックするとその行へ移動します。
+%d sheet,シート %d 枚
+%d scene,シーン %d 個
+%d scenes,シーン %d 個
+%d global,グローバル %d 個
+%d globals,グローバル %d 個
+%d connection,つながり %d 本
+%d connections,つながり %d 本
+(%d more not drawn),（ほか %d 件は描画していません）
+Kind · %s,種類 · %s
+Sheet Type,シートの種類
+Extends,継承元
+Choose…,選ぶ…
+What this does - shown in Godot's Create Node dialog.,これが何をするか - Godot の「ノードを作成」ダイアログに表示されます。
+Autoload name,オートロード名
+GameState - a global name every sheet can call,GameState - どのシートからも呼べるグローバル名
+Runs in the editor too  -  @tool,エディターでも実行  -  @tool
+Family - one rule can target every instance at once,ファミリー - 1つのルールで全インスタンスをまとめて対象にできる
+"What this plugin adds to the editor. Each tick arrives as a pair of events: added when the plugin is enabled, removed when it is disabled.",このプラグインがエディターに加えるもの。チェックごとにイベントが一組できます: プラグインを有効にしたときに追加、無効にしたときに削除。
+Identity,ID 情報
+"More (tags, includes, uses, requires)",その他（タグ、インクルード、uses、requires）
+Tags (comma-separated),タグ（カンマ区切り）
+Includes (addon sheets),インクルード（アドオンのシート）
+Uses (addon classes),Uses（アドオンのクラス）
+"ScreenShake, MathHelpers - owned helper instances","ScreenShake, MathHelpers - 自分が持つヘルパーのインスタンス"
+Requires (sibling behaviors),Requires（兄弟のビヘイビア）
+ScreenShake - shows a warning badge when missing,ScreenShake - 無いときに警告バッジを表示
+More options,その他のオプション
+Name · class_name,名前 · class_name
+"How this script is known to the project and the Add Node dialog. Letters, digits and underscores; it must not be a class Godot already has.",プロジェクトと「ノードを追加」ダイアログでのこのスクリプトの名前。英字、数字、アンダースコアのみ。Godot に既にあるクラス名は使えません。
+"The class this sheet builds on: everything that class can do, this sheet can do. Type to get suggestions, or drop a node from the Scene dock onto this dialog.",このシートの土台となるクラス。そのクラスにできることはすべて、このシートにもできます。入力すると候補が出ます。シーンドックのノードをこのダイアログにドロップしても構いません。
+Icon · @icon,アイコン · @icon
+The image Godot shows for this class in the Scene dock and the Add Node dialog. Any res:// image; Browse… picks one.,シーンドックと「ノードを追加」ダイアログで Godot がこのクラスに表示する画像。任意の res:// 画像。「参照…」で選べます。
+Description · ##,説明 · ##
+"One or two sentences saying what this sheet is. Godot shows them in the Create Node dialog, and the sheet's head shows them on its own band.",このシートが何かを伝える1、2文。Godot は「ノードを作成」ダイアログに表示し、シートのヘッドは専用の帯に表示します。
+"The name every other sheet writes to reach this one. It lives in project.godot, not in this file.",ほかのシートがこのシートに届くために書く名前。この名前はこのファイルではなく project.godot にあります。
+Runs in the editor too · @tool,エディターでも実行 · @tool
+"The script runs inside the editor as well as in the game, so its events fire while you are building the scene.",スクリプトはゲームだけでなくエディター内でも動くので、シーンを組んでいる間にイベントが発火します。
+Acts on (parent),対象（親）
+Extends (data type),継承元（データ型）
+"Every rule is one row. WHEN the left side is true (the conditions), DO the right side (the actions). Nothing is hidden: the plain GDScript your game ships is always one click away.",ルール1つが1行です。左側（条件）が真のとき、右側（アクション）を実行します。隠しごとはありません: ゲームに入るプレーンな GDScript はいつでもワンクリックで見られます。
+"Look at the sheet: conditions live in the left lane, actions in the right.",シートを見てください: 条件は左のレーン、アクションは右のレーンにあります。
+An event starts with a trigger - the moment it runs. On Ready fires once when the object appears; Every Frame runs continuously.,イベントはトリガー（実行されるタイミング）から始まります。On Ready はオブジェクトが現れたときに1回、Every Frame は絶えず実行されます。
+"Click ""Add event"" in the sheet's top-left corner (or the trailing ""+ Add event…"" row) and pick a trigger - try On Ready.",シート左上の「イベントを追加」（または末尾の「+ イベントを追加…」行）をクリックし、トリガーを選びます - On Ready を試してみましょう。
+Conditions decide WHEN the row runs this tick. Stack several and ALL must hold; conditions like Every X Seconds even keep their own timer.,条件はこのティックで行がいつ実行されるかを決めます。複数重ねるとすべてが成り立つ必要があります。Every X Seconds のような条件は自分のタイマーまで持ちます。
+Select your event and double-click the left lane (or press C). Try Every X Seconds.,イベントを選んで左のレーンをダブルクリック（または C キー）。Every X Seconds を試してみましょう。
+Actions are what happens - they run top to bottom whenever the conditions pass.,アクションは起こること - 条件が通るたびに上から下へ実行されます。
+"Double-click the right lane (or press A) and pick Print Message, then type something friendly.",右のレーンをダブルクリック（または A キー）して Print Message を選び、何かあいさつを入力しましょう。
+"Your sheet IS a plain Godot script - no runtime, no magic. Clicking a code line jumps to the row that made it, so the sheet and the script always explain each other.",シートはプレーンな Godot スクリプトそのものです - ランタイムも魔法もありません。コード行をクリックすると、それを作った行へ移動するので、シートとスクリプトは常に互いを説明し合います。
+Open Menu ▸ View ▸ GDScript Panel and find the line your action just added.,メニュー ▸ 表示 ▸ GDScript パネルを開き、アクションが追加した行を探しましょう。
+"Events + conditions + actions, compiled to code you can read. From here: Sheet > New From Template opens full starters, Tools > Welcome has the playable showcase, and Add > Variable gives your sheet memory. Take this tour again any time: Tools > Start the Tour. Have fun!",イベント + 条件 + アクションが、読めるコードにコンパイルされます。ここから: シート > テンプレートから新規 で完成したスターターが開き、ツール > ようこそ に遊べるショーケースがあり、追加 > 変数 でシートに記憶を持たせられます。このツアーはいつでも ツール > ツアーを開始 からやり直せます。楽しんで！
+Try it,やってみよう
+Classic sheet theme,クラシックなシートテーマ
+the editor-matching theme,エディターに合わせたテーマ
+Project bar on,プロジェクトバーをオン
+the GDScript panel beside every sheet,各シートの横に GDScript パネル
+the migration guide open in the Manual,マニュアルで開いた移行ガイド
+the tour,ツアー
+Sets: %s. Change any of it later in Settings ▸ Words and the View menu.,設定内容: %s。どれも後から 設定 ▸ 用語 と 表示 メニューで変えられます。
+How do you usually make games?,ふだんどうやってゲームを作りますか？
+Get Started,はじめる
+New to event sheets? Simple mode keeps the picker and menus to the essentials. Everything still works in Expert mode - toggle any time in View → Simple Mode.,イベントシートは初めてですか？ シンプルモードはピッカーとメニューを要点だけにします。エキスパートモードでもすべて動きます - 表示 → シンプルモード でいつでも切り替えられます。
+The Godot-native default: every sheet opens with its generated script beside it (eventsheets/editor/open_code_panel_by_default).,Godot 流の既定: どのシートも生成スクリプトを横に並べて開きます（eventsheets/editor/open_code_panel_by_default）。
+"Opens the plugin's issue tracker in your browser, with your Godot and plugin versions pre-filled.",ブラウザーでプラグインの課題トラッカーを開きます。Godot とプラグインのバージョンは入力済みです。
+Restore into editor (unsaved - Save to keep),エディターに復元（未保存 - 残すには保存）
+"Click a shortcut, then press the new key combination (Esc cancels). Custom keys are saved per-user, not in the project.",ショートカットをクリックし、新しいキーの組み合わせを押します（Esc で取り消し）。カスタムキーはプロジェクトではなくユーザーごとに保存されます。
+"Pick a whole set of keys at once. Only the keys that differ are rebound - everything stays rebindable afterwards, and Reset all to defaults comes back here.",キーのセットをまとめて選びます。異なるキーだけが割り当て直され、その後もすべて変更できます。「すべて既定に戻す」でここへ戻ります。
+Write template,テンプレートを書き出す
+What this writes,これが書き出すもの
+"The folder a modder copies, with its manifest already filled in",MOD 作者がコピーするフォルダー（マニフェスト記入済み）
+Template folder,テンプレートフォルダー
+"Where the template is written. Keep it out of the folder the game loads mods from - it is the example, not a mod.",テンプレートの書き出し先。ゲームが MOD を読み込むフォルダーの外に置いてください - これは見本で、MOD ではありません。
+Mod name,MOD の名前
+What a mod list calls it. A modder renames this first; blank means the folder's own name is used.,MOD 一覧での呼び名。MOD 作者が最初に変える項目です。空ならフォルダー名を使います。
+"The mod's own version, in whatever spelling its author uses. Nothing here compares two of them.",MOD 自身のバージョン。表記は作者の自由です。ここで2つを比較することはありません。
+Author,作者
+The credit line beside the name.,名前の横に出るクレジット。
+Replaces,置き換えるもの
+"What the mod replaces, in the author's own words. Nothing reads it: it is the sentence a player reads before switching two mods on together.",MOD が置き換えるもの（作者自身の言葉で）。プログラムは読みません: プレイヤーが2つの MOD を同時に有効にする前に読む一文です。
+Content folder,コンテンツフォルダー
+"The subfolder the template suggests for a mod's data assets, made empty beside the manifest. Leave it blank for no suggestion.",テンプレートが MOD のデータアセット用に提案するサブフォルダー。マニフェストの横に空で作られます。空欄なら提案しません。
+Carries code,コードを含む
+"Ticks the manifest's scripts flag. A data-only load refuses such a mod - and it checks the mod's actual files as well, so leaving this off hides nothing.",マニフェストの scripts フラグをオンにします。データのみの読み込みはそうした MOD を拒否し、MOD の実際のファイルも確認するので、オフのままにしても何も隠せません。
+Also save a mod.tres,mod.tres も保存する
+"Saves the same five fields as a ModManifest resource beside the JSON, for a modder who works inside Godot. Needs the ModManifest the Mods pack ships.",同じ5項目を ModManifest リソースとして JSON の横にも保存します（Godot 内で作業する MOD 作者向け）。Mods パックの ModManifest が必要です。
+carrying code,コードあり
+data only,データのみ
+"Write %s %s into %s, %s",%s %s を %s に書き出す、%s
+"Three things go into the folder: mod.json with these fields in it, a README saying what each field means and what a mod carrying code costs the player who runs it, and an empty content folder. Nothing is written over: a folder that already holds a manifest is refused whole, because it is already somebody's mod.",フォルダーには3つが入ります: これらの項目を含む mod.json、各項目の意味とコードを含む MOD がプレイヤーに課すものを説明する README、空のコンテンツフォルダー。上書きはしません: すでにマニフェストがあるフォルダーは、誰かの MOD なので丸ごと拒否します。
+Drops every word you chose and goes back to the two defaults. The Familiar Words toggle itself is left alone.,選んだ語をすべて捨てて2つの既定に戻します。「なじみの用語」の切り替え自体はそのままです。
+"A few things have two honest names: the Godot one and the one every other event-sheet editor uses. Choose either, or type your own - the sheet reads the same word everywhere at once.",いくつかのものには正当な名前が2つあります: Godot の名前と、ほかのイベントシートエディターが使う名前。どちらかを選ぶか、独自の語を入力してください - シートはどこでも同じ語を一度に使います。
+the whole vocabulary at once,語彙をまとめて
+"One event, in the words you have chosen for the state the toggle is in right now.",切り替えの今の状態で選んだ語で書いたイベント1つ。
+Godot's own words throughout - the nouns and the verbs the engine uses.,すべて Godot 自身の用語 - エンジンが使う名詞と動詞。
+"The nouns in the sheet's words (Family, Layout); the verbs stay Godot's.",名詞はシートの用語（Family、Layout）、動詞は Godot のまま。
+"The nouns AND the verbs in the sheet's words - a row reads Create object where Godot says Spawn A Copy. The Godot spelling stays beside it in the picker, and the code panel and the tooltips never change.",名詞も動詞もシートの用語 - Godot が Spawn A Copy と言うところを行は Create object と読みます。Godot の表記はピッカーで横に残り、コードパネルとツールチップは変わりません。
+"Your own mixture - a word you typed, or one half of a preset. Pick one above to go back to a named vocabulary.",自分だけの組み合わせ - 入力した語、またはプリセットの片方。上で1つ選ぶと名前付きの語彙に戻ります。
+Plain events on whatever node this sheet is attached to.,このシートを付けたノード上のふつうのイベント。
+A new node type: appears in Godot's Add Node dialog with your icon.,新しいノード型: Godot の「ノードを追加」ダイアログにアイコン付きで出ます。
+Attach under any node as a child - its events act on that parent.,任意のノードの子として付けます - イベントはその親に作用します。
+"Runs inside the editor (File > Run), not in the game. Experimental.",ゲームではなくエディター内で実行（ファイル > 実行）。試験的。
+One always-on instance the whole game can call by name.,ゲーム全体から名前で呼べる、常に存在するインスタンス1つ。
+A data asset type: each saved file of it is edited in the Inspector.,データアセット型: 保存した各ファイルをインスペクターで編集します。
+Claims about your game that a runner checks and reports pass/fail on.,ゲームについての主張。ランナーが確認し、合格/不合格を報告します。
+"A plugin the editor switches on: it adds a dock, a Tools menu item, an object type.",エディターが有効にするプラグイン: ドック、ツールメニューの項目、オブジェクト型を加えます。
+Runs when files are imported - fix up or check what just landed in the project.,ファイルのインポート時に実行 - プロジェクトに届いたばかりのものを整えたり確認したりします。
+"Runs when the project is exported - stamp a build, bake a file, strip debug content.",プロジェクトのエクスポート時に実行 - ビルドに刻印、ファイルを焼き込み、デバッグ用の内容を除去。
+Test (asserts + verdict),テスト（アサート + 判定）
+a dock,ドック
+a Tools menu item,ツールメニューの項目
+a custom object type,カスタムのオブジェクト型
+an Inspector button,インスペクターのボタン
+2D Character - moves and collides (CharacterBody2D),2D キャラクター - 動いて衝突する（CharacterBody2D）
+"2D Object - a sprite, prop, or point (Node2D)",2D オブジェクト - スプライト、小道具、点（Node2D）
+2D Physics Object - pushed by forces (RigidBody2D),2D 物理オブジェクト - 力で動く（RigidBody2D）
+2D Area / Trigger - detects overlaps (Area2D),2D エリア / トリガー - 重なりを検出（Area2D）
+"UI Control - buttons, labels, menus (Control)",UI コントロール - ボタン、ラベル、メニュー（Control）
+3D Character (CharacterBody3D),3D キャラクター（CharacterBody3D）
+3D Object (Node3D),3D オブジェクト（Node3D）
+Invisible Manager - logic only (Node),見えないマネージャー - ロジックのみ（Node）
+I come from another event-sheet editor,ほかのイベントシートエディターから来ました
+I write GDScript,GDScript を書きます
+I'm new to event sheets,イベントシートは初めてです
+Build a top-down shooter (10 steps),見下ろし型シューターを作る（10 ステップ）
+Open the playable showcase scene,遊べるショーケースのシーンを開く
+New sheet from a starter template,スターターテンプレートから新しいシート
+Add comment,コメントを追加
+Group the selection (or add an empty group),選択をグループ化（または空のグループを追加）
+Toggle enabled / disabled,有効 / 無効を切り替え
+Add blank sub-event,空のサブイベントを追加
+Add sub-event (picker),サブイベントを追加（ピッカー）
+Add function,関数を追加
+Collapse / expand the selected block,選んだブロックを折りたたむ / 広げる
+Preview layout (run this sheet's scene),レイアウトをプレビュー（このシートのシーンを実行）
+Preview project (run the main scene),プロジェクトをプレビュー（メインシーンを実行）
+Debug layout (run with the sheet's debugger armed),レイアウトをデバッグ（シートのデバッガーを有効にして実行）
+Invert selected condition,選んだ条件を反転
+Search all sheets,すべてのシートを検索
+Replace selected trigger / condition / action,選んだトリガー / 条件 / アクションを置き換え
+Jump back (navigation history),戻る（移動履歴）
+Jump forward (navigation history),進む（移動履歴）
+Duplicate event,イベントを複製
+Copy rows,行をコピー
+Paste rows,行を貼り付け
+Apply to running game,実行中のゲームに適用
+Add event (Ctrl alternate),イベントを追加（Ctrl 版）
+Add condition (Ctrl alternate),条件を追加（Ctrl 版）
+Add action (Ctrl alternate),アクションを追加（Ctrl 版）
+Add instance variable,インスタンス変数を追加
+Copy as text,テキストとしてコピー
+Edit the selected row,選んだ行を編集
+Nest / un-nest the event,イベントを入れ子にする / 戻す
+Move the row up / down,行を上 / 下へ移動
+Collapse / expand a group,グループを折りたたむ / 広げる
+Select previous / next row,前 / 次の行を選択
+Extend the row selection,行の選択を広げる
+Delete the selection,選択を削除
+Find & Replace,検索と置換
+Find next / previous,次 / 前を検索
+Command Palette,コマンドパレット
+Toggle breakpoint,ブレークポイントを切り替え
+Toggle bookmark,ブックマークを切り替え
+Zoom in / out (also Ctrl + mouse wheel),拡大 / 縮小（Ctrl + マウスホイールでも可）
+Reset zoom to 100%,ズームを 100% に戻す
+Close a popup / cancel an edit,ポップアップを閉じる / 編集を取り消す
+an inheritance set,継承でまとまる集合
+a scene,シーン
+an attached pack,付けたパック
+a Godot group,Godot のグループ
+the reader,読み物
+what the editor switches on,エディターが有効にするもの
+"the editor itself, as an object",オブジェクトとしてのエディター自体
+a panel docked in the editor,エディターにドッキングしたパネル
+the properties panel and its add-ons,プロパティパネルとそのアドオン
+the tree of the open scene,開いているシーンのツリー
+the project's file list,プロジェクトのファイル一覧
+what Ctrl+Z walks back,Ctrl+Z で戻るもの
+the user's own editor settings,ユーザー自身のエディター設定
+the settings saved with the project,プロジェクトと一緒に保存する設定
+how a control is drawn,コントロールの描き方
+a node you can see and click,見えてクリックできるノード
+a script that also runs in the editor,エディターでも動くスクリプト
+a script run from the command line,コマンドラインから実行するスクリプト
+what runs when files are imported,ファイルのインポート時に動くもの
+what runs when the project is exported,プロジェクトのエクスポート時に動くもの
+something drawn over the 2D or 3D view,2D/3D ビューの上に描くもの
+what draws a file's preview picture,ファイルのプレビュー画像を描くもの
+a tab in the Debugger while the game runs,ゲーム実行中のデバッガーのタブ
+a node of your own in Create Node,「ノードを作成」に出る自作ノード
+one always-on instance the project shares,プロジェクトで共有する常駐インスタンス
+one copy for the whole editor,エディター全体で1つのコピー
+a helper that points back at what it helps,助ける相手を指し返すヘルパー
+one of the editor's top tabs,エディター上部のタブの1つ
+Region name,リージョン名
+Bubble color,吹き出しの色
+Closing fence (#endregion),閉じる区切り（#endregion）

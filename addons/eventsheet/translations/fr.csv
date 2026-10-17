@@ -9017,3 +9017,292 @@ No lines yet - Find text fills it.,Aucune ligne pour l'instant - Trouver le text
 "A picture: an icon, a portrait, a sprite. The cell holds its file path; drag one in from the FileSystem dock.","Une image : une icône, un portrait, un sprite. La cellule garde son chemin de fichier ; glissez-en une depuis le dock Système de fichiers."
 "What a new row starts with in this column, here and in the Inspector's Add Row.","Ce par quoi commence une nouvelle ligne dans cette colonne, ici et dans Ajouter une ligne de l'Inspecteur."
 "What the column holds, said on its header in the Inspector.","Ce que contient la colonne, affiché sur son en-tête dans l'Inspecteur."
+Split,Découper
+Merge,Fusionner
+What this moves,Ce que cela déplace
+"A scene in, a folder of chunk scenes out","Une scène en entrée, un dossier de scènes de morceaux en sortie"
+"A folder of chunk scenes in, one scene out","Un dossier de scènes de morceaux en entrée, une scène en sortie"
+The scene to read. It is never changed - the chunks are written beside it.,La scène à lire. Elle n'est jamais modifiée - les morceaux sont écrits à côté.
+Chunk folder,Dossier des morceaux
+"The folder of chunk scenes: written by Split, read by Merge, and by the Streamer's own Stream Chunks Around.","Le dossier des scènes de morceaux : écrit par Découper, lu par Fusionner et par le Stream Chunks Around du Streamer."
+Into scene,Dans la scène
+The one scene the chunks are put back together into.,La scène unique dans laquelle les morceaux sont réassemblés.
+Cell width,Largeur de cellule
+"How wide one chunk is, in the scene's own units. Match the Streamer's Cell Size.","La largeur d'un morceau, dans les unités de la scène. Alignez-la sur le Cell Size du Streamer."
+Cell height,Hauteur de cellule
+"How tall one chunk is. Ignored on a 2D scene, and on a 3D one until height is a cell axis.","La hauteur d'un morceau. Ignorée dans une scène 2D, et dans une scène 3D tant que la hauteur n'est pas un axe de cellule."
+Cell depth,Profondeur de cellule
+How deep one chunk is. A 2D scene's depth axis is its own y.,La profondeur d'un morceau. L'axe de profondeur d'une scène 2D est son propre y.
+Name prefix,Préfixe du nom
+The words before the cell numbers: chunk_3_-2.tscn. Do not end it with a number - the numbers at the end of the name ARE the address.,Les mots avant les numéros de cellule : chunk_3_-2.tscn. Ne le terminez pas par un nombre - les nombres à la fin du nom SONT l'adresse.
+Height is a cell axis,La hauteur est un axe de cellule
+"Off, the grid is flat and every cell's height is 0 - what an open world wants. On, cells stack, for a station, a cave or a tower.","Désactivé, la grille est plate et la hauteur de chaque cellule vaut 0 - ce que veut un monde ouvert. Activé, les cellules s'empilent, pour une station, une grotte ou une tour."
+"Split %s into %s, one scene per %s cell","Découper %s dans %s, une scène par cellule de %s"
+"Merge the cells in %s into %s, placed %s apart","Fusionner les cellules de %s dans %s, espacées de %s"
+"Each DIRECT CHILD of the scene's root moves into the chunk its own position falls in, re-based to that cell's origin. A child with no position - a Control, a Timer, an audio player - has no cell, so it stays where it is and is named in the receipt. A tilemap is one node holding a whole world of cells: splitting it would mean rewriting its data, so it is left alone.","Chaque ENFANT DIRECT de la racine de la scène passe dans le morceau où tombe sa position, recalé sur l'origine de cette cellule. Un enfant sans position - un Control, un Timer, un lecteur audio - n'a pas de cellule : il reste où il est et il est nommé dans le reçu. Une tilemap est un seul nœud contenant tout un monde de cellules : la découper reviendrait à réécrire ses données, elle est donc laissée telle quelle."
+"Every scene in the folder named like a cell is opened, its children moved back to where the cell puts them, and the result saved as one scene. The chunk scenes are not changed, so a merge is always reversible by splitting again.","Chaque scène du dossier nommée comme une cellule est ouverte, ses enfants sont replacés là où la cellule les met, et le résultat est enregistré comme une seule scène. Les scènes de morceaux ne changent pas : une fusion se défait donc toujours en découpant à nouveau."
+Generate Events from a Description,Générer des événements à partir d'une description
+"Describe the behavior in plain English - it becomes GDScript, then editable events you can tweak.","Décrivez le comportement avec des mots simples - il devient du GDScript, puis des événements modifiables que vous pouvez ajuster."
+"e.g. When the player presses jump and is on the floor, set velocity.y to -400 and play the jump sound.","ex. : quand le joueur appuie sur saut et est au sol, mettre velocity.y à -400 et jouer le son de saut."
+Give or take,À peu près
+Invert - true when it is NOT the case,Inverser - vrai quand ce n'est PAS le cas
+"Pick what to compare, how, and to what. The row you get is whichever condition matches - the ids and the code are the sheet's own.","Choisissez quoi comparer, comment et à quoi. La ligne obtenue est la condition qui correspond - les identifiants et le code sont ceux de la feuille."
+"The left side of the question. Pick one of this sheet's variables, or choose the last entry to type any expression - then the row is a plain value comparison.","Le côté gauche de la question. Choisissez une variable de cette feuille, ou la dernière entrée pour saisir n'importe quelle expression - la ligne est alors une simple comparaison de valeurs."
+"Any expression: a property, a call, arithmetic. Typed values compare as values, so this writes Compare Values rather than Compare variable.","N'importe quelle expression : une propriété, un appel, de l'arithmétique. Les valeurs saisies se comparent comme des valeurs : cela écrit donc Compare Values plutôt que Compare variable."
+"How the two sides are compared. The ranges at the foot ask for two values, or for a value and how far off it may be.","Comment les deux côtés sont comparés. Les plages en bas demandent deux valeurs, ou une valeur et l'écart permis."
+"What to compare against - a number, a piece of text in quotes, or another expression.","À quoi comparer - un nombre, un texte entre guillemets ou une autre expression."
+The other end of the range. Both ends count as inside it.,L'autre borne de la plage. Les deux bornes comptent comme à l'intérieur.
+"How far apart the two values may be and still count as equal. Decimal numbers almost never land exactly equal, which is what this is for.",L'écart permis entre les deux valeurs pour qu'elles comptent comme égales. Les nombres décimaux ne tombent presque jamais exactement égaux : c'est à cela que ça sert.
+"Treat capitals and lowercase as the same. It writes to_lower() on both sides, which is what a hand-written check does.","Traiter majuscules et minuscules de la même façon. Cela écrit to_lower() des deux côtés, comme le ferait une vérification écrite à la main."
+True when the question is NOT. A comparison with a clean opposite simply shows the opposite instead - hp > 0 rather than not (hp <= 0).,Vrai quand la question n'est PAS vraie. Une comparaison qui a un contraire net affiche simplement ce contraire - hp > 0 plutôt que not (hp <= 0).
+Compare With,Comparer avec
+"The other side of the comparison: this sheet's last save, a backup from the ring, or another sheet in the project.","L'autre côté de la comparaison : la dernière sauvegarde de cette feuille, une copie de l'anneau de sauvegardes ou une autre feuille du projet."
+"Compare against any .gd or .tres sheet on disk - a teammate's file, a downloaded pack, an older copy.","Comparer avec n'importe quelle feuille .gd ou .tres sur le disque - le fichier d'un coéquipier, un pack téléchargé, une ancienne copie."
+Compare against,Comparer à
+Pick a side and press Compare. Double-click a row to jump to it; a row that only exists on the other side can be brought over.,Choisissez un côté et appuyez sur Comparer. Double-cliquez sur une ligne pour y aller ; une ligne qui n'existe que de l'autre côté peut être rapatriée.
+Nothing on this side yet.,Rien de ce côté pour l'instant.
+Nothing on the compared side yet.,Rien du côté comparé pour l'instant.
+Only here / different here,Seulement ici / différent ici
+Only there / different there,Seulement là-bas / différent là-bas
+Bring This Row Over,Rapatrier cette ligne
+Copy the selected row from the compared sheet into this one as ordinary rows - one undo step.,"Copier la ligne sélectionnée de la feuille comparée dans celle-ci, en lignes ordinaires - une seule étape d'annulation."
+Browsed - %s,Parcouru - %s
+(nothing to compare against yet - save this sheet first),(rien à comparer pour l'instant - enregistrez d'abord cette feuille)
+Compare against…,Comparer à…
+Pick something to compare against first.,Choisissez d'abord quelque chose à comparer.
+Identical - this sheet and %s compile to the same script.,Identiques - cette feuille et %s se compilent en le même script.
+"%d row(s) differ here, %d row(s) differ in %s. Double-click a row on the left to jump to it, or one on the right to bring it over.","%d ligne(s) différentes ici, %d ligne(s) différentes dans %s. Double-cliquez sur une ligne à gauche pour y aller, ou à droite pour la rapatrier."
+Custom ACE Providers,Fournisseurs d'ACE personnalisés
+"Register GDScript files whose methods, signals and exported variables become custom ACEs.
+Zero-config alternative: drop scripts into res://eventsheet_addons/ and they register project-wide automatically.","Enregistrez des fichiers GDScript dont les méthodes, signaux et variables exportées deviennent des ACE personnalisés.
+Sans configuration : déposez des scripts dans res://eventsheet_addons/ et ils s'enregistrent automatiquement pour tout le projet."
+Remove Selected,Retirer la sélection
+"Select a provider, or press Add to preview a script.","Sélectionnez un fournisseur, ou appuyez sur Ajouter pour prévisualiser un script."
+What it publishes,Ce qu'il publie
+Open Source Sheet…,Ouvrir la feuille source…
+Open the included sheet to edit it (changes flow to every sheet that includes it).,Ouvrir la feuille incluse pour la modifier (les changements se répercutent sur toutes les feuilles qui l'incluent).
+Select an include to preview what it contributes.,Sélectionnez une inclusion pour voir ce qu'elle apporte.
+"[b]%s[/b]
+%s
+Events: %d
+Functions: %s
+Variables: %s","[b]%s[/b]
+Événements : %d
+Fonctions : %s
+Variables : %s"
+"Group ""%s"" is turned off",Le groupe « %s » est désactivé
+nothing inside it runs,rien à l'intérieur ne s'exécute
+"Comment ""%s"" is turned off",Le commentaire « %s » est désactivé
+in a script block %s,dans un bloc de script %s
+A script block is turned off,Un bloc de script est désactivé
+%s is turned off,%s est désactivé
+%s breaks into the debugger,%s s'arrête dans le débogueur
+%s has conditions and no actions,%s a des conditions et aucune action
+An action of %s is turned off,Une action de %s est désactivée
+A condition of %s is turned off,Une condition de %s est désactivée
+"""%s"" is never called",« %s » n'est jamais appelée
+published function,fonction publiée
+before the first event,avant le premier événement
+after event %d,après l'événement %d
+no trigger,aucun déclencheur
+Loose Ends,Points en suspens
+"Everything you left half-done, in one list. Nothing here is drawn on the sheet - click an entry to jump to the row.","Tout ce que vous avez laissé à moitié fait, dans une liste. Rien ici n'est dessiné sur la feuille - cliquez sur une entrée pour aller à la ligne."
+What,Quoi
+Loose ends,Points en suspens
+"Nothing left hanging - no TODOs, no disabled rows, no half-written events.","Rien en suspens - pas de TODO, pas de lignes désactivées, pas d'événements à moitié écrits."
+%d loose end(s). Nothing here is drawn on the sheet - click an entry to jump to the row.,%d point(s) en suspens. Rien ici n'est dessiné sur la feuille - cliquez sur une entrée pour aller à la ligne.
+%d sheet,%d feuille
+%d scene,%d scène
+%d scenes,%d scènes
+%d global,%d global
+%d globals,%d globaux
+%d connection,%d connexion
+%d connections,%d connexions
+(%d more not drawn),(%d de plus non dessinées)
+Kind · %s,Type · %s
+Sheet Type,Type de feuille
+Extends,Étend
+Choose…,Choisir…
+What this does - shown in Godot's Create Node dialog.,Ce que cela fait - affiché dans la boîte Créer un nœud de Godot.
+Autoload name,Nom de l'autoload
+GameState - a global name every sheet can call,GameState - un nom global que toute feuille peut appeler
+Runs in the editor too  -  @tool,S'exécute aussi dans l'éditeur  -  @tool
+Family - one rule can target every instance at once,Famille - une règle peut viser toutes les instances à la fois
+"What this plugin adds to the editor. Each tick arrives as a pair of events: added when the plugin is enabled, removed when it is disabled.","Ce que ce plugin ajoute à l'éditeur. Chaque case cochée arrive comme une paire d'événements : ajouté quand le plugin est activé, retiré quand il est désactivé."
+Identity,Identité
+"More (tags, includes, uses, requires)","Plus (tags, inclusions, uses, requires)"
+Tags (comma-separated),Tags (séparés par des virgules)
+Includes (addon sheets),Inclusions (feuilles d'addon)
+Uses (addon classes),Uses (classes d'addon)
+"ScreenShake, MathHelpers - owned helper instances","ScreenShake, MathHelpers - instances d'assistants possédées"
+Requires (sibling behaviors),Requires (comportements frères)
+ScreenShake - shows a warning badge when missing,ScreenShake - affiche un badge d'avertissement s'il manque
+More options,Plus d'options
+Name · class_name,Nom · class_name
+"How this script is known to the project and the Add Node dialog. Letters, digits and underscores; it must not be a class Godot already has.","Le nom sous lequel le projet et la boîte Ajouter un nœud connaissent ce script. Lettres, chiffres et tirets bas ; ce ne doit pas être une classe que Godot a déjà."
+"The class this sheet builds on: everything that class can do, this sheet can do. Type to get suggestions, or drop a node from the Scene dock onto this dialog.","La classe sur laquelle repose cette feuille : tout ce que peut faire cette classe, cette feuille le peut. Tapez pour obtenir des suggestions, ou déposez un nœud du dock Scène sur cette boîte."
+Icon · @icon,Icône · @icon
+The image Godot shows for this class in the Scene dock and the Add Node dialog. Any res:// image; Browse… picks one.,L'image que Godot affiche pour cette classe dans le dock Scène et la boîte Ajouter un nœud. N'importe quelle image res:// ; Parcourir… en choisit une.
+Description · ##,Description · ##
+"One or two sentences saying what this sheet is. Godot shows them in the Create Node dialog, and the sheet's head shows them on its own band.","Une ou deux phrases qui disent ce qu'est cette feuille. Godot les affiche dans la boîte Créer un nœud, et l'en-tête de la feuille les affiche sur son propre bandeau."
+"The name every other sheet writes to reach this one. It lives in project.godot, not in this file.","Le nom que toute autre feuille écrit pour atteindre celle-ci. Il vit dans project.godot, pas dans ce fichier."
+Runs in the editor too · @tool,S'exécute aussi dans l'éditeur · @tool
+"The script runs inside the editor as well as in the game, so its events fire while you are building the scene.",Le script s'exécute dans l'éditeur comme dans le jeu : ses événements se déclenchent pendant que vous construisez la scène.
+Acts on (parent),Agit sur (parent)
+Extends (data type),Étend (type de données)
+"Every rule is one row. WHEN the left side is true (the conditions), DO the right side (the actions). Nothing is hidden: the plain GDScript your game ships is always one click away.","Chaque règle est une ligne. QUAND le côté gauche est vrai (les conditions), FAIS le côté droit (les actions). Rien n'est caché : le GDScript tout simple que votre jeu embarque est toujours à un clic."
+"Look at the sheet: conditions live in the left lane, actions in the right.","Regardez la feuille : les conditions sont dans la voie de gauche, les actions dans celle de droite."
+An event starts with a trigger - the moment it runs. On Ready fires once when the object appears; Every Frame runs continuously.,Un événement commence par un déclencheur - le moment où il s'exécute. On Ready se déclenche une fois quand l'objet apparaît ; Every Frame tourne en continu.
+"Click ""Add event"" in the sheet's top-left corner (or the trailing ""+ Add event…"" row) and pick a trigger - try On Ready.",Cliquez sur « Ajouter un événement » en haut à gauche de la feuille (ou sur la ligne « + Ajouter un événement… » à la fin) et choisissez un déclencheur - essayez On Ready.
+Conditions decide WHEN the row runs this tick. Stack several and ALL must hold; conditions like Every X Seconds even keep their own timer.,Les conditions décident QUAND la ligne s'exécute à ce tick. Empilez-en plusieurs et TOUTES doivent être vraies ; des conditions comme Every X Seconds gardent même leur propre minuteur.
+Select your event and double-click the left lane (or press C). Try Every X Seconds.,Sélectionnez votre événement et double-cliquez sur la voie de gauche (ou appuyez sur C). Essayez Every X Seconds.
+Actions are what happens - they run top to bottom whenever the conditions pass.,Les actions sont ce qui se passe - elles s'exécutent de haut en bas chaque fois que les conditions sont remplies.
+"Double-click the right lane (or press A) and pick Print Message, then type something friendly.","Double-cliquez sur la voie de droite (ou appuyez sur A), choisissez Print Message, puis tapez quelque chose de sympathique."
+"Your sheet IS a plain Godot script - no runtime, no magic. Clicking a code line jumps to the row that made it, so the sheet and the script always explain each other.","Votre feuille EST un simple script Godot - pas de runtime, pas de magie. Cliquer sur une ligne de code mène à la ligne qui l'a produite : la feuille et le script s'expliquent toujours l'un l'autre."
+Open Menu ▸ View ▸ GDScript Panel and find the line your action just added.,Ouvrez Menu ▸ Affichage ▸ Panneau GDScript et trouvez la ligne que votre action vient d'ajouter.
+"Events + conditions + actions, compiled to code you can read. From here: Sheet > New From Template opens full starters, Tools > Welcome has the playable showcase, and Add > Variable gives your sheet memory. Take this tour again any time: Tools > Start the Tour. Have fun!","Événements + conditions + actions, compilés en code lisible. À partir d'ici : Feuille > Nouvelle depuis un modèle ouvre des modèles complets, Outils > Bienvenue propose la vitrine jouable, et Ajouter > Variable donne de la mémoire à votre feuille. Refaites cette visite quand vous voulez : Outils > Lancer la visite. Amusez-vous bien !"
+Try it,Essayez
+Classic sheet theme,Thème de feuille classique
+the editor-matching theme,le thème assorti à l'éditeur
+Project bar on,Barre de projet activée
+the GDScript panel beside every sheet,le panneau GDScript à côté de chaque feuille
+the migration guide open in the Manual,le guide de migration ouvert dans le Manuel
+the tour,la visite
+Sets: %s. Change any of it later in Settings ▸ Words and the View menu.,Règle : %s. Tout cela se change plus tard dans Réglages ▸ Mots et le menu Affichage.
+How do you usually make games?,Comment faites-vous des jeux d'habitude ?
+Get Started,Commencer
+New to event sheets? Simple mode keeps the picker and menus to the essentials. Everything still works in Expert mode - toggle any time in View → Simple Mode.,Nouveau dans les feuilles d'événements ? Le mode simple réduit le sélecteur et les menus à l'essentiel. Tout fonctionne toujours en mode expert - basculez quand vous voulez dans Affichage → Mode simple.
+The Godot-native default: every sheet opens with its generated script beside it (eventsheets/editor/open_code_panel_by_default).,Le réglage par défaut façon Godot : chaque feuille s'ouvre avec son script généré à côté (eventsheets/editor/open_code_panel_by_default).
+"Opens the plugin's issue tracker in your browser, with your Godot and plugin versions pre-filled.","Ouvre le suivi des problèmes du plugin dans votre navigateur, avec vos versions de Godot et du plugin déjà remplies."
+Restore into editor (unsaved - Save to keep),Restaurer dans l'éditeur (non enregistré - Enregistrer pour garder)
+"Click a shortcut, then press the new key combination (Esc cancels). Custom keys are saved per-user, not in the project.","Cliquez sur un raccourci, puis appuyez sur la nouvelle combinaison (Échap annule). Les touches personnalisées sont enregistrées par utilisateur, pas dans le projet."
+"Pick a whole set of keys at once. Only the keys that differ are rebound - everything stays rebindable afterwards, and Reset all to defaults comes back here.","Choisissez tout un jeu de touches d'un coup. Seules les touches qui diffèrent sont réassignées - tout reste réassignable ensuite, et Tout réinitialiser revient ici."
+Write template,Écrire le modèle
+What this writes,Ce que cela écrit
+"The folder a modder copies, with its manifest already filled in","Le dossier qu'un moddeur copie, avec son manifeste déjà rempli"
+Template folder,Dossier du modèle
+"Where the template is written. Keep it out of the folder the game loads mods from - it is the example, not a mod.","Où le modèle est écrit. Gardez-le hors du dossier d'où le jeu charge les mods - c'est l'exemple, pas un mod."
+Mod name,Nom du mod
+What a mod list calls it. A modder renames this first; blank means the folder's own name is used.,"Le nom qu'une liste de mods lui donne. Un moddeur le renomme en premier ; vide, c'est le nom du dossier qui sert."
+"The mod's own version, in whatever spelling its author uses. Nothing here compares two of them.","La version propre du mod, dans la notation de son auteur. Rien ici n'en compare deux."
+Author,Auteur
+The credit line beside the name.,La ligne de crédit à côté du nom.
+Replaces,Remplace
+"What the mod replaces, in the author's own words. Nothing reads it: it is the sentence a player reads before switching two mods on together.","Ce que le mod remplace, dans les mots de son auteur. Rien ne le lit : c'est la phrase qu'un joueur lit avant d'activer deux mods ensemble."
+Content folder,Dossier de contenu
+"The subfolder the template suggests for a mod's data assets, made empty beside the manifest. Leave it blank for no suggestion.","Le sous-dossier que le modèle propose pour les données d'un mod, créé vide à côté du manifeste. Laissez vide pour ne rien proposer."
+Carries code,Contient du code
+"Ticks the manifest's scripts flag. A data-only load refuses such a mod - and it checks the mod's actual files as well, so leaving this off hides nothing.",Coche le drapeau scripts du manifeste. Un chargement de données seules refuse un tel mod - et il vérifie aussi les vrais fichiers du mod : laisser décoché ne cache donc rien.
+Also save a mod.tres,Enregistrer aussi un mod.tres
+"Saves the same five fields as a ModManifest resource beside the JSON, for a modder who works inside Godot. Needs the ModManifest the Mods pack ships.","Enregistre les cinq mêmes champs en ressource ModManifest à côté du JSON, pour un moddeur qui travaille dans Godot. Nécessite le ModManifest fourni par le pack Mods."
+carrying code,avec du code
+data only,données seulement
+"Write %s %s into %s, %s","Écrire %s %s dans %s, %s"
+"Three things go into the folder: mod.json with these fields in it, a README saying what each field means and what a mod carrying code costs the player who runs it, and an empty content folder. Nothing is written over: a folder that already holds a manifest is refused whole, because it is already somebody's mod.","Trois choses vont dans le dossier : mod.json avec ces champs, un README qui dit ce que signifie chaque champ et ce qu'un mod contenant du code coûte au joueur qui le lance, et un dossier de contenu vide. Rien n'est écrasé : un dossier qui contient déjà un manifeste est refusé en bloc, car c'est déjà le mod de quelqu'un."
+Drops every word you chose and goes back to the two defaults. The Familiar Words toggle itself is left alone.,Abandonne chaque mot choisi et revient aux deux valeurs par défaut. Le bouton Mots familiers lui-même n'est pas touché.
+"A few things have two honest names: the Godot one and the one every other event-sheet editor uses. Choose either, or type your own - the sheet reads the same word everywhere at once.","Certaines choses ont deux noms légitimes : celui de Godot et celui qu'utilisent les autres éditeurs de feuilles d'événements. Choisissez l'un ou l'autre, ou tapez le vôtre - la feuille emploie partout le même mot en même temps."
+the whole vocabulary at once,tout le vocabulaire d'un coup
+"One event, in the words you have chosen for the state the toggle is in right now.","Un événement, dans les mots choisis pour l'état actuel du bouton."
+Godot's own words throughout - the nouns and the verbs the engine uses.,Les mots de Godot partout - les noms et les verbes qu'utilise le moteur.
+"The nouns in the sheet's words (Family, Layout); the verbs stay Godot's.","Les noms dans les mots de la feuille (Family, Layout) ; les verbes restent ceux de Godot."
+"The nouns AND the verbs in the sheet's words - a row reads Create object where Godot says Spawn A Copy. The Godot spelling stays beside it in the picker, and the code panel and the tooltips never change.","Les noms ET les verbes dans les mots de la feuille - une ligne dit Create object là où Godot dit Spawn A Copy. L'orthographe Godot reste à côté dans le sélecteur, et le panneau de code et les infobulles ne changent jamais."
+"Your own mixture - a word you typed, or one half of a preset. Pick one above to go back to a named vocabulary.","Votre propre mélange - un mot que vous avez tapé, ou une moitié d'un préréglage. Choisissez-en un ci-dessus pour revenir à un vocabulaire nommé."
+Plain events on whatever node this sheet is attached to.,Des événements simples sur le nœud auquel cette feuille est attachée.
+A new node type: appears in Godot's Add Node dialog with your icon.,Un nouveau type de nœud : il apparaît dans la boîte Ajouter un nœud de Godot avec votre icône.
+Attach under any node as a child - its events act on that parent.,S'attache sous n'importe quel nœud comme enfant - ses événements agissent sur ce parent.
+"Runs inside the editor (File > Run), not in the game. Experimental.","S'exécute dans l'éditeur (Fichier > Exécuter), pas dans le jeu. Expérimental."
+One always-on instance the whole game can call by name.,Une instance toujours active que tout le jeu peut appeler par son nom.
+A data asset type: each saved file of it is edited in the Inspector.,Un type de ressource de données : chaque fichier enregistré se modifie dans l'Inspecteur.
+Claims about your game that a runner checks and reports pass/fail on.,Des affirmations sur votre jeu qu'un exécuteur vérifie et signale en réussite/échec.
+"A plugin the editor switches on: it adds a dock, a Tools menu item, an object type.","Un plugin que l'éditeur active : il ajoute un dock, une entrée du menu Outils, un type d'objet."
+Runs when files are imported - fix up or check what just landed in the project.,S'exécute à l'import de fichiers - corrige ou vérifie ce qui vient d'arriver dans le projet.
+"Runs when the project is exported - stamp a build, bake a file, strip debug content.","S'exécute à l'export du projet - tamponner un build, générer un fichier, retirer le contenu de débogage."
+Test (asserts + verdict),Test (assertions + verdict)
+a dock,un dock
+a Tools menu item,une entrée du menu Outils
+a custom object type,un type d'objet personnalisé
+an Inspector button,un bouton dans l'Inspecteur
+2D Character - moves and collides (CharacterBody2D),Personnage 2D - se déplace et entre en collision (CharacterBody2D)
+"2D Object - a sprite, prop, or point (Node2D)","Objet 2D - un sprite, un accessoire ou un point (Node2D)"
+2D Physics Object - pushed by forces (RigidBody2D),Objet physique 2D - poussé par des forces (RigidBody2D)
+2D Area / Trigger - detects overlaps (Area2D),Zone / déclencheur 2D - détecte les chevauchements (Area2D)
+"UI Control - buttons, labels, menus (Control)","Contrôle d'UI - boutons, libellés, menus (Control)"
+3D Character (CharacterBody3D),Personnage 3D (CharacterBody3D)
+3D Object (Node3D),Objet 3D (Node3D)
+Invisible Manager - logic only (Node),Gestionnaire invisible - logique seulement (Node)
+I come from another event-sheet editor,Je viens d'un autre éditeur de feuilles d'événements
+I write GDScript,J'écris du GDScript
+I'm new to event sheets,Je découvre les feuilles d'événements
+Build a top-down shooter (10 steps),Créer un shooter vu de dessus (10 étapes)
+Open the playable showcase scene,Ouvrir la scène vitrine jouable
+New sheet from a starter template,Nouvelle feuille depuis un modèle de départ
+Add comment,Ajouter un commentaire
+Group the selection (or add an empty group),Grouper la sélection (ou ajouter un groupe vide)
+Toggle enabled / disabled,Activer / désactiver
+Add blank sub-event,Ajouter un sous-événement vide
+Add sub-event (picker),Ajouter un sous-événement (sélecteur)
+Add function,Ajouter une fonction
+Collapse / expand the selected block,Replier / déplier le bloc sélectionné
+Preview layout (run this sheet's scene),Aperçu de la scène (lancer la scène de cette feuille)
+Preview project (run the main scene),Aperçu du projet (lancer la scène principale)
+Debug layout (run with the sheet's debugger armed),Déboguer la scène (lancer avec le débogueur de la feuille armé)
+Invert selected condition,Inverser la condition sélectionnée
+Search all sheets,Rechercher dans toutes les feuilles
+Replace selected trigger / condition / action,Remplacer le déclencheur / la condition / l'action sélectionné
+Jump back (navigation history),Revenir en arrière (historique de navigation)
+Jump forward (navigation history),Aller en avant (historique de navigation)
+Duplicate event,Dupliquer l'événement
+Copy rows,Copier les lignes
+Paste rows,Coller les lignes
+Apply to running game,Appliquer au jeu en cours
+Add event (Ctrl alternate),Ajouter un événement (variante Ctrl)
+Add condition (Ctrl alternate),Ajouter une condition (variante Ctrl)
+Add action (Ctrl alternate),Ajouter une action (variante Ctrl)
+Add instance variable,Ajouter une variable d'instance
+Copy as text,Copier en texte
+Edit the selected row,Modifier la ligne sélectionnée
+Nest / un-nest the event,Imbriquer / désimbriquer l'événement
+Move the row up / down,Monter / descendre la ligne
+Collapse / expand a group,Replier / déplier un groupe
+Select previous / next row,Sélectionner la ligne précédente / suivante
+Extend the row selection,Étendre la sélection de lignes
+Delete the selection,Supprimer la sélection
+Find & Replace,Rechercher et remplacer
+Find next / previous,Rechercher le suivant / précédent
+Command Palette,Palette de commandes
+Toggle breakpoint,Basculer le point d'arrêt
+Toggle bookmark,Basculer le signet
+Zoom in / out (also Ctrl + mouse wheel),Zoom avant / arrière (aussi Ctrl + molette)
+Reset zoom to 100%,Remettre le zoom à 100 %
+Close a popup / cancel an edit,Fermer une fenêtre / annuler une modification
+an inheritance set,un ensemble par héritage
+a scene,une scène
+an attached pack,un pack attaché
+a Godot group,un groupe Godot
+the reader,le lecteur
+what the editor switches on,ce que l'éditeur active
+"the editor itself, as an object","l'éditeur lui-même, comme objet"
+a panel docked in the editor,un panneau ancré dans l'éditeur
+the properties panel and its add-ons,le panneau des propriétés et ses modules
+the tree of the open scene,l'arbre de la scène ouverte
+the project's file list,la liste des fichiers du projet
+what Ctrl+Z walks back,ce que Ctrl+Z défait
+the user's own editor settings,les réglages d'éditeur propres à l'utilisateur
+the settings saved with the project,les réglages enregistrés avec le projet
+how a control is drawn,la façon dont un contrôle est dessiné
+a node you can see and click,un nœud qu'on voit et sur lequel on clique
+a script that also runs in the editor,un script qui s'exécute aussi dans l'éditeur
+a script run from the command line,un script lancé depuis la ligne de commande
+what runs when files are imported,ce qui s'exécute à l'import de fichiers
+what runs when the project is exported,ce qui s'exécute à l'export du projet
+something drawn over the 2D or 3D view,quelque chose dessiné par-dessus la vue 2D ou 3D
+what draws a file's preview picture,ce qui dessine l'image d'aperçu d'un fichier
+a tab in the Debugger while the game runs,un onglet du débogueur pendant que le jeu tourne
+a node of your own in Create Node,un nœud à vous dans Créer un nœud
+one always-on instance the project shares,une instance toujours active que le projet partage
+one copy for the whole editor,une copie pour tout l'éditeur
+a helper that points back at what it helps,un assistant qui pointe vers ce qu'il aide
+one of the editor's top tabs,un des onglets du haut de l'éditeur
+Region name,Nom de la région
+Bubble color,Couleur de la bulle
+Closing fence (#endregion),Fermeture (#endregion)

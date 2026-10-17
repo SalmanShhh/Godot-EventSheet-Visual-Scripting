@@ -90,20 +90,25 @@ static func summary(found: Dictionary) -> String:
 	for entry: Variant in nodes:
 		var kind: String = str((entry as Dictionary).get("kind", NODE_SHEET))
 		counts[kind] = int(counts.get(kind, 0)) + 1
-	var parts: PackedStringArray = PackedStringArray([_counted(int(counts[NODE_SHEET]), "sheet")])
+	var parts: PackedStringArray = PackedStringArray([_counted(int(counts[NODE_SHEET]),
+		EventSheetL10n.translate("%d sheet"), EventSheetL10n.translate("%d sheets"))])
 	if int(counts[NODE_SCENE]) > 0:
-		parts.append(_counted(int(counts[NODE_SCENE]), "scene"))
+		parts.append(_counted(int(counts[NODE_SCENE]),
+			EventSheetL10n.translate("%d scene"), EventSheetL10n.translate("%d scenes")))
 	if int(counts[NODE_GLOBAL]) > 0:
-		parts.append(_counted(int(counts[NODE_GLOBAL]), "global"))
-	parts.append(_counted(edges.size(), "connection"))
+		parts.append(_counted(int(counts[NODE_GLOBAL]),
+			EventSheetL10n.translate("%d global"), EventSheetL10n.translate("%d globals")))
+	parts.append(_counted(edges.size(),
+		EventSheetL10n.translate("%d connection"), EventSheetL10n.translate("%d connections")))
 	var line: String = ", ".join(parts)
 	if skipped > 0:
-		line += " (%d more not drawn)" % skipped
+		line += " " + EventSheetL10n.translate("(%d more not drawn)") % skipped
 	return line
 
 
-static func _counted(count: int, noun: String) -> String:
-	return "%d %s%s" % [count, noun, "" if count == 1 else "s"]
+## `count` in the words for one or for many, each a whole phrase so a language can place the number.
+static func _counted(count: int, one: String, many: String) -> String:
+	return (one if count == 1 else many) % count
 
 
 # ── Reading one script ────────────────────────────────────────────────────────────────────────

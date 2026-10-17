@@ -31,7 +31,7 @@ func _init() -> void:
 	ok_button_text = "Close"
 	EventSheetPopupUI.main_button(get_ok_button())
 	var reset: Button = add_button("Reset to defaults", false)
-	reset.tooltip_text = "Drops every word you chose and goes back to the two defaults. The Familiar Words toggle itself is left alone."
+	reset.tooltip_text = EventSheetL10n.translate("Drops every word you chose and goes back to the two defaults. The Familiar Words toggle itself is left alone.")
 	reset.pressed.connect(_on_reset_pressed)
 	add_child(EventSheetPopupUI.margined(_build_body()))
 
@@ -40,8 +40,8 @@ func _build_body() -> Control:
 	var page: VBoxContainer = EventSheetPopupUI.form_box()
 	_strip = EventSheetPopupUI.help_strip("", "", "", "", 620.0)
 	page.add_child(EventSheetPopupUI.hint_label(
-		"A few things have two honest names: the Godot one and the one every other event-sheet editor uses. Choose either, or type your own - the sheet reads the same word everywhere at once.", 620.0))
-	page.add_child(EventSheetPopupUI.titled_card("the whole vocabulary at once", _build_presets()))
+		EventSheetL10n.translate("A few things have two honest names: the Godot one and the one every other event-sheet editor uses. Choose either, or type your own - the sheet reads the same word everywhere at once."), 620.0))
+	page.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("the whole vocabulary at once"), _build_presets()))
 	# The table holds a row per choosable word - dozens of them - so it scrolls inside a bounded
 	# height; unscrolled, its minimum size grew the window past the bottom of the screen.
 	var table_scroll: ScrollContainer = ScrollContainer.new()
@@ -87,7 +87,7 @@ func _build_table() -> Control:
 	grid.add_child(EventSheetPopupUI.small_caps_label("off"))
 	for key: String in EventSheetWords.keys():
 		var label: Label = Label.new()
-		label.text = EventSheetWords.names_what(key)
+		label.text = EventSheetL10n.translate(EventSheetWords.names_what(key))
 		label.custom_minimum_size = Vector2(170.0, 0.0)
 		grid.add_child(label)
 		var familiar_field: Control = _build_field(key, true)
@@ -141,7 +141,7 @@ func _build_preview() -> Control:
 	_preview_verbs = Label.new()
 	box.add_child(EventSheetPopupUI.panel_section(_preview_verbs))
 	box.add_child(EventSheetPopupUI.hint_label(
-		"One event, in the words you have chosen for the state the toggle is in right now.", 620.0))
+		EventSheetL10n.translate("One event, in the words you have chosen for the state the toggle is in right now."), 620.0))
 	return box
 
 
@@ -189,12 +189,12 @@ func _refresh_preset() -> void:
 func _preset_description(preset: String) -> String:
 	match preset:
 		EventSheetWords.PRESET_GODOT:
-			return "Godot's own words throughout - the nouns and the verbs the engine uses."
+			return EventSheetL10n.translate("Godot's own words throughout - the nouns and the verbs the engine uses.")
 		EventSheetWords.PRESET_FAMILIAR:
-			return "The nouns in the sheet's words (Family, Layout); the verbs stay Godot's."
+			return EventSheetL10n.translate("The nouns in the sheet's words (Family, Layout); the verbs stay Godot's.")
 		EventSheetWords.PRESET_SHEET:
-			return "The nouns AND the verbs in the sheet's words - a row reads Create object where Godot says Spawn A Copy. The Godot spelling stays beside it in the picker, and the code panel and the tooltips never change."
-	return "Your own mixture - a word you typed, or one half of a preset. Pick one above to go back to a named vocabulary."
+			return EventSheetL10n.translate("The nouns AND the verbs in the sheet's words - a row reads Create object where Godot says Spawn A Copy. The Godot spelling stays beside it in the picker, and the code panel and the tooltips never change.")
+	return EventSheetL10n.translate("Your own mixture - a word you typed, or one half of a preset. Pick one above to go back to a named vocabulary.")
 
 
 func _on_preset_selected(index: int) -> void:

@@ -437,38 +437,38 @@ func _ensure_dialog() -> void:
 	form.add_child(_second_row)
 	_tolerance_edit = LineEdit.new()
 	_tolerance_edit.text_changed.connect(func(_text: String) -> void: _refresh())
-	_tolerance_row = EventSheetPopupUI.form_row("Give or take", _tolerance_edit)
+	_tolerance_row = EventSheetPopupUI.form_row(EventSheetL10n.translate("Give or take"), _tolerance_edit)
 	form.add_child(_tolerance_row)
 
 	_ignore_case_check = CheckBox.new()
-	_ignore_case_check.text = "Ignore case"
+	_ignore_case_check.text = EventSheetL10n.translate("Ignore case")
 	_ignore_case_check.toggled.connect(func(_on: bool) -> void: _refresh())
 	form.add_child(_ignore_case_check)
 	_invert_check = CheckBox.new()
-	_invert_check.text = "Invert - true when it is NOT the case"
+	_invert_check.text = EventSheetL10n.translate("Invert - true when it is NOT the case")
 	_invert_check.toggled.connect(func(_on: bool) -> void: _refresh())
 	form.add_child(_invert_check)
 	page.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("Compare"), form))
 
 	_help_strip = EventSheetPopupUI.help_strip("Compare",
-		"Pick what to compare, how, and to what. The row you get is whichever condition matches - the ids and the code are the sheet's own.")
+		EventSheetL10n.translate("Pick what to compare, how, and to what. The row you get is whichever condition matches - the ids and the code are the sheet's own."))
 	page.add_child(_help_strip)
 	_help_strip.follow(_left_option, "Compare",
-		"The left side of the question. Pick one of this sheet's variables, or choose the last entry to type any expression - then the row is a plain value comparison.")
+		EventSheetL10n.translate("The left side of the question. Pick one of this sheet's variables, or choose the last entry to type any expression - then the row is a plain value comparison."))
 	_help_strip.follow(_left_edit, "Compare",
-		"Any expression: a property, a call, arithmetic. Typed values compare as values, so this writes Compare Values rather than Compare variable.")
+		EventSheetL10n.translate("Any expression: a property, a call, arithmetic. Typed values compare as values, so this writes Compare Values rather than Compare variable."))
 	_help_strip.follow(_operator_option, "Is",
-		"How the two sides are compared. The ranges at the foot ask for two values, or for a value and how far off it may be.")
+		EventSheetL10n.translate("How the two sides are compared. The ranges at the foot ask for two values, or for a value and how far off it may be."))
 	_help_strip.follow(_right_edit, "To",
-		"What to compare against - a number, a piece of text in quotes, or another expression.")
+		EventSheetL10n.translate("What to compare against - a number, a piece of text in quotes, or another expression."))
 	_help_strip.follow(_second_edit, "And",
-		"The other end of the range. Both ends count as inside it.")
-	_help_strip.follow(_tolerance_edit, "Give or take",
-		"How far apart the two values may be and still count as equal. Decimal numbers almost never land exactly equal, which is what this is for.")
-	_help_strip.follow(_ignore_case_check, "Ignore case",
-		"Treat capitals and lowercase as the same. It writes to_lower() on both sides, which is what a hand-written check does.")
+		EventSheetL10n.translate("The other end of the range. Both ends count as inside it."))
+	_help_strip.follow(_tolerance_edit, EventSheetL10n.translate("Give or take"),
+		EventSheetL10n.translate("How far apart the two values may be and still count as equal. Decimal numbers almost never land exactly equal, which is what this is for."))
+	_help_strip.follow(_ignore_case_check, EventSheetL10n.translate("Ignore case"),
+		EventSheetL10n.translate("Treat capitals and lowercase as the same. It writes to_lower() on both sides, which is what a hand-written check does."))
 	_help_strip.follow(_invert_check, "Invert",
-		"True when the question is NOT. A comparison with a clean opposite simply shows the opposite instead - hp > 0 rather than not (hp <= 0).")
+		EventSheetL10n.translate("True when the question is NOT. A comparison with a clean opposite simply shows the opposite instead - hp > 0 rather than not (hp <= 0)."))
 
 
 ## The variable list, rebuilt from the sheet each time the dialog opens (a variable added since the

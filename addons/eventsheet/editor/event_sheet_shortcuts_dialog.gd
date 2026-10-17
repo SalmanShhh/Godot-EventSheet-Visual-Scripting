@@ -37,20 +37,20 @@ func _build() -> void:
 	_shortcuts_dialog.ok_button_text = "Done"
 	EventSheetPopupUI.main_button(_shortcuts_dialog.get_ok_button())
 	_shortcuts_dialog.min_size = Vector2i(EventSheetPalette.scaled(540), EventSheetPalette.scaled(640))
-	var reset_all_button: Button = _shortcuts_dialog.add_button("Reset all to defaults", false)
+	var reset_all_button: Button = _shortcuts_dialog.add_button(EventSheetL10n.translate("Reset all to defaults"), false)
 	reset_all_button.pressed.connect(func() -> void:
 		EventSheetShortcuts.reset_all()
 		_refresh_shortcuts_editor())
 	var outer: VBoxContainer = EventSheetPopupUI.form_box()
 	outer.add_child(EventSheetPopupUI.hint_label(
-		"Click a shortcut, then press the new key combination (Esc cancels). Custom keys are saved per-user, not in the project.",
+		EventSheetL10n.translate("Click a shortcut, then press the new key combination (Esc cancels). Custom keys are saved per-user, not in the project."),
 		EventSheetPalette.scaled_f(500.0)))
 	# Preset ▾. A whole keyboard in one pick, for an author whose fingers already know
 	# another event-sheet editor's keys. The preset only rebinds what DIFFERS, and every key it
 	# touches stays rebindable underneath.
 	_preset_picker = OptionButton.new()
 	_preset_picker.name = "EventSheetShortcutPreset"
-	_preset_picker.tooltip_text = "Pick a whole set of keys at once. Only the keys that differ are rebound - everything stays rebindable afterwards, and Reset all to defaults comes back here."
+	_preset_picker.tooltip_text = EventSheetL10n.translate("Pick a whole set of keys at once. Only the keys that differ are rebound - everything stays rebindable afterwards, and Reset all to defaults comes back here.")
 	for preset_index: int in EventSheetShortcuts.PRESET_ORDER.size():
 		_preset_picker.add_item(
 			EventSheetShortcuts.preset_label_for(str(EventSheetShortcuts.PRESET_ORDER[preset_index])),
@@ -73,7 +73,7 @@ func _build() -> void:
 	fixed.add_theme_constant_override("h_separation", int(EventSheetPalette.scaled_f(12.0)))
 	for pair: Array in _dock.FIXED_KEYS:
 		var what: Label = Label.new()
-		what.text = str(pair[1])
+		what.text = EventSheetL10n.translate(str(pair[1]))
 		what.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		fixed.add_child(what)
 		var keys: Label = Label.new()
@@ -99,14 +99,14 @@ func _key_row(action: String) -> VBoxContainer:
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)
 	var label: Label = Label.new()
-	label.text = EventSheetShortcuts.label_for(action)
+	label.text = EventSheetL10n.translate(EventSheetShortcuts.label_for(action))
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(label)
 	var capture: Button = Button.new()
 	capture.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(150.0), 0.0)
 	capture.pressed.connect(_begin_shortcut_capture.bind(action))
 	capture.gui_input.connect(_shortcut_capture_gui_input.bind(action))
-	_strip.follow(capture, EventSheetL10n.translate(label.text), "", func() -> String:
+	_strip.follow(capture, label.text, "", func() -> String:
 		return EventSheetL10n.translate("Press the new key combination now. Esc cancels.") \
 			if _shortcuts_capturing_action == action \
 			else EventSheetL10n.translate("Click, then press the new key combination."))

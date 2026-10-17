@@ -46,18 +46,18 @@ func _build(scene_path: String) -> void:
 	if _dialog != null and is_instance_valid(_dialog):
 		_dialog.queue_free()
 	_dialog = ConfirmationDialog.new()
-	_dialog.title = SPLIT_TITLE if _splitting else MERGE_TITLE
-	_dialog.ok_button_text = "Split" if _splitting else "Merge"
+	_dialog.title = EventSheetL10n.translate(SPLIT_TITLE) if _splitting else EventSheetL10n.translate(MERGE_TITLE)
+	_dialog.ok_button_text = EventSheetL10n.translate("Split") if _splitting else EventSheetL10n.translate("Merge")
 	var content: VBoxContainer = EventSheetPopupUI.form_box()
 	_form = EventSheetPopupUI.form(content, _specs(scene_path),
 		"chunk tools" if _splitting else "chunk merge")
 	var strip: EventSheetPopupUI.HelpStrip = EventSheetPopupUI.help_strip(
-		"What this moves", _help_body(), "", "")
+		EventSheetL10n.translate("What this moves"), _help_body(), "", "")
 	content.add_child(strip)
 	strip.follow_form(_form, func() -> void: _refresh_reading(strip))
 	_dialog.add_child(EventSheetPopupUI.titled_card(
-		"A scene in, a folder of chunk scenes out" if _splitting
-		else "A folder of chunk scenes in, one scene out", content))
+		EventSheetL10n.translate("A scene in, a folder of chunk scenes out") if _splitting
+		else EventSheetL10n.translate("A folder of chunk scenes in, one scene out"), content))
 	_dialog.confirmed.connect(_on_confirmed)
 	# The dialog parents to the editor base control (outside the dock's translation domain), so it
 	# claims the plugin domain itself and its strings auto-translate.
@@ -70,30 +70,30 @@ func _build(scene_path: String) -> void:
 func _specs(scene_path: String) -> Array[EventSheetFieldSpec]:
 	var specs: Array[EventSheetFieldSpec] = []
 	if _splitting:
-		specs.append(EventSheetPopupUI.path_field("scene", "Scene").default(scene_path)
+		specs.append(EventSheetPopupUI.path_field("scene", EventSheetL10n.translate("Scene")).default(scene_path)
 			.placeholder("res://world/world.tscn")
-			.tooltip("The scene to read. It is never changed - the chunks are written beside it."))
-	specs.append(EventSheetPopupUI.path_field("folder", "Chunk folder").default("res://world/chunks")
-		.tooltip("The folder of chunk scenes: written by Split, read by Merge, and by the Streamer's own Stream Chunks Around."))
+			.tooltip(EventSheetL10n.translate("The scene to read. It is never changed - the chunks are written beside it.")))
+	specs.append(EventSheetPopupUI.path_field("folder", EventSheetL10n.translate("Chunk folder")).default("res://world/chunks")
+		.tooltip(EventSheetL10n.translate("The folder of chunk scenes: written by Split, read by Merge, and by the Streamer's own Stream Chunks Around.")))
 	if not _splitting:
-		specs.append(EventSheetPopupUI.path_field("scene", "Into scene").default("res://world/world.tscn")
-			.tooltip("The one scene the chunks are put back together into."))
-	specs.append(EventSheetPopupUI.number_field("width", "Cell width")
+		specs.append(EventSheetPopupUI.path_field("scene", EventSheetL10n.translate("Into scene")).default("res://world/world.tscn")
+			.tooltip(EventSheetL10n.translate("The one scene the chunks are put back together into.")))
+	specs.append(EventSheetPopupUI.number_field("width", EventSheetL10n.translate("Cell width"))
 		.default(1024.0).at_least(1.0).at_most(MOST_UNITS)
-		.tooltip("How wide one chunk is, in the scene's own units. Match the Streamer's Cell Size."))
-	specs.append(EventSheetPopupUI.number_field("height", "Cell height")
+		.tooltip(EventSheetL10n.translate("How wide one chunk is, in the scene's own units. Match the Streamer's Cell Size.")))
+	specs.append(EventSheetPopupUI.number_field("height", EventSheetL10n.translate("Cell height"))
 		.default(1024.0).at_least(1.0).at_most(MOST_UNITS)
-		.tooltip("How tall one chunk is. Ignored on a 2D scene, and on a 3D one until height is a cell axis."))
-	specs.append(EventSheetPopupUI.number_field("depth", "Cell depth")
+		.tooltip(EventSheetL10n.translate("How tall one chunk is. Ignored on a 2D scene, and on a 3D one until height is a cell axis.")))
+	specs.append(EventSheetPopupUI.number_field("depth", EventSheetL10n.translate("Cell depth"))
 		.default(1024.0).at_least(1.0).at_most(MOST_UNITS)
-		.tooltip("How deep one chunk is. A 2D scene's depth axis is its own y."))
+		.tooltip(EventSheetL10n.translate("How deep one chunk is. A 2D scene's depth axis is its own y.")))
 	if _splitting:
-		specs.append(EventSheetPopupUI.text_field("prefix", "Name prefix")
+		specs.append(EventSheetPopupUI.text_field("prefix", EventSheetL10n.translate("Name prefix"))
 			.default(EventSheetChunkTools.DEFAULT_PREFIX)
-			.tooltip("The words before the cell numbers: chunk_3_-2.tscn. Do not end it with a number - the numbers at the end of the name ARE the address."))
-	specs.append(EventSheetPopupUI.check_field("stacked", "Height is a cell axis")
+			.tooltip(EventSheetL10n.translate("The words before the cell numbers: chunk_3_-2.tscn. Do not end it with a number - the numbers at the end of the name ARE the address.")))
+	specs.append(EventSheetPopupUI.check_field("stacked", EventSheetL10n.translate("Height is a cell axis"))
 		.default(false)
-		.tooltip("Off, the grid is flat and every cell's height is 0 - what an open world wants. On, cells stack, for a station, a cave or a tower."))
+		.tooltip(EventSheetL10n.translate("Off, the grid is flat and every cell's height is 0 - what an open world wants. On, cells stack, for a station, a cave or a tower.")))
 	return specs
 
 
@@ -108,10 +108,10 @@ func _refresh_reading(strip: EventSheetPopupUI.HelpStrip) -> void:
 		int(values.get("depth", 0)), bool(values.get("stacked", false)))
 	if _splitting:
 		var prefix: String = str(values.get("prefix", EventSheetChunkTools.DEFAULT_PREFIX))
-		strip.set_reading("Split %s into %s, one scene per %s cell" % [scene_path, folder, cell],
+		strip.set_reading(EventSheetL10n.translate("Split %s into %s, one scene per %s cell") % [scene_path, folder, cell],
 			"%s/%s_3_-2.tscn" % [folder.rstrip("/"), prefix])
 		return
-	strip.set_reading("Merge the cells in %s into %s, placed %s apart" % [folder, scene_path, cell],
+	strip.set_reading(EventSheetL10n.translate("Merge the cells in %s into %s, placed %s apart") % [folder, scene_path, cell],
 		scene_path)
 
 
@@ -129,8 +129,8 @@ static func cell_words(width: int, height: int, depth: int, stacked: bool) -> St
 ## What the tool will and will not do, said before it is run rather than discovered afterwards.
 func _help_body() -> String:
 	if _splitting:
-		return "Each DIRECT CHILD of the scene's root moves into the chunk its own position falls in, re-based to that cell's origin. A child with no position - a Control, a Timer, an audio player - has no cell, so it stays where it is and is named in the receipt. A tilemap is one node holding a whole world of cells: splitting it would mean rewriting its data, so it is left alone."
-	return "Every scene in the folder named like a cell is opened, its children moved back to where the cell puts them, and the result saved as one scene. The chunk scenes are not changed, so a merge is always reversible by splitting again."
+		return EventSheetL10n.translate("Each DIRECT CHILD of the scene's root moves into the chunk its own position falls in, re-based to that cell's origin. A child with no position - a Control, a Timer, an audio player - has no cell, so it stays where it is and is named in the receipt. A tilemap is one node holding a whole world of cells: splitting it would mean rewriting its data, so it is left alone.")
+	return EventSheetL10n.translate("Every scene in the folder named like a cell is opened, its children moved back to where the cell puts them, and the result saved as one scene. The chunk scenes are not changed, so a merge is always reversible by splitting again.")
 
 
 func _on_confirmed() -> void:

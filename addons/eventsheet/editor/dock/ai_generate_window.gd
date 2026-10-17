@@ -35,7 +35,7 @@ func open() -> void:
 
 ## The window says where the description goes and, beside a greyed Generate, why it cannot run.
 func _build() -> void:
-	var parts: Dictionary = EventSheetPopupUI.action_window("Generate Events from a Description", "Generate",
+	var parts: Dictionary = EventSheetPopupUI.action_window(EventSheetL10n.translate("Generate Events from a Description"), "Generate",
 		"Cancel", Vector2i(580, 340), _dock)
 	_ai_window = parts["window"]
 	_note = parts["note"]
@@ -43,10 +43,10 @@ func _build() -> void:
 	EventSheetPopupUI.main_button(_ai_window.get_ok_button())
 	var box: VBoxContainer = parts["box"]
 	box.add_child(EventSheetPopupUI.hint_label(
-		"Describe the behavior in plain English - it becomes GDScript, then editable events you can tweak.",
+		EventSheetL10n.translate("Describe the behavior in plain English - it becomes GDScript, then editable events you can tweak."),
 		EventSheetPalette.scaled_f(540.0)))
 	_ai_prompt_edit = TextEdit.new()
-	_ai_prompt_edit.placeholder_text = "e.g. When the player presses jump and is on the floor, set velocity.y to -400 and play the jump sound."
+	_ai_prompt_edit.placeholder_text = EventSheetL10n.translate("e.g. When the player presses jump and is on the floor, set velocity.y to -400 and play the jump sound.")
 	_ai_prompt_edit.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
 	_ai_prompt_edit.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(70.0))
 	_ai_prompt_edit.text_changed.connect(_refresh_gate)

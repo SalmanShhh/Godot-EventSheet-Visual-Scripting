@@ -9017,3 +9017,292 @@ No lines yet - Find text fills it.,Строк пока нет - «Найти т�
 "A picture: an icon, a portrait, a sprite. The cell holds its file path; drag one in from the FileSystem dock.","Картинка: значок, портрет, спрайт. В ячейке хранится путь к файлу; перетащите его из панели «Файловая система»."
 "What a new row starts with in this column, here and in the Inspector's Add Row.",С чего начинается новая строка в этом столбце - здесь и в «Добавить строку» инспектора.
 "What the column holds, said on its header in the Inspector.",Что хранит столбец - показывается на его заголовке в инспекторе.
+Split,Разделить
+Merge,Объединить
+What this moves,Что это перемещает
+"A scene in, a folder of chunk scenes out","На входе сцена, на выходе папка сцен-фрагментов"
+"A folder of chunk scenes in, one scene out","На входе папка сцен-фрагментов, на выходе одна сцена"
+The scene to read. It is never changed - the chunks are written beside it.,Сцена для чтения. Она не меняется - фрагменты записываются рядом с ней.
+Chunk folder,Папка фрагментов
+"The folder of chunk scenes: written by Split, read by Merge, and by the Streamer's own Stream Chunks Around.","Папка сцен-фрагментов: её пишет «Разделить», читают «Объединить» и Stream Chunks Around у Streamer."
+Into scene,В сцену
+The one scene the chunks are put back together into.,"Единая сцена, в которую фрагменты собираются обратно."
+Cell width,Ширина ячейки
+"How wide one chunk is, in the scene's own units. Match the Streamer's Cell Size.",Ширина одного фрагмента в единицах сцены. Совпадает с Cell Size у Streamer.
+Cell height,Высота ячейки
+"How tall one chunk is. Ignored on a 2D scene, and on a 3D one until height is a cell axis.","Высота одного фрагмента. В 2D-сцене не учитывается, в 3D - пока высота не станет осью ячеек."
+Cell depth,Глубина ячейки
+How deep one chunk is. A 2D scene's depth axis is its own y.,Глубина одного фрагмента. Ось глубины 2D-сцены - её собственная y.
+Name prefix,Префикс имени
+The words before the cell numbers: chunk_3_-2.tscn. Do not end it with a number - the numbers at the end of the name ARE the address.,Слова перед номерами ячеек: chunk_3_-2.tscn. Не заканчивайте числом - числа в конце имени И ЕСТЬ адрес.
+Height is a cell axis,Высота - ось ячеек
+"Off, the grid is flat and every cell's height is 0 - what an open world wants. On, cells stack, for a station, a cave or a tower.","Выключено - сетка плоская, высота каждой ячейки 0, как нужно открытому миру. Включено - ячейки складываются в стопку, для станции, пещеры или башни."
+"Split %s into %s, one scene per %s cell","Разделить %s в %s, одна сцена на ячейку %s"
+"Merge the cells in %s into %s, placed %s apart",Объединить ячейки из %s в %s с шагом %s
+"Each DIRECT CHILD of the scene's root moves into the chunk its own position falls in, re-based to that cell's origin. A child with no position - a Control, a Timer, an audio player - has no cell, so it stays where it is and is named in the receipt. A tilemap is one node holding a whole world of cells: splitting it would mean rewriting its data, so it is left alone.","Каждый ПРЯМОЙ ПОТОМОК корня сцены переходит во фрагмент, куда попадает его позиция, с пересчётом к началу этой ячейки. Потомок без позиции - Control, Timer, аудиоплеер - не имеет ячейки, поэтому остаётся на месте и указывается в отчёте. Tilemap - это один узел с целым миром ячеек: разделить его значило бы переписать его данные, поэтому он не трогается."
+"Every scene in the folder named like a cell is opened, its children moved back to where the cell puts them, and the result saved as one scene. The chunk scenes are not changed, so a merge is always reversible by splitting again.","Каждая сцена в папке с именем ячейки открывается, её потомки возвращаются туда, куда их ставит ячейка, а результат сохраняется как одна сцена. Сцены-фрагменты не меняются, так что объединение всегда можно отменить повторным разделением."
+Generate Events from a Description,Создать события по описанию
+"Describe the behavior in plain English - it becomes GDScript, then editable events you can tweak.","Опишите поведение простыми словами - оно станет GDScript, а затем редактируемыми событиями, которые можно доработать."
+"e.g. When the player presses jump and is on the floor, set velocity.y to -400 and play the jump sound.","например: когда игрок нажимает прыжок и стоит на полу, задать velocity.y = -400 и проиграть звук прыжка."
+Give or take,Плюс-минус
+Invert - true when it is NOT the case,"Инвертировать - истинно, когда это НЕ так"
+"Pick what to compare, how, and to what. The row you get is whichever condition matches - the ids and the code are the sheet's own.","Выберите, что сравнивать, как и с чем. Получится то условие, которое подходит, - идентификаторы и код принадлежат листу."
+"The left side of the question. Pick one of this sheet's variables, or choose the last entry to type any expression - then the row is a plain value comparison.","Левая часть вопроса. Выберите одну из переменных листа или последний пункт, чтобы ввести любое выражение, - тогда строка будет простым сравнением значений."
+"Any expression: a property, a call, arithmetic. Typed values compare as values, so this writes Compare Values rather than Compare variable.","Любое выражение: свойство, вызов, арифметика. Введённые значения сравниваются как значения, поэтому пишется Compare Values, а не Compare variable."
+"How the two sides are compared. The ranges at the foot ask for two values, or for a value and how far off it may be.",Как сравниваются две части. Диапазоны внизу просят два значения или значение и допустимое отклонение.
+"What to compare against - a number, a piece of text in quotes, or another expression.","С чем сравнивать - число, текст в кавычках или другое выражение."
+The other end of the range. Both ends count as inside it.,Другой конец диапазона. Оба конца считаются входящими в него.
+"How far apart the two values may be and still count as equal. Decimal numbers almost never land exactly equal, which is what this is for.",Насколько два значения могут различаться и всё ещё считаться равными. Десятичные числа почти никогда не совпадают точно - для этого и нужно.
+"Treat capitals and lowercase as the same. It writes to_lower() on both sides, which is what a hand-written check does.","Считать заглавные и строчные одинаковыми. Пишет to_lower() с обеих сторон, как сделала бы проверка вручную."
+True when the question is NOT. A comparison with a clean opposite simply shows the opposite instead - hp > 0 rather than not (hp <= 0).,"Истинно, когда условие НЕ выполняется. Сравнение с явной противоположностью просто показывает её - hp > 0 вместо not (hp <= 0)."
+Compare With,Сравнить с
+"The other side of the comparison: this sheet's last save, a backup from the ring, or another sheet in the project.","Другая сторона сравнения: последнее сохранение этого листа, резервная копия из кольца или другой лист проекта."
+"Compare against any .gd or .tres sheet on disk - a teammate's file, a downloaded pack, an older copy.","Сравнить с любым листом .gd или .tres на диске - файлом коллеги, скачанным паком, старой копией."
+Compare against,Сравнить с
+Pick a side and press Compare. Double-click a row to jump to it; a row that only exists on the other side can be brought over.,"Выберите сторону и нажмите «Сравнить». Двойной щелчок по строке переходит к ней; строку, которая есть только на другой стороне, можно перенести."
+Nothing on this side yet.,С этой стороны пока ничего.
+Nothing on the compared side yet.,Со сравниваемой стороны пока ничего.
+Only here / different here,Только здесь / здесь иначе
+Only there / different there,Только там / там иначе
+Bring This Row Over,Перенести эту строку
+Copy the selected row from the compared sheet into this one as ordinary rows - one undo step.,Скопировать выбранную строку из сравниваемого листа в этот как обычные строки - один шаг отмены.
+Browsed - %s,Выбрано - %s
+(nothing to compare against yet - save this sheet first),(пока не с чем сравнить - сначала сохраните этот лист)
+Compare against…,Сравнить с…
+Pick something to compare against first.,"Сначала выберите, с чем сравнить."
+Identical - this sheet and %s compile to the same script.,Совпадают - этот лист и %s компилируются в один и тот же скрипт.
+"%d row(s) differ here, %d row(s) differ in %s. Double-click a row on the left to jump to it, or one on the right to bring it over.","Здесь отличается строк: %d, отличается строк: %d в %s. Двойной щелчок слева - перейти к строке, справа - перенести её."
+Custom ACE Providers,Свои поставщики ACE
+"Register GDScript files whose methods, signals and exported variables become custom ACEs.
+Zero-config alternative: drop scripts into res://eventsheet_addons/ and they register project-wide automatically.","Зарегистрируйте файлы GDScript, чьи методы, сигналы и экспортируемые переменные станут своими ACE.
+Без настройки: положите скрипты в res://eventsheet_addons/, и они автоматически зарегистрируются во всём проекте."
+Remove Selected,Удалить выбранное
+"Select a provider, or press Add to preview a script.","Выберите поставщика или нажмите «Добавить», чтобы просмотреть скрипт."
+What it publishes,Что он публикует
+Open Source Sheet…,Открыть исходный лист…
+Open the included sheet to edit it (changes flow to every sheet that includes it).,"Открыть включённый лист для правки (изменения дойдут до каждого листа, который его включает)."
+Select an include to preview what it contributes.,"Выберите включение, чтобы увидеть, что оно добавляет."
+"[b]%s[/b]
+%s
+Events: %d
+Functions: %s
+Variables: %s","[b]%s[/b]
+События: %d
+Функции: %s
+Переменные: %s"
+"Group ""%s"" is turned off",Группа «%s» выключена
+nothing inside it runs,ничего внутри не выполняется
+"Comment ""%s"" is turned off",Комментарий «%s» выключен
+in a script block %s,в блоке скрипта %s
+A script block is turned off,Блок скрипта выключен
+%s is turned off,%s выключено
+%s breaks into the debugger,%s останавливается в отладчике
+%s has conditions and no actions,"У %s есть условия, но нет действий"
+An action of %s is turned off,Действие в %s выключено
+A condition of %s is turned off,Условие в %s выключено
+"""%s"" is never called",«%s» нигде не вызывается
+published function,опубликованная функция
+before the first event,перед первым событием
+after event %d,после события %d
+no trigger,без триггера
+Loose Ends,Незаконченное
+"Everything you left half-done, in one list. Nothing here is drawn on the sheet - click an entry to jump to the row.","Всё, что вы оставили наполовину, в одном списке. Ничего из этого не рисуется на листе - щёлкните запись, чтобы перейти к строке."
+What,Что
+Loose ends,Незаконченное
+"Nothing left hanging - no TODOs, no disabled rows, no half-written events.","Ничего не осталось - ни TODO, ни выключенных строк, ни недописанных событий."
+%d loose end(s). Nothing here is drawn on the sheet - click an entry to jump to the row.,"Незаконченного: %d. Ничего из этого не рисуется на листе - щёлкните запись, чтобы перейти к строке."
+%d sheet,листов: %d
+%d scene,сцен: %d
+%d scenes,сцен: %d
+%d global,глобальных: %d
+%d globals,глобальных: %d
+%d connection,связей: %d
+%d connections,связей: %d
+(%d more not drawn),(ещё %d не нарисовано)
+Kind · %s,Вид · %s
+Sheet Type,Тип листа
+Extends,Наследует
+Choose…,Выбрать…
+What this does - shown in Godot's Create Node dialog.,Что это делает - показывается в окне «Создать узел» Godot.
+Autoload name,Имя автозагрузки
+GameState - a global name every sheet can call,"GameState - глобальное имя, к которому может обратиться любой лист"
+Runs in the editor too  -  @tool,Работает и в редакторе  -  @tool
+Family - one rule can target every instance at once,Семейство - одно правило охватывает все экземпляры сразу
+"What this plugin adds to the editor. Each tick arrives as a pair of events: added when the plugin is enabled, removed when it is disabled.","Что этот плагин добавляет в редактор. Каждая галочка приходит парой событий: добавить при включении плагина, убрать при выключении."
+Identity,Идентичность
+"More (tags, includes, uses, requires)","Ещё (теги, включения, uses, requires)"
+Tags (comma-separated),Теги (через запятую)
+Includes (addon sheets),Включения (листы аддонов)
+Uses (addon classes),Uses (классы аддонов)
+"ScreenShake, MathHelpers - owned helper instances","ScreenShake, MathHelpers - собственные экземпляры-помощники"
+Requires (sibling behaviors),Requires (соседние поведения)
+ScreenShake - shows a warning badge when missing,ScreenShake - при отсутствии показывается значок предупреждения
+More options,Другие параметры
+Name · class_name,Имя · class_name
+"How this script is known to the project and the Add Node dialog. Letters, digits and underscores; it must not be a class Godot already has.","Под этим именем скрипт знают проект и окно «Добавить узел». Буквы, цифры и подчёркивания; нельзя брать класс, который в Godot уже есть."
+"The class this sheet builds on: everything that class can do, this sheet can do. Type to get suggestions, or drop a node from the Scene dock onto this dialog.","Класс, на котором строится лист: всё, что умеет этот класс, умеет и лист. Начните вводить для подсказок или перетащите узел из дока «Сцена» в это окно."
+Icon · @icon,Значок · @icon
+The image Godot shows for this class in the Scene dock and the Add Node dialog. Any res:// image; Browse… picks one.,"Изображение, которое Godot показывает для этого класса в доке «Сцена» и окне «Добавить узел». Любое изображение res://; «Обзор…» выбирает его."
+Description · ##,Описание · ##
+"One or two sentences saying what this sheet is. Godot shows them in the Create Node dialog, and the sheet's head shows them on its own band.","Одно-два предложения о том, что это за лист. Godot показывает их в окне «Создать узел», а шапка листа - на своей полосе."
+"The name every other sheet writes to reach this one. It lives in project.godot, not in this file.","Имя, которое пишут другие листы, чтобы обратиться к этому. Оно хранится в project.godot, а не в этом файле."
+Runs in the editor too · @tool,Работает и в редакторе · @tool
+"The script runs inside the editor as well as in the game, so its events fire while you are building the scene.","Скрипт работает и в редакторе, и в игре, поэтому его события срабатывают, пока вы собираете сцену."
+Acts on (parent),Действует на (родителя)
+Extends (data type),Наследует (тип данных)
+"Every rule is one row. WHEN the left side is true (the conditions), DO the right side (the actions). Nothing is hidden: the plain GDScript your game ships is always one click away.","Каждое правило - одна строка. КОГДА левая часть истинна (условия), ДЕЛАЙ правую (действия). Ничего не скрыто: простой GDScript, который уходит в игру, всегда в одном щелчке."
+"Look at the sheet: conditions live in the left lane, actions in the right.","Посмотрите на лист: условия - в левой полосе, действия - в правой."
+An event starts with a trigger - the moment it runs. On Ready fires once when the object appears; Every Frame runs continuously.,"Событие начинается с триггера - момента, когда оно выполняется. On Ready срабатывает один раз при появлении объекта; Every Frame работает непрерывно."
+"Click ""Add event"" in the sheet's top-left corner (or the trailing ""+ Add event…"" row) and pick a trigger - try On Ready.",Нажмите «Добавить событие» в левом верхнем углу листа (или строку «+ Добавить событие…» в конце) и выберите триггер - попробуйте On Ready.
+Conditions decide WHEN the row runs this tick. Stack several and ALL must hold; conditions like Every X Seconds even keep their own timer.,"Условия решают, КОГДА строка выполняется в этот тик. Если их несколько, должны выполняться ВСЕ; такие условия, как Every X Seconds, даже ведут свой таймер."
+Select your event and double-click the left lane (or press C). Try Every X Seconds.,Выберите событие и дважды щёлкните левую полосу (или нажмите C). Попробуйте Every X Seconds.
+Actions are what happens - they run top to bottom whenever the conditions pass.,"Действия - это то, что происходит: они выполняются сверху вниз всякий раз, когда условия выполнены."
+"Double-click the right lane (or press A) and pick Print Message, then type something friendly.","Дважды щёлкните правую полосу (или нажмите A), выберите Print Message и напишите что-нибудь приятное."
+"Your sheet IS a plain Godot script - no runtime, no magic. Clicking a code line jumps to the row that made it, so the sheet and the script always explain each other.","Ваш лист И ЕСТЬ обычный скрипт Godot - без рантайма и магии. Щелчок по строке кода переходит к строке листа, которая её создала, поэтому лист и скрипт всегда объясняют друг друга."
+Open Menu ▸ View ▸ GDScript Panel and find the line your action just added.,"Откройте Меню ▸ Вид ▸ Панель GDScript и найдите строку, которую только что добавило ваше действие."
+"Events + conditions + actions, compiled to code you can read. From here: Sheet > New From Template opens full starters, Tools > Welcome has the playable showcase, and Add > Variable gives your sheet memory. Take this tour again any time: Tools > Start the Tour. Have fun!","События + условия + действия, скомпилированные в читаемый код. Дальше: Лист > Новый из шаблона открывает готовые заготовки, Инструменты > Добро пожаловать - играбельную витрину, а Добавить > Переменная даёт листу память. Пройти тур снова можно в любой момент: Инструменты > Начать тур. Удачи!"
+Try it,Попробуйте
+Classic sheet theme,Классическая тема листа
+the editor-matching theme,тема в стиле редактора
+Project bar on,Панель проекта включена
+the GDScript panel beside every sheet,панель GDScript рядом с каждым листом
+the migration guide open in the Manual,"руководство по переходу, открытое в Руководстве"
+the tour,тур
+Sets: %s. Change any of it later in Settings ▸ Words and the View menu.,Задаёт: %s. Любое из этого можно позже изменить в Настройки ▸ Слова и в меню Вид.
+How do you usually make games?,Как вы обычно делаете игры?
+Get Started,Начать
+New to event sheets? Simple mode keeps the picker and menus to the essentials. Everything still works in Expert mode - toggle any time in View → Simple Mode.,Впервые с листами событий? Простой режим оставляет в выборе и меню только главное. В экспертном режиме всё по-прежнему работает - переключайте в любой момент: Вид → Простой режим.
+The Godot-native default: every sheet opens with its generated script beside it (eventsheets/editor/open_code_panel_by_default).,Привычное для Godot значение по умолчанию: каждый лист открывается со сгенерированным скриптом рядом (eventsheets/editor/open_code_panel_by_default).
+"Opens the plugin's issue tracker in your browser, with your Godot and plugin versions pre-filled.","Открывает трекер задач плагина в браузере, версии Godot и плагина уже заполнены."
+Restore into editor (unsaved - Save to keep),"Восстановить в редактор (не сохранено - «Сохранить», чтобы оставить)"
+"Click a shortcut, then press the new key combination (Esc cancels). Custom keys are saved per-user, not in the project.","Щёлкните сочетание, затем нажмите новое (Esc - отмена). Свои клавиши сохраняются для пользователя, а не в проекте."
+"Pick a whole set of keys at once. Only the keys that differ are rebound - everything stays rebindable afterwards, and Reset all to defaults comes back here.","Выберите сразу целый набор клавиш. Переназначаются только отличающиеся - потом всё по-прежнему можно переназначить, а «Сбросить всё» возвращает сюда."
+Write template,Записать шаблон
+What this writes,Что это записывает
+"The folder a modder copies, with its manifest already filled in","Папка, которую копирует автор мода, с уже заполненным манифестом"
+Template folder,Папка шаблона
+"Where the template is written. Keep it out of the folder the game loads mods from - it is the example, not a mod.","Куда записывается шаблон. Держите его вне папки, из которой игра загружает моды, - это пример, а не мод."
+Mod name,Имя мода
+What a mod list calls it. A modder renames this first; blank means the folder's own name is used.,Как его называет список модов. Автор мода переименовывает это первым; пусто - используется имя папки.
+"The mod's own version, in whatever spelling its author uses. Nothing here compares two of them.",Собственная версия мода в любом написании автора. Здесь ничто не сравнивает две версии.
+Author,Автор
+The credit line beside the name.,Строка авторства рядом с именем.
+Replaces,Заменяет
+"What the mod replaces, in the author's own words. Nothing reads it: it is the sentence a player reads before switching two mods on together.","Что заменяет мод, словами автора. Ничто это не читает: это фраза для игрока перед тем, как включить два мода вместе."
+Content folder,Папка содержимого
+"The subfolder the template suggests for a mod's data assets, made empty beside the manifest. Leave it blank for no suggestion.","Подпапка, которую шаблон предлагает для данных мода, создаётся пустой рядом с манифестом. Оставьте пустым, чтобы ничего не предлагать."
+Carries code,Содержит код
+"Ticks the manifest's scripts flag. A data-only load refuses such a mod - and it checks the mod's actual files as well, so leaving this off hides nothing.","Ставит флаг scripts в манифесте. Загрузка только данных отклоняет такой мод - и проверяет также реальные файлы мода, так что если флаг не ставить, ничего не скроется."
+Also save a mod.tres,Сохранить также mod.tres
+"Saves the same five fields as a ModManifest resource beside the JSON, for a modder who works inside Godot. Needs the ModManifest the Mods pack ships.","Сохраняет те же пять полей как ресурс ModManifest рядом с JSON - для автора мода, работающего в Godot. Нужен ModManifest из пака Mods."
+carrying code,с кодом
+data only,только данные
+"Write %s %s into %s, %s","Записать %s %s в %s, %s"
+"Three things go into the folder: mod.json with these fields in it, a README saying what each field means and what a mod carrying code costs the player who runs it, and an empty content folder. Nothing is written over: a folder that already holds a manifest is refused whole, because it is already somebody's mod.","В папку попадают три вещи: mod.json с этими полями, README с объяснением каждого поля и того, чем мод с кодом грозит запустившему его игроку, и пустая папка содержимого. Ничего не перезаписывается: папка, где уже есть манифест, отклоняется целиком, ведь это уже чей-то мод."
+Drops every word you chose and goes back to the two defaults. The Familiar Words toggle itself is left alone.,Отбрасывает все выбранные слова и возвращает оба варианта по умолчанию. Сам переключатель «Привычные слова» не трогается.
+"A few things have two honest names: the Godot one and the one every other event-sheet editor uses. Choose either, or type your own - the sheet reads the same word everywhere at once.","У некоторых вещей два честных названия: из Godot и то, что используют другие редакторы листов событий. Выберите любое или введите своё - лист везде сразу будет говорить одним словом."
+the whole vocabulary at once,весь словарь сразу
+"One event, in the words you have chosen for the state the toggle is in right now.","Одно событие в словах, выбранных для текущего положения переключателя."
+Godot's own words throughout - the nouns and the verbs the engine uses.,Везде собственные слова Godot - существительные и глаголы движка.
+"The nouns in the sheet's words (Family, Layout); the verbs stay Godot's.","Существительные - словами листа (Family, Layout); глаголы остаются из Godot."
+"The nouns AND the verbs in the sheet's words - a row reads Create object where Godot says Spawn A Copy. The Godot spelling stays beside it in the picker, and the code panel and the tooltips never change.","И существительные, И глаголы - словами листа: строка читается Create object там, где Godot говорит Spawn A Copy. Написание Godot остаётся рядом в выборе, а панель кода и подсказки не меняются."
+"Your own mixture - a word you typed, or one half of a preset. Pick one above to go back to a named vocabulary.","Ваша собственная смесь - введённое слово или половина набора. Выберите набор выше, чтобы вернуться к именованному словарю."
+Plain events on whatever node this sheet is attached to.,"Обычные события на том узле, к которому прикреплён лист."
+A new node type: appears in Godot's Add Node dialog with your icon.,Новый тип узла: появляется в окне «Добавить узел» Godot с вашим значком.
+Attach under any node as a child - its events act on that parent.,Крепится под любой узел как потомок - его события действуют на этого родителя.
+"Runs inside the editor (File > Run), not in the game. Experimental.","Выполняется в редакторе (Файл > Запустить), а не в игре. Экспериментально."
+One always-on instance the whole game can call by name.,"Один всегда активный экземпляр, к которому вся игра обращается по имени."
+A data asset type: each saved file of it is edited in the Inspector.,Тип ресурса данных: каждый сохранённый файл редактируется в Инспекторе.
+Claims about your game that a runner checks and reports pass/fail on.,"Утверждения об игре, которые проверяет запускатель и сообщает, пройдено ли."
+"A plugin the editor switches on: it adds a dock, a Tools menu item, an object type.","Плагин, который включает редактор: добавляет док, пункт меню «Инструменты», тип объекта."
+Runs when files are imported - fix up or check what just landed in the project.,"Выполняется при импорте файлов - поправить или проверить то, что только что попало в проект."
+"Runs when the project is exported - stamp a build, bake a file, strip debug content.","Выполняется при экспорте проекта - пометить сборку, запечь файл, убрать отладочное содержимое."
+Test (asserts + verdict),Тест (проверки + вердикт)
+a dock,док
+a Tools menu item,пункт меню «Инструменты»
+a custom object type,свой тип объекта
+an Inspector button,кнопку в Инспекторе
+2D Character - moves and collides (CharacterBody2D),2D-персонаж - двигается и сталкивается (CharacterBody2D)
+"2D Object - a sprite, prop, or point (Node2D)","2D-объект - спрайт, предмет или точка (Node2D)"
+2D Physics Object - pushed by forces (RigidBody2D),2D физический объект - движется силами (RigidBody2D)
+2D Area / Trigger - detects overlaps (Area2D),2D-область / триггер - замечает пересечения (Area2D)
+"UI Control - buttons, labels, menus (Control)","Элемент интерфейса - кнопки, надписи, меню (Control)"
+3D Character (CharacterBody3D),3D-персонаж (CharacterBody3D)
+3D Object (Node3D),3D-объект (Node3D)
+Invisible Manager - logic only (Node),Невидимый менеджер - только логика (Node)
+I come from another event-sheet editor,Я пришёл из другого редактора листов событий
+I write GDScript,Я пишу на GDScript
+I'm new to event sheets,Я впервые с листами событий
+Build a top-down shooter (10 steps),Собрать шутер с видом сверху (10 шагов)
+Open the playable showcase scene,Открыть играбельную демо-сцену
+New sheet from a starter template,Новый лист из стартового шаблона
+Add comment,Добавить комментарий
+Group the selection (or add an empty group),Сгруппировать выделение (или добавить пустую группу)
+Toggle enabled / disabled,Включить / выключить
+Add blank sub-event,Добавить пустое подсобытие
+Add sub-event (picker),Добавить подсобытие (выбор)
+Add function,Добавить функцию
+Collapse / expand the selected block,Свернуть / развернуть выбранный блок
+Preview layout (run this sheet's scene),Предпросмотр сцены (запустить сцену этого листа)
+Preview project (run the main scene),Предпросмотр проекта (запустить главную сцену)
+Debug layout (run with the sheet's debugger armed),Отладка сцены (запуск с включённым отладчиком листа)
+Invert selected condition,Инвертировать выбранное условие
+Search all sheets,Искать по всем листам
+Replace selected trigger / condition / action,Заменить выбранный триггер / условие / действие
+Jump back (navigation history),Назад (история переходов)
+Jump forward (navigation history),Вперёд (история переходов)
+Duplicate event,Дублировать событие
+Copy rows,Копировать строки
+Paste rows,Вставить строки
+Apply to running game,Применить к запущенной игре
+Add event (Ctrl alternate),Добавить событие (вариант с Ctrl)
+Add condition (Ctrl alternate),Добавить условие (вариант с Ctrl)
+Add action (Ctrl alternate),Добавить действие (вариант с Ctrl)
+Add instance variable,Добавить переменную экземпляра
+Copy as text,Копировать как текст
+Edit the selected row,Изменить выбранную строку
+Nest / un-nest the event,Вложить / вынуть событие
+Move the row up / down,Переместить строку вверх / вниз
+Collapse / expand a group,Свернуть / развернуть группу
+Select previous / next row,Выбрать предыдущую / следующую строку
+Extend the row selection,Расширить выделение строк
+Delete the selection,Удалить выделенное
+Find & Replace,Найти и заменить
+Find next / previous,Найти следующее / предыдущее
+Command Palette,Палитра команд
+Toggle breakpoint,Переключить точку останова
+Toggle bookmark,Переключить закладку
+Zoom in / out (also Ctrl + mouse wheel),Приблизить / отдалить (также Ctrl + колесо мыши)
+Reset zoom to 100%,Сбросить масштаб на 100%
+Close a popup / cancel an edit,Закрыть всплывающее окно / отменить правку
+an inheritance set,набор по наследованию
+a scene,сцена
+an attached pack,прикреплённый пак
+a Godot group,группа Godot
+the reader,справочник
+what the editor switches on,"то, что включает редактор"
+"the editor itself, as an object",сам редактор как объект
+a panel docked in the editor,"панель, пристыкованная в редакторе"
+the properties panel and its add-ons,панель свойств и её дополнения
+the tree of the open scene,дерево открытой сцены
+the project's file list,список файлов проекта
+what Ctrl+Z walks back,"то, что отменяет Ctrl+Z"
+the user's own editor settings,собственные настройки редактора пользователя
+the settings saved with the project,"настройки, сохраняемые вместе с проектом"
+how a control is drawn,как рисуется элемент интерфейса
+a node you can see and click,"узел, который видно и можно нажать"
+a script that also runs in the editor,"скрипт, работающий и в редакторе"
+a script run from the command line,"скрипт, запускаемый из командной строки"
+what runs when files are imported,"то, что выполняется при импорте файлов"
+what runs when the project is exported,"то, что выполняется при экспорте проекта"
+something drawn over the 2D or 3D view,"то, что рисуется поверх 2D- или 3D-вида"
+what draws a file's preview picture,"то, что рисует картинку предпросмотра файла"
+a tab in the Debugger while the game runs,вкладка отладчика во время игры
+a node of your own in Create Node,свой узел в окне «Создать узел»
+one always-on instance the project shares,один всегда активный экземпляр на весь проект
+one copy for the whole editor,одна копия на весь редактор
+a helper that points back at what it helps,"помощник, ссылающийся на то, чему помогает"
+one of the editor's top tabs,одна из верхних вкладок редактора
+Region name,Имя региона
+Bubble color,Цвет пузыря
+Closing fence (#endregion),Закрывающая граница (#endregion)

@@ -9017,3 +9017,292 @@ No lines yet - Find text fills it.,还没有行 - “查找文本”会填充它
 "A picture: an icon, a portrait, a sprite. The cell holds its file path; drag one in from the FileSystem dock.",一张图片：图标、头像、精灵。单元格保存它的文件路径；可从文件系统面板拖入。
 "What a new row starts with in this column, here and in the Inspector's Add Row.",新行在这一列的初始值，此处和检查器的“添加行”都会使用。
 "What the column holds, said on its header in the Inspector.",这一列保存的内容，显示在检查器中该列的标题上。
+Split,拆分
+Merge,合并
+What this moves,这会移动什么
+"A scene in, a folder of chunk scenes out",输入一个场景，输出一个分块场景文件夹
+"A folder of chunk scenes in, one scene out",输入一个分块场景文件夹，输出一个场景
+The scene to read. It is never changed - the chunks are written beside it.,要读取的场景。它不会被修改 - 分块写在它旁边。
+Chunk folder,分块文件夹
+"The folder of chunk scenes: written by Split, read by Merge, and by the Streamer's own Stream Chunks Around.",分块场景文件夹：由拆分写入，由合并以及 Streamer 的 Stream Chunks Around 读取。
+Into scene,合并到场景
+The one scene the chunks are put back together into.,把分块重新拼合进去的那个场景。
+Cell width,单元宽度
+"How wide one chunk is, in the scene's own units. Match the Streamer's Cell Size.",一个分块的宽度，使用场景自身的单位。与 Streamer 的 Cell Size 保持一致。
+Cell height,单元高度
+"How tall one chunk is. Ignored on a 2D scene, and on a 3D one until height is a cell axis.",一个分块的高度。在 2D 场景中忽略；在 3D 场景中，除非高度是单元轴，否则也忽略。
+Cell depth,单元深度
+How deep one chunk is. A 2D scene's depth axis is its own y.,一个分块的深度。2D 场景的深度轴就是它自己的 y。
+Name prefix,名称前缀
+The words before the cell numbers: chunk_3_-2.tscn. Do not end it with a number - the numbers at the end of the name ARE the address.,单元编号前的文字：chunk_3_-2.tscn。不要以数字结尾 - 名称末尾的数字就是地址。
+Height is a cell axis,高度作为单元轴
+"Off, the grid is flat and every cell's height is 0 - what an open world wants. On, cells stack, for a station, a cave or a tower.",关闭时网格是平的，每个单元的高度都是 0 - 适合开放世界。开启时单元会堆叠，适合空间站、洞穴或塔楼。
+"Split %s into %s, one scene per %s cell",把 %s 拆分到 %s，每个 %s 单元一个场景
+"Merge the cells in %s into %s, placed %s apart",把 %s 中的单元合并到 %s，间隔 %s
+"Each DIRECT CHILD of the scene's root moves into the chunk its own position falls in, re-based to that cell's origin. A child with no position - a Control, a Timer, an audio player - has no cell, so it stays where it is and is named in the receipt. A tilemap is one node holding a whole world of cells: splitting it would mean rewriting its data, so it is left alone.",场景根节点的每个直接子节点都会移入其位置所在的分块，并换算到该单元的原点。没有位置的子节点（Control、Timer、音频播放器）没有单元，因此留在原处，并在回执中列出。tilemap 是一个承载整片单元世界的节点：拆分它就意味着重写它的数据，因此保持不动。
+"Every scene in the folder named like a cell is opened, its children moved back to where the cell puts them, and the result saved as one scene. The chunk scenes are not changed, so a merge is always reversible by splitting again.",打开文件夹中每个以单元命名的场景，把它的子节点移回单元所指定的位置，并将结果保存为一个场景。分块场景本身不会改变，因此合并总能通过再次拆分来还原。
+Generate Events from a Description,根据描述生成事件
+"Describe the behavior in plain English - it becomes GDScript, then editable events you can tweak.",用通俗的语言描述行为 - 它会变成 GDScript，再变成可以调整的可编辑事件。
+"e.g. When the player presses jump and is on the floor, set velocity.y to -400 and play the jump sound.",例如：当玩家按下跳跃且在地面上时，把 velocity.y 设为 -400 并播放跳跃音效。
+Give or take,允许误差
+Invert - true when it is NOT the case,反转 - 不成立时为真
+"Pick what to compare, how, and to what. The row you get is whichever condition matches - the ids and the code are the sheet's own.",选择要比较什么、如何比较、与什么比较。得到的行就是匹配的那个条件 - id 和代码都是事件表自己的。
+"The left side of the question. Pick one of this sheet's variables, or choose the last entry to type any expression - then the row is a plain value comparison.",问题的左侧。选择本事件表的一个变量，或选最后一项来输入任意表达式 - 那样这一行就是普通的值比较。
+"Any expression: a property, a call, arithmetic. Typed values compare as values, so this writes Compare Values rather than Compare variable.",任意表达式：属性、调用、算术。输入的值按值比较，因此写出的是 Compare Values 而不是 Compare variable。
+"How the two sides are compared. The ranges at the foot ask for two values, or for a value and how far off it may be.",两侧如何比较。底部的范围需要两个值，或一个值及允许的偏差。
+"What to compare against - a number, a piece of text in quotes, or another expression.",比较的对象 - 一个数字、一段带引号的文本或另一个表达式。
+The other end of the range. Both ends count as inside it.,范围的另一端。两端都算在范围内。
+"How far apart the two values may be and still count as equal. Decimal numbers almost never land exactly equal, which is what this is for.",两个值相差多少仍算相等。小数几乎不会恰好相等，这正是它的用途。
+"Treat capitals and lowercase as the same. It writes to_lower() on both sides, which is what a hand-written check does.",大小写视为相同。它会在两侧都写上 to_lower()，与手写的检查一样。
+True when the question is NOT. A comparison with a clean opposite simply shows the opposite instead - hp > 0 rather than not (hp <= 0).,问题不成立时为真。有明确反面的比较会直接显示反面 - 显示 hp > 0 而不是 not (hp <= 0)。
+Compare With,比较对象
+"The other side of the comparison: this sheet's last save, a backup from the ring, or another sheet in the project.",比较的另一方：本事件表的上次保存、备份环中的备份，或项目中的另一个事件表。
+"Compare against any .gd or .tres sheet on disk - a teammate's file, a downloaded pack, an older copy.",与磁盘上任意 .gd 或 .tres 事件表比较 - 队友的文件、下载的包、旧副本。
+Compare against,比较对象
+Pick a side and press Compare. Double-click a row to jump to it; a row that only exists on the other side can be brought over.,选择一方并按比较。双击一行可跳到该行；只存在于另一方的行可以搬过来。
+Nothing on this side yet.,这一侧暂无内容。
+Nothing on the compared side yet.,被比较的一侧暂无内容。
+Only here / different here,仅此处 / 此处不同
+Only there / different there,仅对方 / 对方不同
+Bring This Row Over,把这一行搬过来
+Copy the selected row from the compared sheet into this one as ordinary rows - one undo step.,把所选行从被比较的事件表复制到这里，作为普通行 - 一步即可撤销。
+Browsed - %s,浏览选择 - %s
+(nothing to compare against yet - save this sheet first),（暂无可比较的对象 - 请先保存此事件表）
+Compare against…,比较对象…
+Pick something to compare against first.,请先选择比较对象。
+Identical - this sheet and %s compile to the same script.,完全相同 - 此事件表与 %s 编译出相同的脚本。
+"%d row(s) differ here, %d row(s) differ in %s. Double-click a row on the left to jump to it, or one on the right to bring it over.",此处有 %d 行不同，%d 行在 %s 中不同。双击左侧的行可跳到该行，双击右侧的行可把它搬过来。
+Custom ACE Providers,自定义 ACE 提供者
+"Register GDScript files whose methods, signals and exported variables become custom ACEs.
+Zero-config alternative: drop scripts into res://eventsheet_addons/ and they register project-wide automatically.","注册 GDScript 文件，其方法、信号和导出变量会成为自定义 ACE。
+免配置方式：把脚本放进 res://eventsheet_addons/，它们会自动在整个项目中注册。"
+Remove Selected,移除所选
+"Select a provider, or press Add to preview a script.",选择一个提供者，或按添加来预览脚本。
+What it publishes,它公开的内容
+Open Source Sheet…,打开源事件表…
+Open the included sheet to edit it (changes flow to every sheet that includes it).,打开被包含的事件表进行编辑（改动会传到每个包含它的事件表）。
+Select an include to preview what it contributes.,选择一个包含项以预览它提供的内容。
+"[b]%s[/b]
+%s
+Events: %d
+Functions: %s
+Variables: %s","[b]%s[/b]
+事件：%d
+函数：%s
+变量：%s"
+"Group ""%s"" is turned off",组“%s”已关闭
+nothing inside it runs,其中的内容都不会运行
+"Comment ""%s"" is turned off",注释“%s”已关闭
+in a script block %s,在脚本块中 %s
+A script block is turned off,一个脚本块已关闭
+%s is turned off,%s 已关闭
+%s breaks into the debugger,%s 会中断进入调试器
+%s has conditions and no actions,%s 有条件但没有动作
+An action of %s is turned off,%s 的一个动作已关闭
+A condition of %s is turned off,%s 的一个条件已关闭
+"""%s"" is never called",“%s”从未被调用
+published function,公开函数
+before the first event,在第一个事件之前
+after event %d,在事件 %d 之后
+no trigger,无触发器
+Loose Ends,未完成事项
+"Everything you left half-done, in one list. Nothing here is drawn on the sheet - click an entry to jump to the row.",把你做了一半的事都列在一张清单里。这里的内容不会画在事件表上 - 点击某项即可跳到该行。
+What,内容
+Loose ends,未完成事项
+"Nothing left hanging - no TODOs, no disabled rows, no half-written events.",没有遗留事项 - 没有 TODO、没有关闭的行、没有写了一半的事件。
+%d loose end(s). Nothing here is drawn on the sheet - click an entry to jump to the row.,%d 个未完成事项。这里的内容不会画在事件表上 - 点击某项即可跳到该行。
+%d sheet,%d 个事件表
+%d scene,%d 个场景
+%d scenes,%d 个场景
+%d global,%d 个全局
+%d globals,%d 个全局
+%d connection,%d 条连接
+%d connections,%d 条连接
+(%d more not drawn),（另有 %d 个未绘制）
+Kind · %s,类型 · %s
+Sheet Type,事件表类型
+Extends,继承
+Choose…,选择…
+What this does - shown in Godot's Create Node dialog.,它的作用 - 显示在 Godot 的创建节点对话框中。
+Autoload name,自动加载名称
+GameState - a global name every sheet can call,GameState - 每个事件表都能调用的全局名称
+Runs in the editor too  -  @tool,也在编辑器中运行  -  @tool
+Family - one rule can target every instance at once,家族 - 一条规则可同时作用于所有实例
+"What this plugin adds to the editor. Each tick arrives as a pair of events: added when the plugin is enabled, removed when it is disabled.",此插件向编辑器添加的内容。每个勾选项都会生成一对事件：插件启用时添加，禁用时移除。
+Identity,身份
+"More (tags, includes, uses, requires)",更多（标签、包含、uses、requires）
+Tags (comma-separated),标签（逗号分隔）
+Includes (addon sheets),包含（插件事件表）
+Uses (addon classes),Uses（插件类）
+"ScreenShake, MathHelpers - owned helper instances","ScreenShake, MathHelpers - 自有的辅助实例"
+Requires (sibling behaviors),Requires（同级行为）
+ScreenShake - shows a warning badge when missing,ScreenShake - 缺失时显示警告徽标
+More options,更多选项
+Name · class_name,名称 · class_name
+"How this script is known to the project and the Add Node dialog. Letters, digits and underscores; it must not be a class Godot already has.",项目和添加节点对话框中对此脚本的称呼。只能用字母、数字和下划线；不能是 Godot 已有的类。
+"The class this sheet builds on: everything that class can do, this sheet can do. Type to get suggestions, or drop a node from the Scene dock onto this dialog.",此事件表所基于的类：该类能做的，此事件表都能做。输入可获得建议，或从场景面板把节点拖到此对话框上。
+Icon · @icon,图标 · @icon
+The image Godot shows for this class in the Scene dock and the Add Node dialog. Any res:// image; Browse… picks one.,Godot 在场景面板和添加节点对话框中为此类显示的图片。任意 res:// 图片；浏览…可选择一张。
+Description · ##,描述 · ##
+"One or two sentences saying what this sheet is. Godot shows them in the Create Node dialog, and the sheet's head shows them on its own band.",用一两句话说明此事件表是什么。Godot 会在创建节点对话框中显示，事件表头部也会在它自己的横栏上显示。
+"The name every other sheet writes to reach this one. It lives in project.godot, not in this file.",其他事件表访问此表时写的名称。它保存在 project.godot 中，而不是这个文件里。
+Runs in the editor too · @tool,也在编辑器中运行 · @tool
+"The script runs inside the editor as well as in the game, so its events fire while you are building the scene.",脚本在编辑器中和游戏中都会运行，因此搭建场景时它的事件就会触发。
+Acts on (parent),作用于（父节点）
+Extends (data type),继承（数据类型）
+"Every rule is one row. WHEN the left side is true (the conditions), DO the right side (the actions). Nothing is hidden: the plain GDScript your game ships is always one click away.",每条规则就是一行。当左侧（条件）为真时，执行右侧（动作）。没有任何隐藏：游戏中的纯 GDScript 随时一键可见。
+"Look at the sheet: conditions live in the left lane, actions in the right.",看看事件表：条件在左侧通道，动作在右侧通道。
+An event starts with a trigger - the moment it runs. On Ready fires once when the object appears; Every Frame runs continuously.,事件从触发器开始 - 即它运行的时刻。On Ready 在对象出现时触发一次；Every Frame 持续运行。
+"Click ""Add event"" in the sheet's top-left corner (or the trailing ""+ Add event…"" row) and pick a trigger - try On Ready.",点击事件表左上角的“添加事件”（或末尾的“+ 添加事件…”行），选择一个触发器 - 试试 On Ready。
+Conditions decide WHEN the row runs this tick. Stack several and ALL must hold; conditions like Every X Seconds even keep their own timer.,条件决定这一帧中该行何时运行。叠加多个时必须全部成立；像 Every X Seconds 这样的条件甚至自带计时器。
+Select your event and double-click the left lane (or press C). Try Every X Seconds.,选中你的事件并双击左侧通道（或按 C）。试试 Every X Seconds。
+Actions are what happens - they run top to bottom whenever the conditions pass.,动作就是要发生的事 - 每当条件通过时，它们从上到下依次运行。
+"Double-click the right lane (or press A) and pick Print Message, then type something friendly.",双击右侧通道（或按 A），选择 Print Message，然后输入一句友好的话。
+"Your sheet IS a plain Godot script - no runtime, no magic. Clicking a code line jumps to the row that made it, so the sheet and the script always explain each other.",你的事件表就是一个普通的 Godot 脚本 - 没有运行时，没有魔法。点击一行代码会跳到生成它的那一行，因此事件表和脚本总能互相解释。
+Open Menu ▸ View ▸ GDScript Panel and find the line your action just added.,打开 菜单 ▸ 视图 ▸ GDScript 面板，找到你的动作刚添加的那一行。
+"Events + conditions + actions, compiled to code you can read. From here: Sheet > New From Template opens full starters, Tools > Welcome has the playable showcase, and Add > Variable gives your sheet memory. Take this tour again any time: Tools > Start the Tour. Have fun!",事件 + 条件 + 动作，编译成你能读懂的代码。接下来：事件表 > 从模板新建 打开完整的起步模板，工具 > 欢迎 中有可玩的展示场景，添加 > 变量 让事件表拥有记忆。随时可以再走一遍：工具 > 开始导览。玩得开心！
+Try it,试一试
+Classic sheet theme,经典事件表主题
+the editor-matching theme,与编辑器匹配的主题
+Project bar on,开启项目栏
+the GDScript panel beside every sheet,每个事件表旁边的 GDScript 面板
+the migration guide open in the Manual,在手册中打开的迁移指南
+the tour,导览
+Sets: %s. Change any of it later in Settings ▸ Words and the View menu.,设置：%s。之后可在 设置 ▸ 用词 和 视图 菜单中更改。
+How do you usually make games?,你通常怎样制作游戏？
+Get Started,开始
+New to event sheets? Simple mode keeps the picker and menus to the essentials. Everything still works in Expert mode - toggle any time in View → Simple Mode.,第一次使用事件表？简易模式只保留选择器和菜单中的必要内容。专家模式下一切照常可用 - 随时可在 视图 → 简易模式 中切换。
+The Godot-native default: every sheet opens with its generated script beside it (eventsheets/editor/open_code_panel_by_default).,Godot 原生默认：每个事件表打开时，旁边都会显示其生成的脚本（eventsheets/editor/open_code_panel_by_default）。
+"Opens the plugin's issue tracker in your browser, with your Godot and plugin versions pre-filled.",在浏览器中打开插件的问题追踪页，并预先填好你的 Godot 和插件版本。
+Restore into editor (unsaved - Save to keep),恢复到编辑器（未保存 - 保存即可保留）
+"Click a shortcut, then press the new key combination (Esc cancels). Custom keys are saved per-user, not in the project.",点击一个快捷键，然后按下新的组合键（Esc 取消）。自定义按键按用户保存，不存入项目。
+"Pick a whole set of keys at once. Only the keys that differ are rebound - everything stays rebindable afterwards, and Reset all to defaults comes back here.",一次选择一整套按键。只有不同的键会被重新绑定 - 之后一切仍可重新绑定，全部重置为默认会回到这里。
+Write template,写入模板
+What this writes,这会写入什么
+"The folder a modder copies, with its manifest already filled in",模组作者复制的文件夹，清单已经填好
+Template folder,模板文件夹
+"Where the template is written. Keep it out of the folder the game loads mods from - it is the example, not a mod.",模板写入的位置。请把它放在游戏加载模组的文件夹之外 - 它是示例，不是模组。
+Mod name,模组名称
+What a mod list calls it. A modder renames this first; blank means the folder's own name is used.,模组列表中显示的名称。模组作者首先会改它；留空则使用文件夹名称。
+"The mod's own version, in whatever spelling its author uses. Nothing here compares two of them.",模组自身的版本号，写法随作者。这里不会比较两个版本。
+Author,作者
+The credit line beside the name.,名称旁边的署名行。
+Replaces,替换内容
+"What the mod replaces, in the author's own words. Nothing reads it: it is the sentence a player reads before switching two mods on together.",模组替换了什么，用作者自己的话写。程序不会读取它：这是玩家同时开启两个模组前读到的一句话。
+Content folder,内容文件夹
+"The subfolder the template suggests for a mod's data assets, made empty beside the manifest. Leave it blank for no suggestion.",模板为模组数据资源建议的子文件夹，在清单旁创建为空文件夹。留空表示不建议。
+Carries code,包含代码
+"Ticks the manifest's scripts flag. A data-only load refuses such a mod - and it checks the mod's actual files as well, so leaving this off hides nothing.",勾选清单中的 scripts 标记。仅数据的加载会拒绝此类模组 - 它还会检查模组的实际文件，所以不勾选也藏不住什么。
+Also save a mod.tres,同时保存 mod.tres
+"Saves the same five fields as a ModManifest resource beside the JSON, for a modder who works inside Godot. Needs the ModManifest the Mods pack ships.",把同样的五个字段另存为 ModManifest 资源放在 JSON 旁边，供在 Godot 中工作的模组作者使用。需要 Mods 包提供的 ModManifest。
+carrying code,包含代码
+data only,仅数据
+"Write %s %s into %s, %s",把 %s %s 写入 %s，%s
+"Three things go into the folder: mod.json with these fields in it, a README saying what each field means and what a mod carrying code costs the player who runs it, and an empty content folder. Nothing is written over: a folder that already holds a manifest is refused whole, because it is already somebody's mod.",文件夹中会放入三样东西：包含这些字段的 mod.json、说明每个字段含义以及带代码的模组会让运行它的玩家承担什么的 README，以及一个空的内容文件夹。不会覆盖任何东西：已经含有清单的文件夹会被整个拒绝，因为它已经是别人的模组。
+Drops every word you chose and goes back to the two defaults. The Familiar Words toggle itself is left alone.,丢弃你选的每个词，回到两套默认值。“熟悉的用词”开关本身保持不变。
+"A few things have two honest names: the Godot one and the one every other event-sheet editor uses. Choose either, or type your own - the sheet reads the same word everywhere at once.",有些东西有两个都正当的名字：Godot 的叫法，以及其他事件表编辑器的叫法。任选其一，或自己输入 - 事件表会在所有地方同时使用同一个词。
+the whole vocabulary at once,一次设置全部用词
+"One event, in the words you have chosen for the state the toggle is in right now.",一个事件，用你为开关当前状态选择的用词显示。
+Godot's own words throughout - the nouns and the verbs the engine uses.,全部使用 Godot 自己的用词 - 引擎使用的名词和动词。
+"The nouns in the sheet's words (Family, Layout); the verbs stay Godot's.",名词使用事件表的用词（Family、Layout）；动词保留 Godot 的。
+"The nouns AND the verbs in the sheet's words - a row reads Create object where Godot says Spawn A Copy. The Godot spelling stays beside it in the picker, and the code panel and the tooltips never change.",名词和动词都使用事件表的用词 - Godot 说 Spawn A Copy 的地方，行会显示 Create object。Godot 的写法仍在选择器中并列显示，代码面板和工具提示从不改变。
+"Your own mixture - a word you typed, or one half of a preset. Pick one above to go back to a named vocabulary.",你自己的组合 - 你输入的词，或某个预设的一半。在上方选一个即可回到命名的用词集。
+Plain events on whatever node this sheet is attached to.,在此事件表所挂节点上的普通事件。
+A new node type: appears in Godot's Add Node dialog with your icon.,一种新的节点类型：会带着你的图标出现在 Godot 的添加节点对话框中。
+Attach under any node as a child - its events act on that parent.,作为子节点挂在任意节点下 - 它的事件作用于那个父节点。
+"Runs inside the editor (File > Run), not in the game. Experimental.",在编辑器中运行（文件 > 运行），而非在游戏中。实验性功能。
+One always-on instance the whole game can call by name.,一个常驻实例，整个游戏都能按名称调用。
+A data asset type: each saved file of it is edited in the Inspector.,一种数据资源类型：它的每个保存文件都在检查器中编辑。
+Claims about your game that a runner checks and reports pass/fail on.,关于游戏的断言，由运行器检查并报告通过或失败。
+"A plugin the editor switches on: it adds a dock, a Tools menu item, an object type.",由编辑器启用的插件：添加停靠面板、工具菜单项、对象类型。
+Runs when files are imported - fix up or check what just landed in the project.,导入文件时运行 - 修正或检查刚进入项目的内容。
+"Runs when the project is exported - stamp a build, bake a file, strip debug content.",导出项目时运行 - 给构建打标记、烘焙文件、去除调试内容。
+Test (asserts + verdict),测试（断言 + 判定）
+a dock,一个停靠面板
+a Tools menu item,一个工具菜单项
+a custom object type,一个自定义对象类型
+an Inspector button,一个检查器按钮
+2D Character - moves and collides (CharacterBody2D),2D 角色 - 会移动和碰撞（CharacterBody2D）
+"2D Object - a sprite, prop, or point (Node2D)",2D 对象 - 精灵、道具或点（Node2D）
+2D Physics Object - pushed by forces (RigidBody2D),2D 物理对象 - 受力推动（RigidBody2D）
+2D Area / Trigger - detects overlaps (Area2D),2D 区域 / 触发器 - 检测重叠（Area2D）
+"UI Control - buttons, labels, menus (Control)",UI 控件 - 按钮、标签、菜单（Control）
+3D Character (CharacterBody3D),3D 角色（CharacterBody3D）
+3D Object (Node3D),3D 对象（Node3D）
+Invisible Manager - logic only (Node),不可见的管理器 - 仅逻辑（Node）
+I come from another event-sheet editor,我来自另一个事件表编辑器
+I write GDScript,我写 GDScript
+I'm new to event sheets,我是事件表新手
+Build a top-down shooter (10 steps),制作一个俯视射击游戏（10 步）
+Open the playable showcase scene,打开可玩的展示场景
+New sheet from a starter template,从起步模板新建事件表
+Add comment,添加注释
+Group the selection (or add an empty group),将所选内容编组（或添加空组）
+Toggle enabled / disabled,切换启用 / 禁用
+Add blank sub-event,添加空子事件
+Add sub-event (picker),添加子事件（选择器）
+Add function,添加函数
+Collapse / expand the selected block,折叠 / 展开所选块
+Preview layout (run this sheet's scene),预览布局（运行此事件表的场景）
+Preview project (run the main scene),预览项目（运行主场景）
+Debug layout (run with the sheet's debugger armed),调试布局（启用事件表调试器运行）
+Invert selected condition,反转所选条件
+Search all sheets,搜索所有事件表
+Replace selected trigger / condition / action,替换所选触发器 / 条件 / 动作
+Jump back (navigation history),后退（导航历史）
+Jump forward (navigation history),前进（导航历史）
+Duplicate event,复制事件
+Copy rows,复制行
+Paste rows,粘贴行
+Apply to running game,应用到运行中的游戏
+Add event (Ctrl alternate),添加事件（Ctrl 备用键）
+Add condition (Ctrl alternate),添加条件（Ctrl 备用键）
+Add action (Ctrl alternate),添加动作（Ctrl 备用键）
+Add instance variable,添加实例变量
+Copy as text,复制为文本
+Edit the selected row,编辑所选行
+Nest / un-nest the event,嵌套 / 取消嵌套事件
+Move the row up / down,上移 / 下移该行
+Collapse / expand a group,折叠 / 展开组
+Select previous / next row,选择上一行 / 下一行
+Extend the row selection,扩展行选择
+Delete the selection,删除所选内容
+Find & Replace,查找和替换
+Find next / previous,查找下一个 / 上一个
+Command Palette,命令面板
+Toggle breakpoint,切换断点
+Toggle bookmark,切换书签
+Zoom in / out (also Ctrl + mouse wheel),放大 / 缩小（也可用 Ctrl + 鼠标滚轮）
+Reset zoom to 100%,缩放重置为 100%
+Close a popup / cancel an edit,关闭弹窗 / 取消编辑
+an inheritance set,按继承划分的集合
+a scene,一个场景
+an attached pack,附加的包
+a Godot group,一个 Godot 组
+the reader,阅读手册
+what the editor switches on,编辑器启用的东西
+"the editor itself, as an object",作为对象的编辑器本身
+a panel docked in the editor,停靠在编辑器中的面板
+the properties panel and its add-ons,属性面板及其附加组件
+the tree of the open scene,打开场景的树
+the project's file list,项目的文件列表
+what Ctrl+Z walks back,Ctrl+Z 撤回的内容
+the user's own editor settings,用户自己的编辑器设置
+the settings saved with the project,随项目保存的设置
+how a control is drawn,控件的绘制方式
+a node you can see and click,可见且可点击的节点
+a script that also runs in the editor,也在编辑器中运行的脚本
+a script run from the command line,从命令行运行的脚本
+what runs when files are imported,导入文件时运行的东西
+what runs when the project is exported,导出项目时运行的东西
+something drawn over the 2D or 3D view,绘制在 2D 或 3D 视图上的东西
+what draws a file's preview picture,绘制文件预览图的东西
+a tab in the Debugger while the game runs,游戏运行时调试器中的选项卡
+a node of your own in Create Node,创建节点中你自己的节点
+one always-on instance the project shares,项目共享的一个常驻实例
+one copy for the whole editor,整个编辑器共用一份
+a helper that points back at what it helps,指回其所辅助对象的辅助者
+one of the editor's top tabs,编辑器顶部的选项卡之一
+Region name,区域名称
+Bubble color,气泡颜色
+Closing fence (#endregion),结束边界（#endregion）

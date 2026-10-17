@@ -79,7 +79,7 @@ static func _walk(rows: Array, counter: Dictionary, entries: Array) -> void:
 		if row is EventGroup:
 			var group: EventGroup = row as EventGroup
 			if not group.enabled:
-				entries.append(_entry("disabled", "Group \"%s\" is turned off" % _group_label(group), "nothing inside it runs", group))
+				entries.append(_entry("disabled", EventSheetL10n.translate("Group \"%s\" is turned off") % _group_label(group), EventSheetL10n.translate("nothing inside it runs"), group))
 			_walk(group.events if not group.events.is_empty() else group.rows, counter, entries)
 		elif row is CommentRow:
 			var comment: CommentRow = row as CommentRow
@@ -90,33 +90,33 @@ static func _walk(rows: Array, counter: Dictionary, entries: Array) -> void:
 			if comment.style == CommentRow.CommentStyle.TODO or not marker.is_empty():
 				entries.append(_entry("todo", _first_line(comment.text), _after_event(counter), comment))
 			if not comment.enabled:
-				entries.append(_entry("disabled", "Comment \"%s\" is turned off" % _first_line(comment.text), _after_event(counter), comment))
+				entries.append(_entry("disabled", EventSheetL10n.translate("Comment \"%s\" is turned off") % _first_line(comment.text), _after_event(counter), comment))
 		elif row is RawCodeRow:
 			var raw: RawCodeRow = row as RawCodeRow
 			for line: String in raw.code.split("\n"):
 				if not _marker_in(_comment_part(line)).is_empty():
-					entries.append(_entry("todo", line.strip_edges(), "in a script block %s" % _after_event(counter), raw))
+					entries.append(_entry("todo", line.strip_edges(), EventSheetL10n.translate("in a script block %s") % _after_event(counter), raw))
 			if not raw.enabled:
-				entries.append(_entry("disabled", "A script block is turned off", _after_event(counter), raw))
+				entries.append(_entry("disabled", EventSheetL10n.translate("A script block is turned off"), _after_event(counter), raw))
 		elif row is EventRow:
 			var event: EventRow = row as EventRow
 			counter["event"] = int(counter["event"]) + 1
-			var here: String = "event %d" % int(counter["event"])
+			var here: String = EventSheetL10n.translate("event %d") % int(counter["event"])
 			if not _marker_in(event.comment).is_empty():
 				entries.append(_entry("todo", event.comment.strip_edges(), here, event))
 			if not event.enabled:
-				entries.append(_entry("disabled", "%s is turned off" % here.capitalize(), _event_label(event), event))
+				entries.append(_entry("disabled", EventSheetL10n.translate("%s is turned off") % here.capitalize(), _event_label(event), event))
 			if event.debug_break:
-				entries.append(_entry("breakpoint", "%s breaks into the debugger" % here.capitalize(), _event_label(event), event))
+				entries.append(_entry("breakpoint", EventSheetL10n.translate("%s breaks into the debugger") % here.capitalize(), _event_label(event), event))
 			if event.actions.is_empty() and event.sub_events.is_empty() \
 					and (not event.trigger_id.is_empty() or not event.conditions.is_empty()):
-				entries.append(_entry("unfinished", "%s has conditions and no actions" % here.capitalize(), _event_label(event), event))
+				entries.append(_entry("unfinished", EventSheetL10n.translate("%s has conditions and no actions") % here.capitalize(), _event_label(event), event))
 			for action: Variant in event.actions:
 				if action is ACEAction and not (action as ACEAction).enabled:
-					entries.append(_entry("disabled", "An action of %s is turned off" % here, (action as ACEAction).ace_id, action as Resource))
+					entries.append(_entry("disabled", EventSheetL10n.translate("An action of %s is turned off") % here, (action as ACEAction).ace_id, action as Resource))
 			for condition: Variant in event.conditions:
 				if condition is ACECondition and not (condition as ACECondition).enabled:
-					entries.append(_entry("disabled", "A condition of %s is turned off" % here, (condition as ACECondition).ace_id, condition as Resource))
+					entries.append(_entry("disabled", EventSheetL10n.translate("A condition of %s is turned off") % here, (condition as ACECondition).ace_id, condition as Resource))
 			_walk(event.sub_events, counter, entries)
 
 
@@ -142,8 +142,8 @@ static func _orphan_verbs(sheet: EventSheetResource) -> Array:
 		# have to check by hand every time.
 		if name.is_empty() or called.has(name) or code_text.contains(name):
 			continue
-		orphans.append(_entry("orphan_verb", "\"%s\" is never called" % name,
-			"published function" if function.expose_as_ace else "function", function))
+		orphans.append(_entry("orphan_verb", EventSheetL10n.translate("\"%s\" is never called") % name,
+			EventSheetL10n.translate("published function") if function.expose_as_ace else EventSheetL10n.translate("function"), function))
 	return orphans
 
 
@@ -205,7 +205,7 @@ static func _first_line(text: String) -> String:
 
 static func _after_event(counter: Dictionary) -> String:
 	var seen: int = int(counter.get("event", 0))
-	return "before the first event" if seen == 0 else "after event %d" % seen
+	return EventSheetL10n.translate("before the first event") if seen == 0 else EventSheetL10n.translate("after event %d") % seen
 
 
 static func _event_label(event: EventRow) -> String:
@@ -213,7 +213,7 @@ static func _event_label(event: EventRow) -> String:
 		return event.trigger_id
 	if not event.conditions.is_empty() and event.conditions[0] != null:
 		return event.conditions[0].ace_id
-	return "no trigger"
+	return EventSheetL10n.translate("no trigger")
 
 
 static func _group_label(group: EventGroup) -> String:
@@ -230,19 +230,19 @@ func build() -> void:
 	if window != null:
 		return
 	window = Window.new()
-	window.title = "Loose Ends"
+	window.title = EventSheetL10n.translate("Loose Ends")
 	window.size = Vector2i(EventSheetPalette.scaled(520), EventSheetPalette.scaled(480))
 	window.min_size = Vector2i(EventSheetPalette.scaled(400), EventSheetPalette.scaled(300))
 	window.close_requested.connect(func() -> void: window.hide())
 	var body: VBoxContainer = EventSheetPopupUI.form_box()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	summary_label = EventSheetPopupUI.hint_label(
-		"Everything you left half-done, in one list. Nothing here is drawn on the sheet - click an entry to jump to the row.", 420.0)
+		EventSheetL10n.translate("Everything you left half-done, in one list. Nothing here is drawn on the sheet - click an entry to jump to the row."), 420.0)
 	body.add_child(summary_label)
-	tree = EventSheetPopupUI.table(PackedStringArray(["What", "Where"]), 0.0, {1: 190.0})
+	tree = EventSheetPopupUI.table(PackedStringArray([EventSheetL10n.translate("What"), EventSheetL10n.translate("Where")]), 0.0, {1: 190.0})
 	tree.select_mode = Tree.SELECT_ROW
 	tree.item_selected.connect(_on_entry_selected)
-	var card: PanelContainer = EventSheetPopupUI.labelled_card("Loose ends", tree)
+	var card: PanelContainer = EventSheetPopupUI.labelled_card(EventSheetL10n.translate("Loose ends"), tree)
 	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(card)
 	# Refresh reads the sheet again: the list is a reading of the sheet at one moment, and every edit
@@ -304,8 +304,8 @@ func refresh() -> int:
 			item.set_text(0, str((entry as Dictionary).get("label", "")))
 			item.set_text(1, str((entry as Dictionary).get("detail", "")))
 			item.set_metadata(0, int(index_of.get(entry, -1)))
-	summary_label.text = "Nothing left hanging - no TODOs, no disabled rows, no half-written events." if _entries.is_empty() \
-		else "%d loose end(s). Nothing here is drawn on the sheet - click an entry to jump to the row." % _entries.size()
+	summary_label.text = EventSheetL10n.translate("Nothing left hanging - no TODOs, no disabled rows, no half-written events.") if _entries.is_empty() \
+		else EventSheetL10n.translate("%d loose end(s). Nothing here is drawn on the sheet - click an entry to jump to the row.") % _entries.size()
 	return _entries.size()
 
 
