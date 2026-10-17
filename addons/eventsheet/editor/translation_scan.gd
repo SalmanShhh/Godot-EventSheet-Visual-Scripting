@@ -379,7 +379,10 @@ static func locales_of(columns: PackedStringArray) -> PackedStringArray:
 ## in that catalog - a finished translation is never moved, and a project that grew out of one
 ## strings.csv keeps every key it had there. Folder mode always writes the notes column (it is how
 ## the studio knows its own catalogs again) and never writes a hand-made catalog: `left_alone`
-## names each one.
+## names each one. A one-file target with `include_notes` off is written in Godot's plain shape, keys
+## and languages only - which the studio reads as hand-made from then on: never rewritten, and a
+## project whose strings.csv it is starts in folder mode beside it. The Translation Studio always
+## writes notes; notes off is for a caller that wants Godot's own file and nothing more.
 static func extract(root: String, csv_path: String, include_notes: bool = true, separator: String = ",") -> Dictionary:
 	var discovered: Array = scan_scripts(root)
 	discovered.append_array(scan_data_assets(root))
@@ -458,6 +461,13 @@ static func studio_catalogs(target: String, separator: String = ",") -> PackedSt
 		if is_single_catalog(target) or is_studio_catalog(path, separator):
 			found.append(path)
 	return found
+
+
+## The outcome of a step that writes only studio catalogs, in a folder where every catalog is hand-made:
+## nothing to write, nothing failed, and the catalogs it left alone named.
+static func only_hand_made(target: String, hand_made: PackedStringArray) -> Dictionary:
+	return {"ok": true, "wrote_nothing": true, "left_alone": hand_made,
+		"message": "Wrote nothing: every catalog in %s was made by hand. Find text makes one beside them.%s" % [target, _left_alone_note(hand_made)]}
 
 
 static func _left_alone_note(hand_made: PackedStringArray) -> String:
@@ -582,9 +592,13 @@ static func write_catalog(csv_path: String, rows: Array, columns: PackedStringAr
 
 ## Adds an empty `locale` column for a translator to fill, to the one catalog or to every catalog in
 ## a folder of them. Godot's importer turns each into one more .translation beside the others; a
-## catalog that already has the column is refused rather than doubled.
+## catalog that already has the column is refused rather than doubled. A folder whose catalogs are
+## all hand-made has none to add it to, which is said rather than failed.
 static func add_locale(target: String, locale: String, separator: String = ",") -> Dictionary:
 	var paths: PackedStringArray = studio_catalogs(target, separator)
+	var hand_made: PackedStringArray = hand_made_catalogs(target, separator)
+	if paths.is_empty() and not hand_made.is_empty():
+		return only_hand_made(target, hand_made)
 	for path: String in paths if not paths.is_empty() else PackedStringArray([target]):
 		var catalog: Dictionary = read_catalog(path, separator)
 		if not bool(catalog.get("ok", false)):
@@ -596,7 +610,6 @@ static func add_locale(target: String, locale: String, separator: String = ",") 
 		var written: Dictionary = write_catalog(path, catalog.get("rows", []), columns, separator)
 		if not bool(written.get("ok", false)):
 			return written
-	var hand_made: PackedStringArray = hand_made_catalogs(target, separator)
 	return {"ok": true, "left_alone": hand_made,
 		"message": "Added an empty %s column to %s.%s" % [locale, target, _left_alone_note(hand_made)]}
 

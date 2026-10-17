@@ -301,7 +301,7 @@ func run_import(returned: String) -> Dictionary:
 		_line(EventSheetL10n.translate("Blank cells in that file left yours alone."))]
 	if not unknown.is_empty():
 		lines.append(_line(EventSheetL10n.translate("%d lines in that file are in no script, so they were not added: %s.") % [unknown.size(), _first_few(unknown)], EventSheetPopupUI.TONE_WARNING))
-	_show_result("bring", _left_alone(lines, outcome),PackedStringArray([returned.get_file(), EventSheetL10n.translate("%d cells filled") % filled]))
+	_show_result("bring", _left_alone(lines, outcome), PackedStringArray([returned.get_file(), EventSheetL10n.translate("%d cells filled") % filled]))
 	return outcome
 
 
@@ -369,14 +369,17 @@ func run_register(persist: bool = true) -> Dictionary:
 	return outcome
 
 
-## Says a failed outcome in the button's own card and on the status line; true when it failed.
+## Says a failed outcome in the button's own card and on the status line; true when it failed, or
+## when every catalog was hand-made and so nothing was written (the card then names them).
 func _failed(id: String, outcome: Dictionary) -> bool:
 	var ok: bool = bool(outcome.get("ok", false))
 	if _dock != null:
 		_dock._set_status(str(outcome.get("message", "")), not ok)
 	if not ok:
 		_show_result(id, [_line(str(outcome.get("message", "")), EventSheetPopupUI.TONE_ERROR)])
-	return not ok
+	elif bool(outcome.get("wrote_nothing", false)):
+		_show_result(id, _left_alone([], outcome))
+	return not ok or bool(outcome.get("wrote_nothing", false))
 
 
 ## Shows `id`'s card with `lines`, hides every other card, and rereads the strip and the table.

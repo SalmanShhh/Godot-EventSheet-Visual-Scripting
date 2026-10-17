@@ -111,13 +111,31 @@ static func _run_hand_made() -> bool:
 	studio._build_window()
 	studio.scan_folder = HAND_PROJECT
 	studio.catalog_target = HAND_FOLDER
+	# Before the first Find text every catalog is hand-made: adding a language and the fake column
+	# write nothing, fail nothing, and name the catalogs they left alone.
+	var first_add: Dictionary = studio.run_add_language("de")
+	var first_pseudo: Dictionary = EventSheetGameCatalog.write_pseudo_column(HAND_FOLDER)
+	var first_card: Label = (studio._results["add"] as EventSheetPopupUI.ResultCard).lines_box.get_child(0).get_child(1) as Label
+	var all_passed: bool = SUPPORT.pins(NAME, [
+		["with only hand-made catalogs, a new language writes nothing and says why",
+			[first_add.get("ok"), first_add.get("left_alone"), str(first_add.get("message", ""))],
+			[true, PackedStringArray([HAND_FOLDER + "/strings.csv", HAND_FOLDER + "/ui.csv"]),
+				"Wrote nothing: every catalog in %s was made by hand. Find text makes one beside them. 2 hand-made catalog(s) left as they were: %s/strings.csv, %s/ui.csv."
+				% [HAND_FOLDER, HAND_FOLDER, HAND_FOLDER]]],
+		["...and its card names them instead of announcing a column", [(studio._results["add"] as EventSheetPopupUI.ResultCard).lines_box.get_child_count(), first_card.text],
+			[1, "2 catalogs here were made by hand, so nothing was written to them: strings.csv, ui.csv."]],
+		["the fake column does the same", [first_pseudo.get("ok"), first_pseudo.get("left_alone")],
+			[true, PackedStringArray([HAND_FOLDER + "/strings.csv", HAND_FOLDER + "/ui.csv"])]],
+		["and both left the hand-made catalogs as written", [FileAccess.get_file_as_string(HAND_FOLDER + "/ui.csv"),
+			FileAccess.get_file_as_string(HAND_FOLDER + "/strings.csv")], [HAND_UI, HAND_STRINGS]],
+	])
 	# Notes off: folder mode still writes the notes column, the mark the studio knows its own by.
 	var outcome: Dictionary = scan.extract(HAND_PROJECT, HAND_FOLDER, false)
 	var again: Dictionary = studio.run_extract()
 	var card: PackedStringArray = PackedStringArray()
 	for row: Node in (studio._results["find"] as EventSheetPopupUI.ResultCard).lines_box.get_children():
 		card.append((row.get_child(1) as Label).text)
-	var all_passed: bool = SUPPORT.pins(NAME, [
+	all_passed = SUPPORT.pins(NAME, [
 		["the hand-made catalogs are byte for byte as written", [FileAccess.get_file_as_string(HAND_FOLDER + "/ui.csv"),
 			FileAccess.get_file_as_string(HAND_FOLDER + "/strings.csv")], [HAND_UI, HAND_STRINGS]],
 		["a new key their folders say goes to a studio catalog beside each", scan.catalog_files(HAND_FOLDER), PackedStringArray([
@@ -137,7 +155,21 @@ static func _run_hand_made() -> bool:
 			[scan.is_studio_catalog(HAND_FOLDER + "/ui.extracted.csv"), scan.is_studio_catalog(HAND_FOLDER + "/ui.csv")], [true, false]],
 		["a hand-made strings.csv does not make the project a one-file target", scan.default_catalog_target(HAND_FOLDER), HAND_FOLDER],
 		["a studio-made one does", scan.default_catalog_target(FOLDER), FOLDER + "/strings.csv"],
-	])
+	]) and all_passed
+	# A one-file sweep with notes off writes Godot's plain shape, which the studio reads as hand-made:
+	# it is never rewritten, and the project starts in folder mode beside it.
+	DirAccess.make_dir_recursive_absolute(HAND_PROJECT + "/plain")
+	scan.extract(HAND_PROJECT, HAND_PROJECT + "/plain/strings.csv", false)
+	all_passed = SUPPORT.pins(NAME, [
+		["a notes-off one-file catalog is Godot's plain shape", FileAccess.get_file_as_string(HAND_PROJECT + "/plain/strings.csv"),
+			"keys,en
+Play,Play
+Quit,Quit
+Buy,Buy
+Sell,Sell
+"],
+		["so the studio treats it as hand-made and starts the folder", scan.default_catalog_target(HAND_PROJECT + "/plain"), HAND_PROJECT + "/plain"],
+	]) and all_passed
 	# Bringing a file back, adding a language and the fake column write only the studio's catalogs.
 	_write(RETURNED, "keys,fr\nSell,Vendre\nBuy,Acheter encore\n")
 	var imported: Dictionary = scan.import_catalog(RETURNED, HAND_FOLDER)
