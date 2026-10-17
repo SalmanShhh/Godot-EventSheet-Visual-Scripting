@@ -15,10 +15,17 @@
 # editor reads it, so the enable is cold: nothing of the plugin is compiled when the clock starts.
 # Enabling it puts the same one entry back, so project.godot is left as it was.
 #
+# Session restore is switched off the same way, in memory, for the length of the run. The tabs a
+# workspace reopens come from `user://`, which every checkout of this project shares, so with it on
+# the figure was whatever the LAST editor anyone closed had open: one run reopened a 2,000-line
+# sheet on top of the open it was timing, the next reopened nothing, and the two read as a second
+# apart for no change in the code. Off, the open is the same one sheet every time, and the saved
+# session is neither read nor written.
+#
 # Run (NON-headless is the real figure; `--headless` works too and is what the budget test uses):
 #   godot --editor --path . --script tools/measure_editor_boot.gd
 #
-# Prints one line, `editor boot: enable_ms=N first_open_ms=N`, and quits; exit 1 if either step
+# Prints one line, `editor boot: enable_ms=N first_open_ms=N tabs=N`, and quits; exit 1 if either step
 # could not be measured. One process measures once - start it again for another sample.
 # `tests/editor_boot_budget_test.gd` runs it as a subprocess and holds both numbers to a budget.
 # The editor may segfault while it tears down after the line is printed; the line is the answer.
@@ -27,6 +34,8 @@ extends SceneTree
 
 const PLUGIN_NAME: String = "eventforge"
 const PLUGIN_SCRIPT: String = "res://addons/eventforge/plugin.gd"
+## The workspace's own switch for reopening last session's tabs (see the header for why it is off).
+const RESTORE_SESSION_SETTING: String = "eventsheets/editor/restore_session"
 ## The same ordinary sheet the bare-process probe opens, so the two sets of figures compare.
 const FIRST_SHEET: String = "res://demo/showcase/boomer_level/boomer_level.gd"
 ## Frames to wait for the editor to settle before the clock starts (first scan, layout).
@@ -41,6 +50,7 @@ var _enable_ms: float = -1.0
 var _first_open_ms: float = -1.0
 var _workspace: Object = null
 var _enabled_setting: Variant = null
+var _restore_setting: Variant = null
 var _project_file: PackedByteArray = PackedByteArray()
 
 
@@ -48,6 +58,8 @@ func _init() -> void:
 	_enabled_setting = ProjectSettings.get_setting("editor_plugins/enabled")
 	_project_file = FileAccess.get_file_as_bytes("res://project.godot")
 	ProjectSettings.set_setting("editor_plugins/enabled", PackedStringArray())
+	_restore_setting = ProjectSettings.get_setting(RESTORE_SESSION_SETTING)
+	ProjectSettings.set_setting(RESTORE_SESSION_SETTING, false)
 	process_frame.connect(_on_frame)
 
 
@@ -101,11 +113,13 @@ func _find_plugin() -> Node:
 func _finish(problem: String) -> void:
 	process_frame.disconnect(_on_frame)
 	ProjectSettings.set_setting("editor_plugins/enabled", _enabled_setting)
+	ProjectSettings.set_setting(RESTORE_SESSION_SETTING, _restore_setting)
 	_restore_project_file()
 	if not problem.is_empty():
 		print("editor boot: could not measure - %s" % problem)
 	else:
-		print("editor boot: enable_ms=%d first_open_ms=%d" % [roundi(_enable_ms), roundi(_first_open_ms)])
+		print("editor boot: enable_ms=%d first_open_ms=%d tabs=%d" % [roundi(_enable_ms), roundi(_first_open_ms),
+			(_workspace.get("_open_tabs") as Array).size()])
 	quit.call_deferred(1 if not problem.is_empty() else 0)
 
 

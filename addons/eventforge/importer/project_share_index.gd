@@ -81,7 +81,16 @@ static var _mesh_wearers: Dictionary = {}
 ## project's type inference to be right, and being quietly wrong about who calls a function is worse
 ## than being plainly approximate about it - a rename listing one file too many costs a glance, and
 ## one too few costs a broken game.
+##
+## Each list is an Array while the scan fills it. A PackedStringArray is a value: taking one out of
+## the dictionary, appending and putting it back copied the whole list on every append, and the names
+## half the project calls (`print`, `get_node`) made a rebuild quadratic in the size of the project.
 static var _callers: Dictionary = {}
+
+## How many script files the scan has read the text of, over the session. What the rebuild after a
+## save is pinned on: every unchanged script answers from the names it called last time, so a rebuild
+## reads none.
+static var _scripts_read: int = 0
 
 ## The call pattern, built once for the whole scan (see _call_regex).
 static var _calls_regex: RegEx = null
@@ -255,7 +264,7 @@ static func callers_of(function_name: String, own_script: String = "") -> Packed
 	var callers: PackedStringArray = PackedStringArray()
 	if function_name.strip_edges().is_empty():
 		return callers
-	for script_path: String in _callers.get(function_name, PackedStringArray()):
+	for script_path: String in _callers.get(function_name, []):
 		if script_path != own_script:
 			callers.append(script_path)
 	return callers
@@ -273,6 +282,11 @@ static func clear_cache() -> void:
 	_next = 0
 	_next_script = 0
 	_started = false
+
+
+## How many script files the scan has read the text of this session - see `_scripts_read`.
+static func scripts_read() -> int:
+	return _scripts_read
 
 
 ## One scene filed: every resource file it loads, and every node of it that wears a material. Both
@@ -367,14 +381,14 @@ static func mesh_wearers_in(scene_path: String) -> Array[Dictionary]:
 ## `signal hurt(` are where the name lives, not where it is used - so the two are the only shapes
 ## taken back out; a name inside a comment or a string is left in, because sorting those out would
 ## cost a parse and the answer is a list to glance at, never a list anything acts on by itself.
+##
+## A plain append is already the set: a script's names are listed once each, and the walk hands each
+## script over once.
 static func _read_script(script_path: String) -> void:
 	for name: String in _names_called_by(script_path):
 		if not _callers.has(name):
-			_callers[name] = PackedStringArray()
-		var callers: PackedStringArray = _callers[name]
-		if not callers.has(script_path):
-			callers.append(script_path)
-			_callers[name] = callers
+			_callers[name] = []
+		(_callers[name] as Array).append(script_path)
 
 
 ## The names one file calls, read once per version of that file. The scan is dropped whenever
@@ -385,6 +399,7 @@ static func _names_called_by(script_path: String) -> PackedStringArray:
 	if _calls_by_file.has(stamp):
 		return _calls_by_file[stamp]
 	var names: PackedStringArray = PackedStringArray()
+	_scripts_read += 1
 	for called: RegExMatch in _call_regex().search_all(FileAccess.get_file_as_string(script_path)):
 		var name: String = called.get_string(1)
 		if not names.has(name):
@@ -409,9 +424,7 @@ static func _sort_holders() -> void:
 		holders.sort()
 		_holders[resource_path] = holders
 	for function_name: Variant in _callers.keys():
-		var callers: PackedStringArray = _callers[function_name]
-		callers.sort()
-		_callers[function_name] = callers
+		(_callers[function_name] as Array).sort()
 
 
 ## Schedules the next slice on the editor's own next frame. It costs no node, no timer and nothing

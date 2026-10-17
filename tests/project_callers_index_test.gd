@@ -25,7 +25,12 @@ const PICKUP: String = "res://tests/fixtures/interop_corpus/pickup.gd"
 ## the other thousand. Measured 70.4, 69.3 and 71.1 ms over 1,119 scripts and 59 scenes, against
 ## 970 ms when every script was read again. The budget is a claim that the rebuild is CHEAP rather
 ## than that it is fast - a per-file identity that stops working lands straight back at a second.
-const INDEX_REBUILD_BUDGET_MS: int = 200
+##
+## 2026-10-17: the project had grown to 1,652 scripts and 95 scenes and the rebuild to 138-146 ms,
+## against a 200 ms budget. About a tenth of that was the scan copying a caller list on every append;
+## with that gone it measured 124, 127 and 129 ms on a quiet machine, and the budget is three times
+## that. The pin that decides it is now the COUNT beside it: a rebuild reads no script's text at all.
+const INDEX_REBUILD_BUDGET_MS: int = 390
 
 
 static func run() -> bool:
@@ -76,9 +81,13 @@ static func run() -> bool:
 	EventSheetProjectShareIndex.clear_cache()
 	ok = _check("a dropped index answers nothing until it is built again",
 		EventSheetProjectShareIndex.callers_of("grant_xp"), PackedStringArray()) and ok
+	var read_before: int = EventSheetProjectShareIndex.scripts_read()
 	var started: int = Time.get_ticks_usec()
 	EventSheetProjectShareIndex.build_now()
 	var rebuild_ms: float = float(Time.get_ticks_usec() - started) / 1000.0
+	ok = _check("and the rebuild reads no script it read before (%d read)" % [
+		EventSheetProjectShareIndex.scripts_read() - read_before],
+		EventSheetProjectShareIndex.scripts_read() - read_before, 0) and ok
 	ok = _check("and the rebuilt one answers as it did",
 		EventSheetProjectShareIndex.callers_of("grant_xp"), PackedStringArray([PROGRESS])) and ok
 	ok = _check("rebuilding after a save costs under %d ms (took %.1f ms)" % [

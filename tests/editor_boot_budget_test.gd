@@ -10,8 +10,12 @@
 # EVERY NUMBER WAS MEASURED three times at the commit that set it, on a quiet machine:
 #   headless (what this test runs)   enable 497, 446, 460 ms     first open 29,300, 27,326, 27,599 ms
 #   a visible editor                 enable 465, 447, 443 ms     first open 26,516, 26,572, 23,536 ms
-# The budgets are about three times the headless medians, because a timing pin with less room than
-# that flaps on a shared runner. What they exist to catch is a regression IN KIND: a heavy class
+# Those first opens also reopened whatever tabs the last editor closed on the machine had left in
+# the session file, which is what made them wander by seconds; the tool keeps session restore off now.
+# Measured again 2026-10-17 once the first open stopped compiling the Doctor and the dialogs, three
+# runs of this test in the repository: enable 315, 312, 314 ms, first open 16,453, 16,277, 16,485 ms
+# (16,091-16,174 in a copy outside OneDrive). The budgets are about three times the headless
+# medians, because a timing pin with less room than that flaps on a shared runner. What they exist to catch is a regression IN KIND: a heavy class
 # named on the boot path (enabling used to cost about 2,000 ms), or a first open that starts building
 # per sheet what it builds once.
 #
@@ -30,14 +34,14 @@ const TEST_NAME := "editor_boot_budget_test"
 const MEASURE_TOOL: String = "res://tools/measure_editor_boot.gd"
 const RESULT_PREFIX: String = "editor boot: "
 
-## Enabling the plugin in a running editor, through the next frame. Median measured 460 ms.
+## Enabling the plugin in a running editor, through the next frame. Median measured 314 ms.
 const ENABLE_BUDGET_MS: int = 1500
 ## Opening the first sheet of the session through the plugin, until its lift lands: the lazy
-## workspace build, the once-per-session registries and the lift. Median measured 27,599 ms.
-const FIRST_OPEN_BUDGET_MS: int = 85000
+## workspace build, the once-per-session registries and the lift. Median measured 16,453 ms.
+const FIRST_OPEN_BUDGET_MS: int = 49400
 ## The WARN thresholds: about 1.5 times each median. Crossing one prints, never fails.
-const ENABLE_WARN_MS: int = 690
-const FIRST_OPEN_WARN_MS: int = 41400
+const ENABLE_WARN_MS: int = 470
+const FIRST_OPEN_WARN_MS: int = 24700
 
 
 static func run() -> bool:
@@ -53,6 +57,10 @@ static func run() -> bool:
 			print("  %s" % str(chunk))
 	var enable_ms: float = float(numbers.get("enable_ms", -1.0))
 	var first_open_ms: float = float(numbers.get("first_open_ms", -1.0))
+	# The blank sheet the workspace seeds and the one sheet the tool opens, and nothing else: the
+	# tool keeps session restore off, so the figure is never one sheet plus whatever the last editor
+	# anybody closed on this machine had open.
+	var tabs: int = int(numbers.get("tabs", -1.0))
 	print("  [boot] enable %d ms (budget %d), first open %d ms (budget %d)" % [
 		roundi(enable_ms), ENABLE_BUDGET_MS, roundi(first_open_ms), FIRST_OPEN_BUDGET_MS])
 	for line: String in warnings(enable_ms, first_open_ms):
@@ -60,11 +68,12 @@ static func run() -> bool:
 	return SUPPORT.pins(TEST_NAME, [
 		["the editor measured enabling the plugin", enable_ms >= 0.0, true],
 		["the editor measured the first sheet open", first_open_ms >= 0.0, true],
+		["the timed open reopened no earlier session (the blank sheet and the one opened)", tabs, 2],
 		["enabling the plugin stays inside its budget", enable_ms <= float(ENABLE_BUDGET_MS), true],
 		["the first sheet open stays inside its budget", first_open_ms <= float(FIRST_OPEN_BUDGET_MS), true],
-		["numbers inside their warn lines say nothing more", warnings(460.0, 27599.0), PackedStringArray()],
-		["a first open past its warn line is said loudly", warnings(460.0, 50000.0), PackedStringArray([
-			"  [boot] WARN the first sheet open took 50000 ms, past the 41400 ms warn line (median 27,599)"])],
+		["numbers inside their warn lines say nothing more", warnings(314.0, 16453.0), PackedStringArray()],
+		["a first open past its warn line is said loudly", warnings(314.0, 30000.0), PackedStringArray([
+			"  [boot] WARN the first sheet open took 30000 ms, past the 24700 ms warn line (median 16,453)"])],
 	])
 
 
@@ -72,10 +81,10 @@ static func run() -> bool:
 static func warnings(enable_ms: float, first_open_ms: float) -> PackedStringArray:
 	var lines: PackedStringArray = PackedStringArray()
 	if enable_ms > float(ENABLE_WARN_MS):
-		lines.append("  [boot] WARN enabling the plugin took %d ms, past the %d ms warn line (median 460)" % [
+		lines.append("  [boot] WARN enabling the plugin took %d ms, past the %d ms warn line (median 314)" % [
 			roundi(enable_ms), ENABLE_WARN_MS])
 	if first_open_ms > float(FIRST_OPEN_WARN_MS):
-		lines.append("  [boot] WARN the first sheet open took %d ms, past the %d ms warn line (median 27,599)" % [
+		lines.append("  [boot] WARN the first sheet open took %d ms, past the %d ms warn line (median 16,453)" % [
 			roundi(first_open_ms), FIRST_OPEN_WARN_MS])
 	return lines
 

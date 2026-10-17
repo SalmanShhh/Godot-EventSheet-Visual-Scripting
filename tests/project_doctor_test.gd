@@ -124,7 +124,14 @@ const SUPPORT := preload("res://tests/support.gd")
 ## and section by section the Migration section was 9.7 of them - it loaded and reflected every pack
 ## script for its vocabulary although the registry keeps that answer in .godot/. Reading the same
 ## memory, the section is 2.3 seconds and the test measured 39.8. The budget did not move.
-const DOCTOR_BUDGET_MS: int = 45000
+##
+## 2026-10-17, re-measured alone on a quiet machine, three runs in the repository (on OneDrive) and
+## three in a copy outside it: 30.2, 29.5 and 29.3 seconds inside, 29.9, 29.9 and 29.6 outside. 45
+## seconds was half again over that, which is the margin that flapped every time a shard or a second
+## Godot was running, so the budget is three times the median, the rule every timing pin in this suite
+## now follows. That no longer catches a return of the three faults above on its own - the two COUNT
+## pins below do, and they say the same thing on a loaded runner as on an idle one.
+const DOCTOR_BUDGET_MS: int = 88500
 
 ## What the audit measured on 2026-09-05 once this project declared its own scope: 50 distinct
 ## scripts opened as sheets out of the 216 the walk now hands back (it was 149 of 1,566 before, and

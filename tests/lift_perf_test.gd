@@ -42,7 +42,11 @@ const ENGINE_BASE_PACK: String = "res://eventsheet_addons/health/health_behavior
 ## everyone learns to ignore, so the load is taken away rather than paid for. What the pin is for is
 ## a rebuild that got ALGORITHMICALLY slower, and a regression of that kind lands far outside this
 ## band rather than just inside it.
-const REBUILD_BUDGET_MS: int = 2700
+##
+## 2026-10-17, quiet machine, three runs inside the repository and three in a copy outside OneDrive:
+## the 346 rows rebuild in 1,054-1,078 ms. Set at three times that, the rule every timing pin here
+## now follows.
+const REBUILD_BUDGET_MS: int = 3200
 ## A warm warm_registries() must be a no-op. Measured 0.1 ms; 50 catches a re-run without flapping.
 const WARM_REPEAT_BUDGET_MS: int = 50
 ## 200 mouse-motion events inside one cell. Measured 0.3 ms once a repeat is recognised as already

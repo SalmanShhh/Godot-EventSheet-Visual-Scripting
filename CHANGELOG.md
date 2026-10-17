@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Fixed: the timing pins measure the work, and sit three times over what it measures
+
+- `tools/measure_editor_boot.gd` keeps session restore off while it times: the tabs it reopened came
+  from a `user://` file every checkout shares, so the first open measured whatever the last editor
+  closed on the machine had open. It prints the tabs the open left, and the budget test pins two.
+- The "who else calls this" rebuild appended to a caller list by copying it, once per name per
+  script; it appends in place now, and the test pins that a rebuild reads no script's text.
+- The shader and scene readers' cold pins read their fixture files once off the clock, and the
+  10,000-event smoke sets up a small sheet first, so a slow disk or the session's one-time builds
+  are not in the figure.
+- Every budget that flapped is re-measured on a quiet machine, in the repository and in a copy
+  outside OneDrive (the two agree within a few percent once files are cached), and set at three
+  times the median: the first open in a real editor 16,453 ms (budget 49,400, was 85,000), the bare
+  first tab 4,104 ms, the workspace build 10,177 ms, the 2,000-line script 6,704 ms and its rebuild
+  3,127 ms, the Doctor 29.7 s (budget 88.5 s; its two count pins are the regression gate), the
+  callers rebuild 127 ms, the pack rebuild 1,066 ms, the 10,000-event setup 9,148 ms.
+
 ### Fixed: opening a real sheet stops compiling the Doctor, the dialogs and the Manual
 
 - The workspace's first open measured 18.0 to 24.2 seconds (median 21.7) against 23.6 to 38.7
