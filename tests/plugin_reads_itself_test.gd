@@ -51,8 +51,16 @@ const SAMPLE_SIZE: int = 40
 ## list of strings, so nearly every row of one is a literal entry. That is the item that reads them
 ## as Define rows; when it lands, this ceiling comes down with it, and until then a ceiling of 99 is
 ## an honest "not measured yet" rather than a pretend pass.
+##
+## RATCHETED over every file of every group (1,119) when a table handed to `return` or to a call became
+## one structured row and a `\`-continued statement one row, which took the editor's wordless rows from
+## 26,591 to 5,026. Worst per group after that: plugin.gd 2, shooter_tour 78, viewport_layout_builder 7,
+## doctor_reading_page 4, scene_effect_facts 10, layout_on_top_lift 57, removal_guard 0,
+## sequencer_aces 67, doc_patterns 17, render_file_places_preview 24, storylet_resource 83 and
+## feedback_card_schema 30. The worst of them are tables whose values span lines, which stay a row per
+## line by design; the older notes beside each group below say how each group came to measure as it did.
 const GENERIC_CEILING_BY_ROLE: Dictionary = {
-	"plugin": 5,
+	"plugin": 2,
 	# Re-measured over the WHOLE role when the corpus gained three files, the rotating sample moved and
 	# landed on shooter_tour.gd, which measures 78 and has since it was added. All 132 workspace files,
 	# read off the tree today, worst first: shooter_tour 78, tour_window 21, comment_door_open 21,
@@ -61,8 +69,8 @@ const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	# rather than logic, the same reason the pack-recipe and vocabulary groups sit where they do.
 	# Nothing about the reading layer changed to move this; the ceiling is the worst file in the group.
 	"workspace": 78,
-	"canvas": 14,
-	"readings": 15,
+	"canvas": 7,
+	"readings": 4,
 	# Read off the tree like the rest. Raised by one when the rotating sample reached
 	# scene_effect_facts.gd, which measures 13: a facts reader is a run of short lookups whose rows
 	# genuinely have little to say, and the ceiling is a description of the group rather than a
@@ -76,7 +84,7 @@ const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	# reasoning is prose above the code rather than lines inside a literal). Re-measured over the
 	# whole role afterwards: the worst importer file is scene_effect_facts.gd at 13, the three run
 	# matchers are 0, 0 and 6, and nothing else reaches 13.
-	"importer": 13,
+	"importer": 10,
 	# Re-measured over the WHOLE role rather than off the file the rotating sample happened to
 	# reach. The group is eighteen families now, not the three it was when 48 was written, and
 	# three of them stand over that number. Read off the tree today, worst first: node_dignity 62,
@@ -91,8 +99,8 @@ const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	# and the widest table scores the highest. That is the same reason a pack recipe sits where it
 	# does. Nothing about the reading layer changed to move this - the ceiling is a description of
 	# the group, taken off the worst file in it, rounded up a little.
-	"recognisers": 63,
-	"compiler": 5,
+	"recognisers": 57,
+	"compiler": 0,
 	# Re-measured over the WHOLE role rather than off the files the rotating sample happened to
 	# reach, after the sample moved and landed on sequencer_aces.gd, which measures 67. The sample is
 	# forty files of about five hundred, seeded by the day, so which forty it takes shifts whenever
@@ -114,10 +122,10 @@ const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	# elsewhere and is read, not repeated), so most of its rows ARE literal entries - the same reason
 	# the vocabulary and pack-recipe groups sit where they do. Nothing about the reading layer
 	# changed to move it; the ceiling is a description of the group, taken off the worst file in it.
-	"manual": 26,
+	"manual": 17,
 	"tests": 30,
 	"command_tools": 24,
-	"pack_recipes": 99,
+	"pack_recipes": 83,
 	"other": 30,
 }
 
@@ -156,10 +164,7 @@ const DERIVED_FLOOR: Dictionary = {
 ## opens with `@tool` and `const Lib := preload(…)`, and the reading accepted the annotation but not
 ## the import, so a recipe whose body split cleanly was left with its prelude standing as code. The
 ## reading now knows a preloaded constant is an import, and the three entries are gone with it.)
-const KNOWN_BLOCK_LINES: Dictionary = {
-	"res://addons/eventsheet/theme/event_sheet_editor_style.gd": 6,
-	"res://tools/render_opened_script_head5_preview.gd": 3,
-}
+const KNOWN_BLOCK_LINES: Dictionary = {}
 
 
 static func run() -> bool:

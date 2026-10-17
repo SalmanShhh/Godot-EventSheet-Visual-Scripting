@@ -56,7 +56,8 @@ const FUNCTION_FLOOR: int = 70
 ## ...and essentially no function should be left sitting as a raw block. THIS is the assertion
 ## that actually bites: a reversion puts every function of the affected file here at once (eleven,
 ## for the `: Variant` bug), while the tolerance keeps one awkward new helper from breaking a build.
-const RAW_FUNCTION_ROW_CEILING: int = 2
+## Ratcheted to what the samples measure today: one.
+const RAW_FUNCTION_ROW_CEILING: int = 1
 
 ## ...and NOTHING should still look like a wall of code. Across these files not one of 1733
 ## non-blank lines reaches the plain GDScript-block rendering: every one arrives as a function, an
@@ -75,7 +76,8 @@ const RAW_FUNCTION_ROW_CEILING: int = 2
 ## raw function blocks, which this metric counts as function rows and so reads as 25. That one is
 ## caught by the raw-function ceiling below; the two assertions cover different failures and both
 ## are needed.
-const BLOCK_LINE_CEILING: int = 5
+## Ratcheted to what the samples measure today: none.
+const BLOCK_LINE_CEILING: int = 0
 
 
 static func run() -> bool:
