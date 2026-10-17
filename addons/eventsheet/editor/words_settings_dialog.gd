@@ -27,8 +27,8 @@ var _strip: EventSheetPopupUI.HelpStrip = null
 
 
 func _init() -> void:
-	title = "Words: choose what the sheet calls things"
-	ok_button_text = "Close"
+	title = EventSheetL10n.translate("Words: choose what the sheet calls things")
+	ok_button_text = EventSheetL10n.translate("Close")
 	EventSheetPopupUI.main_button(get_ok_button())
 	var reset: Button = add_button("Reset to defaults", false)
 	reset.tooltip_text = EventSheetL10n.translate("Drops every word you chose and goes back to the two defaults. The Familiar Words toggle itself is left alone.")

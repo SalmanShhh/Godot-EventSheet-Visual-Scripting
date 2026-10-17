@@ -25,6 +25,9 @@ static func run() -> bool:
 	parked.enabled = false
 	sheet.events.append(parked)
 	var loose: Array = LOOSE_ENDS.loose_ends(sheet, [])
+	var words_page: AcceptDialog = EventSheetWordsSettingsDialog.new()
+	var words_title: String = words_page.title
+	words_page.free()
 	var rows: Array = [
 		["the tour's first step", str(TOUR.steps()[0]["task"]),
 			"Sieh dir das Blatt an: Bedingungen stehen in der linken Spur, Aktionen in der rechten."],
@@ -35,6 +38,8 @@ static func run() -> bool:
 			"Einfache Ereignisse auf dem Node, an den dieses Blatt angehängt ist."],
 		["a shortcut's name", EventSheetL10n.translate(EventSheetShortcuts.label_for("add_comment")), "Kommentar hinzufügen"],
 		["what a word names", EventSheetL10n.translate(EventSheetWords.names_what("group")), "eine Godot-Gruppe"],
+		["the Words page's title", words_title, "Wörter: wähle, wie das Blatt Dinge nennt"],
+		["a preset's name", EventSheetWords.preset_label(EventSheetWords.PRESET_FAMILIAR), "Vertraute Wörter"],
 	]
 	EventSheetL10n.set_locale(before)
 	return SUPPORT.pins(NAME, rows)
