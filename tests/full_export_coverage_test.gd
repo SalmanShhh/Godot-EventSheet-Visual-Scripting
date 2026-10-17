@@ -98,6 +98,19 @@ static func run() -> bool:
 		if entry is LocalVariable:
 			short_range = (entry as LocalVariable).attributes.get("range")
 	short_sheet.external_source_path = "user://export_short_range.gd"
+	# The Ghost Row writes the short form and a hand-written script may carry the step: both open as
+	# the same range row, the same slider look, each saving back the way it was written.
+	var long_source: String = "extends Node\n\n@export_range(1, 3, 1) var max_jumps: int = 2\n"
+	var long_range: Variant = null
+	for entry: Variant in importer.import_external_source(long_source).events:
+		if entry is LocalVariable:
+			long_range = (entry as LocalVariable).attributes.get("range")
+	all_passed = SUPPORT.pins("full_export_coverage_test", [
+		["@export_range(1, 3, 1) opens as the same range row, its step written",
+			[long_range, EventSheetInspectorLooks.unfold({"range": long_range})],
+			[{"min": "1", "max": "3", "step": "1"}, EventSheetInspectorLooks.unfold({"range": short_range})]],
+		["and saves back with its step", SUPPORT.reemit(long_source, "user://export_long_range.gd"), long_source],
+	]) and all_passed
 	var stepped: EventSheetResource = EventSheetResource.new()
 	stepped.host_class = "Node"
 	stepped.variables = {"zoom": {"type": "float", "default": 1.0, "exported": true,
