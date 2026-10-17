@@ -1015,24 +1015,28 @@ class DrawerTable:
 		_rebuild()
 		value_changed.emit(get_value())
 
-	## The starting cell value for a fresh row, by column type. An enum column seeds its FIRST choice
-	## so a new row is valid immediately; everything else keeps its zero-ish default.
+	## The starting cell value for a fresh row: the column's own Default when it has one that fits its
+	## kind, else by kind - an enum column seeds its FIRST choice so a new row is valid immediately, and
+	## everything else keeps its zero-ish value.
 	static func _default_for(column: Dictionary) -> Variant:
+		var written: String = str(column.get("default", "")).strip_edges()
 		match str(column.get("type", "String")):
 			"int":
-				return 0
+				return written.to_int() if written.is_valid_int() else 0
 			"float":
-				return 0.0
+				return written.to_float() if written.is_valid_float() else 0.0
 			"bool":
-				return false
+				return written == "true"
 			"enum":
 				# The KEY, not the label - this value is persisted into the designer's .tres the
 				# moment they click Add Row, and nothing downstream re-validates a stored cell.
 				var options: Array = column.get("options", []) if column.get("options") is Array else []
-				return EventSheetDrawerWidgets.sheet_compiler().table_enum_key(options[0]) if not options.is_empty() else ""
+				var keys: Array = options.map(func(option: Variant) -> String:
+					return EventSheetDrawerWidgets.sheet_compiler().table_enum_key(option))
+				return written if keys.has(written) else (keys[0] if not keys.is_empty() else "")
 			"color":
-				return "#ffffff"
-		return ""
+				return written if not written.is_empty() else "#ffffff"
+		return written
 
 	func _rebuild() -> void:
 		for stale: Node in _grid.get_children():
@@ -1041,7 +1045,10 @@ class DrawerTable:
 		var ink: Color = EventSheetActiveTheme.chrome().drawer_ink_color
 		for column: Dictionary in _columns:
 			var head: Label = Label.new()
-			head.text = str(column.get("name")).capitalize()
+			# The column's name exactly as the code writes it; its Description, when it has one, on hover.
+			head.text = str(column.get("name"))
+			head.tooltip_text = str(column.get("about", ""))
+			head.mouse_filter = Control.MOUSE_FILTER_PASS
 			head.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 			head.modulate = Color(ink.r, ink.g, ink.b, 0.8)
 			_grid.add_child(head)
@@ -1122,6 +1129,8 @@ class DrawerTable:
 					row[column_name] = "#" + picked.to_html(picked.a < 1.0)
 					value_changed.emit(get_value()))
 				return swatch
+			"texture":
+				return _texture_cell(row, column_name)
 		var edit: LineEdit = LineEdit.new()
 		edit.text = str(row.get(column_name, ""))
 		edit.editable = editable
@@ -1130,6 +1139,37 @@ class DrawerTable:
 			row[column_name] = text
 			value_changed.emit(get_value()))
 		return edit
+
+	## A picture cell: its res:// path, typed or dragged in from the FileSystem dock, with the picture
+	## beside it. The row keeps the path as text, which the game turns into the picture with load().
+	func _texture_cell(row: Dictionary, column_name: String) -> Control:
+		var cell: HBoxContainer = HBoxContainer.new()
+		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var preview: TextureRect = TextureRect.new()
+		preview.custom_minimum_size = Vector2.ONE * EventSheetPalette.scaled_f(20.0)
+		preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		cell.add_child(preview)
+		var edit: LineEdit = LineEdit.new()
+		edit.text = str(row.get(column_name, ""))
+		edit.placeholder_text = "res://"
+		edit.tooltip_text = EventSheetL10n.translate("A picture's path - type it, or drag the picture here from the FileSystem dock.")
+		edit.editable = editable
+		edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		cell.add_child(edit)
+		var show: Callable = func(path: String) -> void:
+			preview.texture = load(path) as Texture2D if path.begins_with("res://") and ResourceLoader.exists(path) else null
+		show.call(edit.text)
+		edit.text_changed.connect(func(text: String) -> void:
+			row[column_name] = text
+			show.call(text)
+			value_changed.emit(get_value()))
+		edit.set_drag_forwarding(Callable(), func(_at: Vector2, data: Variant) -> bool:
+			return editable and data is Dictionary and str(data.get("type", "")) == "files" and (data.get("files", []) as Array).size() == 1,
+			func(_at: Vector2, data: Variant) -> void:
+				edit.text = str(data["files"][0])
+				edit.text_changed.emit(edit.text))
+		return cell
 
 	func _on_move_up(row_index: int) -> void:
 		if row_index <= 0 or row_index >= _value.size():

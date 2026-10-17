@@ -8394,7 +8394,6 @@ One row is a,Une ligne est un
 + Row,+ Ligne
 Import from CSV…,Importer depuis un CSV…
 Export to CSV…,Exporter en CSV…
-New rows get,Les nouvelles lignes reçoivent
 Warn in the Inspector when a row is missing a value,Avertir dans l'Inspecteur quand une valeur manque à une ligne
 Warn in the Inspector,Avertir dans l'Inspecteur
 "Adds a check the Inspector runs while the table is edited: it warns until the table has rows, and names the first row with an empty text cell.","Ajoute une vérification que l'Inspecteur exécute pendant l'édition de la table : elle avertit tant que la table n'a pas de lignes, et nomme la première ligne ayant une cellule de texte vide."
@@ -9014,3 +9013,7 @@ Renaming changes its name in Project Settings > Globals and every use; the place
 "Click one to see its properties, double-click to add it. Ones made for another kind of object are greyed, with the reason on hover.","Un clic montre ses propriétés, un double-clic l'ajoute. Ceux faits pour un autre type d'objet sont grisés, avec la raison au survol."
 No lines yet - Find text fills it.,Aucune ligne pour l'instant - Trouver le texte les remplit.
 "Your unsaved edits could not be kept as a backup, so the file on disk was not loaded. Save this version, or fix what stops it compiling, and choose again.","Tes modifications non enregistrées n'ont pas pu être gardées en sauvegarde, donc le fichier du disque n'a pas été chargé. Enregistre cette version, ou corrige ce qui l'empêche de compiler, puis choisis à nouveau."
+"A picture's path - type it, or drag the picture here from the FileSystem dock.","Le chemin d'une image - tapez-le, ou glissez l'image ici depuis le dock Système de fichiers."
+"A picture: an icon, a portrait, a sprite. The cell holds its file path; drag one in from the FileSystem dock.","Une image : une icône, un portrait, un sprite. La cellule garde son chemin de fichier ; glissez-en une depuis le dock Système de fichiers."
+"What a new row starts with in this column, here and in the Inspector's Add Row.","Ce par quoi commence une nouvelle ligne dans cette colonne, ici et dans Ajouter une ligne de l'Inspecteur."
+"What the column holds, said on its header in the Inspector.","Ce que contient la colonne, affiché sur son en-tête dans l'Inspecteur."

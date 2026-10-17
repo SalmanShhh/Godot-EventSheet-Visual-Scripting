@@ -133,7 +133,7 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 			if type != TYPE_ARRAY:
 				return false
 			var args: Array = drawer.get("args", [])
-			var columns: Array = parse_table_columns(str(args[0]) if args.size() > 0 else "")
+			var columns: Array = parse_table_columns(str(args[0]) if args.size() > 0 else "", args.slice(1))
 			if columns.is_empty():
 				return false
 			add_property_editor(name, TableProperty.new(columns))
@@ -362,9 +362,10 @@ static func _var_name_from_line(line: String) -> String:
 
 
 ## "hp=int,name=String" -> [{name:"hp", type:"int"}, {name:"name", type:"String"}]. The table
-## marker's column schema; unknown types fall back to String, nameless entries are dropped.
-## Static + UI-free so the headless suite pins the contract.
-static func parse_table_columns(spec: String) -> Array:
+## marker's column schema; unknown types fall back to String, nameless entries are dropped. `notes`
+## are the marker's parts after the columns - each column's own `default` and `about` - folded in
+## when they fit. Static + UI-free so the headless suite pins the contract.
+static func parse_table_columns(spec: String, notes: Array = []) -> Array:
 	var columns: Array = []
 	for pair: String in spec.split(","):
 		var trimmed: String = pair.strip_edges()
@@ -386,9 +387,11 @@ static func parse_table_columns(spec: String) -> Array:
 		# "key" rides along with the plain types: it renders as text like a String column, and marks
 		# the cells as translation keys for the translator sweep. Flattening it here would make the
 		# declaration unreachable from a resource's own @export hint.
-		if not column_type in ["String", "key", "int", "float", "bool", "color"]:
+		if not column_type in widgets().sheet_compiler().TABLE_CELL_TYPES:
 			column_type = "String"
 		columns.append({"name": column_name, "type": column_type})
+	if not notes.is_empty():
+		widgets().sheet_compiler().read_table_column_notes(columns, notes)
 	return columns
 
 

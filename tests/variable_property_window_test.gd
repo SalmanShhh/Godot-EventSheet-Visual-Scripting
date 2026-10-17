@@ -113,6 +113,14 @@ static func _sections(dialog: VariableDialog) -> bool:
 	kept = _confirm(dialog).get("attributes", {})
 	rows.append(["...while they still mean something they ride through",
 		[kept.get("subgroup_prefix"), kept.get("group_end")], ["trail", true]])
+	# A grid's columns keep their own Default and Description through the window, which only has a
+	# field for the column list itself.
+	var noted: Array = [{"name": "amount", "type": "int", "default": "1", "about": "How many to give."},
+		{"name": "icon", "type": "texture", "about": "The picture."}]
+	dialog.open_for_edit("tree", {"editing": true, "attributes": {"drawer": "table", "table_columns": noted.duplicate(true)}},
+		"drops", "Array", "[]", false, "Edit", false, true)
+	rows.append(["a grid's column notes and Texture kind ride through the window",
+		(_confirm(dialog).get("attributes", {}) as Dictionary).get("table_columns"), noted])
 	return SUPPORT.pins(P, rows)
 
 

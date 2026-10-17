@@ -8394,7 +8394,6 @@ One row is a,Eine Zeile ist ein
 + Row,+ Zeile
 Import from CSV…,Aus CSV importieren…
 Export to CSV…,Als CSV exportieren…
-New rows get,Neue Zeilen erhalten
 Warn in the Inspector when a row is missing a value,"Im Inspector warnen, wenn einer Zeile ein Wert fehlt"
 Warn in the Inspector,Im Inspector warnen
 "Adds a check the Inspector runs while the table is edited: it warns until the table has rows, and names the first row with an empty text cell.","Fügt eine Prüfung hinzu, die der Inspector beim Bearbeiten der Tabelle ausführt: Sie warnt, bis die Tabelle Zeilen hat, und nennt die erste Zeile mit einer leeren Textzelle."
@@ -9014,3 +9013,7 @@ Renaming changes its name in Project Settings > Globals and every use; the place
 "Click one to see its properties, double-click to add it. Ones made for another kind of object are greyed, with the reason on hover.","Ein Klick zeigt seine Eigenschaften, ein Doppelklick fügt es hinzu. Was für eine andere Art Objekt gemacht ist, ist ausgegraut; der Grund steht im Hinweis."
 No lines yet - Find text fills it.,Noch keine Zeilen - Text finden füllt sie.
 "Your unsaved edits could not be kept as a backup, so the file on disk was not loaded. Save this version, or fix what stops it compiling, and choose again.","Deine ungespeicherten Änderungen konnten nicht als Sicherung abgelegt werden, deshalb wurde die Datei von der Festplatte nicht geladen. Speichere diese Fassung oder behebe, was das Kompilieren verhindert, und wähle erneut."
+"A picture's path - type it, or drag the picture here from the FileSystem dock.",Der Pfad eines Bildes - tippe ihn ein oder zieh das Bild aus dem Dateisystem-Dock hierher.
+"A picture: an icon, a portrait, a sprite. The cell holds its file path; drag one in from the FileSystem dock.","Ein Bild: ein Symbol, ein Porträt, ein Sprite. Die Zelle hält seinen Dateipfad; zieh eines aus dem Dateisystem-Dock herein."
+"What a new row starts with in this column, here and in the Inspector's Add Row.","Womit eine neue Zeile in dieser Spalte beginnt, hier und beim Zeile hinzufügen im Inspektor."
+"What the column holds, said on its header in the Inspector.","Was die Spalte enthält, angezeigt an ihrer Kopfzeile im Inspektor."

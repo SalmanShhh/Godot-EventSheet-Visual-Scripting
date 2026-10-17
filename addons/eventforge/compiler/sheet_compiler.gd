@@ -4528,6 +4528,52 @@ static func table_enum_pair(entry: String) -> Dictionary:
 	return {"key": text, "label": text} if _valid_enum_key(text) else {}
 
 
+## The plain cell kinds a table column can declare. "texture" holds a picture's res:// path as text,
+## so the rows stay plain data the game reads with load().
+const TABLE_CELL_TYPES: Array[String] = ["String", "key", "int", "float", "bool", "color", "texture"]
+## The two notes a table column can carry of its own, in the order they ride the marker.
+const TABLE_COLUMN_NOTES: Array[String] = ["default", "about"]
+
+
+## A table column's own Default (what a new row starts with) and Description (what the column
+## holds) ride the marker after its columns: `:default=<one per column, | between>` and
+## `:about=<...>`, each value escaped like a choice label. A part is written only when some column
+## has one, so every grid without notes is byte-for-byte what it was. A note carrying a backslash
+## or a line break is left out: the marker is a quoted GDScript string, and it would change there.
+static func table_column_notes(columns: Array) -> String:
+	var tail: String = ""
+	for note: String in TABLE_COLUMN_NOTES:
+		var values: PackedStringArray = PackedStringArray()
+		var any: bool = false
+		for column: Variant in columns:
+			var value: String = str((column as Dictionary).get(note, "")).strip_edges() if column is Dictionary else ""
+			if value.contains("\\") or value.contains("\n"):
+				value = ""
+			any = any or not value.is_empty()
+			values.append(_escape_marker_label(value))
+		if any:
+			tail += ":%s=%s" % [note, "|".join(values)]
+	return tail
+
+
+## The inverse of table_column_notes: folds the marker's `default=` / `about=` parts into the
+## columns read from it. False when a part is not one of them or does not name every column, so
+## the reader leaves the line as it was written rather than guess.
+static func read_table_column_notes(columns: Array, parts: Array) -> bool:
+	for part: Variant in parts:
+		var text: String = str(part)
+		var note: String = text.get_slice("=", 0)
+		if not note in TABLE_COLUMN_NOTES or not text.contains("="):
+			return false
+		var values: PackedStringArray = text.substr(note.length() + 1).split("|")
+		if values.size() != columns.size():
+			return false
+		for index: int in columns.size():
+			if not values[index].is_empty():
+				(columns[index] as Dictionary)[note] = _unescape_marker_label(values[index])
+	return true
+
+
 ## The value an option stores in the user's data. Accepts either shape, so an extension that builds
 ## table_columns by hand with plain strings keeps working.
 static func table_enum_key(option: Variant) -> String:
@@ -4691,6 +4737,7 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 			if not (type_name in ["Array", "Array[Dictionary]"]) or not (attributes.get("table_columns") is Array):
 				return ""
 			var column_pairs: PackedStringArray = PackedStringArray()
+			var written_columns: Array = []
 			for column: Variant in attributes.get("table_columns"):
 				if not (column is Dictionary):
 					continue
@@ -4711,12 +4758,13 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 					# Round-tripping it through the codec validates and canonicalises it instead.
 					var formed_token: String = table_enum_type(table_enum_options(column_type))
 					column_type = formed_token if not formed_token.is_empty() else "String"
-				elif not column_type in ["String", "key", "int", "float", "bool", "color"]:
+				elif not column_type in TABLE_CELL_TYPES:
 					column_type = "String"
 				column_pairs.append("%s=%s" % [column_name, column_type])
+				written_columns.append(column)
 			if column_pairs.is_empty():
 				return ""
-			marker = "eventsheet:table:%s" % ",".join(column_pairs)
+			marker = "eventsheet:table:%s%s" % [",".join(column_pairs), table_column_notes(written_columns)]
 		"cards":
 			# A list of Dictionaries, each of a KIND, edited as a reorderable list of cards. Three
 			# words ride the marker and nothing else: which key holds the kind, which SCHEMA (a name

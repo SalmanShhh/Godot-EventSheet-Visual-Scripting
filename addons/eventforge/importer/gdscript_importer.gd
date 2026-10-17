@@ -801,7 +801,8 @@ func _extract_drawer_from_hint(lifted: LocalVariable, line: String) -> void:
 					columns.append({"name": pair.substr(0, eq), "type": "enum", "options": enum_options})
 				else:
 					columns.append({"name": pair.substr(0, eq), "type": lifted_type})
-		if columns.is_empty():
+		# Each column's own Default and Description ride the parts after the columns.
+		if columns.is_empty() or not SheetCompiler.read_table_column_notes(columns, Array(parts.slice(3))):
 			return
 		attrs["table_columns"] = columns
 	lifted.attributes = attrs

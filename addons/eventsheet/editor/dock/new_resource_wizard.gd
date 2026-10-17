@@ -11,7 +11,8 @@ extends RefCounted
 # EventSheets.resource_grid, the one owner of that syntax) and a .tres holding the rows typed here.
 # Any sheet can then load the .tres and read its rows.
 #
-# THE MODEL IS PLAIN DATA. `columns` is [{name, type, options}] in the table drawer's own shape and
+# THE MODEL IS PLAIN DATA. `columns` is [{name, type, options, default, about}] - the table drawer's
+# own shape, each column with its own Default (what a new row starts with) and Description - and
 # `rows` is the Array of Dictionary rows the drawer stores, so the CSV round trip
 # (EventSheetGridCSV) and the drawer read them as they are. Every edit goes through the model and
 # the grid is redrawn from it, which is what lets the suite drive the whole window headless.
@@ -26,7 +27,7 @@ const EDGE_GRAB := 4.0
 const MIN_COLUMN_WIDTH := 60.0
 const START_COLUMN_WIDTH := 130.0
 
-## The table drawer's columns, [{name, type, options}], in order.
+## The table drawer's columns, [{name, type, options, default, about}], in order.
 var columns: Array = []
 ## The rows typed so far, one Dictionary per row keyed by column name.
 var rows: Array = []
@@ -45,7 +46,8 @@ var _column_name_edit: LineEdit = null
 var _kind_option: OptionButton = null
 var _choices_row: Control = null
 var _choices_edit: LineEdit = null
-var _default_label: Label = null
+var _default_edit: LineEdit = null
+var _about_edit: LineEdit = null
 var _warn_check: CheckBox = null
 var _help_strip: EventSheetPopupUI.HelpStrip = null
 var _files_label: Label = null
@@ -91,6 +93,7 @@ static func kinds() -> Array:
 		["enum", EventSheetL10n.translate("Choice"), EventSheetL10n.translate("One of a list of words you name; the cell is a dropdown.")],
 		["color", EventSheetL10n.translate("Colour"), EventSheetL10n.translate("A colour, picked from a swatch in the Inspector.")],
 		["key", EventSheetL10n.translate("Translation key"), EventSheetL10n.translate("Text a translator turns into each language; the cell holds its key.")],
+		["texture", EventSheetL10n.translate("Texture"), EventSheetL10n.translate("A picture: an icon, a portrait, a sprite. The cell holds its file path; drag one in from the FileSystem dock.")],
 	]
 
 
@@ -186,9 +189,14 @@ func _build_dialog() -> void:
 	_choices_edit.text_changed.connect(func(text: String) -> void: set_choices(selected_column, text))
 	_choices_row = EventSheetPopupUI.form_row(EventSheetL10n.translate("Choices"), _choices_edit, 96.0)
 	column_box.add_child(_choices_row)
-	_default_label = Label.new()
-	_default_label.add_theme_color_override("font_color", EventSheetPopupUI.text_color())
-	column_box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("New rows get"), _default_label, 96.0))
+	_default_edit = LineEdit.new()
+	_default_edit.text_changed.connect(func(text: String) -> void: set_column_note(selected_column, "default", text))
+	column_box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Default"), _default_edit, 96.0,
+		EventSheetL10n.translate("What a new row starts with in this column, here and in the Inspector's Add Row.")))
+	_about_edit = LineEdit.new()
+	_about_edit.text_changed.connect(func(text: String) -> void: set_column_note(selected_column, "about", text))
+	column_box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Description"), _about_edit, 96.0,
+		EventSheetL10n.translate("What the column holds, said on its header in the Inspector.")))
 	var remove_button: Button = Button.new()
 	remove_button.text = EventSheetL10n.translate("Remove column")
 	remove_button.pressed.connect(func() -> void: remove_column(selected_column))
@@ -286,6 +294,21 @@ func set_kind(index: int, type: String) -> void:
 	_convert_cells(column)
 
 
+## Sets a column's own Default ("default") or Description ("about"); an empty one is no note at all.
+## Saved in the grid's declaration, so the Inspector's table has them too.
+func set_column_note(index: int, note: String, text: String) -> void:
+	if index < 0 or index >= columns.size() or not note in SheetCompiler.TABLE_COLUMN_NOTES:
+		return
+	# Kept as typed, so the field never jumps under the cursor; the declaration trims it when written.
+	if text.strip_edges().is_empty():
+		(columns[index] as Dictionary).erase(note)
+	else:
+		columns[index][note] = text
+	if _table != null:
+		_table.set_column_title_tooltip_text(index + 1, _column_tip(columns[index]))
+		_show_column()
+
+
 ## Sets a Choice column's words, from "coin, gem | key" however it is separated.
 func set_choices(index: int, text: String) -> void:
 	if index < 0 or index >= columns.size():
@@ -359,7 +382,7 @@ func _refresh() -> void:
 	_table.set_column_custom_minimum_width(0, int(EventSheetPalette.scaled_f(40.0)))
 	for index: int in columns.size():
 		_table.set_column_title(index + 1, "%s · %s" % [columns[index]["name"], _kind(columns[index]["type"])[1]])
-		_table.set_column_title_tooltip_text(index + 1, EventSheetL10n.translate("%s - double-click to rename, drag the right edge to resize") % columns[index]["name"])
+		_table.set_column_title_tooltip_text(index + 1, _column_tip(columns[index]))
 		_table.set_column_expand(index + 1, false)
 		_table.set_column_clip_content(index + 1, true)
 		_table.set_column_custom_minimum_width(index + 1, int(EventSheetPalette.scaled_f(_widths[index])))
@@ -397,6 +420,9 @@ func _fill_cell(item: TreeItem, cell: int, column: Dictionary, row: Dictionary) 
 			return
 		"int", "float":
 			item.set_custom_color(cell, EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_OK))
+		"texture":
+			item.set_icon(cell, EventSheetACEIcons.path_icon(str(value)))
+			item.set_icon_max_width(cell, int(EventSheetPalette.scaled_f(18.0)))
 	item.set_text(cell, EventSheetGridCSV.cell_text(value))
 
 
@@ -442,10 +468,20 @@ func _show_column() -> void:
 	var options_text: String = ", ".join(PackedStringArray(column.get("options", [])))
 	if _choices_row.visible and _choices_edit.text.replace(" ", "") != options_text.replace(" ", ""):
 		_choices_edit.text = options_text
-	var blank: String = EventSheetGridCSV.cell_text(EventSheetDrawerWidgets.DrawerTable._default_for(column))
-	_default_label.text = blank if not blank.is_empty() else EventSheetL10n.translate("(empty)")
+	var blank: String = EventSheetGridCSV.cell_text(EventSheetDrawerWidgets.DrawerTable._default_for(column.merged({"default": ""}, true)))
+	_default_edit.placeholder_text = blank if not blank.is_empty() else EventSheetL10n.translate("(empty)")
+	for note: Array in [[_default_edit, "default"], [_about_edit, "about"]]:
+		if (note[0] as LineEdit).text != str(column.get(note[1], "")):
+			(note[0] as LineEdit).text = str(column.get(note[1], ""))
 	# The name rides the sentence, not the small-caps heading: a name reads exactly as it is written.
-	_help_strip.describe("", "%s - %s" % [column["name"], kind[2]])
+	var about: String = str(column.get("about", ""))
+	_help_strip.describe("", "%s - %s" % [column["name"], about if not about.is_empty() else kind[2]])
+
+
+## A column header's hover: its own Description when it has one, then how to rename or resize it.
+static func _column_tip(column: Dictionary) -> String:
+	var how: String = EventSheetL10n.translate("%s - double-click to rename, drag the right edge to resize") % column["name"]
+	return how if str(column.get("about", "")).is_empty() else "%s\n%s" % [column["about"], how]
 
 
 func _show_column_note(problem: String) -> void:

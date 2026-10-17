@@ -8394,7 +8394,6 @@ One row is a,1 行は
 + Row,+ 行
 Import from CSV…,CSV から読み込む…
 Export to CSV…,CSV に書き出す…
-New rows get,新しい行の値
 Warn in the Inspector when a row is missing a value,値が欠けている行があれば Inspector で警告する
 Warn in the Inspector,Inspector で警告
 "Adds a check the Inspector runs while the table is edited: it warns until the table has rows, and names the first row with an empty text cell.",テーブルの編集中に Inspector が実行するチェックを追加します。テーブルに行ができるまで警告し、テキストのセルが空の最初の行を示します。
@@ -9014,3 +9013,7 @@ Renaming changes its name in Project Settings > Globals and every use; the place
 "Click one to see its properties, double-click to add it. Ones made for another kind of object are greyed, with the reason on hover.",クリックでプロパティを表示、ダブルクリックで追加します。別の種類のオブジェクト用のものは灰色になり、理由はマウスを重ねると表示されます。
 No lines yet - Find text fills it.,まだ行がありません - 「テキストを探す」で埋まります。
 "Your unsaved edits could not be kept as a backup, so the file on disk was not loaded. Save this version, or fix what stops it compiling, and choose again.",未保存の編集をバックアップとして残せなかったため、ディスク上のファイルは読み込みませんでした。この版を保存するか、コンパイルできない原因を直してから、もう一度選んでください。
+"A picture's path - type it, or drag the picture here from the FileSystem dock.",画像のパスです。入力するか、ファイルシステムドックから画像をここへドラッグします。
+"A picture: an icon, a portrait, a sprite. The cell holds its file path; drag one in from the FileSystem dock.",画像：アイコン、肖像、スプライトなど。セルにはファイルパスが入ります。ファイルシステムドックからドラッグして入れられます。
+"What a new row starts with in this column, here and in the Inspector's Add Row.",新しい行がこの列で最初に持つ値です。ここでも、インスペクターの「行を追加」でも使われます。
+"What the column holds, said on its header in the Inspector.",この列が何を保持するか。インスペクターの列見出しに表示されます。

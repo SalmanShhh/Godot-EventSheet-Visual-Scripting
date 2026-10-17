@@ -8394,7 +8394,6 @@ One row is a,一行是一个
 + Row,+ 行
 Import from CSV…,从 CSV 导入…
 Export to CSV…,导出为 CSV…
-New rows get,新行的值
 Warn in the Inspector when a row is missing a value,某行缺少值时在检查器中警告
 Warn in the Inspector,在检查器中警告
 "Adds a check the Inspector runs while the table is edited: it warns until the table has rows, and names the first row with an empty text cell.","添加一个检查,检查器在编辑表格时运行它:在表格有行之前一直警告,并指出第一个文本单元格为空的行。"
@@ -9014,3 +9013,7 @@ Renaming changes its name in Project Settings > Globals and every use; the place
 "Click one to see its properties, double-click to add it. Ones made for another kind of object are greyed, with the reason on hover.",单击查看其属性，双击直接添加。为其他种类对象制作的会变灰，悬停可看原因。
 No lines yet - Find text fills it.,还没有行 - “查找文本”会填充它们。
 "Your unsaved edits could not be kept as a backup, so the file on disk was not loaded. Save this version, or fix what stops it compiling, and choose again.",未保存的编辑无法存为备份，所以没有载入磁盘上的文件。请保存这个版本，或修正导致无法编译的问题，然后再选一次。
+"A picture's path - type it, or drag the picture here from the FileSystem dock.",图片的路径：直接输入，或从文件系统面板把图片拖到这里。
+"A picture: an icon, a portrait, a sprite. The cell holds its file path; drag one in from the FileSystem dock.",一张图片：图标、头像、精灵。单元格保存它的文件路径；可从文件系统面板拖入。
+"What a new row starts with in this column, here and in the Inspector's Add Row.",新行在这一列的初始值，此处和检查器的“添加行”都会使用。
+"What the column holds, said on its header in the Inspector.",这一列保存的内容，显示在检查器中该列的标题上。

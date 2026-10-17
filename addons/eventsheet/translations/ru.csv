@@ -8394,7 +8394,6 @@ One row is a,Одна строка - это
 + Row,+ Строка
 Import from CSV…,Импорт из CSV…
 Export to CSV…,Экспорт в CSV…
-New rows get,Новые строки получают
 Warn in the Inspector when a row is missing a value,"Предупреждать в Инспекторе, если в строке не хватает значения"
 Warn in the Inspector,Предупреждать в Инспекторе
 "Adds a check the Inspector runs while the table is edited: it warns until the table has rows, and names the first row with an empty text cell.","Добавляет проверку, которую Инспектор выполняет при правке таблицы: предупреждает, пока в таблице нет строк, и называет первую строку с пустой текстовой ячейкой."
@@ -9014,3 +9013,7 @@ Renaming changes its name in Project Settings > Globals and every use; the place
 "Click one to see its properties, double-click to add it. Ones made for another kind of object are greyed, with the reason on hover.","Щелчок показывает его свойства, двойной щелчок добавляет. То, что сделано для другого вида объектов, затенено, причина видна при наведении."
 No lines yet - Find text fills it.,Строк пока нет - «Найти текст» заполнит их.
 "Your unsaved edits could not be kept as a backup, so the file on disk was not loaded. Save this version, or fix what stops it compiling, and choose again.","Несохранённые правки не удалось сохранить как резервную копию, поэтому файл с диска не загружен. Сохраните эту версию или исправьте то, что мешает компиляции, и выберите снова."
+"A picture's path - type it, or drag the picture here from the FileSystem dock.",Путь к картинке - введите его или перетащите картинку сюда из панели «Файловая система».
+"A picture: an icon, a portrait, a sprite. The cell holds its file path; drag one in from the FileSystem dock.","Картинка: значок, портрет, спрайт. В ячейке хранится путь к файлу; перетащите его из панели «Файловая система»."
+"What a new row starts with in this column, here and in the Inspector's Add Row.",С чего начинается новая строка в этом столбце - здесь и в «Добавить строку» инспектора.
+"What the column holds, said on its header in the Inspector.",Что хранит столбец - показывается на его заголовке в инспекторе.

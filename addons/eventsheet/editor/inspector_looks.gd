@@ -375,8 +375,19 @@ static func parse_columns(detail: String) -> Array:
 		if not enum_options.is_empty():
 			columns.append({"name": column_name, "type": "enum", "options": enum_options})
 		else:
-			columns.append({"name": column_name, "type": column_type if column_type in ["String", "key", "int", "float", "bool", "color"] else "String"})
+			columns.append({"name": column_name, "type": column_type if column_type in SheetCompiler.TABLE_CELL_TYPES else "String"})
 	return columns
+
+
+## Gives each column the Default and Description the same-named column had before, so retyping
+## the column list in a window keeps the notes it has no field for.
+static func carry_column_notes(columns: Array, before: Variant) -> void:
+	for previous: Variant in (before if before is Array else []):
+		for column: Variant in columns:
+			if previous is Dictionary and column is Dictionary and str(column.get("name", "")) == str(previous.get("name", "")):
+				for note: String in SheetCompiler.TABLE_COLUMN_NOTES:
+					if (previous as Dictionary).has(note):
+						column[note] = previous[note]
 
 
 ## The inverse of parse_columns.

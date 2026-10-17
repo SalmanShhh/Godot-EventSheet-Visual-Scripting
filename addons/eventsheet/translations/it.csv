@@ -8394,7 +8394,6 @@ One row is a,Una riga è un
 + Row,+ Riga
 Import from CSV…,Importa da CSV…
 Export to CSV…,Esporta in CSV…
-New rows get,Le nuove righe ricevono
 Warn in the Inspector when a row is missing a value,Avvisa nell'Inspector quando a una riga manca un valore
 Warn in the Inspector,Avvisa nell'Inspector
 "Adds a check the Inspector runs while the table is edited: it warns until the table has rows, and names the first row with an empty text cell.",Aggiunge un controllo che l'Inspector esegue mentre la tabella viene modificata: avvisa finché la tabella non ha righe e nomina la prima riga con una cella di testo vuota.
@@ -9014,3 +9013,7 @@ Renaming changes its name in Project Settings > Globals and every use; the place
 "Click one to see its properties, double-click to add it. Ones made for another kind of object are greyed, with the reason on hover.","Un clic mostra le sue proprietà, un doppio clic lo aggiunge. Quelli fatti per un altro tipo di oggetto sono in grigio, con il motivo al passaggio del mouse."
 No lines yet - Find text fills it.,Ancora nessuna riga - Trova testo le riempie.
 "Your unsaved edits could not be kept as a backup, so the file on disk was not loaded. Save this version, or fix what stops it compiling, and choose again.","Le modifiche non salvate non sono state conservate come backup, quindi il file su disco non è stato caricato. Salva questa versione, o correggi ciò che ne impedisce la compilazione, e scegli di nuovo."
+"A picture's path - type it, or drag the picture here from the FileSystem dock.","Il percorso di un'immagine: scrivilo, oppure trascina qui l'immagine dal pannello FileSystem."
+"A picture: an icon, a portrait, a sprite. The cell holds its file path; drag one in from the FileSystem dock.","Un'immagine: un'icona, un ritratto, uno sprite. La cella tiene il suo percorso; trascinane una dal pannello FileSystem."
+"What a new row starts with in this column, here and in the Inspector's Add Row.","Con cosa inizia una nuova riga in questa colonna, qui e in Aggiungi riga dell'Ispettore."
+"What the column holds, said on its header in the Inspector.","Cosa contiene la colonna, mostrato sulla sua intestazione nell'Ispettore."

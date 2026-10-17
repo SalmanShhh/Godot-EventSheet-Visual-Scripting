@@ -6,6 +6,22 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Added: a data table column has its own Default and Description, and a Texture kind
+
+- New Data Table's column panel gives the selected column a **Default** (what a new row starts with
+  in it) and a **Description** (what it holds). The Default fills each new row, in the window and
+  on the Inspector's Add Row; the Description is said on the column's header in the Inspector, on
+  the grid's header in the window and in the strip under it. \"New rows get\" became the Default
+  field, which shows the kind's own blank until one is typed.
+- A column can be a **Texture**: the cell holds a picture's `res://` path, with the picture beside
+  it. In the Inspector the path is typed or the picture dragged in from the FileSystem dock; the
+  game reads it with `load()`, so the rows stay plain data.
+- Both notes ride the grid's declaration after its columns, as `:default=` and `:about=` with one
+  value per column, and a grid written before has exactly the line it had. A script opened as a
+  sheet keeps them byte for byte, and the variable window's Columns field keeps them too.
+- The Inspector table's headers read each column's name as the code writes it (`max_jumps`, no
+  longer Max Jumps).
+
 ### Changed: Add behaviour is a shelf of tiles, your own behaviours first
 
 - The Add behaviour window lists the packs as tiles, three to a row: each tile is the pack's

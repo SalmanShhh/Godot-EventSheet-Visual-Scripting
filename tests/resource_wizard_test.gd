@@ -119,6 +119,7 @@ static func run() -> bool:
 	ok = _window_says_its_own_problems() and ok
 	ok = _table_edits() and ok
 	ok = _csv_and_files() and ok
+	ok = _column_notes() and ok
 	return ok
 
 
@@ -176,7 +177,7 @@ static func _table_edits() -> bool:
 			[{"name": "kind", "type": "enum", "options": ["coin", "gem", "key"]}, {"name": "", "kind": "coin", "amount": 0}]],
 		["the grid draws the row number, the columns and + Column", titles,
 			["", "name · Text", "kind · Choice", "amount · Number (whole)", "+ Column"]],
-		["the panel is about the selected column", [wizard._column_card_title.text, wizard._choices_row.visible, wizard._default_label.text],
+		["the panel is about the selected column", [wizard._column_card_title.text, wizard._choices_row.visible, wizard._default_edit.placeholder_text],
 			["Column: amount", false, "0"]],
 	])
 	var right_of_name: float = wizard._table.get_theme_stylebox("panel").get_margin(SIDE_LEFT) \
@@ -198,6 +199,73 @@ static func _table_edits() -> bool:
 	wizard.remove_column(0)
 	passed = SUPPORT.check("resource_wizard_test", "Remove column takes it out of every row, and the last column stays",
 		[after_one, wizard.columns.size()], [[2, ["name", "amount"], 2], 1]) and passed
+	host.free()
+	return passed
+
+
+## Each column has a Default and a Description of its own, and a Texture kind: a new row starts
+## with the Default, the Inspector's header says the Description on hover, and the declaration keeps
+## both through a save and a reopen, byte for byte - a comma or a colon in a description included.
+static func _column_notes() -> bool:
+	var host: Control = Control.new()
+	var wizard: EventSheetNewResourceWizard = EventSheetNewResourceWizard.new()
+	wizard.init(host)
+	wizard.open()
+	wizard.set_column_note(0, "about", "The text shown for this drop.")
+	wizard.add_column()
+	wizard.rename_column(1, "amount")
+	wizard.set_kind(1, "int")
+	wizard.set_column_note(1, "default", "1")
+	wizard.set_column_note(1, "about", "How many to give, at least one: never none.")
+	wizard.add_column()
+	wizard.rename_column(2, "icon")
+	wizard.set_kind(2, "texture")
+	wizard.set_column_note(2, "about", "The picture shown in the inventory.")
+	wizard.add_row()
+	var sheet: EventSheetResource = EventSheetNewResourceWizard.build_wizard_sheet("", "LootDrop", wizard.columns, false)
+	var source: String = SUPPORT.compile_output(sheet, "user://column_notes_probe.gd")
+	var declared: String = ""
+	for line: String in source.split("\n"):
+		if line.contains("eventsheet:table:"):
+			declared = line
+	var reopened_columns: Variant = null
+	for entry: Variant in SUPPORT.reopen(source).events:
+		if entry is LocalVariable and (entry as LocalVariable).name == "loot_drops":
+			reopened_columns = (entry as LocalVariable).attributes.get("table_columns")
+	var hint: Dictionary = EventSheetAttributeDrawers.parse_drawer_hint(SheetCompiler._drawer_export_prefix(
+		sheet.variables["loot_drops"]["attributes"], "Array").get_slice("\"", 1))
+	var drawer_columns: Array = EventSheetAttributeDrawers.parse_table_columns(str(hint["args"][0]), (hint["args"] as Array).slice(1))
+	var table: EventSheetDrawerWidgets.DrawerTable = EventSheetDrawerWidgets.DrawerTable.new(drawer_columns)
+	table._on_add_row()
+	var cell: Control = table._make_cell({"icon": "res://icon.svg"}, drawer_columns[2])
+	var texture_cell: Array = [cell.get_child(0).get_class(), cell.get_child(1).get_class(), (cell.get_child(1) as LineEdit).text]
+	cell.free()
+	var heads: Array = []
+	for index: int in drawer_columns.size():
+		var head: Label = table._grid.get_child(index) as Label
+		heads.append([head.text, head.tooltip_text])
+	var passed: bool = SUPPORT.pins("resource_wizard_test", [
+		["a new row starts with each column's own Default", wizard.rows[0], {"name": "", "amount": 1, "icon": ""}],
+		["the Default field shows the kind's blank when it has none", [wizard._default_edit.text, wizard._default_edit.placeholder_text], ["", "(empty)"]],
+		["the declaration carries the Texture kind, each Default and each Description", declared,
+			"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:table:name=String,amount=int,icon=texture:default=|1|:about=The text shown for this drop.|How many to give~2C at least one~3A never none.|The picture shown in the inventory.\") var loot_drops: Array = []"],
+		["it reopens with both notes on their columns", reopened_columns, [
+			{"name": "name", "type": "String", "about": "The text shown for this drop."},
+			{"name": "amount", "type": "int", "default": "1", "about": "How many to give, at least one: never none."},
+			{"name": "icon", "type": "texture", "about": "The picture shown in the inventory."}]],
+		["and saves back byte for byte", SUPPORT.reemit(source, "user://column_notes_probe.gd"), source],
+		["the Inspector's Add Row starts with the Default", table.get_value(), [{"name": "", "amount": 1, "icon": ""}]],
+		["its headers are the names as written, the Description on hover", heads, [
+			["name", "The text shown for this drop."], ["amount", "How many to give, at least one: never none."],
+			["icon", "The picture shown in the inventory."]]],
+		["a texture cell is the picture beside its path", texture_cell, ["TextureRect", "LineEdit", "res://icon.svg"]],
+		["a grid with no notes is declared exactly as before",
+			SheetCompiler._drawer_export_prefix(EventSheets.resource_grid(["item", "count: int"])["attributes"], "Array"),
+			"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:table:item=String,count=int\") "],
+		["a description written by hand that does not name every column stays as written",
+			EventSheetAttributeDrawers.parse_table_columns("a=int,b=int", ["about=only one"]), [{"name": "a", "type": "int"}, {"name": "b", "type": "int"}]],
+	])
+	table.free()
 	host.free()
 	return passed
 

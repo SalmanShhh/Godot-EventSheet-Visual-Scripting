@@ -8394,7 +8394,6 @@ One row is a,Una fila es un
 + Row,+ Fila
 Import from CSV…,Importar desde CSV…
 Export to CSV…,Exportar a CSV…
-New rows get,Las filas nuevas reciben
 Warn in the Inspector when a row is missing a value,Avisar en el Inspector cuando a una fila le falte un valor
 Warn in the Inspector,Avisar en el Inspector
 "Adds a check the Inspector runs while the table is edited: it warns until the table has rows, and names the first row with an empty text cell.",Añade una comprobación que el Inspector ejecuta mientras se edita la tabla: avisa hasta que la tabla tenga filas y nombra la primera fila con una celda de texto vacía.
@@ -9014,3 +9013,7 @@ Renaming changes its name in Project Settings > Globals and every use; the place
 "Click one to see its properties, double-click to add it. Ones made for another kind of object are greyed, with the reason on hover.","Un clic muestra sus propiedades, un doble clic lo añade. Los que son para otro tipo de objeto aparecen en gris, con el motivo al pasar el ratón."
 No lines yet - Find text fills it.,Aún no hay líneas - Buscar texto las rellena.
 "Your unsaved edits could not be kept as a backup, so the file on disk was not loaded. Save this version, or fix what stops it compiling, and choose again.","Tus cambios sin guardar no se pudieron conservar como copia, así que no se cargó el archivo en disco. Guarda esta versión, o corrige lo que impide compilarla, y vuelve a elegir."
+"A picture's path - type it, or drag the picture here from the FileSystem dock.",La ruta de una imagen: escríbela o arrastra aquí la imagen desde el panel Sistema de archivos.
+"A picture: an icon, a portrait, a sprite. The cell holds its file path; drag one in from the FileSystem dock.","Una imagen: un icono, un retrato, un sprite. La celda guarda su ruta de archivo; arrastra una desde el panel Sistema de archivos."
+"What a new row starts with in this column, here and in the Inspector's Add Row.","Con qué empieza una fila nueva en esta columna, aquí y en Añadir fila del Inspector."
+"What the column holds, said on its header in the Inspector.","Qué guarda la columna, dicho en su encabezado en el Inspector."

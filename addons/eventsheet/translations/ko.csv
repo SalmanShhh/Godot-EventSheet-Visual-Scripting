@@ -8394,7 +8394,6 @@ One row is a,한 행은
 + Row,+ 행
 Import from CSV…,CSV에서 가져오기…
 Export to CSV…,CSV로 내보내기…
-New rows get,새 행의 값
 Warn in the Inspector when a row is missing a value,값이 빠진 행이 있으면 Inspector에서 경고
 Warn in the Inspector,Inspector에서 경고
 "Adds a check the Inspector runs while the table is edited: it warns until the table has rows, and names the first row with an empty text cell.","테이블을 편집하는 동안 Inspector가 실행하는 검사를 추가합니다. 테이블에 행이 생길 때까지 경고하고, 텍스트 셀이 빈 첫 행을 알려 줍니다."
@@ -9014,3 +9013,7 @@ Renaming changes its name in Project Settings > Globals and every use; the place
 "Click one to see its properties, double-click to add it. Ones made for another kind of object are greyed, with the reason on hover.","클릭하면 속성을 보여 주고, 더블 클릭하면 추가합니다. 다른 종류의 오브젝트용은 회색으로 표시되며, 마우스를 올리면 이유가 나옵니다."
 No lines yet - Find text fills it.,아직 줄이 없습니다 - 텍스트 찾기로 채워집니다.
 "Your unsaved edits could not be kept as a backup, so the file on disk was not loaded. Save this version, or fix what stops it compiling, and choose again.","저장하지 않은 편집을 백업으로 남길 수 없어 디스크의 파일을 불러오지 않았습니다. 이 버전을 저장하거나 컴파일을 막는 문제를 고친 뒤 다시 선택하세요."
+"A picture's path - type it, or drag the picture here from the FileSystem dock.",그림의 경로입니다. 직접 입력하거나 파일시스템 독에서 그림을 여기로 끌어 오세요.
+"A picture: an icon, a portrait, a sprite. The cell holds its file path; drag one in from the FileSystem dock.","그림: 아이콘, 초상화, 스프라이트. 셀에는 파일 경로가 들어갑니다. 파일시스템 독에서 끌어 넣으세요."
+"What a new row starts with in this column, here and in the Inspector's Add Row.",새 행이 이 열에서 처음 갖는 값입니다. 여기와 인스펙터의 행 추가 모두에서 쓰입니다.
+"What the column holds, said on its header in the Inspector.","이 열이 담는 것으로, 인스펙터의 열 머리글에 표시됩니다."

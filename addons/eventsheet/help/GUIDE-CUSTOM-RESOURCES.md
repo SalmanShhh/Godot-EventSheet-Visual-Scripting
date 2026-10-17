@@ -45,7 +45,7 @@ If a grid of rows can describe an AI's decision-making, it can describe your sho
 Open the EventSheet dock and pick **Sheet > New Data Table…**. The window is one small spreadsheet:
 
 1. **One row is a** - name a single row of your data as one word, `LootDrop`. Everything else is derived from it: the grid variable becomes `loot_drops`, and the **Name** (the class name) defaults to `LootDropTable` - type another name there if you want one, like `LootTable`.
-2. **The grid** - the table starts with one Text column called `name`. Click **+ Column** (the last header) to add one; click a header to select its column, and the panel beside the grid sets that column's **Name** and **Kind**: Text, Number (whole), Number, True/false, Choice (a dropdown - list its words in **Choices**), Colour, or Translation key. Each kind says what it holds when the pointer rests on it. Double-click a header to rename its column; drag a column's right edge to make it wider or narrower, and double-click the edge to fit it to its contents. **+ Row** adds a row; click a cell to type, tick, or pick. Delete removes the selected row.
+2. **The grid** - the table starts with one Text column called `name`. Click **+ Column** (the last header) to add one; click a header to select its column, and the panel beside the grid sets that column's **Name** and **Kind**: Text, Number (whole), Number, True/false, Choice (a dropdown - list its words in **Choices**), Colour, Translation key, or Texture (a picture: the cell holds its `res://` path, and the picture shows beside it). Each kind says what it holds when the pointer rests on it. The panel also gives the column a **Default** - what a new row starts with in it, here and on the Inspector's Add Row - and a **Description**, said on the column's header in the Inspector. Double-click a header to rename its column; drag a column's right edge to make it wider or narrower, and double-click the edge to fit it to its contents. **+ Row** adds a row; click a cell to type, tick, or pick. Delete removes the selected row.
 3. **Import from CSV… / Export to CSV…** - a CSV's header line becomes the columns (a column whose every cell is a number becomes a number column) and its lines become the rows; Export writes the rows back out for a spreadsheet.
 4. **Warn in the Inspector when a row is missing a value** - generates a `validate_loot_drops` function on the sheet, and makes the script a tool script so the Inspector can run it while the table is edited: it warns until the table has rows, and names the first row with an empty text cell.
 
@@ -66,7 +66,7 @@ Each String in the `resource_grid` API is one column of the table (the New Data 
 | `name` | A text column named `name` (plain words = String). |
 | `weight: float` | A number column (decimals). `int` gives whole numbers, `bool` gives checkboxes, `String` is explicit text. |
 | `kind: coin\|gem\|key` | A **dropdown** column - each row picks one of the listed choices. Spaces around the `\|` are forgiven. |
-| `tint: color` | Any other hint after the colon passes through as-is, for column types the shorthand does not name. |
+| `tint: color` | Any other hint after the colon passes through as-is, for column types the shorthand does not name (`icon: texture` is a picture column holding a `res://` path). |
 
 Some worked examples, straight from shipped resources:
 
@@ -529,7 +529,7 @@ sheet.variables["drops"] = EventSheets.resource_grid(
 	{"tooltip": "One drop per row.", "group": "Loot", "required": true})
 ```
 
-- **`columns`**: an Array of String phrases (`"name"`, `"weight: float"`, `"kind: coin|gem|key"`) or pass-through Dictionaries (`{"name": ..., "type": ...}`) for column types the shorthand does not cover.
+- **`columns`**: an Array of String phrases (`"name"`, `"weight: float"`, `"kind: coin|gem|key"`) or pass-through Dictionaries (`{"name": ..., "type": ...}`) for column types the shorthand does not cover. A Dictionary can also carry the column's own `"default"` (the text a new row starts with) and `"about"` (its Description).
 - **`options`** (all optional): `tooltip` (String), `group` (String), `required` (bool).
 - **Returns** a full variable descriptor - `{"type": "Array", "default": [], "exported": true, "attributes": {...}}` - ready to drop into `EventSheetResource.variables` under the grid's name.
 

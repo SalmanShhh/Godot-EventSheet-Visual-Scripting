@@ -43,7 +43,7 @@ const SEPARATOR_OPTIONS: Array[Dictionary] = [
 ## keys, which is what the translator sweep and "Export Text for Translation…" pick up; dropping it
 ## to "String" on the way in (as this list did while it had no entry for it) makes that declaration
 ## unreachable and silently turns the sweep's grid half off.
-const CELL_TYPES: Array[String] = ["String", "key", "int", "float", "bool", "enum", "color"]
+const CELL_TYPES: Array[String] = ["String", "key", "int", "float", "bool", "enum", "color", "texture"]
 
 # ── Column schemas ───────────────────────────────────────────────────────────
 
@@ -60,7 +60,7 @@ static func columns_from_resource(resource: Resource, property_name: String) -> 
 		if str(hint.get("drawer", "")) != "table":
 			continue
 		var args: Array = hint.get("args", []) if hint.get("args") is Array else []
-		return EventSheetAttributeDrawers.parse_table_columns(str(args[0]) if not args.is_empty() else "")
+		return EventSheetAttributeDrawers.parse_table_columns(str(args[0]) if not args.is_empty() else "", args.slice(1))
 	return []
 
 

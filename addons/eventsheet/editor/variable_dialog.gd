@@ -1064,6 +1064,8 @@ func _collect_attributes(type_name: String) -> Dictionary:
 	if not look_id in ["", "written"]:
 		var folded: Dictionary = EventSheetInspectorLooks.fold(look_id, _look_field_values(look_id), type_name)
 		folded.erase("options")
+		if folded.get("table_columns") is Array:
+			EventSheetInspectorLooks.carry_column_notes(folded["table_columns"], _opened_attributes.get("table_columns"))
 		attributes.merge(folded, true)
 	for level: Array in [["category", _category_edit], ["group", _group_edit], ["subgroup", _subgroup_edit]]:
 		var words: String = (level[1] as LineEdit).text.strip_edges()
