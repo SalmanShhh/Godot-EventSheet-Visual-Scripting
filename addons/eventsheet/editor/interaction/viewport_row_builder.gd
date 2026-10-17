@@ -16626,7 +16626,10 @@ func row_sentence(event_row: EventRow) -> String:
 		clauses.append("If %s" % conditions_clause)
 	if not actions_clause.is_empty():
 		clauses.append(actions_clause)
-	return " - ".join(clauses)
+	# The hover is plain text: a descriptor that emphasises its values (Keep [b]hp[/b] between ...)
+	# drew its tags as letters there.
+	var sentence: String = " - ".join(clauses)
+	return EventSheetBBCodeLite.strip(sentence) if EventSheetBBCodeLite.has_markup(sentence) else sentence
 
 
 func _sentence_head(event_row: EventRow) -> String:

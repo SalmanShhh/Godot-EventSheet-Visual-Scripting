@@ -60,6 +60,22 @@ static func run() -> bool:
 	# 6) a null row is the empty string (never crashes the tooltip)
 	ok = _check("null row → empty sentence", builder.row_sentence(null), "") and ok
 
+	# 7) a descriptor that emphasises its values reads as plain words, never as [b] tags
+	var words_registry: EventSheetACERegistry = EventSheetACERegistry.new()
+	var no_sources: Array[Object] = []
+	words_registry.refresh_from_sources(no_sources, true)
+	viewport.set_ace_registry(words_registry)
+	var e7: EventRow = EventRow.new()
+	e7.trigger_id = "OnProcess"
+	var keep: ACEAction = ACEAction.new()
+	keep.provider_id = "Core"
+	keep.ace_id = "KeepBetween"
+	keep.params = {"var_name": "hp", "low": "0", "high": "100"}
+	e7.actions.append(keep)
+	var s7: String = builder.row_sentence(e7)
+	ok = _check("an emphasised descriptor reads as plain words", [s7.contains("hp"), s7.contains("[b]"), s7.contains("[i]")],
+		[true, false, false]) and ok
+
 	return ok
 
 
