@@ -35,6 +35,8 @@
 class_name EventSheetRenameReceipt
 extends RefCounted
 
+const SAVE_CHOICES := preload("res://addons/eventforge/compiler/save_choices.gd")
+
 var _dock: Node = null
 var _dialog: AcceptDialog = null
 var _name_edit: LineEdit = null
@@ -57,6 +59,11 @@ var _finding: Dictionary = {}
 var _includers: PackedStringArray = PackedStringArray()
 var _includers_card: Control = null
 var _includers_list: ItemList = null
+## Shown when the variable has a Save choice: what the rename does to values players already saved,
+## and the one-time fallback read that keeps them loading.
+var _saved_box: Control = null
+var _saved_note: EventSheetPopupUI.StateNote = null
+var _keep_old: CheckBox = null
 
 
 func init(dock: Node) -> void:
@@ -74,6 +81,7 @@ func open(function_name: String, typed: String = "") -> void:
 	_finding = {}
 	_elsewhere = elsewhere_for(_old_name, str(_dock._current_sheet_path))
 	_build_dialog()
+	_keep_old.button_pressed = false
 	_name_edit.editable = true
 	_name_edit.text = typed if not typed.is_empty() else _old_name
 	_fill()
@@ -205,6 +213,16 @@ static func summary_text(here: int, others: Array[Dictionary],
 		" · ".join(names), rows, others.size(), here] + written
 
 
+## What renaming `old_name` does to values players already saved, in plain words - or "" when it has no
+## Save choice that reads a value back (Never and Save only lose nothing). Players' values are stored
+## under the variable's name, so the new name finds nothing until it is saved again.
+static func left_behind_text(sheet: EventSheetResource, old_name: String) -> String:
+	for variable: Dictionary in SAVE_CHOICES.variables_of(sheet):
+		if variable["name"] == old_name and str(variable["choice"]) in ["auto", "load", "manual"]:
+			return EventSheetL10n.translate("Values players already saved under %s will not load after the rename: their save files keep them under the old name.") % old_name
+	return ""
+
+
 ## THE EDIT, through the one rename writer the inline name fields use too: one undoable step over
 ## this sheet - the declaration and every row that says the name - and then the shipped includers
 ## pass, which rewrites and saves the closed sheets that include this one. Nothing outside those is
@@ -217,7 +235,12 @@ func confirm() -> void:
 		_point_the_nodes(_name_edit.text.strip_edges())
 		return
 	var new_name: String = _name_edit.text.strip_edges()
-	if _dock._rename.rename_everywhere(_old_name, new_name):
+	var old_name: String = _old_name
+	# Kept inside the rename's own edit, so one Ctrl+Z takes back the name and the fallback together.
+	var keep_old: Callable = func() -> void:
+		SAVE_CHOICES.keep_loading(_dock._current_sheet, new_name, "", old_name)
+	if _dock._rename.rename_everywhere(_old_name, new_name,
+			keep_old if _saved_box.visible and _keep_old.button_pressed else Callable()):
 		_dock._rename.show_done(_old_name, new_name)
 
 
@@ -267,6 +290,15 @@ func _build_dialog() -> void:
 		EventSheetL10n.translate("Also written, and saved - these sheets include this one, so Ctrl+Z here does not undo them"),
 		_includers_list)
 	content.add_child(_includers_card)
+	var saved_column: VBoxContainer = VBoxContainer.new()
+	_saved_note = EventSheetPopupUI.StateNote.new()
+	saved_column.add_child(_saved_note)
+	_keep_old = CheckBox.new()
+	_keep_old.text = EventSheetL10n.translate("Keep loading the old name")
+	_keep_old.tooltip_text = EventSheetL10n.translate("The save code reads the old name once, while the new name has nothing saved yet. It is plain code at the end of the script.")
+	saved_column.add_child(_keep_old)
+	_saved_box = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Saved values"), saved_column)
+	content.add_child(_saved_box)
 	_strip = EventSheetPopupUI.help_strip()
 	content.add_child(_strip)
 	EventSheetL10n.apply_to(_dialog)
@@ -299,6 +331,10 @@ func _fill() -> void:
 			EventSheetProjectFind.list_project_sheets())
 	draw_includers(_includers)
 	_summary_label.text = summary_text(lines.size(), _elsewhere, _includers)
+	# Only a typed rename of this sheet's own variable: the outside-rename door already happened.
+	var left_behind: String = "" if not _finding.is_empty() else left_behind_text(_dock._current_sheet, _old_name)
+	_saved_note.say(left_behind, EventSheetPopupUI.TONE_WARNING)
+	_saved_box.visible = not left_behind.is_empty()
 	# A node reference is not an identifier, so the identifier rules are not the ones that decide it:
 	# what makes that gesture legal is the evidence behind it, which was decided before the door
 	# appeared. Only a typed rename is held to the sheet's own naming rules.

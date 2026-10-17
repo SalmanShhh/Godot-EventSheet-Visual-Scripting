@@ -9328,3 +9328,13 @@ Nothing to point at in this trail.,Rien à signaler dans ce parcours.
 No change of state in this run yet.,Pas encore de changement d'état dans cette exécution.
 "%d catalogs here were made by hand, so nothing was written to them: %s.","%d catalogues ici ont été faits à la main, donc rien n'y a été écrit : %s."
 This variable lives in %s; open that file to end its group.,Cette variable se trouve dans %s ; ouvrez ce fichier pour terminer son groupe.
+Values players already saved under %s will not load after the rename: their save files keep them under the old name.,Les valeurs que les joueurs ont déjà enregistrées sous %s ne seront pas chargées après le renommage : leurs fichiers de sauvegarde les gardent sous l'ancien nom.
+Keep loading the old name,Continuer à charger l'ancien nom
+"The save code reads the old name once, while the new name has nothing saved yet. It is plain code at the end of the script.","Le code de sauvegarde lit l'ancien nom une fois, tant que rien n'est encore enregistré sous le nouveau nom. C'est du code simple à la fin du script."
+Saved values,Valeurs enregistrées
+Update to Auto,Passer en Automatique
+%s now use the Auto Save choice - values players already saved keep loading.,%s utilisent maintenant le choix de sauvegarde Automatique - les valeurs déjà enregistrées par les joueurs continuent de se charger.
+Remembered (older style),Mémorisé (ancien style)
+Loaded and saved every run by the Remember Between Runs code an older version wrote. Update to Auto to choose its Save here.,Chargé et enregistré à chaque lancement par le code Se souvenir entre les lancements qu'une ancienne version a écrit. Passez en Automatique pour choisir sa sauvegarde ici.
+"An older version wrote code into this script that saves %s. Update to Auto turns that code into the Auto Save choice in one step (Ctrl+Z undoes it), with the same file and names, so values players already saved keep loading.","Une ancienne version a écrit dans ce script du code qui enregistre %s. Passer en Automatique transforme ce code en choix de sauvegarde Automatique en une seule étape (Ctrl+Z l'annule), avec le même fichier et les mêmes noms, donc les valeurs déjà enregistrées par les joueurs continuent de se charger."
+Values players already saved for %s will not load after the rename: their save files keep them under %s.,Les valeurs que les joueurs ont déjà enregistrées pour %s ne seront pas chargées après le renommage : leurs fichiers de sauvegarde les gardent sous %s.

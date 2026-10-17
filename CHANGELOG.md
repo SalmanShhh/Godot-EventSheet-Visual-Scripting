@@ -43,6 +43,27 @@
   the same items. The whole sentence stays on the strip's hover, and widening the dock puts the
   counts and the doors back.
 
+### Added: values players already saved keep loading through a rename and an update
+
+- Renaming a variable that has a Save choice (Auto, Load only or Manually) says in the Rename window
+  that values players already saved under the old name will not load, and offers Keep loading the
+  old name. Ticked, the generated block reads the old key once, while the new one has nothing saved
+  yet, inside the rename's own undo step:
+  `score = __remember_cfg.get_value("Player", "score", __remember_cfg.get_value("Player", "points", score))`,
+  and Load Game reads the old key the same way. Renaming the class says the same for its Auto and
+  Load only variables, whose section is the class name, and offers the same box. The stored keys do
+  not change; the line is plain code, reopens as the same choice and saves byte for byte.
+- The Project Doctor warns when two scripts without a `class_name` save a same-named variable into
+  the shared `"vars"` section of `user://remembered.cfg`, where they overwrite each other's value. The
+  fix it names is giving the script a `class_name`, and it says what that costs: values already saved
+  under `"vars"` stop loading for that script unless Keep loading the old name is ticked.
+- A script an older version wrote with Remember Between Runs (`_ef_recall_remembered`,
+  `_ef_store_remembered` and `__ef_remember_boot`) shows those variables in the Save studio as
+  Remembered (older style) instead of Never, with Update to Auto. Nothing changes until it is pressed;
+  then the three are rewritten as the Auto block in one undo step, with the same file and keys, so
+  values the old code saved load through the new block. A section the class has since left is kept
+  loading.
+
 ### Fixed: Insert keeps Godot's whole Recent list, and four smaller edges
 
 - Insert new object put its class first in Godot's own Create New Node Recent list and then kept

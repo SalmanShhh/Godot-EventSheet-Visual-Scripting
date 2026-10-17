@@ -11,6 +11,9 @@
 #   stored on leaving, never loaded        -> Save only
 #   only in save_state()/load_state()      -> Manual
 #
+# A load that falls back to reading another key is a renamed variable that keeps loading its old name
+# ("saved_as"), so that comes back too.
+#
 # Then the whole file is compiled again and compared byte for byte with what was opened. Anything a
 # person changed in the block - or a save_state() they wrote themselves, which never carries the
 # block's doc line - fails that comparison or is never cut, and stays the code it is.
@@ -31,7 +34,27 @@ static func cut(source: String) -> Dictionary:
 	var choices: Dictionary = read_choices(source.substr(at + marker.length()))
 	if choices.is_empty():
 		return {}
-	return {"prefix": source.substr(0, at) + "\n", "choices": choices}
+	return {"prefix": source.substr(0, at) + "\n", "choices": choices,
+		"saved_as": read_saved_as(source.substr(at + marker.length()))}
+
+
+## {name: {"section", "key"}} for every variable the block keeps loading an older name for: a load
+## whose default is a read of another key - in user://remembered.cfg ("" section when it is the
+## variable's own) or in the state load_state() is handed.
+static func read_saved_as(block: String) -> Dictionary:
+	var found: Dictionary = {}
+	var cfg_read: RegEx = RegEx.create_from_string("^\\t\\t(\\w+) = __remember_cfg\\.get_value\\(\"([^\"]*)\", \"\\w+\", __remember_cfg\\.get_value\\(\"([^\"]*)\", \"(\\w+)\", ")
+	var state_read: RegEx = RegEx.create_from_string("^\\t(\\w+)\\W.*state\\.get\\(\"\\w+\", state\\.get\\(\"(\\w+)\", ")
+	for line: String in block.split("\n"):
+		var cfg: RegExMatch = cfg_read.search(line)
+		if cfg != null:
+			found[cfg.get_string(1)] = {"section": "" if cfg.get_string(3) == cfg.get_string(2) else cfg.get_string(3),
+				"key": cfg.get_string(4)}
+			continue
+		var state: RegExMatch = state_read.search(line)
+		if state != null and not found.has(state.get_string(1)):
+			found[state.get_string(1)] = {"section": "", "key": state.get_string(2)}
+	return found
 
 
 ## {name: choice} for every variable the block's save_state() names, in that order. A block written
@@ -84,6 +107,8 @@ static func apply(sheet: EventSheetResource, cut_block: Dictionary, source: Stri
 		before[variable_name] = variable.attributes.duplicate(true)
 		var attributes: Dictionary = variable.attributes.duplicate(true)
 		SaveChoices.set_choice(attributes, str(choices[variable_name]))
+		if (cut_block.get("saved_as", {}) as Dictionary).has(variable_name):
+			attributes[SaveChoices.SAVED_AS] = cut_block["saved_as"][variable_name]
 		variable.attributes = attributes
 	var saved_path: String = sheet.external_source_path
 	sheet.external_source_path = VERIFY_PATH

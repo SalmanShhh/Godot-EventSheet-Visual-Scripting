@@ -9,6 +9,9 @@ extends RefCounted
 # the shipping code - the Save System's backends, Godot's ConfigFile, the Game Settings pack's own
 # rows - so the window cannot drift from what a game really writes.
 #
+# A script that still carries the code an older Remember Between Runs wrote shows those variables as
+# remembered in the older style, with Update to Auto: one undo step, the same file and keys.
+#
 # The seam this window teaches: a node joins a save by exposing `save_state() -> Dictionary` and
 # `load_state(state: Dictionary)`. No base class, no registration - the Save System duck-types it.
 
@@ -33,6 +36,9 @@ const SMALL_PROMPT_PATH: String = "res://addons/eventsheet/editor/small_prompt.g
 const SAVE_CHOICES := preload("res://addons/eventforge/compiler/save_choices.gd")
 ## The Save dropdown's choices in their order; "" is Never, which stores nothing.
 const SAVE_CHOICE_ORDER: PackedStringArray = ["", "auto", "load", "save", "manual"]
+## What an older version wrote for Remember Between Runs: its load and store functions, and the boot
+## member that runs them.
+const OLDER_STYLE: PackedStringArray = ["_ef_recall_remembered", "_ef_store_remembered", "__ef_remember_boot"]
 
 var _dock: Control = null
 var _window: Window = null
@@ -59,6 +65,9 @@ var _settings_views: Array = []
 var _what_object_picker: OptionButton = null
 var _what_rows: GridContainer = null
 var _what_summary: Label = null
+## The offer under the rows when the sheet still carries the older Remember Between Runs code.
+var _older_box: HBoxContainer = null
+var _older_note: Label = null
 var _where_kept: VBoxContainer = null
 
 
@@ -946,7 +955,7 @@ static func _choice_words(choice: String) -> Array:
 ## object references (a Node, a Texture...), which point at things rather than hold state.
 static func savable_variables(sheet: EventSheetResource) -> Array:
 	return SAVE_CHOICES.variables_of(sheet).filter(func(variable: Dictionary) -> bool:
-		return not ClassDB.class_exists(str(variable["type"])))
+		return not ClassDB.class_exists(str(variable["type"])) and str(variable["name"]) != OLDER_STYLE[2])
 
 
 ## The whole saving story of `object_name` in one sentence, from its variables' choices: who comes back
@@ -1004,6 +1013,54 @@ static func set_save_choice(sheet: EventSheetResource, variable_name: String, ch
 	return false
 
 
+## {name: [section, key]} for every variable a script loads through the code an older version wrote for
+## Remember Between Runs: _ef_recall_remembered() and _ef_store_remembered(), run by the boot member
+## __ef_remember_boot. A script written then still carries the three as code, so its variables read
+## as Never here although they come back every run. Empty when the sheet has no such code.
+static func older_style_remembered(sheet: EventSheetResource) -> Dictionary:
+	var found: Dictionary = {}
+	if sheet == null:
+		return found
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction and (entry as EventFunction).function_name == OLDER_STYLE[0]:
+			var read: RegEx = RegEx.create_from_string("(\\w+) = __remember_cfg\\.get_value\\(\"([^\"]*)\", \"(\\w+)\"")
+			for hit: RegExMatch in read.search_all(SheetCompiler.emit_function_block_text(entry, sheet)):
+				found[hit.get_string(1)] = [hit.get_string(2), hit.get_string(3)]
+	return found
+
+
+## Rewrites the older Remember Between Runs code as the Auto Save choice: the three are removed and
+## each variable they loaded is given Auto, whose block reads and writes the same file under the same
+## section and names - so values players already saved keep loading. A variable whose values sit under
+## another section or key (the class was renamed since) keeps loading that one. False when the sheet
+## has none of that code.
+static func update_to_auto(sheet: EventSheetResource) -> bool:
+	var remembered: Dictionary = older_style_remembered(sheet)
+	if remembered.is_empty():
+		return false
+	for index: int in range(sheet.functions.size() - 1, -1, -1):
+		if sheet.functions[index] is EventFunction and OLDER_STYLE.has((sheet.functions[index] as EventFunction).function_name):
+			sheet.functions.remove_at(index)
+	var kept: Array[Resource] = []
+	for row: Resource in sheet.events:
+		if row is FunctionAnchorRow and OLDER_STYLE.has((row as FunctionAnchorRow).function_name):
+			continue
+		if row is LocalVariable and (row as LocalVariable).name == OLDER_STYLE[2]:
+			# The blank line the older code was written after goes with it.
+			if not kept.is_empty() and kept.back() is RawCodeRow and (kept.back() as RawCodeRow).code.is_empty():
+				kept.pop_back()
+			continue
+		kept.append(row)
+	sheet.events = kept
+	var section: String = SAVE_CHOICES.section_of(sheet)
+	for variable_name: String in remembered:
+		set_save_choice(sheet, variable_name, "auto")
+		var stored_at: Array = remembered[variable_name]
+		if stored_at[0] != section or stored_at[1] != variable_name:
+			SAVE_CHOICES.keep_loading(sheet, variable_name, stored_at[0], stored_at[1])
+	return true
+
+
 ## How a sheet is named in the Object picker and the saving line: its class name, else its file's name.
 static func object_name(sheet: EventSheetResource, path: String) -> String:
 	var named: String = sheet.custom_class_name.strip_edges() if sheet != null else ""
@@ -1030,6 +1087,19 @@ func _build_what_tab() -> Control:
 	_what_rows.columns = 4
 	_what_rows.add_theme_constant_override("h_separation", EventSheetPalette.scaled(12))
 	box.add_child(EventSheetPopupUI.panel_section(_what_rows))
+	_older_box = HBoxContainer.new()
+	_older_note = EventSheetPopupUI.hint_label("")
+	_older_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_older_box.add_child(_older_note)
+	var update: Button = _button(EventSheetL10n.translate("Update to Auto"), func() -> void:
+		var names: String = ", ".join(PackedStringArray(older_style_remembered(_dock._current_sheet).keys()))
+		if _dock._perform_undoable_sheet_edit("Update to Auto", func() -> bool:
+				return update_to_auto(_dock._current_sheet)):
+			_dock._mark_dirty(EventSheetL10n.translate("%s now use the Auto Save choice - values players already saved keep loading.") % names)
+		_refresh_what())
+	update.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_older_box.add_child(update)
+	box.add_child(_older_box)
 	_what_summary = _label("", EventSheetPopupUI.text_color())
 	_what_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_what_summary)
@@ -1060,6 +1130,7 @@ func _refresh_what() -> void:
 		child.queue_free()
 	var sheet: EventSheetResource = _dock._current_sheet
 	var variables: Array = savable_variables(sheet)
+	var older: Dictionary = older_style_remembered(sheet)
 	var mono: Font = EventSheetPopupUI.editor_font("doc_source")
 	for variable: Dictionary in variables:
 		# Type and name in the code font, as written; the variable's own description beside them.
@@ -1069,7 +1140,19 @@ func _refresh_what() -> void:
 				label.add_theme_font_override("font", mono)
 			_what_rows.add_child(label)
 		_what_rows.get_child(_what_rows.get_child_count() - 1).size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_what_rows.add_child(_save_choice_dropdown(str(variable["name"]), str(variable["choice"])))
+		if not older.has(variable["name"]):
+			_what_rows.add_child(_save_choice_dropdown(str(variable["name"]), str(variable["choice"])))
+			continue
+		# Loaded and stored every run by the older code, which behaves as Auto: said so, not Never.
+		var remembered: Label = Label.new()
+		remembered.text = EventSheetL10n.translate("Remembered (older style)")
+		remembered.tooltip_text = EventSheetL10n.translate("Loaded and saved every run by the Remember Between Runs code an older version wrote. Update to Auto to choose its Save here.")
+		remembered.mouse_filter = Control.MOUSE_FILTER_PASS
+		remembered.add_theme_color_override("font_color", EventSheetPopupUI.text_color())
+		_what_rows.add_child(remembered)
+		variable["choice"] = "auto"
+	_older_box.visible = not older.is_empty()
+	_older_note.text = EventSheetL10n.translate("An older version wrote code into this script that saves %s. Update to Auto turns that code into the Auto Save choice in one step (Ctrl+Z undoes it), with the same file and names, so values players already saved keep loading.") % ", ".join(PackedStringArray(older.keys()))
 	_what_summary.text = saving_line(object_name(sheet, _dock._current_sheet_path), variables) if sheet != null \
 		else EventSheetL10n.translate("Open a sheet to choose what it saves.")
 	_fill_where_kept()

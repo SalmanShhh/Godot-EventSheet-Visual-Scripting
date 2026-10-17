@@ -9328,3 +9328,13 @@ Nothing to point at in this trail.,No hay nada que señalar en este rastro.
 No change of state in this run yet.,Todavía no hay ningún cambio de estado en esta ejecución.
 "%d catalogs here were made by hand, so nothing was written to them: %s.","%d catálogos de aquí se hicieron a mano, así que no se escribió nada en ellos: %s."
 This variable lives in %s; open that file to end its group.,Esta variable vive en %s; abre ese archivo para terminar su grupo.
+Values players already saved under %s will not load after the rename: their save files keep them under the old name.,Los valores que los jugadores ya guardaron con el nombre %s no se cargarán tras el cambio de nombre: sus archivos de guardado los conservan con el nombre antiguo.
+Keep loading the old name,Seguir cargando el nombre antiguo
+"The save code reads the old name once, while the new name has nothing saved yet. It is plain code at the end of the script.","El código de guardado lee el nombre antiguo una vez, mientras el nombre nuevo aún no tenga nada guardado. Es código simple al final del script."
+Saved values,Valores guardados
+Update to Auto,Pasar a Automático
+%s now use the Auto Save choice - values players already saved keep loading.,%s usan ahora la opción de guardado Automático - los valores que los jugadores ya guardaron se siguen cargando.
+Remembered (older style),Recordado (estilo antiguo)
+Loaded and saved every run by the Remember Between Runs code an older version wrote. Update to Auto to choose its Save here.,Lo carga y guarda en cada ejecución el código de Recordar entre ejecuciones que escribió una versión anterior. Pasa a Automático para elegir aquí cómo se guarda.
+"An older version wrote code into this script that saves %s. Update to Auto turns that code into the Auto Save choice in one step (Ctrl+Z undoes it), with the same file and names, so values players already saved keep loading.","Una versión anterior escribió en este script código que guarda %s. Pasar a Automático convierte ese código en la opción de guardado Automático en un solo paso (Ctrl+Z lo deshace), con el mismo archivo y los mismos nombres, así que los valores que los jugadores ya guardaron se siguen cargando."
+Values players already saved for %s will not load after the rename: their save files keep them under %s.,Los valores que los jugadores ya guardaron para %s no se cargarán tras el cambio de nombre: sus archivos de guardado los conservan en %s.

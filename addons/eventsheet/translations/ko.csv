@@ -9328,3 +9328,13 @@ Nothing to point at in this trail.,이 기록에서 짚을 것이 없습니다.
 No change of state in this run yet.,이번 실행에서는 아직 상태 변화가 없습니다.
 "%d catalogs here were made by hand, so nothing was written to them: %s.","%d개의 카탈로그는 직접 만든 것이라 아무것도 쓰지 않았습니다: %s."
 This variable lives in %s; open that file to end its group.,이 변수는 %s에 있습니다. 그룹을 끝내려면 그 파일을 여세요.
+Values players already saved under %s will not load after the rename: their save files keep them under the old name.,플레이어가 %s 이름으로 이미 저장한 값은 이름을 바꾼 뒤에는 불러오지 않습니다. 저장 파일에는 옛 이름으로 남아 있습니다.
+Keep loading the old name,옛 이름도 계속 불러오기
+"The save code reads the old name once, while the new name has nothing saved yet. It is plain code at the end of the script.",새 이름에 아직 저장된 것이 없는 동안 저장 코드가 옛 이름을 한 번 읽습니다. 스크립트 끝에 있는 평범한 코드입니다.
+Saved values,저장된 값
+Update to Auto,자동으로 업데이트
+%s now use the Auto Save choice - values players already saved keep loading.,변수 %s: 이제 저장 선택 '자동'을 사용합니다 - 플레이어가 이미 저장한 값은 계속 불러옵니다.
+Remembered (older style),기억됨 (이전 방식)
+Loaded and saved every run by the Remember Between Runs code an older version wrote. Update to Auto to choose its Save here.,이전 버전이 작성한 '실행 사이에 기억' 코드가 매 실행마다 불러오고 저장합니다. '자동으로 업데이트'를 누르면 여기서 저장 방식을 고를 수 있습니다.
+"An older version wrote code into this script that saves %s. Update to Auto turns that code into the Auto Save choice in one step (Ctrl+Z undoes it), with the same file and names, so values players already saved keep loading.",이전 버전이 변수 %s의 값을 저장하는 코드를 이 스크립트에 작성했습니다. '자동으로 업데이트'는 그 코드를 한 번에 저장 선택 '자동'으로 바꿉니다 (Ctrl+Z로 되돌릴 수 있음). 파일과 이름이 같으므로 플레이어가 이미 저장한 값은 계속 불러옵니다.
+Values players already saved for %s will not load after the rename: their save files keep them under %s.,플레이어가 %s에 대해 이미 저장한 값은 이름을 바꾼 뒤에는 불러오지 않습니다. 저장 파일에는 %s 아래에 남아 있습니다.

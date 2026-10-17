@@ -561,16 +561,59 @@ static func check_missing_save_support(sheet_paths: PackedStringArray, findings:
 ## accusation, except the string-literal case - which is why the message ends by naming the way out.
 static func check_save_key_symmetry(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	var usage_by_path: Dictionary = {}
+	var shared_by_path: Dictionary = {}
 	for script_path: String in _project_scripts():
 		var source: String = source_of(script_path)
 		if source.is_empty():
 			continue
+		var shared: PackedStringArray = shared_section_keys(source)
+		if not shared.is_empty():
+			shared_by_path[script_path] = shared
 		var usage: Dictionary = save_key_usage(source)
 		if (usage["saved"] as PackedStringArray).is_empty() and (usage["loaded"] as PackedStringArray).is_empty() \
 				and (usage["remembered"] as PackedStringArray).is_empty():
 			continue
 		usage_by_path[script_path] = usage
 	findings.append_array(save_key_findings(usage_by_path))
+	findings.append_array(shared_section_findings(shared_by_path))
+
+
+## The variables a script WITHOUT a class_name saves through its Save choices. Their section in
+## user://remembered.cfg is the class name, and a script with none writes to the one "vars" section
+## every such script shares - so two of them saving a same-named variable overwrite each other's value
+## and each loads whichever was written last. Pure, text in and names out.
+static func shared_section_keys(source: String) -> PackedStringArray:
+	if not source.contains("__remember_cfg.set_value(\"vars\"") or _cached_regex("(?m)^class_name\\s").search(source) != null:
+		return PackedStringArray()
+	var keys: Dictionary = {}
+	_note_save_keys(_without_comment_lines(source), _cached_regex("__remember_cfg\\.set_value\\(\"vars\",\\s*\"([^\"]+)\""), keys)
+	return _sorted_keys(keys)
+
+
+## {script_path: shared_section_keys(source)} in, one warning per project script that shares a name in
+## "vars" with another script out. A pack is never blamed: its author cannot give it a class_name.
+static func shared_section_findings(keys_by_path: Dictionary) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	var paths: Array = keys_by_path.keys()
+	paths.sort()
+	for script_path: String in paths:
+		if script_path.begins_with("res://eventsheet_addons/"):
+			continue
+		var clashes: PackedStringArray = PackedStringArray()
+		var others: PackedStringArray = PackedStringArray()
+		for key: String in keys_by_path[script_path]:
+			for other_path: String in paths:
+				if other_path != script_path and (keys_by_path[other_path] as PackedStringArray).has(key):
+					if not clashes.has(key):
+						clashes.append(key)
+					if not others.has(other_path.get_file()):
+						others.append(other_path.get_file())
+		if clashes.is_empty():
+			continue
+		_add(findings, "warning", "shared-save-section", script_path,
+			"%s also saved by %s: scripts without a class_name share the \"vars\" section of user://remembered.cfg, so they overwrite each other's value. Give the script a class_name - its values then get a section of their own. Values players already saved under \"vars\" stop loading for it, unless Keep loading the old name is ticked when the class is named." % [
+				", ".join(clashes) + (" is" if clashes.size() == 1 else " are"), ", ".join(others)])
+	return findings
 
 
 ## The whole diff as a pure function: {script_path: save_key_usage(source)} in, findings out. The

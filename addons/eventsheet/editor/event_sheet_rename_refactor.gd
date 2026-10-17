@@ -113,8 +113,9 @@ func _regex_rename(regex: RegEx, text: String, new_name: String, counter: Dictio
 ## The full rename: validate, undoably rewrite the open sheet, then rewrite + save every project sheet
 ## whose `includes` lists this one (Replace-in-Project contract: closed sheets save directly, the status
 ## names every touched file). Public because the receipt's button and the inline name fields are the
-## same gesture, and two writers for one promise is how they come to disagree.
-func rename_everywhere(old_name: String, new_name: String) -> bool:
+## same gesture, and two writers for one promise is how they come to disagree. `also` runs inside the
+## same edit after the rename, so one Ctrl+Z takes back both.
+func rename_everywhere(old_name: String, new_name: String, also: Callable = Callable()) -> bool:
 	if _dock._current_sheet == null:
 		return false
 	var problem: String = EventSheetRefactor.validate_new_name(_dock._current_sheet, old_name, new_name)
@@ -125,6 +126,8 @@ func rename_everywhere(old_name: String, new_name: String) -> bool:
 	var renamed: bool = _dock._perform_undoable_sheet_edit(
 		EventSheetL10n.translate("Rename %s") % old_name, func() -> bool:
 			moved[0] = EventSheetRefactor.rename_symbol(_dock._current_sheet, old_name, new_name)
+			if moved[0] > 0 and also.is_valid():
+				also.call()
 			return moved[0] > 0)
 	if not renamed:
 		_dock._set_status(EventSheetL10n.translate("\"%s\" appears nowhere in this sheet.") % old_name, true)

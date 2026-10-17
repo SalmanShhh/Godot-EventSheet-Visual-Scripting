@@ -14,6 +14,9 @@ extends RefCounted
 # anywhere but in the file (and, for a `.tres` sheet whose prelude the compiler writes, in the
 # matching sheet field), so a band can never disagree with the line it echoes.
 
+## Loaded only when a class rename asks, so opening a sheet never reads it.
+const SAVE_CHOICES_PATH: String = "res://addons/eventforge/compiler/save_choices.gd"
+
 var _dock: Control = null
 var _add_menu: PopupMenu = null
 var _file_menu: PopupMenu = null
@@ -251,16 +254,35 @@ func open_class_rename(current: String = "", seed: String = "", on_rename: Calla
 		current = _current_class_name()
 	var edit: LineEdit = LineEdit.new()
 	edit.text = seed if not seed.is_empty() else current
+	var body: VBoxContainer = VBoxContainer.new()
+	body.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Class name"), edit))
+	# The class name is the section its saved variables live under, so renaming it moves them. Only the
+	# plain class rename offers the fallback: a form with its own `on_rename` writes its own edit.
+	var old_section: String = current if not current.is_empty() else "vars"
+	var moved_values: PackedStringArray = PackedStringArray() if on_rename.is_valid() else values_under_section(_dock._current_sheet)
+	var keep_old: CheckBox = null
+	if not moved_values.is_empty():
+		var note: EventSheetPopupUI.StateNote = EventSheetPopupUI.StateNote.new()
+		note.say(class_left_behind_text(moved_values, old_section), EventSheetPopupUI.TONE_WARNING)
+		body.add_child(note)
+		keep_old = CheckBox.new()
+		keep_old.text = EventSheetL10n.translate("Keep loading the old name")
+		keep_old.tooltip_text = EventSheetL10n.translate("The save code reads the old name once, while the new name has nothing saved yet. It is plain code at the end of the script.")
+		body.add_child(keep_old)
 	_rename_dialog = load(_dock.SMALL_PROMPT_PATH).open(_dock, {
 		# The walk reads every script in the project, so the question shows first and the places
 		# follow a frame later - a big project never stalls the click.
 		"list": [[EventSheetL10n.translate("Looking for every place it is used..."), ""]],
-		"body": EventSheetPopupUI.form_row(EventSheetL10n.translate("Class name"), edit),
+		"body": body,
 		"note": class_rename_note(),
 		"main": EventSheetL10n.translate("Rename"),
 		"on_main": func() -> void:
 			if on_rename.is_valid():
 				on_rename.call(edit.text.strip_edges())
+			elif keep_old != null and keep_old.button_pressed:
+				apply_class_rename_to(edit.text, "Rename Class", func() -> void:
+					for variable_name: String in moved_values:
+						load(SAVE_CHOICES_PATH).keep_loading(_dock._current_sheet, variable_name, old_section, variable_name))
 			else:
 				apply_class_rename_to(edit.text),
 	})
@@ -272,6 +294,22 @@ func open_class_rename(current: String = "", seed: String = "", on_rename: Calla
 			CONNECT_ONE_SHOT)
 		edit.grab_focus()
 		edit.select_all()
+
+
+## The variables of `sheet` that load from the class's own section of user://remembered.cfg (Save choice
+## Auto or Load only) - the ones whose players' values a class rename leaves under the old name.
+static func values_under_section(sheet: EventSheetResource) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	for variable: Dictionary in load(SAVE_CHOICES_PATH).variables_of(sheet):
+		if str(variable["choice"]) in ["auto", "load"]:
+			names.append(str(variable["name"]))
+	return names
+
+
+## What a class rename does to values players already saved, in plain words.
+static func class_left_behind_text(names: PackedStringArray, old_section: String) -> String:
+	return EventSheetL10n.translate("Values players already saved for %s will not load after the rename: their save files keep them under %s.") % [
+		", ".join(names), old_section]
 
 
 ## What Ctrl+Z reaches after a class rename: only this sheet's edit is an undo step. Other open tabs

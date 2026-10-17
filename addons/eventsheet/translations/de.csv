@@ -9328,3 +9328,13 @@ Nothing to point at in this trail.,In dieser Spur gibt es nichts hervorzuheben.
 No change of state in this run yet.,In diesem Lauf noch kein Zustandswechsel.
 "%d catalogs here were made by hand, so nothing was written to them: %s.","%d Kataloge hier wurden von Hand erstellt, daher wurde nichts in sie geschrieben: %s."
 This variable lives in %s; open that file to end its group.,"Diese Variable steht in %s; öffne diese Datei, um ihre Gruppe zu beenden."
+Values players already saved under %s will not load after the rename: their save files keep them under the old name.,"Werte, die Spieler bereits unter %s gespeichert haben, werden nach dem Umbenennen nicht geladen: Ihre Speicherdateien führen sie unter dem alten Namen."
+Keep loading the old name,Den alten Namen weiter laden
+"The save code reads the old name once, while the new name has nothing saved yet. It is plain code at the end of the script.","Der Speichercode liest den alten Namen einmal, solange unter dem neuen Namen noch nichts gespeichert ist. Es ist einfacher Code am Ende des Skripts."
+Saved values,Gespeicherte Werte
+Update to Auto,Auf Automatisch umstellen
+%s now use the Auto Save choice - values players already saved keep loading.,%s verwenden jetzt die Speicherwahl Automatisch - bereits von Spielern gespeicherte Werte werden weiter geladen.
+Remembered (older style),Gemerkt (ältere Art)
+Loaded and saved every run by the Remember Between Runs code an older version wrote. Update to Auto to choose its Save here.,"Wird bei jedem Lauf vom Code geladen und gespeichert, den eine ältere Version für Zwischen Läufen merken geschrieben hat. Auf Automatisch umstellen, um die Speicherwahl hier zu treffen."
+"An older version wrote code into this script that saves %s. Update to Auto turns that code into the Auto Save choice in one step (Ctrl+Z undoes it), with the same file and names, so values players already saved keep loading.","Eine ältere Version hat Code in dieses Skript geschrieben, der %s speichert. Auf Automatisch umstellen macht diesen Code in einem Schritt zur Speicherwahl Automatisch (Strg+Z macht es rückgängig), mit derselben Datei und denselben Namen, sodass bereits von Spielern gespeicherte Werte weiter geladen werden."
+Values players already saved for %s will not load after the rename: their save files keep them under %s.,"Werte, die Spieler bereits für %s gespeichert haben, werden nach dem Umbenennen nicht geladen: Ihre Speicherdateien führen sie unter %s."

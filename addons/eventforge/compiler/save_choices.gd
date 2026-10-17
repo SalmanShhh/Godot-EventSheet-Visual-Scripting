@@ -26,6 +26,16 @@
 # the old Remember Between Runs used (user://remembered.cfg, the class name or "vars"), so a game that
 # remembered values before keeps them.
 #
+# A variable renamed after players saved it - or a class renamed, which moves its section - can keep
+# loading the name it had: its attribute "saved_as" ({"section": "" for its own, "key": the old name})
+# turns the read into a one-time fallback, plain code as ever:
+#
+#     score = __remember_cfg.get_value("Player", "score", __remember_cfg.get_value("Player", "points", score))
+#     score = int(state.get("score", state.get("points", score)))
+#
+# The old key is only ever read, never erased: the next store writes the new one, and a "vars" section
+# two scripts share must not lose the other script's value of the same name.
+#
 # Opened again, the block is read back into the choices it came from (importer/save_choice_lift.gd)
 # and byte-gated, so a file written this way reopens and saves byte for byte, and a hand-written
 # save_state()/load_state() is never claimed. DELIBERATELY NO `class_name`: the compiler and the
@@ -45,6 +55,8 @@ const DECLARES: PackedStringArray = ["_ef_load_saved", "_ef_store_saved", "_ef_r
 ## The pair Save Game and Load Game call. A sheet that writes its own keeps it: the block then leaves
 ## the pair out and still loads and stores its Auto, Load only and Save only variables.
 const PAIR: PackedStringArray = ["save_state", "load_state"]
+## The attribute naming where a renamed variable's values were saved before: {"section", "key"}.
+const SAVED_AS: String = "saved_as"
 
 
 ## The choice a variable's attributes hold: one of CHOICES, or "" for Never.
@@ -57,16 +69,39 @@ static func choice_of(attributes: Variant) -> String:
 	return "auto" if bool((attributes as Dictionary).get("remember", false)) else ""
 
 
-## Writes `choice` onto `attributes` (Never erases it), dropping the older "remember" spelling.
+## Writes `choice` onto `attributes` (Never erases it), dropping the older "remember" spelling. A
+## choice that never reads a value back (Never, Save only) drops the old name it kept loading too.
 static func set_choice(attributes: Dictionary, choice: String) -> void:
 	attributes.erase("remember")
 	if CHOICES.has(choice):
 		attributes["save"] = choice
 	else:
 		attributes.erase("save")
+	if not choice in ["auto", "load", "manual"]:
+		attributes.erase(SAVED_AS)
 
 
-## The sheet's own variables, in the order they are written, as [{name, type, choice, description}]:
+## Makes `variable_name` on `sheet` keep loading what was saved under `old_key` in `old_section` ("" for
+## its own section): the one-time fallback read the block writes. False when the sheet has no such
+## variable. The newest rename replaces an older one - one name back is the one players last saved.
+static func keep_loading(sheet: EventSheetResource, variable_name: String, old_section: String, old_key: String) -> bool:
+	var was: Dictionary = {"section": old_section, "key": old_key}
+	if sheet.variables.get(variable_name) is Dictionary:
+		var descriptor: Dictionary = sheet.variables[variable_name]
+		var attributes: Dictionary = (descriptor.get("attributes") as Dictionary).duplicate() if descriptor.get("attributes") is Dictionary else {}
+		attributes[SAVED_AS] = was
+		descriptor["attributes"] = attributes
+		return true
+	for entry: Variant in sheet.events:
+		if entry is LocalVariable and (entry as LocalVariable).name == variable_name:
+			var row_attributes: Dictionary = (entry as LocalVariable).attributes.duplicate()
+			row_attributes[SAVED_AS] = was
+			(entry as LocalVariable).attributes = row_attributes
+			return true
+	return false
+
+
+## The sheet's own variables, in the order they are written, as [{name, type, choice, saved_as, description}]:
 ## the sheet variables of a .tres sheet and the top-level variable rows of an opened script. Constants
 ## are left out - there is nothing to save in a value that never changes.
 static func variables_of(sheet: EventSheetResource) -> Array:
@@ -79,14 +114,19 @@ static func variables_of(sheet: EventSheetResource) -> Array:
 			var attributes: Variant = (descriptor as Dictionary).get("attributes")
 			var tooltip: String = str((attributes as Dictionary).get("tooltip", "")) if attributes is Dictionary else ""
 			found.append({"name": str(key), "type": str((descriptor as Dictionary).get("type", "Variant")),
-				"choice": choice_of(attributes),
+				"choice": choice_of(attributes), "saved_as": _saved_as(attributes),
 				"description": tooltip if not tooltip.is_empty() else str((descriptor as Dictionary).get("description", ""))})
 	for entry: Variant in sheet.events:
 		if entry is LocalVariable and not (entry as LocalVariable).is_constant:
 			var variable: LocalVariable = entry as LocalVariable
 			found.append({"name": variable.name, "type": variable.type_name, "choice": choice_of(variable.attributes),
-				"description": variable.description})
+				"saved_as": _saved_as(variable.attributes), "description": variable.description})
 	return found
+
+
+static func _saved_as(attributes: Variant) -> Dictionary:
+	var was: Variant = (attributes as Dictionary).get(SAVED_AS) if attributes is Dictionary else null
+	return was if was is Dictionary else {}
 
 
 ## The ConfigFile section the sheet's values live under: its class name, or "vars".
@@ -138,7 +178,8 @@ static func block_lines(sheet: EventSheetResource, declared: Callable, warnings:
 		lines.append("\tvar __remember_cfg: ConfigFile = ConfigFile.new()")
 		lines.append("\tif __remember_cfg.load(\"%s\") == OK:" % STORE)
 		for variable: Dictionary in loads:
-			lines.append("\t\t%s = __remember_cfg.get_value(\"%s\", \"%s\", %s)" % [variable["name"], section, variable["name"], variable["name"]])
+			lines.append("\t\t%s = __remember_cfg.get_value(\"%s\", \"%s\", %s)" % [variable["name"], section, variable["name"],
+				_or(_cfg_fallback(variable, section), variable["name"])])
 	if not stores.is_empty():
 		lines.append("\ttree_exiting.connect(_ef_store_saved)")
 	lines.append("\treturn true")
@@ -186,26 +227,48 @@ static func seam_entries(fields: Array) -> Dictionary:
 		var var_name: String = str((field as Dictionary).get("name", ""))
 		var var_type: String = str((field as Dictionary).get("type", "Variant"))
 		var key: String = var_name.trim_prefix("_")
+		# A field that keeps loading an older name reads that key when its own is missing.
+		var old_key: String = str(_saved_as(field).get("key", "")).trim_prefix("_")
+		var fallback: String = "" if old_key.is_empty() or old_key == key else "state.get(\"" + old_key + "\", %s)"
 		# A TYPED collection (Array[String], Dictionary[String, int]) refuses a plain assignment of
 		# the untyped collection a loaded state holds, so it is filled in place with assign().
 		var typed_base: String = var_type.get_slice("[", 0) if var_type.ends_with("]") else ""
 		if typed_base == "Array" or typed_base == "Dictionary":
 			save_lines.append("\t\t\"%s\": %s.duplicate(true)," % [key, var_name])
-			load_lines.append("\t%s.assign((state.get(\"%s\", %s) as %s).duplicate(true))" % [var_name, key, var_name, typed_base])
+			load_lines.append("\t%s.assign((state.get(\"%s\", %s) as %s).duplicate(true))" % [var_name, key, _or(fallback, var_name), typed_base])
 			continue
 		match var_type:
 			"Dictionary", "Array":
 				save_lines.append("\t\t\"%s\": %s.duplicate(true)," % [key, var_name])
-				load_lines.append("\t%s = (state.get(\"%s\", %s) as %s).duplicate(true)" % [var_name, key, "{}" if var_type == "Dictionary" else "[]", var_type])
+				load_lines.append("\t%s = (state.get(\"%s\", %s) as %s).duplicate(true)" % [var_name, key,
+					_or(fallback, "{}" if var_type == "Dictionary" else "[]"), var_type])
 			"int", "float", "bool":
 				save_lines.append("\t\t\"%s\": %s," % [key, var_name])
-				load_lines.append("\t%s = %s(state.get(\"%s\", %s))" % [var_name, var_type, key, var_name])
+				load_lines.append("\t%s = %s(state.get(\"%s\", %s))" % [var_name, var_type, key, _or(fallback, var_name)])
 			"String":
 				save_lines.append("\t\t\"%s\": %s," % [key, var_name])
-				load_lines.append("\t%s = str(state.get(\"%s\", %s))" % [var_name, key, var_name])
+				load_lines.append("\t%s = str(state.get(\"%s\", %s))" % [var_name, key, _or(fallback, var_name)])
 			_:
 				save_lines.append("\t\t\"%s\": %s," % [key, var_name])
-				load_lines.append("\t%s = state.get(\"%s\", %s)" % [var_name, key, var_name])
+				load_lines.append("\t%s = state.get(\"%s\", %s)" % [var_name, key, _or(fallback, var_name)])
 	if not save_lines.is_empty():
 		save_lines[save_lines.size() - 1] = save_lines[save_lines.size() - 1].trim_suffix(",")
 	return {"save": save_lines, "load": load_lines}
+
+
+## The read of the older name a variable keeps loading from user://remembered.cfg, with a %s for what
+## it falls back to in turn - or "" when it keeps loading nothing older.
+static func _cfg_fallback(variable: Dictionary, section: String) -> String:
+	var was: Dictionary = _saved_as(variable)
+	var old_section: String = str(was.get("section", ""))
+	var old_key: String = str(was.get("key", ""))
+	if old_section.is_empty():
+		old_section = section
+	if old_key.is_empty() or (old_section == section and old_key == str(variable["name"])):
+		return ""
+	return "__remember_cfg.get_value(\"" + old_section + "\", \"" + old_key + "\", %s)"
+
+
+## `default`, or the fallback read wrapped around it.
+static func _or(fallback: String, default: String) -> String:
+	return default if fallback.is_empty() else fallback % default
