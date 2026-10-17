@@ -133,11 +133,13 @@
 - Change Type Everywhere on a variable written with no type (`var target = null`) or an inferred one
   (`var slot := 0`) writes the new type into the declaration. It used to leave the line as it was,
   so the file reopened as the old type.
-- OK on the variable window of a line written with no type and code for its value, changing
-  nothing, leaves the line as it was. `@export var tint = Color.WHITE` opened as Any type, whose
-  field reads as text, so OK wrote `@export var tint: Variant = "Color.WHITE"` - a String where the
-  file had a Color. The value stays code, and Write the type in code starts unticked, as the file
-  has it.
+- OK on a variable's window, changing nothing, leaves its line as the file wrote it. It used to
+  rewrite it in the window's own words, and some of them changed what the line meant:
+  `@export var tint = Color.WHITE` became `@export var tint: Variant = "Color.WHITE"` (a String),
+  `var target = null` became `var target = ""`, `const SAVE_FILE := "..."` became a `var`, a
+  trailing `# comment` after the value went, `"exp", "hide_slider"` lost `"hide_slider"`, and
+  `@export_range(0, 100)`, `1e3`, `.5` and `Vector2(1, 2)` gained a step, digits or decimals.
+  Write the type in code starts unticked on a line written without one.
 - "Use the file on disk" only loads the file once the unsaved version is in Sheet Backups, as the
   question promises; when that backup cannot be written, the edits stay and the status says why.
 - `tests/fixtures/existing_project_large/` holds five more hand-written scripts in the shapes a grown

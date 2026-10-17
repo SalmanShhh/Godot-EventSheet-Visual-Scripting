@@ -210,6 +210,8 @@ var _refusal_field: String = ""
 ## The attributes the variable opened with. A key no field of this window edits (a section's end
 ## line, which side of its section lines the `##` sat) rides through a save untouched.
 var _opened_attributes: Dictionary = {}
+## The look the window opened on and its detail values, so a look nobody touched keeps its keys.
+var _opened_look: Array = ["", {}]
 ## The detail values typed per look, keyed "look|field", so switching looks and back loses nothing.
 var _look_values: Dictionary = {}
 ## An annotation the file wrote that no look reads (kept verbatim while "As written" is the look).
@@ -1072,6 +1074,12 @@ func _collect_attributes(type_name: String) -> Dictionary:
 		if folded.get("table_columns") is Array:
 			EventSheetInspectorLooks.carry_column_notes(folded["table_columns"], _opened_attributes.get("table_columns"))
 		attributes.merge(folded, true)
+	# The look it opened with, its details untouched: the keys it opened with keep the file's own
+	# spelling (a step left to Godot, `"exp", "hide_slider"` together) over the look's rebuild of them.
+	if look_id == str(_opened_look[0]) and _look_field_values(look_id) == _opened_look[1]:
+		for key: String in EventSheetInspectorLooks.look_keys():
+			if _opened_attributes.has(key):
+				attributes[key] = _opened_attributes[key]
 	for level: Array in [["category", _category_edit], ["group", _group_edit], ["subgroup", _subgroup_edit]]:
 		var words: String = (level[1] as LineEdit).text.strip_edges()
 		if not words.is_empty():
@@ -1188,6 +1196,7 @@ func open_for_edit(
 	_type_search.text = ""
 	_select_stored_type(type_name)
 	_show_value(_default_display_text(default_value))
+	_context["opened_words"] = _default_edit.text
 	_const_check.set_pressed_no_signal(is_constant)
 	# A row placed among the events can be written with or without its type; the tick says which, and
 	# names the type it writes. A sheet-level variable always writes one, so it is not asked.
@@ -1230,6 +1239,7 @@ func open_for_edit(
 	_refresh_looks()
 	_select_look("written" if not _export_hint.is_empty() and str(unfolded[0]).is_empty() else str(unfolded[0]))
 	_rebuild_look_details()
+	_opened_look = [_selected_look_id(), _look_field_values(_selected_look_id())]
 	_refresh_sync_option()
 	_type_option.disabled = lock_type
 	_apply_onready_state(_onready_check.button_pressed)
@@ -1312,6 +1322,12 @@ func _on_confirmed() -> void:
 	var value_is_code: bool = _current_value_kind() in CODE_KINDS and not _value_text().is_empty()
 	var empty_code: bool = _current_value_kind() in CODE_KINDS and not value_is_code
 	var default_value: Variant = _value_text() if value_is_code else (null if empty_code else _parse_default(type_name, _value_text()))
+	# A value nobody touched keeps the file's own spelling (`null`, `1e3`, `Vector2(1, 2)`,
+	# `1.5 # seconds`) rather than the window's reading of it, which can differ in more than looks.
+	if editing_resource is LocalVariable and type_name == (editing_resource as LocalVariable).type_name \
+			and _default_edit.text == str(_context.get("opened_words", "")):
+		value_is_code = (editing_resource as LocalVariable).expression_default
+		default_value = (editing_resource as LocalVariable).default_value
 	var attributes: Dictionary = _collect_attributes(type_name)
 	var look_id: String = _selected_look_id()
 	var combo_options: PackedStringArray = PackedStringArray()
@@ -2001,4 +2017,12 @@ func _refresh_const_ui() -> void:
 
 
 func _supports_constant(type_name: String) -> bool:
-	return type_name != "Variant"
+	return constant_allowed(type_name, _context.get("variable_resource"))
+
+
+## Whether a variable of `type_name` can be a constant. Any type rules out only a typed `: Variant`
+## constant: one the file wrote inferred (`const SAVE_FILE := "user://save.cfg"`) is a constant all
+## the same, and the window keeps it one.
+static func constant_allowed(type_name: String, row: Variant) -> bool:
+	return type_name != "Variant" or (row is LocalVariable and (row as LocalVariable).is_constant
+		and (row as LocalVariable).inferred_type)

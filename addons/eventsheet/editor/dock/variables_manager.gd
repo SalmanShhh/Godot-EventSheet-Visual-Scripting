@@ -505,7 +505,7 @@ func _on_variable_dialog_confirmed(
 	var editing: bool = bool(context.get("editing", false))
 	var action_verb: String = "Updated" if editing else "Added"
 	var message := {"text": ""}
-	var supports_const: bool = _variable_type_supports_const(type_name)
+	var supports_const: bool = VariableDialog.constant_allowed(type_name, context.get("variable_resource"))
 	var resolved_constant: bool = is_constant and supports_const
 	var added: bool = _dock._perform_undoable_sheet_edit("Create Variable", func() -> bool:
 		if scope == "tree":

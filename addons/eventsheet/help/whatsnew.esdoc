@@ -6,6 +6,24 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Fixed: a name stays as written in a window's table, and the last English lines are translated
+
+- A window's table translated its cells, so in a Japanese editor the Debugger listed an object
+  called Player as プレイヤー and one called targets as 対象. A table's cells are never translated
+  now (its column titles are), and the sentences that sat in one say themselves in the editor's
+  language: the Debugger's empty tabs and trail notes, Loose Ends' kind headings.
+- The Words page's preset names and column heads, Compare With's Last save / Backup entries and the
+  Welcome window's Preferences card read in the editor's language.
+
+### Fixed: the Theme Editor's preview reads, and two windows keep their foot in place
+
+- The Theme Editor's sample sheet wrapped every condition a letter a line (\"Ev / ery / tic / k\")
+  in a 560 px preview; the window opens wider and gives the preview 720 px.
+- A plain window measures what it holds a moment after it shows, once its labels have wrapped: the
+  Debugger otherwise grew three screens tall from the first layout's one-word-a-line guess.
+- Import event sheet keeps its strip and buttons at the window's foot instead of floating under the
+  cards with the rest of the window blank.
+
 ### Added: a data table column has its own Default and Description, and a Texture kind
 
 - New Data Table's column panel gives the selected column a **Default** (what a new row starts with
@@ -21,6 +39,17 @@ What changed in the build you have installed (v0.18.0), in the words the release
   sheet keeps them byte for byte, and the variable window's Columns field keeps them too.
 - The Inspector table's headers read each column's name as the code writes it (`max_jumps`, no
   longer Max Jumps).
+### Fixed: the windows the canvas build touched speak the editor's language
+
+- Opened in a German or Japanese editor, Sheet Type, the Welcome window and the tour, Compare With,
+  Loose Ends, Manage Includes, the sheet map's count, Custom ACE Providers, Sheet Backups' restore,
+  Generate, the Compare dialog's help, the shortcut and fixed-key names, the Words page's left
+  column and descriptions, the region editor's fields, Split Scene Into Chunks and Export Mod
+  Template read in English: their sentences were never handed to the translation tables, or were
+  set straight from a table with no translate call. About 280 sentences are now translated in all
+  eight languages.
+- An event's hover sentence reads a value-emphasising row as plain words (Keep hp between 0 and
+  100), not as `[b]hp[/b]` tags.
 
 ### Changed: Add behaviour is a shelf of tiles, your own behaviours first
 
@@ -108,11 +137,13 @@ What changed in the build you have installed (v0.18.0), in the words the release
 - Change Type Everywhere on a variable written with no type (`var target = null`) or an inferred one
   (`var slot := 0`) writes the new type into the declaration. It used to leave the line as it was,
   so the file reopened as the old type.
-- OK on the variable window of a line written with no type and code for its value, changing
-  nothing, leaves the line as it was. `@export var tint = Color.WHITE` opened as Any type, whose
-  field reads as text, so OK wrote `@export var tint: Variant = \"Color.WHITE\"` - a String where the
-  file had a Color. The value stays code, and Write the type in code starts unticked, as the file
-  has it.
+- OK on a variable's window, changing nothing, leaves its line as the file wrote it. It used to
+  rewrite it in the window's own words, and some of them changed what the line meant:
+  `@export var tint = Color.WHITE` became `@export var tint: Variant = \"Color.WHITE\"` (a String),
+  `var target = null` became `var target = \"\"`, `const SAVE_FILE := \"...\"` became a `var`, a
+  trailing `# comment` after the value went, `\"exp\", \"hide_slider\"` lost `\"hide_slider\"`, and
+  `@export_range(0, 100)`, `1e3`, `.5` and `Vector2(1, 2)` gained a step, digits or decimals.
+  Write the type in code starts unticked on a line written without one.
 - \"Use the file on disk\" only loads the file once the unsaved version is in Sheet Backups, as the
   question promises; when that backup cannot be written, the edits stay and the status says why.
 - `tests/fixtures/existing_project_large/` holds five more hand-written scripts in the shapes a grown
