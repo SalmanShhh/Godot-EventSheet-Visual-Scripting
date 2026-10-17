@@ -63,6 +63,13 @@ const SAMPLE_SIZE: int = 40
 ## `_init`, a pack source's own verb lines), all 1,119 files re-read: shooter_tour 77,
 ## render_file_places_preview 23, feedback_card_schema 29, layout_on_top_lift 55, sequencer_aces 66;
 ## every other group's worst file measures what it did.
+## Ratcheted once more, all 1,120 files re-read, when the measure began counting a table that stays a
+## line per row as the one row the canvas draws (a note among its entries counting as words) and
+## file-scope tables of records, and a file's closing blank lines, began opening as rows: 1,998
+## wordless rows. Worst per group: plugin.gd 2, sheet_head_actions 3, viewport_layout_builder 7,
+## doctor_reading_page 4, scene_effect_facts 10, node_dignity_lift 43, compiler 0, ace_adapter 29,
+## doc_search 2, render_code_dialog_preview 2, follow_path 82 and match_row 7. The tests group is not
+## in the corpus, so its number is the one it was written with.
 const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	"plugin": 2,
 	# Re-measured over the WHOLE role when the corpus gained three files, the rotating sample moved and
@@ -72,7 +79,7 @@ const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	# dictionary literal per step, title, body, task and check - so most of its rows are entries
 	# rather than logic, the same reason the pack-recipe and vocabulary groups sit where they do.
 	# Nothing about the reading layer changed to move this; the ceiling is the worst file in the group.
-	"workspace": 77,
+	"workspace": 3,
 	"canvas": 7,
 	"readings": 4,
 	# Read off the tree like the rest. Raised by one when the rotating sample reached
@@ -103,7 +110,7 @@ const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	# and the widest table scores the highest. That is the same reason a pack recipe sits where it
 	# does. Nothing about the reading layer changed to move this - the ceiling is a description of
 	# the group, taken off the worst file in it, rounded up a little.
-	"recognisers": 55,
+	"recognisers": 43,
 	"compiler": 0,
 	# Re-measured over the WHOLE role rather than off the files the rotating sample happened to
 	# reach, after the sample moved and landed on sequencer_aces.gd, which measures 67. The sample is
@@ -120,17 +127,17 @@ const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	# move it - the ceiling is a description of the group, taken off the worst file in it, and it is
 	# the measured number exactly rather than a number with room in it, so any file getting worse
 	# still fails.
-	"vocabulary": 66,
+	"vocabulary": 29,
 	# Raised from 21 when the rotating sample reached doc_editor_words.gd, which measures 26: that
 	# page's body is one dictionary literal of key -> sentence (the words table itself lives
 	# elsewhere and is read, not repeated), so most of its rows ARE literal entries - the same reason
 	# the vocabulary and pack-recipe groups sit where they do. Nothing about the reading layer
 	# changed to move it; the ceiling is a description of the group, taken off the worst file in it.
-	"manual": 17,
+	"manual": 2,
 	"tests": 30,
-	"command_tools": 23,
-	"pack_recipes": 83,
-	"other": 29,
+	"command_tools": 2,
+	"pack_recipes": 82,
+	"other": 7,
 }
 
 ## The files that do NOT round-trip byte-exact today, with what is wrong beside each. Empty: the two
@@ -293,6 +300,8 @@ static func _test_generic_measure() -> bool:
 		EventSheetGenericRows.is_generic_code("if health <= 0:"), false) and passed
 	passed = _check("a note is not a row with no words",
 		EventSheetGenericRows.is_generic_code("# what this does"), false) and passed
+	passed = _check("nor is a note written among a table's entries",
+		EventSheetGenericRows.is_generic_code("\t# shared, so every row says it twice"), false) and passed
 	passed = _check("an await says something",
 		EventSheetGenericRows.is_generic_code("await get_tree().process_frame"), false) and passed
 	return passed
