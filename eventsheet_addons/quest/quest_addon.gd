@@ -98,7 +98,7 @@ func reset_quests() -> void:
 ## @ace_action
 ## @ace_name("Save Quests")
 ## @ace_category("Quest")
-## @ace_description("Writes the active quests and the completed list into user://remembered.cfg (the same file the Remember Between Runs variable option uses) under a "Quests" section. Call it when the player saves or the level ends.")
+## @ace_description("Writes the active quests and the completed list into user://remembered.cfg (the same file a variable's Save choice uses) under a "Quests" section. Call it when the player saves or the level ends.")
 ## @ace_icon("res://eventsheet_addons/quest/icon.svg")
 ## @ace_codegen_template("Quests.save_quests()")
 func save_quests() -> void:
@@ -111,7 +111,7 @@ func save_quests() -> void:
 ## @ace_action
 ## @ace_name("Load Quests")
 ## @ace_category("Quest")
-## @ace_description("Reads the active quests and the completed list back out of user://remembered.cfg (the Remember Between Runs store), replacing whatever is tracked now. Nothing happens if there is no save yet. Register your quest resources first if you want chains to keep working.")
+## @ace_description("Reads the active quests and the completed list back out of user://remembered.cfg (the store a variable's Save choice uses), replacing whatever is tracked now. Nothing happens if there is no save yet. Register your quest resources first if you want chains to keep working.")
 ## @ace_icon("res://eventsheet_addons/quest/icon.svg")
 ## @ace_codegen_template("Quests.load_quests()")
 func load_quests() -> void:

@@ -413,6 +413,20 @@ static func is_single_catalog(target: String) -> bool:
 	return target.get_extension().to_lower() == "csv"
 
 
+## Every catalog a target names read as one: {locales, rows}, the languages in first-seen order and the
+## rows of every file in file order.
+static func read_catalogs(target: String, separator: String = ",") -> Dictionary:
+	var rows: Array = []
+	var locales: PackedStringArray = PackedStringArray()
+	for path: String in catalog_files(target):
+		var catalog: Dictionary = read_catalog(path, separator)
+		rows.append_array(catalog.get("rows", []))
+		for locale: String in (catalog.get("locales", PackedStringArray()) as PackedStringArray):
+			if not locales.has(locale):
+				locales.append(locale)
+	return {"locales": locales, "rows": rows}
+
+
 ## Every catalog a target names: the one file, or each .csv under the folder (sorted). A file that is
 ## not there yet is no catalog.
 static func catalog_files(target: String) -> PackedStringArray:
@@ -579,14 +593,9 @@ static func _note_for_sites(sites: Array) -> String:
 ## A folder of catalogs is summed into one line per language over every file, and a file without a
 ## language's column counts every one of its lines as missing in it.
 static func coverage(csv_path: String, separator: String = ",") -> Array:
-	var rows: Array = []
-	var locales: PackedStringArray = PackedStringArray()
-	for path: String in catalog_files(csv_path):
-		var catalog: Dictionary = read_catalog(path, separator)
-		rows.append_array(catalog.get("rows", []))
-		for locale: String in (catalog.get("locales", PackedStringArray()) as PackedStringArray):
-			if not locales.has(locale):
-				locales.append(locale)
+	var catalogs: Dictionary = read_catalogs(csv_path, separator)
+	var rows: Array = catalogs["rows"]
+	var locales: PackedStringArray = catalogs["locales"]
 	var report: Array = []
 	for locale: String in locales:
 		var missing_keys: PackedStringArray = PackedStringArray()

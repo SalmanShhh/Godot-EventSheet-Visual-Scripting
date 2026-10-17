@@ -656,7 +656,7 @@ func _show_peek() -> void:
 		_peek_file.text = EventSheets.preview_save(data, str(_settings.get("format", "config")), str(entry["label"]))
 	var rows: Array = plain_rows(data)
 	if rows.is_empty():
-		_peek_table.add_child(_muted(EventSheetL10n.translate("It holds nothing yet. A node joins a save by exposing save_state(); Add Save Support writes the pair.")))
+		_peek_table.add_child(_muted(EventSheetL10n.translate("It holds nothing yet. A node joins a save by exposing save_state(); a Save choice on its variables writes the pair.")))
 	else:
 		_peek_table.add_child(EventSheetPopupUI.compact_table(PackedStringArray([EventSheetL10n.translate("Name"),
 			EventSheetL10n.translate("Value")]), rows, 1))

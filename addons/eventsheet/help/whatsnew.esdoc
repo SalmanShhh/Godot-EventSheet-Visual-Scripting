@@ -6,6 +6,16 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Fixed: Preview In Language reads a folder of catalogs, and the save words name what is there
+
+- View > Preview In Language offered only pseudo in a project with no `strings.csv`, whose catalog
+  is the `res://i18n` folder: it now reads every catalog under the folder, as the Translation
+  Studio's coverage already did.
+- The Save Studio's look-inside tab and the Quest pack's Save Quests / Load Quests no longer point
+  at Add Save Support or a Remember Between Runs option, both gone; the Inspector Designer
+  says its names read as the file declares them, which is what it shows.
+- Save As Preset…'s file-name poll stops once its dialog is closed.
+
 ### Fixed: the first open of the workspace stops compiling the picker, the Doctor and the Manual
 
 - Wiring the canvas and its menus reached six dock helpers that are built on first use (the ACE,
@@ -130,10 +140,12 @@ What changed in the build you have installed (v0.18.0), in the words the release
   every saved variable is in a generated `save_state()` / `load_state()` pair with the node joining
   the `persist` group, so the Save System's Save Game and Load Game carry it. The values stay in
   `user://remembered.cfg` under the class name, where Remember Between Runs kept them, and a
-  variable marked Remember Between Runs reads as Auto.
+  variable marked Remember Between Runs reads as Auto. Such a variable now also joins Save Game's
+  snapshot, since Auto is both homes.
 - An opened script reads that block back as the choices it came from and saves byte for byte; a
-  hand-written `save_state()` / `load_state()` is never claimed, and a sheet that has its own keeps
-  it (the compile says so) instead of getting a second one.
+  hand-written `save_state()` / `load_state()` is never claimed. A sheet that has its own pair keeps
+  it and gets the block without the pair, so a remembered variable still loads and saves by itself
+  beside it; Manual, which is only the pair, then saves nothing, and the compile says so.
 - Removed: the **Add Save Support** tab (scan a script, tick variables, paste the generated pair) and
   the **Remember Between Runs** menu toggle - the Save choice does both. `EventSheets.save_state_code`,
   `persistable_fields` and `add_save_support` are unchanged and share the compiler's generator.

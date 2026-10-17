@@ -646,7 +646,6 @@ Publish New Version…,新しいバージョンを公開…
 Name Raw Calls…,未整理の呼び出しに名前を付ける…
 Compact Rows,コンパクト行
 Properties Bar,プロパティバー
-Remember Between Runs,実行間で記憶
 Add Entry…,エントリを追加…
 Edit Entry…,エントリを編集…
 Remove Entry,エントリを削除
@@ -662,7 +661,6 @@ Runs in editor,エディタで実行
 Remembered variables,記憶された変数
 Setup lines,セットアップ行
 double-click to edit in code,ダブルクリックでコード編集
-Host binding,ホストバインディング
 decides by state,状態で分岐
 states below,個の状態
 decides by,で分岐:
@@ -8280,8 +8278,8 @@ Drag the handle to set direction + magnitude,ハンドルをドラッグして�
 Custom colour…,カスタムカラー…
 Inspector Designer,インスペクターデザイナー
 "No Inspector-visible variables yet - tick ""Editable in the Inspector"" on a variable and it appears here.","インスペクターに表示される変数はまだありません - 変数で ""Editable in the Inspector"" にチェックを入れるとここに表示されます。"
-"Every Inspector-visible variable, exactly as Godot will show it. ✎ edits a variable; ▲ moves a sheet variable up (the list is in the order the file declares them).",インスペクターに表示されるすべての変数を、Godot が表示するとおりに並べています。✎ で変数を編集、▲ でシートの変数を上へ移動します (一覧はファイルが宣言する順です)。
-"Every Inspector-visible variable, exactly as Godot will show it. Edit a variable from its row in the sheet (hover it there for this same preview).",インスペクターに表示されるすべての変数を、Godot が表示するとおりに並べています。変数はシートのその行から編集します (行にカーソルを合わせると同じプレビューが出ます)。
+"Every Inspector-visible variable, named exactly as the file declares it. ✎ edits a variable; ▲ moves a sheet variable up (the list is in the order the file declares them).",インスペクターに表示されるすべての変数を、ファイルが宣言したとおりの名前で並べています。✎ で変数を編集、▲ でシートの変数を上へ移動します (一覧はファイルが宣言する順です)。
+"Every Inspector-visible variable, named exactly as the file declares it. Edit a variable from its row in the sheet (hover it there for this same preview).",インスペクターに表示されるすべての変数を、ファイルが宣言したとおりの名前で並べています。変数はシートのその行から編集します (行にカーソルを合わせると同じプレビューが出ます)。
 Edit %s in the Variable dialog,変数ダイアログで %s を編集
 Move this variable up in the Inspector (one undo step),この変数をインスペクターで上へ移動 (元に戻すは 1 ステップ)
 Dragged in the viewport:,ビューポートでドラッグ:
@@ -8830,7 +8828,7 @@ What Save Game would write for this node and its behaviors right now.,今 Save G
 Nothing to look inside yet.,まだ中を見るものがありません。
 "What %s holds, in plain words:",%s の中身を平易な言葉で:
 "What a save of %s would hold right now, in plain words:",今 %s をセーブしたときの中身を平易な言葉で:
-It holds nothing yet. A node joins a save by exposing save_state(); Add Save Support writes the pair.,まだ何も入っていません。ノードは save_state() を公開するとセーブに加わります。Add Save Support がその組を書きます。
+It holds nothing yet. A node joins a save by exposing save_state(); a Save choice on its variables writes the pair.,まだ何も入っていません。ノードは save_state() を公開するとセーブに加わります。変数の保存の選択がその組を書きます。
 "Binary file, %d bytes (not text). First bytes:",バイナリファイル、%d バイト (テキストではありません)。先頭のバイト:
 a list of %d,%d 個のリスト
 Player settings,プレイヤー設定

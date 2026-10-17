@@ -715,13 +715,23 @@ func _open_save_dialog() -> void:
 	reason.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	reason.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_WARNING))
 	browser.call("get_vbox").add_child(reason)
-	# The dialog reports no signal when a file in its list is clicked, so the line is re-read on a
-	# short timer while the dialog is up.
+	poll_save_note(browser, reason)
+
+
+## The dialog reports no signal when a file in its list is clicked, so `reason` is re-read on a short
+## timer while `browser` is up. The timer goes the first time it finds the browser hidden, so a browser
+## kept alive after it closes never polls on.
+static func poll_save_note(browser: Window, reason: Label) -> Timer:
 	var poll: Timer = Timer.new()
 	poll.wait_time = 0.2
 	poll.autostart = true
-	poll.timeout.connect(func() -> void: reason.text = save_note(str(browser.get("current_path"))))
+	poll.timeout.connect(func() -> void:
+		if not browser.visible:
+			poll.queue_free()
+			return
+		reason.text = save_note(str(browser.get("current_path"))))
 	browser.add_child(poll)
+	return poll
 
 
 ## Saves the working style as a shareable preset .tres, and says how it went in the window's foot and

@@ -646,7 +646,6 @@ Publish New Version…,Опубликовать новую версию…
 Name Raw Calls…,Именовать необработанные вызовы…
 Compact Rows,Компактные строки
 Properties Bar,Панель свойств
-Remember Between Runs,Запоминать между запусками
 Add Entry…,Добавить запись…
 Edit Entry…,Изменить запись…
 Remove Entry,Удалить запись
@@ -662,7 +661,6 @@ Runs in editor,Работает в редакторе
 Remembered variables,Запоминаемые переменные
 Setup lines,Строки настройки
 double-click to edit in code,двойной щелчок - править в коде
-Host binding,Привязка к хосту
 decides by state,выбирает по состоянию
 states below,состояний ниже
 decides by,выбирает по
@@ -8280,8 +8278,8 @@ Drag the handle to set direction + magnitude,"Перетащите маркер,
 Custom colour…,Свой цвет…
 Inspector Designer,Дизайнер Инспектора
 "No Inspector-visible variables yet - tick ""Editable in the Inspector"" on a variable and it appears here.","В Инспекторе пока нет видимых переменных - отметьте у переменной ""Editable in the Inspector"", и она появится здесь."
-"Every Inspector-visible variable, exactly as Godot will show it. ✎ edits a variable; ▲ moves a sheet variable up (the list is in the order the file declares them).","Все переменные, видимые в Инспекторе, ровно так, как их покажет Godot. ✎ правит переменную; ▲ поднимает переменную листа (список идёт в том порядке, в котором их объявляет файл)."
-"Every Inspector-visible variable, exactly as Godot will show it. Edit a variable from its row in the sheet (hover it there for this same preview).","Все переменные, видимые в Инспекторе, ровно так, как их покажет Godot. Правьте переменную из её строки на листе (наведите на неё там, чтобы увидеть этот же предпросмотр)."
+"Every Inspector-visible variable, named exactly as the file declares it. ✎ edits a variable; ▲ moves a sheet variable up (the list is in the order the file declares them).","Все переменные, видимые в Инспекторе, с именами ровно такими, как их объявляет файл. ✎ правит переменную; ▲ поднимает переменную листа (список идёт в том порядке, в котором их объявляет файл)."
+"Every Inspector-visible variable, named exactly as the file declares it. Edit a variable from its row in the sheet (hover it there for this same preview).","Все переменные, видимые в Инспекторе, с именами ровно такими, как их объявляет файл. Правьте переменную из её строки на листе (наведите на неё там, чтобы увидеть этот же предпросмотр)."
 Edit %s in the Variable dialog,Править %s в окне переменной
 Move this variable up in the Inspector (one undo step),Поднять эту переменную в Инспекторе (один шаг отмены)
 Dragged in the viewport:,Перетаскивается во вьюпорте:
@@ -8830,7 +8828,7 @@ What Save Game would write for this node and its behaviors right now.,Что Sav
 Nothing to look inside yet.,Пока не во что заглянуть.
 "What %s holds, in plain words:","Что хранит %s, простыми словами:"
 "What a save of %s would hold right now, in plain words:","Что сейчас было бы в сохранении %s, простыми словами:"
-It holds nothing yet. A node joins a save by exposing save_state(); Add Save Support writes the pair.,"Пока здесь ничего нет. Узел попадает в сохранение, если предоставляет save_state(); Add Save Support пишет эту пару."
+It holds nothing yet. A node joins a save by exposing save_state(); a Save choice on its variables writes the pair.,"Пока здесь ничего нет. Узел попадает в сохранение, если предоставляет save_state(); пару пишет выбор сохранения у его переменных."
 "Binary file, %d bytes (not text). First bytes:","Двоичный файл, %d байт (не текст). Первые байты:"
 a list of %d,список из %d
 Player settings,Настройки игрока

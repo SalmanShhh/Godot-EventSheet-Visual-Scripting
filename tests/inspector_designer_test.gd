@@ -140,6 +140,10 @@ static func _the_foot_explains() -> bool:
 	(cards[2] as Control).mouse_entered.emit()
 	var pointed: Array = [dialog._this_field.text, dialog._strip.in_code_value.text]
 	var wired_note: bool = dialog._order_note.visible
+	var intro: String = ""
+	for control: Node in dialog.find_children("*", "Control", true, false):
+		if str(control.get("text")).begins_with("Every Inspector-visible variable"):
+			intro = str(control.get("text")).get_slice(".", 0)
 	dialog.free()
 	return SUPPORT.pins("inspector_designer_test", [
 		["unwired, the strip has no buttons to explain, only the first row's line, and no order note", unwired,
@@ -147,6 +151,8 @@ static func _the_foot_explains() -> bool:
 		["wired, the note says why the sheet variables have no ▲", wired_note, true],
 		["only the tree variables move, and the first of them cannot", ups, [true, false]],
 		["the names read exactly as the code writes them", names, ["health", "max_speed", "jump_strength"]],
+		["and the intro says so, not that they read as Godot's Inspector shows them", intro,
+			"Every Inspector-visible variable, named exactly as the file declares it"],
 		["pointing at a row says what its buttons do and the line it is in the file", pointed,
 			["jump_strength: ✎ opens it in the Variable dialog; ▲ moves it above max_speed, as one undo step.",
 				"@export var jump_strength: float = 220.0"]],

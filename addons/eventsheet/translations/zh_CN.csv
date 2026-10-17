@@ -646,7 +646,6 @@ Publish New Version…,发布新版本…
 Name Raw Calls…,命名原始调用…
 Compact Rows,紧凑行
 Properties Bar,属性栏
-Remember Between Runs,在运行之间记住
 Add Entry…,添加条目…
 Edit Entry…,编辑条目…
 Remove Entry,移除条目
@@ -662,7 +661,6 @@ Runs in editor,在编辑器中运行
 Remembered variables,记住的变量
 Setup lines,设置行数
 double-click to edit in code,双击以在代码中编辑
-Host binding,宿主绑定
 decides by state,按状态决定
 states below,个状态
 decides by,按以下决定
@@ -8280,8 +8278,8 @@ Drag the handle to set direction + magnitude,拖动手柄以设置方向 + 大�
 Custom colour…,自定义颜色…
 Inspector Designer,检查器设计器
 "No Inspector-visible variables yet - tick ""Editable in the Inspector"" on a variable and it appears here.","检查器中还没有可见的变量 - 在变量上勾选 ""Editable in the Inspector"",它就会出现在这里。"
-"Every Inspector-visible variable, exactly as Godot will show it. ✎ edits a variable; ▲ moves a sheet variable up (the list is in the order the file declares them).","检查器中可见的每个变量,与 Godot 显示的完全一致。✎ 编辑变量;▲ 上移事件表变量(列表按文件声明它们的顺序排列)。"
-"Every Inspector-visible variable, exactly as Godot will show it. Edit a variable from its row in the sheet (hover it there for this same preview).","检查器中可见的每个变量,与 Godot 显示的完全一致。请在事件表中该变量的行上编辑它(悬停在那里可看到同样的预览)。"
+"Every Inspector-visible variable, named exactly as the file declares it. ✎ edits a variable; ▲ moves a sheet variable up (the list is in the order the file declares them).","检查器中可见的每个变量,名称与文件声明的完全一致。✎ 编辑变量;▲ 上移事件表变量(列表按文件声明它们的顺序排列)。"
+"Every Inspector-visible variable, named exactly as the file declares it. Edit a variable from its row in the sheet (hover it there for this same preview).","检查器中可见的每个变量,名称与文件声明的完全一致。请在事件表中该变量的行上编辑它(悬停在那里可看到同样的预览)。"
 Edit %s in the Variable dialog,在变量对话框中编辑 %s
 Move this variable up in the Inspector (one undo step),在检查器中上移此变量(一个撤销步骤)
 Dragged in the viewport:,在视口中拖动:
@@ -8830,7 +8828,7 @@ What Save Game would write for this node and its behaviors right now.,Save Game 
 Nothing to look inside yet.,还没有可查看的内容。
 "What %s holds, in plain words:","%s 的内容,用通俗的话说:"
 "What a save of %s would hold right now, in plain words:","现在保存 %s 会包含的内容,用通俗的话说:"
-It holds nothing yet. A node joins a save by exposing save_state(); Add Save Support writes the pair.,目前还没有内容。节点通过公开 save_state() 加入存档;Add Save Support 会写出这一对函数。
+It holds nothing yet. A node joins a save by exposing save_state(); a Save choice on its variables writes the pair.,目前还没有内容。节点通过公开 save_state() 加入存档;其变量上的保存选择会写出这一对函数。
 "Binary file, %d bytes (not text). First bytes:","二进制文件,%d 字节(不是文本)。前几个字节:"
 a list of %d,包含 %d 项的列表
 Player settings,玩家设置

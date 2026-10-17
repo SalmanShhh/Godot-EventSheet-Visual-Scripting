@@ -4855,8 +4855,8 @@ func _preview_in_language(locale: String, persist: bool = true) -> void:
 	var catalog_path: String = _translation_studio.catalog_path()
 	var messages: Dictionary = {}
 	if locale != load(GAME_CATALOG_PATH).PSEUDO_LOCALE:
-		var catalog: Dictionary = load(TRANSLATION_SCAN_PATH).read_catalog(catalog_path)
-		for row: Variant in (catalog.get("rows", []) as Array):
+		var catalog: Dictionary = load(TRANSLATION_SCAN_PATH).read_catalogs(catalog_path)
+		for row: Variant in (catalog["rows"] as Array):
 			var text: String = str((row as Dictionary).get(locale, "")).strip_edges()
 			if not text.is_empty():
 				messages[str((row as Dictionary).get(load(TRANSLATION_SCAN_PATH).KEY_COLUMN, ""))] = text
@@ -4892,8 +4892,8 @@ func _rebuild_preview_language_menu() -> void:
 ## Every language the sheet can be previewed in: the catalog's own columns plus pseudo.
 func _preview_languages() -> PackedStringArray:
 	var languages: PackedStringArray = PackedStringArray()
-	var catalog: Dictionary = load(TRANSLATION_SCAN_PATH).read_catalog(_translation_studio.catalog_path())
-	for locale: String in (catalog.get("locales", PackedStringArray()) as PackedStringArray):
+	var catalog: Dictionary = load(TRANSLATION_SCAN_PATH).read_catalogs(_translation_studio.catalog_path())
+	for locale: String in (catalog["locales"] as PackedStringArray):
 		if locale != load(TRANSLATION_SCAN_PATH).SOURCE_COLUMN and not languages.has(locale):
 			languages.append(locale)
 	if not languages.has(load(GAME_CATALOG_PATH).PSEUDO_LOCALE):

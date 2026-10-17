@@ -151,6 +151,14 @@ static func run() -> bool:
 	all_passed = _check("the save dialog names the file a Save replaces, and nothing for a new one",
 		[EventSheetThemeEditor.save_note("user://eventsheets_theme_preset.tres"), EventSheetThemeEditor.save_note("user://no_such_preset.tres")],
 		["Replaces eventsheets_theme_preset.tres", ""]) and all_passed
+	var closed_browser: ConfirmationDialog = ConfirmationDialog.new()
+	closed_browser.visible = false
+	var replaces: Label = Label.new()
+	var poll: Timer = EventSheetThemeEditor.poll_save_note(closed_browser, replaces)
+	poll.timeout.emit()
+	all_passed = _check("the save dialog's poll goes once the dialog is closed", poll.is_queued_for_deletion(), true) and all_passed
+	closed_browser.free()
+	replaces.free()
 	var failed_save: Error = theme_editor.save_preset("res://no_such_folder_for_presets/preset.tres")
 	all_passed = _check("a preset written into a missing folder fails", failed_save != OK, true) and all_passed
 	all_passed = _check("and the failure is said in the window's foot and on the status bar as an error",

@@ -34,7 +34,9 @@ static func cut(source: String) -> Dictionary:
 	return {"prefix": source.substr(0, at) + "\n", "choices": choices}
 
 
-## {name: choice} for every variable the block's save_state() names, in that order.
+## {name: choice} for every variable the block's save_state() names, in that order. A block written
+## beside a hand-written pair has no save_state() of its own, so its lines that load and store name
+## the variables instead.
 static func read_choices(block: String) -> Dictionary:
 	var saved: PackedStringArray = PackedStringArray()
 	var loaded: Dictionary = {}
@@ -51,6 +53,11 @@ static func read_choices(block: String) -> Dictionary:
 			loaded[line.strip_edges().get_slice(" = ", 0)] = true
 		elif line.begins_with("\t__remember_cfg.set_value("):
 			stored[line.trim_suffix(")").get_slice(", ", 2)] = true
+	if saved.is_empty():
+		saved.append_array(PackedStringArray(loaded.keys()))
+		for variable_name: String in stored:
+			if not loaded.has(variable_name):
+				saved.append(variable_name)
 	var choices: Dictionary = {}
 	for variable_name: String in saved:
 		if loaded.has(variable_name):

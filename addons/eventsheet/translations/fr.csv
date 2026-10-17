@@ -646,7 +646,6 @@ Publish New Version…,Publier une nouvelle version…
 Name Raw Calls…,Nommer les appels bruts…
 Compact Rows,Lignes compactes
 Properties Bar,Barre de propriétés
-Remember Between Runs,Mémoriser entre les sessions
 Add Entry…,Ajouter une entrée…
 Edit Entry…,Modifier l'entrée…
 Remove Entry,Supprimer l'entrée
@@ -662,7 +661,6 @@ Runs in editor,S'exécute dans l'éditeur
 Remembered variables,Variables mémorisées
 Setup lines,Lignes de configuration
 double-click to edit in code,double-clic pour éditer dans le code
-Host binding,Liaison à l'hôte
 decides by state,décide selon l'état
 states below,états ci-dessous
 decides by,décide selon
@@ -8280,8 +8278,8 @@ Drag the handle to set direction + magnitude,Faites glisser la poignée pour ré
 Custom colour…,Couleur personnalisée…
 Inspector Designer,Concepteur d'Inspecteur
 "No Inspector-visible variables yet - tick ""Editable in the Inspector"" on a variable and it appears here.","Aucune variable visible dans l'Inspecteur pour l'instant - cochez ""Editable in the Inspector"" sur une variable et elle apparaît ici."
-"Every Inspector-visible variable, exactly as Godot will show it. ✎ edits a variable; ▲ moves a sheet variable up (the list is in the order the file declares them).","Chaque variable visible dans l'Inspecteur, exactement comme Godot l'affichera. ✎ modifie une variable ; ▲ remonte une variable de la feuille (la liste suit l'ordre dans lequel le fichier les déclare)."
-"Every Inspector-visible variable, exactly as Godot will show it. Edit a variable from its row in the sheet (hover it there for this same preview).","Chaque variable visible dans l'Inspecteur, exactement comme Godot l'affichera. Modifiez une variable depuis sa ligne dans la feuille (survolez-la pour voir le même aperçu)."
+"Every Inspector-visible variable, named exactly as the file declares it. ✎ edits a variable; ▲ moves a sheet variable up (the list is in the order the file declares them).","Chaque variable visible dans l'Inspecteur, nommée exactement comme le fichier la déclare. ✎ modifie une variable ; ▲ remonte une variable de la feuille (la liste suit l'ordre dans lequel le fichier les déclare)."
+"Every Inspector-visible variable, named exactly as the file declares it. Edit a variable from its row in the sheet (hover it there for this same preview).","Chaque variable visible dans l'Inspecteur, nommée exactement comme le fichier la déclare. Modifiez une variable depuis sa ligne dans la feuille (survolez-la pour voir le même aperçu)."
 Edit %s in the Variable dialog,Modifier %s dans la boîte Variable
 Move this variable up in the Inspector (one undo step),Remonter cette variable dans l'Inspecteur (une étape d'annulation)
 Dragged in the viewport:,Déplacé dans le viewport :
@@ -8830,7 +8828,7 @@ What Save Game would write for this node and its behaviors right now.,Ce que Sav
 Nothing to look inside yet.,Rien à regarder pour l'instant.
 "What %s holds, in plain words:","Ce que contient %s, en mots simples :"
 "What a save of %s would hold right now, in plain words:","Ce que contiendrait maintenant une sauvegarde de %s, en mots simples :"
-It holds nothing yet. A node joins a save by exposing save_state(); Add Save Support writes the pair.,Elle ne contient encore rien. Un nœud entre dans une sauvegarde en exposant save_state() ; Add Save Support écrit la paire.
+It holds nothing yet. A node joins a save by exposing save_state(); a Save choice on its variables writes the pair.,Elle ne contient encore rien. Un nœud entre dans une sauvegarde en exposant save_state() ; un choix de sauvegarde sur ses variables écrit la paire.
 "Binary file, %d bytes (not text). First bytes:","Fichier binaire, %d octets (pas du texte). Premiers octets :"
 a list of %d,une liste de %d
 Player settings,Réglages du joueur

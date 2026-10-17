@@ -124,8 +124,8 @@ func rebuild_for_sheet(sheet: EventSheetResource) -> void:
 	if entries.is_empty():
 		_column.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("No Inspector-visible variables yet - tick \"Editable in the Inspector\" on a variable and it appears here.")))
 		return
-	_column.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("Every Inspector-visible variable, exactly as Godot will show it. ✎ edits a variable; ▲ moves a sheet variable up (the list is in the order the file declares them).") \
-		if _edit_handler.is_valid() else EventSheetL10n.translate("Every Inspector-visible variable, exactly as Godot will show it. Edit a variable from its row in the sheet (hover it there for this same preview).")))
+	_column.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("Every Inspector-visible variable, named exactly as the file declares it. ✎ edits a variable; ▲ moves a sheet variable up (the list is in the order the file declares them).") \
+		if _edit_handler.is_valid() else EventSheetL10n.translate("Every Inspector-visible variable, named exactly as the file declares it. Edit a variable from its row in the sheet (hover it there for this same preview).")))
 	var previous_tree: String = ""
 	for entry: Dictionary in entries:
 		var card: EventSheetInspectorPreviewCard = EventSheetInspectorPreviewCard.new()

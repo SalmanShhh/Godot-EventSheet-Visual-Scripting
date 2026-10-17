@@ -21,17 +21,22 @@
 class_name TranslationEditorSeamsTest
 extends RefCounted
 
-const PROJECT_DIR := "user://eventforge_l10n_project"
-const SCRIPT_PATH := "user://eventforge_l10n_project/menu_sheet.gd"
-const ASSET_PATH := "user://eventforge_l10n_project/quests.tres"
-const CATALOG_PATH := "user://eventforge_l10n_strings.csv"
-const RETURNED_PATH := "user://eventforge_l10n_returned_fr.csv"
-const GRID_CATALOG_PATH := "user://eventforge_l10n_grid.csv"
+## Every file this test writes lives under one folder named for the process: worktrees of one project
+## share user://, so two runs at once would otherwise read each other's catalog columns.
+static var ROOT: String = "user://eventforge_l10n_%d" % OS.get_process_id()
+static var PROJECT_DIR: String = ROOT + "/project"
+static var SCRIPT_PATH: String = PROJECT_DIR + "/menu_sheet.gd"
+static var ASSET_PATH: String = PROJECT_DIR + "/quests.tres"
+static var CATALOG_PATH: String = ROOT + "/eventforge_l10n_strings.csv"
+static var RETURNED_PATH: String = ROOT + "/eventforge_l10n_returned_fr.csv"
+static var GRID_CATALOG_PATH: String = ROOT + "/eventforge_l10n_grid.csv"
+## A folder of catalogs, one per project folder - the shape a project with no strings.csv starts with.
+static var FOLDER_CATALOGS: String = ROOT + "/i18n"
 ## The data-asset fixture for the `key` column sweep: a resource whose grid DECLARES which of its
 ## columns hold sentences, which is the half of the sweep POT generation cannot see.
-const KEY_GRID_DIR := "user://eventforge_l10n_keygrid"
-const KEY_GRID_SCRIPT := "user://eventforge_l10n_keygrid/quest_rows.gd"
-const KEY_GRID_ASSET := "user://eventforge_l10n_keygrid/quests.tres"
+static var KEY_GRID_DIR: String = ROOT + "/keygrid"
+static var KEY_GRID_SCRIPT: String = KEY_GRID_DIR + "/quest_rows.gd"
+static var KEY_GRID_ASSET: String = KEY_GRID_DIR + "/quests.tres"
 ## A right-to-left sentence: it must survive the codec and the accent pass without being mangled,
 ## because the language that breaks a text pipeline is never the one the team reads.
 const RTL_KEY := "احفظ اللعبة"
@@ -57,6 +62,7 @@ func _ready() -> void:
 
 static func run() -> bool:
 	var all_passed: bool = true
+	DirAccess.make_dir_recursive_absolute(ROOT)
 	all_passed = _run_scanner() and all_passed
 	all_passed = _run_studio() and all_passed
 	all_passed = _run_pseudo() and all_passed
@@ -522,6 +528,20 @@ static func _run_preview() -> bool:
 	all_passed = _check("pseudo is named for what it finds, not for its locale code",
 		menu.get_item_text(menu.item_count - 1), "Pseudo (finds clipped labels)") and all_passed
 	menu.free()
+
+	# A project with no strings.csv starts on a FOLDER of catalogs: the preview reads every one of them.
+	DirAccess.make_dir_recursive_absolute(FOLDER_CATALOGS + "/menus")
+	for entry: Array in [["/strings.csv", "keys,en,fr\nPlay,Play,Jouer\n"], ["/menus/title.csv", "keys,en,de\nQuit,Quit,Beenden\n"]]:
+		var file: FileAccess = FileAccess.open(FOLDER_CATALOGS + str(entry[0]), FileAccess.WRITE)
+		file.store_string(str(entry[1]))
+		file.close()
+	editor._translation_studio.catalog_target = FOLDER_CATALOGS
+	all_passed = _check("a folder of catalogs offers every file's languages",
+		", ".join(editor._preview_languages()), "de, fr, qps") and all_passed
+	editor._preview_in_language("de", false)
+	all_passed = _check("and previews a line from a catalog in a subfolder",
+		EventSheetGameCatalog.preview_param("tr(\"Quit\")"), "\"Beenden\"") and all_passed
+	editor._preview_in_language("", false)
 	editor.free()
 	return all_passed
 
@@ -786,11 +806,16 @@ static func _card_lines(studio: EventSheetTranslationStudio, id: String) -> Pack
 
 static func _cleanup() -> void:
 	EventSheetGameCatalog.clear_preview()
-	for path: String in [SCRIPT_PATH, ASSET_PATH, CATALOG_PATH, RETURNED_PATH, GRID_CATALOG_PATH,
-			KEY_GRID_ASSET, KEY_GRID_SCRIPT]:
-		DirAccess.remove_absolute(path)
-	DirAccess.remove_absolute(PROJECT_DIR)
-	DirAccess.remove_absolute(KEY_GRID_DIR)
+	_remove_tree(ROOT)
+
+
+## Removes a folder and everything under it.
+static func _remove_tree(folder: String) -> void:
+	for name: String in DirAccess.get_directories_at(folder):
+		_remove_tree(folder.path_join(name))
+	for name: String in DirAccess.get_files_at(folder):
+		DirAccess.remove_absolute(folder.path_join(name))
+	DirAccess.remove_absolute(folder)
 
 
 ## The editor's undo manager, as the EDITOR's own is shaped: the dock funnels edits through

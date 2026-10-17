@@ -73,6 +73,7 @@ static func run() -> bool:
 	ok = _reopens_as_the_choices() and ok
 	ok = _leaves_hand_written_saves_alone() and ok
 	ok = _refuses_what_it_cannot_write() and ok
+	ok = _keeps_remembering_beside_an_own_pair() and ok
 	ok = _the_studio_row() and ok
 	return ok
 
@@ -221,6 +222,43 @@ static func _refuses_what_it_cannot_write() -> bool:
 	return SUPPORT.pins(PREFIX, [
 		["a Resource host gets no block", str(resource_result.get("output", "")).contains(SaveChoices.DOC), false],
 		["a Resource host is told why", str(resource_result.get("warnings", [])).contains("needs a Node host"), true],
-		["a sheet with its own save_state gets no block", str(owned_result.get("output", "")).contains(SaveChoices.DOC), false],
-		["a sheet with its own save_state is told why", str(owned_result.get("warnings", [])).contains("already writes save_state()"), true],
+		["a Manual-only sheet with its own save_state gets no block", str(owned_result.get("output", "")).contains(SaveChoices.DOC), false],
+		["a Manual-only sheet with its own save_state is told why", str(owned_result.get("warnings", [])).contains("a Manual Save choice saves nothing"), true],
+	])
+
+
+## A sheet that remembered a value between runs AND writes its own save_state()/load_state() (the pair
+## the old save-support nudge wrote) still loads and stores that value: only the pair is left out.
+static func _keeps_remembering_beside_an_own_pair() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.custom_class_name = "Player"
+	sheet.host_class = "Node2D"
+	sheet.variables = {"coins": {"type": "int", "default": 0, "exported": true, "attributes": {"remember": true}}}
+	var own_save: EventFunction = EventFunction.new()
+	own_save.function_name = "save_state"
+	sheet.functions.append(own_save)
+	var output: String = str(SheetCompiler.compile(sheet, "user://save_choices_own_pair.gd").get("output", ""))
+	var block: String = output.substr(maxi(output.find(SaveChoices.DOC), 0))
+	var own: String = HAND_WRITTEN + "\n\nfunc save_state() -> Dictionary:\n\treturn {\"health\": health}\n\n\nfunc load_state(state: Dictionary) -> void:\n\thealth = int(state.get(\"health\", health))\n"
+	var opened: EventSheetResource = SUPPORT.reopen(own, false)
+	for entry: Variant in opened.events:
+		if entry is LocalVariable and (entry as LocalVariable).name in ["coins", "volume"]:
+			var attributes: Dictionary = (entry as LocalVariable).attributes.duplicate()
+			SaveChoices.set_choice(attributes, "auto" if (entry as LocalVariable).name == "coins" else "load")
+			(entry as LocalVariable).attributes = attributes
+	opened.external_source_path = "user://save_choices_own_pair_player.gd"
+	var written: String = SUPPORT.compile_output(opened, "user://save_choices_own_pair_player.gd")
+	var warned: String = str(SheetCompiler.compile(opened, "user://save_choices_own_pair_player.gd").get("warnings", []))
+	var read_back: Dictionary = {}
+	for entry: Variant in SUPPORT.reopen(written).events:
+		if entry is LocalVariable and not SaveChoices.choice_of((entry as LocalVariable).attributes).is_empty():
+			read_back[(entry as LocalVariable).name] = SaveChoices.choice_of((entry as LocalVariable).attributes)
+	return SUPPORT.pins(PREFIX, [
+		["the value still loads from user://remembered.cfg", block.contains("coins = __remember_cfg.get_value(\"Player\", \"coins\", coins)"), true],
+		["the value is still stored on leaving", block.contains("__remember_cfg.set_value(\"Player\", \"coins\", coins)"), true],
+		["the own pair is not written twice", [output.count("func save_state("), output.count("func load_state(")], [1, 0]],
+		["a script's own pair keeps its lines", written.begins_with(own), true],
+		["the choices beside an own pair read back", read_back, {"coins": "auto", "volume": "load"}],
+		["Load only beside an own pair is told how it is written", warned.contains("_ef_store_saved(true)"), true],
+		["reopen then save beside an own pair is byte-identical", SUPPORT.reemit(written, "user://save_choices_own_pair_player.gd"), written],
 	])

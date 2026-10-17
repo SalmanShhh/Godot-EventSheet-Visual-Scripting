@@ -646,7 +646,6 @@ Publish New Version…,Neue Version veröffentlichen…
 Name Raw Calls…,Rohe Aufrufe benennen…
 Compact Rows,Kompakte Zeilen
 Properties Bar,Eigenschaftsleiste
-Remember Between Runs,Zwischen Läufen merken
 Add Entry…,Eintrag hinzufügen…
 Edit Entry…,Eintrag bearbeiten…
 Remove Entry,Eintrag entfernen
@@ -662,7 +661,6 @@ Runs in editor,Läuft im Editor
 Remembered variables,Gemerkte Variablen
 Setup lines,Setup-Zeilen
 double-click to edit in code,Doppelklick zum Bearbeiten im Code
-Host binding,Host-Bindung
 decides by state,entscheidet nach Zustand
 states below,Zustände darunter
 decides by,entscheidet nach
@@ -8280,8 +8278,8 @@ Drag the handle to set direction + magnitude,"Den Griff ziehen, um Richtung + St
 Custom colour…,Eigene Farbe…
 Inspector Designer,Inspektor-Designer
 "No Inspector-visible variables yet - tick ""Editable in the Inspector"" on a variable and it appears here.","Noch keine im Inspektor sichtbaren Variablen - setze bei einer Variable den Haken ""Editable in the Inspector"", dann erscheint sie hier."
-"Every Inspector-visible variable, exactly as Godot will show it. ✎ edits a variable; ▲ moves a sheet variable up (the list is in the order the file declares them).","Jede im Inspektor sichtbare Variable, genau so, wie Godot sie zeigt. ✎ bearbeitet eine Variable; ▲ schiebt eine Blatt-Variable nach oben (die Liste folgt der Reihenfolge, in der die Datei sie deklariert)."
-"Every Inspector-visible variable, exactly as Godot will show it. Edit a variable from its row in the sheet (hover it there for this same preview).","Jede im Inspektor sichtbare Variable, genau so, wie Godot sie zeigt. Bearbeite eine Variable über ihre Zeile im Blatt (fahre dort darüber, um dieselbe Vorschau zu sehen)."
+"Every Inspector-visible variable, named exactly as the file declares it. ✎ edits a variable; ▲ moves a sheet variable up (the list is in the order the file declares them).","Jede im Inspektor sichtbare Variable, genau so benannt, wie die Datei sie deklariert. ✎ bearbeitet eine Variable; ▲ schiebt eine Blatt-Variable nach oben (die Liste folgt der Reihenfolge, in der die Datei sie deklariert)."
+"Every Inspector-visible variable, named exactly as the file declares it. Edit a variable from its row in the sheet (hover it there for this same preview).","Jede im Inspektor sichtbare Variable, genau so benannt, wie die Datei sie deklariert. Bearbeite eine Variable über ihre Zeile im Blatt (fahre dort darüber, um dieselbe Vorschau zu sehen)."
 Edit %s in the Variable dialog,%s im Variablen-Dialog bearbeiten
 Move this variable up in the Inspector (one undo step),Diese Variable im Inspektor nach oben schieben (ein Rückgängig-Schritt)
 Dragged in the viewport:,Im Viewport gezogen:
@@ -8830,7 +8828,7 @@ What Save Game would write for this node and its behaviors right now.,Was Save G
 Nothing to look inside yet.,Noch nichts zum Hineinschauen.
 "What %s holds, in plain words:","Was %s enthält, in einfachen Worten:"
 "What a save of %s would hold right now, in plain words:","Was ein Spielstand von %s jetzt enthalten würde, in einfachen Worten:"
-It holds nothing yet. A node joins a save by exposing save_state(); Add Save Support writes the pair.,"Es enthält noch nichts. Ein Knoten nimmt an einem Spielstand teil, indem er save_state() anbietet; Add Save Support schreibt das Paar."
+It holds nothing yet. A node joins a save by exposing save_state(); a Save choice on its variables writes the pair.,"Es enthält noch nichts. Ein Knoten nimmt an einem Spielstand teil, indem er save_state() anbietet; eine Speicherwahl an seinen Variablen schreibt das Paar."
 "Binary file, %d bytes (not text). First bytes:","Binärdatei, %d Bytes (kein Text). Erste Bytes:"
 a list of %d,eine Liste mit %d
 Player settings,Spielereinstellungen

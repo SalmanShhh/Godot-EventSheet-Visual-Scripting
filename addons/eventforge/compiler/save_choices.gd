@@ -39,8 +39,12 @@ const CHOICES: PackedStringArray = ["auto", "load", "save", "manual"]
 const DOC: String = "## Saved by each variable's Save choice (Save Studio > What gets saved) - change the choice, not these lines."
 const STORE: String = "user://remembered.cfg"
 const GROUP: String = "persist"
-## The functions the block declares. A sheet that already has one of them keeps its own and gets no block.
-const DECLARES: PackedStringArray = ["_ef_load_saved", "_ef_store_saved", "save_state", "load_state"]
+## The block's own load and store functions (and the older Remember Between Runs loader). A sheet that
+## already has one of them carries a copy of the block as code, so it gets no second one.
+const DECLARES: PackedStringArray = ["_ef_load_saved", "_ef_store_saved", "_ef_recall_remembered"]
+## The pair Save Game and Load Game call. A sheet that writes its own keeps it: the block then leaves
+## the pair out and still loads and stores its Auto, Load only and Save only variables.
+const PAIR: PackedStringArray = ["save_state", "load_state"]
 
 
 ## The choice a variable's attributes hold: one of CHOICES, or "" for Never.
@@ -92,7 +96,9 @@ static func section_of(sheet: EventSheetResource) -> String:
 
 
 ## The block for `sheet`, or no lines when nothing is saved (or the sheet already declares one of the
-## block's functions, which `warnings` is told). The lines open with the blank that separates them.
+## block's functions, which `warnings` is told). A sheet with its own save_state()/load_state() gets the
+## block without the pair, and Manual - which is only the pair - then saves nothing, which `warnings`
+## is told too. The lines open with the blank that separates them.
 static func block_lines(sheet: EventSheetResource, declared: Callable, warnings: Array) -> PackedStringArray:
 	var lines: PackedStringArray = PackedStringArray()
 	var by_choice: Dictionary = {"auto": [], "load": [], "save": [], "manual": []}
@@ -111,6 +117,13 @@ static func block_lines(sheet: EventSheetResource, declared: Callable, warnings:
 		if declared.call(function_name):
 			warnings.append("This sheet already writes %s(), so its variables' Save choices were not added - keep the hand-written save code, or remove it and let the choices write it." % function_name)
 			return lines
+	var own_pair: bool = declared.call(PAIR[0]) or declared.call(PAIR[1])
+	if own_pair and not (by_choice["manual"] as Array).is_empty():
+		warnings.append("This sheet writes its own save_state()/load_state(), so a Manual Save choice saves nothing - put those variables in the hand-written pair.")
+	if own_pair and not (by_choice["load"] as Array).is_empty():
+		warnings.append("This sheet writes its own save_state(), so a Load only variable is written back at Save Game only when that save_state() calls _ef_store_saved(true).")
+	if own_pair and (by_choice["manual"] as Array).size() == saved.size():
+		return lines
 	var section: String = section_of(sheet)
 	var loads: Array = by_choice["auto"] + by_choice["load"]
 	var stores: Array = by_choice["auto"] + by_choice["save"]
@@ -141,6 +154,8 @@ static func block_lines(sheet: EventSheetResource, declared: Callable, warnings:
 			for variable: Dictionary in stored_at_save:
 				lines.append("\t\t__remember_cfg.set_value(\"%s\", \"%s\", %s)" % [section, variable["name"], variable["name"]])
 		lines.append("\t__remember_cfg.save(\"%s\")" % STORE)
+	if own_pair:
+		return lines
 	var seam: Dictionary = seam_entries(saved)
 	var restored: Array = saved.filter(func(variable: Dictionary) -> bool: return variable["choice"] != "save")
 	lines.append("")

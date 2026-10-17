@@ -14,7 +14,7 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 ##  - Completing every objective moves the quest to the completed list, fires On Quest Completed, and
 ##    auto-starts the resource's Next Quest when it named one (chain a questline with no wiring).
 ##  - Save Quests / Load Quests persist the active + completed state through the same
-##    user://remembered.cfg store the Remember Between Runs variable option writes to.
+##    user://remembered.cfg store a variable's Save choice writes to.
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.autoload_mode = true
@@ -164,8 +164,8 @@ static func build() -> bool:
 		[],
 		"_active.clear()\n_completed.clear()")
 
-	# --- Persistence (the Remember Between Runs store) ---
-	Lib.append_function(sheet, "save_quests", "Save Quests", "Quest", "Writes the active quests and the completed list into user://remembered.cfg (the same file the Remember Between Runs variable option uses) under a \"Quests\" section. Call it when the player saves or the level ends.",
+	# --- Persistence (the store a variable's Save choice uses) ---
+	Lib.append_function(sheet, "save_quests", "Save Quests", "Quest", "Writes the active quests and the completed list into user://remembered.cfg (the same file a variable's Save choice uses) under a \"Quests\" section. Call it when the player saves or the level ends.",
 		[],
 		"\n".join(PackedStringArray([
 			"var config: ConfigFile = ConfigFile.new()",
@@ -174,7 +174,7 @@ static func build() -> bool:
 			"config.set_value(\"Quests\", \"completed\", Array(_completed))",
 			"config.save(\"user://remembered.cfg\")"
 		])))
-	Lib.append_function(sheet, "load_quests", "Load Quests", "Quest", "Reads the active quests and the completed list back out of user://remembered.cfg (the Remember Between Runs store), replacing whatever is tracked now. Nothing happens if there is no save yet. Register your quest resources first if you want chains to keep working.",
+	Lib.append_function(sheet, "load_quests", "Load Quests", "Quest", "Reads the active quests and the completed list back out of user://remembered.cfg (the store a variable's Save choice uses), replacing whatever is tracked now. Nothing happens if there is no save yet. Register your quest resources first if you want chains to keep working.",
 		[],
 		"\n".join(PackedStringArray([
 			"var config: ConfigFile = ConfigFile.new()",

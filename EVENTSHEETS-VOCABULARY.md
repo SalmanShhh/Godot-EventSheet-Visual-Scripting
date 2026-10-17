@@ -2277,8 +2277,8 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Advance Objective** (`quest_id: String, objective: String, amount: int`) - Counts progress on one objective of an active quest. Progress stops at the needed count, so an extra call can never double-fire: On Objective Completed fires the moment it fills, and once every objective is full the quest completes (On Quest Completed) and its Next Quest starts automatically.
 - **Abandon Quest** (`quest_id: String`) - Drops an active quest and forgets its progress. It does NOT count as completed, and no trigger fires - start it again to try over.
 - **Reset All Quests** - Clears every active quest and the completed list (e.g. on New Game). Registered quest definitions are kept, so a chain still works.
-- **Save Quests** - Writes the active quests and the completed list into user://remembered.cfg (the same file the Remember Between Runs variable option uses) under a "Quests" section. Call it when the player saves or the level ends.
-- **Load Quests** - Reads the active quests and the completed list back out of user://remembered.cfg (the Remember Between Runs store), replacing whatever is tracked now. Nothing happens if there is no save yet. Register your quest resources first if you want chains to keep working.
+- **Save Quests** - Writes the active quests and the completed list into user://remembered.cfg (the same file a variable's Save choice uses) under a "Quests" section. Call it when the player saves or the level ends.
+- **Load Quests** - Reads the active quests and the completed list back out of user://remembered.cfg (the store a variable's Save choice uses), replacing whatever is tracked now. Nothing happens if there is no save yet. Register your quest resources first if you want chains to keep working.
 
 #### Expressions
 - **Objective Text** (`quest_id: String, objective: String`) - An objective's progress as readable text, e.g. "3/5" - drop it straight into a quest-log label. "" if the quest is not active or has no such objective.
@@ -2336,6 +2336,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Is Saving** - Whether a write is in flight right now - inside On Before Save, a Save All Addons sweep, or an autosave. Guard a second write with it, or hold a quit until it clears.
 - **Is Loading** - Whether a load is in flight right now - the read, the migration gap and the On After Load broadcast are all inside it. Rows that must not fight the restore can stand aside while it is true.
 - **Save Key Is** (`key: String, value: Variant`) - Whether the stored key equals this value, without loading it into a variable first. A key the slot does not hold never equals anything, so a missing key reads as false.
+- **Can Open Save Folder** - Whether this platform has a save folder to show: true on Windows, macOS and Linux, false on the web and on phones. Hide the button that opens the folder where it cannot work.
 
 #### Actions
 - **Save Value** (`key: String, value: Variant`) - Writes ANY value (number, text, Vector2, Color, Dictionary…) under the key.
@@ -2366,6 +2367,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Remove Save Key** (`key: String`) - Takes one key out of the active slot and rewrites the file, then fires On Key Removed. A key the slot does not hold fires On Save Key Missing instead. Never Save This Key blocks a key forever; this removes the one copy that is already there.
 - **Clear Slot Keys** - Empties the active slot of everything the game saved, and fires On Key Removed once per key. The file itself stays, and so do its slot card, its version stamp, its run number and its backups - the reset-profile button that does not cost the player their save file.
 - **Check Save Key** (`key: String`) - Asks the slot whether it holds the key and answers with a row: On Key Loaded when it does, On Save Key Missing when it does not. The row that turns a silent default into a first-run seed.
+- **Open Save Folder** - Shows the folder that holds the saves (the Save Directory) in the player's own file manager - Explorer, Finder or Files - so they can back up, share or delete a save. On the web and on phones there is no folder to show, and it does nothing.
 
 #### Expressions
 - **Load Value** (`key: String, default_value: Variant`) - Reads any value (your default when missing).
