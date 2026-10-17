@@ -9,6 +9,10 @@
 #   - Change Type Everywhere on a declaration written with no type (`var target = null`) or with an
 #     inferred one (`var slot := 0`) must write the type it was asked for, or the file still says what
 #     it said and reopens as the old type.
+#   - OK on the variable window of an untyped line, changing nothing, must leave the line as it was:
+#     `@export var tint = Color.WHITE` opened as Any type, and OK wrote it back as
+#     `@export var tint: Variant = "Color.WHITE"` - a String where the file had a Color.
+#   - Reading what a sheet compiles to (a preview, a line lookup) writes nothing.
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
@@ -56,7 +60,33 @@ static func run() -> bool:
 	rows.append(["finding where a row is leaves the file on disk as it was", [FileAccess.get_file_as_string(OUT_PATH),
 		str(SheetCompiler.echo(edited).get("output", "")).contains("var hp: int = 5")], [on_disk, true]])
 	DirAccess.remove_absolute(OUT_PATH)
+	rows.append(["OK on the variable window, changing nothing, leaves an untyped line untyped",
+		_window_ok_lines("extends Node\n\n@export var tint = Color.WHITE\nvar rng = RandomNumberGenerator.new()\n@export var damage = 3\n",
+			["tint", "rng", "damage"]),
+		["@export var tint = Color.WHITE", "var rng = RandomNumberGenerator.new()", "@export var damage = 3"]])
 	return SUPPORT.pins(TEST_NAME, rows)
+
+
+## Opens each named row in the variable window the way its menu's Edit does, presses OK without
+## touching anything, and returns each row's declaration line as the file then reads.
+static func _window_ok_lines(source: String, names: Array) -> Array:
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(SUPPORT.reopen(source))
+	for row_name: String in names:
+		for entry: Variant in dock._current_sheet.events:
+			if entry is LocalVariable and (entry as LocalVariable).name == row_name:
+				dock._variables._context_variable = {"scope": "tree", "name": row_name, "resource": entry}
+		dock._variables._edit_context_variable()
+		dock._variable_dlg._on_confirmed()
+	var lines: Array = []
+	for line: String in SUPPORT.compile_output(dock._current_sheet, OUT_PATH).split("\n"):
+		for row_name: String in names:
+			if line.contains(" %s " % row_name) or line.contains(" %s:" % row_name):
+				lines.append(line)
+	dock.free()
+	DirAccess.remove_absolute(OUT_PATH)
+	return lines
 
 
 static func _open(source: String) -> EventSheetResource:

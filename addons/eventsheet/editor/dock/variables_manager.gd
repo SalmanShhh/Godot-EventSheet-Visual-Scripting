@@ -792,13 +792,15 @@ func _edit_context_variable() -> void:
 			edit_attributes["getter_body"] = tree_var.getter_body
 			edit_attributes["setter_param"] = tree_var.setter_param
 		# A `var hp := 100` is offered the one tick that writes the type Godot infers for it.
-		# So is an untyped `@export var damage = 3`, which already knows the type its value implies.
+		# So is an untyped `@export var damage = 3`, which already knows the type its value implies,
+		# and an untyped `var tint = Color.WHITE`, whose tick writes `: Variant` - unticked, as the
+		# file has it. Only an inferred line Godot cannot name a type for has no tick to offer.
 		var inferred_type: String = NativeVariableMarks.gdscript_type_word(tree_var.type_name,
 			tree_var.default_value, true) if tree_var.inferred_type else (tree_var.type_name if tree_var.untyped else "")
 		_dock._variable_dlg.open_for_edit(
 			"tree",
 			{"editing": true, "variable_resource": tree_var, "attributes": edit_attributes,
-				"inferred_type": inferred_type if inferred_type != "Variant" else "",
+				"inferred_type": inferred_type if inferred_type != "Variant" or tree_var.untyped else "",
 				"export_hint": tree_var.export_hint, "options": tree_var.options},
 			tree_var.name,
 			tree_var.type_name,

@@ -784,6 +784,11 @@ func _current_value_kind() -> String:
 	var stored: String = _selected_stored_type()
 	if _enum_names().has(stored):
 		return "enum"
+	# Any type reads its field as text, but a row the file wrote with code for its value
+	# (`var tint = Color.WHITE`) is code: read as text, OK would quote it into a String.
+	if stored == "Variant" and _context.get("variable_resource") is LocalVariable \
+			and (_context["variable_resource"] as LocalVariable).expression_default:
+		return "code"
 	var meta: String = str(_type_option.get_item_metadata(_type_option.selected)) if _type_option.selected >= 0 else stored
 	return value_kind(meta)
 
