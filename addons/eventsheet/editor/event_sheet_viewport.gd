@@ -4285,7 +4285,7 @@ func _inspector_preview_payload(hit: Dictionary, metadata: Dictionary) -> Dictio
 		return {
 			"name": tree_var.name,
 			"type_name": tree_var.type_name,
-			"default_text": ReadingDoors.variable_dialog()._default_display_text(tree_var.default_value),
+			"default_text": EventSheetVariableOwners.default_text(tree_var.default_value),
 			"attributes": (tree_var.attributes as Dictionary).duplicate() if tree_var.attributes is Dictionary else {},
 			"constant": tree_var.is_constant
 		}
@@ -4303,7 +4303,7 @@ func _inspector_preview_payload(hit: Dictionary, metadata: Dictionary) -> Dictio
 		return {
 			"name": str(metadata.get("variable_name", "")),
 			"type_name": str(descriptor_dict.get("type", "Variant")),
-			"default_text": ReadingDoors.variable_dialog()._default_display_text(descriptor_dict.get("default")),
+			"default_text": EventSheetVariableOwners.default_text(descriptor_dict.get("default")),
 			"attributes": attributes,
 			"constant": bool(metadata.get("is_constant", false))
 		}

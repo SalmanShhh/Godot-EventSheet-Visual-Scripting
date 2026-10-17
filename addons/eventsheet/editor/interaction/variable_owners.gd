@@ -28,10 +28,31 @@ const GROUP_INSTANCE: String = "instance"
 const GROUP_GLOBAL: String = "global"
 const GROUP_LOCAL: String = "local"
 
+## The parameter hint a variable-reference field is declared with. Frozen like the hints it sits
+## beside: shipped descriptors carry it, and the parameters dialog keys its variable dropdown on it.
+const VARIABLE_REFERENCE_HINT: String = "variable_reference"
+
 ## The order a reader meets the groups in: this object first (the one they are editing), then the
 ## globals it reaches for, then the locals in view. The same order the expression picker, the
 ## Anatomy rail and the picker's Variables section list them in.
 const GROUP_ORDER: PackedStringArray = [GROUP_INSTANCE, GROUP_GLOBAL, GROUP_LOCAL]
+
+
+
+## The words a variable's default value shows as - on its row, in the Anatomy rail, in the
+## Inspector's tables and in the variable dialog's Initial value field - and the inverse of the
+## dialog's `_parse_default`, so the pair MUST round-trip. Containers and the value types use the
+## canonical GDScript literal (str() would give the unparseable "(0, 0)" form); null shows as empty.
+##
+## Here rather than on the dialog because the rows ask it: the dialog is thousands of lines that
+## name the parameters dialog and the picker, and a sheet's first rows compiled all three for this.
+static func default_text(value: Variant) -> String:
+	if value == null:
+		return ""
+	if value is Array or value is Dictionary or value is Color or typeof(value) in [TYPE_VECTOR2, TYPE_VECTOR2I,
+			TYPE_VECTOR3, TYPE_VECTOR3I, TYPE_VECTOR4, TYPE_VECTOR4I, TYPE_RECT2, TYPE_RECT2I, TYPE_QUATERNION]:
+		return ReadingDoors.compiler()._to_code_literal(value)
+	return str(value)
 
 
 ## Every variable this sheet can name, as one flat list in reading order:
@@ -97,7 +118,7 @@ static func own_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 			"name": nested_name,
 			"type_name": descriptor.type_name,
 			"type_word": ViewportRowBuilder.friendly_type_word(descriptor.type_name),
-			"value": ReadingDoors.variable_dialog()._default_display_text(descriptor.default_value),
+			"value": default_text(descriptor.default_value),
 			"scope": EventSheetVariableSentence.member_scope(
 				descriptor.is_constant, descriptor.is_static, autoload, resource_host),
 			"owner": self_object,
@@ -171,7 +192,7 @@ static func local_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 			"name": name_text,
 			"type_name": descriptor.type_name,
 			"type_word": ViewportRowBuilder.friendly_type_word(descriptor.type_name),
-			"value": ReadingDoors.variable_dialog()._default_display_text(descriptor.default_value),
+			"value": default_text(descriptor.default_value),
 			"scope": EventSheetVariableSentence.local_scope(descriptor.static_local),
 			"owner": OWNER_SYSTEM,
 			"group": GROUP_LOCAL,
@@ -324,7 +345,7 @@ static func variable_reference_values(parameters: Array, params: Dictionary) -> 
 		elif entry is ACEParam:
 			param_id = (entry as ACEParam).id
 			hint = (entry as ACEParam).hint
-		if not hint.begins_with(ReadingDoors.params_dialog().VARIABLE_REFERENCE_HINT):
+		if not hint.begins_with(VARIABLE_REFERENCE_HINT):
 			continue
 		var value: String = str(params.get(param_id, "")).strip_edges()
 		if not value.is_empty():

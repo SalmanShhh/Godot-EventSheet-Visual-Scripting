@@ -33,8 +33,9 @@
 #   editor_build_ms - that load plus `.new()` on it: what the plugin's lazy editor build pays
 #                     before the editor is handed to the main screen.
 #
-#   cached          - after that build, off the clock, the workspace opens a blank sheet and runs
-#                     the picker's whole idle warm, exactly as the first open in the editor does;
+#   cached          - after that build, off the clock, the workspace opens a blank sheet and then
+#                     FIRST_SHEET, and runs the picker's whole idle warm, as the first open in the
+#                     editor does;
 #                     then the heavy scripts in RUNTIME_HEAVY that this left compiled, or `none`.
 #                     A VALUE, not a time: the static closure walk cannot see a helper the dock
 #                     reaches by path at runtime, and this is the gate that can.
@@ -73,6 +74,15 @@ const RUNTIME_HEAVY: Array[String] = [
 	"res://addons/eventsheet/editor/variable_dialog.gd",
 	"res://addons/eventforge/project_doctor.gd",
 	"res://addons/eventsheet/api/eventsheets.gd",
+	# And the dock helpers only a click reaches. Each is small, but each was built while the canvas
+	# and the strip were being wired - a handler named as a bound method builds its helper on the
+	# spot - and together they cost the first open about a second of compiling.
+	"res://addons/eventsheet/editor/dock/ask_field.gd",
+	"res://addons/eventsheet/editor/dock/function_dialog_glue.gd",
+	"res://addons/eventsheet/editor/dock/sheet_head_actions.gd",
+	"res://addons/eventsheet/editor/dock/navigate.gd",
+	"res://addons/eventsheet/editor/dock/add_row_requests.gd",
+	"res://addons/eventsheet/editor/dock/variable_grouping.gd",
 ]
 const MANUAL_FOLDER: String = "res://addons/eventsheet/editor/docs/"
 
@@ -203,6 +213,11 @@ func _time_editor_build() -> String:
 		float(loaded_usec - start_usec) / 1000.0, float(built_usec - start_usec) / 1000.0]
 	if editor is Node:
 		(editor as Node).call("setup", load(SHEET_RESOURCE_SCRIPT).new())
+		# And the ordinary first sheet opened through the workspace's own door, because a blank sheet
+		# has no rows to read: the Doctor and the variable dialog both rode in on the reading of real
+		# rows - the script list the share index asks for, a variable's default value - and a blank
+		# sheet never asked either question.
+		(editor as Node).call("_load_sheet_from_path", FIRST_SHEET)
 		(load(PICKER_WARMUP_SCRIPT) as Object).call("warm_now")
 		var cached: PackedStringArray = PackedStringArray()
 		for path: String in runtime_heavy_paths():

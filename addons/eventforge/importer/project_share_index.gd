@@ -30,7 +30,7 @@
 class_name EventSheetProjectShareIndex
 extends RefCounted
 
-const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+const ProjectFiles := preload("res://addons/eventforge/project_files.gd")
 
 ## How long one slice of the first build may take. Small enough that a frame carrying one is
 ## indistinguishable from a frame that is not, which is the only budget worth having here: the scan
@@ -129,7 +129,7 @@ static func request() -> bool:
 		# ONE scan, two halves: every scene, then every script. One module, one cache, one drop - and
 		# the halves in that order because the scene answers have a caller that blocks on them.
 		_pending = EventSheetSceneConnections.scene_paths().duplicate()
-		_pending_scripts = ReadingDoors.doctor().all_project_scripts()
+		_pending_scripts = ProjectFiles.all_scripts()
 		_next = 0
 		_next_script = 0
 		_holders.clear()

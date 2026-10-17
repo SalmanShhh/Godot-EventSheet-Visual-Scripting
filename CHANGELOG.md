@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Fixed: opening a real sheet stops compiling the Doctor, the dialogs and the Manual
+
+- The workspace's first open measured 18.0 to 24.2 seconds (median 21.7) against 23.6 to 38.7
+  (median 27.3) before, five alternating runs each in a copy of the project outside OneDrive. The
+  gate only ever opened a blank sheet, and the reading of real rows reached four things a click
+  needs: the share index asked the Project Doctor for the project's script list (about five
+  seconds of compiling for a list of paths), the Interop section's "stays code" check read its file
+  through the Doctor, a variable's default value was written by the variable dialog (which names the
+  parameters dialog and the picker), and the read-next suggestion put the sheet through the
+  Manual's search inside the wait.
+- The script list is one small walker the Doctor walks through too; "stays code" reads the file;
+  the default value's words and the variable-reference hint live with the variable owners; the
+  suggestion is worked out a frame after the rows are on screen.
+- Six more click-only dock helpers (the ask field, the function dialog, the head actions,
+  go-to-definition, add rows, variable groups) were built while the canvas and the strip were
+  wired, about a second between them; their signals now reach them when they fire.
+- The cold-boot gate opens an ordinary showcase script after the blank sheet, and names those six
+  helpers among what the first open must leave uncompiled.
+
 ### Fixed: a name stays as written in a window's table, and the last English lines are translated
 
 - A window's table translated its cells, so in a Japanese editor the Debugger listed an object

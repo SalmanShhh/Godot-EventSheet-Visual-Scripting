@@ -49,7 +49,7 @@ static func rows_for(sheet: EventSheetResource) -> Array[Dictionary]:
 			"name": variable.name,
 			"type_name": variable.type_name,
 			"type_word": ViewportRowBuilder.friendly_type_word(variable.type_name),
-			"value": ReadingDoors.variable_dialog()._default_display_text(variable.default_value),
+			"value": EventSheetVariableOwners.default_text(variable.default_value),
 			"inspector": variable.exported,
 			"description": str(attributes.get("tooltip", "")),
 			"scope": EventSheetVariableSentence.member_scope(
@@ -67,7 +67,7 @@ static func rows_for(sheet: EventSheetResource) -> Array[Dictionary]:
 			"name": str(key),
 			"type_name": type_name,
 			"type_word": ViewportRowBuilder.friendly_type_word(type_name),
-			"value": ReadingDoors.variable_dialog()._default_display_text(descriptor.get("default", null)),
+			"value": EventSheetVariableOwners.default_text(descriptor.get("default", null)),
 			"inspector": bool(descriptor.get("exported", descriptor.get("exposed", true))),
 			"description": str(descriptor_attributes.get("tooltip", "")),
 			"scope": EventSheetVariableSentence.member_scope(

@@ -29,9 +29,10 @@ func init(dock: Control) -> void:
 ## A callable for a signal whose handler lives on a dock helper that is built on first use: the
 ## helper is reached when the signal fires, not when it is connected. Wiring the canvas this way
 ## keeps the ACE helper, which names the picker, the parameters dialog and the Doctor, out of the
-## first open of the workspace.
+## first open of the workspace - and every other helper a click reaches, each of which cost a
+## compile on that open. It answers what the handler answers, so a probe can be wired this way too.
 func later(helper: String, method: String) -> Callable:
-	return func(...arguments: Array) -> void: (_dock.get(helper) as Object).callv(method, arguments)
+	return func(...arguments: Array) -> Variant: return (_dock.get(helper) as Object).callv(method, arguments)
 
 
 func build_ui() -> void:
@@ -283,8 +284,8 @@ func build_ui() -> void:
 	_dock._viewport.ace_picker_requested.connect(later("_ace_apply", "_on_viewport_ace_picker_requested"))
 	_dock._viewport.rows_rebuilt.connect(_dock._update_sheet_counts_status)
 	_dock._viewport.span_edit_requested.connect(_dock._on_viewport_span_edit_requested)
-	_dock._viewport.navigate_requested.connect(_dock._navigate.navigate)
-	_dock._viewport.navigation_probe = _dock._navigate.can_navigate
+	_dock._viewport.navigate_requested.connect(later("_navigate", "navigate"))
+	_dock._viewport.navigation_probe = later("_navigate", "can_navigate")
 	_dock._viewport.rename_note_provider = _dock._variable_rename_note
 	_dock._viewport.editor_tool_action_requested.connect(_dock._editor_tool_bar.activate)
 	_dock._viewport.this_editor_action_requested.connect(_dock._this_editor_bar.activate)
@@ -302,7 +303,7 @@ func build_ui() -> void:
 	_dock._viewport.enum_edit_requested.connect(_dock._open_enum_dialog)
 	_dock._viewport.signal_edit_requested.connect(_dock._open_signal_dialog)
 	_dock._viewport.custom_block_edit_requested.connect(_dock._open_custom_block_dialog)
-	_dock._viewport.function_edit_requested.connect(_dock._function_dialog_glue._open_function_dialog_for)
+	_dock._viewport.function_edit_requested.connect(later("_function_dialog_glue", "_open_function_dialog_for"))
 	_dock._viewport.verb_properties_requested.connect(_dock.open_verb_properties)
 	_dock._viewport.function_description_requested.connect(_dock.open_function_description)
 	_dock._viewport.object_properties_requested.connect(_dock.open_object_properties)
@@ -310,12 +311,12 @@ func build_ui() -> void:
 	_dock._viewport.data_class_add_field_requested.connect(_dock._open_data_class_add_field_for)
 	_dock._viewport.comment_door_requested.connect(_dock.open_comment_door)
 	_dock._viewport.code_echo_activated.connect(_dock._code_panel_glue.open_at_row)
-	_dock._viewport.sheet_head_action_requested.connect(_dock._head_actions.handle)
+	_dock._viewport.sheet_head_action_requested.connect(later("_head_actions", "handle"))
 	_dock._viewport.group_action_requested.connect(_dock._on_group_action_requested)
 	_dock._viewport.region_fix_requested.connect(_dock._close_orphan_region)
 	_dock._viewport.variable_note_fix_requested.connect(_dock._apply_variable_note_fix)
-	_dock._viewport.variable_group_requested.connect(_dock._variable_grouping.on_group_requested)
-	_dock._viewport.variable_group_rename_requested.connect(_dock._variable_grouping.on_rename_requested)
+	_dock._viewport.variable_group_requested.connect(later("_variable_grouping", "on_group_requested"))
+	_dock._viewport.variable_group_rename_requested.connect(later("_variable_grouping", "on_rename_requested"))
 	_dock._viewport.match_edit_requested.connect(_dock._open_match_dialog)
 	_dock._viewport.row_disable_toggle_requested.connect(_dock._toggle_selected_rows_enabled)
 	_dock._viewport.row_move_requested.connect(_dock._move_selected_row)

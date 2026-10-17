@@ -105,14 +105,14 @@ static func run() -> bool:
 		str(EventSheetInspectorLooks.by_id("min_max").get("label")), "Min-max range") and all_passed
 
 	# Dialog default-field round-trip: the EXACT text the dialog displays for a value must parse back to that
-	# value. This drives _default_display_text → _parse_default (the real edit cycle). Before the fix the
+	# value. This drives EventSheetVariableOwners.default_text → _parse_default (the real edit cycle). Before the fix the
 	# display used str() - "(5.0, -3.0)" - which _parse_default silently zeroed the first component on edit.
 	all_passed = _eq("a Vector2 default survives a display→edit cycle",
-		VariableDialog._parse_default("Vector2", VariableDialog._default_display_text(Vector2(5.0, -3.0))), Vector2(5.0, -3.0)) and all_passed
+		VariableDialog._parse_default("Vector2", EventSheetVariableOwners.default_text(Vector2(5.0, -3.0))), Vector2(5.0, -3.0)) and all_passed
 	all_passed = _eq("a Color default survives a display→edit cycle",
-		VariableDialog._parse_default("Color", VariableDialog._default_display_text(Color(0.5, 0.25, 0.75, 1.0))), Color(0.5, 0.25, 0.75, 1.0)) and all_passed
+		VariableDialog._parse_default("Color", EventSheetVariableOwners.default_text(Color(0.5, 0.25, 0.75, 1.0))), Color(0.5, 0.25, 0.75, 1.0)) and all_passed
 	all_passed = _eq("a resource (null) default displays empty and parses back to null",
-		VariableDialog._parse_default("Texture2D", VariableDialog._default_display_text(null)), null) and all_passed
+		VariableDialog._parse_default("Texture2D", EventSheetVariableOwners.default_text(null)), null) and all_passed
 
 	# texture_preview is Texture2D-only (matches the dialog picker) - a String never gets the marker.
 	all_passed = _eq("texture_preview on a String emits no marker",

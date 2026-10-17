@@ -57,10 +57,14 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 
 ## Whether this file carries the mark that keeps it code. Read off the file, so it is the same answer
 ## whether the plugin is asking, a reader is looking, or a diff is being reviewed.
+##
+## Read straight off the disk rather than through the Doctor's shared reads: every sheet open asks
+## this, and asking the Doctor compiled all of it into the first open of the workspace. Outside a
+## Doctor run that read IS a plain file read, and the section's own walk below keeps the shared one.
 static func stays_code(script_path: String) -> bool:
 	if script_path.strip_edges().is_empty():
 		return false
-	return _marked_in(ReadingDoors.doctor().source_of(script_path))
+	return _marked_in(FileAccess.get_file_as_string(script_path))
 
 
 ## The same question asked of text already in hand, which is how the report asks it: it reads every

@@ -60,7 +60,7 @@ static func params_dialog() -> Script:
 	return _script(PARAMS_DIALOG_PATH)
 
 
-## The variable dialog script, for the way it writes a default value.
+## The variable dialog script, for the way it reads a typed default value back.
 static func variable_dialog() -> Script:
 	return _script(VARIABLE_DIALOG_PATH)
 

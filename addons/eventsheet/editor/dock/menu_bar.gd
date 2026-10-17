@@ -394,9 +394,9 @@ func build(root: Node) -> void:
 	_add_separator = _toolbar.get_child(_toolbar.get_child_count() - 1) as Control
 	_add_separator.name = "EventSheetAddSeparator"
 	# The core reflexes stay one click (E / C / A on the keyboard).
-	_add_event_button = _add_toolbar_button(_toolbar, "Add Event", _dock._add_rows.on_add_event_requested, "Add an event (E).", "Add")
-	_add_condition_button = _add_toolbar_button(_toolbar, "Add Condition", _dock._add_rows.on_add_condition_requested, "Add a condition to the selected event (C).", "MemberConstant")
-	_add_action_button = _add_toolbar_button(_toolbar, "Add Action", _dock._add_rows.on_add_action_requested, "Add an action to the selected event (A).", "MemberMethod")
+	_add_event_button = _add_toolbar_button(_toolbar, "Add Event", _dock._ui_builder.later("_add_rows", "on_add_event_requested"), "Add an event (E).", "Add")
+	_add_condition_button = _add_toolbar_button(_toolbar, "Add Condition", _dock._ui_builder.later("_add_rows", "on_add_condition_requested"), "Add a condition to the selected event (C).", "MemberConstant")
+	_add_action_button = _add_toolbar_button(_toolbar, "Add Action", _dock._ui_builder.later("_add_rows", "on_add_action_requested"), "Add an action to the selected event (A).", "MemberMethod")
 	# Kept as a reference: Simple Mode hides this deliberate drop-to-code surface entirely.
 	_dock._add_code_button = _add_toolbar_button(_toolbar, "Add Code", _dock._on_add_gdscript_action_requested, "Add a script block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.", "Script")
 	# Add ▸ - the whole authoring vocabulary, as a cascading submenu of the one Menu rather than as a
@@ -948,10 +948,13 @@ func build(root: Node) -> void:
 		if _dock._quick_add(text):
 			_quick_add_edit.clear()
 	)
-	# And the answers, riding the same field on the shipped completion popup. The add line is the
-	# first entry in that list and runs this very same call, so Enter on an untouched list still
-	# adds the row - the popup swallows the key, and the add happens on the other side of it.
-	_dock._ask_field.attach(_quick_add_edit)
+	# And the answers, riding the same field on the shipped completion popup - the same list, the
+	# same highlight, the same Tab/Enter/Escape. The add line is the first entry in that list and runs
+	# this very same call, so Enter on an untouched list still adds the row - the popup swallows the
+	# key, and the add happens on the other side of it. The ask helper is reached on the first
+	# keystroke rather than here, which kept it and what it names out of the first open.
+	EventSheetCompletionPopup.attach_entries(_quick_add_edit,
+		func(typed: String) -> Array[Dictionary]: return _dock._ask_field.entries(typed))
 	# The Text labels layout keeps the Find field at the right edge, the way a word-led strip reads:
 	# this spacer takes the room left on the line while that layout is on, and is a zero-width
 	# nothing on the icon-led strip.

@@ -29,7 +29,7 @@
 class_name EventSheetLocalTokens
 extends RefCounted
 
-const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+const ProjectFiles := preload("res://addons/eventforge/project_files.gd")
 
 ## The shape of a baked local, frozen because it is already baked into shipped files: two leading
 ## underscores, a lowercase prefix, an underscore, and eight hex digits. Group 1 is the token.
@@ -216,11 +216,11 @@ static func index_over(paths: PackedStringArray) -> Dictionary:
 
 ## The project's own index, built once per session and held until the filesystem moves. The corpus is
 ## the project's scripts - the sheets a person writes - and not the plugin's own source, which is
-## exactly the listing the Doctor already keeps for the same reason.
+## the same listing the Doctor's own sweeps walk.
 static func project_index() -> Dictionary:
 	if _index_built:
 		return _index
-	_index = index_over(ReadingDoors.doctor().all_project_scripts())
+	_index = index_over(ProjectFiles.all_scripts())
 	_index_built = true
 	return _index
 

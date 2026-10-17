@@ -23,6 +23,7 @@ const DOCK_REGISTRY := preload("res://addons/eventsheet/api/dock_registry.gd")
 const EVENTSHEETS_API_PATH := "res://addons/eventsheet/api/eventsheets.gd"
 const DOC_EXPLAIN_PATH := "res://addons/eventsheet/editor/docs/doc_explain.gd"
 const PROJECT_DOCTOR_PATH := "res://addons/eventforge/project_doctor.gd"
+const PROJECT_FILES_PATH := "res://addons/eventforge/project_files.gd"
 const SHEET_COMPILER_PATH := "res://addons/eventforge/compiler/sheet_compiler.gd"
 const GDSCRIPT_IMPORTER_PATH := "res://addons/eventforge/importer/gdscript_importer.gd"
 const ACE_PICKER_PATH := "res://addons/eventsheet/editor/ace_picker.gd"
@@ -1128,8 +1129,9 @@ func _on_translations_maybe_changed() -> void:
 	# file stamps with it, which is what makes every by-file reader re-stat rather than trust a saved
 	# identity from before the change.
 	EventSheetSceneConnections.clear_cache()
-	# And the listing of the project's own scripts, which every health check walks (held by the
-	# Doctor, so there is nothing to drop until something has loaded it).
+	# And the listing of the project's own scripts, which every health check and the share index walk
+	# (held by the walker and by the Doctor, so there is nothing to drop until something has loaded them).
+	_clear_if_loaded(PROJECT_FILES_PATH, "clear")
 	_clear_if_loaded(PROJECT_DOCTOR_PATH, "clear_project_scripts")
 	# And the tokens those scripts already hold, which the next `{uid}` mint draws against. A file
 	# that arrived from a pull holds tokens this session never minted, and a mint that answered from

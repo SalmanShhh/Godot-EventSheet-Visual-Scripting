@@ -356,7 +356,10 @@ func _finish_gd_open(sheet: EventSheetResource, raw_sheet: EventSheetResource, r
 		_dock._set_status("Opened %s as code - stopped working out the events, so every function is shown as a script block. Reopen the file to try again." % resolved_path.get_file())
 		return
 	_dock._set_status("Opened %s - viewing it as a sheet. Just start editing to change it here, or \"Open in Godot Script Editor\" for the code. (%s)" % [resolved_path.get_file(), EventSheetLiftReport.summary(EventSheetLiftReport.for_sheet(sheet))])
-	_offer_read_next(sheet)
+	# Deferred, so the rows are on screen before the suggestion is worked out: it is a census of the
+	# sheet put through the Manual's search, and on a session's first open it compiled the Manual's
+	# scripts inside the wait for the sheet.
+	_offer_read_next.call_deferred(sheet)
 
 
 ## The one unprompted suggestion this surface makes: a guide on a learning path that teaches verbs

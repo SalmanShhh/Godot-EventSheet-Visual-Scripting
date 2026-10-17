@@ -38,16 +38,6 @@ func init(dock: Control) -> void:
 	_dock = dock
 
 
-## Rides the quick-add field with the shipped completion popup - the same list, the same highlight,
-## the same Tab/Enter/Escape. The field's own `text_submitted` still runs when nothing in the popup
-## is chosen, which is what keeps a typed-and-Entered sentence adding a row.
-func attach(field: LineEdit) -> void:
-	if field == null:
-		return
-	EventSheetCompletionPopup.attach_entries(field,
-		func(typed: String) -> Array[Dictionary]: return entries(typed))
-
-
 ## The whole list one query draws: the add line, then the answers with their doors attached. Empty
 ## for an empty field, so a field nobody has typed in shows nothing at all.
 func entries(query: String) -> Array[Dictionary]:

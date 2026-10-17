@@ -20,6 +20,7 @@ class_name EventSheetProjectDoctor
 extends RefCounted
 
 const TEMP_PATH := "user://eventsheets_doctor_temp.gd"
+const ProjectFiles := preload("res://addons/eventforge/project_files.gd")
 
 ## Extension checks registered through EventSheets.register_doctor_check: Array of
 ## {"id": String, "run": Callable}. They run after the built-ins in every runner
@@ -30,11 +31,6 @@ static var _extension_checks: Array[Dictionary] = []
 ## start of a run and on the editor's filesystem ping - see `_project_scripts`.
 static var _project_scripts_cache: PackedStringArray = PackedStringArray()
 static var _project_scripts_walked: bool = false
-
-## And the same walk WITHOUT the project's declared folders taken out of it - the whole project, for
-## the readers that are not the audit. See `all_project_scripts`.
-static var _all_scripts_cache: PackedStringArray = PackedStringArray()
-static var _all_scripts_walked: bool = false
 
 ## path -> that file's text, for the length of one audit - see `source_of`.
 static var _source_cache: Dictionary = {}
@@ -2948,8 +2944,7 @@ static func _project_scripts() -> PackedStringArray:
 static func clear_project_scripts() -> void:
 	_project_scripts_cache = PackedStringArray()
 	_project_scripts_walked = false
-	_all_scripts_cache = PackedStringArray()
-	_all_scripts_walked = false
+	ProjectFiles.clear()
 	_source_cache.clear()
 	_sheet_cache.clear()
 
@@ -3019,35 +3014,14 @@ static func _walk_project_scripts() -> PackedStringArray:
 
 
 ## Every project GDScript outside `addons/`, INCLUDING the folders this project declared out of its
-## audit. The whole project, as the filesystem has it.
-##
-## THE AUDIT IS NOT THE ONLY READER OF THIS WALK, and that is the whole reason this pair exists. The
-## Doctor's own corpus is `_project_scripts()` and it IS narrowed, because a finding about a folder
-## the reader called uninteresting is exactly the noise the setting removes. But four readers here
-## are not the audit, and narrowing them would not make a report quieter - it would make the editor
-## and the compiler WRONG:
-##
-##   - the baked-local token index, where a name colliding with one in a skipped folder is still a
-##     collision the emitted code has to avoid;
-##   - the project share index behind the "called by" band and the rename notes, where a caller the
-##     editor cannot see is a rename that silently breaks working code;
-##   - the sheet-contract gate, which asks whether files round-trip rather than whether they are
-##     worth advising about;
-##   - the language-variants dialog, which lists what the project actually preloads.
-##
-## Held between asks and dropped by `clear_project_scripts()`, exactly like the narrowed list.
+## audit: the whole project, for the readers that are not the audit. The walk and the list it holds
+## live in `project_files.gd`, so a reader that wants only the list does not compile the Doctor.
 static func all_project_scripts() -> PackedStringArray:
-	if _all_scripts_walked:
-		return _all_scripts_cache
-	_all_scripts_cache = _walk_files(_PLUGIN_DIRECTORIES, func(path: String) -> bool:
-		return path.ends_with(".gd"), false)
-	_all_scripts_walked = true
-	return _all_scripts_cache
+	return ProjectFiles.all_scripts()
 
 
 ## The directories no sweep here steps into: this plugin's own code, which the reader did not write.
-## `.godot` and every other dot-directory are skipped by the walk itself.
-const _PLUGIN_DIRECTORIES: PackedStringArray = ["addons"]
+const _PLUGIN_DIRECTORIES: PackedStringArray = ProjectFiles.PLUGIN_DIRECTORIES
 
 ## The same sentence, handed to the project to finish: the folders THIS project says its audit is
 ## not about.
@@ -3108,55 +3082,21 @@ static func is_in_skipped_folder(path: String) -> bool:
 	return false
 
 
-## Every file under res:// that `keeps` says yes to, in path order.
+## Every file under res:// that `keeps` says yes to, in path order, through the one directory walk
+## in `project_files.gd`.
 ##
-## The ONE directory walk, which four sweeps here were each carrying their own copy of. The copies
-## only ever differed in two places - which directories to step over, and which files to keep - so
-## those are the two arguments, and the walk, the unreadable-directory guard, the handle that gets
-## closed and the final sort live here once.
-##
-## PATH ORDER, ALWAYS. A directory walk hands files back in filesystem order (near-alphabetical on
-## NTFS, hash order on ext4), and forty-odd checks derive their finding order and their "first user"
-## picks from these lists - so a report that took the walk's own order would reorder itself between
-## two machines and be reporting the filesystem rather than the project.
-##
-## THE PROJECT'S OWN DECLARED FOLDERS ARE ADDED HERE, once, rather than at the four call sites, so
-## every corpus this audit reads is the same corpus. That is not tidiness: `.gd` and `.tscn` are read
-## by the same checks against each other - the method-track sweep builds its index of defined
-## functions from the scripts and its list of calls from the scenes - so filtering one and not the
-## other would not narrow the report, it would MANUFACTURE findings, accusing a scene of calling a
-## function whose script the walk had just been told to look away from.
-##
-## `apply_project_scope` is false for the ONE walk that must see the whole project whatever the
-## project declared - see `all_project_scripts`.
-static func _walk_files(skipped_directories: PackedStringArray,
-		keeps: Callable, apply_project_scope: bool = true) -> PackedStringArray:
+## THE PROJECT'S OWN DECLARED FOLDERS ARE ADDED HERE, once, rather than at the call sites, so every
+## corpus this audit reads is the same corpus. That is not tidiness: `.gd` and `.tscn` are read by
+## the same checks against each other - the method-track sweep builds its index of defined functions
+## from the scripts and its list of calls from the scenes - so filtering one and not the other would
+## not narrow the report, it would MANUFACTURE findings, accusing a scene of calling a function whose
+## script the walk had just been told to look away from.
+static func _walk_files(skipped_directories: PackedStringArray, keeps: Callable) -> PackedStringArray:
 	var skipped: PackedStringArray = skipped_directories.duplicate()
-	if apply_project_scope:
-		for folder: String in declared_skipped_folders():
-			if not skipped.has(folder):
-				skipped.append(folder)
-	var found: PackedStringArray = PackedStringArray()
-	var pending: PackedStringArray = PackedStringArray(["res://"])
-	while not pending.is_empty():
-		var directory_path: String = pending[pending.size() - 1]
-		pending.remove_at(pending.size() - 1)
-		var directory: DirAccess = DirAccess.open(directory_path)
-		if directory == null:
-			continue
-		directory.list_dir_begin()
-		var entry: String = directory.get_next()
-		while not entry.is_empty():
-			var full_path: String = directory_path.path_join(entry)
-			if directory.current_is_dir():
-				if not entry.begins_with(".") and not skipped.has(entry):
-					pending.append(full_path)
-			elif keeps.call(full_path):
-				found.append(full_path)
-			entry = directory.get_next()
-		directory.list_dir_end()
-	found.sort()
-	return found
+	for folder: String in declared_skipped_folders():
+		if not skipped.has(folder):
+			skipped.append(folder)
+	return ProjectFiles.walk(skipped, keeps)
 
 
 ## `event_number` is the sheet's own margin number for the row the finding is about (0 when the

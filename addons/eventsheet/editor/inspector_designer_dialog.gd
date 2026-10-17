@@ -87,7 +87,7 @@ static func collect_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 			"name": str(var_name),
 			"scope": "global",
 			"type_name": str(descriptor_dict.get("type", "Variant")),
-			"default_text": VariableDialog._default_display_text(descriptor_dict.get("default")),
+			"default_text": EventSheetVariableOwners.default_text(descriptor_dict.get("default")),
 			"attributes": attributes,
 			"constant": false,
 			"code": EventSheetCodeEcho.line_for_descriptor(str(var_name), descriptor_dict)
@@ -99,7 +99,7 @@ static func collect_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 				"name": tree_var.name,
 				"scope": "tree",
 				"type_name": tree_var.type_name,
-				"default_text": VariableDialog._default_display_text(tree_var.default_value),
+				"default_text": EventSheetVariableOwners.default_text(tree_var.default_value),
 				"attributes": (tree_var.attributes as Dictionary).duplicate(true) if tree_var.attributes is Dictionary else {},
 				"constant": tree_var.is_constant,
 				"code": EventSheetCodeEcho.line_for(tree_var)

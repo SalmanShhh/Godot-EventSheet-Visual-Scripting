@@ -121,9 +121,9 @@ static func run() -> bool:
 		EventSheetACELifter._is_balanced_expression("(a)")])
 	rows.append(["a compiler static answers through the door", ReadingDoors.compiler().guard_token("Enemy AI"),
 		SheetCompiler.guard_token("Enemy AI")])
-	rows.append(["the variable dialog's default text through the door",
-		ReadingDoors.variable_dialog()._default_display_text(Vector2(1, 2)),
-		VariableDialog._default_display_text(Vector2(1, 2))])
+	rows.append(["the variable dialog's default parse through the door",
+		ReadingDoors.variable_dialog()._parse_default("Vector2", "Vector2(1, 2)"),
+		VariableDialog._parse_default("Vector2", "Vector2(1, 2)")])
 	rows.append(["the Doctor's shadowing rule through the door",
 		ReadingDoors.doctor().shadowed_member_class(null, "position"),
 		EventSheetProjectDoctor.shadowed_member_class(null, "position")])

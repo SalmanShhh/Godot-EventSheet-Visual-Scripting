@@ -1192,10 +1192,10 @@ func open_for_edit(
 	_name_edit.text = name
 	var is_tree: bool = _scope == "tree"
 	_onready_check.set_pressed_no_signal(onready and is_tree)
-	_default_edit.text = _default_display_text(default_value)
+	_default_edit.text = EventSheetVariableOwners.default_text(default_value)
 	_type_search.text = ""
 	_select_stored_type(type_name)
-	_show_value(_default_display_text(default_value))
+	_show_value(EventSheetVariableOwners.default_text(default_value))
 	_context["opened_words"] = _default_edit.text
 	_const_check.set_pressed_no_signal(is_constant)
 	# A row placed among the events can be written with or without its type; the tick says which, and
@@ -1389,18 +1389,6 @@ func get_last_name_text() -> String:
 ## Parses a comma-separated choices text ("a, b, c").
 static func parse_options(raw: String) -> PackedStringArray:
 	return PackedStringArray(EventSheetInspectorLooks.split_list(raw))
-
-
-## The words a value shows as in the Initial value field - the inverse of _parse_default, and the
-## pair MUST round-trip. Containers and the value types use the canonical GDScript literal (str()
-## would give the unparseable "(0, 0)" form); null shows as an empty field.
-static func _default_display_text(value: Variant) -> String:
-	if value == null:
-		return ""
-	if value is Array or value is Dictionary or value is Color or typeof(value) in [TYPE_VECTOR2, TYPE_VECTOR2I,
-			TYPE_VECTOR3, TYPE_VECTOR3I, TYPE_VECTOR4, TYPE_VECTOR4I, TYPE_RECT2, TYPE_RECT2I, TYPE_QUATERNION]:
-		return SheetCompiler._to_code_literal(value)
-	return str(value)
 
 
 static func _parse_default(type_name: String, raw: String) -> Variant:

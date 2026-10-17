@@ -18,7 +18,7 @@ signal params_confirmed(definition: ACEDefinition, values: Dictionary, context: 
 ## Emitted when the user presses Back to return to the picker.
 signal back_requested(definition: ACEDefinition, context: Dictionary)
 
-const VARIABLE_REFERENCE_HINT := "variable_reference"
+const VARIABLE_REFERENCE_HINT := EventSheetVariableOwners.VARIABLE_REFERENCE_HINT
 const EXPRESSION_HINT := "expression"
 const NO_VARIABLES_PLACEHOLDER := "No variables available"
 const BACK_ACTION := "back"
