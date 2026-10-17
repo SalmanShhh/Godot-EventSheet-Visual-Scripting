@@ -304,9 +304,11 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 			sheet.addon_help_url = help_match.get_string(1)
 	# Recover the class description: the `##` doc block immediately after `extends` (no blank
 	# between). The host-member doc and signal annotations are separated from `extends` by a blank
-	# line, so they never match. Metadata only in external mode (the lines stay verbatim).
+	# line, so they never match. A block that runs straight into a member is that member's doc
+	# comment, the way Godot reads it, so the block must end at a blank line, a comment or the end.
+	# Metadata only in external mode (the lines stay verbatim).
 	var description_regex: RegEx = RegEx.new()
-	if description_regex.compile("(?m)^extends .+\\n((?:##.*\\n)+)") == OK:
+	if description_regex.compile("(?m)^extends .+\\n((?:##.*\\n)++)(?=\\n|#|\\z)") == OK:
 		var description_match: RegExMatch = description_regex.search(source)
 		if description_match != null:
 			var doc_lines: PackedStringArray = PackedStringArray()

@@ -48,6 +48,11 @@ static func _answers_come_from_the_header() -> bool:
 			"category": "", "icon": "", "description": "Patrols the ledge."}],
 		["the doc comments under the host are not the description",
 			EventSheetNewAddonPanel.answers_of("extends Node\n\n## The host.\nvar host: Node2D\n", "res://zz.gd")["description"], ""],
+		["...nor a function's doc comment written straight under extends", EventSheetNewAddonPanel.answers_of(
+			"extends Node\n## Called each frame.\nfunc _process(_delta: float) -> void:\n\tpass\n", "res://zz.gd")["description"], ""],
+		["...while the line under extends, then a blank, still is", EventSheetNewAddonPanel.answers_of(
+			"extends Node\n## Patrols the ledge.\n\nfunc _process(_delta: float) -> void:\n\tpass\n", "res://zz.gd")["description"],
+			"Patrols the ledge."],
 	])
 
 

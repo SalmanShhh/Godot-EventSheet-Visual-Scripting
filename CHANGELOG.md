@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Fixed: Insert keeps Godot's whole Recent list, and four smaller edges
+
+- Insert new object put its class first in Godot's own Create New Node Recent list and then kept
+  only fifteen lines of it, so every Insert dropped the rest of what Godot had written there. It
+  keeps every other line now; how long the list grows stays Godot's business.
+- An Add behaviour tile clips a long name, so its hover now leads with the name as the pack wrote
+  it, then the pitch. A behaviour made for a script class (a `class_name`) sits beside the object's
+  own kinds when the object's script is that class, and with "any node" otherwise, instead of among
+  the greyed kinds made for other objects; it was never greyed, only filed there.
+- A `##` comment written straight under `extends` that runs into a function or variable is that
+  member's doc comment, the way Godot reads it: Behaviour settings no longer shows it as the
+  behaviour's Description, and the head no longer reads it as the class description, so typing a
+  description never rewrites the function's doc line.
+- Adding a just-made behaviour to its object reads the pack list by path, and the first-open gate
+  names that list among what opening a sheet must leave uncompiled.
+
 ### Fixed: the timing pins measure the work, and sit three times over what it measures
 
 - `tools/measure_editor_boot.gd` keeps session restore off while it times: the tabs it reopened came
@@ -21,14 +37,14 @@
 
 ### Fixed: opening a real sheet stops compiling the Doctor, the dialogs and the Manual
 
-- The workspace's first open in a real editor measured 16,300 to 16,348 ms against 21,023 to
-  21,154 before (and 20,742 to 20,819 at the end of the first wave), three alternating quiet runs
-  each in a copy of the project outside OneDrive. The gate only ever opened a blank sheet, and the reading of real rows reached four things a click
-  needs: the share index asked the Project Doctor for the project's script list (about five
-  seconds of compiling for a list of paths), the Interop section's "stays code" check read its file
-  through the Doctor, a variable's default value was written by the variable dialog (which names the
-  parameters dialog and the picker), and the read-next suggestion put the sheet through the
-  Manual's search inside the wait.
+- The workspace's first open in a real editor measured 16,300 to 16,348 ms against 21,023 to 21,154
+  before (and 20,742 to 20,819 at the end of the first wave), three alternating quiet runs each in
+  a copy of the project outside OneDrive. The gate only ever opened a blank sheet, and the reading
+  of real rows reached four things a click needs: the share index asked the Project Doctor for the
+  project's script list (about five seconds of compiling for a list of paths), the Interop
+  section's "stays code" check read its file through the Doctor, a variable's default value was
+  written by the variable dialog (which names the parameters dialog and the picker), and the
+  read-next suggestion put the sheet through the Manual's search inside the wait.
 - The script list is one small walker the Doctor walks through too; "stays code" reads the file;
   the default value's words and the variable-reference hint live with the variable owners; the
   suggestion is worked out a frame after the rows are on screen.
@@ -44,8 +60,8 @@
   called Player as プレイヤー and one called targets as 対象. A table's cells are never translated
   now (its column titles are), and the sentences that sat in one say themselves in the editor's
   language: the Debugger's empty tabs and trail notes, Loose Ends' kind headings.
-- The Words page's title, preset names and column heads, Compare With's Last save / Backup entries and the
-  Welcome window's Preferences card read in the editor's language.
+- The Words page's title, preset names and column heads, Compare With's Last save / Backup entries
+  and the Welcome window's Preferences card read in the editor's language.
 
 ### Fixed: the Theme Editor's preview reads, and two windows keep their foot in place
 
@@ -71,6 +87,7 @@
   sheet keeps them byte for byte, and the variable window's Columns field keeps them too.
 - The Inspector table's headers read each column's name as the code writes it (`max_jumps`, no
   longer Max Jumps).
+
 ### Fixed: the windows the canvas build touched speak the editor's language
 
 - Opened in a German or Japanese editor, Sheet Type, the Welcome window and the tour, Compare With,

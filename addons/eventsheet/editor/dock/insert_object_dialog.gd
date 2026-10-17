@@ -25,10 +25,8 @@ extends RefCounted
 const TREE_ROOTS: PackedStringArray = ["Node", "Resource", "RefCounted"]
 ## The class the window lands on when it opens.
 const DEFAULT_CLASS := "CharacterBody2D"
-## Where Godot keeps its Create New Node lists (favorites.Node, create_recent.Node), and how many
-## classes its Recent list holds.
+## Where Godot keeps its Create New Node lists (favorites.Node, create_recent.Node).
 const GODOT_LISTS_FOLDER := "res://.godot/editor"
-const RECENT_LENGTH := 15
 
 var _dock: Control = null
 var _dialog: ConfirmationDialog = null
@@ -178,8 +176,9 @@ static func godot_class_list(which: String, folder: String = GODOT_LISTS_FOLDER)
 
 
 ## Puts a node class at the top of Godot's own Recent list, the way Create New Node does when a node
-## is made there: newest first, each class once, fifteen at most, every other line kept as written.
-## A class that is not a node is left out, because that list only offers nodes.
+## is made there: newest first, each class once, every other line kept as written. It never shortens
+## the list - how long it grows is Godot's own business when Create New Node next writes it. A
+## class that is not a node is left out, because that list only offers nodes.
 static func remember_recent(class_id: String, folder: String = GODOT_LISTS_FOLDER) -> void:
 	if not ClassDB.class_exists(class_id) or not (class_id == "Node" or ClassDB.is_parent_class(class_id, "Node")):
 		return
@@ -187,7 +186,7 @@ static func remember_recent(class_id: String, folder: String = GODOT_LISTS_FOLDE
 	var lines: PackedStringArray = PackedStringArray([class_id])
 	if FileAccess.file_exists(path):
 		for line: String in FileAccess.get_file_as_string(path).split("\n", false):
-			if lines.size() < RECENT_LENGTH and line.strip_edges() != class_id:
+			if line.strip_edges() != class_id:
 				lines.append(line.strip_edges())
 	DirAccess.make_dir_recursive_absolute(folder)
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)

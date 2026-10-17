@@ -76,6 +76,29 @@ static func run() -> bool:
 			lit.append(str(tile.get_meta("pack_dir")))
 	all_passed = _check("...and the longer name alone when it is the pick", lit,
 		PackedStringArray(["platformer_pathfinding"])) and all_passed
+	# A tile clips a long name, so its hover leads with the whole name as the pack wrote it.
+	var hovers: PackedStringArray = PackedStringArray()
+	behavior_dialog._packs = [{"name": "Platformer Pathfinding", "pitch": "Walks to a point.", "dir": "pp", "category": "Movement"},
+		{"name": "Quiet", "dir": "q", "category": "Movement"}]
+	behavior_dialog._rebuild_list()
+	for tile: Button in behavior_dialog.tiles():
+		hovers.append(tile.tooltip_text)
+	all_passed = _check("a tile's hover is its name, then its pitch", hovers,
+		PackedStringArray(["Platformer Pathfinding - Walks to a point.", "Quiet"])) and all_passed
+	# A shelf named for a script class is never greyed by refusal, so it never ranks with the
+	# greyed kinds: beside the object's own kinds when the object's script is that class.
+	var probe_path: String = "user://shelf_rank_probe_%d.gd" % OS.get_process_id()
+	FileAccess.open(probe_path, FileAccess.WRITE).store_string("class_name ShelfRankProbe\nextends Node\n")
+	var scripted_host: Node = Node.new()
+	scripted_host.set_script(load(probe_path))
+	all_passed = SUPPORT.pins("pack_catalog_test", [
+		["a script class the object is ranks with its own kinds", EventSheetAddBehaviorDialog.shelf_rank("ShelfRankProbe", scripted_host), 1],
+		["a script class it is not ranks with any node", EventSheetAddBehaviorDialog.shelf_rank("NoSuchScriptClass", scripted_host), 2],
+		["a Godot kind it is not stays with the greyed kinds", EventSheetAddBehaviorDialog.shelf_rank("Sprite2D", scripted_host), 3],
+		["...and refusal agrees the script class fits", EventSheetAddBehaviorDialog.refusal({"name": "X", "path": ""}, scripted_host, {}, "extends Node\nvar host: NoSuchScriptClass\n"), ""],
+	]) and all_passed
+	scripted_host.free()
+	DirAccess.remove_absolute(probe_path)
 	# A card a pack listed as switched off in an older project is an ordinary card now.
 	var listed_off: Array[Dictionary] = [{"name": "Health", "dir": "health", "category": "Health", "enabled": false}]
 	behavior_dialog._packs = listed_off

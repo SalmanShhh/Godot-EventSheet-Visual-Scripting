@@ -39,6 +39,7 @@ const INSERT_OBJECT_PATH := "res://addons/eventsheet/editor/dock/insert_object_d
 const ACE_APPLY_PATH := "res://addons/eventsheet/editor/dock/ace_apply.gd"
 const ADD_BEHAVIOR_DIALOG_PATH := "res://addons/eventsheet/editor/add_behavior_dialog.gd"
 const ADD_BEHAVIOR_PATH := "res://addons/eventsheet/editor/add_behavior.gd"
+const PACK_CATALOG_PATH := "res://addons/eventsheet/ace/pack_catalog.gd"
 const AUTHOR_LOOP_PATH := "res://addons/eventsheet/editor/dock/author_loop.gd"
 const BOOKMARKS_PANEL_PATH := "res://addons/eventsheet/editor/dock/bookmarks_panel.gd"
 const COMMAND_PALETTE_PATH := "res://addons/eventsheet/editor/dock/command_palette.gd"
@@ -7984,7 +7985,7 @@ func open_add_behavior_dialog(object_label: String) -> void:
 ## A behaviour the New behaviour form just made from an object's Behaviours list, added to that object
 ## the way picking it in the list adds it.
 func _add_made_behaviour(script_path: String, object_label: String) -> void:
-	var pack: Dictionary = EventSheetPackCatalog.describe(script_path.get_base_dir().get_file())
+	var pack: Dictionary = load(PACK_CATALOG_PATH).describe(script_path.get_base_dir().get_file())
 	if not pack.is_empty():
 		_apply_add_behavior(pack, {}, false, object_label)
 

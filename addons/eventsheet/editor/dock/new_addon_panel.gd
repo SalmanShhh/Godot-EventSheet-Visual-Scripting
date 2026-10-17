@@ -555,11 +555,17 @@ static func answers_of(source: String, path: String) -> Dictionary:
 		"works_on": works_on if not works_on.is_empty() else "Node", "scene": target.get_extension() == "tscn",
 		"category": "", "icon": "", "description": ""}
 	var past_extends: bool = false
+	var read_below_extends: bool = false
 	for raw_line: String in source.split("\n"):
 		var line: String = raw_line.strip_edges()
 		if line.begins_with("## ") and not line.begins_with("## @") and str(answers["description"]).is_empty():
 			answers["description"] = line.trim_prefix("## ").strip_edges()
+			read_below_extends = past_extends
 		if past_extends and not line.begins_with("##"):
+			# A ## block under extends that runs straight into a member is that member's doc comment,
+			# the way Godot reads it, so the behaviour has no description of its own.
+			if read_below_extends and not line.is_empty() and not line.begins_with("#"):
+				answers["description"] = ""
 			break
 		if line.begins_with("## @ace_category(") and str(answers["category"]).is_empty():
 			answers["category"] = line.get_slice("\"", 1)

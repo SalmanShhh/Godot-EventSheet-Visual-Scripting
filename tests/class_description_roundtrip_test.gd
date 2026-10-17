@@ -37,6 +37,12 @@ static func run() -> bool:
 	var bare_imported: EventSheetResource = GDScriptImporter.new().import_external_source(bare_compiled)
 	ok = _check("absent description stays empty", bare_imported.class_description, "") and ok
 
+	# A `##` block under extends that runs straight into a member is that member's doc comment, the
+	# way Godot reads it, so a typed description never rewrites a function's doc line.
+	var member_doc: EventSheetResource = GDScriptImporter.new().import_external_source(
+		"extends Node\n## Called each frame.\nfunc _process(_delta: float) -> void:\n\tpass\n")
+	ok = _check("a function's doc comment under extends is not the description", member_doc.class_description, "") and ok
+
 	# A non-behaviour (typed host) sheet also carries the description.
 	var plain: EventSheetResource = EventSheetResource.new()
 	plain.host_class = "Node2D"

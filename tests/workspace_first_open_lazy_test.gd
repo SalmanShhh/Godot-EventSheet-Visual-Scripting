@@ -101,6 +101,8 @@ const CLICK_ONLY := [
 	"res://addons/eventsheet/editor/dock/function_inspector.gd",
 	# The Insert Snippet window: read when the menu item is first chosen.
 	"res://addons/eventsheet/editor/dock/insert_snippet_dialog.gd",
+	# The pack list: read when Add behaviour opens or a made behaviour is added to its object.
+	"res://addons/eventsheet/ace/pack_catalog.gd",
 ]
 
 ## The ids a first-paint file spells out rather than reading off a file it must not compile, each

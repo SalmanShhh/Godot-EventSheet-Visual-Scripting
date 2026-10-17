@@ -218,13 +218,21 @@ func _filter_shelves() -> void:
 
 
 ## Where a shelf sits: your own behaviours first, then a kind this object is, then any node, then
-## kinds made for other objects. `shelf` is YOURS, a class name, or "" for any node.
+## kinds made for other objects. `shelf` is YOURS, a class name, or "" for any node. A kind Godot
+## does not know (a script's class_name) is never greyed by refusal(), so it is never filed with the
+## greyed kinds either: beside this object's own kinds when its script is that class, else with any
+## node.
 static func shelf_rank(shelf: String, host: Node) -> int:
 	if shelf == YOURS:
 		return 0
 	if shelf.is_empty():
 		return 2
-	return 1 if host != null and ClassDB.class_exists(shelf) and host.is_class(shelf) else 3
+	if not ClassDB.class_exists(shelf):
+		var script: Script = host.get_script() as Script if host != null else null
+		while script != null and script.get_global_name() != StringName(shelf):
+			script = script.get_base_script()
+		return 1 if script != null else 2
+	return 1 if host != null and host.is_class(shelf) else 3
 
 
 ## Every tile on the shelves, in the order they read.
@@ -258,7 +266,9 @@ func _build_tile(pack: Dictionary, why_not: String) -> Button:
 	tile.set_meta("pack_dir", str(pack.get("dir", "")))
 	tile.button_pressed = _selected_dir == str(pack.get("dir", ""))
 	tile.disabled = not why_not.is_empty()
-	tile.tooltip_text = why_not if tile.disabled else str(pack.get("pitch", "")).strip_edges()
+	# The name as written leads the hover, because a long one is clipped on the tile itself.
+	var pitch: String = str(pack.get("pitch", "")).strip_edges()
+	tile.tooltip_text = why_not if tile.disabled else str(pack.get("name", "")) + (" - " + pitch if not pitch.is_empty() else "")
 	tile.pressed.connect(func() -> void: _select_pack(pack))
 	tile.gui_input.connect(func(event: InputEvent) -> void:
 		var click: InputEventMouseButton = event as InputEventMouseButton

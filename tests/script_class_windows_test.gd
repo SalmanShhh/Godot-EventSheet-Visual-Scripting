@@ -29,15 +29,17 @@ static func _test_insert_rules() -> bool:
 	var recent_read: PackedStringArray = insert.godot_class_list("create_recent", lists)
 	var nodes: PackedStringArray = ClassDB.get_inheriters_from_class("Node2D")
 	nodes.sort()
-	for class_id: String in nodes.slice(0, 20):
+	var every_line: Dictionary = {"Sprite2D": true, "Area2D": true, "MyHandMadeClass": true}
+	for class_id: String in nodes.slice(0, 40):
 		insert.remember_recent(class_id, lists)
+		every_line[class_id] = true
 	var recent_kept: int = FileAccess.get_file_as_string(lists.path_join("create_recent.Node")).split("\n", false).size()
 	DirAccess.remove_absolute(lists.path_join("create_recent.Node"))
 	DirAccess.remove_absolute(lists)
 	return SUPPORT.pins(NAME, [
 		["Insert puts its class first in Godot's Recent list, keeping the rest as written", recent_file, "Area2D\nSprite2D\nMyHandMadeClass\n"],
 		["...and the window reads it back first", recent_read, PackedStringArray(["Area2D", "Sprite2D"])],
-		["the list never grows past Godot's fifteen", recent_kept, 15],
+		["Insert never shortens the Recent list Godot wrote", recent_kept, every_line.size()],
 		["an empty name asks for one", insert.name_problem("", "res://tests/"), "Name it to insert it."],
 		["a name code cannot write is refused", insert.name_problem("2fast", "res://tests/"), "\"2fast\" cannot be a class name."],
 		["a class Godot has is refused", insert.name_problem("Node2D", "res://tests/"), "\"Node2D\" is already the name of another class."],
