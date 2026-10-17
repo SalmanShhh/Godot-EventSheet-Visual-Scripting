@@ -92,8 +92,28 @@ static func _test_inspector() -> bool:
 	ok = SUPPORT.check(NAME, "a rename writes", inspector.apply_name("hurt"), true) and ok
 	ok = SUPPORT.check(NAME, "and the fields follow the function by its new name", inspector.live_function() != null
 		and inspector.live_function().function_name == "hurt", true) and ok
+	ok = _test_follow(dock) and ok
 	dock.free()
 	return ok
+
+
+## The Properties bar hands the selected function to the Inspector and lets it go once another row is
+## selected, writing any text still held on the way out.
+static func _test_follow(dock: EventSheetDock) -> bool:
+	var view: EventSheetViewport = dock._active_view()
+	var bar: EventSheetPropertiesBar = dock._properties_bar
+	view.select_resource(dock._current_sheet.functions[0])
+	bar.refresh()
+	var followed: String = bar._function_inspector._function_name if bar._function_inspector != null else ""
+	if bar._function_inspector != null:
+		bar._function_inspector.hold("description", "Typed, not yet left.")
+	view.clear_selection()
+	bar.refresh()
+	return SUPPORT.pins(NAME, [
+		["selecting the function hands it to the Inspector", followed, "hurt"],
+		["selecting nothing lets it go", bar._function_inspector, null],
+		["and the text still held is written", (dock._current_sheet.functions[0] as EventFunction).description, "Typed, not yet left."],
+	])
 
 
 static func _test_window() -> bool:

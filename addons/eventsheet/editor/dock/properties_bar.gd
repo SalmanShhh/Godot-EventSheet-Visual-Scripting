@@ -326,14 +326,19 @@ func _apply_group_enabled(enabled: bool) -> void:
 
 ## A selected function on a sheet that can be written is handed to Godot's Inspector, which edits
 ## its name, description, return, settings and parameters (dock/function_inspector.gd). Every
-## refresh after that lets the Inspector read the fields again, so an edit or an undo shows there.
+## refresh after that lets the Inspector read the fields again, so an edit or an undo shows there; once
+## another row is selected or the sheet closes, the Inspector lets the function go.
 func _follow_function(view: EventSheetViewport) -> void:
 	var selected: Variant = view.get_selected_context().get("source_resource", null) if view != null else null
-	if selected is EventFunction and _dock._current_sheet != null and not _dock._current_sheet.read_only \
-			and (_function_inspector == null or not _function_inspector.edits(selected as EventFunction)):
+	if not (selected is EventFunction) or _dock._current_sheet == null or _dock._current_sheet.read_only:
+		var leaving: RefCounted = _function_inspector
+		_function_inspector = null
+		if leaving != null:
+			leaving.release()
+	elif _function_inspector == null or not _function_inspector.edits(selected as EventFunction):
 		_function_inspector = load(FUNCTION_INSPECTOR_PATH).new(_dock, selected as EventFunction)
 		_function_inspector.inspect()
-	elif _function_inspector != null:
+	else:
 		_function_inspector.refresh()
 
 

@@ -159,6 +159,17 @@ func inspect() -> void:
 		EditorInterface.inspect_object(self, "", true)
 
 
+## The function is no longer selected (or its sheet closed): the Inspector stops showing this object,
+## so it never stays on a function nothing points at. Text still held is written first: its field is
+## being left, which is all the hold waits for.
+func release() -> void:
+	if not _pending.is_empty():
+		commit_pending()
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface") \
+			and EditorInterface.get_inspector().get_edited_object() == self:
+		EditorInterface.inspect_object(null)
+
+
 ## The sheet changed under the Inspector (an edit, an undo): it reads the fields again.
 func refresh() -> void:
 	notify_property_list_changed()
