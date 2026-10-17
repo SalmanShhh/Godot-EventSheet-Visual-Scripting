@@ -3039,6 +3039,17 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 				index = bracket_end + 1
 				chain_open = false
 				continue
+			# The same for a line ending in `\`: the statement goes on below it. Matching an ACE on the
+			# first line alone made a row whose value ended in a stray `\`, and left the rest - an
+			# `else …` or a `+ "…" \` - as orphan rows that began mid-expression.
+			var continued_end: int = _continuation_close(lines, index, depth)
+			if continued_end > index:
+				for continued_index: int in range(index, continued_end + 1):
+					pending_raw.append(lines[continued_index].substr(depth))
+				_flush_raw(current, pending_raw, blank_box)
+				index = continued_end + 1
+				chain_open = false
+				continue
 			_consume_action_line(current, rest, 0, pending_raw, reverse_entries, in_loop, blank_box)
 		else:
 			# A DEEPER line lives inside an unlifted control block above it. Template-matching it
@@ -3761,6 +3772,46 @@ static func _body_literal_close(lines: PackedStringArray, start: int, depth: int
 	return -1
 
 
+## The index of the last line of a statement that STARTS at `start` and goes on past a trailing `\`,
+## or -1 when the line does not continue. Every continuation line must still sit inside the body at
+## `depth` (GDScript lets one dedent, and a line this run cannot strip its indent from is not taken).
+static func _continuation_close(lines: PackedStringArray, start: int, depth: int) -> int:
+	var indent: String = "\t".repeat(depth)
+	var scan: int = start
+	while scan < lines.size() and ends_in_continuation(lines[scan]):
+		scan += 1
+		if scan >= lines.size() or not lines[scan].begins_with(indent) or lines[scan].strip_edges().is_empty():
+			return -1
+	# A block HEADER continued over lines (`if a and \` … `b:`) owns the body below it, which the
+	# ordinary path keeps with it; only a plain statement is taken here.
+	if scan == start or lines[scan].strip_edges().ends_with(":") or _inside_long_string(lines, start):
+		return -1
+	return scan
+
+
+## True when a line goes on to the next one through a trailing `\` - outside any string and any `#`
+## comment, which is the only place GDScript reads it as a continuation.
+static func ends_in_continuation(line: String) -> bool:
+	if not line.ends_with("\\"):
+		return false
+	var quote: String = ""
+	var index: int = 0
+	while index < line.length() - 1:
+		var character: String = line[index]
+		if not quote.is_empty():
+			if character == "\\":
+				index += 2
+				continue
+			if character == quote:
+				quote = ""
+		elif character == "\"" or character == "'":
+			quote = character
+		elif character == "#":
+			return false
+		index += 1
+	return quote.is_empty() and index == line.length() - 1
+
+
 ## True when line `index` sits inside a triple-quoted string opened above it in `lines`.
 static func _inside_long_string(lines: PackedStringArray, index: int) -> bool:
 	var inside: bool = false
@@ -3921,7 +3972,7 @@ static func _flush_raw(event: EventRow, pending_raw: PackedStringArray, blank_bo
 	var rejoined: PackedStringArray = PackedStringArray()
 	for piece: PackedStringArray in statements:
 		rejoined.append_array(piece)
-	if statements.size() < 2 or rejoined != pending_raw:
+	if (statements.size() < 2 and _note_indent(pending_raw).is_empty()) or rejoined != pending_raw:
 		var block: RawCodeRow = RawCodeRow.new()
 		block.code = "\n".join(pending_raw)
 		# Import triage: these lines matched no ACE template, so they stayed verbatim. Record why
@@ -3933,15 +3984,55 @@ static func _flush_raw(event: EventRow, pending_raw: PackedStringArray, blank_bo
 		pending_raw.clear()
 		return
 	var first: bool = true
-	for piece: PackedStringArray in statements:
+	var piece_index: int = 0
+	while piece_index < statements.size():
+		# A note written INSIDE a block that stayed code (a callback's body, an unlifted branch) is
+		# still a note: the run of comment lines at one indent becomes comment rows whose marker
+		# carries that indent, so each line writes back exactly as it was.
+		var note_indent: String = _note_indent(statements[piece_index])
+		if not note_indent.is_empty():
+			var note_lines: PackedStringArray = PackedStringArray()
+			while piece_index < statements.size() and _note_indent(statements[piece_index]) == note_indent:
+				for note_line: String in statements[piece_index]:
+					note_lines.append(note_line.substr(note_indent.length()))
+				piece_index += 1
+			for group: Dictionary in _split_comment_run(note_lines):
+				var indented_note: CommentRow = CommentRow.new()
+				var group_marker: String = str(group["marker"])
+				var group_text: PackedStringArray = PackedStringArray()
+				for group_line: String in (group["lines"] as PackedStringArray):
+					group_text.append(group_line.substr(group_marker.length()))
+				indented_note.text = "\n".join(group_text)
+				indented_note.source_marker = note_indent + group_marker
+				if first:
+					_stamp_body_blanks(indented_note, blank_box)
+					first = false
+				event.actions.append(indented_note)
+			continue
 		var statement_row: RawCodeRow = RawCodeRow.new()
-		statement_row.code = "\n".join(piece)
+		statement_row.code = "\n".join(statements[piece_index])
 		statement_row.lift_note = "no matching ACE template"
 		if first:
 			_stamp_body_blanks(statement_row, blank_box)
 			first = false
 		event.actions.append(statement_row)
+		piece_index += 1
 	pending_raw.clear()
+
+
+## The tabs every line of a statement piece opens with when the piece is a COMMENT sitting deeper than
+## the row it belongs to (`\t# why`), or "" when it is anything else - code, or a comment at the row's
+## own depth, which the ordinary note path already reads.
+static func _note_indent(piece: PackedStringArray) -> String:
+	if piece.is_empty():
+		return ""
+	var tabs: String = piece[0].substr(0, piece[0].length() - piece[0].lstrip("\t").length())
+	if tabs.is_empty():
+		return ""
+	for line: String in piece:
+		if not line.begins_with(tabs) or not line.substr(tabs.length()).begins_with("#"):
+			return ""
+	return tabs
 
 
 ## Which lines sit INSIDE a triple-quoted string. A multi-line string is ONE statement however its
@@ -4021,10 +4112,12 @@ static func _split_statements(pending_raw: PackedStringArray) -> Array[PackedStr
 	var pieces: Array[PackedStringArray] = []
 	var current: PackedStringArray = PackedStringArray()
 	var open_brackets: int = 0
+	# A line after a trailing `\` continues the statement above it, at whatever indent it sits.
+	var continued: bool = false
 	for line_index: int in pending_raw.size():
 		var line: String = pending_raw[line_index]
 		var line_indent: int = line.length() - line.lstrip("\t ").length()
-		var at_statement_level: bool = line_indent == base_indent and interior[line_index] == 0 and open_brackets == 0
+		var at_statement_level: bool = line_indent == base_indent and interior[line_index] == 0 and open_brackets == 0 and not continued
 		var starts_statement: bool = not line.strip_edges().is_empty() and at_statement_level
 		if starts_statement and not current.is_empty():
 			pieces.append(current)
@@ -4032,6 +4125,7 @@ static func _split_statements(pending_raw: PackedStringArray) -> Array[PackedStr
 		current.append(line)
 		if interior[line_index] == 0:
 			open_brackets = maxi(open_brackets + _bracket_delta(line), 0)
+		continued = interior[line_index] == 0 and ends_in_continuation(line)
 	if not current.is_empty():
 		pieces.append(current)
 	# A LEADING run of deeper-than-base lines is the body of an unlifted control block above the

@@ -4970,6 +4970,29 @@ static func _bracket_delta(line: String) -> int:
 	return depth
 
 
+## True when a line goes on to the next through a trailing `\` outside any string or `#` comment -
+## the importer's own rule, mirrored here so the canvas never has to load the importer to ask it.
+static func _ends_in_continuation(line: String) -> bool:
+	if not line.ends_with("\\"):
+		return false
+	var quote: String = ""
+	var index: int = 0
+	while index < line.length() - 1:
+		var character: String = line[index]
+		if not quote.is_empty():
+			if character == "\\":
+				index += 2
+				continue
+			if character == quote:
+				quote = ""
+		elif character == "\"" or character == "'":
+			quote = character
+		elif character == "#":
+			return false
+		index += 1
+	return quote.is_empty() and index == line.length() - 1
+
+
 static func is_single_statement(code: String) -> bool:
 	var lines: PackedStringArray = code.split("\n")
 	# The row's OWN shallowest indent is the statement level: a row collected from inside an
@@ -4987,12 +5010,16 @@ static func is_single_statement(code: String) -> bool:
 	var interior: PackedInt32Array = _string_interior_mask(lines)
 	var seen_statement: bool = false
 	var open_brackets: int = 0
+	var continued: bool = false
 	for line_index: int in lines.size():
 		var line: String = lines[line_index]
 		var was_open: int = open_brackets
+		var was_continued: bool = continued
 		if interior[line_index] == 0:
 			open_brackets = maxi(open_brackets + _bracket_delta(line), 0)
-		if line.strip_edges().is_empty() or interior[line_index] == 1 or was_open > 0:
+		# A line after a trailing `\` is the statement above it going on, at whatever indent.
+		continued = interior[line_index] == 0 and _ends_in_continuation(line)
+		if line.strip_edges().is_empty() or interior[line_index] == 1 or was_open > 0 or was_continued:
 			continue
 		if line.length() - line.lstrip("\t ").length() > base_indent:
 			continue  # a continuation of the statement above it
@@ -5012,10 +5039,13 @@ static func is_literal_part(code: String) -> bool:
 "):
 		return false
 	var text: String = code.strip_edges()
-	if text.is_empty():
+	if text.is_empty() or text.begins_with("#"):
 		return false
 	if code.begins_with("	"):
-		return true
+		# An indented line is an ENTRY only when it says nothing of its own. A line of an unlifted
+		# `if` body (`	label.text = said`) reads as the sentence it would at its own depth - the
+		# canvas draws it that way - so it is a statement, not a piece of a table.
+		return text.ends_with(",") or statement_sentence(code).is_empty()
 	if _is_closer_line(code):
 		return true
 	return text.ends_with("{") or text.ends_with("[")
@@ -13935,7 +13965,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				# honestly stand for it - and hoisting a branch out of it would move when that branch
 				# runs. It keeps the GDScript code cell it came from.
 				var inline_is_literal_part: bool = (
-					is_literal_part(inline_raw.code) or is_single_statement(inline_raw.code)
+					is_single_statement(inline_raw.code) or is_literal_part(inline_raw.code)
 				) and not inline_raw.code.contains("func(")
 				if not inline_literal.is_empty():
 					inline_lines = PackedStringArray(["%s %s   %d entries" % [

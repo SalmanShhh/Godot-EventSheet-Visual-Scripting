@@ -68,9 +68,28 @@ func shader_text() -> String:
 """
 
 
+## A statement continued with a trailing `\`, and notes written inside a callback's body.
+const CONTINUED_SOURCE := """extends Node
+
+var title: String = ""
+
+
+func open_for(object_label: String) -> void:
+	title = "Add behavior to %s" % object_label \\
+		if not object_label.is_empty() else "Add behavior"
+	var apply: Callable = func() -> void:
+		title = object_label
+		# why the callback says so
+		# and the second line of it
+		print(title)
+	apply.call()
+"""
+
+
 static func run() -> bool:
 	var ok: bool = true
 	ok = _test_handed_on_literals() and ok
+	ok = _test_continued_statements() and ok
 	return ok
 
 
@@ -161,6 +180,49 @@ static func _test_handed_on_literals() -> bool:
 		CollectionDeclRow.parse(PackedStringArray(["return {", "\t\"calm\": 3,", "}"])), null) and ok
 	ok = _check("a loop over a list is not a statement head",
 		CollectionDeclRow.parse(PackedStringArray(["for pair in [", "\t1,", "]:"]), true), null) and ok
+	return ok
+
+
+## A line ending in `\` is ONE statement with the lines it continues onto, never a row whose value
+## ends in a stray backslash above an orphan `if … else …` row. A note inside a block that stayed code
+## is a note row. And the wordless measure reads an indented statement the way the canvas does.
+static func _test_continued_statements() -> bool:
+	var ok: bool = true
+	var sheet: EventSheetResource = SUPPORT.reopen(CONTINUED_SOURCE)
+	sheet.external_source_path = "user://own_code_shapes_continued.gd"
+	ok = _check("a file of continued statements reproduces byte-identically",
+		SUPPORT.compile_output(sheet, "user://own_code_shapes_continued.gd"), CONTINUED_SOURCE) and ok
+	var event: EventRow = _event_of(sheet, "open_for")
+	var first: Resource = event.actions[0] if event != null and not event.actions.is_empty() else null
+	ok = _check("the continued statement is one row holding both of its lines",
+		(first as RawCodeRow).code if first is RawCodeRow else "", "title = \"Add behavior to %s\" % object_label \\\n\tif not object_label.is_empty() else \"Add behavior\"") and ok
+	var notes: Array = []
+	for action: Variant in (event.actions if event != null else []):
+		if action is CommentRow:
+			notes.append([(action as CommentRow).source_marker, (action as CommentRow).text])
+	ok = _check("a note inside the callback is a note row that keeps its indent",
+		notes, [["\t# ", "why the callback says so\nand the second line of it"]]) and ok
+	var cells: Array = []
+	for reading: Variant in LINES.readings_of_sheet(SUPPORT.reopen(CONTINUED_SOURCE), "own"):
+		if reading.lane == "action":
+			cells.append(" | ".join(reading.plain))
+	ok = _check("the canvas reads the continued statement as one sentence",
+		cells[0] if not cells.is_empty() else "",
+		"Set title to \"Add behavior to \" & object_label if not object_label' count = 0 else \"Add behavior\"") and ok
+	ok = SUPPORT.pins("own_code_shapes_test", [
+		["an indented statement is not a literal entry",
+			ViewportRowBuilder.is_literal_part("\tlabel.text = str(said[0])"), false],
+		["an indented entry still is", ViewportRowBuilder.is_literal_part("\t\"walk\", \"run\","), true],
+		["an indented note is not", ViewportRowBuilder.is_literal_part("\t# why"), false],
+		["an indented statement with words is not wordless",
+			EventSheetGenericRows.is_generic_code("\tlabel.text = str(said[0])"), false],
+		["an indented bare call is wordless, the same as at its own depth",
+			EventSheetGenericRows.is_generic_code("\twords.add_child(label)"),
+			EventSheetGenericRows.is_generic_code("words.add_child(label)")],
+		["a backslash in a comment continues nothing", EventSheetACELifter.ends_in_continuation("x = 1 # a \\"), false],
+		["nor one inside a string", EventSheetACELifter.ends_in_continuation("x = \"a \\"), false],
+		["a trailing backslash does", EventSheetACELifter.ends_in_continuation("x = a + \\"), true],
+	]) and ok
 	return ok
 
 

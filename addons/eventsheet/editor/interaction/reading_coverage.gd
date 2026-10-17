@@ -201,7 +201,7 @@ static func renders_as_block(raw: RawCodeRow, top_level: bool) -> bool:
 		return false
 	# A single statement renders as an ordinary action row, and a literal entry as an action chip -
 	# neither is the code-block treatment, so neither counts here.
-	if ViewportRowBuilder.is_literal_part(raw.code) or ViewportRowBuilder.is_single_statement(raw.code):
+	if ViewportRowBuilder.is_single_statement(raw.code) or ViewportRowBuilder.is_literal_part(raw.code):
 		return false
 	if not ViewportRowBuilder.data_literal_info(raw.code).is_empty():
 		return false

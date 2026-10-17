@@ -47,6 +47,14 @@
   `addons/eventforge/verify.gd`, so the whole-project form reads every file again. The checker's
   own file is answered by the fact that it is running, like the command script already was.
 
+### Fixed: a statement continued with `\` is one row
+
+- A line ending in `\` opened as a row whose value ended in a stray backslash, with the rest of the
+  statement (`else …`, `or …`, `+ "…" \`) as orphan rows below it. The whole statement is one row
+  now, and it reads as the sentence it is.
+- A note written inside a callback or a branch that stays code opens as a comment row, its indent
+  kept so the file comes back exactly as written.
+
 ### Fixed: six edges of the variables, functions, translation and save slices
 
 - Group ▸ New group… is greyed for a variable declared in another file, with the same hover as End
