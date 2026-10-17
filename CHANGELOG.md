@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Changed: Add behaviour is a shelf of tiles, your own behaviours first
+
+- The Add behaviour window lists the packs as tiles, three to a row: each tile is the pack's
+  picture, its name as the pack writes it, and the kind of object it works on. The tiles sit on one
+  shelf per kind of object - your own behaviours first, then the kinds the chosen object is, then
+  the ones for any node, then the rest. One made for another kind of object is greyed, with the
+  reason on hover.
+- A click shows the pack's properties as before; a double-click adds it straight away.
+- The category buttons beside the search are gone: almost every pack names a category of its own,
+  so they were one button per pack. The search now only shows and hides tiles, so a keystroke no
+  longer rebuilds the list (about 8 ms instead of the whole list's 150-300 ms).
+- The tile pictures come through the picker's own picture cache, so they load once per session.
+
 ### Added: Behaviour settings… and Global settings…, and every door to the makers
 
 - The New behaviour and New global forms reopen on a file that exists, titled `Patrol · Behaviour

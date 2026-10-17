@@ -311,22 +311,26 @@ static func split_subcategory(group_key: String) -> PackedStringArray:
 static func resolve_definition_icon(definition: ACEDefinition) -> Texture2D:
 	if definition == null:
 		return null
-	var icon_hint: String = definition.icon.strip_edges()
-	if icon_hint.begins_with("res://"):
-		# Cached per PATH, misses included. `load()` hits Godot's own resource cache after the first
-		# read, but `ResourceLoader.exists()` does not - it is a filesystem question every time, and
-		# this is asked once per row of a tree the search box rebuilds on every keystroke.
-		if not _path_icon_cache.has(icon_hint):
-			var found: Texture2D = null
-			if ResourceLoader.exists(icon_hint):
-				var loaded: Resource = load(icon_hint)
-				if loaded is Texture2D:
-					found = loaded as Texture2D
-			_path_icon_cache[icon_hint] = found
-		var cached: Texture2D = _path_icon_cache[icon_hint] as Texture2D
-		if cached != null:
-			return cached
-	return kind_dot(definition.ace_type)
+	var cached: Texture2D = path_icon(definition.icon)
+	return cached if cached != null else kind_dot(definition.ace_type)
+
+
+## A `res://` picture by path, or null for anything else or a path that resolves to nothing.
+## Cached per PATH, misses included. `load()` hits Godot's own resource cache after the first read,
+## but `ResourceLoader.exists()` does not - it is a filesystem question every time, and this is asked
+## once per row of a tree the search box rebuilds on every keystroke, and once per pack tile.
+static func path_icon(path: String) -> Texture2D:
+	var icon_hint: String = path.strip_edges()
+	if not icon_hint.begins_with("res://"):
+		return null
+	if not _path_icon_cache.has(icon_hint):
+		var found: Texture2D = null
+		if ResourceLoader.exists(icon_hint):
+			var loaded: Resource = load(icon_hint)
+			if loaded is Texture2D:
+				found = loaded as Texture2D
+		_path_icon_cache[icon_hint] = found
+	return _path_icon_cache[icon_hint] as Texture2D
 
 
 ## res:// icon path -> its texture, or null where the path resolves to nothing. Dropped with the

@@ -162,16 +162,70 @@ static func run() -> bool:
 	dialog._pack_sources[str(bullet.get("path"))] = "extends Node\n## @ace_requires(\"Camera3D\")\n"
 	dialog._rebuild_list()
 	var greyed: Array = []
-	for card: Node in dialog._list.get_children():
-		if card is Button and not card.is_queued_for_deletion():
-			greyed.append((card as Button).tooltip_text)
+	for tile: Button in dialog.tiles():
+		greyed.append(tile.tooltip_text)
 	ok = _check("a rebuild reads the pack from the opening's copy, not the file again", greyed,
 		["Made for a Camera3D - Enemy is a Node."]) and ok
+	# The shelves: your own behaviours first, then one per kind of object - the kinds this object is,
+	# then any node, then the rest - three tiles to a row, each the pack's name and its kind.
+	dialog._pack_sources.clear()
+	var mine: Dictionary = {"name": "Patrol", "dir": "zz_patrol", "category": "Movement", "path": "res://zz_patrol.gd"}
+	dialog._pack_sources["res://zz_patrol.gd"] = "## @ace_tags(custom)\nextends Node\n@onready var host: CharacterBody2D = get_parent()\n"
+	var blink: Dictionary = {"name": "Blink", "dir": "zz_blink", "category": "", "path": "res://zz_blink.gd"}
+	dialog._pack_sources["res://zz_blink.gd"] = "extends Node\n"
+	var fade: Dictionary = {"name": "Fade", "dir": "zz_fade", "category": "", "path": "res://zz_fade.gd"}
+	dialog._pack_sources["res://zz_fade.gd"] = "extends Node\n## @ace_requires(\"Node\")\n"
+	var shelf_packs: Array[Dictionary] = [bullet, mine, blink, fade]
+	dialog._packs = shelf_packs
+	dialog._rebuild_list()
+	var heads: Array = []
+	var columns: Array = []
+	for child: Node in dialog._list.get_children():
+		if child.is_queued_for_deletion() or not (child as Control).visible:
+			continue
+		if child is Label:
+			heads.append((child as Label).text)
+		elif child is GridContainer:
+			columns.append((child as GridContainer).columns)
+	var tile_words: Array = []
+	for tile: Button in dialog.tiles():
+		var said: Array = [tile.disabled]
+		for label: Node in tile.find_children("*", "Label", true, false):
+			said.append((label as Label).text)
+		tile_words.append(said)
+	ok = SUPPORT.pins("new_addon_panel_test", [
+		["your behaviours lead, then this object's kind, any node, the rest", heads, ["Your behaviours", "Node", "Any node", "Node2D"]],
+		["each shelf is three tiles wide", columns, [3, 3, 3, 3]],
+		["a tile is its name and the kind it works on; another kind is greyed", tile_words,
+			[[true, "Patrol", "CharacterBody2D"], [false, "Fade", "Node"], [false, "Blink", "Any node"], [true, "Bullet", "Node2D"]]],
+		["a search hides the tiles and shelves it does not match, building nothing", _searched(dialog, "fad"),
+			["Node", "Fade"]],
+		["...and says so when it matches nothing", _searched(dialog, "zzz-nothing"), ["No pack here matches that."]],
+		["the works-on kind reads the typed host before what a pack requires",
+			EventSheetAddBehaviorDialog.works_on("extends Node\n## @ace_requires(\"Camera3D\")\n"), "Camera3D"],
+	]) and ok
 	dialog.free()
 	plain.free()
 	body.free()
 	host.free()
 	return ok
+
+
+## What the Add behaviour shelves show after typing `query`: each shown heading, then its shown
+## tiles' names (the hidden ones are still there, only not drawn).
+static func _searched(dialog: EventSheetAddBehaviorDialog, query: String) -> Array:
+	var built: int = dialog.tiles().size()
+	dialog._search.text = query
+	dialog._filter_shelves()
+	var shown: Array = []
+	for child: Node in dialog._list.get_children():
+		if (child as Control).visible and child is Label:
+			shown.append((child as Label).text)
+		elif (child as Control).visible and child is GridContainer:
+			for tile: Button in (child as GridContainer).get_children():
+				if tile.visible:
+					shown.append(str(tile.find_children("*", "Label", true, false)[0].text))
+	return shown if dialog.tiles().size() == built else ["the search rebuilt the tiles"]
 
 
 static func _items(dropdown: OptionButton) -> Array:

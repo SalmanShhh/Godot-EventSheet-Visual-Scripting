@@ -8251,7 +8251,6 @@ What every sheet's picker offers under the object this is added to. Host is that
 returns %s,%s を返す
 Added a trigger.,トリガーを追加しました。
 Your behaviours,自分のビヘイビア
-Packs,パック
 "%s is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object.",%s はグローバルです。プロジェクト設定 > グローバル > 自動読み込み で有効にするもので、オブジェクトには追加しません。
 Made for a %s - %s is a %s.,%s 用です。%s は %s です。
 Add behaviour %s,ビヘイビア %s を追加
@@ -9012,3 +9011,4 @@ Your own,自分用
 "Make a global of your own: its name, script or scene, then turn it on in Project Settings > Globals.",自分のグローバルを作ります: 名前、スクリプトかシーンかを決めて、プロジェクト設定 > Globals で有効にします。
 Renaming changes its class name and every use in one undo step; the places are listed before anything is written. The file keeps its name.,名前を変えると、クラス名とすべての使用箇所が 1 回の元に戻す単位で変わります。書き込む前に場所が一覧されます。ファイル名はそのままです。
 Renaming changes its name in Project Settings > Globals and every use; the places are listed before anything is written. The file keeps its name.,名前を変えると、プロジェクト設定 > Globals での名前とすべての使用箇所が変わります。書き込む前に場所が一覧されます。ファイル名はそのままです。
+"Click one to see its properties, double-click to add it. Ones made for another kind of object are greyed, with the reason on hover.",クリックでプロパティを表示、ダブルクリックで追加します。別の種類のオブジェクト用のものは灰色になり、理由はマウスを重ねると表示されます。

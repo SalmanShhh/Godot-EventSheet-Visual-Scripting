@@ -8251,7 +8251,6 @@ What every sheet's picker offers under the object this is added to. Host is that
 returns %s,返回 %s
 Added a trigger.,已添加触发器。
 Your behaviours,你的行为
-Packs,扩展包
 "%s is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object.",%s 是全局：它在 项目设置 > 全局 > 自动加载 中启用，而不是添加到对象上。
 Made for a %s - %s is a %s.,为 %s 而做 - %s 是 %s。
 Add behaviour %s,添加行为 %s
@@ -9012,3 +9011,4 @@ Your own,你自己的
 "Make a global of your own: its name, script or scene, then turn it on in Project Settings > Globals.",做一个你自己的全局：名称、脚本或场景，然后在 项目设置 > Globals 中启用。
 Renaming changes its class name and every use in one undo step; the places are listed before anything is written. The file keeps its name.,重命名会在一次撤销步骤中更改类名和每处用法；写入任何内容之前会先列出这些位置。文件保留原名。
 Renaming changes its name in Project Settings > Globals and every use; the places are listed before anything is written. The file keeps its name.,重命名会更改它在 项目设置 > Globals 中的名称和每处用法；写入任何内容之前会先列出这些位置。文件保留原名。
+"Click one to see its properties, double-click to add it. Ones made for another kind of object are greyed, with the reason on hover.",单击查看其属性，双击直接添加。为其他种类对象制作的会变灰，悬停可看原因。

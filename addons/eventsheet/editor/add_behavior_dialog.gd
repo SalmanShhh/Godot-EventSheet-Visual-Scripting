@@ -4,10 +4,12 @@ extends ConfirmationDialog
 
 # Add behavior: one window for every pack.
 #
-# Object bar > right-click an object > Add behavior…, and the head's Behaviors folder "+". The search
-# and the shelves (the packs' own categories) share one row; the list reads each pack's name and
-# pitch; the Properties card shows the pack's knobs the way the Inspector will - a number you can
-# scrub, a tick for a true/false, under the names exactly as the pack wrote them. "Where" offers the
+# Object bar > right-click an object > Add behavior…, and the head's Behaviors folder "+". Under the
+# search the packs sit on shelves of tiles - the project's own behaviours first, then one shelf per
+# kind of object the packs work on - each tile its icon, its name and that kind. One made for another
+# kind of object is greyed, with the reason on hover. A click shows the pack's knobs, a double-click
+# adds it straight away. The Properties card shows the pack's knobs the way the Inspector will - a
+# number you can scrub, a tick for a true/false, under the names exactly as the pack wrote them. "Where" offers the
 # node (always) and writing it into this script (only where the pack says its shape can be). The help
 # strip says what the focused knob is for, from the pack's own doc comment, and where it will land.
 #
@@ -18,14 +20,17 @@ extends ConfirmationDialog
 # kind, and the new behaviour is added to it), and right-clicking a behaviour offers its settings or
 # its file opened as a sheet - the doors to a behaviour that live where the behaviours are listed.
 
+## A tile's width before display scaling; the shelves are three tiles wide.
+const TILE_WIDTH := 160.0
+## The shelf key of the project's own behaviours (a kind of object is a class name, never this).
+const YOURS := "@yours"
+
 var _object_label: String = ""
 ## The node the behaviour is being added to, when the scene is open - what the cards are measured against.
 var _host: Node = null
 var _packs: Array[Dictionary] = []
 var _selected_dir: String = ""
-var _category: String = ""
 var _search: LineEdit = null
-var _shelf_bar: HBoxContainer = null
 var _list: VBoxContainer = null
 var _properties: VBoxContainer = null
 var _where: OptionButton = null
@@ -38,9 +43,11 @@ var _on_new: Callable = Callable()
 var _on_open: Callable = Callable()
 var _card_menu: PopupMenu = null
 var _card_menu_path: String = ""
-## Each listed pack's script text, read once per opening: the list is rebuilt on every keystroke of
-## the search, and a big project has well over a hundred packs.
+## Each listed pack's script text, read once per opening: a big project has well over a hundred
+## packs, and each is asked what it works on, whether it is yours and what it is refused for.
 var _pack_sources: Dictionary = {}
+## Said under the search when it matches nothing.
+var _no_match: Label = null
 
 
 func _init() -> void:
@@ -68,47 +75,41 @@ func open_for(object_label: String, host: Node = null) -> void:
 		if not object_label.is_empty() else EventSheetL10n.translate("Add behavior")
 	_packs = EventSheetPackCatalog.packs()
 	_pack_sources.clear()
-	_category = ""
 	_selected_dir = ""
 	if _search != null:
 		_search.text = ""
-	_rebuild_shelves()
 	_rebuild_list()
-	popup_centered(Vector2i(int(EventSheetPalette.scaled_f(780.0)), int(EventSheetPalette.scaled_f(560.0))))
+	popup_centered(Vector2i(int(EventSheetPalette.scaled_f(900.0)), int(EventSheetPalette.scaled_f(580.0))))
 
 
 func _build_body() -> Control:
 	var page: VBoxContainer = EventSheetPopupUI.form_box()
-	page.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(720.0), EventSheetPalette.scaled_f(440.0))
-	# The search and the shelves share one row: the search keeps its width, the shelves take the rest
-	# and scroll sideways when a project has more categories than fit.
-	var top: HBoxContainer = HBoxContainer.new()
-	_search = LineEdit.new()
-	_search.placeholder_text = EventSheetL10n.translate("search")
-	_search.right_icon = EventSheetPopupUI._editor_icon("Search")
-	_search.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(200.0), 0.0)
-	_search.text_changed.connect(func(_text: String) -> void: _rebuild_list())
-	top.add_child(_search)
-	_shelf_bar = HBoxContainer.new()
-	_shelf_bar.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
-	var shelf_scroll: ScrollContainer = ScrollContainer.new()
-	shelf_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	shelf_scroll.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(34.0))
-	shelf_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	shelf_scroll.add_child(_shelf_bar)
-	top.add_child(shelf_scroll)
-	page.add_child(top)
+	page.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(840.0), EventSheetPalette.scaled_f(460.0))
 	var band: HBoxContainer = HBoxContainer.new()
 	band.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(10.0)))
 	band.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var shelves: VBoxContainer = VBoxContainer.new()
+	shelves.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_search = LineEdit.new()
+	_search.placeholder_text = EventSheetL10n.translate("search")
+	_search.right_icon = EventSheetPopupUI._editor_icon("Search")
+	_search.text_changed.connect(func(_text: String) -> void: _filter_shelves())
+	shelves.add_child(_search)
 	_list = VBoxContainer.new()
+	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_list.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
 	var list_scroll: ScrollContainer = ScrollContainer.new()
-	list_scroll.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(280.0), EventSheetPalette.scaled_f(300.0))
+	list_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	list_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	list_scroll.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(3.0 * TILE_WIDTH + 24.0), EventSheetPalette.scaled_f(300.0))
 	list_scroll.add_child(_list)
-	band.add_child(EventSheetPopupUI.panel_section(list_scroll))
+	shelves.add_child(list_scroll)
+	shelves.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate(
+		"Click one to see its properties, double-click to add it. Ones made for another kind of object are greyed, with the reason on hover."),
+		EventSheetPalette.scaled_f(3.0 * TILE_WIDTH)))
+	band.add_child(shelves)
 	var detail: VBoxContainer = EventSheetPopupUI.form_box()
-	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail.custom_minimum_size.x = EventSheetPalette.scaled_f(280.0)
 	_properties = VBoxContainer.new()
 	_properties.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
 	var properties_scroll: ScrollContainer = ScrollContainer.new()
@@ -137,57 +138,41 @@ func _build_body() -> Control:
 	return page
 
 
-func _rebuild_shelves() -> void:
-	for child: Node in _shelf_bar.get_children():
-		child.queue_free()
-	var all_button: Button = Button.new()
-	all_button.text = EventSheetL10n.translate("All")
-	all_button.toggle_mode = true
-	all_button.button_pressed = _category.is_empty()
-	all_button.pressed.connect(func() -> void: _select_category(""))
-	_shelf_bar.add_child(all_button)
-	for shelf: String in EventSheetPackCatalog.categories(_packs):
-		var button: Button = Button.new()
-		button.text = shelf
-		button.toggle_mode = true
-		button.button_pressed = _category == shelf
-		button.pressed.connect(func() -> void: _select_category(shelf))
-		_shelf_bar.add_child(button)
-
-
-func _select_category(shelf: String) -> void:
-	_category = shelf
-	_rebuild_shelves()
-	_rebuild_list()
-
-
 func _rebuild_list() -> void:
 	if _list == null:
 		return
 	for child: Node in _list.get_children():
-		child.queue_free()
-	var shown: Array[Dictionary] = EventSheetPackCatalog.filtered(
-		_packs, _category, _search.text if _search != null else "")
-	# Your own behaviours lead, under their own heading, ahead of the packs that ship. What each pack
-	# is refused for is worked out once per rebuild - one walk of the Autoload list for all of them.
+		child.free()
+	# Your own behaviours lead on their own shelf; the packs sit on one shelf per kind of object they
+	# work on, the kinds this object is first, then the ones for any node, then the rest (greyed). What
+	# each pack is refused for is worked out once per opening - one walk of the Autoload list for all.
+	# The search then only shows and hides tiles, so a keystroke builds nothing.
 	var autoloads: Dictionary = autoload_bases()
-	var refusals: Dictionary = {}
-	var yours: Array[Dictionary] = []
-	var shipped: Array[Dictionary] = []
-	for pack: Dictionary in shown:
+	var shelves: Dictionary = {}
+	for pack: Dictionary in _packs:
 		var source: String = _source_of(pack)
-		refusals[str(pack.get("dir", ""))] = refusal(pack, _host, autoloads, source)
-		(yours if EventSheetBehaviourAddonScaffold.is_yours(source) else shipped).append(pack)
-	if not yours.is_empty():
-		_list.add_child(EventSheetPopupUI.small_caps_label(EventSheetL10n.translate("Your behaviours")))
-		for pack: Dictionary in yours:
-			_list.add_child(_build_card(pack, refusals[str(pack.get("dir", ""))]))
-		if not shipped.is_empty():
-			_list.add_child(EventSheetPopupUI.small_caps_label(EventSheetL10n.translate("Packs")))
-	for pack: Dictionary in shipped:
-		_list.add_child(_build_card(pack, refusals[str(pack.get("dir", ""))]))
-	if shown.is_empty():
-		_list.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("No pack here matches that."), 260.0))
+		pack["refusal"] = refusal(pack, _host, autoloads, source)
+		var shelf: String = YOURS if EventSheetBehaviourAddonScaffold.is_yours(source) else works_on(source)
+		if not shelves.has(shelf):
+			shelves[shelf] = []
+		(shelves[shelf] as Array).append(pack)
+	var shelf_names: Array = shelves.keys()
+	shelf_names.sort_custom(func(first: String, second: String) -> bool:
+		return shelf_rank(first, _host) < shelf_rank(second, _host) \
+			or (shelf_rank(first, _host) == shelf_rank(second, _host) and first < second))
+	for shelf: String in shelf_names:
+		var heading: String = EventSheetL10n.translate("Your behaviours") if shelf == YOURS \
+			else (shelf if not shelf.is_empty() else EventSheetL10n.translate("Any node"))
+		_list.add_child(EventSheetPopupUI.section_header(heading))
+		var grid: GridContainer = GridContainer.new()
+		grid.columns = 3
+		grid.add_theme_constant_override("h_separation", int(EventSheetPalette.scaled_f(6.0)))
+		grid.add_theme_constant_override("v_separation", int(EventSheetPalette.scaled_f(6.0)))
+		for pack: Dictionary in shelves[shelf]:
+			grid.add_child(_build_tile(pack, str(pack["refusal"])))
+		_list.add_child(grid)
+	_no_match = EventSheetPopupUI.hint_label(EventSheetL10n.translate("No pack here matches that."), 260.0)
+	_list.add_child(_no_match)
 	if _on_new.is_valid():
 		var make: Button = Button.new()
 		make.text = EventSheetL10n.translate("+ New behaviour…")
@@ -198,16 +183,58 @@ func _rebuild_list() -> void:
 			hide()
 			_on_new.call(_object_label, _host.get_class() if _host != null else ""))
 		_list.add_child(make)
-	# The card on the right always belongs to a pack the list shows: a search that hides the chosen one
-	# moves the choice to the first match.
+	_filter_shelves()
+
+
+## Shows the tiles the search matches and the shelves that keep one. The card on the right always
+## belongs to a tile on show: a search that hides the chosen pack moves the choice to the first match.
+func _filter_shelves() -> void:
+	var matching: Dictionary = {}
+	for pack: Dictionary in EventSheetPackCatalog.filtered(_packs, "", _search.text if _search != null else ""):
+		matching[str(pack.get("dir", ""))] = pack
+	var heading: Control = null
 	var still_shown: bool = false
 	var first_addable: Dictionary = {}
-	for pack: Dictionary in yours + shipped:
-		still_shown = still_shown or str(pack.get("dir", "")) == _selected_dir
-		if first_addable.is_empty() and str(refusals[str(pack.get("dir", ""))]).is_empty():
-			first_addable = pack
+	for child: Node in _list.get_children():
+		if child == _no_match or child is Button:
+			continue
+		if not child is GridContainer:
+			heading = child as Control
+			continue
+		var any_shown: bool = false
+		for tile: Button in (child as GridContainer).get_children():
+			var pack_dir: String = str(tile.get_meta("pack_dir"))
+			tile.visible = matching.has(pack_dir)
+			if tile.visible:
+				any_shown = true
+				still_shown = still_shown or pack_dir == _selected_dir
+				if first_addable.is_empty() and not tile.disabled:
+					first_addable = matching[pack_dir]
+		(child as GridContainer).visible = any_shown
+		heading.visible = any_shown
+	_no_match.visible = matching.is_empty()
 	if not first_addable.is_empty() and not still_shown:
 		_select_pack(first_addable)
+
+
+## Where a shelf sits: your own behaviours first, then a kind this object is, then any node, then
+## kinds made for other objects. `shelf` is YOURS, a class name, or "" for any node.
+static func shelf_rank(shelf: String, host: Node) -> int:
+	if shelf == YOURS:
+		return 0
+	if shelf.is_empty():
+		return 2
+	return 1 if host != null and ClassDB.class_exists(shelf) and host.is_class(shelf) else 3
+
+
+## Every tile on the shelves, in the order they read.
+func tiles() -> Array[Button]:
+	var out: Array[Button] = []
+	for shelf: Node in _list.get_children():
+		if shelf is GridContainer:
+			for tile: Node in shelf.get_children():
+				out.append(tile as Button)
+	return out
 
 
 func _source_of(pack: Dictionary) -> String:
@@ -217,26 +244,65 @@ func _source_of(pack: Dictionary) -> String:
 	return _pack_sources[path]
 
 
-func _build_card(pack: Dictionary, why_not: String) -> Control:
-	var button: Button = Button.new()
-	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	button.toggle_mode = true
-	# The card knows WHICH pack it is by folder, so the selection highlight never has to guess it
-	# from the label (a name that begins another pack's name would light up both).
-	button.set_meta("pack_dir", str(pack.get("dir", "")))
-	button.button_pressed = _selected_dir == str(pack.get("dir", ""))
-	var pitch: String = str(pack.get("pitch", "")).strip_edges()
-	button.text = str(pack.get("name", "")) if pitch.is_empty() else "%s  -  %s" % [str(pack.get("name", "")), pitch]
-	button.tooltip_text = pitch
-	button.pressed.connect(func() -> void: _select_pack(pack))
-	button.gui_input.connect(func(event: InputEvent) -> void:
+## One tile: the pack's icon, its name as the pack wrote it, and the kind of object it works on. A
+## greyed tile says on hover why it cannot go on this object.
+func _build_tile(pack: Dictionary, why_not: String) -> Button:
+	var source: String = _source_of(pack)
+	var tile: Button = Button.new()
+	tile.toggle_mode = true
+	tile.clip_contents = true
+	tile.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(TILE_WIDTH), EventSheetPalette.scaled_f(48.0))
+	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# The tile knows WHICH pack it is by folder, so the selection highlight never has to guess it
+	# from the name (a name that begins another pack's name would light up both).
+	tile.set_meta("pack_dir", str(pack.get("dir", "")))
+	tile.button_pressed = _selected_dir == str(pack.get("dir", ""))
+	tile.disabled = not why_not.is_empty()
+	tile.tooltip_text = why_not if tile.disabled else str(pack.get("pitch", "")).strip_edges()
+	tile.pressed.connect(func() -> void: _select_pack(pack))
+	tile.gui_input.connect(func(event: InputEvent) -> void:
 		var click: InputEventMouseButton = event as InputEventMouseButton
 		if click != null and click.pressed and click.button_index == MOUSE_BUTTON_RIGHT:
-			open_card_menu(str(pack.get("path", ""))))
-	if not why_not.is_empty():
-		button.disabled = true
-		button.tooltip_text = why_not
-	return button
+			open_card_menu(str(pack.get("path", "")))
+		elif click != null and click.double_click and not tile.disabled:
+			_select_pack(pack)
+			_on_confirmed()
+			hide())
+	var inset: MarginContainer = MarginContainer.new()
+	inset.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	inset.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for side: String in ["margin_left", "margin_right"]:
+		inset.add_theme_constant_override(side, int(EventSheetPalette.scaled_f(8.0)))
+	var line: HBoxContainer = HBoxContainer.new()
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	line.modulate.a = 0.45 if tile.disabled else 1.0
+	inset.add_child(line)
+	var icon: TextureRect = TextureRect.new()
+	icon.texture = tile_icon(pack, source)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.custom_minimum_size = Vector2.ONE * EventSheetPalette.scaled_f(20.0)
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	line.add_child(icon)
+	var words: VBoxContainer = VBoxContainer.new()
+	words.alignment = BoxContainer.ALIGNMENT_CENTER
+	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	words.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	words.add_theme_constant_override("separation", 0)
+	line.add_child(words)
+	var on_kind: String = works_on(source)
+	for said: Array in [[str(pack.get("name", "")), EventSheetPopupUI.text_color(), 0],
+			[on_kind if not on_kind.is_empty() else EventSheetL10n.translate("Any node"), EventSheetPopupUI.muted_text_color(), EventSheetPalette.scaled(11)]]:
+		var label: Label = Label.new()
+		label.text = str(said[0])
+		label.clip_text = true
+		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		label.add_theme_color_override("font_color", said[1])
+		if int(said[2]) > 0:
+			label.add_theme_font_size_override("font_size", int(said[2]))
+		words.add_child(label)
+	tile.add_child(inset)
+	return tile
 
 
 ## A behaviour's right-click: Behaviour settings… or Open as sheet, for the script at `path`. Offered
@@ -257,6 +323,27 @@ func open_card_menu(path: String) -> void:
 		_card_menu.popup(Rect2i(Vector2i(get_mouse_position()) + position, Vector2i.ZERO))
 
 
+## The kind of object a pack's script works on - its typed `host`, else what it says it requires -
+## or "" when any node will do.
+static func works_on(source: String) -> String:
+	var needs: String = EventSheetBehaviourAddonScaffold.host_class_of(source)
+	return needs if not needs.is_empty() else EventSheetAddBehavior.requirement_in(source)
+
+
+## A tile's picture: the script's own @icon, else the pack's icon, else the editor icon of the kind
+## of object it works on - what Godot's Scene dock would show for it.
+static func tile_icon(pack: Dictionary, source: String) -> Texture2D:
+	var drawn: RegExMatch = RegEx.create_from_string("(?m)^@icon\\(\"([^\"]+)\"\\)").search(source)
+	var path: String = drawn.get_string(1) if drawn != null else str(pack.get("icon", ""))
+	# Through the picker's own cache: loading every pack's picture costs about half a second the
+	# first time, and the window is opened again and again while a scene is put together.
+	var drawn_icon: Texture2D = EventSheetACEIcons.path_icon(path)
+	if drawn_icon != null:
+		return drawn_icon
+	var kind: String = works_on(source)
+	return EventSheetPopupUI._editor_icon(kind if not kind.is_empty() else "Node")
+
+
 ## Why `pack` cannot be added to `host`, or "" when it can: it is a global (turned on in Godot's
 ## Autoload list, never added to an object), or it was made for another kind of object. A caller
 ## asking for many packs passes `autoloads` (from `autoload_bases`) and the pack's `source` it already
@@ -268,10 +355,7 @@ static func refusal(pack: Dictionary, host: Node, autoloads: Variant = null, sou
 		return EventSheetL10n.translate("%s is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object.") % str(pack.get("name", ""))
 	if host == null:
 		return ""
-	var text: String = str(source) if source is String else FileAccess.get_file_as_string(path)
-	var needs: String = EventSheetBehaviourAddonScaffold.host_class_of(text)
-	if needs.is_empty():
-		needs = EventSheetAddBehavior.requirement_in(text)
+	var needs: String = works_on(str(source) if source is String else FileAccess.get_file_as_string(path))
 	if needs.is_empty() or not ClassDB.class_exists(needs) or host.is_class(needs):
 		return ""
 	return EventSheetL10n.translate("Made for a %s - %s is a %s.") % [needs, host.name, host.get_class()]
@@ -360,9 +444,8 @@ func _refresh_reading() -> void:
 
 
 func _rebuild_list_selection() -> void:
-	for child: Node in _list.get_children():
-		if child is Button:
-			(child as Button).set_pressed_no_signal(str(child.get_meta("pack_dir", "")) == _selected_dir)
+	for tile: Button in tiles():
+		tile.set_pressed_no_signal(str(tile.get_meta("pack_dir", "")) == _selected_dir)
 
 
 ## The pack the dialog is on, or an empty Dictionary. Public so the dock (and a test) can ask.

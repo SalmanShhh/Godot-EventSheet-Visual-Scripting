@@ -8251,7 +8251,6 @@ What every sheet's picker offers under the object this is added to. Host is that
 returns %s,devuelve %s
 Added a trigger.,Se añadió un disparador.
 Your behaviours,Tus comportamientos
-Packs,Paquetes
 "%s is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object.","%s es un global: se activa en Configuración del proyecto > Globales > Autoload, no se añade a un objeto."
 Made for a %s - %s is a %s.,Hecho para un %s: %s es un %s.
 Add behaviour %s,Añadir comportamiento %s
@@ -9012,3 +9011,4 @@ Your own,Tuyo
 "Make a global of your own: its name, script or scene, then turn it on in Project Settings > Globals.","Crea un global propio: su nombre, script o escena, y actívalo en Ajustes del proyecto > Globals."
 Renaming changes its class name and every use in one undo step; the places are listed before anything is written. The file keeps its name.,Renombrar cambia su nombre de clase y cada uso en un solo paso de deshacer; los lugares se listan antes de escribir nada. El archivo conserva su nombre.
 Renaming changes its name in Project Settings > Globals and every use; the places are listed before anything is written. The file keeps its name.,Renombrar cambia su nombre en Ajustes del proyecto > Globals y cada uso; los lugares se listan antes de escribir nada. El archivo conserva su nombre.
+"Click one to see its properties, double-click to add it. Ones made for another kind of object are greyed, with the reason on hover.","Un clic muestra sus propiedades, un doble clic lo añade. Los que son para otro tipo de objeto aparecen en gris, con el motivo al pasar el ratón."

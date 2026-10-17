@@ -64,27 +64,26 @@ static func run() -> bool:
 	behavior_dialog._rebuild_list()
 	behavior_dialog._rebuild_list_selection()
 	var lit: PackedStringArray = PackedStringArray()
-	for card: Node in behavior_dialog._list.get_children():
-		if card is Button and (card as Button).button_pressed and not card.is_queued_for_deletion():
-			lit.append((card as Button).text)
-	all_passed = _check("picking Platformer lights Platformer alone", lit, PackedStringArray(["Platformer"])) and all_passed
+	for tile: Button in behavior_dialog.tiles():
+		if tile.button_pressed:
+			lit.append(str(tile.get_meta("pack_dir")))
+	all_passed = _check("picking Platformer lights Platformer alone", lit, PackedStringArray(["platformer"])) and all_passed
 	behavior_dialog._selected_dir = "platformer_pathfinding"
 	behavior_dialog._rebuild_list_selection()
 	lit.clear()
-	for card: Node in behavior_dialog._list.get_children():
-		if card is Button and (card as Button).button_pressed and not card.is_queued_for_deletion():
-			lit.append((card as Button).text)
+	for tile: Button in behavior_dialog.tiles():
+		if tile.button_pressed:
+			lit.append(str(tile.get_meta("pack_dir")))
 	all_passed = _check("...and the longer name alone when it is the pick", lit,
-		PackedStringArray(["Platformer Pathfinding"])) and all_passed
+		PackedStringArray(["platformer_pathfinding"])) and all_passed
 	# A card a pack listed as switched off in an older project is an ordinary card now.
 	var listed_off: Array[Dictionary] = [{"name": "Health", "dir": "health", "category": "Health", "enabled": false}]
 	behavior_dialog._packs = listed_off
 	behavior_dialog._rebuild_list()
-	var disabled_cards: int = 0
-	for card: Node in behavior_dialog._list.get_children():
-		if card is Button and (card as Button).disabled and not card.is_queued_for_deletion():
-			disabled_cards += 1
-	all_passed = _check("no pack card is ever greyed out as switched off", disabled_cards, 0) and all_passed
+	var greyed: Array = []
+	for tile: Button in behavior_dialog.tiles():
+		greyed.append(tile.disabled)
+	all_passed = _check("no pack tile is ever greyed out as switched off", greyed, [false]) and all_passed
 	behavior_dialog.free()
 	all_passed = _check("a field's text becomes the value the property wants",
 		EventSheetAddBehavior.parse_value("200", "float"), 200.0) and all_passed
