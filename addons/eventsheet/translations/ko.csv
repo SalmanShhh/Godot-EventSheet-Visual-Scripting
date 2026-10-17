@@ -9306,3 +9306,23 @@ one of the editor's top tabs,에디터 위쪽 탭 중 하나
 Region name,영역 이름
 Bubble color,말풍선 색
 Closing fence (#endregion),닫는 경계(#endregion)
+Godot words,Godot 단어
+Familiar words,익숙한 단어
+Event-sheet-editor words,이벤트 시트 에디터 단어
+Last save - %s,마지막 저장 - %s
+Backup - %s,백업 - %s
+Preferences,환경 설정
+TODO / FIXME,TODO / FIXME
+Unfinished events,완성되지 않은 이벤트
+Disabled rows,꺼진 행
+Breakpoints left on,켜 둔 중단점
+Functions nothing calls,아무도 호출하지 않는 함수
+Rows the checker flags,검사기가 표시한 행
+"No running game. Turn on Tools ▸ Live Values, then run - every object this sheet talks about appears here with its instances, and you can edit their values live.","실행 중인 게임이 없습니다. 도구 ▸ 실시간 값을 켜고 실행하면, 이 시트가 다루는 모든 오브젝트가 인스턴스와 함께 여기 나타나고 값을 실시간으로 편집할 수 있습니다."
+"No traced run yet. Turn on Tools ▸ Event Trace, then run - every event that fires is timed here, busiest first.","아직 추적한 실행이 없습니다. 도구 ▸ 이벤트 추적을 켜고 실행하면, 발생한 모든 이벤트의 시간이 여기서 측정되고 가장 바쁜 것부터 나옵니다."
+"No run has reported a state yet. Declare states on the sheet head, turn on Tools ▸ Live Values, then run - every change of state is written here as a sentence. Turn on Tools ▸ Event Trace as well and each one names the row that did it.","아직 상태를 보고한 실행이 없습니다. 시트 머리에서 상태를 선언하고, 도구 ▸ 실시간 값을 켜고 실행하면, 상태가 바뀔 때마다 여기에 문장으로 적힙니다. 도구 ▸ 이벤트 추적도 켜면 각 변화가 그것을 일으킨 행을 알려 줍니다."
+No breakpoints. Select a row and press F9 to pause the running game there; More ▸ Set Breakpoint Condition… pauses only when you say so.,중단점이 없습니다. 행을 고르고 F9를 누르면 실행 중인 게임이 거기서 멈춥니다. 더 보기 ▸ 중단점 조건 설정…은 정한 때에만 멈춥니다.
+"What this object's state machine has done, oldest first. Double-click a line to go to the row it names.",이 오브젝트의 상태 머신이 한 일입니다(오래된 것부터). 줄을 더블클릭하면 그 줄이 가리키는 행으로 이동합니다.
+"Each moment is counted off the game's report frames, so it is accurate to a quarter of a second and no finer. The game reports one state per running copy without saying which node sent it, so this describes ONE running object: with several stateful objects alive at once their reports interleave here.","각 순간은 게임의 보고 프레임으로 세므로 정밀도는 0.25초까지입니다. 게임은 실행 중인 사본마다 상태 하나를 보고하지만 어느 노드가 보냈는지는 말하지 않으므로, 이것은 실행 중인 오브젝트 하나를 설명합니다. 상태를 가진 오브젝트가 동시에 여럿 있으면 보고가 여기서 섞입니다."
+Nothing to point at in this trail.,이 기록에서 짚을 것이 없습니다.
+No change of state in this run yet.,이번 실행에서는 아직 상태 변화가 없습니다.

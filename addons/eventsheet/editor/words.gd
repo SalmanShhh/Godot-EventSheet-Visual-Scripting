@@ -541,11 +541,11 @@ static func apply_preset(name: String) -> void:
 static func preset_label(name: String) -> String:
 	match name:
 		PRESET_GODOT:
-			return "Godot words"
+			return EventSheetL10n.translate("Godot words")
 		PRESET_FAMILIAR:
-			return "Familiar words"
+			return EventSheetL10n.translate("Familiar words")
 		PRESET_SHEET:
-			return "Event-sheet-editor words"
+			return EventSheetL10n.translate("Event-sheet-editor words")
 	return "custom"
 
 

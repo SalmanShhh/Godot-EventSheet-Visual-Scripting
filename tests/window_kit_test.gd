@@ -16,6 +16,7 @@ static func run() -> bool:
 	passed = _state_note() and passed
 	passed = _row_band() and passed
 	passed = _window_backdrop() and passed
+	passed = _table_keeps_names() and passed
 	passed = _every_plain_window_paints() and passed
 	passed = _described_sentences_are_translatable() and passed
 	return passed
@@ -147,6 +148,15 @@ static func _grown_height(window: Window) -> int:
 	if body.has_method("fit_window"):
 		body.call("fit_window")
 	return window.size.y
+
+
+## A table holds names as written: an object called Player stays Player in a German editor, where
+## an auto-translated cell read it as the editor's own word for "player".
+static func _table_keeps_names() -> bool:
+	var table: Tree = EventSheetPopupUI.table(PackedStringArray(["Value"]))
+	var mode: int = table.auto_translate_mode
+	table.free()
+	return SUPPORT.check(NAME, "a table never translates the names in its cells", mode, Node.AUTO_TRANSLATE_MODE_DISABLED)
 
 
 ## Esc pressed in the window, with nothing inside having used it: how many times the window was asked

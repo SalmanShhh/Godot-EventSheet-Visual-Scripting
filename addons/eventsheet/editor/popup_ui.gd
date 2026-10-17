@@ -1116,9 +1116,13 @@ static func table(titles: PackedStringArray = PackedStringArray(), min_height: f
 		fixed: Dictionary = {}) -> Tree:
 	var tree: Tree = Tree.new()
 	tree.hide_root = true
+	# A table holds names as they are written: auto-translated, an object called Player read as the
+	# editor's own word for "player" in another language. Its cells are never translated, so a fixed
+	# sentence put in one is translated by whoever puts it there; its titles are translated here.
+	tree.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	tree.columns = maxi(titles.size(), 1)
 	for index: int in titles.size():
-		tree.set_column_title(index, titles[index])
+		tree.set_column_title(index, EventSheetL10n.translate(titles[index]))
 	tree.column_titles_visible = not titles.is_empty()
 	for column: int in fixed:
 		tree.set_column_expand(column, false)

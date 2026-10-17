@@ -9306,3 +9306,23 @@ one of the editor's top tabs,エディター上部のタブの1つ
 Region name,リージョン名
 Bubble color,吹き出しの色
 Closing fence (#endregion),閉じる区切り（#endregion）
+Godot words,Godot の用語
+Familiar words,なじみの用語
+Event-sheet-editor words,イベントシートエディターの用語
+Last save - %s,最後の保存 - %s
+Backup - %s,バックアップ - %s
+Preferences,設定
+TODO / FIXME,TODO / FIXME
+Unfinished events,未完成のイベント
+Disabled rows,オフの行
+Breakpoints left on,残ったブレークポイント
+Functions nothing calls,どこからも呼ばれない関数
+Rows the checker flags,チェッカーが指摘した行
+"No running game. Turn on Tools ▸ Live Values, then run - every object this sheet talks about appears here with its instances, and you can edit their values live.",実行中のゲームはありません。ツール ▸ ライブ値 をオンにして実行すると、このシートが扱うオブジェクトがインスタンスごとにここに並び、値をその場で編集できます。
+"No traced run yet. Turn on Tools ▸ Event Trace, then run - every event that fires is timed here, busiest first.",まだトレースした実行がありません。ツール ▸ イベントトレース をオンにして実行すると、発火したイベントがここで計測され、多い順に並びます。
+"No run has reported a state yet. Declare states on the sheet head, turn on Tools ▸ Live Values, then run - every change of state is written here as a sentence. Turn on Tools ▸ Event Trace as well and each one names the row that did it.",まだどの実行も状態を報告していません。シートのヘッドで状態を宣言し、ツール ▸ ライブ値 をオンにして実行すると、状態の変化がすべてここに文で書かれます。ツール ▸ イベントトレース もオンにすると、それぞれが変化させた行を名指しします。
+No breakpoints. Select a row and press F9 to pause the running game there; More ▸ Set Breakpoint Condition… pauses only when you say so.,ブレークポイントはありません。行を選んで F9 を押すと実行中のゲームがそこで止まります。その他 ▸ ブレークポイント条件を設定… なら指定したときだけ止まります。
+"What this object's state machine has done, oldest first. Double-click a line to go to the row it names.",このオブジェクトのステートマシンがしたこと（古い順）。行をダブルクリックすると、その行が示すシートの行へ移動します。
+"Each moment is counted off the game's report frames, so it is accurate to a quarter of a second and no finer. The game reports one state per running copy without saying which node sent it, so this describes ONE running object: with several stateful objects alive at once their reports interleave here.",各時刻はゲームの報告フレームで数えるので、精度は 0.25 秒までです。ゲームは実行中のコピーごとに状態を1つ報告しますが、どのノードが送ったかは言いません。そのためこれは1つの実行中オブジェクトを表します: 状態を持つオブジェクトが同時に複数あると、報告はここで混ざります。
+Nothing to point at in this trail.,この履歴に指摘することはありません。
+No change of state in this run yet.,この実行ではまだ状態の変化がありません。

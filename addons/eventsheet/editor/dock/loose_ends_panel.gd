@@ -293,7 +293,7 @@ func refresh() -> int:
 		if of_kind.is_empty():
 			continue
 		var heading: TreeItem = tree.create_item(root)
-		heading.set_text(0, "%s (%d)" % [str(kind_entry.get("title")).to_upper(), of_kind.size()])
+		heading.set_text(0, "%s (%d)" % [EventSheetL10n.translate(str(kind_entry.get("title"))).to_upper(), of_kind.size()])
 		heading.set_custom_color(0, EventSheetPopupUI.accent_color())
 		heading.set_selectable(0, false)
 		heading.set_selectable(1, false)

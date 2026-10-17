@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Fixed: a name stays as written in a window's table, and the last English lines are translated
+
+- A window's table translated its cells, so in a Japanese editor the Debugger listed an object
+  called Player as プレイヤー and one called targets as 対象. A table's cells are never translated
+  now (its column titles are), and the sentences that sat in one say themselves in the editor's
+  language: the Debugger's empty tabs and trail notes, Loose Ends' kind headings.
+- The Words page's preset names and column heads, Compare With's Last save / Backup entries and the
+  Welcome window's Preferences card read in the editor's language.
+
 ### Fixed: the Theme Editor's preview reads, and two windows keep their foot in place
 
 - The Theme Editor's sample sheet wrapped every condition a letter a line ("Ev / ery / tic / k")

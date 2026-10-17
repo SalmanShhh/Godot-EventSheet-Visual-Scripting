@@ -8528,7 +8528,7 @@ This value,Questo valore
 Expressions over the streamed values. Double-click a row to remove it.,Espressioni sui valori trasmessi. Fai doppio clic su una riga per rimuoverla.
 "Time per fire, busiest first. The last event of a frame is counted but not timed, so it reads ""-"".","Tempo per attivazione, i più impegnati per primi. L'ultimo evento di un frame è contato ma non cronometrato, quindi mostra ""-""."
 Double-click a row to go to that event.,Fai doppio clic su una riga per andare a quell'evento.
-More ▸ Set Breakpoint Condition… pauses only when you say so.,Altro ▸ Imposta condizione del punto di interruzione… mette in pausa solo quando lo dici tu.
+More ▸ Set Breakpoint Condition… pauses only when you say so.,Altro ▸ Imposta la condizione del breakpoint… mette in pausa solo quando lo dici tu.
 Live Values,Valori dal vivo
 Waiting for a running game…,In attesa di un gioco in esecuzione…
 Expressions over the streamed values above. The Debugger's Watch tab shows the same list.,Espressioni sui valori trasmessi qui sopra. La scheda Watch del debugger mostra lo stesso elenco.
@@ -9306,3 +9306,23 @@ one of the editor's top tabs,una delle schede in alto dell'editor
 Region name,Nome della regione
 Bubble color,Colore della bolla
 Closing fence (#endregion),Chiusura (#endregion)
+Godot words,Parole di Godot
+Familiar words,Parole familiari
+Event-sheet-editor words,Parole degli editor di fogli di eventi
+Last save - %s,Ultimo salvataggio - %s
+Backup - %s,Backup - %s
+Preferences,Preferenze
+TODO / FIXME,TODO / FIXME
+Unfinished events,Eventi incompleti
+Disabled rows,Righe disattivate
+Breakpoints left on,Punti di interruzione rimasti attivi
+Functions nothing calls,Funzioni che nulla chiama
+Rows the checker flags,Righe segnalate dal controllo
+"No running game. Turn on Tools ▸ Live Values, then run - every object this sheet talks about appears here with its instances, and you can edit their values live.","Nessun gioco in esecuzione. Attiva Strumenti ▸ Valori dal vivo, poi esegui: ogni oggetto di cui parla questo foglio appare qui con le sue istanze, e puoi modificarne i valori dal vivo."
+"No traced run yet. Turn on Tools ▸ Event Trace, then run - every event that fires is timed here, busiest first.","Ancora nessuna esecuzione tracciata. Attiva Strumenti ▸ Traccia eventi, poi esegui: ogni evento che scatta viene cronometrato qui, il più attivo per primo."
+"No run has reported a state yet. Declare states on the sheet head, turn on Tools ▸ Live Values, then run - every change of state is written here as a sentence. Turn on Tools ▸ Event Trace as well and each one names the row that did it.","Nessuna esecuzione ha ancora segnalato uno stato. Dichiara gli stati nell'intestazione del foglio, attiva Strumenti ▸ Valori dal vivo, poi esegui: ogni cambio di stato viene scritto qui come una frase. Attiva anche Strumenti ▸ Traccia eventi e ognuno nomina la riga che l'ha causato."
+No breakpoints. Select a row and press F9 to pause the running game there; More ▸ Set Breakpoint Condition… pauses only when you say so.,Nessun punto di interruzione. Seleziona una riga e premi F9 per mettere in pausa il gioco lì; Altro ▸ Imposta la condizione del breakpoint… mette in pausa solo quando lo dici tu.
+"What this object's state machine has done, oldest first. Double-click a line to go to the row it names.","Cosa ha fatto la macchina a stati di questo oggetto, dal più vecchio. Fai doppio clic su una voce per andare alla riga che nomina."
+"Each moment is counted off the game's report frames, so it is accurate to a quarter of a second and no finer. The game reports one state per running copy without saying which node sent it, so this describes ONE running object: with several stateful objects alive at once their reports interleave here.","Ogni momento è contato sui fotogrammi di rapporto del gioco, quindi è preciso al quarto di secondo e non di più. Il gioco segnala uno stato per copia in esecuzione senza dire quale nodo lo invia, quindi questo descrive UN oggetto in esecuzione: con più oggetti con stato vivi insieme, i loro rapporti si mescolano qui."
+Nothing to point at in this trail.,Niente da segnalare in questa traccia.
+No change of state in this run yet.,Ancora nessun cambio di stato in questa esecuzione.

@@ -9306,3 +9306,23 @@ one of the editor's top tabs,einer der oberen Tabs des Editors
 Region name,Regionsname
 Bubble color,Blasenfarbe
 Closing fence (#endregion),Schließende Grenze (#endregion)
+Godot words,Godot-Wörter
+Familiar words,Vertraute Wörter
+Event-sheet-editor words,Event-Sheet-Editor-Wörter
+Last save - %s,Letzter Speicherstand - %s
+Backup - %s,Sicherung - %s
+Preferences,Einstellungen
+TODO / FIXME,TODO / FIXME
+Unfinished events,Unfertige Ereignisse
+Disabled rows,Ausgeschaltete Zeilen
+Breakpoints left on,Aktive Haltepunkte
+Functions nothing calls,"Funktionen, die nichts aufruft"
+Rows the checker flags,"Zeilen, die die Prüfung markiert"
+"No running game. Turn on Tools ▸ Live Values, then run - every object this sheet talks about appears here with its instances, and you can edit their values live.","Kein laufendes Spiel. Schalte Werkzeuge ▸ Live-Werte ein und starte dann - jedes Objekt, von dem dieses Blatt spricht, erscheint hier mit seinen Instanzen, und du kannst ihre Werte live bearbeiten."
+"No traced run yet. Turn on Tools ▸ Event Trace, then run - every event that fires is timed here, busiest first.","Noch kein verfolgter Lauf. Schalte Werkzeuge ▸ Ereignisspur ein und starte dann - jedes ausgelöste Ereignis wird hier gemessen, das geschäftigste zuerst."
+"No run has reported a state yet. Declare states on the sheet head, turn on Tools ▸ Live Values, then run - every change of state is written here as a sentence. Turn on Tools ▸ Event Trace as well and each one names the row that did it.","Noch hat kein Lauf einen Zustand gemeldet. Lege Zustände im Blattkopf fest, schalte Werkzeuge ▸ Live-Werte ein und starte dann - jeder Zustandswechsel wird hier als Satz geschrieben. Schalte auch Werkzeuge ▸ Ereignisspur ein, dann nennt jeder die Zeile, die ihn ausgelöst hat."
+No breakpoints. Select a row and press F9 to pause the running game there; More ▸ Set Breakpoint Condition… pauses only when you say so.,"Keine Haltepunkte. Wähle eine Zeile und drücke F9, um das laufende Spiel dort anzuhalten; Mehr ▸ Haltepunkt-Bedingung festlegen… hält nur an, wenn du es sagst."
+"What this object's state machine has done, oldest first. Double-click a line to go to the row it names.","Was der Zustandsautomat dieses Objekts getan hat, das Älteste zuerst. Doppelklicke eine Zeile, um zur genannten Zeile zu gehen."
+"Each moment is counted off the game's report frames, so it is accurate to a quarter of a second and no finer. The game reports one state per running copy without saying which node sent it, so this describes ONE running object: with several stateful objects alive at once their reports interleave here.","Jeder Moment wird an den Berichtsframes des Spiels gezählt, ist also auf eine Viertelsekunde genau und nicht feiner. Das Spiel meldet einen Zustand pro laufender Kopie, ohne zu sagen, welcher Node ihn sendet, daher beschreibt dies EIN laufendes Objekt: Leben mehrere Objekte mit Zuständen gleichzeitig, mischen sich ihre Berichte hier."
+Nothing to point at in this trail.,In dieser Spur gibt es nichts hervorzuheben.
+No change of state in this run yet.,In diesem Lauf noch kein Zustandswechsel.

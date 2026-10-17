@@ -235,12 +235,12 @@ static func compare_targets(sheet: EventSheetResource, sheet_path: String) -> Ar
 	var targets: Array = []
 	var saved: String = saved_path_for(sheet)
 	if not saved.is_empty() and FileAccess.file_exists(saved):
-		targets.append({"label": "Last save - %s" % saved.get_file(), "path": saved, "kind": "save"})
+		targets.append({"label": EventSheetL10n.translate("Last save - %s") % saved.get_file(), "path": saved, "kind": "save"})
 	if not sheet_path.strip_edges().is_empty():
 		for backup_path: String in EventSheetBackups.list_backups(sheet_path):
 			var stamp: String = Time.get_datetime_string_from_unix_time(
 				int(FileAccess.get_modified_time(backup_path))).replace("T", " ")
-			targets.append({"label": "Backup - %s" % stamp, "path": backup_path, "kind": "backup"})
+			targets.append({"label": EventSheetL10n.translate("Backup - %s") % stamp, "path": backup_path, "kind": "backup"})
 	# Both formats: load_side reads a `.gd` as readily as a `.tres`, so a project of `.gd` sheets
 	# (the default kind) has other sheets to compare against too.
 	for other_path: String in EventSheetProjectFind.list_all_project_sheets():

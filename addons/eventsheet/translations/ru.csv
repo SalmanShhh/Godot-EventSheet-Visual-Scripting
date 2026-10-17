@@ -9306,3 +9306,23 @@ one of the editor's top tabs,одна из верхних вкладок ред�
 Region name,Имя региона
 Bubble color,Цвет пузыря
 Closing fence (#endregion),Закрывающая граница (#endregion)
+Godot words,Слова Godot
+Familiar words,Привычные слова
+Event-sheet-editor words,Слова редакторов листов событий
+Last save - %s,Последнее сохранение - %s
+Backup - %s,Резервная копия - %s
+Preferences,Настройки
+TODO / FIXME,TODO / FIXME
+Unfinished events,Незавершённые события
+Disabled rows,Выключенные строки
+Breakpoints left on,Оставленные точки останова
+Functions nothing calls,"Функции, которые никто не вызывает"
+Rows the checker flags,"Строки, отмеченные проверкой"
+"No running game. Turn on Tools ▸ Live Values, then run - every object this sheet talks about appears here with its instances, and you can edit their values live.","Игра не запущена. Включите Инструменты ▸ Живые значения и запустите - каждый объект, о котором говорит лист, появится здесь со своими экземплярами, и их значения можно править на лету."
+"No traced run yet. Turn on Tools ▸ Event Trace, then run - every event that fires is timed here, busiest first.","Пока нет трассированного запуска. Включите Инструменты ▸ Трассировка событий и запустите - каждое сработавшее событие замеряется здесь, самые занятые первыми."
+"No run has reported a state yet. Declare states on the sheet head, turn on Tools ▸ Live Values, then run - every change of state is written here as a sentence. Turn on Tools ▸ Event Trace as well and each one names the row that did it.","Ни один запуск ещё не сообщил о состоянии. Объявите состояния в шапке листа, включите Инструменты ▸ Живые значения и запустите - каждая смена состояния будет записана здесь предложением. Включите также Инструменты ▸ Трассировка событий, и каждое назовёт строку, которая его вызвала."
+No breakpoints. Select a row and press F9 to pause the running game there; More ▸ Set Breakpoint Condition… pauses only when you say so.,"Точек останова нет. Выберите строку и нажмите F9, чтобы игра там остановилась; Ещё ▸ Задать условие точки останова… останавливает только когда вы скажете."
+"What this object's state machine has done, oldest first. Double-click a line to go to the row it names.","Что делала машина состояний этого объекта, сначала самое раннее. Двойной щелчок по строке переходит к упомянутой строке листа."
+"Each moment is counted off the game's report frames, so it is accurate to a quarter of a second and no finer. The game reports one state per running copy without saying which node sent it, so this describes ONE running object: with several stateful objects alive at once their reports interleave here.","Каждый момент отсчитывается по кадрам отчётов игры, поэтому точность - четверть секунды, не больше. Игра сообщает одно состояние на каждую запущенную копию, не говоря, какой узел его прислал, поэтому здесь описан ОДИН запущенный объект: если одновременно живут несколько объектов с состояниями, их отчёты здесь перемешиваются."
+Nothing to point at in this trail.,В этом следе нечего отметить.
+No change of state in this run yet.,В этом запуске смены состояния пока не было.

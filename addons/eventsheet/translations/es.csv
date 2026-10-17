@@ -9306,3 +9306,23 @@ one of the editor's top tabs,una de las pestañas superiores del editor
 Region name,Nombre de la región
 Bubble color,Color de la burbuja
 Closing fence (#endregion),Cierre (#endregion)
+Godot words,Palabras de Godot
+Familiar words,Palabras familiares
+Event-sheet-editor words,Palabras de editores de hojas de eventos
+Last save - %s,Último guardado - %s
+Backup - %s,Copia de seguridad - %s
+Preferences,Preferencias
+TODO / FIXME,TODO / FIXME
+Unfinished events,Eventos sin terminar
+Disabled rows,Filas desactivadas
+Breakpoints left on,Puntos de interrupción activos
+Functions nothing calls,Funciones que nada llama
+Rows the checker flags,Filas que marca el comprobador
+"No running game. Turn on Tools ▸ Live Values, then run - every object this sheet talks about appears here with its instances, and you can edit their values live.","No hay ningún juego en marcha. Activa Herramientas ▸ Valores en vivo y ejecuta: cada objeto del que habla esta hoja aparece aquí con sus instancias, y puedes editar sus valores en vivo."
+"No traced run yet. Turn on Tools ▸ Event Trace, then run - every event that fires is timed here, busiest first.","Todavía no hay una ejecución trazada. Activa Herramientas ▸ Traza de eventos y ejecuta: cada evento que se dispara se cronometra aquí, el más activo primero."
+"No run has reported a state yet. Declare states on the sheet head, turn on Tools ▸ Live Values, then run - every change of state is written here as a sentence. Turn on Tools ▸ Event Trace as well and each one names the row that did it.","Ninguna ejecución ha informado de un estado todavía. Declara estados en la cabecera de la hoja, activa Herramientas ▸ Valores en vivo y ejecuta: cada cambio de estado se escribe aquí como una frase. Activa también Herramientas ▸ Traza de eventos y cada uno nombra la fila que lo hizo."
+No breakpoints. Select a row and press F9 to pause the running game there; More ▸ Set Breakpoint Condition… pauses only when you say so.,No hay puntos de interrupción. Selecciona una fila y pulsa F9 para pausar el juego ahí; Más ▸ Definir la condición del punto de interrupción… pausa solo cuando tú digas.
+"What this object's state machine has done, oldest first. Double-click a line to go to the row it names.","Lo que ha hecho la máquina de estados de este objeto, lo más antiguo primero. Haz doble clic en una línea para ir a la fila que nombra."
+"Each moment is counted off the game's report frames, so it is accurate to a quarter of a second and no finer. The game reports one state per running copy without saying which node sent it, so this describes ONE running object: with several stateful objects alive at once their reports interleave here.","Cada momento se cuenta según los fotogramas de informe del juego, así que es preciso hasta un cuarto de segundo y no más. El juego informa de un estado por copia en ejecución sin decir qué nodo lo envía, así que esto describe UN objeto en ejecución: con varios objetos con estado vivos a la vez, sus informes se entremezclan aquí."
+Nothing to point at in this trail.,No hay nada que señalar en este rastro.
+No change of state in this run yet.,Todavía no hay ningún cambio de estado en esta ejecución.

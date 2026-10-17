@@ -82,9 +82,9 @@ func _build_table() -> Control:
 	grid.columns = 3
 	grid.add_theme_constant_override("h_separation", 10)
 	grid.add_theme_constant_override("v_separation", 6)
-	grid.add_child(EventSheetPopupUI.small_caps_label("what it names"))
-	grid.add_child(EventSheetPopupUI.small_caps_label("with Familiar Words on"))
-	grid.add_child(EventSheetPopupUI.small_caps_label("off"))
+	grid.add_child(EventSheetPopupUI.small_caps_label(EventSheetL10n.translate("what it names")))
+	grid.add_child(EventSheetPopupUI.small_caps_label(EventSheetL10n.translate("with Familiar Words on")))
+	grid.add_child(EventSheetPopupUI.small_caps_label(EventSheetL10n.translate("off")))
 	for key: String in EventSheetWords.keys():
 		var label: Label = Label.new()
 		label.text = EventSheetL10n.translate(EventSheetWords.names_what(key))

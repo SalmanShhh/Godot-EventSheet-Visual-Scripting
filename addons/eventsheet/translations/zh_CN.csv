@@ -9306,3 +9306,23 @@ one of the editor's top tabs,编辑器顶部的选项卡之一
 Region name,区域名称
 Bubble color,气泡颜色
 Closing fence (#endregion),结束边界（#endregion）
+Godot words,Godot 用词
+Familiar words,熟悉的用词
+Event-sheet-editor words,事件表编辑器用词
+Last save - %s,上次保存 - %s
+Backup - %s,备份 - %s
+Preferences,偏好设置
+TODO / FIXME,TODO / FIXME
+Unfinished events,未完成的事件
+Disabled rows,已关闭的行
+Breakpoints left on,未关闭的断点
+Functions nothing calls,无人调用的函数
+Rows the checker flags,检查器标记的行
+"No running game. Turn on Tools ▸ Live Values, then run - every object this sheet talks about appears here with its instances, and you can edit their values live.",没有正在运行的游戏。打开 工具 ▸ 实时值 后运行 - 此事件表涉及的每个对象都会连同其实例显示在这里，你可以实时编辑它们的值。
+"No traced run yet. Turn on Tools ▸ Event Trace, then run - every event that fires is timed here, busiest first.",还没有追踪过的运行。打开 工具 ▸ 事件追踪 后运行 - 每个触发的事件都会在这里计时，最忙的排在前面。
+"No run has reported a state yet. Declare states on the sheet head, turn on Tools ▸ Live Values, then run - every change of state is written here as a sentence. Turn on Tools ▸ Event Trace as well and each one names the row that did it.",还没有运行报告过状态。在事件表头部声明状态，打开 工具 ▸ 实时值 后运行 - 每次状态变化都会在这里写成一句话。再打开 工具 ▸ 事件追踪，每条都会指出造成它的那一行。
+No breakpoints. Select a row and press F9 to pause the running game there; More ▸ Set Breakpoint Condition… pauses only when you say so.,没有断点。选中一行并按 F9，运行中的游戏就会在那里暂停；更多 ▸ 设置断点条件… 只在你指定时暂停。
+"What this object's state machine has done, oldest first. Double-click a line to go to the row it names.",此对象的状态机做过的事，按时间从早到晚。双击某条可跳到它提到的行。
+"Each moment is counted off the game's report frames, so it is accurate to a quarter of a second and no finer. The game reports one state per running copy without saying which node sent it, so this describes ONE running object: with several stateful objects alive at once their reports interleave here.",每个时刻按游戏的报告帧计数，因此精确到四分之一秒，不会更细。游戏为每个运行中的副本报告一个状态，但不说明是哪个节点发送的，所以这里描述的是“一个”运行中的对象：若同时存在多个有状态的对象，它们的报告会在这里交错。
+Nothing to point at in this trail.,这段轨迹中没有需要指出的。
+No change of state in this run yet.,本次运行中还没有状态变化。

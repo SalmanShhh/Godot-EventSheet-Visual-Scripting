@@ -207,7 +207,7 @@ func _build() -> void:
 			var preference_row: Variant = preference_builder.call()
 			if preference_row is Control:
 				prefs_box.add_child(preference_row)
-	box.add_child(EventSheetPopupUI.titled_card("Preferences", prefs_box))
+	box.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("Preferences"), prefs_box))
 	# Somebody hitting a bug on day one should not have to work out where the project lives. The
 	# Tools menu carries the same action for people already past the Welcome.
 	var issue_row: HBoxContainer = HBoxContainer.new()

@@ -282,7 +282,7 @@ func _refresh_values() -> void:
 	var root: TreeItem = values_tree.create_item()
 	if _last_values.is_empty():
 		var waiting: TreeItem = values_tree.create_item(root)
-		waiting.set_text(0, EMPTY_STATES["Inspect"])
+		waiting.set_text(0, EventSheetL10n.translate(EMPTY_STATES["Inspect"]))
 		waiting.set_autowrap_mode(0, TextServer.AUTOWRAP_WORD_SMART)
 		waiting.set_selectable(0, false)
 		return
@@ -371,7 +371,7 @@ func _refresh_profile() -> void:
 	var root: TreeItem = profile_tree.create_item()
 	if not EventSheetTraceTimings.has_run():
 		var empty: TreeItem = profile_tree.create_item(root)
-		empty.set_text(0, EMPTY_STATES["Profile"])
+		empty.set_text(0, EventSheetL10n.translate(EMPTY_STATES["Profile"]))
 		empty.set_selectable(0, false)
 		return
 	var rows: Array[Dictionary] = EventSheetTraceTimings.rows(_event_numbers())
@@ -442,8 +442,8 @@ func _jump_to_selected(table: Tree) -> void:
 static func build_trail_body() -> Dictionary:
 	var box: VBoxContainer = EventSheetPopupUI.form_box()
 	box.name = "Trail"
-	var hint: Label = EventSheetPopupUI.hint_label(TRAIL_HINT, 0.0)
-	hint.tooltip_text = TRAIL_LIMITS
+	var hint: Label = EventSheetPopupUI.hint_label(EventSheetL10n.translate(TRAIL_HINT), 0.0)
+	hint.tooltip_text = EventSheetL10n.translate(TRAIL_LIMITS)
 	hint.mouse_filter = Control.MOUSE_FILTER_PASS
 	box.add_child(hint)
 	var sentences: Tree = EventSheetPopupUI.table(PackedStringArray(), 200.0)
@@ -481,7 +481,7 @@ static func fill_trail(sentences: Tree, patterns: Tree, ring: Array, rows: Dicti
 	var root: TreeItem = sentences.create_item()
 	if not has_run:
 		var empty: TreeItem = sentences.create_item(root)
-		empty.set_text(0, EMPTY_STATES["Trail"])
+		empty.set_text(0, EventSheetL10n.translate(EMPTY_STATES["Trail"]))
 		empty.set_autowrap_mode(0, TextServer.AUTOWRAP_WORD_SMART)
 		empty.set_selectable(0, false)
 		patterns.create_item()
@@ -501,7 +501,7 @@ static func fill_trail(sentences: Tree, patterns: Tree, ring: Array, rows: Dicti
 	var notes: Array[Dictionary] = EventSheetStateTrail.notes_for(ring, rows)
 	if notes.is_empty():
 		var quiet: TreeItem = patterns.create_item(patterns_root)
-		quiet.set_text(0, TRAIL_NO_PATTERNS)
+		quiet.set_text(0, EventSheetL10n.translate(TRAIL_NO_PATTERNS))
 		quiet.set_selectable(0, false)
 		return
 	for note: Dictionary in notes:
@@ -577,7 +577,7 @@ func _refresh_breakpoints() -> void:
 		listed_uids())
 	if rows.is_empty():
 		var empty: TreeItem = breakpoints_tree.create_item(root)
-		empty.set_text(1, EMPTY_STATES["Breakpoints"])
+		empty.set_text(1, EventSheetL10n.translate(EMPTY_STATES["Breakpoints"]))
 		empty.set_selectable(1, false)
 		return
 	for row: Dictionary in rows:
