@@ -9012,3 +9012,4 @@ Your own,自分用
 Renaming changes its class name and every use in one undo step; the places are listed before anything is written. The file keeps its name.,名前を変えると、クラス名とすべての使用箇所が 1 回の元に戻す単位で変わります。書き込む前に場所が一覧されます。ファイル名はそのままです。
 Renaming changes its name in Project Settings > Globals and every use; the places are listed before anything is written. The file keeps its name.,名前を変えると、プロジェクト設定 > Globals での名前とすべての使用箇所が変わります。書き込む前に場所が一覧されます。ファイル名はそのままです。
 "Click one to see its properties, double-click to add it. Ones made for another kind of object are greyed, with the reason on hover.",クリックでプロパティを表示、ダブルクリックで追加します。別の種類のオブジェクト用のものは灰色になり、理由はマウスを重ねると表示されます。
+No lines yet - Find text fills it.,まだ行がありません - 「テキストを探す」で埋まります。

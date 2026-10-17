@@ -238,6 +238,9 @@ func _build_dialog() -> void:
 	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Write into"), _target_picker))
 	_preview = Label.new()
 	_preview.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	# A width of its own: with none, the first layout wraps it a letter a line and the window opens
+	# twice the height of its form.
+	_preview.custom_minimum_size.x = EventSheetPalette.scaled_f(EventSheetPopupUI.HINT_WRAP_WIDTH)
 	form.add_child(EventSheetPopupUI.panel_section(_preview))
 	form.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate(
 		"A global lives on an autoload - one file the whole project can read.")))

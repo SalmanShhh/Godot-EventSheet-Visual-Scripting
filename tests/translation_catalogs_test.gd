@@ -144,6 +144,9 @@ static func _run_view() -> bool:
 		["search counts the lines that hold the text", search_status, "1 of 2 lines hold \"play\" · in strings.csv"],
 		["next and previous open the line they land on, wrapping at the ends", opened, [0, 1, 0]],
 	])
+	view.show_catalogs(PackedStringArray(), PROJECT + "/no_catalog_yet")
+	all_passed = SUPPORT.check(NAME, "a project with no catalog yet names no file", view.status_text(),
+		"No lines yet - Find text fills it.") and all_passed
 	view.free()
 	return all_passed
 

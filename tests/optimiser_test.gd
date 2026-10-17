@@ -22,6 +22,7 @@ static func run() -> bool:
 	all_passed = _run_repairs() and all_passed
 	all_passed = _run_two_paths_one_name() and all_passed
 	all_passed = _run_receipts() and all_passed
+	all_passed = _run_long_batch() and all_passed
 	EventSheetRunProfile.forget()
 	EventSheetOptimiserReceipts.forget_all_for_test()
 	if all_passed:
@@ -142,6 +143,22 @@ static func _run_diff() -> bool:
 		EventSheetOptimiseDialog.cost_words(found[0]),
 		"No profiled run has measured this row, so there is no number beside it yet.") and all_passed
 	return all_passed
+
+
+## A long batch scrolls inside the window rather than making it taller: forty findings used to
+## open a window taller than the editor, with its Apply button below the screen.
+static func _run_long_batch() -> bool:
+	var host: Control = Control.new()
+	var dialog: EventSheetOptimiseDialog = EventSheetOptimiseDialog.new()
+	dialog.init(host)
+	dialog._build()
+	for index: int in range(40):
+		var check: CheckBox = CheckBox.new()
+		check.text = "Player/PlatformerMovement is looked up every frame and never moves. Remember it once."
+		dialog._body.add_child(check)
+	var tall: float = dialog._dialog.get_contents_minimum_size().y
+	host.free()
+	return _check("forty findings leave the window shorter than the editor", tall < EventSheetPalette.scaled_f(700.0), true)
 
 
 # ── 4. The two repairs, on a real sheet through the real dock ─────────────────────────────

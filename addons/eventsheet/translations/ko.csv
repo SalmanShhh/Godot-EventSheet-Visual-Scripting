@@ -9012,3 +9012,4 @@ Your own,나만의 것
 Renaming changes its class name and every use in one undo step; the places are listed before anything is written. The file keeps its name.,이름을 바꾸면 클래스 이름과 모든 사용처가 한 번의 되돌리기 단위로 바뀝니다. 무엇이든 쓰기 전에 위치가 나열됩니다. 파일 이름은 그대로입니다.
 Renaming changes its name in Project Settings > Globals and every use; the places are listed before anything is written. The file keeps its name.,이름을 바꾸면 프로젝트 설정 > Globals의 이름과 모든 사용처가 바뀝니다. 무엇이든 쓰기 전에 위치가 나열됩니다. 파일 이름은 그대로입니다.
 "Click one to see its properties, double-click to add it. Ones made for another kind of object are greyed, with the reason on hover.","클릭하면 속성을 보여 주고, 더블 클릭하면 추가합니다. 다른 종류의 오브젝트용은 회색으로 표시되며, 마우스를 올리면 이유가 나옵니다."
+No lines yet - Find text fills it.,아직 줄이 없습니다 - 텍스트 찾기로 채워집니다.

@@ -243,7 +243,8 @@ func _redraw() -> void:
 func _status_line(first: int, last: int) -> String:
 	var file: String = table.path.trim_prefix(catalog_root.rstrip("/")).lstrip("/") if not catalog_root.is_empty() else table.path.get_file()
 	if table.row_count() == 0:
-		return EventSheetL10n.translate("No lines in %s yet - Find text fills it.") % file
+		# A project with no catalog yet has no file to name, and the sentence read "No lines in  yet".
+		return EventSheetL10n.translate("No lines yet - Find text fills it.") if file.is_empty() 			else EventSheetL10n.translate("No lines in %s yet - Find text fills it.") % file
 	if _filter == "missing" and _search.text.strip_edges().is_empty():
 		var counts: PackedStringArray = PackedStringArray()
 		var lacking: Dictionary = table.missing_by_language()

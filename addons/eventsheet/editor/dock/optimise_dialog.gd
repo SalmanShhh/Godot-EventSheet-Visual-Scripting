@@ -62,8 +62,16 @@ func _build() -> void:
 		var parts: Dictionary = EventSheetPopupUI.panel_window("", Vector2i.ZERO, _dock, "OK", _on_confirmed, true)
 		_dialog = parts["window"]
 		var form: VBoxContainer = parts["box"]
+		# The findings scroll inside a bounded box. Every one used to add its height to the window,
+		# so a sheet with a dozen findings opened a window taller than the editor with Apply below it.
 		_body = EventSheetPopupUI.form_box()
-		form.add_child(_body)
+		_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var scroll: ScrollContainer = ScrollContainer.new()
+		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		scroll.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(560.0), EventSheetPalette.scaled_f(320.0))
+		scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		scroll.add_child(_body)
+		form.add_child(scroll)
 		_help_strip = EventSheetPopupUI.help_strip()
 		form.add_child(_help_strip)
 	for stale: Node in _body.get_children():
@@ -96,6 +104,7 @@ func _fill_batch(found: Array[Dictionary]) -> void:
 		var check: CheckBox = CheckBox.new()
 		check.text = str(finding.get("message", ""))
 		check.button_pressed = true
+		check.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		check.focus_entered.connect(func() -> void:
 			_help_strip.describe(_heading(finding), _explanation(finding))
 			_help_strip.set_reading(str(finding.get("message", "")), str(diff_lines(finding, _dock._current_sheet)[1])))

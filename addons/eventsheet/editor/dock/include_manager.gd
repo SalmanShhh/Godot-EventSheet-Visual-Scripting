@@ -103,6 +103,9 @@ func _build_include_manager() -> void:
 	preview_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_include_preview_viewport = EventSheetViewport.new()
 	_include_preview_viewport.set_ace_registry(_dock._ace_registry)
+	# Read and navigate only, with no add row: it shows the included file, never edits it.
+	_include_preview_viewport.companion_mode = true
+	_include_preview_viewport.show_add_event_footers = false
 	preview_scroll.add_child(_include_preview_viewport)
 	var open_source: Button = Button.new()
 	open_source.text = "Open Source Sheet…"
@@ -182,6 +185,9 @@ func _refresh_include_preview() -> void:
 		return
 	if _include_preview_viewport != null:
 		_include_preview_viewport.set_sheet(EventSheetResource.new())
+		# Hidden until an include with rows is picked: an empty canvas offered "Add your first event"
+		# and "New from template" here, and neither had a sheet to act on.
+		_include_preview_viewport.get_parent().visible = false
 	var path: String = _selected_path()
 	if path.is_empty():
 		_include_preview.text = "Select an include to preview what it contributes."
@@ -209,6 +215,7 @@ func _refresh_include_preview() -> void:
 	var included: EventSheetResource = load(path) as EventSheetResource
 	if _include_preview_viewport != null and included != null:
 		_include_preview_viewport.set_sheet(included)  # read-only provenance view
+		_include_preview_viewport.get_parent().visible = not included.events.is_empty()
 
 
 ## The include picker: the project's sheet files, by path. Choosing one says what it brings, or

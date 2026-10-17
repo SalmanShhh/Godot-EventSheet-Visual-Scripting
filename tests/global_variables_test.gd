@@ -82,7 +82,20 @@ static func run() -> bool:
 		EventSheetGlobalVariables.write_global(null, "Score", "int", 0), false) and ok
 
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(PROBE_PATH))
-	return ok
+	return _window_fits_its_form() and ok
+
+
+## The row preview wraps at a width of its own. With none, the first layout of the window wraps it a
+## letter a line, and the Add global variable window opened twice the height of its form.
+static func _window_fits_its_form() -> bool:
+	var host: Control = Control.new()
+	var globals: EventSheetGlobalVariables = EventSheetGlobalVariables.new()
+	globals.init(host)
+	globals._build_dialog()
+	var width: float = globals._preview.custom_minimum_size.x
+	host.free()
+	return _check("the Add global variable preview wraps at a width of its own", width,
+		EventSheetPalette.scaled_f(EventSheetPopupUI.HINT_WRAP_WIDTH))
 
 
 static func _names(entries: Array[Dictionary]) -> String:

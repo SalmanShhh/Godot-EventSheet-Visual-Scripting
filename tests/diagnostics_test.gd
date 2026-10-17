@@ -81,6 +81,21 @@ static func run() -> bool:
 	shadow_var.name = "my_custom_thing"
 	all_passed = _check("a non-shadowing local variable is clean", EventSheetDiagnostics.analyze(shadow_sheet, null).is_empty(), true) and all_passed
 
+	# A row using a variable a code block declares compiles in the file, so it is not a loose end -
+	# the row's own probe sees only the sheet's variables and flagged it.
+	var kept: EventSheetResource = EventSheetResource.new()
+	var declares: RawCodeRow = RawCodeRow.new()
+	declares.code = "var __spawn_timer: float = 0.0"
+	kept.events.append(declares)
+	var ticks: EventRow = EventRow.new()
+	ticks.trigger_provider_id = "Core"
+	ticks.trigger_id = "OnProcess"
+	var uses: RawCodeRow = RawCodeRow.new()
+	uses.code = "__spawn_timer += 1.0"
+	ticks.actions.append(uses)
+	kept.events.append(ticks)
+	all_passed = _check("a row using a code block's variable is not flagged", EventSheetDiagnostics.analyze(kept, null), []) and all_passed
+
 	return all_passed
 
 

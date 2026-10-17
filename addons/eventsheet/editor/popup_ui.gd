@@ -134,8 +134,9 @@ static func panel_window(title: String, size: Vector2i, host: Node, ok_text: Str
 ## A plain Window's whole body: `content` with the kit's margins on a backdrop painted in the editor's
 ## own base colour. A Window paints nothing of its own, so without it the margins around the cards
 ## showed the renderer's clear colour - a mid grey that reads as a hole in a light editor theme.
+## Added to its window, the backdrop also gives it what a kit dialog already has (WindowBackdrop).
 static func window_body(content: Control) -> Control:
-	var backdrop: PanelContainer = PanelContainer.new()
+	var backdrop: PanelContainer = WindowBackdrop.new()
 	var fill: StyleBoxFlat = StyleBoxFlat.new()
 	var theme: Theme = editor_theme()
 	fill.bg_color = theme.get_color("base_color", "Editor") if theme != null and theme.has_color("base_color", "Editor") \
@@ -144,6 +145,39 @@ static func window_body(content: Control) -> Control:
 	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
 	backdrop.add_child(margined(content))
 	return backdrop
+
+
+## The backdrop window_body puts under a plain Window, and the two things a dialog does that a bare
+## Window does not. It GROWS TO FIT what it holds once it is shown: a Window keeps the size it was
+## given, so a fixed size smaller than the content cut its foot off (the Bookmarks card, the Replay
+## Recorder's checkpoint button), and words in a longer language cut more. Measured a frame after the
+## window shows, once its labels have wrapped at their real width - following the content all along
+## (wrap_controls) grew the Debugger three screens tall from the first layout's one-word-a-line
+## guess, and a window never shrinks back. And ESC CLOSES IT, when nothing inside used the key first,
+## through the window's own close_requested, so a window that does something on close (the Doctor
+## writes down what was read) still does it.
+class WindowBackdrop extends PanelContainer:
+
+	func _notification(what: int) -> void:
+		if what == NOTIFICATION_PARENTED and get_parent() is Window:
+			(get_parent() as Window).visibility_changed.connect(func() -> void:
+				if is_instance_valid(self) and get_parent() is Window and (get_parent() as Window).visible:
+					fit_window.call_deferred())
+
+
+	## Makes the window at least as big as what it holds, and no smaller than it already is.
+	func fit_window() -> void:
+		var window: Window = get_parent() as Window
+		if window != null:
+			window.size = window.size.max(Vector2i(window.get_contents_minimum_size().ceil()))
+
+
+	func _unhandled_key_input(event: InputEvent) -> void:
+		if not event.is_action_pressed("ui_cancel") or not get_parent() is Window:
+			return
+		if get_viewport() != null:
+			get_viewport().set_input_as_handled()
+		(get_parent() as Window).close_requested.emit()
 
 
 ## A ONE-SHOT FILE PICKER over `host` on `filters` (each like "*.gd ; Sheet" or "*.svg, *.png"): calls

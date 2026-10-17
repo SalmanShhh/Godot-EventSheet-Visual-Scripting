@@ -41,6 +41,21 @@ static func run() -> bool:
     ]) and passed
     DirAccess.remove_absolute(path)
 
+    # The Contents preview reads an include and never edits it, and with nothing picked it is hidden
+    # rather than an empty canvas offering "Add your first event" to no sheet at all.
+    var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+    dock.setup(EventSheetResource.new())
+    var manager: EventSheetIncludeManager = EventSheetIncludeManager.new()
+    manager.init(dock)
+    manager._build_include_manager()
+    manager._refresh_include_list()
+    passed = SUPPORT.pins("include_manager_preview", [
+        ["the contents preview edits nothing", manager._include_preview_viewport.companion_mode, true],
+        ["and offers no add row", manager._include_preview_viewport.show_add_event_footers, false],
+        ["with nothing picked it is hidden", manager._include_preview_viewport.get_parent().visible, false],
+    ]) and passed
+    dock.free()
+
     # ── extract_to_include ─────────────────────────────────────────────────────────
     var source: EventSheetResource = EventSheetResource.new()
     source.host_class = "Node2D"

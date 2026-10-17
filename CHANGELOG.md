@@ -59,6 +59,24 @@
   longer lights anything.
 - A bookmark on an event with no condition yet reads as the event's words, not "+ Add condition".
 - The four panels' buttons, hints and the Sheet map's summary go through translation.
+### Fixed: reading a sheet's code no longer saves it, and the windows fit, close and say what they hold
+
+- Opening the Manual on a verb, Find References, the Properties window, Change type, Loose Ends and
+  the Insert new object preview read the code a sheet compiles to through the compiler's save path:
+  on a script-backed sheet that wrote the open sheet's unsaved edits into its `.gd`, and a sheet with
+  no file left a stray `res://event_sheet_generated.gd` declaring its `class_name` in the project.
+  They read it through `SheetCompiler.echo()` now, which compiles and writes nothing.
+- Every plain window (Bookmarks, Replay Recorder, Outline, History, the Start page, the studios, the
+  Debugger and the rest) closes on Esc, through its own close, and grows to fit what it holds once
+  shown: Bookmarks and the Replay Recorder opened cutting off their foot.
+- Optimise this sheet scrolls its findings inside the window: a dozen findings opened it taller than
+  the editor, with Apply below the screen. Add global variable opens at the height of its form.
+- Loose Ends reads the whole script first: on a sheet whose file compiles it no longer lists rows
+  that use a variable a code block declares as "doesn't compile", nor prints a parse error for each.
+- Manage Includes' Contents preview is read-only and hidden until an include is picked; it showed an
+  empty canvas offering Add your first event and New from template to no sheet.
+- The Translation Studio's table in a project with no catalog yet reads "No lines yet" instead of
+  "No lines in  yet".
 
 ### Fixed: Preview In Language reads a folder of catalogs, and the save words name what is there
 

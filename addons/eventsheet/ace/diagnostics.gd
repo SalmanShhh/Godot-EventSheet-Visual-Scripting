@@ -14,6 +14,9 @@ extends RefCounted
 
 const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
 
+## True while analyze() reads a sheet whose whole script compiles, so no row needs its own probe.
+static var _rows_compile: bool = false
+
 
 ## Returns [{ "uid": String, "message": String, "suggestion": String }], one per offending row.
 ## uid = str(resource.get_instance_id()). `registry` is optional: without it, ƒx expression
@@ -23,11 +26,34 @@ static func analyze(sheet: EventSheetResource, registry: EventSheetACERegistry =
 	var diagnostics: Array = []
 	if sheet == null:
 		return diagnostics
+	# The whole script first. When the file the sheet writes compiles, no row in it can fail to, and
+	# the row-by-row probes - which see only the sheet's own variables, not the ones a code block
+	# declares, nor a file head kept as code - flagged rows that compile, and printed a parse error
+	# for each of them as Loose Ends opened.
+	_rows_compile = _whole_sheet_compiles(sheet)
 	_scan_entries(sheet.events, sheet, registry, diagnostics)
 	for function_resource in sheet.functions:
 		if function_resource is EventFunction:
 			_scan_entries((function_resource as EventFunction).events, sheet, registry, diagnostics)
+	_rows_compile = false
 	return diagnostics
+
+
+static func _lint(code: String, in_flow: bool, sheet: EventSheetResource) -> Dictionary:
+	if _rows_compile:
+		return {"ok": true, "error": ""}
+	return EventSheetGDScriptLint.lint(code, in_flow, sheet)
+
+
+## Whether the script the sheet compiles to parses, read without its class_name line (a second
+## script claiming a class the project already has is an error of its own).
+static func _whole_sheet_compiles(sheet: EventSheetResource) -> bool:
+	var output: String = str(SheetCompiler.echo(sheet).get("output", ""))
+	if output.strip_edges().is_empty():
+		return false
+	var probe: GDScript = GDScript.new()
+	probe.source_code = RegEx.create_from_string("(?m)^class_name\\s.*$").sub(output, "", true)
+	return probe.reload(true) == OK
 
 
 static func _scan_entries(entries: Array, sheet: EventSheetResource, registry: EventSheetACERegistry, diagnostics: Array) -> void:
@@ -66,7 +92,7 @@ static func _check_pick_filters(event: EventRow, sheet: EventSheetResource, diag
 		var pick: PickFilter = filter_entry
 		var collection: String = SheetCompiler._pick_collection_expression(pick)
 		if not collection.strip_edges().is_empty():
-			var verdict: Dictionary = EventSheetGDScriptLint.lint(collection, true, sheet)
+			var verdict: Dictionary = _lint(collection, true, sheet)
 			if not bool(verdict.get("ok", true)):
 				diagnostics.append(_make(event, "For Each: the collection doesn't compile (%s)." % collection.strip_edges(), ""))
 				return
@@ -79,14 +105,14 @@ static func _check_pick_filters(event: EventRow, sheet: EventSheetResource, diag
 				continue
 			# Stub the iterator (untyped) so `item.field` compiles dynamically; a typo'd name still fails.
 			var snippet: String = "var %s = null\nvar __pick_lint = (%s)" % [iterator, expr]
-			var pverdict: Dictionary = EventSheetGDScriptLint.lint(snippet, true, sheet)
+			var pverdict: Dictionary = _lint(snippet, true, sheet)
 			if not bool(pverdict.get("ok", true)):
 				diagnostics.append(_make(event, "For Each: an expression doesn't compile (%s)." % expr, _suggest(expr, sheet)))
 				return
 
 
 static func _check_raw(raw: RawCodeRow, in_flow: bool, sheet: EventSheetResource, diagnostics: Array) -> void:
-	var verdict: Dictionary = EventSheetGDScriptLint.lint(raw.code, in_flow, sheet)
+	var verdict: Dictionary = _lint(raw.code, in_flow, sheet)
 	if not bool(verdict.get("ok", true)):
 		diagnostics.append(_make(raw, "Script block doesn't compile: %s" % str(verdict.get("error", "")), ""))
 
@@ -125,7 +151,7 @@ static func _check_ace(ace: Resource, owner: EventRow, kind: String, sheet: Even
 		# lint() in statement context (not lint_expression's `var x = (…)` wrap): some
 		# "expression"-hinted params are statements (e.g. RunGDScript's code = `pass`), which a
 		# value-wrap would wrongly reject. A bare value expression is a valid statement too.
-		var verdict: Dictionary = EventSheetGDScriptLint.lint(value, true, sheet)
+		var verdict: Dictionary = _lint(value, true, sheet)
 		if not bool(verdict.get("ok", true)):
 			diagnostics.append(_make(owner, "%s \"%s\": the %s expression doesn't compile (%s)." % [kind, str(definition.display_name), param_id, value.strip_edges()], _suggest(value, sheet)))
 			return

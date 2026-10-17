@@ -138,6 +138,31 @@ static func _row_band() -> bool:
 	return SUPPORT.pins(NAME, rows)
 
 
+## The height a 200-high window holding a 400-high form takes once it is shown and fitted.
+static func _grown_height(window: Window) -> int:
+	var tall: Control = Control.new()
+	tall.custom_minimum_size = Vector2(10.0, 400.0)
+	var body: Node = window.get_child(0)
+	(body.get_child(0) as Control).add_child(tall)
+	if body.has_method("fit_window"):
+		body.call("fit_window")
+	return window.size.y
+
+
+## Esc pressed in the window, with nothing inside having used it: how many times the window was asked
+## to close. A bare Window ignores the key, so its tool windows stayed open under it.
+static func _escape_closes(window: Window) -> int:
+	var asked: Array[int] = [0]
+	window.close_requested.connect(func() -> void: asked[0] += 1)
+	var escape: InputEventAction = InputEventAction.new()
+	escape.action = "ui_cancel"
+	escape.pressed = true
+	var body: Node = window.get_child(0)
+	if body.has_method("_unhandled_key_input"):
+		body.call("_unhandled_key_input", escape)
+	return asked[0]
+
+
 static func _edge(note: EventSheetPopupUI.StateNote) -> Color:
 	return (note.get_theme_stylebox("panel") as StyleBoxFlat).border_color
 
@@ -153,6 +178,8 @@ static func _window_backdrop() -> bool:
 		["the window's body is a painted panel", body is PanelContainer, true],
 		["painted opaque", (fill as StyleBoxFlat).bg_color.a if fill is StyleBoxFlat else 0.0, 1.0],
 		["the box still sits inside it", body.is_ancestor_of(made["box"]), true],
+		["the window grows to fit what it holds", _grown_height(made["window"]) >= 400, true],
+		["Esc closes it through its own close request", _escape_closes(made["window"]), 1],
 	]
 	host.free()
 	# The two debugger windows are built by hand rather than by panel_window, and paint the same body.

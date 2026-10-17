@@ -9012,3 +9012,4 @@ Your own,Своё
 Renaming changes its class name and every use in one undo step; the places are listed before anything is written. The file keeps its name.,Переименование меняет имя класса и каждое использование за один шаг отмены; места перечисляются до любой записи. Файл сохраняет своё имя.
 Renaming changes its name in Project Settings > Globals and every use; the places are listed before anything is written. The file keeps its name.,Переименование меняет его имя в Настройках проекта > Globals и каждое использование; места перечисляются до любой записи. Файл сохраняет своё имя.
 "Click one to see its properties, double-click to add it. Ones made for another kind of object are greyed, with the reason on hover.","Щелчок показывает его свойства, двойной щелчок добавляет. То, что сделано для другого вида объектов, затенено, причина видна при наведении."
+No lines yet - Find text fills it.,Строк пока нет - «Найти текст» заполнит их.
