@@ -2169,7 +2169,7 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 			# a reader that only ever looks at one of them must not find an empty description.
 			lifted_param.description = str(lifted_param_descriptions[lifted_param.id])
 			lifted_param.desc = lifted_param.description
-	var body: Dictionary = _lift_function(PackedStringArray(["func _ready() -> void:"]) + function_lines.slice(1), {}, true)
+	var body: Dictionary = _lift_function(PackedStringArray(["func _ready() -> void:"]) + function_lines.slice(1), {}, true, false)
 	if not bool(body.get("ok", false)):
 		return {"ok": false}
 	# Function-body events carry no trigger (the function header is the entry point).
@@ -2597,7 +2597,10 @@ static func _lift_notification_chain(function_lines: PackedStringArray) -> Dicti
 const NOTIFICATION_HEADER: String = "func _notification(what: int) -> void:"
 
 
-static func _lift_function(function_lines: PackedStringArray, connections: Dictionary = {}, lenient_ifs: bool = false) -> Dictionary:
+## `own_ready` is false when the `_ready` header is only borrowed to read another function's body: its
+## leading connects are then read where they sit, since that body is not `_ready` and has none to keep.
+static func _lift_function(function_lines: PackedStringArray, connections: Dictionary = {}, lenient_ifs: bool = false,
+		own_ready: bool = true) -> Dictionary:
 	if function_lines.is_empty():
 		return {"ok": false}
 	if function_lines[0] == NOTIFICATION_HEADER:
@@ -2660,7 +2663,7 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 		# On an EditorPlugin the same two callbacks are the plugin being switched on and off.
 		if _lift_host_class == "EditorPlugin" and PLUGIN_LIFECYCLE_TRIGGERS.has(trigger_id):
 			trigger_id = str(PLUGIN_LIFECYCLE_TRIGGERS[trigger_id])
-		if function_lines[0].begins_with("func _ready()"):
+		if own_ready and function_lines[0].begins_with("func _ready()"):
 			# Skip the connect lines the map above CLAIMED; what remains is the OnReady body. Only
 			# claimed lines are skipped: a connect the map could not read would otherwise vanish from
 			# the file (emission regenerates only what a lifted trigger asked for), and the whole file

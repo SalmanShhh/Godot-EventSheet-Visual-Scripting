@@ -84,7 +84,7 @@
 - A file with classes inside it takes longer to finish reading in the background, since every
   function in its classes is now read as well (the first paint of the file is unchanged).
 
-### Fixed: a value holding a function written over several lines, and the class edit's first open
+### Fixed: where the readings of a function inside a call, a long value and a class met
 
 - A declaration whose value hands a function written over several lines to a call
   (`var changed: bool = _dock._perform_undoable_sheet_edit("Apply Cell Edit", func() -> bool:` ...)
@@ -92,6 +92,10 @@
   would have written them back on one line after an edit. A value with a function inside it is no
   longer joined: the undo funnel reads as its one undoable step again, and any other call reads as the
   call with the function as a chip.
+- A function whose first line is a connect written with a function inside it
+  (`button.pressed.connect(func() -> void:` ...) fell back to one block of code: the connect was
+  taken for one at the top of `_ready`. It now reads as an event inside that function, and the
+  function reads as events again (`_connect_view_signals` of the split view, 51 lines, is one).
 - Turning a class back into code named the compiler in a file the first sheet open builds; it now
   reaches it by path, so the first open loads nothing new.
 

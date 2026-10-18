@@ -91,6 +91,16 @@ static func run() -> bool:
 	ok = _check("both come back where they were, byte for byte",
 		_roundtrip(anywhere_sheet, "user://_lambda_anywhere.gd"), anywhere_source) and ok
 
+	# ── As the FIRST line of another function. That body is read under a borrowed `_ready` header, and
+	# the connect must not be taken for `_ready`'s own (an event beside the function, its trigger then
+	# stripped), which made the whole function fail its byte check and fall back to one code block ──
+	var first_source: String = "extends Control\n\nvar score: int = 0\n\n\nfunc wire(button: Button) -> void:\n\tbutton.pressed.connect(func() -> void:\n\t\tscore += 1\n\t)\n\tbutton.text = \"Play\"\n"
+	var first_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(first_source)
+	ok = _check("a connect opening another function reads as an event in that function",
+		[first_sheet.functions.size(), _wired_triggers(first_sheet)], [1, ["signal:pressed button"]]) and ok
+	ok = _check("and the function comes back byte for byte",
+		_roundtrip(first_sheet, "user://_lambda_first.gd"), first_source) and ok
+
 	# ── Editing the row writes code: a second action no longer fits on one line, so the statement
 	# is written in the shape that holds it. Nothing is dropped, which is the point ──
 	var grown_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(inline_source)
