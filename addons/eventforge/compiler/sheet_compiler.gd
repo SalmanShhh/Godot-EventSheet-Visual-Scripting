@@ -4323,18 +4323,33 @@ static func _keep_class_description(lines: PackedStringArray, sheet: EventSheetR
 			read.append(doc_line.substr(3))
 		else:
 			read.append(doc_line.substr(2))
-	while not read.is_empty() and read[read.size() - 1].is_empty():
-		read.remove_at(read.size() - 1)
-	if "\n".join(read) == sheet.class_description.strip_edges():
+	# Compared as the lift reads it: trailing blank lines dropped and nothing else, so a block that
+	# opens on a bare `##` compares equal to the description it was read into.
+	if _without_trailing_blanks("\n".join(read)) == _without_trailing_blanks(sheet.class_description):
 		return lines
 	var wanted: PackedStringArray = _class_description_lines(sheet)
 	var removed: Dictionary = {}
 	for index: int in range(extends_at + 1, block_end + 1):
 		removed[index] = true
+	# A block that is already there already ends the way the lift needs it to (a blank line, a comment
+	# or the end), so it is replaced in place. Only a new block gains a blank line, and only when a
+	# member follows it that it would otherwise read as the doc of.
 	var next_line: int = block_end + 1
-	if not wanted.is_empty() and next_line < lines.size() and not lines[next_line].strip_edges().is_empty():
+	if block_end == extends_at and not wanted.is_empty() and next_line < lines.size() \
+			and not lines[next_line].strip_edges().is_empty():
 		wanted.append("")
 	return GroupHeaders._rebuilt(lines, {}, removed, {extends_at: wanted}, source_map)
+
+
+## A class description without the empty lines it ends on ("" when it holds nothing but blanks):
+## the same trim the lift makes when it reads the `##` block back.
+static func _without_trailing_blanks(description: String) -> String:
+	if description.strip_edges().is_empty():
+		return ""
+	var description_lines: PackedStringArray = description.split("\n")
+	while not description_lines.is_empty() and description_lines[description_lines.size() - 1].is_empty():
+		description_lines.remove_at(description_lines.size() - 1)
+	return "\n".join(description_lines)
 
 
 static func _emit_signal_line(signal_row: SignalRow) -> String:

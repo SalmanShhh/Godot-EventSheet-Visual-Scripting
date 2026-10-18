@@ -22,6 +22,12 @@ const ODD_SPELLING := "extends Node2D\n##Catches stars.\n\nvar score: int = 0\n"
 ## A file whose own `extends` has no block, holding a string with an `extends` line and a `##` line
 ## under it: the string's text is not the class's description, and the save must not move it there.
 const IN_A_STRING := "@tool\nextends RefCounted\n\nconst SOURCE: String = \"\"\"\nextends Node2D\n## Sends the waves.\n\n\"\"\"\n"
+## A block ended by a comment line rather than a blank one: an edit replaces the block in place and
+## adds no blank line between it and the comment.
+const BEFORE_COMMENT := "extends Node2D\n## Catches stars.\n# Tuned by hand.\nvar score: int = 0\n"
+## A block that opens on a bare `##`, spelled by hand: it reads as a description with a blank first
+## line, and an untouched save must see that it still says so rather than rewriting it.
+const LEADING_BLANK := "extends Node2D\n##\n##Catches stars.\n\nvar score: int = 0\n"
 
 
 static func run() -> bool:
@@ -31,7 +37,15 @@ static func run() -> bool:
 	var cleared: Dictionary = _cycle(WITH_BLOCK, "")
 	var untouched: Dictionary = _cycle(ODD_SPELLING, null)
 	var in_string: Dictionary = _cycle(IN_A_STRING, null)
+	var before_comment: Dictionary = _cycle(BEFORE_COMMENT, "Catches falling stars.")
+	var leading_blank: Dictionary = _cycle(LEADING_BLANK, null)
 	return SUPPORT.pins(TEST_NAME, [
+		["an edit above a comment line replaces the block in place, no blank line added",
+			before_comment.get("saved"), "extends Node2D\n## Catches falling stars.\n# Tuned by hand.\nvar score: int = 0\n"],
+		["and reopens as the edit", before_comment.get("description"), "Catches falling stars."],
+		["and parses", before_comment.get("parse"), ""],
+		["a block opening on a bare ## reads with its blank first line", leading_blank.get("description"), "\nCatches stars."],
+		["and saves untouched in its own spelling", leading_blank.get("saved"), LEADING_BLANK],
 		["an edited description replaces the block", _head(edited, 3), ["extends Node2D", "## Catches falling stars.", ""]],
 		["and reopens as the edit", edited.get("description"), "Catches falling stars."],
 		["and saves again byte for byte", edited.get("resaved"), edited.get("saved")],

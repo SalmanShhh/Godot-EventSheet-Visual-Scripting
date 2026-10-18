@@ -36,6 +36,14 @@
   never used to. The field is written only where it is read back: in a sheet that is its own `.gd`,
   and for a group that can be switched.
 
+### Fixed: a class description edited above a comment keeps the file's own layout
+
+- An edited class description whose `##` block was ended by a `# comment` line gained a blank line
+  between the block and the comment on save; a block that is already there is now replaced in
+  place, and only a new block gains the blank line that keeps it off the next member. A block that
+  opens on a bare `##` no longer reads as changed when nothing was edited, so an untouched file
+  spelled `##text` saves byte for byte instead of being rewritten as `## text`.
+
 ### Fixed: a `##` line inside a string is no longer read as the class description
 
 - Opening a `.gd` whose own `extends` line has no doc block, but which holds a string with an
