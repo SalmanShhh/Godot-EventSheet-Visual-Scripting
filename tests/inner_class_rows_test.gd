@@ -11,6 +11,7 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 const LINES := preload("res://tools/reading_lines.gd")
+const LIFT := preload("res://addons/eventforge/importer/inner_class_lift.gd")
 const NAME := "inner_class_rows_test"
 const PATH := "user://inner_class_rows_test.gd"
 const SOURCE := "extends Node\n\nvar hits: int = 0\n\n\nclass Hit:\n\tvar amount: int = 1\n\tvar from: Node = null\n\n" \
@@ -58,8 +59,51 @@ static func run() -> bool:
 		["and none is dropped", reasons.has(LINES.NO_CELL_DROPPED), false],
 	]) and ok
 
+	ok = _one_class_moving_bytes() and ok
 	ok = _rows(sheet) and ok
 	return ok
+
+
+## The whole-file gate is per CLASS too. Two classes each come back alone, but putting the second in
+## moves bytes elsewhere (its row is made to write another header here, the one way to provoke that
+## on purpose): the second stays code and the first still reads, where the gate used to throw every
+## class in the file back to code.
+static func _one_class_moving_bytes() -> bool:
+	var code: String = "extends Node
+
+
+class Even:
+	var n: int = 2
+
+	func twice() -> int:
+		return n * 2
+
+
+" 		+ "class Odd:
+	var m: int = 1
+
+	func once() -> int:
+		return m"
+	var sheet: EventSheetResource = EventSheetResource.new()
+	var raw: RawCodeRow = RawCodeRow.new()
+	raw.code = code
+	sheet.events.append(raw)
+	sheet.external_source_path = InnerClassRow.BODY_PATH
+	var source: String = str(SheetCompiler.echo(sheet).get("output", ""))
+	var before_rows: Array = sheet.events.duplicate()
+	var holders: Array[Dictionary] = LIFT._holders(before_rows, RegEx.create_from_string(LIFT.HEADER_PATTERN))
+	var read: Array = []
+	for holder: Dictionary in holders:
+		for inner: Variant in (holder["classes"] as Dictionary).values():
+			read.append((inner as InnerClassRow).inner_class_name())
+	var ok: bool = _check("both classes come back on their own", read, ["Even", "Odd"])
+	if read.size() == 2:
+		((holders[0]["classes"] as Dictionary).values()[1] as InnerClassRow).header = "class Odd extends Node:"
+	LIFT._place(sheet, before_rows, holders, source)
+	return SUPPORT.pins(NAME, [
+		["only the class that moved a byte stays code", _top_kinds(sheet), ["code", "class Even", "code: class Odd:"]],
+		["and the file still writes what it read", str(SheetCompiler.echo(sheet).get("output", "")), source],
+	]) and ok
 
 
 ## The canvas: one full-width head, the members under it read as the rows they are and inert, and a

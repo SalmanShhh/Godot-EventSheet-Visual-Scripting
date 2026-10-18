@@ -10,7 +10,9 @@
 # stays the code it was, ON ITS OWN: the row holding it is split around the class first, so the lines
 # beside it are untouched and the rest of the file still reads. And once every class is placed, the
 # whole sheet is written once more and compared with the file (or, when the sheet wrote something else
-# before, with that), so a claim can never move a byte anywhere else either.
+# before, with that), so a claim can never move a byte anywhere else either. When that whole-file
+# compare fails, the classes are claimed again one at a time, so only the one that moved a byte stays
+# code.
 #
 # A class of fields alone is left to the reading it already has (a Data type with its fields as rows
 # and its own Add field door); this claims the classes that hold behaviour.
@@ -34,47 +36,90 @@ static func lift(sheet: EventSheetResource, source: String) -> void:
 	if saved_path.is_empty():
 		sheet.external_source_path = InnerClassRow.BODY_PATH
 	var before_rows: Array = sheet.events.duplicate()
-	var claimed: bool = false
-	var index: int = 0
-	while index < sheet.events.size():
-		var raw: RawCodeRow = sheet.events[index] as RawCodeRow
+	_place(sheet, before_rows, _holders(before_rows, header), source)
+	sheet.external_source_path = saved_path
+
+
+## Every class read once, on its own: one entry per code row holding at least one class that came
+## back, as {raw, pieces, classes: {piece index: InnerClassRow}}, in file order.
+static func _holders(rows: Array, header: RegEx) -> Array[Dictionary]:
+	var holders: Array[Dictionary] = []
+	for entry: Variant in rows:
+		var raw: RawCodeRow = entry as RawCodeRow
 		if raw == null or not _has_class_line(raw.code):
-			index += 1
 			continue
-		var rows: Array = []
-		var any_class: bool = false
-		for piece: Dictionary in _pieces(raw.code.split("\n"), header):
-			var lines: PackedStringArray = piece["lines"]
-			if bool(piece["class"]):
-				var inner: InnerClassRow = _read_class(lines)
+		var pieces: Array[Dictionary] = _pieces(raw.code.split("
+"), header)
+		var classes: Dictionary = {}
+		for piece_index: int in pieces.size():
+			if bool(pieces[piece_index]["class"]):
+				var inner: InnerClassRow = _read_class(pieces[piece_index]["lines"])
 				if inner != null:
-					rows.append(inner)
-					any_class = true
-					continue
+					classes[piece_index] = inner
+		if not classes.is_empty():
+			holders.append({"raw": raw, "pieces": pieces, "classes": classes})
+	return holders
+
+
+## The classes `holders` read, put into the sheet as long as the whole file still comes back: all of
+## them when it does, otherwise again ONE AT A TIME in file order, each kept only while the file still
+## comes back with it, so the class that moved a byte stays code and the ones beside it still read.
+static func _place(sheet: EventSheetResource, before_rows: Array, holders: Array[Dictionary], source: String) -> void:
+	var every: Array = []
+	for holder_index: int in holders.size():
+		for piece_index: Variant in (holders[holder_index]["classes"] as Dictionary).keys():
+			every.append([holder_index, piece_index])
+	if every.is_empty():
+		return
+	sheet.events = _claimed(before_rows, holders, every)
+	var after_text: String = str(SheetCompiler.echo(sheet).get("output", ""))
+	if after_text == source:
+		return
+	# The file as written is what the rows wrote before the claims, nearly always; only when the sheet
+	# writes something else is the before written out to compare against.
+	sheet.events = before_rows
+	var before_text: String = str(SheetCompiler.echo(sheet).get("output", ""))
+	var kept: Array = every
+	if after_text != before_text:
+		kept = []
+		for claim: Array in every:
+			sheet.events = _claimed(before_rows, holders, kept + [claim])
+			if str(SheetCompiler.echo(sheet).get("output", "")) == before_text:
+				kept.append(claim)
+	sheet.events = _claimed(before_rows, holders, kept)
+
+
+## `before_rows` with the `claims` ([holder index, piece index] pairs) put in: a code row holding a
+## claimed class is split into its pieces, each claimed class an InnerClassRow and every other piece
+## code as it stands; a code row with no claimed class is left whole.
+static func _claimed(before_rows: Array, holders: Array[Dictionary], claims: Array) -> Array:
+	var rows: Array = before_rows.duplicate()  # the sheet's own typed array, emptied
+	rows.clear()
+	for entry: Variant in before_rows:
+		var holder_index: int = -1
+		for index: int in holders.size():
+			if holders[index]["raw"] == entry:
+				holder_index = index
+		var wanted: Array = []
+		for claim: Array in claims:
+			if int(claim[0]) == holder_index:
+				wanted.append(claim[1])
+		if wanted.is_empty():
+			rows.append(entry)
+			continue
+		var raw: RawCodeRow = entry as RawCodeRow
+		var pieces: Array[Dictionary] = holders[holder_index]["pieces"]
+		for piece_index: int in pieces.size():
+			if wanted.has(piece_index):
+				rows.append(holders[holder_index]["classes"][piece_index])
+				continue
 			var code_row: RawCodeRow = RawCodeRow.new()
-			code_row.code = "\n".join(lines)
+			code_row.code = "\n".join(pieces[piece_index]["lines"])
 			code_row.enabled = raw.enabled
 			code_row.note = raw.note
 			code_row.lift_note = raw.lift_note
 			rows.append(code_row)
-		if not any_class:
-			index += 1
-			continue
-		sheet.events.remove_at(index)
-		for offset: int in rows.size():
-			sheet.events.insert(index + offset, rows[offset])
-		index += rows.size()
-		claimed = true
-	# The file as written is what the rows wrote before the claims, nearly always; only when the sheet
-	# writes something else is the before written out to compare against.
-	if claimed:
-		var after_text: String = str(SheetCompiler.echo(sheet).get("output", ""))
-		if after_text != source:
-			var claimed_rows: Array = sheet.events
-			sheet.events = before_rows
-			var before_text: String = str(SheetCompiler.echo(sheet).get("output", ""))
-			sheet.events = claimed_rows if after_text == before_text else before_rows
-	sheet.external_source_path = saved_path
+	return rows
 
 
 ## One class, read: an InnerClassRow when its body comes back exactly, null otherwise. `lines` is
