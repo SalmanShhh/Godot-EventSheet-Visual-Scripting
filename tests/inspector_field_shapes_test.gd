@@ -128,6 +128,20 @@ static func _decor_reads_the_shapes() -> bool:
 		["two numbers share a line", drawers.side_by_side_fits(target, "min_damage", "max_damage"), true],
 		["a number and a word do not", drawers.side_by_side_fits(target, "max_health", "attack"), false],
 		["a field that is not there does not", drawers.side_by_side_fits(target, "max_damage", "armour"), false],
+		["a pair never reaches across a group line",
+			drawers.build_decor_map("# @inspector_side_by_side
+@export var max_damage: int = 9
+@export_group(\"Loot\")
+@export var drop_row: int = 1
+"),
+			{"max_damage": [{"kind": "side_by_side", "second": ""}]}],
+		["...nor across a subgroup line",
+			drawers.build_decor_map("# @inspector_side_by_side
+@export var max_damage: int = 9
+@export_subgroup(\"Drops\")
+@export var drop_row: int = 1
+"),
+			{"max_damage": [{"kind": "side_by_side", "second": ""}]}],
 	])
 
 
@@ -154,7 +168,23 @@ static func _tabs_follow_the_groups() -> bool:
 		["picking a tab swaps what hides", shown_after, ["Loot", true, false]],
 		["a prefix group holds only its names, subgroups included",
 			object_decor.read_groups(prefixed).get("group_of"), {"bullet_speed": "Bullet", "bullet_trail": "Bullet"}],
+		["a heading with nothing drawn under it is hidden; one holding a plugin's own control is not",
+			[_holds_nothing(null), _holds_nothing(Label.new()), _holds_nothing(ColorRect.new())], [true, false, false]],
 	])
+
+
+## A heading as Godot builds one - its column, a subgroup's heading inside it - holding `content`.
+static func _holds_nothing(content: Control) -> bool:
+	var heading: Control = Control.new()
+	var column: VBoxContainer = VBoxContainer.new()
+	heading.add_child(column)
+	var subgroup: VBoxContainer = VBoxContainer.new()
+	column.add_child(subgroup)
+	if content != null:
+		subgroup.add_child(content)
+	var answer: bool = load(WIDGETS_PATH).GroupTabs.holds_nothing(heading)
+	heading.free()
+	return answer
 
 
 static func _choices_come_from_the_function() -> bool:
@@ -166,6 +196,12 @@ static func _choices_come_from_the_function() -> bool:
 	var listed: Array = [field.item_count, field.get_item_text(0), field.get_item_text(field.selected)]
 	field.call("show_choices", tool_target, "slahs")
 	var kept: Array = [field.item_count, field.get_item_text(field.selected), field.get_item_tooltip(field.selected)]
+	# An Inspector refresh with nothing changed leaves the list as it is, so an open list stays open.
+	field.set_item_text(0, "untouched")
+	field.call("show_choices", tool_target, "slahs")
+	var refreshed: String = field.get_item_text(0)
+	field.call("show_choices", tool_target, "spin")
+	var refilled: Array = [field.get_item_text(0), field.get_item_text(field.selected)]
 	field.free()
 	return SUPPORT.pins(P, [
 		["a @tool script with the function is asked", widgets.ChoicesField.can_ask(tool_target, "attack_names"), true],
@@ -176,6 +212,8 @@ static func _choices_come_from_the_function() -> bool:
 		["anything else is no choices", widgets.ChoicesField.read_choices(3), []],
 		["the dropdown lists the words and picks the value", listed, [3, "slash", "lunge"]],
 		["a word the list no longer has stays, marked", kept, [4, "slahs", "Not one of the words attack_names() gives."]],
+		["a refresh that changes nothing does not refill the list", refreshed, "untouched"],
+		["...and a new value does", refilled, ["slash", "spin"]],
 	])
 
 

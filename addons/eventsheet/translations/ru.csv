@@ -9478,3 +9478,6 @@ Shape %s…,Настроить %s…
 "Code on purpose: these %d lines are text kept inside quotes, joined into one text, and a text reads best exactly as it is written.","Код намеренно: эти %d строк - текст в кавычках, соединённый в один текст, а текст лучше всего читать ровно так, как он написан."
 %s: shown only when %s is on.,%s: показывается только когда %s включено.
 %s: read-only when %s is off.,%s: только для чтения когда %s выключено.
+"It also turns Stay within limits off on the Check tab: with no limits left, there is nothing to stay within.",Заодно выключает «Оставаться в пределах» на вкладке «Проверить»: без пределов оставаться не в чем.
+"The next field, %s, starts another group, so the two sit under different headings.","Следующее поле, %s, начинает другую группу, поэтому они оказываются под разными заголовками."
+Only two numbers share a line; this field and %s are drawn one per line.,Одну строку делят только два числа; это поле и %s показываются каждое на своей строке.

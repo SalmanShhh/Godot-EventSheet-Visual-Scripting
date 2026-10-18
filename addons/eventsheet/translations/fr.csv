@@ -9478,3 +9478,6 @@ Shape %s…,Façonner %s…
 "Code on purpose: these %d lines are text kept inside quotes, joined into one text, and a text reads best exactly as it is written.","Code voulu : ces %d lignes sont du texte entre guillemets, réunies en un seul texte, et un texte se lit mieux exactement tel qu'il est écrit."
 %s: shown only when %s is on.,%s : affiché seulement quand %s est activé.
 %s: read-only when %s is off.,%s : en lecture seule quand %s est désactivé.
+"It also turns Stay within limits off on the Check tab: with no limits left, there is nothing to stay within.","Désactive aussi « Rester dans les limites » dans l'onglet Vérifier : sans limites, il n'y a plus rien dans quoi rester."
+"The next field, %s, starts another group, so the two sit under different headings.","Le champ suivant, %s, commence un autre groupe : les deux sont sous des titres différents."
+Only two numbers share a line; this field and %s are drawn one per line.,Seuls deux nombres partagent une ligne ; ce champ et %s s'affichent chacun sur sa ligne.

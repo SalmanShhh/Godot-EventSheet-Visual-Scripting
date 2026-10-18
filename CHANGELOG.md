@@ -17,6 +17,15 @@
   group's fields under it, and the tab follows the picked field.
 - The help strip under a variable shown only while a tick box is on says so:
   "shield_amount: shown only when has_shield is on." (or "read-only when ... is off.").
+- A Look without limits (Plain number, a dropdown, flags...) on a field that stays within limits now
+  says it also turns Stay within limits off on the Check tab, instead of changing that tab quietly.
+- Side by side never pairs the last field of a group with the first field of the next one (or across
+  a subgroup line), and the Layout tab says why it is not offered: the next field starts another
+  group, or the two are not both numbers.
+- With groups as tabs, a heading that holds another plugin's own controls is no longer hidden, and the
+  picked group's folded heading opens through Godot's own unfold instead of a simulated click.
+- A dropdown filled by a function no longer closes itself when the Inspector refreshes with nothing
+  changed.
 
 ### Added: a block kept as code on purpose says why
 
@@ -25,6 +34,9 @@
   lines, even with notes written among them. Its hover says why it stays code and shows the lines as
   written, the notes in their places. Opening the plugin's own scripts, that took the rows saying
   nothing of their own from 1,998 to 991 (0.8% of rows to 0.4%).
+- A note written among those quoted lines goes with them: it is no longer a row of its own on the
+  canvas, and reads in the row's hover in its place among the lines (the hover shows the first twelve
+  lines and says how many more). This holds in any file with that shape, not only the plugin's own.
 - A text between triple quotes, and every line inside one, says on hover why it stays code.
 - Display only: every file still opens and saves back byte for byte.
 
@@ -73,6 +85,7 @@
   back, byte for byte, so a hand-typed file opens as the same choice.
 - A sheet that is not a tool sheet but carries Show if / Lock unless is now told so when it
   compiles: Godot only asks a @tool script's `_validate_property`, so the field would never hide.
+
 ### Added: shape a field in the Inspector Designer
 
 - Clicking a field in the Inspector Designer picks it, and the "Shape this field" panel beside the

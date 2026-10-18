@@ -113,14 +113,18 @@ static func options(category: String, field: Dictionary, fields: Array = []) -> 
 				listed["asks"] = [["choices_function", EventSheetL10n.translate("Function"), "text", "", "%s_choices" % var_name]]
 				listed["ready"] = false
 				output.append(listed)
+			# Stay within limits keeps the value inside the look's own limits, so a look without limits
+			# takes the check with it. The option says so rather than leave the Check tab to change quietly.
+			if chosen("check", field) == "clamp":
+				for option: Dictionary in output:
+					if not apply("look", str(option["id"]), attributes, type_name).has("clamp"):
+						option["tip"] = "%s %s" % [option["tip"], EventSheetL10n.translate("It also turns Stay within limits off on the Check tab: with no limits left, there is nothing to stay within.")]
 		"layout":
 			output.append(_option("group", EventSheetL10n.translate("In its group"),
 				EventSheetL10n.translate("Under the heading of the group it is declared in, one field per line."), same))
-			var last: bool = not fields.is_empty() and str((fields[fields.size() - 1] as Dictionary).get("name", "")) == var_name
 			output.append(_option("side_by_side", EventSheetL10n.translate("Side by side with the next field"),
 				EventSheetL10n.translate("Shares one line with the field declared after it, for pairs that belong together: min and max, x and y, width and height."),
-				EventSheetL10n.translate("Two lines, one after the other."),
-				EventSheetL10n.translate("No field is declared after this one to share its line.") if last else ""))
+				EventSheetL10n.translate("Two lines, one after the other."), _side_by_side_refusal(field, fields)))
 		"show":
 			output.append(_option("always", EventSheetL10n.translate("Always"), EventSheetL10n.translate("Always shown."), same))
 			var hide_plain: String = EventSheetL10n.translate("The same: this is Godot's own way to hide a field, so it works with or without the plugin. The script becomes a @tool script so the Inspector can ask it.")
@@ -572,6 +576,30 @@ static func _translated(fields: Array) -> Array:
 			copy[4] = EventSheetL10n.translate(str(copy[4]))
 		output.append(copy)
 	return output
+
+
+## Why `field` cannot share a line with the field declared after it, or "" when it can. Only two
+## numbers share a line (the Inspector draws anything else one per line), and never across a group
+## line: the next field then sits under another heading. A group line rides on the first field of the
+## group, so a group key on the next field means a heading comes between the two.
+static func _side_by_side_refusal(field: Dictionary, fields: Array) -> String:
+	var var_name: String = str(field.get("name", ""))
+	var at: int = -1
+	for index: int in fields.size():
+		if fields[index] is Dictionary and str((fields[index] as Dictionary).get("name", "")) == var_name:
+			at = index
+	if at < 0:
+		return ""
+	if at == fields.size() - 1:
+		return EventSheetL10n.translate("No field is declared after this one to share its line.")
+	var next: Dictionary = fields[at + 1] as Dictionary
+	var next_attributes: Dictionary = next.get("attributes") if next.get("attributes") is Dictionary else {}
+	for level: String in ["category", "group", "subgroup"]:
+		if next_attributes.has(level):
+			return EventSheetL10n.translate("The next field, %s, starts another group, so the two sit under different headings.") % str(next.get("name", ""))
+	if not (str(field.get("type_name", "")) in ["int", "float"] and str(next.get("type_name", "")) in ["int", "float"]):
+		return EventSheetL10n.translate("Only two numbers share a line; this field and %s are drawn one per line.") % str(next.get("name", ""))
+	return ""
 
 
 static func _option(id: String, label: String, tip: String, plain: String, reason: String = "") -> Dictionary:

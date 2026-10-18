@@ -9478,3 +9478,6 @@ Shape %s…,%s 꾸미기…
 "Code on purpose: these %d lines are text kept inside quotes, joined into one text, and a text reads best exactly as it is written.","일부러 코드로 둠: 이 %d줄은 따옴표 안의 텍스트로, 하나의 텍스트로 이어집니다. 텍스트는 쓰인 그대로 읽는 것이 가장 좋습니다."
 %s: shown only when %s is on.,%s: %s이(가) 켜져 있을 때만 표시됩니다.
 %s: read-only when %s is off.,%s: %s이(가) 꺼져 있으면 읽기 전용입니다.
+"It also turns Stay within limits off on the Check tab: with no limits left, there is nothing to stay within.",확인 탭의 '범위 안에 두기'도 꺼집니다. 범위가 없으면 그 안에 둘 것이 없습니다.
+"The next field, %s, starts another group, so the two sit under different headings.",다음 필드 %s는 다른 그룹을 시작하므로 두 필드는 서로 다른 제목 아래에 놓입니다.
+Only two numbers share a line; this field and %s are drawn one per line.,한 줄을 나눠 쓸 수 있는 것은 숫자 두 개뿐입니다. 이 필드와 %s는 한 줄에 하나씩 표시됩니다.

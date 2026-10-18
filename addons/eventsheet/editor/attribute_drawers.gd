@@ -373,6 +373,8 @@ static func build_decor_map(source: String) -> Dictionary:
 			# the show-if is consumed here - the canonical emission puts a header / info / action
 			# ABOVE the group line, and those still belong to the variable underneath it.
 			group_scope = {}
+			# The first field of the next group sits under another heading, never on the same line.
+			side_first = null
 			var carried: Array = []
 			for waiting: Variant in pending:
 				if str((waiting as Dictionary).get("kind", "")) != "_show_if_pending":
@@ -380,6 +382,9 @@ static func build_decor_map(source: String) -> Dictionary:
 				elif not str((waiting as Dictionary).get("predicate", "")).is_empty():
 					group_scope = {"kind": "group_show_if", "predicate": str((waiting as Dictionary).get("predicate"))}
 			pending = carried
+		elif line.begins_with("@export_subgroup("):
+			# A subgroup keeps its group's show-if, but its heading still parts a side-by-side pair.
+			side_first = null
 		elif line.begins_with("var ") or (line.begins_with("@") and line.contains(" var ")):
 			if not pending.is_empty() or not group_scope.is_empty() or side_first != null:
 				var var_name: String = _var_name_from_line(line)

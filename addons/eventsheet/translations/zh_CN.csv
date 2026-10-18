@@ -9478,3 +9478,6 @@ Shape %s…,调整 %s…
 "Code on purpose: these %d lines are text kept inside quotes, joined into one text, and a text reads best exactly as it is written.",有意保留为代码：这 %d 行是引号内的文本，连接成一段文本，文本按原样阅读最清楚。
 %s: shown only when %s is on.,%s：仅在 %s 打开时显示。
 %s: read-only when %s is off.,%s：%s 关闭时为只读。
+"It also turns Stay within limits off on the Check tab: with no limits left, there is nothing to stay within.",这也会关闭“检查”标签页里的“保持在范围内”：没有了范围，就没有可保持的范围。
+"The next field, %s, starts another group, so the two sit under different headings.",下一个字段 %s 开始了另一个分组，所以两者位于不同的标题下。
+Only two numbers share a line; this field and %s are drawn one per line.,只有两个数字可以共用一行；此字段和 %s 各占一行显示。

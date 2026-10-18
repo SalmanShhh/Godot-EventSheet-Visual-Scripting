@@ -514,8 +514,10 @@ class GroupTabs:
 		_target.notify_property_list_changed()
 
 	## Godot draws a heading for every group before any plugin is asked about its fields, so the
-	## groups whose tab is not picked are left as empty headings: those are hidden. The picked group's
-	## heading opens if it is folded, since its tab already says which group is showing.
+	## groups whose tab is not picked are left as empty headings: those are hidden. A heading is empty
+	## only when nothing at all was drawn under it - a heading holding another plugin's own controls
+	## (or this one's notes) stays. The picked group's heading opens if it is folded, since its tab
+	## already says which group is showing.
 	func _tidy_sections() -> void:
 		var inspector: Node = get_parent()
 		while inspector != null and not (inspector is EditorInspector):
@@ -527,17 +529,31 @@ class GroupTabs:
 			if section.get_class() != "EditorInspectorSection" or not (section is Control):
 				continue
 			var editors: Array[Node] = section.find_children("*", "EditorProperty", true, false)
-			if editors.is_empty():
+			if holds_nothing(section):
 				(section as Control).hide()
-			elif tab_count > 0 and not (editors[0] as Control).is_visible_in_tree() and _holds_picked_group(editors):
+			elif tab_count > 0 and not editors.is_empty() and not (editors[0] as Control).is_visible_in_tree() \
+					and _holds_picked_group(editors):
 				folded.append(section as Control)
 		if folded.is_empty():
 			return
-		# Clicked once laid out, so the heading is where the click lands.
+		# Opened once laid out, so a click (where one is needed) lands on the heading.
 		await get_tree().process_frame
 		for section: Control in folded:
 			if is_instance_valid(section) and section.is_visible_in_tree():
-				_click_heading(section)
+				# The heading's own unfold, which Godot remembers as a person's click; a version
+				# without it gets that click.
+				if section.has_method("unfold"):
+					section.call("unfold")
+				else:
+					_click_heading(section)
+
+	## True when nothing was drawn under a heading: no field, no control of any plugin - only the
+	## containers that would have held them, and the headings of subgroups as empty as itself.
+	static func holds_nothing(section: Node) -> bool:
+		for child: Node in section.find_children("*", "Control", true, false):
+			if not (child is Container) and child.get_class() != "EditorInspectorSection":
+				return false
+		return true
 
 	func _holds_picked_group(editors: Array[Node]) -> bool:
 		var decor: Dictionary = load(OBJECT_DECOR_PATH).for_object(_target)
@@ -549,6 +565,7 @@ class GroupTabs:
 		return false
 
 	## A heading opens on a click, the way a person opens it, so Godot remembers it open as usual.
+	## Only for a Godot whose heading has no unfold() a script can call.
 	func _click_heading(section: Control) -> void:
 		var at: Vector2 = section.get_global_transform_with_canvas().origin + Vector2(section.size.x * 0.5, 6.0)
 		for pressed: bool in [true, false]:
@@ -570,6 +587,8 @@ class ChoicesField:
 	const POPUP_UI_PATH: String = "res://addons/eventsheet/editor/popup_ui.gd"
 	var _function: String = ""
 	var _words: PackedStringArray = PackedStringArray()
+	## The [choices, current] the list was last filled with.
+	var _offered: Array = []
 
 	func _init(choices_function: String = "") -> void:
 		_function = choices_function
@@ -599,6 +618,11 @@ class ChoicesField:
 	## Fills the dropdown from the function and selects `current`.
 	func show_choices(target: Object, current: String) -> void:
 		var choices: Array = read_choices(target.call(_function)) if can_ask(target, _function) else []
+		# The Inspector refreshes often; refilling an unchanged list would close it while it is open.
+		var offered: Array = [choices, current]
+		if offered == _offered:
+			return
+		_offered = offered
 		clear()
 		_words = PackedStringArray()
 		var popup_ui: GDScript = load(POPUP_UI_PATH)

@@ -22,6 +22,7 @@ const ENEMY := "extends Resource\n\n@export_group(\"Stats\")\n@export var max_he
 static func run() -> bool:
 	var ok: bool = _options_fit_the_type()
 	ok = _a_choice_rewrites_only_its_lines() and ok
+	ok = _a_choice_says_what_else_it_moves() and ok
 	ok = _show_when_brings_tool_and_takes_it_away() and ok
 	ok = _the_panel() and ok
 	ok = _the_designer() and ok
@@ -100,6 +101,56 @@ static func _a_choice_rewrites_only_its_lines() -> bool:
 	SHAPE.write(sheet, "attack", "look", "default")
 	rows.append(["...and their defaults take them out again", _emitted(sheet), ENEMY])
 	return SUPPORT.pins(P, rows)
+
+
+## A choice that cannot keep another tab's choice says so before it is made: a look with no limits
+## takes Stay within limits with it, and Side by side is refused where the pair would not share a line.
+static func _a_choice_says_what_else_it_moves() -> bool:
+	var sheet: EventSheetResource = _opened(ENEMY)
+	SHAPE.write(sheet, "max_health", "check", "clamp")
+	var limited: Dictionary = _entry(sheet, "max_health")
+	var warned: Array = SHAPE.options("look", limited, EventSheetInspectorDesignerDialog.collect_entries(sheet)).filter(
+		func(option: Dictionary) -> bool: return str(option["tip"]).ends_with(" It also turns Stay within limits off on the Check tab: with no limits left, there is nothing to stay within.")).map(
+		func(option: Dictionary) -> String: return str(option["id"]))
+	var unlimited: Array = SHAPE.options("look", _entry(_opened(ENEMY), "max_health"), []).filter(
+		func(option: Dictionary) -> bool: return str(option["tip"]).contains("Stay within limits"))
+	SHAPE.write(sheet, "max_health", "look", "default")
+	var after_look: String = SHAPE.chosen("check", _entry(sheet, "max_health"))
+	var rows: Array = [
+		["with limits kept, the looks that hold no limits say they take the check with them", warned,
+			["default", "number_choices", "flags", "layers", "table_row", "custom", "storage"]],
+		["...and with no check chosen no look says so", unlimited, []],
+		["the plain number, chosen first, takes the check as it said", after_look, "none"],
+		["...so No check after it has nothing left to take", SHAPE.write(sheet, "max_health", "check", "none"), false],
+		["...and the file is the one it was", _emitted(sheet), ENEMY],
+	]
+	var pairs: EventSheetResource = _opened("extends Resource
+
+@export_group(\"Stats\")
+@export var min_damage: int = 4
+"
+		+ "@export var max_damage: int = 9
+@export var armour: float = 0.5
+@export_group(\"Loot\")
+@export var drop_row: int = 1
+"
+		+ "@export var has_shield: bool = true
+")
+	var entries: Array[Dictionary] = EventSheetInspectorDesignerDialog.collect_entries(pairs)
+	var reasons: Array = entries.map(func(entry: Dictionary) -> String: return str(SHAPE.options("layout", entry, entries)[1]["reason"]))
+	rows.append(["side by side takes two numbers of one group, and says why anything else stays two lines", reasons, [
+		"", "",
+		"The next field, drop_row, starts another group, so the two sit under different headings.",
+		"Only two numbers share a line; this field and has_shield are drawn one per line.",
+		"No field is declared after this one to share its line."]])
+	return SUPPORT.pins(P, rows)
+
+
+static func _entry(sheet: EventSheetResource, var_name: String) -> Dictionary:
+	for candidate: Dictionary in EventSheetInspectorDesignerDialog.collect_entries(sheet):
+		if candidate["name"] == var_name:
+			return candidate
+	return {}
 
 
 static func _show_when_brings_tool_and_takes_it_away() -> bool:

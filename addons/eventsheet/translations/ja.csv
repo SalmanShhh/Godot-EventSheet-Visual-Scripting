@@ -9478,3 +9478,6 @@ Shape %s…,%s を整える…
 "Code on purpose: these %d lines are text kept inside quotes, joined into one text, and a text reads best exactly as it is written.",意図してコードのまま: この %d 行は引用符の中のテキストで、1 つのテキストにつながれています。テキストは書かれたとおりに読むのがいちばんです。
 %s: shown only when %s is on.,%s: %s がオンのときだけ表示されます。
 %s: read-only when %s is off.,%s: %s がオフのときは読み取り専用です。
+"It also turns Stay within limits off on the Check tab: with no limits left, there is nothing to stay within.",確認タブの「範囲内に収める」もオフになります。範囲がなくなると、収める先がありません。
+"The next field, %s, starts another group, so the two sit under different headings.",次のフィールド %s は別のグループを始めるので、二つは別々の見出しの下に並びます。
+Only two numbers share a line; this field and %s are drawn one per line.,一行を分け合えるのは数値二つだけです。このフィールドと %s は一行ずつ表示されます。
