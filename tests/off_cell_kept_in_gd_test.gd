@@ -64,6 +64,7 @@ static func run() -> bool:
 				_cell_state(_event(round_trip.get("reopened"), int(case[1]))), case[5]],
 			["%s: and saves again byte for byte" % case[0], str(round_trip.get("resaved", "")), saved],
 		]) and all_passed
+	all_passed = _check_stateful_condition() and all_passed
 	# A .tres sheet's generated companion still leaves a cell that is off out.
 	_write(FILE_PATH, SOURCE)
 	var companion_sheet: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
@@ -75,6 +76,32 @@ static func run() -> bool:
 		["a .tres companion still leaves cells that are off out",
 			[companion.contains("# @off"), companion.contains("true or")], [false, false]],
 	]) and all_passed
+
+
+## A condition that keeps state of its own (Every X Seconds) has no term to stay in while it is off,
+## so the save leaves it out - and says so, naming it, rather than dropping it without a word.
+static func _check_stateful_condition() -> bool:
+	_write(FILE_PATH, SOURCE)
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var every: ACECondition = ACECondition.new()
+	every.provider_id = "Core"
+	every.ace_id = "EveryXSeconds"
+	every.codegen_template = "__every_t1 >= maxf({seconds}, 0.001)"
+	every.member_declaration = "var __every_t1: float = 0.0"
+	every.codegen_prelude = "__every_t1 += get_process_delta_time()"
+	every.codegen_on_true = "__every_t1 = fmod(__every_t1, maxf({seconds}, 0.001))"
+	every.params = {"seconds": "2.0"}
+	every.enabled = false
+	_event(sheet, 0).conditions.append(every)
+	var result: Dictionary = SheetCompiler.compile(sheet, FILE_PATH)
+	var naming: Array = []
+	for warning: Variant in result.get("warnings", []):
+		if str(warning).begins_with("Condition Core/EveryXSeconds is off"):
+			naming.append(str(warning))
+	return SUPPORT.pins(TEST_NAME, [
+		["a stateful condition that is off: the save says it was left out", naming.size(), 1],
+		["a stateful condition that is off: and the file is the one it was", FileAccess.get_file_as_string(FILE_PATH), SOURCE],
+	])
 
 
 ## Writes SOURCE, opens it, switches off one cell of the n-th _process event, saves over the file and

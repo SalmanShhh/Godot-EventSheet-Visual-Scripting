@@ -12,6 +12,13 @@
   `# @off` (or its group's `# @group:` line) and an `if false:` of its own. The saved script parses,
   it reopens off, and an untouched save writes the same bytes.
 
+### Fixed: a stateful condition switched off in a `.gd` sheet says it was left out
+
+- A condition that keeps state of its own (Every X Seconds, Trigger Once and their kind) has no term
+  it can stay in while it is off, so a `.gd` save leaves it out of the file - and it did so without
+  a word. The save now adds a warning naming the condition, beside the one an unresolvable
+  condition already gets.
+
 ### Fixed: a `##` line inside a string is no longer read as the class description
 
 - Opening a `.gd` whose own `extends` line has no doc block, but which holds a string with an
@@ -38,7 +45,8 @@
   `(true or <it>)` among And terms, `(false and <it>)` among Or terms, and `(true or <it>)` for each
   when every condition of an Or event is off. Opening the file reads each back as the same cell,
   switched off, and an untouched save writes the same bytes. A condition that keeps state of its own
-  (Every X Seconds and its kind) still has nowhere to keep it and is left out. A `.tres` sheet still
+  (Every X Seconds and its kind) still has nowhere to keep it and is left out, with a warning that
+  names it. A `.tres` sheet still
   leaves cells that are off out of the game.
 
 ### Fixed: an event switched off in a `.gd` sheet stays in the file

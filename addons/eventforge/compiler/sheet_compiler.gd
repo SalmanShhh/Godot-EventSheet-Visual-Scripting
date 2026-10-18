@@ -2570,6 +2570,9 @@ static func _emit_event_body(
 				var off_term: String = _off_condition_term(condition, off_terms_say_true)
 				if not off_term.is_empty():
 					condition_texts.append(off_term)
+				elif _keeps_state(condition):
+					# Said out loud: the file is the sheet's only copy, and this condition is not in it.
+					warnings.append("Condition %s/%s is off and keeps state of its own (Every X Seconds, Trigger Once...) - a .gd sheet has no way to hold it switched off, so it was left out of the file. Delete it, or switch it back on, to silence this." % [condition.provider_id, condition.ace_id])
 				continue
 			var condition_line: String = ConditionCodegen.generate_condition(condition, _behavior_host_default)
 			if not condition_line.is_empty():
@@ -2976,8 +2979,7 @@ static func _emit_match_case_body(events: Array, indent: String, node_target: St
 ## there, and the lift reads the term back as the same condition, off. A condition that keeps state
 ## of its own (a member, a line run before the header) has nowhere to keep it and is left out.
 static func _off_condition_term(condition: ACECondition, says_true: bool) -> String:
-	if not condition.member_declaration.is_empty() or not condition.codegen_prelude.is_empty() \
-			or not condition.codegen_on_true.is_empty() or not condition.codegen_on_exit.is_empty():
+	if _keeps_state(condition):
 		return ""
 	var switched_on: ACECondition = condition.duplicate() as ACECondition
 	switched_on.enabled = true
@@ -2985,6 +2987,13 @@ static func _off_condition_term(condition: ACECondition, says_true: bool) -> Str
 	if code.is_empty():
 		return ""
 	return ("(%s or %s)" if says_true else "(%s and %s)") % ["true" if says_true else "false", code]
+
+
+## True when a condition keeps state of its own: a member, or a line run before, inside or after
+## the event it gates.
+static func _keeps_state(condition: ACECondition) -> bool:
+	return not condition.member_declaration.is_empty() or not condition.codegen_prelude.is_empty() \
+			or not condition.codegen_on_true.is_empty() or not condition.codegen_on_exit.is_empty()
 
 
 ## The text lines a sheet-level comment row writes, each to be written behind `# `: its own lines
