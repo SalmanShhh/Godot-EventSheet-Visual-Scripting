@@ -9489,3 +9489,10 @@ extends %s,extends %s
 "Off and not switchable: %s is left out of the game entirely, and Set group active cannot reach it. Tick Can be switched at runtime to turn it on from an event.",关闭且不可切换：%s 被完全排除在游戏之外，设置分组激活也无法触及它。勾选 运行时可切换，即可从事件中开启它。
 Off at start; events can switch it on.,启动时关闭；事件可以将其开启。
 Can Be Switched At Runtime,运行时可切换
+"No group of this sheet is called this, so the row switches nothing yet. Kept as it is written.",此表中没有叫这个名字的分组，所以这一行暂时不切换任何东西。按原样保留。
+%s can now be switched at runtime.,%s 现在可在运行时切换。
+"On at start, switchable.",开始时开启，可切换。
+"Off at start, switchable.",开始时关闭，可切换。
+Not switchable: picking it turns on Can be switched at runtime.,不可切换：选中它会打开“可在运行时切换”。
+"Not switchable, and it lives in %s: turn on Can be switched at runtime there.",不可切换，且它位于 %s：请在那里打开“可在运行时切换”。
+Its switch is written as %s.,它的开关写作 %s。

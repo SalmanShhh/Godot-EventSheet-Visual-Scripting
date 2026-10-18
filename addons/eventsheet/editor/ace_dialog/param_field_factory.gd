@@ -148,6 +148,9 @@ const HINT_PARAGRAPHS: Dictionary = {
 	"key_capture": "Press the key you want while this box is focused. Prefer an Input Map action when the player may rebind it.",
 	"input_action": "An action from the project's Input Map, with the keys bound to it beside each name. New action adds one the map does not have yet.",
 	"group_reference": "A node group, with how many nodes of the open scene are in each. Any node joins a group from the Node dock.",
+	# The same hint on Set/Is Group Active means one of the SHEET's groups, not a node group; the
+	# dialog marks such a parameter (`reads_sheet_groups`) and the strip reads this row instead.
+	"sheet_group": "A group of this sheet, or of a sheet it includes. The row stores the name the code switches, so renaming the group later takes this row with it.",
 	"mode_reference": "One of the game's declared modes. They are declared once, on the modes band of the Game sheet's head - a mode that is not in this list has not been declared yet.",
 	"state_reference": "One of THIS object's declared states. They are declared once, on the states band of this sheet's head, and picking from this list is what makes a misspelled state impossible - a state that is not here has not been declared yet.",
 	"scene_node": "A node in the open scene - drag it in from the Scene dock or pick it from the list; the code uses its path.",
@@ -206,6 +209,7 @@ const HINT_TYPE_PHRASES: Dictionary = {
 	"variable_reference": "a variable",
 	"input_action": "an input action",
 	"group_reference": "a node group",
+	"sheet_group": "a group of this sheet",
 	"mode_reference": "a mode",
 	"state_reference": "a state",
 	"scene_node": "a node",
@@ -269,7 +273,7 @@ static func hint_paragraph(hint: String, owner: String = "") -> String:
 ## What KIND of value a parameter takes, in the two or three words a heading ends with. The hint
 ## answers first (a colour is a colour whatever its declared type), the declared type second.
 static func type_phrase(param: Dictionary) -> String:
-	var hint: String = str(param.get("hint", ""))
+	var hint: String = _strip_hint(param)
 	var key: String = hint.get_slice(":", 0) if hint.contains(":") else hint
 	if HINT_TYPE_PHRASES.has(key):
 		return EventSheetL10n.translate(str(HINT_TYPE_PHRASES[key]))
@@ -279,6 +283,12 @@ static func type_phrase(param: Dictionary) -> String:
 	if TYPE_PHRASES.has(type_name):
 		return EventSheetL10n.translate(str(TYPE_PHRASES[type_name]))
 	return EventSheetL10n.translate("a value")
+
+
+## The hint the strip describes a parameter by: its own, except a group parameter the dialog found
+## naming one of the sheet's groups, which is described as that.
+static func _strip_hint(param: Dictionary) -> String:
+	return "sheet_group" if bool(param.get("reads_sheet_groups", false)) else str(param.get("hint", ""))
 
 
 ## The strip's heading for a parameter: its name, then what it takes ("Amount - a number"). `tail`
@@ -293,7 +303,7 @@ static func strip_heading(param: Dictionary, tail: String = "") -> String:
 ## field in 11px), then what this kind of field takes. Either half alone still reads.
 static func strip_body(param: Dictionary, owner: String = "") -> String:
 	var description: String = str(param.get("description", "")).strip_edges()
-	var paragraph: String = hint_paragraph(str(param.get("hint", "")), owner)
+	var paragraph: String = hint_paragraph(_strip_hint(param), owner)
 	if description.is_empty():
 		return paragraph
 	if paragraph.is_empty():

@@ -108,6 +108,19 @@ func display_name() -> String:
 	return "Group"
 
 
+## Gives the group a new name. The name drives the switch's token too, so `group_name` follows it -
+## but only on a real rename: a group whose two fields already differ (an older sheet) keeps the
+## token it was saved with until somebody actually renames it, so nothing that names it breaks.
+func rename(new_name: String) -> void:
+	var resolved: String = new_name.strip_edges()
+	if resolved.is_empty():
+		return
+	if resolved == display_name() and not (name.is_empty() and group_name.is_empty()):
+		return
+	name = resolved
+	group_name = resolved
+
+
 ## The rows this group holds, across the `events` / `rows` alias pair.
 func child_rows() -> Array[Resource]:
 	return events if not events.is_empty() else rows

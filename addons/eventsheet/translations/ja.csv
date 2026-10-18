@@ -9489,3 +9489,10 @@ extends %s,extends %s
 "Off and not switchable: %s is left out of the game entirely, and Set group active cannot reach it. Tick Can be switched at runtime to turn it on from an event.",オフで切り替え不可: %s はゲームから完全に外され、グループを有効にする で届きません。イベントからオンにするには 実行中に切り替え可能 にチェックを入れてください。
 Off at start; events can switch it on.,開始時はオフ。イベントでオンにできます。
 Can Be Switched At Runtime,実行中に切り替え可能
+"No group of this sheet is called this, so the row switches nothing yet. Kept as it is written.",このシートにこの名前のグループはないため、この行はまだ何も切り替えません。書かれたまま残します。
+%s can now be switched at runtime.,%s は実行時に切り替え可能になりました。
+"On at start, switchable.",開始時オン、切り替え可能。
+"Off at start, switchable.",開始時オフ、切り替え可能。
+Not switchable: picking it turns on Can be switched at runtime.,切り替え不可: 選ぶと「実行時に切り替え可能」が有効になります。
+"Not switchable, and it lives in %s: turn on Can be switched at runtime there.",切り替え不可で、%s にあります: そちらで「実行時に切り替え可能」を有効にしてください。
+Its switch is written as %s.,スイッチは %s として書かれます。

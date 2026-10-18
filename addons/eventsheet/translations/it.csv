@@ -9489,3 +9489,10 @@ extends %s,extends %s
 "Off and not switchable: %s is left out of the game entirely, and Set group active cannot reach it. Tick Can be switched at runtime to turn it on from an event.","Disattivato e non commutabile: %s resta del tutto fuori dal gioco, e Imposta gruppo attivo non può raggiungerlo. Spunta Commutabile in esecuzione per accenderlo da un evento."
 Off at start; events can switch it on.,Disattivato all'avvio; gli eventi possono accenderlo.
 Can Be Switched At Runtime,Commutabile in esecuzione
+"No group of this sheet is called this, so the row switches nothing yet. Kept as it is written.","Nessun gruppo di questo foglio si chiama così, quindi la riga non commuta ancora nulla. Mantenuto come è scritto."
+%s can now be switched at runtime.,%s ora è attivabile a runtime.
+"On at start, switchable.","Attivo all'avvio, attivabile."
+"Off at start, switchable.","Spento all'avvio, attivabile."
+Not switchable: picking it turns on Can be switched at runtime.,Non attivabile: sceglierlo attiva Attivabile a runtime.
+"Not switchable, and it lives in %s: turn on Can be switched at runtime there.","Non attivabile, e si trova in %s: attiva lì Attivabile a runtime."
+Its switch is written as %s.,Il suo interruttore è scritto come %s.

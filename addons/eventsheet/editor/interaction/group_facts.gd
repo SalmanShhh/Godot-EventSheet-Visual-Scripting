@@ -195,48 +195,163 @@ static func guard_value(group: EventGroup) -> String:
 	return "\"%s\"" % guard_token(group)
 
 
-## The groups a Set/Is Group Active dialog offers, toggleable ones first (those are the ones the
-## action can actually reach), each with the sentence the picker shows beside it.
+## The groups a Set/Is Group Active dialog offers BY THE NAME THEY WERE GIVEN: this sheet's, then
+## those of the sheets it includes (their groups compile into this script too, so a row here can
+## reach them). Switchable ones lead, because those are the ones the row reaches today. Each entry is
+## {value, name, description, toggleable, group, home}: `value` is the stored guard token, `home` the
+## included file a group lives in ("" for this sheet). Two groups sharing a name share one switch, so
+## the name is offered once.
 static func choices(sheet: EventSheetResource) -> Array[Dictionary]:
-	var offered: Array[Dictionary] = []
-	if sheet == null:
-		return offered
 	var toggleable: Array[Dictionary] = []
 	var rest: Array[Dictionary] = []
-	for group: EventGroup in collect(sheet.events):
-		var entry := {
-			"value": guard_value(group),
-			"name": display_name(group),
-			"description": group.description.strip_edges(),
-			"toggleable": group.runtime_toggleable,
-			"group": group
-		}
-		if group.runtime_toggleable:
-			toggleable.append(entry)
-		else:
-			rest.append(entry)
-	offered.append_array(toggleable)
-	offered.append_array(rest)
-	return offered
+	var seen: Dictionary = {}
+	for owned: Array in _sheets_reaching(sheet):
+		for group: EventGroup in collect((owned[0] as EventSheetResource).events):
+			var value: String = guard_value(group)
+			if seen.has(value):
+				continue
+			seen[value] = true
+			var home: String = str(owned[1])
+			var entry := {
+				"value": value,
+				"name": display_name(group),
+				"description": choice_description(group, home),
+				"toggleable": group.runtime_toggleable,
+				"group": group,
+				"home": home
+			}
+			if group.runtime_toggleable:
+				toggleable.append(entry)
+			else:
+				rest.append(entry)
+	toggleable.append_array(rest)
+	return toggleable
 
 
-## True when the value a group row was given names a group of this sheet that cannot be switched at
-## runtime yet - the one case where the row is well spelled and still does nothing.
-static func needs_switch(offered: Array[Dictionary], value: String) -> bool:
-	var wanted: String = value.strip_edges()
-	for entry: Dictionary in offered:
-		if str(entry.get("value", "")) == wanted:
-			return not bool(entry.get("toggleable", false))
-	return false
+## [sheet, home file] for the sheet itself and every sheet it includes, outermost first, each once -
+## the same walk the compiler's include merge does, so the list holds exactly the groups the
+## compiled script will have. Read when the dialog opens, never on boot.
+static func _sheets_reaching(sheet: EventSheetResource) -> Array:
+	var reached: Array = []
+	if sheet == null:
+		return reached
+	reached.append([sheet, ""])
+	var visited: Dictionary = {}
+	var pending: Array = Array(sheet.includes)
+	while not pending.is_empty():
+		var path: String = str(pending.pop_front())
+		if path.is_empty() or visited.has(path) or not ResourceLoader.exists(path):
+			continue
+		visited[path] = true
+		var included: EventSheetResource = load(path) as EventSheetResource
+		if included == null:
+			continue
+		reached.append([included, path.get_file()])
+		pending.append_array(Array(included.includes))
+	return reached
 
 
-## The group of this sheet a row's value names, or null for free text that matches none.
+## The sentence a group's entry reads with in the picker: its own description, then what picking it
+## does. A group whose saved token no longer matches its name says the token too, so a reader who
+## meets `__group_old_name_active` in the code can tell which group it is.
+static func choice_description(group: EventGroup, home: String = "") -> String:
+	var pieces: PackedStringArray = PackedStringArray()
+	var description: String = group.description.strip_edges()
+	if not description.is_empty():
+		pieces.append(description)
+	if group.runtime_toggleable:
+		pieces.append(EventSheetL10n.translate("On at start, switchable.") if group.enabled
+			else EventSheetL10n.translate("Off at start, switchable."))
+	elif home.is_empty():
+		pieces.append(EventSheetL10n.translate("Not switchable: picking it turns on Can be switched at runtime."))
+	else:
+		pieces.append(EventSheetL10n.translate("Not switchable, and it lives in %s: turn on Can be switched at runtime there.") % home)
+	var token: String = guard_token(group)
+	if token != ReadingDoors.compiler().guard_token(display_name(group)):
+		pieces.append(EventSheetL10n.translate("Its switch is written as %s.") % token)
+	return " ".join(pieces)
+
+
+## The group of THIS sheet a row's value names, or null for free text that matches none. A group of
+## an included sheet is not returned: changing it would write a different file.
 static func group_for_value(sheet: EventSheetResource, value: String) -> EventGroup:
 	var wanted: String = value.strip_edges()
-	for entry: Dictionary in choices(sheet):
-		if str(entry.get("value", "")) == wanted:
-			return entry.get("group") as EventGroup
+	if sheet == null:
+		return null
+	for group: EventGroup in collect(sheet.events):
+		if guard_value(group) == wanted:
+			return group
 	return null
+
+
+## Picking a group that cannot be switched yet turns its switch on - called inside the very edit that
+## writes the row, so one Ctrl+Z takes back both. Returns the group it switched on, or null when the
+## row names no such group of this sheet (already switchable, free text, or another file's group).
+static func switch_on_picked(sheet: EventSheetResource, codegen_template: String, params: Dictionary) -> EventGroup:
+	for key: Variant in params.keys():
+		if not reads_sheet_groups(codegen_template, str(key)):
+			continue
+		var group: EventGroup = group_for_value(sheet, str(params[key]))
+		if group != null and not group.runtime_toggleable:
+			group.runtime_toggleable = true
+			return group
+	return null
+
+
+## The ids of the two builtin rows that name a sheet group. A row lifted from a file or applied from
+## the builtin vocabulary carries no baked template, so these frozen ids are how such a row is known;
+## a pack row is known from the template it baked, the way the picker knows it.
+const SWITCH_ACE_IDS: PackedStringArray = ["SetGroupActive", "IsGroupActive"]
+
+
+## The parameter of a row that names a sheet group, or "" for a row that names none.
+static func switch_param(ace: Resource) -> String:
+	if ace == null or not (ace.get("params") is Dictionary):
+		return ""
+	var template: String = str(ace.get("codegen_template"))
+	for key: Variant in (ace.get("params") as Dictionary).keys():
+		if reads_sheet_groups(template, str(key)):
+			return str(key)
+	if template.is_empty() and SWITCH_ACE_IDS.has(str(ace.get("ace_id"))):
+		return "group"
+	return ""
+
+
+## A group was renamed: every Set/Is Group Active in `sheet` naming its old token now names the new
+## one. Walks events, groups, sub-events and functions (an inner class has groups of its own, so it is
+## left alone). Returns how many rows were rewritten; call it inside the edit that renames the group.
+static func rewrite_switch_rows(sheet: EventSheetResource, old_value: String, new_value: String) -> int:
+	if sheet == null or old_value == new_value:
+		return 0
+	var counter: Array[int] = [0]
+	_rewrite_in_rows(sheet.events, old_value, new_value, counter)
+	for function_resource: Variant in sheet.functions:
+		if function_resource is EventFunction:
+			var function_rows: Array = (function_resource as EventFunction).events
+			if function_rows.is_empty():
+				function_rows = (function_resource as EventFunction).rows
+			_rewrite_in_rows(function_rows, old_value, new_value, counter)
+	return counter[0]
+
+
+static func _rewrite_in_rows(rows: Array, old_value: String, new_value: String, counter: Array[int]) -> void:
+	for row: Variant in rows:
+		if row is EventGroup:
+			_rewrite_in_rows(children(row as EventGroup), old_value, new_value, counter)
+		elif row is EventRow:
+			var event_row: EventRow = row as EventRow
+			var aces: Array = [event_row.trigger]
+			aces.append_array(event_row.conditions)
+			aces.append_array(event_row.actions)
+			for ace: Variant in aces:
+				var key: String = switch_param(ace as Resource) if ace is Resource else ""
+				if key.is_empty():
+					continue
+				var params: Dictionary = (ace as Resource).get("params")
+				if str(params.get(key, "")).strip_edges() == old_value:
+					params[key] = new_value
+					counter[0] += 1
+			_rewrite_in_rows(event_row.sub_events, old_value, new_value, counter)
 
 
 ## True when a parameter names one of the SHEET's own groups rather than a node group. Derived from

@@ -19614,6 +19614,7 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 			# Applied here, on the canvas, because a lens is a derived reading and not a second
 			# spelling - the row still stores and emits the author's own colour.
 			shown = _read_through_lens(EventForgeValueLens.lens_of(parameter as Dictionary), shown)
+			shown = _read_group_name(str(definition.metadata.get("codegen_template", "")), key, shown, value)
 			replacements.append(["{%d}" % index, shown])
 			replacements.append(["{%s}" % key, shown])
 		var substituted: Dictionary = substitute_display_tracking(template, replacements)
@@ -19641,11 +19642,22 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 		var param_shown: String = _read_through_lens(param.display_lens,
 			EventForgeACEFactory.comparison_glyph(EventSheetGameCatalog.preview_param(
 				_translated_option_label(param.display_value(param_value), str(param_value)))))
+		param_shown = _read_group_name(descriptor.codegen_template, param_key, param_shown, param_value)
 		descriptor_replacements.append(["{%d}" % i, param_shown])
 		descriptor_replacements.append(["{%s}" % param_key, param_shown])
 	var descriptor_substituted: Dictionary = substitute_display_tracking(descriptor_template, descriptor_replacements)
 	_pending_param_ranges = descriptor_substituted
 	return str(descriptor_substituted.get("text", ""))
+
+
+## A Set/Is Group Active value reads as the name its group was given ("Boss"), not the token the
+## row stores ("boss"), while the open sheet has that group. Anything else - a group of no sheet, an
+## expression - reads exactly as written, because then the token is the only honest answer.
+func _read_group_name(codegen_template: String, key: String, shown: String, value: Variant) -> String:
+	if _viewport == null or not EventSheetGroupFacts.reads_sheet_groups(codegen_template, key):
+		return shown
+	var group: EventGroup = EventSheetGroupFacts.group_for_value(_viewport._sheet as EventSheetResource, str(value))
+	return shown if group == null else group.display_name()
 
 
 ## Translates a display template, BBCode-aware. A marked-up template is its own translation

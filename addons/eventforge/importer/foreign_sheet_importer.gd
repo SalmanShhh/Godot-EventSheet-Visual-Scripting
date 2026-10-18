@@ -420,6 +420,7 @@ static func _convert_block(event: Dictionary, context: Dictionary, top_level: bo
 static func _convert_group(event: Dictionary, context: Dictionary) -> EventGroup:
 	var group: EventGroup = EventGroup.new()
 	group.name = str(event.get("title", "Group"))
+	group.group_name = group.name
 	group.description = str(event.get("description", ""))
 	group.enabled = not bool(event.get("disabled", false))
 	if event.has("isActiveOnStart") and not bool(event.get("isActiveOnStart", true)):

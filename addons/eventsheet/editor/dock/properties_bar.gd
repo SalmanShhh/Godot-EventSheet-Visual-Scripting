@@ -280,12 +280,12 @@ func _show_group(group: EventGroup) -> void:
 	_shown_resource = group
 	_clear_form()
 	_open_for_selection()
-	_heading.text = heading_for(group.group_name, "group")
+	_heading.text = heading_for(group.display_name(), "group")
 	var name_label: Label = Label.new()
 	name_label.text = "Name"
 	_form.add_child(name_label)
 	var name_edit: LineEdit = LineEdit.new()
-	name_edit.text = group.group_name
+	name_edit.text = group.display_name()
 	name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_edit.text_submitted.connect(func(text: String) -> void: _apply_group_name(text))
 	_form.add_child(name_edit)
@@ -301,13 +301,11 @@ func _show_group(group: EventGroup) -> void:
 func _apply_group_name(text: String) -> void:
 	var view: EventSheetViewport = _dock._active_view()
 	var group: EventGroup = view.get_selected_context().get("source_resource", null) as EventGroup if view != null else null
-	if group == null or text.strip_edges().is_empty() or text == group.group_name:
+	if group == null or text.strip_edges().is_empty() or text.strip_edges() == group.display_name():
 		return
-	if _dock._perform_undoable_sheet_edit("Rename Group", func() -> bool:
-			group.group_name = text
-			return true):
+	# The one rename path: the head, the switch's token and every row that switches it move together.
+	if _dock._quick_prompts.apply_group_edit(group, text, group.description):
 		_dock._refresh_after_edit()
-		_dock._mark_dirty("Group renamed.")
 	refresh()
 
 

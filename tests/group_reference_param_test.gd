@@ -75,12 +75,13 @@ static func run() -> bool:
 	all_passed = _check("a switchable group leads the list", str(offered[0].get("name", "")), "Tutorial hints") and all_passed
 	all_passed = _check("the value is the token the compiler emits",
 		str(offered[0].get("value", "")), "\"tutorial_hints\"") and all_passed
-	all_passed = _check("picking a group that cannot be switched yet is offered the fix",
-		EventSheetGroupFacts.needs_switch(offered, "\"combat\""), true) and all_passed
-	all_passed = _check("a switchable group needs no fix",
-		EventSheetGroupFacts.needs_switch(offered, "\"tutorial_hints\""), false) and all_passed
+	var template: String = _template(by_id, "SetGroupActive")
+	all_passed = _check("a switchable group is left as it is",
+		EventSheetGroupFacts.switch_on_picked(sheet, template, {"group": "\"tutorial_hints\""}), null) and all_passed
 	all_passed = _check("free text names no group of this sheet",
-		EventSheetGroupFacts.needs_switch(offered, "some_expression"), false) and all_passed
+		EventSheetGroupFacts.switch_on_picked(sheet, template, {"group": "some_expression"}), null) and all_passed
+	all_passed = _check("picking a group that cannot be switched yet switches it on",
+		EventSheetGroupFacts.switch_on_picked(sheet, template, {"group": "\"combat\""}) == combat and combat.runtime_toggleable, true) and all_passed
 	all_passed = _check("the value resolves back to its group",
 		EventSheetGroupFacts.group_for_value(sheet, "\"combat\"") == combat, true) and all_passed
 

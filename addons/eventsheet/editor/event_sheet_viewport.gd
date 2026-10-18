@@ -4042,9 +4042,7 @@ func _apply_span_edit(row_data: EventRowData, span: SemanticSpan, value: String)
 	match edit_kind:
 		"group_name":
 			if row_data.source_resource is EventGroup:
-				var group: EventGroup = row_data.source_resource as EventGroup
-				group.name = value
-				group.group_name = value
+				(row_data.source_resource as EventGroup).rename(value)
 		"comment_text":
 			if row_data.source_resource is CommentRow:
 				(row_data.source_resource as CommentRow).text = value

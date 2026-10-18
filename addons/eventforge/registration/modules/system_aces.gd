@@ -312,7 +312,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 static func _group_param(factory: Variant) -> ACEParam:
 	return factory.make_param(
 		"group", "String", "\"combat\"", "Group",
-		"The group to switch, picked from this sheet's runtime-toggleable groups.",
+		"The group to switch, by the name its head shows. Picking one that cannot be switched yet makes it switchable.",
 		"group_reference"
 	)
 

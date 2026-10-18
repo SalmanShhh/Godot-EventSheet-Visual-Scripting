@@ -113,7 +113,7 @@ func on_group_edit_requested(group: EventGroup) -> void:
 	if _group_edit_dialog == null:
 		_build_group_edit_dialog()
 	_group_edit_target = group
-	_group_name_edit.text = group.group_name if not group.group_name.strip_edges().is_empty() else group.name
+	_group_name_edit.text = group.display_name()
 	_group_desc_edit.text = group.description
 	_offer_group_draft(group)
 	_group_enabled_check.button_pressed = group.enabled
@@ -319,7 +319,7 @@ func _refresh_group_reading() -> void:
 	# A group that is off and cannot be switched writes nothing at all, so it shows no code and the
 	# warning line says what that means instead.
 	var truth: Dictionary = group_switch_truth(name_text, _group_enabled_check.button_pressed,
-		_group_runtime_check.button_pressed)
+		_group_runtime_check.button_pressed, _group_switch_token(name_text))
 	_group_help_strip.set_line(_group_off_line, str(truth["warning"]))
 	if not str(truth["warning"]).is_empty():
 		_group_help_strip.set_reading(reads)
@@ -339,15 +339,25 @@ func _refresh_group_reading() -> void:
 ## What the two on/off answers really compile to, said before Apply. {"code": the flag line the
 ## compiler writes for a switchable group (starting at Active on start), "warning": the sentence for
 ## a group that is off and cannot be switched - the compiler leaves that one out entirely, so there is
-## no line to show and nothing an event could turn on}. Static and pure, so it is pinned without a
+## no line to show and nothing an event could turn on}. `token` is the switch's token when it is not
+## the one the name gives (an older group keeps its own). Static and pure, so it is pinned without a
 ## dialog.
-static func group_switch_truth(group_name: String, enabled: bool, switchable: bool) -> Dictionary:
+static func group_switch_truth(group_name: String, enabled: bool, switchable: bool, token: String = "") -> Dictionary:
 	if not enabled and not switchable:
 		return {"code": "", "warning": EventSheetL10n.translate("Off and not switchable: %s is left out of the game entirely, and Set group active cannot reach it. Tick Can be switched at runtime to turn it on from an event.") % group_name}
 	if not switchable:
 		return {"code": "", "warning": ""}
-	return {"code": "var __group_%s_active: bool = %s" % [SheetCompiler.guard_token(group_name),
+	return {"code": "var __group_%s_active: bool = %s" % [
+		token if not token.is_empty() else SheetCompiler.guard_token(group_name),
 		"true" if enabled else "false"], "warning": ""}
+
+
+## The token the switch will be written with once Apply lands: the group's own while its name is
+## unchanged (an older sheet's differing token is kept), the new name's once it is renamed.
+func _group_switch_token(name_text: String) -> String:
+	if _group_edit_target != null and name_text == _group_edit_target.display_name():
+		return EventSheetGroupFacts.guard_token(_group_edit_target)
+	return SheetCompiler.guard_token(name_text)
 
 
 ## One-shot apply: nulls the target first so a text-submit + dialog-OK pair can never double-apply.
@@ -388,28 +398,71 @@ static func group_edit_extras(enabled: bool, runtime_toggleable: bool, chosen: C
 ## Applies a group's fields undoably. Wraps the pure static mutation so the popup's Apply and tests
 ## share one code path. `extras` carries whatever the caller wants changed beyond name/description;
 ## anything it leaves out stays exactly as the group has it.
+##
+## A rename is a rename everywhere: every Set/Is Group Active naming the group's old switch names the
+## new one, in this sheet inside the same undo step, and in each project sheet that includes this one
+## (saved, as Rename Everywhere saves them). The receipt says how many rows followed.
 func apply_group_edit(group: EventGroup, new_name: String, new_desc: String, extras: Dictionary = {}) -> bool:
 	if group == null:
 		return false
+	var old_name: String = group.display_name()
+	var old_value: String = EventSheetGroupFacts.guard_value(group)
+	var moved: Array[int] = [0]
+	var new_value: Array[String] = [old_value]
 	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Group", func() -> bool:
 		set_group_fields(group, new_name, new_desc, extras)
+		new_value[0] = EventSheetGroupFacts.guard_value(group)
+		moved[0] = EventSheetGroupFacts.rewrite_switch_rows(_dock._current_sheet, old_value, new_value[0])
 		return true
 	)
-	if changed:
-		_dock._mark_dirty("Updated group: %s" % group.group_name)
-	return changed
+	if not changed:
+		return false
+	var touched: PackedStringArray = PackedStringArray()
+	if new_value[0] != old_value and not _dock._current_sheet_path.is_empty():
+		touched = switch_rows_in_includers(_dock._current_sheet_path, old_value, new_value[0],
+			EventSheetProjectFind.list_project_sheets())
+	if moved[0] == 0 and touched.is_empty():
+		_dock._mark_dirty("Updated group: %s" % group.display_name())
+		return true
+	_dock._mark_dirty(EventSheetRenameRefactor.done_text(moved[0], touched))
+	if _dock.is_inside_tree():
+		_dock._rename.show_receipt(old_name, group.display_name(), moved[0], touched)
+	return true
 
 
-## Pure mutation: trims + applies a group's name (mirrored to .name + .group_name) and its
-## description; a blank name falls back to "Group". `extras` may carry "enabled",
+## Rewrites + saves every project sheet whose `includes` lists `own_path` and that switches the
+## renamed group: an including sheet compiles this sheet's groups into its own script, so its rows
+## name the same switch. Closed sheets have no undo, so each is backed up first, and a sheet is only
+## reported once its save landed. Returns the file names written.
+static func switch_rows_in_includers(own_path: String, old_value: String, new_value: String,
+		candidate_paths: PackedStringArray) -> PackedStringArray:
+	var touched: PackedStringArray = PackedStringArray()
+	for sheet_path: String in candidate_paths:
+		if sheet_path == own_path:
+			continue
+		var other: EventSheetResource = load(sheet_path) as EventSheetResource
+		if other == null or not other.includes.has(own_path):
+			continue
+		if EventSheetGroupFacts.rewrite_switch_rows(other, old_value, new_value) == 0:
+			continue
+		EventSheetBackups.backup_sheet(sheet_path)
+		if ResourceSaver.save(other, sheet_path) == OK:
+			touched.append(sheet_path.get_file())
+		else:
+			push_warning("EventSheets: a group rename could not save %s - it still switches %s." % [sheet_path, old_value])
+	return touched
+
+
+## Pure mutation: trims + applies a group's name and its description; a blank name falls back to
+## "Group". A NEW name is mirrored onto `group_name` too, so the name drives the switch's token; an
+## unchanged one leaves an older sheet's differing token alone. `extras` may carry "enabled",
 ## "runtime_toggleable" and "custom_color"; a key it omits leaves that fact alone. Static so it is
 ## unit-testable without the dialog or a display server. Returns the resolved name.
 static func set_group_fields(group: EventGroup, new_name: String, new_desc: String, extras: Dictionary = {}) -> String:
 	var resolved_name: String = new_name.strip_edges()
 	if resolved_name.is_empty():
 		resolved_name = "Group"
-	group.name = resolved_name
-	group.group_name = resolved_name
+	group.rename(resolved_name)
 	group.description = new_desc.strip_edges()
 	if extras.has("enabled"):
 		group.enabled = bool(extras["enabled"])

@@ -346,7 +346,7 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 	var message := {"text": ""}
 	# This lambda runs inside the dock's undo funnel and captures `self` (this helper), so every
 	# dock state reference below is written `_dock.` while calls into helper methods stay bare.
-	var changed: bool = _dock._perform_undoable_sheet_edit("Apply Cell Edit", func() -> bool:
+	var write: Callable = func() -> bool:
 		match mode:
 			"new_condition_event":
 				var condition_event: EventRow = EventRow.new()
@@ -518,6 +518,18 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 				message["text"] = "Added event."
 				return true
 		return false
+	var changed: bool = _dock._perform_undoable_sheet_edit("Apply Cell Edit", func() -> bool:
+		if not bool(write.call()):
+			return false
+		# A Set/Is Group Active row naming a group that cannot be switched yet turns its switch on
+		# here, inside the same edit, so the row works the moment it is written and one Ctrl+Z
+		# takes back both.
+		var switched: EventGroup = EventSheetGroupFacts.switch_on_picked(_dock._current_sheet,
+			str(definition.metadata.get("codegen_template", "")), params)
+		if switched != null:
+			message["text"] = "%s %s" % [str(message["text"]),
+				EventSheetL10n.translate("%s can now be switched at runtime.") % switched.display_name()]
+		return true
 	)
 	if not changed and not str(message.get("text", "")).strip_edges().is_empty():
 		# A refusal that set a reason says it out loud: an apply that quietly does nothing is the

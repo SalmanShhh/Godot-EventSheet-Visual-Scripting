@@ -174,13 +174,20 @@ static func done_text(moved: int, touched: PackedStringArray) -> String:
 ## The receipt after the rename: what happened, and the places it happened in. The last rename's
 ## places are kept by rename_everywhere, so what is listed is what was written.
 func show_done(old_name: String, new_name: String) -> ConfirmationDialog:
-	var moved: int = int(_last_done.get("moved", 0))
-	var touched: PackedStringArray = _last_done.get("touched", PackedStringArray())
+	return show_receipt(old_name, new_name, int(_last_done.get("moved", 0)),
+		_last_done.get("touched", PackedStringArray()), _last_done.get("callers", PackedStringArray()))
+
+
+## The receipt for any rename that moved rows: how many places in this sheet, the other files it
+## wrote and saved, and the hand-written files it left for a person to check. A group rename shows the
+## same window with the Set/Is Group Active rows that followed it.
+func show_receipt(old_name: String, new_name: String, moved: int, touched: PackedStringArray,
+		callers: PackedStringArray = PackedStringArray()) -> ConfirmationDialog:
 	var places: Array = [[EventSheetL10n.translate("this sheet"),
 		EventSheetL10n.translate("1 place") if moved == 1 else EventSheetL10n.translate("%d places") % moved]]
 	for file: String in touched:
 		places.append([file, EventSheetL10n.translate("saved")])
-	for file: String in _last_done.get("callers", PackedStringArray()):
+	for file: String in callers:
 		places.append([EventSheetL10n.translate("%s - not changed") % file, EventSheetL10n.translate("check it")])
 	return load(_dock.SMALL_PROMPT_PATH).open(_dock, {
 		"title": EventSheetL10n.translate("Renamed %s to %s") % [old_name, new_name],

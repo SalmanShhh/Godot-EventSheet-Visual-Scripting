@@ -516,6 +516,8 @@ func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 	var key: String = str(param_dict.get("id", ""))
 	var hint: String = str(param_dict.get("hint", ""))
 	_param_dicts[key] = param_dict
+	if hint == "group_reference" and EventSheetGroupFacts.reads_sheet_groups(_definition_template(), key):
+		_param_dicts[key] = param_dict.merged({"reads_sheet_groups": true})
 	# Extension seam (EventSheets.register_param_editor): a factory registered for this param's
 	# hint (or type_name) supplies the field. Contract: it returns a LineEdit (subclass freely -
 	# buttons, popups, validation) so the dialog's value read (.text) needs no special case.
@@ -1301,34 +1303,28 @@ func _definition_template() -> String:
 	return str(_definition.metadata.get("codegen_template", "")) if _definition != null else ""
 
 
-## The sheet-group picker: this sheet's own groups, switchable ones first, written as the quoted
-## snake_case the template concatenates. A group that is NOT switchable yet is still offered - with
-## the one-click offer to make it one, because "it is not in the list" teaches nobody why.
+## The sheet-group picker: a described dropdown of the groups this sheet's script will have, BY THE
+## NAME THEY WERE GIVEN, switchable ones first, each saying what picking it does. The value stored is
+## still the quoted guard token the template concatenates, so a row reads and compiles as it always
+## did. A group that is not switchable yet is offered too - applying the row turns its switch on in
+## the same undo step. A value naming no group (an older row, an expression) is kept as its own
+## choice, so opening the dialog and pressing OK never rewrites a row nobody asked to change.
 func _create_sheet_group_field(key: String, default_value: Variant) -> Control:
-	var sheet: EventSheetResource = _lint_sheet()
-	var offered: Array[Dictionary] = EventSheetGroupFacts.choices(sheet)
-	var suggestions: Array = []
-	for entry: Dictionary in offered:
-		suggestions.append(str(entry.get("value", "")))
-	var row: Control = _create_autocomplete_field(key, suggestions, default_value)
-	var edit: LineEdit = _fields.get(key) as LineEdit
-	if edit == null:
-		return row
-	var offer: Button = Button.new()
-	offer.text = EventSheetL10n.translate("Make switchable")
-	offer.tooltip_text = EventSheetL10n.translate("Turns on \"Can be switched at runtime\" for this group, so this row can reach it.")
-	offer.visible = false
-	offer.pressed.connect(func() -> void:
-		if _group_toggle_requester.is_valid() and bool(_group_toggle_requester.call(edit.text)):
-			offer.visible = false
-	)
-	row.add_child(offer)
-	var refresh_offer: Callable = func(_text: String = "") -> void:
-		offer.visible = _group_toggle_requester.is_valid() \
-			and EventSheetGroupFacts.needs_switch(offered, edit.text)
-	edit.text_changed.connect(refresh_offer)
-	refresh_offer.call()
-	return row
+	var dropdown: OptionButton = OptionButton.new()
+	var current: String = str(default_value).strip_edges()
+	var picked: int = -1
+	for entry: Dictionary in EventSheetGroupFacts.choices(_lint_sheet()):
+		var index: int = EventSheetPopupUI.add_described_item(dropdown, str(entry.get("name", "")),
+			str(entry.get("description", "")), str(entry.get("value", "")))
+		if str(entry.get("value", "")) == current:
+			picked = index
+	var editing: bool = _is_reedit_flow() or str(_context.get("mode", "")) == "batch_edit_params"
+	if picked < 0 and not current.is_empty() and (editing or dropdown.item_count == 0):
+		picked = EventSheetPopupUI.add_described_item(dropdown, current,
+			EventSheetL10n.translate("No group of this sheet is called this, so the row switches nothing yet. Kept as it is written."), current)
+	dropdown.select(maxi(picked, 0))
+	_fields[key] = dropdown
+	return EventSheetPopupUI.described_field(dropdown)
 
 
 ## Every known node group, quoted: project-wide global groups first (they are the deliberate
@@ -3205,9 +3201,6 @@ var _variable_creator: Callable = Callable()
 ## What the "Add hpp…" fix calls: the dock opens the Add variable dialog with the name already
 ## filled in. Left invalid outside the dock, where the fix declares the variable outright instead.
 var _variable_adder: Callable = Callable()
-## What the "Make switchable" offer calls: the dock flips the named group's runtime toggle in
-## one undo step and answers whether it did. Left invalid (no offer shown) outside the dock.
-var _group_toggle_requester: Callable = Callable()
 ## What the last check said about each field, as {param id -> note}. An expression field fills
 ## its entry as it is typed (the lint runs there anyway); everything else is checked on demand. The
 ## strip and the reason beside OK both read from here, so one keystroke costs one check.
@@ -3242,11 +3235,6 @@ func set_variable_creator(creator: Callable) -> void:
 ## dialog on the name that was typed; without one it declares the variable directly.
 func set_variable_adder(adder: Callable) -> void:
 	_variable_adder = adder
-
-
-## Injects the "Make switchable" writer (see _group_toggle_requester).
-func set_group_toggle_requester(requester: Callable) -> void:
-	_group_toggle_requester = requester
 
 
 ## The probable culprit when an expression fails lint: the first plain identifier the
@@ -4330,6 +4318,9 @@ func _describe_dropdown(key: String, param_dict: Dictionary, dropdown: OptionBut
 	for index: int in dropdown.item_count:
 		var code: String = str(dropdown.get_item_metadata(index)) if dropdown.get_item_metadata(index) != null else ""
 		var note: String = str(notes.get(code, ""))
+		# A field that described its own choices as it built them keeps those sentences.
+		if note.is_empty():
+			note = dropdown.get_item_tooltip(index)
 		dropdown.set_item_tooltip(index, note if not note.is_empty()
 			else (code if code != dropdown.get_item_text(index) else ""))
 	EventSheetPopupUI.follow_description(dropdown)

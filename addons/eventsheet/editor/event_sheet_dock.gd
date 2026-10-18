@@ -442,7 +442,6 @@ var _ace_params: RefCounted = null:
 			_ace_params.set_lint_context_provider(func() -> EventSheetResource: return _current_sheet)
 			_ace_params.set_variable_creator(_create_variable_quickfix)
 			_ace_params.set_variable_adder(_variables.open_add_variable_named)
-			_ace_params.set_group_toggle_requester(_make_group_switchable)
 			_ace_params.params_confirmed.connect(_on_ace_params_confirmed)
 			_ace_params.back_requested.connect(_ace_apply._on_ace_params_back_requested)
 			_ace_params_built = true
@@ -4252,16 +4251,6 @@ func _ungroup_context_group() -> void:
 		_mark_dirty("Ungrouped \"%s\" - %d row(s) kept." % [group.group_name, moved])
 
 
-## The "Make switchable" offer in the Set/Is Group Active dialog: the row names a group of this
-## sheet that cannot be switched yet, and one click makes it one. Takes the value the field holds
-## (the quoted snake_case the template concatenates) and answers whether anything changed.
-func _make_group_switchable(value: String) -> bool:
-	var group: EventGroup = EventSheetGroupFacts.group_for_value(_current_sheet, value)
-	if group == null or group.runtime_toggleable:
-		return false
-	return _set_group_runtime_toggleable(group, true)
-
-
 ## The one writer for a group's runtime toggle: one undo step, one status line saying what the two
 ## group rows can now reach.
 func _set_group_runtime_toggleable(group: EventGroup, switchable: bool) -> bool:
@@ -7106,14 +7095,14 @@ func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String,
 	if edit_kind == "variable_rename":
 		_rename.rename_everywhere(old_value, new_value.strip_edges())
 		return
+	# A group's NAME, edited in place, is the Edit group window's rename without the window: the
+	# Set/Is Group Active rows that name it follow, in the same undo step.
+	if edit_kind == "group_name" and row_data.source_resource is EventGroup:
+		var renamed: EventGroup = row_data.source_resource as EventGroup
+		_quick_prompts.apply_group_edit(renamed, new_value, renamed.description)
+		return
 	var updated: bool = _perform_undoable_sheet_edit("Edit Row Text", func() -> bool:
 		match edit_kind:
-			"group_name":
-				if row_data.source_resource is EventGroup:
-					var group: EventGroup = row_data.source_resource as EventGroup
-					group.name = new_value
-					group.group_name = new_value
-					return true
 			"comment_text":
 				if row_data.source_resource is CommentRow:
 					(row_data.source_resource as CommentRow).text = new_value

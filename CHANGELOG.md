@@ -18,6 +18,22 @@
   The head's switch reads "Off at start; events can switch it on." for such a group.
 - The group head's menu has "Can Be Switched At Runtime" beside "Active On Start", ticked at the
   group's state; choosing it is one undo step.
+### Changed: Set group active picks the group by its name, and a rename takes the rows with it
+
+- Set group active and Is group active pick their group from a dropdown of the sheet's groups (and
+  the groups of the sheets it includes) by the name you gave them, switchable ones first, each with
+  its description and what picking it does: "Off at start, switchable", or "Not switchable: picking
+  it turns on Can be switched at runtime". Picking a group that is not switchable turns its switch on
+  in the same undo step as the row. The value the row stores is still the guard token it always
+  was, so older sheets and compiled games are unchanged; a row naming no group keeps its value as a
+  choice of its own. The separate Make switchable button is gone.
+- Renaming a group (the Edit group window, the name on the head, the properties bar) rewrites every
+  Set group active and Is group active that names it, in this sheet as one undo step and in the
+  project sheets that include it, and the rename receipt says how many rows followed.
+- A group's name now drives its switch's token: a rename moves both together. A group from an older
+  sheet whose two name fields differ keeps its saved token until it is renamed, and the picker shows
+  that token ("Its switch is written as boss_fight."). The Edit group window and the properties bar
+  show the name the head shows, and the properties bar's rename now changes the head too.
 
 ### Fixed: what the reader adds to a connect read in place is written, and a class that moves bytes stays code alone
 

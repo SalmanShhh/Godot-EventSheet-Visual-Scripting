@@ -174,9 +174,9 @@ func _replace_in_rows(rows: Array, find_text: String, replace_text: String, coun
 			(row as RawCodeRow).code = (row as RawCodeRow).code.replace(find_text, replace_text)
 		elif row is EventGroup:
 			var group: EventGroup = row as EventGroup
-			counter["count"] = int(counter.get("count", 0)) + group.group_name.count(find_text) + group.description.count(find_text)
-			group.group_name = group.group_name.replace(find_text, replace_text)
-			group.name = group.group_name
+			counter["count"] = int(counter.get("count", 0)) + group.display_name().count(find_text) + group.description.count(find_text)
+			if group.display_name().contains(find_text):
+				group.rename(group.display_name().replace(find_text, replace_text))
 			group.description = group.description.replace(find_text, replace_text)
 			_replace_in_rows(group.events if not group.events.is_empty() else group.rows, find_text, replace_text, counter)
 		elif row is InnerClassRow and (row as InnerClassRow).body != null:
