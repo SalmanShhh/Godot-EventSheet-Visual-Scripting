@@ -68,6 +68,16 @@ func variable_name() -> String:
 	return found.get_string(1) if found != null else "?"
 
 
+## The type the head declares (`var waves: Dictionary = {` gives Dictionary), or the collection word
+## when it declares none (`var waves := {`).
+func declared_type() -> String:
+	var type_regex: RegEx = RegEx.create_from_string("^(?:var|const) [A-Za-z_][A-Za-z0-9_]*: (.+) = [\\[{]$")
+	var found: RegExMatch = type_regex.search(head.strip_edges())
+	if found != null:
+		return found.get_string(1)
+	return "Dictionary" if is_dictionary() else "Array"
+
+
 ## The exact source lines this row emits, shared by the compiler and the parse() byte gate -
 ## one function so the two can never disagree.
 func emit_lines() -> PackedStringArray:

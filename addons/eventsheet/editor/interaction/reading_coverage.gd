@@ -258,6 +258,13 @@ static func _walk(items: Array, top_level: bool, tally: Dictionary, networking_t
 			_walk((item as EventFunction).events, false, tally, networking_too)
 		elif item is EventGroup:
 			_walk((item as EventGroup).events, top_level, tally, networking_too)
+		elif item is InnerClassRow:
+			# A class written inside the file: its head is one line, and its body is read like a file.
+			tally["total_lines"] = int(tally["total_lines"]) + 1
+			var inner_body: EventSheetResource = (item as InnerClassRow).body
+			if inner_body != null:
+				_walk(inner_body.events, false, tally, networking_too)
+				_walk(inner_body.functions, false, tally, networking_too)
 		elif item is LocalVariable:
 			# A declaration is one line, and a networking one when what it holds is (`var peer =
 			# ENetMultiplayerPeer.new()`): reading as a variable row is reading as a row.

@@ -545,6 +545,11 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 				_viewport._begin_edit(row_index, span_index)
 				_viewport.accept_event()
 				return
+			# A table's head row folds its entries to their count; a double-click opens them.
+			if row_data != null and row_data.source_resource is CollectionDeclRow and not row_data.children.is_empty():
+				_viewport._folding.toggle_row_fold(row_index)
+				_viewport.accept_event()
+				return
 			# Single-param inline editing: a double-click landing on a highlighted VALUE
 			# within an ACE edits just that parameter.
 			var value_kind: String = str(double_click_meta.get("kind", ""))
@@ -611,7 +616,8 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 					)
 					_viewport.accept_event()
 					return
-			if row_data != null and row_data.source_resource is RawCodeRow:
+			# A class read as rows opens as the code it is written in: its members are read, not edited.
+			if row_data != null and (row_data.source_resource is RawCodeRow or row_data.source_resource is InnerClassRow):
 				_viewport.raw_code_edit_requested.emit(row_data.source_resource, false)
 				_viewport.accept_event()
 				return

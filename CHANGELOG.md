@@ -59,6 +59,31 @@
   (`PICKER_FIRST_OPEN_BUDGET_MS`, 7,100 ms, three times the cold median) and the open budget times
   the second build: 593-673 ms before the wave and 613-619 after, so 1,840 ms.
 
+### Added: a class inside a script, and a value over several lines, read as rows
+
+- A class written inside a script (`class Hit:` with variables and functions under it) reads as one
+  full-width "Class Hit" head with its members under it, folding like a group: its variables are
+  variable rows and its functions are function events, read exactly as they would be in a file of
+  their own (a class inside it is a Class of its own). Hovering the head says how other code makes
+  one (`Hit.new()`); double-clicking it turns the class back into the code block it is written as.
+  The file still saves back byte for byte. A class that cannot come back exactly stays code on its
+  own, and the rest of the file still reads; a class of fields alone keeps its Data type reading.
+- A variable whose value runs over several lines is ONE variable row with the whole value on one
+  line (`top_speed = (base_speed * boost + wind)`), and a local declaration written that way in a
+  function is one action. Saving writes the same line breaks back until the value is edited; an
+  edited value is written as typed. Lines with a comment inside them stay code.
+- A list or table declared at the top of a script reads as a variable row folded to its count,
+  `Array[Vector2] spawn_points = 3 entries`; a double-click (or the fold arrow) opens its entries as
+  the rows under it, each still editable in place.
+- A table or list inside a function with notes written among its entries folds to one row like any
+  other: a note is never an entry, and the row's hover keeps the notes under the entries.
+- Opening the plugin's own scripts: 65 of its 67 classes now read as rows, 2,703 of their 2,930
+  lines (none did before). Declarations whose value runs over several lines that still read as code
+  fell from 1,324 to 300 (5,658 lines to 2,540), and rows that say nothing of their own from 991 to
+  306 (0.4% of rows to 0.1%).
+- A file with classes inside it takes longer to finish reading in the background, since every
+  function in its classes is now read as well (the first paint of the file is unchanged).
+
 ### Fixed: shaping a field, walked end to end in the editor
 
 - Clicking an option in "Shape this field", pressing Choose or Apply, or pressing ▲ in the Inspector

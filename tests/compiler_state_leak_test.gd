@@ -56,7 +56,10 @@ const SWEPT_STATICS: Array[String] = [
 	# What the sheet's declarations start each variable on, for the Reset rows, and the names a Reset
 	# row asked for that the sheet does not declare. Both are set from the sheet at the start of every
 	# compile (and emptied by the text probes), so a poisoned value cannot reach an emission.
-	"starting_values", "unresolved_starting_values"
+	"starting_values", "unresolved_starting_values",
+	# The lines each class written inside the file writes, set by the entry point for that compile
+	# alone (its bodies are written first) and put back after it, so a poisoned value is overwritten.
+	"_inner_class_lines"
 ]
 
 ## The public statics of the compiler that are not emission entry points: pure answers about a row, a
@@ -72,7 +75,9 @@ const PURE_HELPERS: Array[String] = [
 	"declared_starting_values",
 	# The Show if / Lock unless a sheet's variables ask for, who refreshes the Inspector, and the
 	# generated function: reads of the variables handed in, nothing kept.
-	"inspector_conditions", "inspector_condition_controllers", "inspector_conditions_function"
+	"inspector_conditions", "inspector_condition_controllers", "inspector_conditions_function",
+	# The lines one class written inside a file writes: its body through echo(), nothing kept.
+	"inner_class_lines"
 ]
 
 ## What a poisoned static is set to, by type. Any value that is not the default will do - what

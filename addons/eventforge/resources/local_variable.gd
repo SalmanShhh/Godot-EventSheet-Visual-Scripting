@@ -102,6 +102,10 @@ extends Resource
 ## A "range" spec is {"min", "max", "step", ...} as written; its step is RANGE_STEP_UNWRITTEN when
 ## the source left it to Godot (`@export_range(1, 3)`), so a reader asks `range_step` for it.
 @export var attributes: Dictionary = {}
+## A value the file wrote over several lines, {"one_line", "written"}: default_value holds it on one
+## line, and emission writes the lines back while the value still reads as that one line (see
+## EventForgeValueLines). Empty for a value written on one line. Set by the importer, byte-gated.
+@export var written_value: Dictionary = {}
 
 ## The step a range spec carries when the source left it to Godot: the two-number `@export_range`.
 const RANGE_STEP_UNWRITTEN := ""

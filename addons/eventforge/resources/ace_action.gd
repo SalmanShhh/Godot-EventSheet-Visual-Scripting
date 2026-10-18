@@ -15,6 +15,10 @@ extends Resource
 ## Baked codegen template (from a custom ACE's @ace_codegen_template). When non-empty it
 ## takes precedence over the descriptor registry, so addon ACEs compile without one.
 @export var codegen_template: String = ""
+## Values the file wrote over several lines, {param id: {"one_line", "written"}}: the param holds the
+## value on one line, and emission writes the lines back while it still reads as that one line (see
+## EventForgeValueLines). Empty for a row written on one line. Set by the lift, byte-gated.
+@export var written_params: Dictionary = {}
 ## The row's LAST STORED READING - the display template it was applied under, slots and all
 ## ("Set {property} to {value}"), never the filled-in sentence. Baked at apply time beside the
 ## codegen template, for exactly one reason: a row whose verb the installed vocabulary no longer

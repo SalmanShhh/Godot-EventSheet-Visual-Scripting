@@ -9481,3 +9481,7 @@ Shape %s…,调整 %s…
 "It also turns Stay within limits off on the Check tab: with no limits left, there is nothing to stay within.",这也会关闭“检查”标签页里的“保持在范围内”：没有了范围，就没有可保持的范围。
 "The next field, %s, starts another group, so the two sit under different headings.",下一个字段 %s 开始了另一个分组，所以两者位于不同的标题下。
 Only two numbers share a line; this field and %s are drawn one per line.,只有两个数字可以共用一行；此字段和 %s 各占一行显示。
+1 entry,1 项
+%d entries,%d 项
+"A class inside this script: its own variables and functions, folded under one head. Other code makes one with %s.new().",此脚本内的类：它自己的变量和函数，折叠在一个标题下。其他代码用 %s.new() 创建它。
+extends %s,extends %s

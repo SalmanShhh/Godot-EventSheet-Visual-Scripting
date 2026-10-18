@@ -24,6 +24,12 @@ static func generate_action(action: ACEAction, target_default: String = "", host
 	var params: Dictionary = _params_with_scope_target(action, target_default, template)
 	params = _params_with_host(params, host_default, template)
 	params = _params_with_blank_defaults(action, params)
+	# A value the file wrote over several lines goes back on those lines while it reads as it did.
+	if not action.written_params.is_empty():
+		params = params.duplicate()
+		for written_id: Variant in action.written_params.keys():
+			if params.get(written_id) is String:
+				params[written_id] = EventForgeValueLines.written(str(params[written_id]), action.written_params[written_id])
 	if template.contains("{%s}" % STARTING_VALUE_SLOT) or template.contains("{%s}" % EVERY_STARTING_VALUE_SLOT):
 		return _starting_value_line(template, params, starting_values)
 	return _apply_template(template, params)

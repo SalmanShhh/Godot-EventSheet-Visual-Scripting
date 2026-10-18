@@ -192,6 +192,15 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 			sheet.events.append(lifted)
 			index += 1
 			continue
+		# A declaration whose value runs over several lines is still ONE variable row, its value read
+		# on one line; the lines it was written over are kept and written back. Byte-gated inside.
+		var lifted_written: Dictionary = _try_lift_written_variable(lines, index)
+		if not lifted_written.is_empty():
+			_absorb_tree_variable_group(lifted_written["var"], pending, str(lifted_written["written"]))
+			_flush_pending(pending, sheet)
+			sheet.events.append(lifted_written["var"])
+			index += int(lifted_written["consumed"])
+			continue
 		var lifted_enum: EnumRow = _try_lift_enum(line)
 		if lifted_enum != null:
 			_flush_pending(pending, sheet)
@@ -509,7 +518,7 @@ func _parse_named_accessors(block: PackedStringArray) -> Dictionary:
 ## Lifts a top-level variable declaration to an ordered tree-variable row, but ONLY when the
 ## compiler's canonical emission reproduces the source line exactly (the verify-lift rule);
 ## otherwise the line stays verbatim in a block row and nothing is lost.
-func _try_lift_variable(line: String) -> LocalVariable:
+func _try_lift_variable(line: String, collection_as_text: bool = false) -> LocalVariable:
 	# An `@onready var <name>: <Type> = <expr>` restores a first-class onready row (an editable variable,
 	# not a stranded verbatim block): strip the annotation, parse the declaration, and flag onready. The
 	# compiler re-emits the default VERBATIM for onready, and the byte-verify below still gates it - if the
@@ -642,8 +651,10 @@ func _try_lift_variable(line: String) -> LocalVariable:
 		# going to stay raw, and only when the re-emission matches byte-for-byte.
 		# NOT for a collection: an Array or Dictionary kept as text would lose the structured
 		# collection editor the variable dialog gives it, which is a worse row than a code block.
-		# Those keep the documented behaviour of staying verbatim until they are written canonically.
-		if typeof(lifted.default_value) == TYPE_ARRAY or typeof(lifted.default_value) == TYPE_DICTIONARY:
+		# Those keep the documented behaviour of staying verbatim until they are written canonically -
+		# except a list written over several lines (`collection_as_text`), which as code would be a
+		# block of its own, and as text is one row whose value folds to its count.
+		if not collection_as_text and (typeof(lifted.default_value) == TYPE_ARRAY or typeof(lifted.default_value) == TYPE_DICTIONARY):
 			return null
 		var equals: int = line.find(" = ")
 		if equals < 0:
@@ -659,6 +670,76 @@ func _try_lift_variable(line: String) -> LocalVariable:
 	_extract_structured_hint(lifted, line)
 	_extract_custom_hint(lifted, line)
 	return lifted
+
+
+## Lifts a declaration whose value runs over several lines - inside open brackets, or after a `\` -
+## to one variable row: {var, consumed, written}, or {} when it is not one. The lines are joined onto
+## one (EventForgeValueLines), the joined declaration is lifted like any other, and the variable keeps
+## the lines its value was written over. Byte-gated: the declaration must come back exactly as written.
+## A value that opens a collection on its first line is the Declare row's, so it is left to that lift.
+func _try_lift_written_variable(lines: PackedStringArray, index: int) -> Dictionary:
+	var head: String = lines[index]
+	if not (head.begins_with("var ") or head.begins_with("const ") or head.begins_with("static var ") \
+			or head.begins_with("@export var ") or head.begins_with("@onready var ")):
+		return {}
+	var stripped: String = head.strip_edges()
+	if stripped.ends_with("{") or stripped.ends_with("["):
+		return {}
+	var last: int = index
+	var open: int = EventSheetACELifter._bracket_delta(head)
+	if open > 0:
+		while open > 0 and last + 1 < lines.size() and not lines[last + 1].strip_edges().is_empty():
+			last += 1
+			open += EventSheetACELifter._bracket_delta(lines[last])
+		if open > 0:
+			return {}
+	else:
+		while EventSheetACELifter.ends_in_continuation(lines[last]) and last + 1 < lines.size() \
+				and lines[last + 1].begins_with("\t"):
+			last += 1
+	if last == index:
+		return {}
+	var run: PackedStringArray = lines.slice(index, last + 1)
+	var joined: Dictionary = EventForgeValueLines.join(run)
+	if joined.is_empty():
+		return {}
+	var text: String = str(joined["text"])
+	var lifted: LocalVariable = _try_lift_variable(text, true)
+	if lifted == null:
+		lifted = _typed_expression_variable(text)
+	if lifted == null:
+		return {}
+	# The value is kept as the text it was written as: that text is what the lines are kept for.
+	if not (lifted.default_value is String):
+		var equals: int = text.find(" = ")
+		if equals < 0:
+			return {}
+		lifted.default_value = text.substr(equals + 3)
+		lifted.expression_default = true
+	lifted.written_value = EventForgeValueLines.layout_of(joined, str(lifted.default_value))
+	if lifted.written_value.is_empty() or SheetCompiler._emit_tree_variable_line(lifted) != str(joined["written"]):
+		return {}
+	return {"var": lifted, "consumed": run.size(), "written": str(joined["written"])}
+
+
+## A typed declaration whose value is kept as the text it was written as - `const WORDS:
+## PackedStringArray = ["run", "jump", "duck"]` - for the value the ordinary lift reads into a value
+## and then cannot write back in the file's spelling (a constant, most often). null when the line is
+## not `[static ]var|const|@export var name: Type = value`. The caller's byte gate decides.
+func _typed_expression_variable(text: String) -> LocalVariable:
+	var found: RegExMatch = RegEx.create_from_string(
+		"^(static var|const|var|@export var) ([A-Za-z_][A-Za-z0-9_]*): ([^=]+?) = (.+)$").search(text)
+	if found == null:
+		return null
+	var variable: LocalVariable = LocalVariable.new()
+	variable.name = found.get_string(2)
+	variable.type_name = found.get_string(3)
+	variable.default_value = found.get_string(4)
+	variable.expression_default = true
+	variable.is_constant = found.get_string(1) == "const"
+	variable.is_static = found.get_string(1) == "static var"
+	variable.exported = found.get_string(1) == "@export var"
+	return variable
 
 
 ## The type an untyped declaration's parsed value implies: a whole number is int, a decimal float,

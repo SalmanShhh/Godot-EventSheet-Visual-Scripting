@@ -9481,3 +9481,7 @@ Shape %s…,%s 꾸미기…
 "It also turns Stay within limits off on the Check tab: with no limits left, there is nothing to stay within.",확인 탭의 '범위 안에 두기'도 꺼집니다. 범위가 없으면 그 안에 둘 것이 없습니다.
 "The next field, %s, starts another group, so the two sit under different headings.",다음 필드 %s는 다른 그룹을 시작하므로 두 필드는 서로 다른 제목 아래에 놓입니다.
 Only two numbers share a line; this field and %s are drawn one per line.,한 줄을 나눠 쓸 수 있는 것은 숫자 두 개뿐입니다. 이 필드와 %s는 한 줄에 하나씩 표시됩니다.
+1 entry,항목 1개
+%d entries,항목 %d개
+"A class inside this script: its own variables and functions, folded under one head. Other code makes one with %s.new().",이 스크립트 안의 클래스: 자기 변수와 함수를 하나의 머리글 아래에 접어 둡니다. 다른 코드는 %s.new()로 만듭니다.
+extends %s,extends %s

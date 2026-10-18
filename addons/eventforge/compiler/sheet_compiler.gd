@@ -166,11 +166,15 @@ static var _behavior_host_default: String = ""
 # lift - which recompiles the whole sheet to byte-verify it - on a WORKER THREAD while the editor
 # keeps painting. A compile-on-save or a Project Doctor pass on the main thread would otherwise stomp
 # that working state mid-emission. Locked at the PUBLIC entry points ONLY (compile and echo, through
-# _compile_locked, and emit_function_block_text); no helper takes it, and no entry point calls
-# another, so the lock is never taken twice on one thread and cannot deadlock.
+# _compile_locked, and emit_function_block_text); no helper takes it. The one entry point that calls
+# another is _compile_locked writing a class's body before the file around it, and Godot's Mutex is
+# recursive, so taking it twice on one thread cannot deadlock.
 static var _compile_mutex: Mutex = Mutex.new()
 ## False while echo() compiles: the output is returned and written nowhere. Set under the lock.
 static var _writes_output: bool = true
+## The lines each class written inside the file emits, by the InnerClassRow's instance id: its body,
+## written by echo() before the file around it and set here for that file's compile alone.
+static var _inner_class_lines: Dictionary = {}
 
 ## What the removal guard knows about THIS sheet's names (see EventForgeRemovalGuard.facts): which
 ## ones hold a node across frames, and which events have already asked whether one is still here.
@@ -234,8 +238,13 @@ static func echo(sheet: EventSheetResource, omit_generated_banner: bool = false)
 ## (GDScript has no try/finally, so a wrapper is the only leak-proof shape).
 static func _compile_locked(sheet: EventSheetResource, output_path: String, omit_generated_banner: bool, writes: bool) -> Dictionary:
 	_compile_mutex.lock()
+	# Each class's body first: it is a compile of its own, so it runs before this one sets anything up.
+	var outer_inner_class_lines: Dictionary = _inner_class_lines
+	var inner_class_lines: Dictionary = _write_inner_class_bodies(sheet)
 	_writes_output = writes
+	_inner_class_lines = inner_class_lines
 	var locked_result: Dictionary = _compile_body(sheet, output_path, omit_generated_banner)
+	_inner_class_lines = outer_inner_class_lines
 	# A Reset row naming a variable this sheet does not declare wrote nothing, so it says why here.
 	for unresolved: String in ActionCodegen.unresolved_starting_values:
 		(locked_result["warnings"] as Array).append("Reset Variable: %s is not declared on this sheet, so there is no starting value to put back - the row writes nothing." % unresolved)
@@ -244,6 +253,43 @@ static func _compile_locked(sheet: EventSheetResource, output_path: String, omit
 	_writes_output = true
 	_compile_mutex.unlock()
 	return locked_result
+
+
+## The lines one class written inside a file emits: its header, then its body one tab deeper.
+static func inner_class_lines(inner: InnerClassRow) -> PackedStringArray:
+	return InnerClassRow.indent_body(inner.header, str(_echo_inner_class_body(inner).get("output", "")))
+
+
+## Every class written inside this file, its body written out: {instance id: {lines, source_map,
+## errors}}, the lines one tab deeper under the class's own header. Empty for a file with none.
+static func _write_inner_class_bodies(sheet: EventSheetResource) -> Dictionary:
+	var written: Dictionary = {}
+	if sheet == null or sheet.external_source_path.is_empty():
+		return written
+	for entry: Variant in sheet.events:
+		var inner: InnerClassRow = entry as InnerClassRow
+		if inner == null:
+			continue
+		var body_result: Dictionary = _echo_inner_class_body(inner)
+		written[inner.get_instance_id()] = {
+			"lines": InnerClassRow.indent_body(inner.header, str(body_result.get("output", ""))),
+			"source_map": body_result.get("source_map", []),
+			"errors": body_result.get("errors", []),
+		}
+	return written
+
+
+## What a class's body compiles to, through echo() on the path that keeps a file's own order. A class
+## with no body writes nothing under its header.
+static func _echo_inner_class_body(inner: InnerClassRow) -> Dictionary:
+	if inner.body == null:
+		return {}
+	var body_path: String = inner.body.external_source_path
+	if body_path.is_empty():
+		inner.body.external_source_path = InnerClassRow.BODY_PATH
+	var body_result: Dictionary = echo(inner.body)
+	inner.body.external_source_path = body_path
+	return body_result
 
 
 static func _compile_body(sheet: EventSheetResource, output_path: String = "", omit_generated_banner: bool = false) -> Dictionary:
@@ -1025,6 +1071,22 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 			for code_line: String in (entry as RawCodeRow).code.split("\n"):
 				lines.append(code_line)
 			source_map.append({"uid": str((entry as RawCodeRow).get_instance_id()), "start": block_start, "end": lines.size(), "kind": "raw"})
+		elif entry is InnerClassRow:
+			# A class written inside the file: its header and its body, one tab deeper, written by
+			# _write_inner_class_bodies before this compile. The body's own rows keep their map
+			# entries, moved down to the lines they landed on under the header.
+			var inner_class: InnerClassRow = entry as InnerClassRow
+			var inner_written: Dictionary = _inner_class_lines.get(inner_class.get_instance_id(), {})
+			var inner_start: int = lines.size() + 1
+			lines.append_array(inner_written.get("lines", PackedStringArray([inner_class.header])))
+			source_map.append({"uid": str(inner_class.get_instance_id()), "start": inner_start, "end": lines.size(), "kind": "inner_class"})
+			for body_entry: Variant in inner_written.get("source_map", []):
+				var moved: Dictionary = (body_entry as Dictionary).duplicate()
+				moved["start"] = int(moved.get("start", 0)) + inner_start
+				moved["end"] = int(moved.get("end", 0)) + inner_start
+				source_map.append(moved)
+			for body_error: Variant in inner_written.get("errors", []):
+				(result["errors"] as Array).append("%s: %s" % [inner_class.header.trim_suffix(":"), str(body_error)])
 		elif entry is EventRow and anchored_event_uids.has((entry as EventRow).event_uid):
 			pass  # emitted in place by its EventAnchorRow, just above it in this array
 		elif entry is EventRow or entry is EventGroup:
@@ -4405,6 +4467,21 @@ static func _labeled_value_arguments(entries: Array) -> PackedStringArray:
 ## `refresh_inspector` is true when a Show if / Lock unless reads this variable: with no setter of its
 ## own it then declares one that refreshes the Inspector (see inspector_condition_controllers).
 static func _emit_tree_variable_line(local_var: LocalVariable, refresh_inspector: bool = false) -> String:
+	var declaration: String = _emit_tree_variable_declaration(local_var, refresh_inspector)
+	# A value the file wrote over several lines goes back on those lines while it reads as it did. It
+	# ends the declaration, so the one line it was joined into is the declaration's own ending.
+	if local_var == null or local_var.written_value.is_empty():
+		return declaration
+	var one_line: String = str(local_var.written_value.get("one_line", ""))
+	if one_line.is_empty() or not declaration.ends_with(one_line):
+		return declaration
+	return declaration.left(declaration.length() - one_line.length()) \
+		+ EventForgeValueLines.written(str(local_var.default_value), local_var.written_value)
+
+
+## The declaration itself, every value on one line; _emit_tree_variable_line puts back the lines a
+## value was written over.
+static func _emit_tree_variable_declaration(local_var: LocalVariable, refresh_inspector: bool = false) -> String:
 	if local_var == null or local_var.name.strip_edges().is_empty():
 		return ""
 	# A Static local is written as a local and lives as a member: two lines, the marker that says
@@ -4431,7 +4508,12 @@ static func _emit_tree_variable_line(local_var: LocalVariable, refresh_inspector
 			walrus_prefix = "@export "
 		var_line = "%s%s %s := %s" % [walrus_prefix, "const" if local_var.is_constant else "var", local_var.name, str(local_var.default_value)]
 	elif local_var.is_constant:
-		var_line = "const %s: %s = %s" % [local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
+		# A constant whose value was written over several lines keeps that value as the text it was
+		# written as (see _emit_tree_variable_line); every other constant's value is a literal.
+		var constant_value: String = str(local_var.default_value) \
+			if local_var.expression_default and not local_var.written_value.is_empty() \
+			else _to_code_literal(local_var.default_value)
+		var_line = "const %s: %s = %s" % [local_var.name, local_var.type_name, constant_value]
 	# @onready: deferred init (node refs like $Path). The default is a raw EXPRESSION, emitted
 	# verbatim (not a quoted literal) so `$Sprite2D` / `get_node(...)` stay code, not strings.
 	elif local_var.onready:

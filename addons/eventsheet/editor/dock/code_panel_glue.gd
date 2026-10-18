@@ -302,6 +302,8 @@ func select_sheet_row_for_code_line(line: int) -> void:
 ## sheet-symbol completion. in_flow blocks live inside an event's actions (statements);
 ## class-level blocks are tree rows (helper functions, @onready vars, signals…).
 func on_viewport_raw_code_edit_requested(raw_resource: Resource, in_flow: bool) -> void:
+	if raw_resource is InnerClassRow:
+		raw_resource = _class_as_code(raw_resource as InnerClassRow)
 	var raw_row: RawCodeRow = raw_resource as RawCodeRow
 	if raw_row == null:
 		return
@@ -317,6 +319,25 @@ func on_viewport_raw_code_edit_requested(raw_resource: Resource, in_flow: bool) 
 	_dock._code_panel_glue.validate_raw_code()
 	_dock._raw_code_dialog.popup_centered(Vector2i(680, 460))
 	_dock._raw_code_edit.grab_focus()
+
+
+## A class read as rows, turned back into the code block it is written as, so it can be edited as
+## code: the same lines, through the undo funnel. Returns the live code row, or null when the class is
+## not in the sheet. The class reads as rows again the next time the file is opened.
+func _class_as_code(inner: InnerClassRow) -> RawCodeRow:
+	var sheet: EventSheetResource = _dock._current_sheet
+	var index: int = sheet.events.find(inner) if sheet != null else -1
+	if index < 0:
+		return null
+	var code: String = "\n".join(SheetCompiler.inner_class_lines(inner))
+	_dock._perform_undoable_sheet_edit("Edit Class as Code", func() -> bool:
+		var as_code: RawCodeRow = RawCodeRow.new()
+		as_code.code = code
+		_dock._current_sheet.events[index] = as_code
+		return true
+	)
+	# The commit replaces every resource with its snapshot copy, so the row is fetched again.
+	return _dock._current_sheet.events[index] as RawCodeRow
 
 
 ## Compile-checks the dialog's code against the sheet context (host class + sheet symbols).

@@ -224,7 +224,7 @@ var _sheet_findings_cache: Dictionary = {}
 ## The uid scope for one class block: the class name for the first occurrence (uids unchanged
 ## for the common case), "-N"-suffixed for same-named repeats, instance-id fallback when the
 ## block has no name at all.
-func _unique_class_scope(class_name_str: String, raw_row: RawCodeRow) -> String:
+func _unique_class_scope(class_name_str: String, raw_row: Resource) -> String:
 	var base: String = class_name_str if not class_name_str.is_empty() else str(raw_row.get_instance_id())
 	var count: int = int(_class_uid_counts.get(base, 0)) + 1
 	_class_uid_counts[base] = count
@@ -5929,56 +5929,55 @@ static func _append_structured_member_lines(members: Array, into: PackedStringAr
 			into.append(line)
 
 
-## A TOP-LEVEL structured collection declaration (a const table, a var default set): the same
-## Declare treatment its in-body sibling gets - a header line, one single-cell line per entry,
-## no bracket rows. Entries edit in place (edit_kind "decl_entry_line:-1:<entry>" - the -1 says
-## the row's own resource IS the declaration), and the row menu offers Add/Edit/Remove Entry.
+## A TOP-LEVEL structured collection declaration (a const table, a var default set): ONE variable row,
+## `Array[Vector2] spawn_points = 3 entries`, folded. Its entries are the rows under it - opened by the
+## fold arrow or a double-click - one single-cell line each, no bracket rows. Entries edit in place
+## (edit_kind "decl_entry_line:-1:<entry>" - the -1 says the row's own resource IS the declaration, and
+## every entry row carries the declaration as its resource), and the row menu offers Add/Edit/Remove
+## Entry. The uid is the declared name, so the fold survives the edits that replace the resource.
 func _build_collection_decl_row(decl: CollectionDeclRow, indent: int) -> EventRowData:
 	var row_data := EventRowData.new()
 	row_data.indent = indent
 	row_data.row_type = EventRowData.RowType.SECTION
 	row_data.source_resource = decl
-	row_data.row_uid = "collection_decl_%d" % decl.get_instance_id()
-	row_data.line_count = 1 + decl.entry_values.size()
+	row_data.row_uid = "collection_decl_%s" % _unique_class_scope("value:" + decl.variable_name(), decl)
+	row_data.line_count = 1
 	var decl_style: EventSheetEventStyle = _viewport._get_event_style()
-	var spans: Array[SemanticSpan] = []
-	spans.append(_make_span("Declare", SemanticSpan.SpanType.VALUE, {
-		"editable": false,
-		"kind": "collection_decl",
-		"line_index": 0
-	}))
-	spans.append(_make_span(decl.variable_name(), SemanticSpan.SpanType.VALUE, {
-		"editable": false,
-		"kind": "collection_decl",
-		"line_index": 0,
-		"text_color": _viewport._get_reading_style().primary_text_color
-	}))
-	spans.append(_make_span("%s%s - %d %s" % ["const " if decl.is_constant() else "",
-		"Dictionary" if decl.is_dictionary() else "Array", decl.entry_values.size(),
-		"entry" if decl.entry_values.size() == 1 else "entries"],
-		SemanticSpan.SpanType.VALUE, {
-		"editable": false,
-		"kind": "collection_decl",
-		"line_index": 0,
-		"text_color": decl_style.comment_text_color
-	}))
-	for entry_index: int in decl.entry_values.size():
+	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
+	var head: Dictionary = {"editable": false, "kind": "collection_decl", "line_index": 0}
+	var count: int = decl.entry_values.size()
+	row_data.spans = [
+		_make_span(("const %s" if decl.is_constant() else "%s") % decl.declared_type(), SemanticSpan.SpanType.VALUE,
+			head.merged({"text_color": reading_style.muted_text_color}, true)),
+		_make_span(decl.variable_name(), SemanticSpan.SpanType.VALUE,
+			head.merged({"text_color": reading_style.primary_text_color}, true)),
+		_make_span("=", SemanticSpan.SpanType.VALUE, head.merged({"text_color": reading_style.muted_text_color}, true)),
+		_make_span(EventSheetL10n.translate("1 entry") if count == 1 else EventSheetL10n.translate("%d entries") % count,
+			SemanticSpan.SpanType.VALUE, head.merged({"text_color": decl_style.value_highlight_color}, true)),
+	]
+	for entry_index: int in count:
 		var entry_key: String = decl.entry_keys[entry_index] if entry_index < decl.entry_keys.size() else ""
 		# An entry written over several lines is one entry, shown on its one line; it is edited as code,
 		# because a one-line edit of it would rewrite the lines the file has.
 		var entry_value: String = decl.entry_value_on_one_line(entry_index)
-		var entry_text: String = "        %s" % entry_value
-		if not entry_key.is_empty():
-			entry_text = "        %s = %s" % [entry_key, entry_value]
-		spans.append(_make_span(entry_text, SemanticSpan.SpanType.VALUE, {
+		var entry_row := EventRowData.new()
+		entry_row.indent = indent + 1
+		entry_row.row_type = EventRowData.RowType.SECTION
+		entry_row.source_resource = decl
+		entry_row.row_uid = "%s/%d" % [row_data.row_uid, entry_index]
+		entry_row.spans = [_make_span(entry_value if entry_key.is_empty() else "%s = %s" % [entry_key, entry_value],
+			SemanticSpan.SpanType.VALUE, {
 			"kind": "collection_decl",
 			"decl_entry_index": entry_index,
 			"editable": not decl.entry_spans_lines(entry_index),
 			"edit_kind": "decl_entry_line:-1:%d" % entry_index,
-			"line_index": entry_index + 1,
+			"line_index": 0,
 			"text_color": decl_style.value_highlight_color
-		}))
-	row_data.spans = spans
+		})]
+		row_data.children.append(entry_row)
+	row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, true))
+	# Folded, the head already says what it holds - its count - so no summary of the entries trails it.
+	row_data.set_meta("collapse_summary", "")
 	return row_data
 
 
@@ -6648,6 +6647,47 @@ func _build_structured_class_row(raw_row: RawCodeRow, indent: int) -> EventRowDa
 	row_data.children = _build_class_member_rows(model.get("members", []), scope, indent + 1)
 	if not row_data.children.is_empty():
 		row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, true))
+	return row_data
+
+
+## The head of a class written inside the file and read as rows (an InnerClassRow): one full-width
+## line, the Class badge in the accent a script's own head wears and the class's name beside it, its
+## base class muted after. The members are the caller's to add as children, because they are read
+## against the class's own body sheet. Hovering says what a class inside a script is and shows the
+## line it came from. The uid keys the fold, so it is the class's scope rather than an instance id.
+func build_inner_class_head(inner: InnerClassRow, indent: int) -> EventRowData:
+	var row_data := EventRowData.new()
+	row_data.indent = indent
+	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.source_resource = inner
+	row_data.line_count = 1
+	var display_name: String = inner.inner_class_name()
+	row_data.row_uid = "inner_class_%s" % _unique_class_scope(display_name, inner)
+	var hover: String = "%s\n\n%s" % [
+		EventSheetL10n.translate("A class inside this script: its own variables and functions, folded under one head. Other code makes one with %s.new().") % display_name,
+		inner.header]
+	# The badge wears the accent a script's own head wears: a class is a script's worth of members.
+	var accent: Color = _viewport._get_event_style().behavior_accent_color
+	var head: Dictionary = {"editable": false, "kind": "inner_class", "line_index": 0, "hover_note": hover}
+	var spans: Array[SemanticSpan] = [
+		_make_span(EventSheetL10n.translate("Class"), SemanticSpan.SpanType.KEYWORD, head.merged({
+			"badge": true,
+			"badge_style": "scope",
+			"badge_natural_width": true,
+			"badge_bg": Color(accent.r, accent.g, accent.b, 0.22),
+			"badge_fg": accent
+		}, true)),
+		_make_span(display_name, SemanticSpan.SpanType.OBJECT, head.merged({
+			"natural_width": true,
+			"text_color": _viewport._get_reading_style().primary_text_color
+		}, true))
+	]
+	var base: String = inner.base_class()
+	if not base.is_empty():
+		spans.append(_make_span(EventSheetL10n.translate("extends %s") % base, SemanticSpan.SpanType.VALUE, head.merged({
+			"text_color": _viewport._get_reading_style().muted_text_color
+		}, true)))
+	row_data.spans = spans
 	return row_data
 
 
@@ -7376,7 +7416,11 @@ func _build_tree_variable_row(variable: LocalVariable, indent: int, doc_note: St
 			# A `##` line kept on its own above a plain `var`, which an Inspector-style row reads as
 			# the variable's note (the line is left out of the view, never out of the file).
 			"doc_note": doc_note,
-			"code_line": EventSheetCodeEcho.line_for(variable)
+			"code_line": EventSheetCodeEcho.line_for(variable),
+			# A list written over several lines folds to its count; the whole list is its hover and
+			# what an edit starts from.
+			"entry_count": EventForgeValueLines.entry_count(str(variable.default_value)) \
+				if not variable.written_value.is_empty() else -1
 		}
 	)
 	# A PROPERTY (setter and/or getter): read it as a language block - the variable identity stays the row,
@@ -11720,6 +11764,11 @@ func _build_variable_row(
 		if choice != value_text:
 			value_meta["edit_text"] = value_text
 			value_text = choice
+	var entry_count: int = int(options.get("entry_count", -1))
+	if entry_count >= 0:
+		value_meta["edit_text"] = value_text
+		value_meta["hover_note"] = value_text
+		value_text = EventSheetL10n.translate("1 entry") if entry_count == 1 else EventSheetL10n.translate("%d entries") % entry_count
 	if not hide_value:
 		row_data.spans.append(
 			_make_span(value_text, SemanticSpan.SpanType.VALUE, value_meta)
@@ -17706,6 +17755,9 @@ func _append_literal_chip_spans(spans: Array, literal: Dictionary, action_index:
 	var text_run: bool = literal.has("text_lines")
 	var full_text: String = EventSheetValueLiteralRows.text_hover(literal) if text_run \
 		else EventSheetValueLiteralRows.full_text(entries, open_bracket, humanize)
+	# The notes written among a table's entries are words, not entries: the hover keeps them.
+	if not text_run and literal.has("notes"):
+		full_text += "\n\n" + "\n".join(literal.get("notes", PackedStringArray()))
 	var base_meta: Dictionary = {
 		"lane": "action",
 		"kind": "action",

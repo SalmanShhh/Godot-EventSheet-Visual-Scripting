@@ -73,6 +73,12 @@ const SAMPLE_SIZE: int = 40
 ## Ratcheted when quoted lines joined into one text (a pack builder's whole pack, notes among the
 ## lines) began reading as one row that says why it stays code: all 1,120 files re-read, 991 wordless
 ## rows. Only the pack recipes moved: light_flicker 53, whose verbs are appended a list at a time.
+## Ratcheted when a table or list in a function with notes among its entries began folding to one
+## row (the notes kept for its hover), a class inside a script began reading as rows and a value over
+## several lines as one: all 1,128 files re-read, 306 wordless rows. Worst per group: plugin.gd 2,
+## sheet_type_glue 3, every canvas file under 1, doctor_reading_page 4, every importer, recogniser,
+## vocabulary, manual and pack-recipe file under 1, compiler 0, render_files_band_preview 2 and
+## match_row 7. The older notes beside each group below say how it measured before.
 const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	"plugin": 2,
 	# Re-measured over the WHOLE role when the corpus gained three files, the rotating sample moved and
@@ -83,7 +89,7 @@ const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	# rather than logic, the same reason the pack-recipe and vocabulary groups sit where they do.
 	# Nothing about the reading layer changed to move this; the ceiling is the worst file in the group.
 	"workspace": 3,
-	"canvas": 7,
+	"canvas": 0,
 	"readings": 4,
 	# Read off the tree like the rest. Raised by one when the rotating sample reached
 	# scene_effect_facts.gd, which measures 13: a facts reader is a run of short lookups whose rows
@@ -98,7 +104,7 @@ const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	# reasoning is prose above the code rather than lines inside a literal). Re-measured over the
 	# whole role afterwards: the worst importer file is scene_effect_facts.gd at 13, the three run
 	# matchers are 0, 0 and 6, and nothing else reaches 13.
-	"importer": 10,
+	"importer": 0,
 	# Re-measured over the WHOLE role rather than off the file the rotating sample happened to
 	# reach. The group is eighteen families now, not the three it was when 48 was written, and
 	# three of them stand over that number. Read off the tree today, worst first: node_dignity 62,
@@ -113,7 +119,7 @@ const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	# and the widest table scores the highest. That is the same reason a pack recipe sits where it
 	# does. Nothing about the reading layer changed to move this - the ceiling is a description of
 	# the group, taken off the worst file in it, rounded up a little.
-	"recognisers": 43,
+	"recognisers": 0,
 	"compiler": 0,
 	# Re-measured over the WHOLE role rather than off the files the rotating sample happened to
 	# reach, after the sample moved and landed on sequencer_aces.gd, which measures 67. The sample is
@@ -130,16 +136,16 @@ const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	# move it - the ceiling is a description of the group, taken off the worst file in it, and it is
 	# the measured number exactly rather than a number with room in it, so any file getting worse
 	# still fails.
-	"vocabulary": 29,
+	"vocabulary": 0,
 	# Raised from 21 when the rotating sample reached doc_editor_words.gd, which measures 26: that
 	# page's body is one dictionary literal of key -> sentence (the words table itself lives
 	# elsewhere and is read, not repeated), so most of its rows ARE literal entries - the same reason
 	# the vocabulary and pack-recipe groups sit where they do. Nothing about the reading layer
 	# changed to move it; the ceiling is a description of the group, taken off the worst file in it.
-	"manual": 2,
+	"manual": 0,
 	"tests": 30,
 	"command_tools": 2,
-	"pack_recipes": 53,
+	"pack_recipes": 0,
 	"other": 7,
 }
 

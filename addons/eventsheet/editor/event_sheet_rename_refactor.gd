@@ -47,6 +47,13 @@ func _rename_in_rows(rows: Array, regex: RegEx, new_name: String, counter: Dicti
 		elif row is EventGroup:
 			var group: EventGroup = row as EventGroup
 			_rename_in_rows(group.events if not group.events.is_empty() else group.rows, regex, new_name, counter)
+		elif row is InnerClassRow and (row as InnerClassRow).body != null:
+			# A class written inside the file: its body's rows and its functions' rows.
+			var inner_body: EventSheetResource = (row as InnerClassRow).body
+			_rename_in_rows(inner_body.events, regex, new_name, counter)
+			for inner_function: Variant in inner_body.functions:
+				if inner_function is EventFunction:
+					_rename_in_rows((inner_function as EventFunction).events, regex, new_name, counter)
 		elif row is EventRow:
 			var event_row: EventRow = row as EventRow
 			if event_row.trigger != null:
@@ -82,6 +89,12 @@ func _rename_in_params(ace: Resource, regex: RegEx, new_name: String, counter: D
 	var template: String = str(ace.get("codegen_template"))
 	if not template.is_empty():
 		ace.set("codegen_template", _rename_in_template(template, regex, new_name, counter))
+	# The lines a value was written over follow the value, so the renamed row keeps its line breaks.
+	if ace is ACEAction:
+		var written: Dictionary = (ace as ACEAction).written_params
+		for written_id: Variant in written.keys():
+			written[written_id] = EventForgeValueLines.rewritten(written[written_id], func(text: String) -> String:
+				return regex.sub(text, new_name, true))
 
 
 ## Renames only OUTSIDE {placeholder} segments of a codegen template.

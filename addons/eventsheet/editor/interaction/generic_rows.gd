@@ -230,6 +230,13 @@ static func _walk(items: Array, top_level: bool, tally: Dictionary) -> void:
 			_walk((item as EventGroup).events, top_level, tally)
 		elif item is FunctionAnchorRow:
 			continue  # the function it holds the place of is counted once, with sheet.functions
+		elif item is InnerClassRow:
+			# A class written inside the file: its head is one row, and its body is read like a file.
+			tally["rows"] = int(tally["rows"]) + 1
+			var inner_body: EventSheetResource = (item as InnerClassRow).body
+			if inner_body != null:
+				_walk(inner_body.events, false, tally)
+				_walk(inner_body.functions, false, tally)
 		elif item != null:
 			tally["rows"] = int(tally["rows"]) + 1
 

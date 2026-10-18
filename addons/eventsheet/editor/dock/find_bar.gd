@@ -179,6 +179,13 @@ func _replace_in_rows(rows: Array, find_text: String, replace_text: String, coun
 			group.name = group.group_name
 			group.description = group.description.replace(find_text, replace_text)
 			_replace_in_rows(group.events if not group.events.is_empty() else group.rows, find_text, replace_text, counter)
+		elif row is InnerClassRow and (row as InnerClassRow).body != null:
+			# A class written inside the file: its body's rows and its functions' rows.
+			var inner_body: EventSheetResource = (row as InnerClassRow).body
+			_replace_in_rows(inner_body.events, find_text, replace_text, counter)
+			for inner_function: Variant in inner_body.functions:
+				if inner_function is EventFunction:
+					_replace_in_rows((inner_function as EventFunction).events, find_text, replace_text, counter)
 		elif row is EventRow:
 			var event_row: EventRow = row as EventRow
 			for ace: Variant in event_row.conditions + event_row.actions:
@@ -201,6 +208,12 @@ func _replace_in_rows(rows: Array, find_text: String, replace_text: String, coun
 						if params[key] is String:
 							counter["count"] = int(counter.get("count", 0)) + (params[key] as String).count(find_text)
 							params[key] = (params[key] as String).replace(find_text, replace_text)
+					# The lines a value was written over follow the value, so the row keeps its line breaks.
+					if ace is ACEAction:
+						var written: Dictionary = (ace as ACEAction).written_params
+						for written_id: Variant in written.keys():
+							written[written_id] = EventForgeValueLines.rewritten(written[written_id], func(text: String) -> String:
+								return text.replace(find_text, replace_text))
 			for pick: Variant in event_row.pick_filters:
 				if pick is PickFilter:
 					counter["count"] = int(counter.get("count", 0)) + (pick as PickFilter).collection_value.count(find_text) + (pick as PickFilter).predicate_expression.count(find_text) + (pick as PickFilter).order_by_expression.count(find_text)

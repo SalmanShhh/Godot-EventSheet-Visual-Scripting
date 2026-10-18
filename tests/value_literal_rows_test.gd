@@ -108,8 +108,11 @@ static func run() -> bool:
 		EventSheetValueLiteralRows.groups(_raw_rows(["foo(", "\tbar,", ")"]))["leads"].is_empty(), true) and ok
 	ok = _check("an unbalanced run is refused",
 		EventSheetValueLiteralRows.groups(_raw_rows(["return {", "\t\"a\": 1,"]))["leads"].is_empty(), true) and ok
-	ok = _check("a comment among the entries leaves the run alone",
-		EventSheetValueLiteralRows.groups(_raw_rows(["return {", "\t# why", "\t\"a\": 1,", "}"]))["leads"].is_empty(), true) and ok
+	# A note among the entries stays a note: the table still folds to one row, the note is never an
+	# entry, and the row keeps it for its hover.
+	var noted: Dictionary = _lead(EventSheetValueLiteralRows.groups(_raw_rows(["return {", "\t# why", "\t\"a\": 1,", "}"])))
+	ok = _check("a comment among the entries still folds the table, as a note and not an entry",
+		[(noted.get("entries", []) as Array).size(), Array(noted.get("notes", PackedStringArray()))], [1, ["# why"]]) and ok
 	ok = _test_code_on_purpose() and ok
 	var nested: Dictionary = _lead(EventSheetValueLiteralRows.groups(_raw_rows(
 		["return {", "\t\"outer\": {", "\t\t\"inner\": 1,", "\t},", "}"])))
@@ -242,8 +245,9 @@ static func _test_code_on_purpose() -> bool:
 			EventSheetValueLiteralRows.text_hover(lead),
 			"Code on purpose: these 4 lines are text kept inside quotes, joined into one text, and a text reads best exactly as it is written.\n\n"
 			+ "\"func follow() -> void:\",\n# the guard the gizmo relies on\n\"\\tif route == null:\",\n\"\\t\\treturn\",\n\"\\t_distance = 0.0\""],
-		["a joined text whose entries are names is no text, so its note still leaves it alone",
-			EventSheetValueLiteralRows.groups(_raw_rows(["x = \"\\n\".join([", "\tfirst,", "\t# why", "\tsecond,", "])"]))["leads"].is_empty(), true],
+		["a joined text whose entries are names is no text: a list, its note kept as a note",
+			Array(_lead(EventSheetValueLiteralRows.groups(_raw_rows(["x = \"\\n\".join([", "\tfirst,", "\t# why", "\tsecond,", "])"]))).get("notes", PackedStringArray())),
+			["# why"]],
 		["a text written between triple quotes says why it stays code",
 			EventSheetValueLiteralRows.code_on_purpose("const SOURCE: String = \"\"\"extends Node\n"),
 			"Code on purpose: this is a long text kept inside quotes, and a text reads best exactly as it is written."],

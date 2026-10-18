@@ -9481,3 +9481,7 @@ Shape %s…,Настроить %s…
 "It also turns Stay within limits off on the Check tab: with no limits left, there is nothing to stay within.",Заодно выключает «Оставаться в пределах» на вкладке «Проверить»: без пределов оставаться не в чем.
 "The next field, %s, starts another group, so the two sit under different headings.","Следующее поле, %s, начинает другую группу, поэтому они оказываются под разными заголовками."
 Only two numbers share a line; this field and %s are drawn one per line.,Одну строку делят только два числа; это поле и %s показываются каждое на своей строке.
+1 entry,1 элемент
+%d entries,Элементов: %d
+"A class inside this script: its own variables and functions, folded under one head. Other code makes one with %s.new().","Класс внутри этого скрипта: его собственные переменные и функции, свёрнутые под одним заголовком. Другой код создаёт его через %s.new()."
+extends %s,extends %s

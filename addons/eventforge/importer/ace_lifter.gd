@@ -216,6 +216,9 @@ const TRIGGER_SCOPED_ACES: Dictionary = {
 	"ExportIsDebug": "OnProjectExport",
 	"ExportHasFeature": "OnProjectExport",
 }
+## The lift that reads a class written inside a script. Loaded by path, and only for a file that has
+## one, so every other file's lift never compiles it.
+const INNER_CLASS_LIFT_PATH: String = "res://addons/eventforge/importer/inner_class_lift.gd"
 
 ## Async-open progress, published for the editor's "Opening <file>" strip. The lift can run on a
 ## worker thread (see EventSheetOpenJob) while the main thread paints, so these are DISPLAY ONLY:
@@ -313,6 +316,10 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 	progress_functions_done = 0
 	progress_functions_total = _count_lift_candidates(sheet)
 	var lifted: bool = _attempt_lift_body(sheet, source, lift_functions)
+	# A class written inside the script is read last, from the code rows the lift above left, so its
+	# body is opened as a sheet of its own; byte-gated inside, and loaded only for a file that has one.
+	if not cancel_requested and (source.begins_with("class ") or source.contains("\nclass ")):
+		load(INNER_CLASS_LIFT_PATH).lift(sheet, source)
 	# And the dimension the read was about is dropped here, in the same wrapper and for the same
 	# reason: the body sets it per file and has no single exit to clear it at, and a value left
 	# standing would be the NEXT read's answer to a question that read never asked. CI runs the suite
@@ -3250,6 +3257,10 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			# nothing. Take the whole bracketed run as one statement instead.
 			var bracket_end: int = _bracket_run_close(lines, index)
 			if bracket_end > index:
+				if _took_written_declaration(current, lines, index, bracket_end, depth, pending_raw, reverse_entries, in_loop, blank_box):
+					index = bracket_end + 1
+					chain_open = false
+					continue
 				for bracket_index: int in range(index, bracket_end + 1):
 					pending_raw.append(lines[bracket_index].substr(depth))
 				_flush_raw(current, pending_raw, blank_box)
@@ -3261,6 +3272,10 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			# `else …` or a `+ "…" \` - as orphan rows that began mid-expression.
 			var continued_end: int = _continuation_close(lines, index, depth)
 			if continued_end > index:
+				if _took_written_declaration(current, lines, index, continued_end, depth, pending_raw, reverse_entries, in_loop, blank_box):
+					index = continued_end + 1
+					chain_open = false
+					continue
 				for continued_index: int in range(index, continued_end + 1):
 					pending_raw.append(lines[continued_index].substr(depth))
 				_flush_raw(current, pending_raw, blank_box)
@@ -4038,6 +4053,41 @@ static func _inside_long_string(lines: PackedStringArray, index: int) -> bool:
 		if lines[scan].count("\"\"\"") % 2 == 1:
 			inside = not inside
 	return inside
+
+
+## A local declaration whose value runs over lines `start`..`last` read as ONE action, its value on one
+## line: the lines are joined (EventForgeValueLines), the joined statement is matched like any other,
+## and the row keeps the lines its value was written over. Taken only when that row writes the lines
+## back exactly as they stand; true when it was taken and appended to `event`.
+static func _took_written_declaration(event: EventRow, lines: PackedStringArray, start: int, last: int, depth: int,
+		pending_raw: PackedStringArray, reverse_entries: Array, in_loop: bool, blank_box: Array) -> bool:
+	var run: PackedStringArray = PackedStringArray()
+	for line_index: int in range(start, last + 1):
+		if not lines[line_index].begins_with("\t".repeat(depth)):
+			return false
+		run.append(lines[line_index].substr(depth))
+	if not (run[0].begins_with("var ") or run[0].begins_with("const ")) or _inside_long_string(lines, start):
+		return false
+	var joined: Dictionary = EventForgeValueLines.join(run)
+	if joined.is_empty():
+		return false
+	var probe: EventRow = EventRow.new()
+	var probe_raw: PackedStringArray = PackedStringArray()
+	_consume_action_line(probe, str(joined["text"]), 0, probe_raw, reverse_entries, in_loop)
+	if probe.actions.size() != 1 or not (probe.actions[0] is ACEAction) or not probe_raw.is_empty():
+		return false
+	var action: ACEAction = probe.actions[0] as ACEAction
+	for param_id: Variant in action.params.keys():
+		if action.params[param_id] is String:
+			var layout: Dictionary = EventForgeValueLines.layout_of(joined, str(action.params[param_id]))
+			if not layout.is_empty():
+				action.written_params[param_id] = layout
+	if action.written_params.is_empty() or ActionCodegen.generate_action(action) != str(joined["written"]):
+		return false
+	_flush_raw(event, pending_raw, blank_box)
+	_stamp_body_blanks(action, blank_box)
+	event.actions.append(action)
+	return true
 
 
 ## Action line → ACEAction when a template matches; otherwise queued as raw GDScript so the

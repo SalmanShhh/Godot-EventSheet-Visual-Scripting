@@ -90,6 +90,8 @@ static func _run_at(actions: Array, start: int) -> Dictionary:
 	var indices: PackedInt32Array = PackedInt32Array([start])
 	# Every line of the run as written, notes included: what the hover of a text run shows.
 	var written: PackedStringArray = PackedStringArray()
+	# The notes written among the entries, as written: never an entry, and on the row's hover.
+	var notes: PackedStringArray = PackedStringArray()
 	var text_run: bool = head_text.contains(TEXT_JOIN)
 	var noted: bool = false
 	var entry_depth: int = depth
@@ -97,10 +99,11 @@ static func _run_at(actions: Array, start: int) -> Dictionary:
 	while scan < actions.size() and depth > 0:
 		# The importer files a note it can hold as a comment row, so a text's notes arrive that way.
 		var note_row: CommentRow = actions[scan] as CommentRow
-		if note_row != null and text_run and note_row.enabled:
+		if note_row != null and note_row.enabled:
 			noted = true
 			for line_index: int in note_row.text.split("\n").size():
 				written.append(note_row.echo_line(line_index))
+				notes.append(note_row.echo_line(line_index))
 			indices.append(scan)
 			scan += 1
 			continue
@@ -108,21 +111,18 @@ static func _run_at(actions: Array, start: int) -> Dictionary:
 		if entry_row == null or not entry_row.enabled or entry_row.code.contains("\n"):
 			return {}
 		# A comment written among the entries is a person's own words about the table, and folding it
-		# into a chip would turn a note into an entry the file does not have. The run is left alone -
-		# unless it is a text joined from quoted lines, whose notes stay notes: never a chip, and every
-		# one of them on the row's hover beside the lines it is about.
+		# into a chip would turn a note into an entry the file does not have. So it stays a note: never
+		# a chip, and every one of them on the row's hover - beside the lines it is about in a text
+		# joined from quoted lines, under the entries in a table or a list.
 		if entry_row.code.strip_edges().begins_with("#"):
-			if not text_run:
-				return {}
 			noted = true
 			written.append(entry_row.code.strip_edges())
+			notes.append(entry_row.code.strip_edges())
 			indices.append(scan)
 			scan += 1
 			continue
 		if depth == entry_depth and text_run and not _is_quoted_line(entry_row.code) \
 				and not is_closer_line(entry_row.code):
-			if noted:
-				return {}
 			text_run = false
 		written.append(entry_row.code.strip_edges())
 		depth += bracket_delta(entry_row.code)
@@ -147,6 +147,8 @@ static func _run_at(actions: Array, start: int) -> Dictionary:
 	if text_run:
 		written.resize(written.size() - 1)
 		found["text_lines"] = written
+	elif not notes.is_empty():
+		found["notes"] = notes
 	return found
 
 

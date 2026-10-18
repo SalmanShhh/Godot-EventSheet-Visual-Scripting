@@ -192,11 +192,12 @@ static func segments(line: String, colours: Dictionary, alpha: float) -> Array[D
 
 
 ## The declaration line for a member/tree variable: the compiler's own emitter, so the echo is the
-## file. "" when the variable has no name to declare.
+## file. "" when the variable has no name to declare. A value written over several lines echoes on
+## the one line the row reads it on, so the echo is the whole declaration rather than its first line.
 static func line_for(variable: LocalVariable) -> String:
 	if variable == null:
 		return ""
-	return declaration_line(ReadingDoors.compiler()._emit_tree_variable_line(variable))
+	return declaration_line(ReadingDoors.compiler()._emit_tree_variable_declaration(variable))
 
 
 ## The declaration line for a sheet-level (dictionary) variable: the compiler's OWN emitter for those

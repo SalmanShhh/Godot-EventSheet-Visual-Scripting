@@ -9481,3 +9481,7 @@ Shape %s…,%s を整える…
 "It also turns Stay within limits off on the Check tab: with no limits left, there is nothing to stay within.",確認タブの「範囲内に収める」もオフになります。範囲がなくなると、収める先がありません。
 "The next field, %s, starts another group, so the two sit under different headings.",次のフィールド %s は別のグループを始めるので、二つは別々の見出しの下に並びます。
 Only two numbers share a line; this field and %s are drawn one per line.,一行を分け合えるのは数値二つだけです。このフィールドと %s は一行ずつ表示されます。
+1 entry,1 件
+%d entries,%d 件
+"A class inside this script: its own variables and functions, folded under one head. Other code makes one with %s.new().",このスクリプトの中のクラス: 自分の変数と関数を、ひとつの見出しの下に折りたたんでいます。ほかのコードは %s.new() で作ります。
+extends %s,extends %s

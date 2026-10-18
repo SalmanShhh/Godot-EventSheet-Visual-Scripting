@@ -2994,6 +2994,55 @@ func _build_scene_sheet_rows(sheet: EventSheetResource) -> Array[EventRowData]:
 	return rows
 
 
+## A class written inside the file: the head, and under it the class's own members read by the
+## ordinary row path with `_sheet` pointed at the class's body for the duration - so its variables are
+## variable rows and its functions are function events, exactly as they would read in a file of their
+## own. The members are READ here, not edited: their resources live in the class's body sheet, not in
+## the sheet every edit commits to, so each is made inert (and its words are built now, while the body
+## is the sheet they belong to). Uids carry the head's, so a member's fold never aliases the file's.
+func _build_inner_class_row(inner: InnerClassRow, indent: int) -> EventRowData:
+	var row_data: EventRowData = _row_builder.build_inner_class_head(inner, indent)
+	if inner.body == null:
+		return row_data
+	var outer_sheet: EventSheetResource = _sheet
+	# Read as a read-only sheet is: nothing here can be added to, so no row offers to.
+	var body_read_only: bool = inner.body.read_only
+	inner.body.read_only = true
+	_sheet = inner.body
+	var members: Array[EventRowData] = []
+	for entry: Variant in inner.body.events:
+		if entry is FunctionAnchorRow:
+			var anchored: EventFunction = ViewportRowBuilder.find_function_by_name(
+				inner.body, (entry as FunctionAnchorRow).function_name)
+			if anchored != null:
+				members.append_array(_row_builder.build_verb_block_rows(anchored, 0))
+				continue
+		var member: EventRowData = _build_row_from_resource(entry as Resource, 0)
+		if member != null:
+			members.append(member)
+	members.append_array(_row_builder.build_trailing_verb_rows(inner.body))
+	for member: EventRowData in members:
+		_read_inner_class_member(member, indent + 1)
+	_sheet = outer_sheet
+	inner.body.read_only = body_read_only
+	_prefix_scene_row_uids(members, row_data.row_uid + "/")
+	row_data.children = members
+	row_data.folded = bool(_fold_state.get(row_data.row_uid, false))
+	return row_data
+
+
+## One member row of a class, and everything under it: moved under the class head, its words built
+## while the body is the sheet, and made inert.
+func _read_inner_class_member(member: EventRowData, depth: int) -> void:
+	member.indent += depth
+	member.frame_indent += depth if member.frame_color.a > 0.0 else 0
+	_row_builder._ensure_event_spans(member)
+	for child: EventRowData in member.children:
+		_read_inner_class_member(child, depth)
+	member.reading_resource = member.source_resource if member.source_resource != null else member.reading_resource
+	member.source_resource = null
+
+
 ## Whether a `##` line written above `entry` is read as its note on an Inspector-style sheet: a plain
 ## variable row the view lists, with no description of its own to say instead.
 func _takes_doc_line(entry: Resource) -> bool:
@@ -3078,6 +3127,8 @@ func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
 		row_data = _row_builder._build_collection_decl_row(entry as CollectionDeclRow, indent)
 	elif entry is FunctionAnchorRow:
 		row_data = _row_builder._build_function_anchor_row(entry as FunctionAnchorRow, indent)
+	elif entry is InnerClassRow:
+		row_data = _build_inner_class_row(entry as InnerClassRow, indent)
 	elif entry is EventRow:
 		row_data = _row_builder._build_event_row(entry as EventRow, indent)
 	if row_data != null and not _row_diagnostics.is_empty():

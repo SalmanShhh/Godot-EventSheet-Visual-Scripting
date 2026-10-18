@@ -275,6 +275,8 @@ static func readings_of_sheet(sheet: EventSheetResource, origin_prefix: String) 
 ## apart rather than answered with one string.
 const NO_CELL_PICKING: String = "replaced by the picking reading"
 const NO_CELL_IN_VERB: String = "drawn by the published verb it sits in"
+## A row of a class written inside the file is read under the class's head, inert like a verb's body.
+const NO_CELL_IN_CLASS: String = "read under the class it sits in"
 const NO_CELL_DROPPED: String = "no reading claimed it"
 
 ## The fourth answer, for a caller holding a row that is not an event at all: a file-header comment, an
@@ -301,7 +303,7 @@ static func events_without_cells(sheet: EventSheetResource, readings: Array) -> 
 		var row: Resource = found["row"] as Resource
 		if owners.has(row):
 			continue
-		missing.append({"row": row, "reason": _no_cell_reason(row, bool(found["in_verb"]))})
+		missing.append({"row": row, "reason": _no_cell_reason(row, bool(found["in_verb"]), bool(found["in_class"]))})
 	return missing
 
 
@@ -312,21 +314,24 @@ static func no_cell_reason(sheet: EventSheetResource, row: Resource) -> String:
 	for entry: Variant in event_rows_of(sheet):
 		var found: Dictionary = entry as Dictionary
 		if found["row"] == row:
-			return _no_cell_reason(row, bool(found["in_verb"]))
+			return _no_cell_reason(row, bool(found["in_verb"]), bool(found["in_class"]))
 	return NO_CELL_DROPPED
 
 
 ## The reason itself. A pick-filter row with sub-events is the shell `_expand_picking_row` replaces
-## with its own rows; a row inside a published verb is drawn by the verb; anything else was dropped.
-static func _no_cell_reason(row: Resource, in_verb: bool) -> String:
+## with its own rows; a row inside a published verb is drawn by the verb; a row of a class written
+## inside the file is read under the class; anything else was dropped.
+static func _no_cell_reason(row: Resource, in_verb: bool, in_class: bool = false) -> String:
 	var filters: Array = row.get("pick_filters") as Array
 	var sub_events: Array = row.get("sub_events") as Array
 	if filters != null and sub_events != null and not filters.is_empty() and not sub_events.is_empty():
 		return NO_CELL_PICKING
+	if in_class:
+		return NO_CELL_IN_CLASS
 	return NO_CELL_IN_VERB if in_verb else NO_CELL_DROPPED
 
 
-## Every `EventRow` a sheet holds, as {"row": EventRow, "in_verb": bool} in walk order.
+## Every `EventRow` a sheet holds, as {"row": EventRow, "in_verb": bool, "in_class": bool} in walk order.
 ##
 ## Walked over the RESOURCE GRAPH rather than over the sheet's own named lists, because the shapes a
 ## sheet can hold rows in are data that grows - a verb, a group, a match case, a timeline step - and a
@@ -335,20 +340,25 @@ static func _no_cell_reason(row: Resource, in_verb: bool) -> String:
 static func event_rows_of(sheet: EventSheetResource) -> Array:
 	var found: Array = []
 	var seen: Dictionary = {}
-	_walk_resources(sheet, false, found, seen)
+	_walk_resources(sheet, "", found, seen)
 	return found
 
 
-## One resource of that walk. `in_verb` is carried down rather than looked up, because whether a row
-## is a verb body is a fact about the way it was REACHED and about nothing on the row itself.
-static func _walk_resources(here: Variant, in_verb: bool, found: Array, seen: Dictionary) -> void:
+## One resource of that walk. `drawn_by` ("", "verb" or "class") is carried down rather than looked up,
+## because whether a row is a verb body or a class member is a fact about the way it was REACHED and
+## about nothing on the row itself. The outermost one wins: a function of a class is read in the class.
+static func _walk_resources(here: Variant, drawn_by: String, found: Array, seen: Dictionary) -> void:
 	if not (here is Resource) or seen.has(here):
 		return
 	seen[here] = true
 	var resource: Resource = here as Resource
 	if resource is EventRow:
-		found.append({"row": resource, "in_verb": in_verb})
-	var below: bool = in_verb or resource is EventFunction
+		found.append({"row": resource, "in_verb": drawn_by == "verb", "in_class": drawn_by == "class"})
+	var below: String = drawn_by
+	if below.is_empty() and resource is InnerClassRow:
+		below = "class"
+	elif below.is_empty() and resource is EventFunction:
+		below = "verb"
 	for property: Dictionary in resource.get_property_list():
 		if int(property.get("usage", 0)) & PROPERTY_USAGE_STORAGE == 0:
 			continue

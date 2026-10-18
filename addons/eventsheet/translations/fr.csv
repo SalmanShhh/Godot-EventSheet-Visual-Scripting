@@ -9481,3 +9481,7 @@ Shape %s…,Façonner %s…
 "It also turns Stay within limits off on the Check tab: with no limits left, there is nothing to stay within.","Désactive aussi « Rester dans les limites » dans l'onglet Vérifier : sans limites, il n'y a plus rien dans quoi rester."
 "The next field, %s, starts another group, so the two sit under different headings.","Le champ suivant, %s, commence un autre groupe : les deux sont sous des titres différents."
 Only two numbers share a line; this field and %s are drawn one per line.,Seuls deux nombres partagent une ligne ; ce champ et %s s'affichent chacun sur sa ligne.
+1 entry,1 entrée
+%d entries,%d entrées
+"A class inside this script: its own variables and functions, folded under one head. Other code makes one with %s.new().","Une classe dans ce script : ses propres variables et fonctions, repliées sous un seul en-tête. Le reste du code en crée une avec %s.new()."
+extends %s,extends %s
