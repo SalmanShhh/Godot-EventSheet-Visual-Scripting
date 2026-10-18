@@ -60,8 +60,10 @@ static func run() -> bool:
 	all_passed = _check("the function reads with its own name", output.contains("func reset_score(start: float) -> void:"), true) and all_passed
 	all_passed = _check("an unmapped row keeps its original words",
 		output.contains("# %s Player (Platform) ▸ is-on-floor" % EventSheetForeignImporter.UNMAPPED_MARKER), true) and all_passed
-	all_passed = _check("a row nobody can spell does not run",
-		output.contains("set-blend-mode\n"), false) and all_passed
+	# The wizard writes a .gd, which is the sheet's only copy: the row it switched off stays in the
+	# file, behind a guard that never opens, so it can be fixed rather than being lost.
+	all_passed = _check("a row nobody can spell is kept, and does not run",
+		[output.contains("set-blend-mode\n"), output.contains("\t# @off\n\tif false and score >= 10:")], [true, true]) and all_passed
 
 	all_passed = _roundtrip(sheet) and all_passed
 	all_passed = _wizard() and all_passed

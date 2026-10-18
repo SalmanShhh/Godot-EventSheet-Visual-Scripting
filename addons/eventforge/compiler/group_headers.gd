@@ -270,7 +270,8 @@ static func _header_home(lines: PackedStringArray) -> int:
 	# The opening lines: annotations, `class_name`, `extends`, and comments between them.
 	while index < lines.size():
 		var line: String = lines[index]
-		if line.begins_with("extends ") or line.begins_with("class_name ") or line.begins_with("@tool") 				or line.begins_with("@icon(") or line.begins_with("@static_unload") or line.begins_with("@abstract"):
+		if line.begins_with("extends ") or line.begins_with("class_name ") or line.begins_with("@tool") \
+				or line.begins_with("@icon(") or line.begins_with("@static_unload") or line.begins_with("@abstract"):
 			at = index
 		elif not line.strip_edges().is_empty() and not line.begins_with("#"):
 			break

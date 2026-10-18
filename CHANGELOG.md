@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Fixed: an event switched off in a `.gd` sheet stays in the file
+
+- An event whose box was unticked was left out of the compile. A `.tres` sheet still holds it, but
+  a `.gd` sheet has no other copy, so saving deleted the event from the file - a handler whose only
+  event was off vanished whole. In a sheet that is its own `.gd` an event that is off is now written
+  behind a constant false guard under a `# @off` line (`if false and score > 10:`, `if false:` for an
+  event with no conditions, `elif false:` for an else row), so it stays in the file and never runs.
+  Opening the file brings it back as the same event, switched off - at the top of a handler, in a
+  group, as a sub-event, as an else row or in a function's body - and turning it back on writes the
+  file it was before. A `.tres` sheet still leaves an event that is off out of the game.
+
 ### Fixed: a class description edited in a `.gd` sheet reaches the file
 
 - A `.gd` sheet's class description is read from the `##` block under `extends`, but the save wrote

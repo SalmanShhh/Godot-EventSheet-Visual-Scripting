@@ -155,6 +155,10 @@ const TROUBLE_TRIGGER_ID: String = "OnSomethingWentWrong"
 ## The guard the rows of an off group that cannot be switched are written behind in a sheet that is
 ## its own .gd: the rows stay in the file and never run. Frozen - the lift reads it back.
 const OFF_GROUP_GUARD: String = "false"
+## The line written just above an event that is switched off, in a sheet that is its own .gd: the
+## event follows behind the OFF_GROUP_GUARD term, so it stays in the file and never runs. Frozen -
+## the lift reads the pair back as the same event, switched off.
+const OFF_ROW_MARKER: String = "# @off"
 
 # Runtime-toggleable groups: event -> "__group_<snake>_active" guard (per-compile).
 static var _runtime_group_guards: Dictionary = {}
@@ -175,10 +179,11 @@ static var _row_group_path: Dictionary = {}
 static var _row_fences_before: Dictionary = {}
 static var _row_fences_after: Dictionary = {}
 # True when the file being written is the sheet itself (a .gd opened as a sheet, or a Save As .gd):
-# then a group that is off and cannot be switched keeps its rows in the file behind a constant
-# `false` guard, because the file is the only copy of them. A .tres sheet's generated companion
-# leaves such a group out, as it always has. Per-compile.
-static var _keeps_off_groups: bool = false
+# then what is switched off stays in the file and never runs, because the file is the only copy of
+# it - a group that is off and cannot be switched keeps its rows behind a constant `false` guard, and
+# an event that is off is written behind one too, under an OFF_ROW_MARKER line. A .tres sheet's
+# generated companion leaves both out, as it always has. Per-compile.
+static var _keeps_off_rows: bool = false
 # Host-targeting prefix for {host.} ACE templates: "host" inside a behavior sheet (where node-scoped
 # ACEs must call on the parent host, not the behavior Node itself), "" everywhere else. Per-compile.
 static var _behavior_host_default: String = ""
@@ -230,7 +235,7 @@ static func _reset_per_compile_state(sheet: EventSheetResource = null) -> void:
 	_row_group_path = {}
 	_row_fences_before = {}
 	_row_fences_after = {}
-	_keeps_off_groups = false
+	_keeps_off_rows = false
 	# What this sheet's names MEAN, for the removal guard: which of them hold a node across frames and
 	# which were minted by a spawn row in some other event. Gathered once here rather than per row,
 	# because it is a walk of the whole sheet and the answer cannot change during a compile.
@@ -338,7 +343,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	# external-source path so no branch of this function can inherit it
 	# (see _reset_per_compile_state).
 	_reset_per_compile_state(sheet)
-	_keeps_off_groups = omit_generated_banner or not sheet.external_source_path.is_empty()
+	_keeps_off_rows = omit_generated_banner or not sheet.external_source_path.is_empty()
 
 	# GDScript-backed sheets (opened FROM a .gd file) compile via the order-preserving
 	# external path: no generated header, no synthesized extends, rows emit in sheet order
@@ -773,7 +778,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		if not (row is EventRow):
 			continue
 		var event_row: EventRow = row
-		if not event_row.enabled:
+		if not event_row.enabled and not _keeps_off_rows:
 			continue
 		# A BLANK top-level event - no trigger picked - runs every tick, which is what a blank event
 		# means in an event sheet. It compiles exactly as an every-tick event would (the resolver
@@ -1534,6 +1539,8 @@ static func emit_anchored_trigger_text(events: Array, group_guards: Dictionary =
 	_compile_mutex.lock()
 	_reset_per_compile_state()
 	_tool_sheet_flag = tool_sheet
+	# Only the lift of an opened .gd asks for this text, and that file keeps its rows that are off.
+	_keeps_off_rows = true
 	_runtime_group_guards = group_guards
 	var lines: PackedStringArray = PackedStringArray()
 	var discarded_result: Dictionary = {"warnings": [], "errors": []}
@@ -1543,13 +1550,17 @@ static func emit_anchored_trigger_text(events: Array, group_guards: Dictionary =
 	return "\n".join(lines)
 
 
-static func emit_function_block_text(event_function: EventFunction, sheet: EventSheetResource) -> String:
+## `keeps_off_rows` is the lift's: it reads a .gd before the sheet knows its file, and that file keeps
+## the rows that are off. Any other caller is answered from the sheet itself.
+static func emit_function_block_text(event_function: EventFunction, sheet: EventSheetResource, keeps_off_rows: bool = false) -> String:
 	_compile_mutex.lock()
 	_reset_per_compile_state()
 	# The gate never emits breakpoints (which is why the reset above is handed nothing), but it does
 	# have to know whether this is a tool sheet: the undoable edits refuse on a game sheet, and a probe
 	# that guessed wrong would emit a shorter body than the real compile.
 	_tool_sheet_flag = sheet != null and sheet.tool_mode
+	# The function as its file holds it: a sheet that is its own .gd keeps the rows that are off.
+	_keeps_off_rows = keeps_off_rows or (sheet != null and not sheet.external_source_path.is_empty())
 	var lines: PackedStringArray = PackedStringArray()
 	var discarded_result: Dictionary = {"warnings": [], "errors": []}
 	_emit_function_block(event_function, sheet, lines, [], discarded_result)
@@ -1980,7 +1991,7 @@ static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comm
 			# In a sheet that IS its .gd, an off group that cannot be switched keeps its rows too,
 			# behind a constant false guard that also holds every group inside it: the file is the
 			# only copy of those rows, and leaving them out lost them on save.
-			var held_off: bool = runtime_guard == OFF_GROUP_GUARD or (_keeps_off_groups and not group.enabled and not group.runtime_toggleable)
+			var held_off: bool = runtime_guard == OFF_GROUP_GUARD or (_keeps_off_rows and not group.enabled and not group.runtime_toggleable)
 			if group.enabled or group.runtime_toggleable or held_off:
 				# Runtime-toggleable groups guard their events (nested groups inherit the
 				# INNERMOST toggleable guard - toggling the inner group wins, event-sheet-style).
@@ -2148,7 +2159,8 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		var event_row: EventRow = entry as EventRow
 		# A blank trigger is not "no event": it is the every-tick event (TriggerResolver reads it
 		# that way), so a blank top-level event groups into `_process` with the explicit ones.
-		if not event_row.enabled:
+		# An event that is off stays in a sheet that is its own .gd (see _keeps_off_rows).
+		if not event_row.enabled and not _keeps_off_rows:
 			continue
 		var key: String = TriggerResolver.get_trigger_key(event_row)
 		# An event lifted from a connect LAMBDA is its own wiring, body and all - two lambdas on the
@@ -2511,7 +2523,12 @@ static func _emit_event_body(
 		if not (event_item is EventRow):
 			continue
 		var event_row: EventRow = event_item as EventRow
-		if not event_row.enabled:
+		# An event that is off is left out - except in a sheet that is its own .gd, where it is the
+		# file's only copy: there it is written behind a false guard under OFF_ROW_MARKER and never
+		# runs. A connect read in place has no guard to sit behind (the connect IS the row), so it is
+		# still left out.
+		var held_off: bool = not event_row.enabled
+		if held_off and (not _keeps_off_rows or event_row.has_meta(LAMBDA_IN_PLACE_META)):
 			continue
 		# A blank run captured before this block re-emits above its group marker / condition header.
 		_emit_leading_body_blanks(event_row, lines)
@@ -2534,6 +2551,9 @@ static func _emit_event_body(
 		# before it. Collected apart, appended last below.
 		var tail_condition_texts: PackedStringArray = PackedStringArray()
 		var runtime_group_guard: String = str(_runtime_group_guards.get(event_row, ""))
+		if held_off:
+			runtime_group_guard = OFF_GROUP_GUARD if runtime_group_guard.is_empty() \
+					else "%s and %s" % [OFF_GROUP_GUARD, runtime_group_guard]
 		for condition: ACECondition in event_row.conditions:
 			var condition_line: String = ConditionCodegen.generate_condition(condition, _behavior_host_default)
 			if not condition_line.is_empty():
@@ -2597,6 +2617,8 @@ static func _emit_event_body(
 		# else/elif rows belong to the same group as the `if` they continue.
 		if event_row.else_mode == EventRow.ElseMode.NONE and _row_group_path.has(event_row):
 			lines.append("%s# @group:%s" % [indent, str(_row_group_path[event_row])])
+		if held_off:
+			lines.append(indent + OFF_ROW_MARKER)
 		# Resolve the block header: if / elif / else, per the chaining rules above.
 		var wants_chain: bool = event_row.else_mode != EventRow.ElseMode.NONE
 		if wants_chain and not stateful_preludes.is_empty():

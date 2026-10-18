@@ -664,7 +664,7 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 						# Per-function gate: the lifted function must re-emit header + body exactly, or it
 						# stays raw and the run re-anchors after it (a bad body used to revert the file).
 						if bool(function_lift.get("ok", false)):
-							var emitted_block: String = SheetCompiler.emit_function_block_text(function_lift.get("function"), sheet)
+							var emitted_block: String = SheetCompiler.emit_function_block_text(function_lift.get("function"), sheet, true)
 							if emitted_block != expected_block:
 								# A verb that fails this gate opens as a verbatim block, and the reader
 								# is owed the reason when the reason is one line of its own annotations.
@@ -875,7 +875,7 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 					if bool(annotated_lift.get("ok", false)):
 						var candidate: EventFunction = annotated_lift.get("function")
 						if candidate != null and SheetCompiler._find_function_by_name(sheet, candidate.function_name) == null:
-							var emitted_annotated: String = SheetCompiler.emit_function_block_text(candidate, sheet)
+							var emitted_annotated: String = SheetCompiler.emit_function_block_text(candidate, sheet, true)
 							if emitted_annotated == tail_text + "\n" + mid_row.code:
 								mid_function = candidate
 								strip_tail = true
@@ -899,7 +899,7 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 				if mid_function == null or SheetCompiler._find_function_by_name(sheet, mid_function.function_name) != null:
 					mid_index += 1
 					continue
-				if SheetCompiler.emit_function_block_text(mid_function, sheet) != mid_row.code:
+				if SheetCompiler.emit_function_block_text(mid_function, sheet, true) != mid_row.code:
 					mid_index += 1
 					continue
 			var anchor: FunctionAnchorRow = FunctionAnchorRow.new()
@@ -2922,6 +2922,10 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 	# real EventGroups from these. Skipping the line keeps it out of the lifted body; the group re-emits
 	# it on recompile and the byte-verify strips group markers, so it still round-trips.
 	var pending_group_slug: String = ""
+	# An event that is switched off, in a sheet that is its own .gd: the compiler writes an
+	# OFF_ROW_MARKER line above it and a false guard at the front of its header. The marker is taken
+	# here and the guard off the header below, and the event they wrap comes back switched off.
+	var pending_off: bool = false
 	# Region openers read above a grouped event, and the rows index that event will have.
 	var openers_waiting: Array = []
 	var openers_from: int = -1
@@ -2964,6 +2968,10 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 		var rest: String = line.substr(depth)
 		if rest.begins_with("# @group:"):
 			pending_group_slug = rest.substr(9)  # 9 == len("# @group:")
+			index += 1
+			continue
+		if rest == SheetCompiler.OFF_ROW_MARKER and not pending_off and _heads_off_block(lines, index + 1, depth):
+			pending_off = true
 			index += 1
 			continue
 		# A `#region` fence a group holds is written beside the group's events, inside this body. It
@@ -3023,7 +3031,7 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 		# where there is not - and both halves are that one row's code, so read as a block it comes
 		# back as two events and the sentence the sheet was written in is gone. Every other run
 		# family opens on a statement and refuses this line on its own mark.
-		if is_if:
+		if is_if and not pending_off:
 			var branch_run: Dictionary = _claimed_run(lines, index, depth)
 			if not branch_run.is_empty():
 				if current != null and not pending_group_slug.is_empty():
@@ -3047,9 +3055,13 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			# A group that says who runs it wears its guard on every event under it. The guard is
 			# the GROUP's fact, so it comes off here and rides the EventGroup instead; re-emission puts
 			# back exactly the term that was taken away, which is what keeps the file byte-identical.
+			if pending_off:
+				expression = _without_off_guard(expression, pending_group_slug if is_if else "")
 			if is_if:
 				expression = _without_group_guard(expression, pending_group_slug)
 			var block_event: EventRow = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
+			if pending_off:
+				block_event.enabled = false
 			if not is_if:
 				block_event.else_mode = EventRow.ElseMode.ELSE
 			var representable: bool = expression.is_empty() or _parse_conditions(expression, block_event, reverse_entries, scope_trigger)
@@ -3075,10 +3087,15 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 					current = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
 					pending_group_slug = _stamp_group(current, pending_group_slug)
 					rows.append(current)
+				# The marker the block was read under goes back with it, so no line is lost.
+				if pending_off:
+					pending_raw.append(SheetCompiler.OFF_ROW_MARKER)
+					pending_off = false
 				pending_raw.append(rest)
 				index += 1
 				chain_open = false
 				continue
+			pending_off = false
 			_flush_raw(current, pending_raw, blank_box)
 			current = null
 			if is_if:
@@ -3455,7 +3472,8 @@ static func _fences_read_as_rows(function_lines: PackedStringArray) -> bool:
 ## every expression below passes through untouched.
 static func _note_group_guards(source: String) -> void:
 	_group_runs_on = {}
-	if not source.contains("runs_on=\"") and not source.contains("runs_in=\"") 			and not source.contains("toggleable=true") and not source.contains("enabled=false"):
+	if not source.contains("runs_on=\"") and not source.contains("runs_in=\"") \
+			and not source.contains("toggleable=true") and not source.contains("enabled=false"):
 		return
 	var registry: Dictionary = _recover_group_declarations(source)
 	for slug: String in registry:
@@ -3518,6 +3536,44 @@ static func _without_group_guard(expression: String, slug: String) -> String:
 	if not expression.begins_with(guard + " and "):
 		return expression
 	var rest: String = expression.substr(guard.length() + 5)
+	if rest.begins_with("(") and rest.ends_with(")") and _split_top_level(rest, " or ").size() == 1:
+		var inner: String = rest.substr(1, rest.length() - 2)
+		if _split_top_level(inner, " or ").size() > 1:
+			return inner
+	return rest
+
+
+## True when the line at `index` is the header an OFF_ROW_MARKER is written above: an `if` or `elif`
+## at this depth that opens on the false guard. Anything else under the marker reads it as the
+## comment it would otherwise be.
+static func _heads_off_block(lines: PackedStringArray, index: int, depth: int) -> bool:
+	var indent: String = "\t".repeat(depth)
+	if index >= lines.size() or not lines[index].begins_with(indent):
+		return false
+	var head: String = lines[index].substr(depth)
+	var guard: String = SheetCompiler.OFF_GROUP_GUARD
+	for keyword: String in ["if ", "elif "]:
+		if head == keyword + guard + ":" or head.begins_with(keyword + guard + " and "):
+			return head.ends_with(":")
+	return false
+
+
+## `expression` with the false guard of an event that is off taken from its front - and, inside a
+## group, the group's own guard after it - unwrapping the brackets the compiler puts around an Or list
+## behind a guard. The group's guard stays when no group is named (an `elif` row), exactly as the
+## compiler wrote it.
+static func _without_off_guard(expression: String, slug: String) -> String:
+	var guard: String = SheetCompiler.OFF_GROUP_GUARD
+	var group_guard: String = str(_group_runs_on.get(slug, "")) if not slug.is_empty() else ""
+	if not group_guard.is_empty() and (expression == guard + " and " + group_guard or expression.begins_with(guard + " and " + group_guard + " and ")):
+		guard += " and " + group_guard
+	if expression == guard:
+		return ""
+	if not expression.begins_with(guard + " and "):
+		return expression
+	var rest: String = expression.substr(guard.length() + 5)
+	if not group_guard.is_empty() and not guard.ends_with(group_guard):
+		return rest
 	if rest.begins_with("(") and rest.ends_with(")") and _split_top_level(rest, " or ").size() == 1:
 		var inner: String = rest.substr(1, rest.length() - 2)
 		if _split_top_level(inner, " or ").size() > 1:
