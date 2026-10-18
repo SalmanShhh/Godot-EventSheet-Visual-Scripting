@@ -29,6 +29,13 @@
   run a family claims comes back as that family's row. A GDScript row switched off in a `.gd` sheet
   is now kept the same way, behind `# @off: `, instead of being left out of the file.
 
+### Fixed: a `.tres` sheet's companion writes the group header it always wrote
+
+- The header of an off group that cannot be switched gained `enabled=false` in every compile, so a
+  `.tres` sheet's regenerated companion (which still leaves such a group out) changed a line it
+  never used to. The field is written only where it is read back: in a sheet that is its own `.gd`,
+  and for a group that can be switched.
+
 ### Fixed: a `##` line inside a string is no longer read as the class description
 
 - Opening a `.gd` whose own `extends` line has no doc block, but which holds a string with an

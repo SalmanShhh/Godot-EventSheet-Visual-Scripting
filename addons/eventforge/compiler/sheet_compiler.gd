@@ -1927,8 +1927,9 @@ static func _emit_group_declarations(lines: PackedStringArray, decls: Array) -> 
 			parts.append("toggleable=true")
 		# Off at start: this is the one place a .gd sheet keeps the "off" half. Switchable, the group
 		# is in the game behind a flag that starts false; not switchable, its rows sit behind a
-		# constant false guard. A group that is on writes exactly the header it always wrote.
-		if not group.enabled:
+		# constant false guard. A group that is on writes exactly the header it always wrote, and so
+		# does a .tres sheet's companion, which leaves an off group that cannot be switched out.
+		if not group.enabled and (group.runtime_toggleable or _keeps_off_rows):
 			parts.append("enabled=false")
 		# Who runs it, written only when the answer is not "everybody". A single-player sheet
 		# therefore emits exactly the header it always emitted.

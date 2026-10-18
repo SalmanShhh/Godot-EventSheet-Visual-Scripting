@@ -81,6 +81,8 @@ static func run() -> bool:
 			_state(_group(save_as_reopened, "Wave One")), {"enabled": false, "runtime_toggleable": false, "rows": 3}],
 		["a .tres companion still leaves the off group out",
 			[companion.contains("score += 1"), companion.contains("(disabled group \"Wave One\"")], [false, true]],
+		["and writes the header it always wrote, with no enabled=false",
+			_lines_starting(companion, "## @ace_group(uid=\"wave_one\""), ["## @ace_group(uid=\"wave_one\", name=\"Wave One\")"]],
 	]) and all_passed
 	# A stateful condition (Every X Seconds) on a row of the off group: its bookkeeping line sits behind
 	# the same guard as the row, so the timer does not count while the group is off.
