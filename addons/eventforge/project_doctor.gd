@@ -149,6 +149,7 @@ static func run() -> Dictionary:
 	check_pack_reading(findings)
 	check_pack_spellings(findings)
 	check_old_disabled_packs_setting(findings)
+	check_threaded_shader_import(findings)
 	check_family_group_agreement(findings)
 	check_imported_rows(sheet_paths, findings)
 	check_task_notes(findings)
@@ -2514,6 +2515,33 @@ static func check_old_disabled_packs_setting(findings: Array[Dictionary]) -> voi
 	_add(findings, "info", "old-disabled-packs-setting", "res://project.godot",
 		"This project still has the old disabled-packs setting (%s, listing %s). It is ignored now, so those packs are back in the picker. To remove a pack, delete its folder under eventsheet_addons/ instead, then delete the setting." % [
 			EventSheetPackCatalog.DISABLED_SETTING, ", ".join(listed)])
+
+
+## The Project Settings switch the warning below names, and how many compute shaders it takes.
+const THREADED_IMPORT_SETTING := "editor/import/use_multiple_threads"
+const THREADED_SHADER_IMPORT_LIMIT := 2
+
+
+## A project holding several compute shaders (`.glsl`, which the Post Kit pack ships six of) with
+## import on several threads. Godot 4.7 can crash importing such files side by side: a first import
+## of a fresh copy then stops part way, and every file after the shaders stays unimported until the
+## editor is opened again. One warning naming the switch, and nothing at all with import on one
+## thread or with fewer than two shaders.
+static func check_threaded_shader_import(findings: Array[Dictionary]) -> void:
+	var finding: Dictionary = threaded_shader_import_finding(
+		bool(ProjectSettings.get_setting(THREADED_IMPORT_SETTING, true)), _list_files_with_extension("glsl"))
+	if not finding.is_empty():
+		findings.append(finding)
+
+
+## The warning for one answer to the switch and one list of shaders, or {} - pure, so a test can hand
+## it either.
+static func threaded_shader_import_finding(threaded: bool, shaders: PackedStringArray) -> Dictionary:
+	if not threaded or shaders.size() < THREADED_SHADER_IMPORT_LIMIT:
+		return {}
+	return {"severity": "warning", "check": "threaded-shader-import", "path": "res://project.godot",
+		"message": EventSheetL10n.translate("%d compute shaders (.glsl) are imported on several threads at once, and Godot can crash part way through importing them, leaving the files after them unimported. Turn off Project Settings > Editor > Import > Use Multiple Threads.") % shaders.size(),
+		"subject": THREADED_IMPORT_SETTING}
 
 
 static func _list_files_with_extension(extension: String) -> PackedStringArray:

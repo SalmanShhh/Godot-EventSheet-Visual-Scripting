@@ -6,14 +6,498 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Fixed: what the reader adds to a connect read in place is written, and a class that moves bytes stays code alone
+
+- A connect read where it sits is an ordinary event on the canvas, but saving rebuilt it from its
+  actions alone: a condition, pick, node target or local the reader added to it was dropped without
+  a word. They are written now, inside the function the connect hands over (`if score < 3:` above
+  its lines), exactly as a trigger's conditions guard its handler. An else has no place on a
+  connect, so one set there is named in the save's warnings instead of vanishing.
+- A connect whose function holds ONE line with the `)` glued to it (`pressed.connect(func() -> void:`
+  then `start_game())`) was taken for an empty function and stayed code. It opens as an event like
+  the longer ones.
+- When putting every class of a file back did not reproduce the file, every class in it went back to
+  code. The classes are now tried again one at a time, so only the one that moved a byte stays code
+  and the others still read.
+- The Doctor warns when a project holds two or more compute shaders (`.glsl`, which Post Kit ships
+  six of) and imports on several threads, Godot's default: Godot 4.7 can crash part way through
+  importing them side by side and leave every file after them unimported. The warning names the
+  switch (Project Settings > Editor > Import > Use Multiple Threads), and the Post Kit guide says the
+  same.
+
+### Added: a function written inside a call reads as what it is
+
+- A signal connected to a function written inside the connect (`start_button.pressed.connect(func()
+  -> void:` and the lines under it) opens as its own event: the signal is the trigger
+  (`start_button On Pressed`) and the function's lines are its actions. At the top of `_ready` it
+  stands beside On created as before; anywhere else - lower in `_ready`, in any other function, inside
+  a branch - it is read where it sits, nested under the lines before it, and written back exactly
+  there. The typed spelling (`func() -> void:`) and the `)` glued to the last body line, which is
+  how nearly every connect is written, are read now too. Saving writes the same bytes back; a connect
+  that cannot come back exactly stays the line it was.
+- A function handed to any other call over several lines (`sort_custom`, `filter`, `map`, a callback,
+  a deferred call) is one action row: the call, read like any one-line call, with the function as one
+  chip (`enemies Sort custom  func(a, b): a.position.x < b.position.x`), its first line and `…` when
+  it is longer. Hovering the row lists every line as written. A sort or a total that the one-line
+  reading already knows reads the same way (`Sort shop by price (lowest first)`). Display only.
+- A menu answered by such a lambda (`popup.id_pressed.connect(func(id: int) -> void:` and a
+  `match id:`) still reads each arm as the item it answers.
+- Over the plugin's own 1,125 scripts, 424 connects now open as events, the lines still drawn as code
+  fall from 1,554 to 485, and the rows that say nothing of their own from 991 to 883. Every file
+  still saves back byte for byte.
+
+### Fixed: a fresh copy of this repository imports completely the first time
+
+- The project now imports on one thread (`editor/import/use_multiple_threads=false`). Godot 4.7 can
+  crash when it imports several compute-shader `.glsl` files at once, and the Post Kit pack and its
+  builder's sources hold twelve. A first `--import` of a fresh copy stopped with an access violation
+  just after the translation CSVs in 6 of 17 tries, leaving every texture and icon unimported - which
+  is why the first full test run after a fresh import failed all 141 `pack_icons_test`
+  \"icon.svg is imported\" checks and the drawing stamp texture, and the next run passed. With one
+  thread: 0 of 6. A fresh import takes about 90 s instead of about 55 s; later imports are small.
+  `import_threads_test` pins the setting.
+
+### Fixed: three small things the test runs tripped over
+
+- With no editor around (tests, preview harnesses), the plain UndoRedo the sheet falls back to was
+  handed the editor's (object, method, arguments) spelling, so every edit printed \"Method expected 1
+  argument(s), but called with 3\" and kept no undo step. It is handed one bound Callable now, and the
+  step is recorded without being run again, since the edit is already applied.
+- The Lift Report window has the same body as every other window: Esc closes it and it grows to fit.
+- `tools/run_tests_parallel.ps1` empties `.godot/test_logs/` before it starts. The red-run report
+  reads every log there, so an `-Iterate` run that picked nothing kept the previous run's
+  iterate.txt and named its failures under shards that had all passed.
+
+### Fixed: two timing tests that went red for the machine's load, not the code
+
+- `self_expressions_test` timed twenty Self-section refreshes against a literal 2000 ms but declared
+  no budget, so it ran inside a shard beside seven other Godot processes and measured 2,977 and
+  3,793 ms. It declares `SCALE_REFRESH_BUDGET_MS` now and runs in the serial tail. Alone, outside
+  OneDrive, it takes 752-819 ms at ff3cf143 and 742-853 ms at 045246bb (the code did not get
+  slower); the budget is three times the median, 2,400 ms. `shard_split_test` now fails any test
+  that starts a clock without declaring a budget.
+- `huge_project_budget_test` timed the Add picker's FIRST tree build, which also reads every file the
+  tree shows: 2,375 ms on the first run after an import and 613 ms on the next, with the same
+  first-run red at the commit before the wave. The first build is now held to its own ceiling
+  (`PICKER_FIRST_OPEN_BUDGET_MS`, 7,100 ms, three times the cold median) and the open budget times
+  the second build: 593-673 ms before the wave and 613-619 after, so 1,840 ms.
+
+### Added: a class inside a script, and a value over several lines, read as rows
+
+- A class written inside a script (`class Hit:` with variables and functions under it) reads as one
+  full-width \"Class Hit\" head with its members under it, folding like a group: its variables are
+  variable rows and its functions are function events, read exactly as they would be in a file of
+  their own (a class inside it is a Class of its own). Hovering the head says how other code makes
+  one (`Hit.new()`); double-clicking it turns the class back into the code block it is written as.
+  The file still saves back byte for byte. A class that cannot come back exactly stays code on its
+  own, and the rest of the file still reads; a class of fields alone keeps its Data type reading.
+- A variable whose value runs over several lines is ONE variable row with the whole value on one
+  line (`top_speed = (base_speed * boost + wind)`), and a local declaration written that way in a
+  function is one action. Saving writes the same line breaks back until the value is edited; an
+  edited value is written as typed. Lines with a comment inside them stay code.
+- A list or table declared at the top of a script reads as a variable row folded to its count,
+  `Array[Vector2] spawn_points = 3 entries`; a double-click (or the fold arrow) opens its entries as
+  the rows under it, each still editable in place.
+- A table or list inside a function with notes written among its entries folds to one row like any
+  other: a note is never an entry, and the row's hover keeps the notes under the entries.
+- Opening the plugin's own scripts: 65 of its 67 classes now read as rows, 2,703 of their 2,930
+  lines (none did before). Declarations whose value runs over several lines that still read as code
+  fell from 1,324 to 300 (5,658 lines to 2,540), and rows that say nothing of their own from 991 to
+  306 (0.4% of rows to 0.1%).
+- A file with classes inside it takes longer to finish reading in the background, since every
+  function in its classes is now read as well (the first paint of the file is unchanged).
+
+### Fixed: where the readings of a function inside a call, a long value and a class met
+
+- A declaration whose value hands a function written over several lines to a call
+  (`var changed: bool = _dock._perform_undoable_sheet_edit(\"Apply Cell Edit\", func() -> bool:` ...)
+  was joined onto one line like a long sum, which reads the function's indented lines as one and
+  would have written them back on one line after an edit. A value with a function inside it is no
+  longer joined: the undo funnel reads as its one undoable step again, and any other call reads as the
+  call with the function as a chip.
+- A function whose first line is a connect written with a function inside it
+  (`button.pressed.connect(func() -> void:` ...) fell back to one block of code: the connect was
+  taken for one at the top of `_ready`. It now reads as an event inside that function, and the
+  function reads as events again (`_connect_view_signals` of the split view, 51 lines, is one).
+- Turning a class back into code named the compiler in a file the first sheet open builds; it now
+  reaches it by path, so the first open loads nothing new.
+
+### Fixed: shaping a field, walked end to end in the editor
+
+- Clicking an option in \"Shape this field\", pressing Choose or Apply, or pressing ▲ in the Inspector
+  Designer no longer tries to free the control being clicked (Godot refused with \"Object is locked\"
+  and left it orphaned). The choice now lands right after the click.
+- A script open as a sheet keeps its own path after an edit. Every edit used to hand the script's path
+  to the sheet, so `load()` of the script returned the sheet, and a resource made from the script (a
+  goblin.tres made from EnemyStats) could not be given it.
+- The Inspector's \"Shape <Class>…\" link shows the sheet's tab when it is already open, unsaved edits
+  and undo included, instead of reading the file again into a second tab. Taking the last Show when
+  back after following the link now removes @tool again, as it does without the link.
+- \"Groups show as: Tabs\" turns the Designer's own list into tabs too: a tab per group, only the open
+  group's fields under it, and the tab follows the picked field.
+- The help strip under a variable shown only while a tick box is on says so:
+  \"shield_amount: shown only when has_shield is on.\" (or \"read-only when ... is off.\").
+- A Look without limits (Plain number, a dropdown, flags...) on a field that stays within limits now
+  says it also turns Stay within limits off on the Check tab, instead of changing that tab quietly.
+- Side by side never pairs the last field of a group with the first field of the next one (or across
+  a subgroup line), and the Layout tab says why it is not offered: the next field starts another
+  group, or the two are not both numbers.
+- With groups as tabs, a heading that holds another plugin's own controls is no longer hidden, and the
+  picked group's folded heading opens through Godot's own unfold instead of a simulated click.
+- A dropdown filled by a function no longer closes itself when the Inspector refreshes with nothing
+  changed.
+
+### Added: a block kept as code on purpose says why
+
+- Quoted lines joined into one text (`block.code = \"\\n\".join(PackedStringArray([` followed by a line
+  of GDScript per entry, as every pack builder writes its pack) read as one row, `text` and its first
+  lines, even with notes written among them. Its hover says why it stays code and shows the lines as
+  written, the notes in their places. Opening the plugin's own scripts, that took the rows saying
+  nothing of their own from 1,998 to 991 (0.8% of rows to 0.4%).
+- A note written among those quoted lines goes with them: it is no longer a row of its own on the
+  canvas, and reads in the row's hover in its place among the lines (the hover shows the first twelve
+  lines and says how many more). This holds in any file with that shape, not only the plugin's own.
+- A text between triple quotes, and every line inside one, says on hover why it stays code.
+- Display only: every file still opens and saves back byte for byte.
+
+### Changed: the function Inspector shows the code each choice stands for
+
+- Every dropdown choice of a selected function says, under its sentence, the line it writes or the
+  call it asks for: `-> float` for a Returns type, `amount: int = 0` for a parameter Type,
+  `await take_damage(amount, critical)` for Can wait, `static func ...` for One for the script,
+  `## @ace_hidden` or `## @ace_action` for In Add Action and `## @ace_category(\"Player\")` for a
+  Category. The note kept under the field is still the sentence alone.
+- The two settings are labelled Waits (async) and Shared (static), the words a script uses for them.
+- A parameter whose Type changes starts its default again from the new type's own value
+  (`amount: int = 1` turned to String reads `= \"\"`, a Color starts as `Color.WHITE`), in the same
+  undo step; a required parameter stays required.
+- Text still being typed into a function's field is written to the sheet it was typed on when you
+  switch tabs, never to a same-named function of the tab that comes up.
+- An empty Name says why a function needs one: so callers can find it.
+
+### Added: pick a row of a data table, and big lists in the table look
+
+- A new Inspector look, **Pick a row of a data table**, for an int:
+  `@export_custom(PROPERTY_HINT_NONE, \"eventsheet:table_row:drops:name\")`. The Inspector shows a
+  dropdown of the `drops` rows by their `name` cell, with \"row 1 of drops\" under it. The file still
+  stores the row's number, so `drops[drop_row]` reads it in the game, and without the plugin the
+  property is Godot's plain number field. A number past the last row is never moved onto another
+  row: the field shows \"row 5\" in quiet amber and says the row is gone. The line reopens on the
+  same look and saves back byte for byte; a marker short of its column stays the line it was.
+- The table look gains what a long list needs: a search box, a click on a column's name to sort by
+  it (number columns as numbers, a second click flips it, `#` goes back to the file's order), and
+  pages of eight rows (\"Rows 1-8 of 23\", ‹ ›). They only change what is shown: the list keeps its
+  order in the file. A cell left empty is a quiet amber cell whose hover says which column of which
+  row is missing, the bar under the grid counts the rows that have one, and a list kept in a .tres
+  of its own offers **Open as a table**, which opens that file in the table view.
+
+### Added: three new shapes a field can take in the Inspector
+
+- Groups as tabs: `# @inspector_tabs` shows every `@export_group` of the script as a tab, so a long
+  resource fits on one screen. Without the plugin the groups are Godot's ordinary headings.
+- Side by side: `# @inspector_side_by_side` above a number puts it and the number declared after it
+  on one line (min and max, width and height). Without the plugin they are two lines.
+- Pick from a list a function gives: `# @inspector_choices attack_names` above a String makes it a
+  dropdown of the words `attack_names()` returns - a list of words, or a Dictionary of word to the
+  sentence that describes it. The file still stores the plain word. It needs a @tool script, like
+  Checked by a function; otherwise the field is Godot's plain text field.
+- Each one is a variable attribute the compiler writes as that comment line and the importer reads
+  back, byte for byte, so a hand-typed file opens as the same choice.
+- A sheet that is not a tool sheet but carries Show if / Lock unless is now told so when it
+  compiles: Godot only asks a @tool script's `_validate_property`, so the field would never hide.
+
+### Added: shape a field in the Inspector Designer
+
+- Clicking a field in the Inspector Designer picks it, and the \"Shape this field\" panel beside the
+  list offers six tabs - Look, Layout, Show when, Check, Help and Button. Each tab names the choice
+  the field wears now and lists only the options that fit its type, every option with the sentence
+  that says what it does. Showing an option shows the code it writes into the script and what the
+  field is without the plugin.
+- Choosing an option writes it at once and the Designer shows the field wearing it. Every choice is
+  one undo step that rewrites only the lines that choice owns, and choosing the default takes them
+  out again, so the file is byte for byte what it was. Show when (only when a tick box is on, or
+  read-only while it is off) is written as Godot's own `_validate_property` and turns the script into
+  a `@tool` script; taking the last one back removes the `@tool` it added. An option with details (a
+  bar's limits, a note's sentence, a button's function) keeps its fields under the code, and Apply
+  changes them.
+- \"Groups show as\" above the list offers Sections and Tabs, and the panel offers the new shapes
+  beside the old ones: Side by side in Layout, and Pick a row of a data table and Pick from a list
+  a function gives in Look.
+- Code typed by hand reads back as the same choice when it has the same shape: a `_validate_property`
+  that hides or locks a field shows as its Show when. A field shaped by code in any other shape says
+  \"shaped by your own code\" and is read-only in the panel, so nothing is rewritten behind your back.
+- Two doors open it: a selected exported variable's help strip offers \"Shape in the Inspector…\"
+  (in place of \"Change look…\", whose looks are the panel's Look tab), and Godot's Inspector shows one
+  small \"Shape <Class>…\" link at the top of a resource or node whose script is a sheet. A fourth door
+  on the strip waits in its \"…\" menu.
+
+### Fixed: the function Inspector's refusals say only what is true
+
+- Shared is refused only when the code the function compiles to reads a variable each object has
+  its own copy of. A verb whose own template holds `{speed}` or `{amount}`, a parameter or local
+  with a variable's name, text in quotes, a comment, a constant and a static no longer count, so a
+  sheet with a variable called `speed` can make its functions shared again.
+- A Default is judged only for the types the line can describe (true or false, numbers, text,
+  Vector2, Vector3, Color, lists and dictionaries). `[]` for a PackedStringArray, `\"a/b\"` for a
+  NodePath and `Vector2i(1, 2)` for a Vector2 are written instead of being refused as \"not null\".
+- A Name with letters outside a to z (`größe`) says what is really wrong: GDScript takes it, but the
+  sheet would open that function as code from then on.
+- A save-state table handed to `return` (the Upgrades pack's `save_state`) keeps its skill tree
+  chip again: the pattern walk reads a table's entries as the code they are.
+
+### Fixed: the plugin's own scripts open as rows, not as code
+
+- A doc comment with a blank `##` line between its paragraphs no longer sends the whole file back to
+  code. It was read as a stray block above the function and written twice; the row builder's 563
+  functions, and seven other files, now open as functions.
+- Two blank lines after a multi-line `const` list or dictionary stay two before the documented
+  function under them, so files laid out that way (eight in the plugin) open as rows.
+- A `_init` or `_validate_property` in the middle of a file opens as its function, the way it
+  already did at the end of one. A command tool's `_init` reads as Command tool ▸ On run.
+- A function wired to a signal that returns a value (`button.pressed.connect(apply)` with
+  `func apply() -> bool`) opens as a function instead of code.
+- A published verb that names its own `## @ace_icon(...)`, loops with `## @ace_looping(item)`, or
+  has no `## @ace_codegen_template(...)` line keeps those lines exactly as written, so pack sources
+  such as Post Kit, Codex and Save System open with their verbs as functions.
+- When one function still cannot be written back byte for byte, only that function (up to four of
+  them) stays code; the rest of the file opens as rows instead of all of it falling back.
+- The wordless-row share counts a function as one row whichever way it was opened, so the number no
+  longer moves when the same function is read in a different place.
+
+### Changed: a table handed to `return` or to a call opens as one row
+
+- `return {`, `rows.append({`, `table[key] = {`, `print_rich(x, [` and every other statement that
+  hands a multi-line table or list on, written one entry per line, now opens as ONE structured row
+  instead of a row per line. It reads exactly as before (the statement, then `table` or `list` and
+  the entries as chips), but it moves, switches off and is deleted as the one statement it is, and a
+  chip edits its entry through the row menu's Add, Edit and Remove Entry. A list of one-line records
+  works the same way. A table whose entries span lines (a nested value, a comment among the entries)
+  keeps the lines it was, which the canvas already reads as one row.
+- A variable rename, Replace All, Find References and project Find reach the text such a table
+  writes, and so do they for a `var x := {` table declared the same way.
+- Measured over the plugin's own `addons/` and `tools/` (1,119 files, all still byte-identical on
+  save): rows with no words of their own fall from 26,591 to 5,026, and the lines still held as
+  verbatim code from 124,971 to 104,494, with this and the two changes below. The wordless-row
+  ceilings of the editor's own reading gate come down to match.
+### Added: a selected function's Inspector describes its choices and warns before a mistake is written
+
+- Returns, Category, each parameter's Type, and In Add Action, Waits and Shared are described
+  dropdowns again: every choice says what it means as the pointer rests on it, and the chosen
+  choice's sentence stays under the field as a muted line (a parameter Type reads \"int: A whole
+  number...\"). Waits reads Finishes at once / Can wait, Shared reads One per object / One for the
+  script, In Add Action reads Not listed / Listed. Category keeps its text box, with the sheet's
+  categories one click away beside it. Every field's label says what the field is for on hover.
+- A line under a field steers off an error before anything is written, in three strengths. Refused
+  (red edge, nothing written): a Name that is not a valid name, is a GDScript keyword, or is already
+  a function, variable or signal of this sheet, each with a free name to try (`health` - \"Try
+  health_2\"); a parameter Default its Type cannot hold (`abc` for an int) or that breaks GDScript's
+  defaults-last order; Waits set to Finishes at once while the body has a Wait; Shared turned on while
+  the body uses a variable each object has its own copy of. A refused Name or Default keeps the typed
+  text in its field and the sheet keeps its bytes. Hint (accent edge, allowed): Returns set while no
+  event in the body says Return (and what callers get instead), Waits on with nothing that waits, a
+  parameter left required. Confirmation (green): a free Name says the rename and how many calls
+  leaving the field will change.
+- The fields are drawn by an Inspector plugin that handles only the function being edited,
+  registered on the first function selection, so neither the editor's start nor a sheet's first
+  open loads it.
+### Fixed: the plugin opens its own code cleanly
+
+- Opening the first sheet of a session no longer prints the engine warning \"OptimizedTranslation
+  does not store the message texts\". The shipped translations import compressed, and a compressed
+  translation has no message texts to list; the CSV beside it is read instead, as it always was.
+- `tools/verify_sheets.gd` no longer crashes when its files include the checker's own
+  `addons/eventforge/verify.gd`, so the whole-project form reads every file again. The checker's
+  own file is answered by the fact that it is running, like the command script already was.
+- A file that ends with blank lines under its last function opens as rows: the blank lines are
+  counted and written back, where before the whole file stayed code (four of the plugin's files,
+  `project_find.gd` and `run_controls.gd` among them). A doc line that stays text above a function
+  (`## @ace_category Combat`, without the brackets the annotation takes) keeps the gap above it as
+  its own, so the function under it opens too instead of being held back as code.
+- A file-scope table whose entries are written over several lines, such as a list of dictionaries
+  with one key per line, opens as one Declare row with one entry per dictionary. The entry keeps its
+  lines in the file, shows on one line, and is edited as code. A table with a comment among its
+  entries, or several entries on one line, still shows folded as before.
+- The share of rows that say nothing of their own now counts what the canvas draws. A table handed
+  to a statement that stays a line per row (a nested value inside it) is drawn as one row with its
+  entries as chips, and is counted as that one row; a note written among a table's entries is
+  counted as words. Over all 1,120 files under `addons/` and `tools/`, on top of the other self-reading
+  changes, rows with no words of their own fell from 5,418 to 1,998, lines still held as code from
+  87,890 to 84,630, and functions shown as a block of code from 68 to 9. Every file still
+  round-trips.
+
+### Fixed: a statement continued with `\\` is one row
+
+- A line ending in `\\` opened as a row whose value ended in a stray backslash, with the rest of the
+  statement (`else …`, `or …`, `+ \"…\" \\`) as orphan rows below it. The whole statement is one row
+  now, and it reads as the sentence it is.
+- A note written inside a callback or a branch that stays code opens as a comment row, its indent
+  kept so the file comes back exactly as written.
+
+### Changed: engine callbacks written the engine docs' way open as rows
+
+- `_notification` written as `if what == NOTIFICATION_X:` / `elif what == NOTIFICATION_Y:` opens as
+  one trigger per notification, exactly as the `match what:` spelling does, and saves back as the
+  chain it was. An arm may hold several rows. An arm that tests more than `what`, and the
+  translation-changed arm that On Language Changed itself writes, keep the handler as it was.
+- `_get_property_list` written between other functions opens as the function row it is, in place.
+- A property whose accessors sit on their headers' own line (`get: return panel.tree`), or whose
+  getter comes before its setter, opens as the property row with its get and set, and saves back in
+  that spelling. An accessor grown past one line saves as its block.
+
+### Fixed: six edges of the variables, functions, translation and save slices
+
+- Group ▸ New group… is greyed for a variable declared in another file, with the same hover as End
+  group here, and neither the menu nor a drop onto it groups it any more: a sheet variable of the
+  same name keeps its group.
+- Selecting another row, or closing the sheet, takes a function out of Godot's Inspector instead of
+  leaving an empty object there. Text typed into one of its fields and not yet left is written first.
+- In a translation folder whose catalogs are all hand-made, adding a language and writing the fake
+  column now write nothing, report no failure, and name the catalogs they left alone. A one-file
+  extract with notes off writes Godot's plain catalog shape, which the studio reads as hand-made
+  from then on; that is now written down and pinned.
+- Keep loading on a Manual variable stores only the old key, because Load Game's state has no
+  sections; a class rename no longer stores anything on it.
+- The Save studio compares numbers as numbers, so leaving an unchanged spin box (600.0 against a
+  scene's 600) no longer rewrites the scene.
+
+### Changed: the Save studio's Player settings cards are read off the rows they teach
+
+- Each Game Settings row on a Player settings card (Declare Setting, Load All Settings, Changed
+  Setting Is, Set Setting, Apply Quality...) is now read off the pack's own definition: the words
+  are the row's own reading and the code is what its template writes, so a card can no longer show
+  a call the pack does not make. The settings.cfg and save-slot samples are the files Godot and the
+  Save System really write, and the bindings card names the file through the bindings rows' own
+  constant.
+- The File and format fields are built through the window kit's field form, slot files are matched
+  without a hand-escaped pattern, and Look inside reads a selected node through the Save System's
+  own walk instead of a copy of it. Nothing else in the window changes.
+- The Player settings cards are built the first time that tab is shown, not every time the window
+  opens. `tools/render_save_studio_preview.gd` shoots every tab again.
+
+### Fixed: the Translation Studio never rewrites a catalog you wrote by hand
+
+- With a folder of catalogs (`res://i18n`), Find text, Add a language, bringing a file back and the
+  fake language now write only the catalogs the studio made itself. It knows them by the header it
+  writes: `keys` first and a `notes` column, which a catalog written by hand for Godot does not
+  have. A hand-made `.csv` under the folder is still read, so a line it holds is never copied into
+  a second file, but it stays byte for byte as you wrote it.
+- A new line whose folder's catalog is hand-made goes into a studio catalog beside it
+  (`ui.extracted.csv` next to `ui.csv`), and each step's result card names every hand-made
+  catalog it left alone. Folder mode always writes the `notes` column, notes on or off, since it is
+  how the studio knows its own catalogs again.
+- A hand-made `i18n/strings.csv` no longer makes the studio treat the project as a one-file
+  target; it starts on the folder instead. A line a hand-made catalog holds is no longer reported as
+  \"in no script\" when a translator's file brings it back.
+
+### Changed: a variable from another file says where its group ends, and the strip fits a narrow dock
+
+- A variable row standing for a declaration in another file (a global used here) keeps End group
+  here greyed, and the item's hover says why: \"This variable lives in globals.gd; open that file to
+  end its group.\" An \"Open globals.gd\" item beside it opens that file. A group's end line dropped on
+  such a row moves nothing and says the same. Nothing here writes a group for a member another file
+  declares, even when this sheet has one of the same name.
+- The help strip under a selected variable keeps room for at least sixty characters of its sentence
+  at a narrow dock: the sheet's counts give way first, then its doors fold into one \"…\" menu holding
+  the same items. The whole sentence stays on the strip's hover, and widening the dock puts the
+  counts and the doors back.
+
+### Added: values players already saved keep loading through a rename and an update
+
+- Renaming a variable that has a Save choice (Auto, Load only or Manually) says in the Rename window
+  that values players already saved under the old name will not load, and offers Keep loading the
+  old name. Ticked, the generated block reads the old key once, while the new one has nothing saved
+  yet, inside the rename's own undo step:
+  `score = __remember_cfg.get_value(\"Player\", \"score\", __remember_cfg.get_value(\"Player\", \"points\", score))`,
+  and Load Game reads the old key the same way. Renaming the class says the same for its Auto and
+  Load only variables, whose section is the class name, and offers the same box. The stored keys do
+  not change; the line is plain code, reopens as the same choice and saves byte for byte.
+- The Project Doctor warns when two scripts without a `class_name` save a same-named variable into
+  the shared `\"vars\"` section of `user://remembered.cfg`, where they overwrite each other's value. The
+  fix it names is giving the script a `class_name`, and it says what that costs: values already saved
+  under `\"vars\"` stop loading for that script unless Keep loading the old name is ticked.
+- A script an older version wrote with Remember Between Runs (`_ef_recall_remembered`,
+  `_ef_store_remembered` and `__ef_remember_boot`) shows those variables in the Save studio as
+  Remembered (older style) instead of Never, with Update to Auto. Nothing changes until it is pressed;
+  then the three are rewritten as the Auto block in one undo step, with the same file and keys, so
+  values the old code saved load through the new block. A section the class has since left is kept
+  loading.
+
+### Changed: a function is edited in Godot's own Inspector, and branching first steps sit beside the head
+
+- Selecting a function's head hands it to Godot's Inspector: Name, Description, Returns, In Add
+  Action, Category, Waits, Shared, and under Parameters each one's name, Type and Default, a Move
+  Up button and Add Parameter. It replaces the function panel of the Properties bar. Each change is
+  one undo step (the Inspector's own history entry is handed back, so one Ctrl+Z still undoes one
+  change), and typed text - a rename above all, which renames every call - is written once, when
+  its field is left, not on every key. The Inspector cannot describe the choices of a dropdown one
+  by one, so those sentences are gone; parameters are numbered rather than named in its sections,
+  because the Inspector capitalises section names and a parameter is shown exactly as written.
+- A function whose first step branches (`return 1 if ready else 0`) now draws that step beside its
+  head like any other first step, with the branch rows as its sub-events and no empty \"Always\" row
+  between them, and a step's pattern chip comes up with its actions. 214 functions in the shipped
+  packs read this way now; the 11 whose first step holds a `match` keep their own row, because a
+  match can read as branches whose head belongs on a condition lane the function already uses.
+
+### Fixed: Insert keeps Godot's whole Recent list, and four smaller edges
+
+- Insert new object put its class first in Godot's own Create New Node Recent list and then kept
+  only fifteen lines of it, so every Insert dropped the rest of what Godot had written there. It
+  keeps every other line now; how long the list grows stays Godot's business.
+- An Add behaviour tile clips a long name, so its hover now leads with the name as the pack wrote
+  it, then the pitch. A behaviour made for a script class (a `class_name`) sits beside the object's
+  own kinds when the object's script is that class, and with \"any node\" otherwise, instead of among
+  the greyed kinds made for other objects; it was never greyed, only filed there.
+- A `##` comment written straight under `extends` that runs into a function or variable is that
+  member's doc comment, the way Godot reads it: Behaviour settings no longer shows it as the
+  behaviour's Description, and the head no longer reads it as the class description, so typing a
+  description never rewrites the function's doc line.
+- Adding a just-made behaviour to its object reads the pack list by path, and the first-open gate
+  names that list among what opening a sheet must leave uncompiled.
+
+### Fixed: the timing pins measure the work, and sit three times over what it measures
+
+- `tools/measure_editor_boot.gd` keeps session restore off while it times: the tabs it reopened came
+  from a `user://` file every checkout shares, so the first open measured whatever the last editor
+  closed on the machine had open. It prints the tabs the open left, and the budget test pins two.
+- The \"who else calls this\" rebuild appended to a caller list by copying it, once per name per
+  script; it appends in place now, and the test pins that a rebuild reads no script's text.
+- The shader and scene readers' cold pins read their fixture files once off the clock, and the
+  10,000-event smoke sets up a small sheet first, so a slow disk or the session's one-time builds
+  are not in the figure.
+- Every budget that flapped is re-measured on a quiet machine, in the repository and in a copy
+  outside OneDrive (the two agree within a few percent once files are cached), and set at three
+  times the median: the first open in a real editor 16,453 ms (budget 49,400, was 85,000), the bare
+  first tab 4,104 ms, the workspace build 10,177 ms, the 2,000-line script 6,704 ms and its rebuild
+  3,127 ms, the Doctor 29.7 s (budget 88.5 s; its two count pins are the regression gate), the
+  callers rebuild 127 ms, the pack rebuild 1,066 ms, the 10,000-event setup 9,148 ms.
+
+### Fixed: opening a real sheet stops compiling the Doctor, the dialogs and the Manual
+
+- The workspace's first open in a real editor measured 16,300 to 16,348 ms against 21,023 to 21,154
+  before (and 20,742 to 20,819 at the end of the first wave), three alternating quiet runs each in
+  a copy of the project outside OneDrive. The gate only ever opened a blank sheet, and the reading
+  of real rows reached four things a click needs: the share index asked the Project Doctor for the
+  project's script list (about five seconds of compiling for a list of paths), the Interop
+  section's \"stays code\" check read its file through the Doctor, a variable's default value was
+  written by the variable dialog (which names the parameters dialog and the picker), and the
+  read-next suggestion put the sheet through the Manual's search inside the wait.
+- The script list is one small walker the Doctor walks through too; \"stays code\" reads the file;
+  the default value's words and the variable-reference hint live with the variable owners; the
+  suggestion is worked out a frame after the rows are on screen.
+- Six more click-only dock helpers (the ask field, the function dialog, the head actions,
+  go-to-definition, add rows, variable groups) were built while the canvas and the strip were
+  wired, about a second between them; their signals now reach them when they fire.
+- The cold-boot gate opens an ordinary showcase script after the blank sheet, and names those six
+  helpers among what the first open must leave uncompiled.
+
 ### Fixed: a name stays as written in a window's table, and the last English lines are translated
 
 - A window's table translated its cells, so in a Japanese editor the Debugger listed an object
   called Player as プレイヤー and one called targets as 対象. A table's cells are never translated
   now (its column titles are), and the sentences that sat in one say themselves in the editor's
   language: the Debugger's empty tabs and trail notes, Loose Ends' kind headings.
-- The Words page's preset names and column heads, Compare With's Last save / Backup entries and the
-  Welcome window's Preferences card read in the editor's language.
+- The Words page's title, preset names and column heads, Compare With's Last save / Backup entries
+  and the Welcome window's Preferences card read in the editor's language.
 
 ### Fixed: the Theme Editor's preview reads, and two windows keep their foot in place
 
@@ -39,6 +523,7 @@ What changed in the build you have installed (v0.18.0), in the words the release
   sheet keeps them byte for byte, and the variable window's Columns field keeps them too.
 - The Inspector table's headers read each column's name as the code writes it (`max_jumps`, no
   longer Max Jumps).
+
 ### Fixed: the windows the canvas build touched speak the editor's language
 
 - Opened in a German or Japanese editor, Sheet Type, the Welcome window and the tour, Compare With,

@@ -9485,3 +9485,4 @@ Only two numbers share a line; this field and %s are drawn one per line.,Solo do
 %d entries,%d entradas
 "A class inside this script: its own variables and functions, folded under one head. Other code makes one with %s.new().","Una clase dentro de este script: sus propias variables y funciones, plegadas bajo una cabecera. Otro código crea una con %s.new()."
 extends %s,extends %s
+"%d compute shaders (.glsl) are imported on several threads at once, and Godot can crash part way through importing them, leaving the files after them unimported. Turn off Project Settings > Editor > Import > Use Multiple Threads.","%d shaders de cómputo (.glsl) se importan en varios hilos a la vez, y Godot puede bloquearse a mitad de la importación, dejando sin importar los archivos posteriores. Desactiva Configuración del proyecto > Editor > Importar > Usar varios hilos."

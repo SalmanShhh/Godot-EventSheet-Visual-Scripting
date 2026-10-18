@@ -9485,3 +9485,4 @@ Only two numbers share a line; this field and %s are drawn one per line.,一行�
 %d entries,%d 件
 "A class inside this script: its own variables and functions, folded under one head. Other code makes one with %s.new().",このスクリプトの中のクラス: 自分の変数と関数を、ひとつの見出しの下に折りたたんでいます。ほかのコードは %s.new() で作ります。
 extends %s,extends %s
+"%d compute shaders (.glsl) are imported on several threads at once, and Godot can crash part way through importing them, leaving the files after them unimported. Turn off Project Settings > Editor > Import > Use Multiple Threads.","%d 個のコンピュートシェーダー (.glsl) が複数のスレッドで同時にインポートされます。Godot はその途中でクラッシュすることがあり、その後のファイルがインポートされないまま残ります。プロジェクト設定 > エディター > インポート > 複数スレッドを使用 をオフにしてください。"

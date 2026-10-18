@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Fixed: what the reader adds to a connect read in place is written, and a class that moves bytes stays code alone
+
+- A connect read where it sits is an ordinary event on the canvas, but saving rebuilt it from its
+  actions alone: a condition, pick, node target or local the reader added to it was dropped without
+  a word. They are written now, inside the function the connect hands over (`if score < 3:` above
+  its lines), exactly as a trigger's conditions guard its handler. An else has no place on a
+  connect, so one set there is named in the save's warnings instead of vanishing.
+- A connect whose function holds ONE line with the `)` glued to it (`pressed.connect(func() -> void:`
+  then `start_game())`) was taken for an empty function and stayed code. It opens as an event like
+  the longer ones.
+- When putting every class of a file back did not reproduce the file, every class in it went back to
+  code. The classes are now tried again one at a time, so only the one that moved a byte stays code
+  and the others still read.
+- The Doctor warns when a project holds two or more compute shaders (`.glsl`, which Post Kit ships
+  six of) and imports on several threads, Godot's default: Godot 4.7 can crash part way through
+  importing them side by side and leave every file after them unimported. The warning names the
+  switch (Project Settings > Editor > Import > Use Multiple Threads), and the Post Kit guide says the
+  same.
+
 ### Added: a function written inside a call reads as what it is
 
 - A signal connected to a function written inside the connect (`start_button.pressed.connect(func()

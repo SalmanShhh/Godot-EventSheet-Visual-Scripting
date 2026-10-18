@@ -23,6 +23,16 @@ So if your project ships on Mobile or Compatibility, reach for **Screen FX** (th
 words, on a full-screen rectangle) and **Blend Modes** instead. If it ships on Forward+, this
 pack is cheaper than either, because the frame is already on the GPU when the effect runs.
 
+## Import the shaders on one thread
+
+The effects are compute shaders (six `.glsl` files in `effects/`), and Godot 4.7 can crash while
+importing several of them at once. With threaded import on, which is Godot's default, the first
+import of a project holding this pack can stop part way, and every file after the shaders stays
+unimported until the editor is opened again. Turn off **Project Settings > Editor > Import > Use
+Multiple Threads** (`editor/import/use_multiple_threads`) and the import finishes every time; it
+takes a little longer. The Doctor warns about this when the project has two or more compute shaders
+and the switch is on.
+
 ## Where this pack shines
 
 - **A hit that reads as a hit.** `Pulse Post Effect: vignette, 0.6, 0.35` is the whole
