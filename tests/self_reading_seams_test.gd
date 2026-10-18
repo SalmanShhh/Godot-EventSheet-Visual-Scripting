@@ -14,7 +14,8 @@
 #     than anchored as the function it also is;
 #   - a pack source marks each verb with its own `@ace_icon`, loops with `@ace_looping`, and leaves
 #     the call line to its builder - three lines the function could not carry back;
-#   - and when one function still re-emits differently, only it stays code, not the whole file.
+#   - and when the whole file still re-emits differently, only the functions at the seam where it
+#     first differs stay code, not the whole file.
 #
 # Every fixture must also come back byte for byte: a reading that moved a byte is not a reading.
 @tool
@@ -37,6 +38,11 @@ const PACK_SOURCE_VERBS: String = "extends Node\n\nvar host: Node = null\n\n## R
 
 const ONE_BAD_SEAM: String = "extends Node\n\nsignal died\n\n@export var health: int = 100\n\n\n## @ace_category Combat\nfunc heal(amount: int) -> void:\n\thealth += amount\n\n\nfunc is_dead() -> bool:\n\treturn health <= 0\n\n\nfunc get_health() -> int:\n\treturn health\n"
 
+## A line holding only a tab inside heal: every function passes its own check, and the whole file is
+## what fails to come back. The seam is the gap under heal, so heal and is_dead (the header below the
+## gap) stay code and get_health still opens as rows, where it used to take the whole file with it.
+const WHITESPACE_SEAM: String = "extends Node\n\nsignal died\n\n@export var health: int = 100\n\n\nfunc heal(amount: int) -> void:\n\thealth += amount\n\t\n\n\nfunc is_dead() -> bool:\n\treturn health <= 0\n\n\nfunc get_health() -> int:\n\treturn health\n"
+
 
 static func run() -> bool:
 	var passed: bool = true
@@ -57,6 +63,9 @@ static func run() -> bool:
 		# its own: heal no longer re-emits a second blank under it, so all three functions open.
 		["a doc line left as text above a function keeps its gap, and every function opens",
 			_summary(ONE_BAD_SEAM), {"functions": ["get_health", "heal", "is_dead"], "raw": [], "round_trips": true}],
+		["when the whole file fails, only the functions at its seam stay code",
+			_summary(WHITESPACE_SEAM), {"functions": ["get_health"],
+				"raw": ["func heal(amount: int) -> void:", "func is_dead() -> bool:"], "round_trips": true}],
 	])
 	var verbs: Dictionary = _functions_by_name(SUPPORT.reopen(PACK_SOURCE_VERBS))
 	var looping: EventFunction = verbs.get("each_entry") as EventFunction
