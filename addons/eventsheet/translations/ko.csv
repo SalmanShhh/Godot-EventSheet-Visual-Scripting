@@ -9486,3 +9486,6 @@ Only two numbers share a line; this field and %s are drawn one per line.,한 줄
 "A class inside this script: its own variables and functions, folded under one head. Other code makes one with %s.new().",이 스크립트 안의 클래스: 자기 변수와 함수를 하나의 머리글 아래에 접어 둡니다. 다른 코드는 %s.new()로 만듭니다.
 extends %s,extends %s
 "%d compute shaders (.glsl) are imported on several threads at once, and Godot can crash part way through importing them, leaving the files after them unimported. Turn off Project Settings > Editor > Import > Use Multiple Threads.","컴퓨트 셰이더(.glsl) %d개가 여러 스레드에서 동시에 임포트되며, Godot가 임포트 도중 충돌하여 그 뒤의 파일이 임포트되지 않은 채 남을 수 있습니다. 프로젝트 설정 > 에디터 > 임포트 > 여러 스레드 사용을 끄세요."
+"Off and not switchable: %s is left out of the game entirely, and Set group active cannot reach it. Tick Can be switched at runtime to turn it on from an event.","꺼짐이고 전환 불가: %s 은(는) 게임에서 완전히 빠지며, 그룹 활성 설정으로 닿을 수 없습니다. 이벤트에서 켜려면 실행 중 전환 가능을 체크하세요."
+Off at start; events can switch it on.,시작 시 꺼짐. 이벤트로 켤 수 있습니다.
+Can Be Switched At Runtime,실행 중 전환 가능

@@ -501,6 +501,9 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		# Filled as it opens, ticked at what the group says now.
 		menu.add_submenu_node_item("Runs On", _dock._group_runs_on_submenu, _dock.ROW_MENU_GROUP_RUNS_ON)
 		menu.add_check_item("Active On Start", _dock.ROW_MENU_GROUP_ENABLED)
+		# Its partner: whether an event can switch the group while the game runs. Beside Active On
+		# Start because the two answers only mean something together.
+		menu.add_check_item("Can Be Switched At Runtime", _dock.ROW_MENU_GROUP_SWITCHABLE)
 		menu.add_item("Open / Close Group", _dock.ROW_MENU_TOGGLE_GROUP_FOLD)
 		menu.add_item("Open All / Close All Groups", _dock.ROW_MENU_FOLD_ALL_GROUPS)
 		menu.add_separator()
@@ -795,6 +798,10 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 			var switched_group: EventGroup = _dock._context_row.source_resource as EventGroup if _dock._context_row != null else null
 			menu.set_item_disabled(group_enabled_index, switched_group == null)
 			menu.set_item_checked(group_enabled_index, switched_group != null and switched_group.enabled)
+			var switchable_index: int = menu.get_item_index(_dock.ROW_MENU_GROUP_SWITCHABLE)
+			if switchable_index >= 0:
+				menu.set_item_disabled(switchable_index, switched_group == null)
+				menu.set_item_checked(switchable_index, switched_group != null and switched_group.runtime_toggleable)
 		var row_toggle_index: int = menu.get_item_index(_dock.ROW_MENU_TOGGLE_ENABLED)
 		if row_toggle_index >= 0:
 			menu.set_item_text(

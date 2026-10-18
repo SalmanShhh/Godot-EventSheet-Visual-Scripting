@@ -9486,3 +9486,6 @@ Only two numbers share a line; this field and %s are drawn one per line.,Solo du
 "A class inside this script: its own variables and functions, folded under one head. Other code makes one with %s.new().","Una classe dentro questo script: le sue variabili e funzioni, raccolte sotto un'unica intestazione. Altro codice ne crea una con %s.new()."
 extends %s,extends %s
 "%d compute shaders (.glsl) are imported on several threads at once, and Godot can crash part way through importing them, leaving the files after them unimported. Turn off Project Settings > Editor > Import > Use Multiple Threads.","%d shader di calcolo (.glsl) vengono importati su più thread contemporaneamente, e Godot può bloccarsi a metà dell'importazione, lasciando non importati i file successivi. Disattiva Impostazioni progetto > Editor > Importazione > Usa più thread."
+"Off and not switchable: %s is left out of the game entirely, and Set group active cannot reach it. Tick Can be switched at runtime to turn it on from an event.","Disattivato e non commutabile: %s resta del tutto fuori dal gioco, e Imposta gruppo attivo non può raggiungerlo. Spunta Commutabile in esecuzione per accenderlo da un evento."
+Off at start; events can switch it on.,Disattivato all'avvio; gli eventi possono accenderlo.
+Can Be Switched At Runtime,Commutabile in esecuzione

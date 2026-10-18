@@ -109,7 +109,10 @@ static func cross_references(sheet: EventSheetResource, event_row: EventRow) -> 
 	var group: EventGroup = _group_holding(sheet.events, event_row)
 	if group == null:
 		return facts
-	if not group.enabled:
+	# Off and switchable is still compiled, behind a flag that starts false.
+	if not group.enabled and group.runtime_toggleable:
+		facts.append("The %s group it is in is switched off at start, so its rows only run once an event switches it on." % group.display_name())
+	elif not group.enabled:
 		facts.append("The %s group it is in is switched off, so none of its rows are compiled at all." % group.display_name())
 	elif group.runtime_toggleable:
 		var switched: PackedStringArray = _rows_switching(sheet.events, group.display_name())

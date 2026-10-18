@@ -194,6 +194,8 @@ const ROW_MENU_RENAME_FUNCTION := 66
 ## "Add an Inspector button for it…" on a function's own row: a tool's verbs (Bake, Clear) are its
 ## functions, so the button that runs one in the editor is made from the row that declares it.
 const ROW_MENU_ADD_TOOL_BUTTON := 67
+## "Can Be Switched At Runtime" on the group head, the tick beside Active On Start.
+const ROW_MENU_GROUP_SWITCHABLE := 68
 const GROUP_RUNS_ON_EVERYONE := 70
 const GROUP_RUNS_ON_HOST := 71
 const GROUP_RUNS_ON_OWNER := 72
@@ -4187,7 +4189,9 @@ func _toggle_group_enabled() -> void:
 	)
 	if changed:
 		_refresh_after_edit()
-		_mark_dirty("Group \"%s\" is %s." % [group.group_name, "active on start" if switched_on else "off - it and its rows compile out"])
+		_mark_dirty("Group \"%s\" is %s." % [group.group_name, "active on start" if switched_on
+			else "off at start - an event can switch it on" if group.runtime_toggleable
+			else "off - it and its rows compile out"])
 
 
 ## Open all / Close all groups: one gesture for the whole sheet, folding when anything is open

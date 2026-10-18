@@ -9486,3 +9486,6 @@ Only two numbers share a line; this field and %s are drawn one per line.,只有�
 "A class inside this script: its own variables and functions, folded under one head. Other code makes one with %s.new().",此脚本内的类：它自己的变量和函数，折叠在一个标题下。其他代码用 %s.new() 创建它。
 extends %s,extends %s
 "%d compute shaders (.glsl) are imported on several threads at once, and Godot can crash part way through importing them, leaving the files after them unimported. Turn off Project Settings > Editor > Import > Use Multiple Threads.","%d 个计算着色器 (.glsl) 正在多个线程上同时导入，Godot 可能在导入途中崩溃，使其后的文件保持未导入状态。请关闭 项目设置 > 编辑器 > 导入 > 使用多线程。"
+"Off and not switchable: %s is left out of the game entirely, and Set group active cannot reach it. Tick Can be switched at runtime to turn it on from an event.",关闭且不可切换：%s 被完全排除在游戏之外，设置分组激活也无法触及它。勾选 运行时可切换，即可从事件中开启它。
+Off at start; events can switch it on.,启动时关闭；事件可以将其开启。
+Can Be Switched At Runtime,运行时可切换

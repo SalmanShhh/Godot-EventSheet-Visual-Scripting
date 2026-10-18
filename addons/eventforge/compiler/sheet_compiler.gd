@@ -1921,7 +1921,10 @@ static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comm
 			into_events.append(row)
 		elif row is EventGroup:
 			var group: EventGroup = row as EventGroup
-			if group.enabled:
+			# A group that is off at start but can be switched at runtime stays in the game behind
+			# its flag, which starts false - leaving it out would leave Set group active nothing to
+			# turn on. Only a group that is off AND cannot be switched is left out.
+			if group.enabled or group.runtime_toggleable:
 				# Runtime-toggleable groups guard their events (nested groups inherit the
 				# INNERMOST toggleable guard - toggling the inner group wins, event-sheet-style).
 				var child_guard: String = runtime_guard
@@ -4217,9 +4220,9 @@ static func _collect_runtime_group_members(rows: Array) -> void:
 	for row: Variant in rows:
 		if row is EventGroup:
 			var group: EventGroup = row as EventGroup
-			if group.enabled and group.runtime_toggleable:
+			if group.runtime_toggleable:
 				# Must mirror _flatten_trigger_rows' guard exactly (same guard_token) or the
-				# declared member and the guard reads drift apart.
+				# declared member and the guard reads drift apart. Its value is Active on start.
 				var guard_name: String = "__group_%s_active" % guard_token(group.group_name)
 				var already_known: bool = false
 				for member_pair: Array in _runtime_group_members:
@@ -4227,7 +4230,7 @@ static func _collect_runtime_group_members(rows: Array) -> void:
 						already_known = true
 				if not already_known:
 					_runtime_group_members.append([guard_name, group.enabled])
-			if group.enabled:
+			if group.enabled or group.runtime_toggleable:
 				_collect_runtime_group_members(group.child_rows())
 
 

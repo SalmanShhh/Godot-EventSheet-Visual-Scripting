@@ -7933,6 +7933,7 @@ func _group_head_status_spans(group: EventGroup, folded: bool,
 			"badge_bg": reading_style.plain_chip_background_color,
 			"badge_fg": reading_style.primary_text_color if group.enabled else reading_style.muted_text_color,
 			"hover_note": EventSheetL10n.translate("Active on start.") if group.enabled \
+				else EventSheetL10n.translate("Off at start; events can switch it on.") if group.runtime_toggleable \
 				else EventSheetL10n.translate("Off - this group and its rows compile out.")
 		}
 	))

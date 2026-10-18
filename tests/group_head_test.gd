@@ -18,6 +18,8 @@
 class_name GroupHeadTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -28,6 +30,8 @@ static func run() -> bool:
 	all_passed = _test_dialog_fields() and all_passed
 	all_passed = _test_pinned_head() and all_passed
 	all_passed = _test_open_all_close_all() and all_passed
+	all_passed = _test_switch_truth() and all_passed
+	all_passed = _test_switchable_menu_item() and all_passed
 	if all_passed:
 		print("[PASS] group_head: the head reads in one line, and its body wears its bracket.")
 	return all_passed
@@ -345,6 +349,82 @@ static func _test_open_all_close_all() -> bool:
 
 
 # ── Fixtures + helpers ──
+
+
+# ── 7. Off and switchable, said truly ──
+
+
+## A group that is off at start but can be switched stays in the game behind a flag that starts false,
+## and the Edit group window says so; one that is off and cannot be switched is left out, and the
+## window warns instead of showing a code line the game never runs.
+static func _test_switch_truth() -> bool:
+	var reachable: String = _compiled_boss(true)
+	var left_out: String = _compiled_boss(false)
+	return SUPPORT.pins("group_head_test", [
+		["off but switchable keeps its flag, starting false",
+			reachable.contains("var __group_boss_active: bool = false"), true],
+		["and its events, behind that flag", reachable.contains("if __group_boss_active"), true],
+		["off and not switchable is left out", [left_out.contains("__group_boss_active"),
+			left_out.contains("(disabled group \"Boss\"")], [false, true]],
+		["the window's code line for off and switchable is the flag the compiler writes",
+			EventSheetQuickPromptDialogs.group_switch_truth("Boss", false, true),
+			{"code": "var __group_boss_active: bool = false", "warning": ""}],
+		["off and not switchable shows no code, only the warning",
+			EventSheetQuickPromptDialogs.group_switch_truth("Boss", false, false),
+			{"code": "", "warning": "Off and not switchable: Boss is left out of the game entirely, and Set group active cannot reach it. Tick Can be switched at runtime to turn it on from an event."}],
+		["an ordinary group that is on writes no flag and says nothing",
+			EventSheetQuickPromptDialogs.group_switch_truth("Boss", true, false), {"code": "", "warning": ""}],
+	])
+
+
+## The head's menu gains "Can Be Switched At Runtime" beside Active On Start, ticked at the group's
+## state, and choosing it flips the group in one edit.
+static func _test_switchable_menu_item() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	var group: EventGroup = _group("Boss", "The boss fight.")
+	group.events.append(_event())
+	sheet.events.append(group)
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(sheet)
+	var head: EventRowData = _row_for(dock._active_view(), group)
+	dock._context_row = head
+	dock._context_menus._build_row_context_menu(head)
+	dock._context_menus._configure_context_menu(dock._row_context_menu)
+	var menu: PopupMenu = dock._row_context_menu
+	var active_index: int = menu.get_item_index(EventSheetDock.ROW_MENU_GROUP_ENABLED)
+	var switch_index: int = menu.get_item_index(EventSheetDock.ROW_MENU_GROUP_SWITCHABLE)
+	var label: String = menu.get_item_text(switch_index) if switch_index >= 0 else ""
+	var ticked_before: bool = switch_index >= 0 and menu.is_item_checked(switch_index)
+	dock._quick_prompts.on_group_switchable_toggled()
+	var live: EventGroup = dock.get_current_sheet().events[0] as EventGroup
+	var passed: bool = SUPPORT.pins("group_head_test", [
+		["the menu offers the switch by name", label, "Can Be Switched At Runtime"],
+		["right after Active On Start", switch_index - active_index, 1],
+		["ticked at the group's state", ticked_before, false],
+		["choosing it makes the group switchable", live.runtime_toggleable, true],
+	])
+	dock.free()
+	return passed
+
+
+## A sheet holding one "Boss" group that is OFF at start, switchable or not, compiled.
+static func _compiled_boss(switchable: bool) -> String:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	var group: EventGroup = _group("Boss", "")
+	group.enabled = false
+	group.runtime_toggleable = switchable
+	var event: EventRow = EventRow.new()
+	event.trigger_provider_id = "Core"
+	event.trigger_id = "OnProcess"
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = "Core"
+	action.ace_id = "MoveAndSlide"
+	action.codegen_template = "move_and_slide()"
+	event.actions.append(action)
+	group.events.append(event)
+	sheet.events.append(group)
+	return str(SheetCompiler.compile(sheet).get("output", ""))
 
 
 static func _group(group_name: String, description: String) -> EventGroup:

@@ -200,6 +200,8 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 				_dock._open_project_find(usage_query)
 		_dock.ROW_MENU_GROUP_ENABLED:
 			_dock._toggle_group_enabled()
+		_dock.ROW_MENU_GROUP_SWITCHABLE:
+			_dock._quick_prompts.on_group_switchable_toggled()
 		_dock.ROW_MENU_EDIT_GROUP:
 			_dock._open_group_editor_for_context()
 		_dock.ROW_MENU_FOLD_ALL_GROUPS:

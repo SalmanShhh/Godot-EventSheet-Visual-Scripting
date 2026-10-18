@@ -8,6 +8,16 @@
   `color="#D9534F"` (the colour you picked) instead of the free-text tag, so a `.gd` sheet reopens in
   the colour it was saved in. A header that only carries the older tag (`color="orange"`) still reads
   back as that tag and re-saves byte for byte.
+- A group that is off at start but can be switched at runtime is in the game now, behind its flag
+  starting false (`var __group_boss_active: bool = false`), so Set group active can turn it on. It
+  used to be left out entirely, which left the action nothing to reach. Only a group that is off AND
+  cannot be switched is left out, as before.
+- The Edit group window says that before you press Apply: off and not switchable shows the warning
+  "Boss is left out of the game entirely, and Set group active cannot reach it" in place of the code
+  line it used to show for it, and off and switchable shows the flag line the compiler really writes.
+  The head's switch reads "Off at start; events can switch it on." for such a group.
+- The group head's menu has "Can Be Switched At Runtime" beside "Active On Start", ticked at the
+  group's state; choosing it is one undo step.
 
 ### Fixed: what the reader adds to a connect read in place is written, and a class that moves bytes stays code alone
 

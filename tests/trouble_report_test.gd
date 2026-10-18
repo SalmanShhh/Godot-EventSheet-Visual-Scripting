@@ -69,11 +69,15 @@ static func _run_why_facts() -> bool:
 		PackedStringArray(["The Damage group it is in can be switched off while the game runs, and a row switches it off."])) and all_passed
 
 	group.enabled = false
+	# Off at start but switchable is still in the game, behind a flag that starts false.
+	all_passed = _check("a switchable group off at authoring starts off and waits for an event",
+		EventSheetWhyPanel.cross_references(sheet, row),
+		PackedStringArray(["The Damage group it is in is switched off at start, so its rows only run once an event switches it on."])) and all_passed
+	group.runtime_toggleable = false
 	all_passed = _check("a group switched off at authoring is the plainer fact",
 		EventSheetWhyPanel.cross_references(sheet, row),
 		PackedStringArray(["The Damage group it is in is switched off, so none of its rows are compiled at all."])) and all_passed
 	group.enabled = true
-	group.runtime_toggleable = false
 	all_passed = _check("an ordinary group is nothing to report",
 		EventSheetWhyPanel.cross_references(sheet, row), PackedStringArray()) and all_passed
 

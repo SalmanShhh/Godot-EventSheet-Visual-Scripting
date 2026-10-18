@@ -9486,3 +9486,6 @@ Only two numbers share a line; this field and %s are drawn one per line.,一行�
 "A class inside this script: its own variables and functions, folded under one head. Other code makes one with %s.new().",このスクリプトの中のクラス: 自分の変数と関数を、ひとつの見出しの下に折りたたんでいます。ほかのコードは %s.new() で作ります。
 extends %s,extends %s
 "%d compute shaders (.glsl) are imported on several threads at once, and Godot can crash part way through importing them, leaving the files after them unimported. Turn off Project Settings > Editor > Import > Use Multiple Threads.","%d 個のコンピュートシェーダー (.glsl) が複数のスレッドで同時にインポートされます。Godot はその途中でクラッシュすることがあり、その後のファイルがインポートされないまま残ります。プロジェクト設定 > エディター > インポート > 複数スレッドを使用 をオフにしてください。"
+"Off and not switchable: %s is left out of the game entirely, and Set group active cannot reach it. Tick Can be switched at runtime to turn it on from an event.",オフで切り替え不可: %s はゲームから完全に外され、グループを有効にする で届きません。イベントからオンにするには 実行中に切り替え可能 にチェックを入れてください。
+Off at start; events can switch it on.,開始時はオフ。イベントでオンにできます。
+Can Be Switched At Runtime,実行中に切り替え可能

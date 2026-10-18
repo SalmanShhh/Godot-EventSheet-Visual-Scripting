@@ -88,6 +88,8 @@ var _group_runs_in: OptionButton = null
 var _group_runs_in_choices: Array[Dictionary] = []
 var _group_color_button: ColorPickerButton = null
 var _group_help_strip: EventSheetPopupUI.HelpStrip = null
+## The strip's warning line, filled only while the group is off and cannot be switched.
+var _group_off_line: Label = null
 var _group_edit_target: EventGroup = null
 ## The colour the swatch opened on. Apply writes a colour only when the swatch moved off it, so a
 ## group that deliberately carries none does not come back tinted just for having been edited.
@@ -210,6 +212,11 @@ func _build_group_edit_dialog() -> void:
 			"body": str(choice.get("description", ""))
 		}
 	)
+	# The one line that warns rather than describes, in the strip's amber: a group that is off and
+	# cannot be switched is not in the game at all.
+	_group_off_line = _group_help_strip.add_line("", true)
+	_group_off_line.add_theme_color_override("font_color",
+		EventSheetPopupUI.tone_color(EventSheetPopupUI.HelpStrip.TONE_WARNING))
 	box.add_child(_group_help_strip)
 
 
@@ -222,7 +229,7 @@ static func _group_field_help(field: String) -> String:
 		"Description":
 			return "One line beside the name, on the head itself - and still there when the group is folded."
 		"Active on start":
-			return "Off compiles the whole group out: nothing inside it runs, and nothing inside it is emitted."
+			return "Off leaves the whole group out of the game - unless it can be switched at runtime, when it starts off and an event can turn it on."
 		"Can be switched at runtime":
 			return "Adds the flag Set group active flips, so this group can be turned on and off while the game runs."
 		"Colour":
@@ -241,6 +248,17 @@ func on_group_runs_on_chosen(menu_id: int) -> void:
 		return
 	apply_group_edit(group, group.display_name(), group.description,
 		{"runs_on": str(_dock.GROUP_RUNS_ON_VALUES[menu_id])})
+
+
+## Flips "Can be switched at runtime" from the head's menu: one undo step, through the dialog's own
+## Apply path, so the menu and the window can never write the fact two ways.
+func on_group_switchable_toggled() -> void:
+	var group: EventGroup = _dock._context_group()
+	if group == null:
+		_dock._set_status("Right-click a group head to say whether events can switch it.", true)
+		return
+	apply_group_edit(group, group.display_name(), group.description,
+		{"runtime_toggleable": not group.runtime_toggleable})
 
 
 ## Once a group says who runs it, the same test written on one of its own events is the group's
@@ -298,12 +316,17 @@ func _refresh_group_reading() -> void:
 		reads += "  %s" % runs_in
 	# The IN CODE line says every line this dialog is about to write: the flag a switchable group
 	# declares, and the guard a runs_on group wraps its events in. Either alone is the whole answer.
+	# A group that is off and cannot be switched writes nothing at all, so it shows no code and the
+	# warning line says what that means instead.
+	var truth: Dictionary = group_switch_truth(name_text, _group_enabled_check.button_pressed,
+		_group_runtime_check.button_pressed)
+	_group_help_strip.set_line(_group_off_line, str(truth["warning"]))
+	if not str(truth["warning"]).is_empty():
+		_group_help_strip.set_reading(reads)
+		return
 	var code_lines: PackedStringArray = PackedStringArray()
-	if _group_runtime_check.button_pressed:
-		code_lines.append("var __group_%s_active: bool = %s" % [
-			SheetCompiler.guard_token(name_text),
-			"true" if _group_enabled_check.button_pressed else "false"
-		])
+	if not str(truth["code"]).is_empty():
+		code_lines.append(str(truth["code"]))
 	var guard_line: String = _runs_on_code_line(runs_on)
 	if not guard_line.is_empty():
 		code_lines.append(guard_line)
@@ -311,6 +334,20 @@ func _refresh_group_reading() -> void:
 	if not mode_guard.is_empty():
 		code_lines.append("if %s: …" % mode_guard)
 	_group_help_strip.set_reading(reads, "  ".join(code_lines))
+
+
+## What the two on/off answers really compile to, said before Apply. {"code": the flag line the
+## compiler writes for a switchable group (starting at Active on start), "warning": the sentence for
+## a group that is off and cannot be switched - the compiler leaves that one out entirely, so there is
+## no line to show and nothing an event could turn on}. Static and pure, so it is pinned without a
+## dialog.
+static func group_switch_truth(group_name: String, enabled: bool, switchable: bool) -> Dictionary:
+	if not enabled and not switchable:
+		return {"code": "", "warning": EventSheetL10n.translate("Off and not switchable: %s is left out of the game entirely, and Set group active cannot reach it. Tick Can be switched at runtime to turn it on from an event.") % group_name}
+	if not switchable:
+		return {"code": "", "warning": ""}
+	return {"code": "var __group_%s_active: bool = %s" % [SheetCompiler.guard_token(group_name),
+		"true" if enabled else "false"], "warning": ""}
 
 
 ## One-shot apply: nulls the target first so a text-submit + dialog-OK pair can never double-apply.
