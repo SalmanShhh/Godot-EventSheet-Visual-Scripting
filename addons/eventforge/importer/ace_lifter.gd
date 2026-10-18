@@ -762,6 +762,12 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 		# Reconstruct event groups from the recovered `## @ace_group` declarations + the per-row `# @group:`
 		# tags the lift captured (transient meta on the rows). A no-op when the source declares no groups.
 		lifted_events = _reconstruct_groups(lifted_events, _recover_group_declarations(source))
+		# Which headers belonged to a group the file opened with, so a save can tell a deleted
+		# group's header (removed) from one that never had rows to open (left as written).
+		var rebuilt_slugs: PackedStringArray = PackedStringArray()
+		_rebuilt_group_slugs(lifted_events, rebuilt_slugs)
+		if not rebuilt_slugs.is_empty():
+			sheet.set_meta(SheetCompiler.SOURCE_GROUP_SLUGS_META, rebuilt_slugs)
 		for event: Variant in lifted_events:
 			sheet.events.append(event)
 		for comment: Variant in lifted_comments:
@@ -1038,6 +1044,7 @@ static func _revert_lift(sheet: EventSheetResource, backup: Array[Resource], fun
 	sheet.events = backup
 	sheet.functions = functions_backup
 	sheet.remove_meta(SheetCompiler.TRAILING_BLANKS_META)
+	sheet.remove_meta(SheetCompiler.SOURCE_GROUP_SLUGS_META)
 	if boundary != null:
 		boundary.code = boundary_code
 	for peeled: Array in peeled_rows:
@@ -1150,30 +1157,11 @@ static func _recover_group_declarations(source: String) -> Dictionary:
 	if decl_regex.compile("(?m)^## @ace_group\\((.*)\\)\\s*$") != OK:
 		return registry
 	for decl_match: RegExMatch in decl_regex.search_all(source):
-		var fields: Dictionary = _parse_group_fields(decl_match.get_string(1))
+		var fields: Dictionary = SheetCompiler.GroupHeaders.parse_fields(decl_match.get_string(1))
 		var slug: String = str(fields.get("uid", ""))
 		if not slug.is_empty():
 			registry[slug] = fields
 	return registry
-
-
-## Parses an @ace_group field list (`uid="x", name="y", collapsed=true`) into a typed dict: quoted
-## values become Strings, bare true/false become bools. Tolerant of order + missing optional fields.
-static func _parse_group_fields(inner: String) -> Dictionary:
-	var fields: Dictionary = {}
-	var field_regex: RegEx = RegEx.new()
-	if field_regex.compile("([a-z_]+)=(\"[^\"]*\"|true|false)") != OK:
-		return fields
-	for field_match: RegExMatch in field_regex.search_all(inner):
-		var key: String = field_match.get_string(1)
-		var raw: String = field_match.get_string(2)
-		if raw == "true":
-			fields[key] = true
-		elif raw == "false":
-			fields[key] = false
-		else:
-			fields[key] = raw.substr(1, raw.length() - 2)  # strip the surrounding quotes
-	return fields
 
 
 ## Rebuilds EventGroup resources from the flat lifted event list using the recovered `## @ace_group`
@@ -1190,17 +1178,11 @@ static func _reconstruct_groups(events: Array, registry: Dictionary) -> Array:
 	var parent_of: Dictionary = {}   # slug -> parent slug ("" = top level)
 	for slug: String in registry:
 		var fields: Dictionary = registry[slug]
-		var group: EventGroup = EventGroup.new()
-		group.group_name = str(fields.get("name", slug))
-		group.name = group.group_name
-		group.description = str(fields.get("description", ""))
-		group.read_header_color(str(fields.get("color", "")))
-		group.collapsed = bool(fields.get("collapsed", false))
-		group.expanded = not group.collapsed
-		group.runtime_toggleable = bool(fields.get("toggleable", false))
-		group.enabled = bool(fields.get("enabled", true))
-		group.runs_on = str(fields.get("runs_on", ""))
-		group.runs_in = str(fields.get("runs_in", ""))
+		# Read through the one reading of a header the compiler also asks, so "does this header still
+		# say what its group says" can never read a field differently from opening the file.
+		var group: EventGroup = SheetCompiler.GroupHeaders.group_from_fields(fields)
+		# The uid this group's header line was read from: a renamed group still finds its own line.
+		group.set_meta(SheetCompiler.SOURCE_GROUP_SLUG_META, slug)
 		groups[slug] = group
 		parent_of[slug] = str(fields.get("parent", ""))
 	var output: Array = []
@@ -1227,6 +1209,16 @@ static func _reconstruct_groups(events: Array, registry: Dictionary) -> Array:
 				(groups[parent_slug] as EventGroup).events.append(groups[chain_slug])
 			chain_slug = parent_slug
 	return output
+
+
+## The uids of every group the lift rebuilt, read off the groups in `rows` (nested ones included).
+static func _rebuilt_group_slugs(rows: Array, into: PackedStringArray) -> void:
+	for row: Variant in rows:
+		if row is EventGroup:
+			var source_slug: String = str((row as EventGroup).get_meta(SheetCompiler.SOURCE_GROUP_SLUG_META, ""))
+			if not source_slug.is_empty():
+				into.append(source_slug)
+			_rebuilt_group_slugs((row as EventGroup).events, into)
 
 
 ## ONE emitted line, read back the way opening the file would read it - the ACE row it lifts to, or

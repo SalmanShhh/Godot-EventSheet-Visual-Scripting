@@ -39,11 +39,19 @@ const SpecText := preload("res://addons/eventforge/registration/annotation_spec_
 const Spellings := preload("res://addons/eventforge/compiler/compiler_spellings.gd")
 ## What a variable's Save choice compiles to, and the importer's way of reading it back.
 const SaveChoices := preload("res://addons/eventforge/compiler/save_choices.gd")
+## A group's header line and switch flag in a script that is its own sheet, kept in step with the group.
+const GroupHeaders := preload("res://addons/eventforge/compiler/group_headers.gd")
 
 const VERSION: String = "0.18.0"
 ## How many blank lines an opened file ended with under its last lifted function, as transient meta
 ## on the sheet. The lift writes it and the external path writes the lines back.
 const TRAILING_BLANKS_META: StringName = &"__source_trailing_blanks"
+## The uid an opened group's header line was read from, as transient meta on the EventGroup, so a
+## renamed group still finds its own line (the group headers pass, compiler/group_headers.gd).
+const SOURCE_GROUP_SLUG_META: StringName = &"__source_group_slug"
+## Every uid the opened file's groups were read from, as transient meta on the sheet: a header whose
+## uid is here and whose group is gone belonged to a group that was deleted.
+const SOURCE_GROUP_SLUGS_META: StringName = &"__source_group_slugs"
 ## The doc line above the generated _validate_property. Frozen: files already carry it, and the
 ## importer reads it to know the function below is the generated one.
 const INSPECTOR_CONDITIONS_DOC: String = "## Inspector conditions (Show If / Lock Unless) — generated; edit via the Variable dialog."
@@ -1010,10 +1018,11 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	# sheet-native compiles only, and their flags stay off for this whole path.
 	#
 	# Event groups dissolve into the trigger sections here too, so refill the per-compile slug map for
-	# THIS sheet. The `## @ace_group` declarations ride along verbatim in the preserved prelude rows -
-	# we only need _group_slugs populated so _emit_event_body re-emits the `# @group:` markers (else an
-	# imported grouped sheet would lose them on the next save).
-	_collect_groups(sheet.events, [], {}, _group_slugs)
+	# THIS sheet, so _emit_event_body re-emits the `# @group:` markers (else an imported grouped sheet
+	# would lose them on the next save). The `## @ace_group` declarations ride along verbatim in the
+	# preserved prelude rows, and the group headers pass below rewrites only the ones whose group changed.
+	var group_decls: Array = []
+	_collect_groups(sheet.events, group_decls, {}, _group_slugs)
 	if not sheet.includes.is_empty() or not sheet.uses_addons.is_empty() or not sheet.requires_behaviors.is_empty():
 		(result["warnings"] as Array).append("GDScript-backed sheets ignore Includes/Uses/Requires - the .gd file is the source of truth (write the equivalent code directly).")
 	var lines: PackedStringArray = PackedStringArray()
@@ -1190,6 +1199,10 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	# counts them rather than keeping a row for them; absent, the file ends on its final newline.
 	for _trailing_blank: int in range(maxi(int(sheet.get_meta(TRAILING_BLANKS_META, 0)), 0)):
 		lines.append("")
+	# The groups' header lines and switch flags, in step with the groups: an untouched header stays
+	# as the file wrote it, a changed one is rewritten, and every flag the code above reads is declared.
+	_collect_runtime_group_members(sheet.events)
+	lines = GroupHeaders.keep_in_step(lines, sheet, group_decls, _runtime_group_members, source_map)
 	_insert_missing_member_declarations(lines, sheet, result.get("source_map", []))
 	_insert_provider_member_declarations(lines, result)
 	_keep_distance_travelled(lines, sheet, result)

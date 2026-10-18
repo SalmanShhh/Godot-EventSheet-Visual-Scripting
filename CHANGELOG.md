@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Fixed: editing a group in a `.gd` sheet reaches the file
+
+- A `.gd` opened as a sheet kept its groups' `## @ace_group(...)` header lines exactly as it opened
+  them, so every change to a group there - colour, description, folded, who runs it, which mode,
+  rename, Active On Start, Can Be Switched At Runtime, a group added or deleted - was left out of the
+  save and gone on reopen. Turning on Can Be Switched At Runtime was worse: the rows were guarded by
+  `if __group_x_active:` with no `var __group_x_active` anywhere, so the saved script did not parse.
+- Saving now rewrites the header line of each group that changed (an untouched header, including one
+  spelled by hand, stays byte for byte as written), adds the header of a new group, removes the header
+  of a deleted one, and keeps the switch flag in step: added when a group becomes switchable, renamed
+  with its group, its starting value following Active On Start, removed when the group can no longer
+  be switched. A renamed group's `# @group:` row tags follow the new name, so it reopens whole.
+
 ### Changed: a group head reads the same in every look, and a group's colour and switch say what is true
 
 - One group head in every look, Editor Native included: one line with the fold arrow, the folder
