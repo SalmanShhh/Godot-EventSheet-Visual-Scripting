@@ -84,10 +84,12 @@ static func match_statement(lines: PackedStringArray, index: int) -> Dictionary:
 			if open_brackets <= 0:
 				break
 			cursor += 1
-		if cursor >= lines.size() or cursor == index + 1:
+		if cursor >= lines.size():
 			return {}
 		if lines[cursor] == close:
-			if open_brackets != 1:
+			# An aligned close straight after the open is an empty body; a GLUED close there is a
+			# one-statement body, which is the common spelling and reads like any other.
+			if open_brackets != 1 or cursor == index + 1:
 				return {}
 			parts.merge({"open": open, "close": close, "inline": false, "glued": false, "inline_body": "",
 				"body_start": index + 1, "body_end": cursor, "next": cursor + 1})

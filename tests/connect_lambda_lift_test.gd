@@ -83,6 +83,20 @@ static func run() -> bool:
 	ok = _check("and it round-trips byte-identically",
 		_roundtrip(typed_sheet, "user://_lambda_typed.gd"), typed_source) and ok
 
+	# ── The same glued paren on a ONE-statement body. The close sits on the line after the open,
+	# which the empty-body guard used to take for `connect(func():` with nothing in it ──
+	var glued_one_source: String = "extends Control\n\n\nfunc _ready() -> void:\n\t$Play.pressed.connect(func() -> void:\n\t\tstart_game())\n\n\nfunc start_game() -> void:\n\tpass\n"
+	var glued_one_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(glued_one_source)
+	var glued_one_events: Array = _events(glued_one_sheet)
+	ok = _check("a one-statement lambda with a glued paren lifts to one event",
+		[glued_one_events.size(), (glued_one_events[0] as EventRow).trigger_id if glued_one_events.size() == 1 else "",
+			(glued_one_events[0] as EventRow).actions.size() if glued_one_events.size() == 1 else 0],
+		[1, "signal:pressed", 1]) and ok
+	ok = _check("and it round-trips byte-identically too",
+		_roundtrip(glued_one_sheet, "user://_lambda_glued_one.gd"), glued_one_source) and ok
+	ok = _check("an aligned close straight after the open is still an empty body, left as code",
+		EventForgeConnectLambdaLift.match_statement(PackedStringArray(["\tb.pressed.connect(func():", "\t)"]), 0), {}) and ok
+
 	# ── In any other function, and inside a branch, wherever the connect sits ──
 	var anywhere_source: String = "extends Control\n\nvar score: int = 0\n\n\nfunc build_row(button: Button) -> void:\n\tbutton.text = \"Play\"\n\tbutton.pressed.connect(func() -> void:\n\t\tscore += 1\n\t\tif score > 3:\n\t\t\tbutton.disabled = true\n\t)\n\tif score == 0:\n\t\tbutton.focus_entered.connect(func() -> void: score = 1)\n\tprint(score)\n"
 	var anywhere_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(anywhere_source)
@@ -113,7 +127,48 @@ static func run() -> bool:
 	ok = _check("the grown lambda is written as a block",
 		grown.contains("$Play.pressed.connect(func():\n\t\tstart_game()\n\t\tprint(\"here\")\n\t)"), true) and ok
 
+	# ── A condition added to a connect read IN PLACE is written, inside the lambda, the way a
+	# trigger's conditions guard its handler. The row looks like every other event, so the reader
+	# will add one - and the compiler used to rebuild it from the actions alone and drop it ──
+	var guarded_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(first_source)
+	var guarded: Array = _in_place_rows(guarded_sheet)
+	if guarded.size() == 1:
+		var gate: ACECondition = ACECondition.new()
+		gate.provider_id = "Core"
+		gate.ace_id = "ExpressionIsTrue"
+		gate.codegen_template = "{expression}"
+		gate.params = {"expression": "score < 3"}
+		(guarded[0] as EventRow).conditions.append(gate)
+	ok = _check("the added condition guards the lambda's body",
+		_roundtrip(guarded_sheet, "user://_lambda_guarded.gd").contains(
+			"\tbutton.pressed.connect(func() -> void:\n\t\tif score < 3:\n\t\t\tscore += 1\n\t)\n"), true) and ok
+	var else_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(first_source)
+	var else_rows: Array = _in_place_rows(else_sheet)
+	if else_rows.size() == 1:
+		(else_rows[0] as EventRow).else_mode = EventRow.ElseMode.ELSE
+	else_sheet.external_source_path = "user://_lambda_else.gd"
+	ok = _check("an else, which has no place on a connect, is named in the warnings instead of vanishing",
+		Array(SheetCompiler.compile(else_sheet, "user://_lambda_else.gd").get("warnings", [])).has(
+			"A signal connected where it sits cannot be an else - the else was not written."), true) and ok
+
 	return ok
+
+
+## Every event read in place anywhere in the sheet's functions, the rows themselves, in file order.
+static func _in_place_rows(sheet: EventSheetResource) -> Array:
+	var found: Array = []
+	var pending: Array = []
+	for function_entry: Variant in sheet.functions:
+		if function_entry is EventFunction:
+			pending.append_array((function_entry as EventFunction).events)
+	while not pending.is_empty():
+		var row: Variant = pending.pop_front()
+		if not (row is EventRow):
+			continue
+		if (row as EventRow).has_meta(SheetCompiler.LAMBDA_IN_PLACE_META):
+			found.append(row)
+		pending = (row as EventRow).sub_events.duplicate() + pending
+	return found
 
 
 static func _events(sheet: EventSheetResource) -> Array:

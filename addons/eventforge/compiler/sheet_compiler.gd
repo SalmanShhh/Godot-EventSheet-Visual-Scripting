@@ -2025,14 +2025,25 @@ static func _emit_lambda_connect(body_events: Array, spelling: Dictionary, lines
 ## A connect lambda read where it sits, written back there: the kept spelling re-indented to this
 ## depth, and the event's own actions and sub-events as the body - so the row can be dragged to
 ## another depth and still write a connect that parses.
+## The row is an ordinary event on the canvas, so whatever the reader adds to it is written too: its
+## conditions, picks, node target and locals guard the body INSIDE the lambda, exactly as a trigger's
+## conditions guard its handler. Only an else has no place there (the connect is a statement, not a
+## branch), and that one is named in the warnings instead of vanishing.
 static func _emit_lambda_in_place(event_row: EventRow, depth: int, lines: PackedStringArray,
 		source_map: Array, warnings: Array) -> void:
 	var spelling: Dictionary = (event_row.get_meta(LAMBDA_IN_PLACE_META, {}) as Dictionary).duplicate()
 	spelling["open"] = "\t".repeat(depth) + str(spelling.get("open", "")).lstrip("\t")
 	if not bool(spelling.get("inline", false)) and not bool(spelling.get("glued", false)):
 		spelling["close"] = "\t".repeat(depth) + ")"
+	if event_row.else_mode != EventRow.ElseMode.NONE:
+		warnings.append("A signal connected where it sits cannot be an else - the else was not written.")
 	var body_row: EventRow = EventRow.new()
 	body_row.event_uid = event_row.event_uid
+	body_row.conditions = event_row.conditions
+	body_row.condition_mode = event_row.condition_mode
+	body_row.pick_filters = event_row.pick_filters
+	body_row.with_node_target = event_row.with_node_target
+	body_row.local_variables = event_row.local_variables
 	body_row.actions = event_row.actions
 	body_row.sub_events = event_row.sub_events
 	_emit_lambda_connect([body_row], spelling, lines, source_map, warnings)
