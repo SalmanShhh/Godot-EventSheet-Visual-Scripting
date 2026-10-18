@@ -4,6 +4,14 @@
 
 ### Changed: a group head reads the same in every look, and a group's colour and switch say what is true
 
+- One group head in every look, Editor Native included: one line with the fold arrow, the folder
+  mark, the title, the muted description, the counts and the switch mark (◍ ◌ ◎). Editor Native's
+  two-line head and its Active tick box are retired, and so is the `group_head_two_line` theme token
+  (a saved theme that still names it loads as before; the line is ignored). A long description now
+  shortens with an ellipsis instead of being cut mid-letter, and reads whole on hover.
+- A group's bracket ends in a slim tick in the group's colour where its body ends, so the bottom of a
+  group is as visible as its side. The "+ Add event to '...'" row at the end of a group is
+  translated now.
 - The colour a group shows is the colour its `.gd` keeps: the `## @ace_group(...)` header now writes
   `color="#D9534F"` (the colour you picked) instead of the free-text tag, so a `.gd` sheet reopens in
   the colour it was saved in. A header that only carries the older tag (`color="orange"`) still reads

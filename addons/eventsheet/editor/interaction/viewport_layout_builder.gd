@@ -133,8 +133,6 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	# Comments read as an event-sheet full-width banner: text starts at the row's left edge (no
 	# badge-column indent) and the cell fills the row (see the width branch below).
 	var non_event_line_x: Dictionary = {}
-	# Where a group head's name started, for a description laid out under it.
-	var group_title_x: float = -1.0
 	# Comment wrapping: each logical line wraps to the row width, so a span can be several
 	# visual lines tall. Precompute, per span, the visual-line offset it starts at and how
 	# many visual lines it spans, so spans stack without overlapping (height matches the
@@ -190,11 +188,6 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 			var flow_line: int = int(metadata.get("line_index", 0))
 			span_y = row_top + scale_pad + group_v_offset + float(flow_line) * line_height + 3.0
 			span_x = float(non_event_line_x.get(flow_line, non_event_origin_x))
-			# A two-line group head's description starts under the name rather than under the folder
-			# mark, so the two lines read as one title block.
-			var under_title: bool = bool(metadata.get("flow_under_title", false)) and group_title_x >= 0.0
-			if under_title and not non_event_line_x.has(flow_line):
-				span_x = group_title_x
 			# Comment spans stack by accumulated WRAPPED height, not raw line index, so a
 			# multi-line wrapped span pushes the next one down past its full height.
 			if is_comment_row and span_index < comment_line_tops.size():
@@ -365,8 +358,6 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 			span.rect = Rect2(span_x, span_y, span_width + 2.0, float(span_visual_lines) * line_height - 6.0)
 		# Store absolute X for the next span start on this line.
 		var next_span_start_x: float = span.rect.end.x + _viewport._get_span_gap(span)
-		if bool(metadata.get("group_title", false)):
-			group_title_x = span.rect.position.x
 		if lane_divider_x <= 0.0:
 			# A right-aligned span sits outside the sentence's run, so it never moves the cursor the
 			# spans after it start from.

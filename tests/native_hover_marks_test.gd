@@ -1,6 +1,6 @@
 @tool
 extends RefCounted
-# Godot EventSheets - the hover links, the selected gutter, the two-line group head and the status
+# Godot EventSheets - the hover links, the selected gutter, the one group head and the status
 # bar's sheet counts
 #
 # Every pin here is a VALUE the paint is decided by, because all four are drawing on top of rows the
@@ -9,15 +9,13 @@ extends RefCounted
 #      and show on the hovered event, the selected one and under an empty lane - nowhere else;
 #   2. a selected gutter's ink reads on its fill, and the fill reaches across the trigger icon's slot
 #      for a top-level event and only over the slot (when an icon is there) for a nested one;
-#   3. a theme that asks for the two-line group head moves the description under the name, in
-#      italics, draws the switch as an Active tick and drops the folder mark and the echo of its
-#      line - the same words otherwise - and a theme that does not ask leaves the head as it was;
+#   3. every look draws the one group head: one line, the folder mark, the title, the description
+#      beside it (shortened, whole on hover), the counts and the switch glyph - Editor Native too;
 #   4. the status bar counts the rows drawn amber and the sheet's events in the words a group head
 #      uses.
 
 const SUPPORT := preload("res://tests/support.gd")
 const NativeRowMarks := preload("res://addons/eventsheet/editor/interaction/native_row_marks.gd")
-const NativeHeadMarks := preload("res://addons/eventsheet/editor/interaction/native_head_marks.gd")
 const TEST_NAME := "native_hover_marks_test"
 const NATIVE_THEME := "res://addons/eventsheet/themes/editor_native_theme.tres"
 const CLASSIC_THEME := "res://addons/eventsheet/themes/classic_sheet_theme.tres"
@@ -27,7 +25,7 @@ static func run() -> bool:
 	var ok: bool = true
 	ok = _test_hover_links() and ok
 	ok = _test_selected_gutter() and ok
-	ok = _test_two_line_group_head() and ok
+	ok = _test_one_group_head() and ok
 	ok = _test_status_counts() and ok
 	return ok
 
@@ -93,36 +91,22 @@ static func _test_selected_gutter() -> bool:
 	])
 
 
-static func _test_two_line_group_head() -> bool:
+static func _test_one_group_head() -> bool:
 	var native: Dictionary = _group_head(NATIVE_THEME)
 	var classic: Dictionary = _group_head(CLASSIC_THEME)
 	var native_switchable: Dictionary = _group_head(NATIVE_THEME, true)
-	var classic_switchable: Dictionary = _group_head(CLASSIC_THEME, true)
 	return SUPPORT.pins(TEST_NAME, [
-		["a switchable group's two-line head is count then tick, no ring between",
-			native_switchable.get("ring"), false],
-		["the tick's hover says it can be switched", str(native_switchable.get("tick_hover", "")).contains(
-			EventSheetL10n.translate("Can be switched at runtime - Set group active / Group is active.")), true],
-		["the one-line head keeps its ring", classic_switchable.get("ring"), true],
-		["the starter asks for the two-line head", (load(NATIVE_THEME) as EventSheetEditorStyle).get_event_style().group_head_two_line, true],
-		["the derived native look asks for it too", EventSheetEditorThemeDeriver.native_style(
-			Color("#363d4a")).get_event_style().group_head_two_line, true],
-		["the token defaults to the one-line head", EventSheetEventStyle.new().group_head_two_line, false],
-		["two lines: the description sits on the second", native.get("description_line"), 1],
-		["laid out under the name", native.get("description_x"), native.get("title_x")],
-		["in italics", native.get("description_italic"), true],
-		["the head is two lines tall", native.get("line_count"), 2],
-		["the switch is drawn as the Active tick", native.get("active_tick"), true],
-		["holding the room the tick and the word take", native.get("switch_width"),
-			NativeHeadMarks.active_tick_width(native.get("font"), int(native.get("font_size")))],
-		["the words are the same words", native.get("words"), classic.get("words")],
-		["the two-line head leads with no folder mark and echoes no line", native.get("chrome"), []],
-		["the one-line head keeps both", (classic.get("chrome") as Array).size(), 2],
-		["one line: the description beside the name", classic.get("description_line"), 0],
-		["no italics there", classic.get("description_italic"), false],
-		["no tick there", classic.get("active_tick"), false],
-		["and the head is one line", classic.get("line_count"), 1],
-		["the switch says Active", NativeHeadMarks.active_word(), "Active"],
+		["the two-line head is gone from the theme tokens",
+			"group_head_two_line" in EventSheetEventStyle.new(), false],
+		["Editor Native reads its head in one line", native.get("line_count"), 1],
+		["the description sits beside the name", native.get("description_line"), 0],
+		["upright, not italic", native.get("description_italic"), false],
+		["a long description shortens with an ellipsis", native.get("description_elides"), true],
+		["and reads whole on hover", native.get("description_hover"), "Opens the gate and reports the space key"],
+		["the switch is the glyph, not a tick box", native.get("active_tick"), false],
+		["a switchable group keeps its ring in Editor Native too", native_switchable.get("ring"), true],
+		["it leads with the folder mark and echoes its line, like every look", (native.get("chrome") as Array).size(), 2],
+		["so Editor Native and Classic Sheet read the same head", native.get("texts"), classic.get("texts")],
 	])
 
 
@@ -181,6 +165,8 @@ static func _group_head(theme_path: String, toggleable: bool = false) -> Diction
 		found["font"] = font
 		found["font_size"] = font_size
 		found["description_italic"] = false
+		found["description_elides"] = false
+		found["description_hover"] = ""
 		found["active_tick"] = false
 		found["ring"] = false
 		for span: SemanticSpan in row_data.spans:
@@ -200,12 +186,12 @@ static func _group_head(theme_path: String, toggleable: bool = false) -> Diction
 				found["description_x"] = span.rect.position.x
 				found["description_line"] = int(metadata.get("line_index", 0))
 				found["description_italic"] = bool(metadata.get("italic_note", false))
+				found["description_elides"] = bool(metadata.get("elide", false))
+				found["description_hover"] = str(metadata.get("hover_note", ""))
 			if str(metadata.get("group_action", "")) == "toggleable":
 				found["ring"] = true
 			if str(metadata.get("group_action", "")) == "enabled":
-				found["tick_hover"] = str(metadata.get("hover_note", ""))
 				found["active_tick"] = bool(metadata.get("group_active_tick", false))
-				found["switch_width"] = float(metadata.get("badge_fixed_width", 0.0))
 		found["texts"] = texts
 		found["words"] = words
 		found["chrome"] = chrome

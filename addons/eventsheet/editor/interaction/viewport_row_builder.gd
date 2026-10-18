@@ -7687,14 +7687,10 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 	# muted right beside it (still inline-editable), then what the group holds and its switch at the
 	# right edge. The body wears a bracket in the group's colour instead of pushing its rows sideways,
 	# so the head is the only place a group takes vertical room. Headless the folder icon resolves
-	# null and the mark simply does not draw.
+	# null and the mark simply does not draw. Every look draws this same head.
 	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
 	var spans: Array[SemanticSpan] = []
-	# The two-line head (group_head_two_line) is the design's: the fold arrow, then the name block -
-	# no folder mark before it and, further on, no echo of its line.
-	var two_line_head: bool = event_style.group_head_two_line
-	if not two_line_head:
-		spans.append(_group_folder_span(reading_style))
+	spans.append(_group_folder_span(reading_style))
 	spans.append(
 		_make_span(
 			EventSheetGroupFacts.display_name(group),
@@ -7709,23 +7705,17 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 	)
 	# The description sits on the SAME line now: a group's one-line summary belongs beside its name,
 	# the way a variable's does, and a folded head keeps it rather than hiding the very sentence that
-	# says whether the fold is worth opening.
-	# A theme that lays the head out in two lines (group_head_two_line) puts the description UNDER the
-	# name instead, in italics, starting where the name starts: the same span with the same words,
-	# only placed and painted differently, so no reading changes.
+	# says whether the fold is worth opening. A long one gives up its tail with an ellipsis rather than
+	# pushing the counts and the switch off the row, and reads whole on hover.
 	if not group.description.strip_edges().is_empty():
-		var description_meta: Dictionary = {
+		spans.append(_make_span(group.description, SemanticSpan.SpanType.COMMENT, {
 			"editable": true,
 			"edit_kind": "group_description",
 			"line_index": 0,
+			"elide": true,
+			"hover_note": group.description,
 			"text_color": event_style.comment_text_color
-		}
-		if two_line_head:
-			description_meta["line_index"] = 1
-			description_meta["flow_under_title"] = true
-			description_meta["italic_note"] = true
-			row_data.line_count = 2
-		spans.append(_make_span(group.description, SemanticSpan.SpanType.COMMENT, description_meta))
+		}))
 	# Who runs this group, as ONE muted word beside the name. Everyone says nothing: the head
 	# carries the exception, so a sheet that never hosts anything looks exactly as it did.
 	var runs_on: String = EventSheetGroupFacts.runs_on_word(group)
@@ -7761,9 +7751,8 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 	# The line this head IS, echoed in the script editor's own colours. It opens the
 	# right-anchored run rather than closing it, so the counts and the switch stay flush with the
 	# edge where the pinned copy of this head also draws them.
-	if not two_line_head:
-		_append_head_band_echo(spans, {"group_echo": true}, _group_declaration_line(group), false)
-	spans.append_array(_group_head_status_spans(group, row_data.folded, reading_style, two_line_head))
+	_append_head_band_echo(spans, {"group_echo": true}, _group_declaration_line(group), false)
+	spans.append_array(_group_head_status_spans(group, row_data.folded, reading_style))
 	row_data.spans = spans
 	# The group's own locals are rows at the TOP of its body: they are declarations, and a
 	# declaration reads where it is declared. The echo is the member the compiler really writes.
@@ -7778,7 +7767,8 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 	# preview grows none: nothing can be added to it.
 	if _viewport.add_event_footer_wanted(not group_children.is_empty()) and not _scaffolding_suppressed():
 		row_data.children.append(
-			_build_add_event_footer_row(group, indent + 1, "+ Add event to '%s'…" % EventSheetGroupFacts.display_name(group))
+			_build_add_event_footer_row(group, indent + 1,
+				EventSheetL10n.translate("+ Add event to '%s'…") % EventSheetGroupFacts.display_name(group))
 		)
 	return row_data
 
@@ -7816,7 +7806,7 @@ func _group_folder_span(reading_style: EventSheetReadingStyle) -> SemanticSpan:
 ## inside it), the ring that means "and it can be switched at runtime", and the switch itself. All
 ## three are right-anchored, so they stay a column no matter how long the title and description are.
 func _group_head_status_spans(group: EventGroup, folded: bool,
-		reading_style: EventSheetReadingStyle, active_tick: bool = false) -> Array[SemanticSpan]:
+		reading_style: EventSheetReadingStyle) -> Array[SemanticSpan]:
 	var status: Array[SemanticSpan] = []
 	var counts: String = EventSheetGroupFacts.counts_text(
 		group, _group_object_labels(group) if folded else PackedStringArray()
@@ -7829,9 +7819,7 @@ func _group_head_status_spans(group: EventGroup, folded: bool,
 			"text_color": reading_style.muted_text_color,
 			"hover_note": EventSheetL10n.translate("What this group holds.")
 		}))
-	# The two-line head is count then tick, nothing between: the ring's fact rides the tick's hover
-	# instead, and the group's Edit dialog still switches it.
-	if group.runtime_toggleable and not active_tick:
+	if group.runtime_toggleable:
 		status.append(_make_span(GROUP_TOGGLEABLE_GLYPH, SemanticSpan.SpanType.KEYWORD, {
 			"badge": true,
 			"badge_style": "glyph",
@@ -7862,16 +7850,6 @@ func _group_head_status_spans(group: EventGroup, folded: bool,
 				else EventSheetL10n.translate("Off - this group and its rows compile out.")
 		}
 	))
-	# The two-line head draws the same switch as a tick box and the word Active: the span, its glyph
-	# and its click stay what they were, and only the room it takes grows to hold the word.
-	if active_tick:
-		var switch_meta: Dictionary = status[status.size() - 1].metadata
-		switch_meta["group_active_tick"] = true
-		if group.runtime_toggleable:
-			switch_meta["hover_note"] = "%s
-%s" % [str(switch_meta.get("hover_note", "")),
-				EventSheetL10n.translate("Can be switched at runtime - Set group active / Group is active.")]
-		switch_meta["badge_fixed_width"] = NativeHeadMarks.active_tick_width(_viewport._get_font(), _viewport._get_font_size())
 	return status
 
 

@@ -30,9 +30,6 @@ const BAR_INSET := 2.0
 ## The inner-class block's edge width.
 const BLOCK_EDGE := 2.0
 
-## The two-line group head draws its on/off switch with the variable rows' own tick box.
-const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
-
 static var _includers_cache: Dictionary = {}
 static var _file_cache: Dictionary = {}
 static var _include_cache: Dictionary = {}
@@ -166,33 +163,6 @@ static func draw_rounded_bar(control: Control, row_rect: Rect2, fill: Color, edg
 		box.set_content_margin_all(0)
 		_bar_box_cache[key] = box
 	control.draw_style_box(box, bar)
-
-
-## The word the two-line group head's switch says beside its tick box.
-static func active_word() -> String:
-	return EventSheetL10n.translate("Active")
-
-
-## The room the switch takes on a two-line group head: the tick box, its gap and the word. The row
-## builder reserves exactly this, and the painter draws into it.
-static func active_tick_width(font: Font, font_size: int) -> float:
-	var word: float = 40.0
-	if font != null:
-		word = font.get_string_size(active_word(), HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
-	return NativeVariableMarks.TICK_BOX + NativeVariableMarks.TICK_GAP + ceilf(word) + 2.0
-
-
-## Paints the switch as the design draws it: a tick box, filled and ticked while the group is
-## active, and the word Active beside it - full ink when on, `muted` when off.
-static func draw_active_tick(control: CanvasItem, rect: Rect2, active: bool, font: Font, font_size: int,
-		fill: Color, frame: Color, ink: Color, muted: Color) -> void:
-	if font == null:
-		return
-	var advance: float = NativeVariableMarks.draw_tick_box(control, rect.position.x, rect.get_center().y,
-		active, fill, frame)
-	var baseline: float = rect.get_center().y + float(font_size) * 0.35
-	control.draw_string(font, Vector2(rect.position.x + advance, baseline), active_word(),
-		HORIZONTAL_ALIGNMENT_LEFT, maxf(rect.size.x - advance, 1.0), font_size, ink if active else muted)
 
 
 ## Where a block's frame is drawn on one of its rows: from the head row's indent to the row's right

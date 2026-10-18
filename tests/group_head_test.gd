@@ -156,6 +156,16 @@ static func _test_brackets() -> bool:
 	passed = _check("a nested bracket insets by one step",
 		float(brackets[1]["x"]), EventSheetGroupFacts.BRACKET_LEFT + EventSheetGroupFacts.BRACKET_DEPTH_INSET) and passed
 	passed = _check("nesting depth is counted in GROUPS", int(brackets[1]["depth"]), 1) and passed
+	passed = SUPPORT.pins("group_head_test", [
+		["the outer body ends in a slim tick turning right from its bracket's foot",
+			EventSheetGroupFacts.end_tick_rect(brackets[0]),
+			Rect2(EventSheetGroupFacts.BRACKET_LEFT, 100.0 - EventSheetGroupFacts.BRACKET_WIDTH,
+				EventSheetGroupFacts.END_TICK_LENGTH, EventSheetGroupFacts.BRACKET_WIDTH)],
+		["a nested body's tick starts at its own inset bracket",
+			EventSheetGroupFacts.end_tick_rect(brackets[1]).position,
+			Vector2(EventSheetGroupFacts.BRACKET_LEFT + EventSheetGroupFacts.BRACKET_DEPTH_INSET,
+				80.0 - EventSheetGroupFacts.BRACKET_WIDTH)],
+	]) and passed
 	var folded: Array = [
 		{"group": true, "indent": 0, "top": 0.0, "height": 20.0},
 		{"group": false, "indent": 0, "top": 20.0, "height": 20.0},

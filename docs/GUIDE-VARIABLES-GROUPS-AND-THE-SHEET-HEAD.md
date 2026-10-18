@@ -697,13 +697,13 @@ list is ordered.
 
 ## Groups
 
-A group is a folder you drew around rows. It is one row on the sheet:
+A group is a folder you drew around rows. It is one row on the sheet, the same row in every theme:
 
 | Span | What it is |
 |---|---|
 | folder mark | in the badge column |
 | title | bold, inline-editable |
-| description | muted, right beside the title, also inline-editable |
+| description | muted, right beside the title, also inline-editable. A long one shortens with an ellipsis and reads whole on hover |
 | counts | at the right edge: "3 events · 1 local" |
 | ring | before the switch, when the group can be switched at runtime |
 | switch | `◍` active on start, `◌` not. One click throws it |
@@ -714,7 +714,16 @@ touches - which is the sentence you need to decide whether to open it.
 **The body wears a bracket, and the rows do not move.** A 2px rule in the group's own colour runs
 down the LEFT EDGE of the body, from the head's bottom to its last row's bottom. Nested groups inset
 one step each, so where a group ends is visible without counting indents, and nothing is pushed
-sideways to make room for it. A group switched off fades its whole body.
+sideways to make room for it. The rule ends in a slim tick turning right, so the body has a bottom
+you can see. A group switched off fades its whole body.
+
+**Off, and switchable.** A group that is off at start and cannot be switched at runtime is left out
+of the game entirely, so Set group active cannot reach it; the Edit group window says so before you
+press Apply. A group that is off at start but CAN be switched is in the game behind its flag, which
+starts false (`var __group_boss_active: bool = false`), and an event turns it on.
+
+**Its colour is saved in the file.** The `## @ace_group(...)` line writes the colour the group
+shows (`color="#D9534F"`), so a `.gd` sheet reopens in it.
 
 **How you get there.** `G` with rows selected groups THEM and opens the name editor; `G` with
 nothing selected adds an empty group at the cursor. `Ctrl+Shift+G` opens all groups, or closes them
@@ -727,6 +736,7 @@ The group's menu:
 | Edit Group… | name, description, Runs on, Active on start, Can be switched at runtime, and Colour, in one dialog with the one help strip. The swatch has to open on some colour, so it is written only when you move it - a group that carries none stays uncoloured |
 | Runs On | Everyone / The host / The owner, without opening the dialog |
 | Active On Start | the tick, without opening the dialog |
+| Can Be Switched At Runtime | the other tick, beside it |
 | Open / Close Group | fold this one |
 | Open All / Close All Groups | `Ctrl+Shift+G` |
 | Add Local Variable… | `V` with the head selected does the same |

@@ -9529,3 +9529,4 @@ Ctrl+Z removes the region again.,按 Ctrl+Z 可再次移除区域。
 %s runs only in %s. As a region its events run in every mode.,%s 只在 %s 中运行。变成区域后，它的事件会在所有模式中运行。
 Remove #endregion,移除 #endregion
 Add #endregion,添加 #endregion
++ Add event to '%s'…,+ 向 '%s' 添加事件…

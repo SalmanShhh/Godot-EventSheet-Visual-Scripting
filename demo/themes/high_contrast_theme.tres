@@ -167,7 +167,6 @@ event_corner_radius = 4
 cell_corner_radius = 3
 group_corner_radius = 6
 region_corner_radius = 8
-group_head_two_line = false
 region_line_width = 2
 type_number_color = Color(0.54901963, 1, 0.61960787, 1)
 type_text_color = Color(1, 0.7019608, 0.4, 1)

@@ -6,6 +6,72 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Changed: a group head reads the same in every look, and a group's colour and switch say what is true
+
+- One group head in every look, Editor Native included: one line with the fold arrow, the folder
+  mark, the title, the muted description, the counts and the switch mark (◍ ◌ ◎). Editor Native's
+  two-line head and its Active tick box are retired, and so is the `group_head_two_line` theme token
+  (a saved theme that still names it loads as before; the line is ignored). A long description now
+  shortens with an ellipsis instead of being cut mid-letter, and reads whole on hover.
+- A group's bracket ends in a slim tick in the group's colour where its body ends, so the bottom of a
+  group is as visible as its side. The \"+ Add event to '...'\" row at the end of a group is
+  translated now.
+- The colour a group shows is the colour its `.gd` keeps: the `## @ace_group(...)` header now writes
+  `color=\"#D9534F\"` (the colour you picked) instead of the free-text tag, so a `.gd` sheet reopens in
+  the colour it was saved in. A header that only carries the older tag (`color=\"orange\"`) still reads
+  back as that tag and re-saves byte for byte.
+- A group that is off at start but can be switched at runtime is in the game now, behind its flag
+  starting false (`var __group_boss_active: bool = false`), so Set group active can turn it on. It
+  used to be left out entirely, which left the action nothing to reach. Only a group that is off AND
+  cannot be switched is left out, as before.
+- The Edit group window says that before you press Apply: off and not switchable shows the warning
+  \"Boss is left out of the game entirely, and Set group active cannot reach it\" in place of the code
+  line it used to show for it, and off and switchable shows the flag line the compiler really writes.
+  The head's switch reads \"Off at start; events can switch it on.\" for such a group.
+- The group head's menu has \"Can Be Switched At Runtime\" beside \"Active On Start\", ticked at the
+  group's state; choosing it is one undo step.
+### Changed: Set group active picks the group by its name, and a rename takes the rows with it
+
+- Set group active and Is group active pick their group from a dropdown of the sheet's groups (and
+  the groups of the sheets it includes) by the name you gave them, switchable ones first, each with
+  its description and what picking it does: \"Off at start, switchable\", or \"Not switchable: picking
+  it turns on Can be switched at runtime\". Picking a group that is not switchable turns its switch on
+  in the same undo step as the row. The value the row stores is still the guard token it always
+  was, so older sheets and compiled games are unchanged; a row naming no group keeps its value as a
+  choice of its own. The separate Make switchable button is gone.
+- Renaming a group (the Edit group window, the name on the head, the properties bar) rewrites every
+  Set group active and Is group active that names it, in this sheet as one undo step and in the
+  project sheets that include it, and the rename receipt says how many rows followed.
+- A group's name now drives its switch's token: a rename moves both together. A group from an older
+  sheet whose two name fields differ keeps its saved token until it is renamed, and the picker shows
+  that token (\"Its switch is written as boss_fight.\"). The Edit group window and the properties bar
+  show the name the head shows, and the properties bar's rename now changes the head too.
+
+### Fixed: a region folds from its menu, says what a group would lose, and keeps quiet about a broken fence
+
+- Open / Close Region on a region's menu did nothing: it shared the group's item, and the group's
+  handler only folds groups. It has its own item now and folds the region exactly as its ▶ mark and
+  Collapse All Regions do; folded, the row reads `#region Spawning … #endregion` with its count. On a
+  fence that never closes the item is greyed, since there is nothing to fold.
+- Turn Into Region used to be refused, with an English reason glued to the item, for a group with
+  locals, a runtime switch or that was off, and it dropped Runs on and Runs in without a word. It is
+  always offered now. A plain group turns at once (Ctrl+Z turns it back); a group carrying something
+  a region cannot asks first, in the reader's language, with one sentence per thing that would go -
+  the locals by name, the switch, off at start, who it runs on, which mode it runs in - and Turn Into
+  Region or Cancel.
+- Surround with a region wrapped everything from the first selected row to the last, so a row left
+  out of the selection ended up inside. A selection that skips rows now asks: include the skipped
+  rows, make one region per run, or cancel. Rows inside a group get the region inside that group,
+  instead of being skipped.
+- A `#region` without its `#endregion` (or the other way round) grew an amber note row inside the
+  sheet. The fence row now only wears the quiet amber state every other finding uses; selecting it
+  puts the sentence on the help strip with the one fix beside it - Add #endregion (written after the
+  last row before the next head) or Remove #endregion - and the Doctor's region-fence check lists it
+  as before.
+- Every group and region item in the row menu (Edit Group…, Runs On, Turn Into Region, Rename
+  Region…, Open / Close Region and the rest) goes through the translation catalog, filled in all
+  eight languages. Quick questions gained a second safe answer beside OK for the surround question.
+
 ### Fixed: what the reader adds to a connect read in place is written, and a class that moves bytes stays code alone
 
 - A connect read where it sits is an ordinary event on the canvas, but saving rebuilt it from its

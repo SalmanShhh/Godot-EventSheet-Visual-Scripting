@@ -795,8 +795,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 			row_indent_width, not trigger_kind.is_empty(), event_style.selection_as_outline)
 		if slot_fill.size.x > 0.0:
 			control.draw_rect(slot_fill, event_style.selected_gutter_fill_color, true)
-	_draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty(),
-		row_data.row_type == EventRowData.RowType.GROUP and event_style != null and event_style.group_head_two_line)
+	_draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
 	# How the event is started, as a small icon beside its number: in the slot right of the margin
 	# that every event row reserves, so it moves nothing. Its meaning is the canvas tooltip's.
 	if not trigger_kind.is_empty() and event_style != null:
@@ -1060,20 +1059,11 @@ func _draw_indent_guides(control: Control, row_rect: Rect2, depth: int, guide_co
 		)
 
 
-func _draw_fold_arrow(control: Control, fold_rect: Rect2, folded: bool, visible: bool, solid: bool = false) -> void:
+func _draw_fold_arrow(control: Control, fold_rect: Rect2, folded: bool, visible: bool) -> void:
 	if not visible or fold_rect.size == Vector2.ZERO:
 		return
 	var center: Vector2 = fold_rect.get_center()
 	var color: Color = TEXT_MUTED
-	if solid:
-		# The two-line group head's arrow: a small filled triangle, the design's 9 px "▼".
-		var arrow: PackedVector2Array = PackedVector2Array([
-			Vector2(center.x - 2.5, center.y - 4.0), Vector2(center.x + 2.5, center.y), Vector2(center.x - 2.5, center.y + 4.0)
-		]) if folded else PackedVector2Array([
-			Vector2(center.x - 4.0, center.y - 2.5), Vector2(center.x + 4.0, center.y - 2.5), Vector2(center.x, center.y + 2.5)
-		])
-		control.draw_colored_polygon(arrow, color)
-		return
 	if folded:
 		control.draw_polyline(
 			PackedVector2Array([
@@ -1167,20 +1157,6 @@ func draw_event_selection_outline(control: Control, rect: Rect2, event_style: Ev
 	box.draw(control.get_canvas_item(), rect.grow(-1.0))
 
 
-## The one-pixel edge round a two-line group head, kept per colour and radius like every other box.
-func _group_card_edge(edge_color: Color, radius: int) -> StyleBoxFlat:
-	var key: String = "group_edge:%d:%s" % [radius, edge_color.to_html()]
-	var box: StyleBoxFlat = _rounded_box_cache.get(key)
-	if box == null:
-		box = StyleBoxFlat.new()
-		box.draw_center = false
-		box.border_color = edge_color
-		box.set_border_width_all(1)
-		box.set_corner_radius_all(radius)
-		_rounded_box_cache[key] = box
-	return box
-
-
 func _draw_group_row_chrome(control: Control, row_rect: Rect2, fold_rect: Rect2, alternating: bool, event_style: EventSheetEventStyle = null, group_tint: Color = Color(0.0, 0.0, 0.0, 0.0)) -> void:
 	var bg: Color = EventSheetPalette.COLOR_GROUP_BG_ALT if alternating else EventSheetPalette.COLOR_GROUP_BG
 	if event_style != null:
@@ -1195,15 +1171,6 @@ func _draw_group_row_chrome(control: Control, row_rect: Rect2, fold_rect: Rect2,
 	# top/bottom accent hairlines inset by the radius so they don't overhang the rounded corners.
 	var group_radius: int = event_style.group_corner_radius if event_style != null else 0
 	_draw_rounded_rect(control, row_rect, bg, group_radius, group_radius, group_radius, group_radius)
-	# The two-line head is the design's card: one 1 px edge in the row border colour round the grey,
-	# no accent stripe or hairlines (a group's own colour tag still draws its stripe), and the fold
-	# arrow on the grey with no box behind it.
-	if event_style != null and event_style.group_head_two_line:
-		var edge: StyleBoxFlat = _group_card_edge(event_style.row_border_color, group_radius)
-		edge.draw(control.get_canvas_item(), row_rect)
-		if group_tint.a > 0.0:
-			control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), accent, true)
-		return
 	control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), accent, true)
 	control.draw_rect(Rect2(row_rect.position.x + group_radius, row_rect.position.y, row_rect.size.x - 2.0 * group_radius, 1.0), accent.darkened(0.28), true)
 	control.draw_rect(Rect2(row_rect.position.x + group_radius, row_rect.end.y - 1.0, row_rect.size.x - 2.0 * group_radius, 1.0), accent.darkened(0.38), true)
@@ -1481,16 +1448,6 @@ func _draw_spans(
 		# name span that carries them, so the row needs no span of its own for each tile.
 		if show_variable_badges and metadata.get("badge_tiles_x") is float:
 			_draw_variable_badges(control, span, metadata, event_style)
-		# The two-line group head: its switch drawn as a tick box and the word Active, and its
-		# description in italics under the name. Same spans, same words - only the paint differs.
-		if bool(metadata.get("group_active_tick", false)):
-			var group_on: bool = not (row_data.source_resource is EventGroup) \
-				or (row_data.source_resource as EventGroup).enabled
-			var head_fill: Color = event_style.group_background_color if event_style != null else BG_0
-			NativeHeadMarks.draw_active_tick(control, span.rect, group_on, font, font_size,
-				event_style.trigger_badge_background_color if event_style != null else reading.primary_text_color,
-				NativeVariableMarks.frame_ink(head_fill), reading.primary_text_color, reading.muted_text_color)
-			continue
 		if bool(metadata.get("italic_note", false)) and span_index != editing_span_index:
 			var note_size: int = EventSheetPalette.resolve_font_size(font_size, int(metadata.get("font_size_delta", 0)))
 			var note_baseline: float = span.rect.position.y + (span.rect.size.y * ROW_VERTICAL_CENTER_RATIO) \

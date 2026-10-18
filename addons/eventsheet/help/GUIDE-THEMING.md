@@ -152,9 +152,7 @@ Two more ship inside the addon, in `res://addons/eventsheet/themes/`:
   Text labels, and states `active_tab_edge_color`, the accent line along the top of the open sheet's
   tab. Every bundled theme draws that edge in its own accent; set it clear to keep the tab exactly
   as the editor draws it.
-  And it turns on `group_head_two_line`: a group head in two lines, the name over its description in
-  italics, with the event count and the on/off switch drawn as a tick box and the word Active. Every
-  other theme keeps the one-line head.
+  A group head reads the same in every theme: one line, with the description beside the name.
 
 The native look also brought tokens for marks the sheet is learning to draw (type colours, word
 colours, the Include line, the inner-class block, badges, links). The ones that re-colour something

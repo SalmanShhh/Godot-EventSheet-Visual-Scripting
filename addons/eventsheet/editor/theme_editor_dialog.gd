@@ -199,7 +199,6 @@ const _TOKEN_DESCRIPTIONS := {
 	"lane_divider_width": "Thickness of the conditions/actions divider line.",
 	"minimum_row_height": "Height of a single event row, in pixels - raise it for more breathing room.",
 	"group_row_height": "Height of a group header bar, in pixels - double an event row by default; lower it for the classic slim bar.",
-	"group_head_two_line": "Lay a group head out in two lines: the name over its description in italics, with the event count and an Active tick box at the right - no folder mark and no code beside it.",
 	"inspector_variable_rows": "Draw a variable row the way the Inspector lists a property: its type, its name exactly as the code writes it, its value and its ## description, with its attributes as icon tiles - no scope word, no kind mark and no code.",
 	"variable_row_cards": "Draw each Inspector-style variable row as its own small card - the event card's fill and edge, with a gap to the next - instead of the flat variable wash.",
 	"hide_compiler_variables": "Leave the bookkeeping variables the compiler writes out of the variable rows: every name starting with two underscores, an author's own included. They still compile and save.",

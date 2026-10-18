@@ -24,7 +24,6 @@ action_lane_padding = 8
 lane_divider_width = 7
 minimum_row_height = 24
 group_row_height = 36
-group_head_two_line = true
 inspector_variable_rows = true
 hide_compiler_variables = true
 fold_compiler_helpers = true

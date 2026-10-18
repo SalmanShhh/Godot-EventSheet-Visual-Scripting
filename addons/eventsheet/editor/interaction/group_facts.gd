@@ -27,6 +27,10 @@ const BRACKET_WIDTH: float = 2.0
 ## inset, not an indent.
 const BRACKET_LEFT: float = 3.0
 
+## How far the slim tick at the foot of a group's bracket runs to the right, in px before display
+## scaling: the mark that says where the group's body ends.
+const END_TICK_LENGTH: float = 10.0
+
 ## How many object names a folded head lists before it trails off.
 const FOLDED_OBJECT_LIMIT: int = 3
 
@@ -432,6 +436,13 @@ static func brackets(rows: Array, left: float = BRACKET_LEFT, depth_inset: float
 		if float(candidate.get("bottom", 0.0)) > float(candidate.get("top", 0.0)) + 0.5:
 			drawable.append(candidate)
 	return drawable
+
+
+## The slim end tick of one bracket (an entry `brackets` returned): a short rule as thick as the
+## bracket, turning right from its foot, so a group's body has a visible bottom and not only a side.
+static func end_tick_rect(bracket: Dictionary) -> Rect2:
+	var bottom: float = float(bracket.get("bottom", 0.0))
+	return Rect2(float(bracket.get("x", BRACKET_LEFT)), bottom - BRACKET_WIDTH, END_TICK_LENGTH, BRACKET_WIDTH)
 
 
 ## The separator between two crumbs of the pinned head's parent trail.

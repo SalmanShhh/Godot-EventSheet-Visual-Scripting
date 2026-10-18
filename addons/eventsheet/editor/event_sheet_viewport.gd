@@ -2482,7 +2482,8 @@ func _draw_variable_group_bubbles(width: float) -> void:
 ## body, from the head's bottom to its last row's bottom, so where a group or a region ends is
 ## visible without reading indents. Nested blocks inset 2px each, and rows are never pushed sideways
 ## for one. A group is SOLID and a region DASHED - the script editor's own fold stroke - which is the
-## whole difference between the two on the canvas. A group that is switched off fades its body here
+## whole difference between the two on the canvas. A group's rule ends in a slim tick turning right,
+## where a region's closing fence row does that job. A group that is switched off fades its body here
 ## too, in the same pass that knows the body's range.
 func _draw_group_brackets(width: float) -> void:
 	var shape: Array = []
@@ -2523,6 +2524,7 @@ func _draw_group_brackets(width: float) -> void:
 			)
 			continue
 		draw_rect(Rect2(left, top, EventSheetGroupFacts.BRACKET_WIDTH, height), ink, true)
+		draw_rect(EventSheetGroupFacts.end_tick_rect(bracket), ink, true)
 
 
 ## True when the row at `index` IS the folder strip that names its run - the row the builder puts

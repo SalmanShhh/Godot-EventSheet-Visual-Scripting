@@ -9529,3 +9529,4 @@ Ctrl+Z removes the region again.,Strg+Z entfernt die Region wieder.
 %s runs only in %s. As a region its events run in every mode.,%s läuft nur in %s. Als Region laufen ihre Ereignisse in jedem Modus.
 Remove #endregion,#endregion entfernen
 Add #endregion,#endregion hinzufügen
++ Add event to '%s'…,+ Ereignis zu '%s' hinzufügen…

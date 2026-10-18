@@ -337,8 +337,6 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	event_style.event_corner_radius = 3
 	event_style.cell_corner_radius = 0
 	event_style.group_corner_radius = 3
-	# The design's group head: the name over an italic description, the count and an Active tick.
-	event_style.group_head_two_line = true
 	# The design's variable rows: type, name, value, note, icon tiles - and none of the compiler's own
 	# bookkeeping variables among them.
 	event_style.inspector_variable_rows = true

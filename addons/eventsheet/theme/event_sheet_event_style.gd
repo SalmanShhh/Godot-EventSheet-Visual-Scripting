@@ -123,11 +123,6 @@ extends Resource
 @export_range(0, 16, 1) var cell_corner_radius: int = 4
 ## Corner roundness of GROUP rows, in pixels. 0 = the classic square group bar.
 @export_range(0, 24, 1) var group_corner_radius: int = 0
-## The group head in two lines: the name over its description in italics, with the event count and
-## the on/off switch drawn as an Active tick box at its right - no folder mark before the name and no
-## echo of its line (the code panel still shows it). Off keeps the one-line head, the folder mark, the
-## description beside the name, the echo and the switch as its glyph.
-@export var group_head_two_line: bool = false
 ## A variable row drawn the way the Inspector lists a property: the GDScript type in mono in its
 ## family's colour, the name exactly as the file writes it (`open_speed`, never "Open Speed"), the
 ## value as the Inspector shows it (a colour as its swatch and hex), the `##`
