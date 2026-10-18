@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Fixed: the function Inspector's refusals say only what is true
+
+- Shared is refused only when the code the function compiles to reads a variable each object has
+  its own copy of. A verb whose own template holds `{speed}` or `{amount}`, a parameter or local
+  with a variable's name, text in quotes, a comment, a constant and a static no longer count, so a
+  sheet with a variable called `speed` can make its functions shared again.
+- A Default is judged only for the types the line can describe (true or false, numbers, text,
+  Vector2, Vector3, Color, lists and dictionaries). `[]` for a PackedStringArray, `"a/b"` for a
+  NodePath and `Vector2i(1, 2)` for a Vector2 are written instead of being refused as "not null".
+- A Name with letters outside a to z (`größe`) says what is really wrong: GDScript takes it, but the
+  sheet would open that function as code from then on.
+- A save-state table handed to `return` (the Upgrades pack's `save_state`) keeps its skill tree
+  chip again: the pattern walk reads a table's entries as the code they are.
+
 ### Fixed: the plugin's own scripts open as rows, not as code
 
 - A doc comment with a blank `##` line between its paragraphs no longer sends the whole file back to

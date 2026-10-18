@@ -9366,3 +9366,4 @@ a color (like Color.WHITE),un colore (come Color.WHITE)
 a list (like []),una lista (come [])
 a dictionary (like {}),un dizionario (come {})
 null (no object yet),null (ancora nessun oggetto)
+"""%s"" has letters outside a to z. GDScript takes them, but the sheet would open %s as code from then on. Try %s. Nothing was changed.","""%s"" ha lettere fuori da a-z. GDScript le accetta, ma il foglio aprirebbe %s come codice da allora in poi. Prova %s. Non è stato cambiato nulla."

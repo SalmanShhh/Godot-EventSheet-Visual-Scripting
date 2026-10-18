@@ -9366,3 +9366,4 @@ a color (like Color.WHITE),색 (예: Color.WHITE)
 a list (like []),리스트 (예: [])
 a dictionary (like {}),딕셔너리 (예: {})
 null (no object yet),null (아직 오브젝트 없음)
+"""%s"" has letters outside a to z. GDScript takes them, but the sheet would open %s as code from then on. Try %s. Nothing was changed.","""%s""에는 a부터 z 밖의 글자가 있습니다. GDScript는 받아들이지만, 시트는 그 뒤로 %s을(를) 코드로 엽니다. %s을(를) 써 보세요. 아무것도 바뀌지 않았습니다."

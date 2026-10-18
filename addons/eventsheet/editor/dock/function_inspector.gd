@@ -448,6 +448,11 @@ func name_problem(text: String) -> Array:
 	var suggestion: String = free_name(wanted)
 	if EventSheetIdentifierRules.RESERVED.has(wanted):
 		return [refused, EventSheetL10n.translate("\"%s\" is a word GDScript keeps for itself. Try %s. Nothing was changed.") % [wanted, suggestion]]
+	if not EventSheetIdentifierRules.is_valid(wanted) and wanted.is_valid_unicode_identifier():
+		# GDScript takes a name such as größe, but a sheet reads a function's head in a to z, so the
+		# function would open as a block of code from then on.
+		return [refused, EventSheetL10n.translate("\"%s\" has letters outside a to z. GDScript takes them, but the sheet would open %s as code from then on. Try %s. Nothing was changed.") % [
+			wanted, _function_name, suggestion]]
 	if not EventSheetIdentifierRules.is_valid(wanted):
 		return [refused, EventSheetL10n.translate("\"%s\" cannot be a name: use letters, numbers and _, and do not start with a number. Try %s. Nothing was changed.") % [
 			wanted, suggestion]]
@@ -533,21 +538,52 @@ func _sheet_variables() -> Array[LocalVariable]:
 	return found
 
 
-## The first variable each object has its own copy of that the function's body names, or "".
+## The first variable each object has its own copy of that the function's emitted body reads, or "".
+## Only the code the function compiles to is searched, with its strings and comments left out, so a
+## template's own {amount} placeholder or a parameter or local of the same name is not a use.
 func object_variable_used(event_function: EventFunction) -> String:
+	var sheet: EventSheetResource = _dock._current_sheet if _dock != null else null
 	var names: PackedStringArray = PackedStringArray()
 	for variable: LocalVariable in _sheet_variables():
 		if not variable.is_static and not variable.is_constant:
 			names.append(variable.name)
-	var sheet: EventSheetResource = _dock._current_sheet if _dock != null else null
 	for key: Variant in sheet.variables if sheet != null else {}:
-		names.append(str(key))
+		if not _is_shared_descriptor(sheet.variables[key]):
+			names.append(str(key))
+	var code: String = emitted_body(event_function, sheet)
+	var own: Dictionary = {}
+	for param: ACEParam in event_function.params:
+		own[param.id] = true
+	for found: RegExMatch in RegEx.create_from_string("(?m)^\\s*(?:var|const|for)\\s+([A-Za-z_][A-Za-z0-9_]*)").search_all(code):
+		own[found.get_string(1)] = true
 	names.sort()
-	var text: String = body_text(event_function)
 	for name: String in names:
-		if RegEx.create_from_string("\\b%s\\b" % name).search(text) != null:
+		if not own.has(name) and RegEx.create_from_string("(?:(?<![.\\w])|(?<=self\\.))%s\\b" % name).search(code) != null:
 			return name
 	return ""
+
+
+## True for a sheet variable descriptor that is a constant or static: one copy for every object.
+static func _is_shared_descriptor(descriptor: Variant) -> bool:
+	if not (descriptor is Dictionary):
+		return false
+	for flag: String in ["const", "is_constant", "constant", "static", "is_static"]:
+		if bool((descriptor as Dictionary).get(flag, false)):
+			return true
+	return false
+
+
+## The code the function's body compiles to, without its `func` line, comments or string literals.
+static func emitted_body(event_function: EventFunction, sheet: EventSheetResource) -> String:
+	var lines: PackedStringArray = SheetCompiler.emit_function_block_text(event_function, sheet).split("\n")
+	var start: int = 0
+	for index: int in range(lines.size()):
+		if RegEx.create_from_string("^(static\\s+)?func\\s").search(lines[index]) != null:
+			start = index + 1
+			break
+	var body: String = "\n".join(lines.slice(start))
+	body = RegEx.create_from_string("\"(?:[^\"\\\\\\n]|\\\\.)*\"|'(?:[^'\\\\\\n]|\\\\.)*'").sub(body, "\"\"", true)
+	return RegEx.create_from_string("#[^\\n]*").sub(body, "", true)
 
 
 ## The line a parameter's default gets: refused when its Type cannot hold it or GDScript's order of
@@ -597,8 +633,13 @@ static func value_fits(type_word: String, text: String, known: Callable) -> bool
 		# A node or a class of the project takes only `null` as a written default; anything else that
 		# is not a builtin type (Variant, an enum) is GDScript's to judge.
 		return value == null or not (ClassDB.class_exists(type_word) or _is_project_class(type_word))
-	return typeof(value) == expected or (expected == TYPE_FLOAT and typeof(value) == TYPE_INT) \
-		or (expected == TYPE_STRING_NAME and typeof(value) == TYPE_STRING)
+	# Only the types a refusal can describe are judged; a NodePath, a Packed array, a Transform and the
+	# rest take more spellings than one literal check knows, so GDScript judges them.
+	if not ["bool", "int", "float", "String", "StringName", "Vector2", "Vector3", "Color"].has(type_word):
+		return true
+	var twins: Dictionary = {TYPE_FLOAT: TYPE_INT, TYPE_STRING_NAME: TYPE_STRING, TYPE_VECTOR2: TYPE_VECTOR2I,
+		TYPE_VECTOR3: TYPE_VECTOR3I}
+	return typeof(value) == expected or typeof(value) == int(twins.get(expected, -1))
 
 
 ## What a value of a type looks like, said for a refused default.
@@ -610,7 +651,7 @@ static func value_phrase(type_word: String) -> String:
 			return EventSheetL10n.translate("a whole number (like 1)")
 		"float":
 			return EventSheetL10n.translate("a number (like 0.5)")
-		"String":
+		"String", "StringName":
 			return EventSheetL10n.translate("text in quotes (like \"Ready\")")
 		"Vector2":
 			return EventSheetL10n.translate("Vector2(0, 0) or Vector2.ZERO")
@@ -674,22 +715,6 @@ static func _body_rows(event_function: EventFunction) -> Array[Resource]:
 			if int(property.get("usage", 0)) & PROPERTY_USAGE_STORAGE and int(property.get("type", 0)) == TYPE_ARRAY:
 				rows.append_array((row as Resource).get(str(property["name"])))
 	return found
-
-
-## Every word the function's body holds - code, templates, parameter values - as one text to search.
-static func body_text(event_function: EventFunction) -> String:
-	var parts: PackedStringArray = PackedStringArray()
-	for row: Resource in _body_rows(event_function):
-		for property: Dictionary in row.get_property_list():
-			if not (int(property.get("usage", 0)) & PROPERTY_USAGE_STORAGE):
-				continue
-			var value: Variant = row.get(str(property["name"]))
-			if value is String or value is StringName:
-				parts.append(str(value))
-			elif value is Dictionary:
-				for item: Variant in (value as Dictionary).values():
-					parts.append(str(item))
-	return "\n".join(parts)
 
 
 ## A Return Value action, or a line of code that returns something.

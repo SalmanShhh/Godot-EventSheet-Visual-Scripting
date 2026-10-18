@@ -13,7 +13,74 @@ const PLUGIN_PATH := "res://addons/eventsheet/editor/inspector/function_inspecto
 
 
 static func run() -> bool:
-	return _test_inspector() and _test_window() and _test_described_fields() and _test_guards()
+	return _test_inspector() and _test_window() and _test_described_fields() and _test_guards() \
+		and _test_shared_reads_emitted_code() and _test_defaults_left_to_gdscript()
+
+
+## The Shared refusal reads only the code the function compiles to: a template's own {speed} hole,
+## a parameter or local named like a variable, a string and a comment are not uses, and a constant
+## or static variable is shared already. A real read of the variable is still refused.
+static func _test_shared_reads_emitted_code() -> bool:
+	var dock: EventSheetDock = _guarded_dock()
+	var sheet: EventSheetResource = dock._current_sheet
+	for spec: Array in [["speed", false, false], ["amount", false, false], ["LIMIT", true, false], ["count", false, true]]:
+		var variable: LocalVariable = LocalVariable.new()
+		variable.name = spec[0]
+		variable.type = TYPE_INT
+		variable.type_name = "int"
+		variable.default_value = 1
+		variable.is_constant = spec[1]
+		variable.is_static = spec[2]
+		sheet.events.append(variable)
+	sheet.variables["lives"] = {"type": "int", "default": 3, "const": true}
+	var jump: EventFunction = sheet.functions[1]
+	jump.events.clear()
+	var body: EventRow = EventRow.new()
+	var move: ACEAction = ACEAction.new()
+	move.ace_id = "ProbeMove"
+	move.codegen_template = "print({speed})"
+	move.params = {"speed": "300"}
+	body.actions.append(move)
+	jump.events.append(body)
+	var inspector: RefCounted = load(INSPECTOR_PATH).new(dock, jump)
+	var take_damage: EventFunction = sheet.functions[0]
+	var reads: RawCodeRow = RawCodeRow.new()
+	reads.code = "var count := amount\nprint(\"health\", LIMIT, lives, count)  # health"
+	take_damage.events.append(reads)
+	var ok: bool = SUPPORT.pins(NAME, [
+		["a template's {speed} hole is not the variable speed", inspector.object_variable_used(jump), ""],
+		["a parameter, a local, a string, a comment, a constant and a static are not uses",
+			inspector.object_variable_used(take_damage), ""],
+	])
+	reads.code = "print(self.health)"
+	ok = SUPPORT.check(NAME, "self.health is a use", inspector.object_variable_used(take_damage), "health") and ok
+	move.params = {"speed": "speed * 2"}
+	ok = SUPPORT.check(NAME, "a value that reads speed is a use", inspector.object_variable_used(jump), "speed") and ok
+	dock.free()
+	return ok
+
+
+## A default whose type takes more spellings than one literal (a Packed array, a NodePath) is
+## GDScript's to judge, and an integer vector fills a float one.
+static func _test_defaults_left_to_gdscript() -> bool:
+	var dock: EventSheetDock = _guarded_dock()
+	var event_function: EventFunction = dock._current_sheet.functions[0]
+	var inspector: RefCounted = load(INSPECTOR_PATH).new(dock, event_function)
+	var answers: Dictionary = {}
+	for spec: Array in [["PackedStringArray", "[]"], ["PackedStringArray", "[\"a\"]"], ["PackedInt32Array", "[1, 2]"],
+			["NodePath", "\"a/b\""], ["Vector2", "Vector2i(1, 2)"], ["Vector3", "Vector3i(1, 2, 3)"], ["StringName", "\"jump\""]]:
+		event_function.params[1].type_name = spec[0]
+		answers["%s = %s" % spec] = inspector.default_problem(1, spec[1])
+	event_function.params[1].type_name = "StringName"
+	answers["StringName = 5"] = inspector.default_problem(1, "5")
+	var ok: bool = SUPPORT.check(NAME, "defaults GDScript accepts are not refused", answers, {
+		"PackedStringArray = []": ["", ""], "PackedStringArray = [\"a\"]": ["", ""], "PackedInt32Array = [1, 2]": ["", ""],
+		"NodePath = \"a/b\"": ["", ""], "Vector2 = Vector2i(1, 2)": ["", ""], "Vector3 = Vector3i(1, 2, 3)": ["", ""],
+		"StringName = \"jump\"": ["", ""],
+		"StringName = 5": [EventSheetPopupUI.TONE_ERROR, "\"5\" is not text in quotes (like \"Ready\"), so critical (StringName) cannot start as it. Nothing was changed."],
+	})
+	dock.free()
+	return ok
 
 
 ## The sheet the described fields and the guards are read against: take_damage(amount: int,
@@ -113,6 +180,10 @@ static func _test_guards() -> bool:
 		["the function's own name says nothing", inspector.warning("name", "take_damage"), ["", ""]],
 		["a name that is not an identifier", inspector.warning("name", "2x"),
 			[refused, "\"2x\" cannot be a name: use letters, numbers and _, and do not start with a number. Try _2x. Nothing was changed."]],
+		["a name with letters outside a to z", inspector.warning("name", "größe"),
+			[refused, "\"größe\" has letters outside a to z. GDScript takes them, but the sheet would open take_damage as code from then on. Try gr__e. Nothing was changed."]],
+		["which is why: such a function reopens as code",
+			SUPPORT.reopen("extends Node\n\n\nfunc größe() -> void:\n\tpass\n").functions.size(), 0],
 		["a GDScript keyword", inspector.warning("name", "func"),
 			[refused, "\"func\" is a word GDScript keeps for itself. Try func_2. Nothing was changed."]],
 		["another function's name", inspector.warning("name", "jump"),
