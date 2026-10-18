@@ -98,7 +98,20 @@ const BIG_SHEET_REBUILD_BUDGET_MS: int = 9400
 ## scene wears shader materials, so the scene shelves are built rather than skipped. Measured 498,
 ## 508 and 514 ms over 5,129 registered rows - it was 392-469 while the shelves were being skipped,
 ## and the difference is the work this budget did not cover before.
-const PICKER_OPEN_BUDGET_MS: int = 1500
+##
+## This is the SECOND build of the tree in the process. The first one also reads every file the tree
+## shows from disk, and how long that takes is the disk's answer, not the picker's: in a copy that
+## had just been imported it took 2,375 ms where the next run took 613, and the same first-run red
+## was there at the commit before the wave that seemed to cause it. So the first build is timed
+## against PICKER_FIRST_OPEN_BUDGET_MS below and this one against the tree itself.
+## 2026-10-18, outside OneDrive, three alternating runs at ff3cf143 and at 045246bb over 6,829 rows:
+## 613-619 and 593-673 ms - unchanged by the wave. Three times the 613 ms median.
+const PICKER_OPEN_BUDGET_MS: int = 1840
+
+## The FIRST build of the tree in a process, cold files and all - the ceiling for a first open
+## suddenly building something heavy once. Measured 1,318, 2,375 and 2,735 ms on the first run after
+## an import, which is when it is slowest; three times the 2,375 ms median.
+const PICKER_FIRST_OPEN_BUDGET_MS: int = 7100
 
 ## The same tree built again per typed character, which is what the search box costs. The shelves
 ## are derived from the scene on every refresh, so a keystroke pays for them however narrow the
@@ -349,6 +362,12 @@ static func _pin_the_picker(editor: EventSheetEditor) -> bool:
 	var shelved: int = ACEPickerDialog.effect_dial_definitions(host.sheet, registry).size()
 	passed = _check("the sheet really grows dial shelves (%d entries)" % shelved,
 		shelved > 0, true) and passed
+	var first_usec: int = Time.get_ticks_usec()
+	picker._refresh_tree()
+	var first_ms: float = float(Time.get_ticks_usec() - first_usec) / 1000.0
+	passed = _check("the picker's first open in a process lands under %d ms (took %.1f ms)" % [
+		PICKER_FIRST_OPEN_BUDGET_MS, first_ms],
+		first_ms <= float(PICKER_FIRST_OPEN_BUDGET_MS), true) and passed
 	var start_usec: int = Time.get_ticks_usec()
 	picker._refresh_tree()
 	var elapsed_ms: float = float(Time.get_ticks_usec() - start_usec) / 1000.0

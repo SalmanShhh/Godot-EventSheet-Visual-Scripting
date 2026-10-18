@@ -30,6 +30,7 @@ static func run() -> bool:
 	ok = _test_the_tail_is_the_shared_state_and_the_timing_tests() and ok
 	ok = _test_a_malformed_shard_string_still_runs_everything_once() and ok
 	ok = _test_a_timing_budget_is_found_in_the_file_not_in_its_name() and ok
+	ok = _test_every_test_that_starts_a_clock_runs_in_the_tail() and ok
 	return ok
 
 
@@ -92,6 +93,26 @@ static func _test_a_timing_budget_is_found_in_the_file_not_in_its_name() -> bool
 		timing, PackedStringArray(["doc_library_test.gd", "lift_perf_test.gd",
 			"drawing_prefab_perf_test.gd"])) and ok
 	return ok
+
+
+## A test that starts a clock is a timing test, whatever it declares - so it has to DECLARE it, or it
+## runs in a shard beside seven other Godot processes and goes red for their load. self_expressions_test
+## timed twenty refreshes against a literal 2000 and measured 2,977 and 3,793 ms that way, three times
+## what it takes alone. Every test file that starts a clock with `var <name>: int = Time.get_ticks_...()`
+## must carry the marker that sends it to the serial tail.
+static func _test_every_test_that_starts_a_clock_runs_in_the_tail() -> bool:
+	var clock: RegEx = RegEx.create_from_string(r"(?m)^\t+var \w+: int = Time\.get_ticks_(usec|msec)\(\)$")
+	var files: PackedStringArray = PackedStringArray()
+	for file: String in DirAccess.get_files_at("res://tests/"):
+		if file.ends_with("_test.gd") and clock.search(FileAccess.get_file_as_string("res://tests/" + file)) != null:
+			files.append(file)
+	var timed: PackedStringArray = EventForgeTestRunner.timing_files(files)
+	var unmarked: PackedStringArray = PackedStringArray()
+	for file: String in files:
+		if not timed.has(file):
+			unmarked.append(file)
+	var ok: bool = _check("the sweep finds the clocks it is about", files.has("self_expressions_test.gd"), true)
+	return _check("every test that starts a clock declares a budget", unmarked, PackedStringArray()) and ok
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────────────────────

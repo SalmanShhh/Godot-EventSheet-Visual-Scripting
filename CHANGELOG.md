@@ -34,6 +34,31 @@
   thread: 0 of 6. A fresh import takes about 90 s instead of about 55 s; later imports are small.
   `import_threads_test` pins the setting.
 
+### Fixed: three small things the test runs tripped over
+
+- With no editor around (tests, preview harnesses), the plain UndoRedo the sheet falls back to was
+  handed the editor's (object, method, arguments) spelling, so every edit printed "Method expected 1
+  argument(s), but called with 3" and kept no undo step. It is handed one bound Callable now, and the
+  step is recorded without being run again, since the edit is already applied.
+- The Lift Report window has the same body as every other window: Esc closes it and it grows to fit.
+- `tools/run_tests_parallel.ps1` empties `.godot/test_logs/` before it starts. The red-run report
+  reads every log there, so an `-Iterate` run that picked nothing kept the previous run's
+  iterate.txt and named its failures under shards that had all passed.
+
+### Fixed: two timing tests that went red for the machine's load, not the code
+
+- `self_expressions_test` timed twenty Self-section refreshes against a literal 2000 ms but declared
+  no budget, so it ran inside a shard beside seven other Godot processes and measured 2,977 and
+  3,793 ms. It declares `SCALE_REFRESH_BUDGET_MS` now and runs in the serial tail. Alone, outside
+  OneDrive, it takes 752-819 ms at ff3cf143 and 742-853 ms at 045246bb (the code did not get
+  slower); the budget is three times the median, 2,400 ms. `shard_split_test` now fails any test
+  that starts a clock without declaring a budget.
+- `huge_project_budget_test` timed the Add picker's FIRST tree build, which also reads every file the
+  tree shows: 2,375 ms on the first run after an import and 613 ms on the next, with the same
+  first-run red at the commit before the wave. The first build is now held to its own ceiling
+  (`PICKER_FIRST_OPEN_BUDGET_MS`, 7,100 ms, three times the cold median) and the open budget times
+  the second build: 593-673 ms before the wave and 613-619 after, so 1,840 ms.
+
 ### Fixed: shaping a field, walked end to end in the editor
 
 - Clicking an option in "Shape this field", pressing Choose or Apply, or pressing ▲ in the Inspector

@@ -6,6 +6,18 @@
 class_name SelfExpressionsTest
 extends RefCounted
 
+## Twenty refreshes of the Self section over a 300-row sheet and the whole pack fleet. Declared as a
+## budget so the suite runs this file in its serial tail: inside a shard, beside seven other Godot
+## processes, it measured 2,977 and 3,793 ms and went red for the load rather than the code. Alone,
+## outside OneDrive, three alternating runs each: 752-819 ms at ff3cf143 and 742-853 ms at 045246bb,
+## so nothing got slower. Three times the 785 ms median, as every timing pin here is.
+const SCALE_REFRESH_BUDGET_MS: int = 2400
+
+## One census of a crowded node (100 children, 30 behaviours). Measured 7-9 ms in the same runs; kept
+## wide on purpose, because a number that small moves more with one garbage collection than with
+## the code, and what it exists to catch is a census that walks the tree per behaviour again.
+const GROUNDED_BUDGET_MS: int = 250
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -327,8 +339,8 @@ static func _scale_checks() -> bool:
 	var elapsed_ms: float = float(Time.get_ticks_usec() - started) / 1000.0
 	all_passed = _check("scale: correctness holds (150 vars, 40 fns, groups found)",
 		groups.size() >= 60 and bool(_group_of(groups, "SineBehavior").get("used")), true) and all_passed
-	all_passed = _check("scale: 20 refreshes over 300 rows x full fleet stay under 2000ms (took %.0fms)" % elapsed_ms,
-		elapsed_ms < 2000.0, true) and all_passed
+	all_passed = _check("scale: 20 refreshes over 300 rows x full fleet stay under %dms (took %.0fms)" % [
+		SCALE_REFRESH_BUDGET_MS, elapsed_ms], elapsed_ms < float(SCALE_REFRESH_BUDGET_MS), true) and all_passed
 	# Grounded tier at scale: a crowded instance (100 children, 30 of them behaviours across the
 	# whole fleet) derives correct and flat - it runs once per dialog-open.
 	var owner: Node2D = Node2D.new()
@@ -363,8 +375,8 @@ static func _scale_checks() -> bool:
 		grounded.size(), behaviour_count) and all_passed
 	all_passed = _check("scale: grounded groups keep the synthetic names",
 		grounded_built.is_empty() or str((grounded_built[0] as Dictionary).get("node_name", "")).begins_with("B_"), true) and all_passed
-	all_passed = _check("scale: grounding a crowded node stays under 250ms (took %.0fms)" % grounded_ms,
-		grounded_ms < 250.0, true) and all_passed
+	all_passed = _check("scale: grounding a crowded node stays under %dms (took %.0fms)" % [
+		GROUNDED_BUDGET_MS, grounded_ms], grounded_ms < float(GROUNDED_BUDGET_MS), true) and all_passed
 	owner.free()
 	for source: Object in sources:
 		if source is Node:
