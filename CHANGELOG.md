@@ -113,6 +113,10 @@
   They now read back as the region's two fence rows, in the same place, styled ones included, and an
   untouched save still writes the same bytes. A handler's own hand-written `#region` lines keep
   reading as the comments they always were, and so does a body whose fence sits under a blank line.
+  A hand-written function the file marks as a sheet function is read exactly as one the sheet wrote:
+  its top-level `#region` / `#endregion` lines with no blank line above them open as region rows
+  (deliberately - a region row folds, renames and saves as the same two lines), and the file still
+  saves byte for byte.
 
 ### Fixed: a group that is off and cannot be switched keeps its rows in a `.gd` sheet
 
