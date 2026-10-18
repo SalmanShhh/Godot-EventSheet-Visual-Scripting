@@ -142,7 +142,47 @@ static func run() -> bool:
 	ok = _test_handed_on_literals() and ok
 	ok = _test_continued_statements() and ok
 	ok = _test_engine_callbacks() and ok
+	ok = _test_shipped_pack_readings() and ok
 	return ok
+
+
+## Three readings of shipped packs, pinned where a lift change moved them once. A save-state table
+## handed to `return` is still evidence of the skill tree it saves, so its event keeps the chip. And a
+## handler wired inside another function and called by name as well opens as the function it is,
+## with the wire row saying which signal reaches it: `walk` is a local of the function that wires
+## it, so a standalone "walk: On Finished" event would name an object the file does not have.
+static func _test_shipped_pack_readings() -> bool:
+	var ok: bool = true
+	var upgrades: Array = _cell_texts("res://eventsheet_addons/upgrades/upgrades_addon.gd")
+	var save_at: int = _index_ending(upgrades, "Function | On save_state")
+	var load_at: int = _index_ending(upgrades, "Function | On load_state")
+	ok = _check("the save-state table keeps the skill tree chip",
+		upgrades.slice(save_at, load_at).has("⟡ A skill tree - prerequisites, points and unlocks") if save_at >= 0 and load_at > save_at else false,
+		true) and ok
+	var screen_fx: Array = _cell_texts("res://eventsheet_addons/screen_fx/screen_fx.gd")
+	var drawing: Array = _cell_texts("res://eventsheet_addons/drawing_prefab_resource/drawing_prefab_resource.gd")
+	ok = _check("a handler wired in a function and called by name opens as a function", [
+		_index_ending(screen_fx, "Function | On _settle") >= 0, screen_fx.has("Wire On Finished to Settle"), screen_fx.has("Call Settle"),
+		_index_ending(drawing, "Function | On _invalidate_compiled") >= 0, drawing.has("Wire On Changed to Invalidate Compiled"),
+	], [true, true, true, true, true]) and ok
+	return ok
+
+
+## Every cell of a file opened as a sheet, its segments joined with " | ".
+static func _cell_texts(path: String) -> Array:
+	var texts: Array = []
+	var sheet: EventSheetResource = SUPPORT.reopen(FileAccess.get_file_as_string(path), true, path)
+	for reading: Variant in LINES.readings_of_sheet(sheet, "pack"):
+		texts.append(" | ".join(reading.plain))
+	return texts
+
+
+## The first cell whose text ends in `suffix` (a function head leads with its scope badge), or -1.
+static func _index_ending(texts: Array, suffix: String) -> int:
+	for index: int in range(texts.size()):
+		if str(texts[index]).ends_with(suffix):
+			return index
+	return -1
 
 
 ## A literal handed on by a statement is ONE structured row, reads as the statement with its entries

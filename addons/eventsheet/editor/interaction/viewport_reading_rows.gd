@@ -3232,6 +3232,12 @@ static func _collect_code(resource: Variant, into: PackedStringArray) -> void:
 	if raw != null:
 		into.append(_without_comments(raw.code))
 		return
+	# A table handed to `return` or to a call is the statement it was written as: its entries are
+	# code too, and a pattern named only inside them (a save-state table of skill points) is still
+	# that pattern.
+	if resource is CollectionDeclRow and (resource as CollectionDeclRow).is_statement():
+		into.append(_without_comments("\n".join((resource as CollectionDeclRow).emit_lines())))
+		return
 	var variable: LocalVariable = resource as LocalVariable
 	if variable != null:
 		into.append("%s = %s" % [variable.name, str(variable.default_value)])
