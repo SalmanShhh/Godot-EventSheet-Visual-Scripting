@@ -15,8 +15,9 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 ## A buffer with one of each answer in it: a spelling a shipped table entry claims by name, lines
-## that arrive as rows without one, and a lambda that stays honest code (Callables-as-data have no
-## structured equivalent, and are meant not to).
+## that arrive as rows without one, and a lambda that stays honest code (a function kept in a variable
+## is a Callable-as-data, which has no structured equivalent and is meant not to; one handed straight
+## to `connect` is an event, and reads as one).
 const MIXED_BUFFER: String = """extends Node
 
 var lives: int = 3
@@ -26,9 +27,10 @@ func _ready() -> void:
 	rpc("player_joined", name)
 	lives = 3
 	var timer: Timer = Timer.new()
-	timer.timeout.connect(func() -> void:
+	var on_tick: Callable = func() -> void:
 		lives -= 1
-	)
+		print(lives)
+	timer.timeout.connect(on_tick)
 	add_child(timer)
 """
 
@@ -58,8 +60,8 @@ static func _reading_pins() -> bool:
 	var counts: Dictionary = EventSheetLiftReading.layer_counts(reading)
 	all_passed = _check("one line is claimed by a lift-table entry",
 		int(counts[EventSheetLiftReading.LAYER_ENTRY]), 1) and all_passed
-	all_passed = _check("the lambda's three lines stay code",
-		int(counts[EventSheetLiftReading.LAYER_CODE]), 3) and all_passed
+	all_passed = _check("the kept function's two body lines stay code",
+		int(counts[EventSheetLiftReading.LAYER_CODE]), 2) and all_passed
 	all_passed = _check("blank lines belong to nobody",
 		int(counts[EventSheetLiftReading.LAYER_QUIET]), 4) and all_passed
 	return all_passed
@@ -80,7 +82,7 @@ static func _claim_pins() -> bool:
 		str(send.get("entry_id", "")), "send_everyone_with_arguments") and all_passed
 	all_passed = _check("...at the entry layer, which reads differently from a general reading",
 		str(send.get("layer", "")), EventSheetLiftReading.LAYER_ENTRY) and all_passed
-	var lambda: Dictionary = by_text.get("timer.timeout.connect(func() -> void:", {})
+	var lambda: Dictionary = by_text.get("print(lives)", {})
 	all_passed = _check("the lambda is told the plain truth",
 		str(lambda.get("claim", "")), EventSheetLiftReading.STAYS_CODE) and all_passed
 	all_passed = _check("...at the code layer", str(lambda.get("layer", "")),

@@ -8190,6 +8190,13 @@ func _menu_context_key(event_row: EventRow) -> String:
 			str(event_row.get_meta("__source_connect_line", "")))
 		if not connected.is_empty():
 			return connected
+		# A lambda the open read as its own event names its menu in its trigger: the signal and the
+		# object it came off, the two halves of the connect line it was written on.
+		if event_row.trigger_id.begins_with("signal:"):
+			connected = EventSheetMenuFacts.connected_menu_key("%s.%s.connect(" % [
+				event_row.trigger_source_path, event_row.trigger_id.trim_prefix("signal:")])
+			if not connected.is_empty():
+				return connected
 	if _current_verb_function == null:
 		return ""
 	return EventSheetMenuFacts.handler_menu(sentence_context(), _current_verb_function.function_name)
@@ -13984,7 +13991,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				# already has. Zeroing the line total skips the per-line default below; the sentence occupies
 				# the single line this row consumes, and the RawCodeRow itself is untouched.
 				if not inline_is_note and inline_literal.is_empty() and is_single_statement(inline_raw.code):
-					if _append_sentence_spans(spans, inline_raw, action_index, action_line_index, action_style_meta):
+					if _append_sentence_spans(spans, inline_raw, action_index, action_line_index, action_style_meta) \
+							or _append_inline_function_spans(spans, inline_raw, action_index, action_line_index, action_style_meta):
 						inline_total = 0
 						action_line_index += 1
 				for inline_line_index in range(inline_total):
@@ -14274,6 +14282,9 @@ func _count_event_lines(event_row: EventRow) -> int:
 				action_count += 1
 			elif not _connect_call_note(action_resource).is_empty():
 				# The wired-up call's line is one muted note too, for the same reason.
+				action_count += 1
+			elif reads_as_one_call(raw_code):
+				# A call handed a function written over several lines is one row, the function a chip.
 				action_count += 1
 			else:
 				action_count += maxi(raw_code.split("\n").size(), 1)
@@ -17420,6 +17431,47 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 		"bbcode_segments": sentence_segments,
 		"object_icon": sentence_icon
 	}.merged(_derived_call_meta(), true).merged(action_style_meta, false)))
+	return true
+
+
+## True when a raw statement hands a function written over several lines to a call, so it draws as
+## ONE row: the call, with the function folded into a chip. The line count asks this, and the span
+## pass below draws it, so the two always agree. An undo step is its own reading and is left to it.
+static func reads_as_one_call(code: String) -> bool:
+	if not code.contains("\n") or not code.contains("func("):
+		return false
+	var lines: PackedStringArray = code.split("\n")
+	return not is_comment_only_block(lines) and data_literal_info(code).is_empty() \
+		and is_single_statement(code) and undo_step_parts(code).is_empty() \
+		and not EventSheetInlineFunctions.folded(code).is_empty()
+
+
+## The span for a statement that hands a function written over several lines to a call: the call read
+## like any one-line call, with the function as one chip. It stands for the row's own code, so the
+## hover lists every line as written and double-click opens them.
+func _append_inline_function_spans(spans: Array, raw: RawCodeRow, action_index: int, line_index: int,
+		action_style_meta: Dictionary) -> bool:
+	if not reads_as_one_call(raw.code):
+		return false
+	# Spelled as its one-line twin first, so a reading that knows that twin (Sort by, Total of) says
+	# the same thing about both; any other call shows the function without the word `return`.
+	var one_line: RawCodeRow = RawCodeRow.new()
+	one_line.code = EventSheetInlineFunctions.folded(raw.code, true)
+	if statement_sentence(one_line.code, sentence_context()).is_empty():
+		one_line.code = EventSheetInlineFunctions.folded(raw.code)
+	one_line.enabled = raw.enabled
+	if _append_sentence_spans(spans, one_line, action_index, line_index, action_style_meta):
+		return true
+	spans.append(_make_span(one_line.code, SemanticSpan.SpanType.VALUE, {
+		"lane": "action",
+		"kind": "action",
+		"ace_index": action_index,
+		"ace_enabled": raw.enabled,
+		"chip": true,
+		"raw_action": true,
+		"code_cell": false,
+		"line_index": line_index
+	}.merged(action_style_meta, false)))
 	return true
 
 

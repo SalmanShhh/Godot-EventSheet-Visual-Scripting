@@ -61,13 +61,35 @@ static func run() -> bool:
 	ok = _check("and both come back where they were",
 		_roundtrip(pair_sheet, "user://_lambda_pair.gd"), pair_source) and ok
 
-	# ── What cannot be re-spelled stays a statement, and the file still opens ──
+	# ── Below other setup it is the same event, read where it sits: under the statements before it,
+	# so it is written back exactly there and the file keeps its order ──
 	var late_source: String = "extends Node\n\n\nfunc _ready():\n\tadd_to_group(\"ui\")\n\t$Play.pressed.connect(func(): start_game())\n\n\nfunc start_game():\n\tpass\n"
 	var late_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(late_source)
-	ok = _check("a lambda below other setup is left as a statement",
+	ok = _check("a lambda below other setup is not moved to the top of the sheet",
 		_has_trigger(late_sheet, "signal:pressed"), false) and ok
-	ok = _check("`_ready` keeps it, and the file round-trips",
+	ok = _check("it reads in place, under the setup before it", _wired_under(late_sheet, "OnReady"),
+		["signal:pressed", "Play", 1]) and ok
+	ok = _check("`_ready` keeps it there, and the file round-trips",
 		_roundtrip(late_sheet, "user://_lambda_late.gd"), late_source) and ok
+
+	# ── The typed spelling nearly every script uses, with the paren glued to the last body line ──
+	var typed_source: String = "extends Control\n\n\nfunc _ready() -> void:\n\t$Play.pressed.connect(func() -> void:\n\t\thide()\n\t\tstart_game())\n\n\nfunc start_game() -> void:\n\tpass\n"
+	var typed_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(typed_source)
+	var typed_events: Array = _events(typed_sheet)
+	ok = _check("a typed lambda with a glued paren lifts to one event",
+		[typed_events.size(), (typed_events[0] as EventRow).trigger_id if typed_events.size() == 1 else "",
+			(typed_events[0] as EventRow).actions.size() if typed_events.size() == 1 else 0],
+		[1, "signal:pressed", 2]) and ok
+	ok = _check("and it round-trips byte-identically",
+		_roundtrip(typed_sheet, "user://_lambda_typed.gd"), typed_source) and ok
+
+	# ── In any other function, and inside a branch, wherever the connect sits ──
+	var anywhere_source: String = "extends Control\n\nvar score: int = 0\n\n\nfunc build_row(button: Button) -> void:\n\tbutton.text = \"Play\"\n\tbutton.pressed.connect(func() -> void:\n\t\tscore += 1\n\t\tif score > 3:\n\t\t\tbutton.disabled = true\n\t)\n\tif score == 0:\n\t\tbutton.focus_entered.connect(func() -> void: score = 1)\n\tprint(score)\n"
+	var anywhere_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(anywhere_source)
+	ok = _check("the connect in a function reads as an event in that function, and so does the one in its branch",
+		_wired_triggers(anywhere_sheet), ["signal:pressed button", "signal:focus_entered button"]) and ok
+	ok = _check("both come back where they were, byte for byte",
+		_roundtrip(anywhere_sheet, "user://_lambda_anywhere.gd"), anywhere_source) and ok
 
 	# ── Editing the row writes code: a second action no longer fits on one line, so the statement
 	# is written in the shape that holds it. Nothing is dropped, which is the point ──
@@ -89,6 +111,36 @@ static func _events(sheet: EventSheetResource) -> Array:
 	for item: Variant in sheet.events:
 		if item is EventRow:
 			found.append(item)
+	return found
+
+
+## The connect event read in place under the first `trigger_id` event: [its trigger, its emitter, how
+## many actions it holds], or [] when there is none.
+static func _wired_under(sheet: EventSheetResource, trigger_id: String) -> Array:
+	for item: Variant in sheet.events:
+		if not (item is EventRow) or (item as EventRow).trigger_id != trigger_id:
+			continue
+		for sub: Variant in (item as EventRow).sub_events:
+			if sub is EventRow and (sub as EventRow).has_meta(SheetCompiler.LAMBDA_IN_PLACE_META):
+				var wired: EventRow = sub as EventRow
+				return [wired.trigger_id, wired.trigger_source_path, wired.actions.size()]
+	return []
+
+
+## Every event read in place anywhere in the sheet's functions, as "<trigger> <emitter>", in file order.
+static func _wired_triggers(sheet: EventSheetResource) -> Array:
+	var found: Array = []
+	var pending: Array = []
+	for function_entry: Variant in sheet.functions:
+		if function_entry is EventFunction:
+			pending.append_array((function_entry as EventFunction).events)
+	while not pending.is_empty():
+		var row: Variant = pending.pop_front()
+		if not (row is EventRow):
+			continue
+		if (row as EventRow).has_meta(SheetCompiler.LAMBDA_IN_PLACE_META):
+			found.append("%s %s" % [(row as EventRow).trigger_id, (row as EventRow).trigger_source_path])
+		pending = (row as EventRow).sub_events.duplicate() + pending
 	return found
 
 

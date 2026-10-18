@@ -2780,7 +2780,8 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 		return {"ok": false}  # dedented/blank content inside a function - not our shape
 	var events: Array = parsed.get("rows", [])
 	for event: Variant in events:
-		if _is_plain_collector(event as EventRow) and (event as EventRow).actions.is_empty():
+		if _is_plain_collector(event as EventRow) and (event as EventRow).actions.is_empty() \
+				and (event as EventRow).sub_events.is_empty():
 			return {"ok": false}
 	if trigger_id == "OnPhysicsProcess":
 		_read_floor_edges_back(events)
@@ -2829,15 +2830,13 @@ static func _lift_connect_lambda(function_lines: PackedStringArray, index: int, 
 	var trigger_id: String = str(CORE_SIGNAL_TRIGGERS.get(signal_name, "signal:%s" % signal_name))
 	var trigger_provider: String = "Core" if CORE_SIGNAL_TRIGGERS.has(signal_name) else ""
 	var depth: int = int(parts.get("depth", 1))
-	var body_lines: PackedStringArray = function_lines
-	var body_start: int = int(parts.get("body_start", index + 1))
-	var body_end: int = int(parts.get("body_end", index + 1))
+	var body_lines: PackedStringArray = EventForgeConnectLambdaLift.body_lines(function_lines, parts)
 	if bool(parts.get("inline", false)):
 		# An inline body has no line of its own; give it one at the indent the block form would
 		# have used, so one body grammar reads both shapes.
 		body_lines = PackedStringArray(["%s%s" % ["\t".repeat(depth + 1), str(parts.get("inline_body", ""))]])
-		body_start = 0
-		body_end = 1
+	var body_start: int = 0
+	var body_end: int = body_lines.size()
 	var parsed: Dictionary = _parse_body(body_lines, body_start, depth + 1, trigger_id,
 		trigger_provider, str(parts.get("params", "")), str(parts.get("source", "")),
 		_build_reverse_entries(), lenient_ifs, false, trigger_id)
@@ -2855,6 +2854,36 @@ static func _lift_connect_lambda(function_lines: PackedStringArray, index: int, 
 			return {"ok": false}
 		(event as EventRow).set_meta(SheetCompiler.LAMBDA_CONNECT_ID_META, lead.event_uid)
 	return {"ok": true, "events": events, "next": int(parts.get("next", index + 1))}
+
+
+## The same statement read where it SITS - anywhere but the top of `_ready` - as {ok, event, next}.
+## One event: the signal is its trigger, the lambda's statements its actions and what follows them its
+## sub-events. It carries the kept spelling (LAMBDA_IN_PLACE_META), so the compiler writes the connect
+## back at this exact place instead of moving it into `_ready`.
+static func _lift_connect_lambda_in_place(lines: PackedStringArray, index: int, lenient_ifs: bool) -> Dictionary:
+	var lifted: Dictionary = _lift_connect_lambda(lines, index, lenient_ifs)
+	if not bool(lifted.get("ok", false)):
+		return {"ok": false}
+	var events: Array = lifted.get("events", []) as Array
+	var lead: EventRow = events[0] as EventRow
+	var spelling: Dictionary = lead.get_meta(SheetCompiler.LAMBDA_CONNECT_META, {}) as Dictionary
+	var wired: EventRow = lead
+	if not _is_plain_collector(lead):
+		wired = _make_event(lead.trigger_id, lead.trigger_provider_id, lead.trigger_args, lead.trigger_source_path)
+	for event: Variant in events:
+		var row: EventRow = event as EventRow
+		row.remove_meta(SheetCompiler.LAMBDA_CONNECT_META)
+		row.remove_meta(SheetCompiler.LAMBDA_CONNECT_ID_META)
+		if row == wired:
+			continue
+		# Under the trigger, a row is a sub-event like any other: the trigger is the wired event's.
+		row.trigger_id = ""
+		row.trigger_provider_id = ""
+		row.trigger_args = ""
+		row.trigger_source_path = ""
+		wired.sub_events.append(row)
+	wired.set_meta(SheetCompiler.LAMBDA_IN_PLACE_META, spelling)
+	return {"ok": true, "event": wired, "next": int(lifted.get("next", index + 1))}
 
 
 ## Recursive body grammar (the reverse of _emit_event_body): at each depth,
@@ -3123,6 +3152,27 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 				chain_open = false
 				continue
 			# An empty arm list isn't our shape - fall through and treat `match …:` as a raw line.
+		# A signal connected to a function written inside the connect is an event of its own, read
+		# where it sits. In a handler's own body it hangs under the statements before it, because a
+		# top-level row there is one of the handler's events; anywhere deeper it is a row like a block.
+		if at_this_depth and pending_group_slug.is_empty() and rest.contains(".connect(func("):
+			var in_place: Dictionary = _lift_connect_lambda_in_place(lines, index, lenient_ifs)
+			if bool(in_place.get("ok", false)):
+				var wired: EventRow = in_place.get("event") as EventRow
+				if trigger_id.is_empty():
+					_flush_raw(current, pending_raw, blank_box)
+					rows.append(wired)
+				else:
+					if current == null:
+						current = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
+						rows.append(current)
+					_flush_raw(current, pending_raw, blank_box)
+					current.sub_events.append(wired)
+				_stamp_body_blanks(wired, blank_box)
+				current = null
+				index = int(in_place.get("next", index + 1))
+				chain_open = false
+				continue
 		# Statement at this depth (or deeper, inside an unlifted block): collect with
 		# relative indentation intact.
 		if current != null and not pending_group_slug.is_empty():
@@ -3457,7 +3507,7 @@ static func _adopt_block_body(block_event: EventRow, inner_rows: Array) -> bool:
 		var child: EventRow = inner_rows[cursor] as EventRow
 		# An empty plain collector can't arise from _parse_body (collectors are created lazily on a
 		# consumed statement); bail defensively rather than emit a stray no-op sub-event.
-		if _is_plain_collector(child) and child.actions.is_empty():
+		if _is_plain_collector(child) and child.actions.is_empty() and child.sub_events.is_empty():
 			return false
 		block_event.sub_events.append(child)
 		cursor += 1
@@ -3467,8 +3517,10 @@ static func _adopt_block_body(block_event: EventRow, inner_rows: Array) -> bool:
 ## A "plain collector" holds only the loose statements between blocks - no conditions, no loop
 ## wrapper, no else-chain. A pick_filter-bearing loop row is NOT plain (its body belongs in
 ## sub_events, and its wrapper must survive _adopt_block_body / the _lift_function empty-row drop).
+## A connect lambda read in place is not one either: it is an event of its own, trigger and all.
 static func _is_plain_collector(event: EventRow) -> bool:
-	return event != null and event.conditions.is_empty() and event.pick_filters.is_empty() and event.else_mode == EventRow.ElseMode.NONE
+	return event != null and event.conditions.is_empty() and event.pick_filters.is_empty() \
+		and event.else_mode == EventRow.ElseMode.NONE and not event.has_meta(SheetCompiler.LAMBDA_IN_PLACE_META)
 
 
 ## The sibling-isolation inverse: a lifted per-frame handler may contain fire-and-forget

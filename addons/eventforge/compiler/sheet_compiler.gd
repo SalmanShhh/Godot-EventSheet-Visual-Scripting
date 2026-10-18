@@ -107,6 +107,9 @@ const STATIC_LOCAL_MARKER: String = "# @static_local:%s"
 ## token is what keeps two lambdas on the SAME signal from being folded into one.
 const LAMBDA_CONNECT_META: String = "__source_lambda_connect"
 const LAMBDA_CONNECT_ID_META: String = "__lambda_connect_id"
+## The same kept spelling on an event read where its connect SITS (anywhere but the top of `_ready`):
+## a sub-event, written back in place as the connect statement with its rows as the body.
+const LAMBDA_IN_PLACE_META: String = "__source_lambda_in_place"
 
 # Set per-compile from sheet.emit_breakpoints (single-threaded compiles).
 static var _emit_breakpoints_flag: bool = false
@@ -1928,27 +1931,49 @@ static func _emit_ready_connections(ready_connections: Array, lines: PackedStrin
 			lines.append(str(connection))
 			continue
 		var lambda_events: Array = connection as Array
-		var event_row: EventRow = lambda_events[0] as EventRow
-		var body: PackedStringArray = PackedStringArray()
-		var body_map: Array = []
-		var open: String = str((event_row.get_meta(LAMBDA_CONNECT_META, {}) as Dictionary).get("open", "\t"))
-		var depth: int = open.length() - open.lstrip("\t").length()
-		_emit_event_body(lambda_events, body, body_map, depth + 1, result["warnings"])
-		var written: PackedStringArray = EventForgeConnectLambdaLift.emitted_lines(
-			event_row.get_meta(LAMBDA_CONNECT_META, {}), body)
-		var start_index: int = lines.size()
-		lines.append_array(written)
-		# The body's own line numbers are relative to `body`; shift them onto the lines just written
-		# (past the opening half), or onto the one line an inline statement collapsed into.
-		for entry: Variant in body_map:
-			var mapped: Dictionary = entry as Dictionary
-			if written.size() == 1:
-				mapped["start"] = start_index + 1
-				mapped["end"] = start_index + 1
-			else:
-				mapped["start"] = int(mapped.get("start", 1)) + start_index + 1
-				mapped["end"] = int(mapped.get("end", 1)) + start_index + 1
-			source_map.append(mapped)
+		_emit_lambda_connect(lambda_events, (lambda_events[0] as EventRow).get_meta(LAMBDA_CONNECT_META, {}),
+			lines, source_map, result["warnings"])
+
+
+## One connect lambda written out: `body_events` emitted one level under the kept spelling's open line
+## and put between its two halves.
+static func _emit_lambda_connect(body_events: Array, spelling: Dictionary, lines: PackedStringArray,
+		source_map: Array, warnings: Array) -> void:
+	var body: PackedStringArray = PackedStringArray()
+	var body_map: Array = []
+	var open: String = str(spelling.get("open", "\t"))
+	var depth: int = open.length() - open.lstrip("\t").length()
+	_emit_event_body(body_events, body, body_map, depth + 1, warnings)
+	var written: PackedStringArray = EventForgeConnectLambdaLift.emitted_lines(spelling, body)
+	var start_index: int = lines.size()
+	lines.append_array(written)
+	# The body's own line numbers are relative to `body`; shift them onto the lines just written
+	# (past the opening half), or onto the one line an inline statement collapsed into.
+	for entry: Variant in body_map:
+		var mapped: Dictionary = entry as Dictionary
+		if written.size() == 1:
+			mapped["start"] = start_index + 1
+			mapped["end"] = start_index + 1
+		else:
+			mapped["start"] = int(mapped.get("start", 1)) + start_index + 1
+			mapped["end"] = int(mapped.get("end", 1)) + start_index + 1
+		source_map.append(mapped)
+
+
+## A connect lambda read where it sits, written back there: the kept spelling re-indented to this
+## depth, and the event's own actions and sub-events as the body - so the row can be dragged to
+## another depth and still write a connect that parses.
+static func _emit_lambda_in_place(event_row: EventRow, depth: int, lines: PackedStringArray,
+		source_map: Array, warnings: Array) -> void:
+	var spelling: Dictionary = (event_row.get_meta(LAMBDA_IN_PLACE_META, {}) as Dictionary).duplicate()
+	spelling["open"] = "\t".repeat(depth) + str(spelling.get("open", "")).lstrip("\t")
+	if not bool(spelling.get("inline", false)) and not bool(spelling.get("glued", false)):
+		spelling["close"] = "\t".repeat(depth) + ")"
+	var body_row: EventRow = EventRow.new()
+	body_row.event_uid = event_row.event_uid
+	body_row.actions = event_row.actions
+	body_row.sub_events = event_row.sub_events
+	_emit_lambda_connect([body_row], spelling, lines, source_map, warnings)
 
 
 static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStringArray, source_map: Array, result: Dictionary, connect_context: Dictionary = {}, deferred_comment_lines: PackedStringArray = PackedStringArray()) -> void:
@@ -2313,6 +2338,12 @@ static func _emit_event_body(
 			continue
 		# A blank run captured before this block re-emits above its group marker / condition header.
 		_emit_leading_body_blanks(event_row, lines)
+		# A connect lambda read in place is its connect statement, written where the event sits.
+		if event_row.has_meta(LAMBDA_IN_PLACE_META):
+			_emit_lambda_in_place(event_row, depth, lines, source_map, warnings)
+			had_body = true
+			chain_open = false
+			continue
 		# "With node X:" scope: this row's own target (if set) wins, otherwise it inherits an enclosing
 		# With-node block's. Threaded into action codegen (blank/self targets inline to X) and down to
 		# sub-events. Empty = host-scoped, exactly as before.

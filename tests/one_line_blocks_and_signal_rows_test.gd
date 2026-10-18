@@ -7,9 +7,9 @@
 #        was the one place still spelling the word.
 #   An `await` says which tick or which signal it waits for.
 #   A lambda handed to `connect` reads as the trigger event it is, with the lambda's body as its
-#        rows. At the top of `_ready` it LIFTS - it becomes that event, and re-emits as the
-#        statement it was written as; anywhere else the connect line stays a statement and keeps a
-#        muted note beside the same reading, so nothing is hidden either way.
+#        rows. It LIFTS - it becomes that event, at the top of `_ready` or read in place anywhere
+#        else, and re-emits as the statement it was written as; one the lift cannot claim stays a
+#        statement and keeps a muted note beside the same reading, so nothing is hidden either way.
 #   A one-line `if` / `elif` / `else` lifts as the sub-event its indented twin does, and the
 #        file it came from re-emits BYTE FOR BYTE - the one thing that must never be traded away.
 #
@@ -47,6 +47,7 @@ func _ready() -> void:
 	await host.tree_exited
 	await get_tree().create_timer(0.5).timeout
 	host.renamed.connect(func(): $Timer.stop())
+	host.get_parent().ready.connect(func(): seconds_left = 0)
 
 
 func guards() -> void:
@@ -178,12 +179,18 @@ static func _connected_lambdas(view: EventSheetViewport, rows: PackedStringArray
 	ok = _check("and the branch in its body is a row under the same trigger",
 		_reading_at(rows, "Stop timer"),
 		"➜host On collision withbody > OneLineBlocksFixture seconds left ≤ 0 | Stop timer \"Timer\"") and ok
-	# A lambda the lift cannot claim - one written after other setup, where emission could not put
-	# the statement back - stays a statement, and the view still reads it as the event it is.
+	# A lambda written after other setup is the same event, read where it sits: under the setup
+	# before it, so it is written back there and the file keeps its order.
+	ok = _check("a connect after other setup is the event, read in place",
+		_reading_at(rows, "➜host On Renamed"), "➜host On Renamed | Stop timer \"Timer\"") and ok
+	ok = _check("and it wears no muted note, because it is no longer a line of code",
+		_has_reading(rows, "connects host On Renamed"), false) and ok
+	# A lambda the lift cannot claim - off a call the open cannot name - stays a statement, and the
+	# view still reads it as the event it is.
 	ok = _check("a connect the lift cannot claim keeps a muted note naming what it wires",
-		_has_reading(rows, "connects host On Renamed"), true) and ok
+		_has_reading(rows, "connects host.get_parent() On Ready"), true) and ok
 	ok = _check("and its lambda still draws the trigger it wires",
-		_reading_at(rows, "➜host On Renamed"), "➜host On Renamed | ") and ok
+		_reading_at(rows, "➜host.get_parent()"), "➜host.get_parent() On Ready | ") and ok
 	ok = _check("a connect handed a NAMED function is left exactly as it was",
 		_connect_parts("timer.timeout.connect(_on_timeout)"), "") and ok
 	ok = _check("a connect whose lambda body is empty is refused",

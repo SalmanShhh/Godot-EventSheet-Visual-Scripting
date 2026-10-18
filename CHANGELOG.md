@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+### Added: a function written inside a call reads as what it is
+
+- A signal connected to a function written inside the connect (`start_button.pressed.connect(func()
+  -> void:` and the lines under it) opens as its own event: the signal is the trigger
+  (`start_button On Pressed`) and the function's lines are its actions. At the top of `_ready` it
+  stands beside On created as before; anywhere else - lower in `_ready`, in any other function, inside
+  a branch - it is read where it sits, nested under the lines before it, and written back exactly
+  there. The typed spelling (`func() -> void:`) and the `)` glued to the last body line, which is
+  how nearly every connect is written, are read now too. Saving writes the same bytes back; a connect
+  that cannot come back exactly stays the line it was.
+- A function handed to any other call over several lines (`sort_custom`, `filter`, `map`, a callback,
+  a deferred call) is one action row: the call, read like any one-line call, with the function as one
+  chip (`enemies Sort custom  func(a, b): a.position.x < b.position.x`), its first line and `…` when
+  it is longer. Hovering the row lists every line as written. A sort or a total that the one-line
+  reading already knows reads the same way (`Sort shop by price (lowest first)`). Display only.
+- A menu answered by such a lambda (`popup.id_pressed.connect(func(id: int) -> void:` and a
+  `match id:`) still reads each arm as the item it answers.
+- Over the plugin's own 1,125 scripts, 424 connects now open as events, the lines still drawn as code
+  fall from 1,554 to 485, and the rows that say nothing of their own from 991 to 883. Every file
+  still saves back byte for byte.
+
 ### Fixed: shaping a field, walked end to end in the editor
 
 - Clicking an option in "Shape this field", pressing Choose or Apply, or pressing ▲ in the Inspector
