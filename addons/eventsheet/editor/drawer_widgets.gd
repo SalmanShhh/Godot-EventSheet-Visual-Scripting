@@ -972,29 +972,87 @@ class LinkToggle:
 ## (text / number / checkbox), with add / remove / move-up controls. Columns come from the
 ## variable's table schema ({name, type} entries); values live in plain Dictionaries, so the
 ## generated game code needs nothing but the Array itself.
+##
+## A long list is READ through a view: a search box, a click on a column's name to sort by it
+## (number columns as numbers), and pages of PAGE_SIZE rows. The view only chooses which stored rows
+## are drawn and in what order - `get_value()` is always the list in the order the file keeps it,
+## so searching or sorting never writes anything. A cell left empty is drawn quietly amber, and its
+## hover says which column of which row is missing.
 class DrawerTable:
 	extends VBoxContainer
 	signal value_changed(value: Array)
+	## Rows drawn at once; a list longer than this gets the search box and the pages.
+	const PAGE_SIZE: int = 8
+	## The sort key of the leading "#" column: the order the file keeps.
+	const STORED_ORDER: String = "#"
 	var editable: bool = true
 	var _columns: Array = []
 	var _value: Array = []
 	var _grid: GridContainer = null
 	var _add_button: Button = null
+	var _search: LineEdit = null
+	var _pager: HBoxContainer = null
+	var _page_label: Label = null
+	var _previous_button: Button = null
+	var _next_button: Button = null
+	var _missing_label: Label = null
+	var _open_link: LinkButton = null
+	## Opens the file this list lives in as a table; the link shows only while it is set.
+	var open_table: Callable = Callable()
+	var _query: String = ""
+	var _sort_column: String = ""
+	var _descending: bool = false
+	var _page: int = 0
+	## Each drawn cell's [control, row, column, stored index], so a fill or an emptying repaints its
+	## own cell without rebuilding the grid (which would take the focus from the cell being typed in).
+	var _cell_marks: Array = []
 
 	func _init(columns: Array = []) -> void:
 		for column: Variant in columns:
 			if column is Dictionary and not str((column as Dictionary).get("name", "")).is_empty():
 				_columns.append(column)
 		add_theme_constant_override("separation", 2)
+		_search = LineEdit.new()
+		_search.placeholder_text = EventSheetL10n.translate("Search the rows")
+		_search.clear_button_enabled = true
+		_search.text_changed.connect(search)
+		add_child(_search)
 		_grid = GridContainer.new()
-		_grid.columns = _columns.size() + 2  # cells + move-up + remove
+		_grid.columns = _columns.size() + 3  # row number + cells + move-up + remove
 		_grid.add_theme_constant_override("h_separation", 4)
 		_grid.add_theme_constant_override("v_separation", 2)
 		add_child(_grid)
+		_pager = HBoxContainer.new()
+		_previous_button = Button.new()
+		_previous_button.text = "‹"
+		_previous_button.tooltip_text = EventSheetL10n.translate("The page before")
+		_previous_button.pressed.connect(func() -> void: turn_page(-1))
+		_pager.add_child(_previous_button)
+		_page_label = Label.new()
+		_pager.add_child(_page_label)
+		_next_button = Button.new()
+		_next_button.text = "›"
+		_next_button.tooltip_text = EventSheetL10n.translate("The page after")
+		_next_button.pressed.connect(func() -> void: turn_page(1))
+		_pager.add_child(_next_button)
+		var gap: Control = Control.new()
+		gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_pager.add_child(gap)
+		_missing_label = Label.new()
+		_missing_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+		_pager.add_child(_missing_label)
+		_open_link = LinkButton.new()
+		_open_link.text = EventSheetL10n.translate("Open as a table")
+		_open_link.tooltip_text = EventSheetL10n.translate("Opens this file as a table, one column per field.")
+		_open_link.pressed.connect(func() -> void: open_table.call())
+		_pager.add_child(_open_link)
+		add_child(_pager)
 		_add_button = Button.new()
 		_add_button.text = "+ " + EventSheetL10n.translate("Add row")
 		_add_button.pressed.connect(_on_add_row)
 		add_child(_add_button)
+		# Any cell edit can fill or empty a cell, so the count under the grid follows every change.
+		value_changed.connect(func(_rows: Array) -> void: _refresh_missing())
 		_rebuild()
 
 	func set_value(rows: Array) -> void:
@@ -1007,11 +1065,126 @@ class DrawerTable:
 	func get_value() -> Array:
 		return _value.duplicate(true)
 
+	## Keeps only the rows with `text` in any cell, back on the first page.
+	func search(text: String) -> void:
+		_query = text
+		_page = 0
+		_rebuild()
+
+	## Sorts the view by one column, the way a click on its name does: the same column again flips
+	## the direction, a new number column starts with the biggest first, a new text column from A.
+	## STORED_ORDER goes back to the order the file keeps.
+	func sort_by(column_name: String) -> void:
+		if column_name == STORED_ORDER:
+			_sort_column = ""
+			_descending = false
+		elif column_name == _sort_column:
+			_descending = not _descending
+		else:
+			_sort_column = column_name
+			_descending = is_number_column(_columns, column_name)
+		_page = 0
+		_rebuild()
+
+	func turn_page(step: int) -> void:
+		_page = int(_view().get("page", 0)) + step
+		_rebuild()
+
+	## The stored indices of the rows drawn now, in the order they are drawn.
+	func shown_rows() -> Array:
+		return _view().get("rows", [])
+
+	func _view() -> Dictionary:
+		return view_of(_value, _columns, _query, _sort_column, _descending, _page, PAGE_SIZE)
+
+	## What a view of `rows` shows: {rows: the stored indices on this page in drawn order, matched:
+	## how many rows the search kept, page: the page drawn (clamped), pages}. Pure, so a test pins
+	## what the grid draws for a search, a sort and a page without building one.
+	static func view_of(rows: Array, columns: Array, query: String, sort_column: String, descending: bool,
+			page: int, page_size: int) -> Dictionary:
+		var needle: String = query.strip_edges().to_lower()
+		var kept: Array = []
+		for index: int in range(rows.size()):
+			if needle.is_empty() or _row_matches(rows[index], columns, needle):
+				kept.append(index)
+		if not sort_column.is_empty():
+			var numeric: bool = is_number_column(columns, sort_column)
+			kept.sort_custom(func(a: int, b: int) -> bool:
+				var order: int = _compare_cells(_cell(rows[a], sort_column), _cell(rows[b], sort_column), numeric)
+				if order == 0:
+					return a < b  # equal cells keep the file's order, so one sort always draws the same
+				return order > 0 if descending else order < 0)
+		var per_page: int = maxi(1, page_size)
+		var pages: int = maxi(1, ceili(float(kept.size()) / float(per_page)))
+		var shown_page: int = clampi(page, 0, pages - 1)
+		return {"rows": kept.slice(shown_page * per_page, shown_page * per_page + per_page), "matched": kept.size(),
+			"page": shown_page, "pages": pages}
+
+	## "Rows 1-8 of 23" for a view, or "No row matches" when the search kept none.
+	static func page_text(view: Dictionary, page_size: int) -> String:
+		var matched: int = int(view.get("matched", 0))
+		if matched == 0:
+			return EventSheetL10n.translate("No row matches")
+		var first: int = int(view.get("page", 0)) * page_size + 1
+		return EventSheetL10n.translate("Rows %d-%d of %d") % [first, mini(matched, first + page_size - 1), matched]
+
+	static func is_number_column(columns: Array, column_name: String) -> bool:
+		for column: Variant in columns:
+			if column is Dictionary and str((column as Dictionary).get("name", "")) == column_name:
+				return str((column as Dictionary).get("type", "")) in ["int", "float"]
+		return false
+
+	## True when a cell holds nothing: a text, picture, colour or choice cell that is blank, or any
+	## cell the row does not have at all. A number or a checkbox always holds something.
+	static func is_empty_cell(row: Variant, column: Dictionary) -> bool:
+		var value: Variant = _cell(row, str(column.get("name", "")))
+		if value == null:
+			return true
+		if str(column.get("type", "String")) in ["int", "float", "bool"]:
+			return false
+		return str(value).strip_edges().is_empty()
+
+	## How many rows have at least one empty cell.
+	static func rows_with_empty_cells(rows: Array, columns: Array) -> int:
+		var count: int = 0
+		for row: Variant in rows:
+			for column: Variant in columns:
+				if column is Dictionary and is_empty_cell(row, column as Dictionary):
+					count += 1
+					break
+		return count
+
+	## The hover of an empty cell: which column of which row is missing, then what the column is for.
+	static func empty_cell_hint(column: Dictionary, row_index: int) -> String:
+		var hint: String = EventSheetL10n.translate("%s is empty in row %d.") % [str(column.get("name", "")), row_index]
+		var about: String = str(column.get("about", "")).strip_edges()
+		return hint if about.is_empty() else "%s\n%s" % [hint, about]
+
+	static func _row_matches(row: Variant, columns: Array, needle: String) -> bool:
+		for column: Variant in columns:
+			var value: Variant = _cell(row, str((column as Dictionary).get("name", ""))) if column is Dictionary else null
+			if value != null and str(value).to_lower().contains(needle):
+				return true
+		return false
+
+	static func _cell(row: Variant, column_name: String) -> Variant:
+		return (row as Dictionary).get(column_name) if row is Dictionary else null
+
+	static func _compare_cells(a: Variant, b: Variant, numeric: bool) -> int:
+		if numeric:
+			var x: float = float(a) if a != null else 0.0
+			var y: float = float(b) if b != null else 0.0
+			return 0 if x == y else (-1 if x < y else 1)
+		return str(a if a != null else "").naturalnocasecmp_to(str(b if b != null else ""))
+
 	func _on_add_row() -> void:
 		var fresh: Dictionary = {}
 		for column: Dictionary in _columns:
 			fresh[str(column.get("name"))] = _default_for(column)
 		_value.append(fresh)
+		# The new row is the last one the file keeps, so the file's order shows it on the last page.
+		if _sort_column.is_empty() and _query.strip_edges().is_empty():
+			_page = _value.size()
 		_rebuild()
 		value_changed.emit(get_value())
 
@@ -1040,28 +1213,39 @@ class DrawerTable:
 
 	func _rebuild() -> void:
 		for stale: Node in _grid.get_children():
+			_grid.remove_child(stale)
 			stale.queue_free()
+		_cell_marks.clear()
 		_add_button.disabled = not editable
 		var ink: Color = EventSheetActiveTheme.chrome().drawer_ink_color
+		_grid.add_child(_header(STORED_ORDER, EventSheetL10n.translate("Back to the order the file keeps"), ink))
 		for column: Dictionary in _columns:
-			var head: Label = Label.new()
 			# The column's name exactly as the code writes it; its Description, when it has one, on hover.
-			head.text = str(column.get("name"))
-			head.tooltip_text = str(column.get("about", ""))
-			head.mouse_filter = Control.MOUSE_FILTER_PASS
-			head.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
-			head.modulate = Color(ink.r, ink.g, ink.b, 0.8)
-			_grid.add_child(head)
+			var about: String = str(column.get("about", ""))
+			_grid.add_child(_header(str(column.get("name")),
+				about if not about.is_empty() else EventSheetL10n.translate("Sort by %s") % str(column.get("name")), ink))
 		_grid.add_child(Control.new())
 		_grid.add_child(Control.new())
-		for row_index: int in range(_value.size()):
+		var view: Dictionary = _view()
+		_page = int(view.get("page", 0))
+		for shown: Variant in view.get("rows", []):
+			var row_index: int = int(shown)
 			var row: Dictionary = _value[row_index]
+			var number: Label = Label.new()
+			number.text = str(row_index)
+			number.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			number.modulate = Color(ink.r, ink.g, ink.b, 0.6)
+			_grid.add_child(number)
 			for column: Dictionary in _columns:
-				_grid.add_child(_make_cell(row, column))
+				var cell: Control = _make_cell(row, column)
+				_cell_marks.append([cell, row, column, row_index])
+				_grid.add_child(cell)
 			var up_button: Button = Button.new()
 			up_button.text = "▲"
 			up_button.tooltip_text = EventSheetL10n.translate("Move this row up")
-			up_button.disabled = not editable or row_index == 0
+			# A sorted or searched view does not draw the row above, so "up" there would move a row
+			# past one the reader cannot see; moving waits for the file's own, whole order.
+			up_button.disabled = not editable or row_index == 0 or not _sort_column.is_empty() or not _query.strip_edges().is_empty()
 			up_button.pressed.connect(_on_move_up.bind(row_index))
 			_grid.add_child(up_button)
 			var remove_button: Button = Button.new()
@@ -1070,6 +1254,72 @@ class DrawerTable:
 			remove_button.disabled = not editable
 			remove_button.pressed.connect(_on_remove.bind(row_index))
 			_grid.add_child(remove_button)
+		# The search and the pages are for long lists; a short grid stays the plain grid it was.
+		var long_list: bool = _value.size() > PAGE_SIZE or not _query.is_empty()
+		_search.visible = long_list
+		for page_part: Control in [_previous_button, _page_label, _next_button]:
+			page_part.visible = long_list
+		_page_label.text = page_text(view, PAGE_SIZE)
+		_previous_button.disabled = _page <= 0
+		_next_button.disabled = _page >= int(view.get("pages", 1)) - 1
+		_open_link.visible = open_table.is_valid()
+		_missing_label.add_theme_color_override("font_color", Color(ink.r, ink.g, ink.b, 0.6))
+		_refresh_missing()
+
+	## A column's name as a flat button: a click sorts by it, and the sorted column carries its arrow.
+	func _header(column_name: String, hover: String, ink: Color) -> Button:
+		var head: Button = Button.new()
+		head.flat = true
+		head.text = column_name
+		if column_name == _sort_column:
+			head.text += " ▼" if _descending else " ▲"
+		head.tooltip_text = hover
+		head.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		head.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+		head.modulate = Color(ink.r, ink.g, ink.b, 0.8)
+		head.pressed.connect(sort_by.bind(column_name))
+		return head
+
+	## Paints every drawn empty cell quietly amber with its hover, and counts the rows that have one.
+	func _refresh_missing() -> void:
+		for mark: Variant in _cell_marks:
+			var entry: Array = mark
+			var cell: Control = entry[0]
+			if is_instance_valid(cell):
+				var empty: bool = is_empty_cell(entry[1], entry[2])
+				_paint_empty(cell, empty, empty_cell_hint(entry[2], int(entry[3])) if empty else "")
+		var missing: int = rows_with_empty_cells(_value, _columns)
+		_missing_label.text = "" if missing == 0 else (EventSheetL10n.translate("1 row has an empty cell") if missing == 1
+			else EventSheetL10n.translate("%d rows have an empty cell") % missing)
+		_missing_label.visible = missing > 0
+		# The bar under the grid shows while it has anything to say: the pages, the count or the link.
+		_pager.visible = _page_label.visible or _missing_label.visible or _open_link.visible
+
+	## The field a cell is typed or picked in: the cell itself, or the text box inside a picture cell.
+	static func _cell_field(cell: Control) -> Control:
+		if cell is LineEdit or cell is BaseButton:
+			return cell
+		for child: Node in cell.get_children():
+			if child is LineEdit:
+				return child as Control
+		return cell
+
+	static func _paint_empty(cell: Control, empty: bool, hint: String) -> void:
+		var field: Control = _cell_field(cell)
+		if not field.has_meta("own_tooltip"):
+			field.set_meta("own_tooltip", field.tooltip_text)
+		field.tooltip_text = hint if empty else str(field.get_meta("own_tooltip"))
+		if not empty:
+			field.remove_theme_stylebox_override("normal")
+			return
+		var amber: Color = EventSheetPalette.COLOR_HEALTH_WARN
+		var style: StyleBoxFlat = StyleBoxFlat.new()
+		style.bg_color = Color(amber.r, amber.g, amber.b, 0.14)
+		style.border_color = Color(amber.r, amber.g, amber.b, 0.55)
+		style.set_border_width_all(1)
+		style.set_corner_radius_all(2)
+		style.set_content_margin_all(EventSheetPalette.scaled_f(4.0))
+		field.add_theme_stylebox_override("normal", style)
 
 	func _make_cell(row: Dictionary, column: Dictionary) -> Control:
 		var column_name: String = str(column.get("name"))

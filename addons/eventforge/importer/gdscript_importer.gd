@@ -795,6 +795,13 @@ func _extract_drawer_from_hint(lifted: LocalVariable, line: String) -> void:
 		attrs["unit_kinds"] = unit_kinds
 		if not unit_store.is_empty():
 			attrs["unit_store"] = unit_store
+	elif parts[1] == "table_row":
+		# "table_row:<array>:<column>" recovers into the two names the emitter reads; anything else
+		# (a missing name, an extra part) is left as the verbatim @export_custom it came in as.
+		if parts.size() != 4:
+			return
+		attrs["table_row_table"] = parts[2]
+		attrs["table_row_column"] = parts[3]
 	elif parts[1] == "cards" and parts.size() >= 3:
 		# "kind=k,schema=n,stripes=s" recovers into the same three attributes the emitter reads, so
 		# the marker re-emits byte-for-byte. A marker without its schema names nothing to draw, so

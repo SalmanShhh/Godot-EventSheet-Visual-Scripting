@@ -9370,3 +9370,22 @@ null (no object yet),null (noch kein Objekt)
 Waits (async),Wartet (async)
 Shared (static),Gemeinsam (static)
 "A function needs a name, so callers can find it. Nothing was changed.","Eine Funktion braucht einen Namen, damit Aufrufe sie finden. Nichts wurde geändert."
+Search the rows,Zeilen durchsuchen
+The page before,Die Seite davor
+The page after,Die Seite danach
+Open as a table,Als Tabelle öffnen
+"Opens this file as a table, one column per field.","Öffnet diese Datei als Tabelle, eine Spalte pro Feld."
+No row matches,Keine Zeile passt
+Rows %d-%d of %d,Zeilen %d-%d von %d
+%s is empty in row %d.,%s ist in Zeile %d leer.
+Back to the order the file keeps,Zurück zur Reihenfolge der Datei
+Sort by %s,Nach %s sortieren
+1 row has an empty cell,1 Zeile hat eine leere Zelle
+%d rows have an empty cell,%d Zeilen haben eine leere Zelle
+Picked from a dropdown of a table's rows.,Aus einer Liste der Zeilen einer Tabelle gewählt.
+row %d,Zeile %d
+row %d of %s,Zeile %d von %s
+"%s has no row %d: pick a row, or the number stays as it is.","%s hat keine Zeile %d: Wähle eine Zeile, sonst bleibt die Zahl, wie sie ist."
+Pick a row of a data table,Eine Zeile einer Datentabelle wählen
+"A dropdown of the rows of a data table, shown by their name column. The file still stores the row's number.","Eine Liste der Zeilen einer Datentabelle, gezeigt über ihre Namensspalte. Die Datei speichert weiter die Nummer der Zeile."
+Name column,Namensspalte

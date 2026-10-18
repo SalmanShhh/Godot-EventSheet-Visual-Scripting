@@ -242,7 +242,8 @@ static func _column_notes() -> bool:
 	cell.free()
 	var heads: Array = []
 	for index: int in drawer_columns.size():
-		var head: Label = table._grid.get_child(index) as Label
+		# The first header is the row-number column, so a column's own header sits one place on.
+		var head: Button = table._grid.get_child(index + 1) as Button
 		heads.append([head.text, head.tooltip_text])
 	var passed: bool = SUPPORT.pins("resource_wizard_test", [
 		["a new row starts with each column's own Default", wizard.rows[0], {"name": "", "amount": 1, "icon": ""}],

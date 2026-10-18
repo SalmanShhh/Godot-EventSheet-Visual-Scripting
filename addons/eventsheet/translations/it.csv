@@ -9370,3 +9370,22 @@ null (no object yet),null (ancora nessun oggetto)
 Waits (async),Attende (async)
 Shared (static),Condivisa (static)
 "A function needs a name, so callers can find it. Nothing was changed.",Una funzione ha bisogno di un nome perché le chiamate la trovino. Non è stato cambiato nulla.
+Search the rows,Cerca nelle righe
+The page before,La pagina prima
+The page after,La pagina dopo
+Open as a table,Apri come tabella
+"Opens this file as a table, one column per field.","Apre questo file come tabella, una colonna per campo."
+No row matches,Nessuna riga corrisponde
+Rows %d-%d of %d,Righe %d-%d di %d
+%s is empty in row %d.,%s è vuoto nella riga %d.
+Back to the order the file keeps,Torna all'ordine del file
+Sort by %s,Ordina per %s
+1 row has an empty cell,1 riga ha una cella vuota
+%d rows have an empty cell,%d righe hanno una cella vuota
+Picked from a dropdown of a table's rows.,Scelto da un elenco delle righe di una tabella.
+row %d,riga %d
+row %d of %s,riga %d di %s
+"%s has no row %d: pick a row, or the number stays as it is.","%s non ha la riga %d: scegli una riga, o il numero resta com'è."
+Pick a row of a data table,Scegli una riga di una tabella di dati
+"A dropdown of the rows of a data table, shown by their name column. The file still stores the row's number.","Un elenco delle righe di una tabella di dati, mostrate dalla loro colonna del nome. Il file conserva il numero della riga."
+Name column,Colonna del nome

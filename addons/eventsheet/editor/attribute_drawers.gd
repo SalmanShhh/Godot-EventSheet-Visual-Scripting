@@ -10,6 +10,8 @@
 #   progress_bar   eventsheet:progress_bar:<min>:<max>   int / float
 #   min_max        eventsheet:min_max:<min>:<max>        Vector2 (x = low end, y = high end)
 #   table          eventsheet:table:<n>=<t>,<n>=<t>      Array (of Dictionary rows; t: String/int/float/bool)
+#   table_row      eventsheet:table_row:<array>:<column> int (the number of a row of the table property
+#                  <array>, picked from a dropdown of its rows by their <column> cell)
 #   cards          eventsheet:cards:kind=<k>,schema=<n>,stripes=<k>
 #                  Array (of Dictionary cards, each of a KIND, edited as a reorderable list of cards -
 #                  the schema registered under <n> says what each kind is called and which fields it has)
@@ -40,10 +42,15 @@ const PREVIEW_PANEL_PATH: String = "res://addons/eventsheet/editor/inspector/pre
 ## never asks for cards must not pay for them at every editor start.
 const CARD_LIST_DRAWER_PATH: String = "res://addons/eventsheet/editor/inspector/card_list_drawer.gd"
 const CARD_SCHEMAS_PATH: String = "res://addons/eventsheet/editor/inspector/card_schemas.gd"
+## The row-picking drawer, loaded BY PATH for the same reason.
+const TABLE_ROW_DRAWER_PATH: String = "res://addons/eventsheet/editor/inspector/table_row_drawer.gd"
 ## The widgets themselves, loaded BY PATH for the same reason: most objects an Inspector shows carry
 ## no drawer and no decor, and the widgets (with their translations) are the larger half of this file's
 ## weight at boot. Reached through `widgets()`; the property wrappers below hold them as plain Controls.
 const DRAWER_WIDGETS_PATH: String = "res://addons/eventsheet/editor/drawer_widgets.gd"
+## The door the plugin hands in: opens a .tres in the sheet editor's table view (Callable(path)).
+## Unset, the table look draws no "Open as a table" link.
+var open_table: Callable = Callable()
 
 
 ## The drawer widgets module, compiled the first time a drawer or a decor line is drawn.
@@ -136,7 +143,15 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 			var columns: Array = parse_table_columns(str(args[0]) if args.size() > 0 else "", args.slice(1))
 			if columns.is_empty():
 				return false
-			add_property_editor(name, TableProperty.new(columns))
+			add_property_editor(name, TableProperty.new(columns, open_table))
+			return true
+		"table_row":
+			# An int naming a row of the table property beside it, picked by the row's name. The
+			# file keeps the number, so the game reads `table[number]` as it always would.
+			var row_args: Array = drawer.get("args", [])
+			if type != TYPE_INT or row_args.size() != 2 or not str(row_args[0]).is_valid_identifier():
+				return false
+			add_property_editor(name, load(TABLE_ROW_DRAWER_PATH).new(str(row_args[0]), str(row_args[1])))
 			return true
 		"cards":
 			# A list of Dictionaries, each of a kind: the reorderable card list. Both the untyped list
@@ -525,7 +540,11 @@ class TableProperty:
 	extends EditorProperty
 	var _table: Control
 
-	func _init(columns: Array) -> void:
+	var _open_door: Callable = Callable()
+	var _open_path: String = ""
+
+	func _init(columns: Array, open_door: Callable = Callable()) -> void:
+		_open_door = open_door
 		_table = EventSheetAttributeDrawers.widgets().DrawerTable.new(columns)
 		_table.connect("value_changed", _on_changed)
 		add_child(_table)
@@ -548,9 +567,25 @@ class TableProperty:
 		# reselecting the asset) brings a different value that actually rebuilds the grid.
 		var value: Variant = get_edited_object().get(get_edited_property())
 		var incoming: Array = value if value is Array else []
+		_offer_open_link(get_edited_object())
 		if incoming == _table.call("get_value"):
 			return
 		_table.call("set_value", incoming)
+
+	## "Open as a table" under the grid, for a list kept in a file of its own: the file opens in the
+	## table view of the sheet editor. A list inside a scene or a sub-resource has no file to open.
+	func _offer_open_link(edited: Object) -> void:
+		var path: String = file_of(edited) if _open_door.is_valid() else ""
+		if path == _open_path:
+			return
+		_open_path = path
+		_table.set("open_table", _open_door.bind(path) if not path.is_empty() else Callable())
+		_table.call("_rebuild")
+
+	## The file an edited object is kept in, when it is a .tres or .res of its own; "" otherwise.
+	static func file_of(edited: Object) -> String:
+		var path: String = (edited as Resource).resource_path if edited is Resource else ""
+		return path if path.get_extension() in ["tres", "res"] and not path.contains("::") else ""
 
 
 ## A list of Dictionaries as a list of cards: drag to reorder, fold one open for its own fields.

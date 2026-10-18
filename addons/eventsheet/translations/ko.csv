@@ -9370,3 +9370,22 @@ null (no object yet),null (아직 오브젝트 없음)
 Waits (async),기다림 (async)
 Shared (static),공유 (static)
 "A function needs a name, so callers can find it. Nothing was changed.",호출하는 쪽이 찾을 수 있도록 함수에는 이름이 필요합니다. 아무것도 바뀌지 않았습니다.
+Search the rows,행 검색
+The page before,이전 페이지
+The page after,다음 페이지
+Open as a table,표로 열기
+"Opens this file as a table, one column per field.",이 파일을 표로 엽니다. 필드마다 열 하나입니다.
+No row matches,일치하는 행이 없습니다
+Rows %d-%d of %d,행 %d-%d / %d
+%s is empty in row %d.,%s 값이 %d행에서 비어 있습니다.
+Back to the order the file keeps,파일의 순서로 돌아가기
+Sort by %s,%s 기준 정렬
+1 row has an empty cell,1개 행에 빈 셀이 있습니다
+%d rows have an empty cell,%d개 행에 빈 셀이 있습니다
+Picked from a dropdown of a table's rows.,표의 행 목록에서 고릅니다.
+row %d,%d행
+row %d of %s,%d행 (%s)
+"%s has no row %d: pick a row, or the number stays as it is.","%s에는 %d행이 없습니다. 행을 고르거나, 숫자는 그대로 둡니다."
+Pick a row of a data table,데이터 표의 행 고르기
+"A dropdown of the rows of a data table, shown by their name column. The file still stores the row's number.",데이터 표의 행을 이름 열로 보여 주는 드롭다운입니다. 파일에는 계속 행 번호가 저장됩니다.
+Name column,이름 열

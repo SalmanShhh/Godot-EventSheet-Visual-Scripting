@@ -37,7 +37,7 @@ static func run() -> bool:
 static func _looks_per_type(dialog: VariableDialog) -> bool:
 	var rows: Array = []
 	for expected: Array in [
-		["int", ["", "slider", "no_handle", "progress_bar", "number_choices", "flags", "layers", "custom", "storage"]],
+		["int", ["", "slider", "no_handle", "progress_bar", "number_choices", "flags", "layers", "table_row", "custom", "storage"]],
 		["float", ["", "slider", "angle", "exp_slider", "no_handle", "progress_bar", "easing", "unit", "custom", "storage"]],
 		["String", ["", "file", "folder", "multiline", "placeholder", "choices", "suggestions", "toggle_row", "password",
 			"expression", "custom", "storage"]],

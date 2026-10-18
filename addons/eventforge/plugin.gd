@@ -417,6 +417,7 @@ func _enter_tree() -> void:
 	# Tier 3 attribute drawers (progress bars…): purely cosmetic - generated scripts
 	# degrade to plain fields without this plugin.
 	_attribute_drawers_plugin = EventSheetAttributeDrawers.new()
+	_attribute_drawers_plugin.open_table = _open_sheet_in_workspace
 	add_inspector_plugin(_attribute_drawers_plugin)
 	_drawing_prefab_preview_gen = load(DRAWING_PREFAB_PREVIEW_GEN_PATH).new()
 	var prefab_previewer: EditorResourcePreview = get_editor_interface().get_resource_previewer()

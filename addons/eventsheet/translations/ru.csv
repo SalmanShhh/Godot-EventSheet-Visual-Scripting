@@ -9370,3 +9370,22 @@ null (no object yet),null (пока без объекта)
 Waits (async),Ждёт (async)
 Shared (static),Общая (static)
 "A function needs a name, so callers can find it. Nothing was changed.","Функции нужно имя, чтобы вызовы могли её найти. Ничего не изменено."
+Search the rows,Искать в строках
+The page before,Предыдущая страница
+The page after,Следующая страница
+Open as a table,Открыть как таблицу
+"Opens this file as a table, one column per field.","Открывает этот файл как таблицу, по столбцу на поле."
+No row matches,Ни одна строка не подходит
+Rows %d-%d of %d,Строки %d-%d из %d
+%s is empty in row %d.,%s пусто в строке %d.
+Back to the order the file keeps,Вернуть порядок файла
+Sort by %s,Сортировать по %s
+1 row has an empty cell,В 1 строке есть пустая ячейка
+%d rows have an empty cell,В %d строках есть пустая ячейка
+Picked from a dropdown of a table's rows.,Выбирается из списка строк таблицы.
+row %d,строка %d
+row %d of %s,строка %d в %s
+"%s has no row %d: pick a row, or the number stays as it is.","В %s нет строки %d: выберите строку, иначе число останется как есть."
+Pick a row of a data table,Выбрать строку таблицы данных
+"A dropdown of the rows of a data table, shown by their name column. The file still stores the row's number.","Список строк таблицы данных, показанных по их столбцу имени. Файл по-прежнему хранит номер строки."
+Name column,Столбец имени

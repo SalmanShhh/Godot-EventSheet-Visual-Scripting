@@ -9370,3 +9370,22 @@ null (no object yet),null（还没有对象）
 Waits (async),等待 (async)
 Shared (static),共享 (static)
 "A function needs a name, so callers can find it. Nothing was changed.",函数需要一个名称，调用方才能找到它。未做任何更改。
+Search the rows,搜索行
+The page before,上一页
+The page after,下一页
+Open as a table,以表格打开
+"Opens this file as a table, one column per field.",将此文件以表格打开，每个字段一列。
+No row matches,没有匹配的行
+Rows %d-%d of %d,第 %d-%d 行，共 %d 行
+%s is empty in row %d.,%s 在第 %d 行为空。
+Back to the order the file keeps,回到文件中的顺序
+Sort by %s,按 %s 排序
+1 row has an empty cell,1 行有空单元格
+%d rows have an empty cell,%d 行有空单元格
+Picked from a dropdown of a table's rows.,从表格的行列表中选择。
+row %d,第 %d 行
+row %d of %s,第 %d 行（%s）
+"%s has no row %d: pick a row, or the number stays as it is.",%s 没有第 %d 行：请选一行，否则数字保持不变。
+Pick a row of a data table,选择数据表的一行
+"A dropdown of the rows of a data table, shown by their name column. The file still stores the row's number.",按名称列显示数据表各行的下拉列表。文件仍然保存该行的编号。
+Name column,名称列

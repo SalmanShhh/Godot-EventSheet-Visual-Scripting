@@ -4838,6 +4838,15 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 			if column_pairs.is_empty():
 				return ""
 			marker = "eventsheet:table:%s%s" % [",".join(column_pairs), table_column_notes(written_columns)]
+		"table_row":
+			# An int that names a row of a table property on the same object, picked in the Inspector
+			# by the row's name column. Both names ride the marker; the stored value stays the row's
+			# number, so `drops[drop_row]` reads it in the game with or without the plugin.
+			var row_table: String = str(attributes.get("table_row_table", "")).strip_edges()
+			var row_column: String = str(attributes.get("table_row_column", "")).strip_edges()
+			if type_name != "int" or not row_table.is_valid_identifier() or not row_column.is_valid_identifier():
+				return ""
+			marker = "eventsheet:table_row:%s:%s" % [row_table, row_column]
 		"cards":
 			# A list of Dictionaries, each of a KIND, edited as a reorderable list of cards. Three
 			# words ride the marker and nothing else: which key holds the kind, which SCHEMA (a name

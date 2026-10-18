@@ -205,6 +205,8 @@ static func _widget_sentence(attributes: Dictionary) -> String:
 			return EventSheetL10n.translate("Shown as a min-max range slider.")
 		"table":
 			return EventSheetL10n.translate("Shown as an editable table.")
+		"table_row":
+			return EventSheetL10n.translate("Picked from a dropdown of a table's rows.")
 		"toggle_row":
 			return EventSheetL10n.translate("Shown as toggle buttons.")
 		"unit":
@@ -325,6 +327,15 @@ func _build_widget(type_name: String, default_text: String, attributes: Dictiona
 				sample[str((column as Dictionary).get("name"))] = EventSheetDrawerWidgets.DrawerTable._default_for(column as Dictionary)
 		table.set_value([sample])
 		return _ignored(table)
+	if drawer_kind == "table_row":
+		# No object here to read the table from, so the dropdown names the row by its number and
+		# says which table it counts in - the same words the Inspector puts under the real one.
+		var row_index: int = default_text.to_int()
+		var row_pick := OptionButton.new()
+		row_pick.add_item(EventSheetL10n.translate("row %d") % row_index)
+		row_pick.tooltip_text = EventSheetL10n.translate("row %d of %s") % [row_index, str(attributes.get("table_row_table", ""))]
+		row_pick.custom_minimum_size = Vector2(150.0, 0.0)
+		return _ignored(row_pick)
 	if drawer_kind == "texture_preview":
 		var texture_box := ColorRect.new()
 		texture_box.color = Color(0.45, 0.45, 0.5, 0.6)

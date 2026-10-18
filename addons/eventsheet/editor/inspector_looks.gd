@@ -106,6 +106,9 @@ const LOOKS: Array[Dictionary] = [
 	{"id": "table", "label": "Editable table", "types": ["Array", "Array[Dictionary]"], "writes": "@export_custom(PROPERTY_HINT_NONE, \"es_drawer:table…\")",
 		"tip": "Every element a row of cells. Columns: name:type (String, int, float, bool, color, enum(a|b)).",
 		"fields": [["columns", "Columns", "text", "", "item:String, count:int"]]},
+	{"id": "table_row", "label": "Pick a row of a data table", "types": ["int"], "writes": "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:table_row:drops:name\")",
+		"tip": "A dropdown of the rows of a data table, shown by their name column. The file still stores the row's number.",
+		"fields": [["table", "Table", "text", "", "the table variable, e.g. drops"], ["name_column", "Name column", "text", "name", "the column that names a row"]]},
 	{"id": "custom", "label": "Your own hint", "types": [], "writes": "@export_custom(PROPERTY_HINT_…, \"…\", PROPERTY_USAGE_…)",
 		"tip": "Any PROPERTY_HINT_* with its hint text, and the usage flags when they matter.",
 		"fields": [["hint", "Hint", "text", "PROPERTY_HINT_NONE", "PROPERTY_HINT_…"], ["text", "Hint text", "text", "", "optional"],
@@ -220,6 +223,8 @@ static func fold(look_id: String, values: Dictionary, type_name: String) -> Dict
 			return {"drawer": look_id}
 		"table":
 			return {"drawer": "table", "table_columns": parse_columns(text.call("columns"))}
+		"table_row":
+			return {"drawer": "table_row", "table_row_table": text.call("table"), "table_row_column": _or(text.call("name_column"), "name")}
 		"node_path":
 			return {"node_path_types": split_list(text.call("types"))}
 		"tool_button":
@@ -256,6 +261,8 @@ static func unfold(attributes: Dictionary, options: PackedStringArray = PackedSt
 			return ["toggle_row", {"choices": _joined(attributes.get("toggle_options", []))}]
 		"table":
 			return ["table", {"columns": columns_text(attributes.get("table_columns", []))}]
+		"table_row":
+			return ["table_row", {"table": str(attributes.get("table_row_table", "")), "name_column": str(attributes.get("table_row_column", ""))}]
 		"swatch_row", "corners", "texture_preview", "curve_editor":
 			return [drawer, {}]
 	if bool(attributes.get("exp_easing", false)):
@@ -304,7 +311,8 @@ static func unfold(attributes: Dictionary, options: PackedStringArray = PackedSt
 static func look_keys() -> PackedStringArray:
 	return PackedStringArray(["range", "drawer", "enum_values", "flags", "layers", "exp_easing", "exp_easing_flags",
 		"unit_kinds", "unit_store", "file", "multiline", "no_alpha", "storage", "placeholder", "suggestions",
-		"toggle_options", "custom_preset", "table_columns", "node_path_types", "tool_button", "custom_hint"])
+		"toggle_options", "custom_preset", "table_columns", "table_row_table", "table_row_column", "node_path_types", "tool_button",
+		"custom_hint"])
 
 
 ## "Fire:1, Ice" -> [{label, value}] (the value stays text; empty = automatic).

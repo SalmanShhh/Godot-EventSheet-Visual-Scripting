@@ -17,6 +17,22 @@
   switch tabs, never to a same-named function of the tab that comes up.
 - An empty Name says why a function needs one: so callers can find it.
 
+### Added: pick a row of a data table, and big lists in the table look
+
+- A new Inspector look, **Pick a row of a data table**, for an int:
+  `@export_custom(PROPERTY_HINT_NONE, "eventsheet:table_row:drops:name")`. The Inspector shows a
+  dropdown of the `drops` rows by their `name` cell, with "row 1 of drops" under it. The file still
+  stores the row's number, so `drops[drop_row]` reads it in the game, and without the plugin the
+  property is Godot's plain number field. A number past the last row is never moved onto another
+  row: the field shows "row 5" in quiet amber and says the row is gone. The line reopens on the
+  same look and saves back byte for byte; a marker short of its column stays the line it was.
+- The table look gains what a long list needs: a search box, a click on a column's name to sort by
+  it (number columns as numbers, a second click flips it, `#` goes back to the file's order), and
+  pages of eight rows ("Rows 1-8 of 23", ‹ ›). They only change what is shown: the list keeps its
+  order in the file. A cell left empty is a quiet amber cell whose hover says which column of which
+  row is missing, the bar under the grid counts the rows that have one, and a list kept in a .tres
+  of its own offers **Open as a table**, which opens that file in the table view.
+
 ### Fixed: the function Inspector's refusals say only what is true
 
 - Shared is refused only when the code the function compiles to reads a variable each object has

@@ -9370,3 +9370,22 @@ null (no object yet),null (まだオブジェクトなし)
 Waits (async),待機する (async)
 Shared (static),共有 (static)
 "A function needs a name, so callers can find it. Nothing was changed.",呼び出し側が見つけられるよう、関数には名前が必要です。何も変更されていません。
+Search the rows,行を検索
+The page before,前のページ
+The page after,次のページ
+Open as a table,表として開く
+"Opens this file as a table, one column per field.",このファイルを表として開きます。フィールドごとに1列です。
+No row matches,一致する行はありません
+Rows %d-%d of %d,%d-%d 行目 / %d 行
+%s is empty in row %d.,%s は %d 行目で空です。
+Back to the order the file keeps,ファイルの並び順に戻す
+Sort by %s,%s で並べ替え
+1 row has an empty cell,1 行に空のセルがあります
+%d rows have an empty cell,%d 行に空のセルがあります
+Picked from a dropdown of a table's rows.,表の行の一覧から選びます。
+row %d,%d 行目
+row %d of %s,%d 行目 (%s)
+"%s has no row %d: pick a row, or the number stays as it is.",%s に %d 行目はありません。行を選ぶか、数値はそのままです。
+Pick a row of a data table,データ表の行を選ぶ
+"A dropdown of the rows of a data table, shown by their name column. The file still stores the row's number.",データ表の行を名前の列で並べたドロップダウンです。ファイルには行の番号が保存されたままです。
+Name column,名前の列
