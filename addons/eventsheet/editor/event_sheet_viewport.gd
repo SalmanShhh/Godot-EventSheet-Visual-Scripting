@@ -2486,6 +2486,22 @@ func _draw_variable_group_bubbles(width: float) -> void:
 ## where a region's closing fence row does that job. A group that is switched off fades its body here
 ## too, in the same pass that knows the body's range.
 func _draw_group_brackets(width: float) -> void:
+	for stroke: Dictionary in group_bracket_strokes(width):
+		var rect: Rect2 = stroke["rect"] as Rect2
+		if str(stroke["kind"]) == "dash":
+			draw_dashed_line(Vector2(rect.position.x + rect.size.x * 0.5, rect.position.y),
+				Vector2(rect.position.x + rect.size.x * 0.5, rect.end.y), stroke["color"] as Color,
+				rect.size.x, EventRowRenderer.REGION_DASH_LENGTH)
+		else:
+			draw_rect(rect, stroke["color"] as Color, true)
+
+
+## What the margin brackets paint, in paint order: per group or region {kind, part, rect, color} -
+## an off group's faded backdrop ("backdrop"), then a group's solid bar ("bar") and the slim tick at
+## its foot ("tick"), or a region's dashed rule ("dash"). Worked out apart from drawing so what the
+## sheet paints can be read back without a screen.
+func group_bracket_strokes(width: float) -> Array:
+	var strokes: Array = []
 	var shape: Array = []
 	for index: int in range(_flat_rows.size()):
 		var row_data: EventRowData = _flat_rows[index].get("row")
@@ -2512,19 +2528,18 @@ func _draw_group_brackets(width: float) -> void:
 		var height: float = float(bracket["bottom"]) - top
 		var left: float = float(bracket["x"])
 		if row_data.disabled:
-			draw_rect(Rect2(left, top, width - left, height), reading_style.disabled_row_color, true)
+			strokes.append({"kind": "fill", "part": "backdrop", "rect": Rect2(left, top, width - left, height),
+				"color": reading_style.disabled_row_color})
 		var ink: Color = Color(accent.r, accent.g, accent.b, EventRowRenderer.REGION_RULE_ALPHA)
 		if row_data.row_type == EventRowData.RowType.REGION:
-			draw_dashed_line(
-				Vector2(left + EventSheetGroupFacts.BRACKET_WIDTH * 0.5, top),
-				Vector2(left + EventSheetGroupFacts.BRACKET_WIDTH * 0.5, top + height),
-				ink,
-				EventSheetGroupFacts.BRACKET_WIDTH,
-				EventRowRenderer.REGION_DASH_LENGTH
-			)
+			strokes.append({"kind": "dash", "part": "dash",
+				"rect": Rect2(left, top, EventSheetGroupFacts.BRACKET_WIDTH, height), "color": ink})
 			continue
-		draw_rect(Rect2(left, top, EventSheetGroupFacts.BRACKET_WIDTH, height), ink, true)
-		draw_rect(EventSheetGroupFacts.end_tick_rect(bracket), ink, true)
+		strokes.append({"kind": "fill", "part": "bar",
+			"rect": Rect2(left, top, EventSheetGroupFacts.BRACKET_WIDTH, height), "color": ink})
+		strokes.append({"kind": "fill", "part": "tick", "rect": EventSheetGroupFacts.end_tick_rect(bracket),
+			"color": ink})
+	return strokes
 
 
 ## True when the row at `index` IS the folder strip that names its run - the row the builder puts

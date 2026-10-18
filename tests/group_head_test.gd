@@ -26,6 +26,7 @@ static func run() -> bool:
 	all_passed = _test_head_spans() and all_passed
 	all_passed = _test_counts() and all_passed
 	all_passed = _test_brackets() and all_passed
+	all_passed = _test_painted_ticks() and all_passed
 	all_passed = _test_group_locals() and all_passed
 	all_passed = _test_dialog_fields() and all_passed
 	all_passed = _test_pinned_head() and all_passed
@@ -134,6 +135,36 @@ static func _test_counts() -> bool:
 
 
 # ── 3. The bracket ──
+
+
+## The sheet really paints each body's tick, in the group's own colour, and an off group keeps its
+## bar and tick over the faded backdrop - read from what the viewport hands its draw call.
+static func _test_painted_ticks() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	var combat: EventGroup = _group("Combat", "")
+	combat.custom_color = Color("#D9534F")
+	combat.events.append(_event())
+	var boss: EventGroup = _group("Boss", "")
+	boss.custom_color = Color("#3C8DBC")
+	boss.enabled = false
+	boss.events.append(_event())
+	sheet.events.append(combat)
+	sheet.events.append(boss)
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(sheet)
+	var painted: Array = []
+	for stroke: Dictionary in dock._active_view().group_bracket_strokes(800.0):
+		var ink: Color = stroke["color"] as Color
+		painted.append([str(stroke["part"]), ink.to_html(false) if str(stroke["part"]) != "backdrop" else "faded"])
+	dock.free()
+	return SUPPORT.pins("group_head_test", [
+		["each body paints its bar and the tick at its foot in its own colour; an off group keeps both",
+			painted, [["bar", "d9534f"], ["tick", "d9534f"], ["backdrop", "faded"], ["bar", "3c8dbc"],
+				["tick", "3c8dbc"]]],
+	])
+
+
 
 
 static func _test_brackets() -> bool:
@@ -405,12 +436,21 @@ static func _test_switchable_menu_item() -> bool:
 	var active_index: int = menu.get_item_index(EventSheetDock.ROW_MENU_GROUP_ENABLED)
 	var switch_index: int = menu.get_item_index(EventSheetDock.ROW_MENU_GROUP_SWITCHABLE)
 	var label: String = menu.get_item_text(switch_index) if switch_index >= 0 else ""
+	var head_items: Array = []
+	for item_index: int in range(menu.item_count):
+		if not menu.is_item_separator(item_index):
+			head_items.append(menu.get_item_text(item_index))
+		if menu.get_item_id(item_index) == EventSheetDock.ROW_MENU_UNGROUP:
+			break
 	var ticked_before: bool = switch_index >= 0 and menu.is_item_checked(switch_index)
 	dock._quick_prompts.on_group_switchable_toggled()
 	var live: EventGroup = dock.get_current_sheet().events[0] as EventGroup
 	var passed: bool = SUPPORT.pins("group_head_test", [
 		["the menu offers the switch by name", label, "Can Be Switched At Runtime"],
 		["right after Active On Start", switch_index - active_index, 1],
+		["the group's own items read in the order the design gives them", head_items,
+			["Edit Group…", "Active On Start", "Can Be Switched At Runtime", "Runs On", "Group Color…",
+				"Turn Into Region", "Ungroup - Keep The Rows"]],
 		["ticked at the group's state", ticked_before, false],
 		["choosing it makes the group switchable", live.runtime_toggleable, true],
 	])
