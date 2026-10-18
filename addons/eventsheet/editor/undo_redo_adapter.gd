@@ -22,19 +22,30 @@ func create_action(action_name: String) -> void:
 
 
 func add_do_method(target: Object, method_name: String, args: Array = []) -> void:
-	var payload: Array = [target, method_name]
-	payload.append_array(args)
-	_call("add_do_method", payload, false)
+	_call("add_do_method", _method_payload(target, method_name, args), false)
 
 
 func add_undo_method(target: Object, method_name: String, args: Array = []) -> void:
+	_call("add_undo_method", _method_payload(target, method_name, args), false)
+
+
+## The editor's EditorUndoRedoManager takes (object, method, args...), but the plain UndoRedo the
+## dock falls back to with no editor around (tests, preview harnesses) takes ONE Callable. Handing it
+## the editor's spelling printed "expected 1 argument(s), but called with 3" on every edit and
+## recorded nothing, so a fallback edit could not be undone.
+func _method_payload(target: Object, method_name: String, args: Array) -> Array:
+	if _manager is UndoRedo:
+		return [Callable(target, method_name).bindv(args)]
 	var payload: Array = [target, method_name]
 	payload.append_array(args)
-	_call("add_undo_method", payload, false)
+	return payload
 
 
+## The plain UndoRedo records the step WITHOUT running it: every caller has already applied its edit,
+## and with no editor around the step never ran at commit before either (its methods were refused),
+## so the fallback keeps what it did and gains a history that undo and redo can walk.
 func commit_action() -> void:
-	_call("commit_action", [], false)
+	_call("commit_action", [false] if _manager is UndoRedo else [], false)
 
 
 func has_undo() -> bool:
