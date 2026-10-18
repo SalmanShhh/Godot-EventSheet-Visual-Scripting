@@ -2786,7 +2786,17 @@ static func _emit_event_body(
 				# In-flow GDScript block (inline scripting): emitted verbatim inside the
 				# event body at the body indent (inner indentation preserved beneath it).
 				var inline_raw: RawCodeRow = action_item as RawCodeRow
-				if not inline_raw.enabled or inline_raw.code.strip_edges().is_empty():
+				if inline_raw.code.strip_edges().is_empty():
+					continue
+				# Off, in a sheet that is its own .gd, it stays as its lines behind OFF_CELL_PREFIX, exactly
+				# as an action that is off does - the lift reads a block it cannot read as actions back as
+				# this row, off.
+				if not inline_raw.enabled:
+					if _keeps_off_rows:
+						var off_start: int = lines.size() + 1
+						for off_line: String in inline_raw.code.split("\n"):
+							lines.append(body_indent + OFF_CELL_PREFIX + off_line)
+						source_map.append({"uid": str(inline_raw.get_instance_id()), "start": off_start, "end": lines.size(), "kind": "raw"})
 					continue
 				_emit_leading_body_blanks(inline_raw, lines)
 				var inline_start: int = lines.size() + 1

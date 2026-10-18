@@ -3562,8 +3562,12 @@ static func _without_group_guard(expression: String, slug: String) -> String:
 
 
 ## The actions a run of OFF_CELL_PREFIX lines at `index` (this depth) holds, switched off, as
-## {actions, consumed} - or {} when the run does not read back as actions only, in which case the
-## lines stay the comments they are. Read through the same statement reading every action uses.
+## {actions, consumed} - or {} when the run does not read back as cells only, in which case the
+## lines stay the comments they are. The run is read one statement at a time, the way the same
+## lines read with the prefix taken away: a run a family claims is that family's row; a statement
+## that goes on below its first line (a deeper line, or brackets still open) is the code block it is,
+## an off GDScript row; any other line is read through the same statement reading every action uses,
+## and must come back as an action.
 static func _off_actions_at(lines: PackedStringArray, index: int, depth: int, reverse_entries: Array, in_loop: bool) -> Dictionary:
 	var indent: String = "\t".repeat(depth)
 	var prefix: String = indent + SheetCompiler.OFF_CELL_PREFIX
@@ -3574,18 +3578,39 @@ static func _off_actions_at(lines: PackedStringArray, index: int, depth: int, re
 		cursor += 1
 	if statements.is_empty():
 		return {}
-	var holder: EventRow = EventRow.new()
-	var unread: PackedStringArray = PackedStringArray()
+	# The run with the prefix taken away, at this depth: what the family and bracket readings ask.
+	var plain: PackedStringArray = PackedStringArray()
 	for statement: String in statements:
-		_consume_action_line(holder, statement, 0, unread, reverse_entries, in_loop, [0])
-	_flush_raw(holder, unread, [0])
-	if holder.actions.is_empty():
-		return {}
-	for read: Variant in holder.actions:
-		if not (read is ACEAction):
+		plain.append(indent + statement)
+	var read_back: Array = []
+	var at: int = 0
+	while at < statements.size():
+		var claimed: Dictionary = _claimed_run(plain, at, depth)
+		if not claimed.is_empty() and int(claimed["consumed"]) > 0:
+			read_back.append(_matched_spelling_action(claimed, [0]))
+			at += int(claimed["consumed"])
+			continue
+		var block_end: int = at
+		while block_end + 1 < statements.size() and statements[block_end + 1].begins_with("\t"):
+			block_end += 1
+		block_end = maxi(block_end, mini(_bracket_run_close(plain, at), statements.size() - 1))
+		if block_end > at:
+			var block: RawCodeRow = RawCodeRow.new()
+			block.code = "\n".join(statements.slice(at, block_end + 1))
+			read_back.append(block)
+			at = block_end + 1
+			continue
+		var holder: EventRow = EventRow.new()
+		var unread: PackedStringArray = PackedStringArray()
+		_consume_action_line(holder, statements[at], 0, unread, reverse_entries, in_loop, [0])
+		_flush_raw(holder, unread, [0])
+		if holder.actions.size() != 1 or not (holder.actions[0] is ACEAction):
 			return {}
-		(read as ACEAction).enabled = false
-	return {"actions": holder.actions, "consumed": cursor - index}
+		read_back.append(holder.actions[0])
+		at += 1
+	for read: Variant in read_back:
+		read.set("enabled", false)
+	return {"actions": read_back, "consumed": cursor - index}
 
 
 ## A comment row whose every line opens on the `@off: ` the compiler writes for a comment row that
@@ -3606,12 +3631,12 @@ static func _take_off_note(note: CommentRow) -> void:
 	note.enabled = false
 
 
-## True when an event holds actions and every one of them is an action that is off.
+## True when an event holds actions and every one of them is an action (or a GDScript row) that is off.
 static func _only_off_actions(event: EventRow) -> bool:
 	if event == null or event.actions.is_empty():
 		return false
 	for action: Variant in event.actions:
-		if not (action is ACEAction) or (action as ACEAction).enabled:
+		if not (action is ACEAction or action is RawCodeRow) or bool(action.get("enabled")):
 			return false
 	return true
 

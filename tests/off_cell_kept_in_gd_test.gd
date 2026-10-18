@@ -64,6 +64,7 @@ static func run() -> bool:
 				_cell_state(_event(round_trip.get("reopened"), int(case[1]))), case[5]],
 			["%s: and saves again byte for byte" % case[0], str(round_trip.get("resaved", "")), saved],
 		]) and all_passed
+	all_passed = _check_block_action() and all_passed
 	all_passed = _check_stateful_condition() and all_passed
 	# A .tres sheet's generated companion still leaves a cell that is off out.
 	_write(FILE_PATH, SOURCE)
@@ -76,6 +77,43 @@ static func run() -> bool:
 		["a .tres companion still leaves cells that are off out",
 			[companion.contains("# @off"), companion.contains("true or")], [false, false]],
 	]) and all_passed
+
+
+## An action whose template is a block (a loop with its body under it) switched off: read one line at
+## a time, its first line is no action, so the whole run used to stay comments that could never be
+## switched back on. It reopens as the block it is - a GDScript row, off - and on again it writes the
+## loop it was.
+static func _check_block_action() -> bool:
+	_write(FILE_PATH, SOURCE)
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var block: ACEAction = ACEAction.new()
+	block.provider_id = "Core"
+	block.ace_id = "FreeChildren"
+	block.codegen_template = "for child in get_children():\n\tchild.queue_free()"
+	block.enabled = false
+	_event(sheet, 0).actions.append(block)
+	SheetCompiler.compile(sheet, FILE_PATH)
+	var saved: String = FileAccess.get_file_as_string(FILE_PATH)
+	var reopened: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var read_back: Variant = _event(reopened, 0).actions.back() if _event(reopened, 0) != null else null
+	var read_as: Array = [read_back is RawCodeRow, read_back.get("enabled"), read_back.get("code")] if read_back != null else []
+	_write(RESAVE_PATH, saved)
+	reopened.external_source_path = RESAVE_PATH
+	SheetCompiler.compile(reopened, RESAVE_PATH)
+	var resaved: String = FileAccess.get_file_as_string(RESAVE_PATH)
+	if read_back is RawCodeRow:
+		(read_back as RawCodeRow).enabled = true
+	SheetCompiler.compile(reopened, RESAVE_PATH)
+	var back_on: String = FileAccess.get_file_as_string(RESAVE_PATH)
+	return SUPPORT.pins(TEST_NAME, [
+		["a block action: the save keeps its lines where they never run",
+			saved.contains("\t\tlives += 1\n\t\t# @off: for child in get_children():\n\t\t# @off: \tchild.queue_free()\n"), true],
+		["a block action: the saved script parses", _parse_error(saved), ""],
+		["a block action: it reopens as the block, off", read_as, [true, false, "for child in get_children():\n\tchild.queue_free()"]],
+		["a block action: and saves again byte for byte", resaved, saved],
+		["a block action: on again, it writes the loop", back_on.contains("\t\tlives += 1\n\t\tfor child in get_children():\n\t\t\tchild.queue_free()\n"), true],
+		["a block action: and that parses", _parse_error(back_on), ""],
+	])
 
 
 ## A condition that keeps state of its own (Every X Seconds) has no term to stay in while it is off,

@@ -19,6 +19,16 @@
   a word. The save now adds a warning naming the condition, beside the one an unresolvable
   condition already gets.
 
+### Fixed: an action whose code is a block, switched off in a `.gd` sheet, can be switched back on
+
+- An action that is off is written as its own lines behind `# @off: `, and opening the file read
+  those lines back one at a time; an action whose template is a block (a loop with its body under
+  it) has a first line that is no action, so the whole run stayed comments whose text began with
+  `@off: ` and could never be ticked back on. The run is now read a statement at a time: a block
+  comes back as a GDScript row, off, that writes the same loop when it is switched on again, and a
+  run a family claims comes back as that family's row. A GDScript row switched off in a `.gd` sheet
+  is now kept the same way, behind `# @off: `, instead of being left out of the file.
+
 ### Fixed: a `##` line inside a string is no longer read as the class description
 
 - Opening a `.gd` whose own `extends` line has no doc block, but which holds a string with an
