@@ -46,7 +46,7 @@ const DURABLE_STATICS: Dictionary = {
 const SWEPT_STATICS: Array[String] = [
 	"_behavior_host_default", "_emit_breakpoints_flag", "_emit_event_trace_flag",
 	"_error_reporter_pending", "_group_slugs", "_live_values_payload",
-	"_live_values_receiver_pending", "_removal_guard_facts", "_row_group_path",
+	"_live_values_receiver_pending", "_removal_guard_facts", "_row_fences_after", "_row_fences_before", "_row_group_path",
 	"_runtime_group_guards", "_runtime_group_members", "_throttle_process_emitted",
 	# Whether the compile is of a TOOL sheet. Working state like the rest: it is set from the sheet
 	# on every compile, and the two text-probe entry points set it from what they were handed rather

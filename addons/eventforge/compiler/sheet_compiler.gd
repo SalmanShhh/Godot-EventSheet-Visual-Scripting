@@ -165,6 +165,12 @@ static var _runtime_group_members: Array = []
 # read during emit; they carry NO runtime weight (the markers are comments).
 static var _group_slugs: Dictionary = {}
 static var _row_group_path: Dictionary = {}
+# A `#region` fence a group holds has no class-level slot of its own: the group's events land inside
+# the trigger functions, so its fences land there too, beside the events they wrap. Each grouped
+# EventRow maps to the fence rows written just before it (an opener) and just after it (a closer);
+# filled by _flatten_trigger_rows, written by _emit_event_body, read back by the lifter.
+static var _row_fences_before: Dictionary = {}
+static var _row_fences_after: Dictionary = {}
 # Host-targeting prefix for {host.} ACE templates: "host" inside a behavior sheet (where node-scoped
 # ACEs must call on the parent host, not the behavior Node itself), "" everywhere else. Per-compile.
 static var _behavior_host_default: String = ""
@@ -214,6 +220,8 @@ static func _reset_per_compile_state(sheet: EventSheetResource = null) -> void:
 	_runtime_group_members = []
 	_group_slugs = {}
 	_row_group_path = {}
+	_row_fences_before = {}
+	_row_fences_after = {}
 	# What this sheet's names MEAN, for the removal guard: which of them hold a node across frames and
 	# which were minted by a spawn row in some other event. Gathered once here rather than per row,
 	# because it is a walk of the whole sheet and the answer cannot change during a compile.
@@ -1923,7 +1931,21 @@ static func _joined_group_guard(runtime_guard: String, runs_on_guard: String,
 ## group is dropped but leaves a breadcrumb comment - group-disable semantics), and group comments
 ## collected as deferred comment lines.
 static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comment_lines: PackedStringArray, runtime_guard: String = "", group_slug: String = "", runs_on_guard: String = "", runs_in_guard: String = "") -> void:
+	# Inside a group, a region fence rides on its neighbouring event: an opener on the next one, a
+	# closer on the one before. Fences at the top level keep their own class-level slot.
+	var first_here: int = into_events.size()
+	var openers_waiting: Array = []
 	for row: Variant in rows:
+		if not group_slug.is_empty() and EventSheetRegionFacts.is_fence(row):
+			if EventSheetRegionFacts.is_closing_fence(row) and into_events.size() > first_here:
+				_ride_fence(_row_fences_after, into_events.back(), row)
+			else:
+				openers_waiting.append(row)
+			continue
+		if row is EventRow and not openers_waiting.is_empty():
+			for opener: Variant in openers_waiting:
+				_ride_fence(_row_fences_before, row, opener)
+			openers_waiting.clear()
 		if row is EventRow:
 			# The three group guards a row can inherit, as the one and-chain the emitter wraps its
 			# conditions in: the runtime switch first (a group that is off runs nothing at all), then
@@ -1981,6 +2003,32 @@ static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comm
 		elif row is CommentRow and (row as CommentRow).enabled and not (row as CommentRow).text.strip_edges().is_empty():
 			deferred_comment_lines.append_array((row as CommentRow).text.split("
 "))
+	# Fences with no event after them (a region closing a group's last rows, or an empty one) ride on
+	# the last event the group wrote. A group that wrote no event has nowhere to put them.
+	if not openers_waiting.is_empty() and into_events.size() > first_here:
+		for leftover: Variant in openers_waiting:
+			_ride_fence(_row_fences_after, into_events.back(), leftover)
+
+
+## Adds a fence row to the list a neighbouring event carries (see _row_fences_before / _after).
+static func _ride_fence(table: Dictionary, event: Variant, fence: Variant) -> void:
+	if not (event is EventRow):
+		return
+	if not table.has(event):
+		table[event] = []
+	(table[event] as Array).append(fence)
+
+
+## Writes the fences an event carries, each at the event's indent and mapped to its own row.
+static func _emit_riding_fences(fences: Array, indent: String, lines: PackedStringArray, source_map: Array) -> void:
+	var kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind(EventSheetRegionFacts.KIND_ID)
+	if kind == null:
+		return
+	for fence: Variant in fences:
+		var fence_start: int = lines.size() + 1
+		for fence_line: String in kind.emit(fence as CustomBlockRow):
+			lines.append(indent + fence_line)
+		source_map.append({"uid": str((fence as CustomBlockRow).get_instance_id()), "start": fence_start, "end": lines.size(), "kind": "custom_block"})
 
 
 ## Signal names declared in class-level GDScript blocks, so self-connections to
@@ -2388,7 +2436,23 @@ static func _emit_event_body(
 	# True while the previous sibling ended an if/elif block at this depth, meaning an
 	# ELSE/ELIF sibling may legally chain onto it.
 	var chain_open: bool = false
+	# The closers the previous event carries are written once its lines are done: at the top of the
+	# next turn of this loop, or after it.
+	var closers_owed: Array = []
 	for event_item: Variant in events:
+		if not closers_owed.is_empty():
+			_emit_riding_fences(closers_owed, indent, lines, source_map)
+			closers_owed = []
+		if EventSheetRegionFacts.is_fence(event_item):
+			# A fence among a body's own rows (as the lift reads a group's fences back) is written where
+			# it stands. Like a comment, it does not break an if/elif chain.
+			_emit_riding_fences([event_item], indent, lines, source_map)
+			continue
+		if event_item is EventRow:
+			_emit_riding_fences(_row_fences_before.get(event_item, []), indent, lines, source_map)
+			# The same openers as the lift carries them, before the group is rebuilt around them.
+			_emit_riding_fences((event_item as EventRow).get_meta("__region_before", []), indent, lines, source_map)
+			closers_owed = _row_fences_after.get(event_item, [])
 		if event_item is RawCodeRow:
 			var raw_row: RawCodeRow = event_item as RawCodeRow
 			if raw_row.enabled and not raw_row.code.is_empty():
@@ -2763,6 +2827,7 @@ static func _emit_event_body(
 		# Else sibling chained onto the first and wrote `else:` twice in a row, which is a file that
 		# does not parse. An `elif` keeps the chain open, because more may still follow it.
 		chain_open = emitted_block and not (wants_chain and condition_texts.is_empty())
+	_emit_riding_fences(closers_owed, indent, lines, source_map)
 	return had_body
 
 
@@ -4159,14 +4224,17 @@ static func _moment_step_statements(step: MomentStepRow) -> PackedStringArray:
 
 
 ## Gathers Custom Block API rows (registered non-ACE kinds) from the event tree, group-recursive
-## like enums/signals so a block inside a group still emits.
-static func _collect_custom_blocks(entries: Array, into: Array) -> void:
+## like enums/signals so a block inside a group still emits. A region fence inside a group is left
+## out: it is written beside the group's events instead (_flatten_trigger_rows), because at the top
+## of the class it would wrap nothing.
+static func _collect_custom_blocks(entries: Array, into: Array, in_group: bool = false) -> void:
 	for entry: Variant in entries:
 		if entry is CustomBlockRow:
-			into.append(entry)
+			if not (in_group and EventSheetRegionFacts.is_fence(entry)):
+				into.append(entry)
 		elif entry is EventGroup:
 			var group: EventGroup = entry as EventGroup
-			_collect_custom_blocks(group.child_rows(), into)
+			_collect_custom_blocks(group.child_rows(), into, true)
 
 
 ## Gathers stateful-condition member declarations (deduped) from the event tree.

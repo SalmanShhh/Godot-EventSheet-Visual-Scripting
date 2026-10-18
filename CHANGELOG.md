@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Fixed: a region inside a group is kept when the sheet is saved
+
+- A `#region` a group holds used to be dropped when a `.gd` sheet was saved, and written at the top
+  of the class (wrapping nothing) when a `.tres` sheet compiled. A group's events are written inside
+  the trigger functions, so its fences are now written there too, at the events' indent: the opener
+  just before the event it wraps, the closer just after the last. Opening the file brings them back
+  as the same fences in the same group, styled ones (`## @ace_region(...)`) included, and saving it
+  untouched writes the same bytes. A region whose events have two triggers opens in one function and
+  closes in the other; the script still parses.
+
 ### Fixed: editing a group in a `.gd` sheet reaches the file
 
 - A `.gd` opened as a sheet kept its groups' `## @ace_group(...)` header lines exactly as it opened

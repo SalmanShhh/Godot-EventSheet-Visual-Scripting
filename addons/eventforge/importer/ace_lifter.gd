@@ -1189,12 +1189,17 @@ static func _reconstruct_groups(events: Array, registry: Dictionary) -> Array:
 	var placed: Dictionary = {}       # slug -> true once its subtree is linked into output/parent
 	for event: Variant in events:
 		var slug: String = ""
-		if event is EventRow and (event as EventRow).has_meta("__group_slug"):
-			slug = str((event as EventRow).get_meta("__group_slug"))
-			(event as EventRow).remove_meta("__group_slug")
+		# An event, or a region fence the group held (_grouped_fence_at), goes back into its group.
+		if (event is EventRow or event is CustomBlockRow) and (event as Object).has_meta("__group_slug"):
+			slug = str((event as Object).get_meta("__group_slug"))
+			(event as Object).remove_meta("__group_slug")
 		if slug.is_empty() or not groups.has(slug):
 			output.append(event)
 			continue
+		if event is EventRow and (event as EventRow).has_meta("__region_before"):
+			for opener: Variant in (event as EventRow).get_meta("__region_before"):
+				(groups[slug] as EventGroup).events.append(opener)
+			(event as EventRow).remove_meta("__region_before")
 		(groups[slug] as EventGroup).events.append(event)
 		# Link this group's ancestor chain into place on first encounter: the group nests into its
 		# parent's events (or lands in the output if top-level), walking up until an already-placed
@@ -2912,6 +2917,9 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 	# real EventGroups from these. Skipping the line keeps it out of the lifted body; the group re-emits
 	# it on recompile and the byte-verify strips group markers, so it still round-trips.
 	var pending_group_slug: String = ""
+	# Region openers read above a grouped event, and the rows index that event will have.
+	var openers_waiting: Array = []
+	var openers_from: int = -1
 	# Author-facing blank lines inside a hand-written body: a run of empty lines between two statements
 	# (or before a nested block) is layout, not logic. We count each internal run and carry it onto the
 	# NEXT visible row/action as transient meta (__source_body_blanks), so the compiler re-emits the exact
@@ -2953,6 +2961,27 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			pending_group_slug = rest.substr(9)  # 9 == len("# @group:")
 			index += 1
 			continue
+		# A `#region` fence a group holds is written beside the group's events, inside this body. It
+		# comes back as the fence it was, in the same group, so the group keeps its region. A closer
+		# is a row after the event it ends on; an opener rides on the event it opens before
+		# (__region_before) until the group is rebuilt, so a body's first row is always an event.
+		if openers_from >= 0 and rows.size() > openers_from:
+			_ride_openers(rows[openers_from], openers_waiting)
+			openers_waiting = []
+			openers_from = -1
+		if rest.begins_with("#region") or rest == "#endregion" or rest.begins_with("## @ace_region("):
+			var fence_claim: Dictionary = _grouped_fence_at(lines, index, depth, rows)
+			if not fence_claim.is_empty() and (pending_raw.is_empty() or current != null):
+				_flush_raw(current, pending_raw, blank_box)
+				current = null
+				var fence_row: CustomBlockRow = fence_claim["row"]
+				if EventSheetRegionFacts.is_closing_fence(fence_row):
+					rows.append(fence_row)
+				else:
+					openers_waiting.append(fence_row)
+					openers_from = rows.size()
+				index += int(fence_claim["consumed"])
+				continue
 		var at_this_depth: bool = not rest.begins_with("\t")
 		# A guard clause written on ONE line (`if target == null: return`, `else: play("hurt")`) is the
 		# same block as its multi-line twin, and a beginner writes far more of them than of the indented
@@ -3288,7 +3317,24 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 		index += 1
 		chain_open = false
 	_flush_raw(current, pending_raw, blank_box)
+	if not openers_waiting.is_empty():
+		if openers_from >= 0 and rows.size() > openers_from:
+			_ride_openers(rows[openers_from], openers_waiting)
+		else:
+			# No event followed the opener in this body: the compiler only writes that shape for a
+			# region with nothing left in it, which it places after the group's last event.
+			rows.append_array(openers_waiting)
 	return {"ok": true, "rows": rows, "next": index}
+
+
+## Puts the region openers read just above an event onto that event (see _parse_body), for the
+## group rebuild to turn back into fence rows in front of it.
+static func _ride_openers(target: Variant, openers: Array) -> void:
+	if not (target is EventRow):
+		return
+	var riding: Array = (target as EventRow).get_meta("__region_before", []).duplicate()
+	riding.append_array(openers)
+	(target as EventRow).set_meta("__region_before", riding)
 
 
 ## The row a RUN of statements at `index` means, asked of every run family in turn, or {} when none
@@ -3436,6 +3482,55 @@ static func _without_group_guard(expression: String, slug: String) -> String:
 		if _split_top_level(inner, " or ").size() > 1:
 			return inner
 	return rest
+
+
+## The region fence at `index` when it belongs to a group, as {row, consumed}, or {} when it does not.
+## The compiler writes a group's fences inside the trigger function, at the indent of the group's
+## events: an opener just before the `# @group:` tag of the event it wraps, a closer just after the
+## grouped event it ends on. Any other fence (one a person typed in a function) is left to the body.
+static func _grouped_fence_at(lines: PackedStringArray, index: int, depth: int, rows: Array) -> Dictionary:
+	var claim: Dictionary = _fence_claim(lines, index, depth)
+	if claim.is_empty():
+		return {}
+	var slug: String = ""
+	if bool((claim["fields"] as Dictionary).get("is_end", false)):
+		if not rows.is_empty() and (rows.back() as Object).has_meta("__group_slug"):
+			slug = str((rows.back() as Object).get_meta("__group_slug"))
+	else:
+		var ahead: int = index + int(claim["consumed"])
+		while ahead < lines.size():
+			var ahead_rest: String = lines[ahead].substr(depth) if lines[ahead].begins_with("\t".repeat(depth)) else ""
+			if ahead_rest.begins_with("# @group:"):
+				slug = ahead_rest.substr(9)
+				break
+			var next_fence: Dictionary = _fence_claim(lines, ahead, depth)
+			if next_fence.is_empty() or bool((next_fence["fields"] as Dictionary).get("is_end", false)):
+				break
+			ahead += int(next_fence["consumed"])
+	if slug.is_empty():
+		return {}
+	var fence: CustomBlockRow = CustomBlockRow.new()
+	fence.kind_id = EventSheetRegionFacts.KIND_ID
+	fence.fields = claim["fields"]
+	fence.set_meta("__group_slug", slug)
+	return {"row": fence, "consumed": claim["consumed"]}
+
+
+## The region kind's own claim on the fence at `index`, read one indent level in ({} when none).
+static func _fence_claim(lines: PackedStringArray, index: int, depth: int) -> Dictionary:
+	var indent: String = "\t".repeat(depth)
+	var dedented: PackedStringArray = PackedStringArray()
+	for offset: int in range(2):
+		if index + offset >= lines.size() or not lines[index + offset].begins_with(indent):
+			break
+		var dedented_line: String = lines[index + offset].substr(depth)
+		if dedented_line.begins_with("\t"):
+			break
+		dedented.append(dedented_line)
+	if dedented.is_empty():
+		return {}
+	var kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind(EventSheetRegionFacts.KIND_ID)
+	return {} if kind == null else kind.lift(dedented, 0)
 
 
 ## Stamps a pending `# @group:<slug>` breadcrumb onto a freshly lifted event (any row kind -
