@@ -106,6 +106,9 @@ const BIG_SHEET_REBUILD_BUDGET_MS: int = 9400
 ## against PICKER_FIRST_OPEN_BUDGET_MS below and this one against the tree itself.
 ## 2026-10-18, outside OneDrive, three alternating runs at ff3cf143 and at 045246bb over 6,829 rows:
 ## 613-619 and 593-673 ms - unchanged by the wave. Three times the 613 ms median.
+## The move from about 505 ms to 613 is the VOCABULARY growing, not the tree getting slower: 5,129
+## rows in 505 ms and 6,829 rows in 613 ms are both about 10-11 rows a millisecond. A later rise that
+## keeps that rate is more rows; one that drops it is worth a look.
 const PICKER_OPEN_BUDGET_MS: int = 1840
 
 ## The FIRST build of the tree in a process, cold files and all - the ceiling for a first open
