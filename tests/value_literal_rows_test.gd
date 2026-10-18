@@ -226,7 +226,8 @@ static func run() -> bool:
 
 ## Quoted lines joined into one text read as one row whose hover says why they stay code: the
 ## notes among them stay notes, and the file round-trips. A plain list keeps refusing a note, and a
-## joined text whose entries are not quoted lines is not a text.
+## joined text whose entries are not quoted lines is not a text. A note written among the quoted lines
+## is no longer a row of its own on the canvas: it moves into the folded row's hover, beside its lines.
 static func _test_code_on_purpose() -> bool:
 	var text_lines: PackedStringArray = ["block.code = \"\\n\".join(PackedStringArray([",
 		"\t\"func follow() -> void:\",", "\t# the guard the gizmo relies on", "\t\"\\tif route == null:\",",
