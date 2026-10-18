@@ -72,6 +72,27 @@ func _init() -> void:
 		group_uid = _generate_short_uid()
 
 
+## The `color="..."` value this group's `## @ace_group(...)` header carries: the colour the group
+## SHOWS, as "#RRGGBB" ("#RRGGBBAA" when it is see-through), so a `.gd` sheet reopens in the colour it
+## was saved in. A group that shows no colour of its own writes its older free-text color_tag, or "".
+func header_color() -> String:
+	if custom_color.a > 0.0:
+		return "#%s" % custom_color.to_html(custom_color.a < 1.0).to_upper()
+	return color_tag.strip_edges()
+
+
+## Reads a header's `color="..."` value back. A hex value this group would write again byte for byte
+## becomes the colour it shows; anything else (a header written before colours were saved, "orange",
+## a lower-case hex) stays the color_tag it always was, so that header re-emits exactly as it read.
+func read_header_color(value: String) -> void:
+	if value.begins_with("#") and Color.html_is_valid(value):
+		custom_color = Color.html(value)
+		if header_color() == value:
+			return
+		custom_color = Color(0.0, 0.0, 0.0, 0.0)
+	color_tag = value
+
+
 ## Returns the stable row kind identifier.
 func get_row_kind() -> String:
 	return "group"

@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Changed: a group head reads the same in every look, and a group's colour and switch say what is true
+
+- The colour a group shows is the colour its `.gd` keeps: the `## @ace_group(...)` header now writes
+  `color="#D9534F"` (the colour you picked) instead of the free-text tag, so a `.gd` sheet reopens in
+  the colour it was saved in. A header that only carries the older tag (`color="orange"`) still reads
+  back as that tag and re-saves byte for byte.
+
 ### Fixed: what the reader adds to a connect read in place is written, and a class that moves bytes stays code alone
 
 - A connect read where it sits is an ordinary event on the canvas, but saving rebuilt it from its

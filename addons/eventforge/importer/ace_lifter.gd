@@ -1194,7 +1194,7 @@ static func _reconstruct_groups(events: Array, registry: Dictionary) -> Array:
 		group.group_name = str(fields.get("name", slug))
 		group.name = group.group_name
 		group.description = str(fields.get("description", ""))
-		group.color_tag = str(fields.get("color", ""))
+		group.read_header_color(str(fields.get("color", "")))
 		group.collapsed = bool(fields.get("collapsed", false))
 		group.expanded = not group.collapsed
 		group.runtime_toggleable = bool(fields.get("toggleable", false))

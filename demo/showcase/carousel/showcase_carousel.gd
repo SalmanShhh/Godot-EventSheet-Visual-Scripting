@@ -1,6 +1,6 @@
 class_name CarouselOfJuice
 extends Node2D
-## @ace_group(uid="juice", name="Juice", toggleable=true)
+## @ace_group(uid="juice", name="Juice", color="#8C66D9", toggleable=true)
 
 ## Beats elapsed.
 @export_range(0, 9999, 1) var beat: int = 0

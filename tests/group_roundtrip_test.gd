@@ -84,7 +84,59 @@ static func run() -> bool:
 	var mixed_rt: String = str(SheetCompiler.compile(mixed_in, "user://_group_rt_mixed_verify.gd").get("output", ""))
 	all_passed = _check("mixed-kind grouped sheet re-saves byte-identically", mixed_rt == mixed_out, true) and all_passed
 
+	all_passed = _test_shown_colour() and all_passed
 	return all_passed
+
+
+## The colour a group SHOWS is the one its header writes, so a `.gd` sheet reopens in it - and a
+## header written before that (a free-text color_tag) still reads back as the tag it was, byte for byte.
+static func _test_shown_colour() -> bool:
+	var shown: EventGroup = EventGroup.new()
+	shown.group_name = "Combat"
+	shown.custom_color = Color("#D9534F")
+	shown.color_tag = "orange"
+	shown.events = [_event(false)]
+	var shown_sheet: EventSheetResource = EventSheetResource.new()
+	shown_sheet.host_class = "CharacterBody2D"
+	shown_sheet.events.append(shown)
+	var shown_out: String = str(SheetCompiler.compile(shown_sheet).get("output", ""))
+	var shown_back: EventGroup = _first_group(GDScriptImporter.new().import_external_source(shown_out))
+	var tagged_source: String = shown_out.replace("color=\"#D9534F\"", "color=\"orange\"")
+	var tagged_back: EventGroup = _first_group(GDScriptImporter.new().import_external_source(tagged_source))
+	var see_through: EventGroup = EventGroup.new()
+	see_through.custom_color = Color(1.0, 0.0, 0.0, 0.5)
+	var lower: EventGroup = EventGroup.new()
+	lower.read_header_color("#d9534f")
+	return SUPPORT.pins("group_roundtrip_test", [
+		["the header carries the colour the group shows, not its tag",
+			str(SheetCompiler.group_declaration_lines(shown_sheet.events).get(shown, "")),
+			"## @ace_group(uid=\"combat\", name=\"Combat\", color=\"#D9534F\")"],
+		["reopening the .gd brings that colour back", shown_back.custom_color if shown_back != null else null,
+			Color("#D9534F")],
+		["and re-saves it byte for byte", _resaved(shown_back, shown_out), shown_out],
+		["a header that only has a color_tag still reads as that tag",
+			[tagged_back.color_tag, tagged_back.custom_color.a] if tagged_back != null else [], ["orange", 0.0]],
+		["and re-saves byte for byte too", _resaved(tagged_back, tagged_source), tagged_source],
+		["a see-through colour keeps its alpha", see_through.header_color(), "#FF000080"],
+		["a hex the writer would spell differently stays a tag, so it re-emits as written",
+			[lower.color_tag, lower.custom_color.a], ["#d9534f", 0.0]],
+	])
+
+
+static func _first_group(sheet: EventSheetResource) -> EventGroup:
+	for row: Variant in sheet.events if sheet != null else []:
+		if row is EventGroup:
+			return row as EventGroup
+	return null
+
+
+## A lifted group's sheet compiled again, as the external file it came from.
+static func _resaved(group: EventGroup, source: String) -> String:
+	if group == null:
+		return ""
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	sheet.external_source_path = "user://_group_rt_colour_verify.gd"
+	return str(SheetCompiler.compile(sheet, "user://_group_rt_colour_verify.gd").get("output", ""))
 
 
 ## An action-only OnProcess event carrying one raw statement (or block) - no conditions, so its

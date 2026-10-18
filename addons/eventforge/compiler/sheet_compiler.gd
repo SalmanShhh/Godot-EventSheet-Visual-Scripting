@@ -1871,7 +1871,7 @@ static func _emit_group_declarations(lines: PackedStringArray, decls: Array) -> 
 		var description: String = group.description.strip_edges()
 		if not description.is_empty() and _group_text_is_safe(description):
 			parts.append("description=\"%s\"" % description)
-		var color: String = group.color_tag.strip_edges()
+		var color: String = group.header_color()
 		if not color.is_empty() and _group_text_is_safe(color):
 			parts.append("color=\"%s\"" % color)
 		if group.collapsed:
