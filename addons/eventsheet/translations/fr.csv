@@ -9476,3 +9476,5 @@ Shape %s…,Façonner %s…
 "Opens the Inspector Designer for %s: how each field of it looks, when it shows and what it checks.","Ouvre le Concepteur d'Inspecteur pour %s : l'apparence de chaque champ, quand il s'affiche et ce qu'il vérifie."
 "Code on purpose: this is a long text kept inside quotes, and a text reads best exactly as it is written.","Code voulu : c'est un long texte entre guillemets, et un texte se lit mieux exactement tel qu'il est écrit."
 "Code on purpose: these %d lines are text kept inside quotes, joined into one text, and a text reads best exactly as it is written.","Code voulu : ces %d lignes sont du texte entre guillemets, réunies en un seul texte, et un texte se lit mieux exactement tel qu'il est écrit."
+%s: shown only when %s is on.,%s : affiché seulement quand %s est activé.
+%s: read-only when %s is off.,%s : en lecture seule quand %s est désactivé.

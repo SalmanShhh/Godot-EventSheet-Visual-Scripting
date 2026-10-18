@@ -300,10 +300,11 @@ func _option_row(option: Dictionary) -> Control:
 	if not reason.is_empty():
 		row.modulate = Color(1.0, 1.0, 1.0, 0.55)
 	row.add_child(column)
+	# Deferred: a choice redraws the list, and a row cannot be freed while it is handling its own click.
 	row.gui_input.connect(func(event: InputEvent) -> void:
 		if (event is InputEventMouseButton and (event as InputEventMouseButton).pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT) \
 				or (event is InputEventKey and (event as InputEventKey).pressed and (event as InputEventKey).keycode in [KEY_ENTER, KEY_SPACE]):
-			pick(option_id))
+			pick.call_deferred(option_id))
 	row.mouse_entered.connect(_hover.bind(option_id))
 	row.focus_entered.connect(_hover.bind(option_id))
 	row.mouse_exited.connect(_hover.bind(""))
@@ -394,7 +395,7 @@ func _rebuild_asks(option: Dictionary, pending: bool) -> void:
 				var edit: LineEdit = LineEdit.new()
 				edit.text = str(value)
 				edit.placeholder_text = str(ask[4]) if ask.size() > 4 else ""
-				edit.text_submitted.connect(func(_typed: String) -> void: _choose_shown())
+				edit.text_submitted.connect(func(_typed: String) -> void: _choose_shown.call_deferred())
 				edit.text_changed.connect(func(_typed: String) -> void: _follow_typing())
 				control = edit
 		control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -403,7 +404,8 @@ func _rebuild_asks(option: Dictionary, pending: bool) -> void:
 	var choose: Button = Button.new()
 	choose.text = EventSheetL10n.translate("Choose") if pending else EventSheetL10n.translate("Apply")
 	choose.size_flags_horizontal = Control.SIZE_SHRINK_END
-	choose.pressed.connect(_choose_shown)
+	# Deferred for the same reason as a row's click: choosing redraws these fields and this button.
+	choose.pressed.connect(_choose_shown, CONNECT_DEFERRED)
 	_asks.add_child(choose)
 
 

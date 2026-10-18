@@ -560,9 +560,11 @@ func _register_shape_link() -> void:
 		return
 	_shape_link_plugin = load(SHAPE_LINK_INSPECTOR_PATH).new()
 	_shape_link_plugin.set("open_designer", func(sheet_path: String) -> void:
-		_open_sheet_in_workspace(sheet_path)
-		if _event_sheet_editor != null and _event_sheet_editor.has_method("_open_inspector_designer"):
-			_event_sheet_editor.call("_open_inspector_designer"))
+		_ensure_editor()
+		if _event_sheet_editor == null or not _event_sheet_editor.has_method("open_designer_for"):
+			return
+		get_editor_interface().set_main_screen_editor(_get_plugin_name())
+		_event_sheet_editor.call("open_designer_for", sheet_path))
 	add_inspector_plugin(_shape_link_plugin)
 
 

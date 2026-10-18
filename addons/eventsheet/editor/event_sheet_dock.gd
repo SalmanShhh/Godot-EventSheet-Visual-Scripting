@@ -1688,6 +1688,21 @@ func _open_inspector_designer(field: String = "", category: String = "") -> void
 	_inspector_designer_dialog.open_for_sheet(_current_sheet, field, category)
 
 
+## The Inspector's "Shape <Class>…" link: the sheet for `path`, then its Designer. A sheet already open
+## in a tab is shown as it is - unsaved edits and undo history included - rather than read from disk
+## again into a second tab.
+func open_designer_for(path: String) -> void:
+	var open_index: int = -1
+	for index: int in range(_open_tabs.size()):
+		if str(_open_tabs[index].get("path", "")) == path:
+			open_index = index
+	if open_index < 0:
+		_load_sheet_from_path(path)
+	elif open_index != _active_tab_index:
+		_activate_tab(open_index)
+	_open_inspector_designer()
+
+
 ## One choice of the Designer's "Shape this field" panel, or its "Groups show as" (category "groups"),
 ## written through the undo funnel: every line it rewrites and the @tool it turns on or off are ONE step.
 func _designer_shape_field(var_name: String, category: String, option_id: String, answers: Dictionary) -> bool:
@@ -7848,7 +7863,10 @@ func _restore_sheet_snapshot(snapshot: EventSheetResource) -> void:
 	# version's lists sit in the cache pushing out ones that are still being asked for.
 	_clear_if_loaded(COMPLETIONS_PATH, "invalidate", [_current_sheet])
 	_current_sheet = snapshot.duplicate(true)
-	if not _current_sheet_path.is_empty():
+	# Only a sheet saved as its own resource owns its path. A sheet read from a .gd (or a scene) is a
+	# reading of somebody else's file: taking that path over would hand every later load of the script
+	# this sheet instead, and a resource made from the script could no longer be given it.
+	if _current_sheet_path.get_extension() in ["tres", "res"]:
 		_current_sheet.take_over_path(_current_sheet_path)
 	_refresh_after_edit()
 	# An undo pressed on one tab can land on another: the stack is the host editor's, and every

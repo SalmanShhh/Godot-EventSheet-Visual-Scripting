@@ -42,6 +42,9 @@ var _entries: Array[Dictionary] = []
 var _sheet: EventSheetResource = null
 var _shape_panel: VBoxContainer = null
 var _groups_option: OptionButton = null
+# Groups shown as tabs: the group whose tab is open, and each field's line in the list by name.
+var _open_group: String = ""
+var _holders: Dictionary = {}
 
 
 ## Wires the editing seams (dock-side); called once right after construction.
@@ -155,6 +158,7 @@ func rebuild_for_sheet(sheet: EventSheetResource) -> void:
 		stale.free()
 	_row_card_count = 0
 	_frames = {}
+	_holders = {}
 	_sheet = sheet
 	_strip.set_line(_this_field, "")
 	_strip.set_reading("", "")
@@ -196,6 +200,7 @@ func rebuild_for_sheet(sheet: EventSheetResource) -> void:
 		var frame: PanelContainer = _pickable_frame(card, str(entry.get("name")))
 		if not _edit_handler.is_valid():
 			_column.add_child(frame)
+			_holders[str(entry.get("name"))] = frame
 			continue
 		var row: HBoxContainer = HBoxContainer.new()
 		row.add_child(frame)
@@ -210,16 +215,89 @@ func rebuild_for_sheet(sheet: EventSheetResource) -> void:
 			up_button.text = "▲"
 			up_button.tooltip_text = EventSheetL10n.translate("Move this variable up in the Inspector (one undo step)")
 			up_button.disabled = above.is_empty()
-			up_button.pressed.connect(_on_move_up_pressed.bind(str(entry.get("name"))))
+			# Deferred: the move redraws the list, and this button cannot be freed inside its own press.
+			up_button.pressed.connect(_on_move_up_pressed.bind(str(entry.get("name"))), CONNECT_DEFERRED)
 			buttons.add_child(up_button)
 		for button: Node in buttons.get_children():
 			(button as Button).mouse_entered.connect(_point_at.bind(said, str(entry.get("code", ""))))
 			(button as Button).focus_entered.connect(_point_at.bind(said, str(entry.get("code", ""))))
 		row.add_child(buttons)
 		_column.add_child(row)
+		_holders[str(entry.get("name"))] = row
 	_column.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("Click a field to shape it.")))
 	var names: Array = entries.map(func(entry: Dictionary) -> String: return str(entry.get("name")))
-	pick_field(_picked if names.has(_picked) else str(names[0]), _picked_category)
+	var picked: String = _picked if names.has(_picked) else str(names[0])
+	_show_group_tabs(entries, picked)
+	pick_field(picked, _picked_category)
+
+
+## The fields' groups, by field name: a group runs from the field that opens it to the next one that
+## does, as Godot reads @export_group. Fields before the first group are in none ("").
+static func groups_of(entries: Array[Dictionary]) -> Dictionary:
+	var groups: Dictionary = {}
+	var current: String = ""
+	for entry: Dictionary in entries:
+		var named: String = str((entry.get("attributes") as Dictionary).get("group", "")).strip_edges()
+		if not named.is_empty():
+			current = named
+		groups[str(entry.get("name"))] = current
+	return groups
+
+
+## Groups shown as tabs: a tab per group above the list, and only the open group's fields under it -
+## the Inspector as Godot will draw it. The open tab follows the picked field. Fields in no group stay.
+func _show_group_tabs(entries: Array[Dictionary], picked: String) -> void:
+	if load(SHAPE_PATH).group_style(_sheet) != "tabs":
+		return
+	var groups: Dictionary = groups_of(entries)
+	var titles: PackedStringArray = PackedStringArray()
+	for named: Variant in groups.values():
+		if not str(named).is_empty() and not titles.has(str(named)):
+			titles.append(str(named))
+	if titles.is_empty():
+		return
+	if not str(groups.get(picked, "")).is_empty():
+		_open_group = str(groups[picked])
+	if not titles.has(_open_group):
+		_open_group = titles[0]
+	var bar: TabBar = TabBar.new()
+	bar.name = "GroupTabs"
+	for title: String in titles:
+		bar.add_tab(title)
+	bar.current_tab = titles.find(_open_group)
+	# Deferred: opening a tab redraws the list, this bar included.
+	bar.tab_changed.connect(func(index: int) -> void:
+		_open_group = titles[index]
+		for field: Variant in groups:
+			if str(groups[field]) == _open_group:
+				_picked = str(field)
+				break
+		refresh(), CONNECT_DEFERRED)
+	_column.add_child(bar)
+	_column.move_child(bar, 0)
+	for field: Variant in _holders:
+		var group: String = str(groups.get(field, ""))
+		(_holders[field] as Control).visible = group.is_empty() or group == _open_group
+
+
+## The fields the list shows now, in order - test seam.
+func shown_fields() -> PackedStringArray:
+	var shown: PackedStringArray = PackedStringArray()
+	for field: Variant in _holders:
+		if (_holders[field] as Control).visible:
+			shown.append(str(field))
+	return shown
+
+
+## The group tabs' titles and the open one, or [] when groups show as sections - test seam.
+func group_tabs() -> Array:
+	var bar: TabBar = _column.get_node_or_null("GroupTabs") as TabBar
+	if bar == null:
+		return []
+	var titles: Array = []
+	for index: int in range(bar.tab_count):
+		titles.append(bar.get_tab_title(index))
+	return [titles, bar.get_tab_title(bar.current_tab)]
 
 
 ## What the strip says about one row: ✎ opens it, and for a variable that can move, ▲ puts it above

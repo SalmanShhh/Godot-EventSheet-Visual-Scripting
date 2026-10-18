@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Fixed: shaping a field, walked end to end in the editor
+
+- Clicking an option in "Shape this field", pressing Choose or Apply, or pressing ▲ in the Inspector
+  Designer no longer tries to free the control being clicked (Godot refused with "Object is locked"
+  and left it orphaned). The choice now lands right after the click.
+- A script open as a sheet keeps its own path after an edit. Every edit used to hand the script's path
+  to the sheet, so `load()` of the script returned the sheet, and a resource made from the script (a
+  goblin.tres made from EnemyStats) could not be given it.
+- The Inspector's "Shape <Class>…" link shows the sheet's tab when it is already open, unsaved edits
+  and undo included, instead of reading the file again into a second tab. Taking the last Show when
+  back after following the link now removes @tool again, as it does without the link.
+- "Groups show as: Tabs" turns the Designer's own list into tabs too: a tab per group, only the open
+  group's fields under it, and the tab follows the picked field.
+- The help strip under a variable shown only while a tick box is on says so:
+  "shield_amount: shown only when has_shield is on." (or "read-only when ... is off.").
+
 ### Added: a block kept as code on purpose says why
 
 - Quoted lines joined into one text (`block.code = "\n".join(PackedStringArray([` followed by a line

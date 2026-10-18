@@ -163,6 +163,15 @@ static func strip_for(row_data: EventRowData, sheet: EventSheetResource) -> Dict
 			str((bounds as Dictionary).get("min", "")), str((bounds as Dictionary).get("max", ""))]
 		detail += "  " + text
 		links.append(LINK_RANGE)
+	# When the field shows at all is the one thing neither the row nor its slider can say.
+	var shown_if: String = str(attributes_of(found).get("show_if", "")).strip_edges()
+	var locked_unless: String = str(attributes_of(found).get("lock_unless", "")).strip_edges()
+	if exported and not shown_if.is_empty():
+		text = EventSheetL10n.translate("%s: shown only when %s is on.") % [str(identity["name"]), shown_if]
+		detail += "  " + text
+	elif exported and not locked_unless.is_empty():
+		text = EventSheetL10n.translate("%s: read-only when %s is off.") % [str(identity["name"]), locked_unless]
+		detail += "  " + text
 	if not row_data.help_note.is_empty():
 		text = row_data.help_note
 		detail += "  " + row_data.help_note

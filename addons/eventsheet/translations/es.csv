@@ -9476,3 +9476,5 @@ Shape %s…,Dar forma a %s…
 "Opens the Inspector Designer for %s: how each field of it looks, when it shows and what it checks.","Abre el Diseñador del Inspector para %s: cómo se ve cada campo, cuándo aparece y qué comprueba."
 "Code on purpose: this is a long text kept inside quotes, and a text reads best exactly as it is written.","Código a propósito: es un texto largo entre comillas, y un texto se lee mejor tal como está escrito."
 "Code on purpose: these %d lines are text kept inside quotes, joined into one text, and a text reads best exactly as it is written.","Código a propósito: estas %d líneas son texto entre comillas, unidas en un solo texto, y un texto se lee mejor tal como está escrito."
+%s: shown only when %s is on.,%s: solo se muestra cuando %s está activado.
+%s: read-only when %s is off.,%s: solo lectura cuando %s está desactivado.
