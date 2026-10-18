@@ -85,6 +85,7 @@ static func run() -> bool:
 	]
 	for case: Array in cases:
 		all_passed = _check_case(case) and all_passed
+	all_passed = _check_stateful() and all_passed
 	# On again, the file is the one it was.
 	var off_once: Dictionary = _cycle(func(sheet: EventSheetResource) -> void: _top(sheet, "OnProcess", 0).enabled = false)
 	_write(FILE_PATH, str(off_once.get("saved", "")))
@@ -119,6 +120,44 @@ static func _check_case(case: Array) -> bool:
 		["%s: it reopens as the same event, off" % label,
 			[reopened.enabled, _words(reopened)] if reopened != null else [], [false, _words((case[1] as Callable).call(_opened()))]],
 		["%s: and saves again byte for byte" % label, str(round_trip.get("resaved", "")), saved],
+	])
+
+
+## An event gated by a stateful condition (Every X Seconds, its uid baked the way the dock bakes it),
+## added to the opened file and switched off: the line that counts the time is written behind the
+## same false guard as the event, never at the function's own indent where it would run every tick.
+static func _check_stateful() -> bool:
+	var round_trip: Dictionary = _cycle(func(sheet: EventSheetResource) -> void:
+		var every: ACECondition = ACECondition.new()
+		every.provider_id = "Core"
+		every.ace_id = "EveryXSeconds"
+		every.codegen_template = "__every_t1 >= maxf({seconds}, 0.001)"
+		every.member_declaration = "var __every_t1: float = 0.0"
+		every.codegen_prelude = "__every_t1 += get_process_delta_time()"
+		every.codegen_on_true = "__every_t1 = fmod(__every_t1, maxf({seconds}, 0.001))"
+		every.params = {"seconds": "2.0"}
+		var event: EventRow = EventRow.new()
+		event.trigger_provider_id = "Core"
+		event.trigger_id = "OnProcess"
+		event.conditions.append(every)
+		var tick: RawCodeRow = RawCodeRow.new()
+		tick.code = "print(\"tick\")"
+		event.actions.append(tick)
+		event.enabled = false
+		sheet.events.insert(sheet.events.find(_top(sheet, "OnProcess", 0)), event))
+	var saved: String = str(round_trip.get("saved", ""))
+	var reopened_flags: Array = []
+	var reopened: EventSheetResource = round_trip.get("reopened") as EventSheetResource
+	for nth: int in range(2):
+		var event: EventRow = _top(reopened, "OnProcess", nth)
+		reopened_flags.append(event.enabled if event != null else null)
+	return SUPPORT.pins(TEST_NAME, [
+		["a stateful event: its bookkeeping is behind the guard too",
+			saved.contains("\t# @off\n\tif false:\n\t\t__every_t1 += get_process_delta_time()\n\t# @off\n\tif false and __every_t1 >= maxf(2.0, 0.001):\n\t\t__every_t1 = fmod(__every_t1, maxf(2.0, 0.001))\n\t\tprint(\"tick\")\n"), true],
+		["a stateful event: no bookkeeping line runs outside it", saved.contains("\n\t__every_t1 +="), false],
+		["a stateful event: the saved script parses", _parse_error(saved), ""],
+		["a stateful event: it reopens off, bookkeeping and gate alike", reopened_flags, [false, false]],
+		["a stateful event: and saves again byte for byte", str(round_trip.get("resaved", "")), saved],
 	])
 
 

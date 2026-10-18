@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Fixed: an Every X Seconds timer no longer counts while its event is off in a `.gd` sheet
+
+- An event switched off in a `.gd` sheet (or a row of a group that is off and cannot be switched)
+  stayed in the file behind a false guard, but a stateful condition's bookkeeping line
+  (`__every_... += get_process_delta_time()`) was still written at the function's own indent, above
+  the guard, so the timer went on counting every frame while the event was off. The line is now
+  written behind the same guard, as the event with no conditions it reads back as: under the event's
+  `# @off` (or its group's `# @group:` line) and an `if false:` of its own. The saved script parses,
+  it reopens off, and an untouched save writes the same bytes.
+
 ### Fixed: a `##` line inside a string is no longer read as the class description
 
 - Opening a `.gd` whose own `extends` line has no doc block, but which holds a string with an

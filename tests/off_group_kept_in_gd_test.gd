@@ -82,7 +82,43 @@ static func run() -> bool:
 		["a .tres companion still leaves the off group out",
 			[companion.contains("score += 1"), companion.contains("(disabled group \"Wave One\"")], [false, true]],
 	]) and all_passed
+	# A stateful condition (Every X Seconds) on a row of the off group: its bookkeeping line sits behind
+	# the same guard as the row, so the timer does not count while the group is off.
+	var stateful: EventSheetResource = _base_sheet()
+	var wave: EventGroup = _group(stateful, "Wave One")
+	wave.events.append(_every_event())
+	wave.enabled = false
+	SheetCompiler.compile(stateful, SAVE_AS_PATH, true)
+	var stateful_saved: String = FileAccess.get_file_as_string(SAVE_AS_PATH)
+	var stateful_reopened: EventSheetResource = GDScriptImporter.new().import_external(SAVE_AS_PATH)
+	_write(RESAVE_PATH, stateful_saved)
+	stateful_reopened.external_source_path = RESAVE_PATH
+	SheetCompiler.compile(stateful_reopened, RESAVE_PATH)
+	all_passed = SUPPORT.pins(TEST_NAME, [
+		["stateful: the bookkeeping is behind the group's false guard",
+			stateful_saved.contains("\t# @group:wave_one\n\tif false:\n\t\t__every_t1 += get_process_delta_time()\n\t# @group:wave_one\n\tif false and __every_t1 >= maxf(2.0, 0.001):\n"), true],
+		["stateful: no bookkeeping line runs outside it", stateful_saved.contains("\n\t__every_t1 +="), false],
+		["stateful: the saved script parses", _parse_error(stateful_saved), ""],
+		["stateful: it reopens inside the off group", _state(_group(stateful_reopened, "Wave One")),
+			{"enabled": false, "runtime_toggleable": false, "rows": 5}],
+		["stateful: and saves again byte for byte", FileAccess.get_file_as_string(RESAVE_PATH), stateful_saved],
+	]) and all_passed
 	return all_passed
+
+
+## An every-frame event gated by Every X Seconds, its uid baked the way the dock bakes it.
+static func _every_event() -> EventRow:
+	var every: ACECondition = ACECondition.new()
+	every.provider_id = "Core"
+	every.ace_id = "EveryXSeconds"
+	every.codegen_template = "__every_t1 >= maxf({seconds}, 0.001)"
+	every.member_declaration = "var __every_t1: float = 0.0"
+	every.codegen_prelude = "__every_t1 += get_process_delta_time()"
+	every.codegen_on_true = "__every_t1 = fmod(__every_t1, maxf({seconds}, 0.001))"
+	every.params = {"seconds": "2.0"}
+	var event: EventRow = _raw_event("print(\"tick\")")
+	event.conditions.append(every)
+	return event
 
 
 ## The sheet every case starts from: a score, an outer group holding a nested one, and a group beside.

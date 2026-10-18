@@ -2625,14 +2625,33 @@ static func _emit_event_body(
 				stateful_on_true.append(_substitute_params(condition.codegen_on_true, condition.params))
 			if not condition.codegen_on_exit.is_empty():
 				stateful_on_exit.append(_substitute_params(condition.codegen_on_exit, condition.params))
-		for prelude_line: String in stateful_preludes:
-			lines.append(indent + prelude_line)
-			had_body = true
 		# Group breadcrumb: a `# @group:<slug>` line before a grouped event's block, so the importer can
 		# reconstruct the EventGroup. Only top-of-group events (else_mode NONE) are tagged - chained
 		# else/elif rows belong to the same group as the `if` they continue.
+		var group_breadcrumb: String = ""
 		if event_row.else_mode == EventRow.ElseMode.NONE and _row_group_path.has(event_row):
-			lines.append("%s# @group:%s" % [indent, str(_row_group_path[event_row])])
+			group_breadcrumb = "%s# @group:%s" % [indent, str(_row_group_path[event_row])]
+		# An event that never runs (off, or in an off group that cannot be switched) keeps its stateful
+		# bookkeeping behind the same guard, so a timer does not go on counting while the event is off.
+		# The lines are written as the event with no conditions the lift reads them back as: the
+		# breadcrumb, the marker and the guarded header, with the bookkeeping as its body.
+		var never_runs: bool = held_off or runtime_group_guard == OFF_GROUP_GUARD \
+				or runtime_group_guard.begins_with(OFF_GROUP_GUARD + " and ")
+		if never_runs and not stateful_preludes.is_empty():
+			if not group_breadcrumb.is_empty():
+				lines.append(group_breadcrumb)
+			if held_off:
+				lines.append(indent + OFF_ROW_MARKER)
+			lines.append("%sif %s:" % [indent, runtime_group_guard])
+			for prelude_line: String in stateful_preludes:
+				lines.append(indent + "\t" + prelude_line)
+			had_body = true
+		else:
+			for prelude_line: String in stateful_preludes:
+				lines.append(indent + prelude_line)
+				had_body = true
+		if not group_breadcrumb.is_empty():
+			lines.append(group_breadcrumb)
 		if held_off:
 			lines.append(indent + OFF_ROW_MARKER)
 		# Resolve the block header: if / elif / else, per the chaining rules above.
