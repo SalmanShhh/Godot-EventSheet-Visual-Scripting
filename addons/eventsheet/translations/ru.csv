@@ -9389,3 +9389,4 @@ row %d of %s,строка %d в %s
 Pick a row of a data table,Выбрать строку таблицы данных
 "A dropdown of the rows of a data table, shown by their name column. The file still stores the row's number.","Список строк таблицы данных, показанных по их столбцу имени. Файл по-прежнему хранит номер строки."
 Name column,Столбец имени
+Not one of the words %s() gives.,"Нет среди слов, которые даёт %s()."

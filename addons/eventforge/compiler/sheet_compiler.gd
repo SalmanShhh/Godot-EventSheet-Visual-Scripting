@@ -483,6 +483,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		inspector_conditions(merged_variables, tree_variables, result["warnings"]),
 		_sheet_writes_function(class_raw_rows, all_functions, "_validate_property"), result["warnings"])
 	var controllers: Dictionary = inspector_condition_controllers(inspector_condition_entries)
+	_warn_conditions_need_tool(inspector_condition_entries, sheet.tool_mode, result["warnings"])
 	_warn_unread_reactions(tree_variables, sheet_function_names, class_raw_rows, result["warnings"])
 	var variable_lines: PackedStringArray = _emit_variables(merged_variables, result["warnings"], sheet_function_names, controllers)
 	if variable_lines.size() > 0:
@@ -989,6 +990,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	var external_conditions: Array = _conditions_to_write(inspector_conditions({}, external_variables, result["warnings"]),
 		_sheet_writes_function(external_raw_rows, sheet.functions, "_validate_property"), result["warnings"])
 	var external_controllers: Dictionary = inspector_condition_controllers(external_conditions)
+	_warn_conditions_need_tool(external_conditions, sheet.tool_mode, result["warnings"])
 	var external_function_names: Dictionary = {}
 	for known_function: Variant in sheet.functions:
 		if known_function is EventFunction:
@@ -3719,6 +3721,13 @@ static func _sheet_writes_function(raw_rows: Array, functions: Array, function_n
 	return false
 
 
+## Godot asks _validate_property only of a @tool script while editing, so on any other sheet the
+## written Show if / Lock unless would hide and grey nothing. Said once, with the way to fix it.
+static func _warn_conditions_need_tool(conditions: Array, tool_sheet: bool, warnings: Array) -> void:
+	if not tool_sheet and not conditions.is_empty():
+		warnings.append("Show if / Lock unless need a @tool sheet to work in the Inspector - enable Tool in the Sheet Type dialog.")
+
+
 ## The conditions a compile writes, after the stand-aside rule above: none when the sheet has its own
 ## _validate_property, with a warning naming the variables whose Show if / Lock unless it leaves to it.
 ## A group show-if is not named: in a file with its own function that comment is the author's note to
@@ -4989,8 +4998,14 @@ static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
 ## into the Inspector's hover tooltip and decor must not. Editor-only: the drawers plugin reads them
 ## from the script source and renders a header label / info panel above the property; without the
 ## plugin (or in an exported game) they are inert comments - the parity covenant is untouched.
+## The order is frozen and read back bottom-up by the importer: tabs, header, info, required,
+## validate, action, link, choices, side by side. A new line extends it at an end, never in between.
 static func _decor_prefix_lines(attributes: Dictionary, var_name: String = "") -> PackedStringArray:
 	var decor: PackedStringArray = PackedStringArray()
+	# Tabs: every @export_group of the object becomes a tab. It belongs to the whole object, so it
+	# heads the block; without the plugin the groups stay the headings Godot draws.
+	if bool(attributes.get("tabs", false)):
+		decor.append("# @inspector_tabs")
 	var header: String = str(attributes.get("header", "")).strip_edges()
 	if not header.is_empty():
 		var accent: String = str(attributes.get("header_color", "")).strip_edges()
@@ -5021,6 +5036,15 @@ static func _decor_prefix_lines(attributes: Dictionary, var_name: String = "") -
 	var link_partner: String = str(attributes.get("link_with", "")).strip_edges()
 	if not var_name.is_empty() and link_partner.is_valid_identifier() and link_partner != var_name:
 		decor.append("# @inspector_link %s %s" % [var_name, link_partner])
+	# Choices: a dropdown filled by a function of the script. The field still stores the plain word,
+	# and the function only runs in the editor when the script is a @tool script, like Validate.
+	var choices_function: String = str(attributes.get("choices_function", "")).strip_edges()
+	if not choices_function.is_empty() and choices_function.is_valid_identifier():
+		decor.append("# @inspector_choices %s" % choices_function)
+	# Side by side: this field and the one declared after it share one line. Without the plugin they
+	# are two ordinary lines.
+	if bool(attributes.get("side_by_side", false)):
+		decor.append("# @inspector_side_by_side")
 	return decor
 
 

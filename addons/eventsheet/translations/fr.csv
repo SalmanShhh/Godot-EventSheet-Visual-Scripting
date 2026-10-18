@@ -9389,3 +9389,4 @@ row %d of %s,ligne %d de %s
 Pick a row of a data table,Choisir une ligne d'un tableau de données
 "A dropdown of the rows of a data table, shown by their name column. The file still stores the row's number.","Une liste des lignes d'un tableau de données, montrées par leur colonne de nom. Le fichier garde le numéro de la ligne."
 Name column,Colonne de nom
+Not one of the words %s() gives.,Ne fait pas partie des mots que donne %s().

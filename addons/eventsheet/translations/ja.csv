@@ -9389,3 +9389,4 @@ row %d of %s,%d 行目 (%s)
 Pick a row of a data table,データ表の行を選ぶ
 "A dropdown of the rows of a data table, shown by their name column. The file still stores the row's number.",データ表の行を名前の列で並べたドロップダウンです。ファイルには行の番号が保存されたままです。
 Name column,名前の列
+Not one of the words %s() gives.,%s() が返す言葉にはありません。

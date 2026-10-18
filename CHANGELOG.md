@@ -33,6 +33,21 @@
   row is missing, the bar under the grid counts the rows that have one, and a list kept in a .tres
   of its own offers **Open as a table**, which opens that file in the table view.
 
+### Added: three new shapes a field can take in the Inspector
+
+- Groups as tabs: `# @inspector_tabs` shows every `@export_group` of the script as a tab, so a long
+  resource fits on one screen. Without the plugin the groups are Godot's ordinary headings.
+- Side by side: `# @inspector_side_by_side` above a number puts it and the number declared after it
+  on one line (min and max, width and height). Without the plugin they are two lines.
+- Pick from a list a function gives: `# @inspector_choices attack_names` above a String makes it a
+  dropdown of the words `attack_names()` returns - a list of words, or a Dictionary of word to the
+  sentence that describes it. The file still stores the plain word. It needs a @tool script, like
+  Checked by a function; otherwise the field is Godot's plain text field.
+- Each one is a variable attribute the compiler writes as that comment line and the importer reads
+  back, byte for byte, so a hand-typed file opens as the same choice.
+- A sheet that is not a tool sheet but carries Show if / Lock unless is now told so when it
+  compiles: Godot only asks a @tool script's `_validate_property`, so the field would never hide.
+
 ### Fixed: the function Inspector's refusals say only what is true
 
 - Shared is refused only when the code the function compiles to reads a variable each object has

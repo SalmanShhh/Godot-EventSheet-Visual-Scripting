@@ -9389,3 +9389,4 @@ row %d of %s,%d행 (%s)
 Pick a row of a data table,데이터 표의 행 고르기
 "A dropdown of the rows of a data table, shown by their name column. The file still stores the row's number.",데이터 표의 행을 이름 열로 보여 주는 드롭다운입니다. 파일에는 계속 행 번호가 저장됩니다.
 Name column,이름 열
+Not one of the words %s() gives.,%s()가 주는 단어가 아닙니다.

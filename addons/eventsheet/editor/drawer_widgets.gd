@@ -487,6 +487,131 @@ class ActionButton:
 		return script != null and script.is_tool()
 
 
+# ── Groups as tabs ───────────────────────────────────────────────────────────
+## The `# @inspector_tabs` strip: one tab per @export_group of the object. Picking one remembers it
+## and asks the Inspector to rebuild, which then leaves the other groups' fields out. Target-less =
+## mock (a render harness), wired to nothing.
+class GroupTabs:
+	extends TabBar
+	const OBJECT_DECOR_PATH: String = "res://addons/eventsheet/editor/inspector/object_decor.gd"
+	var _target: Object = null
+
+	func _init(target: Object = null, groups: PackedStringArray = PackedStringArray(), chosen: String = "") -> void:
+		_target = target
+		clip_tabs = false
+		for group: String in groups:
+			add_tab(group)
+		var chosen_index: int = Array(groups).find(chosen)
+		current_tab = chosen_index if chosen_index >= 0 else 0
+		tab_changed.connect(_on_tab_changed)
+		if _target != null:
+			ready.connect(_tidy_sections, CONNECT_DEFERRED)
+
+	func _on_tab_changed(index: int) -> void:
+		if _target == null:
+			return
+		load(OBJECT_DECOR_PATH).choose_tab(_target, get_tab_title(index))
+		_target.notify_property_list_changed()
+
+	## Godot draws a heading for every group before any plugin is asked about its fields, so the
+	## groups whose tab is not picked are left as empty headings: those are hidden. The picked group's
+	## heading opens if it is folded, since its tab already says which group is showing.
+	func _tidy_sections() -> void:
+		var inspector: Node = get_parent()
+		while inspector != null and not (inspector is EditorInspector):
+			inspector = inspector.get_parent()
+		if inspector == null:
+			return
+		var folded: Array[Control] = []
+		for section: Node in inspector.find_children("*", "", true, false):
+			if section.get_class() != "EditorInspectorSection" or not (section is Control):
+				continue
+			var editors: Array[Node] = section.find_children("*", "EditorProperty", true, false)
+			if editors.is_empty():
+				(section as Control).hide()
+			elif tab_count > 0 and not (editors[0] as Control).is_visible_in_tree() and _holds_picked_group(editors):
+				folded.append(section as Control)
+		if folded.is_empty():
+			return
+		# Clicked once laid out, so the heading is where the click lands.
+		await get_tree().process_frame
+		for section: Control in folded:
+			if is_instance_valid(section) and section.is_visible_in_tree():
+				_click_heading(section)
+
+	func _holds_picked_group(editors: Array[Node]) -> bool:
+		var decor: Dictionary = load(OBJECT_DECOR_PATH).for_object(_target)
+		var group_of: Dictionary = decor.get("group_of", {})
+		var picked: String = get_tab_title(current_tab)
+		for editor: Node in editors:
+			if str(group_of.get(str((editor as EditorProperty).get_edited_property()), "")) == picked:
+				return true
+		return false
+
+	## A heading opens on a click, the way a person opens it, so Godot remembers it open as usual.
+	func _click_heading(section: Control) -> void:
+		var at: Vector2 = section.get_global_transform_with_canvas().origin + Vector2(section.size.x * 0.5, 6.0)
+		for pressed: bool in [true, false]:
+			var click: InputEventMouseButton = InputEventMouseButton.new()
+			click.button_index = MOUSE_BUTTON_LEFT
+			click.pressed = pressed
+			click.position = at
+			click.global_position = at
+			section.get_viewport().push_input(click)
+
+
+# ── Choices a function gives ─────────────────────────────────────────────────
+## The `# @inspector_choices <function>` dropdown: the words a function of the script returns, as a
+## described dropdown. The function may return a list of words, or a Dictionary of word -> the
+## sentence that describes it. A value the list no longer holds stays shown, marked, never replaced.
+class ChoicesField:
+	extends OptionButton
+	signal value_changed(word: String)
+	const POPUP_UI_PATH: String = "res://addons/eventsheet/editor/popup_ui.gd"
+	var _function: String = ""
+	var _words: PackedStringArray = PackedStringArray()
+
+	func _init(choices_function: String = "") -> void:
+		_function = choices_function
+		size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		load(POPUP_UI_PATH).described_option(self)
+		item_selected.connect(func(index: int) -> void: value_changed.emit(_words[index]))
+
+	## True when the function can run in the editor: the object's script is a @tool script that has it.
+	static func can_ask(target: Object, choices_function: String) -> bool:
+		if target == null or choices_function.is_empty() or not target.has_method(choices_function):
+			return false
+		var script: Script = target.get_script() as Script
+		return script != null and script.is_tool()
+
+	## The function's answer as [[word, description], ...], in its own order. Anything that is not a
+	## list or a Dictionary is no choices at all.
+	static func read_choices(answer: Variant) -> Array:
+		var choices: Array = []
+		if answer is Dictionary:
+			for word: Variant in (answer as Dictionary):
+				choices.append([str(word), str((answer as Dictionary)[word])])
+		elif answer is Array or answer is PackedStringArray:
+			for word: Variant in answer:
+				choices.append([str(word), ""])
+		return choices
+
+	## Fills the dropdown from the function and selects `current`.
+	func show_choices(target: Object, current: String) -> void:
+		var choices: Array = read_choices(target.call(_function)) if can_ask(target, _function) else []
+		clear()
+		_words = PackedStringArray()
+		var popup_ui: GDScript = load(POPUP_UI_PATH)
+		for choice: Array in choices:
+			_words.append(str(choice[0]))
+			popup_ui.add_described_item(self, str(choice[0]), str(choice[1]))
+		if not _words.has(current):
+			_words.append(current)
+			popup_ui.add_described_item(self, current, EventSheetL10n.translate("Not one of the words %s() gives.") % _function)
+		select(Array(_words).find(current))
+		popup_ui.follow_description(self)
+
+
 # ── String toggle-button row ─────────────────────────────────────────────────
 ## A String's fixed choices as one row of toggle buttons - every option visible at a glance,
 ## one click to switch (a dropdown hides the alternatives behind a click). The pressed button
@@ -1638,3 +1763,76 @@ class DrawerCurvePreview:
 	## A pleasant default ease (smoothstep) for the dialog preview when there's no real Curve yet.
 	func _ease_sample(t: float) -> float:
 		return t * t * (3.0 - 2.0 * t)
+
+
+## A word picked from the list a function of the script gives: a described dropdown. The file stores
+## the plain word, so events and exported games read it as they always did.
+class ChoicesProperty:
+	extends EditorProperty
+	var _field: Control
+
+	func _init(function_name: String) -> void:
+		_field = ChoicesField.new(function_name)
+		_field.connect("value_changed", _on_changed)
+		add_child(_field)
+		add_focusable(_field)
+
+	func _on_changed(word: String) -> void:
+		var is_name: bool = typeof(get_edited_object().get(get_edited_property())) == TYPE_STRING_NAME
+		emit_changed(get_edited_property(), StringName(word) if is_name else word)
+
+	func _update_property() -> void:
+		_field.call("show_choices", get_edited_object(), str(get_edited_object().get(get_edited_property())))
+
+
+## Two numbers on one line - min and max, width and height - each with its own name, as the pair
+## reads in the file. Each edit is written to its own property, so undo takes back the one that moved.
+class SideBySideProperty:
+	extends EditorProperty
+	var _names: PackedStringArray = PackedStringArray()
+	var _spins: Array[EditorSpinSlider] = []
+
+	func _init(first: String, second: String) -> void:
+		draw_label = false
+		_names = PackedStringArray([first, second])
+		var row: HBoxContainer = HBoxContainer.new()
+		for property_name: String in _names:
+			var caption: Label = Label.new()
+			caption.text = property_name
+			caption.clip_text = true
+			caption.tooltip_text = property_name
+			caption.mouse_filter = Control.MOUSE_FILTER_PASS
+			caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			caption.size_flags_stretch_ratio = 0.8
+			row.add_child(caption)
+			var spin: EditorSpinSlider = EditorSpinSlider.new()
+			spin.allow_greater = true
+			spin.allow_lesser = true
+			spin.hide_slider = true
+			spin.min_value = -1000000.0
+			spin.max_value = 1000000.0
+			spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			spin.value_changed.connect(_on_changed.bind(property_name))
+			row.add_child(spin)
+			add_focusable(spin)
+			_spins.append(spin)
+		add_child(row)
+
+	func _on_changed(value: float, property_name: String) -> void:
+		var is_int: bool = typeof(get_edited_object().get(property_name)) == TYPE_INT
+		emit_changed(property_name, int(round(value)) if is_int else value)
+
+	func _notification(what: int) -> void:
+		# The Inspector hands every editor its own label after _init; here the two names are the label.
+		if what == NOTIFICATION_READY:
+			draw_label = false
+			label = ""
+
+	func _update_property() -> void:
+		for index: int in _names.size():
+			var value: Variant = get_edited_object().get(_names[index])
+			var is_int: bool = typeof(value) == TYPE_INT
+			_spins[index].step = 1.0 if is_int else 0.001
+			_spins[index].rounded = is_int
+			_spins[index].set_value_no_signal(float(value))
+			_spins[index].read_only = read_only

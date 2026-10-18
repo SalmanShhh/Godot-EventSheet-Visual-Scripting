@@ -9389,3 +9389,4 @@ row %d of %s,Zeile %d von %s
 Pick a row of a data table,Eine Zeile einer Datentabelle wählen
 "A dropdown of the rows of a data table, shown by their name column. The file still stores the row's number.","Eine Liste der Zeilen einer Datentabelle, gezeigt über ihre Namensspalte. Die Datei speichert weiter die Nummer der Zeile."
 Name column,Namensspalte
+Not one of the words %s() gives.,"Keines der Wörter, die %s() liefert."

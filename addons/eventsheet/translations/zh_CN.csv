@@ -9389,3 +9389,4 @@ row %d of %s,第 %d 行（%s）
 Pick a row of a data table,选择数据表的一行
 "A dropdown of the rows of a data table, shown by their name column. The file still stores the row's number.",按名称列显示数据表各行的下拉列表。文件仍然保存该行的编号。
 Name column,名称列
+Not one of the words %s() gives.,不是 %s() 给出的词之一。

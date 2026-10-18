@@ -27,7 +27,13 @@
 #
 # Decor that belongs to the OBJECT rather than to one property is parsed beside this file:
 # `# @inspector_preview` asks for the preview card at the top, and
-# `# @inspector_handle <property> <kind> [from <property>]` declares a viewport handle.
+# `# @inspector_handle <property> <kind> [from <property>]` declares a viewport handle, and
+# `# @inspector_tabs` draws every @export_group as a tab.
+#
+# Decor that SHAPES the field it sits above, read here:
+#   # @inspector_choices <function>   a String as a dropdown of the words that function returns
+#                                     (only for a @tool script that has it; else the plain field)
+#   # @inspector_side_by_side         two numbers, this one and the next declared, on one line
 @tool
 class_name EventSheetAttributeDrawers
 extends EditorInspectorPlugin
@@ -66,14 +72,25 @@ func _can_handle(_object: Object) -> bool:
 ## preview card at the top of its Inspector, showing the object as it is and re-drawing as it changes.
 ## Anything else is left alone, so an object that asked for nothing renders exactly as Godot draws it.
 func _parse_begin(object: Object) -> void:
-	if load(OBJECT_DECOR_PATH).wants_preview(object):
+	var object_decor: GDScript = load(OBJECT_DECOR_PATH)
+	if object_decor.wants_preview(object):
 		add_custom_control(load(PREVIEW_PANEL_PATH).new(object))
+	# `# @inspector_tabs`: one tab per @export_group. Picking a tab rebuilds the Inspector, and the
+	# fields of the other groups are left out of it below.
+	if object_decor.wants_tabs(object):
+		var groups: PackedStringArray = object_decor.tab_groups(object)
+		if not groups.is_empty():
+			add_custom_control(widgets().GroupTabs.new(object, groups, object_decor.chosen_tab(object)))
 
 
 func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_type: PropertyHint, hint_string: String, _usage_flags: int, _wide: bool) -> bool:
+	# A field in a group whose tab is not the one picked is consumed with nothing drawn.
+	if _object != null and _object.get_script() != null and load(OBJECT_DECOR_PATH).hidden_by_tabs(_object, name):
+		return true
+	var decor: Array = decor_for(_object, name)
 	# Decor first: `# @inspector_header` / `# @inspector_info` comments above the var render as a section
 	# label / info panel ABOVE the property, composing with any drawer (or the default field) below.
-	for entry: Variant in decor_for(_object, name):
+	for entry: Variant in decor:
 		var decor_entry: Dictionary = entry as Dictionary
 		match str(decor_entry.get("kind", "")):
 			"header":
@@ -91,8 +108,28 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 				# emits once per member, exactly as the per-field Show If compiles. The entry is here
 				# so the Designer (and anything else reading the map) can say WHY a group hides.
 				pass
+			"tabs", "choices", "side_by_side", "side_by_side_second":
+				# Drawn as the field itself (below) or at the top of the Inspector (_parse_begin).
+				pass
 			_:
 				add_custom_control(widgets().build_info_panel(str(decor_entry.get("text", ""))))
+	for entry: Variant in decor:
+		var shape: Dictionary = entry as Dictionary
+		match str(shape.get("kind", "")):
+			"choices":
+				# Filled by the script's own function, so it only runs for a @tool script that has
+				# it - otherwise Godot's plain text field, exactly as without the plugin.
+				if (type == TYPE_STRING or type == TYPE_STRING_NAME) and widgets().ChoicesField.can_ask(_object, str(shape.get("function", ""))):
+					add_property_editor(name, widgets().ChoicesProperty.new(str(shape.get("function", ""))))
+					return true
+			"side_by_side":
+				var second: String = str(shape.get("second", ""))
+				if side_by_side_fits(_object, name, second):
+					add_property_editor_for_multiple_properties("", PackedStringArray([name, second]), widgets().SideBySideProperty.new(name, second))
+					return true
+			"side_by_side_second":
+				if side_by_side_fits(_object, str(shape.get("first", "")), name):
+					return true
 	var drawer: Dictionary = parse_drawer_hint(hint_string)
 	var kind: String = str(drawer.get("drawer", ""))
 	match kind:
@@ -293,6 +330,9 @@ static func build_decor_map(source: String) -> Dictionary:
 	# The show-if that scopes a whole @export_group: it rides above the group line and belongs to
 	# every member below it, until the next group (or category) line replaces it.
 	var group_scope: Dictionary = {}
+	# A `# @inspector_side_by_side` entry waiting for the field declared after its own, and its name.
+	var side_first: Variant = null
+	var side_first_name: String = ""
 	for raw_line: String in source.split("\n"):
 		var line: String = raw_line.strip_edges()
 		if line.begins_with("# @inspector_header "):
@@ -315,6 +355,14 @@ static func build_decor_map(source: String) -> Dictionary:
 			var link_names: PackedStringArray = line.substr(18).strip_edges().split(" ", false)
 			if link_names.size() == 2:
 				pending.append({"kind": "link", "first": link_names[0], "second": link_names[1]})
+		elif line == "# @inspector_tabs":
+			pending.append({"kind": "tabs"})
+		elif line.begins_with("# @inspector_choices "):
+			var choices_function: String = line.substr(21).strip_edges()
+			if choices_function.is_valid_identifier():
+				pending.append({"kind": "choices", "function": choices_function})
+		elif line == "# @inspector_side_by_side":
+			pending.append({"kind": "side_by_side", "second": ""})
 		elif line.begins_with("# @inspector_show_if "):
 			# Only meaningful directly above an @export_group line (the group-scoped form); above a
 			# variable the show-if is the per-field attribute, which compiles rather than decorates.
@@ -333,15 +381,23 @@ static func build_decor_map(source: String) -> Dictionary:
 					group_scope = {"kind": "group_show_if", "predicate": str((waiting as Dictionary).get("predicate"))}
 			pending = carried
 		elif line.begins_with("var ") or (line.begins_with("@") and line.contains(" var ")):
-			if not pending.is_empty() or not group_scope.is_empty():
+			if not pending.is_empty() or not group_scope.is_empty() or side_first != null:
 				var var_name: String = _var_name_from_line(line)
 				if not var_name.is_empty():
 					var entries: Array = []
 					if not group_scope.is_empty():
 						entries.append(group_scope)
+					# The field after a side-by-side one is the other half of its line.
+					if side_first != null:
+						side_first["second"] = var_name
+						entries.append({"kind": "side_by_side_second", "first": side_first_name})
+						side_first = null
 					for waiting: Variant in pending:
 						if str((waiting as Dictionary).get("kind", "")) != "_show_if_pending":
 							entries.append(waiting)
+							if str((waiting as Dictionary).get("kind", "")) == "side_by_side":
+								side_first = waiting
+								side_first_name = var_name
 					if not entries.is_empty():
 						map[var_name] = entries
 				pending = []
@@ -353,6 +409,9 @@ static func build_decor_map(source: String) -> Dictionary:
 			# survives it; a real statement (a function, a signal) means the export block is over.
 			if not line.is_empty():
 				group_scope = {}
+				# A setter's indented body still belongs to the variable above it.
+				if not raw_line.begins_with("\t") and not raw_line.begins_with(" "):
+					side_first = null
 	return map
 
 
@@ -408,6 +467,20 @@ static func parse_table_columns(spec: String, notes: Array = []) -> Array:
 	if not notes.is_empty():
 		widgets().sheet_compiler().read_table_column_notes(columns, notes)
 	return columns
+
+
+## True when `first` and `second` can share one line: both numbers the Inspector shows. Anything
+## else stays two ordinary lines, as it is without the plugin. Static + UI-free so the suite pins it.
+static func side_by_side_fits(object: Object, first: String, second: String) -> bool:
+	if object == null or first.is_empty() or second.is_empty() or first == second:
+		return false
+	var shown: int = 0
+	for property: Dictionary in object.get_property_list():
+		var property_name: String = str(property.get("name", ""))
+		if (property_name == first or property_name == second) and int(property.get("usage", 0)) & PROPERTY_USAGE_EDITOR \
+				and int(property.get("type", TYPE_NIL)) in [TYPE_INT, TYPE_FLOAT]:
+			shown += 1
+	return shown == 2
 
 
 ## Best-effort resource-class guard for the TYPE_OBJECT drawers. A generated sheet only ever pairs the marker

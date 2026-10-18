@@ -7,6 +7,9 @@
 #   # @inspector_preview                              a live picture of this object at the top of
 #                                                     its Inspector
 #   # @inspector_handle <property> <kind> [from <p>]  a draggable handle in the 2D / 3D viewport
+#   # @inspector_tabs                                 every @export_group as a tab (anywhere in the
+#                                                     file; the compiler writes it above the first
+#                                                     variable that asked for it)
 #
 # Kinds: `point` (the property is a position), `length` (a distance from the anchor), `angle` (an
 # angle in degrees around the anchor) and `points` (a list of positions). `from <property>` names
@@ -28,9 +31,12 @@ const HANDLE_GLYPHS: Dictionary = {"point": "●", "length": "○", "angle": "�
 
 const PREVIEW_LINE: String = "# @inspector_preview"
 const HANDLE_PREFIX: String = "# @inspector_handle "
+const TABS_LINE: String = "# @inspector_tabs"
 
 # script instance id -> {"len": <source length>, "decor": {...}}
 static var _cache: Dictionary = {}
+# object instance id -> the group whose tab was picked last.
+static var _chosen_tabs: Dictionary = {}
 
 
 ## The object decor of one script source: {"preview": bool, "handles": Array[Dictionary]}, each
@@ -43,6 +49,8 @@ static func parse(source: String) -> Dictionary:
 		var line: String = raw_line.strip_edges()
 		if line == PREVIEW_LINE:
 			decor["preview"] = true
+		elif line == TABS_LINE:
+			decor["tabs"] = true
 		elif line.begins_with(HANDLE_PREFIX):
 			var handle: Dictionary = parse_handle_line(line.substr(HANDLE_PREFIX.length()))
 			if not handle.is_empty():
@@ -88,8 +96,71 @@ static func for_object(object: Object) -> Dictionary:
 	if cached is Dictionary and int((cached as Dictionary).get("len", -1)) == source.length():
 		return (cached as Dictionary).get("decor", {})
 	var decor: Dictionary = parse(source)
+	if bool(decor.get("tabs", false)):
+		decor.merge(read_groups(script.get_script_property_list()))
 	_cache[key] = {"len": source.length(), "decor": decor}
 	return decor
+
+
+## The groups of a script's property list, in order, and the group each property sits in:
+## {"tab_groups": PackedStringArray, "group_of": {property: group}}. Godot's own rules: a category
+## ends the group, a subgroup stays inside it, and a group with a name prefix holds only the names
+## that begin with it. Static + UI-free so the headless suite pins the contract.
+static func read_groups(property_list: Array) -> Dictionary:
+	var groups: PackedStringArray = PackedStringArray()
+	var group_of: Dictionary = {}
+	var group: String = ""
+	var prefix: String = ""
+	for property: Dictionary in property_list:
+		var usage: int = int(property.get("usage", 0))
+		var property_name: String = str(property.get("name", ""))
+		if usage & PROPERTY_USAGE_CATEGORY:
+			group = ""
+		elif usage & PROPERTY_USAGE_GROUP:
+			group = property_name
+			prefix = str(property.get("hint_string", ""))
+			if not group.is_empty() and not groups.has(group):
+				groups.append(group)
+		elif not (usage & PROPERTY_USAGE_SUBGROUP):
+			if not prefix.is_empty() and not property_name.begins_with(prefix):
+				group = ""
+			if not group.is_empty():
+				group_of[property_name] = group
+	return {"tab_groups": groups, "group_of": group_of}
+
+
+## True when the object asked for its groups as tabs.
+static func wants_tabs(object: Object) -> bool:
+	return bool(for_object(object).get("tabs", false))
+
+
+## The tabs one object shows: its groups, in declaration order.
+static func tab_groups(object: Object) -> PackedStringArray:
+	return for_object(object).get("tab_groups", PackedStringArray())
+
+
+## The group whose tab is showing: the one picked last, else the first.
+static func chosen_tab(object: Object) -> String:
+	var groups: PackedStringArray = tab_groups(object)
+	var chosen: String = str(_chosen_tabs.get(object.get_instance_id(), ""))
+	if groups.has(chosen):
+		return chosen
+	return groups[0] if not groups.is_empty() else ""
+
+
+## Remembers the tab picked for one object (until the editor closes).
+static func choose_tab(object: Object, group: String) -> void:
+	_chosen_tabs[object.get_instance_id()] = group
+
+
+## True when `property` belongs to a group whose tab is not the one showing. A field outside every
+## group shows under every tab.
+static func hidden_by_tabs(object: Object, property: String) -> bool:
+	var decor: Dictionary = for_object(object)
+	if not bool(decor.get("tabs", false)):
+		return false
+	var group: String = str((decor.get("group_of", {}) as Dictionary).get(property, ""))
+	return not group.is_empty() and group != chosen_tab(object)
 
 
 ## The handles one object declares, in declaration order.

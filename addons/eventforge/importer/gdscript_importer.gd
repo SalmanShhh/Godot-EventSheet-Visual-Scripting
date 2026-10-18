@@ -933,6 +933,20 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 	# attributes the emitter reads so they reopen as editable dialog fields, verify-gated like the rest.
 	# The link decor is emitted LAST of the decor block (closest to the variable), so it is read
 	# first here. It names both fields; only a line whose FIRST name is this variable belongs to it.
+	# Side by side and choices extend the block below the link, so they are read before it.
+	var side_by_side_value: bool = false
+	if cursor >= 0 and pending[cursor] == "# @inspector_side_by_side":
+		side_by_side_value = true
+		meta_count += 1
+		cursor -= 1
+	var choices_value: String = ""
+	if cursor >= 0 and pending[cursor].begins_with("# @inspector_choices "):
+		choices_value = pending[cursor].substr(21).strip_edges()
+		if choices_value.is_valid_identifier():
+			meta_count += 1
+			cursor -= 1
+		else:
+			choices_value = ""
 	var link_partner_value: String = ""
 	if cursor >= 0 and pending[cursor].begins_with("# @inspector_link "):
 		var link_names: PackedStringArray = pending[cursor].substr(18).strip_edges().split(" ", false)
@@ -984,7 +998,19 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 		if not header_value.is_empty():
 			meta_count += 1
 			cursor -= 1
+	# Tabs heads the decor block, so it is the last line read.
+	var tabs_value: bool = false
+	if cursor >= 0 and pending[cursor] == "# @inspector_tabs":
+		tabs_value = true
+		meta_count += 1
+		cursor -= 1
 	var candidate: Dictionary = {}
+	if tabs_value:
+		candidate["tabs"] = true
+	if side_by_side_value:
+		candidate["side_by_side"] = true
+	if not choices_value.is_empty():
+		candidate["choices_function"] = choices_value
 	if not tooltip_value.is_empty():
 		candidate["tooltip"] = tooltip_value
 	if not validate_value.is_empty():
