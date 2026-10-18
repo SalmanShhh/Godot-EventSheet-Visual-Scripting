@@ -9390,3 +9390,87 @@ Pick a row of a data table,Eine Zeile einer Datentabelle wählen
 "A dropdown of the rows of a data table, shown by their name column. The file still stores the row's number.","Eine Liste der Zeilen einer Datentabelle, gezeigt über ihre Namensspalte. Die Datei speichert weiter die Nummer der Zeile."
 Name column,Namensspalte
 Not one of the words %s() gives.,"Keines der Wörter, die %s() liefert."
+Change how the groups show,Darstellung der Gruppen ändern
+Shape %s in the Inspector,%s im Inspektor gestalten
+Click a field to shape it.,"Klicke auf ein Feld, um es zu gestalten."
+Groups show as,Gruppen erscheinen als
+Click to shape %s,"Klicken, um %s zu gestalten"
+Hidden while %s is off.,"Ausgeblendet, solange %s aus ist."
+Read-only while %s is off.,"Schreibgeschützt, solange %s aus ist."
+Show when,Anzeigen wenn
+Help,Hilfe
+How the value is drawn and edited.,Wie der Wert gezeichnet und bearbeitet wird.
+Where the field sits.,Wo das Feld sitzt.
+When the field appears.,Wann das Feld erscheint.
+What a good value is.,Was ein guter Wert ist.
+Words that explain the field.,"Worte, die das Feld erklären."
+A button that runs a function of the script.,"Eine Schaltfläche, die eine Funktion des Skripts ausführt."
+Exactly the same.,Genau gleich.
+The field Godot picks for the type. Nothing added.,"Das Feld, das Godot für den Typ wählt. Nichts hinzugefügt."
+Exactly the same field.,Genau dasselbe Feld.
+"Shows as a plain field, and the game runs the same: the marker is something only the plugin reads.","Erscheint als einfaches Feld, und das Spiel läuft gleich: Die Markierung liest nur das Plugin."
+"The same: this is Godot's own annotation, so it works with or without the plugin.","Gleich: Das ist Godots eigene Annotation, sie funktioniert mit oder ohne Plugin."
+Pick from a list a function gives,"Aus einer Liste wählen, die eine Funktion liefert"
+"A dropdown filled by a function of the script, so the choices follow your data: attack names, level names, save slots.","Eine Auswahlliste, die eine Funktion des Skripts füllt, damit die Auswahl deinen Daten folgt: Angriffsnamen, Levelnamen, Speicherplätze."
+"A plain text field: the chosen word, as written.","Ein einfaches Textfeld: das gewählte Wort, wie geschrieben."
+In its group,In seiner Gruppe
+"Under the heading of the group it is declared in, one field per line.","Unter der Überschrift der Gruppe, in der es deklariert ist, ein Feld pro Zeile."
+Side by side with the next field,Neben dem nächsten Feld
+"Shares one line with the field declared after it, for pairs that belong together: min and max, x and y, width and height.","Teilt sich eine Zeile mit dem danach deklarierten Feld, für Paare, die zusammengehören: Min und Max, x und y, Breite und Höhe."
+"Two lines, one after the other.","Zwei Zeilen, eine nach der anderen."
+No field is declared after this one to share its line.,"Nach diesem Feld ist kein Feld deklariert, das die Zeile teilen könnte."
+Always shown.,Immer angezeigt.
+"The same: this is Godot's own way to hide a field, so it works with or without the plugin. The script becomes a @tool script so the Inspector can ask it.","Gleich: So blendet Godot selbst ein Feld aus, es funktioniert also mit oder ohne Plugin. Das Skript wird ein @tool-Skript, damit der Inspektor es fragen kann."
+Only when %s is on,Nur wenn %s an ist
+"Hidden while %s is off, so only the fields that matter are on screen. The value is kept while hidden.","Ausgeblendet, solange %s aus ist, damit nur die Felder zu sehen sind, die zählen. Der Wert bleibt erhalten, solange es verborgen ist."
+Read-only when %s is off,"Schreibgeschützt, wenn %s aus ist"
+"Stays visible but greyed out while %s is off, for a value worth seeing but not changing.","Bleibt sichtbar, aber ausgegraut, solange %s aus ist, für einen Wert, den man sehen, aber nicht ändern soll."
+The same: Godot's own read-only flag.,Gleich: Godots eigenes Schreibschutz-Flag.
+Only when a tick box is on,Nur wenn ein Kontrollkästchen an ist
+Hidden while a tick box of the script is off.,"Ausgeblendet, solange ein Kontrollkästchen des Skripts aus ist."
+Add an exported bool variable first: it is the tick box that shows or hides this field.,"Füge zuerst eine exportierte bool-Variable hinzu: Sie ist das Kontrollkästchen, das dieses Feld zeigt oder verbirgt."
+No check,Keine Prüfung
+Any value of the type is accepted.,Jeder Wert des Typs wird angenommen.
+Stay within limits,Innerhalb der Grenzen bleiben
+The field refuses values outside a lowest and highest number.,Das Feld lehnt Werte außerhalb einer kleinsten und größten Zahl ab.
+"The same: Godot's own range, and the setter keeps the value inside it in the game too.","Gleich: Godots eigener Bereich, und der Setter hält den Wert auch im Spiel darin."
+Must be filled in,Muss ausgefüllt sein
+"An empty value shows a quiet amber note in the Inspector, and the Project Doctor lists every scene that leaves it empty.","Ein leerer Wert zeigt im Inspektor einen dezenten bernsteinfarbenen Hinweis, und der Projektarzt listet jede Szene auf, die ihn leer lässt."
+A plain field; the Doctor still lists empty ones.,Ein einfaches Feld; der Arzt listet leere trotzdem auf.
+Checked by a function,Von einer Funktion geprüft
+"A function of the script answers what is wrong, in its own words; an empty answer means all is well.","Eine Funktion des Skripts sagt in eigenen Worten, was falsch ist; eine leere Antwort heißt, alles ist gut."
+A plain field; the function is never called.,Ein einfaches Feld; die Funktion wird nie aufgerufen.
+Hover text only,Nur Hovertext
+"The ## comment above the variable, shown when hovering its name, as Godot does.","Der ##-Kommentar über der Variablen, angezeigt beim Überfahren ihres Namens, wie Godot es macht."
+A note above the field,Ein Hinweis über dem Feld
+"A short sentence always shown above the field, for the one thing nobody should miss.","Ein kurzer Satz, immer über dem Feld angezeigt, für das eine, das niemand übersehen sollte."
+The note is a comment; the field shows plain.,Der Hinweis ist ein Kommentar; das Feld erscheint einfach.
+one short sentence,ein kurzer Satz
+No button,Keine Schaltfläche
+No button.,Keine Schaltfläche.
+A button under the field,Eine Schaltfläche unter dem Feld
+Runs a function of the script when pressed. Works when the script is a @tool script; otherwise it says why it is off.,"Führt beim Drücken eine Funktion des Skripts aus. Funktioniert, wenn das Skript ein @tool-Skript ist; sonst sagt sie, warum sie aus ist."
+No button; the function is still there to call.,Keine Schaltfläche; die Funktion kann weiterhin aufgerufen werden.
+Sections,Abschnitte
+"Every group is a heading, all on one long page, as Godot shows them.","Jede Gruppe ist eine Überschrift, alles auf einer langen Seite, wie Godot sie zeigt."
+"Each group is a tab, so a long resource fits on one screen. Without the plugin they are headings again.","Jede Gruppe ist ein Tab, damit eine lange Ressource auf einen Bildschirm passt. Ohne das Plugin sind es wieder Überschriften."
+"A function name is one word of letters, digits and _, like check_health.","Ein Funktionsname ist ein Wort aus Buchstaben, Ziffern und _, etwa check_health."
+Fill this in first: it is what the choice writes.,Fülle das zuerst aus: Das schreibt die Auswahl.
+Shape this field:,Dieses Feld gestalten:
+In code,Im Code
+Without the plugin,Ohne das Plugin
+From code,Aus Code
+"Opening a script that already has this code shows the same choice here, and saving untouched writes the same bytes.","Wer ein Skript öffnet, das diesen Code schon hat, sieht hier dieselbe Auswahl, und unverändertes Speichern schreibt dieselben Bytes."
+shaped by your own code: edit it in the script,von deinem eigenen Code gestaltet: bearbeite es im Skript
+Read from your own _validate_property: change it there.,Aus deinem eigenen _validate_property gelesen: ändere es dort.
+"This script writes its own _validate_property, so Show when is edited there.","Dieses Skript schreibt sein eigenes _validate_property, daher wird Anzeigen wenn dort bearbeitet."
+read from your code,aus deinem Code gelesen
+chosen for %s,gewählt für %s
+hovered: click to choose,unter dem Zeiger: zum Wählen klicken
+the script,das Skript
+(what the Designer writes into %s),(was der Designer in %s schreibt)
+Choose,Wählen
+"%s is not a function of this script yet: add it on the sheet, or the field has nothing to ask.","%s ist noch keine Funktion dieses Skripts: Füge sie im Blatt hinzu, sonst hat das Feld nichts zu fragen."
+Shape in the Inspector…,Im Inspektor gestalten…
+Shape %s…,%s gestalten…
+"Opens the Inspector Designer for %s: how each field of it looks, when it shows and what it checks.","Öffnet den Inspektor-Designer für %s: wie jedes Feld aussieht, wann es erscheint und was es prüft."

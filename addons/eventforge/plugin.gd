@@ -21,6 +21,7 @@ const NEW_SHEET_DIALOG_PATH: String = "res://addons/eventsheet/editor/new_sheet_
 const CONNECT_SIGNAL_DIALOG_PATH: String = "res://addons/eventsheet/editor/connect_signal_dialog.gd"
 const ACE_PARAM_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/ace_param_inspector_plugin.gd"
 const FUNCTION_FIELDS_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/function_inspector_plugin.gd"
+const SHAPE_LINK_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/shape_link_inspector_plugin.gd"
 const INSTANCE_VARIABLES_INSPECTOR_PATH: String = "res://addons/eventforge/editor/instance_variables_inspector_plugin.gd"
 const DRAWING_PREFAB_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_inspector_plugin.gd"
 const DRAWING_PREFAB_PREVIEW_GEN_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_preview_generator.gd"
@@ -66,6 +67,8 @@ var _live_values_debugger: EventSheetLiveValuesDebugger = null
 # appear in this file, or their subtrees join the boot compile.
 var _ace_param_inspector_plugin: EditorInspectorPlugin = null
 var _function_fields_plugin: EditorInspectorPlugin = null
+# The "Shape <Class>…" link at the top of the Inspector, registered once the workspace is built.
+var _shape_link_plugin: EditorInspectorPlugin = null
 var _attribute_drawers_plugin: EventSheetAttributeDrawers = null
 # Loosely typed on purpose (boot-lazy): loaded by path in _enter_tree so their subtrees stay off the boot compile.
 var _drawing_prefab_inspector: EditorInspectorPlugin = null
@@ -545,7 +548,22 @@ func _ensure_editor() -> void:
 		editor.set("function_fields_door", _register_function_fields)
 	# Commit only after the whole build succeeds - see the docstring's clean-retry contract.
 	_event_sheet_editor = editor
+	# Deferred, so the workspace's first open does not wait for it.
+	_register_shape_link.call_deferred()
 	_maybe_show_welcome()
+
+
+## Adds the Inspector's "Shape <Class>…" link, once: it opens the sheet and its Inspector Designer.
+## Loaded by path.
+func _register_shape_link() -> void:
+	if _shape_link_plugin != null or _event_sheet_editor == null:
+		return
+	_shape_link_plugin = load(SHAPE_LINK_INSPECTOR_PATH).new()
+	_shape_link_plugin.set("open_designer", func(sheet_path: String) -> void:
+		_open_sheet_in_workspace(sheet_path)
+		if _event_sheet_editor != null and _event_sheet_editor.has_method("_open_inspector_designer"):
+			_event_sheet_editor.call("_open_inspector_designer"))
+	add_inspector_plugin(_shape_link_plugin)
 
 
 ## Adds the Inspector plugin that draws a selected function's fields, once. Loaded by path.
@@ -631,6 +649,9 @@ func _exit_tree() -> void:
 	if _function_fields_plugin != null:
 		remove_inspector_plugin(_function_fields_plugin)
 		_function_fields_plugin = null
+	if _shape_link_plugin != null:
+		remove_inspector_plugin(_shape_link_plugin)
+		_shape_link_plugin = null
 	if _new_sheet_dialog != null:
 		_new_sheet_dialog.free_dialog()
 		_new_sheet_dialog = null

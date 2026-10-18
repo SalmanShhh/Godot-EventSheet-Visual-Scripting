@@ -47,6 +47,30 @@
   back, byte for byte, so a hand-typed file opens as the same choice.
 - A sheet that is not a tool sheet but carries Show if / Lock unless is now told so when it
   compiles: Godot only asks a @tool script's `_validate_property`, so the field would never hide.
+### Added: shape a field in the Inspector Designer
+
+- Clicking a field in the Inspector Designer picks it, and the "Shape this field" panel beside the
+  list offers six tabs - Look, Layout, Show when, Check, Help and Button. Each tab names the choice
+  the field wears now and lists only the options that fit its type, every option with the sentence
+  that says what it does. Showing an option shows the code it writes into the script and what the
+  field is without the plugin.
+- Choosing an option writes it at once and the Designer shows the field wearing it. Every choice is
+  one undo step that rewrites only the lines that choice owns, and choosing the default takes them
+  out again, so the file is byte for byte what it was. Show when (only when a tick box is on, or
+  read-only while it is off) is written as Godot's own `_validate_property` and turns the script into
+  a `@tool` script; taking the last one back removes the `@tool` it added. An option with details (a
+  bar's limits, a note's sentence, a button's function) keeps its fields under the code, and Apply
+  changes them.
+- "Groups show as" above the list offers Sections and Tabs, and the panel offers the new shapes
+  beside the old ones: Side by side in Layout, and Pick a row of a data table and Pick from a list
+  a function gives in Look.
+- Code typed by hand reads back as the same choice when it has the same shape: a `_validate_property`
+  that hides or locks a field shows as its Show when. A field shaped by code in any other shape says
+  "shaped by your own code" and is read-only in the panel, so nothing is rewritten behind your back.
+- Two doors open it: a selected exported variable's help strip offers "Shape in the Inspector…"
+  (in place of "Change look…", whose looks are the panel's Look tab), and Godot's Inspector shows one
+  small "Shape <Class>…" link at the top of a resource or node whose script is a sheet. A fourth door
+  on the strip waits in its "…" menu.
 
 ### Fixed: the function Inspector's refusals say only what is true
 

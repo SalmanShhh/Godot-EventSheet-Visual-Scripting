@@ -18,9 +18,11 @@ const ExportSections := preload("res://addons/eventsheet/editor/interaction/expo
 
 ## The doors the help strip can show under a selected variable, in the order they are offered.
 const LINK_MOVE := "move"
-const LINK_LOOK := "look"
 const LINK_RANGE := "range"
 const LINK_PROPERTIES := "properties"
+const LINK_SHAPE := "shape"
+## How many doors the strip has room for; a door past them waits in its "…" menu.
+const STRIP_DOORS := 3
 
 ## The Group submenu's own items; a group of the sheet is GROUP_MENU_FIRST plus its place in the list.
 const GROUP_MENU_NEW := 1
@@ -147,7 +149,10 @@ static func strip_for(row_data: EventRowData, sheet: EventSheetResource) -> Dict
 	if exported:
 		facts.append(EventSheetL10n.translate("in the Inspector"))
 		facts.append(EventSheetL10n.translate("in group %s") % group if not group.is_empty() else EventSheetL10n.translate("not in a group"))
-		links.append(LINK_LOOK if not group.is_empty() else LINK_MOVE)
+		# The Designer's Look tab offers the looks the Variable window does, and the other five kinds.
+		links.append(LINK_SHAPE)
+		if group.is_empty():
+			links.append(LINK_MOVE)
 	else:
 		facts.append(EventSheetL10n.translate("not in the Inspector"))
 	var text: String = " · ".join(facts)
@@ -169,20 +174,23 @@ static func link_label(link: String) -> String:
 	match link:
 		LINK_MOVE:
 			return EventSheetL10n.translate("Move into a group…")
-		LINK_LOOK:
-			return EventSheetL10n.translate("Change look…")
 		LINK_RANGE:
 			return EventSheetL10n.translate("Edit range…")
+		LINK_SHAPE:
+			return EventSheetL10n.translate("Shape in the Inspector…")
 	return EventSheetL10n.translate("Properties…")
 
 
-## One of the strip's doors, pressed: the move asks which group; the rest open the variable window on
-## the part they name.
+## One of the strip's doors, pressed: the move asks which group, the shape opens the Inspector Designer
+## with this field picked; the rest open the variable window on the part they name.
 func run_link(link: String, row_data: EventRowData) -> void:
 	if link == LINK_MOVE:
 		prompt_move_into_group(row_data)
 		return
-	open_window(row_data, {LINK_LOOK: "look", LINK_RANGE: "details"}.get(link, ""))
+	if link == LINK_SHAPE:
+		_dock._open_inspector_designer(str(identity_of(row_data).get("name", "")))
+		return
+	open_window(row_data, {LINK_RANGE: "details"}.get(link, ""))
 
 
 ## The variable window for a member row, turned to `part` ("look", "details", "group") when named and
@@ -224,6 +232,10 @@ func fit_strip(width: float = 0.0) -> void:
 	_fitted_width = -1.0
 	if not label.visible or str(_dock._row_help_finding.get("family", "")) != _dock.VARIABLE_LINKS_FAMILY:
 		return
+	var links: PackedStringArray = _dock._row_help_finding.get("links", PackedStringArray())
+	for index: int in range(STRIP_DOORS, links.size()):
+		_more_door.get_popup().add_item(link_label(links[index]), index)
+		_more_door.visible = true
 	_fitted_width = width if width > 0.0 else strip.size.x
 	var need: float = label.get_theme_font("font").get_string_size(label.text.left(STRIP_SENTENCE_CHARS),
 		HORIZONTAL_ALIGNMENT_LEFT, -1, label.get_theme_font_size("font_size")).x
@@ -234,11 +246,11 @@ func fit_strip(width: float = 0.0) -> void:
 	if _sentence_room(strip, _fitted_width) >= need:
 		return
 	var popup: PopupMenu = _more_door.get_popup()
-	var doors: Array = [_dock._row_help_button, _dock._row_help_button_second, _dock._row_help_button_third]
-	for index: int in doors.size():
-		if (doors[index] as Button).visible:
-			popup.add_item((doors[index] as Button).text, index)
-			(doors[index] as Button).visible = false
+	popup.clear()
+	for index: int in links.size():
+		popup.add_item(link_label(links[index]), index)
+	for door: Button in [_dock._row_help_button, _dock._row_help_button_second, _dock._row_help_button_third]:
+		door.visible = false
 	_more_door.visible = true
 
 

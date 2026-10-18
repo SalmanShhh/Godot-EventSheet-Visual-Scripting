@@ -55,6 +55,7 @@ const GAME_CATALOG_PATH := "res://addons/eventsheet/editor/game_catalog.gd"
 const HEALTH_CARD_PATH := "res://addons/eventsheet/editor/sheet_health.gd"
 const HISTORY_PANEL_PATH := "res://addons/eventsheet/editor/dock/history_panel.gd"
 const INSPECTOR_DESIGNER_DIALOG_PATH := "res://addons/eventsheet/editor/inspector_designer_dialog.gd"
+const INSPECTOR_SHAPE_PATH := "res://addons/eventsheet/editor/inspector_shape.gd"
 const LIVE_VALUES_DEBUGGER_PATH := "res://addons/eventsheet/editor/live_values_debugger.gd"
 const LIVE_VALUES_PANEL_PATH := "res://addons/eventsheet/editor/dock/live_values_panel.gd"
 const LOCAL_TOKENS_PATH := "res://addons/eventforge/local_tokens.gd"
@@ -296,7 +297,7 @@ var _event_count_label: Label = null
 var _row_help_label: Label = null
 var _row_help_button: Button = null
 var _row_help_button_second: Button = null
-## A selected variable can offer three doors (Change look…, Edit range…, Properties…).
+## A selected variable can offer three doors (Shape in the Inspector…, Edit range…, Properties…).
 var _row_help_button_third: Button = null
 ## The finding the door acts on, held only between the selection that showed it and the click that
 ## answers it.
@@ -1672,8 +1673,9 @@ func remove_ace_provider_script(path: String) -> bool:
 ## "Inspector Designer" (Sheet menu): the whole sheet's Inspector as one live view - every
 ## exported variable with its decor, grouping, and widget, through the shared preview cards.
 ## Editing routes BACK through the dock: ✎ opens the shared Variable dialog, ▲ reorders through
-## the undo funnel - the Designer itself never mutates the sheet.
-func _open_inspector_designer() -> void:
+## the undo funnel - the Designer itself never mutates the sheet. `field` and `category` open it with
+## that field picked on that kind of choice (the help strip's and the Inspector's doors).
+func _open_inspector_designer(field: String = "", category: String = "") -> void:
 	if _inspector_designer_dialog == null:
 		_inspector_designer_dialog = load(INSPECTOR_DESIGNER_DIALOG_PATH).new()
 		_inspector_designer_dialog.wire_editing(
@@ -1681,8 +1683,20 @@ func _open_inspector_designer() -> void:
 			_designer_move_variable_up,
 			func() -> EventSheetResource: return _current_sheet
 		)
+		_inspector_designer_dialog.wire_shaping(_designer_shape_field)
 		add_child(_inspector_designer_dialog)
-	_inspector_designer_dialog.open_for_sheet(_current_sheet)
+	_inspector_designer_dialog.open_for_sheet(_current_sheet, field, category)
+
+
+## One choice of the Designer's "Shape this field" panel, or its "Groups show as" (category "groups"),
+## written through the undo funnel: every line it rewrites and the @tool it turns on or off are ONE step.
+func _designer_shape_field(var_name: String, category: String, option_id: String, answers: Dictionary) -> bool:
+	var shape: GDScript = load(INSPECTOR_SHAPE_PATH)
+	if category == "groups":
+		return _perform_undoable_sheet_edit(EventSheetL10n.translate("Change how the groups show"), func() -> bool:
+			return shape.write_group_style(_current_sheet, option_id))
+	return _perform_undoable_sheet_edit(EventSheetL10n.translate("Shape %s in the Inspector") % var_name, func() -> bool:
+		return shape.write(_current_sheet, var_name, category, option_id, answers))
 
 
 ## Designer ✎: route the entry into the SAME context-edit path the viewport uses, resolved LIVE
@@ -7344,7 +7358,7 @@ func _update_row_help_strip(row_data: EventRowData) -> void:
 ## spelling is not a warning. A row with a finding never reaches here: something being wrong outranks
 ## something being older. A selected variable is said the same way when there is no newer spelling -
 ## its type, name and value, whether and where the Inspector shows it, why it is outside the group
-## above it - with its own doors (Move into a group…, Change look…, Edit range…, Properties…).
+## above it - with its own doors (Shape in the Inspector…, Move into a group…, Edit range…, Properties…; a fourth waits in the "…" menu).
 func _show_successor_hint(row_data: EventRowData) -> bool:
 	var said: String = row_data.successor_hint
 	var links: PackedStringArray = PackedStringArray()

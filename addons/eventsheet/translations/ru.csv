@@ -9390,3 +9390,87 @@ Pick a row of a data table,Выбрать строку таблицы данны
 "A dropdown of the rows of a data table, shown by their name column. The file still stores the row's number.","Список строк таблицы данных, показанных по их столбцу имени. Файл по-прежнему хранит номер строки."
 Name column,Столбец имени
 Not one of the words %s() gives.,"Нет среди слов, которые даёт %s()."
+Change how the groups show,Изменить показ групп
+Shape %s in the Inspector,Настроить %s в Инспекторе
+Click a field to shape it.,"Щёлкните поле, чтобы настроить его."
+Groups show as,Группы показаны как
+Click to shape %s,"Щёлкните, чтобы настроить %s"
+Hidden while %s is off.,"Скрыто, пока %s выключено."
+Read-only while %s is off.,"Только чтение, пока %s выключено."
+Show when,"Показывать, когда"
+Help,Справка
+How the value is drawn and edited.,Как значение рисуется и редактируется.
+Where the field sits.,Где находится поле.
+When the field appears.,Когда появляется поле.
+What a good value is.,Какое значение правильное.
+Words that explain the field.,"Слова, объясняющие поле."
+A button that runs a function of the script.,"Кнопка, которая запускает функцию скрипта."
+Exactly the same.,Точно так же.
+The field Godot picks for the type. Nothing added.,"Поле, которое Godot выбирает для типа. Ничего не добавлено."
+Exactly the same field.,Точно такое же поле.
+"Shows as a plain field, and the game runs the same: the marker is something only the plugin reads.","Показывается как обычное поле, и игра работает так же: метку читает только плагин."
+"The same: this is Godot's own annotation, so it works with or without the plugin.","Так же: это собственная аннотация Godot, она работает с плагином и без него."
+Pick from a list a function gives,"Выбрать из списка, который даёт функция"
+"A dropdown filled by a function of the script, so the choices follow your data: attack names, level names, save slots.","Выпадающий список, который заполняет функция скрипта, так что варианты следуют вашим данным: названия атак, уровней, слоты сохранения."
+"A plain text field: the chosen word, as written.",Обычное текстовое поле: выбранное слово как есть.
+In its group,В своей группе
+"Under the heading of the group it is declared in, one field per line.","Под заголовком группы, в которой объявлено, по одному полю в строке."
+Side by side with the next field,Рядом со следующим полем
+"Shares one line with the field declared after it, for pairs that belong together: min and max, x and y, width and height.","Делит одну строку с полем, объявленным после него, для пар, которые идут вместе: мин и макс, x и y, ширина и высота."
+"Two lines, one after the other.","Две строки, одна за другой."
+No field is declared after this one to share its line.,"После этого поля не объявлено поле, с которым можно делить строку."
+Always shown.,Показывается всегда.
+"The same: this is Godot's own way to hide a field, so it works with or without the plugin. The script becomes a @tool script so the Inspector can ask it.","Так же: это собственный способ Godot скрыть поле, он работает с плагином и без него. Скрипт становится скриптом @tool, чтобы Инспектор мог его спросить."
+Only when %s is on,Только когда %s включено
+"Hidden while %s is off, so only the fields that matter are on screen. The value is kept while hidden.","Скрыто, пока %s выключено, чтобы на экране были только нужные поля. Пока поле скрыто, значение сохраняется."
+Read-only when %s is off,"Только чтение, когда %s выключено"
+"Stays visible but greyed out while %s is off, for a value worth seeing but not changing.","Остаётся видимым, но серым, пока %s выключено, для значения, которое стоит видеть, но не менять."
+The same: Godot's own read-only flag.,Так же: собственный флаг Godot «только чтение».
+Only when a tick box is on,Только когда флажок включён
+Hidden while a tick box of the script is off.,"Скрыто, пока флажок скрипта выключен."
+Add an exported bool variable first: it is the tick box that shows or hides this field.,"Сначала добавьте экспортируемую переменную bool: это флажок, который показывает или скрывает поле."
+No check,Без проверки
+Any value of the type is accepted.,Принимается любое значение этого типа.
+Stay within limits,Оставаться в пределах
+The field refuses values outside a lowest and highest number.,Поле не принимает значения вне наименьшего и наибольшего числа.
+"The same: Godot's own range, and the setter keeps the value inside it in the game too.","Так же: собственный диапазон Godot, а сеттер держит значение в нём и в игре."
+Must be filled in,Обязательно заполнить
+"An empty value shows a quiet amber note in the Inspector, and the Project Doctor lists every scene that leaves it empty.","Пустое значение показывает в Инспекторе спокойную янтарную заметку, а Доктор проекта перечисляет все сцены, где оно пусто."
+A plain field; the Doctor still lists empty ones.,Обычное поле; Доктор всё равно перечисляет пустые.
+Checked by a function,Проверяется функцией
+"A function of the script answers what is wrong, in its own words; an empty answer means all is well.","Функция скрипта своими словами отвечает, что не так; пустой ответ значит, что всё в порядке."
+A plain field; the function is never called.,Обычное поле; функция никогда не вызывается.
+Hover text only,Только подсказка при наведении
+"The ## comment above the variable, shown when hovering its name, as Godot does.","Комментарий ## над переменной, показываемый при наведении на её имя, как это делает Godot."
+A note above the field,Заметка над полем
+"A short sentence always shown above the field, for the one thing nobody should miss.","Короткая фраза, всегда видная над полем, для того единственного, что нельзя пропустить."
+The note is a comment; the field shows plain.,Заметка - это комментарий; поле показывается обычным.
+one short sentence,одна короткая фраза
+No button,Без кнопки
+No button.,Без кнопки.
+A button under the field,Кнопка под полем
+Runs a function of the script when pressed. Works when the script is a @tool script; otherwise it says why it is off.,"При нажатии запускает функцию скрипта. Работает, когда скрипт - скрипт @tool; иначе говорит, почему выключена."
+No button; the function is still there to call.,Кнопки нет; функцию по-прежнему можно вызвать.
+Sections,Разделы
+"Every group is a heading, all on one long page, as Godot shows them.","Каждая группа - заголовок, всё на одной длинной странице, как показывает Godot."
+"Each group is a tab, so a long resource fits on one screen. Without the plugin they are headings again.","Каждая группа - вкладка, так длинный ресурс помещается на один экран. Без плагина это снова заголовки."
+"A function name is one word of letters, digits and _, like check_health.","Имя функции - одно слово из букв, цифр и _, например check_health."
+Fill this in first: it is what the choice writes.,Сначала заполните это: именно это запишет выбор.
+Shape this field:,Настроить это поле:
+In code,В коде
+Without the plugin,Без плагина
+From code,Из кода
+"Opening a script that already has this code shows the same choice here, and saving untouched writes the same bytes.","Если открыть скрипт, где этот код уже есть, здесь будет тот же выбор, а сохранение без изменений запишет те же байты."
+shaped by your own code: edit it in the script,настроено вашим собственным кодом: правьте его в скрипте
+Read from your own _validate_property: change it there.,Прочитано из вашего собственного _validate_property: меняйте там.
+"This script writes its own _validate_property, so Show when is edited there.","Этот скрипт пишет собственный _validate_property, поэтому «Показывать, когда» правится там."
+read from your code,прочитано из вашего кода
+chosen for %s,выбрано для %s
+hovered: click to choose,"под курсором: щёлкните, чтобы выбрать"
+the script,скрипт
+(what the Designer writes into %s),(что Дизайнер записывает в %s)
+Choose,Выбрать
+"%s is not a function of this script yet: add it on the sheet, or the field has nothing to ask.","%s пока не функция этого скрипта: добавьте её на листе, иначе полю не у кого спрашивать."
+Shape in the Inspector…,Настроить в Инспекторе…
+Shape %s…,Настроить %s…
+"Opens the Inspector Designer for %s: how each field of it looks, when it shows and what it checks.","Открывает Дизайнер Инспектора для %s: как выглядит каждое поле, когда оно показано и что проверяет."

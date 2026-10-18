@@ -434,7 +434,7 @@ func build_ui() -> void:
 	_dock._row_help_button_second.visible = false
 	_dock._row_help_button_second.pressed.connect(_dock.apply_selected_row_second_fix)
 	status_strip.add_child(_dock._row_help_button_second)
-	# A selected variable's third door (Change look…, Edit range…, Properties…).
+	# A selected variable's third door (Shape in the Inspector…, Edit range…, Properties…).
 	_dock._row_help_button_third = Button.new()
 	_dock._row_help_button_third.name = "EventSheetRowHelpThird"
 	_dock._row_help_button_third.flat = true

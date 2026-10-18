@@ -79,16 +79,16 @@ static func _strip() -> bool:
 	view.free()
 	return SUPPORT.pins(P, [
 		["a member a prefix group shuts out says why, and offers the move",
-			said.get("health"), ["Not in Bullet: that group only takes names starting bullet.", ["move", "properties"]]],
+			said.get("health"), ["Not in Bullet: that group only takes names starting bullet.", ["shape", "move", "properties"]]],
 		["a member in a group with a slider offers its look and its range",
-			said.get("bullet_count"), ["in the Inspector · in group Bullet", ["look", "properties"]]],
+			said.get("bullet_count"), ["in the Inspector · in group Bullet", ["shape", "properties"]]],
 		["a slider says its range",
-			said.get("max_jumps"), ["A slider from 1 to 3 in the Inspector.", ["move", "range", "properties"]]],
+			said.get("max_jumps"), ["A slider from 1 to 3 in the Inspector.", ["shape", "move", "range", "properties"]]],
 		["and its hover says the whole of it, type, name and value first", said.get("max_jumps detail"),
 			"int max_jumps = 2 · in the Inspector · not in a group  A slider from 1 to 3 in the Inspector."],
 		["a private member is not in the Inspector", said.get("_cooldown"), ["not in the Inspector", ["properties"]]],
-		["the doors read Move into a group…, Change look…, Edit range… and Properties…", [GESTURES.link_label("move"), GESTURES.link_label("look"), GESTURES.link_label("range"), GESTURES.link_label("properties")],
-			["Move into a group…", "Change look…", "Edit range…", "Properties…"]],
+		["the doors read Shape in the Inspector…, Move into a group…, Edit range… and Properties…", [GESTURES.link_label("shape"), GESTURES.link_label("move"), GESTURES.link_label("range"), GESTURES.link_label("properties")],
+			["Shape in the Inspector…", "Move into a group…", "Edit range…", "Properties…"]],
 	])
 
 
@@ -255,7 +255,7 @@ static func _narrow_dock() -> bool:
 			health = row
 	var strip: Control = dock._row_help_label.get_parent() as Control
 	var shown: Dictionary = {}
-	for width: int in [1200, 900, 1200, 1000]:
+	for width: int in [1400, 1000, 1400, 1270]:
 		strip.set_block_signals(true)
 		strip.size = Vector2(width, strip.size.y)
 		strip.set_block_signals(false)
@@ -265,18 +265,18 @@ static func _narrow_dock() -> bool:
 		for index: int in more.get_popup().item_count:
 			items.append(more.get_popup().get_item_text(index))
 		shown[shown.size()] = [dock._row_help_label.text.length(), dock._event_count_label.visible,
-			[dock._row_help_button.visible, dock._row_help_button_second.visible], more.visible, items]
+			[dock._row_help_button.visible, dock._row_help_button_second.visible, dock._row_help_button_third.visible], more.visible, items]
 	var hover: String = dock._row_help_label.tooltip_text
 	dock._update_row_help_strip(null)
 	var after: Array = [dock._event_count_label.visible, (strip.get_node("EventSheetRowHelpMore") as Control).visible]
 	dock.free()
 	return SUPPORT.pins(P, [
-		["at 1200 px the sentence, the counts and both doors all show", shown.get(0), [59, true, [true, true], false, []]],
-		["at 900 px the counts give way, then the doors fold into the one menu", shown.get(1), [59, false, [false, false], true, ["Move into a group…", "Properties…"]]],
+		["at 1400 px the sentence, the counts and the three doors all show", shown.get(0), [59, true, [true, true, true], false, []]],
+		["at 1000 px the counts give way, then the doors fold into the one menu", shown.get(1), [59, false, [false, false, false], true, ["Shape in the Inspector…", "Move into a group…", "Properties…"]]],
 		["widening the dock again puts them back", shown.get(2), shown.get(0)],
 		["the whole sentence stays on the hover", hover,
 			"int health = 10 · in the Inspector · not in a group  Not in Bullet: that group only takes names starting bullet."],
-		["at 1000 px only the counts give way: the sentence keeps its room beside both doors", shown.get(3), [59, false, [true, true], false, []]],
+		["at 1270 px only the counts give way: the sentence keeps its room beside the three doors", shown.get(3), [59, false, [true, true, true], false, []]],
 		["selecting nothing puts the counts back and the menu away", after, [true, false]],
 	])
 

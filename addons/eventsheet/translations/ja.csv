@@ -9390,3 +9390,87 @@ Pick a row of a data table,データ表の行を選ぶ
 "A dropdown of the rows of a data table, shown by their name column. The file still stores the row's number.",データ表の行を名前の列で並べたドロップダウンです。ファイルには行の番号が保存されたままです。
 Name column,名前の列
 Not one of the words %s() gives.,%s() が返す言葉にはありません。
+Change how the groups show,グループの表示方法を変更
+Shape %s in the Inspector,インスペクターで %s を整える
+Click a field to shape it.,フィールドをクリックして整えます。
+Groups show as,グループの表示
+Click to shape %s,クリックして %s を整える
+Hidden while %s is off.,%s がオフの間は隠れます。
+Read-only while %s is off.,%s がオフの間は読み取り専用です。
+Show when,表示する条件
+Help,ヘルプ
+How the value is drawn and edited.,値の描かれ方と編集のしかた。
+Where the field sits.,フィールドの置き場所。
+When the field appears.,フィールドが現れるとき。
+What a good value is.,よい値とは何か。
+Words that explain the field.,フィールドを説明する言葉。
+A button that runs a function of the script.,スクリプトの関数を実行するボタン。
+Exactly the same.,まったく同じです。
+The field Godot picks for the type. Nothing added.,Godot がその型に選ぶフィールド。何も足しません。
+Exactly the same field.,まったく同じフィールドです。
+"Shows as a plain field, and the game runs the same: the marker is something only the plugin reads.",普通のフィールドとして表示され、ゲームも同じように動きます。マーカーはプラグインだけが読むものです。
+"The same: this is Godot's own annotation, so it works with or without the plugin.",同じです。これは Godot 自身のアノテーションなので、プラグインの有無にかかわらず動きます。
+Pick from a list a function gives,関数が返すリストから選ぶ
+"A dropdown filled by a function of the script, so the choices follow your data: attack names, level names, save slots.",スクリプトの関数が中身を埋めるドロップダウン。選択肢がデータに合わせて変わります。攻撃名、レベル名、セーブスロットなど。
+"A plain text field: the chosen word, as written.",普通のテキストフィールド。選んだ語がそのまま入ります。
+In its group,そのグループの中
+"Under the heading of the group it is declared in, one field per line.",宣言されたグループの見出しの下に、1 行に 1 フィールド。
+Side by side with the next field,次のフィールドと横並び
+"Shares one line with the field declared after it, for pairs that belong together: min and max, x and y, width and height.",後に宣言されたフィールドと 1 行を分け合います。最小と最大、x と y、幅と高さのような組に。
+"Two lines, one after the other.",2 行、順に並びます。
+No field is declared after this one to share its line.,このフィールドの後に、行を分け合うフィールドが宣言されていません。
+Always shown.,常に表示されます。
+"The same: this is Godot's own way to hide a field, so it works with or without the plugin. The script becomes a @tool script so the Inspector can ask it.",同じです。これは Godot 自身のフィールドの隠し方なので、プラグインの有無にかかわらず動きます。インスペクターが問い合わせられるよう、スクリプトは @tool スクリプトになります。
+Only when %s is on,%s がオンのときだけ
+"Hidden while %s is off, so only the fields that matter are on screen. The value is kept while hidden.",%s がオフの間は隠れ、意味のあるフィールドだけが画面に残ります。隠れている間も値は保たれます。
+Read-only when %s is off,%s がオフのとき読み取り専用
+"Stays visible but greyed out while %s is off, for a value worth seeing but not changing.",%s がオフの間は表示されたまま灰色になります。見えていてほしいが変えさせたくない値に。
+The same: Godot's own read-only flag.,同じです。Godot 自身の読み取り専用フラグです。
+Only when a tick box is on,チェックボックスがオンのときだけ
+Hidden while a tick box of the script is off.,スクリプトのチェックボックスがオフの間は隠れます。
+Add an exported bool variable first: it is the tick box that shows or hides this field.,先にエクスポートした bool 変数を追加してください。それがこのフィールドを表示・非表示にするチェックボックスです。
+No check,チェックなし
+Any value of the type is accepted.,その型の値なら何でも受け付けます。
+Stay within limits,範囲内に収める
+The field refuses values outside a lowest and highest number.,フィールドは最小値と最大値の外の値を受け付けません。
+"The same: Godot's own range, and the setter keeps the value inside it in the game too.",同じです。Godot 自身の範囲で、ゲーム中もセッターが値を範囲内に保ちます。
+Must be filled in,入力が必須
+"An empty value shows a quiet amber note in the Inspector, and the Project Doctor lists every scene that leaves it empty.",空の値はインスペクターに控えめな琥珀色の注意を出し、プロジェクトドクターは空のままのシーンをすべて一覧にします。
+A plain field; the Doctor still lists empty ones.,普通のフィールドです。空のものはドクターが引き続き一覧にします。
+Checked by a function,関数でチェック
+"A function of the script answers what is wrong, in its own words; an empty answer means all is well.",スクリプトの関数が、何がおかしいかを自分の言葉で答えます。空の答えは問題なしという意味です。
+A plain field; the function is never called.,普通のフィールドです。関数は呼ばれません。
+Hover text only,ホバー時のテキストのみ
+"The ## comment above the variable, shown when hovering its name, as Godot does.",変数の上の ## コメント。Godot と同じく、名前にカーソルを合わせると表示されます。
+A note above the field,フィールドの上の注記
+"A short sentence always shown above the field, for the one thing nobody should miss.",フィールドの上に常に表示される短い一文。誰にも見落としてほしくない一点のために。
+The note is a comment; the field shows plain.,注記はコメントで、フィールドは普通に表示されます。
+one short sentence,短い一文
+No button,ボタンなし
+No button.,ボタンはありません。
+A button under the field,フィールドの下のボタン
+Runs a function of the script when pressed. Works when the script is a @tool script; otherwise it says why it is off.,押すとスクリプトの関数を実行します。スクリプトが @tool スクリプトのときに動き、そうでなければ無効な理由を示します。
+No button; the function is still there to call.,ボタンはありません。関数はそのまま呼べます。
+Sections,セクション
+"Every group is a heading, all on one long page, as Godot shows them.",Godot と同じく、各グループが見出しになり、1 枚の長いページに並びます。
+"Each group is a tab, so a long resource fits on one screen. Without the plugin they are headings again.",各グループがタブになり、長いリソースも 1 画面に収まります。プラグインがなければ見出しに戻ります。
+"A function name is one word of letters, digits and _, like check_health.",関数名は英字・数字・_ でできた 1 語です。例: check_health。
+Fill this in first: it is what the choice writes.,先にここを入力してください。この選択が書き込む内容です。
+Shape this field:,このフィールドを整える:
+In code,コードでは
+Without the plugin,プラグインなしでは
+From code,コードから
+"Opening a script that already has this code shows the same choice here, and saving untouched writes the same bytes.",このコードをすでに持つスクリプトを開くとここに同じ選択が表示され、手を加えずに保存すると同じバイトが書かれます。
+shaped by your own code: edit it in the script,あなた自身のコードで整えられています。スクリプトで編集してください
+Read from your own _validate_property: change it there.,あなた自身の _validate_property から読み取りました。そちらで変更してください。
+"This script writes its own _validate_property, so Show when is edited there.",このスクリプトは独自の _validate_property を書いているので、表示する条件はそちらで編集します。
+read from your code,あなたのコードから読み取り
+chosen for %s,%s に選択中
+hovered: click to choose,カーソル中: クリックで選択
+the script,スクリプト
+(what the Designer writes into %s),(デザイナーが %s に書き込む内容)
+Choose,選択
+"%s is not a function of this script yet: add it on the sheet, or the field has nothing to ask.",%s はまだこのスクリプトの関数ではありません。シートに追加してください。そうしないとフィールドは問い合わせる先がありません。
+Shape in the Inspector…,インスペクターで整える…
+Shape %s…,%s を整える…
+"Opens the Inspector Designer for %s: how each field of it looks, when it shows and what it checks.",%s のインスペクターデザイナーを開きます。各フィールドの見た目、表示される条件、チェック内容を整えます。

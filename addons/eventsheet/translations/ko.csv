@@ -9390,3 +9390,87 @@ Pick a row of a data table,데이터 표의 행 고르기
 "A dropdown of the rows of a data table, shown by their name column. The file still stores the row's number.",데이터 표의 행을 이름 열로 보여 주는 드롭다운입니다. 파일에는 계속 행 번호가 저장됩니다.
 Name column,이름 열
 Not one of the words %s() gives.,%s()가 주는 단어가 아닙니다.
+Change how the groups show,그룹 표시 방식 바꾸기
+Shape %s in the Inspector,인스펙터에서 %s 꾸미기
+Click a field to shape it.,필드를 클릭해 꾸밉니다.
+Groups show as,그룹 표시 방식
+Click to shape %s,클릭해 %s 꾸미기
+Hidden while %s is off.,%s이(가) 꺼져 있는 동안 숨겨집니다.
+Read-only while %s is off.,%s이(가) 꺼져 있는 동안 읽기 전용입니다.
+Show when,표시 조건
+Help,도움말
+How the value is drawn and edited.,값이 그려지고 편집되는 방식.
+Where the field sits.,필드가 놓이는 자리.
+When the field appears.,필드가 나타나는 때.
+What a good value is.,올바른 값이 무엇인지.
+Words that explain the field.,필드를 설명하는 말.
+A button that runs a function of the script.,스크립트의 함수를 실행하는 버튼.
+Exactly the same.,완전히 같습니다.
+The field Godot picks for the type. Nothing added.,Godot가 그 타입에 고르는 필드. 아무것도 더하지 않습니다.
+Exactly the same field.,완전히 같은 필드입니다.
+"Shows as a plain field, and the game runs the same: the marker is something only the plugin reads.",평범한 필드로 보이고 게임도 똑같이 돌아갑니다. 표식은 플러그인만 읽습니다.
+"The same: this is Godot's own annotation, so it works with or without the plugin.",같습니다. Godot 자체 어노테이션이라 플러그인이 있든 없든 동작합니다.
+Pick from a list a function gives,함수가 주는 목록에서 고르기
+"A dropdown filled by a function of the script, so the choices follow your data: attack names, level names, save slots.","스크립트의 함수가 채우는 드롭다운이라 선택지가 데이터를 따라갑니다. 공격 이름, 레벨 이름, 저장 슬롯 등."
+"A plain text field: the chosen word, as written.",평범한 텍스트 필드. 고른 낱말이 쓰인 그대로 들어갑니다.
+In its group,자기 그룹 안
+"Under the heading of the group it is declared in, one field per line.","선언된 그룹의 제목 아래, 한 줄에 필드 하나."
+Side by side with the next field,다음 필드와 나란히
+"Shares one line with the field declared after it, for pairs that belong together: min and max, x and y, width and height.","뒤에 선언된 필드와 한 줄을 나눠 씁니다. 최소와 최대, x와 y, 너비와 높이처럼 짝을 이루는 값에."
+"Two lines, one after the other.",두 줄이 차례로 놓입니다.
+No field is declared after this one to share its line.,이 필드 뒤에 줄을 나눠 쓸 필드가 선언되어 있지 않습니다.
+Always shown.,항상 보입니다.
+"The same: this is Godot's own way to hide a field, so it works with or without the plugin. The script becomes a @tool script so the Inspector can ask it.",같습니다. Godot 자체의 필드 숨김 방식이라 플러그인이 있든 없든 동작합니다. 인스펙터가 물어볼 수 있도록 스크립트가 @tool 스크립트가 됩니다.
+Only when %s is on,%s이(가) 켜져 있을 때만
+"Hidden while %s is off, so only the fields that matter are on screen. The value is kept while hidden.",%s이(가) 꺼져 있는 동안 숨겨져 중요한 필드만 화면에 남습니다. 숨겨진 동안에도 값은 유지됩니다.
+Read-only when %s is off,%s이(가) 꺼져 있을 때 읽기 전용
+"Stays visible but greyed out while %s is off, for a value worth seeing but not changing.",%s이(가) 꺼져 있는 동안 보이지만 회색으로 바뀝니다. 볼 만하지만 바꾸면 안 되는 값에.
+The same: Godot's own read-only flag.,같습니다. Godot 자체의 읽기 전용 플래그입니다.
+Only when a tick box is on,체크 상자가 켜져 있을 때만
+Hidden while a tick box of the script is off.,스크립트의 체크 상자가 꺼져 있는 동안 숨겨집니다.
+Add an exported bool variable first: it is the tick box that shows or hides this field.,먼저 내보낸 bool 변수를 추가하세요. 그것이 이 필드를 보이거나 숨기는 체크 상자입니다.
+No check,검사 없음
+Any value of the type is accepted.,그 타입의 값이면 무엇이든 받습니다.
+Stay within limits,범위 안에 두기
+The field refuses values outside a lowest and highest number.,필드가 최솟값과 최댓값 밖의 값을 거부합니다.
+"The same: Godot's own range, and the setter keeps the value inside it in the game too.","같습니다. Godot 자체의 범위이고, 게임 중에도 setter가 값을 그 안에 둡니다."
+Must be filled in,반드시 채워야 함
+"An empty value shows a quiet amber note in the Inspector, and the Project Doctor lists every scene that leaves it empty.","값이 비어 있으면 인스펙터에 은은한 호박색 메모가 보이고, 프로젝트 닥터가 비워 둔 장면을 모두 나열합니다."
+A plain field; the Doctor still lists empty ones.,평범한 필드입니다. 빈 값은 닥터가 여전히 나열합니다.
+Checked by a function,함수로 검사
+"A function of the script answers what is wrong, in its own words; an empty answer means all is well.",스크립트의 함수가 무엇이 잘못됐는지 자기 말로 답합니다. 빈 답은 아무 문제 없다는 뜻입니다.
+A plain field; the function is never called.,평범한 필드입니다. 함수는 호출되지 않습니다.
+Hover text only,마우스를 올렸을 때 텍스트만
+"The ## comment above the variable, shown when hovering its name, as Godot does.","변수 위의 ## 주석으로, Godot처럼 이름에 마우스를 올리면 보입니다."
+A note above the field,필드 위의 메모
+"A short sentence always shown above the field, for the one thing nobody should miss.",필드 위에 늘 보이는 짧은 문장. 아무도 놓치면 안 되는 한 가지를 위해.
+The note is a comment; the field shows plain.,메모는 주석이고 필드는 평범하게 보입니다.
+one short sentence,짧은 한 문장
+No button,버튼 없음
+No button.,버튼이 없습니다.
+A button under the field,필드 아래 버튼
+Runs a function of the script when pressed. Works when the script is a @tool script; otherwise it says why it is off.,"누르면 스크립트의 함수를 실행합니다. 스크립트가 @tool 스크립트일 때 동작하고, 아니면 꺼진 이유를 알려 줍니다."
+No button; the function is still there to call.,"버튼은 없고, 함수는 그대로 호출할 수 있습니다."
+Sections,섹션
+"Every group is a heading, all on one long page, as Godot shows them.",Godot처럼 그룹마다 제목이 되어 하나의 긴 페이지에 모두 놓입니다.
+"Each group is a tab, so a long resource fits on one screen. Without the plugin they are headings again.",그룹마다 탭이 되어 긴 리소스도 한 화면에 들어갑니다. 플러그인이 없으면 다시 제목이 됩니다.
+"A function name is one word of letters, digits and _, like check_health.","함수 이름은 글자, 숫자, _로 된 한 낱말입니다. 예: check_health."
+Fill this in first: it is what the choice writes.,먼저 이것을 채우세요. 이 선택이 쓰는 내용입니다.
+Shape this field:,이 필드 꾸미기:
+In code,코드에서
+Without the plugin,플러그인 없이
+From code,코드에서 읽기
+"Opening a script that already has this code shows the same choice here, and saving untouched writes the same bytes.","이미 이 코드가 있는 스크립트를 열면 여기에 같은 선택이 보이고, 손대지 않고 저장하면 같은 바이트가 쓰입니다."
+shaped by your own code: edit it in the script,직접 쓴 코드로 꾸며져 있습니다. 스크립트에서 편집하세요
+Read from your own _validate_property: change it there.,직접 쓴 _validate_property에서 읽었습니다. 거기서 바꾸세요.
+"This script writes its own _validate_property, so Show when is edited there.",이 스크립트는 자체 _validate_property를 쓰므로 표시 조건은 거기서 편집합니다.
+read from your code,내 코드에서 읽음
+chosen for %s,%s에 선택됨
+hovered: click to choose,마우스 올림: 클릭해 선택
+the script,스크립트
+(what the Designer writes into %s),(디자이너가 %s에 쓰는 내용)
+Choose,선택
+"%s is not a function of this script yet: add it on the sheet, or the field has nothing to ask.",%s은(는) 아직 이 스크립트의 함수가 아닙니다. 시트에 추가하세요. 그러지 않으면 필드가 물어볼 곳이 없습니다.
+Shape in the Inspector…,인스펙터에서 꾸미기…
+Shape %s…,%s 꾸미기…
+"Opens the Inspector Designer for %s: how each field of it looks, when it shows and what it checks.","%s의 인스펙터 디자이너를 엽니다. 각 필드의 모양, 보이는 때, 검사하는 내용을 정합니다."

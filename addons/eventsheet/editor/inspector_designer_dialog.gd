@@ -7,9 +7,17 @@
 # through the dock (the ✎ button opens the same Variable dialog, ▲ reorders through the undo
 # funnel), and the dock calls refresh() afterwards - so the Designer can never mutate a sheet
 # behind the funnel's back. Without wired handlers (tests, render harnesses) it stays a pure view.
+#
+# Clicking a field picks it, and the "Shape this field" panel beside the list (inspector_shape_panel.gd,
+# loaded by path with the Designer itself) offers its six kinds of choice, and "Groups show as" above
+# the list says how the groups are drawn. A choice is handed to the dock's shape handler as (name,
+# kind, option, answers) - one undo step - and the refresh that follows shows the field wearing it.
 @tool
 class_name EventSheetInspectorDesignerDialog
 extends AcceptDialog
+
+const SHAPE_PANEL_PATH := "res://addons/eventsheet/editor/inspector_shape_panel.gd"
+const SHAPE_PATH := "res://addons/eventsheet/editor/inspector_shape.gd"
 
 var _column: VBoxContainer = null
 var _row_card_count: int = 0
@@ -24,6 +32,16 @@ var _order_note: Label = null
 var _edit_handler: Callable = Callable()
 var _move_up_handler: Callable = Callable()
 var _live_sheet: Callable = Callable()
+var _shape_handler: Callable = Callable()
+# The picked field, kept by name across refreshes (the funnel replaces the resources), and the tab
+# its panel shows; the cards' frames by name, so the pick can be redrawn without a rebuild.
+var _picked: String = ""
+var _picked_category: String = ""
+var _frames: Dictionary = {}
+var _entries: Array[Dictionary] = []
+var _sheet: EventSheetResource = null
+var _shape_panel: VBoxContainer = null
+var _groups_option: OptionButton = null
 
 
 ## Wires the editing seams (dock-side); called once right after construction.
@@ -31,6 +49,12 @@ func wire_editing(edit_handler: Callable, move_up_handler: Callable, live_sheet:
 	_edit_handler = edit_handler
 	_move_up_handler = move_up_handler
 	_live_sheet = live_sheet
+
+
+## Wires the shaping seam (dock-side): `handler` is called with (var_name, category, option_id,
+## answers) for every choice the "Shape this field" panel makes.
+func wire_shaping(handler: Callable) -> void:
+	_shape_handler = handler
 
 
 ## Rebuilds from the LIVE sheet - the dock calls this after a Designer-initiated edit lands.
@@ -42,14 +66,23 @@ func refresh() -> void:
 func _init() -> void:
 	title = EventSheetL10n.translate("Inspector Designer")
 	ok_button_text = EventSheetL10n.translate("Close")
-	min_size = Vector2i(560, 620)
+	min_size = Vector2i(1120, 660)
 	var body: VBoxContainer = VBoxContainer.new()
 	add_child(body)
+	body.add_child(_build_groups_row())
+	var split: HBoxContainer = HBoxContainer.new()
+	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_child(split)
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(520.0, 460.0)
+	scroll.custom_minimum_size = Vector2(440.0, 460.0)
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	body.add_child(scroll)
+	split.add_child(scroll)
+	_shape_panel = load(SHAPE_PANEL_PATH).new()
+	_shape_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_shape_panel.visible = false
+	_shape_panel.chose.connect(_on_shape_chosen)
+	split.add_child(EventSheetPopupUI.panel_section(_shape_panel))
 	_column = VBoxContainer.new()
 	_column.add_theme_constant_override("separation", 6)
 	_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -100,11 +133,18 @@ static func collect_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 				"scope": "tree",
 				"type_name": tree_var.type_name,
 				"default_text": EventSheetVariableOwners.default_text(tree_var.default_value),
-				"attributes": (tree_var.attributes as Dictionary).duplicate(true) if tree_var.attributes is Dictionary else {},
+				"attributes": _with_options((tree_var.attributes as Dictionary).duplicate(true) if tree_var.attributes is Dictionary else {}, tree_var.options),
 				"constant": tree_var.is_constant,
 				"code": EventSheetCodeEcho.line_for(tree_var)
 			})
 	return entries
+
+
+## A String dropdown's choices ride the entry's attributes under "options", as a sheet variable's do.
+static func _with_options(attributes: Dictionary, options: PackedStringArray) -> Dictionary:
+	if not options.is_empty():
+		attributes["options"] = Array(options)
+	return attributes
 
 
 ## Rebuilds the whole-Inspector view (popup-free so tests can count rows).
@@ -114,15 +154,20 @@ func rebuild_for_sheet(sheet: EventSheetResource) -> void:
 		_column.remove_child(stale)
 		stale.free()
 	_row_card_count = 0
+	_frames = {}
+	_sheet = sheet
 	_strip.set_line(_this_field, "")
 	_strip.set_reading("", "")
 	var handle_chips: PackedStringArray = declared_handle_chips(sheet)
 	if not handle_chips.is_empty():
 		_column.add_child(_build_handle_chips(handle_chips))
 	var entries: Array[Dictionary] = collect_entries(sheet)
+	_entries = entries
+	_follow_group_style()
 	_order_note.visible = _move_up_handler.is_valid() and entries.any(func(entry: Dictionary) -> bool: return entry.get("scope") == "global")
 	if entries.is_empty():
 		_column.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("No Inspector-visible variables yet - tick \"Editable in the Inspector\" on a variable and it appears here.")))
+		_shape_panel.visible = false
 		return
 	_column.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("Every Inspector-visible variable, named exactly as the file declares it. ✎ edits a variable; ▲ moves a sheet variable up (the list is in the order the file declares them).") \
 		if _edit_handler.is_valid() else EventSheetL10n.translate("Every Inspector-visible variable, named exactly as the file declares it. Edit a variable from its row in the sheet (hover it there for this same preview).")))
@@ -139,6 +184,7 @@ func rebuild_for_sheet(sheet: EventSheetResource) -> void:
 			bool(entry.get("constant", false))
 		)
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_dim_for_switch(card, entry, entries)
 		_row_card_count += 1
 		var above: String = previous_tree
 		var said: String = row_sentence(entry, above) if _edit_handler.is_valid() else ""
@@ -147,11 +193,12 @@ func rebuild_for_sheet(sheet: EventSheetResource) -> void:
 			_point_at(said, str(entry.get("code", "")))
 		if str(entry.get("scope", "")) == "tree":
 			previous_tree = str(entry.get("name"))
+		var frame: PanelContainer = _pickable_frame(card, str(entry.get("name")))
 		if not _edit_handler.is_valid():
-			_column.add_child(card)
+			_column.add_child(frame)
 			continue
 		var row: HBoxContainer = HBoxContainer.new()
-		row.add_child(card)
+		row.add_child(frame)
 		var buttons: VBoxContainer = VBoxContainer.new()
 		var edit_button: Button = Button.new()
 		edit_button.text = "✎"
@@ -170,6 +217,9 @@ func rebuild_for_sheet(sheet: EventSheetResource) -> void:
 			(button as Button).focus_entered.connect(_point_at.bind(said, str(entry.get("code", ""))))
 		row.add_child(buttons)
 		_column.add_child(row)
+	_column.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("Click a field to shape it.")))
+	var names: Array = entries.map(func(entry: Dictionary) -> String: return str(entry.get("name")))
+	pick_field(_picked if names.has(_picked) else str(names[0]), _picked_category)
 
 
 ## What the strip says about one row: ✎ opens it, and for a variable that can move, ▲ puts it above
@@ -238,9 +288,133 @@ static func move_up_among_exported(events: Array, var_name: String) -> bool:
 	return false
 
 
-func open_for_sheet(sheet: EventSheetResource) -> void:
+## Opens on `sheet`, with `field` picked and its panel on the tab `category` when they are named (the
+## help strip's and the Inspector's doors open it so).
+func open_for_sheet(sheet: EventSheetResource, field: String = "", category: String = "") -> void:
+	if not field.is_empty():
+		_picked = field
+	_picked_category = category
 	rebuild_for_sheet(sheet)
-	popup_centered()
+	if is_inside_tree():
+		popup_centered()
+
+
+## Picks a field: its card is framed and the panel shows its choices on `category` (or the tab it was on).
+func pick_field(var_name: String, category: String = "") -> void:
+	var entry: Dictionary = {}
+	for candidate: Dictionary in _entries:
+		if str(candidate.get("name")) == var_name:
+			entry = candidate
+	if entry.is_empty():
+		return
+	_picked = var_name
+	if not category.is_empty():
+		_picked_category = category
+	for named: Variant in _frames:
+		_paint_frame(_frames[named] as PanelContainer, str(named) == var_name)
+	_shape_panel.visible = true
+	_shape_panel.show_field(_sheet, entry, _entries, _picked_category)
+	_point_at(row_sentence(entry, "") if _edit_handler.is_valid() else "", str(entry.get("code", "")))
+
+
+## The field picked now - test seam.
+func picked_field() -> String:
+	return _picked
+
+
+## The "Shape this field" panel - test seam.
+func shape_panel() -> VBoxContainer:
+	return _shape_panel
+
+
+## The "Groups show as" dropdown - test seam.
+func groups_dropdown() -> OptionButton:
+	return _groups_option
+
+
+func _on_shape_chosen(category: String, option_id: String, answers: Dictionary) -> void:
+	_picked_category = category
+	if _shape_handler.is_valid():
+		_shape_handler.call(_picked, category, option_id, answers)
+	refresh()
+
+
+## "Groups show as": Sections or Tabs, each described; a way not built yet is greyed with the reason.
+func _build_groups_row() -> Control:
+	var row: HBoxContainer = HBoxContainer.new()
+	var lead: Label = Label.new()
+	lead.text = EventSheetL10n.translate("Groups show as")
+	lead.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
+	row.add_child(lead)
+	_groups_option = EventSheetPopupUI.described_option()
+	for style: Dictionary in load(SHAPE_PATH).group_styles():
+		var reason: String = str(style.get("reason", ""))
+		var index: int = EventSheetPopupUI.add_described_item(_groups_option, str(style.get("label")),
+			str(style.get("tip")) if reason.is_empty() else "%s\n%s" % [style.get("tip"), reason], str(style.get("id")))
+		_groups_option.set_item_disabled(index, not reason.is_empty())
+	_groups_option.item_selected.connect(func(index: int) -> void:
+		var style_id: String = str(_groups_option.get_item_metadata(index))
+		if _shape_handler.is_valid() and style_id != load(SHAPE_PATH).group_style(_sheet):
+			_shape_handler.call("", "groups", style_id, {})
+		refresh())
+	row.add_child(_groups_option)
+	# The chosen way's sentence stays in view beside the dropdown, as a described field keeps it under.
+	var note: Label = EventSheetPopupUI.hint_label("", 640.0)
+	note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_groups_option.set_meta("chosen_note", note)
+	row.add_child(note)
+	return row
+
+
+func _follow_group_style() -> void:
+	var style_id: String = load(SHAPE_PATH).group_style(_sheet) if _sheet != null else "sections"
+	for index: int in range(_groups_option.item_count):
+		if str(_groups_option.get_item_metadata(index)) == style_id:
+			_groups_option.select(index)
+	EventSheetPopupUI.follow_description(_groups_option)
+
+
+## A card inside a frame a click picks it by: the frame wears the accent while its field is picked.
+func _pickable_frame(card: Control, var_name: String) -> PanelContainer:
+	var frame: PanelContainer = PanelContainer.new()
+	frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	frame.mouse_filter = Control.MOUSE_FILTER_STOP
+	frame.focus_mode = Control.FOCUS_ALL
+	frame.tooltip_text = EventSheetL10n.translate("Click to shape %s") % var_name
+	frame.add_child(card)
+	card.mouse_filter = Control.MOUSE_FILTER_PASS
+	frame.gui_input.connect(func(event: InputEvent) -> void:
+		if (event is InputEventMouseButton and (event as InputEventMouseButton).pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT) \
+				or (event is InputEventKey and (event as InputEventKey).pressed and (event as InputEventKey).keycode in [KEY_ENTER, KEY_SPACE]):
+			pick_field(var_name))
+	_frames[var_name] = frame
+	_paint_frame(frame, false)
+	return frame
+
+
+static func _paint_frame(frame: PanelContainer, picked: bool) -> void:
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = Color(EventSheetPopupUI.accent_color(), 0.14) if picked else Color(0.0, 0.0, 0.0, 0.0)
+	style.border_color = EventSheetPopupUI.accent_color() if picked else Color(0.0, 0.0, 0.0, 0.0)
+	style.set_border_width_all(EventSheetPalette.scaled(2))
+	style.set_corner_radius_all(EventSheetPalette.scaled(3))
+	frame.add_theme_stylebox_override("panel", style)
+
+
+## A field a Show when ties to a tick box that starts off is drawn the way Godot will draw it then:
+## faint while hidden, greyed while read-only, and its hover says why.
+static func _dim_for_switch(card: Control, entry: Dictionary, entries: Array[Dictionary]) -> void:
+	var attributes: Dictionary = entry.get("attributes", {})
+	var hides: String = str(attributes.get("show_if", "")).strip_edges()
+	var locks: String = str(attributes.get("lock_unless", "")).strip_edges()
+	var switch: String = hides if not hides.is_empty() else locks
+	if switch.is_empty():
+		return
+	for other: Dictionary in entries:
+		if str(other.get("name")) == switch and str(other.get("default_text")) == "false":
+			card.modulate = Color(1.0, 1.0, 1.0, 0.45 if not hides.is_empty() else 0.6)
+			card.tooltip_text = EventSheetL10n.translate("Hidden while %s is off.") % switch if not hides.is_empty() \
+				else EventSheetL10n.translate("Read-only while %s is off.") % switch
 
 
 ## The number of variable rows currently shown (excludes the intro/empty hint) - test seam.

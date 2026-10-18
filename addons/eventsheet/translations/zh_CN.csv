@@ -9390,3 +9390,87 @@ Pick a row of a data table,选择数据表的一行
 "A dropdown of the rows of a data table, shown by their name column. The file still stores the row's number.",按名称列显示数据表各行的下拉列表。文件仍然保存该行的编号。
 Name column,名称列
 Not one of the words %s() gives.,不是 %s() 给出的词之一。
+Change how the groups show,更改分组的显示方式
+Shape %s in the Inspector,在检查器中调整 %s
+Click a field to shape it.,点击一个字段来调整它。
+Groups show as,分组显示为
+Click to shape %s,点击以调整 %s
+Hidden while %s is off.,%s 关闭时隐藏。
+Read-only while %s is off.,%s 关闭时只读。
+Show when,显示条件
+Help,帮助
+How the value is drawn and edited.,值的绘制与编辑方式。
+Where the field sits.,字段所在的位置。
+When the field appears.,字段何时出现。
+What a good value is.,什么是合适的值。
+Words that explain the field.,解释字段的文字。
+A button that runs a function of the script.,运行脚本中某个函数的按钮。
+Exactly the same.,完全相同。
+The field Godot picks for the type. Nothing added.,Godot 为该类型选择的字段。不添加任何内容。
+Exactly the same field.,完全相同的字段。
+"Shows as a plain field, and the game runs the same: the marker is something only the plugin reads.",显示为普通字段，游戏照常运行：标记只有插件会读取。
+"The same: this is Godot's own annotation, so it works with or without the plugin.",相同：这是 Godot 自带的注解，有没有插件都能用。
+Pick from a list a function gives,从函数给出的列表中选择
+"A dropdown filled by a function of the script, so the choices follow your data: attack names, level names, save slots.",由脚本函数填充的下拉列表，选项随你的数据而变：攻击名、关卡名、存档槽。
+"A plain text field: the chosen word, as written.",普通的文本字段：所选的词，原样保存。
+In its group,在所属分组中
+"Under the heading of the group it is declared in, one field per line.",在声明它的分组标题下，每行一个字段。
+Side by side with the next field,与下一个字段并排
+"Shares one line with the field declared after it, for pairs that belong together: min and max, x and y, width and height.",与其后声明的字段共用一行，适合成对的值：最小与最大、x 与 y、宽与高。
+"Two lines, one after the other.",两行，一前一后。
+No field is declared after this one to share its line.,此字段之后没有声明可共用一行的字段。
+Always shown.,始终显示。
+"The same: this is Godot's own way to hide a field, so it works with or without the plugin. The script becomes a @tool script so the Inspector can ask it.",相同：这是 Godot 自己隐藏字段的方式，有没有插件都能用。脚本会变成 @tool 脚本，好让检查器询问它。
+Only when %s is on,仅当 %s 开启时
+"Hidden while %s is off, so only the fields that matter are on screen. The value is kept while hidden.",%s 关闭时隐藏，屏幕上只留下有用的字段。隐藏期间值会保留。
+Read-only when %s is off,%s 关闭时只读
+"Stays visible but greyed out while %s is off, for a value worth seeing but not changing.",%s 关闭时仍然显示但变灰，适合值得一看但不该修改的值。
+The same: Godot's own read-only flag.,相同：Godot 自带的只读标志。
+Only when a tick box is on,仅当某个复选框勾选时
+Hidden while a tick box of the script is off.,脚本的某个复选框未勾选时隐藏。
+Add an exported bool variable first: it is the tick box that shows or hides this field.,先添加一个导出的 bool 变量：它就是显示或隐藏此字段的复选框。
+No check,不检查
+Any value of the type is accepted.,接受该类型的任何值。
+Stay within limits,保持在范围内
+The field refuses values outside a lowest and highest number.,字段会拒绝最小值与最大值之外的值。
+"The same: Godot's own range, and the setter keeps the value inside it in the game too.",相同：Godot 自带的范围，游戏中 setter 也会把值限制在其中。
+Must be filled in,必须填写
+"An empty value shows a quiet amber note in the Inspector, and the Project Doctor lists every scene that leaves it empty.",值为空时检查器会显示一条低调的琥珀色提示，项目医生会列出所有留空的场景。
+A plain field; the Doctor still lists empty ones.,普通字段；医生仍会列出空的字段。
+Checked by a function,由函数检查
+"A function of the script answers what is wrong, in its own words; an empty answer means all is well.",脚本中的一个函数用自己的话说明哪里不对；空回答表示一切正常。
+A plain field; the function is never called.,普通字段；函数永远不会被调用。
+Hover text only,仅悬停文字
+"The ## comment above the variable, shown when hovering its name, as Godot does.",变量上方的 ## 注释，像 Godot 一样在悬停其名称时显示。
+A note above the field,字段上方的说明
+"A short sentence always shown above the field, for the one thing nobody should miss.",始终显示在字段上方的一句短话，用于谁都不该错过的那件事。
+The note is a comment; the field shows plain.,说明只是注释；字段照常显示。
+one short sentence,一句短话
+No button,无按钮
+No button.,没有按钮。
+A button under the field,字段下方的按钮
+Runs a function of the script when pressed. Works when the script is a @tool script; otherwise it says why it is off.,按下时运行脚本中的函数。脚本是 @tool 脚本时才起作用；否则会说明为何不可用。
+No button; the function is still there to call.,没有按钮；函数仍可调用。
+Sections,分节
+"Every group is a heading, all on one long page, as Godot shows them.",每个分组都是一个标题，全部在一个长页面上，和 Godot 的显示方式一样。
+"Each group is a tab, so a long resource fits on one screen. Without the plugin they are headings again.",每个分组是一个标签页，长资源也能放在一屏内。没有插件时它们又变回标题。
+"A function name is one word of letters, digits and _, like check_health.",函数名是由字母、数字和 _ 组成的一个词，例如 check_health。
+Fill this in first: it is what the choice writes.,请先填写这里：这就是该选项写入的内容。
+Shape this field:,调整此字段：
+In code,代码中
+Without the plugin,没有插件时
+From code,从代码读取
+"Opening a script that already has this code shows the same choice here, and saving untouched writes the same bytes.",打开已含此代码的脚本时，这里会显示同样的选项；不做改动直接保存会写出相同的字节。
+shaped by your own code: edit it in the script,由你自己的代码调整：请在脚本中编辑
+Read from your own _validate_property: change it there.,读取自你自己的 _validate_property：请在那里修改。
+"This script writes its own _validate_property, so Show when is edited there.",此脚本自己编写了 _validate_property，因此显示条件要在那里编辑。
+read from your code,读取自你的代码
+chosen for %s,已为 %s 选择
+hovered: click to choose,悬停中：点击以选择
+the script,脚本
+(what the Designer writes into %s),（设计器写入 %s 的内容）
+Choose,选择
+"%s is not a function of this script yet: add it on the sheet, or the field has nothing to ask.",%s 还不是此脚本的函数：请在表中添加它，否则该字段无从询问。
+Shape in the Inspector…,在检查器中调整…
+Shape %s…,调整 %s…
+"Opens the Inspector Designer for %s: how each field of it looks, when it shows and what it checks.",为 %s 打开检查器设计器：每个字段的外观、何时显示以及检查什么。
