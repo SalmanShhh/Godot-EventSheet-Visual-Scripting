@@ -5,7 +5,7 @@
 # when somebody changes it?
 #   - A declaration whose value runs over several lines (`var waves = [` ... `]`) must not read as a
 #     variable whose value is `[` with the rest stranded in code blocks after it - moving or editing
-#     that row would write a file that no longer parses.
+#     that row would write a file that no longer parses. It reads with its whole value, or not at all.
 #   - Change Type Everywhere on a declaration written with no type (`var target = null`) or with an
 #     inferred one (`var slot := 0`) must write the type it was asked for, or the file still says what
 #     it said and reopens as the old type.
@@ -24,8 +24,9 @@ static func run() -> bool:
 	var rows: Array = []
 	var multi_line: String = "extends Node\n\nvar waves = [\n\t3,\n\t5,\n]\nvar limits: Array = [\n\t1,\n]\nvar total = max(\n\t1, 2)\nvar after = 1\n"
 	var sheet: EventSheetResource = _open(multi_line)
-	rows.append(["a value that runs over lines is not read as a variable holding its first line",
-		_variable_defaults(sheet), {"after": 1}])
+	# The lists fold to their count (a list row, not a variable); the call reads with its whole value.
+	rows.append(["a value that runs over lines is read whole, never as a variable holding its first line",
+		_variable_defaults(sheet), {"total": "max(1, 2)", "after": 1}])
 	rows.append(["the multi-line declarations still save back byte for byte", _compile(sheet), multi_line])
 
 	var untyped: String = "extends Node\n\nvar target = null\nvar label = \"spawner\"\nvar slot := 0\nvar radius = 240.0\n"

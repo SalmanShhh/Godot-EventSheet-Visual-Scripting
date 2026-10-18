@@ -84,6 +84,17 @@
 - A file with classes inside it takes longer to finish reading in the background, since every
   function in its classes is now read as well (the first paint of the file is unchanged).
 
+### Fixed: a value holding a function written over several lines, and the class edit's first open
+
+- A declaration whose value hands a function written over several lines to a call
+  (`var changed: bool = _dock._perform_undoable_sheet_edit("Apply Cell Edit", func() -> bool:` ...)
+  was joined onto one line like a long sum, which reads the function's indented lines as one and
+  would have written them back on one line after an edit. A value with a function inside it is no
+  longer joined: the undo funnel reads as its one undoable step again, and any other call reads as the
+  call with the function as a chip.
+- Turning a class back into code named the compiler in a file the first sheet open builds; it now
+  reaches it by path, so the first open loads nothing new.
+
 ### Fixed: shaping a field, walked end to end in the editor
 
 - Clicking an option in "Shape this field", pressing Choose or Apply, or pressing ▲ in the Inspector

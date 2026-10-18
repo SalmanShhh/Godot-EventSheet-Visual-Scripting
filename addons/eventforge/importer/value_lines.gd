@@ -13,8 +13,9 @@
 # Joining never changes what the lines say. Inside open brackets, or after a `\`, GDScript reads a
 # line break as a space, so the lines are joined with one space - none after an opening bracket or
 # before a closing one - and the indentation of each continued line is dropped. Lines that cannot be
-# joined that way are refused: a comment inside them (joined, it would swallow the rest), or a
-# triple-quoted string, whose line breaks are part of the value.
+# joined that way are refused: a comment inside them (joined, it would swallow the rest), a
+# triple-quoted string, whose line breaks are part of the value, or a function written inside the
+# value, whose lines are read by their indentation.
 #
 # PURE + STATIC: text in, plain values out.
 @tool
@@ -37,6 +38,10 @@ static func join(lines: PackedStringArray) -> Dictionary:
 	for line_index: int in lines.size():
 		var line: String = lines[line_index]
 		if _has_comment(line):
+			return {}
+		# A line ending in `:` opens a block - a function written inside the value - whose lines are
+		# read by their indentation, so joining them would change what they say.
+		if line_index < lines.size() - 1 and line.strip_edges(false, true).ends_with(":"):
 			return {}
 		var first: int = 0
 		if line_index > 0:

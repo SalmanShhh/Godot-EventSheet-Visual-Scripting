@@ -29,6 +29,8 @@ static func run() -> bool:
 			EventForgeValueLines.join(PackedStringArray(["a + \\", "\tb"])).get("text"), "a + b"],
 		["a comment inside the lines is refused",
 			EventForgeValueLines.join(PackedStringArray(["(a  # why", "\t+ b)"])), {}],
+		["a function written inside the value is refused: its lines are read by their indentation",
+			EventForgeValueLines.join(PackedStringArray(["edit(\"Step\", func() -> bool:", "\tif ready:", "\t\treturn true", "\treturn false)"])), {}],
 		["a hash inside a string is not a comment",
 			EventForgeValueLines.join(PackedStringArray(["(\"#\"", "\t+ b)"])).get("text"), "(\"#\" + b)"],
 		["a rename keeps the line breaks it does not cross",

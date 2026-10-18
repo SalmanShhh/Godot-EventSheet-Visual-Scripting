@@ -329,7 +329,7 @@ func _class_as_code(inner: InnerClassRow) -> RawCodeRow:
 	var index: int = sheet.events.find(inner) if sheet != null else -1
 	if index < 0:
 		return null
-	var code: String = "\n".join(SheetCompiler.inner_class_lines(inner))
+	var code: String = "\n".join(load(SHEET_COMPILER_PATH).inner_class_lines(inner))
 	_dock._perform_undoable_sheet_edit("Edit Class as Code", func() -> bool:
 		var as_code: RawCodeRow = RawCodeRow.new()
 		as_code.code = code
