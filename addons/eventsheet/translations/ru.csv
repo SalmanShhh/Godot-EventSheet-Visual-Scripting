@@ -9367,3 +9367,6 @@ a list (like []),"список (например, [])"
 a dictionary (like {}),"словарь (например, {})"
 null (no object yet),null (пока без объекта)
 """%s"" has letters outside a to z. GDScript takes them, but the sheet would open %s as code from then on. Try %s. Nothing was changed.","""%s"" содержит буквы вне a-z. GDScript их принимает, но лист будет дальше открывать %s как код. Попробуйте %s. Ничего не изменено."
+Waits (async),Ждёт (async)
+Shared (static),Общая (static)
+"A function needs a name, so callers can find it. Nothing was changed.","Функции нужно имя, чтобы вызовы могли её найти. Ничего не изменено."

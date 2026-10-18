@@ -9367,3 +9367,6 @@ a list (like []),リスト (例: [])
 a dictionary (like {}),辞書 (例: {})
 null (no object yet),null (まだオブジェクトなし)
 """%s"" has letters outside a to z. GDScript takes them, but the sheet would open %s as code from then on. Try %s. Nothing was changed.","""%s"" には a から z 以外の文字があります。GDScript では使えますが、シートは以後 %s をコードとして開きます。%s を試してください。何も変更されていません。"
+Waits (async),待機する (async)
+Shared (static),共有 (static)
+"A function needs a name, so callers can find it. Nothing was changed.",呼び出し側が見つけられるよう、関数には名前が必要です。何も変更されていません。

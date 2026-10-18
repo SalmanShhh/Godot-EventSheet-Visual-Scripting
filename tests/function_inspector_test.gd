@@ -14,7 +14,68 @@ const PLUGIN_PATH := "res://addons/eventsheet/editor/inspector/function_inspecto
 
 static func run() -> bool:
 	return _test_inspector() and _test_window() and _test_described_fields() and _test_guards() \
-		and _test_shared_reads_emitted_code() and _test_defaults_left_to_gdscript()
+		and _test_shared_reads_emitted_code() and _test_defaults_left_to_gdscript() and _test_type_restarts_default() \
+		and _test_held_text_stays_on_its_tab()
+
+
+## A new parameter Type starts its default again from the type's own value, in one step, so a default
+## the old type held never sits under a type that cannot hold it; a required parameter stays required.
+static func _test_type_restarts_default() -> bool:
+	var dock: EventSheetDock = _guarded_dock()
+	var inspector: RefCounted = load(INSPECTOR_PATH).new(dock, dock._current_sheet.functions[0])
+	inspector.get_property_list()
+	inspector.hold("param:1:default", "maybe")
+	inspector.apply_param_type(1, "String")
+	var critical: ACEParam = inspector.live_function().params[1]
+	var ok: bool = SUPPORT.pins(NAME, [
+		["bool = false turned to String starts as empty text", [critical.type_name, critical.gdscript_default], ["String", "\"\""]],
+		["and the text typed into its default is dropped with it", inspector.get("Parameters/2/Default"), "\"\""],
+	])
+	inspector.apply_param_type(1, "Color")
+	inspector.apply_param_type(0, "float")
+	var amount: ACEParam = inspector.live_function().params[0]
+	ok = SUPPORT.pins(NAME, [
+		["a colour starts visible", inspector.live_function().params[1].gdscript_default, "Color.WHITE"],
+		["a required parameter stays required", [amount.type_name, amount.gdscript_default], ["float", ""]],
+		["a vector is spelled the way the dropdown spells it", load(INSPECTOR_PATH).starting_value("Vector2"), "Vector2.ZERO"],
+		["a function with no name says why it needs one", inspector.warning("name", ""),
+			[EventSheetPopupUI.TONE_ERROR, "A function needs a name, so callers can find it. Nothing was changed."]],
+	]) and ok
+	dock.free()
+	return ok
+
+
+## Text held in a function's field is written to the sheet it was typed on when another tab comes up,
+## and the Inspector never answers for a same-named function of the tab that came up.
+static func _test_held_text_stays_on_its_tab() -> bool:
+	var dock: EventSheetDock = _guarded_dock()
+	var other: EventSheetResource = EventSheetResource.new()
+	other.host_class = "Node2D"
+	var twin: EventFunction = EventFunction.new()
+	twin.function_name = "take_damage"
+	twin.description = "The other sheet's."
+	other.functions.append(twin)
+	dock._open_sheet_in_tab(other, "")
+	dock._activate_tab(0)
+	var view: EventSheetViewport = dock._active_view()
+	var bar: EventSheetPropertiesBar = dock._properties_bar
+	view.select_resource(dock._current_sheet.functions[0])
+	bar.refresh()
+	var inspector: RefCounted = bar._function_inspector
+	if inspector != null:
+		inspector.hold("description", "Typed on the first tab.")
+	dock._activate_tab(1)
+	var ok: bool = SUPPORT.pins(NAME, [
+		["the first tab's function got the text", (dock._open_tabs[0]["sheet"] as EventSheetResource).functions[0].description,
+			"Typed on the first tab."],
+		["the second tab's same-named function did not", (dock._open_tabs[1]["sheet"] as EventSheetResource).functions[0].description,
+			"The other sheet's."],
+		["the Inspector let the first tab's function go", bar._function_inspector != inspector, true],
+		["and an object made on the first tab answers nothing on the second",
+			inspector.live_function() if inspector != null else "no inspector", null],
+	])
+	dock.free()
+	return ok
 
 
 ## The Shared refusal reads only the code the function compiles to: a template's own {speed} hole,
@@ -144,19 +205,28 @@ static func _test_described_fields() -> bool:
 				plugin.shape_of("waits"), plugin.shape_of("name"), plugin.shape_of("add_param")],
 			["choice", "suggested", "choice", "choice", "text", ""]],
 		["no choice of any dropdown goes undescribed", undescribed, []],
-		["Returns says what Nothing means", inspector.choices("returns")[0],
-			["Nothing", "Hands nothing back. Use it as an action."]],
-		["a parameter Type says what int means", inspector.choices("param:0:type")[1],
-			["int", "A whole number: counts, health, coins."]],
-		["Shared says what each choice means", inspector.choices("shared"),
-			[["One per object", "Each object runs its own copy and can use its own variables, like health."],
-			["One for the script", "Called without picking an object. It cannot read one object's variables, so it suits helpers like maths."]]],
+		["Returns says what Nothing means, and the line it writes", inspector.choices("returns")[0],
+			["Nothing", "Hands nothing back. Use it as an action.", "-> void"]],
+		["a parameter Type says what int means, and the parameter it makes", inspector.choices("param:0:type")[1],
+			["int", "A whole number: counts, health, coins.", "amount: int = 0"]],
+		["Shared says what each choice means, and how it is called", inspector.choices("shared"),
+			[["One per object", "Each object runs its own copy and can use its own variables, like health.",
+				"node_2d.take_damage(amount, critical)"],
+			["One for the script", "Called without picking an object. It cannot read one object's variables, so it suits helpers like maths.",
+				"static func take_damage(amount, critical)"]]],
+		["Waits shows the call and the await", [inspector.choices("waits")[0][2], inspector.choices("waits")[1][2]],
+			["take_damage(amount, critical)", "await take_damage(amount, critical)"]],
+		["In Add Action shows the annotation its return type gets", [inspector.choices("in_add_action")[0][2],
+			inspector.choices("in_add_action")[1][2]], ["## @ace_hidden", "## @ace_expression"]],
+		["a Category shows its annotation", inspector.choices("category")[0][2], "## @ace_category(\"Functions\")"],
 		["a category with none is under the default heading", inspector.note("category", ""),
 			"The default heading for your own functions."],
-		["each item of the drawn dropdown carries its sentence", dropdown.get_item_tooltip(0),
-			"Runs start to end in one frame. Callers carry on straight after."],
-		["and the chosen one's sentence stays on the field", dropdown.tooltip_text,
+		["each item of the drawn dropdown carries its sentence, then its code", dropdown.get_item_tooltip(0),
+			"Runs start to end in one frame. Callers carry on straight after.\ntake_damage(amount, critical)"],
+		["the sentence alone is what the note under the field keeps", dropdown.get_item_metadata(1),
 			"May pause on a Wait (timer, signal, tween). Callers can wait for it to finish before carrying on."],
+		["and the chosen one's sentence stays on the field", dropdown.tooltip_text,
+			"May pause on a Wait (timer, signal, tween). Callers can wait for it to finish before carrying on.\nawait take_damage(amount, critical)"],
 		["each label says what its field is for", inspector.purpose("category"), "The heading it is listed under in Add Action."],
 		["a parameter's Type label too", inspector.purpose("param:1:type"), "The kind of value a call passes in for this input."],
 	])
@@ -235,8 +305,8 @@ static func _test_guards() -> bool:
 	body.sub_events.append(pause)
 	ok = SUPPORT.check(NAME, "and silent once something in it waits", inspector.warning("waits", ""), ["", ""]) and ok
 	# Two picks the body rules out are refused: the setting stays, and the line says why.
-	inspector.set("Waits", false)
-	inspector.set("Shared", true)
+	inspector.set("Waits (async)", false)
+	inspector.set("Shared (static)", true)
 	ok = SUPPORT.pins(NAME, [
 		["a function with a Wait inside stays Can wait", target.is_async, true],
 		["and says why", inspector.warning("waits", ""),
@@ -293,7 +363,7 @@ static func _test_inspector() -> bool:
 	var ok: bool = SUPPORT.pins(NAME, [
 		["the Inspector's fields, in the design's order", shown.slice(shown.find("Function take_damage")),
 			PackedStringArray(["Function take_damage", "Name", "Description", "Returns", "In Add Action", "Category",
-				"Waits", "Shared", "Parameters/1/Name", "Parameters/1/Type", "Parameters/1/Default",
+				"Waits (async)", "Shared (static)", "Parameters/1/Name", "Parameters/1/Type", "Parameters/1/Default",
 				"Parameters/2/Name", "Parameters/2/Type", "Parameters/2/Default", "Parameters/2/Move Up",
 				"Parameters/Add Parameter"])],
 		["the Inspector's own undo step is handed back to the funnel", inspector._dont_undo_redo(), true],
@@ -314,12 +384,12 @@ static func _test_inspector() -> bool:
 	ok = SUPPORT.check(NAME, "leaving the field writes it", inspector.live_function().description, "Hurts a lot.") and ok
 	inspector.set("Returns", 3)
 	ok = SUPPORT.check(NAME, "the Returns field writes", CompilerSpellingsProbe.return_name(inspector.live_function()), "float") and ok
-	inspector.set("Waits", true)
+	inspector.set("Waits (async)", true)
 	ok = SUPPORT.check(NAME, "the Waits field writes is_async", inspector.live_function().is_async, true) and ok
 	inspector.set("Parameters/2/Type", 2)
 	ok = SUPPORT.check(NAME, "a parameter's Type field writes", inspector.live_function().params[1].type_name, "float") and ok
 	inspector.set("Returns", 0)
-	inspector.set("Waits", false)
+	inspector.set("Waits (async)", false)
 	ok = SUPPORT.check(NAME, "the same return writes nothing", inspector.apply_returns("Nothing"), false) and ok
 	ok = SUPPORT.check(NAME, "a new return writes", inspector.apply_returns("float"), true) and ok
 	ok = SUPPORT.check(NAME, "the function now returns a float",

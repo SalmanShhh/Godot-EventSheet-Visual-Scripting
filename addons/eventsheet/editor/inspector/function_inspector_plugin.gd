@@ -114,12 +114,15 @@ class FunctionField:
 		add_child(under)
 		set_bottom_editor(under)
 
-	## Fills a dropdown with [word, sentence] choices, each sentence the item's own tooltip, and picks
-	## `chosen`. The dropdown's tooltip and the note under it follow the pick.
+	## Fills a dropdown with [word, sentence, code] choices and picks `chosen`. Each item's tooltip is
+	## its sentence with the code it stands for on the line below; the sentence alone is the item's
+	## metadata, which is what the note under the field keeps. The dropdown's tooltip follows the pick.
 	static func fill_choices(dropdown: OptionButton, choices: Array, chosen: int) -> void:
 		dropdown.clear()
 		for choice: Array in choices:
-			EventSheetPopupUI.add_described_item(dropdown, str(choice[0]), str(choice[1]))
+			var code: String = str(choice[2]) if choice.size() > 2 else ""
+			EventSheetPopupUI.add_described_item(dropdown, str(choice[0]),
+				str(choice[1]) if code.is_empty() else "%s\n%s" % [choice[1], code], str(choice[1]))
 		if chosen >= 0 and chosen < dropdown.item_count:
 			dropdown.select(chosen)
 		EventSheetPopupUI.follow_description(dropdown)
@@ -163,7 +166,7 @@ class FunctionField:
 		var key: String = _key()
 		var note: String = str(proxy.call("note", key, text))
 		if note.is_empty() and _dropdown != null and _dropdown.selected >= 0:
-			note = _dropdown.get_item_tooltip(_dropdown.selected)
+			note = str(_dropdown.get_item_metadata(_dropdown.selected))
 		_note.text = note
 		_note.visible = not note.is_empty()
 		var line: Array = proxy.call("warning", key, text)

@@ -6,10 +6,10 @@ extends RefCounted
 #   Name           take_damage
 #   Description    Removes health, flashes the sprite, and dies at zero.
 #   Returns        Nothing ▾
-#   In Add Action  ☑
+#   In Add Action  Listed ▾
 #   Category       Player
-#   Waits          ☐
-#   Shared         ☐
+#   Waits (async)  Finishes at once ▾
+#   Shared (static) One per object ▾
 #   ▾ Parameters
 #     ▾ 1   Name amount · Type int ▾ · Default 1
 #     ▾ 2   Name critical · Type bool ▾ · Default false · [Move Up]
@@ -74,11 +74,20 @@ var _said: Dictionary = {}
 # How many places name the function besides its declaration, or -1 until asked (see call_count).
 var _call_count: int = -1
 var _watching: bool = false
+# The id of the tab the function was selected on (see _tab_on_screen).
+var _tab: String = ""
 
 
 func _init(dock: Control, event_function: EventFunction) -> void:
 	_dock = dock
 	_function_name = event_function.function_name
+	_tab = _tab_on_screen()
+
+
+# The tab on screen, by its id: a function is found by its NAME, and another tab's sheet can have a
+# function of the same name, so this object answers only while its own tab is the current one.
+func _tab_on_screen() -> String:
+	return _dock._tab_state.active_tab_id() if _dock != null and "_tab_state" in _dock and _dock._tab_state != null else ""
 
 
 ## The sentence a type choice shows as the pointer rests on it. Each is spelled out inside its own
@@ -219,7 +228,7 @@ static func open_description_editor(dock: Control, event_function: EventFunction
 
 ## The function this object edits, re-fetched from the live sheet (never held across an edit).
 func live_function() -> EventFunction:
-	if _dock == null or _dock._current_sheet == null:
+	if _dock == null or _dock._current_sheet == null or _tab_on_screen() != _tab:
 		return null
 	for entry: Variant in _dock._current_sheet.functions:
 		if entry is EventFunction and (entry as EventFunction).function_name == _function_name:
@@ -227,9 +236,9 @@ func live_function() -> EventFunction:
 	return null
 
 
-## True when this object is the one editing `event_function`.
+## True when this object is the one editing `event_function`, on the tab on screen.
 func edits(event_function: EventFunction) -> bool:
-	return event_function != null and event_function.function_name == _function_name
+	return event_function != null and event_function.function_name == _function_name and _tab_on_screen() == _tab
 
 
 ## Hands this object to Godot's Inspector. Only in the editor: a headless run has no Inspector. The
@@ -280,8 +289,8 @@ func _get_property_list() -> Array[Dictionary]:
 	_add(properties, "in_add_action", EventSheetL10n.translate("In Add Action"), TYPE_BOOL)
 	_add(properties, "category", EventSheetL10n.translate("Category"), TYPE_STRING, PROPERTY_HINT_ENUM_SUGGESTION,
 		",".join(category_choices(_dock._current_sheet, event_function.ace_category)))
-	_add(properties, "waits", EventSheetL10n.translate("Waits"), TYPE_BOOL)
-	_add(properties, "shared", EventSheetL10n.translate("Shared"), TYPE_BOOL)
+	_add(properties, "waits", EventSheetL10n.translate("Waits (async)"), TYPE_BOOL)
+	_add(properties, "shared", EventSheetL10n.translate("Shared (static)"), TYPE_BOOL)
 	var section: String = EventSheetL10n.translate("Parameters")
 	for index: int in range(event_function.params.size()):
 		var param: ACEParam = event_function.params[index]
@@ -354,27 +363,60 @@ func purpose(key: String) -> String:
 	return ""
 
 
-## A dropdown's choices as [word, sentence] pairs, in the order of the indices the field stores.
+## A dropdown's choices as [word, sentence, code] triples, in the order of the indices the field
+## stores. The code is the line that choice puts in the script, or the call it asks of a caller.
 func choices(key: String) -> Array:
 	var event_function: EventFunction = live_function()
 	if event_function == null:
 		return []
-	var pairs: Array = []
+	var triples: Array = []
 	match key:
 		"returns":
 			for word: String in type_words(return_word(event_function), true):
-				pairs.append([EventSheetL10n.translate("Nothing") if word == "Nothing" else word, type_description(word)])
+				triples.append([EventSheetL10n.translate("Nothing") if word == "Nothing" else word, type_description(word),
+					"-> %s" % ("void" if word == "Nothing" else word)])
 		"in_add_action", "waits", "shared":
-			pairs = flag_choices(key)
+			var codes: PackedStringArray = flag_codes(key, event_function, _dock._current_sheet)
+			for index: int in range(2):
+				triples.append(flag_choices(key)[index] + [codes[index]])
 		"category":
 			for word: String in category_choices(_dock._current_sheet, event_function.ace_category):
-				pairs.append([word, category_sentence(word)])
+				triples.append([word, category_sentence(word), "## @ace_category(\"%s\")" % word])
 		_:
 			var index: int = int(key.get_slice(":", 1))
 			if key.get_slice(":", 2) == "type" and index >= 0 and index < event_function.params.size():
 				for word: String in type_words(event_function.params[index].type_name.strip_edges(), false):
-					pairs.append([word, type_description(word)])
-	return pairs
+					triples.append([word, type_description(word),
+						"%s: %s = %s" % [event_function.params[index].id, word, starting_value(word)]])
+	return triples
+
+
+## The code each of a yes/no setting's two choices stands for: the annotation listing writes, the
+## call a caller makes, or the object a call goes through against `static func`.
+static func flag_codes(flag: String, event_function: EventFunction, sheet: EventSheetResource) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	for param: ACEParam in event_function.params:
+		names.append(param.id)
+	var call: String = "%s(%s)" % [event_function.function_name, ", ".join(names)]
+	match flag:
+		"in_add_action":
+			var directive: String = "## @ace_expression"
+			if not event_function.looping_iterator.is_empty():
+				directive = "## @ace_looping(%s)" % event_function.looping_iterator
+			elif event_function.return_type == TYPE_NIL:
+				directive = "## @ace_action"
+			elif event_function.return_type == TYPE_BOOL:
+				directive = "## @ace_condition"
+			return PackedStringArray(["## @ace_hidden", directive])
+		"waits":
+			return PackedStringArray([call, "await " + call])
+		"shared":
+			var owner: String = sheet.custom_class_name.strip_edges() if sheet != null else ""
+			if owner.is_empty():
+				owner = sheet.host_class.strip_edges() if sheet != null else ""
+			return PackedStringArray(["%s.%s" % [owner.to_snake_case() if not owner.is_empty() else "node", call],
+				"static func " + call])
+	return PackedStringArray(["", ""])
 
 
 ## The sentence kept under a field: a Category's meaning, or a parameter Type read as "int: A whole
@@ -444,7 +486,7 @@ func name_problem(text: String) -> Array:
 		return ["", ""]
 	var refused: String = EventSheetPopupUI.TONE_ERROR
 	if wanted.is_empty():
-		return [refused, EventSheetL10n.translate("A function needs a name. Nothing was changed.")]
+		return [refused, EventSheetL10n.translate("A function needs a name, so callers can find it. Nothing was changed.")]
 	var suggestion: String = free_name(wanted)
 	if EventSheetIdentifierRules.RESERVED.has(wanted):
 		return [refused, EventSheetL10n.translate("\"%s\" is a word GDScript keeps for itself. Try %s. Nothing was changed.") % [wanted, suggestion]]
@@ -669,9 +711,15 @@ static func value_phrase(type_word: String) -> String:
 ## What a caller gets back from a function of this type that never says Return, as GDScript writes it.
 static func zero_of(type_word: String) -> String:
 	var zeros: Dictionary = {"bool": "false", "int": "0", "float": "0.0", "String": "\"\"",
-		"Vector2": "Vector2(0, 0)", "Vector3": "Vector3(0, 0, 0)", "Color": "Color(0, 0, 0, 1)", "Array": "[]",
+		"Vector2": "Vector2.ZERO", "Vector3": "Vector3.ZERO", "Color": "Color(0, 0, 0, 1)", "Array": "[]",
 		"Dictionary": "{}"}
 	return str(zeros.get(type_word, "null"))
+
+
+## The default a parameter starts from when its Type is changed: the type's empty value, except a
+## colour, which starts visible.
+static func starting_value(type_word: String) -> String:
+	return "Color.WHITE" if type_word == "Color" else zero_of(type_word)
 
 
 ## True for a bare word a default may name: a constant-style word, a class, an engine singleton, or a
@@ -929,15 +977,27 @@ func apply_flag(flag: String, on: bool) -> bool:
 	return false
 
 
+## A new Type for a parameter. A default the old type had starts again from the new type's own value
+## in the same step, so `amount: int = 1` turned to String reads `= ""` rather than a 1 it cannot hold;
+## a required parameter stays required. Text still typed into that default is dropped with it.
 func apply_param_type(index: int, type_word: String) -> void:
-	_apply_param(index, "type_name", type_word)
+	var target: EventFunction = live_function()
+	if target == null or index < 0 or index >= target.params.size() \
+			or target.params[index].type_name.strip_edges() == type_word:
+		return
+	var changes: Dictionary = {"type_name": type_word}
+	if not target.params[index].gdscript_default.strip_edges().is_empty():
+		changes["default"] = starting_value(type_word)
+	_pending.erase("param:%d:default" % index)
+	_refused.erase("param:%d:default" % index)
+	_apply_param(index, changes)
 
 
 func apply_param_default(index: int, default_text: String) -> void:
-	_apply_param(index, "default", default_text)
+	_apply_param(index, {"default": default_text})
 
 
-func _apply_param(index: int, key: String, value: String) -> void:
+func _apply_param(index: int, changes: Dictionary) -> void:
 	var target: EventFunction = live_function()
 	if target == null or index < 0 or index >= target.params.size():
 		return
@@ -946,9 +1006,9 @@ func _apply_param(index: int, key: String, value: String) -> void:
 		"function": _function_name, "index": index, "id": param.id, "type_name": param.type_name,
 		"default": param.gdscript_default, "description": param.description,
 	}
-	if str(data.get(key, "")) == value:
+	if data.merged(changes, true) == data:
 		return
-	data[key] = value
+	data.merge(changes, true)
 	_dock._function_dialog_glue._apply_param_edit(data)
 
 

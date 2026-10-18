@@ -9367,3 +9367,6 @@ a list (like []),una lista (come [])
 a dictionary (like {}),un dizionario (come {})
 null (no object yet),null (ancora nessun oggetto)
 """%s"" has letters outside a to z. GDScript takes them, but the sheet would open %s as code from then on. Try %s. Nothing was changed.","""%s"" ha lettere fuori da a-z. GDScript le accetta, ma il foglio aprirebbe %s come codice da allora in poi. Prova %s. Non è stato cambiato nulla."
+Waits (async),Attende (async)
+Shared (static),Condivisa (static)
+"A function needs a name, so callers can find it. Nothing was changed.",Una funzione ha bisogno di un nome perché le chiamate la trovino. Non è stato cambiato nulla.

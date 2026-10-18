@@ -1234,6 +1234,7 @@ func _activate_tab(index: int) -> void:
 	if index < 0 or index >= _open_tabs.size():
 		return
 	if index != _active_tab_index:
+		_properties_bar.let_function_go()
 		_sync_active_tab_state()
 		# The tab being left keeps its reading - its rows, their layout, the scroll, the selection
 		# and its log of edits - so coming back to it costs nothing. Here rather than in the sync

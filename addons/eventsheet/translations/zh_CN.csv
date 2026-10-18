@@ -9367,3 +9367,6 @@ a list (like []),列表（如 []）
 a dictionary (like {}),字典（如 {}）
 null (no object yet),null（还没有对象）
 """%s"" has letters outside a to z. GDScript takes them, but the sheet would open %s as code from then on. Try %s. Nothing was changed.","""%s"" 含有 a 到 z 以外的字母。GDScript 接受它们，但此后表格会把 %s 作为代码打开。试试 %s。没有做任何更改。"
+Waits (async),等待 (async)
+Shared (static),共享 (static)
+"A function needs a name, so callers can find it. Nothing was changed.",函数需要一个名称，调用方才能找到它。未做任何更改。

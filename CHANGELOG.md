@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Changed: the function Inspector shows the code each choice stands for
+
+- Every dropdown choice of a selected function says, under its sentence, the line it writes or the
+  call it asks for: `-> float` for a Returns type, `amount: int = 0` for a parameter Type,
+  `await take_damage(amount, critical)` for Can wait, `static func ...` for One for the script,
+  `## @ace_hidden` or `## @ace_action` for In Add Action and `## @ace_category("Player")` for a
+  Category. The note kept under the field is still the sentence alone.
+- The two settings are labelled Waits (async) and Shared (static), the words a script uses for them.
+- A parameter whose Type changes starts its default again from the new type's own value
+  (`amount: int = 1` turned to String reads `= ""`, a Color starts as `Color.WHITE`), in the same
+  undo step; a required parameter stays required.
+- Text still being typed into a function's field is written to the sheet it was typed on when you
+  switch tabs, never to a same-named function of the tab that comes up.
+- An empty Name says why a function needs one: so callers can find it.
+
 ### Fixed: the function Inspector's refusals say only what is true
 
 - Shared is refused only when the code the function compiles to reads a variable each object has

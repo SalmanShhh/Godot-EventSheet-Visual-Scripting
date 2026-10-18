@@ -331,15 +331,21 @@ func _apply_group_enabled(enabled: bool) -> void:
 func _follow_function(view: EventSheetViewport) -> void:
 	var selected: Variant = view.get_selected_context().get("source_resource", null) if view != null else null
 	if not (selected is EventFunction) or _dock._current_sheet == null or _dock._current_sheet.read_only:
-		var leaving: RefCounted = _function_inspector
-		_function_inspector = null
-		if leaving != null:
-			leaving.release()
+		let_function_go()
 	elif _function_inspector == null or not _function_inspector.edits(selected as EventFunction):
 		_function_inspector = load(FUNCTION_INSPECTOR_PATH).new(_dock, selected as EventFunction)
 		_function_inspector.inspect()
 	else:
 		_function_inspector.refresh()
+
+
+## The Inspector lets the function go, writing text still held while its own sheet is on screen. The
+## dock calls this before another tab comes up, so held text lands in the sheet it was typed for.
+func let_function_go() -> void:
+	var leaving: RefCounted = _function_inspector
+	_function_inspector = null
+	if leaving != null:
+		leaving.release()
 
 
 ## A selected object reads what the Object properties popup reads - the same facts, in the bar.
