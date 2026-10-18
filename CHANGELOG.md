@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added: a block kept as code on purpose says why
+
+- Quoted lines joined into one text (`block.code = "\n".join(PackedStringArray([` followed by a line
+  of GDScript per entry, as every pack builder writes its pack) read as one row, `text` and its first
+  lines, even with notes written among them. Its hover says why it stays code and shows the lines as
+  written, the notes in their places. Opening the plugin's own scripts, that took the rows saying
+  nothing of their own from 1,998 to 991 (0.8% of rows to 0.4%).
+- A text between triple quotes, and every line inside one, says on hover why it stays code.
+- Display only: every file still opens and saves back byte for byte.
+
 ### Changed: the function Inspector shows the code each choice stands for
 
 - Every dropdown choice of a selected function says, under its sentence, the line it writes or the

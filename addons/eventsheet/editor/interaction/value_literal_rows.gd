@@ -37,6 +37,12 @@ const LITERAL_TOKEN := "⟦⟧"
 ## declaration rows already fold at, and a row that shows more stops being one line.
 const FOLD_AT := 3
 
+## The head of a run whose quoted lines are joined into one text: `block.code = "\n".join([`.
+const TEXT_JOIN := "\"\\n\".join("
+
+## How many of a joined text's lines its hover shows before it says how many are left.
+const TEXT_HOVER_LINES := 12
+
 
 ## The literal runs in one row list, as {"consumed": {index: true}, "leads": {index: info}} - the
 ## same shape every other multi-row collapse in the row builder reports, so the action loop skips a
@@ -44,7 +50,8 @@ const FOLD_AT := 3
 ##
 ## `info` carries {statement, open, entries, indices, source} where `statement` is the whole run on
 ## one line with the literal replaced by LITERAL_TOKEN, `open` is "{" or "[", and `entries` is the
-## parsed entry list (see parse_entries).
+## parsed entry list (see parse_entries). A run of quoted lines joined into one text also carries
+## `text_lines`, every line of it as written, notes included (see text_hover).
 static func groups(actions: Array) -> Dictionary:
 	var consumed: Dictionary = {}
 	var leads: Dictionary = {}
@@ -81,15 +88,43 @@ static func _run_at(actions: Array, start: int) -> Dictionary:
 	var lines: PackedStringArray = PackedStringArray()
 	var rows: PackedInt32Array = PackedInt32Array()
 	var indices: PackedInt32Array = PackedInt32Array([start])
+	# Every line of the run as written, notes included: what the hover of a text run shows.
+	var written: PackedStringArray = PackedStringArray()
+	var text_run: bool = head_text.contains(TEXT_JOIN)
+	var noted: bool = false
+	var entry_depth: int = depth
 	var scan: int = start + 1
 	while scan < actions.size() and depth > 0:
+		# The importer files a note it can hold as a comment row, so a text's notes arrive that way.
+		var note_row: CommentRow = actions[scan] as CommentRow
+		if note_row != null and text_run and note_row.enabled:
+			noted = true
+			for line_index: int in note_row.text.split("\n").size():
+				written.append(note_row.echo_line(line_index))
+			indices.append(scan)
+			scan += 1
+			continue
 		var entry_row: RawCodeRow = actions[scan] as RawCodeRow
 		if entry_row == null or not entry_row.enabled or entry_row.code.contains("\n"):
 			return {}
 		# A comment written among the entries is a person's own words about the table, and folding it
-		# into a chip would turn a note into an entry the file does not have. The run is left alone.
+		# into a chip would turn a note into an entry the file does not have. The run is left alone -
+		# unless it is a text joined from quoted lines, whose notes stay notes: never a chip, and every
+		# one of them on the row's hover beside the lines it is about.
 		if entry_row.code.strip_edges().begins_with("#"):
-			return {}
+			if not text_run:
+				return {}
+			noted = true
+			written.append(entry_row.code.strip_edges())
+			indices.append(scan)
+			scan += 1
+			continue
+		if depth == entry_depth and text_run and not _is_quoted_line(entry_row.code) \
+				and not is_closer_line(entry_row.code):
+			if noted:
+				return {}
+			text_run = false
+		written.append(entry_row.code.strip_edges())
 		depth += bracket_delta(entry_row.code)
 		indices.append(scan)
 		if depth > 0:
@@ -102,13 +137,56 @@ static func _run_at(actions: Array, start: int) -> Dictionary:
 	if closer == null or not is_closer_line(closer.code):
 		return {}
 	var open_bracket: String = "{" if head_text.ends_with("{") else "["
-	return {
+	var found: Dictionary = {
 		"statement": _flattened(head.code, closer.code.strip_edges()),
 		"open": open_bracket,
 		"entries": parse_entries(lines, rows),
 		"indices": indices,
 		"end": scan
 	}
+	if text_run:
+		written.resize(written.size() - 1)
+		found["text_lines"] = written
+	return found
+
+
+## True for an entry that is one quoted text and nothing else: `"\tvar speed := 2.0",`.
+static func _is_quoted_line(line: String) -> bool:
+	var text: String = line.strip_edges().trim_suffix(",")
+	if text.length() < 2 or not text.begins_with("\"") or not text.ends_with("\""):
+		return false
+	var index: int = 1
+	while index < text.length() - 1:
+		if text[index] == "\\":
+			index += 2
+			continue
+		if text[index] == "\"":
+			return false
+		index += 1
+	return index == text.length() - 1
+
+
+## WHY A BLOCK STAYS CODE, when it stays code on purpose: the sentence its hover says, or "" for a
+## block that is code only because no reading claims it yet. Two shapes, both text kept inside
+## quotes - a reading of such a text would be a second copy of it, and the first is already exact:
+## a text written between triple quotes, and the lines of a text joined from quoted lines.
+## `inside_text` says the block sits inside a triple-quoted text opened above it.
+static func code_on_purpose(code: String, inside_text: bool = false) -> String:
+	if inside_text or code.contains("\"\"\"") or code.contains("'''"):
+		return EventSheetL10n.translate("Code on purpose: this is a long text kept inside quotes, and a text reads best exactly as it is written.")
+	return ""
+
+
+## The hover of a run of lines joined into one text: why it stays code, then its lines as written,
+## notes and all, the first TEXT_HOVER_LINES of them and how many more there are.
+static func text_hover(literal: Dictionary) -> String:
+	var written: PackedStringArray = literal.get("text_lines", PackedStringArray())
+	var shown: PackedStringArray = written.slice(0, TEXT_HOVER_LINES)
+	var hover: String = "%s\n\n%s" % [EventSheetL10n.translate("Code on purpose: these %d lines are text kept inside quotes, joined into one text, and a text reads best exactly as it is written.") % (literal.get("entries", []) as Array).size(),
+		"\n".join(shown)]
+	if written.size() > shown.size():
+		hover += "\n… %s" % (EventSheetL10n.translate("%d more") % (written.size() - shown.size()))
+	return hover
 
 
 ## The same reading for a literal the importer already holds as STRUCTURE: a CollectionDeclRow whose

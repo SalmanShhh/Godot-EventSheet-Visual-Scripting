@@ -70,6 +70,9 @@ const SAMPLE_SIZE: int = 40
 ## doctor_reading_page 4, scene_effect_facts 10, node_dignity_lift 43, compiler 0, ace_adapter 29,
 ## doc_search 2, render_code_dialog_preview 2, follow_path 82 and match_row 7. The tests group is not
 ## in the corpus, so its number is the one it was written with.
+## Ratcheted when quoted lines joined into one text (a pack builder's whole pack, notes among the
+## lines) began reading as one row that says why it stays code: all 1,120 files re-read, 991 wordless
+## rows. Only the pack recipes moved: light_flicker 53, whose verbs are appended a list at a time.
 const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	"plugin": 2,
 	# Re-measured over the WHOLE role when the corpus gained three files, the rotating sample moved and
@@ -136,7 +139,7 @@ const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	"manual": 2,
 	"tests": 30,
 	"command_tools": 2,
-	"pack_recipes": 82,
+	"pack_recipes": 53,
 	"other": 7,
 }
 

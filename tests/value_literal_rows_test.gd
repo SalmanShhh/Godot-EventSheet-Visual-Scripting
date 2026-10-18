@@ -110,6 +110,7 @@ static func run() -> bool:
 		EventSheetValueLiteralRows.groups(_raw_rows(["return {", "\t\"a\": 1,"]))["leads"].is_empty(), true) and ok
 	ok = _check("a comment among the entries leaves the run alone",
 		EventSheetValueLiteralRows.groups(_raw_rows(["return {", "\t# why", "\t\"a\": 1,", "}"]))["leads"].is_empty(), true) and ok
+	ok = _test_code_on_purpose() and ok
 	var nested: Dictionary = _lead(EventSheetValueLiteralRows.groups(_raw_rows(
 		["return {", "\t\"outer\": {", "\t\t\"inner\": 1,", "\t},", "}"])))
 	ok = _check("a nested literal nests",
@@ -221,6 +222,58 @@ static func run() -> bool:
 			{"variable_types": {"System": "EventSheetDock"}}, true).is_empty(), true) and ok
 
 	return ok
+
+
+## Quoted lines joined into one text read as one row whose hover says why they stay code: the
+## notes among them stay notes, and the file round-trips. A plain list keeps refusing a note, and a
+## joined text whose entries are not quoted lines is not a text.
+static func _test_code_on_purpose() -> bool:
+	var text_lines: PackedStringArray = ["block.code = \"\\n\".join(PackedStringArray([",
+		"\t\"func follow() -> void:\",", "\t# the guard the gizmo relies on", "\t\"\\tif route == null:\",",
+		"\t\"\\t\\treturn\",", "\t\"\\t_distance = 0.0\"", "]))"]
+	var groups: Dictionary = EventSheetValueLiteralRows.groups(_raw_rows(text_lines))
+	var lead: Dictionary = _lead(groups)
+	var ok: bool = SUPPORT.pins("value_literal_rows_test", [
+		["quoted lines joined into a text, a note among them, are one row", (groups["leads"] as Dictionary).size(), 1],
+		["every other line of the run is part of it", (groups["consumed"] as Dictionary).size(), 6],
+		["the note is never one of its entries", (lead.get("entries", []) as Array).size(), 4],
+		["its hover says why it stays code, then its lines as written, the note in its place",
+			EventSheetValueLiteralRows.text_hover(lead),
+			"Code on purpose: these 4 lines are text kept inside quotes, joined into one text, and a text reads best exactly as it is written.\n\n"
+			+ "\"func follow() -> void:\",\n# the guard the gizmo relies on\n\"\\tif route == null:\",\n\"\\t\\treturn\",\n\"\\t_distance = 0.0\""],
+		["a joined text whose entries are names is no text, so its note still leaves it alone",
+			EventSheetValueLiteralRows.groups(_raw_rows(["x = \"\\n\".join([", "\tfirst,", "\t# why", "\tsecond,", "])"]))["leads"].is_empty(), true],
+		["a text written between triple quotes says why it stays code",
+			EventSheetValueLiteralRows.code_on_purpose("const SOURCE: String = \"\"\"extends Node\n"),
+			"Code on purpose: this is a long text kept inside quotes, and a text reads best exactly as it is written."],
+		["a block that is code only because nothing reads it yet says nothing of the kind",
+			EventSheetValueLiteralRows.code_on_purpose("match state:\n\t1:\n\t\tpass"), ""],
+	])
+	var source: String = "extends Node\n\n\nfunc build() -> void:\n\tvar block := RawCodeRow.new()\n\t%s\n" \
+		% "\n\t".join(text_lines)
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	sheet.external_source_path = "user://code_on_purpose.gd"
+	ok = SUPPORT.check("value_literal_rows_test", "a file holding a joined text still opens and saves back exactly",
+		str(SheetCompiler.compile(sheet, "user://code_on_purpose.gd").get("output", "")), source) and ok
+	var measured: Dictionary = EventSheetGenericRows.measure(sheet)
+	ok = SUPPORT.check("value_literal_rows_test", "and none of its lines is a row that says nothing",
+		int(measured.get("generic", -1)), 0) and ok
+	# A line in the middle of a triple-quoted text is a block of its own on the canvas, and its hover
+	# says why too: the rows above it opened a text that has not closed yet.
+	var long_text: EventSheetResource = GDScriptImporter.new().import_external_source(
+		"extends Node\n\nconst GREETING := \"\"\"Hello there.\nKept between triple quotes.\n\"\"\"\n\nvar after := 1\n")
+	var viewport: EventSheetViewport = EventSheetViewport.new()
+	viewport.set_ace_registry(EventSheetACERegistry.new())
+	viewport.set_sheet(long_text)
+	var inside: Array = []
+	for index: int in viewport._flat_rows.size():
+		var row_data: EventRowData = viewport._row_at(index)
+		if row_data != null and row_data.source_resource is RawCodeRow \
+				and not (row_data.source_resource as RawCodeRow).code.strip_edges().is_empty():
+			inside.append([(row_data.source_resource as RawCodeRow).code.strip_edges(), viewport._inside_long_text(index)])
+	viewport.free()
+	return SUPPORT.check("value_literal_rows_test", "a line inside a triple-quoted text knows it is inside one, and so does the line closing it",
+		inside, [["Kept between triple quotes.", true], ["\"\"\"", true]]) and ok
 
 
 ## The ƒ chip on a real row is a span of its OWN, carrying the raw name a click jumps to -

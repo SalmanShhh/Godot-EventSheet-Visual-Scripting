@@ -17650,7 +17650,10 @@ func _append_literal_chip_spans(spans: Array, literal: Dictionary, action_index:
 	var entries: Array = literal.get("entries", []) as Array
 	var open_bracket: String = str(literal.get("open", "{"))
 	var humanize: bool = _viewport.humanize_names_enabled()
-	var full_text: String = EventSheetValueLiteralRows.full_text(entries, open_bracket, humanize)
+	# Quoted lines joined into one text stay code on purpose: the hover says so and shows the lines.
+	var text_run: bool = literal.has("text_lines")
+	var full_text: String = EventSheetValueLiteralRows.text_hover(literal) if text_run \
+		else EventSheetValueLiteralRows.full_text(entries, open_bracket, humanize)
 	var base_meta: Dictionary = {
 		"lane": "action",
 		"kind": "action",
@@ -17664,7 +17667,9 @@ func _append_literal_chip_spans(spans: Array, literal: Dictionary, action_index:
 		"literal_full_text": full_text
 	}
 	if show_word:
-		spans.append(_make_span(EventSheetL10n.translate("table" if open_bracket == "{" else "list"),
+		var word: String = EventSheetL10n.translate("text") if text_run \
+			else EventSheetL10n.translate("table" if open_bracket == "{" else "list")
+		spans.append(_make_span(word,
 			SemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
 				"natural_width": true,
 				"text_color": _viewport._get_event_style().object_label_color

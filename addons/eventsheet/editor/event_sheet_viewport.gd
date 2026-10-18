@@ -175,6 +175,8 @@ const TEXT_LISTING_PATH := "res://addons/eventsheet/editor/dock/text_listing.gd"
 # fallback that answer names, and what a caller with no theme in hand (a measurement harness, a
 # figure) gets.
 const ROW_HEIGHT := EventSheetPalette.ROW_HEIGHT
+## How many rows above a hovered block are read to learn whether a triple-quoted text is open there.
+const LONG_TEXT_LOOKBACK := 400
 const INDENT_WIDTH := EventSheetPalette.INDENT_WIDTH
 const FONT_SIZE := EventSheetPalette.FONT_SIZE
 # The `not` badge carries no colour of its own: the builder fills badge_bg / badge_fg from the live
@@ -4235,6 +4237,11 @@ func _get_tooltip(at_position: Vector2) -> String:
 		# Import triage: when a line couldn't lift into a structured ACE, say why right here.
 		if not raw_block.lift_note.strip_edges().is_empty():
 			tip += "\n⚠ Stayed as code: %s" % raw_block.lift_note
+		# A block kept as code on purpose says why, so it is never mistaken for one the reader missed.
+		var on_purpose: String = EventSheetValueLiteralRows.code_on_purpose(raw_block.code,
+			_inside_long_text(int(hit.get("row_index", -1))))
+		if not on_purpose.is_empty():
+			tip += "\n%s" % on_purpose
 		return tip
 	return tooltip_text
 
@@ -4878,6 +4885,29 @@ func _find_ace_span_index(row_data: EventRowData, kind: String, ace_index: int) 
 		):
 			return span_index
 	return -1
+
+
+## True when the row at `row_index` sits inside a text opened by triple quotes on a row above it: the
+## quotes the rows above it write are counted, and an odd count leaves a text open. Asked on hover only.
+func _inside_long_text(row_index: int) -> bool:
+	var quotes: int = 0
+	var counted: Resource = null
+	for index: int in range(row_index - 1, maxi(row_index - LONG_TEXT_LOOKBACK, 0) - 1, -1):
+		var row_data: EventRowData = _row_at(index)
+		# An opened code card is two rows of one block; its quotes are counted once.
+		if row_data == null or (row_data.source_resource != null and row_data.source_resource == counted):
+			continue
+		counted = row_data.source_resource
+		if row_data.source_resource is RawCodeRow:
+			quotes += (row_data.source_resource as RawCodeRow).code.count("\"\"\"")
+			continue
+		# Any other row may show its value twice (the value, then its code echo), so the quotes it
+		# writes are the most any one of its spans shows.
+		var most: int = 0
+		for span: SemanticSpan in row_data.spans:
+			most = maxi(most, span.text.count("\"\"\"") if span != null else 0)
+		quotes += most
+	return quotes % 2 == 1
 
 
 func _row_at(index: int) -> EventRowData:
