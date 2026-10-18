@@ -23,6 +23,8 @@ static func run() -> bool:
 	all_passed = _test_picker_field() and all_passed
 	all_passed = _test_pick_switches_on() and all_passed
 	all_passed = _test_rename_follows() and all_passed
+	all_passed = _test_rename_doors() and all_passed
+	all_passed = _test_rename_in_includers() and all_passed
 	all_passed = _test_kept_token() and all_passed
 	all_passed = _test_row_reads_name() and all_passed
 	return all_passed
@@ -162,6 +164,85 @@ static func _test_rename_follows() -> bool:
 		["the name drives the token", fields, ["Final Boss", "Final Boss"]],
 		["one Ctrl+Z takes back the rename and the rows", undone, ["\"boss\"", "\"boss\"", "\"waves\""]],
 	])
+
+
+## Every door that renames a group takes its rows along, each in one undo step: the name edited in
+## place on the head, the properties bar's name field, and Replace All finding the name.
+static func _test_rename_doors() -> bool:
+	var results: Array = []
+	for door: String in ["inline", "properties", "replace"]:
+		var sheet: EventSheetResource = _sheet()
+		sheet.events.append(_switch_row("SetGroupActive", "\"boss\""))
+		sheet.events.append(_switch_row("IsGroupActive", "\"boss\""))
+		var dock: EventSheetDock = EventSheetDock.new()
+		dock.setup(sheet)
+		var undo: RefCounted = EventSheetEditorTest.FakeEditorUndoRedoManager.new()
+		dock.set_undo_redo_manager(undo)
+		var boss: EventGroup = (dock._current_sheet.events[0] as EventGroup).events[0] as EventGroup
+		match door:
+			"inline":
+				var head: EventRowData = null
+				for flat: Dictionary in dock.get_viewport_control().get_flat_rows():
+					var flat_row: EventRowData = flat.get("row") as EventRowData
+					if flat_row != null and flat_row.source_resource == boss:
+						head = flat_row
+				dock._on_viewport_span_edit_requested(head, "group_name", "Boss", "Final Boss")
+			"properties":
+				dock.get_viewport_control().select_resource(boss)
+				dock._properties_bar._apply_group_name("Final Boss")
+			"replace":
+				dock._ensure_find_bar()
+				dock._find_edit.text = "Boss"
+				dock._replace_edit.text = "Final Boss"
+				dock._replace_all_in_sheet()
+		var renamed: Array = _values(dock._current_sheet)
+		undo.undo()
+		results.append([door, renamed, _values(dock._current_sheet)])
+		dock.free()
+	var after_rename: Array = ["\"final_boss\"", "\"final_boss\""]
+	var before: Array = ["\"boss\"", "\"boss\""]
+	return SUPPORT.pins(NAME, [
+		["the name edited on the head takes the rows, one Ctrl+Z takes both back", results[0],
+			["inline", after_rename, before]],
+		["the properties bar's name field does the same", results[1], ["properties", after_rename, before]],
+		["Replace All on the group's name does the same", results[2], ["replace", after_rename, before]],
+	])
+
+
+## A sheet that includes the renamed one compiles its groups into its own script, so its rows switch
+## the same token: they are rewritten and the file saved. Only `.tres` sheets carry `includes` - a
+## `.gd` sheet's script is its own source of truth and the compiler ignores includes there.
+static func _test_rename_in_includers() -> bool:
+	var includer_path: String = "user://group_switch_picker_includer.tres"
+	var includer: EventSheetResource = EventSheetResource.new()
+	includer.includes = [INCLUDED_PATH]
+	includer.events.append(_switch_row("SetGroupActive", "\"boss\""))
+	ResourceSaver.save(includer, includer_path)
+	var bystander_path: String = "user://group_switch_picker_bystander.tres"
+	var bystander: EventSheetResource = EventSheetResource.new()
+	bystander.events.append(_switch_row("SetGroupActive", "\"boss\""))
+	ResourceSaver.save(bystander, bystander_path)
+	var touched: PackedStringArray = EventSheetQuickPromptDialogs.switch_rows_in_includers(INCLUDED_PATH,
+		"\"boss\"", "\"final_boss\"", PackedStringArray([includer_path, bystander_path]))
+	var reread: EventSheetResource = ResourceLoader.load(includer_path, "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
+	var untouched: EventSheetResource = ResourceLoader.load(bystander_path, "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
+	DirAccess.remove_absolute(includer_path)
+	DirAccess.remove_absolute(bystander_path)
+	return SUPPORT.pins(NAME, [
+		["an including sheet that switches the group is rewritten and saved", Array(touched),
+			["group_switch_picker_includer.tres"]],
+		["its row now names the new switch", _values_from(reread, 0), ["\"final_boss\""]],
+		["a sheet that does not include it is left alone", _values_from(untouched, 0), ["\"boss\""]],
+	])
+
+
+static func _values_from(sheet: EventSheetResource, first: int) -> Array:
+	var values: Array = []
+	for index: int in range(first, sheet.events.size() if sheet != null else 0):
+		var row: EventRow = sheet.events[index] as EventRow
+		var ace: Resource = row.actions[0] if not row.actions.is_empty() else row.conditions[0]
+		values.append(str((ace.get("params") as Dictionary).get("group")))
+	return values
 
 
 static func _values(sheet: EventSheetResource) -> Array:

@@ -155,6 +155,8 @@ func _replace_all_in_sheet() -> void:
 		for function_resource: Variant in _dock._current_sheet.functions:
 			if function_resource is EventFunction:
 				_replace_in_rows((function_resource as EventFunction).events if not (function_resource as EventFunction).events.is_empty() else (function_resource as EventFunction).rows, find_text, replace_text, counter)
+		for switch_pair: Array in counter.get("switches", []):
+			EventSheetGroupFacts.rewrite_switch_rows(_dock._current_sheet, str(switch_pair[0]), str(switch_pair[1]))
 		return int(counter.get("count", 0)) > 0
 	)
 	if changed:
@@ -176,7 +178,12 @@ func _replace_in_rows(rows: Array, find_text: String, replace_text: String, coun
 			var group: EventGroup = row as EventGroup
 			counter["count"] = int(counter.get("count", 0)) + group.display_name().count(find_text) + group.description.count(find_text)
 			if group.display_name().contains(find_text):
+				# A renamed group takes its Set/Is Group Active rows with it, as every rename does:
+				# the walk notes the switch's old and new token, and the edit rewrites them after it.
+				var old_switch: String = EventSheetGroupFacts.guard_value(group)
 				group.rename(group.display_name().replace(find_text, replace_text))
+				var renamed_switches: Array = counter.get_or_add("switches", [])
+				renamed_switches.append([old_switch, EventSheetGroupFacts.guard_value(group)])
 			group.description = group.description.replace(find_text, replace_text)
 			_replace_in_rows(group.events if not group.events.is_empty() else group.rows, find_text, replace_text, counter)
 		elif row is InnerClassRow and (row as InnerClassRow).body != null:
