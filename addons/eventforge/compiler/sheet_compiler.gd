@@ -762,9 +762,8 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		if row is CommentRow:
 			# Top-level comments compile to real comment lines (emitted after the trigger
 			# sections - position is approximate, content is preserved).
-			if (row as CommentRow).enabled and not (row as CommentRow).text.strip_edges().is_empty():
-				for comment_line: String in (row as CommentRow).text.split("\n"):
-					deferred_rows.append("# %s" % comment_line)
+			for comment_line: String in _comment_text_lines(row as CommentRow):
+				deferred_rows.append("# %s" % comment_line)
 			continue
 		if row is EventGroup:
 			# Groups are organizational: their events compile inline (the helper flattens,
@@ -1126,8 +1125,8 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 			pass  # emitted in place by its EventAnchorRow, just above it in this array
 		elif entry is EventRow or entry is EventGroup:
 			added_event_rows.append(entry)
-		elif entry is CommentRow and (entry as CommentRow).enabled and not (entry as CommentRow).text.strip_edges().is_empty():
-			deferred_comment_lines_external.append_array((entry as CommentRow).text.split("\n"))
+		elif entry is CommentRow:
+			deferred_comment_lines_external.append_array(_comment_text_lines(entry as CommentRow))
 		elif entry is EnumRow:
 			var external_enum_lines: PackedStringArray = _emit_enum_lines(entry as EnumRow)
 			if not external_enum_lines.is_empty():
@@ -2033,9 +2032,8 @@ static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comm
 					if disabled_label.is_empty():
 						disabled_label = "group"
 					deferred_comment_lines.append("(disabled group \"%s\" — %d row%s omitted)" % [disabled_label, omitted, "" if omitted == 1 else "s"])
-		elif row is CommentRow and (row as CommentRow).enabled and not (row as CommentRow).text.strip_edges().is_empty():
-			deferred_comment_lines.append_array((row as CommentRow).text.split("
-"))
+		elif row is CommentRow:
+			deferred_comment_lines.append_array(_comment_text_lines(row as CommentRow))
 	# Fences with no event after them (a region closing a group's last rows, or an empty one) ride on
 	# the last event the group wrote. A group that wrote no event has nowhere to put them.
 	if not openers_waiting.is_empty() and into_events.size() > first_here:
@@ -2507,6 +2505,8 @@ static func _emit_event_body(
 					lines.append("%s%s%s" % [indent, comment_row.emit_marker(), comment_line])
 					had_body = true
 				source_map.append({"uid": str(comment_row.get_instance_id()), "start": comment_start, "end": lines.size(), "kind": "comment"})
+			else:
+				_emit_off_comment(comment_row, indent, lines, source_map)
 			# Comments are transparent to else-chaining (annotating a chain shouldn't break it).
 			continue
 		if event_item is LocalVariable:
@@ -2845,6 +2845,8 @@ static func _emit_event_body(
 						lines.append("%s%s%s" % [body_indent, comment_marker, comment_line])
 					had_body = true
 					source_map.append({"uid": str(action_comment.get_instance_id()), "start": action_comment_start, "end": lines.size(), "kind": "comment"})
+				else:
+					_emit_off_comment(action_comment, body_indent, lines, source_map)
 			elif action_item is Resource and action_item.has_method("get_row_kind"):
 				lines.append(body_indent + "# (unknown row type — preserved as a comment so nothing is silently dropped)")
 				had_body = true
@@ -2964,6 +2966,31 @@ static func _off_condition_term(condition: ACECondition, says_true: bool) -> Str
 	if code.is_empty():
 		return ""
 	return ("(%s or %s)" if says_true else "(%s and %s)") % ["true" if says_true else "false", code]
+
+
+## The text lines a sheet-level comment row writes, each to be written behind `# `: its own lines
+## when it is on; when it is off, nothing - except in a sheet that is its own .gd, where each line goes
+## behind the `@off: ` half of OFF_CELL_PREFIX, so the row stays in the file and reopens off.
+static func _comment_text_lines(comment: CommentRow) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	if comment == null or comment.text.strip_edges().is_empty():
+		return out
+	if not comment.enabled and not _keeps_off_rows:
+		return out
+	for comment_line: String in comment.text.split("\n"):
+		out.append(comment_line if comment.enabled else OFF_CELL_PREFIX.trim_prefix("# ") + comment_line)
+	return out
+
+
+## Writes a comment row that is off, in a sheet that is its own .gd, as its lines behind
+## OFF_CELL_PREFIX at `indent`; nothing for one that is on or empty.
+static func _emit_off_comment(comment: CommentRow, indent: String, lines: PackedStringArray, source_map: Array) -> void:
+	if comment.enabled or not _keeps_off_rows or comment.text.strip_edges().is_empty():
+		return
+	var start: int = lines.size() + 1
+	for comment_line: String in comment.text.split("\n"):
+		lines.append(indent + OFF_CELL_PREFIX + comment_line)
+	source_map.append({"uid": str(comment.get_instance_id()), "start": start, "end": lines.size(), "kind": "comment"})
 
 
 ## Writes an action that is off as the lines it would run, each behind OFF_CELL_PREFIX: comments,

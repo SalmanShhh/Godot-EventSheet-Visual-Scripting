@@ -534,6 +534,7 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 					for chunk: String in row.code.strip_edges().split("\n\n"):
 						var comment: CommentRow = CommentRow.new()
 						comment.text = chunk.trim_prefix("# ").replace("\n# ", "\n")
+						_take_off_note(comment)
 						lifted_comments.append(comment)
 			"func":
 				# The user asked for the raw code instead ("Show as code instead"). Nothing in this
@@ -3587,6 +3588,24 @@ static func _off_actions_at(lines: PackedStringArray, index: int, depth: int, re
 	return {"actions": holder.actions, "consumed": cursor - index}
 
 
+## A comment row whose every line opens on the `@off: ` the compiler writes for a comment row that
+## is off (in a sheet that is its own .gd) is that row, off: the prefix comes away and the row is
+## switched off. Only for the ordinary `# ` marker, the one that write uses. Any other note is untouched.
+static func _take_off_note(note: CommentRow) -> void:
+	if note == null or not note.source_marker.is_empty():
+		return
+	var prefix: String = SheetCompiler.OFF_CELL_PREFIX.trim_prefix("# ")
+	var kept: PackedStringArray = PackedStringArray()
+	for note_line: String in note.text.split("\n"):
+		if not note_line.begins_with(prefix):
+			return
+		kept.append(note_line.substr(prefix.length()))
+	if "\n".join(kept).strip_edges().is_empty():
+		return
+	note.text = "\n".join(kept)
+	note.enabled = false
+
+
 ## True when an event holds actions and every one of them is an action that is off.
 static func _only_off_actions(event: EventRow) -> bool:
 	if event == null or event.actions.is_empty():
@@ -4490,6 +4509,7 @@ static func _flush_raw(event: EventRow, pending_raw: PackedStringArray, blank_bo
 			# back verbatim, so `#no space` and `## doc` reproduce as written instead of gaining or
 			# losing a character. Left empty for the ordinary "# ", which every authored comment uses.
 			note.source_marker = "" if comment_marker == "# " else comment_marker
+			_take_off_note(note)
 			if first_note:
 				_stamp_body_blanks(note, blank_box)
 				first_note = false

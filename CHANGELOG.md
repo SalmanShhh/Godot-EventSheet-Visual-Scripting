@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Fixed: a comment switched off in a `.gd` sheet stays in the file
+
+- A comment row that was switched off was left out of the compile, so in a `.gd` sheet saving
+  deleted the note from the file. In a sheet that is its own `.gd` it is now written behind
+  `# @off: `, and opening the file brings it back as the same comment, switched off - a note at the
+  sheet's top level and a note among an event's actions alike. Turning it back on writes the file it
+  was before. A `.tres` sheet still leaves a comment that is off out.
+
 ### Fixed: an action or condition switched off in a `.gd` sheet stays in the file
 
 - A cell whose box was unticked was left out of the compile, so in a `.gd` sheet (the sheet's only
