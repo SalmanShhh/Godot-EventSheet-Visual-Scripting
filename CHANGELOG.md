@@ -25,7 +25,15 @@
   line it used to show for it, and off and switchable shows the flag line the compiler really writes.
   The head's switch reads "Off at start; events can switch it on." for such a group.
 - The group head's menu has "Can Be Switched At Runtime" beside "Active On Start", ticked at the
-  group's state; choosing it is one undo step.
+  group's state; choosing it is one undo step. The group's own items read Edit Group…, Active On
+  Start, Can Be Switched At Runtime, Runs On, Group Color…, Turn Into Region, Ungroup; Add Local
+  Variable… and the two folds follow under a separator.
+- An off-at-start, switchable group keeps both halves in a `.gd` sheet: its header writes
+  `enabled=false` (only for that case, so every other header is byte for byte what it was), and
+  reopening the file brings the group back off and switchable. A `.gd` whose switchable groups used
+  to open as plain code blocks, because nothing took their `if __group_x_active:` guard back off, now
+  opens with the groups and their events as rows.
+
 ### Changed: Set group active picks the group by its name, and a rename takes the rows with it
 
 - Set group active and Is group active pick their group from a dropdown of the sheet's groups (and
@@ -37,7 +45,8 @@
   choice of its own. The separate Make switchable button is gone.
 - Renaming a group (the Edit group window, the name on the head, the properties bar) rewrites every
   Set group active and Is group active that names it, in this sheet as one undo step and in the
-  project sheets that include it, and the rename receipt says how many rows followed.
+  project sheets that include it, and the rename receipt says how many rows followed. Replace All
+  in the find bar renaming a group takes the rows along too, in the same undo step.
 - A group's name now drives its switch's token: a rename moves both together. A group from an older
   sheet whose two name fields differ keeps its saved token until it is renamed, and the picker shows
   that token ("Its switch is written as boss_fight."). The Edit group window and the properties bar

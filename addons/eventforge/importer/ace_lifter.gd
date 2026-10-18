@@ -1142,7 +1142,7 @@ static func _strip_group_markers(text: String) -> String:
 
 
 ## Recovers every `## @ace_group(uid="…", name="…", parent?, description?, color?, collapsed?,
-## toggleable?)` declaration from the source into a {slug → fields} registry, the reverse of the
+## toggleable?, enabled?)` declaration from the source into a {slug → fields} registry, the reverse of the
 ## compiler's _emit_group_declarations. Used to rebuild EventGroup resources during the lift.
 static func _recover_group_declarations(source: String) -> Dictionary:
 	var registry: Dictionary = {}
@@ -1198,6 +1198,7 @@ static func _reconstruct_groups(events: Array, registry: Dictionary) -> Array:
 		group.collapsed = bool(fields.get("collapsed", false))
 		group.expanded = not group.collapsed
 		group.runtime_toggleable = bool(fields.get("toggleable", false))
+		group.enabled = bool(fields.get("enabled", true))
 		group.runs_on = str(fields.get("runs_on", ""))
 		group.runs_in = str(fields.get("runs_in", ""))
 		groups[slug] = group
@@ -3379,7 +3380,7 @@ static var _group_runs_on: Dictionary = {}
 ## every expression below passes through untouched.
 static func _note_group_guards(source: String) -> void:
 	_group_runs_on = {}
-	if not source.contains("runs_on=\"") and not source.contains("runs_in=\""):
+	if not source.contains("runs_on=\"") and not source.contains("runs_in=\"") 			and not source.contains("toggleable=true"):
 		return
 	var registry: Dictionary = _recover_group_declarations(source)
 	for slug: String in registry:
@@ -3388,17 +3389,20 @@ static func _note_group_guards(source: String) -> void:
 		# Both answers ride the same walk up the tree, each taken from the CLOSEST enclosing group that
 		# gives one - the rule the compiler follows on the way down - and joined in the order the
 		# compiler joins them: who runs it, then which mode.
-		var found: Dictionary = {"runs_on": "", "runs_in": ""}
+		var found: Dictionary = {"switch": "", "runs_on": "", "runs_in": ""}
 		while not walk.is_empty() and registry.has(walk) and not seen.has(walk):
 			seen[walk] = true
 			var declared: Dictionary = registry[walk]
+			# The runtime switch leads the chain: the innermost switchable group's flag.
+			if str(found["switch"]).is_empty() and bool(declared.get("toggleable", false)):
+				found["switch"] = "__group_%s_active" % SheetCompiler.guard_token(str(declared.get("name", walk)))
 			if str(found["runs_on"]).is_empty():
 				found["runs_on"] = EventGroup.runs_on_guard(str(declared.get("runs_on", "")))
 			if str(found["runs_in"]).is_empty():
 				found["runs_in"] = EventGroup.runs_in_guard(str(declared.get("runs_in", "")))
 			walk = str(declared.get("parent", ""))
 		var terms: PackedStringArray = PackedStringArray()
-		for key: String in ["runs_on", "runs_in"]:
+		for key: String in ["switch", "runs_on", "runs_in"]:
 			if not str(found[key]).is_empty():
 				terms.append(str(found[key]))
 		if not terms.is_empty():

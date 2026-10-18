@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="EventSheetResource" load_steps=19 format=3 uid="uid://uewp5fqfnf6a"]
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=23 format=3 uid="uid://uewp5fqfnf6a"]
 
 [ext_resource type="Script" uid="uid://das1ks7khoh18" path="res://addons/eventforge/resources/event_sheet.gd" id="1_event_sheet"]
 [ext_resource type="Script" uid="uid://b7h46xqcnqmkv" path="res://addons/eventforge/resources/event_row.gd" id="2_event_row"]
@@ -7,6 +7,7 @@
 [ext_resource type="Script" uid="uid://k7isxxi2kcg2" path="res://addons/eventforge/resources/ace_condition.gd" id="4_ace_condition"]
 [ext_resource type="Script" uid="uid://c50gq4i8jk85y" path="res://addons/eventforge/resources/pick_filter.gd" id="4_engxs"]
 [ext_resource type="Script" path="res://addons/eventforge/resources/signal_row.gd" id="5_signalrow"]
+[ext_resource type="Script" uid="uid://cdb8bmmlr33g2" path="res://addons/eventforge/resources/event_group.gd" id="6_event_group"]
 
 [sub_resource type="Resource" id="SignalRow_damage"]
 script = ExtResource("5_signalrow")
@@ -91,11 +92,33 @@ conditions = Array[ExtResource("4_ace_condition")]([SubResource("ACECondition_en
 actions = Array[Resource]([SubResource("ACEAction_damage_add"), SubResource("ACEAction_damage_emit")])
 event_uid = "a7648e"
 
+[sub_resource type="Resource" id="ACEAction_boss_log"]
+script = ExtResource("3_ace_action")
+ace_id = "PrintLog"
+parameters = {
+"message": "\"Boss phase\""
+}
+
+[sub_resource type="Resource" id="EventRow_boss_tick"]
+script = ExtResource("2_event_row")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("ACEAction_boss_log")])
+event_uid = "b05510"
+
+[sub_resource type="Resource" id="EventGroup_boss_phase"]
+script = ExtResource("6_event_group")
+name = "Boss Phase"
+group_name = "Boss Phase"
+enabled = false
+runtime_toggleable = true
+events = Array[Resource]([SubResource("EventRow_boss_tick")])
+
 [resource]
 script = ExtResource("1_event_sheet")
 host_class = "CharacterBody2D"
 addon_tags = PackedStringArray()
-events = Array[Resource]([SubResource("SignalRow_damage"), SubResource("EventRow_ready"), SubResource("EventRow_process_low_health"), SubResource("EventRow_body_entered")])
+events = Array[Resource]([SubResource("SignalRow_damage"), SubResource("EventRow_ready"), SubResource("EventRow_process_low_health"), SubResource("EventRow_body_entered"), SubResource("EventGroup_boss_phase")])
 variables = {
 "health": {
 "default": 100,

@@ -85,7 +85,45 @@ static func run() -> bool:
 	all_passed = _check("mixed-kind grouped sheet re-saves byte-identically", mixed_rt == mixed_out, true) and all_passed
 
 	all_passed = _test_shown_colour() and all_passed
+	all_passed = _test_off_switchable() and all_passed
 	return all_passed
+
+
+## A group that is off at start but can be switched at runtime keeps BOTH halves of that state in the
+## .gd header, so reopening the file shows it off (and the flag line `= false`) and re-saves byte for
+## byte. Every other group's header stays exactly as it was: only off+switchable writes `enabled=`.
+static func _test_off_switchable() -> bool:
+	var boss: EventGroup = EventGroup.new()
+	boss.group_name = "Boss Phase"
+	boss.enabled = false
+	boss.runtime_toggleable = true
+	boss.events = [_event(false)]
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "CharacterBody2D"
+	sheet.events.append(boss)
+	var out: String = str(SheetCompiler.compile(sheet, "user://_group_rt_off.gd").get("output", ""))
+	var back: EventGroup = _first_group(GDScriptImporter.new().import_external_source(out))
+	var plain_off: EventGroup = EventGroup.new()
+	plain_off.group_name = "Quiet"
+	plain_off.enabled = false
+	plain_off.events = [_event(false)]
+	var on_switch: EventGroup = EventGroup.new()
+	on_switch.group_name = "Loud"
+	on_switch.runtime_toggleable = true
+	on_switch.events = [_event(false)]
+	var lines: Dictionary = SheetCompiler.group_declaration_lines([boss, plain_off, on_switch])
+	return SUPPORT.pins("group_roundtrip_test", [
+		["an off, switchable group writes enabled=false in its header", str(lines.get(boss, "")),
+			"## @ace_group(uid=\"boss_phase\", name=\"Boss Phase\", toggleable=true, enabled=false)"],
+		["an off group that cannot be switched writes no enabled field", str(lines.get(plain_off, "")),
+			"## @ace_group(uid=\"quiet\", name=\"Quiet\")"],
+		["an on, switchable group writes no enabled field", str(lines.get(on_switch, "")),
+			"## @ace_group(uid=\"loud\", name=\"Loud\", toggleable=true)"],
+		["the flag line starts false", out.contains("var __group_boss_phase_active: bool = false"), true],
+		["reopening the .gd reads it off and switchable",
+			[back.enabled, back.runtime_toggleable] if back != null else [], [false, true]],
+		["and re-saves it byte for byte", _resaved(back, out), out],
+	])
 
 
 ## The colour a group SHOWS is the one its header writes, so a `.gd` sheet reopens in it - and a

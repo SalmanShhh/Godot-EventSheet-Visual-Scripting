@@ -1878,6 +1878,11 @@ static func _emit_group_declarations(lines: PackedStringArray, decls: Array) -> 
 			parts.append("collapsed=true")
 		if group.runtime_toggleable:
 			parts.append("toggleable=true")
+			# Off at start but switchable: the group is in the game behind a flag that starts false,
+			# and this is the one place a .gd sheet keeps the "off" half. Every other group's header
+			# is unchanged (an off group that cannot switch is left out of the script anyway).
+			if not group.enabled:
+				parts.append("enabled=false")
 		# Who runs it, written only when the answer is not "everybody". A single-player sheet
 		# therefore emits exactly the header it always emitted.
 		if not EventGroup.runs_on_guard(group.runs_on).is_empty():

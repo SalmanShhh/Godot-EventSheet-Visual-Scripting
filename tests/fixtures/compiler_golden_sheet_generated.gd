@@ -3,11 +3,13 @@
 # DO NOT EDIT — this file is regenerated on every compile.
 
 extends CharacterBody2D
+## @ace_group(uid="boss_phase", name="Boss Phase", toggleable=true, enabled=false)
 
 signal damage_taken(amount: int)
 
 @export var health: int = 100
 @export var speed: float = 200.0
+var __group_boss_phase_active: bool = false
 
 func _ready() -> void:
 	print("Player ready")
@@ -16,6 +18,9 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if health < 50:
 		print("Low health!")
+	# @group:boss_phase
+	if __group_boss_phase_active:
+		print("Boss phase")
 
 func _on_body_entered(body: Node) -> void:
 	if body.is_in_group("enemy"):
