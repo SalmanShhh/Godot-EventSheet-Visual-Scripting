@@ -17,6 +17,7 @@ extends RefCounted
 ## itself rather than a shard beside seven other Godot processes.
 const PARALLEL_UNSAFE := true
 
+const SUPPORT := preload("res://tests/support.gd")
 const LAUNCHER := "res://tools/run_tests_parallel.ps1"
 
 ## An untracked file in the repository root: what git reports by NAME in `status --porcelain`, which
@@ -43,6 +44,7 @@ static func run() -> bool:
 	var ok: bool = true
 	ok = _test_the_launcher_builds_the_identity_from_all_four_sources() and ok
 	ok = _test_a_single_test_selector_is_cleared_before_anything_is_launched() and ok
+	ok = _test_the_last_runs_logs_are_cleared_before_anything_is_launched() and ok
 	ok = _test_a_touched_file_misses_the_stamp() and ok
 	ok = _test_a_different_engine_misses_the_stamp() and ok
 	return ok
@@ -66,6 +68,20 @@ static func _test_a_single_test_selector_is_cleared_before_anything_is_launched(
 			% [cleared, launched])
 		return false
 	return true
+
+
+## The red-run report reads every log in .godot/test_logs/, so a log an earlier run left there is
+## read as this run's: an -Iterate run that picked nothing kept the previous iterate.txt, and the
+## report named its failures under eight shards and a tail that had all passed. The launcher has to
+## empty the folder before it starts a process, which is what this pins.
+static func _test_the_last_runs_logs_are_cleared_before_anything_is_launched() -> bool:
+	var source: String = FileAccess.get_file_as_string(LAUNCHER)
+	var cleared: int = source.find("Remove-Item (Join-Path $logDir \"*.txt\")")
+	var launched: int = source.find("Start-Process")
+	return SUPPORT.pins("verdict_stamp_test", [
+		["the launcher empties the log folder", cleared != -1, true],
+		["before the first process is started", cleared != -1 and cleared < launched, true],
+	])
 
 
 static func _test_the_launcher_builds_the_identity_from_all_four_sources() -> bool:

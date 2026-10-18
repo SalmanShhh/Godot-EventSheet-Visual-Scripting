@@ -151,6 +151,11 @@ $writer.Flush()
 # The crash trail is read back at the end, so it starts empty: a trail left by a run that is not
 # this one would otherwise be reported as this run's crash.
 Remove-Item (Join-Path $root ".godot\test_progress\*.log") -ErrorAction SilentlyContinue
+# The logs start empty for the same reason. tools/test_report.gd reads every .txt in that folder, so
+# a log an earlier run left - the -Iterate stage's, when this run picked nothing to iterate, or a
+# shard number this run does not have - was reported as this run's failure under shards that all
+# said All tests passed.
+Remove-Item (Join-Path $logDir "*.txt") -ErrorAction SilentlyContinue
 
 # A test may print a [FAIL] line ON PURPOSE, to prove tools/test_report.gd formats one correctly.
 # Such a line names itself with this marker, and is not counted as a failure here: a shard printing
