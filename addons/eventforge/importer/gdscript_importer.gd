@@ -315,9 +315,11 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 	# between). The host-member doc and signal annotations are separated from `extends` by a blank
 	# line, so they never match. A block that runs straight into a member is that member's doc
 	# comment, the way Godot reads it, so the block must end at a blank line, a comment or the end.
+	# A `## @ace_...` line is the sheet's own annotation (a group header written under `extends`), so
+	# the block stops there rather than reading the annotation as the class's prose.
 	# Metadata only in external mode (the lines stay verbatim).
 	var description_regex: RegEx = RegEx.new()
-	if description_regex.compile("(?m)^extends .+\\n((?:##.*\\n)++)(?=\\n|#|\\z)") == OK:
+	if description_regex.compile("(?m)^extends .+\\n((?:##(?! @ace_).*\\n)++)(?=\\n|#|\\z)") == OK:
 		var description_match: RegExMatch = description_regex.search(source)
 		if description_match != null:
 			var doc_lines: PackedStringArray = PackedStringArray()

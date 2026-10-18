@@ -260,18 +260,35 @@ static func _flag_line(flag: String, on: bool) -> String:
 	return "var %s: bool = %s" % [flag, "true" if on else "false"]
 
 
-## Where the first header goes when the file has none: under `extends` and the class's own `##` doc
-## lines (the place a sheet-native compile writes them), else under the file's opening lines.
+## Where the first header goes when the file has none: under the class's opening lines (`extends`,
+## `class_name`, the annotations above them) and the `##` doc block `extends` opens, past the blank
+## line that closes them. A header straight under `extends` would read as the class's own doc
+## comment, and one above `@icon` would put the switch flag where Godot refuses a member.
 static func _header_home(lines: PackedStringArray) -> int:
 	var at: int = -1
-	for index: int in range(lines.size()):
+	var index: int = 0
+	# The opening lines: annotations, `class_name`, `extends`, and comments between them.
+	while index < lines.size():
 		var line: String = lines[index]
-		if line.begins_with("extends ") or line.begins_with("class_name ") or line.begins_with("@tool"):
-			at = index
-		elif at >= 0 and line.begins_with("##") and index == at + 1:
+		if line.begins_with("extends ") or line.begins_with("class_name ") or line.begins_with("@tool") 				or line.begins_with("@icon(") or line.begins_with("@static_unload") or line.begins_with("@abstract"):
 			at = index
 		elif not line.strip_edges().is_empty() and not line.begins_with("#"):
 			break
+		elif at >= 0 and line.strip_edges().is_empty():
+			break
+		index += 1
+	if at < 0:
+		return at
+	# The class's doc block, when it is one: `##` lines under the opening that end at a blank line
+	# or the end of the file (a block running into a member is that member's doc, and stays put).
+	var doc_end: int = at
+	while doc_end + 1 < lines.size() and lines[doc_end + 1].begins_with("##"):
+		doc_end += 1
+	if doc_end + 1 >= lines.size() or lines[doc_end + 1].strip_edges().is_empty():
+		at = doc_end
+	# Past the blank line that closes the opening, so the header stands on its own.
+	if at + 1 < lines.size() and lines[at + 1].strip_edges().is_empty():
+		at += 1
 	return at
 
 
