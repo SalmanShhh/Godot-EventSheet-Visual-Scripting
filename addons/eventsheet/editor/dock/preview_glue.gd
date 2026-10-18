@@ -311,8 +311,10 @@ func _open_lift_report() -> void:
 		_lift_report_window.close_requested.connect(func() -> void: _lift_report_window.hide())
 		_lift_report_tree = EventSheetPopupUI.table(PackedStringArray(["Kind", "Row",
 			"Why it stayed code (and the structured equivalent)"]), 0.0, {0: 80.0, 1: 220.0})
-		_lift_report_tree.set_anchors_preset(Control.PRESET_FULL_RECT)
-		_lift_report_window.add_child(_lift_report_tree)
+		_lift_report_tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_lift_report_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		# The kit's body, as every other window has: Esc closes it, and it grows to fit its table.
+		_lift_report_window.add_child(EventSheetPopupUI.window_body(_lift_report_tree))
 		_dock.add_child(_lift_report_window)
 	_lift_report_tree.clear()
 	var root_item: TreeItem = _lift_report_tree.create_item()

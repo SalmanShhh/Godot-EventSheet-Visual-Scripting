@@ -206,6 +206,9 @@ static func _window_backdrop() -> bool:
 		var paint: StyleBox = (painted as Control).get_theme_stylebox("panel") if painted is PanelContainer else null
 		rows.append(["%s paints its body opaque" % pair[0],
 			(paint as StyleBoxFlat).bg_color.a if paint is StyleBoxFlat else 0.0, 1.0])
+	# The Lift Report was one bare Tree filling its window, so Esc did nothing there.
+	dock._preview_glue._open_lift_report()
+	rows.append(["Esc closes the Lift Report", _escape_closes(dock._preview_glue._lift_report_window), 1])
 	dock.free()
 	return SUPPORT.pins(NAME, rows)
 
@@ -217,14 +220,6 @@ static func _every_plain_window_paints() -> bool:
 	var paints_itself: Dictionary = {
 		# The detached sheet: the sheet canvas paints its own background over the whole rect.
 		"res://addons/eventsheet/editor/event_sheet_dock.gd": 1,
-		# The lift report is one Tree filling the window, and a Tree paints its own panel.
-		"res://addons/eventsheet/editor/dock/preview_glue.gd": 1,
-		# OWED, not exempt: these four still show the grey margins and each needs the same one-line
-		# fix; they were rebuilt by other work at the time. Delete a line here when its fix lands.
-		"res://addons/eventsheet/editor/dock/ai_generate_window.gd": 1,
-		"res://addons/eventsheet/editor/dock/ask_window.gd": 1,
-		"res://addons/eventsheet/editor/dock/save_studio.gd": 1,
-		"res://addons/eventsheet/editor/dock/translation_studio.gd": 1,
 	}
 	var rows: Array = []
 	for path: String in _editor_scripts("res://addons/eventsheet/editor"):
