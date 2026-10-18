@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Fixed: a class description edited in a `.gd` sheet reaches the file
+
+- A `.gd` sheet's class description is read from the `##` block under `extends`, but the save wrote
+  that block back exactly as the file opened, so an edit made in the Sheet Type dialog or the head
+  band was dropped and gone on reopen. The save now rewrites the block when it no longer reads as the
+  sheet's description, adds one under `extends` when the file had none (with a blank line after it,
+  so it can never read as the next member's doc comment), and removes it when the description is
+  cleared. A block left untouched keeps its own spelling byte for byte.
+
+### Fixed: the first group added to a `.gd` sheet writes its header where it reads as one
+
+- A `.gd` with no groups yet put the first group's `## @ace_group(...)` line straight under
+  `extends`, where it read as the class's doc comment: the sheet reopened with the header as its
+  class description. In a file that opens with annotations (a behaviour pack's `## @ace_` lines and
+  `@icon(...)`) the header went to the very top, and a switchable group's flag `var` landed above
+  `@icon`, so the saved script did not parse. The header now goes under the class's opening lines
+  and its doc block, past the blank line that closes them, on a line of its own; and a header that
+  does sit under `extends` (a sheet-native compile writes it there) is no longer read as the class
+  description.
+
 ### Fixed: a region drawn in a function body is still a region after the file reopens
 
 - A region drawn around rows of a function's body was written into the body (`#region Setup` ...

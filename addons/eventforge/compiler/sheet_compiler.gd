@@ -1221,6 +1221,9 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	# as the file wrote it, a changed one is rewritten, and every flag the code above reads is declared.
 	_collect_runtime_group_members(sheet.events)
 	lines = GroupHeaders.keep_in_step(lines, sheet, group_decls, _runtime_group_members, source_map)
+	# And the class description, which the lift reads from the `##` block under `extends`: an edit made
+	# in the Sheet Type dialog reaches the file, an untouched block stays as written.
+	lines = _keep_class_description(lines, sheet, source_map)
 	_insert_missing_member_declarations(lines, sheet, result.get("source_map", []))
 	_insert_provider_member_declarations(lines, result)
 	_keep_distance_travelled(lines, sheet, result)
@@ -4144,6 +4147,52 @@ static func _class_description_lines(sheet: EventSheetResource) -> PackedStringA
 	for line: String in sheet.class_description.split("\n"):
 		out.append("##" if line.is_empty() else "## %s" % line)
 	return out
+
+
+## An opened file's class description, in step with the sheet's: the `##` block right under `extends`
+## (the one the lift reads it from, ended by a blank line, a comment or the end, and stopped by a
+## `## @ace_` annotation) is rewritten only when it no longer reads as the sheet's description, so an
+## untouched file keeps its own spelling byte for byte. A file with no block gets one under `extends`,
+## with a blank line after it when a member follows, so it can never read as that member's doc.
+static func _keep_class_description(lines: PackedStringArray, sheet: EventSheetResource, source_map: Array) -> PackedStringArray:
+	if sheet == null:
+		return lines
+	var extends_at: int = -1
+	for index: int in range(lines.size()):
+		if lines[index].begins_with("extends "):
+			extends_at = index
+			break
+	if extends_at < 0:
+		return lines
+	var block_end: int = extends_at
+	while block_end + 1 < lines.size() and lines[block_end + 1].begins_with("##") \
+			and not lines[block_end + 1].begins_with("## @ace_"):
+		block_end += 1
+	var after: int = block_end + 1
+	var ends_cleanly: bool = after >= lines.size() or lines[after].strip_edges().is_empty() or lines[after].begins_with("#")
+	if block_end == extends_at or not ends_cleanly:
+		block_end = extends_at
+	var read: PackedStringArray = PackedStringArray()
+	for index: int in range(extends_at + 1, block_end + 1):
+		var doc_line: String = lines[index]
+		if doc_line == "##":
+			read.append("")
+		elif doc_line.begins_with("## "):
+			read.append(doc_line.substr(3))
+		else:
+			read.append(doc_line.substr(2))
+	while not read.is_empty() and read[read.size() - 1].is_empty():
+		read.remove_at(read.size() - 1)
+	if "\n".join(read) == sheet.class_description.strip_edges():
+		return lines
+	var wanted: PackedStringArray = _class_description_lines(sheet)
+	var removed: Dictionary = {}
+	for index: int in range(extends_at + 1, block_end + 1):
+		removed[index] = true
+	var next_line: int = block_end + 1
+	if not wanted.is_empty() and next_line < lines.size() and not lines[next_line].strip_edges().is_empty():
+		wanted.append("")
+	return GroupHeaders._rebuilt(lines, {}, removed, {extends_at: wanted}, source_map)
 
 
 static func _emit_signal_line(signal_row: SignalRow) -> String:
