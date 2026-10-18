@@ -2167,13 +2167,18 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 			# a reader that only ever looks at one of them must not find an empty description.
 			lifted_param.description = str(lifted_param_descriptions[lifted_param.id])
 			lifted_param.desc = lifted_param.description
+	# A function body's own region fences are rows of the body, so they are read as fences here (a
+	# handler's fences are read only when they belong to a group - a hand-written one stays a comment).
+	_fence_body_lift = _fences_read_as_rows(function_lines)
 	var body: Dictionary = _lift_function(PackedStringArray(["func _ready() -> void:"]) + function_lines.slice(1), {}, true, false)
+	_fence_body_lift = false
 	if not bool(body.get("ok", false)):
 		return {"ok": false}
 	# Function-body events carry no trigger (the function header is the entry point).
 	for event: Variant in body.get("events", []):
-		(event as EventRow).trigger_provider_id = ""
-		(event as EventRow).trigger_id = ""
+		if event is EventRow:
+			(event as EventRow).trigger_provider_id = ""
+			(event as EventRow).trigger_id = ""
 		event_function.events.append(event)
 	return {"ok": true, "function": event_function}
 
@@ -2982,6 +2987,21 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 					openers_from = rows.size()
 				index += int(fence_claim["consumed"])
 				continue
+			# A fence drawn around rows of a SHEET FUNCTION's body is a row of that body, written where
+			# it sits, so it reads back as the fence row it was. Only with no blank pending: the
+			# compiler writes a fence above the blank lines of the row after it, never below them.
+			if fence_claim.is_empty() and _fence_body_lift and depth == 1 and blank_box[0] == 0 \
+					and (pending_raw.is_empty() or current != null):
+				var body_claim: Dictionary = _fence_claim(lines, index, depth)
+				if not body_claim.is_empty():
+					_flush_raw(current, pending_raw, blank_box)
+					current = null
+					var body_fence: CustomBlockRow = CustomBlockRow.new()
+					body_fence.kind_id = EventSheetRegionFacts.KIND_ID
+					body_fence.fields = body_claim["fields"]
+					rows.append(body_fence)
+					index += int(body_claim["consumed"])
+					continue
 		var at_this_depth: bool = not rest.begins_with("\t")
 		# A guard clause written on ONE line (`if target == null: return`, `else: play("hurt")`) is the
 		# same block as its multi-line twin, and a beginner writes far more of them than of the indented
@@ -3412,6 +3432,23 @@ static func _top_level_colon(text: String, from: int) -> int:
 ## answer, or the closest enclosing group's. Filled once per lift, for the same reason the peer variables
 ## are: it is one fact about the file being read.
 static var _group_runs_on: Dictionary = {}
+
+## True while a SHEET FUNCTION's body is read: its top-level `#region` / `#endregion` lines are rows
+## of the body (a region drawn around them), read as fences. Set and cleared around that one read.
+static var _fence_body_lift: bool = false
+
+
+## True when every top-level fence line of a function's body is one the compiler could have written:
+## none sits straight under a blank line. All or nothing, so a body never reads as half fences and
+## half comments - one fence refused would leave its partner standing alone.
+static func _fences_read_as_rows(function_lines: PackedStringArray) -> bool:
+	for index: int in range(1, function_lines.size()):
+		var line: String = function_lines[index]
+		if not (line.begins_with("\t#region") or line == "\t#endregion" or line.begins_with("\t## @ace_region(")):
+			continue
+		if function_lines[index - 1].strip_edges().is_empty():
+			return false
+	return true
 
 
 ## Records that mapping. A source with no groups, or none that says who runs it, leaves it empty and

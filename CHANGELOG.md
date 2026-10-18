@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Fixed: a region drawn in a function body is still a region after the file reopens
+
+- A region drawn around rows of a function's body was written into the body (`#region Setup` ...
+  `#endregion`), but opening the `.gd` again read the two lines back as comment rows inside the
+  neighbouring events, so after one save the region could no longer be folded, renamed or removed.
+  They now read back as the region's two fence rows, in the same place, styled ones included, and an
+  untouched save still writes the same bytes. A handler's own hand-written `#region` lines keep
+  reading as the comments they always were, and so does a body whose fence sits under a blank line.
+
 ### Fixed: a group that is off and cannot be switched keeps its rows in a `.gd` sheet
 
 - A group with Active On Start off and Can Be Switched At Runtime off was left out of the compile,
