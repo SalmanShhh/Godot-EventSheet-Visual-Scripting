@@ -3270,6 +3270,23 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 					index += 1
 					chain_open = false
 					continue
+			# An action that is off, in a sheet that is its own .gd: its lines behind OFF_CELL_PREFIX
+			# read back as the same action, off. Lines that do not read as actions stay comments.
+			var off_actions: Dictionary = _off_actions_at(lines, index, depth, reverse_entries, in_loop)
+			if not off_actions.is_empty():
+				_flush_raw(current, pending_raw, blank_box)
+				for off_action: Variant in off_actions["actions"]:
+					current.actions.append(off_action)
+				index += int(off_actions["consumed"])
+				chain_open = false
+				continue
+			# The `pass` the compiler adds under a body whose every action is off (comments are no
+			# statement) is the stub of that body, not a row of its own.
+			if rest == "pass" and pending_raw.is_empty() and _only_off_actions(current) \
+					and (index + 1 >= lines.size() or not lines[index + 1].begins_with(indent)):
+				index += 1
+				chain_open = false
+				continue
 			# A run that only means something as a group: the two or three lines that open a game,
 			# and the three that put a layout over the running one, are each ONE row, so they are
 			# claimed together before any single line is. The matched spelling rides back as the
@@ -3541,6 +3558,43 @@ static func _without_group_guard(expression: String, slug: String) -> String:
 		if _split_top_level(inner, " or ").size() > 1:
 			return inner
 	return rest
+
+
+## The actions a run of OFF_CELL_PREFIX lines at `index` (this depth) holds, switched off, as
+## {actions, consumed} - or {} when the run does not read back as actions only, in which case the
+## lines stay the comments they are. Read through the same statement reading every action uses.
+static func _off_actions_at(lines: PackedStringArray, index: int, depth: int, reverse_entries: Array, in_loop: bool) -> Dictionary:
+	var indent: String = "\t".repeat(depth)
+	var prefix: String = indent + SheetCompiler.OFF_CELL_PREFIX
+	var statements: PackedStringArray = PackedStringArray()
+	var cursor: int = index
+	while cursor < lines.size() and lines[cursor].begins_with(prefix):
+		statements.append(lines[cursor].substr(prefix.length()))
+		cursor += 1
+	if statements.is_empty():
+		return {}
+	var holder: EventRow = EventRow.new()
+	var unread: PackedStringArray = PackedStringArray()
+	for statement: String in statements:
+		_consume_action_line(holder, statement, 0, unread, reverse_entries, in_loop, [0])
+	_flush_raw(holder, unread, [0])
+	if holder.actions.is_empty():
+		return {}
+	for read: Variant in holder.actions:
+		if not (read is ACEAction):
+			return {}
+		(read as ACEAction).enabled = false
+	return {"actions": holder.actions, "consumed": cursor - index}
+
+
+## True when an event holds actions and every one of them is an action that is off.
+static func _only_off_actions(event: EventRow) -> bool:
+	if event == null or event.actions.is_empty():
+		return false
+	for action: Variant in event.actions:
+		if not (action is ACEAction) or (action as ACEAction).enabled:
+			return false
+	return true
 
 
 ## True when the line at `index` is the header an OFF_ROW_MARKER is written above: an `if` or `elif`
@@ -4071,6 +4125,11 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 	for term: String in terms:
 		var negated: bool = false
 		var candidate: String = term
+		# A condition that is off, in a sheet that is its own .gd, is written as a term whose answer
+		# it cannot change (the compiler's _off_condition_term): read back as that condition, off.
+		var off_condition: String = _off_condition_inside(candidate, event.condition_mode == EventRow.ConditionMode.OR)
+		if not off_condition.is_empty():
+			candidate = off_condition
 		if candidate.begins_with("not (") and candidate.ends_with(")"):
 			negated = true
 			candidate = candidate.substr(5, candidate.length() - 6)
@@ -4091,8 +4150,26 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 		# file's own spelling is remembered on the row, because the compiler writes the opposite
 		# operator by default and re-emitting the short form here would lose the byte gate.
 		condition.negation_wrapped = negated and not _flips_when_inverted(matched).is_empty()
+		if not off_condition.is_empty():
+			condition.enabled = false
 		event.conditions.append(condition)
 	return true
+
+
+## The condition inside a term the compiler writes for a condition that is off - `(true or <it>)`,
+## and among Or terms `(false and <it>)` as well - or "" when the term is not one. The brackets have
+## to close at the end, so `(true or a) and (b)` is never taken apart here.
+static func _off_condition_inside(term: String, among_or: bool) -> String:
+	var openings: Array[String] = ["(true or "]
+	if among_or:
+		openings.append("(false and ")
+	for opening: String in openings:
+		if not term.begins_with(opening) or not term.ends_with(")"):
+			continue
+		var inner: String = term.substr(opening.length(), term.length() - opening.length() - 1)
+		if _brackets_balance(inner):
+			return inner
+	return ""
 
 
 ## The row one condition TERM means to a family that knows what such a term is about, or {} when no

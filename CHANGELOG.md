@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Fixed: an action or condition switched off in a `.gd` sheet stays in the file
+
+- A cell whose box was unticked was left out of the compile, so in a `.gd` sheet (the sheet's only
+  copy) saving deleted the action or condition from the file. In a sheet that is its own `.gd` an
+  action that is off is now written as its own lines behind `# @off: `, comments that never run; a
+  condition that is off stays in the header as a term whose answer it cannot change -
+  `(true or <it>)` among And terms, `(false and <it>)` among Or terms, and `(true or <it>)` for each
+  when every condition of an Or event is off. Opening the file reads each back as the same cell,
+  switched off, and an untouched save writes the same bytes. A condition that keeps state of its own
+  (Every X Seconds and its kind) still has nowhere to keep it and is left out. A `.tres` sheet still
+  leaves cells that are off out of the game.
+
 ### Fixed: an event switched off in a `.gd` sheet stays in the file
 
 - An event whose box was unticked was left out of the compile. A `.tres` sheet still holds it, but

@@ -159,6 +159,9 @@ const OFF_GROUP_GUARD: String = "false"
 ## event follows behind the OFF_GROUP_GUARD term, so it stays in the file and never runs. Frozen -
 ## the lift reads the pair back as the same event, switched off.
 const OFF_ROW_MARKER: String = "# @off"
+## The prefix each line of an ACTION that is switched off is written behind, in a sheet that is its
+## own .gd: the action stays in the file as a comment and comes back as the same action, off. Frozen.
+const OFF_CELL_PREFIX: String = "# @off: "
 
 # Runtime-toggleable groups: event -> "__group_<snake>_active" guard (per-compile).
 static var _runtime_group_guards: Dictionary = {}
@@ -2551,10 +2554,23 @@ static func _emit_event_body(
 		# before it. Collected apart, appended last below.
 		var tail_condition_texts: PackedStringArray = PackedStringArray()
 		var runtime_group_guard: String = str(_runtime_group_guards.get(event_row, ""))
+		# A condition that is off, in a sheet that is its own .gd, stays in the header as a term that
+		# cannot change the answer (see _off_condition_term). When every condition of an Or event is
+		# off, the event runs as one with no conditions does, so each term says true.
+		var every_condition_off: bool = not event_row.conditions.is_empty()
+		for any_condition: ACECondition in event_row.conditions:
+			if any_condition == null or any_condition.enabled:
+				every_condition_off = false
+		var off_terms_say_true: bool = event_row.condition_mode != EventRow.ConditionMode.OR or every_condition_off
 		if held_off:
 			runtime_group_guard = OFF_GROUP_GUARD if runtime_group_guard.is_empty() \
 					else "%s and %s" % [OFF_GROUP_GUARD, runtime_group_guard]
 		for condition: ACECondition in event_row.conditions:
+			if _keeps_off_rows and condition != null and not condition.enabled:
+				var off_term: String = _off_condition_term(condition, off_terms_say_true)
+				if not off_term.is_empty():
+					condition_texts.append(off_term)
+				continue
 			var condition_line: String = ConditionCodegen.generate_condition(condition, _behavior_host_default)
 			if not condition_line.is_empty():
 				if _condition_evaluates_last(condition):
@@ -2709,6 +2725,10 @@ static func _emit_event_body(
 		for action_item: Variant in event_row.actions:
 			action_slot += 1
 			if gesture_refused and EventForgeUndoableEdits.is_undoable(action_item):
+				continue
+			# An action that is off stays in a sheet that is its own .gd, as comment lines that never run.
+			if _keeps_off_rows and action_item is ACEAction and not (action_item as ACEAction).enabled:
+				_emit_off_action(action_item as ACEAction, effective_node_target, body_indent, lines, source_map)
 				continue
 			if action_item is ACEAction:
 				var action_line: String = ActionCodegen.generate_action(action_item, effective_node_target, _behavior_host_default)
@@ -2927,6 +2947,40 @@ static func _emit_match_case_body(events: Array, indent: String, node_target: St
 				for comment_line: String in comment.text.split("\n"):
 					out.append("%s# %s" % [indent, comment_line])
 	return out
+
+
+## The header term a condition that is off is written as, in a sheet that is its own .gd: the
+## condition's own code inside a term whose answer it cannot change - `(true or <it>)` among And
+## terms, `(false and <it>)` among Or terms - so the event runs exactly as if the condition were not
+## there, and the lift reads the term back as the same condition, off. A condition that keeps state
+## of its own (a member, a line run before the header) has nowhere to keep it and is left out.
+static func _off_condition_term(condition: ACECondition, says_true: bool) -> String:
+	if not condition.member_declaration.is_empty() or not condition.codegen_prelude.is_empty() \
+			or not condition.codegen_on_true.is_empty() or not condition.codegen_on_exit.is_empty():
+		return ""
+	var switched_on: ACECondition = condition.duplicate() as ACECondition
+	switched_on.enabled = true
+	var code: String = ConditionCodegen.generate_condition(switched_on, _behavior_host_default)
+	if code.is_empty():
+		return ""
+	return ("(%s or %s)" if says_true else "(%s and %s)") % ["true" if says_true else "false", code]
+
+
+## Writes an action that is off as the lines it would run, each behind OFF_CELL_PREFIX: comments,
+## so it never runs, and the lift reads them back as the same action, off.
+static func _emit_off_action(action: ACEAction, node_target: String, indent: String, lines: PackedStringArray, source_map: Array) -> void:
+	var switched_on: ACEAction = action.duplicate() as ACEAction
+	switched_on.enabled = true
+	var code: String = ActionCodegen.generate_action(switched_on, node_target, _behavior_host_default)
+	if code.is_empty():
+		return
+	var code_lines: PackedStringArray = code.split("\n")
+	if action.is_awaited or action.await_call:
+		code_lines[code_lines.size() - 1] = "await %s" % code_lines[code_lines.size() - 1]
+	var start: int = lines.size() + 1
+	for code_line: String in code_lines:
+		lines.append(indent + OFF_CELL_PREFIX + code_line)
+	source_map.append({"uid": str(action.get_instance_id()), "start": start, "end": lines.size(), "kind": "action"})
 
 
 ## Emits the `for` loop headers for an event's pick filters and returns the new body depth.
