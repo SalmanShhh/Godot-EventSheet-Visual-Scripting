@@ -317,11 +317,18 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 	# comment, the way Godot reads it, so the block must end at a blank line, a comment or the end.
 	# A `## @ace_...` line is the sheet's own annotation (a group header written under `extends`), so
 	# the block stops there rather than reading the annotation as the class's prose.
+	# Only the FIRST `extends` line is the class's own: a later one at column 0 sits inside a string
+	# (inner classes are indented), so a `##` line under it is the string's text, not the class's doc,
+	# and the save, which reads the block under that same first line, would otherwise write it there.
 	# Metadata only in external mode (the lines stay verbatim).
 	var description_regex: RegEx = RegEx.new()
-	if description_regex.compile("(?m)^extends .+\\n((?:##(?! @ace_).*\\n)++)(?=\\n|#|\\z)") == OK:
-		var description_match: RegExMatch = description_regex.search(source)
-		if description_match != null:
+	var first_extends_regex: RegEx = RegEx.new()
+	var first_extends: RegExMatch = null
+	if first_extends_regex.compile("(?m)^extends .+\\n") == OK:
+		first_extends = first_extends_regex.search(source)
+	if first_extends != null and description_regex.compile("(?m)^extends .+\\n((?:##(?! @ace_).*\\n)++)(?=\\n|#|\\z)") == OK:
+		var description_match: RegExMatch = description_regex.search(source, first_extends.get_start())
+		if description_match != null and description_match.get_start() == first_extends.get_start():
 			var doc_lines: PackedStringArray = PackedStringArray()
 			for doc_line: String in description_match.get_string(1).split("\n"):
 				if doc_line == "##":

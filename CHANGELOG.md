@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Fixed: a `##` line inside a string is no longer read as the class description
+
+- Opening a `.gd` whose own `extends` line has no doc block, but which holds a string with an
+  `extends` line and a `##` line under it (a script that writes another script), read the string's
+  `##` line as the class description, and saving the untouched file then wrote that line under the
+  file's own `extends`. Only the file's first `extends` line is read for the description now, the
+  same line the save writes it under, so such a file opens with no description and saves byte for
+  byte.
+
 ### Fixed: a comment switched off in a `.gd` sheet stays in the file
 
 - A comment row that was switched off was left out of the compile, so in a `.gd` sheet saving

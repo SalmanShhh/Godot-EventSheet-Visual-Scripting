@@ -19,6 +19,9 @@ const WITH_BLOCK := "extends Node2D\n## Catches stars.\n## Two lines of it.\n\nv
 const WITHOUT_BLOCK := "class_name DescriptionProbe\nextends Node2D\n\nvar score: int = 0\n\n\nfunc _ready() -> void:\n\tscore = 1\n"
 const MEMBER_DOC := "extends Node2D\n## How many stars were caught.\nvar score: int = 0\n\n\nfunc _ready() -> void:\n\tscore = 1\n"
 const ODD_SPELLING := "extends Node2D\n##Catches stars.\n\nvar score: int = 0\n"
+## A file whose own `extends` has no block, holding a string with an `extends` line and a `##` line
+## under it: the string's text is not the class's description, and the save must not move it there.
+const IN_A_STRING := "@tool\nextends RefCounted\n\nconst SOURCE: String = \"\"\"\nextends Node2D\n## Sends the waves.\n\n\"\"\"\n"
 
 
 static func run() -> bool:
@@ -27,6 +30,7 @@ static func run() -> bool:
 	var beside_doc: Dictionary = _cycle(MEMBER_DOC, "A probe.")
 	var cleared: Dictionary = _cycle(WITH_BLOCK, "")
 	var untouched: Dictionary = _cycle(ODD_SPELLING, null)
+	var in_string: Dictionary = _cycle(IN_A_STRING, null)
 	return SUPPORT.pins(TEST_NAME, [
 		["an edited description replaces the block", _head(edited, 3), ["extends Node2D", "## Catches falling stars.", ""]],
 		["and reopens as the edit", edited.get("description"), "Catches falling stars."],
@@ -42,6 +46,8 @@ static func run() -> bool:
 		["every saved script parses",
 			[edited.get("parse"), added.get("parse"), beside_doc.get("parse"), cleared.get("parse")], ["", "", "", ""]],
 		["an untouched block keeps its own spelling", untouched.get("saved"), ODD_SPELLING],
+		["a doc line inside a string is not the class description", in_string.get("description"), ""],
+		["and the untouched file saves byte for byte", in_string.get("saved"), IN_A_STRING],
 	])
 
 
