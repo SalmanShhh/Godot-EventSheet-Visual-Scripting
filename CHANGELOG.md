@@ -44,6 +44,12 @@
   opens on a bare `##` no longer reads as changed when nothing was edited, so an untouched file
   spelled `##text` saves byte for byte instead of being rewritten as `## text`.
 
+### Changed: CI names the file a red contracts walk failed on
+
+- The suite-and-contracts step runs under `bash -e`, so a red `verify_sheets` ended the step before
+  its summary, and the job failed with exit code 1 naming no file. The walk's exit code is now
+  caught and answered at the end of the step, after the failing lines are printed.
+
 ### Fixed: a `##` line inside a string is no longer read as the class description
 
 - Opening a `.gd` whose own `extends` line has no doc block, but which holds a string with an

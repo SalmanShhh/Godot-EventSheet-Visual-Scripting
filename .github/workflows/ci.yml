@@ -54,10 +54,12 @@ jobs:
           EVENTFORGE_TEST_SHARD="${{ matrix.index }}/${SHARDS}" \
             ~/godot/godot --headless --path . --script tests/run_tests.gd > suite.log 2>&1 &
           SUITE_PID=$!
+          # `shell: bash` runs the step under -e, so a red walk would end it right here, before the
+          # summary below names the file. The exit code is caught instead and answered at the end.
+          VERIFY_EXIT=0
           ~/godot/godot --headless --path . --script tools/verify_sheets.gd -- \
             --skip res://tests/fixtures/ --skip res://tests/corpus/ --shard "${{ matrix.index }}/${SHARDS}" \
-            > verify.log 2>&1
-          VERIFY_EXIT=$?
+            > verify.log 2>&1 || VERIFY_EXIT=$?
           # The suite ends in a known harmless segfault after its verdict, so its exit code is not the
           # answer - the verdict line is.
           wait $SUITE_PID || true
@@ -65,7 +67,9 @@ jobs:
           SUITE_OK=0
           bash .github/scripts/suite_verdict.sh suite.log "suite shard ${{ matrix.index }}/${SHARDS}" || SUITE_OK=1
           if [ $VERIFY_EXIT -ne 0 ]; then
-            grep -vE '^verify:' verify.log | head -n 24 | while IFS= read -r line; do echo "::error::contracts: $line"; done
+            # pipefail would end the step on grep finding nothing (or on head closing the pipe), so the
+            # listing is never what decides the step.
+            { grep -vE '^verify:' verify.log | head -n 24 | while IFS= read -r line; do echo "::error::contracts: $line"; done; } || true
           fi
           [ $SUITE_OK -eq 0 ] && [ $VERIFY_EXIT -eq 0 ]
 
