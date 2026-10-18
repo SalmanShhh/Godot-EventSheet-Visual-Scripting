@@ -3418,7 +3418,7 @@ static var _group_runs_on: Dictionary = {}
 ## every expression below passes through untouched.
 static func _note_group_guards(source: String) -> void:
 	_group_runs_on = {}
-	if not source.contains("runs_on=\"") and not source.contains("runs_in=\"") 			and not source.contains("toggleable=true"):
+	if not source.contains("runs_on=\"") and not source.contains("runs_in=\"") 			and not source.contains("toggleable=true") and not source.contains("enabled=false"):
 		return
 	var registry: Dictionary = _recover_group_declarations(source)
 	for slug: String in registry:
@@ -3431,8 +3431,12 @@ static func _note_group_guards(source: String) -> void:
 		while not walk.is_empty() and registry.has(walk) and not seen.has(walk):
 			seen[walk] = true
 			var declared: Dictionary = registry[walk]
-			# The runtime switch leads the chain: the innermost switchable group's flag.
-			if str(found["switch"]).is_empty() and bool(declared.get("toggleable", false)):
+			# The runtime switch leads the chain: the innermost switchable group's flag - unless some
+			# group on the way up is off and cannot be switched, whose constant false guard holds
+			# everything inside it (the compiler passes it down unchanged).
+			if not bool(declared.get("toggleable", false)) and not bool(declared.get("enabled", true)):
+				found["switch"] = SheetCompiler.OFF_GROUP_GUARD
+			elif str(found["switch"]).is_empty() and bool(declared.get("toggleable", false)):
 				found["switch"] = "__group_%s_active" % SheetCompiler.guard_token(str(declared.get("name", walk)))
 			if str(found["runs_on"]).is_empty():
 				found["runs_on"] = EventGroup.runs_on_guard(str(declared.get("runs_on", "")))

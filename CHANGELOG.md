@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Fixed: a group that is off and cannot be switched keeps its rows in a `.gd` sheet
+
+- A group with Active On Start off and Can Be Switched At Runtime off was left out of the compile,
+  which is right for a `.tres` sheet's generated script (the `.tres` still holds the rows) but lost
+  the rows of a `.gd` sheet: only the group's header survived the save, and the file reopened as an
+  empty group that was on. In a `.gd` sheet the rows are now written behind a constant
+  `if false:` guard, so they stay in the file and never run, and the header says
+  `enabled=false`. Opening the file brings back the same off group with its rows (a group inside it
+  is held off with it, a switchable one included), turning it back on writes the file it was before,
+  and a file saved untouched is byte for byte the same. A `.tres` sheet still leaves the group out.
+
 ### Fixed: a region inside a group is kept when the sheet is saved
 
 - A `#region` a group holds used to be dropped when a `.gd` sheet was saved, and written at the top

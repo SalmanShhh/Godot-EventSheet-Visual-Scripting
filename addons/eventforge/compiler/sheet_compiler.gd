@@ -152,6 +152,9 @@ static var _trouble_reporter_pending: bool = false
 ## reporter open as the row.
 const TROUBLE_SIGNAL: String = "something_went_wrong"
 const TROUBLE_TRIGGER_ID: String = "OnSomethingWentWrong"
+## The guard the rows of an off group that cannot be switched are written behind in a sheet that is
+## its own .gd: the rows stay in the file and never run. Frozen - the lift reads it back.
+const OFF_GROUP_GUARD: String = "false"
 
 # Runtime-toggleable groups: event -> "__group_<snake>_active" guard (per-compile).
 static var _runtime_group_guards: Dictionary = {}
@@ -171,6 +174,11 @@ static var _row_group_path: Dictionary = {}
 # filled by _flatten_trigger_rows, written by _emit_event_body, read back by the lifter.
 static var _row_fences_before: Dictionary = {}
 static var _row_fences_after: Dictionary = {}
+# True when the file being written is the sheet itself (a .gd opened as a sheet, or a Save As .gd):
+# then a group that is off and cannot be switched keeps its rows in the file behind a constant
+# `false` guard, because the file is the only copy of them. A .tres sheet's generated companion
+# leaves such a group out, as it always has. Per-compile.
+static var _keeps_off_groups: bool = false
 # Host-targeting prefix for {host.} ACE templates: "host" inside a behavior sheet (where node-scoped
 # ACEs must call on the parent host, not the behavior Node itself), "" everywhere else. Per-compile.
 static var _behavior_host_default: String = ""
@@ -222,6 +230,7 @@ static func _reset_per_compile_state(sheet: EventSheetResource = null) -> void:
 	_row_group_path = {}
 	_row_fences_before = {}
 	_row_fences_after = {}
+	_keeps_off_groups = false
 	# What this sheet's names MEAN, for the removal guard: which of them hold a node across frames and
 	# which were minted by a spawn row in some other event. Gathered once here rather than per row,
 	# because it is a walk of the whole sheet and the answer cannot change during a compile.
@@ -329,6 +338,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	# external-source path so no branch of this function can inherit it
 	# (see _reset_per_compile_state).
 	_reset_per_compile_state(sheet)
+	_keeps_off_groups = omit_generated_banner or not sheet.external_source_path.is_empty()
 
 	# GDScript-backed sheets (opened FROM a .gd file) compile via the order-preserving
 	# external path: no generated header, no synthesized extends, rows emit in sheet order
@@ -1899,11 +1909,11 @@ static func _emit_group_declarations(lines: PackedStringArray, decls: Array) -> 
 			parts.append("collapsed=true")
 		if group.runtime_toggleable:
 			parts.append("toggleable=true")
-			# Off at start but switchable: the group is in the game behind a flag that starts false,
-			# and this is the one place a .gd sheet keeps the "off" half. Every other group's header
-			# is unchanged (an off group that cannot switch is left out of the script anyway).
-			if not group.enabled:
-				parts.append("enabled=false")
+		# Off at start: this is the one place a .gd sheet keeps the "off" half. Switchable, the group
+		# is in the game behind a flag that starts false; not switchable, its rows sit behind a
+		# constant false guard. A group that is on writes exactly the header it always wrote.
+		if not group.enabled:
+			parts.append("enabled=false")
 		# Who runs it, written only when the answer is not "everybody". A single-player sheet
 		# therefore emits exactly the header it always emitted.
 		if not EventGroup.runs_on_guard(group.runs_on).is_empty():
@@ -1964,11 +1974,17 @@ static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comm
 			# A group that is off at start but can be switched at runtime stays in the game behind
 			# its flag, which starts false - leaving it out would leave Set group active nothing to
 			# turn on. Only a group that is off AND cannot be switched is left out.
-			if group.enabled or group.runtime_toggleable:
+			# In a sheet that IS its .gd, an off group that cannot be switched keeps its rows too,
+			# behind a constant false guard that also holds every group inside it: the file is the
+			# only copy of those rows, and leaving them out lost them on save.
+			var held_off: bool = runtime_guard == OFF_GROUP_GUARD or (_keeps_off_groups and not group.enabled and not group.runtime_toggleable)
+			if group.enabled or group.runtime_toggleable or held_off:
 				# Runtime-toggleable groups guard their events (nested groups inherit the
 				# INNERMOST toggleable guard - toggling the inner group wins, event-sheet-style).
 				var child_guard: String = runtime_guard
-				if group.runtime_toggleable:
+				if held_off:
+					child_guard = OFF_GROUP_GUARD
+				elif group.runtime_toggleable:
 					# guard_token, not raw to_snake_case: "Wave 1!" used to emit
 					# `__group_wave_1!_active` - a parse error in the generated script.
 					child_guard = "__group_%s_active" % guard_token(group.group_name)

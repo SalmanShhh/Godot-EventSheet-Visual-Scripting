@@ -91,7 +91,9 @@ static func run() -> bool:
 
 ## A group that is off at start but can be switched at runtime keeps BOTH halves of that state in the
 ## .gd header, so reopening the file shows it off (and the flag line `= false`) and re-saves byte for
-## byte. Every other group's header stays exactly as it was: only off+switchable writes `enabled=`.
+## byte. An off group that cannot be switched writes `enabled=false` too: in a .gd sheet its rows stay
+## in the file behind a false guard, and the header is what reopens it off. A group that is on writes
+## exactly the header it always wrote.
 static func _test_off_switchable() -> bool:
 	var boss: EventGroup = EventGroup.new()
 	boss.group_name = "Boss Phase"
@@ -115,8 +117,8 @@ static func _test_off_switchable() -> bool:
 	return SUPPORT.pins("group_roundtrip_test", [
 		["an off, switchable group writes enabled=false in its header", str(lines.get(boss, "")),
 			"## @ace_group(uid=\"boss_phase\", name=\"Boss Phase\", toggleable=true, enabled=false)"],
-		["an off group that cannot be switched writes no enabled field", str(lines.get(plain_off, "")),
-			"## @ace_group(uid=\"quiet\", name=\"Quiet\")"],
+		["an off group that cannot be switched says it is off", str(lines.get(plain_off, "")),
+			"## @ace_group(uid=\"quiet\", name=\"Quiet\", enabled=false)"],
 		["an on, switchable group writes no enabled field", str(lines.get(on_switch, "")),
 			"## @ace_group(uid=\"loud\", name=\"Loud\", toggleable=true)"],
 		["the flag line starts false", out.contains("var __group_boss_phase_active: bool = false"), true],
