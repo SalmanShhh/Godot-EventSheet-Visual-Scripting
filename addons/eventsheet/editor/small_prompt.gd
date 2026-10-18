@@ -5,9 +5,10 @@
 #   2. One plain sentence says what will happen.
 #   3. What it touches is shown as a short list before anyone agrees.
 #   4. The safe choice is the blue OK button, so Enter does it; Esc and the close box always cancel.
-#   5. The risky choice (delete, discard, overwrite) is its own red-outlined button on the LEFT. It is
+#   5. A second safe choice, when a question has one, is a plain button beside OK - never the default.
+#   6. The risky choice (delete, discard, overwrite) is its own red-outlined button on the LEFT. It is
 #      never OK and never Cancel, so neither Enter nor Esc can take it.
-#   6. The note says out loud whether Ctrl+Z undoes it.
+#   7. The note says out loud whether Ctrl+Z undoes it.
 #
 # DELIBERATELY NO `class_name`: callers reach it with `load()` of its path at the moment they ask,
 # so nothing about it compiles until a question is actually asked.
@@ -16,6 +17,8 @@ extends RefCounted
 
 ## The custom action the risky button sends. Only it runs `on_danger`.
 const DANGER_ACTION: StringName = &"small_prompt_danger"
+## The custom action the second safe choice sends. Only it runs `on_also`.
+const ALSO_ACTION: StringName = &"small_prompt_also"
 ## The width the sentence and the note wrap at before the display scale, so a content-sized dialog
 ## never balloons. Read through wrap_width(), which scales it the way the rest of the dialog is.
 const WRAP_WIDTH := 400.0
@@ -47,6 +50,7 @@ const DANGER_FALLBACK := Color("#F07A7A")
 ##   glyph   "?" (default), "!", "i", "{ }" or "✓"
 ##   main    the safe choice's label; runs `on_main`
 ##   cancel  the way out's label ("" hides the button); Esc and the close box always run `on_cancel`
+##   also    a second safe choice's label (optional); runs `on_also`
 ##   danger  the risky choice's label (optional); runs `on_danger`
 static func open(host: Node, ask: Dictionary) -> ConfirmationDialog:
 	var dialog: ConfirmationDialog = ConfirmationDialog.new()
@@ -143,13 +147,23 @@ static func set_code(dialog: ConfirmationDialog, text: String) -> void:
 	card.name = "Code"
 
 
-## The three ways out. Only the red button runs `on_danger`; OK runs `on_main`; Cancel, Esc and the
-## close box all send `canceled` and run `on_cancel`. Whichever it was, the dialog is done with.
+## The ways out. Only the red button runs `on_danger` and only the second safe one `on_also`; OK runs
+## `on_main`; Cancel, Esc and the close box all send `canceled` and run `on_cancel`. Whichever it was, the dialog is done with.
 static func _wire(dialog: ConfirmationDialog, ask: Dictionary) -> void:
 	if ask.get("on_main") is Callable:
 		dialog.confirmed.connect(ask["on_main"] as Callable)
 	if ask.get("on_cancel") is Callable:
 		dialog.canceled.connect(ask["on_cancel"] as Callable)
+	var also_text: String = str(ask.get("also", ""))
+	if not also_text.is_empty():
+		dialog.add_button(also_text, false, ALSO_ACTION).name = "Also"
+		var on_also: Callable = ask.get("on_also", Callable()) as Callable
+		dialog.custom_action.connect(func(action: StringName) -> void:
+			if action != ALSO_ACTION:
+				return
+			dialog.hide()
+			if on_also.is_valid():
+				on_also.call())
 	var danger_text: String = str(ask.get("danger", ""))
 	if not danger_text.is_empty():
 		var danger: Button = dialog.add_button(danger_text, false, DANGER_ACTION)

@@ -327,9 +327,9 @@ static func _string_literal_mask(text: String) -> PackedByteArray:
 # ── a region and a group are the same idea said two ways ───────────────────────────────────────
 #
 # Both directions are ONE edit on the container the rows already live in, and nothing inside moves:
-# the byte change is the two fence lines against the one group. A group carries two things a region
-# cannot - local variables and the runtime switch - so the group-to-region direction refuses with a
-# reason instead of quietly dropping them.
+# the byte change is the two fence lines against the one group. A group carries things a region
+# cannot - local variables, the runtime switch, off at start, who and when it runs - so the editor
+# says what would go before it asks this to happen; the refactor itself only moves rows.
 
 
 ## Turns a matched `#region` / `#endregion` pair into an EventGroup holding the rows between them.
@@ -360,41 +360,19 @@ static func region_to_group(container: Array, opener: CustomBlockRow) -> EventGr
 	return group
 
 
-## "" when this group can become a region, else the reason it cannot - said in the words the menu
-## item itself wears, so the refusal is read BEFORE the click rather than after it.
-static func group_to_region_problem(group: EventGroup) -> String:
-	if group == null:
-		return "no group here"
-	var locals: int = 0
-	for entry: Variant in group.local_variables:
-		if entry is LocalVariable:
-			locals += 1
-	if locals > 0:
-		return "has %d local" % locals if locals == 1 else "has %d locals" % locals
-	if group.runtime_toggleable:
-		return "can be switched at runtime"
-	if not group.enabled:
-		return "is switched off"
-	return ""
-
-
 ## Turns an EventGroup into a `#region` / `#endregion` pair around the rows it held. The group's
-## header goes; its name, description and colour ride the opening fence. False when the group is not
-## in this container or carries something a region cannot (see group_to_region_problem).
+## header goes; its name, description and colour ride the opening fence, and what only a group can
+## carry goes with the header. False when the group is not in this container.
 static func group_to_region(container: Array, group: EventGroup) -> bool:
-	var at: int = container.find(group)
-	if at == -1 or not group_to_region_problem(group).is_empty():
+	var at: int = container.find(group) if group != null else -1
+	if at == -1:
 		return false
-	var opener := CustomBlockRow.new()
-	opener.kind_id = EventSheetRegionFacts.KIND_ID
-	opener.fields = {"label": group.display_name(), "is_end": false}
+	var opener: CustomBlockRow = EventSheetRegionFacts.make_fence(group.display_name())
 	if not group.description.strip_edges().is_empty():
 		opener.fields["description"] = group.description.strip_edges()
 	if group.custom_color.a > 0.01:
 		opener.fields["color"] = "#%s" % group.custom_color.to_html(false)
-	var closer := CustomBlockRow.new()
-	closer.kind_id = EventSheetRegionFacts.KIND_ID
-	closer.fields = {"label": "", "is_end": true}
+	var closer: CustomBlockRow = EventSheetRegionFacts.make_fence("", true)
 	var held: Array[Resource] = group.child_rows()
 	container.remove_at(at)
 	var insert_at: int = at

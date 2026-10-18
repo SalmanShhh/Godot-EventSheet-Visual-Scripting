@@ -123,6 +123,38 @@ static func runs_in_word(group: EventGroup) -> String:
 	return "" if group == null else group.runs_in.strip_edges()
 
 
+## What turning this group into a region would lose, one translated sentence each, in the order a
+## head shows them. Empty when nothing would be: a region keeps the name, the description, the
+## colour and every row, so a plain group goes and comes back unchanged.
+static func region_losses(group: EventGroup) -> PackedStringArray:
+	var said: PackedStringArray = PackedStringArray()
+	if group == null:
+		return said
+	var name: String = display_name(group)
+	if not group.enabled:
+		said.append(EventSheetL10n.translate("%s is off at start, so its events never run. As a region they run from the start.") % name)
+	if group.runtime_toggleable:
+		said.append(EventSheetL10n.translate("Events can switch %s off and on. A region cannot be switched, so the rows that switch it stop working.") % name)
+	var locals: PackedStringArray = PackedStringArray()
+	for entry: Variant in group.local_variables:
+		if entry is LocalVariable:
+			locals.append((entry as LocalVariable).name)
+	if locals.size() == 1:
+		said.append(EventSheetL10n.translate("Its local variable %s goes with it, so the rows that use it stop working.") % locals[0])
+	elif locals.size() > 1:
+		said.append(EventSheetL10n.translate("Its %d local variables (%s) go with it, so the rows that use them stop working.") % [
+			locals.size(), ", ".join(locals)])
+	match group.runs_on.strip_edges():
+		EventGroup.RUNS_ON_HOST:
+			said.append(EventSheetL10n.translate("%s runs only on the host. As a region its events run everywhere.") % name)
+		EventGroup.RUNS_ON_OWNER:
+			said.append(EventSheetL10n.translate("%s runs only on the owner of this object. As a region its events run everywhere.") % name)
+	if not runs_in_word(group).is_empty():
+		said.append(EventSheetL10n.translate("%s runs only in %s. As a region its events run in every mode.") % [
+			name, runs_in_word(group)])
+	return said
+
+
 ## Which modes a group can say it runs in: every one the project declares, plus the answer that
 ## means all of them. ONE list, read by the Edit group dropdown, the head's submenu and the tests.
 static func runs_in_choices(sheet: EventSheetResource) -> Array[Dictionary]:

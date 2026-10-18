@@ -171,9 +171,6 @@ var _removal_guard_facts: Dictionary = {}
 # of the compiler ONCE per sweep: the walk that slugs them is a whole-tree walk, and every head on
 # the canvas wants one line out of it.
 var _group_declaration_lines: Dictionary = {}
-# The orphan-fence notes built in THIS sweep, so the fix label can be numbered once the flat
-# list has its gutter numbers. Empty on every sheet whose fences all pair, which is nearly all.
-var _region_fix_notes: Array[EventRowData] = []
 
 ## The mark on the chip that names a pattern. Its own glyph, so a reader learns "⟡ means this
 ## event is a known shape" once and then recognises it everywhere, the way ⟳ ➜ ƒ already work.
@@ -247,7 +244,6 @@ func init(viewport: Control) -> void:
 ## flat rows - the region block kind's wart-not-error contract holds in the view.
 func _pair_region_fences(rows: Array[EventRowData]) -> Array[EventRowData]:
 	_region_occurrences.clear()
-	_region_fix_notes.clear()
 	return _pair_region_fences_walk(rows)
 
 
@@ -264,12 +260,10 @@ func _pair_region_fences_walk(rows: Array[EventRowData]) -> Array[EventRowData]:
 			continue
 		if _is_region_row(row_data) and _region_row_is_end(row_data):
 			if stack.is_empty():
-				# A closer with nothing above it closes nothing. The file still compiles, so
-				# the row stays flat and the note under it is amber, never red.
+				# A closer with nothing above it closes nothing. The file still compiles, so the
+				# row stays flat and only wears the quiet amber state; the words are the strip's.
+				_stamp_attention(row_data, [EventSheetRegionFacts.fence_finding(row_data.source_resource, row_data.row_uid)])
 				_append_to_sink(output, stack, row_data)
-				_append_to_sink(output, stack, _build_region_orphan_note_row(
-					row_data, EventSheetRegionFacts.unopened_note(), ""
-				))
 				continue
 			var frame: Dictionary = stack.pop_back()
 			var opener: EventRowData = frame.get("opener")
@@ -303,18 +297,12 @@ func _pair_region_fences_walk(rows: Array[EventRowData]) -> Array[EventRowData]:
 	# everything it had collected, exactly as they read in the source.
 	for frame: Dictionary in stack:
 		var unclosed: EventRowData = frame.get("opener")
-		# The rule on a fence that never closes turns amber, so the wart is visible at a glance and
-		# the note under it is the explanation rather than the only signal.
+		# A fence that never closes wears the quiet amber state and nothing else: its dashed mark
+		# takes the warning colour, and the sentence with its fix waits in the help strip for the
+		# row to be selected, the same way every other finding on the sheet is said.
 		unclosed.custom_color = _viewport._get_reading_style().lift_note_badge_foreground_color
+		_stamp_attention(unclosed, [EventSheetRegionFacts.fence_finding(unclosed.source_resource, unclosed.row_uid)])
 		output.append(unclosed)
-		# The note rides directly under the fence it is about, with the fix beside it. The
-		# label names the row the closer would land after, which only the numbering pass knows, so
-		# the note is recorded here and the number filled in once the rows have theirs.
-		output.append(_build_region_orphan_note_row(
-			unclosed,
-			EventSheetRegionFacts.unclosed_note(unclosed.source_resource),
-			_region_close_after_uid(frame.get("collected"))
-		))
 		output.append_array(frame.get("collected"))
 	return output
 
@@ -474,32 +462,11 @@ func _region_accent(block: CustomBlockRow) -> Color:
 	return styled.get("accent", _viewport._get_event_style().behavior_accent_color)
 
 
-# ── a fence with no partner ────────────────────────────────────────────────────────────────────
-
-
-## The amber note under an unmatched fence: the problem in a sentence, and (for an opener) the
-## fix that writes the missing `#endregion` after the last row before the next head. Amber, never
-## red: an unbalanced fence is a readability wart and the file still compiles.
-func _build_region_orphan_note_row(fence_row: EventRowData, message: String, close_after_uid: String) -> EventRowData:
-	var note_row: EventRowData = _build_note_row(
-		"region_orphan_%s" % str(fence_row.source_resource.get_instance_id()),
-		fence_row.indent, "region_orphan", message,
-		_viewport._get_reading_style().lift_note_badge_foreground_color, {},
-		# The label is written once the rows are numbered - the number it names does not exist yet.
-		{} if close_after_uid.is_empty() else {"label": "", "meta": {
-			"region_fix": close_after_uid,
-			"hover_note": EventSheetL10n.translate("Writes the missing #endregion there.")
-		}})
-	if not close_after_uid.is_empty():
-		_region_fix_notes.append(note_row)
-	return note_row
-
-
 ## THE note row, wherever the canvas grows one: the warning mark, the sentence, and - when there is
 ## an answer to offer - the fix at the right edge. Inert (no source_resource), so Delete and drag
 ## cannot reach a row through it.
 ##
-## `kind` names the note's metadata family ("region_orphan", "variable_note"); every span carries it
+## `kind` names the note's metadata family ("variable_note"); every span carries it
 ## under "kind" and again as the key whose value says WHICH span this is ("mark" / "message" /
 ## "fix"), which is what the input dispatch and the tests address a note's parts by. `shared_meta`
 ## rides on all three spans (a fix that needs to know what it is fixing), `fix` is
@@ -541,23 +508,10 @@ func _build_note_row(row_uid: String, indent: int, kind: String, message: String
 	return row_data
 
 
-## Which row the missing `#endregion` would land after: the last row before the next structural
-## head (a group, or another fence) or the end of what the opener swallowed. "" when it swallowed
-## nothing, in which case there is no row to close after and the note carries no fix.
-func _region_close_after_uid(collected: Array[EventRowData]) -> String:
-	var last_uid: String = ""
-	for row_data: EventRowData in collected:
-		if row_data.row_type == EventRowData.RowType.GROUP or _is_region_row(row_data):
-			break
-		last_uid = row_data.row_uid
-	return last_uid
-
-
 ## Every note that names a GUTTER NUMBER, filled in once the flat list has been numbered - which is
 ## the only moment those numbers exist. The viewport calls this one function so a future note of the
 ## same shape has a place to go instead of a second call site to remember.
 func apply_numbered_labels(numbered_rows: Array) -> void:
-	apply_region_fix_labels(numbered_rows)
 	apply_else_follows_labels(numbered_rows)
 
 
@@ -596,35 +550,6 @@ static func else_follows_text(numbered_rows: Array, else_index: int, indent: int
 			return ""
 		return EventSheetL10n.translate("neither of {n}").replace("{n}", str(row_data.event_number))
 	return ""
-
-
-## The fix names the row it writes the fence after, and the number it names is the one in the
-## gutter, which exists only once the flat list is numbered. Does nothing at all on a sheet with no
-## unmatched fence - which is every healthy sheet.
-func apply_region_fix_labels(numbered_rows: Array) -> void:
-	if _region_fix_notes.is_empty():
-		return
-	var numbers: Dictionary = {}
-	for entry: Variant in numbered_rows:
-		var row_data: EventRowData = (entry as Dictionary).get("row")
-		if row_data != null:
-			numbers[row_data.row_uid] = row_data.line_number
-	for note_row: EventRowData in _region_fix_notes:
-		if note_row.spans.is_empty():
-			continue
-		var fix_span: SemanticSpan = note_row.spans[note_row.spans.size() - 1]
-		var fix_meta: Dictionary = fix_span.metadata if fix_span.metadata is Dictionary else {}
-		# A re-flatten (a fold toggle) numbers the rows again without rebuilding them, so this can
-		# run twice over the same note: only ever touch the span that IS the fix.
-		if not fix_meta.has("region_fix"):
-			continue
-		var after_row: int = int(numbers.get(str(fix_meta["region_fix"]), 0))
-		if after_row <= 0:
-			# The row the fence would follow is not on the canvas (it is folded away inside
-			# something): offer no button rather than one naming a row nobody can see.
-			note_row.spans.remove_at(note_row.spans.size() - 1)
-			continue
-		fix_span.text = EventSheetRegionFacts.close_after_label(after_row)
 
 
 func _is_region_row(row_data: EventRowData) -> bool:

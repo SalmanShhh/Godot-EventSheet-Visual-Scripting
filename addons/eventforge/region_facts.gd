@@ -3,7 +3,7 @@
 # A region is not a resource: it is two plain lines of the file (`#region Name` and `#endregion`)
 # stored as two independent CustomBlockRow fences in the same container. Everything a reader sees
 # on a region row - its name, the fence line echoed at the right edge, the dashed rule down its
-# body, the amber note when a fence has no partner - is derived here, so the row builder, the
+# body, the finding a fence with no partner carries - is derived here, so the row builder, the
 # refactors, the menu and the tests can never answer the same question two ways.
 #
 # PURE + STATIC on purpose: no viewport, no theme, no display server. The pairing function takes a
@@ -29,6 +29,12 @@ const FOLDED_ECHO_JOIN: String = " … "
 ## What an unnamed region reads as. A fence may legitimately carry no label. The reading goes
 ## through `display_name`, which translates it - this const is the English source the CSVs key on.
 const UNNAMED_LABEL: String = "(unnamed region)"
+
+## The family a fence-without-its-other-half finding is tagged with, and the two doors it can offer:
+## an opener gets its `#endregion` written, a closer that closes nothing is removed.
+const FINDING_FAMILY: String = "region_fence"
+const FIX_ADD_CLOSER: String = "add_closer"
+const FIX_REMOVE_CLOSER: String = "remove_closer"
 
 
 ## True when this row is one of the two fences of a region.
@@ -157,6 +163,22 @@ static func unopened_note() -> String:
 		"%s closes nothing - there is no #region above it. Remove it, or open a region first.") % CLOSING_LINE
 
 
-## The fix button on an unclosed opener's note: the row the closing fence would land after.
-static func close_after_label(row_number: int) -> String:
-	return EventSheetL10n.translate("Close after row %d") % row_number
+## The finding an unmatched fence carries on the sheet: the sentence the help strip reads once the
+## row is selected, and the one door beside it. `row_uid` names the row rather than holding the
+## fence, because the fix runs through the undo funnel and the funnel replaces resources as it
+## commits.
+static func fence_finding(entry: Variant, row_uid: String) -> Dictionary:
+	if is_closing_fence(entry):
+		return {"family": FINDING_FAMILY, "message": unopened_note(), "fix": FIX_REMOVE_CLOSER,
+			"fix_label": EventSheetL10n.translate("Remove #endregion"), "row_uid": row_uid}
+	return {"family": FINDING_FAMILY, "message": unclosed_note(entry), "fix": FIX_ADD_CLOSER,
+		"fix_label": EventSheetL10n.translate("Add #endregion"), "row_uid": row_uid}
+
+
+## A new fence: an opener named `name`, or (with `is_end`) the closing `#endregion`. The one
+## constructor, so every gesture that writes a fence writes the same two fields.
+static func make_fence(name: String, is_end: bool = false) -> CustomBlockRow:
+	var fence := CustomBlockRow.new()
+	fence.kind_id = KIND_ID
+	fence.fields = {"label": "" if is_end else name, "is_end": is_end}
+	return fence

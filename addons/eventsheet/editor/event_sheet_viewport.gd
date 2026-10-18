@@ -77,10 +77,6 @@ signal sheet_head_action_requested(action: String)
 ## A mark on a GROUP head was clicked: "enabled" (the switch) or "toggleable" (the ring
 ## before it). The viewport only names the mark; the group is the sheet's, so the dock writes it.
 signal group_action_requested(action: String, group: EventGroup)
-## The fix on an unmatched fence's amber note was clicked: write the missing `#endregion`
-## where the note says. The note stands for no resource, so the dock resolves the orphan fence from
-## the row's uid rather than from a source the row does not have.
-signal region_fix_requested(note_row: EventRowData)
 ## The "Use hp" beside an unknown-variable note: one click renames every use of the
 ## misspelled name on that event to the one the sheet actually declares.
 signal variable_note_fix_requested(note_row: EventRowData)

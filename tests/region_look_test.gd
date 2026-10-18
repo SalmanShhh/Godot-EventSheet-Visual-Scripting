@@ -8,8 +8,8 @@
 #      and an unmatched fence is still an orphan (the wart-not-error covenant).
 #   3. THE REFACTORS. Region to group and back, on the plain container the rows live in - and the
 #      round trip is byte-identical, which is the only proof that "nothing inside moves" is true.
-#   4. THE ORPHAN. The amber note under an unmatched fence, the row its fix names, and the fence the
-#      fix actually writes.
+#   4. THE ORPHAN. Where the missing closer belongs. What the sheet shows for it, and the door that
+#      writes it, are region_gestures_test's.
 @tool
 class_name RegionLookTest
 extends RefCounted
@@ -176,25 +176,17 @@ static func _test_refactors() -> bool:
 	passed = _check("and both fences are gone",
 		EventSheetRegionFacts.pairing(sheet.events)["pairs"].is_empty(), true) and passed
 
-	passed = _check("a plain group can go back", EventSheetRefactor.group_to_region_problem(group), "") and passed
 	passed = _check("group to region writes the pair",
 		EventSheetRefactor.group_to_region(sheet.events, group), true) and passed
 	passed = _check("the round trip is byte-identical",
 		str(SheetCompiler.compile(sheet, "user://region_refactor.gd").get("output", "")), source) and passed
 
-	# What a region cannot carry, said in the words the menu item wears.
-	var with_local := EventGroup.new()
-	with_local.group_name = "Combat"
-	with_local.local_variables.append(LocalVariable.new())
-	passed = _check("a group with a local says so",
-		EventSheetRefactor.group_to_region_problem(with_local), "has 1 local") and passed
-	var switchable := EventGroup.new()
-	switchable.group_name = "Tutorial"
-	switchable.runtime_toggleable = true
-	passed = _check("a switchable group says so",
-		EventSheetRefactor.group_to_region_problem(switchable), "can be switched at runtime") and passed
-	passed = _check("and the refactor refuses it",
-		EventSheetRefactor.group_to_region([switchable], switchable), false) and passed
+	# The editor asks before a group that carries what a region cannot is turned; the refactor
+	# itself only refuses a group that is not in the container it was handed.
+	var elsewhere := EventGroup.new()
+	elsewhere.group_name = "Tutorial"
+	passed = _check("a group that is not there is refused",
+		EventSheetRefactor.group_to_region([], elsewhere), false) and passed
 
 	# Remove keeps everything the fences held.
 	var kept_sheet: EventSheetResource = _sheet_with([
@@ -211,45 +203,12 @@ static func _test_refactors() -> bool:
 
 
 static func _test_orphan_note() -> bool:
-	var passed: bool = true
-	var opener: CustomBlockRow = _region("Debug helpers", false)
-	var sheet: EventSheetResource = _sheet_with([opener, _comment("one"), _comment("two")])
-	passed = _check("the closer belongs at the end when nothing follows",
-		EventSheetRegionFacts.closer_insert_index(sheet.events, 0), 3) and passed
-
-	var viewport: EventSheetViewport = EventSheetViewport.new()
-	viewport.set_sheet(sheet)
-	var note: EventRowData = _note_row(viewport)
-	passed = _check("an unclosed fence gets a note under it", note != null, true) and passed
-	passed = _check("and it says what is wrong and what to write",
-		_span_text(note, "region_orphan", "message"),
-		"Debug helpers never closes, so it cannot fold. Add #endregion after the last row you want inside.") and passed
-	passed = _check("the fix names the row the fence would land after",
-		note.spans[note.spans.size() - 1].text if note != null else "", "Close after row 4") and passed
-
-	# The fix writes the fence exactly there, and the sheet pairs afterwards.
-	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
-	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
-	dock.setup(sheet)
-	var live_note: EventRowData = _note_row(dock._active_view())
-	dock._close_orphan_region(live_note)
-	var closed: Array = dock.get_current_sheet().events
-	passed = _check("the fence lands after the last row", closed.size(), 4) and passed
-	passed = _check("and it is a closing fence", EventSheetRegionFacts.is_closing_fence(closed[3]), true) and passed
-	passed = _check("so the region pairs now",
-		EventSheetRegionFacts.pairing(closed)["orphan_openers"].is_empty(), true) and passed
-	dock.free()
-
-	# A closer with nothing above it says so too, and offers no fix - there is nothing to write.
-	var lone: EventSheetResource = _sheet_with([_region("", true), _comment("after")])
-	viewport.set_sheet(lone)
-	var lone_note: EventRowData = _note_row(viewport)
-	passed = _check("a lone closer gets its own note",
-		_span_text(lone_note, "region_orphan", "message"),
-		"#endregion closes nothing - there is no #region above it. Remove it, or open a region first.") and passed
-	passed = _check("with no fix beside it", lone_note.spans.size() if lone_note != null else -1, 2) and passed
-	viewport.free()
-	return passed
+	var sheet: EventSheetResource = _sheet_with([_region("Debug helpers", false), _comment("one"), _comment("two")])
+	var passed: bool = _check("the closer belongs at the end when nothing follows",
+		EventSheetRegionFacts.closer_insert_index(sheet.events, 0), 3)
+	var headed: EventSheetResource = _sheet_with([_region("A", false), _comment("one"), EventGroup.new()])
+	return _check("and before the next head when one follows",
+		EventSheetRegionFacts.closer_insert_index(headed.events, 0), 2) and passed
 
 
 # ── Fixtures and span lookups ──
@@ -296,14 +255,6 @@ static func _row_height_of(viewport: EventSheetViewport, row_data: EventRowData)
 		if rows[index].get("row") == row_data:
 			return viewport.get_row_height(index)
 	return -1.0
-
-
-static func _note_row(viewport: EventSheetViewport) -> EventRowData:
-	for entry: Dictionary in viewport.get_flat_rows():
-		var row_data: EventRowData = entry.get("row")
-		if row_data != null and row_data.row_uid.begins_with("region_orphan_"):
-			return row_data
-	return null
 
 
 ## The first span whose metadata `key` equals `value`, or null.

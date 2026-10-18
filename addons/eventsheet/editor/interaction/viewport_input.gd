@@ -400,16 +400,10 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			_viewport.group_action_requested.emit(group_action, row_data.source_resource as EventGroup)
 			_viewport.accept_event()
 			return
-		# The fix beside an unknown-variable note, one click like the fence's.
+		# The fix beside an unknown-variable note: one click.
 		if not event.double_click and str(metadata.get("variable_note", "")) == "fix":
 			_viewport._select_from_click(row_index, span_index, false)
 			_viewport.variable_note_fix_requested.emit(row_data)
-			_viewport.accept_event()
-			return
-		# The fix beside an unmatched fence's note, read the same one-click way.
-		if not event.double_click and metadata.has("region_fix"):
-			_viewport._select_from_click(row_index, span_index, false)
-			_viewport.region_fix_requested.emit(row_data)
 			_viewport.accept_event()
 			return
 		var head_action: String = str(metadata.get("head_action", ""))

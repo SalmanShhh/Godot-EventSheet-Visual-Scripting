@@ -86,7 +86,6 @@ func _connect_view_signals(view: EventSheetViewport) -> void:
 	view.code_echo_activated.connect(_dock._code_panel_glue.open_at_row)
 	view.sheet_head_action_requested.connect(_dock._head_actions.handle)
 	view.group_action_requested.connect(_dock._on_group_action_requested)
-	view.region_fix_requested.connect(_dock._close_orphan_region)
 	view.variable_note_fix_requested.connect(_dock._apply_variable_note_fix)
 	view.rename_note_provider = _dock._variable_rename_note
 	view.rows_drop_requested.connect(_dock._ui_builder.later("_ace_apply", "_on_rows_drop_requested"))

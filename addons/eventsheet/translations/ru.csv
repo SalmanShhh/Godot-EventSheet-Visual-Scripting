@@ -4384,7 +4384,6 @@ Where this region ends.,Где заканчивается эта область.
 Write the file back with the markers gone. Every byte outside the conflicted region is left exactly as it is.,Записывает файл обратно без маркеров. Каждый байт за пределами конфликтной области остаётся ровно таким же.
 "Write the take as an ordinary Test sheet - readable rows, replayed by the same runner as every other test.","Записывает дубль как обычный тестовый лист: читаемые строки, воспроизводимые тем же запускателем, что и все остальные тесты."
 Writes the ## block · Enter commits.,Пишет блок ## · Enter подтверждает.
-Writes the missing #endregion there.,Пишет там недостающий #endregion.
 a number,число
 a value,значение
 check %s,проверьте %s
@@ -4434,7 +4433,6 @@ choose what it extends,выберите базовый класс
 runs in the editor too,работает и в редакторе
 "%s never closes, so it cannot fold. Add %s after the last row you want inside.","%s не закрыт, поэтому не сворачивается. Добавьте %s после последней строки, которая должна быть внутри."
 "%s closes nothing - there is no #region above it. Remove it, or open a region first.",%s ничего не закрывает - выше нет #region. Удалите его или сначала откройте регион.
-Close after row %d,Закрыть после строки %d
 every networking line reads as a row - %d of %d,каждая сетевая строка читается как строка - %d из %d
 %d of %d networking lines read as rows,строк сети читается как строки: %d из %d
 %s added - pick a mode to keep a value in step.,"%s добавлен - выберите режим, чтобы значение оставалось синхронным."
@@ -9496,3 +9494,38 @@ Can Be Switched At Runtime,Переключается во время игры
 Not switchable: picking it turns on Can be switched at runtime.,Не переключаемая: выбор включит «Переключаемая во время выполнения».
 "Not switchable, and it lives in %s: turn on Can be switched at runtime there.",Не переключаемая и находится в %s: включите там «Переключаемая во время выполнения».
 Its switch is written as %s.,Её переключатель записан как %s.
+Select a group to turn it into a region.,"Выберите группу, чтобы преобразовать её в регион."
+Turn %s into a region?,Преобразовать %s в регион?
+A region only folds rows; it does not switch them or choose who runs them.,"Регион только сворачивает строки: он не включает их и не выбирает, кто их выполняет."
+Ctrl+Z turns it back into the group.,Ctrl+Z превращает её обратно в группу.
+Couldn't locate that group.,Не удалось найти эту группу.
+"""%s"" is a #region now - the rows are unchanged.","""%s"" теперь #region - строки не изменились."
+Couldn't locate that region.,Не удалось найти этот регион.
+"""%s"" closes now.","""%s"" теперь закрыт."
+Removed the #endregion that closed nothing.,"Удалён #endregion, который ничего не закрывал."
+Runs On,Выполняется на
+Open Region,Развернуть регион
+Close Region,Свернуть регион
+Surrounded the selection with a region.,Выделение обёрнуто в регион.
+Surrounded the selection with %d regions.,Выделение обёрнуто в регионы: %d.
+Open a sheet to surround its rows with a region.,"Откройте лист, чтобы обернуть его строки в регион."
+"A region is one run of rows in one place. Select rows that sit together, at the same level.","Регион - это один непрерывный блок строк в одном месте. Выделите строки, которые стоят рядом на одном уровне."
+Select the rows to surround with a region.,"Выделите строки, которые нужно обернуть в регион."
+"A region goes around rows of the sheet or of a group, not inside an event.","Регион обрамляет строки листа или группы, но не внутри события."
+Surround with a region,Обернуть в регион
+The selection skips row %s. A region is one run of rows.,В выделении пропущена строка %s. Регион - это один непрерывный блок строк.
+The selection skips rows %s. A region is one run of rows.,В выделении пропущены строки %s. Регион - это один непрерывный блок строк.
+Include row %s,Включить строку %s
+Include rows %s,Включить строки %s
+Two regions,Два региона
+%d regions,Регионов: %d
+Ctrl+Z removes the region again.,Ctrl+Z снова убирает регион.
+"%s is off at start, so its events never run. As a region they run from the start.","%s выключена при запуске, поэтому её события никогда не выполняются. Как регион они будут выполняться с самого начала."
+"Events can switch %s off and on. A region cannot be switched, so the rows that switch it stop working.","События могут включать и выключать %s. Регион нельзя переключать, поэтому строки, которые его переключают, перестанут работать."
+"Its local variable %s goes with it, so the rows that use it stop working.","Её локальная переменная %s исчезнет вместе с ней, поэтому строки, которые её используют, перестанут работать."
+"Its %d local variables (%s) go with it, so the rows that use them stop working.","Её локальные переменные (%d: %s) исчезнут вместе с ней, поэтому строки, которые их используют, перестанут работать."
+%s runs only on the host. As a region its events run everywhere.,%s выполняется только на хосте. Как регион её события будут выполняться везде.
+%s runs only on the owner of this object. As a region its events run everywhere.,%s выполняется только у владельца этого объекта. Как регион её события будут выполняться везде.
+%s runs only in %s. As a region its events run in every mode.,%s выполняется только в режиме %s. Как регион её события будут выполняться в любом режиме.
+Remove #endregion,Удалить #endregion
+Add #endregion,Добавить #endregion

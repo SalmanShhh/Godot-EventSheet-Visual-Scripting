@@ -4384,7 +4384,6 @@ Where this region ends.,此区域的结束位置。
 Write the file back with the markers gone. Every byte outside the conflicted region is left exactly as it is.,去掉标记后把文件写回。冲突区域之外的每个字节都原样保留。
 "Write the take as an ordinary Test sheet - readable rows, replayed by the same runner as every other test.",把这段录制写成一张普通的测试事件表 - 行是可读的，并由运行其他测试的同一个执行器回放。
 Writes the ## block · Enter commits.,写出 ## 块 · 回车确认。
-Writes the missing #endregion there.,在那里写出缺失的 #endregion。
 a number,一个数字
 a value,一个值
 check %s,检查 %s
@@ -4434,7 +4433,6 @@ choose what it extends,选择它继承什么
 runs in the editor too,也在编辑器中运行
 "%s never closes, so it cannot fold. Add %s after the last row you want inside.",%s 从未关闭，因此无法折叠。请在要包含的最后一行之后添加 %s。
 "%s closes nothing - there is no #region above it. Remove it, or open a region first.",%s 没有关闭任何内容 - 它上面没有 #region。请删除它，或先开启一个区域。
-Close after row %d,在第 %d 行后关闭
 every networking line reads as a row - %d of %d,每一行网络代码都读作行 - %d / %d
 %d of %d networking lines read as rows,%d / %d 行网络代码读作行
 %s added - pick a mode to keep a value in step.,已添加 %s - 请选择一种模式来保持某个值同步。
@@ -9496,3 +9494,38 @@ Can Be Switched At Runtime,运行时可切换
 Not switchable: picking it turns on Can be switched at runtime.,不可切换：选中它会打开“可在运行时切换”。
 "Not switchable, and it lives in %s: turn on Can be switched at runtime there.",不可切换，且它位于 %s：请在那里打开“可在运行时切换”。
 Its switch is written as %s.,它的开关写作 %s。
+Select a group to turn it into a region.,请选择要转换为区域的分组。
+Turn %s into a region?,将 %s 转换为区域？
+A region only folds rows; it does not switch them or choose who runs them.,区域只折叠行；它不会开关这些行，也不决定由谁运行它们。
+Ctrl+Z turns it back into the group.,按 Ctrl+Z 可变回分组。
+Couldn't locate that group.,找不到该分组。
+"""%s"" is a #region now - the rows are unchanged.","""%s"" 现在是 #region - 行没有改变。"
+Couldn't locate that region.,找不到该区域。
+"""%s"" closes now.","""%s"" 现在已闭合。"
+Removed the #endregion that closed nothing.,已移除没有闭合任何内容的 #endregion。
+Runs On,运行于
+Open Region,展开区域
+Close Region,折叠区域
+Surrounded the selection with a region.,已用区域包住所选内容。
+Surrounded the selection with %d regions.,已用 %d 个区域包住所选内容。
+Open a sheet to surround its rows with a region.,请先打开一个表，再用区域包住它的行。
+"A region is one run of rows in one place. Select rows that sit together, at the same level.",区域是同一处连续的一段行。请选择同一层级中相邻的行。
+Select the rows to surround with a region.,请选择要用区域包住的行。
+"A region goes around rows of the sheet or of a group, not inside an event.",区域包住的是表或分组中的行，不能放在事件内部。
+Surround with a region,用区域包住
+The selection skips row %s. A region is one run of rows.,所选内容跳过了第 %s 行。区域是一段连续的行。
+The selection skips rows %s. A region is one run of rows.,所选内容跳过了第 %s 行。区域是一段连续的行。
+Include row %s,包含第 %s 行
+Include rows %s,包含第 %s 行
+Two regions,两个区域
+%d regions,%d 个区域
+Ctrl+Z removes the region again.,按 Ctrl+Z 可再次移除区域。
+"%s is off at start, so its events never run. As a region they run from the start.",%s 在开始时是关闭的，所以它的事件从不运行。变成区域后，它们会从一开始就运行。
+"Events can switch %s off and on. A region cannot be switched, so the rows that switch it stop working.",事件可以开关 %s。区域无法开关，所以开关它的那些行将不再起作用。
+"Its local variable %s goes with it, so the rows that use it stop working.",它的局部变量 %s 会一起消失，所以使用它的行将不再起作用。
+"Its %d local variables (%s) go with it, so the rows that use them stop working.",它的 %d 个局部变量（%s）会一起消失，所以使用它们的行将不再起作用。
+%s runs only on the host. As a region its events run everywhere.,%s 只在主机上运行。变成区域后，它的事件会在所有地方运行。
+%s runs only on the owner of this object. As a region its events run everywhere.,%s 只在该对象的所有者上运行。变成区域后，它的事件会在所有地方运行。
+%s runs only in %s. As a region its events run in every mode.,%s 只在 %s 中运行。变成区域后，它的事件会在所有模式中运行。
+Remove #endregion,移除 #endregion
+Add #endregion,添加 #endregion

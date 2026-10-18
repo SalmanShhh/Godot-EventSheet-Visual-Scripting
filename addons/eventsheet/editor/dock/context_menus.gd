@@ -19,7 +19,6 @@ const GRID_CSV_DIALOG_PATH := "res://addons/eventsheet/editor/dock/grid_csv_dial
 const MOMENT_FILE_DOOR_PATH := "res://addons/eventsheet/editor/dock/moment_file_door.gd"
 const PATTERN_ADOPT_PATH := "res://addons/eventsheet/editor/dock/pattern_adopt.gd"
 const PATTERN_FACTS_PATH := "res://addons/eventsheet/editor/interaction/pattern_facts.gd"
-const REFACTOR_PATH := "res://addons/eventforge/sheet_refactor.gd"
 const REFACTOR_MENU_PATH := "res://addons/eventsheet/editor/dock/refactor_menu.gd"
 const SNIPPET_PATH := "res://addons/eventsheet/editor/event_sheet_snippet.gd"
 ## The list the public API keeps the extension row items on, in a file that names nothing: asking
@@ -496,43 +495,38 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		# The group verbs in the order an author reaches for them: everything the group IS in one
 		# dialog, the on/off tick, the folds, then the things you do TO a group. Duplicate and Delete
 		# are the universal items below, so the group menu does not repeat them.
-		menu.add_item("Edit Group…", _dock.ROW_MENU_EDIT_GROUP)
+		menu.add_item(EventSheetL10n.translate("Edit Group…"), _dock.ROW_MENU_EDIT_GROUP)
 		# Who runs this group over a network, without opening the dialog for the one answer.
 		# Filled as it opens, ticked at what the group says now.
-		menu.add_submenu_node_item("Runs On", _dock._group_runs_on_submenu, _dock.ROW_MENU_GROUP_RUNS_ON)
-		menu.add_check_item("Active On Start", _dock.ROW_MENU_GROUP_ENABLED)
+		menu.add_submenu_node_item(EventSheetL10n.translate("Runs On"), _dock._group_runs_on_submenu, _dock.ROW_MENU_GROUP_RUNS_ON)
+		menu.add_check_item(EventSheetL10n.translate("Active On Start"), _dock.ROW_MENU_GROUP_ENABLED)
 		# Its partner: whether an event can switch the group while the game runs. Beside Active On
 		# Start because the two answers only mean something together.
-		menu.add_check_item("Can Be Switched At Runtime", _dock.ROW_MENU_GROUP_SWITCHABLE)
-		menu.add_item("Open / Close Group", _dock.ROW_MENU_TOGGLE_GROUP_FOLD)
-		menu.add_item("Open All / Close All Groups", _dock.ROW_MENU_FOLD_ALL_GROUPS)
+		menu.add_check_item(EventSheetL10n.translate("Can Be Switched At Runtime"), _dock.ROW_MENU_GROUP_SWITCHABLE)
+		menu.add_item(EventSheetL10n.translate("Open / Close Group"), _dock.ROW_MENU_TOGGLE_GROUP_FOLD)
+		menu.add_item(EventSheetL10n.translate("Open All / Close All Groups"), _dock.ROW_MENU_FOLD_ALL_GROUPS)
 		menu.add_separator()
-		menu.add_item("Add Local Variable…", _dock.ROW_MENU_GROUP_ADD_LOCAL)
-		menu.add_item("Group Color…", _dock.ROW_MENU_GROUP_COLOR)
-		# The way back to the file's own kind of grouping. A group carries two things a region
-		# cannot (locals, the runtime switch), so the item says WHY before the click rather than
-		# failing after it.
+		menu.add_item(EventSheetL10n.translate("Add Local Variable…"), _dock.ROW_MENU_GROUP_ADD_LOCAL)
+		menu.add_item(EventSheetL10n.translate("Group Color…"), _dock.ROW_MENU_GROUP_COLOR)
+		# The way back to the file's own kind of grouping. What a region cannot carry (locals, the
+		# runtime switch, off at start, who and when it runs) is said in the question the item asks
+		# before anything changes, so the item itself is always offered.
 		# A synthetic Arrange-by header reports as a group row but stands for no EventGroup, so it is
 		# offered nothing to convert.
 		if _dock._context_group() != null:
-			menu.add_item("Turn Into Region", _dock.ROW_MENU_GROUP_TO_REGION)
-			var region_problem: String = load(REFACTOR_PATH).group_to_region_problem(_dock._context_group())
-			if not region_problem.is_empty():
-				menu.set_item_text(menu.item_count - 1, "%s - %s" % [
-					menu.get_item_text(menu.item_count - 1), region_problem
-				])
-				menu.set_item_disabled(menu.item_count - 1, true)
-		menu.add_item("Ungroup - Keep The Rows", _dock.ROW_MENU_UNGROUP)
+			menu.add_item(EventSheetL10n.translate("Turn Into Region"), _dock.ROW_MENU_GROUP_TO_REGION)
+		menu.add_item(EventSheetL10n.translate("Ungroup - Keep The Rows"), _dock.ROW_MENU_UNGROUP)
 	elif is_region:
 		# What a region offers: rename the fence, fold it, and the two things it can become.
-		# No locals, no on/off switch, no ungroup - a region holds none of that.
-		menu.add_item("Rename Region…", _dock.ROW_MENU_REGION_RENAME)
-		menu.add_item("Open / Close Region", _dock.ROW_MENU_TOGGLE_GROUP_FOLD)
-		menu.add_item("Open All / Close All Regions", _dock.ROW_MENU_FOLD_ALL_REGIONS)
+		# No locals, no on/off switch, no ungroup - a region holds none of that. It folds by its own
+		# id: a region is not a group, and the group's fold has nothing to fold on it.
+		menu.add_item(EventSheetL10n.translate("Rename Region…"), _dock.ROW_MENU_REGION_RENAME)
+		menu.add_item(EventSheetL10n.translate("Open / Close Region"), _dock.ROW_MENU_TOGGLE_REGION_FOLD)
+		menu.add_item(EventSheetL10n.translate("Open All / Close All Regions"), _dock.ROW_MENU_FOLD_ALL_REGIONS)
 		menu.add_separator()
-		menu.add_item("Turn Into Group", _dock.ROW_MENU_REGION_TO_GROUP)
-		menu.add_item("Region Color…", _dock.ROW_MENU_GROUP_COLOR)
-		menu.add_item("Remove Region - Keep The Rows", _dock.ROW_MENU_REGION_REMOVE)
+		menu.add_item(EventSheetL10n.translate("Turn Into Group"), _dock.ROW_MENU_REGION_TO_GROUP)
+		menu.add_item(EventSheetL10n.translate("Region Color…"), _dock.ROW_MENU_GROUP_COLOR)
+		menu.add_item(EventSheetL10n.translate("Remove Region - Keep The Rows"), _dock.ROW_MENU_REGION_REMOVE)
 	elif is_comment:
 		menu.add_item("Edit Comment…", _dock.ROW_MENU_EDIT_COMMENT)
 		menu.add_item("Attach To Event Above", _dock.ROW_MENU_ATTACH_COMMENT)
@@ -554,10 +548,10 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	else:
 		menu.add_item("Disable Row", _dock.ROW_MENU_TOGGLE_ENABLED)
 	if multi:
-		menu.add_item("Group Selection into New Group", _dock.ROW_MENU_BULK_GROUP)
+		menu.add_item(EventSheetL10n.translate("Group Selection into New Group"), _dock.ROW_MENU_BULK_GROUP)
 		# The script editor's selection gesture, surfaced top-level on a multi-selection (the single-row
 		# form stays under More): wraps the selected rows in a #region fence pair and opens the name editor.
-		menu.add_item("Create Code Region", _dock.ROW_MENU_SURROUND_REGION)
+		menu.add_item(EventSheetL10n.translate("Create Code Region"), _dock.ROW_MENU_SURROUND_REGION)
 		menu.add_item("Replace object…", _dock.ROW_MENU_REPLACE_OBJECT)
 		menu.add_item("Edit Values Across Selection…", _dock.ROW_MENU_BATCH_EDIT_PARAMS)
 	menu.add_separator()
@@ -694,7 +688,7 @@ func _build_row_more_submenu(is_event: bool) -> void:
 	m.add_separator()
 	m.add_item("Save Selection as Snippet…", _dock.ROW_MENU_SAVE_SNIPPET)
 	m.add_item("Insert Snippet…", _dock.ROW_MENU_INSERT_SNIPPET)
-	m.add_item("Create Code Region…", _dock.ROW_MENU_SURROUND_REGION)
+	m.add_item(EventSheetL10n.translate("Create Code Region…"), _dock.ROW_MENU_SURROUND_REGION)
 	m.add_item("Replace object…", _dock.ROW_MENU_REPLACE_OBJECT)
 	# Paste Special sits beside Replace Object References because it IS that remap, applied on the
 	# way in instead of as a second step. Disabled (with the reason) when the clipboard holds no
@@ -787,10 +781,15 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 				context_group = _dock._context_row.source_resource as EventGroup
 			menu.set_item_disabled(group_toggle_index, context_group == null)
 			if context_group != null:
-				menu.set_item_text(
-					group_toggle_index,
-					"Open Group" if context_group.is_collapsed() else "Close Group"
-				)
+				menu.set_item_text(group_toggle_index, EventSheetL10n.translate("Open Group")
+					if context_group.is_collapsed() else EventSheetL10n.translate("Close Group"))
+		# A region reads its fold off the row, because the fold is view state and never the file's.
+		# A fence that never closes holds nothing to fold, so its item stays and is greyed.
+		var region_toggle_index: int = menu.get_item_index(_dock.ROW_MENU_TOGGLE_REGION_FOLD)
+		if region_toggle_index >= 0 and _dock._context_row != null:
+			menu.set_item_disabled(region_toggle_index, _dock._context_row.children.is_empty())
+			menu.set_item_text(region_toggle_index, EventSheetL10n.translate("Open Region")
+				if _dock._context_row.folded else EventSheetL10n.translate("Close Region"))
 		# Active on start is a TICK, so the menu shows the group's live state rather than a verb
 		# that has to be read twice to work out which way it goes.
 		var group_enabled_index: int = menu.get_item_index(_dock.ROW_MENU_GROUP_ENABLED)

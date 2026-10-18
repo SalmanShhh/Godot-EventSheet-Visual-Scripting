@@ -4384,7 +4384,6 @@ Where this region ends.,이 리전이 끝나는 곳.
 Write the file back with the markers gone. Every byte outside the conflicted region is left exactly as it is.,표시를 없앤 채로 파일을 다시 씁니다. 충돌 구간 밖의 모든 바이트는 그대로 남습니다.
 "Write the take as an ordinary Test sheet - readable rows, replayed by the same runner as every other test.","테이크를 평범한 테스트 시트로 씁니다 - 읽을 수 있는 행이 되고, 다른 테스트와 같은 러너가 재생합니다."
 Writes the ## block · Enter commits.,## 블록을 씁니다 · Enter로 확정.
-Writes the missing #endregion there.,거기에 빠진 #endregion을 씁니다.
 a number,숫자
 a value,값
 check %s,%s 확인
@@ -4434,7 +4433,6 @@ choose what it extends,상속할 클래스 선택
 runs in the editor too,에디터에서도 실행됩니다
 "%s never closes, so it cannot fold. Add %s after the last row you want inside.",%s 이(가) 닫히지 않아 접을 수 없습니다. 안에 넣을 마지막 행 뒤에 %s 을(를) 추가하세요.
 "%s closes nothing - there is no #region above it. Remove it, or open a region first.",%s 은(는) 아무것도 닫지 않습니다 - 위에 #region 이 없습니다. 삭제하거나 먼저 영역을 여세요.
-Close after row %d,%d 행 뒤에서 닫기
 every networking line reads as a row - %d of %d,모든 네트워크 줄이 행으로 읽힘 - %d개 중 %d개
 %d of %d networking lines read as rows,네트워크 %d개 중 %d개 줄이 행으로 읽힘
 %s added - pick a mode to keep a value in step.,%s 을(를) 추가했습니다 - 값을 동기화할 모드를 고르세요.
@@ -9496,3 +9494,38 @@ Can Be Switched At Runtime,실행 중 전환 가능
 Not switchable: picking it turns on Can be switched at runtime.,전환 불가: 고르면 런타임에 전환 가능이 켜집니다.
 "Not switchable, and it lives in %s: turn on Can be switched at runtime there.",전환 불가이며 %s에 있습니다: 거기서 런타임에 전환 가능을 켜세요.
 Its switch is written as %s.,스위치는 %s(으)로 쓰입니다.
+Select a group to turn it into a region.,리전으로 변환할 그룹을 선택하세요.
+Turn %s into a region?,%s 을(를) 리전으로 변환할까요?
+A region only folds rows; it does not switch them or choose who runs them.,리전은 행을 접기만 합니다. 행을 켜고 끄거나 누가 실행할지 정하지 않습니다.
+Ctrl+Z turns it back into the group.,Ctrl+Z를 누르면 다시 그룹이 됩니다.
+Couldn't locate that group.,그 그룹을 찾을 수 없습니다.
+"""%s"" is a #region now - the rows are unchanged.","""%s"" 은(는) 이제 #region 입니다. 행은 그대로입니다."
+Couldn't locate that region.,그 리전을 찾을 수 없습니다.
+"""%s"" closes now.","""%s"" 이(가) 이제 닫힙니다."
+Removed the #endregion that closed nothing.,아무것도 닫지 않던 #endregion을 제거했습니다.
+Runs On,실행 위치
+Open Region,리전 열기
+Close Region,리전 닫기
+Surrounded the selection with a region.,선택 항목을 리전으로 감쌌습니다.
+Surrounded the selection with %d regions.,선택 항목을 리전 %d개로 감쌌습니다.
+Open a sheet to surround its rows with a region.,행을 리전으로 감싸려면 시트를 여세요.
+"A region is one run of rows in one place. Select rows that sit together, at the same level.",리전은 한 곳에 이어진 행 묶음입니다. 같은 수준에 나란히 있는 행을 선택하세요.
+Select the rows to surround with a region.,리전으로 감쌀 행을 선택하세요.
+"A region goes around rows of the sheet or of a group, not inside an event.",리전은 시트나 그룹의 행을 감쌉니다. 이벤트 안에는 들어갈 수 없습니다.
+Surround with a region,리전으로 감싸기
+The selection skips row %s. A region is one run of rows.,선택 항목이 %s 행을 건너뜁니다. 리전은 이어진 행 묶음입니다.
+The selection skips rows %s. A region is one run of rows.,선택 항목이 %s 행을 건너뜁니다. 리전은 이어진 행 묶음입니다.
+Include row %s,%s 행 포함
+Include rows %s,%s 행 포함
+Two regions,리전 2개
+%d regions,리전 %d개
+Ctrl+Z removes the region again.,Ctrl+Z를 누르면 리전이 다시 사라집니다.
+"%s is off at start, so its events never run. As a region they run from the start.",%s 은(는) 시작 시 꺼져 있어 이벤트가 실행되지 않습니다. 리전이 되면 처음부터 실행됩니다.
+"Events can switch %s off and on. A region cannot be switched, so the rows that switch it stop working.",이벤트가 %s 을(를) 켜고 끌 수 있습니다. 리전은 켜고 끌 수 없으므로 그것을 전환하는 행은 동작하지 않게 됩니다.
+"Its local variable %s goes with it, so the rows that use it stop working.",지역 변수 %s 도 함께 사라지므로 그것을 쓰는 행은 동작하지 않게 됩니다.
+"Its %d local variables (%s) go with it, so the rows that use them stop working.",지역 변수 %d개 (%s) 도 함께 사라지므로 그것을 쓰는 행은 동작하지 않게 됩니다.
+%s runs only on the host. As a region its events run everywhere.,%s 은(는) 호스트에서만 실행됩니다. 리전이 되면 이벤트가 모든 곳에서 실행됩니다.
+%s runs only on the owner of this object. As a region its events run everywhere.,%s 은(는) 이 오브젝트의 소유자에서만 실행됩니다. 리전이 되면 이벤트가 모든 곳에서 실행됩니다.
+%s runs only in %s. As a region its events run in every mode.,%s 은(는) %s 에서만 실행됩니다. 리전이 되면 이벤트가 모든 모드에서 실행됩니다.
+Remove #endregion,#endregion 제거
+Add #endregion,#endregion 추가

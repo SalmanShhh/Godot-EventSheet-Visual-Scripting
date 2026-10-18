@@ -4384,7 +4384,6 @@ Where this region ends.,このリージョンが終わる場所。
 Write the file back with the markers gone. Every byte outside the conflicted region is left exactly as it is.,マーカーを取り除いてファイルを書き戻します。競合部分の外側のバイトはそのまま残ります。
 "Write the take as an ordinary Test sheet - readable rows, replayed by the same runner as every other test.",テイクを通常のテストシートとして書き出します - 読める行になり、他のテストと同じランナーで再生されます。
 Writes the ## block · Enter commits.,## ブロックを書きます · Enter で確定。
-Writes the missing #endregion there.,そこに欠けている #endregion を書きます。
 a number,数値
 a value,値
 check %s,%s を確認
@@ -4434,7 +4433,6 @@ choose what it extends,継承元を選択
 runs in the editor too,エディタでも実行されます
 "%s never closes, so it cannot fold. Add %s after the last row you want inside.",%s が閉じられていないため折りたためません。中に入れたい最後の行の後に %s を追加してください。
 "%s closes nothing - there is no #region above it. Remove it, or open a region first.",%s は何も閉じていません - 上に #region がありません。削除するか、先にリージョンを開いてください。
-Close after row %d,%d 行目の後で閉じる
 every networking line reads as a row - %d of %d,ネットワークの行はすべて行として読める - %d / %d
 %d of %d networking lines read as rows,ネットワークの %d / %d 行が行として読める
 %s added - pick a mode to keep a value in step.,%s を追加しました - 値を同期するモードを選んでください。
@@ -9496,3 +9494,38 @@ Can Be Switched At Runtime,実行中に切り替え可能
 Not switchable: picking it turns on Can be switched at runtime.,切り替え不可: 選ぶと「実行時に切り替え可能」が有効になります。
 "Not switchable, and it lives in %s: turn on Can be switched at runtime there.",切り替え不可で、%s にあります: そちらで「実行時に切り替え可能」を有効にしてください。
 Its switch is written as %s.,スイッチは %s として書かれます。
+Select a group to turn it into a region.,リージョンに変換するグループを選択してください。
+Turn %s into a region?,%s をリージョンに変換しますか?
+A region only folds rows; it does not switch them or choose who runs them.,リージョンは行を折りたたむだけです。行を切り替えたり、誰が実行するかを決めたりはしません。
+Ctrl+Z turns it back into the group.,Ctrl+Z でグループに戻ります。
+Couldn't locate that group.,そのグループが見つかりませんでした。
+"""%s"" is a #region now - the rows are unchanged.","""%s"" は #region になりました。行は変わっていません。"
+Couldn't locate that region.,そのリージョンが見つかりませんでした。
+"""%s"" closes now.","""%s"" は閉じられました。"
+Removed the #endregion that closed nothing.,何も閉じていなかった #endregion を削除しました。
+Runs On,実行する側
+Open Region,リージョンを開く
+Close Region,リージョンを閉じる
+Surrounded the selection with a region.,選択範囲をリージョンで囲みました。
+Surrounded the selection with %d regions.,選択範囲を %d 個のリージョンで囲みました。
+Open a sheet to surround its rows with a region.,行をリージョンで囲むにはシートを開いてください。
+"A region is one run of rows in one place. Select rows that sit together, at the same level.",リージョンは一か所に続く行のまとまりです。同じ階層で並んでいる行を選択してください。
+Select the rows to surround with a region.,リージョンで囲む行を選択してください。
+"A region goes around rows of the sheet or of a group, not inside an event.",リージョンはシートかグループの行を囲みます。イベントの中には置けません。
+Surround with a region,リージョンで囲む
+The selection skips row %s. A region is one run of rows.,選択範囲は %s 行目を飛ばしています。リージョンは続いた行のまとまりです。
+The selection skips rows %s. A region is one run of rows.,選択範囲は %s 行目を飛ばしています。リージョンは続いた行のまとまりです。
+Include row %s,%s 行目も含める
+Include rows %s,%s 行目も含める
+Two regions,リージョンを 2 つ
+%d regions,リージョンを %d 個
+Ctrl+Z removes the region again.,Ctrl+Z でリージョンを取り除けます。
+"%s is off at start, so its events never run. As a region they run from the start.",%s は開始時にオフなので、そのイベントは実行されません。リージョンにすると最初から実行されます。
+"Events can switch %s off and on. A region cannot be switched, so the rows that switch it stop working.",イベントは %s のオン・オフを切り替えられます。リージョンは切り替えられないので、切り替えている行は動かなくなります。
+"Its local variable %s goes with it, so the rows that use it stop working.",ローカル変数 %s も一緒になくなるため、それを使う行は動かなくなります。
+"Its %d local variables (%s) go with it, so the rows that use them stop working.",%d 個のローカル変数 (%s) も一緒になくなるため、それらを使う行は動かなくなります。
+%s runs only on the host. As a region its events run everywhere.,%s はホストでだけ実行されます。リージョンにするとそのイベントはどこでも実行されます。
+%s runs only on the owner of this object. As a region its events run everywhere.,%s はこのオブジェクトの所有者でだけ実行されます。リージョンにするとそのイベントはどこでも実行されます。
+%s runs only in %s. As a region its events run in every mode.,%s は %s のときだけ実行されます。リージョンにするとそのイベントはすべてのモードで実行されます。
+Remove #endregion,#endregion を削除
+Add #endregion,#endregion を追加

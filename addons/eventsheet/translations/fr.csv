@@ -4384,7 +4384,6 @@ Where this region ends.,Où se termine cette région.
 Write the file back with the markers gone. Every byte outside the conflicted region is left exactly as it is.,Réécrit le fichier sans les marqueurs. Chaque octet hors de la zone en conflit reste exactement tel quel.
 "Write the take as an ordinary Test sheet - readable rows, replayed by the same runner as every other test.","Écrit la prise comme une feuille de test ordinaire - des lignes lisibles, rejouées par le même exécuteur que tous les autres tests."
 Writes the ## block · Enter commits.,Écrit le bloc ## · Entrée valide.
-Writes the missing #endregion there.,Écrit le #endregion manquant à cet endroit.
 a number,un nombre
 a value,une valeur
 check %s,vérifiez %s
@@ -4434,7 +4433,6 @@ choose what it extends,choisissez ce qu'elle étend
 runs in the editor too,s'exécute aussi dans l'éditeur
 "%s never closes, so it cannot fold. Add %s after the last row you want inside.",%s ne se ferme jamais et ne peut donc pas se replier. Ajoutez %s après la dernière ligne à inclure.
 "%s closes nothing - there is no #region above it. Remove it, or open a region first.","%s ne ferme rien - il n'y a aucun #region au-dessus. Supprimez-le, ou ouvrez d'abord une région."
-Close after row %d,Fermer après la ligne %d
 every networking line reads as a row - %d of %d,chaque ligne réseau se lit comme une ligne - %d sur %d
 %d of %d networking lines read as rows,%d lignes réseau sur %d se lisent comme des lignes
 %s added - pick a mode to keep a value in step.,%s ajouté - choisissez un mode pour garder une valeur synchronisée.
@@ -9496,3 +9494,38 @@ Can Be Switched At Runtime,Commutable à l'exécution
 Not switchable: picking it turns on Can be switched at runtime.,Non activable : le choisir active Activable à l'exécution.
 "Not switchable, and it lives in %s: turn on Can be switched at runtime there.","Non activable, et il se trouve dans %s : activez-y Activable à l'exécution."
 Its switch is written as %s.,Son interrupteur s'écrit %s.
+Select a group to turn it into a region.,Sélectionnez un groupe pour le convertir en région.
+Turn %s into a region?,Convertir %s en région ?
+A region only folds rows; it does not switch them or choose who runs them.,Une région ne fait que replier des lignes ; elle ne les active pas et ne choisit pas qui les exécute.
+Ctrl+Z turns it back into the group.,Ctrl+Z la reconvertit en groupe.
+Couldn't locate that group.,Impossible de trouver ce groupe.
+"""%s"" is a #region now - the rows are unchanged.","""%s"" est maintenant une #region - les lignes sont inchangées."
+Couldn't locate that region.,Impossible de trouver cette région.
+"""%s"" closes now.","""%s"" se ferme maintenant."
+Removed the #endregion that closed nothing.,Le #endregion qui ne fermait rien a été retiré.
+Runs On,S'exécute sur
+Open Region,Ouvrir la région
+Close Region,Fermer la région
+Surrounded the selection with a region.,La sélection est entourée d'une région.
+Surrounded the selection with %d regions.,La sélection est entourée de %d régions.
+Open a sheet to surround its rows with a region.,Ouvrez une feuille pour entourer ses lignes d'une région.
+"A region is one run of rows in one place. Select rows that sit together, at the same level.","Une région est une suite de lignes à un seul endroit. Sélectionnez des lignes voisines, au même niveau."
+Select the rows to surround with a region.,Sélectionnez les lignes à entourer d'une région.
+"A region goes around rows of the sheet or of a group, not inside an event.","Une région entoure des lignes de la feuille ou d'un groupe, pas à l'intérieur d'un événement."
+Surround with a region,Entourer d'une région
+The selection skips row %s. A region is one run of rows.,La sélection saute la ligne %s. Une région est une suite continue de lignes.
+The selection skips rows %s. A region is one run of rows.,La sélection saute les lignes %s. Une région est une suite continue de lignes.
+Include row %s,Inclure la ligne %s
+Include rows %s,Inclure les lignes %s
+Two regions,Deux régions
+%d regions,%d régions
+Ctrl+Z removes the region again.,Ctrl+Z retire à nouveau la région.
+"%s is off at start, so its events never run. As a region they run from the start.","%s est désactivé au démarrage, donc ses événements ne s'exécutent jamais. En région, ils s'exécutent dès le début."
+"Events can switch %s off and on. A region cannot be switched, so the rows that switch it stop working.","Des événements peuvent activer et désactiver %s. Une région ne peut pas être activée, donc les lignes qui l'activent cessent de fonctionner."
+"Its local variable %s goes with it, so the rows that use it stop working.","Sa variable locale %s disparaît avec lui, donc les lignes qui l'utilisent cessent de fonctionner."
+"Its %d local variables (%s) go with it, so the rows that use them stop working.","Ses %d variables locales (%s) disparaissent avec lui, donc les lignes qui les utilisent cessent de fonctionner."
+%s runs only on the host. As a region its events run everywhere.,"%s ne s'exécute que sur l'hôte. En région, ses événements s'exécutent partout."
+%s runs only on the owner of this object. As a region its events run everywhere.,"%s ne s'exécute que chez le propriétaire de cet objet. En région, ses événements s'exécutent partout."
+%s runs only in %s. As a region its events run in every mode.,"%s ne s'exécute qu'en %s. En région, ses événements s'exécutent dans tous les modes."
+Remove #endregion,Retirer #endregion
+Add #endregion,Ajouter #endregion

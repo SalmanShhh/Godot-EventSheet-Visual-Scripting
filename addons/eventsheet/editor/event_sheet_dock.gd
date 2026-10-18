@@ -196,6 +196,10 @@ const ROW_MENU_RENAME_FUNCTION := 66
 const ROW_MENU_ADD_TOOL_BUTTON := 67
 ## "Can Be Switched At Runtime" on the group head, the tick beside Active On Start.
 const ROW_MENU_GROUP_SWITCHABLE := 68
+## "Open / Close Region" on a region's opening fence. Its own id rather than the group's fold: a
+## region is two lines of the file and its fold is the view's, so the group's handler has nothing to
+## fold on it.
+const ROW_MENU_TOGGLE_REGION_FOLD := 69
 const GROUP_RUNS_ON_EVERYONE := 70
 const GROUP_RUNS_ON_HOST := 71
 const GROUP_RUNS_ON_OWNER := 72
@@ -4383,27 +4387,61 @@ func _turn_region_into_group() -> void:
 	_mark_dirty("\"%s\" is a group now - the rows are unchanged." % made[0].display_name())
 
 
-## Turn Into Region: the group's header goes and its rows sit between two fences instead. The
-## menu item already said why it could not happen, so the refusal here is only a backstop.
+## Turn Into Region: the group's header goes and its rows sit between two fences instead. A group
+## that carries something a region cannot asks first, saying each thing that would go, and Cancel
+## leaves it exactly as it is; a plain group turns at once, because nothing about it is lost.
 func _turn_group_into_region() -> void:
 	var group: EventGroup = _context_group()
 	if group == null:
-		_set_status("Select a group to turn it into a region.", true)
+		_set_status(EventSheetL10n.translate("Select a group to turn it into a region."), true)
 		return
-	var problem: String = load(REFACTOR_PATH).group_to_region_problem(group)
-	if not problem.is_empty():
-		_set_status("\"%s\" %s, and a region cannot carry that." % [group.display_name(), problem], true)
+	var losses: PackedStringArray = EventSheetGroupFacts.region_losses(group)
+	if losses.is_empty():
+		turn_group_into_region(group.group_uid)
 		return
-	var location: Dictionary = _ace_apply._find_resource_location(group)
+	var said: VBoxContainer = EventSheetPopupUI.form_box()
+	for loss: String in losses:
+		var note := EventSheetPopupUI.StateNote.new(load(SMALL_PROMPT_PATH).wrap_width())
+		note.say(loss, EventSheetPopupUI.TONE_WARNING)
+		said.add_child(note)
+	# The question holds the group's uid, never the group: the answer runs through the undo funnel,
+	# which replaces resources as it commits.
+	var uid: String = group.group_uid
+	load(SMALL_PROMPT_PATH).open(self, {
+		"title": EventSheetL10n.translate("Turn %s into a region?") % group.display_name(),
+		"say": EventSheetL10n.translate("A region only folds rows; it does not switch them or choose who runs them."),
+		"body": said,
+		"note": EventSheetL10n.translate("Ctrl+Z turns it back into the group."),
+		"glyph": "!",
+		"main": EventSheetL10n.translate("Turn Into Region"),
+		"on_main": func() -> void: turn_group_into_region(uid),
+	})
+
+
+## The group whose uid is `uid`, anywhere on the sheet, or null.
+func _group_with_uid(uid: String) -> EventGroup:
+	if _current_sheet == null or uid.is_empty():
+		return null
+	for group: EventGroup in EventSheetGroupFacts.collect(_current_sheet.events):
+		if group.group_uid == uid:
+			return group
+	return null
+
+
+## Turns the group `uid` names into a region, in one undo step. False when it is gone.
+func turn_group_into_region(uid: String) -> bool:
+	var group: EventGroup = _group_with_uid(uid)
+	var location: Dictionary = _ace_apply._find_resource_location(group) if group != null else {}
 	if location.is_empty():
-		_set_status("Couldn't locate that group.", true)
-		return
+		_set_status(EventSheetL10n.translate("Couldn't locate that group."), true)
+		return false
 	var name_before: String = group.display_name()
 	var changed: bool = _perform_undoable_sheet_edit("Turn Into Region", func() -> bool:
 		return load(REFACTOR_PATH).group_to_region(location.get("container"), group)
 	)
 	if changed:
-		_mark_dirty("\"%s\" is a #region now - the rows are unchanged." % name_before)
+		_mark_dirty(EventSheetL10n.translate("\"%s\" is a #region now - the rows are unchanged.") % name_before)
+	return changed
 
 
 ## Remove Region: both fences go, everything they held stays exactly where it was.
@@ -4430,6 +4468,18 @@ func _remove_context_region() -> void:
 	_mark_dirty("Region removed - %d row(s) kept." % kept[0])
 
 
+## Open / Close Region on one opening fence: the view folds it exactly as its ▶ mark does, and the
+## fold is remembered beside the sheet rather than written into it.
+func _toggle_context_region_fold() -> void:
+	var view: EventSheetViewport = _active_view()
+	if _context_region() == null or view == null:
+		return
+	if _context_row.children.is_empty():
+		_set_status(EventSheetRegionFacts.unclosed_note(_context_row.source_resource), true)
+		return
+	view.toggle_row_fold_by_uid(_context_row.row_uid)
+
+
 ## Fold all / Unfold all regions: one gesture for the whole sheet, folding when anything is
 ## open and opening when everything is shut, so the item is a toggle rather than two commands.
 func _toggle_all_region_folds() -> void:
@@ -4441,47 +4491,37 @@ func _toggle_all_region_folds() -> void:
 	_set_status("Regions opened." if opening else "Regions closed.")
 
 
-## The fix on an unmatched opener's amber note: writes the missing `#endregion` after the last
-## row before the next head. The note stands for no resource of its own, so the fence it is about is
-## resolved from the row's uid - the same uid the note was built with.
-func _close_orphan_region(note_row: EventRowData) -> void:
-	if note_row == null or _current_sheet == null:
-		return
-	var opener: CustomBlockRow = _orphan_region_for(note_row.row_uid)
-	if opener == null:
-		_set_status("That fence is closed already.", true)
-		return
-	var location: Dictionary = _ace_apply._find_resource_location(opener)
+## The help strip's door on a fence without its other half: an opener gets its `#endregion` after
+## the last row before the next head, a closer that closes nothing is removed. One undo step either
+## way. The fence is found by the row the finding was stamped on, never held across the edit.
+func fix_region_fence(finding: Dictionary) -> bool:
+	var fence: CustomBlockRow = null
+	var view: EventSheetViewport = _active_view()
+	for entry: Dictionary in view.get_flat_rows() if view != null else []:
+		var row_data: EventRowData = entry.get("row")
+		if row_data != null and row_data.row_uid == str(finding.get("row_uid", "")):
+			fence = row_data.source_resource as CustomBlockRow
+	var location: Dictionary = _ace_apply._find_resource_location(fence) if fence != null else {}
 	if location.is_empty():
-		_set_status("Couldn't locate that region.", true)
-		return
-	var changed: bool = _perform_undoable_sheet_edit("Close Region", func() -> bool:
+		_set_status(EventSheetL10n.translate("Couldn't locate that region."), true)
+		return false
+	var closing: bool = str(finding.get("fix", "")) == EventSheetRegionFacts.FIX_ADD_CLOSER
+	var changed: bool = _perform_undoable_sheet_edit("Close Region" if closing else "Remove #endregion", func() -> bool:
 		var container: Array = location.get("container")
-		var at: int = EventSheetRegionFacts.closer_insert_index(container, container.find(opener))
-		if at < 0:
+		var at: int = container.find(fence)
+		if not closing:
+			container.remove_at(at)
+			return true
+		var close_at: int = EventSheetRegionFacts.closer_insert_index(container, at)
+		if close_at < 0:
 			return false
-		var closer := CustomBlockRow.new()
-		closer.kind_id = EventSheetRegionFacts.KIND_ID
-		closer.fields = {"label": "", "is_end": true}
-		container.insert(at, closer)
+		container.insert(close_at, EventSheetRegionFacts.make_fence("", true))
 		return true
 	)
 	if changed:
-		_mark_dirty("\"%s\" closes now." % EventSheetRegionFacts.display_name(opener))
-
-
-## The unmatched opening fence one orphan note is about, found by the uid the note was built with.
-func _orphan_region_for(note_uid: String) -> CustomBlockRow:
-	var view: EventSheetViewport = _active_view()
-	if view == null:
-		return null
-	for entry: Dictionary in view.get_flat_rows():
-		var row_data: EventRowData = entry.get("row")
-		if row_data == null or not EventSheetRegionFacts.is_opening_fence(row_data.source_resource):
-			continue
-		if note_uid == "region_orphan_%s" % str(row_data.source_resource.get_instance_id()):
-			return row_data.source_resource as CustomBlockRow
-	return null
+		_mark_dirty(EventSheetL10n.translate("\"%s\" closes now.") % EventSheetRegionFacts.display_name(fence)
+			if closing else EventSheetL10n.translate("Removed the #endregion that closed nothing."))
+	return changed
 
 
 # ── Autoload (Singleton) sheets ───────────────────────────────────────────────────────
@@ -7450,6 +7490,9 @@ func apply_selected_row_fix() -> void:
 		return
 	if str(finding.get("family", "")) == ViewportRowBuilder.FINDINGS_COLLISIONS:
 		apply_collision_fix(finding)
+		return
+	if str(finding.get("family", "")) == EventSheetRegionFacts.FINDING_FAMILY:
+		fix_region_fence(finding)
 		return
 	if str(finding.get("fix", "")) == EventSheetMigrationFindings.FIX_SEE_REPLACEMENT:
 		see_what_replaced_it(finding)

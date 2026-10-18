@@ -20,6 +20,9 @@ extends RefCounted
 ## The list the public API keeps the extension row items on, in a file that names nothing:
 ## asking the API itself here would compile it, and everything it names, into the first open.
 const DOCK_REGISTRY := preload("res://addons/eventsheet/api/dock_registry.gd")
+## The answers to "the selection skips rows": take them in, or make one region per run.
+const SURROUND_INCLUDE := "include"
+const SURROUND_SPLIT := "split"
 
 var _dock: Control = null
 
@@ -216,6 +219,8 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 			_dock._turn_group_into_region()
 		_dock.ROW_MENU_REGION_RENAME:
 			_dock._begin_region_rename()
+		_dock.ROW_MENU_TOGGLE_REGION_FOLD:
+			_dock._toggle_context_region_fold()
 		_dock.ROW_MENU_FOLD_ALL_REGIONS:
 			_dock._toggle_all_region_folds()
 		_dock.ROW_MENU_REGION_TO_GROUP:
@@ -373,46 +378,123 @@ func unhandled_key_input(event: InputEvent) -> void:
 			_dock.accept_event()
 
 
-## "Surround with Region…": wraps the selected top-level rows (or the right-clicked
-## row) in a fresh #region / #endregion fence pair as ONE undo step, then opens the
-## fence editor so the region gets its name/description/color right away - the
-## script editor's surround gesture, event-sheet style. Rows nested inside groups
-## are skipped (fences pair per level; wrap the group itself instead).
-func surround_selection_with_region() -> void:
-	if _dock._current_sheet == null:
+## "Surround with Region…": wraps the selected rows (or the right-clicked row) in a fresh
+## #region / #endregion pair as ONE undo step, then opens the fence editor so the region gets its
+## name right away - the script editor's surround gesture. The fences go into the container the rows
+## live in, so rows inside a group get a region inside that group. A region is one run of rows: when
+## the selection skips rows, the gesture asks rather than swallowing them (`skipped` is that answer,
+## SURROUND_INCLUDE or SURROUND_SPLIT).
+func surround_selection_with_region(skipped: String = "") -> void:
+	var plan: Dictionary = _surround_plan()
+	if plan.has("problem"):
+		_dock._set_status(str(plan["problem"]), true)
 		return
-	var entry_indices: Array[int] = []
-	var selected_rows: Array[EventRowData] = _dock._viewport.get_selected_rows() if _dock._viewport != null else []
-	if selected_rows.is_empty() and _dock._context_row != null:
-		selected_rows = [_dock._context_row]
-	for row_data: EventRowData in selected_rows:
-		if row_data == null or row_data.source_resource == null:
-			continue
-		var entry_index: int = _dock._current_sheet.events.find(row_data.source_resource)
-		if entry_index != -1 and not entry_indices.has(entry_index):
-			entry_indices.append(entry_index)
-	if entry_indices.is_empty():
-		_dock._set_status("Select top-level rows to surround with a region.", true)
+	var runs: Array = plan["runs"]
+	if runs.size() > 1 and skipped.is_empty():
+		_ask_about_skipped_rows(plan)
 		return
-	entry_indices.sort()
-	var first_index: int = entry_indices[0]
-	var last_index: int = entry_indices[entry_indices.size() - 1]
-	var opener: CustomBlockRow = CustomBlockRow.new()
-	opener.kind_id = "region"
-	opener.fields = {"label": "New Region", "is_end": false}
-	var closer: CustomBlockRow = CustomBlockRow.new()
-	closer.kind_id = "region"
-	closer.fields = {"label": "", "is_end": true}
+	if skipped == SURROUND_INCLUDE:
+		runs = [[runs[0][0], runs[runs.size() - 1][1]]]
+	var container: Array = plan["container"]
+	var opener_rank: Array[int] = []
 	var changed: bool = _dock._perform_undoable_sheet_edit("Surround with Region", func() -> bool:
-		_dock._current_sheet.events.insert(last_index + 1, closer)
-		_dock._current_sheet.events.insert(first_index, opener)
+		# Back to front, so each pair's indices are still true when it lands.
+		for run_index: int in range(runs.size() - 1, -1, -1):
+			container.insert(int(runs[run_index][1]) + 1, EventSheetRegionFacts.make_fence("", true))
+			container.insert(int(runs[run_index][0]), EventSheetRegionFacts.make_fence("New Region"))
+		opener_rank.append(_opening_fences(_dock._current_sheet.events).find(container[int(runs[0][0])]))
 		return true)
 	if not changed:
 		return
 	_dock._refresh_after_edit()
-	_dock._mark_dirty("Surrounded %d row%s with a region." % [entry_indices.size(), "" if entry_indices.size() == 1 else "s"])
-	# Name it right away. The undo funnel replaces resources with snapshot duplicates
-	# on commit, so re-fetch the live opener from the sheet instead of trusting `opener`.
-	var live_opener: Resource = _dock._current_sheet.events[first_index] if first_index < _dock._current_sheet.events.size() else null
-	if live_opener is CustomBlockRow and (live_opener as CustomBlockRow).kind_id == "region":
-		_dock._open_block_editor(live_opener)
+	_dock._mark_dirty(EventSheetL10n.translate("Surrounded the selection with a region.") if runs.size() == 1
+		else EventSheetL10n.translate("Surrounded the selection with %d regions.") % runs.size())
+	# Name it right away. The undo funnel replaces resources with snapshot duplicates on commit, so
+	# the live opener is found again by its place among the sheet's openers, never by `container`.
+	var live_openers: Array[CustomBlockRow] = _opening_fences(_dock._current_sheet.events)
+	if not opener_rank.is_empty() and opener_rank[0] >= 0 and opener_rank[0] < live_openers.size():
+		_dock._open_block_editor(live_openers[opener_rank[0]])
+
+
+## What surrounding the selection would wrap: {container, runs} where each run is [first, last]
+## index of consecutive selected rows in that container, or {problem} said in the reader's words.
+func _surround_plan() -> Dictionary:
+	if _dock._current_sheet == null:
+		return {"problem": EventSheetL10n.translate("Open a sheet to surround its rows with a region.")}
+	var container: Array = []
+	var indices: Array[int] = []
+	for resource: Variant in _dock._top_level_selected_resources():
+		var location: Dictionary = _dock._ace_apply._find_resource_location(resource as Resource)
+		if location.is_empty():
+			continue
+		if indices.is_empty():
+			container = location["container"]
+		elif not is_same(location["container"], container):
+			return {"problem": EventSheetL10n.translate("A region is one run of rows in one place. Select rows that sit together, at the same level.")}
+		indices.append(int(location["index"]))
+	if indices.is_empty():
+		return {"problem": EventSheetL10n.translate("Select the rows to surround with a region.")}
+	if not _holds_rows_of_the_sheet(container):
+		return {"problem": EventSheetL10n.translate("A region goes around rows of the sheet or of a group, not inside an event.")}
+	indices.sort()
+	var runs: Array = [[indices[0], indices[0]]]
+	for index: int in indices.slice(1):
+		if index == int(runs[runs.size() - 1][1]) + 1:
+			runs[runs.size() - 1][1] = index
+		else:
+			runs.append([index, index])
+	return {"container": container, "runs": runs}
+
+
+## True for the sheet's own rows and a group's rows - the two places a fence pair is read back from.
+func _holds_rows_of_the_sheet(container: Array) -> bool:
+	if is_same(container, _dock._current_sheet.events):
+		return true
+	for group: EventGroup in EventSheetGroupFacts.collect(_dock._current_sheet.events):
+		if is_same(group.child_rows(), container):
+			return true
+	return false
+
+
+## The question a selection with gaps asks: the rows it skips by their gutter numbers, and the three
+## answers - take them in, one region per run, or leave everything as it is.
+func _ask_about_skipped_rows(plan: Dictionary) -> void:
+	var container: Array = plan["container"]
+	var runs: Array = plan["runs"]
+	var numbers: PackedStringArray = PackedStringArray()
+	var view: EventSheetViewport = _dock._active_view()
+	for run_index: int in range(runs.size() - 1):
+		for index: int in range(int(runs[run_index][1]) + 1, int(runs[run_index + 1][0])):
+			numbers.append(str(_gutter_number(view, container[index])))
+	var single: bool = numbers.size() == 1
+	load(_dock.SMALL_PROMPT_PATH).open(_dock, {
+		"title": EventSheetL10n.translate("Surround with a region"),
+		"say": (EventSheetL10n.translate("The selection skips row %s. A region is one run of rows.") if single
+			else EventSheetL10n.translate("The selection skips rows %s. A region is one run of rows.")) % ", ".join(numbers),
+		"main": (EventSheetL10n.translate("Include row %s") if single
+			else EventSheetL10n.translate("Include rows %s")) % ", ".join(numbers),
+		"on_main": func() -> void: surround_selection_with_region(SURROUND_INCLUDE),
+		"also": EventSheetL10n.translate("Two regions") if runs.size() == 2
+			else EventSheetL10n.translate("%d regions") % runs.size(),
+		"on_also": func() -> void: surround_selection_with_region(SURROUND_SPLIT),
+		"note": EventSheetL10n.translate("Ctrl+Z removes the region again."),
+	})
+
+
+## The number the gutter shows beside `resource`'s row, or "?" when the row is not on the canvas.
+func _gutter_number(view: EventSheetViewport, resource: Variant) -> String:
+	for entry: Dictionary in view.get_flat_rows() if view != null else []:
+		var row_data: EventRowData = entry.get("row")
+		if row_data != null and row_data.source_resource == resource and row_data.line_number > 0:
+			return str(row_data.line_number)
+	return "?"
+
+
+## Every opening fence on the sheet and inside its groups, in reading order.
+func _opening_fences(entries: Array, into: Array[CustomBlockRow] = []) -> Array[CustomBlockRow]:
+	for entry: Variant in entries:
+		if EventSheetRegionFacts.is_opening_fence(entry):
+			into.append(entry as CustomBlockRow)
+		elif entry is EventGroup:
+			_opening_fences((entry as EventGroup).child_rows(), into)
+	return into

@@ -35,6 +35,31 @@
   that token ("Its switch is written as boss_fight."). The Edit group window and the properties bar
   show the name the head shows, and the properties bar's rename now changes the head too.
 
+### Fixed: a region folds from its menu, says what a group would lose, and keeps quiet about a broken fence
+
+- Open / Close Region on a region's menu did nothing: it shared the group's item, and the group's
+  handler only folds groups. It has its own item now and folds the region exactly as its ▶ mark and
+  Collapse All Regions do; folded, the row reads `#region Spawning … #endregion` with its count. On a
+  fence that never closes the item is greyed, since there is nothing to fold.
+- Turn Into Region used to be refused, with an English reason glued to the item, for a group with
+  locals, a runtime switch or that was off, and it dropped Runs on and Runs in without a word. It is
+  always offered now. A plain group turns at once (Ctrl+Z turns it back); a group carrying something
+  a region cannot asks first, in the reader's language, with one sentence per thing that would go -
+  the locals by name, the switch, off at start, who it runs on, which mode it runs in - and Turn Into
+  Region or Cancel.
+- Surround with a region wrapped everything from the first selected row to the last, so a row left
+  out of the selection ended up inside. A selection that skips rows now asks: include the skipped
+  rows, make one region per run, or cancel. Rows inside a group get the region inside that group,
+  instead of being skipped.
+- A `#region` without its `#endregion` (or the other way round) grew an amber note row inside the
+  sheet. The fence row now only wears the quiet amber state every other finding uses; selecting it
+  puts the sentence on the help strip with the one fix beside it - Add #endregion (written after the
+  last row before the next head) or Remove #endregion - and the Doctor's region-fence check lists it
+  as before.
+- Every group and region item in the row menu (Edit Group…, Runs On, Turn Into Region, Rename
+  Region…, Open / Close Region and the rest) goes through the translation catalog, filled in all
+  eight languages. Quick questions gained a second safe answer beside OK for the surround question.
+
 ### Fixed: what the reader adds to a connect read in place is written, and a class that moves bytes stays code alone
 
 - A connect read where it sits is an ordinary event on the canvas, but saving rebuilt it from its
