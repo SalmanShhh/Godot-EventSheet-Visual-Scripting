@@ -23,6 +23,17 @@
   fall from 1,554 to 485, and the rows that say nothing of their own from 991 to 883. Every file
   still saves back byte for byte.
 
+### Fixed: a fresh copy of this repository imports completely the first time
+
+- The project now imports on one thread (`editor/import/use_multiple_threads=false`). Godot 4.7 can
+  crash when it imports several compute-shader `.glsl` files at once, and the Post Kit pack and its
+  builder's sources hold twelve. A first `--import` of a fresh copy stopped with an access violation
+  just after the translation CSVs in 6 of 17 tries, leaving every texture and icon unimported - which
+  is why the first full test run after a fresh import failed all 141 `pack_icons_test`
+  "icon.svg is imported" checks and the drawing stamp texture, and the next run passed. With one
+  thread: 0 of 6. A fresh import takes about 90 s instead of about 55 s; later imports are small.
+  `import_threads_test` pins the setting.
+
 ### Fixed: shaping a field, walked end to end in the editor
 
 - Clicking an option in "Shape this field", pressing Choose or Apply, or pressing ▲ in the Inspector

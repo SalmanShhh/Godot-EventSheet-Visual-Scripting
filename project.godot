@@ -18,6 +18,10 @@ config/features=PackedStringArray("4.7")
 
 EventForgeBridge="*uid://duh4jgpamtcwn"
 
+[editor]
+
+import/use_multiple_threads=false
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/eventforge/plugin.cfg")
