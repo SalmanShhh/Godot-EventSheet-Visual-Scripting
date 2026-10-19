@@ -205,18 +205,6 @@ var _jump_to: String = ""
 ## When this play began, on the wall clock, so one card's own progress can be answered without a
 ## tick running to count it.
 var _started_at: float = 0.0
-## Every label in the list, in order - what For Each Feedback loops over, and what a settings
-## screen that lists a beat's parts is built out of.
-## @ace_looping(feedback_label)
-## @ace_name("For Each Feedback")
-## @ace_category("Feedback Player")
-## @ace_description("Runs the actions under it once per feedback in this player's list, top to bottom, with the label of each one in hand.")
-func for_each_feedback() -> Array:
-	var labels: Array = []
-	for entry: Variant in _steps_now():
-		if entry is Dictionary:
-			labels.append(_label_of(entry as Dictionary))
-	return labels
 
 ## @ace_action
 ## @ace_featured
@@ -1541,5 +1529,20 @@ func _progress_of(label: String) -> float:
 			return 1.0 if elapsed >= float(plan.get("at", 0.0)) else 0.0
 		return clampf((elapsed - float(plan.get("at", 0.0))) / span, 0.0, 1.0)
 	return 0.0
+
+## Every label in the list, in order - what For Each Feedback loops over, and what a settings
+## screen that lists a beat's parts is built out of.
+## @ace_looping(feedback_label)
+## @ace_name("For Each Feedback")
+## @ace_category("Feedback Player")
+## @ace_description("Runs the actions under it once per feedback in this player's list, top to bottom, with the label of each one in hand.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$FeedbackPlayer.for_each_feedback()")
+func for_each_feedback() -> Array:
+	var labels: Array = []
+	for entry: Variant in _steps_now():
+		if entry is Dictionary:
+			labels.append(_label_of(entry as Dictionary))
+	return labels
 
 # Feedback Player: add this node under an object, fill its list in the Inspector, and one row plays the whole beat. Cards are dragged into order, ticked off, and tuned in place; Pause and Hold space them out and Loop Back repeats a stretch. The ten shake-and-flash words are played by the Juice behaviour beside this node, so put one there too. The list is the same shape a moment file holds - drop a file on the slot to play it instead, or save the list out as one. This pack is an event sheet - extend it by editing it.

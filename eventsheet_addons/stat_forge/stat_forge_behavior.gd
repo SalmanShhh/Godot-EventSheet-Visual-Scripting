@@ -58,12 +58,6 @@ var _rules: Dictionary = {}
 var _last_totals: Dictionary = {}
 var _last_expired: String = ""
 var _last_rule: String = ""
-## Loops the event's actions once per applied buff id (a LOOPING condition: adding it
-## creates the loop) - read details per pass with Buff Value / Buff Time Left.
-## @ace_looping(buff_id)
-## @ace_name("For Each Buff")
-func each_buff() -> Array:
-	return _buffs.keys()
 
 func _ready() -> void:
 	# A node with no timed buff has nothing to count down, so it pays for no frame. Add Buff
@@ -164,6 +158,15 @@ func last_expired_buff() -> String:
 ## @ace_codegen_template("$StatForge.last_threshold_rule()")
 func last_threshold_rule() -> String:
 	return _last_rule
+
+## Loops the event's actions once per applied buff id (a LOOPING condition: adding it
+## creates the loop) - read details per pass with Buff Value / Buff Time Left.
+## @ace_looping(buff_id)
+## @ace_name("For Each Buff")
+## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
+## @ace_codegen_template("$StatForge.each_buff()")
+func each_buff() -> Array:
+	return _buffs.keys()
 
 ## @ace_condition
 ## @ace_name("Has Buff")

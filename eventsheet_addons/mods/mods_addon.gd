@@ -201,15 +201,6 @@ func _settings() -> Object:
 		settings_node = get_node_or_null("/root/Settings")
 	return settings_node
 
-## Runs this event's actions once per LOADED mod, in load order - the mod list on the options
-## screen, as one row. Read the current one as `mod`, then take `mod.name`, `mod.version`,
-## `mod.author`, `mod.kind` ("folder" or "pack") and `mod.folder` straight off it.
-## @ace_looping(mod)
-## @ace_name("For Each Mod")
-## @ace_category("Mods")
-func each_mod() -> Array:
-	return _mods.duplicate()
-
 func _ready() -> void:
 	# The player's own choice about what is switched off outlives the session, so it is read back
 	# before any row asks to load anything.
@@ -1135,5 +1126,16 @@ func _recall_disabled() -> void:
 		var trimmed: String = switched_off.strip_edges()
 		if not trimmed.is_empty():
 			_disabled[trimmed] = true
+
+## Runs this event's actions once per LOADED mod, in load order - the mod list on the options
+## screen, as one row. Read the current one as `mod`, then take `mod.name`, `mod.version`,
+## `mod.author`, `mod.kind` ("folder" or "pack") and `mod.folder` straight off it.
+## @ace_looping(mod)
+## @ace_name("For Each Mod")
+## @ace_category("Mods")
+## @ace_icon("res://eventsheet_addons/mods/icon.svg")
+## @ace_codegen_template("Mods.each_mod()")
+func each_mod() -> Array:
+	return _mods.duplicate()
 
 # Mods (autoload): register as the Mods autoload, then load mods from any sheet. A mod is a folder with a mod.json in it, or a .pck / .zip pack file; the manifest names it and says whether it carries code. Data only reads a pack's own contents and refuses one carrying code - and a mod that does carry code runs with everything the game can reach, because Godot has no sandbox. This pack is an event sheet - extend it by editing it.

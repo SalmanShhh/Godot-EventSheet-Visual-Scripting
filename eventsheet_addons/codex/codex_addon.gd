@@ -34,26 +34,6 @@ func _entry(set_name: String, entry_id: String) -> Resource:
 			return load(path)
 	return null
 
-## Runs this event's actions once per DISCOVERED entry of a set, in name order - the codex
-## page itself, as one row. Read the current one as `entry`, then take its `entry_name`, `picture`
-## and `text` straight off it. An entry that has been discovered but has no file behind it any more
-## is skipped rather than arriving as null.
-## @ace_looping(entry)
-## @ace_name("For Each Discovered")
-## @ace_category("Codex")
-func each_discovered(set_name: String) -> Array:
-	var ids: Array = (_found.get(set_name, {}) as Dictionary).keys()
-	ids.sort()
-	var pages: Array = []
-	for entry_id: String in ids:
-		var page: Resource = _entry(set_name, entry_id)
-		if page == null:
-			if debug_mode:
-				push_warning("Codex: \"%s\" is discovered in the \"%s\" set, but no entry file in %s answers to it." % [entry_id, set_name, _set_folder(set_name)])
-			continue
-		pages.append(page)
-	return pages
-
 ## @ace_action
 ## @ace_featured
 ## @ace_name("Discover")
@@ -178,5 +158,27 @@ func load_state(state: Dictionary) -> void:
 		for entry_id: Variant in state["discovered"][set_name]:
 			ids[str(entry_id)] = true
 		_found[set_name] = ids
+
+## Runs this event's actions once per DISCOVERED entry of a set, in name order - the codex
+## page itself, as one row. Read the current one as `entry`, then take its `entry_name`, `picture`
+## and `text` straight off it. An entry that has been discovered but has no file behind it any more
+## is skipped rather than arriving as null.
+## @ace_looping(entry)
+## @ace_name("For Each Discovered")
+## @ace_category("Codex")
+## @ace_icon("res://eventsheet_addons/codex/icon.svg")
+## @ace_codegen_template("Codex.each_discovered({set_name})")
+func each_discovered(set_name: String) -> Array:
+	var ids: Array = (_found.get(set_name, {}) as Dictionary).keys()
+	ids.sort()
+	var pages: Array = []
+	for entry_id: String in ids:
+		var page: Resource = _entry(set_name, entry_id)
+		if page == null:
+			if debug_mode:
+				push_warning("Codex: \"%s\" is discovered in the \"%s\" set, but no entry file in %s answers to it." % [entry_id, set_name, _set_folder(set_name)])
+			continue
+		pages.append(page)
+	return pages
 
 # Codex (autoload): register as the Codex autoload, then discover entries from any sheet. A set is a folder under the Codex Folder and an entry is a CodexEntryResource file in it, so a new page is a new file. What has been found rides the save through Save All Addons, like every other autoload pack here. This pack is an event sheet - extend it by editing it.

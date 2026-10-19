@@ -148,34 +148,6 @@ var _carried: PackedStringArray = PackedStringArray()
 # Set by Use Upgraded Save so Load Game knows to pick the migrated record back up.
 var _upgrade_applied: bool = false
 
-## Runs this event's actions once per slot that has a save file - the load menu, as
-## one row. Read the current one as `slot_index`, then fill the tile with Slot Detail
-## and Slot Playtime (both read straight off disk, nothing is loaded).
-## @ace_looping(slot_index)
-## @ace_name("For Each Saved Slot")
-## @ace_category("Save System")
-func each_saved_slot() -> Array:
-	return list_slots()
-## Runs this event's actions once per autoload that saves itself, so a debug panel can
-## list exactly what the save covers - and, by its absence, what quietly does not. Read
-## the current one as `addon_name`.
-## @ace_looping(addon_name)
-## @ace_name("For Each Saveable Addon")
-## @ace_category("Save System")
-func each_saveable_addon() -> Array:
-	return _collect_addon_states().keys()
-## Runs this event's actions once per kept backup of the slot, newest first. Read the
-## current one as `backup_path` - a real file path, so File Size (bytes) and Read Save
-## File work on it, and its position in the loop is the "how many back" number.
-## @ace_looping(backup_path)
-## @ace_name("For Each Backup Of Slot")
-## @ace_category("Save System")
-func each_backup_of_slot(slot_index: int) -> Array:
-	var found: Array = []
-	for backup_path: String in _backups_for(slot_index):
-		found.append(backup_path)
-	return found
-
 # The save and load windows, counted rather than flagged. This pack writes synchronously
 # (a .tmp, then a rename), so a window is short - but an On Before Save handler that saves
 # a key of its own opens a second one INSIDE it, and a plain bool would close the outer
@@ -1480,6 +1452,42 @@ func _apply_states(states: Dictionary) -> void:
 			# The save holds state for a node that is not here now (renamed, re-parented,
 			# or the scene is not loaded yet). Surface it rather than dropping it silently.
 			push_warning("Save System: no node at %s to restore its saved state." % str(path))
+
+## Runs this event's actions once per slot that has a save file - the load menu, as
+## one row. Read the current one as `slot_index`, then fill the tile with Slot Detail
+## and Slot Playtime (both read straight off disk, nothing is loaded).
+## @ace_looping(slot_index)
+## @ace_name("For Each Saved Slot")
+## @ace_category("Save System")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
+## @ace_codegen_template("SaveSystem.each_saved_slot()")
+func each_saved_slot() -> Array:
+	return list_slots()
+
+## Runs this event's actions once per autoload that saves itself, so a debug panel can
+## list exactly what the save covers - and, by its absence, what quietly does not. Read
+## the current one as `addon_name`.
+## @ace_looping(addon_name)
+## @ace_name("For Each Saveable Addon")
+## @ace_category("Save System")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
+## @ace_codegen_template("SaveSystem.each_saveable_addon()")
+func each_saveable_addon() -> Array:
+	return _collect_addon_states().keys()
+
+## Runs this event's actions once per kept backup of the slot, newest first. Read the
+## current one as `backup_path` - a real file path, so File Size (bytes) and Read Save
+## File work on it, and its position in the loop is the "how many back" number.
+## @ace_looping(backup_path)
+## @ace_name("For Each Backup Of Slot")
+## @ace_category("Save System")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
+## @ace_codegen_template("SaveSystem.each_backup_of_slot({slot_index})")
+func each_backup_of_slot(slot_index: int) -> Array:
+	var found: Array = []
+	for backup_path: String in _backups_for(slot_index):
+		found.append(backup_path)
+	return found
 
 func _write_all(data: Dictionary, stamp_current_version: bool = false) -> bool:
 	# Every write goes through this door, so Is Saving covers the whole window - which is
