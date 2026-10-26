@@ -23,6 +23,9 @@
   with the other 3D starters instead of under a second "3D" after UI and menus.
 - A property's setter event reads its variable and its parameter as written: `On brush_size set`
   with a `new_size` chip, not "On brush size set".
+- The Parameters window's IN CODE echo never shows a template's `{uid}` mark (Blend Toward read
+  `var __blend_{uid}: Tween`; it now reads `__blend_row` until the row is applied and gets its own
+  token), and a several-line row keeps the indent of the lines under its `if`.
 
 ### Fixed: the head bar reads once, in every kind of view, and the sheet under it stays quiet
 

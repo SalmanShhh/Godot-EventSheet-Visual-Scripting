@@ -738,7 +738,10 @@ class HelpStrip extends PanelContainer:
 	func set_reading(reads_as: String, in_code: String = "") -> void:
 		reads_as_value.text = reads_as
 		reads_as_row.visible = not reads_as.strip_edges().is_empty()
-		in_code_value.text = in_code
+		# A label draws a tab as nothing, so a body line of a several-line row (`if ...:` then its
+		# indented step) lost its indent and read as a sibling of the `if`. Four spaces per tab is the
+		# editor's own width.
+		in_code_value.text = in_code.replace("\t", "    ")
 		in_code_row.visible = not in_code.strip_edges().is_empty()
 
 

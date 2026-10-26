@@ -3745,6 +3745,13 @@ func _is_reedit_flow() -> bool:
 # of code the row becomes; the window's title and head say which object and which action.
 
 
+## What stands in for a row's own token in the IN CODE echo. The real one is minted when the row is
+## applied (a fresh token per row, so two Blend Toward rows never share a tween variable), which is
+## after this window closes - so the echo names the slot in words rather than leaking the template's
+## `{uid}` mark, which is not GDScript and is never what the file holds.
+const PREVIEW_UID: String = "row"
+
+
 ## The line the compiler will write for this row, with the values as typed - produced BY the
 ## emitter, from a throwaway row, so the dialog cannot promise a spelling the compiler would not
 ## use. "" for a definition whose kind has no line of its own.
@@ -3769,14 +3776,14 @@ static func row_code_line(definition: ACEDefinition, values: Dictionary, startin
 			condition.provider_id = definition.provider_id
 			condition.ace_id = definition.id
 			condition.params = values.duplicate()
-			var expression: String = ConditionCodegen.generate_condition(condition)
+			var expression: String = ConditionCodegen.generate_condition(condition).replace("{uid}", PREVIEW_UID)
 			return "" if expression.strip_edges().is_empty() else "if %s:" % expression
 		ACEDefinition.ACEType.ACTION:
 			var action: ACEAction = ACEAction.new()
 			action.provider_id = definition.provider_id
 			action.ace_id = definition.id
 			action.params = values.duplicate()
-			return ActionCodegen.generate_action(action).strip_edges()
+			return ActionCodegen.generate_action(action).strip_edges().replace("{uid}", PREVIEW_UID)
 	# An expression (and a trigger's parameters) has no statement of its own - the template with
 	# the values in it IS what the row contributes to whatever line encloses it.
 	var template: String = str(definition.metadata.get("codegen_template", ""))

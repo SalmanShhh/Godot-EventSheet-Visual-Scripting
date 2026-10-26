@@ -83,6 +83,15 @@ static func _test_title_sentence() -> bool:
 	passed = _check("a condition's line is the if it becomes",
 		ACEParamsDialog.row_code_line(compare, {"var_name": "hp", "op": "<=", "value": "0"}),
 		"if hp <= 0:") and passed
+	# A template that mints a token per row (`var __blend_{uid}: Tween`) gets its token when the row
+	# is applied, so the echo must not leak the `{uid}` mark: it is not GDScript, and no file holds it.
+	var blend: ACEDefinition = _definition("BlendToward", "Blend Toward", "blend {space}",
+		"", ACEDefinition.ACEType.ACTION)
+	var blend_line: String = ACEParamsDialog.row_code_line(blend,
+		{"space": "Locomotion", "value": "Vector2.ZERO", "seconds": "0.2", "target": "self"})
+	passed = _check("IN CODE never shows the template's {uid} mark",
+		[blend_line.contains("{uid}"), blend_line.contains("var __blend_row: Tween = self.create_tween()")],
+		[false, true]) and passed
 	return passed
 
 
@@ -282,6 +291,8 @@ static func _test_strip_component() -> bool:
 	passed = _check("an empty reading line hides", strip.in_code_row.visible, false) and passed
 	strip.set_reading("", "hp -= 1")
 	passed = _check("a filled one shows", strip.in_code_row.visible, true) and passed
+	strip.set_reading("", "if a:\n\tb()")
+	passed = _check("a body line keeps its indent on the strip", strip.in_code_value.text, "if a:\n    b()") and passed
 	passed = _check("and READS AS stays hidden when there is nothing to read",
 		strip.reads_as_row.visible, false) and passed
 	strip.show_note("Variable - not found", "hpp is not a variable of Player.",
