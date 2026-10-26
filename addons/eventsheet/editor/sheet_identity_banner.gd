@@ -4,6 +4,10 @@
 #   ◆ PatrollingGuard - Custom Node · extends CharacterBody2D
 # Hidden for plain event sheets. Dual-audience cue (Godot: "custom node with an icon";
 # event sheets: "behavior attached to an object"); clicking it opens the Sheet Type dialog.
+#
+# Deprecated as a band: the dock keeps it folded away for good, because a sheet opens on its one head
+# bar and the bar's name card says what this band said. The class and its static readings
+# (identity_label, identity_hover_lines, manifest_for, health_chip) stay for anything that calls them.
 @tool
 class_name SheetIdentityBanner
 extends Control

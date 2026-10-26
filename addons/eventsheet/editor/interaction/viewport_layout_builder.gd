@@ -78,6 +78,10 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	# A height-scaled header row centers its content in the taller rect (the extra space
 	# splits above and below), so the bar presence never reads as misaligned text.
 	var scale_pad: float = row_height * (1.0 - 1.0 / row_data.height_scale) * 0.5 if row_data.height_scale > 1.0 else 0.0
+	# A bar of one exact height centres its line in it, which may mean starting a hair above the
+	# row's top when the look's line is taller than the bar.
+	if row_data.fixed_height > 0.0:
+		scale_pad = (row_height - line_height) * 0.5
 	var gutter_rect := Rect2(0.0, row_top, EventSheetPalette.GUTTER_WIDTH, row_height)
 	var x: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH + float(row_data.indent * _viewport.indent_width())
 	# Group headers can be taller than a text line (group_row_height): centre the fold arrow and,

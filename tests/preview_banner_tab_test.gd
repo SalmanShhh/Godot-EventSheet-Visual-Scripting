@@ -1,6 +1,10 @@
-# EventForge - the read-only .gd preview banner must always describe the ACTIVE tab's sheet. A cached
-# lift report made it keep the previously-opened sheet's counts after a tab switch ("9 event(s)" car
-# showing timer's "1 event(s)"); the banner now recomputes from the active sheet on every refresh.
+# EventForge - an opened .gd says what it is on its head bar, and always about the ACTIVE tab's sheet.
+#
+# A preview used to open under a full-width banner ("Viewing car_behavior.gd as a sheet - just start
+# editing ... (9 event(s), ...)") and the status bar said the same sentence again. Both are gone: the
+# banner is shown only for a file an unfinished merge blocks, the status bar names the file, and what
+# the file is and its door to the script editor are the head bar and its name card - which, like the
+# banner it replaced, must describe the sheet whose tab is active, not the last one opened.
 @tool
 class_name PreviewBannerTabTest
 extends RefCounted
@@ -18,15 +22,20 @@ static func run() -> bool:
 	dock.setup(EventSheetResource.new())
 
 	dock._load_sheet_from_path(CAR)
-	var car_summary: String = EventSheetLiftReport.summary(EventSheetLiftReport.for_sheet(dock.get_current_sheet()))
-	ok = _check("banner shows car's counts on open", dock._preview_label.text.contains(car_summary), true) and ok
+	var car_card: Dictionary = _name_card(dock)
+	ok = _check("no banner over an opened file", dock._preview_banner.visible, false) and ok
+	ok = _check("the status bar names the file, and says nothing more", dock._status_label.text, "car_behavior.gd") and ok
+	ok = _check("the head bar is car's", _head_words(dock), "◆ CarBehavior Behaviour") and ok
+	ok = _check("and its name card offers the script editor", Array(car_card.get("doors", [])).has(
+		["Open in the script editor", "open_script_editor"]), true) and ok
 
 	dock._load_sheet_from_path(TIMER)
-	var timer_summary: String = EventSheetLiftReport.summary(EventSheetLiftReport.for_sheet(dock.get_current_sheet()))
-	ok = _check("banner shows timer's counts on open", dock._preview_label.text.contains(timer_summary), true) and ok
-	ok = _check("the two packs genuinely differ (a meaningful regression guard)", car_summary != timer_summary, true) and ok
+	var timer_card: Dictionary = _name_card(dock)
+	ok = _check("timer's head bar names timer", _head_words(dock), "◆ TimerBehavior Behaviour") and ok
+	ok = _check("the two packs genuinely differ (a meaningful regression guard)",
+		str(car_card.get("notes", [])) != str(timer_card.get("notes", [])), true) and ok
 
-	# THE regression: re-activating car's tab must swap the banner back to car's counts.
+	# THE regression the banner once had: re-activating car's tab must show car's words again.
 	var car_tab: int = -1
 	for index: int in range(dock._open_tabs.size()):
 		var tab_sheet: EventSheetResource = dock._open_tabs[index].get("sheet")
@@ -34,11 +43,40 @@ static func run() -> bool:
 			car_tab = index
 	ok = _check("found car's tab", car_tab >= 0, true) and ok
 	dock._activate_tab(car_tab)
-	ok = _check("banner names car after the tab switch", dock._preview_label.text.contains("car_behavior.gd"), true) and ok
-	ok = _check("banner shows CAR's counts after the tab switch (not timer's)", dock._preview_label.text.contains(car_summary), true) and ok
+	ok = _check("the head bar is car's after the tab switch", _head_words(dock), "◆ CarBehavior Behaviour") and ok
+	ok = _check("with CAR's facts on its card, not timer's", str(_name_card(dock).get("notes", [])),
+		str(car_card.get("notes", []))) and ok
+	ok = _check("and still no banner", dock._preview_banner.visible, false) and ok
 
 	dock.free()
 	return ok
+
+
+## The active view's head bar, its words joined.
+static func _head_words(dock: EventSheetDock) -> String:
+	for entry: Dictionary in dock._viewport.get_flat_rows():
+		var row_data: EventRowData = entry.get("row")
+		if row_data == null or not row_data.row_uid.begins_with("sheet_head_bar_"):
+			continue
+		var words: PackedStringArray = PackedStringArray()
+		for span: SemanticSpan in row_data.spans:
+			if not span.text.strip_edges().is_empty():
+				words.append(span.text.strip_edges())
+		return " ".join(words)
+	return ""
+
+
+## The card behind the active view's head bar name, {} when there is none.
+static func _name_card(dock: EventSheetDock) -> Dictionary:
+	for entry: Dictionary in dock._viewport.get_flat_rows():
+		var row_data: EventRowData = entry.get("row")
+		if row_data == null:
+			continue
+		for span: SemanticSpan in row_data.spans:
+			var card: Variant = (span.metadata as Dictionary).get("head_card") if span.metadata is Dictionary else null
+			if card is Dictionary and str((card as Dictionary).get("id", "")) == "name":
+				return card
+	return {}
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

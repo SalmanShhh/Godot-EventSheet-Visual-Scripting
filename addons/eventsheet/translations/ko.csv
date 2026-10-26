@@ -9539,3 +9539,33 @@ The side panel's tabs. Choosing one opens the side panel on it; choosing the tic
 "The side panel beside the sheet, with its Objects and Functions tabs. Unticked, it rests as a thin rail and the sheet takes the width.",시트 옆의 사이드 패널(오브젝트와 함수 탭 포함). 체크를 해제하면 얇은 레일로 남고 시트가 너비를 차지합니다.
 Close the side panel,사이드 패널 닫기
 Objects and functions of this sheet,이 시트의 오브젝트와 함수
+Open in Script Editor,스크립트 편집기에서 열기
+The same file in Godot's own script editor. Changes made there show here when you come back.,같은 파일을 Godot의 스크립트 편집기에서. 거기서 바꾼 내용은 돌아오면 여기에 보입니다.
+Selects this sheet's file in Godot's FileSystem dock.,이 시트의 파일을 Godot의 파일 시스템 독에서 선택합니다.
+extends,extends
+Custom node,사용자 정의 노드
+Custom resource,사용자 정의 리소스
+Editor plugin,에디터 플러그인
+Editor add-on,에디터 확장
+1 behaviour,비헤이비어 1개
+%d behaviours,비헤이비어 %d개
+1 function,함수 1개
+%d functions,함수 %d개
+1 code block,코드 블록 1개
+%d code blocks,코드 블록 %d개
+"A script opened as a sheet: edit it here, and it stays plain GDScript.",시트로 연 스크립트입니다. 여기서 편집해도 평범한 GDScript로 남습니다.
+Attached to %s.,%s에 붙어 있습니다.
+Show the scene,씬 보기
+Edit description…,설명 편집…
+all %d shown in the Inspector,%d개 모두 인스펙터에 표시
+shown in the Inspector,인스펙터에 표시
+%d of them shown in the Inspector,그중 %d개가 인스펙터에 표시
+The 1 other variable in the file is bookkeeping the compiler writes (%s),파일의 나머지 변수 1개는 컴파일러가 쓰는 관리용입니다 (%s)
+The %d other variables in the file are bookkeeping the compiler writes (%s),파일의 나머지 변수 %d개는 컴파일러가 쓰는 관리용입니다 (%s)
+and stay out of sight.,보이지 않습니다.
+"1 part of the file stays as code, drawn where it sits.",파일의 1곳은 코드로 남아 그 자리에 그려집니다.
+"%d parts of the file stay as code, each drawn where it sits.",파일의 %d곳은 코드로 남아 각각 그 자리에 그려집니다.
+Behaviours on this object,이 오브젝트의 비헤이비어
+"They are child nodes in the scene, not lines of this file, so they are listed here rather than as rows.","이것들은 씬의 자식 노드이지 이 파일의 줄이 아니므로, 행이 아니라 여기에 나열됩니다."
+Add behaviour…,비헤이비어 추가…
+"Every script this scene uses, in tree order. Double-click an object bar to open that script and edit it.",이 씬이 쓰는 모든 스크립트를 트리 순서로. 오브젝트 막대를 더블 클릭하면 그 스크립트를 열어 편집합니다.

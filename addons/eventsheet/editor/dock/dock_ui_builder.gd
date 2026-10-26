@@ -73,6 +73,9 @@ func build_ui() -> void:
 	_dock._title_strip = HBoxContainer.new()
 	_dock._title_strip.name = "EventSheetTitleStrip"
 	_dock._title_strip.add_theme_constant_override("separation", 8)
+	# Kept for what reads its labels, never shown: the tab names the sheet and the head bar's name
+	# card says where the file lives.
+	_dock._title_strip.visible = false
 	root.add_child(_dock._title_strip)
 
 	var title_tab_shell: PanelContainer = PanelContainer.new()
@@ -114,7 +117,8 @@ func build_ui() -> void:
 	root.add_child(_dock._identity_banner)
 	_dock._identity_banner.edit_requested.connect(_dock._open_sheet_type_dialog)
 
-	# Read-only preview banner (a .gd opened just to look at it) - hidden for normal sheets.
+	# The banner a file blocked by an unfinished merge wears - hidden for every other sheet, an opened
+	# .gd included: the head bar's name card says what an opened file is.
 	_dock._preview_banner = _dock._preview_glue.build_preview_banner()
 	root.add_child(_dock._preview_banner)
 
@@ -248,6 +252,8 @@ func build_ui() -> void:
 	_dock._viewport.set_ace_registry(_dock._ace_registry)
 	_dock._scroll.add_child(_dock._viewport)
 	_dock._identity_banner.setup(_dock._viewport)
+	# Never shown: the head bar's name card says what the band said (the kind, what it publishes).
+	_dock._identity_banner.set_folded(true)
 
 	_dock._viewport.selection_changed.connect(_dock._on_viewport_selection_changed)
 	_dock._viewport.selection_changed.connect(func(row_data: EventRowData) -> void:

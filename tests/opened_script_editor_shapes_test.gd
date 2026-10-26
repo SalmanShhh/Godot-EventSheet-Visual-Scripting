@@ -48,11 +48,11 @@ static func _test_helper_of() -> bool:
 	var ok: bool = true
 	var view: EventSheetViewport = _open(HELPER_PATH)
 	var readings: PackedStringArray = _readings(view)
-	# The class name is the name band's and `@tool` is the tool band's, so the bar is left with
-	# the shape this file plays in the editor it belongs to.
-	ok = _check("the Include bar says whose helper this is",
-		_texts(_row_with_uid(_all_rows(view), "pack_include_bar_")),
-		"⇥ | helper of | Dock | (event_sheet_dock.gd) · made with the dock | · opened_script_batch12_helper.gd | reads as events · 1 pattern ▸") and ok
+	# The class name and the kind are the head bar's, so its name card says the shape this file plays
+	# in the editor it belongs to.
+	ok = _check("the head bar's name card says whose helper this is",
+		_first_card_note(_row_with_uid(_all_rows(view), "sheet_head_bar_")),
+		"helper of Dock (event_sheet_dock.gd) · made with the dock") and ok
 	ok = _check("the constructor that only stores the reference is folded into the bar",
 		_has_reading(readings, "On Init"), false) and ok
 	ok = _check("a read through the reference is the object's own property",
@@ -108,9 +108,9 @@ static func _test_shared_store() -> bool:
 	var ok: bool = true
 	var view: EventSheetViewport = _open(SHARED_PATH)
 	var readings: PackedStringArray = _readings(view)
-	ok = _check("the Include bar says nothing of this class is ever made",
-		_texts(_row_with_uid(_all_rows(view), "pack_include_bar_")),
-		"⇥ | shared store | · nothing of its own is ever made | · opened_script_batch12_shared.gd | reads as events · 1 pattern ▸") and ok
+	ok = _check("the head bar's name card says nothing of this class is ever made",
+		_first_card_note(_row_with_uid(_all_rows(view), "sheet_head_bar_")),
+		"shared store · nothing of its own is ever made") and ok
 	ok = _check("a shared value says it is one for the whole editor",
 		_first_containing(readings, "_claims"),
 		"x | Shared | table | _claims | = | empty | one for the whole editor | static var _claims: Dictionary = {}") and ok
@@ -366,6 +366,16 @@ static func _first_containing(readings: PackedStringArray, wanted: String) -> St
 
 ## The pattern ids the sheet's readings claimed, joined - the registry everything that talks about
 ## these shapes reads.
+## The first muted line of the head bar's name card - what the file is beyond its first lines.
+static func _first_card_note(row_data: EventRowData) -> String:
+	for span: SemanticSpan in row_data.spans if row_data != null else []:
+		var card: Variant = (span.metadata as Dictionary).get("head_card") if span.metadata is Dictionary else null
+		if card is Dictionary and str((card as Dictionary).get("id", "")) == "name":
+			var notes: Array = Array((card as Dictionary).get("notes", []))
+			return str(notes[0]) if not notes.is_empty() else ""
+	return ""
+
+
 static func _claim_patterns(view: EventSheetViewport) -> String:
 	var ids: PackedStringArray = PackedStringArray()
 	for claim: Variant in EventSheetPatternFacts.claims(view._sheet):

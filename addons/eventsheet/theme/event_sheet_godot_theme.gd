@@ -83,6 +83,13 @@ static func apply(
 	event_style.ace_expression_badge_background_color = _role_badge(EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_BG, base, light_editor)
 	event_style.verb_chip_background_color = base.lerp(dark_1, 0.4)
 	event_style.verb_chip_foreground_color = Color(font_color.r, font_color.g, font_color.b, 0.7)
+	# The sheet's one head bar: a flat grey a step off the canvas toward the text - lighter on a dark
+	# editor, darker on a light one - never a tint of the accent, which would read as a selection.
+	# The editor's dark tones may be translucent, so the step is taken from the canvas as it is SEEN:
+	# the sheet's ground laid over the editor's base.
+	var seen_canvas: Color = Color(base.r, base.g, base.b, 1.0).blend(dark_2)
+	event_style.head_bar_color = seen_canvas.lerp(Color(font_color.r, font_color.g, font_color.b, 1.0),
+		0.08 if base.get_luminance() > 0.5 else 0.13)
 	# The cell words and the number gutter are the dark palette's pale text on a near-black strip. On a
 	# light editor the words take the editor's own font colour (their object labels, values and quoted
 	# text the light hand of the native look) and the gutter the editor's row grey, or the words read

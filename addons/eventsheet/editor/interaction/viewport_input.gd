@@ -149,6 +149,8 @@ func handle_mouse_motion(event: InputEventMouseMotion) -> void:
 		return
 	var hit: Dictionary = _viewport._hit_test(local_position)
 	_viewport._set_hover_state(int(hit.get("row_index", -1)), int(hit.get("span_index", -1)))
+	# The head bar's name and counts open their cards on hover, and leaving them lets the card go.
+	_viewport.update_head_card(hit)
 	# Cursor affordance, in priority order: the empty non-cell area of an event row is the
 	# whole-event DRAG handle (✥ move cursor) - dragging there reorders the event or nests it as a
 	# sub-event, so the previously-dead space reads as grabbable; everything else is the arrow.
@@ -271,6 +273,11 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			return
 		var row_data: EventRowData = _viewport._row_at(row_index)
 		var metadata: Dictionary = hit.get("span_metadata", {})
+		# A word on the head bar with a card behind it opens that card at once on a click - the same
+		# card the hover opens, for a reader who clicks before they wait. The click goes on to select
+		# the bar (and a double-click on the name still renames), so nothing else changes.
+		if not event.double_click and metadata.get("head_card") is Dictionary:
+			_viewport.update_head_card(hit, true)
 		# A noun in a comment that the project's own indexes could prove is a DOOR, and one click
 		# goes to the thing it names. No modifier: the hairline under the word already offered the
 		# jump, and an affordance that does nothing on the gesture it advertises is worse than none.

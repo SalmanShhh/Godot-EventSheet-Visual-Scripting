@@ -86,6 +86,22 @@ func handle(action: String) -> void:
 			open_add_menu()
 		"file_options":
 			open_file_options()
+		# The doors on the head bar's hover cards.
+		"open_script_editor":
+			_dock._preview_glue._open_generated_in_godot()
+		"show_in_filesystem":
+			var shown: String = str(_dock._current_sheet.external_source_path).strip_edges()
+			browse_to_scene(shown if not shown.is_empty() else _dock._current_sheet.resource_path)
+		"file_settings":
+			_dock._new_addon_panel.open_settings(str(_dock._current_sheet.external_source_path))
+		"add_behaviour":
+			_dock.open_add_behavior_dialog(str(EventSheetObjectFacts.sheet_object_title(
+				_dock._current_sheet, str(_dock._current_sheet.external_source_path)).get("name", "")))
+		_:
+			# A behaviour's kind on the behaviours card opens that behaviour as a sheet of its own.
+			if action.begins_with("open_sheet:"):
+				_dock._navigate.record_current()
+				_dock._navigate.open_or_focus(action.trim_prefix("open_sheet:"))
 
 
 ## Shows a spawned scene where it lives, in Godot's own FileSystem dock. Browsing rather than

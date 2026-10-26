@@ -9539,3 +9539,33 @@ The side panel's tabs. Choosing one opens the side panel on it; choosing the tic
 "The side panel beside the sheet, with its Objects and Functions tabs. Unticked, it rests as a thin rail and the sheet takes the width.","Боковая панель рядом с листом, с вкладками «Объекты» и «Функции». Без отметки она остаётся узкой полосой, а лист занимает ширину."
 Close the side panel,Закрыть боковую панель
 Objects and functions of this sheet,Объекты и функции этого листа
+Open in Script Editor,Открыть в редакторе скриптов
+The same file in Godot's own script editor. Changes made there show here when you come back.,"Тот же файл в редакторе скриптов Godot. Изменения, сделанные там, появятся здесь, когда вы вернётесь."
+Selects this sheet's file in Godot's FileSystem dock.,Выделяет файл этого листа в панели «Файловая система» Godot.
+extends,extends
+Custom node,Собственный узел
+Custom resource,Собственный ресурс
+Editor plugin,Плагин редактора
+Editor add-on,Расширение редактора
+1 behaviour,1 поведение
+%d behaviours,Поведений: %d
+1 function,1 функция
+%d functions,Функций: %d
+1 code block,1 блок кода
+%d code blocks,Блоков кода: %d
+"A script opened as a sheet: edit it here, and it stays plain GDScript.","Скрипт, открытый как лист: правьте его здесь, и он останется обычным GDScript."
+Attached to %s.,Прикреплён к %s.
+Show the scene,Показать сцену
+Edit description…,Изменить описание…
+all %d shown in the Inspector,все %d видны в Инспекторе
+shown in the Inspector,видна в Инспекторе
+%d of them shown in the Inspector,из них %d видны в Инспекторе
+The 1 other variable in the file is bookkeeping the compiler writes (%s),Ещё 1 переменная в файле - служебная запись компилятора (%s)
+The %d other variables in the file are bookkeeping the compiler writes (%s),Ещё %d переменных в файле - служебные записи компилятора (%s)
+and stay out of sight.,и скрыты.
+"1 part of the file stays as code, drawn where it sits.",1 часть файла остаётся кодом и показана на своём месте.
+"%d parts of the file stay as code, each drawn where it sits.","Частей файла, оставшихся кодом: %d, каждая показана на своём месте."
+Behaviours on this object,Поведения этого объекта
+"They are child nodes in the scene, not lines of this file, so they are listed here rather than as rows.","Это дочерние узлы в сцене, а не строки этого файла, поэтому они перечислены здесь, а не строками."
+Add behaviour…,Добавить поведение…
+"Every script this scene uses, in tree order. Double-click an object bar to open that script and edit it.","Все скрипты этой сцены в порядке дерева. Дважды щёлкните полосу объекта, чтобы открыть и править его скрипт."

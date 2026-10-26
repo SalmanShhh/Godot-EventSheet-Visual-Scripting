@@ -203,12 +203,15 @@ static func run() -> bool:
     all_passed = _check("saving sheet updates title tab text", title_tab_label.text, "event_sheet_editor_title_roundtrip") and all_passed
     all_passed = _check("saving sheet updates title path hint", title_path_label.text, "user://event_sheet_editor_title_roundtrip.tres") and all_passed
     dock.set_undo_redo_manager(FakeEditorUndoRedoManager.new())
-    # comment + group + its event, plus the group's "Add event…" footer and the sheet-end one.
-    all_passed = _check("sheet renders flattened rows", dock_viewport.get_total_row_count(), 5) and all_passed
+    # A sheet saved as a file opens on its head bar; then comment + group + its event, plus the
+    # group's "Add event…" footer and the sheet-end one.
+    all_passed = _check("sheet renders flattened rows", dock_viewport.get_total_row_count(), 6) and all_passed
     var flat_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
-    var comment_row_data: EventRowData = flat_rows[0].get("row")
-    var group_row: EventRowData = flat_rows[1].get("row")
-    var event_row_data: EventRowData = flat_rows[2].get("row")
+    all_passed = _check("a sheet saved as a file opens on its head bar",
+        str((flat_rows[0].get("row") as EventRowData).row_uid).begins_with("sheet_head_bar_"), true) and all_passed
+    var comment_row_data: EventRowData = flat_rows[1].get("row")
+    var group_row: EventRowData = flat_rows[2].get("row")
+    var event_row_data: EventRowData = flat_rows[3].get("row")
     # One editable label per LINE of the note, plus the echo of the line the row writes standing at
     # its right edge. The echo is chrome, not a line: counted separately here so a change that
     # started stacking it as a second line of text would fail rather than pass quietly.
@@ -228,7 +231,7 @@ static func run() -> bool:
     all_passed = _check("event row inherits indent", event_row_data.indent, 1) and all_passed
     all_passed = _check("event row action span exists", _row_contains_text(event_row_data, "Destroy"), true) and all_passed
     all_passed = _check("event row includes lane metadata spans", _row_has_lane(event_row_data, "condition") and _row_has_lane(event_row_data, "action"), true) and all_passed
-    var layout: Dictionary = dock_viewport.get_row_layout_for_test(2, 640.0)
+    var layout: Dictionary = dock_viewport.get_row_layout_for_test(3, 640.0)
     var condition_lane_rect: Rect2 = layout.get("condition_lane_rect", Rect2())
     all_passed = _check("event row layout contains lane divider scaffold", float(layout.get("lane_divider_x", -1.0)) > 0.0, true) and all_passed
     var condition_span_index: int = _find_span_index_by_kind(event_row_data, "condition")
@@ -527,28 +530,29 @@ static func run() -> bool:
     all_passed = _check("selection stores anchor for range scaffolding", editor_state.get("selection_anchor_index", -1), 2) and all_passed
     all_passed = _check("single selection tracks row count", editor_state.get("selected_row_count", 0), 1) and all_passed
 
+    # The saved sheet opens on its head bar, so its comment, group and event sit one row down.
     dock.setup(sheet)
     dock_viewport = dock.get_viewport_control()
     var event_rows_for_selection: Array[Dictionary] = dock_viewport.get_flat_rows()
-    dock_viewport._select_from_click(1, -1, false)
-    dock_viewport._select_from_click(2, _find_span_index_by_kind(event_rows_for_selection[2].get("row"), "condition"), true)
+    dock_viewport._select_from_click(2, -1, false)
+    dock_viewport._select_from_click(3, _find_span_index_by_kind(event_rows_for_selection[3].get("row"), "condition"), true)
     editor_state = dock_viewport.get_editor_state_snapshot()
     # Selecting the group selects its whole block: group + its event + the group's
     # "Add event…" footer child = 3 rows. The ctrl-click on the event only adds a span.
     all_passed = _check("ctrl selection tracks multiple rows", editor_state.get("selected_row_count", 0), 3) and all_passed
     all_passed = _check("ctrl selection tracks span highlight count", editor_state.get("selected_span_count", 0), 1) and all_passed
-    dock_viewport.get_row_layout_for_test(2, 640.0)
+    dock_viewport.get_row_layout_for_test(3, 640.0)
     # Right-click ON the already-selected condition span (a selection hit) - right-clicking
     # a selected target preserves the multi-selection rather than collapsing to one row.
-    var selected_condition_index: int = _find_span_index_by_kind(event_rows_for_selection[2].get("row"), "condition")
+    var selected_condition_index: int = _find_span_index_by_kind(event_rows_for_selection[3].get("row"), "condition")
     var right_click_selected := InputEventMouseButton.new()
     right_click_selected.pressed = true
     right_click_selected.button_index = MOUSE_BUTTON_RIGHT
-    right_click_selected.position = event_rows_for_selection[2].get("row").spans[selected_condition_index].rect.get_center()
+    right_click_selected.position = event_rows_for_selection[3].get("row").spans[selected_condition_index].rect.get_center()
     dock_viewport._input_handlers.handle_mouse_button(right_click_selected)
     editor_state = dock_viewport.get_editor_state_snapshot()
     all_passed = _check("right-click on selected row preserves multi-selection", editor_state.get("selected_row_count", 0), 3) and all_passed
-    dock_viewport._select_from_click(2, _find_span_index_by_kind(event_rows_for_selection[2].get("row"), "condition"), true)
+    dock_viewport._select_from_click(3, _find_span_index_by_kind(event_rows_for_selection[3].get("row"), "condition"), true)
     editor_state = dock_viewport.get_editor_state_snapshot()
     all_passed = _check("ctrl click toggles selected span off", editor_state.get("selected_span_count", 0), 0) and all_passed
 

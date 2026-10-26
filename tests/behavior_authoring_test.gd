@@ -82,11 +82,12 @@ static func run() -> bool:
 	all_passed = _check("custom-node templates call self methods",
 		node_output.contains("## @ace_codegen_template(\"heal()\")"), true) and all_passed
 
-	# Identity UX: banner content/visibility, tab badge, host-aware header label.
+	# Identity UX: the identity band is never shown (the head bar says what the sheet is), its words,
+	# the tab badge and the host-aware header label.
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(sheet)
 	editor.set_undo_redo_manager(NoopUndoManager.new())
-	all_passed = _check("banner visible for behavior sheets", editor._identity_banner.visible, true) and all_passed
+	all_passed = _check("the identity band stays folded away on a behavior sheet", editor._identity_banner.visible, false) and all_passed
 	all_passed = _check("banner announces the behavior + host",
 		editor._identity_banner._label.contains("PatrolBehavior - Behavior · acts on host: CharacterBody2D"), true) and all_passed
 	all_passed = _check("tab badge marks behavior sheets",
@@ -99,9 +100,9 @@ static func run() -> bool:
 	var second_editor: EventSheetEditor = EventSheetEditor.new()
 	second_editor.setup(plain_sheet)
 	second_editor.set_undo_redo_manager(NoopUndoManager.new())
-	# Plain sheets keep a minimal identity strip (the beginner's "what is this" cue + the save-time
-	# health chip) - the old rule hid the banner for exactly the sheets newcomers make.
-	all_passed = _check("banner visible for plain sheets too", second_editor._identity_banner.visible, true) and all_passed
+	# A plain sheet's band is folded away as well: a sheet saved as a file opens on its head bar, whose
+	# name card says what the band said, and the status bar counts the problems the health chip did.
+	all_passed = _check("and on a plain sheet", second_editor._identity_banner.visible, false) and all_passed
 	all_passed = _check("plain-sheet banner says what it is",
 		second_editor._identity_banner._label.begins_with("Event Sheet · "), true) and all_passed
 	second_editor._sheet_type_glue.apply_sheet_type_settings(2, "GuardBrain", "res://addons/eventsheet/icons/eventsheet.svg", "Area2D")
@@ -109,7 +110,7 @@ static func run() -> bool:
 	all_passed = _check("dialog apply sets name/host",
 		plain_sheet.custom_class_name == "GuardBrain" and plain_sheet.host_class == "Area2D", true) and all_passed
 	second_editor._refresh_title_strip()
-	all_passed = _check("banner appears after type change", second_editor._identity_banner.visible, true) and all_passed
+	all_passed = _check("and after a type change", second_editor._identity_banner.visible, false) and all_passed
 	editor.free()
 	second_editor.free()
 

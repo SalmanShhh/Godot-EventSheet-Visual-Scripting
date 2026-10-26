@@ -9539,3 +9539,33 @@ The side panel's tabs. Choosing one opens the side panel on it; choosing the tic
 "The side panel beside the sheet, with its Objects and Functions tabs. Unticked, it rests as a thin rail and the sheet takes the width.","El panel lateral junto a la hoja, con sus pestañas Objetos y Funciones. Sin marcar, queda como una franja estrecha y la hoja ocupa el ancho."
 Close the side panel,Cerrar el panel lateral
 Objects and functions of this sheet,Objetos y funciones de esta hoja
+Open in Script Editor,Abrir en el editor de scripts
+The same file in Godot's own script editor. Changes made there show here when you come back.,El mismo archivo en el editor de scripts de Godot. Los cambios hechos allí se ven aquí al volver.
+Selects this sheet's file in Godot's FileSystem dock.,Selecciona el archivo de esta hoja en el panel Sistema de archivos de Godot.
+extends,extends
+Custom node,Nodo propio
+Custom resource,Recurso propio
+Editor plugin,Plugin del editor
+Editor add-on,Complemento del editor
+1 behaviour,1 comportamiento
+%d behaviours,%d comportamientos
+1 function,1 función
+%d functions,%d funciones
+1 code block,1 bloque de código
+%d code blocks,%d bloques de código
+"A script opened as a sheet: edit it here, and it stays plain GDScript.",Un script abierto como hoja: edítalo aquí y sigue siendo GDScript simple.
+Attached to %s.,Asignado a %s.
+Show the scene,Mostrar la escena
+Edit description…,Editar descripción…
+all %d shown in the Inspector,las %d se muestran en el Inspector
+shown in the Inspector,se muestra en el Inspector
+%d of them shown in the Inspector,%d de ellas se muestran en el Inspector
+The 1 other variable in the file is bookkeeping the compiler writes (%s),La otra variable del archivo es contabilidad que escribe el compilador (%s)
+The %d other variables in the file are bookkeeping the compiler writes (%s),Las otras %d variables del archivo son contabilidad que escribe el compilador (%s)
+and stay out of sight.,y quedan ocultas.
+"1 part of the file stays as code, drawn where it sits.","1 parte del archivo sigue siendo código, dibujada donde está."
+"%d parts of the file stay as code, each drawn where it sits.","%d partes del archivo siguen siendo código, cada una dibujada donde está."
+Behaviours on this object,Comportamientos de este objeto
+"They are child nodes in the scene, not lines of this file, so they are listed here rather than as rows.","Son nodos hijos en la escena, no líneas de este archivo, así que se listan aquí y no como filas."
+Add behaviour…,Añadir comportamiento…
+"Every script this scene uses, in tree order. Double-click an object bar to open that script and edit it.","Todos los scripts que usa esta escena, en el orden del árbol. Haz doble clic en la barra de un objeto para abrir su script y editarlo."

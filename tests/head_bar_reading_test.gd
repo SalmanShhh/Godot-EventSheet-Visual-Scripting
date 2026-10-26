@@ -2,26 +2,24 @@
 class_name HeadBarReadingTest
 extends RefCounted
 
-# Pins the ONE HEAD BAR an opened file rests under, and the Behaviors band beside it.
+# Pins the ONE HEAD BAR every opened file rests under, and the cards behind its words.
 #
-# A file used to open with six stacked bars before its first event - the class, what it extends, the
-# receipts and how much of it read as events, the `##` prose, the controls it names and the
-# variables it declares. They are one line now:
+# A file used to open with a head card over the sheet, a folded group row under it, the file's prose
+# hoisted to the top as a comment row and a Behaviors band among the rows. It opens on one bar now:
 #
-#     InputRebindDemo extends Control - reads as events - 4 input actions - 1 variable
+#     ◆ CarouselOfJuice  Custom node · extends Node2D            4 variables · 2 events · 34 behaviours
 #
-# and every bar they were is still there, as the fold under it. Four things are pinned here, each
-# by VALUE:
+# and everything else lives one hover away, on the card behind the name or a count. Five things are
+# pinned here, each by VALUE:
 #
-#   1. the bar's own words for a showcase, plus the rows that hang under it - and a shipped pack,
-#      which is a behaviour and so opens on its own title row in file order, with no bar at all;
-#   2. the file's prose drawn ONCE - the `##` band that used to draw its value and its echo over
-#      each other is gone, and the comment row is the only copy;
-#   3. the quiet sheet at the head: a control the Input Map has not got leaves the Input bar's words
-#      entirely and becomes the amber state on the bar, with the sentence in the help strip;
-#   4. the Behaviors band, whose chips are doors into the packs they name, which says the KINDS
-#      and their counts on one folded line and opens into
-#      one line per kind with its settings and the nodes wearing it.
+#   1. the bar's own words for a showcase and for a shipped pack (a behaviour says only that it is
+#      one), and that the bar is a flat 30 px bar, not a fold;
+#   2. the file's prose is no row of the head: a `##` line is the name card's, and the paragraph a
+#      file ends on stays where the file has it;
+#   3. the quiet sheet at the head: a control the Input Map has not got is the amber state on the bar;
+#   4. the behaviours are a count with a card - each kind a door into its pack, then why they are not
+#      rows, then Add behaviour… - and no band among the rows;
+#   5. the variables count leaves the compiler's bookkeeping out, and its card says so.
 #
 # Read off the shipped tree rather than a fixture, because the point of every one of these readings
 # is what a reader sees when they open the real file.
@@ -38,43 +36,53 @@ static func run() -> bool:
 	var all_passed: bool = true
 	all_passed = _one_bar_for_a_showcase() and all_passed
 	all_passed = _one_bar_for_a_pack() and all_passed
-	all_passed = _the_prose_is_drawn_once() and all_passed
+	all_passed = _the_prose_stays_where_the_file_has_it() and all_passed
 	all_passed = _the_input_finding_is_quiet() and all_passed
-	all_passed = _behaviors_count_by_kind() and all_passed
+	all_passed = _behaviours_are_a_count_with_a_card() and all_passed
+	all_passed = _variables_leave_the_bookkeeping_out() and all_passed
 	return all_passed
 
 
-## The showcase's head: one bar with its four facts, and the bars it folds hanging under it.
+## The showcase's head: one flat bar, the name as written, its kind, and the counts.
 static func _one_bar_for_a_showcase() -> bool:
 	var head: Array = _head_rows(SHOWCASE)
 	return SUPPORT.pins(P, [
 		["input_rebind head bar", _words_of(head[0]),
-			"▣ InputRebindDemo extends Control · 4 input actions · 1 variable"],
-		["input_rebind head bar folds the bars it stands for", _child_uids(head[0]),
-			"sheet_head_name, pack_include_bar, input_actions, pack_internal_state"],
-		["input_rebind head bar is a fold, closed", str(head[0].folded), "true"],
+			"◆ InputRebindDemo Custom node · extends Control 1 variable · 8 events · 1 behaviour"],
+		["the head bar is the sheet's", _stable_uid(head[0]), "sheet_head_bar"],
+		["the head bar folds nothing", head[0].children.size(), 0],
+		["the head bar is a bar, not a group", head[0].row_type, EventRowData.RowType.SECTION],
+		["the head bar is 30 px in every look", head[0].fixed_height, 30.0],
+		["the variable stays a row of its own, under the bar",
+			(head[1] as EventRowData).source_resource is LocalVariable, true],
 	])
 
 
-## A shipped pack opens on no head bar at all: it is a behaviour, and a behaviour reads in its file's
-## own order under the title row an edited sheet has - the class head first, then one band per line.
+## A shipped pack is a behaviour: its bar says the name and that it is a behaviour, and no more.
 static func _one_bar_for_a_pack() -> bool:
 	var head: Array = _head_rows(PACK)
 	return SUPPORT.pins(P, [
-		["flash opens on its title row", _words_of(head[0]),
-			"▣ FlashBehavior Behaviour · extends Node class_name FlashBehavior"],
-		["no head bar folds anything", _uids_matching(PACK, "sheet_head_bar"), ""],
+		["flash opens on its head bar", _words_of(head[0]), "◆ FlashBehavior Behaviour"],
+		["and the bar is the one head bar", _stable_uid(head[0]), "sheet_head_bar"],
+		["no row of the head is the @icon line", _uids_matching(PACK, "sheet_head_icon"), ""],
 	])
 
 
-## The `##` block is a comment row and nothing else. The band that used to carry it drew its value
-## and its echo of the same line over each other, and a pack that also ends on an about-comment drew
-## the sentence twice; both files now hold exactly one row that says it.
-static func _the_prose_is_drawn_once() -> bool:
+## The file's prose is no row of the head. A `##` line is said on the name's card; the `#` paragraph a
+## showcase ends on stays at the end, where the file has it, and is said once.
+static func _the_prose_stays_where_the_file_has_it() -> bool:
+	var rows: Array = _head_rows(SHOWCASE)
+	var said_at: int = -1
+	for index: int in range(rows.size()):
+		if _words_of(rows[index]).contains("a working rebind screen"):
+			said_at = index
 	return SUPPORT.pins(P, [
 		["input_rebind description bands", _uids_matching(SHOWCASE, "sheet_head_description"), ""],
 		["input_rebind description rows", _rows_saying(SHOWCASE, "a working rebind screen"), 1],
-		["flash reads its ## line where the file has it", _uids_matching(PACK, "sheet_head_description"), "sheet_head_description"],
+		["the paragraph the file ends on is not hoisted to the top", said_at > 1, true],
+		["flash's ## line is no row", _uids_matching(PACK, "sheet_head_description"), ""],
+		["flash's ## line is the name card's", (_card_of(_head_rows(PACK)[0], "name").get("lines", []) as Array)
+			.size(), 1],
 	])
 
 
@@ -82,9 +90,7 @@ static func _the_prose_is_drawn_once() -> bool:
 ## the head bar, and the sentence the help strip reads out of it.
 static func _the_input_finding_is_quiet() -> bool:
 	var head: Array = _head_rows(SHOWCASE)
-	var input_bar: EventRowData = _child_named(head[0], "input_actions")
 	return SUPPORT.pins(P, [
-		["the Input bar says nothing about it", _words_of(input_bar.children[0]), "demo_jump"],
 		["the head bar wears the finding", head[0].attention_note.get_slice(" · ", 0),
 			"\"demo_jump\" is not in the Input Map - the control never fires and nothing says so. Add it in Project ▸ Input Map, or fix the spelling."],
 		["the finding carries its family", str(head[0].attention_findings[0].get("family", "")), "input"],
@@ -93,45 +99,36 @@ static func _the_input_finding_is_quiet() -> bool:
 	])
 
 
-## Thirty-four behaviors on one object: eight kinds with their counts on the folded line, and one
-## line per kind under it - with the settings the scene wrote and the nodes wearing them.
-static func _behaviors_count_by_kind() -> bool:
-	var band: EventRowData = _row_named(CAROUSEL, "object_behaviors")
-	var lines: PackedStringArray = PackedStringArray()
-	for member: EventRowData in band.children:
-		lines.append(_words_of(member))
+## Thirty-four behaviours on one object: a count on the bar, and on its card the kinds with their
+## counts (each one a door into its pack), why they are listed there, and Add behaviour….
+static func _behaviours_are_a_count_with_a_card() -> bool:
+	var head: Array = _head_rows(CAROUSEL)
+	var card: Dictionary = _card_of(head[0], "behaviours")
+	var kinds: PackedStringArray = PackedStringArray()
+	for link: Variant in card.get("links", []):
+		kinds.append(str((link as Array)[0]))
+	var first: Array = (card.get("links", [[""]]) as Array)[0] as Array
 	return SUPPORT.pins(P, [
-		["carousel Behaviors band", _words_of(band),
-			"Behaviors · 34 on this object - Spring 10, Tween 10, Flash 2, Juice, Scenes, Blend Modes, Screen FX, Sine 8"],
-		["carousel Behaviors band is folded", str(band.folded), "true"],
-		["carousel Behaviors kinds", "\n".join(lines), "\n".join(PackedStringArray([
-			"Spring ×10 on Carousel … Tile7",
-			"Tween ×10 on Carousel … Tile7",
-			"Flash ×2 on Carousel · Hero",
-			"Juice",
-			"Scenes",
-			"Blend Modes",
-			"Screen FX layer = 100",
-			"Sine ×8 movement = \"vertical\" · period = 1.6 · magnitude = 18.0 · on Tile0 … Tile7",
-		]))],
-		# A kind is a DOOR: the chip carries the pack's own script, so clicking the word opens
-		# that behavior as a sheet - the same jump the Include bar makes, through the same field.
-		["carousel Behaviors chips open their packs", _chip_doors(band),
-			"Spring 10 -> spring_behavior.gd"],
+		["carousel head bar", _words_of(head[0]),
+			"◆ CarouselOfJuice Custom node · extends Node2D 4 variables · 2 events · 34 behaviours"],
+		["carousel behaviour kinds on the card", " · ".join(kinds),
+			"Spring 10 · Tween 10 · Flash 2 · Juice · Scenes · Blend Modes · Screen FX · Sine 8"],
+		["a kind opens its pack", str(first[1]).get_file(), "spring_behavior.gd"],
+		["the card says why they are not rows", str((card.get("lines", [""]) as Array)[0]),
+			"They are child nodes in the scene, not lines of this file, so they are listed here rather than as rows."],
+		["and offers Add behaviour…", str(card.get("doors", [])), "[[\"Add behaviour…\", \"add_behaviour\"]]"],
+		["no Behaviors band among the rows", _uids_matching(CAROUSEL, "object_behaviors"), ""],
 	])
 
 
-## The first chip of a band that names a file, as "<chip> -> <file>". One line rather than all of
-## them, because the pin is that a chip IS a door and which file it opens - not the pack list,
-## which the band words above already carry.
-static func _chip_doors(band: EventRowData) -> String:
-	for span: SemanticSpan in band.spans:
-		if span == null or not (span.metadata is Dictionary):
-			continue
-		var opens: String = str((span.metadata as Dictionary).get("include_path", ""))
-		if not opens.is_empty():
-			return "%s -> %s" % [span.text.trim_suffix(","), opens.get_file()]
-	return ""
+## The compiler's own members are bookkeeping, not variables a reader declared: never counted, and
+## named on the card as what they are.
+static func _variables_leave_the_bookkeeping_out() -> bool:
+	var card: Dictionary = _card_of(_head_rows(CAROUSEL)[0], "variables")
+	return SUPPORT.pins(P, [
+		["the variables card", str((card.get("lines", [""]) as Array)[0]),
+			"beat, intensity, party_on and moments_played, all 4 shown in the Inspector. The 3 other variables in the file are bookkeeping the compiler writes (__group_juice_active, __every_beat_caro, …)."],
+	])
 
 
 # ── reading the shipped files ───────────────────────────────────────────────────────────────────
@@ -157,6 +154,15 @@ static func _head_rows(path: String) -> Array:
 	return rows
 
 
+## The card behind one word of a head bar, by its id - {} when the bar has no such word.
+static func _card_of(row_data: EventRowData, card_id: String) -> Dictionary:
+	for span: SemanticSpan in row_data.spans:
+		var card: Variant = (span.metadata as Dictionary).get("head_card") if span.metadata is Dictionary else null
+		if card is Dictionary and str((card as Dictionary).get("id", "")) == card_id:
+			return card
+	return {}
+
+
 ## One row's words, spans joined - what a reader of that line sees, without the colours.
 static func _words_of(row_data: EventRowData) -> String:
 	var words: PackedStringArray = PackedStringArray()
@@ -174,29 +180,6 @@ static func _stable_uid(row_data: EventRowData) -> String:
 	if cut < 0:
 		cut = uid.rfind("_")
 	return uid.substr(0, cut) if cut > 0 else uid
-
-
-static func _child_uids(row_data: EventRowData) -> String:
-	var uids: PackedStringArray = PackedStringArray()
-	for child: EventRowData in row_data.children:
-		uids.append(_stable_uid(child))
-	return ", ".join(uids)
-
-
-static func _child_named(row_data: EventRowData, uid: String) -> EventRowData:
-	for child: EventRowData in row_data.children:
-		if _stable_uid(child) == uid:
-			return child
-	return EventRowData.new()
-
-
-## The one row of a file with this uid, at any depth - the Behaviors band is a root row, but asking
-## for it by name keeps the pin from counting the head's rows.
-static func _row_named(path: String, uid: String) -> EventRowData:
-	for row_data: EventRowData in _all_rows(path):
-		if _stable_uid(row_data) == uid:
-			return row_data
-	return EventRowData.new()
 
 
 ## Every uid of a file that starts with this prefix, sorted - "" when the file grows none, which is

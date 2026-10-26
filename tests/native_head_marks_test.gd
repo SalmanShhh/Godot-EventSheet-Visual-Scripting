@@ -2,14 +2,14 @@
 extends RefCounted
 # Godot EventSheets - the class head, the Include bar and the inner-class block
 #
-# The head of a sheet reads as ONE class head row (the class, the kind of file, what it extends, a
-# shared sheet's mark and who includes it), each Include as a bar with the line it writes at its
+# The head of a sheet reads as ONE head bar (the class, the kind of file, what it extends; a shared
+# sheet's mark and who includes it on its name card), each Include as a bar with the line it writes at its
 # right and the included sheet's variables under it, and an inner data class as one framed block
 # whose open form ends in "+ Add field" and in what a class is for. The pins hold:
 #   1. how one line of source reads as a top-level variable, and what does not;
 #   2. a shared sheet's wiring and the project's scripts that include it;
 #   3. which variables of a sheet hold an inner class;
-#   4. the class head row of a shared sheet: its words, the drawn mark, "Included by";
+#   4. the head bar of a shared sheet: its words, and the share and "Included by" on its name card;
 #   5. the Include bar's shape in a theme that states the Include edge, and in one that does not,
 #      and View > Included Variables turning the rows under it off;
 #   6. the inner-class block's frame, its "+ Add field" and its explainer - and that a read-only
@@ -111,19 +111,21 @@ static func _test_class_head_of_a_shared_sheet() -> bool:
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SHARED_BASE)
 	sheet.read_only = false
 	var view := _view_of(sheet)
-	var head: EventRowData = _row_with_uid(view, "sheet_head_name_")
-	var share_mark: Dictionary = {}
+	var head: EventRowData = _row_with_uid(view, "sheet_head_bar_")
+	var notes: Array = []
 	for span: SemanticSpan in head.spans if head != null else []:
-		if span.text == "⇆":
-			share_mark = span.metadata as Dictionary
+		var card: Variant = (span.metadata as Dictionary).get("head_card") if span.metadata is Dictionary else null
+		if card is Dictionary and str((card as Dictionary).get("id", "")) == "name":
+			notes = Array((card as Dictionary).get("notes", []))
 	var result: bool = SUPPORT.pins(TEST_NAME, [
-		["the class head reads the class, the kind, the base, the mark and who includes it",
-			_texts(head), "▣ | FixtureDamageRules | Script | · extends | Node | change… | ⇆ | Included by Fixture Includer | class_name FixtureDamageRules"],
+		["the head bar reads the class, the kind and the base",
+			_lead_texts(head),
+			"◆ | FixtureDamageRules | Custom node · extends | Node"],
 		["no extends band of its own", _row_with_uid(view, "sheet_head_extends_") == null, true],
-		["the share mark is a drawn glyph on a tile", [str(share_mark.get("badge_style", "")),
-			bool(share_mark.get("badge_plate", false))], ["glyph", true]],
-		["the includers give way to the echo with an ellipsis", _flag_of(head, "Included by", "elide"), true],
-		["a node's script says the node runs it", _flag_of(head, "Script", "hover_note"),
+		["the share mark and who includes it are the name card's words, not the bar's",
+			[_texts(head).contains("⇆"), notes.slice(-2)],
+			[false, ["A shared sheet: other sheets can include it.", "Included by Fixture Includer"]]],
+		["a node's script says the node runs it", str(_flag_of(head, "Custom node", "hover_note")).get_slice(" Click", 0),
 			"What this file is: a script, run by the node it is attached to."],
 	])
 	view.free()
@@ -259,5 +261,17 @@ static func _texts(row_data: EventRowData) -> String:
 		return ""
 	var parts: PackedStringArray = PackedStringArray()
 	for span: SemanticSpan in row_data.spans:
+		parts.append(span.text)
+	return " | ".join(parts)
+
+
+## The head bar's words before its right-aligned counts: the icon, the name, the kind and the base.
+static func _lead_texts(row_data: EventRowData) -> String:
+	if row_data == null:
+		return ""
+	var parts: PackedStringArray = PackedStringArray()
+	for span: SemanticSpan in row_data.spans:
+		if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("align_right", false)):
+			break
 		parts.append(span.text)
 	return " | ".join(parts)

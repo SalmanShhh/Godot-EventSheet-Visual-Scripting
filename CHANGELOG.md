@@ -2,6 +2,33 @@
 
 ## [Unreleased]
 
+### Changed: a sheet opens on one head bar, with no head card, no banner and no Behaviors band
+
+- An opened file used to open under a title strip, a head card ("CarouselOfJuice - Custom Node ·
+  extends Node2D · @ 4 knobs") and a full-width blue banner with Edit Events and Open in Godot Script
+  Editor; then a folded head row that hid the variables, the file's closing paragraph hoisted to the
+  top, and a Behaviors band among the rows. It now opens on ONE 30 px head bar, the same in every look and for every kind of file: the class icon (or the file's
+  own `@icon`), the name as written, what kind of script it is ("Custom node · extends Node2D",
+  "Script", "Behaviour", "Global (autoload)"), and on the right the counts - variables, events and
+  behaviours - each with a dotted rule under it.
+- Hovering a word on the bar (or clicking it) opens its card. The name's card says where the file
+  lives, its description, that a script opened as a sheet stays plain GDScript and how many events,
+  functions and code blocks it has, with Open in Script Editor and Show in FileSystem (a behaviour's
+  or a global's adds its settings form; a sheet being edited adds Edit description…). The variables
+  card names them and says how many the Inspector shows; the bookkeeping members the compiler writes
+  (`__...`) are never counted. The behaviours card lists each kind with its count - a click opens
+  that behaviour as a sheet - and offers Add behaviour….
+- The rows below are the file's, in its order: the variables stay where they are declared (read with
+  their Inspector facts, an `@export_group` as its own section), the signals stay where they are,
+  and the paragraph a file ends on stays at its end.
+- The banner is shown for one state only: a file an unfinished merge blocks. The first edit still
+  unlocks a preview, and the status bar names the opened file instead of repeating the banner. The
+  Sheet menu gains Open in Script Editor and Show in FileSystem, and a behaviour's Sheet | Code |
+  Side by side switch moves to the toolbar.
+- The look a new user gets (the one that matches the editor) paints the head bar a flat grey a step
+  off the canvas.
+
+
 ### Fixed: a script opened as a sheet reads closer to the design boards
 
 - Every function reads where the file writes it: the closed Helpers bar that gathered a script's

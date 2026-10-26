@@ -137,6 +137,10 @@ var or_condition_lines: PackedInt32Array = PackedInt32Array()
 ## setup bar) reserve extra height so they read as BARS, the way an event sheet's
 ## Includes strip does; content re-centers inside the taller rect at layout time.
 var height_scale: float = 1.0
+## A bar that is one exact height in every look, at 1x (0 = measured like any other row): the sheet's
+## head bar is 30 px whether the look's rows are 24 or 32. Never shorter than the font's own line, so
+## a large editor font still fits; content centres inside it. View-only, never serialized.
+var fixed_height: float = 0.0
 # True when the row DIRECTLY BELOW belongs to this one and must not be pushed away by the inter-block
 # gap - a published verb's description caption and the verb row it describes read as one block. It also
 # marks this row as STARTING that block, so the gap lands above the caption instead of between the

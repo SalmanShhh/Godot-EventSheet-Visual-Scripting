@@ -122,6 +122,10 @@ func remeasure_open_rows() -> bool:
 
 
 func _resolve_row_height(row_data: EventRowData) -> float:
+	# A bar of one exact height (the sheet's head bar), floored by the font so its words always fit.
+	if row_data != null and row_data.fixed_height > 0.0:
+		return maxf(EventSheetPalette.scaled_f(row_data.fixed_height),
+			_viewport._get_font().get_height(_viewport._get_font_size()) + 8.0)
 	# Header-like rows reserve height_scale times their natural height (state headers, the
 	# Class setup bar - the event-sheet Includes-bar presence); layout re-centers content.
 	return _resolve_row_height_natural(row_data) * clampf(row_data.height_scale if row_data != null else 1.0, 1.0, 3.0)

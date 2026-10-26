@@ -2,9 +2,9 @@
 class_name EventSheetPreviewGlue
 extends RefCounted
 # The .gd-PREVIEW / OPEN-IN-GODOT / LIFT-REPORT cluster. This helper owns:
-#   • the read-only .gd-preview banner - the plain-language strip shown when a sheet is opened as a
-#     read-only .gd (a lifted GDScript view), with its "Edit Events" unlock and "Open in Godot
-#     Script Editor" buttons,
+#   • the banner a file BLOCKED by an unfinished merge wears (the only thing it is shown for - an
+#     ordinary opened .gd says what it is on the head bar's name card), and the unlock funnel the
+#     first edit of an opened .gd goes through (`_on_preview_edit_requested`),
 #   • the glue that hands a Script/res:// path to Godot's own script editor
 #     (EditorInterface.edit_script) for every "Open in Godot" action (preview, raw-code block,
 #     generated code, provider script),
@@ -50,12 +50,9 @@ var _lift_report_window: Window = null
 var _lift_report_tree: Tree = null
 
 
-## The banner's two grounds. A read-only PREVIEW is calm blue: nothing is wrong, the file is simply
-## not unlocked yet. A file BLOCKED by an unfinished merge is a warning ground, because it is a state
-## rather than a mode - there is no button that opens it, and it must never look like one that merely
-## has not been pressed.
-const PREVIEW_BANNER_BACKGROUND := Color(0.16, 0.26, 0.40)
-const PREVIEW_BANNER_BORDER := Color(0.40, 0.62, 0.95)
+## The banner's ground: a warning, because a file BLOCKED by an unfinished merge is a state rather than
+## a mode - there is no button that opens it, and it must never look like one that merely has not been
+## pressed. It is the only thing the banner is ever shown for.
 const CONFLICT_BANNER_BACKGROUND := Color(0.36, 0.18, 0.14)
 const CONFLICT_BANNER_BORDER := Color(0.92, 0.48, 0.34)
 
@@ -64,15 +61,15 @@ const CONFLICT_BANNER_BORDER := Color(0.92, 0.48, 0.34)
 var _conflict_button: Button = null
 
 
-## Builds the read-only preview banner: a clear, plain-language strip with REAL buttons so a
-## first-time user knows exactly what is happening and what to do next. Hidden by default.
+## Builds the banner a blocked file wears: the reason, wrapped, and the one door that reads the
+## conflicts. Hidden by default and for every file that is not blocked.
 func build_preview_banner() -> PanelContainer:
 	var panel: PanelContainer = PanelContainer.new()
 	panel.name = "EventSheetPreviewBanner"
 	panel.visible = false
 	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = PREVIEW_BANNER_BACKGROUND
-	style.border_color = PREVIEW_BANNER_BORDER
+	style.bg_color = CONFLICT_BANNER_BACKGROUND
+	style.border_color = CONFLICT_BANNER_BORDER
 	style.set_border_width(SIDE_LEFT, 4)
 	style.set_content_margin_all(6.0)
 	panel.add_theme_stylebox_override("panel", style)
@@ -82,18 +79,9 @@ func build_preview_banner() -> PanelContainer:
 	_dock._preview_label = Label.new()
 	_dock._preview_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_dock._preview_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_dock._preview_label.text = "Viewing as a sheet"
 	row.add_child(_dock._preview_label)
-	var edit_button: Button = Button.new()
-	edit_button.text = "Edit Events"
-	edit_button.tooltip_text = "Start editing this sheet here. From then on, Save (Ctrl+S) updates the file - or use Save As… to keep the original and save a copy."
-	edit_button.pressed.connect(_on_preview_edit_requested)
-	row.add_child(edit_button)
-	var script_button: Button = Button.new()
-	script_button.text = "Open in Godot Script Editor"
-	script_button.tooltip_text = "Edit the .gd directly in Godot's script editor - your changes reload here when you come back to this tab."
-	script_button.pressed.connect(_on_preview_open_in_script_editor)
-	row.add_child(script_button)
+	# No Edit Events and no Open in Godot Script Editor here any more: the first edit is the unlock,
+	# and the script editor's door is on the head bar's name card and in the Sheet menu.
 	# The blocked state's own door, hidden for every ordinary preview. It is a way to LOOK at the two
 	# sides side by side rather than an unlock: the banner says the merge tool is where this is
 	# finished, and this window is the reading of what is in the way, not a second merge tool.
@@ -107,46 +95,22 @@ func build_preview_banner() -> PanelContainer:
 	return panel
 
 
-## Shows/updates the preview banner: visible only while previewing a .gd read-only, with the
-## source name + a plain-language lift-fidelity summary (events lifted vs. code kept verbatim).
+## Shows/updates the banner, which is shown for ONE state only: a file an unfinished merge blocks.
+## An ordinary opened .gd shows nothing here - there is nothing to unlock (the first edit is the
+## unlock), and what the old preview banner said is the head bar's name card: where the file is, that
+## it stays plain GDScript, its counts, and the door to Godot's script editor.
 func _refresh_preview_banner() -> void:
 	if _dock._preview_banner == null:
-		return
-	var is_preview: bool = _dock._current_sheet != null and _dock._current_sheet.read_only
-	_dock._preview_banner.visible = is_preview
-	if not is_preview or _dock._preview_label == null:
 		return
 	# THE ONE SANCTIONED BANNER. Everything else this editor finds about a sheet is a finding, and a
 	# finding never says a word in the sheet - it sets the quiet amber row state and its words live in
 	# the help strip and the Doctor. A file a merge has not finished with is not a finding: it is a
 	# FILE-LEVEL BLOCKING STATE, the file is not GDScript, and a state may say so at the head.
-	if _dock._current_sheet.blocked_by_conflict():
+	var blocked: bool = _dock._current_sheet != null and _dock._current_sheet.read_only \
+		and _dock._current_sheet.blocked_by_conflict()
+	_dock._preview_banner.visible = blocked
+	if blocked and _dock._preview_label != null:
 		_paint_blocked_banner()
-		return
-	_paint_banner_ground(PREVIEW_BANNER_BACKGROUND, PREVIEW_BANNER_BORDER)
-	if _conflict_button != null:
-		_conflict_button.visible = false
-	# Back to one trimmed line: an ordinary preview's banner is a note beside the work, and a
-	# wrapping one would push the sheet down the screen on every narrow dock.
-	_dock._preview_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_dock._preview_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	# A scene read as one sheet has no single file to write back to, so there is nothing to
-	# unlock: the banner says what this is and where editing happens instead. The buttons that offer
-	# a file go away with it.
-	var scene_view: bool = EventSheetSceneSheet.is_scene_sheet(_dock._current_sheet)
-	for button: Node in _dock._preview_banner.find_children("", "Button", true, false):
-		(button as Button).visible = not scene_view and button != _conflict_button
-	if scene_view:
-		_dock._preview_label.text = "👁  Reading %s - every script this scene uses, in tree order. Double-click an object bar to open that script and edit it." % EventSheetSceneSheet.scene_path_of(_dock._current_sheet).get_file()
-		return
-	var source_name: String = _dock._current_sheet.external_source_path.get_file()
-	if source_name.is_empty():
-		source_name = "this sheet"
-	# The lift summary is recomputed from the ACTIVE sheet on every refresh - a cached report went
-	# stale the moment you switched tabs between two previews (the banner kept the other sheet's
-	# counts). Recomputing is a cheap row walk, and previews are read-only so refreshes are rare.
-	var report: Array[Dictionary] = EventSheetLiftReport.for_sheet(_dock._current_sheet)
-	_dock._preview_label.text = "👁  Viewing %s as a sheet - just start editing to change it here, or \"Open in Godot Script Editor\" for the code.  (%s)" % [source_name, EventSheetLiftReport.summary(report)]
 
 
 ## The blocked banner: the marker lines named, the reason stated, and the merge tool pointed at. The
@@ -217,6 +181,8 @@ func _on_preview_edit_requested() -> void:
 
 
 ## "Open in Godot Script Editor": hand the .gd to Godot's own script editor for direct code edits.
+## Deprecated: the banner button it answered is gone; the head bar's name card and the Sheet menu open
+## the script editor through _open_generated_in_godot. Kept so a caller of the old name still works.
 func _on_preview_open_in_script_editor() -> void:
 	if _dock._current_sheet == null or _dock._current_sheet.external_source_path.is_empty():
 		return

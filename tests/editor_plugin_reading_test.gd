@@ -141,7 +141,7 @@ static func _plugin_reads_with_the_editor_object() -> bool:
 	return ok
 
 
-## The three questions with constant answers are facts on the head bar, and their function rows
+## The three questions with constant answers are facts on the head bar's name card, and their function rows
 ## are not drawn a second time underneath it.
 static func _head_states_the_constant_answers() -> bool:
 	var ok: bool = true
@@ -279,6 +279,11 @@ static func _render(sheet: EventSheetResource) -> PackedStringArray:
 			var label: String = str(span.metadata.get("object_label", ""))
 			var text: String = span.text.strip_edges()
 			readings.append("%s ▸ %s" % [label, text] if not label.is_empty() else text)
+			# What the head says beyond its words is on the card behind its name.
+			var card: Variant = span.metadata.get("head_card")
+			if card is Dictionary:
+				for said: Variant in Array((card as Dictionary).get("lines", [])) + Array((card as Dictionary).get("notes", [])):
+					readings.append(str(said))
 	viewport.free()
 	return readings
 

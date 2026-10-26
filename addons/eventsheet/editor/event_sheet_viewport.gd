@@ -165,6 +165,8 @@ const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/readin
 ## What only an edit or a copy asks for, read by path at that moment.
 const FORMAT_BAR_PATH := "res://addons/eventsheet/editor/bbcode_selection_bar.gd"
 const TEXT_LISTING_PATH := "res://addons/eventsheet/editor/dock/text_listing.gd"
+## The hover card behind a word of the head bar, read by path the first time a pointer rests on one.
+const HEAD_CARD_PATH := "res://addons/eventsheet/editor/interaction/sheet_head_card.gd"
 
 # The DEFAULT density's numbers. Every layout read goes through row_height_floor() /
 # indent_width() / event_block_gap() below, which ask the sheet's own theme; these two are the
@@ -262,6 +264,8 @@ var _row_builds: int = 0
 ## The (row, span, revision) the current _hover_match_spans was computed for.
 var _hover_match_key: Vector3i = Vector3i(-1, -1, -1)
 var _hover_is_drag_zone: bool = false  # pointer over an event's empty lane band (the move-cursor grab zone)
+## The head bar's hover card (sheet_head_card.gd), built on the first hover of a word that has one.
+var _head_card: Control = null
 var _editing_row_index: int = -1
 var _editing_span_index: int = -1
 var _editing_buffer: String = ""
@@ -504,6 +508,7 @@ func set_sheet(sheet: EventSheetResource) -> void:
 	# change: the same sheet re-seated after an edit is the same reading, still being read.
 	if sheet != _sheet:
 		clear_tunable_events()
+		close_head_card()
 	_sheet = sheet
 	_folding.load_persisted_region_folds()
 	_folding.load_persisted_collapse_level()
@@ -2273,6 +2278,9 @@ func _notification(what: int) -> void:
 		# button is still held and the pointer is expected to roam outside the control.
 		if not _dragging_lane_divider and _dragging_object_column_lane.is_empty():
 			clear_divider_guide()
+		# Off the canvas is off the word: a card left open closes unless the pointer went onto it.
+		if _head_card != null:
+			_head_card.call("leave_word")
 
 
 func _draw() -> void:
@@ -2889,6 +2897,10 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 		if not scaffold_rows.is_empty():
 			root_rows.append_array(_row_builder.build_head_band_rows(sheet, scaffold_rows))
 			event_start = scaffold_end
+	# A file whose head lines are not text of its own (a `.tres` sheet the compiler writes them for)
+	# still opens on the one head bar: it is the sheet's name, kind and counts, not a line of the file.
+	if event_start == 0 and ViewportRowBuilder.opens_on_head_bar(sheet):
+		root_rows.append(_row_builder.build_sheet_head_bar_row(sheet))
 	# The declarations, under the head that names the file and above the events that use them:
 	# first the globals this sheet only BORROWS (with a hairline closing that block), then the ones
 	# it declares itself. A reader meets `Game.Score` where it is used, not only where it lives.
@@ -4096,6 +4108,42 @@ func _trigger_icon_tooltip(row_index: int, logical_position: Vector2) -> String:
 	return NativeRowMarks.trigger_tooltip(kind) if icon_rect.grow(2.0).has_point(logical_position) else ""
 
 
+## The hover card behind a word of the head bar: opened when the pointer has rested on the name or a
+## count (at once on a click, `at_once`), and let go when it leaves the word and the card both. The
+## card is a Control floated over the canvas - the row only carries its words in the span's metadata
+## (`head_card`) - and its doors come back as head actions, the same signal the bands' gestures use.
+func update_head_card(hit: Dictionary, at_once: bool = false) -> void:
+	var metadata: Variant = hit.get("span_metadata", {})
+	var card: Variant = (metadata as Dictionary).get("head_card") if metadata is Dictionary else null
+	if not (card is Dictionary) or (card as Dictionary).is_empty():
+		if _head_card != null:
+			_head_card.call("leave_word")
+		return
+	var row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
+	var span_index: int = int(hit.get("span_index", -1))
+	if row_data == null or span_index < 0 or span_index >= row_data.spans.size():
+		return
+	if _head_card == null:
+		_head_card = load(HEAD_CARD_PATH).new()
+		_head_card.connect("door_pressed", func(action: String) -> void: sheet_head_action_requested.emit(action))
+		add_child(_head_card)
+	var zoom: float = maxf(_zoom_factor, 0.001)
+	var word: Rect2 = row_data.spans[span_index].rect
+	var on_screen: Rect2 = get_global_transform() * Rect2(word.position * zoom, word.size * zoom)
+	_head_card.call("hover_word", card, on_screen, at_once)
+
+
+## Closes the head bar's card, if one is open - a sheet change, or a test that opened one.
+func close_head_card() -> void:
+	if _head_card != null:
+		_head_card.call("close")
+
+
+## The head bar's card while it is built, or null - for the harnesses and tests that read it.
+func head_card() -> Control:
+	return _head_card
+
+
 func _get_tooltip(at_position: Vector2) -> String:
 	# The pinned head shows the last two parent names; the hover is where the whole chain is.
 	if _group_breadcrumb.covers(at_position):
@@ -4105,6 +4153,10 @@ func _get_tooltip(at_position: Vector2) -> String:
 	if not hovered_link.is_empty():
 		return ViewportCornerLinks.tooltip_for(hovered_link)
 	var hit: Dictionary = _hit_test(_to_logical_position(at_position))
+	# A word with a hover card says everything on the card; a tooltip as well would say it twice.
+	var card_meta: Variant = hit.get("span_metadata", {})
+	if card_meta is Dictionary and (card_meta as Dictionary).get("head_card") is Dictionary:
+		return ""
 	# Error → row deep-link: a flagged row leads its tooltip with the diagnostic (it matters
 	# more than the codegen preview).
 	var hovered_error_row: EventRowData = _row_at(int(hit.get("row_index", -1)))

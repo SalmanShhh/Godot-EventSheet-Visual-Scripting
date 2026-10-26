@@ -343,9 +343,7 @@ func _finish_gd_open(sheet: EventSheetResource, raw_sheet: EventSheetResource, r
 		# resource, so it would append a SECOND tab for the same file.
 		_dock._activate_tab(tab_index)
 		_dock._external_mtime = FileAccess.get_modified_time(resolved_path)
-		# The lift report explains the structure/code boundary per block - the teaching
-		# surface for what GDScript maps to which events (the banner recomputes its own copy
-		# from the active sheet, so tab switches always show the right counts).
+		# The banner shows only for a file a merge has left blocked; this is where it learns that.
 		_dock._preview_glue._refresh_preview_banner()
 		_flag_parse_error_rows(sheet, resolved_path)
 	DOCK_REGISTRY.notify_lifecycle("opened", {"sheet": sheet, "path": resolved_path})
@@ -355,7 +353,9 @@ func _finish_gd_open(sheet: EventSheetResource, raw_sheet: EventSheetResource, r
 	if was_canceled:
 		_dock._set_status("Opened %s as code - stopped working out the events, so every function is shown as a script block. Reopen the file to try again." % resolved_path.get_file())
 		return
-	_dock._set_status("Opened %s - viewing it as a sheet. Just start editing to change it here, or \"Open in Godot Script Editor\" for the code. (%s)" % [resolved_path.get_file(), EventSheetLiftReport.summary(EventSheetLiftReport.for_sheet(sheet))])
+	# The status line names the file and nothing more: what it is, its counts and the door to the
+	# script editor are the head bar's name card.
+	_dock._set_status(resolved_path.get_file())
 	# Deferred, so the rows are on screen before the suggestion is worked out: it is a census of the
 	# sheet put through the Manual's search, and on a session's first open it compiled the Manual's
 	# scripts inside the wait for the sheet.

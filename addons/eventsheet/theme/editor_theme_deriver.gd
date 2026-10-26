@@ -257,6 +257,9 @@ static func derive(base_color: Color, accent_color: Color) -> EventSheetEditorSt
 	event_style.hover_fill_color = Color(accent_color.r, accent_color.g, accent_color.b, 0.10)
 	event_style.behavior_accent_color = accent_color
 	read_variables_inspector_style(event_style)
+	# The sheet's one head bar: a flat grey a step off the canvas, the class head the design draws in
+	# both skins - never a tint of the accent, which would read as a selection.
+	event_style.head_bar_color = base_color.lightened(0.08) if dark else base_color.darkened(0.07)
 	style.event_style = event_style
 	return style
 

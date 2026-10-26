@@ -172,25 +172,29 @@ static func _every_x_seconds() -> bool:
 	return passed
 
 
-## The base script reads as an Include bar, and `super` as calling that include.
+## The base script is the head bar's door to its own sheet, and `super` reads as calling that include.
 static func _include_bar_and_super() -> bool:
 	var passed: bool = true
 	var view: EventSheetViewport = _open()
 	var texts: PackedStringArray = _row_texts(view)
-	passed = _check("the head names the base script as an include",
-		_any_row_contains(texts, "Include | opened_script_structure_base.gd | - open as a sheet"), true) and passed
 	passed = _check("super._ready() runs the include's own trigger",
 		_any_row_contains(texts, "▸ run its On Ready"), true) and passed
 	passed = _check("super.take_damage(x) calls the include's verb",
 		_any_row_contains(texts, "▸ Call Take Damage  amount"), true) and passed
-	# The bar carries the path it opens, which is what makes clicking it a jump.
-	var include_row: EventRowData = _first_row_containing(view, "open as a sheet")
-	var carried_path: String = ""
-	if include_row != null:
-		for span: SemanticSpan in include_row.spans:
+	# The head bar's base word carries the path it opens, which is what makes clicking it a jump.
+	var head_row: EventRowData = null
+	for entry: Dictionary in view.get_flat_rows():
+		var candidate: EventRowData = entry.get("row")
+		if candidate != null and candidate.row_uid.begins_with("sheet_head_bar_"):
+			head_row = candidate
+	var carried: Array = ["", ""]
+	if head_row != null:
+		for span: SemanticSpan in head_row.spans:
 			if span.metadata is Dictionary and (span.metadata as Dictionary).has("include_path"):
-				carried_path = str((span.metadata as Dictionary)["include_path"])
-	passed = _check("the include bar carries the file it opens", carried_path, BASE_PATH) and passed
+				carried = [str((span.metadata as Dictionary)["include_path"]),
+					str((span.metadata as Dictionary).get("hover_note", ""))]
+	passed = _check("the head bar's base word opens the base script as a sheet", carried,
+		[BASE_PATH, "Open the base script as a sheet."]) and passed
 	# The class-name spelling of the same thing resolves through the project's own class list.
 	var by_class := EventSheetResource.new()
 	by_class.host_class = "OpenedScriptStructureBase"

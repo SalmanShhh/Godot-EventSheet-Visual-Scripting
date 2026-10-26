@@ -346,21 +346,23 @@ func on_raw_code_dialog_confirmed() -> void:
 		_dock._mark_dirty("Updated script block.")
 
 
-# ── The Sheet | Code | Side by side switch on the title strip ─────────────────────────────────
-# A behaviour or a global is a script somebody may want to read either way, so its title strip
-# carries the switch; every other sheet keeps the code panel behind View, and shows its rows.
+# ── The Sheet | Code | Side by side switch at the toolbar's end ─────────────────────────────────
+# A behaviour or a global is a script somebody may want to read either way, so the toolbar carries
+# the switch while one is open; every other sheet keeps the code panel behind View, and shows its rows.
 # Built the first time such a sheet is shown.
 
 
 func refresh_view_switch() -> void:
 	var offered: bool = ViewportRowBuilder.reads_in_file_order(_dock._current_sheet)
 	if _view_switch == null:
-		if not offered or _dock._title_strip == null:
+		# On the toolbar, at its end: the strip that held it under the tabs is no longer shown.
+		var holder: Control = _dock._toolbar if _dock._toolbar != null else _dock._title_strip
+		if not offered or holder == null:
 			return
 		_view_switch = EventSheetPopupUI.ViewSwitch.new()
 		_view_switch.name = "EventSheetViewSwitch"
 		_view_switch.view_chosen.connect(set_sheet_view)
-		_dock._title_strip.add_child(_view_switch)
+		holder.add_child(_view_switch)
 	_view_switch.visible = offered
 	if not offered and _dock._scroll != null and not _dock._scroll.visible:
 		# A sheet with no switch always shows its rows.

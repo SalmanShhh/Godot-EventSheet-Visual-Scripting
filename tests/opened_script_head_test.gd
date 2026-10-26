@@ -6,9 +6,9 @@
 # sentence an event-sheet user reads. This test pins what replaced it, over two REAL hand-written
 # fixtures (a fixture proves the shapes; only a real file proves the lens fires on one):
 #
-#   1. The Include bar names the OBJECT - its class_name when it has one, the ROOT NODE of the scene
-#      it is attached to when it does not - then the class it is, then the two muted receipts (its
-#      file, and that scene). A script no scene uses keeps its file name and grows no scene note.
+#   1. The file opens on ONE head bar: the name as written (its class_name, or its file name when it
+#      declares none), what kind of script it is and what it extends, and its counts. Its own opening
+#      sentence is the name's card, and a script no scene uses grows no scene note.
 #   2. Collections say what they hold: "list of text", "list of numbers", "table". An empty one reads
 #      "empty" rather than `[]` / `{}`.
 #   3. A constant says so in the type chip itself ("constant number"), and a whole number written as
@@ -16,8 +16,8 @@
 #   4. A preloaded scene is an OBJECT: `Object bullet_scene = Bullet  scene · head_bullet.tscn`,
 #      whichever row shape carried it - a typed `var` (a lifted variable) or a `const` (a preload
 #      block, which used to stop the head dead one line in).
-#   5. Same folders as a pack: Triggers, Settings (per @export_group), Internal state - and they say
-#      "script", not "pack", because that is what this file is.
+#   5. No folders the file does not have: the signals, the knobs and the variables read where the
+#      file declares them, and an @export_group is the Inspector's own section around its knobs.
 #   6. The covenant: pure view. Both fixtures still re-emit byte-identically.
 #
 # VALUES are pinned, not counts - a count would still pass if the rows said the wrong words in the
@@ -46,44 +46,35 @@ static func _test_a_script_with_a_class_name() -> bool:
 	var ok: bool = true
 	var view: EventSheetViewport = _open(PLAYER_PATH)
 	var rows: Array = _all_rows(view)
+	var head: EventRowData = _row_at(rows, 0)
 
-	# The head is the file's own first lines. The name and the class are BANDS, each echoing the
-	# line it stands for; the Include bar under them carries only what no line of the file says.
+	# The head is ONE bar: the name as written, what kind of script it is, what it extends, and the
+	# counts. Nothing folds under it, and nothing else of the old head stack is drawn.
 	ok = _check("an opened script opens on ONE head bar",
-		_texts(_row_at(rows, 0)),
-		"▣ | PlayerAvatar | extends | CharacterBody2D | · 9 variables") and ok
-	ok = _check("and the bar folds the bands it stands for - the class head first",
-		_texts(_row_with_uid(rows, "sheet_head_name_")),
-		"▣ | PlayerAvatar | Script | · extends | CharacterBody2D | class_name PlayerAvatar") and ok
-	ok = _check("the class it extends rides the class head rather than a band of its own",
+		_texts(head),
+		"◆ | PlayerAvatar | Custom node · extends | CharacterBody2D | 7 variables | · | 1 event") and ok
+	ok = _check("and the bar folds nothing", head.children.size(), 0) and ok
+	ok = _check("the class it extends rides the head bar rather than a band of its own",
 		_row_with_uid(rows, "sheet_head_extends_") == null, true) and ok
-	var bar: EventRowData = _row_with_uid(rows, "pack_include_bar_")
-	ok = _check("the Include bar is left with the receipts and the coverage",
-		_texts(bar),
-		"⇥ | · opened_script_head_player.gd · scene opened_script_head_player.tscn | reads as events") and ok
-	ok = _check("it is not called an Addon Pack", _texts(bar).contains("Addon Pack"), false) and ok
-	ok = _check("it wears the identity bar's presence",
-		bar != null and is_equal_approx(bar.height_scale, 1.5), true) and ok
+	ok = _check("there is no Include bar", _row_with_uid(rows, "pack_include_bar_") == null, true) and ok
 
 	# The script's own opening sentence sits ABOVE class_name, where the importer's class-description
-	# rule never looks - the head reads it off the prelude, so it lands on the description band.
-	ok = _check("the file's own sentence is a comment row, not a band",
-		_texts(_row_with_uid(rows, "head_description_row_")).begins_with(
+	# rule never looks - the head reads it off the prelude, and says it on the name's card.
+	ok = _check("the file's own sentence is the name card's",
+		str(Array(_card_of(head, "name").get("lines", [""]))[0]).begins_with(
 			"A hand-written game script - not a behavior pack"), true) and ok
-	ok = _check("and the band that used to draw it twice is gone",
-		_row_with_uid(rows, "sheet_head_description_") == null, true) and ok
+	ok = _check("and neither a band nor a comment row draws it",
+		[_row_with_uid(rows, "sheet_head_description_"), _row_with_uid(rows, "head_description_row_")],
+		[null, null]) and ok
 
-	ok = _check("the head bars read in file order, the folded ones first",
-		_head_bar_titles(rows), "Movement | Instance variables | Triggers") and ok
-	ok = _check("the Triggers bar says a SCRIPT fires them",
-		_texts(_bar_titled(rows, "Triggers")), "Triggers | this script fires - 3") and ok
+	ok = _check("no invented bars: no Triggers, no settings folder, no Instance variables",
+		_head_bar_titles(rows), "") and ok
 	ok = _test_signals_read_as_triggers(view) and ok
-	ok = _check("the @export_group is the settings bar",
-		_texts(_bar_titled(rows, "Movement")), "Movement | 2 settings") and ok
-	ok = _check("the one variable folder names the object it belongs to",
-		_texts(_bar_titled(rows, "Instance variables")), "Instance variables | of PlayerAvatar") and ok
+	ok = _check("the @export_group is the Inspector's section, holding its knobs where the file has them",
+		_section_members(rows, "variable_tree_group_Movement"), "move_speed, jump_height") and ok
 	view.free()
 	return ok
+
 
 
 ## A plain script's signals ARE its triggers - nothing publishes them and nothing has to. So each row
@@ -110,18 +101,16 @@ static func _test_signals_read_as_triggers(view: EventSheetViewport) -> bool:
 
 
 ## No class_name: the object is named after the root node of the scene the script drives.
+## No class_name: the head bar names the file, as written.
 static func _test_a_script_named_by_its_scene() -> bool:
 	var ok: bool = true
 	var view: EventSheetViewport = _open(PAD_PATH)
 	var rows: Array = _all_rows(view)
-	# The node's name is a fact of the SCENE, not a line of the file, so it stays on the bar while the
-	# name band says what the file itself does: that it declares no class at all.
-	ok = _check("a script with no class_name is named by its scene's root node",
-		_texts(_row_with_uid(rows, "pack_include_bar_")),
-		"⇥ | SpawnerPad | · opened_script_head_pad.gd · scene opened_script_head_pad.tscn | reads as events") and ok
-	ok = _check("and its name band says the file names it",
-		_texts(_row_with_uid(rows, "sheet_head_name_")),
-		"▣ | opened_script_head_pad.gd | Script | · extends | Node2D | # no class_name - named by its file") and ok
+	ok = _check("a script with no class_name is named by its file on the head bar",
+		_texts(_row_at(rows, 0)),
+		"◆ | opened_script_head_pad.gd | Script · extends | Node2D | 3 variables | · | 1 event") and ok
+	ok = _check("and its card says where the file lives",
+		str(_card_of(_row_at(rows, 0), "name").get("mono", "")), PAD_PATH) and ok
 	view.free()
 	return ok
 
@@ -145,48 +134,44 @@ static func _test_a_script_no_scene_uses() -> bool:
 	var view := EventSheetViewport.new()
 	view.set_ace_registry(EventSheetACERegistry.new())
 	view.set_sheet(sheet)
-	var bar: EventRowData = _row_with_uid(_all_rows(view), "pack_include_bar_")
-	ok = _check("a script no scene uses names nothing on the bar - the band has the file",
-		_texts(bar), "⇥ | · no_such_script_head.gd | reads as events") and ok
-	ok = _check("…and no scene note is invented",
-		_texts(_row_with_uid(_all_rows(view), "sheet_head_name_")),
-		"▣ | no_such_script_head.gd | Script | · extends | Node2D | # no class_name - named by its file") and ok
+	var head: EventRowData = _row_with_uid(_all_rows(view), "sheet_head_bar_")
+	ok = _check("a script no scene uses is named by its file",
+		_texts(head), "◆ | no_such_script_head.gd | Script · extends | Node2D | 1 variable") and ok
+	ok = _check("…and no scene note is invented", Array(_card_of(head, "name").get("notes", [])),
+		["A script opened as a sheet: edit it here, and it stays plain GDScript. 0 events."]) and ok
 	view.free()
 	return ok
 
 
-## The type words, the values, the constant and the two preload shapes.
+## The type words, the values, the constant and the two preload shapes - each read where the file
+## declares it.
 static func _test_type_words() -> bool:
 	var ok: bool = true
 	var view: EventSheetViewport = _open(PLAYER_PATH)
-	var internal_bar: EventRowData = _bar_titled(_all_rows(view), "Instance variables")
-	ok = _check("the Instance variables bar was found", internal_bar != null, true) and ok
-	if internal_bar == null:
-		view.free()
-		return false
 	var read: PackedStringArray = PackedStringArray()
-	for child: EventRowData in internal_bar.children:
-		read.append(_texts(child))
+	for entry: Variant in _all_rows(view):
+		var row_data: EventRowData = (entry as Dictionary).get("row")
+		if row_data.row_uid.begins_with("variable_reading_") or row_data.row_uid.begins_with("preload_reading_"):
+			read.append(_texts(row_data))
+	ok = _check("the members read in file order", read.size(), 9) and ok
 	ok = _check("a const preload reads as an Object row",
 		read[0] if read.size() > 0 else "", "Object | PAD_SCENE | = | SpawnerPad | scene · opened_script_head_pad.tscn") and ok
 	ok = _check("a constant says so in its type chip, and 300.0 reads 300",
 		read[1] if read.size() > 1 else "", "x | Constant | number | MAX_SPEED | = | 300 | const MAX_SPEED := 300.0") and ok
-	ok = _check("a typed var holding a preload reads as an Object row too",
-		read[2] if read.size() > 2 else "", "Object | bullet_scene | = | Bullet | scene · head_bullet.tscn") and ok
-	ok = _check("Array[String] says what it holds, and [] reads empty",
-		read[3] if read.size() > 3 else "", "x | Instance | list of text | names | = | empty | var names: Array[String] = []") and ok
-	ok = _check("Array[int] says what it holds",
-		read[4] if read.size() > 4 else "", "x | Instance | list of numbers | scores | = | empty | var scores: Array[int] = []") and ok
-	ok = _check("a Dictionary is a table, and {} reads empty",
-		read[5] if read.size() > 5 else "", "x | Instance | table | inventory | = | empty | var inventory: Dictionary = {}") and ok
-	ok = _check("a plain float knob is unchanged",
-		read[6] if read.size() > 6 else "", "x | Instance | number | _cooldown | = | 0 | var _cooldown: float = 0.0") and ok
-
 	# The knob rows keep their doc comment, exactly as a pack's do.
-	var movement_bar: EventRowData = _bar_titled(_all_rows(view), "Movement")
 	ok = _check("an @export knob reads type-word, name, value, description",
-		_texts(movement_bar.children[0]) if movement_bar != null and not movement_bar.children.is_empty() else "",
+		read[2] if read.size() > 2 else "",
 		"x | Instance | number | move_speed | ⚙ | = | 180 | How fast the avatar walks, in pixels per second. | @export var move_speed: float = 180.0") and ok
+	ok = _check("a typed var holding a preload reads as an Object row too",
+		read[4] if read.size() > 4 else "", "Object | bullet_scene | = | Bullet | scene · head_bullet.tscn") and ok
+	ok = _check("Array[String] says what it holds, and [] reads empty",
+		read[5] if read.size() > 5 else "", "x | Instance | list of text | names | = | empty | var names: Array[String] = []") and ok
+	ok = _check("Array[int] says what it holds",
+		read[6] if read.size() > 6 else "", "x | Instance | list of numbers | scores | = | empty | var scores: Array[int] = []") and ok
+	ok = _check("a Dictionary is a table, and {} reads empty",
+		read[7] if read.size() > 7 else "", "x | Instance | table | inventory | = | empty | var inventory: Dictionary = {}") and ok
+	ok = _check("a plain float knob is unchanged",
+		read[8] if read.size() > 8 else "", "x | Instance | number | _cooldown | = | 0 | var _cooldown: float = 0.0") and ok
 
 	# The vocabulary itself, at the seam the verb chips share - the readings that already shipped must
 	# not have moved, and the collection words must be derived from the element type rather than listed.
@@ -240,9 +225,8 @@ static func _open(path: String) -> EventSheetViewport:
 	return view
 
 
-## Every row of an opened file, parents before children, in the shape `get_flat_rows()` answers in.
-## The head is one FOLDED bar now, so the bands and bars it stands for are off screen exactly as the
-## Triggers bar's rows have always been - and a test about what the head SAYS has to see them.
+## Every row of an opened file, parents before children, in the shape `get_flat_rows()` answers in -
+## an Inspector section's strip holds its knobs as children, and a test of what they say must see them.
 static func _all_rows(view: EventSheetViewport) -> Array:
 	var found: Array = []
 	_sweep_rows(view, view._root_rows, found)
@@ -315,14 +299,23 @@ static func _head_bar_titles(rows: Array) -> String:
 	return " | ".join(titles)
 
 
-static func _bar_titled(rows: Array, title: String) -> EventRowData:
-	for entry: Variant in rows:
-		var row_data: EventRowData = (entry as Dictionary).get("row")
-		if row_data == null or row_data.spans.is_empty():
-			continue
-		if row_data.row_type == EventRowData.RowType.GROUP and str(row_data.spans[0].text) == title:
-			return row_data
-	return null
+## The card behind one word of a head bar, by its id - {} when the bar has no such word.
+static func _card_of(row_data: EventRowData, card_id: String) -> Dictionary:
+	for span: SemanticSpan in row_data.spans if row_data != null else []:
+		var card: Variant = (span.metadata as Dictionary).get("head_card") if span.metadata is Dictionary else null
+		if card is Dictionary and str((card as Dictionary).get("id", "")) == card_id:
+			return card
+	return {}
+
+
+## The variable names an Inspector section's strip holds, in order, "" when there is no such strip.
+static func _section_members(rows: Array, uid_prefix: String) -> String:
+	var strip: EventRowData = _row_with_uid(rows, uid_prefix)
+	var names: PackedStringArray = PackedStringArray()
+	for child: EventRowData in strip.children if strip != null else []:
+		if child.source_resource is LocalVariable:
+			names.append((child.source_resource as LocalVariable).name)
+	return ", ".join(names)
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

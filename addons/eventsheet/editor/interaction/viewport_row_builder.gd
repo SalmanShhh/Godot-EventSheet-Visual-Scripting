@@ -627,6 +627,10 @@ func build_head_band_rows(sheet: EventSheetResource, scaffold_rows: Array[EventR
 		for band: Dictionary in head_bands:
 			if head_band_moves_to_hover(band):
 				hovered_facts.append("%s %s" % [str(band["leader"]), str(band["value"])])
+	# A script read inside a scene view keeps its class head as the band its object bar folds; every
+	# other sheet opens on the ONE head bar, which says the name, the icon and the kind, and whose
+	# name's card carries the description and what the host binding means.
+	var one_head: bool = EventSheetSceneSheet.object_bar_of(sheet).is_empty()
 	for band: Dictionary in head_bands:
 		var kind: String = str(band["kind"])
 		if kind == EventSheetHeadBands.BAND_EXTENDS:
@@ -635,6 +639,16 @@ func build_head_band_rows(sheet: EventSheetResource, scaffold_rows: Array[EventR
 			continue
 		# A global's Autoload entry is a fact about the project, said in the hover of its name.
 		if kind == EventSheetHeadBands.BAND_AUTOLOAD and is_autoload(sheet) and not bool(band.get("warning", false)):
+			continue
+		if one_head and kind == EventSheetHeadBands.BAND_NAME:
+			rows.append(build_sheet_head_bar_row(sheet, head_facts, hovered_facts))
+			continue
+		# The icon is the bar's picture and the description the name card's words. A behaviour's host
+		# binding is its card's "works on" - any other file keeps the band for the lines it stands for.
+		if one_head and kind in [EventSheetHeadBands.BAND_ICON, EventSheetHeadBands.BAND_DESCRIPTION] \
+				and not bool(band.get("warning", false)):
+			continue
+		if one_head and kind == EventSheetHeadBands.BAND_HOST and sheet.behavior_mode:
 			continue
 		var head_row: EventRowData = _build_head_band_row(sheet, band, head_facts, description_source,
 			extends_band if kind == EventSheetHeadBands.BAND_NAME else {}, hovered_facts)
@@ -1220,7 +1234,83 @@ func fold_nested_verb_rows(rows: Array[EventRowData], nested: bool = false) -> v
 			fold_nested_verb_rows(row_data.children, true)
 
 
-## THE HEAD OF AN OPENED PACK, in the event-sheet grammar. A read-only preview used to open on two and a
+## THE HEAD OF AN OPENED FILE: the one head bar the band stack already leads with, and under it the
+## object's facts that are not lines of the file (what follows it, what it is pinned to, its families,
+## the globals it uses). Everything else stays exactly where the file has it - the signals, the
+## variables, the description paragraph a file ends on - because a sheet reads in its file's order and
+## adds no headings of its own. The file's prose, its behaviours and its counts are the head bar's hover
+## cards. PURE VIEW: nothing is moved in `sheet.events`, so the emitted bytes are untouched.
+##
+## A script read inside a SCENE view keeps the folded head its object bar hangs from
+## (_build_folded_head_rows), because there the bar is the node the script sits on.
+## Returns the root list to use (the caller assigns it back).
+func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResource) -> Array[EventRowData]:
+	if sheet == null or not sheet.read_only or rows.is_empty():
+		return rows
+	if not EventSheetSceneSheet.object_bar_of(sheet).is_empty():
+		return _build_folded_head_rows(rows, sheet)
+	# An editor add-on is claimed as the pattern it is, and the callbacks whose constant answers the
+	# head bar's name card states are not drawn a second time as rows.
+	rows = _fold_editor_plugin_facts(rows, sheet)
+	rows = _read_members_in_place(rows)
+	var head_end: int = 0
+	while head_end < rows.size() and str(rows[head_end].row_uid).begins_with(HEAD_BAND_UID_PREFIX):
+		head_end += 1
+	var facts_rows: Array[EventRowData] = []
+	facts_rows.append_array(_build_object_folder_rows(sheet))
+	facts_rows.append_array(_build_global_variables_bar_rows(sheet))
+	if facts_rows.is_empty():
+		return rows
+	var output: Array[EventRowData] = []
+	output.append_array(rows.slice(0, head_end))
+	output.append_array(facts_rows)
+	output.append_array(rows.slice(head_end))
+	return output
+
+
+## A preview's member variables, where the file declares them, in the reading shape a reader of the
+## file is shown: a setting says its limits and its step, a choice reads as its label, a colour as its
+## word. A `##` line the lift kept on its own stays the row it is. The same LocalVariable resources,
+## rebuilt in place: nothing moves, nothing is grouped, and the emitted file is untouched.
+func _read_members_in_place(rows: Array[EventRowData]) -> Array[EventRowData]:
+	var output: Array[EventRowData] = []
+	var index: int = 0
+	while index < rows.size():
+		var row_data: EventRowData = rows[index]
+		var source: Resource = row_data.source_resource
+		if row_data.indent == 0 and source is LocalVariable:
+			var variable: LocalVariable = source as LocalVariable
+			output.append(_kept_marks(row_data, _build_reading_variable_row(variable,
+				str(variable.attributes.get("tooltip", "")).strip_edges(), 0)))
+			index += 1
+			continue
+		# `const BULLET_SCENE := preload("res://bullet.tscn")` lifts to a `preload` block, not a
+		# variable; it is still a name the file introduces, so it reads as the Object it loads.
+		if row_data.indent == 0 and source is CustomBlockRow and (source as CustomBlockRow).kind_id == "preload":
+			var block_fields: Dictionary = (source as CustomBlockRow).fields
+			var object_row: EventRowData = _build_preload_object_row(str(block_fields.get("name", "")),
+				str(block_fields.get("path", "")), 0, source, "preload_reading_%d" % source.get_instance_id())
+			output.append(_kept_marks(row_data, object_row) if object_row != null else row_data)
+			index += 1
+			continue
+		output.append(row_data)
+		index += 1
+	return output
+
+
+## `rebuilt`, carrying what the row it replaces was told about itself: a compile error, and the quiet
+## amber state with the findings behind it. Problems are never lost to a re-reading.
+func _kept_marks(original: EventRowData, rebuilt: EventRowData) -> EventRowData:
+	if rebuilt.error_message.is_empty():
+		rebuilt.error_message = original.error_message
+	if rebuilt.attention_note.is_empty() and not original.attention_note.is_empty():
+		rebuilt.attention_note = original.attention_note
+		rebuilt.attention_findings = original.attention_findings
+	return rebuilt
+
+
+## THE HEAD OF A SCRIPT INSIDE A SCENE VIEW, in the event-sheet grammar: the node's object bar folds
+## the prelude under it. A read-only preview used to open on two and a
 ## half screens of prelude before its first rule: a Class setup bar, a `host` variable, a Host binding
 ## bar, every trigger as its own row, then 46 variable rows, then the pack's about text repeated at the
 ## end as a grey wall. An event sheet puts that same material in four shapes, and this is the lens that
@@ -1236,9 +1326,7 @@ func fold_nested_verb_rows(rows: Array[EventRowData], nested: bool = false) -> v
 ## and the emitted bytes are untouched. Read-only only - on a sheet you are authoring, every one of
 ## these rows is something you reach for, and hiding it behind a fold would cost more than it saves.
 ## Returns the root list to use (the caller assigns it back).
-func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResource) -> Array[EventRowData]:
-	if sheet == null or not sheet.read_only or rows.is_empty():
-		return rows
+func _build_folded_head_rows(rows: Array[EventRowData], sheet: EventSheetResource) -> Array[EventRowData]:
 	# ────────────────────────────────────────────────────────────────────────────────────────────
 	# Ahead of everything else, and whatever the rest of this head turns out to read as: on an editor
 	# add-on the constant-answer virtuals have already been said on the Include bar as facts, so the
@@ -1431,7 +1519,7 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 			EventSheetL10n.translate("this script fires - %d") % triggers.size(),
 			triggers
 		))
-	head.append_array(_build_object_folder_rows(sheet))
+	head.append_array(_build_object_folder_rows(sheet, true))
 	head.append_array(_build_global_variables_bar_rows(sheet))
 	head.append_array(leftovers)
 	var output: Array[EventRowData] = []
@@ -1441,6 +1529,546 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 			continue  # the about text reads at the TOP now; a second copy at the end is the grey wall
 		output.append(rows[tail_index])
 	return output
+
+
+# ── The sheet's one head bar ────────────────────────────────────────────────────────────────────
+# Every sheet opens on ONE bar, the same in every look and for every kind of file:
+#
+#     ◆ CarouselOfJuice  Custom node · extends Node2D            4 variables · 2 events · 34 behaviours
+#
+# the class icon, the name as written, what kind of script it is, and three counts. What the file
+# says about itself (where it lives, its description, that it stays plain GDScript, the doors out to
+# the script editor and the FileSystem) is the name's hover card; what each count stands for is that
+# count's hover card. Nothing about it is stored: it is read off the sheet on every build, so an
+# opened file still re-emits byte for byte.
+
+
+## The bar's height at 1x in every look - the head bar the design draws - and its corner.
+const SHEET_HEAD_BAR_HEIGHT: float = 30.0
+const HEAD_BAR_RADIUS: float = 3.0
+## The head bar's uid. It begins with the band prefix on purpose: the bar IS the head, so whatever
+## asks for the head (a local dropped on it, a fold guard) finds it with the question it already asks.
+const SHEET_HEAD_BAR_UID_PREFIX := "sheet_head_bar_"
+## How wide each hover card is, in the design's pixels (drawn for a 12 px text; the card grows with
+## the editor's own): the name's card carries a sentence or two of prose, a count's card one short
+## paragraph, a behaviour's or a global's card its facts and its options.
+const HEAD_CARD_NAME_WIDTH: float = 420.0
+const HEAD_CARD_COUNT_WIDTH: float = 300.0
+const HEAD_CARD_FILE_WIDTH: float = 330.0
+## A file's description is a paragraph; the name's card says its first sentence when the whole of it
+## runs past this many characters.
+const HEAD_CARD_DESCRIPTION_LIMIT: int = 240
+
+
+## The one head bar for `sheet`. `head_facts` are the band model's facts when the caller already read
+## the prelude (EventSheetHeadBands.facts), and are read here otherwise; `hovered_facts` are the
+## scene's facts a quiet class head keeps off the canvas, said in the name's card instead.
+func build_sheet_head_bar_row(sheet: EventSheetResource, head_facts: Dictionary = {},
+		hovered_facts: PackedStringArray = PackedStringArray()) -> EventRowData:
+	var facts: Dictionary = head_facts if not head_facts.is_empty() else EventSheetHeadBands.facts(sheet, "")
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
+	var row_data := EventRowData.new()
+	row_data.indent = 0
+	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.source_resource = null
+	row_data.row_uid = "%s%d" % [SHEET_HEAD_BAR_UID_PREFIX, sheet.get_instance_id()]
+	row_data.fixed_height = SHEET_HEAD_BAR_HEIGHT
+	# One flat rounded bar in the head's own grey: no stripe and no edge of another colour.
+	row_data.custom_color = event_style.head_bar_color
+	row_data.outline_color = event_style.head_bar_color
+	row_data.outline_radius = HEAD_BAR_RADIUS
+	row_data.outline_width = 1.0
+	var editable: bool = not sheet.read_only
+	var meta: Dictionary = {"editable": false, "kind": "sheet_head", "head_band": EventSheetHeadBands.BAND_NAME,
+		"line_index": 0}
+	var extends_target: String = str(facts.get("extends", "")).strip_edges()
+	# The picture: the file's own @icon when it names one, the editor's icon for the class it
+	# extends otherwise - the same texture the Add Node dialog draws.
+	var icon_path: String = str(facts.get("icon", "")).strip_edges()
+	var art: Texture2D = load(icon_path) as Texture2D if icon_path.begins_with("res://") \
+		and ResourceLoader.exists(icon_path) else null
+	if art == null and not extends_target.is_empty():
+		art = EventSheetACEIcons.editor_icon(extends_target)
+	var icon_meta: Dictionary = meta.merged({
+		"badge": true,
+		"badge_style": "glyph",
+		"badge_natural_width": true,
+		"badge_fixed_width": KIND_BADGE_WIDTH,
+		"badge_fg": reading_style.primary_text_color,
+	}, true)
+	if art != null:
+		icon_meta["badge_icon"] = art
+	if editable:
+		icon_meta["head_action"] = EventSheetHeadBands.BAND_ICON
+		icon_meta["hover_note"] = EventSheetL10n.translate("The class icon. Click to pick another image.")
+	var spans: Array[SemanticSpan] = [_make_span("◆", SemanticSpan.SpanType.KEYWORD, icon_meta)]
+	# The name as written - the class_name, or the file when it declares none - bold, and the door to
+	# everything the file says about itself.
+	var name_text: String = head_bar_name(sheet, facts)
+	var name_meta: Dictionary = meta.merged({
+		"text_color": reading_style.primary_text_color,
+		"bbcode_segments": [{"text": name_text, "color": reading_style.primary_text_color, "bold": true, "italic": false}],
+		"hover_card_mark": true,
+		"head_card": _head_name_card(sheet, facts, hovered_facts),
+	}, true)
+	if editable:
+		# A double-click on the name renames the class everywhere, as it always has.
+		name_meta["head_action"] = EventSheetHeadBands.BAND_NAME
+	spans.append(_make_span(name_text, SemanticSpan.SpanType.OBJECT, name_meta))
+	# What kind of script it is, and what it extends. A behaviour or a global says only which it is:
+	# what it works on is a fact of the card, not of the file's `extends` line.
+	var plain_kind: bool = script_kind_word(sheet).is_empty()
+	# Only a node runs a script it is attached to: a Resource or RefCounted script is made and held by
+	# other code, so its kind says what it is and no more.
+	var script_note: String = EventSheetL10n.translate("What this file is: a script, run by the node it is attached to.") \
+		if host_is_node(str(sheet.host_class)) else EventSheetL10n.translate("What this file is: a script.")
+	var kind_meta: Dictionary = meta.merged({"text_color": reading_style.muted_text_color}, true)
+	if plain_kind:
+		kind_meta["hover_note"] = script_note
+	if editable:
+		kind_meta["head_action"] = EventSheetHeadBands.BAND_EXTENDS
+		kind_meta["hover_note"] = "%s %s" % [script_note, EventSheetL10n.translate("Click to change what kind of script it is.")] \
+			if plain_kind else EventSheetL10n.translate("Click to change what kind of script it is.")
+	if plain_kind and not extends_target.is_empty():
+		spans.append(_make_span("%s · %s" % [head_bar_kind_word(sheet), EventSheetL10n.translate("extends")],
+			SemanticSpan.SpanType.KEYWORD, kind_meta))
+		var base_meta: Dictionary = meta.merged({"text_color": reading_style.primary_text_color}, true)
+		# A base that is another SCRIPT of this project opens as its own sheet.
+		var base_path: String = base_script_path(sheet)
+		if not base_path.is_empty():
+			base_meta["include_path"] = base_path
+			base_meta["hover_note"] = EventSheetL10n.translate("Open the base script as a sheet.")
+		elif editable:
+			base_meta["head_action"] = EventSheetHeadBands.BAND_EXTENDS
+			base_meta["hover_note"] = EventSheetL10n.translate("Click to change what kind of script it is.")
+		spans.append(_make_span(extends_target, SemanticSpan.SpanType.VALUE, base_meta))
+	else:
+		spans.append(_make_span(head_bar_kind_word(sheet), SemanticSpan.SpanType.KEYWORD, kind_meta))
+	# What the file is as a piece of TOOLING, and the buttons that run it - the chips the class head
+	# has always carried, beside the name they are about.
+	spans.append_array(_tool_file_chip_spans(sheet, str(sheet.external_source_path)))
+	spans.append_array(_editor_tool_bar_spans(sheet))
+	spans.append_array(_this_editor_bar_spans(sheet))
+	# The counts, right-aligned: what this file declares, what it does, and what the scene adds to the
+	# object. A behaviour or a global is a file other sheets USE, so its head carries no counts.
+	if plain_kind:
+		spans.append_array(_head_count_spans(sheet, meta))
+	row_data.spans = spans
+	# A script that does not parse does not run: said on the bar the way any row's problem is said.
+	var parse_errors: String = EventSheetReadingCoverage.parse_error_text(sheet)
+	if not parse_errors.is_empty():
+		row_data.error_message = parse_errors
+	# THE QUIET SHEET at the head: a control the project has not got, or an include that cannot be
+	# found, is the amber state on the bar, with the words in the help strip and the Doctor.
+	var head_findings: Array[Dictionary] = _tagged(FINDINGS_INPUT, _sheet_findings(FINDINGS_INPUT))
+	head_findings.append_array(_tagged(FINDINGS_INCLUDES, _sheet_findings(FINDINGS_INCLUDES)))
+	_stamp_attention(row_data, head_findings)
+	return row_data
+
+
+## True for a sheet that opens on the head bar even with no head lines of its own to read: one saved
+## as a file (a `.gd` it reads from, or a `.tres`) that is not a script inside a scene view, whose
+## node's object bar is its head. A sheet that lives only in memory has no file to name.
+static func opens_on_head_bar(sheet: EventSheetResource) -> bool:
+	if sheet == null or not EventSheetSceneSheet.object_bar_of(sheet).is_empty():
+		return false
+	if not str(sheet.external_source_path).strip_edges().is_empty():
+		return true
+	return not sheet.resource_path.is_empty() and not sheet.resource_path.contains("::")
+
+
+## The name a head bar shows: the `class_name` as written (the file's own line when `head_facts` read
+## one, the sheet's field otherwise), the file's name when it declares none, and "Untitled" for a
+## sheet with neither yet.
+static func head_bar_name(sheet: EventSheetResource, head_facts: Dictionary = {}) -> String:
+	if sheet == null:
+		return ""
+	var declared: String = str(head_facts.get("class_name", "")).strip_edges()
+	if declared.is_empty():
+		declared = sheet.custom_class_name.strip_edges()
+	if not declared.is_empty():
+		return declared
+	var source_path: String = str(sheet.external_source_path).strip_edges()
+	if source_path.is_empty():
+		source_path = sheet.resource_path
+	if not source_path.is_empty() and not source_path.contains("::"):
+		return source_path.get_file()
+	return EventSheetL10n.translate("Untitled")
+
+
+## The kind of script a head bar names, in a word or two: Behaviour, Global (autoload), Custom node,
+## Custom resource, the editor kinds, Test, and Script for everything else.
+static func head_bar_kind_word(sheet: EventSheetResource) -> String:
+	var special: String = script_kind_word(sheet)
+	if not special.is_empty():
+		return special
+	match EventSheetScriptIntent.of_sheet(sheet):
+		EventSheetScriptIntent.Intent.CUSTOM_NODE:
+			return EventSheetL10n.translate("Custom node")
+		EventSheetScriptIntent.Intent.CUSTOM_RESOURCE:
+			return EventSheetL10n.translate("Custom resource")
+		EventSheetScriptIntent.Intent.EDITOR_TOOL:
+			return EventSheetL10n.translate("Editor tool")
+		EventSheetScriptIntent.Intent.EDITOR_PLUGIN:
+			return EventSheetL10n.translate("Editor plugin")
+		EventSheetScriptIntent.Intent.EDITOR_ADDON:
+			return EventSheetL10n.translate("Editor add-on")
+		EventSheetScriptIntent.Intent.COMMAND_TOOL:
+			return EventSheetL10n.translate("Command tool")
+		EventSheetScriptIntent.Intent.TEST:
+			return EventSheetL10n.translate("Test")
+	return EventSheetL10n.translate("Script")
+
+
+## The counts at the right of the head bar - "4 variables · 2 events · 34 behaviours" - each one a
+## door to its own hover card. A count of nothing is left out rather than said as a zero.
+func _head_count_spans(sheet: EventSheetResource, meta: Dictionary) -> Array[SemanticSpan]:
+	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
+	var cards: Array[Dictionary] = []
+	var variables: Dictionary = head_variable_facts(sheet)
+	var shown: PackedStringArray = variables["names"]
+	if not shown.is_empty():
+		cards.append({"text": EventSheetL10n.translate("1 variable") if shown.size() == 1 \
+			else EventSheetL10n.translate("%d variables") % shown.size(),
+			"card": _head_variables_card(variables)})
+	var events: int = _viewport.event_numbers_for(sheet.events).size()
+	if events > 0:
+		cards.append({"text": EventSheetL10n.translate("1 event") if events == 1 \
+			else EventSheetL10n.translate("%d events") % events,
+			"card": _head_events_card(sheet, events)})
+	var behaviours: Array = head_behaviours(sheet)
+	if not behaviours.is_empty():
+		cards.append({"text": EventSheetL10n.translate("1 behaviour") if behaviours.size() == 1 \
+			else EventSheetL10n.translate("%d behaviours") % behaviours.size(),
+			"card": _head_behaviours_card(behaviours)})
+	var spans: Array[SemanticSpan] = []
+	for index: int in range(cards.size()):
+		var card: Dictionary = cards[index]
+		spans.append(_make_span(str(card["text"]), SemanticSpan.SpanType.COMMENT, meta.merged({
+			"kind": "sheet_head_count",
+			"align_right": true,
+			"text_color": reading_style.muted_text_color,
+			"hover_card_mark": true,
+			"head_card": card["card"],
+		}, true)))
+		if index < cards.size() - 1:
+			var faint: Color = reading_style.muted_text_color
+			spans.append(_make_span("·", SemanticSpan.SpanType.COMMENT, meta.merged({
+				"kind": "sheet_head_count",
+				"align_right": true,
+				"text_color": Color(faint.r, faint.g, faint.b, faint.a * 0.6),
+			}, true)))
+	return spans
+
+
+## The variables a head counts: {"names": the ones a reader declared, in file order, "exported": how
+## many of those show in the Inspector, "compiler": the bookkeeping members the compiler writes (every
+## name starting with two underscores), which are never counted}. Read off the sheet's member rows and,
+## for a `.tres` sheet, its variables table.
+static func head_variable_facts(sheet: EventSheetResource) -> Dictionary:
+	var names: PackedStringArray = PackedStringArray()
+	var compiler: PackedStringArray = PackedStringArray()
+	var exported: Array[int] = [0]
+	if sheet != null:
+		_collect_head_variables(sheet.events, names, compiler, exported)
+		for key: Variant in sheet.variables.keys():
+			var variable_name: String = str(key)
+			if names.has(variable_name) or compiler.has(variable_name):
+				continue
+			if NativeVariableMarks.is_compiler_variable(variable_name):
+				compiler.append(variable_name)
+				continue
+			names.append(variable_name)
+			var descriptor: Variant = sheet.variables[key]
+			if descriptor is Dictionary and bool((descriptor as Dictionary).get("exported",
+					(descriptor as Dictionary).get("exposed", false))):
+				exported[0] += 1
+	return {"names": names, "exported": exported[0], "compiler": compiler}
+
+
+static func _collect_head_variables(entries: Array, names: PackedStringArray, compiler: PackedStringArray,
+		exported: Array[int]) -> void:
+	for entry: Variant in entries:
+		# A constant is not a variable: it never changes, so the count leaves it out.
+		if entry is LocalVariable and not (entry as LocalVariable).is_constant:
+			var variable: LocalVariable = entry as LocalVariable
+			if NativeVariableMarks.is_compiler_variable(variable.name):
+				if not compiler.has(variable.name):
+					compiler.append(variable.name)
+				continue
+			if names.has(variable.name):
+				continue
+			names.append(variable.name)
+			if variable.exported:
+				exported[0] += 1
+		elif entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			_collect_head_variables(group.events if not group.events.is_empty() else group.rows,
+				names, compiler, exported)
+
+
+## The behaviours on the object this sheet drives, one entry per node ({name, script, host}): the pack
+## nodes the scene mounts on it and the machine the file itself writes out. Empty for a sheet no scene
+## runs, which is most of them.
+func head_behaviours(sheet: EventSheetResource) -> Array:
+	var facts: Dictionary = EventSheetObjectFacts.sheet_object_facts(sheet)
+	var behaviours: Array = (facts.get("behaviors", []) as Array).duplicate() if not facts.is_empty() else []
+	behaviours.append_array(_written_behaviors(sheet))
+	return behaviours
+
+
+## The name's card: the name and its kind, where the file lives, what it says about itself, and the
+## doors - the script editor and the FileSystem for any file, the settings form as well for a
+## behaviour or a global, and the description for a sheet being edited.
+func _head_name_card(sheet: EventSheetResource, facts: Dictionary, hovered_facts: PackedStringArray) -> Dictionary:
+	var source_path: String = str(sheet.external_source_path).strip_edges()
+	if source_path.is_empty():
+		source_path = sheet.resource_path if not sheet.resource_path.contains("::") else ""
+	var lines: PackedStringArray = PackedStringArray()
+	var notes: PackedStringArray = PackedStringArray()
+	var doors: Array = []
+	var title: String = head_bar_name(sheet, facts)
+	var subtitle: String = head_bar_kind_word(sheet)
+	var extends_target: String = str(facts.get("extends", "")).strip_edges()
+	if script_kind_word(sheet).is_empty():
+		if not extends_target.is_empty():
+			subtitle = "%s · %s %s" % [subtitle, EventSheetL10n.translate("extends"), extends_target]
+	else:
+		# A behaviour or a global: what it offers, in the one line its settings form also reads.
+		title = str(EventSheetObjectFacts.sheet_object_title(sheet, source_path).get("name", title))
+		subtitle = "· %s" % head_bar_kind_word(sheet)
+		var card_lines: PackedStringArray = script_facts_card(sheet).split("\n")
+		if card_lines.size() > 1 and not card_lines[1].is_empty():
+			# The facts open the card's sentence, so they start with a capital.
+			notes.append(card_lines[1].left(1).to_upper() + card_lines[1].substr(1))
+		doors.append([EventSheetL10n.translate("Global settings…") if is_autoload(sheet)
+			else EventSheetL10n.translate("Behaviour settings…"), "file_settings"])
+	var described: String = head_card_description(sheet, str(facts.get("description", "")))
+	if not described.is_empty():
+		lines.append(described)
+	# What the file is BEYOND its first lines - a data type, the store or helper it is to the editor,
+	# an editor add-on's constant answers - said where the old Include bar said it.
+	var identity: String = head_identity_words(sheet)
+	if not identity.is_empty():
+		notes.append(identity)
+	var counted: PackedStringArray = PackedStringArray()
+	var events: int = _viewport.event_numbers_for(sheet.events).size()
+	counted.append(EventSheetL10n.translate("1 event") if events == 1 else EventSheetL10n.translate("%d events") % events)
+	var functions: int = 0
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction:
+			functions += 1
+	if functions > 0:
+		counted.append(EventSheetL10n.translate("1 function") if functions == 1
+			else EventSheetL10n.translate("%d functions") % functions)
+	var blocks: int = head_code_block_count(sheet)
+	if blocks > 0:
+		counted.append(EventSheetL10n.translate("1 code block") if blocks == 1
+			else EventSheetL10n.translate("%d code blocks") % blocks)
+	# A behaviour's or a global's facts line already says what it offers; any other file says what it
+	# holds, and a script that it stays one.
+	var counts_text: String = " · ".join(counted)
+	if script_kind_word(sheet).is_empty() and source_path.get_extension().to_lower() == "gd":
+		notes.append("%s %s." % [EventSheetL10n.translate(
+			"A script opened as a sheet: edit it here, and it stays plain GDScript."), counts_text])
+	elif script_kind_word(sheet).is_empty():
+		notes.append("%s." % counts_text)
+	# What the scene says about the object, when the look keeps those facts off the canvas - under
+	# the scene's name, so each fact says which scene it came from.
+	var scene_door: Array = []
+	if not hovered_facts.is_empty():
+		var scene_path: String = EventSheetSceneLightingFacts.attached_scene(source_path) \
+			if not source_path.is_empty() else ""
+		if not scene_path.is_empty():
+			notes.append(EventSheetL10n.translate("Attached to %s.") % scene_path.get_file())
+			# The gesture the scene's facts had on the canvas: show the scene where it lives.
+			scene_door = [EventSheetL10n.translate("Show the scene"),
+				"%s:%s" % [EventSheetHeadBands.BAND_SPAWNS, scene_path]]
+		notes.append_array(hovered_facts)
+	# A shared sheet says so, and names who includes it.
+	if not source_path.is_empty() and not NativeHeadMarks.shared_wiring(source_path).is_empty():
+		notes.append(EventSheetL10n.translate("A shared sheet: other sheets can include it."))
+		var includers: PackedStringArray = NativeHeadMarks.includers_of(source_path)
+		if not includers.is_empty():
+			notes.append(EventSheetL10n.translate("Included by %s") % ", ".join(includers))
+	if not source_path.is_empty():
+		doors.append([EventSheetL10n.translate("Open in Script Editor") if script_kind_word(sheet).is_empty()
+			else EventSheetL10n.translate("Open in the script editor"), "open_script_editor"])
+		doors.append([EventSheetL10n.translate("Show in FileSystem"), "show_in_filesystem"])
+	if not scene_door.is_empty():
+		doors.append(scene_door)
+	if not sheet.read_only:
+		doors.append([EventSheetL10n.translate("Edit description…"), EventSheetHeadBands.BAND_DESCRIPTION])
+	if not script_kind_word(sheet).is_empty():
+		# A behaviour's or a global's card is its facts and its options, as a short menu: what it works
+		# on or loads as, what it offers, and what can be done with the file.
+		return {"id": "name", "title": title, "subtitle": subtitle, "lines": lines, "notes": notes,
+			"doors": doors, "doors_layout": "list", "width": HEAD_CARD_FILE_WIDTH, "anchor": "left"}
+	return {
+		"id": "name",
+		"title": title,
+		"subtitle": subtitle,
+		"mono": source_path,
+		"lines": lines,
+		"notes": notes,
+		"doors": doors,
+		"width": HEAD_CARD_NAME_WIDTH,
+		"anchor": "left",
+	}
+
+
+## What an opened script is beyond its own first lines, in one line for the name's card: "data type"
+## for a Resource script, the shape it plays in the editor it is part of ("helper of Dock
+## (event_sheet_dock.gd) · made with the dock", "shared store · nothing of its own is ever made"), and
+## an editor add-on's constant answers. "" for a game script, which is what most files are. Reading the
+## shape claims it as the pattern it is, so the claim lands whether or not the card is ever opened.
+func head_identity_words(sheet: EventSheetResource) -> String:
+	if sheet == null:
+		return ""
+	var base_class: String = sheet.host_class.strip_edges()
+	if EventSheetScriptIntent.is_resource_host(base_class):
+		return EventSheetL10n.translate("data type")
+	var words: PackedStringArray = PackedStringArray()
+	for span: SemanticSpan in _tool_shape_spans(sheet):
+		if not span.text.strip_edges().is_empty():
+			words.append(span.text.strip_edges())
+	if words.is_empty() and EventSheetEditorPluginWords.is_editor_plugin_class(base_class):
+		words.append(" · ".join(_editor_plugin_head_facts(sheet, base_class)))
+	return " ".join(words)
+
+
+## The words a head card says about the file: its `##` prose, joined into one paragraph; for a file
+## with none, the paragraph it closes on (the `#` note some showcases and packs end with), with its
+## markup taken out. A long paragraph is cut to its first sentence. "" when the file says nothing.
+func head_card_description(sheet: EventSheetResource, band_description: String) -> String:
+	var prose: PackedStringArray = PackedStringArray()
+	for line: String in band_description.split("\n"):
+		var said: String = line.strip_edges()
+		if not said.is_empty() and not said.begins_with("@"):
+			prose.append(said)
+	var text: String = " ".join(prose)
+	if text.is_empty():
+		for index: int in range(sheet.events.size() - 1, -1, -1):
+			var entry: Variant = sheet.events[index]
+			if entry is RawCodeRow and is_blank_block((entry as RawCodeRow).code.split("\n")):
+				continue
+			if entry is CommentRow and (entry as CommentRow).text.strip_edges().length() >= 60:
+				text = (entry as CommentRow).text.strip_edges()
+			break
+	text = RegEx.create_from_string("\\[/?[a-z]+[^\\]]*\\]").sub(text, "", true).strip_edges()
+	if text.length() > HEAD_CARD_DESCRIPTION_LIMIT:
+		var stop: int = text.find(". ")
+		if stop > 0:
+			text = text.substr(0, stop + 1)
+	return text
+
+
+## How many parts of the file stay as code - the top-level script blocks the sheet draws where they sit.
+## The blank lines a file keeps between its parts, a block of comments and the class's own first lines
+## (the head bar says those) are no code a reader reads, so they are not counted.
+static func head_code_block_count(sheet: EventSheetResource) -> int:
+	var blocks: int = 0
+	if sheet == null:
+		return blocks
+	for entry: Variant in sheet.events:
+		if not (entry is RawCodeRow):
+			continue
+		var code: String = (entry as RawCodeRow).code
+		var code_lines: PackedStringArray = code.split("\n")
+		if is_blank_block(code_lines) or is_comment_only_block(code_lines) \
+				or EventSheetViewport.is_scaffolding_code(code):
+			continue
+		blocks += 1
+	return blocks
+
+
+## The variables count's card: which variables, how many of them the Inspector shows, and the
+## compiler's bookkeeping that is not counted.
+func _head_variables_card(variables: Dictionary) -> Dictionary:
+	var names: PackedStringArray = variables["names"]
+	var listed: String = names[0]
+	if names.size() > 1:
+		listed = "%s %s %s" % [", ".join(names.slice(0, names.size() - 1)), EventSheetL10n.translate("and"),
+			names[names.size() - 1]]
+	var said: String = listed
+	var exported: int = int(variables["exported"])
+	if exported > 0 and exported == names.size():
+		said = "%s, %s" % [listed, EventSheetL10n.translate("all %d shown in the Inspector") % names.size()
+			if names.size() > 1 else EventSheetL10n.translate("shown in the Inspector")]
+	elif exported > 0:
+		said = "%s, %s" % [listed, EventSheetL10n.translate("%d of them shown in the Inspector") % exported]
+	said += "."
+	var compiler: PackedStringArray = variables["compiler"]
+	if not compiler.is_empty():
+		# The first two names are enough to recognise the kind; the rest is an ellipsis.
+		var named: String = ", ".join(compiler.slice(0, 2)) + (", …" if compiler.size() > 2 else "")
+		var other: String = ""
+		if compiler.size() == 1:
+			other = EventSheetL10n.translate("The 1 other variable in the file is bookkeeping the compiler writes (%s)") % named
+		else:
+			other = EventSheetL10n.translate("The %d other variables in the file are bookkeeping the compiler writes (%s)") \
+				% [compiler.size(), named]
+		# Said only when it is true: a look that shows them (hide_compiler_variables off) lists them.
+		if _viewport._get_event_style().hide_compiler_variables:
+			said += " %s %s" % [other, EventSheetL10n.translate("and stay out of sight.")]
+		else:
+			said += " %s." % other
+	return {"id": "variables", "title": EventSheetL10n.translate("Variables"), "lines": PackedStringArray([said]),
+		"width": HEAD_CARD_COUNT_WIDTH, "anchor": "right"}
+
+
+## The events count's card: events, functions, and the parts of the file that stay as code.
+func _head_events_card(sheet: EventSheetResource, events: int) -> Dictionary:
+	var said: PackedStringArray = PackedStringArray([EventSheetL10n.translate("1 event") if events == 1
+		else EventSheetL10n.translate("%d events") % events])
+	var functions: int = 0
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction:
+			functions += 1
+	if functions > 0:
+		said.append(EventSheetL10n.translate("1 function") if functions == 1
+			else EventSheetL10n.translate("%d functions") % functions)
+	var text: String = "%s." % ", ".join(said)
+	var blocks: int = head_code_block_count(sheet)
+	if blocks == 1:
+		text += " " + EventSheetL10n.translate("1 part of the file stays as code, drawn where it sits.")
+	elif blocks > 1:
+		text += " " + EventSheetL10n.translate("%d parts of the file stay as code, each drawn where it sits.") % blocks
+	return {"id": "events", "title": EventSheetL10n.translate("Events"), "lines": PackedStringArray([text]),
+		"width": HEAD_CARD_COUNT_WIDTH, "anchor": "right"}
+
+
+## The behaviours count's card: each kind with how many of it, as a door to that behaviour's own
+## sheet; why they are listed here rather than as rows; and Add behaviour….
+func _head_behaviours_card(behaviours: Array) -> Dictionary:
+	var order: PackedStringArray = PackedStringArray()
+	var counts: Dictionary = {}
+	var scripts: Dictionary = {}
+	for entry: Variant in behaviours:
+		var behaviour: Dictionary = entry
+		var kind: String = str(behaviour.get("name", ""))
+		if not counts.has(kind):
+			order.append(kind)
+			counts[kind] = 0
+			scripts[kind] = str(behaviour.get("script", ""))
+		counts[kind] = int(counts[kind]) + 1
+	var links: Array = []
+	for kind: String in order:
+		var total: int = int(counts[kind])
+		var script_path: String = str(scripts[kind])
+		links.append([kind if total == 1 else "%s %d" % [kind, total],
+			"open_sheet:%s" % script_path if not script_path.is_empty() else ""])
+	return {
+		"id": "behaviours",
+		"title": EventSheetL10n.translate("Behaviours on this object"),
+		"links": links,
+		"lines": PackedStringArray([EventSheetL10n.translate(
+			"They are child nodes in the scene, not lines of this file, so they are listed here rather than as rows.")]),
+		"doors": [[EventSheetL10n.translate("Add behaviour…"), "add_behaviour"]],
+		"width": HEAD_CARD_COUNT_WIDTH,
+		"anchor": "right",
+	}
 
 
 ## THE ONE HEAD BAR: `▣ Player extends CharacterBody2D · reads as events · 4 input actions ·
@@ -1877,9 +2505,13 @@ func build_scene_bar_row(sheet: EventSheetResource) -> EventRowData:
 	if root_icon != null:
 		badge_meta["badge_icon"] = root_icon
 	var spans: Array[SemanticSpan] = [_make_span("⇥", SemanticSpan.SpanType.KEYWORD, badge_meta)]
+	# What a scene view is and where its editing happens is said on the scene's name, where the
+	# banner over the sheet used to say it.
 	spans.append(_make_span(EventSheetSceneSheet.scene_path_of(sheet).get_file(), SemanticSpan.SpanType.OBJECT, {
 		"editable": false, "kind": "pack_include", "line_index": 0,
-		"text_color": _viewport._get_event_style().object_label_color
+		"text_color": _viewport._get_event_style().object_label_color,
+		"hover_note": EventSheetL10n.translate(
+			"Every script this scene uses, in tree order. Double-click an object bar to open that script and edit it.")
 	}))
 	if not root_type.is_empty():
 		spans.append(_make_span(EventSheetL10n.translate("a"), SemanticSpan.SpanType.VALUE, {
@@ -2398,7 +3030,8 @@ func _tool_shape_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 	var facts: Dictionary = EventSheetEditorSourceFacts.facts(sheet)
 	if facts.is_empty():
 		return spans
-	var bar_uid: String = "pack_include_bar_%d" % sheet.get_instance_id()
+	# Claimed on the head bar, whose name card says the shape.
+	var bar_uid: String = "%s%d" % [SHEET_HEAD_BAR_UID_PREFIX, sheet.get_instance_id()]
 	var helper: Dictionary = facts.get("helper_of", {}) if facts.get("helper_of") is Dictionary else {}
 	if not helper.is_empty():
 		var object_name: String = str(helper.get("object", ""))
@@ -2475,7 +3108,7 @@ func _pack_about_row_index(rows: Array[EventRowData], from_index: int) -> int:
 ## PURE VIEW, like every other head bar: null sources, folded by default, nothing added to `sheet.events`
 ## and nothing emitted, so an opened file still re-emits byte for byte. Empty folders are not built - an
 ## object with no behaviors should not grow a bar telling it so.
-func _build_object_folder_rows(sheet: EventSheetResource) -> Array[EventRowData]:
+func _build_object_folder_rows(sheet: EventSheetResource, with_behaviours: bool = false) -> Array[EventRowData]:
 	var bars: Array[EventRowData] = []
 	var facts: Dictionary = EventSheetObjectFacts.sheet_object_facts(sheet)
 	var behaviors: Array = facts.get("behaviors", []) if not facts.is_empty() else []
@@ -2508,7 +3141,9 @@ func _build_object_folder_rows(sheet: EventSheetResource) -> Array[EventRowData]
 		pins = EventSheetBehaviorShapes.pin_summaries(pin_lines, pin_facts)
 	if behaviors.is_empty() and facts.is_empty() and pins.is_empty():
 		return bars
-	if not behaviors.is_empty():
+	# On a file of its own the behaviours are a count on the head bar, listed on its hover card, so
+	# only a script read inside a scene view (with_behaviours) still folds them under a band.
+	if with_behaviours and not behaviors.is_empty():
 		# KINDS, with their counts - not one line per node. An object that composes many small
 		# behaviors used to open as a page of repeated names before its first event, and a reader
 		# could not tell seven Springs from one. The band says the kinds and how many of each in one

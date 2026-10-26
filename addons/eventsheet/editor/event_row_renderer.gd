@@ -67,6 +67,9 @@ const REGION_DASH_LENGTH := 3.0
 ## words it sits under, which are the thing the reader came to read.
 const TUNE_MARK_DROP_RATIO := 0.22
 const TUNE_MARK_ALPHA := 0.9
+## The dots under a word that opens a hover card: shorter than a tune mark's dashes, so the two
+## marks never read as one.
+const HOVER_CARD_DOT_LENGTH := 1.5
 
 ## The door under a proven noun in a comment: a solid hairline at the same drop as the tune mark,
 ## in the comment's own ink. It is a rule rather than a colour change on purpose - a note is prose,
@@ -1755,6 +1758,14 @@ func _draw_spans(
 		if row_data.tunable and span_index != editing_span_index:
 			_draw_tune_marks(control, Vector2(text_x, baseline_y), draw_text, value_ranges,
 				text_width, font, draw_font_size, reading.muted_text_color)
+		# A word with a card behind it (the head bar's name and counts) wears a dotted rule, the mark a
+		# reader knows for "more on hover".
+		if bool(metadata.get("hover_card_mark", false)) and span_index != editing_span_index:
+			var mark_run: float = minf(font.get_string_size(draw_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
+				draw_font_size).x, text_width)
+			var mark_y: float = baseline_y + maxf(float(draw_font_size) * TUNE_MARK_DROP_RATIO, 2.0)
+			control.draw_dashed_line(Vector2(text_x, mark_y), Vector2(text_x + mark_run, mark_y),
+				Color(reading.muted_text_color, reading.muted_text_color.a * TUNE_MARK_ALPHA), 1.0, HOVER_CARD_DOT_LENGTH)
 		# Color params get a small swatch right after the text (event-sheet-style color preview).
 		var swatch: Variant = metadata.get("swatch_color")
 		if swatch is Color:

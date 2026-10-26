@@ -5,11 +5,11 @@ extends RefCounted
 # One theme switch, fold_workspace_bands, off by default, on in the Editor Native starter and its rule
 # and stated off in every other shipped theme. Pinned here as values:
 #   1. the switch: on in the starter and the derived native look, off in Classic Sheet and by default;
-#   2. the title strip and the identity band rest folded under it and come back the moment a theme
-#      that keeps them is published; no theme puts a Conditions | Actions header above the sheet;
+#   2. the title strip and the identity band are never shown, in any look, and no theme puts a
+#      Conditions | Actions header above the sheet;
 #   3. the canvas carries no Add event / + Add... band under it, only its own 8 px of top air, and the
 #      scroll's panel is padded 10 px at each side while the sheet fills what is inside the padding;
-#   4. what the identity band said rides the class head's name hover;
+#   4. what the identity band said rides the head bar's name card, in every look;
 #   5. the lane boundary is grabbed from the divider inside an event, in every theme, never from a row
 #      that is not one;
 #   6. the side panel rests as its thin rail in every theme, and View > Side Rail's gesture opens it;
@@ -55,10 +55,10 @@ static func _test_the_bands_fold() -> bool:
 	var native: EventSheetEditor = _editor(NATIVE_THEME, _sheet_with_events(2))
 	var classic: EventSheetEditor = _editor(CLASSIC_THEME, _sheet_with_events(2))
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
-		["Editor Native: the title strip and the identity band rest folded",
+		["Editor Native: the title strip and the identity band are not shown",
 			[native._title_strip.visible, native._identity_banner.visible], [false, false]],
-		["Classic Sheet keeps both", [classic._title_strip.visible, classic._identity_banner.visible],
-			[true, true]],
+		["nor in Classic Sheet", [classic._title_strip.visible, classic._identity_banner.visible],
+			[false, false]],
 		["and neither puts a Conditions | Actions header above the sheet",
 			[native.find_child("SheetColumnHeader", true, false) == null,
 				classic.find_child("SheetColumnHeader", true, false) == null], [true, true]],
@@ -67,11 +67,11 @@ static func _test_the_bands_fold() -> bool:
 	native._refresh_title_strip()
 	ok = SUPPORT.check(TEST_NAME, "a refresh of the sheet leaves the identity band folded",
 		native._identity_banner.visible, false) and ok
-	# A switch to a theme that keeps the bands brings every one of them back.
+	# A switch to a theme that used to keep them leaves them away.
 	EventSheetActiveTheme.publish(load(CLASSIC_THEME) as EventSheetEditorStyle)
 	native._menu_bar.apply_theme_chrome()
-	ok = SUPPORT.check(TEST_NAME, "switching to Classic Sheet brings the two back",
-		[native._title_strip.visible, native._identity_banner.visible], [true, true]) and ok
+	ok = SUPPORT.check(TEST_NAME, "switching to Classic Sheet keeps both away",
+		[native._title_strip.visible, native._identity_banner.visible], [false, false]) and ok
 	native.free()
 	classic.free()
 	return ok
@@ -118,11 +118,9 @@ static func _test_the_identity_hover() -> bool:
 		["its hover lines for a pack with a knob", SheetIdentityBanner.identity_hover_lines(
 			_pack_sheet(), "res://eventsheet_addons/demo_pack/demo_pack.gd"),
 			PackedStringArray(["Addon Pack v1.2", "Event Sheet · a script for the Node it's attached to", "@ 1 knob"])],
-		["Editor Native's class head name says what the folded band said, then its own words", native_note,
-			"PlatformerShooter - Custom Node · extends Node2D
-@ 1 knob
-F2 renames this class everywhere."],
-		["Classic Sheet's keeps its own words alone", classic_note, "F2 renames this class everywhere."],
+		["Editor Native's head bar name card says what the folded band said: the kind, the file", native_note,
+			"PlatformerShooter | Custom node · extends Node2D | res://demo/showcase/platformer_shooter/platformer_shooter.gd"],
+		["and Classic Sheet's says the same, its band folded away too", classic_note, native_note],
 	])
 	native.free()
 	classic.free()
@@ -273,6 +271,7 @@ static func _pack_sheet() -> EventSheetResource:
 	return sheet
 
 
+## The head bar's name card, as "title | subtitle | path".
 static func _name_hover(view: EventSheetViewport) -> String:
 	for index: int in range(view.get_flat_rows().size()):
 		var row_data: EventRowData = view._row_at(index)
@@ -281,10 +280,9 @@ static func _name_hover(view: EventSheetViewport) -> String:
 		for span: SemanticSpan in row_data.spans:
 			if not (span.metadata is Dictionary):
 				continue
-			var metadata: Dictionary = span.metadata as Dictionary
-			if str(metadata.get("head_band", "")) == EventSheetHeadBands.BAND_NAME \
-					and span.type == SemanticSpan.SpanType.VALUE:
-				return str(metadata.get("hover_note", ""))
+			var card: Variant = (span.metadata as Dictionary).get("head_card")
+			if card is Dictionary and str((card as Dictionary).get("id", "")) == "name":
+				return "%s | %s | %s" % [str(card["title"]), str(card["subtitle"]), str(card["mono"])]
 	return "<no class head name>"
 
 

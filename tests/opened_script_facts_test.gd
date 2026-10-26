@@ -16,7 +16,7 @@
 #       multiline note, a colour with its word, and flags with their names. Read from what the
 #       importer already stored, over a REAL hinted file rather than a hand-built sheet.
 #
-#   AN AUTOLOAD READS AS THE PROJECT'S GLOBAL. Its title row says so, its name's hover says how it
+#   AN AUTOLOAD READS AS THE PROJECT'S GLOBAL. Its head bar says so, its name's hover says how it
 #       loads, its knobs and triggers read in file order under no invented folder or bar, and the
 #       Objects rail names it the same way.
 #
@@ -56,9 +56,9 @@ static func _test_coverage_chip() -> bool:
 		int(coverage.get("percent", -1)), 73) and ok
 	ok = _check("the chip says both halves in the sheet's words",
 		EventSheetReadingCoverage.chip_text(sheet), "73% reads as events · 2 script blocks ▸") and ok
-	ok = _check("and the chip is on the Include bar, under the bands that name the file",
-		_texts(_row_with_uid(_all_rows(_open(COVERAGE_PATH)), "pack_include_bar_")),
-		"⇥ | · opened_script_coverage.gd | 73% reads as events · 2 script blocks ▸") and ok
+	ok = _check("and the head bar's events card counts the same blocks the chip does",
+		_card_line(_row_with_uid(_all_rows(_open(COVERAGE_PATH)), "sheet_head_bar_"), "events"),
+		"2 events. 2 parts of the file stay as code, each drawn where it sits.") and ok
 
 	# The walk the click follows: the same blocks, in file order, so a click always lands on
 	# something the chip actually counted.
@@ -115,9 +115,9 @@ static func _test_setting_facts() -> bool:
 	var ok: bool = true
 	var view: EventSheetViewport = _open(SETTINGS_PATH)
 	var rows: Array = _all_rows(view)
-	var movement: EventRowData = _bar_titled(rows, "Movement")
-	var look: EventRowData = _bar_titled(rows, "Look")
-	ok = _check("the two settings folders were found", movement != null and look != null, true) and ok
+	var movement: EventRowData = _row_with_uid(rows, "variable_tree_group_Movement")
+	var look: EventRowData = _row_with_uid(rows, "variable_tree_group_Look")
+	ok = _check("the two Inspector sections were found", movement != null and look != null, true) and ok
 	if movement == null or look == null:
 		view.free()
 		return false
@@ -161,12 +161,12 @@ static func _test_autoload_head() -> bool:
 	var ok: bool = true
 	var view: EventSheetViewport = _open(SETTINGS_PATH, true)
 	var rows: Array = _all_rows(view)
-	# A global reads in plain file order under its own title row: the title says it is a global,
+	# A global reads in plain file order under its head bar: the bar says it is a global,
 	# the Autoload entry that grants it is said in the name's hover, and nothing groups its rows
 	# into bands or folders the file does not have.
-	ok = _check("an autoload's title row says it is a global",
-		_texts(_row_with_uid(rows, "sheet_head_name_")),
-		"▣ | TunedKnobs | Global (autoload) | · extends | Node2D | class_name TunedKnobs") and ok
+	ok = _check("an autoload's head bar says it is a global",
+		_texts(_row_with_uid(rows, "sheet_head_bar_")),
+		"◆ | TunedKnobs | Global (autoload)") and ok
 	ok = _check("and its name's hover says how it loads",
 		ViewportRowBuilder.script_facts_card(view._sheet).get_slice("
 ", 1).get_slice(" · ", 0),
@@ -292,6 +292,16 @@ static func _texts(row_data: EventRowData) -> String:
 	for span: SemanticSpan in row_data.spans:
 		parts.append(str(span.text))
 	return " | ".join(parts)
+
+
+## The first line of one of the head bar's hover cards, "" when the bar has no such card.
+static func _card_line(row_data: EventRowData, card_id: String) -> String:
+	for span: SemanticSpan in row_data.spans if row_data != null else []:
+		var card: Variant = (span.metadata as Dictionary).get("head_card") if span.metadata is Dictionary else null
+		if card is Dictionary and str((card as Dictionary).get("id", "")) == card_id:
+			var lines: Array = Array((card as Dictionary).get("lines", []))
+			return str(lines[0]) if not lines.is_empty() else ""
+	return ""
 
 
 static func _swatch(row_data: EventRowData) -> Variant:

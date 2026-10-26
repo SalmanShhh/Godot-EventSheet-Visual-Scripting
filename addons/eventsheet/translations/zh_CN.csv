@@ -9539,3 +9539,33 @@ The side panel's tabs. Choosing one opens the side panel on it; choosing the tic
 "The side panel beside the sheet, with its Objects and Functions tabs. Unticked, it rests as a thin rail and the sheet takes the width.",表格旁的侧边面板，带有“对象”和“函数”标签页。取消勾选后，它收成一条细栏，表格占据宽度。
 Close the side panel,关闭侧边面板
 Objects and functions of this sheet,此表格的对象和函数
+Open in Script Editor,在脚本编辑器中打开
+The same file in Godot's own script editor. Changes made there show here when you come back.,在 Godot 自带的脚本编辑器中打开同一文件。在那里所做的更改，回来时会显示在这里。
+Selects this sheet's file in Godot's FileSystem dock.,在 Godot 的文件系统面板中选中此事件表的文件。
+extends,extends
+Custom node,自定义节点
+Custom resource,自定义资源
+Editor plugin,编辑器插件
+Editor add-on,编辑器扩展
+1 behaviour,1 个行为
+%d behaviours,%d 个行为
+1 function,1 个函数
+%d functions,%d 个函数
+1 code block,1 个代码块
+%d code blocks,%d 个代码块
+"A script opened as a sheet: edit it here, and it stays plain GDScript.",以事件表打开的脚本：在这里编辑，它仍是普通的 GDScript。
+Attached to %s.,附加在 %s 上。
+Show the scene,显示场景
+Edit description…,编辑描述…
+all %d shown in the Inspector,全部 %d 个显示在检查器中
+shown in the Inspector,显示在检查器中
+%d of them shown in the Inspector,其中 %d 个显示在检查器中
+The 1 other variable in the file is bookkeeping the compiler writes (%s),文件中另外 1 个变量是编译器写入的簿记 (%s)
+The %d other variables in the file are bookkeeping the compiler writes (%s),文件中另外 %d 个变量是编译器写入的簿记 (%s)
+and stay out of sight.,不会显示。
+"1 part of the file stays as code, drawn where it sits.",文件中有 1 处保留为代码，显示在原位置。
+"%d parts of the file stay as code, each drawn where it sits.",文件中有 %d 处保留为代码，各自显示在原位置。
+Behaviours on this object,此对象上的行为
+"They are child nodes in the scene, not lines of this file, so they are listed here rather than as rows.",它们是场景中的子节点，而不是此文件的行，所以列在这里而不是作为行。
+Add behaviour…,添加行为…
+"Every script this scene uses, in tree order. Double-click an object bar to open that script and edit it.",此场景使用的每个脚本，按树顺序排列。双击对象条即可打开并编辑其脚本。

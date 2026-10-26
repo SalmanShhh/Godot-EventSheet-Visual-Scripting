@@ -252,6 +252,13 @@ func build(root: Node) -> void:
 		sheet_popup.get_item_index(16),
 		"Write the whole sheet as a plain listing in its own words - \"+ \" for a condition, \"-> \" for an action, indented by sub-event, event numbers on - ready to paste into an issue, a design doc or a chat."
 	)
+	# The two doors the head bar's name card offers, here as well for a reader who looks in the menu.
+	sheet_popup.add_item(EventSheetL10n.translate("Open in Script Editor"), 24)
+	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(24), EventSheetL10n.translate(
+		"The same file in Godot's own script editor. Changes made there show here when you come back."))
+	sheet_popup.add_item(EventSheetL10n.translate("Show in FileSystem"), 25)
+	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(25), EventSheetL10n.translate(
+		"Selects this sheet's file in Godot's FileSystem dock."))
 	sheet_popup.add_separator()
 	sheet_popup.add_item("Sheet Type…", 4)
 	# A shared sheet is a script whose whole job is to be included. The wiring question
@@ -310,6 +317,8 @@ func build(root: Node) -> void:
 		match id:
 			17: _dock._open_start_page()
 			20: _dock.open_insert_object()
+			24: _dock._head_actions.handle("open_script_editor")
+			25: _dock._head_actions.handle("show_in_filesystem")
 			0: _dock._open_template_menu()
 			1: _dock._on_open_requested()
 			2: _dock._sheet_io._on_save_requested()
@@ -1476,18 +1485,17 @@ func apply_theme_chrome() -> void:
 	_apply_workspace_bands()
 
 
-## The bands between the strip and the sheet, folded away while the active theme puts the sheet
-## straight under the toolbar (fold_workspace_bands) and back where they were otherwise: the title
-## strip and the identity band. Each one's words stay reachable - the tab, the class head's hover -
-## so this is only ever a question of what the resting view shows.
+## The bands between the strip and the sheet: the title strip and the identity band are never shown.
+## The sheet opens on its one head bar, the tab names the sheet, and what the two bands said - the
+## file's path, its kind, what it publishes - is the head bar's name card.
 func _apply_workspace_bands() -> void:
 	if _dock == null:
 		return
 	var folded: bool = EventSheetActiveTheme.active().fold_workspace_bands
 	if _dock._title_strip != null:
-		_dock._title_strip.visible = not folded
+		_dock._title_strip.visible = false
 	if _dock._identity_banner != null:
-		_dock._identity_banner.set_folded(folded)
+		_dock._identity_banner.set_folded(true)
 	_apply_canvas_padding(folded)
 
 

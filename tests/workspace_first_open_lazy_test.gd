@@ -67,6 +67,8 @@ const CLICK_ONLY := [
 	"res://addons/eventsheet/editor/translation_scan.gd",
 	"res://addons/eventsheet/editor/grid_csv.gd",
 	"res://addons/eventsheet/editor/inspector_preview_card.gd",
+	# The head bar's hover card: built the first time a pointer rests on the name or a count.
+	"res://addons/eventsheet/editor/interaction/sheet_head_card.gd",
 	"res://addons/eventsheet/editor/project_bar.gd",
 	"res://addons/eventsheet/editor/dock/object_hierarchy.gd",
 	# Only a file holding the generated `_validate_property` needs its lift back onto the variables.

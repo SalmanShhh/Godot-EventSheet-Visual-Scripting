@@ -9539,3 +9539,33 @@ The side panel's tabs. Choosing one opens the side panel on it; choosing the tic
 "The side panel beside the sheet, with its Objects and Functions tabs. Unticked, it rests as a thin rail and the sheet takes the width.",シートの横のサイドパネル (オブジェクトと関数のタブ付き)。チェックを外すと細いレールになり、シートが幅を使います。
 Close the side panel,サイドパネルを閉じる
 Objects and functions of this sheet,このシートのオブジェクトと関数
+Open in Script Editor,スクリプトエディターで開く
+The same file in Godot's own script editor. Changes made there show here when you come back.,同じファイルを Godot 自身のスクリプトエディターで。そこで加えた変更は、戻ってきたときにここに反映されます。
+Selects this sheet's file in Godot's FileSystem dock.,このシートのファイルを Godot のファイルシステムドックで選択します。
+extends,extends
+Custom node,カスタムノード
+Custom resource,カスタムリソース
+Editor plugin,エディタープラグイン
+Editor add-on,エディター拡張
+1 behaviour,ビヘイビア 1 個
+%d behaviours,ビヘイビア %d 個
+1 function,関数 1 個
+%d functions,関数 %d 個
+1 code block,コードブロック 1 個
+%d code blocks,コードブロック %d 個
+"A script opened as a sheet: edit it here, and it stays plain GDScript.",シートとして開いたスクリプトです。ここで編集しても、ただの GDScript のままです。
+Attached to %s.,%s に付いています。
+Show the scene,シーンを表示
+Edit description…,説明を編集…
+all %d shown in the Inspector,%d 個すべてインスペクターに表示
+shown in the Inspector,インスペクターに表示
+%d of them shown in the Inspector,うち %d 個がインスペクターに表示
+The 1 other variable in the file is bookkeeping the compiler writes (%s),ファイル内のもう 1 つの変数はコンパイラーが書く管理用のものです（%s）
+The %d other variables in the file are bookkeeping the compiler writes (%s),ファイル内の他の %d 個の変数はコンパイラーが書く管理用のものです（%s）
+and stay out of sight.,表示されません。
+"1 part of the file stays as code, drawn where it sits.",ファイルの 1 か所はコードのまま、その位置に表示されます。
+"%d parts of the file stay as code, each drawn where it sits.",ファイルの %d か所はコードのまま、それぞれの位置に表示されます。
+Behaviours on this object,このオブジェクトのビヘイビア
+"They are child nodes in the scene, not lines of this file, so they are listed here rather than as rows.",これらはシーン内の子ノードで、このファイルの行ではないため、行ではなくここに一覧表示されます。
+Add behaviour…,ビヘイビアを追加…
+"Every script this scene uses, in tree order. Double-click an object bar to open that script and edit it.",このシーンが使うすべてのスクリプトをツリー順に。オブジェクトのバーをダブルクリックすると、そのスクリプトを開いて編集できます。
