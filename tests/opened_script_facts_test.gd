@@ -177,7 +177,10 @@ static func _test_autoload_head() -> bool:
 		_bar_titled(rows, "Global variables"), null) and ok
 	ok = _check("every one of them is a row",
 		rows.filter(func(entry: Dictionary) -> bool:
-			return (entry.get("row") as EventRowData).row_uid.begins_with("variable_tree_")).size(), 8) and ok
+			return (entry.get("row") as EventRowData).source_resource is LocalVariable).size(), 8) and ok
+	ok = _check("under the two export groups the file writes, as an edited sheet draws them",
+		rows.filter(func(entry: Dictionary) -> bool:
+			return (entry.get("row") as EventRowData).row_uid.begins_with("variable_tree_group_")).size(), 2) and ok
 	ok = _check("and the per-group / Instance variables split is gone",
 		_bar_titled(rows, "Movement") == null and _bar_titled(rows, "Instance variables") == null, true) and ok
 	view.free()

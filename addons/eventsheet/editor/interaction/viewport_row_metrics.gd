@@ -158,6 +158,10 @@ func _resolve_row_height_natural(row_data: EventRowData) -> float:
 			_viewport.row_height_floor() * ViewportRowBuilder.REGION_CLOSER_HEIGHT_RATIO,
 			_viewport._get_font().get_height(tick_font) + 2.0
 		)
+	if ViewportRowBuilder._is_spacing_row(row_data):
+		# The blank lines the round trip keeps between two blocks are spacing, however many there are:
+		# they cost one block gap, never a tall empty row per line.
+		return _viewport.event_block_gap() * EventSheetPalette.row_density()
 	if row_data.row_type != EventRowData.RowType.EVENT:
 		# Multi-line non-event rows (GDScript blocks) expand by their precomputed line count.
 		if row_data.line_count > 1:

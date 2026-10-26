@@ -170,30 +170,30 @@ static func _rows() -> bool:
 	# One event, the group as the object, the if as its condition, its body as the actions.
 	ok = _check("the group loop and its if are ONE event",
 		_row_containing(rows, "(group \"enemies\")"),
-		"i2 [Enemy> (group \"enemies\") hp < 10 | enemy> Flee]") and ok
+		"i1 [Enemy> (group \"enemies\") enemy.hp < 10 | enemy> Flee]") and ok
 	ok = _check("an if/else inside a children loop keeps its Else",
 		_row_containing(rows, "(children)"),
-		"i2 [Child> (children) Is visible | child> Set invisible]") and ok
+		"i1 [Child> (children) Is visible | child> Set invisible]") and ok
 	# The match says what it decides by, and each branch is a sub-event stating its own test; several
 	# values are an OR block; `_` is a plain Else.
 	ok = _check("the match says what it decides by", _row_containing(rows, "match difficulty"),
-		"i2 [match difficulty]") and ok
+		"i1 [match difficulty]") and ok
 	ok = _check("the first case states its test",
 		_row_containing(rows, "difficulty is \"easy\""),
-		"i3 [System> difficulty is \"easy\" | Set reward to 10]") and ok
+		"i2 [System> difficulty is \"easy\" | Set reward to 10]") and ok
 	ok = _check("a multi-value case states every value it runs for",
 		_row_containing(rows, "difficulty is \"normal\""),
-		"i3 [System> difficulty is \"normal\" | System> difficulty is \"hard\" | Set reward to 25]") and ok
+		"i2 [System> difficulty is \"normal\" | System> difficulty is \"hard\" | Set reward to 25]") and ok
 	ok = _check("the default is a plain Else",
 		_row_containing(rows, "Set reward to 0"),
-		"i3 [System> Else | Set reward to 0]") and ok
+		"i2 [System> Else | Set reward to 0]") and ok
 	# Three statements, one row, named after the scene's root and carrying the local name.
 	# Re-pin: a property set on the way IN is part of making the thing, so it rides the same row as
 	# a chip rather than following it as an action of its own. It is the function's own first step,
 	# so it reads beside the function's head.
 	ok = _check("the spawn trio reads as one Create object",
 		_row_containing(rows, "Create object"),
-		"i1 [Action | Function | On spawn_wave | System> Create object Enemy at spawn point (as enemy)   speed = 40 | System> Add 1 to spawned | ⟡ Making an object and putting it somewhere]") and ok
+		"i0 [Action | Function | On spawn_wave | System> Create object Enemy at spawn_point (as enemy)   speed = 40 | System> Add 1 to spawned | ⟡ Making an object and putting it somewhere]") and ok
 	return ok
 
 

@@ -38,6 +38,10 @@ static func _a_behaviour_reads_in_file_order() -> bool:
 		["no head bar folds its lines away", _uids_starting(rows, "sheet_head_bar_"), 0],
 		["no Helpers bar gathers its functions", _uids_starting(rows, "helpers_group_"), 0],
 		["no Verbs band", _uids_starting(rows, "head_group_pack_verbs"), 0],
+		["its host reads once, as the variable the file declares", [_uids_starting(rows, "sheet_head_host_"),
+			rows.filter(func(row_data: EventRowData) -> bool:
+				return row_data.source_resource is LocalVariable and (row_data.source_resource as LocalVariable).name == "host").size()],
+			[0, 1]],
 		["the functions read where the file has them, the last one last",
 			_last_function_uid(rows), "define_fn_editor_preview_sample"],
 		["hovering the name shows the facts and what a click offers",

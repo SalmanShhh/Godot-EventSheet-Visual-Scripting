@@ -196,6 +196,10 @@ static func facts(sheet: EventSheetResource, scaffold_code: String, attached: bo
 	head["source_path"] = source_path
 	head["autoload"] = sheet.autoload_singleton_name()
 	head["host"] = sheet.host_class.strip_edges() if host_bound or sheet.behavior_mode else ""
+	# The `host` a behaviour acts on is said ONCE: where the file declares it as a variable, that row
+	# is the one, and no band repeats it.
+	if _declares_host_variable(sheet):
+		head["host"] = ""
 	head["remembered"] = remembered_variables(sheet)
 	head["includes"] = PackedStringArray(sheet.includes)
 	# The game's own modes, when this sheet is the one that declares them. Read from the sheet's own
@@ -254,6 +258,15 @@ static func line_text(band_kind: String, new_value: String) -> String:
 	if bool(shape.get("exact", false)):
 		return str(shape["format"]) if value == "true" else ""
 	return "" if value.is_empty() else str(shape["format"]) % value
+
+
+## True when the file declares its `host` as a member variable of its own, which reads as that
+## variable's row.
+static func _declares_host_variable(sheet: EventSheetResource) -> bool:
+	for entry: Variant in sheet.events:
+		if entry is LocalVariable and (entry as LocalVariable).name == "host":
+			return true
+	return false
 
 
 ## The variables this sheet saves (any Save choice but Never), in declaration order - the fact the

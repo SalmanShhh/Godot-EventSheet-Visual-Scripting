@@ -188,8 +188,7 @@ static func run() -> bool:
 	var opened: EventSheetResource = dock.get_current_sheet()
 	ok = _check("an opened pack lifts real functions", opened.functions.size() > 20, true) and ok
 	var pack_rows: Array[EventRowData] = _find_rows_by_uid_prefix(dock._active_view(), "define_fn_")
-	# Counted through the whole tree: an opened pack is read-only, so its unpublished helpers are
-	# re-parented under the closed "Helpers" bar and no longer appear in the flat (visible) row list.
+	# Counted through the whole tree, so a verb folded inside another block still counts.
 	ok = _check("the pack shows its verbs inline - one row per lifted function",
 		_count_define_rows_deep(dock._active_view()._root_rows), opened.functions.size()) and ok
 	# A REAL pack's `## @ace_description(...)` blurbs reach the reader - but an opened pack is a READING

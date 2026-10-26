@@ -1152,29 +1152,22 @@ func build_trailing_verb_rows(sheet: EventSheetResource) -> Array[EventRowData]:
 	return rows
 
 
-## Gathers a read-only preview's UNPUBLISHED helpers under one foldable "Helpers" bar, placed after the
-## last published verb and closed by default - the event-sheet reading, where a pack's vocabulary comes
-## first and the functions it uses on itself sit in a group you open when you care. PURE VIEW: the rows
-## are re-parented in the already-built list, so `sheet.functions`, `sheet.events` and the emitted file
-## are untouched (exactly like the "Class setup" strip). Only in a read-only preview: on a sheet you are
-## authoring, a helper is a row you may want to reach without opening a group first.
-## Returns the root list to use (the same array, rebuilt) so the caller can assign it back.
-func group_helper_verb_rows(rows: Array[EventRowData], sheet: EventSheetResource) -> Array[EventRowData]:
+## Drops from a read-only preview the two helper functions its head already says: a constructor that
+## only stores the object it was handed (the Include bar says the class is made with that object) and
+## a test file's `_check` harness (the Include bar says it is a test sheet). Every other function, helper
+## or published, stays exactly where the file writes it - no bar gathers them. PURE VIEW: the rows are
+## filtered in the already-built list, so `sheet.functions`, `sheet.events` and the emitted file are
+## untouched. Returns the root list to use so the caller can assign it back.
+func drop_said_helper_rows(rows: Array[EventRowData], sheet: EventSheetResource) -> Array[EventRowData]:
 	if sheet == null or not sheet.read_only:
 		return rows
-	var helpers: Array[EventRowData] = []
-	var kept: Array[EventRowData] = []
-	var last_published: int = -1
-	# A constructor that only stores the object it was handed says nothing a reader has to read:
-	# the Include bar already says the class is made with that object. So it folds into the bar, and
-	# the helper's functions start with the first one that does something.
 	var folds_constructor: bool = EventSheetEditorSourceFacts.facts(_viewport._sheet as EventSheetResource) \
 		.get("helper_of") is Dictionary
-	# And the same rule for a test's `_check`: it is the harness the Check rows are DRAWN from,
-	# the same eleven lines in every file in the folder, and the Include bar already says this is a
-	# test sheet and how many checks it makes. Folded here rather than with the other head facts
-	# because the trailing verbs are appended to the list after that pass has run.
+	# The harness the Check rows are DRAWN from: the same eleven lines in every file in the folder.
 	var folds_harness: bool = _folds_test_harness(sheet)
+	if not folds_constructor and not folds_harness:
+		return rows
+	var kept: Array[EventRowData] = []
 	for row_data: EventRowData in rows:
 		var owner_function: EventFunction = row_data.source_resource as EventFunction
 		if folds_constructor and owner_function != null and owner_function.function_name == "_init":
@@ -1182,52 +1175,8 @@ func group_helper_verb_rows(rows: Array[EventRowData], sheet: EventSheetResource
 		if folds_harness and owner_function != null \
 				and owner_function.function_name == EventSheetToolFiles.CHECK_HELPER:
 			continue
-		if owner_function != null and row_data.row_type == EventRowData.RowType.EVENT and not owner_function.expose_as_ace:
-			_shift_row_indent(row_data, 1)
-			helpers.append(row_data)
-			continue
 		kept.append(row_data)
-		if owner_function != null and owner_function.expose_as_ace:
-			last_published = kept.size() - 1
-	if helpers.is_empty():
-		return rows
-	var bar: EventRowData = _build_helpers_group_row(sheet, helpers)
-	var insert_at: int = last_published + 1 if last_published >= 0 else kept.size()
-	kept.insert(insert_at, bar)
 	return kept
-
-
-## The "Helpers" bar itself: a synthetic SECTION row owning the helper blocks as children. Null source
-## (nothing to select, drag or delete - it is a lens, not a resource) and closed by default, remembered
-## per session through the shared fold state like every other block.
-func _build_helpers_group_row(sheet: EventSheetResource, helpers: Array[EventRowData]) -> EventRowData:
-	var event_style: EventSheetEventStyle = _viewport._get_event_style()
-	var row_data := EventRowData.new()
-	row_data.indent = 0
-	row_data.row_type = EventRowData.RowType.SECTION
-	row_data.source_resource = null
-	row_data.row_uid = "helpers_group_%d" % sheet.get_instance_id()
-	row_data.children = helpers
-	row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, true))
-	row_data.spans = [
-		_make_span(EventSheetL10n.translate("Helpers"), SemanticSpan.SpanType.OBJECT, {
-			"editable": false,
-			"kind": "helpers_group",
-			"line_index": 0,
-			"text_color": event_style.object_label_color
-		}),
-		_make_span(
-			EventSheetL10n.translate("functions this pack uses inside itself - %d") % helpers.size(),
-			SemanticSpan.SpanType.COMMENT,
-			{
-				"editable": false,
-				"kind": "helpers_group",
-				"line_index": 0,
-				"text_color": _viewport._get_reading_style().muted_text_color
-			}
-		)
-	]
-	return row_data
 
 
 ## Moves a row and its whole subtree one level deeper (or shallower) - what re-parenting a built row
@@ -10540,17 +10489,27 @@ func _flush_variable_group(rows: Array[EventRowData], sheet: EventSheetResource,
 ## A section line the lift left as a script block is still that block: its row becomes the head, band
 ## or end line it declares, and a double-click still edits the line. A pure view pass over the
 ## already-built list, run after the fence pairing and the read-only head (both of which walk a flat
-## list of declarations and must not meet a strip in their place). Skipped on a read-only preview,
-## whose head already gathers the same knobs into its own group bars.
+## list of declarations and must not meet a strip in their place). A read-only preview reads its
+## sections the same way: they are how the file is laid out, not an edit.
 func group_variable_rows_by_folder(rows: Array[EventRowData], sheet: EventSheetResource) -> Array[EventRowData]:
-	if sheet == null or sheet.read_only:
+	if sheet == null:
 		return rows
 	var pass_state := {"walk": ExportSections.new(), "rows": [] as Array[EventRowData], "group": null,
 		"subgroup": null, "runs": {}, "heads": [] as Array[EventRowData]}
 	var walk: ExportSections = pass_state["walk"]
-	for row_data: EventRowData in rows:
+	for row_index: int in rows.size():
+		var row_data: EventRowData = rows[row_index]
 		var variable: LocalVariable = row_data.source_resource as LocalVariable
 		var is_member: bool = variable != null and row_data.variable_row and row_data.indent == 0
+		if _is_doc_line_above_member(rows, row_index):
+			# A `##` line the lift kept on its own above the next exported member (one with a setter, say)
+			# is that member's description: it sits in the member's strip and never ends it.
+			var doc_holder: EventRowData = _open_section_strip(pass_state)
+			if doc_holder != null:
+				doc_holder.children.append(row_data)
+				continue
+			(pass_state["rows"] as Array[EventRowData]).append(row_data)
+			continue
 		if row_data.indent == 0 and row_data.source_resource is RawCodeRow:
 			var sections: Array[Dictionary] = ExportSections.parse_block((row_data.source_resource as RawCodeRow).code)
 			for index: int in sections.size():
@@ -10783,6 +10742,19 @@ func _stamp_section_member(row_data: EventRowData, walk: ExportSections) -> void
 ## gets its own.
 func _subgroup_tint() -> Color:
 	return Color(_viewport._get_event_style().inspector_badge_background_color, 0.45)
+
+
+## True for a comment-only script block at the root whose next row is an exported member variable: the
+## description the lift could not fold onto that member.
+static func _is_doc_line_above_member(rows: Array[EventRowData], index: int) -> bool:
+	var row_data: EventRowData = rows[index]
+	if row_data.indent != 0 or not (row_data.source_resource is RawCodeRow) or index + 1 >= rows.size():
+		return false
+	if not is_comment_only_block((row_data.source_resource as RawCodeRow).code.split("\n")):
+		return false
+	var next: EventRowData = rows[index + 1]
+	var member: LocalVariable = next.source_resource as LocalVariable
+	return member != null and member.exported and next.variable_row and next.indent == 0
 
 
 ## True for a row that is only the blank line the round trip keeps between two declarations - spacing,
@@ -19738,7 +19710,7 @@ func _object_icon_for(provider_id: String, ace_id: String) -> Texture2D:
 
 # ── Arrange by object / trigger / group (appended block - keep together) ───────────────────────
 # The display-only re-grouping pass. It runs over the already-built root rows and re-emits them with
-# one synthetic header per bucket, exactly the way group_helper_verb_rows gathers helpers - the same
+# one synthetic header per bucket, the way a fold bar gathers its rows - the same
 # archetype, the same null source_resource, the same shared fold state. Nothing about the sheet
 # moves: the events array, the emitted GDScript and the byte round-trip are untouched, and every
 # event keeps its number because numbers are computed from sheet.events, not from this list.

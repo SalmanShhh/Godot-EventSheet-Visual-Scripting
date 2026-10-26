@@ -2957,10 +2957,10 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# so a behaviour pack reads events-then-vocabulary exactly like its .gd. After the fence pairing (an
 	# unclosed #region must not swallow the vocabulary) and before the footer.
 	root_rows.append_array(_row_builder.build_trailing_verb_rows(sheet))
-	# A read-only preview of any other script gathers its unpublished helpers under one closed
-	# "Helpers" bar, after the last published verb. Pure view.
+	# Every function reads where the file writes it; a read-only preview only drops the two helpers
+	# its head already says (a constructor that stores its object, a test's harness). Pure view.
 	if not file_order:
-		root_rows = _row_builder.group_helper_verb_rows(root_rows, sheet)
+		root_rows = _row_builder.drop_said_helper_rows(root_rows, sheet)
 	# The same events, re-grouped under headers by object / trigger / group. Display only - the
 	# events array keeps its order, the file is never rewritten, and every event keeps its number.
 	root_rows = _row_builder.arrange_rows(root_rows, sheet, arrangement_mode)
