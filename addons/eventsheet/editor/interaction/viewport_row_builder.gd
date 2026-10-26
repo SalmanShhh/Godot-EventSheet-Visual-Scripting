@@ -8239,10 +8239,8 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 				}
 			)
 		)
-	# The line this head IS, echoed in the script editor's own colours. It opens the
-	# right-anchored run rather than closing it, so the counts and the switch stay flush with the
-	# edge where the pinned copy of this head also draws them.
-	_append_head_band_echo(spans, {"group_echo": true}, _group_declaration_line(group), false)
+	# The head reads as its title, its description, what it holds and how it runs - the line it
+	# stands for (`## @ace_group(...)`) is the counts' hover, not a second sentence across the head.
 	spans.append_array(_group_head_status_spans(group, row_data.folded, reading_style))
 	row_data.spans = spans
 	# The group's own locals are rows at the TOP of its body: they are declarations, and a
@@ -8309,7 +8307,7 @@ func _group_head_status_spans(group: EventGroup, folded: bool,
 			"line_index": 0,
 			"group_counts": true,
 			"text_color": reading_style.muted_text_color,
-			"hover_note": EventSheetL10n.translate("What this group holds.")
+			"hover_note": _group_counts_hover(group)
 		}))
 	var mark: String = HEAD_SWITCH_ON_GLYPH if group.enabled else HEAD_SWITCH_OFF_GLYPH
 	if group.runtime_toggleable:
@@ -8333,6 +8331,13 @@ func _group_head_status_spans(group: EventGroup, folded: bool,
 		"hover_note": state_note
 	}))
 	return status
+
+
+## What the counts' hover says: what the group holds, then the line the file declares it on.
+func _group_counts_hover(group: EventGroup) -> String:
+	var said: String = EventSheetL10n.translate("What this group holds.")
+	var declaration: String = _group_declaration_line(group)
+	return said if declaration.strip_edges().is_empty() else "%s\n%s" % [said, declaration]
 
 
 ## The distinct object names the rows inside a group act on, in the order they first appear - read

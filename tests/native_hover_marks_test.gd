@@ -105,7 +105,7 @@ static func _test_one_group_head() -> bool:
 		["and reads whole on hover", native.get("description_hover"), "Opens the gate and reports the space key"],
 		["the switch is the glyph, not a tick box", native.get("active_tick"), false],
 		["a switchable group keeps its ring in Editor Native too", native_switchable.get("ring"), true],
-		["it leads with the folder mark and echoes its line, like every look", (native.get("chrome") as Array).size(), 2],
+		["it leads with the folder mark and draws no line of code, like every look", (native.get("chrome") as Array).size(), 1],
 		["so Editor Native and Classic Sheet read the same head", native.get("texts"), classic.get("texts")],
 	])
 
@@ -172,7 +172,7 @@ static func _group_head(theme_path: String, toggleable: bool = false) -> Diction
 		for span: SemanticSpan in row_data.spans:
 			var metadata: Dictionary = span.metadata
 			texts.append(span.text)
-			# The folder mark (a badge that is not the switch) and the echo of the line are chrome;
+			# The folder mark (a badge that is not the switch) and any echo of the line are chrome;
 			# everything else is the head's words.
 			var is_chrome: bool = bool(metadata.get("group_echo", false)) or (bool(metadata.get("badge", false))
 				and str(metadata.get("group_action", "")).is_empty())

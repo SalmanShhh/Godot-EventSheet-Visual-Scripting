@@ -91,16 +91,19 @@ static func _test_head_spans() -> bool:
 	passed = _check("on and off read as two shapes, switchable or not", shapes, [
 		ViewportRowBuilder.GROUP_SWITCHABLE_ON_GLYPH, ViewportRowBuilder.GROUP_SWITCHABLE_OFF_GLYPH,
 		ViewportRowBuilder.HEAD_SWITCH_ON_GLYPH, ViewportRowBuilder.HEAD_SWITCH_OFF_GLYPH]) and passed
-	# The head echoes the very line the compiler declares this group on, character for
-	# character, so the row and the file cannot disagree about what the group is.
-	passed = _check("the head echoes its own declaration",
-		_span_text(head, "group_echo", true),
-		str(SheetCompiler.group_declaration_lines(sheet.events).get(group, ""))) and passed
-	passed = _check("...which is the @ace_group line itself",
-		_span_text(head, "group_echo", true),
+	# The head reads as its title, description, counts and switch - no line of code across it. The
+	# line the compiler declares the group on, character for character, is the counts' hover.
+	var code_on_head: Array = []
+	for span: SemanticSpan in head.spans:
+		if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("code_echo", false)):
+			code_on_head.append(span.text)
+	passed = _check("the head draws no code echo", code_on_head, []) and passed
+	passed = _check("the counts' hover says what it holds, then the @ace_group line itself",
+		str((_span_with(head, "group_counts", true).metadata as Dictionary).get("hover_note", "")),
+		"What this group holds.\n" + str(SheetCompiler.group_declaration_lines(sheet.events).get(group, ""))) and passed
+	passed = _check("...which is the declaration as written",
+		str(SheetCompiler.group_declaration_lines(sheet.events).get(group, "")),
 		"## @ace_group(uid=\"combat\", name=\"Combat\", description=\"Damage, hits and death.\", toggleable=true)") and passed
-	passed = _check("the echo joins the right-anchored run",
-		_span_flag(head, "group_echo", true, "align_right"), true) and passed
 	# The right-anchored run lays out left to right without landing on top of itself.
 	viewport.get_row_layout_for_test(_index_for(viewport, group))
 	var counts_span: SemanticSpan = _span_with(head, "group_counts", true)

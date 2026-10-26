@@ -30,6 +30,9 @@
 - The Debugger's Objects list shows each row's count again ("6 values", "(2)", "no report"): the
   column it sits in had no width. Before a run, the values table says its one sentence across its
   whole width instead of a word a line down the Variable column.
+- A group's head reads as its title, its description, what it holds and its switch: the
+  `## @ace_group(...)` line no longer runs across it in code colours. The line moves to the counts'
+  hover, under "What this group holds.".
 
 ### Fixed: the head bar reads once, in every kind of view, and the sheet under it stays quiet
 
