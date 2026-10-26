@@ -158,7 +158,7 @@ static func columns(showcases: PackedStringArray, recents: Array,
 	var templates: Array = [{"kind": "open_script", "label": "Open an existing script…", "tag": "Your scripts",
 		"pitch": "Any script in this project reads as a sheet, and saving it untouched leaves the file exactly as it was.",
 		"shelf": SHELF_YOUR_PROJECT, "target": ""}]
-	for starter: Dictionary in EventSheetStarterTemplates.MENU_STARTERS:
+	for starter: Dictionary in _starters_by_shelf():
 		# The Behaviours and Project-wide shelves open on the form that makes one of your own.
 		var maker: Dictionary = MAKERS.get(str(starter["shelf"]), {})
 		if not maker.is_empty() and shelves(templates).find(str(starter["shelf"])) < 0:
@@ -206,6 +206,26 @@ static func columns(showcases: PackedStringArray, recents: Array,
 			"target": ""
 		}]})
 	return built
+
+
+## The menu's starters with each shelf gathered into one run, the shelves in the order they first
+## appear and the starters in menu order within a shelf. The menu interleaves them (Keycard Door is
+## a 3D starter listed after two menus), and the list draws a heading wherever the shelf changes, so
+## without this the page reads a second "3D" heading under "UI and menus".
+static func _starters_by_shelf() -> Array[Dictionary]:
+	var order: PackedStringArray = PackedStringArray()
+	var by_shelf: Dictionary = {}
+	for starter: Dictionary in EventSheetStarterTemplates.MENU_STARTERS:
+		var shelf: String = str(starter["shelf"])
+		if not by_shelf.has(shelf):
+			order.append(shelf)
+			by_shelf[shelf] = []
+		(by_shelf[shelf] as Array).append(starter)
+	var grouped: Array[Dictionary] = []
+	for shelf: String in order:
+		for starter: Variant in by_shelf[shelf]:
+			grouped.append(starter as Dictionary)
+	return grouped
 
 
 ## The shelves of the template column in the order they first appear - the filter chips' order.

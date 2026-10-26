@@ -289,6 +289,16 @@ static func _first_on(templates: Array, shelf: String) -> String:
 	return ""
 
 
+## The shelf of each run of rows, in order - the headings the list draws, one per shelf change.
+static func _shelf_runs(templates: Array) -> PackedStringArray:
+	var runs: PackedStringArray = PackedStringArray()
+	for entry: Variant in templates:
+		var shelf: String = str((entry as Dictionary).get("shelf", ""))
+		if runs.is_empty() or runs[runs.size() - 1] != shelf:
+			runs.append(shelf)
+	return runs
+
+
 static func _start_page_columns() -> bool:
 	var columns: Array = EventSheetStartPage.columns(PackedStringArray(["starfall"]), ["res://player.gd"])
 	var titles: PackedStringArray = PackedStringArray()
@@ -308,6 +318,8 @@ static func _start_page_columns() -> bool:
 			["Open an existing script…", "open_script"]],
 		["the shelves read in the menu's order, the reader's own project first",
 			" | ".join(EventSheetStartPage.shelves(templates)),
+			"Your project | 2D | 3D | UI and menus | Behaviours | Project-wide (autoloads) | Game shapes | Data | Editor tools | Showcases"],
+		["each shelf is one run, so no heading is drawn twice", " | ".join(_shelf_runs(templates)),
 			"Your project | 2D | 3D | UI and menus | Behaviours | Project-wide (autoloads) | Game shapes | Data | Editor tools | Showcases"],
 		["the 3D starters are on the page",
 			[str((by_label.get("First-Person Controller", {}) as Dictionary).get("shelf", "")),

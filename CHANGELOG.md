@@ -17,6 +17,11 @@
 - The Variable window's type list shows each type's editor icon beside it (`int`, `Vector2`,
   `Node2D`, ...), and the parameters window sets the object's icon on a 32 px rounded tile.
 
+### Fixed: the windows and rows say what the boards say
+
+- The Start page's template list draws each shelf once: Keycard Door sits under the one 3D heading
+  with the other 3D starters instead of under a second "3D" after UI and menus.
+
 ### Fixed: the head bar reads once, in every kind of view, and the sheet under it stays quiet
 
 - The `#` paragraph a script closes on, when the head bar's name card says it as the file's
