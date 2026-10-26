@@ -7930,7 +7930,9 @@ func _build_named_accessor_row(variable: LocalVariable, object_name: String, kin
 	row.row_type = EventRowData.RowType.EVENT
 	row.row_uid = "property_named_%s_%s" % [kind, uid_base]
 	row.line_count = 1
-	row.spans.append_array(_plain_trigger_spans(sentence % variable.name.replace("_", " "), object_name))
+	# The name as written: `brush_size`, never "brush size" - it is the word the reader typed and the
+	# word they will search for.
+	row.spans.append_array(_plain_trigger_spans(sentence % variable.name, object_name))
 	# The function goes in the RIGHT lane, where a thing that runs belongs - the trigger asks and the
 	# action does, which is the sheet's whole grammar. It also gives the row a right half: a trigger
 	# row with nothing on its right keeps the condition lane at its minimum, and the sentence is then
@@ -8044,9 +8046,10 @@ func _build_property_setter_row(variable: LocalVariable, object_name: String, pa
 	row.row_type = EventRowData.RowType.EVENT
 	row.row_uid = "property_setter_%s" % uid_base
 	row.line_count = 1
-	row.spans.append_array(_plain_trigger_spans(EventSheetL10n.translate("On %s set") % variable.name.replace("_", " "),
+	# The variable and the parameter read as written (`On brush_size set`, `new_value`).
+	row.spans.append_array(_plain_trigger_spans(EventSheetL10n.translate("On %s set") % variable.name,
 		object_name))
-	row.spans.append(_trigger_payload_span(param.replace("_", " "), 0, 0))
+	row.spans.append(_trigger_payload_span(param, 0, 0))
 	if not _append_property_body_rows(row, variable.setter_body, indent, row.row_uid,
 			EventSheetSentence.VerbKind.ACTION):
 		return null

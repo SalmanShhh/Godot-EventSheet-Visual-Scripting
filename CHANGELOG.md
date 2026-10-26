@@ -21,6 +21,8 @@
 
 - The Start page's template list draws each shelf once: Keycard Door sits under the one 3D heading
   with the other 3D starters instead of under a second "3D" after UI and menus.
+- A property's setter event reads its variable and its parameter as written: `On brush_size set`
+  with a `new_size` chip, not "On brush size set".
 
 ### Fixed: the head bar reads once, in every kind of view, and the sheet under it stays quiet
 

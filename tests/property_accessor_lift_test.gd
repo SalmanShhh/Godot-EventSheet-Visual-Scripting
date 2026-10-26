@@ -78,6 +78,10 @@ static func run() -> bool:
 			_lane_text(prop_row.children[1].children[0], "action"), "Return health") and ok
 		ok = _check("an accessor row is inert (source null)", prop_row.children[0].source_resource == null, true) and ok
 
+	# ── A property and its parameter read with their names as written ──
+	# `brush_size` is the word the reader typed and searches for; "brush size" is a word nobody wrote.
+	ok = _setter_reads_as_written() and ok
+
 	# ── The NAMED spelling reads in the SAME two categories as the inline one ──
 	# A file may write its properties either way, and `player_stats.gd` in the corpus writes both, so
 	# a getter that reads as a trigger under one spelling and an expression under the other would show
@@ -254,3 +258,27 @@ static func _span_text(row: EventRowData, kind: String) -> String:
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	return SUPPORT.check("property_accessor_lift_test", label, actual, expected)
+
+
+static func _setter_reads_as_written() -> bool:
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(
+		"extends Node
+
+var brush_size: int = 1:
+	set(new_size):
+		brush_size = new_size
+")
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(sheet)
+	var setter: EventRowData = null
+	for entry: Dictionary in dock._active_view().get_flat_rows():
+		var row_data: EventRowData = entry.get("row")
+		if row_data != null and str(row_data.row_uid).begins_with("variable_tree_") and not row_data.children.is_empty():
+			setter = row_data.children[0]
+	var read: Array = ["<no setter row>", ""]
+	if setter != null:
+		read = [_span_text(setter, "trigger"), _span_text(setter, "trigger_payload")]
+	dock.free()
+	return SUPPORT.check("property_accessor_lift_test", "a setter reads its variable and parameter as written",
+		read, ["On brush_size set", "new_size"])
