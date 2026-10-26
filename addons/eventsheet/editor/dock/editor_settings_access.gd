@@ -51,3 +51,10 @@ static func stored_flag(key: String) -> Variant:
 		return null
 	var stored: Variant = settings.call("get_project_metadata", "eventsheets", key, "")
 	return stored if stored is bool else null
+
+
+## Whether this editor was started to run a script (`--script` / `-s`: a render harness, a tool, a
+## test's child editor) rather than opened by a person. Such a run must not spend the project's
+## first-run moments (the Welcome and its Simple Mode, a one-time note) on nobody.
+static func is_scripted_run(arguments: PackedStringArray = OS.get_cmdline_args()) -> bool:
+	return arguments.has("--script") or arguments.has("-s")

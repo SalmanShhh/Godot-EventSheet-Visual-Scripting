@@ -101,6 +101,10 @@ func init(dock: Control) -> void:
 func show_if_first_run() -> void:
 	if not Engine.is_editor_hint() or DisplayServer.get_name() == "headless":
 		return
+	# An editor a tool or a render harness started with --script is not a person opening the project:
+	# its first run must not switch the project to Simple Mode behind the reader's back.
+	if is_scripted_run(OS.get_cmdline_args()):
+		return
 	var editor_settings: EditorSettings = EditorInterface.get_editor_settings()
 	var welcomed: Array = DOCK_REGISTRY.WELCOMED_METADATA
 	if bool(editor_settings.get_project_metadata(welcomed[0], welcomed[1], false)):
@@ -111,6 +115,11 @@ func show_if_first_run() -> void:
 	# flipping to Expert one visible click - so experts lose seconds, beginners gain a fighting start.
 	_dock.set_simple_mode(true)
 	show()
+
+
+## Whether the editor was started to run a script (`--script` / `-s`) rather than opened by a person.
+static func is_scripted_run(arguments: PackedStringArray) -> bool:
+	return EventSheetEditorSettings.is_scripted_run(arguments)
 
 
 func show() -> void:

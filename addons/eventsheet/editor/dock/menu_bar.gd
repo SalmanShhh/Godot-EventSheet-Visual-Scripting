@@ -1405,7 +1405,9 @@ func announce_resting_strip(opened_existing_sheet: bool) -> bool:
 	_resting_note_said = true
 	if stored is bool and bool(stored):
 		return false
-	if settings != null:
+	# An editor a script started (a harness, a test's child editor) says it and keeps no record, so
+	# the person who opens the project next still hears it once.
+	if settings != null and not EventSheetEditorSettings.is_scripted_run():
 		settings.call("set_project_metadata", "eventsheets", RESTING_NOTE_META_KEY, true)
 	_dock._set_status(EventSheetL10n.translate(RESTING_NOTE))
 	return true

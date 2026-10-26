@@ -16,6 +16,12 @@ const TESTS_DIR := "res://tests/"
 ## which the sharding decides, so it is swept after every test rather than left to luck.
 const STRAY_COMPILE_OUTPUT := "res://event_sheet_generated.gd"
 
+## The editor's own per-project choices (Simple Mode, the side panel, the look): the reader's, never a
+## test's. A test that writes one would hand the next editor session UI the reader never chose, so the
+## file is read before the run and checked after every test.
+const PROJECT_METADATA := "res://.godot/editor/project_metadata.cfg"
+const METADATA_SECTION := "eventsheets"
+
 # Tests that mutate shared state (filesystem / plugin enablement / workspace) must run AFTER everything
 # else, in this order, so they never tear down state an earlier test still needs.
 const DEFERRED_LAST: Array[String] = [
@@ -30,6 +36,7 @@ const DEFERRED_LAST: Array[String] = [
 func _init() -> void:
 	var passed: bool = true
 	_start_progress()
+	var metadata_before: String = _read_project_metadata()
 	for test_file: String in _test_files():
 		_mark_started(test_file)
 		var script: GDScript = load(TESTS_DIR + test_file)
@@ -63,6 +70,7 @@ func _init() -> void:
 			passed = false
 		_sweep_stray_output()
 		_sweep_session_state()
+		passed = _sweep_project_metadata(test_file, metadata_before) and passed
 		_mark_finished(test_file, Time.get_ticks_msec() - started_at)
 	if passed:
 		print("All tests passed.")
@@ -77,6 +85,40 @@ func _init() -> void:
 func _sweep_stray_output() -> void:
 	if FileAccess.file_exists(STRAY_COMPILE_OUTPUT):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(STRAY_COMPILE_OUTPUT))
+
+
+## The plugin's own section of the editor's project metadata, as text: the keys this plugin writes
+## (Simple Mode, the side panel, the look). The editor's own keys (recent files, layouts) are its own
+## business, and an editor a test starts may rewrite them.
+func _read_project_metadata() -> String:
+	var metadata := ConfigFile.new()
+	if not FileAccess.file_exists(PROJECT_METADATA) or metadata.load(PROJECT_METADATA) != OK:
+		return ""
+	if not metadata.has_section(METADATA_SECTION):
+		return ""
+	var said: Dictionary = {}
+	for key: String in metadata.get_section_keys(METADATA_SECTION):
+		said[key] = metadata.get_value(METADATA_SECTION, key)
+	return var_to_str(said)
+
+
+## Fails the test that changed the plugin's keys in the editor's project metadata, and puts the
+## reader's values back so the next test (and the next editor session) starts from what they chose.
+func _sweep_project_metadata(test_file: String, before: String) -> bool:
+	if _read_project_metadata() == before:
+		return true
+	print("[FAIL] run_tests: %s changed the editor's project metadata (%s, [%s]) - restored." % [
+		test_file, PROJECT_METADATA, METADATA_SECTION])
+	var metadata := ConfigFile.new()
+	metadata.load(PROJECT_METADATA)
+	if metadata.has_section(METADATA_SECTION):
+		metadata.erase_section(METADATA_SECTION)
+	var restored: Variant = str_to_var(before) if not before.is_empty() else {}
+	if restored is Dictionary:
+		for key: Variant in (restored as Dictionary).keys():
+			metadata.set_value(METADATA_SECTION, str(key), (restored as Dictionary)[key])
+	metadata.save(PROJECT_METADATA)
+	return false
 
 
 ## Drops the two pieces of PROCESS-STATIC SESSION STATE that one test can leave standing for the
