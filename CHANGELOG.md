@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+### Fixed: a script opened as a sheet reads closer to the design boards
+
+- Every function reads where the file writes it: the closed Helpers bar that gathered a script's
+  unpublished functions (its `flash`, `distance_to`, `_bake`, the handlers it wires) is gone. Only the
+  two helpers the head already says - a constructor that stores its object, a test's harness - stay
+  out of the view.
+- Export sections draw on a script opened as a sheet as they do on an edited one: `@export_category`
+  as a band, each `@export_group` as a strip with its prefix tag, `@export_subgroup` inside its group,
+  `@export_group("")` as the line the group ends on. A `##` line kept above a member sits in that
+  member's strip. The blank lines between two blocks cost one block gap, not a tall empty row each.
+- Names read exactly as written on every surface: `bullet_speed`, `Call rebuild_preview`, and a script
+  without a class_name is the object `gun_turret`. The respelling lens stays in View for whoever turns
+  it on. A function hands its value back with `Function ▸ Return x`.
+- `current = (current + 1) % points.size()` keeps its own words instead of reading as the weapon
+  wheel's "Switch to next weapon".
+- A behaviour's `host` reads once, as the variable the file declares.
+- A group head wears one mark (on, off, or switchable) instead of a ring and a switch, and a group
+  that is off is dimmed instead of struck through.
+- The look a new sheet gets lists variables the way the Inspector does (type, name, value, note, icon
+  tiles), as Editor Native does.
+- Opening Properties on a variable the file declares no longer warns that its own name is taken.
 ### Changed: the side panel rests as a thin rail and opens to Objects and Functions tabs
 
 - The always-open column beside the sheet (Open Sheets, a filter, Objects / Project tabs, a USED IN
