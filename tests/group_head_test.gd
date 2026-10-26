@@ -67,10 +67,13 @@ static func _test_head_spans() -> bool:
 		_span_text(head, "group_counts", true), "1 event") and passed
 	passed = _check("the counts hug the right edge",
 		_span_flag(head, "group_counts", true, "align_right"), true) and passed
-	passed = _check("a switchable group wears the ring",
-		_span_text(head, "group_action", "toggleable"), ViewportRowBuilder.GROUP_TOGGLEABLE_GLYPH) and passed
-	passed = _check("and the switch says it is on",
-		_span_text(head, "group_action", "enabled"), ViewportRowBuilder.HEAD_SWITCH_ON_GLYPH) and passed
+	passed = _check("a switchable group wears the ring as its one mark",
+		_span_text(head, "group_action", "enabled"), ViewportRowBuilder.GROUP_TOGGLEABLE_GLYPH) and passed
+	passed = _check("and no second mark beside it",
+		_span_with(head, "group_action", "toggleable") == null, true) and passed
+	passed = _check("the mark's hover still says whether it starts on",
+		str((_span_with(head, "group_action", "enabled").metadata as Dictionary).get("hover_note", "")).get_slice("\n", 0),
+		"Active on start.") and passed
 	# The head echoes the very line the compiler declares this group on, character for
 	# character, so the row and the file cannot disagree about what the group is.
 	passed = _check("the head echoes its own declaration",

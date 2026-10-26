@@ -82,7 +82,7 @@ const HEAD_SWITCH_OFF_GLYPH := "◌"
 
 ## The marks a group head leads and ends with: the folder that says "this is structure" (the
 ## editor's own Folder texture draws over it when there is one), and the ring that says the group can
-## be switched at runtime, which sits just before the switch it qualifies.
+## be switched at runtime, which stands in place of its on / off mark.
 const GROUP_FOLDER_GLYPH := "▤"
 const GROUP_TOGGLEABLE_GLYPH := "◎"
 
@@ -7752,8 +7752,9 @@ func _group_folder_span(reading_style: EventSheetReadingStyle) -> SemanticSpan:
 
 
 ## What the head says at its right edge: what the group holds (plus, when it is folded, the objects
-## inside it), the ring that means "and it can be switched at runtime", and the switch itself. All
-## three are right-anchored, so they stay a column no matter how long the title and description are.
+## inside it) and ONE mark for how it runs - on, off, or switchable while the game runs. Both are
+## right-anchored, so they stay a column no matter how long the title and description are. A click on
+## the mark switches the group on or off, and its hover says which it is.
 func _group_head_status_spans(group: EventGroup, folded: bool,
 		reading_style: EventSheetReadingStyle) -> Array[SemanticSpan]:
 	var status: Array[SemanticSpan] = []
@@ -7768,37 +7769,26 @@ func _group_head_status_spans(group: EventGroup, folded: bool,
 			"text_color": reading_style.muted_text_color,
 			"hover_note": EventSheetL10n.translate("What this group holds.")
 		}))
+	var mark: String = GROUP_TOGGLEABLE_GLYPH if group.runtime_toggleable \
+		else (HEAD_SWITCH_ON_GLYPH if group.enabled else HEAD_SWITCH_OFF_GLYPH)
+	var state_note: String = EventSheetL10n.translate("Active on start.") if group.enabled \
+		else EventSheetL10n.translate("Off at start; events can switch it on.") if group.runtime_toggleable \
+		else EventSheetL10n.translate("Off - this group and its rows compile out.")
 	if group.runtime_toggleable:
-		status.append(_make_span(GROUP_TOGGLEABLE_GLYPH, SemanticSpan.SpanType.KEYWORD, {
-			"badge": true,
-			"badge_style": "glyph",
-			"badge_natural_width": true,
-			"badge_fixed_width": KIND_BADGE_WIDTH,
-			"align_right": true,
-			"line_index": 0,
-			"group_action": "toggleable",
-			"badge_bg": reading_style.plain_chip_background_color,
-			"badge_fg": reading_style.muted_text_color,
-			"hover_note": EventSheetL10n.translate("Can be switched at runtime - Set group active / Group is active.")
-		}))
-	status.append(_make_span(
-		HEAD_SWITCH_ON_GLYPH if group.enabled else HEAD_SWITCH_OFF_GLYPH,
-		SemanticSpan.SpanType.KEYWORD,
-		{
-			"badge": true,
-			"badge_style": "glyph",
-			"badge_natural_width": true,
-			"badge_fixed_width": KIND_BADGE_WIDTH,
-			"align_right": true,
-			"line_index": 0,
-			"group_action": "enabled",
-			"badge_bg": reading_style.plain_chip_background_color,
-			"badge_fg": reading_style.primary_text_color if group.enabled else reading_style.muted_text_color,
-			"hover_note": EventSheetL10n.translate("Active on start.") if group.enabled \
-				else EventSheetL10n.translate("Off at start; events can switch it on.") if group.runtime_toggleable \
-				else EventSheetL10n.translate("Off - this group and its rows compile out.")
-		}
-	))
+		state_note = "%s\n%s" % [state_note,
+			EventSheetL10n.translate("Can be switched at runtime - Set group active / Group is active.")]
+	status.append(_make_span(mark, SemanticSpan.SpanType.KEYWORD, {
+		"badge": true,
+		"badge_style": "glyph",
+		"badge_natural_width": true,
+		"badge_fixed_width": KIND_BADGE_WIDTH,
+		"align_right": true,
+		"line_index": 0,
+		"group_action": "enabled",
+		"badge_bg": reading_style.plain_chip_background_color,
+		"badge_fg": reading_style.primary_text_color if group.enabled else reading_style.muted_text_color,
+		"hover_note": state_note
+	}))
 	return status
 
 

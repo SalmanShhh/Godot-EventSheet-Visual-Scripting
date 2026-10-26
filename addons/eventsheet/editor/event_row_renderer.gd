@@ -1489,6 +1489,11 @@ func _draw_spans(
 			_draw_add_affordance_pill(control, span.rect, color, span_index == hovered_span_index)
 		if row_data.row_type == EventRowData.RowType.GROUP and bool(metadata.get("group_title", false)):
 			color = event_style.group_title_color if event_style != null else EventSheetPalette.COLOR_GROUP_TITLE
+		# A group that is off is dimmed rather than struck through: it is still a group you read and
+		# switch on, and its counts already say "off".
+		var dimmed_group: bool = row_data.disabled and row_data.row_type == EventRowData.RowType.GROUP
+		if dimmed_group:
+			color = Color(color, color.a * DISABLED_GROUP_ALPHA)
 		var draw_text: String = editing_buffer if span_index == editing_span_index else span.text
 		var draw_font_size: int = EventSheetPalette.resolve_font_size(
 			font_size,
@@ -1774,7 +1779,7 @@ func _draw_spans(
 			_draw_text(control, Vector2(cue_x, baseline_y), "→%d" % compiled_lines, 64.0, font, cue_font_size, cue_color)
 		# Strike through the text when the ACE is disabled OR its whole row (event/group/
 		# comment) is disabled, so "commented out" reads clearly like in code.
-		if not ace_enabled or (row_data != null and row_data.disabled):
+		if not ace_enabled or (row_data != null and row_data.disabled and not dimmed_group):
 			var strike_y: float = span.rect.get_center().y
 			control.draw_line(
 				Vector2(span.rect.position.x, strike_y),
@@ -2260,12 +2265,13 @@ const BADGE_MARK_SVGS: Dictionary = {
 	"▣": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"4.5\" y=\"4.5\" width=\"15\" height=\"15\" rx=\"3\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2.2\"/><rect x=\"9.4\" y=\"9.4\" width=\"5.2\" height=\"5.2\" rx=\"1\" fill=\"#fff\"/></svg>",
 	# The sliders mark: a variable a designer can edit in the Inspector wears this instead of a word.
 	"⚙": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M3.6 8.4h16.8M3.6 15.6h16.8\" stroke=\"#fff\" stroke-width=\"2.1\" stroke-linecap=\"round\"/><circle cx=\"8.8\" cy=\"8.4\" r=\"2.9\" fill=\"#fff\"/><circle cx=\"15.6\" cy=\"15.6\" r=\"2.9\" fill=\"#fff\"/></svg>",
-	# The switch a head band wears for a line that is either written or not (`@tool`): a track with
-	# its knob at the right when the line is there, at the left and hollow when it is not.
-	"◍": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"2.4\" y=\"7.2\" width=\"19.2\" height=\"9.6\" rx=\"4.8\" fill=\"#fff\"/><circle cx=\"16.8\" cy=\"12\" r=\"3.1\" fill=\"#000\" fill-opacity=\"0.55\"/></svg>",
-	"◌": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"3.5\" y=\"8.3\" width=\"17\" height=\"7.4\" rx=\"3.7\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\"/><circle cx=\"7.9\" cy=\"12\" r=\"2.4\" fill=\"#fff\"/></svg>",
-	# The ring a group head wears BEFORE its switch: this switch can be thrown while the game
-	# runs, by Set group active. A plain ring, so it qualifies the switch instead of competing with it.
+	# The mark a line that is either on or not wears (`@tool`, a group): a ring filled in when it is
+	# on, a broken empty ring when it is off. A mark rather than a switch drawn in the row - a click
+	# still flips it, and its hover says so.
+	"◍": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"7.6\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\"/><circle cx=\"12\" cy=\"12\" r=\"5\" fill=\"#fff\"/></svg>",
+	"◌": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"7.6\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\" stroke-dasharray=\"3 2.6\"/></svg>",
+	# The ring a group head wears when it can be switched while the game runs, by Set group active:
+	# a ring round a dot, in place of the on / off mark.
 	"◎": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"7.6\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\"/><circle cx=\"12\" cy=\"12\" r=\"2.6\" fill=\"#fff\"/></svg>",
 	# The sync mark: a box with two short bars in it, saying this value is kept in step across
 	# the network. The STROKE says how - solid for always, dotted for on change, dashed for at spawn,
@@ -2280,6 +2286,9 @@ const BADGE_MARK_SVGS: Dictionary = {
 	# (headless, or object icons turned off): a tab and a body, the file-manager idiom.
 	"▤": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M3.2 6.6a1.6 1.6 0 0 1 1.6-1.6h4.1l1.9 2.2h7.4a1.6 1.6 0 0 1 1.6 1.6v9.2a1.6 1.6 0 0 1-1.6 1.6H4.8a1.6 1.6 0 0 1-1.6-1.6z\" fill=\"#fff\"/></svg>",
 }
+
+## How strongly an off group's head is drawn, against a group that is on.
+const DISABLED_GROUP_ALPHA := 0.6
 
 ## SVG textures rasterized per (glyph, pixel size) - a handful of tiny images per session.
 static var _badge_icon_cache: Dictionary = {}
