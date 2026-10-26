@@ -54,6 +54,10 @@
   the last tab's variable words in it.
 - The Sheet map names each box by its file as written (`player.gd`, `level_2 (scene)`) instead of a
   respelled title ("Player", "Level 2 (scene)").
+- The `#` paragraph a script ends on, under its last function, reads under that function at the foot
+  of the sheet, where the file writes it, instead of above the function it closes under.
+
+
 ### Changed: the side panel rests as a thin rail and opens to Objects and Functions tabs
 
 - The always-open column beside the sheet (Open Sheets, a filter, Objects / Project tabs, a USED IN

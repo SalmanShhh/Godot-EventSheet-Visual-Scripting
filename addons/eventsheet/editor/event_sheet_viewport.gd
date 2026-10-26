@@ -2964,7 +2964,16 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# The remaining verbs, in sheet.functions order - the compiler's trailing-functions section mirrored,
 	# so a behaviour pack reads events-then-vocabulary exactly like its .gd. After the fence pairing (an
 	# unclosed #region must not swallow the vocabulary) and before the footer.
+	# An opened script writes its top-level `#` notes after those functions, at the very end of the
+	# file, so the notes the rows end on wait until the verbs are in: a closing paragraph written
+	# under the last function reads under it, not above it.
+	var closing_notes: Array[EventRowData] = []
+	if sheet != null and not sheet.external_source_path.is_empty():
+		while not root_rows.is_empty() and root_rows[root_rows.size() - 1].indent == 0 \
+				and root_rows[root_rows.size() - 1].source_resource is CommentRow:
+			closing_notes.push_front(root_rows.pop_back())
 	root_rows.append_array(_row_builder.build_trailing_verb_rows(sheet))
+	root_rows.append_array(closing_notes)
 	# Every function reads where the file writes it; a read-only preview only drops the two helpers
 	# its head already says (a constructor that stores its object, a test's harness). Pure view.
 	if not file_order:

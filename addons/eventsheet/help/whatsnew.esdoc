@@ -6,6 +6,62 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Changed: a sheet opens on one head bar, with no head card, no banner and no Behaviors band
+
+- An opened file used to open under a title strip, a head card (\"CarouselOfJuice - Custom Node ·
+  extends Node2D · @ 4 knobs\") and a full-width blue banner with Edit Events and Open in Godot Script
+  Editor; then a folded head row that hid the variables, the file's closing paragraph hoisted to the
+  top, and a Behaviors band among the rows. It now opens on ONE 30 px head bar, the same in every look and for every kind of file: the class icon (or the file's
+  own `@icon`), the name as written, what kind of script it is (\"Custom node · extends Node2D\",
+  \"Script\", \"Behaviour\", \"Global (autoload)\"), and on the right the counts - variables, events and
+  behaviours - each with a dotted rule under it.
+- Hovering a word on the bar (or clicking it) opens its card. The name's card says where the file
+  lives, its description, that a script opened as a sheet stays plain GDScript and how many events,
+  functions and code blocks it has, with Open in Script Editor and Show in FileSystem (a behaviour's
+  or a global's adds its settings form; a sheet being edited adds Edit description…). The variables
+  card names them and says how many the Inspector shows; the bookkeeping members the compiler writes
+  (`__...`) are never counted. The behaviours card lists each kind with its count - a click opens
+  that behaviour as a sheet - and offers Add behaviour….
+- The rows below are the file's, in its order: the variables stay where they are declared (read with
+  their Inspector facts, an `@export_group` as its own section), the signals stay where they are,
+  and the paragraph a file ends on stays at its end.
+- The banner is shown for one state only: a file an unfinished merge blocks. The first edit still
+  unlocks a preview, and the status bar names the opened file instead of repeating the banner. The
+  Sheet menu gains Open in Script Editor and Show in FileSystem, and a behaviour's Sheet | Code |
+  Side by side switch moves to the toolbar.
+- The look a new user gets (the one that matches the editor) paints the head bar a flat grey a step
+  off the canvas.
+
+
+### Fixed: a script opened as a sheet reads closer to the design boards
+
+- Every function reads where the file writes it: the closed Helpers bar that gathered a script's
+  unpublished functions (its `flash`, `distance_to`, `_bake`, the handlers it wires) is gone. Only the
+  two helpers the head already says - a constructor that stores its object, a test's harness - stay
+  out of the view.
+- Export sections draw on a script opened as a sheet as they do on an edited one: `@export_category`
+  as a band, each `@export_group` as a strip with its prefix tag, `@export_subgroup` inside its group,
+  `@export_group(\"\")` as the line the group ends on. A `##` line kept above a member sits in that
+  member's strip. The blank lines between two blocks cost one block gap, not a tall empty row each.
+- Names read exactly as written on every surface: `bullet_speed`, `Call rebuild_preview`, and a script
+  without a class_name is the object `gun_turret`. The respelling lens stays in View for whoever turns
+  it on. A function hands its value back with `Function ▸ Return x`.
+- `current = (current + 1) % points.size()` keeps its own words instead of reading as the weapon
+  wheel's \"Switch to next weapon\".
+- A behaviour's `host` reads once, as the variable the file declares.
+- A group head wears one mark (on, off, or switchable) instead of a ring and a switch, and a group
+  that is off is dimmed instead of struck through.
+- The look a new sheet gets lists variables the way the Inspector does (type, name, value, note, icon
+  tiles), as Editor Native does.
+- Opening Properties on a variable the file declares no longer warns that its own name is taken.
+- The help strip speaks for the selection on the tab in front of you: switching tabs no longer leaves
+  the last tab's variable words in it.
+- The Sheet map names each box by its file as written (`player.gd`, `level_2 (scene)`) instead of a
+  respelled title (\"Player\", \"Level 2 (scene)\").
+- The `#` paragraph a script ends on, under its last function, reads under that function at the foot
+  of the sheet, where the file writes it, instead of above the function it closes under.
+
+
 ### Changed: the side panel rests as a thin rail and opens to Objects and Functions tabs
 
 - The always-open column beside the sheet (Open Sheets, a filter, Objects / Project tabs, a USED IN
@@ -16,10 +72,10 @@ What changed in the build you have installed (v0.18.0), in the words the release
     the scene, the Input Map actions and the globals; the sort button sits beside the filter, and
     the Project bar (when it is on) folds in at the foot of the tab.
   - **Functions** lists the sheet's functions with how many times the file calls them, then the
-    functions still written as code, marked `code`; ＋ beside the filter adds one, and right-click
-    still deletes a sheet function.
+	functions still written as code, marked `code`; ＋ beside the filter adds one, and right-click
+	still deletes a sheet function.
   - A behaviour pack adds an **Anatomy** tab, and the **Picker preview** is a tab while the picker
-    is open.
+	is open.
 - Open Sheets is gone: the tabs above the sheet are the open sheets, and recently closed sheets are
   on the Start page. View > Panels picks a tab (choosing the ticked one closes the panel) and View >
   Side Rail opens or closes it.
