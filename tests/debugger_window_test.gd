@@ -135,6 +135,7 @@ static func run() -> bool:
 	ok = _check("a sheet with no breakpoints lists none",
 		EventSheetDebuggerWindow.breakpoint_rows([]).size(), 0) and ok
 	ok = _test_unticking_keeps_the_breakpoint_inactive() and ok
+	ok = _test_inspect_columns() and ok
 	ok = _test_watch_table_and_value_rows() and ok
 
 	# ── The bridge parses the timings message it will really be handed ──
@@ -152,6 +153,29 @@ static func run() -> bool:
 ## Unticking a breakpoint in the list keeps it listed but inactive (the hint above the list says
 ## so), and the change goes through the undo funnel: the sheet is replaced by a snapshot, so the
 ## event is fetched again by uid after each step.
+## The Inspect tab before a run: the Objects list keeps a column for each row's count ("no
+## report"), and the values table is one sentence across its whole width rather than a word a line
+## down the Variable column; once a run reports, it is Variable and Value again.
+static func _test_inspect_columns() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	var dock: EventSheetDock = EventSheetDock.new()
+	dock.setup(sheet)
+	var debugger: EventSheetDebuggerWindow = EventSheetDebuggerWindow.new(dock)
+	var page: Control = debugger._build_inspect_tab()
+	debugger._refresh_inspect()
+	var resting: Array = [debugger.objects_tree.get_column_width(1) > 0, debugger.values_tree.columns,
+		debugger.values_tree.column_titles_visible]
+	debugger._last_values = {"hp": 4}
+	debugger._refresh_values()
+	var reporting: Array = [debugger.values_tree.columns, debugger.values_tree.get_column_title(1)]
+	page.free()
+	dock.free()
+	return SUPPORT.pins("debugger_window_test", [
+		["before a run the count column has room and the table is one sentence wide", resting, [true, 1, false]],
+		["once a run reports it is Variable and Value again", reporting, [2, "Value"]],
+	])
+
+
 static func _test_unticking_keeps_the_breakpoint_inactive() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.events.append(_event("bp", true, "health <= 0"))

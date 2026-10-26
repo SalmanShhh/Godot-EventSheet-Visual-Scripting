@@ -27,6 +27,9 @@
   `var __blend_{uid}: Tween`; it now reads `__blend_row` until the row is applied and gets its own
   token), and a several-line row keeps the indent of the lines under its `if`.
 - The picker's object page shows System with the gear its rows wear, not Godot's Node ring.
+- The Debugger's Objects list shows each row's count again ("6 values", "(2)", "no report"): the
+  column it sits in had no width. Before a run, the values table says its one sentence across its
+  whole width instead of a word a line down the Variable column.
 
 ### Fixed: the head bar reads once, in every kind of view, and the sheet under it stays quiet
 

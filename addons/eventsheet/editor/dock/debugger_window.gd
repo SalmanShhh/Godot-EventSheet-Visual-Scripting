@@ -64,6 +64,9 @@ var tabs: TabContainer = null
 var band: EventSheetPopupUI.RowBand = null
 ## Inspect: the object tree on the left, the picked object's values on the right, and under them the
 ## strip that names the value under the cursor and says what an edit sent.
+## How wide the Objects list's count column is, before the editor's scale.
+const OBJECT_DETAIL_WIDTH: int = 72
+
 var objects_tree: Tree = null
 var values_tree: Tree = null
 var value_strip: EventSheetPopupUI.HelpStrip = null
@@ -188,7 +191,10 @@ func _build_inspect_tab() -> Control:
 	objects_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	objects_tree = EventSheetPopupUI.table(PackedStringArray(["", ""]), 160.0)
 	objects_tree.column_titles_visible = false
+	# The count beside each name ("6 values", "(2)", "no report") is a column of its own, and a
+	# column that does not expand is only as wide as its minimum - without one it drew nothing.
 	objects_tree.set_column_expand(1, false)
+	objects_tree.set_column_custom_minimum_width(1, EventSheetPalette.scaled(OBJECT_DETAIL_WIDTH))
 	objects_tree.item_selected.connect(_on_object_picked)
 	objects_box.add_child(objects_tree)
 	objects_box.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate(
@@ -280,6 +286,9 @@ func _refresh_inspect() -> void:
 func _refresh_values() -> void:
 	values_tree.clear()
 	var root: TreeItem = values_tree.create_item()
+	# With no run the table holds one sentence, not a variable and a value: it takes the whole width
+	# rather than wrapping a word a line down the Variable column beside an empty Value column.
+	_values_columns(not _last_values.is_empty())
 	if _last_values.is_empty():
 		var waiting: TreeItem = values_tree.create_item(root)
 		waiting.set_text(0, EventSheetL10n.translate(EMPTY_STATES["Inspect"]))
@@ -294,6 +303,15 @@ func _refresh_values() -> void:
 		var dotted: bool = str(key).contains(".")
 		item.set_text(0, str(key).get_slice(".", 1) if dotted else str(key))
 		EventSheetLiveValuesPanel.fill_value_item(item, _last_values[key], dotted)
+
+
+## Two titled columns (Variable, Value) while a run reports, one untitled column while it does not.
+func _values_columns(reporting: bool) -> void:
+	values_tree.columns = 2 if reporting else 1
+	values_tree.column_titles_visible = reporting
+	if reporting:
+		values_tree.set_column_title(0, EventSheetL10n.translate("Variable"))
+		values_tree.set_column_title(1, EventSheetL10n.translate("Value"))
 
 
 func _on_object_picked() -> void:
