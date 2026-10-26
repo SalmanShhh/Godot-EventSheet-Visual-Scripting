@@ -26,6 +26,7 @@
 - The Parameters window's IN CODE echo never shows a template's `{uid}` mark (Blend Toward read
   `var __blend_{uid}: Tween`; it now reads `__blend_row` until the row is applied and gets its own
   token), and a several-line row keeps the indent of the lines under its `if`.
+- The picker's object page shows System with the gear its rows wear, not Godot's Node ring.
 
 ### Fixed: the head bar reads once, in every kind of view, and the sheet under it stays quiet
 

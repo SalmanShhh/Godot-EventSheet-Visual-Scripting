@@ -1820,8 +1820,12 @@ func _populate_object_cards() -> void:
 		# Same icon discipline as the classic tree: the provider's own icon at 16px, never
 		# scaled up; System gets the Node glyph from the editor theme.
 		var item_icon: Texture2D = provider_icons.get(provider, null) as Texture2D
+		if provider == "Core":
+			# System is the gear on every sheet row, so it is the gear here too - not the Node ring,
+			# which says "a node" about the one object that is not one.
+			item_icon = system_gear_icon(EventSheetPalette.scaled(16), EventSheetPopupUI.secondary_text_color())
 		if item_icon == null:
-			item_icon = editor_icon("Node" if provider == "Core" else "Script")
+			item_icon = editor_icon("Script")
 		if item_icon != null:
 			item.set_icon(0, item_icon)
 			item.set_icon_max_width(0, 16)
@@ -2482,6 +2486,27 @@ static func kind_dot(ace_type: int) -> Texture2D:
 ## A named editor-theme icon, or null outside the editor or when the name is unknown.
 static func editor_icon(icon_name: String) -> Texture2D:
 	return EventSheetACEIcons.editor_icon(icon_name)
+
+
+## System's gear as a texture of `side_px` square in `ink`: a ring and eight spokes, the same mark
+## the sheet's rows paint beside "System". Cached per size and colour - one or two per session.
+static func system_gear_icon(side_px: int, ink: Color) -> Texture2D:
+	var key: String = "%d|%s" % [side_px, ink.to_html()]
+	if _gear_icons.has(key):
+		return _gear_icons[key]
+	var image: Image = Image.new()
+	var svg: String = SYSTEM_GEAR_SVG.replace("INK", "#" + ink.to_html(false)).replace("ALPHA", str(snappedf(ink.a, 0.01)))
+	var texture: Texture2D = null
+	if side_px >= 2 and image.load_svg_from_string(svg, float(side_px) / 16.0) == OK:
+		texture = ImageTexture.create_from_image(image)
+	_gear_icons[key] = texture
+	return texture
+
+
+## The gear on a 16 px grid: a ring of radius 2.2 and eight spokes from 4.2 to 6.2, stroked 1.3.
+const SYSTEM_GEAR_SVG: String = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 16 16\"><g fill=\"none\" stroke=\"INK\" stroke-opacity=\"ALPHA\" stroke-width=\"1.3\" stroke-linecap=\"round\"><circle cx=\"8\" cy=\"8\" r=\"2.2\"/><path d=\"M12.2 8H14.2M10.97 10.97L12.38 12.38M8 12.2V14.2M5.03 10.97L3.62 12.38M3.8 8H1.8M5.03 5.03L3.62 3.62M8 3.8V1.8M10.97 5.03L12.38 3.62\"/></g></svg>"
+
+static var _gear_icons: Dictionary = {}
 
 
 func _category_of(definition: ACEDefinition) -> String:
