@@ -256,8 +256,20 @@ static func derive(base_color: Color, accent_color: Color) -> EventSheetEditorSt
 	event_style.selection_fill_color = Color(accent_color.r, accent_color.g, accent_color.b, 0.22)
 	event_style.hover_fill_color = Color(accent_color.r, accent_color.g, accent_color.b, 0.10)
 	event_style.behavior_accent_color = accent_color
+	read_variables_inspector_style(event_style)
 	style.event_style = event_style
 	return style
+
+
+## The look a new sheet gets lists a variable the way the Inspector lists a property - its type, its
+## name as written, its value, its ## note and its attributes as icon tiles - and leaves
+## the compiler's own bookkeeping variables out, as Editor Native does. Shared by both ways that look
+## is reached (the derived style and the editor-adapted fallback) so the two cannot drift.
+static func read_variables_inspector_style(event_style: EventSheetEventStyle) -> void:
+	if event_style == null:
+		return
+	event_style.inspector_variable_rows = true
+	event_style.hide_compiler_variables = true
 
 
 ## The editor-derived default (null outside the editor, e.g. headless tests/games).

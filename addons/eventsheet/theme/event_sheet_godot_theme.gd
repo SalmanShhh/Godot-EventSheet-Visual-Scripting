@@ -21,6 +21,7 @@ static func adapt_to_editor(style: EventSheetEditorStyle) -> EventSheetEditorSty
 	var dark_2: Color = theme.get_color("dark_color_2", "Editor") if theme.has_color("dark_color_2", "Editor") else base.darkened(0.25)
 	var accent: Color = theme.get_color("accent_color", "Editor") if theme.has_color("accent_color", "Editor") else Color("#699ce8")
 	var font_color: Color = theme.get_color("font_color", "Editor") if theme.has_color("font_color", "Editor") else Color(0.9, 0.9, 0.9)
+	EventSheetEditorThemeDeriver.read_variables_inspector_style(style.get_event_style())
 	return apply(style, base, dark_1, dark_2, accent, font_color)
 
 
