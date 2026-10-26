@@ -201,11 +201,12 @@ static func _add_node(nodes: Dictionary, path: String, kind: String, label: Stri
 	}
 
 
-## A file the way a reader writes it: "player.gd" becomes "Player", "main_menu.tscn" becomes
-## "Main Menu (scene)". The same rule the Include bar names a sheet by.
+## A file named exactly as it is written: "player.gd" stays player.gd, "main_menu.tscn" reads
+## "main_menu (scene)" - the name the FileSystem dock shows, never a respelling of it.
 static func _label_of(path: String) -> String:
-	var base: String = path.get_file().get_basename().capitalize()
-	return "%s (scene)" % base if path.get_extension().to_lower() == "tscn" else base
+	if path.get_extension().to_lower() == "tscn":
+		return "%s (scene)" % path.get_file().get_basename()
+	return path.get_file()
 
 
 # ── The project ───────────────────────────────────────────────────────────────────────────────

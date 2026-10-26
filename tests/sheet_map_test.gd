@@ -33,7 +33,7 @@ static func _the_nodes(found: Dictionary) -> bool:
 	var passed: bool = true
 	passed = _check("every script is a sheet on the map, and the scene it goes to is a scene",
 		_node_lines(found),
-		"Game [sheet] · Hud [sheet] · Level Two (scene) [scene] · Player [sheet]") and passed
+		"game.gd [sheet] · hud.gd [sheet] · level_two (scene) [scene] · player.gd [sheet]") and passed
 	return passed
 
 
@@ -41,7 +41,7 @@ static func _the_edges(found: Dictionary) -> bool:
 	var passed: bool = true
 	passed = _check("the map says who includes, who signals and who changes layout",
 		_edge_lines(found),
-		"Game -> Level Two (scene): Go to layout · Game -> Player: includes · Player -> Hud: signals On sheet_map_fixture_died") and passed
+		"game.gd -> level_two (scene): Go to layout · game.gd -> player.gd: includes · player.gd -> hud.gd: signals On sheet_map_fixture_died") and passed
 	return passed
 
 

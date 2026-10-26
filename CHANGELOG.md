@@ -25,6 +25,8 @@
 - Opening Properties on a variable the file declares no longer warns that its own name is taken.
 - The help strip speaks for the selection on the tab in front of you: switching tabs no longer leaves
   the last tab's variable words in it.
+- The Sheet map names each box by its file as written (`player.gd`, `level_2 (scene)`) instead of a
+  respelled title ("Player", "Level 2 (scene)").
 ### Changed: the side panel rests as a thin rail and opens to Objects and Functions tabs
 
 - The always-open column beside the sheet (Open Sheets, a filter, Objects / Project tabs, a USED IN
