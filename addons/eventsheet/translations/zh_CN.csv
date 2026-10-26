@@ -9569,3 +9569,16 @@ Behaviours on this object,此对象上的行为
 "They are child nodes in the scene, not lines of this file, so they are listed here rather than as rows.",它们是场景中的子节点，而不是此文件的行，所以列在这里而不是作为行。
 Add behaviour…,添加行为…
 "Every script this scene uses, in tree order. Double-click an object bar to open that script and edit it.",此场景使用的每个脚本，按树顺序排列。双击对象条即可打开并编辑其脚本。
+Used in this sheet,本表中使用
+Also in the scene,场景中的其他对象
+Globals,全局
+"The behaviour nodes on this object, as the head bar's behaviours card lists them.",此对象上的行为节点，与标题栏的行为卡片所列相同。
+Picker preview,选择器预览
+"Open this script as its own sheet, where it is edited.",将此脚本作为独立的表打开，在那里编辑它。
+"Attached to %s, on its node %s.",附加到 %s，位于其节点 %s。
+The 1 other variable in the file is bookkeeping the compiler writes (%s) and stays out of sight.,文件中另外 1 个变量是编译器写入的记账变量（%s），保持隐藏。
+The %d other variables in the file are bookkeeping the compiler writes (%s) and stay out of sight.,文件中另外 %d 个变量是编译器写入的记账变量（%s），保持隐藏。
+"Every script this scene uses, in tree order. Click a script's file on its bar to open it and edit it.",此场景使用的每个脚本，按树的顺序。点击栏上的脚本文件即可打开并编辑它。
+root,根
+1 script,1 个脚本
+Scripts in this scene,此场景中的脚本

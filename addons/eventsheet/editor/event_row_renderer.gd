@@ -2281,8 +2281,11 @@ const BADGE_MARK_SVGS: Dictionary = {
 	# still flips it, and its hover says so.
 	"◍": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"7.6\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\"/><circle cx=\"12\" cy=\"12\" r=\"5\" fill=\"#fff\"/></svg>",
 	"◌": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"7.6\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\" stroke-dasharray=\"3 2.6\"/></svg>",
-	# The ring a group head wears when it can be switched while the game runs, by Set group active:
-	# a ring round a dot, in place of the on / off mark.
+	# A group events can switch while the game runs (Set group active): the same on / off ring with a
+	# dot at its shoulder, so the mark still says how the group starts.
+	"◉": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><circle cx=\"11\" cy=\"13\" r=\"7\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\"/><circle cx=\"11\" cy=\"13\" r=\"4.5\" fill=\"#fff\"/><circle cx=\"19.6\" cy=\"4.4\" r=\"2.6\" fill=\"#fff\"/></svg>",
+	"⊙": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><circle cx=\"11\" cy=\"13\" r=\"7\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\" stroke-dasharray=\"3 2.6\"/><circle cx=\"19.6\" cy=\"4.4\" r=\"2.6\" fill=\"#fff\"/></svg>",
+	# The plain switchable ring, kept for anything that still draws it.
 	"◎": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"7.6\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\"/><circle cx=\"12\" cy=\"12\" r=\"2.6\" fill=\"#fff\"/></svg>",
 	# The sync mark: a box with two short bars in it, saying this value is kept in step across
 	# the network. The STROKE says how - solid for always, dotted for on change, dashed for at spawn,

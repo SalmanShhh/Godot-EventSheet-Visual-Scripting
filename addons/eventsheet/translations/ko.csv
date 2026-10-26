@@ -9569,3 +9569,16 @@ Behaviours on this object,이 오브젝트의 비헤이비어
 "They are child nodes in the scene, not lines of this file, so they are listed here rather than as rows.","이것들은 씬의 자식 노드이지 이 파일의 줄이 아니므로, 행이 아니라 여기에 나열됩니다."
 Add behaviour…,비헤이비어 추가…
 "Every script this scene uses, in tree order. Double-click an object bar to open that script and edit it.",이 씬이 쓰는 모든 스크립트를 트리 순서로. 오브젝트 막대를 더블 클릭하면 그 스크립트를 열어 편집합니다.
+Used in this sheet,이 시트에서 사용
+Also in the scene,장면에 있는 다른 것
+Globals,전역
+"The behaviour nodes on this object, as the head bar's behaviours card lists them.",이 오브젝트의 비헤이비어 노드. 헤드 바의 비헤이비어 카드가 나열하는 것과 같습니다.
+Picker preview,선택기 미리 보기
+"Open this script as its own sheet, where it is edited.",이 스크립트를 자체 시트로 엽니다. 편집은 그곳에서 합니다.
+"Attached to %s, on its node %s.",%s에 연결됨 (노드 %s).
+The 1 other variable in the file is bookkeeping the compiler writes (%s) and stays out of sight.,파일의 다른 변수 1개는 컴파일러가 쓰는 관리용 변수(%s)이며 보이지 않습니다.
+The %d other variables in the file are bookkeeping the compiler writes (%s) and stay out of sight.,파일의 다른 변수 %d개는 컴파일러가 쓰는 관리용 변수(%s)이며 보이지 않습니다.
+"Every script this scene uses, in tree order. Click a script's file on its bar to open it and edit it.",이 장면이 사용하는 모든 스크립트(트리 순서). 바에 있는 스크립트 파일을 클릭하면 열어서 편집합니다.
+root,루트
+1 script,스크립트 1개
+Scripts in this scene,이 장면의 스크립트

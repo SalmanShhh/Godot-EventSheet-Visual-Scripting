@@ -45,7 +45,15 @@ static func _the_default_look() -> bool:
 	var dark_canvas: Color = Color("#252525").blend(Color(0.0, 0.0, 0.0, 0.3))
 	var light_canvas: Color = Color("#e0e0e0").blend(Color(0.0, 0.0, 0.0, 0.3))
 	var derived: EventSheetEventStyle = EventSheetEditorThemeDeriver.derive(Color("#252525"), Color("#3a72b0")).event_style
+	var native_dark: EventSheetEventStyle = EventSheetEditorThemeDeriver.native_style(Color("#252b34")).event_style
+	var native_light: EventSheetEventStyle = EventSheetEditorThemeDeriver.native_style(Color("#e0e3e8")).event_style
 	return SUPPORT.pins(P, [
+		["Editor Native's head bar is the same neutral grey, not its canvas's blue",
+			[is_equal_approx(native_dark.head_bar_color.r, native_dark.head_bar_color.b),
+				is_equal_approx(native_light.head_bar_color.r, native_light.head_bar_color.b)], [true, true]],
+		["a step off its canvas, lighter in dark and darker in light",
+			[native_dark.head_bar_color.get_luminance() > native_dark.sheet_background_color.get_luminance(),
+				native_light.head_bar_color.get_luminance() < native_light.sheet_background_color.get_luminance()], [true, true]],
 		["its head bar is opaque grey", [dark.head_bar_color.a, is_equal_approx(dark.head_bar_color.r, dark.head_bar_color.b)],
 			[1.0, true]],
 		["a step lighter than a dark canvas", dark.head_bar_color.get_luminance() > dark_canvas.get_luminance(), true],
@@ -79,8 +87,10 @@ static func _the_card() -> bool:
 	var closed: bool = not card_view.visible
 	card_view.free()
 	return SUPPORT.pins(P, [
-		["the behaviours card says the kinds, why they are not rows, and offers Add behaviour…", shown,
-			"Behaviours on this object\nSpring 10 · Tween 10 · Flash 2 · Juice · Scenes · Blend Modes · Screen FX · Sine 8. They are child nodes in the scene, not lines of this file, so they are listed here rather than as rows.\n[Add behaviour…]"],
+		["the behaviours card says the kinds, why they are not rows, each kind's settings and nodes, and offers Add behaviour…", shown,
+			"Behaviours on this object\nSpring 10 · Tween 10 · Flash 2 · Juice · Scenes · Blend Modes · Screen FX · Sine 8. They are child nodes in the scene, not lines of this file, so they are listed here rather than as rows.\n"
+			+ "Spring ×10 · on Carousel … Tile7\nTween ×10 · on Carousel … Tile7\nFlash ×2 · on Carousel · Hero\nJuice · on Carousel\nScenes · on Carousel\nBlend Modes · on Carousel\nScreen FX · layer = 100 · on Carousel\nSine ×8 · movement = \"vertical\" · period = 1.6 · magnitude = 18.0 · on Tile0 … Tile7\n"
+			+ "[Add behaviour…]"],
 		["its door answers as a head action, and the card closes", [door_found, pressed, closed],
 			[true, ["add_behaviour"], true]],
 	])

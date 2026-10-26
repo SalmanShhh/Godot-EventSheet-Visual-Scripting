@@ -85,6 +85,7 @@ badge_extra_width = 10
 script = ExtResource("2_event_style")
 sheet_background_color = Color(0.12, 0.13, 0.16, 1)
 inspector_variable_rows = false
+variable_quiet_marks = false
 hide_compiler_variables = false
 fold_compiler_helpers = false
 pattern_in_help_strip = false

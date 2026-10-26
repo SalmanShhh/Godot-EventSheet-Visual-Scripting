@@ -188,7 +188,8 @@ static func _group_head(theme_path: String, toggleable: bool = false) -> Diction
 				found["description_italic"] = bool(metadata.get("italic_note", false))
 				found["description_elides"] = bool(metadata.get("elide", false))
 				found["description_hover"] = str(metadata.get("hover_note", ""))
-			if str(metadata.get("group_action", "")) == "enabled" and span.text == ViewportRowBuilder.GROUP_TOGGLEABLE_GLYPH:
+			if str(metadata.get("group_action", "")) == "enabled" and span.text in [
+					ViewportRowBuilder.GROUP_SWITCHABLE_ON_GLYPH, ViewportRowBuilder.GROUP_SWITCHABLE_OFF_GLYPH]:
 				found["ring"] = true
 			if str(metadata.get("group_action", "")) == "enabled":
 				found["active_tick"] = bool(metadata.get("group_active_tick", false))

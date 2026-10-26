@@ -92,6 +92,11 @@ func handle(action: String) -> void:
 		"show_in_filesystem":
 			var shown: String = str(_dock._current_sheet.external_source_path).strip_edges()
 			browse_to_scene(shown if not shown.is_empty() else _dock._current_sheet.resource_path)
+		ViewportRowBuilder.HEAD_ACTION_EDIT_DESCRIPTION_NOTE:
+			# The description is the paragraph the file closes on, kept off the canvas: edit that note.
+			var claimed: CommentRow = ViewportRowBuilder.claimed_description_note(_dock._viewport._root_rows)
+			if claimed != null:
+				_dock._open_comment_dialog(claimed)
 		"file_settings":
 			_dock._new_addon_panel.open_settings(str(_dock._current_sheet.external_source_path))
 		"add_behaviour":

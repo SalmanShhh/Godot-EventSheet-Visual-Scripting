@@ -81,6 +81,7 @@ badge_foreground_color = Color(0.4, 0.8509804, 0.9372549, 1)
 script = ExtResource("3_q363u")
 sheet_background_color = Color(0.15294118, 0.15686275, 0.13333334, 1)
 inspector_variable_rows = false
+variable_quiet_marks = false
 hide_compiler_variables = false
 fold_compiler_helpers = false
 pattern_in_help_strip = false

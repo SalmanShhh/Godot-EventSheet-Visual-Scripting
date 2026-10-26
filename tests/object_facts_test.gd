@@ -239,17 +239,27 @@ static func _object_bar_sections() -> bool:
 	# names no control, and an empty section is never drawn.
 	passed = _check("the bar is four sections, in the order a reader wants them",
 		" | ".join(summary),
-		"USED IN THIS SHEET: Player · Sprite2D · Boss"
-		+ " | ALSO IN THE SCENE: Camera2D"
-		+ " | INPUT: "
-		+ " | GLOBALS & BASE CLASSES: Game · enemies") and passed
-	passed = _check("the used section is its title and nothing else",
-		EventSheetObjectsPanel.section_line(sections[0], 3), "USED IN THIS SHEET") and passed
-	passed = _check("the scene section counts what is left and says what to do with it",
-		EventSheetObjectsPanel.section_line(sections[1], 1),
-		"ALSO IN THE SCENE  (1) - drag one onto the sheet to use it") and passed
-	passed = _check("the globals section just counts",
-		EventSheetObjectsPanel.section_line(sections[3], 2), "GLOBALS & BASE CLASSES  (2)") and passed
+		"Used in this sheet: Player · Sprite2D · Boss"
+		+ " | Also in the scene: Camera2D"
+		+ " | Input: "
+		+ " | Globals & Base classes: Game · enemies") and passed
+	passed = _check("a heading is its name alone, so it fits the panel",
+		[EventSheetObjectsPanel.section_line(sections[0], 3), EventSheetObjectsPanel.section_line(sections[1], 1),
+			EventSheetObjectsPanel.section_line(sections[3], 2)],
+		["Used in this sheet", "Also in the scene", "Globals & Base classes"]) and passed
+	passed = _check("the used section's hover adds nothing",
+		EventSheetObjectsPanel.section_tooltip(sections[0], 3), "") and passed
+	passed = _check("the scene section's hover counts what is left and says what to do with it",
+		EventSheetObjectsPanel.section_tooltip(sections[1], 1),
+		"Also in the scene (1) - drag one onto the sheet to use it") and passed
+	passed = _check("the globals section's hover just counts",
+		EventSheetObjectsPanel.section_tooltip(sections[3], 2), "Globals & Base classes (2)") and passed
+	passed = _check("an object's behaviours are counted into one fold under it",
+		EventSheetObjectsPanel.behaviour_fold_counts([
+			{"label": "Spring", "kind": "behaviour"}, {"label": "Tween", "kind": "behaviour"},
+			{"label": "Tiles", "kind": "node"}],
+			func(_entry: Dictionary) -> String: return "CarouselOfJuice"),
+		{"CarouselOfJuice": 2}) and passed
 	# A name that resolves to nothing at runtime is the one thing in the bar a reader must not
 	# scroll past, so it is flagged rather than listed like any other node.
 	passed = _check("an object the scene does not have is flagged",

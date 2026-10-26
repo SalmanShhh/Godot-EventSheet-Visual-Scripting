@@ -38,6 +38,18 @@ static func _rows_of_a_sheet() -> bool:
 	ok = _check("the definition line is not a call, and a comment is not either",
 		EventSheetFunctionsPanel.call_count(sheet, "juice_tile", PackedStringArray([
 			"func juice_tile(index: int) -> void:\n\tpass  # juice_tile(1)"])), 0) and ok
+	# The tab counts every function's calls in one pass, and each count is the one-function count.
+	var code_blocks := PackedStringArray([
+		"func _process(delta: float) -> void:\n\tjuice_tile(1, delta)\n\tjuice_tile(2)  # juice_tile(3)",
+		"func juice_tile(index: int) -> void:\n\t$Other.do_thing(1)\n\tdo_thing(2)"])
+	var counted: Dictionary = EventSheetFunctionsPanel.call_counts(sheet, code_blocks)
+	var one_by_one: Array = []
+	var in_one_pass: Array = []
+	for function_name: String in ["do_thing", "compute", "juice_tile"]:
+		one_by_one.append(EventSheetFunctionsPanel.call_count(sheet, function_name, code_blocks))
+		in_one_pass.append(int(counted.get(function_name, 0)))
+	ok = _check("one pass counts what each function's own count does", in_one_pass, one_by_one) and ok
+	ok = _check("and those counts are the file's calls", in_one_pass, [3, 0, 2]) and ok
 	ok = _check("a method of something else with the same name is not this file's call",
 		EventSheetFunctionsPanel.call_count(sheet, "juice_tile", PackedStringArray([
 			"func _ready() -> void:\n\t$Other.juice_tile(1)\n\tjuice_tile(2)"])), 1) and ok
@@ -55,6 +67,15 @@ static func _the_built_tab() -> bool:
 	ok = _check("the tab exists WITHOUT the GDScript view open",
 		[dock._functions_panel != null, dock._side_panel == null], [true, true]) and ok
 	ok = _check("it sits in the side panel", dock._workspace_body.is_ancestor_of(dock._functions_panel), true) and ok
+	# The side panel rests closed, and a closed tab counts no calls: on first open and on every edit
+	# the rows wait until the tab is shown.
+	ok = _check("while the panel rests closed the rows are not read",
+		[dock._rail_panels.is_rail_tucked(), dock._functions_panel.rows_pending(), _list_rows(dock._functions_list)],
+		[true, true, []]) and ok
+	dock._refresh_after_edit()
+	ok = _check("an edit with the panel closed reads none either", dock._functions_panel.rows_pending(), true) and ok
+	dock._rail_panels.set_panel_tucked("functions", false)
+	ok = _check("opening the panel on Functions reads them", dock._functions_panel.rows_pending(), false) and ok
 	ok = _check("its list is the rows above, name then count", _list_rows(dock._functions_list), [
 		["do_thing", "2 calls"], ["compute  ✦", ""], ["juice_tile", "1 call"],
 		["_process", "code"], ["_physics_process", "code"],

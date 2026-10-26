@@ -29,6 +29,11 @@ var filter_edit: LineEdit = null
 
 var _rows: Array = []
 var _filter: String = ""
+## The sheet the rows are read from, and whether they still have to be. Reading them counts every
+## function's calls over the whole file, so it waits until the tab is on screen: a side panel that
+## rests closed (the state every project starts in) costs nothing on first open or on an edit.
+var _sheet: EventSheetResource = null
+var _stale: bool = false
 
 
 func _init() -> void:
@@ -72,6 +77,8 @@ func _init() -> void:
 
 
 func _notification(what: int) -> void:
+	if what == NOTIFICATION_VISIBILITY_CHANGED:
+		catch_up()
 	# The magnifier a Godot dock's filter wears, from the editor's own icons when there are any.
 	if what == NOTIFICATION_THEME_CHANGED and filter_edit != null and has_theme_icon("Search", "EditorIcons"):
 		filter_edit.right_icon = get_theme_icon("Search", "EditorIcons")
@@ -84,14 +91,48 @@ func tab_tooltip() -> String:
 		"Every function in this file: the sheet's own (✦ = published as an ACE), then the ones still written as code.")
 
 
-## Re-read the open sheet's functions.
+## Re-read the open sheet's functions - now when the tab is on screen, and the moment it is shown
+## otherwise.
 func set_sheet(sheet: EventSheetResource) -> void:
-	_rows = function_rows(sheet)
-	_rebuild()
+	_sheet = sheet
+	_stale = true
+	catch_up()
+
+
+## Read the rows now if they wait and the tab is on screen. The side panel calls it after it shows a
+## tab, which also covers a panel that is not in a tree yet (no visibility notification reaches it).
+func catch_up() -> void:
+	if _stale and _on_screen():
+		_ensure_rows()
+		_rebuild()
+
+
+## Whether the rows wait for the tab to be shown before they are read.
+func rows_pending() -> bool:
+	return _stale
+
+
+## Whether this tab and every control holding it are shown - asked of the controls themselves, so it
+## answers the same in a tree and out of one.
+func _on_screen() -> bool:
+	var node: Node = self
+	while node != null:
+		if node is CanvasItem and not (node as CanvasItem).visible:
+			return false
+		node = node.get_parent()
+	return true
+
+
+func _ensure_rows() -> void:
+	if not _stale:
+		return
+	_stale = false
+	_rows = function_rows(_sheet)
 
 
 ## How many sheet functions the tab lists.
 func sheet_function_count() -> int:
+	_ensure_rows()
 	var count: int = 0
 	for row: Variant in _rows:
 		if str((row as Dictionary).get("kind", "")) == KIND_SHEET:
@@ -111,6 +152,9 @@ func selected_function_index() -> int:
 
 ## Select the row of the sheet function at `index` in `sheet.functions`.
 func select_function(index: int) -> void:
+	if _stale:
+		_ensure_rows()
+		_rebuild()
 	var item: TreeItem = list.get_root().get_first_child() if list.get_root() != null else null
 	while item != null:
 		var meta: Variant = item.get_metadata(0)
@@ -131,11 +175,12 @@ static func function_rows(sheet: EventSheetResource) -> Array:
 		return rows
 	var code_blocks: PackedStringArray = PackedStringArray()
 	_collect_code(sheet.events, code_blocks)
+	var calls_by_name: Dictionary = call_counts(sheet, code_blocks)
 	for function_index: int in sheet.functions.size():
 		var function: EventFunction = sheet.functions[function_index] as EventFunction
 		if function == null:
 			continue
-		var calls: int = call_count(sheet, function.function_name, code_blocks)
+		var calls: int = int(calls_by_name.get(function.function_name, 0))
 		var description: String = EventSheetDescriptions.display(EventSheetDescriptions.for_function(function))
 		var signature: String = signature_of(function)
 		rows.append({
@@ -198,6 +243,48 @@ static func call_count(sheet: EventSheetResource, function_name: String, code_bl
 				continue
 			count += pattern.search_all(line.split("#")[0]).size()
 	return count
+
+
+## How many times this file calls each name, in ONE pass over the file: {name: calls}. The same
+## count `call_count` gives one function - Call rows in events, groups, sub-events and the other
+## functions' bodies (a function calling itself is not counted), plus every `name(` in the code the
+## sheet keeps as code, the name a `func` line defines left out.
+static func call_counts(sheet: EventSheetResource, code_blocks: PackedStringArray) -> Dictionary:
+	var counts: Dictionary = {}
+	if sheet == null:
+		return counts
+	_tally_call_rows(sheet.events, "", counts)
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction:
+			_tally_call_rows((entry as EventFunction).events, (entry as EventFunction).function_name, counts)
+	var called: RegEx = RegEx.create_from_string("(?<![\\w.])([A-Za-z_]\\w*)\\s*\\(")
+	var definition: RegEx = RegEx.create_from_string("^\\s*(?:static\\s+)?func\\s+([A-Za-z_]\\w*)\\s*\\(")
+	for code: String in code_blocks:
+		for line: String in code.split("\n"):
+			var defined: RegExMatch = definition.search(line)
+			for found: RegExMatch in called.search_all(line.split("#")[0]):
+				var called_name: String = found.get_string(1)
+				# `func` itself is no call, and neither is the name its line defines.
+				if called_name == "func" or (defined != null and called_name == defined.get_string(1)):
+					continue
+				counts[called_name] = int(counts.get(called_name, 0)) + 1
+	return counts
+
+
+static func _tally_call_rows(rows: Array, inside_function: String, counts: Dictionary) -> void:
+	for entry: Variant in rows:
+		if entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			_tally_call_rows(group.events if not group.events.is_empty() else group.rows, inside_function, counts)
+			continue
+		if not (entry is EventRow):
+			continue
+		var event: EventRow = entry as EventRow
+		for action: Variant in event.actions:
+			var called_name: String = _called_function_name(action)
+			if not called_name.is_empty() and called_name != inside_function:
+				counts[called_name] = int(counts.get(called_name, 0)) + 1
+		_tally_call_rows(event.sub_events, inside_function, counts)
 
 
 ## The names of the functions a block of code defines, in the order it defines them.

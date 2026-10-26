@@ -39,7 +39,6 @@ const NATIVE_GREYS_DARK := {
 	"group_badge_background_color": Color("#22272e"),
 	"group_fold_background_color": Color("#2e343e"),
 	"column_header_background_color": Color("#2c323b"),
-	"head_bar_color": Color("#323944"),
 	"gutter_background_color": Color("#2e343e"),
 	"gutter_text_color": Color("#8c94a0"),
 	"gutter_icon_color": Color("#b0b7c2"),
@@ -58,7 +57,6 @@ const NATIVE_GREYS_LIGHT := {
 	"group_badge_background_color": Color("#dde1e6"),
 	"group_fold_background_color": Color("#ffffff"),
 	"column_header_background_color": Color("#dcdfe3"),
-	"head_bar_color": Color("#dfe2e6"),
 	"gutter_background_color": Color("#ffffff"),
 	"gutter_text_color": Color("#555b63"),
 	"gutter_icon_color": Color("#444a52"),
@@ -273,6 +271,8 @@ static func read_variables_inspector_style(event_style: EventSheetEventStyle) ->
 		return
 	event_style.inspector_variable_rows = true
 	event_style.hide_compiler_variables = true
+	# One mark per row, the note and the rest in the hover: the quiet sheet a new user meets.
+	event_style.variable_quiet_marks = true
 
 
 ## The editor-derived default (null outside the editor, e.g. headless tests/games).
@@ -334,6 +334,11 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	var greys: Dictionary = NATIVE_GREYS_LIGHT if light else NATIVE_GREYS_DARK
 	for token_name: String in greys:
 		event_style.set(token_name, native_grey(greys[token_name], base_color))
+	# The one head bar is the design's neutral grey a step off the canvas - lighter on a dark editor,
+	# darker on a light one - in this look as in the default one, never a tint of the canvas's blue.
+	var canvas_light: float = event_style.sheet_background_color.get_luminance()
+	var head_grey: float = clampf(canvas_light - 0.07 if light else canvas_light + 0.08, 0.0, 1.0)
+	event_style.head_bar_color = Color(head_grey, head_grey, head_grey, 1.0)
 	var colours: Dictionary = NATIVE_COLOURS_LIGHT if light else NATIVE_COLOURS_DARK
 	for token_name: String in colours:
 		event_style.set(token_name, colours[token_name])

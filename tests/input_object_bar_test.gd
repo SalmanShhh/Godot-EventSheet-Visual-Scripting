@@ -24,9 +24,11 @@ static func _check_section_order() -> bool:
 		ids.append(str((entry as Dictionary).get("id", "")))
 	var passed: bool = _pin("the bar's sections, in order", ", ".join(ids), "used, scene, input, globals")
 	var input_section: Dictionary = sections[2]
-	passed = _pin("the section header says what dragging one does",
-		EventSheetObjectsPanel.section_line(input_section, 4),
-		"INPUT  (4) - drag one onto the sheet to start an event") and passed
+	passed = _pin("the section header is its name, in sentence case",
+		EventSheetObjectsPanel.section_line(input_section, 4), "Input") and passed
+	passed = _pin("and its hover says what dragging one does",
+		EventSheetObjectsPanel.section_tooltip(input_section, 4),
+		"Input (4) - drag one onto the sheet to start an event") and passed
 	return passed
 
 

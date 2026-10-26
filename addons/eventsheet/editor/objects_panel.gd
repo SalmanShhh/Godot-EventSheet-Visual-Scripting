@@ -9,9 +9,12 @@ extends VBoxContainer
 #
 #   what this sheet uses   first, as plain rows with per-object counts, behaviors nested under the
 #                          object they ride on - the tab is called Objects, so these need no heading
-#   ALSO IN THE SCENE      collapsed, the rest of the scene, no counts because there are none
-#   INPUT                  the Input Map actions this file names
-#   GLOBALS & FAMILIES     collapsed
+#   Also in the scene      collapsed, the rest of the scene, no counts because there are none
+#   Input                  the Input Map actions this file names
+#   Globals & Families     collapsed
+#
+# A heading is its name alone, in sentence case as Godot's docks write theirs; how many it holds and
+# what it is for are its hover, so the name fits the panel's width.
 #
 # It is the Objects tab of the side panel, so it is drawn the way Godot's own docks are: a filter with
 # its sort button beside it, then the rows. When the Project bar is on, it folds in at the foot.
@@ -286,10 +289,10 @@ static func sections_for(census: Array, scene_only: Array, scene_name: String,
 		else:
 			used.append(record)
 	return [
-		{"id": "used", "title": EventSheetL10n.translate("USED IN THIS SHEET"), "note": "", "entries": used},
+		{"id": "used", "title": EventSheetL10n.translate("Used in this sheet"), "note": "", "entries": used},
 		{
 			"id": "scene",
-			"title": EventSheetL10n.translate("ALSO IN THE SCENE"),
+			"title": EventSheetL10n.translate("Also in the scene"),
 			"note": EventSheetL10n.translate("drag one onto the sheet to use it") if not scene_name.is_empty() else "",
 			"entries": scene_only
 		},
@@ -298,14 +301,14 @@ static func sections_for(census: Array, scene_only: Array, scene_name: String,
 		# leave the sheet to look up.
 		{
 			"id": "input",
-			"title": EventSheetL10n.translate("INPUT"),
+			"title": EventSheetL10n.translate("Input"),
 			"note": EventSheetL10n.translate("drag one onto the sheet to start an event"),
 			"entries": input_entries(input_actions)
 		},
 		{
 			"id": "globals",
-			"title": "%s & %s" % [EventSheetL10n.translate("GLOBALS"),
-				EventSheetFamilyFacts.section_title(familiar_words)],
+			"title": "%s & %s" % [EventSheetL10n.translate("Globals"),
+				EventSheetFamilyFacts.plural(familiar_words)],
 			"note": "",
 			"entries": globals
 		}
@@ -340,13 +343,18 @@ static func input_entries(input_actions: Array) -> Array:
 	return entries
 
 
-## One section's header line: its title, then its count and what it is FOR. USED carries no count -
-## the header above the bar already says how many are used, and the entries are right there.
-static func section_line(section: Dictionary, shown: int) -> String:
+## One section's header line: its name alone, so it fits the panel's width.
+static func section_line(section: Dictionary, _shown: int) -> String:
+	return str(section.get("title", ""))
+
+
+## One section's hover: how many it holds and what it is FOR. USED carries no count - the tab's own
+## hover already says how many are used, and the entries are right there.
+static func section_tooltip(section: Dictionary, shown: int) -> String:
 	if str(section.get("id", "")) == "used":
-		return str(section.get("title", ""))
+		return ""
 	var note: String = str(section.get("note", ""))
-	var counted: String = "%s  (%d)" % [str(section.get("title", "")), shown]
+	var counted: String = "%s (%d)" % [str(section.get("title", "")), shown]
 	return counted if note.is_empty() else "%s - %s" % [counted, note]
 
 
@@ -531,6 +539,7 @@ func _rebuild_tree() -> void:
 			continue
 		var section_item: TreeItem = tree.create_item(root)
 		section_item.set_text(0, section_line(section, visible_entries.size()))
+		section_item.set_tooltip_text(0, section_tooltip(section, visible_entries.size()))
 		section_item.set_selectable(0, false)
 		section_item.set_selectable(1, false)
 		section_item.set_custom_color(0, EventSheetActiveTheme.chrome().object_bar_section_color)
@@ -548,11 +557,14 @@ func _rebuild_tree() -> void:
 		empty_item.set_autowrap_mode(0, TextServer.AUTOWRAP_WORD_SMART)
 
 
-## One section's entries under `parent_item`, each behavior nested under the object it rides on.
-## Returns how many were added.
+## One section's entries under `parent_item`, each behavior nested under the object it rides on -
+## inside ONE closed Behaviours fold, since the head bar's behaviours card already lists them and they
+## would otherwise bury the objects. Returns how many were added.
 func _add_section_entries(parent_item: TreeItem, section: Dictionary, visible_entries: Array,
 		missing: PackedStringArray) -> int:
 	var by_label: Dictionary = {}
+	var behaviour_folds: Dictionary = {}
+	var behaviour_counts: Dictionary = behaviour_fold_counts(visible_entries, _owner_label_of)
 	for entry: Variant in visible_entries:
 		var record: Dictionary = entry
 		var label: String = str(record.get("label", ""))
@@ -560,10 +572,42 @@ func _add_section_entries(parent_item: TreeItem, section: Dictionary, visible_en
 		var owner_label: String = _owner_label_of(record)
 		if by_label.has(owner_label):
 			owner_item = by_label[owner_label]
+			if str(record.get("kind", "")) == "behaviour":
+				if not behaviour_folds.has(owner_label):
+					behaviour_folds[owner_label] = _add_behaviour_fold(owner_item,
+						int(behaviour_counts.get(owner_label, 0)))
+				owner_item = behaviour_folds[owner_label]
 		var entry_item: TreeItem = _add_entry_item(owner_item, record, Array(missing).has(label))
 		by_label[label] = entry_item
 		_add_could_adopt_line(entry_item, str(section.get("id", "")), label)
 	return visible_entries.size()
+
+
+## How many behaviours ride on each object of a section: {owner label: count}. Pure, so a test pins
+## what the fold under each object will say.
+static func behaviour_fold_counts(section_entries: Array, owner_of: Callable) -> Dictionary:
+	var counts: Dictionary = {}
+	for entry: Variant in section_entries:
+		var record: Dictionary = entry
+		if str(record.get("kind", "")) != "behaviour":
+			continue
+		var owner_label: String = str(owner_of.call(record))
+		counts[owner_label] = int(counts.get(owner_label, 0)) + 1
+	return counts
+
+
+## The closed fold an object's behaviours sit in: "Behaviours (N)", its fold remembered with the
+## sections'.
+func _add_behaviour_fold(owner_item: TreeItem, count: int) -> TreeItem:
+	var fold: TreeItem = tree.create_item(owner_item)
+	fold.set_text(0, "%s (%d)" % [EventSheetL10n.translate("Behaviours"), count])
+	fold.set_tooltip_text(0, EventSheetL10n.translate("The behaviour nodes on this object, as the head bar's behaviours card lists them."))
+	fold.set_selectable(0, false)
+	fold.set_selectable(1, false)
+	fold.set_custom_color(0, EventSheetActiveTheme.chrome().object_bar_section_color)
+	fold.set_metadata(0, {"section": "behaviours"})
+	fold.collapsed = bool(_section_folds.get("behaviours", true)) and _filter.strip_edges().is_empty()
+	return fold
 
 
 ## The muted "could adopt: X, Y" line under an object whose script the readings recognised a
@@ -683,7 +727,7 @@ func _on_item_mouse_selected(_position: Vector2, mouse_button_index: int) -> voi
 	_menu.popup(Rect2i(Vector2i(get_screen_transform() * get_local_mouse_position()), Vector2i.ZERO))
 
 
-## Folding a section is remembered for the session, so a reader who opens ALSO IN THE SCENE and works
+## Folding a section is remembered for the session, so a reader who opens Also in the scene and works
 ## through it does not have to open it again on every sheet change.
 func _on_section_collapsed(item: TreeItem) -> void:
 	var metadata: Variant = item.get_metadata(0)

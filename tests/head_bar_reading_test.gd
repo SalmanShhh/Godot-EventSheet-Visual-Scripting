@@ -68,18 +68,16 @@ static func _one_bar_for_a_pack() -> bool:
 	])
 
 
-## The file's prose is no row of the head. A `##` line is said on the name's card; the `#` paragraph a
-## showcase ends on stays at the end, where the file has it, and is said once.
+## The file's prose is no row of the head. A `##` line is said on the name's card; so is the `#`
+## paragraph a showcase ends on, which the card claims as the description, and the canvas leaves its
+## row out: it is said once, on the card.
 static func _the_prose_stays_where_the_file_has_it() -> bool:
 	var rows: Array = _head_rows(SHOWCASE)
-	var said_at: int = -1
-	for index: int in range(rows.size()):
-		if _words_of(rows[index]).contains("a working rebind screen"):
-			said_at = index
 	return SUPPORT.pins(P, [
 		["input_rebind description bands", _uids_matching(SHOWCASE, "sheet_head_description"), ""],
-		["input_rebind description rows", _rows_saying(SHOWCASE, "a working rebind screen"), 1],
-		["the paragraph the file ends on is not hoisted to the top", said_at > 1, true],
+		["input_rebind's closing paragraph is no row", _rows_saying(SHOWCASE, "a working rebind screen"), 0],
+		["it is the name card's description, said once",
+			str((_card_of(rows[0], "name").get("lines", []) as Array)).contains("a working rebind screen"), true],
 		["flash's ## line is no row", _uids_matching(PACK, "sheet_head_description"), ""],
 		["flash's ## line is the name card's", (_card_of(_head_rows(PACK)[0], "name").get("lines", []) as Array)
 			.size(), 1],

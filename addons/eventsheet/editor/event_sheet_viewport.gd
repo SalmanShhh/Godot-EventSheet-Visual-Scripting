@@ -266,6 +266,10 @@ var _hover_match_key: Vector3i = Vector3i(-1, -1, -1)
 var _hover_is_drag_zone: bool = false  # pointer over an event's empty lane band (the move-cursor grab zone)
 ## The head bar's hover card (sheet_head_card.gd), built on the first hover of a word that has one.
 var _head_card: Control = null
+## Whether a sheet that lives only in memory still opens on the head bar, named "Untitled" and with no
+## file doors. The editor's own sheet views set it; a figure in the Manual or a theme preview, which
+## shows rows rather than a file, does not.
+var heads_unsaved_sheets: bool = false
 var _editing_row_index: int = -1
 var _editing_span_index: int = -1
 var _editing_buffer: String = ""
@@ -2899,7 +2903,7 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 			event_start = scaffold_end
 	# A file whose head lines are not text of its own (a `.tres` sheet the compiler writes them for)
 	# still opens on the one head bar: it is the sheet's name, kind and counts, not a line of the file.
-	if event_start == 0 and ViewportRowBuilder.opens_on_head_bar(sheet):
+	if event_start == 0 and (ViewportRowBuilder.opens_on_head_bar(sheet) or heads_unsaved_sheets):
 		root_rows.append(_row_builder.build_sheet_head_bar_row(sheet))
 	# The declarations, under the head that names the file and above the events that use them:
 	# first the globals this sheet only BORROWS (with a hairline closing that block), then the ones
@@ -2973,7 +2977,14 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 				and root_rows[root_rows.size() - 1].source_resource is CommentRow:
 			closing_notes.push_front(root_rows.pop_back())
 	root_rows.append_array(_row_builder.build_trailing_verb_rows(sheet))
+	# The paragraph the head bar's name card says as the file's description reads THERE, once: its row
+	# stays off the canvas, and the card's Edit description… edits it. Pure view - the note is still in
+	# sheet.events and the file.
 	root_rows.append_array(closing_notes)
+	var claimed_note: CommentRow = ViewportRowBuilder.claimed_description_note(root_rows)
+	if claimed_note != null:
+		root_rows.assign(root_rows.filter(func(note_row: EventRowData) -> bool:
+			return note_row.indent != 0 or note_row.source_resource != claimed_note))
 	# Every function reads where the file writes it; a read-only preview only drops the two helpers
 	# its head already says (a constructor that stores its object, a test's harness). Pure view.
 	if not file_order:

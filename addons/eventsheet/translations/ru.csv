@@ -9569,3 +9569,16 @@ Behaviours on this object,Поведения этого объекта
 "They are child nodes in the scene, not lines of this file, so they are listed here rather than as rows.","Это дочерние узлы в сцене, а не строки этого файла, поэтому они перечислены здесь, а не строками."
 Add behaviour…,Добавить поведение…
 "Every script this scene uses, in tree order. Double-click an object bar to open that script and edit it.","Все скрипты этой сцены в порядке дерева. Дважды щёлкните полосу объекта, чтобы открыть и править его скрипт."
+Used in this sheet,Используется в этом листе
+Also in the scene,Также в сцене
+Globals,Глобальные
+"The behaviour nodes on this object, as the head bar's behaviours card lists them.","Узлы поведений этого объекта - так, как их перечисляет карточка поведений в строке заголовка."
+Picker preview,Предпросмотр выбора
+"Open this script as its own sheet, where it is edited.","Открыть этот скрипт отдельным листом, где он и редактируется."
+"Attached to %s, on its node %s.","Прикреплён к %s, к её узлу %s."
+The 1 other variable in the file is bookkeeping the compiler writes (%s) and stays out of sight.,"Ещё 1 переменная в файле - служебная, её пишет компилятор (%s), и она скрыта."
+The %d other variables in the file are bookkeeping the compiler writes (%s) and stay out of sight.,"Ещё %d переменных в файле - служебные, их пишет компилятор (%s), и они скрыты."
+"Every script this scene uses, in tree order. Click a script's file on its bar to open it and edit it.","Все скрипты этой сцены, в порядке дерева. Нажми на файл скрипта на его строке, чтобы открыть и редактировать его."
+root,корень
+1 script,1 скрипт
+Scripts in this scene,Скрипты этой сцены

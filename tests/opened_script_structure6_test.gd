@@ -105,12 +105,13 @@ static func _scene_sheet_rows() -> bool:
 	view.set_sheet(scene_sheet)
 	view.set_reading_mode(true)
 	var texts: PackedStringArray = _row_texts(view)
-	ok = _check("the scene's own bar comes first", texts[0] if texts.size() > 0 else "",
-		"⇥ | opened_scene_level.tscn | a | Node2D | 3 scripts") and ok
-	# The bar is the script's own Include bar wearing the NODE's name, so it keeps everything that bar
-	# already says about a file - the reading-coverage chip included.
-	ok = _check("each script sits under its object bar, named by its NODE",
-		_first_containing(texts, "| HUD |"), "⇥ | HUD | a | CanvasLayer | · opened_scene_hud.gd | reads as events") and ok
+	ok = _check("the scene's own head bar comes first", texts[0] if texts.size() > 0 else "",
+		"◆ | opened_scene_level.tscn | Scene · root | Node2D | 3 scripts") and ok
+	# Each script opens on the same head bar a file of its own does, wearing the NODE's name and the
+	# file it runs, with its counts on the right.
+	ok = _check("each script sits under its head bar, named by its NODE",
+		_first_containing(texts, "| HUD |"),
+		"◆ | HUD | Custom node · extends | CanvasLayer | · opened_scene_hud.gd | 1 variable | · | 1 event") and ok
 	# The wiring the SCENE file holds, on a script that is not the scene root: before this, a child
 	# node's handler had no way of knowing what wired it.
 	ok = _check("a child node's scene wiring reads as its trigger",

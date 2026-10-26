@@ -9569,3 +9569,16 @@ Behaviours on this object,Comportamenti di questo oggetto
 "They are child nodes in the scene, not lines of this file, so they are listed here rather than as rows.","Sono nodi figli nella scena, non righe di questo file, quindi sono elencati qui e non come righe."
 Add behaviour…,Aggiungi comportamento…
 "Every script this scene uses, in tree order. Double-click an object bar to open that script and edit it.","Ogni script usato da questa scena, nell'ordine dell'albero. Fai doppio clic sulla barra di un oggetto per aprirne lo script e modificarlo."
+Used in this sheet,Usato in questo foglio
+Also in the scene,Anche nella scena
+Globals,Globali
+"The behaviour nodes on this object, as the head bar's behaviours card lists them.","I nodi di comportamento di questo oggetto, come li elenca la scheda dei comportamenti della barra di testa."
+Picker preview,Anteprima del selettore
+"Open this script as its own sheet, where it is edited.","Apri questo script come foglio a sé, dove si modifica."
+"Attached to %s, on its node %s.","Collegato a %s, sul suo nodo %s."
+The 1 other variable in the file is bookkeeping the compiler writes (%s) and stays out of sight.,L'altra variabile del file è contabilità scritta dal compilatore (%s) e resta nascosta.
+The %d other variables in the file are bookkeeping the compiler writes (%s) and stay out of sight.,Le altre %d variabili del file sono contabilità scritta dal compilatore (%s) e restano nascoste.
+"Every script this scene uses, in tree order. Click a script's file on its bar to open it and edit it.","Ogni script usato da questa scena, in ordine di albero. Fai clic sul file di uno script nella sua barra per aprirlo e modificarlo."
+root,radice
+1 script,1 script
+Scripts in this scene,Script in questa scena

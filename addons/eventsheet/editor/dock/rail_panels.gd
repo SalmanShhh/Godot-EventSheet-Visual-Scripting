@@ -33,13 +33,6 @@ const DEFAULT_PROPERTIES_WIDTH: float = 270.0
 
 ## The tabs, in the order the strip shows them.
 const PANEL_IDS: PackedStringArray = ["objects", "functions", "anatomy", "picker_preview"]
-## What a tab and a View entry call each panel.
-const PANEL_TITLES: Dictionary = {
-	"objects": "Objects",
-	"functions": "Functions",
-	"anatomy": "Anatomy",
-	"picker_preview": "Picker preview",
-}
 
 
 ## The panel's tabs in strip order. The one place the order is written down.
@@ -47,13 +40,19 @@ static func panel_ids() -> PackedStringArray:
 	return PANEL_IDS.duplicate()
 
 
-## What the tab strip and the View menu call a panel, in the reader's language. The table above
-## holds the source strings; this is the one place they are read out, so it is the one place they
-## are translated. The key is a VALUE rather than a literal, so the translation harvester cannot
-## derive these from here: three of them are owed a row by other screens that name them literally,
-## and "Picker preview" falls back to its source string until one does.
+## What the tab strip and the View menu call a panel, in the reader's language. Each title is a
+## literal, so the translation harvester owes every one of them a row.
 static func panel_title(panel_id: String) -> String:
-	return EventSheetL10n.translate(str(PANEL_TITLES.get(panel_id, panel_id)))
+	match panel_id:
+		"objects":
+			return EventSheetL10n.translate("Objects")
+		"functions":
+			return EventSheetL10n.translate("Functions")
+		"anatomy":
+			return EventSheetL10n.translate("Anatomy")
+		"picker_preview":
+			return EventSheetL10n.translate("Picker preview")
+	return panel_id
 
 
 ## The side panel as it stands before anybody has opened it: closed, on the Objects tab, the panel
@@ -418,6 +417,10 @@ func _apply() -> void:
 			else SplitContainer.DRAGGER_VISIBLE)
 	_width_fixes = 0
 	_apply_rail_width()
+	# A tab that reads its rows only once it is on screen (the Functions tab) reads them now.
+	var shown_panel: Control = _panels.get(showing, null) as Control
+	if not tucked and shown_panel != null and shown_panel.has_method("catch_up"):
+		shown_panel.call("catch_up")
 
 
 ## The tab strip, refilled only when the tabs on offer change, so a click is never undone by its

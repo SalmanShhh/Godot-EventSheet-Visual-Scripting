@@ -83,6 +83,7 @@ corner_radius = 2
 script = ExtResource("3_6dnue")
 sheet_background_color = Color(0.10980392, 0.12156863, 0.14901961, 1)
 inspector_variable_rows = false
+variable_quiet_marks = false
 hide_compiler_variables = false
 fold_compiler_helpers = false
 pattern_in_help_strip = false

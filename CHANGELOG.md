@@ -2,6 +2,40 @@
 
 ## [Unreleased]
 
+### Fixed: the head bar reads once, in every kind of view, and the sheet under it stays quiet
+
+- The `#` paragraph a script closes on, when the head bar's name card says it as the file's
+  description, reads there once: it is no longer drawn again as the sheet's last row. The card's Edit
+  description… edits that very note. A comment row written with `[b]`-style markup no longer echoes
+  its raw line beside the formatted words.
+- A scene view opens on the same 30 px grey head bar a script does - the scene's name, `Scene · root
+  Node2D` and how many scripts it uses, with a card naming them - and each script under it reads
+  under its own head bar naming the node it sits on and the file it runs, with no folded band stack
+  and no Behaviors band among the rows. In the editor, a sheet that is not saved yet opens on a bar
+  named "Untitled".
+- The behaviours card lists each kind's settings and the nodes wearing it, one line per kind, so
+  nothing the Behaviors band unfolded to is lost.
+- In the look a new user gets, a variable row reads `int beat = 0` with one mark, the Inspector eye;
+  its `##` note and what its other marks would say move to the name's hover (the theme's
+  `variable_quiet_marks`). Editor Native keeps the note and the tiles.
+- Editor Native's head bar is the neutral grey a step off its canvas, as the default look's is, and
+  the name card says which scene a script is attached to in every look (and the node that runs it,
+  for a script with no class_name).
+- A group events can switch while the game runs keeps its on or off shape and wears a dot beside it,
+  so its mark still says how it starts.
+- The Functions tab counts calls in one pass over the file, and only while it is on screen: a side
+  panel resting closed costs nothing on first open or on an edit.
+- The Objects tab writes its headings in sentence case ("Also in the scene", "Input"); each heading's
+  count and what it is for are its hover, and an object's behaviour nodes sit in one closed
+  Behaviours fold under it.
+- The side panel's tab titles are translated, Picker preview included, and the variables card says
+  its bookkeeping sentence whole, so a language agrees its verb with the count.
+- `EventSheetOpenSheetsDock` is back as a deprecated class the workspace no longer places, so a tool
+  that names it still parses; the tabs above the sheet and the Start page's recent sheets replace it.
+- An editor started with `--script` (a render harness, a tool) no longer counts as the project's first
+  run, so it no longer switches the project to Simple Mode; the test runner fails any test that
+  changes the editor's project metadata, and puts the reader's back.
+
 ### Changed: a sheet opens on one head bar, with no head card, no banner and no Behaviors band
 
 - An opened file used to open under a title strip, a head card ("CarouselOfJuice - Custom Node ·

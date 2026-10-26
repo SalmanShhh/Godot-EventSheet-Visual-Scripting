@@ -247,6 +247,9 @@ func build_ui() -> void:
 
 	_dock._viewport = EventSheetViewport.new()
 	_dock._viewport.name = "EventSheetViewport"
+	# In the editor an unsaved sheet still opens on its head bar ("Untitled"). A dock built by a script
+	# outside the editor (a test, a tool) reads rows only, the way a figure does.
+	_dock._viewport.heads_unsaved_sheets = Engine.is_editor_hint()
 	_dock._viewport.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_dock._viewport.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_dock._viewport.set_ace_registry(_dock._ace_registry)
