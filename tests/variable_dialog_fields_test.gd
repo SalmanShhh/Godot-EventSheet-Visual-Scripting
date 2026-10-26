@@ -102,6 +102,8 @@ static func run() -> bool:
 	ok = _check("a free name is not flagged", dialog._name_warning.visible, false) and ok
 	ok = _check("the variable being edited never clashes with itself",
 		_clash_while_editing(dialog, sheet), false) and ok
+	ok = _check("…nor does a member variable, which opens with its resource rather than a name",
+		_member_clash_while_editing(dialog, sheet), [false, true]) and ok
 
 	# ── the strip follows focus, and its two lines are the row and the line ──────
 	dialog.open_for_edit("global", {}, "hp", "int", "100", false, "Add variable")
@@ -275,6 +277,21 @@ static func _edit_title(dialog: VariableDialog, _sheet: EventSheetResource) -> S
 static func _clash_while_editing(dialog: VariableDialog, _sheet: EventSheetResource) -> bool:
 	dialog.open_for_edit("global", {"editing": true, "original_name": "taken"}, "taken", "int", "0", false, "Edit Variable")
 	return dialog.name_clashes("taken")
+
+
+## A member variable (`var health = 10` in the file) opens with its resource: keeping its name is not a
+## clash, while another member's name still is. [own name, other member's name].
+static func _member_clash_while_editing(dialog: VariableDialog, sheet: EventSheetResource) -> Array:
+	var health: LocalVariable = LocalVariable.new()
+	health.name = "health"
+	var speed: LocalVariable = LocalVariable.new()
+	speed.name = "walk_speed"
+	sheet.events = [health, speed]
+	dialog.open_for_edit("tree", {"editing": true, "variable_resource": health}, "health", "int", "10", false,
+		"Edit Variable")
+	var answer: Array = [dialog.name_clashes("health"), dialog.name_clashes("walk_speed")]
+	sheet.events = []
+	return answer
 
 
 static func _comparison_labels() -> Array:

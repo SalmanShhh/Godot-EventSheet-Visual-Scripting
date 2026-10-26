@@ -1974,10 +1974,15 @@ func name_clashes(candidate: String) -> bool:
 	var sheet: EventSheetResource = _sheet()
 	if typed.is_empty() or sheet == null or typed == str(_context.get("original_name", "")).strip_edges():
 		return false
+	# A member variable opens with its own resource rather than an original name: keeping that name is
+	# keeping it, not clashing with it.
+	var own: LocalVariable = _context.get("variable_resource", null) as LocalVariable
+	if own != null and typed == own.name.strip_edges():
+		return false
 	if sheet.variables.has(typed):
 		return true
 	for entry: Variant in sheet.events:
-		if entry is LocalVariable and (entry as LocalVariable).name.strip_edges() == typed:
+		if entry is LocalVariable and entry != own and (entry as LocalVariable).name.strip_edges() == typed:
 			return true
 	return false
 
