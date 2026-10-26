@@ -33,6 +33,9 @@
 - A group's head reads as its title, its description, what it holds and its switch: the
   `## @ace_group(...)` line no longer runs across it in code colours. The line moves to the counts'
   hover, under "What this group holds.".
+- Bold words on a row ("Set group **Boss active**", a parameter's value) are drawn once in a
+  stroked face instead of twice 0.7 px apart, so they read as weight rather than as a smear. The
+  advances are the regular face's, so nothing after a bold word moves.
 
 ### Fixed: the head bar reads once, in every kind of view, and the sheet under it stays quiet
 

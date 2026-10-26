@@ -19,6 +19,13 @@ const COLOR_TRIGGER = EventSheetPalette.COLOR_TRIGGER
 const COLOR_VALUE = EventSheetPalette.COLOR_VALUE
 const ROW_VERTICAL_CENTER_RATIO := 0.5
 const FONT_BASELINE_OFFSET_RATIO := 0.35
+## How wide the stroke a bold run is drawn with is, in pixels: the glyphs' own outline in their own
+## colour, so the weight is added evenly round each glyph rather than smeared to one side.
+const BOLD_OUTLINE_SIZE := 1
+## The meta a bold face carries, so _draw_text knows to stroke it.
+const BOLD_FACE_META := &"eventsheet_bold_face"
+## The bold face of each font a row has drawn with, {Font: FontVariation}.
+static var _bold_fonts: Dictionary = {}
 # The "or" divider between two OR'd conditions: the rule sits this far above the line it divides
 # from the one before (the same 3px pad the layout gives a line's spans, so the rule lands in the
 # middle of the gap), inset from the lane's edges, with this much air between the word and its rule.
@@ -280,12 +287,31 @@ func _draw_insert_marker_arrows(control: Control, line_rect: Rect2, color: Color
 	]), color)
 
 
+## The bold face of `font`: the same font, marked so _draw_text strokes each glyph's outline in its
+## own colour as it fills it. The advances are the regular face's to the pixel, so a bold run never
+## moves the words the layout put after it (an emboldened variation measures wider and did). Bold
+## used to be the regular text drawn twice, 0.7 px apart - which at row size reads as a smear, not as
+## weight. One face per font for the session.
+static func bold_font(font: Font) -> Font:
+	if font == null:
+		return font
+	var cached: Variant = _bold_fonts.get(font)
+	if cached is Font:
+		return cached
+	var bold := FontVariation.new()
+	bold.base_font = font
+	bold.set_meta(BOLD_FACE_META, true)
+	_bold_fonts[font] = bold
+	return bold
+
+
 ## Draws ACE text with its parameter values highlighted (event-sheet-style): plain segments use the
 ## base colour, value segments (numbers / quoted strings / booleans, precomputed at span
 ## build) use the value colour. Segments advance by measured logical width and stop at the
 ## clip width.
-## Bold overlay for the substituted parameter runs: each [start, length] re-draws its text
-## 0.7px right of the base pass (the BBCode cells' bold trick - layout metrics untouched).
+## Bold overlay for the substituted parameter runs: each [start, length] re-draws its text over the
+## base pass in the bold face (bold_font), at the same x - the stroke adds weight evenly and the
+## advances are the regular face's, so the layout metrics stay untouched.
 ## A run is split at value-range boundaries so every piece re-draws in the colour the base
 ## pass gave it: tinted values stay tinted, plain expressions stay the base colour.
 func _draw_param_emphasis(
@@ -342,7 +368,7 @@ func _draw_param_emphasis(
 			var run_text: String = text.substr(cursor, run_end - cursor)
 			var x: float = baseline.x + font.get_string_size(text.substr(0, cursor), HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
 			if x < limit and not run_text.is_empty():
-				_draw_text(control, Vector2(x + 0.7, baseline.y), run_text, limit - x, font, font_size, run_color)
+				_draw_text(control, Vector2(x, baseline.y), run_text, limit - x, bold_font(font), font_size, run_color)
 			cursor = maxi(run_end, cursor + 1)
 
 
@@ -480,13 +506,23 @@ func _draw_text(
 	color: Color
 ) -> void:
 	var zoom: float = control.get_zoom_factor() if control.has_method("get_zoom_factor") else 1.0
+	# A bold face (bold_font) is its regular font stroked in its own colour under the fill.
+	var bold: bool = font != null and font.has_meta(BOLD_FACE_META)
+	if bold:
+		font = (font as FontVariation).base_font
 	if is_equal_approx(zoom, 1.0):
+		if bold:
+			control.draw_string_outline(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, max_width, font_size,
+				BOLD_OUTLINE_SIZE, color)
 		control.draw_string(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, max_width, font_size, color)
 		return
 	var physical_size: int = maxi(int(round(font_size * zoom)), 6)
 	# Small slack so hinting differences at the rounded physical size don't clip the last glyph.
 	var physical_width: float = max_width * zoom + 4.0 if max_width > 0.0 else max_width
 	control.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	if bold:
+		control.draw_string_outline(font, baseline * zoom, text, HORIZONTAL_ALIGNMENT_LEFT, physical_width,
+			physical_size, maxi(roundi(BOLD_OUTLINE_SIZE * zoom), 1), color)
 	control.draw_string(font, baseline * zoom, text, HORIZONTAL_ALIGNMENT_LEFT, physical_width, physical_size, color)
 	control.draw_set_transform(Vector2.ZERO, 0.0, Vector2(zoom, zoom))
 
@@ -1633,7 +1669,7 @@ func _draw_spans(
 		if row_data.hovered and bool(metadata.get("code_echo", false)) and not bbcode_segments.is_empty():
 			bbcode_segments = opaque_segments(bbcode_segments)
 		if not bbcode_segments.is_empty():
-			# BBCode-lite cells: sequential styled segments (bold = double-draw). A segment the
+			# BBCode-lite cells: sequential styled segments (bold = the bold face, stroked). A segment the
 			# author left colour-less still shows the typed value TINTS - its text is split at
 			# the value-range boundaries (offsets into the stripped text) and each piece draws
 			# in its range's hue, so `[b]{amount}[/b]` reads bold AND number-green.
@@ -1684,9 +1720,8 @@ func _draw_spans(
 					if remaining <= 1.0:
 						break
 					if not tinted_by_ranges or painted_ranges.is_empty():
-						_draw_text(control, Vector2(segment_x, line_baseline_y), segment_text, remaining, font, draw_font_size, segment_color)
-						if bool(segment.get("bold", false)):
-							_draw_text(control, Vector2(segment_x + 0.7, line_baseline_y), segment_text, remaining, font, draw_font_size, segment_color)
+						var segment_font: Font = bold_font(font) if bool(segment.get("bold", false)) else font
+						_draw_text(control, Vector2(segment_x, line_baseline_y), segment_text, remaining, segment_font, draw_font_size, segment_color)
 					else:
 						var shifted_ranges: Array = []
 						for value_range: Variant in painted_ranges:
@@ -1699,12 +1734,8 @@ func _draw_spans(
 										kept.append((value_range as Array)[2])
 									shifted_ranges.append(kept)
 						_draw_text_with_values(control, Vector2(segment_x, line_baseline_y), segment_text, shifted_ranges,
-							remaining, font, draw_font_size, segment_color, bbcode_value_color,
-							word_text_color, word_keyword_color, TEXT_MUTED, word_variable_color)
-						if bool(segment.get("bold", false)):
-							_draw_text_with_values(control, Vector2(segment_x + 0.7, line_baseline_y), segment_text, shifted_ranges,
-								remaining, font, draw_font_size, segment_color, bbcode_value_color,
-								word_text_color, word_keyword_color, TEXT_MUTED, word_variable_color)
+							remaining, bold_font(font) if bool(segment.get("bold", false)) else font, draw_font_size,
+							segment_color, bbcode_value_color, word_text_color, word_keyword_color, TEXT_MUTED, word_variable_color)
 					segment_x += font.get_string_size(segment_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 		elif bool(metadata.get("comment_wrap", false)) and span_index != editing_span_index:
 			# Wrapped comment: draw from the top of the (multi-line-tall) cell so the whole
@@ -1725,9 +1756,9 @@ func _draw_spans(
 			_draw_text(control, Vector2(text_x, baseline_y), draw_text, text_width, font, draw_font_size, color)
 		else:
 			_draw_text_with_values(control, Vector2(text_x, baseline_y), draw_text, painted_ranges, text_width, font, draw_font_size, color, word_number_color, word_text_color, word_keyword_color, reading.muted_text_color, word_variable_color)
-		# The event-sheet parameter emphasis: every substituted parameter value re-draws 0.7px over -
-		# the same double-draw bold the BBCode cells use - in whatever colour that run already
-		# has, so the typed value tints never wash out.
+		# The event-sheet parameter emphasis: every substituted parameter value re-draws in the
+		# bold face the BBCode cells' bold uses, in whatever colour that run already has, so
+		# the typed value tints never wash out.
 		if not param_ranges.is_empty() and bbcode_segments.is_empty() and not bool(metadata.get("comment_wrap", false)):
 			_draw_param_emphasis(control, Vector2(text_x, baseline_y), draw_text, param_ranges, painted_ranges,
 				text_width, font, draw_font_size, color, word_number_color,
