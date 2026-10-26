@@ -23,6 +23,8 @@
 - The look a new sheet gets lists variables the way the Inspector does (type, name, value, note, icon
   tiles), as Editor Native does.
 - Opening Properties on a variable the file declares no longer warns that its own name is taken.
+- The help strip speaks for the selection on the tab in front of you: switching tabs no longer leaves
+  the last tab's variable words in it.
 ### Changed: the side panel rests as a thin rail and opens to Objects and Functions tabs
 
 - The always-open column beside the sheet (Open Sheets, a filter, Objects / Project tabs, a USED IN
