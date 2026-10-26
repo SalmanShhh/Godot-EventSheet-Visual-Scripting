@@ -65,7 +65,7 @@ var band: EventSheetPopupUI.RowBand = null
 ## Inspect: the object tree on the left, the picked object's values on the right, and under them the
 ## strip that names the value under the cursor and says what an edit sent.
 ## How wide the Objects list's count column is, before the editor's scale.
-const OBJECT_DETAIL_WIDTH: int = 72
+const OBJECT_DETAIL_WIDTH: int = 96
 
 var objects_tree: Tree = null
 var values_tree: Tree = null
