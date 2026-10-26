@@ -162,8 +162,8 @@ static func _test_shipped_pack_readings() -> bool:
 	var screen_fx: Array = _cell_texts("res://eventsheet_addons/screen_fx/screen_fx.gd")
 	var drawing: Array = _cell_texts("res://eventsheet_addons/drawing_prefab_resource/drawing_prefab_resource.gd")
 	ok = _check("a handler wired in a function and called by name opens as a function", [
-		_index_ending(screen_fx, "Function | On _settle") >= 0, screen_fx.has("Wire On Finished to Settle"), screen_fx.has("Call Settle"),
-		_index_ending(drawing, "Function | On _invalidate_compiled") >= 0, drawing.has("Wire On Changed to Invalidate Compiled"),
+		_index_ending(screen_fx, "Function | On _settle") >= 0, screen_fx.has("Wire On Finished to _settle"), screen_fx.has("Call _settle"),
+		_index_ending(drawing, "Function | On _invalidate_compiled") >= 0, drawing.has("Wire On Changed to _invalidate_compiled"),
 	], [true, true, true, true, true]) and ok
 	return ok
 
@@ -226,13 +226,13 @@ static func _test_handed_on_literals() -> bool:
 		if reading.lane == "action" and (text.contains(" | table | ") or text.contains(" | list | ")):
 			cells.append(text)
 	ok = _check("the canvas reads each literal as one row, structured or not", cells, [
-		"Return  | table | path = path | kind = \"scene\"",
-		"Push back  | table | path = path | trees = 2 |  to sources",
-		"Set connections[handler] to  | table | path = path | once = true",
-		"print rich   path    | list | \"first\" | \"second\"",
+		"Return  | table | \"path\" = path | \"kind\" = \"scene\"",
+		"Push back  | table | \"path\" = path | \"trees\" = 2 |  to sources",
+		"Set connections[handler] to  | table | \"path\" = path | \"once\" = true",
+		"Print rich   path    | list | \"first\" | \"second\"",
 		"Return  | list | {\"name\": \"calm\", \"count\": 3} | {\"name\": \"busy\", \"count\": 8}",
-		"Return  | table | outer = table (inner = 1)",
-		"shade    | table | alpha = 1",
+		"Return  | table | \"outer\" = table (\"inner\" = 1)",
+		"Shade    | table | alpha = 1",
 	]) and ok
 	var event_index: int = remember.actions.find(appended) if remember != null else -1
 	ok = _check("a chip edit rewrites its one entry", EventSheetViewport._apply_decl_entry_edit(remember,

@@ -66,7 +66,7 @@ const EXPECTED_PLUGIN: Array[String] = [
 	"overlay ▸ Draw circle at (0, 0), radius 6, yellow",
 	"ur ▸ Begin undoable action \"Align Left\"",
 	"ur ▸ Add do step: set dock's x to 0",
-	"ur ▸ Add do step: call Refresh",
+	"ur ▸ Add do step: call _refresh",
 	"ur ▸ Commit undoable action"
 ]
 

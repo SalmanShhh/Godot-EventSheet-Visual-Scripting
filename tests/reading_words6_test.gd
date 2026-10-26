@@ -123,14 +123,14 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ Be on layer Enemies",
 	"CharacterBody2D ▸ Set collision layers to \"World\", \"Player\"",
 	# A number written where an enum is expected
-	"CharacterBody2D ▸ Set process mode to Always",
+	"CharacterBody2D ▸ Set process_mode to Always",
 	"System ▸ Set dir to DOWN",
-	"art ▸ Set texture filter to Nearest",
+	"art ▸ Set texture_filter to Nearest",
 	# Re-pin: alignment is a TEXT reading now, and the sheet's own word for the middle of a line
 	# is "centre" rather than the engine constant's spelling.
 	"caption ▸ Set horizontal alignment to centre",
 	# Numbers the way a person writes them
-	"System ▸ Set Half to 50%",
+	"System ▸ Set half to 50%",
 	"CharacterBody2D ▸ Set X to 300",
 	"CharacterBody2D ▸ Set Y to 1,000,000",
 	"CharacterBody2D ▸ Set angle (radians) to π/2",

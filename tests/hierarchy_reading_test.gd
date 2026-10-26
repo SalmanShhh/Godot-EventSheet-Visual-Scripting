@@ -115,7 +115,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"Saddle ▸ Add child rider, snapping to it",
 	"Head ▸ Add child hat keeping its place",
 	"transform position ✓ transform angle ✓ transform size ✗ destroy with parent ✓",
-	"card ▸ Move to layer hud layer",
+	"card ▸ Move to layer hud_layer",
 	"System ▸ For each unit in leader's children"
 ])
 

@@ -74,19 +74,19 @@ func jumps_left() -> int:
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"host ▸ does not exist",
 	"System ▸ Stop event",
-	"System ▸ Subtract 1 from jumps left",
-	"System ▸ Add amount to coyote timer",
-	"System ▸ Set coyote timer to max(coyote timer - amount, 0)",
-	"host ▸ Set position X to amount * 2",
+	"System ▸ Subtract 1 from _jumps_left",
+	"System ▸ Add amount to _coyote_timer",
+	"System ▸ Set _coyote_timer to max(_coyote_timer - amount, 0)",
+	"host ▸ Set position.x to amount * 2",
 	# A local whose value has to be worked out declares at the top of its event with the number's
 	# own starting value, and the work stays where the line is, as the Set action it is.
 	"Local number remaining = 0",
 	"System ▸ Set remaining to amount",
-	"System ▸ Set push x to push x moved toward 0 by remaining",
+	"System ▸ Set push_x to push_x moved toward 0 by remaining",
 	"System ▸ crouching is true",
-	"System ▸ Set push x to push x kept between -1 and 1",
+	"System ▸ Set push_x to push_x kept between -1 and 1",
 	"System ▸ crouching is false",
-	"System ▸ Set push x to amount°",
+	"System ▸ Set push_x to amount°",
 	"Keyboard ▸ \"ui_accept\" is down",
 	"System ▸ Destroy",
 	"System ▸ 30% chance",
@@ -95,9 +95,9 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ ⏳ Wait 0.5 seconds",
 	"System ▸ Go to layout Menu",
 	"host ▸ exists",
-	"System ▸ Set return value to true",
-	"System ▸ Set return value to false",
-	"System ▸ Set return value to jumps left"
+	"Function ▸ Return true",
+	"Function ▸ Return false",
+	"Function ▸ Return _jumps_left"
 ])
 
 
@@ -209,9 +209,9 @@ static func _picked_matches_typed() -> bool:
 	var readings: PackedStringArray = _render(sheet)
 	# `Fixture ▸ Destroy` rather than `System ▸ Destroy`: this sheet declares a class_name, so its own
 	# object has a name, and a row acting on the script itself says that name.
-	for expected: String in ["host ▸ does not exist", "System ▸ Set coyote timer to 0",
+	for expected: String in ["host ▸ does not exist", "System ▸ Set _coyote_timer to 0",
 			"Fixture ▸ Signal On Jumped", "Fixture ▸ Destroy", "System ▸ Stop event",
-			"host ▸ Set position X to 1"]:
+			"host ▸ Set position.x to 1"]:
 		ok = _check("picked row reads \"%s\"" % expected, readings.has(expected), true) and ok
 	return ok
 

@@ -75,11 +75,11 @@ static func _wired_call_rows() -> bool:
 	var view: EventSheetViewport = _open(LEVEL_PATH)
 	var texts: PackedStringArray = _row_texts(view)
 	ok = _check("the plain callable reads as the trigger calling it",
-		_first_containing(texts, "Call Reset"), "➜ | On Pressed | Call Reset") and ok
+		_first_containing(texts, "Call reset"), "➜ | On Pressed | Call reset") and ok
 	ok = _check("a bound value reads as an ordinary parameter chip, named by the callee",
-		_first_containing(texts, "count = 3"), "➜ | On Timeout | Call Show Wave   count = 3") and ok
+		_first_containing(texts, "count = 3"), "➜ | On Timeout | Call show_wave   count = 3") and ok
 	ok = _check("a one-shot connection wears the sheet's own Trigger once",
-		_first_containing(texts, "count = 9"), "➜ | On Timeout | Trigger once | Call Show Wave   count = 9") and ok
+		_first_containing(texts, "count = 9"), "➜ | On Timeout | Trigger once | Call show_wave   count = 9") and ok
 	# The connect lines themselves keep their muted note - nothing is hidden.
 	ok = _check("the connect line keeps its note",
 		_first_containing(texts, "connects StartButton").contains("connects StartButton On Pressed"), true) and ok

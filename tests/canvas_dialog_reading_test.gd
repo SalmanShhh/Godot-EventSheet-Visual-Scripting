@@ -76,8 +76,8 @@ func _gui_input(event: InputEvent) -> void:
 ## What the opened file must read as, row by row.
 static var OPENED_READINGS: PackedStringArray = PackedStringArray([
 	"Control ▸ On draw",
-	"Control ▸ Draw rectangle (0, 0) size size, style's background color",
-	"Control ▸ Draw line (0, 0) to size, style's guide color width 1",
+	"Control ▸ Draw rectangle (0, 0) size size, style.background_color",
+	"Control ▸ Draw line (0, 0) to size, style.guide_color width 1",
 	"Mouse ▸ On left button clicked (on Control)",
 	"Mouse ▸ On mouse moved (on Control)",
 	"Control ▸ Redraw"
@@ -250,11 +250,11 @@ static func _setup_run_rows() -> bool:
 				if str(span.metadata.get("kind", "")) == "action":
 					under.append(span.text.strip_edges())
 		ok = _check("the lines that shape the dialog hang under it", " | ".join(under),
-			"Set title to \"Keep as every tick?\" | Set ok button text to \"Keep As Every Tick\" | add child dialog | Open centered") and ok
+			"Set title to \"Keep as every tick?\" | Set ok_button_text to \"Keep As Every Tick\" | add child dialog | Open centered") and ok
 	# The wired-up signal is NOT swallowed: it keeps the trigger reading the sheet already gives it,
 	# on the event itself, which is why the run steps over a connect instead of taking it.
 	ok = _check("the wired-up signal keeps its own row, once", " | ".join(event_lines),
-		"Wire On Confirmed to Keep Every Tick   uid = uid") and ok
+		"Wire On Confirmed to _keep_every_tick   uid = uid") and ok
 	viewport.free()
 	var output: String = str(SheetCompiler.compile(
 		GDScriptImporter.new().import_external(SETUP_PATH), SETUP_PATH).get("output", ""))

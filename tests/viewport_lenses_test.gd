@@ -87,8 +87,8 @@ static func _not_as_a_mark() -> bool:
 ## own parameter names when they are known.
 static func _function_call_chips() -> bool:
 	var passed: bool = true
-	passed = _check("a snake_case function gets a display name",
-		EventSheetViewportLenses.function_display_name("add_look"), "Add Look") and passed
+	passed = _check("a snake_case function keeps its name as written",
+		EventSheetViewportLenses.function_display_name("add_look"), "add_look") and passed
 	passed = _check("a published name wins over the derived one",
 		EventSheetViewportLenses.function_display_name("do_jump", "Jump"), "Jump") and passed
 	passed = _check("a named argument chip",

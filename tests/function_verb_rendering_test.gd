@@ -38,10 +38,10 @@ static func run() -> bool:
 	all_passed = _check("the raw function name never reaches the cell",
 		viewport._function_call_label(call_known).contains("apply_physics"), false) and all_passed
 
-	# An unknown function humanizes its name; args are appended only when the call passes them.
+	# An unknown function keeps its name as written; args are appended only when the call passes them.
 	var call_unknown: ACEAction = _call_action("do_stuff", "1, 2")
-	all_passed = _check("unknown function humanizes + appends args",
-		viewport._function_call_label(call_unknown), "Do Stuff(1, 2)") and all_passed
+	all_passed = _check("unknown function keeps its name + appends args",
+		viewport._function_call_label(call_unknown), "do_stuff(1, 2)") and all_passed
 
 	# A non-function-call action is untouched (still goes through the normal descriptor path).
 	var plain: ACEAction = ACEAction.new()

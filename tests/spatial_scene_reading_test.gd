@@ -106,7 +106,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"CharacterBody3D ▸ Move relative to the camera along input at run_speed (flattened to the ground)",
 	"CharacterBody3D ▸ Fall at 30 (gravity)",
 	# The angle written out, and the arm the camera hangs off
-	"CharacterBody3D ▸ Orbit moon at radius moon radius angle moon angle (on the ground plane)",
+	"CharacterBody3D ▸ Orbit moon at radius moon_radius angle moon_angle (on the ground plane)",
 	"arm ▸ Set camera distance to 6",
 	# The blend tree, under the object's Animation aspect
 	"CharacterBody3D ▸ Animation ▸ Set Locomotion blend to pace",

@@ -94,7 +94,7 @@ static func _test_head_rows() -> bool:
 	var recipe_rows: PackedStringArray = _action_rows_of(head_lines, work_line,
 		"res://tools/pack_builders/synthetic_recipe.gd")
 	passed = _check("a recipe states its head facts on the bar, not as rows",
-		"\n".join(recipe_rows), "append   block") and passed
+		"\n".join(recipe_rows), "Append   block") and passed
 	# The gate itself: the same four lines in a game script are four ordinary Set rows.
 	var game_rows: PackedStringArray = _action_rows_of(head_lines, work_line,
 		"res://game/level_setup.gd")

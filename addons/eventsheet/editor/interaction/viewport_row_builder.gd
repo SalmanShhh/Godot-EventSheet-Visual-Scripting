@@ -4610,7 +4610,7 @@ func _pack_signal_sources(signal_name: String) -> String:
 			continue
 		var verb_name: String = verb.ace_display_name.strip_edges()
 		if verb_name.is_empty():
-			verb_name = verb.function_name.capitalize()
+			verb_name = verb.function_name
 		for row: Variant in verb.events:
 			_collect_signal_sources(row, wanted, verb_name, sources)
 	if sources.is_empty():
@@ -16107,15 +16107,15 @@ func _is_function_call_action(action: ACEAction) -> bool:
 	return action != null and (action.provider_id.is_empty() or action.provider_id == "Core") and action.ace_id == "CallFunction"
 
 
-## The friendly verb name for a function-call action: the target Function's ace_display_name if it set one
-## (e.g. "Apply Physics"), else its humanized name. Appends the argument list only when the call passes
+## The verb name for a function-call action: the target Function's ace_display_name if it set one
+## (e.g. "Apply Physics"), else its name exactly as written. Appends the argument list only when the call passes
 ## args, so a plain call reads as a clean verb while a parameterised one still reads fully.
 func _function_call_label(action: ACEAction) -> String:
 	var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
 	var fn_name: String = str(params_dict.get("function_name", "")).strip_edges()
 	if fn_name.is_empty():
 		return ""
-	var label: String = fn_name.capitalize()
+	var label: String = fn_name
 	if _viewport._sheet != null:
 		for function_entry: Variant in _viewport._sheet.functions:
 			if function_entry is EventFunction and (function_entry as EventFunction).function_name == fn_name:

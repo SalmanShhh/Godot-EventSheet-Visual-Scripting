@@ -4961,7 +4961,12 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	# rows above: a lift is worth making only when it reads at least as well as the line it
 	# replaced. Both author the same bytes either way, so the picker keeps its blend-tree words and
 	# a hand-written tree keeps the sentence that already opens it.
-	"SetBlendPosition", "SetTreeTimeScale"
+	"SetBlendPosition", "SetTreeTimeScale",
+	# The weapon wheel's two steps. `{index} = ({index} + 1) % {weapons}.size()` is how ANY list is
+	# stepped round - a patrol's next point, a menu's next entry - so as a template match they read
+	# every such line as "Switch to next weapon" about a list that holds no weapons. The line keeps
+	# its own words instead; the picker still offers both rows, and they still write the same bytes.
+	"SwitchToNextWeapon", "SwitchToPreviousWeapon"
 ]
 
 

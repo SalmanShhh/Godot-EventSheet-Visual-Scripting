@@ -173,8 +173,8 @@ static func object_name_of(reference: String) -> String:
 
 
 ## What a sheet calls itself - the object every event that names nobody else is talking about. Its
-## class name when it has one, otherwise the file's own name read as words, so `player_body.gd`
-## answers `Player Body` rather than a path. One answer, shared by the headers and the Outline, so
+## class name when it has one, otherwise the file's own name exactly as written, so `player_body.gd`
+## answers `player_body` rather than a path. One answer, shared by the headers and the Outline, so
 ## the two can never disagree about which object an event belongs to.
 static func self_object_of(sheet: EventSheetResource) -> String:
 	if sheet == null:
@@ -186,7 +186,7 @@ static func self_object_of(sheet: EventSheetResource) -> String:
 	if path.is_empty():
 		path = str(sheet.resource_path).strip_edges()
 	var base: String = path.get_file().get_basename().strip_edges()
-	return base.capitalize() if not base.is_empty() else OBJECT_FALLBACK
+	return base if not base.is_empty() else OBJECT_FALLBACK
 
 
 ## The arrangement itself: `[{"header": String, "rows": Array[EventRowData]}]`, headers in the order

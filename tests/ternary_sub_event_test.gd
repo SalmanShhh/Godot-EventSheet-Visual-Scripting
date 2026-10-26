@@ -97,15 +97,15 @@ static func _fixture_rows() -> bool:
 	# `and` never appears inside a condition cell - each conjunct is a condition LINE of the one
 	# event, exactly as a lifted `if a and b:` already stacks them.
 	ok = _check("a lone ternary return replaces its row with the pair",
-		_reading_at(rows, "Set return value to host's wall normal X"),
-		"host exists > host Is by wall | Set return value to host's wall normal X") and ok
+		_reading_at(rows, "Return host.wall_normal.x"),
+		"host exists > host Is by wall | Return host.wall_normal.x") and ok
 	ok = _check("the pair's second arm is the Else row",
-		_reading_at(rows, "Set return value to 0"), "Else | Set return value to 0") and ok
+		_reading_at(rows, "Return 0"), "Else | Return 0") and ok
 	ok = _check("a sub-expression ternary re-reads the whole assignment",
-		_reading_at(rows, "Set speed to move speed * sprint multiplier"),
-		"sprint held is true | Set speed to move speed * sprint multiplier") and ok
+		_reading_at(rows, "Set speed to move_speed * sprint_multiplier"),
+		"sprint_held is true | Set speed to move_speed * sprint_multiplier") and ok
 	ok = _check("its Else keeps the statement too",
-		_reading_at(rows, "Set speed to move speed * 1"), "Else | Set speed to move speed * 1") and ok
+		_reading_at(rows, "Set speed to move_speed * 1"), "Else | Set speed to move_speed * 1") and ok
 	# A chain nests no further: three arms, three sibling rows, the last of them the plain Else. The
 	# values stay QUOTED, because a string is content the reader is looking at, not a name.
 	ok = _check("a nested chain draws three arms",

@@ -75,7 +75,7 @@ static func run() -> bool:
 		ok = _check("the getter reads with the property's name",
 			_span_text(prop_row.children[1], "property_getter"), "health") and ok
 		ok = _check("the getter's body sets the return value",
-			_lane_text(prop_row.children[1].children[0], "action"), "Set return value to health") and ok
+			_lane_text(prop_row.children[1].children[0], "action"), "Return health") and ok
 		ok = _check("an accessor row is inert (source null)", prop_row.children[0].source_resource == null, true) and ok
 
 	# ── The NAMED spelling reads in the SAME two categories as the inline one ──

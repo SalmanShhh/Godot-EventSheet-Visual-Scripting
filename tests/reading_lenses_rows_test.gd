@@ -68,14 +68,13 @@ static func _reading_rows() -> bool:
 	var view: EventSheetViewport = _open(true)
 	var texts: PackedStringArray = _row_texts(view)
 
-	# The private state var and the @export knob both read as words, with the knob taking
-	# Godot's Inspector capitalisation.
-	passed = _check("reading mode turns the humanized-names lens on",
-		view.humanize_names_enabled(), true) and passed
-	passed = _check("a private state var reads as words",
-		_any_row_contains(texts, "coyote timer"), true) and passed
-	passed = _check("the raw identifier is gone from the sentence",
-		_any_row_contains(texts, "_coyote_timer ="), false) and passed
+	# Reading a file does not respell its names: the private state var reads exactly as written.
+	passed = _check("reading mode leaves the humanized-names lens off",
+		view.humanize_names_enabled(), false) and passed
+	passed = _check("a private state var reads as written",
+		_any_row_contains(texts, "_coyote_timer"), true) and passed
+	passed = _check("and never as words",
+		_any_row_contains(texts, "coyote timer"), false) and passed
 
 	# The property chain in the call arguments reads possessively.
 	passed = _check("a property chain reads possessively",
@@ -89,7 +88,7 @@ static func _reading_rows() -> bool:
 
 	# The call to the fixture's own add_look reads the familiar way, with the parameter
 	# names supplying the argument labels.
-	passed = _check("a known call reads Functions > Call", _any_row_contains(texts, "Call Add Look"), true) and passed
+	passed = _check("a known call reads Functions > Call", _any_row_contains(texts, "Call add_look"), true) and passed
 	passed = _check("call arguments are named by the parameters",
 		_any_row_contains(texts, "x = velocity X"), true) and passed
 

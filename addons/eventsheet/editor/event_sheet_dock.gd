@@ -2695,10 +2695,9 @@ func _toggle_compact_rows(view_popup: PopupMenu) -> void:
 
 
 ## View ▾ "Humanized Names". Three states, two of them the user's: AUTO (nothing stored, the
-## default) means the lens follows the surface - on where a sheet is being READ (an opened pack, a
-## .gd preview, the Reading lens), off where one is being AUTHORED - and an explicit choice, once
-## made, applies everywhere and persists per-project per-user (editor metadata, not repo state),
-## exactly like Compact Rows. Stored as an int so "no choice yet" stays distinguishable from "off".
+## default) reads names exactly as written everywhere, and an explicit choice, once made, applies
+## everywhere and persists per-project per-user (editor metadata, not repo state), exactly like
+## Compact Rows. Stored as an int so "no choice yet" stays distinguishable from "off".
 const HUMANIZED_NAMES_AUTO := -1
 
 

@@ -372,11 +372,10 @@ var show_add_event_footers: bool = true
 var show_object_icons: bool = true
 ## The humanized-names lens: "_coyote_timer" reads "coyote timer", an @export knob reads with
 ## its Inspector capitalisation, and the raw name stays on hover. Tri-state on purpose: -1 AUTO
-## (the default) means "on where the sheet is being READ, off where it is being AUTHORED", which
-## is the honest default for the two audiences - a reader wants the words, a programmer
-## editing the file wants the identifiers that are actually in it. 0/1 are the user's explicit
-## View-menu choice, which persists and then applies everywhere. Span builds read this, so
-## flipping it rebuilds via set_sheet, exactly like show_object_icons.
+## (the default) reads every name exactly as the file writes it, on a sheet being read as much as on
+## one being authored - a second spelling of one identifier blurs which line a row is. 0/1 are the
+## user's explicit View-menu choice, which persists and then applies everywhere. Span builds read
+## this, so flipping it rebuilds via set_sheet, exactly like show_object_icons.
 var humanize_names_override: int = -1
 ## The familiar-words glossary: the few Godot nouns other event-sheet editors have a different
 ## word for read in that word (scene -> layout, pause -> time scale 0, CanvasLayer -> layer), with
@@ -479,13 +478,10 @@ func set_reading_mode(enabled: bool) -> void:
 	queue_redraw()
 
 
-## Whether the humanized-names lens is running for this view right now. AUTO (-1, the
-## default) resolves to reading mode, so an opened pack or the Reading lens shows the words and an
-## editable sheet shows the identifiers; an explicit View-menu choice overrides that everywhere.
+## Whether the humanized-names lens is running for this view right now: only when the View menu
+## turned it on. AUTO (-1, the default) shows the identifiers as written on every surface.
 func humanize_names_enabled() -> bool:
-	if humanize_names_override >= 0:
-		return humanize_names_override == 1
-	return is_reading_mode()
+	return humanize_names_override == 1
 
 
 ## Whether this view reads the few renamed nouns in their familiar words. Plain on/off: there is

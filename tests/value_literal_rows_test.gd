@@ -170,11 +170,11 @@ static func run() -> bool:
 	var function_context: Dictionary = {"function_params": {"_open_sheet_in_workspace": []}}
 	ok = _check("a bare function name is an ƒ chip",
 		EventSheetSentence.expression_text("_open_sheet_in_workspace", function_context),
-		"ƒ Open Sheet In Workspace") and ok
+		"ƒ _open_sheet_in_workspace") and ok
 	ok = _check("a name the sheet does not declare is left alone",
 		EventSheetSentence.expression_text("some_variable", function_context), "some_variable") and ok
 	ok = _check("Callable(self, \"f\") is the same chip",
-		EventSheetSentence.expression_text("Callable(self, \"on_done\")", {}), "ƒ On Done") and ok
+		EventSheetSentence.expression_text("Callable(self, \"on_done\")", {}), "ƒ on_done") and ok
 	ok = _check("a Callable local reads Local function",
 		EventSheetSentence.type_word("Callable"), "function") and ok
 	ok = _check("a held function's call reads as a Call",
@@ -195,12 +195,12 @@ static func run() -> bool:
 	# The way back: the words the chip shows name the function they came from, and words that
 	# name nothing this sheet declares resolve to nothing rather than to a guess.
 	ok = _check("the chip's words name the function behind them",
-		EventSheetSentence.function_reference_name("ƒ Open Sheet In Workspace", function_context),
+		EventSheetSentence.function_reference_name("ƒ _open_sheet_in_workspace", function_context),
 		"_open_sheet_in_workspace") and ok
 	ok = _check("words naming no declared function resolve to nothing",
-		EventSheetSentence.function_reference_name("ƒ Something Else", function_context), "") and ok
+		EventSheetSentence.function_reference_name("ƒ something_else", function_context), "") and ok
 	ok = _check("plain words are not a chip at all",
-		EventSheetSentence.function_reference_name("Open Sheet In Workspace", function_context), "") and ok
+		EventSheetSentence.function_reference_name("_open_sheet_in_workspace", function_context), "") and ok
 	ok = _function_chip_span() and ok
 
 	# ── the object column says what the receiver IS ───────
@@ -322,12 +322,12 @@ static func _function_chip_span() -> bool:
 				chip = span
 	ok = _check("the row's ƒ chip is a span of its own", chip != null, true) and ok
 	if chip != null:
-		ok = _check("the chip reads as the function's name in words", chip.text,
-			"ƒ open sheet in workspace") and ok
+		ok = _check("the chip reads as the function's name, as written", chip.text,
+			"ƒ _open_sheet_in_workspace") and ok
 		ok = _check("and carries the raw name a click jumps to",
 			str(chip.metadata.get("name", "")), "_open_sheet_in_workspace") and ok
 	ok = _check("splitting the chip off changes no word of the row",
-		whole.strip_edges(), "Set open sheet to ƒ open sheet in workspace") and ok
+		whole.strip_edges(), "Set open_sheet to ƒ _open_sheet_in_workspace") and ok
 	# The seam the click lands on: the same lookup the Outline uses, answering with the function.
 	ok = _check("the name the chip carries finds the function it names",
 		ViewportRowBuilder.find_function_by_name(sheet, "_open_sheet_in_workspace"), handler) and ok

@@ -66,8 +66,8 @@ func _physics_process(delta):
 ## Every row the opened file must read as. The board's four verbs and the rail's five questions.
 const EXPECTED_READINGS: PackedStringArray = [
 	"CharacterBody2D ▸ Skateboard ▸ Roll with the slope gravity along the floor",
-	"CharacterBody2D ▸ Skateboard ▸ Push toward max speed by push speed",
-	"CharacterBody2D ▸ Skateboard ▸ Ollie ollie speed",
+	"CharacterBody2D ▸ Skateboard ▸ Push toward max speed by push_speed",
+	"CharacterBody2D ▸ Skateboard ▸ Ollie ollie_speed",
 	"CharacterBody2D ▸ Skateboard ▸ Spin one turn per second",
 	"CharacterBody2D ▸ Grind ▸ Is not grinding",
 	"CharacterBody2D ▸ Grind ▸ Is grinding",

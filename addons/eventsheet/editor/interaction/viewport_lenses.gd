@@ -375,13 +375,12 @@ static func strip_leading_not(sentence: String) -> Dictionary:
 	return {"text": sentence, "negated": false}
 
 
-## A function's snake_case name as its display name ("add_look" -> "Add Look").
-## A name the pack already published under an @ace_name keeps that name; the caller passes it
-## as `published_name` and this is only the fallback.
+## A function's display name: the name it was published under (an @ace_name) when the caller passes
+## one as `published_name`, else its name exactly as the file writes it ("add_look").
 static func function_display_name(function_name: String, published_name: String = "") -> String:
 	if not published_name.strip_edges().is_empty():
 		return published_name.strip_edges()
-	return humanize_identifier(function_name, true)
+	return function_name.strip_edges()
 
 
 ## One argument chip for a function call: "x = event's relative X" when the parameter name

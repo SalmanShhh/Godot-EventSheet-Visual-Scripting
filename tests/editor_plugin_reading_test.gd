@@ -97,11 +97,11 @@ const EXPECTED_PLUGIN: Array[String] = [
 	"Editor ▸ Remove global \"Bridge\"",
 	# The members read under the names the sheet gives members everywhere else, not their identifier
 	# spelling - "edit button" is what every other row in every other sheet calls `_edit_button`.
-	"Editor ▸ Add Properties bar add-on edit button",
-	"Editor ▸ Remove Properties bar add-on edit button",
-	"Editor ▸ Add export hook export integrity",
-	"Editor ▸ Add debugger panel live values",
-	"Editor ▸ Add context menu menu to Scene dock"
+	"Editor ▸ Add Properties bar add-on _edit_button",
+	"Editor ▸ Remove Properties bar add-on _edit_button",
+	"Editor ▸ Add export hook _export_integrity",
+	"Editor ▸ Add debugger panel _live_values",
+	"Editor ▸ Add context menu _menu to Scene dock"
 ]
 
 ## And what the opened Properties bar add-on must say.

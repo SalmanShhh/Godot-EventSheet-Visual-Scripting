@@ -79,7 +79,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"horn ▸ Set hearing distance to 600",
 	"horn ▸ Set falloff to 2",
 	"Video ▸ Play",
-	"System ▸ Run Chunk Of in the background   index = 1",
+	"System ▸ Run chunk_of in the background   index = 1",
 	"System ▸ ⏳ Wait for it to finish",
 	# The two runs whose lines only mean anything together, each ONE row. The look belongs
 	# to the script's own object, which this file names by the class it extends.
@@ -123,18 +123,18 @@ static var STATEMENT_READINGS: Dictionary = {
 	# Facing something
 	"look_at(target.global_position, Vector3.UP)": "Player ▸ Look at target",
 	# Work handed off the main thread, and the wait that joins it back up
-	"thread.start(bake.bind(level))": "System ▸ Run Bake in the background   level = level",
+	"thread.start(bake.bind(level))": "System ▸ Run bake in the background   level = level",
 	"thread.wait_to_finish()": "System ▸ ⏳ Wait for it to finish",
-	"WorkerThreadPool.add_task(chunk.bind(index))": "System ▸ Run Chunk in the background   index = index",
-	"WorkerThreadPool.add_group_task(row, 64)": "System ▸ Run Row in the background 64 times",
+	"WorkerThreadPool.add_task(chunk.bind(index))": "System ▸ Run chunk in the background   index = index",
+	"WorkerThreadPool.add_group_task(row, 64)": "System ▸ Run row in the background 64 times",
 	"WorkerThreadPool.wait_for_group_task_completion(id)": "System ▸ ⏳ Wait for it to finish",
 	# The signal steps that act
-	"died.disconnect(on_died)": "Player ▸ Unwire On Died from On Died",
+	"died.disconnect(on_died)": "Player ▸ Unwire On Died from on_died",
 	"sig.emit(10)": "System ▸ Fire sig   10",
 	# A call made by name
-	"call(\"heal\", 5)": "Functions ▸ Call Heal   amount = 5 by name",
+	"call(\"heal\", 5)": "Functions ▸ Call heal   amount = 5 by name",
 	"callv(\"heal\", [5, self])":
-		"Functions ▸ Call Heal   amount = 5   source = self by name, with a list",
+		"Functions ▸ Call heal   amount = 5   source = self by name, with a list",
 	# The Video object, and how far a sound carries
 	"film.stream = load(\"res://intro.ogv\")": "Video ▸ Set video to intro.ogv",
 	"film.play()": "Video ▸ Play",
@@ -148,7 +148,7 @@ static var STATEMENT_READINGS: Dictionary = {
 static var CONDITION_READINGS: Dictionary = {
 	"result == HTTPRequest.RESULT_SUCCESS": "AJAX ▸ request succeeded",
 	"result != HTTPRequest.RESULT_SUCCESS": "AJAX ▸ not request succeeded",
-	"died.is_connected(on_died)": "Player ▸ On Died is wired to On Died",
+	"died.is_connected(on_died)": "Player ▸ On Died is wired to on_died",
 	"film.is_playing()": "Video ▸ Is playing"
 }
 
@@ -163,7 +163,7 @@ static var EXPRESSION_READINGS: Dictionary = {
 	"cam.global_transform.basis.y": "cam's up",
 	# Re-pinned this from "the function Heal" to the ƒ chip: the condition lane already names
 	# every function with that mark, and a function held as a VALUE is the same thing.
-	"Callable(self, \"heal\")": "ƒ Heal",
+	"Callable(self, \"heal\")": "ƒ heal",
 	# The single index is untouched: one index already had a sentence, and a run is a different one.
 	"inventory[\"potion\"]": "inventory's \"potion\""
 }
@@ -258,7 +258,7 @@ static func _grammar_values() -> bool:
 	# The flag whose whole meaning is WHEN the handler runs says so, as a chip.
 	ok = _check("a deferred connection says when the handler runs",
 		_joined_segments(EventSheetSentence.statement("died.connect(on_died, CONNECT_DEFERRED)", context)),
-		"Player ▸ Wire On Died to On Died   at end of frame") and ok
+		"Player ▸ Wire On Died to on_died   at end of frame") and ok
 	# A signal held in a value declares as a signal, in the sheet's own word.
 	ok = _check("a signal type reads as the sheet's word for it",
 		EventSheetSentence.type_word("Signal"), "signal") and ok

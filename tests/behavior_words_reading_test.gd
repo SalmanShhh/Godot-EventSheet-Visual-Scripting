@@ -172,10 +172,10 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"Advanced Random ▸ Set seed to \"level-1\"",
 	"Advanced Random ▸ Set noise type to Perlin",
 	"System ▸ Set drop to choose weighted(\"coin\" 70, \"gem\" 20, \"nothing\" 10)",
-	"System ▸ Return CharacterBody2D has line of sight to t (within Sight Range)",
+	"System ▸ Return CharacterBody2D has line of sight to t (within sight_range)",
 	# The instantiate, the layer it went onto, where it was put and the property set on the way
 	# in are ONE row; the Local row that holds the new object stays where the event declares it.
-	"System ▸ Create object enemy_scene on layer FX at spawn point's global position (as e)   rotation = angle",
+	"System ▸ Create object enemy_scene on layer FX at spawn_point.global_position (as e)   rotation = angle",
 	# A loop over what an area is touching
 	"System ▸ For each a overlapping Area2D"
 ])

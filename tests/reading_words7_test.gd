@@ -79,10 +79,10 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"CharacterBody2D ▸ Is moving",
 	# The cooldown idiom, both halves. The name lens spells the variables as words on the
 	# canvas, which is why these read "last shot" where the grammar's own answer says "last_shot".
-	"System ▸ 0.5 seconds have passed since last shot",
-	"System ▸ Set last shot to now",
+	"System ▸ 0.5 seconds have passed since last_shot",
+	"System ▸ Set last_shot to now",
 	# One condition per question
-	"CharacterBody2D ▸ angle is within 10° of target angle",
+	"CharacterBody2D ▸ angle is within 10° of target_angle",
 	"CharacterBody2D ▸ is within 100 of (0, 0)",
 	"CharacterBody2D ▸ is inside area 0, 0 - 640 × 360",
 	"CharacterBody2D ▸ speed is about 0 (not moving)",

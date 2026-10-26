@@ -46,7 +46,7 @@ static var ROOT_READINGS: PackedStringArray = PackedStringArray([
 	"Node2D ▸ Set input deactivated",
 	"Node2D ▸ Set disabled",
 	# The wait, then the step that follows it
-	"System ▸ ⏳ Wait 2 seconds then Call Explode",
+	"System ▸ ⏳ Wait 2 seconds then Call explode",
 	# The drawing verbs
 	"Node2D ▸ Draw line (0, 0) to (100, 0), red",
 	"Node2D ▸ Draw rectangle Rect2(0, 0, 10, 10), blue",
@@ -121,9 +121,9 @@ static func _statement_values() -> bool:
 		["process_mode = PROCESS_MODE_WHEN_PAUSED", "Player ▸ Set active only when paused"],
 		# The wait, then the step that runs when it ends
 		["get_tree().create_timer(2.0).timeout.connect(func(): explode())",
-			"System ▸ ⏳ Wait 2 seconds then Call Explode"],
+			"System ▸ ⏳ Wait 2 seconds then Call explode"],
 		["get_tree().create_timer(0.5).timeout.connect(explode)",
-			"System ▸ ⏳ Wait 0.5 seconds then Call Explode"],
+			"System ▸ ⏳ Wait 0.5 seconds then Call explode"],
 		["get_tree().create_timer(1.0).timeout.connect(func(): hp = 0)",
 			"System ▸ ⏳ Wait 1 seconds then Set hp to 0"],
 		["get_tree().create_timer(0.15).timeout.connect(func(): queue_free(), CONNECT_ONE_SHOT)",
@@ -168,7 +168,7 @@ static func _refusals() -> bool:
 	# Gave it the sentence it does have - wiring a handler up is an ACTION - so the pin is that it
 	# reads as the wiring it is and never as the wait it is not.
 	ok = _check("a plain signal connect is a wiring, not a wait",
-		_read("$Timer.timeout.connect(explode)"), "Timer ▸ Wire On Timeout to Explode") and ok
+		_read("$Timer.timeout.connect(explode)"), "Timer ▸ Wire On Timeout to explode") and ok
 	# Gave the width its own place in the sentence, so the line that used to be refused now reads
 	# with the thickness said out loud rather than quietly dropped.
 	ok = _check("a drawn line with a width says the width",
@@ -328,7 +328,7 @@ static func _picked_matches_typed() -> bool:
 		"Player ▸ Set Every tick (draw) activated",
 		"Player ▸ Set input deactivated",
 		"Player ▸ Set disabled",
-		"System ▸ ⏳ Wait 2 seconds then Call Explode"
+		"System ▸ ⏳ Wait 2 seconds then Call explode"
 	]:
 		ok = _check("picked row reads \"%s\"" % expected, readings.has(expected), true) and ok
 	return ok

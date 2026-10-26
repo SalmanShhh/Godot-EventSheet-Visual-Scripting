@@ -107,14 +107,14 @@ static func _one_line_blocks(rows: PackedStringArray) -> bool:
 	ok = _check("a one-line guard clause is a sub-event, not a code cell",
 		_reading_at(rows, "Stop event"), "host does not exist | Stop event") and ok
 	ok = _check("a one-line if calls its verb",
-		_reading_at(rows, "Call Die"), "OneLineBlocksFixture hp ≤ 0 | Call Die") and ok
+		_reading_at(rows, "Call die"), "OneLineBlocksFixture hp ≤ 0 | Call die") and ok
 	# `play("low")` is this file's OWN `play`, declared at the bottom of it, so the row says so. The
 	# vocabulary has verbs spelled `play(…)` too and one of them used to claim the line, which read
 	# as a confident sentence about a sound this script has never had.
 	ok = _check("a one-line elif is an Else with its own condition",
-		_reading_at(rows, "\"low\""), "Else > OneLineBlocksFixture hp < 5 | Call Play   name = \"low\"") and ok
+		_reading_at(rows, "\"low\""), "Else > OneLineBlocksFixture hp < 5 | Call play   _name = \"low\"") and ok
 	ok = _check("a one-line else is the plain Else",
-		_reading_at(rows, "\"hurt\""), "Else | Call Play   name = \"hurt\"") and ok
+		_reading_at(rows, "\"hurt\""), "Else | Call play   _name = \"hurt\"") and ok
 	# `i == 1` is a COMPARISON, not an identity test. Is The Same Object's reverse template is the bare
 	# `{a} == {b}`, so it used to claim every equality ever written and these two rows read "i is the
 	# same object as 1" - a confident lie about a loop counter and a number.
@@ -131,11 +131,11 @@ static func _one_line_blocks(rows: PackedStringArray) -> bool:
 static func _stacked_conditions(view: EventSheetViewport, rows: PackedStringArray) -> bool:
 	var ok: bool = true
 	ok = _check("a ternary's `and` test stacks as two condition lines",
-		_reading_at(rows, "Return host's wall normal X"),
-		"host exists > host Is by wall | Return host's wall normal X") and ok
+		_reading_at(rows, "Return host.wall_normal.x"),
+		"host exists > host Is by wall | Return host.wall_normal.x") and ok
 	# The OR is ruled BETWEEN the two lines now, so neither of them carries a badge word.
 	ok = _check("a ternary's `or` test is the OR block",
-		_reading_at(rows, "Return \"gold\""), "hp > 100 > seconds left > 9 | Return \"gold\"") and ok
+		_reading_at(rows, "Return \"gold\""), "hp > 100 > seconds_left > 9 | Return \"gold\"") and ok
 	ok = _check("no condition cell anywhere in the fixture spells `and`",
 		_conjunction_cells(view), PackedStringArray()) and ok
 	return ok
@@ -165,10 +165,10 @@ static func _connected_lambdas(view: EventSheetViewport, rows: PackedStringArray
 	# a view drawn over a line of code.
 	ok = _check("the one-line lambda is the event, body and all",
 		_reading_at(rows, "➜Timer On Timeout"),
-		"➜Timer On Timeout | Subtract 1 from seconds left") and ok
+		"➜Timer On Timeout | Subtract 1 from seconds_left") and ok
 	ok = _check("a multi-line lambda's trigger carries its payload chip",
 		_reading_at(rows, "➜host On collision with"),
-		"➜host On collision withbody | Add 1 to seconds left") and ok
+		"➜host On collision withbody | Add 1 to seconds_left") and ok
 	# The payload used to be crammed INSIDE the trigger cell ("On Hit   body"), because a chip after a
 	# trigger cell drew as a sliver. It is now the same span a declared handler's trigger row draws,
 	# so one event reads one way whether it was wired with a func or with a lambda.
@@ -178,7 +178,7 @@ static func _connected_lambdas(view: EventSheetViewport, rows: PackedStringArray
 	# where it used to fall through to the generic Object ▸ Verb reading and say only "Stop".
 	ok = _check("and the branch in its body is a row under the same trigger",
 		_reading_at(rows, "Stop timer"),
-		"➜host On collision withbody > OneLineBlocksFixture seconds left ≤ 0 | Stop timer \"Timer\"") and ok
+		"➜host On collision withbody > OneLineBlocksFixture seconds_left ≤ 0 | Stop timer \"Timer\"") and ok
 	# A lambda written after other setup is the same event, read where it sits: under the setup
 	# before it, so it is written back there and the file keeps its order.
 	ok = _check("a connect after other setup is the event, read in place",

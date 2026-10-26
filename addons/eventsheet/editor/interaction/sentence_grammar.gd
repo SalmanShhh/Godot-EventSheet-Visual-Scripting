@@ -1024,11 +1024,11 @@ static func _signal_parameter_names(signal_name: String, context: Dictionary) ->
 	return out
 
 
-## The reading of a `return`, given the kind of verb whose body it sits in. The event-sheet function
-## block has exactly one action for handing a value back - `Set return value to X` - so a published
-## CONDITION and a published EXPRESSION both read that, with `true` / `false` as themselves. An
-## action's bare `return` is `Stop event` (the rest of the event does not run). Shared with the Core
-## Return row so a picked row and a typed one read alike.
+## The reading of a `return`, given the kind of verb whose body it sits in. A function hands a value
+## back with one action, `Function ▸ Return X`, so a published CONDITION and a published EXPRESSION
+## both read that, with `true` / `false` as themselves. An action's bare `return` is `Stop event` (the
+## rest of the event does not run). Shared with the Core Return row so a picked row and a typed one
+## read alike.
 static func return_sentence(returned: String, context: Dictionary) -> Dictionary:
 	var verb_kind: int = int(context.get("verb_kind", VerbKind.ACTION))
 	var value: String = returned.strip_edges()
@@ -1048,7 +1048,7 @@ static func return_sentence(returned: String, context: Dictionary) -> Dictionary
 	if bool(context.get("answer_return", false)):
 		return _sentence(str(context.get("self_object", OBJECT_SYSTEM)), "Answer {value}", {"value": [shown, "value"]})
 	if verb_kind == VerbKind.CONDITION or verb_kind == VerbKind.EXPRESSION:
-		return _sentence(str(context.get("self_object", OBJECT_SYSTEM)), "Set return value to {value}", {"value": [shown, "value"]})
+		return _sentence(OBJECT_FUNCTION, "Return {value}", {"value": [shown, "value"]})
 	return _sentence(str(context.get("self_object", OBJECT_SYSTEM)), "Return {value}", {"value": [shown, "value"]})
 
 
@@ -2407,6 +2407,8 @@ static func _uniform_scale_factor(value: String) -> String:
 
 ## The object every Call row belongs to, whichever function it names.
 const OBJECT_FUNCTIONS := "Functions"
+## The object a function's own Return row belongs to: the function handing the value back.
+const OBJECT_FUNCTION := "Function"
 
 
 ## `commands["equip"].call()` and `commands["equip"].call(arg)` - a table of functions, called by
@@ -4433,15 +4435,11 @@ static func file_name_value(path_value: String, context: Dictionary = {}) -> Str
 	return "\"%s\"" % path
 
 
-## A method name as the FUNCTION it is: Title Case, the way a published verb reads in the picker and in
-## a Call row ("take_damage" -> "Take Damage"). Deliberately not `verb_words()`, which spells an unknown
-## method as a sentence-case step; asking whether an object has a FUNCTION is asking about the named
-## thing, so it reads under the name that thing would be published as.
+## A method name as the FUNCTION it is: exactly as the file writes it, the way the code and its author
+## name it ("take_damage" stays take_damage). A second spelling of one identifier would blur which
+## function a row calls. Deliberately not `verb_words()`, which spells an unknown method as a step.
 static func function_words(method: String) -> String:
-	var bare: String = method.strip_edges()
-	while bare.begins_with("_"):
-		bare = bare.substr(1)
-	return bare.capitalize() if not bare.is_empty() else method.strip_edges()
+	return method.strip_edges()
 
 
 ## `rotation > 1.5` - a comparison whose subject is an ENGINE property of the script's own
@@ -10446,7 +10444,7 @@ static func family_word_of(name_text: String) -> String:
 		bare = bare.substr(6, bare.length() - 7).strip_edges()
 	if not is_identifier(bare):
 		return ""
-	return bare if bare == bare.capitalize().replace(" ", "") else function_words(bare)
+	return bare if bare == bare.capitalize().replace(" ", "") else bare.trim_prefix("_").capitalize()
 
 
 ## `rows.map(func(r): return r.name)` and `rows.filter(func(r): return r.ready)` as the words

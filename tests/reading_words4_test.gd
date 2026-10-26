@@ -128,7 +128,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"other ▸ is a Node2D",
 	"System ▸ inventory has key \"potion\"",
 	"System ▸ hp is one of 1, 2, 3",
-	"other ▸ has function Take Damage",
+	"other ▸ has function take_damage",
 	"ReadingWords4Player ▸ has child Ball",
 	"System ▸ hp ≥ 10",
 	# The two text questions, in the same words the value expressions read in
@@ -261,7 +261,7 @@ static func _condition_values() -> bool:
 		["\"potion\" in inventory", "System ▸ inventory has key \"potion\""],
 		["x in [1, 2, 3]", "System ▸ x is one of 1, 2, 3"],
 		["x in wave", "System ▸ wave contains x"],
-		["body.has_method(\"take_damage\")", "body ▸ has function Take Damage"],
+		["body.has_method(\"take_damage\")", "body ▸ has function take_damage"],
 		["has_node(\"Sprite2D\")", "Player ▸ has child Sprite2D"],
 		["$Hurtbox.has_node(\"Shape\")", "Hurtbox ▸ has child Shape"],
 		# The two comparison glyphs, wherever a comparison is shown

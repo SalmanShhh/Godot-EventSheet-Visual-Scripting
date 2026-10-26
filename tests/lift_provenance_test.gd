@@ -310,7 +310,7 @@ static func _test_the_printed_shape() -> bool:
 		EventSheetLiftProvenance.text(SOURCE, TABLE_LINE, "res://buffer.gd"),
 		"res://buffer.gd:8  rpc(&\"take_damage\", 10)\n"
 		+ "  row      EventRow  OnReady\n"
-		+ "  shaped   bespoke:_trigger_sentence, grammar:NodeSetProcessing, bespoke:_reading_sentence\n"
+		+ "  shaped   bespoke:_trigger_sentence, grammar:NodeSetProcessing, template\n"
 		+ "  read by:\n"
 		+ "  1. table    multiplayer_lift.gd  send_everyone_with_arguments -> SendMessageToEveryone\n"
 		+ "  5. call     Node2D.rpc (receiver: self)")
@@ -327,10 +327,10 @@ static func _test_the_printed_shape() -> bool:
 static func _test_which_builder_path_shaped_it() -> bool:
 	var ok: bool = _check("an event's cells name their paths in the order the canvas draws them",
 		EventSheetLiftProvenance.shaped_by(SOURCE, TABLE_LINE, "res://buffer.gd"),
-		"bespoke:_trigger_sentence, grammar:NodeSetProcessing, bespoke:_reading_sentence")
+		"bespoke:_trigger_sentence, grammar:NodeSetProcessing, template")
 	ok = _check("a line of the same event gets the same answer - the grain is the row",
 		EventSheetLiftProvenance.shaped_by(SOURCE, DERIVED_LINE, "res://buffer.gd"),
-		"bespoke:_trigger_sentence, grammar:NodeSetProcessing, bespoke:_reading_sentence") and ok
+		"bespoke:_trigger_sentence, grammar:NodeSetProcessing, template") and ok
 	ok = _check("a row that is only chrome says so rather than naming nothing",
 		EventSheetLiftProvenance.shaped_by(SOURCE, 3, "res://buffer.gd"), "structure") and ok
 	ok = _check("a row the canvas draws no cell for says WHICH of the reasons it is",

@@ -147,8 +147,8 @@ static func _test_arrange_by_object() -> bool:
 		EventSheetArrangement.self_object_of(sheet), "Player") and passed
 	var unnamed: EventSheetResource = EventSheetResource.new()
 	unnamed.external_source_path = "res://game/player_body.gd"
-	passed = _check("without one, the file's own name reads as words",
-		EventSheetArrangement.self_object_of(unnamed), "Player Body") and passed
+	passed = _check("without one, the file's own name, exactly as written",
+		EventSheetArrangement.self_object_of(unnamed), "player_body") and passed
 	return passed
 
 

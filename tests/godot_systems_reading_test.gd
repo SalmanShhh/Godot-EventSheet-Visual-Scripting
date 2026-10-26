@@ -93,23 +93,23 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	# The background-loading idiom
 	"System ▸ layout Level 2 has finished loading",
 	# The movement words, on a character body
-	"System ▸ Apply Gravity Gravity (per second)",
-	"System ▸ Accelerate x toward dir * Speed at Accel (per second)",
-	"System ▸ Limit Speed to Max Speed",
+	"System ▸ Apply gravity gravity (per second)",
+	"System ▸ Accelerate x toward dir * speed at accel (per second)",
+	"System ▸ Limit speed to max_speed",
 	"System ▸ Move (and slide along what it hits)",
 	# Re-pin: the named-layer verbs lift, so the line is now the ROW a picker would have authored.
 	# The project never named layer 2, so the row says the number - which is all anyone can call it.
 	"System ▸ Stop colliding with 2",
 	"System ▸ Ignore collisions with platform",
-	"System ▸ Rotate toward target angle at 5 (per second)",
+	"System ▸ Rotate toward target_angle at 5 (per second)",
 	# The path words
 	"System ▸ Has arrived",
 	# The messages
 	# A Send row belongs to the object whose function the message is (this file has no
 	# class_name, so its object is what it extends), whether the row is the grammar's reading of a
 	# typed line or the lifted Send action itself.
-	"CharacterBody2D ▸ Send Take Damage to the host   amount = 10",
-	"CharacterBody2D ▸ Send take damage to everyone 10",
+	"CharacterBody2D ▸ Send take_damage to the host   amount = 10",
+	"CharacterBody2D ▸ Send take_damage to everyone 10",
 	"On message take_damage",
 	"Multiplayer ▸ Is host",
 	"Multiplayer ▸ Owns this object"

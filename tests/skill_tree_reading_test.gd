@@ -45,15 +45,15 @@ static func _test_grammar() -> bool:
 	passed = _check("the prerequisite walk reads as Is not unlocked", _words(missing), "Is not unlocked required") and passed
 	passed = _check("a stat with an upgrade level inside reads as one sentence",
 		EventSheetSentence.expression_text("base_speed * (1.0 + level_of(\"speed\") * 0.1)", {}),
-		"base_speed boosted by Speed upgrade (10% per level)") and passed
+		"base_speed boosted by speed upgrade (10% per level)") and passed
 	passed = _check("a whole-number multiplier keeps its round per-cent",
 		EventSheetSentence.expression_text("damage * (1.0 + upgrades.level_of(\"power\") * 0.25)", {}),
-		"damage boosted by Power upgrade (25% per level)") and passed
+		"damage boosted by power upgrade (25% per level)") and passed
 	passed = _check("a flat amount per level reads as one sentence",
 		EventSheetSentence.expression_text("base_damage + 5.0 * level_of(\"power\")", {}),
 		"base_damage +5 per level") and passed
 	passed = _check("an upgrade name is the reader's name for it",
-		EventSheetSentence.skill_level_call_name("upgrades.level(\"fire_rate\")"), "Fire Rate") and passed
+		EventSheetSentence.skill_level_call_name("upgrades.level(\"fire_rate\")"), "fire_rate") and passed
 	return passed
 
 
