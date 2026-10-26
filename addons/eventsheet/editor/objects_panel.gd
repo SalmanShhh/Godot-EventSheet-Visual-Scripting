@@ -5,13 +5,18 @@ extends VBoxContainer
 #
 # The first draft of this rail listed everything in one flat run, which turns a forty-node scene into
 # thirty-seven grey lines burying the three objects the sheet actually uses. That is a scene tree, not
-# an object bar. So the bar is three sections in the order a reader wants them:
+# an object bar. So the bar reads in the order a reader wants it:
 #
-#   USED IN THIS SHEET   open, with per-object counts, behaviors nested under the object they ride on
-#   ALSO IN THE SCENE    collapsed, the rest of the scene, no counts because there are none
-#   GLOBALS & FAMILIES   collapsed
+#   what this sheet uses   first, as plain rows with per-object counts, behaviors nested under the
+#                          object they ride on - the tab is called Objects, so these need no heading
+#   ALSO IN THE SCENE      collapsed, the rest of the scene, no counts because there are none
+#   INPUT                  the Input Map actions this file names
+#   GLOBALS & FAMILIES     collapsed
 #
-# plus a filter box, and five gestures: HOVER previews an object's rows, CLICK pins that highlight,
+# It is the Objects tab of the side panel, so it is drawn the way Godot's own docks are: a filter with
+# its sort button beside it, then the rows. When the Project bar is on, it folds in at the foot.
+#
+# Five gestures: HOVER previews an object's rows, CLICK pins that highlight,
 # DOUBLE-CLICK opens Object properties, DRAG onto the sheet starts an event on the object, and
 # RIGHT-CLICK offers Add condition / Add action / Select in scene / Open its script as a sheet.
 #
@@ -46,9 +51,6 @@ signal object_starter_events_requested(object_label: String)
 ## Right-click > Duplicate events for… - this object's events, copied for other objects.
 signal object_duplicate_events_requested(object_label: String)
 
-## The fold opened or closed - the rail records it with the rest of the column's state.
-signal fold_toggled(expanded: bool)
-
 const _META_KEY: String = "eventsheets_objects_panel"
 
 ## The drag payload a bar entry hands the canvas. Named so the viewport can recognise it without
@@ -67,12 +69,9 @@ const SORT_ORDERS: PackedStringArray = ["reading", "count", "name"]
 var tree: Tree = null
 var filter_edit: LineEdit = null
 
-var _header_button: Button = null
-var _header_row: HBoxContainer = null
 var _sort_button: Button = null
 var _entries: Array = []
 var _scene_only: Array = []
-var _expanded: bool = false
 var _highlighted: String = ""
 var _filter: String = ""
 var _sort: String = "reading"
@@ -84,56 +83,36 @@ var _section_folds: Dictionary = {"used": false, "scene": true, "input": false, 
 var _menu: PopupMenu = null
 var _menu_label: String = ""
 var _class_map: Dictionary = {}
-# The Project bar rides in this bar as its OTHER TAB rather than as a second dock. The strip
-# only appears once one is handed over, so a project that never turns it on sees the bar it always
-# had, with nothing extra on it.
-var _tab_row: HBoxContainer = null
-var _objects_tab: Button = null
-var _project_tab: Button = null
+# The Project bar rides at the foot of this tab, under its own fold, rather than as a second dock
+# or a tab of its own. It only appears once one is handed over, so a project that never turns it on
+# sees the bar it always had, with nothing extra on it.
 var _project_bar: Control = null
-var _active_tab: String = "objects"
 
 
 func _init() -> void:
 	name = "Objects"
-	custom_minimum_size = Vector2(EventSheetPalette.scaled_f(180.0), 0.0)
-	_tab_row = HBoxContainer.new()
-	_tab_row.name = "EventSheetObjectBarTabs"
-	_tab_row.visible = false
-	_objects_tab = _make_tab_button(EventSheetL10n.translate("Objects"), "objects")
-	_project_tab = _make_tab_button(EventSheetL10n.translate("Project"), "project")
-	_tab_row.add_child(_objects_tab)
-	_tab_row.add_child(_project_tab)
-	add_child(_tab_row)
-	_header_button = Button.new()
-	_header_button.flat = true
-	_header_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_header_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_header_button.tooltip_text = EventSheetL10n.translate(
-		"Every object this file uses. Click one to highlight its rows, click it again to clear.")
-	_header_button.pressed.connect(func() -> void: set_expanded(not _expanded))
-	var header_row := HBoxContainer.new()
-	_header_row = header_row
-	header_row.add_child(_header_button)
+	add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
+	# The filter, with the sort button beside it - the row a Godot dock starts with.
+	var filter_row: HBoxContainer = HBoxContainer.new()
+	filter_row.name = "EventSheetObjectsFilterRow"
+	filter_edit = LineEdit.new()
+	filter_edit.name = "EventSheetObjectsFilter"
+	filter_edit.placeholder_text = EventSheetL10n.translate("Filter…")
+	filter_edit.clear_button_enabled = true
+	filter_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	filter_edit.text_changed.connect(_on_filter_changed)
+	filter_edit.text_submitted.connect(_on_filter_submitted)
+	filter_row.add_child(filter_edit)
 	_sort_button = Button.new()
 	_sort_button.flat = true
 	_sort_button.text = "⇅"
 	_sort_button.tooltip_text = EventSheetL10n.translate("Sort by reading order, by count or by name.")
 	_sort_button.pressed.connect(_cycle_sort)
-	header_row.add_child(_sort_button)
-	add_child(header_row)
-	filter_edit = LineEdit.new()
-	filter_edit.name = "EventSheetObjectsFilter"
-	filter_edit.placeholder_text = EventSheetL10n.translate("filter objects...")
-	filter_edit.clear_button_enabled = true
-	filter_edit.text_changed.connect(_on_filter_changed)
-	filter_edit.text_submitted.connect(_on_filter_submitted)
-	add_child(filter_edit)
+	filter_row.add_child(_sort_button)
+	add_child(filter_row)
 	tree = Tree.new()
 	tree.name = "EventSheetObjectsTree"
-	# The rail decides the column heights, so the body carries no minimum of its own: a panel
-	# that kept one could not be dragged shut past its own header, which is how a panel is
-	# tucked away.
+	# The side panel decides the tab's size, so the body carries no minimum of its own.
 	tree.custom_minimum_size = Vector2.ZERO
 	tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -160,71 +139,22 @@ func _init() -> void:
 	_sort = str(prefs.get("sort", "reading"))
 	if not Array(SORT_ORDERS).has(_sort):
 		_sort = "reading"
-	set_expanded(bool(prefs.get("expanded", false)))
 
 
-## Expanding gives the list rail space (it competes with Open Sheets / Functions / Anatomy);
-## collapsing shrinks the panel back to its one-line header.
-func set_expanded(expanded: bool) -> void:
-	_expanded = expanded
-	size_flags_vertical = Control.SIZE_EXPAND_FILL if expanded else Control.SIZE_SHRINK_BEGIN
-	_apply_active_tab()
-	_refresh_header()
-	_save_prefs()
-	fold_toggled.emit(expanded)
+func _notification(what: int) -> void:
+	# The magnifier a Godot dock's filter wears, from the editor's own icons when there are any.
+	if what == NOTIFICATION_THEME_CHANGED and filter_edit != null and has_theme_icon("Search", "EditorIcons"):
+		filter_edit.right_icon = get_theme_icon("Search", "EditorIcons")
 
 
-## The header line the rail hangs its minimise button on, at the right edge. The row stays on
-## screen while the Project tab is showing (only the Objects controls inside it stand down), so
-## the gesture that slides this panel off the rail is always where it was.
-func rail_header_row() -> HBoxContainer:
-	return _header_row
-
-
-func is_expanded() -> bool:
-	return _expanded
-
-
-func _make_tab_button(label: String, tab_id: String) -> Button:
-	var button := Button.new()
-	button.flat = true
-	button.toggle_mode = true
-	button.text = label
-	button.pressed.connect(func() -> void: set_active_tab(tab_id))
-	return button
-
-
-## Hands this bar its Project tab. Passing null takes the tab away again (View ▸ Project bar
-## off, or the ✕), and the bar falls back to the Objects tab it has always had.
+## Hands this tab the Project bar, which sits at its foot under its own fold. Passing null takes it
+## away again (View ▸ Project bar off, or the ✕).
 func set_project_bar(bar: Control) -> void:
 	if _project_bar != null and _project_bar.get_parent() == self:
 		remove_child(_project_bar)
 	_project_bar = bar
 	if _project_bar != null and _project_bar.get_parent() == null:
 		add_child(_project_bar)
-	_tab_row.visible = _project_bar != null
-	if _project_bar == null:
-		_active_tab = "objects"
-	_apply_active_tab()
-
-
-func set_active_tab(tab_id: String) -> void:
-	if _project_bar == null:
-		tab_id = "objects"
-	_active_tab = tab_id
-	_apply_active_tab()
-
-
-func _apply_active_tab() -> void:
-	var on_objects: bool = _active_tab != "project"
-	_objects_tab.set_pressed_no_signal(on_objects)
-	_project_tab.set_pressed_no_signal(not on_objects)
-	_header_button.visible = on_objects
-	tree.visible = on_objects and _expanded
-	filter_edit.visible = on_objects and _expanded
-	_sort_button.visible = on_objects and _expanded
-	if _project_bar != null:
-		_project_bar.visible = not on_objects
 
 
 ## Highlights one object FROM OUTSIDE - the Scene dock's selection landing on a node this sheet
@@ -258,20 +188,28 @@ func _sync_tree_highlight() -> void:
 	if tree == null or tree.get_root() == null:
 		return
 	_syncing_highlight = true
-	var item: TreeItem = tree.get_root().get_first_child()
-	while item != null:
-		var child: TreeItem = item.get_first_child()
-		while child != null:
-			var meta: Variant = child.get_metadata(0)
-			if meta is Dictionary and str((meta as Dictionary).get("label", "")) == _highlighted:
-				child.select(0)
-				tree.scroll_to_item(child)
-				_syncing_highlight = false
-				return
-			child = child.get_next()
-		item = item.get_next()
-	tree.deselect_all()
+	var found: TreeItem = _item_labelled(tree.get_root(), _highlighted) if not _highlighted.is_empty() else null
+	if found != null:
+		found.select(0)
+		tree.scroll_to_item(found)
+	else:
+		tree.deselect_all()
 	_syncing_highlight = false
+
+
+## The first entry under `parent`, at any depth, that stands for the object `label` - the sheet's own
+## objects sit at the top level, a behavior under the object it rides on, the rest under a section.
+func _item_labelled(parent: TreeItem, label: String) -> TreeItem:
+	var item: TreeItem = parent.get_first_child()
+	while item != null:
+		var meta: Variant = item.get_metadata(0)
+		if meta is Dictionary and str((meta as Dictionary).get("label", "")) == label:
+			return item
+		var nested: TreeItem = _item_labelled(item, label)
+		if nested != null:
+			return nested
+		item = item.get_next()
+	return null
 
 
 ## Rebuilds the bar from a sheet. Safe to call on every sheet change - both halves are reads (the
@@ -286,7 +224,6 @@ func set_sheet(sheet: EventSheetResource) -> void:
 	EventSheetInputMapFacts.clear_cache()
 	_input_actions = EventSheetInputMapFacts.actions_named_by(sheet)
 	_rebuild_tree()
-	_refresh_header()
 
 
 ## When the OPEN FILE is itself a project autoload, the rail says so about it: the file's own
@@ -587,6 +524,11 @@ func _rebuild_tree() -> void:
 				visible_entries.append(entry)
 		if visible_entries.is_empty():
 			continue
+		# What this sheet uses needs no heading: the tab is called Objects, and these are the rows
+		# it is about, so they stand at the top level as plain rows. The other sections are folds.
+		if str(section.get("id", "")) == "used":
+			shown += _add_section_entries(root, section, visible_entries, missing)
+			continue
 		var section_item: TreeItem = tree.create_item(root)
 		section_item.set_text(0, section_line(section, visible_entries.size()))
 		section_item.set_selectable(0, false)
@@ -597,24 +539,31 @@ func _rebuild_tree() -> void:
 		# box has text, and goes back to its remembered state when it is cleared.
 		section_item.collapsed = bool(_section_folds.get(str(section.get("id", "")), false)) \
 			and _filter.strip_edges().is_empty()
-		var by_label: Dictionary = {}
-		for entry: Variant in visible_entries:
-			var record: Dictionary = entry
-			var label: String = str(record.get("label", ""))
-			var parent_item: TreeItem = section_item
-			var owner_label: String = _owner_label_of(record)
-			if by_label.has(owner_label):
-				parent_item = by_label[owner_label]
-			var entry_item: TreeItem = _add_entry_item(parent_item, record, Array(missing).has(label))
-			by_label[label] = entry_item
-			_add_could_adopt_line(entry_item, str(section.get("id", "")), label)
-			shown += 1
+		shown += _add_section_entries(section_item, section, visible_entries, missing)
 	if shown == 0:
 		var empty_item: TreeItem = tree.create_item(root)
 		empty_item.set_text(0, empty_state_text(not _scene_name.is_empty()))
 		empty_item.set_selectable(0, false)
 		empty_item.set_custom_color(0, EventSheetActiveTheme.chrome().object_bar_section_color)
 		empty_item.set_autowrap_mode(0, TextServer.AUTOWRAP_WORD_SMART)
+
+
+## One section's entries under `parent_item`, each behavior nested under the object it rides on.
+## Returns how many were added.
+func _add_section_entries(parent_item: TreeItem, section: Dictionary, visible_entries: Array,
+		missing: PackedStringArray) -> int:
+	var by_label: Dictionary = {}
+	for entry: Variant in visible_entries:
+		var record: Dictionary = entry
+		var label: String = str(record.get("label", ""))
+		var owner_item: TreeItem = parent_item
+		var owner_label: String = _owner_label_of(record)
+		if by_label.has(owner_label):
+			owner_item = by_label[owner_label]
+		var entry_item: TreeItem = _add_entry_item(owner_item, record, Array(missing).has(label))
+		by_label[label] = entry_item
+		_add_could_adopt_line(entry_item, str(section.get("id", "")), label)
+	return visible_entries.size()
 
 
 ## The muted "could adopt: X, Y" line under an object whose script the readings recognised a
@@ -849,10 +798,11 @@ func _cycle_sort() -> void:
 	_sort = SORT_ORDERS[(index + 1) % SORT_ORDERS.size()]
 	_save_prefs()
 	_rebuild_tree()
-	_refresh_header()
 
 
-func _refresh_header() -> void:
+## The Objects tab's hover: the scene this file is on, and how many objects it uses and how many
+## more the scene has - what the panel's own header line used to say, now that the tab names it.
+func tab_tooltip() -> String:
 	var used: int = 0
 	for entry: Variant in _entries:
 		if str((entry as Dictionary).get("kind", "")) not in ["autoload", "group"]:
@@ -862,9 +812,8 @@ func _refresh_header() -> void:
 		EventSheetL10n.translate("%d more") % _scene_only.size()
 	]
 	var scene_note: String = "  %s" % _scene_name if not _scene_name.is_empty() else ""
-	_header_button.text = "%s %s%s · %s" % [
-		"▾" if _expanded else "▸", EventSheetL10n.translate("Objects"), scene_note, counts
-	]
+	return "%s%s · %s\n%s" % [EventSheetL10n.translate("Objects"), scene_note, counts,
+		EventSheetL10n.translate("Every object this file uses. Click one to highlight its rows, click it again to clear.")]
 
 
 func _read_prefs() -> Dictionary:
@@ -878,4 +827,4 @@ func _read_prefs() -> Dictionary:
 func _save_prefs() -> void:
 	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
 		EditorInterface.get_editor_settings().set_project_metadata(
-			"eventsheets", _META_KEY, {"expanded": _expanded, "sort": _sort})
+			"eventsheets", _META_KEY, {"sort": _sort})

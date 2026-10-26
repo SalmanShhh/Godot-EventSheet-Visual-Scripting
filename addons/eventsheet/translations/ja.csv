@@ -9530,3 +9530,12 @@ Ctrl+Z removes the region again.,Ctrl+Z でリージョンを取り除けます�
 Remove #endregion,#endregion を削除
 Add #endregion,#endregion を追加
 + Add event to '%s'…,+ '%s' にイベントを追加…
+Filter…,フィルター…
+"Every function in this file: the sheet's own (✦ = published as an ACE), then the ones still written as code.",このファイルのすべての関数: まずシートの関数 (✦ = ACE として公開)、次にまだコードとして書かれている関数。
+Written as code in this file.,このファイルでコードとして書かれています。
+1 call,1 回の呼び出し
+%d calls,%d 回の呼び出し
+The side panel's tabs. Choosing one opens the side panel on it; choosing the ticked one closes the side panel.,サイドパネルのタブ。選ぶとそのタブでサイドパネルが開き、チェックの付いたタブを選ぶとサイドパネルが閉じます。
+"The side panel beside the sheet, with its Objects and Functions tabs. Unticked, it rests as a thin rail and the sheet takes the width.",シートの横のサイドパネル (オブジェクトと関数のタブ付き)。チェックを外すと細いレールになり、シートが幅を使います。
+Close the side panel,サイドパネルを閉じる
+Objects and functions of this sheet,このシートのオブジェクトと関数

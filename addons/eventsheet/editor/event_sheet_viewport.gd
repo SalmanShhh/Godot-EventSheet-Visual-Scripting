@@ -1235,14 +1235,14 @@ func end_column_header_drag() -> bool:
 	return false
 
 
-## WHAT A PRESS INSIDE AN EVENT WOULD DRAG, at a logical position, when the theme folds the header
-## band away (fold_workspace_bands): the lane split from the divider between the event's lanes, or a
-## fixed object column from the hairline after its object names - the two boundaries the header's
-## grabbers hold everywhere else, so folding the band takes neither away. The same answer shapes
-## column_header_grab_at gives. {} off an event, in a figure, under a theme that keeps the band, and
-## for a column that flows after its names (that edge sits on the words, where a press selects).
+## WHAT A PRESS INSIDE AN EVENT WOULD DRAG, at a logical position: the lane split from the divider
+## between the event's lanes, or a fixed object column from the hairline after its object names.
+## There is no band above the sheet to grab them from - the two sides are told apart by their colour
+## and their kind labels - so the line on any event IS the handle, in every theme. The same answer
+## shapes column_header_grab_at gives. {} off an event, in a figure, and for a column that flows
+## after its names (that edge sits on the words, where a press selects).
 func event_boundary_grab_at(local_position: Vector2) -> Dictionary:
-	if figure_mode or not workspace_bands_folded():
+	if figure_mode:
 		return {}
 	var row_data: EventRowData = _row_at(_row_metrics_helper.row_index_at_y(local_position.y))
 	if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
@@ -1274,20 +1274,19 @@ func _handle_event_boundary_press(mouse_button: InputEventMouseButton) -> bool:
 	return true
 
 
-## The resize cursor over a boundary an event can be dragged by, the cursor the header's grabbers
-## show; anything else gives the arrow back only if this put the resize cursor up.
+## The resize cursor over a boundary an event can be dragged by, so the line says it is a handle
+## before the button goes down; anything else gives the arrow back only if this put the resize
+## cursor up.
 func _show_event_boundary_cursor(control_position: Vector2) -> void:
-	if not workspace_bands_folded():
-		return
 	if not event_boundary_grab_at(_to_logical_position(control_position)).is_empty():
 		mouse_default_cursor_shape = Control.CURSOR_HSIZE
 	elif mouse_default_cursor_shape == Control.CURSOR_HSIZE:
 		mouse_default_cursor_shape = Control.CURSOR_ARROW
 
 
-## Back to the split the theme was authored with. The drag lives in the column header now, so the
-## way back to the default cannot live only in a gesture down the sheet: this is what the View menu
-## calls, and it announces the new ratio the way a finished drag does.
+## Back to the split the theme was authored with. The drag is a gesture on an event's divider, so
+## the way back to the default cannot live only in that gesture: this is what the View menu calls,
+## and it announces the new ratio the way a finished drag does.
 func reset_lane_split() -> void:
 	var default_ratio: float = EventSheetEventStyle.new().condition_lane_ratio
 	_get_event_style().condition_lane_ratio = default_ratio
@@ -3546,8 +3545,7 @@ func content_top_offset() -> float:
 
 
 ## True when the sheet's theme folds the bands between the toolbar and the sheet away
-## (fold_workspace_bands): no corner links, the top padding alone, and the lane boundary dragged from
-## the divider inside an event rather than from the header band above the canvas.
+## (fold_workspace_bands): no corner links and the top padding alone.
 func workspace_bands_folded() -> bool:
 	return _editor_style != null and _editor_style.fold_workspace_bands
 

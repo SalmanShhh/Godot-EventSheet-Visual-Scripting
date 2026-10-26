@@ -1,8 +1,8 @@
 # Godot EventSheets - the sheet health card.
 #
 # Pins VALUES: the exact lines the card draws and which panel each one belongs to, the Doctor counts
-# for ONE sheet out of a project-wide report, how a set of Test Sheets reads when one of them failed
-# and when none has been run, and the hover the Open Sheets panel shows where a sheet is picked.
+# for ONE sheet out of a project-wide report, and how a set of Test Sheets reads when one of them
+# failed and when none has been run.
 @tool
 class_name SheetHealthCardTest
 extends RefCounted
@@ -14,7 +14,6 @@ static func run() -> bool:
 	all_passed = _test_card_lines() and all_passed
 	all_passed = _test_doctor_counts() and all_passed
 	all_passed = _test_test_results() and all_passed
-	all_passed = _test_open_sheets_hover() and all_passed
 	return all_passed
 
 
@@ -100,21 +99,6 @@ static func _test_test_results() -> bool:
 			PackedStringArray(["res://tests/a_test.gd", "res://tests/b_test.gd"])), "red") and passed
 	passed = _check("a test nobody has run says nothing either way",
 		EventSheetHealthCard.combined_test_result(PackedStringArray(["res://tests/never.gd"])), "") and passed
-	return passed
-
-
-## The hover where a sheet is PICKED: where it is stored, how much of it reads as events, and the
-## workspace it belongs to.
-static func _test_open_sheets_hover() -> bool:
-	var passed: bool = _check("an unsaved sheet says so",
-		EventSheetOpenSheetsDock.hover_text({"path": ""}), "(unsaved sheet)")
-	passed = _check("a saved one leads with its file",
-		EventSheetOpenSheetsDock.hover_text({"path": "res://game/player.gd", "health": "reads as events"}),
-		"res://game/player.gd\nreads as events") and passed
-	passed = _check("and names its workspace when it has one",
-		EventSheetOpenSheetsDock.hover_text({"path": "res://game/player.gd", "health": "reads as events",
-			"group": "Level 1"}),
-		"res://game/player.gd\nreads as events\nLevel 1") and passed
 	return passed
 
 

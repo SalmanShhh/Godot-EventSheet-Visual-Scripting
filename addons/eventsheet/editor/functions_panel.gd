@@ -1,99 +1,277 @@
 @tool
 class_name EventSheetFunctionsPanel
 extends VBoxContainer
-# The Functions overview as its OWN dockable left-rail panel - previously welded inside the
-# Generated-GDScript side panel, so seeing your functions meant opening the code view. Now it sits
-# in the rail (under Open Sheets, above Anatomy) behind a fold header you expand whenever you want:
-# every sheet function at a glance with its signature (✦ = exposed as an ACE), ＋ adds one, and the
-# list keeps its click/right-click behaviour (the dock owns those handlers - this panel is shell +
-# fold state only). Expanded/collapsed persists per-project across editor restarts.
+# The Functions tab of the side panel: every function this file has, at a glance.
+#
+# Drawn the way Godot's own docks are - a filter (with ＋ beside it, which adds a function), then
+# plain rows with an icon, a name and a count:
+#
+#   ƒ juice_tile    1 call      a sheet function, and how many times this file calls it
+#   ƒ _process      code        a function still written as code in the file
+#
+# Sheet functions come first, in the order the sheet holds them (✦ after a name = published as an
+# ACE), then the functions still written as code, in file order. The rows are DERIVED from the open
+# sheet every time it changes, so there is no stored list to fall out of date. The panel is shell
+# only: right-click on a sheet function is the dock's (it offers Delete Function).
 
-## The header's ＋ - the dock opens the function dialog (the ACE Studio).
+## The ＋ beside the filter - the dock opens the function dialog (the ACE Studio).
 signal add_requested
-## The fold opened or closed - the rail records it with the rest of the column's state.
-signal fold_toggled(expanded: bool)
 
-const _META_KEY: String = "eventsheets_functions_panel"
+## The row kinds `function_rows` returns.
+const KIND_SHEET: String = "sheet"
+const KIND_CODE: String = "code"
 
-var list: ItemList = null
+## The function list itself: column 0 the icon and the name, column 1 the count. A sheet function's
+## row carries {"kind": "sheet", "index": <its index in sheet.functions>} as its metadata, a code
+## function's {"kind": "code", "name": <its name>}.
+var list: Tree = null
+var filter_edit: LineEdit = null
 
-var _header_button: Button = null
-var _header_row: HBoxContainer = null
-var _count: int = 0
-var _expanded: bool = false
+var _rows: Array = []
+var _filter: String = ""
 
 
 func _init() -> void:
 	name = "Functions"
-	custom_minimum_size = Vector2(EventSheetPalette.scaled_f(180.0), 0.0)
-	var header: HBoxContainer = HBoxContainer.new()
-	_header_row = header
-	_header_button = Button.new()
-	_header_button.flat = true
-	_header_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_header_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_header_button.tooltip_text = "Every sheet function at a glance (✦ = published as an ACE). Click to expand or collapse."
-	_header_button.pressed.connect(func() -> void: set_expanded(not _expanded))
-	header.add_child(_header_button)
+	add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
+	var filter_row: HBoxContainer = HBoxContainer.new()
+	filter_row.name = "EventSheetFunctionsFilterRow"
 	var add_button: Button = Button.new()
+	add_button.name = "EventSheetFunctionsAdd"
 	add_button.text = "＋"
 	add_button.flat = true
-	add_button.tooltip_text = "Add a function…"
+	add_button.tooltip_text = EventSheetL10n.translate("Add a function…")
 	add_button.pressed.connect(func() -> void: add_requested.emit())
-	header.add_child(add_button)
-	add_child(header)
-	list = ItemList.new()
+	filter_row.add_child(add_button)
+	filter_edit = LineEdit.new()
+	filter_edit.name = "EventSheetFunctionsFilter"
+	filter_edit.placeholder_text = EventSheetL10n.translate("Filter…")
+	filter_edit.clear_button_enabled = true
+	filter_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	filter_edit.text_changed.connect(func(text: String) -> void:
+		_filter = text
+		_rebuild())
+	filter_row.add_child(filter_edit)
+	add_child(filter_row)
+	list = Tree.new()
 	list.name = "EventSheetFunctionsList"
-	# The rail decides the column heights, so the body carries no minimum of its own: a panel
-	# that kept one could not be dragged shut past its own header, which is how a panel is
-	# tucked away.
+	# The side panel decides the tab's size, so the body carries no minimum of its own.
 	list.custom_minimum_size = Vector2.ZERO
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	list.hide_root = true
+	list.columns = 2
+	list.set_column_expand(0, true)
+	list.set_column_expand(1, false)
+	list.set_column_custom_minimum_width(1, int(EventSheetPalette.scaled_f(58.0)))
 	list.allow_reselect = true
+	# Without this a right-click selects nothing, and the menu would open on whatever was selected
+	# last rather than on the row under the pointer.
+	list.allow_rmb_select = true
 	add_child(list)
-	set_expanded(bool(_read_prefs().get("expanded", false)))
 
 
-## Expanding gives the list rail space (it competes with Open Sheets / Anatomy); collapsing shrinks
-## the panel back to its one-line header.
-func set_expanded(expanded: bool) -> void:
-	_expanded = expanded
-	list.visible = expanded
-	size_flags_vertical = Control.SIZE_EXPAND_FILL if expanded else Control.SIZE_SHRINK_BEGIN
-	_refresh_header()
-	_save_prefs()
-	fold_toggled.emit(expanded)
+func _notification(what: int) -> void:
+	# The magnifier a Godot dock's filter wears, from the editor's own icons when there are any.
+	if what == NOTIFICATION_THEME_CHANGED and filter_edit != null and has_theme_icon("Search", "EditorIcons"):
+		filter_edit.right_icon = get_theme_icon("Search", "EditorIcons")
+		_rebuild()
 
 
-## The header line the rail hangs its minimise button on, at the right edge.
-func rail_header_row() -> HBoxContainer:
-	return _header_row
+## The Functions tab's hover.
+func tab_tooltip() -> String:
+	return EventSheetL10n.translate(
+		"Every function in this file: the sheet's own (✦ = published as an ACE), then the ones still written as code.")
 
 
-func is_expanded() -> bool:
-	return _expanded
+## Re-read the open sheet's functions.
+func set_sheet(sheet: EventSheetResource) -> void:
+	_rows = function_rows(sheet)
+	_rebuild()
 
 
-## The dock pushes the function count after every refresh so the collapsed header still tells the
-## sheet's weight ("▸ Functions · 12") without expanding.
-func set_count(count: int) -> void:
-	_count = count
-	_refresh_header()
+## How many sheet functions the tab lists.
+func sheet_function_count() -> int:
+	var count: int = 0
+	for row: Variant in _rows:
+		if str((row as Dictionary).get("kind", "")) == KIND_SHEET:
+			count += 1
+	return count
 
 
-func _refresh_header() -> void:
-	_header_button.text = "%s Functions · %d" % ["▾" if _expanded else "▸", _count]
+## The index into `sheet.functions` of the selected row, or -1 when nothing - or a function written
+## as code - is selected.
+func selected_function_index() -> int:
+	var selected: TreeItem = list.get_selected()
+	if selected == null or not (selected.get_metadata(0) is Dictionary):
+		return -1
+	var meta: Dictionary = selected.get_metadata(0)
+	return int(meta.get("index", -1)) if str(meta.get("kind", "")) == KIND_SHEET else -1
 
 
-func _read_prefs() -> Dictionary:
-	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
-		var meta: Variant = EditorInterface.get_editor_settings().get_project_metadata("eventsheets", _META_KEY, {})
-		if meta is Dictionary:
-			return meta
-	return {}
+## Select the row of the sheet function at `index` in `sheet.functions`.
+func select_function(index: int) -> void:
+	var item: TreeItem = list.get_root().get_first_child() if list.get_root() != null else null
+	while item != null:
+		var meta: Variant = item.get_metadata(0)
+		if meta is Dictionary and str((meta as Dictionary).get("kind", "")) == KIND_SHEET \
+				and int((meta as Dictionary).get("index", -1)) == index:
+			item.select(0)
+			return
+		item = item.get_next()
 
 
-func _save_prefs() -> void:
-	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
-		EditorInterface.get_editor_settings().set_project_metadata("eventsheets", _META_KEY, {"expanded": _expanded})
+## What the tab lists, as [{kind, name, label, count, tooltip, index}] - pure, so a test pins it.
+## Sheet functions first: their name (a ✦ after it when published as an ACE), how many times this
+## file calls them, and their signature plus their description on hover. Then the functions still
+## written as code, read off the code blocks the sheet keeps.
+static func function_rows(sheet: EventSheetResource) -> Array:
+	var rows: Array = []
+	if sheet == null:
+		return rows
+	var code_blocks: PackedStringArray = PackedStringArray()
+	_collect_code(sheet.events, code_blocks)
+	for function_index: int in sheet.functions.size():
+		var function: EventFunction = sheet.functions[function_index] as EventFunction
+		if function == null:
+			continue
+		var calls: int = call_count(sheet, function.function_name, code_blocks)
+		var description: String = EventSheetDescriptions.display(EventSheetDescriptions.for_function(function))
+		var signature: String = signature_of(function)
+		rows.append({
+			"kind": KIND_SHEET,
+			"name": function.function_name,
+			"label": (function.function_name + "  ✦") if function.expose_as_ace else function.function_name,
+			"count": call_count_text(calls),
+			"tooltip": signature if description.is_empty() else "%s\n%s" % [signature, description],
+			"index": function_index,
+		})
+	var seen: Dictionary = {}
+	for code: String in code_blocks:
+		for function_name: String in code_function_names(code):
+			if seen.has(function_name):
+				continue
+			seen[function_name] = true
+			rows.append({
+				"kind": KIND_CODE,
+				"name": function_name,
+				"label": function_name,
+				"count": EventSheetL10n.translate("code"),
+				"tooltip": EventSheetL10n.translate("Written as code in this file."),
+				"index": -1,
+			})
+	return rows
+
+
+## "name(a, b)" - a sheet function's signature, as its hover opens with.
+static func signature_of(function: EventFunction) -> String:
+	var param_ids: PackedStringArray = PackedStringArray()
+	for param_variant: Variant in function.params:
+		if param_variant is ACEParam:
+			param_ids.append((param_variant as ACEParam).id)
+	return "%s(%s)" % [function.function_name, ", ".join(param_ids)]
+
+
+## "1 call" / "3 calls", or nothing for a function this file never calls (a published verb, an
+## entry point other files call).
+static func call_count_text(calls: int) -> String:
+	if calls <= 0:
+		return ""
+	return EventSheetL10n.translate("1 call") if calls == 1 else EventSheetL10n.translate("%d calls") % calls
+
+
+## How many times this file calls `function_name`: every Call row naming it (in events, groups,
+## sub-events and the other functions' bodies), plus every `function_name(` in the code the sheet
+## keeps as code that is not the line defining it.
+static func call_count(sheet: EventSheetResource, function_name: String, code_blocks: PackedStringArray) -> int:
+	if function_name.is_empty():
+		return 0
+	var count: int = _count_call_rows(sheet.events, function_name)
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction and (entry as EventFunction).function_name != function_name:
+			count += _count_call_rows((entry as EventFunction).events, function_name)
+	var pattern: RegEx = RegEx.create_from_string("(?<![\\w.])%s\\s*\\(" % function_name)
+	var definition: RegEx = RegEx.create_from_string("^\\s*(static\\s+)?func\\s+%s\\s*\\(" % function_name)
+	for code: String in code_blocks:
+		for line: String in code.split("\n"):
+			if definition.search(line) != null:
+				continue
+			count += pattern.search_all(line.split("#")[0]).size()
+	return count
+
+
+## The names of the functions a block of code defines, in the order it defines them.
+static func code_function_names(code: String) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	var definition: RegEx = RegEx.create_from_string("^(?:static\\s+)?func\\s+([A-Za-z_]\\w*)\\s*\\(")
+	for line: String in code.split("\n"):
+		var found: RegExMatch = definition.search(line)
+		if found != null:
+			names.append(found.get_string(1))
+	return names
+
+
+static func _collect_code(rows: Array, into: PackedStringArray) -> void:
+	for entry: Variant in rows:
+		if entry is RawCodeRow:
+			into.append((entry as RawCodeRow).code)
+		elif entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			_collect_code(group.events if not group.events.is_empty() else group.rows, into)
+
+
+static func _count_call_rows(rows: Array, function_name: String) -> int:
+	var count: int = 0
+	for entry: Variant in rows:
+		if entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			count += _count_call_rows(group.events if not group.events.is_empty() else group.rows, function_name)
+			continue
+		if not (entry is EventRow):
+			continue
+		var event: EventRow = entry as EventRow
+		for action: Variant in event.actions:
+			if _called_function_name(action) == function_name:
+				count += 1
+		count += _count_call_rows(event.sub_events, function_name)
+	return count
+
+
+## The function a Call row calls, or "" for any other action.
+static func _called_function_name(action: Variant) -> String:
+	if not (action is ACEAction):
+		return ""
+	var call_action: ACEAction = action as ACEAction
+	if not (call_action.provider_id.is_empty() or call_action.provider_id == "Core") \
+			or call_action.ace_id != "CallFunction":
+		return ""
+	var params: Dictionary = call_action.params if not call_action.params.is_empty() else call_action.parameters
+	return str(params.get("function_name", "")).strip_edges()
+
+
+func _rebuild() -> void:
+	if list == null:
+		return
+	list.clear()
+	var root: TreeItem = list.create_item()
+	var needle: String = _filter.strip_edges().to_lower()
+	var icon: Texture2D = get_theme_icon("MemberMethod", "EditorIcons") \
+		if has_theme_icon("MemberMethod", "EditorIcons") else null
+	var muted: Color = EventSheetActiveTheme.chrome().object_bar_section_color
+	for row_variant: Variant in _rows:
+		var row: Dictionary = row_variant
+		if not needle.is_empty() and not str(row.get("name", "")).to_lower().contains(needle):
+			continue
+		var item: TreeItem = list.create_item(root)
+		var is_code: bool = str(row.get("kind", "")) == KIND_CODE
+		item.set_text(0, str(row.get("label", "")) if icon != null else "ƒ  %s" % str(row.get("label", "")))
+		if icon != null:
+			item.set_icon(0, icon)
+		item.set_tooltip_text(0, str(row.get("tooltip", "")))
+		if is_code:
+			item.set_custom_color(0, muted)
+		item.set_text(1, str(row.get("count", "")))
+		item.set_text_alignment(1, HORIZONTAL_ALIGNMENT_RIGHT)
+		item.set_custom_color(1, muted)
+		item.set_metadata(0, {"kind": KIND_CODE, "name": str(row.get("name", ""))} if is_code
+			else {"kind": KIND_SHEET, "index": int(row.get("index", -1))})

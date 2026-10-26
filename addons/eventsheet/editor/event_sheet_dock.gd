@@ -328,22 +328,18 @@ var _provider_preview_path: String = ""
 var _provider_preview_scan: Dictionary = {}
 var _split: HSplitContainer = null
 var _scroll: ScrollContainer = null
-# Open Sheets panel: a left in-workspace pane (the "Filter Scripts"-style list). _workspace_body
-# is a stable HSplit holding [_open_sheets_panel | _content_host]; _content_host wraps _scroll, so
-# the code-panel/split-view machinery (which reparents _scroll relative to its parent) stays inside
-# it and never disturbs the panel. Toggled from the View menu; collapsible to a strip.
+# The side panel beside the sheet. _workspace_body is a stable HSplit holding [side panel |
+# _content_host]; _content_host wraps _scroll, so the code-panel/split-view machinery (which
+# reparents _scroll relative to its parent) stays inside it and never disturbs the panel.
 var _workspace_body: HSplitContainer = null
 var _content_host: VBoxContainer = null
-var _open_sheets_panel: EventSheetOpenSheetsDock = null
-var _anatomy_panel: BehaviourAnatomyPanel = null
-var _picker_preview_panel: EventSheetPickerPreviewPanel = null  # left rail, under Open Sheets (behaviour_anatomy_panel.gd)
-var _functions_panel: EventSheetFunctionsPanel = null  # left rail, dockable fold-expand Functions overview (functions_panel.gd)
-# The left rail itself: the five panels as a draggable VSplit chain that folds, tucks panels into
-# foot tabs and tucks the whole column into an edge strip, all remembered per project
-# (dock/rail_panels.gd).
+var _anatomy_panel: BehaviourAnatomyPanel = null  # the side panel's Anatomy tab, for a behaviour pack (behaviour_anatomy_panel.gd)
+var _picker_preview_panel: EventSheetPickerPreviewPanel = null  # the side panel's tab while the picker is open (picker_preview_panel.gd)
+var _functions_panel: EventSheetFunctionsPanel = null  # the side panel's Functions tab (functions_panel.gd)
+# The side panel itself: a thin rail that opens to tabs, open or closed and its tab remembered per
+# project (dock/rail_panels.gd).
 var _rail_panels: EventSheetRailPanels = EventSheetRailPanels.new()
 var _minimap: EventSheetMinimap = null  # the thin picture-of-the-sheet column at the canvas's right edge (dock/minimap.gd)
-var _column_header: SheetColumnHeader = null
 var _identity_banner: SheetIdentityBanner = null
 var _preview_banner: PanelContainer = null
 var _preview_label: Label = null
@@ -355,8 +351,8 @@ var _side_panel: VBoxContainer = null
 var _preview_window: Window = null
 var _preview_title: Label = null
 var _preview_list: ItemList = null
-## Functions overview (event-sheet-style): every sheet function at a glance, atop the GDScript panel.
-var _functions_list: ItemList = null
+## The Functions tab's list: every function in the file at a glance (functions_panel.gd).
+var _functions_list: Tree = null
 var _functions_menu: PopupMenu = null
 
 var _current_sheet: EventSheetResource = null  # the ACTIVE tab's sheet
@@ -1448,9 +1444,10 @@ func _remember_closed_path(path: String) -> void:
 		_recent_closed_paths.pop_back()
 
 
-## ── Open Sheets dock API (a left editor dock; see open_sheets_dock.gd) ───────────────
-## A read-only snapshot of the tab strip: each open tab's display title / path / dirty flag,
-## the active index, and recently-closed paths not currently open (offered as "reopen").
+## ── Open tabs model ─────────────────────────────────────────────────────────────────────
+## A read-only snapshot of the tab strip: each open tab's display title / path / dirty flag /
+## workspace group, the active index, and recently-closed paths not currently open (the Start
+## page offers those to reopen).
 func get_open_sheets_state() -> Dictionary:
 	var open: Array = []
 	var open_paths: Dictionary = {}
@@ -1462,9 +1459,6 @@ func get_open_sheets_state() -> Dictionary:
 			"title": _format_tab_title(tab.get("sheet"), p, bool(tab.get("dirty", false))),
 			"path": p,
 			"dirty": bool(tab.get("dirty", false)),
-			# The health card's first line on the hover, where sheets are picked. Only this
-			# line: the rest of the card asks the Doctor, and a hover must never sweep the project.
-			"health": EventSheetReadingCoverage.chip_text(tab.get("sheet")),
 			"group": str(tab.get("group", "")),
 		})
 	var recent: Array[String] = []
@@ -1474,7 +1468,7 @@ func get_open_sheets_state() -> Dictionary:
 	return {"open": open, "active": _active_tab_index, "recent": recent}
 
 
-## Switch to an open tab by index (Open Sheets dock click). A one-click reselect of the
+## Switch to an open tab by index. A one-click reselect of the
 ## already-active sheet must re-focus, not reload - reloading clears the viewport and wipes
 ## the sheet's undo/redo history, so swallow the no-op here (the dock allows reselect).
 func activate_open_tab(index: int) -> void:
@@ -1483,7 +1477,7 @@ func activate_open_tab(index: int) -> void:
 	_activate_tab(index)
 
 
-## Reopen a recently-closed sheet by path (Open Sheets dock click). Drops it from the MRU
+## Reopen a recently-closed sheet by path (the Start page's recent sheets). Drops it from the MRU
 ## first - _load_sheet_from_path opens or re-focuses it as a tab.
 func reopen_sheet_path(path: String) -> void:
 	if path.strip_edges().is_empty():

@@ -575,7 +575,7 @@ i18n (Godot translations).
   from a small dropdown on the field's row - the third time an action needs `"jump"` or
   `res://sfx/hit.ogg`, it is a pick instead of a retype.
 - **You always know which group you are in.** On long sheets, scrolling inside a group pins
-  **that group's own head** under the column header - its title, description, what it holds and
+  **that group's own head** at the top of the sheet - its title, description, what it holds and
   its switch - so it can be folded, switched off or edited without scrolling back up. The parent
   chain shortens to the last two names ("Gameplay ▸ Combat") and the whole chain is the hover.
   Clicking one of those parent names scrolls to that group's own head, so getting back out is the

@@ -1,4 +1,8 @@
 # EventSheet - pinned Conditions/Actions column header.
+#
+# DEPRECATED: the dock no longer places this band. The two lanes are told apart by their colour and
+# their kind labels, and the line between them on any event is the handle that resizes them
+# (EventSheetViewport.event_boundary_grab_at). The class stays so code that built one keeps working.
 # A thin band drawn above the scrollable sheet that labels the two lanes and mirrors the
 # event rows' lane divider position (zoom + horizontal-scroll aware), so the column grid
 # reads from the header straight down through every row.

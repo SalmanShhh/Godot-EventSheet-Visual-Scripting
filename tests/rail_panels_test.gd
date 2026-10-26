@@ -1,16 +1,15 @@
 @tool
 class_name RailPanelsTest
 extends RefCounted
-# The left rail (dock/rail_panels.gd) and the Properties bar's empty state (dock/properties_bar.gd).
+# The side panel (dock/rail_panels.gd) and the Properties bar's empty state (dock/properties_bar.gd).
 #
-# Pins the model first, because it is what decides what a reader sees before anything is dragged:
-# the panel order, which panels rest open and which are folds, which panels are on offer at all for
-# a given sheet, and the stored-state round trip. Then pins the BUILT rail: the VSplit chain in
-# panel order, every panel's minimum size handed to the rail, grabbers drawn rather than revealed on
-# hover, a tucked panel gone from the column and named by a tab at the foot, and the whole rail
-# tucked into its edge strip. Finally the two Open Sheets readings the rail leans on - duplicate
-# tabs of one file grouped under one line with a count, and which tab a click on that line goes to -
-# and the Properties bar being its splitter handle until something is selected.
+# Pins the model first, because it is what decides what a reader sees before anything is clicked:
+# the tab order, the resting state (closed, on Objects), which tabs are on offer for a given sheet,
+# and the stored-state round trip - including a record written by the stacked column the panel
+# replaced. Then pins the BUILT panel: a thin rail with one open button, opening to Godot-style tabs
+# (Objects and Functions) with no Open Sheets list, the chosen tab shown alone, every panel's fold
+# header standing down inside its tab, the strip not draggable while closed, and the View menu
+# saying the same. Finally the Properties bar being its splitter handle until something is selected.
 
 
 const SUPPORT := preload("res://tests/support.gd")
@@ -32,203 +31,130 @@ class NoopUndoManager:
 static func run() -> bool:
 	var ok: bool = true
 	ok = _model() and ok
-	ok = _open_sheets_grouping() and ok
-	ok = _built_rail() and ok
+	ok = _built_panel() and ok
 	return ok
 
 
-## The rail's state model: order, defaults, the census rule, and reading a stored record back.
+## The panel's state model: order, defaults, the census rule, and reading a stored record back.
 static func _model() -> bool:
 	var ok: bool = true
-	ok = _check("the rail's panel order",
-		Array(EventSheetRailPanels.panel_ids()),
-		["open_sheets", "objects", "functions", "anatomy", "picker_preview"]) and ok
+	ok = _check("the side panel's tabs, in strip order",
+		Array(EventSheetRailPanels.panel_ids()), ["objects", "functions", "anatomy", "picker_preview"]) and ok
+	ok = _check("it rests closed, on the Objects tab, 230 px wide when opened",
+		EventSheetRailPanels.default_state(),
+		{"panel_open": false, "panel_tab": "objects", "rail_width": 230.0,
+			"properties_tucked": false, "properties_width": 270.0}) and ok
 
-	var defaults: Dictionary = EventSheetRailPanels.default_state()
-	var folded_by_default: Array = []
-	for panel_id: String in EventSheetRailPanels.panel_ids():
-		if bool((defaults["panels"][panel_id] as Dictionary).get("folded")):
-			folded_by_default.append(panel_id)
-	ok = _check("the rail rests on Open Sheets and Objects; the rest are folds",
-		folded_by_default, ["functions", "anatomy", "picker_preview"]) and ok
-	ok = _check("nothing starts tucked away",
-		Array(EventSheetRailPanels.tucked_panel_ids(defaults)), []) and ok
-	ok = _check("the rail and the Properties bar start on screen",
-		[defaults["rail_tucked"], defaults["properties_tucked"]], [false, false]) and ok
-
-	# The census: a panel nothing can fill is not on offer at all.
-	ok = _check("a plain sheet with the picker closed offers three panels",
+	# The census: a tab nothing can fill is not on offer at all.
+	ok = _check("a plain sheet with the picker closed offers Objects and Functions",
 		Array(EventSheetRailPanels.shown_panel_ids({"behaviour_pack": false, "picker_open": false})),
-		["open_sheets", "objects", "functions"]) and ok
+		["objects", "functions"]) and ok
 	ok = _check("a behaviour pack also offers Anatomy",
 		Array(EventSheetRailPanels.shown_panel_ids({"behaviour_pack": true, "picker_open": false})),
-		["open_sheets", "objects", "functions", "anatomy"]) and ok
+		["objects", "functions", "anatomy"]) and ok
 	ok = _check("the Picker preview is on offer while the picker is open",
 		Array(EventSheetRailPanels.shown_panel_ids({"behaviour_pack": false, "picker_open": true})),
-		["open_sheets", "objects", "functions", "picker_preview"]) and ok
+		["objects", "functions", "picker_preview"]) and ok
+	ok = _check("a remembered tab that is not on offer shows Objects instead",
+		[EventSheetRailPanels.shown_tab("anatomy", PackedStringArray(["objects", "functions"])),
+			EventSheetRailPanels.shown_tab("functions", PackedStringArray(["objects", "functions"]))],
+		["objects", "functions"]) and ok
 
-	# The stored record: written, read back, the same rail.
-	var stored: Dictionary = EventSheetRailPanels.default_state()
-	(stored["panels"]["objects"] as Dictionary)["tucked"] = true
-	(stored["panels"]["objects"] as Dictionary)["height"] = 233.0
-	(stored["panels"]["functions"] as Dictionary)["folded"] = false
-	stored["rail_tucked"] = true
-	stored["rail_width"] = 174.0
-	stored["properties_tucked"] = true
-	stored["properties_width"] = 312.0
-	var read_back: Dictionary = EventSheetRailPanels.normalize_state(stored)
-	ok = _check("a stored rail reads back exactly as it was written", read_back, stored) and ok
-	ok = _check("the tucked panels are listed in rail order",
-		Array(EventSheetRailPanels.tucked_panel_ids(read_back)), ["objects"]) and ok
-
-	# A record from before a panel existed, or a record that is not a record at all, reads as the
-	# defaults for what it does not carry - never as a missing panel.
-	var partial: Dictionary = EventSheetRailPanels.normalize_state({
-		"rail_width": 120.0, "panels": {"objects": {"tucked": true}}})
-	ok = _check("a half-written record keeps every panel",
-		Array((partial["panels"] as Dictionary).keys()),
-		Array(EventSheetRailPanels.panel_ids())) and ok
-	ok = _check("a half-written record keeps the defaults it does not carry",
-		[partial["rail_width"], partial["rail_tucked"],
-			(partial["panels"]["functions"] as Dictionary)["folded"],
-			(partial["panels"]["objects"] as Dictionary)["tucked"]],
-		[120.0, false, true, true]) and ok
+	# The stored record: written, read back, the same panel.
+	var stored: Dictionary = {"panel_open": true, "panel_tab": "functions", "rail_width": 174.0,
+		"properties_tucked": true, "properties_width": 312.0}
+	ok = _check("a stored panel reads back exactly as it was written",
+		EventSheetRailPanels.normalize_state(stored), stored) and ok
+	# The column of stacked panels the side panel replaced kept other keys. Its record reads as the
+	# resting panel, keeping only the widths both shapes share.
+	var old_column: Dictionary = EventSheetRailPanels.normalize_state({
+		"rail_tucked": false, "rail_width": 200.0, "properties_width": 300.0,
+		"panels": {"open_sheets": {"folded": false, "tucked": false, "height": 150.0}}})
+	ok = _check("the stacked column's record reads as a closed panel on Objects", old_column,
+		{"panel_open": false, "panel_tab": "objects", "rail_width": 200.0,
+			"properties_tucked": false, "properties_width": 300.0}) and ok
+	ok = _check("a tab that does not exist reads as Objects",
+		EventSheetRailPanels.normalize_state({"panel_tab": "open_sheets"})["panel_tab"], "objects") and ok
 	ok = _check("a record that is not a dictionary reads as the defaults",
 		EventSheetRailPanels.normalize_state("nonsense"), EventSheetRailPanels.default_state()) and ok
 	return ok
 
 
-## Open Sheets: eight tabs on one file are one line with a count, and a click walks them.
-static func _open_sheets_grouping() -> bool:
-	var ok: bool = true
-	var open: Array = []
-	for i: int in 8:
-		open.append({"title": "Flash", "path": "res://eventsheet_addons/flash/flash_behavior.gd", "dirty": false})
-	open.append({"title": "InputRebindDemo", "path": "res://demo/input_rebind.gd", "dirty": true})
-	open.append({"title": "Untitled", "path": "", "dirty": true})
-	open.append({"title": "Untitled", "path": "", "dirty": false})
-
-	var grouped: Array = EventSheetOpenSheetsDock.group_entries(open)
-	var labels: Array = []
-	for entry: Dictionary in grouped:
-		labels.append(EventSheetOpenSheetsDock.list_label(entry))
-	ok = _check("duplicates of one file are one line with a count; unsaved sheets never group",
-		labels, ["Flash ×8", "InputRebindDemo", "Untitled", "Untitled"]) and ok
-	ok = _check("the grouped line carries every tab it stands for",
-		(grouped[0] as Dictionary).get("indices"), [0, 1, 2, 3, 4, 5, 6, 7]) and ok
-	ok = _check("a dirty tab anywhere in the group marks the line",
-		(grouped[1] as Dictionary).get("dirty"), true) and ok
-	ok = _check("the hover says how many tabs are on the file",
-		EventSheetOpenSheetsDock.hover_text(grouped[0]).ends_with(
-			"8 tabs are open on this file - clicking walks them."), true) and ok
-
-	var indices: Array = (grouped[0] as Dictionary).get("indices")
-	ok = _check("clicking a group with the active tab elsewhere goes to its first tab",
-		EventSheetOpenSheetsDock.next_index(indices, 9), 0) and ok
-	ok = _check("clicking it again walks to the next tab of that file",
-		EventSheetOpenSheetsDock.next_index(indices, 3), 4) and ok
-	ok = _check("the walk wraps round at the end",
-		EventSheetOpenSheetsDock.next_index(indices, 7), 0) and ok
-
-	# The rendered list says the same thing.
-	var panel: EventSheetOpenSheetsDock = EventSheetOpenSheetsDock.new()
-	panel.set_state(open, 0, [])
-	var rendered: Array = []
-	for row: int in panel._list.item_count:
-		rendered.append(panel._list.get_item_text(row))
-	ok = _check("the panel renders one row per file", rendered,
-		["Flash ×8", "InputRebindDemo", "Untitled", "Untitled"]) and ok
-	panel.free()
-	return ok
-
-
-## The built rail: the chain, the minimum sizes, the drawn grabbers, a tucked panel, a tucked rail,
-## and the Properties bar waiting as its handle.
-static func _built_rail() -> bool:
+## The built panel: the rail, the tabs, the chosen tab alone, the stood-down fold headers, the View
+## menu, and the Properties bar waiting as its handle.
+static func _built_panel() -> bool:
 	var ok: bool = true
 	var dock: EventSheetEditor = EventSheetEditor.new()
 	dock.set_undo_redo_manager(NoopUndoManager.new())
 	dock.setup(EventSheetResource.new())
+	var rail: EventSheetRailPanels = dock._rail_panels
 
-	var rail: Control = dock._workspace_body.get_child(0) as Control
-	ok = _check("the rail is the workspace split's left side", rail.name, "EventSheetLeftRail") and ok
-	var body: Control = rail.get_child(0) as Control
-	var chain: Control = body.get_child(1) as Control
-	ok = _check("the panels stack in rail order", _chain_names(chain),
-		["Open Sheets", "Objects", "Functions", "Anatomy", "PickerPreview"]) and ok
+	var root: Control = dock._workspace_body.get_child(0) as Control
+	ok = _check("the side panel is the workspace split's left side", str(root.name), "EventSheetLeftRail") and ok
+	var body: Control = root.get_node("EventSheetSidePanelBody") as Control
+	var edge: Control = root.get_node("EventSheetLeftRailEdge") as Control
+	var open_button: Button = edge.find_child("EventSheetSidePanelOpen", true, false) as Button
 
-	var minimums: Array = []
-	for panel: Control in [dock._open_sheets_panel, dock._objects_panel, dock._functions_panel,
-			dock._anatomy_panel, dock._picker_preview_panel]:
-		minimums.append(panel.custom_minimum_size)
-	ok = _check("no panel brings a minimum size of its own to the rail", minimums,
-		[Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO]) and ok
+	# At rest: a thin rail with one button, and the strip is not a thing to drag wider.
+	ok = _check("it rests as a 30 px rail with one open button",
+		[body.visible, edge.visible, root.custom_minimum_size.x, edge.get_child(0).get_child_count(), open_button.text],
+		[false, true, EventSheetPalette.scaled_f(30.0), 1, "›"]) and ok
+	ok = _check("the button says what is behind it", open_button.tooltip_text,
+		"Objects and functions of this sheet") and ok
+	ok = _check("the closed rail does not drag",
+		[dock._workspace_body.dragging_enabled, dock._workspace_body.dragger_visibility],
+		[false, SplitContainer.DRAGGER_HIDDEN_COLLAPSED]) and ok
 
-	# ...and neither does anything INSIDE a panel. A VSplitContainer stops a drag at its children
-	# combined minimum, so a list 110 px tall inside an open panel put the tuck threshold
-	# out of a dragger's reach: the panel could be slid off by its button and not by its divider.
-	var clamping: Array = []
-	for panel: Control in [dock._open_sheets_panel, dock._objects_panel, dock._functions_panel,
-			dock._anatomy_panel, dock._picker_preview_panel]:
-		_collect_height_minimums(panel, clamping)
-	clamping.sort()
-	ok = _check("and nothing inside one holds the column open either", clamping, []) and ok
+	# Opened: Godot-style tabs, Objects showing, and no Open Sheets list anywhere.
+	open_button.pressed.emit()
+	var tabs: TabBar = body.find_child("EventSheetSidePanelTabs", true, false) as TabBar
+	ok = _check("the button opens the panel, draggable wider",
+		[body.visible, edge.visible, root.custom_minimum_size.x, dock._workspace_body.dragging_enabled],
+		[true, false, 0.0, true]) and ok
+	ok = _check("it opens to two tabs, Objects and Functions", _tab_titles(tabs), ["Objects", "Functions"]) and ok
+	ok = _check("the Objects tab shows, and only it",
+		[tabs.current_tab, dock._objects_panel.visible, dock._functions_panel.visible],
+		[0, true, false]) and ok
+	ok = _check("there is no Open Sheets list: the tabs above the sheet are the open sheets",
+		root.find_child("Open Sheets", true, false), null) and ok
 
-	var autohidden: Array = []
-	for split: SplitContainer in _chain_splits(chain):
-		autohidden.append([split.dragger_visibility, split.get_theme_constant("autohide")])
-	ok = _check("every grabber in the chain is drawn, not revealed on hover", autohidden,
-		[[SplitContainer.DRAGGER_VISIBLE, 0], [SplitContainer.DRAGGER_VISIBLE, 0],
-			[SplitContainer.DRAGGER_VISIBLE, 0], [SplitContainer.DRAGGER_VISIBLE, 0]]) and ok
-	ok = _check("so is the rail-to-canvas grabber",
-		[dock._workspace_body.dragger_visibility, dock._workspace_body.get_theme_constant("autohide")],
-		[SplitContainer.DRAGGER_VISIBLE, 0]) and ok
+	# Picking a tab shows it alone and is remembered.
+	tabs.current_tab = 1
+	ok = _check("picking Functions shows it alone",
+		[rail.active_tab(), dock._objects_panel.visible, dock._functions_panel.visible],
+		["functions", false, true]) and ok
+	ok = _check("and the Functions tab is a filter, then the list",
+		[str(dock._functions_panel.get_child(0).name), str(dock._functions_panel.get_child(1).name)],
+		["EventSheetFunctionsFilterRow", "EventSheetFunctionsList"]) and ok
 
-	# A plain sheet is not a behaviour pack and the picker is closed: two of the five stand down.
-	ok = _check("a plain sheet shows the three panels it can fill",
-		[dock._open_sheets_panel.visible, dock._objects_panel.visible, dock._functions_panel.visible,
-			dock._anatomy_panel.visible, dock._picker_preview_panel.visible],
-		[true, true, true, false, false]) and ok
-
-	# Minimising a panel: gone from the column, named by a tab at the foot, back at a click.
-	dock._rail_panels.set_panel_tucked("objects", true)
-	ok = _check("a tucked panel takes no room at all",
-		[dock._objects_panel.visible, dock._rail_panels.is_panel_tucked("objects")],
+	# A behaviour pack offers Anatomy as a third tab, with its fold header standing down.
+	rail.set_census(true, false)
+	ok = _check("a behaviour pack adds the Anatomy tab", _tab_titles(tabs),
+		["Objects", "Functions", "Anatomy"]) and ok
+	ok = _check("a panel's fold header stands down inside its tab, its body open",
+		[(dock._anatomy_panel.rail_header_row() as Control).visible, dock._anatomy_panel.is_expanded()],
 		[false, true]) and ok
-	ok = _check("its name waits in a tab at the foot of the rail", _tab_labels(body), ["› Objects"]) and ok
-	dock._rail_panels.set_panel_tucked("objects", false)
-	ok = _check("clicking the tab brings it back",
-		[dock._objects_panel.visible, _tab_labels(body)], [true, []]) and ok
+	rail.set_census(false, false)
 
-	# A divider dragged up past a panel's own header is the same gesture as its minimise button.
-	dock._rail_panels._on_split_dragged("functions", 2)
-	ok = _check("a divider dragged past a header slides that panel off",
-		dock._rail_panels.is_panel_tucked("functions"), true) and ok
-	dock._rail_panels.set_panel_tucked("functions", false)
-
-	# The View menu tick beside Open Sheets reads the RAIL, not the older private record only
-	# the menu path ever wrote - so a panel tucked by its header button comes back unticked.
+	# The close button closes it; View > Panels and View > Side Rail say and do the same.
+	var close_button: Button = body.find_child("EventSheetSidePanelClose", true, false) as Button
+	close_button.pressed.emit()
+	ok = _check("the close button rests it as the rail again", [body.visible, edge.visible], [false, true]) and ok
 	var view_popup: PopupMenu = dock._view_popup
-	dock._rail_panels.set_panel_tucked("open_sheets", true)
+	var panels_menu: PopupMenu = view_popup.get_node("EventSheetPanelsMenu") as PopupMenu
 	view_popup.about_to_popup.emit()
-	ok = _check("a header-button tuck unticks View > Open Sheets Panel",
-		view_popup.is_item_checked(view_popup.get_item_index(13)), false) and ok
-	dock._rail_panels.set_panel_tucked("open_sheets", false)
+	ok = _check("View > Panels lists the tabs on offer, none ticked while closed",
+		_menu_state(panels_menu), [["Objects", false], ["Functions", false]]) and ok
+	panels_menu.id_pressed.emit(0)
 	view_popup.about_to_popup.emit()
-	ok = _check("and bringing it back ticks it again",
-		view_popup.is_item_checked(view_popup.get_item_index(13)), true) and ok
-
-	# The rail itself: an edge strip with a chevron, and the sheet takes the width.
-	dock._rail_panels.set_rail_tucked(true)
-	var edge: Control = rail.get_child(1) as Control
-	ok = _check("the tucked rail is one narrow edge strip",
-		[body.visible, edge.visible, rail.custom_minimum_size.x],
-		[false, true, EventSheetPalette.scaled_f(EventSheetRailPanels.EDGE_STRIP_WIDTH)]) and ok
-	ok = _check("the strip says what is behind it",
-		(edge.get_child(1) as Label).text, "OPEN SHEETS · OBJECTS · FUNCTIONS") and ok
-	dock._rail_panels.set_rail_tucked(false)
-	ok = _check("restoring the rail brings the column back",
-		[body.visible, edge.visible, rail.custom_minimum_size.x], [true, false, 0.0]) and ok
+	ok = _check("choosing one opens the panel on it, ticked",
+		[body.visible, rail.active_tab(), _menu_state(panels_menu)],
+		[true, "objects", [["Objects", true], ["Functions", false]]]) and ok
+	ok = _check("View > Side Rail is ticked while the panel is open",
+		view_popup.is_item_checked(view_popup.get_item_index(EventSheetMenuBar.SIDE_RAIL_VIEW_ID)), true) and ok
+	panels_menu.id_pressed.emit(0)
+	ok = _check("choosing the ticked one closes the panel", body.visible, false) and ok
+	ok = _check("View has no Open Sheets Panel entry", view_popup.get_item_index(13), -1) and ok
 
 	# The Properties bar is its splitter handle until something is selected.
 	var bar: EventSheetPropertiesBar = dock._properties_bar
@@ -248,43 +174,18 @@ static func _built_rail() -> bool:
 	return ok
 
 
-## Every control at or under `node` that asks for height, by name. A panel on the rail must ask
-## for none: the rail decides the column, and a child that holds it open cannot be dragged shut.
-static func _collect_height_minimums(node: Node, found: Array) -> void:
-	var control: Control = node as Control
-	if control != null and control.custom_minimum_size.y > 0.0:
-		found.append(control.name)
-	for child: Node in node.get_children():
-		_collect_height_minimums(child, found)
+static func _tab_titles(tabs: TabBar) -> Array:
+	var titles: Array = []
+	for index: int in tabs.tab_count:
+		titles.append(tabs.get_tab_title(index))
+	return titles
 
 
-## The panel names down the VSplit chain, in the order a reader meets them.
-static func _chain_names(chain: Control) -> Array:
-	var names: Array = []
-	var node: Control = chain
-	while node is SplitContainer:
-		names.append(str((node.get_child(0) as Control).name))
-		node = node.get_child(1) as Control
-	names.append(str(node.name))
-	return names
-
-
-static func _chain_splits(chain: Control) -> Array:
-	var splits: Array = []
-	var node: Control = chain
-	while node is SplitContainer:
-		splits.append(node)
-		node = node.get_child(1) as Control
-	return splits
-
-
-## What the foot tab strip reads, in order.
-static func _tab_labels(body: Control) -> Array:
-	var labels: Array = []
-	for child: Node in (body.get_child(2) as Control).get_children():
-		if child is Button:
-			labels.append((child as Button).text)
-	return labels
+static func _menu_state(menu: PopupMenu) -> Array:
+	var rows: Array = []
+	for index: int in menu.item_count:
+		rows.append([menu.get_item_text(index), menu.is_item_checked(index)])
+	return rows
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

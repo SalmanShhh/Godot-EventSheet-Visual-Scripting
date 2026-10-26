@@ -108,8 +108,8 @@ func build_ui() -> void:
 	# View ▸ Add toolbar asks for it, so an expert's sheet is unchanged.
 	_dock._beginner_toolbar.build(root)
 
-	# Pinned Conditions/Actions column header, above the scrolling sheet (bound to the
-	# viewport once it exists). Kept outside the scroll so the scroll still has a single child.
+	# The sheet's identity band, above the scrolling sheet (bound to the viewport once it exists).
+	# Kept outside the scroll so the scroll still has a single child.
 	_dock._identity_banner = SheetIdentityBanner.new()
 	root.add_child(_dock._identity_banner)
 	_dock._identity_banner.edit_requested.connect(_dock._open_sheet_type_dialog)
@@ -121,8 +121,8 @@ func build_ui() -> void:
 	# "Opening <file>" progress strip - visible only while a .gd's ACE lift runs on a worker thread.
 	root.add_child(_dock._open_progress.build())
 
-	_dock._column_header = SheetColumnHeader.new()
-	root.add_child(_dock._column_header)
+	# No Conditions | Actions band above the sheet: the two sides are told apart by their colour and
+	# their kind labels, and the line between them on any event is what resizes them.
 
 	_dock._scroll = ScrollContainer.new()
 	_dock._scroll.name = "EventSheetScroll"
@@ -130,7 +130,7 @@ func build_ui() -> void:
 	_dock._scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_dock._scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	_dock._scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	# Wrap the viewport in _dock._content_host, then sit it beside the Open Sheets panel in _dock._workspace_body.
+	# Wrap the viewport in _dock._content_host, then sit it beside the side panel in _dock._workspace_body.
 	_dock._content_host = VBoxContainer.new()
 	_dock._content_host.name = "EventSheetContentHost"
 	_dock._content_host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -156,23 +156,18 @@ func build_ui() -> void:
 	properties_split.add_child(canvas_row)
 	properties_split.add_child(_dock._properties_bar.build())
 	_dock._content_host.add_child(properties_split)
-	_dock._open_sheets_panel = EventSheetOpenSheetsDock.new()
-	_dock._open_sheets_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_dock._open_sheets_panel.activate_requested.connect(_dock.activate_open_tab)
-	_dock._open_sheets_panel.reopen_requested.connect(_dock.reopen_sheet_path)
-	_dock.open_tabs_changed.connect(_dock._code_panel_glue.refresh_open_sheets_panel)
-	# The Functions overview is its own dockable rail panel (fold-expandable on demand) - it used
-	# to live inside the Generated-GDScript side panel, so seeing your functions meant opening the
-	# code view. The list's click/right-click handlers stay on the dock.
+	# The Functions tab of the side panel - it used to live inside the Generated-GDScript side
+	# panel, so seeing your functions meant opening the code view. The list's right-click handler
+	# stays on the dock.
 	_dock._functions_panel = EventSheetFunctionsPanel.new()
 	_dock._functions_panel.add_requested.connect(_dock._open_function_dialog)
 	_dock._functions_list = _dock._functions_panel.list
-	_dock._functions_list.item_clicked.connect(_dock._code_panel_glue.on_functions_list_item_clicked)
+	_dock._functions_list.item_mouse_selected.connect(_dock._code_panel_glue.on_functions_list_item_clicked)
 	_dock._functions_menu = PopupMenu.new()
 	_dock._functions_menu.add_item("Delete Function", 0)
 	_dock._functions_menu.id_pressed.connect(_dock._code_panel_glue.on_functions_menu_id_pressed)
 	_dock._functions_list.add_child(_dock._functions_menu)
-	# The Anatomy panel shares the left rail below Open Sheets: the active behaviour's organs
+	# The Anatomy tab, offered for a behaviour pack: the active behaviour's organs
 	# (knobs/state/triggers/actions/conditions/expressions/uses) at a glance, click to jump.
 	_dock._anatomy_panel = BehaviourAnatomyPanel.new()
 	_dock._anatomy_panel.reveal_requested.connect(func(resource: Resource) -> void:
@@ -220,15 +215,14 @@ func build_ui() -> void:
 		_dock.add_common_events_for(object_label))
 	_dock._objects_panel.object_duplicate_events_requested.connect(func(object_label: String) -> void:
 		_dock.open_duplicate_events_dialog(object_label))
-	# Picker preview: how the sheet's published verbs will read in the picker, live (rail-folded).
+	# Picker preview: how the sheet's published verbs will read in the picker, live (a tab while
+	# the picker is open).
 	_dock._picker_preview_panel = EventSheetPickerPreviewPanel.new()
-	# The rail is a chain of VSplitContainers rather than a stack of fixed panels: every boundary
-	# drags, every grabber is drawn, and a panel (or the whole rail) can be slid off into a tab.
-	# It also decides which panels are on offer at all, so a first sheet is not five headers
-	# counting to zero.
+	# The side panel rests as a thin rail with one button, and opens to tabs styled like Godot's
+	# own docks - Objects and Functions, plus Anatomy and the Picker preview when there is something
+	# behind them. Open or closed, and which tab, are remembered per project.
 	_dock._rail_panels.init(_dock)
 	var left_rail: Control = _dock._rail_panels.build({
-		"open_sheets": _dock._open_sheets_panel,
 		"objects": _dock._objects_panel,
 		"functions": _dock._functions_panel,
 		"anatomy": _dock._anatomy_panel,
@@ -241,13 +235,11 @@ func build_ui() -> void:
 	_dock._workspace_body.add_child(left_rail)
 	_dock._workspace_body.add_child(_dock._content_host)
 	root.add_child(_dock._workspace_body)
-	_dock._rail_panels.attach_split(_dock._workspace_body)
 	_dock._rail_panels.apply_state(EventSheetRailPanels.read_state())
-	_dock._rail_panels.set_rail_choice_known(EventSheetRailPanels.has_stored_rail_choice())
+	_dock._rail_panels.attach_split(_dock._workspace_body)
 	# The bands between the strip and the sheet follow the theme; they were all built above.
 	_dock._menu_bar.apply_theme_chrome()
 	_dock._properties_bar.attach_split(properties_split)
-	_dock._code_panel_glue.apply_open_sheets_panel_prefs()
 
 	_dock._viewport = EventSheetViewport.new()
 	_dock._viewport.name = "EventSheetViewport"
@@ -255,7 +247,6 @@ func build_ui() -> void:
 	_dock._viewport.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_dock._viewport.set_ace_registry(_dock._ace_registry)
 	_dock._scroll.add_child(_dock._viewport)
-	_dock._column_header.setup(_dock._viewport)
 	_dock._identity_banner.setup(_dock._viewport)
 
 	_dock._viewport.selection_changed.connect(_dock._on_viewport_selection_changed)

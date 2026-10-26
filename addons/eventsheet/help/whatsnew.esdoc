@@ -6,6 +6,191 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Changed: the side panel rests as a thin rail and opens to Objects and Functions tabs
+
+- The always-open column beside the sheet (Open Sheets, a filter, Objects / Project tabs, a USED IN
+  THIS SHEET list and a Functions fold, each with its own header and splitter) is now a side panel
+  that rests closed as a 30 px rail with one button. Opened, it is two tabs styled like Godot's own
+  docks - a strip of flat tabs, a filter, then plain rows with an icon, a name and a count:
+  - **Objects** lists what the file uses first, without a heading, then the folds for the rest of
+    the scene, the Input Map actions and the globals; the sort button sits beside the filter, and
+    the Project bar (when it is on) folds in at the foot of the tab.
+  - **Functions** lists the sheet's functions with how many times the file calls them, then the
+    functions still written as code, marked `code`; ＋ beside the filter adds one, and right-click
+    still deletes a sheet function.
+  - A behaviour pack adds an **Anatomy** tab, and the **Picker preview** is a tab while the picker
+    is open.
+- Open Sheets is gone: the tabs above the sheet are the open sheets, and recently closed sheets are
+  on the Start page. View > Panels picks a tab (choosing the ticked one closes the panel) and View >
+  Side Rail opens or closes it.
+- Whether the panel is open, which tab it shows and how wide it was dragged are remembered per
+  project in the editor's project metadata. A project that remembered the old column starts with
+  the panel closed.
+
+### Changed: no Conditions | Actions band above the sheet
+
+- The band naming the two lanes, with its drag handles, is gone in every look. The two sides are
+  told apart by their colour and their kind labels, and the lanes are resized by dragging the line
+  between them on any event: the pointer shows ↔ over it, and the width is remembered on the sheet's
+  style exactly as the band's drag remembered it. View > Reset Lane Split still puts the theme's own
+  split back.
+
+### Fixed: an Every X Seconds timer no longer counts while its event is off in a `.gd` sheet
+
+- An event switched off in a `.gd` sheet (or a row of a group that is off and cannot be switched)
+  stayed in the file behind a false guard, but a stateful condition's bookkeeping line
+  (`__every_... += get_process_delta_time()`) was still written at the function's own indent, above
+  the guard, so the timer went on counting every frame while the event was off. The line is now
+  written behind the same guard, as the event with no conditions it reads back as: under the event's
+  `# @off` (or its group's `# @group:` line) and an `if false:` of its own. The saved script parses,
+  it reopens off, and an untouched save writes the same bytes.
+
+### Fixed: a stateful condition switched off in a `.gd` sheet says it was left out
+
+- A condition that keeps state of its own (Every X Seconds, Trigger Once and their kind) has no term
+  it can stay in while it is off, so a `.gd` save leaves it out of the file - and it did so without
+  a word. The save now adds a warning naming the condition, beside the one an unresolvable
+  condition already gets.
+
+### Fixed: an action whose code is a block, switched off in a `.gd` sheet, can be switched back on
+
+- An action that is off is written as its own lines behind `# @off: `, and opening the file read
+  those lines back one at a time; an action whose template is a block (a loop with its body under
+  it) has a first line that is no action, so the whole run stayed comments whose text began with
+  `@off: ` and could never be ticked back on. The run is now read a statement at a time: a block
+  comes back as a GDScript row, off, that writes the same loop when it is switched on again, and a
+  run a family claims comes back as that family's row. A GDScript row switched off in a `.gd` sheet
+  is now kept the same way, behind `# @off: `, instead of being left out of the file.
+
+### Fixed: a `.tres` sheet's companion writes the group header it always wrote
+
+- The header of an off group that cannot be switched gained `enabled=false` in every compile, so a
+  `.tres` sheet's regenerated companion (which still leaves such a group out) changed a line it
+  never used to. The field is written only where it is read back: in a sheet that is its own `.gd`,
+  and for a group that can be switched.
+
+### Fixed: a class description edited above a comment keeps the file's own layout
+
+- An edited class description whose `##` block was ended by a `# comment` line gained a blank line
+  between the block and the comment on save; a block that is already there is now replaced in
+  place, and only a new block gains the blank line that keeps it off the next member. A block that
+  opens on a bare `##` no longer reads as changed when nothing was edited, so an untouched file
+  spelled `##text` saves byte for byte instead of being rewritten as `## text`.
+
+### Changed: CI names the file a red contracts walk failed on
+
+- The suite-and-contracts step runs under `bash -e`, so a red `verify_sheets` ended the step before
+  its summary, and the job failed with exit code 1 naming no file. The walk's exit code is now
+  caught and answered at the end of the step, after the failing lines are printed.
+
+### Fixed: a `##` line inside a string is no longer read as the class description
+
+- Opening a `.gd` whose own `extends` line has no doc block, but which holds a string with an
+  `extends` line and a `##` line under it (a script that writes another script), read the string's
+  `##` line as the class description, and saving the untouched file then wrote that line under the
+  file's own `extends`. Only the file's first `extends` line is read for the description now, the
+  same line the save writes it under, so such a file opens with no description and saves byte for
+  byte.
+
+### Fixed: a comment switched off in a `.gd` sheet stays in the file
+
+- A comment row that was switched off was left out of the compile, so in a `.gd` sheet saving
+  deleted the note from the file. In a sheet that is its own `.gd` it is now written behind
+  `# @off: `, and opening the file brings it back as the same comment, switched off - a note at the
+  sheet's top level and a note among an event's actions alike. Turning it back on writes the file it
+  was before. A `.tres` sheet still leaves a comment that is off out.
+
+### Fixed: an action or condition switched off in a `.gd` sheet stays in the file
+
+- A cell whose box was unticked was left out of the compile, so in a `.gd` sheet (the sheet's only
+  copy) saving deleted the action or condition from the file. In a sheet that is its own `.gd` an
+  action that is off is now written as its own lines behind `# @off: `, comments that never run; a
+  condition that is off stays in the header as a term whose answer it cannot change -
+  `(true or <it>)` among And terms, `(false and <it>)` among Or terms, and `(true or <it>)` for each
+  when every condition of an Or event is off. Opening the file reads each back as the same cell,
+  switched off, and an untouched save writes the same bytes. A condition that keeps state of its own
+  (Every X Seconds and its kind) still has nowhere to keep it and is left out, with a warning that
+  names it. A `.tres` sheet still
+  leaves cells that are off out of the game.
+
+### Fixed: an event switched off in a `.gd` sheet stays in the file
+
+- An event whose box was unticked was left out of the compile. A `.tres` sheet still holds it, but
+  a `.gd` sheet has no other copy, so saving deleted the event from the file - a handler whose only
+  event was off vanished whole. In a sheet that is its own `.gd` an event that is off is now written
+  behind a constant false guard under a `# @off` line (`if false and score > 10:`, `if false:` for an
+  event with no conditions, `elif false:` for an else row), so it stays in the file and never runs.
+  Opening the file brings it back as the same event, switched off - at the top of a handler, in a
+  group, as a sub-event, as an else row or in a function's body - and turning it back on writes the
+  file it was before. A `.tres` sheet still leaves an event that is off out of the game.
+
+### Fixed: a class description edited in a `.gd` sheet reaches the file
+
+- A `.gd` sheet's class description is read from the `##` block under `extends`, but the save wrote
+  that block back exactly as the file opened, so an edit made in the Sheet Type dialog or the head
+  band was dropped and gone on reopen. The save now rewrites the block when it no longer reads as the
+  sheet's description, adds one under `extends` when the file had none (with a blank line after it,
+  so it can never read as the next member's doc comment), and removes it when the description is
+  cleared. A block left untouched keeps its own spelling byte for byte.
+
+### Fixed: the first group added to a `.gd` sheet writes its header where it reads as one
+
+- A `.gd` with no groups yet put the first group's `## @ace_group(...)` line straight under
+  `extends`, where it read as the class's doc comment: the sheet reopened with the header as its
+  class description. In a file that opens with annotations (a behaviour pack's `## @ace_` lines and
+  `@icon(...)`) the header went to the very top, and a switchable group's flag `var` landed above
+  `@icon`, so the saved script did not parse. The header now goes under the class's opening lines
+  and its doc block, past the blank line that closes them, on a line of its own; and a header that
+  does sit under `extends` (a sheet-native compile writes it there) is no longer read as the class
+  description.
+
+### Fixed: a region drawn in a function body is still a region after the file reopens
+
+- A region drawn around rows of a function's body was written into the body (`#region Setup` ...
+  `#endregion`), but opening the `.gd` again read the two lines back as comment rows inside the
+  neighbouring events, so after one save the region could no longer be folded, renamed or removed.
+  They now read back as the region's two fence rows, in the same place, styled ones included, and an
+  untouched save still writes the same bytes. A handler's own hand-written `#region` lines keep
+  reading as the comments they always were, and so does a body whose fence sits under a blank line.
+  A hand-written function the file marks as a sheet function is read exactly as one the sheet wrote:
+  its top-level `#region` / `#endregion` lines with no blank line above them open as region rows
+  (deliberately - a region row folds, renames and saves as the same two lines), and the file still
+  saves byte for byte.
+
+### Fixed: a group that is off and cannot be switched keeps its rows in a `.gd` sheet
+
+- A group with Active On Start off and Can Be Switched At Runtime off was left out of the compile,
+  which is right for a `.tres` sheet's generated script (the `.tres` still holds the rows) but lost
+  the rows of a `.gd` sheet: only the group's header survived the save, and the file reopened as an
+  empty group that was on. In a `.gd` sheet the rows are now written behind a constant
+  `if false:` guard, so they stay in the file and never run, and the header says
+  `enabled=false`. Opening the file brings back the same off group with its rows (a group inside it
+  is held off with it, a switchable one included), turning it back on writes the file it was before,
+  and a file saved untouched is byte for byte the same. A `.tres` sheet still leaves the group out.
+
+### Fixed: a region inside a group is kept when the sheet is saved
+
+- A `#region` a group holds used to be dropped when a `.gd` sheet was saved, and written at the top
+  of the class (wrapping nothing) when a `.tres` sheet compiled. A group's events are written inside
+  the trigger functions, so its fences are now written there too, at the events' indent: the opener
+  just before the event it wraps, the closer just after the last. Opening the file brings them back
+  as the same fences in the same group, styled ones (`## @ace_region(...)`) included, and saving it
+  untouched writes the same bytes. A region whose events have two triggers opens in one function and
+  closes in the other; the script still parses.
+
+### Fixed: editing a group in a `.gd` sheet reaches the file
+
+- A `.gd` opened as a sheet kept its groups' `## @ace_group(...)` header lines exactly as it opened
+  them, so every change to a group there - colour, description, folded, who runs it, which mode,
+  rename, Active On Start, Can Be Switched At Runtime, a group added or deleted - was left out of the
+  save and gone on reopen. Turning on Can Be Switched At Runtime was worse: the rows were guarded by
+  `if __group_x_active:` with no `var __group_x_active` anywhere, so the saved script did not parse.
+- Saving now rewrites the header line of each group that changed (an untouched header, including one
+  spelled by hand, stays byte for byte as written), adds the header of a new group, removes the header
+  of a deleted one, and keeps the switch flag in step: added when a group becomes switchable, renamed
+  with its group, its starting value following Active On Start, removed when the group can no longer
+  be switched. A renamed group's `# @group:` row tags follow the new name, so it reopens whole.
+
 ### Changed: a group head reads the same in every look, and a group's colour and switch say what is true
 
 - One group head in every look, Editor Native included: one line with the fold arrow, the folder
@@ -29,7 +214,15 @@ What changed in the build you have installed (v0.18.0), in the words the release
   line it used to show for it, and off and switchable shows the flag line the compiler really writes.
   The head's switch reads \"Off at start; events can switch it on.\" for such a group.
 - The group head's menu has \"Can Be Switched At Runtime\" beside \"Active On Start\", ticked at the
-  group's state; choosing it is one undo step.
+  group's state; choosing it is one undo step. The group's own items read Edit Group…, Active On
+  Start, Can Be Switched At Runtime, Runs On, Group Color…, Turn Into Region, Ungroup; Add Local
+  Variable… and the two folds follow under a separator.
+- An off-at-start, switchable group keeps both halves in a `.gd` sheet: its header writes
+  `enabled=false` (only for that case, so every other header is byte for byte what it was), and
+  reopening the file brings the group back off and switchable. A `.gd` whose switchable groups used
+  to open as plain code blocks, because nothing took their `if __group_x_active:` guard back off, now
+  opens with the groups and their events as rows.
+
 ### Changed: Set group active picks the group by its name, and a rename takes the rows with it
 
 - Set group active and Is group active pick their group from a dropdown of the sheet's groups (and
@@ -41,7 +234,8 @@ What changed in the build you have installed (v0.18.0), in the words the release
   choice of its own. The separate Make switchable button is gone.
 - Renaming a group (the Edit group window, the name on the head, the properties bar) rewrites every
   Set group active and Is group active that names it, in this sheet as one undo step and in the
-  project sheets that include it, and the rename receipt says how many rows followed.
+  project sheets that include it, and the rename receipt says how many rows followed. Replace All
+  in the find bar renaming a group takes the rows along too, in the same undo step.
 - A group's name now drives its switch's token: a rename moves both together. A group from an older
   sheet whose two name fields differ keeps its saved token until it is renamed, and the picker shows
   that token (\"Its switch is written as boss_fight.\"). The Edit group window and the properties bar

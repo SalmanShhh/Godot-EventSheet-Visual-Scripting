@@ -255,16 +255,17 @@ static func _test_the_cascade() -> bool:
 	# View ▸ Panels when the left rail learned to slide its panels off. Both are submenus, so this
 	# counts the hangers - the theme menu's entries are pinned in _test_the_sheet_theme_menu, and
 	# the Panels menu is filled from the open sheet's own census each time View opens. View ▸ Reset
-	# Lane Split is the 59th: the conditions/actions boundary is dragged from the column header
-	# band now, so the way back to the theme's own share is a menu item rather than a gesture.
+	# Lane Split is the 59th: the conditions/actions boundary is dragged on an event's divider, so
+	# the way back to the theme's own share is a menu item rather than a gesture.
 	# View ▸ Text labels is the 60th: the strip laid out as words, one choice beside Full toolbar.
 	# View ▸ Trigger Icons, Value Glyphs and Variable Badges are the 61st to 63rd: the native look's
 	# drawn marks, each one a toggle beside Object Icons. View ▸ Included Variables is the 64th: the
 	# included sheet's variables under each Include bar. View ▸ Add Links On Hover is the 65th: the
-	# hovered event's Add condition and Add action links. View ▸ Side Rail is the 66th: the whole rail
-	# out or tucked, the way back to it under a theme that leaves no edge strip for a tucked rail.
+	# hovered event's Add condition and Add action links. View ▸ Side Rail is the 66th: the side
+	# panel open or closed to its rail. View ▸ Open Sheets Panel left, back to 65: the tabs above the
+	# sheet are the open sheets.
 	ok = _check("View keeps its items, plus Full toolbar, Sheet theme, Panels and Text labels",
-		counts["EventSheetViewMenu"], 66) and ok
+		counts["EventSheetViewMenu"], 65) and ok
 	# The Addon manager left Tools: a pack is a folder, seen in the FileSystem dock.
 	ok = _check("Tools keeps its items, plus Words…, less the Addon manager", counts["EventSheetToolsMenu"], 41) and ok
 	# Words… moved menus rather than leaving: it is on Tools now, beside Keyboard Shortcuts.

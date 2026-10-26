@@ -9530,3 +9530,12 @@ Ctrl+Z removes the region again.,按 Ctrl+Z 可再次移除区域。
 Remove #endregion,移除 #endregion
 Add #endregion,添加 #endregion
 + Add event to '%s'…,+ 向 '%s' 添加事件…
+Filter…,筛选…
+"Every function in this file: the sheet's own (✦ = published as an ACE), then the ones still written as code.",此文件中的所有函数：先是表格自己的函数（✦ = 已作为 ACE 发布），然后是仍以代码编写的函数。
+Written as code in this file.,在此文件中以代码编写。
+1 call,1 次调用
+%d calls,%d 次调用
+The side panel's tabs. Choosing one opens the side panel on it; choosing the ticked one closes the side panel.,侧边面板的标签页。选择一个会在该标签页上打开侧边面板；选择已勾选的那个会关闭侧边面板。
+"The side panel beside the sheet, with its Objects and Functions tabs. Unticked, it rests as a thin rail and the sheet takes the width.",表格旁的侧边面板，带有“对象”和“函数”标签页。取消勾选后，它收成一条细栏，表格占据宽度。
+Close the side panel,关闭侧边面板
+Objects and functions of this sheet,此表格的对象和函数

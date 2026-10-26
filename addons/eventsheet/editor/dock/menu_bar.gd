@@ -579,17 +579,17 @@ func build(root: Node) -> void:
 			_dock._toggle_project_bar()
 		elif id == _dock.ADD_TOOLBAR_VIEW_ID:
 			_dock._toggle_add_toolbar())
-	# Panels: the rail's own column, said in words. Every panel is ticked while it is on the rail
-	# and unticked once it has been slid off into a tab, so the menu is the third way of saying
-	# what the header button and a divider dragged past a header already say. Refilled each time
-	# View opens, because which panels are on offer follows the open sheet. Explicit child-popup
-	# wiring with its own id, never an id-less add_submenu_item.
+	# Panels: the side panel's tabs, said in words. The tab the open panel shows is ticked; choosing
+	# another opens the panel on it, and choosing the ticked one closes the panel - the two gestures
+	# the tab strip and the button on the rail already offer. Refilled each time View opens, because
+	# which tabs are on offer follows the open sheet. Explicit child-popup wiring with its own id,
+	# never an id-less add_submenu_item.
 	var panels_menu: PopupMenu = PopupMenu.new()
 	panels_menu.name = "EventSheetPanelsMenu"
 	view_popup.add_child(panels_menu)
 	view_popup.add_submenu_item(EventSheetL10n.translate("Panels"), "EventSheetPanelsMenu", PANELS_VIEW_ID)
 	view_popup.set_item_tooltip(view_popup.get_item_index(PANELS_VIEW_ID), EventSheetL10n.translate(
-		"The left rail's panels. A panel slid off the rail is not closed - it waits in a tab at the foot of the rail, and this list brings it back at the size it had."))
+		"The side panel's tabs. Choosing one opens the side panel on it; choosing the ticked one closes the side panel."))
 	panels_menu.id_pressed.connect(func(panel_index: int) -> void:
 		var ids: PackedStringArray = EventSheetRailPanels.panel_ids()
 		if panel_index < 0 or panel_index >= ids.size() or _dock._rail_panels == null:
@@ -598,18 +598,14 @@ func build(root: Node) -> void:
 			not _dock._rail_panels.is_panel_tucked(ids[panel_index])))
 	view_popup.about_to_popup.connect(func() -> void:
 		_fill_panels_menu(panels_menu)
-		_refresh_open_sheets_tick(view_popup)
 		_refresh_side_rail_tick(view_popup))
-	# The whole rail, out or tucked: the chevron's gesture said in words, and the way back to the rail
-	# under a theme that leaves no edge strip for a tucked one.
+	# The whole side panel, open or closed to its rail: the rail button's gesture said in words.
 	view_popup.add_check_item(EventSheetL10n.translate("Side Rail"), SIDE_RAIL_VIEW_ID)
 	view_popup.set_item_tooltip(view_popup.get_item_index(SIDE_RAIL_VIEW_ID), EventSheetL10n.translate(
-		"The panels beside the sheet - Open Sheets, Objects, Functions. Unticked, the rail is tucked away and the sheet takes the width."))
+		"The side panel beside the sheet, with its Objects and Functions tabs. Unticked, it rests as a thin rail and the sheet takes the width."))
 	view_popup.id_pressed.connect(func(id: int) -> void:
 		if id == SIDE_RAIL_VIEW_ID and _dock._rail_panels != null:
 			_dock._rail_panels.set_rail_tucked(_dock._rail_panels.is_rail_shown()))
-	view_popup.add_check_item("Open Sheets Panel", 13)
-	_refresh_open_sheets_tick(view_popup)
 	view_popup.add_check_item("Add-Event Rows", 9)
 	view_popup.set_item_checked(view_popup.get_item_index(9), true)
 	view_popup.add_check_item("Object Icons", 15)
@@ -803,7 +799,6 @@ func build(root: Node) -> void:
 			45: _dock._open_properties_for_selected_row()
 			11: _dock.set_simple_mode(not _dock._simple_mode)
 			12: _dock._toggle_mcp_server(view_popup)
-			13: _dock._code_panel_glue.toggle_open_sheets_panel(view_popup)
 			22: _collapse_sweep(0)
 			23: _collapse_sweep(-1)
 			24: _collapse_sweep(1)
@@ -1302,28 +1297,8 @@ static func mark_unread(popup: PopupMenu, item_id: int, label: String) -> void:
 	popup.set_item_text(index, "%s ●" % label if unread else label)
 
 
-## The View menu's collapse sweeps, aimed at whichever view is active (split/detached panes
-## each keep their own collapse state). `level` 0 collapses everything, -1 expands
-## everything, and anything above 0 reads the sheet down to that depth.
-## The Panels submenu, refilled each time View opens: one ticked entry per panel the open sheet
-## has anything to put in, unticked once that panel has been slid off the rail. A panel the census
-## does not offer at all (Anatomy outside a behaviour pack, the Picker preview with the picker
-## closed) is not listed - there is nothing behind it to bring back.
-## The View menu tick beside Open Sheets. THE RAIL IS THE RECORD: a panel is off the rail or on
-## it, and the header button, a divider dragged past the header and this menu are three ways of
-## saying the same thing - so the tick is read back from the rail rather than from the older
-## shown/collapsed note, which only the menu path and the collapse signal ever wrote. Refreshed
-## every time the menu opens, because a header button tucked between two openings moved it.
-func _refresh_open_sheets_tick(view_popup: PopupMenu) -> void:
-	var item_index: int = view_popup.get_item_index(13)
-	if item_index < 0:
-		return
-	view_popup.set_item_checked(item_index,
-		_dock._rail_panels == null or not _dock._rail_panels.is_panel_tucked("open_sheets"))
-
-
-## View > Side Rail's tick, read back from the rail each time the menu opens, because the chevron
-## and a grabber dragged into the edge tuck it too.
+## View > Side Rail's tick, read back from the side panel each time the menu opens, because the
+## buttons on the panel and on its rail open and close it too.
 func _refresh_side_rail_tick(view_popup: PopupMenu) -> void:
 	var item_index: int = view_popup.get_item_index(SIDE_RAIL_VIEW_ID)
 	if item_index < 0:
@@ -1331,6 +1306,10 @@ func _refresh_side_rail_tick(view_popup: PopupMenu) -> void:
 	view_popup.set_item_checked(item_index, _dock._rail_panels == null or _dock._rail_panels.is_rail_shown())
 
 
+## The Panels submenu, refilled each time View opens: one entry per tab the open sheet has anything
+## to put in, the one the open side panel shows ticked. A tab the census does not offer at all
+## (Anatomy outside a behaviour pack, the Picker preview with the picker closed) is not listed -
+## there is nothing behind it.
 func _fill_panels_menu(panels_menu: PopupMenu) -> void:
 	panels_menu.clear()
 	if _dock._rail_panels == null:
@@ -1348,6 +1327,9 @@ func _fill_panels_menu(panels_menu: PopupMenu) -> void:
 			not _dock._rail_panels.is_panel_tucked(ids[panel_index]))
 
 
+## The View menu's collapse sweeps, aimed at whichever view is active (split/detached panes
+## each keep their own collapse state). `level` 0 collapses everything, -1 expands
+## everything, and anything above 0 reads the sheet down to that depth.
 func _collapse_sweep(level: int) -> void:
 	var view: EventSheetViewport = _dock._active_view()
 	if view == null:
@@ -1496,9 +1478,8 @@ func apply_theme_chrome() -> void:
 
 ## The bands between the strip and the sheet, folded away while the active theme puts the sheet
 ## straight under the toolbar (fold_workspace_bands) and back where they were otherwise: the title
-## strip, the identity band, the Conditions | Actions header, and a tucked rail's edge strip. Each
-## one's words and gestures stay reachable - the tab, the class head's hover, the divider inside an
-## event, View > Side Rail - so this is only ever a question of what the resting view shows.
+## strip and the identity band. Each one's words stay reachable - the tab, the class head's hover -
+## so this is only ever a question of what the resting view shows.
 func _apply_workspace_bands() -> void:
 	if _dock == null:
 		return
@@ -1507,10 +1488,6 @@ func _apply_workspace_bands() -> void:
 		_dock._title_strip.visible = not folded
 	if _dock._identity_banner != null:
 		_dock._identity_banner.set_folded(folded)
-	if _dock._column_header != null:
-		_dock._column_header.visible = not folded
-	if _dock._rail_panels != null:
-		_dock._rail_panels.set_bands_folded(folded)
 	_apply_canvas_padding(folded)
 
 

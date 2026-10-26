@@ -32,28 +32,7 @@ func init(dock: Control) -> void:
 	_dock = dock
 
 
-## ── Open Sheets panel (the left in-workspace pane) ──────────────────────────────────────
-## Push the current open-tab snapshot into the panel (on every _dock.open_tabs_changed + on build).
-func refresh_open_sheets_panel() -> void:
-	if _dock._open_sheets_panel == null:
-		return
-	var state: Dictionary = _dock.get_open_sheets_state()
-	_dock._open_sheets_panel.set_state(state.get("open", []), int(state.get("active", -1)), state.get("recent", []))
-
-
-## View ▸ Open Sheets Panel: slide the panel off the rail, or bring it back at the height it had.
-## The rail is the one place a panel's off-screen state lives, so the menu and the header button and
-## a divider dragged past the header are three ways of saying the same thing.
-func toggle_open_sheets_panel(view_popup: PopupMenu) -> void:
-	if _dock._open_sheets_panel == null or _dock._rail_panels == null:
-		return
-	var tucked: bool = not _dock._rail_panels.is_panel_tucked("open_sheets")
-	_dock._rail_panels.set_panel_tucked("open_sheets", tucked)
-	if view_popup != null:
-		view_popup.set_item_checked(view_popup.get_item_index(13), not tucked)
-
-
-## The panel collapsed to / expanded from a strip: snap the split divider to match, and remember it.
+## The side panel's tabs follow the open sheet: Anatomy, the Picker preview and Objects re-read it.
 func refresh_anatomy_panel() -> void:
 	if _dock._anatomy_panel != null:
 		_dock._anatomy_panel.refresh(_dock._current_sheet)
@@ -75,17 +54,7 @@ func refresh_rail_census() -> void:
 	_dock._rail_panels.set_census(
 		_dock._current_sheet != null and _dock._current_sheet.behavior_mode,
 		_dock._ace_picker_built and _dock._ace_picker.is_open())
-
-
-## Apply the remembered state when the workspace is built. The panel used to keep a second,
-## private record of its own - shown and collapsed - which only this file and the View menu ever
-## wrote, so a panel tucked away by its header button came back ticked. The rail is the one
-## record now: it holds the fold, the height and whether the panel is off the column at all, and
-## it has already applied them by the time this runs.
-func apply_open_sheets_panel_prefs() -> void:
-	if _dock._open_sheets_panel == null:
-		return
-	refresh_open_sheets_panel()
+	_dock._rail_panels.refresh_tab_tooltips()
 
 
 func toggle_code_panel() -> void:
@@ -143,44 +112,20 @@ func refresh_code_panel() -> void:
 	_dock._code_panel_glue.update_code_panel_highlight()
 
 
-## Repopulates the Functions overview list from the active sheet (signature + an ✦ for ACE-exposed
-## functions). Cheap; runs whenever the side panel refreshes (i.e. on any edit while it's open).
+## Repopulates the Functions tab from the active sheet. Cheap; runs whenever the side panel
+## refreshes (i.e. on any edit while it's open).
 func refresh_functions_list() -> void:
-	if _dock._functions_list == null:
-		return
-	_dock._functions_list.clear()
-	var count: int = 0
-	if _dock._current_sheet != null:
-		for function_resource: Variant in _dock._current_sheet.functions:
-			if function_resource is EventFunction:
-				var event_function: EventFunction = function_resource as EventFunction
-				_dock._functions_list.add_item(format_function_signature(event_function))
-				# The one description this function carries, on its entry: what it is for, or the
-				# soft nudge that it has not been said yet. Read from the function's own doc line,
-				# never from a second store, so the list and the file cannot disagree.
-				_dock._functions_list.set_item_tooltip(count,
-					EventSheetDescriptions.display(EventSheetDescriptions.for_function(event_function)))
-				count += 1
 	if _dock._functions_panel != null:
-		_dock._functions_panel.set_count(count)  # the collapsed header still tells the sheet's weight
+		_dock._functions_panel.set_sheet(_dock._current_sheet)
 
 
-## "name(a, b)" plus a trailing ✦ when the function is exposed as an ACE (a reusable action/condition/
-## expression in other sheets) - the at-a-glance signature shown in the Functions list.
-func format_function_signature(function: EventFunction) -> String:
-	var param_ids: PackedStringArray = PackedStringArray()
-	for param_variant: Variant in function.params:
-		if param_variant is ACEParam:
-			param_ids.append((param_variant as ACEParam).id)
-	var signature: String = "%s(%s)" % [function.function_name, ", ".join(param_ids)]
-	return (signature + "  ✦") if function.expose_as_ace else signature
-
-
-## Right-click a function to delete it (the list is otherwise read-only - editing is via the rows).
-func on_functions_list_item_clicked(index: int, at_position: Vector2, mouse_button_index: int) -> void:
-	if mouse_button_index != MOUSE_BUTTON_RIGHT or _dock._functions_menu == null:
+## Right-click a sheet function to delete it (the list is otherwise read-only - editing is via the
+## rows). A function still written as code has no menu: it is edited where it is written.
+func on_functions_list_item_clicked(at_position: Vector2, mouse_button_index: int) -> void:
+	if mouse_button_index != MOUSE_BUTTON_RIGHT or _dock._functions_menu == null or _dock._functions_panel == null:
 		return
-	_dock._functions_list.select(index)
+	if _dock._functions_panel.selected_function_index() < 0:
+		return
 	_dock._functions_menu.position = Vector2i(_dock._functions_list.get_screen_position() + at_position)
 	_dock._functions_menu.reset_size()
 	_dock._functions_menu.popup()
@@ -193,12 +138,9 @@ func on_functions_menu_id_pressed(id: int) -> void:
 
 ## Removes the selected function from the sheet (undoable) and refreshes the list + preview.
 func delete_selected_function() -> void:
-	if _dock._current_sheet == null or _dock._functions_list == null:
+	if _dock._current_sheet == null or _dock._functions_panel == null:
 		return
-	var selected: PackedInt32Array = _dock._functions_list.get_selected_items()
-	if selected.is_empty():
-		return
-	var index: int = selected[0]
+	var index: int = _dock._functions_panel.selected_function_index()
 	if index < 0 or index >= _dock._current_sheet.functions.size():
 		return
 	var removed_name: String = ""

@@ -5,14 +5,14 @@ extends RefCounted
 # One theme switch, fold_workspace_bands, off by default, on in the Editor Native starter and its rule
 # and stated off in every other shipped theme. Pinned here as values:
 #   1. the switch: on in the starter and the derived native look, off in Classic Sheet and by default;
-#   2. the title strip, the identity band and the Conditions | Actions header rest folded under it and
-#      come back the moment a theme that keeps them is published;
+#   2. the title strip and the identity band rest folded under it and come back the moment a theme
+#      that keeps them is published; no theme puts a Conditions | Actions header above the sheet;
 #   3. the canvas carries no Add event / + Add... band under it, only its own 8 px of top air, and the
 #      scroll's panel is padded 10 px at each side while the sheet fills what is inside the padding;
 #   4. what the identity band said rides the class head's name hover;
-#   5. the lane boundary is grabbed from the divider inside an event, never from a row that is not one;
-#   6. a tucked rail leaves nothing on screen, the rail rests tucked until the reader chooses, and
-#      View > Side Rail's gesture brings it back;
+#   5. the lane boundary is grabbed from the divider inside an event, in every theme, never from a row
+#      that is not one;
+#   6. the side panel rests as its thin rail in every theme, and View > Side Rail's gesture opens it;
 #   7. an unsaved sheet's tab says so on its hover;
 #   8. the resting view ends where the design ends it: no "+ Add event…" row after a body that has
 #      events (an empty one keeps it, as its only way in), and no "Loaded:" line in the status bar's
@@ -55,11 +55,13 @@ static func _test_the_bands_fold() -> bool:
 	var native: EventSheetEditor = _editor(NATIVE_THEME, _sheet_with_events(2))
 	var classic: EventSheetEditor = _editor(CLASSIC_THEME, _sheet_with_events(2))
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
-		["Editor Native: the title strip, the identity band and the header rest folded",
-			[native._title_strip.visible, native._identity_banner.visible, native._column_header.visible],
-			[false, false, false]],
-		["Classic Sheet keeps all three", [classic._title_strip.visible, classic._identity_banner.visible,
-			classic._column_header.visible], [true, true, true]],
+		["Editor Native: the title strip and the identity band rest folded",
+			[native._title_strip.visible, native._identity_banner.visible], [false, false]],
+		["Classic Sheet keeps both", [classic._title_strip.visible, classic._identity_banner.visible],
+			[true, true]],
+		["and neither puts a Conditions | Actions header above the sheet",
+			[native.find_child("SheetColumnHeader", true, false) == null,
+				classic.find_child("SheetColumnHeader", true, false) == null], [true, true]],
 	])
 	# A re-read of the sheet (every save and rename refreshes the identity band) keeps it folded.
 	native._refresh_title_strip()
@@ -68,9 +70,8 @@ static func _test_the_bands_fold() -> bool:
 	# A switch to a theme that keeps the bands brings every one of them back.
 	EventSheetActiveTheme.publish(load(CLASSIC_THEME) as EventSheetEditorStyle)
 	native._menu_bar.apply_theme_chrome()
-	ok = SUPPORT.check(TEST_NAME, "switching to Classic Sheet brings the three back",
-		[native._title_strip.visible, native._identity_banner.visible, native._column_header.visible],
-		[true, true, true]) and ok
+	ok = SUPPORT.check(TEST_NAME, "switching to Classic Sheet brings the two back",
+		[native._title_strip.visible, native._identity_banner.visible], [true, true]) and ok
 	native.free()
 	classic.free()
 	return ok
@@ -148,7 +149,8 @@ static func _test_the_divider_grab() -> bool:
 			view.event_boundary_grab_at(Vector2(divider_x - 60.0, inside.y)), {}],
 		["nor does a press on a row that is not an event", view.event_boundary_grab_at(
 			Vector2(divider_x, view.get_row_top(head_index) + 4.0)) if head_index >= 0 else {}, {}],
-		["Classic Sheet keeps the drag in its header band", classic_view.event_boundary_grab_at(classic_inside), {}],
+		["and Classic Sheet's events are grabbed the same way, with no band above to grab instead",
+			str(classic_view.event_boundary_grab_at(classic_inside).get("kind", "")), "lane_divider"],
 	])
 	# The drag in hand moves the split the way the header's drag does, and lets go the same way.
 	var ratio_before: float = view.get_event_style().condition_lane_ratio
@@ -171,28 +173,18 @@ static func _test_the_rail() -> bool:
 	var rail: EventSheetRailPanels = native._rail_panels
 	var rail_root: Control = native._workspace_body.get_child(0) as Control
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
-		["Editor Native rests with the rail tucked while the reader has not chosen", rail.is_rail_shown(), false],
-		["and leaves nothing of it on screen", rail_root.visible, false],
-		["Classic Sheet keeps the rail out", classic._rail_panels.is_rail_shown(), true],
-		["with its column showing", (classic._workspace_body.get_child(0) as Control).visible, true],
+		["Editor Native rests with the side panel closed to its rail", rail.is_rail_shown(), false],
+		["the rail on screen, 30 px wide", [rail_root.visible, rail_root.custom_minimum_size.x],
+			[true, EventSheetPalette.scaled_f(30.0)]],
+		["Classic Sheet rests the same way", [classic._rail_panels.is_rail_shown(),
+			(classic._workspace_body.get_child(0) as Control).visible], [false, true]],
 	])
-	# View > Side Rail: the tick is the rail shown, and pressing it flips the rail.
+	# View > Side Rail: the tick is the panel open, and pressing it flips the panel.
 	rail.set_rail_tucked(rail.is_rail_shown())
-	ok = SUPPORT.pins(TEST_NAME, [
-		["Side Rail brings it back", rail.is_rail_shown(), true],
-		["column and all", rail_root.visible, true],
-	]) and ok
+	ok = SUPPORT.check(TEST_NAME, "Side Rail opens it", rail.is_rail_shown(), true) and ok
 	rail.set_rail_tucked(rail.is_rail_shown())
-	ok = SUPPORT.pins(TEST_NAME, [
-		["and tucks it again, chosen now", rail.is_rail_shown(), false],
-		["with no edge strip left behind", rail_root.visible, false],
-	]) and ok
-	# Under a theme that keeps the bands, the same tucked rail is the narrow edge strip it always was.
-	rail.set_bands_folded(false)
-	ok = SUPPORT.pins(TEST_NAME, [
-		["a quiet theme draws the tucked rail as its edge strip", rail_root.visible, true],
-		["still tucked", rail.is_rail_tucked(), true],
-	]) and ok
+	ok = SUPPORT.check(TEST_NAME, "and closes it again to the rail", [rail.is_rail_shown(), rail_root.visible],
+		[false, true]) and ok
 	native.free()
 	classic.free()
 	return ok

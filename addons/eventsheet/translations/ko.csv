@@ -9530,3 +9530,12 @@ Ctrl+Z removes the region again.,Ctrl+Z를 누르면 리전이 다시 사라집�
 Remove #endregion,#endregion 제거
 Add #endregion,#endregion 추가
 + Add event to '%s'…,+ '%s'에 이벤트 추가…
+Filter…,필터…
+"Every function in this file: the sheet's own (✦ = published as an ACE), then the ones still written as code.","이 파일의 모든 함수: 먼저 시트의 함수(✦ = ACE로 공개됨), 그다음 아직 코드로 작성된 함수."
+Written as code in this file.,이 파일에 코드로 작성되어 있습니다.
+1 call,호출 1회
+%d calls,호출 %d회
+The side panel's tabs. Choosing one opens the side panel on it; choosing the ticked one closes the side panel.,"사이드 패널의 탭. 하나를 고르면 그 탭으로 사이드 패널이 열리고, 체크된 탭을 고르면 사이드 패널이 닫힙니다."
+"The side panel beside the sheet, with its Objects and Functions tabs. Unticked, it rests as a thin rail and the sheet takes the width.",시트 옆의 사이드 패널(오브젝트와 함수 탭 포함). 체크를 해제하면 얇은 레일로 남고 시트가 너비를 차지합니다.
+Close the side panel,사이드 패널 닫기
+Objects and functions of this sheet,이 시트의 오브젝트와 함수

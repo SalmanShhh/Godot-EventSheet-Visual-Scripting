@@ -9530,3 +9530,12 @@ Ctrl+Z removes the region again.,Strg+Z entfernt die Region wieder.
 Remove #endregion,#endregion entfernen
 Add #endregion,#endregion hinzufügen
 + Add event to '%s'…,+ Ereignis zu '%s' hinzufügen…
+Filter…,Filtern…
+"Every function in this file: the sheet's own (✦ = published as an ACE), then the ones still written as code.","Jede Funktion in dieser Datei: zuerst die des Blatts (✦ = als ACE veröffentlicht), dann die, die noch als Code geschrieben sind."
+Written as code in this file.,In dieser Datei als Code geschrieben.
+1 call,1 Aufruf
+%d calls,%d Aufrufe
+The side panel's tabs. Choosing one opens the side panel on it; choosing the ticked one closes the side panel.,Die Reiter der Seitenleiste. Einen zu wählen öffnet die Seitenleiste darauf; den angehakten zu wählen schließt die Seitenleiste.
+"The side panel beside the sheet, with its Objects and Functions tabs. Unticked, it rests as a thin rail and the sheet takes the width.","Die Seitenleiste neben dem Blatt, mit ihren Reitern Objekte und Funktionen. Nicht angehakt ruht sie als schmale Leiste, und das Blatt nimmt die Breite."
+Close the side panel,Seitenleiste schließen
+Objects and functions of this sheet,Objekte und Funktionen dieses Blatts

@@ -2,6 +2,35 @@
 
 ## [Unreleased]
 
+### Changed: the side panel rests as a thin rail and opens to Objects and Functions tabs
+
+- The always-open column beside the sheet (Open Sheets, a filter, Objects / Project tabs, a USED IN
+  THIS SHEET list and a Functions fold, each with its own header and splitter) is now a side panel
+  that rests closed as a 30 px rail with one button. Opened, it is two tabs styled like Godot's own
+  docks - a strip of flat tabs, a filter, then plain rows with an icon, a name and a count:
+  - **Objects** lists what the file uses first, without a heading, then the folds for the rest of
+    the scene, the Input Map actions and the globals; the sort button sits beside the filter, and
+    the Project bar (when it is on) folds in at the foot of the tab.
+  - **Functions** lists the sheet's functions with how many times the file calls them, then the
+	functions still written as code, marked `code`; ＋ beside the filter adds one, and right-click
+	still deletes a sheet function.
+  - A behaviour pack adds an **Anatomy** tab, and the **Picker preview** is a tab while the picker
+	is open.
+- Open Sheets is gone: the tabs above the sheet are the open sheets, and recently closed sheets are
+  on the Start page. View > Panels picks a tab (choosing the ticked one closes the panel) and View >
+  Side Rail opens or closes it.
+- Whether the panel is open, which tab it shows and how wide it was dragged are remembered per
+  project in the editor's project metadata. A project that remembered the old column starts with
+  the panel closed.
+
+### Changed: no Conditions | Actions band above the sheet
+
+- The band naming the two lanes, with its drag handles, is gone in every look. The two sides are
+  told apart by their colour and their kind labels, and the lanes are resized by dragging the line
+  between them on any event: the pointer shows ↔ over it, and the width is remembered on the sheet's
+  style exactly as the band's drag remembered it. View > Reset Lane Split still puts the theme's own
+  split back.
+
 ### Fixed: an Every X Seconds timer no longer counts while its event is off in a `.gd` sheet
 
 - An event switched off in a `.gd` sheet (or a row of a group that is off and cannot be switched)

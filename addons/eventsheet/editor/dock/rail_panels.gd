@@ -1,71 +1,48 @@
 @tool
 class_name EventSheetRailPanels
 extends RefCounted
-# The LEFT RAIL: the five workspace panels as one column that rests, slides and gets out of the way.
+# The SIDE PANEL beside the sheet: a thin rail that rests closed, and opens to tabs.
 #
-# The rail used to be a plain VBoxContainer with five panels stacked in it, each carrying a fixed
-# minimum size, and the only draggable edge was the rail-to-canvas grabber - which the editor theme
-# only draws on hover, so the rail read as a fixed strip of counters beside the sheet. This builds
-# the same five panels as a chain of VSplitContainers inside that HSplit instead:
+# Closed, it is a strip 30 px wide with one button on it, and the sheet has the width. Open, it is
+# a panel styled the way Godot's own docks are - a strip of flat tabs along the top, then whatever
+# the chosen tab holds (a filter, then plain rows with an icon, a name and a count):
 #
-#   VSplit(Open Sheets, VSplit(Objects, VSplit(Functions, VSplit(Anatomy, Picker preview))))
+#   Objects     what this file uses and what else is in its scene, plus the Project bar's fold
+#   Functions   the sheet's functions and the functions still written as code
 #
-# so every boundary drags, every panel's minimum size is zero (the rail can be dragged to a sliver),
-# and the grabbers are DRAWN rather than revealed on hover (`autohide` off, a bar background behind
-# them). Three states, all remembered per project:
+# Two more tabs appear only when there is something behind them: Anatomy for a behaviour pack, and
+# the Picker preview while the picker is open. There is no Open Sheets list: the tabs above the
+# sheet already are the open sheets.
 #
-#   open       the panel takes its share of the column
-#   tucked     the panel takes no room at all, not even a header; its name sits in the tab strip at
-#              the foot of the rail, and clicking that tab brings it back at the height it had
-#   rail off   the whole rail tucks into a narrow edge strip with a restore chevron, and the sheet
-#              takes the width - the way a browser sidebar tucks away
+# Whether the panel is open, which tab it shows and how wide it is are remembered per project, in
+# the editor's project metadata (the same record also holds the Properties bar's width).
 #
-# A panel is tucked by the button at the right edge of its header, or by dragging its divider up
-# past that header; the rail is tucked by the chevron above it, or by dragging its grabber into the
-# canvas edge. Nothing is ever CLOSED here: a tucked panel is off screen and its tab says what is
-# there, which is why the View menu lists them too.
-#
-# Which panels are ON OFFER is a census question, not a preference: Anatomy only means something for
-# a behaviour pack, and the Picker preview only while the picker is open, so a first sheet shows the
-# two panels it has things in rather than five headers counting to zero.
-#
-# The state model at the top is static and pure, so panel order, defaults, the census rule and the
-# stored-state round trip are all pinnable without an editor.
+# The state model at the top is static and pure, so the tab order, the defaults, the census rule
+# and the stored-state round trip are all pinnable without an editor.
 
-## Per-project editor metadata key holding the whole rail state (see `default_state`).
+## Per-project editor metadata key holding the whole side panel state (see `default_state`).
 const META_KEY: String = "eventsheets_rail_panels"
-## The tucked rail's width, and the width under which a rail drag counts as "tuck it".
+## The closed panel's width: the strip with the open button on it, at 1x.
+const CLOSED_WIDTH: float = 30.0
+## The narrowest the Properties bar may be dragged before it counts as "slide it off the edge".
 const EDGE_STRIP_WIDTH: float = 14.0
-## A drag that leaves a panel shorter than this has dragged it past its own header.
-const TUCK_THRESHOLD: float = 18.0
-## The rail's width when it is open and nothing has dragged it yet.
-const DEFAULT_RAIL_WIDTH: float = 200.0
+## The open panel's width when nothing has dragged it yet, at 1x.
+const DEFAULT_RAIL_WIDTH: float = 230.0
 ## The Properties bar's width when it is open and nothing has dragged it yet.
 const DEFAULT_PROPERTIES_WIDTH: float = 270.0
 
-## The panels, in the order the rail stacks them.
-const PANEL_IDS: PackedStringArray = ["open_sheets", "objects", "functions", "anatomy", "picker_preview"]
-## What a tab, a View entry and a tooltip call each panel.
+## The tabs, in the order the strip shows them.
+const PANEL_IDS: PackedStringArray = ["objects", "functions", "anatomy", "picker_preview"]
+## What a tab and a View entry call each panel.
 const PANEL_TITLES: Dictionary = {
-	"open_sheets": "Open Sheets",
 	"objects": "Objects",
 	"functions": "Functions",
 	"anatomy": "Anatomy",
 	"picker_preview": "Picker preview",
 }
-## The rail rests on the two panels every sheet fills; the rest are folds, closed until asked for.
-const OPEN_BY_DEFAULT: PackedStringArray = ["open_sheets", "objects"]
-## The starting height of each panel's slice of the column, at 1x.
-const DEFAULT_HEIGHTS: Dictionary = {
-	"open_sheets": 150.0,
-	"objects": 150.0,
-	"functions": 110.0,
-	"anatomy": 120.0,
-	"picker_preview": 110.0,
-}
 
 
-## The rail's panels in stacking order. The one place the order is written down.
+## The panel's tabs in strip order. The one place the order is written down.
 static func panel_ids() -> PackedStringArray:
 	return PANEL_IDS.duplicate()
 
@@ -73,67 +50,46 @@ static func panel_ids() -> PackedStringArray:
 ## What the tab strip and the View menu call a panel, in the reader's language. The table above
 ## holds the source strings; this is the one place they are read out, so it is the one place they
 ## are translated. The key is a VALUE rather than a literal, so the translation harvester cannot
-## derive these five from here: four of them are owed a row by other screens that name them
-## literally, and "Picker preview" falls back to its source string until one does.
+## derive these from here: three of them are owed a row by other screens that name them literally,
+## and "Picker preview" falls back to its source string until one does.
 static func panel_title(panel_id: String) -> String:
 	return EventSheetL10n.translate(str(PANEL_TITLES.get(panel_id, panel_id)))
 
 
-## Whether a panel starts open (its body showing) or folded to its header line.
-static func opens_by_default(panel_id: String) -> bool:
-	return Array(OPEN_BY_DEFAULT).has(panel_id)
-
-
-## The rail as it stands before anybody has dragged anything: two panels open, three folded, none
-## tucked, the rail and the Properties bar at their default widths.
+## The side panel as it stands before anybody has opened it: closed, on the Objects tab, the panel
+## and the Properties bar at their default widths.
 static func default_state() -> Dictionary:
-	var panels: Dictionary = {}
-	for panel_id: String in PANEL_IDS:
-		panels[panel_id] = {
-			"folded": not opens_by_default(panel_id),
-			"tucked": false,
-			"height": float(DEFAULT_HEIGHTS.get(panel_id, 110.0)),
-		}
 	return {
-		"panels": panels,
-		"rail_tucked": false,
+		"panel_open": false,
+		"panel_tab": "objects",
 		"rail_width": DEFAULT_RAIL_WIDTH,
 		"properties_tucked": false,
 		"properties_width": DEFAULT_PROPERTIES_WIDTH,
 	}
 
 
-## Read a stored state back into the full shape: every known panel present, every unknown key
-## dropped, every value the type it is meant to be. A half-written or older record therefore reads
-## as the default for the parts it does not carry, and never as a missing panel.
+## Read a stored state back into the full shape: every known key present, every unknown key dropped,
+## every value the type it is meant to be. A half-written or older record therefore reads as the
+## default for the parts it does not carry - and the column of stacked panels the side panel replaced
+## kept different keys, so its record reads as a closed panel on the Objects tab.
 static func normalize_state(stored: Variant) -> Dictionary:
 	var state: Dictionary = default_state()
 	if not (stored is Dictionary):
 		return state
 	var source: Dictionary = stored as Dictionary
-	state["rail_tucked"] = bool(source.get("rail_tucked", state["rail_tucked"]))
-	state["rail_width"] = maxf(EDGE_STRIP_WIDTH, float(source.get("rail_width", state["rail_width"])))
+	state["panel_open"] = bool(source.get("panel_open", state["panel_open"]))
+	var tab: String = str(source.get("panel_tab", state["panel_tab"]))
+	state["panel_tab"] = tab if PANEL_IDS.has(tab) else "objects"
+	state["rail_width"] = maxf(CLOSED_WIDTH, float(source.get("rail_width", state["rail_width"])))
 	state["properties_tucked"] = bool(source.get("properties_tucked", state["properties_tucked"]))
 	state["properties_width"] = maxf(0.0, float(source.get("properties_width", state["properties_width"])))
-	var stored_panels: Variant = source.get("panels", {})
-	if not (stored_panels is Dictionary):
-		return state
-	for panel_id: String in PANEL_IDS:
-		var entry: Variant = (stored_panels as Dictionary).get(panel_id, null)
-		if not (entry is Dictionary):
-			continue
-		var record: Dictionary = state["panels"][panel_id]
-		record["folded"] = bool((entry as Dictionary).get("folded", record["folded"]))
-		record["tucked"] = bool((entry as Dictionary).get("tucked", record["tucked"]))
-		record["height"] = maxf(0.0, float((entry as Dictionary).get("height", record["height"])))
 	return state
 
 
-## Which panels the rail offers at all, given what the open sheet actually holds. Open Sheets,
-## Objects and Functions are every sheet's; Anatomy is a behaviour pack's organs, so it appears
-## for a pack and nowhere else; the Picker preview shows how this sheet's verbs will read in the
-## picker, so it appears while the picker is open. A panel nothing can fill is not a fold the
-## reader has to close - it is simply not there.
+## Which tabs the panel offers, given what the open sheet actually holds. Objects and Functions are
+## every sheet's; Anatomy is a behaviour pack's organs, so it appears for a pack and nowhere else;
+## the Picker preview shows how this sheet's verbs will read in the picker, so it appears while the
+## picker is open. A tab nothing can fill is simply not there.
 static func shown_panel_ids(census: Dictionary) -> PackedStringArray:
 	var shown: PackedStringArray = PackedStringArray()
 	for panel_id: String in PANEL_IDS:
@@ -149,21 +105,14 @@ static func shown_panel_ids(census: Dictionary) -> PackedStringArray:
 	return shown
 
 
-## The tucked panels, in rail order - what the foot tab strip and View ▸ Panels list.
-static func tucked_panel_ids(state: Dictionary) -> PackedStringArray:
-	var tucked: PackedStringArray = PackedStringArray()
-	var panels: Variant = state.get("panels", {})
-	if not (panels is Dictionary):
-		return tucked
-	for panel_id: String in PANEL_IDS:
-		var entry: Variant = (panels as Dictionary).get(panel_id, null)
-		if entry is Dictionary and bool((entry as Dictionary).get("tucked", false)):
-			tucked.append(panel_id)
-	return tucked
+## The tab the panel shows for a stored choice: the chosen one while it is on offer, Objects when it
+## is not (an Anatomy tab remembered from a pack, with an ordinary script open).
+static func shown_tab(chosen: String, shown: PackedStringArray) -> String:
+	return chosen if shown.has(chosen) else "objects"
 
 
-## The whole rail state as the editor remembers it for this project. Outside the editor there is
-## nothing to read, and the defaults stand.
+## The whole side panel state as the editor remembers it for this project. Outside the editor there
+## is nothing to read, and the defaults stand.
 static func read_state() -> Dictionary:
 	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
 		return normalize_state(EditorInterface.get_editor_settings().get_project_metadata(
@@ -171,34 +120,25 @@ static func read_state() -> Dictionary:
 	return default_state()
 
 
-## Whether this project remembers a choice about the whole rail - tucked or out - rather than only
-## the defaults. A theme that folds the workspace bands away rests the rail tucked until the reader
-## has made that choice once.
-static func has_stored_rail_choice() -> bool:
-	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
-		var stored: Variant = EditorInterface.get_editor_settings().get_project_metadata(
-			"eventsheets", META_KEY, {})
-		return stored is Dictionary and (stored as Dictionary).has("rail_tucked")
-	return false
-
-
-## Write the rail state back for this project. A no-op outside the editor.
+## Write the side panel state back for this project, keeping the keys this file does not own (the
+## Properties bar writes its width into the same record). A no-op outside the editor.
 static func save_state(state: Dictionary) -> void:
 	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
 		EditorInterface.get_editor_settings().set_project_metadata("eventsheets", META_KEY, state)
 
 
-# ── The built rail ────────────────────────────────────────────────────────────────────────────
+# ── The built panel ───────────────────────────────────────────────────────────────────────────
 
 var _dock: Control = null
 var _state: Dictionary = default_state()
 var _panels: Dictionary = {}          # panel id -> the panel Control
-var _splits: Dictionary = {}          # panel id -> the VSplitContainer whose FIRST child it is
-var _tabs: HBoxContainer = null       # the foot strip of tucked-panel tabs
-var _body: VBoxContainer = null       # the whole rail: chevron strip, splits, tabs
-var _edge: VBoxContainer = null       # the tucked rail's narrow strip
-var _edge_label: Label = null
-var _root: VBoxContainer = null
+var _root: PanelContainer = null
+var _body: VBoxContainer = null       # the open panel: the tab strip, then the chosen tab
+var _strip: PanelContainer = null     # the tab strip's ground
+var _content: PanelContainer = null   # the chosen tab's ground
+var _tab_bar: TabBar = null
+var _tab_ids: PackedStringArray = PackedStringArray()   # the tab bar's tabs, by index
+var _edge: PanelContainer = null      # the closed panel: the rail with the open button
 var _workspace_body: HSplitContainer = null
 var _census: Dictionary = {"behaviour_pack": false, "picker_open": false}
 # How many times the width has been corrected since the last state was applied. The correction
@@ -208,152 +148,140 @@ var _width_fixes: int = 0
 # Set while a grabber drag is being answered, so the next layout is read as the reader's chosen
 # width rather than as a width to correct.
 var _reading_drag: bool = false
-# Set while the sheet's theme folds the workspace bands away (fold_workspace_bands): a tucked rail
-# then leaves no edge strip, and until the reader has chosen, the rail rests tucked.
-var _bands_folded: bool = false
-# Whether the reader has said, in this project, whether the rail is out or tucked.
-var _rail_chosen: bool = false
+# Set while the tab strip is being refilled, so the refill is not read as the reader picking a tab.
+var _filling_tabs: bool = false
 
 
 func init(dock: Control) -> void:
 	_dock = dock
 
 
-## Builds the rail around the five panels the dock has already made and wired, handed over as
+## Builds the side panel around the panels the dock has already made and wired, handed over as
 ## `{panel id: Control}`. Returns the control to put on the left of the workspace split;
-## `attach_split` then gives it the HSplit so the rail can drag and tuck itself.
+## `attach_split` then gives it the HSplit so the open panel can be dragged wider.
 func build(panels: Dictionary) -> Control:
-	_root = VBoxContainer.new()
+	_root = PanelContainer.new()
 	_root.name = "EventSheetLeftRail"
 	# NOT expanding horizontally: an HSplitContainer whose two children both expand puts its
 	# divider at a share of the width, and `split_offset` then reads as an offset FROM there. With
-	# only the canvas expanding, the divider rests at the rail's own minimum - which is zero - so
-	# the offset is the rail's width in pixels and nothing has to guess.
+	# only the canvas expanding, the divider rests at the panel's own minimum, so the offset is the
+	# panel's width in pixels and nothing has to guess.
 	_root.size_flags_horizontal = Control.SIZE_FILL
 	_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	# The grounds below are the ones a Godot dock's TabContainer draws, read from the theme once the
+	# panel is in the editor's tree and each time the theme changes; the root draws nothing itself.
+	_root.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	_root.tree_entered.connect(_dress_grounds)
+	_root.theme_changed.connect(_dress_grounds)
 
 	_body = VBoxContainer.new()
-	_body.name = "EventSheetLeftRailBody"
+	_body.name = "EventSheetSidePanelBody"
 	_body.add_theme_constant_override("separation", 0)
 	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_root.add_child(_body)
 
-	# The rail's own minimise, on its top edge: the chevron a browser puts on its sidebar.
-	var top_strip: HBoxContainer = HBoxContainer.new()
-	top_strip.name = "EventSheetLeftRailTopStrip"
-	var top_spacer: Control = Control.new()
-	top_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top_strip.add_child(top_spacer)
-	top_strip.add_child(_chevron_button("‹",
-		EventSheetL10n.translate("Tuck the rail into the edge - the sheet takes the width."),
-		func() -> void: set_rail_tucked(true)))
-	_body.add_child(top_strip)
+	# The strip along the top: the tabs, and at its right end the button that closes the panel.
+	_strip = PanelContainer.new()
+	_strip.name = "EventSheetSidePanelStrip"
+	var strip_row: HBoxContainer = HBoxContainer.new()
+	strip_row.name = "EventSheetSidePanelStripRow"
+	strip_row.add_theme_constant_override("separation", 0)
+	_tab_bar = TabBar.new()
+	_tab_bar.name = "EventSheetSidePanelTabs"
+	_tab_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_tab_bar.clip_tabs = true
+	_tab_bar.tab_changed.connect(_on_tab_changed)
+	strip_row.add_child(_tab_bar)
+	var close_button: Button = _strip_button("‹",
+		EventSheetL10n.translate("Close the side panel"),
+		func() -> void: set_rail_tucked(true))
+	close_button.name = "EventSheetSidePanelClose"
+	strip_row.add_child(close_button)
+	_strip.add_child(strip_row)
+	_body.add_child(_strip)
 
+	# The chosen tab, on the dock's own ground. Every panel is a child of it and only the chosen one
+	# is visible, which is exactly how a TabContainer holds its pages.
+	_content = PanelContainer.new()
+	_content.name = "EventSheetSidePanelContent"
+	_content.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_body.add_child(_content)
 	for panel_id: String in PANEL_IDS:
 		var panel: Control = panels.get(panel_id, null) as Control
 		if panel == null:
 			continue
 		_panels[panel_id] = panel
-		# The rail decides the column's heights, so a panel brings no minimum of its own to it.
-		panel.custom_minimum_size = Vector2.ZERO
-		_add_header_button(panel, panel_id)
-		_connect_fold(panel, panel_id)
+		_dress_as_tab(panel)
+		_content.add_child(panel)
 
-	_body.add_child(_build_chain(0))
-
-	_tabs = HBoxContainer.new()
-	_tabs.name = "EventSheetLeftRailTabs"
-	_tabs.add_theme_constant_override("separation", 3)
-	_body.add_child(_tabs)
-
-	_edge = VBoxContainer.new()
+	_edge = PanelContainer.new()
 	_edge.name = "EventSheetLeftRailEdge"
-	_edge.visible = false
-	_edge.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(EDGE_STRIP_WIDTH), 0.0)
-	_edge.add_child(_chevron_button("›",
-		EventSheetL10n.translate("Bring the rail back at the width it had."),
-		func() -> void: set_rail_tucked(false)))
-	_edge_label = Label.new()
-	_edge_label.name = "EventSheetLeftRailEdgeLabel"
-	# One narrow column of characters - the panel names read down the strip, so the tucked rail
-	# still says what is behind it.
-	_edge_label.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
-	_edge_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(9))
-	_edge_label.add_theme_color_override("font_color", EventSheetPopupUI.secondary_text_color())
-	_edge_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_edge.add_child(_edge_label)
+	var edge_column: VBoxContainer = VBoxContainer.new()
+	edge_column.name = "EventSheetLeftRailEdgeColumn"
+	edge_column.alignment = BoxContainer.ALIGNMENT_BEGIN
+	var open_button: Button = _strip_button("›",
+		EventSheetL10n.translate("Objects and functions of this sheet"),
+		func() -> void: set_rail_tucked(false))
+	open_button.name = "EventSheetSidePanelOpen"
+	# The one thing on the rail, so it wears a button's own ground rather than sitting flat on it.
+	open_button.flat = false
+	open_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	edge_column.add_child(open_button)
+	_edge.add_child(edge_column)
 	_root.add_child(_edge)
 	_root.resized.connect(_on_rail_resized)
+	_dress_grounds()
 	return _root
 
 
-## The nested VSplit chain, one split per boundary between two panels. Built over ALL the panels
-## rather than only the shown ones, because a SplitContainer hands the whole area to whichever of
-## its two children is visible - so showing and hiding a panel is a visibility flag, never a
-## rebuild of the column under the reader's cursor.
-func _build_chain(index: int) -> Control:
-	var panel_id: String = PANEL_IDS[index]
-	var panel: Control = _panels.get(panel_id, null) as Control
-	if panel == null:
-		panel = Control.new()
-		panel.name = "EventSheetRailMissing_%s" % panel_id
-	if index == PANEL_IDS.size() - 1:
-		return panel
-	var split: VSplitContainer = VSplitContainer.new()
-	split.name = "EventSheetRailSplit_%s" % panel_id
-	split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	split.dragger_visibility = SplitContainer.DRAGGER_VISIBLE
-	# The two theme overrides that make the boundary a THING ON SCREEN rather than something the
-	# pointer discovers: `autohide` off keeps the grabber drawn, and the bar gets a ground of its own.
-	split.add_theme_constant_override("autohide", 0)
-	split.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
-	split.add_theme_constant_override("minimum_grab_thickness", int(EventSheetPalette.scaled_f(6.0)))
-	var bar: StyleBoxFlat = StyleBoxFlat.new()
-	bar.bg_color = EventSheetPalette.TEXT_SECONDARY
-	bar.bg_color.a = 0.22
-	split.add_theme_stylebox_override("split_bar_background", bar)
-	split.split_offset = int(EventSheetPalette.scaled_f(
-		float((_state["panels"][panel_id] as Dictionary).get("height", 110.0))))
-	split.add_child(panel)
-	split.add_child(_build_chain(index + 1))
-	split.dragged.connect(func(offset: int) -> void: _on_split_dragged(panel_id, offset))
-	_splits[panel_id] = split
-	return split
-
-
-## A drag on one panel's lower boundary: remember the height, and treat a drag that took the panel
-## up past its own header as the same gesture as pressing its minimise button.
-func _on_split_dragged(panel_id: String, offset: int) -> void:
-	if float(offset) < EventSheetPalette.scaled_f(TUCK_THRESHOLD):
-		set_panel_tucked(panel_id, true)
+## The grounds a Godot dock draws, from the theme: the tab strip on the TabContainer's tab-bar
+## background, the chosen tab and the closed rail on its panel. The rail keeps a few pixels of air
+## rather than the panel's own margins, so its one button fits the 30 px it rests at.
+func _dress_grounds() -> void:
+	if _root == null:
 		return
-	(_state["panels"][panel_id] as Dictionary)["height"] = float(offset) / maxf(0.001, EventSheetPalette.ui_scale())
-	save_state(_state)
+	var bar_ground: StyleBox = _root.get_theme_stylebox("tabbar_background", "TabContainer")
+	_strip.add_theme_stylebox_override("panel", bar_ground if bar_ground != null else StyleBoxEmpty.new())
+	var page_ground: StyleBox = _root.get_theme_stylebox("panel", "TabContainer")
+	_content.add_theme_stylebox_override("panel", page_ground if page_ground != null else StyleBoxEmpty.new())
+	var rail_ground: StyleBox = page_ground.duplicate() as StyleBox if page_ground != null else StyleBoxFlat.new()
+	var air: float = EventSheetPalette.scaled_f(4.0)
+	rail_ground.content_margin_left = air
+	rail_ground.content_margin_right = air
+	rail_ground.content_margin_top = air
+	rail_ground.content_margin_bottom = air
+	_edge.add_theme_stylebox_override("panel", rail_ground)
 
 
-## The HSplit between the rail and the canvas: dragging its grabber into the edge tucks the rail,
-## exactly as the chevron does, and any other drag is the rail's remembered width.
+## A panel that used to stand in a column of its own carried a fold header (its name, a chevron and
+## sometimes a count). In a tab the tab names it, so the header stands down and the body is always
+## open; and the panel brings no minimum size of its own, because the panel's width is the reader's.
+func _dress_as_tab(panel: Control) -> void:
+	panel.custom_minimum_size = Vector2.ZERO
+	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	if panel.has_method("set_expanded"):
+		panel.call("set_expanded", true)
+	if panel.has_method("rail_header_row"):
+		var header: Variant = panel.call("rail_header_row")
+		if header is Control:
+			(header as Control).visible = false
+
+
+## The HSplit between the side panel and the canvas: a drag on its grabber is the open panel's
+## remembered width. Closed, the panel is its strip and the grabber does nothing.
 func attach_split(workspace_body: HSplitContainer) -> void:
 	_workspace_body = workspace_body
-	_workspace_body.dragger_visibility = SplitContainer.DRAGGER_VISIBLE
-	_workspace_body.add_theme_constant_override("autohide", 0)
-	_workspace_body.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
-	var bar: StyleBoxFlat = StyleBoxFlat.new()
-	bar.bg_color = EventSheetPalette.TEXT_SECONDARY
-	bar.bg_color.a = 0.22
-	_workspace_body.add_theme_stylebox_override("split_bar_background", bar)
 	# A drag is answered by the width it actually produced rather than by the offset that was
 	# asked for: what a SplitContainer's offset means depends on which of its two children expand
-	# and on their minimums, and the rail wants to remember a WIDTH.
+	# and on their minimums, and the panel wants to remember a WIDTH.
 	_workspace_body.dragged.connect(func(_offset: int) -> void: _reading_drag = true)
+	_apply()
 
 
-## The width the rail is asked to be, in pixels: the remembered one, or the edge strip when it is
-## tucked away.
+## The width the panel is asked to be, in pixels: the remembered one, or the strip when it is closed.
 func _wanted_rail_width() -> float:
-	return EventSheetPalette.scaled_f(EDGE_STRIP_WIDTH if is_rail_tucked()
+	return EventSheetPalette.scaled_f(CLOSED_WIDTH if is_rail_tucked()
 		else float(_state.get("rail_width", DEFAULT_RAIL_WIDTH)))
 
 
@@ -366,21 +294,20 @@ func _apply_rail_width() -> void:
 	_workspace_body.split_offset = int(_wanted_rail_width())
 
 
-## The rail was laid out. Either it has just been dragged, in which case the width it landed on IS
+## The panel was laid out. Either it has just been dragged, in which case the width it landed on IS
 ## the answer and is remembered, or it came out at a width it was not asked for and the offset is
-## nudged by the difference - a bounded number of times, because a width that will not settle is a
-## width, not a loop.
+## nudged by the difference - a bounded number of times.
 func _on_rail_resized() -> void:
-	if _root == null or _root.size.x <= 0.0:
+	if _root == null or _root.size.x <= 0.0 or _workspace_body == null:
 		return
 	if _reading_drag:
 		_reading_drag = false
-		if _root.size.x <= EventSheetPalette.scaled_f(EDGE_STRIP_WIDTH + 6.0):
-			set_rail_tucked(true)
+		if is_rail_tucked():
+			_apply_rail_width()
 			return
-		_state["rail_width"] = _root.size.x / maxf(0.001, EventSheetPalette.ui_scale())
+		_state["rail_width"] = maxf(CLOSED_WIDTH, _root.size.x / maxf(0.001, EventSheetPalette.ui_scale()))
 		_width_fixes = 0
-		save_state(_state)
+		save_state(_merged_state())
 		return
 	if _width_fixes >= 4 or absf(_root.size.x - _wanted_rail_width()) <= 2.0:
 		return
@@ -388,7 +315,7 @@ func _on_rail_resized() -> void:
 	_workspace_body.split_offset += int(_wanted_rail_width() - _root.size.x)
 
 
-## What the open sheet offers the rail: whether it is a behaviour pack (Anatomy), and whether the
+## What the open sheet offers the panel: whether it is a behaviour pack (Anatomy), and whether the
 ## picker is open (Picker preview). Pushed by the dock whenever either could have changed.
 func set_census(behaviour_pack: bool, picker_open: bool) -> void:
 	var next: Dictionary = {"behaviour_pack": behaviour_pack, "picker_open": picker_open}
@@ -398,203 +325,140 @@ func set_census(behaviour_pack: bool, picker_open: bool) -> void:
 	_apply()
 
 
-## Fold or unfold a panel - the header's own gesture, kept here so the choice is remembered with
-## the rest of the rail rather than by each panel separately. Pushing it down and hearing it back
-## are the same call, so the rail and the header can never disagree about what is folded.
-func set_panel_folded(panel_id: String, folded: bool) -> void:
-	if not (_state["panels"] as Dictionary).has(panel_id):
+## The tabs on offer right now, in strip order.
+func offered_panel_ids() -> PackedStringArray:
+	return shown_panel_ids(_census)
+
+
+## The tab the panel shows (or would show, were it open).
+func active_tab() -> String:
+	return shown_tab(str(_state.get("panel_tab", "objects")), offered_panel_ids())
+
+
+## Show one tab, remembering the choice. Opens nothing: the panel's open state is its own choice.
+func set_active_tab(panel_id: String) -> void:
+	if not PANEL_IDS.has(panel_id):
 		return
-	if bool((_state["panels"][panel_id] as Dictionary).get("folded", false)) == folded:
-		return
-	(_state["panels"][panel_id] as Dictionary)["folded"] = folded
-	_push_fold(panel_id)
-	save_state(_state)
-
-
-func is_panel_folded(panel_id: String) -> bool:
-	var entry: Variant = (_state["panels"] as Dictionary).get(panel_id, null)
-	return entry is Dictionary and bool((entry as Dictionary).get("folded", false))
-
-
-## A panel's own header button folded it: record it here, so one project memory holds every fold.
-func _connect_fold(panel: Control, panel_id: String) -> void:
-	if panel.has_signal("fold_toggled"):
-		panel.connect("fold_toggled", func(expanded: bool) -> void: set_panel_folded(panel_id, not expanded))
-	elif panel.has_signal("collapse_toggled"):
-		panel.connect("collapse_toggled", func(collapsed: bool) -> void: set_panel_folded(panel_id, collapsed))
-
-
-## The remembered fold, on the panel. Open Sheets calls it collapsing to a strip and the folds call
-## it expanding; both are the same choice from the rail's side.
-func _push_fold(panel_id: String) -> void:
-	var panel: Control = _panels.get(panel_id, null) as Control
-	if panel == null:
-		return
-	var folded: bool = is_panel_folded(panel_id)
-	if panel.has_method("set_expanded"):
-		if bool(panel.call("is_expanded")) == folded:
-			panel.call("set_expanded", not folded)
-	elif panel.has_method("set_collapsed"):
-		if bool(panel.call("is_collapsed")) != folded:
-			panel.call("set_collapsed", folded)
-	# A panel that shrinks itself when it folds is asking for a width the rail decides. The rail
-	# decides it, so the minimum goes back to nothing.
-	panel.custom_minimum_size = Vector2.ZERO
-
-
-## Slide a panel off the column (it takes no room, not even a header, and its name joins the tab
-## strip at the foot of the rail) or bring it back at the height it had.
-func set_panel_tucked(panel_id: String, tucked: bool) -> void:
-	if not (_state["panels"] as Dictionary).has(panel_id):
-		return
-	(_state["panels"][panel_id] as Dictionary)["tucked"] = tucked
-	save_state(_state)
+	_state["panel_tab"] = panel_id
+	save_state(_merged_state())
 	_apply()
 
 
+## Whether a panel is out of sight - the panel is closed, or another tab is showing. Bringing one
+## back (`set_panel_tucked(id, false)`) opens the panel on that tab, and putting the showing one
+## away closes the panel; putting away a tab that is not showing changes nothing.
 func is_panel_tucked(panel_id: String) -> bool:
-	var entry: Variant = (_state["panels"] as Dictionary).get(panel_id, null)
-	return entry is Dictionary and bool((entry as Dictionary).get("tucked", false))
+	return is_rail_tucked() or active_tab() != panel_id
 
 
-## Tuck the whole rail into its edge strip, or bring it back at the width it had.
+func set_panel_tucked(panel_id: String, tucked: bool) -> void:
+	if not PANEL_IDS.has(panel_id):
+		return
+	if not tucked:
+		_state["panel_tab"] = panel_id
+		set_rail_tucked(false)
+		return
+	if not is_panel_tucked(panel_id):
+		set_rail_tucked(true)
+
+
+## Close the panel to its strip, or open it at the width it had, remembering the choice.
 func set_rail_tucked(tucked: bool) -> void:
-	_state["rail_tucked"] = tucked
-	_rail_chosen = true
-	save_state(_state)
+	_state["panel_open"] = not tucked
+	save_state(_merged_state())
 	_apply()
 
 
-## Whether the rail is tucked: the reader's choice, or - under a theme that folds the workspace bands
-## away, before the reader has chosen - tucked, because that theme rests with the sheet alone.
+## Whether the panel is closed to its strip.
 func is_rail_tucked() -> bool:
-	if _bands_folded and not _rail_chosen:
-		return true
-	return bool(_state.get("rail_tucked", false))
+	return not bool(_state.get("panel_open", false))
 
 
-## Whether the rail takes any room at all: View > Side Rail's tick.
+## Whether the panel is open: View > Side Panel's tick.
 func is_rail_shown() -> bool:
 	return not is_rail_tucked()
 
 
-## Says whether the reader has already chosen the rail's state in this project (the dock reads it off
-## the stored record once, as the rail is built). Without that, a folding theme rests it tucked.
-func set_rail_choice_known(known: bool) -> void:
-	_rail_chosen = known
-	_apply()
-
-
-## The theme's fold_workspace_bands, pushed by the dock whenever the active theme changes. Under it a
-## tucked rail takes no room - no edge strip, no grabber - and View > Side Rail brings it back.
-func set_bands_folded(folded: bool) -> void:
-	if _bands_folded == folded:
-		return
-	_bands_folded = folded
-	_apply()
-
-
-## Put a remembered (or a test's) state on the built rail: the folds go down to the panels, and
-## everything else is laid out by `_apply`.
+## Put a remembered (or a test's) state on the built panel.
 func apply_state(state: Dictionary) -> void:
 	_state = normalize_state(state)
-	for panel_id: String in PANEL_IDS:
-		_push_fold(panel_id)
 	_apply()
 
 
-## Everything the state says, on the widgets: which panels are on offer, which are tucked, the
-## column's heights, the tab strip, and whether the rail itself is an edge strip.
+## The state to write back: this file's keys over whatever the record already holds, so the
+## Properties bar's width (written by its own file into the same record) is never lost.
+func _merged_state() -> Dictionary:
+	var merged: Dictionary = read_state()
+	for key: Variant in _state.keys():
+		if key != "properties_tucked" and key != "properties_width":
+			merged[key] = _state[key]
+	return merged
+
+
+## Everything the state says, on the widgets: which tabs are on offer, which one shows, and whether
+## the panel is open or its strip.
 func _apply() -> void:
 	if _root == null:
 		return
-	var shown: PackedStringArray = shown_panel_ids(_census)
-	var on_screen: PackedStringArray = PackedStringArray()
+	var shown: PackedStringArray = offered_panel_ids()
+	var showing: String = active_tab()
+	_fill_tabs(shown, showing)
 	for panel_id: String in PANEL_IDS:
 		var panel: Control = _panels.get(panel_id, null) as Control
-		if panel == null:
-			continue
-		var visible_now: bool = shown.has(panel_id) and not is_panel_tucked(panel_id)
-		panel.visible = visible_now
-		if visible_now:
-			on_screen.append(panel_id)
-		var split: VSplitContainer = _splits.get(panel_id, null) as VSplitContainer
-		if split != null and visible_now:
-			split.split_offset = int(EventSheetPalette.scaled_f(
-				float((_state["panels"][panel_id] as Dictionary).get("height", 110.0))))
-	_rebuild_tabs(shown)
+		if panel != null:
+			panel.visible = panel_id == showing
 	var tucked: bool = is_rail_tucked()
 	_body.visible = not tucked
 	_edge.visible = tucked
-	_root.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(EDGE_STRIP_WIDTH) if tucked else 0.0, 0.0)
-	# A folding theme leaves nothing of a tucked rail on screen: the split then has one child, so it
-	# draws no grabber either, and the sheet starts at the dock's edge.
-	_root.visible = not (tucked and _bands_folded)
-	if _edge_label != null:
-		var titles: PackedStringArray = PackedStringArray()
-		for panel_id2: String in on_screen:
-			titles.append(panel_title(panel_id2).to_upper())
-		_edge_label.text = " · ".join(titles)
+	_root.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(CLOSED_WIDTH) if tucked else 0.0, 0.0)
+	if _workspace_body != null:
+		# Closed, the strip is not a thing to drag wider: the button on it opens the panel.
+		_workspace_body.dragging_enabled = not tucked
+		_workspace_body.dragger_visibility = (SplitContainer.DRAGGER_HIDDEN_COLLAPSED if tucked
+			else SplitContainer.DRAGGER_VISIBLE)
 	_width_fixes = 0
 	_apply_rail_width()
 
 
-## The foot strip: one thin tab per panel that is on offer but tucked away. Clicking one brings its
-## panel back. A panel the census does not offer has no tab - there is nothing behind it to restore.
-func _rebuild_tabs(shown: PackedStringArray) -> void:
-	if _tabs == null:
+## The tab strip, refilled only when the tabs on offer change, so a click is never undone by its
+## own refill.
+func _fill_tabs(shown: PackedStringArray, showing: String) -> void:
+	if _tab_bar == null:
 		return
-	for child: Node in Array(_tabs.get_children()):
-		_tabs.remove_child(child)
-		child.queue_free()
-	for panel_id: String in tucked_panel_ids(_state):
-		if not shown.has(panel_id):
-			continue
-		var tab: Button = Button.new()
-		tab.name = "EventSheetRailTab_%s" % panel_id
-		tab.flat = true
-		tab.text = "› %s" % panel_title(panel_id)
-		tab.tooltip_text = EventSheetL10n.translate(
-			"Bring %s back at the height it had.") % panel_title(panel_id)
-		tab.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
-		var restored_id: String = panel_id
-		tab.pressed.connect(func() -> void: set_panel_tucked(restored_id, false))
-		_tabs.add_child(tab)
-	_tabs.visible = _tabs.get_child_count() > 0
+	_filling_tabs = true
+	if shown != _tab_ids:
+		_tab_bar.clear_tabs()
+		for panel_id: String in shown:
+			_tab_bar.add_tab(panel_title(panel_id))
+		_tab_ids = shown.duplicate()
+	var index: int = _tab_ids.find(showing)
+	if index >= 0 and _tab_bar.current_tab != index:
+		_tab_bar.current_tab = index
+	for tab_index: int in _tab_ids.size():
+		var panel: Control = _panels.get(_tab_ids[tab_index], null) as Control
+		if panel != null and panel.has_method("tab_tooltip"):
+			_tab_bar.set_tab_tooltip(tab_index, str(panel.call("tab_tooltip")))
+	_filling_tabs = false
 
 
-## The minimise button every panel header carries at its right edge. The panel says WHERE its
-## header is (`rail_header_row`); the rail says what the button does, so the gesture is one
-## sentence in one place rather than five copies of it.
-func _add_header_button(panel: Control, panel_id: String) -> void:
-	if not panel.has_method("rail_header_row"):
+func _on_tab_changed(index: int) -> void:
+	if _filling_tabs or index < 0 or index >= _tab_ids.size():
 		return
-	var header: Node = panel.call("rail_header_row")
-	if not (header is Control):
-		return
-	# A header that says a lot ("Objects  player.tscn - 10 used - 2 more") would otherwise set the
-	# rail's minimum width to the length of its own sentence, and no drag could make the column
-	# narrower than the longest thing it currently says. The words are clipped instead: the rail's
-	# width is the reader's choice, and the full text is a tooltip away.
-	for child: Node in (header as Control).get_children():
-		if child is Button:
-			(child as Button).clip_text = true
-		elif child is Label:
-			(child as Label).clip_text = true
-	var button: Button = _chevron_button("-",
-		EventSheetL10n.translate(
-			"Slide %s off the rail - its name waits in the tab strip at the foot.") % panel_title(panel_id),
-		func() -> void: set_panel_tucked(panel_id, true))
-	button.name = "EventSheetRailMinimise_%s" % panel_id
-	(header as Control).add_child(button)
+	set_active_tab(_tab_ids[index])
 
 
-func _chevron_button(glyph: String, tooltip: String, on_pressed: Callable) -> Button:
+## Refresh the tabs' hovers - a panel says what it holds once the sheet has been read.
+func refresh_tab_tooltips() -> void:
+	if _root != null:
+		_fill_tabs(offered_panel_ids(), active_tab())
+
+
+func _strip_button(glyph: String, tooltip: String, on_pressed: Callable) -> Button:
 	var button: Button = Button.new()
 	button.flat = true
 	button.text = glyph
 	button.tooltip_text = tooltip
 	button.focus_mode = Control.FOCUS_NONE
-	button.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
+	button.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(22.0), EventSheetPalette.scaled_f(22.0))
 	button.pressed.connect(on_pressed)
 	return button
