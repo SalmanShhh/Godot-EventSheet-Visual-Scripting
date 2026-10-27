@@ -40,11 +40,20 @@ const ANCHOR_EVENT := "event"
 ## The one-click answer, by the id the dock's door and the inbox chip both dispatch on.
 const FIX_MAKE_IT_UNDOABLE := "make_the_edit_undoable"
 
-## The plugin's own switch on and switch off. What they build and free is the plugin's own UI - a
-## dock, a menu item, a panel - never the scene the editor has open, and putting it in the reader's
-## undo history would let a Ctrl+Z bring back a dock nobody owns. So neither event, nor anything
-## under it, is asked the question at all.
+## What the plugin makes for itself is not the scene the editor has open. A member the file fills
+## with something it made (`_dock = Control.new()`, `.instantiate()`) or hands to the editor's own
+## containers (`add_control_to_dock(DOCK_SLOT_LEFT_UR, _dock)`) is the plugin's own UI, and building,
+## changing or freeing it - `_dock.queue_free()` on disable, from a menu command, anywhere - is no
+## edit of the reader's scene: a Ctrl+Z that brought the dock back would be the bug. The question is
+## asked of what a line changes, not of which event it sits in, so a lifecycle event that really does
+## edit the open scene by hand is still caught.
+const MADE_HERE_PATTERN := "\\b([A-Za-z_][A-Za-z0-9_]*)[ \\t]*(?::[ \\t]*[A-Za-z_][A-Za-z0-9_.]*[ \\t]*)?:?=[^=\\n][^\\n]*\\.(?:new|instantiate)\\("
+## The plugin's own switch on and switch off, the one fallback: a member of the plugin that these two
+## events change is taken as the plugin's own UI even when the file never shows where it was made
+## (`_dock.queue_free()` in a teardown whose dock was built elsewhere). Anything else they change -
+## the edited scene reached through EditorInterface, a node they fetched - is still asked.
 const PLUGIN_LIFECYCLE: Array[String] = ["OnPluginEnabled", "OnPluginDisabled"]
+const HANDED_TO_EDITOR_PATTERN := "\\badd_(?:control_to_[a-z_]+|dock|inspector_plugin|import_plugin|export_plugin|node_3d_gizmo_plugin|scene_post_import_plugin|translation_parser_plugin|debugger_plugin|resource_conversion_plugin)\\(([^()\\n]*)\\)"
 
 
 ## Every not-undoable note this sheet earns, one per event that changes the open scene outside the
@@ -55,12 +64,50 @@ static func findings(sheet: EventSheetResource, script_path: String = "") -> Arr
 	if sheet == null or not sheet.tool_mode or not edits_the_open_scene(sheet):
 		return found
 	var label_path: String = script_path if not script_path.is_empty() else str(sheet.resource_path)
-	_walk(sheet.events, label_path.get_file(), found)
+	var own: Dictionary = plugin_own_names(sheet)
+	var members: Dictionary = own.duplicate()
+	for entry: Dictionary in EventSheetVariableOwners.own_entries(sheet):
+		members[str(entry.get("name", ""))] = true
+	_walk(sheet.events, label_path.get_file(), members, own, found)
 	for entry: Variant in sheet.functions:
 		var event_function: EventFunction = entry as EventFunction
 		if event_function != null:
-			_walk(_function_rows(event_function), label_path.get_file(), found)
+			_walk(_function_rows(event_function), label_path.get_file(), members, own, found)
 	return found
+
+
+## The members the file made for itself or handed to the editor's own containers, {name: true}: the
+## plugin's own UI, whose changes are not edits of the scene the editor has open. Read off every row's
+## emitted text, like the open-scene gate.
+static func plugin_own_names(sheet: EventSheetResource) -> Dictionary:
+	var own: Dictionary = {}
+	if sheet == null:
+		return own
+	var seen: Array[Dictionary] = []
+	_collect_text(sheet.events, seen)
+	for entry: Variant in sheet.functions:
+		var event_function: EventFunction = entry as EventFunction
+		if event_function != null:
+			_collect_text(_function_rows(event_function), seen)
+	var made: RegEx = RegEx.create_from_string(MADE_HERE_PATTERN)
+	var handed: RegEx = RegEx.create_from_string(HANDED_TO_EDITOR_PATTERN)
+	for said: Dictionary in seen:
+		var text: String = str(said.get("text", ""))
+		for found: RegExMatch in made.search_all(text):
+			own[found.get_string(1)] = true
+		for found: RegExMatch in handed.search_all(text):
+			var last: String = found.get_string(1).get_slice(",", found.get_string(1).get_slice_count(",") - 1)
+			if last.strip_edges().is_valid_identifier():
+				own[last.strip_edges()] = true
+	return own
+
+
+## True when `line` changes only something the plugin owns: the name it leads with - `_dock` in
+## `_dock.queue_free()` or `_panel.label.text = "x"` - is one of `own`.
+static func _changes_own_ui(line: String, own: Dictionary) -> bool:
+	var text: String = line.strip_edges()
+	var dot: int = text.find(".")
+	return dot > 0 and own.has(text.left(dot))
 
 
 ## True when this sheet works on the scene the editor has open rather than on itself. The gate the
@@ -162,23 +209,28 @@ static func emitted_text(entry: Variant) -> String:
 
 
 ## One walk of the rows. Recursive because a plain edit in a sub-event is still a row of the file.
-static func _walk(items: Array, label: String, found: Array[Dictionary]) -> void:
+## `own` is the set this level asks with: the plugin's own names, or under a switch on or switch off
+## `members` - those plus every member the file declares.
+static func _walk(items: Array, label: String, members: Dictionary, own: Dictionary,
+		found: Array[Dictionary]) -> void:
 	for item: Variant in items:
 		if item is EventGroup:
-			_walk(EventSheetGroupFacts.children(item as EventGroup), label, found)
+			_walk(EventSheetGroupFacts.children(item as EventGroup), label, members, own, found)
 			continue
 		var event_row: EventRow = item as EventRow
-		if event_row == null or PLUGIN_LIFECYCLE.has(event_row.trigger_id):
+		if event_row == null:
 			continue
-		_note_this_event(event_row, label, found)
-		_walk(event_row.sub_events, label, found)
+		var here: Dictionary = members if PLUGIN_LIFECYCLE.has(event_row.trigger_id) else own
+		_note_this_event(event_row, label, here, found)
+		_walk(event_row.sub_events, label, members, here, found)
 
 
 ## The findings ONE event earns: one per KIND of plain edit it makes. Per kind rather than per row,
 ## because three properties set in a row of three rows is one thing to fix and one sentence to read;
 ## the slot recorded is the first of them, which is the row the door rewrites and the row the reader
 ## is looking at when the strip speaks.
-static func _note_this_event(event_row: EventRow, label: String, found: Array[Dictionary]) -> void:
+static func _note_this_event(event_row: EventRow, label: String, own: Dictionary,
+		found: Array[Dictionary]) -> void:
 	var seen: Dictionary = {}
 	for slot: int in event_row.actions.size():
 		var entry: Variant = event_row.actions[slot]
@@ -189,7 +241,7 @@ static func _note_this_event(event_row: EventRow, label: String, found: Array[Di
 			continue  # already through the history - this is the answer, not the question
 		for line: String in emitted_text(entry).split("\n"):
 			var kind: String = EventForgeUndoableEdits.raw_edit_kind(line)
-			if kind.is_empty() or seen.has(kind):
+			if kind.is_empty() or seen.has(kind) or _changes_own_ui(line, own):
 				continue
 			seen[kind] = true
 			var twin: String = str(EventForgeUndoableEdits.TWIN_FOR_ACE.get(ace_id, ""))

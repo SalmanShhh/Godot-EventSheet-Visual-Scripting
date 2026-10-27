@@ -62,10 +62,35 @@ func _on_tidy() -> void:
 """
 
 
+## The answer is decided by WHAT a line changes, not by which event it sits in: a menu command that
+## closes the plugin's own panel is the plugin's business too, and a switch-on that tidies the open
+## scene by hand is an edit of the reader's scene like any other.
+const BY_RECEIVER := """@tool
+extends EditorPlugin
+
+var _panel: Control
+
+
+func _enter_tree() -> void:
+	_panel = preload("res://panel.tscn").instantiate()
+	add_control_to_bottom_panel(_panel, "Coins")
+	EditorInterface.get_edited_scene_root().get_child(0).queue_free()
+
+
+func _on_close_panel() -> void:
+	_panel.queue_free()
+"""
+
+
 static func run() -> bool:
 	var own: EventSheetResource = SUPPORT.reopen(OWN_PLUGIN, true, "user://plugin_teardown_own.gd")
 	var editing: EventSheetResource = SUPPORT.reopen(EDITING_PLUGIN, true, "user://plugin_teardown_editing.gd")
+	var by_receiver: EventSheetResource = SUPPORT.reopen(BY_RECEIVER, true, "user://plugin_teardown_by_receiver.gd")
 	return SUPPORT.pins(NAME, [
+		["a menu command freeing the plugin's own panel is no finding, a switch-on editing the open scene is",
+			_subjects(by_receiver), ["EditorInterface.get_edited_scene_root().get_child(0).queue_free()"]],
+		["the plugin's own names are what it made or handed to the editor",
+			EventSheetUndoableFindings.plugin_own_names(own).keys(), ["_dock"]],
 		["the plugin file opens as a tool sheet", own.tool_mode, true],
 		["and it reaches the open scene", EventSheetUndoableFindings.edits_the_open_scene(own), true],
 		["freeing its own dock on disable is no finding", _subjects(own), []],

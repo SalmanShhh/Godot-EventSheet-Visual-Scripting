@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Fixed: the not-undoable note asks what a line changes, not which event it sits in
+
+- A menu command that freed your plugin's own panel still got the "changes the scene the editor
+  has open" note, and anything On Plugin Enabled did to the open scene by hand got none. The note
+  now leaves alone what your plugin made for itself (`_panel = ... .instantiate()`, a control handed
+  to `add_control_to_bottom_panel`) wherever it is changed, and a switch on or switch off that edits
+  the open scene through `EditorInterface.get_edited_scene_root()` is caught like any other event.
+
 ### Fixed: a local of one function no longer hides a typo in another
 
 - A name declared as a local or parameter anywhere in a script was accepted everywhere in it, so
