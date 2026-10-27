@@ -18,6 +18,9 @@ const MEASURE := preload("res://tools/measure_packs.gd")
 ## would invent its id, and every scene naming it by uid would fall back to the path with a warning.
 const UID_SIDECARS := preload("res://tools/uid_sidecars.gd")
 
+## The behaviour library's writer, asked here only whether the library still matches the packs.
+const LIBRARY_BUILD := preload("res://tools/build_library.gd")
+
 
 func _init() -> void:
 	var packs_dir: DirAccess = DirAccess.open("res://eventsheet_addons")
@@ -77,10 +80,18 @@ func _init() -> void:
 	for path: String in missing_sidecars:
 		print("UID MISSING: %s (%s)" % [path, UID_SIDECARS.FIX])
 	print("uid_sidecars missing=%d" % missing_sidecars.size())
+	# The behaviour library must be the packs, byte for byte: a pack fixed here and not there reaches
+	# every project that adds it from the library still broken.
+	var library_drift: PackedStringArray = LIBRARY_BUILD.drift(LIBRARY_BUILD.SOURCE_ROOT,
+		LIBRARY_BUILD.LIBRARY.LIBRARY_ROOT, PackedStringArray(LIBRARY_BUILD.SHIPPED.FOLDERS), false)
+	for path: String in library_drift:
+		print("LIBRARY DRIFT: %s (run tools/build_library.gd)" % path)
+	print("library drifted=%d" % library_drift.size())
 	# A red gate must FAIL the invocation: anything checking only the exit code (CI, shell
 	# chains) used to see success even when packs drifted or failed to parse.
 	quit(1 if drifted > 0 or failed > 0 or not spelling_problems.is_empty() \
-		or not successor_problems.is_empty() or not missing_sidecars.is_empty() else 0)
+		or not successor_problems.is_empty() or not missing_sidecars.is_empty() \
+		or not library_drift.is_empty() else 0)
 
 
 ## How many verbs in the vocabulary carry a forwarding address at all - printed beside the problem

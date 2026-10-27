@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="StatusEffectResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/status_effect_resource/status_effect_resource.gd" id="1_status_effect"]
+
+[resource]
+script = ExtResource("1_status_effect")
+status_name = "poison"
+tint = Color(0.62, 0.9, 0.5, 1)
+icon = null
+tick_amount = 1.0
+tick_type = "poison"
+tick_seconds = 1.0
+heal_amount = 0.0
+speed_factor = 1.0
+multiplier_tag = ""
+multiplier = 1.0
+stacking = "add"
+max_stacks = 5
+cleansable = true
+particle_scene = null

@@ -89,6 +89,8 @@ static func _gd_files(root: String) -> PackedStringArray:
 		if file.ends_with(".gd"):
 			out.append(root.path_join(file))
 	for sub: String in dir.get_directories():
-		if not sub.begins_with("."):
+		# A folder holding .gdignore is never compiled by the editor - the behaviour library is the
+		# packs themselves, waiting there - so nothing in it can name a class at boot.
+		if not sub.begins_with(".") and not FileAccess.file_exists(root.path_join(sub).path_join(".gdignore")):
 			out.append_array(_gd_files(root.path_join(sub)))
 	return out

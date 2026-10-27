@@ -59,6 +59,12 @@ const OFFERED := {
 	"multiplayer-message": [
 		{"id": "make_message", "label": "Make %s a message…"},
 	],
+	# The one note about packs nobody uses. Where the plugin carries its behaviour library, each of
+	# them can go to the trash and come back from the library, so the note's door is the window that
+	# lists them all, the unused ticked and the used locked.
+	"unused-pack": [
+		{"id": "tidy_behaviours", "label": "Tidy behaviours…"},
+	],
 	"pack-reading": [
 		{"id": "open_pack", "label": "Open the pack"},
 	],
@@ -204,6 +210,9 @@ static func fixes_for(finding: Dictionary) -> Array[Dictionary]:
 	var check: String = str(finding.get("check", ""))
 	if not OFFERED.has(check):
 		return out
+	# Tidying sends packs to the trash on the promise that the library still has them.
+	if check == "unused-pack" and not EventSheetPackLibrary.exists():
+		return out
 	var subject: String = subject_of(finding)
 	for offer: Variant in (OFFERED[check] as Array):
 		var entry: Dictionary = (offer as Dictionary).duplicate()
@@ -278,6 +287,11 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 			return {"ok": true, "message": "Open %s: the script block's own row offers Adopt, which rewrites it into a row plus whatever the row does not cover, with the diff shown before anything changes." % str(finding.get("path", "")).get_file()}
 		"make_message":
 			return {"ok": true, "message": "Open %s, right-click the %s function row and choose Make it a message - the annotation is what makes a call travel." % [str(finding.get("path", "")).get_file(), subject]}
+		"tidy_behaviours":
+			if dock != null and dock.has_method("open_tidy_behaviours"):
+				dock.call("open_tidy_behaviours")
+				return {"ok": true, "message": EventSheetL10n.translate("Tidy behaviours lists every behaviour in the project, the unused ones ticked.")}
+			return {"ok": false, "message": EventSheetL10n.translate("Open the EventSheets workspace to tidy the behaviours.")}
 		"open_pack":
 			return {"ok": true, "message": "Open %s and Sheet ▸ Publish New Version… lists what does not read yet, with the fix." % str(finding.get("path", "")).get_file()}
 		# The same gesture the note row under the event offers, reached from the report instead:

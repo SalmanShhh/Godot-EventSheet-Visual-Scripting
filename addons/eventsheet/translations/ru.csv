@@ -9607,3 +9607,62 @@ Listed under its own name in the picker and the Add behaviour list. The usual ch
 "%s is a %s, not a node: a sheet reads it from its file, so it is never added to an object.","%s - это %s, а не узел: лист читает его из файла, поэтому он никогда не добавляется к объекту."
 "%d pack class(es) are referenced by no sheet, scene or autoload - fine if you call them from hand-written GDScript: %s.","%d класс(ов) пакетов не использует ни один лист, сцена или автозагрузка - это нормально, если вы вызываете их из написанного вручную GDScript: %s."
 %s (autoload),%s (автозагрузка)
+%s is not in the library.,%s нет в библиотеке.
+%s could not be copied into the project (%s).,Не удалось скопировать %s в проект (%s).
+unused,не используется
+used by %s,используется в %s
+"Nothing in this project matches ""%s"".",В этом проекте нет совпадений с «%s».
+In the library,В библиотеке
+"In the behaviour library, not in this project yet. Add behaviour… opens the window on it; nothing is added from here.","В библиотеке поведений, ещё не в этом проекте. «Добавить поведение…» открывает для него окно; отсюда ничего не добавляется."
+"This behaviour is in the library, not in this project. Add behaviour… opens the window on it, where adding copies it in and attaches it.","Это поведение в библиотеке, а не в этом проекте. «Добавить поведение…» открывает для него окно, где добавление копирует его и прикрепляет."
+Search the project and the library,Искать в проекте и библиотеке
+The project's behaviours and the library's together.,Поведения проекта и библиотеки вместе.
+In this project,В этом проекте
+Only the behaviours this project already holds.,"Только поведения, которые уже есть в этом проекте."
+"Also adds, because it needs them","Также добавляет, потому что они ему нужны"
+Copied into,Копируется в
+Takes the behaviour off the object and sends the folders it copied in to the trash - the same step as Ctrl+Z.,"Снимает поведение с объекта и отправляет скопированные папки в корзину - тот же шаг, что Ctrl+Z."
+Library,Библиотека
+In project,В проекте
+Remove from project…,Убрать из проекта…
+Add to project and attach,Добавить в проект и прикрепить
+(already in the project),(уже в проекте)
+Nothing else.,Больше ничего.
+Adding…,Добавление…
+Added · attached to %s,Добавлено · прикреплено к %s
+"Tidy behaviours lists every behaviour in the project, the unused ones ticked.","«Навести порядок в поведениях» показывает все поведения проекта, неиспользуемые отмечены."
+Open the EventSheets workspace to tidy the behaviours.,"Откройте рабочую область EventSheets, чтобы навести порядок в поведениях."
+Godot imported 1 folder.,Godot импортировал 1 папку.
+Godot imported %d folders.,Godot импортировал папок: %d.
+Added %s to the project.,%s добавлено в проект.
+"Added %s to the project, with %s it needs.",%s добавлено в проект вместе с нужными ему %s.
+%s and %s,%s и %s
+Open the scene holding %s to attach it.,"Откройте сцену с %s, чтобы прикрепить."
+Nothing was added.,Ничего не добавлено.
+Added %d behaviours to eventsheet_addons/. Add or remove any of them from an object's Behaviours list.,В eventsheet_addons/ добавлено поведений: %d. Добавляйте или убирайте их в списке поведений объекта.
+Used by 1 sheet,Используется в 1 листе
+Used by 1 file,Используется в 1 файле
+Used by %d sheets,Используется в листах: %d
+Used by %d files,Используется в файлах: %d
+Remove %s from the project?,Убрать %s из проекта?
+"It stays in the library, so you can add it back at any time.","Оно остаётся в библиотеке, так что его можно вернуть в любой момент."
+"It is not in the library, so the trash is where it can be restored from.","Его нет в библиотеке, поэтому восстановить его можно только из корзины."
+Its folder %s goes to the system trash.,Его папка %s отправляется в системную корзину.
+Those rows stay as written and show as missing until it is added back. The Doctor lists them.,"Эти строки остаются как написаны и отображаются как отсутствующие, пока поведение не вернут. Doctor их перечисляет."
+%s could not be sent to the trash (%s); it is still in the project.,Не удалось отправить %s в корзину (%s); оно всё ещё в проекте.
+Removed %s: its folder is in the system trash.,%s убрано: его папка в системной корзине.
+This project holds %d behaviours. No sheet uses %d of them. Ticked ones go to the trash and stay in the library.,В этом проекте поведений: %d. Ни один лист не использует %d из них. Отмеченные уходят в корзину и остаются в библиотеке.
+Remove %d unused,Убрать неиспользуемые: %d
+Tidy behaviours,Навести порядок в поведениях
+Not now,Не сейчас
+Made in this project: the library has no copy to add it back from.,"Создано в этом проекте: в библиотеке нет копии, чтобы его вернуть."
+Sent %d unused behaviours to the trash; each stays in the library.,Неиспользуемых поведений отправлено в корзину: %d; каждое остаётся в библиотеке.
+Still in the project (the trash refused them): %s.,Всё ещё в проекте (корзина их не приняла): %s.
+Pick any that fit. Each adds a few behaviours to this project; you can add or remove any of them later from an object's Behaviours list.,Выберите подходящее. Каждый вариант добавляет в проект несколько поведений; любое из них можно позже добавить или убрать в списке поведений объекта.
+Start with none,Начать без них
+Adds nothing. An object's Behaviours list > + Add behaviour… adds any of them later.,Ничего не добавляет. Список поведений объекта > + Добавить поведение… добавит любое позже.
+Nothing will be added. The Add behaviour window is always there later.,Ничего не будет добавлено. Окно «Добавить поведение» всегда доступно позже.
+Add and continue,Добавить и продолжить
+Nothing will be added.,Ничего не будет добавлено.
+1 behaviour will be added.,Будет добавлено 1 поведение.
+%d behaviours will be added (shared ones once).,Будет добавлено поведений: %d (общие - один раз).

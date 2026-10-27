@@ -16,6 +16,8 @@ extends SceneTree
 const BUILDERS_DIR := "res://tools/pack_builders/"
 
 const UID_SIDECARS := preload("res://tools/uid_sidecars.gd")
+## The behaviour library writer: what a build puts in eventsheet_addons/ is mirrored into the library.
+const LIBRARY_BUILD := preload("res://tools/build_library.gd")
 
 ## The trees a build writes into, whose sidecars it must leave exactly as it found them.
 const BUILT_TREES: PackedStringArray = ["res://eventsheet_addons", "res://tools/pack_builders"]
@@ -43,6 +45,11 @@ func _init() -> void:
 		ok = false
 	for path: String in UID_SIDECARS.missing("res://eventsheet_addons"):
 		print("[build_sample_behaviors] %s has no .uid yet: %s" % [path, UID_SIDECARS.FIX])
+	# The behaviour library is the packs again, copied for projects that add them one at a time, so
+	# it is rewritten from what was just built rather than left for somebody to remember.
+	var mirrored: PackedStringArray = LIBRARY_BUILD.drift(LIBRARY_BUILD.SOURCE_ROOT,
+		LIBRARY_BUILD.LIBRARY.LIBRARY_ROOT, PackedStringArray(LIBRARY_BUILD.SHIPPED.FOLDERS), true)
+	print("[build_sample_behaviors] library rewrote %d path(s)" % mirrored.size())
 	if not ok:
 		# EXIT 1, because a build that pushed an error and then exited 0 is a build a script
 		# believed. A pack that failed here is one whose body the assembler could not make -

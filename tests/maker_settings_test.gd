@@ -171,8 +171,8 @@ static func _the_doors() -> bool:
 		last.pressed.emit()
 	rows.append(["which makes one for that object, on its kind", made, [["Enemy", "CharacterBody2D"]]])
 	dialog.open_card_menu("res://eventsheet_addons/bullet/bullet_behavior.gd")
-	rows.append(["a behaviour's right-click offers its settings or its sheet", _menu_texts(dialog._card_menu),
-		["Behaviour settings…", "Open as sheet"]])
+	rows.append(["a behaviour's right-click offers its settings or its sheet, then taking it out", _menu_texts(dialog._card_menu),
+		["Behaviour settings…", "Open as sheet", "", "Remove from project…"]])
 	dialog._card_menu.id_pressed.emit(0)
 	rows.append(["and settings opens that file's form", opened, [["res://eventsheet_addons/bullet/bullet_behavior.gd", true]]])
 	# The New behaviour form opened for an object starts on that object's kind.

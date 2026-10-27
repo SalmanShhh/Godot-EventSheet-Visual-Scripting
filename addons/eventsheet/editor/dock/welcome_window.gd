@@ -9,6 +9,12 @@ extends RefCounted
 # dialog: the band that says what the plugin is, then cards for the one question, Get Started and
 # Preferences, and the help strip that says what the chosen answer would set. Apply commits it.
 #
+# When the plugin carries its behaviour library, a second question sits under the first: "What are
+# you making?". Each answer is a kit - a tag the packs themselves carry (`@ace_tags`), listing the
+# packs carrying it by name - so the reader sees exactly what arrives. Nothing is copied until Add and
+# continue; Start with none is a real answer, because an object's Behaviours list adds any of them
+# later.
+#
 # Extracted from event_sheet_dock.gd so the dock stays focused. The dock owns one instance, calls
 # init(self), and keeps two thin delegates (show_welcome / show_welcome_if_first_run) so the menu,
 # the command palette, and the plugin's startup hook all keep calling the dock unchanged. The window
@@ -30,6 +36,8 @@ const DOCK_REGISTRY := preload("res://addons/eventsheet/api/dock_registry.gd")
 const CLASSIC_THEME_PATH := "res://addons/eventsheet/themes/classic_sheet_theme.tres"
 ## The guide a reader from another event-sheet editor is handed, opened in the Manual.
 const MIGRATION_GUIDE_ID := "GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR"
+## How many of a kit's packs its card names before it counts the rest.
+const KIT_NAMED := 5
 
 var _dock: Control = null
 var _welcome_window: ConfirmationDialog = null
@@ -41,6 +49,12 @@ var _sets_value: Label = null
 ## The answer buttons by choice, and the answer chosen but not yet applied ("" for none).
 var _answers: Dictionary = {}
 var _picked: String = ""
+## The kits on offer (EventSheetPackLibrary.kits), each beside its tick box, and the line that
+## says what ticking them adds.
+var _kits: Array[Dictionary] = []
+var _kit_ticks: Array[CheckBox] = []
+var _kit_summary: Label = null
+var _kit_add: Button = null
 
 
 ## Whether the Get Started card offers the door with these words. Every door is offered, except the
@@ -169,6 +183,8 @@ func _build() -> void:
 	# The one question that sets the words, the look and the panels a reader already expects,
 	# instead of three settings in three menus they would have to know existed.
 	box.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("How do you usually make games?"), _build_came_from()))
+	if EventSheetPackLibrary.exists():
+		box.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("What are you making?"), _build_kits()))
 	# The four doors, two by two, so the window keeps its width.
 	var start_grid: GridContainer = GridContainer.new()
 	start_grid.columns = 2
@@ -271,6 +287,104 @@ func _build_came_from() -> VBoxContainer:
 		_answers[choice] = answer
 		card.add_child(answer)
 	return card
+
+
+## The kits, two by two: each a tick box named by its tag, the packs it adds listed by name under it,
+## then the line saying how many would arrive, Start with none and Add and continue.
+func _build_kits() -> VBoxContainer:
+	var card: VBoxContainer = EventSheetPopupUI.form_box()
+	card.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate(
+		"Pick any that fit. Each adds a few behaviours to this project; you can add or remove any of them later from an object's Behaviours list."),
+		EventSheetPalette.scaled_f(440.0)))
+	_kits = EventSheetPackLibrary.kits(EventSheetPackLibrary.packs())
+	_kit_ticks.clear()
+	var grid: GridContainer = GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", int(EventSheetPalette.scaled_f(10.0)))
+	for kit: Dictionary in _kits:
+		var cell: VBoxContainer = VBoxContainer.new()
+		cell.add_theme_constant_override("separation", 0)
+		var tick: CheckBox = CheckBox.new()
+		tick.text = str(kit.get("tag", ""))
+		tick.toggled.connect(func(_on: bool) -> void: _refresh_kit_summary())
+		cell.add_child(tick)
+		var listed: PackedStringArray = kit.get("names", PackedStringArray())
+		var said: Label = EventSheetPopupUI.hint_label(kit_list_text(listed), EventSheetPalette.scaled_f(205.0))
+		said.tooltip_text = ", ".join(listed)
+		said.mouse_filter = Control.MOUSE_FILTER_PASS
+		cell.add_child(said)
+		grid.add_child(cell)
+		_kit_ticks.append(tick)
+	# The kits scroll inside the card, so the window keeps the height it had before it asked.
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(440.0), EventSheetPalette.scaled_f(220.0))
+	scroll.add_child(grid)
+	card.add_child(scroll)
+	var footer: HBoxContainer = HBoxContainer.new()
+	_kit_summary = Label.new()
+	_kit_summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_kit_summary.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
+	footer.add_child(_kit_summary)
+	var none: Button = Button.new()
+	none.text = EventSheetL10n.translate("Start with none")
+	none.flat = true
+	none.add_theme_color_override("font_color", EventSheetPopupUI.accent_color())
+	none.tooltip_text = EventSheetL10n.translate("Adds nothing. An object's Behaviours list > + Add behaviour… adds any of them later.")
+	none.pressed.connect(func() -> void:
+		for tick: CheckBox in _kit_ticks:
+			tick.set_pressed_no_signal(false)
+		_refresh_kit_summary()
+		_kit_summary.text = EventSheetL10n.translate("Nothing will be added. The Add behaviour window is always there later."))
+	footer.add_child(none)
+	_kit_add = EventSheetPopupUI.main_button(Button.new())
+	_kit_add.text = EventSheetL10n.translate("Add and continue")
+	_kit_add.pressed.connect(_add_kits)
+	footer.add_child(_kit_add)
+	card.add_child(footer)
+	_refresh_kit_summary()
+	return card
+
+
+## A kit's packs as its card lists them: the first KIT_NAMED by name, then how many more (all of
+## them are on the hover).
+static func kit_list_text(names: PackedStringArray) -> String:
+	if names.size() <= KIT_NAMED:
+		return ", ".join(names)
+	return EventSheetL10n.translate("%s and %d more") % [", ".join(names.slice(0, KIT_NAMED)), names.size() - KIT_NAMED]
+
+
+## The kits ticked right now.
+func chosen_kits() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for index: int in range(_kit_ticks.size()):
+		if _kit_ticks[index].button_pressed:
+			out.append(_kits[index])
+	return out
+
+
+## The line under the kits for `count` behaviours on their way in.
+static func kit_summary(count: int) -> String:
+	if count == 0:
+		return EventSheetL10n.translate("Nothing will be added.")
+	if count == 1:
+		return EventSheetL10n.translate("1 behaviour will be added.")
+	return EventSheetL10n.translate("%d behaviours will be added (shared ones once).") % count
+
+
+func _refresh_kit_summary() -> void:
+	var count: int = EventSheetPackLibrary.kit_folders(chosen_kits()).size()
+	_kit_summary.text = kit_summary(count)
+	_kit_add.disabled = count == 0
+
+
+func _add_kits() -> void:
+	_kit_add.disabled = true
+	var result: Dictionary = await _dock._library_flow.add_kits(chosen_kits())
+	for tick: CheckBox in _kit_ticks:
+		tick.set_pressed_no_signal(false)
+	_refresh_kit_summary()
+	_kit_summary.text = str(result.get("message", ""))
 
 
 ## Chooses an answer without applying it: the button shows pressed and the strip says what Apply

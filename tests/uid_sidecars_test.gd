@@ -60,6 +60,8 @@ static func run() -> bool:
 		["the uid line of an .import file is read",
 			import_uid("[remap]\n\nimporter=\"keep\"\nuid=\"uid://q1\"\n"), "uid://q1"],
 		["an .import file without a uid line reads as none", import_uid("[remap]\n\nimporter=\"keep\"\n"), ""],
+		["a sidecar under a .gdignore folder is not read for duplicates",
+			_tracked_uids(PackedStringArray(["lib/.gdignore", "lib/a.gd.uid", "a.gd.uid"])).keys(), ["a.gd.uid"]],
 	])
 
 	var tracked: PackedStringArray = tracked_files()
@@ -141,10 +143,18 @@ static func tracked_files() -> PackedStringArray:
 
 
 ## Every uid a tracked file carries in its own right: each `.uid` sidecar's, and each `.import`
-## file's own `uid=` line.
+## file's own `uid=` line. A file under a `.gdignore` folder carries none Godot reads - the behaviour
+## library keeps each pack's sidecar only so a copy added to a project keeps its id, and that copy's
+## twin in eventsheet_addons/ is the one this repository's import sees.
 static func _tracked_uids(tracked: PackedStringArray) -> Dictionary:
 	var uids: Dictionary = {}
+	var ignored_dirs: PackedStringArray = PackedStringArray()
 	for path: String in tracked:
+		if path.get_file() == ".gdignore":
+			ignored_dirs.append(path.get_base_dir() + "/")
+	for path: String in tracked:
+		if _under_any(path, ignored_dirs):
+			continue
 		if path.get_extension() == "uid":
 			uids[path] = _read(path).strip_edges()
 		elif path.get_extension() == "import":

@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="MomentResource" format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/moment_resource/moment_resource.gd" id="1_moment"]
+
+[resource]
+script = ExtResource("1_moment")
+moment_name = "Calm"
+steps = Array[Dictionary]([{
+"amount": 0.0,
+"effect": "vignette",
+"seconds": 1.0,
+"verb": "hold"
+}, {
+"amount": 0.0,
+"effect": "desaturate",
+"seconds": 1.0,
+"verb": "hold"
+}, {
+"amount": 0.0,
+"effect": "bloom",
+"seconds": 1.0,
+"verb": "hold"
+}, {
+"amount": 0.0,
+"effect": "saturate",
+"seconds": 1.0,
+"verb": "hold"
+}])

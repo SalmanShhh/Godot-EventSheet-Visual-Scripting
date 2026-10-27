@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="16" height="16" fill="none">
+  <!-- the mod's own file, with its corner turned -->
+  <path d="M116 46 h206 l74 74 v346 a20 20 0 0 1 -20 20 h-260 a20 20 0 0 1 -20 -20 v-400 a20 20 0 0 1 20 -20 z"
+    fill="#334155" stroke="#64748b" stroke-width="14" stroke-linejoin="round"/>
+  <path d="M322 46 v74 h74" stroke="#64748b" stroke-width="14" stroke-linejoin="round"/>
+  <!-- the five fields it names -->
+  <g stroke="#0ea5e9" stroke-width="26" stroke-linecap="round">
+    <line x1="166" y1="216" x2="326" y2="216"/>
+    <line x1="166" y1="286" x2="346" y2="286"/>
+    <line x1="166" y1="356" x2="286" y2="356"/>
+  </g>
+  <!-- the flag that says whether it carries code -->
+  <circle cx="346" cy="392" r="42" fill="#f97316"/>
+</svg>

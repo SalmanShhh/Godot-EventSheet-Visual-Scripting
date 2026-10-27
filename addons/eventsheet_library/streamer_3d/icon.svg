@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="16" height="16" fill="none">
+  <!-- the ground plane of cells, in perspective -->
+  <g stroke="#64748b" stroke-width="14" opacity="0.35" stroke-linejoin="round">
+    <polygon points="256,96 466,206 256,316 46,206"/>
+    <polygon points="256,206 466,316 256,426 46,316"/>
+  </g>
+  <!-- the loaded cell under the player, and its neighbours -->
+  <polygon points="256,151 361,206 256,261 151,206" fill="#0ea5e9" opacity="0.95"/>
+  <polygon points="361,206 466,261 361,316 256,261" fill="#0ea5e9" opacity="0.5"/>
+  <polygon points="151,206 256,261 151,316 46,261" fill="#0ea5e9" opacity="0.5"/>
+  <!-- the node the radius is measured around -->
+  <circle cx="256" cy="176" r="42" fill="#f97316"/>
+</svg>

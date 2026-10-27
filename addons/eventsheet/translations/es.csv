@@ -9607,3 +9607,62 @@ Listed under its own name in the picker and the Add behaviour list. The usual ch
 "%s is a %s, not a node: a sheet reads it from its file, so it is never added to an object.","%s es un %s, no un nodo: una hoja lo lee de su archivo, así que nunca se añade a un objeto."
 "%d pack class(es) are referenced by no sheet, scene or autoload - fine if you call them from hand-written GDScript: %s.","%d clase(s) de paquete no las usa ninguna hoja, escena ni autoload - está bien si las llamas desde GDScript escrito a mano: %s."
 %s (autoload),%s (autoload)
+%s is not in the library.,%s no está en la biblioteca.
+%s could not be copied into the project (%s).,No se pudo copiar %s al proyecto (%s).
+unused,sin usar
+used by %s,usado por %s
+"Nothing in this project matches ""%s"".","Nada en este proyecto coincide con ""%s""."
+In the library,En la biblioteca
+"In the behaviour library, not in this project yet. Add behaviour… opens the window on it; nothing is added from here.","En la biblioteca de comportamientos, aún no en este proyecto. Añadir comportamiento… abre la ventana en él; desde aquí no se añade nada."
+"This behaviour is in the library, not in this project. Add behaviour… opens the window on it, where adding copies it in and attaches it.","Este comportamiento está en la biblioteca, no en este proyecto. Añadir comportamiento… abre la ventana en él, donde añadirlo lo copia y lo adjunta."
+Search the project and the library,Buscar en el proyecto y en la biblioteca
+The project's behaviours and the library's together.,Los comportamientos del proyecto y de la biblioteca juntos.
+In this project,En este proyecto
+Only the behaviours this project already holds.,Solo los comportamientos que este proyecto ya tiene.
+"Also adds, because it needs them","También añade, porque los necesita"
+Copied into,Se copia en
+Takes the behaviour off the object and sends the folders it copied in to the trash - the same step as Ctrl+Z.,Quita el comportamiento del objeto y envía a la papelera las carpetas que copió - el mismo paso que Ctrl+Z.
+Library,Biblioteca
+In project,En el proyecto
+Remove from project…,Quitar del proyecto…
+Add to project and attach,Añadir al proyecto y adjuntar
+(already in the project),(ya en el proyecto)
+Nothing else.,Nada más.
+Adding…,Añadiendo…
+Added · attached to %s,Añadido · adjuntado a %s
+"Tidy behaviours lists every behaviour in the project, the unused ones ticked.","Ordenar comportamientos lista todos los comportamientos del proyecto, con los no usados marcados."
+Open the EventSheets workspace to tidy the behaviours.,Abre el espacio de trabajo de EventSheets para ordenar los comportamientos.
+Godot imported 1 folder.,Godot importó 1 carpeta.
+Godot imported %d folders.,Godot importó %d carpetas.
+Added %s to the project.,Se añadió %s al proyecto.
+"Added %s to the project, with %s it needs.","Se añadió %s al proyecto, con %s que necesita."
+%s and %s,%s y %s
+Open the scene holding %s to attach it.,Abre la escena que contiene %s para adjuntarlo.
+Nothing was added.,No se añadió nada.
+Added %d behaviours to eventsheet_addons/. Add or remove any of them from an object's Behaviours list.,Se añadieron %d comportamientos a eventsheet_addons/. Añade o quita cualquiera desde la lista de comportamientos de un objeto.
+Used by 1 sheet,Usado por 1 hoja
+Used by 1 file,Usado por 1 archivo
+Used by %d sheets,Usado por %d hojas
+Used by %d files,Usado por %d archivos
+Remove %s from the project?,¿Quitar %s del proyecto?
+"It stays in the library, so you can add it back at any time.","Sigue en la biblioteca, así que puedes volver a añadirlo cuando quieras."
+"It is not in the library, so the trash is where it can be restored from.","No está en la biblioteca, así que solo se puede restaurar desde la papelera."
+Its folder %s goes to the system trash.,Su carpeta %s va a la papelera del sistema.
+Those rows stay as written and show as missing until it is added back. The Doctor lists them.,Esas filas quedan tal como están escritas y aparecen como ausentes hasta que se vuelva a añadir. El Doctor las enumera.
+%s could not be sent to the trash (%s); it is still in the project.,No se pudo enviar %s a la papelera (%s); sigue en el proyecto.
+Removed %s: its folder is in the system trash.,Se quitó %s: su carpeta está en la papelera del sistema.
+This project holds %d behaviours. No sheet uses %d of them. Ticked ones go to the trash and stay in the library.,Este proyecto tiene %d comportamientos. Ninguna hoja usa %d de ellos. Los marcados van a la papelera y siguen en la biblioteca.
+Remove %d unused,Quitar %d sin usar
+Tidy behaviours,Ordenar comportamientos
+Not now,Ahora no
+Made in this project: the library has no copy to add it back from.,Hecho en este proyecto: la biblioteca no tiene copia para volver a añadirlo.
+Sent %d unused behaviours to the trash; each stays in the library.,Se enviaron %d comportamientos sin usar a la papelera; cada uno sigue en la biblioteca.
+Still in the project (the trash refused them): %s.,Siguen en el proyecto (la papelera los rechazó): %s.
+Pick any that fit. Each adds a few behaviours to this project; you can add or remove any of them later from an object's Behaviours list.,Elige los que encajen. Cada uno añade unos cuantos comportamientos a este proyecto; puedes añadir o quitar cualquiera más tarde desde la lista de comportamientos de un objeto.
+Start with none,Empezar sin ninguno
+Adds nothing. An object's Behaviours list > + Add behaviour… adds any of them later.,No añade nada. La lista de comportamientos de un objeto > + Añadir comportamiento… añade cualquiera más tarde.
+Nothing will be added. The Add behaviour window is always there later.,No se añadirá nada. La ventana Añadir comportamiento siempre estará ahí más tarde.
+Add and continue,Añadir y continuar
+Nothing will be added.,No se añadirá nada.
+1 behaviour will be added.,Se añadirá 1 comportamiento.
+%d behaviours will be added (shared ones once).,"Se añadirán %d comportamientos (los compartidos, una vez)."

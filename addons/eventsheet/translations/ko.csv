@@ -9607,3 +9607,62 @@ Listed under its own name in the picker and the Add behaviour list. The usual ch
 "%s is a %s, not a node: a sheet reads it from its file, so it is never added to an object.",%s 은(는) 노드가 아닌 %s 입니다. 시트가 파일에서 읽으므로 오브젝트에 추가되지 않습니다.
 "%d pack class(es) are referenced by no sheet, scene or autoload - fine if you call them from hand-written GDScript: %s.","%d개의 팩 클래스를 참조하는 시트, 씬, 오토로드가 없습니다 - 직접 작성한 GDScript에서 호출한다면 괜찮습니다: %s."
 %s (autoload),%s (자동 로드)
+%s is not in the library.,%s은(는) 라이브러리에 없습니다.
+%s could not be copied into the project (%s).,%s을(를) 프로젝트에 복사할 수 없습니다 (%s).
+unused,사용 안 함
+used by %s,%s에서 사용
+"Nothing in this project matches ""%s"".","이 프로젝트에는 ""%s""와(과) 일치하는 항목이 없습니다."
+In the library,라이브러리에 있음
+"In the behaviour library, not in this project yet. Add behaviour… opens the window on it; nothing is added from here.",비헤이비어 라이브러리에 있으며 아직 이 프로젝트에는 없습니다. 비헤이비어 추가…는 해당 창을 엽니다. 여기서는 아무것도 추가되지 않습니다.
+"This behaviour is in the library, not in this project. Add behaviour… opens the window on it, where adding copies it in and attaches it.","이 비헤이비어는 라이브러리에 있고 이 프로젝트에는 없습니다. 비헤이비어 추가…가 해당 창을 열며, 추가하면 복사되어 연결됩니다."
+Search the project and the library,프로젝트와 라이브러리 검색
+The project's behaviours and the library's together.,프로젝트와 라이브러리의 비헤이비어를 함께 표시합니다.
+In this project,이 프로젝트에 있음
+Only the behaviours this project already holds.,이 프로젝트에 이미 있는 비헤이비어만.
+"Also adds, because it needs them",필요하므로 함께 추가
+Copied into,복사 위치
+Takes the behaviour off the object and sends the folders it copied in to the trash - the same step as Ctrl+Z.,객체에서 비헤이비어를 떼고 복사한 폴더를 휴지통으로 보냅니다 - Ctrl+Z와 같은 단계입니다.
+Library,라이브러리
+In project,프로젝트에 있음
+Remove from project…,프로젝트에서 제거…
+Add to project and attach,프로젝트에 추가하고 연결
+(already in the project),(이미 프로젝트에 있음)
+Nothing else.,다른 것은 없습니다.
+Adding…,추가하는 중…
+Added · attached to %s,추가됨 · %s에 연결됨
+"Tidy behaviours lists every behaviour in the project, the unused ones ticked.",비헤이비어 정리는 프로젝트의 모든 비헤이비어를 나열하며 사용하지 않는 것은 체크됩니다.
+Open the EventSheets workspace to tidy the behaviours.,비헤이비어를 정리하려면 EventSheets 작업 공간을 여세요.
+Godot imported 1 folder.,Godot가 폴더 1개를 가져왔습니다.
+Godot imported %d folders.,Godot가 폴더 %d개를 가져왔습니다.
+Added %s to the project.,%s을(를) 프로젝트에 추가했습니다.
+"Added %s to the project, with %s it needs.",%s을(를) 필요한 %s과(와) 함께 프로젝트에 추가했습니다.
+%s and %s,%s 및 %s
+Open the scene holding %s to attach it.,연결하려면 %s이(가) 있는 씬을 여세요.
+Nothing was added.,아무것도 추가되지 않았습니다.
+Added %d behaviours to eventsheet_addons/. Add or remove any of them from an object's Behaviours list.,eventsheet_addons/에 비헤이비어 %d개를 추가했습니다. 객체의 비헤이비어 목록에서 추가하거나 제거할 수 있습니다.
+Used by 1 sheet,시트 1개에서 사용
+Used by 1 file,파일 1개에서 사용
+Used by %d sheets,시트 %d개에서 사용
+Used by %d files,파일 %d개에서 사용
+Remove %s from the project?,%s을(를) 프로젝트에서 제거할까요?
+"It stays in the library, so you can add it back at any time.",라이브러리에는 남아 있으므로 언제든 다시 추가할 수 있습니다.
+"It is not in the library, so the trash is where it can be restored from.",라이브러리에 없으므로 휴지통에서만 복원할 수 있습니다.
+Its folder %s goes to the system trash.,폴더 %s은(는) 시스템 휴지통으로 이동합니다.
+Those rows stay as written and show as missing until it is added back. The Doctor lists them.,해당 행은 작성된 그대로 남으며 다시 추가할 때까지 누락으로 표시됩니다. Doctor가 목록을 보여 줍니다.
+%s could not be sent to the trash (%s); it is still in the project.,%s을(를) 휴지통으로 보낼 수 없습니다 (%s). 아직 프로젝트에 있습니다.
+Removed %s: its folder is in the system trash.,%s을(를) 제거했습니다. 폴더는 시스템 휴지통에 있습니다.
+This project holds %d behaviours. No sheet uses %d of them. Ticked ones go to the trash and stay in the library.,이 프로젝트에는 비헤이비어 %d개가 있습니다. 그중 %d개는 어떤 시트도 사용하지 않습니다. 체크한 것은 휴지통으로 가고 라이브러리에는 남습니다.
+Remove %d unused,사용하지 않는 %d개 제거
+Tidy behaviours,비헤이비어 정리
+Not now,나중에
+Made in this project: the library has no copy to add it back from.,이 프로젝트에서 만든 것: 라이브러리에 다시 추가할 사본이 없습니다.
+Sent %d unused behaviours to the trash; each stays in the library.,사용하지 않는 비헤이비어 %d개를 휴지통으로 보냈습니다. 모두 라이브러리에 남습니다.
+Still in the project (the trash refused them): %s.,아직 프로젝트에 있음 (휴지통이 거부함): %s.
+Pick any that fit. Each adds a few behaviours to this project; you can add or remove any of them later from an object's Behaviours list.,"해당하는 것을 고르세요. 각각 이 프로젝트에 비헤이비어 몇 개를 추가하며, 나중에 객체의 비헤이비어 목록에서 추가하거나 제거할 수 있습니다."
+Start with none,없이 시작
+Adds nothing. An object's Behaviours list > + Add behaviour… adds any of them later.,아무것도 추가하지 않습니다. 나중에 객체의 비헤이비어 목록 > + 비헤이비어 추가…로 추가할 수 있습니다.
+Nothing will be added. The Add behaviour window is always there later.,아무것도 추가되지 않습니다. 비헤이비어 추가 창은 나중에 언제든 쓸 수 있습니다.
+Add and continue,추가하고 계속
+Nothing will be added.,아무것도 추가되지 않습니다.
+1 behaviour will be added.,비헤이비어 1개가 추가됩니다.
+%d behaviours will be added (shared ones once).,비헤이비어 %d개가 추가됩니다 (공통인 것은 한 번만).

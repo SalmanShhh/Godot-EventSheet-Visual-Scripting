@@ -9607,3 +9607,62 @@ Listed under its own name in the picker and the Add behaviour list. The usual ch
 "%s is a %s, not a node: a sheet reads it from its file, so it is never added to an object.",%s 是 %s，不是节点：表格从它的文件中读取它，所以它永远不会被添加到对象上。
 "%d pack class(es) are referenced by no sheet, scene or autoload - fine if you call them from hand-written GDScript: %s.","%d 个包类没有被任何表、场景或自动加载引用 - 如果你在手写的 GDScript 中调用它们则无妨：%s。"
 %s (autoload),%s（自动加载）
+%s is not in the library.,%s 不在库中。
+%s could not be copied into the project (%s).,无法将 %s 复制到项目中 (%s)。
+unused,未使用
+used by %s,被 %s 使用
+"Nothing in this project matches ""%s"".",此项目中没有与“%s”匹配的内容。
+In the library,在库中
+"In the behaviour library, not in this project yet. Add behaviour… opens the window on it; nothing is added from here.",在行为库中，尚未加入此项目。“添加行为…”会打开它的窗口；此处不会添加任何内容。
+"This behaviour is in the library, not in this project. Add behaviour… opens the window on it, where adding copies it in and attaches it.",此行为在库中，不在此项目中。“添加行为…”会打开它的窗口，在那里添加会将其复制进来并附加。
+Search the project and the library,搜索项目和库
+The project's behaviours and the library's together.,项目与库中的行为一起显示。
+In this project,在此项目中
+Only the behaviours this project already holds.,仅此项目已有的行为。
+"Also adds, because it needs them",也会添加（因为需要它们）
+Copied into,复制到
+Takes the behaviour off the object and sends the folders it copied in to the trash - the same step as Ctrl+Z.,从对象上移除该行为，并将复制进来的文件夹移到回收站 - 与 Ctrl+Z 相同的一步。
+Library,库
+In project,在项目中
+Remove from project…,从项目中移除…
+Add to project and attach,添加到项目并附加
+(already in the project),（已在项目中）
+Nothing else.,没有其他。
+Adding…,正在添加…
+Added · attached to %s,已添加 · 已附加到 %s
+"Tidy behaviours lists every behaviour in the project, the unused ones ticked.",“整理行为”列出项目中的每个行为，未使用的会被勾选。
+Open the EventSheets workspace to tidy the behaviours.,打开 EventSheets 工作区以整理行为。
+Godot imported 1 folder.,Godot 导入了 1 个文件夹。
+Godot imported %d folders.,Godot 导入了 %d 个文件夹。
+Added %s to the project.,已将 %s 添加到项目。
+"Added %s to the project, with %s it needs.",已将 %s 添加到项目，并附带它需要的 %s。
+%s and %s,%s 和 %s
+Open the scene holding %s to attach it.,打开包含 %s 的场景以附加它。
+Nothing was added.,未添加任何内容。
+Added %d behaviours to eventsheet_addons/. Add or remove any of them from an object's Behaviours list.,已向 eventsheet_addons/ 添加 %d 个行为。可在对象的行为列表中添加或移除它们。
+Used by 1 sheet,被 1 个表使用
+Used by 1 file,被 1 个文件使用
+Used by %d sheets,被 %d 个表使用
+Used by %d files,被 %d 个文件使用
+Remove %s from the project?,从项目中移除 %s？
+"It stays in the library, so you can add it back at any time.",它仍保留在库中，你可以随时重新添加。
+"It is not in the library, so the trash is where it can be restored from.",它不在库中，因此只能从回收站恢复。
+Its folder %s goes to the system trash.,其文件夹 %s 会移到系统回收站。
+Those rows stay as written and show as missing until it is added back. The Doctor lists them.,这些行保持原样，在重新添加之前显示为缺失。Doctor 会列出它们。
+%s could not be sent to the trash (%s); it is still in the project.,无法将 %s 移到回收站 (%s)；它仍在项目中。
+Removed %s: its folder is in the system trash.,已移除 %s：其文件夹在系统回收站中。
+This project holds %d behaviours. No sheet uses %d of them. Ticked ones go to the trash and stay in the library.,此项目包含 %d 个行为，其中 %d 个没有任何表使用。勾选的会移到回收站，并保留在库中。
+Remove %d unused,移除 %d 个未使用的
+Tidy behaviours,整理行为
+Not now,以后再说
+Made in this project: the library has no copy to add it back from.,在此项目中创建：库中没有可用于重新添加的副本。
+Sent %d unused behaviours to the trash; each stays in the library.,已将 %d 个未使用的行为移到回收站；每个都仍保留在库中。
+Still in the project (the trash refused them): %s.,仍在项目中（回收站拒绝了它们）：%s。
+Pick any that fit. Each adds a few behaviours to this project; you can add or remove any of them later from an object's Behaviours list.,选择所有合适的项。每项都会向此项目添加几个行为；之后可在对象的行为列表中添加或移除其中任何一个。
+Start with none,从空白开始
+Adds nothing. An object's Behaviours list > + Add behaviour… adds any of them later.,不添加任何内容。之后可通过对象的行为列表 > + 添加行为… 添加任何一个。
+Nothing will be added. The Add behaviour window is always there later.,不会添加任何内容。“添加行为”窗口之后随时可用。
+Add and continue,添加并继续
+Nothing will be added.,不会添加任何内容。
+1 behaviour will be added.,将添加 1 个行为。
+%d behaviours will be added (shared ones once).,将添加 %d 个行为（共用的只添加一次）。

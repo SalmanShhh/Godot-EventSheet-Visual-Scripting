@@ -1,0 +1,104 @@
+## @ace_category("Orbit")
+## @ace_expose_all(node)
+## @ace_version(1.0.0)
+@icon("res://eventsheet_addons/orbit/icon.svg")
+class_name OrbitBehavior
+extends Node
+## Sweeps a Node2D around a center point every frame: attach to a moon, shield orb, or spinning hazard and it circles on a radius (or tilted ellipse) at a speed you can change live. The center is captured from wherever the node starts, and the node can face the direction it is travelling.
+
+## The node this behavior acts on (its parent). Required host: Node2D.
+var host: Node2D = null
+
+func _enter_tree() -> void:
+	host = get_parent() as Node2D
+	if host == null:
+		push_warning("OrbitBehavior behavior requires a Node2D parent.")
+
+var angle: float = 0.0
+var center_captured: bool = false
+var center_x: float = 0.0
+var center_y: float = 0.0
+## When on, the node rotates to face its direction of travel.
+@export var match_rotation: bool = false
+## Tilts the whole ellipse by this many degrees.
+@export var offset_angle_degrees: float = 0.0
+## Orbit radius on the primary axis, in pixels.
+@export var primary_radius: float = 100.0
+## Orbit radius on the second axis, in pixels; 0 makes a circle from primary_radius.
+@export var secondary_radius: float = 0.0
+## Degrees per second traveled around the orbit; negative reverses direction.
+@export var speed_degrees: float = 90.0
+var total_rotation: float = 0.0
+
+func _process(delta: float) -> void:
+	if host == null:
+		return
+	if not center_captured:
+		center_x = host.position.x
+		center_y = host.position.y
+		center_captured = true
+	var step := deg_to_rad(speed_degrees) * delta
+	angle += step
+	total_rotation += absf(step)
+	var radius_b := secondary_radius if secondary_radius > 0.0 else primary_radius
+	var local := Vector2(cos(angle) * primary_radius, sin(angle) * radius_b).rotated(deg_to_rad(offset_angle_degrees))
+	var previous := host.position
+	host.position = Vector2(center_x, center_y) + local
+	if match_rotation and host.position != previous:
+		host.rotation = (host.position - previous).angle()
+
+## @ace_action
+## @ace_name("Set Orbit Center")
+## @ace_category("Orbit")
+## @ace_description("Orbits around the given point from now on.")
+## @ace_icon("res://eventsheet_addons/orbit/icon.svg")
+## @ace_codegen_template("$OrbitBehavior.set_orbit_center({x}, {y})")
+func set_orbit_center(x: float, y: float) -> void:
+	center_x = x
+	center_y = y
+	center_captured = true
+
+## @ace_action
+## @ace_name("Set Orbit Speed")
+## @ace_category("Orbit")
+## @ace_description("Degrees per second (negative reverses).")
+## @ace_icon("res://eventsheet_addons/orbit/icon.svg")
+## @ace_codegen_template("$OrbitBehavior.set_orbit_speed({degrees_per_second})")
+func set_orbit_speed(degrees_per_second: float) -> void:
+	speed_degrees = degrees_per_second
+
+## @ace_action
+## @ace_name("Set Orbit Radii")
+## @ace_category("Orbit")
+## @ace_description("Primary/secondary radii (secondary 0 = circle).")
+## @ace_icon("res://eventsheet_addons/orbit/icon.svg")
+## @ace_codegen_template("$OrbitBehavior.set_orbit_radii({primary}, {secondary})")
+func set_orbit_radii(primary: float, secondary: float) -> void:
+	primary_radius = primary
+	secondary_radius = secondary
+
+## @ace_hidden
+static func editor_preview_sample(params: Dictionary, base: Dictionary, time: float) -> Dictionary:
+	# Editor-preview contract (Tools > Preview Behaviors on Selected Node): the tick's ellipse
+	# solved for a time rather than accumulated - angle(t) = speed*t - so the editor can show the
+	# ring without running the behavior or writing the saved position. Facing is sampled the same
+	# way, from the tangent at t, so match_rotation looks right in the preview too.
+	var rest: Variant = base.get("position", null)
+	if not rest is Vector2:
+		return {}
+	var centre: Vector2 = rest
+	var primary: float = float(params.get("primary_radius", 100.0))
+	var secondary: float = float(params.get("secondary_radius", 0.0))
+	var radius_b: float = secondary if secondary > 0.0 else primary
+	var tilt: float = deg_to_rad(float(params.get("offset_angle_degrees", 0.0)))
+	var speed: float = deg_to_rad(float(params.get("speed_degrees", 90.0)))
+	var phase: float = speed * time
+	var local: Vector2 = Vector2(cos(phase) * primary, sin(phase) * radius_b).rotated(tilt)
+	var out: Dictionary = {"position": centre + local}
+	if bool(params.get("match_rotation", false)):
+		var tangent: Vector2 = Vector2(-sin(phase) * primary, cos(phase) * radius_b).rotated(tilt)
+		if tangent != Vector2.ZERO:
+			out["rotation"] = tangent.angle()
+	return out
+
+# Orbit behavior (event-sheet parity): circles or ellipses around a point. secondary_radius 0 = circle; offset_angle tilts the ellipse; match_rotation faces the travel direction.

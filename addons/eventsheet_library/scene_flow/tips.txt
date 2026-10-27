@@ -1,0 +1,11 @@
+# The loading screen's tips, one per line. A line starting with # is a note to yourself and is
+# never shown. This file is a STARTER: every line below is about a game that does not exist, so
+# rewrite all of them for yours, or point the Loading Tips File knob at a file of your own.
+Hold the run button while you jump to clear the widest gaps.
+Standing still for a moment refills the last bar of your shield.
+Most locked doors have a second way in somewhere above them.
+You can sell anything you are carrying back at the harbour.
+Enemies that glow have already noticed you.
+Reading a signpost marks the place it names on your map.
+Falling never costs more than the height you fell from.
+The map remembers every room you have walked into, even the empty ones.

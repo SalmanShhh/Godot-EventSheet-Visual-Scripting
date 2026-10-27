@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="16" height="16" fill="none">
+  <!-- the file the track is -->
+  <path d="M112 48 L300 48 L400 148 L400 464 L112 464 Z" fill="none" stroke="#64748b" stroke-width="30" stroke-linejoin="round"/>
+  <path d="M300 48 L300 148 L400 148" fill="none" stroke="#64748b" stroke-width="30" stroke-linejoin="round"/>
+  <!-- the tempo written on it -->
+  <g stroke="#5fb37a" stroke-width="22" opacity="0.75" stroke-linecap="round">
+    <line x1="164" y1="216" x2="252" y2="216"/>
+    <line x1="164" y1="278" x2="216" y2="278"/>
+  </g>
+  <!-- the song -->
+  <path d="M262 268 L348 250 L348 300 L262 318 Z" fill="#7c9cf5"/>
+  <line x1="262" y1="288" x2="262" y2="392" stroke="#7c9cf5" stroke-width="26" stroke-linecap="round"/>
+  <ellipse cx="226" cy="394" rx="48" ry="38" fill="#e8a33d"/>
+</svg>

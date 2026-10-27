@@ -426,6 +426,11 @@ var _ace_picker: RefCounted = null:
 			_ace_picker.guide_requested.connect(_on_picker_guide_requested)
 			_ace_picker.help_requested.connect(_on_picker_help_requested)
 			_ace_picker.global_settings_requested.connect(_ui_builder.later("_new_addon_panel", "open_settings"))
+			# An empty search names library packs that would answer it; picking one opens the Add
+			# behaviour window on that pack, for the object the sheet is about.
+			_ace_picker.library_pack_requested.connect(func(pack_dir: String) -> void:
+				open_add_behavior_dialog(str(EventSheetObjectFacts.sheet_object_title(_current_sheet,
+					str(_current_sheet.external_source_path) if _current_sheet != null else "").get("name", "")), pack_dir))
 			_ace_picker_built = true
 			# The idle warm skips the row icons while the picker is uncompiled, so it is asked again
 			# now that the picker exists. Outside the editor this schedules nothing.
@@ -481,6 +486,14 @@ var _variable_dlg: RefCounted = null:
 							sheet_enums.append({"name": (row as EnumRow).enum_name, "members": (row as EnumRow).members})
 				return sheet_enums)
 		return _variable_dlg
+## The behaviour library's editor half (dock/behaviour_library_flow.gd): adding a library pack and
+## attaching it, Remove from project…, Tidy behaviours… and the Welcome's kits. Built on first use.
+var _library_flow: RefCounted = null:
+	get:
+		if _library_flow == null:
+			_library_flow = load("res://addons/eventsheet/editor/dock/behaviour_library_flow.gd").new()
+			_library_flow.init(self)
+		return _library_flow
 var _new_addon_panel: RefCounted = null:  # Sheet ▸ New behaviour… / New global… (dock/new_addon_panel.gd)
 	get:
 		if _new_addon_panel == null:
@@ -8048,7 +8061,9 @@ func open_docs_housekeeping() -> void:
 ## Object bar ▸ right-click an object ▸ Add behavior…: every pack, in one dialog. Its "+ New
 ## behaviour…" opens the New behaviour form for that object, and a behaviour's right-click opens its
 ## settings or its file as a sheet.
-func open_add_behavior_dialog(object_label: String) -> void:
+##
+## `preselect` opens the window on one pack - the picker's empty search hands it a library pack.
+func open_add_behavior_dialog(object_label: String, preselect: String = "") -> void:
 	if _add_behavior_dialog == null:
 		_add_behavior_dialog = load(ADD_BEHAVIOR_DIALOG_PATH).new()
 		_add_behavior_dialog.configure(_apply_add_behavior,
@@ -8058,9 +8073,18 @@ func open_add_behavior_dialog(object_label: String) -> void:
 					_new_addon_panel.open_settings(path)
 					return
 				_navigate.record_current()
-				_navigate.open_or_focus(path))
+				_navigate.open_or_focus(path),
+			func(pack: Dictionary, values: Dictionary, label: String) -> Dictionary:
+				return await _library_flow.add_and_attach(pack, values, label),
+			func(pack: Dictionary) -> void: _library_flow.confirm_remove(pack),
+			func(host: Node) -> void: _library_flow.undo_last(host))
 		add_child(_add_behavior_dialog)
-	_add_behavior_dialog.open_for(object_label, _scene_node_for_object(object_label))
+	_add_behavior_dialog.open_for(object_label, _scene_node_for_object(object_label), preselect)
+
+
+## Project Doctor ▸ the unused-packs note ▸ Tidy behaviours…: the project's packs, unused ones ticked.
+func open_tidy_behaviours() -> void:
+	_library_flow.open_tidy()
 
 
 ## A behaviour the New behaviour form just made from an object's Behaviours list, added to that object

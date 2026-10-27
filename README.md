@@ -49,7 +49,7 @@ Delete the plugin and this script still runs. The reverse works too: **open *any
 
 ## Quick start
 
-1. Copy `addons/eventforge/` and `addons/eventsheet/` into your Godot **4.5+** project (tested through **4.7 stable**). Optional: `eventsheet_addons/` for the 140 behavior packs. Removal is clean - see [uninstall](docs/GUIDE-UNINSTALL.md).
+1. Copy `addons/eventforge/`, `addons/eventsheet/` and `addons/eventsheet_library/` into your Godot **4.5+** project (tested through **4.7 stable**). The library holds the 140 behavior packs in a folder Godot never imports (it carries a `.gdignore`), so none of them reach Create Node, the picker or your exported game until you add one: the Welcome asks what you are making and copies the packs you pick into `eventsheet_addons/`, and any object's Behaviours list > **+ Add behaviour…** adds more later. Some built-in rows call one of the single scripts at the top of this repository's `eventsheet_addons/` (`free_spot.gd`, `pooled_nodes.gd`, `haptics.gd` and the rest); copy those files into your `eventsheet_addons/` too. Removal is clean - see [uninstall](docs/GUIDE-UNINSTALL.md).
 2. **Project Settings → Plugins** → enable **Godot EventSheets**.
 3. Open the **EventSheet** tab in the main editor strip (next to 2D/3D/Script).
 4. **New… → Platformer Starter**, add events (live search understands C3 phrases like *"every tick"*), and Run.
@@ -150,7 +150,8 @@ Every release has full notes in [CHANGELOG.md](CHANGELOG.md); the one-line theme
 |---|---|
 | `addons/eventforge/` | Data model, compiler, importer, builtin ACEs, runtime bridge |
 | `addons/eventsheet/` | The editor: dock, virtualized viewport, renderer, picker, themes, lint, the Manual, MCP server |
-| `eventsheet_addons/` | Zero-config ACE addons + the 140 behavior packs |
+| `eventsheet_addons/` | Zero-config ACE addons + the 140 behavior packs, as this repository's own project uses them (built from `tools/pack_builders/`) |
+| `addons/eventsheet_library/` | The same packs as the library a game adds them from, behind a `.gdignore` (written by `tools/build_library.gd`) |
 | `demo/` | 30 showcases (each a `.gd` that is BOTH the sheet and the compiled script, with a scene where it is playable) and the bundled themes |
 | `tests/` | Headless suite - `run_tests.gd` (full) and `run_perf.gd` (fast gate) |
 | `docs/` | Contract specs + guides (migration, recipes, MCP, glossary, uninstall) |

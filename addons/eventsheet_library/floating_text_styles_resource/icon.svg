@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="16" height="16" fill="none">
+  <!-- the file the styles are -->
+  <path d="M112 48 L300 48 L400 148 L400 464 L112 464 Z" fill="none" stroke="#64748b" stroke-width="30" stroke-linejoin="round"/>
+  <path d="M300 48 L300 148 L400 148" fill="none" stroke="#64748b" stroke-width="30" stroke-linejoin="round"/>
+  <!-- the numbers written in it -->
+  <g stroke="#5fb37a" stroke-width="22" opacity="0.75" stroke-linecap="round">
+    <line x1="164" y1="330" x2="252" y2="330"/>
+    <line x1="164" y1="392" x2="216" y2="392"/>
+  </g>
+  <!-- the number popping out of the thing you hit -->
+  <path d="M214 268 L268 214 L322 268" stroke="#e8a33d" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="268" y1="214" x2="268" y2="330" stroke="#e8a33d" stroke-width="30" stroke-linecap="round"/>
+  <g stroke="#7c9cf5" stroke-width="26" stroke-linecap="round">
+    <line x1="356" y1="216" x2="428" y2="216"/>
+    <line x1="392" y1="180" x2="392" y2="252"/>
+  </g>
+</svg>

@@ -87,7 +87,9 @@ static func _scan_directory(dir_path: String, violations: PackedStringArray, exe
 	while not entry.is_empty():
 		var full_path: String = dir_path.path_join(entry)
 		if dir.current_is_dir():
-			if not entry.begins_with("."):
+			# The behaviour library is the shipped packs copied byte for byte (tools/build_library.gd),
+			# compiler output like eventsheet_addons/ itself, and Godot never imports it.
+			if not entry.begins_with(".") and full_path != EventSheetPackLibrary.LIBRARY_ROOT:
 				scanned += _scan_directory(full_path, violations, exempted)
 		elif entry.get_extension() == "gd":
 			_scan_file(full_path, violations, exempted)

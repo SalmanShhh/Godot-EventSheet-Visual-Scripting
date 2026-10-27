@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="DamageTypeSet" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/damage_type_set_resource/damage_type_set.gd" id="1_damage_types"]
+
+[resource]
+script = ExtResource("1_damage_types")
+set_name = ""
+type_names = PackedStringArray("physical", "fire", "ice", "poison")
+type_colors = PackedColorArray(0.85, 0.85, 0.85, 1, 1, 0.45, 0.1, 1, 0.45, 0.8, 1, 1, 0.55, 0.85, 0.3, 1)

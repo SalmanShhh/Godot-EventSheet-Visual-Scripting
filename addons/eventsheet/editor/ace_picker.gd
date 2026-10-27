@@ -45,6 +45,9 @@ signal recipe_insert_requested(recipe: Dictionary)
 ## Emitted from a global's right-click, Global settings…: the script that global runs. The form that
 ## changes it is the dock's; the picker has closed by then, because the form opens that file.
 signal global_settings_requested(script_path: String)
+## A library pack picked from the empty-search shelf: the dock opens the Add behaviour window on it.
+## Nothing is added from the picker itself.
+signal library_pack_requested(pack_dir: String)
 
 ## Recents (familiar ACEs surface first): last-used ACE ids, newest first. Persisted PER-USER and
 ## PER-PROJECT in a user:// file - NOT project.godot: recents change on every ACE use and would churn
@@ -285,6 +288,8 @@ var _add_default_label: String = "Add"
 
 ## The recipe highlighted on the empty-result shelf, if any - committed by the same Add button.
 var _selected_recipe: Dictionary = {}
+## The library pack highlighted on the empty-search shelf, as {"dir", "name", "said"}, or empty.
+var _selected_library_pack: Dictionary = {}
 var _tree_context_menu: PopupMenu = null
 var _tree_context_definition: ACEDefinition = null
 var _context: Dictionary = {}
@@ -2347,6 +2352,10 @@ func _refresh_tree() -> void:
 	# worked examples out of the guides' own self-drawing figures, inserted as real rows. The plain
 	# advice line survives only for the query nothing at all is near.
 	if filtering and root.get_child_count() == 0:
+		# Nothing in the project answers, so the behaviour library is asked: the packs whose actions,
+		# conditions or expressions carry the word, each a door to Add behaviour… on that pack. Only
+		# here, on an empty result, so the library never crowds a search the project answers.
+		_add_library_rows(root, query)
 		var candidates: Array[ACEDefinition] = []
 		for near_candidate: ACEDefinition in _registry.get_all_definitions():
 			if _is_allowed_for_mode(near_candidate, mode, signals_only):
@@ -2397,6 +2406,50 @@ func _refresh_tree() -> void:
 	if blank_item != null and not filtering:
 		blank_item.select(0)
 		_on_blank_event_highlighted()
+
+
+## The empty-search shelf's library rows: a line saying nothing in the project matches, then
+## "In the library" with one row per pack, "<pack> · <the action that matched>".
+func _add_library_rows(root: TreeItem, query: String) -> void:
+	var hits: Array[Dictionary] = EventSheetPackLibrary.search(query)
+	if hits.is_empty():
+		return
+	var said: TreeItem = _tree.create_item(root)
+	said.set_text(0, EventSheetL10n.translate("Nothing in this project matches \"%s\".") % query.strip_edges())
+	said.set_selectable(0, false)
+	said.set_custom_color(0, EventSheetPopupUI.readable_on_panel(GROUP_COLOR_NEUTRAL))
+	var header: TreeItem = _make_group_item(root, EventSheetL10n.translate("In the library"), false)
+	header.collapsed = false
+	for hit: Dictionary in hits:
+		var row: TreeItem = _tree.create_item(header)
+		var line: String = str(hit.get("name", ""))
+		if not str(hit.get("said", "")).is_empty():
+			line += " · " + str(hit.get("said", ""))
+		row.set_text(0, line)
+		row.set_tooltip_text(0, EventSheetL10n.translate("In the behaviour library, not in this project yet. Add behaviour… opens the window on it; nothing is added from here."))
+		row.set_metadata(0, {"library_pack": hit})
+
+
+## A library pack is highlighted: the panel says it is not in the project yet, and Add becomes
+## Add behaviour….
+func _show_library_info(hit: Dictionary) -> void:
+	_selected_library_pack = hit.duplicate()
+	_selected_recipe = {}
+	_selected_definition = null
+	_blank_event_highlighted = false
+	if _favorite_button != null:
+		_favorite_button.set_pressed_no_signal(false)
+	if _add_button != null:
+		_add_button.disabled = false
+		_add_button.text = EventSheetL10n.translate("Add behaviour…")
+	_say(str(hit.get("name", "")), EventSheetL10n.translate("This behaviour is in the library, not in this project. Add behaviour… opens the window on it, where adding copies it in and attaches it."))
+
+
+func _commit_library_pack(hit: Dictionary) -> void:
+	if hit.is_empty():
+		return
+	close()
+	library_pack_requested.emit(str(hit.get("dir", "")))
 
 
 ## Whether the Add event dialog offers its blank first entry. Only for a whole new top-level
@@ -2862,8 +2915,12 @@ func _on_item_selected_for_info() -> void:
 		if meta is Dictionary and (meta as Dictionary).has("recipe"):
 			_show_recipe_info((meta as Dictionary)["recipe"] as Dictionary)
 			return
+		if meta is Dictionary and (meta as Dictionary).has("library_pack"):
+			_show_library_info((meta as Dictionary)["library_pack"] as Dictionary)
+			return
 	_blank_event_highlighted = false
 	_selected_recipe = {}
+	_selected_library_pack = {}
 	var definition: ACEDefinition = selected.get_metadata(0) as ACEDefinition if selected != null else null
 	# Picking in the main tree clears the side-pane highlight so there is one logical selection.
 	if definition != null:
@@ -3190,6 +3247,9 @@ func _on_item_activated() -> void:
 		return
 	if item_meta is Dictionary and (item_meta as Dictionary).has("recipe"):
 		_commit_recipe((item_meta as Dictionary)["recipe"] as Dictionary)
+		return
+	if item_meta is Dictionary and (item_meta as Dictionary).has("library_pack"):
+		_commit_library_pack((item_meta as Dictionary)["library_pack"] as Dictionary)
 		return
 	_commit_definition(item_meta if item_meta is ACEDefinition else null)
 
@@ -3531,6 +3591,9 @@ func _on_add_button_pressed() -> void:
 	# So does a highlighted recipe - the button was already wearing "Insert rows".
 	if _selected_definition == null and not _selected_recipe.is_empty():
 		_commit_recipe(_selected_recipe)
+		return
+	if _selected_definition == null and not _selected_library_pack.is_empty():
+		_commit_library_pack(_selected_library_pack)
 		return
 	_commit_definition(_selected_definition)
 

@@ -1,0 +1,87 @@
+[gd_resource type="Resource" script_class="GlyphSheetResource" load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/glyph_sheet_resource/glyph_sheet_resource.gd" id="1_glyph_sheet"]
+
+[sub_resource type="Gradient" id="Gradient_keyboard"]
+offsets = PackedFloat32Array(0, 1)
+colors = PackedColorArray(0.87, 0.89, 0.94, 1, 0.36, 0.39, 0.48, 1)
+
+[sub_resource type="GradientTexture2D" id="Glyph_keyboard"]
+gradient = SubResource("Gradient_keyboard")
+width = 64
+height = 64
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.5, 0)
+
+[sub_resource type="Gradient" id="Gradient_pad"]
+offsets = PackedFloat32Array(0, 1)
+colors = PackedColorArray(0.78, 0.8, 0.85, 1, 0.28, 0.3, 0.36, 1)
+
+[sub_resource type="GradientTexture2D" id="Glyph_pad"]
+gradient = SubResource("Gradient_pad")
+width = 64
+height = 64
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.5, 0)
+
+[sub_resource type="Gradient" id="Gradient_xbox"]
+offsets = PackedFloat32Array(0, 1)
+colors = PackedColorArray(0.53, 0.82, 0.47, 1, 0.16, 0.35, 0.16, 1)
+
+[sub_resource type="GradientTexture2D" id="Glyph_xbox"]
+gradient = SubResource("Gradient_xbox")
+width = 64
+height = 64
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.5, 0)
+
+[sub_resource type="Gradient" id="Gradient_playstation"]
+offsets = PackedFloat32Array(0, 1)
+colors = PackedColorArray(0.49, 0.63, 0.94, 1, 0.15, 0.24, 0.45, 1)
+
+[sub_resource type="GradientTexture2D" id="Glyph_playstation"]
+gradient = SubResource("Gradient_playstation")
+width = 64
+height = 64
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.5, 0)
+
+[sub_resource type="Gradient" id="Gradient_nintendo"]
+offsets = PackedFloat32Array(0, 1)
+colors = PackedColorArray(0.93, 0.55, 0.42, 1, 0.44, 0.17, 0.11, 1)
+
+[sub_resource type="GradientTexture2D" id="Glyph_nintendo"]
+gradient = SubResource("Gradient_nintendo")
+width = 64
+height = 64
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.5, 0)
+
+[resource]
+script = ExtResource("1_glyph_sheet")
+sheet_name = "Plain"
+keyboard = {
+"ui_accept": SubResource("Glyph_keyboard"),
+"ui_cancel": SubResource("Glyph_keyboard")
+}
+pad = {
+"ui_accept": SubResource("Glyph_pad"),
+"ui_cancel": SubResource("Glyph_pad")
+}
+xbox = {
+"ui_accept": SubResource("Glyph_xbox"),
+"ui_cancel": SubResource("Glyph_xbox")
+}
+playstation = {
+"ui_accept": SubResource("Glyph_playstation"),
+"ui_cancel": SubResource("Glyph_playstation")
+}
+nintendo = {
+"ui_accept": SubResource("Glyph_nintendo"),
+"ui_cancel": SubResource("Glyph_nintendo")
+}

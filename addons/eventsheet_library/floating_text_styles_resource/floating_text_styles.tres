@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="FloatingTextStyles" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/floating_text_styles_resource/floating_text_styles.gd" id="1_floating_text_styles"]
+
+[resource]
+script = ExtResource("1_floating_text_styles")
+set_name = ""
+style_names = PackedStringArray("normal", "crit", "heal")
+sizes = PackedFloat32Array(1, 1.6, 1.1)
+colors = PackedColorArray(0.9, 0.9, 0.9, 1, 1, 0.78, 0.25, 1, 0.45, 0.95, 0.55, 1)
+rises = PackedFloat32Array(24, 40, 28)
+shakes = PackedFloat32Array(0, 6, 0)
+lifetimes = PackedFloat32Array(0.7, 0.9, 0.8)
+colour_from_damage_type = PackedStringArray("normal")

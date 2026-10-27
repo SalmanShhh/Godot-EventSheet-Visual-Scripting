@@ -19,6 +19,13 @@ extends ConfirmationDialog
 # The list ends with "+ New behaviour…", which makes one for this object (Works on is already its
 # kind, and the new behaviour is added to it), and right-clicking a behaviour offers its settings or
 # its file opened as a sheet - the doors to a behaviour that live where the behaviours are listed.
+#
+# When the plugin carries its behaviour library (addons/eventsheet_library/, a folder Godot never
+# imports), the search reads the project and the library together. A library pack's tile says so, its
+# card names what else comes along (read from its own @ace_requires) and the folder it lands in, and
+# Add becomes "Add to project and attach": the folders are copied in, Godot imports them and the pack
+# is attached, as one undo step. "In this project" hides the library. Right-click a pack the project
+# holds for Remove from project…, which sends its folder to the system trash.
 
 ## A tile's width before display scaling; the shelves are three tiles wide.
 const TILE_WIDTH := 160.0
@@ -48,11 +55,33 @@ var _card_menu_path: String = ""
 var _pack_sources: Dictionary = {}
 ## Said under the search when it matches nothing.
 var _no_match: Label = null
+## (pack, values, object_label) -> {"ok", "message", "host"}, awaited: a library pack copied in and attached.
+var _on_add_library: Callable = Callable()
+## (pack) - Remove from project… on a pack the project holds.
+var _on_remove: Callable = Callable()
+## (host) - the band's Undo: the same step Ctrl+Z takes.
+var _on_undo_library: Callable = Callable()
+## All / In this project: whether library packs are listed.
+var _scope_all: Button = null
+var _scope_project: Button = null
+## The detail column's library card: what else comes along, and where it is copied.
+var _library_card: VBoxContainer = null
+var _library_needs: Label = null
+var _library_into: Label = null
+## The band under the window once a library pack is in, with its Undo.
+var _added_band: HBoxContainer = null
+var _added_said: Label = null
+var _added_host: Node = null
+## True while a library add is copying and importing, so a second click does not start another.
+var _adding: bool = false
 
 
 func _init() -> void:
 	title = EventSheetL10n.translate("Add behavior")
 	ok_button_text = EventSheetL10n.translate("Add")
+	# OK closes the window for a pack the project holds, and keeps it open for a library pack, which
+	# says what it copied in before the window goes (see _on_confirmed).
+	dialog_hide_on_ok = false
 	add_child(EventSheetPopupUI.margined(_build_body()))
 	confirmed.connect(_on_confirmed)
 
@@ -60,26 +89,68 @@ func _init() -> void:
 ## `on_add` is called with (pack: Dictionary, values: Dictionary, inline: bool) - the dock does
 ## the scene write and the undo, because a window has no business touching either. `on_new` and
 ## `on_open` are the list's doors to the New behaviour form and to a behaviour's own file.
-func configure(on_add: Callable, on_new: Callable = Callable(), on_open: Callable = Callable()) -> void:
+##
+## `on_add_library` (awaited) copies a library pack in and attaches it; `on_remove` is Remove from
+## project…; `on_undo` takes a library add back, for the band's Undo.
+func configure(on_add: Callable, on_new: Callable = Callable(), on_open: Callable = Callable(),
+		on_add_library: Callable = Callable(), on_remove: Callable = Callable(), on_undo: Callable = Callable()) -> void:
 	_on_add = on_add
 	_on_new = on_new
 	_on_open = on_open
+	_on_add_library = on_add_library
+	_on_remove = on_remove
+	_on_undo_library = on_undo
 
 
 ## Opens for one object. The label is the object the picker and the head will show it under; `host` is
 ## its node in the open scene, when there is one, so a behaviour made for another kind of object is greyed.
-func open_for(object_label: String, host: Node = null) -> void:
+##
+## `preselect` is a pack folder to open on - the picker's "Add behaviour…" on a library pack - and its
+## name is put in the search so the window opens showing it.
+func open_for(object_label: String, host: Node = null, preselect: String = "") -> void:
 	_object_label = object_label
 	_host = host
 	title = EventSheetL10n.translate("Add behavior to {object}").replace("{object}", object_label) \
 		if not object_label.is_empty() else EventSheetL10n.translate("Add behavior")
-	_packs = EventSheetPackCatalog.packs()
+	_load_packs()
 	_pack_sources.clear()
 	_selected_dir = ""
+	_added_host = null
+	_show_added("")
+	ok_button_text = EventSheetL10n.translate("Add")
 	if _search != null:
 		_search.text = ""
+		_search.placeholder_text = EventSheetL10n.translate("Search the project and the library") if _has_library() \
+			else EventSheetL10n.translate("search")
+	if _scope_all != null:
+		_scope_all.get_parent().visible = _has_library()
+		_scope_all.set_pressed_no_signal(true)
+		_scope_project.set_pressed_no_signal(false)
+	for pack: Dictionary in _packs:
+		if str(pack.get("dir", "")) == preselect and _search != null:
+			_search.text = str(pack.get("name", ""))
 	_rebuild_list()
+	for pack: Dictionary in _packs:
+		if str(pack.get("dir", "")) == preselect:
+			_select_pack(pack)
 	popup_centered(Vector2i(int(EventSheetPalette.scaled_f(900.0)), int(EventSheetPalette.scaled_f(580.0))))
+
+
+## The packs the window lists: the project's, and the library's beside them when there is a library.
+func _load_packs() -> void:
+	var waiting: Array[Dictionary] = []
+	if EventSheetPackLibrary.exists():
+		waiting = EventSheetPackLibrary.packs()
+	_packs = EventSheetPackLibrary.combined(EventSheetPackCatalog.packs(), waiting)
+
+
+func _has_library() -> bool:
+	return EventSheetPackLibrary.exists()
+
+
+## True for a pack that waits in the library rather than sitting in the project.
+static func is_library_pack(pack: Dictionary) -> bool:
+	return str(pack.get("state", "")) == "library"
 
 
 func _build_body() -> Control:
@@ -94,7 +165,28 @@ func _build_body() -> Control:
 	_search.placeholder_text = EventSheetL10n.translate("search")
 	_search.right_icon = EventSheetPopupUI._editor_icon("Search")
 	_search.text_changed.connect(func(_text: String) -> void: _filter_shelves())
-	shelves.add_child(_search)
+	_search.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var search_row: HBoxContainer = HBoxContainer.new()
+	search_row.add_child(_search)
+	# All / In this project: the library listed beside the project's own packs, or not.
+	var scope: HBoxContainer = HBoxContainer.new()
+	scope.add_theme_constant_override("separation", 0)
+	var scope_group: ButtonGroup = ButtonGroup.new()
+	_scope_all = Button.new()
+	_scope_all.text = EventSheetL10n.translate("All")
+	_scope_all.tooltip_text = EventSheetL10n.translate("The project's behaviours and the library's together.")
+	_scope_project = Button.new()
+	_scope_project.text = EventSheetL10n.translate("In this project")
+	_scope_project.tooltip_text = EventSheetL10n.translate("Only the behaviours this project already holds.")
+	for scope_button: Button in [_scope_all, _scope_project]:
+		scope_button.toggle_mode = true
+		scope_button.button_group = scope_group
+		scope_button.add_theme_color_override("font_pressed_color", EventSheetPopupUI.accent_color())
+		scope_button.pressed.connect(func() -> void: _filter_shelves())
+		scope.add_child(scope_button)
+	_scope_all.button_pressed = true
+	search_row.add_child(scope)
+	shelves.add_child(search_row)
 	_list = VBoxContainer.new()
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_list.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
@@ -127,8 +219,35 @@ func _build_body() -> Control:
 		EventSheetL10n.translate("The pack's knobs become this script's own variables. Only packs that say their shape can be written in offer it."), 1)
 	_where.item_selected.connect(func(_index: int) -> void: _refresh_reading())
 	detail.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Where"), _where))
+	_library_card = VBoxContainer.new()
+	_library_card.add_child(EventSheetPopupUI.section_header(EventSheetL10n.translate("Also adds, because it needs them")))
+	_library_needs = EventSheetPopupUI.hint_label("", EventSheetPalette.scaled_f(260.0))
+	_library_needs.add_theme_color_override("font_color", EventSheetPopupUI.text_color())
+	_library_card.add_child(_library_needs)
+	_library_card.add_child(EventSheetPopupUI.section_header(EventSheetL10n.translate("Copied into")))
+	_library_into = EventSheetPopupUI.hint_label("", EventSheetPalette.scaled_f(260.0))
+	_library_into.add_theme_color_override("font_color", EventSheetPopupUI.text_color())
+	_library_card.add_child(_library_into)
+	_library_card.visible = false
+	detail.add_child(_library_card)
 	band.add_child(detail)
 	page.add_child(band)
+	_added_band = HBoxContainer.new()
+	_added_said = Label.new()
+	_added_said.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_added_said.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_added_said.custom_minimum_size.x = EventSheetPalette.scaled_f(560.0)
+	_added_said.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_OK))
+	_added_band.add_child(_added_said)
+	var undo_added: Button = Button.new()
+	undo_added.text = EventSheetL10n.translate("Undo")
+	undo_added.flat = true
+	undo_added.add_theme_color_override("font_color", EventSheetPopupUI.accent_color())
+	undo_added.tooltip_text = EventSheetL10n.translate("Takes the behaviour off the object and sends the folders it copied in to the trash - the same step as Ctrl+Z.")
+	undo_added.pressed.connect(_undo_added)
+	_added_band.add_child(undo_added)
+	_added_band.visible = false
+	page.add_child(_added_band)
 	_strip = EventSheetPopupUI.help_strip("", "", "", "", EventSheetPalette.scaled_f(600.0))
 	page.add_child(_strip)
 	_strip.follow(_search, EventSheetL10n.translate("search"),
@@ -190,7 +309,10 @@ func _rebuild_list() -> void:
 ## belongs to a tile on show: a search that hides the chosen pack moves the choice to the first match.
 func _filter_shelves() -> void:
 	var matching: Dictionary = {}
+	var project_only: bool = _scope_project != null and _scope_project.button_pressed
 	for pack: Dictionary in EventSheetPackCatalog.filtered(_packs, "", _search.text if _search != null else ""):
+		if project_only and is_library_pack(pack):
+			continue
 		matching[str(pack.get("dir", ""))] = pack
 	var heading: Control = null
 	var still_shown: bool = false
@@ -275,9 +397,10 @@ func _build_tile(pack: Dictionary, why_not: String) -> Button:
 		if click != null and click.pressed and click.button_index == MOUSE_BUTTON_RIGHT:
 			open_card_menu(str(pack.get("path", "")))
 		elif click != null and click.double_click and not tile.disabled:
+			# _on_confirmed closes the window itself for a pack the project holds, and keeps it open
+			# for a library pack until it has said what it copied in.
 			_select_pack(pack)
-			_on_confirmed()
-			hide())
+			_on_confirmed())
 	var inset: MarginContainer = MarginContainer.new()
 	inset.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	inset.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -301,8 +424,11 @@ func _build_tile(pack: Dictionary, why_not: String) -> Button:
 	words.add_theme_constant_override("separation", 0)
 	line.add_child(words)
 	var on_kind: String = works_on(source)
+	var kind_line: String = on_kind if not on_kind.is_empty() else EventSheetL10n.translate("Any node")
+	if not str(pack.get("state", "")).is_empty() and _has_library():
+		kind_line = tile_state_line(kind_line, pack)
 	for said: Array in [[str(pack.get("name", "")), EventSheetPopupUI.text_color(), 0],
-			[on_kind if not on_kind.is_empty() else EventSheetL10n.translate("Any node"), EventSheetPopupUI.muted_text_color(), EventSheetPalette.scaled(11)]]:
+			[kind_line, EventSheetPopupUI.muted_text_color(), EventSheetPalette.scaled(11)]]:
 		var label: Label = Label.new()
 		label.text = str(said[0])
 		label.clip_text = true
@@ -315,22 +441,47 @@ func _build_tile(pack: Dictionary, why_not: String) -> Button:
 	return tile
 
 
+## A tile's second line: the kind of object it works on, then where the pack is - in the project
+## already, or waiting in the library.
+static func tile_state_line(kind_line: String, pack: Dictionary) -> String:
+	return "%s · %s" % [kind_line, EventSheetL10n.translate("Library") if is_library_pack(pack)
+		else EventSheetL10n.translate("In project")]
+
+
 ## A behaviour's right-click: Behaviour settings… or Open as sheet, for the script at `path`. Offered
 ## on a greyed one too, because changing what it works on is how one made for another object fits.
+## A pack the project holds also offers Remove from project…; a library pack is not the project's
+## yet, so it has no menu.
 func open_card_menu(path: String) -> void:
 	if not _on_open.is_valid() or path.is_empty():
 		return
+	for listed: Dictionary in _packs:
+		if str(listed.get("path", "")) == path and is_library_pack(listed):
+			return
 	_card_menu_path = path
 	if _card_menu == null:
 		_card_menu = PopupMenu.new()
 		_card_menu.add_item(EventSheetL10n.translate("Behaviour settings…"), 0)
 		_card_menu.add_item(EventSheetL10n.translate("Open as sheet"), 1)
+		_card_menu.add_separator()
+		_card_menu.add_item(EventSheetL10n.translate("Remove from project…"), 2)
 		_card_menu.id_pressed.connect(func(id: int) -> void:
 			hide()
+			if id == 2:
+				_remove_menu_pack()
+				return
 			_on_open.call(_card_menu_path, id == 0))
 		add_child(_card_menu)
+	_card_menu.set_item_disabled(_card_menu.get_item_index(2), not _on_remove.is_valid())
 	if is_inside_tree():
 		_card_menu.popup(Rect2i(Vector2i(get_mouse_position()) + position, Vector2i.ZERO))
+
+
+func _remove_menu_pack() -> void:
+	for listed: Dictionary in _packs:
+		if str(listed.get("path", "")) == _card_menu_path and _on_remove.is_valid():
+			_on_remove.call(listed)
+			return
 
 
 ## The kind of object a pack's script works on - its typed `host`, else what it says it requires -
@@ -459,8 +610,35 @@ func _select_pack(pack: Dictionary) -> void:
 		if not inline_capable and _where.get_selected_id() == 1:
 			_where.select(_where.get_item_index(0))
 	_strip.describe(str(pack.get("name", "")), str(pack.get("pitch", "")))
+	_refresh_library_card(pack)
 	_refresh_reading()
 	_rebuild_list_selection()
+
+
+## The card a library pack shows: what else its @ace_requires brings, and the folder it is copied
+## into. Hidden for a pack the project holds. The OK button says what it will do.
+func _refresh_library_card(pack: Dictionary) -> void:
+	var waiting: bool = is_library_pack(pack)
+	_library_card.visible = waiting
+	if _added_host == null:
+		ok_button_text = EventSheetL10n.translate("Add to project and attach") if waiting else EventSheetL10n.translate("Add")
+		get_ok_button().disabled = false
+	if not waiting:
+		return
+	_library_needs.text = library_needs_text(str(pack.get("dir", "")))
+	_library_into.text = "res://eventsheet_addons/%s/" % str(pack.get("dir", ""))
+
+
+## The folders a library pack brings along, one per line, or a word saying it needs none.
+static func library_needs_text(pack_dir: String, root: String = EventSheetPackLibrary.LIBRARY_ROOT,
+		project_root: String = EventSheetPackLibrary.PROJECT_ROOT) -> String:
+	var lines: PackedStringArray = PackedStringArray()
+	for folder: String in EventSheetPackLibrary.needs(pack_dir, root):
+		var line: String = "%s/" % folder
+		if EventSheetPackLibrary.in_project(folder, project_root):
+			line += "  " + EventSheetL10n.translate("(already in the project)")
+		lines.append(line)
+	return "\n".join(lines) if not lines.is_empty() else EventSheetL10n.translate("Nothing else.")
 
 
 ## Where the pack will land, said in the strip: under the object as a node, or into this script.
@@ -497,6 +675,54 @@ func property_values() -> Dictionary:
 
 func _on_confirmed() -> void:
 	var pack: Dictionary = selected_pack()
-	if pack.is_empty() or not _on_add.is_valid():
+	if pack.is_empty():
+		return
+	if is_library_pack(pack):
+		_add_from_library(pack)
+		return
+	hide()
+	if not _on_add.is_valid():
 		return
 	_on_add.call(pack, property_values(), _where != null and _where.get_selected_id() == 1, _object_label)
+
+
+## Add to project and attach: the window stays open while the folders are copied and imported, then
+## says what came in, with its Undo, and the list shows the pack as in the project.
+func _add_from_library(pack: Dictionary) -> void:
+	if _adding or not _on_add_library.is_valid():
+		return
+	_adding = true
+	get_ok_button().disabled = true
+	ok_button_text = EventSheetL10n.translate("Adding…")
+	var result: Dictionary = await _on_add_library.call(pack, property_values(), _object_label)
+	_adding = false
+	_added_host = result.get("host") as Node if bool(result.get("ok", false)) else null
+	_load_packs()
+	_rebuild_list()
+	for listed: Dictionary in _packs:
+		if str(listed.get("dir", "")) == str(pack.get("dir", "")):
+			_select_pack(listed)
+	if not bool(result.get("ok", false)):
+		_show_added("")
+		return
+	_show_added("✓ " + str(result.get("message", "")))
+	if _added_host != null:
+		ok_button_text = EventSheetL10n.translate("Added · attached to %s") % _object_label
+		get_ok_button().disabled = true
+
+
+func _show_added(said: String) -> void:
+	if _added_band == null:
+		return
+	_added_said.text = said
+	_added_band.visible = not said.is_empty()
+	(_added_band.get_child(1) as Control).visible = _added_host != null
+
+
+func _undo_added() -> void:
+	if _on_undo_library.is_valid() and _added_host != null:
+		_on_undo_library.call(_added_host)
+	_added_host = null
+	_show_added("")
+	_load_packs()
+	_rebuild_list()

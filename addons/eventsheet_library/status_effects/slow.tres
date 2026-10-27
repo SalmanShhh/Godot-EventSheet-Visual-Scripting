@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="StatusEffectResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/status_effect_resource/status_effect_resource.gd" id="1_status_effect"]
+
+[resource]
+script = ExtResource("1_status_effect")
+status_name = "slow"
+tint = Color(0.68, 0.78, 1, 1)
+icon = null
+tick_amount = 0.0
+tick_type = ""
+tick_seconds = 0.5
+heal_amount = 0.0
+speed_factor = 0.5
+multiplier_tag = ""
+multiplier = 1.0
+stacking = "refresh"
+max_stacks = 1
+cleansable = true
+particle_scene = null

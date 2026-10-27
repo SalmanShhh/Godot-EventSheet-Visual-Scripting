@@ -9607,3 +9607,62 @@ Listed under its own name in the picker and the Add behaviour list. The usual ch
 "%s is a %s, not a node: a sheet reads it from its file, so it is never added to an object.",%s は %s でノードではありません。シートはそのファイルから読み込むので、オブジェクトに追加されることはありません。
 "%d pack class(es) are referenced by no sheet, scene or autoload - fine if you call them from hand-written GDScript: %s.","%d 個のパッククラスはどのシート、シーン、オートロードからも参照されていません - 手書きの GDScript から呼ぶなら問題ありません: %s。"
 %s (autoload),%s (自動読み込み)
+%s is not in the library.,%s はライブラリにありません。
+%s could not be copied into the project (%s).,%s をプロジェクトにコピーできませんでした (%s)。
+unused,未使用
+used by %s,%s が使用
+"Nothing in this project matches ""%s"".",このプロジェクトには「%s」に一致するものがありません。
+In the library,ライブラリ内
+"In the behaviour library, not in this project yet. Add behaviour… opens the window on it; nothing is added from here.",ビヘイビアライブラリにあり、まだこのプロジェクトにはありません。「ビヘイビアを追加…」でそのウィンドウが開きます。ここからは何も追加されません。
+"This behaviour is in the library, not in this project. Add behaviour… opens the window on it, where adding copies it in and attaches it.",このビヘイビアはライブラリにあり、このプロジェクトにはありません。「ビヘイビアを追加…」でウィンドウが開き、追加するとコピーされてアタッチされます。
+Search the project and the library,プロジェクトとライブラリを検索
+The project's behaviours and the library's together.,プロジェクトとライブラリのビヘイビアをまとめて表示。
+In this project,このプロジェクト内
+Only the behaviours this project already holds.,このプロジェクトに既にあるビヘイビアのみ。
+"Also adds, because it needs them",必要なため一緒に追加
+Copied into,コピー先
+Takes the behaviour off the object and sends the folders it copied in to the trash - the same step as Ctrl+Z.,オブジェクトからビヘイビアを外し、コピーしたフォルダーをごみ箱へ送ります - Ctrl+Z と同じ操作です。
+Library,ライブラリ
+In project,プロジェクト内
+Remove from project…,プロジェクトから削除…
+Add to project and attach,プロジェクトに追加してアタッチ
+(already in the project),(既にプロジェクト内)
+Nothing else.,ほかにはありません。
+Adding…,追加中…
+Added · attached to %s,追加済み · %s にアタッチ
+"Tidy behaviours lists every behaviour in the project, the unused ones ticked.",「ビヘイビアの整理」はプロジェクト内のすべてのビヘイビアを一覧表示し、未使用のものにチェックを入れます。
+Open the EventSheets workspace to tidy the behaviours.,ビヘイビアを整理するには EventSheets ワークスペースを開いてください。
+Godot imported 1 folder.,Godot が 1 個のフォルダーをインポートしました。
+Godot imported %d folders.,Godot が %d 個のフォルダーをインポートしました。
+Added %s to the project.,%s をプロジェクトに追加しました。
+"Added %s to the project, with %s it needs.",%s をプロジェクトに追加しました。必要な %s も一緒です。
+%s and %s,%s と %s
+Open the scene holding %s to attach it.,アタッチするには %s を含むシーンを開いてください。
+Nothing was added.,何も追加されませんでした。
+Added %d behaviours to eventsheet_addons/. Add or remove any of them from an object's Behaviours list.,%d 個のビヘイビアを eventsheet_addons/ に追加しました。オブジェクトのビヘイビア一覧からいつでも追加・削除できます。
+Used by 1 sheet,1 個のシートが使用
+Used by 1 file,1 個のファイルが使用
+Used by %d sheets,%d 個のシートが使用
+Used by %d files,%d 個のファイルが使用
+Remove %s from the project?,%s をプロジェクトから削除しますか?
+"It stays in the library, so you can add it back at any time.",ライブラリには残るので、いつでも追加し直せます。
+"It is not in the library, so the trash is where it can be restored from.",ライブラリにはないため、復元はごみ箱からになります。
+Its folder %s goes to the system trash.,フォルダー %s はシステムのごみ箱へ送られます。
+Those rows stay as written and show as missing until it is added back. The Doctor lists them.,それらの行は書かれたまま残り、追加し直すまで欠落として表示されます。Doctor が一覧表示します。
+%s could not be sent to the trash (%s); it is still in the project.,%s をごみ箱へ送れませんでした (%s)。まだプロジェクト内にあります。
+Removed %s: its folder is in the system trash.,%s を削除しました。フォルダーはシステムのごみ箱にあります。
+This project holds %d behaviours. No sheet uses %d of them. Ticked ones go to the trash and stay in the library.,このプロジェクトには %d 個のビヘイビアがあります。そのうち %d 個はどのシートも使用していません。チェックしたものはごみ箱へ送られ、ライブラリには残ります。
+Remove %d unused,未使用の %d 個を削除
+Tidy behaviours,ビヘイビアの整理
+Not now,今はしない
+Made in this project: the library has no copy to add it back from.,このプロジェクトで作成: ライブラリには追加し直すためのコピーがありません。
+Sent %d unused behaviours to the trash; each stays in the library.,未使用のビヘイビア %d 個をごみ箱へ送りました。どれもライブラリには残ります。
+Still in the project (the trash refused them): %s.,まだプロジェクト内にあります (ごみ箱が拒否しました): %s。
+Pick any that fit. Each adds a few behaviours to this project; you can add or remove any of them later from an object's Behaviours list.,当てはまるものを選んでください。それぞれがこのプロジェクトにいくつかのビヘイビアを追加します。どれも後でオブジェクトのビヘイビア一覧から追加・削除できます。
+Start with none,何も追加せずに始める
+Adds nothing. An object's Behaviours list > + Add behaviour… adds any of them later.,何も追加しません。後でオブジェクトのビヘイビア一覧 > + ビヘイビアを追加… からどれでも追加できます。
+Nothing will be added. The Add behaviour window is always there later.,何も追加されません。「ビヘイビアを追加」ウィンドウは後からいつでも使えます。
+Add and continue,追加して続ける
+Nothing will be added.,何も追加されません。
+1 behaviour will be added.,1 個のビヘイビアが追加されます。
+%d behaviours will be added (shared ones once).,%d 個のビヘイビアが追加されます (共通のものは 1 回だけ)。

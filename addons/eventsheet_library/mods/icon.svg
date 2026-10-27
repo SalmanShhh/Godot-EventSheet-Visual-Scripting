@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="16" height="16" fill="none">
+  <!-- the folder the game reads mods from -->
+  <path d="M46 146 h150 l44 56 h226 a20 20 0 0 1 20 20 v230 a20 20 0 0 1 -20 20 h-420 a20 20 0 0 1 -20 -20 v-286 a20 20 0 0 1 20 -20 z"
+    fill="#334155" stroke="#64748b" stroke-width="14" stroke-linejoin="round"/>
+  <!-- the piece somebody else wrote, dropping into it -->
+  <rect x="176" y="256" width="160" height="120" rx="16" fill="#0ea5e9" opacity="0.95"/>
+  <path d="M256 46 v150 M196 136 l60 60 l60 -60" stroke="#f97316" stroke-width="30"
+    stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

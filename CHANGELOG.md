@@ -15,6 +15,39 @@
   does. `Array[Node2D] _in_range = []` keeps its `[]` instead of the
   word "empty". Classic Sheet and the other sentence-row themes read as before.
 
+### Added: the behaviour library - a project holds only the behaviours it asked for
+
+- The packs now ship a second time in `addons/eventsheet_library/`, a folder holding a `.gdignore`, so
+  Godot never imports it: none of its classes reach Create Node, the picker, the class list, an import
+  or an exported game, and the editor boots no slower for it. A project's own behaviours stay ordinary
+  folders in `eventsheet_addons/`. A behaviour is still a folder: there means in use, deleted means
+  gone. There is no on or off switch.
+- **The Welcome asks "What are you making?"** Each answer is a kit: a tag the packs carry
+  (`@ace_tags`) that at least four of them share, listing those packs by name. Nothing is copied until
+  Add and continue; Start with none is a real answer.
+- **Add behaviour searches the project and the library together.** A library pack's tile says
+  Library, its card lists what else it needs (read from its own `@ace_requires`) and the folder it is
+  copied into, and the button reads **Add to project and attach**: the folders are copied in, Godot
+  imports them and the behaviour is attached, as one undo step whose Undo takes the node out and sends
+  the copied folders to the system trash. A folder the project already holds is never overwritten.
+  **All / In this project** hides the library.
+- **Remove from project…** on a behaviour the project holds sends its folder to the system trash and
+  first says which sheets use it ("Used by 2 sheets", with the rows in each). Those rows stay as
+  written.
+- **Tidy behaviours…** is the door on the Doctor's existing note about unused packs: every behaviour
+  in the project, the unused ones ticked and the used ones locked with the files that use them.
+  Everything removed stays in the library.
+- **The picker on an empty search** names the library packs whose actions, conditions or expressions
+  match ("Nothing in this project matches "dash"." then In the library), each opening Add behaviour on
+  that pack. Nothing is added from the picker itself.
+- Installing: copy `addons/eventforge/`, `addons/eventsheet/` and `addons/eventsheet_library/`; the
+  packs no longer need copying by hand. An existing project that copied every pack keeps them all and
+  changes nothing on its own.
+- For contributors: this repository is a project that holds every pack, so its tests, showcases and
+  drift gates keep reading `eventsheet_addons/`. The library is derived from it by
+  `tools/build_library.gd` (run by `build_sample_behaviors.gd` after every build), the pack audit
+  prints `library drifted=N` and fails on drift, and `behaviour_library_test` asks the same question.
+
 ### Fixed: the plugin ships its `.uid` files
 
 - Every script and shader in the plugin, the packs, the showcases and the tools now ships with the

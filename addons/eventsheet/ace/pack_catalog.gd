@@ -45,10 +45,11 @@ static func packs() -> Array[Dictionary]:
 	return out
 
 
-## One pack, by folder name. Empty when the folder holds no pack script.
-static func describe(pack_dir: String) -> Dictionary:
-	var folder: String = PACKS_ROOT.path_join(pack_dir)
-	var script_path: String = main_script_for(pack_dir)
+## One pack, by folder name. Empty when the folder holds no pack script. `root` is where the folder
+## sits: the packs folder, or the behaviour library a pack waits in before it is added.
+static func describe(pack_dir: String, root: String = PACKS_ROOT) -> Dictionary:
+	var folder: String = root.path_join(pack_dir)
+	var script_path: String = main_script_for(pack_dir, root)
 	if script_path.is_empty():
 		return {}
 	var source: String = FileAccess.get_file_as_string(script_path)

@@ -1,0 +1,307 @@
+## @ace_tags(ai, planning)
+## @ace_category("HTN")
+## @ace_expose_all(node)
+## @ace_version(1.0.0)
+@icon("res://eventsheet_addons/htn_agent/icon.svg")
+class_name HTNAgent
+extends Node
+## A small hierarchical task planner on any Node2D: describe goals as compound tasks that break down into primitive steps through methods with preconditions and utility scores. Feed it world-state facts, request a plan, and run the ordered task list it hands back - re-plan when the situation changes instead of rewriting a state machine.
+
+## The node this behavior acts on (its parent). Required host: Node2D.
+var host: Node2D = null
+
+func _enter_tree() -> void:
+	host = get_parent() as Node2D
+	if host == null:
+		push_warning("HTNAgent behavior requires a Node2D parent.")
+
+## @ace_trigger
+## @ace_name("On Task Started")
+signal task_started(task_name: String)
+## @ace_trigger
+## @ace_name("On Plan Complete")
+signal plan_complete
+## @ace_trigger
+## @ace_name("On Plan Failed")
+signal plan_failed
+
+## Mark Failed re-plans from the root instead of giving up.
+@export var auto_replan_on_fail: bool = true
+var compounds: Dictionary = {}
+var plan: Array = []
+var plan_index: int = 0
+var primitives: Dictionary = {}
+## Goal to plan for - a compound or primitive task name.
+@export var root_task: String = ""
+var world_state: Dictionary = {}
+
+## An HTN method - a way to accomplish a compound task, with preconditions + an ordered subtask list.
+class HTNMethod:
+	var id: String = ""
+	var utility: float = 0.0
+	var conditions: Array = []
+	var subtasks: Array = []
+
+## A precondition (world-state key, operator, expected value) a method needs to be chosen.
+class HTNCondition:
+	var key: String = ""
+	var op: String = "=="
+	var value: Variant = null
+# ── Planner internals ──
+func _find_method(task_name: String, method_id: String) -> HTNMethod:
+	for method: HTNMethod in compounds.get(task_name, []):
+		if method.id == method_id:
+			return method
+	return null
+
+## @ace_action
+## @ace_featured
+## @ace_name("Set World State")
+## @ace_category("HTN")
+## @ace_description("Writes a fact the planner reads in method preconditions.")
+## @ace_display_template("Set world fact [b]{key}[/b] to [b]{value}[/b]")
+## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
+## @ace_codegen_template("$HTNAgent.set_world_state({key}, {value})")
+func set_world_state(key: String, value: Variant) -> void:
+	world_state[key] = value
+
+## @ace_action
+## @ace_name("Clear World State")
+## @ace_category("HTN")
+## @ace_description("Removes a world-state key.")
+## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
+## @ace_codegen_template("$HTNAgent.clear_world_state({key})")
+func clear_world_state(key: String) -> void:
+	world_state.erase(key)
+
+## @ace_action
+## @ace_name("Add Primitive Task")
+## @ace_category("HTN")
+## @ace_description("Registers a leaf task your sheet executes directly.")
+## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
+## @ace_codegen_template("$HTNAgent.add_primitive({task_name})")
+func add_primitive(task_name: String) -> void:
+	primitives[task_name] = true
+
+## @ace_action
+## @ace_name("Add Compound Task")
+## @ace_category("HTN")
+## @ace_description("Registers a task that decomposes via methods.")
+## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
+## @ace_codegen_template("$HTNAgent.add_compound({task_name})")
+func add_compound(task_name: String) -> void:
+	if not compounds.has(task_name):
+		compounds[task_name] = []
+
+## @ace_action
+## @ace_name("Add Method")
+## @ace_category("HTN")
+## @ace_description("Adds (or re-scores) a way to accomplish a compound task; highest utility wins.")
+## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
+## @ace_codegen_template("$HTNAgent.add_method({task_name}, {method_id}, {utility})")
+func add_method(task_name: String, method_id: String, utility: float) -> void:
+	if not compounds.has(task_name):
+		compounds[task_name] = []
+	var method: HTNMethod = _find_method(task_name, method_id)
+	if method == null:
+		var m: HTNMethod = HTNMethod.new()
+		m.id = method_id
+		m.utility = utility
+		compounds[task_name].append(m)
+	else:
+		method.utility = utility
+
+## @ace_action
+## @ace_name("Add Method Condition")
+## @ace_category("HTN")
+## @ace_description("A precondition (world-state key, operator, value) the method needs to be chosen.")
+## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
+## @ace_codegen_template("$HTNAgent.add_method_condition({task_name}, {method_id}, {key}, {op}, {value})")
+func add_method_condition(task_name: String, method_id: String, key: String, op: String, value: Variant) -> void:
+	var method: HTNMethod = _find_method(task_name, method_id)
+	if method != null:
+		var c: HTNCondition = HTNCondition.new()
+		c.key = key
+		c.op = op
+		c.value = value
+		method.conditions.append(c)
+
+## @ace_action
+## @ace_name("Add Method Subtask")
+## @ace_category("HTN")
+## @ace_description("Appends a subtask (primitive or compound) to a method, in order.")
+## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
+## @ace_codegen_template("$HTNAgent.add_method_subtask({task_name}, {method_id}, {subtask})")
+func add_method_subtask(task_name: String, method_id: String, subtask: String) -> void:
+	var method: HTNMethod = _find_method(task_name, method_id)
+	if method != null:
+		method.subtasks.append(subtask)
+
+## @ace_action
+## @ace_name("Set Method Utility")
+## @ace_category("HTN")
+## @ace_description("Updates a method's utility at runtime (utility-driven re-prioritising).")
+## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
+## @ace_codegen_template("$HTNAgent.set_method_utility({task_name}, {method_id}, {utility})")
+func set_method_utility(task_name: String, method_id: String, utility: float) -> void:
+	var method: HTNMethod = _find_method(task_name, method_id)
+	if method != null:
+		method.utility = utility
+
+## @ace_action
+## @ace_name("Clear Task Network")
+## @ace_category("HTN")
+## @ace_description("Wipes all tasks/methods (keeps world state).")
+## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
+## @ace_codegen_template("$HTNAgent.clear_network()")
+func clear_network() -> void:
+	primitives.clear()
+	compounds.clear()
+
+## @ace_action
+## @ace_featured
+## @ace_name("Request Plan")
+## @ace_category("HTN")
+## @ace_description("Decomposes the root task into a plan and starts the first task.")
+## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
+## @ace_codegen_template("$HTNAgent.request_plan()")
+func request_plan() -> void:
+	plan = _decompose(root_task, 0)
+	plan_index = 0
+	if plan.is_empty():
+		plan_failed.emit()
+	else:
+		task_started.emit(str(plan[0]))
+
+## @ace_action
+## @ace_featured
+## @ace_name("Mark Task Complete")
+## @ace_category("HTN")
+## @ace_description("Advances to the next task, or fires On Plan Complete at the end.")
+## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
+## @ace_codegen_template("$HTNAgent.mark_complete()")
+func mark_complete() -> void:
+	if plan_index >= plan.size():
+		return
+	plan_index += 1
+	if plan_index >= plan.size():
+		plan = []
+		plan_index = 0
+		plan_complete.emit()
+	else:
+		task_started.emit(str(plan[plan_index]))
+
+## @ace_action
+## @ace_name("Mark Task Failed")
+## @ace_category("HTN")
+## @ace_description("Re-plans from the root (or fires On Plan Failed if auto-replan is off).")
+## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
+## @ace_codegen_template("$HTNAgent.mark_failed()")
+func mark_failed() -> void:
+	if auto_replan_on_fail:
+		request_plan()
+	else:
+		plan = []
+		plan_index = 0
+		plan_failed.emit()
+
+## @ace_action
+## @ace_name("Invalidate Plan")
+## @ace_category("HTN")
+## @ace_description("Drops the current plan so the next Request Plan rebuilds it.")
+## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
+## @ace_codegen_template("$HTNAgent.invalidate_plan()")
+func invalidate_plan() -> void:
+	plan = []
+	plan_index = 0
+
+## @ace_condition
+## @ace_name("Has Plan")
+## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
+## @ace_codegen_template("$HTNAgent.has_plan()")
+func has_plan() -> bool:
+	return plan_index < plan.size()
+
+## @ace_condition
+## @ace_name("Current Task Is")
+## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
+## @ace_codegen_template("$HTNAgent.current_task_is({task_name})")
+func current_task_is(task_name: String) -> bool:
+	return current_task() == task_name
+
+## @ace_expression
+## @ace_name("Current Task")
+## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
+## @ace_codegen_template("$HTNAgent.current_task()")
+func current_task() -> String:
+	return str(plan[plan_index]) if plan_index < plan.size() else ""
+
+## @ace_expression
+## @ace_name("Plan Length")
+## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
+## @ace_codegen_template("$HTNAgent.plan_length()")
+func plan_length() -> int:
+	return plan.size()
+
+## @ace_expression
+## @ace_name("World Value")
+## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
+## @ace_codegen_template("$HTNAgent.world_value({key})")
+func world_value(key: String) -> Variant:
+	return world_state.get(key, 0)
+
+func _to_number(value: Variant) -> float:
+	if value is float or value is int:
+		return float(value)
+	return str(value).to_float()
+
+func _loose_equal(a: Variant, b: Variant) -> bool:
+	if (a is float or a is int) and (b is float or b is int):
+		return is_equal_approx(float(a), float(b))
+	return str(a) == str(b)
+
+func _compare_values(a: Variant, op: String, b: Variant) -> bool:
+	if op == "==": return _loose_equal(a, b)
+	if op == "!=": return not _loose_equal(a, b)
+	if op == "<": return _to_number(a) < _to_number(b)
+	if op == "<=": return _to_number(a) <= _to_number(b)
+	if op == ">": return _to_number(a) > _to_number(b)
+	if op == ">=": return _to_number(a) >= _to_number(b)
+	return false
+
+func _conditions_hold(conditions: Array) -> bool:
+	for condition: HTNCondition in conditions:
+		var actual: Variant = world_state.get(condition.key, null)
+		if not _compare_values(actual, condition.op, condition.value):
+			return false
+	return true
+
+func _decompose(task_name: String, depth: int) -> Array:
+	# Decompose a task into an ordered list of primitive task names. At each compound the
+	# applicable methods (preconditions satisfied) are tried in descending utility order,
+	# backtracking to the next method when a subtask cannot be decomposed.
+	if depth > 64:
+		return []
+	if primitives.has(task_name):
+		return [task_name]
+	if not compounds.has(task_name):
+		return []
+	var applicable: Array = []
+	for method: HTNMethod in compounds[task_name]:
+		if _conditions_hold(method.conditions):
+			applicable.append(method)
+	applicable.sort_custom(func(a: HTNMethod, b: HTNMethod) -> bool: return a.utility > b.utility)
+	for method: HTNMethod in applicable:
+		var result: Array = []
+		var ok: bool = true
+		for subtask: String in method.subtasks:
+			var sub: Array = _decompose(subtask, depth + 1)
+			if sub.is_empty():
+				ok = false
+				break
+			result.append_array(sub)
+		if ok:
+			return result
+	return []
+
+# Utility-driven HTN planner. In On Ready build a task network (Add Primitive / Add Compound / Add Method / Add Method Condition / Add Method Subtask) and set the Root Task. Feed facts with Set World State, call Request Plan, run the Current Task in your sheet, and call Mark Complete / Mark Failed. Highest-utility applicable method wins at each compound (with backtracking). Triggers: On Task Started, On Plan Complete, On Plan Failed.

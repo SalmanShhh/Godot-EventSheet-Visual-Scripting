@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="16" height="16" fill="none">
+  <!-- the file the page is -->
+  <path d="M112 48 L300 48 L400 148 L400 464 L112 464 Z" fill="none" stroke="#64748b" stroke-width="30" stroke-linejoin="round"/>
+  <path d="M300 48 L300 148 L400 148" fill="none" stroke="#64748b" stroke-width="30" stroke-linejoin="round"/>
+  <!-- the picture -->
+  <rect x="160" y="196" width="192" height="118" rx="14" fill="#7c9cf5"/>
+  <circle cx="206" cy="238" r="18" fill="#e8a33d"/>
+  <!-- the words -->
+  <g stroke="#5fb37a" stroke-width="22" opacity="0.8" stroke-linecap="round">
+    <line x1="164" y1="366" x2="348" y2="366"/>
+    <line x1="164" y1="414" x2="288" y2="414"/>
+  </g>
+</svg>

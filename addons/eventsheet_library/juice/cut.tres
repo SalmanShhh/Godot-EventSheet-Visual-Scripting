@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="MomentResource" format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/moment_resource/moment_resource.gd" id="1_moment"]
+
+[resource]
+script = ExtResource("1_moment")
+moment_name = "Cut"
+steps = Array[Dictionary]([{
+"amount": 1.0,
+"effect": "white",
+"seconds": 0.06,
+"verb": "flash"
+}, {
+"amount": 115.0,
+"effect": "",
+"seconds": 0.12,
+"verb": "zoom"
+}])
