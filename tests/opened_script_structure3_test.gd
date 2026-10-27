@@ -180,13 +180,13 @@ static func _rows() -> bool:
 		"i1 [match difficulty]") and ok
 	ok = _check("the first case states its test",
 		_row_containing(rows, "difficulty is \"easy\""),
-		"i2 [System> difficulty is \"easy\" | Set reward to 10]") and ok
+		"i2 [System> difficulty is \"easy\" | System> Set reward to 10]") and ok
 	ok = _check("a multi-value case states every value it runs for",
 		_row_containing(rows, "difficulty is \"normal\""),
-		"i2 [System> difficulty is \"normal\" | System> difficulty is \"hard\" | Set reward to 25]") and ok
+		"i2 [System> difficulty is \"normal\" | System> difficulty is \"hard\" | System> Set reward to 25]") and ok
 	ok = _check("the default is a plain Else",
 		_row_containing(rows, "Set reward to 0"),
-		"i2 [System> Else | Set reward to 0]") and ok
+		"i2 [System> Else | System> Set reward to 0]") and ok
 	# Three statements, one row, named after the scene's root and carrying the local name.
 	# Re-pin: a property set on the way IN is part of making the thing, so it rides the same row as
 	# a chip rather than following it as an action of its own. It is the function's own first step,
