@@ -73,12 +73,15 @@ const OBJECT_GLYPH_TOUCH := "touch"
 const OBJECT_GLYPH_FUNCTION := "function"
 const OBJECT_GLYPH_PARAMETER := "parameter"
 const OBJECT_GLYPH_LOCAL := "local"
+## The head of a class written inside a script: a page with its lines, the icon its members fold under.
+const OBJECT_GLYPH_CLASS := "class"
 ## Each head glyph's own ink, [on a dark sheet, on a light sheet]: the function amber, a parameter
 ## blue and a local green, so the three kinds of line tell apart down the column.
 const HEAD_GLYPH_INKS: Dictionary = {
 	OBJECT_GLYPH_FUNCTION: EventSheetPalette.COLOR_GLYPH_FUNCTION,
 	OBJECT_GLYPH_PARAMETER: EventSheetPalette.COLOR_GLYPH_PARAMETER,
 	OBJECT_GLYPH_LOCAL: EventSheetPalette.COLOR_GLYPH_LOCAL,
+	OBJECT_GLYPH_CLASS: EventSheetPalette.COLOR_GLYPH_CLASS,
 }
 const OBJECT_GLYPHS: Dictionary = {
 	"System": OBJECT_GLYPH_SYSTEM,
@@ -422,6 +425,11 @@ static func draw_object_glyph(control: CanvasItem, rect: Rect2, glyph: String, c
 			control.draw_polyline(PackedVector2Array([_at(rect, 11.0, 3.0), _at(rect, 13.0, 3.0),
 				_at(rect, 13.0, 13.0), _at(rect, 11.0, 13.0)]), color, stroke, true)
 			control.draw_line(_at(rect, 8.0, 7.2), _at(rect, 8.0, 8.8), color, stroke, true)
+		OBJECT_GLYPH_CLASS:
+			control.draw_rect(Rect2(_at(rect, 3.0, 2.5), Vector2(_units(rect, 10.0), _units(rect, 11.0))), color, false, stroke)
+			control.draw_line(_at(rect, 5.5, 5.5), _at(rect, 10.5, 5.5), color, stroke, true)
+			control.draw_line(_at(rect, 5.5, 8.0), _at(rect, 10.5, 8.0), color, stroke, true)
+			control.draw_line(_at(rect, 5.5, 10.5), _at(rect, 8.5, 10.5), color, stroke, true)
 		OBJECT_GLYPH_LOCAL:
 			control.draw_rect(Rect2(_at(rect, 2.5, 2.5), Vector2(_units(rect, 11.0), _units(rect, 11.0))), color, false, stroke)
 			control.draw_line(_at(rect, 6.0, 6.0), _at(rect, 10.0, 10.0), color, stroke, true)

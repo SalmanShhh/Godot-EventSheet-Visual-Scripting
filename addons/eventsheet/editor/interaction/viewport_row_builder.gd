@@ -7129,16 +7129,14 @@ func build_inner_class_head(inner: InnerClassRow, indent: int) -> EventRowData:
 		inner.header]
 	var head: Dictionary = {"editable": false, "kind": "inner_class", "line_index": 0, "hover_note": hover}
 	var base: String = inner.base_class()
-	# No kind word in front: the icon of the class it extends (RefCounted when it names none, which is
-	# what Godot gives it) leads the name, the way every object on the sheet is drawn.
+	# No kind word in front: the class's own icon, a page with its lines on its tile, leads the name as
+	# written - the head its members fold under, in every look.
 	var name_meta: Dictionary = head.merged({
 		"natural_width": true,
-		"text_color": _viewport._get_reading_style().primary_text_color
+		"text_color": _viewport._get_reading_style().primary_text_color,
+		"object_glyph": NativeRowMarks.OBJECT_GLYPH_CLASS,
+		"object_icon": _glyph_icon_slot()
 	}, true)
-	if _viewport.show_object_icons:
-		var icon: Texture2D = class_icon_with_ancestry(base if not base.is_empty() else "RefCounted")
-		if icon != null:
-			name_meta["object_icon"] = icon
 	var spans: Array[SemanticSpan] = [_make_span(display_name, SemanticSpan.SpanType.OBJECT, name_meta)]
 	if not base.is_empty():
 		spans.append(_make_span(EventSheetL10n.translate("extends %s") % base, SemanticSpan.SpanType.VALUE, head.merged({

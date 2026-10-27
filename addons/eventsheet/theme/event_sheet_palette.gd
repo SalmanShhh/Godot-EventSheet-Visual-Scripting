@@ -65,6 +65,8 @@ const COLOR_OBJECT_ICON_TILE_LIGHT := Color("#d2d2d2")
 const COLOR_GLYPH_FUNCTION: Array[Color] = [Color("#e8c27a"), Color("#7a4e00")]
 const COLOR_GLYPH_PARAMETER: Array[Color] = [Color("#9ac6f0"), Color("#124175")]
 const COLOR_GLYPH_LOCAL: Array[Color] = [Color("#a6d18f"), Color("#1f4a14")]
+## A class written inside a script, the head its members fold under: a slate blue, [dark, light].
+const COLOR_GLYPH_CLASS: Array[Color] = [Color("#8eb2d8"), Color("#204266")]
 const BG_1 = Color("#24262d")
 const TEXT_PRIMARY = Color("#d7dae0")
 const TEXT_SECONDARY = Color("#9aa1ad")

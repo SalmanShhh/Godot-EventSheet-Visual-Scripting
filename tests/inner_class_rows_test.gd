@@ -127,7 +127,9 @@ static func _rows(sheet: EventSheetResource) -> bool:
 			inert = inert and child.source_resource == null
 		ok = SUPPORT.pins(NAME, [
 			["the head is full width", head.row_type, EventRowData.RowType.SECTION],
-			["and reads the name with no kind word in front", head.spans[0].text, "Hit"],
+			# The class icon says what the line is: no "Class" word stands in front of the name.
+			["and leads with the class icon, then the name as written",
+				[head.spans[0].text, str(head.spans[0].metadata.get("object_glyph", "")), head.spans.size()], ["Hit", "class", 1]],
 			["the members sit under it, keyed by it", child_uids,
 				["inner_class_Hit/variable_", "inner_class_Hit/variable_", "inner_class_Hit/define_fn"]],
 			["one indent deeper", head.children[0].indent, head.indent + 1],
