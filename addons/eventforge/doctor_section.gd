@@ -31,15 +31,31 @@ extends RefCounted
 ## the editor is not the reader's game, and a note about it is not theirs to act on.
 const PLUGIN_DIRECTORY := "res://addons/"
 
-## Where the behaviour packs live. They ship with the plugin and are rebuilt from its pack builders, so
-## in a game that installed them they are the plugin's code as much as `addons/` is: a finding about a
+## Where the behaviour packs live. The shipped ones are rebuilt from the plugin's pack builders, so in
+## a game that installed them they are the plugin's code as much as `addons/` is: a finding about a
 ## pack's script was the first thing a new project's Doctor said, and nothing the reader could fix.
+## The SAME folder holds the reader's own work, though - New behaviour, New global and Export Pack
+## each write a folder here - so the folder alone does not say whose a file is.
 const PACK_DIRECTORY := "res://eventsheet_addons/"
 
+## The pack folders the plugin ships, as the pack builders publish them. Written by
+## `tools/measure_packs.gd -- --write` and gated against the builders, because a user's project has
+## the plugin's `addons/` but not its builders.
+const SHIPPED_PACKS := preload("res://addons/eventforge/shipped_pack_folders.gd")
 
-## True for a file the plugin ships - its own code or one of its packs - which no section reports on.
+
+## True for a file the plugin ships - its own code, a shipped pack or one of the runtime scripts at
+## the packs' root - which no section reports on. A file in any other folder under the packs' root
+## is a behaviour, global or pack the reader made, and is reported on like the rest of their game.
 static func _is_shipped(path: String) -> bool:
-	return path.begins_with(PLUGIN_DIRECTORY) or path.begins_with(PACK_DIRECTORY)
+	if path.begins_with(PLUGIN_DIRECTORY):
+		return true
+	if not path.begins_with(PACK_DIRECTORY):
+		return false
+	var rest: String = path.trim_prefix(PACK_DIRECTORY)
+	var slash: int = rest.find("/")
+	# Nothing the editor makes lands at the root: every maker writes a folder of its own.
+	return slash < 0 or SHIPPED_PACKS.FOLDERS.has(rest.substr(0, slash))
 
 
 ## The paths of a corpus the reader wrote, in their order: everything `_is_shipped` names is left

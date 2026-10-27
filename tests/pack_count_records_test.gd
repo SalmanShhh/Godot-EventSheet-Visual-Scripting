@@ -27,6 +27,28 @@ static func run() -> bool:
 	var all_passed: bool = true
 	all_passed = _pin_the_walk() and all_passed
 	all_passed = _pin_the_records() and all_passed
+	all_passed = _pin_the_shipped_folders() and all_passed
+	return all_passed
+
+
+## The shipped-folders file the Doctor reads in a user's project, against the builders, and against
+## the folders this repository actually holds: a folder the list missed would be reported on as the
+## reader's own code in every project the plugin is installed into.
+static func _pin_the_shipped_folders() -> bool:
+	var shipped: PackedStringArray = MEASURE.shipped_folders(MEASURE.BUILDERS_DIR)
+	var on_disk: PackedStringArray = DirAccess.get_directories_at("res://eventsheet_addons/")
+	var unlisted: PackedStringArray = PackedStringArray()
+	for folder: String in on_disk:
+		if not shipped.has(folder):
+			unlisted.append(folder)
+	var all_passed: bool = SUPPORT.pins(PREFIX, [
+		["fixture shipped folders", ",".join(MEASURE.shipped_folders(FIXTURE_BUILDERS)), "fixture_alpha_pack,fixture_beta"],
+		["every folder under eventsheet_addons/ is one a builder ships", Array(unlisted), []],
+		["the shipped-folders file is the builders' list", MEASURE.manifest_is_current(shipped), true],
+	])
+	if not all_passed:
+		print("  shipped folders: rewrite the list with:")
+		print("  %s" % MEASURE.FIX_LINE)
 	return all_passed
 
 

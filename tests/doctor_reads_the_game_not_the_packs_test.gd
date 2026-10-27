@@ -68,6 +68,64 @@ static func run() -> bool:
 	ok = SUPPORT.check(TEST_NAME, "a game the plugin was installed into audits none of them",
 		Array(EventSheetDocsDoctor.guide_pages(false)), []) and ok
 	EventSheetProjectDoctor.clear_project_scripts()
+	ok = _the_readers_own_folder_under_the_packs_is_theirs() and ok
+	return ok
+
+
+## New behaviour, New global and Export Pack all write a folder under eventsheet_addons/, beside the
+## packs - so the folder alone cannot say whose a file is. A user's own global there was skipped by
+## Interop, the reading ledger, Performance and Migration, and its guide by Docs. The project's script
+## list and the guides are handed in through the walks' own caches, so nothing is written to disk.
+const USER_GLOBAL := "res://eventsheet_addons/game_state/game_state.gd"
+const USER_GUIDE := "res://eventsheet_addons/game_state/guide.md"
+
+
+static func _the_readers_own_folder_under_the_packs_is_theirs() -> bool:
+	var ok: bool = SUPPORT.check(TEST_NAME, "a folder the reader made under the packs is theirs, a shipped pack and a root runtime script are not",
+		Array(EventSheetDoctorSection.own_paths(PackedStringArray([
+			USER_GLOBAL, PACK_SCRIPT, "res://eventsheet_addons/free_spot.gd", "res://player.gd"]))),
+		[USER_GLOBAL, "res://player.gd"])
+	EventSheetProjectDoctor.clear_project_scripts()
+	EventSheetProjectDoctor._project_scripts_cache = PackedStringArray([PACK_SCRIPT, USER_GLOBAL])
+	EventSheetProjectDoctor._project_scripts_walked = true
+	EventSheetProjectDoctor._source_cache[USER_GLOBAL] = "extends Node\n\n\nfunc _process(_delta: float) -> void:\n\tfor enemy: Node in get_tree().get_nodes_in_group(\"enemies\"):\n\t\tenemy.set_process(false)\n"
+	EventSheetProjectDoctor._source_cache[PACK_SCRIPT] = FileAccess.get_file_as_string(PACK_SCRIPT)
+	EventSheetProjectDoctor._sheet_cache[USER_GLOBAL] = GDScriptImporter.new().import_external_source(
+		str(EventSheetProjectDoctor._source_cache[USER_GLOBAL]), true, USER_GLOBAL)
+	ok = SUPPORT.check(TEST_NAME, "Performance sweeps the reader's own global",
+		Array(EventSheetPerformanceDoctor.sweep().get("busy", PackedStringArray())), [USER_GLOBAL]) and ok
+	# Interop and Migration say how many scripts they read; the ledger says nothing at all over an
+	# empty corpus, so its having a page is the count.
+	var counted: Array = []
+	for section: Array in [
+			["Interop", EventSheetInteropDoctor, "Interop: (\\d+) script"],
+			["the reading ledger", EventSheetReadingDoctor, ""],
+			["Migration", EventSheetMigrationDoctor, "Migration: (\\d+) sheet\\(s\\) read"]]:
+		var findings: Array[Dictionary] = []
+		(section[1] as Object).call("check", PackedStringArray(), findings)
+		var total: int = -1 if not str(section[2]).is_empty() else mini(findings.size(), 1)
+		if not str(section[2]).is_empty():
+			var pattern: RegEx = RegEx.create_from_string(str(section[2]))
+			for finding: Dictionary in findings:
+				var found: RegExMatch = pattern.search(str(finding.get("message", "")))
+				if found != null:
+					total = int(found.get_string(1))
+		counted.append([str(section[0]), total])
+	ok = SUPPORT.check(TEST_NAME, "Interop, the ledger and Migration each read the reader's own global",
+		counted, [["Interop", 1], ["the reading ledger", 1], ["Migration", 1]]) and ok
+	EventSheetProjectDoctor.clear_project_scripts()
+	# The guide the reader's own pack keeps beside itself is theirs to fix, in any project.
+	var kept_external: Dictionary = EventSheetDocLibrary._external
+	var kept_loaded: bool = EventSheetDocLibrary._external_loaded
+	EventSheetDocLibrary._external = {
+		"Packs/game_state": {"path": USER_GUIDE, "title": "Game State"},
+		"Packs/move_to": {"path": "res://eventsheet_addons/move_to/guide.md", "title": "Move To"},
+	}
+	EventSheetDocLibrary._external_loaded = true
+	ok = SUPPORT.check(TEST_NAME, "a game the plugin was installed into still audits the guide of its own pack",
+		Array(EventSheetDocsDoctor.guide_pages(false)), ["Packs/game_state"]) and ok
+	EventSheetDocLibrary._external = kept_external
+	EventSheetDocLibrary._external_loaded = kept_loaded
 	return ok
 
 

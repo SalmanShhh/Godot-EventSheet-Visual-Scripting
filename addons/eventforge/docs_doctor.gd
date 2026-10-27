@@ -80,9 +80,9 @@ static func ensure_registered() -> void:
 
 
 ## The section, with the contract every registered check has: append findings, never write inside
-## res://. The guides are the corpus this editor has loaded - the shipped pack guides plus any guide
-## a pack in this project ships beside itself - so a studio's own packs are audited exactly like the
-## ones that came in the box.
+## res://. The guides are the corpus this editor has loaded: a guide a studio's own pack keeps beside
+## itself is always audited, and the guides that came in the box only in the plugin's own project
+## (see `guide_pages`).
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	var pages: PackedStringArray = guide_pages(EventSheetEditorSourceFacts.is_editor_project())
 	# A game that has no guide of its own has nothing for this section to say, and saying "guides

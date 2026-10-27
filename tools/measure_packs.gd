@@ -39,7 +39,10 @@
 #     every pack shares).
 #
 # THE FILES --write REWRITES: `README.md` and `CLAUDE.md`, and in them only the pack-count sentences
-# - the literal immediately before "behavior packs" / "behaviour packs". Nothing else moves. The
+# - the literal immediately before "behavior packs" / "behaviour packs" - plus the list of shipped
+# pack folders in `addons/eventforge/shipped_pack_folders.gd`, which the Doctor reads to tell the
+# plugin's packs from the behaviours, globals and exported packs a user makes in the same folder
+# (those land under `eventsheet_addons/` too, and are the user's own code). Nothing else moves. The
 # CHANGELOG is deliberately NOT in the list: its entries are the count as it stood on a release day,
 # which is history and must stay wrong-by-now.
 #
@@ -69,6 +72,12 @@ const PUBLISH_PATTERN := "(?:save_pack|publish)\\(\\s*[A-Za-z_][A-Za-z0-9_]*\\s*
 ## British spelling). Group 1 is the literal --write replaces. "the save-state seam on 18 packs"
 ## does NOT match, which is the point of requiring the word between them.
 const RECORD_PATTERN := "([0-9]+)(\\s+behaviou?r packs)"
+
+## The list of shipped pack folders the installed plugin carries. It is the measurement above, written
+## down where a user's project has it: the builders stay in this repository, so a project the plugin
+## was installed into can only learn which folders under `eventsheet_addons/` are the plugin's from a
+## file under `addons/`.
+const MANIFEST_PATH := "res://addons/eventforge/shipped_pack_folders.gd"
 
 ## The line a red gate prints so the reader never has to reconstruct the invocation.
 const FIX_LINE := "\"$GODOT\" --headless --path . --script tools/measure_packs.gd -- --write"
@@ -102,6 +111,19 @@ func _init() -> void:
 		else:
 			print("%s: %d sentence(s), %d disagree with %d" % [path, quoted.size(), wrong, count])
 			stale += wrong
+	var shipped: PackedStringArray = shipped_folders(builders_dir)
+	var manifest_stale: bool = not manifest_is_current(shipped)
+	if write and manifest_stale:
+		var handle: FileAccess = FileAccess.open(MANIFEST_PATH, FileAccess.WRITE)
+		if handle == null:
+			push_error("[measure_packs] cannot write %s" % MANIFEST_PATH)
+		else:
+			handle.store_string(manifest_source(shipped))
+			handle.close()
+			print("%s: rewritten with %d folder(s)" % [MANIFEST_PATH, shipped.size()])
+	elif not write:
+		print("%s: %s" % [MANIFEST_PATH, "stale" if manifest_stale else "current"])
+		stale += 1 if manifest_stale else 0
 	if not write and stale > 0:
 		print("stale=%d - fix with: %s" % [stale, FIX_LINE])
 	quit(0)
@@ -181,6 +203,51 @@ static func rewrite_record(path: String, count: int) -> int:
 	handle.store_string(text)
 	handle.close()
 	return changed
+
+
+## Every folder under `res://eventsheet_addons/` a builder writes into, sorted and without
+## duplicates: the pack folders above plus the ones a builder fills another way (`Lib.ship_files`
+## copies `vector_shapes/` whole, so it is shipped without being counted as a pack). Any folder a
+## builder's source names is read as one it ships - a builder that names a sibling's file is naming
+## a shipped folder too. This is the list the shipped-folders file holds.
+static func shipped_folders(builders_dir: String) -> PackedStringArray:
+	var folders: PackedStringArray = PackedStringArray()
+	var regex: RegEx = RegEx.create_from_string("res://eventsheet_addons/([A-Za-z0-9_]+)/")
+	for source: String in _builder_sources(builders_dir):
+		for found: RegExMatch in regex.search_all(source):
+			var folder: String = found.get_string(1)
+			if not folders.has(folder):
+				folders.append(folder)
+	folders.sort()
+	return folders
+
+
+## The whole text of the shipped-folders file for `folders`, one name a line. Pure over the list, so
+## the gate compares bytes and a no-op `--write` leaves the file untouched.
+static func manifest_source(folders: PackedStringArray) -> String:
+	var lines: PackedStringArray = PackedStringArray([
+		"# Godot EventSheets - the behaviour pack folders this plugin ships under eventsheet_addons/.",
+		"#",
+		"# WRITTEN BY tools/measure_packs.gd -- --write, never by hand: it is the folders the pack builders",
+		"# publish, and tests/pack_count_records_test.gd fails when the two disagree. The Doctor reads it to",
+		"# tell the plugin's packs from what a user makes in the same folder - a new behaviour, a new global",
+		"# or an exported pack each lands under eventsheet_addons/ and is the user's own code to report on.",
+		"@tool",
+		"extends RefCounted",
+		"",
+		"## Every shipped pack folder, by its name under eventsheet_addons/, sorted.",
+		"const FOLDERS: Array[String] = [",
+	])
+	for folder: String in folders:
+		lines.append("\t\"%s\"," % folder)
+	lines.append("]")
+	return "\n".join(lines) + "\n"
+
+
+## True when the shipped-folders file on disk is exactly `manifest_source(folders)`.
+static func manifest_is_current(folders: PackedStringArray) -> bool:
+	return FileAccess.file_exists(MANIFEST_PATH) \
+			and FileAccess.get_file_as_string(MANIFEST_PATH) == manifest_source(folders)
 
 
 ## The source text of every builder in `builders_dir`, in sorted order. Leading-underscore files are

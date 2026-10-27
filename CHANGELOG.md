@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Fixed: the Doctor reads your own behaviours, globals and packs again
+
+- New behaviour, New global and Export Pack all write a folder under `eventsheet_addons/`, beside
+  the packs that came with the plugin, and the Doctor had started leaving that whole folder out. A
+  global like `game_state/game_state.gd` was missing from Interop, the reading ledger, Performance
+  and Migration, and the guide your own pack keeps beside itself was missing from Docs. The Doctor
+  now leaves out only the folders the plugin ships, from a list written beside the plugin's code by
+  `tools/measure_packs.gd -- --write` and checked against the pack builders by the suite.
+
 ### Fixed: freeing your plugin's own dock is not an edit of the open scene
 
 - Opening your own editor plugin as a sheet put an amber frame on its On Plugin Disabled event and
