@@ -7567,6 +7567,8 @@ var _event_parents_sheet: Resource = null
 ## Every action of the open sheet, filed under the event whose lane holds it, for the sheet named.
 var _action_events: Dictionary = {}
 var _action_events_sheet: Resource = null
+## The names the same walk found a positive `is` question asked about (see _is_checked_names).
+var _is_checked: Dictionary = {}
 
 
 ## Whether this sheet's theme folds the compiler's "__" bookkeeping inside events.
@@ -7619,43 +7621,68 @@ func _declared_locals(event_row: EventRow) -> Array:
 	return declared
 
 
-## The object map a row's call is read against, with what its event's own `X is Class` questions
-## settle: inside `if body is Player:` the `body` a `body: Node2D` handler was handed IS a Player, as
-## GDScript itself narrows it, so `body.take_damage(damage)` reads with Player's own parameter names
-## ("amount = damage"). Asked of the row's event and every event it is nested in; a negated question
-## settles nothing.
-func _narrowed_class_map(action: Resource) -> Dictionary:
-	var class_map: Dictionary = _reading_class_map()
+## The class a row's own events settle its `receiver` to, or "": inside `if body is Player:` the `body`
+## a `body: Node2D` handler was handed IS a Player, as GDScript itself narrows it, so
+## `body.take_damage(damage)` reads with Player's own parameter names ("amount = damage"). Asked of the
+## row's event and every event it is nested in, innermost answer last; a negated question settles
+## nothing.
+func _narrowed_class_of(action: Resource, receiver: String) -> String:
+	# The cheap door first: most sheets ask no `is` question of anything, and a receiver no event asks
+	# one of is never narrowed, so the walk up the row's events is taken only for a name that could be.
+	if receiver.is_empty() or not _is_checked_names().has(receiver):
+		return ""
 	var owner: EventRow = _event_of_action(action)
 	if owner == null:
-		return class_map
-	var narrowed: Dictionary = {}
+		return ""
+	var settled: String = ""
 	for event_row: EventRow in _event_chain(owner):
 		for condition: Variant in event_row.conditions:
 			var question: ACECondition = condition as ACECondition
 			if question == null or question.negated or question.ace_id != "CompareVar":
 				continue
 			var asked: Dictionary = question.params if not question.params.is_empty() else question.parameters
-			var named: String = str(asked.get("var_name", "")).strip_edges()
 			var as_class: String = str(asked.get("value", "")).strip_edges()
-			if str(asked.get("op", "")) == "is" and not named.is_empty() \
-					and EventSheetDerivedCalls.is_class_text(as_class):
-				narrowed[named] = as_class
-	if narrowed.is_empty():
-		return class_map
-	var merged: Dictionary = class_map.duplicate()
-	merged.merge(narrowed, true)
-	return merged
+			if str(asked.get("op", "")) == "is" and str(asked.get("var_name", "")).strip_edges() == receiver \
+					and _names_a_class(as_class):
+				settled = as_class
+	return settled
+
+
+## True for an engine class or a project class_name. Asked here rather than of the derived-call
+## layer, whose script reaches the Manual: the question is asked on every sheet's first open, and the
+## first open must not compile the docs.
+static func _names_a_class(text: String) -> bool:
+	if text.is_empty() or text.contains("[") or not text.is_valid_identifier():
+		return false
+	if ClassDB.class_exists(StringName(text)):
+		return true
+	for entry: Dictionary in ProjectSettings.get_global_class_list():
+		if str(entry.get("class", "")) == text:
+			return true
+	return false
+
+
+## Every name a positive `X is Class` question of this sheet asks about, {name: true}. Kept with the
+## owner catalog, so it is walked once per sheet and dropped with it.
+func _is_checked_names() -> Dictionary:
+	_owner_catalog_for_current_sheet()
+	if not _variable_owner_catalog.has("is_checked"):
+		_action_events_sheet = null
+		_event_of_action(null)
+		_variable_owner_catalog["is_checked"] = _is_checked
+	return _variable_owner_catalog["is_checked"]
 
 
 ## The event whose action lane holds `action`, or null for a row no event of the sheet holds.
 func _event_of_action(action: Resource) -> EventRow:
 	var sheet: Resource = _viewport._sheet if _viewport != null else null
 	# Walked again on a miss: an edit replaces the rows it commits, so a row met for the first time
-	# is usually one the last walk could not have seen.
+	# is usually one the last walk could not have seen. Only names an `is` question asks about get
+	# here, so a miss is rare.
 	if sheet != _action_events_sheet or not _action_events.has(action):
 		_action_events_sheet = sheet
 		_action_events.clear()
+		_is_checked = {}
 		if sheet != null:
 			for key: String in ["events", "functions"]:
 				_note_action_events(sheet.get(key))
@@ -7670,6 +7697,12 @@ func _note_action_events(entries: Variant) -> void:
 			for action: Variant in (entry as EventRow).actions:
 				if action is Resource:
 					_action_events[action] = entry
+			for condition: Variant in (entry as EventRow).conditions:
+				var question: ACECondition = condition as ACECondition
+				if question != null and not question.negated and question.ace_id == "CompareVar":
+					var asked: Dictionary = question.params if not question.params.is_empty() else question.parameters
+					if str(asked.get("op", "")) == "is":
+						_is_checked[str(asked.get("var_name", "")).strip_edges()] = true
 			_note_action_events((entry as EventRow).sub_events)
 		elif entry is Resource:
 			for key: String in ["events", "rows"]:
@@ -11697,9 +11730,7 @@ static func _collect_code_declared_names(written: String, names: Dictionary) -> 
 		return
 	var bare_lines: PackedStringArray = PackedStringArray()
 	for line: String in written.split("\n"):
-		var bare: String = SheetCompiler._without_string_literals(line)
-		var comment_at: int = bare.find("#")
-		bare_lines.append(bare.left(comment_at) if comment_at >= 0 else bare)
+		bare_lines.append(_code_words_of(line))
 	var code: String = "\n".join(bare_lines)
 	var declared := RegEx.create_from_string("\\b(?:var|for)\\s+([A-Za-z_][A-Za-z0-9_]*)")
 	for found: RegExMatch in declared.search_all(code):
@@ -11707,6 +11738,29 @@ static func _collect_code_declared_names(written: String, names: Dictionary) -> 
 	var inline := RegEx.create_from_string("\\bfunc\\s*(?:[A-Za-z_][A-Za-z0-9_]*\\s*)?\\(([^)]*)\\)")
 	for found: RegExMatch in inline.search_all(code):
 		_collect_parameter_names(found.get_string(1).split(","), names)
+
+
+## One line with the insides of its strings blanked and its `#` comment cut off: what is left is code.
+## Both quote styles and backslash escapes; the quotes themselves stay, so the line keeps its shape.
+static func _code_words_of(line: String) -> String:
+	var kept: String = ""
+	var open_quote: String = ""
+	var index: int = 0
+	while index < line.length():
+		var character: String = line[index]
+		if open_quote.is_empty():
+			if character == "#":
+				break
+			kept += character
+			if character == "\"" or character == "'":
+				open_quote = character
+		elif character == "\\":
+			index += 1
+		elif character == open_quote:
+			kept += character
+			open_quote = ""
+		index += 1
+	return kept
 
 
 ## The names a list of parameters declares, into `names`: `body: Node2D = null` names `body`.
@@ -19067,23 +19121,18 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 				str(params_dict.get("target", "")), str(params_dict.get("method", "")),
 				str(params_dict.get("args", ""))]
 			# A receiver the event's own `is` question settles (`if body is Player:`) is that class
-			# for this row, and the class's own method - with its parameter names - says more than
-			# the plain call sentence below, which knows neither.
-			var narrowed: Dictionary = _narrowed_class_map(action)
+			# for this row, so the call names the values by the class's own parameter names - the
+			# same sentence below, with the names it could not know. Only the parameter names are
+			# asked for, never the method's documentation, so no row pays for the Manual.
 			var receiver: String = str(params_dict.get("target", "")).strip_edges()
-			if str(narrowed.get(receiver, "")) != str(_reading_class_map().get(receiver, "")):
-				# The question is asked of THIS row's own value, so a name the flat maps refuse
-				# because the file uses it twice (a handler's `body` and another's) is answered here.
-				var narrowed_context: Dictionary = context.duplicate()
-				var shadowed: Dictionary = (context.get("shadowed_names", {}) as Dictionary).duplicate()
-				shadowed.erase(receiver)
-				narrowed_context["shadowed_names"] = shadowed
-				var narrowed_call: Dictionary = EventSheetDerivedCalls.derived_pieces(
-					call_code, narrowed_context, narrowed, _reading_autoloads())
-				if not narrowed_call.is_empty():
-					_pending_derived_ace = narrowed_call
-					return {"object": str(narrowed_call.get("object", "")),
-						"segments": _grammar_tone_segments(narrowed_call.get("pieces", []) as Array)}
+			var narrowed_class: String = _narrowed_class_of(action, receiver)
+			if not narrowed_class.is_empty():
+				var parameter_names: PackedStringArray = EventSheetViewportReadingRows.project_method_parameter_names(
+					narrowed_class, str(params_dict.get("method", "")))
+				if not parameter_names.is_empty():
+					var named_call: Dictionary = EventSheetSentence.call_reading(call_code, context, parameter_names)
+					if not named_call.is_empty():
+						return named_call
 			var settled: Dictionary = EventSheetSentence.statement(call_code, context)
 			if not settled.is_empty():
 				return settled
@@ -19096,7 +19145,7 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			# derived style. A settled sentence above it still wins outright, which is the whole
 			# ordering: curated first, derived second, the general reading last.
 			var derived_call: Dictionary = EventSheetDerivedCalls.derived_pieces(
-				call_code, context, narrowed, _reading_autoloads())
+				call_code, context, _reading_class_map(), _reading_autoloads())
 			if not derived_call.is_empty():
 				_pending_derived_ace = derived_call
 				return {"object": str(derived_call.get("object", "")),
