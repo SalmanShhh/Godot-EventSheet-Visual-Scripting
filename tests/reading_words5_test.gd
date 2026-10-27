@@ -41,17 +41,17 @@ static var ROOT_READINGS: PackedStringArray = PackedStringArray([
 	# The question a @tool script asks about itself
 	"System ▸ is in the editor",
 	# The tick switches and the process mode
-	"Node2D ▸ Set Every tick (physics) deactivated",
-	"Node2D ▸ Set Every tick (draw) activated",
-	"Node2D ▸ Set input deactivated",
-	"Node2D ▸ Set disabled",
+	"opened_script_words5_root ▸ Set Every tick (physics) deactivated",
+	"opened_script_words5_root ▸ Set Every tick (draw) activated",
+	"opened_script_words5_root ▸ Set input deactivated",
+	"opened_script_words5_root ▸ Set disabled",
 	# The wait, then the step that follows it
 	"System ▸ ⏳ Wait 2 seconds then Call explode",
 	# The drawing verbs
-	"Node2D ▸ Draw line (0, 0) to (100, 0), red",
-	"Node2D ▸ Draw rectangle Rect2(0, 0, 10, 10), blue",
-	"Node2D ▸ Draw circle at (4, 4), radius 2, green",
-	"Node2D ▸ Redraw",
+	"opened_script_words5_root ▸ Draw line (0, 0) to (100, 0), red",
+	"opened_script_words5_root ▸ Draw rectangle Rect2(0, 0, 10, 10), blue",
+	"opened_script_words5_root ▸ Draw circle at (4, 4), radius 2, green",
+	"opened_script_words5_root ▸ Redraw",
 	# Named chips on an emit, on one of the sheet's own functions, and on the optional
 	# engine argument that had none
 	"System ▸ Signal On Hit   damage = 3",
@@ -61,7 +61,7 @@ static var ROOT_READINGS: PackedStringArray = PackedStringArray([
 ## And the PART file, which sits on a child node of the same scene: its _ready is that object being
 ## created, not the layout opening.
 static var PART_READINGS: PackedStringArray = PackedStringArray([
-	"CharacterBody2D ▸ On created"
+	"opened_script_words5_part ▸ On created"
 ])
 
 

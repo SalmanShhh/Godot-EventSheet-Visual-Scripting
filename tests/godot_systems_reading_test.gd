@@ -108,8 +108,8 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	# A Send row belongs to the object whose function the message is (this file has no
 	# class_name, so its object is what it extends), whether the row is the grammar's reading of a
 	# typed line or the lifted Send action itself.
-	"CharacterBody2D ▸ Send take_damage to the host   amount = 10",
-	"CharacterBody2D ▸ Send take_damage to everyone 10",
+	"eventforge_godot_systems_reading ▸ Send take_damage to the host   amount = 10",
+	"eventforge_godot_systems_reading ▸ Send take_damage to everyone 10",
 	"On message take_damage",
 	"Multiplayer ▸ Is host",
 	"Multiplayer ▸ Owns this object"

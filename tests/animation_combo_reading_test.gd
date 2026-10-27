@@ -99,9 +99,9 @@ static var SHIPPED_TEMPLATES: Dictionary = {
 
 ## Every reading the opened file must contain, one per shape these items claim.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
-	"CharacterBody2D ▸ Combo Box ▸ Press input button",
-	"CharacterBody2D ▸ Combo Box ▸ On combo \"punch punch kick\"",
-	"CharacterBody2D ▸ Combo Box ▸ On combo \"kick kick\"",
+	"eventforge_animation_combo_reading ▸ Combo Box ▸ Press input button",
+	"eventforge_animation_combo_reading ▸ Combo Box ▸ On combo \"punch punch kick\"",
+	"eventforge_animation_combo_reading ▸ Combo Box ▸ On combo \"kick kick\"",
 	"Set animation to \"uppercut\" (play from beginning)",
 	"Set animation to \"sweep\" (play from beginning)",
 	"System ▸ Hitstop for 0.08 seconds",

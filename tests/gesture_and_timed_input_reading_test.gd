@@ -104,8 +104,8 @@ static var SHIPPED_TEMPLATES: Dictionary = {
 ## Every reading the opened file must contain, one per shape these items claim.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ Set neutral to Touch.Acceleration",
-	"CharacterBody3D ▸ Steer by tilt x at tilt strength",
-	"CharacterBody3D ▸ Aim by gyro",
+	"eventforge_gesture_timed_input_reading ▸ Steer by tilt x at tilt strength",
+	"eventforge_gesture_timed_input_reading ▸ Aim by gyro",
 	"System ▸ Open input window \"dodge\" for seconds"
 ])
 

@@ -75,12 +75,12 @@ func _gui_input(event: InputEvent) -> void:
 
 ## What the opened file must read as, row by row.
 static var OPENED_READINGS: PackedStringArray = PackedStringArray([
-	"Control ▸ On draw",
-	"Control ▸ Draw rectangle (0, 0) size size, style.background_color",
-	"Control ▸ Draw line (0, 0) to size, style.guide_color width 1",
-	"Mouse ▸ On left button clicked (on Control)",
-	"Mouse ▸ On mouse moved (on Control)",
-	"Control ▸ Redraw"
+	"eventforge_canvas_dialog_reading_test ▸ On draw",
+	"eventforge_canvas_dialog_reading_test ▸ Draw rectangle (0, 0) size size, style.background_color",
+	"eventforge_canvas_dialog_reading_test ▸ Draw line (0, 0) to size, style.guide_color width 1",
+	"Mouse ▸ On left button clicked (on eventforge_canvas_dialog_reading_test)",
+	"Mouse ▸ On mouse moved (on eventforge_canvas_dialog_reading_test)",
+	"eventforge_canvas_dialog_reading_test ▸ Redraw"
 ])
 
 

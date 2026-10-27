@@ -159,20 +159,20 @@ static var EXPRESSION_READINGS: Dictionary = {
 ## The object column names the class an opened script IS, because that is what the sheet knows itself
 ## as before anyone gives its object a name of their own.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
-	"CharacterBody2D ▸ Drag & Drop ▸ Start dragging",
-	"CharacterBody2D ▸ Drag & Drop ▸ Drop",
-	"CharacterBody2D ▸ Drag & Drop ▸ Remember the grab offset",
-	"CharacterBody2D ▸ Drag & Drop ▸ Follow the cursor (keeping the grab offset)",
-	"CharacterBody2D ▸ Drag & Drop ▸ Is dragging",
-	"CharacterBody2D ▸ Jump-thru ▸ Set enabled (one-way: solid from above only)",
-	"CharacterBody2D ▸ Solid ▸ Set disabled",
+	"eventforge_behavior_words_reading ▸ Drag & Drop ▸ Start dragging",
+	"eventforge_behavior_words_reading ▸ Drag & Drop ▸ Drop",
+	"eventforge_behavior_words_reading ▸ Drag & Drop ▸ Remember the grab offset",
+	"eventforge_behavior_words_reading ▸ Drag & Drop ▸ Follow the cursor (keeping the grab offset)",
+	"eventforge_behavior_words_reading ▸ Drag & Drop ▸ Is dragging",
+	"eventforge_behavior_words_reading ▸ Jump-thru ▸ Set enabled (one-way: solid from above only)",
+	"eventforge_behavior_words_reading ▸ Solid ▸ Set disabled",
 	# Re-pin: the named-layer verbs lift, so sitting on a layer is now the Be On Layer row.
 	"System ▸ Be on layer 1",
-	"CharacterBody2D ▸ Is overlapping at offset (0, 1) (a solid)",
+	"eventforge_behavior_words_reading ▸ Is overlapping at offset (0, 1) (a solid)",
 	"Advanced Random ▸ Set seed to \"level-1\"",
 	"Advanced Random ▸ Set noise type to Perlin",
 	"System ▸ Set drop to choose weighted(\"coin\" 70, \"gem\" 20, \"nothing\" 10)",
-	"Return CharacterBody2D has line of sight to t (within sight_range)",
+	"Return eventforge_behavior_words_reading has line of sight to t (within sight_range)",
 	# The instantiate, the layer it went onto, where it was put and the property set on the way
 	# in are ONE row; the Local row that holds the new object stays where the event declares it.
 	"System ▸ Create object enemy_scene on layer FX at spawn_point.global_position (as e)   rotation = angle",

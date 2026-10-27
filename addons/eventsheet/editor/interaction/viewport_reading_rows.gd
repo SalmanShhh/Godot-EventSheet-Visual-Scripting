@@ -1831,6 +1831,18 @@ static func script_object_name(sheet: EventSheetResource) -> String:
 	# script after it would send a reader looking for the object on the wrong node.
 	if sheet.behavior_mode or _declares_host(sheet):
 		return ""
+	# A script with no class name is still an object of its own: an autoload is reached by its
+	# singleton name, any other file by its name as written (`spike_ring`), the same word its variables
+	# and its actions already read under. The class it extends is only the icon in front of that name.
+	var singleton: String = sheet.autoload_singleton_name()
+	if not singleton.is_empty():
+		return singleton
+	var path: String = str(sheet.external_source_path).strip_edges()
+	if path.is_empty():
+		path = sheet.resource_path.strip_edges()
+	var file_name: String = path.get_file().get_basename().strip_edges()
+	if not file_name.is_empty() and EventSheetIdentifierRules.is_valid(file_name):
+		return file_name
 	var host_class: String = sheet.host_class.strip_edges()
 	return host_class if not host_class.is_empty() and host_class != "Node" else ""
 

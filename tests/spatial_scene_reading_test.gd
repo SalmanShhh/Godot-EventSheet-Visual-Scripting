@@ -100,19 +100,19 @@ func dress_the_knight(hp: float) -> void:
 """
 
 ## Every reading the opened file must contain, one per shape these items claim. The object is the
-## class the script extends, because this file declares no class_name of its own.
+## script's own name as written, because this file declares no class_name of its own.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	# The five-line run is ONE action, and the fall under it says what it is
-	"CharacterBody3D ▸ Move relative to the camera along input at run_speed (flattened to the ground)",
-	"CharacterBody3D ▸ Fall at 30 (gravity)",
+	"eventforge_spatial_scene_reading ▸ Move relative to the camera along input at run_speed (flattened to the ground)",
+	"eventforge_spatial_scene_reading ▸ Fall at 30 (gravity)",
 	# The angle written out, and the arm the camera hangs off
-	"CharacterBody3D ▸ Orbit moon at radius moon_radius angle moon_angle (on the ground plane)",
+	"eventforge_spatial_scene_reading ▸ Orbit moon at radius moon_radius angle moon_angle (on the ground plane)",
 	"arm ▸ Set camera distance to 6",
 	# The blend tree, under the object's Animation aspect
-	"CharacterBody3D ▸ Animation ▸ Set Locomotion blend to pace",
-	"CharacterBody3D ▸ Animation ▸ Go to state \"Jump\"",
-	"CharacterBody3D ▸ Animation ▸ Set animation speed to 0.5",
-	"CharacterBody3D ▸ Animation ▸ Play one-shot animation Shoot",
+	"eventforge_spatial_scene_reading ▸ Animation ▸ Set Locomotion blend to pace",
+	"eventforge_spatial_scene_reading ▸ Animation ▸ Go to state \"Jump\"",
+	"eventforge_spatial_scene_reading ▸ Animation ▸ Set animation speed to 0.5",
+	"eventforge_spatial_scene_reading ▸ Animation ▸ Play one-shot animation Shoot",
 	# The sound that carries, the band a mesh is drawn in, and the two switches
 	"horn ▸ Set hearing distance to 40",
 	"horn ▸ Set falloff to 3",
@@ -139,8 +139,8 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 static var FORBIDDEN_READINGS: PackedStringArray = PackedStringArray([
 	# The four lines the run swallowed, each a perfectly good row on its own before it
 	"dir ▸ Set y to 0",
-	"CharacterBody3D ▸ Set velocity X to dir X * run_speed",
-	"CharacterBody3D ▸ Subtract 30 * dt from velocity Y",
+	"eventforge_spatial_scene_reading ▸ Set velocity X to dir X * run_speed",
+	"eventforge_spatial_scene_reading ▸ Subtract 30 * dt from velocity Y",
 	# The property writes these readings renamed
 	"horn ▸ Set max distance to 40",
 	"rock ▸ Set transparency to 0.4",

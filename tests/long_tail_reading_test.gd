@@ -83,7 +83,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ ⏳ Wait for it to finish",
 	# The two runs whose lines only mean anything together, each ONE row. The look belongs
 	# to the script's own object, which this file names by the class it extends.
-	"Node3D ▸ Mouse look",
+	"eventforge_long_tail_reading ▸ Mouse look",
 	"System ▸ Crossfade music a → music b by t"
 ])
 

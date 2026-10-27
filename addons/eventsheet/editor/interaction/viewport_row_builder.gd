@@ -16903,7 +16903,10 @@ func _object_label_for(provider_id: String, ace_id: String) -> String:
 	if definition != null:
 		var node_type: String = str(definition.metadata.get("node_type", "")).strip_edges()
 		if not node_type.is_empty():
-			return node_type
+			# A line with no target of its own acts on the script's own node, and that object has a
+			# name: `Player`, `spike_ring`. The class it extends is the icon in front of the name.
+			var own: String = _own_object_for_class(node_type)
+			return own if not own.is_empty() else node_type
 	if provider_id.is_empty() or provider_id == "Core":
 		# An event sheet treats the input devices as OBJECTS, not as part of System: a captured-cursor
 		# check reads "Mouse > mouse is captured", a key test "Keyboard > Key Space is down". The
@@ -16925,6 +16928,25 @@ func _object_label_for(provider_id: String, ace_id: String) -> String:
 			return WINDOW_OBJECT
 		return "System"
 	return provider_id
+
+
+## The script's own object name when a line about a `node_type` can only be about the script's own
+## node - the script extends that class or one below it - else "". A behaviour pack's lines are about
+## the node it is attached to, so a pack keeps the class word.
+func _own_object_for_class(node_type: String) -> String:
+	var sheet: EventSheetResource = _viewport._sheet if _viewport != null else null
+	if sheet == null:
+		return ""
+	var own: String = _script_object_name().strip_edges()
+	if own.is_empty():
+		return ""
+	var host: String = sheet.host_class.strip_edges()
+	if host == node_type:
+		return own
+	if ClassDB.class_exists(StringName(host)) and ClassDB.class_exists(StringName(node_type)) \
+			and ClassDB.is_parent_class(StringName(host), StringName(node_type)):
+		return own
+	return ""
 
 
 ## A call to a sheet Function - the row IS an abstraction (a named verb), so the renderer marks it "ƒ"

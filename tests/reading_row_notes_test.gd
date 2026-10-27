@@ -39,7 +39,7 @@ func chase() -> void:
 ## Every reading the opened file must contain. The note is drawn as its own trailing piece, so a row
 ## with one reads as the sentence plus the note - which is what these pin.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
-	"Node2D ▸ Set position to position.move_toward(target, speed)   💬 TODO tweak",
+	"eventforge_reading_row_notes ▸ Set position to position.move_toward(target, speed)   💬 TODO tweak",
 	"System ▸ Subtract 1 from hp   💬 ouch",
 	"System ▸ Signal On Died   💬 FIXME: this double-fires on respawn",
 	"💬 room to breathe"

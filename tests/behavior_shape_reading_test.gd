@@ -139,23 +139,23 @@ static var CONDITION_READINGS: Dictionary = {
 ## line the importer claimed for a shipped row reads through that row's own words instead, which is
 ## why the turn toward the target is absent here and pinned in the recogniser gate above.
 static var EXPECTED_ROW_READINGS: PackedStringArray = PackedStringArray([
-	"Node2D ▸ Bullet  Set speed to speed accelerating by accel",
-	"Node2D ▸ Bullet  Set angle of motion to angle",
-	"Node2D ▸ Bullet  Set gravity to gravity",
-	"Node2D ▸ Bullet  Move",
-	"Node2D ▸ Bullet  Distance travelled > range_px",
-	"Node2D ▸ Turret  Has target",
-	"Node2D ▸ Move To  Move to position p at speed",
-	"Node2D ▸ Move To  Start moving",
-	"Node2D ▸ Move To  Move toward destination at speed",
-	"Node2D ▸ Move To  Has arrived",
-	"Node2D ▸ Move To  Stop",
-	"Node2D ▸ Rotate  Rotate clockwise at rotate_speed (degrees per second)",
-	"Node2D ▸ Wrap  Wrap around layout horizontally",
-	"Node2D ▸ Bound To  Bound to layout (inside (0, 0) - screen)",
-	"Node2D ▸ Pin  Pin to anchor (position · offset pin_offset)",
-	"Node2D ▸ Pin  Pin to anchor (angle)",
-	"Node2D ▸ Fade  Fade out over 1 seconds (then destroy)"
+	"eventforge_behavior_shape_reading ▸ Bullet  Set speed to speed accelerating by accel",
+	"eventforge_behavior_shape_reading ▸ Bullet  Set angle of motion to angle",
+	"eventforge_behavior_shape_reading ▸ Bullet  Set gravity to gravity",
+	"eventforge_behavior_shape_reading ▸ Bullet  Move",
+	"eventforge_behavior_shape_reading ▸ Bullet  Distance travelled > range_px",
+	"eventforge_behavior_shape_reading ▸ Turret  Has target",
+	"eventforge_behavior_shape_reading ▸ Move To  Move to position p at speed",
+	"eventforge_behavior_shape_reading ▸ Move To  Start moving",
+	"eventforge_behavior_shape_reading ▸ Move To  Move toward destination at speed",
+	"eventforge_behavior_shape_reading ▸ Move To  Has arrived",
+	"eventforge_behavior_shape_reading ▸ Move To  Stop",
+	"eventforge_behavior_shape_reading ▸ Rotate  Rotate clockwise at rotate_speed (degrees per second)",
+	"eventforge_behavior_shape_reading ▸ Wrap  Wrap around layout horizontally",
+	"eventforge_behavior_shape_reading ▸ Bound To  Bound to layout (inside (0, 0) - screen)",
+	"eventforge_behavior_shape_reading ▸ Pin  Pin to anchor (position · offset pin_offset)",
+	"eventforge_behavior_shape_reading ▸ Pin  Pin to anchor (angle)",
+	"eventforge_behavior_shape_reading ▸ Fade  Fade out over 1 seconds (then destroy)"
 ])
 
 

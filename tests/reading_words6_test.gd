@@ -113,17 +113,17 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ Delete key \"potion\" from inventory",
 	"System ▸ Append \"!\" to label",
 	# The deferred family says the delay out loud
-	"CharacterBody2D ▸ Call Reset (at end of frame)",
-	"CharacterBody2D ▸ Set visible to true (at end of frame)",
+	"eventforge_reading_words6 ▸ Call Reset (at end of frame)",
+	"eventforge_reading_words6 ▸ Set visible to true (at end of frame)",
 	# The project's own names for its physics layers
 	# Re-pin: the line is now the ROW a picker would have authored - "Be on layer Enemies" - because
 	# the named-layer verbs lift. The project's own word for the layer is still what the row says;
 	# what changed is that the sentence and the picker now agree, so editing the layer is a field
 	# rather than a script block.
 	"System ▸ Be on layer Enemies",
-	"CharacterBody2D ▸ Set collision layers to \"World\", \"Player\"",
+	"eventforge_reading_words6 ▸ Set collision layers to \"World\", \"Player\"",
 	# A number written where an enum is expected
-	"CharacterBody2D ▸ Set process_mode to Always",
+	"eventforge_reading_words6 ▸ Set process_mode to Always",
 	"System ▸ Set dir to DOWN",
 	"art ▸ Set texture_filter to Nearest",
 	# Re-pin: alignment is a TEXT reading now, and the sheet's own word for the middle of a line
@@ -131,9 +131,9 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"caption ▸ Set horizontal alignment to centre",
 	# Numbers the way a person writes them
 	"System ▸ Set half to 50%",
-	"CharacterBody2D ▸ Set X to 300",
-	"CharacterBody2D ▸ Set Y to 1,000,000",
-	"CharacterBody2D ▸ Set angle (radians) to π/2",
+	"eventforge_reading_words6 ▸ Set X to 300",
+	"eventforge_reading_words6 ▸ Set Y to 1,000,000",
+	"eventforge_reading_words6 ▸ Set angle (radians) to π/2",
 	"System ▸ Set velocity X to 1000",
 	# The poll reads as the trigger it is, under the device the project bound it to
 	"Keyboard ▸ On \"jump\" pressed",
@@ -153,7 +153,7 @@ static var FORBIDDEN_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ Add \"!\" to label",
 	"CharacterBody2D ▸ Set collision with layer 2 on",
 	"CharacterBody2D ▸ Set process mode to 3",
-	"CharacterBody2D ▸ Set X to 300.0",
+	"eventforge_reading_words6 ▸ Set X to 300.0",
 	"System ▸ Set velocity X to 1e3"
 ])
 

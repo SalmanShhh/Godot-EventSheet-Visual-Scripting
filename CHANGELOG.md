@@ -9,6 +9,11 @@
   an `enemy.gd` with a `class Patrol` were each flagged under the events that set them. A local
   declared in the function (`var direction := ...`) and a function's own parameter (`body`) are no
   longer flagged either; a name the file really does not declare still is.
+- A line about the script itself reads under the script's own name, with the class it extends as the
+  icon in front: `spike_ring > Redraw` and `enemy > Wire On Body Entered`, where they read
+  `Node2D` and `Area2D`, and an autoload's under its singleton name (`GameState`). The setter
+  events of a script with no class_name used to say `Node2D` beside actions that said `spike_ring`
+  for the same node. A behaviour pack still names the node it sits on by its class.
 
 ### Fixed: a game you wrote yourself reads as yours, beside the installed packs
 

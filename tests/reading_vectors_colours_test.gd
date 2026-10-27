@@ -44,7 +44,7 @@ func _process(delta: float) -> void:
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ Set tint to red, 20% darker",
 	"System ▸ Set tint to red at 50% opacity",
-	"Node2D ▸ Ease colour toward white at 5"
+	"eventforge_reading_vectors_colours ▸ Ease colour toward white at 5"
 ])
 
 ## Readings the file must NOT contain: the code each shape replaced. A reading that silently stops

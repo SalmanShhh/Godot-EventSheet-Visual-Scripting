@@ -74,23 +74,23 @@ func _physics_process(delta: float) -> void:
 ## Every reading the opened file must contain, one per shape this batch claims.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	# The platform words, on a body
-	"CharacterBody2D ▸ Is on floor",
-	"CharacterBody2D ▸ Is touching ceiling",
-	"CharacterBody2D ▸ Is moving",
+	"eventforge_reading_words7 ▸ Is on floor",
+	"eventforge_reading_words7 ▸ Is touching ceiling",
+	"eventforge_reading_words7 ▸ Is moving",
 	# The cooldown idiom, both halves. The name lens spells the variables as words on the
 	# canvas, which is why these read "last shot" where the grammar's own answer says "last_shot".
 	"System ▸ 0.5 seconds have passed since last_shot",
 	"System ▸ Set last_shot to now",
 	# One condition per question
-	"CharacterBody2D ▸ angle is within 10° of target_angle",
-	"CharacterBody2D ▸ is within 100 of (0, 0)",
-	"CharacterBody2D ▸ is inside area 0, 0 - 640 × 360",
-	"CharacterBody2D ▸ speed is about 0 (not moving)",
+	"eventforge_reading_words7 ▸ angle is within 10° of target_angle",
+	"eventforge_reading_words7 ▸ is within 100 of (0, 0)",
+	"eventforge_reading_words7 ▸ is inside area 0, 0 - 640 × 360",
+	"eventforge_reading_words7 ▸ speed is about 0 (not moving)",
 	# The layout edge. The `or` of the two edges arrives as two lifted conditions (the
 	# importer files each comparison as its own row), so the reading - both edges
 	# collapsed into one line - is what a test written on the raw condition text gets; here the
 	# right-hand edge is the one this file proves reaches the canvas.
-	"CharacterBody2D ▸ Is outside layout (right)",
+	"eventforge_reading_words7 ▸ Is outside layout (right)",
 	# A roll under a probability
 	"System ▸ 30% chance",
 	# The scene-flow words, always on

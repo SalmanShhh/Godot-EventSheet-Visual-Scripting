@@ -125,7 +125,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ set Z order to 5",
 	"System ▸ set Z order absolute",
 	"System ▸ move to top of layer",
-	"FX ▸ Add child Node2D keeping its place",
+	"FX ▸ Add child eventforge_around_objects_reading keeping its place",
 	"System ▸ set layer order to 10",
 	"System ▸ set font size to 32",
 	"label ▸ Set horizontal alignment to centre",
