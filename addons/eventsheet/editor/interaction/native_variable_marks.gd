@@ -45,6 +45,14 @@ const SWATCH_WIDTH := 34.0
 const SWATCH_HEIGHT := 14.0
 const SWATCH_GAP := 6.0
 
+## The code shape a badge's card quotes when the row has no variable to read it from.
+const BADGE_CODE_SHAPES: Dictionary = {
+	"inspector": "@export",
+	"range": "@export_range(...)",
+	"tooltip": "## ...",
+	"storage": "@export_storage",
+}
+
 ## The prefix the compiler's own bookkeeping members start with (the Every X Seconds clock, a spawn's
 ## temporary), which an Inspector-style sheet leaves out of its variable rows.
 const COMPILER_VARIABLE_PREFIX := "__"
@@ -54,9 +62,12 @@ const BADGE_INSPECTOR := "inspector"
 const BADGE_RANGE := "range"
 const BADGE_TOOLTIP := "tooltip"
 const BADGE_SAVED := "saved"
+## Saved with the scene but hidden from the Inspector (`@export_storage`): it stands where the eye
+## would, so a variable the Inspector never shows never wears the eye.
+const BADGE_STORAGE := "storage"
 
 ## A badge tile and the icon inside it, and the room between two tiles and before the first.
-const TILE_SIZE := 18.0
+const TILE_SIZE := 20.0
 const TILE_ICON := 12.0
 const TILE_GAP := 2.0
 const TILE_LEAD := 8.0
@@ -445,10 +456,13 @@ static func _number_text(value: float) -> String:
 
 
 ## The badges a variable earns, in their standing order.
-static func badges_for(exported: bool, has_range: bool, has_doc: bool, saved: bool) -> PackedStringArray:
+static func badges_for(exported: bool, has_range: bool, has_doc: bool, saved: bool,
+		storage: bool = false) -> PackedStringArray:
 	var badges := PackedStringArray()
 	if exported:
 		badges.append(BADGE_INSPECTOR)
+	elif storage:
+		badges.append(BADGE_STORAGE)
 	if has_range:
 		badges.append(BADGE_RANGE)
 	if has_doc:
@@ -456,6 +470,16 @@ static func badges_for(exported: bool, has_range: bool, has_doc: bool, saved: bo
 	if saved:
 		badges.append(BADGE_SAVED)
 	return badges
+
+
+## Whether a variable is `@export_storage`: saved with the scene, never listed in the Inspector.
+## Read from the structured attribute the importer lifts, or the hint it kept verbatim.
+static func is_storage(variable: LocalVariable) -> bool:
+	if variable == null:
+		return false
+	if variable.attributes is Dictionary and bool((variable.attributes as Dictionary).get("storage", false)):
+		return true
+	return variable.export_hint.strip_edges() == "@export_storage"
 
 
 ## Whether a variable is kept in a range by `@export_range`, read from what the importer stored: the
@@ -507,9 +531,57 @@ static func badge_tooltip(badge: String, variable: LocalVariable = null) -> Stri
 			said = EventSheetL10n.translate("Has a description: its ## comment, which the Inspector shows as its tooltip.")
 		BADGE_SAVED:
 			said = EventSheetL10n.translate("Kept by the Save System under this variable's name.")
+		BADGE_STORAGE:
+			said = EventSheetL10n.translate("Saved with the scene, but designers never see it in the Inspector.")
 	var code: String = _badge_code(badge, variable)
 	return said if code.is_empty() else "%s
 %s" % [said, code]
+
+
+## The hover card a badge tile opens, in the words the head bar's card reads: a bold title, one
+## sentence, and the line of code that earns the tile in the muted code face. The shape
+## sheet_head_card.gd draws ({"id", "title", "mono", "lines", "width", "anchor"}); {} for no badge.
+static func badge_card(badge: String, variable: LocalVariable = null) -> Dictionary:
+	var title: String = ""
+	var said: String = ""
+	match badge:
+		BADGE_INSPECTOR:
+			title = EventSheetL10n.translate("In the Inspector")
+			said = EventSheetL10n.translate("Designers can change this per object in the Inspector, without opening the script.")
+		BADGE_RANGE:
+			title = EventSheetL10n.translate("Kept in a range")
+			said = _range_sentence(variable)
+		BADGE_TOOLTIP:
+			title = EventSheetL10n.translate("Has a description")
+			said = EventSheetL10n.translate("Its ## comment line, which the Inspector shows as the hover tooltip.")
+		BADGE_SAVED:
+			title = EventSheetL10n.translate("Saved")
+			said = EventSheetL10n.translate("Kept by the Save System under this variable's name.")
+		BADGE_STORAGE:
+			title = EventSheetL10n.translate("Saved, hidden")
+			said = EventSheetL10n.translate("Saved with the scene, but designers never see it in the Inspector.")
+	if title.is_empty():
+		return {}
+	var code: String = _badge_code(badge, variable)
+	if code.is_empty():
+		code = str(BADGE_CODE_SHAPES.get(badge, ""))
+	var name_text: String = variable.name if variable != null else ""
+	return {"id": "badge:%s:%s" % [badge, name_text], "title": title, "mono": code,
+		"lines": PackedStringArray([said]) if not said.is_empty() else PackedStringArray(),
+		"width": 250.0, "anchor": "right", "code_last": true}
+
+
+## "A slider in the Inspector, from 0 to 600." - the range card's sentence, from the limits the
+## importer stored; the plain sentence when the limits are not known.
+static func _range_sentence(variable: LocalVariable) -> String:
+	if variable != null and variable.attributes is Dictionary \
+			and (variable.attributes as Dictionary).get("range") is Dictionary:
+		var limits: Dictionary = (variable.attributes as Dictionary)["range"]
+		var low: String = str(limits.get("min", "")).strip_edges()
+		var high: String = str(limits.get("max", "")).strip_edges()
+		if not low.is_empty() and not high.is_empty():
+			return EventSheetL10n.translate("A slider in the Inspector, from %s to %s.") % [low, high]
+	return EventSheetL10n.translate("A slider in the Inspector, kept between limits.")
 
 
 ## The code a badge stands for on `variable`, or "" when the row has none to show.
@@ -520,6 +592,8 @@ static func _badge_code(badge: String, variable: LocalVariable) -> String:
 	match badge:
 		BADGE_INSPECTOR:
 			return "@export"
+		BADGE_STORAGE:
+			return "@export_storage"
 		BADGE_RANGE:
 			if attributes.get("range") is Dictionary:
 				var limits := PackedStringArray()
@@ -609,7 +683,19 @@ static func badge_ink(event_style: EventSheetEventStyle, badge: String, foregrou
 			return style.tooltip_badge_foreground_color if foreground else style.tooltip_badge_background_color
 		BADGE_SAVED:
 			return style.saved_badge_foreground_color if foreground else style.saved_badge_background_color
+		BADGE_STORAGE:
+			# The hidden tile is the eye's pair with its colour taken out: grey, as a thing the
+			# Inspector does not show. Derived, so every theme has it without a token of its own.
+			return _greyed(style.inspector_badge_foreground_color if foreground \
+				else style.inspector_badge_background_color)
 	return style.inspector_badge_foreground_color if foreground else style.inspector_badge_background_color
+
+
+## `colour` with its hue taken out, at the same lightness - how the hidden tile stays readable on
+## the theme's own ground.
+static func _greyed(colour: Color) -> Color:
+	var level: float = colour.get_luminance()
+	return Color(level, level, level, colour.a)
 
 
 ## The style a badge asks when the canvas has none: the style's own defaults, made once.
@@ -649,6 +735,19 @@ static func draw_badge_tile(control: CanvasItem, rect: Rect2, badge: String, for
 			control.draw_polyline(PackedVector2Array([_at(icon, 2.5, 3.5), _at(icon, 13.5, 3.5),
 				_at(icon, 13.5, 10.5), _at(icon, 7.5, 10.5), _at(icon, 4.5, 13.0), _at(icon, 4.5, 10.5),
 				_at(icon, 2.5, 10.5), _at(icon, 2.5, 3.5)]), foreground, stroke, true)
+		BADGE_STORAGE:
+			# The eye, struck through: kept, but not shown.
+			var upper_hidden := PackedVector2Array()
+			var lower_hidden := PackedVector2Array()
+			for step: int in range(13):
+				var t: float = float(step) / 12.0
+				var x: float = lerpf(2.0, 14.0, t)
+				var lift: float = sin(t * PI) * 4.0
+				upper_hidden.append(_at(icon, x, 8.0 - lift))
+				lower_hidden.append(_at(icon, x, 8.0 + lift))
+			control.draw_polyline(upper_hidden, foreground, stroke, true)
+			control.draw_polyline(lower_hidden, foreground, stroke, true)
+			control.draw_line(_at(icon, 3.0, 13.0), _at(icon, 13.0, 3.0), foreground, stroke, true)
 		BADGE_SAVED:
 			# A disk: its body, the shutter and the label.
 			control.draw_polyline(PackedVector2Array([_at(icon, 3.0, 2.5), _at(icon, 11.0, 2.5),

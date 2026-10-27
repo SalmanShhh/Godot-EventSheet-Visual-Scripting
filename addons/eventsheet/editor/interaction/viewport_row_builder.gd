@@ -11964,21 +11964,15 @@ func _build_variable_row(
 			and source_variable.attributes is Dictionary:
 		description_text = str((source_variable.attributes as Dictionary).get("tooltip", "")).strip_edges() \
 			.get_slice("\n", 0).strip_edges()
+	# One tile per fact, in every look: in the Inspector, kept in a range, has a description, kept
+	# by the Save System. A variable `@export_storage` saves is hidden from the Inspector, so it earns
+	# the saved-but-hidden tile in place of the eye.
 	var variable_badges: PackedStringArray = NativeVariableMarks.badges_for(
-		bool(options.get("exported", false)),
+		bool(options.get("exported", false)) and not NativeVariableMarks.is_storage(source_variable),
 		NativeVariableMarks.has_range(source_variable),
 		not description_text.is_empty(),
-		_is_saved_variable(scope_label, var_name, declared_in))
-	# The quiet look: one mark on the row (the Inspector eye), and what the others and the `##` note
-	# would say in the name's hover instead.
-	var quiet_marks: bool = inspector_rows and _viewport._get_event_style().variable_quiet_marks
-	var hovered_marks := PackedStringArray()
-	if quiet_marks:
-		for badge: String in variable_badges:
-			if badge != NativeVariableMarks.BADGE_INSPECTOR and badge != NativeVariableMarks.BADGE_TOOLTIP:
-				hovered_marks.append(NativeVariableMarks.badge_tooltip(badge).get_slice("\n", 0))
-		variable_badges = PackedStringArray([NativeVariableMarks.BADGE_INSPECTOR]) \
-			if variable_badges.has(NativeVariableMarks.BADGE_INSPECTOR) else PackedStringArray()
+		_is_saved_variable(scope_label, var_name, declared_in),
+		NativeVariableMarks.is_storage(source_variable))
 	# The kind cue: an outlined `x` in the badge column, so a declaration is unmistakable while
 	# scrolling. A mark, never a word pill. An Inspector-style row has none: its type leads it.
 	row_data.spans = []
@@ -12225,10 +12219,6 @@ func _build_variable_row(
 	if inspector_rows:
 		for note_span: SemanticSpan in notes_target.spans:
 			hover_lines.append(note_span.text)
-		if quiet_marks:
-			if not description_text.is_empty():
-				hover_lines.insert(0, description_text)
-			hover_lines.append_array(hovered_marks)
 		if name_span != null and not hover_lines.is_empty():
 			var name_meta: Dictionary = name_span.metadata as Dictionary
 			name_meta["hover_note"] = "%s\n%s" % [str(name_meta.get("hover_note", "")), "\n".join(hover_lines)]
@@ -12236,7 +12226,7 @@ func _build_variable_row(
 	# its tooltip. A reader of an opened pack should never have to open the .gd to learn what a setting
 	# does. Reading shape only; an authored row keeps the tooltip in the variable dialog.
 	_append_variable_note(row_data, variable_meta,
-		description_text if not code_only and not quiet_marks else "", "", true)
+		description_text if not code_only else "", "", true)
 	_append_code_echo_span(row_data, variable_meta, code_line, view_mode)
 	return row_data
 

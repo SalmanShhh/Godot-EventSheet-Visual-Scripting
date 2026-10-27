@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Fixed: a variable's marks are coloured tiles again, in every look
+
+- Every look draws a variable's marks as 20 px coloured tiles, one per fact - the eye for in the
+  Inspector, the slider for kept in a range, the speech bubble for has a description - and keeps
+  its `##` note at the end of the row. The look a new sheet gets no longer cuts them down to one
+  bare eye; a theme file that still names `variable_quiet_marks` loads and saves as before, and the
+  value changes nothing.
+- Each tile opens a hover card with its title, one sentence and the code that earns it
+  (`@export`, `@export_range(0, 9999, 1)`, `## ...`), the same card the head bar's words open.
+- A variable `@export_storage` keeps is hidden from the Inspector, so it no longer wears the eye: it
+  wears a grey "Saved, hidden" tile instead.
+- On a light editor the tiles take the design's inks.
+- The Variable window's type list shows each type's editor icon beside it (`int`, `Vector2`,
+  `Node2D`, ...), and the parameters window sets the object's icon on a 32 px rounded tile.
+
 ### Fixed: the head bar reads once, in every kind of view, and the sheet under it stays quiet
 
 - The `#` paragraph a script closes on, when the head bar's name card says it as the file's
@@ -15,9 +30,6 @@
   named "Untitled".
 - The behaviours card lists each kind's settings and the nodes wearing it, one line per kind, so
   nothing the Behaviors band unfolded to is lost.
-- In the look a new user gets, a variable row reads `int beat = 0` with one mark, the Inspector eye;
-  its `##` note and what its other marks would say move to the name's hover (the theme's
-  `variable_quiet_marks`). Editor Native keeps the note and the tiles.
 - Editor Native's head bar is the neutral grey a step off its canvas, as the default look's is, and
   the name card says which scene a script is attached to in every look (and the node that runs it,
   for a script with no class_name).

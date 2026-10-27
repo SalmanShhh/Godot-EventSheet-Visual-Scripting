@@ -9582,3 +9582,12 @@ The %d other variables in the file are bookkeeping the compiler writes (%s) and 
 root,루트
 1 script,스크립트 1개
 Scripts in this scene,이 장면의 스크립트
+"Designers can change this per object in the Inspector, without opening the script.",디자이너가 스크립트를 열지 않고 인스펙터에서 오브젝트마다 바꿀 수 있습니다.
+Kept in a range,범위 안으로 유지
+Has a description,설명 있음
+"Its ## comment line, which the Inspector shows as the hover tooltip.","## 주석 줄로, 인스펙터가 마우스를 올렸을 때 툴팁으로 보여 줍니다."
+Saved,저장됨
+"Saved, hidden","저장됨, 숨김"
+"Saved with the scene, but designers never see it in the Inspector.",씬과 함께 저장되지만 디자이너는 인스펙터에서 볼 수 없습니다.
+"A slider in the Inspector, from %s to %s.","인스펙터의 슬라이더, %s부터 %s까지."
+"A slider in the Inspector, kept between limits.","인스펙터의 슬라이더로, 한계 안에서 유지됩니다."

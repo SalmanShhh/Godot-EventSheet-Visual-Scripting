@@ -200,7 +200,6 @@ const _TOKEN_DESCRIPTIONS := {
 	"minimum_row_height": "Height of a single event row, in pixels - raise it for more breathing room.",
 	"group_row_height": "Height of a group header bar, in pixels - double an event row by default; lower it for the classic slim bar.",
 	"inspector_variable_rows": "Draw a variable row the way the Inspector lists a property: its type, its name exactly as the code writes it, its value and its ## description, with its attributes as icon tiles - no scope word, no kind mark and no code.",
-	"variable_quiet_marks": "With Inspector-style rows, give each variable one mark (the Inspector eye) and move its ## note and its other marks into the name's hover.",
 	"variable_row_cards": "Draw each Inspector-style variable row as its own small card - the event card's fill and edge, with a gap to the next - instead of the flat variable wash.",
 	"hide_compiler_variables": "Leave the bookkeeping variables the compiler writes out of the variable rows: every name starting with two underscores, an author's own included. They still compile and save.",
 	"fold_compiler_helpers": "Inside events, stop showing the compiler's two-underscore bookkeeping names: a scene copy kept in such a local is named by its scene file, the line that adds it reads Spawn, its local's row folds into that, and rows that only keep a hidden member up to date fold away. They still compile and save.",
@@ -437,7 +436,9 @@ static func editable_tokens(style_resource: Resource) -> Array[Dictionary]:
 	if style_resource == null:
 		return tokens
 	for property_info: Dictionary in style_resource.get_property_list():
-		if not (property_info.get("usage", 0) & PROPERTY_USAGE_SCRIPT_VARIABLE):
+		# A stored-only value (a retired token kept so old theme files still load) is not a setting.
+		if not (property_info.get("usage", 0) & PROPERTY_USAGE_SCRIPT_VARIABLE) \
+				or not (property_info.get("usage", 0) & PROPERTY_USAGE_EDITOR):
 			continue
 		var token_type: int = int(property_info.get("type", TYPE_NIL))
 		if token_type in [TYPE_COLOR, TYPE_FLOAT, TYPE_INT, TYPE_BOOL]:

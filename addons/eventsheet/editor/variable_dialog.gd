@@ -625,8 +625,24 @@ static func add_type_items(option: OptionButton) -> void:
 		if str(entry[0]) != group:
 			group = str(entry[0])
 			option.add_separator(EventSheetL10n.translate(group))
-		EventSheetPopupUI.add_described_item(option, "%s · %s" % [entry[1], EventSheetL10n.translate(str(entry[2]))],
+		var index: int = EventSheetPopupUI.add_described_item(option,
+			"%s · %s" % [entry[1], EventSheetL10n.translate(str(entry[2]))],
 			EventSheetL10n.translate(str(entry[3])), str(entry[1]))
+		# Each type wears the icon the Inspector gives it (the editor's own int, Vector2, Node2D...).
+		# A class with no icon of its own (Resource) wears its nearest parent's, as the Inspector does.
+		var icon_name: String = type_icon_name(str(entry[1]))
+		var type_icon: Texture2D = EventSheetEditorIcons.icon(icon_name)
+		while type_icon == null and ClassDB.class_exists(icon_name) and not ClassDB.get_parent_class(icon_name).is_empty():
+			icon_name = ClassDB.get_parent_class(icon_name)
+			type_icon = EventSheetEditorIcons.icon(icon_name)
+		if type_icon != null:
+			option.set_item_icon(index, type_icon)
+
+
+## The editor icon a type in the list wears: its own name, with a typed collection's element types
+## dropped (`Array[int]` wears Array, `Dictionary[String, int]` wears Dictionary).
+static func type_icon_name(type_name: String) -> String:
+	return type_name.get_slice("[", 0).strip_edges()
 
 
 ## Fills the type list: the table's groups, then the sheet's own enums, then - when the variable

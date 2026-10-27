@@ -12,7 +12,10 @@ extends PanelContainer
 #
 # The words arrive as one Dictionary, built by the row builder:
 #   {"id", "title", "subtitle", "mono", "lines": [paragraph], "links": [[label, action]],
-#    "notes": [muted paragraph], "doors": [[label, action]], "width": design px, "anchor": "left"|"right"}
+#    "notes": [muted paragraph], "doors": [[label, action]], "width": design px, "anchor": "left"|"right",
+#    "code_last": bool}
+# `code_last` puts the "mono" line under the paragraphs instead of under the title: a variable mark's
+# card reads title, sentence, then the code that earns the mark.
 # Every key but "id" and "title" may be missing. `links` lead the first paragraph as words joined by
 # " · ", each a door when it has an action. An action comes back through `door_pressed`, which the
 # viewport hands on as a head action.
@@ -178,14 +181,9 @@ func _build(card: Dictionary) -> void:
 		head.add_text(" " + subtitle_text)
 		head.pop()
 	_box.add_child(head)
-	var mono_text: String = str(card.get("mono", ""))
-	if not mono_text.is_empty():
-		var mono: Label = _label(mono_text, EventSheetPopupUI.muted_text_color(), inner)
-		var source_font: Font = EventSheetPopupUI.editor_font("source")
-		if source_font != null:
-			mono.add_theme_font_override("font", source_font)
-		mono.add_theme_font_size_override("font_size", maxi(int(round(text_size * MONO_TEXT_RATIO)), 8))
-		_box.add_child(mono)
+	var code_last: bool = bool(card.get("code_last", false))
+	if not code_last:
+		_add_mono(str(card.get("mono", "")), inner, text_size)
 	# The behaviours lead the card's paragraph, "Spring 10 · Tween 10 · ...", each kind a door to its
 	# own sheet where the scene names one; the card's first line follows them in the same paragraph.
 	var lines: Array = Array(card.get("lines", PackedStringArray()))
@@ -206,6 +204,8 @@ func _build(card: Dictionary) -> void:
 		_box.add_child(_label(str(line), EventSheetPopupUI.text_color(), inner))
 	for note: Variant in card.get("notes", PackedStringArray()):
 		_box.add_child(_label(str(note), EventSheetPopupUI.muted_text_color(), inner))
+	if code_last:
+		_add_mono(str(card.get("mono", "")), inner, text_size)
 	var doors: Array = card.get("doors", []) as Array
 	if not doors.is_empty():
 		# A file's options read as a short menu under a rule (a behaviour's or a global's card); any
@@ -228,6 +228,18 @@ func _build(card: Dictionary) -> void:
 			button.pressed.connect(_on_door.bind(str(door_entry[1])))
 			row.add_child(button)
 		_box.add_child(row)
+
+
+## The card's line of code, muted and in the editor's code face; nothing for no code.
+func _add_mono(mono_text: String, inner: float, text_size: int) -> void:
+	if mono_text.is_empty():
+		return
+	var mono: Label = _label(mono_text, EventSheetPopupUI.muted_text_color(), inner)
+	var source_font: Font = EventSheetPopupUI.editor_font("source")
+	if source_font != null:
+		mono.add_theme_font_override("font", source_font)
+	mono.add_theme_font_size_override("font_size", maxi(int(round(text_size * MONO_TEXT_RATIO)), 8))
+	_box.add_child(mono)
 
 
 func _on_door(action: String) -> void:

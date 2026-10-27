@@ -129,9 +129,9 @@ static func _test_tile_geometry() -> bool:
 	var rects: Array[Rect2] = NativeVariableMarks.tile_rects(500.0, 49.0, 2)
 	return SUPPORT.pins(TEST_NAME, [
 		["no tiles reserve nothing", NativeVariableMarks.badge_reserve(0), 0.0],
-		["three tiles reserve the lead, three tiles and two gaps", NativeVariableMarks.badge_reserve(3), 66.0],
-		["the first tile stands one lead in", rects[0], Rect2(508.0, 40.0, 18.0, 18.0)],
-		["the next one a gap after it", rects[1], Rect2(528.0, 40.0, 18.0, 18.0)],
+		["three tiles reserve the lead, three tiles and two gaps", NativeVariableMarks.badge_reserve(3), 72.0],
+		["the first tile stands one lead in", rects[0], Rect2(508.0, 39.0, 20.0, 20.0)],
+		["the next one a gap after it", rects[1], Rect2(530.0, 39.0, 20.0, 20.0)],
 		["the row's badges", NativeVariableMarks.row_badges(row), PackedStringArray(["inspector", "range"])],
 		["a point on the second tile", NativeVariableMarks.badge_at(row, Vector2(537.0, 49.0)), "range"],
 		["a point between the sentence and the tiles", NativeVariableMarks.badge_at(row, Vector2(450.0, 49.0)), ""],

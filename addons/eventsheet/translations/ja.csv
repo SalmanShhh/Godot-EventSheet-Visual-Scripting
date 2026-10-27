@@ -9582,3 +9582,12 @@ The %d other variables in the file are bookkeeping the compiler writes (%s) and 
 root,ルート
 1 script,1 個のスクリプト
 Scripts in this scene,このシーンのスクリプト
+"Designers can change this per object in the Inspector, without opening the script.",デザイナーはスクリプトを開かずに、インスペクターでオブジェクトごとに変更できます。
+Kept in a range,範囲内に保つ
+Has a description,説明あり
+"Its ## comment line, which the Inspector shows as the hover tooltip.",その ## コメント行。インスペクターがホバー時のツールチップとして表示します。
+Saved,保存
+"Saved, hidden",保存・非表示
+"Saved with the scene, but designers never see it in the Inspector.",シーンと一緒に保存されますが、インスペクターには表示されません。
+"A slider in the Inspector, from %s to %s.",インスペクターのスライダー（%s から %s）。
+"A slider in the Inspector, kept between limits.",インスペクターのスライダー。上限と下限の間に保たれます。

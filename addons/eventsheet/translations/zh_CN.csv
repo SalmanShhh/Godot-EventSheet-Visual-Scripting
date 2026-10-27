@@ -9582,3 +9582,12 @@ The %d other variables in the file are bookkeeping the compiler writes (%s) and 
 root,根
 1 script,1 个脚本
 Scripts in this scene,此场景中的脚本
+"Designers can change this per object in the Inspector, without opening the script.",设计者无需打开脚本，即可在检查器中按对象修改它。
+Kept in a range,保持在范围内
+Has a description,有描述
+"Its ## comment line, which the Inspector shows as the hover tooltip.",它的 ## 注释行，检查器会将其显示为悬停提示。
+Saved,已保存
+"Saved, hidden",已保存，隐藏
+"Saved with the scene, but designers never see it in the Inspector.",随场景保存，但设计者在检查器中看不到它。
+"A slider in the Inspector, from %s to %s.",检查器中的滑块，从 %s 到 %s。
+"A slider in the Inspector, kept between limits.",检查器中的滑块，保持在上下限之间。

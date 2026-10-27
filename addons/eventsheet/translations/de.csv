@@ -9582,3 +9582,12 @@ The %d other variables in the file are bookkeeping the compiler writes (%s) and 
 root,Wurzel
 1 script,1 Skript
 Scripts in this scene,Skripte in dieser Szene
+"Designers can change this per object in the Inspector, without opening the script.","Designer können das pro Objekt im Inspektor ändern, ohne das Skript zu öffnen."
+Kept in a range,In einem Bereich gehalten
+Has a description,Hat eine Beschreibung
+"Its ## comment line, which the Inspector shows as the hover tooltip.","Seine ##-Kommentarzeile, die der Inspektor als Tooltip zeigt."
+Saved,Gespeichert
+"Saved, hidden","Gespeichert, verborgen"
+"Saved with the scene, but designers never see it in the Inspector.","Wird mit der Szene gespeichert, aber Designer sehen es nie im Inspektor."
+"A slider in the Inspector, from %s to %s.","Ein Schieberegler im Inspektor, von %s bis %s."
+"A slider in the Inspector, kept between limits.","Ein Schieberegler im Inspektor, zwischen Grenzen gehalten."

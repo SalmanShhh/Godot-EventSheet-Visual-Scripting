@@ -130,11 +130,10 @@ extends Resource
 ## No kind mark, no scope word (it moves to the name's hover) and no code echo. Off keeps the
 ## sentence row: kind mark, scope word, the type in words and the declaration echo.
 @export var inspector_variable_rows: bool = false
-## With Inspector-style variable rows: each row wears ONE mark (the Inspector eye, for a variable the
-## Inspector shows) and reads `int beat = 0` alone; its `##` note and what its other marks would say
-## (kept in a range, has a tooltip, kept by the Save System) move to the name's hover. Off trails the
-## note and draws every icon tile.
-@export var variable_quiet_marks: bool = false
+## RETIRED: a variable row draws one coloured tile per fact (in the Inspector, kept in a range, has a
+## description) and trails its `##` note in every look, so nothing reads this any more. Kept as a
+## stored, non-editable value only so a theme file that names it still loads and saves byte for byte.
+@export_storage var variable_quiet_marks: bool = false
 ## Leaves out of the sheet's variable rows the bookkeeping variables the compiler writes for rows
 ## such as Every X Seconds (names starting with two underscores). They still compile and save; the
 ## view only stops listing them. The rule is the prefix, so a variable an author named with two

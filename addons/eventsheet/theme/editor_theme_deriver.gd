@@ -177,11 +177,11 @@ const NATIVE_COLOURS_LIGHT := {
 	"class_name_color": Color("#2b2536"),
 	"class_note_color": Color("#5b5368"),
 	"link_color": Color("#2659b8"),
-	"inspector_badge_foreground_color": Color("#0b4f96"),
+	"inspector_badge_foreground_color": Color("#094380"),
 	"inspector_badge_background_color": Color("#c4dcf5"),
-	"range_badge_foreground_color": Color("#5b2da8"),
+	"range_badge_foreground_color": Color("#502793"),
 	"range_badge_background_color": Color("#ddd0f5"),
-	"tooltip_badge_foreground_color": Color("#7a4e00"),
+	"tooltip_badge_foreground_color": Color("#664100"),
 	"tooltip_badge_background_color": Color("#f5e2b8"),
 	"saved_badge_foreground_color": Color("#1d6a2a"),
 	"saved_badge_background_color": Color("#c7ebcb"),
@@ -271,8 +271,6 @@ static func read_variables_inspector_style(event_style: EventSheetEventStyle) ->
 		return
 	event_style.inspector_variable_rows = true
 	event_style.hide_compiler_variables = true
-	# One mark per row, the note and the rest in the hover: the quiet sheet a new user meets.
-	event_style.variable_quiet_marks = true
 
 
 ## The editor-derived default (null outside the editor, e.g. headless tests/games).

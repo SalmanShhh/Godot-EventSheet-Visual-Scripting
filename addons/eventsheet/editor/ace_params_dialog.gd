@@ -22,6 +22,12 @@ const VARIABLE_REFERENCE_HINT := EventSheetVariableOwners.VARIABLE_REFERENCE_HIN
 const EXPRESSION_HINT := "expression"
 const NO_VARIABLES_PLACEHOLDER := "No variables available"
 const BACK_ACTION := "back"
+## The header's object icon tile: its side, the icon inside it, and its ground on a dark and on a
+## light editor, at 1x.
+const ICON_TILE_SIZE := 32.0
+const ICON_TILE_GLYPH := 18.0
+const ICON_TILE_DARK := Color("#3a4350")
+const ICON_TILE_LIGHT := Color("#d3dce6")
 ## The one shape every quick question takes, loaded the first time a value asks one.
 const SMALL_PROMPT_PATH := "res://addons/eventsheet/editor/small_prompt.gd"
 const ADD_ANOTHER_ACTION := "add_another"
@@ -189,10 +195,20 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry = null, vari
 func _build_header() -> Control:
 	var header: HBoxContainer = HBoxContainer.new()
 	header.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(10.0)))
+	# The object's class icon sits on a 32 px rounded tile, 18 px inside it, the way the picker and
+	# the sheet frame an object's icon - not loose beside the words.
+	var icon_tile: PanelContainer = PanelContainer.new()
+	icon_tile.custom_minimum_size = Vector2.ONE * EventSheetPalette.scaled_f(ICON_TILE_SIZE)
+	icon_tile.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	icon_tile.add_theme_stylebox_override("panel", icon_tile_style())
 	_header_icon = TextureRect.new()
-	_header_icon.custom_minimum_size = Vector2.ONE * EventSheetPalette.scaled_f(32.0)
-	_header_icon.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
-	header.add_child(_header_icon)
+	_header_icon.custom_minimum_size = Vector2.ONE * EventSheetPalette.scaled_f(ICON_TILE_GLYPH)
+	_header_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_header_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_header_icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_header_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	icon_tile.add_child(_header_icon)
+	header.add_child(icon_tile)
 	var words: VBoxContainer = VBoxContainer.new()
 	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	words.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(3.0)))
@@ -238,6 +254,16 @@ func _object_name() -> String:
 ## Fills the head for the action being opened: the title, the icon, the names and the description,
 ## and the class-reference door when the action is a native node's (the vocabulary IS Godot, and the
 ## built-in docs are one click away).
+## The header's icon tile: a 4 px rounded ground a step off the window, light or dark with the editor
+## (the dark hand on a dark editor, the light hand on a light one).
+static func icon_tile_style() -> StyleBoxFlat:
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	var light_editor: bool = EventSheetPopupUI.text_color().get_luminance() < 0.5
+	style.bg_color = ICON_TILE_LIGHT if light_editor else ICON_TILE_DARK
+	style.set_corner_radius_all(int(round(EventSheetPalette.scaled_f(4.0))))
+	return style
+
+
 func _fill_header() -> void:
 	var object_name: String = _object_name()
 	_dialog.title = window_title(_definition, object_name)

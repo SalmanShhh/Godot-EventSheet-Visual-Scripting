@@ -9582,3 +9582,12 @@ The %d other variables in the file are bookkeeping the compiler writes (%s) and 
 root,корень
 1 script,1 скрипт
 Scripts in this scene,Скрипты этой сцены
+"Designers can change this per object in the Inspector, without opening the script.","Дизайнеры могут менять это для каждого объекта в Инспекторе, не открывая скрипт."
+Kept in a range,В пределах диапазона
+Has a description,Есть описание
+"Its ## comment line, which the Inspector shows as the hover tooltip.","Его строка комментария ##, которую Инспектор показывает как подсказку."
+Saved,Сохраняется
+"Saved, hidden","Сохраняется, скрыто"
+"Saved with the scene, but designers never see it in the Inspector.","Сохраняется вместе со сценой, но дизайнеры не видят его в Инспекторе."
+"A slider in the Inspector, from %s to %s.","Ползунок в Инспекторе, от %s до %s."
+"A slider in the Inspector, kept between limits.","Ползунок в Инспекторе, в заданных пределах."

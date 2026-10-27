@@ -4153,6 +4153,34 @@ func update_head_card(hit: Dictionary, at_once: bool = false) -> void:
 	_head_card.call("hover_word", card, on_screen, at_once)
 
 
+## The hover card behind a variable's mark tile (in the Inspector, kept in a range, has a
+## description): the same floating card the head bar's words open, with the tile's title, its
+## sentence and the code that earns it. True when the pointer is on a tile, so the caller leaves the
+## head bar's own card alone.
+func update_badge_card(hit: Dictionary, logical_position: Vector2, at_once: bool = false) -> bool:
+	if not show_variable_badges:
+		return false
+	var badge_row: EventRowData = _row_at(int(hit.get("row_index", -1)))
+	var badge: String = NativeVariableMarks.badge_at(badge_row, logical_position)
+	if badge.is_empty():
+		return false
+	var card: Dictionary = NativeVariableMarks.badge_card(badge, badge_row.source_resource as LocalVariable)
+	if card.is_empty():
+		return false
+	if _head_card == null:
+		_head_card = load(HEAD_CARD_PATH).new()
+		_head_card.connect("door_pressed", func(action: String) -> void: sheet_head_action_requested.emit(action))
+		add_child(_head_card)
+	var span: SemanticSpan = NativeVariableMarks.badge_span(badge_row)
+	var tiles: Array[Rect2] = NativeVariableMarks.tile_rects(float((span.metadata as Dictionary)["badge_tiles_x"]),
+		span.rect.get_center().y, NativeVariableMarks.row_badges(badge_row).size())
+	var tile: Rect2 = tiles[maxi(NativeVariableMarks.row_badges(badge_row).find(badge), 0)]
+	var zoom: float = maxf(_zoom_factor, 0.001)
+	var on_screen: Rect2 = get_global_transform() * Rect2(tile.position * zoom, tile.size * zoom)
+	_head_card.call("hover_word", card, on_screen, at_once)
+	return true
+
+
 ## Closes the head bar's card, if one is open - a sheet change, or a test that opened one.
 func close_head_card() -> void:
 	if _head_card != null:
@@ -4199,12 +4227,12 @@ func _get_tooltip(at_position: Vector2) -> String:
 		var trigger_hover: String = _trigger_icon_tooltip(int(hit.get("row_index", -1)), _to_logical_position(at_position))
 		if not trigger_hover.is_empty():
 			return trigger_hover
-	# A variable's badge tiles are pictures too; each says what it means.
+	# A variable's mark tiles are pictures too; each opens its hover card (update_badge_card), so a
+	# tooltip as well would say it twice.
 	if show_variable_badges:
 		var badge_row: EventRowData = _row_at(int(hit.get("row_index", -1)))
-		var badge: String = NativeVariableMarks.badge_at(badge_row, _to_logical_position(at_position))
-		if not badge.is_empty():
-			return NativeVariableMarks.badge_tooltip(badge, badge_row.source_resource as LocalVariable)
+		if not NativeVariableMarks.badge_at(badge_row, _to_logical_position(at_position)).is_empty():
+			return ""
 	var metadata: Dictionary = hit.get("span_metadata", {}) if hit.get("span_metadata", {}) is Dictionary else {}
 	var kind: String = str(metadata.get("kind", ""))
 	# A MARK explains itself. The glyphs a sheet puts on a row (runs every frame, trigger, calls a

@@ -149,8 +149,10 @@ func handle_mouse_motion(event: InputEventMouseMotion) -> void:
 		return
 	var hit: Dictionary = _viewport._hit_test(local_position)
 	_viewport._set_hover_state(int(hit.get("row_index", -1)), int(hit.get("span_index", -1)))
-	# The head bar's name and counts open their cards on hover, and leaving them lets the card go.
-	_viewport.update_head_card(hit)
+	# The head bar's name and counts open their cards on hover, and leaving them lets the card go; a
+	# variable's mark tile opens its own card the same way.
+	if not _viewport.update_badge_card(hit, local_position):
+		_viewport.update_head_card(hit)
 	# Cursor affordance, in priority order: the empty non-cell area of an event row is the
 	# whole-event DRAG handle (✥ move cursor) - dragging there reorders the event or nests it as a
 	# sub-event, so the previously-dead space reads as grabbable; everything else is the arrow.
