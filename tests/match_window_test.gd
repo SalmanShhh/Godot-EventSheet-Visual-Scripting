@@ -74,6 +74,7 @@ static func _test_sheet_reading() -> bool:
 	editor.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	var viewport: EventSheetViewport = editor.get_viewport_control()
 	var head_texts: PackedStringArray = PackedStringArray()
+	var tick_cells: Array = []
 	var case_rows: Array[EventRowData] = []
 	for entry: Dictionary in viewport.get_flat_rows():
 		var row: EventRowData = entry.get("row")
@@ -84,19 +85,29 @@ static func _test_sheet_reading() -> bool:
 			for span: SemanticSpan in row.spans:
 				if str(span.metadata.get("kind", "")) == "match_head":
 					head_texts.append(span.text)
+				elif str(span.metadata.get("kind", "")) == "trigger":
+					tick_cells.append([span.text, str(span.metadata.get("object_label", ""))])
 		elif row.source_resource is MatchRow:
 			case_rows.append(row)
 	var case_reading: Array = []
 	for case_row: EventRowData in case_rows:
 		var words: PackedStringArray = PackedStringArray()
 		for span: SemanticSpan in case_row.spans:
-			words.append("%s:%s" % [str(span.metadata.get("kind", "")), span.text])
+			var object_label: String = str(span.metadata.get("object_label", "")) \
+				if str(span.metadata.get("kind", "")) == "match_case" else ""
+			words.append("%s:%s%s" % [str(span.metadata.get("kind", "")),
+				"" if object_label.is_empty() else object_label + " | ", span.text])
 		case_reading.append(" | ".join(words))
 	var match_row: MatchRow = case_rows[0].source_resource as MatchRow if not case_rows.is_empty() else null
 	var ok: bool = SUPPORT.pins(NAME, [
 		["the match says itself beside the trigger", head_texts, PackedStringArray(["match state"])],
+		# One sentence on one line, in every look: "System | Every tick (physics), match state".
+		["the tick it runs on keeps its words and its object, so the line reads as one sentence",
+			tick_cells, [["Every tick (physics),", "System"]]],
+		# A branch's step reads as the same line reads in an event's action lane: the object it acts on
+		# in the column, and the property as written - not "Set x to 0" with no object at all.
 		["each branch is a sub-event holding its own actions, an empty one only its Add action", case_reading, [
-			"condition:state is IDLE | match_case:Set x to 0 | add_action:+ Add action",
+			"condition:state is IDLE | match_case:CharacterBody2D | Set velocity.x to 0 | add_action:+ Add action",
 			"condition:state is RUN | add_action:+ Add action",
 			"else_keyword:Else | add_action:+ Add action"]],
 		["a branch row knows its branch", case_rows.size() == 3 and case_rows[1].match_case == match_row.cases[1], true],

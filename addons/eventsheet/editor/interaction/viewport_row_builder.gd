@@ -8809,6 +8809,40 @@ func _append_case_add_action(case_row: EventRowData, action_lines: int) -> void:
 	case_row.line_count = maxi(case_row.line_count, action_lines + 1)
 
 
+## A branch's plain steps read exactly as the same line reads in an event's action lane: through the
+## sentence layer, with the object it acts on in the object column - `velocity.x = 0` is the script's
+## own "Set velocity X to 0", where the branch used to say "Set x to 0" and name no object at all. Each
+## step keeps the branch's own kind, so selecting and opening it still opens the Match window; a line
+## the sentence layer has no reading for keeps the words it had. Display only - the arm's body is kept
+## verbatim, so the file cannot move.
+func _read_case_steps(case_row: EventRowData, step_code: Dictionary) -> void:
+	if step_code.is_empty():
+		return
+	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
+	var read_spans: Array[SemanticSpan] = []
+	for span: SemanticSpan in case_row.spans:
+		var metadata: Dictionary = span.metadata
+		var line_index: int = int(metadata.get("line_index", -1))
+		if str(metadata.get("kind", "")) != "match_case" or str(metadata.get("lane", "")) != "action" \
+				or not step_code.has(line_index):
+			read_spans.append(span)
+			continue
+		var step := RawCodeRow.new()
+		step.code = str(step_code[line_index]).strip_edges()
+		var read: Array = []
+		if not _append_sentence_spans(read, step, -1, line_index, action_style) or read.is_empty():
+			read_spans.append(span)
+			continue
+		for read_span: Variant in read:
+			var read_meta: Dictionary = (read_span as SemanticSpan).metadata
+			read_meta["kind"] = "match_case"
+			read_meta["editable"] = false
+			read_meta.erase("raw_action")
+			read_meta.erase("ace_index")
+			read_spans.append(read_span as SemanticSpan)
+	case_row.spans = read_spans
+
+
 ## The match head on its event's condition lane: "match state", after the trigger. It carries the
 ## match's action index, so a double-click opens the Match window exactly as the old caption did.
 func _match_head_span(match_row: MatchRow, action_index: int, line_index: int, style_meta: Dictionary) -> SemanticSpan:
@@ -8821,6 +8855,19 @@ func _match_head_span(match_row: MatchRow, action_index: int, line_index: int, s
 			"chip": false,
 			"line_index": line_index
 		}.merged(style_meta, true))
+
+
+## True when a blank tick event's one condition line will carry a match head beside its trigger: the
+## event holds exactly one switch that reads as branches. The tick then keeps its words, so the line
+## reads "Every tick, match state" rather than a bare "match state" (or a muted note) on its own.
+func _match_head_beside_tick(event_row: EventRow) -> bool:
+	if event_row == null or not EventSheetViewportReadingRows.BLANK_TICK_TRIGGER_IDS.has(event_row.trigger_id):
+		return false
+	var heads: int = 0
+	for action_item: Variant in event_row.actions:
+		if action_item is MatchRow and match_reads_as_branches(action_item as MatchRow, event_row):
+			heads += 1
+	return heads == 1 and _match_head_shares_trigger_line(event_row, 1)
 
 
 ## How many condition lines the branch-reading matches of an event add: none when the event has its
@@ -8899,6 +8946,9 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 			# condition cell); plain statements stay in the case's action lane, read as the same
 			# sentences and Object ▸ Verb calls every other row gets.
 			var body: PackedStringArray = PackedStringArray()
+			# The line of code behind each plain step, by its index in `body`: a branch's step is read
+			# through the same sentence layer an event's step is (below), object column and all.
+			var step_code: Dictionary = {}
 			var transition_children: Array[EventRowData] = []
 			for case_item: Variant in match_case.events:
 				if case_item is RawCodeRow:
@@ -8919,6 +8969,8 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 						# BE that row, because an arm's body is kept verbatim so the match re-emits
 						# to the byte. So it is at least READ as the row it means.
 						var stepped: String = "" if not own_state_match else EventSheetStateFacts.statement_reading(case_line)
+						if stepped.is_empty() and combo.is_empty():
+							step_code[body.size()] = case_line
 						body.append(stepped if not stepped.is_empty() \
 							else _friendly_statement_text(case_line, not combo.is_empty()))
 				elif case_item is ACEAction:
@@ -8972,6 +9024,7 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 			case_row.language_block = true  # a switch case - a language construct, not a regular ACE event
 			if branches:
 				case_row.match_case = match_case
+				_read_case_steps(case_row, step_code)
 				_append_case_add_action(case_row, body.size())
 			for transition_child: EventRowData in transition_children:
 				case_row.children.append(transition_child)
@@ -13650,14 +13703,20 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# column on every line, so the physics note reads as the trigger cell its neighbours wear -
 		# "System | Every tick (physics)" - instead of a bare lowercase note with no column.
 		var native_note: bool = event_style != null and event_style.trigger_icon_in_gutter
-		if not blank_note.is_empty() and native_note:
+		# A tick that runs a switch says so in one sentence on one line, in every look - "System |
+		# Every tick, match state" - so the match head beside it has a trigger to finish. The cell
+		# sizes to its words, which puts the head straight after them instead of across the lane.
+		var match_beside: bool = _match_head_beside_tick(event_row)
+		if (not blank_note.is_empty() and native_note) or match_beside:
+			var tick_words: String = EventSheetViewportReadingRows.tick_trigger_words(event_row.trigger_id, _trigger_sentence(event_row))
 			spans.append(_make_span(
-				EventSheetViewportReadingRows.tick_trigger_words(event_row.trigger_id, _trigger_sentence(event_row)),
+				"%s," % tick_words if match_beside else tick_words,
 				SemanticSpan.SpanType.CONDITION, {
 					"lane": "condition",
 					"kind": "trigger",
 					"ace_index": 0,
 					"chip": true,
+					"natural_width": match_beside,
 					"line_index": condition_line_index,
 					"object_label": _handler_object_label(event_row),
 					"object_icon": _object_icon_for(event_row.trigger_provider_id, event_row.trigger_id)

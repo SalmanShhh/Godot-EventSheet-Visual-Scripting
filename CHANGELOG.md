@@ -36,6 +36,11 @@
 - Bold words on a row ("Set group **Boss active**", a parameter's value) are drawn once in a
   stroked face instead of twice 0.7 px apart, so they read as weight rather than as a smear. The
   advances are the regular face's, so nothing after a bold word moves.
+- A tick that runs a switch reads as one sentence on one line in every look: "System | Every tick
+  (physics), match state", where the default look used to show a muted "every tick (physics)" with
+  "match state" pushed to the far edge. Each branch's steps read as the same line reads in an
+  event's action lane, the object it acts on in the column and the property as written:
+  `velocity.x = 0` is "Set velocity.x to 0", not "Set x to 0" with no object.
 
 ### Fixed: the head bar reads once, in every kind of view, and the sheet under it stays quiet
 
