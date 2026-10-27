@@ -61,7 +61,40 @@ static func run() -> bool:
 
 	ok = _one_class_moving_bytes() and ok
 	ok = _rows(sheet) and ok
+	ok = _own_calls() and ok
 	return ok
+
+
+## A call a class makes to one of its own functions is a line of that class: it reads under the
+## class's name, as a call in a file of its own reads under the file's object - never under a
+## nameless "Functions".
+static func _own_calls() -> bool:
+	var source: String = "extends Node
+
+
+class Counter:
+	var total: int = 0
+
+" 		+ "	func count(root: Node) -> int:
+		_walk(root)
+		return total
+
+" 		+ "	func _walk(node: Node) -> void:
+		total += 1
+
+
+func _ready() -> void:
+	print(1)
+"
+	var sheet: EventSheetResource = _open(source)
+	var calls: Array = []
+	for reading: Variant in LINES.readings_of_sheet(sheet, PATH):
+		if " ".join((reading as LINES.Reading).plain).contains("_walk with"):
+			calls.append("%s | %s" % [(reading as LINES.Reading).object_label, " ".join((reading as LINES.Reading).plain)])
+	return SUPPORT.pins(NAME, [
+		["a class's call to its own function reads under the class's name", calls, ["Counter | _walk with node root"]],
+		["and the file still saves back byte for byte", SUPPORT.compile_output(sheet, PATH), source],
+	])
 
 
 ## The whole-file gate is per CLASS too. Two classes each come back alone, but putting the second in

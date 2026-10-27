@@ -18726,6 +18726,10 @@ var _pending_grammar_segments: Array = []
 # The sheet the cached sentence context was built for, so a tab switch rebuilds it.
 var _sentence_context_sheet: Resource = null
 var _sentence_context_cache: Dictionary = {}
+## The name of the class written inside the file whose members are being read, while the viewport
+## reads them with the class's body standing in for the sheet; "" otherwise. The body has no file and
+## no class_name of its own, so without it a member's lines would belong to nobody.
+var inner_class_object: String = ""
 # Whether the open sheet is a pack recipe, remembered per sheet. Asked once per EVENT in both
 # the span pass and its line-count twin, and the answer is a fact about the FILE - so asking the
 # sentence context each time (which duplicates the whole context dictionary) would put a copy of it
@@ -19756,6 +19760,10 @@ func sentence_context() -> Dictionary:
 		var extended: String = str(sheet.get("host_class")).strip_edges()
 		if EventSheetEditorPluginWords.is_editor_plugin_class(extended):
 			context["editor_plugin_class"] = extended
+		# A class written inside the file is the object its own members belong to: a call to one of
+		# its functions reads "CoinCounter | _walk with node root", like a call in a file of its own.
+		if not inner_class_object.is_empty():
+			context["script_object"] = inner_class_object
 	_sentence_context_sheet = sheet
 	_sentence_context_cache = context.duplicate()
 	context["verb_kind"] = _current_verb_kind()

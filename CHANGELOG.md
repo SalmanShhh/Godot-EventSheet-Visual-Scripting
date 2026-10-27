@@ -94,6 +94,8 @@ way a user meets it:
   Functions.
 - A class written inside a script leads with the class icon and its name, with no "Class" word in
   front of it.
+- A class written inside a script owns the calls its functions make to each other: "CoinCounter |
+  _walk with node root", where they read under a nameless "Functions".
 - Add an event's Functions section is headed "Functions" alone and lists each function by its name
   as written, under the function mark the sheet draws, with no kind word after it. A hand-written
   script, which publishes none of its functions, lists them all straight under the head instead of
