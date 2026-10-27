@@ -187,7 +187,10 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.expr("GetStaticMemory", "Static Memory (bytes)", "OS.get_static_memory_usage()", "Utility: Debug", "static memory", "Returns how much memory the game is currently using, in bytes."))
 
 	# ── Time formatting (turn seconds into clock text; read the system clock) ──
-	descriptors.append(F.expr("FormatTime", "Format Time (mm:ss)", "(\"%02d:%02d\" % [int({seconds}) / 60, int({seconds}) % 60])", "Utility: Time", "format {seconds} as mm:ss", "Turns a number of seconds into a tidy mm:ss string for timers and clocks.").param("seconds", "0.0", "Seconds", "Total seconds to format.", "expression"))
+	descriptors.append(F.expr("FormatTime", "Format Time (mm:ss)", "(\"%02d:%02d\" % [int({seconds}) / 60, int({seconds}) % 60])", "Utility: Time", "format {seconds} as mm:ss", "Turns a number of seconds into a tidy mm:ss string for timers and clocks.").param("seconds", "0.0", "Seconds", "Total seconds to format.", "expression").deprecated("Writes int(seconds) / 60, an integer division Godot warns about in every project that runs it. The replacement reads exactly the same.", "Core::FormatTimeText").succeeded_by("Core::FormatTimeText"))
+	# The same clock text without the integer division Godot reports: int(s / 60.0) truncates exactly as
+	# int(s) / 60 did. The older row keeps its id and template for the sheets already using it.
+	descriptors.append(F.expr("FormatTimeText", "Format Time (mm:ss)", "(\"%02d:%02d\" % [int({seconds} / 60.0), int({seconds}) % 60])", "Utility: Time", "format {seconds} as mm:ss", "Turns a number of seconds into a tidy mm:ss string for timers and clocks.").param("seconds", "0.0", "Seconds", "Total seconds to format.", "expression"))
 	# Both belong to the Date object a reader of event sheets looks for, and both say the name a
 	# row shows them under. The ids and the templates are frozen; only the words changed.
 	descriptors.append(F.expr("GetSystemTime", "Date: Time Text", "Time.get_time_string_from_system()", "Utility: Time", "Date.TimeString", "Returns the player's current clock time as a text string."))

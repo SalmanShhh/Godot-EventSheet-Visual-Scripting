@@ -71,7 +71,7 @@ static func _stats_screen_starter() -> bool:
 	ok = _check("secrets are counted with the shipped Secrets Found word",
 		built.contains("$HudKitBehavior.set_text(\"SecretsValue\", \"%d of %d\" % [secrets_found.size(), secrets_total])"), true) and ok
 	ok = _check("the time is the shipped mm:ss word, against par",
-		built.contains("(\"%02d:%02d\" % [int(level_seconds) / 60, int(level_seconds) % 60]) + \" of \" + (\"%02d:%02d\" % [int(par_seconds) / 60, int(par_seconds) % 60])"), true) and ok
+		built.contains("(\"%02d:%02d\" % [int(level_seconds / 60.0), int(level_seconds) % 60]) + \" of \" + (\"%02d:%02d\" % [int(par_seconds / 60.0), int(par_seconds) % 60])"), true) and ok
 	ok = _check("the secrets bar is filled by the shipped Set Bar row",
 		built.contains("$HudKitBehavior.set_bar(\"SecretsBar\", float(secrets_found.size()), float(secrets_total))"), true) and ok
 	ok = _check("the button is answered through the pack's one trigger",

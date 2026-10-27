@@ -152,8 +152,8 @@ static func _test_the_shipped_addresses() -> bool:
 			addressed.append(str(key))
 	addressed.sort()
 	var ok: bool = _check("the shipped vocabulary carries exactly these forwarding addresses", addressed,
-		PackedStringArray(["Core::IsAudioPlaying", "Core::PlayAudio", "Core::SetVolumeDb",
-			"Core::StopAudio"]))
+		PackedStringArray(["Core::AsClockTime", "Core::FormatTime", "Core::IsAudioPlaying",
+			"Core::MissionTimeLeft", "Core::PlayAudio", "Core::SetVolumeDb", "Core::StopAudio"]))
 	ok = _check("Play Sound forwards to Play, renaming its one parameter",
 		EventForgeSuccessors.resolve("Core::PlayAudio", known),
 		{"id": "Core::AudioPlay", "renames": {"from_position": "from"}, "defaults": {},
@@ -564,6 +564,13 @@ static func _compiles_to(successor_key: String, successor: Dictionary, params: D
 		action.params = params.duplicate()
 		event.actions.append(action)
 	sheet.events.append(event)
+	# A row that names one of the sheet's own variables (Mission Time Left reads `mission_time_left`)
+	# needs that variable to exist, or the engine refuses the fixture rather than the rewrite.
+	for value: Variant in params.values():
+		var named: String = str(value).strip_edges()
+		if named.is_valid_ascii_identifier() and not ClassDB.class_exists(named) and named != "null" \
+				and named != "true" and named != "false":
+			sheet.variables[named] = {"type": "float", "default": 0.0, "exported": false}
 	var compiled: Dictionary = SheetCompiler.compile(sheet, "user://_successor_map_fixture.gd")
 	if not bool(compiled.get("success", false)):
 		print("  [why] %s did not compile: %s" % [successor_key, str(compiled.get("errors", []))])

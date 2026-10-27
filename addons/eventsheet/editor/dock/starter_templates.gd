@@ -350,7 +350,7 @@ static func _build_mission_timer_starter() -> EventSheetResource:
 	body.code = "\n".join(PackedStringArray([
 		"mission_time_left = maxf(0.0, mission_time_left - delta)",
 		"if time_label != null:",
-		"\ttime_label.set(\"text\", (\"%02d:%02d\" % [int(mission_time_left) / 60, int(mission_time_left) % 60]))",
+		"\ttime_label.set(\"text\", (\"%02d:%02d\" % [int(mission_time_left / 60.0), int(mission_time_left) % 60]))",
 		"if mission_time_left <= 0.0:",
 		"\tmission_time_up.emit()",
 		"\tset_process(false)"
@@ -584,6 +584,10 @@ static func _member_row(code: String) -> RawCodeRow:
 
 ## One typed parameter of a function the EDITOR calls: the name and type are Godot's, not ours, so
 ## the compiled function has the exact header the editor looks for.
+##
+## A callback a starter leaves empty names its parameters `_object`, `_paths` and so on: Godot reports a
+## parameter the body never reads, and the leading underscore is its own way of saying "on purpose".
+## Read one, and the underscore can go.
 static func _fn_param(param_id: String, type_name: String) -> ACEParam:
 	var parameter: ACEParam = ACEParam.new()
 	parameter.id = param_id
@@ -656,14 +660,14 @@ static func _build_tools_menu_item_starter() -> EventSheetResource:
 static func _build_properties_bar_starter() -> EventSheetResource:
 	var sheet: EventSheetResource = _tool_starter("EditorInspectorPlugin", "[b]Properties bar add-on[/b] - your own buttons and property editors in the Inspector. The editor asks whether you handle an object, then hands you each of its properties in turn.\nAn add-on does nothing on its own: make an Editor Plugin sheet too and give it Add Inspector plugin on plugin enabled.")
 	sheet.functions.append(_callback_function("_can_handle", [_fn_param("object", "Object")], "bool", "return object is Node"))
-	sheet.functions.append(_callback_function("_parse_begin", [_fn_param("object", "Object")], "void", "# Add your own controls above the object's properties with add_custom_control()."))
+	sheet.functions.append(_callback_function("_parse_begin", [_fn_param("_object", "Object")], "void", "# Add your own controls above the object's properties with add_custom_control()."))
 	return sheet
 
 
 ## A CONTEXT MENU ITEM: the right-click menu in the Scene dock or the Project bar.
 static func _build_context_menu_starter() -> EventSheetResource:
 	var sheet: EventSheetResource = _tool_starter("EditorContextMenuPlugin", "[b]Context menu item[/b] - your own entry in the right-click menu of the Scene dock or the Project bar. The editor calls this with whatever was right-clicked.\nRegister it from an Editor Plugin sheet with add_context_menu_plugin on plugin enabled.")
-	sheet.functions.append(_callback_function("_popup_menu", [_fn_param("paths", "PackedStringArray")], "void", "# add_context_menu_item(\"My Item\", _on_chosen) - one call per entry you want."))
+	sheet.functions.append(_callback_function("_popup_menu", [_fn_param("_paths", "PackedStringArray")], "void", "# add_context_menu_item(\"My Item\", _on_chosen) - one call per entry you want."))
 	return sheet
 
 
@@ -688,7 +692,7 @@ static func _build_view_handle_starter() -> EventSheetResource:
 static func _build_thumbnail_maker_starter() -> EventSheetResource:
 	var sheet: EventSheetResource = _tool_starter("EditorResourcePreviewGenerator", "[b]Thumbnail maker[/b] - the little picture the editor draws for a file of your own type, in the Project bar and the file dialogs.\nRegister it from an Editor Plugin sheet with add_resource_preview_generator on plugin enabled.")
 	sheet.functions.append(_callback_function("_handles", [_fn_param("type", "String")], "bool", "return type == \"Resource\""))
-	sheet.functions.append(_callback_function("_generate", [_fn_param("resource", "Resource"), _fn_param("size", "Vector2i"), _fn_param("metadata", "Dictionary")], "Texture2D", "# Draw the preview and hand back a Texture2D, or null for no thumbnail.\nreturn null"))
+	sheet.functions.append(_callback_function("_generate", [_fn_param("_resource", "Resource"), _fn_param("_size", "Vector2i"), _fn_param("_metadata", "Dictionary")], "Texture2D", "# Draw the preview and hand back a Texture2D, or null for no thumbnail.\nreturn null"))
 	return sheet
 
 
@@ -698,7 +702,7 @@ static func _build_debugger_panel_starter() -> EventSheetResource:
 	var sheet: EventSheetResource = _tool_starter("EditorDebuggerPlugin", "[b]Debugger panel[/b] - a tab of your own in the Debugger while the game is running, fed by messages the game sends.\nThe running game sends them with EngineDebugger.send_message; everything under one prefix arrives here.")
 	sheet.events.append(_member_row("const MESSAGE_PREFIX: String = \"my_tool\""))
 	sheet.functions.append(_callback_function("_has_capture", [_fn_param("capture", "String")], "bool", "return capture == MESSAGE_PREFIX"))
-	sheet.functions.append(_callback_function("_capture", [_fn_param("message", "String"), _fn_param("data", "Array"), _fn_param("session_id", "int")], "bool", "# One message from the running game. Answer true when you handled it.\nreturn true"))
+	sheet.functions.append(_callback_function("_capture", [_fn_param("_message", "String"), _fn_param("_data", "Array"), _fn_param("_session_id", "int")], "bool", "# One message from the running game. Answer true when you handled it.\nreturn true"))
 	return sheet
 
 
@@ -712,7 +716,7 @@ static func _build_command_tool_starter() -> EventSheetResource:
 	# reads back as. Authored as picked rows, so the file this starter compiles to is byte-for-byte
 	# the file the reading recognises - the two-way gate every batch ships with.
 	sheet.events.append(_plugin_event("OnCommandToolRun", [
-		_member_row("var args: PackedStringArray = OS.get_cmdline_user_args()\n# What this tool does."),
+		_member_row("var args: PackedStringArray = OS.get_cmdline_user_args()\nprint(\"Running with: %s\" % \" \".join(args))\n# What this tool does."),
 		_tool_action("CommandToolFinish", "quit()", {}),
 	]))
 	return sheet
@@ -964,8 +968,8 @@ static func _build_level_stats_screen_starter() -> EventSheetResource:
 	reveal.actions.append(mark_shown)
 	reveal.actions.append(_hud_action("switch_screen", {"panel_name": "\"%s\"" % STATS_SCREEN_PANEL}))
 	var secrets_count: String = _shipped_template("SecretsFoundCount").format({"found": "secrets_found"})
-	var time_played: String = _shipped_template("FormatTime").format({"seconds": "level_seconds"})
-	var time_par: String = _shipped_template("FormatTime").format({"seconds": "par_seconds"})
+	var time_played: String = _shipped_template("FormatTimeText").format({"seconds": "level_seconds"})
+	var time_par: String = _shipped_template("FormatTimeText").format({"seconds": "par_seconds"})
 	reveal.actions.append(_hud_action("set_text", {"control_name": "\"KillsValue\"", "text": "str(kills)"}))
 	reveal.actions.append(_hud_action("set_text", {"control_name": "\"SecretsValue\"",
 		"text": "\"%d of %d\" % [" + secrets_count + ", secrets_total]"}))

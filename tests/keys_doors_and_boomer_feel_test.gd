@@ -352,7 +352,7 @@ static func _showcase_sheets() -> bool:
 		level.contains("\t$Player/FPSController.bob_with_movement($Player/Head/Weapon)") \
 			and level.contains("\t$Player/FPSController.sway_with_mouse($Player/Head/Weapon)"), true) and ok
 	ok = _check("the tally reads every number in the shipped words",
-		level.contains("$HudLayer/Tally.text = \"Kills %d of %d   Secrets %d of %d   Time %s of %s\" % [kills, enemies_total, secrets_found.size(), secrets_total, (\"%02d:%02d\" % [int(level_seconds) / 60, int(level_seconds) % 60]), (\"%02d:%02d\" % [int(par_seconds) / 60, int(par_seconds) % 60])]"), true) and ok
+		level.contains("$HudLayer/Tally.text = \"Kills %d of %d   Secrets %d of %d   Time %s of %s\" % [kills, enemies_total, secrets_found.size(), secrets_total, (\"%02d:%02d\" % [int(level_seconds / 60.0), int(level_seconds) % 60]), (\"%02d:%02d\" % [int(par_seconds / 60.0), int(par_seconds) % 60])]"), true) and ok
 	ok = _check("the door answers the trigger Try Door raises",
 		door.contains("func locked_door_tried(key: Variant) -> void:"), true) and ok
 	ok = _check("and opens once", door.contains("\tif not door_open:"), true) and ok

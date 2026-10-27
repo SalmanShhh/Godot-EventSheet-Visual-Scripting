@@ -237,7 +237,7 @@ const FULLY_KEYED_ACES: Array[String] = [
 	"MaterialSetTransparency",
 	"MaterialSides", "MaterialSurfaceMaterial", "MaterialTexture", "MaterialTransparency",
 	"MeasuredAverage", "MeasuredLast", "MeasuredPeak", "MenuAddItem",
-	"MirrorPath", "MirrorTheView", "MirrorViewportView", "MissingFields", "MissionTimeLeft",
+	"MirrorPath", "MirrorTheView", "MirrorViewportView", "MissingFields", "MissionTimeLeft", "MissionTimeLeftText",
 	"MouseFloorObject", "MouseFloorPoint", "MouseFloorSlope", "MoveChild", "MoveForwardOwnFacing",
 	"MoveInDirection3D", "MoveTheWorldsWay", "MoveTowardEachTick", "MyPeerId", "NeighboursOfCell",
 	"NextRawPacket", "NumberFromText", "NumberInText", "NumberOr", "ObjectUnderCursor2D",

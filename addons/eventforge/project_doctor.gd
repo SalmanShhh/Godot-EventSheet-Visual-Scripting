@@ -3429,7 +3429,8 @@ static func scan_game_shape_smells(sheet: EventSheetResource, sheet_path: String
 		_add(findings, "info", "meter-never-drains", sheet_path,
 			"This sheet fills a meter and never drains one - a meter that only goes up reaches its cap and stays there.")
 	# The mission clock the player cannot see. Pressure nobody can read is not pressure.
-	if _sheet_uses_ace(sheet, "StartMissionTimer") and not _sheet_uses_ace(sheet, "MissionTimeLeft"):
+	if _sheet_uses_ace(sheet, "StartMissionTimer") and not _sheet_uses_ace(sheet, "MissionTimeLeft") \
+			and not _sheet_uses_ace(sheet, "MissionTimeLeftText"):
 		_add(findings, "info", "mission-timer-not-shown", sheet_path,
 			"A mission timer starts here and no row shows the time left - drop Mission Time Left into a HUD label so the player can feel the deadline.")
 

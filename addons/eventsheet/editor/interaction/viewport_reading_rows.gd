@@ -757,7 +757,7 @@ const SYSTEMS_PATTERN_ACES: Dictionary = {
 	"swipe": [],
 	"hitscan": ["FireHitscan", "ExplodeAt", "SwitchToNextWeapon", "SwitchToPreviousWeapon",
 		"CurrentWeapon"],
-	"secrets": ["MarkSecretFound", "SecretsFoundCount", "SecretAlreadyFound", "FormatTime"],
+	"secrets": ["MarkSecretFound", "SecretsFoundCount", "SecretAlreadyFound", "FormatTime", "FormatTimeText"],
 	"keys_doors": ["PickUpKey", "HasKey", "NeedsKey", "KeysHeld", "TryDoor", "OpenDoor"],
 	"detection": ["AlertEnemiesWithin", "RetaliateAgainstAttacker", "MakeNoise"],
 	# The rebinding rows that already shipped belong to this pattern too: a remap screen written with
