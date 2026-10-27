@@ -13,6 +13,9 @@
 - A project's first boot with the plugin no longer prints "Failed loading resource" for the workspace
   icon, and its first import no longer warns that the translators' template locale has no
   translation (the template is kept as a plain file).
+- The Tools menu item, Properties bar add-on and Context menu item starters write a script that
+  loads: their empty `-> void` callback is stubbed with `pass`, not `return null` ("A void function
+  cannot return a value").
 
 ### Added: Platformer Pathfinding learns every way a platformer character gets around
 

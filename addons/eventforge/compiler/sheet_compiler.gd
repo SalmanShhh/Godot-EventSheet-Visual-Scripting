@@ -3719,7 +3719,11 @@ static func _empty_function_stub(event_function: EventFunction) -> String:
 		return "\tpass"
 	# A named (custom/engine class) return can't be defaulted structurally - null parses for any
 	# object/collection type, so a bodiless helper with a named return still loads.
-	if not event_function.return_type_name.strip_edges().is_empty():
+	# `void` spelled as a name is still void, and a void function that returns a value does not parse.
+	var named_return: String = event_function.return_type_name.strip_edges()
+	if named_return == "void":
+		return "\tpass"
+	if not named_return.is_empty():
 		return "\treturn null"
 	match event_function.return_type:
 		TYPE_NIL:
