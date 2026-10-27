@@ -27,8 +27,10 @@ const EDGE_SIGNALS := "signals"
 const EDGE_INCLUDES := "includes"
 const EDGE_LAYOUT := "layout"
 
-## Folders whose contents are the plugin or the test corpus, not the user's project.
-const SKIPPED_DIRS: PackedStringArray = ["res://addons", "res://.godot", "res://tests"]
+## Folders whose contents are the plugin or the test corpus, not the user's project. The behaviour
+## packs are the plugin's too: in a project that installed them, their hundred-odd scripts filled the
+## map before the first of the game's own was drawn.
+const SKIPPED_DIRS: PackedStringArray = ["res://addons", "res://eventsheet_addons", "res://.godot", "res://tests"]
 
 ## Beyond this the picture stops being a picture. The map keeps the first nodes it finds and says
 ## how many it left out, rather than drawing a wall nobody can read.

@@ -2386,6 +2386,10 @@ static func _collect_usage_text(rows: Array, into: PackedStringArray) -> void:
 ## a missing control is exactly as broken as a generated one.
 static func check_unknown_input_actions(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for script_path: String in _list_files_with_extension("gd"):
+		# A pack's script names the controls a game is expected to add when it uses that pack, and is
+		# not the reader's to fix: the finding belongs on the game's own scripts.
+		if script_path.begins_with("res://eventsheet_addons/"):
+			continue
 		var file: FileAccess = FileAccess.open(script_path, FileAccess.READ)
 		if file == null:
 			continue

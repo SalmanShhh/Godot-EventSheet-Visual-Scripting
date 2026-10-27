@@ -77,7 +77,7 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 static func ranked(scripts: PackedStringArray) -> PackedStringArray:
 	var ordered: PackedStringArray = PackedStringArray()
 	for script_path: String in scripts:
-		if script_path.begins_with(PLUGIN_DIRECTORY):
+		if _is_shipped(script_path):
 			continue
 		if says_enough(ReadingDoors.doctor().source_of(script_path)):
 			ordered.append(script_path)

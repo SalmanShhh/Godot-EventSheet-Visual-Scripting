@@ -10,6 +10,30 @@
   declared in the function (`var direction := ...`) and a function's own parameter (`body`) are no
   longer flagged either; a name the file really does not declare still is.
 
+### Fixed: a game you wrote yourself reads as yours, beside the installed packs
+
+Walked in a fresh project with the plugin and its packs installed next to a hand-written game, the
+way a user meets it:
+
+- The Doctor no longer says a state "is declared and no row can reach it" when the object goes to it
+  from a function of its own (`func _update_state()` with the `match` inside), or from a script block
+  that says `state = State.RUN`.
+- Rename on a function nothing in its own file calls lists the function's head line it is about to
+  rewrite, instead of "rewrites the 0 row(s) in this sheet".
+- The Inspector Designer puts every field after `@export_group("Feel")` under Feel, as Godot draws
+  the Inspector, not just the first one; and a field written `var coyote_time := 0.1` reads as the
+  float it is, not "Variant". The Save studio types such variables the same way, and names an
+  autoloaded script with no class name by its global's name (GameState, not game_state).
+- The behaviour packs stop standing in for the game: the Sheet map no longer draws the packs' scripts
+  (it drew a hundred of them and none of the game's), Find in Project lists the game's own files
+  before the packs' matches, and the Doctor's spawning, collision, shapes, lighting, effects,
+  streaming, save-memory and missing-input-action checks leave the packs alone, as they already
+  left the plugin's own folder.
+- Opening a script that is already open (FileSystem, Inspector button, double-click) brings its tab
+  forward instead of opening a second tab of the same file.
+- The Words page's live preview reads the `_process` word its own table sets ("Every tick"), where it
+  said "Every Frame" beside a table that said otherwise.
+
 ### Fixed: the plugin and the code it writes stop filling the Output and Debugger panels
 
 - Quitting the editor no longer prints "Parent node is busy adding/removing children": the bridge

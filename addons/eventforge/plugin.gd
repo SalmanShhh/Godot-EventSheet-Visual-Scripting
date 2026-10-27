@@ -179,6 +179,12 @@ func _open_sheet_in_workspace(path: String) -> void:
 	if _event_sheet_editor == null or not _event_sheet_editor.has_method("_load_sheet_from_path"):
 		return
 	get_editor_interface().set_main_screen_editor(_get_plugin_name())
+	# A file already open in a tab is brought forward rather than read again into a second tab: every
+	# door here (the FileSystem's Open as Event Sheet, the Inspector button, a double-click) is asked
+	# again and again for the same few scripts, and each ask used to add another tab of the same file.
+	if _event_sheet_editor.has_method("open_or_focus_sheet"):
+		_event_sheet_editor.call("open_or_focus_sheet", path)
+		return
 	_event_sheet_editor.call("_load_sheet_from_path", path)
 
 

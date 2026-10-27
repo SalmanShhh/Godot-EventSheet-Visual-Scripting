@@ -17,6 +17,7 @@ class_name EventSheetInspectorDesignerDialog
 extends AcceptDialog
 
 const SHAPE_PANEL_PATH := "res://addons/eventsheet/editor/inspector_shape_panel.gd"
+const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
 const SHAPE_PATH := "res://addons/eventsheet/editor/inspector_shape.gd"
 
 var _column: VBoxContainer = null
@@ -134,7 +135,10 @@ static func collect_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 			entries.append({
 				"name": tree_var.name,
 				"scope": "tree",
-				"type_name": tree_var.type_name,
+				# `var coyote_time := 0.1` is a float to Godot, so it is a float here: the type the value
+				# gives away, the same word the variable's own row prints, never "Variant".
+				"type_name": NativeVariableMarks.gdscript_type_word(tree_var.type_name,
+					tree_var.default_value, true) if tree_var.inferred_type else tree_var.type_name,
 				"default_text": EventSheetVariableOwners.default_text(tree_var.default_value),
 				"attributes": _with_options((tree_var.attributes as Dictionary).duplicate(true) if tree_var.attributes is Dictionary else {}, tree_var.options),
 				"constant": tree_var.is_constant,
@@ -176,6 +180,7 @@ func rebuild_for_sheet(sheet: EventSheetResource) -> void:
 	_column.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("Every Inspector-visible variable, named exactly as the file declares it. ✎ edits a variable; ▲ moves a sheet variable up (the list is in the order the file declares them).") \
 		if _edit_handler.is_valid() else EventSheetL10n.translate("Every Inspector-visible variable, named exactly as the file declares it. Edit a variable from its row in the sheet (hover it there for this same preview).")))
 	var previous_tree: String = ""
+	var shown_attributes: Dictionary = attributes_as_shown(entries)
 	for entry: Dictionary in entries:
 		var card: EventSheetInspectorPreviewCard = EventSheetInspectorPreviewCard.new()
 		card.hide_caption()
@@ -183,7 +188,7 @@ func rebuild_for_sheet(sheet: EventSheetResource) -> void:
 			str(entry.get("name")),
 			str(entry.get("type_name")),
 			str(entry.get("default_text")),
-			entry.get("attributes") as Dictionary,
+			shown_attributes.get(str(entry.get("name")), entry.get("attributes")) as Dictionary,
 			true,
 			bool(entry.get("constant", false))
 		)
@@ -242,6 +247,36 @@ static func groups_of(entries: Array[Dictionary]) -> Dictionary:
 			current = named
 		groups[str(entry.get("name"))] = current
 	return groups
+
+
+## Each field's attributes as the Inspector will SHOW them, by field name: a group runs from the field
+## that opens it to the next one that does, and a subgroup to the next subgroup or group, so the fields
+## after the one carrying `@export_group("Feel")` are under Feel too, as Godot draws them. A field that
+## only continues a group is marked `group_continues`, so its card indents under the heading and says
+## which group it is in without drawing the heading a second time. Copies: the entries' own
+## attributes are what the file says, and a field is never written as if it had its own annotation.
+static func attributes_as_shown(entries: Array[Dictionary]) -> Dictionary:
+	var shown: Dictionary = {}
+	var group: String = ""
+	var subgroup: String = ""
+	for entry: Dictionary in entries:
+		var attributes: Dictionary = (entry.get("attributes") as Dictionary).duplicate(true) \
+			if entry.get("attributes") is Dictionary else {}
+		var own_group: String = str(attributes.get("group", "")).strip_edges()
+		var own_subgroup: String = str(attributes.get("subgroup", "")).strip_edges()
+		if not own_group.is_empty():
+			group = own_group
+			subgroup = ""
+		if not own_subgroup.is_empty():
+			subgroup = own_subgroup
+		if own_group.is_empty() and not group.is_empty():
+			attributes["group"] = group
+			attributes["group_continues"] = true
+		if own_subgroup.is_empty() and not subgroup.is_empty():
+			attributes["subgroup"] = subgroup
+			attributes["subgroup_continues"] = true
+		shown[str(entry.get("name"))] = attributes
+	return shown
 
 
 ## Groups shown as tabs: a tab per group above the list, and only the open group's fields under it -

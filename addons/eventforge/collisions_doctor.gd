@@ -139,7 +139,7 @@ static func sheet_findings(script_path: String,
 static func ranked(scripts: PackedStringArray) -> PackedStringArray:
 	var ordered: PackedStringArray = PackedStringArray()
 	for script_path: String in scripts:
-		if script_path.begins_with(PLUGIN_DIRECTORY):
+		if _is_shipped(script_path):
 			continue
 		if not says_enough(EventSheetProjectDoctor.source_of(script_path)):
 			continue

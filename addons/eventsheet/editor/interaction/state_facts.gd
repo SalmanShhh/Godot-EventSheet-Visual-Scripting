@@ -175,7 +175,7 @@ const STATE_PARAM: String = "state"
 static func named_states(sheet: EventSheetResource) -> PackedStringArray:
 	var named: PackedStringArray = PackedStringArray()
 	if sheet != null:
-		_walk(sheet.events, named, STATE_ACE_IDS, true)
+		_walk(rows_of(sheet), named, STATE_ACE_IDS, true)
 	return named
 
 
@@ -192,7 +192,7 @@ static func named_states(sheet: EventSheetResource) -> PackedStringArray:
 static func entered_states(sheet: EventSheetResource) -> PackedStringArray:
 	var entered: PackedStringArray = PackedStringArray()
 	if sheet != null:
-		_walk(sheet.events, entered, GOING_ACE_IDS, false)
+		_walk(rows_of(sheet), entered, GOING_ACE_IDS, false)
 	return entered
 
 
@@ -201,11 +201,25 @@ static func entered_states(sheet: EventSheetResource) -> PackedStringArray:
 static func naming_counts(sheet: EventSheetResource) -> Dictionary:
 	var every: PackedStringArray = PackedStringArray()
 	if sheet != null:
-		_walk(sheet.events, every, STATE_ACE_IDS, true, true)
+		_walk(rows_of(sheet), every, STATE_ACE_IDS, true, true)
 	var counts: Dictionary = {}
 	for member: String in every:
 		counts[member] = int(counts.get(member, 0)) + 1
 	return counts
+
+
+## Every row the sheet's own code runs: the events, then each function's body. A hand-written
+## script keeps its state changes in a function as often as in an event (`func _update_state()` with
+## the `match` in it), and a walk that stopped at the events told the Doctor those states were
+## unreachable while the object went to them every frame.
+static func rows_of(sheet: EventSheetResource) -> Array:
+	var rows: Array = sheet.events.duplicate()
+	for entry: Variant in sheet.functions:
+		var event_function: EventFunction = entry as EventFunction
+		if event_function != null:
+			rows.append_array(event_function.events if not event_function.events.is_empty()
+				else event_function.rows)
+	return rows
 
 
 static func _walk(items: Array, into: PackedStringArray, only: PackedStringArray,
@@ -213,6 +227,13 @@ static func _walk(items: Array, into: PackedStringArray, only: PackedStringArray
 	for item: Variant in items:
 		if item is EventGroup:
 			_walk(EventSheetGroupFacts.children(item as EventGroup), into, only, with_triggers, repeats)
+			continue
+		# Code kept as code - a function whose body stayed a script block, or a line the reading left
+		# alone - moves the object as surely as a Go to row does when it says `state = State.RUN`. The
+		# same one-line rule the match arms are read by, so the two can never disagree.
+		if item is RawCodeRow and only.has(GOING_ACE_IDS[0]):
+			for line: String in (item as RawCodeRow).code.split("\n"):
+				_note(into, member_gone_to(line), repeats)
 			continue
 		# A `match state:` row, wherever it sits. Its arms hold verbatim lines rather than ACE rows,
 		# and a Go to written in one of them reaches a state exactly as a row does. The arm PATTERNS
@@ -440,7 +461,7 @@ const KIND_STATE_ROW_UNFILLED := "a-state-row-that-names-no-state"
 static func unfilled_rows(sheet: EventSheetResource) -> int:
 	var found: int = 0
 	if sheet != null:
-		found = _count_unfilled(sheet.events)
+		found = _count_unfilled(rows_of(sheet))
 	return found
 
 

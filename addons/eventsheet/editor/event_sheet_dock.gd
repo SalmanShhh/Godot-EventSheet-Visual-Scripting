@@ -1935,6 +1935,12 @@ func _load_sheet_from_path(path: String) -> void:
 	_sheet_io._load_sheet_from_path(path)
 
 
+## Opens a sheet by path, or brings its tab forward when that file is already open - the plugin's
+## Open as Event Sheet doors land here, so asking twice never makes a second tab of one file.
+func open_or_focus_sheet(path: String) -> void:
+	_navigate.open_or_focus(path)
+
+
 ## Opens a freshly-created .gd editable (not the read-only preview a casual Open gives). The plugin's
 ## "Create New > Event Sheet" glue calls this after writing + rescanning the new file.
 func open_new_sheet(path: String) -> void:

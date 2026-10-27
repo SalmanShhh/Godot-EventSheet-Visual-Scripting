@@ -218,8 +218,11 @@ func _refresh_preview(familiar: bool) -> void:
 	_preview_condition.text = "⟳  System ▸ For each  Enemy  %s" % set_word.to_lower()
 	_preview_action.text = "Enemy ▸ %s" % destroy_word
 	if _preview_verbs != null:
+		# The trigger reads in the `_process` word the table above sets, so the preview says what the
+		# page says: "Every tick" there and "Every Frame" here was one row in two words.
 		_preview_verbs.text = "System ▸ %s      Player ▸ %s Bullet" % [
-			EventSheetWords.verb_name_words("Core::OnProcess", "Every Frame"),
+			EventSheetWords.verb_name_words("Core::OnProcess",
+				EventSheetWords.word_for("every_tick", familiar, override_map)),
 			EventSheetWords.verb_row_words("Core::SpawnNewCopy", "Spawn a copy of"),
 		]
 

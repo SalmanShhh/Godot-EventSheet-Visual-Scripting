@@ -34,6 +34,7 @@ const OPEN_FOLDER_PROVIDER: String = "SaveSystemAddon"
 const OPEN_FOLDER_ACE: String = "method:open_save_folder"
 const SMALL_PROMPT_PATH: String = "res://addons/eventsheet/editor/small_prompt.gd"
 const SAVE_CHOICES := preload("res://addons/eventforge/compiler/save_choices.gd")
+const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
 ## The Save dropdown's choices in their order; "" is Never, which stores nothing.
 const SAVE_CHOICE_ORDER: PackedStringArray = ["", "auto", "load", "save", "manual"]
 ## What an older version wrote for Remember Between Runs: its load and store functions, and the boot
@@ -961,9 +962,24 @@ static func _choice_words(choice: String) -> Array:
 
 ## The variables of `sheet` a Save choice can be given: every variable but the constants and the
 ## object references (a Node, a Texture...), which point at things rather than hold state.
+##
+## Each is typed as Godot types it: `var run_time := 0.0` is a float, the word the value gives away,
+## and never "Variant" - which is also what keeps `var sprite := $Sprite2D`-style references out.
 static func savable_variables(sheet: EventSheetResource) -> Array:
-	return SAVE_CHOICES.variables_of(sheet).filter(func(variable: Dictionary) -> bool:
-		return not ClassDB.class_exists(str(variable["type"])) and str(variable["name"]) != OLDER_STYLE[2])
+	var inferred: Dictionary = {}
+	if sheet != null:
+		for entry: Variant in sheet.events:
+			var declared: LocalVariable = entry as LocalVariable
+			if declared != null and declared.inferred_type:
+				inferred[declared.name] = NativeVariableMarks.gdscript_type_word(declared.type_name,
+					declared.default_value, true)
+	var found: Array = []
+	for variable: Dictionary in SAVE_CHOICES.variables_of(sheet):
+		if inferred.has(variable["name"]):
+			variable["type"] = inferred[variable["name"]]
+		if not ClassDB.class_exists(str(variable["type"])) and str(variable["name"]) != OLDER_STYLE[2]:
+			found.append(variable)
+	return found
 
 
 ## The whole saving story of `object_name` in one sentence, from its variables' choices: who comes back
@@ -1069,9 +1085,13 @@ static func update_to_auto(sheet: EventSheetResource) -> bool:
 	return true
 
 
-## How a sheet is named in the Object picker and the saving line: its class name, else its file's name.
+## How a sheet is named in the Object picker and the saving line: its class name, else the name the
+## project's globals know it by (a `game_state.gd` autoloaded as GameState is GameState - the name its
+## events and every other script write), else its file's name.
 static func object_name(sheet: EventSheetResource, path: String) -> String:
 	var named: String = sheet.custom_class_name.strip_edges() if sheet != null else ""
+	if named.is_empty() and not path.is_empty():
+		named = EventSheetACEGenerator.autoload_name_for_path(path)
 	if named.is_empty():
 		named = path.get_file().get_basename() if not path.is_empty() else EventSheetL10n.translate("This sheet")
 	return named

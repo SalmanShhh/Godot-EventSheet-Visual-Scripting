@@ -69,7 +69,7 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 static func scripts_scrolling_dashes() -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	for script_path: String in EventSheetProjectDoctor._project_scripts():
-		if script_path.begins_with(PLUGIN_DIRECTORY):
+		if _is_shipped(script_path):
 			continue
 		var source: String = EventSheetProjectDoctor.source_of(script_path)
 		if not source.contains(SCROLL_CALL):

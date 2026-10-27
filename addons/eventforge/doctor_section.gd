@@ -31,6 +31,16 @@ extends RefCounted
 ## the editor is not the reader's game, and a note about it is not theirs to act on.
 const PLUGIN_DIRECTORY := "res://addons/"
 
+## Where the behaviour packs live. They ship with the plugin and are rebuilt from its pack builders, so
+## in a game that installed them they are the plugin's code as much as `addons/` is: a finding about a
+## pack's script was the first thing a new project's Doctor said, and nothing the reader could fix.
+const PACK_DIRECTORY := "res://eventsheet_addons/"
+
+
+## True for a file the plugin ships - its own code or one of its packs - which no section reports on.
+static func _is_shipped(path: String) -> bool:
+	return path.begins_with(PLUGIN_DIRECTORY) or path.begins_with(PACK_DIRECTORY)
+
 
 ## One finding, in the shape every runner reads. `severity` is "error", "warning" or "info";
 ## `check_id` is what the panel groups by and what a quick-fix chip is addressed to; `path` is the

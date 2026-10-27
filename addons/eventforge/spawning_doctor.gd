@@ -169,7 +169,7 @@ static func sheet_findings(script_path: String) -> Array[Dictionary]:
 static func ranked(scripts: PackedStringArray) -> PackedStringArray:
 	var scored: Array[Dictionary] = []
 	for script_path: String in scripts:
-		if script_path.begins_with(PLUGIN_DIRECTORY):
+		if _is_shipped(script_path):
 			continue
 		var weight: int = evidence(EventSheetProjectDoctor.source_of(script_path))
 		if weight > 0:

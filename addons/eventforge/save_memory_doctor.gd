@@ -59,7 +59,7 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 		return
 	var paths: PackedStringArray = PackedStringArray()
 	for script_path: String in EventSheetProjectDoctor._project_scripts():
-		if script_path.begins_with(PLUGIN_DIRECTORY):
+		if _is_shipped(script_path):
 			continue
 		if _says_any(EventSheetProjectDoctor.source_of(script_path), SHEET_WORDS):
 			paths.append(script_path)

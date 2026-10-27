@@ -158,6 +158,18 @@ static func find_in_project(needle: String, sheet_paths: PackedStringArray,
 		if not paths.has(str(open_path)):
 			paths.append(str(open_path))
 	paths.sort()
+	# The game's own sheets first, then the behaviour packs: a pack is searched (its words are worth
+	# finding) but it is the plugin's code, and in a project that installed the packs their hundreds of
+	# matches came before the first line of the reader's own player.gd.
+	var own: PackedStringArray = PackedStringArray()
+	var packs: PackedStringArray = PackedStringArray()
+	for sheet_path: String in paths:
+		if is_pack_script(sheet_path):
+			packs.append(sheet_path)
+		else:
+			own.append(sheet_path)
+	own.append_array(packs)
+	paths = own
 	for sheet_path: String in paths:
 		var matches: Array = []
 		var sheet: EventSheetResource = null

@@ -73,7 +73,9 @@ func update_preview(variable_name: String, type_name: String, default_text: Stri
 		band.text = str(attributes.get("category"))
 		band.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_rows.add_child(band)
-	if not group_name.is_empty():
+	# A field that only CONTINUES a group (the Designer's whole-Inspector list) sits under the heading
+	# the field above it drew: indented, never a second heading.
+	if not group_name.is_empty() and not bool(attributes.get("group_continues", false)):
 		var group_label := Label.new()
 		# The chip the Inspector Designer shows on a group header: the whole section hides with this
 		# switch, which is a fact about the SECTION, not about any one field under it.
@@ -81,7 +83,7 @@ func update_preview(variable_name: String, type_name: String, default_text: Stri
 		group_label.text = EventSheetL10n.translate("%s   (shown while %s)") % [group_name, group_predicate] if not group_predicate.is_empty() else group_name
 		group_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(12))
 		_rows.add_child(group_label)
-	if not subgroup_name.is_empty():
+	if not subgroup_name.is_empty() and not bool(attributes.get("subgroup_continues", false)):
 		var subgroup_label := Label.new()
 		subgroup_label.text = "    %s" % subgroup_name
 		subgroup_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))

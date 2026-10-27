@@ -118,6 +118,14 @@ static func row_lines(sheet: EventSheetResource, old_name: String,
 	# A sheet variable's declaration is not a row, and it is the first thing the button renames.
 	if sheet.variables.has(old_name):
 		lines.append("var %s → var %s" % [old_name, new_name])
+	# A function's head is the same: not a row that says the name but the line that declares it, and
+	# the button renames it first. Without it, a function nothing in its own file calls read "rewrites
+	# the 0 row(s) in this sheet" while the button went on to rewrite its declaration.
+	for entry: Variant in sheet.functions:
+		var event_function: EventFunction = entry as EventFunction
+		if event_function != null and event_function.function_name == old_name:
+			var head: String = SheetCompiler._function_header_line(event_function)
+			lines.append("%s → %s" % [head, EventSheetRefactor.rename_in_code(head, old_name, new_name)])
 	for reference: Dictionary in EventSheetFindReferences.find_in_sheet(sheet, old_name):
 		var before: String = str(reference.get("preview", "")).strip_edges()
 		if before.is_empty():
