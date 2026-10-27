@@ -165,7 +165,7 @@ static func columns(showcases: PackedStringArray, recents: Array,
 			templates.append(maker.merged({"kind": "maker", "shelf": str(starter["shelf"])}))
 		templates.append({"kind": "template", "label": str(starter["label"]).get_slice(" (", 0),
 			"tag": str(starter["kind"]), "pitch": str(starter["pitch"]), "shelf": str(starter["shelf"]),
-			"target": str(starter["id"])})
+			"target": str(starter["id"]), "host": str(starter.get("host", "Node"))})
 	templates.append({"kind": "editor_tool", "label": "Editor Tool…", "tag": "@tool",
 		"pitch": "A sheet whose events run INSIDE the editor - batch renames, scene checks, one-click chores.",
 		"shelf": SHELF_EDITOR_TOOLS, "target": ""})
@@ -238,6 +238,41 @@ static func shelves(entries: Array) -> PackedStringArray:
 		if not shelf.is_empty() and not found.has(shelf):
 			found.append(shelf)
 	return found
+
+
+## The editor icon a row wears in front of its name, by the editor's own icon names: a starter wears
+## the class its script extends, a recent sheet a file, a showcase a scene, a lesson the help mark.
+## Pure, so a test pins every row's icon without an editor theme to draw it from.
+static func row_icon(entry: Dictionary) -> String:
+	match str(entry.get("kind", "")):
+		"open_script":
+			return "Load"
+		"template":
+			return str(entry.get("host", "Node"))
+		"maker":
+			return "Add"
+		"editor_tool":
+			return "Tools"
+		"showcase":
+			return "PackedScene"
+		"recent":
+			return "File"
+		"learn":
+			return "Help"
+	return "Folder"
+
+
+## The texture for `icon_name`: the class's own icon, else its nearest ancestor's that the editor
+## theme carries (Resource has no art of its own and wears Object's, as the Scene dock does). Null
+## outside the editor, where the row keeps only its words.
+static func _icon_texture(icon_name: String) -> Texture2D:
+	var candidate: String = icon_name
+	while not candidate.is_empty():
+		var found: Texture2D = EventSheetEditorIcons.icon(candidate)
+		if found != null:
+			return found
+		candidate = str(ClassDB.get_parent_class(StringName(candidate))) if ClassDB.class_exists(StringName(candidate)) else ""
+	return null
 
 
 ## What opening a row does, said before it is opened - the strip's OPENS line.
@@ -477,6 +512,10 @@ func _fill_list(list: Tree, entries: Array, shelf: String = "") -> void:
 			head.set_selectable(1, false)
 		var item: TreeItem = list.create_item(root)
 		item.set_text(0, str(row.get("label", "")))
+		var icon: Texture2D = _icon_texture(row_icon(row))
+		if icon != null:
+			item.set_icon(0, icon)
+			item.set_icon_max_width(0, EventSheetPalette.scaled(16))
 		item.set_text(1, str(row.get("tag", "")))
 		item.set_tooltip_text(0, str(row.get("label", "")))
 		item.set_custom_color(1, EventSheetPopupUI.muted_text_color())

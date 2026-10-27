@@ -127,6 +127,11 @@ way a user meets it:
   has a Player), so Insert is ready and the window no longer opens on a red line.
 - Sheet Type opens with its help strip on the kind the sheet is; a custom node opened under a strip
   that called it an Event Sheet.
+- Every Start page row leads with its icon, as the board draws it: a starter wears the class its
+  script extends (Platformer Starter a CharacterBody2D, Keycard Door a StaticBody3D, the menus a
+  Control), a recent sheet a file, a showcase a scene, a lesson the help mark. The rows were bare
+  words.
+
 ### Fixed: a hand-written script opened in a user's own project reads like the sheet boards
 
 Found by installing the plugin into a fresh project and opening scripts nobody wrote for it - a
