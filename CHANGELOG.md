@@ -96,6 +96,10 @@ way a user meets it:
   front of it.
 - A class written inside a script owns the calls its functions make to each other: "CoinCounter |
   _walk with node root", where they read under a nameless "Functions".
+- Add an event's object page reads a pack by the word its rows read under ("Bullet", "Platformer")
+  instead of its class name, and puts the project's own globals under Your Project as "GameState
+  (autoload)" after the packs, where they sat at the top beside System with nothing to tell them
+  from a pack.
 - Add an event's Functions section is headed "Functions" alone and lists each function by its name
   as written, under the function mark the sheet draws, with no kind word after it. A hand-written
   script, which publishes none of its functions, lists them all straight under the head instead of

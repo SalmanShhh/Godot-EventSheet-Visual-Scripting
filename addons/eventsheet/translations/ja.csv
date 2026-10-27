@@ -9606,3 +9606,4 @@ The Inspector hides it unless another setting is on.,別の設定がオンにな
 Listed under its own name in the picker and the Add behaviour list. The usual choice.,ピッカーと「ビヘイビアを追加」の一覧に自分の名前で並びます。いつもの選択です。
 "%s is a %s, not a node: a sheet reads it from its file, so it is never added to an object.",%s は %s でノードではありません。シートはそのファイルから読み込むので、オブジェクトに追加されることはありません。
 "%d pack class(es) are referenced by no sheet, scene or autoload - fine if you call them from hand-written GDScript: %s.","%d 個のパッククラスはどのシート、シーン、オートロードからも参照されていません - 手書きの GDScript から呼ぶなら問題ありません: %s。"
+%s (autoload),%s (自動読み込み)

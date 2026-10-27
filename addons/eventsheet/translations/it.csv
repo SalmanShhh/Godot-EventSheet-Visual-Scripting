@@ -9606,3 +9606,4 @@ The Inspector hides it unless another setting is on.,L'Ispettore lo nasconde fin
 Listed under its own name in the picker and the Add behaviour list. The usual choice.,Elencato con il suo nome nel selettore e nell'elenco Aggiungi comportamento. La scelta abituale.
 "%s is a %s, not a node: a sheet reads it from its file, so it is never added to an object.","%s è un %s, non un nodo: un foglio lo legge dal suo file, quindi non viene mai aggiunto a un oggetto."
 "%d pack class(es) are referenced by no sheet, scene or autoload - fine if you call them from hand-written GDScript: %s.","%d classe/i di pacchetto non sono usate da nessun foglio, scena o autoload - va bene se le chiami da GDScript scritto a mano: %s."
+%s (autoload),%s (autoload)

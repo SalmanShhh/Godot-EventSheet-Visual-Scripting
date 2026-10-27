@@ -235,6 +235,7 @@ const CATEGORY_EDITOR_ICONS: Dictionary = EventSheetACEIcons.CATEGORY_EDITOR_ICO
 
 # Group-header colours (by group kind).
 const GROUP_COLOR_NODE_TYPE := Color("#e0b070")  # amber - Godot class sections
+const PROJECT_HEADER_META := "__your_project__"
 const GROUP_COLOR_CUSTOM := Color("#c79bf0")      # purple - custom / runtime providers
 const GROUP_COLOR_NEUTRAL := Color("#9aa1ad")     # neutral muted - other categories
 # Used by the ƒx expression autocomplete (ace_params_dialog) to tint expression fragments. The ACE
@@ -1495,14 +1496,36 @@ static func object_cards_for(definitions: Array[ACEDefinition]) -> Array[Diction
 		seen[provider] = true
 		cards.append({"provider": provider, "label": "System" if provider == "Core" else provider,
 			"global": ProjectSettings.has_setting("autoload/" + provider)})
+	# A pack's card reads by the word its rows read under ("Bullet", "Platformer"), never by the class
+	# it is spelled with ("BulletBehavior"). Two packs that share a word keep their class names, so no
+	# two cards ever read the same.
+	var words: Dictionary = {}
+	for card: Dictionary in cards:
+		var word: String = pack_card_word(str(card.get("provider")))
+		if not word.is_empty():
+			words[word] = int(words.get(word, 0)) + 1
+	for card: Dictionary in cards:
+		var word: String = pack_card_word(str(card.get("provider")))
+		if not word.is_empty() and int(words.get(word, 0)) == 1:
+			card["label"] = word
 	cards.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		# System leads, the globals follow it, the rest alphabetize - the stable order hands learn.
-		var rank_a: int = 0 if str(a.get("provider")) == "Core" else (1 if bool(a.get("global")) else 2)
-		var rank_b: int = 0 if str(b.get("provider")) == "Core" else (1 if bool(b.get("global")) else 2)
+		# System leads, the objects and behaviours alphabetize, and the project's own globals close the
+		# list - the stable order hands learn, and the order the page draws its sections in.
+		var rank_a: int = 0 if str(a.get("provider")) == "Core" else (2 if bool(a.get("global")) else 1)
+		var rank_b: int = 0 if str(b.get("provider")) == "Core" else (2 if bool(b.get("global")) else 1)
 		if rank_a != rank_b:
 			return rank_a < rank_b
 		return str(a.get("label")) < str(b.get("label")))
 	return cards
+
+
+## The word a pack's rows read under, from its own category ("Advanced Random: Setup" is the
+## Advanced Random pack), or "" for a provider that is not a pack or is a global.
+static func pack_card_word(provider: String) -> String:
+	if provider == "Core" or ProjectSettings.has_setting("autoload/" + provider):
+		return ""
+	var category: String = str(EventSheetViewportReadingRows.behaviour_pack_index().get(provider, ""))
+	return category.get_slice(":", 0).strip_edges()
 
 
 ## The open sheet, when there is a dock to read it off. Null everywhere else (a bare picker in a
@@ -1809,12 +1832,16 @@ func _populate_object_cards() -> void:
 	# System is one selectable row at the top (colored like a node-type header, it IS the
 	# whole Core vocabulary); every other object sits under one section header.
 	var objects_header: TreeItem = null
-	var after_system: int = 0
 	for card: Dictionary in object_cards_for(definitions):
 		var provider: String = str(card.get("provider"))
 		var label: String = str(card.get("label"))
 		var parent_item: TreeItem = root
-		if provider != "Core" and not bool(card.get("global")):
+		var global: bool = bool(card.get("global"))
+		if global:
+			# A global is the project's own object: it sits under Your Project, said to be one.
+			parent_item = _project_header(root)
+			label = EventSheetL10n.translate("%s (autoload)") % label
+		elif provider != "Core":
 			if objects_header == null:
 				objects_header = _objects_tree.create_item(root)
 				objects_header.set_text(0, "Objects & Behaviors")
@@ -1825,7 +1852,7 @@ func _populate_object_cards() -> void:
 		if provider == "Core":
 			item.set_custom_color(0, EventSheetPopupUI.readable_on_panel(GROUP_COLOR_NODE_TYPE))
 		item.set_text(0, label)
-		var tooltip: String = "Browse %s's conditions, actions, and triggers." % label
+		var tooltip: String = "Browse %s's conditions, actions, and triggers." % str(card.get("label"))
 		# A pack can ship editor tooling as well as gameplay verbs, and until you installed it
 		# nothing said so. The census reads the pack's own emitted scripts, so the card cannot claim a
 		# dock the pack stopped hanging.
@@ -1836,8 +1863,6 @@ func _populate_object_cards() -> void:
 			tooltip += "\n%s" % adds
 		item.set_tooltip_text(0, tooltip)
 		item.set_metadata(0, provider)
-		if parent_item == root:
-			after_system = item.get_index() + 1
 		# Same icon discipline as the classic tree: the provider's own icon at 16px, never
 		# scaled up; System gets the Node glyph from the editor theme.
 		var item_icon: Texture2D = provider_icons.get(provider, null) as Texture2D
@@ -1851,14 +1876,13 @@ func _populate_object_cards() -> void:
 			item.set_icon(0, item_icon)
 			item.set_icon_max_width(0, 16)
 	# A global the vocabulary does not publish (an autoload outside the packs folder, with no annotations)
-	# still sits at the top beside System, reflected the way Your Project reflects a class.
+	# is still the project's own object, reflected the way Your Project reflects a class.
 	for entry: Dictionary in EventSheetProjectScanner.list_autoloads():
 		var global_name: String = str(entry.get("autoload", ""))
 		if _objects_tree_has(root, global_name):
 			continue
-		var global_item: TreeItem = _objects_tree.create_item(root, after_system)
-		after_system += 1
-		global_item.set_text(0, global_name)
+		var global_item: TreeItem = _objects_tree.create_item(_project_header(root))
+		global_item.set_text(0, EventSheetL10n.translate("%s (autoload)") % global_name)
 		global_item.set_tooltip_text(0, EventSheetL10n.translate("Browse what the global %s offers - every sheet reaches it by this name.") % global_name)
 		global_item.set_metadata(0, str(entry.get("name", "")))
 		global_item.set_icon(0, editor_icon("Node"))
@@ -1866,11 +1890,28 @@ func _populate_object_cards() -> void:
 	_populate_project_cards(root)
 
 
-## Whether a top-level row already offers `provider`.
+## The Your Project section's head, made the first time a card needs it: the project's own globals
+## and classes, after the packs.
+func _project_header(root: TreeItem) -> TreeItem:
+	for child: TreeItem in root.get_children():
+		if str(child.get_metadata(0)) == PROJECT_HEADER_META:
+			return child
+	var header: TreeItem = _objects_tree.create_item(root)
+	header.set_text(0, "Your Project")
+	header.set_metadata(0, PROJECT_HEADER_META)
+	header.set_custom_color(0, EventSheetPopupUI.readable_on_panel(GROUP_COLOR_CUSTOM))
+	header.set_selectable(0, false)
+	return header
+
+
+## Whether a card already offers `provider`, at the top or under a section head.
 func _objects_tree_has(root: TreeItem, provider: String) -> bool:
 	for child: TreeItem in root.get_children():
 		if str(child.get_metadata(0)) == provider:
 			return true
+		for grandchild: TreeItem in child.get_children():
+			if str(grandchild.get_metadata(0)) == provider:
+				return true
 	return false
 
 
@@ -1888,10 +1929,7 @@ func _populate_project_cards(root: TreeItem) -> void:
 		return str(entry.get("autoload", "")).is_empty())
 	if entries.is_empty():
 		return
-	var header: TreeItem = _objects_tree.create_item(root)
-	header.set_text(0, "Your Project")
-	header.set_custom_color(0, EventSheetPopupUI.readable_on_panel(GROUP_COLOR_CUSTOM))
-	header.set_selectable(0, false)
+	var header: TreeItem = _project_header(root)
 	# Hidden classes are listed too, greyed and marked - hiding must not be a one-way door
 	# with no path back, and a card the user cannot see is a card they cannot restore.
 	var hidden_names: PackedStringArray = PackedStringArray()
