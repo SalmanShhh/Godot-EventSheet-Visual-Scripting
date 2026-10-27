@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Fixed: the plugin ships its `.uid` files
+
+- Every script and shader in the plugin, the packs, the showcases and the tools now ships with the
+  `.uid` file Godot keeps beside it, as Godot 4.4 and later ask. A project that replaced the plugin
+  folders on an update printed one "Missing .uid file ... re-created from cache" warning per script
+  (951 of them in a project with the packs installed); it now prints none, and a fresh clone keeps
+  the same ids on every machine instead of inventing its own.
+- **Updating an existing project:** the first import after this update may print a one-time UID
+  warning for a scene or resource of yours that named a plugin script by the id your project had
+  invented for it before the shipped one arrived. Nothing breaks - Godot falls back to the path - and
+  re-saving that scene clears it.
+- For contributors: `tests/uid_sidecars_test.gd` holds every tracked `.gd`, `.gdshader` and
+  `.gdshaderinc` to its tracked `.uid` (and the reverse) and fails on a uid spelled twice. The pack
+  build and the showcase build keep every existing `.uid` exactly as it was, and the pack audit and
+  the showcase check fail on a shipped script without one (`uid_sidecars missing=N`) without ever
+  counting a `.uid` as drift. A new script gets its `.uid` from `--import`; commit it with the script.
+
 ### Fixed: three small readings of a user's own scripts
 
 - In `if body is Player:` the call `body.take_damage(damage)` read "Take damage   damage", the value

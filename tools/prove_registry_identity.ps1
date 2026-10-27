@@ -47,10 +47,11 @@
 # ABSOLUTE path under the temp folder rather than to `user://something.txt` - two runs writing the
 # same `user://` name would compare a text against itself and print a green gate over a real change.
 #
-# THE IMPORT RE-MINTS EVERY `.uid` SIDECAR IN THE BASE WORKTREE. Importing a fresh checkout writes
-# new resource ids into the `.gd.uid` files beside the scripts, so the same script has one id in the
-# base worktree and a different one here, with neither of them wrong and neither of them meaning a
-# thing about the vocabulary. TWO CONSEQUENCES, both of them rules rather than observations:
+# A BASE OLDER THAN THE COMMITTED `.uid` SIDECARS HAS ITS IDS RE-MINTED BY THE IMPORT. Such a
+# checkout carries no `.gd.uid` files, so importing it writes new resource ids beside the scripts,
+# and the same script has one id in the base worktree and a different one here, with neither of them
+# wrong and neither of them meaning a thing about the vocabulary (a base that has the sidecars keeps
+# them). TWO CONSEQUENCES, both of them rules rather than observations:
 #
 #   * ANYTHING COMPARING PATHS OR IDS ACROSS THE TWO TREES MUST NORMALISE. A future text that put a
 #     script's uid, or a `res://` path resolved through one, on a line would report every verb moved

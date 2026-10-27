@@ -13,6 +13,11 @@ extends SceneTree
 ## apart says so in the audit's own output instead of only at the next full regeneration.
 const MEASURE := preload("res://tools/measure_packs.gd")
 
+## The committed `.uid` sidecars. They are not compared as drift - no builder writes one, the import
+## does - but a pack script or shader shipped WITHOUT one is a red gate of its own: a user install
+## would invent its id, and every scene naming it by uid would fall back to the path with a warning.
+const UID_SIDECARS := preload("res://tools/uid_sidecars.gd")
+
 
 func _init() -> void:
 	var packs_dir: DirAccess = DirAccess.open("res://eventsheet_addons")
@@ -68,10 +73,14 @@ func _init() -> void:
 	for problem: String in successor_problems:
 		print("SUCCESSOR: %s" % problem)
 	print("successors=%d problems=%d" % [_successor_count(catalog), successor_problems.size()])
+	var missing_sidecars: PackedStringArray = UID_SIDECARS.missing("res://eventsheet_addons")
+	for path: String in missing_sidecars:
+		print("UID MISSING: %s (%s)" % [path, UID_SIDECARS.FIX])
+	print("uid_sidecars missing=%d" % missing_sidecars.size())
 	# A red gate must FAIL the invocation: anything checking only the exit code (CI, shell
 	# chains) used to see success even when packs drifted or failed to parse.
 	quit(1 if drifted > 0 or failed > 0 or not spelling_problems.is_empty() \
-		or not successor_problems.is_empty() else 0)
+		or not successor_problems.is_empty() or not missing_sidecars.is_empty() else 0)
 
 
 ## How many verbs in the vocabulary carry a forwarding address at all - printed beside the problem

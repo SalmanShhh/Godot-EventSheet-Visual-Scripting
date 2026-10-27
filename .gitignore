@@ -28,12 +28,10 @@ Thumbs.db
 # Python cache (tooling)
 __pycache__/
 
-# Godot script UID sidecars
-*.uid
-# EXCEPT the one script project.godot names by uid: the editor rewrites the autoload line to the
-# script's uid on import, and without a committed sidecar every fresh checkout invents a new uid -
-# so project.godot churned on every machine and the autoload errored until the rewrite landed.
-!addons/eventforge/runtime/eventforge_bridge.gd.uid
+# Godot's `.uid` sidecars are COMMITTED, every one of them (Godot 4.4+ asks for exactly that): a
+# script or shader is named by its uid in scenes, resources and project.godot, and a checkout or a
+# user install without the sidecars invents new ids, warns about every one it had cached, and
+# churns project.godot. tests/uid_sidecars_test.gd holds every tracked script to its sidecar.
 _preview.png
 _preview.png.import
 _picker_preview.png

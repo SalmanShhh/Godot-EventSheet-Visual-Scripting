@@ -6,15 +6,25 @@
 # is deterministic. Run:
 #   godot --headless --path . --script tools/build_sample_behaviors.gd
 # Faithfulness gate: tools/audit_addons.gd must report drifted=0 afterwards.
+#
+# The committed `.uid` sidecars are KEPT: a build never writes, rewrites or removes one (a
+# regenerated pack keeps its identity), and one that changed anyway is put back and fails the build.
+# A brand-new pack's script has no sidecar until the next import writes it - the build names it.
 @tool
 extends SceneTree
 
 const BUILDERS_DIR := "res://tools/pack_builders/"
 
+const UID_SIDECARS := preload("res://tools/uid_sidecars.gd")
+
+## The trees a build writes into, whose sidecars it must leave exactly as it found them.
+const BUILT_TREES: PackedStringArray = ["res://eventsheet_addons", "res://tools/pack_builders"]
+
 
 func _init() -> void:
 	var ok: bool = true
 	var built: int = 0
+	var sidecars: Dictionary = UID_SIDECARS.snapshot(BUILT_TREES)
 	for builder_name: String in _discover_builders():
 		var builder: GDScript = load(BUILDERS_DIR + builder_name + ".gd")
 		if builder == null:
@@ -28,6 +38,11 @@ func _init() -> void:
 		ok = bool(builder.call("build")) and ok
 		built += 1
 	print("[build_sample_behaviors] built %d packs" % built)
+	for path: String in UID_SIDECARS.changed_since(sidecars):
+		push_error("[build_sample_behaviors] the build changed %s - put back as it was" % path)
+		ok = false
+	for path: String in UID_SIDECARS.missing("res://eventsheet_addons"):
+		print("[build_sample_behaviors] %s has no .uid yet: %s" % [path, UID_SIDECARS.FIX])
 	if not ok:
 		# EXIT 1, because a build that pushed an error and then exited 0 is a build a script
 		# believed. A pack that failed here is one whose body the assembler could not make -
