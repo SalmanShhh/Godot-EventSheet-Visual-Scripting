@@ -113,9 +113,8 @@ static func run() -> bool:
 	var plain_rows: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
 	ok = _check("a non-state match reads as its test", plain_rows[0].spans[0].text, "damage_type is State.PATROL") and ok
 
-	# 5. A case body's if block is a nested CONDITION row whose guard SPEAKS: a bare self-call
-	# humanizes ("Can See Player"), `not` reads as the word Not - a beginner never meets
-	# parentheses in a condition cell.
+	# 5. A case body's if block is a nested CONDITION row whose guard SPEAKS, in the words the same
+	# test gets on any event: a bare self-call reads without its parentheses ("can see player").
 	lifted_match.match_expression = "state"
 	var spot: RawCodeRow = RawCodeRow.new()
 	spot.code = "if can_see_player():
@@ -124,18 +123,21 @@ static func run() -> bool:
 	var guarded_rows: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
 	ok = _check("the transition is a child row of its state", guarded_rows[0].children.size(), 1) and ok
 	var transition: EventRowData = guarded_rows[0].children[0]
-	ok = _check("the guard leads with the ƒ badge", transition.spans[0].text, "ƒ") and ok
-	ok = _check("the ƒ is a badge span, not text", bool((transition.spans[0].metadata as Dictionary).get("badge", false)), true) and ok
-	ok = _check("the guard humanizes in the condition cell", transition.spans[1].text, "Can See Player") and ok
+	# The guard is a condition like any sub-event's, read by the reader a hand-written `if` gets: no
+	# badge leads it (a trigger arrow there said "trigger" about a question), and it names its object.
+	ok = _check("the guard is read as a condition line, its object first",
+		[transition.spans[0].text, bool((transition.spans[0].metadata as Dictionary).get("badge", false)),
+			str((transition.spans[0].metadata as Dictionary).get("object_label", ""))],
+		["can see player", false, "System"]) and ok
 	# The effect of a guard inside the OBJECT'S OWN machine is a transition, and reads as the row that
 	# writes it. The same guard under somebody else's machine keeps the plain assignment sentence,
 	# because there the leaf names no enum this sheet declares.
 	ok = _check("the transition reads as the Go to row it means",
-		transition.spans[2].text, "Go to Chase") and ok
+		transition.spans[1].text, "Go to Chase") and ok
 	lifted_match.match_expression = "machine.current_state"
 	var foreign_guarded: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
 	ok = _check("and elsewhere it reads as a sentence in the action cell",
-		foreign_guarded[0].children[0].spans[2].text, "Set state to State.CHASE") and ok
+		foreign_guarded[0].children[0].spans[1].text, "Set state to State.CHASE") and ok
 	lifted_match.match_expression = "state"
 	spot.code = "if not can_see_player():
 	state = State.PATROL"
@@ -153,7 +155,7 @@ static func run() -> bool:
 	ok = _check("the invert mark is a badge span, not text",
 		bool((negated_transition.spans[negated_texts.find(ViewportRowBuilder.NEGATED_MARK)].metadata as Dictionary).get("badge", false)), true) and ok
 	ok = _check("a negated guard's sentence is the positive one",
-		negated_texts.has("Can See Player"), true) and ok
+		negated_texts.has("can see player"), true) and ok
 	ok = _check("a negated guard never says the word Not",
 		" ".join(negated_texts).contains("Not"), false) and ok
 

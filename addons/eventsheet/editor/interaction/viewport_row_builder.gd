@@ -8874,16 +8874,27 @@ func _read_case_steps(case_row: EventRowData, step_code: Dictionary) -> void:
 
 ## The match head on its event's condition lane: "match state", after the trigger. It carries the
 ## match's action index, so a double-click opens the Match window exactly as the old caption did.
-func _match_head_span(match_row: MatchRow, action_index: int, line_index: int, style_meta: Dictionary) -> SemanticSpan:
-	return _make_span("%s %s" % [EventSheetL10n.translate("match"), match_row.match_expression.strip_edges()],
-		SemanticSpan.SpanType.CONDITION, {
-			"lane": "condition",
-			"kind": "match_head",
-			"ace_index": action_index,
-			"match_action": true,
-			"chip": false,
-			"line_index": line_index
-		}.merged(style_meta, true))
+## On a line of its own (a function's switch, or one after other conditions) the head is a System line
+## like any other, so it leads with System's icon in the object column; beside a trigger, the trigger's
+## own object already leads the line.
+func _match_head_span(match_row: MatchRow, action_index: int, line_index: int, style_meta: Dictionary,
+		own_line: bool = false) -> SemanticSpan:
+	var metadata: Dictionary = {
+		"lane": "condition",
+		"kind": "match_head",
+		"ace_index": action_index,
+		"match_action": true,
+		"chip": false,
+		"line_index": line_index
+	}
+	if own_line:
+		metadata["object_label"] = _object_label_for("Core", "")
+	var span: SemanticSpan = _make_span("%s %s" % [EventSheetL10n.translate("match"), match_row.match_expression.strip_edges()],
+		SemanticSpan.SpanType.CONDITION, metadata.merged(style_meta, true))
+	if own_line:
+		var dressed: Array[SemanticSpan] = [span]
+		_dress_line_object_icons(dressed)
+	return span
 
 
 ## True when a blank tick event's one condition line will carry a match head beside its trigger: the
@@ -8978,6 +8989,7 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 			# The line of code behind each plain step, by its index in `body`: a branch's step is read
 			# through the same sentence layer an event's step is (below), object column and all.
 			var step_code: Dictionary = {}
+			var stepped_lines: Dictionary = {}
 			var transition_children: Array[EventRowData] = []
 			for case_item: Variant in match_case.events:
 				if case_item is RawCodeRow:
@@ -9000,6 +9012,8 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 						var stepped: String = "" if not own_state_match else EventSheetStateFacts.statement_reading(case_line)
 						if stepped.is_empty() and combo.is_empty():
 							step_code[body.size()] = case_line
+						elif not stepped.is_empty():
+							stepped_lines[body.size()] = true
 						body.append(stepped if not stepped.is_empty() \
 							else _friendly_statement_text(case_line, not combo.is_empty()))
 				elif case_item is ACEAction:
@@ -9054,6 +9068,7 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 			if branches:
 				case_row.match_case = match_case
 				_read_case_steps(case_row, step_code)
+				_name_stepped_objects(case_row, stepped_lines)
 				_append_case_add_action(case_row, body.size())
 			for transition_child: EventRowData in transition_children:
 				case_row.children.append(transition_child)
@@ -10814,6 +10829,9 @@ func _transition_child_row(case_lines: PackedStringArray, indent: int, match_row
 	# the same Go to reading the arm's plain lines get applies here. Asked of the match's own subject,
 	# because that is the only thing that says which machine these lines are about.
 	var own_state: bool = EventSheetStateFacts.is_state_subject(match_row.match_expression)
+	# The code behind each plain step, by its index in `inner`, and the steps already said as Go to.
+	var step_code: Dictionary = {}
+	var stepped_lines: Dictionary = {}
 	for line_index: int in range(1, case_lines.size()):
 		if not case_lines[line_index].begins_with("\t"):
 			return null
@@ -10821,30 +10839,50 @@ func _transition_child_row(case_lines: PackedStringArray, indent: int, match_row
 		if inner_line.begins_with("\t") or inner_line.begins_with("elif") or inner_line.begins_with("else"):
 			return null
 		var stepped: String = "" if not own_state else EventSheetStateFacts.statement_reading(inner_line)
+		if stepped.is_empty():
+			step_code[inner.size()] = inner_line
+		else:
+			stepped_lines[inner.size()] = true
 		inner.append(stepped if not stepped.is_empty() else _friendly_statement_text(inner_line))
-	var child: EventRowData = _build_condition_action_row(_friendly_guard_text(guard), inner, indent, match_row, _guard_is_negated(guard))
+	# The guard is a condition like any sub-event's: read by the same conjunct reader a hand-written
+	# `if a and b:` gets, so it names its object and says its test in the sheet's words ("Player |
+	# Is on floor", "System | |velocity.x| > 10"). An inverted guard wears the red cross and reads
+	# positive. A guard that reader cannot say keeps the words it had.
+	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
+	var negated: bool = _guard_is_negated(guard)
+	var carrier := EventRowData.new()
+	if negated:
+		carrier.spans.append(_negated_badge_span(condition_style_meta, 0))
+	_append_conjunct_condition_lines(carrier,
+		str(EventSheetViewportLenses.strip_leading_not(guard.strip_edges()).get("text", guard)), 0, condition_style_meta)
+	# A test no object owns (a sum, a comparison of a computed value) is System's, as on an event.
+	for carried: SemanticSpan in carrier.spans:
+		if str(carried.metadata.get("kind", "")) == "condition" \
+				and str(carried.metadata.get("object_label", "")).strip_edges().is_empty():
+			carried.metadata["object_label"] = _object_label_for("Core", "")
+	var child: EventRowData = null
+	if carrier.spans.size() > (1 if negated else 0):
+		child = _build_condition_action_row("", inner, indent, match_row, false, carrier.spans)
+		child.or_condition_lines = carrier.or_condition_lines
+		child.line_count = maxi(child.line_count, carrier.line_count)
+	else:
+		child = _build_condition_action_row(_friendly_guard_text(guard), inner, indent, match_row, negated)
 	child.language_block = true
-	# A computed-check guard wears the ƒ SVG badge in the icon column - the reader learns at a
-	# glance the value comes from a FUNCTION, not a bool variable, without meeting parentheses.
-	if _guard_is_call(guard):
-		var guard_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
-		guard_badge_meta["badge_bg"] = _viewport._get_reading_style().code_badge_background_color
-		guard_badge_meta["badge_fg"] = _viewport._get_reading_style().code_badge_foreground_color
-		guard_badge_meta["badge_style"] = "trigger"
-		guard_badge_meta["lane"] = "condition"
-		guard_badge_meta["line_index"] = 0
-		child.spans.insert(0, _make_span("ƒ", SemanticSpan.SpanType.KEYWORD, guard_badge_meta))
+	# Its steps read as the same lines read in an event's action lane, object column and all.
+	_read_case_steps(child, step_code)
+	_name_stepped_objects(child, stepped_lines)
 	return child
 
 
-## Whether a guard's core (after any leading `not`) is a bare self-call - the shape that earns
-## the ƒ computed-check badge.
-func _guard_is_call(guard: String) -> bool:
-	var text: String = guard.strip_edges()
-	if text.begins_with("not "):
-		text = text.substr(4).strip_edges()
-	var call: Dictionary = ViewportRowBuilder.call_parts(text)
-	return not call.is_empty() and (str(call.get("target", "")).is_empty() or str(call.get("target", "")) == "self")
+## A Go to step inside a switch on the object's own state is said by the state facts rather than the
+## sentence layer, so it is given the object an event's Go to row names: System.
+func _name_stepped_objects(row: EventRowData, stepped_lines: Dictionary) -> void:
+	if stepped_lines.is_empty():
+		return
+	for span: SemanticSpan in row.spans:
+		if str(span.metadata.get("kind", "")) == "match_case" and str(span.metadata.get("lane", "")) == "action" \
+				and stepped_lines.has(int(span.metadata.get("line_index", -1))):
+			span.metadata["object_label"] = _object_label_for("Core", "")
 
 
 ## Whether a match subject is state-shaped: its trailing identifier (after any `.`/`(`) contains
@@ -14066,7 +14104,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		if head_match == null or not match_reads_as_branches(head_match, event_row):
 			continue
 		spans.append(_match_head_span(head_match, head_index,
-			0 if head_beside_trigger else condition_line_index, condition_style_meta))
+			0 if head_beside_trigger else condition_line_index, condition_style_meta, not head_beside_trigger))
 		if not head_beside_trigger:
 			condition_line_index += 1
 	# In a READ-ONLY preview a body-only row leaves its left cell blank, exactly as an event sheet

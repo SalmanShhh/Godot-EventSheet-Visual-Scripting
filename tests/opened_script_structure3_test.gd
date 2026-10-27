@@ -177,7 +177,7 @@ static func _rows() -> bool:
 	# The match says what it decides by, and each branch is a sub-event stating its own test; several
 	# values are an OR block; `_` is a plain Else.
 	ok = _check("the match says what it decides by", _row_containing(rows, "match difficulty"),
-		"i1 [match difficulty]") and ok
+		"i1 [System> match difficulty]") and ok
 	ok = _check("the first case states its test",
 		_row_containing(rows, "difficulty is \"easy\""),
 		"i2 [System> difficulty is \"easy\" | System> Set reward to 10]") and ok
