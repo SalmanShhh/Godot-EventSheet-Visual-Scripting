@@ -656,7 +656,8 @@ func build_head_band_rows(sheet: EventSheetResource, scaffold_rows: Array[EventR
 		if one_head and kind == EventSheetHeadBands.BAND_HOST and sheet.behavior_mode:
 			continue
 		# A script that runs in the editor says so on the bar, as a chip beside what it extends.
-		if one_head and kind == EventSheetHeadBands.BAND_TOOL and bool(band.get("switch_on", false)) 				and not bool(band.get("warning", false)):
+		var tool_on_bar: bool = kind == EventSheetHeadBands.BAND_TOOL and bool(band.get("switch_on", false))
+		if one_head and tool_on_bar and not bool(band.get("warning", false)):
 			continue
 		var head_row: EventRowData = _build_head_band_row(sheet, band, head_facts, description_source,
 			extends_band if kind == EventSheetHeadBands.BAND_NAME else {}, hovered_facts)
@@ -1477,9 +1478,7 @@ func build_sheet_head_bar_row(sheet: EventSheetResource, head_facts: Dictionary 
 ## light ground.
 func _runs_in_editor_chip_span(meta: Dictionary, editable: bool) -> SemanticSpan:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
-	var hover: String = "%s
-
-@tool" % EventSheetL10n.translate("Runs in the editor too.")
+	var hover: String = "%s\n\n@tool" % EventSheetL10n.translate("Runs in the editor too.")
 	var chip_meta: Dictionary = meta.merged({
 		"badge": true,
 		"badge_style": "scope",
@@ -1490,8 +1489,7 @@ func _runs_in_editor_chip_span(meta: Dictionary, editable: bool) -> SemanticSpan
 	}, true)
 	if editable:
 		chip_meta["head_action"] = EventSheetHeadBands.BAND_EXTENDS
-		chip_meta["hover_note"] = "%s
-%s" % [hover, EventSheetL10n.translate("Click to change what kind of script it is.")]
+		chip_meta["hover_note"] = "%s\n%s" % [hover, EventSheetL10n.translate("Click to change what kind of script it is.")]
 	return _make_span(EventSheetL10n.translate("Runs in the editor"), SemanticSpan.SpanType.KEYWORD, chip_meta)
 
 
