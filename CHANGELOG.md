@@ -60,6 +60,7 @@ way a user meets it:
   Add action, Compare and Match lead with their object's icon and name.
 - A drafted function description keeps a name at the start of a clause as written: "GameState.coins
   += amount", never "gameState".
+
 ### Fixed: the makers read right in a project the plugin was installed into
 
 - The Welcome window no longer offers "Open the playable showcase scene" in a project that has no
@@ -73,8 +74,7 @@ way a user meets it:
 - Behaviour settings… and Global settings… read a hand-written script's description when a blank
   line sits between `extends` and its `##` line, the way Godot's own script template writes it.
 - Properties and actions… reads a property written `@export var enabled := true` as `bool` and
-  `true`, not `Variant` and `"true"`; the Inspector Designer's card for `@export var starting_coins := 0`
-  says "A whole number." instead of "A Variant value.".
+  `true`, not `Variant` and `"true"`.
 - A variable written `var run_time := 0.0` reads as a number: `run_time += delta` no longer grows the
   amber "run_time is any - Add to wants a number" note on an autoload written by hand.
 - The Add behaviour list no longer offers a data pack that extends Resource as something to add to
