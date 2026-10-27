@@ -16,6 +16,7 @@ extends AcceptDialog
 
 const LISTS: Array[String] = ["properties", "actions", "conditions", "triggers", "expressions"]
 const PANEL_PATH := "res://addons/eventsheet/editor/dock/new_addon_panel.gd"
+const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
 
 var _dock: Control = null
 var _list: String = "properties"
@@ -99,7 +100,13 @@ static func entries(sheet: EventSheetResource, list: String) -> Array[Dictionary
 			var variable: LocalVariable = entry as LocalVariable
 			if variable == null or variable.is_constant or (not is_global and not variable.exported):
 				continue
-			out.append({"name": variable.name, "type": variable.type_name, "value": var_to_str(variable.default_value),
+			# A value written as code (`var enabled := true`, `= Vector2.ZERO`, an @onready line) is
+			# kept as its source text, so it reads as written and its type is the one Godot infers
+			# from it - not "Variant" and a quoted "true".
+			var as_code: bool = variable.expression_default or variable.inferred_type or variable.onready
+			out.append({"name": variable.name,
+				"type": NativeVariableMarks.gdscript_type_word(variable.type_name, variable.default_value, as_code),
+				"value": str(variable.default_value) if as_code and variable.default_value is String else var_to_str(variable.default_value),
 				"means": variable.description, "line": EventSheetCodeEcho.line_for(variable), "resource": variable})
 		return out
 	for organ: Dictionary in BehaviourAnatomyPanel.collect_anatomy(sheet):

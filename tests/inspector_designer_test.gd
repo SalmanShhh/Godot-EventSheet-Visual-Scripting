@@ -52,6 +52,20 @@ static func run() -> bool:
 	all_passed = _eq("entries carry their scope (dict = global, tree = tree)",
 		[str(entries[0].get("scope")), str(entries[2].get("scope"))], ["global", "tree"]) and all_passed
 
+	# `@export var starting_coins := 0`, the way a script written by hand often declares it: the
+	# type is the one Godot infers from the value, and the card says so.
+	var inferred: LocalVariable = LocalVariable.new()
+	inferred.name = "starting_coins"
+	inferred.default_value = "0"
+	inferred.inferred_type = true
+	inferred.exported = true
+	var inferred_sheet: EventSheetResource = EventSheetResource.new()
+	inferred_sheet.events.append(inferred)
+	var inferred_entry: Dictionary = EventSheetInspectorDesignerDialog.collect_entries(inferred_sheet)[0]
+	all_passed = _eq("a variable written with := reads as the type Godot infers, and the card says it",
+		[inferred_entry.get("type_name"), EventSheetInspectorPreviewCard.describe(str(inferred_entry.get("type_name")), {}, true, false)],
+		["int", "A whole number."]) and all_passed
+
 	var dialog: EventSheetInspectorDesignerDialog = EventSheetInspectorDesignerDialog.new()
 	dialog.rebuild_for_sheet(sheet)
 	all_passed = _eq("the dialog shows one card per Inspector-visible variable", dialog.row_count(), 3) and all_passed

@@ -334,10 +334,26 @@ func open_card_menu(path: String) -> void:
 
 
 ## The kind of object a pack's script works on - its typed `host`, else what it says it requires -
-## or "" when any node will do.
+## or "" when any node will do. A pack that is not a node at all (a data pack extending Resource) is
+## named by what it extends, so it sits on its own greyed shelf instead of among the ones for any node.
 static func works_on(source: String) -> String:
+	var not_a_node: String = non_node_base(source)
+	if not not_a_node.is_empty():
+		return not_a_node
 	var needs: String = EventSheetBehaviourAddonScaffold.host_class_of(source)
 	return needs if not needs.is_empty() else EventSheetAddBehavior.requirement_in(source)
+
+
+## The engine class a pack's script extends when that class is not a node (Resource, RefCounted), or
+## "" for a node or a script class - a pack like that is read by a sheet, never added under an object.
+static func non_node_base(source: String) -> String:
+	var found: RegExMatch = RegEx.create_from_string("(?m)^extends\\s+([A-Za-z_][A-Za-z0-9_]*)").search(source)
+	if found == null:
+		return ""
+	var base: String = found.get_string(1)
+	if not ClassDB.class_exists(base) or base == "Node" or ClassDB.is_parent_class(base, "Node"):
+		return ""
+	return base
 
 
 ## A tile's picture: the script's own @icon, else the pack's icon, else the editor icon of the kind
@@ -363,9 +379,14 @@ static func refusal(pack: Dictionary, host: Node, autoloads: Variant = null, sou
 	var globals: Dictionary = autoloads if autoloads is Dictionary else autoload_bases()
 	if globals.has(path.get_basename()):
 		return EventSheetL10n.translate("%s is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object.") % str(pack.get("name", ""))
+	var text: String = str(source) if source is String else FileAccess.get_file_as_string(path)
+	var not_a_node: String = non_node_base(text)
+	if not not_a_node.is_empty():
+		return EventSheetL10n.translate("%s is a %s, not a node: a sheet reads it from its file, so it is never added to an object.") % [
+			str(pack.get("name", "")), not_a_node]
 	if host == null:
 		return ""
-	var needs: String = works_on(str(source) if source is String else FileAccess.get_file_as_string(path))
+	var needs: String = works_on(text)
 	if needs.is_empty() or not ClassDB.class_exists(needs) or host.is_class(needs):
 		return ""
 	return EventSheetL10n.translate("Made for a %s - %s is a %s.") % [needs, host.name, host.get_class()]

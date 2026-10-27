@@ -43,7 +43,13 @@ static func run() -> bool:
 	panel._kind_option.select(1)
 	panel._kind_option.item_selected.emit(1)
 	ok = _check("changing what it works on changes the copies", _items(panel._start_option).has("Copy of Bullet"), true) and ok
-	ok = _check("a shelf names the packs already on it", panel._shelf_option.get_item_tooltip(panel._shelf_option.selected).begins_with("Listed with "), true) and ok
+	ok = SUPPORT.pins("new_addon_panel_test", [
+		["a behaviour's category leads with its own name, which a project with no packs still has",
+			panel._shelf_option.get_item_text(0), "Its own name"],
+		["and it stays the chosen one whatever pack the copies list starts with",
+			[panel._shelf_option.selected, panel._shelf_option.get_item_metadata(panel._shelf_option.selected)], [0, ""]],
+		["a pack shelf names the packs already on it", panel._shelf_option.get_item_tooltip(1).begins_with("Listed with "), true],
+	]) and ok
 
 	panel.open(true)
 	ok = SUPPORT.pins("new_addon_panel_test", [
@@ -125,6 +131,18 @@ static func run() -> bool:
 		["the behaviour is named as its class", MEMBERS.identity(sheet)["name"], "Patrol"],
 		["and is not a global", MEMBERS.identity(sheet)["global"], false],
 	]) and ok
+	# A property written by hand as `@export var enabled := true` keeps its value as source text; the
+	# list reads it as written, with the type Godot infers, not as a Variant holding "true".
+	var enabled: LocalVariable = LocalVariable.new()
+	enabled.name = "enabled"
+	enabled.default_value = "true"
+	enabled.inferred_type = true
+	enabled.exported = true
+	sheet.events.append(enabled)
+	var written: Dictionary = MEMBERS.entries(sheet, "properties")[1]
+	ok = _check("a property written with := reads its inferred type and its value as written",
+		[written["name"], written["type"], written["value"]], ["enabled", "bool", "true"]) and ok
+	sheet.events.erase(enabled)
 	sheet.behavior_mode = false
 	sheet.autoload_mode = true
 	sheet.autoload_name = "GameState"
@@ -203,6 +221,13 @@ static func run() -> bool:
 		["...and says so when it matches nothing", _searched(dialog, "zzz-nothing"), ["No pack here matches that."]],
 		["the works-on kind reads the typed host before what a pack requires",
 			EventSheetAddBehaviorDialog.works_on("extends Node\n## @ace_requires(\"Camera3D\")\n"), "Camera3D"],
+		["a data pack that is not a node is named by what it extends, not offered for any node",
+			EventSheetAddBehaviorDialog.works_on("class_name ZzLoot\nextends Resource\n"), "Resource"],
+		["and is greyed with the reason, even with no scene open", EventSheetAddBehaviorDialog.refusal(
+			{"name": "Zz Loot", "path": "res://zz_loot.gd"}, null, {}, "class_name ZzLoot\nextends Resource\n"),
+			"Zz Loot is a Resource, not a node: a sheet reads it from its file, so it is never added to an object."],
+		["a node pack is still offered", EventSheetAddBehaviorDialog.refusal(
+			{"name": "Zz Blink", "path": "res://zz_blink.gd"}, null, {}, "extends Node\n"), ""],
 	]) and ok
 	dialog.free()
 	plain.free()

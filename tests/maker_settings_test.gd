@@ -53,6 +53,11 @@ static func _answers_come_from_the_header() -> bool:
 		["...while the line under extends, then a blank, still is", EventSheetNewAddonPanel.answers_of(
 			"extends Node\n## Patrols the ledge.\n\nfunc _process(_delta: float) -> void:\n\tpass\n", "res://zz.gd")["description"],
 			"Patrols the ledge."],
+		["...and so is one under a blank line under extends, the way Godot's own template writes it",
+			EventSheetNewAddonPanel.answers_of("class_name ZzLedge\nextends Node\n\n## Moves its parent.\n\nsignal stopped\n",
+			"res://zz.gd")["description"], "Moves its parent."],
+		["...while a member's doc comment under that blank line still is not", EventSheetNewAddonPanel.answers_of(
+			"extends Node\n\n## Where it walks.\nvar points: Array = []\n", "res://zz.gd")["description"], ""],
 	])
 
 

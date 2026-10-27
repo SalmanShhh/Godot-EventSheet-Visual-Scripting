@@ -230,16 +230,20 @@ func _fill_shelves() -> void:
 		EventSheetPopupUI.add_described_item(_shelf_option, "Saving", EventSheetL10n.translate("Listed with the save and load actions."), "Saving")
 		EventSheetPopupUI.add_described_item(_shelf_option, "UI", EventSheetL10n.translate("Listed with menus and screens."), "UI")
 		return
+	# Its own name leads and is the one chosen: a project with no packs has no other shelf at all
+	# (the list was empty, and Create wrote a heading read off no item), and with packs installed
+	# every shelf is one pack's own name, so picking one for the reader filed a new Patrol with Car.
+	EventSheetPopupUI.add_described_item(_shelf_option, EventSheetL10n.translate("Its own name"), EventSheetL10n.translate(
+		"Listed under its own name in the picker and the Add behaviour list. The usual choice."), "")
 	var packs: Array[Dictionary] = EventSheetPackCatalog.packs()
 	for shelf: String in EventSheetPackCatalog.categories(packs):
 		var names: PackedStringArray = PackedStringArray()
 		for pack: Dictionary in EventSheetPackCatalog.filtered(packs, shelf, ""):
 			if names.size() < 3:
 				names.append(str(pack.get("name", "")))
-		var index: int = EventSheetPopupUI.add_described_item(_shelf_option, shelf,
+		EventSheetPopupUI.add_described_item(_shelf_option, shelf,
 			EventSheetL10n.translate("Listed with %s.") % ", ".join(names), shelf)
-		if shelf == "General":
-			_shelf_option.select(index)
+	_shelf_option.select(0)
 	EventSheetPopupUI.follow_description(_shelf_option)
 
 
@@ -257,10 +261,6 @@ func _fill_starts() -> void:
 		var source: String = FileAccess.get_file_as_string(str(pack.get("path", "")))
 		var fits: bool = _is_global_shaped(source) if _global else Scaffold.host_class_of(source) == works_on
 		if fits and not Scaffold.is_yours(source):
-			# The shelf a new one is likely to share is the one the packs made for the same object sit on.
-			if not _global and _start_option.item_count == 1 and not str(pack.get("category", "")).is_empty():
-				EventSheetPopupUI.select_option(_shelf_option, str(pack.get("category", "")))
-				_shelf_option.item_selected.emit(_shelf_option.selected)
 			_start_item(EventSheetL10n.translate("Copy of %s") % str(pack.get("name", "")),
 				EventSheetL10n.translate("%s Your copy gets its own name and folder; the shipped one stays as it is.") % str(pack.get("pitch", "")),
 				START_COPY, str(pack.get("path", "")))
@@ -561,6 +561,11 @@ static func answers_of(source: String, path: String) -> Dictionary:
 		if line.begins_with("## ") and not line.begins_with("## @") and str(answers["description"]).is_empty():
 			answers["description"] = line.trim_prefix("## ").strip_edges()
 			read_below_extends = past_extends
+		# Godot's own new-script template leaves a blank line under extends before the class doc
+		# comment, and a script written by hand usually does too; the description is still the one
+		# the file states, so those blank lines are stepped over until the doc block starts.
+		if past_extends and line.is_empty() and str(answers["description"]).is_empty():
+			continue
 		if past_extends and not line.begins_with("##"):
 			# A ## block under extends that runs straight into a member is that member's doc comment,
 			# the way Godot reads it, so the behaviour has no description of its own.

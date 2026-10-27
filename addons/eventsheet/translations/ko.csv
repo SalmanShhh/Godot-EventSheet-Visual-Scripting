@@ -9603,3 +9603,5 @@ The Inspector hides it unless another setting is on.,다른 설정이 켜지기 
 "Live Values is on for this sheet, and it reaches the game through the saved file: save the sheet (Ctrl+S), then run, and every object it talks about appears here with its instances.","이 시트는 실시간 값이 켜져 있으며, 실시간 값은 저장된 파일을 통해 게임에 전달됩니다. 시트를 저장(Ctrl+S)한 뒤 실행하면 이 시트가 다루는 모든 오브젝트가 인스턴스와 함께 여기 나타납니다."
 "The game is running, but this sheet has not reported. Live Values reaches the game through the saved file: save the sheet (Ctrl+S), then run again.",게임이 실행 중이지만 이 시트에서 보고가 없습니다. 실시간 값은 저장된 파일을 통해 게임에 전달됩니다. 시트를 저장(Ctrl+S)한 뒤 다시 실행하세요.
 "This sheet is a read-only preview, so the game runs the file as it was. Press Edit Events, save the sheet (Ctrl+S), then run again, and its values report here.",이 시트는 읽기 전용 미리보기이므로 게임은 원래 파일을 그대로 실행합니다. 이벤트 편집을 누르고 시트를 저장(Ctrl+S)한 뒤 다시 실행하면 값이 여기 표시됩니다.
+Listed under its own name in the picker and the Add behaviour list. The usual choice.,선택기와 비헤이비어 추가 목록에 자기 이름으로 나옵니다. 보통의 선택입니다.
+"%s is a %s, not a node: a sheet reads it from its file, so it is never added to an object.",%s 은(는) 노드가 아닌 %s 입니다. 시트가 파일에서 읽으므로 오브젝트에 추가되지 않습니다.
