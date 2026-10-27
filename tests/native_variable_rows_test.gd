@@ -113,9 +113,9 @@ static func _test_native_rows() -> bool:
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
 		["an exported variable: type, name, value, its tooltip as the note",
 			_words(_row_named(viewport, "open_speed")),
-			["float", "open_speed", "⚙", "=", "2", "How fast the gate opens"]],
+			["float", "open_speed", "⚙", "=", "2.0", "How fast the gate opens"]],
 		["a plain var reads the ## line above it as its note",
-			_words(_row_named(viewport, "open_progress")), ["float", "open_progress", "=", "0", "How far open the gate is"]],
+			_words(_row_named(viewport, "open_progress")), ["float", "open_progress", "=", "0.0", "How far open the gate is"]],
 		["so the ## line is not listed again", raw_rows, 0],
 		["an untyped var prints the type its value gives away", _words(_row_named(viewport, "hit_count")),
 			["int", "hit_count", "=", "5"]],

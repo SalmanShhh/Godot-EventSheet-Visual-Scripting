@@ -10,6 +10,7 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 const FIXTURE_PATH := "res://tests/fixtures/reading_lenses_fixture.gd"
+const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
 
 
 static func run() -> bool:
@@ -55,6 +56,17 @@ static func _collect_row_texts(view: EventSheetViewport, row_data: EventRowData,
 		_collect_row_texts(view, child, texts)
 
 
+## The tiles the variable row named `variable_name` carries at its right.
+static func _tiles_of(view: EventSheetViewport, variable_name: String) -> PackedStringArray:
+	for entry: Dictionary in view.get_flat_rows():
+		var row_data: EventRowData = entry.get("row")
+		if row_data != null and row_data.source_resource is LocalVariable \
+				and (row_data.source_resource as LocalVariable).name == variable_name:
+			view._row_builder._ensure_event_spans(row_data)
+			return NativeVariableMarks.row_badges(row_data)
+	return PackedStringArray()
+
+
 static func _any_row_contains(texts: PackedStringArray, needle: String) -> bool:
 	for text: String in texts:
 		if text.contains(needle):
@@ -92,12 +104,13 @@ static func _reading_rows() -> bool:
 	passed = _check("call arguments are named by the parameters",
 		_any_row_contains(texts, "x = velocity X"), true) and passed
 
-	# The @onready node reference reads as the variable row every member reads as - its type, its
-	# name and its value - and never as a row led by an "Object" word.
-	passed = _check("an @onready node is not led by an Object word",
+	# The @onready node reference is a variable row like any other: its class leads it as the type,
+	# no kind word stands in front, and the on-ready tile at its right says when it is filled in.
+	passed = _check("an @onready node wears no kind word",
 		_any_row_contains(texts, "Object | hp_bar"), false) and passed
-	passed = _check("the @onready row names its node", _any_row_contains(texts, "%HpBar"), true) and passed
-	passed = _check("the @onready row names its class", _any_row_contains(texts, "ProgressBar"), true) and passed
+	passed = _check("the row names its node", _any_row_contains(texts, "%HpBar"), true) and passed
+	passed = _check("the row names its class", _any_row_contains(texts, "ProgressBar"), true) and passed
+	passed = _check("and wears the on-ready tile", _tiles_of(view, "hp_bar"), PackedStringArray(["on_ready"])) and passed
 	view.free()
 	return passed
 

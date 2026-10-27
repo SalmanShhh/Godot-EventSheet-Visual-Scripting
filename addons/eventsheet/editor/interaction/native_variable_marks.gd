@@ -472,8 +472,10 @@ static func _number_text(value: float) -> String:
 
 
 ## The badges a variable earns, in their standing order.
+## `acts` is what the script itself does with the variable - on change, on ready, shown only if -
+## read off it by script_badges, and it stands after the rest in that same order.
 static func badges_for(exported: bool, has_range: bool, has_doc: bool, saved: bool,
-		storage: bool = false) -> PackedStringArray:
+		storage: bool = false, acts: PackedStringArray = PackedStringArray()) -> PackedStringArray:
 	var badges := PackedStringArray()
 	if exported:
 		badges.append(BADGE_INSPECTOR)
@@ -485,6 +487,29 @@ static func badges_for(exported: bool, has_range: bool, has_doc: bool, saved: bo
 		badges.append(BADGE_TOOLTIP)
 	if saved:
 		badges.append(BADGE_SAVED)
+	for badge: String in [BADGE_ON_CHANGE, BADGE_ON_READY, BADGE_SHOW_IF]:
+		if acts.has(badge):
+			badges.append(badge)
+	return badges
+
+
+## What the script does with `variable`, as the tiles that say so, in their standing order: a setter
+## (inline `set(value):`, a named `set = _set_x`, or the window's on-changed call) runs code on change,
+## `@onready` fills it as the scene starts, and a show-if keeps it out of the Inspector until another
+## setting is on.
+static func script_badges(variable: LocalVariable) -> PackedStringArray:
+	var badges := PackedStringArray()
+	if variable == null:
+		return badges
+	var attributes: Dictionary = variable.attributes if variable.attributes is Dictionary else {}
+	if not variable.setter_body.strip_edges().is_empty() or not variable.setter_name.strip_edges().is_empty() \
+			or not str(attributes.get("setter_body", "")).strip_edges().is_empty() \
+			or not str(attributes.get("on_changed", "")).strip_edges().is_empty():
+		badges.append(BADGE_ON_CHANGE)
+	if variable.onready:
+		badges.append(BADGE_ON_READY)
+	if not str(attributes.get("show_if", "")).strip_edges().is_empty():
+		badges.append(BADGE_SHOW_IF)
 	return badges
 
 
@@ -632,6 +657,13 @@ static func _badge_code(badge: String, variable: LocalVariable) -> String:
 			var note: String = str(attributes.get("tooltip", variable.description)).strip_edges().get_slice("
 ", 0)
 			return "## %s" % note if not note.is_empty() else ""
+		BADGE_ON_CHANGE:
+			if not variable.setter_name.strip_edges().is_empty():
+				return "set = %s" % variable.setter_name.strip_edges()
+			if not variable.setter_body.strip_edges().is_empty():
+				return "set(%s):" % variable.setter_param
+		BADGE_ON_READY:
+			return "@onready"
 	return ""
 
 

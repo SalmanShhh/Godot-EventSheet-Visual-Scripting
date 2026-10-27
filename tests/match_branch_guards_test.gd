@@ -23,7 +23,7 @@ static func run() -> bool:
 		["a branch's question names its object and reads in the sheet's words, its step names System",
 			_row_containing(rows, "> 10"), "i3 [System> |velocity.x| > 10 | System> Go to Run]"],
 		["a function the object answers reads as the object's own question, with no trigger arrow",
-			_row_containing(rows, "Is on floor | System> Go to Idle"), "i3 [CharacterBody2D> Is on floor | System> Go to Idle]"],
+			_row_containing(rows, "Is on floor | System> Go to Idle"), "i3 [match_branch_guards> Is on floor | System> Go to Idle]"],
 		["no line under the switch is left without an object", _bare_lines(rows), PackedStringArray()],
 	])
 

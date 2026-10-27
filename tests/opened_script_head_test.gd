@@ -154,16 +154,16 @@ static func _test_type_words() -> bool:
 		if row_data.row_uid.begins_with("variable_reading_") or row_data.row_uid.begins_with("preload_reading_"):
 			read.append(_texts(row_data))
 	ok = _check("the members read in file order", read.size(), 9) and ok
-	ok = _check("a const preload reads as an Object row",
-		read[0] if read.size() > 0 else "", "Object | PAD_SCENE | = | SpawnerPad | scene · opened_script_head_pad.tscn") and ok
-	ok = _check("a constant says so in its type chip, and 300.0 reads 300",
-		read[1] if read.size() > 1 else "", "x | Constant | number | MAX_SPEED | = | 300 | const MAX_SPEED := 300.0") and ok
+	ok = _check("a const preload reads as the object it loads, with no kind word",
+		read[0] if read.size() > 0 else "", "PAD_SCENE | = | SpawnerPad | scene · opened_script_head_pad.tscn") and ok
+	ok = _check("a constant says so in its type chip, and 300.0 reads as written",
+		read[1] if read.size() > 1 else "", "x | Constant | number | MAX_SPEED | = | 300.0 | const MAX_SPEED := 300.0") and ok
 	# The knob rows keep their doc comment, exactly as a pack's do.
 	ok = _check("an @export knob reads type-word, name, value, description",
 		read[2] if read.size() > 2 else "",
-		"x | Instance | number | move_speed | ⚙ | = | 180 | How fast the avatar walks, in pixels per second. | @export var move_speed: float = 180.0") and ok
-	ok = _check("a typed var holding a preload reads as an Object row too",
-		read[4] if read.size() > 4 else "", "Object | bullet_scene | = | Bullet | scene · head_bullet.tscn") and ok
+		"x | Instance | number | move_speed | ⚙ | = | 180.0 | How fast the avatar walks, in pixels per second. | @export var move_speed: float = 180.0") and ok
+	ok = _check("a typed var holding a preload reads as the object it loads too",
+		read[4] if read.size() > 4 else "", "bullet_scene | = | Bullet | scene · head_bullet.tscn") and ok
 	ok = _check("Array[String] says what it holds, and [] reads empty",
 		read[5] if read.size() > 5 else "", "x | Instance | list of text | names | = | empty | var names: Array[String] = []") and ok
 	ok = _check("Array[int] says what it holds",
@@ -171,7 +171,7 @@ static func _test_type_words() -> bool:
 	ok = _check("a Dictionary is a table, and {} reads empty",
 		read[7] if read.size() > 7 else "", "x | Instance | table | inventory | = | empty | var inventory: Dictionary = {}") and ok
 	ok = _check("a plain float knob is unchanged",
-		read[8] if read.size() > 8 else "", "x | Instance | number | _cooldown | = | 0 | var _cooldown: float = 0.0") and ok
+		read[8] if read.size() > 8 else "", "x | Instance | number | _cooldown | = | 0.0 | var _cooldown: float = 0.0") and ok
 
 	# The vocabulary itself, at the seam the verb chips share - the readings that already shipped must
 	# not have moved, and the collection words must be derived from the element type rather than listed.

@@ -6,6 +6,8 @@
 #     the class, so its own `_start_x` and `_dir` were "not a variable of enemy";
 #   - a local (`var direction := ...` inside the function) and a function's parameter (`body`) are
 #     names the line can use, and the note treated them as missing members.
+# And a variable with no written type (`var hits = 3`) is not "any - Subtract from wants a number":
+# it holds the number it starts at, so the amber kind note has nothing to say about it.
 # The typo control proves the note still fires where it should.
 @tool
 extends RefCounted
@@ -19,6 +21,7 @@ const CLEAN := """extends Area2D
 
 var _start_x: float
 var _dir := 1.0
+var hits = 3
 
 
 class Patrol:
@@ -41,6 +44,10 @@ func _process(delta: float) -> void:
 func take(body: Node2D) -> void:
 	if body is Sprite2D:
 		_dir = body.position.x
+
+
+func hurt(amount) -> void:
+	hits -= amount
 """
 
 

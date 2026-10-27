@@ -1519,11 +1519,10 @@ static func _tab_icon(title: Dictionary) -> Texture2D:
 
 func _format_tab_title(sheet: EventSheetResource, path: String, dirty: bool) -> String:
 	var title: String = _format_sheet_title(sheet, path)
-	# Sheet-type badges: ⚙ behavior, ◆ custom node (event-sheet users expect typed tabs).
+	# A behaviour's tab says so with ⚙. A script's own kind is the class icon the tab already leads
+	# with, so a custom node wears no second mark in front of its name.
 	if sheet != null and sheet.behavior_mode:
 		title = "⚙ " + title
-	elif sheet != null and not sheet.custom_class_name.strip_edges().is_empty():
-		title = "◆ " + title
 	return ("● " + title) if dirty else title
 
 

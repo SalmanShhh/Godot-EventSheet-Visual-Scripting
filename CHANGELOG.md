@@ -14,6 +14,14 @@
   `Node2D` and `Area2D`, and an autoload's under its singleton name (`GameState`). The setter
   events of a script with no class_name used to say `Node2D` beside actions that said `spike_ring`
   for the same node. A behaviour pack still names the node it sits on by its class.
+- A variable's row wears the tiles for what the script does with it, as the window already did: a
+  setter (`set(value):` or `set = _set_x`) puts the on-change tile after the eye, `@onready` the
+  on-ready tile, a show-if the shown-only-if tile, each with its hover card and its code line. An
+  `@onready` node reads as the variable it is (`Sprite2D sprite = $Sprite2D`), and a preloaded scene
+  and an inner class read as their name with their icon - no "Object" or "Class" word in front.
+- A variable's value reads as the code writes it: `float speed = 220.0`, not `220`, and a
+  declaration with no value (`var _start_x: float`) shows none instead of `= null`.
+- A custom node's tab is its icon and its name, without a second mark in front.
 
 ### Fixed: a game you wrote yourself reads as yours, beside the installed packs
 

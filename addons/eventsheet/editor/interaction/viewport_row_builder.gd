@@ -3565,7 +3565,7 @@ func _build_head_group_row(sheet: EventSheetResource, uid_suffix: String, title:
 ## the @export / group chips are gone - the bar above the row carries the group, and everything inside
 ## a settings bar is exported by definition.
 func _build_reading_variable_row(variable: LocalVariable, description: String, indent: int) -> EventRowData:
-	# A preloaded scene / script / resource is an OBJECT too, whichever row shape carried it.
+	# A preloaded scene / script / resource is an OBJECT, whichever row shape carried it.
 	var preload_path: String = preloaded_path(str(variable.default_value))
 	if not preload_path.is_empty():
 		var preload_row: EventRowData = _build_preload_object_row(
@@ -7097,23 +7097,19 @@ func build_inner_class_head(inner: InnerClassRow, indent: int) -> EventRowData:
 	var hover: String = "%s\n\n%s" % [
 		EventSheetL10n.translate("A class inside this script: its own variables and functions, folded under one head. Other code makes one with %s.new().") % display_name,
 		inner.header]
-	# The badge wears the accent a script's own head wears: a class is a script's worth of members.
-	var accent: Color = _viewport._get_event_style().behavior_accent_color
 	var head: Dictionary = {"editable": false, "kind": "inner_class", "line_index": 0, "hover_note": hover}
-	var spans: Array[SemanticSpan] = [
-		_make_span(EventSheetL10n.translate("Class"), SemanticSpan.SpanType.KEYWORD, head.merged({
-			"badge": true,
-			"badge_style": "scope",
-			"badge_natural_width": true,
-			"badge_bg": Color(accent.r, accent.g, accent.b, 0.22),
-			"badge_fg": accent
-		}, true)),
-		_make_span(display_name, SemanticSpan.SpanType.OBJECT, head.merged({
-			"natural_width": true,
-			"text_color": _viewport._get_reading_style().primary_text_color
-		}, true))
-	]
 	var base: String = inner.base_class()
+	# No kind word in front: the icon of the class it extends (RefCounted when it names none, which is
+	# what Godot gives it) leads the name, the way every object on the sheet is drawn.
+	var name_meta: Dictionary = head.merged({
+		"natural_width": true,
+		"text_color": _viewport._get_reading_style().primary_text_color
+	}, true)
+	if _viewport.show_object_icons:
+		var icon: Texture2D = class_icon_with_ancestry(base if not base.is_empty() else "RefCounted")
+		if icon != null:
+			name_meta["object_icon"] = icon
+	var spans: Array[SemanticSpan] = [_make_span(display_name, SemanticSpan.SpanType.OBJECT, name_meta)]
 	if not base.is_empty():
 		spans.append(_make_span(EventSheetL10n.translate("extends %s") % base, SemanticSpan.SpanType.VALUE, head.merged({
 			"text_color": _viewport._get_reading_style().muted_text_color
@@ -7273,11 +7269,8 @@ func _build_preload_object_row(object_name: String, res_path: String, indent: in
 	var icon: Texture2D = null
 	if _viewport.show_object_icons and not icon_class.is_empty():
 		icon = EventSheetACEIcons.editor_icon(icon_class)
+	# No kind word in front: the scene's own icon and the name say what it is.
 	row_data.spans = [
-		_make_span(EventSheetL10n.translate("Object"), SemanticSpan.SpanType.KEYWORD, {
-			"editable": false, "kind": "variable", "line_index": 0, "badge": true, "badge_style": "scope",
-			"badge_bg": _viewport._get_reading_style().inspector_chip_background_color, "badge_fg": _viewport._get_reading_style().inspector_chip_foreground_color
-		}),
 		_make_span(object_name, SemanticSpan.SpanType.OBJECT, {
 			"editable": false, "kind": "variable", "line_index": 0,
 			"text_color": event_style.object_label_color
@@ -12107,7 +12100,10 @@ func _build_variable_row(
 		NativeVariableMarks.has_range(source_variable),
 		not description_text.is_empty(),
 		_is_saved_variable(scope_label, var_name, declared_in),
-		NativeVariableMarks.is_storage(source_variable))
+		NativeVariableMarks.is_storage(source_variable),
+		# And what the script itself does with it - a setter, an @onready, a show-if - after them,
+		# the same tiles the variable window puts beside the options that write them.
+		NativeVariableMarks.script_badges(source_variable))
 	# The kind cue: an outlined `x` in the badge column, so a declaration is unmistakable while
 	# scrolling. A mark, never a word pill. An Inspector-style row has none: its type leads it.
 	row_data.spans = []
@@ -12252,12 +12248,18 @@ func _build_variable_row(
 	# A setting with nothing to tune shows nothing to tune: an Inspector button's `= _bake` is
 	# which function it calls, and the muted note beside it already says so in words.
 	var hide_value: bool = code_only or bool(facts.get("hide_value", false))
+	# A declaration with no value written (`var _start_x: float`) has none to show: `= null` would be
+	# a value the file never wrote, and not even the one Godot starts it at.
+	if source_variable != null and source_variable.no_default and default_value == null:
+		hide_value = true
 	if not hide_value:
 		row_data.spans.append(_make_span("=", SemanticSpan.SpanType.OPERATOR, variable_meta.merged({"editable": false}, true)))
 	# An expression default (`State.PATROL`, `Vector2.ZERO`, a walrus var's verbatim `100`) is
 	# CODE stored as text - quoting it would misread it as a string literal.
 	var value_text: String = str(default_value) if bool(options.get("expression_default", false)) else _format_variable_value(default_value)
-	value_text = _reading_value_text(value_text)
+	# The value reads as the code writes it: `220.0` beside the word `float`, the same number the
+	# file holds. Only an empty collection is put in words.
+	value_text = _reading_empty_text(value_text)
 	# The hint re-reads the value itself where it knows better than the literal does: an enum's
 	# number is really its label, a 0-1 range is really a percent, a colour is really a word.
 	var hinted_value: String = str(facts.get("value_text", "")).strip_edges()
@@ -12528,24 +12530,14 @@ static func _inferred_type_word(default_value: Variant, expression_default: bool
 	return ""
 
 
-## A value in the reading shape. An empty collection reads `empty` - `[]` and `{}` are punctuation a
-## reader has to decode, and "nothing in it yet" is the whole fact. A whole number written as a float
-## (`300.0`, how GDScript spells a float constant) drops the tail it does not need; `4.5` keeps every
-## digit it has.
-static func _reading_value_text(value_text: String) -> String:
+## A value in the reading shape: an empty collection reads `empty` - `[]` and `{}` are punctuation a
+## reader has to decode, and "nothing in it yet" is the whole fact. Anything else exactly as given.
+static func _reading_empty_text(value_text: String) -> String:
 	var text: String = value_text.strip_edges()
 	if text == "[]" or text == "{}" or text == "[  ]" or text == "{  }":
 		return EventSheetL10n.translate("empty")
-	if _trailing_zero_regex == null:
-		_trailing_zero_regex = RegEx.new()
-		_trailing_zero_regex.compile("^(-?\\d+)\\.0+$")
-	var trimmed: RegExMatch = _trailing_zero_regex.search(text)
-	if trimmed != null:
-		return trimmed.get_string(1)
 	return value_text
 
-
-static var _trailing_zero_regex: RegEx = null
 
 # ── Event-span assembly (the "model → SemanticSpans" pass) ───────────────────────────────────────
 

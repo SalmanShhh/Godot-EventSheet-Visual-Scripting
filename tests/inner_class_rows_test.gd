@@ -127,14 +127,14 @@ static func _rows(sheet: EventSheetResource) -> bool:
 			inert = inert and child.source_resource == null
 		ok = SUPPORT.pins(NAME, [
 			["the head is full width", head.row_type, EventRowData.RowType.SECTION],
-			["and reads Class and the name", [head.spans[0].text, head.spans[1].text], ["Class", "Hit"]],
+			["and reads the name with no kind word in front", head.spans[0].text, "Hit"],
 			["the members sit under it, keyed by it", child_uids,
 				["inner_class_Hit/variable_", "inner_class_Hit/variable_", "inner_class_Hit/define_fn"]],
 			["one indent deeper", head.children[0].indent, head.indent + 1],
 			["the members are read, not edited", inert, true],
 			["the head opens unfolded", head.folded, false],
 			["hovering it says how other code makes one",
-				str((head.spans[1].metadata as Dictionary).get("hover_note", "")).contains("Hit.new()"), true],
+				str((head.spans[0].metadata as Dictionary).get("hover_note", "")).contains("Hit.new()"), true],
 		]) and ok
 	var inner: InnerClassRow = _first_inner(dock._current_sheet)
 	var as_code: RawCodeRow = dock._code_panel_glue.call("_class_as_code", inner)

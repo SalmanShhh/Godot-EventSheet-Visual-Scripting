@@ -123,7 +123,7 @@ static func _test_setting_facts() -> bool:
 		return false
 	ok = _check("a range says its limits and its step",
 		_texts(movement.children[0]),
-		"x | Instance | number | speed | ⚙ | = | 5 | 0 to 20, step 0.5 | How fast it walks, in pixels per second. | @export_range(0, 20, 0.5) var speed: float = 5.0") and ok
+		"x | Instance | number | speed | ⚙ | = | 5.0 | 0 to 20, step 0.5 | How fast it walks, in pixels per second. | @export_range(0, 20, 0.5) var speed: float = 5.0") and ok
 	ok = _check("a fixed set of choices is a combo, reading its label instead of its number",
 		_texts(movement.children[1]), "x | Instance | combo | mode | ⚙ | = | Walk | Walk / Run / Fly | @export_enum(\"Walk\", \"Run\", \"Fly\") var mode: int = 0") and ok
 	ok = _check("a 0-to-1 range reads as a percent",

@@ -13,13 +13,18 @@ const P := "script_object_name_test"
 
 
 static func run() -> bool:
+	# The tab leads with the class icon, so the name stands alone after it - no second kind mark.
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	var tab: String = dock._format_tab_title(_sheet("a class_name"), "res://player.gd", false)
+	dock.free()
+	var ok: bool = SUPPORT.pin_value(P, "a custom node's tab is its name alone", tab, "Player")
 	return SUPPORT.pin_table(P, {
 		"a class_name": "Player",
 		"a file with no class_name": "spike_ring",
 		"an autoload": "GameState",
 		"a behaviour pack": "",
 		"a sheet with no file yet": "Node2D",
-	}, func(key: String) -> String: return EventSheetViewportReadingRows.script_object_name(_sheet(key)))
+	}, func(key: String) -> String: return EventSheetViewportReadingRows.script_object_name(_sheet(key))) and ok
 
 
 static func _sheet(key: String) -> EventSheetResource:

@@ -426,7 +426,7 @@ static func _test_the_row_reads_as_one_sentence() -> bool:
 	var row: EventRowData = rows[0]
 	ok = _check("the row is a variable row the theme can wash", row.variable_row, true) and ok
 	ok = _check("the sentence reads scope, type, name, value",
-		_texts(row), "x | Instance | number | speed | ⚙ | = | 200 | @export var speed: float = 200.0") and ok
+		_texts(row), "x | Instance | number | speed | ⚙ | = | 200.0 | @export var speed: float = 200.0") and ok
 	ok = _check("the kind badge leads the row",
 		bool((row.spans[0].metadata as Dictionary).get("variable_badge", false)), true) and ok
 	ok = _check("the scope word is plain text, never a pill",
