@@ -972,16 +972,9 @@ func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakp
 		# The number itself carries the verdict, so a scroll past a hundred rows finds the expensive
 		# ones without reading a single chip: amber over a millisecond a fire, red over a quarter of
 		# a frame or never fired at all.
-		var number_x: float = gutter_rect.position.x + 4.0
-		var number_room: float = gutter_rect.size.x - 8.0
-		if first_line_height > 0.0 and font != null:
-			# On the first line beside the trigger icon the number is right-aligned against the
-			# margin's edge, the way a line number is, so "9" and "10" end in the same place and two
-			# digits are not cut to one.
-			number_room = gutter_rect.size.x - GUTTER_NUMBER_END_INSET
-			var number_width: float = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size - 1).x
-			number_x = gutter_rect.position.x + maxf(number_room - number_width, 1.0)
-		_draw_text(control, Vector2(number_x, baseline_y), text, number_room, font, font_size - 1,
+		var number_width: float = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size - 1).x if font != null else 0.0
+		var number_box: Vector2 = gutter_number_box(gutter_rect, number_width, first_line_height > 0.0 and font != null)
+		_draw_text(control, Vector2(number_box.x, baseline_y), text, number_box.y, font, font_size - 1,
 			_gutter_number_color(hit_uid, gutter_text) if stacked else gutter_text)
 	if stacked:
 		_draw_hit_count_chip(control, gutter_rect, hit_uid, font, font_size)
@@ -1009,6 +1002,19 @@ static func hit_chip_text(event_uid: String) -> String:
 ## What the gutter NUMBER says about a row before anybody reads its chip. The resting colour for a
 ## row that behaved, the amber and red of the cost bands for one that did not, and red for a row
 ## that never fired - the three states a reader scans for.
+## Where an event's number sits in the margin, as (x, room it may use). It keeps its 4px inset
+## while it fits; beside the trigger icon (`right_aligned`), or whenever it is wider than that
+## inset leaves room for, it ends against the margin's edge the way a line number does, so "9" and
+## "10" end in the same place and a two-digit number is never cut to its first digit.
+static func gutter_number_box(gutter_rect: Rect2, number_width: float, right_aligned: bool) -> Vector2:
+	var inset_room: float = gutter_rect.size.x - 8.0
+	if not right_aligned and number_width <= inset_room:
+		return Vector2(gutter_rect.position.x + 4.0, inset_room)
+	var room: float = gutter_rect.size.x - GUTTER_NUMBER_END_INSET
+	var start: float = maxf(room - number_width, 1.0)
+	return Vector2(gutter_rect.position.x + start, gutter_rect.size.x - start)
+
+
 func _gutter_number_color(hit_uid: String, resting: Color) -> Color:
 	if hit_uid.is_empty():
 		return resting

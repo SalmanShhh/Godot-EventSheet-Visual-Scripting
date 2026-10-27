@@ -131,6 +131,9 @@ player, an enemy with a class inside it, an editor plugin and its dock, the ship
   value - instead of a row led by an "Object" word.
 - A long pattern chip after a condition gives up its tail before it takes half the conditions lane,
   so a trigger beside it ("On Plugin Enabled") is no longer drawn one letter per line.
+- An event more than one line tall numbered 10 or higher shows both digits in the margin. The
+  number sat in the middle of the margin with a 4px inset either side, which left room for one
+  digit, so a `player.gd` with eleven events numbered its last two "1" and "1".
 
 ### Fixed: the plugin and the code it writes stop filling the Output and Debugger panels
 
