@@ -150,6 +150,7 @@ static func run() -> bool:
 	ok = _test_player() and ok
 	ok = _test_inner_class_keeps_the_members() and ok
 	ok = _test_inline_function_names() and ok
+	ok = _test_pack_reads_under_one_name() and ok
 	ok = _test_chips_leave_the_condition_room() and ok
 	return ok
 
@@ -196,6 +197,38 @@ static func _test_inline_function_names() -> bool:
 		_notes(dock), PackedStringArray())
 	dock.free()
 	return ok
+
+
+## A shipped pack opened as a sheet: its trigger, its own verbs and a line that changes one of its
+## own variables all read under the one word the picker offers it by.
+static func _test_pack_reads_under_one_name() -> bool:
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/health/health_behavior.gd")
+	sheet.read_only = true
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(sheet)
+	dock._viewport.set_reading_mode(true)
+	var lines: PackedStringArray = _lines(dock)
+	var ok: bool = SUPPORT.pins(NAME, [
+		["a pack's trigger reads under the pack's own name", _line_with(lines, "On created", 0).get_slice(" | ", 0),
+			"Health: On created"],
+		["a line that fills one of the pack's own tables reads under the same name",
+			_line_with(lines, "HealthPool.new()", 0).get_slice(" | ", 1), "Health: Set health_pools[type] to HealthPool.new()"],
+		# Folded, a data type's line names its first fields the way they are written.
+		["a folded data type reads its fields as written",
+			_folded_summary(dock, "Data type HealthPool").get_slice(" - ", 0), "amount: float = 0.0"],
+	])
+	dock.free()
+	return ok
+
+
+## The summary a folded row wears, for the first row whose words begin with `head`; "" when none does.
+static func _folded_summary(dock: EventSheetDock, head: String) -> String:
+	for row: EventRowData in _walk(dock._viewport._root_rows, dock._viewport):
+		if not row.spans.is_empty() and row.spans[0].text.begins_with(head):
+			row.folded = true
+			return dock._viewport.collapsed_row_summary(row)
+	return ""
 
 
 static func _test_chips_leave_the_condition_room() -> bool:

@@ -171,6 +171,12 @@ player, an enemy with a class inside it, an editor plugin and its dock, the ship
 - A function written inline - a lambda handed to a call, its body read as rows of their own - no
   longer hangs "is not a variable" notes under those rows for its own parameters, locals and loop
   items (`insert_after`, `function_resource` in the editor's own helper scripts).
+- An opened behaviour pack reads under one name. Its On created trigger, a verb filed under its
+  host's class and a line that fills one of its own tables read "Health", the word the rest of its
+  lines and its tab already use, instead of the class the file is spelled with
+  ("SimpleHealthBehavior", cut to "SimpleHe..." in the object column).
+- A folded data type written inside a script names its first fields as they are written
+  ("amount: float = 0.0") instead of their pieces joined by dashes ("amount - : - float -> = - 0.0").
 
 ### Fixed: the plugin and the code it writes stop filling the Output and Debugger panels
 

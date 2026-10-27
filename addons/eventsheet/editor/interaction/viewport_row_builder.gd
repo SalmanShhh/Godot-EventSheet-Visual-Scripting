@@ -13896,7 +13896,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# being created, the layout ending or an object being destroyed, a draw, and the notifications.
 		var lifecycle_reading: Dictionary = EventSheetViewportReadingRows.lifecycle_trigger_reading(
 			event_row.trigger_id, trigger_object,
-			bool(sentence_context().get("scene_root", false)), _script_object_name())
+			bool(sentence_context().get("scene_root", false)), _own_object_word())
 		if not lifecycle_reading.is_empty():
 			trigger_words = str(lifecycle_reading.get("text", trigger_words))
 			trigger_object = str(lifecycle_reading.get("object", trigger_object))
@@ -14879,14 +14879,14 @@ func _resolve_line_object_icon(object_label: String) -> Texture2D:
 	if not NativeRowMarks.object_glyph_for(object_label).is_empty():
 		return EventSheetACEIcons.editor_icon("Tools")
 	var sheet: EventSheetResource = _viewport._sheet as EventSheetResource
-	if sheet != null and object_label == _script_object_name() and not sheet.custom_class_icon.strip_edges().is_empty():
+	if sheet != null and (object_label == _script_object_name() or object_label == _own_object_word()) and not sheet.custom_class_icon.strip_edges().is_empty():
 		var own_icon: Texture2D = _script_icon_texture(sheet.custom_class_icon.strip_edges())
 		if own_icon != null:
 			return own_icon
 	var class_text: String = object_label if ClassDB.class_exists(StringName(object_label)) \
 		else str(_lens_class_map.get(object_label, ""))
 	# The script's own object is the class the script extends, whatever the class map knows of it.
-	if class_text.is_empty() and sheet != null and object_label == _script_object_name():
+	if class_text.is_empty() and sheet != null and (object_label == _script_object_name() or object_label == _own_object_word()):
 		class_text = sheet.host_class.strip_edges()
 	return class_icon_with_ancestry(class_text)
 
@@ -17001,11 +17001,22 @@ func _object_label_for(provider_id: String, ace_id: String) -> String:
 ## The script's own object name when a line about a `node_type` can only be about the script's own
 ## node - the script extends that class or one below it - else "". A behaviour pack's lines are about
 ## the node it is attached to, so a pack keeps the class word.
+## The word the script's own object reads under in the object column: an opened behaviour pack's
+## picker name ("Health"), the one its own verbs already read under, or else the script's own name.
+## The class the pack is spelled with ("SimpleHealthBehavior") never stands beside it.
+func _own_object_word() -> String:
+	var pack_name: String = pack_object_name()
+	var own: String = _script_object_name().strip_edges()
+	if not pack_name.is_empty() and own == _pack_class_name():
+		return pack_name
+	return own
+
+
 func _own_object_for_class(node_type: String) -> String:
 	var sheet: EventSheetResource = _viewport._sheet if _viewport != null else null
 	if sheet == null:
 		return ""
-	var own: String = _script_object_name().strip_edges()
+	var own: String = _own_object_word()
 	if own.is_empty():
 		return ""
 	var host: String = sheet.host_class.strip_edges()
@@ -17424,7 +17435,7 @@ static func action_awaits(action: ACEAction) -> bool:
 ## `is_on_floor()` and `move_and_slide()` on one player read under one name. A row whose target
 ## names another node is that node's line and is left to the rules that already read it.
 func _own_object_for_class_verb(provider_id: String, ace_id: String, params: Dictionary) -> String:
-	var own: String = _script_object_name().strip_edges()
+	var own: String = _own_object_word()
 	var sheet: EventSheetResource = _viewport._sheet if _viewport != null else null
 	if own.is_empty() or sheet == null:
 		return ""
@@ -17448,7 +17459,7 @@ func _own_object_for_class_verb(provider_id: String, ace_id: String, params: Dic
 ## for a call to anything else (a function of a class written inside the file, of another object, or
 ## one the sheet does not have) and on a sheet with no object of its own.
 func _own_function_call_object(params: Dictionary) -> String:
-	var own: String = _script_object_name().strip_edges()
+	var own: String = _own_object_word()
 	if own.is_empty():
 		return ""
 	var called: String = str(params.get("function_name", "")).strip_edges()
@@ -20120,7 +20131,9 @@ func _variable_owner_label(provider_id: String, ace_id: String, params: Dictiona
 	for name_text: String in _variable_reference_values(provider_id, ace_id, params):
 		var owner: String = EventSheetVariableOwners.owner_for(_variable_owner_entries(), name_text)
 		if not owner.is_empty():
-			return owner
+			# An opened pack's own variable belongs to the pack under the word its other lines read
+			# under ("Health"), not the class the file is spelled with.
+			return _own_object_word() if owner == _pack_class_name() else owner
 	return ""
 
 

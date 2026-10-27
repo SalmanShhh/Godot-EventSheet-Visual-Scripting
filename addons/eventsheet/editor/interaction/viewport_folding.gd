@@ -333,6 +333,15 @@ func summary_piece(row_data: EventRowData) -> String:
 	var conditions: PackedStringArray = PackedStringArray()
 	var actions: PackedStringArray = PackedStringArray()
 	var plain: PackedStringArray = PackedStringArray()
+	# A field of a data type is one declaration, its tokens spread over both lanes: it reads back the
+	# way it is written ("amount: float = 0.0"), never as its pieces joined like separate clauses.
+	if not row_data.spans.is_empty() and row_data.spans[0].metadata is Dictionary \
+			and str((row_data.spans[0].metadata as Dictionary).get("kind", "")) == "data_class_field":
+		var tokens: PackedStringArray = PackedStringArray()
+		for span: SemanticSpan in row_data.spans:
+			if not span.text.strip_edges().is_empty():
+				tokens.append(span.text.strip_edges())
+		return " ".join(tokens).replace(" :", ":")
 	for span: SemanticSpan in row_data.spans:
 		var text: String = span.text.strip_edges()
 		if text.is_empty():
