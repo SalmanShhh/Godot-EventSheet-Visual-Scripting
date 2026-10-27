@@ -90,8 +90,10 @@ What changed in the build you have installed (v0.18.0), in the words the release
   line before every line and its `##` turned into `#`. It is now written right above the event it sits
   over, at that event's indent, inside the function the event lands in: several lines stay one block,
   `##` stays `##`, a switched-off comment writes `# @off:`, and a comment inside a group sits under
-  the group's tag so it reopens in the group. Only a comment with no event below it still closes the
-  file, and it keeps its marker too.
+  the group's tag so it reopens in the group. In an opened script, a comment under the last event of a
+  handler ends that handler, and one over a variable, a code block or a function is written right
+  above it. Only a comment with nothing at all below it still closes the file, and it keeps its marker
+  too.
 - Opening a script reads a comment written right above an `if` (or a loop) back as the comment row
   above that event, so a file saved from the sheet reopens with its comments where they were, instead
   of as an \"Every tick\" event holding the comment. A comment above a plain statement stays with that

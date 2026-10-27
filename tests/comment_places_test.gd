@@ -23,7 +23,52 @@ static func run() -> bool:
 	ok = _plain_var_keeps_every_description_line() and ok
 	ok = _match_case_comment_keeps_marker_and_off() and ok
 	ok = _colour_stays_on_the_sheet() and ok
+	ok = _comments_keep_their_place_in_an_opened_file() and ok
 	return ok
+
+
+## In an opened file whose handler sits in the middle of it: a comment row added under the handler's last
+## event is written at the end of that handler, and one over a variable is written right above it.
+static func _comments_keep_their_place_in_an_opened_file() -> bool:
+	var sheet: EventSheetResource = SUPPORT.reopen("
+".join([
+		"extends CharacterBody2D",
+		"",
+		"var coins := 0",
+		"",
+		"",
+		"func _physics_process(delta: float) -> void:",
+		"	if not is_on_floor():",
+		"		velocity.y += 980.0 * delta",
+		"	move_and_slide()",
+		"",
+		"",
+		"## @ace_group(name=\"Coins\")",
+		"func add_coin(amount: int = 1) -> void:",
+		"	# Coins go to the tally.",
+		"	coins += amount",
+		""]))
+	sheet.external_source_path = SAVED_AT
+	var last_event: int = -1
+	var variable: int = -1
+	for index: int in range(sheet.events.size()):
+		if sheet.events[index] is EventRow:
+			last_event = index
+		elif sheet.events[index] is LocalVariable:
+			variable = index
+	sheet.events.insert(last_event + 1, _comment("Then the state."))
+	sheet.events.insert(variable, _comment("Coins: the tally."))
+	var written: String = SUPPORT.compile_output(sheet, SAVED_AT)
+	return SUPPORT.pins(NAME, [
+		["a comment under a handler's last event ends that handler", written.contains("	move_and_slide()
+	# Then the state.
+"), true],
+		["a comment over a variable is written right above it", written.contains("
+# Coins: the tally.
+var coins := 0
+"), true],
+		["and the file saves byte for byte", SUPPORT.reemit(written, SAVED_AT), written],
+	])
 
 
 static func _print_action(said: String, note: String = "") -> ACEAction:

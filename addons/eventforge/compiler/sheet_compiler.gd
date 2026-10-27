@@ -1099,6 +1099,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 			external_raw_rows.append(entry)
 	for anchored_comment: Variant in _comments_above_anchored_events(sheet.events, anchored_event_uids):
 		anchored_comments[anchored_comment] = true
+	var class_level_comments: Dictionary = _comments_over_class_rows(sheet.events)
 	var external_conditions: Array = _conditions_to_write(inspector_conditions({}, external_variables, result["warnings"]),
 		_sheet_writes_function(external_raw_rows, sheet.functions, "_validate_property"), result["warnings"])
 	var external_controllers: Dictionary = inspector_condition_controllers(external_conditions)
@@ -1156,6 +1157,16 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 			added_event_rows.append(entry)
 		elif entry is CommentRow and anchored_comments.has(entry):
 			pass  # emitted in place by its EventAnchorRow, above the event it sits over
+		elif entry is CommentRow and class_level_comments.has(entry):
+			# Over a variable, a code block or a function: written right there, one blank line above it
+			# when the line before is not already blank.
+			var class_comment_lines: PackedStringArray = _comment_written_lines(entry as CommentRow)
+			if not class_comment_lines.is_empty():
+				if not lines.is_empty() and not lines[lines.size() - 1].strip_edges().is_empty():
+					lines.append("")
+				var class_comment_start: int = lines.size() + 1
+				lines.append_array(class_comment_lines)
+				source_map.append({"uid": str((entry as CommentRow).get_instance_id()), "start": class_comment_start, "end": lines.size(), "kind": "comment"})
 		elif entry is CommentRow:
 			added_event_rows.append(entry)
 		elif entry is EnumRow:
@@ -1347,19 +1358,42 @@ static func _collect_anchored_events(sheet: EventSheetResource, anchor: EventAnc
 	return events
 
 
-## The comment rows of `rows` that sit right above an event whose uid is in `uids` (a run of them,
-## with nothing else between the run and the event).
+## The comment rows of `rows` that sit among the events whose uid is in `uids`: a run right above one
+## of them, or right under one with another row after the run. They are written in that handler.
 static func _comments_above_anchored_events(rows: Array, uids: Dictionary) -> Array:
 	var found: Array = []
+	var waiting: Array = []
+	var after_anchored: bool = false
+	for entry: Variant in rows:
+		if entry is CommentRow:
+			waiting.append(entry)
+			continue
+		var anchored: bool = entry is EventRow and uids.has((entry as EventRow).event_uid)
+		if anchored or after_anchored:
+			found.append_array(waiting)
+		waiting.clear()
+		after_anchored = anchored
+	# A run with nothing at all after it closes the file instead (the lift reads a file's closing
+	# comments back that way), even when the row above it is one of the handler's events.
+	return found
+
+
+## Where each top-level comment row of an opened file's `rows` is written, by the row under it: a comment
+## over an event or a group rides on that event, and one with nothing under it closes the file (both
+## through _emit_grouped_trigger_functions); one over any other row (a variable, a code block, a
+## function) is written right there, at class level. Returns the comment rows of that last kind.
+static func _comments_over_class_rows(rows: Array) -> Dictionary:
+	var in_place: Dictionary = {}
 	var waiting: Array = []
 	for entry: Variant in rows:
 		if entry is CommentRow:
 			waiting.append(entry)
 			continue
-		if entry is EventRow and uids.has((entry as EventRow).event_uid):
-			found.append_array(waiting)
+		if not (entry is EventRow or entry is EventGroup):
+			for comment: Variant in waiting:
+				in_place[comment] = true
 		waiting.clear()
-	return found
+	return in_place
 
 
 ## One trigger handler emitted at an EventAnchorRow's slot: the header (the source's own spelling

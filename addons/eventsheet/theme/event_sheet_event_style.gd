@@ -279,12 +279,14 @@ func comment_tag_color(tag: String) -> Color:
 	var base: Color = comment_row_background_color
 	if tag != "grey" and not _COMMENT_TAG_HUES.has(tag):
 		return base
+	# Deep enough to tell apart beside the canvas, never so bright the comment's words stop reading:
+	# a dark theme's tints sit a little lighter than its comment colour, a light theme's a little deeper.
 	var light: bool = base.get_luminance() > 0.5
-	var depth: float = base.v if light else clampf(base.v * 1.3, 0.0, 1.0)
+	var depth: float = clampf(base.v, 0.9, 0.98) if light else clampf(maxf(base.v * 1.3, 0.28), 0.0, 0.42)
 	if tag == "grey":
 		return Color.from_hsv(0.0, 0.0, depth, base.a)
-	var saturation: float = clampf(base.s, 0.15, 0.3) if light else clampf(base.s, 0.3, 0.5)
-	return Color.from_hsv(float(_COMMENT_TAG_HUES[tag]), saturation, depth, base.a)
+	var saturation: float = 0.16 if light else 0.45
+	return Color.from_hsv(float(_COMMENT_TAG_HUES[tag]), saturation, depth, maxf(base.a, 0.9))
 
 
 ## A token that re-colours something older, or the colour it stands in for while the theme leaves it
