@@ -106,9 +106,33 @@ static func buttons_for(sheet: EventSheetResource, script_path: String = "") -> 
 		buttons.append({"kind": KIND_RUN, "text": "▶ " + EventSheetL10n.translate("Run now")})
 	buttons.append({"kind": KIND_RELOAD, "text": "↻ " + EventSheetL10n.translate("Reload")})
 	buttons.append({"kind": KIND_OUTPUT, "text": output_text(script_path)})
-	if is_plugin_sheet(sheet):
+	# A plugin the project already runs has nothing to enable: Project Settings ▸ Plugins switches it.
+	if is_plugin_sheet(sheet) and not plugin_is_enabled(script_path):
 		buttons.append({"kind": KIND_ENABLE, "text": EventSheetL10n.translate("Enable plugin")})
 	return buttons
+
+
+## True when the project already enables the plugin whose script is `script_path` - its
+## `res://addons/<folder>/plugin.cfg` is in Project Settings' enabled list.
+static func plugin_is_enabled(script_path: String) -> bool:
+	var folder: String = plugin_folder_name(script_path)
+	if folder.is_empty():
+		return false
+	var enabled: Variant = ProjectSettings.get_setting("editor_plugins/enabled", PackedStringArray())
+	var listed: PackedStringArray = PackedStringArray()
+	if enabled is PackedStringArray or enabled is Array:
+		listed = PackedStringArray(enabled)
+	return listed.has("res://addons/%s/plugin.cfg" % folder)
+
+
+## The plugin.cfg text Enable plugin writes, or "" when it writes none: a folder that already has its
+## own plugin.cfg keeps it as written - its author, its version, its own words - and only a folder
+## with none gets the one this sheet describes.
+static func plugin_cfg_to_write(existing_text: String, plugin_name: String, description: String,
+		script_file: String) -> String:
+	if not existing_text.strip_edges().is_empty():
+		return ""
+	return plugin_cfg_text(plugin_name, description, script_file)
 
 
 ## The bar a TOOLING file carries: a test runs, a command tool runs with arguments
@@ -543,8 +567,10 @@ func enable_plugin() -> void:
 	if plugin_name.is_empty():
 		plugin_name = folder.capitalize()
 	var cfg_path: String = target.get_base_dir().path_join("plugin.cfg")
-	var wanted: String = plugin_cfg_text(plugin_name, _dock._current_sheet.class_description, target.get_file())
-	if not FileAccess.file_exists(cfg_path) or FileAccess.get_file_as_string(cfg_path) != wanted:
+	var existing: String = FileAccess.get_file_as_string(cfg_path) if FileAccess.file_exists(cfg_path) else ""
+	var wanted: String = plugin_cfg_to_write(existing, plugin_name, _dock._current_sheet.class_description,
+		target.get_file())
+	if not wanted.is_empty():
 		var file: FileAccess = FileAccess.open(cfg_path, FileAccess.WRITE)
 		if file == null:
 			_dock._set_status("Couldn't write %s." % cfg_path, true)

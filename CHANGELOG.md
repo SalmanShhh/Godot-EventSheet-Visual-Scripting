@@ -21,6 +21,9 @@
 
 ### Fixed: your own scripts, opened as sheets, read the way the boards draw them
 
+- Your own editor plugin, opened as a sheet, no longer offers "Enable plugin" while the project
+  already runs it, and Enable plugin never writes over a plugin.cfg the folder already has - its
+  author, version and words stay as you wrote them. Only a folder with no plugin.cfg gets one.
 - The parameters window opened on a line of your own function no longer refuses it: a local the
   function declares (`direction`), the value its tick hands it (`delta`), a loop's item and a
   parameter are names a field can use, so `direction * speed` is not "not a variable of Player" and
