@@ -183,7 +183,7 @@ func _on_ci_pressed() -> void:
 	if shown != null:
 		shown.text = _ci_text
 	_ci_confirm.ok_button_text = "Replace it" if EventSheetDocsCiWorkflow.exists() else "Write it"
-	_ci_confirm.popup_centered()
+	EventSheetPopupUI.popup_fitted(_ci_confirm)
 
 
 func _on_ci_confirmed() -> void:

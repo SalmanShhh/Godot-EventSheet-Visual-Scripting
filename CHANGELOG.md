@@ -11,6 +11,21 @@
   asked that question any more. A menu command in the same file that really does change the open
   scene by hand still gets the finding, in the sheet and in the Doctor.
 
+### Fixed: windows open at the size of what they hold
+
+- A window's READS AS and IN CODE lines wrap inside the window instead of widening it. A long
+  comment opened Edit comment 2,437 px wide, a long group description opened Edit group 2,454 px
+  wide, a long value opened the parameters window 7,812 px wide and the Variable window 3,694 by
+  8,336 px. They now open at their usual width, and a reading line longer than four lines ends in
+  "…" with the whole line in its hover.
+- A window opened again opens at what it holds now. Edit group, the Variable window, the function
+  window and the other windows that are built once kept the size of the biggest thing they had ever
+  held, so a group opened after a long one opened 1,920 px wide with three quarters of it empty.
+  They also no longer open a line or two taller than their content.
+- The Variable window is as tall as its cards. It asked for 600 px whatever it held, so a plain
+  local opened with a third of the window empty under its cards; past 520 px the cards scroll, as
+  before.
+
 ### Fixed: the Doctor reports on your game, not on the packs installed beside it
 
 - In a project with the behaviour packs copied in, the Doctor said 189 notes about a ten-script

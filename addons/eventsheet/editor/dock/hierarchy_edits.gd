@@ -184,7 +184,7 @@ func prompt_flags(child_label: String, flags: Dictionary, callback: Callable) ->
 		(_flag_boxes[key] as CheckBox).button_pressed = bool(flags.get(key, true))
 	_keep_place_box.button_pressed = bool(flags.get("keep_place", true))
 	_flags_callback = callback
-	_flags_dialog.popup_centered()
+	EventSheetPopupUI.popup_fitted(_flags_dialog)
 
 
 ## The ticks as a flags dictionary, public so a headless test reads what the dialog would apply.

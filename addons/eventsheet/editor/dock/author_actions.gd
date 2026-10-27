@@ -316,7 +316,7 @@ func _open_save_snippet_dialog() -> void:
 	_snippet_name_dialog.title = EventSheetL10n.translate("Save {n} row(s) as a snippet").replace("{n}", str(count))
 	_refresh_snippet_name()
 	if _dock.is_inside_tree():
-		_snippet_name_dialog.popup_centered(Vector2i(int(EventSheetPalette.scaled_f(420.0)), 0))
+		EventSheetPopupUI.popup_fitted(_snippet_name_dialog, Vector2i(int(EventSheetPalette.scaled_f(420.0)), 0))
 		_snippet_name_edit.grab_focus()
 
 

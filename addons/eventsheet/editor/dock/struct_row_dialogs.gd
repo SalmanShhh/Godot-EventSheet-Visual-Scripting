@@ -42,7 +42,7 @@ func _window(title: String, ok_text: String) -> Dictionary:
 ## on screen; a dock that is not (the suite drives these headless) just keeps the window filled.
 func _popup(dialog: ConfirmationDialog, width: float) -> void:
 	if _dock.is_inside_tree():
-		dialog.popup_centered(Vector2i(int(EventSheetPalette.scaled_f(width)), 0))
+		EventSheetPopupUI.popup_fitted(dialog, Vector2i(int(EventSheetPalette.scaled_f(width)), 0))
 
 
 ## Puts the note and the strip under the cards, and the window under the dock.

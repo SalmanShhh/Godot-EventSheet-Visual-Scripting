@@ -328,7 +328,7 @@ func open_with_values(definition: ACEDefinition, context: Dictionary, initial_va
 	_set_back_visible(_can_return_to_picker())
 	if _add_another_button != null:
 		_add_another_button.visible = str(_context.get("mode", "")) in ["append_condition", "append_action"]
-	_dialog.popup_centered(_window_size())
+	EventSheetPopupUI.popup_fitted(_dialog, _window_size())
 	_dialog.call_deferred("grab_focus")
 	call_deferred("_focus_first_field")
 	# The Expressions panel is filled after the window is up: it reads the sheet, the host class and

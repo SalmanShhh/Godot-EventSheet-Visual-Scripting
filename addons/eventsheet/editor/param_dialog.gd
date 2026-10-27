@@ -154,7 +154,7 @@ func _popup() -> void:
 		EventSheetL10n.translate("The parameter's name in the GDScript, and the label on the function's row."))
 	_refresh()
 	if _dialog.is_inside_tree():
-		_dialog.popup_centered(Vector2i(int(EventSheetPalette.scaled_f(460.0)), 0))
+		EventSheetPopupUI.popup_fitted(_dialog, Vector2i(int(EventSheetPalette.scaled_f(460.0)), 0))
 		_name_edit.call_deferred("grab_focus")
 		_name_edit.call_deferred("select_all")
 

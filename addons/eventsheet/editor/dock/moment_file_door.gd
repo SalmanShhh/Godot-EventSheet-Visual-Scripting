@@ -84,7 +84,7 @@ func open_save(block: MomentBlockRow) -> void:
 	_dialog.ok_button_text = "Write the file"
 	_path_edit.text = SUGGESTED_DIRECTORY + _file_word(block.moment_name) + ".tres"
 	_note.text = _save_note(carried.get("steps", []).size(), left_behind)
-	_dialog.popup_centered()
+	EventSheetPopupUI.popup_fitted(_dialog)
 	_path_edit.grab_focus()
 
 
@@ -98,7 +98,7 @@ func open_read() -> void:
 	_path_edit.text = SHIPPED_DIRECTORY + "impact.tres"
 	_note.text = ("The file's steps arrive as rows that all start together, which is what a file "
 		+ "means. Give them a Then or a Hold afterwards and the beat is yours.")
-	_dialog.popup_centered()
+	EventSheetPopupUI.popup_fitted(_dialog)
 	_path_edit.grab_focus()
 
 
@@ -127,7 +127,7 @@ func open_step(block: MomentBlockRow) -> void:
 		box.add_child(EventSheetPopupUI.form_row("Do", _step_code))
 		box.add_child(EventSheetPopupUI.hint_label("The step arrives as one row. Give it more "
 			+ "actions, or another step, the way you would anywhere else in the sheet."))
-	_step_dialog.popup_centered()
+	EventSheetPopupUI.popup_fitted(_step_dialog)
 	_step_number.grab_focus()
 
 
@@ -143,7 +143,7 @@ func open_new() -> void:
 		box.add_child(EventSheetPopupUI.form_row("Called", _name_edit))
 		box.add_child(EventSheetPopupUI.hint_label("The name the Moment row plays it by, and the "
 			+ "name of the function it compiles to."))
-	_name_dialog.popup_centered()
+	EventSheetPopupUI.popup_fitted(_name_dialog)
 	_name_edit.grab_focus()
 
 

@@ -201,7 +201,7 @@ func _open_command_palette() -> void:
 		_build_command_palette_window()
 	_command_palette_search.text = ""
 	_refresh_command_palette("")
-	_command_palette_window.popup_centered()
+	EventSheetPopupUI.popup_fitted(_command_palette_window)
 	_command_palette_search.grab_focus()
 
 

@@ -188,7 +188,7 @@ func open() -> void:
 	if not told.is_empty():
 		_help_strip.show_note(str(told["heading"]), str(told["body"]))
 	if _sheet_type_dialog.is_inside_tree():  # headless tests: the fields are filled, nothing to pop
-		_sheet_type_dialog.popup_centered(Vector2i(480, 0))
+		EventSheetPopupUI.popup_fitted(_sheet_type_dialog, Vector2i(480, 0))
 
 
 ## Which field rows the CHOSEN type shows - mirrors apply_sheet_type_settings field by field: a plain

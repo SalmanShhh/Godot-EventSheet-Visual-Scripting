@@ -42,7 +42,7 @@ static func open_for(dock: Control, snippets: PackedStringArray) -> Confirmation
 	dialog.call("configure", dock, snippets)
 	dock.add_child(dialog)
 	if dock.is_inside_tree():
-		dialog.popup_centered(Vector2i(EventSheetPalette.scaled(480), 0))
+		EventSheetPopupUI.popup_fitted(dialog, Vector2i(EventSheetPalette.scaled(480), 0))
 	return dialog
 
 

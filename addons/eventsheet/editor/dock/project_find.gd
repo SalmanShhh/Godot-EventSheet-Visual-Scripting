@@ -33,7 +33,7 @@ func open(initial_query: String = "") -> void:
 		_build_project_find()
 	if not initial_query.is_empty():
 		_project_find_edit.text = initial_query
-	_project_find_window.popup_centered()
+	EventSheetPopupUI.popup_fitted(_project_find_window)
 	_project_find_edit.grab_focus()
 	if not initial_query.is_empty():
 		_run_project_find()

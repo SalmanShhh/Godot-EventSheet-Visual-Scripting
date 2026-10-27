@@ -220,7 +220,7 @@ func open(dock: Control, directory: String = "") -> ConfirmationDialog:
 	_name_edit.select_all()
 	_choose(DEFAULT_CLASS)
 	if _dock.is_inside_tree():
-		_dialog.popup_centered(Vector2i(roundi(EventSheetPalette.scaled_f(640.0)), 0))
+		EventSheetPopupUI.popup_fitted(_dialog, Vector2i(roundi(EventSheetPalette.scaled_f(640.0)), 0))
 		_search.grab_focus()
 	return _dialog
 

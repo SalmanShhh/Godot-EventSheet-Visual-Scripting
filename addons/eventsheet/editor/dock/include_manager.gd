@@ -248,7 +248,7 @@ func _include_add_requested() -> void:
 		_add_row(_picker_list, path, path.trim_prefix("res://"), note)
 	_picker_note.say("")
 	_picker.get_ok_button().disabled = true
-	_picker.popup_centered()
+	EventSheetPopupUI.popup_fitted(_picker)
 
 
 ## The .tres files under `folder`, sorted, skipping hidden folders and addons/ - the files a sheet

@@ -105,7 +105,7 @@ func open_settings(path: String) -> void:
 
 func _popup() -> void:
 	if _dialog.is_inside_tree():  # headless tests: the fields are filled, there is no window to pop
-		_dialog.popup_centered(Vector2i(int(EventSheetPalette.scaled_f(620.0)), 0))
+		EventSheetPopupUI.popup_fitted(_dialog, Vector2i(int(EventSheetPalette.scaled_f(620.0)), 0))
 		_name_edit.grab_focus()
 
 

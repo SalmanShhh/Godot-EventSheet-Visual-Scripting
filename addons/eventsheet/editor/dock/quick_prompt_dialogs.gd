@@ -128,9 +128,10 @@ func on_group_edit_requested(group: EventGroup) -> void:
 	_group_color_seed = group.custom_color if group.custom_color.a > 0.0 else _dock.DEFAULT_STRUCTURE_COLOR
 	_group_color_button.color = _group_color_seed
 	_refresh_group_reading()
-	_group_edit_dialog.popup_centered()
-	_group_name_edit.grab_focus()
-	_group_name_edit.select_all()
+	if _group_edit_dialog.is_inside_tree():
+		EventSheetPopupUI.popup_fitted(_group_edit_dialog)
+		_group_name_edit.grab_focus()
+		_group_name_edit.select_all()
 
 
 ## Shows what this group's rows would say about it, as the description field's own placeholder - an

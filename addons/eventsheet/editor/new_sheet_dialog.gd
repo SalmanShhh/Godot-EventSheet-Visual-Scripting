@@ -96,7 +96,7 @@ func open(directory: String = "res://") -> void:
 	_starter_option.select(0)
 	EventSheetPopupUI.follow_description(_starter_option)
 	_refresh()
-	_dialog.popup_centered(Vector2i(EventSheetPalette.scaled(460), 0))
+	EventSheetPopupUI.popup_fitted(_dialog, Vector2i(EventSheetPalette.scaled(460), 0))
 	_name_edit.grab_focus()
 	_name_edit.select_all()
 

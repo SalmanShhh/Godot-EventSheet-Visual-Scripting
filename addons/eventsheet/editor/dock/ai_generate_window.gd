@@ -29,7 +29,7 @@ func open() -> void:
 	if _ai_window == null:
 		_build()
 	_refresh_gate()
-	_ai_window.popup_centered()
+	EventSheetPopupUI.popup_fitted(_ai_window)
 	_ai_prompt_edit.grab_focus()
 
 

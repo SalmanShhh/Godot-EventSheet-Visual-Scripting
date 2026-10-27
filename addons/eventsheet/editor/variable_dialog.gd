@@ -154,6 +154,9 @@ const SYNC_ADD_CHOICE: String = "add"
 ## The colour each axis letter wears, the way the editor's own vector fields tint them.
 const AXIS_COLORS: Array = [Color("#f07a7a"), Color("#8ee09a"), Color("#7cb8ff"), Color("#9a9a9a")]
 
+## The tallest the Variable window's cards get before they scroll, in px at 1x.
+const FORM_MAX_HEIGHT := 520.0
+
 var _dialog: ConfirmationDialog = null
 var _help_strip: EventSheetPopupUI.HelpStrip = null
 ## "to Player": whose variable this will be, said once at the top.
@@ -189,6 +192,9 @@ var _onready_check: CheckBox = null
 var _sync_option: OptionButton = null
 ## The Inspector card: its tick, the look, the look's details and the preview of the result.
 var _inspector_card: Control = null
+## The scroll the four cards sit in. It is as tall as the cards up to FORM_MAX_HEIGHT and scrolls past
+## that, so the window is as tall as what it holds rather than a fixed height with the rest empty.
+var _form_scroll: ScrollContainer = null
 var _exported_check: CheckBox = null
 var _look_option: OptionButton = null
 var _look_details: VBoxContainer = null
@@ -253,7 +259,9 @@ func init_dialog(parent_node: Node) -> void:
 	_dialog.title = EventSheetL10n.translate("Add variable")
 	_dialog.ok_button_text = EventSheetL10n.translate("Add")
 	_dialog.visible = false
-	_dialog.min_size = Vector2i(int(EventSheetPalette.scaled_f(900.0)), int(EventSheetPalette.scaled_f(600.0)))
+	# A width, and no height: the window is as tall as its cards (see _fit_form_height). A fixed 600 px
+	# floor opened a plain local with a third of the window empty under its cards.
+	_dialog.min_size = Vector2i(int(EventSheetPalette.scaled_f(900.0)), 0)
 	_dialog.confirmed.connect(_on_confirmed)
 	_dialog.canceled.connect(_close)
 	parent_node.add_child(_dialog)
@@ -271,6 +279,9 @@ func init_dialog(parent_node: Node) -> void:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(form)
+	_form_scroll = scroll
+	form.minimum_size_changed.connect(_fit_form_height)
+	_fit_form_height()
 	# The live column, read as you pick: the row and the code (the strip's two reading lines, under
 	# whatever is focused) and the Inspector the choices add up to.
 	var live: VBoxContainer = EventSheetPopupUI.form_box()
@@ -286,6 +297,16 @@ func init_dialog(parent_node: Node) -> void:
 	scroll.size_flags_stretch_ratio = 1.6
 	_dialog.add_child(EventSheetPopupUI.margined(band))
 	_wire_help_strip()
+
+
+## The cards' scroll is as tall as the cards, up to FORM_MAX_HEIGHT; past that they scroll. A
+## ScrollContainer asks for no height of its own, so without this the window would be only as tall as
+## the live column beside it.
+func _fit_form_height() -> void:
+	if _form_scroll == null or _form_scroll.get_child_count() == 0:
+		return
+	var cards: float = (_form_scroll.get_child(0) as Control).get_combined_minimum_size().y
+	_form_scroll.custom_minimum_size.y = minf(cards, EventSheetPalette.scaled_f(FORM_MAX_HEIGHT))
 
 
 func _build_variable_card() -> VBoxContainer:
@@ -1400,7 +1421,7 @@ func open_for_edit(
 		_help_strip.show_note(str(opening.get("heading", "")), str(opening.get("body", "")))
 	_refresh_reading()
 	if _dialog.is_inside_tree():
-		_dialog.popup_centered()
+		EventSheetPopupUI.popup_fitted(_dialog)
 		_name_edit.grab_focus()
 		_name_edit.select_all()
 
@@ -1691,7 +1712,7 @@ func _open_items_editor() -> void:
 	_items_edit.text = "\n".join(collection_literal_items(_default_edit.text))
 	_items_edit.placeholder_text = EventSheetL10n.translate("one \"key\": value per line") if is_dict else EventSheetL10n.translate("one value per line")
 	_items_window.title = EventSheetL10n.translate("Edit Dictionary Items") if is_dict else EventSheetL10n.translate("Edit Array Items")
-	_items_window.popup_centered()
+	EventSheetPopupUI.popup_fitted(_items_window)
 
 
 ## The live reading of everything the window holds: the strip's row and code lines, the Inspector

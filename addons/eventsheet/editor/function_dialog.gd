@@ -272,7 +272,7 @@ func open(kind: String = "", publish: bool = false) -> void:
 	_value_type_option.select(0)
 	_select_usable(_usable_index_for_kind(kind))
 	if _dialog.is_inside_tree():
-		_dialog.popup_centered()
+		EventSheetPopupUI.popup_fitted(_dialog)
 		_name_edit.grab_focus()
 
 

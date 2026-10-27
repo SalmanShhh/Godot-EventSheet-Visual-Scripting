@@ -147,6 +147,35 @@ static func window_body(content: Control) -> Control:
 	return backdrop
 
 
+## Opens a window centred at the size of what it holds NOW - or `least` where that is bigger, a zero
+## side meaning "the content's". For a window built once and opened again: popup_centered() with no
+## size reopens a window at the size it had last time, and a window only ever grows on its own, so a
+## form once opened on a long text stayed that big - empty space and all - for the rest of the session.
+## Measured again once its labels have wrapped at their real width (WindowBackdrop.SETTLE_SECONDS):
+## the first layout reads a wrapping label narrower, so taller, than it ends up, and the window grows to
+## that guess. The second measure takes the guess back, about the window's centre.
+static func popup_fitted(window: Window, least: Vector2i = Vector2i.ZERO) -> void:
+	if window == null or not window.is_inside_tree():
+		return
+	window.popup_centered(fitted_size(window, least))
+	window.get_tree().create_timer(WindowBackdrop.SETTLE_SECONDS).timeout.connect(func() -> void:
+		if not is_instance_valid(window) or not window.visible:
+			return
+		var fitted: Vector2i = fitted_size(window, least)
+		if fitted.x < window.size.x or fitted.y < window.size.y:
+			var centre: Vector2i = window.position + window.size / 2
+			window.size = fitted.min(window.size)
+			window.position = centre - window.size / 2
+	)
+
+
+## The size popup_fitted opens `window` at: its content's minimum, raised to `least` and to the
+## window's own min_size. Never zero, which popup_centered would read as "keep the old size".
+static func fitted_size(window: Window, least: Vector2i = Vector2i.ZERO) -> Vector2i:
+	var content: Vector2i = Vector2i(window.get_contents_minimum_size().ceil())
+	return content.max(least).max(window.min_size).max(Vector2i.ONE)
+
+
 ## The backdrop window_body puts under a plain Window, and the two things a dialog does that a bare
 ## Window does not. It GROWS TO FIT what it holds once it is shown: a Window keeps the size it was
 ## given, so a fixed size smaller than the content cut its foot off (the Bookmarks card, the Replay
@@ -619,6 +648,8 @@ class HelpStrip extends PanelContainer:
 
 	## The accent rule down the left edge, in px before display scaling.
 	const ACCENT_RULE_WIDTH := 3
+	## The most lines a reading line (READS AS, IN CODE, an added line) wraps to before it ends in "...".
+	const READING_MAX_LINES := 4
 
 	## The three tones the strip speaks in. "" is the ordinary describing voice; a warning is
 	## something that compiles but will surprise; an error is something that cannot be meant. The
@@ -690,14 +721,27 @@ class HelpStrip extends PanelContainer:
 
 
 	## One reading line: a muted small-caps caption and the value beside it. Hidden until filled.
+	## The value WRAPS inside the strip's own width: a line that did not wrap was as wide as what it
+	## said, so a long comment, group description or value opened its whole window thousands of
+	## pixels wide. It has a width of its own too, or a wrapping label measures one glyph per line on
+	## the window's first pass and stretches the window tall instead. And it stops at READING_MAX_LINES
+	## with an ellipsis, the whole line in its hover: a long value is in the field above it already, and
+	## twenty wrapped lines of it made the window taller than the screen.
 	func _reading_row(caption: String) -> HBoxContainer:
 		var row: HBoxContainer = HBoxContainer.new()
 		row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(10.0)))
 		row.visible = false
 		var label: Label = EventSheetPopupUI.small_caps_label(caption, EventSheetPopupUI.muted_text_color())
+		# The caption stays beside the line's first row, not halfway down a wrapped value.
+		label.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		row.add_child(label)
 		var value: Label = Label.new()
 		value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		value.custom_minimum_size = Vector2(body_label.custom_minimum_size.x * 0.75, 0.0)
+		value.max_lines_visible = READING_MAX_LINES
+		value.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		value.mouse_filter = Control.MOUSE_FILTER_PASS
 		row.add_child(value)
 		return row
 
@@ -708,10 +752,6 @@ class HelpStrip extends PanelContainer:
 	func add_line(caption: String, first: bool = false) -> Label:
 		var row: HBoxContainer = _reading_row(caption)
 		var value: Label = row.get_child(1) as Label
-		value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		# A wrapping label with no width of its own measures one glyph per line on the window's
-		# first pass and stretches the whole window; the paragraph's width keeps it sane.
-		value.custom_minimum_size = Vector2(body_label.custom_minimum_size.x * 0.75, 0.0)
 		in_code_row.get_parent().add_child(row)
 		if first:
 			row.get_parent().move_child(row, reads_as_row.get_index())
@@ -721,6 +761,7 @@ class HelpStrip extends PanelContainer:
 	## Fills a line add_line() made; an empty text hides it, like the two reading lines.
 	func set_line(value: Label, text: String) -> void:
 		value.text = text
+		value.tooltip_text = text
 		value.get_parent().visible = not text.strip_edges().is_empty()
 
 
@@ -737,11 +778,13 @@ class HelpStrip extends PanelContainer:
 	## so a dialog with no code behind it never shows an empty IN CODE caption.
 	func set_reading(reads_as: String, in_code: String = "") -> void:
 		reads_as_value.text = reads_as
+		reads_as_value.tooltip_text = reads_as
 		reads_as_row.visible = not reads_as.strip_edges().is_empty()
 		# A label draws a tab as nothing, so a body line of a several-line row (`if ...:` then its
 		# indented step) lost its indent and read as a sibling of the `if`. Four spaces per tab is the
 		# editor's own width.
 		in_code_value.text = in_code.replace("\t", "    ")
+		in_code_value.tooltip_text = in_code_value.text
 		in_code_row.visible = not in_code.strip_edges().is_empty()
 
 

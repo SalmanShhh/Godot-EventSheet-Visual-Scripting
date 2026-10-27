@@ -29,7 +29,7 @@ func open() -> void:
 	var seed: String = _selected_symbol_text()
 	if not seed.is_empty():
 		_find_refs_edit.text = seed
-	_find_refs_window.popup_centered()
+	EventSheetPopupUI.popup_fitted(_find_refs_window)
 	_find_refs_edit.grab_focus()
 	if not _find_refs_edit.text.strip_edges().is_empty():
 		_run_find_references()

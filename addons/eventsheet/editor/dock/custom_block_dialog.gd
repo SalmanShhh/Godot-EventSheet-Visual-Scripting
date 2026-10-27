@@ -67,7 +67,7 @@ func _open(kind: EventSheetBlockKind, block: CustomBlockRow) -> void:
 		# but the row shows the edit + its Browse button together.
 		var row_control: Control = control.get_parent() as Control if control.get_parent() is Control and control.has_meta("browse_wrapped") else control
 		_fields_box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate(str(field.get("label", field_id))), row_control))
-	_dialog.popup_centered()
+	EventSheetPopupUI.popup_fitted(_dialog)
 	# Focus the first field so add flows are type-and-Enter.
 	if not kind.fields().is_empty():
 		var first: Control = _field_controls.get(str(kind.fields()[0].get("id", "")), null)

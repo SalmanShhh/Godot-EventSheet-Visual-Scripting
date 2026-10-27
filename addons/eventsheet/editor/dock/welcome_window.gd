@@ -140,11 +140,9 @@ func show() -> void:
 	# whole flow for a new language - no registration step, no restart.
 	EventSheetL10n.rescan()
 	_refresh_language_picker()
-	# Collapse the content-fitting dialog to its real minimum size FIRST, so popup_centered has the
-	# final dimensions to center against - without this, the first open centers on a pre-layout
-	# (too-small) size and the content then expands down-and-right, leaving the window off-centre.
-	_welcome_window.reset_size()
-	_welcome_window.popup_centered()
+	# Opened at its content's own size and centred on it - without that, the first open centred on a
+	# pre-layout (too-small) size and the content then expanded down-and-right, off-centre.
+	EventSheetPopupUI.popup_fitted(_welcome_window)
 
 
 ## A content-sized dialog, so the window fits what it holds; every label wraps inside a fixed width.

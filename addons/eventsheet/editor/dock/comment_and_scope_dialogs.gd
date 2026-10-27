@@ -42,7 +42,7 @@ func open_comment_dialog(comment_resource: Resource) -> void:
 	_comment_manual_check.button_pressed = comment_row.is_documentation()
 	_refresh_comment()
 	if _dock.is_inside_tree():
-		_comment_dialog.popup_centered(Vector2i(int(EventSheetPalette.scaled_f(560.0)), 0))
+		EventSheetPopupUI.popup_fitted(_comment_dialog, Vector2i(int(EventSheetPalette.scaled_f(560.0)), 0))
 		_comment_text_edit.grab_focus()
 
 

@@ -28,7 +28,7 @@ func open() -> void:
 		_build()
 		_dock.add_child(_shortcuts_dialog)
 	_refresh_shortcuts_editor()
-	_shortcuts_dialog.popup_centered()
+	EventSheetPopupUI.popup_fitted(_shortcuts_dialog)
 
 
 func _build() -> void:

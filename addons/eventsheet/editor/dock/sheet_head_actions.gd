@@ -591,7 +591,7 @@ func _prompt_for_text(band_kind: String, label_text: String, seed_text: String) 
 		(parts["box"] as VBoxContainer).add_child(EventSheetPopupUI.form_row("Text", _text_edit))
 	_text_dialog.title = label_text
 	_text_edit.text = seed_text
-	_text_dialog.popup_centered(Vector2i(460, 0))
+	EventSheetPopupUI.popup_fitted(_text_dialog, Vector2i(460, 0))
 	_text_edit.grab_focus()
 
 

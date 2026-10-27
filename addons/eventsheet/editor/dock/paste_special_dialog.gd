@@ -48,7 +48,7 @@ func open(snippet_override: Dictionary = {}) -> void:
 	_populate(rows)
 	_dialog.title = EventSheetL10n.translate("Paste {n} row(s) retargeted").replace("{n}", str(rows.size()))
 	if _dock.is_inside_tree():
-		_dialog.popup_centered(Vector2i(int(EventSheetPalette.scaled_f(560.0)), 0))
+		EventSheetPopupUI.popup_fitted(_dialog, Vector2i(int(EventSheetPalette.scaled_f(560.0)), 0))
 
 
 func _build_dialog() -> void:
