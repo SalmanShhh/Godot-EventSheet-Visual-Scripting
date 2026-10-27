@@ -106,6 +106,9 @@ static func _window_pins() -> Array:
 	var eye_tile: Control = dialog._mark_tiles["Editable in the Inspector"]
 	var eye_inks: Array = eye_tile.call("inks")
 	var eye_card_title: String = str((eye_tile.call("card") as Dictionary).get("title", ""))
+	var described_row: HBoxContainer = dialog._attr_tooltip_edit.get_parent() as HBoxContainer
+	var described_order: Array = [described_row.get_child(0).get_child(0).get_child(0) == dialog._mark_tiles["Description"],
+		(described_row.get_child(0).get_child(1) as Label).text, dialog.field_order().has("Description")]
 	_open_member(dialog, members.get("bullet_speed") as LocalVariable)
 	var first_writes_group: bool = dialog._collect_attributes("float").has("group")
 	_open_member(dialog, members.get("health") as LocalVariable)
@@ -125,6 +128,8 @@ static func _window_pins() -> Array:
 		["a tile wears the sheet's own colours", eye_inks,
 			[light.inspector_badge_foreground_color, light.inspector_badge_background_color]],
 		["and opens the row tile's card", eye_card_title, "In the Inspector"],
+		["the tile stands in front of its option's words, and the row still counts as a field",
+			described_order, [true, "Description", true]],
 		["a member under an earlier member's group line opens on that group and its prefix", count_fields,
 			["", "Bullet", "bullet", true, ""]],
 		["and saving it untouched writes no second group line", count_writes_group, false],

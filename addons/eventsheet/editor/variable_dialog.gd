@@ -45,6 +45,8 @@ const OPTION_BADGES: Dictionary = {
 }
 ## The option word the Inspector look's tile stands beside.
 const LOOK_OPTION := "Inspector look"
+## The meta marking the box that holds a form row's option tile and its words, in the label column.
+const OPTION_TILE_SLOT := "option_tile_slot"
 
 ## The scopes the window offers, in the sheet's own order.
 const CHOOSABLE_SCOPES: PackedStringArray = EventSheetVariableSentence.SCOPE_ORDER
@@ -376,21 +378,34 @@ func _option_tile(option: String, badge: String) -> Control:
 	return tile
 
 
-## Sets the option's tile at the right end of a form row's label, where the label meets its field: the
-## field column stays where every other row has it.
+## Sets the option's tile in front of a form row's label, as the row's own tile leads its fact. Tile
+## and words share the label column, so the field column stays where every other row has it (a label
+## too long for the column widens it, as any long label does).
 func _with_label_tile(row: HBoxContainer, option: String) -> HBoxContainer:
 	var label: Label = row.get_child(0) as Label
 	if label == null:
 		return row
 	var tile: Control = _option_tile(option, str(OPTION_BADGES.get(option, "")))
-	label.add_child(tile)
-	var side: float = tile.custom_minimum_size.x
-	var gap: float = EventSheetPalette.scaled_f(6.0)
-	tile.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
-	tile.offset_left = -side - gap
-	tile.offset_right = -gap
-	tile.offset_top = -side * 0.5
-	tile.offset_bottom = side * 0.5
+	# The slot keeps its room while its tile is hidden (a look that draws no tile), so the words and
+	# the field never jump as the look changes.
+	var slot: Control = Control.new()
+	slot.custom_minimum_size = tile.custom_minimum_size
+	slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	slot.add_child(tile)
+	tile.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var lead: HBoxContainer = HBoxContainer.new()
+	lead.set_meta(OPTION_TILE_SLOT, true)
+	lead.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
+	lead.custom_minimum_size = Vector2(label.custom_minimum_size.x, 0.0)
+	row.add_child(lead)
+	row.move_child(lead, 0)
+	row.remove_child(label)
+	label.custom_minimum_size.x = 0.0
+	# The tile takes the place of the label's own inset, so the words start just after it and a label
+	# as long as "Inspector look" still fits the column.
+	label.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
+	lead.add_child(slot)
+	lead.add_child(label)
 	return row
 
 
@@ -1931,11 +1946,27 @@ func _collect_rows(node: Node, visible_only: bool, into: PackedStringArray) -> v
 	for child: Node in node.get_children():
 		if visible_only and child is Control and not (child as Control).visible:
 			continue
-		if child is HBoxContainer and child.get_child_count() > 1 and child.get_child(0) is Label \
-				and (child.get_child(0) as Label).custom_minimum_size.x == EventSheetPopupUI.LABEL_MIN_WIDTH:
-			into.append((child.get_child(0) as Label).text)
+		var label: Label = _row_label(child)
+		if label != null:
+			into.append(label.text)
 			continue
 		_collect_rows(child, visible_only, into)
+
+
+## The label a form row leads with - beside the option tile when the row carries one - or null
+## for anything that is not a form row of the standard label width.
+func _row_label(node: Node) -> Label:
+	if not (node is HBoxContainer) or node.get_child_count() < 2:
+		return null
+	var first: Control = node.get_child(0) as Control
+	if first == null:
+		return null
+	var room: float = first.custom_minimum_size.x
+	if first.has_meta(OPTION_TILE_SLOT) and first.get_child_count() > 1:
+		first = first.get_child(1) as Control
+	if not (first is Label):
+		return null
+	return first as Label if is_equal_approx(room, EventSheetPopupUI.LABEL_MIN_WIDTH) else null
 
 
 ## The strip's text for the scope at `index` of the Scope dropdown.
