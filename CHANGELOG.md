@@ -134,6 +134,9 @@ player, an enemy with a class inside it, an editor plugin and its dock, the ship
 - An event more than one line tall numbered 10 or higher shows both digits in the margin. The
   number sat in the middle of the margin with a 4px inset either side, which left room for one
   digit, so a `player.gd` with eleven events numbered its last two "1" and "1".
+- A function written inline - a lambda handed to a call, its body read as rows of their own - no
+  longer hangs "is not a variable" notes under those rows for its own parameters, locals and loop
+  items (`insert_after`, `function_resource` in the editor's own helper scripts).
 
 ### Fixed: the plugin and the code it writes stop filling the Output and Debugger panels
 

@@ -11469,8 +11469,17 @@ func _collect_local_names(entries: Variant, names: Dictionary, walked: Dictionar
 		if not (entry is Resource) or walked.has(entry):
 			continue
 		walked[entry] = true
+		if entry is RawCodeRow:
+			_collect_code_declared_names((entry as RawCodeRow).code, names)
+			continue
 		if entry is EventRow:
 			var event_row: EventRow = entry as EventRow
+			# A line kept as code can hold a function written inline (`edit("Paste", func() -> bool:
+			# ...)`), whose body the canvas reads as rows of its own: its parameters, locals and loop
+			# items are names those rows use.
+			for kept: Variant in event_row.actions:
+				if kept is RawCodeRow:
+					_collect_code_declared_names((kept as RawCodeRow).code, names)
 			for declared: Array in _declared_locals(event_row):
 				if not str(declared[0]).is_empty():
 					names[str(declared[0])] = true
@@ -11494,6 +11503,19 @@ func _collect_local_names(entries: Variant, names: Dictionary, walked: Dictionar
 				names[str(local_name)] = true
 		for key: String in ["events", "rows"]:
 			_collect_local_names((entry as Resource).get(key), names, walked)
+
+
+## The names a piece of code kept as written declares, into `names`: every `var name`, every
+## `for name` and every parameter of a `func(...)` written inline.
+static func _collect_code_declared_names(code: String, names: Dictionary) -> void:
+	if code.is_empty() or not (code.contains("var ") or code.contains("for ") or code.contains("func")):
+		return
+	var declared := RegEx.create_from_string("\\b(?:var|for)\\s+([A-Za-z_][A-Za-z0-9_]*)")
+	for found: RegExMatch in declared.search_all(code):
+		names[found.get_string(1)] = true
+	var inline := RegEx.create_from_string("\\bfunc\\s*(?:[A-Za-z_][A-Za-z0-9_]*\\s*)?\\(([^)]*)\\)")
+	for found: RegExMatch in inline.search_all(code):
+		_collect_parameter_names(found.get_string(1).split(","), names)
 
 
 ## The names a list of parameters declares, into `names`: `body: Node2D = null` names `body`.

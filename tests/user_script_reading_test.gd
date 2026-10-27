@@ -26,6 +26,7 @@ const SUPPORT := preload("res://tests/support.gd")
 const NAME := "user_script_reading_test"
 const PLAYER_PATH := "user://eventsheets_user_script_reading_player.gd"
 const ENEMY_PATH := "user://eventsheets_user_script_reading_enemy.gd"
+const LAMBDA_PATH := "user://eventsheets_user_script_reading_lambda.gd"
 
 const PLAYER_SOURCE := """class_name ReadingTestPlayer
 extends CharacterBody2D
@@ -112,10 +113,43 @@ func count(rows: Array) -> int:
 """
 
 
+# Names a function written inline declares: a connected lambda's parameter, and the local and loop
+# item of a body handed to the sheet-edit funnel, which the canvas reads as rows of their own - so a
+# note under them must know those names as well as the file's. The plugin's own editor helpers are
+# written this way, and a user who opens one reads it like any other script.
+const LAMBDA_SOURCE := """extends Node
+
+var _label: Label
+var _dock: Object = null
+
+
+func _ready() -> void:
+	_label = Label.new()
+	_label.gui_input.connect(func(input_event: InputEvent) -> void:
+		if input_event is InputEventKey and (input_event as InputEventKey).pressed and (input_event as InputEventKey).keycode == KEY_ESCAPE:
+			_label.visible = false
+			if _label.get_parent() != null:
+				_label.grab_focus()
+	)
+
+
+func refill(rows: Array, anchor: Resource) -> bool:
+	var changed: bool = _dock._perform_undoable_sheet_edit("Paste", func() -> bool:
+		var insert_after: Resource = anchor
+		for row_entry: Variant in rows:
+			_dock.place(row_entry, insert_after)
+			insert_after = row_entry
+		return true
+	)
+	return changed
+"""
+
+
 static func run() -> bool:
 	var ok: bool = true
 	ok = _test_player() and ok
 	ok = _test_inner_class_keeps_the_members() and ok
+	ok = _test_inline_function_names() and ok
 	ok = _test_chips_leave_the_condition_room() and ok
 	return ok
 
@@ -151,6 +185,14 @@ static func _test_inner_class_keeps_the_members() -> bool:
 	# Every name the file uses here is real: its members (the class inside it notwithstanding), a
 	# vector added to, an input handler's event, a loop's item and a function's local.
 	var ok: bool = SUPPORT.check(NAME, "a class inside the file leaves the file's own members variables",
+		_notes(dock), PackedStringArray())
+	dock.free()
+	return ok
+
+
+static func _test_inline_function_names() -> bool:
+	var dock: EventSheetDock = _open(LAMBDA_PATH, LAMBDA_SOURCE)
+	var ok: bool = SUPPORT.check(NAME, "a lambda's parameter, local and loop item are names the file declares",
 		_notes(dock), PackedStringArray())
 	dock.free()
 	return ok
