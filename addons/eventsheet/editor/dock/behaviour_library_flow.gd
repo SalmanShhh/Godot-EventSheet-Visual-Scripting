@@ -14,6 +14,8 @@ extends RefCounted
 ## How long an import may take before the flow stops waiting for it and attaches anyway. Godot says
 ## when a scan has finished; this only stops a scan that never says so from holding the window.
 const IMPORT_WAIT_SECONDS := 60.0
+## The files a pack folder holds that Godot reads as they are, with no import step.
+const READ_AS_IS: PackedStringArray = ["gd", "uid", "gdshader", "gdshaderinc", "tres", "tscn", "res", "md", "txt", "cfg", "json"]
 
 var _dock: Control = null
 var _remove_window: ConfirmationDialog = null
@@ -139,7 +141,11 @@ func _trash_folders(folders: PackedStringArray) -> void:
 
 ## Asks Godot to import what changed under eventsheet_addons/ and waits until it says it has, so a
 ## class the copied packs declare is known before anything uses it. A coroutine: await it.
-func import_folders(_folders: PackedStringArray) -> void:
+##
+## The scan finds the new files but imports their pictures and sounds a step later, and a rebuild of
+## the vocabulary in between loads a pack icon that is not imported yet. So once the scan is done,
+## this also waits until every copied file Godot imports has its import.
+func import_folders(folders: PackedStringArray) -> void:
 	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface") or _dock == null or not _dock.is_inside_tree():
 		return
 	var filesystem: EditorFileSystem = EditorInterface.get_resource_filesystem()
@@ -147,8 +153,36 @@ func import_folders(_folders: PackedStringArray) -> void:
 	filesystem.filesystem_changed.connect(func() -> void: finished[0] = true, CONNECT_ONE_SHOT)
 	filesystem.scan()
 	var give_up: SceneTreeTimer = _dock.get_tree().create_timer(IMPORT_WAIT_SECONDS)
-	while not finished[0] and give_up.time_left > 0.0:
+	while (not finished[0] or filesystem.is_scanning()) and give_up.time_left > 0.0:
 		await _dock.get_tree().process_frame
+	# Godot refuses a second import started while its own runs, so this waits for the files it is
+	# importing to arrive rather than importing them itself.
+	while give_up.time_left > 0.0 and not _all_imported(folders):
+		await _dock.get_tree().process_frame
+
+
+static func _all_imported(folders: PackedStringArray) -> bool:
+	for folder: String in folders:
+		if not unimported_files(EventSheetPackLibrary.PROJECT_ROOT.path_join(folder)).is_empty():
+			return false
+	return true
+
+
+## Every file under `folder` Godot imports (a picture, a sound, a compute shader, a table) that has
+## no `.import` beside it yet. Scripts, shaders, scenes and resources are read as they are.
+static func unimported_files(folder: String) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	if not DirAccess.dir_exists_absolute(folder):
+		return out
+	for file_name: String in DirAccess.get_files_at(folder):
+		var extension: String = file_name.get_extension()
+		if READ_AS_IS.has(extension) or EventSheetPackLibrary.GENERATED_EXTENSIONS.has(extension):
+			continue
+		if not FileAccess.file_exists(folder.path_join(file_name) + ".import"):
+			out.append(folder.path_join(file_name))
+	for child: String in DirAccess.get_directories_at(folder):
+		out.append_array(unimported_files(folder.path_join(child)))
+	return out
 
 
 func _after_change() -> void:

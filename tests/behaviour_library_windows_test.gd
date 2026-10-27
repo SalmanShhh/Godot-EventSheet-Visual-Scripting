@@ -49,6 +49,18 @@ static func run() -> bool:
 			[{"id": "tidy_behaviours", "label": "Tidy behaviours…", "check": "unused-pack"}]],
 	])
 
+	# A copied folder's pictures are imported before anything loads them; scripts need no import.
+	var folder: String = "user://behaviour_library_windows_test_import"
+	DirAccess.make_dir_recursive_absolute(folder.path_join("art"))
+	for file_name: String in ["a.gd", "a.gd.uid", "art/icon.svg", "done.png", "done.png.import"]:
+		FileAccess.open(folder.path_join(file_name), FileAccess.WRITE).close()
+	ok = SUPPORT.check(P, "only a copied file still waiting for its import is imported by hand",
+		FLOW.unimported_files(folder), PackedStringArray([folder.path_join("art/icon.svg")])) and ok
+	for file_name: String in ["a.gd", "a.gd.uid", "art/icon.svg", "done.png", "done.png.import"]:
+		DirAccess.remove_absolute(folder.path_join(file_name))
+	DirAccess.remove_absolute(folder.path_join("art"))
+	DirAccess.remove_absolute(folder)
+
 	# The window over the real library: every library pack is listed beside the project's own, as a
 	# tile that says Library, and "In this project" hides them.
 	# This repository's project holds every pack, so the window is handed the library as a project
