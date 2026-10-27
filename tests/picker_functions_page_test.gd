@@ -7,7 +7,8 @@
 #
 # What it pins, in the order a reader meets it:
 #   1. THE PAGE. The section title, its sub-note, the folded Helpers header, and every entry label
-#      in order - name, kind in one word, one chip per parameter.
+#      in order - the function's name, with no kind word after it. A script that publishes nothing
+#      lists its functions straight under the head, each wearing the function mark.
 #   2. THE GUARD. A sheet with no .gd behind it, and a .gd with no functions, show no section.
 #   3. THE INSERT. Every entry is a COPY of the frozen Core "Call Function" ACE with its target
 #      named in metadata - the ace id and the codegen template are compatibility promises, so a
@@ -32,6 +33,10 @@ class StubDock:
 	var _current_sheet: EventSheetResource = null
 
 
+	func get_current_sheet() -> EventSheetResource:
+		return _current_sheet
+
+
 static func run() -> bool:
 	var passed: bool = true
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE_PATH)
@@ -40,6 +45,7 @@ static func run() -> bool:
 
 	passed = _test_the_page(sheet) and passed
 	passed = _test_the_guard() and passed
+	passed = _test_a_hand_written_script() and passed
 	passed = _test_the_insert(sheet, registry) and passed
 	passed = _test_search(sheet, registry) and passed
 	passed = _test_chips(sheet, registry) and passed
@@ -52,22 +58,51 @@ static func run() -> bool:
 
 static func _test_the_page(sheet: EventSheetResource) -> bool:
 	var content: Dictionary = ACEPickerDialog.functions_page_content(sheet)
-	var passed: bool = _check("the section is titled with the function mark",
-		str(content.get("title", "")), "ƒ Functions")
+	# The entries wear the function icon; the head is the section's name alone, no glyph typed into it.
+	var passed: bool = _check("the section is titled with its name alone",
+		str(content.get("title", "")), "Functions")
 	passed = _check("the sub-note counts every function in the file",
 		str(content.get("note", "")), "this script - 4") and passed
 	passed = _check("the folded part is headed with its own count",
 		str(content.get("helpers_header", "")), "+ Helpers (2)") and passed
-	passed = _check("the published verbs lead, each with its kind and its parameter chip",
-		_labels(content.get("published", [])),
-		"Award Points   action   amount number | Round Is Ready   condition   enabled boolean") and passed
-	passed = _check("the helpers follow, each saying it is not published as an ACE",
-		_labels(content.get("helpers", [])),
-		"Reset Score   action · not published | Doubled Score   expression · not published") and passed
+	# Each entry is the function's name - the one its author gave it in Add Action, else as the file
+	# writes it - with no kind word after it: the icon beside it already says it is a function.
+	passed = _check("the published verbs lead, each under the name its author gave it",
+		_labels(content.get("published", [])), "Award Points | Round Is Ready") and passed
+	passed = _check("the helpers follow, each named exactly as the file writes it",
+		_labels(content.get("helpers", [])), "reset_score | doubled_score") and passed
 	passed = _check("the entries name the functions they call",
 		_function_names(content.get("published", [])) + " | " + _function_names(content.get("helpers", [])),
 		"award_points, round_is_ready | reset_score, doubled_score") and passed
 	return passed
+
+
+## A script a user writes by hand publishes nothing, so every function it has is a helper: they are
+## the section itself, each under the function mark, not folded behind a Helpers head.
+static func _test_a_hand_written_script() -> bool:
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE_PATH)
+	for entry: Variant in sheet.functions:
+		(entry as EventFunction).expose_as_ace = false
+	var stub := StubDock.new()
+	stub._current_sheet = sheet
+	var picker: ACEPickerDialog = ACEPickerDialog.new()
+	picker._host_node = stub
+	picker._objects_tree = Tree.new()
+	picker._populate_function_cards(picker._objects_tree.create_item())
+	var listed: PackedStringArray = PackedStringArray()
+	var marked: int = 0
+	var header: TreeItem = picker._objects_tree.get_root().get_first_child()
+	for child: TreeItem in header.get_children() if header != null else []:
+		listed.append(child.get_text(0))
+		if child.get_icon(0) != null:
+			marked += 1
+	picker._objects_tree.free()
+	stub.free()
+	return SUPPORT.pins("picker_functions_page_test", [
+		["every function is listed straight under the head, none folded away", listed,
+			PackedStringArray(["Award Points", "Round Is Ready", "reset_score", "doubled_score"])],
+		["each wears the function mark", marked, 4],
+	])
 
 
 # ── 2. The guard ──
@@ -216,8 +251,10 @@ static func _test_symmetry(registry: EventSheetACERegistry) -> bool:
 	var reading: PackedStringArray = PackedStringArray()
 	for piece: Variant in pieces:
 		reading.append(str((piece as Array)[0]).strip_edges())
+	# No object name was handed over, so the call files under Functions; the words are the verb's
+	# name, then "with" and each value after the parameter it fills.
 	passed = _check("and the reopened row reads as the same named verb under Functions",
-		" ".join(reading).strip_edges(), "Functions Call Award Points  amount = 5") and passed
+		" ".join(reading).strip_edges(), "Functions Award Points with amount 5") and passed
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(ROUND_TRIP_PATH))
 	return passed
 

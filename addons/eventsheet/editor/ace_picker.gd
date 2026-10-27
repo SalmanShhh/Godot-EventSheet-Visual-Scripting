@@ -1546,7 +1546,7 @@ static func functions_page_content(sheet: EventSheetResource) -> Dictionary:
 	if published.is_empty() and helpers.is_empty():
 		return {}
 	return {
-		"title": "ƒ %s" % EventSheetL10n.translate("Functions"),
+		"title": EventSheetL10n.translate("Functions"),
 		"note": EventSheetL10n.translate("this script - %d") % (published.size() + helpers.size()),
 		"published": published,
 		"helpers": helpers,
@@ -1554,25 +1554,12 @@ static func functions_page_content(sheet: EventSheetResource) -> Dictionary:
 	}
 
 
-## One function's entry line: its display name, its kind in one word ("action" / "condition" /
-## "expression" - void returns nothing, a bool answers a question, anything else hands a value
-## back), then one chip per parameter as "<name> <type-word>". So a reader learns what the verb IS
-## and what it takes without opening anything. An unpublished helper carries "not published" beside
-## its kind: it is callable, but it is not part of any sheet's vocabulary.
+## One function's entry line: its name exactly as the file writes it (or the name its author gave
+## it in Add Action). The function icon beside it says what it is, so no kind word follows the name,
+## and its parameters and description are the help strip's to show.
 static func function_entry_label(event_function: EventFunction) -> String:
-	var parts: PackedStringArray = PackedStringArray()
-	parts.append(EventSheetBBCodeLite.strip(EventSheetVerbProperties.display_name_of(event_function)))
-	var kind: String = EventSheetL10n.translate(ViewportRowBuilder.define_role_for(event_function))
-	if not event_function.expose_as_ace:
-		kind = "%s · %s" % [kind, EventSheetL10n.translate("not published")]
-	parts.append(kind)
-	for param: Variant in event_function.params:
-		if param is ACEParam:
-			parts.append("%s %s" % [
-				ViewportRowBuilder.friendly_param_label(param as ACEParam),
-				ViewportRowBuilder.friendly_type_word((param as ACEParam).type_name)
-			])
-	return "   ".join(parts)
+	var authored: String = EventSheetBBCodeLite.strip(str(event_function.ace_display_name)).strip_edges()
+	return authored if not authored.is_empty() else event_function.function_name.strip_edges()
 
 
 ## The script's own functions as pickable definitions: COPIES of the Core "Call Function" ACE with
@@ -1666,6 +1653,12 @@ func _populate_function_cards(root: TreeItem) -> void:
 	var helpers: Array = content.get("helpers", [])
 	if helpers.is_empty():
 		return
+	# A hand-written script publishes nothing: every function it has is one of these, so they are the
+	# section itself, listed under its head rather than folded away behind a second one.
+	if (content.get("published", []) as Array).is_empty():
+		for entry: Variant in helpers:
+			_add_function_item(header, entry as Dictionary, false)
+		return
 	# Folded, not hidden: the everyday reading is the published verbs, and the helpers are one
 	# click away for the moment you do want to call one.
 	var helpers_header: TreeItem = _objects_tree.create_item(header)
@@ -1685,8 +1678,9 @@ func _add_function_item(parent_item: TreeItem, entry: Dictionary, muted: bool) -
 	item.set_metadata(0, "%s%s" % [FUNCTION_PREFIX, function_name])
 	if muted:
 		item.set_custom_color(0, EventSheetPopupUI.readable_on_panel(GROUP_COLOR_NEUTRAL))
-	# Headless has no editor theme, so this is null there and the entry simply carries no icon.
-	var function_icon: Texture2D = editor_icon("MemberMethod")
+	# The function mark a function head leads with on the sheet, drawn rather than borrowed, so the
+	# entry and the row it calls wear one icon.
+	var function_icon: Texture2D = function_glyph_icon(EventSheetPalette.scaled(16))
 	if function_icon != null:
 		item.set_icon(0, function_icon)
 		item.set_icon_max_width(0, 16)
@@ -2534,6 +2528,27 @@ static func system_gear_icon(side_px: int, ink: Color) -> Texture2D:
 const SYSTEM_GEAR_SVG: String = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 16 16\"><g fill=\"none\" stroke=\"INK\" stroke-opacity=\"ALPHA\" stroke-width=\"1.3\" stroke-linecap=\"round\"><circle cx=\"8\" cy=\"8\" r=\"2.2\"/><path d=\"M12.2 8H14.2M10.97 10.97L12.38 12.38M8 12.2V14.2M5.03 10.97L3.62 12.38M3.8 8H1.8M5.03 5.03L3.62 3.62M8 3.8V1.8M10.97 5.03L12.38 3.62\"/></g></svg>"
 
 static var _gear_icons: Dictionary = {}
+
+
+## The function mark as a texture of `side_px` square: the same glyph a function head leads with on
+## the sheet, in the function's own amber for the editor's light or dark theme. Cached per size and ink.
+static func function_glyph_icon(side_px: int) -> Texture2D:
+	var on_dark: bool = EventSheetPopupUI.text_color().get_luminance() > 0.5
+	var ink: Color = EventSheetPalette.COLOR_GLYPH_FUNCTION[0 if on_dark else 1]
+	var key: String = "fn|%d|%s" % [side_px, ink.to_html()]
+	if _gear_icons.has(key):
+		return _gear_icons[key]
+	var image: Image = Image.new()
+	var svg: String = FUNCTION_GLYPH_SVG.replace("INK", "#" + ink.to_html(false))
+	var texture: Texture2D = null
+	if side_px >= 2 and image.load_svg_from_string(svg, float(side_px) / 16.0) == OK:
+		texture = ImageTexture.create_from_image(image)
+	_gear_icons[key] = texture
+	return texture
+
+
+## The function mark on a 16 px grid: a hooked stem and its crossbar, stroked 1.4.
+const FUNCTION_GLYPH_SVG: String = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 16 16\"><path d=\"M11 2.5C8.5 2.5 8 4 8 6v8M5 7h6\" fill=\"none\" stroke=\"INK\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>"
 
 
 func _category_of(definition: ACEDefinition) -> String:
