@@ -593,8 +593,8 @@ func _portal_by_id(portal_id: int) -> Dictionary:
 
 ## Registers a portal and links it into the built graph; returns its id.
 ## @ace_hidden
-func _add_portal_record(from: Vector2, to: Vector2, both: bool, portal_type: String, cost: float, speed: float, tag: String) -> int:
-	var portal: Dictionary = {"id": _next_portal_id, "from": from, "to": to, "both": both, "type": portal_type,
+func _add_portal_record(from: Vector2, to: Vector2, both: bool, portal_kind: String, cost: float, speed: float, tag: String) -> int:
+	var portal: Dictionary = {"id": _next_portal_id, "from": from, "to": to, "both": both, "type": portal_kind,
 		"cost": cost, "speed": speed, "tag": tag, "ignore_hazards": false}
 	_next_portal_id += 1
 	_portals.append(portal)
