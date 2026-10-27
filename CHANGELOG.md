@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Fixed: a class inside a script sets its own variables on its own line
+
+- A step a class written inside your script takes on its own variable read under System
+  (`System | Add 1 to turns` in `class Patrol`). It now reads `Patrol | Add 1 to turns`, the way
+  your script's own variables read under your script's name, and a note about a name the class does
+  not have names the class.
+
 ### Fixed: a line aimed at another body does not read under your script's name
 
 - In a player script that extends CharacterBody2D, a Move and slide or Set velocity row aimed at

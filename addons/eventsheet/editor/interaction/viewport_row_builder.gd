@@ -11456,7 +11456,9 @@ func _build_variable_note_rows(event_row: EventRow, event_uid: String, indent: i
 	var entries: Array[Dictionary] = _variable_owner_entries()
 	if entries.is_empty():
 		return rows
-	var owner: String = EventSheetVariableOwners.owner_of_sheet(_viewport._sheet)
+	# A class written inside the file owns its members, so "x is not a variable of Patrol" names it.
+	var owner: String = inner_class_object if not inner_class_object.is_empty() \
+		else EventSheetVariableOwners.owner_of_sheet(_viewport._sheet)
 	# A local the event declares and a function's parameter are names the line can use too: they are
 	# not members, so the catalog does not list them, but "direction is not a variable" over the
 	# `var direction := ...` line right above it is a finding the file does not earn. So are a loop's
@@ -20020,8 +20022,15 @@ func _reading_autoloads() -> Dictionary:
 func _variable_owner_entries() -> Array[Dictionary]:
 	_owner_catalog_for_current_sheet()
 	if not _variable_owner_catalog.has("entries"):
-		_variable_owner_catalog["entries"] = EventSheetVariableOwners.own_entries(
+		var entries: Array[Dictionary] = EventSheetVariableOwners.own_entries(
 			_viewport._sheet if _viewport != null else null)
+		# A class written inside the file is read with its body standing in for the sheet, and the
+		# body has no name of its own: its members belong to the class, so a step on one reads
+		# "Patrol | Add 1 to turns" the way a script's own variable reads under the script.
+		if not inner_class_object.is_empty():
+			for entry: Dictionary in entries:
+				entry["owner"] = inner_class_object
+		_variable_owner_catalog["entries"] = entries
 	return _variable_owner_catalog["entries"]
 
 

@@ -89,10 +89,28 @@ func _ready() -> void:
 	var sheet: EventSheetResource = _open(source)
 	var calls: Array = []
 	for reading: Variant in LINES.readings_of_sheet(sheet, PATH):
-		if " ".join((reading as LINES.Reading).plain).contains("_walk with"):
-			calls.append("%s | %s" % [(reading as LINES.Reading).object_label, " ".join((reading as LINES.Reading).plain)])
+		var line: String = " ".join((reading as LINES.Reading).plain)
+		if line.contains("_walk with"):
+			calls.append("%s | %s" % [(reading as LINES.Reading).object_label, line])
+	# The step is read in the editor itself, where the vocabulary knows which of a verb's fields
+	# names a variable - which is what decides whose variable it is.
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(sheet)
+	var steps: Array = []
+	for entry: Dictionary in dock._active_view().get_flat_rows():
+		var row_data: EventRowData = entry.get("row")
+		if row_data == null:
+			continue
+		for span: SemanticSpan in row_data.spans:
+			if span.text.contains("to total"):
+				steps.append("%s | %s" % [str(span.metadata.get("object_label", "")), span.text])
+	dock.free()
 	return SUPPORT.pins(NAME, [
 		["a class's call to its own function reads under the class's name", calls, ["Counter | _walk with node root"]],
+		# A step on the class's own variable is set on the class's own line, as a script's own variables
+		# are on the script's - never on System.
+		["a class's step on its own variable reads under the class's name", steps, ["Counter | Add 1 to total"]],
 		["and the file still saves back byte for byte", SUPPORT.compile_output(sheet, PATH), source],
 	])
 
