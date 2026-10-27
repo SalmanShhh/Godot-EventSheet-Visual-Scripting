@@ -328,7 +328,7 @@ func _apply_group_enabled(enabled: bool) -> void:
 ## another row is selected or the sheet closes, the Inspector lets the function go.
 func _follow_function(view: EventSheetViewport) -> void:
 	var selected: Variant = view.get_selected_context().get("source_resource", null) if view != null else null
-	if not (selected is EventFunction) or _dock._current_sheet == null or _dock._current_sheet.read_only:
+	if not (selected is EventFunction) or not _dock._preview_glue.can_inspect_function():
 		let_function_go()
 	elif _function_inspector == null or not _function_inspector.edits(selected as EventFunction):
 		_function_inspector = load(FUNCTION_INSPECTOR_PATH).new(_dock, selected as EventFunction)

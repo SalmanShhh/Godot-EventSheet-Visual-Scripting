@@ -236,6 +236,18 @@ func live_function() -> EventFunction:
 	return null
 
 
+## True when the sheet can take a write now. A script opened from disk is a read-only preview until
+## the first intentional edit, and a change made here is one: it unlocks the preview the way picking
+## an action does. A file a merge left blocked stays locked, and nothing is written.
+func writable() -> bool:
+	var sheet: EventSheetResource = _dock._current_sheet if _dock != null else null
+	if sheet == null:
+		return false
+	if sheet.read_only and "_preview_glue" in _dock and _dock._preview_glue != null:
+		_dock._preview_glue._on_preview_edit_requested()
+	return not sheet.read_only
+
+
 ## True when this object is the one editing `event_function`, on the tab on screen.
 func edits(event_function: EventFunction) -> bool:
 	return event_function != null and event_function.function_name == _function_name and _tab_on_screen() == _tab
@@ -827,7 +839,7 @@ func _get(property: StringName) -> Variant:
 func _set(property: StringName, value: Variant) -> bool:
 	var key: String = str(_keys.get(str(property), ""))
 	var event_function: EventFunction = live_function()
-	if key.is_empty() or event_function == null:
+	if key.is_empty() or event_function == null or not writable():
 		return false
 	match key:
 		"name", "description", "category":
@@ -1015,7 +1027,7 @@ func _apply_param(index: int, changes: Dictionary) -> void:
 ## Add Parameter: the parameter window, the same one a function row's "+ Add parameter" opens.
 func add_param() -> void:
 	var target: EventFunction = live_function()
-	if target != null:
+	if target != null and writable():
 		_dock._function_dialog_glue._open_function_dialog_add_param(target)
 
 
@@ -1023,7 +1035,7 @@ func add_param() -> void:
 ## parameter with a default before one without, which GDScript does not parse.
 func move_param(from_index: int, to_index: int) -> bool:
 	var target: EventFunction = live_function()
-	if target == null or from_index == to_index or from_index < 0 or to_index < 0 \
+	if target == null or not writable() or from_index == to_index or from_index < 0 or to_index < 0 \
 			or from_index >= target.params.size() or to_index >= target.params.size():
 		return false
 	var order: Array = target.params.duplicate()

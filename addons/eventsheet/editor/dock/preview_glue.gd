@@ -157,6 +157,20 @@ func _on_show_conflicts_requested() -> void:
 	_dock._sheet_io._open_conflict_view(_dock._current_sheet.external_source_path)
 
 
+## True when a selected function can be handed to Godot's Inspector: on a sheet being written, and on
+## a script opened from disk as a preview - the Inspector shows it, and its first change unlocks the
+## preview as any first edit does. Not on a file a merge left blocked, and not on a read-only view
+## that is not a script of its own (a scene's view, a preview of rows nobody can save).
+func can_inspect_function() -> bool:
+	var sheet: EventSheetResource = _dock._current_sheet
+	if sheet == null:
+		return false
+	if not sheet.read_only:
+		return true
+	return sheet.external_source_path.get_extension() == "gd" and not sheet.blocked_by_conflict() \
+		and _dock._current_sheet_path == sheet.external_source_path
+
+
 ## "Edit Events": turn the preview into a normal GDScript-backed sheet (Save then compiles
 ## back to the .gd). The banner flips to a plain warning so the consequence stays obvious.
 ##

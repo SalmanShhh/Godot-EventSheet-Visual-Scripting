@@ -15,7 +15,7 @@ const PLUGIN_PATH := "res://addons/eventsheet/editor/inspector/function_inspecto
 static func run() -> bool:
 	return _test_inspector() and _test_window() and _test_described_fields() and _test_guards() \
 		and _test_shared_reads_emitted_code() and _test_defaults_left_to_gdscript() and _test_type_restarts_default() \
-		and _test_held_text_stays_on_its_tab()
+		and _test_held_text_stays_on_its_tab() and _test_script_opened_as_preview()
 
 
 ## A new parameter Type starts its default again from the type's own value, in one step, so a default
@@ -419,6 +419,44 @@ static func _test_inspector() -> bool:
 	return ok
 
 
+## A user's own script opens as a read-only preview. Clicking one of its functions still hands it to
+## the Inspector - the flow the Functions board draws - and the first change made there unlocks the
+## preview the way any first edit does. A read-only view that is not a script (a scene's view) keeps
+## the function out of the Inspector, and nothing in it can be written.
+static func _test_script_opened_as_preview() -> bool:
+	var dock: EventSheetDock = _guarded_dock()
+	var sheet: EventSheetResource = dock._current_sheet
+	sheet.read_only = true
+	sheet.external_source_path = "res://player.gd"
+	dock._current_sheet_path = "res://player.gd"
+	var view: EventSheetViewport = dock._active_view()
+	var bar: EventSheetPropertiesBar = dock._properties_bar
+	view.select_resource(sheet.functions[0])
+	bar.refresh()
+	var handed: bool = bar._function_inspector != null
+	if handed:
+		# What the Inspector does first when it is handed the object: it asks for the fields.
+		bar._function_inspector.get_property_list()
+		bar._function_inspector.set("Waits (async)", true)
+	# The edit swaps the sheet for its snapshot, so the live one is asked again.
+	sheet = dock._current_sheet
+	var after_change: Array = [sheet.read_only, (sheet.functions[0] as EventFunction).is_async]
+	view.clear_selection()
+	bar.refresh()
+	sheet.read_only = true
+	sheet.external_source_path = "res://main.tscn"
+	dock._current_sheet_path = "res://main.tscn"
+	view.select_resource(sheet.functions[0])
+	bar.refresh()
+	var scene_view: Variant = bar._function_inspector
+	dock.free()
+	return SUPPORT.pins(NAME, [
+		["a function of a script opened as a preview goes to the Inspector", handed, true],
+		["its first change unlocks the preview and is written", after_change, [false, true]],
+		["a read-only view that is not a script keeps it out", scene_view, null],
+	])
+
+
 ## The Properties bar hands the selected function to the Inspector and lets it go once another row is
 ## selected, writing any text still held on the way out.
 static func _test_follow(dock: EventSheetDock) -> bool:
@@ -450,7 +488,9 @@ static func _test_window() -> bool:
 		if dialog._usable_option.get_item_tooltip(index).is_empty():
 			undescribed += 1
 	var ok: bool = SUPPORT.pins(NAME, [
-		["the band shows the row the sheet will draw", dialog._band_label.text, "ƒ  Function  On take_damage → nothing"],
+		["the band shows the head the sheet will draw", dialog._band.words_label.text, "On function take_damage"],
+		["the band leads with the function icon, and names no object", [dialog._band.icon.glyph, dialog._band.object_label.visible],
+			["function", false]],
 		["the code name sits beside Name", dialog._code_name_label.text, "→ take_damage"],
 		["the title carries the live name", dialog._dialog.title, "Create function take_damage"],
 		["the kind is ONE dropdown", dialog._usable_option.item_count, 3],
@@ -460,8 +500,8 @@ static func _test_window() -> bool:
 	])
 	dialog._usable_option.select(2)
 	dialog._select_usable(2)
-	ok = SUPPORT.check(NAME, "an Expression returns its value type in the band", dialog._band_label.text,
-		"ƒ  Function  On take_damage → float") and ok
+	ok = SUPPORT.check(NAME, "an Expression's band is its head too: what it hands back is not on the row",
+		dialog._band.words_label.text, "On function take_damage") and ok
 	parent.free()
 	return ok
 
