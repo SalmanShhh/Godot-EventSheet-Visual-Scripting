@@ -9600,3 +9600,6 @@ Set when the scene is ready,"Gesetzt, wenn die Szene bereit ist"
 Shown only if,"Nur angezeigt, wenn"
 The Inspector hides it unless another setting is on.,"Der Inspektor blendet es aus, solange keine andere Einstellung aktiv ist."
 %s:,%s:
+"Live Values is on for this sheet, and it reaches the game through the saved file: save the sheet (Ctrl+S), then run, and every object it talks about appears here with its instances.","Live-Werte ist für dieses Blatt an und erreicht das Spiel über die gespeicherte Datei: Speichere das Blatt (Strg+S) und starte dann - jedes Objekt, von dem es spricht, erscheint hier mit seinen Instanzen."
+"The game is running, but this sheet has not reported. Live Values reaches the game through the saved file: save the sheet (Ctrl+S), then run again.","Das Spiel läuft, aber dieses Blatt hat nichts gemeldet. Live-Werte erreicht das Spiel über die gespeicherte Datei: Speichere das Blatt (Strg+S) und starte erneut."
+"This sheet is a read-only preview, so the game runs the file as it was. Press Edit Events, save the sheet (Ctrl+S), then run again, and its values report here.","Dieses Blatt ist eine schreibgeschützte Vorschau, also läuft im Spiel die Datei, wie sie war. Drücke Ereignisse bearbeiten, speichere das Blatt (Strg+S) und starte erneut, dann melden sich seine Werte hier."

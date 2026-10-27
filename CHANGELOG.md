@@ -33,6 +33,9 @@ way a user meets it:
   forward instead of opening a second tab of the same file.
 - The Words page's live preview reads the `_process` word its own table sets ("Every tick"), where it
   said "Every Frame" beside a table that said otherwise.
+- The Debugger's Inspect tab says why a run is silent: with Live Values on and the game running, it
+  says the run comes from the saved file and asks for a save (and, on a read-only preview, for Edit
+  Events first), instead of telling the reader to turn on the Live Values that was already on.
 
 ### Fixed: your own scripts read and edit the way the function and match boards draw them
 

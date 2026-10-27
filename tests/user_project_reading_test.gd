@@ -83,6 +83,7 @@ static func run() -> bool:
 	ok = _the_packs_are_not_the_game() and ok
 	ok = _opening_twice_keeps_one_tab() and ok
 	ok = _the_words_preview_says_what_the_page_says() and ok
+	ok = _the_debugger_says_why_a_run_is_silent() and ok
 	return ok
 
 
@@ -208,6 +209,22 @@ static func _the_words_preview_says_what_the_page_says() -> bool:
 	page.free()
 	return _check("the Words preview's trigger is the _process word the table sets",
 		said.begins_with("System ▸ %s " % word), true)
+
+
+## The Debugger's Inspect tab, before anything reports: a hand-written script opened as a sheet and
+## run with Live Values on reports nothing until it is saved, and the tab used to tell the reader to
+## turn on the Live Values that was already on.
+static func _the_debugger_says_why_a_run_is_silent() -> bool:
+	return SUPPORT.pins(TEST_NAME, [
+		["Live Values off asks for Live Values", EventSheetDebuggerWindow.inspect_empty_text(false, true, false),
+			EventSheetDebuggerWindow.EMPTY_STATES["Inspect"]],
+		["on and waiting asks for a save, then a run", EventSheetDebuggerWindow.inspect_empty_text(true, false, false),
+			"Live Values is on for this sheet, and it reaches the game through the saved file: save the sheet (Ctrl+S), then run, and every object it talks about appears here with its instances."],
+		["on with a silent game says the run is from the file as saved", EventSheetDebuggerWindow.inspect_empty_text(true, true, false),
+			"The game is running, but this sheet has not reported. Live Values reaches the game through the saved file: save the sheet (Ctrl+S), then run again."],
+		["a read-only preview says to edit and save it first", EventSheetDebuggerWindow.inspect_empty_text(true, true, true),
+			"This sheet is a read-only preview, so the game runs the file as it was. Press Edit Events, save the sheet (Ctrl+S), then run again, and its values report here."],
+	])
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

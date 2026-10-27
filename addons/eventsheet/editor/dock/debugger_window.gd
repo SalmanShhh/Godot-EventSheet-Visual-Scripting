@@ -291,7 +291,10 @@ func _refresh_values() -> void:
 	_values_columns(not _last_values.is_empty())
 	if _last_values.is_empty():
 		var waiting: TreeItem = values_tree.create_item(root)
-		waiting.set_text(0, EventSheetL10n.translate(EMPTY_STATES["Inspect"]))
+		var sheet: EventSheetResource = _dock._current_sheet if _dock != null else null
+		waiting.set_text(0, inspect_empty_text(sheet != null and sheet.emit_live_values,
+			EditorInterface.is_playing_scene() if Engine.is_editor_hint() else false,
+			sheet != null and sheet.read_only))
 		waiting.set_autowrap_mode(0, TextServer.AUTOWRAP_WORD_SMART)
 		waiting.set_selectable(0, false)
 		return
@@ -303,6 +306,21 @@ func _refresh_values() -> void:
 		var dotted: bool = str(key).contains(".")
 		item.set_text(0, str(key).get_slice(".", 1) if dotted else str(key))
 		EventSheetLiveValuesPanel.fill_value_item(item, _last_values[key], dotted)
+
+
+## What the Inspect tab says while nothing has reported, from what is actually true: Live Values
+## off, on and waiting for a run, or on with a game running that the sheet is not reaching. Live
+## Values reaches the game through the SAVED file, so a script opened as a sheet and never saved -
+## the first thing a user does with their own player.gd - runs without it, and the old sentence told
+## them to turn on what was already on. Pure, so the suite pins every case without a window.
+static func inspect_empty_text(live_on: bool, playing: bool, read_only: bool) -> String:
+	if not live_on:
+		return EventSheetL10n.translate(EMPTY_STATES["Inspect"])
+	if read_only:
+		return EventSheetL10n.translate("This sheet is a read-only preview, so the game runs the file as it was. Press Edit Events, save the sheet (Ctrl+S), then run again, and its values report here.")
+	if playing:
+		return EventSheetL10n.translate("The game is running, but this sheet has not reported. Live Values reaches the game through the saved file: save the sheet (Ctrl+S), then run again.")
+	return EventSheetL10n.translate("Live Values is on for this sheet, and it reaches the game through the saved file: save the sheet (Ctrl+S), then run, and every object it talks about appears here with its instances.")
 
 
 ## Two titled columns (Variable, Value) while a run reports, one untitled column while it does not.

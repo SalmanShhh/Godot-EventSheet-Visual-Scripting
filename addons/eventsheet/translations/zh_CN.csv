@@ -9600,3 +9600,6 @@ Set when the scene is ready,在场景就绪时设置
 Shown only if,仅在条件满足时显示
 The Inspector hides it unless another setting is on.,除非另一项设置已开启，否则检查器会隐藏它。
 %s:,%s：
+"Live Values is on for this sheet, and it reaches the game through the saved file: save the sheet (Ctrl+S), then run, and every object it talks about appears here with its instances.",此事件表已打开实时值，实时值通过已保存的文件到达游戏：保存事件表（Ctrl+S）后运行，它涉及的每个对象都会连同其实例显示在这里。
+"The game is running, but this sheet has not reported. Live Values reaches the game through the saved file: save the sheet (Ctrl+S), then run again.",游戏正在运行，但此事件表没有上报。实时值通过已保存的文件到达游戏：保存事件表（Ctrl+S）后重新运行。
+"This sheet is a read-only preview, so the game runs the file as it was. Press Edit Events, save the sheet (Ctrl+S), then run again, and its values report here.",此事件表是只读预览，所以游戏运行的是原来的文件。点击 编辑事件，保存事件表（Ctrl+S）后重新运行，它的值就会显示在这里。

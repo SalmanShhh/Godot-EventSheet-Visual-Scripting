@@ -9600,3 +9600,6 @@ Set when the scene is ready,Impostato quando la scena è pronta
 Shown only if,Mostrato solo se
 The Inspector hides it unless another setting is on.,L'Ispettore lo nasconde finché un'altra impostazione non è attiva.
 %s:,%s:
+"Live Values is on for this sheet, and it reaches the game through the saved file: save the sheet (Ctrl+S), then run, and every object it talks about appears here with its instances.","Valori dal vivo è attivo per questo foglio e raggiunge il gioco tramite il file salvato: salva il foglio (Ctrl+S), poi esegui, e ogni oggetto di cui parla appare qui con le sue istanze."
+"The game is running, but this sheet has not reported. Live Values reaches the game through the saved file: save the sheet (Ctrl+S), then run again.","Il gioco è in esecuzione, ma questo foglio non ha inviato nulla. Valori dal vivo raggiunge il gioco tramite il file salvato: salva il foglio (Ctrl+S), poi esegui di nuovo."
+"This sheet is a read-only preview, so the game runs the file as it was. Press Edit Events, save the sheet (Ctrl+S), then run again, and its values report here.","Questo foglio è un'anteprima di sola lettura, quindi il gioco esegue il file com'era. Premi Modifica gli eventi, salva il foglio (Ctrl+S), poi esegui di nuovo, e i suoi valori arriveranno qui."
