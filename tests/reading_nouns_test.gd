@@ -111,10 +111,10 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ Set reading to fps",
 	# The layout words are the action's own name, so they are on whatever the glossary says
 	"System ▸ Go to layout Menu",
-	# A node lookup IS the object it names, and an "or null" one says it may not be there
+	# A node lookup IS the object it names; an `@onready` one is the variable row every member
+	# reads as, its value exactly as the file writes it
 	"Boss ▸ Subtract 10 from hp",
-	"$HUD/Score",
-	"may be missing",
+	"get_node_or_null(\"HUD/Score\")",
 	"boss ▸ Set hp to 3",
 	# The collision family and the platform words
 	"ReadingNounsPlayer ▸ Is by wall",

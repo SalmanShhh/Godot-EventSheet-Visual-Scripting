@@ -706,12 +706,47 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	var input_row: Dictionary = _input_condition(text)
 	if not input_row.is_empty():
 		return input_row
+	# `not is_on_floor()` is the same question as `is_on_floor()` asked the other way round, so it
+	# reads as that question on the same object, led by the word the row turns into its red cross.
+	# Only a reading that NAMES its question is taken: an inner line nothing recognised would come
+	# back as the code it is, and a cross in front of code reads no better than the `not` did.
+	var inverted: Dictionary = _inverted_condition(text, context)
+	if not inverted.is_empty():
+		return inverted
 	# Nothing structural matched, but the expression itself may still hold an idiom
 	# (`is_zero_approx(direction)`) or a type annotation this reading never shows.
 	var rewritten: String = expression_text(text, context)
 	if rewritten != text:
 		return _sentence("", "{value}", {"value": [rewritten, "value"]})
 	return {}
+
+
+## `not <question>` read as that question with the word `not` in front, or {} when the question
+## inside is not one the grammar has words for. The word leads on purpose: the row takes a leading
+## `not` off the sentence and draws the inverted mark in its place, so the line reads like the
+## sheet's own inverted condition - the object it is about, then the question - and never like code.
+## A bare flag (`not crouching`) is not this reading's: the flag branch above already says "is false".
+static func _inverted_condition(text: String, context: Dictionary) -> Dictionary:
+	if not text.begins_with("not "):
+		return {}
+	var inner_text: String = text.substr(4).strip_edges()
+	if inner_text.is_empty() or is_identifier(inner_text):
+		return {}
+	var inner: Dictionary = condition(inner_text, context)
+	var segments: Array = inner.get("segments", []) as Array
+	if segments.is_empty():
+		return {}
+	# The idiom pass at the end of `condition()` hands back the expression itself as one value: that
+	# is the line's code, not a question with words, and a mark in front of it would not make it one.
+	if segments.size() == 1 and str((segments[0] as Dictionary).get("tone", "")) == "value":
+		return {}
+	var inverted: Dictionary = inner.duplicate()
+	# The GDScript keyword itself, untranslated: it is the marker the row trades for the inverted
+	# mark, and the row looks for exactly these four characters.
+	var led: Array = [{"text": "not ", "tone": "plain"}]
+	led.append_array(segments)
+	inverted["segments"] = led
+	return inverted
 
 
 ## The event-sheet reading of a condition that may be a RUN of conjuncts: `host != null and

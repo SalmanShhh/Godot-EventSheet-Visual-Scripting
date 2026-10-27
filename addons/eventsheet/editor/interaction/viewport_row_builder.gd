@@ -3565,11 +3565,6 @@ func _build_head_group_row(sheet: EventSheetResource, uid_suffix: String, title:
 ## the @export / group chips are gone - the bar above the row carries the group, and everything inside
 ## a settings bar is exported by definition.
 func _build_reading_variable_row(variable: LocalVariable, description: String, indent: int) -> EventRowData:
-	# An @onready node reference is an OBJECT, not a value: it reads as an Object
-	# declaration here too, so the head's variable list and the event tree agree.
-	var object_row: EventRowData = _build_object_declaration_row(variable, indent)
-	if object_row != null:
-		return object_row
 	# A preloaded scene / script / resource is an OBJECT too, whichever row shape carried it.
 	var preload_path: String = preloaded_path(str(variable.default_value))
 	if not preload_path.is_empty():
@@ -7255,68 +7250,6 @@ static func _dedent_lines(lines: PackedStringArray, depth: int) -> PackedStringA
 	return out
 
 
-## An `@onready var hp_bar: ProgressBar = %HpBar` read as an OBJECT declaration rather than
-## as a value one: this is how an event sheet's object list is recovered from a script. The row says
-## what the object is called, which node it is, and its class - with the class's own Godot icon,
-## the same icon every later row using `hp_bar` as its object then shows.
-##
-## Reading mode only. While AUTHORING, the @onready variable row stays exactly as it was: it is
-## the row the variable dialog edits, and re-shaping an editable row would be a lens with
-## consequences. Returns null when the variable is not an object declaration.
-func _build_object_declaration_row(variable: LocalVariable, indent: int) -> EventRowData:
-	if not _viewport.is_reading_mode() or not EventSheetViewportReadingRows.is_object_declaration(variable):
-		return null
-	var row_data := EventRowData.new()
-	row_data.indent = indent
-	row_data.row_type = EventRowData.RowType.SECTION
-	row_data.source_resource = variable
-	row_data.row_uid = "variable_tree_%d" % variable.get_instance_id()
-	row_data.line_count = 1
-	var event_style: EventSheetEventStyle = _viewport._get_event_style()
-	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
-	# A `get_node("A/B")` lookup names the same object `$A/B` does, so it reads as that reference -
-	# and the `_or_null` spelling says, in the muted note, that the object may not be there.
-	var declaration_value: Dictionary = EventSheetViewportReadingRows.object_declaration_value(variable)
-	var node_reference: String = str(declaration_value.get("value", ""))
-	var missing_note: String = str(declaration_value.get("note", ""))
-	var declared_class: String = EventSheetViewportReadingRows.declared_class_of(variable)
-	# The object's NAME is not humanized, even with the lens on: this row is where the object gets
-	# its identity, and every later row refers to it by exactly this spelling. An event sheet shows an
-	# object's name verbatim in its object list for the same reason.
-	var shown_name: String = variable.name
-	var spans: Array[SemanticSpan] = [
-		_make_span(EventSheetL10n.translate("Object"), SemanticSpan.SpanType.KEYWORD, {
-			"editable": false, "kind": "variable", "line_index": 0, "badge": true, "badge_style": "scope",
-			"badge_bg": _viewport._get_reading_style().inspector_chip_background_color, "badge_fg": _viewport._get_reading_style().inspector_chip_foreground_color
-		}),
-		_make_span(shown_name, SemanticSpan.SpanType.OBJECT, {
-			"editable": false, "kind": "variable", "line_index": 0,
-			"text_color": event_style.object_label_color
-		}),
-		_make_span("=", SemanticSpan.SpanType.OPERATOR, {
-			"editable": false, "kind": "variable", "line_index": 0,
-			"text_color": _viewport._get_reading_style().muted_text_color
-		}),
-		_make_span(node_reference, SemanticSpan.SpanType.VALUE, {
-			"editable": false, "kind": "variable", "line_index": 0,
-			"text_color": event_style.value_highlight_color,
-			"object_icon": _reading_class_icon_for(node_reference)
-		})
-	]
-	if not declared_class.is_empty():
-		spans.append(_make_span(declared_class, SemanticSpan.SpanType.COMMENT, {
-			"editable": false, "kind": "variable", "line_index": 0,
-			"text_color": _viewport._get_reading_style().muted_text_color
-		}))
-	if not missing_note.is_empty():
-		spans.append(_make_span(missing_note, SemanticSpan.SpanType.COMMENT, {
-			"editable": false, "kind": "variable", "line_index": 0,
-			"text_color": _viewport._get_reading_style().muted_text_color
-		}))
-	row_data.spans = spans
-	return row_data
-
-
 ## A preloaded scene, script or resource is an OBJECT, not a value: `bullet_scene` holding
 ## `preload("res://bullet.tscn")` reads `Object bullet_scene = Bullet  scene · bullet.tscn`, with the
 ## scene root's own class icon. The res:// path is punctuation to a reader; the THING at the end of it
@@ -7820,10 +7753,6 @@ func walked_collection_shown(pick: PickFilter) -> String:
 
 ## Builds a row for a variable placed directly in the event tree (movable like an event).
 func _build_tree_variable_row(variable: LocalVariable, indent: int, doc_note: String = "") -> EventRowData:
-	# While reading, an @onready node reference is an OBJECT declaration, not a variable row.
-	var object_row: EventRowData = _build_object_declaration_row(variable, indent)
-	if object_row != null:
-		return object_row
 	var row_data: EventRowData = _build_variable_row(
 		"tree",
 		variable.name,
@@ -10825,6 +10754,7 @@ func _transition_child_row(case_lines: PackedStringArray, indent: int, match_row
 	if guard.is_empty():
 		return null
 	var inner: PackedStringArray = PackedStringArray()
+	var inner_objects: PackedStringArray = PackedStringArray()
 	# A guard INSIDE an arm of the object's own machine ends in a transition more often than not, so
 	# the same Go to reading the arm's plain lines get applies here. Asked of the match's own subject,
 	# because that is the only thing that says which machine these lines are about.
@@ -11480,8 +11410,10 @@ func _build_variable_note_rows(event_row: EventRow, event_uid: String, indent: i
 	var owner: String = EventSheetVariableOwners.owner_of_sheet(_viewport._sheet)
 	# A local the event declares and a function's parameter are names the line can use too: they are
 	# not members, so the catalog does not list them, but "direction is not a variable" over the
-	# `var direction := ...` line right above it is a finding the file does not earn.
+	# `var direction := ...` line right above it is a finding the file does not earn. So are a loop's
+	# item and the values a trigger hands its handler (`body`, an input handler's `event`).
 	var seen: Dictionary = _scoped_names()
+	seen.merge(_sheet_local_names())
 	for lane: String in ["condition", "action"]:
 		var lane_rows: Array = event_row.conditions if lane == "condition" else event_row.actions
 		for index: int in range(lane_rows.size()):
@@ -11521,11 +11453,79 @@ func _build_variable_note_rows(event_row: EventRow, event_uid: String, indent: i
 	return rows
 
 
+## Every name this sheet declares as a local or a parameter, {name: true}: the Local Variable rows and
+## local tables of every event, and the parameters and local tables of every function. Kept with the
+## owner catalog, so it is walked once per sheet and dropped with it.
+func _sheet_local_names() -> Dictionary:
+	_owner_catalog_for_current_sheet()
+	if not _variable_owner_catalog.has("locals"):
+		var names: Dictionary = {}
+		var sheet: Resource = _viewport._sheet if _viewport != null else null
+		if sheet != null:
+			for key: String in ["events", "functions"]:
+				_collect_local_names(sheet.get(key), names, {})
+		_variable_owner_catalog["locals"] = names
+	return _variable_owner_catalog["locals"]
+
+
+## One level of the walk above, into `names`; `walked` keeps a resource met twice from being walked twice.
+func _collect_local_names(entries: Variant, names: Dictionary, walked: Dictionary) -> void:
+	if not (entries is Array):
+		return
+	for entry: Variant in entries:
+		if not (entry is Resource) or walked.has(entry):
+			continue
+		walked[entry] = true
+		if entry is EventRow:
+			var event_row: EventRow = entry as EventRow
+			for declared: Array in _declared_locals(event_row):
+				if not str(declared[0]).is_empty():
+					names[str(declared[0])] = true
+			# The name a loop walks a collection with, and its counter.
+			for filter: PickFilter in event_row.pick_filters:
+				if filter != null:
+					_collect_parameter_names(PackedStringArray([filter.iterator_name, filter.index_name]), names)
+			# The values a trigger hands its handler (`body: Node2D`, an input event's `event`).
+			_collect_parameter_names(event_row.trigger_args.split(","), names)
+			if not event_row.trigger_id.is_empty():
+				_collect_parameter_names(str(TriggerResolver.resolve_trigger(event_row).get("args", "")).split(","), names)
+			_collect_local_names(event_row.sub_events, names, walked)
+			continue
+		if entry is EventFunction:
+			var function: EventFunction = entry as EventFunction
+			for param: ACEParam in function.params:
+				if param != null and not param.id.strip_edges().is_empty():
+					names[param.id.strip_edges()] = true
+			_collect_parameter_names(PackedStringArray(function.parameters), names)
+			for local_name: Variant in function.local_variables.keys():
+				names[str(local_name)] = true
+		for key: String in ["events", "rows"]:
+			_collect_local_names((entry as Resource).get(key), names, walked)
+
+
+## The names a list of parameters declares, into `names`: `body: Node2D = null` names `body`.
+static func _collect_parameter_names(parameters: PackedStringArray, names: Dictionary) -> void:
+	for parameter: String in parameters:
+		var name_text: String = parameter.get_slice("=", 0).get_slice(":", 0).strip_edges()
+		if EventSheetSentence.is_identifier(name_text):
+			names[name_text] = true
+
+
 ## The amber note when a verb is handed the wrong kind of variable, and the verb that does fit:
 ## "nickname is text - Add to wants a number." {} when the pairing is fine, or when the variable's
 ## type says nothing. Static + pure, so the wording is pinned without a canvas.
 static func variable_mismatch_note(entry: Dictionary, ace_id: String) -> Dictionary:
 	if entry.is_empty():
+		return {}
+	# A variable whose type the file never wrote (`var health := 3` read as "any", or a plain `var
+	# coins = 0`) can hold whatever the verb hands it, so no verb is the wrong one for it.
+	var type_name: String = str(entry.get("type_name", "")).strip_edges()
+	if type_name.is_empty() or type_name == "Variant":
+		return {}
+	# A vector and a colour add, subtract, multiply and divide exactly as a number does, so
+	# `velocity += push` is the right verb for its variable and no note says otherwise.
+	if (type_name.begins_with("Vector") or type_name == "Color") \
+			and ["AddVar", "SubtractVar", "MultiplyVar", "DivideVar"].has(ace_id):
 		return {}
 	var wants: String = str(EventSheetVariableOwners.VARIABLE_VERB_TAKES.get(ace_id, ""))
 	if wants.is_empty():
@@ -17129,6 +17129,8 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 		_pending_grammar_segments = grammar.get("segments", []) as Array
 		return _joined_segments(grammar)
 	_pending_object_label = global_owner
+	if _pending_object_label.is_empty():
+		_pending_object_label = _own_object_for_class_verb(condition.provider_id, condition.ace_id, params_dict)
 	if _is_state_header_condition(condition):
 		# ────────────────────────────────────────────────────────────────────────────────────────
 		# The words a state machine is asked in: "Current state is "Jump"". Anyone who has driven a
@@ -17346,6 +17348,46 @@ static func action_awaits(action: ACEAction) -> bool:
 	return action.codegen_template.contains("await ")
 
 
+## The script's own object name for a verb filed under a node CLASS (Move and slide, Set velocity Y,
+## Apply gravity) when the row works on the script's own node and that node is of that class, or ""
+## otherwise. A line names the object it acts on as the file writes it - "Player", not
+## "CharacterBody2D" - exactly as the same verb reads once the grammar has words for it, so
+## `is_on_floor()` and `move_and_slide()` on one player read under one name. A row whose target
+## names another node is that node's line and is left to the rules that already read it.
+func _own_object_for_class_verb(provider_id: String, ace_id: String, params: Dictionary) -> String:
+	var own: String = _script_object_name().strip_edges()
+	var sheet: EventSheetResource = _viewport._sheet if _viewport != null else null
+	if own.is_empty() or sheet == null:
+		return ""
+	var definition: ACEDefinition = _viewport._find_definition(provider_id, ace_id)
+	if definition == null:
+		return ""
+	var node_type: String = str(definition.metadata.get("node_type", "")).strip_edges()
+	if node_type.is_empty():
+		return ""
+	var target: String = str(params.get("target", "")).strip_edges()
+	if not target.is_empty() and target != "self":
+		return ""
+	var host: String = str(sheet.host_class).strip_edges()
+	if host == node_type or (ClassDB.class_exists(host) and ClassDB.class_exists(node_type)
+			and ClassDB.is_parent_class(host, node_type)):
+		return own
+	return ""
+
+
+## The script's own object name for a call to a function this sheet declares at its top level, or ""
+## for a call to anything else (a function of a class written inside the file, of another object, or
+## one the sheet does not have) and on a sheet with no object of its own.
+func _own_function_call_object(params: Dictionary) -> String:
+	var own: String = _script_object_name().strip_edges()
+	if own.is_empty():
+		return ""
+	var called: String = str(params.get("function_name", "")).strip_edges()
+	if called.is_empty() or find_function_by_name(_viewport._sheet, called) == null:
+		return ""
+	return own
+
+
 func _format_action_descriptor_base(action: ACEAction) -> String:
 	# A row whose SHAPE has a settled event-sheet sentence reads through the shared grammar, so the
 	# picked row and the hand-written line beside it say the same words. Both one-shots are cleared
@@ -17402,7 +17444,13 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 		_pending_grammar_segments = grammar.get("segments", []) as Array
 		return _joined_segments(grammar)
 	_pending_object_label = global_owner
-	# Function calls read as the named verb (under the "ƒ" chip), not the raw "Call name()" template.
+	if _pending_object_label.is_empty():
+		_pending_object_label = _own_object_for_class_verb(action.provider_id, action.ace_id, params_dict)
+	# Function calls read as the named verb, not the raw "Call name()" template. A call to one of the
+	# script's OWN functions is a line of the script's own object, so it leads with that object's icon
+	# and name the way the script's own variables do; the "ƒ" mark stays for a sheet with no object.
+	if _is_function_call_action(action) and _pending_object_label.is_empty():
+		_pending_object_label = _own_function_call_object(params_dict)
 	if _is_function_call_action(action):
 		var verb: String = _function_call_label(action)
 		if not verb.is_empty():
@@ -19857,6 +19905,7 @@ func _reading_autoloads() -> Dictionary:
 ## adds the "(global)" note to an autoload and hands a behaviour pack's rows back to the object the
 ## pack is mounted on, with the pack's name as the leading chip.
 func _variable_owner_entries() -> Array[Dictionary]:
+	_owner_catalog_for_current_sheet()
 	if not _variable_owner_catalog.has("entries"):
 		_variable_owner_catalog["entries"] = EventSheetVariableOwners.own_entries(
 			_viewport._sheet if _viewport != null else null)
@@ -19866,6 +19915,7 @@ func _variable_owner_entries() -> Array[Dictionary]:
 ## Every local the sheet declares and every parameter its functions take, as a set - the names a row
 ## may use that are not members. Derived once per sweep beside the catalog it completes.
 func _scoped_names() -> Dictionary:
+	_owner_catalog_for_current_sheet()
 	if not _variable_owner_catalog.has("scoped"):
 		var names: Dictionary = {}
 		var sheet: EventSheetResource = _viewport._sheet if _viewport != null else null
@@ -19896,6 +19946,16 @@ func _collect_declared_local_names(rows: Array, into: Dictionary) -> void:
 					if not local_name.is_empty():
 						into[local_name] = true
 			_collect_declared_local_names((entry as EventRow).sub_events, into)
+## Empties the owner catalog when the sheet being read is not the one it was filled from. One sweep
+## reads more than one sheet: a class written inside the file is read with its own sheet in place,
+## and a catalog filled there answered for the whole file afterwards - every member of the file
+## itself was then "not a variable", because the catalog held the inner class's members instead.
+func _owner_catalog_for_current_sheet() -> void:
+	var sheet: Resource = _viewport._sheet if _viewport != null else null
+	var stamp: int = 0 if sheet == null else sheet.get_instance_id()
+	if int(_variable_owner_catalog.get("sheet", 0)) != stamp:
+		_variable_owner_catalog.clear()
+		_variable_owner_catalog["sheet"] = stamp
 
 
 ## The object column a variable row belongs in: an instance variable is the sheet's own object's,

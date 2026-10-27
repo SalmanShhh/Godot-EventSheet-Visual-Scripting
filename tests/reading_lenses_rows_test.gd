@@ -92,11 +92,12 @@ static func _reading_rows() -> bool:
 	passed = _check("call arguments are named by the parameters",
 		_any_row_contains(texts, "x = velocity X"), true) and passed
 
-	# The @onready node reference is an object declaration, not a variable row.
-	passed = _check("an @onready node reads as an Object declaration",
-		_any_row_contains(texts, "Object | hp_bar"), true) and passed
-	passed = _check("the object declaration names its node", _any_row_contains(texts, "%HpBar"), true) and passed
-	passed = _check("the object declaration names its class", _any_row_contains(texts, "ProgressBar"), true) and passed
+	# The @onready node reference reads as the variable row every member reads as - its type, its
+	# name and its value - and never as a row led by an "Object" word.
+	passed = _check("an @onready node is not led by an Object word",
+		_any_row_contains(texts, "Object | hp_bar"), false) and passed
+	passed = _check("the @onready row names its node", _any_row_contains(texts, "%HpBar"), true) and passed
+	passed = _check("the @onready row names its class", _any_row_contains(texts, "ProgressBar"), true) and passed
 	view.free()
 	return passed
 

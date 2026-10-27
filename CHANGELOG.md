@@ -83,6 +83,29 @@ way a user meets it:
   has a Player), so Insert is ready and the window no longer opens on a red line.
 - Sheet Type opens with its help strip on the kind the sheet is; a custom node opened under a strip
   that called it an Event Sheet.
+### Fixed: a hand-written script opened in a user's own project reads like the sheet boards
+
+Found by installing the plugin into a fresh project and opening scripts nobody wrote for it - a
+player, an enemy with a class inside it, an editor plugin and its dock, the shipped packs.
+
+- `if not is_on_floor():` reads as the inverted condition on the object itself - the red cross, the
+  script's own name, "Is on floor" - instead of "System is_on_floor()". The same test written in a
+  `match` branch reads the same words on the same object, and so does any other inverted question
+  the sheet has words for.
+- A verb filed under the node's class (Move and slide, Set velocity Y, Apply gravity, Accelerate x)
+  and a call to one of the script's own functions lead with the script's own name and icon
+  ("Player"), not the class ("CharacterBody2D") or a bare "ƒ".
+- The "is not a variable" notes no longer fire on names the file really declares: a loop's item, the
+  values a trigger hands its handler (an input handler's `event`) and a parameter list written out
+  in full are known names too, and the variable catalog is filled again whenever the sheet being
+  read changes, so no sheet read in the same pass answers for another. A variable whose type the
+  file never wrote is no longer "the wrong kind" for Add to, and a vector or colour can be added to.
+  Across the shipped packs and a handful of the plugin's own scripts this took the canvas from
+  several hundred false warnings to none in most files.
+- An `@onready` node reads as the variable row every member reads as - its type, its name, its
+  value - instead of a row led by an "Object" word.
+- A long pattern chip after a condition gives up its tail before it takes half the conditions lane,
+  so a trigger beside it ("On Plugin Enabled") is no longer drawn one letter per line.
 
 ### Fixed: the plugin and the code it writes stop filling the Output and Debugger panels
 

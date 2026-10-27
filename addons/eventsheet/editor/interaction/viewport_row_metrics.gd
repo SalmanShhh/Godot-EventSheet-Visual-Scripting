@@ -313,6 +313,9 @@ const TRAILING_CHIP_KINDS: PackedStringArray = ["trigger_payload", "pattern_chip
 ## The most of the conditions lane the chips after a condition may take, under a theme that lets them
 ## yield (lane_chips_yield).
 const LANE_CHIP_SHARE := 0.4
+## The most of the conditions lane those chips may take under any other theme: they keep their full
+## size until they would take more than this share, and give up their tail after that.
+const LANE_CHIP_LIMIT := 0.45
 ## The small drawn marks of an event row (the comment note's lead width is read from there).
 const NativeRowMarks := preload("res://addons/eventsheet/editor/interaction/native_row_marks.gd")
 
@@ -337,10 +340,13 @@ func condition_trailing_width(row_data: EventRowData, line_index: int, font: Fon
 		total += _viewport._row_builder._measure_span_width(span, span.text, font, font_size) + 2.0 \
 			+ maxf(_viewport._get_span_gap(span), EventSheetPalette.SPAN_GAP)
 	# A theme that lets the chips yield gives them at most two fifths of the lane, so the condition's
-	# own words keep their room and a long chip is the half that is cut short.
+	# own words keep their room and a long chip is the half that is cut short. Every other theme still
+	# caps them a little under half: a long pattern name beside a short lane otherwise took all of it,
+	# and the trigger's own words were drawn as a column of single letters.
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
-	if event_style != null and event_style.lane_chips_yield and total > 0.0:
-		total = minf(total, _viewport.lane_width_for("condition") * LANE_CHIP_SHARE)
+	if total > 0.0:
+		var share: float = LANE_CHIP_SHARE if event_style != null and event_style.lane_chips_yield else LANE_CHIP_LIMIT
+		total = minf(total, _viewport.lane_width_for("condition") * share)
 	return total
 
 

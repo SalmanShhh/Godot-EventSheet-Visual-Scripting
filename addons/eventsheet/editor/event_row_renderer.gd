@@ -1740,9 +1740,10 @@ func _draw_spans(
 			# A span flagged `elide` gives up its tail with an ellipsis and a gap rather than being
 			# sliced against whatever the layout put after it (a class head's includers against the
 			# head's own code echo, on a dock too narrow for both).
-			# So does a chip after a condition that yielded its room to the condition (lane_chips_yield).
-			var yielded_chip: bool = event_style != null and event_style.lane_chips_yield \
-				and ViewportRowMetrics.TRAILING_CHIP_KINDS.has(span_kind)
+			# So does a chip after a condition, which yields its room to the condition once it would take
+			# more than its share of the lane (ViewportRowMetrics.condition_trailing_width). A chip
+			# that fits is drawn whole: eliding text that fits changes nothing.
+			var yielded_chip: bool = ViewportRowMetrics.TRAILING_CHIP_KINDS.has(span_kind)
 			if (bool(metadata.get("elide", false)) or yielded_chip) and span_index != editing_span_index:
 				draw_text = elide_with_gap(draw_text, text_width, font, draw_font_size)
 			_draw_text(control, Vector2(text_x, baseline_y), draw_text, text_width, font, draw_font_size, color)

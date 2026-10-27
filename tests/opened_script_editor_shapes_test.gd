@@ -80,7 +80,7 @@ static func _test_undo_step() -> bool:
 		"On function apply | changed ▸ boolean | = Dock ▸ Edit sheet undoably \"Apply Cell Edit\" | ↓ the steps below are the edit | ⟡ one undoable step, the edit under it") and ok
 	ok = _check("the edit's own lines hang under it as sub-events",
 		_first_containing(readings, "Call _append_condition_entry"),
-		"System ▸ mode = \"new_condition_event\" | ƒ ▸ Call _append_condition_entry | System ▸ Answer true") and ok
+		"System ▸ mode = \"new_condition_event\" | Batch12UndoFunnelFixture ▸ Call _append_condition_entry | System ▸ Answer true") and ok
 	ok = _check("and the answer the funnel asked for reads as an answer",
 		_has_reading(readings, "System ▸ Answer false"), true) and ok
 	ok = _check("nothing of the edit is left as a code card",
@@ -147,7 +147,7 @@ static func _test_vocabulary_module() -> bool:
 	ok = _check("and a published action does too",
 		_has_reading(readings, "Core ▸ Define action Pin To   Core/PinTo · category Pin · input anchor: Node   Writes {target.}pin_to({anchor})"), true) and ok
 	ok = _check("a function that hands over to itself says so on the call row",
-		_has_reading(readings, "ƒ ▸ Call walk   depth = depth + 1   ↻ itself"), true) and ok
+		_has_reading(readings, "Batch12VocabularyModuleFixture ▸ Call walk   depth = depth + 1   ↻ itself"), true) and ok
 	view.free()
 	# The other spelling of the same publish - the one the editor's own modules are written in.
 	var descriptor: String = "\tdescriptors.append(F.make_descriptor(\"Core\", \"InputAddAction\", \"Add Input Action\", ACEDescriptor.ACEType.ACTION, \"InputMap.add_action({action})\", \"\", [F.make_param(\"action\", \"String\", \"\\\"jump\\\"\")], \"Input\", \"add input action {action}\"))"
