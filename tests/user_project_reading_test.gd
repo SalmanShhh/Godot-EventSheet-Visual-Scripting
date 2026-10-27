@@ -159,6 +159,8 @@ static func _the_save_studio_reads_types_and_globals(sheet: EventSheetResource) 
 	var named: String = EventSheetSaveStudio.object_name(EventSheetResource.new(), AUTOLOAD_SCRIPT)
 	ProjectSettings.set_setting(AUTOLOAD_SETTING, null)
 	ok = _check("a global with no class name is called by its global's name", named, "ZqUserGameState") and ok
+	ok = _check("with no Save System pack installed, no setting reads as null",
+		EventSheetSaveStudio.read_settings("", "res://zq_no_such_pack/save_system.gd"), {}) and ok
 	ok = _check("and a plain script still by its file",
 		EventSheetSaveStudio.object_name(EventSheetResource.new(), "res://zq_plain_script.gd"), "zq_plain_script") and ok
 	return ok

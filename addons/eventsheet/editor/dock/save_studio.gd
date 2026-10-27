@@ -256,11 +256,16 @@ static func settings_scene(autoload_value: String) -> String:
 
 ## The settings as the game will run them: the pack script's defaults, overlaid by whatever the
 ## scene's root node changes. Read off the scene's state, so nothing is instantiated to ask.
-static func read_settings(scene_path: String) -> Dictionary:
+## `pack_script` is the Save System's script, a parameter so a project without the pack can be asked.
+static func read_settings(scene_path: String, pack_script: String = SAVE_SYSTEM_SCRIPT) -> Dictionary:
 	var values: Dictionary = {}
-	var pack: Script = load(SAVE_SYSTEM_SCRIPT) as Script if ResourceLoader.exists(SAVE_SYSTEM_SCRIPT) else null
-	for property: String in SETTINGS:
-		values[property] = pack.get_property_default_value(property) if pack != null else null
+	var pack: Script = load(pack_script) as Script if ResourceLoader.exists(pack_script) else null
+	# Without the pack there is no default to read, and a setting left out falls back to the studio's
+	# own (save_{slot}.cfg in user://). Written as null instead, the first project with no packs - the
+	# Quick start's two folders - opened this window on a script error and a search of "<null>".
+	if pack != null:
+		for property: String in SETTINGS:
+			values[property] = pack.get_property_default_value(property)
 	if scene_path.is_empty() or not ResourceLoader.exists(scene_path):
 		return values
 	var state: SceneState = (ResourceLoader.load(scene_path, "", ResourceLoader.CACHE_MODE_REPLACE) as PackedScene).get_state()

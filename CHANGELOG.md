@@ -41,6 +41,8 @@ way a user meets it:
 - The Debugger's Inspect tab says why a run is silent: with Live Values on and the game running, it
   says the run comes from the saved file and asks for a save (and, on a read-only preview, for Edit
   Events first), instead of telling the reader to turn on the Live Values that was already on.
+- Tools ▸ Save Studio opens cleanly in a project without the packs (the README's Quick start): it
+  stopped on a script error and searched a folder called "<null>" for save slots.
 
 ### Fixed: your own scripts read and edit the way the function and match boards draw them
 
