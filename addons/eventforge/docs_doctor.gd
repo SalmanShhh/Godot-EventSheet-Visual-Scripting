@@ -84,17 +84,30 @@ static func ensure_registered() -> void:
 ## a pack in this project ships beside itself - so a studio's own packs are audited exactly like the
 ## ones that came in the box.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(guide_pages(), _changelog_text()))
+	var pages: PackedStringArray = guide_pages(EventSheetEditorSourceFacts.is_editor_project())
+	# A game that has no guide of its own has nothing for this section to say, and saying "guides
+	# are checked in the editor" inside the editor would be wrong as well as idle.
+	if pages.is_empty():
+		return
+	findings.append_array(report(pages, _changelog_text()))
 
 
 ## Every page the section audits, sorted: the bundled addon guides and the guides packs ship beside
 ## themselves. Sorted rather than walk-ordered, because a directory walk hands back a different
 ## order on a different filesystem and a report that reshuffles is a report whose "what is new"
 ## marks are noise.
-static func guide_pages() -> PackedStringArray:
+##
+## THE SHIPPED GUIDES ARE THE PLUGIN'S TO KEEP. In the plugin's own project they are what this
+## section is for; in a game the plugin was installed into, a stale name in a shipped pack's guide is
+## nothing the reader wrote or can fix, and a stock install opened the Doctor on a page of them. So
+## outside the plugin's own project a page under a shipped folder is left out, and a guide the
+## reader's project keeps anywhere else is still read.
+static func guide_pages(include_shipped: bool = true) -> PackedStringArray:
 	var ids: PackedStringArray = PackedStringArray()
-	ids.append_array(EventSheetDocLibrary.ids_in_set(EventSheetDocLibrary.ADDONS_DIR))
-	ids.append_array(EventSheetDocLibrary.ids_in_set(EventSheetDocLibrary.PACKS_SET))
+	for page_id: String in EventSheetDocLibrary.ids_in_set(EventSheetDocLibrary.ADDONS_DIR) \
+			+ EventSheetDocLibrary.ids_in_set(EventSheetDocLibrary.PACKS_SET):
+		if include_shipped or not _is_shipped(EventSheetDocLibrary.page_path(page_id)):
+			ids.append(page_id)
 	ids.sort()
 	return ids
 

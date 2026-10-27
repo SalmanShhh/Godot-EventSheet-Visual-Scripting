@@ -5,7 +5,8 @@
 # project's script list, so in that project the Doctor's Interop table measured pack scripts, its
 # reading ledger sampled nothing but packs ("Read the first 12 script(s) of 189"), Performance told
 # the reader to rewrite a pack's distance check, Migration counted the packs' sheets, and the
-# Effects and Feedbacks summaries double-clicked into a pack. None of it was the reader's to act on.
+# Effects and Feedbacks summaries double-clicked into a pack, and in the editor the Docs section
+# listed stale names in the shipped pack guides. None of it was the reader's to act on.
 #
 # This repository holds the packs at the same path a user's project does, so asking each section's
 # own door here is asking the same question that project asked.
@@ -58,6 +59,14 @@ static func run() -> bool:
 			counted.append([str(section[0]), total])
 			expected.append([str(section[0]), int(section[3])])
 	ok = SUPPORT.check(TEST_NAME, "and each summary counts the reader's scripts, not the packs'", counted, expected) and ok
+	# The Docs section read the shipped guides wherever it ran, so a stock install opened the Doctor on
+	# a page of stale names in the plugin's own pack guides. Outside the plugin's project they are left
+	# out; this repository keeps no guide of its own, so what is left is nothing.
+	var every_guide: PackedStringArray = EventSheetDocsDoctor.guide_pages()
+	ok = SUPPORT.check(TEST_NAME, "the plugin's own project still audits its shipped guides",
+		every_guide.has("Addons/Advanced-Random"), true) and ok
+	ok = SUPPORT.check(TEST_NAME, "a game the plugin was installed into audits none of them",
+		Array(EventSheetDocsDoctor.guide_pages(false)), []) and ok
 	EventSheetProjectDoctor.clear_project_scripts()
 	return ok
 

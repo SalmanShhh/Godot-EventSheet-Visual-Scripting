@@ -14,6 +14,10 @@
   referenced by no sheet, scene or autoload ... SimpleAbilitiesBehavior, ... and 164 more". A pack
   that one of your own `.gd` scripts names now counts as used. Before, only `.tres` sheets, scenes
   and autoloads counted, and `.gd` is the default sheet format.
+- Opened in the editor, the Doctor's Docs section listed stale names and empty descriptions in the
+  plugin's own pack guides (`Blend-Modes.md`, `Bound-To.md` ...) on a stock install. It now reads
+  those only in the plugin's own project. In your game it reads a guide your project keeps
+  elsewhere, and when there is none it says nothing.
 
 ### Fixed: your own scripts, opened as sheets, read the way the boards draw them
 
