@@ -94,10 +94,10 @@ static func run() -> bool:
 	var hand_rows: Array[PackedStringArray] = _event_readings(hand)
 	ok = _check("a mouse-button branch names the button and the edge",
 		hand_rows[0] if hand_rows.size() > 0 else PackedStringArray(),
-		PackedStringArray(["Mouse|On right button pressed", "Node2D|Call fire"])) and ok
+		PackedStringArray(["Mouse|On right button pressed", "eventsheets_handwritten_input_test|Call fire"])) and ok
 	ok = _check("a key-RELEASED branch says released",
 		hand_rows[1] if hand_rows.size() > 1 else PackedStringArray(),
-		PackedStringArray(["Keyboard|On Space released", "Node2D|Call stop_firing"])) and ok
+		PackedStringArray(["Keyboard|On Space released", "eventsheets_handwritten_input_test|Call stop_firing"])) and ok
 	ok = _check("a hand-written signal handler reads as its source node, with its payload as a chip",
 		hand_rows[2] if hand_rows.size() > 2 else PackedStringArray(),
 		PackedStringArray(["Hurtbox|On collision with", "|body", "System|Print body.name"])) and ok
