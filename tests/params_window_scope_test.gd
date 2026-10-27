@@ -47,6 +47,12 @@ static func run() -> bool:
 					hurt_event = entry as EventRow
 	var in_hurt: PackedStringArray = EventSheetGDScriptLint.scope_names_of(sheet, hurt_event)
 	return SUPPORT.pins(P, [
+		# The Expressions panel's band names the verb and the field it answers - once each.
+		["a verb that already ends with its field's name says it once", [
+			ACEParamsExpressionPicker.verb_and_field("Set Velocity Y", "Y"),
+			ACEParamsExpressionPicker.verb_and_field("Move Toward", "Speed"),
+			ACEParamsExpressionPicker.verb_and_field("Set Text", "")],
+			["Set Velocity Y", "Move Toward Speed", "Set Text"]],
 		["a field inside one function knows that function's names only", in_hurt,
 			PackedStringArray(["amount", "spike"])],
 		["so another function's local is a typo there", _ok("direction * speed", sheet, in_hurt), false],

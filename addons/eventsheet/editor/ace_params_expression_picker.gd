@@ -466,8 +466,18 @@ func _say_field() -> void:
 static func field_words(host: ACEParamsDialog, key: String) -> PackedStringArray:
 	var verb: String = EventSheetL10n.translate(host._definition.display_name) if host._definition != null else ""
 	var field: Variant = host._fields.get(key)
-	return PackedStringArray([("%s %s" % [verb, host._param_label(key)]).strip_edges(),
+	return PackedStringArray([verb_and_field(verb, host._param_label(key)),
 		str((field as Control).get("text")) if field is Control else ""])
+
+
+## "Move Toward" and "Speed" are "Move Toward Speed"; a verb whose name already ends with the field's
+## name says it once - "Set Velocity Y" and "Y" are "Set Velocity Y", never "Set Velocity Y Y".
+static func verb_and_field(verb: String, field_label: String) -> String:
+	var said: String = verb.strip_edges()
+	var label: String = field_label.strip_edges()
+	if label.is_empty() or said.to_lower() == label.to_lower() or said.to_lower().ends_with(" " + label.to_lower()):
+		return said
+	return ("%s %s" % [said, label]).strip_edges()
 
 
 ## The line under the tree: what picking the highlighted entry actually inserts, so the reader

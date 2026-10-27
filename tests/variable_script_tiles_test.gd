@@ -57,6 +57,19 @@ static func run() -> bool:
 		["and the named one by its function",
 			str(NativeVariableMarks.badge_card("on_change", _variable(sheet, "health")).get("mono", "")), "set = _set_health"],
 	])
+	# The window's two script tiles quote the line they add, not a placeholder shape: a show-if is the
+	# test _validate_property asks, and an On changed with no setter of its own is the setter it writes.
+	var shown: LocalVariable = LocalVariable.new()
+	shown.name = "jump_height"
+	shown.attributes = {"show_if": "can_jump", "on_changed": "_refresh_jump"}
+	ok = SUPPORT.pins(P, [
+		["the show-if card quotes the test that hides it",
+			str(NativeVariableMarks.badge_card("show_if", shown).get("mono", "")),
+			"if str(property.name) == \"jump_height\" and not bool(can_jump):"],
+		["the on-changed card quotes the setter it writes",
+			str(NativeVariableMarks.badge_card("on_change", shown).get("mono", "")),
+			"set(value): jump_height = value; _refresh_jump()"],
+	]) and ok
 	view.free()
 	return ok
 

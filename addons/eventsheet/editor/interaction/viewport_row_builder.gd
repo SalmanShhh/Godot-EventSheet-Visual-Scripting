@@ -7564,6 +7564,9 @@ var _walked_names: Dictionary = {}
 var _event_parents: Dictionary = {}
 var _event_parents_seen: Dictionary = {}
 var _event_parents_sheet: Resource = null
+## Every action of the open sheet, filed under the event whose lane holds it, for the sheet named.
+var _action_events: Dictionary = {}
+var _action_events_sheet: Resource = null
 
 
 ## Whether this sheet's theme folds the compiler's "__" bookkeeping inside events.
@@ -7614,6 +7617,63 @@ func _declared_locals(event_row: EventRow) -> Array:
 		if local != null:
 			declared.append([local.name.strip_edges(), str(local.default_value)])
 	return declared
+
+
+## The object map a row's call is read against, with what its event's own `X is Class` questions
+## settle: inside `if body is Player:` the `body` a `body: Node2D` handler was handed IS a Player, as
+## GDScript itself narrows it, so `body.take_damage(damage)` reads with Player's own parameter names
+## ("amount = damage"). Asked of the row's event and every event it is nested in; a negated question
+## settles nothing.
+func _narrowed_class_map(action: Resource) -> Dictionary:
+	var class_map: Dictionary = _reading_class_map()
+	var owner: EventRow = _event_of_action(action)
+	if owner == null:
+		return class_map
+	var narrowed: Dictionary = {}
+	for event_row: EventRow in _event_chain(owner):
+		for condition: Variant in event_row.conditions:
+			var question: ACECondition = condition as ACECondition
+			if question == null or question.negated or question.ace_id != "CompareVar":
+				continue
+			var asked: Dictionary = question.params if not question.params.is_empty() else question.parameters
+			var named: String = str(asked.get("var_name", "")).strip_edges()
+			var as_class: String = str(asked.get("value", "")).strip_edges()
+			if str(asked.get("op", "")) == "is" and not named.is_empty() \
+					and EventSheetDerivedCalls.is_class_text(as_class):
+				narrowed[named] = as_class
+	if narrowed.is_empty():
+		return class_map
+	var merged: Dictionary = class_map.duplicate()
+	merged.merge(narrowed, true)
+	return merged
+
+
+## The event whose action lane holds `action`, or null for a row no event of the sheet holds.
+func _event_of_action(action: Resource) -> EventRow:
+	var sheet: Resource = _viewport._sheet if _viewport != null else null
+	# Walked again on a miss: an edit replaces the rows it commits, so a row met for the first time
+	# is usually one the last walk could not have seen.
+	if sheet != _action_events_sheet or not _action_events.has(action):
+		_action_events_sheet = sheet
+		_action_events.clear()
+		if sheet != null:
+			for key: String in ["events", "functions"]:
+				_note_action_events(sheet.get(key))
+	return _action_events.get(action, null) as EventRow
+
+
+func _note_action_events(entries: Variant) -> void:
+	if not (entries is Array):
+		return
+	for entry: Variant in entries:
+		if entry is EventRow:
+			for action: Variant in (entry as EventRow).actions:
+				if action is Resource:
+					_action_events[action] = entry
+			_note_action_events((entry as EventRow).sub_events)
+		elif entry is Resource:
+			for key: String in ["events", "rows"]:
+				_note_action_events((entry as Resource).get(key))
 
 
 ## `event_row` and the events it is nested in, outermost first.
@@ -19006,6 +19066,24 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			var call_code: String = "%s.%s(%s)" % [
 				str(params_dict.get("target", "")), str(params_dict.get("method", "")),
 				str(params_dict.get("args", ""))]
+			# A receiver the event's own `is` question settles (`if body is Player:`) is that class
+			# for this row, and the class's own method - with its parameter names - says more than
+			# the plain call sentence below, which knows neither.
+			var narrowed: Dictionary = _narrowed_class_map(action)
+			var receiver: String = str(params_dict.get("target", "")).strip_edges()
+			if str(narrowed.get(receiver, "")) != str(_reading_class_map().get(receiver, "")):
+				# The question is asked of THIS row's own value, so a name the flat maps refuse
+				# because the file uses it twice (a handler's `body` and another's) is answered here.
+				var narrowed_context: Dictionary = context.duplicate()
+				var shadowed: Dictionary = (context.get("shadowed_names", {}) as Dictionary).duplicate()
+				shadowed.erase(receiver)
+				narrowed_context["shadowed_names"] = shadowed
+				var narrowed_call: Dictionary = EventSheetDerivedCalls.derived_pieces(
+					call_code, narrowed_context, narrowed, _reading_autoloads())
+				if not narrowed_call.is_empty():
+					_pending_derived_ace = narrowed_call
+					return {"object": str(narrowed_call.get("object", "")),
+						"segments": _grammar_tone_segments(narrowed_call.get("pieces", []) as Array)}
 			var settled: Dictionary = EventSheetSentence.statement(call_code, context)
 			if not settled.is_empty():
 				return settled
@@ -19018,7 +19096,7 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			# derived style. A settled sentence above it still wins outright, which is the whole
 			# ordering: curated first, derived second, the general reading last.
 			var derived_call: Dictionary = EventSheetDerivedCalls.derived_pieces(
-				call_code, context, _reading_class_map(), _reading_autoloads())
+				call_code, context, narrowed, _reading_autoloads())
 			if not derived_call.is_empty():
 				_pending_derived_ace = derived_call
 				return {"object": str(derived_call.get("object", "")),

@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Fixed: three small readings of a user's own scripts
+
+- In `if body is Player:` the call `body.take_damage(damage)` read "Take damage   damage", the value
+  with no name. The event's own `is` question now settles the class the way GDScript does, so the
+  row reads "Take damage   amount = damage" with Player's own parameter name. A negated question
+  settles nothing.
+- The parameters window's Expressions band read "Set Velocity Y Y": a verb whose name already ends
+  with the field's name now says it once.
+- The On changed and Shown only if tiles' hover cards quoted a placeholder shape. They now quote the
+  line they add: the setter that calls your function, and the test `_validate_property` asks.
+
 ### Fixed: a variable inside a row's sentence draws once
 
 - "Accelerate x toward direction * speed at acceleration (per second)" drew `acceleration` as two

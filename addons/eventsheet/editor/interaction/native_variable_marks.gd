@@ -673,8 +673,17 @@ static func _badge_code(badge: String, variable: LocalVariable) -> String:
 				return "set = %s" % variable.setter_name.strip_edges()
 			if not variable.setter_body.strip_edges().is_empty():
 				return "set(%s):" % variable.setter_param
+			# The window's On changed writes a setter that calls the named function - the line it adds.
+			var on_changed: String = str(attributes.get("on_changed", "")).strip_edges()
+			if not on_changed.is_empty():
+				return "set(value): %s = value; %s()" % [variable.name, on_changed]
 		BADGE_ON_READY:
 			return "@onready"
+		BADGE_SHOW_IF:
+			# The test the generated _validate_property asks of this variable before the Inspector shows it.
+			var predicate: String = str(attributes.get("show_if", "")).strip_edges()
+			if not predicate.is_empty():
+				return "if str(property.name) == \"%s\" and not bool(%s):" % [variable.name, predicate]
 	return ""
 
 
