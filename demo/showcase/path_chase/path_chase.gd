@@ -13,6 +13,10 @@ func _ready() -> void:
 	$Chaser/Pathfinding.add_hazard(704.0, 512.0, 192.0, 64.0, true)
 	$Chaser/Pathfinding.add_moving_platform($MovingPlatform, 1088.0, 552.0, 1088.0, 200.0)
 	$Chaser/Pathfinding.set_nav_debug_draw(true)
+	$Guard.add_collision_exception_with($Chaser)
+	$Guard.add_collision_exception_with($Player)
+	$Guard/Pathfinding.build_nav_graph($Level)
+	$Guard/Pathfinding.start_patrol(0.8, 8.0)
 
 
 func _physics_process(delta: float) -> void:
@@ -55,4 +59,4 @@ func toggle_bridge() -> void:
 			$Level.erase_cell(Vector2i(x, 17))
 	$Chaser/Pathfinding.regenerate_nav_graph()
 
-# [b]Path Chase[/b] - Platformer Pathfinding + Platformer Movement on one Chaser: the graph is built from the TileMapLayer once, then Find Path To Node re-routes to the Player every second. The pathfinder derives jump reach from the movement pack and steers it through the ai_move_axis seam - the same movement rules you play with, variable jump included. The purple PORTAL pair links the ground to the floating platform, the tile BRIDGE over the gap toggles every 3 seconds + Regenerate Nav Graph, the red zone is a DEADLY HAZARD routes refuse (forcing the high-platform detour), and the orange ELEVATOR is a registered moving platform - the Chaser waits for it, rides it, and walks off onto the tower. Green line = the Chaser's path.
+# [b]Path Chase[/b] - Platformer Pathfinding + Platformer Movement on one Chaser: the graph is built from the TileMapLayer once, then Find Path To Node re-routes to the Player every second. The pathfinder derives jump reach from the movement pack and steers it through the ai_move_axis seam - the same movement rules you play with, variable jump included. The purple PORTAL pair links the ground to the floating platform, the tile BRIDGE over the gap toggles every 3 seconds + Regenerate Nav Graph, the red zone is a DEADLY HAZARD routes refuse (forcing the high-platform detour), the orange ELEVATOR is a registered moving platform - the Chaser waits for it, rides it, and walks off onto the tower - and the yellow Guard PATROLS the high platform (Start Patrol: walk to an end, wait, turn), reusing the Chaser's graph because both carry the same Map Tag. Green line = the Chaser's path.

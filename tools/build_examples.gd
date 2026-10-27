@@ -2115,7 +2115,7 @@ func _build_path_chase() -> bool:
 		"platform_time": {"type": "float", "default": 0.0, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Path Chase[/b] - Platformer Pathfinding + Platformer Movement on one Chaser: the graph is built from the TileMapLayer once, then Find Path To Node re-routes to the Player every second. The pathfinder derives jump reach from the movement pack and steers it through the ai_move_axis seam - the same movement rules you play with, variable jump included. The purple PORTAL pair links the ground to the floating platform, the tile BRIDGE over the gap toggles every 3 seconds + Regenerate Nav Graph, the red zone is a DEADLY HAZARD routes refuse (forcing the high-platform detour), and the orange ELEVATOR is a registered moving platform - the Chaser waits for it, rides it, and walks off onto the tower. Green line = the Chaser's path."
+	about.text = "[b]Path Chase[/b] - Platformer Pathfinding + Platformer Movement on one Chaser: the graph is built from the TileMapLayer once, then Find Path To Node re-routes to the Player every second. The pathfinder derives jump reach from the movement pack and steers it through the ai_move_axis seam - the same movement rules you play with, variable jump included. The purple PORTAL pair links the ground to the floating platform, the tile BRIDGE over the gap toggles every 3 seconds + Regenerate Nav Graph, the red zone is a DEADLY HAZARD routes refuse (forcing the high-platform detour), the orange ELEVATOR is a registered moving platform - the Chaser waits for it, rides it, and walks off onto the tower - and the yellow Guard PATROLS the high platform (Start Patrol: walk to an end, wait, turn), reusing the Chaser's graph because both carry the same Map Tag. Green line = the Chaser's path."
 	sheet.events.append(about)
 
 	var on_ready: EventRow = EventRow.new()
@@ -2127,7 +2127,11 @@ func _build_path_chase() -> bool:
 		"$Chaser/Pathfinding.add_portal(976.0, 528.0, 176.0, 304.0, true)",
 		"$Chaser/Pathfinding.add_hazard(704.0, 512.0, 192.0, 64.0, true)",
 		"$Chaser/Pathfinding.add_moving_platform($MovingPlatform, 1088.0, 552.0, 1088.0, 200.0)",
-		"$Chaser/Pathfinding.set_nav_debug_draw(true)"
+		"$Chaser/Pathfinding.set_nav_debug_draw(true)",
+		"$Guard.add_collision_exception_with($Chaser)",
+		"$Guard.add_collision_exception_with($Player)",
+		"$Guard/Pathfinding.build_nav_graph($Level)",
+		"$Guard/Pathfinding.start_patrol(0.8, 8.0)"
 	]))
 	on_ready.actions.append(on_ready_body)
 	sheet.events.append(on_ready)
@@ -2299,7 +2303,16 @@ func _build_path_chase() -> bool:
 	root.add_child(chaser)
 	_own_deep(chaser, root)
 	_attach_behavior(chaser, "Movement", PLATFORMER_MOVEMENT, root)
-	_attach_behavior(chaser, "Pathfinding", PLATFORMER_PATHFINDING, root)
+	_attach_behavior(chaser, "Pathfinding", PLATFORMER_PATHFINDING, root, {"map_tag": "path_chase"})
+	# The Guard patrols the high platform. It shares the Chaser's graph (the same Map Tag), sits on
+	# its own collision layer and ignores both actors (the sheet's collision exceptions), so the
+	# chase never shoves it off its platform and it never body-blocks the chase.
+	var guard: CharacterBody2D = _chase_actor("Guard", Vector2(784.0, 400.0), Color(1.0, 0.85, 0.25))
+	guard.collision_layer = 2
+	root.add_child(guard)
+	_own_deep(guard, root)
+	_attach_behavior(guard, "Movement", PLATFORMER_MOVEMENT, root)
+	_attach_behavior(guard, "Pathfinding", PLATFORMER_PATHFINDING, root, {"map_tag": "path_chase"})
 
 	var hud_layer: CanvasLayer = CanvasLayer.new()
 	hud_layer.name = "HudLayer"
@@ -2309,7 +2322,7 @@ func _build_path_chase() -> bool:
 	hud.name = "Hud"
 	hud.position = Vector2(24.0, 16.0)
 	hud.add_theme_font_size_override("font_size", 18)
-	hud.text = "Arrows move · Space jumps · the red Chaser pathfinds to you (green = its path)\nPurple = portal · red zone = deadly hazard (routes refuse it) · the bridge toggles every 3s\nOrange elevator = a moving platform: stand on the tower and watch it wait, ride, and walk off"
+	hud.text = "Arrows move · Space jumps · the red Chaser pathfinds to you (green = its path)\nPurple = portal · red zone = deadly hazard (routes refuse it) · the bridge toggles every 3s\nOrange elevator = a moving platform: stand on the tower and watch it wait, ride, and walk off\nYellow Guard = Start Patrol on the high platform, sharing the Chaser's graph through a Map Tag"
 	hud_layer.add_child(hud)
 	hud.owner = root
 

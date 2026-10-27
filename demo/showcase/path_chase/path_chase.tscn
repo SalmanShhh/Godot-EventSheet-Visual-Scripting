@@ -36,6 +36,9 @@ size = Vector2(22, 28)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_721gj"]
 size = Vector2(22, 28)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_0ekav"]
+size = Vector2(22, 28)
+
 [node name="PathChase" type="Node2D"]
 script = ExtResource("1_efhhy")
 
@@ -111,6 +114,28 @@ script = ExtResource("2_0034v")
 
 [node name="Pathfinding" type="Node" parent="Chaser"]
 script = ExtResource("3_06lpk")
+map_tag = "path_chase"
+
+[node name="Guard" type="CharacterBody2D" parent="."]
+position = Vector2(784, 400)
+collision_layer = 2
+
+[node name="Collider" type="CollisionShape2D" parent="Guard"]
+shape = SubResource("RectangleShape2D_0ekav")
+
+[node name="Visual" type="ColorRect" parent="Guard"]
+offset_left = -11.0
+offset_top = -14.0
+offset_right = 11.0
+offset_bottom = 14.0
+color = Color(1, 0.85, 0.25, 1)
+
+[node name="Movement" type="Node" parent="Guard"]
+script = ExtResource("2_0034v")
+
+[node name="Pathfinding" type="Node" parent="Guard"]
+script = ExtResource("3_06lpk")
+map_tag = "path_chase"
 
 [node name="HudLayer" type="CanvasLayer" parent="."]
 
@@ -122,4 +147,5 @@ offset_bottom = 16.0
 theme_override_font_sizes/font_size = 18
 text = "Arrows move · Space jumps · the red Chaser pathfinds to you (green = its path)
 Purple = portal · red zone = deadly hazard (routes refuse it) · the bridge toggles every 3s
-Orange elevator = a moving platform: stand on the tower and watch it wait, ride, and walk off"
+Orange elevator = a moving platform: stand on the tower and watch it wait, ride, and walk off
+Yellow Guard = Start Patrol on the high platform, sharing the Chaser's graph through a Map Tag"
