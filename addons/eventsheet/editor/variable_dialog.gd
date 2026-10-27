@@ -30,6 +30,21 @@ signal project_global_requested(name: String, type_name: String, value_text: Str
 
 const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
 const ExportSections := preload("res://addons/eventsheet/editor/interaction/export_sections.gd")
+const VariableMarkTile := preload("res://addons/eventsheet/editor/variable_mark_tile.gd")
+
+## The options that put a tile on the variable's row, keyed by the word each option is written with,
+## and the tile each one carries beside it - the row's own tile, in the row's colours. The Inspector
+## look's tile is the look's own (a slider for a range, the hidden eye for saved-but-hidden), so it is
+## read from the look in front of the reader rather than listed here.
+const OPTION_BADGES: Dictionary = {
+	"Editable in the Inspector": NativeVariableMarks.BADGE_INSPECTOR,
+	"Description": NativeVariableMarks.BADGE_TOOLTIP,
+	"On ready": NativeVariableMarks.BADGE_ON_READY,
+	"Show if": NativeVariableMarks.BADGE_SHOW_IF,
+	"Setter body": NativeVariableMarks.BADGE_ON_CHANGE,
+}
+## The option word the Inspector look's tile stands beside.
+const LOOK_OPTION := "Inspector look"
 
 ## The scopes the window offers, in the sheet's own order.
 const CHOOSABLE_SCOPES: PackedStringArray = EventSheetVariableSentence.SCOPE_ORDER
@@ -195,6 +210,16 @@ var _refresh_label: Label = null
 
 ## Queried at gating time (a dock-owned preference); invalid Callable = expert mode.
 var simple_mode_provider: Callable = Callable()
+## Returns the EventSheetEventStyle of the sheet the window edits, whose tile colours the option tiles
+## wear so they match the row's; unset wears the default style's.
+var style_provider: Callable = Callable()
+## The tile beside each option that puts one on the row, keyed by the option's word (OPTION_BADGES,
+## plus LOOK_OPTION).
+var _mark_tiles: Dictionary = {}
+## The sections the edited variable sits in on the row - written above an earlier member and carried
+## down to it, the Inspector's own reading - as {category, group, group_prefix, subgroup}. Shown in the
+## section fields, and written back only when the reader changes one.
+var _inherited_sections: Dictionary = {}
 var _sheet_provider: Callable = Callable()
 var _enum_provider: Callable = Callable()
 var _scope: String = "global"
@@ -305,7 +330,8 @@ func _build_variable_card() -> VBoxContainer:
 	_attr_tooltip_edit = LineEdit.new()
 	_attr_tooltip_edit.placeholder_text = EventSheetL10n.translate("What it is for - the Inspector tooltip")
 	_attr_tooltip_edit.text_changed.connect(func(_text: String) -> void: _refresh_reading())
-	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Description"), _attr_tooltip_edit))
+	box.add_child(_with_label_tile(EventSheetPopupUI.form_row(EventSheetL10n.translate("Description"), _attr_tooltip_edit),
+		"Description"))
 	var flags: HBoxContainer = HBoxContainer.new()
 	flags.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)
 	_static_check = _tick(flags, EventSheetL10n.translate("Static"))
@@ -322,6 +348,7 @@ func _build_variable_card() -> VBoxContainer:
 			_const_check.set_pressed_no_signal(false)
 		_apply_scope_gating()
 		refresh_scope_selection())
+	flags.add_child(_option_tile("On ready", str(OPTION_BADGES["On ready"])))
 	_onready_check = _tick(flags, EventSheetL10n.translate("On ready"))
 	_onready_check.toggled.connect(_on_onready_toggled_interactive)
 	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Flags"), flags))
@@ -338,6 +365,72 @@ func _tick(row: Control, words: String) -> CheckBox:
 	tick.toggled.connect(func(_on: bool) -> void: _refresh_reading())
 	row.add_child(tick)
 	return tick
+
+
+## The tile the option written `option` puts on the variable's row, made to stand beside it.
+func _option_tile(option: String, badge: String) -> Control:
+	var tile: Control = VariableMarkTile.new()
+	tile.set("badge", badge)
+	tile.set("style_provider", _tile_style)
+	_mark_tiles[option] = tile
+	return tile
+
+
+## Sets the option's tile at the right end of a form row's label, where the label meets its field: the
+## field column stays where every other row has it.
+func _with_label_tile(row: HBoxContainer, option: String) -> HBoxContainer:
+	var label: Label = row.get_child(0) as Label
+	if label == null:
+		return row
+	var tile: Control = _option_tile(option, str(OPTION_BADGES.get(option, "")))
+	label.add_child(tile)
+	var side: float = tile.custom_minimum_size.x
+	var gap: float = EventSheetPalette.scaled_f(6.0)
+	tile.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
+	tile.offset_left = -side - gap
+	tile.offset_right = -gap
+	tile.offset_top = -side * 0.5
+	tile.offset_bottom = side * 0.5
+	return row
+
+
+## The style the sheet's rows are drawn in, whose tile colours the option tiles wear.
+func _tile_style() -> EventSheetEventStyle:
+	if style_provider.is_valid():
+		return style_provider.call() as EventSheetEventStyle
+	return null
+
+
+## The tile an Inspector look puts on the row: the slider for a look written as `@export_range`, the
+## hidden eye for saved-but-hidden, none for any other look. `written_hint` is the annotation the file
+## wrote, which the "As written" look keeps.
+static func look_badge(look_id: String, written_hint: String = "") -> String:
+	var writes: String = written_hint.strip_edges() if look_id == "written" \
+		else str(EventSheetInspectorLooks.by_id(look_id).get("writes", ""))
+	if writes.begins_with("@export_range("):
+		return NativeVariableMarks.BADGE_RANGE
+	if writes == "@export_storage":
+		return NativeVariableMarks.BADGE_STORAGE
+	return ""
+
+
+## The badge beside each option, by the option's word, as the window shows it now ("" for a tile that
+## is hidden).
+func option_badges() -> Dictionary:
+	var shown: Dictionary = {}
+	for option: Variant in _mark_tiles:
+		shown[option] = str((_mark_tiles[option] as Control).get("badge"))
+	return shown
+
+
+## The look's tile follows the look in front of the reader, and every tile's card names the variable
+## being edited.
+func _refresh_mark_tiles() -> void:
+	var edited: LocalVariable = _context.get("variable_resource") as LocalVariable
+	for option: Variant in _mark_tiles:
+		(_mark_tiles[option] as Control).set("variable", edited)
+	if _mark_tiles.has(LOOK_OPTION):
+		(_mark_tiles[LOOK_OPTION] as Control).set("badge", look_badge(_selected_look_id(), _export_hint))
 
 
 ## The Initial value: the words field, and the editor the Inspector would give the type beside it -
@@ -395,6 +488,7 @@ func _build_inspector_card() -> PanelContainer:
 	var spacer: Control = Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(spacer)
+	head.add_child(_option_tile("Editable in the Inspector", str(OPTION_BADGES["Editable in the Inspector"])))
 	_exported_check = CheckBox.new()
 	_exported_check.text = EventSheetL10n.translate("Editable in the Inspector")
 	_exported_check.toggled.connect(func(_pressed: bool) -> void:
@@ -407,8 +501,8 @@ func _build_inspector_card() -> PanelContainer:
 		_rebuild_look_details()
 		_refresh_reading())
 	# The annotation the chosen look writes sits muted beside it, so the friendly name teaches the code.
-	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Inspector look"), EventSheetPopupUI.code_noted_option(_look_option,
-		func(_index: int) -> String: return annotation_text())))
+	box.add_child(_with_label_tile(EventSheetPopupUI.form_row(EventSheetL10n.translate("Inspector look"),
+		EventSheetPopupUI.code_noted_option(_look_option, func(_index: int) -> String: return annotation_text())), LOOK_OPTION))
 	var annotation_note: Label = _look_option.get_meta("code_note") as Label
 	annotation_note.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	annotation_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -422,8 +516,9 @@ func _build_inspector_card() -> PanelContainer:
 
 func _build_sections_card() -> VBoxContainer:
 	var box: VBoxContainer = EventSheetPopupUI.form_box()
-	_category_edit = _section_field(box, EventSheetL10n.translate("Category"), "Weapon", "category")
-	_group_edit = _section_field(box, EventSheetL10n.translate("Group"), "Bullet", "group")
+	# The empty fields say "none": a made-up section name there reads as a value the variable has.
+	_category_edit = _section_field(box, EventSheetL10n.translate("Category"), EventSheetL10n.translate("none"), "category")
+	_group_edit = _section_field(box, EventSheetL10n.translate("Group"), EventSheetL10n.translate("none"), "group")
 	var prefix_row: HBoxContainer = HBoxContainer.new()
 	_prefix_check = CheckBox.new()
 	_prefix_check.toggled.connect(func(on: bool) -> void:
@@ -434,11 +529,11 @@ func _build_sections_card() -> VBoxContainer:
 	prefix_row.add_child(_prefix_check)
 	_prefix_edit = LineEdit.new()
 	_prefix_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_prefix_edit.placeholder_text = "bullet"
+	_prefix_edit.placeholder_text = EventSheetL10n.translate("none")
 	_prefix_edit.text_changed.connect(func(_text: String) -> void: _refresh_reading())
 	prefix_row.add_child(_prefix_edit)
 	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Only names starting"), prefix_row))
-	_subgroup_edit = _section_field(box, EventSheetL10n.translate("Subgroup"), "Jump", "subgroup")
+	_subgroup_edit = _section_field(box, EventSheetL10n.translate("Subgroup"), EventSheetL10n.translate("none"), "subgroup")
 	_prefix_note = EventSheetPopupUI.StateNote.new(380.0)
 	box.add_child(_prefix_note)
 	return box
@@ -481,7 +576,10 @@ func _build_changes_fold() -> FoldableContainer:
 			EventSheetCompletionPopup.attach(edit, str(spec[3]), func() -> Variant: return _sheet())
 		edit.set_meta("label", str(spec[1]))
 		_changes_edits[spec[0]] = edit
-		box.add_child(EventSheetPopupUI.form_row(str(spec[1]), edit))
+		var change_row: HBoxContainer = EventSheetPopupUI.form_row(str(spec[1]), edit)
+		if spec[0] == "show_if":
+			_with_label_tile(change_row, "Show if")
+		box.add_child(change_row)
 	var ticks: HBoxContainer = HBoxContainer.new()
 	for spec: Array in [["wait_for_ready", EventSheetL10n.translate("Wait for ready")], ["clamp", EventSheetL10n.translate("Clamp to range")], ["read_only", EventSheetL10n.translate("Read-only")],
 			["required", EventSheetL10n.translate("Required")]]:
@@ -491,6 +589,7 @@ func _build_changes_fold() -> FoldableContainer:
 	_refresh_label.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
 	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Refresh the Inspector"), _refresh_label))
 	_setter_edit = _code_box(box, EventSheetL10n.translate("Setter body"), "health = clampi(value, 0, max_health)")
+	_with_label_tile(_setter_edit.get_parent() as HBoxContainer, "Setter body")
 	_changes_edits["setter_param"] = LineEdit.new()
 	(_changes_edits["setter_param"] as LineEdit).placeholder_text = "value"
 	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Setter parameter"), _changes_edits["setter_param"]))
@@ -1098,6 +1197,10 @@ func _collect_attributes(type_name: String) -> Dictionary:
 				attributes[key] = _opened_attributes[key]
 	for level: Array in [["category", _category_edit], ["group", _group_edit], ["subgroup", _subgroup_edit]]:
 		var words: String = (level[1] as LineEdit).text.strip_edges()
+		# A section the variable only sits in - written above an earlier member - is the field's words
+		# but not this variable's line: writing it would add a second section line above it.
+		if words == str(_inherited_sections.get(level[0], "")) and not _opened_attributes.has(level[0]):
+			continue
 		if not words.is_empty():
 			attributes[level[0]] = words
 	if _prefix_check.button_pressed and attributes.has("group") and not _prefix_edit.text.strip_edges().is_empty():
@@ -1228,6 +1331,17 @@ func open_for_edit(
 	_group_edit.text = str(attributes.get("group", ""))
 	_subgroup_edit.text = str(attributes.get("subgroup", ""))
 	_prefix_edit.text = str(attributes.get("group_prefix", ""))
+	# A member under an earlier member's section line sits in that section all the same, so its fields
+	# say the section it is in rather than opening empty.
+	_inherited_sections = {}
+	var edited_variable: LocalVariable = context.get("variable_resource") as LocalVariable
+	if is_editing and edited_variable != null and _sheet() != null:
+		_inherited_sections = inherited_sections(_sheet().events, edited_variable)
+	for level: Array in [["category", _category_edit], ["group", _group_edit], ["subgroup", _subgroup_edit]]:
+		if (level[1] as LineEdit).text.strip_edges().is_empty():
+			(level[1] as LineEdit).text = str(_inherited_sections.get(level[0], ""))
+	if _prefix_edit.text.is_empty() and not attributes.has("group"):
+		_prefix_edit.text = str(_inherited_sections.get("group_prefix", ""))
 	_prefix_check.set_pressed_no_signal(not _prefix_edit.text.is_empty())
 	_prefix_edit.editable = _prefix_check.button_pressed
 	for key: String in ["on_changed", "show_if", "group_show_if", "lock_unless", "link_with", "validate", "info"]:
@@ -1573,6 +1687,7 @@ func _refresh_reading() -> void:
 	var type_name: String = _selected_stored_type()
 	var attributes: Dictionary = _collect_attributes(type_name)
 	_help_strip.set_reading(row_preview_text(), code_block_text(attributes))
+	_refresh_mark_tiles()
 	if _look_option.has_meta("code_note"):
 		(_look_option.get_meta("code_note") as Label).text = annotation_text()
 	var exported: bool = _exported_check.button_pressed and not _exported_check.disabled
@@ -1609,6 +1724,49 @@ func suggested_prefix() -> String:
 				names.append(str(key))
 	var shared: String = ExportSections.shared_start(names)
 	return shared if not shared.is_empty() else group.to_snake_case()
+
+
+## The Inspector sections `target` sits in, read down the sheet's rows the way the Inspector reads the
+## file and the variable rows read it (ExportSections' walk): {category, group, group_prefix,
+## subgroup}, or {} when it sits in none - an unexported member, a member past the declarations, or
+## one a prefix group shuts out. A note or a blank line between members ends nothing; code does.
+static func inherited_sections(entries: Array, target: LocalVariable) -> Dictionary:
+	if target == null:
+		return {}
+	var walk: ExportSections = ExportSections.new()
+	for entry: Variant in entries:
+		if entry is RawCodeRow:
+			var code: String = (entry as RawCodeRow).code
+			var sections: Array[Dictionary] = ExportSections.parse_block(code)
+			for section: Dictionary in sections:
+				walk.enter(section)
+			if sections.is_empty() and not _is_note_or_blank(code):
+				walk.reset()
+			continue
+		if not (entry is LocalVariable):
+			walk.reset()
+			continue
+		var member: LocalVariable = entry as LocalVariable
+		if member.exported:
+			for section: Dictionary in ExportSections.from_attributes(member.attributes):
+				walk.enter(section)
+			walk.place(member.name)
+		if member == target or member.name == target.name:
+			if not member.exported or (walk.category.is_empty() and walk.group.is_empty()):
+				return {}
+			return {"category": walk.category, "group": walk.group, "group_prefix": walk.group_prefix,
+				"subgroup": walk.subgroup}
+	return {}
+
+
+## True for a block of comment lines and blank lines only: a member's note, or the spacing the round
+## trip keeps.
+static func _is_note_or_blank(code: String) -> bool:
+	for line: String in code.split("\n"):
+		var stripped: String = line.strip_edges()
+		if not stripped.is_empty() and not stripped.begins_with("#"):
+			return false
+	return true
 
 
 ## The names the sheet already uses at one section level, for the section fields' completion.
@@ -1735,6 +1893,8 @@ func _apply_scope_gating() -> void:
 	if not is_local:
 		_static_local_check.set_pressed_no_signal(false)
 	_onready_check.visible = _scope == "tree"
+	if _mark_tiles.has("On ready"):
+		(_mark_tiles["On ready"] as Control).visible = _onready_check.visible
 	_refresh_write_type()
 	_update_attr_gating()
 

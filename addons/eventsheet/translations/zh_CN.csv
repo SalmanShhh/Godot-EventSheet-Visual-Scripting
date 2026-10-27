@@ -9593,3 +9593,10 @@ Saved,已保存
 "A slider in the Inspector, kept between limits.",检查器中的滑块，保持在上下限之间。
 Inverted: the event runs while this condition is NOT true.,反转：当此条件不成立时，事件运行。
 On function,函数被调用时
+Runs code on change,更改时运行代码
+A setter runs every time the value changes; its event reads On name set.,每次值改变时都会运行 setter；它的事件读作 On name set。
+Set when the scene is ready,在场景就绪时设置
+"Filled in once, as the node enters the scene, usually with a child node.",在节点进入场景时填入一次，通常是一个子节点。
+Shown only if,仅在条件满足时显示
+The Inspector hides it unless another setting is on.,除非另一项设置已开启，否则检查器会隐藏它。
+%s:,%s：

@@ -9593,3 +9593,10 @@ Saved,Guardado
 "A slider in the Inspector, kept between limits.","Un deslizador en el Inspector, dentro de unos límites."
 Inverted: the event runs while this condition is NOT true.,Invertida: el evento se ejecuta mientras esta condición NO se cumple.
 On function,Al llamar a la función
+Runs code on change,Ejecuta código al cambiar
+A setter runs every time the value changes; its event reads On name set.,Un setter se ejecuta cada vez que cambia el valor; su evento se lee On name set.
+Set when the scene is ready,Se asigna cuando la escena está lista
+"Filled in once, as the node enters the scene, usually with a child node.","Se rellena una vez, cuando el nodo entra en la escena, normalmente con un nodo hijo."
+Shown only if,Se muestra solo si
+The Inspector hides it unless another setting is on.,El Inspector lo oculta a menos que otro ajuste esté activado.
+%s:,%s:

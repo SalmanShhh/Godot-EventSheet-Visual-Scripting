@@ -4,7 +4,9 @@
 # saves is hidden from the Inspector, so it wears the saved-but-hidden tile and never the eye. The
 # retired quiet-marks theme value still loads and saves, but changes nothing and is no setting. The
 # Variable window's type list wears each type's editor icon, and the parameters window frames its
-# object's icon on a tile.
+# object's icon on a tile. The Variable window carries the row's own tile beside each option that puts
+# one on the row (same colours, same card), and a member under an earlier member's group line opens
+# on that group without writing the line again; an empty section field says "none".
 @tool
 extends RefCounted
 
@@ -15,6 +17,7 @@ const VARIABLE_DIALOG := preload("res://addons/eventsheet/editor/variable_dialog
 const CAROUSEL := "res://demo/showcase/carousel/showcase_carousel.gd"
 const STORAGE_FIXTURE := "user://variable_mark_tiles_storage.gd"
 const STORAGE_SOURCE := "extends Node2D\n\n## Written by Bake.\n@export_storage var baked_cells: Array = []\n@export var brush_size: int = 3\n"
+const WINDOW_SOURCE := "extends Node2D\n\n@export_group(\"Bullet\", \"bullet\")\n@export var bullet_speed: float = 400.0\n@export var bullet_count: int = 3\n@export_group(\"\")\n@export var health: int = 10\n"
 
 
 static func run() -> bool:
@@ -31,7 +34,7 @@ static func run() -> bool:
 		default_beat.get("variable") as LocalVariable)
 	var tip_card: Dictionary = NativeVariableMarks.badge_card(NativeVariableMarks.BADGE_TOOLTIP)
 	var light: Dictionary = EventSheetEditorThemeDeriver.NATIVE_COLOURS_LIGHT
-	return SUPPORT.pins(P, [
+	var ok: bool = SUPPORT.pins(P, [
 		["the default look's beat wears all three tiles", default_beat["badges"],
 			PackedStringArray(["inspector", "range", "tooltip"])],
 		["and trails its ## note", default_beat["note"], "Beats elapsed."],
@@ -65,7 +68,96 @@ static func run() -> bool:
 			["PanelContainer", EventSheetPalette.scaled_f(32.0), EventSheetPalette.scaled_f(18.0)]],
 		["the tile's ground is the design's", [ACEParamsDialog.ICON_TILE_DARK, ACEParamsDialog.ICON_TILE_LIGHT],
 			[Color("#3a4350"), Color("#d3dce6")]],
+		["the retired behaviour column is no setting in the Theme Editor",
+			_editable_token_names().has("behaviour_in_object_column"), false],
+		["but a theme file naming it still stores it", _stored("behaviour_in_object_column"), true],
 	])
+	return SUPPORT.pins(P, _window_pins()) and ok
+
+
+## The Variable window carries the row's own tile beside each option that puts one on the row, in the
+## row's colours, with the row tile's card; and a member written under an earlier member's group line
+## opens on the group it sits in, without writing that line a second time.
+static func _window_pins() -> Array:
+	var sheet: EventSheetResource = EventSheets.open_gd_as_sheet(WINDOW_SOURCE)
+	var members: Dictionary = {}
+	for entry: Variant in sheet.events:
+		if entry is LocalVariable:
+			members[(entry as LocalVariable).name] = entry
+	var host: Node = Node.new()
+	var dialog: VariableDialog = VARIABLE_DIALOG.new()
+	dialog.init_dialog(host)
+	dialog.set_sheet_provider(func() -> EventSheetResource: return sheet)
+	var light: EventSheetEventStyle = EventSheetEditorThemeDeriver.native_style(Color("#e6e6e6")).get_event_style()
+	dialog.style_provider = func() -> EventSheetEventStyle: return light
+	_open_member(dialog, members.get("bullet_count") as LocalVariable)
+	var opened: Dictionary = dialog.option_badges()
+	var count_fields: Array = [dialog._category_edit.text, dialog._group_edit.text, dialog._prefix_edit.text,
+		dialog._prefix_check.button_pressed, dialog._subgroup_edit.text]
+	var count_writes_group: bool = dialog._collect_attributes("int").has("group")
+	var placeholders: Array = [dialog._category_edit.placeholder_text, dialog._group_edit.placeholder_text,
+		dialog._prefix_edit.placeholder_text, dialog._subgroup_edit.placeholder_text]
+	dialog._select_look("slider")
+	dialog._refresh_reading()
+	var slider_tile: String = str(dialog.option_badges().get(VariableDialog.LOOK_OPTION, ""))
+	dialog._select_look("storage")
+	dialog._refresh_reading()
+	var storage_tile: String = str(dialog.option_badges().get(VariableDialog.LOOK_OPTION, ""))
+	var eye_tile: Control = dialog._mark_tiles["Editable in the Inspector"]
+	var eye_inks: Array = eye_tile.call("inks")
+	var eye_card_title: String = str((eye_tile.call("card") as Dictionary).get("title", ""))
+	_open_member(dialog, members.get("bullet_speed") as LocalVariable)
+	var first_writes_group: bool = dialog._collect_attributes("float").has("group")
+	_open_member(dialog, members.get("health") as LocalVariable)
+	var after_end: String = dialog._group_edit.text
+	host.free()
+	var dark: EventSheetEventStyle = EventSheetEditorThemeDeriver.native_style(
+		EventSheetEditorThemeDeriver.NATIVE_DARK_REFERENCE_BASE).get_event_style()
+	return [
+		["each option and the tile it carries", VariableDialog.OPTION_BADGES, {
+			"Editable in the Inspector": "inspector", "Description": "tooltip", "On ready": "on_ready",
+			"Show if": "show_if", "Setter body": "on_change"}],
+		["the window opens with every option's tile, and a plain look puts none on the row", opened, {
+			"Editable in the Inspector": "inspector", "Description": "tooltip", "On ready": "on_ready",
+			"Show if": "show_if", "Setter body": "on_change", "Inspector look": ""}],
+		["a slider look carries the range tile", slider_tile, "range"],
+		["saved but hidden carries the hidden eye", storage_tile, "storage"],
+		["a tile wears the sheet's own colours", eye_inks,
+			[light.inspector_badge_foreground_color, light.inspector_badge_background_color]],
+		["and opens the row tile's card", eye_card_title, "In the Inspector"],
+		["a member under an earlier member's group line opens on that group and its prefix", count_fields,
+			["", "Bullet", "bullet", true, ""]],
+		["and saving it untouched writes no second group line", count_writes_group, false],
+		["the member the line sits on keeps writing it", first_writes_group, true],
+		["a member after the group's end sits in none", after_end, ""],
+		["an empty section field says none, never a made-up name", placeholders, ["none", "none", "none", "none"]],
+		["the walk names the sections a member sits in",
+			VariableDialog.inherited_sections(sheet.events, members.get("bullet_count") as LocalVariable),
+			{"category": "", "group": "Bullet", "group_prefix": "bullet", "subgroup": ""}],
+		["the three new tiles' cards", [NativeVariableMarks.badge_card(NativeVariableMarks.BADGE_ON_CHANGE).get("title"),
+			NativeVariableMarks.badge_card(NativeVariableMarks.BADGE_ON_READY).get("title"),
+			NativeVariableMarks.badge_card(NativeVariableMarks.BADGE_SHOW_IF).get("title")],
+			["Runs code on change", "Set when the scene is ready", "Shown only if"]],
+		["on change is the eye tile turned coral, at each hand's own lightness",
+			[NativeVariableMarks.badge_ink(dark, NativeVariableMarks.BADGE_ON_CHANGE, true).to_html(false),
+				NativeVariableMarks.badge_ink(light, NativeVariableMarks.BADGE_ON_CHANGE, true).to_html(false)],
+			["ff9d7c", "802709"]],
+		["show if is the eye tile turned a soft periwinkle",
+			NativeVariableMarks.badge_ink(dark, NativeVariableMarks.BADGE_SHOW_IF, false).to_html(false), "36364d"],
+		["on ready shares the range tile's", NativeVariableMarks.badge_ink(light, NativeVariableMarks.BADGE_ON_READY, false),
+			light.range_badge_background_color],
+	]
+
+
+## Opens the window on `member` the way a double-click on its row does.
+static func _open_member(dialog: VariableDialog, member: LocalVariable) -> void:
+	if member == null:
+		return
+	dialog.open_for_edit("tree", {"editing": true, "variable_resource": member,
+		"attributes": (member.attributes as Dictionary).duplicate(true) if member.attributes is Dictionary else {},
+		"export_hint": member.export_hint, "options": member.options},
+		member.name, member.type_name, member.default_value, false, "Edit Variable", member.is_constant,
+		member.exported, member.onready, member.is_static)
 
 
 ## [the class of what holds the header icon, its side, the icon's side].

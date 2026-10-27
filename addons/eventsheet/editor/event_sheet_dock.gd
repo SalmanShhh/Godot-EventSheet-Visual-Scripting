@@ -464,6 +464,10 @@ var _variable_dlg: RefCounted = null:
 			_variable_dlg.init_dialog(self)
 			# Feed the active sheet so the name field can flag host-member shadowing (live + blocking).
 			_variable_dlg.set_sheet_provider(func() -> EventSheetResource: return _current_sheet)
+			# The tiles beside its options wear the colours the sheet's own variable rows wear.
+			_variable_dlg.style_provider = func() -> EventSheetEventStyle:
+				var view: EventSheetViewport = _active_view()
+				return view._get_event_style() if view != null else null
 			_variable_dlg.variable_confirmed.connect(_on_variable_dialog_confirmed)
 			# Scope ▸ Global writes into the autoload the dialog's "Write into" picker named, through the
 			# same writer the Add global variable dialog uses, rather than into this file.

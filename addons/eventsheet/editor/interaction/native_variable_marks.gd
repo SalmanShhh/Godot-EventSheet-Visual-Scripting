@@ -51,6 +51,9 @@ const BADGE_CODE_SHAPES: Dictionary = {
 	"range": "@export_range(...)",
 	"tooltip": "## ...",
 	"storage": "@export_storage",
+	"on_change": "set(value):",
+	"on_ready": "@onready",
+	"show_if": "_validate_property()",
 }
 
 ## The prefix the compiler's own bookkeeping members start with (the Every X Seconds clock, a spawn's
@@ -65,6 +68,19 @@ const BADGE_SAVED := "saved"
 ## Saved with the scene but hidden from the Inspector (`@export_storage`): it stands where the eye
 ## would, so a variable the Inspector never shows never wears the eye.
 const BADGE_STORAGE := "storage"
+## What the script itself does with the variable: a setter runs code each time it changes, an
+## `@onready` fills it as the node enters the scene, and a show-if keeps it out of the Inspector until
+## another setting is on. The Variable window carries these beside the options that write them.
+const BADGE_ON_CHANGE := "on_change"
+const BADGE_ON_READY := "on_ready"
+const BADGE_SHOW_IF := "show_if"
+## The three tiles above have no theme colour of their own. On ready shares the range tile's pair; on
+## change and show if are the eye tile's pair turned to their own hue - coral, and a soft periwinkle
+## (the eye's saturation scaled down) - so every theme has them at its own tile lightness without a
+## token of its own.
+const ON_CHANGE_HUE := 15.0 / 360.0
+const SHOW_IF_HUE := 240.0 / 360.0
+const SHOW_IF_SATURATION := 0.55
 
 ## A badge tile and the icon inside it, and the room between two tiles and before the first.
 const TILE_SIZE := 20.0
@@ -560,6 +576,15 @@ static func badge_card(badge: String, variable: LocalVariable = null) -> Diction
 		BADGE_STORAGE:
 			title = EventSheetL10n.translate("Saved, hidden")
 			said = EventSheetL10n.translate("Saved with the scene, but designers never see it in the Inspector.")
+		BADGE_ON_CHANGE:
+			title = EventSheetL10n.translate("Runs code on change")
+			said = EventSheetL10n.translate("A setter runs every time the value changes; its event reads On name set.")
+		BADGE_ON_READY:
+			title = EventSheetL10n.translate("Set when the scene is ready")
+			said = EventSheetL10n.translate("Filled in once, as the node enters the scene, usually with a child node.")
+		BADGE_SHOW_IF:
+			title = EventSheetL10n.translate("Shown only if")
+			said = EventSheetL10n.translate("The Inspector hides it unless another setting is on.")
 	if title.is_empty():
 		return {}
 	var code: String = _badge_code(badge, variable)
@@ -688,6 +713,14 @@ static func badge_ink(event_style: EventSheetEventStyle, badge: String, foregrou
 			# Inspector does not show. Derived, so every theme has it without a token of its own.
 			return _greyed(style.inspector_badge_foreground_color if foreground \
 				else style.inspector_badge_background_color)
+		BADGE_ON_READY:
+			return style.range_badge_foreground_color if foreground else style.range_badge_background_color
+		BADGE_ON_CHANGE, BADGE_SHOW_IF:
+			var eye: Color = style.inspector_badge_foreground_color if foreground \
+				else style.inspector_badge_background_color
+			if badge == BADGE_ON_CHANGE:
+				return Color.from_hsv(ON_CHANGE_HUE, eye.s, eye.v, eye.a)
+			return Color.from_hsv(SHOW_IF_HUE, eye.s * SHOW_IF_SATURATION, eye.v, eye.a)
 	return style.inspector_badge_foreground_color if foreground else style.inspector_badge_background_color
 
 
@@ -757,6 +790,27 @@ static func draw_badge_tile(control: CanvasItem, rect: Rect2, badge: String, for
 				_at(icon, 9.5, 5.5), _at(icon, 9.5, 2.5)]), foreground, stroke, true)
 			control.draw_polyline(PackedVector2Array([_at(icon, 5.5, 13.5), _at(icon, 5.5, 9.5),
 				_at(icon, 10.5, 9.5), _at(icon, 10.5, 13.5)]), foreground, stroke, true)
+		BADGE_ON_CHANGE:
+			# Two arrows chasing each other round a circle: the value comes round, the code runs.
+			var hub: Vector2 = _at(icon, 8.0, 8.0)
+			var bend: float = atan2(3.8, 4.0)
+			control.draw_arc(hub, _units(icon, 5.5), PI, TAU - bend, 12, foreground, stroke, true)
+			control.draw_arc(hub, _units(icon, 5.5), 0.0, PI - bend, 12, foreground, stroke, true)
+			control.draw_polyline(PackedVector2Array([_at(icon, 12.0, 1.5), _at(icon, 12.0, 4.5),
+				_at(icon, 9.0, 4.5)]), foreground, stroke, true)
+			control.draw_polyline(PackedVector2Array([_at(icon, 4.0, 14.5), _at(icon, 4.0, 11.5),
+				_at(icon, 7.0, 11.5)]), foreground, stroke, true)
+		BADGE_ON_READY:
+			# A burst of eight short rays: filled in the moment the scene starts.
+			for ray: Array in [[8.0, 2.5, 8.0, 5.5], [8.0, 10.5, 8.0, 13.5], [2.5, 8.0, 5.5, 8.0],
+					[10.5, 8.0, 13.5, 8.0], [4.2, 4.2, 6.2, 6.2], [9.8, 9.8, 11.8, 11.8], [4.2, 11.8, 6.2, 9.8],
+					[9.8, 6.2, 11.8, 4.2]]:
+				control.draw_line(_at(icon, ray[0], ray[1]), _at(icon, ray[2], ray[3]), foreground, stroke, true)
+		BADGE_SHOW_IF:
+			# A funnel: only what passes the test shows.
+			control.draw_polyline(PackedVector2Array([_at(icon, 2.0, 3.0), _at(icon, 14.0, 3.0),
+				_at(icon, 9.5, 8.5), _at(icon, 9.5, 13.0), _at(icon, 6.5, 14.5), _at(icon, 6.5, 8.5),
+				_at(icon, 2.0, 3.0)]), foreground, stroke, true)
 
 
 ## The room a value glyph adds to (bool, resource) or takes in place of (vector) the value's text.

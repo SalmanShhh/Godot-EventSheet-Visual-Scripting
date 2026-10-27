@@ -44,8 +44,8 @@ static func run() -> bool:
 	]) and ok
 	# ── No hint text sits under a checkbox: the strip is the one place that explains. The row holds
 	# only checkboxes, and only the flags the scope in front of you can actually wear are on screen ──
-	ok = _check("the Flags row carries checkboxes and nothing else",
-		_flag_row_classes(dialog), ["CheckBox", "CheckBox", "CheckBox", "CheckBox"]) and ok
+	ok = _check("the Flags row carries checkboxes, and On ready the tile it puts on the row",
+		_flag_row_classes(dialog), ["CheckBox", "CheckBox", "CheckBox", "Control", "CheckBox"]) and ok
 	ok = _check("a member variable is offered Static and Constant",
 		_visible_flags(dialog), ["Static", "Constant"]) and ok
 	ok = _check("the Inspector tick heads its own card",
