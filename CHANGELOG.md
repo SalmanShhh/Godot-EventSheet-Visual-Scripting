@@ -16,6 +16,29 @@
 - The Tools menu item, Properties bar add-on and Context menu item starters write a script that
   loads: their empty `-> void` callback is stubbed with `pass`, not `return null` ("A void function
   cannot return a value").
+- A handler the compiler writes underscores the parameters its events never read - `func
+  _process(_delta: float)`, `func _on_exit_body_entered(_body: Node)` - which is Godot's own cure for
+  "The parameter is never used", and writes them plain again the moment an event reads one. A file
+  opened as a sheet reads `_delta` back as the trigger's `delta`; one whose author left an unread
+  parameter plain comes back exactly as written. Every pack and showcase is regenerated with it.
+- The Save-choice block reads its boot flag and names an unread `_at_save_game`, so a sheet that
+  saves a variable no longer reports an unused class variable and an unused parameter. A file the
+  older block wrote still opens with its Save choices and saves back byte for byte.
+- Format Time (mm:ss), As Clock Time and Mission Time Left have warning-free successors that read
+  exactly the same (`int(seconds / 60.0)` in place of the integer division `int(seconds) / 60`); the
+  old rows keep compiling where they are used and offer the new ones.
+- The packs' own code is free of the warnings it shipped with: shadowed names, integer division,
+  ternaries of two types, an int handed where an enum is expected, signals only ever emitted by
+  name, and a variable declared below its use. A frozen ACE parameter that shadows a member keeps
+  its name under a commented `@warning_ignore`.
+- Nav Agent 3D adds its agent after the host has finished setting up its children, so the FPS arena
+  no longer prints "Parent node is busy setting up children" and a hundred "The agent has no parent".
+- The editor-tool starters that leave a callback empty name its parameters `_object`, `_paths` and so
+  on, and the command tool starter reads its arguments; a new shared sheet starts the same way.
+- The import hook passes over a script that only mentions `_on_files_imported` without loading it or
+  warning about it.
+- The suite loads every pack, showcase and starter script in a `-d` run and holds the warnings Godot
+  reports for them to a short, explained list.
 
 ### Added: Platformer Pathfinding learns every way a platformer character gets around
 
