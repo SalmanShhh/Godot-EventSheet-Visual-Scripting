@@ -49,7 +49,25 @@ static func run() -> bool:
 	passed = _test_host_candidates() and passed
 	passed = _test_ok_waits_for_a_valid_identity() and passed
 	passed = _test_name_change_renames_uses() and passed
+	passed = _test_strip_opens_on_the_sheets_kind() and passed
 	return passed
+
+
+## Opened on a custom node, the help strip names that kind, not the first kind in the list.
+static func _test_strip_opens_on_the_sheets_kind() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node"
+	sheet.custom_class_name = "ZzSheetTypeStripProbe"
+	var editor: EventSheetEditor = EventSheetEditor.new()
+	editor.setup(sheet)
+	editor.set_undo_redo_manager(NoopUndoManager.new())
+	var dialog: EventSheetSheetTypeDialog = editor._sheet_type as EventSheetSheetTypeDialog
+	dialog.open()
+	var ok: bool = _check("the strip opens on the kind the sheet is",
+		[dialog._sheet_type_option.get_item_text(dialog._sheet_type_option.selected), dialog._help_strip.heading_label.text],
+		["Custom Node", "KIND · CUSTOM NODE"])
+	editor.free()
+	return ok
 
 
 ## OK cannot apply what the identity line is warning about: it is disabled while the line shows a

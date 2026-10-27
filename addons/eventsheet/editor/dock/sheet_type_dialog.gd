@@ -182,7 +182,13 @@ func open() -> void:
 	# Collapse the power fields on every open, so the first read is always the short form.
 	_set_more_expanded(false)
 	_refresh_type_ui()
-	_sheet_type_dialog.popup_centered(Vector2i(480, 0))
+	# The strip opens on the kind this sheet IS. It was built describing the first kind (Event
+	# Sheet), so a Custom Node opened under a strip that called it an Event Sheet.
+	var told: Dictionary = _kind_help(_sheet_type_option.selected)
+	if not told.is_empty():
+		_help_strip.show_note(str(told["heading"]), str(told["body"]))
+	if _sheet_type_dialog.is_inside_tree():  # headless tests: the fields are filled, nothing to pop
+		_sheet_type_dialog.popup_centered(Vector2i(480, 0))
 
 
 ## Which field rows the CHOSEN type shows - mirrors apply_sheet_type_settings field by field: a plain

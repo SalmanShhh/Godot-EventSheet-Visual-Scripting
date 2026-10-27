@@ -108,6 +108,18 @@ static func name_problem(typed: String, directory: String) -> String:
 	return ""
 
 
+## The first of `base`, `base`2, `base`3... that nothing stops in this folder - the name the window
+## opens with, so it never offers a name the project already uses (a game with its own Player class
+## is offered Player2, not a red line on the very first frame).
+static func free_name(base: String, directory: String) -> String:
+	var candidate: String = base
+	var number: int = 2
+	while not name_problem(candidate, directory).is_empty() and number < 100:
+		candidate = "%s%d" % [base, number]
+		number += 1
+	return candidate
+
+
 ## The file a class name is written to: its words in snake_case, the way Godot names a script.
 static func file_name_for(class_id: String) -> String:
 	return class_id.strip_edges().to_snake_case() + ".gd"
@@ -203,6 +215,9 @@ func open(dock: Control, directory: String = "") -> ConfirmationDialog:
 	_directory = directory if directory.begins_with("res://") else "res://"
 	_build()
 	_fill()
+	# Opens with a name already in the field, selected so typing replaces it: Insert is ready at once.
+	_name_edit.text = free_name("Player", _directory)
+	_name_edit.select_all()
 	_choose(DEFAULT_CLASS)
 	if _dock.is_inside_tree():
 		_dialog.popup_centered(Vector2i(roundi(EventSheetPalette.scaled_f(640.0)), 0))

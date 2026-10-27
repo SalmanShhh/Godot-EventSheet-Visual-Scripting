@@ -70,7 +70,7 @@ static func _test_insert_window() -> bool:
 			for index: int in (child as ItemList).item_count:
 				if (child as ItemList).get_item_tooltip(index).is_empty():
 					undescribed += 1
-	var empty_blocks: bool = dialog.get_ok_button().disabled
+	var opened_with: Array = [window._name_edit.text, dialog.get_ok_button().disabled]
 	var first_sentence: String = window._chosen_label.text
 	window._name_edit.text = "ScriptClassProbe"
 	window._refresh()
@@ -89,7 +89,9 @@ static func _test_insert_window() -> bool:
 		["every tile says what it is", undescribed, 0],
 		["the chosen kind's sentence is on screen", first_sentence,
 			"Character - A body you move with code: players and enemies that walk, jump and collide."],
-		["Insert waits for a name", empty_blocks, true],
+		["it opens with a free name filled in, so Insert is ready", opened_with,
+			["Player", false]],
+		["a name the folder already uses is not the one offered", load(INSERT_PATH).free_name("Support", "res://tests/"), "Support2"],
 		["a free name lets Insert go", named_allows, true],
 		["an editor tool's switch is on and fixed", forced, [true, true]],
 		["the footer names the file and folder", window._target_label.text, "Creates script_class_probe.gd in res://tests/ and opens it."],
