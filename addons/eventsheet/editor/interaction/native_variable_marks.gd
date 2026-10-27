@@ -141,6 +141,7 @@ static var _italic_cache: Dictionary = {}
 static var _saved_cache: Dictionary = {}
 static var _box_cache: Dictionary = {}
 static var _default_style: EventSheetEventStyle = null
+static var _project_base_cache: Dictionary = {}
 
 
 ## The colour family of a variable's type, or "" when nothing about it says. Read from the declared
@@ -180,7 +181,50 @@ static func type_family(type_name: String, default_value: Variant, expression_de
 	# A dotted type (`Gate.State`) is another script's enum far more often than anything else.
 	if declared.contains("."):
 		return FAMILY_ENUM
+	# The project's own class (`class_name EnemyStats extends Resource`) is the node or resource its
+	# engine base is, so `stats: EnemyStats = preload(...)` reads like `bullet_scene: PackedScene`.
+	var engine_base: String = project_class_base(declared)
+	if not engine_base.is_empty() and (ClassDB.is_parent_class(engine_base, "Node") \
+			or ClassDB.is_parent_class(engine_base, "Resource")):
+		return FAMILY_OBJECT
 	return FAMILY_CLASS
+
+
+## The engine class a project `class_name` comes down to (`EnemyStats` -> "Resource"), "" for a name
+## the project does not declare. Read from the project's global class list, once per name a session.
+static func project_class_base(class_title: String) -> String:
+	if _project_base_cache.has(class_title):
+		return str(_project_base_cache[class_title])
+	var bases: Dictionary = {}
+	for entry: Dictionary in ProjectSettings.get_global_class_list():
+		bases[str(entry.get("class", ""))] = str(entry.get("base", ""))
+	var found: String = ""
+	var walked: String = class_title
+	# A class can extend another of the project's own; follow the chain to the engine.
+	for _step: int in range(32):
+		if not bases.has(walked):
+			break
+		walked = str(bases[walked])
+		if ClassDB.class_exists(walked):
+			found = walked
+			break
+	_project_base_cache[class_title] = found
+	return found
+
+
+## True when a declaration of this type with no value written starts as `null`: every object type -
+## a node, a resource, the project's own class - which is what an Inspector slot shows as empty.
+## A value type (`float`, `Vector2`, `Rect2`), a collection and an enum start at their zero instead.
+static func starts_null(type_name: String, enum_names: PackedStringArray = PackedStringArray()) -> bool:
+	var declared: String = type_name.strip_edges()
+	if declared.is_empty() or declared == "Variant":
+		return false
+	if not (type_family(declared, null, false, enum_names) in [FAMILY_OBJECT, FAMILY_CLASS]):
+		return false
+	for variant_type: int in range(1, TYPE_MAX):
+		if type_string(variant_type) == declared:
+			return declared == "Object"
+	return true
 
 
 static func _inferred_family(default_value: Variant, expression_default: bool) -> String:

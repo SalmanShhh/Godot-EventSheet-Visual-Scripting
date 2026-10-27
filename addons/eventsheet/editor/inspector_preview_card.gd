@@ -407,13 +407,26 @@ func _build_widget(type_name: String, default_text: String, attributes: Dictiona
 		color_swatch.custom_minimum_size = Vector2(60.0, 18.0)
 		return _ignored(color_swatch)
 	var field := LineEdit.new()
-	field.text = default_text
+	field.text = slot_text(default_text)
 	field.editable = false
 	if bool(attributes.get("multiline", false)):
 		field.text = default_text + "  (multiline)"
 	if attributes.has("placeholder") and default_text.strip_edges().is_empty():
 		field.placeholder_text = str(attributes.get("placeholder"))
 	return _ignored(field)
+
+
+## What the Inspector's slot shows for a value: a preloaded or loaded file by its file name
+## (`preload("res://bullet.tscn")` shows `bullet.tscn`), anything else as written.
+static func slot_text(default_text: String) -> String:
+	var text: String = default_text.strip_edges()
+	for call: String in ["preload(", "load("]:
+		if text.begins_with(call) and text.ends_with(")"):
+			var inner: String = text.substr(call.length(), text.length() - call.length() - 1).strip_edges()
+			if inner.length() > 2 and inner.begins_with("\"") and inner.ends_with("\"") \
+					and inner.substr(1, inner.length() - 2).begins_with("res://"):
+				return inner.substr(1, inner.length() - 2).get_file()
+	return default_text
 
 
 ## The look the folded attributes wear, through the same table the dialog's dropdown reads, so the

@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Fixed: node, scene and resource variables read as the Inspector lists them
+
+- In the default look and Editor Native, a variable holding a node, a scene, a resource or a typed
+  list now reads like any other variable: its type exactly as written, its name, its value as
+  written, and its tiles. `@export var target: Node2D` reads `Node2D target = null`, the `null`
+  muted because nothing is assigned yet. `@export var bullet_scene: PackedScene = preload(...)` and
+  a resource of your own class (`stats: EnemyStats = preload(...)`) read `bullet_scene =
+  bullet.tscn` with the eye tile and the file's chip, where they used to turn into a plain line with
+  no tiles, no hover card and no variable window; double-clicking one now opens the variable window
+  with Load and New beside the value, its Inspector preview showing the file by name as the Inspector
+  does. `Array[Node2D] _in_range = []` keeps its `[]` instead of the
+  word "empty". Classic Sheet and the other sentence-row themes read as before.
+
 ### Fixed: the plugin ships its `.uid` files
 
 - Every script and shader in the plugin, the packs, the showcases and the tools now ships with the

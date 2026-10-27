@@ -3593,9 +3593,11 @@ func _build_head_group_row(sheet: EventSheetResource, uid_suffix: String, title:
 ## the @export / group chips are gone - the bar above the row carries the group, and everything inside
 ## a settings bar is exported by definition.
 func _build_reading_variable_row(variable: LocalVariable, description: String, indent: int) -> EventRowData:
-	# A preloaded scene / script / resource is an OBJECT, whichever row shape carried it.
+	# A preloaded scene / script / resource is an OBJECT, whichever row shape carried it. An
+	# Inspector-style row lists it the way the Inspector lists the slot instead - its type as written,
+	# its name, the file it holds - so it stays a variable row with its tiles and its window.
 	var preload_path: String = preloaded_path(str(variable.default_value))
-	if not preload_path.is_empty():
+	if not preload_path.is_empty() and not _viewport._get_event_style().inspector_variable_rows:
 		var preload_row: EventRowData = _build_preload_object_row(
 			variable.name, preload_path, indent, variable, "variable_reading_%d" % variable.get_instance_id()
 		)
@@ -12516,17 +12518,31 @@ func _build_variable_row(
 	# which function it calls, and the muted note beside it already says so in words.
 	var hide_value: bool = code_only or bool(facts.get("hide_value", false))
 	# A declaration with no value written (`var _start_x: float`) has none to show: `= null` would be
-	# a value the file never wrote, and not even the one Godot starts it at.
+	# a value the file never wrote, and not even the one Godot starts it at. An object slot is the
+	# exception on an Inspector-style row: `@export var target: Node2D` IS null until something is
+	# assigned, and the Inspector shows that empty slot, so the row reads `null`, muted.
+	var unassigned_slot: bool = false
 	if source_variable != null and source_variable.no_default and default_value == null:
-		hide_value = true
+		unassigned_slot = inspector_rows and NativeVariableMarks.starts_null(type_name, _sheet_enum_names())
+		hide_value = not unassigned_slot
 	if not hide_value:
 		row_data.spans.append(_make_span("=", SemanticSpan.SpanType.OPERATOR, variable_meta.merged({"editable": false}, true)))
 	# An expression default (`State.PATROL`, `Vector2.ZERO`, a walrus var's verbatim `100`) is
 	# CODE stored as text - quoting it would misread it as a string literal.
 	var value_text: String = str(default_value) if bool(options.get("expression_default", false)) else _format_variable_value(default_value)
+	if unassigned_slot:
+		value_text = "null"
 	# The value reads as the code writes it: `220.0` beside the word `float`, the same number the
-	# file holds. Only an empty collection is put in words.
-	value_text = _reading_empty_text(value_text)
+	# file holds. Only an empty collection is put in words - on a sentence row. An Inspector-style row
+	# keeps `[]` as written, beside the `Array[Node2D]` it is the empty one of.
+	if not inspector_rows:
+		value_text = _reading_empty_text(value_text)
+	# A preloaded file reads as the Inspector's slot reads it: the file (`bullet.tscn`), not the call
+	# that loads it. Typing into it still edits what the file holds.
+	var preload_file: String = preloaded_path(value_text).get_file() if inspector_rows else ""
+	var preload_text: String = value_text
+	if not preload_file.is_empty():
+		value_text = preload_file
 	# The hint re-reads the value itself where it knows better than the literal does: an enum's
 	# number is really its label, a 0-1 range is really a percent, a colour is really a word.
 	var hinted_value: String = str(facts.get("value_text", "")).strip_edges()
@@ -12548,6 +12564,15 @@ func _build_variable_row(
 		# saying who the running game will take it from.
 		"edit_note": EventSheetL10n.translate("set by the owner") if not sync_entry.is_empty() else ""
 	}, true)
+	# An empty slot has nothing to type over: it is filled in the Inspector, or in the variable window,
+	# which picks the node or loads the file the way the Inspector does.
+	if unassigned_slot:
+		value_meta["editable"] = false
+	if not preload_file.is_empty():
+		value_meta["edit_text"] = preload_text
+	# `null` is the absence of a value, so it reads muted beside the values that are there.
+	if inspector_rows and value_text == "null":
+		value_meta["text_color"] = reading_style.muted_text_color
 	# The swatch belongs beside the colour's WORD, not trailing the row: "tint = white [] #ffffff"
 	# reads as one value with its picture, where the same swatch parked after the hex read as an
 	# afterthought. The span reserves the swatch's room when it measures, so the muted hex that
