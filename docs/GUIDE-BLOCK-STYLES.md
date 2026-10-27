@@ -134,11 +134,12 @@ as chips beside it. "internal" names a distinction only a behavior pack has.
 
 ![A pack's published rows: the role badge, one typed chip per input and the gives-back return, with no func signature anywhere](images/define-rows.png)
 
-A function reads as the trigger it is: `ƒ  Functions ▸ On Jump`, with the name and one chip per
-input in the CONDITION lane, because that lane answers "when does this run?" and a function's
-answer is "when it is called". Its body is ordinary event rows one level in, and the row's tint
-says whether it is an action, a condition or an expression. A pack's published function also
-carries its category chip - never an annotation wall.
+A function reads as the trigger it is. Its head is one line in the CONDITION lane - the function
+icon, then `On function jump`, the name as written with no object name before it - and each input
+is a line of its own under it: the parameter icon, the input's name, its type as written (`height`
+`float`). That lane answers "when does this run?" and a function's answer is "when it is called".
+Its body is ordinary event rows one level in. Whether it is an action, a condition or an expression,
+what it hands back and its flags are said by the name's hover card, never by a word on the row.
 
 An unpublished helper collapses to one line: `ƒ name(params) → return · function - N lines`, and
 the helpers gather under one closed **Helpers** folder. The same ƒ marks computed-check guards,
