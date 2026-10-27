@@ -216,6 +216,8 @@ static func _starters_by_shelf() -> Array[Dictionary]:
 	var order: PackedStringArray = PackedStringArray()
 	var by_shelf: Dictionary = {}
 	for starter: Dictionary in EventSheetStarterTemplates.MENU_STARTERS:
+		if not EventSheetStarterTemplates.is_offered(starter):
+			continue
 		var shelf: String = str(starter["shelf"])
 		if not by_shelf.has(shelf):
 			order.append(shelf)

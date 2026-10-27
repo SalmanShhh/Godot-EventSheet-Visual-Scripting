@@ -43,6 +43,12 @@ var _answers: Dictionary = {}
 var _picked: String = ""
 
 
+## Whether the Get Started card offers the door with these words. Every door is offered, except the
+## showcase door in a project that holds no showcase scene to open.
+static func offers_door(words: String, has_showcase: bool) -> bool:
+	return has_showcase or words != "Open the playable showcase scene"
+
+
 ## What one answer sets: {label, note, words, theme, project_bar, code_panel, guide, tour}. `theme` is a
 ## theme file ("" keeps the editor-matching default); `words` is a words preset name.
 static func choice_settings(choice: String) -> Dictionary:
@@ -168,6 +174,10 @@ func _build() -> void:
 	# The four doors, two by two, so the window keeps its width.
 	var start_grid: GridContainer = GridContainer.new()
 	start_grid.columns = 2
+	# The showcase door is offered only when the project holds a showcase scene: a project the plugin
+	# was installed into has none (the two addon folders are all it copies), and a door that does
+	# nothing when clicked reads as a broken plugin.
+	var has_showcase: bool = not EventForgePlugin._find_showcase_scene().is_empty()
 	for door: Array in [
 		["Take the 2-minute tour", func() -> void: _dock.start_tour()],
 		# The game most event-sheet users built first, rebuilt row by row - ten steps on the same
@@ -179,6 +189,8 @@ func _build() -> void:
 				EditorInterface.open_scene_from_path(showcase_scene)],
 		["New sheet from a starter template", func() -> void: _dock._open_template_menu()],
 	]:
+		if not offers_door(str(door[0]), has_showcase):
+			continue
 		var door_button: Button = Button.new()
 		door_button.text = EventSheetL10n.translate(str(door[0]))
 		door_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL

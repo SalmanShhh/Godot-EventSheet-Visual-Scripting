@@ -60,6 +60,29 @@ way a user meets it:
   Add action, Compare and Match lead with their object's icon and name.
 - A drafted function description keeps a name at the start of a clause as written: "GameState.coins
   += amount", never "gameState".
+### Fixed: the makers read right in a project the plugin was installed into
+
+- The Welcome window no longer offers "Open the playable showcase scene" in a project that has no
+  showcase to open (an installed plugin brings none, so the button did nothing).
+- The New menu and the Start page leave out Level Stats Screen and Skill Tree Screen in a project
+  without the HUD Kit and Upgrades packs: those starters are written in the packs' words, and made
+  without them every such row came out as an empty template.
+- New behaviour's Category leads with "Its own name" and starts on it. In a project with no packs
+  the list was empty and Create wrote a heading read off no item; with packs installed it picked the
+  first pack made for the same kind of object, so a new Patrol was filed with Car.
+- Behaviour settings… and Global settings… read a hand-written script's description when a blank
+  line sits between `extends` and its `##` line, the way Godot's own script template writes it.
+- Properties and actions… reads a property written `@export var enabled := true` as `bool` and
+  `true`, not `Variant` and `"true"`; the Inspector Designer's card for `@export var starting_coins := 0`
+  says "A whole number." instead of "A Variant value.".
+- A variable written `var run_time := 0.0` reads as a number: `run_time += delta` no longer grows the
+  amber "run_time is any - Add to wants a number" note on an autoload written by hand.
+- The Add behaviour list no longer offers a data pack that extends Resource as something to add to
+  an object: it sits on its own greyed shelf, and its hover says a sheet reads it from its file.
+- Insert new object opens with a free name filled in (Player, or Player2 when the project already
+  has a Player), so Insert is ready and the window no longer opens on a red line.
+- Sheet Type opens with its help strip on the kind the sheet is; a custom node opened under a strip
+  that called it an Event Sheet.
 
 ### Fixed: the plugin and the code it writes stop filling the Output and Debugger panels
 

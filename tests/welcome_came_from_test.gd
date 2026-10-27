@@ -41,4 +41,8 @@ static func run() -> bool:
 			"words = Event-sheet-editor words · theme = Classic sheet · Project bar = on · GDScript panel = off · tour = off"],
 		["the theme it names ships", ResourceLoader.exists(str(sheets["theme"])), true],
 		["the guide it opens ships in the Manual", EventSheetDocLibrary.has_page(str(sheets["guide"])), true],
+		["a project with no showcase scene is not offered the showcase door",
+			EventSheetWelcomeWindow.offers_door("Open the playable showcase scene", false), false],
+		["...but still every other door", EventSheetWelcomeWindow.offers_door("Take the 2-minute tour", false), true],
+		["...and a project holding one is offered it", EventSheetWelcomeWindow.offers_door("Open the playable showcase scene", true), true],
 	])

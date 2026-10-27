@@ -42,6 +42,8 @@ func _build_template_menu_items() -> void:
 	# same moment they discover behaviours - without a wizard slowing every creation down.
 	var section: String = ""
 	for starter: Dictionary in MENU_STARTERS:
+		if not is_offered(starter):
+			continue
 		if str(starter["section"]) != section:
 			section = str(starter["section"])
 			_template_menu.add_separator(section)
@@ -57,6 +59,16 @@ func _build_template_menu_items() -> void:
 		_template_menu.add_separator("Project templates")
 		for index in _project_template_paths.size():
 			_template_menu.add_item(_project_template_paths[index].get_file().get_basename().capitalize(), 100 + index)
+
+
+## Whether a starter is offered in this project. A starter whose rows are a pack's words lists that
+## pack's script under `needs`; a project the plugin was installed into without the packs folder has
+## none of them, and the sheet it made there read every one of those rows as an empty template.
+static func is_offered(starter: Dictionary) -> bool:
+	for path: Variant in starter.get("needs", []):
+		if not ResourceLoader.exists(str(path)):
+			return false
+	return true
 
 
 ## Every game starter the New-Sheet menu offers, in its order: the menu reads `label` under its
@@ -79,11 +91,13 @@ const MENU_STARTERS: Array[Dictionary] = [
 	{"id": 31, "label": "Game Options", "section": "Scripts on a node", "shelf": "UI and menus", "kind": "Menu",
 		"pitch": "The accessibility screen: remapping, effect strength, no flashing, text size and aim help."},
 	{"id": 32, "label": "Level Stats Screen", "section": "Scripts on a node", "shelf": "UI and menus", "kind": "Menu",
-		"pitch": "The end-of-level tally: kills, secrets and time."},
+		"pitch": "The end-of-level tally: kills, secrets and time.",
+		"needs": ["res://eventsheet_addons/hud_kit/hud_kit_behavior.gd"]},
 	{"id": 33, "label": "Keycard Door (3D)", "section": "Scripts on a node", "shelf": "3D", "kind": "Doors",
 		"pitch": "A door that opens for the key it names."},
 	{"id": 34, "label": "Skill Tree Screen", "section": "Scripts on a node", "shelf": "UI and menus", "kind": "Menu",
-		"pitch": "The picture of a skill tree: a button per skill, the points left and what is granted."},
+		"pitch": "The picture of a skill tree: a button per skill, the points left and what is granted.",
+		"needs": ["res://eventsheet_addons/upgrades/upgrades_addon.gd", "res://eventsheet_addons/hud_kit/hud_kit_behavior.gd"]},
 	{"id": 8, "label": "Behavior Component (signal-driven)", "section": "Behaviours - attach under a node",
 		"shelf": "Behaviours", "kind": "Behaviour",
 		"pitch": "One behavior you attach to any node: signals in, actions out, nothing else to set up."},
