@@ -6,6 +6,23 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Fixed: a big sheet no longer freezes the editor a few seconds after it opens
+
+- A function's hover card names the files that call it, an answer the editor counts in the
+  background. When that count finished, every row of the open sheet was built again to put it in:
+  on a 1,443-row sheet (the platformer pathfinding pack) the editor froze for 11-13 s a few seconds
+  after the file had opened, with nobody touching it. The cards are now written again in place
+  (3.5 ms for 200 functions); the rows are built again only when a band about a scene was laid out
+  while the scenes were still being counted.
+
+### Fixed: building a behaviour pack is up to fifteen times faster
+
+- Publishing a pack (the bundled pack builders and Export Addon) turns each function body into rows
+  only where the file still compiles byte for byte to what it did. That check compiled the whole
+  sheet twice for every function. It now compiles it once and tries the bodies in halves, so the
+  bodies that all pass cost one compile together. The platformer pathfinding pack builds in 18 s
+  instead of 4 min 30 s, save_system in 6 s instead of 52 s, and rebuilding every pack takes about
+  4 minutes instead of 20. Every pack still comes out byte for byte as before.
 ### Fixed: node, scene and resource variables read as the Inspector lists them
 
 - In the default look and Editor Native, a variable holding a node, a scene, a resource or a typed
