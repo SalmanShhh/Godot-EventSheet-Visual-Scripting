@@ -36,10 +36,10 @@ static func run() -> bool:
 	var rows: Array = _rows(sheet)
 
 	# ── The declaration rows, at the top of the event that owns them ──
-	ok = _check("a worked-out number declares with the number's own starting value",
-		_reading(rows, "dealt"), "number | = 0") and ok
+	ok = _check("a worked-out number declares with the number's own starting value, its type as written",
+		_reading(rows, "dealt"), "float | = 0") and ok
 	ok = _check("a worked-out text declares empty",
-		_reading(rows, "tag"), "text | = \"\"") and ok
+		_reading(rows, "tag"), "String | = \"\"") and ok
 	ok = _check("a value that is already a value rides on the declaration",
 		_reading(rows, "hits"), "number | = 3") and ok
 	ok = _check("and so does a piece of text",
@@ -73,9 +73,9 @@ static func _authored_rows() -> bool:
 	sheet.events.append(event_row)
 	var rows: Array = _rows(sheet, false)
 	ok = _check("an authored local reads as the same declaration row",
-		_reading(rows, "spare"), "number | = 2") and ok
+		_reading(rows, "spare"), "int | = 2") and ok
 	ok = _check("an authored local whose value is worked out declares empty-handed",
-		_reading(rows, "total"), "number | = 0") and ok
+		_reading(rows, "total"), "float | = 0") and ok
 	ok = _check("the declaration row is owned by its event",
 		_row_for(rows, "total").get("owned", false), true) and ok
 	ok = _check("and its spans point at that one action",
