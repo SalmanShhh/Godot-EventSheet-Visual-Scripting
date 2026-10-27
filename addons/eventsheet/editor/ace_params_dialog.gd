@@ -103,6 +103,9 @@ var _add_another_button: Button = null
 
 # Sheet-context source for live expression validation (set by the dock; returns the active sheet).
 var _lint_context_provider: Callable = Callable()
+## The locals and parameters the sheet's lines can use, read once per window (see _scope_names_for).
+var _scope_names_sheet: EventSheetResource = null
+var _scope_names: PackedStringArray = PackedStringArray()
 
 # The node search behind "click to choose" and the Expressions panel beside the form are
 # self-contained subsystems in their own files (each owns its widgets + state) to keep this file
@@ -307,6 +310,7 @@ func open_with_values(definition: ACEDefinition, context: Dictionary, initial_va
 		return
 	_definition = definition
 	_context = context.duplicate(true)
+	_scope_names_sheet = null
 	_variable_names = _resolve_variable_names()
 	_read_variable_context()
 	# Fresh add (no existing params, not a re-edit) prefills from session memory of
@@ -3110,7 +3114,8 @@ func _validate_expression_field(edit: Control) -> void:
 	if not _lint_context_provider.is_valid():
 		return
 	var sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
-	var lint_result: Dictionary = EventSheetGDScriptLint.lint_expression(str(edit.get("text")), sheet)
+	var lint_result: Dictionary = EventSheetGDScriptLint.lint_expression(str(edit.get("text")), sheet,
+		_scope_names_for(sheet))
 	var key: String = _key_of_field(edit)
 	var param: Dictionary = _param_dict(key)
 	if edit.has_meta(FOREIGN_READING_META):
@@ -3504,6 +3509,15 @@ func _extract_value(field: Control) -> Variant:
 	return ""
 
 
+## The locals and parameters a line of `sheet` can use besides its members, read once per sheet per
+## window: every open reads them again.
+func _scope_names_for(sheet: EventSheetResource) -> PackedStringArray:
+	if sheet != _scope_names_sheet:
+		_scope_names_sheet = sheet
+		_scope_names = EventSheetGDScriptLint.scope_names_of(sheet)
+	return _scope_names
+
+
 ## First expression field whose text fails the compile-check (null = all valid). The
 ## commit guardrail: invalid GDScript never reaches the sheet.
 func _first_invalid_expression() -> Control:
@@ -3513,7 +3527,8 @@ func _first_invalid_expression() -> Control:
 	for key: Variant in _fields.keys():
 		var field: Control = _fields[key]
 		if field is CodeEdit and not _holds_foreign_reading(field) \
-				and not bool(EventSheetGDScriptLint.lint_expression(str(field.get("text")), sheet).get("ok", true)):
+				and not bool(EventSheetGDScriptLint.lint_expression(str(field.get("text")), sheet,
+					_scope_names_for(sheet)).get("ok", true)):
 			return field
 	return null
 

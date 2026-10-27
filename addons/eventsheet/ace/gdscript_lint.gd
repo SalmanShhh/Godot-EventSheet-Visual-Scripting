@@ -27,11 +27,84 @@ static func lint(code: String, in_flow: bool, sheet: EventSheetResource) -> Dict
 
 
 ## Validates a ƒx field as a plain GDScript expression against the sheet context (sheet
-## variables, host members, the behavior `host` accessor). Empty text is valid.
-static func lint_expression(expression: String, sheet: EventSheetResource) -> Dictionary:
+## variables, host members, the behavior `host` accessor). Empty text is valid. `scope_names` are the
+## names a line inside a body can use besides the members - its locals, its function's parameters,
+## the values its trigger hands it (`delta`) - declared in front of the check, so a line read out of a
+## hand-written function compiles here exactly as it does in the file.
+static func lint_expression(expression: String, sheet: EventSheetResource,
+		scope_names: PackedStringArray = PackedStringArray()) -> Dictionary:
 	if expression.strip_edges().is_empty():
 		return {"ok": true, "error": ""}
-	return lint("var __expression_check__ = (%s)" % expression.strip_edges(), true, sheet)
+	var declared: PackedStringArray = PackedStringArray()
+	for scope_name: String in scope_names:
+		if scope_name.is_valid_identifier():
+			declared.append("var %s = null" % scope_name)
+	declared.append("var __expression_check__ = (%s)" % expression.strip_edges())
+	return lint("
+".join(declared), true, sheet)
+
+
+## Every name a line inside one of this sheet's bodies can use besides the members, sorted: the locals
+## an event declares (a `var` line, its local list), a loop's item and counter, the values a trigger
+## hands its handler, and each function's parameters and locals. Read across the whole sheet, the
+## same reach the sheet's own variable notes give these names.
+static func scope_names_of(sheet: EventSheetResource) -> PackedStringArray:
+	var names: Dictionary = {}
+	if sheet != null:
+		_collect_scope_names(sheet.events, names, {})
+		_collect_scope_names(sheet.functions, names, {})
+	var sorted: PackedStringArray = PackedStringArray(names.keys())
+	sorted.sort()
+	return sorted
+
+
+## One level of scope_names_of's walk; `walked` keeps a resource met twice from being walked twice.
+static func _collect_scope_names(entries: Variant, names: Dictionary, walked: Dictionary) -> void:
+	if not (entries is Array):
+		return
+	for entry: Variant in entries:
+		if not (entry is Resource) or walked.has(entry):
+			continue
+		walked[entry] = true
+		if entry is EventRow:
+			var event_row: EventRow = entry as EventRow
+			for action: Resource in event_row.actions:
+				if action is ACEAction and str((action as ACEAction).ace_id).begins_with("SetLocal"):
+					var ace: ACEAction = action as ACEAction
+					var action_params: Dictionary = ace.params if not ace.params.is_empty() else ace.parameters
+					_add_scope_name(str(action_params.get("name", "")), names)
+			for local: LocalVariable in event_row.local_variables:
+				if local != null:
+					_add_scope_name(local.name, names)
+			for filter: PickFilter in event_row.pick_filters:
+				if filter != null:
+					_add_scope_name(filter.iterator_name, names)
+					_add_scope_name(filter.index_name, names)
+			for parameter: String in event_row.trigger_args.split(","):
+				_add_scope_name(parameter, names)
+			if not event_row.trigger_id.is_empty():
+				for parameter: String in str(TriggerResolver.resolve_trigger(event_row).get("args", "")).split(","):
+					_add_scope_name(parameter, names)
+			_collect_scope_names(event_row.sub_events, names, walked)
+			continue
+		if entry is EventFunction:
+			var function: EventFunction = entry as EventFunction
+			for param: ACEParam in function.params:
+				if param != null:
+					_add_scope_name(param.id, names)
+			for parameter: String in function.parameters:
+				_add_scope_name(parameter, names)
+			for local_name: Variant in function.local_variables.keys():
+				_add_scope_name(str(local_name), names)
+		for key: String in ["events", "rows"]:
+			_collect_scope_names((entry as Resource).get(key), names, walked)
+
+
+## Adds the name a parameter or local spelling declares: `body: Node2D = null` declares `body`.
+static func _add_scope_name(spelling: String, names: Dictionary) -> void:
+	var scope_name: String = spelling.get_slice("=", 0).get_slice(":", 0).strip_edges()
+	if scope_name.is_valid_identifier():
+		names[scope_name] = true
 
 
 ## A purely STRUCTURAL GDScript syntax error in `code` - unbalanced ()/[]/{}, a mismatched bracket, or an

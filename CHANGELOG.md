@@ -21,6 +21,10 @@
 
 ### Fixed: your own scripts, opened as sheets, read the way the boards draw them
 
+- The parameters window opened on a line of your own function no longer refuses it: a local the
+  function declares (`direction`), the value its tick hands it (`delta`), a loop's item and a
+  parameter are names a field can use, so `direction * speed` is not "not a variable of Player" and
+  Done is not shut on a line nobody touched. A typo is still caught.
 - A `@tool` script says "Runs in the editor" as a violet chip on its head bar, beside what it
   extends, with the `@tool` line in its hover; the second head row that said "runs in the editor
   too" under the bar is gone.
