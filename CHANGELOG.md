@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Fixed: your own scripts, opened as sheets, read the way the boards draw them
+
+- A script with an inner `class` no longer says its own members are "not a variable": the class's
+  members were read as the file's for every row built after the class, so `_start_x` and `_dir` in
+  an `enemy.gd` with a `class Patrol` were each flagged under the events that set them. A local
+  declared in the function (`var direction := ...`) and a function's own parameter (`body`) are no
+  longer flagged either; a name the file really does not declare still is.
+
 ### Fixed: the plugin and the code it writes stop filling the Output and Debugger panels
 
 - Quitting the editor no longer prints "Parent node is busy adding/removing children": the bridge

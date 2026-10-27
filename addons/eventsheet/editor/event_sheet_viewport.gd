@@ -3049,6 +3049,14 @@ func _build_inner_class_row(inner: InnerClassRow, indent: int) -> EventRowData:
 	var body_read_only: bool = inner.body.read_only
 	inner.body.read_only = true
 	_sheet = inner.body
+	# The builder derives "the sheet's variables" and "the sheet's findings" once per sweep. Asked
+	# while the body stands in for the sheet, they would answer for the class - and stay cached for
+	# the file's own rows built after it, so every member the file declares read as "not a variable".
+	# The body gets answers of its own, and the file's are put back untouched.
+	var outer_catalog: Dictionary = _row_builder._variable_owner_catalog
+	var outer_findings: Dictionary = _row_builder._sheet_findings_cache
+	_row_builder._variable_owner_catalog = {}
+	_row_builder._sheet_findings_cache = {}
 	var members: Array[EventRowData] = []
 	for entry: Variant in inner.body.events:
 		if entry is FunctionAnchorRow:
@@ -3064,6 +3072,8 @@ func _build_inner_class_row(inner: InnerClassRow, indent: int) -> EventRowData:
 	for member: EventRowData in members:
 		_read_inner_class_member(member, indent + 1)
 	_sheet = outer_sheet
+	_row_builder._variable_owner_catalog = outer_catalog
+	_row_builder._sheet_findings_cache = outer_findings
 	inner.body.read_only = body_read_only
 	_prefix_scene_row_uids(members, row_data.row_uid + "/")
 	row_data.children = members

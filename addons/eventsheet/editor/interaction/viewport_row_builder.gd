@@ -11440,7 +11440,10 @@ func _build_variable_note_rows(event_row: EventRow, event_uid: String, indent: i
 	if entries.is_empty():
 		return rows
 	var owner: String = EventSheetVariableOwners.owner_of_sheet(_viewport._sheet)
-	var seen: Dictionary = {}
+	# A local the event declares and a function's parameter are names the line can use too: they are
+	# not members, so the catalog does not list them, but "direction is not a variable" over the
+	# `var direction := ...` line right above it is a finding the file does not earn.
+	var seen: Dictionary = _scoped_names()
 	for lane: String in ["condition", "action"]:
 		var lane_rows: Array = event_row.conditions if lane == "condition" else event_row.actions
 		for index: int in range(lane_rows.size()):
@@ -19798,6 +19801,41 @@ func _variable_owner_entries() -> Array[Dictionary]:
 		_variable_owner_catalog["entries"] = EventSheetVariableOwners.own_entries(
 			_viewport._sheet if _viewport != null else null)
 	return _variable_owner_catalog["entries"]
+
+
+## Every local the sheet declares and every parameter its functions take, as a set - the names a row
+## may use that are not members. Derived once per sweep beside the catalog it completes.
+func _scoped_names() -> Dictionary:
+	if not _variable_owner_catalog.has("scoped"):
+		var names: Dictionary = {}
+		var sheet: EventSheetResource = _viewport._sheet if _viewport != null else null
+		if sheet != null:
+			for entry: Dictionary in EventSheetVariableOwners.local_entries(sheet):
+				names[str(entry.get("name", ""))] = true
+			_collect_declared_local_names(sheet.events, names)
+			for function_entry: Variant in sheet.functions:
+				if function_entry is EventFunction:
+					for param: ACEParam in (function_entry as EventFunction).params:
+						if param != null:
+							names[param.id] = true
+					_collect_declared_local_names((function_entry as EventFunction).events, names)
+		_variable_owner_catalog["scoped"] = names
+	return (_variable_owner_catalog["scoped"] as Dictionary).duplicate()
+
+
+## The names a `var name := ...` line inside a body declares: an opened script's locals are action
+## rows (Set local variable), not entries in an event's local list.
+func _collect_declared_local_names(rows: Array, into: Dictionary) -> void:
+	for entry: Variant in rows:
+		if entry is EventGroup:
+			_collect_declared_local_names(EventSheetGroupFacts.children(entry as EventGroup), into)
+		elif entry is EventRow:
+			for action: Variant in (entry as EventRow).actions:
+				if action is ACEAction and str((action as ACEAction).ace_id).begins_with("SetLocal"):
+					var local_name: String = str(_ace_params_of(action as Resource).get("name", "")).strip_edges()
+					if not local_name.is_empty():
+						into[local_name] = true
+			_collect_declared_local_names((entry as EventRow).sub_events, into)
 
 
 ## The object column a variable row belongs in: an instance variable is the sheet's own object's,
