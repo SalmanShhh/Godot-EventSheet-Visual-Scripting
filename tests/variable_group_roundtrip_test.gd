@@ -156,15 +156,17 @@ static func run() -> bool:
 	all_passed = _check("an explicit tooltip wins over the description field",
 		SheetCompiler._emit_tree_variable_line(described),
 		"## Shield points.\n@export var shield: int = 50") and all_passed
-	# A described but NON-exported var stays a plain private var (Godot only surfaces exported docs).
+	# A described NON-exported var keeps its description as its `##` lines too: it reads in the script
+	# and comes back on its row, though the Inspector never shows a private var.
 	var priv: LocalVariable = LocalVariable.new()
 	priv.name = "_ticks"
 	priv.type_name = "int"
 	priv.default_value = 0
 	priv.exported = false
 	priv.description = "internal counter"
-	all_passed = _check("a described private var emits no doc comment",
-		SheetCompiler._emit_tree_variable_line(priv), "var _ticks: int = 0") and all_passed
+	all_passed = _check("a described private var writes its description as its ## line",
+		SheetCompiler._emit_tree_variable_line(priv), "## internal counter
+var _ticks: int = 0") and all_passed
 	# Round-trip: the description-emitted `## ` reopens as the variable's tooltip (byte-identical re-emit,
 	# so the lossless .gd contract holds). Pin the value, never a `bool and String` chain (it crashes).
 	var desc_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n## Absorbs damage before health.\n@export var shield: int = 50\n")

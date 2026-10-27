@@ -53,6 +53,9 @@ const SWEPT_STATICS: Array[String] = [
 	# than inheriting it, so a poisoned value cannot reach an emission.
 	"_tool_sheet_flag",
 	"_trouble_reporter_pending",
+	# The comment rows an event carries (written above it) and whether this file writes them there: set
+	# per compile from the sheet's rows and the path taken, swept with the rest.
+	"_row_comments_outer", "_row_comments_inner", "_comments_in_place",
 	# What the sheet's declarations start each variable on, for the Reset rows, and the names a Reset
 	# row asked for that the sheet does not declare. Both are set from the sheet at the start of every
 	# compile (and emptied by the text probes), so a poisoned value cannot reach an emission.
@@ -77,7 +80,9 @@ const PURE_HELPERS: Array[String] = [
 	# generated function: reads of the variables handed in, nothing kept.
 	"inspector_conditions", "inspector_condition_controllers", "inspector_conditions_function",
 	# The lines one class written inside a file writes: its body through echo(), nothing kept.
-	"inner_class_lines"
+	"inner_class_lines",
+	# The comment written after an action's code: a read of the action handed in, nothing kept.
+	"action_note_suffix"
 ]
 
 ## What a poisoned static is set to, by type. Any value that is not the default will do - what

@@ -4078,6 +4078,15 @@ static func friendly_template_line(event_function: EventFunction) -> String:
 	return template
 
 
+## `metadata` with the BBCode-lite segments of `shown` added when its words are marked up ([b], [i],
+## [color=...]), the way a comment row draws them: the segments shape the pixels, the span keeps the
+## raw text. Unchanged when the line carries no markup.
+static func _with_comment_markup(metadata: Dictionary, shown: String, color: Color) -> Dictionary:
+	if EventSheetBBCodeLite.has_markup(shown):
+		metadata["bbcode_segments"] = EventSheetBBCodeLite.parse(shown, color)
+	return metadata
+
+
 ## True when every non-blank line of a code block is a comment (# or ##). Such a block reads as a note,
 ## so it renders as a comment (no code badge, leading # dropped) instead of a GDScript block.
 static func is_comment_only_block(code_lines: PackedStringArray) -> bool:
@@ -6642,7 +6651,8 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 			note_spans.append(_make_span(
 				shown if not shown.is_empty() else " ",
 				SemanticSpan.SpanType.COMMENT,
-				{"editable": false, "kind": "raw_code", "line_index": note_index, "text_color": comment_style.comment_text_color}
+				_with_comment_markup({"editable": false, "kind": "raw_code", "line_index": note_index,
+					"text_color": comment_style.comment_text_color}, shown, comment_style.comment_text_color)
 			))
 		row_data.spans = note_spans
 		return row_data
@@ -8520,6 +8530,10 @@ func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
 	row_data.disabled = not comment_row.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
 	row_data.breakpoint_enabled = bool(_viewport._breakpoint_rows.get(row_data.row_uid, false))
 	row_data.custom_color = comment_row.custom_color
+	# A named colour is the theme's (sheet only - it is never written to the code); a free colour the
+	# author picked under More colours wins over it.
+	if comment_row.custom_color.a <= 0.01 and not comment_row.color_tag.is_empty():
+		row_data.custom_color = event_style.comment_tag_color(comment_row.color_tag)
 	# Multiline comments render one span per text line (same per-line model as GDScript
 	# blocks); the row height follows line_count.
 	var comment_lines: PackedStringArray = comment_row.text.split("\n") if not comment_row.text.is_empty() else PackedStringArray(["Comment"])
@@ -14924,7 +14938,10 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 								"block_line": inline_line_index,
 								"line_index": action_line_index,
 								"text_color": _viewport._get_event_style().comment_text_color if inline_is_note else action_style_meta.get("text_color", _viewport._get_reading_style().primary_text_color),
-								"object_label": "" if inline_is_literal_part else (_inline_block_label(inline_is_note, inline_literal) if inline_line_index == 0 else "")
+								"object_label": "" if inline_is_literal_part else (_inline_block_label(inline_is_note, inline_literal) if inline_line_index == 0 else ""),
+								# A note marks its words up the way a comment row does ([b], [i]); code never does.
+								"bbcode_segments": EventSheetBBCodeLite.parse(inline_text, _viewport._get_event_style().comment_text_color)
+									if inline_is_note and EventSheetBBCodeLite.has_markup(inline_text) else []
 							}.merged(action_style_meta, true)
 						)
 					)
@@ -14975,7 +14992,9 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 							"text_color": _viewport._get_event_style().comment_text_color,
 							# Reading Mode: the note reads as an italic CAPTION - intent first, mechanics under
 							# it - and drops its # marker (the row is already visibly a comment). View state only.
-							"bbcode_segments": EventSheetBBCodeLite.parse("[i]%s[/i]" % action_comment_lines[comment_line_index], _viewport._get_event_style().comment_text_color) if _viewport.is_reading_mode() else []
+							"bbcode_segments": EventSheetBBCodeLite.parse("[i]%s[/i]" % action_comment_lines[comment_line_index], _viewport._get_event_style().comment_text_color) if _viewport.is_reading_mode()
+								else (EventSheetBBCodeLite.parse(action_comment_drawn, _viewport._get_event_style().comment_text_color)
+									if EventSheetBBCodeLite.has_markup(action_comment_drawn) else [])
 							}.merged(action_style_meta, false))
 						)
 					)
@@ -19848,6 +19867,9 @@ func grammar_action_declaration(action: ACEAction) -> Dictionary:
 	var split: PackedStringArray = EventSheetSentence.trailing_comment(str(params_dict.get("value", "")))
 	var value_text: String = split[0]
 	var value_note: String = split[1]
+	# A note the lift read off the end of the line rides on the action itself (its comment).
+	if value_note.is_empty():
+		value_note = action.comment.strip_edges()
 	# The sheet's own context, so a starting value that names a place ("the direction from Player
 	# to target") reads with the same object names every other row on this sheet uses.
 	var context: Dictionary = sentence_context()

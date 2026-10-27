@@ -64,6 +64,46 @@
   drift gates keep reading `eventsheet_addons/`. The library is derived from it by
   `tools/build_library.gd` (run by `build_sample_behaviors.gd` after every build), the pack audit
   prints `library drifted=N` and fails on drift, and `behaviour_library_test` asks the same question.
+### Added: comments are made and moved where they are needed
+
+- **Q with an action selected** puts the comment in that action list, right under the action - a `#`
+  line between two statements - instead of a new row under the event.
+- **Right-click on an action offers Add note** (it used to say Edit Note… and open "Row Comment"): the
+  words after the action, saved as the comment at the end of its own line. A condition no longer
+  offers a note at all; to explain an event, put a comment row above it.
+- **Alt+Up / Alt+Down** move a comment that sits among an event's actions one place up or down.
+- **A comment row dropped on an event's action column** joins that action list, between the actions
+  it is dropped between (a blue line shows where). Ctrl while dragging copies it.
+- **The Edit comment window shows named colours** - Default, Red, Orange, Yellow, Green, Blue, Purple
+  and Grey - each worked out from the theme's own comment colour, so a comment reads right in a dark
+  theme and a light one. The free picker stays under More colours. The box reads "Shows in the manual
+  (writes ##)". A comment's colour belongs to the sheet: it is never written to the `.gd`, so the code
+  stays plain and reopening the file shows the default colour.
+
+### Fixed: a comment is written where it sits on the sheet
+
+- A comment row between events, or inside a group, was written at the end of the file, with a blank
+  line before every line and its `##` turned into `#`. It is now written right above the event it sits
+  over, at that event's indent, inside the function the event lands in: several lines stay one block,
+  `##` stays `##`, a switched-off comment writes `# @off:`, and a comment inside a group sits under
+  the group's tag so it reopens in the group. Only a comment with no event below it still closes the
+  file, and it keeps its marker too.
+- Opening a script reads a comment written right above an `if` (or a loop) back as the comment row
+  above that event, so a file saved from the sheet reopens with its comments where they were, instead
+  of as an "Every tick" event holding the comment. A comment above a plain statement stays with that
+  statement, as before, and every file still saves byte for byte.
+- An action's note is now saved: it is written as the comment at the end of the action's own line
+  (`$JumpSound.play()  # short blip`), and a line written that way reopens as the action with its
+  note. A `#` inside a string is not a note, and a line whose code reads as no action stays as written.
+- A comment written after an `if` in your own code is kept exactly as written; a condition takes no
+  note of its own.
+- The `##` description above a variable that is not exported was left in a code block above it. It
+  is now the variable's description - every line of it - shown on its row and written back as its
+  `##` lines. An exported variable's description keeps every line too.
+- A comment inside a match case wrote `#` whatever it was and was dropped when switched off. It now
+  keeps `##` for a paragraph that shows in the manual and writes `# @off:` when it is off.
+- A code row that is nothing but comments showed `[b]` and `[i]` as tags; it now draws the words bold
+  or italic, the way a comment row does. The file's text is unchanged.
 
 ### Fixed: the plugin ships its `.uid` files
 

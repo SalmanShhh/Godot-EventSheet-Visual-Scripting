@@ -110,12 +110,33 @@ func on_add_comment_requested() -> void:
 		return
 	var comment: CommentRow = CommentRow.new()
 	comment.text = "Comment"
+	# With an action selected the comment goes into that action list, right under the action: a `#`
+	# line between two statements. Anywhere else it is a comment row under the selected row.
+	var under_action: Dictionary = selected_action_slot()
 	var changed: bool = _dock._perform_undoable_sheet_edit("Add Comment", func() -> bool:
-		_dock._ace_apply._insert_row_below_selection(comment)
+		if not under_action.is_empty():
+			(under_action["event"] as EventRow).actions.insert(int(under_action["index"]) + 1, comment)
+		else:
+			_dock._ace_apply._insert_row_below_selection(comment)
 		return true
 	)
 	if changed:
 		_dock._mark_dirty("Added comment.")
+
+
+## The action the selection is on, as {event, index} - the event whose action list holds it and its
+## place there - or {} when the selection is not on an action.
+func selected_action_slot() -> Dictionary:
+	var view: Variant = _dock._active_view()
+	if view == null:
+		return {}
+	var context: Dictionary = view.get_selected_context()
+	var metadata: Dictionary = context.get("span_metadata", {})
+	var event: EventRow = context.get("source_resource", null) as EventRow
+	var index: int = int(metadata.get("ace_index", -1))
+	if event == null or str(metadata.get("kind", "")) != "action" or index < 0 or index >= event.actions.size():
+		return {}
+	return {"event": event, "index": index}
 
 
 func on_add_group_requested() -> void:

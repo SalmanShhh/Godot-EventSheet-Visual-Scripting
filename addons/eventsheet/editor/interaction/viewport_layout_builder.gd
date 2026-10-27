@@ -401,8 +401,15 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				# as a sub-event of the target", not just "drop after".
 				var child_indent_x: float = EventSheetPalette.GUTTER_WIDTH + float((row_data.indent + 1) * _viewport.indent_width()) + EventSheetPalette.ROW_HORIZONTAL_PADDING
 				drag_rect = Rect2(child_indent_x, row_rect.end.y - 2.0, max(width - child_indent_x, 1.0), 3.0)
-			_:
-				drag_rect = Rect2(0.0, row_rect.position.y - 1.0, width, 2.0)
+			var other_mode:
+				if str(other_mode).begins_with(EventSheetViewport.ACTION_LIST_DROP_PREFIX):
+					# A comment joining the action list: the line sits between the actions it lands between.
+					drag_rect = _viewport._build_ace_drag_preview_rect(row_data, "action",
+						int(_viewport._drag_comment_action_slot.get("ace_index", -1)),
+						str(_viewport._drag_comment_action_slot.get("insert_mode", "append")),
+						condition_lane_rect, action_lane_rect)
+				else:
+					drag_rect = Rect2(0.0, row_rect.position.y - 1.0, width, 2.0)
 	var ace_drag_rect := Rect2()
 	if not _viewport._drag_ace_entries.is_empty() and _viewport._drag_ace_target_row_index == index:
 		ace_drag_rect = _viewport._build_ace_drag_preview_rect(

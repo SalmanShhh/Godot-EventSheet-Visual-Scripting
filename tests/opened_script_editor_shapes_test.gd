@@ -116,7 +116,7 @@ static func _test_shared_store() -> bool:
 		"x | Shared | table | _claims | = | empty | one for the whole editor | static var _claims: Dictionary = {}") and ok
 	ok = _check("a constant the file froze says so",
 		_first_containing(readings, "PATTERN_IDS"),
-		"x | Constant | list of text | PATTERN_IDS | = | [\"state_machine\", \"object_pool\", \"countdown\"] | frozen | const PATTERN_IDS: PackedStringArray = [\"state_machine\", \"object_pool\", \"countdown\"]") and ok
+		"x | Constant | list of text | PATTERN_IDS | = | [\"state_machine\", \"object_pool\", \"countdown\"] | frozen | The pattern ids the readings may claim. Frozen once shipped; add, never rename. | const PATTERN_IDS: PackedStringArray = [\"state_machine\", \"object_pool\", \"countdown\"]") and ok
 	ok = _check("the store is claimed", _claim_patterns(view), "shared_store") and ok
 	view.free()
 	# The three report levels, each its own act - and `printerr` stays the log line it always was.

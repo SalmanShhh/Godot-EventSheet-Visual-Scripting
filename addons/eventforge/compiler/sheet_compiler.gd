@@ -168,6 +168,9 @@ const OFF_ROW_MARKER: String = "# @off"
 ## The prefix each line of an ACTION that is switched off is written behind, in a sheet that is its
 ## own .gd: the action stays in the file as a comment and comes back as the same action, off. Frozen.
 const OFF_CELL_PREFIX: String = "# @off: "
+# What stands between an action's code and its note on the same line (action_note_suffix); the lift
+# reads a statement ending in it back as the action, with the words after it as its note.
+const ACTION_NOTE_MARKER: String = "  # "
 
 # Runtime-toggleable groups: event -> "__group_<snake>_active" guard (per-compile).
 static var _runtime_group_guards: Dictionary = {}
@@ -187,6 +190,17 @@ static var _row_group_path: Dictionary = {}
 # filled by _flatten_trigger_rows, written by _emit_event_body, read back by the lifter.
 static var _row_fences_before: Dictionary = {}
 static var _row_fences_after: Dictionary = {}
+# A comment row among a sheet's top-level or grouped rows is written right above the event it sits
+# over, at that event's indent, inside the function the event lands in. Each such EventRow maps to the
+# comment rows it carries: the OUTER ones (they sit outside the event's group, so they are written above
+# its `# @group:` tag) and the INNER ones (the event's own group holds them, so they are written under
+# the tag, which is what tells the lift which group they came from). Filled by _flatten_trigger_rows.
+static var _row_comments_outer: Dictionary = {}
+static var _row_comments_inner: Dictionary = {}
+# True while the file being written is a sheet that is its own .gd (the opened-file path, and the lift's
+# probes of it): only there is a comment row written above its event. A generated companion and every
+# pack keep writing theirs at the end of the file, so their bytes do not move. Per-compile.
+static var _comments_in_place: bool = false
 # True when the file being written is the sheet itself (a .gd opened as a sheet, or a Save As .gd):
 # then what is switched off stays in the file and never runs, because the file is the only copy of
 # it - a group that is off and cannot be switched keeps its rows behind a constant `false` guard, and
@@ -244,6 +258,9 @@ static func _reset_per_compile_state(sheet: EventSheetResource = null) -> void:
 	_row_group_path = {}
 	_row_fences_before = {}
 	_row_fences_after = {}
+	_row_comments_outer = {}
+	_row_comments_inner = {}
+	_comments_in_place = false
 	_keeps_off_rows = false
 	# What this sheet's names MEAN, for the removal guard: which of them hold a node across frames and
 	# which were minted by a spawn row in some other event. Gathered once here rather than per row,
@@ -766,8 +783,8 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		if row is RawCodeRow:
 			continue  # emitted above as a class-level GDScript block
 		if row is CommentRow:
-			# Top-level comments compile to real comment lines (emitted after the trigger
-			# sections - position is approximate, content is preserved).
+			# A generated companion (a .tres sheet's script, a pack) writes its top-level comments after
+			# the trigger sections, as it always has; a sheet that is its own .gd takes the other path.
 			for comment_line: String in _comment_text_lines(row as CommentRow):
 				deferred_rows.append("# %s" % comment_line)
 			continue
@@ -807,8 +824,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	}
 	var group_comment_lines: PackedStringArray = PackedStringArray()
 	_emit_grouped_trigger_functions(top_level_events, lines, source_map, result, connect_context, group_comment_lines)
-	for group_comment_line: String in group_comment_lines:
-		deferred_rows.append("# %s" % group_comment_line)
+	deferred_rows.append_array(group_comment_lines)
 
 	if not _throttle_process_emitted and (not _live_values_payload.is_empty() or _emit_event_trace_flag):
 		lines.append("")
@@ -975,7 +991,8 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 
 	for deferred: String in deferred_rows:
 		lines.append("")
-		lines.append(deferred)
+		lines.append_array(deferred.split("
+"))
 
 	_insert_missing_member_declarations(lines, sheet, result.get("source_map", []))
 	_insert_provider_member_declarations(lines, result)
@@ -1045,6 +1062,7 @@ static func _write_output_if_changed(path: String, output: String) -> bool:
 ## afterwards append as standard trigger functions at the end. Disabled blocks still emit -
 ## external mode is lossless, never a filter.
 static func _compile_external(sheet: EventSheetResource, result: Dictionary, output_path: String) -> Dictionary:
+	_comments_in_place = true
 	# The working state was cleared by the caller. External mode is lossless, so it carries no
 	# synthesized debug members either - the runtime-error reporter and live values ride
 	# sheet-native compiles only, and their flags stay off for this whole path.
@@ -1064,6 +1082,8 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	# Lifted MID-FILE lifecycle handlers (EventAnchorRow): the events they own emit as one function
 	# at the anchor's slot below, so the trailing grouped section must not claim them a second time.
 	var anchored_event_uids: Dictionary = {}
+	# The comment rows that sit right above an anchored handler's events: written in place with them.
+	var anchored_comments: Dictionary = {}
 	# The opened file's own variables (its top-level rows) and the Show if / Lock unless they carry. The
 	# generated _validate_property lands straight after the last of them, which is where a sheet-written
 	# file has it, so a file that came from a sheet reopens and saves byte for byte.
@@ -1077,6 +1097,8 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 			external_variables.append(entry)
 		elif entry is RawCodeRow:
 			external_raw_rows.append(entry)
+	for anchored_comment: Variant in _comments_above_anchored_events(sheet.events, anchored_event_uids):
+		anchored_comments[anchored_comment] = true
 	var external_conditions: Array = _conditions_to_write(inspector_conditions({}, external_variables, result["warnings"]),
 		_sheet_writes_function(external_raw_rows, sheet.functions, "_validate_property"), result["warnings"])
 	var external_controllers: Dictionary = inspector_condition_controllers(external_conditions)
@@ -1132,8 +1154,10 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 			pass  # emitted in place by its EventAnchorRow, just above it in this array
 		elif entry is EventRow or entry is EventGroup:
 			added_event_rows.append(entry)
+		elif entry is CommentRow and anchored_comments.has(entry):
+			pass  # emitted in place by its EventAnchorRow, above the event it sits over
 		elif entry is CommentRow:
-			deferred_comment_lines_external.append_array(_comment_text_lines(entry as CommentRow))
+			added_event_rows.append(entry)
 		elif entry is EnumRow:
 			var external_enum_lines: PackedStringArray = _emit_enum_lines(entry as EnumRow)
 			if not external_enum_lines.is_empty():
@@ -1223,10 +1247,11 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 			lines.append("")
 		_emit_function_block(event_function, sheet, lines, source_map, result)
 
-	# Top-level comments emit last, one blank before each line (main path's deferred format).
-	for comment_line: String in deferred_comment_lines_external:
+	# Comments with no event after them emit last, one blank above each row (the main path's format).
+	for deferred_comment: String in deferred_comment_lines_external:
 		lines.append("")
-		lines.append("# %s" % comment_line)
+		lines.append_array(deferred_comment.split("
+"))
 	# Blank lines the opened file ended with, under its last function. They are layout, so the lift
 	# counts them rather than keeping a row for them; absent, the file ends on its final newline.
 	for _trailing_blank: int in range(maxi(int(sheet.get_meta(TRAILING_BLANKS_META, 0)), 0)):
@@ -1310,11 +1335,31 @@ static func _collect_anchored_events(sheet: EventSheetResource, anchor: EventAnc
 	var wanted: Dictionary = {}
 	for anchored_uid: String in anchor.event_uids:
 		wanted[anchored_uid] = true
+	# A comment row right above one of the handler's events is written with it, in place, so the
+	# events and the comments between them come back in the order they were read.
+	var comments: Dictionary = {}
+	for anchored_comment: Variant in _comments_above_anchored_events(sheet.events, wanted):
+		comments[anchored_comment] = true
 	var events: Array = []
 	for entry: Variant in sheet.events:
-		if entry is EventRow and wanted.has((entry as EventRow).event_uid):
+		if (entry is EventRow and wanted.has((entry as EventRow).event_uid)) or comments.has(entry):
 			events.append(entry)
 	return events
+
+
+## The comment rows of `rows` that sit right above an event whose uid is in `uids` (a run of them,
+## with nothing else between the run and the event).
+static func _comments_above_anchored_events(rows: Array, uids: Dictionary) -> Array:
+	var found: Array = []
+	var waiting: Array = []
+	for entry: Variant in rows:
+		if entry is CommentRow:
+			waiting.append(entry)
+			continue
+		if entry is EventRow and uids.has((entry as EventRow).event_uid):
+			found.append_array(waiting)
+		waiting.clear()
+	return found
 
 
 ## One trigger handler emitted at an EventAnchorRow's slot: the header (the source's own spelling
@@ -1324,18 +1369,25 @@ static func _collect_anchored_events(sheet: EventSheetResource, anchor: EventAnc
 ## there), no live-values plumbing (an opened hand-written file is not a streaming sheet). Anything
 ## outside that narrow shape simply fails the lifter's byte gate and stays a raw block.
 static func _emit_anchored_trigger_function(events: Array, lines: PackedStringArray, source_map: Array, result: Dictionary) -> void:
-	if events.is_empty() or not (events[0] is EventRow):
+	# The handler's first EventRow leads it (a comment row may sit above it); the comment rows are
+	# written in place by the body walk, and only the events reach the readers of a whole handler.
+	var event_rows: Array = []
+	for entry: Variant in events:
+		if entry is EventRow:
+			event_rows.append(entry)
+	if event_rows.is_empty():
 		return
-	var signature: Dictionary = TriggerResolver.resolve_trigger(events[0] as EventRow)
+	var lead: EventRow = event_rows[0] as EventRow
+	var signature: Dictionary = TriggerResolver.resolve_trigger(lead)
 	var function_name: String = str(signature.get("function_name", ""))
 	if function_name.is_empty():
-		(result["warnings"] as Array[String]).append("Unsupported anchored trigger %s" % (events[0] as EventRow).trigger_id)
+		(result["warnings"] as Array[String]).append("Unsupported anchored trigger %s" % lead.trigger_id)
 		return
-	var source_header: String = str((events[0] as EventRow).get_meta("__source_trigger_header", ""))
+	var source_header: String = str(lead.get_meta("__source_trigger_header", ""))
 	var args: String = str(signature.get("args", ""))
 	var returns: String = str(signature.get("return_type", "void"))
 	if not source_header.is_empty():
-		lines.append(_source_trigger_header(events[0] as EventRow, source_header))
+		lines.append(_source_trigger_header(lead, source_header))
 	elif args.is_empty():
 		lines.append("func %s() -> %s:" % [function_name, returns])
 	else:
@@ -1344,22 +1396,22 @@ static func _emit_anchored_trigger_function(events: Array, lines: PackedStringAr
 	# Kept verbatim from the source on this path, which is what lets an opened handler come back
 	# byte-for-byte with the author's own spelling of it.
 	var handler_body_start: int = lines.size()
-	for guard_line: String in CollisionFilters.guard_lines(events[0] as EventRow, args):
+	for guard_line: String in CollisionFilters.guard_lines(lead, args):
 		lines.append(guard_line)
 	# And the retirement's own first line, for the same reason: `tree_exiting` is raised every time
 	# the node leaves the tree - a reparent, a pool handing it out again - and only sometimes because
 	# it is being retired. The guard is what makes the handler mean what the row says.
-	for retire_line: String in TriggerResolver.retire_guard_lines(events[0] as EventRow,
-			TriggerResolver.effective_trigger_id(events[0] as EventRow),
+	for retire_line: String in TriggerResolver.retire_guard_lines(lead,
+			TriggerResolver.effective_trigger_id(lead),
 			str(signature.get("source_path", ""))):
 		lines.append(retire_line)
-	if _emit_notification_match(events, lines, source_map, result["warnings"]):
+	if _emit_notification_match(event_rows, lines, source_map, result["warnings"]):
 		return
-	if _emit_menu_match(events, lines, source_map, result["warnings"]):
+	if _emit_menu_match(event_rows, lines, source_map, result["warnings"]):
 		return
-	if _emit_mode_change_body(events, lines, source_map, result["warnings"]):
+	if _emit_mode_change_body(event_rows, lines, source_map, result["warnings"]):
 		return
-	if _emit_state_change_body(events, lines, source_map, result["warnings"]):
+	if _emit_state_change_body(event_rows, lines, source_map, result["warnings"]):
 		return
 	_emit_event_body(events, lines, source_map, 1, result["warnings"])
 	if not _has_statement(lines, handler_body_start):
@@ -1551,6 +1603,7 @@ static func emit_anchored_trigger_text(events: Array, group_guards: Dictionary =
 	_tool_sheet_flag = tool_sheet
 	# Only the lift of an opened .gd asks for this text, and that file keeps its rows that are off.
 	_keeps_off_rows = true
+	_comments_in_place = true
 	_runtime_group_guards = group_guards
 	var lines: PackedStringArray = PackedStringArray()
 	var discarded_result: Dictionary = {"warnings": [], "errors": []}
@@ -1964,9 +2017,11 @@ static func _joined_group_guard(runtime_guard: String, runs_on_guard: String,
 
 
 ## Flattens trigger-bearing rows for emission: EventRows kept, ENABLED groups recursed (a disabled
-## group is dropped but leaves a breadcrumb comment - group-disable semantics), and group comments
-## collected as deferred comment lines.
-static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comment_lines: PackedStringArray, runtime_guard: String = "", group_slug: String = "", runs_on_guard: String = "", runs_in_guard: String = "") -> void:
+## group is dropped but leaves a breadcrumb comment - group-disable semantics), and comment rows
+## carried by the event below them (_row_comments_outer / _inner). `comments_waiting` holds the comment
+## rows not yet carried, each as [row, slug of the group it sits in], and is shared with the nested
+## calls, so a comment above a group rides on the group's first event.
+static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comment_lines: PackedStringArray, runtime_guard: String = "", group_slug: String = "", runs_on_guard: String = "", runs_in_guard: String = "", comments_waiting: Array = []) -> void:
 	# Inside a group, a region fence rides on its neighbouring event: an opener on the next one, a
 	# closer on the one before. Fences at the top level keep their own class-level slot.
 	var first_here: int = into_events.size()
@@ -1982,6 +2037,18 @@ static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comm
 			for opener: Variant in openers_waiting:
 				_ride_fence(_row_fences_before, row, opener)
 			openers_waiting.clear()
+		if row is CommentRow and not _comments_in_place:
+			for legacy_line: String in _comment_text_lines(row as CommentRow):
+				deferred_comment_lines.append("# %s" % legacy_line)
+			continue
+		if row is CommentRow:
+			comments_waiting.append([row, group_slug])
+			continue
+		if row is EventRow and not comments_waiting.is_empty() and _carries_comments(row as EventRow):
+			for waiting: Variant in comments_waiting:
+				var own_group: bool = not group_slug.is_empty() and str((waiting as Array)[1]) == group_slug
+				_ride_fence(_row_comments_inner if own_group else _row_comments_outer, row, (waiting as Array)[0])
+			comments_waiting.clear()
 		if row is EventRow:
 			# The three group guards a row can inherit, as the one and-chain the emitter wraps its
 			# conditions in: the runtime switch first (a group that is off runs nothing at all), then
@@ -2031,7 +2098,7 @@ static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comm
 				var child_runs_in: String = EventGroup.runs_in_guard(group.runs_in)
 				if child_runs_in.is_empty():
 					child_runs_in = runs_in_guard
-				_flatten_trigger_rows(group.child_rows(), into_events, deferred_comment_lines, child_guard, _group_slugs.get(group, ""), child_runs_on, child_runs_in)
+				_flatten_trigger_rows(group.child_rows(), into_events, deferred_comment_lines, child_guard, _group_slugs.get(group, ""), child_runs_on, child_runs_in, comments_waiting)
 			else:
 				# Don't silently drop a disabled group: leave a breadcrumb so the omission is visible
 				# in the generated code. Disabling a group intentionally excludes its events (the
@@ -2041,9 +2108,7 @@ static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comm
 					var disabled_label: String = (group.group_name if not group.group_name.is_empty() else group.name).strip_edges()
 					if disabled_label.is_empty():
 						disabled_label = "group"
-					deferred_comment_lines.append("(disabled group \"%s\" — %d row%s omitted)" % [disabled_label, omitted, "" if omitted == 1 else "s"])
-		elif row is CommentRow:
-			deferred_comment_lines.append_array(_comment_text_lines(row as CommentRow))
+					deferred_comment_lines.append("# (disabled group \"%s\" — %d row%s omitted)" % [disabled_label, omitted, "" if omitted == 1 else "s"])
 	# Fences with no event after them (a region closing a group's last rows, or an empty one) ride on
 	# the last event the group wrote. A group that wrote no event has nowhere to put them.
 	if not openers_waiting.is_empty() and into_events.size() > first_here:
@@ -2161,7 +2226,13 @@ static func _emit_lambda_in_place(event_row: EventRow, depth: int, lines: Packed
 
 static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStringArray, source_map: Array, result: Dictionary, connect_context: Dictionary = {}, deferred_comment_lines: PackedStringArray = PackedStringArray()) -> void:
 	var flattened: Array = []
-	_flatten_trigger_rows(event_rows, flattened, deferred_comment_lines)
+	var comments_waiting: Array = []
+	_flatten_trigger_rows(event_rows, flattened, deferred_comment_lines, "", "", "", "", comments_waiting)
+	# A comment with no event below it has nothing to sit over: it closes the file, one entry a row.
+	for waiting: Variant in comments_waiting:
+		var closing_lines: PackedStringArray = _comment_written_lines((waiting as Array)[0] as CommentRow)
+		if not closing_lines.is_empty():
+			deferred_comment_lines.append("\n".join(closing_lines))
 	var grouped: Dictionary = {}
 	var trigger_order: PackedStringArray = PackedStringArray()
 	for entry: Variant in flattened:
@@ -2495,6 +2566,7 @@ static func _emit_event_body(
 			# The same openers as the lift carries them, before the group is rebuilt around them.
 			_emit_riding_fences((event_item as EventRow).get_meta("__region_before", []), indent, lines, source_map)
 			closers_owed = _row_fences_after.get(event_item, [])
+			_emit_riding_comments(_row_comments_outer.get(event_item, []), indent, lines, source_map)
 		if event_item is RawCodeRow:
 			var raw_row: RawCodeRow = event_item as RawCodeRow
 			if raw_row.enabled and not raw_row.code.is_empty():
@@ -2663,8 +2735,14 @@ static func _emit_event_body(
 			for prelude_line: String in stateful_preludes:
 				lines.append(indent + prelude_line)
 				had_body = true
+		# The comment rows the event's own group holds above it are written under its tag, which is
+		# what reads them back into that group; their first blank lines stay above the tag.
+		var inner_comments: Array = _row_comments_inner.get(event_row, [])
+		if not inner_comments.is_empty() and not group_breadcrumb.is_empty():
+			_emit_leading_body_blanks(inner_comments[0], lines)
 		if not group_breadcrumb.is_empty():
 			lines.append(group_breadcrumb)
+		_emit_riding_comments(inner_comments, indent, lines, source_map, not group_breadcrumb.is_empty())
 		if held_off:
 			lines.append(indent + OFF_ROW_MARKER)
 		# Resolve the block header: if / elif / else, per the chaining rules above.
@@ -2788,6 +2866,9 @@ static func _emit_event_body(
 					var emitted_line: String = action_lines[line_index]
 					if (action_item.is_awaited or action_item.await_call) and line_index == action_lines.size() - 1:
 						emitted_line = "await %s" % emitted_line
+					# The action's note is the comment at the end of its own line (its last one).
+					if line_index == action_lines.size() - 1:
+						emitted_line += action_note_suffix(action_item as ACEAction)
 					lines.append(statement_indent + emitted_line)
 				if not gesture_refused and action_slot == gesture_span.y:
 					lines.append(body_indent + EventForgeUndoableEdits.COMMIT_LINE)
@@ -2978,6 +3059,8 @@ static func _emit_match_case_body(events: Array, indent: String, node_target: St
 				var emitted: String = action_lines[line_index]
 				if (action.is_awaited or action.await_call) and line_index == action_lines.size() - 1:
 					emitted = "await %s" % emitted
+				if line_index == action_lines.size() - 1:
+					emitted += action_note_suffix(action)
 				out.append(statement_indent + emitted)
 		elif item is RawCodeRow:
 			var raw: RawCodeRow = item as RawCodeRow
@@ -2986,10 +3069,16 @@ static func _emit_match_case_body(events: Array, indent: String, node_target: St
 			for raw_line: String in raw.code.split("\n"):
 				out.append(indent + raw_line)
 		elif item is CommentRow:
+			# Written as a comment row is everywhere else: its own marker (`## ` for a paragraph that
+			# shows in the manual), and when it is off, behind OFF_CELL_PREFIX in a sheet that is its own
+			# .gd (left out of any other file).
 			var comment: CommentRow = item as CommentRow
-			if comment.enabled and not comment.text.strip_edges().is_empty():
+			if comment.writes_a_line():
 				for comment_line: String in comment.text.split("\n"):
-					out.append("%s# %s" % [indent, comment_line])
+					out.append("%s%s%s" % [indent, comment.emit_marker(), comment_line])
+			elif not comment.enabled and _keeps_off_rows and not comment.text.strip_edges().is_empty():
+				for comment_line: String in comment.text.split("\n"):
+					out.append(indent + OFF_CELL_PREFIX + comment_line)
 	return out
 
 
@@ -3016,9 +3105,19 @@ static func _keeps_state(condition: ACECondition) -> bool:
 			or not condition.codegen_on_true.is_empty() or not condition.codegen_on_exit.is_empty()
 
 
-## The text lines a sheet-level comment row writes, each to be written behind `# `: its own lines
-## when it is on; when it is off, nothing - except in a sheet that is its own .gd, where each line goes
-## behind the `@off: ` half of OFF_CELL_PREFIX, so the row stays in the file and reopens off.
+## What an action's note adds to the end of its code line: two spaces and `# ` before the note, the way
+## a comment is written after a statement, or nothing when the action has no note. A note is one line;
+## a line break typed into one is written as a space so the statement stays on its line.
+static func action_note_suffix(action: ACEAction) -> String:
+	if action == null:
+		return ""
+	var note: String = action.comment.replace("\r", "").replace("\n", " ").strip_edges()
+	return "" if note.is_empty() else ACTION_NOTE_MARKER + note
+
+
+## The text lines a generated companion writes for a comment row, each to go behind `# ` at the end of
+## the file: its own lines when it is on; when it is off, nothing - except in a sheet that keeps what is
+## off, where each line goes behind the `@off: ` half of OFF_CELL_PREFIX.
 static func _comment_text_lines(comment: CommentRow) -> PackedStringArray:
 	var out: PackedStringArray = PackedStringArray()
 	if comment == null or comment.text.strip_edges().is_empty():
@@ -3028,6 +3127,49 @@ static func _comment_text_lines(comment: CommentRow) -> PackedStringArray:
 	for comment_line: String in comment.text.split("\n"):
 		out.append(comment_line if comment.enabled else OFF_CELL_PREFIX.trim_prefix("# ") + comment_line)
 	return out
+
+
+## The lines a sheet-level comment row writes at the end of the file (it had no event below it), with
+## their marker: its own lines when it is on, behind its own marker (`# `, or `## ` for a paragraph that
+## shows in the manual); when it is off, nothing - except in a sheet that is its own .gd, where each line
+## goes behind OFF_CELL_PREFIX, so the row stays in the file and reopens off.
+static func _comment_written_lines(comment: CommentRow) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	if comment == null or comment.text.strip_edges().is_empty():
+		return out
+	if not comment.enabled and not _keeps_off_rows:
+		return out
+	for comment_line: String in comment.text.split("\n"):
+		out.append(comment.emit_marker() + comment_line if comment.enabled else OFF_CELL_PREFIX + comment_line)
+	return out
+
+
+## True when `event` is written where it sits and starts a block of its own, so a comment row above it
+## can be written right above it: not a chained else (a line between an if and its elif would end the
+## chain), and not an event that is left out of the file.
+static func _carries_comments(event: EventRow) -> bool:
+	return event.else_mode == EventRow.ElseMode.NONE and (event.enabled or _keeps_off_rows)
+
+
+## Writes the comment rows an event carries, each at `indent` with its own blank lines above it.
+## `skip_first_blanks` is set when the first one's blank lines were already written (above the
+## event's `# @group:` tag, which the comments sit under).
+static func _emit_riding_comments(comments: Array, indent: String, lines: PackedStringArray, source_map: Array, skip_first_blanks: bool = false) -> void:
+	var first: bool = true
+	for entry: Variant in comments:
+		var comment: CommentRow = entry as CommentRow
+		if comment == null:
+			continue
+		if not (first and skip_first_blanks):
+			_emit_leading_body_blanks(comment, lines)
+		first = false
+		if comment.writes_a_line():
+			var comment_start: int = lines.size() + 1
+			for comment_line: String in comment.text.split("\n"):
+				lines.append("%s%s%s" % [indent, comment.emit_marker(), comment_line])
+			source_map.append({"uid": str(comment.get_instance_id()), "start": comment_start, "end": lines.size(), "kind": "comment"})
+		else:
+			_emit_off_comment(comment, indent, lines, source_map)
 
 
 ## Writes a comment row that is off, in a sheet that is its own .gd, as its lines behind
@@ -5398,15 +5540,30 @@ static func export_section_line(level: String, title: String, prefix: String = "
 	return "@export_%s(\"%s\", \"%s\")" % [level, title, prefix]
 
 
+## A variable's description as its `##` lines, one a line of the text, each ending in a line break
+## ("" for no description). A line left empty in the middle is written as a bare `##`, which keeps the
+## block one block.
+static func _doc_comment_lines(description: String) -> String:
+	if description.strip_edges().is_empty():
+		return ""
+	var out: String = ""
+	for doc_line: String in description.strip_edges().split("\n"):
+		out += ("## %s" % doc_line.strip_edges() if not doc_line.strip_edges().is_empty() else "##") + "\n"
+	return out
+
+
 ## @export_group/@export_subgroup lines emitted before an EXPORTED tree variable that carries Inspector
 ## grouping. Empty for non-exported or un-grouped vars (the common case - existing emission stays
 ## byte-identical). Must match _emit_variables' format exactly (the verify-lift compares against it).
 static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
-	# A plain-description exported variable (no attributes) still earns a `##` doc line, so the
-	# guard is on `exported` alone; the attribute-driven lines below all no-op on an empty dict.
-	if not local_var.exported:
-		return ""
 	var attributes: Dictionary = local_var.attributes if local_var.attributes is Dictionary else {}
+	# A variable that is not exported has no Inspector lines to write, but its description is still its
+	# `##` lines - every one of them - so it reads in the script and comes back on its row.
+	if not local_var.exported:
+		var plain_doc: String = str(attributes.get("tooltip", "")).strip_edges()
+		if plain_doc.is_empty():
+			plain_doc = local_var.description.strip_edges()
+		return _doc_comment_lines(plain_doc)
 	var prefix: String = ""
 	# Decor first, then tooltip, then category/group/subgroup - same canonical order as the
 	# dict-var path (_emit_variables), so the importer's absorb can verify-lift the whole block.
@@ -5419,7 +5576,7 @@ static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
 	var tooltip: String = str(attributes.get("tooltip", "")).strip_edges()
 	if tooltip.is_empty():
 		tooltip = local_var.description.strip_edges()
-	var doc_line: String = "## %s\n" % tooltip.replace("\n", " ") if not tooltip.is_empty() else ""
+	var doc_line: String = _doc_comment_lines(tooltip)
 	# Both orders are ordinary Godot: this plugin writes the doc above the section lines, while
 	# Godot's own convention writes `@export_group("…")` first and the doc directly above the variable
 	# it documents. A variable opened from a file that used the second order carries that fact

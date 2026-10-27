@@ -4,6 +4,9 @@ extends Control
 
 signal selection_changed(row_data: EventRowData)
 signal row_drop_requested(source_row: EventRowData, target_row: EventRowData, drop_mode: String, copy_mode: bool)
+## The drop mode a comment row dropped on an event's action column carries: this prefix, then the index
+## in that event's action list it joins at.
+const ACTION_LIST_DROP_PREFIX: String = "actions:"
 signal variable_group_requested(source_row: EventRowData, target_row: EventRowData)
 signal variable_group_rename_requested(group_name: String)
 signal rows_drop_requested(source_rows: Array, target_row: EventRowData, drop_mode: String, copy_mode: bool)
@@ -287,6 +290,9 @@ var _drag_row_index: int = -1
 var _drag_row_indices: Array[int] = []
 var _drag_target_index: int = -1
 var _drag_target_mode: String = "before"
+# Where a comment row dragged onto an event's action column would join its actions, as the lane slot
+# _resolve_lane_drop_target answers ({ace_index, insert_mode}); read by the drop line while the drag is live.
+var _drag_comment_action_slot: Dictionary = {}
 var _drag_row_copy_mode: bool = false
 var _drag_ace_entries: Array = []
 var _drag_ace_target_row_index: int = -1
@@ -4655,6 +4661,11 @@ func _resolve_drop_mode(hit: Dictionary, position: Vector2) -> String:
 			and _row_is_variable(_row_at(_drag_row_index)) and _row_is_variable(row_data) \
 			and row_index != _drag_row_index:
 		return "group"
+	# A comment row dropped on an event's action column joins that action list, between the actions it
+	# is dropped between: a `#` line among the event's statements.
+	var action_slot: int = comment_action_drop_slot(hit, position)
+	if action_slot >= 0:
+		return "%s%d" % [ACTION_LIST_DROP_PREFIX, action_slot]
 	var supports_inside_drop: bool = row_data.row_type in [
 		EventRowData.RowType.EVENT,
 		EventRowData.RowType.GROUP,
@@ -4663,6 +4674,30 @@ func _resolve_drop_mode(hit: Dictionary, position: Vector2) -> String:
 	if supports_inside_drop and is_in_inside_zone:
 		return "inside"
 	return "after" if relative_y > row_height * DROP_ZONE_AFTER_THRESHOLD else "before"
+
+
+## The place in an event's action list a dragged comment row would take when let go at `position`
+## over `hit`: the index it is inserted at, or -1 when this is no such drop (one comment row dragged,
+## over the action column of an event that is not itself). Also keeps the slot for the drop line.
+func comment_action_drop_slot(hit: Dictionary, position: Vector2) -> int:
+	_drag_comment_action_slot = {}
+	var row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
+	var dragged: EventRowData = _row_at(_drag_row_index)
+	if row_data == null or dragged == null or _drag_row_indices.size() > 1 or dragged == row_data:
+		return -1
+	if not (dragged.source_resource is CommentRow) or not (row_data.source_resource is EventRow):
+		return -1
+	if row_data.row_type != EventRowData.RowType.EVENT or str(hit.get("lane", "")) != "action":
+		return -1
+	var slot: Dictionary = _resolve_lane_drop_target(row_data, "action", position)
+	_drag_comment_action_slot = slot
+	var ace_index: int = int(slot.get("ace_index", -1))
+	match str(slot.get("insert_mode", "append")):
+		"before":
+			return maxi(ace_index, 0)
+		"after":
+			return ace_index + 1
+	return (row_data.source_resource as EventRow).actions.size()
 
 
 ## True for any variable row (global dict var or tree LocalVariable) - the grouping gesture's guard.

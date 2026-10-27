@@ -9666,3 +9666,8 @@ Add and continue,Hinzufügen und weiter
 Nothing will be added.,Es wird nichts hinzugefügt.
 1 behaviour will be added.,1 Verhalten wird hinzugefügt.
 %d behaviours will be added (shared ones once).,%d Verhalten werden hinzugefügt (gemeinsame nur einmal).
+Add note,Notiz hinzufügen
+Why this action is here…,Warum diese Aktion hier steht…
+More colours,Weitere Farben
+Shows in the manual (writes ##),Erscheint im Handbuch (schreibt ##)
+"Named colours from the theme, so a comment reads right in dark and light. The colour is for the sheet only and is not written to the code.","Benannte Farben aus dem Theme, damit ein Kommentar in Dunkel und Hell gut lesbar ist. Die Farbe gilt nur für das Blatt und wird nicht in den Code geschrieben."

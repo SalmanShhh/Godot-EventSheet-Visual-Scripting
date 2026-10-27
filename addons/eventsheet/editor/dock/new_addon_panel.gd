@@ -718,6 +718,12 @@ static func retarget_host(sheet: EventSheetResource, was: String, works_on: Stri
 		var variable: LocalVariable = entry as LocalVariable
 		if variable != null and variable.name == "host" and variable.type_name == was:
 			variable.type_name = works_on
+			# Its `##` doc comment is the variable's own description, so it is retargeted with it.
+			if variable.attributes is Dictionary and (variable.attributes as Dictionary).has("tooltip"):
+				var retargeted: Dictionary = (variable.attributes as Dictionary).duplicate()
+				retargeted["tooltip"] = word.sub(str(retargeted["tooltip"]), works_on, true)
+				variable.attributes = retargeted
+			variable.description = word.sub(variable.description, works_on, true)
 		var raw: RawCodeRow = entry as RawCodeRow
 		if raw == null:
 			continue

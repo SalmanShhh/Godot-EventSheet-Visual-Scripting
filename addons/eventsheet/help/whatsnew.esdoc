@@ -6,6 +6,374 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Fixed: node, scene and resource variables read as the Inspector lists them
+
+- In the default look and Editor Native, a variable holding a node, a scene, a resource or a typed
+  list now reads like any other variable: its type exactly as written, its name, its value as
+  written, and its tiles. `@export var target: Node2D` reads `Node2D target = null`, the `null`
+  muted because nothing is assigned yet. `@export var bullet_scene: PackedScene = preload(...)` and
+  a resource of your own class (`stats: EnemyStats = preload(...)`) read `bullet_scene =
+  bullet.tscn` with the eye tile and the file's chip, where they used to turn into a plain line with
+  no tiles, no hover card and no variable window; double-clicking one now opens the variable window
+  with Load and New beside the value, its Inspector preview showing the file by name as the Inspector
+  does. `Array[Node2D] _in_range = []` keeps its `[]` instead of the
+  word \"empty\". Classic Sheet and the other sentence-row themes read as before.
+
+### Added: the behaviour library - a project holds only the behaviours it asked for
+
+- The packs now ship a second time in `addons/eventsheet_library/`, a folder holding a `.gdignore`, so
+  Godot never imports it: none of its classes reach Create Node, the picker, the class list, an import
+  or an exported game, and the editor boots no slower for it. A project's own behaviours stay ordinary
+  folders in `eventsheet_addons/`. A behaviour is still a folder: there means in use, deleted means
+  gone. There is no on or off switch.
+- **The Welcome asks \"What are you making?\"** Each answer is a kit: a tag the packs carry
+  (`@ace_tags`) that at least four of them share, listing those packs by name. Nothing is copied until
+  Add and continue; Start with none is a real answer.
+- **Add behaviour searches the project and the library together.** A library pack's tile says
+  Library, its card lists what else it needs (read from its own `@ace_requires`) and the folder it is
+  copied into, and the button reads **Add to project and attach**: the folders are copied in, Godot
+  imports them and the behaviour is attached, as one undo step whose Undo takes the node out and sends
+  the copied folders to the system trash. A folder the project already holds is never overwritten.
+  **All / In this project** hides the library.
+- **Remove from project…** on a behaviour the project holds sends its folder to the system trash and
+  first says which sheets use it (\"Used by 2 sheets\", with the rows in each). Those rows stay as
+  written.
+- **Tidy behaviours…** is the door on the Doctor's existing note about unused packs: every behaviour
+  in the project, the unused ones ticked and the used ones locked with the files that use them.
+  Everything removed stays in the library.
+- **The picker on an empty search** names the library packs whose actions, conditions or expressions
+  match (\"Nothing in this project matches \"dash\".\" then In the library), each opening Add behaviour on
+  that pack. Nothing is added from the picker itself.
+- Installing: copy `addons/eventforge/`, `addons/eventsheet/` and `addons/eventsheet_library/`; the
+  packs no longer need copying by hand. An existing project that copied every pack keeps them all and
+  changes nothing on its own.
+- For contributors: this repository is a project that holds every pack, so its tests, showcases and
+  drift gates keep reading `eventsheet_addons/`. The library is derived from it by
+  `tools/build_library.gd` (run by `build_sample_behaviors.gd` after every build), the pack audit
+  prints `library drifted=N` and fails on drift, and `behaviour_library_test` asks the same question.
+### Added: comments are made and moved where they are needed
+
+- **Q with an action selected** puts the comment in that action list, right under the action - a `#`
+  line between two statements - instead of a new row under the event.
+- **Right-click on an action offers Add note** (it used to say Edit Note… and open \"Row Comment\"): the
+  words after the action, saved as the comment at the end of its own line. A condition no longer
+  offers a note at all; to explain an event, put a comment row above it.
+- **Alt+Up / Alt+Down** move a comment that sits among an event's actions one place up or down.
+- **A comment row dropped on an event's action column** joins that action list, between the actions
+  it is dropped between (a blue line shows where). Ctrl while dragging copies it.
+- **The Edit comment window shows named colours** - Default, Red, Orange, Yellow, Green, Blue, Purple
+  and Grey - each worked out from the theme's own comment colour, so a comment reads right in a dark
+  theme and a light one. The free picker stays under More colours. The box reads \"Shows in the manual
+  (writes ##)\". A comment's colour belongs to the sheet: it is never written to the `.gd`, so the code
+  stays plain and reopening the file shows the default colour.
+
+### Fixed: a comment is written where it sits on the sheet
+
+- A comment row between events, or inside a group, was written at the end of the file, with a blank
+  line before every line and its `##` turned into `#`. It is now written right above the event it sits
+  over, at that event's indent, inside the function the event lands in: several lines stay one block,
+  `##` stays `##`, a switched-off comment writes `# @off:`, and a comment inside a group sits under
+  the group's tag so it reopens in the group. Only a comment with no event below it still closes the
+  file, and it keeps its marker too.
+- Opening a script reads a comment written right above an `if` (or a loop) back as the comment row
+  above that event, so a file saved from the sheet reopens with its comments where they were, instead
+  of as an \"Every tick\" event holding the comment. A comment above a plain statement stays with that
+  statement, as before, and every file still saves byte for byte.
+- An action's note is now saved: it is written as the comment at the end of the action's own line
+  (`$JumpSound.play()  # short blip`), and a line written that way reopens as the action with its
+  note. A `#` inside a string is not a note, and a line whose code reads as no action stays as written.
+- A comment written after an `if` in your own code is kept exactly as written; a condition takes no
+  note of its own.
+- The `##` description above a variable that is not exported was left in a code block above it. It
+  is now the variable's description - every line of it - shown on its row and written back as its
+  `##` lines. An exported variable's description keeps every line too.
+- A comment inside a match case wrote `#` whatever it was and was dropped when switched off. It now
+  keeps `##` for a paragraph that shows in the manual and writes `# @off:` when it is off.
+- A code row that is nothing but comments showed `[b]` and `[i]` as tags; it now draws the words bold
+  or italic, the way a comment row does. The file's text is unchanged.
+
+### Fixed: the plugin ships its `.uid` files
+
+- Every script and shader in the plugin, the packs, the showcases and the tools now ships with the
+  `.uid` file Godot keeps beside it, as Godot 4.4 and later ask. A project that replaced the plugin
+  folders on an update printed one \"Missing .uid file ... re-created from cache\" warning per script
+  (951 of them in a project with the packs installed); it now prints none, and a fresh clone keeps
+  the same ids on every machine instead of inventing its own.
+- **Updating an existing project:** the first import after this update may print a one-time UID
+  warning for a scene or resource of yours that named a plugin script by the id your project had
+  invented for it before the shipped one arrived. Nothing breaks - Godot falls back to the path - and
+  re-saving that scene clears it.
+- For contributors: `tests/uid_sidecars_test.gd` holds every tracked `.gd`, `.gdshader` and
+  `.gdshaderinc` to its tracked `.uid` (and the reverse) and fails on a uid spelled twice. The pack
+  build and the showcase build keep every existing `.uid` exactly as it was, and the pack audit and
+  the showcase check fail on a shipped script without one (`uid_sidecars missing=N`) without ever
+  counting a `.uid` as drift. A new script gets its `.uid` from `--import`; commit it with the script.
+
+### Fixed: three small readings of a user's own scripts
+
+- In `if body is Player:` the call `body.take_damage(damage)` read \"Take damage   damage\", the value
+  with no name. The event's own `is` question now settles the class the way GDScript does, so the
+  row reads \"Take damage   amount = damage\" with Player's own parameter name. A negated question
+  settles nothing.
+- The parameters window's Expressions band read \"Set Velocity Y Y\": a verb whose name already ends
+  with the field's name now says it once.
+- The On changed and Shown only if tiles' hover cards quoted a placeholder shape. They now quote the
+  line they add: the setter that calls your function, and the test `_validate_property` asks.
+
+### Fixed: a variable inside a row's sentence draws once
+
+- \"Accelerate x toward direction * speed at acceleration (per second)\" drew `acceleration` as two
+  smeared copies. The bold re-draw of a row's parameters was placed by the width of the whole text
+  in front of it, while the coloured pass under it draws the sentence piece by piece, and the two
+  drifted apart by a pixel or more per piece. The re-draw now lands exactly on the word it covers.
+
+### Fixed: the not-undoable note asks what a line changes, not which event it sits in
+
+- A menu command that freed your plugin's own panel still got the \"changes the scene the editor
+  has open\" note, and anything On Plugin Enabled did to the open scene by hand got none. The note
+  now leaves alone what your plugin made for itself (`_panel = ... .instantiate()`, a control handed
+  to `add_control_to_bottom_panel`) wherever it is changed, and a switch on or switch off that edits
+  the open scene through `EditorInterface.get_edited_scene_root()` is caught like any other event.
+
+### Fixed: a local of one function no longer hides a typo in another
+
+- A name declared as a local or parameter anywhere in a script was accepted everywhere in it, so
+  `direction = 2.0` in a function that has no `direction` grew no \"is not a variable\" note, and the
+  parameters window passed it, because `_process` declared one. Both now know only the names of the
+  body the line sits in: its function, or every event under the same trigger. A comment or a string
+  in code kept as written (`# for example`) no longer declares a name either.
+
+### Fixed: a made object and the Expressions panel say the type the value gives
+
+- `var _stats := Patrol.new()` read \"any\" (and \"Variant\" in Editor Native) on the sheet. A variable
+  holding a made object now reads the class that made it - `Patrol`, `Node2D`, `Stats.Block` -
+  whether that is an engine class, your class_name or a class written inside the file.
+- The parameters window's Expressions panel listed `GRAVITY : Variant` and `coyote_time : Variant`
+  beside rows that say float. It now lists the type the variable row reads.
+
+### Fixed: a class inside a script sets its own variables on its own line
+
+- A step a class written inside your script takes on its own variable read under System
+  (`System | Add 1 to turns` in `class Patrol`). It now reads `Patrol | Add 1 to turns`, the way
+  your script's own variables read under your script's name, and a note about a name the class does
+  not have names the class.
+
+### Fixed: a line aimed at another body does not read under your script's name
+
+- In a player script that extends CharacterBody2D, a Move and slide or Set velocity row aimed at
+  another body (`enemy`) read \"Player | ...\", claiming the wrong object. A row whose target names
+  another node keeps the class word again, on the row and in a folded group's object summary; the
+  script's own lines still read under its name.
+
+### Fixed: the Doctor reads your own behaviours, globals and packs again
+
+- New behaviour, New global and Export Pack all write a folder under `eventsheet_addons/`, beside
+  the packs that came with the plugin, and the Doctor had started leaving that whole folder out. A
+  global like `game_state/game_state.gd` was missing from Interop, the reading ledger, Performance
+  and Migration, and the guide your own pack keeps beside itself was missing from Docs. The Doctor
+  now leaves out only the folders the plugin ships, from a list written beside the plugin's code by
+  `tools/measure_packs.gd -- --write` and checked against the pack builders by the suite.
+
+### Fixed: freeing your plugin's own dock is not an edit of the open scene
+
+- Opening your own editor plugin as a sheet put an amber frame on its On Plugin Disabled event and
+  \"1 problem\" in the status bar, because `_dock.queue_free()` read as a change to the scene the
+  editor has open made outside the undo history. A plugin's switch on and switch off build and free
+  the plugin's own UI, and a Ctrl+Z that brought the dock back would be the bug, so neither event is
+  asked that question any more. A menu command in the same file that really does change the open
+  scene by hand still gets the finding, in the sheet and in the Doctor.
+
+### Fixed: windows open at the size of what they hold
+
+- A window's READS AS and IN CODE lines wrap inside the window instead of widening it. A long
+  comment opened Edit comment 2,437 px wide, a long group description opened Edit group 2,454 px
+  wide, a long value opened the parameters window 7,812 px wide and the Variable window 3,694 by
+  8,336 px. They now open at their usual width, and a reading line longer than four lines ends in
+  \"…\" with the whole line in its hover.
+- A window opened again opens at what it holds now. Edit group, the Variable window, the function
+  window and the other windows that are built once kept the size of the biggest thing they had ever
+  held, so a group opened after a long one opened 1,920 px wide with three quarters of it empty.
+  They also no longer open a line or two taller than their content.
+- The Variable window is as tall as its cards. It asked for 600 px whatever it held, so a plain
+  local opened with a third of the window empty under its cards; past 520 px the cards scroll, as
+  before.
+
+### Fixed: the Doctor reports on your game, not on the packs installed beside it
+
+- In a project with the behaviour packs copied in, the Doctor said 189 notes about a ten-script
+  game. Interop measured pack scripts, the reading ledger sampled nothing but packs (\"Read the first
+  12 script(s) of 189\"), Performance asked you to rewrite a pack's distance check, Migration counted
+  the packs' sheets, and the Effects and Feedbacks summaries opened a pack. Those sections now read
+  your own scripts only, the way the others already did: Interop now measures `player.gd` and
+  `enemy.gd`, which it skipped before.
+- The packs you have not used yet are one note, not one note each: \"169 pack class(es) are
+  referenced by no sheet, scene or autoload ... SimpleAbilitiesBehavior, ... and 164 more\". A pack
+  that one of your own `.gd` scripts names now counts as used. Before, only `.tres` sheets, scenes
+  and autoloads counted, and `.gd` is the default sheet format.
+- Opened in the editor, the Doctor's Docs section listed stale names and empty descriptions in the
+  plugin's own pack guides (`Blend-Modes.md`, `Bound-To.md` ...) on a stock install. It now reads
+  those only in the plugin's own project. In your game it reads a guide your project keeps
+  elsewhere, and when there is none it says nothing.
+
+### Fixed: your own scripts, opened as sheets, read the way the boards draw them
+
+- Your own editor plugin, opened as a sheet, no longer offers \"Enable plugin\" while the project
+  already runs it, and Enable plugin never writes over a plugin.cfg the folder already has - its
+  author, version and words stay as you wrote them. Only a folder with no plugin.cfg gets one.
+- The parameters window opened on a line of your own function no longer refuses it: a local the
+  function declares (`direction`), the value its tick hands it (`delta`), a loop's item and a
+  parameter are names a field can use, so `direction * speed` is not \"not a variable of Player\" and
+  Done is not shut on a line nobody touched. A typo is still caught.
+- A `@tool` script says \"Runs in the editor\" as a violet chip on its head bar, beside what it
+  extends, with the `@tool` line in its hover; the second head row that said \"runs in the editor
+  too\" under the bar is gone.
+- A script with an inner `class` no longer says its own members are \"not a variable\": the class's
+  members were read as the file's for every row built after the class, so `_start_x` and `_dir` in
+  an `enemy.gd` with a `class Patrol` were each flagged under the events that set them. A local
+  declared in the function (`var direction := ...`) and a function's own parameter (`body`) are no
+  longer flagged either; a name the file really does not declare still is.
+- A line about the script itself reads under the script's own name, with the class it extends as the
+  icon in front: `spike_ring > Redraw` and `enemy > Wire On Body Entered`, where they read
+  `Node2D` and `Area2D`, and an autoload's under its singleton name (`GameState`). The setter
+  events of a script with no class_name used to say `Node2D` beside actions that said `spike_ring`
+  for the same node. A behaviour pack still names the node it sits on by its class.
+- A variable's row wears the tiles for what the script does with it, as the window already did: a
+  setter (`set(value):` or `set = _set_x`) puts the on-change tile after the eye, `@onready` the
+  on-ready tile, a show-if the shown-only-if tile, each with its hover card and its code line. An
+  `@onready` node reads as the variable it is (`Sprite2D sprite = $Sprite2D`), and a preloaded scene
+  and an inner class read as their name with their icon - no \"Object\" or \"Class\" word in front.
+- A variable's value reads as the code writes it: `float speed = 220.0`, not `220`, and a
+  declaration with no value (`var _start_x: float`) shows none instead of `= null`.
+- A custom node's tab is its icon and its name, without a second mark in front.
+
+### Fixed: a game you wrote yourself reads as yours, beside the installed packs
+
+Walked in a fresh project with the plugin and its packs installed next to a hand-written game, the
+way a user meets it:
+
+- The Doctor no longer says a state \"is declared and no row can reach it\" when the object goes to it
+  from a function of its own (`func _update_state()` with the `match` inside), or from a script block
+  that says `state = State.RUN`.
+- Rename on a function nothing in its own file calls lists the function's head line it is about to
+  rewrite, instead of \"rewrites the 0 row(s) in this sheet\".
+- The Inspector Designer puts every field after `@export_group(\"Feel\")` under Feel, as Godot draws
+  the Inspector, not just the first one; and a field written `var coyote_time := 0.1` reads as the
+  float it is, not \"Variant\". The Save studio types such variables the same way, and names an
+  autoloaded script with no class name by its global's name (GameState, not game_state).
+- The behaviour packs stop standing in for the game: the Sheet map no longer draws the packs' scripts
+  (it drew a hundred of them and none of the game's), Find in Project lists the game's own files
+  before the packs' matches, and the Doctor's spawning, collision, shapes, lighting, effects,
+  streaming, save-memory and missing-input-action checks leave the packs alone, as they already
+  left the plugin's own folder.
+- Opening a script that is already open (FileSystem, Inspector button, double-click) brings its tab
+  forward instead of opening a second tab of the same file.
+- The Words page's live preview reads the `_process` word its own table sets (\"Every tick\"), where it
+  said \"Every Frame\" beside a table that said otherwise.
+- The Debugger's Inspect tab says why a run is silent: with Live Values on and the game running, it
+  says the run comes from the saved file and asks for a save (and, on a read-only preview, for Edit
+  Events first), instead of telling the reader to turn on the Live Values that was already on.
+- Tools ▸ Save Studio opens cleanly in a project without the packs (the README's Quick start): it
+  stopped on a script error and searched a folder called \"<null>\" for save slots.
+
+### Fixed: your own scripts read and edit the way the function and match boards draw them
+
+- Clicking a function of a script you just opened (which opens as a read-only preview) hands it to
+  Godot's Inspector, as on any sheet; the first change made there unlocks the preview the way picking
+  an action does. A scene's view and a file a merge left blocked still only show the read-only card.
+- A `match` inside a function reads like any other line: its head on a line of its own leads with
+  System, and the question a branch asks before it moves on (`if absf(velocity.x) > 10.0:`, `if
+  is_on_floor():`) reads in the sheet's words with its object - \"System | |velocity.x| > 10\",
+  \"Player | Is on floor\" - instead of the bare code. Its steps name their object too (\"System | Go to
+  Run\"), and a function call used as that question no longer wears the green trigger arrow.
+- The windows that write one line show that line the way the sheet draws it, icon first: the
+  function window's band is the function icon and \"On function take_damage\" (no \"Function\" word and
+  no \"-> nothing\"), the parameter window's band is the parameter's own line (\"amount   int = 1\"), and
+  Add action, Compare and Match lead with their object's icon and name.
+- A drafted function description keeps a name at the start of a clause as written: \"GameState.coins
+  += amount\", never \"gameState\".
+- A call to one of the script's own functions reads under the object that owns it, by the function's
+  name: \"Player | take_damage with amount 2, critical false\" where it read \"ƒ | Call take_damage
+  amount = 2   critical = false\". A sheet that names no object of its own still files it under
+  Functions.
+- A class written inside a script leads with the class icon and its name, with no \"Class\" word in
+  front of it.
+- A class written inside a script owns the calls its functions make to each other: \"CoinCounter |
+  _walk with node root\", where they read under a nameless \"Functions\".
+- A switch branch's step that sets one of the object's own variables reads under the object, as the
+  same line reads anywhere else: \"PatrolBehavior | Set mode to WAITING\" under a guarded branch, where
+  it read under System.
+- Add an event's object page reads a pack by the word its rows read under (\"Bullet\", \"Platformer\")
+  instead of its class name, and puts the project's own globals under Your Project as \"GameState
+  (autoload)\" after the packs, where they sat at the top beside System with nothing to tell them
+  from a pack.
+- Add an event's Functions section is headed \"Functions\" alone and lists each function by its name
+  as written, under the function mark the sheet draws, with no kind word after it. A hand-written
+  script, which publishes none of its functions, lists them all straight under the head instead of
+  folding every one of them behind \"+ Helpers\".
+
+### Fixed: the makers read right in a project the plugin was installed into
+
+- The Welcome window no longer offers \"Open the playable showcase scene\" in a project that has no
+  showcase to open (an installed plugin brings none, so the button did nothing).
+- The New menu and the Start page leave out Level Stats Screen and Skill Tree Screen in a project
+  without the HUD Kit and Upgrades packs: those starters are written in the packs' words, and made
+  without them every such row came out as an empty template.
+- New behaviour's Category leads with \"Its own name\" and starts on it. In a project with no packs
+  the list was empty and Create wrote a heading read off no item; with packs installed it picked the
+  first pack made for the same kind of object, so a new Patrol was filed with Car.
+- Behaviour settings… and Global settings… read a hand-written script's description when a blank
+  line sits between `extends` and its `##` line, the way Godot's own script template writes it.
+- Properties and actions… reads a property written `@export var enabled := true` as `bool` and
+  `true`, not `Variant` and `\"true\"`.
+- A variable written `var run_time := 0.0` reads as a number: `run_time += delta` no longer grows the
+  amber \"run_time is any - Add to wants a number\" note on an autoload written by hand.
+- The Add behaviour list no longer offers a data pack that extends Resource as something to add to
+  an object: it sits on its own greyed shelf, and its hover says a sheet reads it from its file.
+- Insert new object opens with a free name filled in (Player, or Player2 when the project already
+  has a Player), so Insert is ready and the window no longer opens on a red line.
+- Sheet Type opens with its help strip on the kind the sheet is; a custom node opened under a strip
+  that called it an Event Sheet.
+- Every Start page row leads with its icon, as the board draws it: a starter wears the class its
+  script extends (Platformer Starter a CharacterBody2D, Keycard Door a StaticBody3D, the menus a
+  Control), a recent sheet a file, a showcase a scene, a lesson the help mark. The rows were bare
+  words.
+
+### Fixed: a hand-written script opened in a user's own project reads like the sheet boards
+
+Found by installing the plugin into a fresh project and opening scripts nobody wrote for it - a
+player, an enemy with a class inside it, an editor plugin and its dock, the shipped packs.
+
+- `if not is_on_floor():` reads as the inverted condition on the object itself - the red cross, the
+  script's own name, \"Is on floor\" - instead of \"System is_on_floor()\". The same test written in a
+  `match` branch reads the same words on the same object, and so does any other inverted question
+  the sheet has words for.
+- A verb filed under the node's class (Move and slide, Set velocity Y, Apply gravity, Accelerate x)
+  and a call to one of the script's own functions lead with the script's own name and icon
+  (\"Player\"), not the class (\"CharacterBody2D\") or a bare \"ƒ\".
+- The \"is not a variable\" notes no longer fire on names the file really declares: a loop's item, the
+  values a trigger hands its handler (an input handler's `event`) and a parameter list written out
+  in full are known names too, and the variable catalog is filled again whenever the sheet being
+  read changes, so no sheet read in the same pass answers for another. A variable whose type the
+  file never wrote is no longer \"the wrong kind\" for Add to, and a vector or colour can be added to.
+  Across the shipped packs and a handful of the plugin's own scripts this took the canvas from
+  several hundred false warnings to none in most files.
+- An `@onready` node reads as the variable row every member reads as - its type, its name, its
+  value - instead of a row led by an \"Object\" word.
+- A long pattern chip after a condition gives up its tail before it takes half the conditions lane,
+  so a trigger beside it (\"On Plugin Enabled\") is no longer drawn one letter per line.
+- An event more than one line tall numbered 10 or higher shows both digits in the margin. The
+  number sat in the middle of the margin with a 4px inset either side, which left room for one
+  digit, so a `player.gd` with eleven events numbered its last two \"1\" and \"1\".
+- A function written inline - a lambda handed to a call, its body read as rows of their own - no
+  longer hangs \"is not a variable\" notes under those rows for its own parameters, locals and loop
+  items (`insert_after`, `function_resource` in the editor's own helper scripts).
+- An opened behaviour pack reads under one name. Its On created trigger, a verb filed under its
+  host's class and a line that fills one of its own tables read \"Health\", the word the rest of its
+  lines and its tab already use, instead of the class the file is spelled with
+  (\"SimpleHealthBehavior\", cut to \"SimpleHe...\" in the object column).
+- A folded data type written inside a script names its first fields as they are written
+  (\"amount: float = 0.0\") instead of their pieces joined by dashes (\"amount - : - float -> = - 0.0\").
+
 ### Fixed: the plugin and the code it writes stop filling the Output and Debugger panels
 
 - Quitting the editor no longer prints \"Parent node is busy adding/removing children\": the bridge

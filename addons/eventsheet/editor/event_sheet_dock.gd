@@ -5246,6 +5246,11 @@ func _toggle_selected_rows_enabled() -> void:
 func _move_selected_row(direction: int) -> void:
 	if _viewport == null:
 		return
+	# A comment among an event's actions moves within that action list, one place at a time.
+	var action_slot: Dictionary = _add_rows.selected_action_slot()
+	if not action_slot.is_empty() and (action_slot["event"] as EventRow).actions[int(action_slot["index"])] is CommentRow:
+		_move_action_comment(action_slot["event"] as EventRow, int(action_slot["index"]), direction)
+		return
 	var selected_index: int = _active_view().get_selected_context().get("row_index", -1)
 	var row_data: EventRowData = _active_view().get_selected_row_data()
 	if row_data == null or selected_index < 0:
@@ -5257,6 +5262,23 @@ func _move_selected_row(direction: int) -> void:
 	if target_row == null or target_row.source_resource == null:
 		return
 	_ace_apply._move_rows([row_data], target_row, "before" if direction < 0 else "after")
+
+
+## Moves the comment at `index` in `event`'s action list one place up (`direction` -1) or down, as one
+## undo step; nothing at either end of the list.
+func _move_action_comment(event: EventRow, index: int, direction: int) -> void:
+	var to: int = index + direction
+	if to < 0 or to >= event.actions.size():
+		return
+	var changed: bool = _perform_undoable_sheet_edit("Move Comment", func() -> bool:
+		var moving: Resource = event.actions[index]
+		event.actions.remove_at(index)
+		event.actions.insert(to, moving)
+		return true
+	)
+	if changed:
+		_refresh_after_edit()
+		_mark_dirty("Moved comment.")
 
 
 ## Editor-native defaults: inherit the user's editor theme when no explicit sheet theme was chosen
@@ -7005,12 +7027,13 @@ func _cut_selected_rows() -> void:
 
 
 # ── Per-ACE comments (condition/action notes) ──────────────────────────────────────
-## Event-sheet-style per-condition/action note: shown dimmed after the ACE text in the sheet.
+## An action's note: the words shown after the action on the sheet, written as the comment at the end
+## of its code line. Actions only - a condition takes no note, so its `if` line stays plain.
 func _open_ace_comment_dialog(target: Resource) -> void:
-	if target == null:
-		_set_status("Right-click a condition or action to comment it.", true)
+	if not (target is ACEAction):
+		_set_status("Right-click an action to add a note to it.", true)
 		return
-	_ask_for_line(EventSheetL10n.translate("Row Comment"), EventSheetL10n.translate("Why this condition/action exists…"), str(target.get("comment")),
+	_ask_for_line(EventSheetL10n.translate("Add note"), EventSheetL10n.translate("Why this action is here…"), str(target.get("comment")),
 		_on_ace_comment_confirmed.bind(target))
 
 

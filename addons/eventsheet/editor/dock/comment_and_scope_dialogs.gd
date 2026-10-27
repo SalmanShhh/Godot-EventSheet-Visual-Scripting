@@ -27,6 +27,12 @@ var _comment_dialog_target: CommentRow = null
 var _comment_band: EventSheetPopupUI.RowBand = null
 var _comment_color_label: Label = null
 var _comment_strip: EventSheetPopupUI.HelpStrip = null
+# The named colour the window has picked (CommentRow.color_tag; "" for the theme's own), and one
+# swatch button per name, in EventSheetEventStyle.COMMENT_COLOR_TAGS order.
+var _comment_color_tag: String = ""
+var _comment_swatches: Array[Button] = []
+const _SWATCH_NAMES: Dictionary = {"": "Default", "red": "Red", "orange": "Orange", "yellow": "Yellow",
+	"green": "Green", "blue": "Blue", "purple": "Purple", "grey": "Grey"}
 
 
 ## Dialog editor for comments: multiline comment rows, action-cell comments, and the row
@@ -39,7 +45,9 @@ func open_comment_dialog(comment_resource: Resource) -> void:
 	_comment_dialog_target = comment_row
 	_comment_text_edit.text = comment_row.text
 	_comment_color_button.color = comment_row.custom_color
+	_comment_color_tag = comment_row.color_tag
 	_comment_manual_check.button_pressed = comment_row.is_documentation()
+	_paint_swatches()
 	_refresh_comment()
 	if _dock.is_inside_tree():
 		EventSheetPopupUI.popup_fitted(_comment_dialog, Vector2i(int(EventSheetPalette.scaled_f(560.0)), 0))
@@ -69,25 +77,43 @@ func _ensure_comment_dialog() -> void:
 	# Discord-style formatting: highlight text and a small unfocused bar floats above the
 	# selection to wrap it in BBCode (comments render BBCode in the sheet).
 	EventSheetBBCodeSelectionBar.attach(_comment_text_edit)
-	# The swatch says what it is set to beside it: "theme default" while its alpha is 0, which is
-	# what a cleared background means.
+	# The named colours first, each the theme's own (so a comment reads right in a dark theme and a light
+	# one), then the free picker under More colours. The colour belongs to the sheet: it is never written
+	# to the code. The free swatch says "theme default" beside it while its alpha is 0.
+	var swatch_row: HBoxContainer = HBoxContainer.new()
+	swatch_row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
+	_comment_swatches.clear()
+	for tag: String in EventSheetEventStyle.COMMENT_COLOR_TAGS:
+		var swatch: Button = Button.new()
+		swatch.custom_minimum_size = Vector2.ONE * EventSheetPalette.scaled_f(22.0)
+		swatch.focus_mode = Control.FOCUS_ALL
+		swatch.tooltip_text = EventSheetL10n.translate(str(_SWATCH_NAMES[tag]))
+		swatch.pressed.connect(_on_swatch_picked.bind(tag))
+		swatch_row.add_child(swatch)
+		_comment_swatches.append(swatch)
+	var more_label: Label = Label.new()
+	more_label.text = EventSheetL10n.translate("More colours")
+	more_label.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
+	swatch_row.add_child(more_label)
 	_comment_color_button = ColorPickerButton.new()
-	_comment_color_button.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(64.0), 0.0)
+	_comment_color_button.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(40.0), 0.0)
 	_comment_color_button.color = Color(0, 0, 0, 0)
 	_comment_color_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	_comment_color_button.color_changed.connect(func(_color: Color) -> void: _refresh_comment())
+	_comment_color_button.color_changed.connect(func(_color: Color) -> void:
+		_comment_color_tag = ""
+		_paint_swatches()
+		_refresh_comment())
+	swatch_row.add_child(_comment_color_button)
 	_comment_color_label = Label.new()
 	_comment_color_label.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
-	var swatch_row: HBoxContainer = HBoxContainer.new()
-	swatch_row.add_child(_comment_color_button)
 	swatch_row.add_child(_comment_color_label)
-	card.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Background"), swatch_row))
+	card.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Colour"), swatch_row))
 	# The ONE control that decides which of GDScript's two comment spellings this row writes.
 	# Ticked, the row writes `##` - the documentation form the engine renders and the project manual
 	# sets as prose. Unticked, it writes `#` and never leaves this sheet. The marker in the file IS
 	# the setting, so the row and the line always agree.
 	_comment_manual_check = CheckBox.new()
-	_comment_manual_check.text = EventSheetL10n.translate("Shows in the manual")
+	_comment_manual_check.text = EventSheetL10n.translate("Shows in the manual (writes ##)")
 	_comment_manual_check.toggled.connect(func(_on: bool) -> void: _refresh_comment())
 	card.add_child(_comment_manual_check)
 	form.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("Comment"), card))
@@ -97,7 +123,10 @@ func _ensure_comment_dialog() -> void:
 	form.add_child(_comment_strip)
 	_comment_strip.follow(_comment_text_edit, EventSheetL10n.translate("Comment"),
 		EventSheetL10n.translate("Highlight text to format it; comments render BBCode in the sheet."))
-	_comment_strip.follow(_comment_color_button, EventSheetL10n.translate("Background"),
+	for swatch: Button in _comment_swatches:
+		_comment_strip.follow(swatch, EventSheetL10n.translate("Colour"),
+			EventSheetL10n.translate("Named colours from the theme, so a comment reads right in dark and light. The colour is for the sheet only and is not written to the code."))
+	_comment_strip.follow(_comment_color_button, EventSheetL10n.translate("More colours"),
 		EventSheetL10n.translate("A colour behind this comment on the sheet. Clear its alpha to 0 to go back to the theme default."))
 	_comment_strip.follow(_comment_manual_check, EventSheetL10n.translate("Shows in the manual"),
 		EventSheetL10n.translate("Writes ## instead of #. Notes left as # stay in this sheet - they are not documentation and nothing counts them as missing."))
@@ -113,7 +142,31 @@ func _refresh_comment() -> void:
 		line += " …"
 	_comment_band.show_row("", line)
 	_comment_strip.set_reading("", line)
-	_comment_color_label.text = EventSheetL10n.translate("theme default") if _comment_color_button.color.a <= 0.0 else ""
+	_comment_color_label.text = EventSheetL10n.translate("theme default") \
+		if _comment_color_button.color.a <= 0.0 and _comment_color_tag.is_empty() else ""
+
+
+## A named colour picked: it replaces any free colour, so the comment wears the theme's.
+func _on_swatch_picked(tag: String) -> void:
+	_comment_color_tag = tag
+	_comment_color_button.color = Color(0, 0, 0, 0)
+	_paint_swatches()
+	_refresh_comment()
+
+
+## Fills each swatch with its colour in the sheet's current theme, the picked one ringed.
+func _paint_swatches() -> void:
+	var style: EventSheetEventStyle = _dock._active_view()._get_event_style() if _dock._active_view() != null else EventSheetEventStyle.new()
+	var picked: String = _comment_color_tag if _comment_color_button.color.a <= 0.0 else "\n"
+	for index: int in range(_comment_swatches.size()):
+		var tag: String = EventSheetEventStyle.COMMENT_COLOR_TAGS[index]
+		var fill: StyleBoxFlat = StyleBoxFlat.new()
+		fill.bg_color = style.comment_tag_color(tag)
+		fill.set_corner_radius_all(int(EventSheetPalette.scaled_f(3.0)))
+		fill.set_border_width_all(int(EventSheetPalette.scaled_f(2.0 if tag == picked else 1.0)))
+		fill.border_color = EventSheetPopupUI.accent_color() if tag == picked else EventSheetPopupUI.muted_text_color()
+		for state: String in ["normal", "hover", "pressed", "focus"]:
+			_comment_swatches[index].add_theme_stylebox_override(state, fill)
 
 
 func _on_comment_dialog_confirmed() -> void:
@@ -122,15 +175,17 @@ func _on_comment_dialog_confirmed() -> void:
 	var target: CommentRow = _comment_dialog_target
 	var new_text: String = _comment_text_edit.text
 	var new_color: Color = _comment_color_button.color
+	var new_tag: String = _comment_color_tag if new_color.a <= 0.0 else ""
 	var documentation: bool = _comment_manual_check.button_pressed
 	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Comment", func() -> bool:
 		# An OK that changed nothing is not an edit: no undo step, and the sheet stays clean (for an
 		# opened .gd that means no rewrite at all).
-		if target.text == new_text and target.custom_color == new_color \
+		if target.text == new_text and target.custom_color == new_color and target.color_tag == new_tag \
 				and target.is_documentation() == documentation:
 			return false
 		target.text = new_text
 		target.custom_color = new_color
+		target.color_tag = new_tag
 		# Leaves the marker completely alone when the side has not changed, so a comment lifted as
 		# `##` (no trailing space) is not silently respelled and re-emits byte for byte.
 		target.set_documentation(documentation)

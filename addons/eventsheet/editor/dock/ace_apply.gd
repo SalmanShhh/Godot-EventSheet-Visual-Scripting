@@ -1058,7 +1058,33 @@ func _sheet_variable_name(row_data: EventRowData) -> String:
 func _on_row_drop_requested(source_row: EventRowData, target_row: EventRowData, drop_mode: String = "before", copy_mode: bool = false) -> void:
 	if source_row == null:
 		return
+	if drop_mode.begins_with(EventSheetViewport.ACTION_LIST_DROP_PREFIX):
+		_drop_comment_into_actions(source_row, target_row,
+			int(drop_mode.trim_prefix(EventSheetViewport.ACTION_LIST_DROP_PREFIX)), copy_mode)
+		return
 	_move_rows([source_row], target_row, drop_mode, copy_mode)
+
+
+## A comment row let go on an event's action column joins that action list at `at`: moved there, or
+## copied with Ctrl held. One undo step.
+func _drop_comment_into_actions(source_row: EventRowData, target_row: EventRowData, at: int, copy_mode: bool) -> void:
+	var comment: CommentRow = source_row.source_resource as CommentRow
+	var event: EventRow = target_row.source_resource as EventRow if target_row != null else null
+	if comment == null or event == null or _dock._current_sheet == null:
+		return
+	var location: Dictionary = _dock._comments._locate_row_container(_dock._current_sheet.events, comment)
+	if location.is_empty() and not copy_mode:
+		return
+	var changed: bool = _dock._perform_undoable_sheet_edit("Move Comment Into Actions", func() -> bool:
+		var moving: CommentRow = comment.duplicate(true) as CommentRow if copy_mode else comment
+		if not copy_mode:
+			(location["container"] as Array).erase(comment)
+		event.actions.insert(clampi(at, 0, event.actions.size()), moving)
+		return true
+	)
+	if changed:
+		_dock._refresh_after_edit()
+		_dock._mark_dirty("Comment joined the actions.")
 
 
 func _on_rows_drop_requested(

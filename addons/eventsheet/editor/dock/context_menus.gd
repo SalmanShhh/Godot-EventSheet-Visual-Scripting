@@ -131,7 +131,7 @@ func build_all() -> void:
 	_dock._condition_context_menu.add_separator()
 	_dock._condition_context_menu.add_item("Invert Condition", _dock.CONDITION_MENU_INVERT)
 	_dock._condition_context_menu.add_item("Disable Condition", _dock.CONDITION_MENU_TOGGLE_ENABLED)
-	_dock._condition_context_menu.add_item("Edit Note…", _dock.CONDITION_MENU_EDIT_ACE_COMMENT)
+	# No note on a condition: its `if` line stays plain. A comment row above the event explains it.
 	_dock._condition_context_menu.add_item("Select All Events Using This", _dock.ACE_MENU_SELECT_ALL_MATCHING)
 	_dock._condition_context_menu.add_separator()
 	_dock._condition_context_menu.add_item("Delete Condition", _dock.CONDITION_MENU_DELETE)
@@ -144,7 +144,8 @@ func build_all() -> void:
 	_dock._action_context_menu.add_item("Replace Action", _dock.ACTION_MENU_REPLACE)
 	_dock._action_context_menu.add_separator()
 	_dock._action_context_menu.add_item("Disable Action", _dock.ACTION_MENU_TOGGLE_ENABLED)
-	_dock._action_context_menu.add_item("Edit Note…", _dock.ACTION_MENU_EDIT_ACE_COMMENT)
+	# The words after the action, written as the comment at the end of its own code line.
+	_dock._action_context_menu.add_item(EventSheetL10n.translate("Add note"), _dock.ACTION_MENU_EDIT_ACE_COMMENT)
 	_dock._action_context_menu.add_item("Select All Events Using This", _dock.ACE_MENU_SELECT_ALL_MATCHING)
 	_dock._action_context_menu.add_item("Detach Comment To Row", _dock.ACTION_MENU_DETACH_COMMENT)
 	_dock._action_context_menu.add_item("Delete Action", _dock.ACTION_MENU_DELETE)

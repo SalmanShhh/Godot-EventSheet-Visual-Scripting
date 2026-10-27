@@ -9666,3 +9666,8 @@ Add and continue,追加して続ける
 Nothing will be added.,何も追加されません。
 1 behaviour will be added.,1 個のビヘイビアが追加されます。
 %d behaviours will be added (shared ones once).,%d 個のビヘイビアが追加されます (共通のものは 1 回だけ)。
+Add note,メモを追加
+Why this action is here…,このアクションがここにある理由…
+More colours,その他の色
+Shows in the manual (writes ##),マニュアルに表示（## を書き込む）
+"Named colours from the theme, so a comment reads right in dark and light. The colour is for the sheet only and is not written to the code.",テーマの名前付きカラーなので、コメントはダークでもライトでも読みやすく表示されます。色はシート上だけのもので、コードには書き込まれません。

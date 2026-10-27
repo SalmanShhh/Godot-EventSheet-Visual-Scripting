@@ -9666,3 +9666,8 @@ Add and continue,추가하고 계속
 Nothing will be added.,아무것도 추가되지 않습니다.
 1 behaviour will be added.,비헤이비어 1개가 추가됩니다.
 %d behaviours will be added (shared ones once).,비헤이비어 %d개가 추가됩니다 (공통인 것은 한 번만).
+Add note,메모 추가
+Why this action is here…,이 액션이 여기 있는 이유…
+More colours,색 더 보기
+Shows in the manual (writes ##),매뉴얼에 표시 (## 작성)
+"Named colours from the theme, so a comment reads right in dark and light. The colour is for the sheet only and is not written to the code.",테마의 이름 있는 색이라 주석이 어두운 테마와 밝은 테마 모두에서 잘 읽힙니다. 색은 시트에만 적용되며 코드에는 쓰이지 않습니다.

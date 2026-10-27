@@ -301,6 +301,21 @@ static func reset_progress() -> void:
 	cancel_requested = false
 
 
+## The lift body, with the comments of a handler the per-handler gate does not ask (`_ready`, a handler
+## that inlines its coroutines) read as comment rows too. Only the whole-file verify judges those, so when
+## the lift fails after taking such comments out it is read once more with them left in the events, the
+## way it always was - a file that lifted before still lifts.
+static func _lift_body_reading_comments(sheet: EventSheetResource, source: String, lift_functions: bool) -> bool:
+	_ungated_comment_rows_taken = false
+	var lifted: bool = _attempt_lift_body(sheet, source, lift_functions)
+	if lifted or not _ungated_comment_rows_taken:
+		return lifted
+	_ungated_comment_rows = false
+	lifted = _attempt_lift_body(sheet, source, lift_functions)
+	_ungated_comment_rows = true
+	return lifted
+
+
 ## Attempts the lift on an imported external sheet. Mutates sheet.events only when the
 ## byte-identical round-trip verifies; otherwise leaves the sheet untouched.
 ## Two-pass: the full lift (events + sheet functions + trailing comments) is tried first;
@@ -311,13 +326,13 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 	# function and must not restart the bar the user is watching. The body has many early returns
 	# (GDScript has no try/finally), so the finalize lives here in the wrapper.
 	if sheet == null or not lift_functions:
-		var lifted_events_only: bool = _attempt_lift_body(sheet, source, lift_functions)
+		var lifted_events_only: bool = _lift_body_reading_comments(sheet, source, lift_functions)
 		SpawnRunLift.note_host_class("")
 		return lifted_events_only
 	progress_phase = "lifting"
 	progress_functions_done = 0
 	progress_functions_total = _count_lift_candidates(sheet)
-	var lifted: bool = _attempt_lift_body(sheet, source, lift_functions)
+	var lifted: bool = _lift_body_reading_comments(sheet, source, lift_functions)
 	# A class written inside the script is read last, from the code rows the lift above left, so its
 	# body is opened as a sheet of its own; byte-gated inside, and loaded only for a file that has one.
 	if not cancel_requested and (source.begins_with("class ") or source.contains("\nclass ")):
@@ -596,7 +611,6 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 						# what a sheet whose mode rows came before its On created row opened as.
 						var claimable: Dictionary = _claims_still_ahead(sheet, index, connections) \
 								if header.begins_with("func _ready(") else connections
-						var lift: Dictionary = _lift_function(row.code.split("\n"), claimable, true)
 						# Per-function gate, the trigger-branch twin of the sheet-function gate below:
 						# the lifted events must re-emit this handler's exact bytes, or the handler
 						# stays raw and the run re-anchors after it (a mis-emitting handler used to
@@ -606,6 +620,12 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 						# split-out async coroutines (its re-emission spans other rows by design).
 						var gate_exempt: bool = header.begins_with("func _ready(") \
 								or (not async_funcs.is_empty() and (header.begins_with("func _process(") or header.begins_with("func _physics_process(")))
+						# A handler the gate does not ask keeps its comments in its events, as it always
+						# did: only a gated read may lift them out as comment rows.
+						_comment_rows_ride = not gate_exempt or _ungated_comment_rows
+						var lift: Dictionary = _lift_function(row.code.split("\n"), claimable, true)
+						if gate_exempt and _comment_rows_ride and _holds_comment_row(lift.get("events", [])):
+							_ungated_comment_rows_taken = true
 						# Group markers are stripped from BOTH sides exactly as the whole-file verify
 						# strips them: the `# @group:` tags re-emit from a registry the full compile
 						# fills, which this per-function probe does not have.
@@ -613,7 +633,13 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 								and not (lift.get("events", []) as Array).is_empty() \
 								and _strip_group_markers(SheetCompiler.emit_anchored_trigger_text(lift.get("events", []),
 									_group_guards_for(lift.get("events", [])), sheet.tool_mode)) != _strip_group_markers(row.code):
-							lift = {"ok": false}
+							# Once more with the comments left in the events, before the handler stays raw.
+							_comment_rows_ride = false
+							lift = _lift_function(row.code.split("\n"), claimable, true)
+							if bool(lift.get("ok", false)) and _strip_group_markers(SheetCompiler.emit_anchored_trigger_text(lift.get("events", []),
+									_group_guards_for(lift.get("events", [])), sheet.tool_mode)) != _strip_group_markers(row.code):
+								lift = {"ok": false}
+						_comment_rows_ride = true
 						if bool(lift.get("ok", false)):
 							saw_function = true
 							if header.begins_with("func _ready("):
@@ -834,10 +860,14 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 				# has nowhere to keep `-> bool`, so it used to stay a code block although it lifts as the
 				# function it also is. A lifecycle header stays as it was.
 				var event_anchor: EventAnchorRow = EventAnchorRow.new()
-				event_anchor.trigger_id = (handler_events[0] as EventRow).trigger_id
+				for handler_lead: Variant in handler_events:
+					if handler_lead is EventRow:
+						event_anchor.trigger_id = (handler_lead as EventRow).trigger_id
+						break
 				var handler_uids: PackedStringArray = PackedStringArray()
 				for handler_event: Variant in handler_events:
-					handler_uids.append((handler_event as EventRow).event_uid)
+					if handler_event is EventRow:
+						handler_uids.append((handler_event as EventRow).event_uid)
 				event_anchor.event_uids = handler_uids
 				sheet.events[mid_index] = event_anchor
 				for insert_offset in range(handler_events.size()):
@@ -1201,7 +1231,7 @@ static func _reconstruct_groups(events: Array, registry: Dictionary) -> Array:
 	for event: Variant in events:
 		var slug: String = ""
 		# An event, or a region fence the group held (_grouped_fence_at), goes back into its group.
-		if (event is EventRow or event is CustomBlockRow) and (event as Object).has_meta("__group_slug"):
+		if (event is EventRow or event is CustomBlockRow or event is CommentRow) and (event as Object).has_meta("__group_slug"):
 			slug = str((event as Object).get_meta("__group_slug"))
 			(event as Object).remove_meta("__group_slug")
 		if slug.is_empty() or not groups.has(slug):
@@ -2502,15 +2532,29 @@ static func _annotated_function_regex() -> RegEx:
 ## gate: the compiler's in-place re-emission of those events has to reproduce this row's bytes
 ## exactly, so anchoring can never change a file.
 static func _anchor_handler_events(mid_row: RawCodeRow, connections: Dictionary, tool_sheet: bool = false) -> Array:
+	var handler_events: Array = _anchored_handler_try(mid_row, connections, tool_sheet)
+	if handler_events.is_empty() and _comment_rows_ride:
+		# Read again with the comments left in the events, the way they always were.
+		_comment_rows_ride = false
+		handler_events = _anchored_handler_try(mid_row, connections, tool_sheet)
+		_comment_rows_ride = true
+	return handler_events
+
+
+## One read of a handler for _anchor_handler_events: its events (comment rows among them), or [] when
+## they do not write the handler back byte for byte.
+static func _anchored_handler_try(mid_row: RawCodeRow, connections: Dictionary, tool_sheet: bool) -> Array:
 	var handler_lift: Dictionary = _lift_function(mid_row.code.split("\n"), connections, true)
 	if not bool(handler_lift.get("ok", false)):
 		return []
 	var handler_events: Array = handler_lift.get("events", [])
-	if handler_events.is_empty() or not (handler_events[0] is EventRow):
-		return []
+	var has_event: bool = false
 	for handler_event: Variant in handler_events:
-		if not (handler_event is EventRow):
+		if not (handler_event is EventRow or handler_event is CommentRow):
 			return []
+		has_event = has_event or handler_event is EventRow
+	if not has_event:
+		return []
 	if SheetCompiler.emit_anchored_trigger_text(handler_events, {}, tool_sheet) != mid_row.code:
 		return []
 	return handler_events
@@ -2894,7 +2938,66 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 			(event as EventRow).set_meta("__scene_connected", true)
 			if not source_class.is_empty():
 				(event as EventRow).set_meta("__scene_source_class", source_class)
+	if _comment_rows_ride:
+		events = _comment_rows_out(events)
 	return {"ok": true, "events": lambda_rows + events}
+
+
+## True when `rows` holds a comment row of its own (one _comment_rows_out took out of the events).
+static func _holds_comment_row(rows: Array) -> bool:
+	for row: Variant in rows:
+		if row is CommentRow:
+			return true
+	return false
+
+
+## A handler's events with the comments written right above an event read back as the comment rows
+## they are, standing above that event as a row of the sheet (the compiler writes a comment row
+## exactly there: _flatten_trigger_rows). The walk reads them as the trailing comments of the
+## statements before the event (or of a run that holds nothing but them), so they are taken off that
+## run's end. Only the shapes the compiler writes are taken; anything else is left as it was read.
+##
+## A run of comments under a `# @group:` tag belongs to that group and takes the event below it into
+## the group too (the compiler writes a grouped event's own comments under its tag); a run above the
+## tag stays outside the group.
+static func _comment_rows_out(events: Array) -> Array:
+	var out: Array = []
+	for index: int in range(events.size()):
+		var event: Variant = events[index]
+		var next: Variant = events[index + 1] if index + 1 < events.size() else null
+		if not (event is EventRow) or not (next is EventRow) or not _is_plain_collector(event as EventRow) \
+				or not (event as EventRow).sub_events.is_empty() or (next as EventRow).else_mode != EventRow.ElseMode.NONE:
+			out.append(event)
+			continue
+		var collector: EventRow = event as EventRow
+		var below: EventRow = next as EventRow
+		var first_comment: int = collector.actions.size()
+		while first_comment > 0 and collector.actions[first_comment - 1] is CommentRow:
+			first_comment -= 1
+		if first_comment == collector.actions.size():
+			out.append(event)
+			continue
+		var run_slug: String = str(collector.get_meta("__group_slug", ""))
+		var below_slug: String = str(below.get_meta("__group_slug", ""))
+		var whole_run: bool = first_comment == 0
+		var taken: bool = run_slug.is_empty() and (below_slug.is_empty() or whole_run)
+		# Under the tag: the run is the whole collector, and the event below was read with no tag of
+		# its own because the run took it.
+		var under_tag: bool = whole_run and not run_slug.is_empty() and below_slug.is_empty()
+		if not taken and not under_tag:
+			out.append(event)
+			continue
+		var comments: Array = collector.actions.slice(first_comment)
+		collector.actions.resize(first_comment)
+		if not whole_run:
+			out.append(collector)
+		for comment: Variant in comments:
+			if under_tag:
+				(comment as Object).set_meta("__group_slug", run_slug)
+			out.append(comment)
+		if under_tag:
+			below.set_meta("__group_slug", run_slug)
+	return out
 
 
 ## One `signal.connect(func(…): …)` statement in `_ready` → {ok, events, next}. The body becomes the
@@ -3539,6 +3642,15 @@ static var _group_runs_on: Dictionary = {}
 ## True while a SHEET FUNCTION's body is read: its top-level `#region` / `#endregion` lines are rows
 ## of the body (a region drawn around them), read as fences. Set and cleared around that one read.
 static var _fence_body_lift: bool = false
+# Whether a handler's lift reads a comment written right above an event as a comment row of the sheet
+# (_comment_rows_out). Switched off for a second try when the handler with them cannot be written back
+# byte for byte, so a shape the compiler cannot reproduce still lifts the way it always did.
+static var _comment_rows_ride: bool = true
+# Whether a handler the per-handler gate does not ask may read its comments as rows (only the whole-file
+# verify judges it), and whether one did in the lift running now: _lift_body_reading_comments reads the
+# file again without them when that lift fails.
+static var _ungated_comment_rows: bool = true
+static var _ungated_comment_rows_taken: bool = false
 
 
 ## True when every top-level fence line of a function's body is one the compiler could have written:
@@ -4480,6 +4592,21 @@ static func _consume_action_line(event: EventRow, line: String, _depth: int, pen
 	if line.strip_edges().begins_with("#"):
 		_append_raw_line(event, pending_raw, blank_box, line)
 		return
+	# A statement with a comment at the end of its line is the action with a note: the code before the
+	# comment is read as it would be alone, and the words after it ride on the action it becomes. When
+	# the code reads as no action the whole line stays verbatim, note and all.
+	var note_at: int = _action_note_at(line)
+	if note_at > 0:
+		var code_part: String = line.substr(0, note_at)
+		var last_before: Variant = event.actions.back() if not event.actions.is_empty() else null
+		_consume_action_line(event, code_part, _depth, pending_raw, reverse_entries, in_loop, blank_box)
+		if not pending_raw.is_empty() and pending_raw[pending_raw.size() - 1] == code_part:
+			pending_raw[pending_raw.size() - 1] = line
+		elif not event.actions.is_empty() and event.actions.back() is ACEAction and event.actions.back() != last_before:
+			(event.actions.back() as ACEAction).comment = line.substr(note_at + SheetCompiler.ACTION_NOTE_MARKER.length())
+		else:
+			pending_raw.append(line)
+		return
 	# The families that know what a line is ABOUT are asked first, each with the spelling it matched
 	# baked on so emission writes the author's bytes back. They win over the general index because it
 	# reads a line by its shape alone: `rpc(&"f", …)` is "Call rpc" to it, and a light's `energy = 1.2`
@@ -4521,6 +4648,38 @@ static func _consume_action_line(event: EventRow, line: String, _depth: int, pen
 	action.params = matched.get("params", {})
 	_stamp_body_blanks(action, blank_box)
 	event.actions.append(action)
+
+
+## Where the note at the end of a statement line starts: the index of the two spaces before its `# `,
+## the way the compiler writes an action's note (SheetCompiler.ACTION_NOTE_MARKER), or -1 when the line
+## has none. A `#` inside a string is not a comment, a note has words in it, and a `# @` marker is code.
+static func _action_note_at(line: String) -> int:
+	var quote: String = ""
+	var index: int = 0
+	while index < line.length():
+		var character: String = line[index]
+		if not quote.is_empty():
+			if character == "\\":
+				index += 2
+				continue
+			if character == quote:
+				quote = ""
+		elif character == "\"" or character == "'":
+			quote = character
+		elif character == "#":
+			var start: int = index - 2
+			if start <= 0 or line.substr(start, SheetCompiler.ACTION_NOTE_MARKER.length()) != SheetCompiler.ACTION_NOTE_MARKER:
+				return -1
+			if line[start - 1] == " " or line[start - 1] == "\t":
+				return -1
+			var note: String = line.substr(start + SheetCompiler.ACTION_NOTE_MARKER.length())
+			# A `# @...` after a statement is a marker a template writes itself (`# @ace:Core.ConsoleLog`),
+			# part of the code the action is read from, never a note somebody typed.
+			if note.strip_edges().is_empty() or note != note.strip_edges() or note.begins_with("@"):
+				return -1
+			return start
+		index += 1
+	return -1
 
 
 ## One matched spelling as the row it is, for every family that recognises the author's own

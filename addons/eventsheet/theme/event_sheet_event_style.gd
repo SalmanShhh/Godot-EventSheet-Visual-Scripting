@@ -265,6 +265,28 @@ extends Resource
 @export var saved_badge_background_color: Color = Color("#25402a")
 
 
+## The named colours a comment can wear (CommentRow.color_tag), in the order the Edit comment window
+## shows them. The first, empty, is the theme's own comment colour. Each is worked out from the theme's
+## comment colour (comment_tag_color), so it reads right in a dark theme and a light one alike.
+const COMMENT_COLOR_TAGS: PackedStringArray = ["", "red", "orange", "yellow", "green", "blue", "purple", "grey"]
+const _COMMENT_TAG_HUES: Dictionary = {"red": 0.0, "orange": 0.07, "yellow": 0.15, "green": 0.36, "blue": 0.6, "purple": 0.76}
+
+
+## The colour behind a comment wearing the named colour `tag`: the theme's comment colour turned to
+## that hue, at the same depth, so the comment keeps the contrast of the theme it sits in. The theme's
+## own comment colour for "" or a name it does not know.
+func comment_tag_color(tag: String) -> Color:
+	var base: Color = comment_row_background_color
+	if tag != "grey" and not _COMMENT_TAG_HUES.has(tag):
+		return base
+	var light: bool = base.get_luminance() > 0.5
+	var depth: float = base.v if light else clampf(base.v * 1.3, 0.0, 1.0)
+	if tag == "grey":
+		return Color.from_hsv(0.0, 0.0, depth, base.a)
+	var saturation: float = clampf(base.s, 0.15, 0.3) if light else clampf(base.s, 0.3, 0.5)
+	return Color.from_hsv(float(_COMMENT_TAG_HUES[tag]), saturation, depth, base.a)
+
+
 ## A token that re-colours something older, or the colour it stands in for while the theme leaves it
 ## clear. The one reading of "clear means as before", shared by every painter that honours it.
 static func stated_or(stated: Color, fallback: Color) -> Color:

@@ -940,6 +940,20 @@ static func _is_variable_doc_line(line: String) -> bool:
 	return line.begins_with("## ") and not line.begins_with("## @")
 
 
+## The `##` description written right above `pending[cursor]` and up: every line of it, read as one
+## text with a line break between its lines, as {text, lines} (`lines` is how many it took); {} when the
+## line at `cursor` is no description line.
+static func _doc_block_above(pending: PackedStringArray, cursor: int) -> Dictionary:
+	var doc_lines: PackedStringArray = PackedStringArray()
+	var at: int = cursor
+	while at >= 0 and _is_variable_doc_line(pending[at]) and not pending[at].substr(3).strip_edges().is_empty():
+		doc_lines.insert(0, pending[at].substr(3).strip_edges())
+		at -= 1
+	if doc_lines.is_empty():
+		return {}
+	return {"text": "\n".join(doc_lines), "lines": doc_lines.size()}
+
+
 ## When a tree variable lifts, pull a directly-preceding @export_group / @export_subgroup off the pending
 ## block onto the variable's attributes - but only if the variable's canonical re-emission then reproduces
 ## those exact lines plus the var line (the verify-lift rule). A wrong guess is reverted, so a grouped var
@@ -961,13 +975,12 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 	# hand-written script whose group line stayed a raw block never grew its settings folder at all.
 	var tooltip_value: String = ""
 	var doc_after_group: bool = false
-	if cursor >= 0 and _is_variable_doc_line(pending[cursor]):
-		var trailing_doc: String = pending[cursor].substr(3).strip_edges()
-		if not trailing_doc.is_empty():
-			tooltip_value = trailing_doc
-			doc_after_group = true
-			meta_count += 1
-			cursor -= 1
+	var trailing_doc: Dictionary = _doc_block_above(pending, cursor)
+	if not trailing_doc.is_empty():
+		tooltip_value = str(trailing_doc["text"])
+		doc_after_group = true
+		meta_count += int(trailing_doc["lines"])
+		cursor -= int(trailing_doc["lines"])
 	# A section line may carry the name prefix as its second argument (`@export_group("Bullet",
 	# "bullet")`), and an empty group name is the explicit end of the folder before it.
 	var subgroup_prefix_value: String = ""
@@ -1008,11 +1021,12 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 	# A doc comment above the section lines (no blank line - a blank line would sit at pending's tail
 	# instead) is the variable's tooltip, per Godot's `##` doc-comment convention, in this plugin's own
 	# canonical order. The other order was already taken above, so this only runs when it was not.
-	if not doc_after_group and cursor >= 0 and _is_variable_doc_line(pending[cursor]):
-		tooltip_value = pending[cursor].substr(3).strip_edges()
-		if not tooltip_value.is_empty():
-			meta_count += 1
-			cursor -= 1
+	if not doc_after_group:
+		var leading_doc: Dictionary = _doc_block_above(pending, cursor)
+		if not leading_doc.is_empty():
+			tooltip_value = str(leading_doc["text"])
+			meta_count += int(leading_doc["lines"])
+			cursor -= int(leading_doc["lines"])
 	# The flag is only worth carrying when there IS a section line to sit above: with none, the two
 	# orders are the same bytes, and a stray flag would be a difference the sheet cannot justify.
 	doc_after_group = doc_after_group and not (
