@@ -366,8 +366,8 @@ Node script extending `CharacterBody2D`.
 - **On First Discovered** (`set_name: String, entry_id: String`) - Fires the FIRST time an entry is discovered, and never again for that entry - the toast, the page-turn sound, the achievement. A second Discover of the same entry is silent, so the row that fills the codex and the row that celebrates it can be the same row.
 
 #### Conditions
-- **For Each Discovered** (`set_name: String`) - Runs this event's actions once per DISCOVERED entry of a set, in name order - the codex page itself, as one row. Read the current one as `entry`, then take its `entry_name`, `picture` and `text` straight off it. An entry that has been discovered but has no file behind it any more is skipped rather than arriving as null.
 - **Has Discovered** (`set_name: String, entry_id: String`) - Whether that entry of that set has been found - show the page, unlock the recipe, grey the silhouette out.
+- **For Each Discovered** (`set_name: String`) - Runs this event's actions once per DISCOVERED entry of a set, in name order - the codex page itself, as one row. Read the current one as `entry`, then take its `entry_name`, `picture` and `text` straight off it. An entry that has been discovered but has no file behind it any more is skipped rather than arriving as null.
 
 #### Actions
 - **Discover** (`set_name: String, entry_id: String`) - Records that the player has found an entry of a set. The first Discover of an entry fires On First Discovered; every one after it is silent, so the row that fills the codex and the row that celebrates it can be the same row.
@@ -1325,12 +1325,12 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **On Loop** (`loops_left: int`)
 
 #### Conditions
-- **For Each Feedback** - Runs the actions under it once per feedback in this player's list, top to bottom, with the label of each one in hand.
 - **Is Playing** - True while a play is running - between the started and the finished trigger.
 - **Has Played** - True once this player has played at least once, and stays true. The "they have seen this already" question, with nothing to store.
 - **Feedback Is Playing** (`label: String`) - True while the head is on that card - the moment the hit is being felt rather than the whole beat around it.
 - **Has Feedback** (`label: String`) - True when this player's list holds a card by that name. The question a row asks before it retunes one, and the one a Doctor finding is about.
 - **Feedback Is Enabled** (`label: String`) - True when that card's box is ticked - so a settings screen can show the switch the way the list actually has it.
+- **For Each Feedback** - Runs the actions under it once per feedback in this player's list, top to bottom, with the label of each one in hand.
 
 #### Actions
 - **Play Feedbacks** (`at_strength: float`) - Plays this node's list of feedbacks and carries straight on with the rows under this one. The strength scales every amount in the list, so a light hit and a heavy one are one list at two numbers.
@@ -1642,8 +1642,8 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **On Mods Changed** - Fires once after anything changes what is loaded or what is switched on - the moment a mod list on the options screen should be redrawn.
 
 #### Conditions
-- **For Each Mod** - Runs this event's actions once per LOADED mod, in load order - the mod list on the options screen, as one row. Read the current one as `mod`, then take `mod.name`, `mod.version`, `mod.author`, `mod.kind` ("folder" or "pack") and `mod.folder` straight off it.
 - **Mod Is Loaded** (`wanted: String`) - Whether a mod of that name is loaded right now - the check in front of using what it brought.
+- **For Each Mod** - Runs this event's actions once per LOADED mod, in load order - the mod list on the options screen, as one row. Read the current one as `mod`, then take `mod.name`, `mod.version`, `mod.author`, `mod.kind` ("folder" or "pack") and `mod.folder` straight off it.
 
 #### Actions
 - **Load Mods From** (`folder: String, data_only: bool`) - Loads every mod in a folder, in load order: a subfolder with a manifest in it, or a .pck / .zip pack file. With Data Only on, a mod carrying code is refused and says so through On Mod Refused instead of loading. A mod switched off is skipped in silence, and On Mods Changed fires once at the end.
@@ -2048,19 +2048,40 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **On Path Complete**
 - **On Waypoint Reached**
 - **On Nav Graph Built**
+- **On Portal Entered** - Fires when the agent reaches a portal's entrance, BEFORE the portal moves it. Call Pause At Portal here to play a door animation first; Current Portal Id names the portal.
+- **On Jump Toward Launched** - Fires when Jump Toward actually leaves the ground. Jump Toward Target is the aimed point.
+- **On Patrol End Reached** - Fires each time a patrolling agent reaches one end of its platform, before it turns.
+- **On Patrol Dwell Started** - Fires when a patrolling agent starts waiting at an end (not fired for a dwell of 0).
+- **On Patrol Dwell Finished** - Fires when the wait at a patrol end is over and the agent turns; Patrol Direction already reads the new direction inside it.
+- **On Node Side Reached** - Fires when a Find Path To Node Side route arrives beside the node; Reached Side says which.
+- **On Nav Graph Cleared** - Fires when Clear Nav Graph drops the graph and the obstacle map.
 
 #### Conditions
+- **Is Enabled** - True while the behavior is enabled (Set Enabled, or the Nav Enabled property).
+- **Is Patrolling** - True while a Start Patrol patrol is running (walking or dwelling).
+- **Is At Ledge** - True while the agent stands on the edge node of its platform.
+- **Is At Island** - True while the agent stands on a one-node platform.
+- **Is On Same Platform** (`target: Node`) - True when the agent could WALK to the node - no jump or fall needed (slopes and stairs count).
+- **Is Position On Same Platform** (`x: float, y: float`) - True when the agent could WALK to a world position - no jump or fall needed.
+- **Tile Has State** (`gx: int, gy: int, state: String`) - True when a cell has the given state.
+- **Tile Has State At** (`x: float, y: float, state: String`) - True when the cell under a world position has the given state.
+- **Graph Node Exists** (`gx: int, gy: int`) - True when a cell is a standable node of the graph.
+- **Graph Node Exists At** (`x: float, y: float`) - True when the cell under a world position is a standable node.
+- **Is Ledge Node** (`gx: int, gy: int`) - True when a node is the edge of its platform (left, right or both).
+- **Is Position Hazardous** (`x: float, y: float`) - True when a world position is inside any hazard.
+- **Is At Portal** - True while the agent is held at a portal entrance by Pause At Portal.
+- **Is Traversing Portal** - True while a gradual portal is moving the agent.
 - **Is Path Pending**
 - **Is In Hazard**
 - **Has Path**
 - **Path Wants Jump**
 
 #### Actions
-- **Build Nav Graph From Tilemap** (`tilemap: Node`) - Scans a TileMapLayer's physics tiles into the navigation graph: standable cells become nodes, adjacent cells (one step up or down - stairs and tile slopes) become WALK edges, and jump arcs / fall drops connect the rest, sized to the sibling PlatformerMovement's real jump. Call once on ready; Regenerate after level edits. Fires On Nav Graph Built.
-- **Regenerate Nav Graph** - Rebuilds the graph from the same TileMapLayer (after runtime tile edits).
-- **Find Path To** (`x: float, y: float, mode: String`) - Routes to a world position and starts moving. Mode "reach" fails (On Path Failed) when the spot itself is unreachable; "nearest" never fails - it goes to the closest reachable node instead. Fires On Path Found / On Path Failed.
+- **Build Nav Graph From Tilemap** (`tilemap: Node`) - Scans a TileMapLayer's physics tiles into the navigation graph: standable cells become nodes, adjacent cells (one step up or down - stairs and tile slopes) become WALK links, and jump arcs / fall drops connect the rest, sized to the sibling PlatformerMovement's real jump. One-way tiles become jump-through platforms an agent can drop through. Call once on ready; Regenerate after level edits. Fires On Nav Graph Built.
+- **Regenerate Nav Graph** - Rebuilds the graph from the same map (after runtime tile edits, Set Tile State or Scan Collision Bodies).
+- **Find Path To** (`x: float, y: float, mode: String`) - Routes to a world position and starts moving. Mode "reach" fails (On Path Failed) when the spot itself is unreachable; "nearest" never fails on a cut-off spot - it goes as close as it can get. Fires On Path Found / On Path Failed.
 - **Find Path To Node** (`target: Node, mode: String`) - Routes to another node's position AND keeps following it: the route auto-refreshes every Repath Interval once the node has moved Repath Threshold pixels (firing On Repath) - one call chases forever. Stop Pathfinding ends the follow.
-- **Stop Pathfinding** - Clears the path and releases the movement pack back to the keyboard (ai_controlled off).
+- **Stop Pathfinding** - Clears the path (and any patrol, Jump Toward or portal in progress) and releases the movement pack back to the keyboard (ai_controlled off).
 - **Set Auto Control** (`enabled: bool`) - On (default): the behavior drives the sibling PlatformerMovement. Off: paths still compute - read Path Move Axis / Path Wants Jump / Current Waypoint X/Y and drive anything you like.
 - **Set Ledge Restriction** (`enabled: bool`) - Patrol discipline: on, routes may only WALK - no jumps, no portals, and no drops beyond Ledge Leniency, so the agent stays on its platform. Applies from the next Find Path To.
 - **Set Ledge Leniency** (`pixels: float`) - With Ledge Restriction on, drops up to this many pixels are still allowed (a patroller may hop down one step but never off the tower).
@@ -2069,15 +2090,108 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Repath Interval** (`seconds: float`) - While following a node, how often the route may refresh (chase freshness vs cost).
 - **Set Repath Threshold** (`pixels: float`) - The route only refreshes when the followed node has moved at least this many pixels.
 - **Set Max Paths Per Tick** (`count: int`) - The SHARED budget across every agent: at most this many route computations per physics tick - extras defer a tick (Is Path Pending) instead of spiking the frame. The difference between 20 chasers working and not.
-- **Add Portal** (`from_x: float, from_y: float, to_x: float, to_y: float, bidirectional: bool`) - Links two world positions as a PORTAL: an agent whose route uses it walks to the entrance and blinks to the exit (fires On Portal Taken). Bidirectional works both ways. Portals join the graph immediately and survive Regenerate - doors, teleporters, ladders, and elevators all model as portals.
-- **Clear Portals** - Removes every registered portal (takes effect on the next Regenerate Nav Graph).
-- **Add Hazard** (`x: float, y: float, width: float, height: float, deadly: bool`) - Marks a world-space rectangle as hazardous. Deadly: routes NEVER pass through it (spikes, lava). Not deadly: routes pay 4x to cross, so it is taken only when no clean way exists (fire patches, slow mud). Applies to routing instantly - no rebuild - and On Hazard Entered fires if the agent ends up inside one anyway.
-- **Clear Hazards** - Removes every hazard (routing sees the change immediately).
-- **Add Moving Platform** (`platform: Node, from_x: float, from_y: float, to_x: float, to_y: float`) - Registers a moving platform (an AnimatableBody2D you animate) by its two travel endpoints: the graph gains a PLATFORM edge between them, and an agent routed across it walks to the track, WAITS for the platform, boards, rides, and walks off at the far side. Survives Regenerate. The pack never moves the platform - your sheet animates it between exactly these endpoints.
+- **Add Portal** (`from_x: float, from_y: float, to_x: float, to_y: float, bidirectional: bool`) - Links two world positions as an instant PORTAL: an agent whose route uses it walks to the entrance and blinks to the exit (fires On Portal Entered, then On Portal Taken). Bidirectional works both ways. Portals join the graph immediately and survive Regenerate. Add Instant Portal adds a cost and a tag; Add Gradual Portal moves the agent instead of blinking it.
+- **Clear Portals** - Removes every registered portal and elevator stop (takes effect on the next Regenerate Nav Graph).
+- **Add Hazard** (`x: float, y: float, width: float, height: float, deadly: bool`) - Marks a world-space rectangle as hazardous. Deadly: routes NEVER pass through it (spikes, lava). Not deadly: routes pay Danger Cost Multiplier to cross, so it is taken only when no clean way exists (fire patches, slow mud). Applies to routing instantly - no rebuild - and On Hazard Entered fires if the agent ends up inside one anyway. Last Hazard Id names it for Remove Hazard.
+- **Clear Hazards** - Removes every hazard of every kind (routing sees the change immediately).
+- **Add Moving Platform** (`platform: Node, from_x: float, from_y: float, to_x: float, to_y: float`) - Registers a moving platform (an AnimatableBody2D you animate) by its two travel endpoints: the graph gains a PLATFORM link between them, and an agent routed across it walks to the track, WAITS for the platform, boards, rides, and walks off at the far side. Survives Regenerate. The pack never moves the platform - your sheet animates it between exactly these endpoints.
 - **Clear Moving Platforms** - Unregisters every moving platform (takes effect on the next Regenerate Nav Graph).
 - **Set Nav Debug Draw** (`enabled: bool`) - Draws the active path as a line in the world (great while tuning a level).
+- **Set Enabled** (`state: bool`) - Off freezes the agent where it stands with its route, graph and settings kept, and ignores route requests; on resumes exactly where it left off.
+- **Set Path Strategy** (`strategy: String`) - How routes are picked from now on: balanced, shortest (fewest pixels, long jumps welcome), safest (short hops over long leaps and deep drops), ground_hugging (walks whenever it can), no_falling (never descends by air) or walk_only (never leaves its platform except by portal or moving platform).
+- **Set Max Traversal Drop** (`pixels: float`) - Jumps and falls landing more than this many pixels lower are left out of this agent's routes, so it goes down by slopes, portals and short hops instead (fall damage, heavy units). -1 = no limit.
+- **Set Drift Repath Distance** (`pixels: float`) - Knocked more than this many pixels off the leg it is walking, the agent re-plans from where it is (fires On Repath), at most once per Repath Interval. 0 = off.
+- **Set Movement Limit** (`limit: String, value: float`) - Overrides a movement limit the graph is built from instead of deriving it from the movement sibling: jump_height, jump_distance (pixels, 0 = derive again) or max_fall (pixels, negative = no limit). Regenerate Nav Graph afterwards.
+- **Jump Toward** (`x: float, y: float`) - A full-strength jump straight at a point with no route at all - a lunge, a pounce, a boss leap. Works from the ground (or mid-air when the movement sibling has a jump left). Ends any route or patrol. Fires On Jump Toward Launched as it leaves the ground.
+- **Teleport To** (`x: float, y: float`) - Moves the agent to a world position instantly without throwing its route away (the drift re-route skips that tick).
+- **Start Patrol** (`dwell: float, edge_distance: float`) - Patrols the platform the agent stands on: walks to one end, waits Dwell seconds, turns, and repeats. The ends are found from the graph (ledges and walls, slopes and stairs included); Edge Distance keeps it that many pixels back from each end. Any route request ends the patrol.
+- **Stop Patrol** - Ends the patrol; the agent stands where it is.
+- **Find Path To Nearest Ledge** (`direction: String, distance: float`) - Routes to the nearest edge of the agent's platform in a direction, stopping Distance pixels back from it. Fails (On Path Failed, reason no_ledge) when the platform has no ledge that way.
+- **Find Path To Node Side** (`target: Node, side: String, distance: float`) - Routes to a spot BESIDE a node instead of onto it, Distance pixels clear of it: left, right, or any (the nearer side, falling back to the other when it has no ground). Fires On Node Side Reached on arrival there; Reached Side says which side.
+- **Set Crowd Arrivals** (`enabled: bool`) - On: agents routing to the same spot each claim a landing node, so later arrivals stand beside it instead of stacking on one pixel.
+- **Set Multi Agent Avoidance** (`enabled: bool`) - On: routes pay extra for cells other agents stand on or are about to walk, so a pack fans out over different ways.
+- **Set Separation Setting** (`setting: String, value: float`) - Changes an idle separation setting: distance (personal space in pixels, 0 = off), cooldown (seconds of rest after giving up) or give_up_time (seconds of trying before resting).
+- **Create Obstacle Map** (`width: int, height: int, cell_size: float`) - Starts an empty map with no TileMapLayer: Width x Height cells of Cell Size pixels from the world origin, every cell clear. Fill it with Set Tile State or Scan Collision Bodies, then Regenerate Nav Graph.
+- **Set Tile State** (`gx: int, gy: int, state: String`) - Overrides one cell of the map: solid, clear, jump_thru (a one-way platform), slope_left (rises to the right) or slope_right (rises to the left). Overrides survive Regenerate; call Regenerate Nav Graph after a batch of them.
+- **Set Tile State At** (`x: float, y: float, state: String`) - Set Tile State for the cell under a world position.
+- **Scan Collision Bodies** (`root: Node`) - Marks every cell covered by the StaticBody2D shapes under a node as solid (one-way shapes as jump-through) - for levels built from bodies instead of tiles. Needs a grid first (Build Nav Graph From Tilemap or Create Obstacle Map); Regenerate Nav Graph afterwards.
+- **Clear Nav Graph** - Drops the graph, the obstacle map and every tile override (portals and hazards stay registered), stops the agent and fires On Nav Graph Cleared.
+- **Load Obstacle Map JSON** (`json: String`) - Rebuilds the map and graph from a string Obstacle Map JSON produced - a saved or pre-baked level, no TileMapLayer needed.
+- **Log Graph Stats** - Prints the graph's size to the Output panel: nodes, links by kind, portals, hazards, platforms and the jump reach.
+- **Set Debug Draw Graph** (`enabled: bool`) - Draws every node and link of the graph in the world, links coloured by kind.
+- **Add Circle Hazard** (`x: float, y: float, radius: float, deadly: bool`) - Marks a circle as hazardous - an explosion, a fire burst. Deadly blocks routes; not deadly makes them costly. Last Hazard Id names it.
+- **Add Tracked Hazard** (`target: Node, radius: float, deadly: bool`) - A circular hazard that FOLLOWS a node (a patrolling saw, a burning enemy) with no per-frame events, and removes itself when the node is freed. Last Hazard Id names it.
+- **Remove Hazard** (`hazard_id: int`) - Removes one hazard by the id Last Hazard Id gave you.
+- **Set Hazard Margin** (`pixels: float`) - Surrounds every hazard with a danger buffer this many pixels wide, so routes keep their distance.
+- **Add Instant Portal** (`from_x: float, from_y: float, to_x: float, to_y: float, bidirectional: bool, cost: float, tag: String`) - A portal that BLINKS the agent from entrance to exit (a door, a teleporter). Cost 1 is the normal price; raise it to make routes avoid the portal. Tags (comma-separated) group portals for the by-tag verbs. Last Portal Id names it.
+- **Add Gradual Portal** (`from_x: float, from_y: float, to_x: float, to_y: float, bidirectional: bool, speed: float, cost: float, tag: String`) - A portal that MOVES the agent from entrance to exit in a straight line at Speed (a ladder, a lift, a zipline), with the movement sibling paused on the way. Cost 1 prices it by its travel time. Last Portal Id names it.
+- **Add Elevator Stop** (`group: String, x: float, y: float, speed: float, tag: String`) - Adds a stop to an elevator group: two-way gradual portals to every other stop of the group are created for you. One group name per elevator.
+- **Pause At Portal** - Inside On Portal Entered: holds the agent at the entrance so your events can play a door or lift animation first. Then Resume Portal (the portal moves it) or Complete Portal (your events moved it).
+- **Resume Portal** - Runs a paused portal's own move: the blink, or the gradual travel.
+- **Complete Portal** - Finishes a paused portal WITHOUT its own move (your events already moved the agent), or cuts a gradual portal short where the agent is.
+- **Remove Portal** (`portal_id: int`) - Removes one portal by id; its links leave the graph immediately.
+- **Remove Portal Near** (`x: float, y: float`) - Removes the portal whose entrance or exit is nearest a world position.
+- **Remove Portals By Tag** (`tag: String`) - Removes every portal carrying a tag (an empty tag removes them all).
+- **Set Portal Cost** (`portal_id: int, cost: float`) - Changes a portal's price multiplier (higher = routes avoid it).
+- **Set Portal Speed** (`portal_id: int, speed: float`) - Changes a gradual portal's travel speed in px/s.
+- **Set Portal Tag** (`portal_id: int, tag: String`) - Replaces a portal's tags.
+- **Set Portal Ignore Hazards** (`portal_id: int, ignore: bool`) - On: routes use the portal even when a hazard covers it.
+- **Set Portal Position** (`portal_id: int, from_x: float, from_y: float, to_x: float, to_y: float`) - Moves a portal's entrance and exit, keeping its id, type, cost, speed and tags - call it on a timer to follow a moving door.
 
 #### Expressions
+- **Patrol Direction** - -1 walking left, 1 walking right, 0 while dwelling at an end or not patrolling. Handy for flipping the sprite.
+- **Reached Side** - Which side Find Path To Node Side arrived on: -1 left, 1 right, 0 none yet.
+- **Jump Toward Target** - The point the running Jump Toward is aimed at (zero when none is running).
+- **Coyote Timer** - Seconds of coyote grace left after running off a ledge (0 on the ground or once it has run out).
+- **Estimated Velocity X** - The horizontal speed (px/s) the route is asking for right now - Path Move Axis times the run speed.
+- **Path Cost** - The total cost of the active route under the current strategy (0 with no route).
+- **Path End** - Where the active route actually ends - in nearest mode this can differ from the asked-for spot.
+- **Path Target** - The world position the last route was asked for.
+- **Path Goal Cell** - The grid cell the last route ended on (the asked-for spot snapped to walkable ground).
+- **Path Fail Reason** - Why the last route failed: no_graph, no_start_node, no_goal_node, no_path, max_nodes_reached, no_ledge or no_target. Empty after a success.
+- **Path Queue Size** - How many agents are waiting on the shared per-tick route budget right now.
+- **Waypoint Position** (`index: int`) - The world position of a waypoint of the active route (zero out of range).
+- **Waypoint Cell** (`index: int`) - The grid cell of a waypoint of the active route ((-1, -1) out of range).
+- **Waypoint Action** (`index: int`) - How a waypoint is reached: walk, jump, double_jump, coyote_jump, fall, fall_through, portal, portal_gradual or platform (empty out of range).
+- **Distance To Waypoint** - Pixels from the agent to its current waypoint (0 with no route).
+- **Angle To Waypoint** - Degrees from the agent to its current waypoint (0 with no route).
+- **Nearby Agent Count** (`radius: float`) - How many other agents on the same map stand within a radius of this one.
+- **Nearest Ledge** (`direction: String`) - The nearest ledge of the agent's platform in a direction (zero when there is none).
+- **Node On Platform** (`group: String, which: String`) - The nearest or furthest node of a group that stands on the agent's own platform (reachable by walking alone), or null - pick a target it can walk to.
+- **Obstacle Map JSON** - The current obstacle map (tiles, scanned bodies and overrides) as a JSON string, to save or ship with a level.
+- **Obstacle Map Source** - Where the map comes from: tilemap, custom or none.
+- **Tile State** (`gx: int, gy: int`) - A cell's state: solid, clear, jump_thru, slope_left or slope_right (empty with no map or outside a custom map).
+- **World To Grid** (`x: float, y: float`) - The grid cell under a world position.
+- **Grid To World** (`gx: int, gy: int`) - The world position of a cell's centre.
+- **Grid Size** - The map's size in cells (a tilemap's used area, or a custom map's size).
+- **Grid Tile Size** - The map's cell size in pixels (0 with no map).
+- **Ledge Side** (`gx: int, gy: int`) - Which side of a node is a ledge: -1 left, 1 right, 2 both (a one-node island), 0 neither.
+- **Graph Node Count** - How many standable nodes the graph has.
+- **Graph Node Cell** (`index: int`) - The grid cell of the node at an index ((-1, -1) out of range).
+- **Graph Node Position** (`index: int`) - The world position of the node at an index (zero out of range).
+- **Graph Node Connection Count** (`gx: int, gy: int`) - How many links leave a node.
+- **Graph Node Connection Kind** (`gx: int, gy: int, index: int`) - The kind of one link leaving a node (walk, jump, fall, portal...).
+- **Graph Node Connection Cost** (`gx: int, gy: int, index: int`) - The cost of one link leaving a node, under the current strategy.
+- **Graph Node Connection Target** (`gx: int, gy: int, index: int`) - The world position one link leaving a node lands on.
+- **Nearest Graph Node** (`x: float, y: float`) - The world position of the node nearest a point (zero with no graph).
+- **Nearest Graph Node Cell** (`x: float, y: float`) - The grid cell of the node nearest a point ((-1, -1) with no graph).
+- **Calculated Jump Distance** - The jump distance in pixels the graph is built with (derived or overridden).
+- **Calculated Jump Height** - The jump height in pixels the graph is built with (derived or overridden).
+- **Hazard At** (`x: float, y: float`) - The hazard level at a world position: 0 clear, 1 danger (or a hazard's margin), 2 deadly.
+- **Hazard Count** - How many hazards are registered (every kind).
+- **Tracked Hazard Count** - How many node-following hazards are registered.
+- **Last Hazard Id** - The id of the most recently added hazard, for Remove Hazard (0 before any).
+- **Current Portal Id** - The portal being (or last) taken - read it inside On Portal Entered / On Portal Taken (-1 before any).
+- **Last Portal Id** - The id of the most recently added portal (-1 before any).
+- **Portal Count** - How many portals are registered.
+- **Nearest Portal Id** (`x: float, y: float, tag: String`) - The portal whose entrance is nearest a point, optionally only those carrying a tag (-1 when none).
+- **Furthest Portal Id** (`x: float, y: float, tag: String`) - The portal whose entrance is furthest from a point, optionally only those carrying a tag (-1 when none).
+- **Portal Count By Tag** (`tag: String`) - How many portals carry a tag.
+- **Portal Id By Tag** (`tag: String, index: int`) - The id of the index-th portal carrying a tag (-1 out of range).
+- **Portal Tag** (`portal_id: int`) - A portal's tags (empty when it has none or does not exist).
+- **Portal Type** (`portal_id: int`) - instant or gradual (empty when the portal does not exist).
+- **Portal Exit** - Where the current portal lets the agent out.
+- **Portal Progress** - 0 to 1 along a gradual portal while it moves the agent (0 otherwise).
 - **Path Move Axis**
 - **Waypoint Count**
 - **Current Waypoint Index**
@@ -2322,9 +2436,6 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **On Save Key Missing** (`key: String, slot_index: int`) - Fires when a key was asked for and the slot does not hold it - Check Save Key, or a Remove Save Key with nothing to remove. This is where a first run seeds its default once, instead of quietly defaulting forever.
 
 #### Conditions
-- **For Each Saved Slot** - Runs this event's actions once per slot that has a save file - the load menu, as one row. Read the current one as `slot_index`, then fill the tile with Slot Detail and Slot Playtime (both read straight off disk, nothing is loaded).
-- **For Each Saveable Addon** - Runs this event's actions once per autoload that saves itself, so a debug panel can list exactly what the save covers - and, by its absence, what quietly does not. Read the current one as `addon_name`.
-- **For Each Backup Of Slot** (`slot_index: int`) - Runs this event's actions once per kept backup of the slot, newest first. Read the current one as `backup_path` - a real file path, so File Size (bytes) and Read Save File work on it, and its position in the loop is the "how many back" number.
 - **Has Save Key** (`key: String`) - Whether the key exists in the active slot.
 - **Save File Is Format** (`path: String, expected_format: String`) - Whether the save file at the path is the given format (config/json/binary/csv/ini/xml).
 - **Save Format Is** (`expected_format: String`) - Whether the active save format (the Inspector format property) equals the given one.
@@ -2337,6 +2448,9 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Is Loading** - Whether a load is in flight right now - the read, the migration gap and the On After Load broadcast are all inside it. Rows that must not fight the restore can stand aside while it is true.
 - **Save Key Is** (`key: String, value: Variant`) - Whether the stored key equals this value, without loading it into a variable first. A key the slot does not hold never equals anything, so a missing key reads as false.
 - **Can Open Save Folder** - Whether this platform has a save folder to show: true on Windows, macOS and Linux, false on the web and on phones. Hide the button that opens the folder where it cannot work.
+- **For Each Saved Slot** - Runs this event's actions once per slot that has a save file - the load menu, as one row. Read the current one as `slot_index`, then fill the tile with Slot Detail and Slot Playtime (both read straight off disk, nothing is loaded).
+- **For Each Saveable Addon** - Runs this event's actions once per autoload that saves itself, so a debug panel can list exactly what the save covers - and, by its absence, what quietly does not. Read the current one as `addon_name`.
+- **For Each Backup Of Slot** (`slot_index: int`) - Runs this event's actions once per kept backup of the slot, newest first. Read the current one as `backup_path` - a real file path, so File Size (bytes) and Read Save File work on it, and its position in the loop is the "how many back" number.
 
 #### Actions
 - **Save Value** (`key: String, value: Variant`) - Writes ANY value (number, text, Vector2, Color, Dictionary…) under the key.

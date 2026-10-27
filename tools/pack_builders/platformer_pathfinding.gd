@@ -3,30 +3,33 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
+const _STRATEGIES := ["balanced", "shortest", "safest", "ground_hugging", "no_falling", "walk_only"]
+const _TILE_STATES := ["solid", "clear", "jump_thru", "slope_left", "slope_right"]
+
 
 ## Platformer pathfinding for a CharacterBody2D - the 2D jump-graph navigator:
-## scans a TileMapLayer's physics tiles into standable nodes, connects them with WALK edges
-## (adjacent cells, one step up/down - which is what makes stairs and tile slopes walkable),
-## JUMP arcs, and FALL drops, then A*-routes over the graph. Jump reach is DERIVED from the
-## sibling PlatformerMovement's move_speed/jump_velocity/gravity, and auto-control DRIVES that
-## sibling through its ai_move_axis seam + jump() - pathfinding never reimplements movement.
-## Manual mode (Set Auto Control off) exposes the same intents as expressions.
+## scans a TileMapLayer's physics tiles (or a hand-built obstacle map, or scanned StaticBody2D
+## shapes) into standable nodes, connects them with WALK links (adjacent cells, one step up/down -
+## which is what makes stairs and tile slopes walkable), JUMP, DOUBLE JUMP and COYOTE JUMP arcs,
+## FALL drops and FALL-THROUGH drops off one-way platforms, plus instant and gradual PORTALS and
+## moving platforms, then A*-routes over the graph under a path strategy. Jump reach is DERIVED
+## from the sibling PlatformerMovement's move_speed/jump_velocity/gravity/max_jumps, and
+## auto-control DRIVES that sibling through its ai_move_axis seam + jump() - pathfinding never
+## reimplements movement. Manual mode (Set Auto Control off) exposes the same intents as
+## expressions. The code lives in tools/pack_builders/src/platformer_pathfinding/.
 static func build() -> bool:
-	var sheet: EventSheetResource = EventSheetResource.new()
-	sheet.behavior_mode = true
-	sheet.host_class = "CharacterBody2D"
-	sheet.custom_class_name = "PlatformerPathfinding"
-	sheet.class_description = "Jump-aware navigation for 2D platformers: builds a jump graph from your TileMapLayer so an enemy can actually chase through the level - walking where walking works and jumping where a jump is needed. Attach as a sibling of PlatformerMovement, build the graph once, and call Find Path To; jump reach is derived from the movement pack's real physics and the agent is driven through its ai_move_axis seam."
-	sheet.addon_category = "Platformer Pathfinding"
-	sheet.ace_expose_all_mode = "node"
-	sheet.addon_tags = PackedStringArray(["movement", "platformer", "ai", "pathfinding"])
+	var src: Lib.PackSource = Lib.pack_from_source("platformer_pathfinding", "CharacterBody2D", "PlatformerPathfinding",
+		"Jump-aware navigation for 2D platformers: builds a jump graph from your TileMapLayer so an enemy can actually chase through the level - walking where walking works and jumping where a jump is needed. Attach as a sibling of PlatformerMovement, build the graph once, and call Find Path To; jump reach is derived from the movement pack's real physics and the agent is driven through its ai_move_axis seam.",
+		Lib.manifest().behavior().category("Platformer Pathfinding").tags(["movement", "platformer", "ai", "pathfinding"]).expose_all_verbs_on_a_node())
+	var sheet: EventSheetResource = src.sheet
+	# Property ORDER is part of the pack: these emit in the order they are declared here.
 	sheet.variables = {
 		"auto_control": {"type": "bool", "default": true, "exported": true,
 			"attributes": {"tooltip": "Drive the sibling PlatformerMovement automatically. Off = paths still compute; read Path Move Axis / Path Wants Jump and steer yourself."}},
 		"arrive_distance": {"type": "float", "default": 10.0, "exported": true,
 			"attributes": {"tooltip": "How close (px, horizontally) counts as reaching a waypoint."}},
 		"max_fall_distance": {"type": "float", "default": 320.0, "exported": true,
-			"attributes": {"tooltip": "The furthest safe drop (px) the graph will route through."}},
+			"attributes": {"tooltip": "The furthest safe drop (px) the graph will route through. Negative = no limit."}},
 		"jump_height_override": {"type": "float", "default": 0.0, "exported": true,
 			"attributes": {"tooltip": "Max jump height in px (0 = derive it from the sibling PlatformerMovement's jump_velocity/gravity)."}},
 		"jump_distance_override": {"type": "float", "default": 0.0, "exported": true,
@@ -42,9 +45,9 @@ static func build() -> bool:
 		"jump_positioning": {"type": "String", "default": "relaxed", "exported": true, "options": ["relaxed", "strict"],
 			"attributes": {"tooltip": "relaxed: jump as soon as a jump leg starts. strict: walk onto the exact takeoff spot first - slower but precise on tight arcs."}},
 		"coyote_time": {"type": "float", "default": 0.12, "exported": true,
-			"attributes": {"tooltip": "Grace window (s) for AI jumps just after running off the takeoff ledge - a frame-late jump still fires."}},
+			"attributes": {"tooltip": "Grace window (s) for AI jumps just after running off the takeoff ledge - a frame-late jump still fires. Long enough a window (capped by the movement sibling's own) also builds COYOTE JUMP links: run off a ledge, then leap for gaps a standing jump cannot clear."}},
 		"repath_interval": {"type": "float", "default": 0.5, "exported": true,
-			"attributes": {"tooltip": "While following a node (Find Path To Node), how often the route may refresh."}},
+			"attributes": {"tooltip": "While following a node (Find Path To Node), how often the route may refresh. Also the cooldown between drift re-routes."}},
 		"repath_threshold": {"type": "float", "default": 24.0, "exported": true,
 			"attributes": {"tooltip": "The route only refreshes when the followed node has moved at least this many pixels from where the current path was aimed."}},
 		"stuck_timeout": {"type": "float", "default": 1.5, "exported": true,
@@ -55,845 +58,498 @@ static func build() -> bool:
 			"attributes": {"tooltip": "The fallback driver's jump velocity (negative = up). Also sizes jump arcs when nothing can be derived."}},
 		"fallback_gravity": {"type": "float", "default": 980.0, "exported": true,
 			"attributes": {"tooltip": "The fallback driver's gravity."}},
+		"nav_enabled": {"type": "bool", "default": true, "exported": true,
+			"attributes": {"tooltip": "Off = the agent freezes with its route, graph and settings kept, and route requests are ignored until it is switched back on (Set Enabled)."}},
+		"path_strategy": {"type": "String", "default": "balanced", "exported": true, "options": _STRATEGIES,
+			"attributes": {"tooltip": "How routes are picked. balanced: distance and difficulty weighed together. shortest: fewest pixels, long jumps welcome. safest: chains of short hops over long leaps and deep drops. ground_hugging: walks whenever any walking route exists. no_falling: never descends by jump or fall (Max Traversal Drop raises the allowance). walk_only: never leaves its platform except by portal or moving platform."}},
+		"smooth_paths": {"type": "bool", "default": true, "exported": true,
+			"attributes": {"tooltip": "Drop the in-between waypoints of a straight walk so the agent walks the stretch in one leg."}},
+		"max_search_nodes": {"type": "int", "default": 2000, "exported": true,
+			"attributes": {"tooltip": "The most nodes one route search may expand before it gives up (Path Fail Reason max_nodes_reached). Raise it for very large levels."}},
+		"max_traversal_drop": {"type": "float", "default": -1.0, "exported": true,
+			"attributes": {"tooltip": "Jumps and falls that land more than this many pixels lower are left out of routes (fall damage, heavy units). -1 = no limit."}},
+		"drift_repath_distance": {"type": "float", "default": 0.0, "exported": true,
+			"attributes": {"tooltip": "Knocked more than this many pixels off the leg it is walking, the agent re-plans from where it is (fires On Repath). 0 = off."}},
+		"double_jump_links": {"type": "bool", "default": true, "exported": true,
+			"attributes": {"tooltip": "When the movement sibling has max_jumps of 2 or more, build DOUBLE JUMP links to ledges a single jump cannot reach."}},
+		"hazard_margin": {"type": "float", "default": 0.0, "exported": true,
+			"attributes": {"tooltip": "Every hazard is surrounded by a danger buffer this many pixels wide: links through it cost more, so routes keep their distance."}},
+		"danger_cost_multiplier": {"type": "float", "default": 4.0, "exported": true,
+			"attributes": {"tooltip": "How much more a link through a non-deadly hazard (or a hazard's margin) costs than a clean one."}},
+		"auto_build": {"type": "bool", "default": true, "exported": true,
+			"attributes": {"tooltip": "A route asked for before any graph exists builds one from the first TileMapLayer with physics in the running scene."}},
+		"map_tag": {"type": "String", "default": "", "exported": true,
+			"attributes": {"tooltip": "Agents with the same non-empty tag SHARE one graph, obstacle edits, portals, hazards and moving platforms - built once for all of them. Give agents with different jump physics different tags. Empty = this agent keeps its own."}},
+		"grid_cell_size": {"type": "float", "default": 32.0, "exported": true,
+			"attributes": {"tooltip": "Cell size in pixels for a map with no TileMapLayer (Create Obstacle Map, Load Obstacle Map JSON). A tilemap's own tile size always wins."}},
+		"crowd_arrivals": {"type": "bool", "default": false, "exported": true,
+			"attributes": {"tooltip": "Agents routing to the same spot each claim a landing node; later arrivals take the nearest free node beside it instead of stacking."}},
+		"multi_agent_avoidance": {"type": "bool", "default": false, "exported": true,
+			"attributes": {"tooltip": "Routes pay extra for the cells other agents stand on or are about to walk, so agents fan out over different ways."}},
+		"idle_separation": {"type": "float", "default": 0.0, "exported": true,
+			"attributes": {"tooltip": "Personal space in pixels for an agent with no route: closer than this to another agent on the same map, it steps away - never off a ledge. 0 = off."}},
+		"separation_cooldown": {"type": "float", "default": 5.0, "exported": true,
+			"attributes": {"tooltip": "Seconds an agent rests after giving up on idle separation (a crowd too dense to spread)."}},
+		"separation_give_up_time": {"type": "float", "default": 2.0, "exported": true,
+			"attributes": {"tooltip": "Seconds an agent keeps trying to separate before it gives up and rests."}},
+		"debug_draw_graph": {"type": "bool", "default": false, "exported": true,
+			"attributes": {"tooltip": "Draw every node and link of the graph in the world, links coloured by kind (walk, jump, fall, portal...)."}},
+		"debug_log": {"type": "bool", "default": false, "exported": true,
+			"attributes": {"tooltip": "Print each route found (waypoints, cost) and each failure with its reason to the Output panel."}},
 	}
 
-	var about: CommentRow = CommentRow.new()
-	about.text = "Platformer pathfinding: attach as a SIBLING of PlatformerMovement under a CharacterBody2D. Build Nav Graph from your TileMapLayer once, then Find Path To - the behavior derives jump reach from the movement pack and drives it through the ai_move_axis seam. Stairs and tile slopes walk (adjacent cells one step up/down are WALK edges); gaps and ledges route through jump arcs and fall drops."
-	sheet.events.append(about)
-
-	# Internal state + triggers + conditions + expressions + the graph/AStar helpers.
-	var block: RawCodeRow = RawCodeRow.new()
-	block.code = "\n".join(PackedStringArray([
-		"# --- Internal state (the graph lives per agent) ---",
-		"var _tilemap: TileMapLayer = null",
-		"var _movement: Node = null",
-		"var _gravity_angle_warned: bool = false",
-		"## Standable cells (the cell the agent's feet occupy) -> true.",
-		"var _nodes: Dictionary = {}",
-		"## cell -> Array of {\"to\": Vector2i, \"kind\": \"walk\"/\"jump\"/\"fall\", \"cost\": float}.",
-		"var _edges: Dictionary = {}",
-		"## The active path: Array of {\"world\": Vector2, \"action\": String}.",
-		"var _path: Array = []",
-		"var _path_index: int = 0",
-		"var _jumped_this_segment: bool = false",
-		"var _jump_released: bool = false",
-		"var _jump_release_velocity: float = 0.0",
-		"var _move_axis: float = 0.0",
-		"var _debug_line: Line2D = null",
-		"## Registered portals: {\"from\": Vector2, \"to\": Vector2, \"both\": bool} - survive regenerate.",
-		"var _portals: Array = []",
-		"## World-space hazard rects: {\"rect\": Rect2, \"deadly\": bool}. Applied at ROUTING time (no",
-		"## rebuild needed when they change): deadly blocks edges outright, danger multiplies cost.",
-		"var _hazards: Array = []",
-		"var _was_in_hazard: bool = false",
-		"## Registered moving platforms: {\"node\": Node2D, \"a\": Vector2, \"b\": Vector2} - survive",
-		"## regenerate. Each becomes a \"platform\" edge; the drive waits, boards, and rides it.",
-		"var _moving_platforms: Array = []",
-		"# Follow mode (Find Path To Node): the tracked node + where the current path was aimed.",
-		"var _follow_target: Node = null",
-		"var _path_goal: Vector2 = Vector2.ZERO",
-		"var _goal_mode: String = \"nearest\"",
-		"var _repath_clock: float = 0.0",
-		"# Coyote grace: seconds since the host last stood on the floor.",
-		"var _floor_grace: float = 0.0",
-		"# Stuck watchdog: best distance seen toward the current waypoint + time without progress.",
-		"var _best_waypoint_distance: float = INF",
-		"var _stuck_clock: float = 0.0",
-		"# Budget-deferred request (this agent is queued for a later tick).",
-		"var _path_pending: bool = false",
-		"var _pending_goal: Vector2 = Vector2.ZERO",
-		"var _pending_goal_mode: String = \"nearest\"",
-		"# The SHARED path budget: statics are one value across every agent of this behavior, so",
-		"# N chasers repathing at once spread their A* runs over frames instead of spiking one.",
-		"static var _shared_max_paths_per_tick: int = 8",
-		"static var _shared_tick_id: int = -1",
-		"static var _shared_paths_this_tick: int = 0",
-		"",
-		"## @ace_trigger",
-		"## @ace_name(\"On Portal Taken\")",
-		"signal portal_taken",
-		"",
-		"## @ace_trigger",
-		"## @ace_name(\"On Waypoint Stuck\")",
-		"signal waypoint_stuck",
-		"",
-		"## @ace_trigger",
-		"## @ace_name(\"On Repath\")",
-		"signal repathed",
-		"",
-		"## @ace_trigger",
-		"## @ace_name(\"On Hazard Entered\")",
-		"signal hazard_entered",
-		"",
-		"## @ace_condition",
-		"## @ace_name(\"Is Path Pending\")",
-		"func is_path_pending() -> bool:",
-		"\treturn _path_pending",
-		"",
-		"## @ace_condition",
-		"## @ace_name(\"Is In Hazard\")",
-		"func is_in_hazard() -> bool:",
-		"\treturn host != null and _point_in_hazard(host.global_position, false)",
-		"",
-		"## Whether a world point sits in any hazard (deadly_only narrows to deadly ones).",
-		"## @ace_hidden",
-		"func _point_in_hazard(world: Vector2, deadly_only: bool) -> bool:",
-		"\tfor hazard in _hazards:",
-		"\t\tif (not deadly_only or bool(hazard[\"deadly\"])) and (hazard[\"rect\"] as Rect2).has_point(world):",
-		"\t\t\treturn true",
-		"\treturn false",
-		"",
-		"## Hazard verdict for one edge (endpoints + midpoint): 0 = clear, 1 = danger, 2 = deadly.",
-		"## @ace_hidden",
-		"func _segment_hazard(from_cell: Vector2i, to_cell: Vector2i) -> int:",
-		"\tif _hazards.is_empty():",
-		"\t\treturn 0",
-		"\tvar verdict: int = 0",
-		"\tfor sample in [_cell_world(from_cell), _cell_world(to_cell), (_cell_world(from_cell) + _cell_world(to_cell)) * 0.5]:",
-		"\t\tfor hazard in _hazards:",
-		"\t\t\tif (hazard[\"rect\"] as Rect2).has_point(sample):",
-		"\t\t\t\tif bool(hazard[\"deadly\"]):",
-		"\t\t\t\t\treturn 2",
-		"\t\t\t\tverdict = 1",
-		"\treturn verdict",
-		"",
-		"## @ace_trigger",
-		"## @ace_name(\"On Path Found\")",
-		"signal path_found",
-		"",
-		"## @ace_trigger",
-		"## @ace_name(\"On Path Failed\")",
-		"signal path_failed",
-		"",
-		"## @ace_trigger",
-		"## @ace_name(\"On Path Complete\")",
-		"signal path_complete",
-		"",
-		"## @ace_trigger",
-		"## @ace_name(\"On Waypoint Reached\")",
-		"signal waypoint_reached",
-		"",
-		"## @ace_trigger",
-		"## @ace_name(\"On Nav Graph Built\")",
-		"signal nav_graph_built",
-		"",
-		"## @ace_condition",
-		"## @ace_name(\"Has Path\")",
-		"func has_path() -> bool:",
-		"\treturn not _path.is_empty()",
-		"",
-		"## @ace_condition",
-		"## @ace_name(\"Path Wants Jump\")",
-		"func path_wants_jump() -> bool:",
-		"\tif _path.is_empty() or _jumped_this_segment or host == null:",
-		"\t\treturn false",
-		"\tvar waypoint: Dictionary = _path[_path_index]",
-		"\tif waypoint[\"action\"] == \"jump\":",
-		"\t\treturn true",
-		"\t# Step assist: a close-and-higher walk waypoint needs a hop on full-block stairs.",
-		"\tvar tile: float = float(_tilemap.tile_set.tile_size.y) if _tilemap != null else 32.0",
-		"\tvar target: Vector2 = waypoint[\"world\"]",
-		"\treturn waypoint[\"action\"] == \"walk\" and target.y < host.global_position.y - 8.0 and absf(target.x - host.global_position.x) < tile * 1.5",
-		"",
-		"## @ace_expression",
-		"## @ace_name(\"Path Move Axis\")",
-		"func path_move_axis() -> float:",
-		"\treturn _move_axis",
-		"",
-		"## @ace_expression",
-		"## @ace_name(\"Waypoint Count\")",
-		"func waypoint_count() -> int:",
-		"\treturn _path.size()",
-		"",
-		"## @ace_expression",
-		"## @ace_name(\"Current Waypoint Index\")",
-		"func current_waypoint_index() -> int:",
-		"\treturn _path_index",
-		"",
-		"## @ace_expression",
-		"## @ace_name(\"Current Waypoint X\")",
-		"func current_waypoint_x() -> float:",
-		"\treturn (_path[_path_index][\"world\"] as Vector2).x if not _path.is_empty() else 0.0",
-		"",
-		"## @ace_expression",
-		"## @ace_name(\"Current Waypoint Y\")",
-		"func current_waypoint_y() -> float:",
-		"\treturn (_path[_path_index][\"world\"] as Vector2).y if not _path.is_empty() else 0.0",
-		"",
-		"## @ace_expression",
-		"## @ace_name(\"Current Path Action\")",
-		"func current_path_action() -> String:",
-		"\treturn str(_path[_path_index][\"action\"]) if not _path.is_empty() else \"\"",
-		"",
-		"## The sibling movement pack, duck-typed: any child of the host with a move_speed and a",
-		"## jump() (PlatformerMovement, or your own driver with the same surface).",
-		"## @ace_hidden",
-		"func _find_movement() -> Node:",
-		"\tif _movement != null and is_instance_valid(_movement):",
-		"\t\treturn _movement",
-		"\tif host == null:",
-		"\t\treturn null",
-		"\tfor child in host.get_children():",
-		"\t\tif child != self and child.has_method(\"jump\") and child.get(\"move_speed\") != null:",
-		"\t\t\t_movement = child",
-		"\t\t\t# The planner's frame is straight-down gravity: the graph, jump arcs, and",
-		"\t\t\t# steering all reason in screen x/y. A rotated movement frame would make",
-		"\t\t\t# every planned path wrong, so say so LOUDLY once instead of failing quietly.",
-		"\t\t\tvar movement_angle: Variant = _movement.get(\"gravity_angle\")",
-		"\t\t\tif movement_angle != null and not is_equal_approx(float(movement_angle), 90.0) and not _gravity_angle_warned:",
-		"\t\t\t\t_gravity_angle_warned = true",
-		"\t\t\t\tpush_warning(\"[PlatformerPathfinding] The movement pack's gravity_angle is %.0f - pathfinding plans with straight-down gravity (90) and its paths will be wrong under rotated gravity.\" % float(movement_angle))",
-		"\t\t\treturn _movement",
-		"\treturn null",
-		"",
-		"## Jump reach in CELLS, derived from the movement pack's physics (the overrides win when",
-		"## set): height = v^2/2g, distance = speed * full air time, both with a 0.9 safety margin.",
-		"## @ace_hidden",
-		"func _jump_reach_cells() -> Vector2i:",
-		"\tvar tile: float = float(_tilemap.tile_set.tile_size.y)",
-		"\tvar height_px: float = jump_height_override",
-		"\tvar distance_px: float = jump_distance_override",
-		"\tvar movement: Node = _find_movement()",
-		"\tif movement != null:",
-		"\t\tvar rise: float = absf(float(movement.get(\"jump_velocity\")))",
-		"\t\tvar fall_pull: float = maxf(float(movement.get(\"gravity\")), 1.0)",
-		"\t\tif height_px <= 0.0:",
-		"\t\t\theight_px = rise * rise / (2.0 * fall_pull) * 0.9",
-		"\t\tif distance_px <= 0.0:",
-		"\t\t\tdistance_px = float(movement.get(\"move_speed\")) * (2.0 * rise / fall_pull) * 0.9",
-		"\t# No sibling to derive from: size arcs from the fallback driver's own physics.",
-		"\tvar fallback_rise: float = absf(fallback_jump_velocity)",
-		"\tif height_px <= 0.0:",
-		"\t\theight_px = fallback_rise * fallback_rise / (2.0 * maxf(fallback_gravity, 1.0)) * 0.9",
-		"\tif distance_px <= 0.0:",
-		"\t\tdistance_px = fallback_move_speed * (2.0 * fallback_rise / maxf(fallback_gravity, 1.0)) * 0.9",
-		"\treturn Vector2i(maxi(int(ceil(distance_px / tile)), 1), maxi(int(ceil(height_px / tile)), 1))",
-		"",
-		"## The gravity the drive should reason with (the sibling's when present).",
-		"## @ace_hidden",
-		"func _drive_gravity() -> float:",
-		"\tvar movement: Node = _find_movement()",
-		"\tif movement != null and movement.get(\"gravity\") != null:",
-		"\t\treturn maxf(float(movement.get(\"gravity\")), 1.0)",
-		"\treturn maxf(fallback_gravity, 1.0)",
-		"",
-		"## The upward speed still needed to climb to `target` from here (plus a half-tile margin) -",
-		"## variable jump releases the button once remaining velocity drops to this, so each hop",
-		"## rises just as far as its arc requires.",
-		"## @ace_hidden",
-		"func _release_velocity_for(target: Vector2) -> float:",
-		"\tvar rise: float = maxf(host.global_position.y - target.y, 0.0) + 20.0",
-		"\treturn sqrt(2.0 * _drive_gravity() * rise)",
-		"",
-		"## Injects one portal into the built graph as a cheap \"portal\" edge between the standable",
-		"## nodes nearest its endpoints.",
-		"## @ace_hidden",
-		"func _apply_portal(portal: Dictionary) -> void:",
-		"\tvar from_node: Vector2i = _nearest_node(portal[\"from\"], 2)",
-		"\tvar to_node: Vector2i = _nearest_node(portal[\"to\"], 2)",
-		"\tif from_node == Vector2i.MAX or to_node == Vector2i.MAX:",
-		"\t\treturn",
-		"\t_add_edge(from_node, to_node, \"portal\", 2.0)",
-		"\tif bool(portal[\"both\"]):",
-		"\t\t_add_edge(to_node, from_node, \"portal\", 2.0)",
-		"",
-		"## Injects one moving platform as a slow bidirectional \"platform\" edge between the",
-		"## standable nodes nearest its two travel endpoints.",
-		"## @ace_hidden",
-		"func _apply_moving_platform(ride: Dictionary) -> void:",
-		"\tvar from_node: Vector2i = _nearest_node(ride[\"a\"], 3)",
-		"\tvar to_node: Vector2i = _nearest_node(ride[\"b\"], 3)",
-		"\tif from_node == Vector2i.MAX or to_node == Vector2i.MAX:",
-		"\t\treturn",
-		"\tvar span: float = (ride[\"a\"] as Vector2).distance_to(ride[\"b\"]) / float(_tilemap.tile_set.tile_size.y)",
-		"\t_add_edge(from_node, to_node, \"platform\", span * 1.3)",
-		"\t_add_edge(to_node, from_node, \"platform\", span * 1.3)",
-		"",
-		"## The registered platform serving this waypoint (one of its endpoints is near it).",
-		"## @ace_hidden",
-		"func _platform_for_waypoint(target: Vector2) -> Dictionary:",
-		"\tfor ride in _moving_platforms:",
-		"\t\tif not is_instance_valid(ride[\"node\"]):",
-		"\t\t\tcontinue",
-		"\t\tif (ride[\"a\"] as Vector2).distance_to(target) < 96.0 or (ride[\"b\"] as Vector2).distance_to(target) < 96.0:",
-		"\t\t\treturn ride",
-		"\treturn {}",
-		"",
-		"## Steering for a platform leg: wait BESIDE the track (a descending platform must land on",
-		"## empty space), board when it arrives at the near side, stand centered while it travels,",
-		"## and walk off once it reaches the far side. Waiting and riding legitimately stall",
-		"## progress, so the stuck watchdog is held off for the leg.",
-		"## @ace_hidden",
-		"func _platform_move_axis(target: Vector2, default_axis: float) -> float:",
-		"\tvar ride: Dictionary = _platform_for_waypoint(target)",
-		"\tif ride.is_empty():",
-		"\t\treturn default_axis",
-		"\t_stuck_clock = 0.0",
-		"\t_best_waypoint_distance = INF",
-		"\tvar platform: Node2D = ride[\"node\"]",
-		"\tvar plat: Vector2 = platform.global_position",
-		"\tvar dest_side: Vector2 = ride[\"a\"] if (ride[\"a\"] as Vector2).distance_to(target) <= (ride[\"b\"] as Vector2).distance_to(target) else ride[\"b\"]",
-		"\tvar board_side: Vector2 = ride[\"b\"] if dest_side == ride[\"a\"] else ride[\"a\"]",
-		"\tvar riding: bool = host.is_on_floor() and absf(host.global_position.x - plat.x) < 64.0 and host.global_position.y < plat.y + 8.0 and absf(host.global_position.y - plat.y) < 48.0",
-		"\tif riding:",
-		"\t\tif plat.distance_to(dest_side) < 40.0:",
-		"\t\t\treturn default_axis",
-		"\t\tvar center_dx: float = plat.x - host.global_position.x",
-		"\t\treturn clampf(center_dx / 24.0, -1.0, 1.0) if absf(center_dx) > 6.0 else 0.0",
-		"\t# Board only a PARKED platform (a still-moving one can crush the walker) - give your",
-		"\t# platform a dwell at each endpoint so there is a boarding window.",
-		"\tif plat.distance_to(board_side) < 12.0:",
-		"\t\tvar board_dx: float = plat.x - host.global_position.x",
-		"\t\treturn clampf(board_dx / 24.0, -1.0, 1.0) if absf(board_dx) > 4.0 else 0.0",
-		"\t# Wait on the DESTINATION's side of the track - clear of the descending platform.",
-		"\tvar wait_x: float = board_side.x - 56.0 if target.x <= board_side.x else board_side.x + 56.0",
-		"\tvar wait_dx: float = wait_x - host.global_position.x",
-		"\treturn clampf(wait_dx / 24.0, -1.0, 1.0) if absf(wait_dx) > 6.0 else 0.0",
-		"",
-		"## Steering while a platform leg is still AHEAD in the path: the walk nodes feeding a",
-		"## boarding point sit inside the track's crush zone, so the agent holds STILL at the wait",
-		"## spot beside the track and only walks in once the platform is parked at the boarding",
-		"## side (never strolls under a platform that is about to land on it).",
-		"## @ace_hidden",
-		"func _platform_approach_axis(leg_target: Vector2, default_axis: float) -> float:",
-		"\tvar ride: Dictionary = _platform_for_waypoint(leg_target)",
-		"\tif ride.is_empty():",
-		"\t\treturn default_axis",
-		"\tvar plat: Vector2 = (ride[\"node\"] as Node2D).global_position",
-		"\tvar dest_side: Vector2 = ride[\"a\"] if (ride[\"a\"] as Vector2).distance_to(leg_target) <= (ride[\"b\"] as Vector2).distance_to(leg_target) else ride[\"b\"]",
-		"\tvar board_side: Vector2 = ride[\"b\"] if dest_side == ride[\"a\"] else ride[\"a\"]",
-		"\tif plat.distance_to(board_side) < 12.0:",
-		"\t\treturn default_axis",
-		"\t_stuck_clock = 0.0",
-		"\t_best_waypoint_distance = INF",
-		"\tvar wait_x: float = board_side.x - 56.0 if leg_target.x <= board_side.x else board_side.x + 56.0",
-		"\tvar wait_dx: float = wait_x - host.global_position.x",
-		"\treturn clampf(wait_dx / 24.0, -1.0, 1.0) if absf(wait_dx) > 6.0 else 0.0",
-		"",
-		"## True while standing on a registered platform that is BETWEEN its endpoints - the",
-		"## window where a fresh route would mis-start from a ground node and steer the rider",
-		"## off the shaft in mid-air.",
-		"## @ace_hidden",
-		"func _riding_moving_platform() -> bool:",
-		"\tif host == null or not host.is_on_floor():",
-		"\t\treturn false",
-		"\tfor ride in _moving_platforms:",
-		"\t\tif not is_instance_valid(ride[\"node\"]):",
-		"\t\t\tcontinue",
-		"\t\tvar plat: Vector2 = (ride[\"node\"] as Node2D).global_position",
-		"\t\tif absf(host.global_position.x - plat.x) >= 40.0 or host.global_position.y > plat.y or plat.y - host.global_position.y >= 48.0:",
-		"\t\t\tcontinue",
-		"\t\tif plat.distance_to(ride[\"a\"]) > 12.0 and plat.distance_to(ride[\"b\"]) > 12.0:",
-		"\t\t\treturn true",
-		"\treturn false",
-		"",
-		"## @ace_hidden",
-		"func _advance_waypoint() -> void:",
-		"\t_jumped_this_segment = false",
-		"\t_jump_released = false",
-		"\t_best_waypoint_distance = INF",
-		"\t_stuck_clock = 0.0",
-		"\t_path_index += 1",
-		"\twaypoint_reached.emit()",
-		"\tif _path_index >= _path.size():",
-		"\t\tstop_pathfinding()",
-		"\t\tpath_complete.emit()",
-		"",
-		"## Coarse clearance for a jump/fall arc: the cells along the chord, lifted one cell for",
-		"## the rise, must be free. Coarse on purpose - it favours routing in open layouts.",
-		"## @ace_hidden",
-		"func _arc_clear(from_cell: Vector2i, to_cell: Vector2i, solid: Dictionary) -> bool:",
-		"\tif solid.has(from_cell + Vector2i(0, -1)) or solid.has(to_cell + Vector2i(0, -1)):",
-		"\t\treturn false",
-		"\tfor step in [0.25, 0.5, 0.75]:",
-		"\t\tvar sample: Vector2 = Vector2(from_cell).lerp(Vector2(to_cell), step) + Vector2(0.0, -1.0)",
-		"\t\tif solid.has(Vector2i(roundi(sample.x), roundi(sample.y))):",
-		"\t\t\treturn false",
-		"\treturn true",
-		"",
-		"## @ace_hidden",
-		"func _add_edge(from_cell: Vector2i, to_cell: Vector2i, kind: String, cost: float) -> void:",
-		"\tif not _edges.has(from_cell):",
-		"\t\t_edges[from_cell] = []",
-		"\t(_edges[from_cell] as Array).append({\"to\": to_cell, \"kind\": kind, \"cost\": cost})",
-		"",
-		"## The standable node nearest a world position (within max_cells), or Vector2i.MAX.",
-		"## Tree-safe: outside a scene tree (tools, tests) the tilemap's own offset stands in for",
-		"## the global transform.",
-		"## @ace_hidden",
-		"func _nearest_node(world: Vector2, max_cells: int) -> Vector2i:",
-		"\tvar local: Vector2 = _tilemap.to_local(world) if _tilemap.is_inside_tree() else world - _tilemap.position",
-		"\tvar around: Vector2i = _tilemap.local_to_map(local)",
-		"\tvar best: Vector2i = Vector2i.MAX",
-		"\tvar best_distance: float = float(max_cells) + 0.51",
-		"\tfor cell in _nodes:",
-		"\t\t# A node inside a deadly hazard is never a start or goal.",
-		"\t\tif _point_in_hazard(_cell_world(cell), true):",
-		"\t\t\tcontinue",
-		"\t\tvar cell_distance: float = Vector2(cell - around).length()",
-		"\t\tif cell_distance < best_distance:",
-		"\t\t\tbest_distance = cell_distance",
-		"\t\t\tbest = cell",
-		"\treturn best",
-		"",
-		"## @ace_hidden",
-		"func _cell_world(cell: Vector2i) -> Vector2:",
-		"\tvar local: Vector2 = _tilemap.map_to_local(cell)",
-		"\treturn _tilemap.to_global(local) if _tilemap.is_inside_tree() else local + _tilemap.position",
-		"",
-		"## A* over the walk/jump/fall edges (jump edges already carry their cost premium, so the",
-		"## router prefers walking a ramp over jumping it). Returns the cell path or [].",
-		"## @ace_hidden",
-		"func _astar(start: Vector2i, goal: Vector2i) -> Array:",
-		"\tvar open: Array = [start]",
-		"\tvar came_from: Dictionary = {}",
-		"\tvar cost_so_far: Dictionary = {start: 0.0}",
-		"\twhile not open.is_empty():",
-		"\t\tvar best_index: int = 0",
-		"\t\tfor index in range(1, open.size()):",
-		"\t\t\tvar here: Vector2i = open[index]",
-		"\t\t\tif cost_so_far[here] + Vector2(goal - here).length() < cost_so_far[open[best_index]] + Vector2(goal - (open[best_index] as Vector2i)).length():",
-		"\t\t\t\tbest_index = index",
-		"\t\tvar current: Vector2i = open.pop_at(best_index)",
-		"\t\tif current == goal:",
-		"\t\t\tvar cells: Array = [current]",
-		"\t\t\twhile came_from.has(current):",
-		"\t\t\t\tcurrent = came_from[current]",
-		"\t\t\t\tcells.push_front(current)",
-		"\t\t\treturn cells",
-		"\t\tfor edge in (_edges.get(current, []) as Array):",
-		"\t\t\tif not _edge_allowed(current, edge):",
-		"\t\t\t\tcontinue",
-		"\t\t\tvar next_cell: Vector2i = edge[\"to\"]",
-		"\t\t\t# Danger (non-deadly) hazards stay traversable but cost 4x - taken only when",
-		"\t\t\t# no clean route exists.",
-		"\t\t\tvar next_cost: float = cost_so_far[current] + float(edge[\"cost\"]) * (4.0 if _segment_hazard(current, next_cell) == 1 else 1.0)",
-		"\t\t\tif not cost_so_far.has(next_cell) or next_cost < float(cost_so_far[next_cell]):",
-		"\t\t\t\tcost_so_far[next_cell] = next_cost",
-		"\t\t\t\tcame_from[next_cell] = current",
-		"\t\t\t\tif not open.has(next_cell):",
-		"\t\t\t\t\topen.append(next_cell)",
-		"\treturn []",
-		"",
-		"## The router's edge filter: deadly hazards block outright; with ledge restriction on,",
-		"## walking is always fine, drops only within the leniency, jumps and portals never.",
-		"## @ace_hidden",
-		"func _edge_allowed(from_cell: Vector2i, edge: Dictionary) -> bool:",
-		"\tif _segment_hazard(from_cell, edge[\"to\"]) == 2:",
-		"\t\treturn false",
-		"\tif not ledge_restriction:",
-		"\t\treturn true",
-		"\tvar kind: String = str(edge[\"kind\"])",
-		"\tif kind == \"walk\":",
-		"\t\treturn true",
-		"\tif kind == \"fall\":",
-		"\t\tvar tile: float = float(_tilemap.tile_set.tile_size.y) if _tilemap != null else 32.0",
-		"\t\treturn float(((edge[\"to\"] as Vector2i).y - from_cell.y)) * tile <= ledge_leniency",
-		"\treturn false",
-		"",
-		"## The edge kind walking cell A -> B on the found path (for the waypoint's action).",
-		"## @ace_hidden",
-		"func _edge_kind(from_cell: Vector2i, to_cell: Vector2i) -> String:",
-		"\tfor edge in (_edges.get(from_cell, []) as Array):",
-		"\t\tif edge[\"to\"] == to_cell:",
-		"\t\t\treturn str(edge[\"kind\"])",
-		"\treturn \"walk\"",
-		"",
-		"## @ace_hidden",
-		"func _refresh_debug() -> void:",
-		"\tif not debug_draw:",
-		"\t\tif _debug_line != null and is_instance_valid(_debug_line):",
-		"\t\t\t_debug_line.clear_points()",
-		"\t\treturn",
-		"\tif _debug_line == null or not is_instance_valid(_debug_line):",
-		"\t\t_debug_line = Line2D.new()",
-		"\t\t_debug_line.width = 3.0",
-		"\t\t_debug_line.default_color = Color(0.2, 0.9, 0.5, 0.8)",
-		"\t\t_debug_line.top_level = true",
-		"\t\thost.add_child(_debug_line)",
-		"\t_debug_line.clear_points()",
-		"\tif _path.is_empty():",
-		"\t\treturn",
-		"\t_debug_line.add_point(host.global_position)",
-		"\tfor index in range(_path_index, _path.size()):",
-		"\t\t_debug_line.add_point(_path[index][\"world\"])"
-	]))
-	sheet.events.append(block)
-
+	src.note("Platformer pathfinding: attach as a SIBLING of PlatformerMovement under a CharacterBody2D. Build Nav Graph from your TileMapLayer once, then Find Path To - the behavior derives jump reach from the movement pack and drives it through the ai_move_axis seam. Stairs and tile slopes walk (adjacent cells one step up/down are WALK links); gaps and ledges route through jump, double jump and coyote jump arcs, fall drops, fall-through drops off one-way platforms, portals and moving platforms.")
+	src.block("state")
+	src.block("signals")
+	src.block("queries")
+	src.block("grid")
+	src.block("helpers")
 	# Per-physics-tick drive: resolve the current waypoint into the {move_axis, want_jump}
 	# intent, feed the sibling movement pack (auto) or just publish the expressions (manual).
-	var tick: EventRow = EventRow.new()
-	tick.trigger_provider_id = "Core"
-	tick.trigger_id = "OnPhysicsProcess"
-	var tick_body: RawCodeRow = RawCodeRow.new()
-	tick_body.code = "\n".join(PackedStringArray([
-		"if host == null:",
-		"\treturn",
-		"# Coyote bookkeeping: seconds since the host last stood on the floor (the jump gate",
-		"# below accepts a frame-late takeoff within Coyote Time).",
-		"if host.is_on_floor():",
-		"\t_floor_grace = 0.0",
-		"else:",
-		"\t_floor_grace += delta",
-		"# Hazard presence (any kind) fires On Hazard Entered on the way in - the damage hook.",
-		"var in_hazard_now: bool = _point_in_hazard(host.global_position, false)",
-		"if in_hazard_now and not _was_in_hazard:",
-		"\thazard_entered.emit()",
-		"_was_in_hazard = in_hazard_now",
-		"# Budget-deferred retries and follow-mode refreshes run even without an active path.",
-		"_repath_clock += delta",
-		"if _path_pending:",
-		"\tfind_path_to(_pending_goal.x, _pending_goal.y, _pending_goal_mode)",
-		"elif _follow_target != null and is_instance_valid(_follow_target) and _follow_target is Node2D and _repath_clock >= repath_interval:",
-		"\t_repath_clock = 0.0",
-		"\tvar followed: Vector2 = (_follow_target as Node2D).global_position",
-		"\tif followed.distance_to(_path_goal) > repath_threshold:",
-		"\t\tfind_path_to(followed.x, followed.y, _goal_mode)",
-		"\t\trepathed.emit()",
-		"if _path.is_empty():",
-		"\t# No route, no deferred request, nobody being followed and no hazard to watch means",
-		"\t# there is nothing this tick could do - a parked agent costs nothing per frame until",
-		"\t# a path verb or Add Hazard turns processing back on.",
-		"\tif not _path_pending and (_follow_target == null or not is_instance_valid(_follow_target)) and _hazards.is_empty():",
-		"\t\tset_physics_process(false)",
-		"\treturn",
-		"var waypoint: Dictionary = _path[_path_index]",
-		"var target: Vector2 = waypoint[\"world\"]",
-		"# Portal traversal: the waypoint IS the exit - blink there and continue.",
-		"if waypoint[\"action\"] == \"portal\":",
-		"\thost.global_position = target",
-		"\thost.velocity = Vector2.ZERO",
-		"\tportal_taken.emit()",
-		"\t_advance_waypoint()",
-		"\treturn",
-		"var dx: float = target.x - host.global_position.x",
-		"_move_axis = clampf(dx / 24.0, -1.0, 1.0) if absf(dx) > 2.0 else 0.0",
-		"var movement: Node = _find_movement()",
-		"var tile: float = float(_tilemap.tile_set.tile_size.y) if _tilemap != null else 32.0",
-		"# Jump on jump arcs, and STEP-ASSIST on raised walk waypoints: a full-block stair stops",
-		"# a walking body, so a close-and-higher waypoint gets a hop (slope tiles just walk).",
-		"var wants_jump: bool = waypoint[\"action\"] == \"jump\"",
-		"if not wants_jump and waypoint[\"action\"] == \"walk\":",
-		"\twants_jump = target.y < host.global_position.y - 8.0 and absf(dx) < tile * 1.5",
-		"# Strict jump positioning: walk onto the exact takeoff spot before leaping (relaxed",
-		"# leaps the moment the jump leg starts - faster, but looser on tight arcs).",
-		"if waypoint[\"action\"] == \"jump\" and jump_positioning == \"strict\" and not _jumped_this_segment and _path_index > 0:",
-		"\tvar takeoff_dx: float = (_path[_path_index - 1][\"world\"] as Vector2).x - host.global_position.x",
-		"\tif absf(takeoff_dx) > 4.0:",
-		"\t\t_move_axis = clampf(takeoff_dx / 24.0, -1.0, 1.0)",
-		"\t\twants_jump = false",
-		"# Moving-platform leg: wait beside the track, board, ride, walk off - the platform carries.",
-		"if waypoint[\"action\"] == \"platform\":",
-		"\t_move_axis = _platform_move_axis(target, _move_axis)",
-		"\twants_jump = false",
-		"# A platform leg coming up within the next few waypoints: its boarding nodes sit under",
-		"# the track, so the wait-beside steering engages EARLY - the agent stands clear until",
-		"# the platform parks instead of idling beneath a descending one.",
-		"else:",
-		"\tfor ahead in range(_path_index + 1, mini(_path_index + 4, _path.size())):",
-		"\t\tif _path[ahead][\"action\"] == \"platform\":",
-		"\t\t\t_move_axis = _platform_approach_axis(_path[ahead][\"world\"], _move_axis)",
-		"\t\t\twants_jump = false",
-		"\t\t\tbreak",
-		"# The final waypoint is the chase goal, and a chased body physically OCCUPIES its node -",
-		"# arrival there accepts standing beside it (a body-width radius) instead of pressing",
-		"# into the target forever (two CharacterBody2Ds grind, and the loser gets bulldozed).",
-		"var arrive_radius: float = arrive_distance if _path_index < _path.size() - 1 else maxf(arrive_distance, tile)",
-		"# Arrival is checked BEFORE the drive: the arrival tick must not also steer, or every",
-		"# instant-complete refind leaks one frame of drive and a parked agent creeps off ledges.",
-		"if absf(dx) <= arrive_radius and absf(target.y - host.global_position.y) <= tile:",
-		"\t_advance_waypoint()",
-		"\tif debug_draw:",
-		"\t\t_refresh_debug()",
-		"\treturn",
-		"# Stuck watchdog: no progress toward the waypoint for Stuck Timeout -> On Waypoint Stuck",
-		"# and a fresh route from wherever the agent actually is.",
-		"var waypoint_gap: float = host.global_position.distance_to(target)",
-		"if waypoint_gap < _best_waypoint_distance - 1.0:",
-		"\t_best_waypoint_distance = waypoint_gap",
-		"\t_stuck_clock = 0.0",
-		"else:",
-		"\t_stuck_clock += delta",
-		"\tif _stuck_clock >= maxf(stuck_timeout, 0.1):",
-		"\t\t_stuck_clock = 0.0",
-		"\t\t_best_waypoint_distance = INF",
-		"\t\twaypoint_stuck.emit()",
-		"\t\tfind_path_to(_path_goal.x, _path_goal.y, _goal_mode)",
-		"\t\trepathed.emit()",
-		"if auto_control:",
-		"\tvar start_jump: bool = wants_jump and not _jumped_this_segment and (host.is_on_floor() or _floor_grace <= coyote_time)",
-		"\tif start_jump:",
-		"\t\t_jumped_this_segment = true",
-		"\t\t_jump_released = false",
-		"\t\t_jump_release_velocity = _release_velocity_for(target)",
-		"\t\t# An arc that needs (nearly) the whole jump must never be cut - releasing a",
-		"\t\t# near-max jump on its first frames kills the climb. Variable jump only arms",
-		"\t\t# when there is clear headroom.",
-		"\t\tvar full_rise: float = absf(float(movement.get(\"jump_velocity\"))) if movement != null else absf(fallback_jump_velocity)",
-		"\t\tif _jump_release_velocity >= full_rise * 0.85:",
-		"\t\t\t_jump_release_velocity = 0.0",
-		"\t# Variable jump: once remaining upward speed is just enough for THIS arc's rise,",
-		"\t# release - flat gap hops stay low, tall ledges get the full jump.",
-		"\tvar release_now: bool = variable_jump and _jumped_this_segment and not _jump_released and host.velocity.y < 0.0 and absf(host.velocity.y) <= _jump_release_velocity",
-		"\tif movement != null:",
-		"\t\t# The standard drive seam on the movement sibling - its accel, coyote time, and",
-		"\t\t# jump feel all still apply under AI control.",
-		"\t\tmovement.set(\"ai_controlled\", true)",
-		"\t\tmovement.set(\"ai_move_axis\", _move_axis)",
-		"\t\tif start_jump:",
-		"\t\t\tmovement.jump()",
-		"\t\tif release_now and movement.has_method(\"jump_released\"):",
-		"\t\t\t_jump_released = true",
-		"\t\t\tmovement.jump_released()",
-		"\telse:",
-		"\t\t# No movement sibling: the built-in fallback drives the CharacterBody2D itself,",
-		"\t\t# so ANY body pathfinds out of the box (attach one behavior, done).",
-		"\t\thost.velocity.y = minf(host.velocity.y + fallback_gravity * delta, 1000.0)",
-		"\t\thost.velocity.x = _move_axis * fallback_move_speed",
-		"\t\tif start_jump:",
-		"\t\t\thost.velocity.y = fallback_jump_velocity",
-		"\t\tif release_now:",
-		"\t\t\t_jump_released = true",
-		"\t\t\thost.velocity.y *= 0.45",
-		"\t\thost.move_and_slide()",
-		"if debug_draw:",
-		"\t_refresh_debug()"
-	]))
-	tick.actions.append(tick_body)
-	sheet.events.append(tick)
+	src.on_physics_process()
 
-	# ── Exposed actions ─────────────────────────────────────────────────────────────
-	Lib.append_function(sheet, "build_nav_graph", "Build Nav Graph From Tilemap", "Platformer Pathfinding",
-		"Scans a TileMapLayer's physics tiles into the navigation graph: standable cells become nodes, adjacent cells (one step up or down - stairs and tile slopes) become WALK edges, and jump arcs / fall drops connect the rest, sized to the sibling PlatformerMovement's real jump. Call once on ready; Regenerate after level edits. Fires On Nav Graph Built.",
-		[["tilemap", "Node"]],
-		"_tilemap = tilemap as TileMapLayer\nregenerate_nav_graph()")
-	Lib.append_function(sheet, "regenerate_nav_graph", "Regenerate Nav Graph", "Platformer Pathfinding",
-		"Rebuilds the graph from the same TileMapLayer (after runtime tile edits).",
-		[],
-		"\n".join(PackedStringArray([
-			"_nodes.clear()",
-			"_edges.clear()",
-			"if _tilemap == null:",
-			"\treturn",
-			"var solid: Dictionary = {}",
-			"for cell in _tilemap.get_used_cells():",
-			"\tvar tile_data: TileData = _tilemap.get_cell_tile_data(cell)",
-			"\tif tile_data != null and tile_data.get_collision_polygons_count(0) > 0:",
-			"\t\tsolid[cell] = true",
-			"# A standable node = a solid cell with two cells of headroom above it.",
-			"for cell in solid:",
-			"\tvar stand: Vector2i = cell + Vector2i(0, -1)",
-			"\tif not solid.has(stand) and not solid.has(stand + Vector2i(0, -1)):",
-			"\t\t_nodes[stand] = true",
-			"# WALK edges: neighbours one cell over, up to one step up/down - stairs and slopes",
-			"# included, at plain euclidean cost so ramps beat jumps in the router.",
-			"for cell in _nodes:",
-			"\tfor dx in [-1, 1]:",
-			"\t\tfor dy in [-1, 0, 1]:",
-			"\t\t\tvar to: Vector2i = cell + Vector2i(dx, dy)",
-			"\t\t\tif _nodes.has(to):",
-			"\t\t\t\t_add_edge(cell, to, \"walk\", Vector2(float(dx), float(dy)).length())",
-			"# JUMP arcs + FALL drops within the derived reach, clearance-checked coarsely.",
-			"var reach: Vector2i = _jump_reach_cells()",
-			"var fall_cells: int = maxi(int(ceil(max_fall_distance / float(_tilemap.tile_set.tile_size.y))), 1)",
-			"for cell in _nodes:",
-			"\tfor dx in range(-reach.x, reach.x + 1):",
-			"\t\tfor dy in range(-reach.y, fall_cells + 1):",
-			"\t\t\tif absi(dx) <= 1 and absi(dy) <= 1:",
-			"\t\t\t\tcontinue",
-			"\t\t\tvar to: Vector2i = cell + Vector2i(dx, dy)",
-			"\t\t\tif not _nodes.has(to) or not _arc_clear(cell, to, solid):",
-			"\t\t\t\tcontinue",
-			"\t\t\tvar kind: String = \"fall\" if dy > 0 and absi(dx) <= 2 else \"jump\"",
-			"\t\t\tvar span: float = Vector2(float(dx), float(dy)).length()",
-			"\t\t\t_add_edge(cell, to, kind, span * (1.5 if kind == \"jump\" else 1.1))",
-			"# Registered portals and moving platforms survive every rebuild.",
-			"for portal in _portals:",
-			"\t_apply_portal(portal)",
-			"for ride in _moving_platforms:",
-			"\t_apply_moving_platform(ride)",
-			"nav_graph_built.emit()"
-		])))
-	Lib.append_function(sheet, "find_path_to", "Find Path To", "Platformer Pathfinding",
-		"Routes to a world position and starts moving. Mode \"reach\" fails (On Path Failed) when the spot itself is unreachable; \"nearest\" never fails - it goes to the closest reachable node instead. Fires On Path Found / On Path Failed.",
-		[["x", "float"], ["y", "float"], ["mode", "String"]],
-		"\n".join(PackedStringArray([
-			"# A route to walk is work every frame again. Coming back from parked the floor",
-			"# bookkeeping was not being kept, so the coyote window starts closed rather than",
-			"# handing out a takeoff the agent did not earn while it stood still.",
-			"if not is_physics_processing():",
-			"\t_floor_grace = INF",
-			"\tset_physics_process(true)",
-			"# A repath while riding a mid-travel moving platform is DEFERRED (the current path",
-			"# keeps driving): a fresh route would start from a ground node and steer the rider",
-			"# off the shaft in mid-air.",
-			"if _riding_moving_platform():",
-			"\treturn",
-			"# The shared budget: at most Max Paths Per Tick A* runs per physics tick ACROSS all",
-			"# agents - extra requests defer to the next tick (Is Path Pending) instead of spiking.",
-			"var frame: int = Engine.get_physics_frames()",
-			"if frame != _shared_tick_id:",
-			"\t_shared_tick_id = frame",
-			"\t_shared_paths_this_tick = 0",
-			"if _shared_paths_this_tick >= maxi(_shared_max_paths_per_tick, 0):",
-			"\t_pending_goal = Vector2(x, y)",
-			"\t_pending_goal_mode = mode",
-			"\t_path_pending = true",
-			"\treturn",
-			"_shared_paths_this_tick += 1",
-			"_path_pending = false",
-			"if _tilemap == null or _nodes.is_empty():",
-			"\tpush_warning(\"[PlatformerPathfinding] Find Path To called before the nav graph exists - call Build Nav Graph From Tilemap (usually On Ready) first.\")",
-			"\tpath_failed.emit()",
-			"\treturn",
-			"if host == null:",
-			"\tpath_failed.emit()",
-			"\treturn",
-			"var start: Vector2i = _nearest_node(host.global_position, 3)",
-			"var goal: Vector2i = _nearest_node(Vector2(x, y), 2 if mode == \"reach\" else 1000000)",
-			"if start == Vector2i.MAX or goal == Vector2i.MAX:",
-			"\tstop_pathfinding()",
-			"\tpath_failed.emit()",
-			"\treturn",
-			"var cells: Array = _astar(start, goal)",
-			"if cells.is_empty():",
-			"\tstop_pathfinding()",
-			"\tpath_failed.emit()",
-			"\treturn",
-			"_path_goal = Vector2(x, y)",
-			"_goal_mode = mode",
-			"_path = []",
-			"for index in range(cells.size()):",
-			"\tvar action: String = \"walk\" if index == 0 else _edge_kind(cells[index - 1], cells[index])",
-			"\t_path.append({\"world\": _cell_world(cells[index]), \"action\": action})",
-			"_path_index = 0",
-			"# A fresh route starts at OUR nearest node - when we already stand on it, aim at the",
-			"# next waypoint instead (a repath mid-stride must never walk the agent backward, or a",
-			"# chaser re-finding on a timer thrashes in place at node boundaries).",
-			"if _path.size() > 1 and host.global_position.distance_to(_path[0][\"world\"]) <= float(_tilemap.tile_set.tile_size.y):",
-			"\t_path_index = 1",
-			"_jumped_this_segment = false",
-			"_best_waypoint_distance = INF",
-			"_stuck_clock = 0.0",
-			"path_found.emit()"
-		])))
+	# ── The original verbs (ids, params and templates are frozen) ──────────────────────
+	src.verb("build_nav_graph", "Build Nav Graph From Tilemap",
+		"Scans a TileMapLayer's physics tiles into the navigation graph: standable cells become nodes, adjacent cells (one step up or down - stairs and tile slopes) become WALK links, and jump arcs / fall drops connect the rest, sized to the sibling PlatformerMovement's real jump. One-way tiles become jump-through platforms an agent can drop through. Call once on ready; Regenerate after level edits. Fires On Nav Graph Built.",
+		[["tilemap", "Node"]])
+	src.verb("regenerate_nav_graph", "Regenerate Nav Graph",
+		"Rebuilds the graph from the same map (after runtime tile edits, Set Tile State or Scan Collision Bodies).",
+		[])
+	src.verb("find_path_to", "Find Path To",
+		"Routes to a world position and starts moving. Mode \"reach\" fails (On Path Failed) when the spot itself is unreachable; \"nearest\" never fails on a cut-off spot - it goes as close as it can get. Fires On Path Found / On Path Failed.",
+		[["x", "float"], ["y", "float"], ["mode", "String"]])
 	_default(sheet, "mode", "nearest")
 	_param_options(sheet, "mode", ["nearest", "reach"])
 	_quoted_argument(sheet, "find_path_to({x}, {y}, \"{mode}\")")
-	Lib.append_function(sheet, "find_path_to_node", "Find Path To Node", "Platformer Pathfinding",
+	src.verb("find_path_to_node", "Find Path To Node",
 		"Routes to another node's position AND keeps following it: the route auto-refreshes every Repath Interval once the node has moved Repath Threshold pixels (firing On Repath) - one call chases forever. Stop Pathfinding ends the follow.",
-		[["target", "Node"], ["mode", "String"]],
-		"if target is Node2D:\n\tfind_path_to((target as Node2D).global_position.x, (target as Node2D).global_position.y, mode)\n\t_follow_target = target\n\t_goal_mode = mode\n\t_repath_clock = 0.0\nelse:\n\tpath_failed.emit()")
+		[["target", "Node"], ["mode", "String"]])
 	_default(sheet, "mode", "nearest")
 	_param_options(sheet, "mode", ["nearest", "reach"])
 	_quoted_argument(sheet, "find_path_to_node({target}, \"{mode}\")")
-	Lib.append_function(sheet, "stop_pathfinding", "Stop Pathfinding", "Platformer Pathfinding",
-		"Clears the path and releases the movement pack back to the keyboard (ai_controlled off).",
-		[],
-		"\n".join(PackedStringArray([
-			"_path = []",
-			"_path_index = 0",
-			"_move_axis = 0.0",
-			"_jumped_this_segment = false",
-			"_follow_target = null",
-			"_path_pending = false",
-			"_stuck_clock = 0.0",
-			"_best_waypoint_distance = INF",
-			"var movement: Node = _find_movement()",
-			"if movement != null:",
-			"\tmovement.set(\"ai_move_axis\", 0.0)",
-			"\tmovement.set(\"ai_controlled\", false)",
-			"if _debug_line != null and is_instance_valid(_debug_line):",
-			"\t_debug_line.clear_points()"
-		])))
-	Lib.append_function(sheet, "set_auto_control", "Set Auto Control", "Platformer Pathfinding",
+	src.verb("stop_pathfinding", "Stop Pathfinding",
+		"Clears the path (and any patrol, Jump Toward or portal in progress) and releases the movement pack back to the keyboard (ai_controlled off).",
+		[])
+	src.verb("set_auto_control", "Set Auto Control",
 		"On (default): the behavior drives the sibling PlatformerMovement. Off: paths still compute - read Path Move Axis / Path Wants Jump / Current Waypoint X/Y and drive anything you like.",
-		[["enabled", "bool"]],
-		"auto_control = enabled\nif not enabled:\n\tvar movement: Node = _find_movement()\n\tif movement != null:\n\t\tmovement.set(\"ai_controlled\", false)")
-	Lib.append_function(sheet, "set_ledge_restriction", "Set Ledge Restriction", "Platformer Pathfinding",
+		[["enabled", "bool"]])
+	src.verb("set_ledge_restriction", "Set Ledge Restriction",
 		"Patrol discipline: on, routes may only WALK - no jumps, no portals, and no drops beyond Ledge Leniency, so the agent stays on its platform. Applies from the next Find Path To.",
-		[["enabled", "bool"]],
-		"ledge_restriction = enabled")
-	Lib.append_function(sheet, "set_ledge_leniency", "Set Ledge Leniency", "Platformer Pathfinding",
+		[["enabled", "bool"]])
+	src.verb("set_ledge_leniency", "Set Ledge Leniency",
 		"With Ledge Restriction on, drops up to this many pixels are still allowed (a patroller may hop down one step but never off the tower).",
-		[["pixels", "float"]],
-		"ledge_leniency = pixels")
-	Lib.append_function(sheet, "set_jump_positioning", "Set Jump Positioning", "Platformer Pathfinding",
+		[["pixels", "float"]])
+	src.verb("set_jump_positioning", "Set Jump Positioning",
 		"relaxed (default): leap the moment a jump leg starts. strict: walk onto the exact takeoff spot first - slower but precise on tight arcs.",
-		[["mode", "String"]],
-		"jump_positioning = mode")
+		[["mode", "String"]])
 	_default(sheet, "mode", "relaxed")
 	_param_options(sheet, "mode", ["relaxed", "strict"])
 	_quoted_argument(sheet, "set_jump_positioning(\"{mode}\")")
-	Lib.append_function(sheet, "set_coyote_time", "Set Coyote Time", "Platformer Pathfinding",
+	src.verb("set_coyote_time", "Set Coyote Time",
 		"Grace window (s) for AI jumps just after running off the takeoff ledge.",
-		[["seconds", "float"]],
-		"coyote_time = seconds")
-	Lib.append_function(sheet, "set_repath_interval", "Set Repath Interval", "Platformer Pathfinding",
+		[["seconds", "float"]])
+	src.verb("set_repath_interval", "Set Repath Interval",
 		"While following a node, how often the route may refresh (chase freshness vs cost).",
-		[["seconds", "float"]],
-		"repath_interval = seconds")
-	Lib.append_function(sheet, "set_repath_threshold", "Set Repath Threshold", "Platformer Pathfinding",
+		[["seconds", "float"]])
+	src.verb("set_repath_threshold", "Set Repath Threshold",
 		"The route only refreshes when the followed node has moved at least this many pixels.",
-		[["pixels", "float"]],
-		"repath_threshold = pixels")
-	Lib.append_function(sheet, "set_max_paths_per_tick", "Set Max Paths Per Tick", "Platformer Pathfinding",
+		[["pixels", "float"]])
+	src.verb("set_max_paths_per_tick", "Set Max Paths Per Tick",
 		"The SHARED budget across every agent: at most this many route computations per physics tick - extras defer a tick (Is Path Pending) instead of spiking the frame. The difference between 20 chasers working and not.",
-		[["count", "int"]],
-		"_shared_max_paths_per_tick = count")
-	Lib.append_function(sheet, "add_portal", "Add Portal", "Platformer Pathfinding",
-		"Links two world positions as a PORTAL: an agent whose route uses it walks to the entrance and blinks to the exit (fires On Portal Taken). Bidirectional works both ways. Portals join the graph immediately and survive Regenerate - doors, teleporters, ladders, and elevators all model as portals.",
-		[["from_x", "float"], ["from_y", "float"], ["to_x", "float"], ["to_y", "float"], ["bidirectional", "bool"]],
-		"\n".join(PackedStringArray([
-			"var portal: Dictionary = {\"from\": Vector2(from_x, from_y), \"to\": Vector2(to_x, to_y), \"both\": bidirectional}",
-			"_portals.append(portal)",
-			"if not _nodes.is_empty():",
-			"\t_apply_portal(portal)"
-		])))
-	Lib.append_function(sheet, "clear_portals", "Clear Portals", "Platformer Pathfinding",
-		"Removes every registered portal (takes effect on the next Regenerate Nav Graph).",
-		[],
-		"_portals = []\nregenerate_nav_graph()")
-	Lib.append_function(sheet, "add_hazard", "Add Hazard", "Platformer Pathfinding",
-		"Marks a world-space rectangle as hazardous. Deadly: routes NEVER pass through it (spikes, lava). Not deadly: routes pay 4x to cross, so it is taken only when no clean way exists (fire patches, slow mud). Applies to routing instantly - no rebuild - and On Hazard Entered fires if the agent ends up inside one anyway.",
-		[["x", "float"], ["y", "float"], ["width", "float"], ["height", "float"], ["deadly", "bool"]],
-		"\n".join(PackedStringArray([
-			"_hazards.append({\"rect\": Rect2(x, y, width, height), \"deadly\": deadly})",
-			"# A hazard is watched per frame (On Hazard Entered fires on the way in), so a parked",
-			"# agent starts paying for its tick again the moment one exists.",
-			"set_physics_process(true)"
-		])))
-	Lib.append_function(sheet, "clear_hazards", "Clear Hazards", "Platformer Pathfinding",
-		"Removes every hazard (routing sees the change immediately).",
-		[],
-		"_hazards = []")
-	Lib.append_function(sheet, "add_moving_platform", "Add Moving Platform", "Platformer Pathfinding",
-		"Registers a moving platform (an AnimatableBody2D you animate) by its two travel endpoints: the graph gains a PLATFORM edge between them, and an agent routed across it walks to the track, WAITS for the platform, boards, rides, and walks off at the far side. Survives Regenerate. The pack never moves the platform - your sheet animates it between exactly these endpoints.",
-		[["platform", "Node"], ["from_x", "float"], ["from_y", "float"], ["to_x", "float"], ["to_y", "float"]],
-		"\n".join(PackedStringArray([
-			"if not (platform is Node2D):",
-			"\treturn",
-			"var ride: Dictionary = {\"node\": platform, \"a\": Vector2(from_x, from_y), \"b\": Vector2(to_x, to_y)}",
-			"_moving_platforms.append(ride)",
-			"if not _nodes.is_empty():",
-			"\t_apply_moving_platform(ride)"
-		])))
-	Lib.append_function(sheet, "clear_moving_platforms", "Clear Moving Platforms", "Platformer Pathfinding",
+		[["count", "int"]])
+	src.verb("add_portal", "Add Portal",
+		"Links two world positions as an instant PORTAL: an agent whose route uses it walks to the entrance and blinks to the exit (fires On Portal Entered, then On Portal Taken). Bidirectional works both ways. Portals join the graph immediately and survive Regenerate. Add Instant Portal adds a cost and a tag; Add Gradual Portal moves the agent instead of blinking it.",
+		[["from_x", "float"], ["from_y", "float"], ["to_x", "float"], ["to_y", "float"], ["bidirectional", "bool"]])
+	src.verb("clear_portals", "Clear Portals",
+		"Removes every registered portal and elevator stop (takes effect on the next Regenerate Nav Graph).",
+		[])
+	src.verb("add_hazard", "Add Hazard",
+		"Marks a world-space rectangle as hazardous. Deadly: routes NEVER pass through it (spikes, lava). Not deadly: routes pay Danger Cost Multiplier to cross, so it is taken only when no clean way exists (fire patches, slow mud). Applies to routing instantly - no rebuild - and On Hazard Entered fires if the agent ends up inside one anyway. Last Hazard Id names it for Remove Hazard.",
+		[["x", "float"], ["y", "float"], ["width", "float"], ["height", "float"], ["deadly", "bool"]])
+	src.verb("clear_hazards", "Clear Hazards",
+		"Removes every hazard of every kind (routing sees the change immediately).",
+		[])
+	src.verb("add_moving_platform", "Add Moving Platform",
+		"Registers a moving platform (an AnimatableBody2D you animate) by its two travel endpoints: the graph gains a PLATFORM link between them, and an agent routed across it walks to the track, WAITS for the platform, boards, rides, and walks off at the far side. Survives Regenerate. The pack never moves the platform - your sheet animates it between exactly these endpoints.",
+		[["platform", "Node"], ["from_x", "float"], ["from_y", "float"], ["to_x", "float"], ["to_y", "float"]])
+	src.verb("clear_moving_platforms", "Clear Moving Platforms",
 		"Unregisters every moving platform (takes effect on the next Regenerate Nav Graph).",
-		[],
-		"_moving_platforms = []\nregenerate_nav_graph()")
-	Lib.append_function(sheet, "set_nav_debug_draw", "Set Nav Debug Draw", "Platformer Pathfinding",
+		[])
+	src.verb("set_nav_debug_draw", "Set Nav Debug Draw",
 		"Draws the active path as a line in the world (great while tuning a level).",
-		[["enabled", "bool"]],
-		"debug_draw = enabled\n_refresh_debug()")
+		[["enabled", "bool"]])
+
+	# ── Routing and movement ───────────────────────────────────────────────────────────
+	src.verb("set_enabled", "Set Enabled",
+		"Off freezes the agent where it stands with its route, graph and settings kept, and ignores route requests; on resumes exactly where it left off.",
+		[["state", "bool", "On to navigate, off to freeze."]])
+	src.condition("is_enabled", "Is Enabled",
+		"True while the behavior is enabled (Set Enabled, or the Nav Enabled property).",
+		[])
+	src.verb("set_path_strategy", "Set Path Strategy",
+		"How routes are picked from now on: balanced, shortest (fewest pixels, long jumps welcome), safest (short hops over long leaps and deep drops), ground_hugging (walks whenever it can), no_falling (never descends by air) or walk_only (never leaves its platform except by portal or moving platform).",
+		[["strategy", "String", "The strategy routes are priced by."]])
+	_word(sheet, "strategy", _STRATEGIES, "set_path_strategy(\"{strategy}\")")
+	src.verb("set_max_traversal_drop", "Set Max Traversal Drop",
+		"Jumps and falls landing more than this many pixels lower are left out of this agent's routes, so it goes down by slopes, portals and short hops instead (fall damage, heavy units). -1 = no limit.",
+		[["pixels", "float", "The deepest drop allowed, in pixels (-1 = no limit)."]])
+	src.verb("set_drift_repath_distance", "Set Drift Repath Distance",
+		"Knocked more than this many pixels off the leg it is walking, the agent re-plans from where it is (fires On Repath), at most once per Repath Interval. 0 = off.",
+		[["pixels", "float", "How far off its leg the agent may be pushed before it re-plans (0 = off)."]])
+	src.verb("set_movement_limit", "Set Movement Limit",
+		"Overrides a movement limit the graph is built from instead of deriving it from the movement sibling: jump_height, jump_distance (pixels, 0 = derive again) or max_fall (pixels, negative = no limit). Regenerate Nav Graph afterwards.",
+		[["limit", "String", "Which limit to override."], ["value", "float", "The new limit in pixels."]])
+	_word(sheet, "limit", ["jump_height", "jump_distance", "max_fall"], "set_movement_limit(\"{limit}\", {value})")
+	src.verb("jump_toward", "Jump Toward",
+		"A full-strength jump straight at a point with no route at all - a lunge, a pounce, a boss leap. Works from the ground (or mid-air when the movement sibling has a jump left). Ends any route or patrol. Fires On Jump Toward Launched as it leaves the ground.",
+		[["x", "float", "World X to leap toward."], ["y", "float", "World Y to leap toward."]])
+	src.verb("teleport_to", "Teleport To",
+		"Moves the agent to a world position instantly without throwing its route away (the drift re-route skips that tick).",
+		[["x", "float", "World X."], ["y", "float", "World Y."]])
+	src.verb("start_patrol", "Start Patrol",
+		"Patrols the platform the agent stands on: walks to one end, waits Dwell seconds, turns, and repeats. The ends are found from the graph (ledges and walls, slopes and stairs included); Edge Distance keeps it that many pixels back from each end. Any route request ends the patrol.",
+		[["dwell", "float", "Seconds to wait at each end (0 = turn straight around)."], ["edge_distance", "float", "Pixels to stay back from each end."]])
+	src.verb("stop_patrol", "Stop Patrol",
+		"Ends the patrol; the agent stands where it is.",
+		[])
+	src.condition("is_patrolling", "Is Patrolling",
+		"True while a Start Patrol patrol is running (walking or dwelling).",
+		[])
+	src.expression("patrol_direction", "Patrol Direction",
+		"-1 walking left, 1 walking right, 0 while dwelling at an end or not patrolling. Handy for flipping the sprite.",
+		[], TYPE_INT)
+	src.verb("find_path_to_nearest_ledge", "Find Path To Nearest Ledge",
+		"Routes to the nearest edge of the agent's platform in a direction, stopping Distance pixels back from it. Fails (On Path Failed, reason no_ledge) when the platform has no ledge that way.",
+		[["direction", "String", "Which way to look for the ledge."], ["distance", "float", "Pixels to stop short of the edge."]])
+	_word(sheet, "direction", ["left", "right"], "find_path_to_nearest_ledge(\"{direction}\", {distance})")
+	src.verb("find_path_to_node_side", "Find Path To Node Side",
+		"Routes to a spot BESIDE a node instead of onto it, Distance pixels clear of it: left, right, or any (the nearer side, falling back to the other when it has no ground). Fires On Node Side Reached on arrival there; Reached Side says which side.",
+		[["target", "Node", "The node to stand beside."], ["side", "String", "Which side of it to stand on."], ["distance", "float", "Gap in pixels between the two (one tile is always kept)."]])
+	_word(sheet, "side", ["any", "left", "right"], "find_path_to_node_side({target}, \"{side}\", {distance})")
+	src.expression("reached_side", "Reached Side",
+		"Which side Find Path To Node Side arrived on: -1 left, 1 right, 0 none yet.",
+		[], TYPE_INT)
+	src.expression("jump_toward_target", "Jump Toward Target",
+		"The point the running Jump Toward is aimed at (zero when none is running).",
+		[], TYPE_VECTOR2)
+	src.expression("coyote_timer", "Coyote Timer",
+		"Seconds of coyote grace left after running off a ledge (0 on the ground or once it has run out).",
+		[], TYPE_FLOAT)
+	src.expression("estimated_velocity_x", "Estimated Velocity X",
+		"The horizontal speed (px/s) the route is asking for right now - Path Move Axis times the run speed.",
+		[], TYPE_FLOAT)
+
+	# ── Path details ─────────────────────────────────────────────────────────────────
+	src.expression("path_cost", "Path Cost",
+		"The total cost of the active route under the current strategy (0 with no route).",
+		[], TYPE_FLOAT)
+	src.expression("path_end", "Path End",
+		"Where the active route actually ends - in nearest mode this can differ from the asked-for spot.",
+		[], TYPE_VECTOR2)
+	src.expression("path_target", "Path Target",
+		"The world position the last route was asked for.",
+		[], TYPE_VECTOR2)
+	src.expression("path_goal_cell", "Path Goal Cell",
+		"The grid cell the last route ended on (the asked-for spot snapped to walkable ground).",
+		[], TYPE_VECTOR2I)
+	src.expression("path_fail_reason", "Path Fail Reason",
+		"Why the last route failed: no_graph, no_start_node, no_goal_node, no_path, max_nodes_reached, no_ledge or no_target. Empty after a success.",
+		[], TYPE_STRING)
+	src.expression("path_queue_size", "Path Queue Size",
+		"How many agents are waiting on the shared per-tick route budget right now.",
+		[], TYPE_INT)
+	src.expression("waypoint_position", "Waypoint Position",
+		"The world position of a waypoint of the active route (zero out of range).",
+		[["index", "int", "Waypoint index, from 0."]], TYPE_VECTOR2)
+	src.expression("waypoint_cell", "Waypoint Cell",
+		"The grid cell of a waypoint of the active route ((-1, -1) out of range).",
+		[["index", "int", "Waypoint index, from 0."]], TYPE_VECTOR2I)
+	src.expression("waypoint_action", "Waypoint Action",
+		"How a waypoint is reached: walk, jump, double_jump, coyote_jump, fall, fall_through, portal, portal_gradual or platform (empty out of range).",
+		[["index", "int", "Waypoint index, from 0."]], TYPE_STRING)
+	src.expression("distance_to_waypoint", "Distance To Waypoint",
+		"Pixels from the agent to its current waypoint (0 with no route).",
+		[], TYPE_FLOAT)
+	src.expression("angle_to_waypoint", "Angle To Waypoint",
+		"Degrees from the agent to its current waypoint (0 with no route).",
+		[], TYPE_FLOAT)
+
+	# ── Crowds ───────────────────────────────────────────────────────────────────────
+	src.verb("set_crowd_arrivals", "Set Crowd Arrivals",
+		"On: agents routing to the same spot each claim a landing node, so later arrivals stand beside it instead of stacking on one pixel.",
+		[["enabled", "bool", "On to spread arrivals."]])
+	src.verb("set_multi_agent_avoidance", "Set Multi Agent Avoidance",
+		"On: routes pay extra for cells other agents stand on or are about to walk, so a pack fans out over different ways.",
+		[["enabled", "bool", "On to avoid other agents' routes."]])
+	src.verb("set_separation_setting", "Set Separation Setting",
+		"Changes an idle separation setting: distance (personal space in pixels, 0 = off), cooldown (seconds of rest after giving up) or give_up_time (seconds of trying before resting).",
+		[["setting", "String", "Which setting to change."], ["value", "float", "Its new value."]])
+	_word(sheet, "setting", ["distance", "cooldown", "give_up_time"], "set_separation_setting(\"{setting}\", {value})")
+	src.expression("nearby_agent_count", "Nearby Agent Count",
+		"How many other agents on the same map stand within a radius of this one.",
+		[["radius", "float", "Radius in pixels."]], TYPE_INT)
+
+	# ── Platforms and ledges ─────────────────────────────────────────────────────────
+	src.condition("is_at_ledge", "Is At Ledge",
+		"True while the agent stands on the edge node of its platform.",
+		[])
+	src.condition("is_at_island", "Is At Island",
+		"True while the agent stands on a one-node platform.",
+		[])
+	src.condition("is_on_same_platform", "Is On Same Platform",
+		"True when the agent could WALK to the node - no jump or fall needed (slopes and stairs count).",
+		[["target", "Node", "The node to test."]])
+	src.condition("is_position_on_same_platform", "Is Position On Same Platform",
+		"True when the agent could WALK to a world position - no jump or fall needed.",
+		[["x", "float", "World X."], ["y", "float", "World Y."]])
+	src.expression("nearest_ledge", "Nearest Ledge",
+		"The nearest ledge of the agent's platform in a direction (zero when there is none).",
+		[["direction", "String", "Which way to look."]], TYPE_VECTOR2)
+	_word(sheet, "direction", ["left", "right"], "nearest_ledge(\"{direction}\")")
+	src.object_expression("node_on_platform", "Node On Platform",
+		"The nearest or furthest node of a group that stands on the agent's own platform (reachable by walking alone), or null - pick a target it can walk to.",
+		[["group", "String", "The group to search, in quotes."], ["which", "String", "Nearest or furthest."]], "Node")
+	_code_default(sheet, "group", "\"\"")
+	_word(sheet, "which", ["nearest", "furthest"], "node_on_platform({group}, \"{which}\")")
+
+	# ── Obstacle map ─────────────────────────────────────────────────────────────────
+	src.verb("create_obstacle_map", "Create Obstacle Map",
+		"Starts an empty map with no TileMapLayer: Width x Height cells of Cell Size pixels from the world origin, every cell clear. Fill it with Set Tile State or Scan Collision Bodies, then Regenerate Nav Graph.",
+		[["width", "int", "Width in cells."], ["height", "int", "Height in cells."], ["cell_size", "float", "Cell size in pixels (0 keeps Grid Cell Size)."]])
+	src.verb("set_tile_state", "Set Tile State",
+		"Overrides one cell of the map: solid, clear, jump_thru (a one-way platform), slope_left (rises to the right) or slope_right (rises to the left). Overrides survive Regenerate; call Regenerate Nav Graph after a batch of them.",
+		[["gx", "int", "Grid X."], ["gy", "int", "Grid Y."], ["state", "String", "The cell's new state."]])
+	_word(sheet, "state", _TILE_STATES, "set_tile_state({gx}, {gy}, \"{state}\")")
+	src.verb("set_tile_state_at", "Set Tile State At",
+		"Set Tile State for the cell under a world position.",
+		[["x", "float", "World X."], ["y", "float", "World Y."], ["state", "String", "The cell's new state."]])
+	_word(sheet, "state", _TILE_STATES, "set_tile_state_at({x}, {y}, \"{state}\")")
+	src.verb("scan_collision_bodies", "Scan Collision Bodies",
+		"Marks every cell covered by the StaticBody2D shapes under a node as solid (one-way shapes as jump-through) - for levels built from bodies instead of tiles. Needs a grid first (Build Nav Graph From Tilemap or Create Obstacle Map); Regenerate Nav Graph afterwards.",
+		[["root", "Node", "The node whose StaticBody2D descendants are scanned."]])
+	src.verb("clear_nav_graph", "Clear Nav Graph",
+		"Drops the graph, the obstacle map and every tile override (portals and hazards stay registered), stops the agent and fires On Nav Graph Cleared.",
+		[])
+	src.verb("load_obstacle_map_json", "Load Obstacle Map JSON",
+		"Rebuilds the map and graph from a string Obstacle Map JSON produced - a saved or pre-baked level, no TileMapLayer needed.",
+		[["json", "String", "The JSON text, in quotes or from a variable."]])
+	_code_default(sheet, "json", "\"\"")
+	src.expression("obstacle_map_json", "Obstacle Map JSON",
+		"The current obstacle map (tiles, scanned bodies and overrides) as a JSON string, to save or ship with a level.",
+		[], TYPE_STRING)
+	src.expression("obstacle_map_source", "Obstacle Map Source",
+		"Where the map comes from: tilemap, custom or none.",
+		[], TYPE_STRING)
+	src.expression("tile_state", "Tile State",
+		"A cell's state: solid, clear, jump_thru, slope_left or slope_right (empty with no map or outside a custom map).",
+		[["gx", "int", "Grid X."], ["gy", "int", "Grid Y."]], TYPE_STRING)
+	src.condition("tile_has_state", "Tile Has State",
+		"True when a cell has the given state.",
+		[["gx", "int", "Grid X."], ["gy", "int", "Grid Y."], ["state", "String", "The state to test for."]])
+	_word(sheet, "state", _TILE_STATES, "tile_has_state({gx}, {gy}, \"{state}\")")
+	src.condition("tile_has_state_at", "Tile Has State At",
+		"True when the cell under a world position has the given state.",
+		[["x", "float", "World X."], ["y", "float", "World Y."], ["state", "String", "The state to test for."]])
+	_word(sheet, "state", _TILE_STATES, "tile_has_state_at({x}, {y}, \"{state}\")")
+	src.expression("world_to_grid", "World To Grid",
+		"The grid cell under a world position.",
+		[["x", "float", "World X."], ["y", "float", "World Y."]], TYPE_VECTOR2I)
+	src.expression("grid_to_world", "Grid To World",
+		"The world position of a cell's centre.",
+		[["gx", "int", "Grid X."], ["gy", "int", "Grid Y."]], TYPE_VECTOR2)
+	src.expression("grid_size", "Grid Size",
+		"The map's size in cells (a tilemap's used area, or a custom map's size).",
+		[], TYPE_VECTOR2I)
+	src.expression("grid_tile_size", "Grid Tile Size",
+		"The map's cell size in pixels (0 with no map).",
+		[], TYPE_FLOAT)
+
+	# ── Graph inspection ─────────────────────────────────────────────────────────────
+	src.verb("log_graph_stats", "Log Graph Stats",
+		"Prints the graph's size to the Output panel: nodes, links by kind, portals, hazards, platforms and the jump reach.",
+		[])
+	src.verb("set_debug_draw_graph", "Set Debug Draw Graph",
+		"Draws every node and link of the graph in the world, links coloured by kind.",
+		[["enabled", "bool", "On to draw the graph."]])
+	src.condition("graph_node_exists", "Graph Node Exists",
+		"True when a cell is a standable node of the graph.",
+		[["gx", "int", "Grid X."], ["gy", "int", "Grid Y."]])
+	src.condition("graph_node_exists_at", "Graph Node Exists At",
+		"True when the cell under a world position is a standable node.",
+		[["x", "float", "World X."], ["y", "float", "World Y."]])
+	src.condition("is_ledge_node", "Is Ledge Node",
+		"True when a node is the edge of its platform (left, right or both).",
+		[["gx", "int", "Grid X."], ["gy", "int", "Grid Y."]])
+	src.expression("ledge_side", "Ledge Side",
+		"Which side of a node is a ledge: -1 left, 1 right, 2 both (a one-node island), 0 neither.",
+		[["gx", "int", "Grid X."], ["gy", "int", "Grid Y."]], TYPE_INT)
+	src.expression("graph_node_count", "Graph Node Count",
+		"How many standable nodes the graph has.",
+		[], TYPE_INT)
+	src.expression("graph_node_cell", "Graph Node Cell",
+		"The grid cell of the node at an index ((-1, -1) out of range).",
+		[["index", "int", "Node index, from 0."]], TYPE_VECTOR2I)
+	src.expression("graph_node_position", "Graph Node Position",
+		"The world position of the node at an index (zero out of range).",
+		[["index", "int", "Node index, from 0."]], TYPE_VECTOR2)
+	src.expression("graph_node_connection_count", "Graph Node Connection Count",
+		"How many links leave a node.",
+		[["gx", "int", "Grid X."], ["gy", "int", "Grid Y."]], TYPE_INT)
+	src.expression("graph_node_connection_kind", "Graph Node Connection Kind",
+		"The kind of one link leaving a node (walk, jump, fall, portal...).",
+		[["gx", "int", "Grid X."], ["gy", "int", "Grid Y."], ["index", "int", "Link index, from 0."]], TYPE_STRING)
+	src.expression("graph_node_connection_cost", "Graph Node Connection Cost",
+		"The cost of one link leaving a node, under the current strategy.",
+		[["gx", "int", "Grid X."], ["gy", "int", "Grid Y."], ["index", "int", "Link index, from 0."]], TYPE_FLOAT)
+	src.expression("graph_node_connection_target", "Graph Node Connection Target",
+		"The world position one link leaving a node lands on.",
+		[["gx", "int", "Grid X."], ["gy", "int", "Grid Y."], ["index", "int", "Link index, from 0."]], TYPE_VECTOR2)
+	src.expression("nearest_graph_node", "Nearest Graph Node",
+		"The world position of the node nearest a point (zero with no graph).",
+		[["x", "float", "World X."], ["y", "float", "World Y."]], TYPE_VECTOR2)
+	src.expression("nearest_graph_node_cell", "Nearest Graph Node Cell",
+		"The grid cell of the node nearest a point ((-1, -1) with no graph).",
+		[["x", "float", "World X."], ["y", "float", "World Y."]], TYPE_VECTOR2I)
+	src.expression("calculated_jump_distance", "Calculated Jump Distance",
+		"The jump distance in pixels the graph is built with (derived or overridden).",
+		[], TYPE_FLOAT)
+	src.expression("calculated_jump_height", "Calculated Jump Height",
+		"The jump height in pixels the graph is built with (derived or overridden).",
+		[], TYPE_FLOAT)
+
+	# ── Hazards ──────────────────────────────────────────────────────────────────────
+	src.verb("add_circle_hazard", "Add Circle Hazard",
+		"Marks a circle as hazardous - an explosion, a fire burst. Deadly blocks routes; not deadly makes them costly. Last Hazard Id names it.",
+		[["x", "float", "Centre X."], ["y", "float", "Centre Y."], ["radius", "float", "Radius in pixels."], ["deadly", "bool", "Deadly blocks routes; off only makes them costly."]])
+	src.verb("add_tracked_hazard", "Add Tracked Hazard",
+		"A circular hazard that FOLLOWS a node (a patrolling saw, a burning enemy) with no per-frame events, and removes itself when the node is freed. Last Hazard Id names it.",
+		[["target", "Node", "The node the hazard follows."], ["radius", "float", "Radius in pixels."], ["deadly", "bool", "Deadly blocks routes; off only makes them costly."]])
+	src.verb("remove_hazard", "Remove Hazard",
+		"Removes one hazard by the id Last Hazard Id gave you.",
+		[["hazard_id", "int", "The hazard's id."]])
+	src.verb("set_hazard_margin", "Set Hazard Margin",
+		"Surrounds every hazard with a danger buffer this many pixels wide, so routes keep their distance.",
+		[["pixels", "float", "Buffer width in pixels (0 = none)."]])
+	src.condition("is_position_hazardous", "Is Position Hazardous",
+		"True when a world position is inside any hazard.",
+		[["x", "float", "World X."], ["y", "float", "World Y."]])
+	src.expression("hazard_at", "Hazard At",
+		"The hazard level at a world position: 0 clear, 1 danger (or a hazard's margin), 2 deadly.",
+		[["x", "float", "World X."], ["y", "float", "World Y."]], TYPE_INT)
+	src.expression("hazard_count", "Hazard Count",
+		"How many hazards are registered (every kind).",
+		[], TYPE_INT)
+	src.expression("tracked_hazard_count", "Tracked Hazard Count",
+		"How many node-following hazards are registered.",
+		[], TYPE_INT)
+	src.expression("last_hazard_id", "Last Hazard Id",
+		"The id of the most recently added hazard, for Remove Hazard (0 before any).",
+		[], TYPE_INT)
+
+	# ── Portals ──────────────────────────────────────────────────────────────────────
+	src.verb("add_instant_portal", "Add Instant Portal",
+		"A portal that BLINKS the agent from entrance to exit (a door, a teleporter). Cost 1 is the normal price; raise it to make routes avoid the portal. Tags (comma-separated) group portals for the by-tag actions and expressions. Last Portal Id names it.",
+		[["from_x", "float", "Entrance X."], ["from_y", "float", "Entrance Y."], ["to_x", "float", "Exit X."], ["to_y", "float", "Exit Y."], ["bidirectional", "bool", "Usable both ways."], ["cost", "float", "Price multiplier (1 = normal)."], ["tag", "String", "Optional tags, comma-separated, in quotes."]])
+	_code_default(sheet, "tag", "\"\"")
+	src.verb("add_gradual_portal", "Add Gradual Portal",
+		"A portal that MOVES the agent from entrance to exit in a straight line at Speed (a ladder, a lift, a zipline), with the movement sibling paused on the way. Cost 1 prices it by its travel time. Last Portal Id names it.",
+		[["from_x", "float", "Entrance X."], ["from_y", "float", "Entrance Y."], ["to_x", "float", "Exit X."], ["to_y", "float", "Exit Y."], ["bidirectional", "bool", "Usable both ways."], ["speed", "float", "Travel speed in px/s."], ["cost", "float", "Price multiplier (1 = priced by travel time)."], ["tag", "String", "Optional tags, comma-separated, in quotes."]])
+	_code_default(sheet, "tag", "\"\"")
+	src.verb("add_elevator_stop", "Add Elevator Stop",
+		"Adds a stop to an elevator group: two-way gradual portals to every other stop of the group are created for you. One group name per elevator.",
+		[["group", "String", "The elevator's name, in quotes."], ["x", "float", "Stop X."], ["y", "float", "Stop Y."], ["speed", "float", "Travel speed in px/s."], ["tag", "String", "Optional tags, comma-separated, in quotes."]])
+	_code_default(sheet, "group", "\"\"")
+	_code_default(sheet, "tag", "\"\"")
+	src.verb("pause_at_portal", "Pause At Portal",
+		"Inside On Portal Entered: holds the agent at the entrance so your events can play a door or lift animation first. Then Resume Portal (the portal moves it) or Complete Portal (your events moved it).",
+		[])
+	src.verb("resume_portal", "Resume Portal",
+		"Runs a paused portal's own move: the blink, or the gradual travel.",
+		[])
+	src.verb("complete_portal", "Complete Portal",
+		"Finishes a paused portal WITHOUT its own move (your events already moved the agent), or cuts a gradual portal short where the agent is.",
+		[])
+	src.verb("remove_portal", "Remove Portal",
+		"Removes one portal by id; its links leave the graph immediately.",
+		[["portal_id", "int", "The portal's id."]])
+	src.verb("remove_portal_near", "Remove Portal Near",
+		"Removes the portal whose entrance or exit is nearest a world position.",
+		[["x", "float", "World X."], ["y", "float", "World Y."]])
+	src.verb("remove_portals_by_tag", "Remove Portals By Tag",
+		"Removes every portal carrying a tag (an empty tag removes them all).",
+		[["tag", "String", "The tag, in quotes."]])
+	_code_default(sheet, "tag", "\"\"")
+	src.verb("set_portal_cost", "Set Portal Cost",
+		"Changes a portal's price multiplier (higher = routes avoid it).",
+		[["portal_id", "int", "The portal's id."], ["cost", "float", "Price multiplier (1 = normal)."]])
+	src.verb("set_portal_speed", "Set Portal Speed",
+		"Changes a gradual portal's travel speed in px/s.",
+		[["portal_id", "int", "The portal's id."], ["speed", "float", "Travel speed in px/s."]])
+	src.verb("set_portal_tag", "Set Portal Tag",
+		"Replaces a portal's tags.",
+		[["portal_id", "int", "The portal's id."], ["tag", "String", "The new tags, comma-separated, in quotes."]])
+	_code_default(sheet, "tag", "\"\"")
+	src.verb("set_portal_ignore_hazards", "Set Portal Ignore Hazards",
+		"On: routes use the portal even when a hazard covers it.",
+		[["portal_id", "int", "The portal's id."], ["ignore", "bool", "On to ignore hazards."]])
+	src.verb("set_portal_position", "Set Portal Position",
+		"Moves a portal's entrance and exit, keeping its id, type, cost, speed and tags - call it on a timer to follow a moving door.",
+		[["portal_id", "int", "The portal's id."], ["from_x", "float", "Entrance X."], ["from_y", "float", "Entrance Y."], ["to_x", "float", "Exit X."], ["to_y", "float", "Exit Y."]])
+	src.condition("is_at_portal", "Is At Portal",
+		"True while the agent is held at a portal entrance by Pause At Portal.",
+		[])
+	src.condition("is_traversing_portal", "Is Traversing Portal",
+		"True while a gradual portal is moving the agent.",
+		[])
+	src.expression("current_portal_id", "Current Portal Id",
+		"The portal being (or last) taken - read it inside On Portal Entered / On Portal Taken (-1 before any).",
+		[], TYPE_INT)
+	src.expression("last_portal_id", "Last Portal Id",
+		"The id of the most recently added portal (-1 before any).",
+		[], TYPE_INT)
+	src.expression("portal_count", "Portal Count",
+		"How many portals are registered.",
+		[], TYPE_INT)
+	src.expression("nearest_portal_id", "Nearest Portal Id",
+		"The portal whose entrance is nearest a point, optionally only those carrying a tag (-1 when none).",
+		[["x", "float", "World X."], ["y", "float", "World Y."], ["tag", "String", "Only portals with this tag (empty = any), in quotes."]], TYPE_INT)
+	_code_default(sheet, "tag", "\"\"")
+	src.expression("furthest_portal_id", "Furthest Portal Id",
+		"The portal whose entrance is furthest from a point, optionally only those carrying a tag (-1 when none).",
+		[["x", "float", "World X."], ["y", "float", "World Y."], ["tag", "String", "Only portals with this tag (empty = any), in quotes."]], TYPE_INT)
+	_code_default(sheet, "tag", "\"\"")
+	src.expression("portal_count_by_tag", "Portal Count By Tag",
+		"How many portals carry a tag.",
+		[["tag", "String", "The tag, in quotes."]], TYPE_INT)
+	_code_default(sheet, "tag", "\"\"")
+	src.expression("portal_id_by_tag", "Portal Id By Tag",
+		"The id of the index-th portal carrying a tag (-1 out of range).",
+		[["tag", "String", "The tag, in quotes."], ["index", "int", "Index among those portals, from 0."]], TYPE_INT)
+	_code_default(sheet, "tag", "\"\"")
+	src.expression("portal_tag", "Portal Tag",
+		"A portal's tags (empty when it has none or does not exist).",
+		[["portal_id", "int", "The portal's id."]], TYPE_STRING)
+	src.expression("portal_type", "Portal Type",
+		"instant or gradual (empty when the portal does not exist).",
+		[["portal_id", "int", "The portal's id."]], TYPE_STRING)
+	src.expression("portal_exit", "Portal Exit",
+		"Where the current portal lets the agent out.",
+		[], TYPE_VECTOR2)
+	src.expression("portal_progress", "Portal Progress",
+		"0 to 1 along a gradual portal while it moves the agent (0 otherwise).",
+		[], TYPE_FLOAT)
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
 	Lib.verb_sentences(sheet, {
 		"build_nav_graph": "Build nav graph from [i]{tilemap}[/i]",
 		"find_path_to": "Find path to ([b]{x}[/b], [b]{y}[/b]) mode [b]{mode}[/b]",
+		"start_patrol": "Patrol the platform, waiting [b]{dwell}[/b] s at each end, [b]{edge_distance}[/b] px back from it",
+		"jump_toward": "Jump toward ([b]{x}[/b], [b]{y}[/b])",
+		"set_path_strategy": "Pick routes by [b]{strategy}[/b]",
+		"add_gradual_portal": "Add gradual portal ([b]{from_x}[/b], [b]{from_y}[/b]) to ([b]{to_x}[/b], [b]{to_y}[/b]) at [b]{speed}[/b] px/s",
 	})
 	Lib.feature_verbs(sheet, ["build_nav_graph", "find_path_to"])
-	return Lib.save_pack(sheet, "res://eventsheet_addons/platformer_pathfinding/platformer_pathfinding_behavior")
+	return Lib.publish(src, "res://eventsheet_addons/platformer_pathfinding/platformer_pathfinding_behavior")
 
 
 ## Gives the last-appended ACE a call template that QUOTES its dropdown argument. A dropdown key is
@@ -924,3 +580,25 @@ static func _param_options(sheet: EventSheetResource, param_id: String, choices:
 	for parameter: ACEParam in fn.params:
 		if parameter.id == param_id:
 			parameter.options = typed
+
+
+## A word dropdown on the last-appended ACE: its options, the first option as the starting value
+## (spelled as a word, because the template's own quotes receive it), and the quoting template.
+static func _word(sheet: EventSheetResource, param_id: String, choices: Array, call: String) -> void:
+	_param_options(sheet, param_id, choices)
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	for parameter: ACEParam in fn.params:
+		if parameter.id == param_id:
+			parameter.default_value = str(choices[0])
+			parameter.default_spelling = "word"
+	_quoted_argument(sheet, call)
+
+
+## A free-text parameter's starting value, spelled as GDScript (an unquoted template slot takes it
+## verbatim, so an empty string is written with its quotes).
+static func _code_default(sheet: EventSheetResource, param_id: String, value: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	for parameter: ACEParam in fn.params:
+		if parameter.id == param_id:
+			parameter.default_value = value
+			parameter.default_spelling = "code"

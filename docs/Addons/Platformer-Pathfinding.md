@@ -13,8 +13,14 @@ Two bundled showcases. **Platformer Pathfinding**
 (`demo/showcase/platformer_pathfinding/`) is the plain case and the one to copy: a level with one
 gap and two ledges, a keyboard Player, and a Chaser wired in three actions - build the graph, draw
 it, Find Path To Node the Player once. **Path Chase** (`demo/showcase/path_chase/`) is the same
-setup with everything else the pack can do turned on: portals, a deadly hazard, a moving platform
-and a bridge that appears and vanishes.
+setup with everything else the pack can do turned on: portals, a deadly hazard, a moving platform,
+a bridge that appears and vanishes, and a Guard patrolling the high platform on a graph it shares
+with the Chaser through a Map Tag.
+
+The second half of the vocabulary (link kinds, strategies, crowds, patrols, obstacle maps, the
+fuller portal and hazard sets) is inspired by a platformer navigation graph addon from another
+event-sheet engine, rebuilt in Godot's own terms: signals for triggers, `Vector2` expressions for
+X/Y pairs, Nodes and groups for picked objects, and StaticBody2D / TileMapLayer data for the map.
 
 ---
 
@@ -61,7 +67,23 @@ and a bridge that appears and vanishes.
 - **Moving platforms carry the agent.** Add Moving Platform registers an AnimatableBody2D you
   animate between two endpoints; a routed agent walks to the track, WAITS beside it standing
   still until the platform parks, boards, rides centered, and walks off at the far side.
-- **See it think.** Set Nav Debug Draw paints the live route as a line in the world.
+- **See it think.** Set Nav Debug Draw paints the live route as a line in the world, and Set
+  Debug Draw Graph paints EVERY node and link, coloured by kind.
+- **Every way a platformer character gets around.** Walk, jump, fall, plus DOUBLE JUMP links
+  when the movement sibling has two jumps, COYOTE JUMP links (run off the ledge, leap in the air),
+  FALL-THROUGH drops off one-way tiles, instant and GRADUAL portals (ladders, lifts, ziplines),
+  elevator groups, and moving platforms.
+- **Six path strategies.** balanced, shortest, safest, ground_hugging, no_falling and walk_only
+  change how a route is priced - the same level gives a speedrunner rival, a cautious escort and
+  a shopkeeper who never leaves the counter.
+- **Crowds behave.** Crowd Arrivals spreads agents over neighbouring nodes instead of stacking
+  them, Multi Agent Avoidance fans their routes out, Idle Separation nudges idle agents apart
+  (never off a ledge), and a shared Map Tag builds the graph ONCE for a whole horde.
+- **Patrols in one row.** Start Patrol walks the platform end to end with a dwell at each end,
+  firing a trigger at every turn.
+- **No tiles? Still works.** Create Obstacle Map + Set Tile State, or Scan Collision Bodies over a
+  level built from StaticBody2D shapes, and Obstacle Map JSON / Load Obstacle Map JSON save and
+  restore the whole map.
 
 ## Core concepts
 
@@ -96,6 +118,41 @@ walks on, rides centered, and walks off at the far side. Waiting and riding legi
 waypoint progress, so the stuck watchdog holds off, and route refreshes are deferred mid-ride
 (a fresh route would start from a ground node and steer the rider off the shaft).
 
+**Link kinds.** Every route is a list of waypoints, and each says how it is reached (Waypoint
+Action): `walk`; `jump`; `double_jump` (only built when the movement sibling has `max_jumps` of 2
+or more - the second jump fires at the top of the first); `coyote_jump` (run off a ledge and leap
+half way through the coyote window, for gaps a standing jump cannot clear - only built when the
+window is long enough to matter and Ledge Restriction is off); `fall`; `fall_through` (drop
+straight down through a one-way tile - one-way collision polygons are read as jump-through
+platforms you can stand on, jump up through, and drop through); `portal` (an instant blink);
+`portal_gradual` (a straight-line move at a speed, with the movement sibling paused - ladders,
+lifts, ziplines); and `platform` (a moving platform ride).
+
+**Strategies price routes.** Walking, portals and platforms always cost what they cost; Path
+Strategy re-prices the airborne links. `balanced` (default) uses the built-in weights;
+`shortest` counts raw distance plus a small landing fee per jump, so long leaps win; `safest`
+makes long leaps and deep drops cost more the bigger they are, so chains of short hops win;
+`ground_hugging` puts a heavy fee on every jump and fall, so it walks whenever any walking route
+exists; `no_falling` never descends by jump or fall (Max Traversal Drop raises the allowance);
+`walk_only` never leaves its platform except by portal or moving platform. Max Traversal Drop
+also works alone, with any strategy.
+
+**Nearest really means nearest.** In `nearest` mode a target the agent cannot reach is not a
+failure: the route goes to the closest node the search could reach. `reach` mode still fails,
+and Path Fail Reason says why (`no_graph`, `no_start_node`, `no_goal_node`, `no_path`,
+`max_nodes_reached`, `no_ledge`, `no_target`).
+
+**Maps without a TileMapLayer.** Create Obstacle Map starts an empty grid of a cell size you
+pick; Set Tile State marks cells `solid`, `clear`, `jump_thru`, `slope_left` or `slope_right`;
+Scan Collision Bodies marks the cells StaticBody2D shapes cover (one-way shapes as jump-through).
+Overrides and scans layer over a tilemap too, and survive Regenerate. Obstacle Map JSON hands
+back the merged map as text and Load Obstacle Map JSON rebuilds from it - a pre-baked level.
+
+**Map tags share one graph.** Agents whose Map Tag is the same non-empty word share ONE graph,
+obstacle edits, portals, hazards and moving platforms: the first Build Nav Graph builds, every
+later one on the same TileMapLayer just joins. Give agents with different jump physics
+different tags. An empty tag (the default) keeps the graph per agent.
+
 **Pathfinding plans with straight-down gravity.** The graph, jump arcs, and steering all
 reason in screen x/y with gravity pulling down. PlatformerMovement's `gravity_angle` knob
 rotates that whole frame, and the planner does not follow it: leave the angle at its default
@@ -129,6 +186,10 @@ On the canvas these rows read as styled sentences - parameter values in **bold**
 
 - Build nav graph from *tilemap*
 - Find path to (**x**, **y**) mode **mode**
+- Patrol the platform, waiting **dwell** s at each end, **edge_distance** px back from it
+- Jump toward (**x**, **y**)
+- Pick routes by **strategy**
+- Add gradual portal (**from_x**, **from_y**) to (**to_x**, **to_y**) at **speed** px/s
 
 All ACEs live in the **Platformer Pathfinding** category and target the behavior on the node
 they are placed on.
@@ -155,6 +216,31 @@ they are placed on.
 | Clear Moving Platforms | (none) | Removes every registered platform (their edges leave on the next Regenerate). |
 | Set Auto Control | `enabled` (bool) | On (default): drive the sibling movement pack. Off: paths compute, you drive. |
 | Set Nav Debug Draw | `enabled` (bool) | Draw the active path as a line in the world. |
+| Set Enabled | `state` (bool) | Off freezes the agent with everything kept and ignores route requests; on resumes. |
+| Set Path Strategy | `strategy` (`balanced`/`shortest`/`safest`/`ground_hugging`/`no_falling`/`walk_only`) | How routes are priced from now on. |
+| Set Max Traversal Drop | `pixels` (float) | Jumps and falls landing lower than this are left out of routes (-1 = no limit). |
+| Set Drift Repath Distance | `pixels` (float) | Knocked this far off its leg, the agent re-plans (On Repath). 0 = off. |
+| Set Movement Limit | `limit` (`jump_height`/`jump_distance`/`max_fall`), `value` (float) | Overrides a derived limit; Regenerate afterwards. |
+| Jump Toward | `x`, `y` (float) | A full-strength leap at a point with no route - lunges and pounces. Fires On Jump Toward Launched. |
+| Teleport To | `x`, `y` (float) | Moves the agent without throwing its route away. |
+| Start Patrol / Stop Patrol | `dwell`, `edge_distance` (float) / (none) | Walks the platform end to end, waiting `dwell` seconds at each end, `edge_distance` px back from it. |
+| Find Path To Nearest Ledge | `direction` (`left`/`right`), `distance` (float) | Routes to the nearest edge of its platform, stopping `distance` px short. |
+| Find Path To Node Side | `target` (Node), `side` (`any`/`left`/`right`), `distance` (float) | Routes to a spot beside a node instead of onto it. Fires On Node Side Reached. |
+| Set Crowd Arrivals / Set Multi Agent Avoidance | `enabled` (bool) | Spread arrivals over neighbouring nodes / fan routes away from other agents' cells. |
+| Set Separation Setting | `setting` (`distance`/`cooldown`/`give_up_time`), `value` (float) | Idle separation tuning. |
+| Create Obstacle Map | `width`, `height` (int), `cell_size` (float) | An empty map with no TileMapLayer. |
+| Set Tile State / Set Tile State At | `gx`, `gy` (int) or `x`, `y` (float), `state` | Overrides one cell: `solid`, `clear`, `jump_thru`, `slope_left`, `slope_right`. Regenerate afterwards. |
+| Scan Collision Bodies | `root` (Node) | Marks cells covered by the StaticBody2D shapes under `root` (one-way shapes as jump-through). Regenerate afterwards. |
+| Clear Nav Graph | (none) | Drops the graph and the obstacle map. Fires On Nav Graph Cleared. |
+| Load Obstacle Map JSON | `json` (String) | Rebuilds the map and graph from Obstacle Map JSON text. |
+| Log Graph Stats / Set Debug Draw Graph | (none) / `enabled` (bool) | Print the graph's size; draw every node and link. |
+| Add Circle Hazard / Add Tracked Hazard | `x`, `y`, `radius` / `target`, `radius`, plus `deadly` | A circular hazard, fixed or following a node (removed when the node is freed). |
+| Remove Hazard / Set Hazard Margin | `hazard_id` (int) / `pixels` (float) | Remove one hazard by Last Hazard Id; grow every hazard by a danger buffer. |
+| Add Instant Portal / Add Gradual Portal | ends, `bidirectional`, (`speed`,) `cost`, `tag` | A blink, or a straight-line move at `speed`. `cost` 1 is normal; tags are comma-separated. |
+| Add Elevator Stop | `group` (String), `x`, `y`, `speed` (float), `tag` | Two-way gradual portals to every other stop of the group. |
+| Pause At Portal / Resume Portal / Complete Portal | (none) | Hold the agent at a portal inside On Portal Entered, then run the portal's move, or finish it without one. |
+| Remove Portal / Remove Portal Near / Remove Portals By Tag | id / `x`, `y` / `tag` | Portal links leave the graph at once. |
+| Set Portal Cost / Speed / Tag / Ignore Hazards / Position | `portal_id` plus the new value(s) | Edit a portal in place, keeping its id. |
 
 ### Conditions, expressions, and triggers
 
@@ -175,6 +261,30 @@ they are placed on.
 | Trigger | On Waypoint Stuck | No progress toward the waypoint for Stuck Timeout - it re-routes itself and tells you. |
 | Trigger | On Repath | The route refreshed (a follow update or a stuck recovery). |
 | Trigger | On Hazard Entered | The agent just stepped into a hazard (deadly or danger) - the damage hook. |
+| Trigger | On Portal Entered | The agent reached a portal entrance, before the portal moves it (call Pause At Portal here). |
+| Trigger | On Jump Toward Launched | Jump Toward just left the ground. |
+| Trigger | On Patrol End Reached / On Patrol Dwell Started / On Patrol Dwell Finished | A patrol's turn, wait and walk-on. |
+| Trigger | On Node Side Reached | A Find Path To Node Side route arrived beside its node. |
+| Trigger | On Nav Graph Cleared | Clear Nav Graph ran. |
+| Condition | Is Enabled / Is Patrolling | The behavior is on; a patrol is running. |
+| Condition | Is At Ledge / Is At Island | Standing on a platform's edge node; on a one-node platform. |
+| Condition | Is On Same Platform / Is Position On Same Platform | The agent could WALK there (slopes and stairs count). |
+| Condition | Is Position Hazardous | A world position is inside any hazard. |
+| Condition | Is At Portal / Is Traversing Portal | Held at a portal; moving through a gradual portal. |
+| Condition | Graph Node Exists / Graph Node Exists At / Is Ledge Node | Graph inspection by cell or world position. |
+| Condition | Tile Has State / Tile Has State At | A cell's obstacle state is the given one. |
+| Expression | Waypoint Position / Waypoint Cell / Waypoint Action (index) | Any waypoint of the route. |
+| Expression | Path Cost / Path End / Path Target / Path Goal Cell | The route's price, where it really ends, what was asked for, and the goal cell. |
+| Expression | Path Fail Reason / Path Queue Size | Why the last route failed; how many agents wait on the shared budget. |
+| Expression | Distance To Waypoint / Angle To Waypoint | Pixels and degrees to the current waypoint. |
+| Expression | Patrol Direction / Reached Side / Jump Toward Target | -1/1 (0 while dwelling); the side arrived on; the leap's aim. |
+| Expression | Coyote Timer / Estimated Velocity X | Coyote grace left; the speed the route asks for. |
+| Expression | Nearby Agent Count (radius) / Nearest Ledge (direction) / Node On Platform (group, which) | Crowd and platform questions; Node On Platform returns the Node. |
+| Expression | Obstacle Map JSON / Obstacle Map Source / Tile State / World To Grid / Grid To World / Grid Size / Grid Tile Size | The obstacle map. |
+| Expression | Graph Node Count / Graph Node Cell / Graph Node Position / Ledge Side / Graph Node Connection Count / Kind / Cost / Target / Nearest Graph Node / Nearest Graph Node Cell | Graph inspection. |
+| Expression | Calculated Jump Distance / Calculated Jump Height | The reach the graph is built with. |
+| Expression | Hazard At / Hazard Count / Tracked Hazard Count / Last Hazard Id | 0 clear, 1 danger, 2 deadly; counts; the id for Remove Hazard. |
+| Expression | Current Portal Id / Last Portal Id / Portal Count / Nearest Portal Id / Furthest Portal Id / Portal Count By Tag / Portal Id By Tag / Portal Tag / Portal Type / Portal Exit / Portal Progress | Portal bookkeeping. |
 
 ### Inspector properties
 
@@ -193,6 +303,20 @@ they are placed on.
 | `coyote_time` | `0.12` | AI jump grace after leaving the takeoff ledge (s). |
 | `repath_interval` / `repath_threshold` | `0.5` / `24.0` | Follow-mode refresh rate and the movement needed to trigger it. |
 | `stuck_timeout` | `1.5` | No waypoint progress for this long fires On Waypoint Stuck + a self re-route. |
+| `nav_enabled` | `true` | Off = frozen with state kept (Set Enabled). |
+| `path_strategy` | `balanced` | How routes are priced (see Core concepts). |
+| `smooth_paths` | `true` | Drop the in-between waypoints of a straight walk. |
+| `max_search_nodes` | `2000` | Search cap per route (Path Fail Reason `max_nodes_reached`). |
+| `max_traversal_drop` | `-1.0` | Deepest jump or fall a route may take, px (-1 = no limit). |
+| `drift_repath_distance` | `0.0` | Re-plan when knocked this far off the leg (0 = off). |
+| `double_jump_links` | `true` | Build double jump links when the sibling has two jumps. |
+| `hazard_margin` / `danger_cost_multiplier` | `0.0` / `4.0` | Danger buffer around every hazard; the price of crossing danger. |
+| `auto_build` | `true` | A route asked for with no graph builds one from the scene's first physics TileMapLayer. |
+| `map_tag` | `""` | Same non-empty tag = one shared graph. |
+| `grid_cell_size` | `32.0` | Cell size for a map with no TileMapLayer. |
+| `crowd_arrivals` / `multi_agent_avoidance` | `false` / `false` | Spread arrivals; fan routes out. |
+| `idle_separation` / `separation_cooldown` / `separation_give_up_time` | `0.0` / `5.0` / `2.0` | Idle personal space (px, 0 = off), rest after giving up, time before giving up. |
+| `debug_draw_graph` / `debug_log` | `false` / `false` | Draw the whole graph; print each route and failure. |
 
 ### Inspector properties are ACEs too
 
@@ -403,6 +527,105 @@ On Next Level Ready
   -> Enemy | Pathfinding: Build Nav Graph From Tilemap  $Level2
 ```
 
+### 16. A guard that walks its rooftop
+
+One row: walk end to end, wait at each end, turn. The triggers carry the acting.
+
+```
+On Ready                 -> Guard | Pathfinding: Start Patrol  1.5, 8
+On Patrol Dwell Started  -> play "look_around"
+On Patrol Dwell Finished -> play "walk" (flip by Patrol Direction)
+```
+
+### 17. A door with an opening animation
+
+Pause the agent at the portal, play the door, then let the portal run.
+
+```
+On Portal Entered
+  -> Enemy | Pathfinding: Pause At Portal
+  -> $Door: play "open"
+On $Door animation finished
+  -> Enemy | Pathfinding: Resume Portal
+```
+
+### 18. A ladder and a zipline
+
+A gradual portal moves the agent in a straight line at a speed, with the movement sibling paused.
+
+```
+On Ready
+  -> Enemy | Pathfinding: Add Gradual Portal  208, 464, 208, 176, true, 120, 1, "ladder"
+  -> Enemy | Pathfinding: Add Gradual Portal  400, 160, 900, 420, false, 400, 1, "zipline"
+```
+
+### 19. A three-floor lift
+
+Every stop of a group links to every other one, both ways.
+
+```
+On Ready
+  -> Enemy | Pathfinding: Add Elevator Stop  "lift", 640, 560, 150, ""
+  -> Enemy | Pathfinding: Add Elevator Stop  "lift", 640, 336, 150, ""
+  -> Enemy | Pathfinding: Add Elevator Stop  "lift", 640, 112, 150, ""
+```
+
+### 20. A horde that surrounds instead of stacking
+
+One shared graph, landing spots claimed, routes fanned out, idle bodies spaced.
+
+```
+(Inspector, every goblin: map_tag "horde", crowd_arrivals on, multi_agent_avoidance on, idle_separation 24)
+Every 1 seconds -> Goblin | Pathfinding: Find Path To Node  $Player, "nearest"
+```
+
+### 21. A knight who takes the long road down
+
+No falls deeper than two tiles: it walks down stairs and slopes instead of jumping off the castle.
+
+```
+On Ready -> Knight | Pathfinding: Set Path Strategy  "no_falling"
+         -> Knight | Pathfinding: Set Max Traversal Drop  64
+```
+
+### 22. A boss lunge
+
+Jump Toward ignores the graph: a full-strength leap at the player, with a trigger at takeoff.
+
+```
+Every 4 seconds          -> Boss | Pathfinding: Jump Toward  $Player.global_position.x, $Player.global_position.y
+On Jump Toward Launched  -> play "pounce"
+```
+
+### 23. An archer that keeps its distance
+
+Stand beside the target, not on it.
+
+```
+Every 1 seconds -> Archer | Pathfinding: Find Path To Node Side  $Player, "any", 160
+On Node Side Reached -> Archer | Shoot
+```
+
+### 24. A pre-baked map for a huge level
+
+Save the merged obstacle map once, ship the text, and load it with no TileMapLayer scan at all.
+
+```
+(in a tool run)  -> save $Enemy/Pathfinding.obstacle_map_json() to "res://levels/castle_nav.json"
+On Ready         -> Enemy | Pathfinding: Load Obstacle Map JSON  FileAccess.get_file_as_string("res://levels/castle_nav.json")
+```
+
+### 25. Drop through the floorboards
+
+Paint one-way tiles (a TileSet polygon with One Way on) and the chaser drops through them to cut
+you off - no setup, the scan reads the polygon.
+
+```
+Every 1 seconds -> Enemy | Pathfinding: Find Path To Node  $Player, "nearest"
+Every tick
+  Condition: Current Path Action is "fall_through"  -> play "drop"
+```
+
 ### Other use cases
 
 **Rooftop assassin patrols.** Ledge restriction keeps each guard glued to its own rooftop while normal chasing agents below jump between platforms, so two AI temperaments share one pack.
@@ -451,7 +674,16 @@ On Next Level Ready
   and mud = danger (4x cost) - the agent braves them only when the clean route disappears,
   which reads as smart desperation.
 - **Tune with the debug line on.** Set Nav Debug Draw during development; the green line shows
-  exactly what the router decided, which makes level-layout problems obvious.
+  exactly what the router decided, which makes level-layout problems obvious. Set Debug Draw
+  Graph shows every link the router COULD use, and Log Graph Stats counts them by kind.
+- **Patrols and routes do not mix.** Any Find Path To, Find Path To Node, Jump Toward or Stop
+  Pathfinding ends a running patrol; call Start Patrol again to resume it.
+- **A shared Map Tag shares everything.** Portals, hazards and platforms one agent registers on a
+  tag apply to every agent on it - which is the point for a horde, and a surprise for a guard who
+  was meant to ignore a door. Give it its own tag (or none).
+- **Coyote links need a real window.** They are built only when half the coyote window (capped by
+  the movement sibling's own coyote time) adds at least a tile of run - the 0.1 s default adds
+  none.
 - **Does it work with nav meshes? No - on purpose.** A navmesh describes walkable SURFACES and
   has no concept of a jump, so it cannot express "leap this gap, climb that ledge" - which is
   the whole problem in a side-view platformer. This pack builds its own jump graph from your

@@ -2,6 +2,37 @@
 
 ## [Unreleased]
 
+### Added: Platformer Pathfinding learns every way a platformer character gets around
+
+- New link kinds: `double_jump` (when the movement sibling has two jumps; the second fires at the
+  apex), `coyote_jump` (run off a ledge, leap in the air), and `fall_through` (one-way tile
+  polygons are now jump-through platforms an agent stands on, jumps up through and drops through).
+  Slope tiles read as `slope_left` / `slope_right` off their polygons.
+- Path strategies (`path_strategy`, Set Path Strategy): balanced, shortest, safest,
+  ground_hugging, no_falling, walk_only; Set Max Traversal Drop, path smoothing, a search cap
+  (`max_search_nodes`) and Path Fail Reason. `nearest` mode now routes to the closest node it can
+  reach instead of failing on a cut-off goal.
+- Portals carry ids, costs and tags: Add Instant Portal, Add Gradual Portal (ladders, lifts,
+  ziplines - a straight-line move with the movement sibling paused), Add Elevator Stop, Pause /
+  Resume / Complete Portal inside the new On Portal Entered, remove / edit / query by id or tag.
+- Hazards: Add Circle Hazard, Add Tracked Hazard (follows a node), Remove Hazard by id, a danger
+  margin, Hazard At.
+- Movement verbs: Start Patrol / Stop Patrol (with end and dwell triggers), Jump Toward, Find Path
+  To Nearest Ledge, Find Path To Node Side, Teleport To, Set Enabled, Set Movement Limit, drift
+  re-routing.
+- Crowds: Crowd Arrivals (goal claims), Multi Agent Avoidance, Idle Separation, and a shared Map
+  Tag so a horde builds one graph.
+- Maps without a TileMapLayer: Create Obstacle Map, Set Tile State, Scan Collision Bodies
+  (StaticBody2D shapes, one-way ones as jump-through), Obstacle Map JSON / Load Obstacle Map JSON,
+  Clear Nav Graph; Auto Build builds from the scene's first physics TileMapLayer when a route is
+  asked for with no graph.
+- Inspection: graph node / link / ledge expressions, waypoint position / cell / action by index,
+  path cost / end / target, Log Graph Stats and Set Debug Draw Graph (every link, coloured by
+  kind).
+- Every existing verb, id and call template is unchanged. The pack's code now lives as real
+  GDScript in `tools/pack_builders/src/platformer_pathfinding/`, and the Path Chase showcase gains a
+  patrolling Guard that shares the Chaser's graph.
+
 ### Fixed: a variable's marks are coloured tiles again, in every look
 
 - Every look draws a variable's marks as 20 px coloured tiles, one per fact - the eye for in the

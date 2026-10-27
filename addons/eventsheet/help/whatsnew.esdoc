@@ -6,6 +6,37 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Added: Platformer Pathfinding learns every way a platformer character gets around
+
+- New link kinds: `double_jump` (when the movement sibling has two jumps; the second fires at the
+  apex), `coyote_jump` (run off a ledge, leap in the air), and `fall_through` (one-way tile
+  polygons are now jump-through platforms an agent stands on, jumps up through and drops through).
+  Slope tiles read as `slope_left` / `slope_right` off their polygons.
+- Path strategies (`path_strategy`, Set Path Strategy): balanced, shortest, safest,
+  ground_hugging, no_falling, walk_only; Set Max Traversal Drop, path smoothing, a search cap
+  (`max_search_nodes`) and Path Fail Reason. `nearest` mode now routes to the closest node it can
+  reach instead of failing on a cut-off goal.
+- Portals carry ids, costs and tags: Add Instant Portal, Add Gradual Portal (ladders, lifts,
+  ziplines - a straight-line move with the movement sibling paused), Add Elevator Stop, Pause /
+  Resume / Complete Portal inside the new On Portal Entered, remove / edit / query by id or tag.
+- Hazards: Add Circle Hazard, Add Tracked Hazard (follows a node), Remove Hazard by id, a danger
+  margin, Hazard At.
+- Movement verbs: Start Patrol / Stop Patrol (with end and dwell triggers), Jump Toward, Find Path
+  To Nearest Ledge, Find Path To Node Side, Teleport To, Set Enabled, Set Movement Limit, drift
+  re-routing.
+- Crowds: Crowd Arrivals (goal claims), Multi Agent Avoidance, Idle Separation, and a shared Map
+  Tag so a horde builds one graph.
+- Maps without a TileMapLayer: Create Obstacle Map, Set Tile State, Scan Collision Bodies
+  (StaticBody2D shapes, one-way ones as jump-through), Obstacle Map JSON / Load Obstacle Map JSON,
+  Clear Nav Graph; Auto Build builds from the scene's first physics TileMapLayer when a route is
+  asked for with no graph.
+- Inspection: graph node / link / ledge expressions, waypoint position / cell / action by index,
+  path cost / end / target, Log Graph Stats and Set Debug Draw Graph (every link, coloured by
+  kind).
+- Every existing verb, id and call template is unchanged. The pack's code now lives as real
+  GDScript in `tools/pack_builders/src/platformer_pathfinding/`, and the Path Chase showcase gains a
+  patrolling Guard that shares the Chaser's graph.
+
 ### Fixed: a variable's marks are coloured tiles again, in every look
 
 - Every look draws a variable's marks as 20 px coloured tiles, one per fact - the eye for in the
@@ -20,6 +51,33 @@ What changed in the build you have installed (v0.18.0), in the words the release
 - On a light editor the tiles take the design's inks.
 - The Variable window's type list shows each type's editor icon beside it (`int`, `Vector2`,
   `Node2D`, ...), and the parameters window sets the object's icon on a 32 px rounded tile.
+
+### Fixed: the windows and rows say what the boards say
+
+- The Start page's template list draws each shelf once: Keycard Door sits under the one 3D heading
+  with the other 3D starters instead of under a second \"3D\" after UI and menus.
+- A property's setter event reads its variable and its parameter as written: `On brush_size set`
+  with a `new_size` chip, not \"On brush size set\".
+- The Parameters window's IN CODE echo never shows a template's `{uid}` mark (Blend Toward read
+  `var __blend_{uid}: Tween`; it now reads `__blend_row` until the row is applied and gets its own
+  token), and a several-line row keeps the indent of the lines under its `if`.
+- The picker's object page shows System with the gear its rows wear, not Godot's Node ring.
+- The Debugger's Objects list shows each row's count again (\"6 values\", \"(2)\", \"no report\"): the
+  column it sits in had no width. Before a run, the values table says its one sentence across its
+  whole width instead of a word a line down the Variable column.
+- A group's head reads as its title, its description, what it holds and its switch: the
+  `## @ace_group(...)` line no longer runs across it in code colours. The line moves to the counts'
+  hover, under \"What this group holds.\".
+- Bold words on a row (\"Set group **Boss active**\", a parameter's value) are drawn once in a
+  stroked face instead of twice 0.7 px apart, so they read as weight rather than as a smear. The
+  advances are the regular face's, so nothing after a bold word moves.
+- A tick that runs a switch reads as one sentence on one line in every look: \"System | Every tick
+  (physics), match state\", where the default look used to show a muted \"every tick (physics)\" with
+  \"match state\" pushed to the far edge. Each branch's steps read as the same line reads in an
+  event's action lane, the object it acts on in the column and the property as written:
+  `velocity.x = 0` is \"Set velocity.x to 0\", not \"Set x to 0\" with no object.
+- The side panel's Objects list says an object's count once, in its right-hand column: a line reads
+  \"Tiles  $Tiles\" beside its \"2\" instead of running out of room at \"Tiles  $Tiles · 2 r...\".
 
 ### Fixed: the head bar reads once, in every kind of view, and the sheet under it stays quiet
 
