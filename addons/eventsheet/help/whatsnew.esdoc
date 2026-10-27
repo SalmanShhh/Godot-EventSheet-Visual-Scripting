@@ -6,6 +6,44 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Fixed: the plugin and the code it writes stop filling the Output and Debugger panels
+
+- Quitting the editor no longer prints \"Parent node is busy adding/removing children\": the bridge
+  autoload is added when the plugin is switched on and removed when it is switched off, not on every
+  editor start and quit.
+- A project without the drawing-prefab pack starts the plugin cleanly: the prefab thumbnail maker no
+  longer names the pack's class, which failed to compile and stopped the plugin's start-up half way.
+  No plugin file names a class a pack declares any more, and the suite holds it.
+- A project's first boot with the plugin no longer prints \"Failed loading resource\" for the workspace
+  icon, and its first import no longer warns that the translators' template locale has no
+  translation (the template is kept as a plain file).
+- The Tools menu item, Properties bar add-on and Context menu item starters write a script that
+  loads: their empty `-> void` callback is stubbed with `pass`, not `return null` (\"A void function
+  cannot return a value\").
+- A handler the compiler writes underscores the parameters its events never read - `func
+  _process(_delta: float)`, `func _on_exit_body_entered(_body: Node)` - which is Godot's own cure for
+  \"The parameter is never used\", and writes them plain again the moment an event reads one. A file
+  opened as a sheet reads `_delta` back as the trigger's `delta`; one whose author left an unread
+  parameter plain comes back exactly as written. Every pack and showcase is regenerated with it.
+- The Save-choice block reads its boot flag and names an unread `_at_save_game`, so a sheet that
+  saves a variable no longer reports an unused class variable and an unused parameter. A file the
+  older block wrote still opens with its Save choices and saves back byte for byte.
+- Format Time (mm:ss), As Clock Time and Mission Time Left have warning-free successors that read
+  exactly the same (`int(seconds / 60.0)` in place of the integer division `int(seconds) / 60`); the
+  old rows keep compiling where they are used and offer the new ones.
+- The packs' own code is free of the warnings it shipped with: shadowed names, integer division,
+  ternaries of two types, an int handed where an enum is expected, signals only ever emitted by
+  name, and a variable declared below its use. A frozen ACE parameter that shadows a member keeps
+  its name under a commented `@warning_ignore`.
+- Nav Agent 3D adds its agent after the host has finished setting up its children, so the FPS arena
+  no longer prints \"Parent node is busy setting up children\" and a hundred \"The agent has no parent\".
+- The editor-tool starters that leave a callback empty name its parameters `_object`, `_paths` and so
+  on, and the command tool starter reads its arguments; a new shared sheet starts the same way.
+- The import hook passes over a script that only mentions `_on_files_imported` without loading it or
+  warning about it.
+- The suite loads every pack, showcase and starter script in a `-d` run and holds the warnings Godot
+  reports for them to a short, explained list.
+
 ### Added: Platformer Pathfinding learns every way a platformer character gets around
 
 - New link kinds: `double_jump` (when the movement sibling has two jumps; the second fires at the

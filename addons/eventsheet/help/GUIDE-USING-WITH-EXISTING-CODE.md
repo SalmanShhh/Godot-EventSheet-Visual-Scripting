@@ -939,13 +939,15 @@ pivot turns.
   the same `match what:` block the file already had. **On object freed is not On destroyed**: a node
   leaving the tree can happen more than once, this happens exactly once and nothing follows it, so
   the two moments do not share a sentence.
-- **Every function reads as the trigger it is.** `ƒ  Functions ▸ On Jump`,
-  `ƒ  Functions ▸ On Set Third Person  enabled`: the name and one chip per input sit in the CONDITION
-  lane, because that lane answers "when does this run?" for every other event and a function's answer is
-  "when it is called". The body's first step reads beside it on the right, the rest of the body hangs
-  under it as sub-events, and Collapse takes the whole function back to that one row. The row's tint says
-  whether it is an Action, Condition or Expression, and a condition or expression also says its kind as a
-  quiet word next to the name. Click it for the **ACE properties** popup - kind, category, inputs (with
+- **Every function reads as the trigger it is.** Its head is a line like any other in the CONDITION
+  lane: the function icon, then `On function jump`, with the name exactly as the code writes it and no
+  object name between them - the icon already says "function". Each input is a line of its own under
+  it: the parameter icon, the input's name, its type as written (`enabled` `bool`). That lane answers
+  "when does this run?" for every other event, and a function's answer is "when it is called". The
+  body's first step reads beside it on the right, the rest of the body hangs under it as sub-events,
+  and Collapse takes the whole function back to that one row. No word on the row says whether it is an
+  Action, Condition or Expression: the name's hover card says its kind, what it hands back and its
+  flags. Click it for the **ACE properties** popup - kind, category, inputs (with
   their types), what it gives back, description, whether it is featured, its icon, the exact line it
   inserts, and the function behind it - with Edit..., Open guide and Show in code. Unpublished helpers are
   the same blocks with their doc as the right-hand caption, gathered under a closed **Helpers** folder.
