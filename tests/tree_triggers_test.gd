@@ -33,7 +33,7 @@ static func run() -> bool:
 	# child_entered_tree carries the entering child as an argument.
 	var child_source: String = _compile_tree_trigger("OnChildEnteredTree", "")
 	all_passed = _check("child_entered_tree handler takes the node arg",
-		child_source.contains("func _on_child_entered_tree(node: Node) -> void:"), true) and all_passed
+		child_source.contains("func _on_child_entered_tree(_node: Node) -> void:"), true) and all_passed
 
 	# Round-trip: the generated connection lifts back to the NAMED trigger and recompiles byte-identically.
 	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)

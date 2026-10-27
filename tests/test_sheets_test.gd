@@ -55,7 +55,7 @@ static func _test_the_kind_compiles_to_a_startable_script() -> bool:
 	ok = _check("On Test Start connects to it in _ready",
 		source.contains("\ttest_started.connect(_on_test_started)"), true) and ok
 	ok = _check("On Test Start's handler takes the test name",
-		source.contains("func _on_test_started(test_name: String) -> void:"), true) and ok
+		source.contains("func _on_test_started(_test_name: String) -> void:"), true) and ok
 	ok = _check("a plain sheet emits no marker", _compile(_plain_sheet()).contains("## @ace_test_sheet"), false) and ok
 	ok = _check("a plain sheet declares no test signal",
 		_compile(_plain_sheet()).contains("signal test_started"), false) and ok

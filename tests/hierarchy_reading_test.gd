@@ -397,7 +397,7 @@ static func _child_triggers() -> bool:
 		ok = _check("%s connects %s" % [str(pair[0]), str(pair[1])],
 			output.contains("%s.connect(_on_%s)" % [str(pair[1]), str(pair[1])]), true) and ok
 		ok = _check("...and hands the row the node that moved",
-			output.contains("func _on_%s(node: Node) -> void:" % str(pair[1])), true) and ok
+			output.contains("func _on_%s(_node: Node) -> void:" % str(pair[1])), true) and ok
 	return ok
 
 

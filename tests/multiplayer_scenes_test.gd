@@ -159,7 +159,7 @@ static func _test_what_a_spawn_row_writes() -> bool:
 	ok = _check("the spawner's own event connects on the node", output.contains(
 		"\tget_node(\"Spawner\").spawned.connect(_on_spawner_spawned)"), true) and ok
 	ok = _check("and lands in a handler taking the copy", output.contains(
-		"func _on_spawner_spawned(node: Node) -> void:"), true) and ok
+		"func _on_spawner_spawned(_node: Node) -> void:"), true) and ok
 	return ok
 
 

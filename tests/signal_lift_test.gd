@@ -110,7 +110,7 @@ static func run() -> bool:
 	exits.events.append(area_exit)
 	var exit_source: String = str(SheetCompiler.compile(exits, "user://eventsheets_exits_src.gd").get("output", ""))
 	all_passed = _check("On Body Exited connects body_exited + names the handler",
-		exit_source.contains("body_exited.connect(_on_body_exited)") and exit_source.contains("func _on_body_exited(body: Node) -> void:"), true) and all_passed
+		exit_source.contains("body_exited.connect(_on_body_exited)") and exit_source.contains("func _on_body_exited(_body: Node) -> void:"), true) and all_passed
 	all_passed = _check("On Area Exited connects area_exited + names the handler",
 		exit_source.contains("area_exited.connect(_on_area_exited)") and exit_source.contains("func _on_area_exited(area: Area2D) -> void:"), true) and all_passed
 	var exit_imported: EventSheetResource = GDScriptImporter.new().import_external_source(exit_source)

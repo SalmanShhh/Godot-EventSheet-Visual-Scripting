@@ -54,7 +54,7 @@ var state: State = State.PATROL:
 func _ready() -> void:
 	state_changed.connect(_on_state_changed)
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if state == State.PATROL:
 		state = State.CHASE
 	if state == State.STAGGER and (Time.get_ticks_msec() - state_entered_msec) / 1000.0 > 2.0:

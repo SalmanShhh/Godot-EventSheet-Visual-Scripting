@@ -110,6 +110,8 @@ const RUN_FAMILIES: Array[GDScript] = [
 ## before the walk starts - the one fact its two same-in-both-dimensions shapes cannot get from the
 ## line. By path, like every other name here, so the importer never waits on the class cache.
 const SpawnRunLift := preload("res://addons/eventforge/importer/spawn_run_lift.gd")
+## How the compiler spells a handler's unread parameters (`_delta`), read back here.
+const UnusedParams := preload("res://addons/eventforge/compiler/unused_params.gd")
 
 ## The undoable family again, named on its own because the statement loop asks it a second question
 ## the run seam has no shape for: where the gesture opened at this line is committed.
@@ -447,7 +449,7 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 	# (uid preserved); a func the handler actually inlined is then CONSUMED below - emission
 	# regenerates both the call and the func, so keeping it would double it.
 	var async_funcs: Dictionary = {}
-	var async_header_regex: RegEx = RegEx.create_from_string("^func _event_([A-Za-z0-9_]+)_async\\(delta: float\\) -> void:$")
+	var async_header_regex: RegEx = RegEx.create_from_string("^func _event_([A-Za-z0-9_]+)_async\\(_?delta: float\\) -> void:$")
 	for scan_index in range(first_run_index, sheet.events.size()):
 		var scan_row: RawCodeRow = sheet.events[scan_index] as RawCodeRow
 		if scan_row != null and _run_row_kind(scan_row.code, lift_functions) == "func":
@@ -508,12 +510,20 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 				# Plus a blank row standing on its own right above: the importer hands the two blank
 				# lines after a closing `]` or `}` over as a row of their own, and dropping their count
 				# re-emitted the gap as one line.
-				pending_blank_count += _leading_blank_count(row.code)
-				pending_annotations = _parse_annotations(row.code)
-				pending_annotation_lines = _collect_gd_annotation_lines(row.code)
-				pending_doc_comment = _collect_doc_comment_text(row.code)
+				# The import hands a top-level `@` line (`@warning_ignore(...)` under a `## @ace_*` block) over
+				# as a row of its own. Butting straight onto the block above it, it is the same header:
+				# read the two as one, or the second row's reading replaced the first's and the verb lost
+				# its whole `## @ace_*` block.
+				var header_code: String = row.code
+				if not pending_header_text.is_empty() and _leading_blank_count(row.code) == 0:
+					header_code = pending_header_text + "\n" + row.code
+				else:
+					pending_blank_count += _leading_blank_count(row.code)
+				pending_annotations = _parse_annotations(header_code)
+				pending_annotation_lines = _collect_gd_annotation_lines(header_code)
+				pending_doc_comment = _collect_doc_comment_text(header_code)
 				# The header is the row minus its leading blank lines (those are the gap).
-				var header_lines: PackedStringArray = row.code.split("\n")
+				var header_lines: PackedStringArray = header_code.split("\n")
 				while not header_lines.is_empty() and header_lines[0].strip_edges().is_empty():
 					header_lines.remove_at(0)
 				pending_header_text = "\n".join(header_lines)
@@ -2480,7 +2490,11 @@ static func _is_lifecycle_header(header: String) -> bool:
 	# The two Ask answers stand with the lifecycle callbacks here for the same reason they do in
 	# _lift_function: nothing connects them, the emitted Ask line calls them by name, so the header
 	# is the only thing that says what they are.
+	# A head whose unread parameters are underscored (`func _process(_delta: float)`) names the same
+	# callback; which ones the body reads is _lift_function's question, asked with the body in hand.
+	var bare: String = UnusedParams.strip_underscores(header)
 	return LIFECYCLE_TRIGGERS.has(header) or ASK_ANSWER_TRIGGERS.has(header) \
+		or LIFECYCLE_TRIGGERS.has(bare) or ASK_ANSWER_TRIGGERS.has(bare) \
 		or header == NOTIFICATION_HEADER or _loose_lifecycle_match(header) != null
 
 
@@ -2634,17 +2648,23 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 	# lifts to the same trigger with the source header carried as meta, so emission reproduces
 	# the exact spelling and the byte gate holds on files no style guide ever touched.
 	var source_header: String = ""
+	# The head as the trigger names its parameters: an `_name` the body never reads is `name` here, and
+	# the compiler underscores it again on the way out. `head_spelled` is false when the file left an
+	# unread parameter WITHOUT the underscore - the author's own spelling, which is then kept verbatim.
+	var spelling: Dictionary = UnusedParams.normalize(function_lines[0], function_lines.slice(1))
+	var head: String = str(spelling.get("header", function_lines[0]))
+	var head_spelled: bool = bool(spelling.get("follows", true))
 	var loose_lifecycle: RegExMatch = null
-	if not LIFECYCLE_TRIGGERS.has(function_lines[0]):
-		loose_lifecycle = _loose_lifecycle_match(function_lines[0])
+	if not LIFECYCLE_TRIGGERS.has(head):
+		loose_lifecycle = _loose_lifecycle_match(head)
 	# An Ask row's answer is a named function nothing connects, so it lifts from its header - unless
 	# this file wired the same name to a signal, in which case that connect line owns the handler.
 	var ask_answer: String = ""
-	if ASK_ANSWER_TRIGGERS.has(function_lines[0]):
-		var answered: String = function_lines[0].trim_prefix("func ").split("(")[0]
+	if ASK_ANSWER_TRIGGERS.has(head):
+		var answered: String = head.trim_prefix("func ").split("(")[0]
 		if not connections.has(answered):
-			ask_answer = str(ASK_ANSWER_TRIGGERS[function_lines[0]])
-	if LIFECYCLE_TRIGGERS.has(function_lines[0]) or loose_lifecycle != null or not ask_answer.is_empty():
+			ask_answer = str(ASK_ANSWER_TRIGGERS[head])
+	if LIFECYCLE_TRIGGERS.has(head) or loose_lifecycle != null or not ask_answer.is_empty():
 		if not ask_answer.is_empty():
 			trigger_id = ask_answer
 		elif loose_lifecycle != null:
@@ -2655,9 +2675,13 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 				"_gui_input": "OnControlInput",
 			}
 			trigger_id = str(loose_map[loose_lifecycle.get_string(1)])
-			source_header = function_lines[0]
+			source_header = head
 		else:
-			trigger_id = str(LIFECYCLE_TRIGGERS[function_lines[0]])
+			trigger_id = str(LIFECYCLE_TRIGGERS[head])
+		# The canonical head with an unread parameter left plain is kept as the file wrote it: the
+		# compiler would underscore it, and the round trip gives back what it was handed.
+		if source_header.is_empty() and not head_spelled:
+			source_header = function_lines[0]
 		if trigger_id == "OnEnterTree" and _is_host_binding_body(function_lines):
 			# The host-binding `_enter_tree` a host-targeting behaviour pack ships. The compiler
 			# regenerates it from the sheet's host metadata, so lifting it to a trigger event would
@@ -2690,7 +2714,7 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 	else:
 		var header_regex: RegEx = RegEx.new()
 		header_regex.compile("^func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\) -> void:$")
-		var header_match: RegExMatch = header_regex.search(function_lines[0])
+		var header_match: RegExMatch = header_regex.search(head)
 		if header_match == null or not connections.has(header_match.get_string(1)):
 			return {"ok": false}
 		var connection: Dictionary = connections[header_match.get_string(1)]
@@ -2702,7 +2726,7 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 		# A hand-written handler types the payload the way its scene needs it (`body: Node2D` where
 		# the canonical Core trigger says `body: Node`), so the source header rides along and
 		# emission reproduces it - otherwise the re-typed argument fails the byte-verify.
-		source_header = function_lines[0]
+		source_header = head
 		# The handler's own parameter list, kept for EVERY signal trigger (not just custom ones):
 		# it is the payload the editor draws as chips beside the trigger row. The resolver only
 		# consults it for a `signal:` id, so recording it on a Core trigger changes no emission.
@@ -2811,8 +2835,13 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 	if not source_header.is_empty():
 		# Every event of this handler carries the source spelling - the section emitter reads
 		# it off whichever event leads the group, so top-of-sheet reordering cannot lose it.
+		# A head the file already spelled the compiler's way is kept with its parameters named as
+		# the trigger names them, and marked so the compiler spells it again against the body.
+		var spelled_again: bool = head_spelled and source_header == head
 		for event: Variant in events:
 			(event as EventRow).set_meta("__source_trigger_header", source_header)
+			if spelled_again:
+				(event as EventRow).set_meta(SheetCompiler.UNUSED_PARAMS_SPELLED_META, true)
 	if not connect_line.is_empty():
 		# The handler carries the exact connect line that wired it, so the regenerated ready
 		# handler reproduces the author's spelling rather than the canonical get_node() one.

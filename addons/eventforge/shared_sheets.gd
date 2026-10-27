@@ -110,17 +110,19 @@ static func new_shared_sheet_source(display_name: String, wiring: String) -> Str
 	lines.append("## %s - a shared event sheet: its events run in every script that includes it." % display_name)
 	lines.append("%s(%s)" % [MARKER, wiring if wiring == WIRING_HELPER else WIRING_BASE_CLASS])
 	lines.append("class_name %s" % shared_class)
+	# The starting function reads none of its parameters yet, so they are written `_host` / `_delta`:
+	# Godot reports an unread parameter written plain, and a new file should not open with warnings.
 	if wiring == WIRING_HELPER:
 		lines.append("extends RefCounted")
 		lines.append("")
 		lines.append("")
-		lines.append("func on_tick(host: Node, delta: float) -> void:")
+		lines.append("func on_tick(_host: Node, _delta: float) -> void:")
 		lines.append("\tpass")
 	else:
 		lines.append("extends Node")
 		lines.append("")
 		lines.append("")
-		lines.append("func _process(delta: float) -> void:")
+		lines.append("func _process(_delta: float) -> void:")
 		lines.append("\tpass")
 	lines.append("")
 	return "\n".join(lines)

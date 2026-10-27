@@ -263,7 +263,7 @@ static func _test_export_gate_compiles() -> bool:
 	var output: String = str(SheetCompiler.compile(sheet, "user://translation_quality_gate.gd").get("output", ""))
 	var ok: bool = true
 	ok = _check("the gate rides the shipped export trigger",
-		output.contains("func _on_project_export(is_debug: bool, features: PackedStringArray) -> void:"), true) and ok
+		output.contains("func _on_project_export(_is_debug: bool, features: PackedStringArray) -> void:"), true) and ok
 	ok = _check("the export feature flag is the shipped one", output.contains("features.has(\"release\")"), true) and ok
 	ok = _check("the inverted gate emits as a negation", output.contains("not ("), true) and ok
 	ok = _check("the catalog path reaches the emitted line", output.contains("res://i18n/strings.csv"), true) and ok

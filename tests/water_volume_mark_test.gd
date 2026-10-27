@@ -134,10 +134,10 @@ static func _the_reading() -> bool:
 	var ok: bool = true
 	var built: String = _compiled_water_sheet()
 	ok = _check("the way in raises the flag",
-		built.contains("func _on_watervolume_body_entered(body: Node) -> void:\n\tin_water = true"),
+		built.contains("func _on_watervolume_body_entered(_body: Node) -> void:\n\tin_water = true"),
 		true) and ok
 	ok = _check("the way out lowers it",
-		built.contains("func _on_watervolume_body_exited(body: Node) -> void:\n\tin_water = false"),
+		built.contains("func _on_watervolume_body_exited(_body: Node) -> void:\n\tin_water = false"),
 		true) and ok
 	ok = _check("and the flag is declared on the sheet",
 		built.contains("var in_water: bool = false"), true) and ok

@@ -24,7 +24,7 @@ static func run() -> bool:
 	var blank_result: Dictionary = SheetCompiler.compile(sheet, "user://eventforge_blank_event.gd")
 	var blank_output: String = str(blank_result.get("output", ""))
 	all_passed = _check("a blank top-level event emits the every-tick handler",
-		blank_output.contains("func _process(delta: float) -> void:\n\tlabel.text = str(hp)"), true) and all_passed
+		blank_output.contains("func _process(_delta: float) -> void:\n\tlabel.text = str(hp)"), true) and all_passed
 	all_passed = _check("no `if true:` is written for the blank event",
 		blank_output.contains("if true:"), false) and all_passed
 	var skip_warning: bool = false
@@ -42,7 +42,7 @@ static func run() -> bool:
 	var conditioned_output: String = str(SheetCompiler.compile(
 		conditioned_sheet, "user://eventforge_blank_event_conditioned.gd").get("output", ""))
 	all_passed = _check("a trigger-less event with a condition checks it every tick",
-		conditioned_output.contains("func _process(delta: float) -> void:\n\tif hp > 0:\n\t\ttick()"), true) and all_passed
+		conditioned_output.contains("func _process(_delta: float) -> void:\n\tif hp > 0:\n\t\ttick()"), true) and all_passed
 
 	# A blank event and an explicit every-tick event share ONE _process handler, in sheet order.
 	var shared_sheet: EventSheetResource = EventSheetResource.new()
@@ -57,7 +57,7 @@ static func run() -> bool:
 	var shared_output: String = str(SheetCompiler.compile(
 		shared_sheet, "user://eventforge_blank_event_shared.gd").get("output", ""))
 	all_passed = _check("blank and explicit every-tick events share one handler, in order",
-		shared_output.contains("func _process(delta: float) -> void:\n\tfirst()\n\tsecond()"), true) and all_passed
+		shared_output.contains("func _process(_delta: float) -> void:\n\tfirst()\n\tsecond()"), true) and all_passed
 	all_passed = _check("only one _process handler is emitted",
 		shared_output.count("func _process("), 1) and all_passed
 

@@ -164,7 +164,7 @@ static func run() -> bool:
     # The events must COMPILE so the Generated GDScript panel matches the sheet: rows whose templates
     # emit nothing would leave the panel disagreeing with the events on screen.
     var demo_gd: String = str(SheetCompiler.compile(dock._current_sheet, "user://_demo_editor_verify.gd").get("output", ""))
-    all_passed = _check("an On Process event compiles to a _process function", demo_gd.contains("func _process(delta: float) -> void:"), true) and all_passed
+    all_passed = _check("an On Process event compiles to a _process function", demo_gd.contains("func _process(_delta: float) -> void:"), true) and all_passed
     all_passed = _check("the generated GDScript matches its rows", demo_gd.contains("score += 1") and demo_gd.contains("health -= 1"), true) and all_passed
     all_passed = _check("rows do not expose debug overlay badges by default", _rows_have_debug_state(demo_rows), false) and all_passed
     all_passed = _check("title formatter returns no-sheet fallback", EventSheetDock._format_sheet_title(null, ""), "No Sheet Loaded") and all_passed

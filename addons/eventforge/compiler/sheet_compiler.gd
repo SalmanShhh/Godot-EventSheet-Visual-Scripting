@@ -41,6 +41,12 @@ const Spellings := preload("res://addons/eventforge/compiler/compiler_spellings.
 const SaveChoices := preload("res://addons/eventforge/compiler/save_choices.gd")
 ## A group's header line and switch flag in a script that is its own sheet, kept in step with the group.
 const GroupHeaders := preload("res://addons/eventforge/compiler/group_headers.gd")
+## A trigger handler's parameters the events under it never read, written `_name` (Godot's own cure for
+## "The parameter is never used"). Heads are marked as they are written and spelled once the file is.
+const UnusedParams := preload("res://addons/eventforge/compiler/unused_params.gd")
+## Stamped by the lift on a kept handler head that was already spelled the compiler's way, so the
+## compiler may spell it again against the body it has now.
+const UNUSED_PARAMS_SPELLED_META: String = "__source_trigger_header_spelled"
 
 const VERSION: String = "0.18.0"
 ## How many blank lines an opened file ended with under its last lifted function, as transient meta
@@ -984,6 +990,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	_append_hierarchy_helpers(lines, verbatim_lines)
 	_append_pause_requests_helper(lines, verbatim_lines)
 	_append_saved_variables(lines, sheet, result)
+	UnusedParams.finish(lines)
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output
 
@@ -1244,6 +1251,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	_append_hierarchy_helpers(lines, verbatim_lines)
 	_append_pause_requests_helper(lines, verbatim_lines)
 	_append_saved_variables(lines, sheet, result)
+	UnusedParams.finish(lines)
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output
 	var final_output_path: String = output_path if not output_path.is_empty() else sheet.external_source_path
@@ -1327,11 +1335,11 @@ static func _emit_anchored_trigger_function(events: Array, lines: PackedStringAr
 	var args: String = str(signature.get("args", ""))
 	var returns: String = str(signature.get("return_type", "void"))
 	if not source_header.is_empty():
-		lines.append(source_header)
+		lines.append(_source_trigger_header(events[0] as EventRow, source_header))
 	elif args.is_empty():
 		lines.append("func %s() -> %s:" % [function_name, returns])
 	else:
-		lines.append("func %s(%s) -> %s:" % [function_name, args, returns])
+		lines.append(UnusedParams.mark("func %s(%s) -> %s:" % [function_name, args, returns]))
 	# The filter's own line, first in the handler: an early return for anything not in the group.
 	# Kept verbatim from the source on this path, which is what lets an opened handler come back
 	# byte-for-byte with the author's own spelling of it.
@@ -1549,6 +1557,7 @@ static func emit_anchored_trigger_text(events: Array, group_guards: Dictionary =
 	_emit_anchored_trigger_function(events, lines, [], discarded_result)
 	_runtime_group_guards = {}
 	_compile_mutex.unlock()
+	UnusedParams.finish(lines)
 	return "\n".join(lines)
 
 
@@ -2316,11 +2325,11 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		var source_header: String = str((events[0] as EventRow).get_meta("__source_trigger_header", "")) if events[0] is EventRow else ""
 		var returns: String = str(signature.get("return_type", "void"))
 		if not source_header.is_empty():
-			lines.append(source_header)
+			lines.append(_source_trigger_header(events[0] as EventRow, source_header))
 		elif args.is_empty():
 			lines.append("func %s() -> %s:" % [function_name, returns])
 		else:
-			lines.append("func %s(%s) -> %s:" % [function_name, args, returns])
+			lines.append(UnusedParams.mark("func %s(%s) -> %s:" % [function_name, args, returns]))
 		var had_body: bool = false
 		var handler_body_start: int = lines.size()
 		# The filter's own line, first in the handler: an early return for anything that is not in
@@ -2420,7 +2429,7 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		# The split-out coroutines follow their dispatcher immediately, in event order.
 		for event_entry: Variant in split_events:
 			lines.append("")
-			lines.append("func _event_%s_async(delta: float) -> void:" % (event_entry as EventRow).event_uid)
+			lines.append(UnusedParams.mark("func _event_%s_async(delta: float) -> void:" % (event_entry as EventRow).event_uid))
 			var async_body_start: int = lines.size()
 			_emit_event_body([event_entry], lines, source_map, 1, result["warnings"])
 			if not _has_statement(lines, async_body_start):
@@ -3707,6 +3716,16 @@ static func _has_statement(lines: PackedStringArray, from_index: int) -> bool:
 		if not stripped.is_empty() and not stripped.begins_with("#"):
 			return true
 	return false
+
+
+## A handler head the lift kept from the file it read. One the lift found spelled the compiler's way -
+## every parameter its body did not read already underscored - is spelled again against the body it
+## has now, so an event that starts reading `body` gets `body` back; any other is the author's own
+## spelling and is written exactly as it was read.
+static func _source_trigger_header(event: EventRow, source_header: String) -> String:
+	if event != null and bool(event.get_meta(UNUSED_PARAMS_SPELLED_META, false)):
+		return UnusedParams.mark(source_header)
+	return source_header
 
 
 ## The stub emitted for a function whose body has no rows yet ("published before implemented").

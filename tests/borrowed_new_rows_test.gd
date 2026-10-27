@@ -223,7 +223,7 @@ static func _the_distance_travelled() -> bool:
 	var read: ACEAction = _action("PrintLog", {"message": "_travelled"})
 	var character: String = _compiled([read], "CharacterBody2D", "OnProcess")
 	rows.append(["a character keeps the total from its real velocity", character,
-		"extends CharacterBody2D\n\nvar _travelled: float = 0.0\n\nfunc _process(delta: float) -> void:\n\tprint(_travelled)\n\nfunc _physics_process(delta: float) -> void:\n\t_travelled += get_real_velocity().length() * delta\n"])
+		"extends CharacterBody2D\n\nvar _travelled: float = 0.0\n\nfunc _process(_delta: float) -> void:\n\tprint(_travelled)\n\nfunc _physics_process(delta: float) -> void:\n\t_travelled += get_real_velocity().length() * delta\n"])
 	var parsed: GDScript = GDScript.new()
 	parsed.source_code = character
 	rows.append(["the file parses", parsed.reload(), OK])

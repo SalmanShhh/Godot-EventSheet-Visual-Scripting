@@ -164,7 +164,7 @@ static func _test_a_landing_and_a_physics_event_share_one_handler() -> bool:
 	var output: String = _compile(sheet, "user://eventforge_edge_landed.gd")
 	var passed: bool = true
 	passed = _check("the landing lives in the physics step",
-		output.contains("func _physics_process(delta: float) -> void:"), true) and passed
+		output.contains("func _physics_process(_delta: float) -> void:"), true) and passed
 	passed = _check("and there is exactly one of them",
 		output.count("func _physics_process("), 1) and passed
 	passed = _check("the memory is declared beside the handler",
@@ -190,7 +190,7 @@ static func _test_the_first_overlap_is_the_arrival_signal_and_a_visible_gate() -
 	passed = _check("it is the area's own arrival signal, connected in _ready",
 		output.contains("\tbody_entered.connect(_on_body_entered)"), true) and passed
 	passed = _check("the handler is handed what arrived",
-		output.contains("func _on_body_entered(body: Node) -> void:"), true) and passed
+		output.contains("func _on_body_entered(_body: Node) -> void:"), true) and passed
 	passed = _check("the gate is an ordinary if, not a wrapper",
 		output.contains("\tif get_overlapping_bodies().size() == 1:"), true) and passed
 	passed = _check("no memory is declared for it",

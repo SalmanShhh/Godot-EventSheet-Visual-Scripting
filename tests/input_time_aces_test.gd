@@ -68,7 +68,7 @@ static func run() -> bool:
 		output.contains("if Input.is_action_just_pressed(&\"ui_accept\"):"), true) and all_passed
 	all_passed = _check("wait compiles to await", output.contains("await get_tree().create_timer(0.5).timeout"), true) and all_passed
 	all_passed = _check("axis expression compiles", output.contains("Input.get_axis(\"ui_left\", \"ui_right\") * 200.0"), true) and all_passed
-	all_passed = _check("OnInput compiles to the lifecycle handler", output.contains("func _input(event: InputEvent) -> void:"), true) and all_passed
+	all_passed = _check("OnInput compiles to the lifecycle handler", output.contains("func _input(_event: InputEvent) -> void:"), true) and all_passed
 	var generated: GDScript = GDScript.new()
 	generated.source_code = output
 	all_passed = _check("input/await output parses", generated.reload(true) == OK, true) and all_passed

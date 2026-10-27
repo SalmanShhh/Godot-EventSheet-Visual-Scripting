@@ -15,7 +15,7 @@ func _ready() -> void:
 	print("Player ready")
 	health = 100
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if health < 50:
 		print("Low health!")
 	# @group:boss_phase

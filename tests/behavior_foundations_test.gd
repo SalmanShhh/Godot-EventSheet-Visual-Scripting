@@ -70,7 +70,7 @@ static func run() -> bool:
 		output.contains("\tbody_entered.connect(_on_body_entered)"), true) and all_passed
 	all_passed = _check("connections run before OnReady logic",
 		output.find("body_entered.connect") < output.find("\tsetup()"), true) and all_passed
-	all_passed = _check("handler keeps the classic name", output.contains("func _on_body_entered(body: Node) -> void:"), true) and all_passed
+	all_passed = _check("handler keeps the classic name", output.contains("func _on_body_entered(_body: Node) -> void:"), true) and all_passed
 
 	# Compile-time validation: a self-signal the host class lacks is skipped with a warning
 	# (emitting it blindly would make the whole generated script fail to parse).
@@ -101,7 +101,7 @@ static func run() -> bool:
 	all_passed = _check("_ready synthesized for connections",
 		custom_output.contains("func _ready() -> void:\n\tget_node(\"Platform\").landed.connect(_on_platform_landed)"), true) and all_passed
 	all_passed = _check("source-aware handler with baked args",
-		custom_output.contains("func _on_platform_landed(impact: float) -> void:"), true) and all_passed
+		custom_output.contains("func _on_platform_landed(_impact: float) -> void:"), true) and all_passed
 
 	# Dock bake: applying a TRIGGER definition sets trigger id + args on the event (this is
 	# also what makes picker-created trigger events compile at all).
@@ -125,7 +125,7 @@ static func run() -> bool:
 	all_passed = _check("apply bakes trigger args", created != null and created.trigger_args == "amount: int", true) and all_passed
 	var baked_output: String = str(SheetCompiler.compile(dock_sheet, "user://eventforge_baked_trigger.gd").get("output", ""))
 	all_passed = _check("picker-created custom trigger compiles + connects",
-		baked_output.contains("healed.connect(_on_healed)") and baked_output.contains("func _on_healed(amount: int) -> void:"), true) and all_passed
+		baked_output.contains("healed.connect(_on_healed)") and baked_output.contains("func _on_healed(_amount: int) -> void:"), true) and all_passed
 	editor.free()
 
 	return all_passed

@@ -152,7 +152,7 @@ static func run() -> bool:
 	all_passed = _check("the awaiting event becomes a fire-and-forget call",
 		split_output.contains("\t_event_aa11_async(delta)"), true) and all_passed
 	all_passed = _check("its coroutine splits out below the dispatcher",
-		split_output.contains("func _event_aa11_async(delta: float) -> void:"), true) and all_passed
+		split_output.contains("func _event_aa11_async(_delta: float) -> void:"), true) and all_passed
 	all_passed = _check("the sibling stays inline (never waits)",
 		split_output.find("print(\"every frame\")") < split_output.find("func _event_aa11_async"), true) and all_passed
 	var split_parsed: GDScript = GDScript.new()

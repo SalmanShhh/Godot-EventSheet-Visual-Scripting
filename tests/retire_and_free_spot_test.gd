@@ -493,7 +493,7 @@ static func _test_a_skipped_spawn_says_so() -> bool:
 	passed = SUPPORT.check(TEST_NAME, "On Spawn Skipped connects to it once",
 		output.count("spawn_skipped.connect(_on_spawn_skipped)"), 1) and passed
 	passed = SUPPORT.check(TEST_NAME, "and the handler is handed the scene that could not be placed",
-		output.contains("func _on_spawn_skipped(scene: PackedScene) -> void:"), true) and passed
+		output.contains("func _on_spawn_skipped(_scene: PackedScene) -> void:"), true) and passed
 	return passed
 
 

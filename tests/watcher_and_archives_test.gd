@@ -376,11 +376,11 @@ static func _run_handlers() -> bool:
 		sheet.events.append(row)
 	var compiled: String = str(SheetCompiler.compile(sheet, PROBE_SCRIPT).get("output", ""))
 	ok = _check("progress is answered by the function the loop calls",
-		compiled.contains("func _on_unpack_progress(entries: int, bytes: int, total: int) -> void:"), true) and ok
+		compiled.contains("func _on_unpack_progress(_entries: int, _bytes: int, _total: int) -> void:"), true) and ok
 	ok = _check("refusal too",
-		compiled.contains("func _on_unpack_refused(entry: String, reason: String) -> void:"), true) and ok
+		compiled.contains("func _on_unpack_refused(_entry: String, _reason: String) -> void:"), true) and ok
 	ok = _check("and the finish",
-		compiled.contains("func _on_unpack_finished(entries: int, bytes: int, skipped: int) -> void:"), true) and ok
+		compiled.contains("func _on_unpack_finished(_entries: int, _bytes: int, _skipped: int) -> void:"), true) and ok
 	if FileAccess.file_exists(PROBE_SCRIPT):
 		DirAccess.remove_absolute(PROBE_SCRIPT)
 

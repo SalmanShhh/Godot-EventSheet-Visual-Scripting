@@ -63,7 +63,7 @@ static func _test_against_real_compiler_output() -> bool:
 
 	var without: String = _compile(false)
 	passed = _check("the undeclared sheet still emits the handler",
-		without.contains("func _on_verb_failed(verb_id: String, reason: String) -> void:"), true) and passed
+		without.contains("func _on_verb_failed(_verb_id: String, reason: String) -> void:"), true) and passed
 	passed = _check("but connects nothing to it, which is why the event never runs",
 		without.contains(".connect(_on_verb_failed)"), false) and passed
 	passed = _check("it compiles anyway, so nothing else in the project complains", _parses(without), true) and passed

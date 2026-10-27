@@ -245,7 +245,7 @@ static func _test_spawn_trigger_compiles() -> bool:
 	event.actions.append(action)
 	sheet.events.append(event)
 	var output: String = str(SheetCompiler.compile(sheet, "user://eventforge_spawn_trigger.gd").get("output", ""))
-	ok = _pin(ok, output.contains("func _on_scene_spawned(spawn_name: String, node: Node) -> void:"), true,
+	ok = _pin(ok, output.contains("func _on_scene_spawned(_spawn_name: String, node: Node) -> void:"), true,
 		"the handler is emitted with the signal's own arguments as its parameters")
 	ok = _pin(ok, output.contains("scene_spawned.connect(_on_scene_spawned)"), true,
 		"and it is actually connected, so the row runs")

@@ -50,7 +50,7 @@ static func run() -> bool:
 	hit_row.actions.append(poke)
 	sheet.events.append(hit_row)
 	var output: String = str(SheetCompiler.compile(sheet, "user://signal_connect_probe.gd").get("output", ""))
-	all_passed = _check("the handler emits under its trigger name", output.contains("func _on_body_entered(body: Node) -> void:"), true) and all_passed
+	all_passed = _check("the handler emits under its trigger name", output.contains("func _on_body_entered(_body: Node) -> void:"), true) and all_passed
 	all_passed = _check("the self-connect emits in _ready", output.contains("\tbody_entered.connect(_on_body_entered)"), true) and all_passed
 	all_passed = _check("the connected sheet round-trips byte-exact", EventSheets.round_trips(output), true) and all_passed
 
