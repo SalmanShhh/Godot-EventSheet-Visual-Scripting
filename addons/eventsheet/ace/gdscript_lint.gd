@@ -27,21 +27,19 @@ static func lint(code: String, in_flow: bool, sheet: EventSheetResource) -> Dict
 
 
 ## Validates a ƒx field as a plain GDScript expression against the sheet context (sheet
-## variables, host members, the behavior `host` accessor). Empty text is valid. `scope_names` are the
+## variables, host members, the behavior `host` accessor). Empty text is valid. `scope` holds the
 ## names a line inside a body can use besides the members - its locals, its function's parameters,
 ## the values its trigger hands it (`delta`) - declared in front of the check, so a line read out of a
 ## hand-written function compiles here exactly as it does in the file.
-static func lint_expression(expression: String, sheet: EventSheetResource,
-		scope_names: PackedStringArray = PackedStringArray()) -> Dictionary:
+static func lint_expression(expression: String, sheet: EventSheetResource, scope: PackedStringArray = []) -> Dictionary:
 	if expression.strip_edges().is_empty():
 		return {"ok": true, "error": ""}
 	var declared: PackedStringArray = PackedStringArray()
-	for scope_name: String in scope_names:
+	for scope_name: String in scope:
 		if scope_name.is_valid_identifier():
 			declared.append("var %s = null" % scope_name)
 	declared.append("var __expression_check__ = (%s)" % expression.strip_edges())
-	return lint("
-".join(declared), true, sheet)
+	return lint("\n".join(declared), true, sheet)
 
 
 ## Every name a line inside one of this sheet's bodies can use besides the members, sorted: the locals
