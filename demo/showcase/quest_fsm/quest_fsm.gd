@@ -37,11 +37,11 @@ func _process(delta: float) -> void:
 	items: %d   log: %d
 	t = %d" % [["OFFERED", "ACTIVE", "COMPLETE"][quest_state], inventory.size(), quest_log.size(), tick]
 
-func _on_item_collected(id: String) -> void:
+func _on_item_collected(_id: String) -> void:
 	$Icon/SpringBehavior.spring_host_scale(1.0)
 	$Icon/SpringBehavior.add_impulse("__scale", 6.0)
 
-func _on_quest_advanced(phase: int) -> void:
+func _on_quest_advanced(_phase: int) -> void:
 	$Icon/TweenBehavior.tween_rotation($Icon.rotation_degrees + 120.0, 0.4)
 	$Icon/SpringBehavior.spring_host_scale(1.6)
 

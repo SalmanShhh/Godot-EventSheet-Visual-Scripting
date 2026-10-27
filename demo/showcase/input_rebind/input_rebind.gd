@@ -21,7 +21,7 @@ func _input(event: InputEvent) -> void:
 		refresh_binding_labels()
 
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed("demo_jump"):
 		$HudKit.show_toast("Jump!")
 	if Input.is_action_just_pressed("demo_dash"):

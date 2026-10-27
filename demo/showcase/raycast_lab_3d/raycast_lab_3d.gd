@@ -86,7 +86,7 @@ func _physics_process(delta: float) -> void:
 			pick_on_target = true
 
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	# The turning turret's ray: a yellow beam to whatever stopped it, and a marker on the spot.
 	aim_beam($Beams/RadarBeam, $Turret.global_position, radar_end)
 	$Markers/RadarMark.visible = radar_hit
@@ -122,7 +122,9 @@ func aim_beam(beam: Node3D, from: Vector3, to: Vector3) -> void:
 	if not beam.visible:
 		return
 	beam.global_position = (from + to) * 0.5
-	beam.look_at(to, Vector3.UP)
+	# A beam that points straight up or down has no use for UP as its up: look_at warns, so it takes BACK.
+	var up: Vector3 = Vector3.UP if absf((to - from).normalized().dot(Vector3.UP)) < 0.999 else Vector3.BACK
+	beam.look_at(to, up)
 	# The mesh is a unit box on -Z, so scaling z by the span turns it into a beam of that length.
 	beam.scale = Vector3(1.0, 1.0, span)
 

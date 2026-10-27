@@ -69,7 +69,7 @@ func _physics_process(delta: float) -> void:
 		$Stone.global_position = Vector2(1290.0, 200.0)
 		$Stone.velocity = Vector2.ZERO
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	$HUD/Readout.text = "climber hanging: %s   jumper wall sliding: %s   diver in water: %s   depth: %.0f" % [
 		str($Climber/Traversal.is_hanging()), str($Jumper/Traversal.is_wall_sliding()),
 		str($Diver/Traversal.is_in_water()), $Diver/Traversal.water_depth()]

@@ -22,7 +22,7 @@ func _ready() -> void:
 	if body_icon != null:
 		$Emblem.texture = body_icon
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	var t: float = Time.get_ticks_msec() / 1000.0
 	var phase: float = sin(t * 2.0) * 0.5 + 0.5
 	if stat_curve != null and stat_curve.point_count > 0:

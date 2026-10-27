@@ -11,7 +11,7 @@ func _ready() -> void:
 	var __cols: int = 40
 	for __i: int in range(count):
 		var __dot: Sprite2D = load("res://demo/showcase/swarm/dot.tscn").instantiate()
-		__dot.position = Vector2(48.0 + float(__i % __cols) * 27.0, 70.0 + float(__i / __cols) * 27.0)
+		__dot.position = Vector2(48.0 + float(__i % __cols) * 27.0, 70.0 + floorf(__i / float(__cols)) * 27.0)
 		add_child(__dot)
 
 func _process(delta: float) -> void:

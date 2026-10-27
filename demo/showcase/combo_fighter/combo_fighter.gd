@@ -19,7 +19,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if (event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_K):
 		press("kick")
 
-func _physics_process(delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	if (Time.get_ticks_msec() / 1000.0 <= punch_input):
 		punch_input = Time.get_ticks_msec() / 1000.0 - 1.0
 		press("punch")

@@ -11,7 +11,7 @@ func _ready() -> void:
 	$Skater/Skateboard.bailed.connect(_on_bailed)
 
 
-func _physics_process(delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	if $Skater.is_on_floor():
 		$Skater/Skateboard.roll_with_slope()
 	$Skater/Skateboard.align_board_to_surface()

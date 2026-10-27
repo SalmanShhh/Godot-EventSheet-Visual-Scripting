@@ -10,7 +10,7 @@ func _ready() -> void:
 	$Skater/Skateboard.bailed.connect(_on_bailed)
 
 
-func _physics_process(delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	if $Skater.is_on_floor():
 		$Skater/Skateboard.roll_with_slope()
 	if Input.is_action_just_pressed(&"ui_accept"):

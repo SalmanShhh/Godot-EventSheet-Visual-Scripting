@@ -21,7 +21,7 @@ func _physics_process(delta: float) -> void:
 	# line is straight, which is exactly the difference between a rope and a bar.
 	$Lantern.position.y = minf($Lantern.position.y + 220.0 * delta, 620.0)
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	$Screen.text = "PIN MODES   rope %.0f / 90 px   bar %.0f / 70 px   soft lag %.0f px" % [$Lantern.global_position.distance_to($Post.global_position), $Cart.global_position.distance_to($Engine.global_position), $CamTarget.global_position.distance_to($Player.global_position)]
 
 # [b]Pin Modes[/b] - six ways one object can ride another, running at once. The sheet moves only the ANCHORS (the post, the engine, the walker); everything else is a Pin behavior in a different mode. Watch the rope go slack and then snap taut, the bar hold its length through every turn, the camera target trail behind, the hat overshoot and settle, the shadow keep its own ground line, and the sword stay in the hand rather than beside the body.

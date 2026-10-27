@@ -1290,7 +1290,7 @@ func _build_swarm() -> bool:
 	# On Ready: spawn the crowd in a 40-wide grid into the "swarm" group.
 	var spawn: EventRow = EventRow.new()
 	spawn.trigger_provider_id = "Core"; spawn.trigger_id = "OnReady"
-	spawn.actions.append(_raw("var __cols: int = 40\nfor __i: int in range(count):\n\tvar __dot: Sprite2D = load(\"res://demo/showcase/swarm/dot.tscn\").instantiate()\n\t__dot.position = Vector2(48.0 + float(__i % __cols) * 27.0, 70.0 + float(__i / __cols) * 27.0)\n\tadd_child(__dot)"))
+	spawn.actions.append(_raw("var __cols: int = 40\nfor __i: int in range(count):\n\tvar __dot: Sprite2D = load(\"res://demo/showcase/swarm/dot.tscn\").instantiate()\n\t__dot.position = Vector2(48.0 + float(__i % __cols) * 27.0, 70.0 + floorf(__i / float(__cols)) * 27.0)\n\tadd_child(__dot)"))
 	sheet.events.append(spawn)
 
 	# On Process: advance the clock + show the live FPS so you can see it stay smooth.
@@ -1393,7 +1393,7 @@ func _build_family_arena() -> bool:
 	# On Ready: spawn the Enemies into a grid.
 	var spawn: EventRow = EventRow.new()
 	spawn.trigger_provider_id = "Core"; spawn.trigger_id = "OnReady"
-	spawn.actions.append(_raw("var __cols: int = 6\nfor __i: int in range(spawn_count):\n\tvar __e: Sprite2D = load(\"res://demo/showcase/family_arena/enemy.tscn\").instantiate()\n\t__e.position = Vector2(80.0 + float(__i % __cols) * 90.0, 40.0 + float(__i / __cols) * 80.0)\n\tadd_child(__e)"))
+	spawn.actions.append(_raw("var __cols: int = 6\nfor __i: int in range(spawn_count):\n\tvar __e: Sprite2D = load(\"res://demo/showcase/family_arena/enemy.tscn\").instantiate()\n\t__e.position = Vector2(80.0 + float(__i % __cols) * 90.0, 40.0 + floorf(__i / float(__cols)) * 80.0)\n\tadd_child(__e)"))
 	arena.events.append(spawn)
 	# On Process: ONE family rule moves every Enemy by its own instance fall_speed + recycles it.
 	var fall: EventRow = EventRow.new()
@@ -3428,7 +3428,9 @@ func _build_raycast_lab_3d() -> bool:
 		"if not beam.visible:",
 		"\treturn",
 		"beam.global_position = (from + to) * 0.5",
-		"beam.look_at(to, Vector3.UP)",
+		"# A beam that points straight up or down has no use for UP as its up: look_at warns, so it takes BACK.",
+		"var up: Vector3 = Vector3.UP if absf((to - from).normalized().dot(Vector3.UP)) < 0.999 else Vector3.BACK",
+		"beam.look_at(to, up)",
 		"# The mesh is a unit box on -Z, so scaling z by the span turns it into a beam of that length.",
 		"beam.scale = Vector3(1.0, 1.0, span)"
 	])))]
@@ -4305,8 +4307,8 @@ func _build_boomer_level_sheet() -> bool:
 	# string, and running one through another would eat the emitted `%d`s.
 	exit_event.actions.append(_raw("$HudLayer/Tally.text = \"Kills %d of %d   Secrets %d of %d   Time %s of %s\" % [kills, enemies_total, " \
 		+ _ace_template("SecretsFoundCount").format({"found": "secrets_found"}) + ", secrets_total, " \
-		+ _ace_template("FormatTime").format({"seconds": "level_seconds"}) + ", " \
-		+ _ace_template("FormatTime").format({"seconds": "par_seconds"}) + "]"))
+		+ _ace_template("FormatTimeText").format({"seconds": "level_seconds"}) + ", " \
+		+ _ace_template("FormatTimeText").format({"seconds": "par_seconds"}) + "]"))
 	sheet.events.append(exit_event)
 
 	# The HUD line the door and the keys write to, refreshed every tick.

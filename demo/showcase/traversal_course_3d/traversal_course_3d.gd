@@ -75,7 +75,7 @@ func _ready() -> void:
 	$LadderBot/Traversal.ai_controlled = true
 	$LadderBot/Traversal.ai_climb_axis = 1.0
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	$HUD/Readout.text = "climber hanging: %s   jumper wall sliding: %s   bot on ladder: %s   diver depth: %.2f" % [
 		str($Climber/Traversal.is_hanging()), str($Jumper/Traversal.is_wall_sliding()),
 		str($LadderBot/Traversal.is_on_ladder()), $Diver/Traversal.water_depth()]

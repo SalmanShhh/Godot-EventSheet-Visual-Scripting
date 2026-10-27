@@ -67,7 +67,7 @@ func _physics_process(delta: float) -> void:
 			laser_on_target = true
 
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	var ink: DrawingCanvas = $InkLayer/Ink
 	var here: Vector2 = $Player.global_position
 	var mouse: Vector2 = get_global_mouse_position()

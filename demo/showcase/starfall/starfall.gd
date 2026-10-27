@@ -53,7 +53,7 @@ func _physics_process(delta: float) -> void:
 	if lives <= 0 and state == State.PLAYING:
 		state = State.GAME_OVER
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	$ScoreLabel.text = "Score %d    Lives %d    %s" % [score, lives, ("GAME OVER - press Enter" if state == State.GAME_OVER else "PLAYING")]
 
 # [b]Starfall[/b] - a complete restartable arcade game authored as events: move the ship (ui_left/ui_right) to catch falling stars. Shows an enum+match state machine (PLAYING/GAME_OVER), a group pick-filter that scores & culls stars, an Every-2s spawner, and if/elif input branches. Miss 3 and it's GAME OVER - press ui_accept to restart.

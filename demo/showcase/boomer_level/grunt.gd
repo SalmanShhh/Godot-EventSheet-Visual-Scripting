@@ -16,7 +16,7 @@ func alerted(who: Variant) -> void:
 	if who.is_in_group("enemies"):
 		target = who
 
-func _physics_process(delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	if target != null and is_instance_valid(target):
 		var toward := (target.global_position - global_position)
 		velocity.x = toward.normalized().x * walk_speed

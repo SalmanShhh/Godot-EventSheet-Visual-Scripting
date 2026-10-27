@@ -19,7 +19,7 @@ func _ready() -> void:
 	$HudKit.on_button_pressed.connect(unlock_pressed)
 	lay_out()
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	refresh_states()
 	$HudKit.set_text("PointsValue", "Skill points left: %d" % upgrades.skill_points_left())
 	$HudKit.set_text("SpeedValue", "Speed: %0.0f" % $Runner/Stats.stat_total("speed"))

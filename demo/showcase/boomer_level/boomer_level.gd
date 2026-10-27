@@ -25,7 +25,7 @@ func _physics_process(delta: float) -> void:
 	if level_over == false:
 		level_seconds += delta
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	$Player/FPSController.bob_with_movement($Player/Head/Weapon)
 	$Player/FPSController.sway_with_mouse($Player/Head/Weapon)
 	if Input.is_action_just_pressed(&"ui_focus_next"):
@@ -47,25 +47,25 @@ func _process(delta: float) -> void:
 				__body_rocket.apply_impulse(__away_rocket.normalized() * 10.0 * __falloff_rocket)
 	$HudLayer/Hud.text = "Keys %d   Secrets %d of %d   %s" % [keys.size(), secrets_found.size(), secrets_total, $RedDoor.locked_hint]
 
-func _on_redcard_body_entered(body: Node) -> void:
+func _on_redcard_body_entered(_body: Node) -> void:
 	keys.append("red_key")
 	$RedCard.hide()
 	$RedCard.set_deferred("monitoring", false)
 
-func _on_doortrigger_body_entered(body: Node) -> void:
+func _on_doortrigger_body_entered(_body: Node) -> void:
 	var __door_level = $RedDoor
 	if str(__door_level.needs_key) in keys:
 		__door_level.open_door()
 	else:
 		__door_level.locked_door_tried(str(__door_level.needs_key))
 
-func _on_secretroom_body_entered(body: Node) -> void:
+func _on_secretroom_body_entered(_body: Node) -> void:
 	if not "SecretRoom" in secrets_found:
 		secrets_found.append("SecretRoom")
 
-func _on_exit_body_entered(body: Node) -> void:
+func _on_exit_body_entered(_body: Node) -> void:
 	level_over = true
-	$HudLayer/Tally.text = "Kills %d of %d   Secrets %d of %d   Time %s of %s" % [kills, enemies_total, secrets_found.size(), secrets_total, ("%02d:%02d" % [int(level_seconds) / 60, int(level_seconds) % 60]), ("%02d:%02d" % [int(par_seconds) / 60, int(par_seconds) % 60])]
+	$HudLayer/Tally.text = "Kills %d of %d   Secrets %d of %d   Time %s of %s" % [kills, enemies_total, secrets_found.size(), secrets_total, ("%02d:%02d" % [int(level_seconds / 60.0), int(level_seconds) % 60]), ("%02d:%02d" % [int(par_seconds / 60.0), int(par_seconds) % 60])]
 
 ## @ace_hidden
 func count_kill() -> void:

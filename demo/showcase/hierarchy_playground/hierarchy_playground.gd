@@ -31,7 +31,7 @@ func _process(delta: float) -> void:
 	$HudLayer/Readout.text = "rider's parent: %s   hat follows size: no   bar ignores movement: yes   squad hp: %d   crates settled: %s" % [%Rider.get_parent().name, squad_hp, "yes" if crates_settled else "no"]
 
 
-func _physics_process(delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	if not crates_settled:
 		for crate: Node3D in $Crates.get_children():
 			var __down := PhysicsRayQueryParameters3D.create(

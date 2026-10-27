@@ -6,7 +6,7 @@ func _ready() -> void:
 	$Chaser/Pathfinding.set_nav_debug_draw(true)
 	$Chaser/Pathfinding.find_path_to_node($Player, "nearest")
 
-func _physics_process(delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	if Input.is_action_just_pressed(&"ui_accept"):
 		$Player/Movement.jump()
 	if Input.is_action_just_released(&"ui_accept"):
