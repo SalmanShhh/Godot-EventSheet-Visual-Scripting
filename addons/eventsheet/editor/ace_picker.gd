@@ -1125,8 +1125,35 @@ func _say_landing(mode: String, resource: Resource) -> void:
 			note = EventSheetL10n.translate("the condition you pick joins these")
 		"replace_condition", "replace_trigger":
 			note = EventSheetL10n.translate("the condition you pick replaces one here")
-	var reading: String = landing_reading(_landing_row(resource)) if not note.is_empty() else ""
-	_band.show_row("", reading, note)
+	var row_data: EventRowData = _landing_row(resource) if not note.is_empty() else null
+	var reading: String = landing_reading(row_data)
+	# The line leads as it does on the sheet: its object's icon, its object's name, then its words.
+	var lead: Dictionary = landing_lead(row_data)
+	var object_name: String = str(lead.get("object", ""))
+	if not object_name.is_empty() and reading.begins_with(object_name + " "):
+		_band.show_row(object_name, reading.substr(object_name.length() + 1), note)
+	else:
+		_band.show_row("", reading, note)
+	_band.show_icon(str(lead.get("glyph", "")), lead.get("icon", null) as Texture2D)
+
+
+## The first condition line of the landing row: its object's name, the icon the sheet drew beside it
+## and the glyph it painted in place of that icon (System's gear, an input device), when it has one.
+static func landing_lead(row_data: EventRowData) -> Dictionary:
+	if row_data == null:
+		return {}
+	for span: SemanticSpan in row_data.spans:
+		if not (span.metadata is Dictionary) or span.type != SemanticSpan.SpanType.CONDITION:
+			continue
+		var metadata: Dictionary = span.metadata as Dictionary
+		if span.text.strip_edges().is_empty() or bool(metadata.get("badge", false)) \
+				or str(metadata.get("lane", "")) != "condition" or str(metadata.get("kind", "")).begins_with("add_"):
+			continue
+		var marks: Script = load("res://addons/eventsheet/editor/interaction/native_row_marks.gd")
+		return {"object": str(metadata.get("object_label", "")).strip_edges(),
+			"glyph": str(marks.call("line_glyph_for", metadata)),
+			"icon": metadata.get("object_icon", null) as Texture2D}
+	return {}
 
 
 ## The row the dock drew for `resource`: the selected one when it is that row, else the first row

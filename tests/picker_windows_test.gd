@@ -105,7 +105,9 @@ static func _the_dock_opens_on_the_event() -> bool:
 	var picker: ACEPickerDialog = dock._ace_picker
 	var rows: Array = [
 		["the title names the object", picker._window.title, "Add an action to Player"],
-		["the band reads the event", picker._band.words_label.text, "Player Is on floor"],
+		# The band leads as the line does on the sheet: the object in its column, then the words.
+		["the band reads the event, its object in the object column", [picker._band.object_label.text,
+			picker._band.words_label.text], ["Player", "Is on floor"]],
 		["and says where the pick goes", picker._band.note_label.text, "the action you pick lands here"],
 		["it shows", picker._band.visible, true],
 	]

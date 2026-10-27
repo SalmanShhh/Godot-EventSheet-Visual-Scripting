@@ -724,6 +724,7 @@ func _refresh_match() -> void:
 	_match_value_info.visible = not info.is_empty()
 	_match_fill_button.disabled = _subject_enum_name().is_empty()
 	_match_band.show_row(EventSheetL10n.translate("System"), "%s %s" % [EventSheetL10n.translate("match"), subject])
+	_match_band.show_object_icon("System")
 	var patterns: PackedStringArray = _match_patterns()
 	_match_strip.set_reading("", match_code_line(subject, patterns))
 	var problem: String = match_problem()

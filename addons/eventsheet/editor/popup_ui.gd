@@ -1253,8 +1253,62 @@ static func action_window(title: String, main: String, close: String, size: Vect
 ## the event a pick lands on and the field a pick goes into - then an optional note at the far right.
 ## Redrawn live as the fields change, so nothing is written or picked blind. `code_words` sets the
 ## words in the code font (a picker's field shows what the field holds); an empty band hides.
+## The icon a sheet line leads with, as the line draws it: the 18 px tile and, on it, either a class
+## icon or one of the sheet's own glyphs (System's gear, the function, a parameter) in that glyph's ink.
+## A window's band wears it so the band reads as the very line it is about.
+class LineIcon extends Control:
+
+	## The sheet's row marks, loaded the first time a band shows an icon: a window that never shows
+	## one (and the editor's boot) never loads the row painter.
+	const ROW_MARKS_PATH := "res://addons/eventsheet/editor/interaction/native_row_marks.gd"
+	## The tile and the icon on it, the sizes the sheet's object column draws them at.
+	const PLATE_SIZE := 18.0
+	const ICON_SIZE := 14.0
+	## The glyph ids of a function head's lines, spelled as the row marks spell them.
+	const GLYPH_FUNCTION := "function"
+	const GLYPH_PARAMETER := "parameter"
+
+	var glyph: String = ""
+	var texture: Texture2D = null
+
+
+	func _init() -> void:
+		var side: float = EventSheetPalette.scaled_f(PLATE_SIZE)
+		custom_minimum_size = Vector2(side, side)
+		size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		visible = false
+
+
+	## Shows `glyph` (a NativeRowMarks OBJECT_GLYPH_* id), else `icon`; neither hides the tile.
+	func show_icon(glyph_id: String, icon: Texture2D = null) -> void:
+		glyph = glyph_id
+		texture = icon
+		visible = not glyph.is_empty() or texture != null
+		queue_redraw()
+
+
+	func _draw() -> void:
+		var ink: Color = EventSheetPopupUI.text_color()
+		# The tile the sheet's object column draws: a neutral grey a step off the ground, lighter
+		# under pale ink (a dark editor) and darker under dark ink (a light one).
+		var plate := StyleBoxFlat.new()
+		plate.bg_color = EventSheetPalette.COLOR_OBJECT_ICON_TILE_DARK if ink.get_luminance() > 0.5 \
+			else EventSheetPalette.COLOR_OBJECT_ICON_TILE_LIGHT
+		plate.set_corner_radius_all(3)
+		draw_style_box(plate, Rect2(Vector2.ZERO, size))
+		var inner: float = EventSheetPalette.scaled_f(ICON_SIZE)
+		var icon_rect: Rect2 = Rect2((size - Vector2(inner, inner)) * 0.5, Vector2(inner, inner))
+		if not glyph.is_empty():
+			var marks: Script = load(ROW_MARKS_PATH)
+			marks.call("draw_object_glyph", self, icon_rect, glyph, marks.call("glyph_ink", glyph, ink))
+		elif texture != null:
+			draw_texture_rect(texture, icon_rect, false)
+
+
 class RowBand extends PanelContainer:
 
+	var icon: LineIcon = null
 	var object_label: Label = null
 	var words_label: Label = null
 	var note_label: Label = null
@@ -1270,6 +1324,8 @@ class RowBand extends PanelContainer:
 		var row: HBoxContainer = HBoxContainer.new()
 		row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(10.0)))
 		add_child(row)
+		icon = LineIcon.new()
+		row.add_child(icon)
 		object_label = Label.new()
 		object_label.add_theme_color_override("font_color", EventSheetPopupUI.secondary_text_color())
 		row.add_child(object_label)
@@ -1297,6 +1353,18 @@ class RowBand extends PanelContainer:
 		note_label.text = note
 		note_label.visible = not note.is_empty()
 		visible = not (object_name + words).strip_edges().is_empty()
+
+
+	## The icon the line leads with: a sheet glyph id (NativeRowMarks.OBJECT_GLYPH_*), else a class
+	## icon. An object the sheet draws a glyph for (System, the input devices) gets that glyph from its
+	## name alone. Empty and null hide the tile.
+	func show_icon(glyph: String, texture: Texture2D = null) -> void:
+		icon.show_icon(glyph, texture)
+
+
+	## The icon for the object column's own name: its glyph when the sheet draws one, else `texture`.
+	func show_object_icon(object_name: String, texture: Texture2D = null) -> void:
+		icon.show_icon(str(load(LineIcon.ROW_MARKS_PATH).call("object_glyph_for", object_name)), texture)
 
 
 ## Gives a text field a red edge while `problem` is true, and its own look back when it is not - the

@@ -50,6 +50,7 @@ func init_dialog(parent_node: Node) -> void:
 	var form: VBoxContainer = parts["box"]
 	form.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(420.0), 0.0)
 	_band = EventSheetPopupUI.RowBand.new()
+	_band.show_icon(EventSheetPopupUI.LineIcon.GLYPH_PARAMETER)
 	form.add_child(_band)
 	var card: VBoxContainer = EventSheetPopupUI.form_box()
 	_name_edit = LineEdit.new()
@@ -204,12 +205,14 @@ func problem() -> String:
 
 func _refresh() -> void:
 	var params: Array[Dictionary] = _params_now()
-	var names: PackedStringArray = PackedStringArray()
-	for index: int in range(params.size()):
-		var shown: String = str(params[index].get("id", ""))
-		var edited: bool = index == _param_index or (_param_index < 0 and index == params.size() - 1)
-		names.append("[%s]" % shown if edited else shown)
-	_band.show_row("ƒ " + _function_name, "  ".join(names))
+	# The band is this parameter's own line under the function's head, as the sheet draws it: the
+	# parameter icon, its name in the object column, then its type and any default.
+	var edited: Dictionary = params[_param_index] if _param_index >= 0 and _param_index < params.size() \
+		else params[params.size() - 1]
+	var type_words: String = str(edited.get("type_name", ""))
+	if not str(edited.get("default", "")).is_empty():
+		type_words += " = " + str(edited.get("default", ""))
+	_band.show_row(str(edited.get("id", "")), type_words)
 	_strip.set_reading("", func_line(_function_name, params))
 	var said: String = problem()
 	_problem_label.say(said)

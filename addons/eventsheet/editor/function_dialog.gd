@@ -1,7 +1,7 @@
 # Godot EventSheets - the New / Edit Function window.
 #
 # Built on the window kit, top to bottom:
-#  • a band holding the function's row as the sheet will show it ("ƒ  On take_damage → nothing"),
+#  • a band holding the function's row as the sheet will show it (the function icon, "On function take_damage"),
 #  • the Function card: Name (with the snake_case name the code will use beside it), the doc comment
 #    with its drafted line, and the Inspector button,
 #  • the "What kind is it?" card: ONE described dropdown - Action / Condition / Expression - whose
@@ -53,7 +53,7 @@ var _name_edit: LineEdit = null
 ## The name the code will use, shown beside the Name field as it is typed.
 var _code_name_label: Label = null
 ## The function's row as the sheet will show it, in the band at the top.
-var _band_label: Label = null
+var _band: EventSheetPopupUI.RowBand = null
 var _doc_comment_edit: TextEdit = null
 ## The description this function's own rows compose, and the strip that offers it. Held only while
 ## the window is open: a draft is never stored anywhere, so there is nowhere for a stale one to hide.
@@ -120,10 +120,13 @@ func init_dialog(parent_node: Node) -> void:
 	form.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(540.0), 0.0)
 	_help = EventSheetPopupUI.help_strip()
 
-	_band_label = Label.new()
-	_band_label.tooltip_text = EventSheetL10n.translate("The function's row, as the sheet will show it.")
-	_band_label.mouse_filter = Control.MOUSE_FILTER_STOP
-	form.add_child(EventSheetPopupUI.panel_section(_band_label))
+	# The band is the function's head as the sheet draws it: the function icon, then "On function"
+	# and the name - no kind word, and what it hands back is the hover's to say, not the row's.
+	_band = EventSheetPopupUI.RowBand.new()
+	_band.show_icon(EventSheetPopupUI.LineIcon.GLYPH_FUNCTION)
+	_band.tooltip_text = EventSheetL10n.translate("The function's row, as the sheet will show it.")
+	_band.mouse_filter = Control.MOUSE_FILTER_STOP
+	form.add_child(_band)
 
 	var function_box: VBoxContainer = EventSheetPopupUI.form_box()
 	_name_edit = LineEdit.new()
@@ -404,10 +407,7 @@ func _refresh_studio() -> void:
 		signature_name = "new_function"
 	var signature: String = format_signature(signature_name, _return_type_for_kind(kind), params, _selected_return_type_name())
 	_help.set_reading("", signature)
-	var returns_word: String = signature.get_slice("-> ", 1)
-	_band_label.text = "ƒ  %s  %s → %s" % [EventSheetL10n.translate("Function"),
-		EventSheetL10n.translate("On %s") % signature_name,
-		EventSheetL10n.translate("nothing") if returns_word == "void" else returns_word]
+	_band.show_row("", "%s %s" % [EventSheetL10n.translate("On function"), signature_name])
 	_dialog.title = (EventSheetL10n.translate("Edit function %s") if not _original_name.is_empty()
 		else EventSheetL10n.translate("Create function %s")) % (signature_name if named else "")
 	# The problem is said as it is typed, not only after OK. An empty name is not one yet - the

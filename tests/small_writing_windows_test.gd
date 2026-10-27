@@ -67,7 +67,7 @@ static func _test_parameter() -> bool:
 		param.gdscript_default = str(pair[2])
 		verb.params.append(param)
 	dialog.open_for_param(verb, 0)
-	var opened: Array = [dialog._band.object_label.text, dialog._band.words_label.text, dialog._strip.in_code_value.text,
+	var opened: Array = [dialog._band.icon.glyph, dialog._band.object_label.text, dialog._band.words_label.text, dialog._strip.in_code_value.text,
 		dialog._delete_button.visible]
 	dialog._default_edit.text = "5"
 	dialog._refresh()
@@ -98,8 +98,8 @@ static func _test_parameter() -> bool:
 	var new_one: bool = dialog._delete_button.visible
 	parent.free()
 	return SUPPORT.pins(NAME, [
-		["the band shows the function's row with this input marked, the strip its func line", opened,
-			["ƒ take_damage", "[amount]  knockback", "func take_damage(amount: int, knockback: float = 0.0)", true]],
+		["the band is this input's own line under the head, the strip its func line", opened,
+			["parameter", "amount", "int", "func take_damage(amount: int, knockback: float = 0.0)", true]],
 		["a default ahead of a defaulted input is fine", fine, ""],
 		["clearing the last default is fine", trailing_ok, ""],
 		["a default ahead of an input without one is refused in the window", misplaced,
