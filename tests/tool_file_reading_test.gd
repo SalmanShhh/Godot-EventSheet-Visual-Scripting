@@ -337,7 +337,7 @@ static func _test_opened_files() -> bool:
 	_write(GAME_TEST_PATH, GAME_TEST_SOURCE)
 	var readings: PackedStringArray = _open_and_read(GAME_TEST_PATH)
 	passed = _check("the test's entry point reads under Test, not under Functions",
-		" | ".join(readings).contains("Condition | Test | On run"), true) and passed
+		" | ".join(readings).contains("Test ▸ On run"), true) and passed
 	passed = _check("a Check row is drawn for the coin claim",
 		_has(readings, "Test ▸ Check \"a coin is worth ten\": ScoreRules.value_of(\"coin\") = 10"), true) and passed
 	passed = _check("the head says it is a test sheet",
@@ -346,7 +346,7 @@ static func _test_opened_files() -> bool:
 	_write(GAME_TOOL_PATH, GAME_TOOL_SOURCE)
 	var tool_readings: PackedStringArray = _open_and_read(GAME_TOOL_PATH)
 	passed = _check("a command tool's _init reads as the run it is",
-		" | ".join(tool_readings).contains("Action | Command tool | On run"), true) and passed
+		" | ".join(tool_readings).contains("Command tool ▸ On run"), true) and passed
 	passed = _check("the head says it runs headless",
 		_has(tool_readings, "runs headless"), true) and passed
 	return passed

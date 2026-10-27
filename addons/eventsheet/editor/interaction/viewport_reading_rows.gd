@@ -3044,12 +3044,13 @@ static func behaviour_pack_of(object_label: String, class_map: Dictionary) -> St
 ## ask whether anything happened.
 ##
 ## Two shapes and nothing else. An autoload gains its "(global)" note and a globe. A pack node hands
-## its rows back to the object the pack is mounted ON, with the pack's name as the leading chip, so
-## the row reads "Player > [Health] Take damage 3". When the sheet has no object of its own (a plain
-## `extends Node`), a behaviour keeps its own label rather than being handed to nobody.
+## its rows back to the object the pack is mounted ON, with the pack's name and a colon leading the
+## words, so the row reads "Player | Health: Take damage 3" - the node's icon and name, then whose verb
+## it is. When the sheet has no object of its own (a plain `extends Node`), a behaviour keeps its own
+## label rather than being handed to nobody.
 ##
-## With `behaviour_in_object_column` (a theme that asks for it) a pack node names ITSELF in the object
-## column by the pack's name, and the sentence keeps only what it does: "Platformer | Jump".
+## `behaviour_in_object_column` is the older shape a theme could ask for (the pack's name in the object
+## column, "Platformer | Jump"); it is kept so a saved theme still loads, and only read when passed.
 static func object_attribution(object_label: String, pieces: Array, script_object: String,
 		class_map: Dictionary, autoloads: Dictionary,
 		pack_object: String = "", pack_class: String = "", behaviour_in_object_column: bool = false) -> Dictionary:
@@ -3074,7 +3075,7 @@ static func object_attribution(object_label: String, pieces: Array, script_objec
 	var owner: String = script_object.strip_edges()
 	if owner.is_empty():
 		return unchanged
-	var chipped: Array = [[pack, "behaviour"], ["  ", "plain"]]
+	var chipped: Array = [["%s: " % pack, "behaviour"]]
 	chipped.append_array(pieces)
 	return {"object": owner, "pieces": chipped, "icon": class_icon_for(owner, class_map)}
 

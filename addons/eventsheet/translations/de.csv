@@ -9591,3 +9591,5 @@ Saved,Gespeichert
 "Saved with the scene, but designers never see it in the Inspector.","Wird mit der Szene gespeichert, aber Designer sehen es nie im Inspektor."
 "A slider in the Inspector, from %s to %s.","Ein Schieberegler im Inspektor, von %s bis %s."
 "A slider in the Inspector, kept between limits.","Ein Schieberegler im Inspektor, zwischen Grenzen gehalten."
+Inverted: the event runs while this condition is NOT true.,"Umgekehrt: das Ereignis läuft, solange diese Bedingung NICHT erfüllt ist."
+On function,Bei Funktion

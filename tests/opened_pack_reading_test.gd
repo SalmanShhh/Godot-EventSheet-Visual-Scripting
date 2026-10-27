@@ -35,30 +35,33 @@ static func run() -> bool:
 	# ── the head: the kind as a coloured word, Function, On <name> as written, then its facts ──────
 	var action_row: EventRowData = _row_by_uid(view, "define_fn_take_damage")
 	ok = _check("a published verb reads as its function head",
-		_span_texts(action_row), PackedStringArray(["Action", "Function", "On take_damage", "In Add Action", "Featured", "PARAM", "float amount"])) and ok
+		_span_texts(action_row), PackedStringArray(["On function take_damage", "float"])) and ok
 	var condition_row: EventRowData = _row_by_uid(view, "define_fn_is_dead")
-	ok = _check("a condition says what it returns",
-		_span_texts(condition_row), PackedStringArray(["Condition", "Function", "On is_dead", "returns bool", "In Add Action"])) and ok
+	ok = _check("a condition is one head line; what it returns is in its hover",
+		[_span_texts(condition_row), str(_span_meta(condition_row, "On function is_dead", "hover_note")).contains("This function hands back a bool.")],
+		[PackedStringArray(["On function is_dead"]), true]) and ok
 	var expression_row: EventRowData = _row_by_uid(view, "define_fn_health_percent")
 	ok = _check("an expression says it the same way",
-		_span_texts(expression_row), PackedStringArray(["Expression", "Function", "On health_percent", "returns float", "In Add Action"])) and ok
+		[_span_texts(expression_row), str(_span_meta(expression_row, "On function health_percent", "hover_note")).contains("This function hands back a float.")],
+		[PackedStringArray(["On function health_percent"]), true]) and ok
 	ok = _check("no row anywhere prints an @ace_ annotation line", _any_span_contains(view, "@ace_"), false) and ok
 	ok = _check("the description is not drawn on the row", _any_span_contains(view, "off the pool"), false) and ok
 	ok = _check("hovering the name shows it, with how Add Action reads the verb",
-		_span_meta(action_row, "On take_damage", "hover_note"),
-		"take_damage\nTakes [b]amount[/b] off the pool.\nReads as: Take damage") and ok
-	ok = _check("each kind word wears its own colours",
-		[_span_meta(action_row, "Action", "badge_bg"), _span_meta(condition_row, "Condition", "badge_bg"),
-			_span_meta(expression_row, "Expression", "badge_bg")],
-		[Color("#2e5a2a"), Color("#24497a"), Color("#4e3577")]) and ok
+		str(_span_meta(action_row, "On function take_damage", "hover_note")).begins_with(
+		"take_damage\nTakes [b]amount[/b] off the pool.\nReads as: Take damage\n"), true) and ok
+	ok = _check("each kind is said by the name's hover, not by a word on the row",
+		[str(_span_meta(action_row, "On function take_damage", "hover_note")).contains("\nAction: "),
+			str(_span_meta(condition_row, "On function is_dead", "hover_note")).contains("\nCondition: "),
+			str(_span_meta(expression_row, "On function health_percent", "hover_note")).contains("\nExpression: ")],
+		[true, true, true]) and ok
 	ok = _check("no description caption row is welded above a verb",
 		_row_by_uid(view, "verb_note_take_damage") == null, true) and ok
 	# ── a pack reads in its file's order: its helper is a function head like any other ──────
 	var helper_row: EventRowData = _row_by_uid(view, "define_fn__recalc")
 	ok = _check("a hidden helper reads as a function head",
-		_span_texts(helper_row), PackedStringArray(["Action", "Function", "On _recalc"])) and ok
+		_span_texts(helper_row), PackedStringArray(["On function _recalc"])) and ok
 	ok = _check("its doc comment is in the name's hover, not on the row",
-		str(_span_meta(helper_row, "On _recalc", "hover_note")).get_slice("\n", 1), "Recomputes the cached totals.") and ok
+		str(_span_meta(helper_row, "On function _recalc", "hover_note")).get_slice("\n", 1), "Recomputes the cached totals.") and ok
 	ok = _check("a pack gathers no Helpers bar", _row_by_uid(view, "helpers_group_"), null) and ok
 
 	# ── Reading mode - no add scaffolding, no "Always" on a body-only row ──────
@@ -81,7 +84,7 @@ static func run() -> bool:
 	authored_dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	authored_dock.setup(authored)
 	var authored_view: EventSheetViewport = authored_dock._active_view()
-	ok = _check("an authored sheet draws the function as an event", _row_has_text(_row_by_uid(authored_view, "define_fn_take_damage"), "On take_damage"), true) and ok
+	ok = _check("an authored sheet draws the function as an event", _row_has_text(_row_by_uid(authored_view, "define_fn_take_damage"), "On function take_damage"), true) and ok
 	ok = _check("an authored sheet gathers NO Helpers bar", _row_by_uid(authored_view, "helpers_group_") == null, true) and ok
 	ok = _check("an authored sheet keeps its add scaffolding", _any_span_contains(authored_view, "+ Add action"), true) and ok
 	authored_dock.free()

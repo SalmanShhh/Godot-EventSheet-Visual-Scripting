@@ -75,6 +75,32 @@
 - The side panel's Objects list says an object's count once, in its right-hand column: a line reads
   "Tiles  $Tiles" beside its "2" instead of running out of room at "Tiles  $Tiles · 2 r...".
 
+### Changed: a row says what it is by its icons, never by a word in front of it
+
+- A trigger line carries a green arrow in front of its object icon, in every look; the filled blue
+  play circle in the conditions lane and the trigger icon beside the event's number are gone. An
+  inverted condition carries a red cross in the same slot instead of the word `not`. A plain
+  condition, a per-frame event and every action carry no mark. Each mark explains itself on hover,
+  and View > Trigger Icons now switches the arrow.
+- Every condition and action line leads with the icon of what it acts on: the node's own Godot class
+  icon (its nearest ancestor's when the class has none, the script's `@icon` for the script's own
+  object), the System gear and the input devices' glyphs in a neutral grey, on a tile that reads on
+  light sheets too. A pick filter, a state's case and an Else get their icon as well, and "System" is
+  no longer dimmed.
+- A function head is a line like any other: the function icon, `Functions`, `On function juice_tile`.
+  Each parameter is its own line under it - the parameter icon, its name, its type (`index` `int`) -
+  and a local variable reads as the local icon, its name, its type and its value. The `Action` /
+  `Condition` / `Expression` kind word, the `Function` word, the `returns` chip, the `In Add Action`,
+  `Waits`, `Shared` and `Featured` chips, `PARAM` and `Local` are gone from the row; the kind, what the
+  function hands back and its flags are in the name's hover card.
+- A behaviour's action keeps the node it is mounted on in the object column and starts its words with
+  the behaviour's name and a colon, in the behaviour colour: `Spring: Add impulse`. Editor Native no
+  longer names the behaviour in the object column (the theme's `behaviour_in_object_column` is
+  retired and kept only so saved themes load).
+- Editor Native gives every condition line a 16 px mark slot, so marked and unmarked lines start
+  their icons at the same x in every look. New theme colours `trigger_mark_color` and
+  `behaviour_name_color`; the inverted cross takes the design's red on both hands.
+
 ### Fixed: the head bar reads once, in every kind of view, and the sheet under it stays quiet
 
 - The `#` paragraph a script closes on, when the head bar's name card says it as the file's

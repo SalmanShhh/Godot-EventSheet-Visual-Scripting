@@ -4150,93 +4150,55 @@ func _callback_head_spans(event_function: EventFunction) -> Array[SemanticSpan]:
 	return []
 
 
-## The function head's spans, all in the CONDITION lane: the kind word and "Function ▸ On <name>" on
-## the first line, the "returns <type>" chip and the tags under them (a lane holds no more beside a
-## name longer than a word), then a line per parameter, then "+ Add parameter" on a sheet that can
-## take one.
+## The function head's spans, all in the CONDITION lane, each a line like any other line of the
+## sheet: the function icon, "Functions" in the object column and "On function <name>" on the first
+## line; then one line per parameter (the parameter icon, its name in the object column, its type
+## after it); then "+ Add parameter" on a sheet that can take one. What kind of function it is, what
+## it returns and its flags are said by the name's hover card, never by a word chip on the row.
 func _function_head_spans(event_function: EventFunction, role: String) -> Array[SemanticSpan]:
-	var role_colors: Array = _define_role_colors(role)
 	var chip_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var editable: bool = _verb_metadata_editable()
 	var head: Dictionary = {"editable": false, "kind": "define_function", "lane": "condition", "line_index": 0}
-	var spans: Array[SemanticSpan] = [
-		_make_span(function_kind_word(role), SemanticSpan.SpanType.KEYWORD, head.merged({
-			"function_kind": role,
-			"badge": true,
-			"badge_style": "scope",
-			"badge_natural_width": true,
-			"badge_bg": role_colors[0],
-			"badge_fg": role_colors[1],
-			"hover_note": function_kind_note(role)
-		}, true)),
-	]
 	# A function marked `@rpc` is not one this peer calls: it ARRIVES, sent by another peer, and a
 	# visibility filter is ASKED, once per player, by a synchronizer. So the word between "On" and
 	# the name says which kind of arrival this head stands for.
-	var arrival: String = EventSheetL10n.translate("On")
+	var arrival: String = EventSheetL10n.translate("On function")
 	if EventSheetMessageFacts.is_message(event_function):
 		arrival = EventSheetL10n.translate("On message")
 	elif not _visibility_filter_entry(event_function).is_empty():
 		arrival = EventSheetL10n.translate("On asked")
 	var name_word: String = event_function.function_name
 	if not _tool_file_entry_kind(event_function).is_empty():
+		arrival = EventSheetL10n.translate("On")
 		name_word = EventSheetL10n.translate("run")
-	# "Function" is a word of its own in the object colour rather than the cell's object column: the
-	# kind word before it would push that column's shared edge and cut the word short.
-	spans.append(_make_span(_verb_trigger_object(event_function), SemanticSpan.SpanType.OBJECT, head.merged({
-		"natural_width": true,
-		"text_color": _viewport._get_event_style().object_label_color
-	}, true)))
+	var spans: Array[SemanticSpan] = []
 	spans.append(_make_span("%s %s" % [arrival, name_word], SemanticSpan.SpanType.CONDITION, head.merged({
 		"chip": true,
 		"function_name": true,
-		"hover_note": _function_name_card(event_function, editable)
+		"function_kind": role,
+		"object_label": _verb_trigger_object(event_function),
+		"object_glyph": NativeRowMarks.OBJECT_GLYPH_FUNCTION,
+		"object_icon": _glyph_icon_slot(),
+		"hover_note": _function_head_card(event_function, role, editable)
 	}, true).merged(chip_style, true)))
 	var line: int = 1
-	var facts: Dictionary = head.merged({"line_index": line}, true)
-	var returns_word: String = CompilerSpellings.function_return_type_name(event_function)
-	if returns_word != "void":
-		var muted: Color = _viewport._get_reading_style().muted_text_color
-		var returns_text: String = EventSheetL10n.translate("returns %s") % returns_word
-		spans.append(_make_span(returns_text, SemanticSpan.SpanType.VALUE, facts.merged({
-			"kind": "function_returns",
-			"chip": true,
-			"natural_width": true,
-			"font_size_delta": -2,
-			"hover_note": EventSheetL10n.translate("This function hands back a %s.") % returns_word,
-			"bbcode_segments": [
-				{"text": returns_text.trim_suffix(returns_word), "color": muted, "bold": false, "italic": false},
-				{"text": returns_word, "color": _viewport._get_event_style().value_highlight_color, "bold": true, "italic": false},
-			]
-		}, true).merged(chip_style, true)))
-	var tags: Array = function_tags(event_function)
-	for tag: Array in tags:
-		spans.append(_make_span(str(tag[0]), SemanticSpan.SpanType.CONDITION, facts.merged({
-			"kind": "function_tag",
-			"chip": true,
-			"font_size_delta": -2,
-			"hover_note": str(tag[1])
-		}, true).merged(chip_style, true)))
-	if returns_word != "void" or not tags.is_empty():
-		line += 1
-	var chip_colors: Array = _verb_chip_colors()
 	for index in range(event_function.params.size()):
 		var param: ACEParam = event_function.params[index]
 		if param == null:
 			continue
-		var param_meta: Dictionary = {"editable": false, "kind": "verb_param", "param_index": index,
-			"lane": "condition", "line_index": line}
-		spans.append(_make_span(EventSheetL10n.translate("PARAM"), SemanticSpan.SpanType.KEYWORD, param_meta.merged({
-			"badge": true,
-			"badge_style": "scope",
-			"badge_natural_width": true,
-			"badge_bg": chip_colors[0],
-			"badge_fg": (chip_colors[1] as Color).lerp(chip_colors[0], 0.45)
-		}, true)))
-		spans.append(_make_span(function_param_line(param), SemanticSpan.SpanType.VALUE, param_meta.merged({
-			"text_color": _viewport._get_event_style().value_highlight_color,
+		spans.append(_make_span(function_param_type_words(param), SemanticSpan.SpanType.VALUE, {
+			"editable": false,
+			"kind": "verb_param",
+			"param_index": index,
+			"lane": "condition",
+			"line_index": line,
+			"chip": true,
+			"object_label": param.id,
+			"object_glyph": NativeRowMarks.OBJECT_GLYPH_PARAMETER,
+			"object_icon": _glyph_icon_slot(),
+			"text_color": _viewport._get_event_style().object_label_color,
 			"hover_note": function_param_note(param)
-		}, true)))
+		}.merged(chip_style, true)))
 		line += 1
 	# Adding an input is the core authoring gesture on a function, so it lives on the row. Only a
 	# read-only sheet goes without: it edits nothing, so it must not grow an affordance it cannot honour.
@@ -4252,6 +4214,29 @@ func _function_head_spans(event_function: EventFunction, role: String) -> Array[
 		}))
 	_append_message_spans(spans, event_function)
 	return spans
+
+
+## The texture that holds an object icon's slot for a line whose icon is a drawn glyph (a function, a
+## parameter, a local variable): the painter draws the glyph over it, so only its presence matters.
+## Null when object icons are switched off, or with no editor theme - the line then has no icon slot.
+func _glyph_icon_slot() -> Texture2D:
+	if not _viewport.show_object_icons:
+		return null
+	return EventSheetACEIcons.editor_icon("Tools")
+
+
+## The card a function head's name shows on hover, one fact a line: the name card, then what kind of
+## function it is to an event that calls it, what it hands back and its flags - the facts a row used
+## to spell as word chips.
+func _function_head_card(event_function: EventFunction, role: String, editable: bool) -> String:
+	var lines: PackedStringArray = PackedStringArray([_function_name_card(event_function, editable)])
+	lines.append("%s: %s" % [function_kind_word(role), function_kind_note(role)])
+	var returns_word: String = CompilerSpellings.function_return_type_name(event_function)
+	if returns_word != "void":
+		lines.append(EventSheetL10n.translate("This function hands back a %s.") % returns_word)
+	for tag: Array in function_tags(event_function):
+		lines.append("%s: %s" % [str(tag[0]), str(tag[1])])
+	return "\n".join(lines)
 
 
 ## The word a function's kind is drawn as, in its kind's colour: what it is to an event that calls it.
@@ -4329,6 +4314,17 @@ static func function_param_line(param: ACEParam) -> String:
 	return line
 
 
+## A parameter line's words after its name: its type as the code writes it, and the value a call that
+## leaves it out gets ("int", "float = 1.0"). "Variant" for an untyped parameter, so the line is never
+## a bare name.
+static func function_param_type_words(param: ACEParam) -> String:
+	var type_name: String = param.type_name.strip_edges()
+	var words: String = type_name if not type_name.is_empty() else "Variant"
+	if not param.gdscript_default.strip_edges().is_empty():
+		words += " = %s" % param.gdscript_default.strip_edges()
+	return words
+
+
 ## What hovering a parameter's line says: what it is for, how to use it, and its value when a call
 ## leaves it out.
 static func function_param_note(param: ACEParam) -> String:
@@ -4390,7 +4386,7 @@ func _verb_trigger_object(event_function: EventFunction) -> String:
 			return EventSheetL10n.translate(EventSheetToolFiles.OBJECT_TEST)
 		EventSheetToolFiles.KIND_COMMAND_TOOL:
 			return EventSheetL10n.translate(EventSheetToolFiles.OBJECT_COMMAND_TOOL)
-	return EventSheetL10n.translate("Function")
+	return EventSheetL10n.translate("Functions")
 
 
 ## "" unless this function IS the open tooling file's entry point - the name and the file kind have to
@@ -14639,18 +14635,105 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			)
 		)
 	spans.append_array(_pattern_chip_spans(event_row))
-	# A theme that draws the trigger icon in the number gutter leaves out the badge that said the same
-	# thing at the head of the conditions lane, so the lane starts with its object column.
-	if event_style != null and event_style.trigger_icon_in_gutter \
-			and not NativeRowMarks.trigger_kind_for_event(event_row).is_empty():
-		var kept: Array[SemanticSpan] = []
-		for span: SemanticSpan in spans:
-			var metadata: Dictionary = span.metadata if span != null and span.metadata is Dictionary else {}
-			if bool(metadata.get("badge", false)) and str(metadata.get("badge_style", "")) == "trigger":
-				continue
-			kept.append(span)
-		spans = kept
+	_dress_line_object_icons(spans)
 	return spans
+
+
+## Every condition and action line leads with the icon of what it acts on: the node's own Godot class
+## icon (its nearest ancestor's when the class has none, the script's @icon for the script's own
+## object), the System gear, an input device. Read off the name the line's object column shows, so
+## a check of `visible` on a Node2D wears the Node2D icon rather than its category's checkbox, and a
+## line that had no icon at all (a pick filter, a state's case, an Else) gets one. Display only:
+## nothing here touches a span's words.
+func _dress_line_object_icons(spans: Array[SemanticSpan]) -> void:
+	if not _viewport.show_object_icons:
+		return
+	for span: SemanticSpan in spans:
+		if span == null or not (span.metadata is Dictionary):
+			continue
+		var metadata: Dictionary = span.metadata as Dictionary
+		var object_label: String = str(metadata.get("object_label", "")).strip_edges()
+		if object_label.is_empty() or bool(metadata.get("badge", false)) or metadata.has("object_glyph"):
+			continue
+		var icon: Texture2D = line_object_icon(object_label)
+		if icon != null:
+			metadata["object_icon"] = icon
+
+
+## The icon a line whose object column reads `object_label` leads with, or null when nothing more
+## specific than what the line already wears is known (headless, an unknown name).
+func line_object_icon(object_label: String) -> Texture2D:
+	_reset_lens_caches_if_stale()
+	if _line_icon_cache.has(object_label):
+		return _line_icon_cache[object_label]
+	var icon: Texture2D = _resolve_line_object_icon(object_label)
+	# Only a FOUND icon is kept: a miss before the editor theme exists must not stick for the sheet.
+	if icon != null:
+		_line_icon_cache[object_label] = icon
+	return icon
+
+
+## Object label -> the icon its lines lead with, per sheet (cleared with the other lens caches).
+var _line_icon_cache: Dictionary = {}
+
+
+func _resolve_line_object_icon(object_label: String) -> Texture2D:
+	# System and the input devices paint a glyph of their own over whatever texture holds the slot;
+	# the editor's Tools icon is only the placeholder that tells the painter there is a slot.
+	if not NativeRowMarks.object_glyph_for(object_label).is_empty():
+		return EventSheetACEIcons.editor_icon("Tools")
+	var sheet: EventSheetResource = _viewport._sheet as EventSheetResource
+	if sheet != null and object_label == _script_object_name() and not sheet.custom_class_icon.strip_edges().is_empty():
+		var own_icon: Texture2D = _script_icon_texture(sheet.custom_class_icon.strip_edges())
+		if own_icon != null:
+			return own_icon
+	var class_text: String = object_label if ClassDB.class_exists(StringName(object_label)) \
+		else str(_lens_class_map.get(object_label, ""))
+	# The script's own object is the class the script extends, whatever the class map knows of it.
+	if class_text.is_empty() and sheet != null and object_label == _script_object_name():
+		class_text = sheet.host_class.strip_edges()
+	return class_icon_with_ancestry(class_text)
+
+
+## The editor icon of `class_text`, else the nearest ancestor's that has one - the walk the Scene
+## dock does. A project script class answers with its @icon, else its base class's icon. Null for an
+## empty name or outside the editor.
+static func class_icon_with_ancestry(class_text: String) -> Texture2D:
+	var cursor: String = class_text.strip_edges()
+	var guard: int = 0
+	while not cursor.is_empty() and guard < 32:
+		guard += 1
+		if ClassDB.class_exists(StringName(cursor)):
+			var engine_icon: Texture2D = EventSheetACEIcons.editor_icon(cursor)
+			if engine_icon != null:
+				return engine_icon
+			cursor = str(ClassDB.get_parent_class(StringName(cursor)))
+			continue
+		var script_class: Dictionary = _global_script_class(cursor)
+		if script_class.is_empty():
+			return null
+		var icon_path: String = str(script_class.get("icon", "")).strip_edges()
+		if not icon_path.is_empty():
+			var script_icon: Texture2D = _script_icon_texture(icon_path)
+			if script_icon != null:
+				return script_icon
+		cursor = str(script_class.get("base", ""))
+	return null
+
+
+## The project's global script class named `class_text` ({class, base, icon, path}), or {}.
+static func _global_script_class(class_text: String) -> Dictionary:
+	for entry: Dictionary in ProjectSettings.get_global_class_list():
+		if str(entry.get("class", "")) == class_text:
+			return entry
+	return {}
+
+
+## A script's @icon file as a texture, or null when it cannot be loaded.
+static func _script_icon_texture(icon_path: String) -> Texture2D:
+	if icon_path.is_empty() or not ResourceLoader.exists(icon_path):
+		return null
+	return load(icon_path) as Texture2D
 
 
 ## The ⟡ chip that names the PATTERN this event is, when a reading claimed one on it. It sits
@@ -15004,15 +15087,14 @@ func _append_undo_step_spans(spans: Array, parts: Dictionary, action_index: int,
 		"line_index": line_index
 	}
 	var type_word: String = friendly_type_word(str(parts.get("type_word", "")))
-	spans.append(_make_span("%s %s" % [EventSheetL10n.translate("Local"), type_word],
-		SemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
+	# The local that catches the answer reads as a local line: its icon, its name, its type.
+	spans.append(_make_span(type_word, SemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
 			"natural_width": true,
+			"object_label": str(parts.get("name", "")),
+			"object_glyph": NativeRowMarks.OBJECT_GLYPH_LOCAL,
+			"object_icon": _glyph_icon_slot(),
+			"local_name": str(parts.get("name", "")),
 			"text_color": _viewport._get_event_style().object_label_color
-		}, true).merged(action_style_meta, false)))
-	spans.append(_make_span(str(parts.get("name", "")), SemanticSpan.SpanType.VALUE,
-		base_meta.duplicate().merged({
-			"natural_width": true,
-			"text_color": _viewport._get_reading_style().primary_text_color
 		}, true).merged(action_style_meta, false)))
 	spans.append(_make_span("= %s" % step_text, SemanticSpan.SpanType.VALUE,
 		base_meta.duplicate().merged({
@@ -16230,6 +16312,8 @@ func _tone_segments(pieces: Array) -> Dictionary:
 				tone_color = _viewport._get_event_style().value_highlight_color
 			"object":
 				tone_color = _viewport._get_event_style().object_label_color
+			"behaviour":
+				tone_color = _viewport._get_event_style().behaviour_name_color
 			"muted":
 				# A connective the sentence needs but the reader does not read ("then").
 				tone_color = _viewport._get_reading_style().muted_text_color
@@ -18146,10 +18230,9 @@ func _sentence_tone_segments(pieces: Array, indent: int) -> Array[Dictionary]:
 			"object":
 				tone_color = _viewport._get_event_style().object_label_color
 			"behaviour":
-				# The pack's name between the object and its verb. Drawn in the object tint and
-				# bold, so it reads as part of WHO acts rather than as part of what the verb says.
-				tone_color = _viewport._get_event_style().object_label_color
-				tone_bold = true
+				# The pack's name and a colon at the head of the verb ("Spring: Add impulse"), in the
+				# behaviour colour: the line keeps the node's icon and name, the words say whose verb.
+				tone_color = _viewport._get_event_style().behaviour_name_color
 			"muted":
 				# A connective the sentence needs but the reader does not read ("then").
 				tone_color = _viewport._get_reading_style().muted_text_color
@@ -18331,20 +18414,25 @@ func append_local_declaration_spans(spans: Array, declaration: Dictionary, base_
 	# exactly what it is: the chip reads `Local table` / `Local list` rather than `Local value`.
 	if not literal.is_empty() and type_word == EventSheetL10n.translate("value"):
 		type_word = EventSheetL10n.translate("table" if str(literal.get("open", "{")) == "{" else "list")
-	var chip_word: String = "%s %s" % [
-		EventSheetL10n.translate("Local constant") if bool(declaration.get("is_constant", false)) else EventSheetL10n.translate("Local"),
-		type_word
-	]
-	var chip_meta: Dictionary = base_meta.duplicate()
-	chip_meta["chip"] = true
-	chip_meta["natural_width"] = true
-	chip_meta["text_color"] = _viewport._get_event_style().object_label_color
-	spans.append(_make_span(indent_text + chip_word, SemanticSpan.SpanType.VALUE, chip_meta.merged(style_meta, false)))
+	# A line like any other: the local-variable icon, the name in the object column, then its type and
+	# its starting value. The icon says "local", so no word does; a constant says so before its type.
+	if not indent_text.is_empty():
+		var indent_meta: Dictionary = base_meta.duplicate()
+		indent_meta["natural_width"] = true
+		indent_meta["editable"] = false
+		spans.append(_make_span(indent_text, SemanticSpan.SpanType.VALUE, indent_meta.merged(style_meta, false)))
+	var type_words: String = type_word
+	if bool(declaration.get("is_constant", false)):
+		type_words = EventSheetL10n.translate("constant %s") % type_word
 	var name_meta: Dictionary = base_meta.duplicate()
 	name_meta["chip"] = true
 	name_meta["natural_width"] = true
-	name_meta["text_color"] = _viewport._get_reading_style().primary_text_color
-	spans.append(_make_span(str(declaration.get("name", "")), SemanticSpan.SpanType.VALUE, name_meta.merged(style_meta, false)))
+	name_meta["object_label"] = str(declaration.get("name", ""))
+	name_meta["object_glyph"] = NativeRowMarks.OBJECT_GLYPH_LOCAL
+	name_meta["object_icon"] = _glyph_icon_slot()
+	name_meta["local_name"] = str(declaration.get("name", ""))
+	name_meta["text_color"] = _viewport._get_event_style().object_label_color
+	spans.append(_make_span(type_words, SemanticSpan.SpanType.VALUE, name_meta.merged(style_meta, false)))
 	if not literal.is_empty():
 		# The declared value IS the literal, so there is nothing to print between the name and the
 		# entries: the chips are the starting value, one per line the file wrote it over.
@@ -19320,6 +19408,9 @@ func grammar_bbcode_segments(pieces: Array) -> Array[Dictionary]:
 				# sentence, so it wears the object hue the object column uses for the same idea.
 				tone_color = _viewport._get_event_style().object_label_color
 				tone_bold = true
+			"behaviour":
+				# "Spring: " at the head of a behaviour's verb, in the behaviour colour.
+				tone_color = _viewport._get_event_style().behaviour_name_color
 			"muted":
 				# A connective the sentence needs but the reader does not read ("then").
 				tone_color = _viewport._get_reading_style().muted_text_color
@@ -19514,6 +19605,7 @@ func _reset_lens_caches_if_stale() -> void:
 	if stamp == _lens_sheet_stamp:
 		return
 	_lens_sheet_stamp = stamp
+	_line_icon_cache = {}
 	_lens_knob_names = EventSheetViewportReadingRows.export_knob_names(sheet)
 	_lens_class_map = EventSheetViewportReadingRows.object_class_map(sheet)
 	_lens_scene_vars = _scene_variable_map(sheet)
@@ -19719,11 +19811,12 @@ func _attributed_grammar(grammar: Dictionary, global_owner: String) -> Dictionar
 	return {"object": str(attribution.get("object", "")), "segments": rebuilt}
 
 
-## True when the sheet's theme names a behaviour in the object column rather than handing its rows to
-## the script's object with the behaviour's name at the head of the sentence.
+## Always false: a behaviour's action keeps the node it is mounted on in the object column, with the
+## behaviour's name and a colon at the head of its words, in every look. The theme setting that once
+## named the behaviour in the object column instead is still read from saved themes but no longer
+## changes a row.
 func _behaviour_in_object_column() -> bool:
-	var event_style: EventSheetEventStyle = _viewport._get_event_style()
-	return event_style != null and event_style.behaviour_in_object_column
+	return false
 
 
 ## The name the script's own object goes by, so a behaviour pack mounted under it can hand its

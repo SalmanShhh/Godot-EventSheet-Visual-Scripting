@@ -37,13 +37,13 @@ static func run() -> bool:
 
 	# ── The declaration rows, at the top of the event that owns them ──
 	ok = _check("a worked-out number declares with the number's own starting value",
-		_reading(rows, "dealt"), "Local number | dealt | = 0") and ok
+		_reading(rows, "dealt"), "number | = 0") and ok
 	ok = _check("a worked-out text declares empty",
-		_reading(rows, "tag"), "Local text | tag | = \"\"") and ok
+		_reading(rows, "tag"), "text | = \"\"") and ok
 	ok = _check("a value that is already a value rides on the declaration",
-		_reading(rows, "hits"), "Local number | hits | = 3") and ok
+		_reading(rows, "hits"), "number | = 3") and ok
 	ok = _check("and so does a piece of text",
-		_reading(rows, "label"), "Local text | label | = \"ready\"") and ok
+		_reading(rows, "label"), "text | = \"ready\"") and ok
 
 	# ── The work stays where the line is, as the Set action it is ──
 	var actions: PackedStringArray = _action_readings(rows)
@@ -73,9 +73,9 @@ static func _authored_rows() -> bool:
 	sheet.events.append(event_row)
 	var rows: Array = _rows(sheet, false)
 	ok = _check("an authored local reads as the same declaration row",
-		_reading(rows, "spare"), "Local number | spare | = 2") and ok
+		_reading(rows, "spare"), "number | = 2") and ok
 	ok = _check("an authored local whose value is worked out declares empty-handed",
-		_reading(rows, "total"), "Local number | total | = 0") and ok
+		_reading(rows, "total"), "number | = 0") and ok
 	ok = _check("the declaration row is owned by its event",
 		_row_for(rows, "total").get("owned", false), true) and ok
 	ok = _check("and its spans point at that one action",
@@ -123,9 +123,12 @@ static func _walk(rows: Array, viewport: EventSheetViewport, found: Array) -> vo
 		var parts: PackedStringArray = PackedStringArray()
 		var action_texts: PackedStringArray = PackedStringArray()
 		var ace_index: int = -1
+		var local_name: String = ""
 		for span: SemanticSpan in row_data.spans:
 			var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 			parts.append(span.text)
+			if local_name.is_empty():
+				local_name = str(metadata.get("local_name", ""))
 			var label: String = str(metadata.get("object_label", ""))
 			if not label.is_empty():
 				action_texts.append("%s> %s" % [label, span.text])
@@ -136,18 +139,20 @@ static func _walk(rows: Array, viewport: EventSheetViewport, found: Array) -> vo
 			"text": " | ".join(parts),
 			"action_texts": action_texts,
 			"owned": row_data.source_resource is EventRow,
+			"local": local_name,
 			"ace_index": ace_index
 		})
 		_walk(row_data.children, viewport, found)
 
 
-## The declaration row that names `variable_name`, as {} when the reading holds none.
+## The declaration row that names `variable_name` (the local line's name, in its object column), as {}
+## when the reading holds none. The row reads as the local's type and value: the local icon says
+## "local", so no word does.
 static func _row_for(rows: Array, variable_name: String) -> Dictionary:
 	for row: Variant in rows:
 		if not str((row as Dictionary).get("uid", "")).begins_with("local_declaration_"):
 			continue
-		var parts: PackedStringArray = str((row as Dictionary).get("text", "")).split(" | ")
-		if parts.size() > 1 and parts[1] == variable_name:
+		if str((row as Dictionary).get("local", "")) == variable_name:
 			return row
 	return {}
 

@@ -9591,3 +9591,5 @@ Saved,Сохраняется
 "Saved with the scene, but designers never see it in the Inspector.","Сохраняется вместе со сценой, но дизайнеры не видят его в Инспекторе."
 "A slider in the Inspector, from %s to %s.","Ползунок в Инспекторе, от %s до %s."
 "A slider in the Inspector, kept between limits.","Ползунок в Инспекторе, в заданных пределах."
+Inverted: the event runs while this condition is NOT true.,"Инвертировано: событие выполняется, пока это условие НЕ выполнено."
+On function,При вызове функции

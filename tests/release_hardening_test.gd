@@ -93,8 +93,10 @@ static func run() -> bool:
 			condition_verb_row = restyled_row
 		elif restyled_row.row_uid == "define_fn_spawn_pickup":
 			action_verb_row = restyled_row
-	all_passed = _check("a restyled role accent reaches the verb's badge",
-		condition_verb_row != null and condition_verb_row.spans[0].metadata.get("badge_fg") == Color.RED, true) and all_passed
+	# The head carries no kind word any more (its kind is in the name's hover); the role's accent
+	# reaches the row through its wash, below.
+	all_passed = _check("the verb's head still knows its kind",
+		condition_verb_row != null and str(condition_verb_row.spans[0].metadata.get("function_kind", "")) == "condition", true) and all_passed
 	all_passed = _check("and tints the row's wash with it",
 		condition_verb_row != null and is_equal_approx(condition_verb_row.custom_color.r, 1.0), true) and all_passed
 	all_passed = _check("the wash STRENGTH is the token, not a baked literal",

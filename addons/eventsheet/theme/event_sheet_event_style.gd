@@ -73,6 +73,12 @@ extends Resource
 ## #FF0000: full-saturation red reads as "error!" and vibrates against the dark theme; this stays
 ## unmistakably red without shouting.
 @export var invert_marker_color: Color = Color("#e05c5c")
+## The green arrow in front of a trigger line's object icon: the one sign a line fires once, when its
+## thing happens. A plain condition and every action carry no mark at all.
+@export var trigger_mark_color: Color = Color("#6ccb4e")
+## A behaviour's name at the head of its action's words ("Spring: Add impulse"), so the verb reads
+## as the behaviour's while the line keeps the node it is mounted on.
+@export var behaviour_name_color: Color = Color("#f0b86e")
 ## Object/origin label drawn before each condition/action ("System", node class).
 @export var object_label_color: Color = EventSheetPalette.COLOR_OBJECT
 ## Parameter values (numbers / strings / booleans) highlighted inside ACE text.
@@ -167,12 +173,13 @@ extends Resource
 ## selected, so an event at rest is as tall as its conditions and actions and no taller. Off keeps
 ## the line reserved under every event and revealed in place.
 @export var add_lines_on_hover: bool = false
-## The trigger icon sits in the number gutter beside the event's number, at its first line, and the
-## coloured trigger badge leaves the conditions lane, so the lane starts with the object column. Off
-## keeps the badge column and centres the number on the event.
+## The event's number sits on its first line, and the gutter and the number read as one column. Off
+## centres the number on the event. (How the event is started is the trigger line's own green arrow in
+## every look; the number gutter carries no trigger icon.)
 @export var trigger_icon_in_gutter: bool = false
-## A behaviour's own row names the behaviour in the object column ("Platformer | Jump") rather
-## than the script's object with the behaviour's name repeated at the head of the sentence.
+## Retired: a behaviour's action keeps the node it is mounted on in the object column and leads its
+## words with the behaviour's name and a colon ("Player | Platformer: Jump") in every look. Kept so a
+## theme saved with it still loads; it no longer changes a row.
 @export var behaviour_in_object_column: bool = false
 ## The chips after a condition (a trigger's payload, the chip naming the event's pattern) take at most
 ## two fifths of the conditions lane, so the condition's own words keep their room and a long chip is

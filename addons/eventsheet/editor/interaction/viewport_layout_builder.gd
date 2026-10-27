@@ -381,6 +381,10 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 			var condition_line_index: int = int(metadata.get("line_index", 0))
 			if bool(metadata.get("badge", false)):
 				condition_badge_next_x[condition_line_index] = next_span_start_x
+				# A mark in the line's own slot ends where the slot does, so a marked line's words start
+				# at the same x as an unmarked line's (the twin of event_line_extents' badge step).
+				if not bool(metadata.get("badge_natural_width", false)) and condition_badge_column_width > 0.0:
+					condition_badge_next_x[condition_line_index] = span.rect.position.x + condition_badge_column_width + condition_badge_column_gap
 			else:
 				condition_line_x[condition_line_index] = next_span_start_x
 	var drag_rect := Rect2()

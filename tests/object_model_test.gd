@@ -94,10 +94,10 @@ static func _autoloads_read_as_globals() -> bool:
 static func _packs_read_as_behaviours() -> bool:
 	var passed: bool = true
 	var cells: PackedStringArray = _row_cells(_open())
-	passed = _check("a call on a pack node reads under the object, behind the pack's chip",
-		_has_cell(cells, "ObjectsReadingFixture|Health  Take damage   3"), true) and passed
+	passed = _check("a call on a pack node reads under the object, its words led by the pack's name and a colon",
+		_has_cell(cells, "ObjectsReadingFixture|Health: Take damage   3"), true) and passed
 	passed = _check("a pack whose class name is not its display name still reads by display name",
-		_has_cell(cells, "ObjectsReadingFixture|FPS Controller  Do jump"), true) and passed
+		_has_cell(cells, "ObjectsReadingFixture|FPS Controller: Do jump"), true) and passed
 	passed = _check("the pack node no longer stands in for the object",
 		_has_cell(cells, "Health|Take damage   3"), false) and passed
 	# The index is derived from the packs themselves, so a shipped pack is known by every name a

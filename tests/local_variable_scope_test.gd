@@ -110,7 +110,8 @@ static func run() -> bool:
 
 	# Hovering the variable's name lights up its other uses, and only inside its own scope.
 	# The name lives on the DECLARATION row the event owns - an event sheet declares its locals at the
-	# top of the event, so that row, not the action lane, is where a cursor finds "dealt".
+	# top of the event, so that row, not the action lane, is where a cursor finds "dealt" - in its object
+	# column, beside the local-variable icon.
 	var hover_row_index: int = _declaration_row_index(view, declaring)
 	var hover_span_index: int = _span_index_with_text(view, hover_row_index, "dealt")
 	ok = _check("the declaration row shows the variable's name", hover_span_index >= 0, true) and ok
@@ -121,7 +122,7 @@ static func run() -> bool:
 	ok = _check("the other use of the same local is a match too",
 		matches.has(_row_index_for(view, user)), true) and ok
 	ok = _check("hovering something that is not a local matches nothing",
-		view._compute_hover_matches(hover_row_index, _span_index_with_text(view, hover_row_index, "Local number")).is_empty(),
+		view._compute_hover_matches(hover_row_index, _span_index_with_text(view, hover_row_index, "= 0")).is_empty(),
 		true) and ok
 	dock.free()
 	return ok
@@ -163,7 +164,8 @@ static func _span_index_with_text(view: EventSheetViewport, row_index: int, word
 		return -1
 	view._row_builder._ensure_event_spans(row_data)
 	for index in row_data.spans.size():
-		if row_data.spans[index].text.strip_edges() == word:
+		var metadata: Dictionary = row_data.spans[index].metadata if row_data.spans[index].metadata is Dictionary else {}
+		if row_data.spans[index].text.strip_edges() == word or str(metadata.get("local_name", "")) == word:
 			return index
 	return -1
 

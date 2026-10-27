@@ -9591,3 +9591,5 @@ Saved,Salvato
 "Saved with the scene, but designers never see it in the Inspector.","Salvato con la scena, ma i designer non lo vedono mai nell'Ispettore."
 "A slider in the Inspector, from %s to %s.","Un cursore nell'Ispettore, da %s a %s."
 "A slider in the Inspector, kept between limits.","Un cursore nell'Ispettore, tenuto entro dei limiti."
+Inverted: the event runs while this condition is NOT true.,Invertita: l'evento viene eseguito finché questa condizione NON è vera.
+On function,Alla chiamata della funzione

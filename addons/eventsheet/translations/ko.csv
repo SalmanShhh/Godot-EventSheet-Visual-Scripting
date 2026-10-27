@@ -9591,3 +9591,5 @@ Saved,저장됨
 "Saved with the scene, but designers never see it in the Inspector.",씬과 함께 저장되지만 디자이너는 인스펙터에서 볼 수 없습니다.
 "A slider in the Inspector, from %s to %s.","인스펙터의 슬라이더, %s부터 %s까지."
 "A slider in the Inspector, kept between limits.","인스펙터의 슬라이더로, 한계 안에서 유지됩니다."
+Inverted: the event runs while this condition is NOT true.,반전: 이 조건이 참이 아닌 동안 이벤트가 실행됩니다.
+On function,함수 호출 시

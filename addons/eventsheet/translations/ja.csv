@@ -9591,3 +9591,5 @@ Saved,保存
 "Saved with the scene, but designers never see it in the Inspector.",シーンと一緒に保存されますが、インスペクターには表示されません。
 "A slider in the Inspector, from %s to %s.",インスペクターのスライダー（%s から %s）。
 "A slider in the Inspector, kept between limits.",インスペクターのスライダー。上限と下限の間に保たれます。
+Inverted: the event runs while this condition is NOT true.,反転: この条件が成り立たない間、イベントが実行されます。
+On function,関数呼び出し時

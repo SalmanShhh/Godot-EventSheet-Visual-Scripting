@@ -56,7 +56,7 @@ static func _test_helper_of() -> bool:
 	ok = _check("the constructor that only stores the reference is folded into the bar",
 		_has_reading(readings, "On Init"), false) and ok
 	ok = _check("a read through the reference is the object's own property",
-		_has_reading(readings, "Local EventSheetResource | sheet | = Dock.CurrentSheet"), true) and ok
+		_has_reading(readings, "EventSheetResource | = Dock.CurrentSheet"), true) and ok
 	ok = _check("a call through the reference is something the OBJECT does",
 		_has_reading(readings, "Dock ▸ Select row"), true) and ok
 	ok = _check("and the member that holds it is never the object",
@@ -77,7 +77,7 @@ static func _test_undo_step() -> bool:
 	# The step is the function's own first step, so it reads beside the function's head.
 	ok = _check("the edit reads as one undoable step, named by the label",
 		_first_containing(readings, "Edit sheet undoably"),
-		"Action | Function | On apply | Local boolean | changed | = Dock ▸ Edit sheet undoably \"Apply Cell Edit\" | ↓ the steps below are the edit | ⟡ one undoable step, the edit under it") and ok
+		"Functions ▸ On function apply | changed ▸ boolean | = Dock ▸ Edit sheet undoably \"Apply Cell Edit\" | ↓ the steps below are the edit | ⟡ one undoable step, the edit under it") and ok
 	ok = _check("the edit's own lines hang under it as sub-events",
 		_first_containing(readings, "Call _append_condition_entry"),
 		"System ▸ mode = \"new_condition_event\" | ƒ ▸ Call _append_condition_entry | System ▸ Answer true") and ok

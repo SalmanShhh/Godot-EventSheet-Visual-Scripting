@@ -80,7 +80,9 @@ const NATIVE_COLOURS_DARK := {
 	"cell_hover_color": Color(1.0, 1.0, 1.0, 0.06),
 	"column_header_conditions_color": Color("#8ec3f2"),
 	"column_header_actions_color": Color("#a6d18f"),
-	"invert_marker_color": Color("#ff8a80"),
+	"invert_marker_color": Color("#f07a7a"),
+	"trigger_mark_color": Color("#6ccb4e"),
+	"behaviour_name_color": Color("#f0b86e"),
 	"object_label_color": Color("#b9c9da"),
 	"value_highlight_color": Color("#a6d18f"),
 	"behavior_accent_color": Color("#c2b4d6"),
@@ -140,7 +142,9 @@ const NATIVE_COLOURS_LIGHT := {
 	"cell_hover_color": Color(0.0, 0.0, 0.0, 0.05),
 	"column_header_conditions_color": Color("#17508f"),
 	"column_header_actions_color": Color("#2c681c"),
-	"invert_marker_color": Color("#b3261e"),
+	"invert_marker_color": Color("#b42318"),
+	"trigger_mark_color": Color("#22700e"),
+	"behaviour_name_color": Color("#7a4300"),
 	"object_label_color": Color("#1f4870"),
 	"value_highlight_color": Color("#2c681c"),
 	"behavior_accent_color": Color("#584a70"),
@@ -196,6 +200,7 @@ const NATIVE_NEW_MARK_TOKENS: Array[String] = [
 	"class_border_color", "class_fill_color", "class_head_color", "class_tag_color",
 	"class_name_color", "class_note_color",
 	"link_color",
+	"trigger_mark_color", "invert_marker_color", "behaviour_name_color",
 	"inspector_badge_foreground_color", "inspector_badge_background_color",
 	"range_badge_foreground_color", "range_badge_background_color",
 	"tooltip_badge_foreground_color", "tooltip_badge_background_color",
@@ -368,13 +373,14 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	event_style.variable_row_cards = true
 	# The design's head: one class head card, no code echoes, no scene-fact or "+ add" rows.
 	event_style.inspector_class_head = true
-	# The design's events: 12 px text on 24 px lines, the trigger icon beside the number in the
-	# gutter (so no badge column in the lane), a behaviour named in the object column, and the add
-	# lines only on the hovered or selected event - a one-condition, one-action event is one line.
+	# The design's events: 12 px text on 24 px lines, the number on the event's first line, a 16 px
+	# mark slot at the head of every condition line (the trigger arrow, the inverted cross), a
+	# behaviour named in the object column, and the add lines only on the hovered or selected event -
+	# a one-condition, one-action event is one line.
 	event_style.row_font_size = 12
 	event_style.trigger_icon_in_gutter = true
-	event_style.condition_badge_column_width = 0
-	event_style.behaviour_in_object_column = true
+	event_style.condition_badge_column_width = 16
+	event_style.behaviour_in_object_column = false
 	event_style.lane_chips_yield = true
 	event_style.add_lines_on_hover = true
 	# The design's notes (a yellow card with a grip and a bubble, no echo) and its selection (a filled

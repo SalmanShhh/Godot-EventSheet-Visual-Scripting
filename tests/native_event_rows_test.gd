@@ -5,11 +5,12 @@ extends RefCounted
 #
 # A theme that draws events at the design's size draws a one-condition, one-action event one line
 # tall: 12 px text on 24 px lines, the "Add condition" / "Add action" lines only on the hovered or
-# selected event, the trigger icon beside the number in the gutter instead of a badge in the lane, a
-# behaviour named in the object column instead of repeated in the sentence, and the chips after a
-# condition giving the condition's words their room. The pins hold:
-#   1. the five tokens are off by default, on in the Editor Native starter and its rule, and stated
-#      off in every other shipped theme;
+# selected event, the number on the event's first line, the trigger's green arrow in a 16 px mark
+# slot at the head of the conditions lane (as in every look), a behaviour's action led by its name and a
+# colon after the node it is mounted on (the retired behaviour_in_object_column stays off), and the
+# chips after a condition giving the condition's words their room. The pins hold:
+#   1. the tokens are off by default, on in the Editor Native starter and its rule (bar the retired
+#      one), and stated off in every other shipped theme;
 #   2. the resting add-line rule, as a pure function;
 #   3. the real sheet's events in Editor Native - heights at rest, on hover and on selection, no
 #      trigger badge, the behaviour in the object column, the font size - and the same sheet in
@@ -65,16 +66,16 @@ static func _test_tokens() -> bool:
 		on_rule.append(rule.get_event_style().get(token))
 	return SUPPORT.pins(TEST_NAME, [
 		["off by default", [off, defaults.row_font_size], [[false, false, false, false], 0]],
-		["the starter states them on, at the design's 12 px text",
-			[on_starter, starter.row_font_size], [[true, true, true, true], 12]],
+		["the starter states them on (the retired one off), at the design's 12 px text",
+			[on_starter, starter.row_font_size], [[true, true, false, true], 12]],
 		["and so does the rule it is built by",
-			[on_rule, rule.get_event_style().row_font_size], [[true, true, true, true], 12]],
-		["the starter's geometry: no badge column, a 92 px name after the icon, 1 px cell padding",
+			[on_rule, rule.get_event_style().row_font_size], [[true, true, false, true], 12]],
+		["the starter's geometry: a 16 px mark slot, a 92 px name after the icon, 1 px cell padding",
 			[starter.condition_badge_column_width, starter.condition_object_column_width,
 				starter.action_object_column_width,
 				(load(NATIVE_THEME) as EventSheetEditorStyle).get_condition_style().vertical_padding,
 				rule.get_condition_style().vertical_padding, rule.get_action_style().vertical_padding],
-			[0, 114, 114, 1, 1, 1]],
+			[16, 114, 114, 1, 1, 1]],
 		["the action lane is the card tinted green, never toward yellow",
 			[starter.action_lane_color.to_html(false), rule.get_event_style().action_lane_color.to_html(false)],
 			["354838", "354838"]],
@@ -132,8 +133,9 @@ static func _test_shooter_events() -> bool:
 		["hovered it gains its add line, and the event below moves down by it", hovered, [48.0, 24.0]],
 		["the pointer moving on gives the line to the next event", moved_on, [24.0, 48.0]],
 		["selected it keeps the line", selected, 48.0],
-		["no trigger badge in the lane", _texts(jump), "On \"ui_up\" pressed | + Add condition | Jump | + Add action"],
-		["the behaviour names itself in the object column", _object_of(jump, "Jump"), "Platformer"],
+		["the trigger keeps its badge in the lane, and the behaviour leads its words",
+			_texts(jump), "⌨ | On \"ui_up\" pressed | + Add condition | Platformer: Jump | + Add action"],
+		["the action keeps the node the behaviour is mounted on", _object_of(jump, "Jump"), "PlatformerShooter"],
 		["the pattern chip yields to the trigger's words", shoot_trailing <= lane * 0.4 + 0.01, true],
 		["a physics tick with no condition reads as its neighbours' trigger cell",
 			[_object_of(blank_tick, "Every tick (physics)"), _texts(blank_tick).contains("every tick (physics)")],
@@ -149,7 +151,7 @@ static func _test_shooter_events() -> bool:
 	result = SUPPORT.pins(TEST_NAME, [
 		["Classic Sheet keeps its font, its trigger badge and the behaviour in the sentence",
 			[classic_view._get_font_size(), _texts(classic_jump)],
-			[16, "⌨ | On \"ui_up\" pressed | + Add condition | Platformer  Jump | + Add action"]],
+			[16, "⌨ | On \"ui_up\" pressed | + Add condition | Platformer: Jump | + Add action"]],
 		["and the script's object in the column", _object_of(classic_jump, "Platformer"), "PlatformerShooter"],
 		["and the blank physics tick as its muted note, no column", [_texts(classic_blank_tick).begins_with(
 			"every tick (physics)"), _object_of(classic_blank_tick, "every tick")], [true, ""]],

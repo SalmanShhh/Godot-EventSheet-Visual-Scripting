@@ -193,7 +193,7 @@ static func _rows() -> bool:
 	# so it reads beside the function's head.
 	ok = _check("the spawn trio reads as one Create object",
 		_row_containing(rows, "Create object"),
-		"i0 [Action | Function | On spawn_wave | System> Create object Enemy at spawn_point (as enemy)   speed = 40 | System> Add 1 to spawned | ⟡ Making an object and putting it somewhere]") and ok
+		"i0 [Functions> On function spawn_wave | System> Create object Enemy at spawn_point (as enemy)   speed = 40 | System> Add 1 to spawned | ⟡ Making an object and putting it somewhere]") and ok
 	return ok
 
 

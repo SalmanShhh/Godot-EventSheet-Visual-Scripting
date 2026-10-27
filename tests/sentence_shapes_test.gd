@@ -80,7 +80,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"host ▸ Set position.x to amount * 2",
 	# A local whose value has to be worked out declares at the top of its event with the number's
 	# own starting value, and the work stays where the line is, as the Set action it is.
-	"Local number remaining = 0",
+	"remaining ▸ number",
 	"System ▸ Set remaining to amount",
 	"System ▸ Set push_x to push_x moved toward 0 by remaining",
 	"System ▸ crouching is true",
@@ -227,7 +227,7 @@ static func _local_variable_round_trip() -> bool:
 	event_row.actions.append(_action("SetLocalVarTyped", {"name": "remaining", "var_type": "float", "value": "1.0"}))
 	sheet.events.append(event_row)
 	ok = _check("authored local reads as a declaration row",
-		_render(sheet).has("Local number remaining = 1"), true) and ok
+		_render(sheet).has("remaining ▸ number") and _render(sheet).has("= 1"), true) and ok
 	var compiled: String = str(SheetCompiler.compile(sheet, "user://eventforge_local_var.gd").get("output", ""))
 	ok = _check("authored local compiles to the plain var line",
 		compiled.contains("\tvar remaining: float = 1.0"), true) and ok
@@ -236,7 +236,7 @@ static func _local_variable_round_trip() -> bool:
 	handle.close()
 	var reopened: EventSheetResource = GDScriptImporter.new().import_external("user://eventforge_local_var.gd")
 	ok = _check("reopening gives the same declaration row back",
-		_render(reopened).has("Local number remaining = 1"), true) and ok
+		_render(reopened).has("remaining ▸ number") and _render(reopened).has("= 1"), true) and ok
 	ok = _check("and reopening it saves byte-identically",
 		str(SheetCompiler.compile(reopened, "user://eventforge_local_var.gd").get("output", "")), compiled) and ok
 	return ok

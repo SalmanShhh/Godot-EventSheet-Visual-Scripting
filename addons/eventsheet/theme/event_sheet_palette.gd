@@ -57,6 +57,14 @@ const CONDITION_BADGE_COLUMN_WIDTH := 26.0
 const ACTION_LANE_PADDING := 8.0
 
 const BG_0 = Color("#1e1f24")
+## The tile an object icon sits on, a neutral grey a step off the lane: on a dark sheet, on a light one.
+const COLOR_OBJECT_ICON_TILE_DARK := Color("#3a3a3a")
+const COLOR_OBJECT_ICON_TILE_LIGHT := Color("#d2d2d2")
+## A function head's glyphs, [on a dark sheet, on a light one]: the function amber, a parameter blue,
+## a local green, so the three kinds of line tell apart down the object column.
+const COLOR_GLYPH_FUNCTION: Array[Color] = [Color("#e8c27a"), Color("#7a4e00")]
+const COLOR_GLYPH_PARAMETER: Array[Color] = [Color("#9ac6f0"), Color("#124175")]
+const COLOR_GLYPH_LOCAL: Array[Color] = [Color("#a6d18f"), Color("#1f4a14")]
 const BG_1 = Color("#24262d")
 const TEXT_PRIMARY = Color("#d7dae0")
 const TEXT_SECONDARY = Color("#9aa1ad")

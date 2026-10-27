@@ -67,6 +67,19 @@ const OBJECT_GLYPH_KEYBOARD := "keyboard"
 const OBJECT_GLYPH_MOUSE := "mouse"
 const OBJECT_GLYPH_GAMEPAD := "gamepad"
 const OBJECT_GLYPH_TOUCH := "touch"
+## The lines of a function head: the head itself, each parameter, and a local variable. A span names
+## one of these in its `object_glyph` metadata, because what such a line acts on is not an object
+## with a class of its own.
+const OBJECT_GLYPH_FUNCTION := "function"
+const OBJECT_GLYPH_PARAMETER := "parameter"
+const OBJECT_GLYPH_LOCAL := "local"
+## Each head glyph's own ink, [on a dark sheet, on a light sheet]: the function amber, a parameter
+## blue and a local green, so the three kinds of line tell apart down the column.
+const HEAD_GLYPH_INKS: Dictionary = {
+	OBJECT_GLYPH_FUNCTION: EventSheetPalette.COLOR_GLYPH_FUNCTION,
+	OBJECT_GLYPH_PARAMETER: EventSheetPalette.COLOR_GLYPH_PARAMETER,
+	OBJECT_GLYPH_LOCAL: EventSheetPalette.COLOR_GLYPH_LOCAL,
+}
 const OBJECT_GLYPHS: Dictionary = {
 	"System": OBJECT_GLYPH_SYSTEM,
 	"Keyboard": OBJECT_GLYPH_KEYBOARD,
@@ -208,6 +221,49 @@ static func draw_trigger_icon(control: CanvasItem, rect: Rect2, kind: String, co
 			control.draw_circle(_at(rect, 8.0, 8.0), _units(rect, 1.6), color)
 
 
+## What a condition line's mark slot shows: a green arrow on a trigger line, a red cross on an
+## inverted condition, nothing on any other line. Read off the badge span the row builder put at the
+## head of the line. A per-frame or repeating event is not a trigger (it runs whenever the sheet
+## runs, as a plain condition does), so its slot stays empty, and a state machine's case is a plain
+## check of the state.
+const KIND_MARK_TRIGGER := "trigger"
+const KIND_MARK_INVERTED := "inverted"
+## The badge glyphs that stand for a line with no kind mark.
+const UNMARKED_BADGE_GLYPHS: PackedStringArray = ["⟳", "◆"]
+
+
+## The kind mark the badge span with `metadata` and `glyph` draws, or "" for an empty slot.
+static func kind_mark_for(metadata: Dictionary, glyph: String) -> String:
+	match str(metadata.get("badge_style", "")):
+		"negated":
+			return KIND_MARK_INVERTED
+		"trigger":
+			if str(metadata.get("tempo", "")) == TriggerResolver.TEMPO_EVERY_TICK or UNMARKED_BADGE_GLYPHS.has(glyph):
+				return ""
+			return KIND_MARK_TRIGGER
+	return ""
+
+
+## Paints one kind mark centred in `rect`: the arrow points right at the line's object icon, the
+## cross is the two strokes of an X. Both are drawn on a 16-unit square at a 2-unit stroke.
+static func draw_kind_mark(control: CanvasItem, rect: Rect2, mark: String, color: Color) -> void:
+	var stroke: float = maxf(rect.size.x / 16.0 * 2.0, 1.0)
+	match mark:
+		KIND_MARK_TRIGGER:
+			control.draw_line(_at(rect, 2.0, 8.0), _at(rect, 12.5, 8.0), color, stroke, true)
+			control.draw_polyline(PackedVector2Array([
+				_at(rect, 8.5, 4.0), _at(rect, 12.5, 8.0), _at(rect, 8.5, 12.0)]), color, stroke, true)
+		KIND_MARK_INVERTED:
+			control.draw_line(_at(rect, 4.0, 4.0), _at(rect, 12.0, 12.0), color, stroke, true)
+			control.draw_line(_at(rect, 12.0, 4.0), _at(rect, 4.0, 12.0), color, stroke, true)
+
+
+## The square a kind mark is painted in, centred in its badge cell and never wider than the cell.
+static func kind_mark_rect(badge_rect: Rect2) -> Rect2:
+	var side: float = minf(badge_rect.size.x, badge_rect.size.y) * 0.75
+	return Rect2(badge_rect.get_center() - Vector2(side, side) * 0.5, Vector2(side, side))
+
+
 ## The ink that reads on `fill`: white on a dark or saturated fill (the design's selected blue), a
 ## near-black on a pale one. What a selected gutter's number and trigger icon are drawn in.
 static func ink_on(fill: Color) -> Color:
@@ -314,6 +370,21 @@ static func object_glyph_for(object_label: String) -> String:
 	return str(OBJECT_GLYPHS.get(object_label, ""))
 
 
+## The glyph a line's span asks for: its own `object_glyph` (a function head's lines), else the one
+## its object label draws (System, the input devices), else "".
+static func line_glyph_for(metadata: Dictionary) -> String:
+	var own: String = str(metadata.get("object_glyph", ""))
+	return own if not own.is_empty() else object_glyph_for(str(metadata.get("object_label", "")))
+
+
+## The ink a glyph is painted in on a line whose words are `ink`: a head glyph's own colour for the
+## sheet's hand, else the words' own ink a little quieter (the System gear is furniture).
+static func glyph_ink(glyph: String, ink: Color) -> Color:
+	if HEAD_GLYPH_INKS.has(glyph):
+		return (HEAD_GLYPH_INKS[glyph] as Array)[0 if ink.get_luminance() > 0.5 else 1]
+	return Color(ink, ink.a * 0.8)
+
+
 ## Paints an object glyph inside the icon box `rect`.
 static func draw_object_glyph(control: CanvasItem, rect: Rect2, glyph: String, color: Color) -> void:
 	var stroke: float = maxf(rect.size.x / 16.0 * 1.3, 1.0)
@@ -337,6 +408,20 @@ static func draw_object_glyph(control: CanvasItem, rect: Rect2, glyph: String, c
 		OBJECT_GLYPH_TOUCH:
 			control.draw_circle(_at(rect, 8.0, 8.0), _units(rect, 2.0), color)
 			control.draw_arc(_at(rect, 8.0, 8.0), _units(rect, 5.5), 0.0, TAU, 24, color, stroke, true)
+		OBJECT_GLYPH_FUNCTION:
+			control.draw_polyline(PackedVector2Array([_at(rect, 11.0, 2.5), _at(rect, 9.4, 2.7),
+				_at(rect, 8.4, 3.6), _at(rect, 8.0, 6.0), _at(rect, 8.0, 14.0)]), color, stroke, true)
+			control.draw_line(_at(rect, 5.0, 7.0), _at(rect, 11.0, 7.0), color, stroke, true)
+		OBJECT_GLYPH_PARAMETER:
+			control.draw_polyline(PackedVector2Array([_at(rect, 5.0, 3.0), _at(rect, 3.0, 3.0),
+				_at(rect, 3.0, 13.0), _at(rect, 5.0, 13.0)]), color, stroke, true)
+			control.draw_polyline(PackedVector2Array([_at(rect, 11.0, 3.0), _at(rect, 13.0, 3.0),
+				_at(rect, 13.0, 13.0), _at(rect, 11.0, 13.0)]), color, stroke, true)
+			control.draw_line(_at(rect, 8.0, 7.2), _at(rect, 8.0, 8.8), color, stroke, true)
+		OBJECT_GLYPH_LOCAL:
+			control.draw_rect(Rect2(_at(rect, 2.5, 2.5), Vector2(_units(rect, 11.0), _units(rect, 11.0))), color, false, stroke)
+			control.draw_line(_at(rect, 6.0, 6.0), _at(rect, 10.0, 10.0), color, stroke, true)
+			control.draw_line(_at(rect, 10.0, 6.0), _at(rect, 6.0, 10.0), color, stroke, true)
 		_:
 			_draw_keyboard(control, rect, color, stroke)
 

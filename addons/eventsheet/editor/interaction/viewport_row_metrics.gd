@@ -246,6 +246,10 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 				var badge_width: float = measured if natural_badge or badge_column <= 0.0 else badge_column
 				var badge_start: float = float(cond_badge_x.get(line, condition_x))
 				cond_badge_x[line] = badge_start + maxf(minf(badge_width, max_condition_right - badge_start), _viewport.MIN_SPAN_WIDTH) + 2.0 + _viewport._get_span_gap(span)
+				# A mark in the line's own slot ends where the slot does, so a marked line's words start
+				# at the same x as an unmarked line's.
+				if not natural_badge and badge_column > 0.0:
+					cond_badge_x[line] = badge_start + badge_column + badge_gap
 			else:
 				var text_start: float = float(cond_text_x.get(line, float(cond_badge_x.get(line, condition_text_start_x))))
 				if str(metadata.get("kind", "")) in ["condition", "trigger"]:
@@ -688,6 +692,8 @@ func _natural_lane_extents(row_data: EventRowData, width: float, font: Font, fon
 			var badge_width: float = measured if natural_badge or badge_column <= 0.0 else badge_column
 			var badge_start: float = float(condition_cursor.get(line, condition_x))
 			condition_cursor[line] = badge_start + maxf(badge_width, _viewport.MIN_SPAN_WIDTH) + 2.0 + gap
+			if not natural_badge and badge_column > 0.0:
+				condition_cursor[line] = badge_start + badge_column + badge_gap
 		else:
 			var text_start: float = float(condition_cursor.get(line, condition_text_start_x))
 			var condition_width_needed: float = measured

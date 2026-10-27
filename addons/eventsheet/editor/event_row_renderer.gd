@@ -39,8 +39,10 @@ const OR_DIVIDER_WORD_GAP := 6.0
 const OBJECT_ICON_SIZE := 14.0
 const OBJECT_ICON_PLATE_SIZE := 18.0
 const OBJECT_ICON_ADVANCE := 23.0
-const OBJECT_ICON_PLATE_FILL := Color(1.0, 1.0, 1.0, 0.05)
-const OBJECT_ICON_PLATE_BORDER := Color(1.0, 1.0, 1.0, 0.13)
+## The tile an object icon sits on: a neutral grey a step off the lane, lighter under pale ink (a
+## dark sheet) and darker under dark ink (a light one), so the tile reads in both.
+const OBJECT_ICON_TILE_DARK := EventSheetPalette.COLOR_OBJECT_ICON_TILE_DARK
+const OBJECT_ICON_TILE_LIGHT := EventSheetPalette.COLOR_OBJECT_ICON_TILE_LIGHT
 # A colour value's live swatch, drawn just past its span's text. The gap and the box are constants
 # here, and the width the span must RESERVE for them is derived from the same two numbers, so a
 # swatch can sit on any span in a row without painting over whatever follows it.
@@ -87,7 +89,7 @@ const DOOR_RULE_WIDTH := 1.0
 
 # One shared plate StyleBox (this draws once per icon per frame on a virtualized canvas -
 # never allocate it inside the draw loop).
-static var _icon_plate_style: StyleBoxFlat = null
+static var _icon_plate_styles: Dictionary = {}
 # The variable cards' boxes, one per fill / edge / radius (a handful per session).
 static var _variable_card_boxes: Dictionary = {}
 
@@ -250,14 +252,16 @@ static func swatch_advance_for(draw_font_size: int) -> float:
 	return SWATCH_GAP + swatch_box_for(draw_font_size)
 
 
-static func _object_icon_plate_style() -> StyleBoxFlat:
-	if _icon_plate_style == null:
-		_icon_plate_style = StyleBoxFlat.new()
-		_icon_plate_style.bg_color = OBJECT_ICON_PLATE_FILL
-		_icon_plate_style.border_color = OBJECT_ICON_PLATE_BORDER
-		_icon_plate_style.set_border_width_all(1)
-		_icon_plate_style.set_corner_radius_all(3)
-	return _icon_plate_style
+static func _object_icon_plate_style(ink: Color) -> StyleBoxFlat:
+	var dark_sheet: bool = ink.get_luminance() > 0.5
+	if not _icon_plate_styles.has(dark_sheet):
+		var style := StyleBoxFlat.new()
+		style.bg_color = OBJECT_ICON_TILE_DARK if dark_sheet else OBJECT_ICON_TILE_LIGHT
+		style.set_corner_radius_all(3)
+		_icon_plate_styles[dark_sheet] = style
+	return _icon_plate_styles[dark_sheet]
+
+
 const BADGE_FONT_SIZE_DELTA := 1
 const BADGE_MIN_HORIZONTAL_PADDING := 1.0
 const SELECTION_OUTLINE_LIGHTEN := 0.28
@@ -828,20 +832,14 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	# the fold arrow.
 	var gutter_selected: bool = is_event_row and row_data.selected and event_style != null \
 		and event_style.selected_gutter_fill_color.a > 0.01
-	var trigger_kind: String = NativeRowMarks.trigger_kind(row_data) if show_trigger_icons and is_event_row else ""
+	# How the event is started is said on its trigger LINE (the arrow in front of its object icon),
+	# never beside its number, so the margin holds the number alone.
 	if gutter_selected:
 		var slot_fill: Rect2 = NativeRowMarks.selected_slot_rect(gutter_rect, row_rect, row_data.indent,
-			row_indent_width, not trigger_kind.is_empty(), event_style.selection_as_outline)
+			row_indent_width, false, event_style.selection_as_outline)
 		if slot_fill.size.x > 0.0:
 			control.draw_rect(slot_fill, event_style.selected_gutter_fill_color, true)
 	_draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
-	# How the event is started, as a small icon beside its number: in the slot right of the margin
-	# that every event row reserves, so it moves nothing. Its meaning is the canvas tooltip's.
-	if not trigger_kind.is_empty() and event_style != null:
-		NativeRowMarks.draw_trigger_icon(control,
-			NativeRowMarks.trigger_icon_rect(row_rect, row_data.indent, row_indent_width, first_line_height),
-			trigger_kind, NativeRowMarks.ink_on(event_style.selected_gutter_fill_color) if gutter_selected
-				else event_style.gutter_icon_color)
 	_draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, editing_select_anchor, selected_span_indices, hovered_span_index, total_selected_spans, event_style, selection_fill, hover_fill, match_span_indices, reading_style)
 	# What the open inline editor has to say before it is committed ("renames 6 uses in 2
 	# sheets · Enter to apply · Esc"). Drawn AFTER the spans and measured from the field's own rect,
@@ -1505,7 +1503,7 @@ func _draw_spans(
 			# The Inspector mark joins the badge tiles while they are shown; it measured to nothing.
 			if show_variable_badges and bool(metadata.get("inspector_badge", false)):
 				continue
-			_draw_badge_span(control, span, font, font_size, metadata)
+			_draw_badge_span(control, span, font, font_size, metadata, event_style)
 			continue
 		if show_value_glyphs and row_data.variable_row and span_index != editing_span_index \
 				and _draw_variable_word(control, span, metadata, font, font_size, event_style, reading):
@@ -1553,28 +1551,22 @@ func _draw_spans(
 			# reads as one tidy framed column (the "{my}" look).
 			var plate_y: float = span.rect.position.y + (span.rect.size.y - OBJECT_ICON_PLATE_SIZE) * 0.5
 			var plate_rect := Rect2(text_x, plate_y, OBJECT_ICON_PLATE_SIZE, OBJECT_ICON_PLATE_SIZE)
-			control.draw_style_box(_object_icon_plate_style(), plate_rect)
+			control.draw_style_box(_object_icon_plate_style(color), plate_rect)
 			var icon_inset: float = (OBJECT_ICON_PLATE_SIZE - OBJECT_ICON_SIZE) * 0.5
 			var icon_rect := Rect2(text_x + icon_inset, plate_y + icon_inset, OBJECT_ICON_SIZE, OBJECT_ICON_SIZE)
 			# System and the input devices wear a glyph of their own (a gear, a keyboard, a mouse...)
 			# instead of their category's icon, in the object ink, so the catch-all object reads as one
 			# thing on every row. Same box, same advance: only what is painted in it changes.
-			var object_glyph: String = NativeRowMarks.object_glyph_for(str(metadata.get("object_label", "")))
+			var object_glyph: String = NativeRowMarks.line_glyph_for(metadata)
 			if object_glyph.is_empty():
 				control.draw_texture_rect(object_icon as Texture2D, icon_rect, false)
 			else:
-				var glyph_ink: Color = event_style.object_label_color if event_style != null else COLOR_OBJECT
-				NativeRowMarks.draw_object_glyph(control, icon_rect, object_glyph, Color(glyph_ink, glyph_ink.a * 0.85))
+				NativeRowMarks.draw_object_glyph(control, icon_rect, object_glyph, NativeRowMarks.glyph_ink(object_glyph, color))
 			text_x += OBJECT_ICON_ADVANCE
 			text_width = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
 		var object_label: String = str(metadata.get("object_label", ""))
 		if not object_label.is_empty():
 			var object_color: Color = event_style.object_label_color if event_style != null else COLOR_OBJECT
-			# "System" is the catch-all object for engine/Core ACEs, so it repeats on nearly
-			# every row. Keep it (the object is always shown) but dim it so the eye reads the
-			# actual condition/action, not a column of identical "System" labels.
-			if object_label == "System":
-				object_color.a *= 0.5
 			# Event-sheet sub-lane: a fixed object column aligns every row's display text at the
 			# same edge (label clipped to the column); width 0 keeps the classic flow where
 			# text follows each label.
@@ -2187,7 +2179,8 @@ func _draw_variable_card(control: Control, row_rect: Rect2, event_style: EventSh
 	control.draw_style_box(box, card)
 
 
-func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_size: int, metadata: Dictionary) -> void:
+func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_size: int, metadata: Dictionary,
+		event_style: EventSheetEventStyle = null) -> void:
 	var badge_rect: Rect2 = span.rect
 	var badge_bg: Color = metadata.get("badge_bg", EventSheetPalette.COLOR_LANE_DIVIDER)
 	var badge_fg: Color = metadata.get("badge_fg", TEXT_PRIMARY)
@@ -2243,6 +2236,20 @@ func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_siz
 			outline.set_corner_radius_all(int(metadata.get("corner_radius", 4)))
 			outline.set_content_margin_all(0)
 			control.draw_style_box(outline, badge_rect)
+	elif badge_style in ["trigger", "negated"] and not (metadata.get("badge_icon") is Texture2D):
+		# The line's kind mark, and nothing else in its slot: a green arrow on a trigger, a red cross on
+		# an inverted condition, an empty slot on every other line (a per-frame event among them). No
+		# plate and no word - what the mark means is the canvas tooltip's.
+		var mark: String = NativeRowMarks.kind_mark_for(metadata, span.text)
+		if mark == NativeRowMarks.KIND_MARK_TRIGGER and not show_trigger_icons:
+			return
+		if mark.is_empty():
+			return
+		var mark_color: Color = badge_fg
+		if event_style != null:
+			mark_color = event_style.trigger_mark_color if mark == NativeRowMarks.KIND_MARK_TRIGGER else event_style.invert_marker_color
+		NativeRowMarks.draw_kind_mark(control, NativeRowMarks.kind_mark_rect(badge_rect), mark, mark_color)
+		return
 	elif badge_style in ["trigger", "negated"]:
 		var radius: float = min(badge_rect.size.x, badge_rect.size.y) * 0.45
 		control.draw_circle(badge_rect.get_center(), radius, badge_bg, true, -1.0, true)

@@ -34,7 +34,7 @@ static func run() -> bool:
 		_actions(NAMED_CHAIN),
 		"Tween repeat 3 times | Tween position to p in 0.5 seconds | " \
 		+ "Tween opacity to 0 in 0.3 seconds (after the previous) | Stop tween | " \
-		+ "Local object | t | = a new tween") and ok
+		+ "object | = a new tween") and ok
 	for entry: Array in [
 		["the one-line chain", ONE_LINE_LOOPS], ["the forever chain", ONE_LINE_FOREVER],
 		["the parallel chain", ONE_LINE_PARALLEL], ["the eased one-line chain", ONE_LINE_EASED],

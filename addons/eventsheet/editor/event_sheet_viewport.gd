@@ -3799,7 +3799,8 @@ func _compute_hover_matches(row_index: int, span_index: int) -> Dictionary:
 	var row_data: EventRowData = _row_at(row_index)
 	if row_data == null or span_index >= row_data.spans.size():
 		return matches
-	var name_text: String = row_data.spans[span_index].text.strip_edges()
+	# A local's own line names it in its object column, not in its words.
+	var name_text: String = _span_local_name(row_data.spans[span_index])
 	if not EventSheetSentence.is_identifier(name_text):
 		return matches
 	var scope_ids: Dictionary = EventSheetLocalScope.scope_event_ids(_sheet, name_text)
@@ -3814,11 +3815,21 @@ func _compute_hover_matches(row_index: int, span_index: int) -> Dictionary:
 			continue
 		var span_indices: PackedInt32Array = PackedInt32Array()
 		for candidate_span in range(candidate.spans.size()):
-			if EventSheetLocalScope.mentions_name(candidate.spans[candidate_span].text, name_text):
+			var candidate_text: String = candidate.spans[candidate_span].text
+			if EventSheetLocalScope.mentions_name(candidate_text, name_text) or _span_local_name(candidate.spans[candidate_span]) == name_text:
 				span_indices.append(candidate_span)
 		if not span_indices.is_empty():
 			matches[index] = span_indices
 	return matches
+
+
+## The local a span names: the name in a local line's object column, else the span's own words.
+static func _span_local_name(span: SemanticSpan) -> String:
+	if span != null and span.metadata is Dictionary:
+		var local_name: String = str((span.metadata as Dictionary).get("local_name", ""))
+		if not local_name.is_empty():
+			return local_name
+	return span.text.strip_edges() if span != null else ""
 
 
 func _begin_edit(row_index: int, span_index: int) -> void:
@@ -4115,17 +4126,25 @@ static func _apply_decl_entry_edit(source: Resource, edit_kind: String, value: S
 ## Hovering a condition/action/trigger shows the GDScript it compiles to (the codegen
 ## template with the ACE's parameter values substituted) - the sheet continuously teaches
 ## the GDScript mapping. Falls back to tooltip_text (drag feedback) otherwise.
-## What the trigger icon of row `row_index` means, when `logical_position` is on it; "" otherwise.
-## Asks the same geometry the renderer paints the icon with, so the hover is exactly where the icon is.
+## What the kind mark under `logical_position` on row `row_index` means - the trigger arrow says how
+## the event is started, the cross that the condition is checked the other way round; "" off a mark.
+## Asks the same rect the renderer paints the mark in, so the hover is exactly where the mark is.
 func _trigger_icon_tooltip(row_index: int, logical_position: Vector2) -> String:
 	var row_data: EventRowData = _row_at(row_index)
-	var kind: String = NativeRowMarks.trigger_kind(row_data)
-	if kind.is_empty():
+	if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
 		return ""
-	var row_rect := Rect2(0.0, _row_metrics_helper.row_top(row_index), _get_logical_canvas_width(), _row_metrics_helper.row_height(row_index))
-	var first_line: float = _get_event_line_height(_get_font_size()) if _get_event_style().trigger_icon_in_gutter else 0.0
-	var icon_rect: Rect2 = NativeRowMarks.trigger_icon_rect(row_rect, row_data.indent, indent_width(), first_line)
-	return NativeRowMarks.trigger_tooltip(kind) if icon_rect.grow(2.0).has_point(logical_position) else ""
+	for span: SemanticSpan in row_data.spans:
+		if span == null or not (span.metadata is Dictionary) or not bool((span.metadata as Dictionary).get("badge", false)):
+			continue
+		var mark: String = NativeRowMarks.kind_mark_for(span.metadata, span.text)
+		if mark == NativeRowMarks.KIND_MARK_TRIGGER and not show_trigger_icons:
+			continue
+		if mark.is_empty() or not NativeRowMarks.kind_mark_rect(span.rect).grow(3.0).has_point(logical_position):
+			continue
+		if mark == NativeRowMarks.KIND_MARK_INVERTED:
+			return EventSheetL10n.translate("Inverted: the event runs while this condition is NOT true.")
+		return NativeRowMarks.trigger_tooltip(NativeRowMarks.trigger_kind(row_data))
+	return ""
 
 
 ## The hover card behind a word of the head bar: opened when the pointer has rested on the name or a
@@ -4222,11 +4241,10 @@ func _get_tooltip(at_position: Vector2) -> String:
 			(hovered_error_row.source_resource as EventRow).event_uid, hovered_error_row.event_number)
 		if not hit_count_hover.is_empty():
 			return hit_count_hover
-	# The trigger icon beside an event's number is a picture; its hover says what it means.
-	if show_trigger_icons:
-		var trigger_hover: String = _trigger_icon_tooltip(int(hit.get("row_index", -1)), _to_logical_position(at_position))
-		if not trigger_hover.is_empty():
-			return trigger_hover
+	# A line's kind mark (the trigger arrow, the inverted cross) is a picture; its hover says what it means.
+	var trigger_hover: String = _trigger_icon_tooltip(int(hit.get("row_index", -1)), _to_logical_position(at_position))
+	if not trigger_hover.is_empty():
+		return trigger_hover
 	# A variable's mark tiles are pictures too; each opens its hover card (update_badge_card), so a
 	# tooltip as well would say it twice.
 	if show_variable_badges:

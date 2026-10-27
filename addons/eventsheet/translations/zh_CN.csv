@@ -9591,3 +9591,5 @@ Saved,已保存
 "Saved with the scene, but designers never see it in the Inspector.",随场景保存，但设计者在检查器中看不到它。
 "A slider in the Inspector, from %s to %s.",检查器中的滑块，从 %s 到 %s。
 "A slider in the Inspector, kept between limits.",检查器中的滑块，保持在上下限之间。
+Inverted: the event runs while this condition is NOT true.,反转：当此条件不成立时，事件运行。
+On function,函数被调用时

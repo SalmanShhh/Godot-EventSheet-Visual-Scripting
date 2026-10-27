@@ -1,6 +1,7 @@
 # EventForge - functions on the sheet: each EventFunction is drawn like any other event, at root level -
-# its kind as a coloured word, "Function", "On <name>", a "returns <type>" chip, its tags and one line
-# per parameter, its own actions in the action lane beside the head and the rest of its body as
+# a head line like any other line (the function icon, "Functions", "On function <name>") and one line
+# per parameter (the parameter icon, its name, its type), with its kind, what it returns and its tags
+# said by the name's hover rather than by word chips; its own actions in the action lane beside the head and the rest of its body as
 # sub-events, numbered like events. Its description is not drawn: the name's hover shows it and a
 # double-click on the name edits it. Functions live in sheet.functions, a SEPARATE array from
 # sheet.events. Pins: the head's words and lanes, the parameter lines, the own-actions lane (live and
@@ -38,37 +39,46 @@ static func run() -> bool:
 	ok = _check("the inline verb rows sit at root indent",
 		define_rows[0].indent if define_rows.size() > 0 else -1, 0) and ok
 	ok = _check("the verbs render in sheet order (take_damage first)",
-		_span_text(define_rows[0] if define_rows.size() > 0 else null, 2), "On take_damage") and ok
+		_span_text(define_rows[0] if define_rows.size() > 0 else null, 0), "On function take_damage") and ok
 
-	# ── The function drawn like any other event: its kind as a coloured word, "Function", "On <name>",
-	# what it returns, its tags, one line per parameter ──
+	# ── The function drawn like any other event: a head line ("Functions", "On function <name>") and one
+	# line per parameter; the kind, what it returns and its tags live in the name's hover ──
 	var action_row: EventRowData = define_rows[0] if define_rows.size() > 0 else null
 	var condition_row: EventRowData = define_rows[1] if define_rows.size() > 1 else null
 	var expression_row: EventRowData = define_rows[2] if define_rows.size() > 2 else null
 	var internal_row: EventRowData = define_rows[3] if define_rows.size() > 3 else null
 	ok = SUPPORT.pins("define_block_rows_test", [
-		["the head leads with its kind as a word", _span_text(action_row, 0), "Action"],
-		["in its kind's colours, never a glyph", _span_meta(action_row, 0, "badge_fg"), Color("#cdefc0")],
-		["the kind explains itself on hover", _span_meta(action_row, 0, "hover_note"), "Runs when an event calls it."],
-		["a condition says Condition", _span_text(condition_row, 0), "Condition"],
-		["an expression says Expression", _span_text(expression_row, 0), "Expression"],
-		["then the Function word", _span_text(action_row, 1), "Function"],
-		["the name reads On <name>, exactly as written", _span_text(action_row, 2), "On take_damage"],
-		["a void function says nothing about what it returns", _row_has_span_text(action_row, "returns void"), false],
-		["a condition returns bool", _row_has_span_text(condition_row, "returns bool"), true],
-		["an expression returns its type", _row_has_span_text(expression_row, "returns float"), true],
-		["the returns chip explains itself", _span_meta_of_kind(expression_row, "function_returns", "hover_note"), "This function hands back a float."],
-		["a function in Add Action carries the tag", _row_has_span_text(action_row, "In Add Action"), true],
-		["one that is not carries none", _row_has_span_text(internal_row, "In Add Action"), false],
-		["the tag explains itself on hover", str(_span_meta_of_kind(action_row, "function_tag", "hover_note")).begins_with("Listed in Add Action"), true],
-		["a parameter is its own line, as the code names it", _row_has_span_text(action_row, "float amount"), true],
-		["led by a PARAM tag", _row_has_span_text(action_row, "PARAM"), true],
+		["the head reads On function <name>, the name exactly as written", _span_text(action_row, 0), "On function take_damage"],
+		["its object column says Functions", _span_meta(action_row, 0, "object_label"), "Functions"],
+		["no kind word leads the row", _row_has_span_text(action_row, "Action"), false],
+		["the kind explains itself in the name's hover",
+			str(_span_meta(action_row, 0, "hover_note")).contains("Action: Runs when an event calls it."), true],
+		["a condition's hover says Condition",
+			str(_span_meta(condition_row, 0, "hover_note")).contains("Condition: Returns true or false"), true],
+		["an expression's hover says Expression",
+			str(_span_meta(expression_row, 0, "hover_note")).contains("Expression: Usable inside any value"), true],
+		["no Function word on the row", _row_has_span_text(action_row, "Function"), false],
+		["a void function says nothing about what it returns",
+			str(_span_meta(action_row, 0, "hover_note")).contains("hands back"), false],
+		["a condition's hover says it returns bool",
+			str(_span_meta(condition_row, 0, "hover_note")).contains("This function hands back a bool."), true],
+		["an expression's hover says its type",
+			str(_span_meta(expression_row, 0, "hover_note")).contains("This function hands back a float."), true],
+		["no returns chip on the row", _row_has_span_text(condition_row, "returns bool"), false],
+		["a function in Add Action says so in the hover",
+			str(_span_meta(action_row, 0, "hover_note")).contains("In Add Action: Listed in Add Action"), true],
+		["one that is not says nothing of it", str(_span_meta(internal_row, 0, "hover_note")).contains("In Add Action"), false],
+		["no tag chip on the row", _row_has_span_text(action_row, "In Add Action"), false],
+		["a parameter is its own line: its type after its name", _row_has_span_text(action_row, "float"), true],
+		["its name stands in the object column", _span_meta_of_kind(action_row, "verb_param", "object_label"), "amount"],
+		["no PARAM word", _row_has_span_text(action_row, "PARAM"), false],
 		["the parameter line carries its index, so a click knows which one to open", _span_meta_of_kind(action_row, "verb_param", "param_index"), 0],
 		["the parameter explains itself on hover",
 			ViewportRowBuilder.function_param_note(action_row.source_resource.params[0]) if action_row != null else "",
 			"amount (float). Inside this function, use it like any variable. Every call has to give it a value."],
 		["a parameter with a default says it", ViewportRowBuilder.function_param_line(_defaulted_param()), "int amount = 1"],
-		["the whole head sits in the CONDITION lane", _lane_of_span_text(action_row, "float amount"), "condition"],
+		["a parameter with a default says it after its type", ViewportRowBuilder.function_param_type_words(_defaulted_param()), "int = 1"],
+		["the whole head sits in the CONDITION lane", _lane_of_span_text(action_row, "float"), "condition"],
 		["no raw func signature leaks into the row", _row_has_span_text(action_row, "func take_damage"), false],
 		["no category chip on the row (the Properties bar holds it)", _row_has_span_text(action_row, "Health"), false],
 		["a Define row is an EVENT row", action_row.row_type if action_row != null else -1, EventRowData.RowType.EVENT],
@@ -111,15 +121,16 @@ static func run() -> bool:
 		["no caption row above the function any more", _find_row_by_uid_prefix(described_view, "verb_note_"), null],
 		["the description is not drawn on the row", _row_has_span_text(heal_row, "Restores health, capped at the maximum."), false],
 		["hovering the name shows it, and how to edit it",
-			_span_meta(heal_row, 2, "hover_note"),
-			"heal\nRestores health, capped at the maximum.\nReads as: Heal\nDouble-click the name to edit the description."],
-		["the name is the door to the description", _span_meta(heal_row, 2, "function_name"), true],
+			str(_span_meta(heal_row, 0, "hover_note")).begins_with(
+			"heal\nRestores health, capped at the maximum.\nReads as: Heal\nDouble-click the name to edit the description."), true],
+		["the name is the door to the description", _span_meta(heal_row, 0, "function_name"), true],
 		["an undescribed function says so in the hover",
-			str(_span_meta(silent_row, 2, "hover_note")).get_slice("\n", 1), "No description yet."],
+			str(_span_meta(silent_row, 0, "hover_note")).get_slice("\n", 1), "No description yet."],
 		["a doc comment reads as one whole sentence",
-			str(_span_meta(charge_row, 2, "hover_note")).get_slice("\n", 1), "Builds up charge before releasing it for a moment."],
-		["a function that waits says so", _row_has_span_text(heal_row, "Waits"), true],
-		["a shared one says so", _row_has_span_text(heal_row, "Shared"), true],
+			str(_span_meta(charge_row, 0, "hover_note")).get_slice("\n", 1), "Builds up charge before releasing it for a moment."],
+		["a function that waits says so in the hover", str(_span_meta(heal_row, 0, "hover_note")).contains("\nWaits: "), true],
+		["a shared one says so in the hover", str(_span_meta(heal_row, 0, "hover_note")).contains("\nShared: "), true],
+		["neither is a chip on the row", _row_has_span_text(heal_row, "Waits") or _row_has_span_text(heal_row, "Shared"), false],
 	]) and ok
 	described_dock.free()
 	# ── Ordering: the canvas mirrors the COMPILER - the sheet's events first, then its vocabulary. The old
