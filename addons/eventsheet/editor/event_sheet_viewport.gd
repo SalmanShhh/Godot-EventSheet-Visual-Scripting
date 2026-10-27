@@ -699,6 +699,17 @@ func rebuild_rows() -> void:
 	queue_redraw()
 
 
+## The project index finished counting, so the answers the rows were built without have landed. A
+## function head's card is written again in place; the rows are built again only when a band about a
+## scene was laid out while that half was still counting.
+func refresh_after_shared_count() -> void:
+	if EventSheetProjectShareIndex.take_scene_waits():
+		rebuild_rows()
+		return
+	_row_builder.refresh_function_cards(_root_rows)
+	queue_redraw()
+
+
 func set_ace_registry(ace_registry: EventSheetACERegistry) -> void:
 	if ace_registry == null:
 		_ace_registry = EventSheetACERegistry.new()

@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Fixed: a big sheet no longer freezes the editor a few seconds after it opens
+
+- A function's hover card names the files that call it, an answer the editor counts in the
+  background. When that count finished, every row of the open sheet was built again to put it in:
+  on a 1,443-row sheet (the platformer pathfinding pack) the editor froze for 11-13 s a few seconds
+  after the file had opened, with nobody touching it. The cards are now written again in place
+  (3.5 ms for 200 functions); the rows are built again only when a band about a scene was laid out
+  while the scenes were still being counted.
+
 ### Fixed: building a behaviour pack is up to fifteen times faster
 
 - Publishing a pack (the bundled pack builders and Export Addon) turns each function body into rows

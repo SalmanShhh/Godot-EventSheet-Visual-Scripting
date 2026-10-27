@@ -128,6 +128,9 @@ static var _pumping: bool = false
 ## dropped as they are found: a dock closed mid-scan is the ordinary case, not an error.
 static var _when_counted: Array[Callable] = []
 
+## Set when `scenes_ready()` answers "not yet" to a reader, cleared by `take_scene_waits()`.
+static var _scene_answer_waited: bool = false
+
 
 ## Starts the scan if it has not started, and returns whether it has already finished. Cheap to call
 ## from anywhere, including from the question itself - which is where it IS called from, so nothing
@@ -161,11 +164,32 @@ static func request_scenes() -> bool:
 
 ## True when everything has been read and every answer below is final.
 static func is_ready() -> bool:
-	return scenes_ready() and _next_script >= _pending_scripts.size()
+	return _scenes_read() and _next_script >= _pending_scripts.size()
 
 
-## True when the SCENE half is final - which is all "who else holds this file" needs.
+## True when the SCENE half is final - which is all "who else holds this file" needs. A reader told
+## "not yet" is remembered (see `take_scene_waits`), because what it built is a band that has to be
+## built again when the count lands.
 static func scenes_ready() -> bool:
+	if _scenes_read():
+		return true
+	_scene_answer_waited = true
+	return false
+
+
+## Whether a reader was told the scene half was still counting since this was last asked, and forgets
+## it. The rows ask the index two kinds of question. A function head's hover card asks who calls the
+## function, and that card can be written again in place once the count lands. A band about a scene
+## (who else wears this material, who else holds this file) is laid out with the row, so it needs the
+## rows built again - which on a sheet of 1,443 rows is a twelve-second stall a few seconds after the
+## file opens, and so is paid only when a band actually waited.
+static func take_scene_waits() -> bool:
+	var waited: bool = _scene_answer_waited
+	_scene_answer_waited = false
+	return waited
+
+
+static func _scenes_read() -> bool:
 	return _started and _next >= _pending.size()
 
 

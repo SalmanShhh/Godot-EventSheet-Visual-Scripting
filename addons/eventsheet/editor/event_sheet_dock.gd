@@ -1206,7 +1206,7 @@ static func _clear_if_loaded(script_path: String, method: String, arguments: Arr
 ## again. Once per scan, and only for the view in front: a tab activated later builds its own rows.
 func _on_shared_resources_counted() -> void:
 	if _viewport != null:
-		_viewport.rebuild_rows()
+		_viewport.refresh_after_shared_count()
 
 
 ## Project Settings changed: the Input Map lives there, and every row that names an action reads it.

@@ -4285,6 +4285,28 @@ static func function_kind_note(role: String) -> String:
 	return EventSheetL10n.translate("Runs when an event calls it.")
 
 
+## Writes every function head's hover card again in place, under `rows` and their children, and
+## returns how many it wrote. The card names who else calls the function, an answer the project index
+## gives only once it has finished counting - so the rows built before that carry a card without it,
+## and this puts it in without building a single row again.
+func refresh_function_cards(rows: Array) -> int:
+	var written: int = 0
+	var editable: bool = _verb_metadata_editable()
+	for row_variant: Variant in rows:
+		var row_data: EventRowData = row_variant as EventRowData
+		if row_data == null:
+			continue
+		var event_function: EventFunction = row_data.source_resource as EventFunction
+		if event_function != null:
+			for span: SemanticSpan in row_data.spans:
+				var metadata: Dictionary = span.metadata as Dictionary
+				if bool(metadata.get("function_name", false)) and metadata.has("hover_note"):
+					metadata["hover_note"] = _function_head_card(event_function, str(metadata.get("function_kind", "")), editable)
+					written += 1
+		written += refresh_function_cards(row_data.children)
+	return written
+
+
 ## The card hovering a function's name shows, one fact a line: the name, its description, how Add
 ## Action lists it, who else calls it, how long it takes when it is a run of waits, and how to edit
 ## the description. The description lives here rather than on the row.
