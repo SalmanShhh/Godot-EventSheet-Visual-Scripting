@@ -42,6 +42,19 @@ static func _is_shipped(path: String) -> bool:
 	return path.begins_with(PLUGIN_DIRECTORY) or path.begins_with(PACK_DIRECTORY)
 
 
+## The paths of a corpus the reader wrote, in their order: everything `_is_shipped` names is left
+## out. A section whose corpus is the project's scripts asks this at its door, so a game that
+## installed the packs is measured, sampled and summarised on its own files - in such a game the
+## packs outnumber the reader's scripts many times over, and a sample read in path order was
+## otherwise nothing but packs.
+static func own_paths(paths: PackedStringArray) -> PackedStringArray:
+	var own: PackedStringArray = PackedStringArray()
+	for path: String in paths:
+		if not _is_shipped(path):
+			own.append(path)
+	return own
+
+
 ## One finding, in the shape every runner reads. `severity` is "error", "warning" or "info";
 ## `check_id` is what the panel groups by and what a quick-fix chip is addressed to; `path` is the
 ## file double-clicking the line opens; `message` is the words; and `subject` is the one name or

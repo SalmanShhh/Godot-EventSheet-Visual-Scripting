@@ -9605,3 +9605,4 @@ The Inspector hides it unless another setting is on.,別の設定がオンにな
 "This sheet is a read-only preview, so the game runs the file as it was. Press Edit Events, save the sheet (Ctrl+S), then run again, and its values report here.",このシートは読み取り専用のプレビューなので、ゲームは元のままのファイルを実行しています。イベントを編集 を押してシートを保存 (Ctrl+S) し、もう一度実行すると、値がここに届きます。
 Listed under its own name in the picker and the Add behaviour list. The usual choice.,ピッカーと「ビヘイビアを追加」の一覧に自分の名前で並びます。いつもの選択です。
 "%s is a %s, not a node: a sheet reads it from its file, so it is never added to an object.",%s は %s でノードではありません。シートはそのファイルから読み込むので、オブジェクトに追加されることはありません。
+"%d pack class(es) are referenced by no sheet, scene or autoload - fine if you call them from hand-written GDScript: %s.","%d 個のパッククラスはどのシート、シーン、オートロードからも参照されていません - 手書きの GDScript から呼ぶなら問題ありません: %s。"

@@ -52,7 +52,7 @@ static func ensure_registered() -> void:
 ## The section itself, with the contract every registered check has: append findings, never write
 ## inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(ReadingDoors.doctor()._project_scripts()))
+	findings.append_array(report(own_paths(ReadingDoors.doctor()._project_scripts())))
 
 
 ## Whether this file carries the mark that keeps it code. Read off the file, so it is the same answer

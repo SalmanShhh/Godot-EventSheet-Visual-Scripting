@@ -48,10 +48,10 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 
 
 ## Every script in the project that addresses a Feedback Player, in path order. Excludes the
-## plugin's own code, like every other Doctor corpus.
+## plugin's own code and its packs, like every other Doctor corpus.
 static func scripts_naming_a_player() -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
-	for script_path: String in EventSheetProjectDoctor._project_scripts():
+	for script_path: String in own_paths(EventSheetProjectDoctor._project_scripts()):
 		if EventSheetProjectDoctor.source_of(script_path).contains(PLAYER_WORD):
 			found.append(script_path)
 	return found

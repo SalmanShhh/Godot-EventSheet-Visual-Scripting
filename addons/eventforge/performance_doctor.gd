@@ -78,7 +78,7 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 static func sweep() -> Dictionary:
 	var busy: PackedStringArray = PackedStringArray()
 	var handles_trouble: bool = false
-	for script_path: String in EventSheetProjectDoctor._project_scripts():
+	for script_path: String in own_paths(EventSheetProjectDoctor._project_scripts()):
 		var text: String = EventSheetProjectDoctor.source_of(script_path)
 		if text.contains(SheetCompiler.TROUBLE_SIGNAL):
 			handles_trouble = true

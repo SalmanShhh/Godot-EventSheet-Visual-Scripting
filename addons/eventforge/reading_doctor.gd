@@ -71,7 +71,7 @@ static func ensure_registered() -> void:
 ## inside res://. `sheet_paths` is deliberately unused - it finds only `.tres` sheets while `.gd` is
 ## the default sheet format, and this page is about hand-written GDScript above all.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(EventSheetProjectDoctor._project_scripts()))
+	findings.append_array(report(EventSheetDoctorSection.own_paths(EventSheetProjectDoctor._project_scripts())))
 
 
 ## The whole page for a list of scripts, as findings. Pure over the paths, so a test can hand it a

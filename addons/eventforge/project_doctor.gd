@@ -1448,9 +1448,26 @@ static func _note_fragile_paths(text: String, fragile: Dictionary) -> void:
 ## Packs no sheet, scene or autoload references are removal candidates - advisory,
 ## because a pack is also legitimately used from hand-written GDScript only.
 static func check_unused_packs(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	var unused: Array[Dictionary] = unused_packs(sheet_paths)
+	if unused.is_empty():
+		return
+	var names: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in unused:
+		names.append(str(entry["class"]))
+	# ONE NOTE FOR THE LOT. A project that installed the packs and uses three of them has a hundred and
+	# more it does not use yet, and a note apiece buried every other finding under them. The note
+	# names the first few and counts the rest; double-clicking it opens the first.
+	_add(findings, "info", "unused-pack", str(unused[0]["path"]),
+		EventSheetL10n.translate("%d pack class(es) are referenced by no sheet, scene or autoload - fine if you call them from hand-written GDScript: %s.") % [
+			names.size(), _named_with_rest(names, UNUSED_PACKS_NAMED)])
+
+
+## Every pack class nothing in the project names, as {"class", "path"} in the scanner's order.
+static func unused_packs(sheet_paths: PackedStringArray) -> Array[Dictionary]:
+	var unused: Array[Dictionary] = []
 	var pack_scripts: Array[String] = EventSheetAddonScanner.list_addon_scripts()
 	if pack_scripts.is_empty():
-		return
+		return unused
 	var corpus_parts: PackedStringArray = PackedStringArray()
 	for sheet_path: String in sheet_paths:
 		if sheet_path.begins_with("res://eventsheet_addons/"):
@@ -1461,6 +1478,10 @@ static func check_unused_packs(sheet_paths: PackedStringArray, findings: Array[D
 		corpus_parts.append(_sheet_usage_text(sheet))
 		corpus_parts.append(" ".join(sheet.uses_addons) + " " + " ".join(sheet.requires_behaviors)
 			+ " " + " ".join(sheet.ace_provider_scripts) + " " + " ".join(sheet.includes))
+	# The project's own scripts are its sheets too - `.gd` is the default sheet format, and the list
+	# above holds `.tres` only - so a pack the reader's player script reaches for is in use.
+	for script_path: String in EventSheetDoctorSection.own_paths(_project_scripts()):
+		corpus_parts.append(source_of(script_path))
 	for scene_path: String in _list_files_with_extension("tscn"):
 		corpus_parts.append(source_of(scene_path))
 	for property: Dictionary in ProjectSettings.get_property_list():
@@ -1475,8 +1496,19 @@ static func check_unused_packs(sheet_paths: PackedStringArray, findings: Array[D
 		var pack_class: String = found.get_string(1)
 		if corpus.contains(script_path) or RegEx.create_from_string("\\b%s\\b" % pack_class).search(corpus) != null:
 			continue
-		_add(findings, "info", "unused-pack", script_path,
-			"Pack class %s is referenced by no sheet, scene or autoload - fine if you call it from hand-written GDScript." % pack_class)
+		unused.append({"class": pack_class, "path": script_path})
+	return unused
+
+
+## How many unused pack classes the one note names before it counts the rest.
+const UNUSED_PACKS_NAMED: int = 5
+
+
+## "A, B, C and 4 more" - the first `named` of a list, then a count of what is left.
+static func _named_with_rest(names: PackedStringArray, named: int) -> String:
+	if names.size() <= named:
+		return ", ".join(names)
+	return EventSheetL10n.translate("%s and %d more") % [", ".join(names.slice(0, named)), names.size() - named]
 
 
 ## Packs declare what they need with `## @ace_requires(a, b)` - class names,

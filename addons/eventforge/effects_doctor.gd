@@ -87,7 +87,7 @@ static func ensure_registered() -> void:
 ## The section itself, with the contract every registered check has: append findings, never write
 ## inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(scenes_with_effects(), EventSheetProjectDoctor._project_scripts()))
+	findings.append_array(report(scenes_with_effects(), own_paths(EventSheetProjectDoctor._project_scripts())))
 
 
 ## Every scene of the project with a material worn in it, in path order. The substring sweep comes

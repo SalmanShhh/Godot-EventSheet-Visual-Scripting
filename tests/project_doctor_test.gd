@@ -397,14 +397,27 @@ static func run() -> bool:
 				break
 	all_passed = _check("no finding is about a script in a folder this project declared out of the audit",
 		audited_declared_script, "") and all_passed
-	var unused_packs: PackedStringArray = PackedStringArray()
+	# The unused packs are ONE note, naming the first few and counting the rest - so what is pinned
+	# is the set it is worked out from, asked of the same check with a corpus of its own.
+	var unused_notes: Array[Dictionary] = []
 	for finding: Dictionary in (report.get("findings", []) as Array):
 		if str(finding.get("check")) == "unused-pack":
-			unused_packs.append(str(finding.get("path")))
+			unused_notes.append(finding)
+	all_passed = _check("however many packs are unused, they are one note", unused_notes.size(), 1) and all_passed
+	var unused_message: String = str(unused_notes[0].get("message", "")) if unused_notes.size() == 1 else ""
+	all_passed = _check("which counts them and names the first few",
+		unused_message.contains("pack class(es) are referenced by no sheet, scene or autoload") \
+			and unused_message.contains(" more."), true) and all_passed
+	all_passed = _check("and opens on the first of them",
+		str(unused_notes[0].get("path", "")).begins_with("res://eventsheet_addons/") if unused_notes.size() == 1 else false,
+		true) and all_passed
+	var unused_paths: Array = EventSheetProjectDoctor.unused_packs(
+		EventSheetTemplates.non_template_sheets(EventSheetProjectFind.list_project_sheets())).map(
+		func(entry: Dictionary) -> String: return str(entry["path"]))
 	all_passed = _check("scene-attached packs count as used",
-		unused_packs.has("res://eventsheet_addons/spring/spring_behavior.gd"), false) and all_passed
-	all_passed = _check("never-referenced packs get an advisory note",
-		unused_packs.has("res://eventsheet_addons/car/car_behavior.gd"), true) and all_passed
+		unused_paths.has("res://eventsheet_addons/spring/spring_behavior.gd"), false) and all_passed
+	all_passed = _check("never-referenced packs are among the unused",
+		unused_paths.has("res://eventsheet_addons/car/car_behavior.gd"), true) and all_passed
 
 	DirAccess.remove_absolute(generated_path)
 	DirAccess.remove_absolute(sheet_path)

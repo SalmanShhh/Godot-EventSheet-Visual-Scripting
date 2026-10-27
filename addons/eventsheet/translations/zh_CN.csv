@@ -9605,3 +9605,4 @@ The Inspector hides it unless another setting is on.,除非另一项设置已开
 "This sheet is a read-only preview, so the game runs the file as it was. Press Edit Events, save the sheet (Ctrl+S), then run again, and its values report here.",此事件表是只读预览，所以游戏运行的是原来的文件。点击 编辑事件，保存事件表（Ctrl+S）后重新运行，它的值就会显示在这里。
 Listed under its own name in the picker and the Add behaviour list. The usual choice.,以自己的名字列在选择器和“添加行为”列表中。通常的选择。
 "%s is a %s, not a node: a sheet reads it from its file, so it is never added to an object.",%s 是 %s，不是节点：表格从它的文件中读取它，所以它永远不会被添加到对象上。
+"%d pack class(es) are referenced by no sheet, scene or autoload - fine if you call them from hand-written GDScript: %s.","%d 个包类没有被任何表、场景或自动加载引用 - 如果你在手写的 GDScript 中调用它们则无妨：%s。"

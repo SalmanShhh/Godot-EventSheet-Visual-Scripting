@@ -65,9 +65,10 @@ static func check(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -
 	# ONE walk for both halves of the section. Opening a sheet is the expensive part of this audit -
 	# a `.gd` one is lifted from its text every time - so the words and the per-sheet counts are
 	# taken from the same open rather than from two walks of the same corpus.
-	var scripts: PackedStringArray = EventSheetProjectDoctor._project_scripts()
-	var audited: Dictionary = _audit(corpus(sheet_paths, scripts), {},
-		sample_note(sheet_paths, scripts))
+	var own_sheets: PackedStringArray = own_paths(sheet_paths)
+	var scripts: PackedStringArray = own_paths(EventSheetProjectDoctor._project_scripts())
+	var audited: Dictionary = _audit(corpus(own_sheets, scripts), {},
+		sample_note(own_sheets, scripts))
 	var said: Array[Dictionary] = []
 	said.assign(audited.get("findings", []))
 	var counted: Array[Dictionary] = []

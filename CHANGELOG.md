@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Fixed: the Doctor reports on your game, not on the packs installed beside it
+
+- In a project with the behaviour packs copied in, the Doctor said 189 notes about a ten-script
+  game. Interop measured pack scripts, the reading ledger sampled nothing but packs ("Read the first
+  12 script(s) of 189"), Performance asked you to rewrite a pack's distance check, Migration counted
+  the packs' sheets, and the Effects and Feedbacks summaries opened a pack. Those sections now read
+  your own scripts only, the way the others already did: Interop now measures `player.gd` and
+  `enemy.gd`, which it skipped before.
+- The packs you have not used yet are one note, not one note each: "169 pack class(es) are
+  referenced by no sheet, scene or autoload ... SimpleAbilitiesBehavior, ... and 164 more". A pack
+  that one of your own `.gd` scripts names now counts as used. Before, only `.tres` sheets, scenes
+  and autoloads counted, and `.gd` is the default sheet format.
+
 ### Fixed: your own scripts, opened as sheets, read the way the boards draw them
 
 - A script with an inner `class` no longer says its own members are "not a variable": the class's
