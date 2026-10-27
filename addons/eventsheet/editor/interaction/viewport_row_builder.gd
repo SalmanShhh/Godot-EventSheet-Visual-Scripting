@@ -16937,10 +16937,11 @@ func _format_pick_filter(pick: PickFilter) -> String:
 ## Event-sheet-style object label shown before each condition/action (e.g. "System",
 ## "Sprite", "CharacterBody2D"). Core ACEs read as "System"; node-typed ACEs use the class.
 func _object_label_for(provider_id: String, ace_id: String) -> String:
-	# A call to a sheet Function is an abstraction you CREATED (e.g. via Extract to Function) - show it as
-	# a named verb under a "ƒ" chip, not a generic "System" action, so the eye reads it as higher-level.
+	# A call to one of the sheet's own functions belongs to the object that owns the function - the
+	# script's own object, as "Player | take_damage with amount 2" - like any other line about it.
 	if (provider_id.is_empty() or provider_id == "Core") and ace_id == "CallFunction":
-		return "ƒ"
+		var own_object: String = _script_object_name()
+		return own_object if not own_object.is_empty() else EventSheetL10n.translate("Functions")
 	var definition: ACEDefinition = _viewport._find_definition(provider_id, ace_id)
 	if definition != null:
 		var node_type: String = str(definition.metadata.get("node_type", "")).strip_edges()
@@ -16991,8 +16992,8 @@ func _own_object_for_class(node_type: String) -> String:
 	return ""
 
 
-## A call to a sheet Function - the row IS an abstraction (a named verb), so the renderer marks it "ƒ"
-## (see _object_label_for) and shows the verb's name instead of "Call name()".
+## A call to a sheet Function - the row IS an abstraction (a named verb), so it reads under the object
+## that owns the function (see _object_label_for) and shows the verb's name instead of "Call name()".
 func _is_function_call_action(action: ACEAction) -> bool:
 	return action != null and (action.provider_id.is_empty() or action.provider_id == "Core") and action.ace_id == "CallFunction"
 
@@ -17025,7 +17026,8 @@ func _function_call_label(action: ACEAction) -> String:
 			_split_call_arguments(args),
 			EventSheetViewportReadingRows.parameter_names_of(called),
 			_viewport.humanize_names_enabled(),
-			_export_knob_names()
+			_export_knob_names(),
+			_script_object_name()
 		)
 		if not call_pieces.is_empty():
 			var text: String = ""
@@ -20251,7 +20253,8 @@ func _reading_call_pieces(code: String, arguments: PackedStringArray) -> Array:
 		arguments,
 		EventSheetViewportReadingRows.parameter_names_of(event_function),
 		_viewport.humanize_names_enabled(),
-		_export_knob_names()
+		_export_knob_names(),
+		_script_object_name()
 	)
 	# A function that hands over to ITSELF is the one shape a reader has to be told about: the
 	# rows below this one are the same rows again, one level in. Said on the call row, muted, because

@@ -98,11 +98,11 @@ static func _reading_rows() -> bool:
 	passed = _check("an inverted condition's sentence drops the word not",
 		_any_row_contains(texts, "not is_on_floor"), false) and passed
 
-	# The call to the fixture's own add_look reads the familiar way, with the parameter
-	# names supplying the argument labels.
-	passed = _check("a known call reads Functions > Call", _any_row_contains(texts, "Call add_look"), true) and passed
+	# The call to the fixture's own add_look reads as its name, with the parameter names supplying
+	# the argument labels: "add_look with x velocity X, ...".
+	passed = _check("a known call reads as the function's own name", _any_row_contains(texts, "add_look with"), true) and passed
 	passed = _check("call arguments are named by the parameters",
-		_any_row_contains(texts, "x = velocity X"), true) and passed
+		_any_row_contains(texts, "x velocity X"), true) and passed
 
 	# The @onready node reference is a variable row like any other: its class leads it as the type,
 	# no kind word stands in front, and the on-ready tile at its right says when it is filled in.

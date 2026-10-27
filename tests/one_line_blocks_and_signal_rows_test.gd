@@ -107,14 +107,14 @@ static func _one_line_blocks(rows: PackedStringArray) -> bool:
 	ok = _check("a one-line guard clause is a sub-event, not a code cell",
 		_reading_at(rows, "Stop event"), "host does not exist | Stop event") and ok
 	ok = _check("a one-line if calls its verb",
-		_reading_at(rows, "Call die"), "OneLineBlocksFixture hp ≤ 0 | Call die") and ok
+		_reading_at(rows, "| die"), "OneLineBlocksFixture hp ≤ 0 | die") and ok
 	# `play("low")` is this file's OWN `play`, declared at the bottom of it, so the row says so. The
 	# vocabulary has verbs spelled `play(…)` too and one of them used to claim the line, which read
 	# as a confident sentence about a sound this script has never had.
 	ok = _check("a one-line elif is an Else with its own condition",
-		_reading_at(rows, "\"low\""), "Else > OneLineBlocksFixture hp < 5 | Call play   _name = \"low\"") and ok
+		_reading_at(rows, "\"low\""), "Else > OneLineBlocksFixture hp < 5 | play with _name \"low\"") and ok
 	ok = _check("a one-line else is the plain Else",
-		_reading_at(rows, "\"hurt\""), "Else | Call play   _name = \"hurt\"") and ok
+		_reading_at(rows, "\"hurt\""), "Else | play with _name \"hurt\"") and ok
 	# `i == 1` is a COMPARISON, not an identity test. Is The Same Object's reverse template is the bare
 	# `{a} == {b}`, so it used to claim every equality ever written and these two rows read "i is the
 	# same object as 1" - a confident lie about a loop counter and a number.

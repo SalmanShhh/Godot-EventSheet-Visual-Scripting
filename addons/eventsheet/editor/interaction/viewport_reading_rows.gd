@@ -2746,13 +2746,19 @@ static func call_reading_pieces(
 	arguments: PackedStringArray,
 	parameter_names: PackedStringArray,
 	humanize: bool,
-	knob_names: Dictionary = {}
+	knob_names: Dictionary = {},
+	object_name: String = ""
 ) -> Array:
 	if display_name.strip_edges().is_empty():
 		return []
+	# The object is whoever owns the function - the script's own object, named as the sheet names it
+	# - and the words are the function's name, then "with" and each value after the parameter it
+	# fills: "take_damage with amount 2, critical false". No "Call" in front: the name is the verb.
 	var pieces: Array = []
-	pieces.append([EventSheetL10n.translate("Functions") + "  ", "object"])
-	pieces.append([EventSheetL10n.translate("Call") + " ", "plain"])
+	var owner: String = object_name.strip_edges()
+	if owner.is_empty():
+		owner = EventSheetL10n.translate("Functions")
+	pieces.append([owner + "  ", "object"])
 	pieces.append([display_name, "name"])
 	for index: int in range(arguments.size()):
 		var parameter_name: String = parameter_names[index] if index < parameter_names.size() else ""
@@ -2761,8 +2767,11 @@ static func call_reading_pieces(
 			value = EventSheetViewportLenses.humanize_expression(value, knob_names)
 		else:
 			value = EventSheetViewportLenses.possessive_in_expression(value, false)
-		pieces.append(["   ", "plain"])
-		pieces.append([EventSheetViewportLenses.call_argument_chip(parameter_name, value, false), "value"])
+		pieces.append([" %s " % EventSheetL10n.translate("with") if index == 0 else ", ", "plain"])
+		var shown: String = value
+		if not parameter_name.strip_edges().is_empty():
+			shown = "%s %s" % [parameter_name.strip_edges(), value]
+		pieces.append([shown, "value"])
 	return pieces
 
 

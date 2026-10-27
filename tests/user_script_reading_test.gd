@@ -166,8 +166,8 @@ static func _test_player() -> bool:
 		["a velocity verb leads with the script's own name, not its class",
 			_line_with(lines, "Set velocity Y", 0), "Keyboard: On \"ui_accept\" pressed | ReadingTestPlayer: Set velocity Y to -400"],
 		["a call to the script's own function leads with the script's own name",
-			_line_with(lines, "Call add_coin", 0),
-			"System: Every tick (physics) | ReadingTestPlayer: Move (and slide along what it hits) | ReadingTestPlayer: Call add_coin | ⟡ Movement"],
+			_line_with(lines, "ReadingTestPlayer: add_coin", 0),
+			"System: Every tick (physics) | ReadingTestPlayer: Move (and slide along what it hits) | ReadingTestPlayer: add_coin | ⟡ Movement"],
 		["a local the step declares is a variable: no note says otherwise",
 			_notes(dock), PackedStringArray()],
 		# The same variable row every other member reads as (its scope and type words are painted as

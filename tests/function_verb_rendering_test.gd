@@ -1,8 +1,8 @@
 # Godot EventSheets - function calls render as first-class named VERBS (show abstraction level).
 #
 # A Call to a sheet Function is an abstraction you created (e.g. via Extract to Function), not just another
-# action. The renderer marks it with a "ƒ" object chip and shows the verb's friendly name ("Apply Physics")
-# instead of the generic "System → Call apply_physics()". This pins that legibility treatment.
+# action. It reads under the object that owns the function and shows the verb's friendly name
+# ("Player | Apply Physics") instead of the generic "System → Call apply_physics()". This pins that.
 @tool
 class_name FunctionVerbRenderingTest
 extends RefCounted
@@ -22,19 +22,25 @@ static func run() -> bool:
 	sheet.functions.append(function)
 	viewport._sheet = sheet
 
-	# A function call gets the "ƒ" object chip (a named verb), not the generic "System".
-	all_passed = _check("function-call object chip is ƒ",
-		viewport._row_builder._object_label_for("Core", "CallFunction"), "ƒ") and all_passed
+	# A function call reads under the object that owns the function, not the generic "System" -
+	# and "Functions" only where the sheet names no object of its own.
+	all_passed = _check("a sheet with no object of its own files the call under Functions",
+		viewport._row_builder._object_label_for("Core", "CallFunction"), "Functions") and all_passed
+	var named: EventSheetResource = sheet.duplicate()
+	named.custom_class_name = "Player"
+	viewport._sheet = named
+	all_passed = _check("a call to the sheet's own function reads under the sheet's own object",
+		viewport._row_builder._object_label_for("Core", "CallFunction"), "Player") and all_passed
+	viewport._sheet = sheet
 
-	# A call to a known Function reads the familiar way: the word Call plus the function's
-	# friendly display name. What this has always guarded against is the RAW form leaking into the
-	# cell (`apply_physics()` - a code name and a pair of parentheses); that still holds, and the
-	# verb is still the display name. Only the leading word is new.
+	# A call to a known Function reads as its name - the name is the verb, so no "Call" leads it.
+	# What this has always guarded against is the RAW form leaking into the cell (`apply_physics()`
+	# - a code name and a pair of parentheses); that still holds, and the verb is the display name.
 	var call_known: ACEAction = _call_action("apply_physics", "")
 	all_passed = _check("known function renders its friendly verb name",
-		viewport._function_call_label(call_known), "Call Apply Physics") and all_passed
+		viewport._function_call_label(call_known), "Apply Physics") and all_passed
 	all_passed = _check("the action descriptor shows the verb, not the raw name()",
-		viewport._row_builder._format_action_descriptor_base(call_known), "Call Apply Physics") and all_passed
+		viewport._row_builder._format_action_descriptor_base(call_known), "Apply Physics") and all_passed
 	all_passed = _check("the raw function name never reaches the cell",
 		viewport._function_call_label(call_known).contains("apply_physics"), false) and all_passed
 

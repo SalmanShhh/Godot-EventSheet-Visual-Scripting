@@ -162,7 +162,7 @@ static func _test_shipped_pack_readings() -> bool:
 	var screen_fx: Array = _cell_texts("res://eventsheet_addons/screen_fx/screen_fx.gd")
 	var drawing: Array = _cell_texts("res://eventsheet_addons/drawing_prefab_resource/drawing_prefab_resource.gd")
 	ok = _check("a handler wired in a function and called by name opens as a function", [
-		_index_ending(screen_fx, "On function _settle") >= 0, screen_fx.has("Wire On Finished to _settle"), screen_fx.has("Call _settle"),
+		_index_ending(screen_fx, "On function _settle") >= 0, screen_fx.has("Wire On Finished to _settle"), screen_fx.has("_settle"),
 		_index_ending(drawing, "On function _invalidate_compiled") >= 0, drawing.has("Wire On Changed to _invalidate_compiled"),
 	], [true, true, true, true, true]) and ok
 	return ok

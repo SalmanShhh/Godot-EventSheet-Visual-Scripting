@@ -88,6 +88,16 @@ way a user meets it:
   Add action, Compare and Match lead with their object's icon and name.
 - A drafted function description keeps a name at the start of a clause as written: "GameState.coins
   += amount", never "gameState".
+- A call to one of the script's own functions reads under the object that owns it, by the function's
+  name: "Player | take_damage with amount 2, critical false" where it read "ƒ | Call take_damage
+  amount = 2   critical = false". A sheet that names no object of its own still files it under
+  Functions.
+- A class written inside a script leads with the class icon and its name, with no "Class" word in
+  front of it.
+- Add an event's Functions section is headed "Functions" alone and lists each function by its name
+  as written, under the function mark the sheet draws, with no kind word after it. A hand-written
+  script, which publishes none of its functions, lists them all straight under the head instead of
+  folding every one of them behind "+ Helpers".
 
 ### Fixed: the makers read right in a project the plugin was installed into
 

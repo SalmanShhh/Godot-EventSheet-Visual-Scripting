@@ -34,9 +34,9 @@ static func run() -> bool:
 	return SUPPORT.pins(P, [
 		["a script opened as a sheet does not respell names", asked, false],
 		["a variable and a called function read as written", ready_words,
-			"On created | Print bullet_speed | Call take_damage   amount = 2"],
+			"On created | Print bullet_speed | take_damage with amount 2"],
 		["the View lens still respells them once it is turned on", lens_words,
-			"On created | Print Bullet Speed | Call take damage   amount = 2"],
+			"On created | Print Bullet Speed | take damage with amount 2"],
 		["a function's display name is its name", EventSheetViewportLenses.function_display_name("take_damage"), "take_damage"],
 		["...unless it was published under another", EventSheetViewportLenses.function_display_name("take_damage", "Hurt"), "Hurt"],
 		["a method named as the function it is", EventSheetSentence.function_words("rebuild_preview"), "rebuild_preview"],
