@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Fixed: building a behaviour pack is up to fifteen times faster
+
+- Publishing a pack (the bundled pack builders and Export Addon) turns each function body into rows
+  only where the file still compiles byte for byte to what it did. That check compiled the whole
+  sheet twice for every function. It now compiles it once and tries the bodies in halves, so the
+  bodies that all pass cost one compile together. The platformer pathfinding pack builds in 18 s
+  instead of 4 min 30 s, save_system in 6 s instead of 52 s, and rebuilding every pack takes about
+  4 minutes instead of 20. Every pack still comes out byte for byte as before.
 ### Fixed: node, scene and resource variables read as the Inspector lists them
 
 - In the default look and Editor Native, a variable holding a node, a scene, a resource or a typed

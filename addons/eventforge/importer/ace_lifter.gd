@@ -1290,8 +1290,7 @@ static func lift_function_bodies(sheet: EventSheetResource) -> int:
 	# without this a 3D pack built after a 2D one read its runs as the 2D rows.
 	SpawnRunLift.note_host_class(str(sheet.host_class).strip_edges())
 	var reverse_entries: Array = _build_reverse_entries()
-	var verify_path: String = "user://_eventforge_pack_body_verify.gd"
-	var converted: int = 0
+	var swaps: Array[Callable] = []
 	for fn_variant: Variant in sheet.functions:
 		var fn: EventFunction = fn_variant as EventFunction
 		if fn == null:
@@ -1299,37 +1298,77 @@ static func lift_function_bodies(sheet: EventSheetResource) -> int:
 		var body_rows: Array = fn.events if not fn.events.is_empty() else fn.rows
 		if body_rows.size() != 1 or not (body_rows[0] is RawCodeRow):
 			continue  # only the un-converted shape (one verbatim block)
-		var code: String = (body_rows[0] as RawCodeRow).code
-		if code.strip_edges().is_empty():
-			continue
-		var before: String = str(SheetCompiler.compile(sheet, verify_path).get("output", ""))
-		# Parse the body as a depth-1 function body (one leading tab per line, plus a dummy header).
-		var lines: PackedStringArray = PackedStringArray(["func _ready() -> void:"])
-		for line: String in code.split("\n"):
-			lines.append("\t" + line)
-		var parsed: Dictionary = _parse_body(lines, 1, 1, "", "", "", "", reverse_entries, true)
-		if not bool(parsed.get("ok", false)) or int(parsed.get("next", 0)) < lines.size():
-			continue
-		var lifted: Array = parsed.get("rows", [])
+		var lifted: Array = _lift_verbatim_body((body_rows[0] as RawCodeRow).code, reverse_entries)
 		if lifted.is_empty():
 			continue
-		var backup: Array[Resource] = (fn.events if not fn.events.is_empty() else fn.rows).duplicate()
 		var had_events: bool = not fn.events.is_empty()
-		fn.events = _to_resource_array(lifted)
-		fn.rows = []
-		var after: String = str(SheetCompiler.compile(sheet, verify_path).get("output", ""))
-		if after == before:
-			converted += 1
-		else:
-			if had_events:
-				fn.events = backup
+		var backup: Array[Resource] = []
+		backup.assign(body_rows)
+		var swap: Callable = func(lift: bool) -> void:
+			if lift:
+				fn.events = _to_resource_array(lifted)
+				fn.rows = []
+			elif had_events:
+				fn.events = backup.duplicate()
 				fn.rows = []
 			else:
-				fn.rows = backup
+				fn.rows = backup.duplicate()
 				fn.events = []
+		# A body whose own block already reads differently once lifted cannot leave the file as it
+		# was, so it is put back here, at the price of one function's emission instead of the file's.
+		var block_before: String = SheetCompiler.emit_function_block_text(fn, sheet)
+		swap.call(true)
+		var block_after: String = SheetCompiler.emit_function_block_text(fn, sheet)
+		swap.call(false)
+		if block_after == block_before:
+			swaps.append(swap)
+	var converted: int = _adopt_byte_identical(sheet, swaps)
 	# Dropped at the end of the read, so the next thing this process lifts asks its own question.
 	SpawnRunLift.note_host_class("")
 	return converted
+
+
+## A verbatim body read as rows under a throwaway depth-1 header: the rows, or empty when any line of
+## it does not read.
+static func _lift_verbatim_body(code: String, reverse_entries: Array) -> Array:
+	if code.strip_edges().is_empty():
+		return []
+	var lines: PackedStringArray = PackedStringArray(["func _ready() -> void:"])
+	for line: String in code.split("\n"):
+		lines.append("\t" + line)
+	var parsed: Dictionary = _parse_body(lines, 1, 1, "", "", "", "", reverse_entries, true)
+	if not bool(parsed.get("ok", false)) or int(parsed.get("next", 0)) < lines.size():
+		return []
+	return parsed.get("rows", [])
+
+
+## Keeps every swap in `swaps` (a Callable: true puts a body's lifted rows in, false puts its verbatim
+## block back) that leaves what the sheet compiles to byte for byte as it was, and returns how many it
+## kept. The whole file is still the gate; what changed is how often it is asked. A kept swap leaves
+## the output as it was, so that output is ONE string for the whole pass: it is compiled once, and the
+## swaps are tried in halves - a half that keeps the bytes is kept whole after one compile, and only a
+## half that moves them is split further, down to the one body that moved them. A pack whose bodies
+## all lift costs two compiles instead of two per function: on the largest pack (127 functions, 3,500
+## lines) the per-function gate was over four minutes of a four-and-a-half-minute build.
+static func _adopt_byte_identical(sheet: EventSheetResource, swaps: Array[Callable]) -> int:
+	if swaps.is_empty():
+		return 0
+	var baseline: String = str(SheetCompiler.echo(sheet).get("output", ""))
+	return _adopt_run(sheet, swaps, 0, swaps.size(), baseline)
+
+
+## The swaps from `from` up to (not including) `to`, tried together on top of every swap already kept.
+static func _adopt_run(sheet: EventSheetResource, swaps: Array[Callable], from: int, to: int, baseline: String) -> int:
+	for index: int in range(from, to):
+		swaps[index].call(true)
+	if str(SheetCompiler.echo(sheet).get("output", "")) == baseline:
+		return to - from
+	for index: int in range(from, to):
+		swaps[index].call(false)
+	if to - from == 1:
+		return 0
+	var middle: int = from + (to - from) / 2
+	return _adopt_run(sheet, swaps, from, middle, baseline) + _adopt_run(sheet, swaps, middle, to, baseline)
 
 
 static func _to_resource_array(rows: Array) -> Array[Resource]:
