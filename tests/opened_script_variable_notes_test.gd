@@ -53,10 +53,19 @@ func hurt(amount) -> void:
 
 static func run() -> bool:
 	var typo: String = CLEAN.replace("\t_start_x = position.x", "\t_strat_x = position.x")
+	# A local of _process is not a name another function can use: `direction` in spin() is a typo of
+	# nothing that function declares, and the note says so instead of being hidden by _process's local.
+	var elsewhere: String = CLEAN + "\n\nfunc spin() -> void:\n\tdirection = 2.0\n"
+	var declared: Dictionary = {}
+	ViewportRowBuilder._collect_code_declared_names(
+		"hits = 1  # for example, var nope\nvar real := \"for fake in words\"", declared)
 	return SUPPORT.pins(P, [
 		["a clean file with a class, a local and a parameter grows no note", _notes(CLEAN, "clean"), []],
 		["a name the file does not declare still does", _notes(typo, "typo"),
 			["_strat_x is not a variable of opened_script_variable_notes_typo."]],
+		["a local of one function does not hide a missing name in another", _notes(elsewhere, "elsewhere"),
+			["direction is not a variable of opened_script_variable_notes_elsewhere."]],
+		["a comment or a string declares no name in code kept as written", declared.keys(), ["real"]],
 	])
 
 

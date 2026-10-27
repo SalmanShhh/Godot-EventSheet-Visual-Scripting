@@ -3510,11 +3510,14 @@ func _extract_value(field: Control) -> Variant:
 
 
 ## The locals and parameters a line of `sheet` can use besides its members, read once per sheet per
-## window: every open reads them again.
+## window: every open reads them again. The event the window writes into narrows them to the body
+## it sits in, so a local of another function does not pass a typo here.
 func _scope_names_for(sheet: EventSheetResource) -> PackedStringArray:
 	if sheet != _scope_names_sheet:
 		_scope_names_sheet = sheet
-		_scope_names = EventSheetGDScriptLint.scope_names_of(sheet)
+		var selected: Variant = _context.get("selected_resource", null)
+		var within: EventRow = selected as EventRow if selected is EventRow else null
+		_scope_names = EventSheetGDScriptLint.scope_names_of(sheet, within)
 	return _scope_names
 
 

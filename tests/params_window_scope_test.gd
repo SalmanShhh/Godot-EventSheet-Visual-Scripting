@@ -38,7 +38,18 @@ static func run() -> bool:
 	file.close()
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
 	var names: PackedStringArray = EventSheetGDScriptLint.scope_names_of(sheet)
+	# A field of a line inside hurt() knows hurt's names, not _physics_process's local.
+	var hurt_event: EventRow = null
+	for function_entry: Variant in sheet.functions:
+		if function_entry is EventFunction and (function_entry as EventFunction).function_name == "hurt":
+			for entry: Variant in (function_entry as EventFunction).events:
+				if entry is EventRow and hurt_event == null:
+					hurt_event = entry as EventRow
+	var in_hurt: PackedStringArray = EventSheetGDScriptLint.scope_names_of(sheet, hurt_event)
 	return SUPPORT.pins(P, [
+		["a field inside one function knows that function's names only", in_hurt,
+			PackedStringArray(["amount", "spike"])],
+		["so another function's local is a typo there", _ok("direction * speed", sheet, in_hurt), false],
 		["the names a line can use besides the members", names,
 			PackedStringArray(["amount", "delta", "direction", "spike"])],
 		["the function's local is a name the field can use", _ok("direction * speed", sheet, names), true],

@@ -44,16 +44,77 @@ static func lint_expression(expression: String, sheet: EventSheetResource, scope
 
 ## Every name a line inside one of this sheet's bodies can use besides the members, sorted: the locals
 ## an event declares (a `var` line, its local list), a loop's item and counter, the values a trigger
-## hands its handler, and each function's parameters and locals. Read across the whole sheet, the
-## same reach the sheet's own variable notes give these names.
-static func scope_names_of(sheet: EventSheetResource) -> PackedStringArray:
+## hands its handler, and each function's parameters and locals. With `within` - the event a field
+## belongs to - only the body that event sits in is read: its function, or the top-level event it is
+## under and the groups around it, so a local of another function never hides a typo here. Without
+## it, or for an event the sheet does not hold, the whole sheet is read.
+static func scope_names_of(sheet: EventSheetResource, within: EventRow = null) -> PackedStringArray:
 	var names: Dictionary = {}
 	if sheet != null:
-		_collect_scope_names(sheet.events, names, {})
-		_collect_scope_names(sheet.functions, names, {})
+		var body: Array = [] if within == null else _body_holding(sheet, within)
+		if body.is_empty():
+			_collect_scope_names(sheet.events, names, {})
+			_collect_scope_names(sheet.functions, names, {})
+		else:
+			for group_local: String in body[1]:
+				_add_scope_name(group_local, names)
+			_collect_scope_names(body[0], names, {})
 	var sorted: PackedStringArray = PackedStringArray(names.keys())
 	sorted.sort()
 	return sorted
+
+
+## [the bodies `event_row` shares its names with, the names of the locals the groups around them
+## declare], or [] when the sheet does not hold the event. A function's body is the function; a
+## top-level event's is every top-level event under the same trigger, because they are one handler -
+## an opened `_process` is a run of events that all fire On every tick.
+static func _body_holding(sheet: EventSheetResource, event_row: EventRow) -> Array:
+	for function_entry: Variant in sheet.functions:
+		if function_entry is EventFunction and _holds(((function_entry as EventFunction).events), event_row):
+			return [[function_entry], PackedStringArray()]
+	var tops: Array = []
+	_top_events(sheet.events, PackedStringArray(), tops)
+	var trigger: String = ""
+	var found: bool = false
+	for top: Array in tops:
+		if _holds([top[0]], event_row):
+			trigger = (top[0] as EventRow).trigger_id
+			found = true
+	if not found:
+		return []
+	var bodies: Array = []
+	var group_locals: PackedStringArray = PackedStringArray()
+	for top: Array in tops:
+		if (top[0] as EventRow).trigger_id == trigger:
+			bodies.append(top[0])
+			group_locals.append_array(top[1])
+	return [bodies, group_locals]
+
+
+## Every top-level event, groups looked through, as [event, the locals its groups declare].
+static func _top_events(entries: Array, group_locals: PackedStringArray, into: Array) -> void:
+	for entry: Variant in entries:
+		if entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			var inner_locals: PackedStringArray = group_locals.duplicate()
+			for local_entry: Variant in group.local_variables:
+				if local_entry is LocalVariable:
+					inner_locals.append((local_entry as LocalVariable).name)
+			_top_events(EventSheetGroupFacts.children(group), inner_locals, into)
+		elif entry is EventRow:
+			into.append([entry, group_locals])
+
+
+## True when `event_row` is one of `rows` or nested anywhere under them.
+static func _holds(rows: Array, event_row: EventRow) -> bool:
+	for entry: Variant in rows:
+		if entry == event_row:
+			return true
+		if entry is EventGroup and _holds(EventSheetGroupFacts.children(entry as EventGroup), event_row):
+			return true
+		if entry is EventRow and _holds((entry as EventRow).sub_events, event_row):
+			return true
+	return false
 
 
 ## One level of scope_names_of's walk; `walked` keeps a resource met twice from being walked twice.

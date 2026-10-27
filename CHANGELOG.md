@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Fixed: a local of one function no longer hides a typo in another
+
+- A name declared as a local or parameter anywhere in a script was accepted everywhere in it, so
+  `direction = 2.0` in a function that has no `direction` grew no "is not a variable" note, and the
+  parameters window passed it, because `_process` declared one. Both now know only the names of the
+  body the line sits in: its function, or every event under the same trigger. A comment or a string
+  in code kept as written (`# for example`) no longer declares a name either.
+
 ### Fixed: a made object and the Expressions panel say the type the value gives
 
 - `var _stats := Patrol.new()` read "any" (and "Variant" in Editor Native) on the sheet. A variable

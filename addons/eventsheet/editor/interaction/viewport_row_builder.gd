@@ -11463,8 +11463,7 @@ func _build_variable_note_rows(event_row: EventRow, event_uid: String, indent: i
 	# not members, so the catalog does not list them, but "direction is not a variable" over the
 	# `var direction := ...` line right above it is a finding the file does not earn. So are a loop's
 	# item and the values a trigger hands its handler (`body`, an input handler's `event`).
-	var seen: Dictionary = _scoped_names()
-	seen.merge(_sheet_local_names())
+	var seen: Dictionary = _event_scope_names(event_row)
 	for lane: String in ["condition", "action"]:
 		var lane_rows: Array = event_row.conditions if lane == "condition" else event_row.actions
 		for index: int in range(lane_rows.size()):
@@ -11519,6 +11518,73 @@ func _sheet_local_names() -> Dictionary:
 	return _variable_owner_catalog["locals"]
 
 
+## The names a line of `event_row` can use besides the members, {name: true}: those of the body it
+## sits in - its function's parameters and locals, or the top-level event it is under (a handler's
+## arguments, its locals, its loops' items) and the groups around that event. A name that is a local
+## of ANOTHER function is not one of them, so a typo of a member there is still "not a variable". An
+## event the walk does not reach (a row built for display only) falls back to every name the sheet
+## declares anywhere.
+func _event_scope_names(event_row: EventRow) -> Dictionary:
+	_owner_catalog_for_current_sheet()
+	if not _variable_owner_catalog.has("scope_of"):
+		var scope_of: Dictionary = {}
+		var sheet: EventSheetResource = _viewport._sheet if _viewport != null else null
+		if sheet != null:
+			# Every top-level event under one trigger is one handler's body - an opened `_process` is a
+			# run of events that all fire On every tick - so they share one set of names.
+			_map_event_scopes(sheet.events, {}, {}, scope_of)
+			for function_entry: Variant in sheet.functions:
+				if not (function_entry is EventFunction):
+					continue
+				var function: EventFunction = function_entry as EventFunction
+				var names: Dictionary = {}
+				_collect_local_names([function], names, {})
+				_collect_declared_local_names(function.events, names)
+				_note_event_scope(function.events, names, scope_of)
+		_variable_owner_catalog["scope_of"] = scope_of
+	var mapped: Dictionary = _variable_owner_catalog["scope_of"]
+	if mapped.has(event_row):
+		return (mapped[event_row] as Dictionary).duplicate()
+	var whole: Dictionary = _scoped_names()
+	whole.merge(_sheet_local_names())
+	return whole
+
+
+## One level of the scope walk over the sheet's own events. A group passes its own locals down to
+## what it holds. Each event met here is the root of a body, and the bodies under one trigger are one
+## handler, so they share ONE set in `by_trigger`: every event is filed under that same set, which
+## keeps growing as the walk meets the trigger's later events.
+func _map_event_scopes(entries: Array, inherited: Dictionary, by_trigger: Dictionary,
+		scope_of: Dictionary) -> void:
+	for entry: Variant in entries:
+		if entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			var group_names: Dictionary = inherited.duplicate()
+			for local_entry: Variant in group.local_variables:
+				if local_entry is LocalVariable:
+					group_names[(local_entry as LocalVariable).name.strip_edges()] = true
+			_map_event_scopes(EventSheetGroupFacts.children(group), group_names, by_trigger, scope_of)
+		elif entry is EventRow:
+			var trigger: String = (entry as EventRow).trigger_id
+			if not by_trigger.has(trigger):
+				by_trigger[trigger] = {}
+			var names: Dictionary = by_trigger[trigger]
+			names.merge(inherited)
+			_collect_local_names([entry], names, {})
+			_collect_declared_local_names([entry], names)
+			_note_event_scope([entry], names, scope_of)
+
+
+## Files every event in `rows`, nested ones included, under one body's `names`.
+func _note_event_scope(rows: Array, names: Dictionary, scope_of: Dictionary) -> void:
+	for entry: Variant in rows:
+		if entry is EventGroup:
+			_note_event_scope(EventSheetGroupFacts.children(entry as EventGroup), names, scope_of)
+		elif entry is EventRow and not scope_of.has(entry):
+			scope_of[entry] = names
+			_note_event_scope((entry as EventRow).sub_events, names, scope_of)
+
+
 ## One level of the walk above, into `names`; `walked` keeps a resource met twice from being walked twice.
 func _collect_local_names(entries: Variant, names: Dictionary, walked: Dictionary) -> void:
 	if not (entries is Array):
@@ -11564,10 +11630,17 @@ func _collect_local_names(entries: Variant, names: Dictionary, walked: Dictionar
 
 
 ## The names a piece of code kept as written declares, into `names`: every `var name`, every
-## `for name` and every parameter of a `func(...)` written inline.
-static func _collect_code_declared_names(code: String, names: Dictionary) -> void:
-	if code.is_empty() or not (code.contains("var ") or code.contains("for ") or code.contains("func")):
+## `for name` and every parameter of a `func(...)` written inline. Comments and the insides of strings
+## are blanked first: "# for example" declares nothing.
+static func _collect_code_declared_names(written: String, names: Dictionary) -> void:
+	if written.is_empty() or not (written.contains("var ") or written.contains("for ") or written.contains("func")):
 		return
+	var bare_lines: PackedStringArray = PackedStringArray()
+	for line: String in written.split("\n"):
+		var bare: String = SheetCompiler._without_string_literals(line)
+		var comment_at: int = bare.find("#")
+		bare_lines.append(bare.left(comment_at) if comment_at >= 0 else bare)
+	var code: String = "\n".join(bare_lines)
 	var declared := RegEx.create_from_string("\\b(?:var|for)\\s+([A-Za-z_][A-Za-z0-9_]*)")
 	for found: RegExMatch in declared.search_all(code):
 		names[found.get_string(1)] = true
