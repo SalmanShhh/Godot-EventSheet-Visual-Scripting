@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Fixed: a variable inside a row's sentence draws once
+
+- "Accelerate x toward direction * speed at acceleration (per second)" drew `acceleration` as two
+  smeared copies. The bold re-draw of a row's parameters was placed by the width of the whole text
+  in front of it, while the coloured pass under it draws the sentence piece by piece, and the two
+  drifted apart by a pixel or more per piece. The re-draw now lands exactly on the word it covers.
+
 ### Fixed: the not-undoable note asks what a line changes, not which event it sits in
 
 - A menu command that freed your plugin's own panel still got the "changes the scene the editor

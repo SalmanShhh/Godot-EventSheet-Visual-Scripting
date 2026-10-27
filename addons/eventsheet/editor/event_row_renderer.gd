@@ -335,6 +335,34 @@ func _draw_param_emphasis(
 	variable_color: Color = Color(0.0, 0.0, 0.0, 0.0)
 ) -> void:
 	var limit: float = baseline.x + max_width
+	for run: Array in emphasis_runs(text, param_ranges, value_ranges, font, font_size):
+		var x: float = baseline.x + float(run[0])
+		var kind: Variant = run[2]
+		var run_color: Color = base_color
+		if kind == "string":
+			run_color = string_color
+		elif kind == "bool":
+			run_color = bool_color
+		elif kind == "muted":
+			run_color = muted_color
+		elif kind == NativeRowMarks.WORD_VARIABLE:
+			run_color = variable_color if variable_color.a > 0.01 else base_color
+		elif kind != null:
+			run_color = value_color
+		if x < limit:
+			_draw_text(control, Vector2(x, baseline.y), str(run[1]), limit - x, bold_font(font), font_size, run_color)
+
+
+## The pieces the bold overlay draws, as [x from the text's left edge, text, the value range's kind
+## or null for plain]. A run is split at the value ranges' edges, and its x is where the BASE pass
+## (`_draw_text_with_values`) put the same character. That pass draws piece by piece, each shaped
+## on its own, and pieces measured one by one do not add up to the prefix measured whole - a pixel
+## or more per piece - so an overlay placed by the whole prefix landed beside the word it re-draws and
+## a variable in the sentence ("at acceleration") read as two smeared copies. Static and pure, so
+## the positions are pinned without a canvas.
+static func emphasis_runs(text: String, param_ranges: Array, value_ranges: Array, font: Font,
+		font_size: int) -> Array:
+	var runs: Array = []
 	for entry: Variant in param_ranges:
 		if not (entry is Array) or (entry as Array).size() < 2:
 			continue
@@ -347,7 +375,7 @@ func _draw_param_emphasis(
 		var end: int = start + length
 		while cursor < end:
 			var run_end: int = end
-			var run_color: Color = base_color
+			var run_kind: Variant = null
 			for value_range: Variant in value_ranges:
 				if not (value_range is Array) or (value_range as Array).size() < 2:
 					continue
@@ -355,25 +383,43 @@ func _draw_param_emphasis(
 				var value_end: int = value_start + int((value_range as Array)[1])
 				if cursor >= value_start and cursor < value_end:
 					run_end = mini(end, value_end)
-					var kind: String = str((value_range as Array)[2]) if (value_range as Array).size() >= 3 else ""
-					if kind == "string":
-						run_color = string_color
-					elif kind == "bool":
-						run_color = bool_color
-					elif kind == "muted":
-						run_color = muted_color
-					elif kind == NativeRowMarks.WORD_VARIABLE:
-						run_color = variable_color if variable_color.a > 0.01 else base_color
-					else:
-						run_color = value_color
+					run_kind = str((value_range as Array)[2]) if (value_range as Array).size() >= 3 else ""
 					break
 				elif value_start > cursor:
 					run_end = mini(run_end, value_start)
 			var run_text: String = text.substr(cursor, run_end - cursor)
-			var x: float = baseline.x + font.get_string_size(text.substr(0, cursor), HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
-			if x < limit and not run_text.is_empty():
-				_draw_text(control, Vector2(x, baseline.y), run_text, limit - x, bold_font(font), font_size, run_color)
+			if not run_text.is_empty():
+				runs.append([base_pass_x(text, cursor, value_ranges, font, font_size), run_text, run_kind])
 			cursor = maxi(run_end, cursor + 1)
+	return runs
+
+
+## Where `_draw_text_with_values` draws the character at `offset`, from the text's left edge: the
+## widths of the pieces it drew before it, each measured as it was drawn, plus the part of its own
+## piece in front of it. Walks the ranges exactly as that pass does, skipping one that starts inside
+## a piece already drawn.
+static func base_pass_x(text: String, offset: int, value_ranges: Array, font: Font, font_size: int) -> float:
+	var x: float = 0.0
+	var cursor: int = 0
+	for range_entry: Variant in value_ranges:
+		if not (range_entry is Array) or (range_entry as Array).size() < 2:
+			continue
+		var start: int = int((range_entry as Array)[0])
+		var length: int = int((range_entry as Array)[1])
+		if start < cursor or start >= text.length():
+			continue
+		if offset <= start:
+			return x + _measured(text.substr(cursor, offset - cursor), font, font_size)
+		x += _measured(text.substr(cursor, start - cursor), font, font_size)
+		if offset <= start + length:
+			return x + _measured(text.substr(start, offset - start), font, font_size)
+		x += _measured(text.substr(start, length), font, font_size)
+		cursor = start + length
+	return x + _measured(text.substr(cursor, offset - cursor), font, font_size)
+
+
+static func _measured(piece: String, font: Font, font_size: int) -> float:
+	return 0.0 if piece.is_empty() else font.get_string_size(piece, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
 
 
 func _draw_text_with_values(
