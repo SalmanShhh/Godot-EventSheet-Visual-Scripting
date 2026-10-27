@@ -27,7 +27,37 @@ static func run() -> bool:
 	ok = _test_row_owner_and_notes() and ok
 	ok = _test_the_doctor_says_what_the_rows_say() and ok
 	ok = _test_one_question_answers_whether_a_sheet_is_an_autoload() and ok
+	ok = _test_a_walrus_variable_is_its_values_kind() and ok
 	return ok
+
+
+## `var run_time := 0.0` - the way Godot's own scripts often declare a member - keeps no written type,
+## yet it is a number: Add to takes it, and no amber note calls it "any".
+static func _test_a_walrus_variable_is_its_values_kind() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	var run_time: LocalVariable = LocalVariable.new()
+	run_time.name = "run_time"
+	run_time.default_value = "0.0"
+	run_time.inferred_type = true
+	var coins: LocalVariable = LocalVariable.new()
+	coins.name = "coins"
+	coins.default_value = "0"
+	coins.inferred_type = true
+	var alive: LocalVariable = LocalVariable.new()
+	alive.name = "alive"
+	alive.default_value = "true"
+	alive.inferred_type = true
+	sheet.events.append_array([run_time, coins, alive])
+	var catalog: Array[Dictionary] = EventSheetVariableOwners.catalog(sheet)
+	return SUPPORT.pins("variable_owners_test", [
+		["a := variable reads as its value's kind",
+			[str(EventSheetVariableOwners.find(catalog, "run_time").get("type_word")),
+				str(EventSheetVariableOwners.find(catalog, "coins").get("type_word")),
+				str(EventSheetVariableOwners.find(catalog, "alive").get("type_word"))],
+			["number", "number", "boolean"]],
+		["so Add to on it grows no note", ViewportRowBuilder.variable_mismatch_note(
+			EventSheetVariableOwners.find(catalog, "run_time"), "AddVar"), {}],
+	])
 
 
 ## A sheet is an autoload when the project made it one: the KIND and the name it was granted. The two

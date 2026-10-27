@@ -48,7 +48,7 @@ static func rows_for(sheet: EventSheetResource) -> Array[Dictionary]:
 		rows.append({
 			"name": variable.name,
 			"type_name": variable.type_name,
-			"type_word": ViewportRowBuilder.friendly_type_word(variable.type_name),
+			"type_word": EventSheetVariableOwners.type_word_of(variable),
 			"value": EventSheetVariableOwners.default_text(variable.default_value),
 			"inspector": variable.exported,
 			"description": str(attributes.get("tooltip", "")),

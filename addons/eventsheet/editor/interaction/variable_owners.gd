@@ -18,6 +18,7 @@ class_name EventSheetVariableOwners
 extends RefCounted
 
 const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
 
 ## The owner a local variable reads with - nobody's property, so the sheet's own word for "the
 ## machinery itself". Frozen: rows, the picker and the notes all address this group by it.
@@ -69,6 +70,17 @@ static func catalog(sheet: EventSheetResource) -> Array[Dictionary]:
 	return entries
 
 
+## The kind word a variable reads as. A declaration written `var run_time := 0.0` keeps no type of
+## its own (its type_name stays Variant), so the word is the one its value gives - "number" - rather
+## than "any", which made Add to call a number variable the wrong kind. A whole-number value still
+## reads "number": the line never said the author cared that it refuses a fraction.
+static func type_word_of(variable: LocalVariable) -> String:
+	if variable.inferred_type and (variable.type_name.strip_edges().is_empty() or variable.type_name == "Variant"):
+		var inferred: String = NativeVariableMarks.gdscript_type_word(variable.type_name, variable.default_value, true)
+		return ViewportRowBuilder.friendly_type_word("float" if inferred == "int" else inferred)
+	return ViewportRowBuilder.friendly_type_word(variable.type_name)
+
+
 ## Only the variables the sheet DECLARES - its own object's. Split out because the row builder asks
 ## once per sweep and only ever needs these: a qualified `Game.Score` already carries its owner in
 ## the name, and a local already reads as System, so scanning every autoload's script to answer a
@@ -117,7 +129,7 @@ static func own_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 		entries.append({
 			"name": nested_name,
 			"type_name": descriptor.type_name,
-			"type_word": ViewportRowBuilder.friendly_type_word(descriptor.type_name),
+			"type_word": type_word_of(descriptor),
 			"value": default_text(descriptor.default_value),
 			"scope": EventSheetVariableSentence.member_scope(
 				descriptor.is_constant, descriptor.is_static, autoload, resource_host),
@@ -191,7 +203,7 @@ static func local_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 		entries.append({
 			"name": name_text,
 			"type_name": descriptor.type_name,
-			"type_word": ViewportRowBuilder.friendly_type_word(descriptor.type_name),
+			"type_word": type_word_of(descriptor),
 			"value": default_text(descriptor.default_value),
 			"scope": EventSheetVariableSentence.local_scope(descriptor.static_local),
 			"owner": OWNER_SYSTEM,
