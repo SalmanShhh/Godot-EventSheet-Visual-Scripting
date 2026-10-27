@@ -156,6 +156,7 @@ static func build() -> bool:
 	_param_options(sheet, "ease", ["linear", "smooth", "in", "out"])
 	_param_desc(sheet, "ease", "What the walk feels like: linear is one speed, smooth eases both ends, in starts slowly, out arrives slowly.")
 	_quoted_argument(sheet, "go_to_scene_with({path}, \"{transition}\", {seconds}, \"{ease}\")")
+	_keep_frozen_parameter(sheet, "shadowed_global_identifier", "ease")
 
 	Lib.append_function(sheet, "reload_scene_with", "Reload Scene With", "Scenes",
 		"Reloads the current scene with a transition drawn over it - the polished retry, in whichever shape the game uses everywhere else. Same shapes, same cover colour and same one-at-a-time rule as Go To Scene With; emits On Transition Finished when the fresh scene is up.",
@@ -170,6 +171,7 @@ static func build() -> bool:
 	_param_options(sheet, "ease", ["linear", "smooth", "in", "out"])
 	_param_desc(sheet, "ease", "What the walk feels like: linear is one speed, smooth eases both ends, in starts slowly, out arrives slowly.")
 	_quoted_argument(sheet, "reload_scene_with(\"{transition}\", {seconds}, \"{ease}\")")
+	_keep_frozen_parameter(sheet, "shadowed_global_identifier", "ease")
 
 	Lib.append_function(sheet, "go_to_with_loading", "Go To Scene With Loading", "Scenes",
 		"Shows the node's Loading Scene while the next scene comes off the disk on a thread, then enters it. The wait is over when BOTH the load has finished and the minimum seconds have passed, so the screen cannot flash past on a fast machine; On Loading Progress moves a bar through Scene Load Progress, and Loading Tip answers with one line of the tips file. With Wait For Key on it stops there and waits for Enter Loaded Scene. The node's Loading Transition wraps both halves of the change.",
@@ -259,6 +261,13 @@ static func _transition_lines() -> PackedStringArray:
 		"## @ace_name(\"On Transition Finished\")",
 		"signal transition_finished(shape: String)",
 		"",
+		"## What a transition runner calls on each Scene Flow node it finds once the cover is off. The",
+		"## runner is a class of its own, so the signal is raised here, beside its declaration, where Godot",
+		"## can see it is used.",
+		"## @ace_hidden",
+		"func _announce_transition_finished(shape: String) -> void:",
+		"\ttransition_finished.emit(shape)",
+		"",
 		"## The root-parented runner that draws a transition and swaps the scene under it. Like the fade",
 		"## runner above, it parents itself to the TREE ROOT rather than to the scene being replaced, so the",
 		"## walk out, the swap and the walk back in all survive the change.",
@@ -327,7 +336,9 @@ static func _transition_lines() -> PackedStringArray:
 		"\tfunc _finish() -> void:",
 		"\t\tset_process(false)",
 		"\t\tfor listener: Node in get_tree().get_nodes_in_group(SceneFlowBehavior.TRANSITION_LISTENERS):",
-		"\t\t\tif listener.has_signal(\"transition_finished\"):",
+		"\t\t\tif listener is SceneFlowBehavior:",
+		"\t\t\t\t(listener as SceneFlowBehavior)._announce_transition_finished(shape)",
+		"\t\t\telif listener.has_signal(\"transition_finished\"):",
 		"\t\t\t\tlistener.emit_signal(\"transition_finished\", shape)",
 		"\t\tqueue_free()",
 		"",
@@ -440,6 +451,16 @@ static func _loading_lines() -> PackedStringArray:
 		"## @ace_trigger",
 		"## @ace_name(\"On Loading Finished\")",
 		"signal loading_finished",
+		"",
+		"## What the loading runner calls on each Scene Flow node it finds, naming the beat: the reading",
+		"## moved, or the wait is over. Raised here, beside the two declarations, for the same reason the",
+		"## finished transition is.",
+		"## @ace_hidden",
+		"func _announce_loading(what: String) -> void:",
+		"\tif what == \"loading_progress_changed\":",
+		"\t\tloading_progress_changed.emit()",
+		"\telif what == \"loading_finished\":",
+		"\t\tloading_finished.emit()",
 		"",
 		"## The root-parented poller that holds one background load: it asks the loader how far it has",
 		"## got, tells the loading screen, and enters the new scene when the wait is over. Like the two",
@@ -562,7 +583,9 @@ static func _loading_lines() -> PackedStringArray:
 		"\tfunc _tell(what: String) -> void:",
 		"\t\tfor listener: Node in get_tree().get_nodes_in_group(",
 		"\t\t\t\tSceneFlowBehavior.TRANSITION_LISTENERS):",
-		"\t\t\tif listener.has_signal(what):",
+		"\t\t\tif listener is SceneFlowBehavior:",
+		"\t\t\t\t(listener as SceneFlowBehavior)._announce_loading(what)",
+		"\t\t\telif listener.has_signal(what):",
 		"\t\t\t\tlistener.emit_signal(what)",
 		"",
 		"## HOW FAR THE WAIT HAS GOT, from 0 to 1 - what Scene Load Progress answers with and what a bar is",
@@ -729,3 +752,12 @@ static func _param_options(sheet: EventSheetResource, param_id: String, choices:
 	for parameter: ACEParam in fn.params:
 		if parameter.id == param_id:
 			parameter.options = typed
+
+
+## A verb's parameter names are its ACE parameter ids, frozen once the verb shipped, so a name that
+## shadows something Godot already has stays as it is. The last-declared verb says so to Godot with a
+## `@warning_ignore` of that one warning, instead of Godot reporting it on every load of the pack.
+static func _keep_frozen_parameter(sheet: EventSheetResource, warning: String, parameter: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	fn.annotation_lines.append("@warning_ignore(\"%s\")  # %s: ACE parameter id of this verb, frozen since it shipped" % [
+		warning, parameter])

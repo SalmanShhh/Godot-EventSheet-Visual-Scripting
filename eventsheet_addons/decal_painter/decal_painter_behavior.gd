@@ -27,7 +27,9 @@ var _clock: float = 0.0
 ## The parent every spawned Decal goes under (the host, so decals live in the world).
 ## @ace_hidden
 func _decal_parent() -> Node:
-	return host if host != null else self
+	if host != null:
+		return host
+	return self
 ## The soft radial shadow texture, generated - no asset needed.
 ## @ace_hidden
 func _blob_texture(opacity: float) -> GradientTexture2D:

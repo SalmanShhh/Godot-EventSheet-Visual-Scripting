@@ -25,12 +25,12 @@ func shape_is_solid() -> bool:
 	return true
 
 ## @ace_hidden
-func shape_volume_mesh(detail: int) -> Mesh:
+func shape_volume_mesh(segments: int) -> Mesh:
 	var hoop: TorusMesh = TorusMesh.new()
 	hoop.inner_radius = minf(inner_radius, radius)
 	hoop.outer_radius = maxf(radius, inner_radius + 0.001)
-	hoop.rings = detail
-	hoop.ring_segments = maxi(detail / 2, 3)
+	hoop.rings = segments
+	hoop.ring_segments = maxi(int(segments / 2.0), 3)
 	return hoop
 
 ## @ace_hidden

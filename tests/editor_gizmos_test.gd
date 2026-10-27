@@ -60,7 +60,7 @@ static func run() -> bool:
 	# ---- the shipped demo: Bound To's gizmo static survives pack emission ----
 	var emitted: String = FileAccess.get_file_as_string(BOUND_TO_PATH)
 	all_passed = _check("Bound To ships the gizmo static",
-		emitted.contains("static func editor_gizmo_draw(params: Dictionary, host: Node2D, canvas: CanvasItem) -> void:"), true) and all_passed
+		emitted.contains("static func editor_gizmo_draw(params: Dictionary, gizmo_host: Node2D, canvas: CanvasItem) -> void:"), true) and all_passed
 
 	return all_passed
 

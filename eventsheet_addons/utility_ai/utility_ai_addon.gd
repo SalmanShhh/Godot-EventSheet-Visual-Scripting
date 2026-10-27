@@ -90,11 +90,11 @@ func _ready() -> void:
 	set_process(false)
 
 func _process(delta: float) -> void:
-	for name: String in _cooldowns.keys():
-		_cooldowns[name] = float(_cooldowns[name]) - delta
-		if float(_cooldowns[name]) <= 0.0:
-			_cooldowns.erase(name)
-			_cooldown_action = name
+	for action_name: String in _cooldowns.keys():
+		_cooldowns[action_name] = float(_cooldowns[action_name]) - delta
+		if float(_cooldowns[action_name]) <= 0.0:
+			_cooldowns.erase(action_name)
+			_cooldown_action = action_name
 			on_cooldown_ended.emit()
 	# With nothing left cooling down there is nothing to count, so the brain stops paying for a
 	# frame. Recomputed after the triggers, because a handler may have started a fresh cooldown.
@@ -175,19 +175,19 @@ func clear_inputs() -> void:
 ## @ace_codegen_template("$UtilityBrain.evaluate()")
 func evaluate() -> void:
 	var candidates: Array = []
-	for name: String in _actions:
-		var action: Dictionary = _actions[name]
-		if not bool(action.enabled) or _cooldowns.has(name):
+	for action_name: String in _actions:
+		var action: Dictionary = _actions[action_name]
+		if not bool(action.enabled) or _cooldowns.has(action_name):
 			continue
-		var s: float = _score_action(name)
+		var s: float = _score_action(action_name)
 		# Inertia is an anti-jitter tie-breaker for the running action - it only nudges an already-
 		# viable action, never rescues one its own considerations have vetoed below the threshold.
-		if name == _current and s >= min_score:
+		if action_name == _current and s >= min_score:
 			s += inertia_bonus
-		_scores[name] = s
+		_scores[action_name] = s
 		if s < min_score:
 			continue
-		candidates.append({"name": name, "score": s})
+		candidates.append({"name": action_name, "score": s})
 	if candidates.is_empty():
 		_decision_score = 0.0
 		on_no_valid_action.emit()
@@ -225,12 +225,12 @@ func force_action(action_name: String) -> void:
 func mark_complete() -> void:
 	if _current == "":
 		return
-	var name: String = _current
+	var action_name: String = _current
 	on_action_completed.emit()
-	var cd: float = float(_actions[name].cooldown) if _actions.has(name) else 0.0
+	var cd: float = float(_actions[action_name].cooldown) if _actions.has(action_name) else 0.0
 	if cd > 0.0:
-		_cooldowns[name] = cd
-		_cooldown_action = name
+		_cooldowns[action_name] = cd
+		_cooldown_action = action_name
 		# A cooldown is counted down per frame, so starting one wakes the tick up.
 		set_process(true)
 		on_cooldown_started.emit()
@@ -428,10 +428,10 @@ func _curve_score(curve: String, x: float, center: float, slope: float) -> float
 			return exp(-d * d)
 		_: return v
 
-func _score_action(name: String) -> float:
+func _score_action(action_name: String) -> float:
 	# An action's score: the product of its considerations (with the geometric-mean make-up
 	# compensation), times its priority. A consideration-less action returns the flat fallback.
-	var action: Dictionary = _actions[name]
+	var action: Dictionary = _actions[action_name]
 	var cons: Array = action.considerations
 	if cons.is_empty():
 		return fallback_score * float(action.priority)
@@ -444,20 +444,20 @@ func _score_action(name: String) -> float:
 		score += (1.0 - score) * mod * score
 	return score * float(action.priority)
 
-func _push_history(name: String) -> void:
+func _push_history(action_name: String) -> void:
 	# Records a newly-started action at the front of the bounded history ring.
-	_history.insert(0, name)
+	_history.insert(0, action_name)
 	while _history.size() > history_length:
 		_history.remove_at(_history.size() - 1)
 
-func _decide(name: String, force_start: bool) -> void:
+func _decide(action_name: String, force_start: bool) -> void:
 	# Commits a chosen action: always On Decision Made; On Action Changed + On Action Started when
 	# the choice differs from what is running (or, for a forced action, whenever force_start is set).
 	on_decision_made.emit()
-	if name != _current:
+	if action_name != _current:
 		_previous = _current
-		_current = name
-		_push_history(name)
+		_current = action_name
+		_push_history(action_name)
 		on_action_changed.emit()
 		on_action_started.emit()
 	elif force_start:

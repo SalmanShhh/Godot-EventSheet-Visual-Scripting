@@ -151,6 +151,7 @@ static func build() -> bool:
 		"Replays a walker's recorded path and considers a candidate every N steps, keeping each with the given chance and rejecting it if it lands too close to an existing mark of the same tag. The walker must have run already, because the path is recorded as it walks. Candidates start at step N, not at the start cell.",
 		[["walker_id", "String"], ["tag", "String"], ["every_steps", "int"], ["chance", "float"],
 			["min_spacing", "float"]])
+	_keep_frozen_parameter(src.sheet, "shadowed_variable", "walker_id")
 	src.verb("scatter_marks", "Scatter Marks",
 		"Places up to this many tagged marks on cells holding a value, filtered by the placement rule and thinned by minimum spacing. The count is a maximum, not a promise: tight spacing or a rule that matches almost nothing places fewer, and Debug Mode says how many it managed.",
 		[["count", "int"], ["tag", "String"], ["value", "int"], ["placement", "String"],
@@ -343,3 +344,12 @@ static func _options(sheet: EventSheetResource, param_id: String, choices: Array
 	for parameter: ACEParam in fn.params:
 		if parameter.id == param_id:
 			parameter.options = typed
+
+
+## A verb's parameter names are its ACE parameter ids, frozen once the verb shipped, so a name that
+## shadows something Godot already has stays as it is. The last-declared verb says so to Godot with a
+## `@warning_ignore` of that one warning, instead of Godot reporting it on every load of the pack.
+static func _keep_frozen_parameter(sheet: EventSheetResource, warning: String, parameter: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	fn.annotation_lines.append("@warning_ignore(\"%s\")  # %s: ACE parameter id of this verb, frozen since it shipped" % [
+		warning, parameter])

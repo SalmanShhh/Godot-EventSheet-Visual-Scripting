@@ -270,10 +270,10 @@ func _run_draw_commands() -> void:
 			"multiline":
 				_drawer.draw_multiline(command["points"], command["color"], command["width"])
 			"stamp":
-				var texture: Texture2D = command["texture"]
-				if texture != null:
+				var stamp_texture: Texture2D = command["texture"]
+				if stamp_texture != null:
 					_drawer.draw_set_transform(command["at"], command["rotation"], Vector2.ONE * float(command["scale"]))
-					_drawer.draw_texture(texture, -texture.get_size() * 0.5)
+					_drawer.draw_texture(stamp_texture, -stamp_texture.get_size() * 0.5)
 					_drawer.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 			"node_stamp":
 				var node_tex: Texture2D = command["texture"]
@@ -403,9 +403,9 @@ func prefab(prefab_res: Resource, x: float, y: float, scale_factor: float, rotat
 			"cone":
 				cone(at.x, at.y, p1 + rotation_deg, p2, p3 * scale_by, tint)
 			"stamp":
-				var texture: Texture2D = entry["tex"]
-				if texture != null:
-					stamp(texture, at.x, at.y, maxf(p1, 0.01) * scale_by, p2 + rotation_deg)
+				var stamp_texture: Texture2D = entry["tex"]
+				if stamp_texture != null:
+					stamp(stamp_texture, at.x, at.y, maxf(p1, 0.01) * scale_by, p2 + rotation_deg)
 
 ## Typed draw entries for a prefab: the resource's cached compiled_steps() (parsed once, shared by
 ## every draw) when it exposes one, else a raw parse of any Resource's steps into the same shape.
@@ -533,7 +533,7 @@ func _sprite_info(sprite: Sprite2D, tint: Color) -> Dictionary:
 		var rows: int = maxi(sprite.vframes, 1)
 		frame_size = Vector2(tex.get_width() / float(cols), tex.get_height() / float(rows))
 		var cell: int = sprite.frame
-		src = Rect2(Vector2(cell % cols, (cell / cols) % rows) * frame_size, frame_size)
+		src = Rect2(Vector2(cell % cols, floori(cell / float(cols)) % rows) * frame_size, frame_size)
 	var dest_pos: Vector2 = sprite.offset
 	if sprite.centered:
 		dest_pos -= frame_size * 0.5
@@ -718,7 +718,10 @@ static func style_fields(style: Resource) -> Dictionary:
 		if typeof(value) == typeof(fields[key]):
 			fields[key] = value
 		elif (value is float or value is int) and (fields[key] is float or fields[key] is int):
-			fields[key] = float(value) if fields[key] is float else int(value)
+			if fields[key] is float:
+				fields[key] = float(value)
+			else:
+				fields[key] = int(value)
 	return fields
 
 ## Draws an arc of a circle in the current style: a cooldown sweep, a health ring, a turn radius.
@@ -958,9 +961,9 @@ static func raster_shape(command: Dictionary) -> Dictionary:
 				return {"kind": "polygon", "points": points, "color": colour}
 			if bool(style.get("dashed", false)):
 				return {"kind": "multiline", "points": dashed_walk(points, true, style), "width": width, "color": colour}
-			var ring: PackedVector2Array = points.duplicate()
-			ring.append(ring[0])
-			return {"kind": "polyline", "points": ring, "width": width, "color": colour}
+			var closed: PackedVector2Array = points.duplicate()
+			closed.append(closed[0])
+			return {"kind": "polyline", "points": closed, "width": width, "color": colour}
 		"polyline":
 			var path: PackedVector2Array = command.get("points", PackedVector2Array())
 			if path.size() < 2:

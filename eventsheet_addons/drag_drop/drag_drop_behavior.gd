@@ -110,6 +110,7 @@ func _process(delta: float) -> void:
 ## @ace_display_template("Start drag at ([b]{drag_point_x}[/b], [b]{drag_point_y}[/b]) grab mode [b]{grab_mode}[/b]")
 ## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
 ## @ace_codegen_template("$DragDropBehavior.start_drag({drag_point_x}, {drag_point_y}, {grab_mode})")
+@warning_ignore("shadowed_variable")  # drag_point_x, drag_point_y: ACE parameter id of this verb, frozen since it shipped
 func start_drag(drag_point_x: float, drag_point_y: float, grab_mode: int) -> void:
 	if not enabled or dragging or host == null:
 		return

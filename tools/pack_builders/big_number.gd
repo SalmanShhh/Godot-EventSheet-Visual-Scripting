@@ -86,7 +86,7 @@ static func build() -> bool:
 			"var exponent: int = _oom(magnitude)",
 			"if exponent < 3:",
 			"\treturn sign_text + String.num(magnitude, maxi(decimals, 0))",
-			"var tier: int = exponent / 3",
+			"var tier: int = floori(exponent / 3.0)",
 			"var step: float = pow(10.0, -maxi(decimals, 0))",
 			"var mantissa: float = magnitude / pow(10.0, tier * 3)",
 			"if snappedf(mantissa, step) >= 1000.0:",
@@ -132,11 +132,11 @@ static func build() -> bool:
 	Lib.number(sheet, "fmt_time", "Format Time", "Big Numbers", "Seconds as a friendly duration: 3725 -> \"1h 2m 5s\". Drops leading zero units (90 -> \"1m 30s\").",
 		[["seconds", "float"]], "\n".join(PackedStringArray([
 			"var total: int = int(maxf(seconds, 0.0))",
-			"var days: int = total / 86400",
+			"var days: int = floori(total / 86400.0)",
 			"total = total % 86400",
-			"var hours: int = total / 3600",
+			"var hours: int = floori(total / 3600.0)",
 			"total = total % 3600",
-			"var minutes: int = total / 60",
+			"var minutes: int = floori(total / 60.0)",
 			"var secs: int = total % 60",
 			"var parts: PackedStringArray = PackedStringArray()",
 			"if days > 0:",
@@ -151,8 +151,8 @@ static func build() -> bool:
 	Lib.number(sheet, "fmt_time_short", "Format Time Short", "Big Numbers", "Seconds as a clock: 3725 -> \"1:02:05\", 90 -> \"1:30\".",
 		[["seconds", "float"]], "\n".join(PackedStringArray([
 			"var total: int = int(maxf(seconds, 0.0))",
-			"var hours: int = total / 3600",
-			"var minutes: int = (total % 3600) / 60",
+			"var hours: int = floori(total / 3600.0)",
+			"var minutes: int = floori((total % 3600) / 60.0)",
 			"var secs: int = total % 60",
 			"if hours > 0:",
 			"\treturn \"%d:%02d:%02d\" % [hours, minutes, secs]",
@@ -195,7 +195,7 @@ static func build() -> bool:
 		[["magnitude", "int"]], "\n".join(PackedStringArray([
 			"if magnitude < 0:",
 			"\treturn \"\"",
-			"var tier: int = magnitude / 3",
+			"var tier: int = floori(magnitude / 3.0)",
 			"return str(SUFFIXES[tier]) if tier < SUFFIXES.size() else \"\""
 		])), TYPE_STRING)
 	Lib.number(sheet, "order_of_magnitude", "Order Of Magnitude", "Big Numbers", "The power of ten of a value (floor log10): 1250 -> 3, 1000000 -> 6.",
@@ -276,7 +276,7 @@ static func build() -> bool:
 			"var e: int = int(exponent_floor)",
 			"if e < 3:",
 			"\treturn sign_text + String.num(mantissa * pow(10.0, e), maxi(decimals, 0))",
-			"var tier: int = e / 3",
+			"var tier: int = floori(e / 3.0)",
 			"var band: float = mantissa * pow(10.0, e - tier * 3)",
 			"if band >= 1000.0:",
 			"\tband = band / 1000.0",

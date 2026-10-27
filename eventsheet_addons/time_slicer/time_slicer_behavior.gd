@@ -35,7 +35,7 @@ var _paused: bool = false
 func _ready() -> void:
 	set_process(not _queue.is_empty())
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if _paused or _queue.is_empty():
 		set_process(false)
 		return

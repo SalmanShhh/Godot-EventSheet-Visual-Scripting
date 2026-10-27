@@ -1234,10 +1234,10 @@ func _read_path(path: String, fmt: String) -> Dictionary:
 	var load_err: Error = config.load(path) if encryption_key.is_empty() else config.load_encrypted_pass(path, encryption_key)
 	if load_err != Error.OK:
 		return _read_failed("it may be damaged, or the encryption key is wrong")
-	var data: Dictionary = {}
+	var section_values: Dictionary = {}
 	for key: String in config.get_section_keys(section) if config.has_section(section) else PackedStringArray():
-		data[key] = config.get_value(section, key)
-	return data
+		section_values[key] = config.get_value(section, key)
+	return section_values
 
 func _xml_escape(text: String) -> String:
 	# XML entities on write; XMLParser un-escapes on read.

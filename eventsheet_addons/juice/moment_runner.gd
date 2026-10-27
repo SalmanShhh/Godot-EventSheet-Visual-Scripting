@@ -219,10 +219,10 @@ static func walk_order(steps: Array, backwards: bool = false) -> PackedInt32Arra
 static func revert_order(steps: Array) -> PackedInt32Array:
 	var order: PackedInt32Array = PackedInt32Array()
 	for index: int in steps.size():
-		var at: int = steps.size() - 1 - index
-		var step: Variant = steps[at]
+		var step_index: int = steps.size() - 1 - index
+		var step: Variant = steps[step_index]
 		if step is Dictionary and not is_one_way(str((step as Dictionary).get("verb", ""))):
-			order.append(at)
+			order.append(step_index)
 	return order
 
 ## Whether one step word leaves nothing behind to walk home.

@@ -217,6 +217,10 @@ static func build() -> bool:
 		[["pool_name", "String"], ["scene_path", "String"], ["prewarm", "int"]],
 		"var scene: PackedScene = load(scene_path) as PackedScene\n_pools[pool_name] = {\"scene\": scene, \"free\": [], \"active\": []}\nif scene == null:\n\treturn\nfor _i: int in maxi(prewarm, 0):\n\t_stow(pool_name, scene.instantiate())")
 	_default(sheet, "prewarm", "8")
+	# `prewarm` is the Create Pool row's own parameter name, frozen with the row, so it keeps sharing a
+	# name with the Prewarm verb and the shadowing is said to be deliberate.
+	(sheet.functions.back() as EventFunction).annotation_lines.append(
+		"@warning_ignore(\"shadowed_variable\")  # `prewarm` is this row's frozen parameter name")
 	Lib.append_function(sheet, "create_empty_pool", "Create Empty Pool", "Object Pool", "The custom way: makes a pool with no scene of its own. Fill it with Add To Pool (your own nodes), and Spawn hands those back out.",
 		[["pool_name", "String"]],
 		"_pools[pool_name] = {\"scene\": null, \"free\": [], \"active\": []}")

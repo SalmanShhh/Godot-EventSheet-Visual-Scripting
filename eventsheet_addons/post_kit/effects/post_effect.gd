@@ -65,8 +65,8 @@ func _render_callback(callback_type: int, render_data: RenderData) -> void:
 	if size.x <= 0 or size.y <= 0:
 		return
 	var push: PackedFloat32Array = _push_constant(size)
-	var groups_x: int = int((size.x - 1) / GROUP_SIZE) + 1
-	var groups_y: int = int((size.y - 1) / GROUP_SIZE) + 1
+	var groups_x: int = ceili(size.x / float(GROUP_SIZE))
+	var groups_y: int = ceili(size.y / float(GROUP_SIZE))
 	for view: int in buffers.get_view_count():
 		var uniforms: Array[RDUniform] = _uniforms(buffers.get_color_layer(view))
 		if uniforms.is_empty():

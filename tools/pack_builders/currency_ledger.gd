@@ -94,6 +94,7 @@ static func build() -> bool:
 	Lib.append_function(sheet, "set_daily_cap", "Set Daily Cap", "Currency", "Caps how much can be EARNED (added) per day (-1 = no daily cap). You decide when a day rolls over by calling Reset Daily Caps.",
 		[["id", "String"], ["daily_cap", "float"]],
 		"_ensure(id).daily_cap = daily_cap")
+	_keep_frozen_parameter(sheet, "shadowed_variable", "daily_cap")
 	Lib.append_function(sheet, "allow_debt", "Allow Debt", "Currency", "Lets a currency go negative down to this floor (e.g. -50). Use it for hunger, heat, or overdraft. Default floor is 0 (no debt).",
 		[["id", "String"], ["minimum", "float"]],
 		"_ensure(id).min = minimum")
@@ -267,3 +268,12 @@ static func _number(sheet: EventSheetResource, function_name: String, display_na
 	var fn: EventFunction = Lib.exposed_function(function_name, display_name, category, description, params, body)
 	fn.return_type = ret
 	sheet.functions.append(fn)
+
+
+## A verb's parameter names are its ACE parameter ids, frozen once the verb shipped, so a name that
+## shadows something Godot already has stays as it is. The last-declared verb says so to Godot with a
+## `@warning_ignore` of that one warning, instead of Godot reporting it on every load of the pack.
+static func _keep_frozen_parameter(sheet: EventSheetResource, warning: String, parameter: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	fn.annotation_lines.append("@warning_ignore(\"%s\")  # %s: ACE parameter id of this verb, frozen since it shipped" % [
+		warning, parameter])

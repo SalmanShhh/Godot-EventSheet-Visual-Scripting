@@ -57,7 +57,7 @@ func _ready() -> void:
 	# per physics frame until Set Bound Enabled turns it on.
 	set_physics_process(bound_enabled)
 
-func _physics_process(delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	if not bound_enabled or host == null:
 		return
 	var rect: Rect2 = _bound_rect()
@@ -141,7 +141,7 @@ func set_bound_space(space: String) -> void:
 	if space in ["screen", "custom"]:
 		bound_space = space
 
-static func editor_gizmo_draw(params: Dictionary, host: Node2D, canvas: CanvasItem) -> void:
+static func editor_gizmo_draw(params: Dictionary, gizmo_host: Node2D, canvas: CanvasItem) -> void:
 	# Editor-gizmo contract (select the host or this behavior in the editor): draws the
 	# bound rectangle in the 2D viewport - solid outer bound, dashed inner line where the
 	# ORIGIN can reach when edge binding subtracts the half-size. Pure knob math; the
@@ -153,7 +153,7 @@ static func editor_gizmo_draw(params: Dictionary, host: Node2D, canvas: CanvasIt
 		# The editor has no running camera - show the project's base view size from 0,0.
 		rect = Rect2(0.0, 0.0, float(ProjectSettings.get_setting("display/window/size/viewport_width", 1152)), float(ProjectSettings.get_setting("display/window/size/viewport_height", 648)))
 	# The rect is world-space; the canvas rides the host, so draw through the inverse.
-	canvas.draw_set_transform_matrix(host.get_global_transform().affine_inverse())
+	canvas.draw_set_transform_matrix(gizmo_host.get_global_transform().affine_inverse())
 	var color: Color = Color(0.36, 0.78, 1.0, 0.9)
 	canvas.draw_rect(rect, color, false, 2.0)
 	if bool(params.get("bound_by_edge", true)):

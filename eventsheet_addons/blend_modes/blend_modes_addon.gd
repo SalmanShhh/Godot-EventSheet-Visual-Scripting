@@ -365,7 +365,7 @@ func _wear_native(item: CanvasItem, mode: String) -> void:
 	if canvas_material == null:
 		canvas_material = CanvasItemMaterial.new()
 		item.material = canvas_material
-	canvas_material.blend_mode = int(NATIVE_MODES[mode])
+	canvas_material.blend_mode = int(NATIVE_MODES[mode]) as CanvasItemMaterial.BlendMode
 	item.set_meta(MODE_META, mode)
 
 ## Remembers what the item was wearing before the pack put anything on it - once, so a second blend

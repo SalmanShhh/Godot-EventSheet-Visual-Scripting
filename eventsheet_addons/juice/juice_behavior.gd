@@ -1117,6 +1117,7 @@ func moment(moment_name: String, strength: float) -> void:
 ## @ace_param(moment, hint: resource_path, default: preload("res://eventsheet_addons/juice/impact.tres"), desc: "The moment file. Pick one with the browse button, or leave it empty to take the name away again.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.define_moment("{moment_name}", {moment})")
+@warning_ignore("shadowed_variable")  # `moment` is this row's frozen parameter name
 func define_moment(moment_name: String, moment: Resource) -> void:
 	var word: String = moment_name.strip_edges().to_lower()
 	if word.is_empty():
@@ -2034,7 +2035,9 @@ func _moment_remember(key: String, play: Dictionary, steps: Array) -> void:
 ## @ace_hidden
 func _moment_value_of(key: String) -> Variant:
 	if key == MomentRunner.TOUCH_HOST_TINT:
-		return (host as CanvasItem).modulate if host is CanvasItem else null
+		if host is CanvasItem:
+			return (host as CanvasItem).modulate
+		return null
 	if key == MomentRunner.TOUCH_HOST_SCALE:
 		if host is Node2D:
 			return (host as Node2D).scale
@@ -2045,7 +2048,9 @@ func _moment_value_of(key: String) -> Variant:
 		return Engine.time_scale
 	if key == MomentRunner.TOUCH_CAMERA_ZOOM:
 		var cam: Camera2D = _camera()
-		return cam.zoom if cam != null else null
+		if cam != null:
+			return cam.zoom
+		return null
 	if key.begins_with(MomentRunner.TOUCH_POST_PREFIX):
 		var screen: CanvasLayer = _moment_screen_fx()
 		if screen == null:

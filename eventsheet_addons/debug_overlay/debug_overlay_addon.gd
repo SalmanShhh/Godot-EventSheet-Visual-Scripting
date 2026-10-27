@@ -36,7 +36,7 @@ var _rects: Array = []
 var _rays_3d: Array = []
 var _labels: Array = []
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	_expire_overlay_entries()
 
 func _ready() -> void:

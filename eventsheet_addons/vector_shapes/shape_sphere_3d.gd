@@ -46,12 +46,12 @@ extends VectorShape3D
 		shape_changed()
 
 ## @ace_hidden
-func shape_volume_mesh(detail: int) -> Mesh:
+func shape_volume_mesh(segments: int) -> Mesh:
 	var ball: SphereMesh = SphereMesh.new()
 	ball.radius = radius
 	ball.height = radius * 2.0
-	ball.radial_segments = detail
-	ball.rings = maxi(detail / 2, 2)
+	ball.radial_segments = segments
+	ball.rings = maxi(int(segments / 2.0), 2)
 	return ball
 ## @ace_hidden
 func shape_plane_bounds() -> Rect2:

@@ -81,6 +81,7 @@ func _retire_runtime_script() -> Script:
 ## @ace_display_template("Create pool [b]{pool_name}[/b] of [b]{scene_path}[/b], prewarm [b]{prewarm}[/b]")
 ## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.create_pool({pool_name}, {scene_path}, {prewarm})")
+@warning_ignore("shadowed_variable")  # `prewarm` is this row's frozen parameter name
 func create_pool(pool_name: String, scene_path: String, prewarm: int) -> void:
 	var scene: PackedScene = load(scene_path) as PackedScene
 	_pools[pool_name] = {"scene": scene, "free": [], "active": []}

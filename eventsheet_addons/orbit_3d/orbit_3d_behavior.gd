@@ -57,8 +57,8 @@ static func editor_preview_sample(params: Dictionary, base: Dictionary, time: fl
 	if not rest is Vector3:
 		return {}
 	var centre: Vector3 = rest
-	var angle: float = deg_to_rad(float(params.get("speed_degrees", 90.0)) * time)
-	var radius: float = float(params.get("radius", 3.0))
-	return {"position": Vector3(centre.x + cos(angle) * radius, centre.y, centre.z + sin(angle) * radius)}
+	var phase: float = deg_to_rad(float(params.get("speed_degrees", 90.0)) * time)
+	var ring_radius: float = float(params.get("radius", 3.0))
+	return {"position": Vector3(centre.x + cos(phase) * ring_radius, centre.y, centre.z + sin(phase) * ring_radius)}
 
 # Orbit 3D behavior (event-sheet-style): circles the host around its starting point in the XZ plane (Y stays).

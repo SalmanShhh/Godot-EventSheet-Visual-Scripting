@@ -35,6 +35,7 @@ static func build() -> bool:
 		"Records that the player has found an entry of a set. The first Discover of an entry fires On First Discovered; every one after it is silent, so the row that fills the codex and the row that celebrates it can be the same row.",
 		[["set_name", "String"], ["entry_id", "String"]])
 	_default(src.sheet, "set_name", "\"enemies\"")
+	_keep_frozen_parameter(src.sheet, "shadowed_variable_base_class", "set_name")
 	_default(src.sheet, "entry_id", "\"slime\"")
 	# THE WAY BACK OUT. Without these two the book could only ever grow: a New Game in the same
 	# session, a cheat menu that locks a page again and a set of run-only discoveries all had no
@@ -44,24 +45,29 @@ static func build() -> bool:
 		"Takes one entry back out of the set, so Has Discovered says no again and the page leaves For Each Discovered. The other half of Discover: a cheat menu that locks a page again, a chapter that takes its own notes back, a run-only discovery cleared between runs. An entry that was never found is left alone.",
 		[["set_name", "String"], ["entry_id", "String"]])
 	_default(src.sheet, "set_name", "\"enemies\"")
+	_keep_frozen_parameter(src.sheet, "shadowed_variable_base_class", "set_name")
 	_default(src.sheet, "entry_id", "\"slime\"")
 	src.verb("forget_set", "Forget Set",
 		"Empties one whole set, so nothing in it counts as found any more and its count reads zero. What a New Game in the same session wants, and what a save that carries no codex of its own deliberately does NOT do by itself.",
 		[["set_name", "String"]])
 	_default(src.sheet, "set_name", "\"enemies\"")
+	_keep_frozen_parameter(src.sheet, "shadowed_variable_base_class", "set_name")
 	src.condition("has_discovered", "Has Discovered",
 		"Whether that entry of that set has been found - show the page, unlock the recipe, grey the silhouette out.",
 		[["set_name", "String"], ["entry_id", "String"]])
 	_default(src.sheet, "set_name", "\"enemies\"")
+	_keep_frozen_parameter(src.sheet, "shadowed_variable_base_class", "set_name")
 	_default(src.sheet, "entry_id", "\"slime\"")
 	src.expression("discovered_count", "Discovered Count",
 		"How many entries of a set have been found - the left-hand number of a 14-out-of-60 line.",
 		[["set_name", "String"]], TYPE_INT)
 	_default(src.sheet, "set_name", "\"enemies\"")
+	_keep_frozen_parameter(src.sheet, "shadowed_variable_base_class", "set_name")
 	src.expression("total_entries", "Total Entries",
 		"How many entries a set HOLDS, counted from the files in its folder - the right-hand number of a 14-out-of-60 line. A page added to the folder joins the total with no sheet edit.",
 		[["set_name", "String"]], TYPE_INT)
 	_default(src.sheet, "set_name", "\"enemies\"")
+	_keep_frozen_parameter(src.sheet, "shadowed_variable_base_class", "set_name")
 
 	Lib.verb_sentences(src.sheet, {
 		"discover": "Discover [b]{entry_id}[/b] in [b]{set_name}[/b]",
@@ -103,3 +109,12 @@ static func _default(sheet: EventSheetResource, param_id: String, value: String)
 	for parameter: ACEParam in fn.params:
 		if parameter.id == param_id:
 			parameter.default_value = value
+
+
+## A verb's parameter names are its ACE parameter ids, frozen once the verb shipped, so a name that
+## shadows something Godot already has stays as it is. The last-declared verb says so to Godot with a
+## `@warning_ignore` of that one warning, instead of Godot reporting it on every load of the pack.
+static func _keep_frozen_parameter(sheet: EventSheetResource, warning: String, parameter: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	fn.annotation_lines.append("@warning_ignore(\"%s\")  # %s: ACE parameter id of this verb, frozen since it shipped" % [
+		warning, parameter])

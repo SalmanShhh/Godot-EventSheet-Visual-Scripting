@@ -64,6 +64,7 @@ func _ready() -> void:
 ## @ace_description("Registers a rarity: a roll weight (higher = commoner) and a tier rank (higher = rarer; pity guarantees a tier at or above the pity rarity).")
 ## @ace_icon("res://eventsheet_addons/skin_vault/icon.svg")
 ## @ace_codegen_template("SkinVault.register_rarity({name}, {weight}, {tier})")
+@warning_ignore("shadowed_variable_base_class")  # `name` is this row's frozen parameter name
 func register_rarity(name: String, weight: float, tier: int) -> void:
 	_rarities[name] = {"weight": maxf(weight, 0.0), "tier": tier}
 

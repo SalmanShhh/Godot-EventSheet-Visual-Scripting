@@ -108,7 +108,6 @@ const TRANSITION_FLOOR_SECONDS: float = 0.1
 ## outlives the scene it started in, so the node it tells is whichever one is standing in the NEW
 ## scene - which is exactly where a row waiting on the arrival wants to be.
 const TRANSITION_LISTENERS: StringName = &"scene_flow_listener"
-
 ## The root-parented runner that draws a transition and swaps the scene under it. Like the fade
 ## runner above, it parents itself to the TREE ROOT rather than to the scene being replaced, so the
 ## walk out, the swap and the walk back in all survive the change.
@@ -177,7 +176,9 @@ class ShaderTransitionRunner:
 	func _finish() -> void:
 		set_process(false)
 		for listener: Node in get_tree().get_nodes_in_group(SceneFlowBehavior.TRANSITION_LISTENERS):
-			if listener.has_signal("transition_finished"):
+			if listener is SceneFlowBehavior:
+				(listener as SceneFlowBehavior)._announce_transition_finished(shape)
+			elif listener.has_signal("transition_finished"):
 				listener.emit_signal("transition_finished", shape)
 		queue_free()
 ## The shader one shape wears, loaded from the pack folder beside this script. A word that is not a
@@ -211,7 +212,6 @@ const LOADING_NO_TRANSITION: String = "none"
 ## The line a tips file leaves out: a comment, so a file of tips can carry a note about itself
 ## and a tip can be parked without being deleted.
 const LOADING_TIP_COMMENT: String = "#"
-
 ## The root-parented poller that holds one background load: it asks the loader how far it has
 ## got, tells the loading screen, and enters the new scene when the wait is over. Like the two
 ## transition runners above it lives under the TREE ROOT, because the row that started it is
@@ -333,7 +333,9 @@ class LoadingRunner:
 	func _tell(what: String) -> void:
 		for listener: Node in get_tree().get_nodes_in_group(
 				SceneFlowBehavior.TRANSITION_LISTENERS):
-			if listener.has_signal(what):
+			if listener is SceneFlowBehavior:
+				(listener as SceneFlowBehavior)._announce_loading(what)
+			elif listener.has_signal(what):
 				listener.emit_signal(what)
 ## Whether the runner walks into the new scene by itself at that point, which it does unless the
 ## row asked to wait for a key - the press-any-key screen.
@@ -418,6 +420,7 @@ func quit_game() -> void:
 ## @ace_param(ease, options: linear|smooth|in|out, default: smooth, desc: "What the walk feels like: linear is one speed, smooth eases both ends, in starts slowly, out arrives slowly.")
 ## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
 ## @ace_codegen_template("$SceneFlowBehavior.go_to_scene_with({path}, "{transition}", {seconds}, "{ease}")")
+@warning_ignore("shadowed_global_identifier")  # ease: ACE parameter id of this verb, frozen since it shipped
 func go_to_scene_with(path: String, transition: String, seconds: float, ease: String) -> void:
 	if path.strip_edges().is_empty():
 		return
@@ -433,6 +436,7 @@ func go_to_scene_with(path: String, transition: String, seconds: float, ease: St
 ## @ace_param(ease, options: linear|smooth|in|out, default: smooth, desc: "What the walk feels like: linear is one speed, smooth eases both ends, in starts slowly, out arrives slowly.")
 ## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
 ## @ace_codegen_template("$SceneFlowBehavior.reload_scene_with("{transition}", {seconds}, "{ease}")")
+@warning_ignore("shadowed_global_identifier")  # ease: ACE parameter id of this verb, frozen since it shipped
 func reload_scene_with(transition: String, seconds: float, ease: String) -> void:
 	_start_transition("", transition, seconds, ease)
 
@@ -485,6 +489,13 @@ func _start_fade(path: String) -> void:
 	runner.target_path = path
 	get_tree().root.add_child(runner)
 
+## What a transition runner calls on each Scene Flow node it finds once the cover is off. The
+## runner is a class of its own, so the signal is raised here, beside its declaration, where Godot
+## can see it is used.
+## @ace_hidden
+func _announce_transition_finished(shape: String) -> void:
+	transition_finished.emit(shape)
+
 ## HOW COVERED THE SCREEN IS at a point in the walk: nothing at the start, everything at the halfway
 ## mark where the scene is exchanged, and nothing again at the end. ONE progress model, so the
 ## shader, the swap and anything asking about the walk are reading the same triangle rather than
@@ -536,6 +547,16 @@ func _start_transition(path: String, shape: String, seconds: float, ease_word: S
 	runner.wipe_image = wipe_image
 	runner.target_path = path
 	get_tree().root.add_child(runner)
+
+## What the loading runner calls on each Scene Flow node it finds, naming the beat: the reading
+## moved, or the wait is over. Raised here, beside the two declarations, for the same reason the
+## finished transition is.
+## @ace_hidden
+func _announce_loading(what: String) -> void:
+	if what == "loading_progress_changed":
+		loading_progress_changed.emit()
+	elif what == "loading_finished":
+		loading_finished.emit()
 
 ## HOW FAR THE WAIT HAS GOT, from 0 to 1 - what Scene Load Progress answers with and what a bar is
 ## set to. It is the SLOWER of the two things being waited on: how much of the scene is off the

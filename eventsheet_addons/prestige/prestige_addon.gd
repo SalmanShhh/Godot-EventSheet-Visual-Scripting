@@ -31,6 +31,7 @@ var _last_gain: int = 0
 ## @ace_description("Sets the requirement (run earnings before you gain a point), the exponent (curve; 0.5 = square-root, the usual), and the bonus each banked point adds to Prestige Multiplier.")
 ## @ace_icon("res://eventsheet_addons/prestige/icon.svg")
 ## @ace_codegen_template("Prestige.configure({requirement}, {exponent}, {bonus_per_point})")
+@warning_ignore("shadowed_variable")  # `requirement` is this row's frozen parameter name
 func configure(requirement: float, exponent: float, bonus_per_point: float) -> void:
 	_requirement = maxf(requirement, 0.0)
 	_exponent = exponent

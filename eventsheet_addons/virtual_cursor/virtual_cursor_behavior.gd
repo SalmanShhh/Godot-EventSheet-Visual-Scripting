@@ -315,6 +315,7 @@ func simulate_interact(id: String) -> void:
 ## @ace_description("Sets the max cursor speed (px/s).")
 ## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.set_max_speed({speed})")
+@warning_ignore("shadowed_variable")  # `speed` is this row's frozen parameter name
 func set_max_speed(speed: float) -> void:
 	max_speed = speed
 

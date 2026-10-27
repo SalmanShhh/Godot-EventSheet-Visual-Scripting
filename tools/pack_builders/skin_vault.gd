@@ -129,6 +129,10 @@ static func build() -> bool:
 	Lib.append_function(sheet, "register_rarity", "Register Rarity", "SkinVault", "Registers a rarity: a roll weight (higher = commoner) and a tier rank (higher = rarer; pity guarantees a tier at or above the pity rarity).",
 		[["name", "String"], ["weight", "float"], ["tier", "int"]],
 		"_rarities[name] = {\"weight\": maxf(weight, 0.0), \"tier\": tier}")
+	# `name` is the Register Rarity row's own parameter name, frozen with the row, so it keeps
+	# shadowing Node.name and says so.
+	(sheet.functions.back() as EventFunction).annotation_lines.append(
+		"@warning_ignore(\"shadowed_variable_base_class\")  # `name` is this row's frozen parameter name")
 	Lib.append_function(sheet, "use_advanced_random", "Use Advanced Random", "SkinVault", "When on, rolls draw from the shared AdvancedRandom autoload instead of this pack's own generator, so one seed drives your whole game's randomness. When off (the default) it uses its own generator. Needs the Advanced Random pack installed (it safely falls back to the local generator if not).",
 		[["enabled", "bool"]],
 		"_use_shared = enabled")

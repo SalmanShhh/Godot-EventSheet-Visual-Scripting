@@ -155,6 +155,10 @@ static func build() -> bool:
 	Lib.append_function(sheet, "teleport_to_tile", "Teleport To Tile", "Slide Movement", "Jumps instantly to a tile coordinate (multiplied by the grid size), cancelling any slide.",
 		[["tile_x", "int"], ["tile_y", "int"]],
 		"_sliding = false\nif host is Node2D:\n\t(host as Node2D).global_position = Vector2(tile_x, tile_y) * grid_size")
+	# `tile_x` / `tile_y` are the Teleport To Tile row's own parameter names, frozen with the row, so
+	# they keep the names of the Tile X / Tile Y expressions and say so.
+	(sheet.functions.back() as EventFunction).annotation_lines.append(
+		"@warning_ignore(\"shadowed_variable\")  # `tile_x` and `tile_y` are this row's frozen parameter names")
 	Lib.append_function(sheet, "set_grid_size", "Set Grid Size", "Slide Movement", "Changes the tile size in pixels at runtime.",
 		[["pixels", "float"]],
 		"grid_size = maxf(pixels, 1.0)")

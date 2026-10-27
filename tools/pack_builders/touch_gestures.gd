@@ -87,6 +87,12 @@ static func build() -> bool:
 	Lib.condition(sheet, "knows_shape", "Knows Shape", "Touch Gestures", "Whether a shape has been taught under this name.",
 		[["shape_name", "String"]],
 		"return _shapes.has(shape_name)")
+	# `shape_name` is the parameter of these four rows, frozen with them, so it keeps the name of the
+	# Shape Name expression and each of them says the shadowing is deliberate.
+	for event_function: EventFunction in sheet.functions:
+		if event_function.function_name in ["teach_shape_from_stroke", "forget_shape", "shape_was", "knows_shape"]:
+			event_function.annotation_lines.append(
+				"@warning_ignore(\"shadowed_variable\")  # `shape_name` is this row's frozen parameter name")
 
 	# --- Expressions ---
 	Lib.number(sheet, "swipe_direction", "Swipe Direction", "Touch Gestures", "Which way the swipe went, as a word (inside On Swipe).", [],

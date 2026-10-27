@@ -63,7 +63,13 @@ func _ensure_agent() -> NavigationAgent3D:
 	if _agent == null:
 		_agent = NavigationAgent3D.new()
 		_agent.name = "NavAgent"
-		host.add_child(_agent)
+		# Asked from the behaviour's own _ready, the host is still setting up its children and refuses
+		# an add_child there; the agent joins at the end of the frame instead, and every query below
+		# waits until it is in the tree. A host that is not setting anything up takes it at once.
+		if host.is_inside_tree() and not host.is_node_ready():
+			host.add_child.call_deferred(_agent)
+		else:
+			host.add_child(_agent)
 	_agent.radius = agent_radius
 	_agent.height = agent_height
 	_agent.target_desired_distance = target_desired_distance
@@ -95,7 +101,7 @@ func _ready() -> void:
 	set_physics_process(false)
 
 func _physics_process(delta: float) -> void:
-	if host == null or _agent == null or not is_instance_valid(_agent):
+	if host == null or _agent == null or not is_instance_valid(_agent) or not _agent.is_inside_tree():
 		return
 	if _pending_check:
 		_pending_check = false
@@ -250,28 +256,28 @@ func has_path() -> bool:
 ## @ace_icon("res://eventsheet_addons/nav_agent_3d/icon.svg")
 ## @ace_codegen_template("$NavAgent3D.target_is_reachable()")
 func target_is_reachable() -> bool:
-	return _agent != null and is_instance_valid(_agent) and _agent.is_target_reachable()
+	return _agent != null and is_instance_valid(_agent) and _agent.is_inside_tree() and _agent.is_target_reachable()
 
 ## @ace_expression
 ## @ace_name("Current Waypoint X")
 ## @ace_icon("res://eventsheet_addons/nav_agent_3d/icon.svg")
 ## @ace_codegen_template("$NavAgent3D.current_waypoint_x()")
 func current_waypoint_x() -> float:
-	return _agent.get_next_path_position().x if _active and _agent != null else 0.0
+	return _agent.get_next_path_position().x if _active and _agent != null and _agent.is_inside_tree() else 0.0
 
 ## @ace_expression
 ## @ace_name("Current Waypoint Y")
 ## @ace_icon("res://eventsheet_addons/nav_agent_3d/icon.svg")
 ## @ace_codegen_template("$NavAgent3D.current_waypoint_y()")
 func current_waypoint_y() -> float:
-	return _agent.get_next_path_position().y if _active and _agent != null else 0.0
+	return _agent.get_next_path_position().y if _active and _agent != null and _agent.is_inside_tree() else 0.0
 
 ## @ace_expression
 ## @ace_name("Current Waypoint Z")
 ## @ace_icon("res://eventsheet_addons/nav_agent_3d/icon.svg")
 ## @ace_codegen_template("$NavAgent3D.current_waypoint_z()")
 func current_waypoint_z() -> float:
-	return _agent.get_next_path_position().z if _active and _agent != null else 0.0
+	return _agent.get_next_path_position().z if _active and _agent != null and _agent.is_inside_tree() else 0.0
 
 ## @ace_expression
 ## @ace_name("Distance To Target")

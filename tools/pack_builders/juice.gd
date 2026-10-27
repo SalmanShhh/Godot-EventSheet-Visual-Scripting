@@ -780,6 +780,10 @@ static func build() -> bool:
 	_param_desc(sheet, "moment", "The moment file. Pick one with the browse button, or leave it empty to take the name away again.")
 	_default(sheet, "moment", "preload(\"res://eventsheet_addons/juice/impact.tres\")")
 	_quoted_argument(sheet, "define_moment(\"{moment_name}\", {moment})")
+	# `moment` is the row's own parameter name - a frozen part of the Define Moment row - so it keeps
+	# the name the Moment verb also has, and the shadowing is said to be deliberate.
+	(sheet.functions.back() as EventFunction).annotation_lines.append(
+		"@warning_ignore(\"shadowed_variable\")  # `moment` is this row's frozen parameter name")
 	Lib.append_function(sheet, "play_moment_at", "Play Moment At", "Juice", "Plays a moment WHERE it happened, so a far explosion is felt less than a near one. The strength falls off between that place and the edge of the range, and a moment that happened outside the range does not play at all. Leave the range at 0 and it plays everywhere at full strength, exactly as Moment does. Whatever is left is scaled by Set Moment Strength before anything is felt.",
 		[["moment_name", "String"], ["strength", "float"], ["from", "Node"], ["within", "float"], ["falloff", "String"]],
 		"var here: float = MomentRunner.strength_at(host, strength * _moment_strength, from, within, falloff)
@@ -1377,7 +1381,9 @@ static func _moment_lines() -> PackedStringArray:
 		"## @ace_hidden",
 		"func _moment_value_of(key: String) -> Variant:",
 		"\tif key == MomentRunner.TOUCH_HOST_TINT:",
-		"\t\treturn (host as CanvasItem).modulate if host is CanvasItem else null",
+		"\t\tif host is CanvasItem:",
+		"\t\t\treturn (host as CanvasItem).modulate",
+		"\t\treturn null",
 		"\tif key == MomentRunner.TOUCH_HOST_SCALE:",
 		"\t\tif host is Node2D:",
 		"\t\t\treturn (host as Node2D).scale",
@@ -1388,7 +1394,9 @@ static func _moment_lines() -> PackedStringArray:
 		"\t\treturn Engine.time_scale",
 		"\tif key == MomentRunner.TOUCH_CAMERA_ZOOM:",
 		"\t\tvar cam: Camera2D = _camera()",
-		"\t\treturn cam.zoom if cam != null else null",
+		"\t\tif cam != null:",
+		"\t\t\treturn cam.zoom",
+		"\t\treturn null",
 		"\tif key.begins_with(MomentRunner.TOUCH_POST_PREFIX):",
 		"\t\tvar screen: CanvasLayer = _moment_screen_fx()",
 		"\t\tif screen == null:",

@@ -26,19 +26,19 @@ var _found: Dictionary = {}
 
 ## The folder one set's entry files live in.
 ## @ace_hidden
-func _set_folder(set_name: String) -> String:
-	return codex_folder.path_join(set_name)
+func _set_folder(codex_set: String) -> String:
+	return codex_folder.path_join(codex_set)
 
 ## Every entry id a set's folder HOLDS, sorted - the file names with their extension taken off. A
 ## folder that is not there holds nothing, and says so only in debug mode, because Total Entries is
 ## the kind of row a menu asks every frame.
 ## @ace_hidden
-func _entry_ids(set_name: String) -> PackedStringArray:
-	var folder: String = _set_folder(set_name)
+func _entry_ids(codex_set: String) -> PackedStringArray:
+	var folder: String = _set_folder(codex_set)
 	var ids: PackedStringArray = PackedStringArray()
 	if not DirAccess.dir_exists_absolute(folder):
 		if debug_mode:
-			push_warning("Codex: there is no folder at %s, so the \"%s\" set counts as empty." % [folder, set_name])
+			push_warning("Codex: there is no folder at %s, so the \"%s\" set counts as empty." % [folder, codex_set])
 		return ids
 	for file_name: String in DirAccess.get_files_at(folder):
 		var plain: String = String(file_name).trim_suffix(".remap")
@@ -50,9 +50,9 @@ func _entry_ids(set_name: String) -> PackedStringArray:
 ## One entry's resource, or null when no file answers to that id. Both resource extensions are
 ## tried, so a binary .res entry works exactly like a text .tres one.
 ## @ace_hidden
-func _entry(set_name: String, entry_id: String) -> Resource:
+func _entry(codex_set: String, entry_id: String) -> Resource:
 	for extension: String in [".tres", ".res"]:
-		var path: String = _set_folder(set_name).path_join(entry_id + extension)
+		var path: String = _set_folder(codex_set).path_join(entry_id + extension)
 		if ResourceLoader.exists(path):
 			return load(path)
 	return null
@@ -63,12 +63,12 @@ func _entry(set_name: String, entry_id: String) -> Resource:
 ## @ace_hidden
 func save_state() -> Dictionary:
 	var out: Dictionary = {}
-	var set_names: Array = _found.keys()
-	set_names.sort()
-	for set_name: String in set_names:
-		var ids: Array = (_found[set_name] as Dictionary).keys()
+	var codex_sets: Array = _found.keys()
+	codex_sets.sort()
+	for codex_set: String in codex_sets:
+		var ids: Array = (_found[codex_set] as Dictionary).keys()
 		ids.sort()
-		out[set_name] = ids
+		out[codex_set] = ids
 	return {"discovered": out}
 
 ## @ace_hidden
@@ -76,11 +76,11 @@ func load_state(state: Dictionary) -> void:
 	if state.is_empty():
 		return
 	_found = {}
-	for set_name: String in (state.get("discovered", {}) as Dictionary):
+	for codex_set: String in (state.get("discovered", {}) as Dictionary):
 		var ids: Dictionary = {}
-		for entry_id: Variant in state["discovered"][set_name]:
+		for entry_id: Variant in state["discovered"][codex_set]:
 			ids[str(entry_id)] = true
-		_found[set_name] = ids
+		_found[codex_set] = ids
 #endregion
 
 #region block_2

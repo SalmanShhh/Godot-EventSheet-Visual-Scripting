@@ -33,6 +33,7 @@ static func build() -> bool:
 		[["path", "Path2D"], ["seconds", "float"], ["ease", "String"]])
 	_options(src.sheet, "ease", _EASES)
 	_quoted_argument(src.sheet, "fly_along({path}, {seconds}, \"{ease}\")")
+	_keep_frozen_parameter(src.sheet, "shadowed_global_identifier", "ease")
 	src.verb("cut_to", "Cut To",
 		"Hands the view to another camera immediately - the hard cut. Whatever shot the rail was running stops where it stands, without firing On Shot Finished, because the cut is the ending.",
 		[["camera", "Camera2D"]])
@@ -41,6 +42,7 @@ static func build() -> bool:
 		[["camera", "Camera2D"], ["seconds", "float"], ["ease", "String"]])
 	_options(src.sheet, "ease", _EASES)
 	_quoted_argument(src.sheet, "blend_to({camera}, {seconds}, \"{ease}\")")
+	_keep_frozen_parameter(src.sheet, "shadowed_global_identifier", "ease")
 	src.verb("hold", "Hold",
 		"Parks the rail for a number of seconds and then fires On Shot Finished - the beat between two moves. It leaves the view exactly where it is, so a hold after a Cut To is the beat on THAT camera. 0 seconds falls back to the rail's default pace.",
 		[["seconds", "float"]])
@@ -86,3 +88,12 @@ static func _options(sheet: EventSheetResource, param_id: String, choices: Array
 static func _quoted_argument(sheet: EventSheetResource, call: String) -> void:
 	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
 	fn.codegen_template_override = "$%s.%s" % [PACK_CLASS, call]
+
+
+## A verb's parameter names are its ACE parameter ids, frozen once the verb shipped, so a name that
+## shadows something Godot already has stays as it is. The last-declared verb says so to Godot with a
+## `@warning_ignore` of that one warning, instead of Godot reporting it on every load of the pack.
+static func _keep_frozen_parameter(sheet: EventSheetResource, warning: String, parameter: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	fn.annotation_lines.append("@warning_ignore(\"%s\")  # %s: ACE parameter id of this verb, frozen since it shipped" % [
+		warning, parameter])

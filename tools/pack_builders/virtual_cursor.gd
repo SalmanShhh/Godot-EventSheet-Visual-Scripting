@@ -508,6 +508,10 @@ static func build() -> bool:
 		[["speed", "float"]], "\n".join(PackedStringArray([
 		"max_speed = speed"
 	])))
+	# `speed` is the Set Max Speed row's own parameter name, frozen with the row, so it keeps the name
+	# of the Speed expression and says the shadowing is deliberate.
+	(sheet.functions.back() as EventFunction).annotation_lines.append(
+		"@warning_ignore(\"shadowed_variable\")  # `speed` is this row's frozen parameter name")
 
 	Lib.append_function(sheet, "set_acceleration", "Set Acceleration", "Virtual Cursor",
 		"Sets the speed-up rate while an axis is held.",

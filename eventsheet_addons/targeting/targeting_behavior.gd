@@ -118,7 +118,7 @@ func _ready() -> void:
 	# lock and stops with the last, so an unlocked node costs nothing per frame.
 	set_process(false)
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if not _holding:
 		set_process(false)
 		return

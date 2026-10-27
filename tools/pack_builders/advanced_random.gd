@@ -64,7 +64,7 @@ static func build() -> bool:
 		"_rng.randomize()\n_noise.seed = _rng.randi()")
 	Lib.append_function(sheet, "set_noise_type", "Set Noise Type", "Advanced Random: Setup", "FastNoiseLite.NoiseType: 0 Simplex · 1 Simplex Smooth · 2 Cellular · 3 Perlin · 4 Value Cubic · 5 Value.",
 		[["noise_type", "int"]],
-		"_noise.noise_type = clampi(noise_type, 0, 5)")
+		"_noise.noise_type = clampi(noise_type, 0, 5) as FastNoiseLite.NoiseType")
 	Lib.append_function(sheet, "set_noise_frequency", "Set Noise Frequency", "Advanced Random: Setup", "Lower = smoother/larger features; higher = noisier (default 0.01).",
 		[["frequency", "float"]],
 		"_noise.frequency = frequency")

@@ -190,7 +190,7 @@ func nearest_point_on_path(path: Path2D, point: Vector2) -> Vector2:
 		return point
 	return path.to_global(path.curve.get_closest_point(path.to_local(point)))
 
-static func editor_gizmo_draw(params: Dictionary, host: Node2D, canvas: CanvasItem) -> void:
+static func editor_gizmo_draw(params: Dictionary, gizmo_host: Node2D, canvas: CanvasItem) -> void:
 	# Editor-gizmo contract (select the host or this behavior in the editor): draws the route
 	# in the 2D viewport, with a green dot at the start and an orange one at the end, so a
 	# patrol reads at a glance and a route drawn backwards is obvious before you press play.
@@ -204,7 +204,7 @@ static func editor_gizmo_draw(params: Dictionary, host: Node2D, canvas: CanvasIt
 	for point: Vector2 in baked:
 		points.append(drawn_route.to_global(point))
 	# The points are world-space; the canvas rides the host, so draw through the inverse.
-	canvas.draw_set_transform_matrix(host.get_global_transform().affine_inverse())
+	canvas.draw_set_transform_matrix(gizmo_host.get_global_transform().affine_inverse())
 	canvas.draw_polyline(points, Color(0.36, 0.78, 1.0, 0.9), 2.0)
 	canvas.draw_circle(points[0], 4.0, Color(0.45, 1.0, 0.6, 0.9))
 	canvas.draw_circle(points[points.size() - 1], 4.0, Color(1.0, 0.55, 0.35, 0.9))

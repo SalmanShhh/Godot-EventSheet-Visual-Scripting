@@ -54,9 +54,9 @@ static func build() -> bool:
 		"\tif not rest is Vector3:",
 		"\t\treturn {}",
 		"\tvar centre: Vector3 = rest",
-		"\tvar angle: float = deg_to_rad(float(params.get(\"speed_degrees\", 90.0)) * time)",
-		"\tvar radius: float = float(params.get(\"radius\", 3.0))",
-		"\treturn {\"position\": Vector3(centre.x + cos(angle) * radius, centre.y, centre.z + sin(angle) * radius)}"
+		"\tvar phase: float = deg_to_rad(float(params.get(\"speed_degrees\", 90.0)) * time)",
+		"\tvar ring_radius: float = float(params.get(\"radius\", 3.0))",
+		"\treturn {\"position\": Vector3(centre.x + cos(phase) * ring_radius, centre.y, centre.z + sin(phase) * ring_radius)}"
 	]))
 	sheet.events.append(preview_block)
 

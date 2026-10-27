@@ -44,7 +44,7 @@ func _ready() -> void:
 	# is switched off and the sensor costs nothing until something asks it a question.
 	set_process(false)
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	# Deliberately empty: the sight checks run when a row asks them. Processing is turned off
 	# on ready, so anything added here needs a set_process(true) to run.
 	pass

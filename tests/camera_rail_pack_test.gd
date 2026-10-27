@@ -336,8 +336,9 @@ static func _test_the_3d_rail() -> bool:
 	text = text.replace("global_transform", "transform").replace("global_position", "position")
 	text = text.replace("class_name CameraRail3DBehavior\n", "")
 	all_passed = _check("the rewrite fired", text == shipped, false) and all_passed
+	# The verbs' `@warning_ignore("shadowed_global_identifier")` lines name a warning, not a global.
 	all_passed = _check("and nothing global is left to fail on a missing tree",
-		text.contains("global_"), false) and all_passed
+		text.replace("\"shadowed_global_identifier\"", "").contains("global_"), false) and all_passed
 	# The field the stand-in above reads. Appended rather than woven in, because a member variable
 	# is legal anywhere at the top level and none of the pack's own bytes move for it.
 	text += "\n\nvar on_screen: Camera3D = null\n"

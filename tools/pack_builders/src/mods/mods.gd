@@ -453,7 +453,7 @@ func _path_of_bytes(raw: PackedByteArray) -> String:
 ## calls one at a keyframe. None of that brings a stranger's code in; each of them can reach yours.
 ## A mod is somebody else's DATA, so what it can reach is worth the same thought as any other input.
 ## @ace_hidden
-func _resource_reason(name: String, text: String, own_folder: String) -> String:
+func _resource_reason(file_name: String, text: String, own_folder: String) -> String:
 	var inside: String = own_folder
 	if not inside.is_empty() and not inside.ends_with("/"):
 		inside += "/"
@@ -461,13 +461,13 @@ func _resource_reason(name: String, text: String, own_folder: String) -> String:
 	for head: String in RESOURCE_HEADS:
 		readable = readable or text.begins_with(head)
 	if not readable:
-		return "%s is saved in a form this row cannot read, so it cannot be cleared of code" % name
+		return "%s is saved in a form this row cannot read, so it cannot be cleared of code" % file_name
 	for maker: String in BUILDING_MAKERS:
 		var maker_at: int = text.find(maker)
 		while maker_at >= 0:
 			var lead: String = text.substr(maker_at - 1, 1) if maker_at > 0 else ""
 			if lead.to_lower() == lead.to_upper() and not lead.is_valid_int() and lead != "_":
-				return "%s carries a value that builds something, and this row loads data only" % name
+				return "%s carries a value that builds something, and this row loads data only" % file_name
 			maker_at = text.find(maker, maker_at + maker.length())
 	var lines: PackedStringArray = text.split("\n")
 	var at: int = 0
@@ -479,7 +479,7 @@ func _resource_reason(name: String, text: String, own_folder: String) -> String:
 		var closed_at: int = _tag_closes_at(tag)
 		while closed_at < 0:
 			if at >= lines.size():
-				return "%s holds a tag that never closes, so it cannot be cleared of code" % name
+				return "%s holds a tag that never closes, so it cannot be cleared of code" % file_name
 			tag += " " + lines[at].strip_edges()
 			at += 1
 			closed_at = _tag_closes_at(tag)
@@ -489,24 +489,24 @@ func _resource_reason(name: String, text: String, own_folder: String) -> String:
 		if not RESOURCE_TAGS.has(tag_name):
 			continue
 		if head.contains(ESCAPE_GLYPH):
-			return "%s holds an escape inside a resource tag, so it cannot be cleared of code" % name
+			return "%s holds an escape inside a resource tag, so it cannot be cleared of code" % file_name
 		var fields: Dictionary = _tag_fields("" if named_at < 0 else head.substr(named_at + 1))
 		if fields.is_empty():
-			return "%s holds a tag this row cannot read, so it cannot be cleared of code" % name
+			return "%s holds a tag this row cannot read, so it cannot be cleared of code" % file_name
 		var kind: String = str(fields.get("type", ""))
 		if kind.is_empty():
-			return "%s holds a tag with no type, so it cannot be cleared of code" % name
+			return "%s holds a tag with no type, so it cannot be cleared of code" % file_name
 		if tag_name == "sub_resource":
 			# Source code written INSIDE the file, in whatever language the engine has - and a
 			# shader written inside it is source code too, for the other processor.
 			if kind.ends_with(SCRIPT_TYPE_TAIL):
-				return "%s carries a script, and this row loads data only" % name
+				return "%s carries a script, and this row loads data only" % file_name
 			if _type_is_shader(kind):
-				return "%s carries a shader, and this row loads data only" % name
+				return "%s carries a shader, and this row loads data only" % file_name
 			continue
 		var place: String = str(fields.get("path", ""))
 		if place.is_empty() or place.contains(CLIMB_OUT):
-			return "%s names a file this row cannot place, so it cannot be cleared of code" % name
+			return "%s names a file this row cannot place, so it cannot be cleared of code" % file_name
 		# res:// is the game's own files, which is what a game IS - and a code file a PACK mod
 		# brings to res:// was already refused by name before this reading was reached. A script
 		# named under res:// is therefore the game's own, which is how a manifest saved as a
@@ -516,7 +516,7 @@ func _resource_reason(name: String, text: String, own_folder: String) -> String:
 		if place.begins_with("res://"):
 			continue
 		if inside.is_empty() or not place.begins_with(inside):
-			return "%s names %s, which is outside the mod, and this row loads data only" % [name, place]
+			return "%s names %s, which is outside the mod, and this row loads data only" % [file_name, place]
 		# INSIDE THE MOD IS NOT A PLACE A SCRIPT MAY BE NAMED FROM EITHER. The place check above
 		# lets a mod's scene name the mod's own textures and resources, which is what a mod is made
 		# of - but a file the mod brought is a file a stranger wrote, so an ext_resource of a script
@@ -525,9 +525,9 @@ func _resource_reason(name: String, text: String, own_folder: String) -> String:
 		# refused by name a step earlier, and this is the same refusal for the tag that would have
 		# loaded it BEFORE that walk ever ran - which is exactly what a crafted manifest did.
 		if kind.ends_with(SCRIPT_TYPE_TAIL) or _names_code(place):
-			return "%s names the script %s, and this row loads data only" % [name, place]
+			return "%s names the script %s, and this row loads data only" % [file_name, place]
 		if _type_is_shader(kind) or _names_shader(place):
-			return "%s names the shader %s, and this row loads data only" % [name, place]
+			return "%s names the shader %s, and this row loads data only" % [file_name, place]
 	return ""
 
 
@@ -775,16 +775,16 @@ func _pck_resource_reason(path: String, entries: Array) -> String:
 		return str(first.get("path", "")) < str(second.get("path", "")))
 	var reason: String = ""
 	for entry: Dictionary in wanted:
-		var name: String = str(entry.get("path", "")).get_file()
+		var file_name: String = str(entry.get("path", "")).get_file()
 		if int(entry.get("flags", 0)) & PACK_ENTRY_ENCRYPTED != 0:
-			reason = "%s is encrypted, so it cannot be cleared of code" % name
+			reason = "%s is encrypted, so it cannot be cleared of code" % file_name
 			break
 		var size: int = int(entry.get("size", 0))
 		if size < 0 or size > MOST_RESOURCE_BYTES:
-			reason = "%s is too big for this row to read, so it cannot be cleared of code" % name
+			reason = "%s is too big for this row to read, so it cannot be cleared of code" % file_name
 			break
 		file.seek(int(entry.get("offset", 0)))
-		reason = _resource_reason(name, file.get_buffer(size).get_string_from_utf8(), "")
+		reason = _resource_reason(file_name, file.get_buffer(size).get_string_from_utf8(), "")
 		if not reason.is_empty():
 			break
 	file.close()

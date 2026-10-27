@@ -76,6 +76,10 @@ static func build() -> bool:
 			"_exponent = exponent",
 			"_bonus_per_point = bonus_per_point"
 		])))
+	# `requirement` is the Configure row's own parameter name, frozen with the row, so it keeps
+	# sharing a name with the Requirement expression and the shadowing is said to be deliberate.
+	(sheet.functions.back() as EventFunction).annotation_lines.append(
+		"@warning_ignore(\"shadowed_variable\")  # `requirement` is this row's frozen parameter name")
 	Lib.append_function(sheet, "track_earned", "Track Earned", "Prestige", "Records earnings toward prestige - call it wherever the player earns the prestige currency. Feeds both the run total (drives the gain) and the all-time Total Earned.",
 		[["amount", "float"]], "\n".join(PackedStringArray([
 			"var gained: float = maxf(amount, 0.0)",

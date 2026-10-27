@@ -95,6 +95,7 @@ func set_eight_way(on: bool) -> void:
 ## @ace_display_template("Teach shape from stroke as [b]{shape_name}[/b]")
 ## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.teach_shape_from_stroke({shape_name})")
+@warning_ignore("shadowed_variable")  # `shape_name` is this row's frozen parameter name
 func teach_shape_from_stroke(shape_name: String) -> void:
 	if _stroke.size() < minimum_stroke_points:
 		return
@@ -109,6 +110,7 @@ func teach_shape_from_stroke(shape_name: String) -> void:
 ## @ace_description("Removes a taught shape, so it stops being matched. The attached library is updated and marked changed the same way teaching updates it.")
 ## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.forget_shape({shape_name})")
+@warning_ignore("shadowed_variable")  # `shape_name` is this row's frozen parameter name
 func forget_shape(shape_name: String) -> void:
 	_shapes.erase(shape_name)
 	_write_through_to_library()
@@ -165,6 +167,7 @@ func swipe_was(direction: String) -> bool:
 ## @ace_description("Whether the shape that was just drawn is this one.")
 ## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.shape_was({shape_name})")
+@warning_ignore("shadowed_variable")  # `shape_name` is this row's frozen parameter name
 func shape_was(shape_name: String) -> bool:
 	return _shape_name == shape_name
 
@@ -174,6 +177,7 @@ func shape_was(shape_name: String) -> bool:
 ## @ace_description("Whether a shape has been taught under this name.")
 ## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.knows_shape({shape_name})")
+@warning_ignore("shadowed_variable")  # `shape_name` is this row's frozen parameter name
 func knows_shape(shape_name: String) -> bool:
 	return _shapes.has(shape_name)
 

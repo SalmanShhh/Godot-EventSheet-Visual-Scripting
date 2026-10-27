@@ -129,12 +129,12 @@ func _wave(t: float) -> float:
 	return sin(cycle * TAU)
 
 ## @ace_hidden
-static func editor_preview_sample(params: Dictionary, base: Dictionary, time: float) -> Dictionary:
+static func editor_preview_sample(params: Dictionary, base: Dictionary, at_time: float) -> Dictionary:
 	# Editor-preview contract (Tools > Preview Behaviors on Selected Node): pure wave math over
 	# the Inspector values, so the editor can animate the host without running the behavior.
 	if not bool(params.get("active", true)):
 		return {}
-	var t := time / maxf(float(params.get("period", 4.0)), 0.001) + float(params.get("phase_degrees", 0.0)) / 360.0
+	var t := at_time / maxf(float(params.get("period", 4.0)), 0.001) + float(params.get("phase_degrees", 0.0)) / 360.0
 	var cycle := fposmod(t, 1.0)
 	var value := sin(cycle * TAU)
 	match str(params.get("wave", "sine")):
@@ -146,8 +146,8 @@ static func editor_preview_sample(params: Dictionary, base: Dictionary, time: fl
 			value = 1.0 - 2.0 * cycle
 		"square":
 			value = 1.0 if cycle < 0.5 else -1.0
-	var magnitude := float(params.get("magnitude", 50.0))
-	var offset := value * magnitude
+	var wave_size := float(params.get("magnitude", 50.0))
+	var offset := value * wave_size
 	var base_position: Vector2 = base.get("position", Vector2.ZERO)
 	var base_rot := float(base.get("rotation", 0.0))
 	match str(params.get("movement", "horizontal")):
@@ -159,12 +159,12 @@ static func editor_preview_sample(params: Dictionary, base: Dictionary, time: fl
 			return {"position": base_position + Vector2.from_angle(base_rot) * offset}
 		"size":
 			var base_scale: Vector2 = base.get("scale", Vector2.ONE)
-			return {"scale": base_scale * (1.0 + value * magnitude * 0.01)}
+			return {"scale": base_scale * (1.0 + value * wave_size * 0.01)}
 		"angle":
 			return {"rotation": base_rot + offset * 0.0174533}
 		"opacity":
 			var color: Color = base.get("modulate", Color.WHITE)
-			color.a = clampf(color.a + value * magnitude * 0.01, 0.0, 1.0)
+			color.a = clampf(color.a + value * wave_size * 0.01, 0.0, 1.0)
 			return {"modulate": color}
 	return {}
 

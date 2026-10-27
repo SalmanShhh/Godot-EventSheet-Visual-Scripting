@@ -1054,7 +1054,9 @@ func _control_value(control: Node, setting_name: String) -> Variant:
 		return words[picked] if picked >= 0 and picked < words.size() else fallback
 	if control is Range:
 		var number: float = (control as Range).value
-		return int(number) if typeof(fallback) == TYPE_INT else number
+		if typeof(fallback) == TYPE_INT:
+			return int(number)
+		return number
 	if control is BaseButton:
 		return (control as BaseButton).button_pressed
 	if control is LineEdit:

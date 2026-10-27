@@ -77,19 +77,19 @@ func shape_plane_bounds() -> Rect2:
 ## The volumetric disc is one of the engine's own primitives rather than a tube: a ring is a torus
 ## and a solid disc is a very flat cylinder, both of which the engine already builds well.
 ## @ace_hidden
-func shape_volume_mesh(detail: int) -> Mesh:
+func shape_volume_mesh(segments: int) -> Mesh:
 	if inner_radius > 0.0:
 		var ring: TorusMesh = TorusMesh.new()
 		ring.inner_radius = minf(inner_radius, radius)
 		ring.outer_radius = maxf(radius, inner_radius + 0.001)
-		ring.rings = detail
-		ring.ring_segments = maxi(detail / 2, 3)
+		ring.rings = segments
+		ring.ring_segments = maxi(int(segments / 2.0), 3)
 		return ring
 	var plate: CylinderMesh = CylinderMesh.new()
 	plate.top_radius = radius
 	plate.bottom_radius = radius
 	plate.height = maxf(_number("thickness", 0.05), 0.001)
-	plate.radial_segments = detail
+	plate.radial_segments = segments
 	plate.rings = 1
 	return plate
 #endregion

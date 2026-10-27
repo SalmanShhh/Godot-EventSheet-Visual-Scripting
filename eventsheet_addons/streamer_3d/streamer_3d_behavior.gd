@@ -128,7 +128,7 @@ func _ready() -> void:
 	# Around starts the tick; it stops itself again when there is nothing left in flight.
 	set_process(false)
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if _streaming and (_around == null or not is_instance_valid(_around)):
 		# What was being followed is gone - the player died, the level was thrown away. There is
 		# no centre to build a wanted set around any more, so the streamer stops following rather
@@ -425,7 +425,7 @@ func _collect_finished() -> void:
 func _place_chunk(cell: Vector3i, chunk: Node) -> void:
 	if chunk == null:
 		return
-	var parent: Node = host if host != null else self
+	var parent: Node = host if host != null else (self as Node)
 	parent.add_child(chunk)
 	if chunk is Node3D:
 		(chunk as Node3D).position = Vector3(cell) * cell_size

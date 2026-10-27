@@ -256,7 +256,7 @@ func _collect_finished() -> void:
 func _place_chunk(cell: Vector2i, chunk: Node) -> void:
 	if chunk == null:
 		return
-	var parent: Node = host if host != null else self
+	var parent: Node = host if host != null else (self as Node)
 	parent.add_child(chunk)
 	if chunk is Node2D:
 		(chunk as Node2D).position = Vector2(cell) * cell_size

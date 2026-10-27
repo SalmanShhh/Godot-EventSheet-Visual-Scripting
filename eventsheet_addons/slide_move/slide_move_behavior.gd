@@ -106,6 +106,7 @@ func snap_to_grid() -> void:
 ## @ace_description("Jumps instantly to a tile coordinate (multiplied by the grid size), cancelling any slide.")
 ## @ace_icon("res://eventsheet_addons/slide_move/icon.svg")
 ## @ace_codegen_template("$SlideMove.teleport_to_tile({tile_x}, {tile_y})")
+@warning_ignore("shadowed_variable")  # `tile_x` and `tile_y` are this row's frozen parameter names
 func teleport_to_tile(tile_x: int, tile_y: int) -> void:
 	_sliding = false
 	if host is Node2D:

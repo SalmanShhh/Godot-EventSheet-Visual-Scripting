@@ -52,7 +52,7 @@ func randomize_seed() -> void:
 ## @ace_icon("res://eventsheet_addons/advanced_random/icon.svg")
 ## @ace_codegen_template("AdvancedRandom.set_noise_type({noise_type})")
 func set_noise_type(noise_type: int) -> void:
-	_noise.noise_type = clampi(noise_type, 0, 5)
+	_noise.noise_type = clampi(noise_type, 0, 5) as FastNoiseLite.NoiseType
 
 ## @ace_action
 ## @ace_name("Set Noise Frequency")

@@ -333,6 +333,9 @@ static func build() -> bool:
 		"set_process(true)",
 		"drag_started.emit()"
 	])))
+	# Both coordinates shadow the Drag Point X / Y expressions of the same name, and one ignore of the
+	# warning covers the pair.
+	_keep_frozen_parameter(sheet, "shadowed_variable", "drag_point_x, drag_point_y")
 
 	Lib.append_function(sheet, "start_drag_at_object", "Start Drag At Object", "Drag & Drop",
 		"Begins a drag that follows the given object each tick.",
@@ -457,3 +460,12 @@ static func build() -> bool:
 	})
 	Lib.feature_verbs(sheet, ["start_drag", "drop_drag"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/drag_drop/drag_drop_behavior")
+
+
+## A verb's parameter names are its ACE parameter ids, frozen once the verb shipped, so a name that
+## shadows something Godot already has stays as it is. The last-declared verb says so to Godot with a
+## `@warning_ignore` of that one warning, instead of Godot reporting it on every load of the pack.
+static func _keep_frozen_parameter(sheet: EventSheetResource, warning: String, parameter: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	fn.annotation_lines.append("@warning_ignore(\"%s\")  # %s: ACE parameter id of this verb, frozen since it shipped" % [
+		warning, parameter])

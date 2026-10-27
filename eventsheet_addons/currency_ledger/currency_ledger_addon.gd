@@ -74,6 +74,7 @@ func set_max(id: String, max_amount: float) -> void:
 ## @ace_description("Caps how much can be EARNED (added) per day (-1 = no daily cap). You decide when a day rolls over by calling Reset Daily Caps.")
 ## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.set_daily_cap({id}, {daily_cap})")
+@warning_ignore("shadowed_variable")  # daily_cap: ACE parameter id of this verb, frozen since it shipped
 func set_daily_cap(id: String, daily_cap: float) -> void:
 	_ensure(id).daily_cap = daily_cap
 

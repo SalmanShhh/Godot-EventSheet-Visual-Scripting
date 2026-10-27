@@ -31,7 +31,7 @@ func _ready() -> void:
 	# Background is what starts the polling.
 	set_process(false)
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if _tasks.is_empty():
 		set_process(false)
 		return

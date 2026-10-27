@@ -32,12 +32,12 @@ func shape_is_solid() -> bool:
 	return true
 
 ## @ace_hidden
-func shape_volume_mesh(detail: int) -> Mesh:
+func shape_volume_mesh(segments: int) -> Mesh:
 	var horn: CylinderMesh = CylinderMesh.new()
 	horn.top_radius = 0.0
 	horn.bottom_radius = radius
 	horn.height = maxf(height, 0.001)
-	horn.radial_segments = detail
+	horn.radial_segments = segments
 	horn.rings = 1
 	horn.cap_bottom = capped
 	horn.cap_top = false

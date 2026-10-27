@@ -27,7 +27,7 @@ func fmt_short(value: float, decimals: int) -> String:
 	var exponent: int = _oom(magnitude)
 	if exponent < 3:
 		return sign_text + String.num(magnitude, maxi(decimals, 0))
-	var tier: int = exponent / 3
+	var tier: int = floori(exponent / 3.0)
 	var step: float = pow(10.0, -maxi(decimals, 0))
 	var mantissa: float = magnitude / pow(10.0, tier * 3)
 	if snappedf(mantissa, step) >= 1000.0:
@@ -88,11 +88,11 @@ func fmt_engineering(value: float, decimals: int) -> String:
 ## @ace_codegen_template("BigNumber.fmt_time({seconds})")
 func fmt_time(seconds: float) -> String:
 	var total: int = int(maxf(seconds, 0.0))
-	var days: int = total / 86400
+	var days: int = floori(total / 86400.0)
 	total = total % 86400
-	var hours: int = total / 3600
+	var hours: int = floori(total / 3600.0)
 	total = total % 3600
-	var minutes: int = total / 60
+	var minutes: int = floori(total / 60.0)
 	var secs: int = total % 60
 	var parts: PackedStringArray = PackedStringArray()
 	if days > 0:
@@ -112,8 +112,8 @@ func fmt_time(seconds: float) -> String:
 ## @ace_codegen_template("BigNumber.fmt_time_short({seconds})")
 func fmt_time_short(seconds: float) -> String:
 	var total: int = int(maxf(seconds, 0.0))
-	var hours: int = total / 3600
-	var minutes: int = (total % 3600) / 60
+	var hours: int = floori(total / 3600.0)
+	var minutes: int = floori((total % 3600) / 60.0)
 	var secs: int = total % 60
 	if hours > 0:
 		return "%d:%02d:%02d" % [hours, minutes, secs]
@@ -183,7 +183,7 @@ func fmt_multiplier(value: float, decimals: int) -> String:
 func suffix_for(magnitude: int) -> String:
 	if magnitude < 0:
 		return ""
-	var tier: int = magnitude / 3
+	var tier: int = floori(magnitude / 3.0)
 	return str(SUFFIXES[tier]) if tier < SUFFIXES.size() else ""
 
 ## @ace_expression
@@ -332,7 +332,7 @@ func dec_format(decimal: Array, decimals: int) -> String:
 	var e: int = int(exponent_floor)
 	if e < 3:
 		return sign_text + String.num(mantissa * pow(10.0, e), maxi(decimals, 0))
-	var tier: int = e / 3
+	var tier: int = floori(e / 3.0)
 	var band: float = mantissa * pow(10.0, e - tier * 3)
 	if band >= 1000.0:
 		band = band / 1000.0

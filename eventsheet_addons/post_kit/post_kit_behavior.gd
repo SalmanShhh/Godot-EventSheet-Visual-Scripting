@@ -143,7 +143,7 @@ func _ready() -> void:
 	# the first outline.
 	set_process(false)
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	# Only ever running while something is outlined. The mask camera has to stand exactly where the
 	# real one does, or the outline would sit beside the thing it belongs to.
 	if _mask == null or not is_instance_valid(_mask) or _mask_camera == null:

@@ -21,7 +21,7 @@ var ai_move_y: float = 0.0
 ## Movement speed in pixels per second the host travels at full input.
 @export var move_speed: float = 200.0
 
-func _physics_process(delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	if is_instance_valid(host):
 		var input_vector: Vector2 = Vector2(ai_move_x, ai_move_y).limit_length(1.0) if ai_controlled else Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 		host.velocity = input_vector * move_speed

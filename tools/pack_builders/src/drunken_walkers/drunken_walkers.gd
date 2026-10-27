@@ -257,7 +257,7 @@ func _next_random() -> float:
 ## carves - walkers, dilation, outlining - goes through this one door, which is why the trigger
 ## can promise "only on a change" without any caller having to remember it.
 ## @ace_hidden
-func _write(x: int, y: int, value: int, walker_id: String) -> void:
+func _write(x: int, y: int, value: int, carver_id: String) -> void:
 	if not _inside(x, y):
 		return
 	var index: int = y * _width + x
@@ -269,8 +269,8 @@ func _write(x: int, y: int, value: int, walker_id: String) -> void:
 	_ctx_carved_x = x
 	_ctx_carved_y = y
 	_ctx_carved_value = value
-	_ctx_walker_id = walker_id
-	cell_carved.emit(x, y, value, walker_id)
+	_ctx_walker_id = carver_id
+	cell_carved.emit(x, y, value, carver_id)
 	_ctx_carved_x = 0
 	_ctx_carved_y = 0
 	_ctx_carved_value = 0
@@ -363,7 +363,7 @@ func _stamp(walker: Walker) -> void:
 	var size: int = maxi(1, walker.brush_size)
 	# Odd sizes centre exactly. Even sizes cannot centre on a square grid, so they extend right
 	# and down, which is the least surprising of the two ways to break the tie.
-	var low: int = (size - 1) / 2
+	var low: int = int((size - 1) / 2.0)
 	for row: int in size:
 		for column: int in size:
 			_write(walker.x + column - low, walker.y + row - low, walker.carve_value, walker.id)
@@ -382,7 +382,7 @@ func _stamp_dig(walker: Walker) -> void:
 	var forward_sign: float = -1.0 if depth < 0 else 1.0
 	var forward: Vector2 = Vector2(_heading_step(walker.heading)).normalized()
 	var across: Vector2 = Vector2(-forward.y, forward.x)
-	var low: int = (maxi(1, width) - 1) / 2
+	var low: int = int((maxi(1, width) - 1) / 2.0)
 	var base: Vector2 = Vector2(float(walker.x), float(walker.y))
 	for along: int in span:
 		for side: int in maxi(1, width):
@@ -749,7 +749,7 @@ func draw_cells_to_tilemap(layer: TileMapLayer, value: int, source_id: int, atla
 			push_warning("Drunken Walkers: Draw Cells To Tilemap was given no TileMapLayer, so nothing was painted.")
 		return
 	for index: int in _cells_holding(value):
-		layer.set_cell(Vector2i(index % _width, index / _width), source_id, Vector2i(atlas_x, atlas_y))
+		layer.set_cell(Vector2i(index % _width, int(index / float(_width))), source_id, Vector2i(atlas_x, atlas_y))
 
 func set_seed(seed_text: String) -> void:
 	_ensure_started()
@@ -979,7 +979,7 @@ func scatter_marks(count: int, tag: String, value: int, placement: String, min_s
 	var eligible: Array[Vector2i] = []
 	for index: int in _cells_holding(value):
 		var x: int = index % _width
-		var y: int = index / _width
+		var y: int = int(index / float(_width))
 		if _placement_allows(x, y, value, rule):
 			eligible.append(Vector2i(x, y))
 	var placed: int = 0
@@ -1019,7 +1019,7 @@ func dilate_cells(value: int, iterations: int) -> void:
 			if before[index] == value:
 				continue
 			var x: int = index % _width
-			var y: int = index / _width
+			var y: int = int(index / float(_width))
 			for step: Vector2i in NEIGHBOUR_STEPS:
 				var nx: int = x + step.x
 				var ny: int = y + step.y
@@ -1039,7 +1039,7 @@ func outline_cells(value: int, outline_value: int) -> void:
 		if before[index] != empty_value:
 			continue
 		var x: int = index % _width
-		var y: int = index / _width
+		var y: int = int(index / float(_width))
 		for step: Vector2i in NEIGHBOUR_STEPS:
 			var nx: int = x + step.x
 			var ny: int = y + step.y
@@ -1134,7 +1134,7 @@ func cell_y_by_index(value: int, index: int) -> int:
 	var found: PackedInt32Array = _cells_holding(value)
 	if index < 0 or index >= found.size():
 		return -1
-	return found[index] / _width
+	return int(found[index] / float(_width))
 
 func count_marks(tag: String) -> int:
 	if tag.is_empty():

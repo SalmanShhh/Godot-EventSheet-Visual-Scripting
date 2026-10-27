@@ -64,7 +64,7 @@ func _ready() -> void:
 	# nothing per physics frame until Set Wrap Enabled turns it on.
 	set_physics_process(wrap_enabled)
 
-func _physics_process(delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	if not wrap_enabled or host == null:
 		return
 	# The circular constraint: once fully outside the circle, re-enter at the ANTIPODE

@@ -92,11 +92,11 @@ static func editor_preview_sample(params: Dictionary, base: Dictionary, time: fl
 	var radius_b: float = secondary if secondary > 0.0 else primary
 	var tilt: float = deg_to_rad(float(params.get("offset_angle_degrees", 0.0)))
 	var speed: float = deg_to_rad(float(params.get("speed_degrees", 90.0)))
-	var angle: float = speed * time
-	var local: Vector2 = Vector2(cos(angle) * primary, sin(angle) * radius_b).rotated(tilt)
+	var phase: float = speed * time
+	var local: Vector2 = Vector2(cos(phase) * primary, sin(phase) * radius_b).rotated(tilt)
 	var out: Dictionary = {"position": centre + local}
 	if bool(params.get("match_rotation", false)):
-		var tangent: Vector2 = Vector2(-sin(angle) * primary, cos(angle) * radius_b).rotated(tilt)
+		var tangent: Vector2 = Vector2(-sin(phase) * primary, cos(phase) * radius_b).rotated(tilt)
 		if tangent != Vector2.ZERO:
 			out["rotation"] = tangent.angle()
 	return out

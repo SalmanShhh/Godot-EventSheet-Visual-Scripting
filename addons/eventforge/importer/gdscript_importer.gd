@@ -1590,7 +1590,11 @@ func _split_literal_blocks(pending: PackedStringArray) -> Array[PackedStringArra
 		# the body of a `class`, most often - and breaking inside one leaves fragments that are neither
 		# a class the canvas can render structurally nor a statement it can render as a row.
 		var at_column_zero: bool = not pending[index].begins_with("	") and not pending[index].begins_with(" ") and interior[index] == 0
-		if at_column_zero and ((is_code and piece_has_comment and not piece_has_code) or (is_comment and piece_has_code)):
+		# An `@warning_ignore` / `@rpc` line under a `##` doc block is part of the same header: the
+		# block documents the declaration the annotation decorates, so the two are never parted.
+		var joins_its_doc: bool = is_code and text.begins_with("@") and not text.begins_with("@export") \
+				and not text.begins_with("@onready") and _only_doc_lines(current)
+		if at_column_zero and not joins_its_doc and ((is_code and piece_has_comment and not piece_has_code) or (is_comment and piece_has_code)):
 			pieces.append(current)
 			current = PackedStringArray()
 			piece_has_code = false
@@ -1617,6 +1621,20 @@ func _split_literal_blocks(pending: PackedStringArray) -> Array[PackedStringArra
 	if not current.is_empty():
 		pieces.append(current)
 	return pieces
+
+
+## True when the piece so far is a `##` doc block and nothing else (blank lines allowed above it).
+static func _only_doc_lines(piece: PackedStringArray) -> bool:
+	var saw_doc: bool = false
+	for line: String in piece:
+		if line.strip_edges().is_empty():
+			if saw_doc:
+				return false
+			continue
+		if not (line.begins_with("## ") or line == "##"):
+			return false
+		saw_doc = true
+	return saw_doc
 
 
 ## The index of the line closing a column-0 multi-line collection literal STARTING at `start`, or
