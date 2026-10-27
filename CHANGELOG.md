@@ -21,6 +21,9 @@
 
 ### Fixed: your own scripts, opened as sheets, read the way the boards draw them
 
+- A `@tool` script says "Runs in the editor" as a violet chip on its head bar, beside what it
+  extends, with the `@tool` line in its hover; the second head row that said "runs in the editor
+  too" under the bar is gone.
 - A script with an inner `class` no longer says its own members are "not a variable": the class's
   members were read as the file's for every row built after the class, so `_start_x` and `_dir` in
   an `enemy.gd` with a `class Patrol` were each flagged under the events that set them. A local

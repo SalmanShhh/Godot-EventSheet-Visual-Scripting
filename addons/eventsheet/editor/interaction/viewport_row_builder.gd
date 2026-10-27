@@ -655,6 +655,9 @@ func build_head_band_rows(sheet: EventSheetResource, scaffold_rows: Array[EventR
 			continue
 		if one_head and kind == EventSheetHeadBands.BAND_HOST and sheet.behavior_mode:
 			continue
+		# A script that runs in the editor says so on the bar, as a chip beside what it extends.
+		if one_head and kind == EventSheetHeadBands.BAND_TOOL and bool(band.get("switch_on", false)) 				and not bool(band.get("warning", false)):
+			continue
 		var head_row: EventRowData = _build_head_band_row(sheet, band, head_facts, description_source,
 			extends_band if kind == EventSheetHeadBands.BAND_NAME else {}, hovered_facts)
 		rows.append(head_row)
@@ -1443,6 +1446,10 @@ func build_sheet_head_bar_row(sheet: EventSheetResource, head_facts: Dictionary 
 			"include_path": str(object_bar.get("script_path", "")),
 			"hover_note": EventSheetL10n.translate("Open this script as its own sheet, where it is edited."),
 		}, true)))
+	# A script that runs in the editor (`@tool`) says so beside what it extends; the line it stands for
+	# is in its hover, and a click opens the window whose switch writes or removes it.
+	if bool(facts.get("tool", false)):
+		spans.append(_runs_in_editor_chip_span(meta, editable))
 	# What the file is as a piece of TOOLING, and the buttons that run it - the chips the class head
 	# has always carried, beside the name they are about.
 	spans.append_array(_tool_file_chip_spans(sheet, str(sheet.external_source_path)))
@@ -1463,6 +1470,29 @@ func build_sheet_head_bar_row(sheet: EventSheetResource, head_facts: Dictionary 
 	head_findings.append_array(_tagged(FINDINGS_INCLUDES, _sheet_findings(FINDINGS_INCLUDES)))
 	_stamp_attention(row_data, head_findings)
 	return row_data
+
+
+## The head bar's "Runs in the editor" chip: a `@tool` script's one fact about when it runs, in the
+## theme's violet pair - the one the range tile wears, which every theme derives for its dark and its
+## light ground.
+func _runs_in_editor_chip_span(meta: Dictionary, editable: bool) -> SemanticSpan:
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var hover: String = "%s
+
+@tool" % EventSheetL10n.translate("Runs in the editor too.")
+	var chip_meta: Dictionary = meta.merged({
+		"badge": true,
+		"badge_style": "scope",
+		"badge_natural_width": true,
+		"badge_bg": event_style.range_badge_background_color,
+		"badge_fg": event_style.range_badge_foreground_color,
+		"hover_note": hover,
+	}, true)
+	if editable:
+		chip_meta["head_action"] = EventSheetHeadBands.BAND_EXTENDS
+		chip_meta["hover_note"] = "%s
+%s" % [hover, EventSheetL10n.translate("Click to change what kind of script it is.")]
+	return _make_span(EventSheetL10n.translate("Runs in the editor"), SemanticSpan.SpanType.KEYWORD, chip_meta)
 
 
 ## True for a sheet that opens on the head bar even with no head lines of its own to read: one saved
