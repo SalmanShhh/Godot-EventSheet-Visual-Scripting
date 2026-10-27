@@ -120,6 +120,19 @@ static func run() -> bool:
 			PackedStringArray(["surface", "stamp"])],
 	]) and ok
 
+	# The editor's two-step copy: everything but the scripts first, then the scripts.
+	_write(LIB.path_join("runner/icon.svg"), "<svg/>")
+	_write(LIB.path_join("runner/runner.gd.uid"), "uid://runner1\n")
+	EventSheetPackLibrary.copy_into_project(PackedStringArray(["runner"]), LIB, packs_dir, true)
+	var first_step: Array = [FileAccess.file_exists(packs_dir.path_join("runner/icon.svg")),
+		FileAccess.file_exists(packs_dir.path_join("runner/runner.gd")), FileAccess.file_exists(packs_dir.path_join("runner/runner.gd.uid"))]
+	EventSheetPackLibrary.copy_scripts(PackedStringArray(["runner"]), LIB, packs_dir)
+	ok = SUPPORT.pins(P, [
+		["the first step copies the pictures and holds the scripts back", first_step, [true, false, false]],
+		["the second step brings the scripts and their uid", [FileAccess.file_exists(packs_dir.path_join("runner/runner.gd")),
+			FileAccess.get_file_as_string(packs_dir.path_join("runner/runner.gd.uid"))], [true, "uid://runner1\n"]],
+	]) and ok
+
 	# The real library, beside the plugin.
 	ok = SUPPORT.pins(P, [
 		["the plugin carries its library, invisible to Godot", EventSheetPackLibrary.exists(), true],

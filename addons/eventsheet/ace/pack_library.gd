@@ -195,8 +195,12 @@ static func folders_to_add(pack_dir: String, root: String = LIBRARY_ROOT,
 ## Copies library folders into the project, one by one. A folder the project already holds is
 ## left exactly as it is and listed under "kept": the project's copy is the reader's, and an update
 ## of the plugin never reaches into it. Returns {"ok", "copied", "kept", "message"}.
+##
+## `scripts_later` copies everything but the scripts (and their `.uid`): the editor copies a pack in
+## two steps, so the pictures a script's `@icon` names are imported before Godot registers the script
+## and goes looking for them. `copy_scripts` is the second step.
 static func copy_into_project(wanted: PackedStringArray, root: String = LIBRARY_ROOT,
-		project_root: String = PROJECT_ROOT) -> Dictionary:
+		project_root: String = PROJECT_ROOT, scripts_later: bool = false) -> Dictionary:
 	var copied: PackedStringArray = PackedStringArray()
 	var kept: PackedStringArray = PackedStringArray()
 	for folder: String in wanted:
@@ -207,7 +211,7 @@ static func copy_into_project(wanted: PackedStringArray, root: String = LIBRARY_
 		if in_project(folder, project_root):
 			kept.append(folder)
 			continue
-		var error: Error = _copy_tree(source, project_root.path_join(folder))
+		var error: Error = _copy_tree(source, project_root.path_join(folder), 1 if scripts_later else 0)
 		if error != OK:
 			return {"ok": false, "copied": copied, "kept": kept,
 				"message": EventSheetL10n.translate("%s could not be copied into the project (%s).") % [folder, error_string(error)]}
@@ -226,18 +230,37 @@ static func send_to_trash(pack_dir: String, project_root: String = PROJECT_ROOT)
 	return OS.move_to_trash(ProjectSettings.globalize_path(folder))
 
 
-static func _copy_tree(source: String, destination: String) -> Error:
+## The second step of a two-step copy: the scripts (and their `.uid`) of folders whose other files
+## `copy_into_project(..., true)` already copied.
+static func copy_scripts(folders: PackedStringArray, root: String = LIBRARY_ROOT,
+		project_root: String = PROJECT_ROOT) -> Error:
+	for folder: String in folders:
+		var error: Error = _copy_tree(root.path_join(folder), project_root.path_join(folder), 2)
+		if error != OK:
+			return error
+	return OK
+
+
+## True for a file the second step of a two-step copy carries: a script, or a script's `.uid`.
+static func is_script_file(file_name: String) -> bool:
+	return file_name.get_extension() == "gd" or file_name.ends_with(".gd.uid")
+
+
+## `part` 0 copies every file, 1 every file but the scripts, 2 only the scripts.
+static func _copy_tree(source: String, destination: String, part: int = 0) -> Error:
 	var made: Error = DirAccess.make_dir_recursive_absolute(destination)
 	if made != OK:
 		return made
 	for file_name: String in DirAccess.get_files_at(source):
 		if GENERATED_EXTENSIONS.has(file_name.get_extension()):
 			continue
+		if (part == 1 and is_script_file(file_name)) or (part == 2 and not is_script_file(file_name)):
+			continue
 		var copy_error: Error = DirAccess.copy_absolute(source.path_join(file_name), destination.path_join(file_name))
 		if copy_error != OK:
 			return copy_error
 	for child: String in DirAccess.get_directories_at(source):
-		var nested: Error = _copy_tree(source.path_join(child), destination.path_join(child))
+		var nested: Error = _copy_tree(source.path_join(child), destination.path_join(child), part)
 		if nested != OK:
 			return nested
 	return OK

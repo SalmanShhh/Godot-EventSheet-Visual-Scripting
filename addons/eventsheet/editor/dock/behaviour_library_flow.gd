@@ -62,12 +62,11 @@ static func _and_list(names: PackedStringArray) -> String:
 func add_and_attach(pack: Dictionary, values: Dictionary, object_label: String) -> Dictionary:
 	var pack_dir: String = str(pack.get("dir", ""))
 	var wanted: PackedStringArray = EventSheetPackLibrary.folders_to_add(pack_dir)
-	var copied: Dictionary = EventSheetPackLibrary.copy_into_project(wanted)
+	var copied: Dictionary = await copy_and_import(wanted)
 	if not bool(copied.get("ok", false)):
 		_dock._set_status(str(copied.get("message", "")), true)
 		return copied
 	var added: PackedStringArray = copied.get("copied", PackedStringArray())
-	await import_folders(added)
 	var in_project: Dictionary = EventSheetPackCatalog.describe(pack_dir)
 	var host: Node = _dock._scene_node_for_object(object_label)
 	if host == null:
@@ -126,8 +125,7 @@ func undo_last(host: Node) -> void:
 
 ## Copies the folders back in from the library, for the redo of an add.
 func _restore_folders(folders: PackedStringArray) -> void:
-	EventSheetPackLibrary.copy_into_project(folders)
-	import_folders(folders)
+	copy_and_import(folders)
 	_after_change()
 
 
@@ -137,6 +135,47 @@ func _trash_folders(folders: PackedStringArray) -> void:
 		EventSheetPackLibrary.send_to_trash(folder)
 	import_folders(PackedStringArray())
 	_after_change()
+
+
+## Copies library folders in, in two steps with an import after each: first everything but the
+## scripts, so the pictures a script's `@icon` names are imported, then the scripts. Copying both at
+## once had Godot register each script and look for its icon before the icon was imported - one
+## "Failed loading resource" per pack, and on a large add an editor that crashed part way. Returns
+## what copy_into_project returns. A coroutine: await it.
+func copy_and_import(wanted: PackedStringArray) -> Dictionary:
+	var copied: Dictionary = EventSheetPackLibrary.copy_into_project(wanted, EventSheetPackLibrary.LIBRARY_ROOT,
+		EventSheetPackLibrary.PROJECT_ROOT, true)
+	var added: PackedStringArray = copied.get("copied", PackedStringArray())
+	if added.is_empty():
+		return copied
+	await import_folders(added)
+	var scripts_error: Error = EventSheetPackLibrary.copy_scripts(added)
+	if scripts_error != OK:
+		copied["ok"] = false
+		copied["message"] = EventSheetL10n.translate("%s could not be copied into the project (%s).") % [", ".join(added), error_string(scripts_error)]
+	await import_folders(added)
+	await _classes_registered(added)
+	return copied
+
+
+## Waits until Godot's class list holds every class the copied scripts declare: a script loaded
+## before then (the vocabulary's rebuild loads them) cannot find a base class from the same pack.
+func _classes_registered(folders: PackedStringArray) -> void:
+	if not Engine.is_editor_hint() or _dock == null or not _dock.is_inside_tree():
+		return
+	var wanted: Dictionary = {}
+	var declared: RegEx = RegEx.create_from_string("(?m)^class_name\\s+([A-Za-z_][A-Za-z0-9_]*)")
+	for folder: String in folders:
+		for script_path: String in EventSheetPackLibrary._scripts_in(EventSheetPackLibrary.PROJECT_ROOT.path_join(folder)):
+			var found: RegExMatch = declared.search(FileAccess.get_file_as_string(script_path))
+			if found != null:
+				wanted[found.get_string(1)] = true
+	var give_up: SceneTreeTimer = _dock.get_tree().create_timer(IMPORT_WAIT_SECONDS)
+	while not wanted.is_empty() and give_up.time_left > 0.0:
+		for entry: Dictionary in ProjectSettings.get_global_class_list():
+			wanted.erase(str(entry.get("class", "")))
+		if not wanted.is_empty():
+			await _dock.get_tree().process_frame
 
 
 ## Asks Godot to import what changed under eventsheet_addons/ and waits until it says it has, so a
@@ -201,10 +240,9 @@ func _after_change() -> void:
 ## A coroutine: await it.
 func add_kits(chosen: Array[Dictionary]) -> Dictionary:
 	var wanted: PackedStringArray = EventSheetPackLibrary.kit_folders(chosen)
-	var copied: Dictionary = EventSheetPackLibrary.copy_into_project(wanted)
+	var copied: Dictionary = await copy_and_import(wanted)
 	var added: PackedStringArray = copied.get("copied", PackedStringArray())
 	if not added.is_empty():
-		await import_folders(added)
 		_after_change()
 	var message: String = str(copied.get("message", "")) if not bool(copied.get("ok", false)) \
 		else (EventSheetL10n.translate("Nothing was added.") if added.is_empty()
