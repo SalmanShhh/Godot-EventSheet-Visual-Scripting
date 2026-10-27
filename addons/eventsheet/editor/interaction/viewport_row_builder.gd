@@ -19946,6 +19946,8 @@ func _collect_declared_local_names(rows: Array, into: Dictionary) -> void:
 					if not local_name.is_empty():
 						into[local_name] = true
 			_collect_declared_local_names((entry as EventRow).sub_events, into)
+
+
 ## Empties the owner catalog when the sheet being read is not the one it was filled from. One sweep
 ## reads more than one sheet: a class written inside the file is read with its own sheet in place,
 ## and a catalog filled there answered for the whole file afterwards - every member of the file
