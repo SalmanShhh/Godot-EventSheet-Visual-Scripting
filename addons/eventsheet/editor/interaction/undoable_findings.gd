@@ -40,6 +40,12 @@ const ANCHOR_EVENT := "event"
 ## The one-click answer, by the id the dock's door and the inbox chip both dispatch on.
 const FIX_MAKE_IT_UNDOABLE := "make_the_edit_undoable"
 
+## The plugin's own switch on and switch off. What they build and free is the plugin's own UI - a
+## dock, a menu item, a panel - never the scene the editor has open, and putting it in the reader's
+## undo history would let a Ctrl+Z bring back a dock nobody owns. So neither event, nor anything
+## under it, is asked the question at all.
+const PLUGIN_LIFECYCLE: Array[String] = ["OnPluginEnabled", "OnPluginDisabled"]
+
 
 ## Every not-undoable note this sheet earns, one per event that changes the open scene outside the
 ## history. `script_path` is the file the sheet lives in and is only the label the sentence leads
@@ -162,7 +168,7 @@ static func _walk(items: Array, label: String, found: Array[Dictionary]) -> void
 			_walk(EventSheetGroupFacts.children(item as EventGroup), label, found)
 			continue
 		var event_row: EventRow = item as EventRow
-		if event_row == null:
+		if event_row == null or PLUGIN_LIFECYCLE.has(event_row.trigger_id):
 			continue
 		_note_this_event(event_row, label, found)
 		_walk(event_row.sub_events, label, found)

@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Fixed: freeing your plugin's own dock is not an edit of the open scene
+
+- Opening your own editor plugin as a sheet put an amber frame on its On Plugin Disabled event and
+  "1 problem" in the status bar, because `_dock.queue_free()` read as a change to the scene the
+  editor has open made outside the undo history. A plugin's switch on and switch off build and free
+  the plugin's own UI, and a Ctrl+Z that brought the dock back would be the bug, so neither event is
+  asked that question any more. A menu command in the same file that really does change the open
+  scene by hand still gets the finding, in the sheet and in the Doctor.
+
 ### Fixed: the Doctor reports on your game, not on the packs installed beside it
 
 - In a project with the behaviour packs copied in, the Doctor said 189 notes about a ten-script
