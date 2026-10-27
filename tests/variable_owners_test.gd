@@ -14,6 +14,7 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 const INSPECTOR_PLUGIN := preload("res://addons/eventforge/editor/sheet_edit_inspector_plugin.gd")
+const LINES := preload("res://tools/reading_lines.gd")
 
 
 static func run() -> bool:
@@ -28,7 +29,52 @@ static func run() -> bool:
 	ok = _test_the_doctor_says_what_the_rows_say() and ok
 	ok = _test_one_question_answers_whether_a_sheet_is_an_autoload() and ok
 	ok = _test_a_walrus_variable_is_its_values_kind() and ok
+	ok = _test_a_made_object_and_the_expressions_panel_say_the_rows_type() and ok
 	return ok
+
+
+## `var _stats := Patrol.new()` holds a Patrol, and read "Variant" on the sheet. The parameters
+## window's Expressions panel listed `GRAVITY : Variant` and `coyote_time : Variant` beside rows that
+## say float: it read the declared type, which a `:=` line leaves empty. Both now give the type the
+## value gives, through the one helper the variable row reads its type from.
+static func _test_a_made_object_and_the_expressions_panel_say_the_rows_type() -> bool:
+	var marks: Script = preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
+	var made: Dictionary = {}
+	for value: String in ["Patrol.new()", "Node2D.new()", "Stats.Block.new(3)", "enemy.new()", "_Hidden.new()"]:
+		made[value] = str(marks.call("gdscript_type_word", "", value, true))
+	var sheet: EventSheetResource = EventSheetResource.new()
+	for spec: Array in [["GRAVITY", "980.0", true], ["coyote_time", "0.1", false], ["_stats", "Patrol.new()", false]]:
+		var variable: LocalVariable = LocalVariable.new()
+		variable.name = str(spec[0])
+		variable.default_value = str(spec[1])
+		variable.inferred_type = true
+		variable.is_constant = bool(spec[2])
+		sheet.events.append(variable)
+	var typed: LocalVariable = LocalVariable.new()
+	typed.name = "lives"
+	typed.type_name = "int"
+	typed.default_value = 3
+	sheet.events.append(typed)
+	var labels: Array = []
+	for entry: Variant in EventSheetSelfExpressions.variable_entries(sheet):
+		labels.append(str((entry as Dictionary).get("label", "")))
+	# And the variable row itself, in a hand-written script that makes one of its own classes.
+	var path: String = "user://variable_owners_made_object.gd"
+	var source: String = "extends Node\n\nclass Patrol:\n\tvar turns: int = 0\n\nvar _stats := Patrol.new()\n"
+	var rows: Array = []
+	for reading: Variant in LINES.readings_of_sheet(SUPPORT.reopen(source, true, path), path):
+		var line: String = " ".join((reading as LINES.Reading).plain)
+		if line.contains("_stats"):
+			rows.append(line)
+	return SUPPORT.pins("variable_owners_test", [
+		["the row of a made object reads its class", rows,
+			["x Instance Patrol _stats = Patrol.new() var _stats := Patrol.new()"]],
+		["a made object is of the class that made it, and a call on a variable stays any", made, {
+			"Patrol.new()": "Patrol", "Node2D.new()": "Node2D", "Stats.Block.new(3)": "Stats.Block",
+			"enemy.new()": "Variant", "_Hidden.new()": "Variant"}],
+		["the Expressions panel lists each variable with the type its row reads", labels,
+			["GRAVITY : float", "coyote_time : float", "_stats : Patrol", "lives : int"]],
+	])
 
 
 ## `var run_time := 0.0` - the way Godot's own scripts often declare a member - keeps no written type,

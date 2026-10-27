@@ -13,6 +13,8 @@
 class_name EventSheetSelfExpressions
 extends RefCounted
 
+const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
+
 ## The familiar-name override table - the ONLY literal table in the feature, and it is an override
 ## list on top of reflection, never a property catalog. An alias exists ONLY when the familiar name
 ## and the Godot name genuinely differ (position.x needs "X"; scale needs nothing). `host` gates the entry:
@@ -480,8 +482,21 @@ static func gather_sheet_variables(sheet: EventSheetResource) -> Array:
 		if name_str.is_empty() or seen.has(name_str):
 			continue
 		seen[name_str] = true
-		out.append({"name": name_str, "type_name": local_variable.type_name.strip_edges()})
+		# The kind the sheet's own variable row reads as: `const GRAVITY := 980.0` declares no type,
+		# so the value gives it (float), never "Variant" beside a row that says float.
+		out.append({"name": name_str, "type_name": inferred_type_name(local_variable)})
 	return out
+
+
+## The GDScript type a declared variable holds: its written type, or for one that writes none
+## (`:=`, `const X := ...`, an @onready value) the type its value gives - the same answer the variable
+## row on the sheet reads. A truly untyped `var x = null` stays "Variant".
+static func inferred_type_name(variable: LocalVariable) -> String:
+	var declared: String = variable.type_name.strip_edges()
+	if not declared.is_empty() and declared != "Variant":
+		return declared
+	return NativeVariableMarks.gdscript_type_word(declared, variable.default_value,
+		variable.expression_default or variable.inferred_type or variable.onready)
 
 
 ## Recursively collect every LocalVariable row (top-level, inside groups, and nested in

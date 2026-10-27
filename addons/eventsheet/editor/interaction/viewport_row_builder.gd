@@ -12607,6 +12607,12 @@ static func _inferred_type_word(default_value: Variant, expression_default: bool
 	for constructed: String in ["Color", "Vector2", "Vector3", "Vector4"]:
 		if text.begins_with("%s." % constructed) or text.begins_with("%s(" % constructed):
 			return friendly_type_word(constructed)
+	# A made object - `var _stats := Patrol.new()` - is of the class that made it, the same answer the
+	# code type gives (NativeVariableMarks.gdscript_type_word), so the row never says "any" for it.
+	if text.contains(".new("):
+		var made: String = NativeVariableMarks.gdscript_type_word("", text, true)
+		if made != "Variant":
+			return friendly_type_word(made)
 	return ""
 
 

@@ -379,6 +379,17 @@ static func gdscript_type_word(type_name: String, default_value: Variant, expres
 		for variant_type: int in range(1, TYPE_MAX):
 			if type_string(variant_type) == head and head != "Object":
 				return head
+	# A class made fresh - `Patrol.new()`, `Node2D.new()`, `Stats.Block.new(3)` - holds an instance of
+	# that class: the engine's, the project's class_name, or a class written inside the file. A class
+	# name is capitalised by convention, which is what tells `Patrol.new()` from a call on a variable.
+	var made: RegExMatch = RegEx.create_from_string(
+		"^([A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*)\\.new\\(").search(text)
+	if made != null:
+		var made_class: String = made.get_string(1)
+		var last: String = made_class.get_slice(".", made_class.get_slice_count(".") - 1)
+		if ClassDB.class_exists(StringName(made_class)) or (last.left(1) == last.left(1).to_upper() \
+				and last.left(1) != "_"):
+			return made_class
 	return "Variant"
 
 

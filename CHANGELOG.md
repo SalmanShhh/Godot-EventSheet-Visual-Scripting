@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Fixed: a made object and the Expressions panel say the type the value gives
+
+- `var _stats := Patrol.new()` read "any" (and "Variant" in Editor Native) on the sheet. A variable
+  holding a made object now reads the class that made it - `Patrol`, `Node2D`, `Stats.Block` -
+  whether that is an engine class, your class_name or a class written inside the file.
+- The parameters window's Expressions panel listed `GRAVITY : Variant` and `coyote_time : Variant`
+  beside rows that say float. It now lists the type the variable row reads.
+
 ### Fixed: a class inside a script sets its own variables on its own line
 
 - A step a class written inside your script takes on its own variable read under System
