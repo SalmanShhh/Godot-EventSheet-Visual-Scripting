@@ -26,6 +26,8 @@ func _ef_load_saved() -> bool:
 	return true
 
 func _ef_store_saved(at_save_game: bool = false) -> void:
+	if not __ef_save_boot:
+		return
 	var __remember_cfg: ConfigFile = ConfigFile.new()
 	__remember_cfg.load("user://remembered.cfg")
 	__remember_cfg.set_value("Player", "health", health)
@@ -183,6 +185,22 @@ static func _reopens_as_the_choices() -> bool:
 		["the choices read back", read_back, {"health": "auto", "coins": "auto", "spot": "manual", "speed": "", "volume": "load", "jumps": "save"}],
 		["the block is not shown as functions", str(reopened.functions.map(func(f: EventFunction) -> String: return f.function_name)).contains("save_state"), false],
 		["reopen then save is byte-identical", SUPPORT.reemit(written, "user://save_choices_player.gd"), written],
+	]) and _reopens_the_older_spelling(written)
+
+
+## A file the older block wrote - no boot-flag guard, `at_save_game` written plain whether read or not
+## - still opens with its choices and saves back exactly as it was.
+static func _reopens_the_older_spelling(written: String) -> bool:
+	var older: String = written.replace("\tif not __ef_save_boot:\n\t\treturn\n", "")
+	var reopened: EventSheetResource = SUPPORT.reopen(older)
+	var read_back: Dictionary = {}
+	for entry: Variant in reopened.events:
+		if entry is LocalVariable:
+			read_back[(entry as LocalVariable).name] = SaveChoices.choice_of((entry as LocalVariable).attributes)
+	return SUPPORT.pins(PREFIX, [
+		["the older block is a different file", older != written, true],
+		["its choices read back", read_back, {"health": "auto", "coins": "auto", "spot": "manual", "speed": "", "volume": "load", "jumps": "save"}],
+		["and it saves back byte for byte", SUPPORT.reemit(older, "user://save_choices_player.gd"), older],
 	])
 
 

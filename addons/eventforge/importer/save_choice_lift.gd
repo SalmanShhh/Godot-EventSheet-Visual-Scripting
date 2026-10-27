@@ -113,6 +113,12 @@ static func apply(sheet: EventSheetResource, cut_block: Dictionary, source: Stri
 	var saved_path: String = sheet.external_source_path
 	sheet.external_source_path = VERIFY_PATH
 	var output: String = str(SheetCompiler.compile(sheet, VERIFY_PATH).get("output", ""))
+	# A file an older version wrote: the same block in its older spelling, written back as it was read.
+	if output != source and source.contains("func _ef_store_saved(at_save_game: bool = false) -> void:\n\tvar __remember_cfg"):
+		sheet.set_meta(SaveChoices.LEGACY_SPELLING_META, true)
+		output = str(SheetCompiler.compile(sheet, VERIFY_PATH).get("output", ""))
+		if output != source:
+			sheet.remove_meta(SaveChoices.LEGACY_SPELLING_META)
 	sheet.external_source_path = saved_path
 	if output == source:
 		return true

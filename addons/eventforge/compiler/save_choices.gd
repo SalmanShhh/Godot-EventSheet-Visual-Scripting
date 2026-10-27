@@ -14,7 +14,9 @@
 #         tree_exiting.connect(_ef_store_saved)   # Auto and Save only, on leaving the tree or quit
 #         return true
 #
-#     func _ef_store_saved(at_save_game: bool = false) -> void:
+#     func _ef_store_saved(at_save_game: bool = false) -> void:   # `_at_save_game` when nothing reads it
+#         if not __ef_save_boot:                  # nothing is stored before the load has run
+#             return
 #         ... Auto and Save only variables written; Load only ones only when at_save_game
 #
 #     func save_state() -> Dictionary:            # Save Game: every saved variable
@@ -57,6 +59,11 @@ const DECLARES: PackedStringArray = ["_ef_load_saved", "_ef_store_saved", "_ef_r
 const PAIR: PackedStringArray = ["save_state", "load_state"]
 ## The attribute naming where a renamed variable's values were saved before: {"section", "key"}.
 const SAVED_AS: String = "saved_as"
+## Stamped by the lift on a sheet whose file was written by an older version of this block, so it is
+## written back the way it was read. Since then the block reads its boot flag (a store before the load
+## ran is skipped) and calls an unread at_save_game `_at_save_game`: the older spelling made Godot
+## report an unused class variable and an unused parameter in every project that saves a variable.
+const LEGACY_SPELLING_META: String = "__save_block_legacy_spelling"
 
 
 ## The choice a variable's attributes hold: one of CHOICES, or "" for Never.
@@ -189,9 +196,13 @@ static func block_lines(sheet: EventSheetResource, declared: Callable, warnings:
 	if not stores.is_empty():
 		lines.append("\ttree_exiting.connect(_ef_store_saved)")
 	lines.append("\treturn true")
+	var legacy: bool = bool(sheet.get_meta(LEGACY_SPELLING_META, false))
 	if not stores.is_empty() or not stored_at_save.is_empty():
 		lines.append("")
-		lines.append("func _ef_store_saved(at_save_game: bool = false) -> void:")
+		lines.append("func _ef_store_saved(%sat_save_game: bool = false) -> void:" % ["" if legacy or not stored_at_save.is_empty() else "_"])
+		if not legacy:
+			lines.append("\tif not __ef_save_boot:")
+			lines.append("\t\treturn")
 		lines.append("\tvar __remember_cfg: ConfigFile = ConfigFile.new()")
 		lines.append("\t__remember_cfg.load(\"%s\")" % STORE)
 		for variable: Dictionary in stores:
