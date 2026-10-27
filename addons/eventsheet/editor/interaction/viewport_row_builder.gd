@@ -8812,14 +8812,41 @@ func _read_case_steps(case_row: EventRowData, step_code: Dictionary) -> void:
 		if not _append_sentence_spans(read, step, -1, line_index, action_style) or read.is_empty():
 			read_spans.append(span)
 			continue
+		# A step that sets one of the object's own variables is a line of that object, as the same
+		# line reads anywhere else on the sheet ("PatrolBehavior | Set mode to WAITING"), not System's.
+		var own_owner: String = _assigned_member_owner(step.code)
 		for read_span: Variant in read:
 			var read_meta: Dictionary = (read_span as SemanticSpan).metadata
 			read_meta["kind"] = "match_case"
 			read_meta["editable"] = false
 			read_meta.erase("raw_action")
 			read_meta.erase("ace_index")
+			if not own_owner.is_empty() and str(read_meta.get("object_label", "")) == _object_label_for("Core", ""):
+				read_meta["object_label"] = own_owner
+				read_meta.erase("object_icon")
+				var dressed: Array[SemanticSpan] = [read_span as SemanticSpan]
+				_dress_line_object_icons(dressed)
 			read_spans.append(read_span as SemanticSpan)
 	case_row.spans = read_spans
+
+
+## The object that owns the variable a plain assignment sets (`mode = Mode.WAITING`, `hits += 1`), or
+## "" when the line sets no bare name or the name is not one of the sheet's own variables.
+func _assigned_member_owner(code: String) -> String:
+	var text: String = code.strip_edges()
+	var name_end: int = 0
+	while name_end < text.length() and (text[name_end] == "_" or text[name_end].is_valid_identifier() 			or (name_end > 0 and text[name_end].is_valid_int())):
+		name_end += 1
+	if name_end == 0:
+		return ""
+	var rest: String = text.substr(name_end).strip_edges()
+	var assigns: bool = false
+	for operator: String in ["=", "+=", "-=", "*=", "/="]:
+		if rest.begins_with(operator) and not rest.begins_with("=="):
+			assigns = true
+	if not assigns:
+		return ""
+	return EventSheetVariableOwners.owner_for(_variable_owner_entries(), text.substr(0, name_end))
 
 
 ## The match head on its event's condition lane: "match state", after the trigger. It carries the

@@ -100,6 +100,9 @@ way a user meets it:
   front of it.
 - A class written inside a script owns the calls its functions make to each other: "CoinCounter |
   _walk with node root", where they read under a nameless "Functions".
+- A switch branch's step that sets one of the object's own variables reads under the object, as the
+  same line reads anywhere else: "PatrolBehavior | Set mode to WAITING" under a guarded branch, where
+  it read under System.
 - Add an event's object page reads a pack by the word its rows read under ("Bullet", "Platformer")
   instead of its class name, and puts the project's own globals under Your Project as "GameState
   (autoload)" after the packs, where they sat at the top beside System with nothing to tell them

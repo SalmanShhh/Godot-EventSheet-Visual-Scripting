@@ -9,6 +9,7 @@ extends RefCounted
 const SUPPORT := preload("res://tests/support.gd")
 const NAME := "match_branch_guards_test"
 const PATH: String = "res://tests/fixtures/match_branch_guards.gd"
+const MEMBER_STEPS: String = "res://tests/fixtures/match_member_steps.gd"
 
 
 static func run() -> bool:
@@ -25,6 +26,21 @@ static func run() -> bool:
 		["a function the object answers reads as the object's own question, with no trigger arrow",
 			_row_containing(rows, "Is on floor | System> Go to Idle"), "i3 [match_branch_guards> Is on floor | System> Go to Idle]"],
 		["no line under the switch is left without an object", _bare_lines(rows), PackedStringArray()],
+	]) and _member_steps()
+
+
+## A step that sets one of the object's own variables reads under the object, as the same line reads
+## anywhere else on the sheet - never under System because it sits in a switch branch.
+static func _member_steps() -> bool:
+	var rows: PackedStringArray = _read_rows(MEMBER_STEPS)
+	return SUPPORT.pins(NAME, [
+		["the file still comes back byte for byte",
+			str(SheetCompiler.compile(GDScriptImporter.new().import_external(MEMBER_STEPS), MEMBER_STEPS).get("output", "")),
+			FileAccess.get_file_as_string(MEMBER_STEPS)],
+		["a guarded branch's steps on the object's own variables name the object",
+			_row_containing(rows, "wait_left ≤ 0"),
+			"i2 [System> wait_left ≤ 0 | match_member_steps> Set direction to -direction | match_member_steps> Set wait_left to 2]"],
+		["and so does an unguarded branch's step", _row_containing(rows, "is WALKING"), "i1 [System> mode is WALKING | match_member_steps> Subtract dt from wait_left]"],
 	])
 
 
