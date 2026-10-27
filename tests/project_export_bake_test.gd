@@ -210,7 +210,9 @@ static func run() -> bool:
 	var report: Dictionary = EXPORT_TOOLS.run_export_tools(PackedStringArray(["mobile", "etc"]), true, run_dir)
 	var ran_scripts: PackedStringArray = report.get("scripts", PackedStringArray())
 	ok = _check("one tool ran", int(report.get("ran", -1)), 1) and ok
-	ok = _check("the node script and the text-only match were both refused", int(report.get("skipped", -1)), 2) and ok
+	# The text-only match is not a hook at all, so it is passed over without a word: counting it as
+	# skipped printed a warning into the Output panel on every import of a project that quotes the header.
+	ok = _check("the node script was refused, and the text-only match is not counted", int(report.get("skipped", -1)), 1) and ok
 	ok = _check("and neither of them was ever constructed", FileAccess.file_exists(construction_path), false) and ok
 	ok = _check("the run is reported by path", ", ".join(ran_scripts), tool_path) and ok
 	ok = _check("the tool received the export flags", FileAccess.get_file_as_string(receipt_path), "true|mobile,etc") and ok

@@ -88,7 +88,14 @@ static func run_hook_scripts(hook: String, arguments: Array, root: String, label
 	# Built as a local and stored back at the end: a PackedStringArray is a VALUE, so appending to one
 	# fetched out of a Dictionary appends to a copy and the report would come back empty.
 	var ran_paths: PackedStringArray = PackedStringArray()
+	var declaration: RegEx = RegEx.create_from_string("(?m)^func %s\\(" % hook)
 	for script_path: String in find_hook_scripts(hook, root):
+		# Discovery is a text match, so a file that only MENTIONS the handler (a test naming it in a
+		# string, a guide quoting it) reaches here too. It is not a hook and says nothing: loading it
+		# would compile somebody's file for no reason, and the warning it used to earn appeared in the
+		# Output panel on every import of a project that merely talks about the handler.
+		if declaration.search(FileAccess.get_file_as_string(script_path)) == null:
+			continue
 		var script: Script = load(script_path) as Script
 		var skipped: String = ""
 		if script == null or not script.can_instantiate():
