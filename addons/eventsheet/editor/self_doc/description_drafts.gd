@@ -381,13 +381,17 @@ static func _clean(text: String) -> String:
 
 
 ## A phrase with its first letter lowered, for a clause in the middle of a sentence. An identifier or
-## an all-caps word is left exactly as it is - "HP" is not "hP".
+## an all-caps word is left exactly as it is - "HP" is not "hP", and a name written with a capital
+## inside it, a dot or an underscore ("GameState.coins", "Hud_label") is a name, read as written.
 static func _lower_lead(text: String) -> String:
 	if text.length() < 2:
 		return text
 	var lead: String = text.substr(0, 1)
 	var second: String = text.substr(1, 1)
 	if lead != lead.to_lower() and second == second.to_upper() and second != second.to_lower():
+		return text
+	var first_word: String = text.get_slice(" ", 0)
+	if first_word.contains(".") or first_word.contains("_") or first_word.substr(1) != first_word.substr(1).to_lower():
 		return text
 	return lead.to_lower() + text.substr(1)
 

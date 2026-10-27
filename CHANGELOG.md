@@ -34,6 +34,23 @@ way a user meets it:
 - The Words page's live preview reads the `_process` word its own table sets ("Every tick"), where it
   said "Every Frame" beside a table that said otherwise.
 
+### Fixed: your own scripts read and edit the way the function and match boards draw them
+
+- Clicking a function of a script you just opened (which opens as a read-only preview) hands it to
+  Godot's Inspector, as on any sheet; the first change made there unlocks the preview the way picking
+  an action does. A scene's view and a file a merge left blocked still only show the read-only card.
+- A `match` inside a function reads like any other line: its head on a line of its own leads with
+  System, and the question a branch asks before it moves on (`if absf(velocity.x) > 10.0:`, `if
+  is_on_floor():`) reads in the sheet's words with its object - "System | |velocity.x| > 10",
+  "Player | Is on floor" - instead of the bare code. Its steps name their object too ("System | Go to
+  Run"), and a function call used as that question no longer wears the green trigger arrow.
+- The windows that write one line show that line the way the sheet draws it, icon first: the
+  function window's band is the function icon and "On function take_damage" (no "Function" word and
+  no "-> nothing"), the parameter window's band is the parameter's own line ("amount   int = 1"), and
+  Add action, Compare and Match lead with their object's icon and name.
+- A drafted function description keeps a name at the start of a clause as written: "GameState.coins
+  += amount", never "gameState".
+
 ### Fixed: the plugin and the code it writes stop filling the Output and Debugger panels
 
 - Quitting the editor no longer prints "Parent node is busy adding/removing children": the bridge

@@ -105,6 +105,14 @@ static func run() -> bool:
 		EventSheetDescriptionDrafts.for_function(busy),
 		"Print line 0, print line 1; print line 2; and 2 more steps") and all_passed
 
+	# A clause in the middle of the draft starts lower case, but a name keeps its spelling: a user's
+	# autoload GameState is never gameState, and a snake_case name is never touched.
+	all_passed = _check("a name at the start of a clause keeps its spelling",
+		[EventSheetDescriptionDrafts._lower_lead("GameState.coins += amount"),
+			EventSheetDescriptionDrafts._lower_lead("Hud_label shows"),
+			EventSheetDescriptionDrafts._lower_lead("Add amount to coins")],
+		["GameState.coins += amount", "Hud_label shows", "add amount to coins"]) and all_passed
+
 	# A function with nothing in it drafts nothing: a draft of nothing would just be its own name.
 	all_passed = _check("an empty function drafts nothing at all",
 		EventSheetDescriptionDrafts.for_function(EventFunction.new()), "") and all_passed
