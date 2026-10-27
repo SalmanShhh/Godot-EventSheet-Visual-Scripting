@@ -2,14 +2,15 @@
 #
 # A trigger line carries a green arrow in front of its object icon, an inverted condition a red cross
 # in the same slot, and every other line nothing; the action lane carries no mark at all. A function
-# head is a line like any other - the function icon, "Functions", "On function <name>" - with one line
-# per parameter under it (the parameter icon, its name, its type) and a local variable as a line with
+# head is a line like any other - the function icon, then "On function <name>" straight after it with
+# no object name - with one line per parameter under it (the parameter icon, its name, its type) and a local variable as a line with
 # the local icon; no "Action" / "Function" / "PARAM" / "Local" word is drawn. A behaviour's action keeps
 # the node it is mounted on and starts its words with the behaviour's name and a colon. The pins hold:
 #   1. which mark a badge span draws, as a pure function;
 #   2. the trigger and the inverted badges are built in every look (the native look's number gutter
 #      no longer swallows the trigger's badge) and the marks' colours per hand;
-#   3. the function head, its parameter lines and a local line, with no kind word anywhere;
+#   3. the function head, its parameter lines and a local line, with no kind word anywhere, and a
+#      function's return line, which like the head names no object;
 #   4. a behaviour's action words lead with "Name: " and the old object-column shape is retired.
 # Headless-safe: the icons themselves need an editor theme, so the pins read the spans' words and
 # metadata, never a texture.
@@ -29,6 +30,7 @@ static func run() -> bool:
 	ok = _test_badges_in_every_look() and ok
 	ok = _test_function_head_lines() and ok
 	ok = _test_behaviour_words() and ok
+	ok = _test_function_return_lines() and ok
 	return ok
 
 
@@ -129,7 +131,7 @@ static func _test_function_head_lines() -> bool:
 	ok = SUPPORT.pins(TEST_NAME, [
 		["the head's first words read On function <name>, the name as written", texts[0] if not texts.is_empty() else "",
 			"On function juice_tile"],
-		["the object column says Functions", str(head_meta.get("object_label", "")), "Functions"],
+		["no object name stands before the words: the icon says function", str(head_meta.get("object_label", "")), ""],
 		["the head leads with the function icon", str(head_meta.get("object_glyph", "")), NativeRowMarks.OBJECT_GLYPH_FUNCTION],
 		["one line per parameter: its icon, its name, its type (and default)", param_lines, [
 			["index", "int", NativeRowMarks.OBJECT_GLYPH_PARAMETER, 1],
@@ -182,6 +184,62 @@ static func _test_behaviour_words() -> bool:
 		["the shipped native look leaves the old setting off",
 			native.get_event_style().behaviour_in_object_column, false],
 	])
+
+
+static func _test_function_return_lines() -> bool:
+	var source: String = "extends CharacterBody2D
+
+@export var health: int = 10
+
+
+func take_hit(amount: int) -> int:
+	var left: int = health - amount
+	return left
+
+
+func _physics_process(delta: float) -> void:
+	if not is_on_floor():
+		velocity.y += 980.0 * delta
+		return
+"
+	var sheet: EventSheetResource = EventSheets.open_gd_as_sheet(source)
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(sheet)
+	var view: EventSheetViewport = dock._active_view()
+	var lines: Dictionary = {}
+	for entry: Dictionary in view.get_flat_rows():
+		var row_data: EventRowData = entry.get("row")
+		if row_data == null:
+			continue
+		view._row_builder._ensure_event_spans(row_data)
+		for span: SemanticSpan in row_data.spans:
+			var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
+			if str(metadata.get("lane", "")) == "action" and (span.text.begins_with("Return") or span.text.begins_with("Stop")):
+				lines[span.text] = [str(metadata.get("object_label", "")), str(metadata.get("object_glyph", ""))]
+	var return_ace: ACEAction = ACEAction.new()
+	return_ace.ace_id = "ReturnValue"
+	var raw_return: RawCodeRow = RawCodeRow.new()
+	raw_return.code = "return left"
+	var raw_call: RawCodeRow = RawCodeRow.new()
+	raw_call.code = "returned_count += 1"
+	dock.free()
+	return SUPPORT.pins(TEST_NAME, [
+		["a function's return line names no object and leads with the function icon",
+			lines.get("Return left", []), ["", NativeRowMarks.OBJECT_GLYPH_FUNCTION]],
+		["a bare return in an event keeps its own reading and object", lines.get("Stop event", []), ["System", ""]],
+		["the Core Return action is a return", ViewportRowBuilder.is_function_return(return_ace), true],
+		["a return written as code is one", ViewportRowBuilder.is_function_return(raw_return), true],
+		["a statement that only starts with the letters is not", ViewportRowBuilder.is_function_return(raw_call), false],
+		["a return written with a value hands one back", ViewportRowBuilder.function_returns_value(raw_return), true],
+		["a bare return with a comment hands nothing back", ViewportRowBuilder.function_returns_value(_raw("return  # done")), false],
+	])
+
+
+static func _raw(code: String) -> RawCodeRow:
+	var raw: RawCodeRow = RawCodeRow.new()
+	raw.code = code
+	return raw
 
 
 static func _untyped_param() -> ACEParam:

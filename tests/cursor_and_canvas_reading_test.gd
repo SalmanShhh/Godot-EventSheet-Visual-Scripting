@@ -99,7 +99,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"= e's position on the canvas",
 	"= the canvas distance from centre to on_screen (pixels)",
 	"e ▸ is behind the camera",
-	"System ▸ Return o's position on the canvas",
+	"Return o's position on the canvas",
 	# The aimed, filtered run, with the layer it may see said in the note.
 	"System ▸ Set hit to the object under crosshair",
 	"on layer 1, reach 500 · none when nothing is hit"

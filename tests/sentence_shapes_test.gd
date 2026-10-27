@@ -95,9 +95,9 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ ⏳ Wait 0.5 seconds",
 	"System ▸ Go to layout Menu",
 	"host ▸ exists",
-	"Function ▸ Return true",
-	"Function ▸ Return false",
-	"Function ▸ Return _jumps_left"
+	"Return true",
+	"Return false",
+	"Return _jumps_left"
 ])
 
 

@@ -4151,9 +4151,10 @@ func _callback_head_spans(event_function: EventFunction) -> Array[SemanticSpan]:
 
 
 ## The function head's spans, all in the CONDITION lane, each a line like any other line of the
-## sheet: the function icon, "Functions" in the object column and "On function <name>" on the first
-## line; then one line per parameter (the parameter icon, its name in the object column, its type
-## after it); then "+ Add parameter" on a sheet that can take one. What kind of function it is, what
+## sheet: the function icon and "On function <name>" straight after it on the first line (the icon
+## says "function", so no object name stands between them; only a tooling file's entry point names
+## the Test or Command tool it runs); then one line per parameter (the parameter icon, its name in
+## the object column, its type after it); then "+ Add parameter" on a sheet that can take one. What kind of function it is, what
 ## it returns and its flags are said by the name's hover card, never by a word chip on the row.
 func _function_head_spans(event_function: EventFunction, role: String) -> Array[SemanticSpan]:
 	var chip_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
@@ -4176,7 +4177,7 @@ func _function_head_spans(event_function: EventFunction, role: String) -> Array[
 		"chip": true,
 		"function_name": true,
 		"function_kind": role,
-		"object_label": _verb_trigger_object(event_function),
+		"object_label": _function_head_object(event_function),
 		"object_glyph": NativeRowMarks.OBJECT_GLYPH_FUNCTION,
 		"object_icon": _glyph_icon_slot(),
 		"hover_note": _function_head_card(event_function, role, editable)
@@ -4387,6 +4388,14 @@ func _verb_trigger_object(event_function: EventFunction) -> String:
 		EventSheetToolFiles.KIND_COMMAND_TOOL:
 			return EventSheetL10n.translate(EventSheetToolFiles.OBJECT_COMMAND_TOOL)
 	return EventSheetL10n.translate("Functions")
+
+
+## The object column of a function head: empty, so the words start right after the function icon,
+## except on a tooling file's entry point, which names the Test or Command tool that runs it.
+func _function_head_object(event_function: EventFunction) -> String:
+	if _tool_file_entry_kind(event_function).is_empty():
+		return ""
+	return _verb_trigger_object(event_function)
 
 
 ## "" unless this function IS the open tooling file's entry point - the name and the file kind have to
@@ -14635,8 +14644,68 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			)
 		)
 	spans.append_array(_pattern_chip_spans(event_row))
+	_dress_function_return_lines(spans, event_row)
 	_dress_line_object_icons(spans)
 	return spans
+
+
+## The Core vocabulary's two ways a function hands control back to its caller.
+const FUNCTION_RETURN_ACE_IDS: PackedStringArray = ["ReturnValue", "ReturnEarly"]
+
+
+## A function's return line reads like its head: the function icon, then "Return <value>" straight
+## after it. The icon already says whose line it is, so no object name ("Functions", "Function",
+## System or the script's own) stands in the object column. Only a return that reads as one is
+## touched: a call to a function keeps its object, a bare `return` keeps its own unless the line is
+## already the function's (it reads "Stop event" anywhere else), and inside an editor callback or an
+## edit handed to the undo funnel a return reads as that question's answer and keeps its object too.
+func _dress_function_return_lines(spans: Array[SemanticSpan], event_row: EventRow) -> void:
+	if event_row == null or not _current_answer_shape().is_empty() or _answer_return_rows > 0:
+		return
+	var function_words: PackedStringArray = PackedStringArray([
+		EventSheetSentence.OBJECT_FUNCTIONS, EventSheetSentence.OBJECT_FUNCTION,
+		EventSheetL10n.translate(EventSheetSentence.OBJECT_FUNCTIONS),
+		EventSheetL10n.translate(EventSheetSentence.OBJECT_FUNCTION)])
+	for span: SemanticSpan in spans:
+		if span == null or not (span.metadata is Dictionary):
+			continue
+		var metadata: Dictionary = span.metadata as Dictionary
+		if str(metadata.get("lane", "")) != "action" or str(metadata.get("object_label", "")).is_empty():
+			continue
+		var action_index: int = int(metadata.get("ace_index", -1))
+		if action_index < 0 or action_index >= event_row.actions.size():
+			continue
+		var action: Resource = event_row.actions[action_index]
+		if not is_function_return(action):
+			continue
+		if not function_returns_value(action) and not function_words.has(str(metadata.get("object_label", ""))):
+			continue
+		metadata["object_label"] = ""
+		metadata["object_glyph"] = NativeRowMarks.OBJECT_GLYPH_FUNCTION
+		metadata["object_icon"] = _glyph_icon_slot()
+
+
+## True when the return `action` hands a value back, not only control: the Core Return Value action,
+## or a `return` written as code with something after it other than a comment.
+static func function_returns_value(action: Resource) -> bool:
+	if action is ACEAction:
+		return (action as ACEAction).ace_id == "ReturnValue"
+	if action is RawCodeRow:
+		var rest: String = (action as RawCodeRow).code.strip_edges().trim_prefix("return").strip_edges()
+		return not rest.is_empty() and not rest.begins_with("#")
+	return false
+
+
+## True when `action` hands control back from the function it sits in: the Core Return actions, or a
+## statement the sheet keeps as written that is a `return`.
+static func is_function_return(action: Resource) -> bool:
+	if action is ACEAction:
+		var provider: String = (action as ACEAction).provider_id
+		return (provider.is_empty() or provider == "Core") and FUNCTION_RETURN_ACE_IDS.has((action as ACEAction).ace_id)
+	if action is RawCodeRow:
+		var code: String = (action as RawCodeRow).code.strip_edges()
+		return code == "return" or code.begins_with("return ") or code.begins_with("return(")
+	return false
 
 
 ## Every condition and action line leads with the icon of what it acts on: the node's own Godot class

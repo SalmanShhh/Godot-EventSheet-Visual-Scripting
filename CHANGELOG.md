@@ -87,8 +87,10 @@
   object), the System gear and the input devices' glyphs in a neutral grey, on a tile that reads on
   light sheets too. A pick filter, a state's case and an Else get their icon as well, and "System" is
   no longer dimmed.
-- A function head is a line like any other: the function icon, `Functions`, `On function juice_tile`.
-  Each parameter is its own line under it - the parameter icon, its name, its type (`index` `int`) -
+- A function head is a line like any other: the function icon, then `On function juice_tile` straight
+  after it - no `Functions` name stands between them, the icon says it. A function's return line reads
+  the same way: the function icon, then `Return left`, with no `Functions`, `Function` or `System` in
+  its object column. Each parameter is its own line under it - the parameter icon, its name, its type (`index` `int`) -
   and a local variable reads as the local icon, its name, its type and its value. The `Action` /
   `Condition` / `Expression` kind word, the `Function` word, the `returns` chip, the `In Add Action`,
   `Waits`, `Shared` and `Featured` chips, `PARAM` and `Local` are gone from the row; the kind, what the

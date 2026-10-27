@@ -1,5 +1,5 @@
 # EventForge - functions on the sheet: each EventFunction is drawn like any other event, at root level -
-# a head line like any other line (the function icon, "Functions", "On function <name>") and one line
+# a head line like any other line (the function icon, then "On function <name>" with no object name) and one line
 # per parameter (the parameter icon, its name, its type), with its kind, what it returns and its tags
 # said by the name's hover rather than by word chips; its own actions in the action lane beside the head and the rest of its body as
 # sub-events, numbered like events. Its description is not drawn: the name's hover shows it and a
@@ -41,7 +41,7 @@ static func run() -> bool:
 	ok = _check("the verbs render in sheet order (take_damage first)",
 		_span_text(define_rows[0] if define_rows.size() > 0 else null, 0), "On function take_damage") and ok
 
-	# ── The function drawn like any other event: a head line ("Functions", "On function <name>") and one
+	# ── The function drawn like any other event: a head line (the icon, "On function <name>") and one
 	# line per parameter; the kind, what it returns and its tags live in the name's hover ──
 	var action_row: EventRowData = define_rows[0] if define_rows.size() > 0 else null
 	var condition_row: EventRowData = define_rows[1] if define_rows.size() > 1 else null
@@ -49,7 +49,7 @@ static func run() -> bool:
 	var internal_row: EventRowData = define_rows[3] if define_rows.size() > 3 else null
 	ok = SUPPORT.pins("define_block_rows_test", [
 		["the head reads On function <name>, the name exactly as written", _span_text(action_row, 0), "On function take_damage"],
-		["its object column says Functions", _span_meta(action_row, 0, "object_label"), "Functions"],
+		["no object name before its words", _span_meta(action_row, 0, "object_label"), ""],
 		["no kind word leads the row", _row_has_span_text(action_row, "Action"), false],
 		["the kind explains itself in the name's hover",
 			str(_span_meta(action_row, 0, "hover_note")).contains("Action: Runs when an event calls it."), true],
