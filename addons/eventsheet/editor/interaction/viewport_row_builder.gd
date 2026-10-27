@@ -8338,13 +8338,16 @@ func _collect_group_object_labels(rows: Array, labels: PackedStringArray, seen: 
 		if event_row == null:
 			continue
 		if not event_row.trigger_id.strip_edges().is_empty():
-			_note_object_label(_object_label_for(event_row.trigger_provider_id, event_row.trigger_id), labels, seen)
+			_note_object_label(_object_label_for(event_row.trigger_provider_id, event_row.trigger_id,
+				event_row.trigger_params), labels, seen)
 		for condition: Variant in event_row.conditions:
 			if condition is ACECondition:
-				_note_object_label(_object_label_for((condition as ACECondition).provider_id, (condition as ACECondition).ace_id), labels, seen)
+				_note_object_label(_object_label_for((condition as ACECondition).provider_id, (condition as ACECondition).ace_id,
+					_row_params(condition)), labels, seen)
 		for action: Variant in event_row.actions:
 			if action is ACEAction:
-				_note_object_label(_object_label_for((action as ACEAction).provider_id, (action as ACEAction).ace_id), labels, seen)
+				_note_object_label(_object_label_for((action as ACEAction).provider_id, (action as ACEAction).ace_id,
+					_row_params(action)), labels, seen)
 
 
 func _note_object_label(label: String, labels: PackedStringArray, seen: Dictionary) -> void:
@@ -13106,7 +13109,7 @@ func _handler_object_label(event_row: EventRow) -> String:
 	var source_path: String = event_row.trigger_source_path.strip_edges()
 	if not source_path.is_empty() and not source_path.begins_with("@") and not source_path.begins_with("autoload:"):
 		return source_path.get_file() if source_path.contains("/") else source_path
-	return _object_label_for(event_row.trigger_provider_id, event_row.trigger_id)
+	return _object_label_for(event_row.trigger_provider_id, event_row.trigger_id, event_row.trigger_params)
 
 
 ## The class picture of the node a SCENE-wired signal comes from. The scene said what class the
@@ -13810,7 +13813,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					"ace_enabled": event_row.trigger.enabled,
 					"chip": true,
 					"line_index": condition_line_index,
-					"object_label": _object_label_for(event_row.trigger.provider_id, event_row.trigger.ace_id),
+					"object_label": _object_label_for(event_row.trigger.provider_id, event_row.trigger.ace_id,
+						_row_params(event_row.trigger)),
 					"object_icon": _object_icon_for(event_row.trigger.provider_id, event_row.trigger.ace_id)
 				}.merged(condition_style_meta, true)
 			)
@@ -13990,7 +13994,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					"chip": true,
 					"line_index": condition_line_index,
 					"rendered_as_trigger": true,
-					"object_label": _object_label_for(inline_trigger.provider_id, inline_trigger.ace_id),
+					"object_label": _object_label_for(inline_trigger.provider_id, inline_trigger.ace_id,
+						_row_params(inline_trigger)),
 					"object_icon": _object_icon_for(inline_trigger.provider_id, inline_trigger.ace_id)
 				}.merged(condition_style_meta, true)
 			)
@@ -14058,7 +14063,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			if _names_compiler_helpers():
 				condition_text = _compiler_names_text(condition_text)
 			var condition_owner: String = str(joined_lead.get("object", "")) if not joined_lead.is_empty() \
-				else _object_label_or_pending(condition.provider_id, condition.ace_id)
+				else _object_label_or_pending(condition.provider_id, condition.ace_id, _row_params(condition))
 			spans.append(
 				_make_span(
 					condition_text,
@@ -14482,7 +14487,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 							"ace_enabled": (action_resource as ACEAction).enabled,
 							"chip": true,
 							"line_index": action_line_index,
-							"object_label": _object_label_or_pending((action_resource as ACEAction).provider_id, (action_resource as ACEAction).ace_id),
+							"object_label": _object_label_or_pending((action_resource as ACEAction).provider_id, (action_resource as ACEAction).ace_id,
+								_row_params(action_resource)),
 							"object_icon": _object_icon_for((action_resource as ACEAction).provider_id, (action_resource as ACEAction).ace_id),
 							"swatch_color": _first_color_in_params(action_resource),
 							"compiled_lines": compiled_line_count(action_resource as ACEAction)
@@ -16445,7 +16451,7 @@ func _append_branch_ace_spans(spans: Array, action: ACEAction, param_key: String
 		"ace_enabled": action.enabled,
 		"chip": true,
 		"line_index": 0,
-		"object_label": _object_label_or_pending(action.provider_id, action.ace_id),
+		"object_label": _object_label_or_pending(action.provider_id, action.ace_id, _row_params(action)),
 		"object_icon": _object_icon_for(action.provider_id, action.ace_id),
 		"swatch_color": _first_color_in_params(action)
 	}.merged(action_style_meta, true)))
@@ -16960,8 +16966,10 @@ func _format_pick_filter(pick: PickFilter) -> String:
 
 
 ## Event-sheet-style object label shown before each condition/action (e.g. "System",
-## "Sprite", "CharacterBody2D"). Core ACEs read as "System"; node-typed ACEs use the class.
-func _object_label_for(provider_id: String, ace_id: String) -> String:
+## "Sprite", "CharacterBody2D"). Core ACEs read as "System"; node-typed ACEs use the class, or the
+## script's own name when the line acts on the script's own node. `params` are the row's own, read
+## for its target: a row aimed at another node never claims the script's name.
+func _object_label_for(provider_id: String, ace_id: String, params: Dictionary = {}) -> String:
 	# A call to one of the sheet's own functions belongs to the object that owns the function - the
 	# script's own object, as "Player | take_damage with amount 2" - like any other line about it.
 	if (provider_id.is_empty() or provider_id == "Core") and ace_id == "CallFunction":
@@ -16972,7 +16980,11 @@ func _object_label_for(provider_id: String, ace_id: String) -> String:
 		var node_type: String = str(definition.metadata.get("node_type", "")).strip_edges()
 		if not node_type.is_empty():
 			# A line with no target of its own acts on the script's own node, and that object has a
-			# name: `Player`, `spike_ring`. The class it extends is the icon in front of the name.
+			# name: `Player`, `spike_ring`. The class it extends is the icon in front of the name. A
+			# line whose target names another node - `enemy` - is about that node, and keeps the class.
+			var target: String = str(params.get("target", "")).strip_edges()
+			if not target.is_empty() and target != "self":
+				return node_type
 			var own: String = _own_object_for_class(node_type)
 			return own if not own.is_empty() else node_type
 	if provider_id.is_empty() or provider_id == "Core":
@@ -16998,9 +17010,6 @@ func _object_label_for(provider_id: String, ace_id: String) -> String:
 	return provider_id
 
 
-## The script's own object name when a line about a `node_type` can only be about the script's own
-## node - the script extends that class or one below it - else "". A behaviour pack's lines are about
-## the node it is attached to, so a pack keeps the class word.
 ## The word the script's own object reads under in the object column: an opened behaviour pack's
 ## picker name ("Health"), the one its own verbs already read under, or else the script's own name.
 ## The class the pack is spelled with ("SimpleHealthBehavior") never stands beside it.
@@ -17012,6 +17021,10 @@ func _own_object_word() -> String:
 	return own
 
 
+## The script's own object word (`_own_object_word`) when a line about a `node_type` can be about the
+## script's own node - the script extends that class or one below it - else "". An opened behaviour
+## pack reads under its picker name here too, like its own verbs. The caller decides first whether
+## the line is about the script's own node at all: a row with a target of its own never asks.
 func _own_object_for_class(node_type: String) -> String:
 	var sheet: EventSheetResource = _viewport._sheet if _viewport != null else null
 	if sheet == null:
@@ -17528,7 +17541,8 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 		_pending_object_label = _own_object_for_class_verb(action.provider_id, action.ace_id, params_dict)
 	# Function calls read as the named verb, not the raw "Call name()" template. A call to one of the
 	# script's OWN functions is a line of the script's own object, so it leads with that object's icon
-	# and name the way the script's own variables do; the "ƒ" mark stays for a sheet with no object.
+	# and name the way the script's own variables do; on a sheet with no object of its own the call
+	# reads under "Functions" instead (`_object_label_for`).
 	if _is_function_call_action(action) and _pending_object_label.is_empty():
 		_pending_object_label = _own_function_call_object(params_dict)
 	if _is_function_call_action(action):
@@ -19722,12 +19736,23 @@ func grammar_bbcode_segments(pieces: Array) -> Array[Dictionary]:
 	return segments
 
 
+## A condition's or action's own parameters, under whichever of the two keys the row was saved with.
+func _row_params(row: Variant) -> Dictionary:
+	if row is ACECondition:
+		var condition: ACECondition = row as ACECondition
+		return condition.params if not condition.params.is_empty() else condition.parameters
+	if row is ACEAction:
+		var action: ACEAction = row as ACEAction
+		return action.params if not action.params.is_empty() else action.parameters
+	return {}
+
+
 ## The label an ACE row shows in its object column - the pending one when the row's shape named its
-## own object, otherwise the ordinary provider/node reading.
-func _object_label_or_pending(provider_id: String, ace_id: String) -> String:
+## own object, otherwise the ordinary provider/node reading over the row's own `params`.
+func _object_label_or_pending(provider_id: String, ace_id: String, params: Dictionary = {}) -> String:
 	var pending: String = _pending_object_label
 	_pending_object_label = ""
-	var label: String = pending if not pending.is_empty() else _object_label_for(provider_id, ace_id)
+	var label: String = pending if not pending.is_empty() else _object_label_for(provider_id, ace_id, params)
 	# A "__" copy of a scene is named by the scene it was made from, and a "__" loop name by what the
 	# loop walks (fold_compiler_helpers).
 	if _spawn_copy_names.has(label):

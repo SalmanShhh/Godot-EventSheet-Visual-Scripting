@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Fixed: a line aimed at another body does not read under your script's name
+
+- In a player script that extends CharacterBody2D, a Move and slide or Set velocity row aimed at
+  another body (`enemy`) read "Player | ...", claiming the wrong object. A row whose target names
+  another node keeps the class word again, on the row and in a folded group's object summary; the
+  script's own lines still read under its name.
+
 ### Fixed: the Doctor reads your own behaviours, globals and packs again
 
 - New behaviour, New global and Export Pack all write a folder under `eventsheet_addons/`, beside

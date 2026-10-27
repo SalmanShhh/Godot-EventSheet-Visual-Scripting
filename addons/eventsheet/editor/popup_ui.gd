@@ -1291,11 +1291,6 @@ static func action_window(title: String, main: String, close: String, size: Vect
 	return parts
 
 
-## A ROW BAND: the line at the top of a window naming what it is about - the row a writing window
-## will write, read the way the sheet will (its object in the quiet object column, then its words), or
-## the event a pick lands on and the field a pick goes into - then an optional note at the far right.
-## Redrawn live as the fields change, so nothing is written or picked blind. `code_words` sets the
-## words in the code font (a picker's field shows what the field holds); an empty band hides.
 ## The icon a sheet line leads with, as the line draws it: the 18 px tile and, on it, either a class
 ## icon or one of the sheet's own glyphs (System's gear, the function, a parameter) in that glyph's ink.
 ## A window's band wears it so the band reads as the very line it is about.
@@ -1349,6 +1344,11 @@ class LineIcon extends Control:
 			draw_texture_rect(texture, icon_rect, false)
 
 
+## A ROW BAND: the line at the top of a window naming what it is about - the row a writing window
+## will write, read the way the sheet will (its object in the quiet object column, then its words), or
+## the event a pick lands on and the field a pick goes into - then an optional note at the far right.
+## Redrawn live as the fields change, so nothing is written or picked blind. `code_words` sets the
+## words in the code font (a picker's field shows what the field holds); an empty band hides.
 class RowBand extends PanelContainer:
 
 	var icon: LineIcon = null
