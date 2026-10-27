@@ -2,6 +2,10 @@
 .godot/
 .import/
 *.import
+# EXCEPT the translators' template: it carries an empty placeholder locale, and imported as a translation
+# it printed "Locale 'xx' does not contain any translation" on every project's first import. Kept as a
+# plain file instead - the plugin reads its CSVs itself.
+!addons/eventsheet/translations/TEMPLATE.csv.import
 *.translation
 
 # Godot export presets

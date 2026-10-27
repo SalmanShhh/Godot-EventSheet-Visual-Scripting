@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Fixed: the plugin and the code it writes stop filling the Output and Debugger panels
+
+- Quitting the editor no longer prints "Parent node is busy adding/removing children": the bridge
+  autoload is added when the plugin is switched on and removed when it is switched off, not on every
+  editor start and quit.
+- A project without the drawing-prefab pack starts the plugin cleanly: the prefab thumbnail maker no
+  longer names the pack's class, which failed to compile and stopped the plugin's start-up half way.
+  No plugin file names a class a pack declares any more, and the suite holds it.
+- A project's first boot with the plugin no longer prints "Failed loading resource" for the workspace
+  icon, and its first import no longer warns that the translators' template locale has no
+  translation (the template is kept as a plain file).
+
 ### Added: Platformer Pathfinding learns every way a platformer character gets around
 
 - New link kinds: `double_jump` (when the movement sibling has two jumps; the second fires at the

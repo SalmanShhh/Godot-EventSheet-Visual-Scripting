@@ -8,6 +8,7 @@ const BRIDGE_NAME: String = "EventForgeBridge"
 const BRIDGE_PATH: String = "res://addons/eventforge/runtime/eventforge_bridge.gd"
 const EVENT_SHEET_EDITOR_PATH: String = "res://addons/eventforge/editor/event_sheet_editor.gd"
 const MAIN_SCREEN_ROOT_NAME: String = "EventSheetWorkspace"
+const PLUGIN_ICON_PATH: String = "res://addons/eventsheet/icons/eventsheet.svg"
 
 # Cold-path helpers load BY PATH, not by class name: naming a global class in any function body
 # (or a var type) makes its whole dependency subtree - the importer, the compiler, the registry -
@@ -112,10 +113,15 @@ func _has_main_screen() -> bool:
 ## Returns the icon shown in the top editor workspace strip: the bespoke sheet glyph (trigger
 ## band + condition/action rows), so the tab reads as ITS OWN workspace rather than borrowing
 ## the generic Node icon. Falls back to that Node icon if the svg ever goes missing.
+##
+## The very first time a project opens with the plugin in it, the editor asks for this icon before its
+## first import has reached the svg, and a load() then printed "Failed loading resource" into the
+## Output panel. Asking whether the imported texture exists first makes that one boot use the fallback.
 func _get_plugin_icon() -> Texture2D:
-	var icon: Resource = load("res://addons/eventsheet/icons/eventsheet.svg")
-	if icon is Texture2D:
-		return icon
+	if ResourceLoader.exists(PLUGIN_ICON_PATH):
+		var icon: Resource = load(PLUGIN_ICON_PATH)
+		if icon is Texture2D:
+			return icon
 	return get_editor_interface().get_editor_theme().get_icon("Node", "EditorIcons")
 
 
@@ -335,9 +341,24 @@ static func _find_showcase_scene() -> String:
 	return newest
 
 
+## The bridge autoload belongs to the project, so it is written into project.godot when the plugin is
+## switched on and taken out when it is switched off - not on every editor start and quit. _exit_tree
+## also runs while the editor is closing, with the tree half torn down, and taking the autoload out
+## then reached for a root that was busy freeing its children and printed an error on every quit.
+func _enable_plugin() -> void:
+	add_autoload_singleton(BRIDGE_NAME, BRIDGE_PATH)
+
+
+func _disable_plugin() -> void:
+	remove_autoload_singleton(BRIDGE_NAME)
+
+
 ## Registers plugin services when the plugin is enabled.
 func _enter_tree() -> void:
-	add_autoload_singleton(BRIDGE_NAME, BRIDGE_PATH)
+	# A project that was already using the plugin before the autoload moved to _enable_plugin, or whose
+	# project.godot lost the line, gets it back here. One that has it is left exactly as it is.
+	if not ProjectSettings.has_setting("autoload/%s" % BRIDGE_NAME):
+		add_autoload_singleton(BRIDGE_NAME, BRIDGE_PATH)
 	# Every eventsheets/* setting becomes visible + documented in Project Settings
 	# (value-neutral: defaults match the in-code fallbacks).
 	EventSheetSettings.register_all()
@@ -666,5 +687,4 @@ func _exit_tree() -> void:
 			_event_sheet_editor.get_parent().remove_child(_event_sheet_editor)
 		_event_sheet_editor.queue_free()
 		_event_sheet_editor = null
-	remove_autoload_singleton(BRIDGE_NAME)
 	print("[Godot EventSheets] unloaded")
