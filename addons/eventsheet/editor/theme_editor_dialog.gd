@@ -207,7 +207,6 @@ const _TOKEN_DESCRIPTIONS := {
 	"inspector_class_head": "Draw the sheet's head as one class head card: icon, name, kind, what it extends, the share mark and the attached scene - no code, no change… word, no scene-fact rows and no + add row (the + Add… menu and the Sheet Type dialog keep those gestures).",
 	"add_lines_on_hover": "Show an event's Add condition and Add action lines only while it is hovered or selected, so an event at rest is as tall as its conditions and actions.",
 	"trigger_icon_in_gutter": "Draw the event's number on its first line, with the gutter as one column.",
-	"behaviour_in_object_column": "Retired: a behaviour's action always keeps its node and leads with the behaviour's name and a colon.",
 	"lane_chips_yield": "Give the chips after a condition (a trigger's payload, the pattern chip) at most two fifths of the conditions lane, so the condition's own words keep their room.",
 	"comment_notes": "Draw a comment as a note: the yellow card with a drag grip and a speech-bubble mark before its words, in its own row and inside the action lane (without its # marker), and no code beside it.",
 	"selection_as_outline": "Mark a selected event by its filled number gutter and a frame round it, with nothing washed over its conditions and actions.",

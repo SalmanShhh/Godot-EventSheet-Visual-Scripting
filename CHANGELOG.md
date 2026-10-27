@@ -113,6 +113,32 @@
 - The side panel's Objects list says an object's count once, in its right-hand column: a line reads
   "Tiles  $Tiles" beside its "2" instead of running out of room at "Tiles  $Tiles · 2 r...".
 
+### Fixed: every line leads with its icon, and the Variable window wears the row's tiles
+
+- Rows built outside an event's own lanes lead with their object's icon too: a setter's or getter's
+  trigger line (`On intensity set` under the script's icon), a switch's branches and their Else (the
+  System gear), and a signal the script declares, which now names the script and wears its icon. The
+  values a signal hands over are parameter lines - the parameter icon, the value's name and its type
+  as written (`spring_name` `String`).
+- A physics tick with no condition reads "System | Every tick (physics)" in every look; the default
+  look no longer shows a bare lowercase "every tick (physics)" with no object.
+- An enum's head ("State is one of IDLE, RUN or JUMP"), a moment's head and a pack's include bar are
+  declarations, so they carry no trigger arrow.
+- The Variable window carries the row's own tile beside each option that puts one on the row, in the
+  row's colours and with the row tile's hover card: the eye beside Editable in the Inspector, the
+  speech bubble beside Description, the slider (or the hidden eye) beside an Inspector look that
+  draws one, and new tiles for On ready, Show if and the setter's code.
+- A variable written under an earlier variable's `@export_group` line opens the window on the group
+  and prefix it sits in, and saving it untouched writes no second group line; an empty section field
+  says "none" instead of a made-up name.
+- A local's line spells the type as the code wrote it (`left` `int`), as a parameter's does.
+- The colon after a behaviour's name is translated, so French writes `Health : Take damage`.
+- Soft Light, a dark sheet, takes the dark hand's trigger green and behaviour amber; every shipped
+  and demo theme keeps its marks at 3:1 or better against its rows. The retired
+  `behaviour_in_object_column` is no longer listed in the Theme Editor (saved themes still load).
+- Resolving a line's icon reads the project's class list once per row build, and a name no theme has
+  an icon for is not looked up again on every row.
+
 ### Changed: a row says what it is by its icons, never by a word in front of it
 
 - A trigger line carries a green arrow in front of its object icon, in every look; the filled blue

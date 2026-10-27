@@ -230,6 +230,9 @@ const KIND_MARK_TRIGGER := "trigger"
 const KIND_MARK_INVERTED := "inverted"
 ## The badge glyphs that stand for a line with no kind mark.
 const UNMARKED_BADGE_GLYPHS: PackedStringArray = ["⟳", "◆"]
+## The rows whose badge leads a DECLARATION, not a line that fires: an enum's list of states, a
+## moment, a pack's include bar. Nothing happens on them, so they carry no arrow.
+const UNMARKED_BADGE_KINDS: PackedStringArray = ["enum_row", "moment_row", "pack_include"]
 
 
 ## The kind mark the badge span with `metadata` and `glyph` draws, or "" for an empty slot.
@@ -238,7 +241,8 @@ static func kind_mark_for(metadata: Dictionary, glyph: String) -> String:
 		"negated":
 			return KIND_MARK_INVERTED
 		"trigger":
-			if str(metadata.get("tempo", "")) == TriggerResolver.TEMPO_EVERY_TICK or UNMARKED_BADGE_GLYPHS.has(glyph):
+			if str(metadata.get("tempo", "")) == TriggerResolver.TEMPO_EVERY_TICK or UNMARKED_BADGE_GLYPHS.has(glyph) \
+					or UNMARKED_BADGE_KINDS.has(str(metadata.get("kind", ""))):
 				return ""
 			return KIND_MARK_TRIGGER
 	return ""

@@ -1895,6 +1895,9 @@ static func _declaration_statement(text: String, keyword: String, context: Dicti
 	var built: Dictionary = _popup_ui_declaration(name_text, value_text, context)
 	if not built.is_empty():
 		return built
+	# The type exactly as the line wrote it, "" when it wrote none: a local's line spells it as
+	# written (`left int`), the way a parameter's line does.
+	var written_type: String = declared_type
 	# An inferred or annotation-free local still shows a type word, taken from the value when the
 	# value says plainly what it is - a chip reading "value" on `var count := 0` helps nobody.
 	if declared_type.is_empty():
@@ -1904,6 +1907,7 @@ static func _declaration_statement(text: String, keyword: String, context: Dicti
 		"object": "",
 		"is_constant": keyword == "const",
 		"type_word": type_word(declared_type),
+		"written_type": written_type,
 		"name": name_text,
 		"value": expression_text(value_text, context),
 		# The value exactly as the file wrote it, which is what decides whether the declaration

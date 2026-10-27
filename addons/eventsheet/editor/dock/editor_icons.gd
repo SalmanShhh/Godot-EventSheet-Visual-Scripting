@@ -36,14 +36,19 @@ const MIRRORED: Dictionary = {"Undo": "Redo"}
 ## hands out NEW textures) remakes the mirror instead of serving one in yesterday's colours.
 static var _mirrored: Dictionary = {}
 
+## A theme that stands in for the editor's where there is no editor theme at all - a headless run, so
+## the suite can ask which icon a line resolves to. Never set by the plugin: in the editor it is null
+## and the running editor theme answers.
+static var stand_in_theme: Theme = null
+
 
 ## The editor icon called `icon_name`, or null. Null when there is no editor (a headless run has no
-## editor theme at all), when the running theme does not carry the name and nothing can be derived
-## from it, or when the name is empty.
+## editor theme at all, unless a stand-in theme was handed in), when the running theme does not carry
+## the name and nothing can be derived from it, or when the name is empty.
 static func icon(icon_name: String) -> Texture2D:
-	if icon_name.is_empty() or not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+	if icon_name.is_empty():
 		return null
-	var editor_theme: Theme = EditorInterface.get_editor_theme()
+	var editor_theme: Theme = _theme()
 	if editor_theme == null:
 		return null
 	if editor_theme.has_icon(icon_name, "EditorIcons"):
@@ -55,6 +60,21 @@ static func icon(icon_name: String) -> Texture2D:
 ## Answers false headlessly, where there is no theme to ask.
 static func has(icon_name: String) -> bool:
 	return icon(icon_name) != null
+
+
+## True when some theme can answer for icons - the running editor's, or the stand-in - so a name that
+## finds nothing is a real miss rather than a run with no theme to ask.
+static func has_theme() -> bool:
+	return _theme() != null
+
+
+## The theme icons are asked of: the running editor's, else the stand-in, else null.
+static func _theme() -> Theme:
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		var editor_theme: Theme = EditorInterface.get_editor_theme()
+		if editor_theme != null:
+			return editor_theme
+	return stand_in_theme
 
 
 ## The mirrored twin of a name the theme does not carry, made once and kept.

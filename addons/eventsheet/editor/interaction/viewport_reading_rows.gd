@@ -3075,7 +3075,8 @@ static func object_attribution(object_label: String, pieces: Array, script_objec
 	var owner: String = script_object.strip_edges()
 	if owner.is_empty():
 		return unchanged
-	var chipped: Array = [["%s: " % pack, "behaviour"]]
+	# The colon is translated: French typography puts a space before it ("Health : Take damage").
+	var chipped: Array = [[(EventSheetL10n.translate("%s:") % pack) + " ", "behaviour"]]
 	chipped.append_array(pieces)
 	return {"object": owner, "pieces": chipped, "icon": class_icon_for(owner, class_map)}
 

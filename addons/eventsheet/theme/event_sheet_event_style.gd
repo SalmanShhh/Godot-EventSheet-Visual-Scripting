@@ -177,10 +177,10 @@ extends Resource
 ## centres the number on the event. (How the event is started is the trigger line's own green arrow in
 ## every look; the number gutter carries no trigger icon.)
 @export var trigger_icon_in_gutter: bool = false
-## Retired: a behaviour's action keeps the node it is mounted on in the object column and leads its
+## RETIRED: a behaviour's action keeps the node it is mounted on in the object column and leads its
 ## words with the behaviour's name and a colon ("Player | Platformer: Jump") in every look. Kept so a
 ## theme saved with it still loads; it no longer changes a row.
-@export var behaviour_in_object_column: bool = false
+@export_storage var behaviour_in_object_column: bool = false
 ## The chips after a condition (a trigger's payload, the chip naming the event's pattern) take at most
 ## two fifths of the conditions lane, so the condition's own words keep their room and a long chip is
 ## cut short. Off lets a chip take what it measures, however little that leaves the condition.

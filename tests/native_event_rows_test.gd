@@ -153,8 +153,9 @@ static func _test_shooter_events() -> bool:
 			[classic_view._get_font_size(), _texts(classic_jump)],
 			[16, "⌨ | On \"ui_up\" pressed | + Add condition | Platformer: Jump | + Add action"]],
 		["and the script's object in the column", _object_of(classic_jump, "Platformer"), "PlatformerShooter"],
-		["and the blank physics tick as its muted note, no column", [_texts(classic_blank_tick).begins_with(
-			"every tick (physics)"), _object_of(classic_blank_tick, "every tick")], [true, ""]],
+		["and the blank physics tick as the trigger line every look reads, System and all",
+			[_object_of(classic_blank_tick, "Every tick (physics)"), _texts(classic_blank_tick).contains("every tick (physics)")],
+			["System", false]],
 		["and the add line reserved, hovered or not",
 			[classic_rest, classic_view._row_metrics_helper.row_height(classic_events[0])], [64.0, 64.0]],
 	]) and result

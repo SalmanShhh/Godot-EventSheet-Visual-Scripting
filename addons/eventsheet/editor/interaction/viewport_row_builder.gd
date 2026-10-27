@@ -5086,14 +5086,18 @@ func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
 			"lane": "condition",
 			"line_index": 0
 		}),
+		# The signal is the script's own: its trigger line names the script and leads with its icon,
+		# as every other trigger line names what it happens to.
 		_make_span(title, SemanticSpan.SpanType.OBJECT, {
 			"kind": "signal_row",
 			"lane": "condition",
 			"line_index": 0,
+			"object_label": _own_object_label(),
 			"text_color": event_style.object_label_color
 		})
 	]
 	var condition_lines: int = _append_signal_param_spans(spans, signal_row, script_trigger) + 1
+	_dress_line_object_icons(spans)
 	# The ACTION lane answers "and what actually fires?". For a trigger that is the underlying signal
 	# identifier - the friendly name hides it, but it is what game code connects to, and it is the one
 	# fact a reader cannot recover from the left lane. A plain signal's name IS its identifier, so
@@ -5122,6 +5126,15 @@ func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
 	row_data.spans = spans
 	row_data.line_count = maxi(condition_lines, 1)
 	return row_data
+
+
+## The object a line about the script itself names: the script's own name, else the class it extends,
+## else System.
+func _own_object_label() -> String:
+	var own: String = _script_object_name().strip_edges()
+	if own.is_empty() and _viewport._sheet != null:
+		own = _viewport._sheet.host_class.strip_edges()
+	return own if not own.is_empty() else EventSheetSentence.OBJECT_SYSTEM
 
 
 ## The ACE a row emits a signal with. Frozen: the id is the compatibility promise, the words are not.
@@ -5251,10 +5264,15 @@ func _append_signal_param_spans(spans: Array[SemanticSpan], signal_row: SignalRo
 			spans.append(_trigger_payload_span(param_name.replace("_", " "), index, 0))
 			continue
 		line += 1
+		# A value the signal hands over is a parameter line like a function's: the parameter icon, its
+		# name, its type as written (`spring_name String`).
+		type_word = declaration.substr(colon + 1).strip_edges() if colon >= 0 else "Variant"
 		append_field_cell(cell_host, param_name, type_word, {
 			"kind": "signal_row",
 			"param_index": index,
-			"line_index": line
+			"line_index": line,
+			"object_glyph": NativeRowMarks.OBJECT_GLYPH_PARAMETER,
+			"object_icon": _glyph_icon_slot()
 		})
 	spans.append_array(cell_host.spans)
 	return line
@@ -7924,6 +7942,7 @@ func _build_named_getter_row(variable: LocalVariable, object_name: String, funct
 	row.line_count = 1
 	row.spans.append_array(_getter_head_spans(variable, object_name))
 	row.spans.append(_accessor_function_span(function_name, object_name))
+	_dress_line_object_icons(row.spans)
 	return row
 
 
@@ -7943,6 +7962,7 @@ func _build_named_accessor_row(variable: LocalVariable, object_name: String, kin
 	# row with nothing on its right keeps the condition lane at its minimum, and the sentence is then
 	# cut off after two characters.
 	row.spans.append(_accessor_function_span(function_name, object_name))
+	_dress_line_object_icons(row.spans)
 	return row
 
 
@@ -7956,7 +7976,7 @@ func _plain_trigger_spans(sentence: String, object_name: String) -> Array[Semant
 	badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
 	badge_meta["line_index"] = 0
 	badge_meta["badge_style"] = "trigger"
-	return [_make_span(badge_glyph, SemanticSpan.SpanType.KEYWORD, badge_meta),
+	var spans: Array[SemanticSpan] = [_make_span(badge_glyph, SemanticSpan.SpanType.KEYWORD, badge_meta),
 		_make_span(sentence, SemanticSpan.SpanType.CONDITION, {
 			"lane": "condition",
 			"kind": "trigger",
@@ -7967,6 +7987,9 @@ func _plain_trigger_spans(sentence: String, object_name: String) -> Array[Semant
 			"line_index": 0,
 			"object_label": object_name
 		}.merged(condition_style_meta, true))]
+	# The trigger line leads with its object's icon, as every line does.
+	_dress_line_object_icons(spans)
+	return spans
 
 
 ## A named accessor's function, in the RIGHT lane where a thing that runs belongs.
@@ -8073,6 +8096,7 @@ func _build_property_getter_row(variable: LocalVariable, object_name: String, in
 	row.row_uid = "property_getter_%s" % uid_base
 	row.line_count = 1
 	row.spans.append_array(_getter_head_spans(variable, object_name))
+	_dress_line_object_icons(row.spans)
 	if not _append_property_body_rows(row, variable.getter_body, indent, row.row_uid,
 			EventSheetSentence.VerbKind.EXPRESSION):
 		return null
@@ -9035,6 +9059,10 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 				case_row.children.append(transition_child)
 			if state_shaped and pattern_text != "_" and not case_row.spans.is_empty():
 				case_row.spans.insert(0, _trigger_badge_span("◆", 0, null, true))
+			# A branch's test, its Else and its steps lead with their object's icon, as an event's do.
+			_dress_line_object_icons(case_row.spans)
+			for transition_child: EventRowData in transition_children:
+				_dress_line_object_icons(transition_child.spans)
 			rows.append(case_row)
 	return rows
 
@@ -13704,15 +13732,14 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# one muted note, because blank alone cannot say WHICH tick. Display only: the row still
 		# carries its trigger id and still compiles to exactly the handler it came from.
 		var blank_note: String = str(_blank_tick_reading(event_row).get("note", ""))
-		# A theme that draws the trigger icon in the gutter (trigger_icon_in_gutter) has an object
-		# column on every line, so the physics note reads as the trigger cell its neighbours wear -
-		# "System | Every tick (physics)" - instead of a bare lowercase note with no column.
-		var native_note: bool = event_style != null and event_style.trigger_icon_in_gutter
+		# Every line has an object column and leads with its object's icon, so the physics note reads
+		# as the trigger cell its neighbours wear - "System | Every tick (physics)" - in every look,
+		# never as a bare lowercase note with no object.
 		# A tick that runs a switch says so in one sentence on one line, in every look - "System |
 		# Every tick, match state" - so the match head beside it has a trigger to finish. The cell
 		# sizes to its words, which puts the head straight after them instead of across the lane.
 		var match_beside: bool = _match_head_beside_tick(event_row)
-		if (not blank_note.is_empty() and native_note) or match_beside:
+		if not blank_note.is_empty() or match_beside:
 			var tick_words: String = EventSheetViewportReadingRows.tick_trigger_words(event_row.trigger_id, _trigger_sentence(event_row))
 			spans.append(_make_span(
 				"%s," % tick_words if match_beside else tick_words,
@@ -13726,15 +13753,6 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					"object_label": _handler_object_label(event_row),
 					"object_icon": _object_icon_for(event_row.trigger_provider_id, event_row.trigger_id)
 				}.merged(condition_style_meta, true)))
-		elif not blank_note.is_empty():
-			spans.append(_make_span(blank_note, SemanticSpan.SpanType.COMMENT, {
-				"lane": "condition",
-				"kind": "trigger",
-				"ace_index": 0,
-				"editable": false,
-				"hoverable": false,
-				"line_index": condition_line_index
-			}.merged(condition_style_meta, true)))
 		# Blank hides the tick words, never a fact a reader has to know: a per-frame event on a
 		# tool sheet ALSO runs while the scene is being edited, so that chip survives the blank
 		# reading and keeps its place on the line.
@@ -14736,8 +14754,9 @@ func line_object_icon(object_label: String) -> Texture2D:
 	if _line_icon_cache.has(object_label):
 		return _line_icon_cache[object_label]
 	var icon: Texture2D = _resolve_line_object_icon(object_label)
-	# Only a FOUND icon is kept: a miss before the editor theme exists must not stick for the sheet.
-	if icon != null:
+	# A miss is kept only once there is a theme to ask: a miss before the editor theme exists must not
+	# stick for the sheet, but a name no theme has an icon for need not be walked again on every row.
+	if icon != null or EventSheetEditorIcons.has_theme():
 		_line_icon_cache[object_label] = icon
 	return icon
 
@@ -14790,12 +14809,21 @@ static func class_icon_with_ancestry(class_text: String) -> Texture2D:
 	return null
 
 
-## The project's global script class named `class_text` ({class, base, icon, path}), or {}.
+## The project's global script class named `class_text` ({class, base, icon, path}), or {}. Read
+## from an index of the class list built once per row build, not by walking the list per name.
 static func _global_script_class(class_text: String) -> Dictionary:
-	for entry: Dictionary in ProjectSettings.get_global_class_list():
-		if str(entry.get("class", "")) == class_text:
-			return entry
-	return {}
+	if not _global_class_index_built:
+		_global_class_index = {}
+		for entry: Dictionary in ProjectSettings.get_global_class_list():
+			_global_class_index[str(entry.get("class", ""))] = entry
+		_global_class_index_built = true
+	return _global_class_index.get(class_text, {})
+
+
+## The project's global script classes by name, and whether the index is current. Dropped with the
+## lens caches, so a class added since the last row build is found by the next one.
+static var _global_class_index: Dictionary = {}
+static var _global_class_index_built: bool = false
 
 
 ## A script's @icon file as a texture, or null when it cannot be loaded.
@@ -18478,7 +18506,10 @@ func _append_value_literal_spans(spans: Array, literal: Dictionary, action_index
 ## the starting value is then the entry chips rather than one blob of text.
 func append_local_declaration_spans(spans: Array, declaration: Dictionary, base_meta: Dictionary, style_meta: Dictionary, literal: Dictionary = {}) -> void:
 	var indent_text: String = "    ".repeat(int(declaration.get("indent", 0)))
-	var type_word: String = str(declaration.get("type_word", ""))
+	# A type the line wrote reads as written (`left int`), as a parameter's does; only a local whose
+	# type Godot infers keeps the sheet's word for what its value is.
+	var written_type: String = str(declaration.get("written_type", "")).strip_edges()
+	var type_word: String = written_type if not written_type.is_empty() else str(declaration.get("type_word", ""))
 	# An untyped `var x := {` says nothing about what x is, but the literal it opens says
 	# exactly what it is: the chip reads `Local table` / `Local list` rather than `Local value`.
 	if not literal.is_empty() and type_word == EventSheetL10n.translate("value"):
@@ -19675,6 +19706,7 @@ func _reset_lens_caches_if_stale() -> void:
 		return
 	_lens_sheet_stamp = stamp
 	_line_icon_cache = {}
+	_global_class_index_built = false
 	_lens_knob_names = EventSheetViewportReadingRows.export_knob_names(sheet)
 	_lens_class_map = EventSheetViewportReadingRows.object_class_map(sheet)
 	_lens_scene_vars = _scene_variable_map(sheet)
