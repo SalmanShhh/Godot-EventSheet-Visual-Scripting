@@ -204,7 +204,7 @@ static func _test_objects_rail() -> bool:
 	ok = _check("the rail lists the global itself", entries.is_empty(), false) and ok
 	if not entries.is_empty():
 		ok = _check("under the singleton's own name, as a global",
-			EventSheetObjectsPanel.entry_text(entries[0] as Dictionary), "Game  autoload (global) · Node2D · 1 row") and ok
+			EventSheetObjectsPanel.entry_text(entries[0] as Dictionary), "Game  autoload (global) · Node2D") and ok
 	# An ordinary script is untouched by any of that.
 	var plain := EventSheetObjectsPanel.new()
 	plain.set_sheet(_sheet(SETTINGS_PATH))

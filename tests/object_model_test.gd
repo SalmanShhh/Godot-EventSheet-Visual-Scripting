@@ -174,8 +174,9 @@ static func _object_popup_rows() -> bool:
 		EventSheetObjectProperties.can_select_in_scene(
 			EventSheetObjectProperties.find_entry(sheet, "enemies"), "Player.tscn"), false) and passed
 	# The rail's own line for an entry, which is what the render shows.
-	passed = _check("the rail line is the object's name and its note",
-		EventSheetObjectsPanel.entry_text(health), "Health  $Health · Health · 1 row") and passed
+	# The count is the list's right-hand column, so the line does not repeat it.
+	passed = _check("the rail line is the object's name and its note, the count left to its column",
+		EventSheetObjectsPanel.entry_text(health), "Health  $Health · Health") and passed
 	return passed
 
 

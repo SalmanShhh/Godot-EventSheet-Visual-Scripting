@@ -415,8 +415,12 @@ static func missing_labels(census: Array, scene_path: String) -> PackedStringArr
 static func entry_text(entry: Dictionary) -> String:
 	# An Input Map action carries its own note (its bindings), because "what is this bound to" is what
 	# a reader came to the INPUT section for, and no census count answers it.
+	# The row count is the list's own right-hand column, so the line does not say it a second time -
+	# said twice, the line ran out of room and read "Tiles  $Tiles · 2 r…" beside a "2".
+	var counted: Dictionary = entry.duplicate()
+	counted.erase("rows")
 	var note: String = str(entry.get("note", "")) if str(entry.get("kind", "")) == "input_action" \
-		else EventSheetViewportReadingRows.object_note(entry)
+		else EventSheetViewportReadingRows.object_note(counted)
 	var label: String = str(entry.get("label", ""))
 	return label if note.is_empty() else "%s  %s" % [label, note]
 

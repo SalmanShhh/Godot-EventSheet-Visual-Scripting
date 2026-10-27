@@ -41,6 +41,8 @@
   "match state" pushed to the far edge. Each branch's steps read as the same line reads in an
   event's action lane, the object it acts on in the column and the property as written:
   `velocity.x = 0` is "Set velocity.x to 0", not "Set x to 0" with no object.
+- The side panel's Objects list says an object's count once, in its right-hand column: a line reads
+  "Tiles  $Tiles" beside its "2" instead of running out of room at "Tiles  $Tiles · 2 r...".
 
 ### Fixed: the head bar reads once, in every kind of view, and the sheet under it stays quiet
 
