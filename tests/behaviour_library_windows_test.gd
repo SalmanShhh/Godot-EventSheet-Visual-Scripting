@@ -46,6 +46,18 @@ static func run() -> bool:
 			"A, B, C, D, E and 2 more"],
 		["a short kit names every pack", WELCOME.kit_list_text(PackedStringArray(["A", "B"])), "A, B"],
 		["the Welcome's line with nothing ticked", WELCOME.kit_summary(0), "Nothing will be added."],
+		# A kit is titled as a kind of game, never shown as the bare tag; a tag with no title is not offered.
+		["the Welcome's kits are titled, and an untitled tag is not offered",
+			WELCOME.titled_kits([{"tag": "3d", "dirs": PackedStringArray(["a", "b", "c", "d"])},
+				{"tag": "resource", "dirs": PackedStringArray(["a", "b", "c", "d"])},
+				{"tag": "idle", "dirs": PackedStringArray(["e", "f", "g", "h"])}]).map(func(kit: Dictionary) -> Array:
+					return [kit["tag"], kit["title"]]),
+			[["3d", "A 3D game"], ["idle", "An idle or clicker game"]]],
+		# The window fits a 1600x1100 editor: content 1200 tall with 1000 of room gives up 200 of the
+		# kits' 220, and never more than down to the shortest.
+		["the kits' scroll gives up what the window stands too tall", WELCOME.kit_scroll_height(1000.0, 1200.0, 220.0, 72.0), 72.0],
+		["it gives up only that much", WELCOME.kit_scroll_height(1000.0, 1100.0, 220.0, 72.0), 120.0],
+		["a window that fits keeps its kits' full height", WELCOME.kit_scroll_height(1000.0, 900.0, 220.0, 72.0), 220.0],
 		["the Welcome's line for several", WELCOME.kit_summary(9), "9 behaviours will be added (shared ones once)."],
 		["the unused-packs note opens Tidy behaviours", EventSheetQuickFixes.fixes_for({"check": "unused-pack", "subject": ""}),
 			[{"id": "tidy_behaviours", "label": "Tidy behaviours…", "check": "unused-pack"}]],

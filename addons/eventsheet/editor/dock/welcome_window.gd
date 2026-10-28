@@ -10,8 +10,9 @@ extends RefCounted
 # Preferences, and the help strip that says what the chosen answer would set. Apply commits it.
 #
 # When the plugin carries its behaviour library, a second question sits under the first: "What are
-# you making?". Each answer is a kit - a tag the packs themselves carry (`@ace_tags`), listing the
-# packs carrying it by name - so the reader sees exactly what arrives. Nothing is copied until Add and
+# you making?". Each answer is a kit - a tag the packs themselves carry (`@ace_tags`), titled from a
+# short list of kinds of game (`kit_title`) and listing the packs carrying it by name - so the reader
+# sees exactly what arrives. Nothing is copied until Add and
 # continue; Start with none is a real answer, because an object's Behaviours list adds any of them
 # later.
 #
@@ -38,6 +39,11 @@ const CLASSIC_THEME_PATH := "res://addons/eventsheet/themes/classic_sheet_theme.
 const MIGRATION_GUIDE_ID := "GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR"
 ## How many of a kit's packs its card names before it counts the rest.
 const KIT_NAMED := 5
+## The kits' scroll at its tallest, and at its shortest when the editor window is too short for that.
+const KIT_SCROLL_TALLEST := 220.0
+const KIT_SCROLL_SHORTEST := 72.0
+## Room kept above and below the window inside the editor, beside its title bar.
+const EDITOR_MARGIN := 24.0
 
 var _dock: Control = null
 var _welcome_window: ConfirmationDialog = null
@@ -55,6 +61,8 @@ var _kits: Array[Dictionary] = []
 var _kit_ticks: Array[CheckBox] = []
 var _kit_summary: Label = null
 var _kit_add: Button = null
+## The kits' scroll, whose height `show` fits to the editor window each time it opens.
+var _kit_scroll: ScrollContainer = null
 
 
 ## Whether the Get Started card offers the door with these words. Every door is offered, except the
@@ -154,9 +162,36 @@ func show() -> void:
 	# whole flow for a new language - no registration step, no restart.
 	EventSheetL10n.rescan()
 	_refresh_language_picker()
+	_fit_kits_to_editor()
 	# Opened at its content's own size and centred on it - without that, the first open centred on a
 	# pre-layout (too-small) size and the content then expanded down-and-right, off-centre.
 	EventSheetPopupUI.popup_fitted(_welcome_window)
+
+
+## Shrinks the kits' scroll until the whole window - its title bar and its buttons too - fits inside
+## the editor window it opens over and the screen it is centred on (a dialog of its own is centred on
+## the screen, so on a short screen the screen is the limit). The kits are the one part that can
+## scroll, so they give way.
+func _fit_kits_to_editor() -> void:
+	if _kit_scroll == null or not _dock.is_inside_tree():
+		return
+	_kit_scroll.custom_minimum_size.y = EventSheetPalette.scaled_f(KIT_SCROLL_TALLEST)
+	var title_bar: float = float(_welcome_window.get_theme_constant("title_height", "Window"))
+	var content: float = _welcome_window.get_contents_minimum_size().y
+	var editor: Window = _dock.get_window()
+	var room: float = float(editor.size.y)
+	var screen: Rect2i = DisplayServer.screen_get_usable_rect(editor.current_screen)
+	if screen.size.y > 0:
+		room = minf(room, float(screen.size.y))
+	var available: float = room - title_bar - EventSheetPalette.scaled_f(EDITOR_MARGIN) * 2.0
+	_kit_scroll.custom_minimum_size.y = kit_scroll_height(available, content, _kit_scroll.custom_minimum_size.y,
+		EventSheetPalette.scaled_f(KIT_SCROLL_SHORTEST))
+
+
+## How tall the kits' scroll may be: what it is now, less whatever the window's content stands taller
+## than the room it has, never below `shortest`. Pure, so the rule is pinned headless.
+static func kit_scroll_height(available: float, content: float, scroll: float, shortest: float) -> float:
+	return clampf(scroll - maxf(content - available, 0.0), minf(shortest, scroll), scroll)
 
 
 ## A content-sized dialog, so the window fits what it holds; every label wraps inside a fixed width.
@@ -289,14 +324,14 @@ func _build_came_from() -> VBoxContainer:
 	return card
 
 
-## The kits, two by two: each a tick box named by its tag, the packs it adds listed by name under it,
+## The kits, two by two: each a tick box named by its title (`titled_kits`), the packs it adds listed by name under it,
 ## then the line saying how many would arrive, Start with none and Add and continue.
 func _build_kits() -> VBoxContainer:
 	var card: VBoxContainer = EventSheetPopupUI.form_box()
 	card.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate(
 		"Pick any that fit. Each adds a few behaviours to this project; you can add or remove any of them later from an object's Behaviours list."),
 		EventSheetPalette.scaled_f(440.0)))
-	_kits = EventSheetPackLibrary.kits(EventSheetPackLibrary.packs())
+	_kits = titled_kits(EventSheetPackLibrary.kits(EventSheetPackLibrary.packs()))
 	_kit_ticks.clear()
 	var grid: GridContainer = GridContainer.new()
 	grid.columns = 2
@@ -305,7 +340,7 @@ func _build_kits() -> VBoxContainer:
 		var cell: VBoxContainer = VBoxContainer.new()
 		cell.add_theme_constant_override("separation", 0)
 		var tick: CheckBox = CheckBox.new()
-		tick.text = str(kit.get("tag", ""))
+		tick.text = str(kit.get("title", ""))
 		tick.toggled.connect(func(_on: bool) -> void: _refresh_kit_summary())
 		cell.add_child(tick)
 		var listed: PackedStringArray = kit.get("names", PackedStringArray())
@@ -315,12 +350,12 @@ func _build_kits() -> VBoxContainer:
 		cell.add_child(said)
 		grid.add_child(cell)
 		_kit_ticks.append(tick)
-	# The kits scroll inside the card, so the window keeps the height it had before it asked.
-	var scroll: ScrollContainer = ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(440.0), EventSheetPalette.scaled_f(220.0))
-	scroll.add_child(grid)
-	card.add_child(scroll)
+	# The kits scroll inside the card; `show` shortens the scroll until the window fits the editor.
+	_kit_scroll = ScrollContainer.new()
+	_kit_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_kit_scroll.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(440.0), EventSheetPalette.scaled_f(KIT_SCROLL_TALLEST))
+	_kit_scroll.add_child(grid)
+	card.add_child(_kit_scroll)
 	var footer: HBoxContainer = HBoxContainer.new()
 	_kit_summary = Label.new()
 	_kit_summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -344,6 +379,52 @@ func _build_kits() -> VBoxContainer:
 	card.add_child(footer)
 	_refresh_kit_summary()
 	return card
+
+
+## The kits a reader is offered, each with its "title" in the editor's language. A kit is derived
+## from a tag its packs carry, and a tag is a word written for search ("3d", "juice"), not a name for a
+## kind of game - so the titles below are an override list over the derived kits, and a kit whose tag
+## has no title here is not offered rather than shown as its bare tag.
+static func titled_kits(kits: Array[Dictionary]) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for kit: Dictionary in kits:
+		var title: String = kit_title(str(kit.get("tag", "")))
+		if not title.is_empty():
+			var titled: Dictionary = kit.duplicate()
+			titled["title"] = title
+			out.append(titled)
+	return out
+
+
+## The title of the kit a tag makes, or "" for a tag that names no kind of game. Each title is a
+## literal so the translation harvest finds it.
+static func kit_title(tag: String) -> String:
+	match tag:
+		"movement":
+			return EventSheetL10n.translate("Things that move")
+		"visual":
+			return EventSheetL10n.translate("Visual effects")
+		"juice":
+			return EventSheetL10n.translate("Game feel")
+		"3d":
+			return EventSheetL10n.translate("A 3D game")
+		"effects":
+			return EventSheetL10n.translate("Shader effects")
+		"idle":
+			return EventSheetL10n.translate("An idle or clicker game")
+		"camera":
+			return EventSheetL10n.translate("Camera work")
+		"ai":
+			return EventSheetL10n.translate("Enemies that plan")
+		"performance":
+			return EventSheetL10n.translate("Lots of objects at once")
+		"combat":
+			return EventSheetL10n.translate("Fighting")
+		"drawing":
+			return EventSheetL10n.translate("Drawing and painting")
+		"ui":
+			return EventSheetL10n.translate("Menus and screens")
+	return ""
 
 
 ## A kit's packs as its card lists them: the first KIT_NAMED by name, then how many more (all of

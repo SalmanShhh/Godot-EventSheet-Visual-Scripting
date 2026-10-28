@@ -43,8 +43,11 @@
   folders in `eventsheet_addons/`. A behaviour is still a folder: there means in use, deleted means
   gone. There is no on or off switch.
 - **The Welcome asks "What are you making?"** Each answer is a kit: a tag the packs carry
-  (`@ace_tags`) that at least four of them share, listing those packs by name. Nothing is copied until
-  Add and continue; Start with none is a real answer.
+  (`@ace_tags`) that at least four of them share, listing those packs by name. Each kit is titled as a
+  kind of game in the editor's language ("A 3D game", "Game feel"), never shown as its bare tag; a tag
+  with no title is not offered. Nothing is copied until Add and continue; Start with none is a real
+  answer. The kits scroll inside their card, and the scroll gives way until the whole window - title
+  bar and buttons too - fits inside the editor window and the screen.
 - **Add behaviour searches the project and the library together.** A library pack's tile says
   Library, its card lists what else it needs (read from its own `@ace_requires`) and the folder it is
   copied into, and the button reads **Add to project and attach**: the folders are copied in, Godot
