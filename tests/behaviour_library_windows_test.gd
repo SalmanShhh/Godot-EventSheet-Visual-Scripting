@@ -32,9 +32,11 @@ static func run() -> bool:
 			"Added Drawing Canvas to the project, with Canvas Surface and Drawing Prefab Resource it needs. Godot imported 3 folders."],
 		["an add on its own", FLOW.added_sentence("Wrap", PackedStringArray(), 1), "Added Wrap to the project. Godot imported 1 folder."],
 		["three needed packs read as a list", FLOW._and_list(PackedStringArray(["A", "B", "C"])), "A, B and C"],
-		["nobody using a pack warns of nothing", FLOW.remove_warning([]), {"heading": "", "lines": PackedStringArray()}],
+		["nobody using a pack warns of nothing", FLOW.remove_warning([]), {"heading": "", "lines": PackedStringArray(), "after": ""}],
 		["two sheets using a pack", FLOW.remove_warning([{"path": "res://player.gd", "rows": 3}, {"path": "res://tiles.gd", "rows": 1}]),
-			{"heading": "Used by 2 sheets", "lines": PackedStringArray(["player.gd · 3 rows", "tiles.gd · 1 row"])}],
+			{"heading": "Used by 2 sheets", "lines": PackedStringArray(["player.gd · 3 rows", "tiles.gd · 1 row"]),
+				# What is true of a .gd sheet too: no row is marked missing and no check lists them.
+				"after": "Those rows stay as written, and they need it back to run."}],
 		["a scene among the users makes them files", str(FLOW.remove_warning([{"path": "res://player.gd", "rows": 2}, {"path": "res://level.tscn", "rows": 1}])["heading"]),
 			"Used by 2 files"],
 		["Tidy behaviours says what it holds and what is unused", FLOW.tidy_summary(140, 133),

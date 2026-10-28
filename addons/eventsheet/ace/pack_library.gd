@@ -213,10 +213,36 @@ static func copy_into_project(wanted: PackedStringArray, root: String = LIBRARY_
 			continue
 		var error: Error = _copy_tree(source, project_root.path_join(folder), 1 if scripts_later else 0)
 		if error != OK:
-			return {"ok": false, "copied": copied, "kept": kept,
+			# All or nothing: a half-copied folder would be "already in the project" on the next try,
+			# and a folder that exists is never overwritten - so it would stay broken for good.
+			var made: PackedStringArray = copied.duplicate()
+			made.append(folder)
+			take_back(made, project_root)
+			return {"ok": false, "copied": PackedStringArray(), "kept": kept,
 				"message": EventSheetL10n.translate("%s could not be copied into the project (%s).") % [folder, error_string(error)]}
 		copied.append(folder)
 	return {"ok": true, "copied": copied, "kept": kept, "message": ""}
+
+
+## Takes back folders a copy made, after it failed part way. Only for folders the failed call
+## created itself, which were not in the project before it ran: each is a copy of a library folder
+## that still holds every file, so removing it loses nothing - and the trash would only fill with
+## half-copies. A path that is not a folder (a file in the way of the copy) is never touched.
+static func take_back(folders: PackedStringArray, project_root: String = PROJECT_ROOT) -> void:
+	for folder: String in folders:
+		if folder.is_empty() or folder.contains("/") or folder.contains("\\") or folder.begins_with("."):
+			continue
+		var path: String = project_root.path_join(folder)
+		if DirAccess.dir_exists_absolute(path):
+			_remove_tree(path)
+
+
+static func _remove_tree(path: String) -> void:
+	for file_name: String in DirAccess.get_files_at(path):
+		DirAccess.remove_absolute(path.path_join(file_name))
+	for child: String in DirAccess.get_directories_at(path):
+		_remove_tree(path.path_join(child))
+	DirAccess.remove_absolute(path)
 
 
 ## Sends one project folder to the system trash, where it can be restored from. Never deletes
@@ -231,12 +257,16 @@ static func send_to_trash(pack_dir: String, project_root: String = PROJECT_ROOT)
 
 
 ## The second step of a two-step copy: the scripts (and their `.uid`) of folders whose other files
-## `copy_into_project(..., true)` already copied.
+## `copy_into_project(..., true)` already copied. On a failure every one of those folders is taken
+## back (`take_back`), because the first step made them all.
 static func copy_scripts(folders: PackedStringArray, root: String = LIBRARY_ROOT,
 		project_root: String = PROJECT_ROOT) -> Error:
 	for folder: String in folders:
 		var error: Error = _copy_tree(root.path_join(folder), project_root.path_join(folder), 2)
 		if error != OK:
+			# The folders' other files came in with the first step; a pack without its scripts is no
+			# pack, so the whole add is taken back.
+			take_back(folders, project_root)
 			return error
 	return OK
 

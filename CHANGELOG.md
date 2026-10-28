@@ -49,11 +49,13 @@
   Library, its card lists what else it needs (read from its own `@ace_requires`) and the folder it is
   copied into, and the button reads **Add to project and attach**: the folders are copied in, Godot
   imports them and the behaviour is attached, as one undo step whose Undo takes the node out and sends
-  the copied folders to the system trash. A folder the project already holds is never overwritten.
+  the copied folders to the system trash. A folder the project already holds is never overwritten,
+  and a copy that fails part way takes back every folder it had made, so a half-copied folder is
+  never left behind to be kept as "already in the project".
   **All / In this project** hides the library.
 - **Remove from project…** on a behaviour the project holds sends its folder to the system trash and
   first says which sheets use it ("Used by 2 sheets", with the rows in each). Those rows stay as
-  written.
+  written, and they need it back to run.
 - **Tidy behaviours…** is the door on the Doctor's existing note about unused packs: every behaviour
   in the project, the unused ones ticked and the used ones locked with the files that use them.
   Everything removed stays in the library.

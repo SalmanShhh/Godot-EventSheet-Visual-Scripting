@@ -151,8 +151,12 @@ func copy_and_import(wanted: PackedStringArray) -> Dictionary:
 	await import_folders(added)
 	var scripts_error: Error = EventSheetPackLibrary.copy_scripts(added)
 	if scripts_error != OK:
+		# copy_scripts took every one of these folders back out: nothing half-copied stays behind.
 		copied["ok"] = false
+		copied["copied"] = PackedStringArray()
 		copied["message"] = EventSheetL10n.translate("%s could not be copied into the project (%s).") % [", ".join(added), error_string(scripts_error)]
+		await import_folders(PackedStringArray())
+		return copied
 	await import_folders(added)
 	await _classes_registered(added)
 	return copied
@@ -254,11 +258,13 @@ func add_kits(chosen: Array[Dictionary]) -> Dictionary:
 # --- removing ----------------------------------------------------------------------------------
 
 
-## The warning a removal shows, from the files that use the pack: {"heading", "lines"}, both empty
-## when nothing does.
+## The warning a removal shows, from the files that use the pack: {"heading", "lines", "after"}, all
+## empty when nothing does. "after" says what becomes of those rows, and only what is true of every
+## sheet: a `.gd` sheet (the default) reads a line naming a missing behaviour as plain code, and no
+## check lists such lines, so the sentence promises neither a mark on the row nor a list.
 static func remove_warning(found_users: Array[Dictionary]) -> Dictionary:
 	if found_users.is_empty():
-		return {"heading": "", "lines": PackedStringArray()}
+		return {"heading": "", "lines": PackedStringArray(), "after": ""}
 	var all_sheets: bool = true
 	var lines: PackedStringArray = PackedStringArray()
 	for entry: Dictionary in found_users:
@@ -273,7 +279,8 @@ static func remove_warning(found_users: Array[Dictionary]) -> Dictionary:
 		heading = EventSheetL10n.translate("Used by 1 sheet") if all_sheets else EventSheetL10n.translate("Used by 1 file")
 	else:
 		heading = (EventSheetL10n.translate("Used by %d sheets") if all_sheets else EventSheetL10n.translate("Used by %d files")) % found_users.size()
-	return {"heading": heading, "lines": lines}
+	return {"heading": heading, "lines": lines,
+		"after": EventSheetL10n.translate("Those rows stay as written, and they need it back to run.")}
 
 
 ## Right-click an In project behaviour > Remove from project…: says which files use it first, and
@@ -302,8 +309,7 @@ func confirm_remove(pack: Dictionary) -> void:
 	if str(warning["heading"]).is_empty():
 		_remove_users.say("")
 	else:
-		_remove_users.say("%s\n%s\n%s" % [warning["heading"], "\n".join(warning["lines"]),
-			EventSheetL10n.translate("Those rows stay as written and show as missing until it is added back. The Doctor lists them.")],
+		_remove_users.say("%s\n%s\n%s" % [warning["heading"], "\n".join(warning["lines"]), warning["after"]],
 			EventSheetPopupUI.TONE_WARNING)
 	EventSheetPopupUI.popup_fitted(_remove_window)
 

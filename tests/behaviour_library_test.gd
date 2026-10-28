@@ -141,8 +141,37 @@ static func run() -> bool:
 			PackedStringArray()],
 		["the mirror gate names a stale file", LIBRARY_BUILD.drift(LIB, PROJECT, PackedStringArray(["painter"]), false).has("painter/painter.gd"), true],
 	]) and ok
+	ok = _pin_failed_copy(packs_dir) and ok
 	_clear(ROOT)
 	EventSheetPackLibrary.forget()
+	return ok
+
+
+## A copy that fails part way leaves nothing of itself in the project: the folders it had already
+## copied and the one it was copying are taken back, so the next try is not "already there" and
+## kept broken for good. A file standing where a folder had to go is the failure, and stays untouched.
+static func _pin_failed_copy(packs_dir: String) -> bool:
+	_write(packs_dir.path_join("stamp"), "a file, not a folder")
+	var failed: Dictionary = EventSheetPackLibrary.copy_into_project(PackedStringArray(["surface", "palette", "stamp"]),
+		LIB, packs_dir)
+	var ok: bool = SUPPORT.pins(P, [
+		["a copy that fails part way says so and copied nothing", [failed["ok"], failed["copied"]],
+			[false, PackedStringArray()]],
+		["the folders it had copied before the failure are taken back",
+			[DirAccess.dir_exists_absolute(packs_dir.path_join("surface")), DirAccess.dir_exists_absolute(packs_dir.path_join("palette"))],
+			[false, false]],
+		["the file in the way is never touched", FileAccess.get_file_as_string(packs_dir.path_join("stamp")), "a file, not a folder"],
+	])
+	# The second step failing takes back every folder the first step made. A folder standing where
+	# the script has to go is what refuses its copy.
+	DirAccess.remove_absolute(packs_dir.path_join("stamp"))
+	var first: Dictionary = EventSheetPackLibrary.copy_into_project(PackedStringArray(["surface"]), LIB, packs_dir, true)
+	DirAccess.make_dir_recursive_absolute(packs_dir.path_join("surface/surface.gd"))
+	var second: Error = EventSheetPackLibrary.copy_scripts(first["copied"], LIB, packs_dir)
+	ok = SUPPORT.pins(P, [
+		["a failed script step reports its error", second != OK, true],
+		["and leaves no half-copied folder behind", DirAccess.dir_exists_absolute(packs_dir.path_join("surface")), false],
+	]) and ok
 	return ok
 
 
