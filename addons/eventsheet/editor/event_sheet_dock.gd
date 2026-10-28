@@ -5631,7 +5631,10 @@ func _on_condition_context_menu_id_pressed(id: int) -> void:
 		CONDITION_MENU_INVERT:
 			_row_edit_ops._toggle_context_condition_inversion()
 		CONDITION_MENU_EDIT_ACE_COMMENT:
-			_open_ace_comment_dialog(_row_edit_ops._context_ace_resource("condition"))
+			# Offered only on a condition that still carries a note from an older sheet: it clears it.
+			var noted: Resource = _row_edit_ops._context_ace_resource("condition")
+			if noted is ACECondition:
+				_on_ace_comment_confirmed("", noted)
 		CONDITION_MENU_TOGGLE_ENABLED:
 			_row_edit_ops._toggle_context_ace_enabled()
 		ACE_MENU_SELECT_ALL_MATCHING:

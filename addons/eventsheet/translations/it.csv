@@ -9671,3 +9671,8 @@ Why this action is here…,Perché questa azione è qui…
 More colours,Altri colori
 Shows in the manual (writes ##),Compare nel manuale (scrive ##)
 "Named colours from the theme, so a comment reads right in dark and light. The colour is for the sheet only and is not written to the code.","Colori con nome dal tema, così un commento si legge bene sia nel tema scuro sia in quello chiaro. Il colore vale solo per il foglio e non viene scritto nel codice."
+Orange,Arancione
+Yellow,Giallo
+Purple,Viola
+Grey,Grigio
+Remove note,Rimuovi nota

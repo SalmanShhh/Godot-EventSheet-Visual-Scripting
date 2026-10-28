@@ -69,14 +69,17 @@
 - **Q with an action selected** puts the comment in that action list, right under the action - a `#`
   line between two statements - instead of a new row under the event.
 - **Right-click on an action offers Add note** (it used to say Edit Note… and open "Row Comment"): the
-  words after the action, saved as the comment at the end of its own line. A condition no longer
-  offers a note at all; to explain an event, put a comment row above it.
+  words after the action, saved as the comment at the end of its own line. A comment sitting among
+  the actions offers none: it is words already. A condition no longer offers a note at all; to
+  explain an event, put a comment row above it. A condition that still carries a note from an older
+  sheet offers **Remove note**, so that note can be cleared.
 - **Alt+Up / Alt+Down** move a comment that sits among an event's actions one place up or down.
 - **A comment row dropped on an event's action column** joins that action list, between the actions
   it is dropped between (a blue line shows where). Ctrl while dragging copies it.
 - **The Edit comment window shows named colours** - Default, Red, Orange, Yellow, Green, Blue, Purple
   and Grey - each worked out from the theme's own comment colour, so a comment reads right in a dark
-  theme and a light one. The free picker stays under More colours. The box reads "Shows in the manual
+  theme and a light one, and each named in the editor's language. The free picker stays under More
+  colours. The box reads "Shows in the manual
   (writes ##)". A comment's colour belongs to the sheet: it is never written to the `.gd`, so the code
   stays plain and reopening the file shows the default colour.
 

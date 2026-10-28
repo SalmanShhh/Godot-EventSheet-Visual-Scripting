@@ -29,6 +29,7 @@ class NoopUndoManager:
 static func run() -> bool:
 	var ok: bool = _q_on_an_action_comments_between_actions()
 	ok = _notes_are_for_actions_only() and ok
+	ok = _the_menus_offer_a_note_only_where_it_does_something() and ok
 	ok = _alt_arrows_move_a_comment_among_actions() and ok
 	ok = _a_comment_dropped_on_the_actions_joins_them() and ok
 	ok = _the_edit_window_names_its_colours() and ok
@@ -160,6 +161,62 @@ static func _notes_are_for_actions_only() -> bool:
 	])
 
 
+## The note items follow what was right-clicked. A comment sitting among the actions is words already,
+## so it is offered no Add note (choosing it only ever said "Right-click an action"). A condition is
+## offered no note - unless an older sheet gave it one, which Remove note clears.
+static func _the_menus_offer_a_note_only_where_it_does_something() -> bool:
+	var dock: EventSheetDock = _dock_with_event()
+	var event: EventRow = _event_of(dock)
+	var between: CommentRow = CommentRow.new()
+	between.text = "between"
+	event.actions.insert(1, between)
+	var condition: ACECondition = ACECondition.new()
+	condition.provider_id = "Core"
+	condition.ace_id = "Compare"
+	condition.comment = "from an older sheet"
+	event.conditions.append(condition)
+	dock._refresh_after_edit()
+	dock._context_menus.build_all()
+	dock._context_row = _row_of(dock, _event_of(dock))
+	var on_action: Array = _items_for(dock, dock._action_context_menu, {"kind": "action", "ace_index": 0})
+	var on_comment: Array = _items_for(dock, dock._action_context_menu, {"kind": "action", "ace_index": 1})
+	var on_noted_condition: Array = _items_for(dock, dock._condition_context_menu, {"kind": "condition", "ace_index": 0})
+	dock._on_condition_context_menu_id_pressed(dock.CONDITION_MENU_EDIT_ACE_COMMENT)
+	var left: String = (_event_of(dock).conditions[0] as ACECondition).comment
+	dock._context_row = _row_of(dock, _event_of(dock))
+	var on_plain_condition: Array = _items_for(dock, dock._condition_context_menu, {"kind": "condition", "ace_index": 0})
+	dock.free()
+	var notes: Callable = func(items: Array) -> Array:
+		return items.filter(func(item: String) -> bool: return item.contains("note"))
+	return SUPPORT.pins(NAME, [
+		["an action is offered Add note, right after Disable", on_action.slice(on_action.find("Disable Action"),
+			on_action.find("Disable Action") + 2), ["Disable Action", "Add note"]],
+		["a comment among the actions is offered no note", notes.call(on_comment), []],
+		["a condition carrying an older note is offered Remove note", notes.call(on_noted_condition), ["Remove note"]],
+		["which clears it", left, ""],
+		["a condition with no note is offered none", notes.call(on_plain_condition), []],
+	])
+
+
+static func _row_of(dock: EventSheetDock, event: EventRow) -> EventRowData:
+	for entry: Dictionary in dock.get_viewport_control().get_flat_rows():
+		var row_data: EventRowData = entry.get("row")
+		if row_data != null and row_data.source_resource == event:
+			return row_data
+	return null
+
+
+## The menu's items as the click on `metadata` shows them.
+static func _items_for(dock: EventSheetDock, menu: PopupMenu, metadata: Dictionary) -> Array:
+	dock._context_hit = {"span_metadata": metadata, "ace_index": int(metadata.get("ace_index", -1))}
+	dock._context_menus._configure_context_menu(menu)
+	var items: Array = []
+	for index: int in range(menu.item_count):
+		if not menu.is_item_separator(index):
+			items.append(menu.get_item_text(index))
+	return items
+
+
 static func _alt_arrows_move_a_comment_among_actions() -> bool:
 	var dock: EventSheetDock = _dock_with_event()
 	var event: EventRow = _event_of(dock)
@@ -219,4 +276,25 @@ static func _the_edit_window_names_its_colours() -> bool:
 		["the window shows the theme's named colours", names, ["Default", "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Grey"]],
 		["and the box that writes ##", manual_box, "Shows in the manual (writes ##)"],
 		["a picked colour is the comment's, by name", picked, "orange"],
+		["every colour's name is translated in all eight languages", _untranslated(names), []],
 	])
+
+
+## The swatch names some language's file leaves untranslated, as "<language>: <name>". A name read
+## through a variable is invisible to the harvest, so its translation was never asked for.
+static func _untranslated(names: Array) -> Array:
+	var missing: Array = []
+	var folder: String = "res://addons/eventsheet/translations"
+	for file_name: String in DirAccess.get_files_at(folder):
+		if file_name.get_extension() != "csv" or file_name == "TEMPLATE.csv":
+			continue
+		var translated: Dictionary = {}
+		var file: FileAccess = FileAccess.open(folder.path_join(file_name), FileAccess.READ)
+		while not file.eof_reached():
+			var line: PackedStringArray = file.get_csv_line()
+			if line.size() >= 2 and not line[1].is_empty():
+				translated[line[0]] = true
+		for swatch_name: String in names:
+			if not translated.has(swatch_name):
+				missing.append("%s: %s" % [file_name.get_basename(), swatch_name])
+	return missing

@@ -9671,3 +9671,8 @@ Why this action is here…,Зачем здесь это действие…
 More colours,Другие цвета
 Shows in the manual (writes ##),Показывается в руководстве (пишет ##)
 "Named colours from the theme, so a comment reads right in dark and light. The colour is for the sheet only and is not written to the code.","Именованные цвета из темы, чтобы комментарий хорошо читался и в тёмной, и в светлой теме. Цвет нужен только листу и не записывается в код."
+Orange,Оранжевый
+Yellow,Жёлтый
+Purple,Фиолетовый
+Grey,Серый
+Remove note,Удалить заметку

@@ -728,6 +728,11 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 				condition_toggle_index,
 				"Enable Condition" if _dock._row_edit_ops._context_ace_is_disabled() else "Disable Condition"
 			)
+		# A condition takes no new note, but a sheet written before that may still carry one: offer to
+		# clear it, and only then.
+		var noted: Resource = _dock._row_edit_ops._context_ace_resource("condition")
+		offer_item(menu, _dock.CONDITION_MENU_EDIT_ACE_COMMENT, EventSheetL10n.translate("Remove note"),
+			noted is ACECondition and not str(noted.get("comment")).is_empty(), _dock.CONDITION_MENU_TOGGLE_ENABLED)
 	elif menu == _dock._row_context_menu:
 		# A read-only preview reads the file but never rewrites it, so the three event-shape
 		# commands are greyed there rather than silently doing nothing. Press Edit Events first.
@@ -884,6 +889,26 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 				action_toggle_index,
 				"Enable Action" if _dock._row_edit_ops._context_ace_is_disabled() else "Disable Action"
 			)
+		# A comment among the actions is words already: it takes no note.
+		offer_item(menu, _dock.ACTION_MENU_EDIT_ACE_COMMENT, EventSheetL10n.translate("Add note"),
+			not (_dock._row_edit_ops._context_ace_resource("action") is CommentRow), _dock.ACTION_MENU_TOGGLE_ENABLED)
+
+
+## Shows or leaves out one item of a right-click menu, for this click. A PopupMenu cannot hide an
+## item, and a greyed item nobody can use is clutter, so the item is taken out or put back right
+## after `after_id`.
+static func offer_item(menu: PopupMenu, item_id: int, text: String, wanted: bool, after_id: int) -> void:
+	var index: int = menu.get_item_index(item_id)
+	if not wanted:
+		if index >= 0:
+			menu.remove_item(index)
+		return
+	if index < 0:
+		menu.add_item(text, item_id)
+		index = menu.item_count - 1
+		var after: int = menu.get_item_index(after_id)
+		if after >= 0 and after + 1 < index:
+			menu.set_item_index(index, after + 1)
 
 
 ## The Runs on submenu: the three answers, ticked at the one this group carries now. Built as

@@ -9671,3 +9671,8 @@ Why this action is here…,为什么这个动作在这里…
 More colours,更多颜色
 Shows in the manual (writes ##),显示在手册中（写入 ##）
 "Named colours from the theme, so a comment reads right in dark and light. The colour is for the sheet only and is not written to the code.",来自主题的命名颜色，让注释在深色和浅色主题下都清晰易读。颜色只属于表格，不会写入代码。
+Orange,橙
+Yellow,黄
+Purple,紫
+Grey,灰
+Remove note,移除备注

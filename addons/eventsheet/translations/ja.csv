@@ -9671,3 +9671,8 @@ Why this action is here…,このアクションがここにある理由…
 More colours,その他の色
 Shows in the manual (writes ##),マニュアルに表示（## を書き込む）
 "Named colours from the theme, so a comment reads right in dark and light. The colour is for the sheet only and is not written to the code.",テーマの名前付きカラーなので、コメントはダークでもライトでも読みやすく表示されます。色はシート上だけのもので、コードには書き込まれません。
+Orange,オレンジ
+Yellow,黄
+Purple,紫
+Grey,灰色
+Remove note,メモを削除

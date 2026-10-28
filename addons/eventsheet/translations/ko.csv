@@ -9671,3 +9671,8 @@ Why this action is here…,이 액션이 여기 있는 이유…
 More colours,색 더 보기
 Shows in the manual (writes ##),매뉴얼에 표시 (## 작성)
 "Named colours from the theme, so a comment reads right in dark and light. The colour is for the sheet only and is not written to the code.",테마의 이름 있는 색이라 주석이 어두운 테마와 밝은 테마 모두에서 잘 읽힙니다. 색은 시트에만 적용되며 코드에는 쓰이지 않습니다.
+Orange,주황
+Yellow,노랑
+Purple,보라
+Grey,회색
+Remove note,메모 제거

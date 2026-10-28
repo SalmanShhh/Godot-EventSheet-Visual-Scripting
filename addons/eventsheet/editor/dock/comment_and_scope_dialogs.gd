@@ -31,8 +31,6 @@ var _comment_strip: EventSheetPopupUI.HelpStrip = null
 # swatch button per name, in EventSheetEventStyle.COMMENT_COLOR_TAGS order.
 var _comment_color_tag: String = ""
 var _comment_swatches: Array[Button] = []
-const _SWATCH_NAMES: Dictionary = {"": "Default", "red": "Red", "orange": "Orange", "yellow": "Yellow",
-	"green": "Green", "blue": "Blue", "purple": "Purple", "grey": "Grey"}
 
 
 ## Dialog editor for comments: multiline comment rows, action-cell comments, and the row
@@ -52,6 +50,27 @@ func open_comment_dialog(comment_resource: Resource) -> void:
 	if _dock.is_inside_tree():
 		EventSheetPopupUI.popup_fitted(_comment_dialog, Vector2i(int(EventSheetPalette.scaled_f(560.0)), 0))
 		_comment_text_edit.grab_focus()
+
+
+## The swatch's name in the editor's language. Each name is spelled out as a literal so the
+## translation harvest finds it; a table read through a variable hides every name from it.
+static func swatch_name(tag: String) -> String:
+	match tag:
+		"red":
+			return EventSheetL10n.translate("Red")
+		"orange":
+			return EventSheetL10n.translate("Orange")
+		"yellow":
+			return EventSheetL10n.translate("Yellow")
+		"green":
+			return EventSheetL10n.translate("Green")
+		"blue":
+			return EventSheetL10n.translate("Blue")
+		"purple":
+			return EventSheetL10n.translate("Purple")
+		"grey":
+			return EventSheetL10n.translate("Grey")
+	return EventSheetL10n.translate("Default")
 
 
 func _ensure_comment_dialog() -> void:
@@ -87,7 +106,7 @@ func _ensure_comment_dialog() -> void:
 		var swatch: Button = Button.new()
 		swatch.custom_minimum_size = Vector2.ONE * EventSheetPalette.scaled_f(22.0)
 		swatch.focus_mode = Control.FOCUS_ALL
-		swatch.tooltip_text = EventSheetL10n.translate(str(_SWATCH_NAMES[tag]))
+		swatch.tooltip_text = swatch_name(tag)
 		swatch.pressed.connect(_on_swatch_picked.bind(tag))
 		swatch_row.add_child(swatch)
 		_comment_swatches.append(swatch)
