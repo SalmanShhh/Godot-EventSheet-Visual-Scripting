@@ -9,7 +9,10 @@
   on a 1,443-row sheet (the platformer pathfinding pack) the editor froze for 11-13 s a few seconds
   after the file had opened, with nobody touching it. The cards are now written again in place
   (3.5 ms for 200 functions); the rows are built again only when a band about a scene was laid out
-  while the scenes were still being counted.
+  while the scenes were still being counted, or when a band asked
+  `EventSheetProjectShareIndex.request()` and was told "not yet" - the readiness question a custom
+  block or head band asks before it says "counting…", so such a band is still built again with its
+  count. `request(false)` asks without that promise, for a reader that rebuilds itself.
 
 ### Fixed: building a behaviour pack is up to fifteen times faster
 

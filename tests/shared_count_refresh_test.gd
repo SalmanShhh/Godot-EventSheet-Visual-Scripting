@@ -56,6 +56,27 @@ static func run() -> bool:
 		viewport._row_builds - builds_before, 1) and ok
 	ok = SUPPORT.check(PIN, "and the wait is forgotten once it was paid for",
 		EventSheetProjectShareIndex.take_scene_waits(), false) and ok
+
+	# A custom band follows the public pattern: it asks `request()` for readiness and says
+	# "counting…" until it answers true. That band is laid out with its row too, so the count
+	# landing builds the rows again, once - or it would say "counting…" until something unrelated
+	# rebuilt them.
+	EventSheetProjectShareIndex.clear_cache()
+	ok = SUPPORT.check(PIN, "a band asking request() while counting is told not yet",
+		EventSheetProjectShareIndex.request(), false) and ok
+	EventSheetProjectShareIndex.build_now()
+	builds_before = viewport._row_builds
+	viewport.refresh_after_shared_count()
+	ok = SUPPORT.check(PIN, "a band that asked request() while counting builds the rows again once",
+		viewport._row_builds - builds_before, 1) and ok
+	# The function head's card asks without recording: it is written again in place.
+	EventSheetProjectShareIndex.clear_cache()
+	viewport.rebuild_rows()
+	EventSheetProjectShareIndex.build_now()
+	builds_before = viewport._row_builds
+	viewport.refresh_after_shared_count()
+	ok = SUPPORT.check(PIN, "a function card built while counting still builds no row",
+		viewport._row_builds - builds_before, 0) and ok
 	EventSheetProjectShareIndex.clear_cache()
 	viewport.free()
 	ok = _pin_refresh_budget() and ok

@@ -4480,7 +4480,7 @@ const CALLERS_NAMED: int = 3
 ## Matched BY NAME, which is what the index can honestly answer, so a rename reads this as the list
 ## to CHECK rather than as a list to act on. Static + pure over a name, so it is pinned headless.
 static func called_by_words(function_name: String, own_script: String) -> String:
-	if function_name.strip_edges().is_empty() or not EventSheetProjectShareIndex.request():
+	if function_name.strip_edges().is_empty() or not EventSheetProjectShareIndex.request(false):
 		return ""
 	var callers: PackedStringArray = EventSheetProjectShareIndex.callers_of(function_name, own_script)
 	if callers.is_empty():

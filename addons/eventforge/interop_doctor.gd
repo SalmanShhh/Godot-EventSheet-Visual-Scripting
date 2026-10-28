@@ -192,7 +192,7 @@ static func _average_reads_as(measured: Array[Dictionary]) -> int:
 ## to a question nobody has finished asking - and it is asked rather than waited for on purpose: the
 ## whole audit has a budget, and a health check is not worth a second of somebody's time on its own.
 static func _caller_count(sheet: EventSheetResource, script_path: String) -> int:
-	if not EventSheetProjectShareIndex.request():
+	if not EventSheetProjectShareIndex.request(false):
 		return 0
 	var callers: Dictionary = {}
 	for entry: Variant in sheet.functions:

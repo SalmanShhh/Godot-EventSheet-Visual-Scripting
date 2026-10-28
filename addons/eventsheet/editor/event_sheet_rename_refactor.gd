@@ -210,7 +210,7 @@ func show_receipt(old_name: String, new_name: String, moved: int, touched: Packe
 ## the project index is still counting: a silent answer beats a wrong one.
 static func hand_written_callers(old_name: String, own_script: String) -> PackedStringArray:
 	var names: PackedStringArray = PackedStringArray()
-	if not EventSheetProjectShareIndex.request():
+	if not EventSheetProjectShareIndex.request(false):
 		return names
 	for path: String in EventSheetProjectShareIndex.callers_of(old_name, own_script):
 		names.append(path.get_file())

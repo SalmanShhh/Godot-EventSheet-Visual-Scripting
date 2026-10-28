@@ -128,14 +128,20 @@ static var _pumping: bool = false
 ## dropped as they are found: a dock closed mid-scan is the ordinary case, not an error.
 static var _when_counted: Array[Callable] = []
 
-## Set when `scenes_ready()` answers "not yet" to a reader, cleared by `take_scene_waits()`.
+## Set when `scenes_ready()` or `request()` answers "not yet" to a reader, cleared by
+## `take_scene_waits()`.
 static var _scene_answer_waited: bool = false
 
 
 ## Starts the scan if it has not started, and returns whether it has already finished. Cheap to call
 ## from anywhere, including from the question itself - which is where it IS called from, so nothing
 ## has to remember to start it.
-static func request() -> bool:
+##
+## A "not yet" is remembered (see `take_scene_waits`) unless `record_wait` is false: this is the
+## readiness question a custom band asks before it says "counting…", and a band laid out that way has
+## to be built again when the count lands. Only a reader that is written again in place (a function
+## head's hover card) or that builds no row at all (a rename's check list, a health audit) passes false.
+static func request(record_wait: bool = true) -> bool:
 	if not _started:
 		_started = true
 		# ONE scan, two halves: every scene, then every script. One module, one cache, one drop - and
@@ -150,6 +156,8 @@ static func request() -> bool:
 		_callers.clear()
 	if is_ready():
 		return true
+	if record_wait:
+		_scene_answer_waited = true
 	_arm()
 	return false
 
@@ -158,7 +166,7 @@ static func request() -> bool:
 ## wears this material". It answers as soon as the scenes are read rather than waiting on the pass
 ## over every script, which is a question those readers never asked.
 static func request_scenes() -> bool:
-	request()
+	request(false)
 	return scenes_ready()
 
 
@@ -233,7 +241,7 @@ static func _advance_scenes(deadline: int) -> bool:
 ## asker that has always blocked on its first question goes on using - the answer is the same either
 ## way, and only the waiting differs.
 static func build_now() -> void:
-	request()
+	request(false)
 	while not advance(1000):
 		pass
 
@@ -242,7 +250,7 @@ static func build_now() -> void:
 ## slices, because a question about scenes should not pay for a pass over every script in the
 ## project: on this repository that is a second of waiting for an answer that was already there.
 static func build_scenes_now() -> void:
-	request()
+	request(false)
 	while not _advance_scenes(Time.get_ticks_msec() + 1000):
 		pass
 	_sort_holders()
