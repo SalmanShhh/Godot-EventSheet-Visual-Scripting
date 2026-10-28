@@ -103,8 +103,17 @@
   too.
 - Opening a script reads a comment written right above an `if` (or a loop) back as the comment row
   above that event, so a file saved from the sheet reopens with its comments where they were, instead
-  of as an "Every tick" event holding the comment. A comment above a plain statement stays with that
-  statement, as before, and every file still saves byte for byte.
+  of as an "Every tick" event holding the comment. A comment above a plain statement that follows another
+  event of the handler, such as `# Movement` over `var direction := ...` after a blank line, is a
+  comment row above that statement's event too, rather than the first line of its actions. A comment
+  as the first line of a handler stays the note on its first statement. Every
+  file still saves byte for byte.
+- Save As .gd from a `.tres` sheet writes each comment row above the event it sits over, the way an
+  opened `.gd` writes it, so the new file reopens with its comments in place instead of moving them all
+  to the end on the first save. A pack publish still writes them at the end, so no pack changes.
+- A file whose `_ready` reads its comments as rows is read a second time without them only when the
+  whole-file check was refused at that handler: a file refused somewhere else is no longer lifted
+  twice, which on a big hand-written file was a second full "working out the events".
 - An action's note is now saved: it is written as the comment at the end of the action's own line
   (`$JumpSound.play()  # short blip`), and a line written that way reopens as the action with its
   note. A `#` inside a string is not a note, and a line whose code reads as no action stays as written.

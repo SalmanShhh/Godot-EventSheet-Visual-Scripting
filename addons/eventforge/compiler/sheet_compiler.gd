@@ -197,8 +197,8 @@ static var _row_fences_after: Dictionary = {}
 # the tag, which is what tells the lift which group they came from). Filled by _flatten_trigger_rows.
 static var _row_comments_outer: Dictionary = {}
 static var _row_comments_inner: Dictionary = {}
-# True while the file being written is a sheet that is its own .gd (the opened-file path, and the lift's
-# probes of it): only there is a comment row written above its event. A generated companion and every
+# True while the file being written is a sheet that is its own .gd (the opened-file path, the lift's
+# probes of it, and a Save As .gd): only there is a comment row written above its event. A generated companion and every
 # pack keep writing theirs at the end of the file, so their bytes do not move. Per-compile.
 static var _comments_in_place: bool = false
 # True when the file being written is the sheet itself (a .gd opened as a sheet, or a Save As .gd):
@@ -278,8 +278,11 @@ static func _reset_per_compile_state(sheet: EventSheetResource = null) -> void:
 ## With no output_path the file is the sheet's own: a script-backed sheet's .gd, else a generated
 ## file beside it (or res://event_sheet_generated.gd for a sheet with no path). To READ what a sheet
 ## compiles to, ask echo(), which writes nothing.
-static func compile(sheet: EventSheetResource, output_path: String = "", omit_generated_banner: bool = false) -> Dictionary:
-	return _compile_locked(sheet, output_path, omit_generated_banner, true)
+## own_file says the .gd written is the sheet from now on (Save As .gd): its comment rows are written
+## above the events they sit over, as an opened .gd writes them, so reopening it keeps them there. A
+## pack publish and a generated companion leave it false and keep their bytes.
+static func compile(sheet: EventSheetResource, output_path: String = "", omit_generated_banner: bool = false, own_file: bool = false) -> Dictionary:
+	return _compile_locked(sheet, output_path, omit_generated_banner, true, own_file)
 
 
 ## What `sheet` compiles to - the same result compile() returns - written NOWHERE. A window that only
@@ -292,14 +295,14 @@ static func echo(sheet: EventSheetResource, omit_generated_banner: bool = false)
 
 ## The body lives in _compile_body so this can hold the compile lock across every early return
 ## (GDScript has no try/finally, so a wrapper is the only leak-proof shape).
-static func _compile_locked(sheet: EventSheetResource, output_path: String, omit_generated_banner: bool, writes: bool) -> Dictionary:
+static func _compile_locked(sheet: EventSheetResource, output_path: String, omit_generated_banner: bool, writes: bool, own_file: bool = false) -> Dictionary:
 	_compile_mutex.lock()
 	# Each class's body first: it is a compile of its own, so it runs before this one sets anything up.
 	var outer_inner_class_lines: Dictionary = _inner_class_lines
 	var inner_class_lines: Dictionary = _write_inner_class_bodies(sheet)
 	_writes_output = writes
 	_inner_class_lines = inner_class_lines
-	var locked_result: Dictionary = _compile_body(sheet, output_path, omit_generated_banner)
+	var locked_result: Dictionary = _compile_body(sheet, output_path, omit_generated_banner, own_file)
 	_inner_class_lines = outer_inner_class_lines
 	# A Reset row naming a variable this sheet does not declare wrote nothing, so it says why here.
 	for unresolved: String in ActionCodegen.unresolved_starting_values:
@@ -348,7 +351,7 @@ static func _echo_inner_class_body(inner: InnerClassRow) -> Dictionary:
 	return body_result
 
 
-static func _compile_body(sheet: EventSheetResource, output_path: String = "", omit_generated_banner: bool = false) -> Dictionary:
+static func _compile_body(sheet: EventSheetResource, output_path: String = "", omit_generated_banner: bool = false, own_file: bool = false) -> Dictionary:
 	var result: Dictionary = {
 		"success": true,
 		"errors": [] as Array[String],
@@ -370,6 +373,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	# (see _reset_per_compile_state).
 	_reset_per_compile_state(sheet)
 	_keeps_off_rows = omit_generated_banner or not sheet.external_source_path.is_empty()
+	_comments_in_place = own_file
 
 	# GDScript-backed sheets (opened FROM a .gd file) compile via the order-preserving
 	# external path: no generated header, no synthesized extends, rows emit in sheet order
@@ -782,6 +786,11 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 			continue  # emitted above as a class-level variable
 		if row is RawCodeRow:
 			continue  # emitted above as a class-level GDScript block
+		if row is CommentRow and _comments_in_place:
+			# A Save As .gd: the file is the sheet from now on, so a comment rides on the event below it
+			# (_flatten_trigger_rows), exactly as an opened .gd writes it.
+			top_level_events.append(row)
+			continue
 		if row is CommentRow:
 			# A generated companion (a .tres sheet's script, a pack) writes its top-level comments after
 			# the trigger sections, as it always has; a sheet that is its own .gd takes the other path.

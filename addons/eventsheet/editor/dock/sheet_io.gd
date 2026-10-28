@@ -689,7 +689,8 @@ func _save_sheet_as_gdscript(path: String) -> bool:
 	# companion - it must not carry the "DO NOT EDIT / regenerated on every compile" banner.
 	# Save As over an existing .gd overwrites it - ring its pre-save bytes first.
 	EventSheetBackups.backup_sheet(path)
-	var compile_result: Dictionary = load(SHEET_COMPILER_PATH).compile(_dock._current_sheet, path, true)
+	# own_file: the comments are written above their events, so the reopened .gd keeps them there.
+	var compile_result: Dictionary = load(SHEET_COMPILER_PATH).compile(_dock._current_sheet, path, true, true)
 	if not bool(compile_result.get("success", false)):
 		_dock._set_status("Couldn't save as GDScript: %s" % ", ".join(PackedStringArray(compile_result.get("errors", []))), true)
 		return false

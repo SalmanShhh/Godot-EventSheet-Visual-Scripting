@@ -24,7 +24,121 @@ static func run() -> bool:
 	ok = _match_case_comment_keeps_marker_and_off() and ok
 	ok = _colour_stays_on_the_sheet() and ok
 	ok = _comments_keep_their_place_in_an_opened_file() and ok
+	ok = _a_comment_over_a_plain_statement_is_a_row() and ok
+	ok = _save_as_gd_keeps_a_comment_over_its_event() and ok
+	ok = _a_refusal_elsewhere_is_not_lifted_twice() and ok
 	return ok
+
+
+## A file whose `_ready` read its comments as rows is read a second time without them only when the
+## whole-file check was refused AT a handler that did (or ran out of places to look). Refused anywhere
+## else, the second read would be refused the same way, and on a big hand-written file it is a second
+## full lift of several seconds. A file that lifts is read once.
+static func _a_refusal_elsewhere_is_not_lifted_twice() -> bool:
+	var took: Dictionary = {"_ready": true}
+	var source: String = "\n".join([
+		"extends Node",
+		"",
+		"",
+		"func _ready() -> void:",
+		"\t# Say hello.",
+		"\tprint(\"ready\")",
+		""])
+	var retries_before: int = EventSheetACELifter.comment_retries
+	var lifted: bool = EventSheetACELifter.attempt_lift(SUPPORT.reopen(source, false), source, true)
+	return SUPPORT.pins(NAME, [
+		["refused in another function: no second read", EventSheetACELifter.comment_rows_could_refuse({"_on_hit": true}, took, false), false],
+		["refused in the handler that read comment rows: read again", EventSheetACELifter.comment_rows_could_refuse({"_ready": true}, took, false), true],
+		["out of seams to try: read again", EventSheetACELifter.comment_rows_could_refuse({"_on_hit": true}, took, true), true],
+		["no handler read comment rows: never", EventSheetACELifter.comment_rows_could_refuse({"_ready": true}, {}, true), false],
+		["a file that lifts is read once", [lifted, EventSheetACELifter.comment_retries - retries_before], [true, 0]],
+	])
+
+
+## A sheet that is not a .gd yet (a .tres sheet, here one with no file at all) saved as a .gd: the file
+## is the sheet from then on, so its comment row is written above its event and reopens there. Written
+## the generated way it went to the end of the file and reopened as a trailing comment, so the first
+## save of the new .gd lost where it was. A pack publish keeps writing it at the end.
+static func _save_as_gd_keeps_a_comment_over_its_event() -> bool:
+	# Two events of one handler, each an `if`, taken off a file and made a sheet with no file of its own.
+	var sheet: EventSheetResource = SUPPORT.reopen("\n".join([
+		"extends Node",
+		"",
+		"var speed := 1.0",
+		"",
+		"",
+		"func _process(_delta: float) -> void:",
+		"\tif speed > 0.0:",
+		"\t\tprint(\"first\")",
+		"\tif speed > 1.0:",
+		"\t\tprint(\"second\")",
+		""]))
+	sheet.external_source_path = ""
+	var second: int = -1
+	for index: int in range(sheet.events.size()):
+		if sheet.events[index] is EventRow:
+			second = index
+	sheet.events.insert(second, _comment("Then the second."))
+	var own: String = str(SheetCompiler.compile(sheet, SAVED_AT, true, true).get("output", ""))
+	var published: String = str(SheetCompiler.compile(sheet, SAVED_AT, true).get("output", ""))
+	return SUPPORT.pins(NAME, [
+		["Save As .gd writes the comment above its event", own.contains("\t# Then the second.\n\tif speed > 1.0:"), true],
+		["and the .gd reopens with the comment row above that event",
+			_shape(SUPPORT.reopen(own).events), ["event", "comment: Then the second.", "event"]],
+		["and saves byte for byte", SUPPORT.reemit(own, SAVED_AT), own],
+		["a publish still writes it at the end of the file", published.strip_edges().ends_with("# Then the second."), true],
+	])
+
+
+## The shape of a hand-written player script: after a blank line, a comment over a plain statement (no
+## `if` of its own), with the branch that reads it below. The comment is a row of the sheet standing
+## above that statement's event, not the first line of an "Every tick" event's actions. A comment as the
+## first line of a handler stays the note on its first statement. Both files save byte for byte.
+static func _a_comment_over_a_plain_statement_is_a_row() -> bool:
+	var source: String = "\n".join([
+		"extends CharacterBody2D",
+		"",
+		"var speed := 220.0",
+		"",
+		"",
+		"func _physics_process(delta: float) -> void:",
+		"\tif not is_on_floor():",
+		"\t\tvelocity.y += 980.0 * delta",
+		"",
+		"\t# Movement - the player walks left and right.",
+		"\tvar direction := Input.get_axis(\"ui_left\", \"ui_right\")",
+		"\tif direction != 0.0:",
+		"\t\tvelocity.x = direction * speed",
+		"\telse:",
+		"\t\tvelocity.x = 0.0",
+		"\tmove_and_slide()",
+		""])
+	var opened: EventSheetResource = SUPPORT.reopen(source)
+	var first_lines: String = "\n".join([
+		"extends Node",
+		"",
+		"",
+		"func _process(_delta: float) -> void:",
+		"\t# Spin - a quarter turn a second.",
+		"\trotation += 0.5",
+		""])
+	return SUPPORT.pins(NAME, [
+		["the comment over the plain statement is a comment row above its event",
+			_shape(opened.events), ["event", "comment: Movement - the player walks left and right.", "event", "event", "event", "event"]],
+		["no event's actions open with it", _first_comment_in_actions(opened), ""],
+		["the file saves byte for byte", SUPPORT.reemit(source, SAVED_AT), source],
+		["a comment as a handler's first line stays the note on its first statement", _first_comment_in_actions(SUPPORT.reopen(first_lines)),
+			"Spin - a quarter turn a second."],
+		["and that file saves byte for byte", SUPPORT.reemit(first_lines, SAVED_AT), first_lines],
+	])
+
+
+## The text of the first comment found at the front of an event's actions, or "".
+static func _first_comment_in_actions(sheet: EventSheetResource) -> String:
+	for entry: Variant in sheet.events:
+		if entry is EventRow and not (entry as EventRow).actions.is_empty() and (entry as EventRow).actions[0] is CommentRow:
+			return ((entry as EventRow).actions[0] as CommentRow).text
+	return ""
 
 
 ## In an opened file whose handler sits in the middle of it: a comment row added under the handler's last
@@ -199,8 +313,10 @@ static func _opened_comments_read_back_as_rows() -> bool:
 		""])
 	var opened: EventSheetResource = SUPPORT.reopen(source)
 	return SUPPORT.pins(NAME, [
-		["the note above the if is a comment row above its event", _shape(opened.events).slice(-4, -1), [
-			"event", "comment: Jump: press the button while on the floor.\nCoyote time lets a late press still count.", "event"]],
+		# And a comment over a line kept as written (an `if` with a comment after it) is a row above it too.
+		["the note above the if is a comment row above its event, and so is the one above the if kept as written",
+			_shape(opened.events), ["event", "comment: Jump: press the button while on the floor.\nCoyote time lets a late press still count.",
+				"event", "comment: Crouch - hold down to squash the sprite.", "event"]],
 		["the if with a comment after it is kept as written", source.contains("\tif speed > 1.0:  # crouch only on the ground")
 			and SUPPORT.reemit(source, SAVED_AT) == source, true],
 		["the file saves byte for byte", SUPPORT.reemit(source, SAVED_AT), source],

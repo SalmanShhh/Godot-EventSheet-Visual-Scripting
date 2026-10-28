@@ -305,11 +305,18 @@ static func reset_progress() -> void:
 ## that inlines its coroutines) read as comment rows too. Only the whole-file verify judges those, so when
 ## the lift fails after taking such comments out it is read once more with them left in the events, the
 ## way it always was - a file that lifted before still lifts.
+##
+## Only when the verify was refused AT such a handler, though (or its seams ran out before it could
+## say where): a file that fails somewhere else would fail the second read the same way, and on a big
+## hand-written file that second read is a second full lift - seconds of "working out the events".
 static func _lift_body_reading_comments(sheet: EventSheetResource, source: String, lift_functions: bool) -> bool:
 	_ungated_comment_rows_taken = false
+	_ungated_comment_handlers = {}
+	_ungated_comment_seam = false
 	var lifted: bool = _attempt_lift_body(sheet, source, lift_functions)
-	if lifted or not _ungated_comment_rows_taken:
+	if lifted or not _ungated_comment_rows_taken or not _ungated_comment_seam:
 		return lifted
+	comment_retries += 1
 	_ungated_comment_rows = false
 	lifted = _attempt_lift_body(sheet, source, lift_functions)
 	_ungated_comment_rows = true
@@ -626,6 +633,7 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 						var lift: Dictionary = _lift_function(row.code.split("\n"), claimable, true)
 						if gate_exempt and _comment_rows_ride and _holds_comment_row(lift.get("events", [])):
 							_ungated_comment_rows_taken = true
+							_ungated_comment_handlers[_header_function_name(header)] = true
 						# Group markers are stripped from BOTH sides exactly as the whole-file verify
 						# strips them: the `# @group:` tags re-emit from a registry the full compile
 						# fills, which this per-function probe does not have.
@@ -997,16 +1005,30 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 				break
 		print("[lift-debug] src=", src_lines.size(), " out=", out_lines.size(), " lines")
 	_revert_lift(sheet, backup, functions_backup, boundary, boundary_code, peeled_rows)
+	var seam: Dictionary = _seam_functions(source, output)
+	_ungated_comment_seam = _ungated_comment_seam or comment_rows_could_refuse(seam, _ungated_comment_handlers,
+		not lift_functions or held_back.size() >= SEAM_HOLD_BACK_LIMIT)
 	# Before giving up on every function, hold back the one at the seam and try again: a file of six
 	# hundred functions used to open as six hundred code blocks because ONE of them re-emitted a line
 	# differently. Bounded, because each round is a whole lift and a whole compile.
 	if lift_functions and held_back.size() < SEAM_HOLD_BACK_LIMIT:
-		var seam: Dictionary = _seam_functions(source, output)
 		var widened: Dictionary = held_back.duplicate()
 		widened.merge(seam)
 		if widened.size() > held_back.size():
 			return _attempt_lift_body(sheet, source, true, widened)
 	return _retry_or_fail(sheet, source, lift_functions)
+
+
+## Whether a whole-file refusal is one the comment rows of an ungated handler could have caused: the
+## seam sits in a handler that read comment rows, or no more seams will be tried to find out (`last`).
+## Pure, so the rule is pinned headless.
+static func comment_rows_could_refuse(seam: Dictionary, comment_handlers: Dictionary, last: bool) -> bool:
+	if comment_handlers.is_empty():
+		return false
+	for seam_name: Variant in seam:
+		if comment_handlers.has(seam_name):
+			return true
+	return last
 
 
 ## How many functions one file may hold back at its seams before the lift gives up and opens it with
@@ -2960,11 +2982,19 @@ static func _holds_comment_row(rows: Array) -> bool:
 ## A run of comments under a `# @group:` tag belongs to that group and takes the event below it into
 ## the group too (the compiler writes a grouped event's own comments under its tag); a run above the
 ## tag stays outside the group.
+##
+## A run at the HEAD of a no-condition event that follows another event of the handler (the lines after
+## a blank line, above a plain statement) is that event's comment the same way: the walk reads the
+## comment and the statements under it as one event, so the run is taken off its front and stands
+## above it. The first lines of a handler stay the note on its first statement, a switched-off line
+## stays a switched-off row, and a region fence stays a fence.
 static func _comment_rows_out(events: Array) -> Array:
 	var out: Array = []
 	for index: int in range(events.size()):
 		var event: Variant = events[index]
 		var next: Variant = events[index + 1] if index + 1 < events.size() else null
+		if index > 0:
+			_head_comments_out(event, out)
 		if not (event is EventRow) or not (next is EventRow) or not _is_plain_collector(event as EventRow) \
 				or not (event as EventRow).sub_events.is_empty() or (next as EventRow).else_mode != EventRow.ElseMode.NONE:
 			out.append(event)
@@ -2998,6 +3028,26 @@ static func _comment_rows_out(events: Array) -> Array:
 		if under_tag:
 			below.set_meta("__group_slug", run_slug)
 	return out
+
+
+## Moves the comments at the front of a no-condition event, above at least one statement of its own,
+## to `out` as the rows standing above that event: plain comments only, never a fence or a line that
+## is switched off. A grouped event keeps them: the compiler writes a
+## grouped event's comments under its tag, which the run above (_comment_rows_out) reads.
+static func _head_comments_out(event: Variant, out: Array) -> void:
+	if not (event is EventRow) or not _is_plain_collector(event as EventRow) or not (event as EventRow).sub_events.is_empty() \
+			or not str((event as EventRow).get_meta("__group_slug", "")).is_empty():
+		return
+	var collector: EventRow = event as EventRow
+	var lead: int = 0
+	while lead < collector.actions.size() and collector.actions[lead] is CommentRow \
+			and (collector.actions[lead] as CommentRow).enabled and not EventSheetRegionFacts.is_fence(collector.actions[lead]):
+		lead += 1
+	if lead == 0 or lead == collector.actions.size():
+		return
+	for comment_index: int in range(lead):
+		out.append(collector.actions[0])
+		collector.actions.remove_at(0)
 
 
 ## One `signal.connect(func(…): …)` statement in `_ready` → {ok, events, next}. The body becomes the
@@ -3651,6 +3701,13 @@ static var _comment_rows_ride: bool = true
 # file again without them when that lift fails.
 static var _ungated_comment_rows: bool = true
 static var _ungated_comment_rows_taken: bool = false
+# The ungated handlers (by function name) that read comment rows in the lift running now, and whether a
+# whole-file refusal was at one of them: only then is the file read again without those rows.
+static var _ungated_comment_handlers: Dictionary = {}
+static var _ungated_comment_seam: bool = false
+## How many times a file was read a second time with its ungated handlers' comments left in their
+## events. A count, so a test can tell one full lift from two.
+static var comment_retries: int = 0
 
 
 ## True when every top-level fence line of a function's body is one the compiler could have written:
