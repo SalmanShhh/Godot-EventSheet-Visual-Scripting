@@ -109,7 +109,7 @@ static func _test_derived_greys_for_a_dark_and_a_light_editor() -> bool:
 	rows.append(["dark reference: text, gutter numbers, type word, comment note", [
 		dark_style.get_condition_style().text_color.to_html(false), dark.gutter_text_color.to_html(false),
 		dark.type_number_color.to_html(false), dark.comment_row_background_color.to_html(false)],
-		["d2d2d2", "8c8c8c", "d0d0d0", "4a4630"]])
+		["d2d2d2", "8c8c8c", "d0d0d0", "38321f"]])
 	rows.append(["light reference: canvas, card, edge, divider, lanes", [light.sheet_background_color.to_html(false),
 		light.row_background_color.to_html(false), light.row_border_color.to_html(false), light.lane_divider_color.to_html(false),
 		light.condition_lane_color.to_html(false), light.action_lane_color.to_html(false)],
@@ -118,6 +118,11 @@ static func _test_derived_greys_for_a_dark_and_a_light_editor() -> bool:
 		light.variable_card_fill_color.to_html(false), light.variable_card_border_color.to_html(false),
 		light.variable_group_fill_color.to_html(false), light.variable_group_border_color.to_html(false)],
 		["d3d3d3", "eef7e8", "b7cdaa", "efefef", "a9a9a9"]])
+	rows.append(["the comment band, dark and light: fill, words, an edge that is the fill", [
+		dark.comment_row_background_color.to_html(false), dark.comment_text_color.to_html(false),
+		dark.comment_border_color.to_html(false), light.comment_row_background_color.to_html(false),
+		light.comment_text_color.to_html(false), light.comment_border_color.to_html(false)],
+		["38321f", "ede3c4", "38321f", "f7edc4", "2e2610", "f7edc4"]])
 	rows.append(["light reference: text, gutter numbers, type word, object, number, string, link", [
 		light_style.get_condition_style().text_color.to_html(false), light.gutter_text_color.to_html(false),
 		light.type_number_color.to_html(false), light.object_label_color.to_html(false), light.word_number_color.to_html(false),

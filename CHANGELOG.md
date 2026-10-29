@@ -13,7 +13,9 @@
   (base `#292929` / `#e6e6e6`): canvas `#282828` / `#e4e4e4`, event card `#383838` / `#ffffff` with a
   `#232323` / `#bdbdbd` edge, lanes `#2f3742` and `#2f3a31` / `#e9f0f8` and `#eaf4e6`, divider
   `#1e1e1e` / `#d6d6d6`, head bar `#3e3e3e` / `#d3d3d3`, sentence text `#d2d2d2` / `#0f0f0f`, type words
-  in one grey, the light hand's object, number, string and link colours, and the `#3a72b0` tab edge.
+  in one grey, the light hand's object, number, string and link colours, the comment band
+  `#38321f` with `#ede3c4` words / `#f7edc4` with `#2e2610` words and no edge of its own, and the
+  `#3a72b0` tab edge.
   The greys no longer carry the old blue cast.
 - Variable cards take their own fill and edge (`#424242` on `#2a2a2a`, `#eef7e8` on `#b7cdaa`), 28 px
   with a 4 px gap, standing on the canvas rather than on a band; an Inspector group's run sits in a
