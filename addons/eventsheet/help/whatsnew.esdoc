@@ -6,6 +6,35 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Added: the MCP server edits `.gd` sheets, works through the open editor, and edits single rows
+
+- **`.gd` sheets.** `list_sheets` lists the project's `.gd` scripts beside its `.tres` sheets (the
+  plugin's own code and the packs it ships are left out). Every editing tool takes a `.gd`: the file
+  is opened as a sheet, edited and saved - and written only when it saved back byte for byte before
+  the edit, the edited sheet compiles, and the new bytes save back byte for byte themselves.
+  Otherwise nothing is written and the answer says why. A file mid-merge or marked to stay code is
+  never edited.
+- **The open editor.** Once the EventSheets workspace is open and the MCP switch is on, the editor
+  listens on `127.0.0.1` (port and a random key in `user://eventsheets_mcp_live.json`), and the
+  server your AI client launches passes every call to it. A sheet open in a tab is read as the tab
+  holds it, unsaved edits included; an edit lands in the open tab as one undo step, named after the
+  tool, so Ctrl+Z takes it back; nothing is saved for you. With no editor answering, or with
+  `-- --no-live`, the server works on the files as before. Turning the switch off closes the link.
+- **Row edits.** `read_sheet` gives every row an address (`\"3\"`, `\"3/0\"`), and `.gd` rows the file
+  lines they are written on. `apply_snippet` takes `parent` and `position` to insert inside an event
+  or group; `edit_row` replaces a row; `delete_row` removes one.
+- **New tools.** `explain` (a file and line number to the row it opens as), `verify` (the
+  command-line contract checks on the files you name), `variable_properties` (read and set a
+  variable's export options), `comment` (add a comment, or reword one) and `rename` (a variable or
+  function, everywhere the sheet names it). The dock's MCP switch gates every one of them.
+- **Fixed: the stdio server answered nothing.** The documented launch line carried `--quiet`, which
+  in Godot 4.7 silences everything written to stdout - the answers included - so a client waited
+  forever. Launch with `--no-header` instead (the help page and the setup example say so, and a
+  launch that still carries `--quiet` says so on stderr). Two requests written together also used
+  to be read as one broken line and refused; each line is now answered, and a request id comes back
+  as it was sent (`1`, not `1.0`). The server also no longer compiles the whole editor before its
+  first answer - only `list_aces` builds it, when first asked.
+
 ### Fixed: a big sheet no longer freezes the editor a few seconds after it opens
 
 - A function's hover card names the files that call it, an answer the editor counts in the
@@ -13,7 +42,10 @@ What changed in the build you have installed (v0.18.0), in the words the release
   on a 1,443-row sheet (the platformer pathfinding pack) the editor froze for 11-13 s a few seconds
   after the file had opened, with nobody touching it. The cards are now written again in place
   (3.5 ms for 200 functions); the rows are built again only when a band about a scene was laid out
-  while the scenes were still being counted.
+  while the scenes were still being counted, or when a band asked
+  `EventSheetProjectShareIndex.request()` and was told \"not yet\" - the readiness question a custom
+  block or head band asks before it says \"counting…\", so such a band is still built again with its
+  count. `request(false)` asks without that promise, for a reader that rebuilds itself.
 
 ### Fixed: building a behaviour pack is up to fifteen times faster
 
@@ -44,17 +76,22 @@ What changed in the build you have installed (v0.18.0), in the words the release
   folders in `eventsheet_addons/`. A behaviour is still a folder: there means in use, deleted means
   gone. There is no on or off switch.
 - **The Welcome asks \"What are you making?\"** Each answer is a kit: a tag the packs carry
-  (`@ace_tags`) that at least four of them share, listing those packs by name. Nothing is copied until
-  Add and continue; Start with none is a real answer.
+  (`@ace_tags`) that at least four of them share, listing those packs by name. Each kit is titled as a
+  kind of game in the editor's language (\"A 3D game\", \"Game feel\"), never shown as its bare tag; a tag
+  with no title is not offered. Nothing is copied until Add and continue; Start with none is a real
+  answer. The kits scroll inside their card, and the scroll gives way until the whole window - title
+  bar and buttons too - fits inside the editor window and the screen.
 - **Add behaviour searches the project and the library together.** A library pack's tile says
   Library, its card lists what else it needs (read from its own `@ace_requires`) and the folder it is
   copied into, and the button reads **Add to project and attach**: the folders are copied in, Godot
   imports them and the behaviour is attached, as one undo step whose Undo takes the node out and sends
-  the copied folders to the system trash. A folder the project already holds is never overwritten.
+  the copied folders to the system trash. A folder the project already holds is never overwritten,
+  and a copy that fails part way takes back every folder it had made, so a half-copied folder is
+  never left behind to be kept as \"already in the project\".
   **All / In this project** hides the library.
 - **Remove from project…** on a behaviour the project holds sends its folder to the system trash and
   first says which sheets use it (\"Used by 2 sheets\", with the rows in each). Those rows stay as
-  written.
+  written, and they need it back to run.
 - **Tidy behaviours…** is the door on the Doctor's existing note about unused packs: every behaviour
   in the project, the unused ones ticked and the used ones locked with the files that use them.
   Everything removed stays in the library.
@@ -73,14 +110,17 @@ What changed in the build you have installed (v0.18.0), in the words the release
 - **Q with an action selected** puts the comment in that action list, right under the action - a `#`
   line between two statements - instead of a new row under the event.
 - **Right-click on an action offers Add note** (it used to say Edit Note… and open \"Row Comment\"): the
-  words after the action, saved as the comment at the end of its own line. A condition no longer
-  offers a note at all; to explain an event, put a comment row above it.
+  words after the action, saved as the comment at the end of its own line. A comment sitting among
+  the actions offers none: it is words already. A condition no longer offers a note at all; to
+  explain an event, put a comment row above it. A condition that still carries a note from an older
+  sheet offers **Remove note**, so that note can be cleared.
 - **Alt+Up / Alt+Down** move a comment that sits among an event's actions one place up or down.
 - **A comment row dropped on an event's action column** joins that action list, between the actions
   it is dropped between (a blue line shows where). Ctrl while dragging copies it.
 - **The Edit comment window shows named colours** - Default, Red, Orange, Yellow, Green, Blue, Purple
   and Grey - each worked out from the theme's own comment colour, so a comment reads right in a dark
-  theme and a light one. The free picker stays under More colours. The box reads \"Shows in the manual
+  theme and a light one, and each named in the editor's language. The free picker stays under More
+  colours. The box reads \"Shows in the manual
   (writes ##)\". A comment's colour belongs to the sheet: it is never written to the `.gd`, so the code
   stays plain and reopening the file shows the default colour.
 
@@ -96,8 +136,17 @@ What changed in the build you have installed (v0.18.0), in the words the release
   too.
 - Opening a script reads a comment written right above an `if` (or a loop) back as the comment row
   above that event, so a file saved from the sheet reopens with its comments where they were, instead
-  of as an \"Every tick\" event holding the comment. A comment above a plain statement stays with that
-  statement, as before, and every file still saves byte for byte.
+  of as an \"Every tick\" event holding the comment. A comment above a plain statement that follows another
+  event of the handler, such as `# Movement` over `var direction := ...` after a blank line, is a
+  comment row above that statement's event too, rather than the first line of its actions. A comment
+  as the first line of a handler stays the note on its first statement. Every
+  file still saves byte for byte.
+- Save As .gd from a `.tres` sheet writes each comment row above the event it sits over, the way an
+  opened `.gd` writes it, so the new file reopens with its comments in place instead of moving them all
+  to the end on the first save. A pack publish still writes them at the end, so no pack changes.
+- A file whose `_ready` reads its comments as rows is read a second time without them only when the
+  whole-file check was refused at that handler: a file refused somewhere else is no longer lifted
+  twice, which on a big hand-written file was a second full \"working out the events\".
 - An action's note is now saved: it is written as the comment at the end of the action's own line
   (`$JumpSound.play()  # short blip`), and a line written that way reopens as the action with its
   note. A `#` inside a string is not a note, and a line whose code reads as no action stays as written.

@@ -61,6 +61,7 @@ const LIVE_VALUES_PANEL_PATH := "res://addons/eventsheet/editor/dock/live_values
 const LOCAL_TOKENS_PATH := "res://addons/eventforge/local_tokens.gd"
 const LOOSE_ENDS_PANEL_PATH := "res://addons/eventsheet/editor/dock/loose_ends_panel.gd"
 const MCP_SERVER_PATH := "res://addons/eventsheet/mcp/mcp_server.gd"
+const MCP_LIVE_LINK_PATH := "res://addons/eventsheet/mcp/mcp_live_link.gd"
 const MODES_DIALOG_PATH := "res://addons/eventsheet/editor/dock/modes_dialog.gd"
 const OBJECT_PROPERTIES_PATH := "res://addons/eventsheet/editor/dock/object_properties_popup.gd"
 const OPTIMISE_DIALOG_PATH := "res://addons/eventsheet/editor/dock/optimise_dialog.gd"
@@ -1100,6 +1101,9 @@ func _ready() -> void:
 			_current_sheet = _build_blank_sheet()
 			_viewport.set_debug_overlay_states({})
 		setup(_current_sheet)
+	# The MCP live link: deferred, so the workspace's first paint does not wait for a listener.
+	if Engine.is_editor_hint() and is_inside_tree():
+		_sync_mcp_live_link.call_deferred()
 
 
 ## Editor filesystem ping: cheap fingerprint check inside; only a REAL translation-folder
@@ -1978,7 +1982,29 @@ func _toggle_mcp_server(view_popup: PopupMenu) -> void:
 	var enabled: bool = load(MCP_SERVER_PATH).is_enabled()
 	if view_popup != null:
 		view_popup.set_item_checked(view_popup.get_item_index(12), enabled)
+	_sync_mcp_live_link()
 	_set_status("MCP server (AI tools) is now %s." % ("ON" if enabled else "OFF"))
+
+
+## The MCP live link (mcp/mcp_live_link.gd): the protocol core served from this editor on
+## 127.0.0.1, so an AI client sees the open tabs as they are and edits through the undo funnel. Up
+## while the MCP switch is on, down when it is off; loaded by path, and only once it is first wanted.
+var _mcp_live_link: Node = null
+
+
+func _sync_mcp_live_link() -> void:
+	var wanted: bool = bool(load(MCP_LIVE_LINK_PATH).switched_on())
+	if wanted and _mcp_live_link == null:
+		_mcp_live_link = load(MCP_LIVE_LINK_PATH).new()
+		_mcp_live_link.name = "MCPLiveLink"
+		_mcp_live_link.call("init", self)
+		add_child(_mcp_live_link)
+	if _mcp_live_link == null:
+		return
+	if wanted:
+		_mcp_live_link.call("start")
+	else:
+		_mcp_live_link.call("stop")
 
 
 ## Extract Selection to Include: moves the selected top-level events into a NEW library sheet
