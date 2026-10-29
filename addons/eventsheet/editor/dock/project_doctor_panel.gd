@@ -71,7 +71,9 @@ func _build() -> void:
 	_summary_label = Label.new()
 	box.add_child(_summary_label)
 	_doctor_tree = inbox_tree()
-	_doctor_tree.item_selected.connect(_on_finding_selected)
+	# Deferred: a Tree refuses to create items while it is handling the click that selected one, so
+	# the fix and Learn more rows under a finding are built once that click is over.
+	_doctor_tree.item_selected.connect(_on_finding_selected, CONNECT_DEFERRED)
 	_doctor_tree.item_mouse_selected.connect(func(_at: Vector2, _button: int) -> void:
 		_apply_fix_row(_doctor_tree.get_selected()))
 	# A finding is a destination, not just a report line: double-click (or Enter) opens the sheet.
@@ -188,6 +190,7 @@ func _on_finding_selected() -> void:
 	learn_row.set_custom_color(3, EventSheetPopupUI.accent_color())
 	learn_row.set_tooltip_text(3, EventSheetL10n.translate("Opens the Manual on the page that explains this finding and its fix."))
 	learn_row.set_metadata(2, learn)
+	item.collapsed = false
 
 
 ## Where a finding's Learn more goes: {doc_id, anchor, title}, or {} when the Manual has nothing

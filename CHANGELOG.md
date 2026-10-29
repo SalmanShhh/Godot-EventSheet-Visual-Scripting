@@ -64,11 +64,15 @@
 - **F1, Ctrl+F1 and Ctrl+P reach the sheet.** Godot's own shortcuts were answered first, so F1 on a
   selected row opened Search Help, Ctrl+F1 switched to the 2D screen and Ctrl+P opened Quick Open.
   While the keyboard is inside the sheet editor, the sheet's keys are now asked first; anywhere else
-  the editor's keys are untouched.
+  the editor's keys are untouched. F1 answers for the cell you clicked: the condition, not the
+  event's trigger.
 - **The picker's status line says where a guide opened.** "Open the Platformer guide" said "Opened in
   your browser" even when the guide opened in the Manual; it now says "in the Manual" or "in your
   browser", whichever happened.
-- **The contents group "Coming from Construct 3" is now "Coming from another event-sheet editor"**,
+- **A Project Doctor finding lists its fixes again.** Selecting a finding built its fix rows while
+  the list was still handling the click, which Godot refuses, so in the editor no fix row (and no
+  Learn more) ever appeared under a finding. The rows are now built once the click is over.
+- **The contents group named for another product is now "Coming from another event-sheet editor"**,
   as the Welcome window already says.
 
 ### New: more ways into the Manual
@@ -77,14 +81,16 @@
   select. The dock existed, but nothing in the plugin opened it. With it showing, every door sends
   its page there instead of opening a window; the item is ticked while it shows and puts it away
   when chosen again.
-- **The ? on a picker section heading** (Time, Input, Math & Random ...) opens the Manual's page for
-  that whole group of words, the vocabulary module guide. The picker stays open.
+- **The ? on a picker section heading** opens the Manual's page for that whole group of words: the
+  vocabulary module guide for a built-in section (Time, Input, Math & Random ...), the behaviour's
+  guide for a behaviour's section (Platformer, FPS Controller ...). The picker stays open.
 - **Read the guide in Add behaviour.** The selected behaviour's name, then Read the guide, over its
   properties - for a pack in the project and for one still in the library - and on a pack's
   right-click menu. The window stays open behind the guide.
 - **Learn more on a Project Doctor finding.** Selecting a finding lists, under its fixes, the Manual
-  page that names its check, at the heading over that mention. A check no page explains has no
-  Learn more rather than a guess.
+  page that names its check, at the heading over that mention, or the "What the Doctor says"
+  section of the guide about its subject. A check no page explains has no Learn more rather than a
+  guess.
 - **A behaviour's page offers Add to project** at its top when the behaviour waits in the plugin's
   library and the project does not hold it yet; it opens Add behaviour on that pack.
 - **The Manual's home page** is two short rows of doors - Start here (Your first platformer, A

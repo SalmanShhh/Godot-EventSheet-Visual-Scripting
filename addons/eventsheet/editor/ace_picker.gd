@@ -2773,11 +2773,11 @@ func _add_help_button(item: TreeItem, definition: ACEDefinition) -> void:
 func _on_tree_button_clicked(item: TreeItem, _column: int, id: int, mouse_button_index: int) -> void:
 	if id != HELP_BUTTON_ID or mouse_button_index != MOUSE_BUTTON_LEFT or item == null:
 		return
-	var definition: ACEDefinition = item.get_metadata(0) as ACEDefinition
-	if definition != null:
-		help_requested.emit(definition)
-		return
 	var marker: Variant = item.get_metadata(0)
+	# A heading's metadata is a marker Dictionary, never a definition, so it is asked what it IS first.
+	if marker is ACEDefinition:
+		help_requested.emit(marker as ACEDefinition)
+		return
 	if marker is Dictionary and (marker as Dictionary).has("section"):
 		var doc_id: String = section_doc_id(str((marker as Dictionary)["section"]))
 		if not doc_id.is_empty():

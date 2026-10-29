@@ -4844,6 +4844,12 @@ func _selected_row_doc_id() -> String:
 	for row_data: EventRowData in _viewport.get_selected_rows():
 		if row_data == null:
 			continue
+		# A clicked condition, action or trigger answers with its own page, not its object's: F1 on
+		# the words "Is on floor" asks about Is on floor. A click on the object label still asks about
+		# the object, and the router below answers that.
+		var verb_page: String = _clicked_verb_doc_id(row_data)
+		if not verb_page.is_empty():
+			return verb_page
 		# The whole selection is offered, not only its verb: an object label, a group band and a
 		# behavior's Include bar each have their own page, and one router decides which.
 		var doc_id: String = load(DOC_HELP_TARGET_PATH).doc_id_for(_current_sheet,
@@ -4853,12 +4859,31 @@ func _selected_row_doc_id() -> String:
 	return ""
 
 
+## The page of the condition, action or trigger whose words the reader clicked in `row_data`, or ""
+## when the clicked cell is not a verb's words (an object label, nothing clicked, another row).
+func _clicked_verb_doc_id(row_data: EventRowData) -> String:
+	var clicked: SemanticSpan = _viewport.get_selected_span() if _viewport != null else null
+	if clicked == null or not row_data.spans.has(clicked) or not (clicked.metadata is Dictionary):
+		return ""
+	var metadata: Dictionary = clicked.metadata as Dictionary
+	if not (str(metadata.get("kind", "")) in ["condition", "action", "trigger"]):
+		return ""
+	if str(clicked.text).strip_edges() == str(metadata.get("object_label", "")).strip_edges():
+		return ""
+	return str(load(DOC_EXPLAIN_PATH).doc_id_for_row(row_data.source_resource, metadata))
+
+
 ## The span metadata F1 answers from. A click has one (the exact condition, the object label that
 ## was pointed at); a KEY does not, so the row's own leading object label stands in - which is what
 ## a reader pressing F1 on a row about the player means by "this".
 func _selection_span_metadata(row_data: EventRowData) -> Dictionary:
 	if row_data == null:
 		return {}
+	# The cell the reader clicked answers first: F1 on the third condition is help for that condition.
+	var clicked: SemanticSpan = _viewport.get_selected_span() if _viewport != null else null
+	if clicked != null and row_data.spans.has(clicked) and clicked.metadata is Dictionary \
+			and not (clicked.metadata as Dictionary).is_empty():
+		return clicked.metadata as Dictionary
 	for span: SemanticSpan in row_data.spans:
 		# A span's metadata is a Variant and is routinely null, so it is asked what it IS before it
 		# is asked anything else.
