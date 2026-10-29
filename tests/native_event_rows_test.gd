@@ -78,7 +78,7 @@ static func _test_tokens() -> bool:
 			[16, 114, 114, 1, 1, 1]],
 		["the action lane is the card tinted green, never toward yellow",
 			[starter.action_lane_color.to_html(false), rule.get_event_style().action_lane_color.to_html(false)],
-			["354838", "354838"]],
+			["2f3a31", "2f3a31"]],
 		["every other shipped theme states them off", [others >= 11, all_off], [true, true]],
 	])
 

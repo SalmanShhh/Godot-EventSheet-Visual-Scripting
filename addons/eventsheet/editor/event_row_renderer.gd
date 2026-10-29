@@ -51,8 +51,8 @@ const SWATCH_MIN_BOX := 8.0
 const SWATCH_FONT_RATIO := 0.7
 # The rule down the left edge of a variable row, in logical pixels.
 const VARIABLE_ROW_RULE_WIDTH := 2.0
-## How much of a variable card's row the card fills: 28 px of the 34 the row takes, the rest the gap.
-const VARIABLE_CARD_FILL := 28.0 / 34.0
+## How much of a variable card's row the card fills: 28 px of the 32 the row takes, the rest the gap.
+const VARIABLE_CARD_FILL := 28.0 / 32.0
 ## How much of the variable rule's colour a block-closing hairline keeps - a whisper of the same
 ## lilac, so the break reads without competing with the rows it separates.
 const BLOCK_HAIRLINE_ALPHA := 0.45
@@ -724,6 +724,10 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		control.draw_rect(row_rect, section_fill(event_style, alternating), true)
 		NativeHeadMarks.draw_rounded_bar(control, row_rect, row_data.custom_color,
 			row_data.outline_color, row_data.outline_radius, row_data.outline_width)
+	elif row_data.variable_card and event_style != null and event_style.variable_card_fill_color.a > 0.01:
+		# A card in a theme that states its own card colour stands on what is under the row - the
+		# canvas, or its group's box - so the gap between two cards reads as that, not as a band.
+		pass
 	else:
 		var section_bg: Color = section_fill(event_style, alternating)
 		# A row may carry a faint role tint (a published-verb Define row washed by its ACE kind): blend it
@@ -2212,19 +2216,21 @@ func _draw_variable_row_wash(control: Control, row_rect: Rect2, reading: EventSh
 	)
 
 
-## A variable row as its own card (variable_row_cards): the event card's fill and one-pixel edge with
-## its corner radius, inset top and bottom by half the gap so two cards stand apart. One StyleBoxFlat
-## per colour set, so a frame allocates nothing.
+## A variable row as its own card (variable_row_cards): the theme's variable card fill and one-pixel
+## edge (the event card's where the theme leaves them clear) with its corner radius, inset top and
+## bottom by half the gap so two cards stand apart. One StyleBoxFlat per colour set, so a frame
+## allocates nothing.
 func _draw_variable_card(control: Control, row_rect: Rect2, event_style: EventSheetEventStyle) -> void:
 	var gap: float = row_rect.size.y * (1.0 - VARIABLE_CARD_FILL) * 0.5
 	var card: Rect2 = Rect2(row_rect.position + Vector2(0.0, gap), Vector2(row_rect.size.x, row_rect.size.y - gap * 2.0))
-	var key: String = "%s/%s/%d" % [event_style.row_background_color.to_html(), event_style.row_border_color.to_html(),
-		event_style.event_corner_radius]
+	var fill: Color = EventSheetEventStyle.stated_or(event_style.variable_card_fill_color, event_style.row_background_color)
+	var edge: Color = EventSheetEventStyle.stated_or(event_style.variable_card_border_color, event_style.row_border_color)
+	var key: String = "%s/%s/%d" % [fill.to_html(), edge.to_html(), event_style.event_corner_radius]
 	var box: StyleBoxFlat = _variable_card_boxes.get(key)
 	if box == null:
 		box = StyleBoxFlat.new()
-		box.bg_color = event_style.row_background_color
-		box.border_color = event_style.row_border_color
+		box.bg_color = fill
+		box.border_color = edge
 		box.set_border_width_all(1)
 		box.set_corner_radius_all(event_style.event_corner_radius)
 		box.anti_aliasing = false

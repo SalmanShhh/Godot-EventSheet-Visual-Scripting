@@ -49,6 +49,9 @@ static func duplicate_style(base_style: EventSheetEditorStyle) -> EventSheetEdit
 	style.ensure_defaults()
 	if base_style != null:
 		return style
+	# In the editor that default is Editor Native followed onto the editor's base colour.
+	if EventSheetEditorThemeDeriver.running_editor_base().a > 0.0:
+		return EventSheetEditorThemeDeriver.default_style().duplicate(true) as EventSheetEditorStyle
 	return EventSheetThemeDerivation.fill_derived_tokens(EventSheetGodotTheme.adapt_to_editor(style))
 
 
@@ -201,6 +204,11 @@ const _TOKEN_DESCRIPTIONS := {
 	"group_row_height": "Height of a group header bar, in pixels - double an event row by default; lower it for the classic slim bar.",
 	"inspector_variable_rows": "Draw a variable row the way the Inspector lists a property: its type, its name exactly as the code writes it, its value and its ## description, with its attributes as icon tiles - no scope word, no kind mark and no code.",
 	"variable_row_cards": "Draw each Inspector-style variable row as its own small card - the event card's fill and edge, with a gap to the next - instead of the flat variable wash.",
+	"variable_card_fill_color": "The fill of a variable card. Clear uses the event card's fill.",
+	"variable_card_border_color": "The one-pixel edge of a variable card. Clear uses the event card's edge.",
+	"variable_group_fill_color": "The box behind a run of variables in one Inspector group. Clear keeps the faint tint over the rows.",
+	"variable_group_border_color": "The edge of that box. Clear keeps the folder outline.",
+	"variable_group_corner_radius": "How round that box's corners are.",
 	"hide_compiler_variables": "Leave the bookkeeping variables the compiler writes out of the variable rows: every name starting with two underscores, an author's own included. They still compile and save.",
 	"fold_compiler_helpers": "Inside events, stop showing the compiler's two-underscore bookkeeping names: a scene copy kept in such a local is named by its scene file, the line that adds it reads Spawn, its local's row folds into that, and rows that only keep a hidden member up to date fold away. They still compile and save.",
 	"pattern_in_help_strip": "Leave the pattern chip (Making an object and putting it somewhere) out of the conditions lane, and say the pattern in the help strip when its event is selected, with a door to its Manual page.",

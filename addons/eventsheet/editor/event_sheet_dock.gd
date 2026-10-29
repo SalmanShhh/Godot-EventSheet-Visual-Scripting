@@ -5318,12 +5318,14 @@ func _move_action_comment(event: EventRow, index: int, direction: int) -> void:
 func _apply_editor_native_defaults() -> void:
 	if not Engine.is_editor_hint() or _viewport == null:
 		return
-	# The active style lives on EventSheetThemeManager now; read it through the getter to decide
-	# whether to derive the "Match Editor" default (apply_theme_style is the dock's delegate below).
-	if _theme_manager.get_active_theme_style() == null:
-		var derived: EventSheetEditorStyle = EventSheetEditorThemeDeriver.derive_from_editor()
-		if derived != null:
-			apply_theme_style(derived)
+	# A sheet with no theme of its own is painted with the default the viewport resolves at every
+	# seat (Editor Native moved onto the editor's base colour), so a new editor theme only needs the
+	# sheet re-seated - never a theme written onto the sheet, which would mark it unsaved and pin the
+	# old colours to it. The active style lives on EventSheetThemeManager; read it through the getter.
+	if _theme_manager.get_active_theme_style() == null and _current_sheet != null:
+		_viewport.set_sheet(_current_sheet)
+		if _menu_bar != null:
+			_menu_bar.apply_theme_chrome()
 
 
 # ── Quick-add bar ("type to insert", and to ASK) - bodies in EventSheetAuthorActions

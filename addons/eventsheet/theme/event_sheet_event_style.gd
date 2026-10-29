@@ -159,9 +159,19 @@ extends Resource
 ## is wrong. Drawing only. Off keeps the chip at the end of the event's first condition line.
 @export var pattern_in_help_strip: bool = false
 ## Each Inspector-style variable row as its own card: the event card's fill and one-pixel edge with
-## its corner radius, 28 px tall with a 6 px gap to the next, in place of the flat variable wash and
+## its corner radius, 28 px tall with a 4 px gap to the next, in place of the flat variable wash and
 ## its left rule. Drawing only - the row's words do not move. Off keeps the flat washed row.
 @export var variable_row_cards: bool = false
+## The fill and the one-pixel edge of a variable card (variable_row_cards). Clear draws the card in
+## the event card's own fill and edge, as before.
+@export var variable_card_fill_color: Color = Color(0.0, 0.0, 0.0, 0.0)
+@export var variable_card_border_color: Color = Color(0.0, 0.0, 0.0, 0.0)
+## The box round a run of variables in one Inspector group: its fill under the rows, its one-pixel
+## edge and its corner radius. A clear fill keeps the faint tint drawn over the rows, a clear edge the
+## folder outline, as before.
+@export var variable_group_fill_color: Color = Color(0.0, 0.0, 0.0, 0.0)
+@export var variable_group_border_color: Color = Color(0.0, 0.0, 0.0, 0.0)
+@export_range(0, 16, 1) var variable_group_corner_radius: int = 7
 ## The sheet's head as the Inspector heads a script: ONE class head card - the class icon, the name
 ## in bold, the kind of file, "· extends" and the base in the faint colour, the share mark and who
 ## includes a shared sheet, and the attached scene at the right - with no code echo, no "change…"

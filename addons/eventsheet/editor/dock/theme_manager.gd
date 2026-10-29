@@ -268,7 +268,7 @@ func _on_density_preset_selected(index: int) -> void:
 	style = (
 		style.duplicate(true) as EventSheetEditorStyle
 		if style != null
-		else EventSheetGodotTheme.adapt_to_editor(EventSheetEditorStyle.new())
+		else EventSheetEditorThemeDeriver.default_style().duplicate(true) as EventSheetEditorStyle
 	)
 	(loaded as EventSheetDensityStyle).apply_to(style)
 	_dock._current_sheet.editor_style = style

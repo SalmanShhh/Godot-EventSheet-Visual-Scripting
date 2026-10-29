@@ -208,6 +208,11 @@ tooltip_badge_foreground_color = Color(1, 0.8784314, 0.4, 1)
 tooltip_badge_background_color = Color(0.25490198, 0.23137255, 0.13725491, 1)
 saved_badge_foreground_color = Color(0.54901963, 1, 0.61960787, 1)
 saved_badge_background_color = Color(0.16470589, 0.25490198, 0.18039216, 1)
+variable_card_fill_color = Color(0, 0, 0, 0)
+variable_card_border_color = Color(0, 0, 0, 0)
+variable_group_fill_color = Color(0, 0, 0, 0)
+variable_group_border_color = Color(0, 0, 0, 0)
+variable_group_corner_radius = 7
 
 [sub_resource type="Resource" id="Resource_e2mpa"]
 script = ExtResource("4_rphpx")

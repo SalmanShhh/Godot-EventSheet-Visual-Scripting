@@ -71,9 +71,9 @@ const HEAD_BAND_UID_PREFIX := "sheet_head_"
 ## little taller than a row.
 const INCLUDE_BAR_RADIUS := 16.0
 const INCLUDE_BAR_HEIGHT_SCALE := 1.3
-## A variable card's row (variable_row_cards): the 28 px card and the 6 px gap under it, over the
+## A variable card's row (variable_row_cards): the 28 px card and the 4 px gap under it, over the
 ## 24 px line the row would otherwise take.
-const VARIABLE_CARD_ROW_SCALE := (28.0 + 6.0) / 24.0
+const VARIABLE_CARD_ROW_SCALE := (28.0 + 4.0) / 24.0
 
 ## The `@tool` band's switch, drawn as a mark in the badge column at the variable badge's width.
 ## A group head wears the same pair, because it is the same fact: this line is on, or it is not.

@@ -2,6 +2,30 @@
 
 ## [Unreleased]
 
+### Changed: a fresh install draws Editor Native, in the boards' own colours
+
+- A sheet with no theme of its own now wears Editor Native, moved onto the running editor's greys,
+  instead of the older editor-derived look. That is what a fresh install, the Welcome's default
+  answer and View > Sheet theme > Match Editor (default) now draw. A sheet that chose a theme keeps
+  it, and re-skinning on an editor theme change re-seats the sheet instead of writing a theme onto
+  it, so opening a sheet or switching the editor's theme never marks it unsaved.
+- Editor Native's palette is now the design's, measured at Godot's own Default and Light presets
+  (base `#292929` / `#e6e6e6`): canvas `#282828` / `#e4e4e4`, event card `#383838` / `#ffffff` with a
+  `#232323` / `#bdbdbd` edge, lanes `#2f3742` and `#2f3a31` / `#e9f0f8` and `#eaf4e6`, divider
+  `#1e1e1e` / `#d6d6d6`, head bar `#3e3e3e` / `#d3d3d3`, sentence text `#d2d2d2` / `#0f0f0f`, type words
+  in one grey, the light hand's object, number, string and link colours, and the `#3a72b0` tab edge.
+  The greys no longer carry the old blue cast.
+- Variable cards take their own fill and edge (`#424242` on `#2a2a2a`, `#eef7e8` on `#b7cdaa`), 28 px
+  with a 4 px gap, standing on the canvas rather than on a band; an Inspector group's run sits in a
+  `#333333` / `#efefef` box with a `#555555` / `#a9a9a9` edge and 4 px corners instead of the lavender
+  outline; events stand 8 px apart.
+- Editor Native draws the ordinary strip (Menu, the save and undo icons, Run Scene, the quick-add
+  field) with the open sheets' tabs under it, as the boards do; View > Text labels still lays it out
+  as words for anyone who wants that.
+- New theme tokens, clear (as before) in every other bundled theme: `variable_card_fill_color`,
+  `variable_card_border_color`, `variable_group_fill_color`, `variable_group_border_color` and
+  `variable_group_corner_radius`.
+
 ### Added: the MCP server edits `.gd` sheets, works through the open editor, and edits single rows
 
 - **`.gd` sheets.** `list_sheets` lists the project's `.gd` scripts beside its `.tres` sheets (the

@@ -175,6 +175,10 @@ tooltip_badge_foreground_color = Color(0.47843137, 0.3647059, 0, 1)
 tooltip_badge_background_color = Color(0.9372549, 0.8784314, 0.7137255, 1)
 saved_badge_foreground_color = Color(0.35686275, 0.4117647, 0, 1)
 saved_badge_background_color = Color(0.8980392, 0.8901961, 0.7137255, 1)
+variable_card_fill_color = Color(0, 0, 0, 0)
+variable_card_border_color = Color(0, 0, 0, 0)
+variable_group_fill_color = Color(0, 0, 0, 0)
+variable_group_border_color = Color(0, 0, 0, 0)
 
 [sub_resource type="Resource" id="Resource_5y1iu"]
 script = ExtResource("4_th4rs")

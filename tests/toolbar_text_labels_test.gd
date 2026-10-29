@@ -8,8 +8,10 @@
 #
 # Pinned here as values:
 #   1. Nobody chose and the theme says nothing: the icon-led strip, untouched.
-#   2. A sheet wearing the Editor Native starter opens on text labels, in this order and with these
-#      faces, and its open tab wears the starter's accent edge as a two-pixel top border.
+#   2. A sheet wearing a theme that asks for text labels (the Editor Native starter with its switch
+#      on - the starter itself draws the ordinary strip, as the boards do) opens on them, in this
+#      order and with these faces, and its open tab wears the starter's accent edge as a two-pixel
+#      top border.
 #   3. The reader's own choice wins over the theme, and taking text labels off puts back exactly
 #      the faces the strip was built with.
 #   4. A theme with a clear edge leaves the tab bar's own style alone.
@@ -52,8 +54,8 @@ static func _test_nobody_chose_and_the_theme_is_quiet() -> bool:
 	EventSheetActiveTheme.publish(null)
 	var editor: EventSheetEditor = _editor(null)
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
-		["the starter file asks for text labels",
-			(load(STARTER_PATH) as EventSheetEditorStyle).toolbar_text_labels, true],
+		["the starter file draws the ordinary strip, as the boards do",
+			(load(STARTER_PATH) as EventSheetEditorStyle).toolbar_text_labels, false],
 		["Classic Sheet does not", (load(CLASSIC_PATH) as EventSheetEditorStyle).toolbar_text_labels, false],
 		["with no theme the strip is icon-led", editor._menu_bar.text_labels(), false],
 		["and rests exactly as it did", _visible_row(editor), _as_strings(ICON_ROW)],
@@ -66,13 +68,13 @@ static func _test_nobody_chose_and_the_theme_is_quiet() -> bool:
 
 
 static func _test_the_starter_opens_on_words() -> bool:
-	var editor: EventSheetEditor = _editor(load(STARTER_PATH) as EventSheetEditorStyle)
+	var editor: EventSheetEditor = _editor(_worded_starter())
 	var add_event: Button = _button(editor, "Add Event")
 	var add_condition: Button = _button(editor, "Add Condition")
 	var save: Button = _button(editor, "EventSheetSaveButton")
 	var edge: StyleBoxFlat = editor._tab_bar.get_theme_stylebox("tab_selected") as StyleBoxFlat
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
-		["a sheet wearing Editor Native opens on text labels", editor._menu_bar.text_labels(), true],
+		["a sheet whose theme asks opens on text labels", editor._menu_bar.text_labels(), true],
 		["the strip reads as words, in this order", _visible_row(editor), _as_strings(TEXT_ROW)],
 		["the Menu reads Sheet", _button(editor, "EventSheetMenu").text, "Sheet ▾"],
 		["but is still the Menu to anything that names it",
@@ -105,14 +107,14 @@ static func _test_the_starter_opens_on_words() -> bool:
 		["in the starter's accent", edge.border_color if edge != null else Color(),
 			EventSheetActiveTheme.chrome().active_tab_edge_color],
 		["which is the design's blue", EventSheetActiveTheme.chrome().active_tab_edge_color,
-			Color("#3a79bb")],
+			Color("#3a72b0")],
 	])
 	editor.free()
 	return ok
 
 
 static func _test_the_readers_choice_wins() -> bool:
-	var editor: EventSheetEditor = _editor(load(STARTER_PATH) as EventSheetEditorStyle)
+	var editor: EventSheetEditor = _editor(_worded_starter())
 	editor._menu_bar.set_text_labels(false)
 	# A theme republish (a tab switch, a theme edit) must not take the reader's choice back.
 	editor._menu_bar.apply_theme_chrome()
@@ -139,7 +141,7 @@ static func _test_the_readers_choice_wins() -> bool:
 
 
 static func _test_a_clear_edge_leaves_the_tab_alone() -> bool:
-	var editor: EventSheetEditor = _editor(load(STARTER_PATH) as EventSheetEditorStyle)
+	var editor: EventSheetEditor = _editor(_worded_starter())
 	var had_edge: bool = editor._tab_bar.has_theme_stylebox_override("tab_selected")
 	# Every bundled theme now draws the edge in its own accent, so the clear case is a Classic Sheet
 	# whose designer cleared it.
@@ -186,6 +188,13 @@ static func _test_the_sentences_menu() -> bool:
 
 ## The names of the strip's visible children, in order - a button that has no name of its own is
 ## read by the words it was built with.
+## The Editor Native starter with its Text labels switch on.
+static func _worded_starter() -> EventSheetEditorStyle:
+	var style: EventSheetEditorStyle = (load(STARTER_PATH) as EventSheetEditorStyle).duplicate(true)
+	style.toolbar_text_labels = true
+	return style
+
+
 static func _visible_row(editor: EventSheetEditor) -> PackedStringArray:
 	var names: PackedStringArray = PackedStringArray()
 	for child: Node in editor._toolbar.get_children():

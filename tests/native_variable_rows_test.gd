@@ -133,9 +133,9 @@ static func _test_native_rows() -> bool:
 			str(speed_name.metadata.get("hover_note", "")).contains(EventSheetVariableSentence.scope_word(
 				EventSheetVariableSentence.SCOPE_INSTANCE)), true],
 		["the compiler's bookkeeping member is not listed", _row_named(viewport, "__every_tick") == null, true],
-		["each row is its own card: 28 px and a 6 px gap over the 24 px line",
+		["each row is its own card: 28 px and a 4 px gap over the 24 px line",
 			[_row_named(viewport, "open_speed").variable_card, _row_named(viewport, "open_speed").height_scale],
-			[true, 34.0 / 24.0]],
+			[true, 32.0 / 24.0]],
 	])
 	viewport.free()
 	return ok

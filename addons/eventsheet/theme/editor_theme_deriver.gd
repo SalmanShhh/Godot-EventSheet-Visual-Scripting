@@ -14,54 +14,65 @@
 class_name EventSheetEditorThemeDeriver
 extends RefCounted
 
-## The editor base colour the Editor Native starter file was built at (the classic dark Godot
-## base), and the light one its light hand is measured from. At either base the sheet wears the
-## design palette exactly; any other base shifts the greys by how far the editor moved.
-const NATIVE_DARK_REFERENCE_BASE := Color("#363d4a")
-const NATIVE_LIGHT_REFERENCE_BASE := Color("#e0e2e7")
+## The editor base colour the Editor Native starter file was built at (the base of Godot's own
+## Default dark preset), and the light one its light hand is measured from (the Light preset's). At
+## either base the sheet wears the design palette exactly; any other base shifts the greys by how
+## far the editor moved.
+const NATIVE_DARK_REFERENCE_BASE := Color("#292929")
+const NATIVE_LIGHT_REFERENCE_BASE := Color("#e6e6e6")
 ## How far the sheet's canvas sits from the editor base: darker in a dark editor, lighter in a
 ## light one - the step Godot itself takes from its base colour to the panels inside it.
 const NATIVE_CANVAS_STEP := 0.3
 
-## The greys of the Editor Native look, dark hand then light. Each is drawn at the reference base
-## and moves with the editor's canvas: an editor a little darker than the reference gets every one
-## of these a little darker, so the steps between them - card on canvas, divider on card - survive. The two lanes are
-## not greys: native_lane() tints them from the card.
+## The greys of the Editor Native look, dark hand then light - the design's own values at the
+## reference base. Each moves with the editor's canvas: an editor a little darker than the reference
+## gets every one of these a little darker, so the steps between them - card on canvas, divider on
+## card - survive. The two lane tints ride along, so a lane keeps the blue or green it has on the
+## card whatever grey the editor is; the variable cards are the design's own grey, a step lighter
+## than an event card, with their own edge.
 const NATIVE_GREYS_DARK := {
-	"sheet_background_color": Color("#262b33"),
-	"row_background_color": Color("#2e343e"),
-	"row_background_alt_color": Color("#2e343e"),
-	"row_border_color": Color("#1b1f25"),
-	"lane_divider_color": Color("#22272e"),
-	"group_background_color": Color("#38404c"),
-	"group_background_alt_color": Color("#38404c"),
-	"group_accent_color": Color("#55606e"),
-	"group_badge_background_color": Color("#22272e"),
-	"group_fold_background_color": Color("#2e343e"),
-	"column_header_background_color": Color("#2c323b"),
-	"gutter_background_color": Color("#2e343e"),
-	"gutter_text_color": Color("#8c94a0"),
-	"gutter_icon_color": Color("#b0b7c2"),
-	"object_hairline_color": Color("#454d59"),
-	"verb_chip_background_color": Color("#323944"),
+	"sheet_background_color": Color("#282828"),
+	"row_background_color": Color("#383838"),
+	"row_background_alt_color": Color("#383838"),
+	"row_border_color": Color("#232323"),
+	"lane_divider_color": Color("#1e1e1e"),
+	"condition_lane_color": Color("#2f3742"),
+	"action_lane_color": Color("#2f3a31"),
+	"variable_card_fill_color": Color("#424242"),
+	"variable_card_border_color": Color("#2a2a2a"),
+	"group_background_color": Color("#333333"),
+	"group_background_alt_color": Color("#333333"),
+	"group_accent_color": Color("#555555"),
+	"group_badge_background_color": Color("#1e1e1e"),
+	"group_fold_background_color": Color("#383838"),
+	"column_header_background_color": Color("#383838"),
+	"gutter_background_color": Color("#383838"),
+	"gutter_text_color": Color("#8c8c8c"),
+	"gutter_icon_color": Color("#b0b0b0"),
+	"object_hairline_color": Color("#4a4a4a"),
+	"verb_chip_background_color": Color("#3a3a3a"),
 }
 const NATIVE_GREYS_LIGHT := {
-	"sheet_background_color": Color("#e9ebee"),
+	"sheet_background_color": Color("#e4e4e4"),
 	"row_background_color": Color("#ffffff"),
 	"row_background_alt_color": Color("#ffffff"),
-	"row_border_color": Color("#c3c8cf"),
-	"lane_divider_color": Color("#dde1e6"),
-	"group_background_color": Color("#dce6f0"),
-	"group_background_alt_color": Color("#dce6f0"),
-	"group_accent_color": Color("#a9b8c7"),
-	"group_badge_background_color": Color("#dde1e6"),
+	"row_border_color": Color("#bdbdbd"),
+	"lane_divider_color": Color("#d6d6d6"),
+	"condition_lane_color": Color("#e9f0f8"),
+	"action_lane_color": Color("#eaf4e6"),
+	"variable_card_fill_color": Color("#eef7e8"),
+	"variable_card_border_color": Color("#b7cdaa"),
+	"group_background_color": Color("#efefef"),
+	"group_background_alt_color": Color("#efefef"),
+	"group_accent_color": Color("#a9a9a9"),
+	"group_badge_background_color": Color("#d6d6d6"),
 	"group_fold_background_color": Color("#ffffff"),
-	"column_header_background_color": Color("#dcdfe3"),
+	"column_header_background_color": Color("#ffffff"),
 	"gutter_background_color": Color("#ffffff"),
-	"gutter_text_color": Color("#555b63"),
-	"gutter_icon_color": Color("#444a52"),
-	"object_hairline_color": Color("#d2d6dc"),
-	"verb_chip_background_color": Color("#dfe2e6"),
+	"gutter_text_color": Color("#404040"),
+	"gutter_icon_color": Color("#414141"),
+	"object_hairline_color": Color("#d6d6d6"),
+	"verb_chip_background_color": Color("#e4e4e4"),
 }
 
 ## The colours of the Editor Native look: fixed per hand, never shifted, because a string's orange
@@ -94,15 +105,15 @@ const NATIVE_COLOURS_DARK := {
 	"ace_expression_badge_background_color": EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_BG,
 	"ace_expression_accent_color": EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_FG,
 	"verb_chip_foreground_color": Color("#b4bac4"),
-	"type_number_color": Color("#a6d18f"),
-	"type_text_color": Color("#e3b47e"),
-	"type_bool_color": Color("#8ec3f2"),
-	"type_vector_color": Color("#7fe3d3"),
-	"type_color_color": Color("#f0a6c8"),
-	"type_object_color": Color("#b9c9da"),
-	"type_enum_color": Color("#ffd27a"),
-	"type_collection_color": Color("#c9a6ff"),
-	"type_class_color": Color("#c2b4d6"),
+	"type_number_color": Color("#d0d0d0"),
+	"type_text_color": Color("#d0d0d0"),
+	"type_bool_color": Color("#d0d0d0"),
+	"type_vector_color": Color("#d0d0d0"),
+	"type_color_color": Color("#d0d0d0"),
+	"type_object_color": Color("#d0d0d0"),
+	"type_enum_color": Color("#d0d0d0"),
+	"type_collection_color": Color("#d0d0d0"),
+	"type_class_color": Color("#d0d0d0"),
 	"word_variable_color": Color("#8ec3f2"),
 	"word_text_color": Color("#e3b47e"),
 	"word_number_color": Color("#a6d18f"),
@@ -131,7 +142,7 @@ const NATIVE_COLOURS_DARK := {
 const NATIVE_COLOURS_LIGHT := {
 	"trigger_badge_background_color": Color("#2b6fd6"),
 	"trigger_badge_foreground_color": Color("#ffffff"),
-	"group_title_color": Color("#0f2a45"),
+	"group_title_color": Color("#091a2c"),
 	"group_badge_foreground_color": Color("#3f444a"),
 	"comment_row_background_color": Color("#fff6c7"),
 	"comment_text_color": Color("#4a3c00"),
@@ -145,8 +156,8 @@ const NATIVE_COLOURS_LIGHT := {
 	"invert_marker_color": Color("#b42318"),
 	"trigger_mark_color": Color("#22700e"),
 	"behaviour_name_color": Color("#7a4300"),
-	"object_label_color": Color("#1f4870"),
-	"value_highlight_color": Color("#2c681c"),
+	"object_label_color": Color("#1d4369"),
+	"value_highlight_color": Color("#1f4a14"),
 	"behavior_accent_color": Color("#584a70"),
 	"language_block_accent_color": Color("#afa6bd"),
 	"ace_action_badge_background_color": Color("#b9e2a8"),
@@ -156,18 +167,18 @@ const NATIVE_COLOURS_LIGHT := {
 	"ace_expression_badge_background_color": Color("#d6c2f2"),
 	"ace_expression_accent_color": Color("#401c78"),
 	"verb_chip_foreground_color": Color("#3f444a"),
-	"type_number_color": Color("#2c681c"),
-	"type_text_color": Color("#8a4a0c"),
-	"type_bool_color": Color("#17508f"),
-	"type_vector_color": Color("#0e5a52"),
-	"type_color_color": Color("#8e2457"),
-	"type_object_color": Color("#1f4870"),
-	"type_enum_color": Color("#7a4e00"),
-	"type_collection_color": Color("#5b2da8"),
-	"type_class_color": Color("#584a70"),
-	"word_variable_color": Color("#17508f"),
-	"word_text_color": Color("#8a4a0c"),
-	"word_number_color": Color("#2c681c"),
+	"type_number_color": Color("#2a2a2a"),
+	"type_text_color": Color("#2a2a2a"),
+	"type_bool_color": Color("#2a2a2a"),
+	"type_vector_color": Color("#2a2a2a"),
+	"type_color_color": Color("#2a2a2a"),
+	"type_object_color": Color("#2a2a2a"),
+	"type_enum_color": Color("#2a2a2a"),
+	"type_collection_color": Color("#2a2a2a"),
+	"type_class_color": Color("#2a2a2a"),
+	"word_variable_color": Color("#124175"),
+	"word_text_color": Color("#633508"),
+	"word_number_color": Color("#1f4a14"),
 	"word_keyword_color": Color("#4f555c"),
 	"include_border_color": Color("#3f9a8f"),
 	"include_fill_color": Color("#ddf4f0"),
@@ -180,7 +191,7 @@ const NATIVE_COLOURS_LIGHT := {
 	"class_tag_color": Color("#584a70"),
 	"class_name_color": Color("#2b2536"),
 	"class_note_color": Color("#5b5368"),
-	"link_color": Color("#2659b8"),
+	"link_color": Color("#1a3e80"),
 	"inspector_badge_foreground_color": Color("#094380"),
 	"inspector_badge_background_color": Color("#c4dcf5"),
 	"range_badge_foreground_color": Color("#502793"),
@@ -209,8 +220,8 @@ const NATIVE_NEW_MARK_TOKENS: Array[String] = [
 
 ## The sentence text of the two lanes, per hand. The cell plates are the lane's own tint, so a cell
 ## reads as part of its lane rather than as a chip sitting on it.
-const NATIVE_TEXT_DARK := Color("#dfe3ea")
-const NATIVE_TEXT_LIGHT := Color("#16191d")
+const NATIVE_TEXT_DARK := Color("#d2d2d2")
+const NATIVE_TEXT_LIGHT := Color("#0f0f0f")
 
 ## The two lanes' hues: the condition lane leans blue and the action lane green, on any editor base.
 ## A lane is the card's own brightness (a step lighter in a dark editor, a step darker in a light one)
@@ -227,18 +238,28 @@ const NATIVE_LANE_STEP_LIGHT := -0.02
 ## The least contrast the sentence text keeps against a lane (the WCAG body-text bar).
 const NATIVE_LANE_MIN_CONTRAST := 4.5
 
-## The line along the top of the open sheet's tab, per hand: the selection blue of the design, a
-## shade deeper on light paper so it still reads as a line rather than a smudge.
-const NATIVE_TAB_EDGE_DARK := Color("#3a79bb")
+## The line along the top of the open sheet's tab, per hand: the design's accent blue, the same on
+## dark and light paper.
+const NATIVE_TAB_EDGE_DARK := Color("#3a72b0")
 const NATIVE_TAB_EDGE_LIGHT := Color("#3a72b0")
 ## The design's "No problems" green, dark and light.
 const NATIVE_STATUS_OK_DARK := Color("#8fc27a")
-const NATIVE_STATUS_OK_LIGHT := Color("#2f6b1f")
+const NATIVE_STATUS_OK_LIGHT := Color("#204a15")
+
+## How far the head bar steps from the canvas, per hand (the design's 22 and 17 levels of 255).
+const NATIVE_HEAD_STEP_DARK := 22.0 / 255.0
+const NATIVE_HEAD_STEP_LIGHT := 17.0 / 255.0
+
+## The Editor Native starter: the look a sheet with no theme of its own wears in the editor.
+const NATIVE_STARTER_PATH := "res://addons/eventsheet/themes/editor_native_theme.tres"
 
 ## The last native_style() built, by base colour. follow_editor() asks for two per call and a
 ## sheet is re-seated on every edit, so the rule runs once per editor base rather than per edit.
 ## Read-only by contract: callers copy from these, never write into them.
 static var _native_cache: Dictionary = {}
+## default_style_for() by base colour, built once per editor base: a painter asks on every sheet
+## seat. Read-only by contract, like _native_cache - a caller that edits one duplicates it first.
+static var _default_cache: Dictionary = {}
 
 
 ## Builds a style from a base/accent pair (the two colors Godot themes hinge on).
@@ -325,41 +346,47 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	var light: bool = is_light_base(base_color)
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.follow_editor_greys = true
-	# The design's strip is words (Sheet, Save, Add Event, Find, Sentences), not icons. A default the
-	# reader's own View > Text labels choice overrules.
-	style.toolbar_text_labels = true
-	# The design stacks the tabs over the strip, and its status bar says what is selected.
-	style.tabs_above_toolbar = true
+	# The design's strip is the ordinary one (Menu, the save and undo icons, Run Scene, the quick-add
+	# field) with the open sheets' tabs under it, and its status bar says what is selected.
+	style.toolbar_text_labels = false
+	style.tabs_above_toolbar = false
 	style.status_bar_selection_line = true
 	# The design puts the sheet straight under the strip: no title, identity, header or link bands.
 	style.fold_workspace_bands = true
 	var event_style: EventSheetEventStyle = style.get_event_style()
+	# The greys, the variable cards and the two lane tints: the design's own values at the reference
+	# base, moved with the editor.
 	var greys: Dictionary = NATIVE_GREYS_LIGHT if light else NATIVE_GREYS_DARK
 	for token_name: String in greys:
 		event_style.set(token_name, native_grey(greys[token_name], base_color))
-	# The one head bar is the design's neutral grey a step off the canvas - lighter on a dark editor,
-	# darker on a light one - in this look as in the default one, never a tint of the canvas's blue.
+	# The one head bar is a neutral grey a step off the canvas - the design's #3e3e3e over #282828 in
+	# a dark editor, #d3d3d3 under #e4e4e4 in a light one - never a tint of a bluish canvas.
 	var canvas_light: float = event_style.sheet_background_color.get_luminance()
-	var head_grey: float = clampf(canvas_light - 0.07 if light else canvas_light + 0.08, 0.0, 1.0)
+	var head_grey: float = clampf(canvas_light - NATIVE_HEAD_STEP_LIGHT if light else canvas_light + NATIVE_HEAD_STEP_DARK, 0.0, 1.0)
 	event_style.head_bar_color = Color(head_grey, head_grey, head_grey, 1.0)
 	var colours: Dictionary = NATIVE_COLOURS_LIGHT if light else NATIVE_COLOURS_DARK
 	for token_name: String in colours:
 		event_style.set(token_name, colours[token_name])
 	# The density the design is drawn at: 24 px rows, a 92 px object name after its 14 px icon and the
-	# 8 px gap (114 px in all, the column counting the icon), an 18 px nesting step,
+	# 8 px gap (114 px in all, the column counting the icon), 8 px between two events, an 18 px nesting step,
 	# a 7 px lane divider and square-ish cards with a one-pixel edge.
 	event_style.condition_lane_ratio = 0.42
 	event_style.minimum_row_height = 24
 	event_style.group_row_height = 36
 	event_style.condition_object_column_width = 114
 	event_style.action_object_column_width = 114
-	event_style.event_block_gap = 6
+	event_style.event_block_gap = 8
 	event_style.sub_event_indent = 18
 	event_style.lane_divider_width = 7
 	event_style.event_card_border_width = 1
 	event_style.event_corner_radius = 3
 	event_style.cell_corner_radius = 0
 	event_style.group_corner_radius = 3
+	# The box round an Inspector group's variables: the group's grey under the cards, its edge, 4 px
+	# corners.
+	event_style.variable_group_fill_color = event_style.group_background_color
+	event_style.variable_group_border_color = event_style.group_accent_color
+	event_style.variable_group_corner_radius = 4
 	# The design's variable rows: type, name, value, note, icon tiles - and none of the compiler's own
 	# bookkeeping variables among them.
 	event_style.inspector_variable_rows = true
@@ -387,10 +414,6 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	# gutter and a frame, no wash over the lanes).
 	event_style.comment_notes = true
 	event_style.selection_as_outline = true
-	# The lanes are tinted from the card they sit on rather than shifted with the greys: a shift keeps
-	# the reference editor's few levels of blue and green, which a neutral editor reads as grey.
-	event_style.condition_lane_color = native_lane(event_style.row_background_color, NATIVE_CONDITION_LANE_HUE, light)
-	event_style.action_lane_color = native_lane(event_style.row_background_color, NATIVE_ACTION_LANE_HUE, light)
 	_native_cells(style.get_condition_style(), event_style.condition_lane_color, base_color, light)
 	_native_cells(style.get_action_style(), event_style.action_lane_color, base_color, light)
 	EventSheetThemeDerivation.fill_derived_tokens(style)
@@ -492,15 +515,53 @@ static func _cached_native_style(base_color: Color) -> EventSheetEditorStyle:
 static func follow_running_editor(style: EventSheetEditorStyle) -> EventSheetEditorStyle:
 	if style == null or not style.follow_editor_greys:
 		return style
-	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+	var base: Color = running_editor_base()
+	if base.a <= 0.0:
 		return style
+	return follow_editor(style, base)
+
+
+## The running editor's base colour, or clear outside the editor (headless tests, a game build).
+static func running_editor_base() -> Color:
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return Color(0.0, 0.0, 0.0, 0.0)
 	var editor_interface: Object = Engine.get_singleton("EditorInterface")
 	if editor_interface == null or not editor_interface.has_method("get_editor_theme"):
-		return style
+		return Color(0.0, 0.0, 0.0, 0.0)
 	var theme: Theme = editor_interface.get_editor_theme()
 	if theme == null or not theme.has_color("base_color", "Editor"):
-		return style
-	return follow_editor(style, theme.get_color("base_color", "Editor"))
+		return Color(0.0, 0.0, 0.0, 0.0)
+	return theme.get_color("base_color", "Editor")
+
+
+## The look a sheet with no theme of its own wears. In the editor it is Editor Native moved onto the
+## running editor's base colour - what a fresh install, and the Welcome's editor-matching answer,
+## draw; a sheet that chose another theme keeps it. Outside the editor (headless tests, a game build)
+## it is the bare bundled style, so every machine reads the same tokens.
+static func default_style() -> EventSheetEditorStyle:
+	var base: Color = running_editor_base()
+	if base.a <= 0.0:
+		var bare: EventSheetEditorStyle = EventSheetEditorStyle.new()
+		bare.ensure_defaults()
+		return bare
+	return default_style_for(base)
+
+
+## The no-theme look for one editor base colour: the Editor Native starter followed onto it. Pure
+## apart from loading the starter, so a test can pin it for a dark and a light editor.
+static func default_style_for(base_color: Color) -> EventSheetEditorStyle:
+	var key: String = base_color.to_html(true)
+	if _default_cache.has(key):
+		return _default_cache[key]
+	var starter: EventSheetEditorStyle = load(NATIVE_STARTER_PATH) as EventSheetEditorStyle
+	var built: EventSheetEditorStyle = (
+		follow_editor(starter, base_color) if starter != null else native_style(base_color)
+	)
+	built.ensure_defaults()
+	if _default_cache.size() > 4:
+		_default_cache.clear()
+	_default_cache[key] = built
+	return built
 
 
 ## Gives the marks that are new with the native look the light hand of their colours on a light

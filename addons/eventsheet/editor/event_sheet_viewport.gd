@@ -999,11 +999,9 @@ func _resolve_editor_style(sheet: EventSheetResource) -> EventSheetEditorStyle:
 		# A theme that asks to follow the editor (the Editor Native starter) is painted from a copy
 		# moved onto the running editor's base colour; every other theme comes back as saved.
 		return EventSheetEditorThemeDeriver.follow_running_editor(configured_style)
-	var fallback_style := EventSheetEditorStyle.new()
-	fallback_style.ensure_defaults()
-	# Default-themed sheets adopt the running editor's colors so they look native to Godot
-	# (no-op outside the editor, keeping tests deterministic).
-	return EventSheetGodotTheme.adapt_to_editor(fallback_style)
+	# A sheet with no theme of its own wears Editor Native moved onto the running editor's base
+	# colour; outside the editor, the bare bundled style, keeping tests deterministic.
+	return EventSheetEditorThemeDeriver.default_style()
 
 
 func _get_event_style() -> EventSheetEventStyle:
@@ -2342,6 +2340,7 @@ func _draw() -> void:
 	_renderer.show_value_glyphs = show_value_glyphs
 	_renderer.show_variable_badges = show_variable_badges
 	_renderer.show_hover_add_links = show_hover_add_links
+	_draw_variable_group_fills(width)
 	for index in range(visible_range.x, visible_range.y + 1):
 		var row_info: Dictionary = _flat_rows[index]
 		var row_data: EventRowData = row_info.get("row")
@@ -2483,11 +2482,18 @@ func _draw_variable_group_bubbles(width: float) -> void:
 	var runs: Array = ViewportRowBuilder.variable_group_runs(_flat_rows)
 	if runs.is_empty():
 		return
+	var event_style: EventSheetEventStyle = _get_event_style()
 	var bubble: StyleBoxFlat = StyleBoxFlat.new()
-	bubble.bg_color = Color(EventSheetPalette.COLOR_CAT_CHIP_BG.r, EventSheetPalette.COLOR_CAT_CHIP_BG.g, EventSheetPalette.COLOR_CAT_CHIP_BG.b, 0.16)
-	bubble.border_color = Color(EventSheetPalette.COLOR_CAT_CHIP_FG.r, EventSheetPalette.COLOR_CAT_CHIP_FG.g, EventSheetPalette.COLOR_CAT_CHIP_FG.b, 0.55)
+	# A theme that states the box's fill had it painted UNDER the rows (_draw_variable_group_fills),
+	# so only the edge is drawn over them here.
+	bubble.bg_color = (
+		Color(0.0, 0.0, 0.0, 0.0) if event_style.variable_group_fill_color.a > 0.01
+		else Color(EventSheetPalette.COLOR_CAT_CHIP_BG.r, EventSheetPalette.COLOR_CAT_CHIP_BG.g, EventSheetPalette.COLOR_CAT_CHIP_BG.b, 0.16)
+	)
+	bubble.border_color = EventSheetEventStyle.stated_or(event_style.variable_group_border_color,
+		Color(EventSheetPalette.COLOR_CAT_CHIP_FG.r, EventSheetPalette.COLOR_CAT_CHIP_FG.g, EventSheetPalette.COLOR_CAT_CHIP_FG.b, 0.55))
 	bubble.set_border_width_all(1)
-	bubble.set_corner_radius_all(7)
+	bubble.set_corner_radius_all(event_style.variable_group_corner_radius)
 	for run: Dictionary in runs:
 		var start_index: int = int(run.get("start"))
 		var end_index: int = int(run.get("end"))
@@ -2500,6 +2506,27 @@ func _draw_variable_group_bubbles(width: float) -> void:
 		# unlabelled bracket around three rows.
 		if not _run_leads_with_folder_strip(start_index):
 			_draw_variable_group_label(str(run.get("group", "")), top)
+
+
+## The box behind each run of grouped variables, painted before the rows so the cards sit on it and
+## the gaps between them show it - for a theme that states the box's fill. One rounded fill per run,
+## at the same rect the edge is drawn at afterwards.
+func _draw_variable_group_fills(width: float) -> void:
+	var event_style: EventSheetEventStyle = _get_event_style()
+	if event_style.variable_group_fill_color.a <= 0.01:
+		return
+	var runs: Array = ViewportRowBuilder.variable_group_runs(_flat_rows)
+	if runs.is_empty():
+		return
+	var box: StyleBoxFlat = StyleBoxFlat.new()
+	box.bg_color = event_style.variable_group_fill_color
+	box.set_corner_radius_all(event_style.variable_group_corner_radius)
+	for run: Dictionary in runs:
+		var start_index: int = int(run.get("start"))
+		var end_index: int = int(run.get("end"))
+		var top: float = _row_metrics_helper.row_top(start_index)
+		var bottom: float = _row_metrics_helper.row_top(end_index) + _row_metrics_helper.row_height(end_index)
+		box.draw(get_canvas_item(), Rect2(3.0, top + 1.0, width - 6.0, bottom - top - 2.0))
 
 
 ## The structure brackets: a 2px rule in the block's own colour down the LEFT EDGE of its

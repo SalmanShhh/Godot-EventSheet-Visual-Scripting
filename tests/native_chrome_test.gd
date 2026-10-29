@@ -39,15 +39,15 @@ static func run() -> bool:
 static func _test_the_switches() -> bool:
 	var native: EventSheetEditorStyle = load(NATIVE_THEME) as EventSheetEditorStyle
 	var classic: EventSheetEditorStyle = load(CLASSIC_THEME) as EventSheetEditorStyle
-	var derived: EventSheetEditorStyle = EventSheetEditorThemeDeriver.native_style(Color("#363d4a"))
+	var derived: EventSheetEditorStyle = EventSheetEditorThemeDeriver.native_style(Color("#292929"))
 	var defaults := EventSheetEditorStyle.new()
 	return SUPPORT.pins(TEST_NAME, [
-		["the starter's four switches", [native.tabs_above_toolbar, native.status_bar_selection_line,
-			native.get_event_style().comment_notes, native.get_event_style().selection_as_outline],
-			[true, true, true, true]],
+		["the starter's four switches (the design keeps the tabs under the strip)", [native.tabs_above_toolbar,
+			native.status_bar_selection_line, native.get_event_style().comment_notes,
+			native.get_event_style().selection_as_outline], [false, true, true, true]],
 		["the derived native look's", [derived.tabs_above_toolbar, derived.status_bar_selection_line,
 			derived.get_event_style().comment_notes, derived.get_event_style().selection_as_outline],
-			[true, true, true, true]],
+			[false, true, true, true]],
 		["Classic Sheet's", [classic.tabs_above_toolbar, classic.status_bar_selection_line,
 			classic.get_event_style().comment_notes, classic.get_event_style().selection_as_outline],
 			[false, false, false, false]],
@@ -58,22 +58,32 @@ static func _test_the_switches() -> bool:
 			native.get_chrome_style().status_ok_color.to_html(false), "8fc27a"],
 		["the derived dark look's too", derived.get_chrome_style().status_ok_color, Color("#8fc27a")],
 		["the light look's is deeper", EventSheetEditorThemeDeriver.native_style(Color("#f2f2f2"))
-			.get_chrome_style().status_ok_color, Color("#2f6b1f")],
+			.get_chrome_style().status_ok_color, Color("#204a15")],
 		["clear by default", defaults.get_chrome_style().status_ok_color, Color(0.0, 0.0, 0.0, 0.0)],
 		["and clear in Classic Sheet", classic.get_chrome_style().status_ok_color, Color(0.0, 0.0, 0.0, 0.0)],
 	])
 
 
 static func _test_tabs_over_the_strip() -> bool:
-	var native: EventSheetEditor = _editor(NATIVE_THEME, EventSheetResource.new())
+	# A theme that asks for the tabs over the strip (no shipped one does: the design keeps them under).
+	var stacked_style: EventSheetEditorStyle = (load(CLASSIC_THEME) as EventSheetEditorStyle).duplicate(true)
+	stacked_style.tabs_above_toolbar = true
+	var stacked_sheet := EventSheetResource.new()
+	stacked_sheet.editor_style = stacked_style
+	var native := EventSheetEditor.new()
+	native.setup(stacked_sheet)
 	var classic: EventSheetEditor = _editor(CLASSIC_THEME, EventSheetResource.new())
+	var plain: EventSheetEditor = _editor(NATIVE_THEME, EventSheetResource.new())
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
-		["Editor Native stacks the tabs over the strip",
+		["a theme that asks stacks the tabs over the strip",
 			native._tab_bar.get_index() < native._toolbar.get_index(), true],
 		["directly over it", native._toolbar.get_index() - native._tab_bar.get_index(), 1],
 		["Classic Sheet keeps them under the strip, as the dock was built",
 			classic._tab_bar.get_index() - classic._toolbar.get_index(), 1],
+		["and so does Editor Native, as the boards draw it",
+			plain._tab_bar.get_index() - plain._toolbar.get_index(), 1],
 	])
+	plain.free()
 	# A theme switch moves them back, and a second publish of the same theme moves nothing.
 	EventSheetActiveTheme.publish(load(CLASSIC_THEME) as EventSheetEditorStyle)
 	native._menu_bar.apply_theme_chrome()
