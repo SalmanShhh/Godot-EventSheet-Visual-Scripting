@@ -16,6 +16,18 @@ extends RefCounted
 ## never heard of it.
 const DEFAULT_SKIPPED_FOLDERS: PackedStringArray = []
 
+## Clicking a script in the FileSystem or the Inspector opens it as a sheet. Its old key was
+## `auto_preview_gd_on_select`, from the days it opened a read-only preview; [constant RENAMED_SETTINGS]
+## carries a project that ticked the old key over to this one.
+const OPEN_SCRIPTS_SETTING: String = "eventsheets/editor/open_scripts_as_event_sheets"
+const OPEN_SCRIPTS_DOC: String = "When on, clicking a script in the FileSystem or the Inspector opens it as an event sheet you can edit, instead of in the Script editor. A script the sheet cannot read still opens in the Script editor. Off by default; right-click a script, then Open as Event Sheet, works either way."
+
+## Old key -> new key. A project that set the old key keeps its choice: the value is read once,
+## written under the new key, and the old key is dropped.
+const RENAMED_SETTINGS: Dictionary = {
+	"eventsheets/editor/auto_preview_gd_on_select": OPEN_SCRIPTS_SETTING,
+}
+
 const DEFINITIONS: Array[Dictionary] = [
 	{"name": "eventsheets/editor/compile_on_save", "default": true, "type": TYPE_BOOL,
 		"doc": "Saving a sheet also writes its generated script (F5 can never play-test stale code)."},
@@ -26,8 +38,11 @@ const DEFINITIONS: Array[Dictionary] = [
 		"doc": "Reopen last session's sheet tabs when the editor starts."},
 	{"name": "eventsheets/editor/open_code_panel_by_default", "default": false, "type": TYPE_BOOL,
 		"doc": "Show the generated-GDScript panel whenever a sheet opens (the Godot-native default from the welcome panel)."},
-	{"name": "eventsheets/editor/auto_preview_gd_on_select", "default": false, "type": TYPE_BOOL,
-		"doc": "When ON, selecting a liftable .gd script opens it straight into the Event Sheets workspace as a read-only events preview (instead of the script editor). OFF by default; right-click → \"Open as Event Sheet\" always works regardless."},
+	# The one setting marked "basic": Project Settings lists it without Advanced Settings, because it
+	# is the one a newcomer goes looking for. Its hover reads the documented member of the same name
+	# below, which says the same thing as "doc".
+	{"name": OPEN_SCRIPTS_SETTING, "default": false, "type": TYPE_BOOL, "basic": true,
+		"doc": OPEN_SCRIPTS_DOC},
 	{"name": "eventsheets/editor/show_scene_events", "default": false, "type": TYPE_BOOL,
 		"doc": "Mark nodes whose script is a sheet with a small ⌗ and their event count - in the Scene dock, and beside the node in the 2D editor. Hover names the triggers. OFF by default: a badge on every node is noise."},
 	{"name": "eventsheets/editor/follow_scene_selection", "default": true, "type": TYPE_BOOL,
@@ -83,9 +98,20 @@ const DEFINITIONS: Array[Dictionary] = [
 ]
 
 
+# The hover Project Settings shows for OPEN_SCRIPTS_SETTING. Godot reads a setting's hover from
+# documentation, and a plugin's setting has none, so the settings hover plugin points the row at this
+# member's doc comment instead - which must say exactly what OPEN_SCRIPTS_DOC says (a test holds the
+# two together). Nothing reads or writes the member; the setting itself lives in ProjectSettings.
+## When on, clicking a script in the FileSystem or the Inspector opens it as an event sheet you can edit, instead of in the Script editor. A script the sheet cannot read still opens in the Script editor. Off by default; right-click a script, then Open as Event Sheet, works either way.
+## [code]eventsheets/editor/open_scripts_as_event_sheets[/code]
+var open_scripts_as_event_sheets: bool = false
+
+
 ## Registers every setting (idempotent; call at plugin load). Values equal to the
-## initial value are never persisted into project.godot.
-static func register_all() -> void:
+## initial value are never persisted into project.godot. Returns true when an old key was carried
+## over to its new name, so the caller knows project.godot has a change worth saving.
+static func register_all() -> bool:
+	var renamed: bool = migrate_renamed()
 	# Authoring shortcuts moved to a per-user file (EventSheetShortcuts / Tools ▸ Keyboard Shortcuts),
 	# so they are no longer registered as project settings.
 	var definitions: Array[Dictionary] = DEFINITIONS.duplicate()
@@ -100,3 +126,21 @@ static func register_all() -> void:
 			"hint": int(definition.get("hint", PROPERTY_HINT_NONE)),
 			"hint_string": str(definition.get("hint_string", "")),
 		})
+		ProjectSettings.set_as_basic(setting_name, bool(definition.get("basic", false)))
+	return renamed
+
+
+## Moves every [constant RENAMED_SETTINGS] old key the project still carries to its new key: the
+## old value is kept unless the new key was already set, and the old key is erased either way.
+## Writes nothing to disk; returns true when anything moved.
+static func migrate_renamed() -> bool:
+	var moved: bool = false
+	for old_name: String in RENAMED_SETTINGS:
+		if not ProjectSettings.has_setting(old_name):
+			continue
+		var new_name: String = str(RENAMED_SETTINGS[old_name])
+		if not ProjectSettings.has_setting(new_name):
+			ProjectSettings.set_setting(new_name, ProjectSettings.get_setting(old_name))
+		ProjectSettings.set_setting(old_name, null)
+		moved = true
+	return moved

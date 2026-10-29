@@ -6,6 +6,10 @@
 # it printed "Locale 'xx' does not contain any translation" on every project's first import. Kept as a
 # plain file instead - the plugin reads its CSVs itself.
 !addons/eventsheet/translations/TEMPLATE.csv.import
+# AND the plugin icon's: it asks the importer to draw the icon in the editor's own icon colour
+# (editor/convert_colors_with_editor_theme), which is what turns the @icon on a sheet resource dark
+# grey on a light editor theme. Without it every project imports the icon in its light-theme grey.
+!addons/eventsheet/icons/eventsheet.svg.import
 *.translation
 
 # Godot export presets

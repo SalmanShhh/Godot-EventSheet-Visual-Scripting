@@ -31,6 +31,29 @@
   as it was sent (`1`, not `1.0`). The server also no longer compiles the whole editor before its
   first answer - only `list_aces` builds it, when first asked.
 
+### Fixed: clicking a script opens its sheet, and the setting that does it can be found
+
+- The Project Settings tick that sends a clicked script to the sheet is now
+  `eventsheets/editor/open_scripts_as_event_sheets`, listed as "Open Scripts as Event Sheets" in the
+  plain Project Settings view (Eventsheets > Editor) without switching on Advanced Settings. Hovering
+  it says what it does instead of "No description available": clicking a script in the FileSystem or
+  the Inspector opens it as an event sheet you can edit, instead of in the Script editor; right-click
+  a script, then Open as Event Sheet, works either way. A project that ticked the old
+  `auto_preview_gd_on_select` keeps its choice: it is read once, saved under the new key, and the old
+  key is dropped.
+- With the tick on, a single click on a script in the FileSystem now really opens it in the
+  EventSheet tab (the click only ever reached the Inspector, so nothing happened), and a second click
+  brings the same tab forward. Scenes and other files still open where Godot opens them.
+
+### Changed: the plugin icon is one event, drawn in Godot's own icon ink
+
+- `addons/eventsheet/icons/eventsheet.svg` is now one event - a frame cut in two, a trigger arrow on
+  the condition side, two action bars on the other - in the single light grey Godot draws its plain
+  icons in, instead of five bars in four colours. On a light editor theme the EventSheet button on the
+  top bar and the icon a sheet resource wears in the FileSystem turn dark grey like their neighbours:
+  the plugin redraws the svg in the editor's icon colour when it loads, and the svg is imported in the
+  editor's colours (redrawn once after a switch between a dark and a light theme).
+
 ### Fixed: a big sheet no longer freezes the editor a few seconds after it opens
 
 - A function's hover card names the files that call it, an answer the editor counts in the

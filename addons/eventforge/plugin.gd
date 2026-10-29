@@ -9,6 +9,13 @@ const BRIDGE_PATH: String = "res://addons/eventforge/runtime/eventforge_bridge.g
 const EVENT_SHEET_EDITOR_PATH: String = "res://addons/eventforge/editor/event_sheet_editor.gd"
 const MAIN_SCREEN_ROOT_NAME: String = "EventSheetWorkspace"
 const PLUGIN_ICON_PATH: String = "res://addons/eventsheet/icons/eventsheet.svg"
+## The one ink the plugin icon is drawn in: the light grey Godot draws its own plain icons in on the
+## dark theme. At load it is swapped for the editor's own icon colour, so the icon turns dark grey on
+## a light theme the way its neighbours do.
+const PLUGIN_ICON_INK: String = "#E0E0E0"
+## A plain one-ink editor icon, read for the colour the editor draws such icons in right now.
+const EDITOR_INK_SAMPLE_ICON: String = "Node"
+const SETTINGS_HOVER_PATH: String = "res://addons/eventforge/editor/settings_hover_plugin.gd"
 
 # Cold-path helpers load BY PATH, not by class name: naming a global class in any function body
 # (or a var type) makes its whole dependency subtree - the importer, the compiler, the registry -
@@ -91,6 +98,10 @@ var _sheet_edit_button_plugin: EventSheetEditButtonPlugin = null
 # The Inspector's "Instance variables" band. add_inspector_plugin takes an INSTANCE, so this is
 # constructed at every boot - which is why it is loaded BY PATH and carries no class name here.
 var _instance_variables_inspector: EditorInspectorPlugin = null
+# The Project Settings hover for the plugin's own settings (loaded by path, no class_name).
+var _settings_hover_plugin: EditorInspectorPlugin = null
+# The plugin icon in the editor's own ink, made once per load.
+var _plugin_icon: Texture2D = null
 var _context_menus: Array[EventSheetContextMenu] = []
 var _new_sheet_dialog: RefCounted = null
 var _connect_signal_dialog: RefCounted = null
@@ -110,19 +121,94 @@ func _has_main_screen() -> bool:
 	return true
 
 
-## Returns the icon shown in the top editor workspace strip: the bespoke sheet glyph (trigger
-## band + condition/action rows), so the tab reads as ITS OWN workspace rather than borrowing
-## the generic Node icon. Falls back to that Node icon if the svg ever goes missing.
+## Returns the icon shown in the top editor workspace strip: one event (a frame cut in two, a
+## trigger arrow on the condition side, two action bars on the other) drawn in one ink like the 2D,
+## 3D and Script buttons beside it. The svg is read as text and its ink swapped for the editor's own
+## icon colour before it is rasterised, because Godot recolours its own icons for a light theme but
+## not a plugin's. Falls back to the imported texture, then to the Node icon.
 ##
 ## The very first time a project opens with the plugin in it, the editor asks for this icon before its
 ## first import has reached the svg, and a load() then printed "Failed loading resource" into the
 ## Output panel. Asking whether the imported texture exists first makes that one boot use the fallback.
 func _get_plugin_icon() -> Texture2D:
+	if _plugin_icon == null:
+		var theme: Theme = get_editor_interface().get_editor_theme()
+		_plugin_icon = inked_svg_texture(FileAccess.get_file_as_string(PLUGIN_ICON_PATH),
+				editor_icon_ink(theme), get_editor_interface().get_editor_scale())
+	if _plugin_icon != null:
+		return _plugin_icon
 	if ResourceLoader.exists(PLUGIN_ICON_PATH):
 		var icon: Resource = load(PLUGIN_ICON_PATH)
 		if icon is Texture2D:
 			return icon
 	return get_editor_interface().get_editor_theme().get_icon("Node", "EditorIcons")
+
+
+## The svg text with the plugin icon's ink swapped for `ink` (either spelling of the hex).
+static func inked_svg(svg_text: String, ink: Color) -> String:
+	var hex: String = "#" + ink.to_html(false).to_upper()
+	return svg_text.replace(PLUGIN_ICON_INK, hex).replace(PLUGIN_ICON_INK.to_lower(), hex)
+
+
+## The plugin svg rasterised in `ink` at `scale`, or null when the text is not a drawable svg.
+static func inked_svg_texture(svg_text: String, ink: Color, scale: float) -> Texture2D:
+	if svg_text.is_empty():
+		return null
+	var image: Image = Image.new()
+	if image.load_svg_from_string(inked_svg(svg_text, ink), maxf(scale, 0.25)) != OK:
+		return null
+	return ImageTexture.create_from_image(image)
+
+
+## Reimports the plugin svg when its imported texture is not in the editor's icon ink (the editor
+## theme changed between dark and light since it was imported). Waits for the first scan to finish,
+## because a reimport asked for during a scan is dropped. One 16 px read per editor start otherwise.
+func _refresh_plugin_icon_import() -> void:
+	var file_system: EditorFileSystem = get_editor_interface().get_resource_filesystem()
+	if file_system == null or not ResourceLoader.exists(PLUGIN_ICON_PATH):
+		return
+	if file_system.is_scanning():
+		if not file_system.filesystem_changed.is_connected(_refresh_plugin_icon_import):
+			file_system.filesystem_changed.connect(_refresh_plugin_icon_import, CONNECT_ONE_SHOT)
+		return
+	var imported: Texture2D = load(PLUGIN_ICON_PATH) as Texture2D
+	if imported != null and not is_in_ink(imported, editor_icon_ink(get_editor_interface().get_editor_theme())):
+		file_system.reimport_files(PackedStringArray([PLUGIN_ICON_PATH]))
+
+
+## True when the most opaque pixel of `texture` is `ink`, give or take rounding (2/255 per channel).
+static func is_in_ink(texture: Texture2D, ink: Color) -> bool:
+	var drawn: Color = most_opaque_colour(texture.get_image() if texture != null else null)
+	return absf(drawn.r - ink.r) <= 2.0 / 255.0 and absf(drawn.g - ink.g) <= 2.0 / 255.0 \
+			and absf(drawn.b - ink.b) <= 2.0 / 255.0
+
+
+## The colour of the most opaque pixel of `image` (opaque black when there is none).
+static func most_opaque_colour(image: Image) -> Color:
+	var colour: Color = Color.BLACK
+	if image == null:
+		return colour
+	if image.is_compressed():
+		image.decompress()
+	var best_alpha: float = 0.0
+	for y: int in image.get_height():
+		for x: int in image.get_width():
+			var pixel: Color = image.get_pixel(x, y)
+			if pixel.a > best_alpha:
+				best_alpha = pixel.a
+				colour = Color(pixel.r, pixel.g, pixel.b)
+	return colour
+
+
+## The colour the editor draws its plain one-ink icons in under `theme`: the most opaque pixel of a
+## sample icon that Godot draws in #E0E0E0 and recolours for a light theme. #E0E0E0 when there is
+## no theme to ask.
+static func editor_icon_ink(theme: Theme) -> Color:
+	var ink: Color = Color(PLUGIN_ICON_INK)
+	if theme == null or not theme.has_icon(EDITOR_INK_SAMPLE_ICON, "EditorIcons"):
+		return ink
+	var image: Image = theme.get_icon(EDITOR_INK_SAMPLE_ICON, "EditorIcons").get_image()
+	return ink if image == null else most_opaque_colour(image)
 
 
 ## Controls visibility for the workspace surface when selected in top tabs. Selecting the tab is
@@ -134,16 +220,64 @@ func _make_visible(visible: bool) -> void:
 		_event_sheet_editor.visible = visible
 
 
+## Connects (or disconnects) the FileSystem dock's tree and file list clicks. Only a left click does
+## anything, so walking the list with the arrow keys never pulls the editor away from its screen.
+func _watch_file_system_clicks(on: bool) -> void:
+	var file_system_dock: FileSystemDock = get_editor_interface().get_file_system_dock()
+	if file_system_dock == null:
+		return
+	for tree: Node in file_system_dock.find_children("*", "Tree", true, false):
+		var clicked: Signal = (tree as Tree).item_mouse_selected
+		if on and not clicked.is_connected(_on_file_system_tree_clicked):
+			clicked.connect(_on_file_system_tree_clicked)
+		elif not on and clicked.is_connected(_on_file_system_tree_clicked):
+			clicked.disconnect(_on_file_system_tree_clicked)
+	for list: Node in file_system_dock.find_children("*", "ItemList", true, false):
+		var clicked: Signal = (list as ItemList).item_clicked
+		if on and not clicked.is_connected(_on_file_system_list_clicked):
+			clicked.connect(_on_file_system_list_clicked)
+		elif not on and clicked.is_connected(_on_file_system_list_clicked):
+			clicked.disconnect(_on_file_system_list_clicked)
+
+
+func _on_file_system_tree_clicked(_at: Vector2, button: int) -> void:
+	if button == MOUSE_BUTTON_LEFT:
+		# After the FileSystem has finished handling its own click, so the selection is the clicked file.
+		_open_clicked_script.call_deferred()
+
+
+func _on_file_system_list_clicked(_index: int, _at: Vector2, button: int) -> void:
+	if button == MOUSE_BUTTON_LEFT:
+		_open_clicked_script.call_deferred()
+
+
+## A click in the FileSystem that leaves one script selected opens it as a sheet while "Open Scripts as
+## Event Sheets" is ticked; a second click on it brings its tab forward again.
+func _open_clicked_script() -> void:
+	if not _open_scripts_as_sheets_enabled():
+		return
+	var paths: PackedStringArray = get_editor_interface().get_selected_paths()
+	if paths.size() == 1 and opens_on_click(paths[0], true):
+		_open_sheet_in_workspace(paths[0])
+
+
+## True when a click on `path` in the FileSystem opens it as a sheet: the setting is ticked and the
+## file is a script the sheet opens. Any other file keeps doing what Godot does with it.
+static func opens_on_click(path: String, enabled: bool) -> bool:
+	return enabled and path.get_extension().to_lower() == "gd" and load(WORKFLOW_PATH).is_openable_as_sheet(path)
+
+
 ## Checks whether the selected object can be edited by this plugin.
 func _handles(object: Object) -> bool:
 	if is_event_sheet_resource(object):
 		return true
-	# Auto-preview toggle (OFF by default): when on, selecting a sheet-liftable .gd routes here so it
-	# opens as a read-only EVENTS preview instead of the script editor. Limited to liftable game scripts.
-	return _auto_preview_gd_enabled() and object is Script and load(WORKFLOW_PATH).is_openable_as_sheet((object as Script).resource_path)
+	# Open scripts as event sheets (off by default): when on, clicking a script the sheet can read routes
+	# here, so it opens as an editable sheet instead of in the Script editor. A script the sheet cannot
+	# read is not claimed, so Godot still opens it in the Script editor.
+	return _open_scripts_as_sheets_enabled() and object is Script and load(WORKFLOW_PATH).is_openable_as_sheet((object as Script).resource_path)
 
 
-## Loads the selected EventSheet (or, with the toggle on, a .gd) into the workspace editor.
+## Loads the selected EventSheet (or, with the setting on, a .gd) into the workspace editor.
 func _edit(object: Object) -> void:
 	# Selecting a sheet resource can precede the user ever opening the workspace tab - build on demand.
 	_ensure_editor()
@@ -156,13 +290,13 @@ func _edit(object: Object) -> void:
 			if exposed_node is Object:
 				get_editor_interface().inspect_object(exposed_node)
 	elif object is Script:
-		# Auto-preview path: open the selected script's file as a read-only events preview.
+		# Open-scripts path: open the clicked script's file as a sheet.
 		_open_sheet_in_workspace((object as Script).resource_path)
 
 
-## True when the "auto-preview a selected .gd as events" project setting is enabled.
-static func _auto_preview_gd_enabled() -> bool:
-	return bool(ProjectSettings.get_setting("eventsheets/editor/auto_preview_gd_on_select", false))
+## True when the "open scripts as event sheets" project setting is ticked.
+static func _open_scripts_as_sheets_enabled() -> bool:
+	return bool(ProjectSettings.get_setting(EventSheetSettings.OPEN_SCRIPTS_SETTING, false))
 
 
 ## Shared object guard used by plugin handlers and tests.
@@ -367,7 +501,21 @@ func _enter_tree() -> void:
 		add_autoload_singleton(BRIDGE_NAME, BRIDGE_PATH)
 	# Every eventsheets/* setting becomes visible + documented in Project Settings
 	# (value-neutral: defaults match the in-code fallbacks).
-	EventSheetSettings.register_all()
+	# A project that ticked a setting under its old key gets the choice saved under the new key once.
+	if EventSheetSettings.register_all():
+		ProjectSettings.save()
+	# The hover Project Settings shows for the settings that are documented.
+	_settings_hover_plugin = load(SETTINGS_HOVER_PATH).new()
+	add_inspector_plugin(_settings_hover_plugin)
+	# A single click on a script in the FileSystem only shows it in the Inspector, so _handles() is never
+	# asked; with "Open Scripts as Event Sheets" ticked, the click itself opens the sheet. The dock's
+	# tree and its file list say "an item was clicked" even when it was already selected, which is what
+	# lets a second click bring the sheet forward again.
+	_watch_file_system_clicks(true)
+	# The @icon a sheet resource wears in the FileSystem is the imported svg, which the importer draws in
+	# the editor's colours of the day it ran. After a switch between a dark and a light editor theme it
+	# is redrawn once, so it does not stay pale on the light theme.
+	_refresh_plugin_icon_import.call_deferred()
 	# Native entry points: right-click a node → Attach Event Sheet; right-click a
 	# sheet .tres / any .gd in the FileSystem or script editor → Open as Event Sheet;
 	# FileSystem "Create New >" submenu → Event Sheet... (a fresh sheet in that folder).
@@ -639,6 +787,10 @@ func _exit_tree() -> void:
 	if _instance_variables_inspector != null:
 		remove_inspector_plugin(_instance_variables_inspector)
 		_instance_variables_inspector = null
+	if _settings_hover_plugin != null:
+		remove_inspector_plugin(_settings_hover_plugin)
+		_settings_hover_plugin = null
+	_watch_file_system_clicks(false)
 	if _export_integrity_plugin != null:
 		remove_export_plugin(_export_integrity_plugin)
 		_export_integrity_plugin = null
