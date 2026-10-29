@@ -27,6 +27,9 @@ signal guide_requested(definition: ACEDefinition)
 ## Emitted when the reader presses the "?" on an entry. The Manual is where that is answered; this
 ## dialog only says which verb was asked about.
 signal help_requested(definition: ACEDefinition)
+## Emitted when the reader presses the "?" on a section heading, with the Manual page for that whole
+## group of words. The picker stays open; the host opens the page.
+signal section_help_requested(doc_id: String)
 
 ## Emitted when the reader takes the Add event dialog's first entry, "(none - runs every tick)".
 ## A blank event is a real event with no condition of its own, so there is no definition to hand over -
@@ -2554,6 +2557,33 @@ func _mark_section_header(item: TreeItem, section_name: String) -> void:
 	var blurb: String = EventSheetSectionInfo.description_for(section_name)
 	if not blurb.is_empty():
 		item.set_tooltip_text(0, blurb)
+	# The "?" on a heading: the Manual's page for the whole group of words, when it has one.
+	var icon: Texture2D = editor_icon_named("Help")
+	if icon != null and not section_doc_id(section_name).is_empty():
+		item.add_button(0, icon, HELP_BUTTON_ID, false,
+			EventSheetL10n.translate("Help for every word under %s") % item.get_text(0))
+
+
+## The Manual page a picker section heading's "?" opens: the vocabulary module guide for the section
+## ("Timers, Waiting and Cooldowns" for Time), asked for the full "Parent: Sub" key first and then
+## its parent, or "" when the Manual has no page for that group of words.
+static func section_doc_id(section_name: String) -> String:
+	var keys: Array[String] = [section_name.strip_edges()]
+	var parts: PackedStringArray = split_subcategory(section_name)
+	if not parts.is_empty():
+		keys.append(parts[0])
+	for key: String in keys:
+		if key.is_empty():
+			continue
+		var doc_id: String = "module:%s" % key
+		if not str(EventSheetDocExplain.resolve(doc_id).get("page_id", "")).is_empty() \
+				and EventSheetDocExplain.opens_inside(doc_id):
+			return doc_id
+		# A behaviour's section is titled as its guide is ("FPS Controller" - Addons/FPS-Controller).
+		var pack_page: String = "guide:Addons/%s" % key.replace(" ", "-")
+		if EventSheetDocExplain.opens_inside(pack_page):
+			return pack_page
+	return ""
 
 
 # The icon answers below live in EventSheetACEIcons, which the sheet's rows ask directly. These
@@ -2746,6 +2776,12 @@ func _on_tree_button_clicked(item: TreeItem, _column: int, id: int, mouse_button
 	var definition: ACEDefinition = item.get_metadata(0) as ACEDefinition
 	if definition != null:
 		help_requested.emit(definition)
+		return
+	var marker: Variant = item.get_metadata(0)
+	if marker is Dictionary and (marker as Dictionary).has("section"):
+		var doc_id: String = section_doc_id(str((marker as Dictionary)["section"]))
+		if not doc_id.is_empty():
+			section_help_requested.emit(doc_id)
 
 
 ## An editor theme icon by name, or null outside the editor and for a name this build lacks.

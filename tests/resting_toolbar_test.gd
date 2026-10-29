@@ -34,8 +34,9 @@ extends RefCounted
 ##
 ## 555 measured headless, 640 budgeted: room for one more icon-sized control, so the next pass that
 ## puts something on the resting strip comes here, re-measures, and says why - rather than finding
-## out by watching the row wrap.
-const RESTING_WIDTH_BUDGET: float = 640.0
+## out by watching the row wrap. 723 measured once the Events | Code | Both switch rested at the end
+## (the reading door every open sheet carries), so 760 budgeted.
+const RESTING_WIDTH_BUDGET: float = 760.0
 
 
 ## An undo manager whose history this test can move by hand, so the two icons can be held against a
@@ -161,11 +162,12 @@ static func _test_the_resting_row() -> bool:
 	for child: Node in editor._toolbar.get_children():
 		if (child as Control).visible:
 			resting.append(str(child.name))
-	var ok: bool = _check("the strip rests as seven controls and one empty segment, in this order",
+	# The Events | Code | Both switch rests at the end: every open sheet reads either way, one click away.
+	var ok: bool = _check("the strip rests as eight controls and one empty segment, in this order",
 		resting,
 		PackedStringArray(["EventSheetMenu", "EventSheetSaveButton", "EventSheetUndoButton",
 			"EventSheetRedoButton", "EventSheetPlaySlot", "EventSheetQuickAdd",
-			"EventSheetMomentSegment", "EventSheetToolbarExpander"]))
+			"EventSheetMomentSegment", "EventSheetToolbarExpander", "EventSheetViewSwitch"]))
 	# And it rests EMPTY: every control inside it is hidden until the selection earns it.
 	var segment_showing: PackedStringArray = PackedStringArray()
 	for child: Node in editor._toolbar.get_children():
@@ -264,9 +266,9 @@ static func _test_the_cascade() -> bool:
 	# included sheet's variables under each Include bar. View ▸ Add Links On Hover is the 65th: the
 	# hovered event's Add condition and Add action links. View ▸ Side Rail is the 66th: the side
 	# panel open or closed to its rail. View ▸ Open Sheets Panel left, back to 65: the tabs above the
-	# sheet are the open sheets.
+	# sheet are the open sheets. View ▸ Manual beside the sheet makes 66: the Manual as a dock.
 	ok = _check("View keeps its items, plus Full toolbar, Sheet theme, Panels and Text labels",
-		counts["EventSheetViewMenu"], 65) and ok
+		counts["EventSheetViewMenu"], 66) and ok
 	# The Addon manager left Tools: a pack is a folder, seen in the FileSystem dock.
 	ok = _check("Tools keeps its items, plus Words…, less the Addon manager", counts["EventSheetToolsMenu"], 41) and ok
 	# Words… moved menus rather than leaving: it is on Tools now, beside Keyboard Shortcuts.

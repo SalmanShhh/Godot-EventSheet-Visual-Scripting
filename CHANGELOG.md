@@ -56,6 +56,49 @@
   to be read as one broken line and refused; each line is now answered, and a request id comes back
   as it was sent (`1`, not `1.0`). The server also no longer compiles the whole editor before its
   first answer - only `list_aces` builds it, when first asked.
+### Fixed: every way into the Manual lands on the page it names
+
+- **What's new opens What's new.** Menu > What's new… and the Start page's Learn > What's new asked
+  for a page id the Manual did not know, so both landed on the home page with "No documentation for
+  that row". Both now ask the Manual for the page by the id its router draws.
+- **F1, Ctrl+F1 and Ctrl+P reach the sheet.** Godot's own shortcuts were answered first, so F1 on a
+  selected row opened Search Help, Ctrl+F1 switched to the 2D screen and Ctrl+P opened Quick Open.
+  While the keyboard is inside the sheet editor, the sheet's keys are now asked first; anywhere else
+  the editor's keys are untouched.
+- **The picker's status line says where a guide opened.** "Open the Platformer guide" said "Opened in
+  your browser" even when the guide opened in the Manual; it now says "in the Manual" or "in your
+  browser", whichever happened.
+- **The contents group "Coming from Construct 3" is now "Coming from another event-sheet editor"**,
+  as the Welcome window already says.
+
+### New: more ways into the Manual
+
+- **View > Manual beside the sheet** shows the Manual as a dock next to the sheet, following what you
+  select. The dock existed, but nothing in the plugin opened it. With it showing, every door sends
+  its page there instead of opening a window; the item is ticked while it shows and puts it away
+  when chosen again.
+- **The ? on a picker section heading** (Time, Input, Math & Random ...) opens the Manual's page for
+  that whole group of words, the vocabulary module guide. The picker stays open.
+- **Read the guide in Add behaviour.** The selected behaviour's name, then Read the guide, over its
+  properties - for a pack in the project and for one still in the library - and on a pack's
+  right-click menu. The window stays open behind the guide.
+- **Learn more on a Project Doctor finding.** Selecting a finding lists, under its fixes, the Manual
+  page that names its check, at the heading over that mention. A check no page explains has no
+  Learn more rather than a guess.
+- **A behaviour's page offers Add to project** at its top when the behaviour waits in the plugin's
+  library and the project does not hold it yet; it opens Add behaviour on that pack.
+- **The Manual's home page** is two short rows of doors - Start here (Your first platformer, A
+  top-down shooter, What's new, Learning paths) and Look something up (Every condition and action,
+  Every behaviour, Glossary, Patterns) - and the line for people moving from another event-sheet
+  editor, instead of the long list of links the index page was.
+- **Pictures draw in the page.** The pictures the guides show ship in the help folder (a folder with
+  a .gdignore, so a project never imports them) and are drawn where the guide places them, instead
+  of a card with a "See this picture online" button. A picture the plugin does not carry still gets
+  the card.
+- **Events, Code or Both above every sheet.** The switch that behaviours and globals had now sits on
+  every open sheet: the rows, the GDScript the file is, or both side by side. Selecting a row
+  highlights the lines it writes and clicking a line selects its row, so the docked Manual follows
+  either.
 
 ### Fixed: clicking a script opens its sheet, and the setting that does it can be found
 

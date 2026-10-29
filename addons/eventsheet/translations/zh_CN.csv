@@ -9688,3 +9688,17 @@ Enemies that plan,会规划的敌人
 Lots of objects at once,同时大量对象
 Drawing and painting,绘图与绘画
 Menus and screens,菜单与界面
+Help for every word under %s,%s 下所有词语的帮助
+"Opens this behaviour's guide in the Manual, so you can read it before adding it.","在手册中打开此行为的指南,添加前即可阅读。"
+Read the guide,阅读指南
+The Manual is beside the sheet and follows what you select.,"手册在工作表旁边,并跟随你的选择。"
+The Manual is no longer beside the sheet.,手册不再显示在工作表旁边。
+the %s guide,%s 指南
+The file read as events.,以事件形式阅读该文件。
+"The file as the GDScript it is, byte for byte. Click a line to select the row that writes it.","该文件原本的 GDScript,逐字节一致。点击一行即可选中写出它的行。"
+"The events and the lines they write, side by side. Selecting either highlights the other.",事件和它们写出的代码行并排显示。选中其中一边会高亮另一边。
+Manual beside the sheet,手册在工作表旁
+"Shows the Manual as a dock next to the sheet. Its page follows what you select, and every way into the Manual opens the page there instead of in a window.","将手册作为停靠面板显示在工作表旁边。页面跟随你的选择,所有进入手册的入口都会在那里打开页面,而不是弹出窗口。"
+Opens the Manual on the page that explains this finding and its fix.,打开手册中解释此发现及其修复方法的页面。
+Opened %s in the Manual.,已在手册中打开 %s。
+Opened %s in your browser.,已在浏览器中打开 %s。

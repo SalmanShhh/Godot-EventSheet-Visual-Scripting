@@ -29,13 +29,13 @@ const CLASSIC_PATH := "res://addons/eventsheet/themes/classic_sheet_theme.tres"
 const ICON_ROW := [
 	"EventSheetMenu", "EventSheetSaveButton", "EventSheetUndoButton", "EventSheetRedoButton",
 	"EventSheetPlaySlot", "EventSheetQuickAdd", "EventSheetMomentSegment",
-	"EventSheetToolbarExpander",
+	"EventSheetToolbarExpander", "EventSheetViewSwitch",
 ]
 const TEXT_ROW := [
 	"EventSheetMenu", "EventSheetSheetSeparator", "EventSheetSaveButton", "EventSheetUndoButton", "EventSheetRedoButton",
 	"EventSheetAddSeparator", "Add Event", "Add Condition", "Add Action",
 	"EventSheetFindSpacer", "EventSheetQuickAdd", "EventSheetMomentSegment",
-	"EventSheetSentencesMenu",
+	"EventSheetSentencesMenu", "EventSheetViewSwitch",
 ]
 
 

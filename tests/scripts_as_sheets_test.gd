@@ -109,7 +109,8 @@ static func _the_view_switch() -> bool:
 	rows.append(["Sheet shows the rows alone", [dock.is_code_panel_visible(), dock._scroll.visible], [false, true]])
 	dock.setup(EventSheetResource.new())
 	dock._refresh_title_strip()
-	rows.append(["a sheet that is neither hides the switch", (dock_switch as Control).visible if dock_switch != null else true, false])
+	# Every open sheet reads either way now, so a plain sheet keeps the switch too.
+	rows.append(["a sheet that is neither keeps the switch", (dock_switch as Control).visible if dock_switch != null else false, true])
 	dock.free()
 	return SUPPORT.pins(P, rows)
 

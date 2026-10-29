@@ -77,6 +77,9 @@ const ACTION_TRANSLATIONS := "open_translations"
 ## before any harvest has finished rather than only after one.
 const ENGINE_SCHEME := "engine:"
 
+## The Add to project button a library behaviour's page carries; its argument is the pack folder.
+const ACTION_LIBRARY_ADD := "library_add"
+
 ## The guide list's width, and the wider one a list of RESULTS gets: a guide row is a name, a
 ## result row is a sentence.
 const SIDEBAR_MIN_WIDTH := 210.0
@@ -557,6 +560,12 @@ func _on_page_action(action: String, argument: String) -> void:
 		EventSheetDocTracks.ACTION_OPEN:
 			show_doc(argument)
 			return
+		EventSheetDocReference.ACTION_HOME_OPEN:
+			show_doc(argument.get_slice("#", 0), argument.get_slice("#", 1))
+			return
+		ACTION_LIBRARY_ADD:
+			EventSheets.add_behaviour_from_library(argument)
+			return
 		EventSheetDocTracks.ACTION_TICK:
 			# The tick is the reader's, both ways: pressing it again takes it back. The page is
 			# redrawn rather than patched, because the track's own progress line changed too.
@@ -928,6 +937,9 @@ func _show_routed(doc_id: String, anchor: String, route: Dictionary) -> bool:
 	if not bool(route.get("valid", false)):
 		return false
 	var page_id: String = str(route.get("page_id", ""))
+	# The documentation index IS the home page, however a reader reached it.
+	if page_id == HOME_IDS[0] and anchor.strip_edges().is_empty():
+		return _show_home()
 	if not page_id.is_empty() and EventSheetDocLibrary.has_page(page_id):
 		return _show_page(page_id, anchor, doc_id)
 	var target: String = str(route.get("target", ""))
@@ -1069,13 +1081,25 @@ func _highlight_nav(slug: String) -> void:
 		button.add_theme_color_override("font_hover_color", accent)
 
 
-## The landing page: the shipped documentation index when there is one, and the guidance line the
-## generated panel already carries when no bundle is installed.
+## The landing page: two short rows of doors and the line for people moving from another editor,
+## drawn under the documentation index's own id so the tree, the history and Ctrl+F1 all call it
+## the index. The guidance line the generated panel carries answers when no bundle is installed.
 func _show_home() -> bool:
-	for id: String in HOME_IDS:
-		if EventSheetDocLibrary.has_page(id):
-			return _show_page(id, "", "guide:%s" % id)
-	return _show_generated("")
+	if not EventSheetDocLibrary.has_page(HOME_IDS[0]):
+		for id: String in HOME_IDS:
+			if EventSheetDocLibrary.has_page(id):
+				return _show_page(id, "", "guide:%s" % id)
+		return _show_generated("")
+	var home_id: String = "guide:%s" % HOME_IDS[0]
+	if not _page.show_blocks(EventSheetDocReference.home_blocks(), HOME_IDS[0]):
+		return false
+	_current_id = home_id
+	_panel.visible = false
+	_page.visible = true
+	_clear_mini_nav()
+	_select_tree_item(HOME_IDS[0])
+	_restore_scroll(home_id)
+	return true
 
 
 ## A page, ready to draw: parsed, with a pack guide's ACE reference swapped for the live one, and
@@ -1090,6 +1114,13 @@ func _blocks_for(page_id: String) -> Array[Dictionary]:
 	var shown: String = EventSheetDocLocale.page_for(page_id, locale, EventSheetDocLibrary.page_ids())
 	var blocks: Array[Dictionary] = EventSheetDocAceReference.replace_section(
 		EventSheetDocLibrary.page_blocks(shown), page_id)
+	# A behaviour still in the library, not yet in the project: the page offers to add it at the
+	# top, so reading leads straight to using.
+	var waiting: String = library_pack_for_page(page_id)
+	if not waiting.is_empty():
+		blocks.insert(mini(1, blocks.size()), {"kind": "button", "label": "Add to project",
+			"tooltip": "This behaviour waits in the plugin's library. Add to project copies it in and attaches it to the sheet's object.",
+			"action": ACTION_LIBRARY_ADD, "argument": waiting})
 	var note: Dictionary = EventSheetDocLocale.note_block(shown, locale)
 	if not note.is_empty():
 		var at: int = mini(1, blocks.size())
@@ -1106,6 +1137,19 @@ func _blocks_for(page_id: String) -> Array[Dictionary]:
 		blocks.append({"kind": "next", "title": str(next_page.get("title", "")),
 			"doc_id": str(next_page.get("doc_id", ""))})
 	return blocks
+
+
+## The library pack a behaviour guide page ("Addons/Platformer") is about, when that pack waits in
+## the plugin's library and the project does not hold it; "" otherwise. The roots are arguments so
+## the suite can answer it against a fixture library.
+static func library_pack_for_page(page_id: String, library_root: String = EventSheetPackLibrary.LIBRARY_ROOT,
+		project_root: String = EventSheetPackLibrary.PROJECT_ROOT) -> String:
+	if not page_id.begins_with(EventSheetDocLibrary.ADDONS_DIR + "/") or not EventSheetPackLibrary.exists(library_root):
+		return ""
+	for pack_dir: String in EventSheetPackLibrary.folders(library_root):
+		if "%s/%s" % [EventSheetDocLibrary.ADDONS_DIR, EventSheets.addon_guide_name(pack_dir)] == page_id:
+			return "" if EventSheetPackLibrary.in_project(pack_dir, project_root) else pack_dir
+	return ""
 
 
 ## Typing in the search box swaps the tree for ranked results, and clearing it puts the guide tree

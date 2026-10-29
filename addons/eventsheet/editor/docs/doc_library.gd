@@ -79,6 +79,10 @@ const PACK_GUIDE_FILE := "guide.md"
 const USER_DOCS_SETTING := "eventsheets/project/docs_dir"
 const USER_DOCS_DEFAULT := "res://eventsheet_docs"
 
+## The folder the pictures ship in, inside the help folder. It carries a .gdignore, so Godot never
+## imports them into a reader's project; the page reads the bytes itself.
+const IMAGES_DIR := "images"
+
 ## Parsed once per session. A page's TEXT is deliberately not cached: the reader opens one page at
 ## a time and the parse is sub-millisecond, while holding the whole corpus would cost megabytes
 ## for the life of the editor.
@@ -420,6 +424,22 @@ static func repo_path_for_link(target: String, from_id: String) -> String:
 		# One level above docs/ is the repo root.
 		return path.substr(3)
 	return "docs/%s" % path
+
+
+## A link's CORPUS-relative path ("images/jump.png", "Addons/Quest.md"), resolved against the page
+## it was written in; "" for an anchor, a web address or a res:// path.
+static func corpus_path_for_link(target: String, from_id: String) -> String:
+	return _resolve_relative(target.strip_edges(), from_id)
+
+
+## Where a picture a page links to ships inside the plugin (res://addons/eventsheet/help/images/...),
+## or "" when it is not a shipped picture - a web address, or one the bundle does not carry.
+static func shipped_picture(target: String, from_id: String) -> String:
+	var corpus: String = corpus_path_for_link(target, from_id)
+	if not corpus.begins_with(IMAGES_DIR + "/"):
+		return ""
+	var path: String = HELP_ROOT.path_join(corpus)
+	return path if FileAccess.file_exists(path) else ""
 
 
 ## Resolves a relative link against the page it was written in, collapsing "../" segments. The

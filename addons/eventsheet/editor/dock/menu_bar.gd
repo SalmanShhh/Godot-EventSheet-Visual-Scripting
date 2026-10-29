@@ -18,11 +18,18 @@ const MCP_SERVER_PATH := "res://addons/eventsheet/mcp/mcp_server.gd"
 const PATTERN_MANUAL_PATH := "res://addons/eventsheet/editor/docs/doc_patterns.gd"
 const REPEATED_ROWS_PATH := "res://addons/eventsheet/editor/dock/repeated_rows.gd"
 const SAVED_VIEWS_PATH := "res://addons/eventsheet/editor/dock/saved_views.gd"
+const DOC_REFERENCE_PATH := "res://addons/eventsheet/editor/docs/doc_reference.gd"
 const DOC_WHATS_NEW_PATH := "res://addons/eventsheet/editor/docs/doc_whats_new.gd"
 const EVENTSHEETS_API_PATH := "res://addons/eventsheet/api/eventsheets.gd"
 const WORKSPACES_PATH := "res://addons/eventsheet/editor/dock/workspaces.gd"
 
 var _dock: Control = null
+
+
+## The page each of the Menu's two Manual doors asks for: What's new for What's new…, and "" for
+## Manual…, which lets the selection answer (or the home page, when nothing is selected).
+static func menu_doc_id(id: int) -> String:
+	return str(load(DOC_REFERENCE_PATH).whats_new_id()) if id == MENU_WHATS_NEW_ID else ""
 
 
 ## This file's own path, so a control it builds can say where it was built. Written out rather
@@ -76,6 +83,14 @@ const TEXT_LABELS_VIEW_ID: int = 9830
 ## View > Side Rail - the whole left rail out or tucked away. Clear of the runs above, so a
 ## neighbouring pass adding View items never shares it.
 const SIDE_RAIL_VIEW_ID: int = 9840
+
+## View > Manual beside the sheet - the Manual shown as an editor dock next to the sheet, following
+## the selection. Clear of every run above.
+const MANUAL_BESIDE_VIEW_ID: int = 9850
+
+## The Menu's foot: Manual… and What's new…, the two doors a reader looks for by name.
+const MENU_MANUAL_ID: int = 4
+const MENU_WHATS_NEW_ID: int = 5
 
 ## The design's canvas padding at the sheet's left and right, in pixels at 1x, while the workspace
 ## bands are folded away.
@@ -615,6 +630,17 @@ func build(root: Node) -> void:
 	view_popup.id_pressed.connect(func(id: int) -> void:
 		if id == SIDE_RAIL_VIEW_ID and _dock._rail_panels != null:
 			_dock._rail_panels.set_rail_tucked(_dock._rail_panels.is_rail_shown()))
+	# The Manual as a dock beside the sheet, following the selection. The dock is registered at
+	# boot but closed until a reader asks for it; this is where they ask.
+	view_popup.add_check_item(EventSheetL10n.translate("Manual beside the sheet"), MANUAL_BESIDE_VIEW_ID)
+	view_popup.set_item_tooltip(view_popup.get_item_index(MANUAL_BESIDE_VIEW_ID), EventSheetL10n.translate(
+		"Shows the Manual as a dock next to the sheet. Its page follows what you select, and every way into the Manual opens the page there instead of in a window."))
+	view_popup.about_to_popup.connect(func() -> void:
+		view_popup.set_item_checked(view_popup.get_item_index(MANUAL_BESIDE_VIEW_ID),
+			bool(load(_dock.DOC_DOCK_PATH).is_shown_beside())))
+	view_popup.id_pressed.connect(func(id: int) -> void:
+		if id == MANUAL_BESIDE_VIEW_ID:
+			_dock.toggle_manual_beside())
 	view_popup.add_check_item("Add-Event Rows", 9)
 	view_popup.set_item_checked(view_popup.get_item_index(9), true)
 	view_popup.add_check_item("Object Icons", 15)
@@ -914,17 +940,16 @@ func build(root: Node) -> void:
 	# The Menu's foot: the two doors a reader looks for by name rather than by group. Both open the
 	# same Manual the Tools entry does - this is a second door onto one page, never a second page.
 	menu_popup.add_separator()
-	menu_popup.add_item("Manual…", 4)
-	menu_popup.add_item("What's new…", 5)
+	menu_popup.add_item("Manual…", MENU_MANUAL_ID)
+	menu_popup.add_item("What's new…", MENU_WHATS_NEW_ID)
 	# THE SAME DOT ON THE SAME DOOR. Tools ▸ Manual… wears a mark when the reader has not opened
 	# What's new since the plugin's version changed, and this is the door a reader looks for by name
 	# rather than by group - so it was the one Manual entry that never said there was something
 	# unread. Re-asked every time the Menu opens, so reading the page clears it either way.
 	menu_popup.about_to_popup.connect(func() -> void: mark_unread(menu_popup, 4, "Manual…"))
 	menu_popup.id_pressed.connect(func(id: int) -> void:
-		match id:
-			4: _dock.open_documentation()
-			5: _dock.open_documentation("reference:whats-new")
+		if id == MENU_MANUAL_ID or id == MENU_WHATS_NEW_ID:
+			_dock.open_documentation(menu_doc_id(id))
 	)
 	_add_toolbar_separator(_toolbar)
 	# Simple Mode is no longer a pill on the strip: the strip is already calm, so the audience flag

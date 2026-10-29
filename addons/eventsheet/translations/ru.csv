@@ -9688,3 +9688,17 @@ Enemies that plan,"Враги, которые планируют"
 Lots of objects at once,Много объектов сразу
 Drawing and painting,Рисование и живопись
 Menus and screens,Меню и экраны
+Help for every word under %s,Справка по всем словам в разделе %s
+"Opens this behaviour's guide in the Manual, so you can read it before adding it.","Открывает руководство по этому поведению в Руководстве, чтобы его можно было прочитать до добавления."
+Read the guide,Читать руководство
+The Manual is beside the sheet and follows what you select.,Руководство открыто рядом с листом и следует за выделением.
+The Manual is no longer beside the sheet.,Руководство больше не открыто рядом с листом.
+the %s guide,руководство %s
+The file read as events.,"Файл, прочитанный как события."
+"The file as the GDScript it is, byte for byte. Click a line to select the row that writes it.","Файл как GDScript, которым он является, байт в байт. Щёлкните строку, чтобы выделить строку листа, которая её пишет."
+"The events and the lines they write, side by side. Selecting either highlights the other.","События и строки, которые они пишут, рядом. Выделение одного подсвечивает другое."
+Manual beside the sheet,Руководство рядом с листом
+"Shows the Manual as a dock next to the sheet. Its page follows what you select, and every way into the Manual opens the page there instead of in a window.","Показывает Руководство как панель рядом с листом. Его страница следует за выделением, и любой путь в Руководство открывает страницу там, а не в окне."
+Opens the Manual on the page that explains this finding and its fix.,"Открывает Руководство на странице, которая объясняет эту находку и её исправление."
+Opened %s in the Manual.,%s открыто в Руководстве.
+Opened %s in your browser.,%s открыто в браузере.

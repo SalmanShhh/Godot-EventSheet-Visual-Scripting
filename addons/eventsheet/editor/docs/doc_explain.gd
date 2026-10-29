@@ -141,6 +141,23 @@ static func resolve(doc_id: String) -> Dictionary:
 	return route
 
 
+## Whether opening `doc_id` draws it inside the Manual (true) or sends the reader to their browser
+## (false): a guide id whose page did not ship goes online, everything else valid is drawn here. The
+## status line asks this, so it says where the page really opened.
+static func opens_inside(doc_id: String) -> bool:
+	var route: Dictionary = resolve(doc_id)
+	if not bool(route.get("valid", false)):
+		return false
+	return EventSheetDocLibrary.has_page(str(route.get("page_id", ""))) or str(route.get("target", "")).is_empty()
+
+
+## The status line after a door opened a page: where it really opened, in the reader's words.
+static func opened_line(title: String, inside: bool) -> String:
+	if inside:
+		return EventSheetL10n.translate("Opened %s in the Manual.") % title
+	return EventSheetL10n.translate("Opened %s in your browser.") % title
+
+
 ## Where a builtin vocabulary module's guide lives, asked of the API rather than derived here.
 ## The lookup is SOFT on purpose: the module mapping is authored beside the module guides
 ## themselves, and this reader must keep working whether that mapping has landed yet or not - a

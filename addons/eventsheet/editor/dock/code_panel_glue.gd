@@ -346,23 +346,44 @@ func on_raw_code_dialog_confirmed() -> void:
 		_dock._mark_dirty("Updated script block.")
 
 
-# ── The Sheet | Code | Side by side switch at the toolbar's end ─────────────────────────────────
-# A behaviour or a global is a script somebody may want to read either way, so the toolbar carries
-# the switch while one is open; every other sheet keeps the code panel behind View, and shows its rows.
-# Built the first time such a sheet is shown.
+# ── The Events | Code | Both switch above the sheet ───────────────────────────────────────────────
+# Every open sheet is a file somebody may want to read either way, so the strip above the sheet
+# carries the switch whenever a sheet is open: the rows, the GDScript the file is, or both at once.
+# The selection is kept in step both ways (a row highlights its lines, a clicked line selects its
+# row), and the docked Manual follows either, since both end in the same selection.
+
+
+## The switch's three words: Events, Code and Both, with what each shows.
+static func view_switch_words() -> Dictionary:
+	return {
+		EventSheetPopupUI.ViewSwitch.SHEET: [EventSheetL10n.translate("Events"),
+			EventSheetL10n.translate("The file read as events.")],
+		EventSheetPopupUI.ViewSwitch.CODE: [EventSheetL10n.translate("Code"),
+			EventSheetL10n.translate("The file as the GDScript it is, byte for byte. Click a line to select the row that writes it.")],
+		EventSheetPopupUI.ViewSwitch.BOTH: [EventSheetL10n.translate("Both"),
+			EventSheetL10n.translate("The events and the lines they write, side by side. Selecting either highlights the other.")],
+	}
+
+
+## Whether the switch is offered for `sheet`: for any sheet that is open.
+static func offers_view_switch(sheet: EventSheetResource) -> bool:
+	return sheet != null
 
 
 func refresh_view_switch() -> void:
-	var offered: bool = ViewportRowBuilder.reads_in_file_order(_dock._current_sheet)
+	var offered: bool = offers_view_switch(_dock._current_sheet)
 	if _view_switch == null:
 		# On the toolbar, at its end: the strip that held it under the tabs is no longer shown.
 		var holder: Control = _dock._toolbar if _dock._toolbar != null else _dock._title_strip
 		if not offered or holder == null:
 			return
-		_view_switch = EventSheetPopupUI.ViewSwitch.new()
+		_view_switch = EventSheetPopupUI.ViewSwitch.new(EventSheetPopupUI.ViewSwitch.SHEET, view_switch_words())
 		_view_switch.name = "EventSheetViewSwitch"
 		_view_switch.view_chosen.connect(set_sheet_view)
 		holder.add_child(_view_switch)
+		# One of the controls the strip rests with, in either layout: the switch is the reading door.
+		if _dock._menu_bar != null and not _dock._menu_bar._resting_controls.has(_view_switch):
+			_dock._menu_bar._resting_controls.append(_view_switch)
 	_view_switch.visible = offered
 	if not offered and _dock._scroll != null and not _dock._scroll.visible:
 		# A sheet with no switch always shows its rows.

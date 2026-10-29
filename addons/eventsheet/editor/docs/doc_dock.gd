@@ -73,6 +73,10 @@ const INDEX_DOC_PATH: String = "docs/README.md"
 ## instead of popping a window over the sheet. Null whenever no dock is in the tree.
 static var _active: EventSheetDocDock = null
 
+## The dock the plugin registered, whether or not it is showing. A closed dock leaves the tree, so
+## active_dock() cannot find it; View > Manual beside the sheet needs this one to open it again.
+static var _registered: EventSheetDocDock = null
+
 var _browser: Control = null
 var _status: Label = null
 var _built: bool = false
@@ -103,6 +107,7 @@ func _init() -> void:
 	available_layouts = EditorDock.DOCK_LAYOUT_VERTICAL | EditorDock.DOCK_LAYOUT_HORIZONTAL | EditorDock.DOCK_LAYOUT_FLOATING
 	closable = true
 	icon_name = &"Help"
+	_registered = self
 
 
 ## The open dock, or null when none is in the tree. The Manual window asks this before
@@ -111,6 +116,29 @@ static func active_dock() -> EventSheetDocDock:
 	if _active != null and is_instance_valid(_active) and _active.is_inside_tree():
 		return _active
 	return null
+
+
+## Whether the Manual is showing beside the sheet right now - what View > Manual beside the sheet
+## ticks, and what decides whether a door sends its page here or to the window.
+static func is_shown_beside() -> bool:
+	var dock: EventSheetDocDock = active_dock()
+	return dock != null and dock.is_visible_in_tree()
+
+
+## View > Manual beside the sheet. Shows the dock (opening it if the reader closed it) on `doc_id`,
+## or hides it when it is already showing. Returns whether the dock is showing afterwards, and
+## false when the plugin registered no dock (a headless run).
+static func toggle_beside(doc_id: String = "") -> bool:
+	if _registered == null or not is_instance_valid(_registered):
+		return false
+	if is_shown_beside():
+		_registered.close()
+		return false
+	_registered.make_visible()
+	if not doc_id.strip_edges().is_empty():
+		_registered.show_documentation(doc_id, "")
+	_registered.set_following(true)
+	return true
 
 
 ## Opens the dock on `doc_id` (empty for the index), building its content on the way if this is

@@ -119,6 +119,58 @@ static func doc_id(kind: String, name: String = "") -> String:
 	return "%s%s" % [SCHEME, wanted] if suffix.is_empty() else "%s%s/%s" % [SCHEME, wanted, suffix]
 
 
+## The What's new page's id. Every door that names that page asks here, so a door can never again
+## ask for a spelling the router does not know and land on the home page instead.
+static func whats_new_id() -> String:
+	return doc_id(KIND_WHATS_NEW)
+
+
+## The action a home-page door carries; its argument is "<doc id>#<heading anchor>".
+const ACTION_HOME_OPEN := "home_open"
+
+## The page the Manual's home doors open, each with the heading it lands on ("" for the top).
+const HOME_START_HERE: Array[Array] = [
+	["Your first platformer", "guide:GUIDE-RECIPES", "3-hello-jump-a-platformer-character-in-minutes"],
+	["A top-down shooter", "guide:GUIDE-TOP-DOWN-SHOOTER-TUTORIAL", ""],
+	["What's new", "reference:whatsnew", ""],
+	["Learning paths", "reference:tracks", ""],
+]
+const HOME_LOOK_UP: Array[Array] = [
+	["Every condition and action", "guide:Modules/README", ""],
+	["Every behaviour", "guide:Addons/README", ""],
+	["Glossary", "reference:glossary", ""],
+	["Patterns", "reference:patterns", ""],
+]
+const HOME_MOVING_ACROSS := "guide:GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR"
+
+
+## The Manual's home page: two short rows of doors (Start here, Look something up) and the line for
+## people moving from another editor. A door whose page this install does not carry is left out
+## rather than drawn dead.
+static func home_blocks() -> Array[Dictionary]:
+	var blocks: Array[Dictionary] = [
+		{"kind": "heading", "level": 1, "text": "Documentation index", "slug": "documentation-index"},
+		{"kind": "paragraph", "bbcode": "Everything the plugin can do, in the order you will need it. Start with a tutorial, or search above: every page, every condition and action, and every behaviour is in the search."},
+	]
+	for row: Array in [["Start here", HOME_START_HERE], ["Look something up", HOME_LOOK_UP]]:
+		var items: Array = []
+		for door: Array in (row[1] as Array):
+			if EventSheetDocExplain.resolve(str(door[1])).get("valid", false):
+				items.append({"label": str(door[0]), "tooltip": "", "action": ACTION_HOME_OPEN,
+					"argument": "%s#%s" % [str(door[1]), str(door[2])]})
+		if items.is_empty():
+			continue
+		blocks.append({"kind": "heading", "level": 2, "text": str(row[0]), "slug": str(row[0]).to_lower().replace(" ", "-")})
+		blocks.append({"kind": "buttons", "items": items})
+	if bool(EventSheetDocExplain.resolve(HOME_MOVING_ACROSS).get("valid", false)):
+		blocks.append({"kind": "heading", "level": 2, "text": "Coming from another event-sheet editor",
+			"slug": "coming-from-another-event-sheet-editor"})
+		blocks.append({"kind": "paragraph", "bbcode": "Which words change, which stay, and how a family, a layout and an instance variable read here."})
+		blocks.append({"kind": "buttons", "items": [{"label": "Moving from another event-sheet editor", "tooltip": "",
+			"action": ACTION_HOME_OPEN, "argument": "%s#" % HOME_MOVING_ACROSS}]})
+	return blocks
+
+
 ## A "reference:" id split into {kind, name}, or an empty Dictionary when it is not one (or names a
 ## kind this build does not know). The parse is deliberately not a get_slice: a class name never
 ## carries a slash but a category legitimately could, so everything after the FIRST one is the name.

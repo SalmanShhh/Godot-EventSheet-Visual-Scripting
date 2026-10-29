@@ -426,12 +426,12 @@ var _ace_picker: RefCounted = null:
 				return str(load(DOC_EXPLAIN_PATH).guide_label(definition.provider_id)) if definition != null else "")
 			_ace_picker.guide_requested.connect(_on_picker_guide_requested)
 			_ace_picker.help_requested.connect(_on_picker_help_requested)
+			_ace_picker.section_help_requested.connect(func(doc_id: String) -> void:
+				open_documentation(doc_id))
 			_ace_picker.global_settings_requested.connect(_ui_builder.later("_new_addon_panel", "open_settings"))
 			# An empty search names library packs that would answer it; picking one opens the Add
 			# behaviour window on that pack, for the object the sheet is about.
-			_ace_picker.library_pack_requested.connect(func(pack_dir: String) -> void:
-				open_add_behavior_dialog(str(EventSheetObjectFacts.sheet_object_title(_current_sheet,
-					str(_current_sheet.external_source_path) if _current_sheet != null else "").get("name", "")), pack_dir))
+			_ace_picker.library_pack_requested.connect(open_library_pack)
 			_ace_picker_built = true
 			# The idle warm skips the row icons while the picker is uncompiled, so it is asked again
 			# now that the picker exists. Outside the editor this schedules nothing.
@@ -1843,6 +1843,25 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	_input_dispatch.unhandled_key_input(event)
 
 
+## The sheet's keys, asked BEFORE the editor's own shortcuts while the keyboard is inside the sheet.
+## Godot's shortcuts run ahead of unhandled input, so without this F1 opened Search Help, Ctrl+F1
+## switched to the 2D screen and Ctrl+P opened Quick Open while the reader was on a sheet. Outside
+## the sheet the editor's keys are left exactly as they were.
+func _shortcut_input(event: InputEvent) -> void:
+	if not (event is InputEventKey) or not keyboard_is_inside():
+		return
+	_input_dispatch.unhandled_key_input(event)
+
+
+## True while the control that owns the keyboard is part of this sheet editor.
+func keyboard_is_inside() -> bool:
+	var view: Viewport = get_viewport()
+	if view == null:
+		return false
+	var focus_owner: Control = view.gui_get_focus_owner()
+	return focus_owner != null and (focus_owner == self or is_ancestor_of(focus_owner))
+
+
 ## "show the events behind this". Ctrl+Shift+Alt on any control the plugin built opens the
 ## sheet that built it, scrolled to the row. Handled here rather than on each control because the
 ## question is asked OF a control and answered BY the dock, and because a chord this deliberate must
@@ -1851,6 +1870,14 @@ func _unhandled_key_input(event: InputEvent) -> void:
 ## Silent everywhere else: outside the editor's own repo nothing is marked, so this finds nothing and
 ## the click goes where it always went.
 func _input(event: InputEvent) -> void:
+	# F1 and Ctrl+F1 are taken by the editor before any shortcut or unhandled pass (Search Help and
+	# the 2D screen), so while the keyboard is inside the sheet they are answered here, first.
+	var key_event: InputEventKey = event as InputEventKey
+	if key_event != null and key_event.keycode == KEY_F1 and keyboard_is_inside():
+		if key_event.pressed and not key_event.echo:
+			_input_dispatch.unhandled_key_input(event)
+		get_viewport().set_input_as_handled()
+		return
 	if not EventSheetBuiltHere.is_show_source_click(event):
 		return
 	var view: Viewport = get_viewport()
@@ -4778,6 +4805,22 @@ func open_documentation(doc_id: String = "", anchor: String = "") -> bool:
 	return false
 
 
+## Opens the Add behaviour window on a pack that waits in the behaviour library, for the object the
+## sheet is about - the picker's library suggestion and a behaviour page's Add to project both land here.
+func open_library_pack(pack_dir: String) -> void:
+	open_add_behavior_dialog(str(EventSheetObjectFacts.sheet_object_title(_current_sheet,
+		str(_current_sheet.external_source_path) if _current_sheet != null else "").get("name", "")), pack_dir)
+
+
+## View > Manual beside the sheet: the Manual as a dock next to the sheet, opened on whatever is
+## selected (or the page it was last left on), or put away again when it is already showing.
+func toggle_manual_beside() -> void:
+	if bool(load(DOC_DOCK_PATH).toggle_beside(_selected_row_doc_id())):
+		_set_status(EventSheetL10n.translate("The Manual is beside the sheet and follows what you select."))
+	elif not bool(load(DOC_DOCK_PATH).is_shown_beside()):
+		_set_status(EventSheetL10n.translate("The Manual is no longer beside the sheet."))
+
+
 ## The last page the reader had open in the Manual, for Ctrl+F1 - "take me back to what I was
 ## reading" rather than "explain this row". "" when they have not opened it yet, which lands them on
 ## the index, and that is the right answer: there is nothing to go back to.
@@ -4860,9 +4903,15 @@ func _on_picker_guide_requested(definition: ACEDefinition) -> void:
 	if definition == null:
 		return
 	var pack_dir: String = load(EVENTSHEETS_API_PATH).addon_pack_directory(definition.provider_id)
-	if pack_dir.is_empty() or not load(EVENTSHEETS_API_PATH).open_docs("addon:%s" % pack_dir):
+	var guide_id: String = "addon:%s" % pack_dir
+	if pack_dir.is_empty() or not load(EVENTSHEETS_API_PATH).open_docs(guide_id):
 		return
-	_set_status("Opened %s in your browser." % load(EVENTSHEETS_API_PATH).addon_guide_for_pack(pack_dir).get_file())
+	# Said where it really opened: a guide that ships with the plugin is drawn in the Manual, and
+	# only one that did not ship goes to the browser.
+	var explain: Script = load(DOC_EXPLAIN_PATH)
+	var guide_title: String = str(load(EVENTSHEETS_API_PATH).addon_guide_name(pack_dir)).replace("-", " ")
+	_set_status(explain.opened_line(EventSheetL10n.translate("the %s guide") % guide_title,
+		bool(explain.opens_inside(guide_id))))
 
 
 ## The addon's issue tracker. A plain constant rather than a project setting: it is where THIS

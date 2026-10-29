@@ -9688,3 +9688,17 @@ Enemies that plan,계획하는 적
 Lots of objects at once,한 번에 많은 오브젝트
 Drawing and painting,그리기와 칠하기
 Menus and screens,메뉴와 화면
+Help for every word under %s,%s 아래 모든 단어 도움말
+"Opens this behaviour's guide in the Manual, so you can read it before adding it.",이 동작의 가이드를 설명서에서 엽니다. 추가하기 전에 읽어 볼 수 있습니다.
+Read the guide,가이드 읽기
+The Manual is beside the sheet and follows what you select.,설명서가 시트 옆에 있으며 선택한 항목을 따라갑니다.
+The Manual is no longer beside the sheet.,설명서가 더 이상 시트 옆에 없습니다.
+the %s guide,%s 가이드
+The file read as events.,파일을 이벤트로 읽습니다.
+"The file as the GDScript it is, byte for byte. Click a line to select the row that writes it.","파일을 있는 그대로의 GDScript로, 바이트 단위로 똑같이 보여 줍니다. 줄을 클릭하면 그 줄을 쓰는 행이 선택됩니다."
+"The events and the lines they write, side by side. Selecting either highlights the other.",이벤트와 그 이벤트가 쓰는 줄을 나란히 보여 줍니다. 한쪽을 선택하면 다른 쪽이 강조됩니다.
+Manual beside the sheet,시트 옆에 설명서
+"Shows the Manual as a dock next to the sheet. Its page follows what you select, and every way into the Manual opens the page there instead of in a window.","설명서를 시트 옆 도크로 보여 줍니다. 페이지는 선택한 항목을 따라가며, 설명서로 들어가는 모든 길은 창 대신 그곳에 페이지를 엽니다."
+Opens the Manual on the page that explains this finding and its fix.,이 발견 사항과 해결 방법을 설명하는 페이지로 설명서를 엽니다.
+Opened %s in the Manual.,%s을(를) 설명서에서 열었습니다.
+Opened %s in your browser.,%s을(를) 브라우저에서 열었습니다.

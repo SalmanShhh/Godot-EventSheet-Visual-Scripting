@@ -8,6 +8,8 @@
 #   docs/Addons/*.md   ->  addons/eventsheet/help/Addons/<STEM>.md     id "Addons/Quest"
 #   docs/Modules/*.md  ->  addons/eventsheet/help/Modules/<STEM>.md    id "Modules/Collections"
 #   docs/<locale>/*.md ->  addons/eventsheet/help/<locale>/<STEM>.md    id "fr/GUIDE-RECIPES"
+#   docs/images/*      ->  addons/eventsheet/help/images/*  (only the pictures a page links; the
+#                          folder carries a .gdignore, so a reader's project never imports them)
 #   (derived)          ->  addons/eventsheet/help/index.esdoc
 #   (derived)          ->  addons/eventsheet/help/figures.esdoc
 #   (derived)          ->  addons/eventsheet/help/whatsnew.esdoc
@@ -298,6 +300,7 @@ static func drifted_pages(pages: Dictionary) -> PackedStringArray:
 	# same kind of wrong as a stale page: the reader searches a corpus that is not the one shipped.
 	if read_text(EventSheetDocLibrary.SEARCH_PATH) != search_text(pages):
 		drifted.append("search.esdoc")
+	drifted.append_array(drifted_pictures(pages))
 	return drifted
 
 
@@ -328,6 +331,66 @@ static func write_bundle(pages: Dictionary) -> void:
 	for id: Variant in pages:
 		write_bytes("%s/%s.md" % [BUNDLE_ROOT, str(id)], read_bytes(str(pages[id])))
 	write_text(MANIFEST_PATH, manifest_text(build_manifest(pages)))
+	write_pictures(pages)
+
+
+## The pictures the shipped pages draw, corpus-relative ("images/jump.png") and sorted: every image
+## a page links to (Markdown or an <img> tag) that resolves into docs/images/ and exists there.
+static func referenced_pictures(pages: Dictionary) -> PackedStringArray:
+	var found: Dictionary = {}
+	var matcher: RegEx = RegEx.create_from_string("(?:\\]\\(|src=\")([^)\"\\s]+\\.(?:png|jpg|jpeg|webp|svg))")
+	for id: Variant in pages:
+		for hit: RegExMatch in matcher.search_all(read_text(str(pages[id]))):
+			var corpus: String = EventSheetDocLibrary.corpus_path_for_link(hit.get_string(1), str(id))
+			if corpus.begins_with(EventSheetDocLibrary.IMAGES_DIR + "/") \
+					and FileAccess.file_exists(SOURCE_ROOT.path_join(corpus)):
+				found[corpus] = true
+	var sorted: PackedStringArray = PackedStringArray(found.keys())
+	sorted.sort()
+	return sorted
+
+
+## The pictures as they sit in the help folder now, corpus-relative and sorted.
+static func bundled_pictures() -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	var folder: String = BUNDLE_ROOT.path_join(EventSheetDocLibrary.IMAGES_DIR)
+	if DirAccess.dir_exists_absolute(folder):
+		for file_name: String in DirAccess.get_files_at(folder):
+			if not file_name.begins_with("."):
+				out.append("%s/%s" % [EventSheetDocLibrary.IMAGES_DIR, file_name])
+	out.sort()
+	return out
+
+
+## Copies every referenced picture into the help folder byte for byte, removes the ones no page
+## links any more, and keeps the folder's .gdignore so Godot never imports them.
+static func write_pictures(pages: Dictionary) -> void:
+	var folder: String = BUNDLE_ROOT.path_join(EventSheetDocLibrary.IMAGES_DIR)
+	DirAccess.make_dir_recursive_absolute(folder)
+	write_text(folder.path_join(".gdignore"), "")
+	var wanted: PackedStringArray = referenced_pictures(pages)
+	for corpus: String in bundled_pictures():
+		if not wanted.has(corpus):
+			DirAccess.remove_absolute(BUNDLE_ROOT.path_join(corpus))
+	for corpus: String in wanted:
+		write_bytes(BUNDLE_ROOT.path_join(corpus), read_bytes(SOURCE_ROOT.path_join(corpus)))
+
+
+## The pictures that differ from what the pages ask for: missing, stale, changed, or the folder
+## without its .gdignore.
+static func drifted_pictures(pages: Dictionary) -> PackedStringArray:
+	var drifted: PackedStringArray = PackedStringArray()
+	var wanted: PackedStringArray = referenced_pictures(pages)
+	for corpus: String in wanted:
+		if read_bytes(BUNDLE_ROOT.path_join(corpus)) != read_bytes(SOURCE_ROOT.path_join(corpus)):
+			drifted.append(corpus)
+	for corpus: String in bundled_pictures():
+		if not wanted.has(corpus):
+			drifted.append("%s (no page links it)" % corpus)
+	if not wanted.is_empty() and not FileAccess.file_exists(
+			BUNDLE_ROOT.path_join(EventSheetDocLibrary.IMAGES_DIR).path_join(".gdignore")):
+		drifted.append("images/.gdignore")
+	return drifted
 
 
 ## The manifest: page titles, the derived groups, and the guides the index forgot.

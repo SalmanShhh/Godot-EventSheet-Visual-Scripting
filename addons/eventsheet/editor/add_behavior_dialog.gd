@@ -74,6 +74,8 @@ var _added_said: Label = null
 var _added_host: Node = null
 ## True while a library add is copying and importing, so a second click does not start another.
 var _adding: bool = false
+## "<pack> · Read the guide" over the selected pack's properties.
+var _guide_link: Button = null
 
 
 func _init() -> void:
@@ -202,6 +204,15 @@ func _build_body() -> Control:
 	band.add_child(shelves)
 	var detail: VBoxContainer = EventSheetPopupUI.form_box()
 	detail.custom_minimum_size.x = EventSheetPalette.scaled_f(280.0)
+	# The selected behaviour's guide, readable before it is added - from the project or the library.
+	_guide_link = Button.new()
+	_guide_link.flat = true
+	_guide_link.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_guide_link.add_theme_color_override("font_color", EventSheetPopupUI.accent_color())
+	_guide_link.tooltip_text = EventSheetL10n.translate("Opens this behaviour's guide in the Manual, so you can read it before adding it.")
+	_guide_link.pressed.connect(_read_selected_guide)
+	_guide_link.visible = false
+	detail.add_child(_guide_link)
 	_properties = VBoxContainer.new()
 	_properties.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
 	var properties_scroll: ScrollContainer = ScrollContainer.new()
@@ -463,9 +474,15 @@ func open_card_menu(path: String) -> void:
 		_card_menu = PopupMenu.new()
 		_card_menu.add_item(EventSheetL10n.translate("Behaviour settings…"), 0)
 		_card_menu.add_item(EventSheetL10n.translate("Open as sheet"), 1)
+		_card_menu.add_item(EventSheetL10n.translate("Read the guide"), 3)
 		_card_menu.add_separator()
 		_card_menu.add_item(EventSheetL10n.translate("Remove from project…"), 2)
 		_card_menu.id_pressed.connect(func(id: int) -> void:
+			if id == 3:
+				for listed: Dictionary in _packs:
+					if str(listed.get("path", "")) == _card_menu_path and not guide_doc_id(listed).is_empty():
+						EventSheets.open_docs(guide_doc_id(listed))
+				return
 			hide()
 			if id == 2:
 				_remove_menu_pack()
@@ -610,9 +627,35 @@ func _select_pack(pack: Dictionary) -> void:
 		if not inline_capable and _where.get_selected_id() == 1:
 			_where.select(_where.get_item_index(0))
 	_strip.describe(str(pack.get("name", "")), str(pack.get("pitch", "")))
+	var guide: String = guide_doc_id(pack)
+	_guide_link.visible = not guide.is_empty()
+	_guide_link.text = "%s · %s" % [str(pack.get("name", "")), EventSheetL10n.translate("Read the guide")]
 	_refresh_library_card(pack)
 	_refresh_reading()
 	_rebuild_list_selection()
+
+
+## The Manual page a pack's "Read the guide" opens: the guide that ships with the plugin for it, else
+## the pack's own guide when the project holds it, or "" when it has none. A library pack is not in
+## the project, so its shipped guide is the only page it can have.
+static func guide_doc_id(pack: Dictionary) -> String:
+	var pack_dir: String = str(pack.get("dir", "")).strip_edges()
+	if pack_dir.is_empty():
+		return ""
+	var shipped: String = "Addons/%s" % EventSheets.addon_guide_name(pack_dir)
+	if EventSheetDocLibrary.has_page(shipped):
+		return "guide:%s" % shipped
+	if not is_library_pack(pack) and EventSheetDocExplain.opens_inside("addon:%s" % pack_dir):
+		return "addon:%s" % pack_dir
+	return ""
+
+
+## Read the guide: the selected pack's guide, in the Manual. The window stays open behind it, since
+## reading is how the choice gets made.
+func _read_selected_guide() -> void:
+	var guide: String = guide_doc_id(selected_pack())
+	if not guide.is_empty():
+		EventSheets.open_docs(guide)
 
 
 ## The card a library pack shows: what else its @ace_requires brings, and the folder it is copied

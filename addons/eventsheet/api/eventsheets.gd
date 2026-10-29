@@ -2714,6 +2714,16 @@ static func open_docs(doc_id: String = "", anchor: String = "") -> bool:
 	return _dock.open_documentation(doc_id, anchor)
 
 
+## Opens the Add behaviour window on `pack_dir`, a pack that waits in the plugin's behaviour library,
+## for the open sheet's object - so the Manual page of a behaviour not yet in the project leads
+## straight to adding it. False when no editor is open or the library does not carry that pack.
+static func add_behaviour_from_library(pack_dir: String) -> bool:
+	if not _dock_alive() or not EventSheetPackLibrary.folders().has(pack_dir.strip_edges()):
+		return false
+	_dock.open_library_pack(pack_dir.strip_edges())
+	return true
+
+
 ## The `## @ace_help("...")` value declared anywhere in a pack directory, or "". Cached per
 ## directory: this sits on the doc panel's per-page path, and a pack's scripts do not move
 ## while the editor is open.

@@ -23,7 +23,7 @@
 "title": "Working with your project"
 }, {
 "ids": ["GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR", "GUIDE-TOP-DOWN-SHOOTER-TUTORIAL", "REFERENCE-GLOSSARY"],
-"title": "Coming from Construct 3"
+"title": "Coming from another event-sheet editor"
 }, {
 "ids": ["REFERENCE-ENGINE-ACES", "REFERENCE-MCP-SERVER", "REFERENCE-PERFORMANCE", "GDSCRIPT-BASICS-COVERAGE"],
 "title": "Reference"

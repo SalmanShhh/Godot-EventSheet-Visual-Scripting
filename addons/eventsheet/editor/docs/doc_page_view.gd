@@ -804,13 +804,28 @@ func _wide_content_scroll(content: Control) -> ScrollContainer:
 	return scroll
 
 
-## Images do not ship with the plugin (they are 5 MB of PNGs, and every one of them would cost the
-## reader's project an import pass). The alt text this repo writes is unusually descriptive, so an
-## image degrades to a caption card with a button that opens the real picture online.
+## A picture is drawn in the page from the copy that ships in the help folder. That folder is never
+## imported (it carries a .gdignore, so the pictures cost a reader's project no import pass), so the
+## bytes are read and decoded here. A picture the bundle does not carry - a web address, or one a
+## third-party guide links - degrades to a caption card with a button that opens it online; the alt
+## text this repo writes is descriptive enough to stand in for it.
 func _image_card(path: String, alt: String) -> Control:
 	var caption: String = alt.strip_edges()
 	if caption.is_empty():
 		caption = path.get_file()
+	var texture: Texture2D = shipped_picture_texture(EventSheetDocLibrary.shipped_picture(path, _doc_id))
+	if texture != null:
+		var picture: TextureRect = TextureRect.new()
+		picture.texture = texture
+		picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT
+		var width: float = minf(float(texture.get_width()), _page_width if _page_width > 0.0 else float(texture.get_width()))
+		picture.custom_minimum_size = Vector2(width, width * float(texture.get_height()) / maxf(1.0, float(texture.get_width())))
+		picture.tooltip_text = caption
+		var drawn: VBoxContainer = EventSheetPopupUI.form_box()
+		drawn.add_child(picture)
+		drawn.add_child(EventSheetPopupUI.hint_label(caption, _page_width))
+		return drawn
 	var box: VBoxContainer = EventSheetPopupUI.form_box()
 	var repo_path: String = EventSheetDocLibrary.repo_path_for_link(path, _doc_id)
 	var button: Button = null
@@ -827,6 +842,30 @@ func _image_card(path: String, alt: String) -> Control:
 	box.add_child(_card_label_row("Picture", button))
 	box.add_child(EventSheetPopupUI.hint_label(caption, _page_width))
 	return EventSheetPopupUI.panel_section(box)
+
+
+## A shipped picture as a texture, decoded from its bytes (the folder is never imported), or null
+## for "" or a file that does not decode.
+static func shipped_picture_texture(path: String) -> Texture2D:
+	if path.is_empty():
+		return null
+	var bytes: PackedByteArray = FileAccess.get_file_as_bytes(path)
+	if bytes.is_empty():
+		return null
+	var image: Image = Image.new()
+	var result: Error = ERR_FILE_UNRECOGNIZED
+	match path.get_extension().to_lower():
+		"png":
+			result = image.load_png_from_buffer(bytes)
+		"jpg", "jpeg":
+			result = image.load_jpg_from_buffer(bytes)
+		"webp":
+			result = image.load_webp_from_buffer(bytes)
+		"svg":
+			result = image.load_svg_from_buffer(bytes)
+	if result != OK or image.is_empty():
+		return null
+	return ImageTexture.create_from_image(image)
 
 
 ## Every link click in the page lands here. A link to another shipped guide stays inside the

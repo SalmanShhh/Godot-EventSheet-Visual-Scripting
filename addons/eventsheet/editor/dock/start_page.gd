@@ -190,7 +190,7 @@ static func columns(showcases: PackedStringArray, recents: Array,
 			"tag": "%d min" % int(tutorial.get("minutes", 0)), "pitch": str(tutorial.get("lead", "")),
 			"target": EventSheetDocTutorials.doc_id(str(tutorial.get("id", "")))})
 	learn.append({"kind": "learn", "label": "What's new", "tag": "since you last looked",
-		"pitch": "What changed in the editor since you last looked.", "target": "reference:whats-new"})
+		"pitch": "What changed in the editor since you last looked.", "target": EventSheetDocReference.whats_new_id()})
 	var built: Array = [
 		{"id": "templates", "title": "New from template", "entries": templates},
 		{"id": "recent", "title": "Recent", "entries": recent_entries},

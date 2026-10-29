@@ -9688,3 +9688,17 @@ Enemies that plan,"Gegner, die planen"
 Lots of objects at once,Viele Objekte auf einmal
 Drawing and painting,Zeichnen und Malen
 Menus and screens,Menüs und Bildschirme
+Help for every word under %s,Hilfe zu allen Wörtern unter %s
+"Opens this behaviour's guide in the Manual, so you can read it before adding it.","Öffnet die Anleitung dieses Verhaltens im Handbuch, damit du sie vor dem Hinzufügen lesen kannst."
+Read the guide,Anleitung lesen
+The Manual is beside the sheet and follows what you select.,Das Handbuch steht neben dem Blatt und folgt deiner Auswahl.
+The Manual is no longer beside the sheet.,Das Handbuch steht nicht mehr neben dem Blatt.
+the %s guide,die Anleitung %s
+The file read as events.,Die Datei als Ereignisse gelesen.
+"The file as the GDScript it is, byte for byte. Click a line to select the row that writes it.","Die Datei als das GDScript, das sie ist, Byte für Byte. Klicke eine Zeile an, um die Zeile im Blatt auszuwählen, die sie schreibt."
+"The events and the lines they write, side by side. Selecting either highlights the other.","Die Ereignisse und die Zeilen, die sie schreiben, nebeneinander. Eine Auswahl auf einer Seite hebt die andere hervor."
+Manual beside the sheet,Handbuch neben dem Blatt
+"Shows the Manual as a dock next to the sheet. Its page follows what you select, and every way into the Manual opens the page there instead of in a window.","Zeigt das Handbuch als Dock neben dem Blatt. Seine Seite folgt deiner Auswahl, und jeder Weg ins Handbuch öffnet die Seite dort statt in einem Fenster."
+Opens the Manual on the page that explains this finding and its fix.,"Öffnet das Handbuch auf der Seite, die diesen Befund und seine Behebung erklärt."
+Opened %s in the Manual.,%s im Handbuch geöffnet.
+Opened %s in your browser.,%s in deinem Browser geöffnet.

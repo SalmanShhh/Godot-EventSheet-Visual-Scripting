@@ -9688,3 +9688,17 @@ Enemies that plan,計画する敵
 Lots of objects at once,大量のオブジェクトを同時に
 Drawing and painting,描画とペイント
 Menus and screens,メニューと画面
+Help for every word under %s,%s のすべての語のヘルプ
+"Opens this behaviour's guide in the Manual, so you can read it before adding it.",この挙動のガイドをマニュアルで開きます。追加する前に読めます。
+Read the guide,ガイドを読む
+The Manual is beside the sheet and follows what you select.,マニュアルがシートの横にあり、選択に合わせて表示が変わります。
+The Manual is no longer beside the sheet.,マニュアルはシートの横から閉じられました。
+the %s guide,%s ガイド
+The file read as events.,ファイルをイベントとして表示します。
+"The file as the GDScript it is, byte for byte. Click a line to select the row that writes it.",ファイルをそのままの GDScript として、1 バイトも変えずに表示します。行をクリックすると、その行を書くシートの行が選択されます。
+"The events and the lines they write, side by side. Selecting either highlights the other.",イベントと、それが書く行を並べて表示します。どちらかを選択すると、もう一方が強調されます。
+Manual beside the sheet,シートの横にマニュアル
+"Shows the Manual as a dock next to the sheet. Its page follows what you select, and every way into the Manual opens the page there instead of in a window.",マニュアルをシートの横のドックとして表示します。ページは選択に合わせて変わり、マニュアルへのどの入口もウィンドウではなくそこにページを開きます。
+Opens the Manual on the page that explains this finding and its fix.,この指摘とその直し方を説明するページでマニュアルを開きます。
+Opened %s in the Manual.,%s をマニュアルで開きました。
+Opened %s in your browser.,%s をブラウザーで開きました。

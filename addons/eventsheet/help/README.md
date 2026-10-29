@@ -82,7 +82,7 @@ Every page below also ships inside the editor: open **Tools > Manual**, or press
 - [Asking for Events in Plain Words](GUIDE-ASKING-FOR-EVENTS-IN-PLAIN-WORDS.md) - the optional Ask box: what is sent (exactly), what can come back, why the answer is rows rather than code, and how to turn it on or leave it off.
 - [Removing Godot EventSheets](GUIDE-UNINSTALL.md) - a clean, guided teardown that leaves your game running.
 
-## Coming from Construct 3
+## Coming from another event-sheet editor
 
 - [Migration Guide](GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md) - every concept, behavior, and plugin mapped to its home here.
 - [Top-Down Shooter Tutorial](GUIDE-TOP-DOWN-SHOOTER-TUTORIAL.md) - the first game most event-sheet users build, rebuilt in ten rows with the GDScript beside each, and picking as a For each.

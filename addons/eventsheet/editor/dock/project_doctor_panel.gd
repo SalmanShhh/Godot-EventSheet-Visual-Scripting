@@ -33,6 +33,8 @@ var _page: Array[Dictionary] = []
 ## True from a fix being applied until the re-run redraws the page, so the second click of a
 ## double-click (which Godot also reports as an activation) does not apply the same fix again.
 var _fix_pending: bool = false
+## Where each check's Learn more goes, found once a session: reading the whole Manual is not free.
+static var _learn_more_cache: Dictionary = {}
 
 
 func init(dock: Control) -> void:
@@ -176,6 +178,114 @@ func _on_finding_selected() -> void:
 		row.set_custom_color(3, EventSheetPopupUI.accent_color())
 		row.set_tooltip_text(3, EventSheetL10n.translate("Applies this fix through undo, then re-runs the check."))
 		row.set_metadata(2, offer)
+	# The page that explains the problem and its fix, at its heading - the Manual's own search asked
+	# with the finding's words, so a check needs no entry anywhere to have one.
+	var learn: Dictionary = learn_more_for(finding as Dictionary)
+	if learn.is_empty():
+		return
+	var learn_row: TreeItem = _doctor_tree.create_item(item)
+	learn_row.set_text(3, "%s · %s" % [EventSheetL10n.translate("Learn more"), str(learn.get("title", ""))])
+	learn_row.set_custom_color(3, EventSheetPopupUI.accent_color())
+	learn_row.set_tooltip_text(3, EventSheetL10n.translate("Opens the Manual on the page that explains this finding and its fix."))
+	learn_row.set_metadata(2, learn)
+
+
+## Where a finding's Learn more goes: {doc_id, anchor, title}, or {} when the Manual has nothing
+## about it. The page that names the check is the page that explains it, so the first guide whose
+## text carries the check's id lands the reader on the heading over that mention; without one, the
+## Manual's search is asked for a HEADING in the check's own words. A page with only a passing
+## mention of the words would be a guess, and a Learn more that lands on the wrong page is worse
+## than none. `pages` ({page id: Markdown}) stands in for the shipped Manual in a test.
+static func learn_more_for(finding: Dictionary, pages: Dictionary = {}) -> Dictionary:
+	var check: String = str(finding.get("check", "")).strip_edges()
+	if check.is_empty():
+		return {}
+	var corpus: Dictionary = pages
+	if corpus.is_empty():
+		if _learn_more_cache.has(check):
+			return _learn_more_cache[check]
+		for page_id: String in EventSheetDocLibrary.page_ids():
+			corpus[page_id] = EventSheetDocLibrary.page_source(page_id)
+	var found: Dictionary = mention_in(corpus, check)
+	if found.is_empty():
+		found = doctor_heading_in(corpus, check)
+	if found.is_empty() and pages.is_empty():
+		for result: Dictionary in EventSheetDocSearch.search(check.replace("-", " "), 5):
+			if not str(result.get("anchor", "")).is_empty():
+				found = {"doc_id": str(result.get("doc_id", "")), "anchor": str(result.get("anchor", "")),
+					"title": "%s · %s" % [str(result.get("title", "")), str(result.get("heading", ""))]}
+				break
+	if pages.is_empty():
+		_learn_more_cache[check] = found
+	return found
+
+
+## The guides keep a "What the Doctor says" section about their own subject. The first heading that
+## names the Doctor, on a page whose title or that heading carries the check's first word ("Collisions"
+## for collisions, "Interop" for interop-script), as {doc_id, anchor, title}, or {}.
+static func doctor_heading_in(pages: Dictionary, check: String) -> Dictionary:
+	var subject: String = check.get_slice("-", 0).to_lower()
+	if subject.length() < 4:
+		return {}
+	var word: RegEx = RegEx.create_from_string("\\b%s\\b" % subject)
+	var ids: Array = pages.keys()
+	ids.sort()
+	for page_id: Variant in ids:
+		var title: String = ""
+		var in_fence: bool = false
+		for line: String in str(pages[page_id]).split("\n"):
+			var stripped: String = line.strip_edges()
+			if stripped.begins_with("```"):
+				in_fence = not in_fence
+				continue
+			if in_fence or not stripped.begins_with("#"):
+				continue
+			var text: String = stripped.lstrip("#").strip_edges()
+			if stripped.begins_with("# ") and title.is_empty():
+				title = text
+				continue
+			if not text.to_lower().contains("doctor"):
+				continue
+			if word.search(text.to_lower()) != null or word.search(title.to_lower()) != null:
+				return {"doc_id": "guide:%s" % str(page_id), "anchor": EventSheetDocMarkdown.slug(text),
+					"title": "%s · %s" % [title, text]}
+	return {}
+
+
+## The first page whose text names `check` as a whole word, as {doc_id, anchor, title} at the
+## heading over the mention, or {}. Pure over the pages it is handed; pages are read in id order.
+static func mention_in(pages: Dictionary, check: String) -> Dictionary:
+	# A one-word check ("collisions", "compile") is an ordinary word in prose, so only its spelling as
+	# code (`collisions`) names it; a hyphenated id is distinctive wherever it appears.
+	if not check.contains("-"):
+		check = "`%s`" % check
+	var matcher: RegEx = RegEx.create_from_string("(^|[^a-z0-9-])%s([^a-z0-9-]|$)" % check.replace("-", "\\-"))
+	var ids: Array = pages.keys()
+	ids.sort()
+	for page_id: Variant in ids:
+		var title: String = ""
+		var heading: String = ""
+		var in_fence: bool = false
+		for line: String in str(pages[page_id]).split("\n"):
+			var stripped: String = line.strip_edges()
+			if stripped.begins_with("```"):
+				in_fence = not in_fence
+				continue
+			if in_fence:
+				continue
+			if stripped.begins_with("#"):
+				var text: String = stripped.lstrip("#").strip_edges()
+				if stripped.begins_with("# ") and title.is_empty():
+					title = text
+				else:
+					heading = text
+			if matcher.search(line) == null:
+				continue
+			if heading.is_empty():
+				break
+			return {"doc_id": "guide:%s" % str(page_id), "anchor": EventSheetDocMarkdown.slug(heading),
+				"title": "%s · %s" % [title, heading]}
+	return {}
 
 
 ## A click (or Enter) on a fix row applies it, then re-runs the audit so the finding's going away is
@@ -184,6 +294,10 @@ func _on_finding_selected() -> void:
 func _apply_fix_row(item: TreeItem) -> bool:
 	if item == null or not (item.get_metadata(2) is Dictionary):
 		return false
+	var learn: Dictionary = item.get_metadata(2) as Dictionary
+	if learn.has("doc_id"):
+		_dock.open_documentation(str(learn["doc_id"]), str(learn.get("anchor", "")))
+		return true
 	if _fix_pending:
 		return true
 	_fix_pending = true
