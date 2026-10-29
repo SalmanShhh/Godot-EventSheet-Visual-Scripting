@@ -5319,13 +5319,16 @@ func _apply_editor_native_defaults() -> void:
 	if not Engine.is_editor_hint() or _viewport == null:
 		return
 	# A sheet with no theme of its own is painted with the default the viewport resolves at every
-	# seat (Editor Native moved onto the editor's base colour), so a new editor theme only needs the
-	# sheet re-seated - never a theme written onto the sheet, which would mark it unsaved and pin the
-	# old colours to it. The active style lives on EventSheetThemeManager; read it through the getter.
-	if _theme_manager.get_active_theme_style() == null and _current_sheet != null:
+	# seat (Editor Native moved onto the editor's base colour), and a theme that follows the editor
+	# (the Editor Native starter) is moved onto that base at every seat too - so a new editor theme
+	# only needs the sheet re-seated and the chrome republished, never a theme written onto the sheet,
+	# which would mark it unsaved and pin the old colours to it. A theme that does not follow the
+	# editor is left as it is. The active style lives on EventSheetThemeManager; read it through the
+	# getter.
+	var active: EventSheetEditorStyle = _theme_manager.get_active_theme_style()
+	if _current_sheet != null and (active == null or active.follow_editor_greys):
 		_viewport.set_sheet(_current_sheet)
-		if _menu_bar != null:
-			_menu_bar.apply_theme_chrome()
+		_theme_manager._publish_active_style()
 
 
 # ── Quick-add bar ("type to insert", and to ASK) - bodies in EventSheetAuthorActions
