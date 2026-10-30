@@ -1673,6 +1673,7 @@ func set_undo_redo_manager(undo_redo: Variant) -> void:
 	if undo_redo == null:
 		return
 	_undo_redo_adapter.set_manager(undo_redo)
+	_undo_redo_adapter.set_context(self)
 	if _exposed_node != null:
 		_exposed_node.set_undo_redo_manager(_undo_redo_adapter.get_manager())
 	if not _exposed_node.row_param_changed.is_connected(_on_exposed_row_param_changed):

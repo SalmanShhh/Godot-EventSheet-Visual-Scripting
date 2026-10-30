@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Fixed: Undo works inside the editor
+
+- In the editor, the sheet's Undo and Redo did nothing: Ctrl+Z after a drag-drop (or any other
+  edit), the toolbar's Undo and Redo, Edit ▸ Undo and the History panel all said "Nothing to undo".
+  The editor's undo manager keeps one history per scene and one for the editor, and the questions
+  "is there a step" and "take it back" belong to those histories, not to the manager. The sheet now
+  asks the history its own steps go into, so every one of those doors undoes and redoes the last
+  edit. Clearing the sheet's history now clears only its own, never the open scenes'.
+
 ### Changed: a fresh install draws Editor Native, in the boards' own colours
 
 - A sheet with no theme of its own now wears Editor Native, moved onto the running editor's greys,
