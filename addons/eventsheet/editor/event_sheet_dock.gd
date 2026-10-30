@@ -1674,11 +1674,21 @@ func set_undo_redo_manager(undo_redo: Variant) -> void:
 		return
 	_undo_redo_adapter.set_manager(undo_redo)
 	_undo_redo_adapter.set_context(self)
+	# The toolbar's Undo and Redo answer for the editor's newest step, which a scene edit changes too,
+	# so they follow the editor's own history rather than only the sheet's edits.
+	var history_source: Object = undo_redo as Object
+	if history_source != null and history_source.has_signal("version_changed") \
+			and not history_source.is_connected("version_changed", _on_editor_history_moved):
+		history_source.connect("version_changed", _on_editor_history_moved, CONNECT_DEFERRED)
 	if _exposed_node != null:
 		_exposed_node.set_undo_redo_manager(_undo_redo_adapter.get_manager())
 	if not _exposed_node.row_param_changed.is_connected(_on_exposed_row_param_changed):
 		_exposed_node.row_param_changed.connect(_on_exposed_row_param_changed)
 
+
+func _on_editor_history_moved() -> void:
+	if _menu_bar != null:
+		_menu_bar.refresh_history_buttons()
 
 
 func add_ace_provider_script(path: String) -> bool:

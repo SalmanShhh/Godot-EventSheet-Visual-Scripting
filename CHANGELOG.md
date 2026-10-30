@@ -5,11 +5,19 @@
 ### Fixed: Undo works inside the editor
 
 - In the editor, the sheet's Undo and Redo did nothing: Ctrl+Z after a drag-drop (or any other
-  edit), the toolbar's Undo and Redo, Edit ▸ Undo and the History panel all said "Nothing to undo".
+  edit), the toolbar's Undo and Redo, Scene ▸ Undo and the History panel all said "Nothing to undo".
   The editor's undo manager keeps one history per scene and one for the editor, and the questions
   "is there a step" and "take it back" belong to those histories, not to the manager. The sheet now
   asks the history its own steps go into, so every one of those doors undoes and redoes the last
   edit. Clearing the sheet's history now clears only its own, never the open scenes'.
+- The sheet's Undo and Redo (Ctrl+Z, Ctrl+Shift+Z, the toolbar, the History panel) are now the
+  editor's own Scene ▸ Undo and Scene ▸ Redo. Taking a step back by running the history directly
+  left the editor's undo manager behind: after a Ctrl+Z in the sheet, Scene ▸ Redo found nothing to
+  redo, the next Scene ▸ Undo took back one step too many, and Godot's History dock still showed
+  the undone step as current. Every door now moves exactly one step, in step with the History dock.
+  Like Scene ▸ Undo, it takes back the editor's newest step, so after a scene edit the first Ctrl+Z
+  in the sheet takes back that scene edit; the toolbar's Undo and Redo follow scene edits too. The
+  Add behaviour window's Undo takes its step back the same way.
 
 ### Changed: a fresh install draws Editor Native, in the boards' own colours
 

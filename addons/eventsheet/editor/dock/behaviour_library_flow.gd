@@ -115,9 +115,13 @@ func _scene_root_named(object_label: String) -> Node:
 
 
 ## Takes the last library add back, the way Ctrl+Z would: the node out, the folders to the trash.
-## The Add behaviour window's Undo, which is the same step on the same history.
+## The Add behaviour window's Undo, which is the same step on the same history - taken back through
+## the editor's own Undo, so the editor's undo manager and its History panel see the step go (running
+## the scene history's UndoRedo by hand left the manager offering it still).
 func undo_last(host: Node) -> void:
 	if host == null or not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return
+	if EventSheetUndoRedoAdapter.run_editor_command("ui_undo"):
 		return
 	var manager: EditorUndoRedoManager = EditorInterface.get_editor_undo_redo()
 	manager.get_history_undo_redo(manager.get_object_history_id(host)).undo()
