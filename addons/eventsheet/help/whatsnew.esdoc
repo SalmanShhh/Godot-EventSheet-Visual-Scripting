@@ -6,6 +6,34 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Added: the MCP server edits `.gd` sheets, works through the open editor, and edits single rows
+
+- **`.gd` sheets.** `list_sheets` lists the project's `.gd` scripts beside its `.tres` sheets (the
+  plugin's own code and the packs it ships are left out). Every editing tool takes a `.gd`: the file
+  is opened as a sheet, edited and saved - and written only when it saved back byte for byte before
+  the edit, the edited sheet compiles, and the new bytes save back byte for byte themselves.
+  Otherwise nothing is written and the answer says why. A file mid-merge or marked to stay code is
+  never edited.
+- **The open editor.** Once the EventSheets workspace is open and the MCP switch is on, the editor
+  listens on `127.0.0.1` (port and a random key in `user://eventsheets_mcp_live.json`), and the
+  server your AI client launches passes every call to it. A sheet open in a tab is read as the tab
+  holds it, unsaved edits included; an edit lands in the open tab as one undo step, named after the
+  tool, so Ctrl+Z takes it back; nothing is saved for you. With no editor answering, or with
+  `-- --no-live`, the server works on the files as before. Turning the switch off closes the link.
+- **Row edits.** `read_sheet` gives every row an address (`\"3\"`, `\"3/0\"`), and `.gd` rows the file
+  lines they are written on. `apply_snippet` takes `parent` and `position` to insert inside an event
+  or group; `edit_row` replaces a row; `delete_row` removes one.
+- **New tools.** `explain` (a file and line number to the row it opens as), `verify` (the
+  command-line contract checks on the files you name), `variable_properties` (read and set a
+  variable's export options), `comment` (add a comment, or reword one) and `rename` (a variable or
+  function, everywhere the sheet names it). The dock's MCP switch gates every one of them.
+- **Fixed: the stdio server answered nothing.** The documented launch line carried `--quiet`, which
+  in Godot 4.7 silences everything written to stdout - the answers included - so a client waited
+  forever. Launch with `--no-header` instead (the help page and the setup example say so, and a
+  launch that still carries `--quiet` says so on stderr). Two requests written together also used
+  to be read as one broken line and refused; each line is now answered, and a request id comes back
+  as it was sent (`1`, not `1.0`). The server also no longer compiles the whole editor before its
+  first answer - only `list_aces` builds it, when first asked.
 ### Fixed: every way into the Manual lands on the page it names
 
 - **What's new opens What's new.** Menu > What's new… and the Start page's Learn > What's new asked
