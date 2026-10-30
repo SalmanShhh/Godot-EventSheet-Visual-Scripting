@@ -9702,3 +9702,7 @@ Manual beside the sheet,시트 옆에 설명서
 Opens the Manual on the page that explains this finding and its fix.,이 발견 사항과 해결 방법을 설명하는 페이지로 설명서를 엽니다.
 Opened %s in the Manual.,%s을(를) 설명서에서 열었습니다.
 Opened %s in your browser.,%s을(를) 브라우저에서 열었습니다.
+Every line of this event is ordinary Godot code the sheet reads as rows. Its shape matches a pattern the Manual explains.,이 이벤트의 모든 줄은 시트가 행으로 읽는 평범한 Godot 코드입니다. 그 모양은 매뉴얼이 설명하는 패턴과 일치합니다.
+Open in the Manual (F1),매뉴얼에서 열기 (F1)
+Conditions go on the left,조건은 왼쪽에 놓입니다
+Actions go on the right,액션은 오른쪽에 놓입니다

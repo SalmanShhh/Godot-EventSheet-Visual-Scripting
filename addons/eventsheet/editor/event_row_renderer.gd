@@ -846,14 +846,28 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	# nothing over the lanes: the filled gutter below and the frame drawn over the card say it.
 	var outline_only: bool = row_data.row_type == EventRowData.RowType.EVENT and event_style != null \
 		and event_style.selection_as_outline
-	if row_data.selected and not has_span_selection and not outline_only:
+	# A row inside a selection RUN (a parent and its subtree, neighbouring variables) takes the run's
+	# ONE fill, edge to edge, whatever kind of row it is - local lines included - and draws no frame
+	# of its own: the canvas frames the whole run once, after every row of it is painted.
+	var in_run: bool = row_data.selected and row_data.in_selection_run and not has_span_selection
+	if row_data.selected and not has_span_selection and (in_run or not outline_only):
 		# Slightly tempered for single-cell rows (comments especially) - selection
 		# stays unmistakable via the outline, without the full-strength flood fill.
 		var row_selection: Color = selection_fill
-		if row_data.row_type != EventRowData.RowType.EVENT:
+		if row_data.row_type != EventRowData.RowType.EVENT and not in_run:
 			row_selection.a *= 0.75
-		control.draw_rect(row_fill_rect, row_selection, true)
-		if row_data.row_type != EventRowData.RowType.EVENT:
+		if in_run and event_style != null:
+			# One fill, edge to edge: the selection colour laid over the row's own background as one
+			# solid wash, so the lanes' two tints and the local lines' paler band all read as the
+			# same selected block.
+			row_selection = event_style.row_background_color.blend(selection_fill)
+		var selection_rect: Rect2 = row_fill_rect
+		if in_run and not is_event_row and gutter_rect.size.x > 0.0:
+			# Measured from where an event's fill starts, so the run's fill is one straight edge.
+			selection_rect = Rect2(gutter_rect.end.x, row_rect.position.y,
+				maxf(row_rect.end.x - gutter_rect.end.x, 0.0), row_rect.size.y)
+		control.draw_rect(selection_rect, row_selection, true)
+		if row_data.row_type != EventRowData.RowType.EVENT and not in_run:
 			_draw_row_outline(control, row_rect, selection_fill, SELECTION_OUTLINE_LIGHTEN, SELECTION_OUTLINE_ALPHA)
 	if not row_data.attention_note.is_empty() and row_data.error_message.is_empty():
 		# The quiet amber state: a faint warning-colour tint over the row and a thin inset of the
@@ -880,7 +894,8 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	# icon read as one selected gutter. Paint only, over the row's own fill, the indent guides and the
 	# rails (so a nested event's selected margin is one fill, not split by its group's rail) and under
 	# the fold arrow.
-	var gutter_selected: bool = is_event_row and row_data.selected and event_style != null \
+	var gutter_selected: bool = (is_event_row or (in_run and row_data.in_selection_branch)) \
+		and row_data.selected and event_style != null \
 		and event_style.selected_gutter_fill_color.a > 0.01
 	# How the event is started is said on its trigger LINE (the arrow in front of its object icon),
 	# never beside its number, so the margin holds the number alone.
@@ -1217,6 +1232,46 @@ func draw_event_card(control: Control, rect: Rect2, event_style: EventSheetEvent
 	box.draw(control.get_canvas_item(), rect)
 
 
+## A CARRIED CELL'S LINE, drawn the way the sheet draws it: the lane's own fill behind it and the
+## line's cells over that, at the places the row laid them out - so the drag ghost of a condition
+## looks like a condition and an action like an action, rather than a label naming one. `rect` is the
+## line's band in the row's coordinates; every span of `lane` inside that band is drawn (the carried
+## cells, and what sits on their line with them, like an inverted mark).
+func draw_cell_line(control: Control, row_data: EventRowData, lane: String, rect: Rect2,
+		font: Font, font_size: int, editor_style: EventSheetEditorStyle = null) -> void:
+	if control == null or row_data == null:
+		return
+	var event_style: EventSheetEventStyle = editor_style.get_event_style() if editor_style != null else null
+	var reading_style: EventSheetReadingStyle = editor_style.get_reading_style() if editor_style != null \
+		else _fallback_reading_style()
+	var lane_color: Color = EventSheetPalette.COLOR_LANE_ACTIONS if lane == "action" else EventSheetPalette.COLOR_LANE_CONDITIONS
+	if event_style != null:
+		lane_color = event_style.action_lane_color if lane == "action" else event_style.condition_lane_color
+		var base: Color = event_style.row_background_color
+		base.a = 1.0
+		control.draw_rect(rect, base, true)
+	control.draw_rect(rect, lane_color, true)
+	var line: EventRowData = EventRowData.new()
+	line.row_type = EventRowData.RowType.EVENT
+	for span: SemanticSpan in row_data.spans:
+		if span == null or not (span.metadata is Dictionary):
+			continue
+		var span_lane: String = str((span.metadata as Dictionary).get("lane", ""))
+		if (span_lane == "action") != (lane == "action"):
+			continue
+		var middle: float = span.rect.get_center().y
+		if middle <= rect.position.y or middle >= rect.end.y:
+			continue
+		var kind: String = str((span.metadata as Dictionary).get("kind", ""))
+		if kind in ["add_action", "add_condition", "add_event"]:
+			continue
+		line.spans.append(span)
+	var selection_fill: Color = event_style.selection_fill_color if event_style != null else EventSheetPalette.COLOR_SELECTION
+	var hover_fill: Color = event_style.hover_fill_color if event_style != null else EventSheetPalette.COLOR_HOVER
+	_draw_spans(control, line, font, font_size, -1, "", -1, -1, [], -1, 0, event_style, selection_fill,
+		hover_fill, [], reading_style)
+
+
 ## ONE EVENT, ONE OUTLINE. The selection mark of a WHOLE event: a single frame around the union of
 ## every row that event is drawn on - the second line of a ternary pair, a wrapped cell, the OR'd
 ## conditions stacked in its lane - with the number gutter inside it and the cells left flat. An
@@ -1488,7 +1543,9 @@ func _draw_spans(
 					_draw_block_cell(control, block_unions[span_index], metadata)
 			elif bool(metadata.get("code_cell", false)):
 				_draw_block_cell(control, span.rect, metadata)
-			else:
+			elif not (row_data.in_selection_run and row_data.selected):
+				# Inside a selection run the cells lay no plate of their own: the run's one fill is
+				# the only colour behind the words, so the branch reads as one block.
 				_draw_chip_span(control, span, metadata, event_style.cell_corner_radius if event_style != null else 4)
 			# A comment in the action lane drawn as a note (comment_notes): its card set inside the
 			# cell, once per block, with the grip and the bubble on its first line.

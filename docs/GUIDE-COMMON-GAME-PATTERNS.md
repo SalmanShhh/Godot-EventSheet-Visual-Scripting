@@ -553,22 +553,26 @@ Everything above is about writing a pattern from the picker. The other direction
 supported: open a hand-written `.gd` file as a sheet and the reading recognises the shapes it
 knows, then says so.
 
-![An opened cooldown script: the event that counts the number down wears a Cooldown marker, and the head bar says 1 pattern, 1 adoptable](images/pattern-chip.png)
+![An opened cooldown script: the event that counts the number down is read as the Cooldown pattern, and the head bar says 1 pattern, 1 adoptable](images/pattern-chip.png)
 
-An event that IS a pattern wears a muted **⟡** chip naming it, at the end of its first condition
-line. Only the event that OWNS the shape gets one - the row that counts the number down, the
-function that hands an object out - never every row that mentions the same variable, because the
-chip is a name for the whole idea rather than a label on each of its parts.
+An event that IS a pattern is named for it, but never inside the row: a row holds its object, its
+words and its parameters, so the lanes line up from event to event. Only the event that OWNS the
+shape is named - the row that counts the number down, the function that hands an object out -
+never every row that mentions the same variable, because the name is for the whole idea rather
+than a label on each of its parts.
 
-- **Hover the chip** for the one line that says what the pattern is, and the offer to open its
-  page in the Manual. **Click it** to open that page.
+- **Hover the event's number** for its card: what the event is, **⟡ Reads as: Cooldown**, and an
+  **Open in the Manual (F1)** door to the pattern's page. The card opens beside the number, so the
+  pointer can still run down the column of numbers.
+- **Select the event** and the help strip under the sheet says the pattern and its one-line why,
+  with the same door.
 - **Hover any row of the event** for the evidence: *read as the Cooldown pattern because:
   `cooldown -= delta`, `cooldown <= 0.0`, `cooldown = 0.5`*. Those are the exact lines in your
   file. A pattern reading is a claim spanning several lines, so it owes you the lines.
 - **View ▸ Patterns** turns the whole thing off. The sheet then reads as its own plain sentences,
   which is how you check a claim you doubt.
 - The head bar's coverage chip grows two counts - *reads as events · 4 patterns · 2 adoptable* -
-  and clicking it walks the script blocks and then the ⟡ events, one per click.
+  and clicking it walks the script blocks and then the events read as patterns, one per click.
 
 ### Adopt behavior
 

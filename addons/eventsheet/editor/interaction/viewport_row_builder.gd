@@ -15036,7 +15036,11 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				}
 			)
 		)
-	spans.append_array(_pattern_chip_spans(event_row))
+	# The pattern an event was read as is never drawn in the row, but an opened sheet still states
+	# its patterns as its rows are built: the file-level walk and this pass both claim, and the
+	# number's card, the help strip, the coverage chip and Adopt behavior all read those claims.
+	if _viewport.patterns_lens_enabled() and _viewport._sheet != null and not event_row.event_uid.is_empty():
+		EventSheetViewportReadingRows.ensure_claims(_viewport._sheet)
 	_dress_function_return_lines(spans, event_row)
 	_dress_line_object_icons(spans)
 	return spans
@@ -15206,58 +15210,6 @@ static func _script_icon_texture(icon_path: String) -> Texture2D:
 	if icon_path.is_empty() or not ResourceLoader.exists(icon_path):
 		return null
 	return load(icon_path) as Texture2D
-
-
-## The ⟡ chip that names the PATTERN this event is, when a reading claimed one on it. It sits
-## at the end of the FIRST condition line, after the trigger and its parameter chips, exactly where a
-## note about the whole event belongs; rows that merely USE a pattern's words get nothing, because
-## the claim names the one row that owns the shape.
-##
-## Everything here is read out of EventSheetPatternFacts - this draws claims, it never re-derives
-## one - so an event only says "Cooldown" if the reading that recognised it said so first, with its
-## evidence. Off when the Patterns lens is off, which is the doubter's switch back to the plain
-## statement sentences underneath.
-func _pattern_chip_spans(event_row: EventRow) -> Array[SemanticSpan]:
-	var spans: Array[SemanticSpan] = []
-	if event_row == null or not _viewport.patterns_lens_enabled():
-		return spans
-	# A theme whose conditions lane holds conditions only says the pattern in the help strip instead,
-	# once the event is selected (ViewportTooltipHelper.pattern_strip_line).
-	var lane_style: EventSheetEventStyle = _viewport._get_event_style()
-	if lane_style != null and lane_style.pattern_in_help_strip:
-		return spans
-	var sheet: EventSheetResource = _viewport._sheet
-	if sheet == null or event_row.event_uid.is_empty():
-		return spans
-	# Asked for rather than assumed: this pass and the file-level walk both claim, and nothing fixes
-	# their order against every clear of the registry.
-	EventSheetViewportReadingRows.ensure_claims(sheet)
-	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
-	for claim: Variant in EventSheetPatternFacts.claims_for_row(sheet, event_row.event_uid):
-		if not EventSheetPatternVocabulary.is_marked(str((claim as Dictionary).get("pattern", ""))):
-			continue
-		# THE CHIP SAYS THE PATTERN'S NAME, not the claim's own sentence. A claim's `words` is the one
-		# line the hover shows ("counts cooldown down and asks whether it has run out"); a chip is a
-		# NAME, and a whole clause on a row would be a second sentence competing with the row's own.
-		var words: String = EventSheetPatternVocabulary.words(str((claim as Dictionary).get("pattern", "")))
-		if words.is_empty():
-			words = str((claim as Dictionary).get("words", ""))
-		if words.is_empty():
-			continue
-		spans.append(_make_span("%s %s" % [PATTERN_CHIP_MARK, EventSheetL10n.translate(words)],
-			SemanticSpan.SpanType.CONDITION, {
-				"editable": false,
-				"lane": "condition",
-				"kind": "pattern_chip",
-				"pattern": str((claim as Dictionary).get("pattern", "")),
-				"chip": true,
-				"hoverable": true,
-				"line_index": 0,
-				"natural_width": true,
-				"chip_bg": reading_style.resolved_pattern_chip_background(),
-				"text_color": reading_style.resolved_pattern_chip_foreground()
-			}))
-	return spans
 
 
 ## Cheaply computes how many stacked lines an event row occupies, mirroring the

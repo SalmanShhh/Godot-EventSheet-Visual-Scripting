@@ -443,7 +443,9 @@ static func _branching_steps_beside_the_head() -> bool:
 		["the head's first sub-event is the branch", first.row_uid.contains("_branch_") if first != null else false, true],
 		["the head wears the step's number", head.event_number if head != null else -1, 1],
 		["the branch rows wear none", first.event_number if first != null else -1, 0],
-		["the pattern chip rides up to the head", _row_has_span_text(seeded, "⟡ Seeded randomness and noise"), true],
+		["the pattern rides up to the head (said on its number's card, never in the row)",
+			[_head_reads_as(viewport, seeded), _row_has_span_text(seeded, "⟡ Seeded randomness and noise")],
+			["⟡ Reads as: Seeded randomness and noise", false]],
 		["so that head keeps no 'Always' row either", _child_has_text(seeded, "Always"), false],
 	])
 	viewport.free()
@@ -761,6 +763,14 @@ static func _span_text(row_data: EventRowData, index: int) -> String:
 	if row_data == null or index >= row_data.spans.size():
 		return ""
 	return str(row_data.spans[index].text)
+
+
+## The last line of the number card of the event a row draws: "⟡ Reads as: <pattern>", or "".
+static func _head_reads_as(viewport: EventSheetViewport, row_data: EventRowData) -> String:
+	if row_data == null:
+		return ""
+	var card: Dictionary = viewport.event_number_card_for(row_data)
+	return str(Array(card.get("lines", PackedStringArray())).back()) if not card.is_empty() else ""
 
 
 static func _row_has_span_text(row_data: EventRowData, needle: String) -> bool:

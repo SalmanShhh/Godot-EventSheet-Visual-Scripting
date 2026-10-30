@@ -9702,3 +9702,7 @@ Manual beside the sheet,Руководство рядом с листом
 Opens the Manual on the page that explains this finding and its fix.,"Открывает Руководство на странице, которая объясняет эту находку и её исправление."
 Opened %s in the Manual.,%s открыто в Руководстве.
 Opened %s in your browser.,%s открыто в браузере.
+Every line of this event is ordinary Godot code the sheet reads as rows. Its shape matches a pattern the Manual explains.,"Каждая строка этого события - обычный код Godot, который лист читает как строки. Его форма совпадает с шаблоном, описанным в Руководстве."
+Open in the Manual (F1),Открыть в Руководстве (F1)
+Conditions go on the left,Условия ставятся слева
+Actions go on the right,Действия ставятся справа

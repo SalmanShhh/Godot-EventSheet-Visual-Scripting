@@ -1,18 +1,21 @@
 @tool
 extends RefCounted
-# Godot EventSheets - the pattern line in the help strip
+# Godot EventSheets - the pattern leaves the row
 #
-# A theme that states pattern_in_help_strip keeps the conditions lane to conditions: the ⟡ chip that
-# names the pattern an event was read as ("Making an object and putting it somewhere") leaves the
-# lane, and selecting the event says it in the help strip instead, muted, with the chip's door to its
-# Manual page. A finding on the same row outranks it, and the strip's hover still carries it.
+# The pattern an event was read as ("Making an object and putting it somewhere") is never a chip in
+# the conditions lane, in ANY look - not a look option. It is said in two places instead: the help
+# strip when the event is selected (muted, with the Open in the Manual door), and the card the
+# event's number opens on hover ("Reads as: ..." with the Open in the Manual (F1) door). A finding on
+# the same row outranks the strip line, and the strip's hover still carries the pattern.
 # Pinned as values, on the real platformer_shooter showcase:
-#   1. the token: off by default, on in the Editor Native starter and its rule, stated off in every
-#      other shipped theme;
-#   2. Editor Native draws no pattern chip; Classic Sheet draws the same chips as before;
-#   3. the strip over an event that owns the pattern and nothing wrong: words, colour, door;
+#   1. the token: on by default and in every shipped theme, and no longer offered as a choice;
+#   2. no look draws a pattern chip in a lane: the default a fresh install gets, Editor Native and
+#      Classic Sheet, and a theme saved while the token was a choice;
+#   3. the strip over an event that owns the pattern and nothing wrong: words, colour, door - under
+#      Editor Native and Classic Sheet alike;
 #   4. the strip over an event that also has a finding: the finding, with the pattern in its hover;
-#   5. under Classic Sheet the strip says nothing about patterns.
+#   5. the event number's card: its title, the pattern's name and the door, and none for an event
+#      read as no pattern.
 
 const SUPPORT := preload("res://tests/support.gd")
 const TEST_NAME := "native_pattern_strip_test"
@@ -41,6 +44,7 @@ static func run() -> bool:
 	ok = _test_token() and ok
 	ok = _test_lane_chips() and ok
 	ok = _test_strip() and ok
+	ok = _test_number_card() and ok
 	# The docks above publish the theme of the sheet they open, and freeing a dock does not take
 	# it back - a later test's fresh sheet would read the Classic Sheet style as its default.
 	EventSheetActiveTheme.publish(null)
@@ -57,25 +61,36 @@ static func _test_token() -> bool:
 		var style: EventSheetEditorStyle = load(path) as EventSheetEditorStyle
 		others.append([path.get_file(), style.get_event_style().pattern_in_help_strip,
 			FileAccess.get_file_as_string(path).contains("pattern_in_help_strip = false")])
-		expected_others.append([path.get_file(), false, true])
+		expected_others.append([path.get_file(), true, false])
+	var offered: bool = false
+	for property: Dictionary in EventSheetEventStyle.new().get_property_list():
+		if str(property.get("name", "")) == "pattern_in_help_strip":
+			offered = (int(property.get("usage", 0)) & PROPERTY_USAGE_EDITOR) != 0
 	return SUPPORT.pins(TEST_NAME, [
-		["the token defaults off", EventSheetEventStyle.new().pattern_in_help_strip, false],
+		["the token defaults on", EventSheetEventStyle.new().pattern_in_help_strip, true],
 		["the starter states it on", native.pattern_in_help_strip, true],
 		["and so does the rule it is built by", built.pattern_in_help_strip, true],
-		["every other shipped theme states it off", others, expected_others],
+		["no shipped theme states it off", others, expected_others],
+		["it is not offered as a look option (Inspector, Theme Editor)", offered, false],
 	])
 
 
 static func _test_lane_chips() -> bool:
+	var fresh: EventSheetViewport = _viewport_for("")
 	var native: EventSheetViewport = _viewport_for(NATIVE_THEME)
 	var classic: EventSheetViewport = _viewport_for(CLASSIC_THEME)
+	# A saved theme that still says false - written while it was a choice - draws no chip either.
+	var stale: EventSheetViewport = _viewport_for(CLASSIC_THEME, false)
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
+		["the default look draws no pattern chip in the conditions lane", _pattern_chips(fresh), []],
 		["Editor Native draws no pattern chip in the conditions lane", _pattern_chips(native), []],
-		["Classic Sheet draws the same two chips as before", _pattern_chips(classic),
-			[PATTERN_WORDS, PATTERN_WORDS]],
+		["Classic Sheet draws no pattern chip in the conditions lane", _pattern_chips(classic), []],
+		["a theme saved with the token off draws none either", _pattern_chips(stale), []],
 	])
+	fresh.free()
 	native.free()
 	classic.free()
+	stale.free()
 	return ok
 
 
@@ -128,20 +143,52 @@ static func _test_strip() -> bool:
 		["the one with a finding says the finding, and its hover adds the pattern", flagged_said,
 			[SPAWN_FINDING, "Use the safe spawn row", "%s\n\n%s" % [SPAWN_FINDING, PATTERN_WORDS]]],
 		["a row with nothing to say clears the strip", nothing_said, [false, false]],
-		["under Classic Sheet the strip says nothing about patterns", classic_said, [false, false]],
+		["under Classic Sheet the strip says the pattern too", classic_said, [true, true]],
 	])
 
 
-static func _shooter(theme_path: String) -> EventSheetResource:
+static func _test_number_card() -> bool:
+	var sheet: EventSheetResource = _shooter(NATIVE_THEME)
+	var viewport: EventSheetViewport = EventSheetViewport.new()
+	viewport.set_ace_registry(EventSheetACERegistry.new())
+	viewport.set_sheet(sheet)
+	var with_pattern: Dictionary = {}
+	var without: Dictionary = {"unset": true}
+	for index: int in range(viewport._flat_rows.size()):
+		var row: EventRowData = viewport._row_at(index)
+		if row == null or not (row.source_resource is EventRow) or row.event_number <= 0:
+			continue
+		var card: Dictionary = ViewportTooltipHelper.event_number_card(sheet,
+			(row.source_resource as EventRow).event_uid, row.event_number)
+		if not card.is_empty() and with_pattern.is_empty():
+			with_pattern = {"title": card["title"], "lines": Array(card["lines"]), "doors": card["doors"],
+				"anchor": card["anchor"], "number": row.event_number}
+		elif card.is_empty() and without.has("unset"):
+			without = card
+	viewport.free()
+	return SUPPORT.pins(TEST_NAME, [
+		["the pattern event's number card", with_pattern, {
+			"title": "Event %d" % int(with_pattern.get("number", 0)),
+			"lines": ["Every line of this event is ordinary Godot code the sheet reads as rows. Its shape matches a pattern the Manual explains.",
+				"⟡ Reads as: Making an object and putting it somewhere"],
+			"doors": [["Open in the Manual (F1)", "pattern_page:create_object"]],
+			"anchor": "beside", "number": int(with_pattern.get("number", 0))}],
+		["an event read as no pattern has no card", without, {}],
+	])
+
+
+static func _shooter(theme_path: String, help_strip: bool = true) -> EventSheetResource:
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SHOWCASE)
-	sheet.editor_style = (load(theme_path) as EventSheetEditorStyle).duplicate(true)
+	if not theme_path.is_empty():
+		sheet.editor_style = (load(theme_path) as EventSheetEditorStyle).duplicate(true)
+		sheet.editor_style.get_event_style().pattern_in_help_strip = help_strip
 	return sheet
 
 
-static func _viewport_for(theme_path: String) -> EventSheetViewport:
+static func _viewport_for(theme_path: String, help_strip: bool = true) -> EventSheetViewport:
 	var viewport: EventSheetViewport = EventSheetViewport.new()
 	viewport.set_ace_registry(EventSheetACERegistry.new())
-	viewport.set_sheet(_shooter(theme_path))
+	viewport.set_sheet(_shooter(theme_path, help_strip))
 	return viewport
 
 

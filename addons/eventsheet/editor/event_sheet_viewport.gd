@@ -232,6 +232,14 @@ var _layout_cache: RowLayoutCache = RowLayoutCache.new()
 var _selection_helper: ViewportSelectionHelper = ViewportSelectionHelper.new()
 var _hit_test_helper: ViewportHitTestHelper = ViewportHitTestHelper.new()
 var _drag_preview_helper: ViewportDragPreviewHelper = ViewportDragPreviewHelper.new()
+## What the sheet looks like while something is carried: the ghost, the gap, the fold, the slide.
+var _drag_motion: ViewportDragMotion = ViewportDragMotion.new()
+var _drag_motion_was_moving: bool = false
+## The row and cell the press that may become a drag landed on: {"row_index", "span_index"}.
+var _drag_press_hit: Dictionary = {}
+## A click on a row of a selection of several, held until the button comes up: a drag carries the
+## whole selection, and only a click that never lifted narrows it to the one row. {} when none.
+var _pending_click_select: Dictionary = {}
 # The ROW-BUILDER layer: owns "model → SemanticSpans" construction (span assembly, per-ACE
 # descriptors, non-event row builders). See interaction/viewport_row_builder.gd. The methods
 # below keep one-line delegates so internal STAY callers and tests reach it by the original names.
@@ -399,12 +407,14 @@ var humanize_names_override: int = -1
 ## set_sheet, exactly like show_object_icons.
 var familiar_words: bool = false
 ## The Patterns lens: an event that a reading recognised as a known code pattern (a Cooldown,
-## an Object pool, a Wait sequence) wears a muted ⟡ chip naming it, and its hover says what the
-## evidence for that claim was. ON by default, because naming the pattern is the teaching moment and
-## a beginner is exactly who needs it; View ▾ turns it off so a doubter can read the plain statement
-## sentences underneath and compare. Span builds read it, so flipping it rebuilds via set_sheet.
+## an Object pool, a Wait sequence) is named on its number's hover card and in the help strip -
+## never as a chip inside the row - and the row's hover says what the evidence for that claim was.
+## ON by default, because naming the pattern is the teaching moment and a beginner is exactly who
+## needs it; View ▾ turns it off so a doubter can read the plain statement sentences underneath and
+## compare. Span builds read it, so flipping it rebuilds via set_sheet.
 var patterns_lens: bool = true
-## Event-sheet-style drag ghost: a faint label of the dragged content following the cursor.
+## The words naming what a drag carries, for a drag that has no motion drawn (ViewportDragMotion
+## carries the real row once the press has lifted).
 var _drag_ghost_label: String = ""
 var _drag_pointer_position: Vector2 = Vector2.ZERO
 ## Vertical gap inserted before an event/group that starts a new sibling block (indent <=
@@ -423,6 +433,7 @@ func _init() -> void:
 	_folding.init(self)
 	_layout_builder.init(self)
 	_drag.init(self)
+	_drag_motion.init(self)
 	_input_handlers.init(self)
 	_row_metrics_helper.init(self)
 	_group_breadcrumb.init(self)
@@ -445,6 +456,16 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if not _fired_intensity.is_empty():
 		_decay_firing(_delta)
+	# A gap opening, a fold folding, Esc's slide home: one frame of it per frame, and one more when
+	# it stops, so the last frame drawn is the rest position.
+	if _drag_motion.active:
+		var moving: bool = _drag_motion.advance()
+		if moving or _drag_motion_was_moving:
+			queue_redraw()
+		_drag_motion_was_moving = moving
+	elif _drag_motion_was_moving:
+		_drag_motion_was_moving = false
+		queue_redraw()
 	var scroll_value: int = _get_scroll_offset()
 	if scroll_value != _last_scroll:
 		_last_scroll = scroll_value
@@ -2341,13 +2362,23 @@ func _draw() -> void:
 	_renderer.show_variable_badges = show_variable_badges
 	_renderer.show_hover_add_links = show_hover_add_links
 	_draw_variable_group_fills(width)
+	var selection_runs: Array = _stamp_selection_runs(visible_range)
+	_draw_selection_run_fills(selection_runs)
+	var drag_moving: bool = _drag_motion.active
+	if drag_moving:
+		# A fold pulls rows up from below the window, so a few more are drawn while a drag is in hand.
+		visible_range.y = mini(visible_range.y + 8, _flat_rows.size() - 1)
 	for index in range(visible_range.x, visible_range.y + 1):
 		var row_info: Dictionary = _flat_rows[index]
 		var row_data: EventRowData = row_info.get("row")
 		if row_data == null:
 			continue
 		var layout: Dictionary = _layout_builder.get_or_build_row_layout(index, width, font, font_size)
-		_renderer.draw_row(self, layout, row_data, font, font_size, _editor_style)
+		if drag_moving:
+			if not _draw_row_in_motion(index, layout, row_data, font, font_size, zoom):
+				continue
+		else:
+			_renderer.draw_row(self, layout, row_data, font, font_size, _editor_style)
 		# The laid-out band of THIS row. Read under the name the layout builder writes it as: a
 		# mistaken key here fails silently as an empty rect at the top of the canvas, which is
 		# where every chip, wash and grip dot below then lands.
@@ -2371,8 +2402,12 @@ func _draw() -> void:
 			var grip_color: Color = chrome_style.object_bar_grip_active_color if _hover_is_drag_zone else chrome_style.object_bar_grip_color
 			for dot_row in range(3):
 				draw_circle(Vector2(row_rect.position.x + 5.0, row_rect.position.y + row_rect.size.y * 0.5 + (dot_row - 1) * 5.0), 1.4, grip_color)
+		if drag_moving:
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2(zoom, zoom))
 	_draw_event_cards(visible_range)
-	_draw_event_selection_outlines(visible_range)
+	if drag_moving:
+		_draw_drag_gaps()
+	_draw_selection_run_frames(selection_runs)
 	_draw_variable_group_bubbles(width)
 	_draw_group_brackets(width)
 	_draw_region_drop_glow(width)
@@ -2410,30 +2445,327 @@ func _draw_event_cards(visible_range: Vector2i) -> void:
 		if carded.has(lead):
 			continue
 		carded[lead] = true
-		_renderer.draw_event_card(self, event_card_border_rect(lead), event_style)
+		if _drag_motion.row_carried_away(lead):
+			continue
+		_renderer.draw_event_card(self, drag_shifted_rect(event_card_border_rect(lead), lead, statement_last_index(lead)), event_style)
 
 
-## ONE EVENT, ONE OUTLINE: the frame around every selected event, drawn once per event over the
-## union of its rows. It runs AFTER the row loop because a frame taller than one row would be cut
-## by the lane fill of the row below it, and once per event because an event drawn as several rows
-## must not be framed several times. An event with a cell selected inside it is skipped: that
-## selection is the cell's, and the per-cell outline is what says so.
-func _draw_event_selection_outlines(visible_range: Vector2i) -> void:
-	if _selected_row_uids.is_empty() or visible_range.x < 0:
+## The selection runs the visible rows belong to (ViewportSelectionHelper.selection_runs), read
+## before the rows are painted: each row of a run of two or more statements is stamped
+## `in_selection_run`, so it takes the run's one fill and draws no frame of its own. A run that
+## starts above the window or ends below it is followed out to its real ends, so its frame is the
+## whole run's and its edge is never drawn across the middle of a branch.
+func _stamp_selection_runs(visible_range: Vector2i) -> Array:
+	if visible_range.x < 0:
+		return []
+	for index: int in range(visible_range.x, visible_range.y + 1):
+		var stamped: EventRowData = _row_at(index)
+		if stamped != null:
+			stamped.in_selection_run = false
+			stamped.in_selection_branch = false
+	if _selected_row_uids.is_empty():
+		return []
+	var first: int = visible_range.x
+	while first > 0 and _row_at(first - 1) != null and _row_at(first - 1).selected:
+		first -= 1
+	var last: int = visible_range.y
+	while last + 1 < _flat_rows.size() and _row_at(last + 1) != null and _row_at(last + 1).selected:
+		last += 1
+	var runs: Array = ViewportSelectionHelper.selection_runs(first, last, _row_at, statement_lead_index,
+		func(index: int) -> bool: return not (_selected_span_indices.get(_row_at(index).row_uid, []) as Array).is_empty())
+	for run: Dictionary in runs:
+		if int(run["statements"]) < 2:
+			continue
+		for index: int in range(int(run["first"]), int(run["last"]) + 1):
+			_row_at(index).in_selection_run = true
+			_row_at(index).in_selection_branch = bool(run["has_event"])
+	return runs
+
+
+## ONE FILL, EDGE TO EDGE: under a run of two or more statements, the run's whole rectangle takes the
+## selection fill before any row is painted, so the air between two events' cards inside the run is
+## the same colour as the rows themselves rather than a stripe of sheet across the selection.
+func _draw_selection_run_fills(runs: Array) -> void:
+	if runs.is_empty():
 		return
 	var event_style: EventSheetEventStyle = _get_event_style()
-	var framed: Dictionary = {}
-	for index in range(visible_range.x, visible_range.y + 1):
-		var row_data: EventRowData = _row_at(index)
-		if row_data == null or row_data.row_type != EventRowData.RowType.EVENT or not row_data.selected:
+	if event_style == null:
+		return
+	var fill: Color = event_style.row_background_color.blend(event_style.selection_fill_color)
+	for run: Dictionary in runs:
+		if int(run["statements"]) < 2 or _drag_motion.row_carried_away(int(run["first"])):
 			continue
-		var lead: int = statement_lead_index(index)
-		if framed.has(lead):
+		draw_rect(drag_shifted_rect(selection_run_rect(run), int(run["first"]), int(run["last"])), fill, true)
+
+
+## ONE SELECTION, ONE FRAME: the frame round every selection run, drawn once per run over the union
+## of its rows - one event and everything under it, or a run of neighbouring variables. It runs AFTER
+## the row loop because a frame taller than one row would be cut by the lane fill of the row below
+## it. A single variable, enum or signal line keeps the outline its own row draws, and a statement
+## whose cell is the selection is in no run at all: the per-cell outline is what says so.
+func _draw_selection_run_frames(runs: Array) -> void:
+	if runs.is_empty():
+		return
+	var event_style: EventSheetEventStyle = _get_event_style()
+	for run: Dictionary in runs:
+		if not bool(run["has_event"]) and int(run["statements"]) < 2:
 			continue
-		framed[lead] = true
-		if _statement_has_selected_span(lead):
+		if _drag_motion.row_carried_away(int(run["first"])):
 			continue
-		_renderer.draw_event_selection_outline(self, event_card_rect(lead), event_style)
+		_renderer.draw_event_selection_outline(self,
+			drag_shifted_rect(selection_run_rect(run), int(run["first"]), int(run["last"])), event_style)
+
+
+## One row drawn where a drag in hand puts it: moved down by the gaps above it and up by what folded
+## away above it, its later cells moved down by a gap opened in its own lane, a carried cell left out
+## once the pointer has left it, and a lifted source drawn faint with a dashed edge. False when the
+## row is not drawn at all (a carried row that has folded away). The row's spans are put back as they
+## were before this returns, so hit-testing and the layout cache never see a moved rect.
+func _draw_row_in_motion(index: int, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int, zoom: float) -> bool:
+	var plan: Dictionary = _drag_motion.row_plan(index)
+	var faded: float = float(plan["faded"])
+	if faded <= 0.01:
+		return false
+	draw_set_transform(Vector2(0.0, float(plan["offset"]) * zoom), 0.0, Vector2(zoom, zoom))
+	var shifts: Dictionary = plan["span_shift"]
+	var hidden: Array = plan["hidden"]
+	var resize: float = float(plan["growth"])
+	if shifts.is_empty() and hidden.is_empty() and absf(resize) < 0.01:
+		_renderer.draw_row(self, layout, row_data, font, font_size, _editor_style)
+	else:
+		var kept_spans: Array[SemanticSpan] = row_data.spans.duplicate()
+		var moved_layout: Dictionary = layout.duplicate()
+		for key: String in ["row_rect", "condition_lane_rect", "action_lane_rect", "lane_divider_rect", "gutter_rect"]:
+			var band: Rect2 = moved_layout.get(key, Rect2())
+			if band.size != Vector2.ZERO:
+				band.size.y = maxf(band.size.y + resize, 0.0)
+				moved_layout[key] = band
+		for span_index: int in range(row_data.spans.size()):
+			var span: SemanticSpan = row_data.spans[span_index]
+			if span == null:
+				continue
+			if hidden.has(span_index):
+				row_data.spans[span_index] = SemanticSpan.new()
+				continue
+			if shifts.has(span_index):
+				var moved: SemanticSpan = SemanticSpan.new()
+				moved.text = span.text
+				moved.type = span.type
+				moved.metadata = span.metadata
+				moved.hoverable = span.hoverable
+				moved.rect = Rect2(span.rect.position + Vector2(0.0, float(shifts[span_index])), span.rect.size)
+				row_data.spans[span_index] = moved
+		_renderer.draw_row(self, moved_layout, row_data, font, font_size, _editor_style)
+		row_data.spans = kept_spans
+	if faded < 1.0:
+		# The place a lifted row came from: the row under a veil of the sheet, and a dashed edge.
+		var row_rect: Rect2 = layout.get("row_rect", Rect2())
+		var veil: Color = _get_event_style().sheet_background_color
+		veil.a = 1.0 - faded
+		draw_rect(row_rect, veil, true)
+		_draw_dashed_rect(row_rect.grow(-1.0), _get_reading_style().drag_line_color)
+	if _drag_motion.kind == "cells" and index == int(_drag_motion._source_cell.get("row", -1)) \
+			and not _drag_motion.left_source:
+		var cell: Rect2 = Rect2(_drag_motion._lane_rect(index, str(_drag_motion._source_cell["lane"])).position.x,
+			_drag_motion.source_cell_top() - 1.0,
+			_drag_motion._lane_rect(index, str(_drag_motion._source_cell["lane"])).size.x,
+			_drag_motion.source_cell_bottom() - _drag_motion.source_cell_top() + 2.0)
+		var veil_cell: Color = _get_event_style().sheet_background_color
+		veil_cell.a = 1.0 - ViewportDragMotion.LIFTED_ALPHA
+		draw_rect(cell, veil_cell, true)
+		_draw_dashed_rect(cell, _get_reading_style().drag_line_color)
+	return true
+
+
+## The dashed gaps a drag in hand has opened, drawn over the rows that slid apart round them.
+func _draw_drag_gaps() -> void:
+	var line: Color = _get_reading_style().drag_line_color
+	for entry: Variant in _drag_motion.gap_rects():
+		var rect: Rect2 = (entry as Dictionary)["rect"]
+		var wash: Color = line
+		wash.a = 0.10 * clampf(float((entry as Dictionary)["open"]), 0.0, 1.0)
+		draw_rect(rect.grow(-2.0), wash, true)
+		_draw_dashed_rect(rect.grow(-2.0), line)
+
+
+func _draw_dashed_rect(rect: Rect2, color: Color) -> void:
+	if rect.size.x <= 2.0 or rect.size.y <= 2.0:
+		return
+	var corners: PackedVector2Array = PackedVector2Array([rect.position, Vector2(rect.end.x, rect.position.y),
+		rect.end, Vector2(rect.position.x, rect.end.y), rect.position])
+	for side: int in range(4):
+		draw_dashed_line(corners[side], corners[side + 1], color, 1.0, ViewportDragMotion.GAP_DASH)
+
+
+## A rectangle over rows `first` to `last`, moved and stretched the way a drag in hand draws those
+## rows - so an event's card and a selection's frame stay round their rows while the rows slide.
+func drag_shifted_rect(rect: Rect2, first: int, last: int) -> Rect2:
+	if not _drag_motion.active or rect.size == Vector2.ZERO:
+		return rect
+	var top_offset: float = _drag_motion.row_offset(first)
+	var bottom_offset: float = _drag_motion.row_offset(last) + _drag_motion.lane_growth(last)
+	return Rect2(rect.position.x, rect.position.y + top_offset, rect.size.x, maxf(rect.size.y + bottom_offset - top_offset, 0.0))
+
+
+## The held press has travelled: what it pressed lifts. A cell carries its line (several selected
+## cells stack, with their count); a row carries itself, or every selected row, each with its subtree.
+func lift_drag(at: Vector2) -> void:
+	# A card left open by the hover before the press would sit over the sheet the drag moves across.
+	close_head_card()
+	if not _drag_ace_entries.is_empty():
+		var row_index: int = int(_drag_press_hit.get("row_index", -1))
+		var span_index: int = int(_drag_press_hit.get("span_index", -1))
+		var row_data: EventRowData = _row_at(row_index)
+		if row_data == null or span_index < 0 or span_index >= row_data.spans.size():
+			return
+		var kind: String = str((_drag_ace_entries[0] as Dictionary).get("kind", ""))
+		_drag_motion.lift_cells(row_index, "action" if kind == "action" else "condition", [span_index],
+			_drag_ace_entries.size(), at)
+	elif _drag_row_index >= 0:
+		_drag_motion.lift_rows(_drag_row_indices.duplicate(), at)
+	queue_redraw()
+
+
+## True when a plain press on `row_index` should keep the selection for a drag: the row's statement
+## is selected along with at least one other statement it does not hold (a parent with only its own
+## subtree selected is one thing, and a press on it selects it the ordinary way).
+func press_keeps_selection(row_index: int) -> bool:
+	var row_data: EventRowData = _row_at(row_index)
+	if row_data == null or not row_data.selected or not _selected_span_indices.is_empty():
+		return false
+	var pressed_block: Vector2i = Vector2i(statement_lead_index(row_index), _drag_motion.subtree_last(row_index))
+	for index: int in _get_selected_row_indices():
+		if index < pressed_block.x or index > pressed_block.y:
+			return true
+	return false
+
+
+## Esc while carrying: the drag ends with no drop, and the motion slides everything back home.
+func cancel_drag() -> void:
+	_drag_motion.cancel()
+	_drag.clear_ace_drag()
+	_drag.clear_row_drag()
+	queue_redraw()
+
+
+## Tells the motion where the gap opens for the drop target the drag has just worked out - or that
+## the place under the pointer refuses what is carried, and why.
+func place_drag_gap(hit: Dictionary) -> void:
+	if not _drag_motion.active:
+		return
+	if not _drag_ace_entries.is_empty():
+		var carried_kind: String = str((_drag_ace_entries[0] as Dictionary).get("kind", ""))
+		var carried_lane: String = "action" if carried_kind == "action" else "condition"
+		var target_index: int = _drag_ace_target_row_index
+		if target_index < 0:
+			var over: EventRowData = _row_at(int(hit.get("row_index", -1)))
+			var over_lane: String = str(hit.get("lane", ""))
+			if over != null and over.source_resource is EventRow and over.row_type == EventRowData.RowType.EVENT \
+					and over_lane in ["condition", "action"] and over_lane != carried_lane:
+				_drag_motion.refuse(EventSheetL10n.translate("Conditions go on the left") if carried_lane == "condition"
+					else EventSheetL10n.translate("Actions go on the right"))
+			else:
+				_drag_motion.target_lane(-1, "", 0.0)
+			return
+		if not _drag_ace_drop_valid:
+			_drag_motion.refuse(_drag_feedback_text)
+			return
+		var target_row: EventRowData = _row_at(target_index)
+		var span_index: int = _find_ace_span_index(target_row, carried_kind if carried_kind != "trigger" else "condition",
+			_drag_ace_target_ace_index) if _drag_ace_target_ace_index >= 0 else -1
+		var gap_y: float = _drag_motion._lane_bottom(target_index, _drag_ace_target_lane)
+		if span_index >= 0 and _drag_ace_insert_mode != "append":
+			var cell: Rect2 = target_row.spans[span_index].rect
+			gap_y = cell.position.y if _drag_ace_insert_mode == "before" else cell.end.y
+		_drag_motion.target_lane(target_index, _drag_ace_target_lane, gap_y)
+		return
+	var target: int = _drag_target_index
+	var mode: String = _drag_target_mode
+	var target_row_data: EventRowData = _row_at(target)
+	if target_row_data == null or mode == "group" or mode.begins_with(ACTION_LIST_DROP_PREFIX) \
+			or _drag_row_indices.has(target) or drag_targets_dragged_statement(target_row_data):
+		_drag_motion.target_row_slot(-1, 0)
+		return
+	match mode:
+		"before":
+			_drag_motion.target_row_slot(statement_lead_index(target), target_row_data.indent)
+		"inside":
+			_drag_motion.target_row_slot(_drag_motion.subtree_last(target) + 1, target_row_data.indent + 1)
+		_:
+			_drag_motion.target_row_slot(_drag_motion.subtree_last(target) + 1, target_row_data.indent)
+
+
+## The pointer moved INSIDE the open gap of a carried event: the gap stays where it is, and the
+## pointer's half says how deep it opens. The right half nests the event in the event just above the
+## gap (as its last sub-event, which is this same place); the left half makes it that event's
+## sibling again. Nothing else about the target changes, so moving across the gap never sends it
+## anywhere the reader cannot see.
+func reconsider_gap_nesting(at: Vector2) -> void:
+	var carried: EventRowData = _row_at(_drag_row_index)
+	var target_row: EventRowData = _row_at(_drag_target_index)
+	if carried == null or target_row == null or not (carried.source_resource is EventRow):
+		return
+	var nest: bool = at.x >= _get_logical_canvas_width() * 0.5
+	var target: int = _drag_target_index
+	var mode: String = _drag_target_mode
+	if mode == "inside" and not nest:
+		mode = "after"
+	elif mode == "after" and nest and target_row.source_resource is EventRow:
+		mode = "inside"
+	elif mode == "before" and nest:
+		# The event just above the gap, at the depth the gap opens at: the place before `target` is
+		# the place after that event's subtree.
+		var above: int = statement_lead_index(target) - 1
+		while above >= 0 and _row_at(above) != null and _row_at(above).indent > target_row.indent:
+			above -= 1
+		var above_row: EventRowData = _row_at(above)
+		if above_row == null or above_row.indent != target_row.indent or not (above_row.source_resource is EventRow) \
+				or _drag_row_indices.has(statement_lead_index(above)):
+			return
+		target = statement_lead_index(above)
+		mode = "inside"
+	if target == _drag_target_index and mode == _drag_target_mode:
+		return
+	_drag_target_index = target
+	_drag_target_mode = mode
+	place_drag_gap({"row_index": target})
+
+
+## What the drag in hand looks like right now (ViewportDragMotion.facts) - for the tests and harnesses.
+func drag_display_facts() -> Dictionary:
+	return _drag_motion.facts()
+
+
+## The rectangle one selection run is framed by: from the top of its first row to the bottom of its
+## last. A run that holds an event spans the event's own width, number gutter included, exactly as one
+## selected event's frame does; a run of variable lines spans the lines' own band.
+func selection_run_rect(run: Dictionary) -> Rect2:
+	var first: int = int(run.get("first", -1))
+	var last: int = int(run.get("last", -1))
+	if first < 0 or last < first or last >= _flat_rows.size():
+		return Rect2()
+	var top: float = _row_metrics_helper.row_top(first)
+	var bottom: float = _row_metrics_helper.row_top(last) + _row_metrics_helper.row_height(last)
+	var width: float = _get_logical_canvas_width()
+	if bool(run.get("has_event", false)):
+		return Rect2(0.0, top, width, maxf(bottom - top, 0.0))
+	var band: Rect2 = _layout_builder.get_or_build_row_layout(first, width, _get_font(), _get_font_size()).get("row_rect", Rect2())
+	return Rect2(band.position.x, top, band.size.x, maxf(bottom - top, 0.0))
+
+
+## The selection runs the canvas would frame right now, over every row - for the tests and harnesses
+## that check which frames a selection draws ({"first", "last", "has_event", "statements", "rect"}).
+func selection_run_frames() -> Array:
+	var runs: Array = ViewportSelectionHelper.selection_runs(0, _flat_rows.size() - 1, _row_at, statement_lead_index,
+		func(index: int) -> bool: return not (_selected_span_indices.get(_row_at(index).row_uid, []) as Array).is_empty())
+	var framed: Array = []
+	for run: Dictionary in runs:
+		if not bool(run["has_event"]) and int(run["statements"]) < 2:
+			continue
+		var entry: Dictionary = run.duplicate()
+		entry["rect"] = selection_run_rect(run)
+		framed.append(entry)
+	return framed
 
 
 ## True when any row of one statement carries a selected cell. Asked of the whole statement rather
@@ -4256,6 +4588,50 @@ func update_badge_card(hit: Dictionary, logical_position: Vector2, at_once: bool
 	return true
 
 
+## The hover card behind an event's NUMBER (ViewportTooltipHelper.event_number_card): the event,
+## the pattern it was read as and the door to the pattern's page, floated over the canvas like the
+## head bar's cards. True when the pointer is on the number of an event that has one, so the caller
+## leaves the other cards alone. Only with the Patterns lens on, the same switch the help strip obeys.
+func update_event_number_card(hit: Dictionary, at_once: bool = false) -> bool:
+	if not bool(hit.get("gutter", false)) or not patterns_lens_enabled():
+		return false
+	var row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
+	var card: Dictionary = event_number_card_for(row_data)
+	if card.is_empty():
+		return false
+	if _head_card == null:
+		_head_card = load(HEAD_CARD_PATH).new()
+		_head_card.connect("door_pressed", func(action: String) -> void: sheet_head_action_requested.emit(action))
+		add_child(_head_card)
+	var row_index: int = int(hit.get("row_index", -1))
+	var zoom: float = maxf(_zoom_factor, 0.001)
+	var number_rect: Rect2 = Rect2(0.0, _row_metrics_helper.row_top(row_index),
+		float(EventSheetPalette.GUTTER_WIDTH), _row_metrics_helper.row_height(row_index))
+	var on_screen: Rect2 = get_global_transform() * Rect2(number_rect.position * zoom, number_rect.size * zoom)
+	_head_card.call("hover_word", card, on_screen, at_once)
+	return true
+
+
+## The card an event row's number opens ({} when it has none): the event's own claim, or - for a
+## published verb's head, which wears the number of the step it leads with - the claim on that step.
+func event_number_card_for(row_data: EventRowData) -> Dictionary:
+	if row_data == null or row_data.row_type != EventRowData.RowType.EVENT or row_data.event_number <= 0:
+		return {}
+	var event_uid: String = ""
+	if row_data.source_resource is EventRow:
+		event_uid = (row_data.source_resource as EventRow).event_uid
+	elif row_data.source_resource is EventFunction and not (row_data.source_resource as EventFunction).events.is_empty() \
+			and (row_data.source_resource as EventFunction).events[0] is EventRow:
+		event_uid = ((row_data.source_resource as EventFunction).events[0] as EventRow).event_uid
+	if event_uid.is_empty():
+		return {}
+	var notes: PackedStringArray = PackedStringArray()
+	var ran: String = EventSheetRunProfile.tooltip_for(event_uid, row_data.event_number)
+	if not ran.is_empty():
+		notes.append(ran)
+	return ViewportTooltipHelper.event_number_card(_sheet, event_uid, row_data.event_number, notes)
+
+
 ## Closes the head bar's card, if one is open - a sheet change, or a test that opened one.
 func close_head_card() -> void:
 	if _head_card != null:
@@ -4268,6 +4644,9 @@ func head_card() -> Control:
 
 
 func _get_tooltip(at_position: Vector2) -> String:
+	# While something is carried the ghost is the only thing that talks.
+	if _drag_motion.active:
+		return ""
 	# The pinned head shows the last two parent names; the hover is where the whole chain is.
 	if _group_breadcrumb.covers(at_position):
 		return _group_breadcrumb.full_chain()
@@ -4293,6 +4672,9 @@ func _get_tooltip(at_position: Vector2) -> String:
 	# left behind - the one-off form of the hit-count lens. Silent unless a traced run has actually
 	# streamed: an unknown count is never dressed up as a zero.
 	if bool(hit.get("gutter", false)) and hovered_error_row != null and hovered_error_row.source_resource is EventRow:
+		# A number with a card (the pattern the event was read as) says the count on the card.
+		if patterns_lens_enabled() and not event_number_card_for(hovered_error_row).is_empty():
+			return ""
 		var hit_count_hover: String = EventSheetRunProfile.tooltip_for(
 			(hovered_error_row.source_resource as EventRow).event_uid, hovered_error_row.event_number)
 		if not hit_count_hover.is_empty():
@@ -4329,12 +4711,6 @@ func _get_tooltip(at_position: Vector2) -> String:
 	var glossary_help: String = _glossary_tooltip(hit)
 	if not glossary_help.is_empty():
 		return glossary_help
-	# The ⟡ chip is a NAME, and a name on its own teaches nothing: hovering it says what the
-	# pattern is in one line and that the Manual has a page about it (which a click opens).
-	if kind == "pattern_chip":
-		var chip_help: String = ViewportTooltipHelper.pattern_chip_tooltip(str(metadata.get("pattern", "")))
-		if not chip_help.is_empty():
-			return chip_help
 	# A sentence or chip view over a raw statement keeps the CODE one hover away - the flat exit
 	# ramp in miniature. Resolved through the action index so the tooltip always shows the very
 	# line the row is, not a reconstruction of it.
@@ -4693,6 +5069,14 @@ func _resolve_drop_mode(hit: Dictionary, position: Vector2) -> String:
 	var action_slot: int = comment_action_drop_slot(hit, position)
 	if action_slot >= 0:
 		return "%s%d" % [ACTION_LIST_DROP_PREFIX, action_slot]
+	# An EVENT carried over another event: its right half takes it as a sub-event, its left half as a
+	# sibling before or after it - the half the pointer is on says which, whatever the row's height.
+	var carried: EventRowData = _row_at(_drag_row_index)
+	if carried != null and carried.row_type == EventRowData.RowType.EVENT and carried.source_resource is EventRow \
+			and row_data.row_type == EventRowData.RowType.EVENT and row_data.source_resource is EventRow:
+		if position.x >= _get_logical_canvas_width() * 0.5:
+			return "inside"
+		return "after" if relative_y > row_height * DROP_ZONE_AFTER_THRESHOLD else "before"
 	var supports_inside_drop: bool = row_data.row_type in [
 		EventRowData.RowType.EVENT,
 		EventRowData.RowType.GROUP,

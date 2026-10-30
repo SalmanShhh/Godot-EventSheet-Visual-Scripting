@@ -156,8 +156,8 @@ static func _test_shipped_pack_readings() -> bool:
 	var upgrades: Array = _cell_texts("res://eventsheet_addons/upgrades/upgrades_addon.gd")
 	var save_at: int = _index_ending(upgrades, "On function save_state")
 	var load_at: int = _index_ending(upgrades, "On function load_state")
-	ok = _check("the save-state table keeps the skill tree chip",
-		upgrades.slice(save_at, load_at).has("⟡ A skill tree - prerequisites, points and unlocks") if save_at >= 0 and load_at > save_at else false,
+	ok = _check("the save-state table keeps the skill tree claim",
+		_claimed_rows("res://eventsheet_addons/upgrades/upgrades_addon.gd", "skill_tree").split(", ").has("save_state"),
 		true) and ok
 	var screen_fx: Array = _cell_texts("res://eventsheet_addons/screen_fx/screen_fx.gd")
 	var drawing: Array = _cell_texts("res://eventsheet_addons/drawing_prefab_resource/drawing_prefab_resource.gd")
@@ -175,6 +175,38 @@ static func _cell_texts(path: String) -> Array:
 	for reading: Variant in LINES.readings_of_sheet(sheet, "pack"):
 		texts.append(" | ".join(reading.plain))
 	return texts
+
+
+## Which functions a marked pattern is claimed in, read off the opened sheet's claims: the name of
+## each function whose steps hold a claimed event, joined. The pattern is never drawn in the row, so
+## the claim behind its number's card is what is pinned.
+static func _claimed_rows(path: String, pattern: String) -> String:
+	var sheet: EventSheetResource = SUPPORT.reopen(FileAccess.get_file_as_string(path), true, path)
+	var viewport: EventSheetViewport = LINES.viewport_for(sheet)
+	var rows: Array = []
+	LINES._walk_rows(viewport, viewport._root_rows, rows)
+	EventSheetViewportReadingRows.ensure_claims(sheet)
+	var found: PackedStringArray = PackedStringArray()
+	for claim: Variant in EventSheetPatternFacts.claims(sheet):
+		if str((claim as Dictionary).get("pattern", "")) != pattern:
+			continue
+		for function_entry: Variant in sheet.functions:
+			var event_function: EventFunction = function_entry as EventFunction
+			if event_function != null and _function_holds(event_function.events, str((claim as Dictionary).get("event_uid", ""))) 					and not found.has(event_function.function_name):
+				found.append(event_function.function_name)
+	viewport.free()
+	found.sort()
+	return ", ".join(found)
+
+
+static func _function_holds(events: Array, event_uid: String) -> bool:
+	for entry: Variant in events:
+		var event_row: EventRow = entry as EventRow
+		if event_row == null:
+			continue
+		if event_row.event_uid == event_uid or _function_holds(event_row.sub_events, event_uid):
+			return true
+	return false
 
 
 ## The first cell whose text ends in `suffix` (a function head leads with its scope badge), or -1.

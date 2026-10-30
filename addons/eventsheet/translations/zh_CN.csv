@@ -9702,3 +9702,7 @@ Manual beside the sheet,手册在工作表旁
 Opens the Manual on the page that explains this finding and its fix.,打开手册中解释此发现及其修复方法的页面。
 Opened %s in the Manual.,已在手册中打开 %s。
 Opened %s in your browser.,已在浏览器中打开 %s。
+Every line of this event is ordinary Godot code the sheet reads as rows. Its shape matches a pattern the Manual explains.,此事件的每一行都是表格按行读取的普通 Godot 代码。它的形状符合手册中讲解的一种模式。
+Open in the Manual (F1),在手册中打开 (F1)
+Conditions go on the left,条件放在左侧
+Actions go on the right,动作放在右侧

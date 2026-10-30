@@ -9702,3 +9702,7 @@ Manual beside the sheet,シートの横にマニュアル
 Opens the Manual on the page that explains this finding and its fix.,この指摘とその直し方を説明するページでマニュアルを開きます。
 Opened %s in the Manual.,%s をマニュアルで開きました。
 Opened %s in your browser.,%s をブラウザーで開きました。
+Every line of this event is ordinary Godot code the sheet reads as rows. Its shape matches a pattern the Manual explains.,このイベントの各行は、シートが行として読む普通の Godot コードです。その形は、マニュアルが説明するパターンに一致します。
+Open in the Manual (F1),マニュアルで開く (F1)
+Conditions go on the left,条件は左側に置きます
+Actions go on the right,アクションは右側に置きます

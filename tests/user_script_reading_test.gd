@@ -161,14 +161,14 @@ static func _test_player() -> bool:
 	var ok: bool = SUPPORT.pins(NAME, [
 		["the inverted floor test reads on the player, under the inverted mark",
 			_line_with(lines, "Is on floor", 0),
-			"System: Every tick (physics) | [not] ReadingTestPlayer: Is on floor | ReadingTestPlayer: Apply gravity GRAVITY (per second) | ⟡ Movement"],
+			"System: Every tick (physics) | [not] ReadingTestPlayer: Is on floor | ReadingTestPlayer: Apply gravity GRAVITY (per second)"],
 		["the same test inside a match branch reads the same words on the same object",
 			_line_with(lines, "Is on floor", 1), "ReadingTestPlayer: Is on floor | System: Go to Idle"],
 		["a velocity verb leads with the script's own name, not its class",
 			_line_with(lines, "Set velocity Y", 0), "Keyboard: On \"ui_accept\" pressed | ReadingTestPlayer: Set velocity Y to -400"],
 		["a call to the script's own function leads with the script's own name",
 			_line_with(lines, "ReadingTestPlayer: add_coin", 0),
-			"System: Every tick (physics) | ReadingTestPlayer: Move (and slide along what it hits) | ReadingTestPlayer: add_coin | ⟡ Movement"],
+			"System: Every tick (physics) | ReadingTestPlayer: Move (and slide along what it hits) | ReadingTestPlayer: add_coin"],
 		["a local the step declares is a variable: no note says otherwise",
 			_notes(dock), PackedStringArray()],
 		# The same variable row every other member reads as (its scope and type words are painted as

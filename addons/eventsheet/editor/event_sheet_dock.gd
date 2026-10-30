@@ -7594,10 +7594,11 @@ func _run_variable_link(index: int) -> bool:
 	return true
 
 
-## The pattern an event was read as, under a theme that keeps the ⟡ chip out of the conditions lane
-## (pattern_in_help_strip): "⟡ Making an object and putting it somewhere - why", muted like the
-## newer-spelling hint because it teaches rather than warns, with the chip's own door - its page in
-## the Manual. Only when nothing about the row is wrong or older, and only with the Patterns lens on.
+## The pattern an event was read as: "⟡ Making an object and putting it somewhere - why", muted like
+## the newer-spelling hint because it teaches rather than warns, with a door to its page in the
+## Manual. The pattern is never a chip inside the row, so this line and the event number's hover card
+## are where it is said. Only when nothing about the row is wrong or older, and only with the
+## Patterns lens on.
 func _show_pattern_hint(row_data: EventRowData) -> void:
 	var said: Dictionary = _pattern_hint(row_data)
 	if said.is_empty():
@@ -7611,14 +7612,11 @@ func _show_pattern_hint(row_data: EventRowData) -> void:
 	_row_help_button.visible = true
 
 
-## The pattern line for a selected event, or {} when the theme keeps the chip in the lane, the
-## Patterns lens is off, or the event owns no pattern claim.
+## The pattern line for a selected event, or {} when the Patterns lens is off or the event owns no
+## pattern claim. Every look says it here: no theme puts the pattern back inside the row.
 func _pattern_hint(row_data: EventRowData) -> Dictionary:
 	if _viewport == null or row_data == null or not (row_data.source_resource is EventRow) \
 			or not _viewport.patterns_lens_enabled():
-		return {}
-	var lanes: EventSheetEventStyle = _viewport._get_event_style()
-	if lanes == null or not lanes.pattern_in_help_strip:
 		return {}
 	return ViewportTooltipHelper.pattern_strip_line(_current_sheet, (row_data.source_resource as EventRow).event_uid)
 

@@ -1,7 +1,7 @@
 # Godot EventSheets - everything the editor SAYS about a pattern, pinned by value.
 #
 # The registry is proved on its own by pattern_facts_test; this is the layer above it - the pre-pass
-# that claims a pattern from a real hand-written file, the chip that names it, the counts on the
+# that claims a pattern from a real hand-written file, the number card that names it, the counts on the
 # coverage chip, the evidence a hover owes the reader, the Adopt plan and its refusals, the Doctor's
 # smells, the Manual page, and the lens that turns the whole thing off.
 #
@@ -83,14 +83,27 @@ static func _test_claims_from_a_real_file() -> bool:
 
 static func _test_the_chip_names_the_pattern() -> bool:
 	var ok: bool = true
-	var rows: PackedStringArray = _row_texts(_open(COUNTDOWN_PATH, true))
-	ok = _check("the event that OWNS the pattern wears the chip",
-		_row_containing(rows, "Subtract dt from cooldown"),
-		"Subtract dt from cooldown | ⟡ Cooldown") and ok
-	# The rows that merely USE the pattern's words get nothing: the claim names one row, and a chip
-	# on every row that mentions the variable would be noise rather than a name.
-	ok = _check("and the rows that only use its words do not",
-		_row_containing(rows, "Call Shoot").contains("⟡"), false) and ok
+	var view: EventSheetViewport = _open(COUNTDOWN_PATH, true)
+	var rows: PackedStringArray = _row_texts(view)
+	# The pattern is never a chip inside the row: the event that OWNS it reads as its own sentence,
+	# and its NUMBER's card is where the name is said.
+	ok = _check("the event that OWNS the pattern reads as its own sentence, no chip in the row",
+		_row_containing(rows, "Subtract dt from cooldown"), "Subtract dt from cooldown") and ok
+	var owner_card: Dictionary = {}
+	for index: int in range(view._flat_rows.size()):
+		var row: EventRowData = view._row_at(index)
+		if row == null or not (row.source_resource is EventRow) or row.event_number <= 0:
+			continue
+		var card: Dictionary = ViewportTooltipHelper.event_number_card(view._sheet,
+			(row.source_resource as EventRow).event_uid, row.event_number)
+		if not card.is_empty():
+			owner_card = card
+			break
+	ok = _check("its number's card names the pattern",
+		str(Array(owner_card.get("lines", PackedStringArray())).back()) if not owner_card.is_empty() else "",
+		"⟡ Reads as: Cooldown") and ok
+	ok = _check("and no row anywhere wears the ⟡ mark",
+		"\n".join(rows).contains("⟡"), false) and ok
 
 	# The lens is what turns the whole thing off, and it is a SPAN-level lens: with it off the
 	# sheet reads as its own plain sentences and nothing else about the row changes.
@@ -100,6 +113,8 @@ static func _test_the_chip_names_the_pattern() -> bool:
 	ok = _check("with the Patterns lens off the row is its plain sentence again",
 		_row_containing(_row_texts(plain), "Subtract dt from cooldown"),
 		"Subtract dt from cooldown") and ok
+	ok = _check("and its number has no card",
+		ViewportTooltipHelper.event_number_card(plain._sheet, "", 1), {}) and ok
 	return ok
 
 
@@ -109,6 +124,9 @@ static func _test_the_chip_names_the_pattern() -> bool:
 static func _test_the_coverage_chip_counts_them() -> bool:
 	var ok: bool = true
 	var view: EventSheetViewport = _open(COUNTDOWN_PATH, true)
+	# The claims are asked for by whatever says them (the coverage chip, the help strip, a number's
+	# card), never as a side effect of drawing a row.
+	EventSheetViewportReadingRows.ensure_claims(view._sheet)
 	var summary: Dictionary = EventSheetPatternFacts.summary(view._sheet)
 	# TWO claims here: the cooldown, and the Every-tick one the blank event carries. The registry
 	# counts both, because both are true; the CHIP counts only the marked one, below.

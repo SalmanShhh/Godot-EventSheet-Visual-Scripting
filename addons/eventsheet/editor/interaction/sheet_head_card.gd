@@ -12,7 +12,8 @@ extends PanelContainer
 #
 # The words arrive as one Dictionary, built by the row builder:
 #   {"id", "title", "subtitle", "mono", "lines": [paragraph], "links": [[label, action]],
-#    "notes": [muted paragraph], "doors": [[label, action]], "width": design px, "anchor": "left"|"right",
+#    "notes": [muted paragraph], "doors": [[label, action]], "width": design px,
+#    "anchor": "left"|"right"|"beside",
 #    "code_last": bool}
 # `code_last` puts the "mono" line under the paragraphs instead of under the title: a variable mark's
 # card reads title, sentence, then the code that earns the mark.
@@ -148,9 +149,16 @@ func _open_pending() -> void:
 	if str(_pending_card.get("anchor", "left")) == "right":
 		position_x = _pending_anchor.end.x - width
 	var top: float = _pending_anchor.end.y + EventSheetPalette.scaled_f(CARD_DROP)
+	# "beside": the card opens to the right of the word, level with it - an event number's card, so
+	# the pointer can still run down the column of numbers without landing on the card.
+	if str(_pending_card.get("anchor", "left")) == "beside":
+		position_x = _pending_anchor.end.x + EventSheetPalette.scaled_f(CARD_DROP)
+		top = _pending_anchor.position.y
 	# Kept on the window: a card hanging off the edge would hide its own doors.
 	var room: Rect2 = get_viewport_rect()
 	position_x = clampf(position_x, room.position.x, maxf(room.end.x - width, room.position.x))
+	if str(_pending_card.get("anchor", "left")) == "beside":
+		top = clampf(top, room.position.y, maxf(room.end.y - size.y, room.position.y))
 	global_position = Vector2(position_x, top)
 	set_process(true)
 

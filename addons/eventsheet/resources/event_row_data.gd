@@ -18,6 +18,14 @@ var indent: int = 0
 var row_type: int = RowType.EVENT
 var folded: bool = false
 var selected: bool = false
+## True while this row is drawn inside a selection RUN of two or more statements (a parent and its
+## subtree, neighbouring variables): the row takes the run's one fill, and the run's one frame is
+## drawn round all of it, so the row draws no frame of its own. Stamped by the canvas each frame
+## for the rows it draws; nothing else reads it.
+var in_selection_run: bool = false
+## True when that run is an event's branch (the run starts with an event), so a local line inside it
+## fills the number margin the way the events round it do; a run of variables leaves the margin alone.
+var in_selection_branch: bool = false
 var hovered: bool = false
 var spans: Array[SemanticSpan] = []
 ## Number of stacked text lines this row occupies. Precomputed cheaply so row

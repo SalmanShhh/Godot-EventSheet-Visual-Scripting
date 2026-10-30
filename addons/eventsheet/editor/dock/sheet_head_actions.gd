@@ -16,6 +16,8 @@ extends RefCounted
 
 ## Loaded only when a class rename asks, so opening a sheet never reads it.
 const SAVE_CHOICES_PATH: String = "res://addons/eventforge/compiler/save_choices.gd"
+## The Manual's patterns page, loaded only when an event number's card door asks for it.
+const PATTERN_MANUAL_PATH: String = "res://addons/eventsheet/editor/docs/doc_patterns.gd"
 
 var _dock: Control = null
 var _add_menu: PopupMenu = null
@@ -43,6 +45,11 @@ func handle(action: String) -> void:
 	# The spawns band is about a FILE rather than about a node of a scene, so its gesture is the one
 	# a file wants: show it where it lives. Answered before the loop below because it is the one scene
 	# band whose reference is a scene path on its own, with no node inside it to select.
+	# An event number's card names the pattern the event was read as; its door opens the pattern's
+	# page in the Manual, the same page F1 on the selected event opens.
+	if action.begins_with(ViewportTooltipHelper.PATTERN_PAGE_ACTION):
+		load(PATTERN_MANUAL_PATH).open_page(action.trim_prefix(ViewportTooltipHelper.PATTERN_PAGE_ACTION))
+		return
 	if action.begins_with("%s:" % EventSheetHeadBands.BAND_SPAWNS):
 		browse_to_scene(action.trim_prefix("%s:" % EventSheetHeadBands.BAND_SPAWNS))
 		return

@@ -2,7 +2,6 @@
 class_name ViewportInputHandlers
 extends RefCounted
 
-const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
 # The INPUT handling of the event sheet's virtualized viewport, extracted from
 # event_sheet_viewport.gd to keep that file maintainable. The four handlers behind
 # the viewport's _gui_input virtual live here:
@@ -150,9 +149,11 @@ func handle_mouse_motion(event: InputEventMouseMotion) -> void:
 	var hit: Dictionary = _viewport._hit_test(local_position)
 	_viewport._set_hover_state(int(hit.get("row_index", -1)), int(hit.get("span_index", -1)))
 	# The head bar's name and counts open their cards on hover, and leaving them lets the card go; a
-	# variable's mark tile opens its own card the same way.
-	if not _viewport.update_badge_card(hit, local_position):
-		_viewport.update_head_card(hit)
+	# variable's mark tile opens its own card the same way. Not while something is carried: the ghost
+	# is the only thing that talks then, and a card under the pointer would take the drop.
+	if not _viewport._drag_motion.active:
+		if not _viewport.update_badge_card(hit, local_position) and not _viewport.update_event_number_card(hit):
+			_viewport.update_head_card(hit)
 	# Cursor affordance, in priority order: the empty non-cell area of an event row is the
 	# whole-event DRAG handle (✥ move cursor) - dragging there reorders the event or nests it as a
 	# sub-event, so the previously-dead space reads as grabbable; everything else is the arrow.
@@ -180,18 +181,39 @@ func handle_mouse_motion(event: InputEventMouseMotion) -> void:
 		_viewport.clear_divider_guide()
 		_viewport.mouse_default_cursor_shape = Control.CURSOR_ARROW
 	_viewport._drag_pointer_position = local_position
+	# A held press that has travelled LIFTS what it pressed: from here the sheet is drawn in motion
+	# (the ghost, the gap, the fold), and the pointer is read back through that drawing before the
+	# drop target is asked for, so a gap opening under the pointer never moves the target.
+	var carrying: bool = not _viewport._drag_ace_entries.is_empty() or _viewport._drag_row_index >= 0
+	if carrying and not _viewport._drag_motion.active and (event.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0 \
+			and _viewport._drag_motion.moved_enough(local_position):
+		_viewport.lift_drag(local_position)
+	var target_position: Vector2 = local_position
+	if carrying and _viewport._drag_motion.active:
+		_viewport._drag_motion.pointer_moved(local_position)
+		var drawn: Dictionary = _viewport._drag_motion.to_logical(local_position)
+		if bool(drawn.get("in_gap", false)):
+			# Inside the open gap the place stays put; only the pointer's half still says whether a
+			# carried event goes in as a sub-event or beside.
+			_viewport.reconsider_gap_nesting(local_position)
+			_viewport.queue_redraw()
+			return
+		target_position = drawn.get("position", local_position)
+		hit = _viewport._hit_test(target_position)
 	if not _viewport._drag_ace_entries.is_empty():
 		_viewport._drag_ace_copy_mode = event.ctrl_pressed or event.meta_pressed
-		_viewport._drag.update_ace_drag_target(hit, local_position)
+		_viewport._drag.update_ace_drag_target(hit, target_position)
+		_viewport.place_drag_gap(hit)
 	elif _viewport._drag_row_index >= 0:
 		_viewport._drag_row_copy_mode = event.ctrl_pressed or event.meta_pressed
 		# A ternary pair is one statement: a target that landed between its rows is snapped out to
 		# before or after the whole pair, so the indicator can never promise a drop the sheet has no
 		# place for.
 		var drop_target: Dictionary = _viewport.normalize_row_drop_target(
-			int(hit.get("row_index", -1)), _viewport._resolve_drop_mode(hit, local_position))
+			int(hit.get("row_index", -1)), _viewport._resolve_drop_mode(hit, target_position))
 		_viewport._drag_target_index = int(drop_target.get("index", -1))
 		_viewport._drag_target_mode = str(drop_target.get("mode", "before"))
+		_viewport.place_drag_gap(hit)
 		_viewport.queue_redraw()
 
 
@@ -354,13 +376,6 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			_walk_to_next_script_block()
 			_viewport.accept_event()
 			return
-		# The ⟡ chip names a pattern; clicking it opens that pattern's page in the Manual, with
-		# the hand-written shape and the events shape side by side. The hover already promised this,
-		# so the click has to keep the promise.
-		if not event.double_click and str(metadata.get("kind", "")) == "pattern_chip":
-			ReadingDoors.pattern_manual().open_page(str(metadata.get("pattern", "")))
-			_viewport.accept_event()
-			return
 		# The ƒ chip names a function this sheet declares; clicking it goes there, the way the
 		# Outline does. One click, no modifier: the chip is the sheet's own word for "a function, by
 		# name", and a name a reader can see is a name they want to be at.
@@ -470,8 +485,16 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		# under the shorter lane, the gap beside an OR'd condition. Ctrl still toggles whichever of
 		# the two it is, and a double click below still opens the cell the point is on.
 		var press_target: Dictionary = _viewport.press_target_at(local_position)
-		_viewport._select_from_click(row_index, int(press_target.get("span_index", -1)),
-			event.ctrl_pressed or event.meta_pressed)
+		# A plain press on a row that is part of a selection of several keeps them all, so a drag
+		# from it carries the whole selection; let go without dragging and the click selects just
+		# that row, as it always did.
+		_viewport._pending_click_select = {}
+		if not event.double_click and not event.ctrl_pressed and not event.meta_pressed \
+				and int(press_target.get("span_index", -1)) < 0 and _viewport.press_keeps_selection(row_index):
+			_viewport._pending_click_select = {"row_index": row_index, "span_index": -1}
+		else:
+			_viewport._select_from_click(row_index, int(press_target.get("span_index", -1)),
+				event.ctrl_pressed or event.meta_pressed)
 		if event.double_click:
 			# In-flow GDScript blocks (actions) open the code dialog, not the ACE editor.
 			var double_click_meta: Dictionary = hit.get("span_metadata", {})
@@ -639,6 +662,8 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			return
 		_viewport._drag_ace_copy_mode = event.ctrl_pressed or event.meta_pressed
 		_viewport._drag_row_copy_mode = event.ctrl_pressed or event.meta_pressed
+		_viewport._drag_motion.press(local_position)
+		_viewport._drag_press_hit = {"row_index": row_index, "span_index": int(hit.get("span_index", -1))}
 		if _viewport._drag.maybe_begin_ace_drag(hit, row_index):
 			# Accept so this control keeps receiving motion/release for the drag.
 			_viewport.accept_event()
@@ -651,6 +676,12 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 	if _viewport.end_column_header_drag():
 		_viewport.accept_event()
 		return
+	# The press kept a selection of several for a drag that never lifted: it was a click after all.
+	if not _viewport._pending_click_select.is_empty():
+		var pending: Dictionary = _viewport._pending_click_select
+		_viewport._pending_click_select = {}
+		if not _viewport._drag_motion.active:
+			_viewport._select_from_click(int(pending["row_index"]), int(pending["span_index"]), false)
 	if not _viewport._drag_ace_entries.is_empty():
 		_viewport._drag_ace_copy_mode = event.ctrl_pressed or event.meta_pressed
 		_viewport._drag.complete_ace_drag()
@@ -663,8 +694,10 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 	# insertion into that cell and never a move of the declaration.
 	if _viewport._drag_row_index >= 0:
 		# The cheap question first: the catalog walk behind the insert text reads every autoload's
-		# script, and a drop that landed on no parameter has nothing to ask it.
-		var field: Dictionary = _viewport._param_value_at(local_position)
+		# script, and a drop that landed on no parameter has nothing to ask it. Asked where the
+		# pointer is on the sheet as drawn, gaps and folds read back out.
+		var drawn: Dictionary = _viewport._drag_motion.to_logical(local_position)
+		var field: Dictionary = {} if bool(drawn.get("in_gap", false)) 			else _viewport._param_value_at(drawn.get("position", local_position))
 		var dropped_text: String = "" if field.is_empty() \
 			else _viewport.variable_insert_text(_viewport._row_at(_viewport._drag_row_index))
 		if not dropped_text.is_empty():
@@ -705,6 +738,11 @@ func handle_key(event: InputEventKey) -> void:
 	if _is_inert_figure():
 		return
 	if not event.pressed or event.echo:
+		return
+	# Esc while something is carried puts it back: every gap closes and the row slides home.
+	if event.keycode == KEY_ESCAPE and _viewport._drag_motion.active and not _viewport._drag_motion.cancelling:
+		_viewport.cancel_drag()
+		_viewport.accept_event()
 		return
 	if _viewport._editing_row_index >= 0:
 		handle_editing_key(event)

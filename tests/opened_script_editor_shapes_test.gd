@@ -77,7 +77,7 @@ static func _test_undo_step() -> bool:
 	# The step is the function's own first step, so it reads beside the function's head.
 	ok = _check("the edit reads as one undoable step, named by the label",
 		_first_containing(readings, "Edit sheet undoably"),
-		"On function apply | changed ▸ boolean | = Dock ▸ Edit sheet undoably \"Apply Cell Edit\" | ↓ the steps below are the edit | ⟡ one undoable step, the edit under it") and ok
+		"On function apply | changed ▸ boolean | = Dock ▸ Edit sheet undoably \"Apply Cell Edit\" | ↓ the steps below are the edit") and ok
 	ok = _check("the edit's own lines hang under it as sub-events",
 		_first_containing(readings, "_append_condition_entry"),
 		"System ▸ mode = \"new_condition_event\" | Batch12UndoFunnelFixture ▸ _append_condition_entry | System ▸ Answer true") and ok

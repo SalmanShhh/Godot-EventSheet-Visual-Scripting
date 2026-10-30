@@ -128,6 +128,43 @@
   top bar and the icon a sheet resource wears in the FileSystem turn dark grey like their neighbours:
   the plugin redraws the svg in the editor's icon colour when it loads, and the svg is imported in the
   editor's colours (redrawn once after a switch between a dark and a light theme).
+### Fixed: selecting an event draws one frame round it and everything under it
+
+- Selecting a parent event already selected its local lines and sub-events; each of them then drew
+  a frame of its own, so event 5 of BoomerLevel showed seven frames. The selection is now drawn as
+  runs: one frame from the top of the parent to the bottom of its last child, one fill across every
+  row inside it (local lines and both lanes included), and no frame on the rows inside. Neighbouring
+  selected variable, enum and signal lines share one frame the same way, and a gap splits it. Two
+  events picked side by side are still two frames, a sub-event picked on its own is framed alone,
+  and a single cell keeps its own small outline.
+
+### Changed: the pattern an event was read as leaves the row in every look
+
+- The ⟡ chip naming a pattern ("Shots, blasts and an arsenal") no longer sits inside the conditions
+  lane in any look; it already left it in Editor Native, and now the default look and every other
+  theme follow. A row holds its object, its words and its parameters, so the lanes line up from
+  event to event. The pattern is said in the help strip when the event is selected, and hovering
+  the event's number opens a card beside it: "Event 4", what the event is, "⟡ Reads as: ..." and
+  an Open in the Manual (F1) door. The card opens beside the number, so the pointer can still run
+  down the column of numbers. Explain this reading in the row menu is unchanged. The theme token
+  that switched the chip (`pattern_in_help_strip`) is kept so saved themes load, and is no longer
+  offered as a choice.
+
+### Changed: dragging carries the real row, and the sheet makes room for it
+
+- Dragging a condition, an action, an event or several selected rows now carries the thing itself,
+  drawn by the sheet's own renderer, tilted a little with a shadow; several carried things stack
+  with their count. Where it would land, the lane opens a dashed gap the height of what is carried
+  and the rows round it slide apart (160 ms, eased); the place it came from folds away once the
+  pointer has left it, so the sheet already looks as it will after the drop. The drop target is
+  read off the sheet as it is drawn, so a gap opening under the pointer never moves it.
+- An event over the right half of another goes in as a sub-event (the gap opens indented); over the
+  left half it goes before or after it.
+- A condition over the action lane (or an action over the conditions lane) opens no gap: the ghost
+  turns red-edged and says why ("Conditions go on the left"), as it does for any place that cannot
+  take what is carried.
+- Esc while dragging puts it back: every gap closes and the row slides home. With Reduced Motion on
+  (View menu, or the system's own setting) the gap and the fold appear at once, without sliding.
 
 ### Fixed: a big sheet no longer freezes the editor a few seconds after it opens
 

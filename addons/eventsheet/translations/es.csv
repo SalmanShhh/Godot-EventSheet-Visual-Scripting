@@ -9702,3 +9702,7 @@ Manual beside the sheet,Manual junto a la hoja
 Opens the Manual on the page that explains this finding and its fix.,Abre el Manual en la página que explica este hallazgo y su solución.
 Opened %s in the Manual.,Se abrió %s en el Manual.
 Opened %s in your browser.,Se abrió %s en tu navegador.
+Every line of this event is ordinary Godot code the sheet reads as rows. Its shape matches a pattern the Manual explains.,Cada línea de este evento es código Godot corriente que la hoja lee como filas. Su forma coincide con un patrón que explica el Manual.
+Open in the Manual (F1),Abrir en el Manual (F1)
+Conditions go on the left,Las condiciones van a la izquierda
+Actions go on the right,Las acciones van a la derecha

@@ -9702,3 +9702,7 @@ Manual beside the sheet,Handbuch neben dem Blatt
 Opens the Manual on the page that explains this finding and its fix.,"Öffnet das Handbuch auf der Seite, die diesen Befund und seine Behebung erklärt."
 Opened %s in the Manual.,%s im Handbuch geöffnet.
 Opened %s in your browser.,%s in deinem Browser geöffnet.
+Every line of this event is ordinary Godot code the sheet reads as rows. Its shape matches a pattern the Manual explains.,"Jede Zeile dieses Ereignisses ist gewöhnlicher Godot-Code, den das Blatt als Zeilen liest. Seine Form entspricht einem Muster, das das Handbuch erklärt."
+Open in the Manual (F1),Im Handbuch öffnen (F1)
+Conditions go on the left,Bedingungen gehören nach links
+Actions go on the right,Aktionen gehören nach rechts

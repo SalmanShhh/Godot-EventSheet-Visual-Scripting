@@ -177,6 +177,8 @@ func row_ghost_label(row_data: EventRowData) -> String:
 
 
 func clear_row_drag() -> void:
+	if _viewport._drag_ace_entries.is_empty():
+		_viewport._drag_motion.finish()
 	_viewport._drag_row_index = -1
 	_viewport._drag_row_indices.clear()
 	_viewport._drag_target_index = -1
@@ -225,6 +227,8 @@ func maybe_begin_ace_drag(hit: Dictionary, row_index: int) -> bool:
 
 
 func clear_ace_drag() -> void:
+	if _viewport._drag_row_index < 0:
+		_viewport._drag_motion.finish()
 	_viewport._drag_ace_entries.clear()
 	_viewport._drag_ace_target_row_index = -1
 	_viewport._drag_ace_target_lane = ""
@@ -291,7 +295,9 @@ func update_ace_drag_target(hit: Dictionary, position: Vector2) -> void:
 	if not _viewport._drag_ace_drop_valid:
 		_viewport._drag_feedback_text = str(validation.get("message", "This drop target is not valid."))
 		_viewport._drag_feedback_is_error = true
-		_viewport.tooltip_text = _viewport._drag_feedback_text
+		# In motion the ghost says it; a tooltip as well would say it twice.
+		if not _viewport._drag_motion.active:
+			_viewport.tooltip_text = _viewport._drag_feedback_text
 	_viewport.queue_redraw()
 
 
@@ -321,7 +327,8 @@ func complete_ace_drag() -> bool:
 ## Event-sheet-style drag ghost: a faint (~0.66 opacity) label of the dragged content following the
 ## cursor while an ACE/row drag has an active target (i.e. after actual mouse motion).
 func draw_drag_ghost(font: Font, font_size: int) -> void:
-	if _viewport._drag_ghost_label.is_empty():
+	# A drag in motion carries the real row (ViewportDragMotion); the label is for a drag without one.
+	if _viewport._drag_ghost_label.is_empty() or _viewport._drag_motion.active:
 		return
 	var ace_dragging: bool = not _viewport._drag_ace_entries.is_empty() and _viewport._drag_ace_target_row_index >= 0
 	var row_dragging: bool = _viewport._drag_row_index >= 0 and _viewport._drag_target_index >= 0

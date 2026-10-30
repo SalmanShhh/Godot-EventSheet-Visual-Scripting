@@ -49,8 +49,8 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	# target index, and the current layout style signature.
 	# Drag state is part of the key so the drop preview (row reorder + ACE drop line) updates
 	# as the drag target moves; it is constant when idle, so no churn outside a drag.
-	var drag_signature: String = "%d:%s:%d:%s:%d:%s" % [
-		_viewport._drag_target_index, _viewport._drag_target_mode,
+	var drag_signature: String = "%s:%d:%s:%d:%s:%d:%s" % [
+		str(_viewport._drag_motion.active), _viewport._drag_target_index, _viewport._drag_target_mode,
 		_viewport._drag_ace_target_row_index, _viewport._drag_ace_target_lane, _viewport._drag_ace_target_ace_index, _viewport._drag_ace_insert_mode
 	]
 	var key: String = "%s:%d:%d:%s:%s" % [row_data.row_uid, index, int(width), drag_signature, _viewport._layout_style_signature]
@@ -388,7 +388,13 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 			else:
 				condition_line_x[condition_line_index] = next_span_start_x
 	var drag_rect := Rect2()
-	if _viewport._drag_row_index >= 0 and _viewport._drag_target_index == index:
+	# While the drag is in motion the place it lands is a dashed GAP the rows slide apart round
+	# (ViewportDragMotion), so the thin insert lines below are drawn only for the two drops a gap does
+	# not stand for: a variable folded into another's group, and a comment joining an action list.
+	var gap_drawn: bool = _viewport._drag_motion.active
+	if _viewport._drag_row_index >= 0 and _viewport._drag_target_index == index \
+			and (not gap_drawn or _viewport._drag_target_mode == "group" \
+			or _viewport._drag_target_mode.begins_with(EventSheetViewport.ACTION_LIST_DROP_PREFIX)):
 		match _viewport._drag_target_mode:
 			"after":
 				drag_rect = Rect2(0.0, row_rect.end.y - 1.0, width, 2.0)
@@ -411,7 +417,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				else:
 					drag_rect = Rect2(0.0, row_rect.position.y - 1.0, width, 2.0)
 	var ace_drag_rect := Rect2()
-	if not _viewport._drag_ace_entries.is_empty() and _viewport._drag_ace_target_row_index == index:
+	if not gap_drawn and not _viewport._drag_ace_entries.is_empty() and _viewport._drag_ace_target_row_index == index:
 		ace_drag_rect = _viewport._build_ace_drag_preview_rect(
 			row_data,
 			_viewport._drag_ace_target_lane,
@@ -421,7 +427,8 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 			action_lane_rect
 		)
 	var drag_feedback_rect := Rect2()
-	if not _viewport._drag_feedback_text.is_empty() and _viewport._drag_ace_target_row_index == index:
+	# In motion, the ghost itself says why a place refuses it.
+	if not gap_drawn and not _viewport._drag_feedback_text.is_empty() and _viewport._drag_ace_target_row_index == index:
 		var feedback_lane_rect: Rect2 = (
 			action_lane_rect if _viewport._drag_ace_target_lane == "action" else condition_lane_rect
 		)

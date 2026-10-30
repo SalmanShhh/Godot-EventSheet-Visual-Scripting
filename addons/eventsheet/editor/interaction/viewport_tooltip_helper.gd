@@ -243,6 +243,46 @@ static func pattern_strip_line(sheet: EventSheetResource, event_uid: String) -> 
 	return {}
 
 
+## The head action an event number's card door sends, followed by the pattern's id: the door opens
+## that pattern's page in the Manual, as F1 on the selected event and Explain this reading do.
+const PATTERN_PAGE_ACTION := "pattern_page:"
+
+
+## The hover card behind an event's NUMBER, for an event read as a pattern: what the event is, the
+## pattern's name ("Reads as: Shots, blasts and an arsenal") and the door to the pattern's page. The
+## pattern is never a chip inside the row, so this card and the help strip are where it is said.
+## {} for an event that owns no pattern claim - its number keeps no card. `notes` are added muted
+## under the words (the hit count of a traced run). The same claim the help strip reads, so the two
+## can never disagree.
+static func event_number_card(sheet: EventSheetResource, event_uid: String, number: int,
+		notes: PackedStringArray = PackedStringArray()) -> Dictionary:
+	if sheet == null or event_uid.is_empty() or number <= 0:
+		return {}
+	EventSheetViewportReadingRows.ensure_claims(sheet)
+	for claim: Variant in EventSheetPatternFacts.claims_for_row(sheet, event_uid):
+		var pattern: String = str((claim as Dictionary).get("pattern", ""))
+		if not EventSheetPatternVocabulary.is_marked(pattern):
+			continue
+		var words: String = EventSheetPatternVocabulary.words(pattern)
+		if words.is_empty():
+			words = str((claim as Dictionary).get("words", ""))
+		if words.is_empty():
+			continue
+		return {
+			"id": "event_number:%s" % event_uid,
+			"title": EventSheetL10n.translate("Event %d") % number,
+			"lines": PackedStringArray([
+				EventSheetL10n.translate("Every line of this event is ordinary Godot code the sheet reads as rows. Its shape matches a pattern the Manual explains."),
+				"%s %s" % [ViewportRowBuilder.PATTERN_CHIP_MARK,
+					EventSheetL10n.translate("Reads as: %s") % EventSheetL10n.translate(words)]]),
+			"notes": notes,
+			"doors": [[EventSheetL10n.translate("Open in the Manual (F1)"), PATTERN_PAGE_ACTION + pattern]],
+			"width": 300.0,
+			"anchor": "beside"
+		}
+	return {}
+
+
 ## The EVIDENCE line a pattern-read row owes its reader: which pattern it was read as, and the
 ## exact source lines that were the grounds for saying so. A pattern reading is a claim spanning
 ## several lines, so unlike every other reading in this program it cannot be checked by looking at

@@ -72,3 +72,55 @@ static func apply_hover_state(flat_rows: Array, hovered_row_index: int) -> void:
 		if row_data == null:
 			continue
 		row_data.hovered = index == hovered_row_index
+
+
+## THE SELECTION AS RUNS. Selected rows that touch are one selection mark: one frame and one fill
+## around the run, never a frame per row. Rows `first` to `last` are read in order, and each run comes
+## back as {"first", "last", "has_event", "statements"}:
+##   - an EVENT starts its own run and keeps every selected row under it (its local lines, its
+##     sub-events, the rows of a statement that reads as several) - selecting a parent selects its
+##     subtree, so the branch is one frame from the parent's top to its last child's bottom;
+##   - a second event at the parent's own depth or shallower starts a new run: two events picked
+##     side by side are two things, and two frames say so;
+##   - neighbouring variable, enum and signal lines are one run, and an event after them starts its own;
+##   - a row that is not selected, or a statement whose CELL is the selection, ends the run - a cell
+##     keeps its own small outline, which is how a cell reads apart from an event.
+## `statements` counts the statements in the run (the rows of one ternary pair count once).
+## The rows are asked through callables so a test can hand in plain rows:
+##   row_at(index) -> EventRowData, lead_of(index) -> int (the statement's first row),
+##   cell_selected(index) -> bool.
+static func selection_runs(first: int, last: int, row_at: Callable, lead_of: Callable,
+		cell_selected: Callable) -> Array:
+	var runs: Array = []
+	var run: Dictionary = {}
+	var head_indent: int = -1
+	for index: int in range(first, last + 1):
+		var row_data: EventRowData = row_at.call(index) as EventRowData
+		if row_data == null or not row_data.selected or bool(cell_selected.call(index)):
+			if not run.is_empty():
+				runs.append(run)
+			run = {}
+			continue
+		var lead: int = int(lead_of.call(index))
+		var continues_statement: bool = lead != index and not run.is_empty() and int(run["last"]) >= lead
+		var starts_event: bool = row_data.row_type == EventRowData.RowType.EVENT and not continues_statement
+		var joins: bool = false
+		if not run.is_empty():
+			if continues_statement:
+				joins = true
+			elif head_indent >= 0:
+				joins = row_data.indent > head_indent
+			else:
+				joins = not starts_event
+		if not joins:
+			if not run.is_empty():
+				runs.append(run)
+			run = {"first": index, "last": index, "has_event": starts_event, "statements": 1}
+			head_indent = row_data.indent if starts_event else -1
+			continue
+		run["last"] = index
+		if not continues_statement:
+			run["statements"] = int(run["statements"]) + 1
+	if not run.is_empty():
+		runs.append(run)
+	return runs
