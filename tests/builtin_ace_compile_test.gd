@@ -63,6 +63,7 @@ const KNOWN_OPTION_FAILURES: Dictionary = {
 
 const NOT_STANDALONE: Array[String] = [
 	"LoopBreak", "LoopContinue", "ReturnValue",
+	"CallParentFunction",  # `super()` only means something inside a function the class above also has; the harness's stand-in function has no parent version
 	"EveryXSeconds", "TriggerOnce", "SingleFlight", "HasChanged",  # call sheet-synthesized companion state (an accumulator / an edge-test helper / a busy latch / a previous-value slot)
 	"EveryRandomSeconds",  # calls a sheet-synthesized helper over its own accumulator + rolled-interval slots
 	"WasRecentlyTrue", "OnlyOnceEver",  # calls a sheet-synthesized helper over its own last-true timestamp slot

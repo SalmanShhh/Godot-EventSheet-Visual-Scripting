@@ -9711,3 +9711,7 @@ Sheet display,Отображение листа
 Collapse and expand,Свернуть и развернуть
 Split views,Разделённые виды
 Zoom,Масштаб
+"Enemy, CharacterBody2D, ...","Enemy, CharacterBody2D, ..."
+Another class is already called %s.,Другой класс уже называется %s.
+No class or node by that name.,Нет класса или узла с таким именем.
+A kind of,Разновидность

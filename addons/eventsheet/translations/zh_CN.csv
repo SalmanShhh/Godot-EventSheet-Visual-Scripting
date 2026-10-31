@@ -9711,3 +9711,7 @@ Sheet display,表格显示
 Collapse and expand,折叠与展开
 Split views,分屏视图
 Zoom,缩放
+"Enemy, CharacterBody2D, ...","Enemy, CharacterBody2D, ..."
+Another class is already called %s.,已有另一个类名为 %s。
+No class or node by that name.,没有该名称的类或节点。
+A kind of,的一种

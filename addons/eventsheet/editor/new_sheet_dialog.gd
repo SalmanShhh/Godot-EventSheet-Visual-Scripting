@@ -30,6 +30,8 @@ var _name_edit: LineEdit = null
 var _starter_option: OptionButton = null
 var _band: EventSheetPopupUI.RowBand = null
 var _taken_note: EventSheetPopupUI.StateNote = null
+var _kind_edit: LineEdit = null
+const KINDS_PATH := "res://addons/eventsheet/editor/dock/class_kinds.gd"
 var _strip: EventSheetPopupUI.HelpStrip = null
 var _directory: String = "res://"
 
@@ -60,6 +62,14 @@ func init_dialog(parent_node: Node) -> void:
 	_starter_option.item_selected.connect(func(_index: int) -> void: _refresh())
 	fields.add_child(EventSheetPopupUI.form_row("Start from",
 		EventSheetPopupUI.described_field(_starter_option, EventSheetPalette.scaled_f(300.0))))
+	# "A kind of": the class the new sheet extends. Your own classes complete first, then Godot's;
+	# left empty the sheet is built on the starter's own class as before.
+	_kind_edit = LineEdit.new()
+	_kind_edit.placeholder_text = EventSheetL10n.translate("Enemy, CharacterBody2D, ...")
+	EventSheetCompletionPopup.attach(_kind_edit, EventSheetCompletions.FIELD_CLASS, Callable())
+	_kind_edit.text_changed.connect(func(_text: String) -> void: _refresh())
+	_dialog.register_text_enter(_kind_edit)
+	fields.add_child(EventSheetPopupUI.form_row("A kind of" if _familiar_words() else "Extends", _kind_edit))
 	form.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("New Event Sheet"), fields))
 	_strip = EventSheetPopupUI.help_strip("", "", "", "", EventSheetPalette.scaled_f(420.0))
 	_strip.follow(_name_edit, EventSheetL10n.translate("Name"),
@@ -87,12 +97,13 @@ static func starter_pitch(starter_id: int) -> String:
 
 ## Shows the dialog for a target directory. Re-fills the name to a clean default each open so a
 ## previous run's edits never leak into the next create.
-func open(directory: String = "res://") -> void:
+func open(directory: String = "res://", kind_of: String = "") -> void:
 	_directory = directory if not directory.strip_edges().is_empty() else "res://"
 	if _dialog == null:
 		return
 	_dialog.title = EventSheetL10n.translate("Create an event sheet in %s") % _directory
-	_name_edit.text = DEFAULT_SHEET_NAME
+	_name_edit.text = DEFAULT_SHEET_NAME if kind_of.is_empty() else ""
+	_kind_edit.text = kind_of
 	_starter_option.select(0)
 	EventSheetPopupUI.follow_description(_starter_option)
 	_refresh()
@@ -106,11 +117,46 @@ func _refresh() -> void:
 	var path: String = target_path()
 	var taken: bool = FileAccess.file_exists(path)
 	_band.show_row("", path, EventSheetL10n.translate("written and opened on Create"))
-	_taken_note.say(EventSheetL10n.translate("%s is already in this folder - pick another name.") % path.get_file() if taken else "")
-	EventSheetPopupUI.mark_field(_name_edit, taken)
-	_dialog.get_ok_button().disabled = taken
-	var host: String = EventSheetStarterTemplates.build_starter(selected_starter_id()).host_class
+	var kind_problem: String = kind_problem_text(kind_of())
+	var class_taken: bool = not kind_of().is_empty() and load(KINDS_PATH).name_is_taken(
+		load(KINDS_PATH).class_name_from(_name_edit.text), path)
+	var note: String = ""
+	if taken:
+		note = EventSheetL10n.translate("%s is already in this folder - pick another name.") % path.get_file()
+	elif class_taken:
+		note = EventSheetL10n.translate("Another class is already called %s.") % load(KINDS_PATH).class_name_from(_name_edit.text)
+	elif not kind_problem.is_empty():
+		note = kind_problem
+	_taken_note.say(note)
+	EventSheetPopupUI.mark_field(_name_edit, taken or class_taken)
+	EventSheetPopupUI.mark_field(_kind_edit, not kind_problem.is_empty())
+	var nameless_kind: bool = not kind_of().is_empty() and _name_edit.text.strip_edges().is_empty()
+	_dialog.get_ok_button().disabled = taken or class_taken or nameless_kind or not kind_problem.is_empty()
+	var host: String = kind_of() if not kind_of().is_empty() else EventSheetStarterTemplates.build_starter(selected_starter_id()).host_class
 	_strip.set_reading("", "extends %s" % (host if not host.is_empty() else "Node"))
+
+
+## The class the new sheet is a kind of, as typed ("" when it is built on the starter's own class).
+func kind_of() -> String:
+	return _kind_edit.text.strip_edges() if _kind_edit != null else ""
+
+
+## What is wrong with a "kind of" value, or "" when it is empty or names a class: one of the
+## project's own classes or a Godot class the new script can extend.
+static func kind_problem_text(kind_text: String) -> String:
+	if kind_text.is_empty() or ClassDB.class_exists(kind_text):
+		return ""
+	for info: Dictionary in ProjectSettings.get_global_class_list():
+		if str(info.get("class", "")) == kind_text:
+			return ""
+	return EventSheetL10n.translate("No class or node by that name.")
+
+
+## Whether the Familiar Words switch is on, read from the same stored choice the sheet reads.
+static func _familiar_words() -> bool:
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		return bool(EditorInterface.get_editor_settings().get_project_metadata("eventsheets", "familiar_words", false))
+	return false
 
 
 ## The exact file Create writes for the name in the field.

@@ -44,6 +44,10 @@ func _popup_menu(paths: PackedStringArray) -> void:
 			# layout and every script in it as one named tab group.
 			if should_offer_open_workspace(slot, paths):
 				add_context_menu_item("Open its sheets", _on_open_workspace_requested, _open_as_sheet_icon())
+			# A script that names a class can be made a kind of: the new sheet extends it.
+			var kind_parent: String = class_declared_in(paths)
+			if not kind_parent.is_empty():
+				add_context_menu_item(kind_menu_text(kind_parent), _on_new_kind_requested, _open_as_sheet_icon())
 		EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM_CREATE:
 			# The FileSystem "Create New >" submenu: sit "Event Sheet..." beside the native
 			# Folder/Scene/Script/Resource/TextFile entries. The ellipsis matches the siblings
@@ -56,6 +60,26 @@ func _popup_menu(paths: PackedStringArray) -> void:
 				if not load(PROJECT_DOCTOR_PATH).sheet_for_script(path).is_empty():
 					add_context_menu_item("Go to Sheet Row", _on_goto_row_requested)
 					break
+
+
+## The class a single selected script names (`class_name Enemy` gives "Enemy"), or "" when the
+## selection is not exactly one script that publishes a class. Static so a test asks it without the
+## editor-only plugin.
+static func class_declared_in(paths: PackedStringArray) -> String:
+	if paths.size() != 1 or paths[0].get_extension().to_lower() != "gd":
+		return ""
+	for info: Dictionary in ProjectSettings.get_global_class_list():
+		if str(info.get("path", "")) == paths[0]:
+			return str(info.get("class", ""))
+	return ""
+
+
+## The menu item's words, in the vocabulary the sheet reads in.
+static func kind_menu_text(parent_text: String) -> String:
+	var familiar: bool = false
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		familiar = bool(EditorInterface.get_editor_settings().get_project_metadata("eventsheets", "familiar_words", false))
+	return ("New kind of %s..." if familiar else "New script extending %s...") % parent_text
 
 
 ## True when this slot + paths should offer "Open as Event Sheet". Pure + static so the decision is
@@ -128,6 +152,17 @@ func _on_connect_signal_requested(targets: Variant) -> void:
 func _on_show_events_requested(targets: Variant) -> void:
 	if show_events.is_valid() and targets is Array and not (targets as Array).is_empty() and (targets as Array)[0] is Node:
 		show_events.call((targets as Array)[0])
+
+
+## "New kind of <Class>..." on a script: the New Event Sheet window opens in that script's folder
+## with the class already in its "A kind of" field.
+func _on_new_kind_requested(targets: Variant) -> void:
+	if not create_sheet.is_valid() or not (targets is PackedStringArray):
+		return
+	var paths: PackedStringArray = targets as PackedStringArray
+	var parent_text: String = class_declared_in(paths)
+	if not parent_text.is_empty():
+		create_sheet.call(paths[0].get_base_dir(), parent_text)
 
 
 func _on_create_sheet_requested(targets: Variant) -> void:

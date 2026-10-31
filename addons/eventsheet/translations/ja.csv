@@ -9711,3 +9711,7 @@ Sheet display,シートの表示
 Collapse and expand,折りたたみと展開
 Split views,分割ビュー
 Zoom,ズーム
+"Enemy, CharacterBody2D, ...","Enemy, CharacterBody2D, ..."
+Another class is already called %s.,別のクラスがすでに %s という名前です。
+No class or node by that name.,その名前のクラスまたはノードはありません。
+A kind of,の一種

@@ -9711,3 +9711,7 @@ Sheet display,시트 표시
 Collapse and expand,접기와 펼치기
 Split views,분할 보기
 Zoom,확대/축소
+"Enemy, CharacterBody2D, ...","Enemy, CharacterBody2D, ..."
+Another class is already called %s.,다른 클래스가 이미 %s(이)라는 이름을 쓰고 있습니다.
+No class or node by that name.,그 이름의 클래스나 노드가 없습니다.
+A kind of,의 한 종류

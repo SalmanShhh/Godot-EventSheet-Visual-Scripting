@@ -5421,6 +5421,14 @@ static func _match_entry(line: String, reverse_entries: Array, kind: String, in_
 		# `{var_name} {op} {value}` says what `i == 1` actually asks. Same bytes either way.
 		if str((entry as Dictionary).get("ace_id", "")) == "IsSameObject" and not _reads_as_object_identity(params):
 			continue
+		# Is A Kind Of writes the `is` type test, which an opened file already reads in its own words (the
+		# narrowed-receiver reading: "other is a Node2D", and the calls under it that use the narrowed
+		# type). The row AUTHORS the line; a hand-written one keeps that reading, so no file's rows
+		# move words because the verb exists. Same bytes either way.
+		# Also Run Parent Function (`super(...)`) is held to the same rule: a file that already calls super
+		# keeps the words its call rows have.
+		if str((entry as Dictionary).get("ace_id", "")) in ["IsAKindOf", "CallParentFunction"]:
+			continue
 		# A keycard is a name in a list, so `keys.append("red_key")` is Push Back's spelling
 		# exactly. Push Back steps aside for the one shape that is unmistakably about keys - a list
 		# named for keys, with a key name going into it - which leaves the line for the reading that

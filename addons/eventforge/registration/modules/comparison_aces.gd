@@ -123,6 +123,11 @@ static func _add_types(descriptors: Array[ACEDescriptor]) -> void:
 	descriptors.append(F.cond("ValuesSameType", "Values Are The Same Type", "typeof({a}) == typeof({b})", CAT_TYPES, "{a} and {b} are the same type", "True when two values are of the same kind, so comparing them means anything. Text and a number are never equal, however similar they look.").param("a", "0", "First", "Left value.", "expression").param("b", "0", "Second", "Right value.", "expression"))
 	descriptors.append(F.expr("ValueTypeName", "Value Type Name", "type_string(typeof({value}))", CAT_TYPES, "type of {value}", "The name of a value's type as readable text (\"int\", \"Vector2\", \"Dictionary\") - handy in a debug print when something is not what you expected.").param("value", "0", "Value", "Value to name.", "expression"))
 	descriptors.append(F.cond("ObjectIsClass", "Object Is Class", "({object} != null and {object}.is_class({class_name}))", CAT_TYPES, "{object} is a {class_name}", "True when an object is of an engine class, or something derived from it - so a CharacterBody2D also counts as a Node2D. Checks for nothing-there first, so it is safe on an empty reference.").param("object", "self", "Object", "Object to test.", "expression").param("class_name", "\"CharacterBody2D\"", "Class", "Engine class name, e.g. \"CharacterBody2D\".", "expression"))
+	# The type test behind "body is an Enemy": a class the project names (class_name Enemy) or an
+	# engine class. Unlike Object Is Class (an engine class given as TEXT) this is the GDScript `is`
+	# itself, so after it passes the next rows can use everything the class has, and a kind of the
+	# class (a Slime that extends Enemy) passes too.
+	descriptors.append(F.cond("IsAKindOf", "Is A Kind Of", "{value} is {kind}", CAT_TYPES, "{value} is a kind of {kind}", "True when a value is the named class or a kind of it - a Slime that extends Enemy passes for Enemy. The class field completes from your own classes first, then Godot's.").param("value", "self", "Value", "The object to test.", "expression").param("kind", "Node", "Class", "A class of your project or of Godot. Your own classes complete first.", "class_name"))
 	# One question - "is there anything there" - that used to need four rows and prior knowledge of the
 	# value's type (Text Is Empty, Array Is Empty, Dictionary Is Empty, Is Null).
 	#

@@ -449,7 +449,7 @@ func _show_events_for_node(node: Node) -> void:
 ## The FileSystem "Create New > Event Sheet..." entry: pop the name + starter dialog for the
 ## clicked folder. The dialog is parented to the editor's base control (always present), so it
 ## works even before the workspace editor has ever been built.
-func _create_sheet_in_directory(directory: String) -> void:
+func _create_sheet_in_directory(directory: String, kind_of: String = "") -> void:
 	# Built once and reused (the standard reusable-dialog pattern) - the plugin holds the strong
 	# reference so the window is never freed out from under its connections. It carries the target
 	# folder in its create_requested signal, so one connection serves every folder.
@@ -457,13 +457,18 @@ func _create_sheet_in_directory(directory: String) -> void:
 		_new_sheet_dialog = load(NEW_SHEET_DIALOG_PATH).new()
 		_new_sheet_dialog.init_dialog(get_editor_interface().get_base_control())
 		_new_sheet_dialog.create_requested.connect(_finish_create_sheet)
-	_new_sheet_dialog.open(directory)
+	_new_sheet_dialog.open(directory, kind_of)
 
 
 ## Writes the chosen starter to a fresh .gd in the target folder, indexes it, and opens it EDITABLE
 ## in the workspace (not the read-only preview a casual .gd Open gives - the user just authored it).
 func _finish_create_sheet(directory: String, sheet_name: String, starter_id: int) -> void:
 	var sheet: EventSheetResource = load(STARTER_TEMPLATES_PATH).build_starter(starter_id)
+	# A kind of another class extends it and names itself after the file; the starter's events stay.
+	var kind_of: String = str(_new_sheet_dialog.call("kind_of")) if _new_sheet_dialog != null else ""
+	if not kind_of.is_empty():
+		sheet.host_class = kind_of
+		sheet.custom_class_name = load("res://addons/eventsheet/editor/dock/class_kinds.gd").class_name_from(sheet_name)
 	var result: Dictionary = load(WORKFLOW_PATH).write_sheet_file(sheet, directory, sheet_name)
 	if not bool(result.get("ok", false)):
 		push_warning("[Godot EventSheets] %s" % str(result.get("message")))

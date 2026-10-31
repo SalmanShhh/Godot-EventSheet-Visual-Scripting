@@ -9711,3 +9711,7 @@ Sheet display,Visualizzazione del foglio
 Collapse and expand,Comprimi ed espandi
 Split views,Viste divise
 Zoom,Zoom
+"Enemy, CharacterBody2D, ...","Enemy, CharacterBody2D, ..."
+Another class is already called %s.,Un'altra classe si chiama già %s.
+No class or node by that name.,Nessuna classe o nodo con quel nome.
+A kind of,Un tipo di

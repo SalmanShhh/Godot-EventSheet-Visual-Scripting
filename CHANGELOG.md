@@ -18,6 +18,26 @@
   ghosted). The sheet now keeps the look it was drawn in, and the dragged number saves onto a copy
   of it.
 
+### New: classes and kinds of a class (first slice)
+
+- New condition **Is A Kind Of** (`body is Enemy`): the GDScript `is`, with a class field that
+  completes from your own classes first, then Godot's. A Slime that extends Enemy passes for Enemy.
+- New action **Also Run Parent Function** (`super(amount)`): the line that keeps a function a kind
+  replaces from losing what the class above it already did.
+- Right-click a script that names a class in the FileSystem: **New kind of Enemy...** (Familiar
+  words) or **New script extending Enemy...** (Godot words). The New Event Sheet window opens in
+  that folder with the class already in its new **A kind of** / **Extends** field; the field
+  completes from your own classes first, then Godot's, warns on a name that is no class, and the
+  window also warns when the file's class name is already taken. The new sheet reads "Slime
+  extends Enemy" and writes `class_name Slime` / `extends Enemy`.
+- A model of kinds (`dock/class_kinds.gd`): a project's classes as a tree of kinds, the variables
+  and functions a class hands down (nearest class first), the head in Familiar or Godot words,
+  starting an inherited variable at another value (written in `_init`), and replacing an inherited
+  function with the parent's version run first. Every line it writes is plain GDScript that opens
+  and saves byte for byte. The two new verbs author their lines; a file you open that already has
+  an `is` test or a `super(...)` call keeps the words its rows have today (neither verb claims a
+  hand-written line), so no opened file reads differently.
+
 ### Fixed: Undo works inside the editor
 
 - In the editor, the sheet's Undo and Redo did nothing: Ctrl+Z after a drag-drop (or any other
