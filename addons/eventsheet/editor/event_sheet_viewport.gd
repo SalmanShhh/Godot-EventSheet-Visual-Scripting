@@ -1014,15 +1014,14 @@ func get_editor_style() -> EventSheetEditorStyle:
 
 
 func _resolve_editor_style(sheet: EventSheetResource) -> EventSheetEditorStyle:
+	# A chosen theme comes back as saved (one that asks to follow the editor, the Editor Native
+	# starter, is painted from a copy moved onto the running editor's base colour). A sheet with no
+	# theme of its own wears Editor Native; outside the editor, the bare bundled style, keeping tests
+	# deterministic.
+	var chosen: EventSheetEditorStyle = null
 	if sheet != null and sheet.editor_style is EventSheetEditorStyle:
-		var configured_style: EventSheetEditorStyle = sheet.editor_style as EventSheetEditorStyle
-		configured_style.ensure_defaults()
-		# A theme that asks to follow the editor (the Editor Native starter) is painted from a copy
-		# moved onto the running editor's base colour; every other theme comes back as saved.
-		return EventSheetEditorThemeDeriver.follow_running_editor(configured_style)
-	# A sheet with no theme of its own wears Editor Native moved onto the running editor's base
-	# colour; outside the editor, the bare bundled style, keeping tests deterministic.
-	return EventSheetEditorThemeDeriver.default_style()
+		chosen = sheet.editor_style as EventSheetEditorStyle
+	return EventSheetEditorThemeDeriver.sheet_look(chosen, EventSheetEditorThemeDeriver.running_editor_base())
 
 
 func _get_event_style() -> EventSheetEventStyle:

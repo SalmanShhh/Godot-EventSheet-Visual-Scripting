@@ -536,11 +536,22 @@ static func running_editor_base() -> Color:
 
 
 ## The look a sheet with no theme of its own wears. In the editor it is Editor Native moved onto the
-## running editor's base colour - what a fresh install, and the Welcome's editor-matching answer,
-## draw; a sheet that chose another theme keeps it. Outside the editor (headless tests, a game build)
-## it is the bare bundled style, so every machine reads the same tokens.
+## running editor's base colour - what a fresh install, an updated project that never chose a look
+## and the Welcome's editor-matching answer draw; a sheet that chose another theme keeps it. Outside
+## the editor (headless tests, a game build) it is the bare bundled style, so every machine reads the
+## same tokens.
 static func default_style() -> EventSheetEditorStyle:
-	var base: Color = running_editor_base()
+	return sheet_look(null, running_editor_base())
+
+
+## The look one sheet is drawn with on an editor whose base colour is `base` (clear outside the
+## editor): the theme the sheet chose, followed onto the editor's greys when it asks to, or with no
+## theme chosen, Editor Native. No project setting is consulted, so a project that used the plugin
+## before Editor Native became the default draws it too once updated; only a chosen theme is kept.
+static func sheet_look(chosen: EventSheetEditorStyle, base: Color) -> EventSheetEditorStyle:
+	if chosen != null:
+		chosen.ensure_defaults()
+		return follow_editor(chosen, base) if base.a > 0.0 else chosen
 	if base.a <= 0.0:
 		var bare: EventSheetEditorStyle = EventSheetEditorStyle.new()
 		bare.ensure_defaults()

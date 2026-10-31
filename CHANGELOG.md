@@ -19,11 +19,13 @@
   in the sheet takes back that scene edit; the toolbar's Undo and Redo follow scene edits too. The
   Add behaviour window's Undo takes its step back the same way.
 
-### Changed: a fresh install draws Editor Native, in the boards' own colours
+### Changed: Editor Native is the default look, in the boards' own colours
 
 - A sheet with no theme of its own now wears Editor Native, moved onto the running editor's greys,
-  instead of the older editor-derived look. That is what a fresh install, the Welcome's default
-  answer and View > Sheet theme > Match Editor (default) now draw. A sheet that chose a theme keeps
+  instead of the older editor-derived look. **This changes existing projects on update:** every
+  sheet that never chose a look (every `.gd` sheet, and every `.tres` sheet that never saved a
+  theme) draws Editor Native once the plugin is updated, as a fresh install, the Welcome's default
+  answer and View > Sheet theme > Match Editor (default) do. A sheet that chose a theme keeps
   it, and re-skinning on an editor theme change re-seats the sheet instead of writing a theme onto
   it, so opening a sheet or switching the editor's theme never marks it unsaved.
 - Editor Native's palette is now the design's, measured at Godot's own Default and Light presets
