@@ -163,8 +163,13 @@ func _top_level_selected_resources() -> Array:
 	for row_data in _dock._queries.get_selected_rows_from_context():
 		if row_data == null or row_data.source_resource == null:
 			continue
-		if not resources.has(row_data.source_resource):
-			resources.append(row_data.source_resource)
+		# The state row stands for the whole machine: the enum and every line it hides travel together.
+		var machine: Array[Resource] = EventSheetStateFacts.machine_parts(_dock._current_sheet, row_data.source_resource)
+		if machine.is_empty():
+			machine.append(row_data.source_resource)
+		for part: Resource in machine:
+			if not resources.has(part):
+				resources.append(part)
 	var top_level: Array = []
 	for resource in resources:
 		var has_selected_ancestor: bool = false

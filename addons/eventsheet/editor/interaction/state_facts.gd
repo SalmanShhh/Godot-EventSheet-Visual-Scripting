@@ -3,7 +3,8 @@
 # An enemy is patrolling, or chasing, or staggered. Every event-sheet user already builds that as a
 # variable they compare in conditions and set in actions, and every Godot user writes it as an enum.
 # So this is that, and deliberately nothing more: a state is NOT a new kind of row, NOT a group with
-# run-only-in-this-state semantics, and NOT a diagram. The head band IS the diagram.
+# run-only-in-this-state semantics, and NOT a diagram. The machine is drawn as ONE state row where its
+# enum sits ("state is one of IDLE · RUN · JUMP"), standing for the enum and the lines it hides.
 #
 # THE SAME MACHINERY AS THE GAME'S MODES, one level down. `mode_facts.gd` reads the GAME's own
 # machine - the Mode enum an Autoload declares, the mode variable, the mode_changed signal - and this
@@ -17,9 +18,9 @@
 #     Go to mode X        Go to X
 #
 # Two readers rather than one because the two are asked of different sheets and answer about
-# different things (a game has one mode; a level holds fifty objects with a state each), and the
-# rules they share - how a member is said as a word, how many names a band shows - are CALLED here
-# rather than copied, so a reader can never meet two spellings of one idea.
+# different things (a game has one mode; a level holds fifty objects with a state each). They no
+# longer share a spelling rule: a state is said exactly as the enum writes it (PATROL stays PATROL,
+# see word_for below), while the modes reader keeps its own.
 #
 # AND THE STATE MACHINE PACK: `eventsheet_addons/state_machine/` ships the same idea as a behaviour
 # node with a String state (Current state is / Go to state / Time in state). It is frozen and keeps
@@ -195,6 +196,24 @@ static func hides_declaration(sheet: EventSheetResource, entry: Variant) -> bool
 			return false
 		return not machine(sheet).is_empty()
 	return false
+
+
+## Every declaration the state row stands for, in sheet order: the State enum and each line the row
+## hides (the `state` variable, the previous state, the entered time, the `state_changed` signal).
+## Empty unless `entry` is one of them, so a caller can hand it any row it is about to delete, cut or
+## copy and act on the whole machine when that row is part of one - deleting the enum alone left the
+## variable and its helpers behind as loose rows, and deleting the variable alone broke the machine.
+static func machine_parts(sheet: EventSheetResource, entry: Variant) -> Array[Resource]:
+	var parts: Array[Resource] = []
+	var found: Dictionary = machine(sheet)
+	if found.is_empty():
+		return parts
+	for declared: Variant in sheet.events:
+		if declared == found["enum"] or hides_declaration(sheet, declared):
+			parts.append(declared as Resource)
+	if not parts.has(entry):
+		parts.clear()
+	return parts
 
 
 ## What the machine is for, in one line: the `##` above its enum, its lines joined by a space.

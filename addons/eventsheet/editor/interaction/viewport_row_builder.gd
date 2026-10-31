@@ -4887,8 +4887,12 @@ func build_state_row(machine: Dictionary, indent: int) -> EventRowData:
 			"is_constant": false,
 			"exported": false,
 			"expression_default": true,
-			"source_resource": variable,
-			"row_uid": "variable_tree_%d" % variable.get_instance_id(),
+			# The row IS the machine and is drawn where the enum sits, so it acts where it is drawn:
+			# insert-after, a drag and the jump to code anchor on the enum, and delete, cut and copy
+			# widen to every line the row stands for (EventSheetStateFacts.machine_parts).
+			"source_resource": enum_row,
+			"variable_resource": variable,
+			"row_uid": "state_row_%d" % enum_row.get_instance_id(),
 			"reading_scope": _member_scope_key(variable),
 			"description": EventSheetStateFacts.machine_description(sheet),
 		})
@@ -12509,7 +12513,9 @@ func _build_variable_row(
 	var sync_entry: Dictionary = _sync_entry(scope_label, var_name, declared_in)
 	# The native look's facts about this variable: the colour family its type paints in, and the
 	# badges it earns. Stamped on spans the row already has, so no span is added for them.
-	var source_variable: LocalVariable = options.get("source_resource") as LocalVariable
+	# A row that acts for something else (the state row acts for its enum) still reads its marks off
+	# the variable it shows.
+	var source_variable: LocalVariable = options.get("variable_resource", options.get("source_resource")) as LocalVariable
 	var type_family: String = NativeVariableMarks.type_family(type_name, default_value,
 		bool(options.get("expression_default", false)), _sheet_enum_names())
 	var description_text: String = str(options.get("description", "")).strip_edges()

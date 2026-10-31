@@ -546,6 +546,17 @@ func _delete_context_row() -> void:
 	if _dock._context_row == null or _dock._context_row.source_resource == null:
 		return
 	var target_resource: Resource = _dock._context_row.source_resource
+	var machine: Array[Resource] = EventSheetStateFacts.machine_parts(_dock._current_sheet, target_resource)
+	if not machine.is_empty():
+		# A state row's right-click Delete takes the whole machine, as Delete on the selection does.
+		var removed: bool = _dock._perform_undoable_sheet_edit("Delete Row", func() -> bool:
+			for part: Resource in machine:
+				_dock._current_sheet.events.erase(part)
+			return true
+		)
+		if removed:
+			_dock._mark_dirty("Deleted row.")
+		return
 	var location: Dictionary = _dock._ace_apply._find_resource_location(target_resource)
 	if location.is_empty():
 		return
@@ -640,6 +651,7 @@ func _delete_selected_rows() -> void:
 		resources_to_delete.append(source_resource)
 	if resources_to_delete.is_empty():
 		return
+	resources_to_delete = with_machine_parts(_dock._current_sheet, resources_to_delete)
 	# Keep only rows we can actually locate. A published-verb (Define) header's source_resource is the
 	# EventFunction itself, which lives in sheet.functions - not sheet.events or a function body - so it is
 	# never locatable and deleting it removes nothing. Filtering BEFORE the funnel means a delete / cut that
@@ -668,6 +680,20 @@ func _delete_selected_rows() -> void:
 	if deleted:
 		_dock._viewport.clear_selection()
 		_dock._mark_dirty("Deleted row.")
+
+
+## The resources a delete or cut acts on, widened so a state row takes its whole machine with it: the
+## enum and every line the row hides, under the one undo the caller opens.
+static func with_machine_parts(sheet: EventSheetResource, resources: Array[Resource]) -> Array[Resource]:
+	var widened: Array[Resource] = []
+	for resource: Resource in resources:
+		var machine: Array[Resource] = EventSheetStateFacts.machine_parts(sheet, resource)
+		if machine.is_empty():
+			machine.append(resource)
+		for part: Resource in machine:
+			if not widened.has(part):
+				widened.append(part)
+	return widened
 
 
 func _insert_child_event_for_context_row() -> void:

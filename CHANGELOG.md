@@ -29,6 +29,10 @@
   150 px floor, the divider it draws is the one that can be grabbed, and its actions lane is
   measured from it.
 - The States window's row counts use the editor's quieter text colour instead of a fixed alpha.
+- The state row acts on the machine it stands for. Delete, Cut and Copy take the State enum and every
+  line the row hides (the `state` variable, the previous state, the entered time, `state_changed`)
+  under one undo, instead of removing only `var state` and leaving the rest as loose rows; Add below,
+  a drag and the jump to code anchor on the enum, where the row is drawn.
 - Drawing: the words with a card behind them are measured once per text instead of every frame,
   and the running game's live states are worked out once per frame received.
 

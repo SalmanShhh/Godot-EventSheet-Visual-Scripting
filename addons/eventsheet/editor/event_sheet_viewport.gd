@@ -4627,7 +4627,11 @@ func update_badge_card(hit: Dictionary, logical_position: Vector2, at_once: bool
 	var badge: String = NativeVariableMarks.badge_at(badge_row, logical_position)
 	if badge.is_empty():
 		return false
-	var card: Dictionary = NativeVariableMarks.badge_card(badge, badge_row.source_resource as LocalVariable)
+	var shown: LocalVariable = badge_row.source_resource as LocalVariable
+	# The state row acts for its enum; its marks are the state variable's.
+	if shown == null and ViewportRowBuilder._is_state_machine_row(badge_row):
+		shown = EventSheetStateFacts.machine(_sheet as EventSheetResource).get("variable") as LocalVariable
+	var card: Dictionary = NativeVariableMarks.badge_card(badge, shown)
 	if card.is_empty():
 		return false
 	if _head_card == null:
