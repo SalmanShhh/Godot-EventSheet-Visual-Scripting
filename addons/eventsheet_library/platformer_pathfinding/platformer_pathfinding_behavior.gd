@@ -85,7 +85,7 @@ signal nav_graph_cleared
 @export var jump_distance_override: float = 0.0
 ## Draw the active path as a line in the world.
 @export var debug_draw: bool = false
-## Release the jump at the height each arc actually needs (short hops for flat gaps, full rises for tall ledges) - smoother-looking movement. Off = every jump is full height.
+## Release jump at the height each gap needs; off makes every jump full height.
 @export var variable_jump: bool = true
 ## Patrol discipline: routes may only WALK - no jumps, no portals, and no drops beyond Ledge Leniency. The agent stays on its platform.
 @export var ledge_restriction: bool = false
@@ -93,7 +93,7 @@ signal nav_graph_cleared
 @export var ledge_leniency: float = 0.0
 ## relaxed: jump as soon as a jump leg starts. strict: walk onto the exact takeoff spot first - slower but precise on tight arcs.
 @export_enum("relaxed", "strict") var jump_positioning: String = "relaxed"
-## Grace window (s) for AI jumps just after running off the takeoff ledge - a frame-late jump still fires. Long enough a window (capped by the movement sibling's own) also builds COYOTE JUMP links: run off a ledge, then leap for gaps a standing jump cannot clear.
+## Seconds after leaving a ledge during which an AI jump still fires.
 @export var coyote_time: float = 0.12
 ## While following a node (Find Path To Node), how often the route may refresh. Also the cooldown between drift re-routes.
 @export var repath_interval: float = 0.5
@@ -109,7 +109,7 @@ signal nav_graph_cleared
 @export var fallback_gravity: float = 980.0
 ## Off = the agent freezes with its route, graph and settings kept, and route requests are ignored until it is switched back on (Set Enabled).
 @export var nav_enabled: bool = true
-## How routes are picked. balanced: distance and difficulty weighed together. shortest: fewest pixels, long jumps welcome. safest: chains of short hops over long leaps and deep drops. ground_hugging: walks whenever any walking route exists. no_falling: never descends by jump or fall (Max Traversal Drop raises the allowance). walk_only: never leaves its platform except by portal or moving platform.
+## How routes are picked: balanced, shortest, safest, ground hugging or no falling.
 @export_enum("balanced", "shortest", "safest", "ground_hugging", "no_falling", "walk_only") var path_strategy: String = "balanced"
 ## Drop the in-between waypoints of a straight walk so the agent walks the stretch in one leg.
 @export var smooth_paths: bool = true
@@ -127,7 +127,7 @@ signal nav_graph_cleared
 @export var danger_cost_multiplier: float = 4.0
 ## A route asked for before any graph exists builds one from the first TileMapLayer with physics in the running scene.
 @export var auto_build: bool = true
-## Agents with the same non-empty tag SHARE one graph, obstacle edits, portals, hazards and moving platforms - built once for all of them. Give agents with different jump physics different tags. Empty = this agent keeps its own.
+## Agents with the same tag share one map; empty keeps this agent's own.
 @export var map_tag: String = ""
 ## Cell size in pixels for a map with no TileMapLayer (Create Obstacle Map, Load Obstacle Map JSON). A tilemap's own tile size always wins.
 @export var grid_cell_size: float = 32.0
@@ -155,9 +155,7 @@ var _movement: Node = null
 var _gravity_angle_warned: bool = false
 ## Standable cells (the cell the agent's feet occupy) -> true.
 var _nodes: Dictionary = {}
-## cell -> Array of {"to": Vector2i, "kind": String, "cost": float} (portal links also carry
-## "portal_id"). Kinds: walk, jump, double_jump, coyote_jump, fall, fall_through, portal,
-## portal_gradual, platform.
+## Links out of each cell: target, kind (walk, jump, fall, portal) and cost.
 var _edges: Dictionary = {}
 ## The obstacle map the last build read: cell -> "solid" / "jump_thru" / "slope_left" /
 ## "slope_right". Clear cells are simply absent.
@@ -230,8 +228,7 @@ var _next_hazard_id: int = 1
 var _last_hazard_id: int = 0
 ## True if the host was inside a hazard on the previous frame.
 var _was_in_hazard: bool = false
-## Registered moving platforms: {"node": Node2D, "a": Vector2, "b": Vector2} - survive
-## regenerate. Each becomes a "platform" link; the drive waits, boards, and rides it.
+## Registered moving platforms, each a link the agent waits for, boards and rides.
 var _moving_platforms: Array = []
 # Follow mode (Find Path To Node): the tracked node + where the current path was aimed.
 ## The node the host keeps routing toward.

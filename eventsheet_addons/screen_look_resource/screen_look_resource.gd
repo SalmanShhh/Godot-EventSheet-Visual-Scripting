@@ -8,5 +8,5 @@ extends Resource
 # @inspector_info One entry in Rows per post effect, in the order they are drawn: the first is applied to the screen first and the last one has the last word.
 ## What the look answers to. Look Is and Current Look compare this, so two files holding the same name are the same look.
 @export var look_name: String = "Clean"
-## One entry per effect, in draw order. Each is {"called": a name, "effect": one of the effect words, "strength": 0 to 1, "params": that effect's own dials by uniform name}.
+## One entry per effect, in draw order: name, effect, strength 0 to 1 and settings.
 @export var rows: Array[Dictionary] = []

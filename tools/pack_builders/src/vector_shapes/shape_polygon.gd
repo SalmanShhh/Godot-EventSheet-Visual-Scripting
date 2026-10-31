@@ -9,7 +9,7 @@ extends "res://tools/pack_builders/src/vector_shapes/vector_shape_2d.gd"
 # Each one is a handle in the 2D viewport while the
 # node is selected. Past thirty-two points this is Godot's own Polygon2D's job, and the extra
 # points are left undrawn rather than silently thinned.
-## The corners, in the node's own coordinates.
+## Corner points of the shape, in the node's own coordinates.
 ## @ace_hidden
 @export var points: PackedVector2Array = PackedVector2Array([
 	Vector2(-48.0, 40.0), Vector2(0.0, -48.0), Vector2(48.0, 40.0), Vector2(0.0, 16.0)

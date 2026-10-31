@@ -6,9 +6,7 @@ extends "res://tools/pack_builders/src/vector_shapes_3d/vector_shape_3d.gd"
 # @inspector_preview
 # @inspector_handle points points
 @export_group("Polygon")
-## The corners, in the node's own coordinates. Each one is a handle in the 3D viewport while the
-## node is selected, dragged on the plane facing the camera. Past thirty-two points this is Godot's
-## own mesh tools' job, and the extra points are left undrawn rather than silently thinned.
+## Corner points of the shape, in the node's own coordinates.
 ## @ace_hidden
 @export var points: PackedVector3Array = PackedVector3Array([
 	Vector3(-0.5, -0.4, 0.0), Vector3(0.0, 0.5, 0.0), Vector3(0.5, -0.4, 0.0), Vector3(0.0, -0.15, 0.0)

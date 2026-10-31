@@ -211,20 +211,14 @@ static func number(sheet: EventSheetResource, function_name: String, display_nam
 static func light_binding_lines(reach_knob: String = "") -> PackedStringArray:
 	var scales_reach: bool = not reach_knob.strip_edges().is_empty()
 	var lines: PackedStringArray = PackedStringArray([
-		"## The property this host spells brightness with - `energy` on a 2D light, `light_energy` on",
-		"## a 3D one. Resolved once when the behaviour starts, because a light answers to exactly one",
-		"## of them and the answer cannot change while the game runs.",
+		"## Name of the host's brightness property: energy in 2D, light_energy in 3D.",
 		"var _brightness_property: String = \"\""
 	])
 	if scales_reach:
 		lines.append_array(PackedStringArray([
-			"## The property this host spells reach with, when it has one: a 2D point light scales a",
-			"## texture, an omni light has a radius in metres, a spot light has its own. A directional",
-			"## light reaches everywhere and has none, and then this stays empty.",
+			"## Name of the host's reach property; empty for lights with none.",
 			"var _reach_property: String = \"\"",
-			"## The reach the light was authored with. Reach is SCALED around this rather than",
-			"## replaced, so a designer's own radius survives the effect - and a scale of 1 is the way",
-			"## back to it, which is what the light settles on when the effect stops.",
+			"## Reach the light was authored with; the flicker scales around it.",
 			"var _authored_reach: float = 0.0"
 		]))
 	lines.append_array(PackedStringArray([
@@ -287,22 +281,21 @@ static func light_binding_lines(reach_knob: String = "") -> PackedStringArray:
 ## naming them there is what makes that warning worth reading.
 static func effect_material_lines(pack_name: String, shader_file: String) -> PackedStringArray:
 	var lines: PackedStringArray = PackedStringArray([
-		"## Give this node its own copy of the material before anything turns a dial on it. A material",
-		"## is a RESOURCE, so every node pointing at the same file SHARES it: turn a dial on one goblin",
-		"## and every goblin wearing that file turns with it. On is the safe answer and the one you",
-		"## almost always want. Off when a whole row of nodes really should react together, which is the",
-		"## one case where sharing is the feature rather than the bug.",
+		"# Give this node its own copy of the material before anything turns a dial on it. A material",
+		"# is a RESOURCE, so every node pointing at the same file SHARES it: turn a dial on one goblin",
+		"# and every goblin wearing that file turns with it. On is the safe answer and the one you",
+		"# almost always want. Off when a whole row of nodes really should react together, which is the",
+		"# one case where sharing is the feature rather than the bug.",
+		"## Give this node its own copy of the material so dials affect only it.",
 		"@export var own_material: bool = true",
 		"",
 		"## The material this behaviour writes through, resolved on first use so the copy is taken once.",
 		"var _worn: ShaderMaterial = null",
 		"",
-		"## The dial walks running right now, keyed by dial name, so a second call on the same dial",
-		"## replaces the first instead of the two of them fighting over it.",
+		"## Dial changes running now, by dial name; a new call replaces the old.",
 		"var _walks: Dictionary = {}",
 		"",
-		"## Whether the missing-material warning has been said. A setup mistake is worth saying once;",
-		"## saying it per dial per call is a log nobody can read past to find it.",
+		"## True once the missing-material warning was shown, so it shows once.",
 		"var _warned: bool = false",
 		"",
 		"## The material to write on, copied on first use when own_material is on. Null means the parent",
@@ -535,10 +528,11 @@ static func juice_chroma_shake_lines() -> PackedStringArray:
 		"## How much of the peak a fixed-angle shake can lose to the wander.",
 		"const CHROMA_SHAKE_WANDER: float = 0.35",
 		"",
-		"## The Engine meta the whole project keeps the no-flashing answer in - the one the built-in Set",
-		"## No Flashing row writes. A game carrying that row needs nothing else: the split comes out half",
-		"## as wide and wanders half as fast, which is the same shake without the strobe. This is the",
-		"## pack's ONE name for that meta, read by everything here that has to obey it.",
+		"# The Engine meta the whole project keeps the no-flashing answer in - the one the built-in Set",
+		"# No Flashing row writes. A game carrying that row needs nothing else: the split comes out half",
+		"# as wide and wanders half as fast, which is the same shake without the strobe. This is the",
+		"# pack's ONE name for that meta, read by everything here that has to obey it.",
+		"## Engine meta key holding the project's no-flashing choice.",
 		"const NO_FLASHING_META: StringName = &\"no_flashing\"",
 		"",
 		"# The magnitude the screen is showing right now, in pixels - what the expression answers with.",

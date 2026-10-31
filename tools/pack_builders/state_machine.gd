@@ -19,7 +19,7 @@ static func build() -> bool:
 	sheet.variables = {
 		"_state_entered_ticks": {"type": "int", "default": 0, "exported": false, "description": "Engine time in milliseconds at which the current state was entered, which Time In State reads."},
 		"previous_state": {"type": "String", "default": "", "exported": false, "description": "The state the machine was in before the current one; empty until it first changes."},
-		"state": {"type": "String", "default": "idle", "exported": true, "description": "The machine's current state name; change it with Go to state."}
+		"state": {"type": "String", "default": "idle", "exported": true, "description": "The state the node is in now, idle at the start; any name works, and Go to state switches it."}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "State machine behavior: Go to state / Current state is from any sheet; On any state change fires with (previous, next)."

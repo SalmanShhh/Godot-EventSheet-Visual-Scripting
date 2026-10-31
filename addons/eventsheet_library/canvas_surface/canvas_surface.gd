@@ -94,8 +94,7 @@ func _enclosing_rect(xform: Transform2D, local_rect: Rect2) -> Rect2:
 # pack, and in the persistent mode that bakes strokes into the raster once, exactly the same shapes
 # are drawn the raster way instead. Nothing else changes: the same rows, the same numbers.
 
-## Where the shape shader the batches wear lives once the Vector Shapes pack is installed. Its
-## absence is not a fault - it is the canvas drawing the same shapes the raster way.
+## Path of the shape shader batches use; if missing, shapes draw the slower way.
 const BATCH_SHADER_PATH: String = "res://eventsheet_addons/vector_shapes/vector_shape_batch.gdshader"
 
 # A kind NOT in this list is always drawn the raster way: a polygon and a polyline are meshes
@@ -123,8 +122,7 @@ const STYLE_DEFAULTS: Dictionary = {
 	"dash_style": "plain"
 }
 
-## The cap words, the colour modes, the dash snaps and the dash ends, each in the shader's own
-## order - the position in the list IS the number the shader is handed.
+## Cap, colour mode, dash snap and dash end names, in the shader's own order.
 const CAP_WORDS: PackedStringArray = ["none", "square", "round"]
 ## The colour modes a stroke can use, as the words a row picks from.
 const COLOUR_MODE_WORDS: PackedStringArray = ["single", "two", "radial", "angular", "gradient", "per corner"]
@@ -133,8 +131,7 @@ const DASH_SNAP_WORDS: PackedStringArray = ["off", "tiling", "end to end"]
 ## The dash end shapes a dashed line can use, as row words.
 const DASH_STYLE_WORDS: PackedStringArray = ["plain", "angled", "rounded"]
 
-## How wide the fade at a drawn edge is, in pixels. One number on both sides of the wire: the quad a
-## shape is drawn on is grown by it here, and the shader fades over it there.
+## Width in pixels of the soft fade at a shape's edge.
 const ANTIALIAS_WIDTH: float = 1.0
 
 ## How many segments a raster arc is drawn with when there is no shader to solve it per pixel.

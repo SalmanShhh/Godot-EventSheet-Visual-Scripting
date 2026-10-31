@@ -32,7 +32,7 @@ static func build() -> bool:
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
 		"# --- Designer knobs (tune the FEEL in the Inspector) ---",
-		"## How the winner is chosen. \"highest\" always takes the top score (predictable); \"weighted_random\" samples among the top few by score (varied, less robotic).",
+		"## How the winner is chosen: highest score, or weighted random among the top few.",
 		"@export_enum(\"highest\", \"weighted_random\") var selection_mode: String = \"highest\"",
 		"## Weighted-random only: how many of the highest-scoring actions to sample from.",
 		"@export_range(1, 10, 1) var weighted_top_n: int = 3",

@@ -23,7 +23,7 @@ signal path_blocked
 
 ## Node path (relative to the host) of the node to follow; empty means idle.
 @export var target_path: String = ""
-## Follow the first node in this GROUP instead of a path - no tree path, so it survives the target being moved or renamed. Takes priority over Target Path; leave blank to use the path.
+## Follow the first node in this group instead of a path; blank uses the path.
 @export var target_group: String = ""
 ## smooth lerps toward the target each frame; delayed replays the target's past positions.
 @export_enum("smooth", "delayed") var mode: String = "smooth"
@@ -33,7 +33,7 @@ signal path_blocked
 @export var delay: float = 0.4
 ## In smooth mode, stops and fires On Reached Target once within this many pixels of the target.
 @export var min_distance: float = 0.0
-## In SMOOTH mode, sweep the path each frame instead of lerping straight there, so a fast chase cannot pass through a thin wall between two frames. Delayed mode ignores it, since retracing the target's recorded path is the point of that mode.
+## In smooth mode, sweep the path each frame so a fast chase cannot skip through thin walls.
 @export var stepping: bool = false
 ## Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5.
 @export var step_mask: int = 1

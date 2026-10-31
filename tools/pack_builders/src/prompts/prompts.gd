@@ -37,24 +37,21 @@ signal prompt_missed(action: String)
 ## @ace_name("On Sequence Finished")
 signal sequence_finished(completed: bool)
 
-## The three words a grade can be. They are the Timed Input module's own two plus the miss, so a
-## sheet that already branches on "perfect" needs nothing rewritten to branch on a prompt.
+## Grade word for a prompt answered perfectly.
 const GRADE_PERFECT: String = "perfect"
 ## Grade word for a prompt answered in time.
 const GRADE_GOOD: String = "good"
 ## Grade word for a prompt that was missed.
 const GRADE_MISS: String = "miss"
 
-## What kind of answer the open prompt is waiting for. A press, a hold, or a count of presses -
-## three shapes with one deadline, one grade and one pair of triggers between them.
+## Prompt kind: press the key once.
 const KIND_PRESS: String = "press"
 ## Prompt kind word: hold the input for a set time.
 const KIND_HOLD: String = "hold"
 ## Prompt kind word: press the input over and over.
 const KIND_MASH: String = "mash"
 
-## The five devices a glyph sheet draws for: the keyboard, a pad whose product name matches none of
-## the layouts, and the three layouts told apart by that name.
+## Device word for the keyboard.
 const DEVICE_KEYBOARD: String = "keyboard"
 ## Device word for a generic gamepad.
 const DEVICE_PAD: String = "pad"
@@ -65,8 +62,7 @@ const DEVICE_PLAYSTATION: String = "playstation"
 ## Device word for a Nintendo-style gamepad.
 const DEVICE_NINTENDO: String = "nintendo"
 
-## The product-name fragments each layout answers to, lower-cased. A pad naming none of them is the
-## generic pad, which is the honest answer rather than a guess.
+## Lower-case product-name fragments each pad layout answers to.
 const LAYOUT_WORDS: Dictionary = {
 	DEVICE_XBOX: ["xbox", "xinput"],
 	DEVICE_PLAYSTATION: ["playstation", "dualshock", "dualsense", "ps3", "ps4", "ps5"],
@@ -85,20 +81,17 @@ const FLASH_FLOOR_SECONDS: float = 0.4
 ## run can see where the prompts are being drawn.
 const LAYER_NAME: String = "PromptLayer"
 
-## The font size the prompt's own label is drawn at before the player's text-size dial multiplies
-## it. The starter scene sets no size of its own, so this is the one place it is decided.
+## Font size of the prompt label before the player's text-size setting applies.
 const PROMPT_FONT_SIZE: int = 20
 
-## Whether a prompt is waiting for an answer right now, and what it is waiting for. One at a time on
-## purpose: two prompts on screen asking for two controls is a sequence, and Sequence is the row.
+## Whether a prompt is waiting for an answer, and what it waits for.
 var _open: bool = false
 ## Kind of the prompt on screen: press, hold or mash.
 var _kind: String = KIND_PRESS
 ## Input action the prompt asks for.
 var _action: String = ""
 
-## The moment the prompt opened and the moment it closes, both on the engine clock - the same clock
-## the Timed Input rows measure a press with, so a grade from either reads the same.
+## Engine time when the open prompt started and when it ends.
 var _opened_at: float = 0.0
 ## Seconds left to answer the prompt.
 var _deadline: float = 0.0
@@ -111,8 +104,7 @@ var _deadline: float = 0.0
 ## The FRAME the prompt opened on.
 var _opened_frame: int = -1
 
-## A hold: how long the control has to be held down, and how long it has been held so far. Letting
-## go resets the count, because a hold that survived being let go is not a hold.
+## Seconds the key must be held, and seconds held so far.
 var _hold_needed: float = 0.0
 ## Seconds the input has been held so far.
 var _held_for: float = 0.0
@@ -142,20 +134,20 @@ var _queue_at: Node = null
 ## True while a queue of prompts is running.
 var _in_sequence: bool = false
 
-## Which device the glyphs are drawn for: the one the last input event came from, unless a row has
-## forced one for a menu that has to show a particular layout.
+## Device the glyphs are drawn for: the last input's, unless a row forces one.
 var _device: String = DEVICE_KEYBOARD
 ## Device word the icons are fixed to; empty follows the last device used.
 var _forced_device: String = ""
 
-## The notes travelling down their lanes, each a small record rather than a node, because what a
-## note IS is a control, a moment and a place - the node is only how it is drawn.
-##
-##   action  the control the player has to press
-##   at      the moment it must be pressed on, on the engine clock
-##   from    the moment it was spawned, so how far along the lane it is can be worked out
-##   lane    the lane it travels down, or null
-##   node    the thing being drawn, or null when nothing is being drawn
+# The notes travelling down their lanes, each a small record rather than a node, because what a
+# note IS is a control, a moment and a place - the node is only how it is drawn.
+#
+#   action  the control the player has to press
+#   at      the moment it must be pressed on, on the engine clock
+#   from    the moment it was spawned, so how far along the lane it is can be worked out
+#   lane    the lane it travels down, or null
+#   node    the thing being drawn, or null when nothing is being drawn
+## Notes travelling down their lanes, each with its control and due time.
 var _notes: Array[Dictionary] = []
 
 ## The prompt being drawn now, the layer it is drawn on, and the node it is drawn at.

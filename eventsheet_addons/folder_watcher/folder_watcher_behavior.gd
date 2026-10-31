@@ -38,13 +38,13 @@ signal file_changed(path: String)
 ## @ace_name("On A File Removed")
 signal file_removed(path: String)
 
-## The folder to look in. Prefer user:// - a folder under res:// is packed into the export and cannot be written to once the game ships, so nothing in it will ever change. Changing this while a watch is running points the SAME baseline at a different folder, so the next look reads every file in the new one as having just appeared and every file in the old one as having just gone. Stop Watching and Watch Folder again to move a running watch.
+## Folder to watch; prefer user:// since res:// cannot be written once exported.
 @export var watched_folder: String = "user://mods"
-## Seconds between looks. Every look is one directory read plus one modified-time question per file, so a second or two is generous for a mods folder and far too often for a folder holding thousands of files. A tenth of a second is the shortest gap honoured: zero would be a directory read every single frame, which is not what anybody means by an interval.
+## Seconds between folder checks; a second or two is plenty.
 @export var look_every_seconds: float = 2.0
-## Which file names count, as a pattern with * and ? in it - "*.json" for data files, "*" for all of them. Names that do not match are invisible to this watcher: they raise nothing, and they are not looked up. Changing this while a watch is running is compared against a baseline read under the OLD pattern, so the next look raises On A File Removed for files that merely stopped matching and On A File Appeared for ones that just started. Stop Watching and Watch Folder again to change it cleanly.
+## File name pattern to watch, using * and ?; for example *.json.
 @export var only_names_like: String = "*"
-## Start watching as soon as the node is ready, using the folder and interval above. Off by default, because a watcher is usually started by the sheet at the moment the game actually cares.
+## Start watching as soon as the node is ready.
 @export var watch_on_ready: bool = false
 ## Files seen at the last look, with their modified time.
 var _seen: Dictionary = {}

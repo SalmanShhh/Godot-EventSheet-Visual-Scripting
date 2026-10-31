@@ -40,27 +40,28 @@ signal hour_struck(hour: int)
 @export_range(0.1, 240, 0.1, "suffix:min") var day_length_minutes: float = 20.0
 ## The hour the sun reaches the horizon on its way up, on a 24 hour clock. On Sunrise fires as the clock passes it.
 @export_range(0, 24, 0.25, "suffix:h") var sunrise_hour: float = 6.0
-## The hour the sun reaches the horizon on its way down, on a 24 hour clock. Daylight and night are stretched over their own halves of the sun's turn, so noon is overhead whatever these two are set to.
+## Hour the sun sets on a 24 hour clock; noon stays overhead.
 @export_range(0, 24, 0.25, "suffix:h") var sunset_hour: float = 19.0
-## What time it is now, on a 24 hour clock - 8.5 is half past eight in the morning. Set it here to choose the hour a scene opens on, or from a row with Set The Time.
+## Current time on a 24 hour clock; 8.5 is half past eight in the morning.
 @export_range(0, 24, 0.01, "suffix:h") var time_of_day: float = 8.0
 ## How many times faster than Day Length Minutes the clock actually runs. 1 is that length exactly, 60 is a time-lapse, 0 stops it.
 @export_range(0, 240, 0.1) var clock_scale: float = 1.0
 ## How bright the sun light is through the day, drawn left to right from midnight to midnight. Leave it empty for a plain sunrise-to-sunset arc.
 @export var sun_brightness: Curve = null
-## How bright the environment's ambient light is through the day, midnight to midnight. Leave it empty and night keeps a little ambient light rather than going pitch black.
+## Curve of ambient light through the day; empty keeps a little light at night.
 @export var ambient_brightness: Curve = null
-## How much daylight the sky itself carries, midnight to midnight: it brightens a 3D background, and lifts a 2D CanvasModulate from the colour the scene was authored with toward full daylight. Leave it empty for the same arc the sun takes.
+## Curve of how much daylight the sky carries across the day; empty follows the sun.
 @export var sky_tint_strength: Curve = null
-## The light that plays the sun. A DirectionalLight3D also turns with the hour; any other light only changes brightness. Leave it empty to drive no light at all.
+## The light that acts as the sun; a 3D directional light also turns with the hour.
 @export_node_path("Light2D", "Light3D") var sun_light: NodePath = ""
 ## What the sky is: a WorldEnvironment for a 3D scene, or the CanvasModulate that holds a 2D level's darkness. Leave it empty to drive neither.
 @export_node_path("WorldEnvironment", "CanvasModulate") var world_lighting: NodePath = ""
 
-## The whole hour last announced, so On The Hour rings once per hour rather than once per
-## frame, and the colour the CanvasModulate was authored with, which is this level's NIGHT:
-## the cycle lifts the scene's own darkness toward daylight rather than replacing it, so a
-## designer's night colour survives.
+# The whole hour last announced, so On The Hour rings once per hour rather than once per
+# frame, and the colour the CanvasModulate was authored with, which is this level's NIGHT:
+# the cycle lifts the scene's own darkness toward daylight rather than replacing it, so a
+# designer's night colour survives.
+## The whole hour last announced, so On The Hour fires once per hour.
 var _last_hour: int = -1
 ## The darkness colour the host had before the cycle took over, restored when it stops.
 var _authored_darkness: Color = Color.WHITE

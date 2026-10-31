@@ -29,13 +29,13 @@ static func build() -> bool:
 	# Property ORDER is part of the pack: these emit in the order they are declared here.
 	src.sheet.variables = {
 		"music_bus": {"type": "String", "default": "Music", "exported": true,
-			"attributes": {"tooltip": "The audio bus the music plays out on. Set Music Volume writes this bus, so an options-menu music slider and this director are moving the same fader. Make the bus in Godot's Audio panel first - the name here has to match it."}},
+			"attributes": {"tooltip": "Audio bus the music plays on; the music volume setting moves the same bus."}},
 		"music_folder": {"type": "String", "default": "res://music/", "exported": true,
-			"attributes": {"tooltip": "Where the Play row looks a track NAME up: \"forest\" finds forest.tres here. A row may also give a full res:// path instead, which skips the folder entirely."}},
+			"attributes": {"tooltip": "Folder the Play row looks track names up in; a full res:// path skips it."}},
 		"beat_number_every": {"type": "int", "default": 8, "exported": true,
-			"attributes": {"tooltip": "How many beats apart On Beat Number fires - 8 is a phrase, 16 is a longer one. On Bar already covers the downbeat, so this is for the change that should land less often than that.", "range": {"min": "1", "max": "64", "step": "1"}}},
+			"attributes": {"tooltip": "Beats between On Beat Number triggers; 8 is a phrase, 16 a longer one.", "range": {"min": "1", "max": "64", "step": "1"}}},
 		"debug_mode": {"type": "bool", "default": false, "exported": true,
-			"attributes": {"tooltip": "Warns about a track name that finds no file, a track with no stream in it, a missing audio bus, and a Switch To Clip on a stream that is not interactive. On while you build, off for release."}},
+			"attributes": {"tooltip": "Warn about unknown tracks, missing buses and streams; turn off for release."}},
 	}
 	src.note("Music (autoload): register as the Music autoload, then play tracks from any sheet. A track is a MusicTrackResource file you own - the stream, its layers, its tempo and its loop points - and the beat triggers read the stream's own position rather than counting, so they stay on the song. This pack is an event sheet - extend it by editing it.")
 	src.block("block_1")

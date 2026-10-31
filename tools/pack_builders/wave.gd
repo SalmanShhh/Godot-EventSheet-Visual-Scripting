@@ -26,8 +26,7 @@ static func build() -> bool:
 
 	var block: RawCodeRow = RawCodeRow.new()
 	var lines: PackedStringArray = PackedStringArray([
-		"## The dial wave.gdshader pushes along, named once so a rename there is a one-line change",
-		"## here. It is a share of the picture's width, so 0.03 is a three-percent sway.",
+		"## Shader dial the wave pushes along, as a share of picture width.",
 		"const PUSH_DIAL: String = \"wave_strength\"",
 		""
 	])

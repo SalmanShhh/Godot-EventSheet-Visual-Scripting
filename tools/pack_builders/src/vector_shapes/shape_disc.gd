@@ -18,7 +18,7 @@ extends "res://tools/pack_builders/src/vector_shapes/vector_shape_2d.gd"
 	set(value):
 		inner_radius = value
 		shape_changed()
-## Where the sweep starts, in degrees, measured from the right and turning the way the screen does.
+## Where the sweep starts; the dropdown reads it in degrees, turns or radians.
 ## @ace_hidden
 @export_range(-360.0, 360.0, 0.1) var start_angle: float = 0.0:
 	set(value):
@@ -45,8 +45,7 @@ extends "res://tools/pack_builders/src/vector_shapes/vector_shape_2d.gd"
 #endregion
 
 #region disc_runtime
-## How many points the outline is sampled at when a row asks for its length, its area or whether a
-## click landed on it. The drawing itself is exact - it is a distance field, not these points.
+## Points the outline is sampled at for length, area and click tests.
 const OUTLINE_SAMPLES: int = 24
 
 ## @ace_hidden

@@ -24,26 +24,24 @@ signal dissolved
 ## here. 0 is whole, 1 is gone.
 const BURN_DIAL: String = "dissolve"
 
-## Hide the host once it has finished burning. A fully dissolved sprite draws nothing anyway,
-## so this saves the draw; turn it off when something else is going to fade it back in.
+## Hide the host once fully dissolved, saving the draw.
 @export var hide_when_gone: bool = true
 
-## Give this node its own copy of the material before anything turns a dial on it. A material
-## is a RESOURCE, so every node pointing at the same file SHARES it: turn a dial on one goblin
-## and every goblin wearing that file turns with it. On is the safe answer and the one you
-## almost always want. Off when a whole row of nodes really should react together, which is the
-## one case where sharing is the feature rather than the bug.
+# Give this node its own copy of the material before anything turns a dial on it. A material
+# is a RESOURCE, so every node pointing at the same file SHARES it: turn a dial on one goblin
+# and every goblin wearing that file turns with it. On is the safe answer and the one you
+# almost always want. Off when a whole row of nodes really should react together, which is the
+# one case where sharing is the feature rather than the bug.
+## Give this node its own copy of the material so dials affect only it.
 @export var own_material: bool = true
 
 ## The material this behaviour writes through, resolved on first use so the copy is taken once.
 var _worn: ShaderMaterial = null
 
-## The dial walks running right now, keyed by dial name, so a second call on the same dial
-## replaces the first instead of the two of them fighting over it.
+## Dial changes running now, by dial name; a new call replaces the old.
 var _walks: Dictionary = {}
 
-## Whether the missing-material warning has been said. A setup mistake is worth saying once;
-## saying it per dial per call is a log nobody can read past to find it.
+## True once the missing-material warning was shown, so it shows once.
 var _warned: bool = false
 ## The material to write on, copied on first use when own_material is on. Null means the parent
 ## wears no ShaderMaterial at all: attaching the pack copies dissolve.gdshader into the project and assigns it,

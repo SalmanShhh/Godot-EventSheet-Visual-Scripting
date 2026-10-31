@@ -31,9 +31,7 @@ func _enter_tree() -> void:
 		# frame, which is why waiting counts as running here.
 		set_process(value or _waiting > 0.0)
 
-## The property this host spells brightness with - `energy` on a 2D light, `light_energy` on
-## a 3D one. Resolved once when the behaviour starts, because a light answers to exactly one
-## of them and the answer cannot change while the game runs.
+## Name of the host's brightness property: energy in 2D, light_energy in 3D.
 var _brightness_property: String = ""
 # Kept rather than read off the game
 # clock so that stopping and starting again resumes from where the wave was, and so that

@@ -136,7 +136,7 @@ var yaw: float = 0.0
 @export var slide_enabled: bool = true
 ## Minimum horizontal speed needed to start a crouch slide.
 @export var slide_min_speed: float = 6.5
-## Grace window in seconds to still take the ground jump just after walking off a ledge (0 turns it off). A coyote jump is the floor jump, not a mid-air one, so it never spends the air-jump budget.
+## Seconds after walking off a ledge during which the ground jump still works; 0 is off.
 @export_group("Jump")
 @export var coyote_time: float = 0.1
 ## Upward velocity applied on a jump (and on a wall jump).
@@ -154,14 +154,14 @@ var yaw: float = 0.0
 @export var pitch_max: float = 80.0
 ## Lowest look angle in degrees (how far you can look down).
 @export var pitch_min: float = -80.0
-## How much of the run you keep in mid-air, as a share: 1 turns on a coin the way you do on the ground, 0.35 lets you steer a jump without redirecting it, 0 is pure momentum. It is the difference between a floaty platformer and a shooter that rewards a good launch.
+## Share of ground steering kept in the air, 0 to 1; 1 turns as freely as on the ground.
 @export_group("Movement")
 @export var air_control: float = 0.35
-## Walking speed in metres per second while the firing window is open - the shooter's foot-planted slowdown. It replaces Move Speed as the base, so sprint and crouch still multiply it.
+## Walking speed in metres per second while firing; replaces move speed.
 @export var firing_move_speed: float = 2.5
 ## Downward acceleration pulling the host to the floor, in metres per second squared.
 @export var gravity: float = 9.8
-## Landing with jump still held hops straight back off without ever planting a foot, and the landing frame keeps the speed it came in with - the bunny hop. Off, every landing settles to walking pace first.
+## Holding jump on landing hops again and keeps speed, for bunny hopping.
 @export var keep_momentum: bool = true
 ## Base walking speed in metres per second.
 @export var move_speed: float = 5.0

@@ -20,11 +20,9 @@ func _enter_tree() -> void:
 # in that group by hand counts as a neighbour too.
 ## The group whose members fly together.
 @export var flock_group: StringName = &"flock"
-## How far a member looks for neighbours, in metres. Only members inside this sphere are steered
-## by: a bird reacts to the birds around it, never to the whole sky.
+## Pixels within which a member sees neighbours and is steered by them.
 @export var neighbour_radius: float = 4.0
-## Closer than this a neighbour is too close, and separation pushes away from it - harder the
-## closer it is. Make it a little more than the width of the model and members never overlap.
+## Pixels inside which a neighbour is too close and is pushed away.
 @export var separation_radius: float = 1.2
 ## How strongly a member keeps its distance from neighbours that are too close.
 @export var separation_weight: float = 1.5
@@ -36,8 +34,7 @@ func _enter_tree() -> void:
 @export var min_speed: float = 2.0
 ## The fastest a member flies, in metres per second.
 @export var max_speed: float = 6.0
-## How quickly a member may change its velocity, in metres per second per second, for each of the
-## three rules. Low turns in wide, lazy arcs; high snaps round on the spot.
+## Most a member may change its velocity, in pixels per second squared; low turns lazily.
 @export var max_force: float = 12.0
 ## A group the flock keeps away from - a predator, the player, a wall of hazards. Empty avoids
 ## nothing.
@@ -57,8 +54,7 @@ func _enter_tree() -> void:
 		set_physics_process(value)
 
 # --- Internal state ---
-## The velocity this member is flying at, in metres per second. Neighbours read it to align with
-## this one, and a row can read it to aim a trail or pitch a wing-beat sound.
+## Velocity this member flies at, in pixels per second; neighbours align to it.
 var flock_velocity: Vector3 = Vector3.ZERO
 
 func _ready() -> void:

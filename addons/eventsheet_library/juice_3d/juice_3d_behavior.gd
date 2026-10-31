@@ -134,8 +134,7 @@ func _camera() -> Camera3D:
 # a node in that group, and the Node dock already shows which groups a node is in. That is why a
 # collapse can reach every hanging lamp in a level without a single reference between them.
 
-## What a listener moves when its channel speaks. The camera the player looks through, the node
-## itself (a lamp, a sign, a prop), or the screen's own colour channels.
+## Channel target word: shake the camera the player looks through.
 const CHANNEL_SHAKE_CAMERA: String = "the camera"
 ## Shake target word: shake the node itself.
 const CHANNEL_SHAKE_NODE: String = "this node"
@@ -148,8 +147,7 @@ const CHANNEL_SHAKE_SCREEN: String = "the screen"
 ## This listener's answer, for every channel it is in.
 var _channel_shakes: String = CHANNEL_SHAKE_CAMERA
 
-## The shake a channel last asked this node for: how much, how long it lasts, how much is left,
-## and the pose the node was found in so it can be handed back exactly as it was.
+## The shake a channel last asked for: amount, length, time left and the node's pose.
 var _channel_amount: float = 0.0
 ## Total seconds of the channel effect in progress.
 var _channel_span: float = 0.0
@@ -231,10 +229,11 @@ void fragment() {
 ## How much of the peak a fixed-angle shake can lose to the wander.
 const CHROMA_SHAKE_WANDER: float = 0.35
 
-## The Engine meta the whole project keeps the no-flashing answer in - the one the built-in Set
-## No Flashing row writes. A game carrying that row needs nothing else: the split comes out half
-## as wide and wanders half as fast, which is the same shake without the strobe. This is the
-## pack's ONE name for that meta, read by everything here that has to obey it.
+# The Engine meta the whole project keeps the no-flashing answer in - the one the built-in Set
+# No Flashing row writes. A game carrying that row needs nothing else: the split comes out half
+# as wide and wanders half as fast, which is the same shake without the strobe. This is the
+# pack's ONE name for that meta, read by everything here that has to obey it.
+## Engine meta key holding the project's no-flashing choice.
 const NO_FLASHING_META: StringName = &"no_flashing"
 
 # The magnitude the screen is showing right now, in pixels - what the expression answers with.

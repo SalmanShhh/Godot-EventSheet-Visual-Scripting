@@ -58,7 +58,7 @@ var _was_on_floor: bool = false
 var _zip_speed: float = 0.0
 ## True while the board is riding a zipline.
 var _zipline: bool = false
-## How quickly the board settles flat onto the slope it is rolling on, in radians per second. It only does this when no trick is turning, so a spin is never fought.
+## Radians per second the board settles flat onto a slope when no trick is turning.
 @export var align_speed: float = 12.0
 ## How fast balance slides toward the edge per second while you are balancing. 0 is a free ride.
 @export var balance_drift: float = 0.8

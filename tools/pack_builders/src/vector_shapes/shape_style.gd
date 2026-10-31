@@ -25,8 +25,7 @@
 extends Resource
 
 #region style_fields
-## How wide the stroke is. The dropdown at the field's right reads the number in pixels, world units
-## or screen units; the number stored here is always pixels, exactly as a shape stores it.
+## Stroke width; the dropdown reads it in pixels, world units or screen units.
 ## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:kinds=px|world|screen,store=px") var thickness: float = 2.0:
 	set(value):
@@ -47,8 +46,7 @@ extends Resource
 		caps = value
 		emit_changed()
 @export_group("Colour")
-## How the shape is coloured. A shape that has not got the mode this names keeps drawing the way it
-## did - the words are the family's, and each shape offers the ones it can draw.
+## How the shape is coloured; each shape offers the modes it can draw.
 ## @ace_hidden
 @export_enum("single", "two", "radial", "angular", "gradient", "per corner") var colour_mode: String = "single":
 	set(value):
@@ -79,15 +77,13 @@ extends Resource
 	set(value):
 		dashed = value
 		emit_changed()
-## How a dash length is measured: in world pixels, in multiples of the stroke's own thickness, or
-## not at all - "count" fits a fixed number of dashes to the shape however long it is.
+## How dash length is measured: world units, thickness multiples, or count.
 ## @ace_hidden
 @export_enum("world", "relative", "count") var dash_space: String = "count":
 	set(value):
 		dash_space = value
 		emit_changed()
-## How the pattern meets the ends: off leaves it where it falls, tiling fits it a whole number of
-## times, end to end also centres a dash on each end.
+## How dashes meet the ends: off, tiling to fit whole, or end to end.
 ## @ace_hidden
 @export_enum("off", "tiling", "end to end") var dash_snap: String = "tiling":
 	set(value):

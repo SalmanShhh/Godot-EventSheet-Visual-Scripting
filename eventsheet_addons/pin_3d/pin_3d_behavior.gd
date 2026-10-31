@@ -25,14 +25,11 @@ func _enter_tree() -> void:
 @export var rotate_with_anchor: bool = true
 ## Master on/off - Unpin flips it, Pin To turns it back on.
 @export var pin_enabled: bool = true
-## How long the rope or the bar is, in world units. A rope is slack below this and pulls at
-## it; a bar holds the host at exactly this distance, every tick.
+## Length in world units of the rope or bar.
 @export var pin_length: float = 2.0
-## How quickly a soft pin closes the gap, per second. 10 catches up in about a tenth of a
-## second; 2 trails a long way behind, which is what makes a chase camera feel alive.
+## How fast a soft pin closes the gap, per second; 10 is tight, 2 trails.
 @export var pin_speed: float = 10.0
-## Spring pull toward the anchor (higher = snappier) - the same pair of numbers the Spring
-## pack's own integrator takes, so a spring pin and a sprung number feel alike.
+## Spring pull toward the anchor; higher is snappier.
 @export var pin_stiffness: float = 170.0
 ## 0 = oscillate forever, 1 = no overshoot.
 @export var pin_damping: float = 0.85

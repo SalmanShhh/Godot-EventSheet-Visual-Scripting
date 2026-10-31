@@ -31,13 +31,13 @@ static func build() -> bool:
 	sheet.class_description = "One song of a game as a file: the stream, the layers that fade in over it, the tempo the beat triggers count on, and where the loop goes back to. Play it with the Music director's Play row. It is your file - rename it, retune it in the Inspector, share it."
 	sheet.variables = {
 		"track_name": {"type": "String", "default": "", "exported": true,
-			"attributes": {"tooltip": "What the track answers to. The Play row looks a name up as a file in the director's Music Folder, so a file called forest.tres is played by Play \"forest\" with nothing else set up, and this name is what Current Track reads back.",
+			"attributes": {"tooltip": "Name this track is played by.",
 				"header": "Track", "header_color": "#7c9cf5",
 				"info": "The stream is the song. Layers are extra streams that ride on top of it, silent until a Fade Layer row brings one up."}},
 		"stream": {"type": "AudioStream", "default": null, "exported": true,
 			"attributes": {"tooltip": "The song itself. Set the file's own loop in the Import panel if you want it to repeat."}},
 		"layers": {"type": "Dictionary", "default": {}, "exported": true,
-			"attributes": {"tooltip": "The extra streams that ride on top of the song, by name: {\"drums\": the drums stream, \"strings\": the strings stream}. They all start silent; Fade Layer brings one up. Every layer must be the same length as the song, because they are played as one synchronized stream."}},
+			"attributes": {"tooltip": "Extra streams over the song by name; all start silent and match its length."}},
 		"bpm": {"type": "float", "default": 120.0, "exported": true,
 			"attributes": {"tooltip": "The tempo in beats per minute. On Beat, On Bar, Beat Number and the rest are all counted from this.",
 				"header": "Beat", "header_color": "#e8a33d",
@@ -47,9 +47,9 @@ static func build() -> bool:
 		"beats_per_bar": {"type": "int", "default": 4, "exported": true,
 			"attributes": {"tooltip": "How many beats a bar holds - 4 for most music, 3 for a waltz. On Bar and Position In Bars read it.", "range": {"min": "1", "max": "32", "step": "1"}}},
 		"loop_from": {"type": "float", "default": 0.0, "exported": true,
-			"attributes": {"tooltip": "Seconds into the file where the loop starts. A song is played from its beginning the first time it is asked for and from here every time after, so an intro is heard whole when the level opens and skipped when the song comes back.",
+			"attributes": {"tooltip": "Seconds into the file where the loop starts.",
 				"header": "Loop", "header_color": "#5fb37a"}},
 		"loop_to": {"type": "float", "default": 0.0, "exported": true,
-			"attributes": {"tooltip": "Seconds into the file where the loop ends. Set it past Loop From and the director sends the song back to Loop From when it gets there; leave it at 0 and the file plays to its end, looping only if the stream itself is set to in the Import panel."}}
+			"attributes": {"tooltip": "Seconds into the file where the loop ends; 0 plays to the end."}}
 	}
 	return Lib.save_pack(sheet, "res://eventsheet_addons/music_track_resource/music_track_resource")

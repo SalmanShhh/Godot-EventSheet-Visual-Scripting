@@ -29,7 +29,7 @@ static func build() -> bool:
 	sheet.addon_tags = PackedStringArray(["codex", "collection", "resource"])
 	sheet.variables = {
 		"entry_name": {"type": "String", "default": "", "exported": true,
-			"attributes": {"tooltip": "The title the page is shown under - \"Green Slime\", \"Rusted Key\", \"The Long Winter\". Leave the file name to say which entry this IS; this is what a reader sees.",
+			"attributes": {"tooltip": "Title shown for this entry, such as Green Slime; the file name stays its id.",
 				"header": "Page", "header_color": "#7c9cf5",
 				"info": "The file's own name is the entry id the Discover and Has Discovered rows take, and its folder is the set. Nothing here has to repeat either."}},
 		"picture": {"type": "Texture2D", "default": null, "exported": true,

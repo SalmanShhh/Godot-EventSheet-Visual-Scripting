@@ -8,5 +8,5 @@ extends Resource
 # @inspector_info One entry in Phases per stretch of the rhythm, in order. A phase is on seconds, off seconds and how many times to repeat that pair before the next phase takes over.
 ## What this rhythm is called. For your own reading: the Blink row takes the file itself, so a pattern never has to be looked up by name.
 @export var pattern_name: String = ""
-## One entry per stretch of the rhythm, in the order they play. Each is {"on": seconds visible, "off": seconds hidden, "count": how many times}. Six fast winks then two slow ones is two entries.
+## Blink rhythm as steps of seconds visible, seconds hidden and repeat count.
 @export var phases: Array[Dictionary] = []

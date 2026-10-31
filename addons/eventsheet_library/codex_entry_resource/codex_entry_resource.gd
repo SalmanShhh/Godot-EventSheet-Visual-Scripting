@@ -8,7 +8,7 @@ extends Resource
 
 # @inspector_header Page #7c9cf5
 # @inspector_info The file's own name is the entry id the Discover and Has Discovered rows take, and its folder is the set. Nothing here has to repeat either.
-## The title the page is shown under - "Green Slime", "Rusted Key", "The Long Winter". Leave the file name to say which entry this IS; this is what a reader sees.
+## Title shown for this entry, such as Green Slime; the file name stays its id.
 @export var entry_name: String = ""
 ## The illustration beside the words. Any texture: a portrait, an item sprite, a photograph of a map.
 @export var picture: Texture2D = null

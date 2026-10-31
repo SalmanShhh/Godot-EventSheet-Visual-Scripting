@@ -69,9 +69,9 @@ var _invincible_until: int = 0
 var last_hit_from: Node = null
 ## Hits taken so far this run, counted for the accessibility assists.
 var assist_hits: Dictionary = {}
-## Flat damage taken off every typed hit, after the type resistance and before a critical. A hit that got past resistance never lands for less than Minimum Damage, so armour blunts hits rather than ending them.
+## Flat damage removed from every typed hit; never below minimum damage.
 @export_range(0, 1000, 0.5) var armour: float = 0.0
-## The least a hit that got past resistance can land for, however much armour there is. Without it, enough armour quietly makes a node unkillable by anything small.
+## Least damage a hit can land for, however much armour there is.
 @export_range(0, 100, 0.5) var minimum_damage: float = 1.0
 ## How often a typed hit on this node lands as a critical: 0 never, 1 every time.
 @export_range(0, 1, 0.01) var crit_chance: float = 0.0

@@ -22,7 +22,7 @@ extends Resource
 @export var shakes: PackedFloat32Array = []
 ## How long each manner stays on screen, in seconds.
 @export var lifetimes: PackedFloat32Array = []
-## The style names whose colour comes from the DAMAGE rather than from this file - the door a typed-damage game opens so a fire number is orange and an ice one blue. Leave it empty and every style keeps its own colour.
+## Style names whose colour comes from the damage type, not this file.
 @export var colour_from_damage_type: PackedStringArray = []
 
 func has_style(style_name: String) -> bool:

@@ -25,7 +25,7 @@ const PACK_CLASS_3D := "VectorShape3D"
 ## in a 3D world until a camera says how far away the shape is, which is what "screen" means.
 const UNITS_3D := ["world", "screen"]
 
-## The three ways a 2D shape lives in 3D, in the order the base numbers them.
+## The three 3D forms: on its plane, facing the camera, or real geometry.
 const GEOMETRIES := ["flat", "billboard", "volumetric"]
 
 

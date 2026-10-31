@@ -309,10 +309,11 @@ void fragment() {
 ## How much of the peak a fixed-angle shake can lose to the wander.
 const CHROMA_SHAKE_WANDER: float = 0.35
 
-## The Engine meta the whole project keeps the no-flashing answer in - the one the built-in Set
-## No Flashing row writes. A game carrying that row needs nothing else: the split comes out half
-## as wide and wanders half as fast, which is the same shake without the strobe. This is the
-## pack's ONE name for that meta, read by everything here that has to obey it.
+# The Engine meta the whole project keeps the no-flashing answer in - the one the built-in Set
+# No Flashing row writes. A game carrying that row needs nothing else: the split comes out half
+# as wide and wanders half as fast, which is the same shake without the strobe. This is the
+# pack's ONE name for that meta, read by everything here that has to obey it.
+## Engine meta key holding the project's no-flashing choice.
 const NO_FLASHING_META: StringName = &"no_flashing"
 
 # The magnitude the screen is showing right now, in pixels - what the expression answers with.
@@ -373,8 +374,7 @@ const MOMENT_FLASH_FLOOR_SECONDS: float = MomentRunner.FLASH_FLOOR_SECONDS
 # The Engine meta the whole project keeps that answer in is NO_FLASHING_META, declared once with
 # the chromatic shake above and read by both: one meta, one name for it.
 
-## Every word a step may be, in the order a reader meets them: this pack's own effects first, then
-## the two that reach the screen, then the two that drive the post stack.
+## Every step word a moment may use, in the order readers meet them.
 const MOMENT_VERBS: PackedStringArray = ["shake", "hitstop", "slowmo", "flash", "punch", "zoom",
 	"shockwave", "chromatic", "pulse", "hold"]
 
@@ -391,15 +391,12 @@ const MOMENT_VERBS: PackedStringArray = ["shake", "hitstop", "slowmo", "flash", 
 const MOMENT_AMPLITUDE_VERBS: PackedStringArray = MomentRunner.AMPLITUDE_VERBS
 
 # A name nothing was defined under falls through to the file of that name beside the pack.
-## Moments defined by name, shared by every Juice node in the game, because a moment is a fact about
-## the game rather than about one object: Define Moment once at startup and every node's Moment row
-## finds it.
+## Moments defined by name, shared by every juice node in the game.
 static var _moments: Dictionary = {}
 
 # Asking a group is a
 # dictionary read, so a game that has no post stack at all pays nothing to be told so again.
-## The group the Screen FX layer puts itself in, which is how a moment finds it: one name, spelled
-## the same in both packs and joined by that layer as it enters the tree.
+## Group the screen effects layer joins so moments can find it.
 const POST_STACK_GROUP: StringName = &"screen_fx_post_stack"
 
 # Only a found layer is remembered:
@@ -481,8 +478,7 @@ var _moment_plays: Dictionary = {}
 ## one.
 var _moment_ledger: Dictionary = {}
 
-## Whether the LAST play of each name ran its course or was ended early, so a row inside On
-## Moment Finished can tell the beat that landed from the beat somebody walked out of.
+## Whether the last play of each name finished or was ended early.
 var _moment_cut: Dictionary = {}
 
 # Kept between frames and cleared
@@ -497,8 +493,7 @@ var _moment_ended: Array[String] = []
 # quake can reach every prop in a level without a single reference between them, and why a game
 # that has never opened this pack's docs can still read what the row does.
 
-## What a listener moves when its channel speaks. The camera the player looks through, the node
-## itself (a HUD panel, a lamp, a sign), or the screen's own colour channels.
+## Channel target word: shake the camera the player looks through.
 const CHANNEL_SHAKE_CAMERA: String = "the camera"
 ## Shake target word: shake the node itself.
 const CHANNEL_SHAKE_NODE: String = "this node"
@@ -511,8 +506,7 @@ const CHANNEL_SHAKE_SCREEN: String = "the screen"
 ## This listener's answer, for every channel it is in.
 var _channel_shakes: String = CHANNEL_SHAKE_CAMERA
 
-## The shake a channel last asked this node for: how much, how long it lasts, how much is left,
-## and the pose the node was found in so it can be handed back exactly as it was.
+## The shake a channel last asked for: amount, length, time left and the node's pose.
 var _channel_amount: float = 0.0
 ## Total seconds of the channel effect in progress.
 var _channel_span: float = 0.0

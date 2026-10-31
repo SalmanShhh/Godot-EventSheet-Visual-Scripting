@@ -30,7 +30,7 @@ extends VectorShape2D
 # Each one is a handle in the 2D viewport while the
 # node is selected. Past thirty-two points this is Godot's own Polygon2D's job, and the extra
 # points are left undrawn rather than silently thinned.
-## The corners, in the node's own coordinates.
+## Corner points of the shape, in the node's own coordinates.
 ## @ace_hidden
 @export var points: PackedVector2Array = PackedVector2Array([
 	Vector2(-48.0, 40.0), Vector2(0.0, -48.0), Vector2(48.0, 40.0), Vector2(0.0, 16.0)
@@ -40,8 +40,7 @@ extends VectorShape2D
 		shape_changed()
 
 @export_group("Stroke")
-## How wide the stroke is. The dropdown at the field's right reads the number in pixels, world units
-## or screen units; the number stored here is always pixels, so nothing moves when you flip it.
+## Stroke width; the dropdown reads it in pixels, world units or screen units.
 ## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:kinds=px|world|screen,store=px") var thickness: float = 2.0:
 	set(value):
@@ -130,7 +129,7 @@ extends VectorShape2D
 # These are the five blends a canvas shader can be compiled
 # for; a shape that wants one of the screen-reading modes goes under a parent the Blend Modes pack
 # has blended, because a shape owns its own material.
-## How the shape meets what is behind it.
+## How the shape blends with what is behind it.
 ## @ace_hidden
 @export_enum("normal", "add", "subtract", "multiply", "premultiplied") var blend: String = "normal":
 	set(value):

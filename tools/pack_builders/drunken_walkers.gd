@@ -55,11 +55,11 @@ static func build() -> bool:
 		"empty_value": {"type": "int", "default": 0, "exported": true,
 			"attributes": {"tooltip": "The value a fresh grid is filled with. It is also what an out-of-bounds Cell Value reads, and the only value Outline Cells is allowed to overwrite."}},
 		"start_seed": {"type": "String", "default": "", "exported": true,
-			"attributes": {"tooltip": "The seed the generator starts on. Left empty it derives one from the clock and remembers it, so Current Seed can still show the player a code - but the first run of a session is not reproducible until you call Set Seed."}},
+			"attributes": {"tooltip": "Seed the generator starts on; empty picks one from the clock."}},
 		"random_source": {"type": "String", "default": "internal", "exported": true, "options": ["internal", "shared", "injected"],
-			"attributes": {"tooltip": "internal = this pack's own seeded generator. shared = the Advanced Random autoload, so one seed drives every procedural system at once. injected = the queue Inject Random fills, for one audited stream."}},
+			"attributes": {"tooltip": "Where random numbers come from: internal, the shared Advanced Random autoload, or injected values."}},
 		"debug_mode": {"type": "bool", "default": false, "exported": true,
-			"attributes": {"tooltip": "Warns about walker lifecycles, clamped grid sizes, scatters that could not fit, an injected queue running dry, and the four common reasons a map comes out empty. On while you build, off for release."}},
+			"attributes": {"tooltip": "Warn about walker mistakes and empty maps; turn off for release."}},
 	}
 	src.note("Drunken Walkers (autoload): register as the DrunkenWalkers autoload, then size a grid, set a seed, register walkers and run them from any sheet. The pack owns the grid and the marks; you paint the tiles and spawn the objects from the results. Same seed plus same action order = the same map every time. This pack is an event sheet - extend it by editing it.")
 	src.block("block_1")

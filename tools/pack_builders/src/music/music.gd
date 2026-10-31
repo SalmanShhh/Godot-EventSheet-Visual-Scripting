@@ -32,21 +32,16 @@ signal bar(number: int)
 ## @ace_name("On Beat Number")
 signal nth_beat(number: int)
 
-## How many players a crossfade needs: the one going out and the one coming in. Two is the whole
-## machine - a third would be a second crossfade running over the first, which is a mix nobody can
-## hear the shape of.
+## Players a crossfade needs: one going out and one coming in.
 const DECK_COUNT: int = 2
 
-## The quietest a deck is allowed to be treated as, so linear_to_db is never handed a 0 (which is
-## minus infinity, and an infinity written into volume_db is a silence nothing recovers from).
+## Quietest level a deck is treated as, so volume never hits zero.
 const SILENT_LEVEL: float = 0.0001
 
-## The two players. Empty until _ready builds them, which is what lets every rule below be driven
-## and pinned with no scene tree and no audio device in the picture.
+## The two players, built on ready.
 var _decks: Array[AudioStreamPlayer] = []
 
-## How loud each deck is right now, and where it is walking to, as a 0-to-1 level. Levels rather
-## than decibels because a crossfade is a straight line in loudness, not in decibels.
+## Loudness of each deck now and its target, from 0 to 1.
 var _levels: Array[float] = [0.0, 0.0]
 ## Volume each of the two decks is fading toward, in decibels.
 var _level_targets: Array[float] = [0.0, 0.0]
@@ -76,14 +71,12 @@ var _bpm: float = 120.0
 ## Seconds the beat grid is shifted from the start of the track.
 var _beat_offset: float = 0.0
 
-## The last whole beat and bar a trigger fired for, so each fires once per beat rather than once
-## per frame. Reset when a track starts, which is why the first beat of a new track always arrives.
+## Last whole beat and bar triggered, so each fires once.
 var _last_beat: int = -1
 ## Bar number last announced, used to fire On Bar once per bar.
 var _last_bar: int = -1
 
-## Ducking: where the music's decibel offset is, where it is walking to, how fast, and how long it
-## holds down before it comes back up on its own (a stinger ducks for its own length).
+## Duck volume now, its target, its speed and how long it holds.
 var _duck_db: float = 0.0
 ## Volume the music is being ducked down to, in decibels.
 var _duck_target_db: float = 0.0
@@ -107,16 +100,14 @@ var _duck_return_db: float = 0.0
 ## The tracks that have been started this session, by the name each answered to.
 var _heard: Dictionary = {}
 
-## Layer levels, by layer name: where each is, where it is walking to, and how fast. A layer nobody
-## has faded is silent, so a track's layers all start under the base stream.
+## Level of each named layer now, its target and its speed.
 var _layer_levels: Dictionary = {}
 ## Volume each layer is fading toward, by layer name.
 var _layer_targets: Dictionary = {}
 ## How fast each layer is fading, by layer name.
 var _layer_rates: Dictionary = {}
 
-## The layer names of the stream now playing, in the order they were built into it - which is the
-## order their volumes are written back in, so a name and its slot can never drift apart.
+## Layer names of the playing stream, in the order built.
 var _layer_order: PackedStringArray = PackedStringArray()
 
 ## Whether the music is paused. Pause keeps the position, so Resume carries on rather than

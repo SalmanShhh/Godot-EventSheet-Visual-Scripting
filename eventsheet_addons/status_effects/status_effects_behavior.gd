@@ -39,15 +39,12 @@ signal stacks_changed(status: String, stacks: int)
 # this at your own folder once you have copied and edited them.
 ## Where the effect files live.
 @export_dir var effects_folder: String = "res://eventsheet_addons/status_effects"
-## Effect files dropped straight onto this node, looked in BEFORE the folder - so one enemy can
-## carry its own version of "burn" without the folder or any other enemy knowing about it.
+## Effect files on this node, checked before the folder so one enemy can have its own.
 @export var effects: Array = []
-## Warns about a status applied under a name no file answers to, and about a tick with damage in it
-## on a host that has no Health behaviour to take it. On while you build, off for release.
+## Warn about unknown statuses and ticks on hosts without health; turn off for release.
 @export var debug_mode: bool = false
 
-## What is on right now: the status word -> {effect, remaining, stacks, tick_in, particles}. The
-## effect is resolved ONCE, when the status lands, so a tick never touches the disk.
+## Statuses on now, each with its effect, time left, stacks and tick timer.
 var _active: Dictionary = {}
 
 ## What cannot land right now: the status word -> the seconds of immunity left.
@@ -65,8 +62,7 @@ var _tint_written: Color = Color(1.0, 1.0, 1.0, 1.0)
 ## True while this behaviour has a tint on the host.
 var _tint_applied: bool = false
 
-## The two Engine meta this project keeps its accessibility answers in - the same two the built-in
-## Set No Flashing and Set Effect Strength rows write, and the same two the screen effects read.
+## Engine meta keys holding the no-flashing and effect-strength choices.
 const NO_FLASHING_META: StringName = &"no_flashing"
 ## Metadata key a player sets to scale every effect.
 const EFFECT_STRENGTH_META: StringName = &"effect_strength"
@@ -77,8 +73,7 @@ const EFFECT_STRENGTH_META: StringName = &"effect_strength"
 ## How far a tint may pull the host's colour while a player has asked for no flashing.
 const TINT_CEILING: float = 0.3
 
-## The tick this pack falls back to when an effect file asks for one of zero seconds, which would
-## otherwise be a tick every frame - or, worse, a loop that never advances.
+## Tick length used when an effect asks for zero seconds.
 const MINIMUM_TICK_SECONDS: float = 0.05
 
 ## The ownership key this whole project credits kills through, written by the Claim row.

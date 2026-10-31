@@ -36,7 +36,7 @@ var compounds: Dictionary = {}
 var plan: Array = []
 ## Which task in the plan is running now.
 var plan_index: int = 0
-## Optional: a UHTNPlanResource (.tres) holding the whole plan - tasks, methods, preconditions, and utility scorers - authored in Inspector grids. Loaded automatically on ready; leave empty to build the network with the Add ... actions instead.
+## Plan resource to load on ready; empty builds the plan with actions instead.
 @export var plan_resource: Resource = null
 ## Primitive tasks by name, each with its conditions and effects.
 var primitives: Dictionary = {}

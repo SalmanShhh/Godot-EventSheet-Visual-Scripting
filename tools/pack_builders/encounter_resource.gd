@@ -24,7 +24,7 @@ static func build() -> bool:
 	sheet.variables = {
 		"entries": {"type": "Array", "default": [], "exported": true,
 			"attributes": {"group": "Beats",
-				"tooltip": "One row per beat of the encounter. `at_seconds` is how far into the encounter it happens (rows may be typed in any order - the timeline sorts them). `scene_path` is the .tscn to spawn, e.g. res://enemies/slime.tscn - leave it blank for a beat that spawns nothing and only fires the trigger. `count` is how many copies (0 spawns nothing). `group_name` puts every copy in that group so the rest of your game can find them (\"enemies\"). `note` is a plain-language reminder for you and for the report (\"first archer, teaches cover\") - the pack never interprets it.",
+				"tooltip": "One row per beat: seconds in, scene to spawn and how many.",
 				"drawer": "table", "table_columns": [
 					{"name": "at_seconds", "type": "float"},
 					{"name": "scene_path", "type": "String"},
@@ -33,6 +33,6 @@ static func build() -> bool:
 					{"name": "note", "type": "String"}]}},
 		"encounter_name": {"type": "String", "default": "encounter", "exported": true,
 			"attributes": {"group": "Identity",
-				"tooltip": "A readable name for this encounter (\"Wave 3\", \"Boss: phase two\"), shown at the top of the Encounter Report and read back with the Encounter Name expression."}}
+				"tooltip": "Readable name of this encounter, such as Wave 3, shown in the encounter report."}}
 	}
 	return Lib.save_pack(sheet, "res://eventsheet_addons/encounter_resource/encounter_resource")

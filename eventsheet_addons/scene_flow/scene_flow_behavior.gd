@@ -37,13 +37,13 @@ signal loading_finished
 @export var fade_color: Color = Color(0.0, 0.0, 0.0, 1.0)
 ## Fade-out (and fade-in) duration in seconds.
 @export_range(0.05, 5, 0.05) var fade_seconds: float = 0.4
-## The greyscale picture a wipe transition follows: its dark parts are covered first and its light parts last, so a ramp is a bar wipe, a radial ramp is a clock, and a painted shape is whatever you painted. Empty is a plain left-to-right sweep.
+## Greyscale picture a wipe follows: dark parts cover first; empty sweeps left to right.
 @export var wipe_image: Texture2D = null
-## The screen shown while Go To Scene With Loading waits for the next scene. The pack ships loading_screen.tscn as a starter to copy and restyle; empty means no screen at all, and the wait happens where the player is standing.
+## Screen shown while the next scene loads; empty shows none.
 @export_file("*.tscn", "*.scn") var loading_scene: String = ""
-## The shape drawn over BOTH halves of a loading change: onto the loading screen and off it again into the new scene. The same wardrobe Go To Scene With picks from, held over the node's Fade Seconds. None swaps plainly.
+## Transition drawn onto and off the loading screen.
 @export_enum("none", "fade", "wipe", "dissolve", "iris", "blinds", "pixelate", "page curl") var loading_transition: String = "fade"
-## A text file of tips, one per line, that Loading Tip picks from - one tip is chosen when the load starts and stays put for the whole wait. The pack ships tips.txt as a starter; the file is yours, and a line starting with # is a note to yourself. Add *.txt to the export filters so it ships with the game.
+## Text file of loading tips, one per line; one is shown per load.
 @export_file("*.txt") var loading_tips_file: String = ""
 
 ## The root-parented fade overlay: fades out, swaps (or reloads) the scene, fades back in,
@@ -78,8 +78,7 @@ class TransitionRunner:
 
 # --- Transitions: a scene change with a shader drawn over it ---
 
-## Where the transition shaders live once the pack is installed, and the name one takes: the word a
-## row uses with its spaces closed up, under one prefix. A word and its file can never drift apart.
+## Folder of the transition shaders once installed.
 const TRANSITION_DIRECTORY: String = "res://eventsheet_addons/scene_flow/"
 ## Start of the file name of every transition scene.
 const TRANSITION_PREFIX: String = "transition_"
@@ -91,20 +90,19 @@ const TRANSITION_PREFIX: String = "transition_"
 const TRANSITIONS: PackedStringArray = ["fade", "wipe", "dissolve", "iris", "blinds", "pixelate",
 	"page curl"]
 
-## The group every running transition joins - the shipped fade above and the shaded ones below alike,
-## so Is Transitioning is ONE question with one answer rather than two flags that can disagree.
+## Group every running transition joins, so Is Transitioning has one answer.
 const TRANSITION_GROUP: StringName = &"scene_flow_transition"
 
-## THE ACCESSIBILITY FLOOR. A player who has asked for no flashing gets the same transition in the
-## same shape, held over this many seconds - because a shape that sweeps the whole screen and back
-## in a tenth of a second is a flash whatever shape it is. This is the same floor the post stack
-## holds its walks over, read off the same Engine meta the built-in Set No Flashing row writes.
+# THE ACCESSIBILITY FLOOR. A player who has asked for no flashing gets the same transition in the
+# same shape, held over this many seconds - because a shape that sweeps the whole screen and back
+# in a tenth of a second is a flash whatever shape it is. This is the same floor the post stack
+# holds its walks over, read off the same Engine meta the built-in Set No Flashing row writes.
+## Shortest transition length when no flashing is requested.
 const TRANSITION_FLASH_FLOOR_SECONDS: float = 0.4
 ## Metadata key a player sets to turn flashing transitions off.
 const TRANSITION_NO_FLASHING_META: StringName = &"no_flashing"
 
-## And the shortest a transition may be when nobody has asked for anything: short enough to feel
-## instant, long enough that the swap still happens under cover.
+## Shortest a transition may be when no flashing is requested.
 const TRANSITION_FLOOR_SECONDS: float = 0.1
 
 # The runner
@@ -204,13 +202,10 @@ static func transition_shader(shape: String) -> Shader:
 
 # It is a group rather than a member because the poller OUTLIVES the scene the row was in:
 # the node that started the load is replaced by the loading screen a moment later.
-## The group the one running background load joins, so Scene Is Loading, Scene Load Progress and
-## Loading Tip are ONE question with one answer rather than three fields that can disagree.
+## Group joined by the background load so progress questions share one answer.
 const LOADING_GROUP: StringName = &"scene_flow_loading"
 
-## The word that means "no shape over the change" in the Loading Transition knob. Every other
-## word in that list is one of the shapes above, so a loading change wears the same wardrobe
-## the rest of the game's changes do.
+## Word meaning no shape over a loading change.
 const LOADING_NO_TRANSITION: String = "none"
 
 ## The line a tips file leaves out: a comment, so a file of tips can carry a note about itself

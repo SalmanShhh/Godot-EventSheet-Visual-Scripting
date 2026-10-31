@@ -8,16 +8,14 @@ extends VectorShape3D
 ## A closed outline through points you drag in the 3D viewport, filled or hollow, with a border of its own - the claimed territory, the zone marker, the stylised leaf.
 
 @export_group("Geometry")
-## How this shape lives in 3D: flat on its own plane, always turned to face the camera, or as real
-## geometry a light and a depth buffer treat like anything else in the scene.
+## How the shape lives in 3D: flat, facing the camera, or real geometry.
 ## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:flat,billboard,volumetric:segmented") var geometry: String = "billboard":
 	set(value):
 		geometry = value
 		notify_property_list_changed()
 		shape_changed()
-## How many sides the volumetric form is built from. Higher is rounder and costs more vertices; it
-## is read only when the shape is volumetric, because a flat one has no vertices to spend.
+## Sides of the volumetric form; higher is rounder and costs more.
 ## @ace_hidden
 @export_range(3, 64, 1) var detail: int = 16:
 	set(value):
@@ -27,9 +25,7 @@ extends VectorShape3D
 # @inspector_preview
 # @inspector_handle points points
 @export_group("Polygon")
-## The corners, in the node's own coordinates. Each one is a handle in the 3D viewport while the
-## node is selected, dragged on the plane facing the camera. Past thirty-two points this is Godot's
-## own mesh tools' job, and the extra points are left undrawn rather than silently thinned.
+## Corner points of the shape, in the node's own coordinates.
 ## @ace_hidden
 @export var points: PackedVector3Array = PackedVector3Array([
 	Vector3(-0.5, -0.4, 0.0), Vector3(0.0, 0.5, 0.0), Vector3(0.5, -0.4, 0.0), Vector3(0.0, -0.15, 0.0)
@@ -39,16 +35,17 @@ extends VectorShape3D
 		shape_changed()
 
 @export_group("Stroke")
-## How wide the stroke is, in whichever unit the row below says.
+## Stroke width; the dropdown reads it in pixels, world units or screen units.
 ## @ace_hidden
 @export var thickness: float = 0.05:
 	set(value):
 		thickness = value
 		shape_changed()
-## What the number above means: world units are the node's own (a rope five centimetres thick is
-## 0.05), and screen units are PIXELS - the shape keeps that weight however far away the camera is,
-## which is what a range ring or a gizmo line wants. The unit is a mode rather than a view here,
-## because a distance is what turns one into the other and only the camera knows it.
+# What the number above means: world units are the node's own (a rope five centimetres thick is
+# 0.05), and screen units are PIXELS - the shape keeps that weight however far away the camera is,
+# which is what a range ring or a gizmo line wants. The unit is a mode rather than a view here,
+# because a distance is what turns one into the other and only the camera knows it.
+## Whether thickness is in world units or in screen pixels.
 ## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:world,screen:segmented") var thickness_unit: String = "world":
 	set(value):
@@ -128,16 +125,13 @@ extends VectorShape3D
 		shape_changed()
 
 @export_group("Drawing")
-## How the shape meets what is behind it. These are the five blends the pack compiles a shader for;
-## a volumetric shape reads the same word off its own surface.
+## How the shape blends with what is behind it.
 ## @ace_hidden
 @export_enum("normal", "add", "subtract", "multiply", "premultiplied") var blend: String = "normal":
 	set(value):
 		blend = value
 		shape_changed()
-## Whether the shape is sorted against the world the ordinary way, or drawn over everything in front
-## of it - which is what a gizmo line or a range ring that has to read through a wall wants. Drawing
-## through walls is honest about its cost: it is a second shader, not a flag on the same one.
+## Sort with the world normally, or draw over everything in front.
 ## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:test,through walls:segmented") var depth: String = "test":
 	set(value):

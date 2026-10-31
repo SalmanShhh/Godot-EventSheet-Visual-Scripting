@@ -17,8 +17,7 @@ const RECT_NAME: String = "Screen"
 ## not.
 const AT_REST: Dictionary = {"blur": 0.0, "fade_amount": 0.0, "shock_strength": 0.0, "chromatic": 0.0}
 
-## How long a shockwave ring takes to cross the screen. A ring is a moment rather than a state,
-## so it times itself instead of asking every row how long it should last.
+## Seconds a shockwave ring takes to cross the screen.
 @export_range(0.05, 3.0, 0.05) var ring_seconds: float = 0.55
 
 ## Full-screen rectangle the effect is drawn on.
@@ -26,8 +25,7 @@ var _rect: ColorRect = null
 ## Shader material that draws the effect.
 var _screen: ShaderMaterial = null
 
-## The walks running right now, keyed by the dial they move, so a second call on the same dial
-## replaces the first rather than the two of them fighting over it.
+## Dial changes running now, by dial name; a new call replaces the old.
 var _walks: Dictionary = {}
 ## Walks one dial to a value over a number of seconds, hands the tween back, and re-checks the
 ## rectangle when it lands. No time at all is a straight set rather than a tween nobody sees.
@@ -47,12 +45,10 @@ func _walk_dial(dial: String, to_value: float, seconds: float) -> Tween:
 	_walks[dial] = walk
 	return walk
 
-## Where the pack's own shaders live once it is installed. The pack builder copies them here beside
-## the script, so an effect is a file on disk rather than a string compiled at run time.
+## Folder holding the pack's shaders once installed.
 const POST_DIRECTORY: String = "res://eventsheet_addons/screen_fx/"
 
-## The name a shader file takes: the effect word with its spaces closed up, under one prefix. An
-## effect word and its file can therefore never drift apart.
+## Prefix of a shader file name; the effect word with spaces closed up.
 const POST_PREFIX: String = "post_"
 
 # Each is one full-screen shader with a
@@ -82,13 +78,10 @@ const CORRECT_EFFECT: String = "correct colours"
 ## And the two the accessibility dials do NOT touch.
 const UNDIALLED_EFFECTS: PackedStringArray = [SEE_AS_EFFECT, CORRECT_EFFECT]
 
-## The four kinds of colour vision, IN THE ORDER the two vision shaders number them: the position in
-## this list is the number written into the shader, so nothing keeps a second table of numbers in
-## step with this one.
+## The four colour-vision kinds, in the order the shaders number them.
 const VISION_KINDS: PackedStringArray = ["normal", "protanopia", "deuteranopia", "tritanopia"]
 
-## The dial every effect shader declares, and the one the rows turn. An entry holding 0 draws the
-## screen back exactly as it arrived, which is the moment its rectangle is worth hiding.
+## Name of the strength dial every effect shader declares.
 const STRENGTH_DIAL: String = "strength"
 
 ## The dial the two vision shaders take their kind of vision on.
@@ -105,8 +98,7 @@ const FLASH_FLOOR_SECONDS: float = 0.4
 
 # A game that has those rows needs
 # nothing else for the stack to obey them.
-## The two Engine meta this project already keeps its accessibility answers in - the same two the
-## built-in Set No Flashing and Set Effect Strength rows write.
+## Engine meta keys holding the no-flashing and effect-strength choices.
 const NO_FLASHING_META: StringName = &"no_flashing"
 ## Metadata key a player sets to scale every effect.
 const EFFECT_STRENGTH_META: StringName = &"effect_strength"
@@ -114,12 +106,10 @@ const EFFECT_STRENGTH_META: StringName = &"effect_strength"
 # The Juice pack's
 # moments ask for it by this name - one name, spelled the same in both packs - and a game that has
 # built its own post layer joins the group in one line to be found the same way.
-## The group this layer joins as it enters the tree, so another pack can find the post stack without
-## walking the scene tree looking for something that answers to a method name.
+## Group this layer joins so other packs can find it.
 const POST_STACK_GROUP: StringName = &"screen_fx_post_stack"
 
-## The look resource's own script, loaded by path rather than named as a class, so this pack still
-## runs (and says so) in a project that only installed Screen FX.
+## Path of the look resource script, loaded by path.
 const LOOK_SCRIPT: String = "res://eventsheet_addons/screen_look_resource/screen_look_resource.gd"
 
 # An entry is a small record rather than a node, because the order,
@@ -142,12 +132,10 @@ var _stack: Array[Dictionary] = []
 ## The shaders loaded so far, by effect word. A project that only ever uses a vignette loads one.
 var _shaders: Dictionary = {}
 
-## The strength walks running right now, keyed by the entry they move, so a second row on the same
-## entry replaces the first rather than the two of them fighting over one dial.
+## Strength changes running now, by entry; a new row replaces the old.
 var _stack_walks: Dictionary = {}
 
-## What Current Look reads back: the name of the look last worn, or "" when the stack was built row
-## by row. Save Look does not change it, because saving is not wearing.
+## Name of the look last worn, or empty if the stack was built row by row.
 var _look_name: String = ""
 ## The stack as look rows: what Save Look writes and what Use Look reads back, in stack order. The
 ## strength recorded is the one the ROWS ASKED FOR, never the one one player's accessibility dials

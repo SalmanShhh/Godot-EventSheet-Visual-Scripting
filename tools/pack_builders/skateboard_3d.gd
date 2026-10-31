@@ -42,7 +42,7 @@ static func build() -> bool:
 		"_zip_speed": {"type": "float", "default": 0.0, "exported": false, "description": "Speed along the zipline."},
 		"_zipline": {"type": "bool", "default": false, "exported": false, "description": "True while the board is riding a zipline."},
 		"align_speed": {"type": "float", "default": 12.0, "exported": true,
-			"attributes": {"tooltip": "How quickly the board swings flat onto the surface it is on. Higher is snappier, lower reads as suspension."}},
+			"attributes": {"tooltip": "Radians per second the board settles flat onto a slope when no trick is turning."}},
 		"balance_drift": {"type": "float", "default": 0.8, "exported": true,
 			"attributes": {"tooltip": "How fast balance slides toward the edge per second while you are balancing. 0 is a free ride."}},
 		"balance_steer": {"type": "float", "default": 1.6, "exported": true,

@@ -28,11 +28,11 @@ static func build() -> bool:
 	sheet.addon_tags = PackedStringArray(["spawning", "waves", "pacing", "encounter"])
 	sheet.variables = {
 		"encounter": {"type": "Resource", "default": null, "exported": true,
-			"attributes": {"tooltip": "Optional: drop an EncounterResource (.tres) here to load its beats on ready - the data-driven way to plan an encounter without events. You can also load one later (or a different difficulty) with Load Encounter."}},
+			"attributes": {"tooltip": "Encounter resource to load on ready; empty plans beats with events instead."}},
 		"use_object_pool": {"type": "bool", "default": true, "exported": true,
-			"attributes": {"tooltip": "When on (the default), spawns go through the ObjectPool autoload IF one is registered - a long encounter then reuses nodes instead of creating and freeing them. With no ObjectPool installed, or with this off, the timeline instantiates the scene itself. Either way the triggers fire identically."}},
+			"attributes": {"tooltip": "Spawn through the ObjectPool autoload when one exists, to reuse nodes."}},
 		"auto_start": {"type": "bool", "default": false, "exported": true,
-			"attributes": {"tooltip": "Start the encounter as soon as this node is ready, instead of waiting for a Start Encounter action. Handy for an arena that begins the moment its scene loads; leave it off when a cutscene or a door should decide."}}
+			"attributes": {"tooltip": "Start the encounter as soon as the node is ready."}}
 	}
 
 	var about: CommentRow = CommentRow.new()

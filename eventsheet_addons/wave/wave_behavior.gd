@@ -15,26 +15,24 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("WaveBehavior behavior requires a CanvasItem parent.")
 
-## The dial wave.gdshader pushes along, named once so a rename there is a one-line change
-## here. It is a share of the picture's width, so 0.03 is a three-percent sway.
+## Shader dial the wave pushes along, as a share of picture width.
 const PUSH_DIAL: String = "wave_strength"
 
-## Give this node its own copy of the material before anything turns a dial on it. A material
-## is a RESOURCE, so every node pointing at the same file SHARES it: turn a dial on one goblin
-## and every goblin wearing that file turns with it. On is the safe answer and the one you
-## almost always want. Off when a whole row of nodes really should react together, which is the
-## one case where sharing is the feature rather than the bug.
+# Give this node its own copy of the material before anything turns a dial on it. A material
+# is a RESOURCE, so every node pointing at the same file SHARES it: turn a dial on one goblin
+# and every goblin wearing that file turns with it. On is the safe answer and the one you
+# almost always want. Off when a whole row of nodes really should react together, which is the
+# one case where sharing is the feature rather than the bug.
+## Give this node its own copy of the material so dials affect only it.
 @export var own_material: bool = true
 
 ## The material this behaviour writes through, resolved on first use so the copy is taken once.
 var _worn: ShaderMaterial = null
 
-## The dial walks running right now, keyed by dial name, so a second call on the same dial
-## replaces the first instead of the two of them fighting over it.
+## Dial changes running now, by dial name; a new call replaces the old.
 var _walks: Dictionary = {}
 
-## Whether the missing-material warning has been said. A setup mistake is worth saying once;
-## saying it per dial per call is a log nobody can read past to find it.
+## True once the missing-material warning was shown, so it shows once.
 var _warned: bool = false
 ## The material to write on, copied on first use when own_material is on. Null means the parent
 ## wears no ShaderMaterial at all: attaching the pack copies wave.gdshader into the project and assigns it,

@@ -25,21 +25,21 @@ static func build() -> bool:
 	sheet.variables = {
 		"next_quest": {"type": "String", "default": "", "exported": true,
 			"attributes": {"group": "Chain",
-				"tooltip": "Optional: the quest id to start automatically the moment this one completes - how a questline is chained. Register that quest first (Register Quest) so the autoload knows its objectives. Leave blank to end here."}},
+				"tooltip": "Quest id started automatically when this one completes; blank ends the line."}},
 		"quest_id": {"type": "String", "default": "quest", "exported": true,
 			"attributes": {"group": "Identity",
-				"tooltip": "The id this quest is tracked under - every Quest action, condition and expression addresses it by this string. Keep it short and unique (\"bridge_repair\")."}},
+				"tooltip": "Unique id the quest is tracked by, such as bridge_repair."}},
 		"title": {"type": "String", "default": "", "exported": true,
 			"attributes": {"group": "Identity",
 				"tooltip": "The name the player reads in the quest log. Read it back with the Quest Title expression."}},
 		"objectives": {"type": "Array", "default": [], "exported": true,
 			"attributes": {"group": "Objectives",
-				"tooltip": "One row per objective: its name (the string Advance Objective addresses) and how many are needed to finish it. The quest completes when EVERY row reaches its needed count. A quest with no rows never completes on its own - abandon it or complete the questline another way.",
+				"tooltip": "One row per objective: its name and how many are needed.",
 				"drawer": "table", "table_columns": [
 					{"name": "name", "type": "String"},
 					{"name": "needed", "type": "int"}]}},
 		"reward_note": {"type": "String", "default": "", "exported": true,
 			"attributes": {"group": "Reward",
-				"tooltip": "A plain-language note about the payout (\"200 gold and the river key\"), shown in your own UI via the Quest Reward Note expression. The engine never grants it for you - hand it out in On Quest Completed."}}
+				"tooltip": "Plain note about the payout, shown by your own UI; the pack never grants it."}}
 	}
 	return Lib.save_pack(sheet, "res://eventsheet_addons/quest_resource/quest_resource")

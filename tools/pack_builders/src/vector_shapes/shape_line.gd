@@ -5,8 +5,7 @@ extends "res://tools/pack_builders/src/vector_shapes/vector_shape_2d.gd"
 # @inspector_preview
 # @inspector_handle end_point point
 @export_group("Line")
-## Where the line ends, in the node's own coordinates. It starts at the node's origin, so moving the
-## node moves the start and dragging the handle moves the end.
+## Where the line ends, in the node's coordinates.
 @export var end_point: Vector2 = Vector2(96.0, 0.0):
 	set(value):
 		end_point = value

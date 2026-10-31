@@ -33,7 +33,7 @@ static func build() -> bool:
 		"description": {"type": "String", "default": "", "exported": true,
 			"attributes": {"tooltip": "The line the menu shows under the word - what this difficulty is for, in the player's terms."}},
 		"factors": {"type": "Dictionary", "default": {}, "exported": true,
-			"attributes": {"tooltip": "Factor name to the number this difficulty gives it. Any keys at all; a key no difficulty writes reads as 1.0. Each key also shows as its own field above."}}
+			"attributes": {"tooltip": "Number each named factor takes at this difficulty; unlisted factors read 1."}}
 	}
 	var fields: RawCodeRow = RawCodeRow.new()
 	fields.code = "\n".join(PackedStringArray([

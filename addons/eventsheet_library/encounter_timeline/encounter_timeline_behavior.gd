@@ -23,11 +23,11 @@ signal on_entry_spawned(node: Node, group_name: String)
 ## @ace_category("Encounter Timeline")
 signal on_encounter_finished
 
-## Optional: drop an EncounterResource (.tres) here to load its beats on ready - the data-driven way to plan an encounter without events. You can also load one later (or a different difficulty) with Load Encounter.
+## Encounter resource to load on ready; empty plans beats with events instead.
 @export var encounter: Resource = null
-## When on (the default), spawns go through the ObjectPool autoload IF one is registered - a long encounter then reuses nodes instead of creating and freeing them. With no ObjectPool installed, or with this off, the timeline instantiates the scene itself. Either way the triggers fire identically.
+## Spawn through the ObjectPool autoload when one exists, to reuse nodes.
 @export var use_object_pool: bool = true
-## Start the encounter as soon as this node is ready, instead of waiting for a Start Encounter action. Handy for an arena that begins the moment its scene loads; leave it off when a cutscene or a door should decide.
+## Start the encounter as soon as the node is ready.
 @export var auto_start: bool = false
 
 # The loaded plan, kept sorted by time: one record per beat, {at, scene, count, group, note}.

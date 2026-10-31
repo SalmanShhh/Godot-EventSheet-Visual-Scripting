@@ -44,8 +44,7 @@ var blinking: bool = false
 
 # --- Blink patterns: a rhythm the game owns, played on the host ---
 
-## The project-wide answer to "this player has asked for no flashing", the same plain Engine
-## meta every other flashing thing here reads, so one row sets it for the whole game.
+## Engine meta key that holds the project's no-flashing choice.
 const BLINK_NO_FLASHING_META: StringName = &"no_flashing"
 
 # A strobe is a medical problem rather than a

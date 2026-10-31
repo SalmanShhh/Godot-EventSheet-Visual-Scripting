@@ -6,8 +6,9 @@ class_name BlendModesAddon
 extends Node
 ## The twenty ways a picture can meet the one behind it, as rows: the five Godot draws by itself, and fifteen that read the screen back through a shader the pack ships - screen, overlay, the light-and-dark family, difference, and the four that take a colour apart. Plus a mask, so a second picture decides where the first is allowed to be. Ships as the BlendModes autoload, so any sheet can blend any canvas item.
 
-## Where the pack's own shaders live once it is installed. The pack builder copies them here beside
-## the script, so a mode is a file on disk rather than a string compiled at run time.
+# The pack builder copies the shaders here beside the script, so a mode is a file on disk rather
+# than a string compiled at run time.
+## Folder holding the pack's shaders once installed.
 const SHADER_DIRECTORY: String = "res://eventsheet_addons/blend_modes/"
 
 # These cost nothing extra:
@@ -30,34 +31,28 @@ const SHADER_MODES: PackedStringArray = ["screen", "overlay", "darken", "lighten
 	"colour dodge", "colour burn", "hard light", "soft light", "difference", "exclusion", "hue",
 	"saturation", "colour", "luminosity", "copy"]
 
-## The five ways a mask and the thing it masks can meet, IN THE ORDER blend_mask.gdshader numbers
-## them - the position in this list is the number written into the shader, so nothing has to keep a
-## second table of numbers in step with this one.
+## The five ways a mask can combine with what it masks, in shader order.
 const MASK_MODES: PackedStringArray = ["inside", "outside", "atop", "behind", "xor"]
 
-## The name the mode file takes: the word with its spaces closed up. "colour dodge" is
-## blend_colour_dodge.gdshader, and a mode word and its file can therefore never drift apart.
+## Prefix of a mode's shader file; colour dodge is blend_colour_dodge.gdshader.
 const SHADER_PREFIX: String = "blend_"
 
 # Kept on the node so an item
 # freed mid-game takes its own record with it, and so two of these packs could never disagree.
-## What the pack remembers ON THE ITEM rather than in a table of its own: the mode word it was last
-## asked for, and the material it was wearing before the pack touched it.
+## Meta keys that remember an item's last blend mode and its original material.
 const MODE_META: StringName = &"blend_modes_mode"
 ## Metadata key that remembers which blend mode a node is wearing.
 const WORN_META: StringName = &"blend_modes_worn"
 ## Metadata key that remembers the blend group a node belongs to.
 const GROUP_META: StringName = &"blend_modes_group"
 
-## The mode an item is in when nobody has said otherwise - what Blend Mode reads back for an item no
-## row here has touched, and what the row shows the moment it is dropped.
+## Blend mode an item has until a row sets another.
 const DEFAULT_MODE: String = "normal"
 
 ## The shaders loaded so far, by mode word. A project that only ever uses screen loads one file.
 var _shaders: Dictionary = {}
 
-## The strength fades running right now, keyed by the item's instance id, so a second fade on the
-## same item replaces the first rather than the two of them fighting over one uniform.
+## Strength fades running now, by item, so a new fade replaces the old one.
 var _fades: Dictionary = {}
 ## One mode's shader, loaded the first time it is asked for and kept after that. A project that only
 ## ever blends one way loads one file.

@@ -28,7 +28,7 @@ static func build() -> bool:
 	sheet.variables = {
 		"choice_requirements": {"type": "Array", "default": [], "exported": true,
 			"attributes": {"group": "Choices",
-				"tooltip": "Rules that must pass for a choice to be OFFERED (else it is hidden). Reference the choice by its `storylet` + `choice_id`. Same comparison / value_is_key meaning as the Requirements grid.",
+				"tooltip": "Rules a choice must pass to be offered, else it is hidden; same columns as Requirements.",
 				"drawer": "table", "table_columns": [
 					{"name": "storylet", "type": "String"},
 					{"name": "choice_id", "type": "String"},
@@ -45,7 +45,7 @@ static func build() -> bool:
 					{"name": "text", "type": "String"}]}},
 		"choice_effects": {"type": "Array", "default": [], "exported": true,
 			"attributes": {"group": "Effects",
-				"tooltip": "Quality changes applied when a CHOICE is picked. Reference the choice by `storylet` + `choice_id`; same op / key / value as the Effects grid.",
+				"tooltip": "Quality changes applied when a choice is picked; same columns as Effects.",
 				"drawer": "table", "table_columns": [
 					{"name": "storylet", "type": "String"},
 					{"name": "choice_id", "type": "String"},
@@ -54,7 +54,7 @@ static func build() -> bool:
 					{"name": "value", "type": "String"}]}},
 		"effects": {"type": "Array", "default": [], "exported": true,
 			"attributes": {"group": "Effects",
-				"tooltip": "Quality changes applied automatically when a storylet is DRAWN. `op`: set / inc / dec / toggle / delete on `key`; `value` is the operand (ignored for toggle / delete).",
+				"tooltip": "Quality changes applied when a storylet is drawn: set, inc, dec, toggle or delete a key.",
 				"drawer": "table", "table_columns": [
 					{"name": "storylet", "type": "String"},
 					{"name": "op", "type": "enum", "options": [{"key": "set", "label": "Set to"}, {"key": "inc", "label": "Increment by"}, {"key": "dec", "label": "Decrement by"}, {"key": "toggle", "label": "Toggle (0/1)"}, {"key": "delete", "label": "Delete key"}]},
@@ -71,7 +71,7 @@ static func build() -> bool:
 					{"name": "value", "type": "String"}]}},
 		"requirements": {"type": "Array", "default": [], "exported": true,
 			"attributes": {"group": "Requirements",
-				"tooltip": "Rules a storylet needs to be eligible (all must pass). `storylet` is the id from the Storylets grid. `op` picks the comparison from a dropdown; the cell stores a short token (gte, lt, eq...) that the runtime matches on. For a comparison, `key` is a quality and `value` is what to compare against; tick `value_is_key` to compare against ANOTHER quality's value (gold >= price). For `chance`, put a 0-100 percent in `value` (key ignored). For `recent` / `not_recent`, put a draw count N in `value` - an anti-repeat gate over the last N draws.",
+				"tooltip": "Rules a storylet needs to be eligible, all must pass: compare a quality, roll a chance, or gate on recent draws.",
 				"drawer": "table", "table_columns": [
 					{"name": "storylet", "type": "String"},
 					{"name": "op", "type": "enum", "options": [{"key": "gte", "label": ">= (at least)"}, {"key": "gt", "label": "> (more than)"}, {"key": "lte", "label": "<= (at most)"}, {"key": "lt", "label": "< (less than)"}, {"key": "eq", "label": "= (equal to)"}, {"key": "neq", "label": "!= (not equal to)"}, {"key": "chance", "label": "Chance (0-100%)"}, {"key": "recent", "label": "Drawn in the last N"}, {"key": "not_recent", "label": "NOT drawn in the last N"}]},
@@ -80,7 +80,7 @@ static func build() -> bool:
 					{"name": "value_is_key", "type": "bool"}]}},
 		"storylets": {"type": "Array", "default": [], "exported": true,
 			"attributes": {"group": "Storylets",
-				"tooltip": "One row per storylet: its id (the key every other grid references), the title + body your game shows, its weight (higher = leads the draw), cooldown seconds, and max plays (-1 = unlimited, 1 = a one-shot).",
+				"tooltip": "One row per storylet: id, title, body, weight, cooldown seconds and max plays; -1 is unlimited.",
 				"drawer": "table", "table_columns": [
 					{"name": "id", "type": "String"},
 					{"name": "title", "type": "String"},

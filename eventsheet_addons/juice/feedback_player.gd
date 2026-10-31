@@ -51,13 +51,13 @@ signal on_loop(loops_left: int)
 # @inspector_info One card per feedback. Pause and Hold space them out, Loop Start and Loop Back repeat a stretch, and everything else is felt. Play plays the list; the strength on the row scales every amount in it.
 ## The feedbacks this object plays, in order. Each one is a card: what it does, how much, how long, and the timing words between them.
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:cards:kind=verb,schema=feedback_steps,stripes=category") var steps: Array[Dictionary] = []
-## What every amount in the list is scaled by before the strength on the row is applied. Turn a whole object's feedback down without retuning a single card.
+## Scales every amount in the list before the row's own strength applies.
 @export var strength: float = 1.0
 ## Which end of the list a play starts from.
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:top to bottom,bottom to top") var direction: String = "top to bottom"
 ## What a second play does while the first is still running: restart it, ignore the new one, or let the two overlap.
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:restart,ignore,overlap") var while_playing: String = "restart"
-## The shortest gap between two plays, in seconds. A play asked for sooner than this is refused, which is how a rapid-fire hit stops stacking its own feedback.
+## Seconds that must pass between plays; sooner requests are refused.
 @export var cooldown: float = 0.0
 ## Optional: a moment file to play INSTEAD of the list. Drop one here to share a beat between objects; Save As File writes this list out as one.
 @export var moment_file: Resource = null
@@ -71,8 +71,7 @@ signal on_loop(loops_left: int)
 # The card the head is on is not copied. A card carries its own live values while it runs (the loops
 # it has left), and those are what the remote Inspector of the running node shows.
 
-## The most steps one play may take, loops included. A Loop Back with nothing to end it would
-## otherwise be a play that never comes back; this is the number at which it gives up and says so.
+## Most steps one play may run, loops included, before it gives up.
 const MAX_PLAY_STEPS: int = 4096
 
 ## The two directions a list is walked in, and the three answers to "it is already playing".
@@ -141,9 +140,7 @@ var _head_taken: bool = false
 # A moment file dropped on two players is ONE resource shared by both, so a counter
 # written into its steps would have each play counting the other's loops down, and the file on
 # disk would come back from a play changed.
-## How many times round each Loop Back card still has to go, and the roll each card's chance will
-## be answered with - both kept per PLAY and keyed by where the card sits, never written into the
-## card itself.
+## Loops still to run for each Loop Back card, kept per play.
 var _loops_left: Dictionary = {}
 ## The random roll each card's chance is answered with, kept per play.
 var _rolls: Dictionary = {}
@@ -155,8 +152,7 @@ var _restore_to: Array = []
 ## back.
 var _tweens: Array[Tween] = []
 
-## And the players this play set going through a Play Player card. A nested play obeys the outer
-## one: stopping, skipping or restoring the list that started it does the same to them.
+## Players this play started through a Play Player card; they follow it.
 var _nested: Array[Node] = []
 
 ## The Juice behaviour found beside this player, kept once found.
@@ -214,17 +210,13 @@ const CATEGORY_OF: Dictionary = {
 	"play_player": "signal"
 }
 
-## The keys Set Feedback Field writes and Feedback Field reads. Named rather than open, so a typo
-## cannot quietly add a key nothing ever looks at - the one failure a dictionary with no schema
-## behind it is prone to.
+## Keys that Set Feedback Field and Feedback Field accept.
 const FIELD_KEYS: PackedStringArray = ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"]
 
-## The families muted right now, as a set. Empty in every project that never mutes one, which is
-## why it costs a lookup in an empty dictionary rather than a branch per card.
+## Feedback families muted right now.
 var _muted: Dictionary = {}
 
-## The labels Skip Feedback Once has been asked about and the play has not reached yet. Each is
-## taken out the moment it is used, so the row means once rather than from now on.
+## Labels to skip once on the next play, removed as they are used.
 var _skip_once: Dictionary = {}
 
 ## Hold Here, and the label Jump To Feedback wants the head moved to at the next step.

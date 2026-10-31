@@ -23,7 +23,7 @@ signal state_changed(previous: String, next: String)
 var _state_entered_ticks: int = 0
 ## The state the machine was in before the current one; empty until it first changes.
 var previous_state: String = ""
-## The machine's current state name; change it with Go to state.
+## The state the node is in now, idle at the start; any name works, and Go to state switches it.
 @export var state: String = "idle"
 
 ## @ace_condition

@@ -24,7 +24,7 @@ static func build() -> bool:
 				"tooltip": "The goal the planner decomposes - name a compound (usually) or primitive task from the Tasks grid."}},
 		"conditions": {"type": "Array", "default": [], "exported": true,
 			"attributes": {"group": "Task Network",
-				"tooltip": "Preconditions a method needs before it can be chosen: the world-state key, a comparison, and the expected value. A method with no rows here is always applicable.",
+				"tooltip": "Preconditions per method: a world-state key, a comparison and a value.",
 				"drawer": "table", "table_columns": [
 					{"name": "method", "type": "String"},
 					{"name": "key", "type": "String"},
@@ -32,7 +32,7 @@ static func build() -> bool:
 					{"name": "value", "type": "String"}]}},
 		"methods": {"type": "Array", "default": [], "exported": true,
 			"attributes": {"group": "Task Network",
-				"tooltip": "The ways to accomplish each compound task. Subtasks run in order (comma-separated task names). Rank methods with a SCORER (from the Scorer Inputs grid) for live utility ranking, or leave scorer blank and use the fixed utility number. Keep method ids unique.",
+				"tooltip": "Ways to accomplish each compound task, ranked by an optional scorer.",
 				"drawer": "table", "table_columns": [
 					{"name": "task", "type": "String"},
 					{"name": "method", "type": "String"},
@@ -41,13 +41,13 @@ static func build() -> bool:
 					{"name": "utility", "type": "float"}]}},
 		"tasks": {"type": "Array", "default": [], "exported": true,
 			"attributes": {"group": "Task Network",
-				"tooltip": "Every task in the network. A PRIMITIVE is a leaf your event sheet executes (walk, shoot, hide); a COMPOUND decomposes into subtasks via the Methods grid.",
+				"tooltip": "Every task: primitives your sheet runs, and compounds broken into subtasks by methods.",
 				"drawer": "table", "table_columns": [
 					{"name": "name", "type": "String"},
 					{"name": "kind", "type": "enum(primitive|compound)"}]}},
 		"scorer_inputs": {"type": "Array", "default": [], "exported": true,
 			"attributes": {"group": "Utility Scorers",
-				"tooltip": "The Utility-AI half: each row feeds one world-state input through a response curve into a named scorer. A method that names that scorer is ranked by the LIVE score at plan time (weighted average across the scorer's rows). Center + slope shape the logistic / threshold / bell curves.",
+				"tooltip": "Which world-state input feeds which scorer, through a response curve.",
 				"drawer": "table", "table_columns": [
 					{"name": "scorer", "type": "String"},
 					{"name": "input", "type": "String"},

@@ -7,17 +7,13 @@ class_name VectorShape3D
 extends MeshInstance3D
 ## The base every 3D Vector Shape node extends: one quad wearing the spatial half of the pack's distance-field shader when the shape is flat or a billboard, a real mesh when it is volumetric, and the rows that drive both. Add a Line 3D, Disc 3D, Rect 3D, Polygon 3D, Polyline 3D, Regular Polygon 3D, Sphere, Cuboid, Cone or Torus from the Create Node dialog rather than this.
 
-## The 2D half of the pack, for the word lists both halves number the shader's arms with and for the
-## dash-style pictures. Read by path rather than by class name so a project loads this script even
-## while the editor's class cache is being rebuilt, and so there is exactly one copy of each list.
+## Word lists shared by 2D and 3D shapes for shader arms and dash pictures.
 const SHAPE_WORDS := preload("res://eventsheet_addons/vector_shapes/vector_shape_2d.gd")
 
 ## Where the pack's own shaders live once it is installed.
 const SHADER_DIRECTORY: String = "res://eventsheet_addons/vector_shapes/"
 
-## The blend words a 3D shape offers, and the file each one is when the shape is sorted against the
-## world the ordinary way. A blend is a `render_mode`, decided when a shader compiles and impossible
-## to make a uniform, which is why "the same drawing, blended differently" is one file each.
+## Blend words a 3D shape offers, with the shader file for each.
 const BLEND_SHADERS_3D: Dictionary = {
 	"normal": "vector_shape_3d_mix.gdshader",
 	"add": "vector_shape_3d_add.gdshader",
@@ -26,8 +22,7 @@ const BLEND_SHADERS_3D: Dictionary = {
 	"premultiplied": "vector_shape_3d_premul.gdshader"
 }
 
-## The same five, drawn over everything in front of them - the gizmo line that reads through a wall.
-## A depth test is a `render_mode` too, so it doubles the files for the same reason the blends do.
+## The blend shaders for shapes drawn over everything in front of them.
 const BLEND_SHADERS_3D_THROUGH: Dictionary = {
 	"normal": "vector_shape_3d_mix_through.gdshader",
 	"add": "vector_shape_3d_add_through.gdshader",
@@ -36,8 +31,7 @@ const BLEND_SHADERS_3D_THROUGH: Dictionary = {
 	"premultiplied": "vector_shape_3d_premul_through.gdshader"
 }
 
-## The three ways a 2D shape lives in 3D: on its own plane, always facing the camera, or as real
-## geometry. The first two are the same quad and the same shader; the third is a mesh.
+## The three 3D forms: on its plane, facing the camera, or real geometry.
 const GEOMETRIES: PackedStringArray = ["flat", "billboard", "volumetric"]
 
 ## The two ways a stroke's width is read: in the node's own units, or in pixels on the screen.
@@ -46,9 +40,7 @@ const THICKNESS_UNITS_3D: PackedStringArray = ["world", "screen"]
 ## The two depth readings, in the order the shader files are named for.
 const DEPTH_MODES: PackedStringArray = ["test", "through walls"]
 
-## How far a shape with a screen-unit stroke may reach past its own box before the engine may cull
-## it. A screen-unit stroke is as wide as the camera says it is, so its box cannot be worked out on
-## the CPU; this is the margin the engine's own cull-margin field exists for.
+## Pixels a screen-width stroke may reach past its box before culling.
 const SCREEN_CULL_MARGIN: float = 1.0
 
 # One Shader resource per blend word and depth reading, shared by every 3D shape in the project.

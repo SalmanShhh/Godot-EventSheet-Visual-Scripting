@@ -25,7 +25,7 @@ static func build() -> bool:
 	sheet.variables = {
 		"entries": {"type": "Array", "default": [], "exported": true,
 			"attributes": {"group": "Entries",
-				"tooltip": "One row per thing that can be bought. `id` is the string every action, condition and expression addresses (keep it short and unique). `label` is what the player reads. `price` is what it costs, in `currency` (blank = the table's Default Currency). `stock` is how many are left: -1 means unlimited, 0 means sold out. TICK `locked` to start an entry closed until Set Entry Unlocked opens it (a fresh row is unticked, so it sells straight away). `requires` is a plain-language note about the condition YOUR game checks (\"needs the guild badge\") - the pack never interprets it, it only hands it back for your UI.",
+				"tooltip": "One row per thing for sale: id, label, price and currency.",
 				"drawer": "table", "table_columns": [
 					{"name": "id", "type": "String"},
 					{"name": "label", "type": "String"},

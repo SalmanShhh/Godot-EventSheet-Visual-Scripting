@@ -38,8 +38,7 @@ static func build() -> bool:
 		"## here. 0 is whole, 1 is gone.",
 		"const BURN_DIAL: String = \"dissolve\"",
 		"",
-		"## Hide the host once it has finished burning. A fully dissolved sprite draws nothing anyway,",
-		"## so this saves the draw; turn it off when something else is going to fade it back in.",
+		"## Hide the host once fully dissolved, saving the draw.",
 		"@export var hide_when_gone: bool = true",
 		""
 	])

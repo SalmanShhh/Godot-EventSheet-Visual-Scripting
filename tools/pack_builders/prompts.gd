@@ -37,23 +37,23 @@ static func build() -> bool:
 	# Property ORDER is part of the pack: these emit in the order they are declared here.
 	src.sheet.variables = {
 		"prompt_scene": {"type": "String", "default": "res://eventsheet_addons/prompts/prompt.tscn", "exported": true,
-			"attributes": {"tooltip": "The scene one prompt is drawn as. The shipped one is a starter drawn plain - copy it into your own project and restyle it. The director fills in the children it finds by name: Ring (anything with a value, for the time left), Glyph (a texture, for the button picture) and Label (for the Input Map's own words when no glyph was drawn)."}},
+			"attributes": {"tooltip": "Scene each prompt is drawn as; copy the starter to restyle it."}},
 		"glyphs": {"type": "Resource", "default": null, "exported": true,
-			"attributes": {"tooltip": "The GlyphSheetResource saying which picture stands for which control on which device. Leave it empty and a prompt shows the Input Map's own words instead, which is right on a keyboard and vague on a pad."}},
+			"attributes": {"tooltip": "Glyph sheet choosing which picture shows for each control; empty shows the action names."}},
 		"perfect_window_ms": {"type": "int", "default": 80, "exported": true,
-			"attributes": {"tooltip": "How close to a note's own moment a press has to land to grade perfect, in milliseconds. Rhythm windows are discussed in milliseconds, so they are typed in milliseconds. Timed prompts do not use this - they grade on how much of their window was left.", "range": {"min": "0", "max": "1000", "step": "1"}}},
+			"attributes": {"tooltip": "Milliseconds either side of a note's moment that still grade perfect.", "range": {"min": "0", "max": "1000", "step": "1"}}},
 		"hit_window_ms": {"type": "int", "default": 250, "exported": true,
-			"attributes": {"tooltip": "How far off a note's moment a press may be and still count at all, in milliseconds. A press further out than this is not an answer to that note, and a note this far past its moment is a miss.", "range": {"min": "0", "max": "2000", "step": "1"}}},
+			"attributes": {"tooltip": "Milliseconds off a note's moment a press may be and still count.", "range": {"min": "0", "max": "2000", "step": "1"}}},
 		"perfect_share": {"type": "float", "default": 0.5, "exported": true,
-			"attributes": {"tooltip": "How much of a timed prompt's window still has to be left for the answer to grade perfect. 0.5 means the first half of the window is perfect and the second half is good. It grades reaction rather than nerve, which is what a quick-time event is asking about.", "range": {"min": "0", "max": "1", "step": "0.05"}}},
+			"attributes": {"tooltip": "Share of a timed prompt's window that must remain to grade perfect, 0 to 1.", "range": {"min": "0", "max": "1", "step": "0.05"}}},
 		"lead_seconds": {"type": "float", "default": 1.0, "exported": true,
-			"attributes": {"tooltip": "How long a note travels its lane for when there is no Music director to ask. With one in the project the note lands on the song's next beat instead, and this is only the fallback.", "range": {"min": "0.05", "max": "10", "step": "0.05"}}},
+			"attributes": {"tooltip": "Seconds a note travels its lane when no music director sets the beat.", "range": {"min": "0.05", "max": "10", "step": "0.05"}}},
 		"flash_strength": {"type": "float", "default": 1.0, "exported": true,
-			"attributes": {"tooltip": "How bright a prompt flashes as it is hit. A player who has asked for no flashing gets a slow fade instead, whatever this says - the prompt still has to show it landed.", "range": {"min": "0", "max": "1", "step": "0.05"}}},
+			"attributes": {"tooltip": "How bright a prompt flashes when hit; a no-flashing player gets a fade instead.", "range": {"min": "0", "max": "1", "step": "0.05"}}},
 		"flash_seconds": {"type": "float", "default": 0.15, "exported": true,
 			"attributes": {"tooltip": "How long that flash takes to fade out. No flashing stretches it to at least four tenths of a second, which is what turns a flash into a fade.", "range": {"min": "0.01", "max": "2", "step": "0.01"}}},
 		"debug_mode": {"type": "bool", "default": false, "exported": true,
-			"attributes": {"tooltip": "Warns about a prompt scene that cannot be loaded, a lane with no Note child to copy, and a Sequence given no controls. On while you build, off for release."}},
+			"attributes": {"tooltip": "Warn about prompt scene and lane mistakes; turn off for release."}},
 	}
 	src.note("Prompts (autoload): register as the Prompts autoload, then ask the player for a control from any sheet. Prompt opens a moment with the right glyph on it; Hold Prompt and Mash Prompt are the same moment answered a different way; Sequence is a list of them; Prompt On Beat sends a note down a lane to land on the song's next beat. The grades are the Timed Input rows' own words - perfect, good, miss. This pack is an event sheet - extend it by editing it.")
 	src.block("block_1")

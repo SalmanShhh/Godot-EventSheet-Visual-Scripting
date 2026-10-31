@@ -14,12 +14,10 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("PostKitBehavior behavior requires a Node parent.")
 
-## Where the pack's effect scripts and their compute shaders live once it is installed. The builder
-## copies them there beside the pack, so an effect is a file on disk rather than a string.
+## Folder holding the effect scripts and compute shaders once installed.
 const EFFECT_DIRECTORY: String = "res://eventsheet_addons/post_kit/effects/"
 
-## The name an effect's script takes: the effect word with its spaces closed up, under one prefix.
-## An effect word and its file can therefore never drift apart.
+## Prefix of an effect's script name; the effect word with spaces closed up.
 const EFFECT_PREFIX: String = "post_"
 
 # They are the words the 2D post stack uses for the same
@@ -50,8 +48,7 @@ const FLASH_FLOOR_SECONDS: float = 0.4
 
 # A game that has those rows needs
 # nothing else for the camera to obey them.
-## The two Engine meta this project already keeps its accessibility answers in - the same two the
-## built-in Set No Flashing and Set Effect Strength rows write.
+## Engine meta keys holding the no-flashing and effect-strength choices.
 const NO_FLASHING_META: StringName = &"no_flashing"
 ## Metadata key a player sets to scale every effect.
 const EFFECT_STRENGTH_META: StringName = &"effect_strength"
@@ -60,8 +57,7 @@ const EFFECT_STRENGTH_META: StringName = &"effect_strength"
 ## run can see what the outline is made of.
 const MASK_NODE_NAME: String = "PostKitMask"
 
-## Which visual layer the mask camera can see, and the one the outline rows switch on for the meshes
-## they mark. 20 is the last layer Godot has and the one a project is least likely to be using.
+## Visual layer the mask camera sees and outlined meshes use; 20 is rarely used.
 @export_range(1, 20, 1) var mask_layer: int = 20
 
 # An entry is a small record rather than a node, because the order, the
@@ -81,18 +77,15 @@ var _stack: Array[Dictionary] = []
 ## The Compositor this node hangs its effects on - the parent's own, when it had one already.
 var _compositor: Compositor = null
 
-## The strength walks running right now, keyed by the entry they move, so a second row on the same
-## entry replaces the first rather than the two of them fighting over one dial.
+## Strength changes running now, by entry; a new row replaces the old.
 var _stack_walks: Dictionary = {}
 
-## The mask rig, built the first time something is outlined and freed when nothing is: a viewport
-## with a transparent background and a camera that can see one visual layer and nothing else.
+## Mask rig built when something is first outlined and freed when nothing is.
 var _mask: SubViewport = null
 ## Camera that renders the mask used by effects limited to part of the screen.
 var _mask_camera: Camera3D = null
 
-## Every visual instance an outline row switched the mask layer on for, so Stop Outlining can switch
-## it off again on exactly those and leave the project's own layer bits alone.
+## Meshes outlined so far, so Stop Outlining switches off only their layer bit.
 var _marked: Array[VisualInstance3D] = []
 
 ## Whether this run has already said out loud that there is no compositor here. Once is honest;

@@ -42,14 +42,13 @@ extends VectorShape3D
 	set(value):
 		detail = value
 		shape_changed()
-## How the shape meets what is behind it.
+## How the shape blends with what is behind it.
 ## @ace_hidden
 @export_enum("normal", "add", "subtract", "multiply", "premultiplied") var blend: String = "normal":
 	set(value):
 		blend = value
 		shape_changed()
-## Whether the shape is sorted against the world the ordinary way, or drawn over everything in front
-## of it - the debug volume you want to see through the level.
+## Sort with the world normally, or draw over everything in front.
 ## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:test,through walls:segmented") var depth: String = "test":
 	set(value):

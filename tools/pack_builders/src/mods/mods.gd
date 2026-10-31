@@ -5,18 +5,14 @@
 extends Node
 
 #region block_1
-## Where Load Mods From looks by default, and the folder a mod's own folder is expected under.
-## Prefer user:// - a folder under res:// is packed into the export and a player cannot put
-## anything in it once the game ships.
+## Default folder mods load from; prefer user:// since res:// cannot be written once exported.
 @export var mods_folder: String = "user://mods"
 # A mod is ON unless its name is in that list, so a mod the
 # player has never seen arrives enabled.
 ## The setting the switched-off mods are remembered under, when the project has the Game Settings
 ## autoload registered as Settings.
 @export var settings_key: String = "disabled_mods"
-## Warns about a folder that is not there, a mod folder with no manifest in it, a pack file whose
-## own file list could not be read, and a name two mods both claim. On while you build, off for
-## release.
+## Warn about missing folders, manifests and clashing names; turn off for release.
 @export var debug_mode: bool = false
 
 # Resolved the first time the enabled state
@@ -46,13 +42,10 @@ signal mod_refused(refused_name: String, reason: String)
 signal mods_changed()
 
 # Plain data, so it rides a loop, a print and a save unchanged.
-## What a mod is made of, once its manifest has been read: name, version, author, replaces, whether
-## it declares that it carries code, which kind it is ("folder" or "pack"), the path it came from
-## and the folder its files live in.
+## Loaded mods by name: version, author, kind, path and whether it carries code.
 var _mods: Array[Dictionary] = []
 
-## The names Set Load Order named, in the order it named them. Everything else follows in name
-## order, so a partial order is a partial order rather than a reshuffle.
+## Mod names in the order Set Load Order gave; the rest follow by name.
 var _order: PackedStringArray = PackedStringArray()
 
 ## The mods that are switched OFF, by name. Absent means on.
@@ -61,8 +54,7 @@ var _disabled: Dictionary = {}
 ## The mod the last event was about: what Mod Name, Mod Version, Mod Author and Mod Reason answer.
 var _about: Dictionary = {"name": "", "version": "", "author": "", "reason": ""}
 
-## The file extensions that are CODE. A mod carrying any of these can run anything the game itself
-## can, which is the whole difference between the two tiers.
+## File extensions that count as code; a mod with any can run anything.
 const CODE_EXTENSIONS: Array[String] = [
 	"gd", "gdc", "gde", "cs", "gdextension", "gdnlib", "gdns", "dll", "so", "dylib", "wasm"]
 
@@ -136,8 +128,7 @@ const CLIMB_OUT: String = ".."
 ## The four bytes a Godot pack file opens with, as one little-endian number - "GDPC".
 const PACK_MAGIC: int = 0x43504447
 
-## The newest pack format this reader understands. A file that says a higher number is not read at
-## all, and a data-only row refuses it rather than guessing at its contents.
+## Newest pack format this reader understands; higher numbers are refused.
 const PACK_FORMAT_MAX: int = 4
 
 # An encrypted DIRECTORY cannot be read without the
@@ -151,14 +142,10 @@ const PACK_PLACES_ARE_RELATIVE: int = 2
 
 # Both are read here, because a pack a player downloads was written by whichever engine
 # the game that made it shipped with.
-## The format from which the file list is written at a place of its own near the END of the pack
-## rather than straight after the header, and file paths inside it are written without their
-## `res://`.
+## First pack format that keeps its file list near the end.
 const PACK_FORMAT_WITH_DIRECTORY: int = 4
 
-## The bit a pack entry's flags word sets when the exporter encrypted that file. Its bytes cannot
-## be read without the game's own key, and a file that cannot be read is not one that has been
-## cleared of code.
+## Flag bit set on a pack file that was encrypted by the exporter.
 const PACK_ENTRY_ENCRYPTED: int = 1
 
 # Both are stated rather than felt: a mod is somebody else's folder, so the walk that decides
@@ -176,9 +163,7 @@ const MOST_FOLDER_FILES: int = 20000
 ## Whether the last folder walk stopped at one of those limits.
 var _folder_was_truncated: bool = false
 
-## The most bytes of one scene or resource this reading will take in at once. A table big enough to
-## matter is a table somebody built to be read instead of the mod, and a refusal is the safe answer
-## either way.
+## Most bytes of one scene or resource read at once; larger is refused.
 const MOST_RESOURCE_BYTES: int = 32 * 1024 * 1024
 
 ## One mod's record, made from whatever the manifest gave and filled in for whatever it did not.

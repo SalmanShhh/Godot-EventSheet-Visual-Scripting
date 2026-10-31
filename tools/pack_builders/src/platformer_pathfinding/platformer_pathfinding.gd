@@ -55,9 +55,7 @@ var _movement: Node = null
 var _gravity_angle_warned: bool = false
 ## Standable cells (the cell the agent's feet occupy) -> true.
 var _nodes: Dictionary = {}
-## cell -> Array of {"to": Vector2i, "kind": String, "cost": float} (portal links also carry
-## "portal_id"). Kinds: walk, jump, double_jump, coyote_jump, fall, fall_through, portal,
-## portal_gradual, platform.
+## Links out of each cell: target, kind (walk, jump, fall, portal) and cost.
 var _edges: Dictionary = {}
 ## The obstacle map the last build read: cell -> "solid" / "jump_thru" / "slope_left" /
 ## "slope_right". Clear cells are simply absent.
@@ -130,8 +128,7 @@ var _next_hazard_id: int = 1
 var _last_hazard_id: int = 0
 ## True if the host was inside a hazard on the previous frame.
 var _was_in_hazard: bool = false
-## Registered moving platforms: {"node": Node2D, "a": Vector2, "b": Vector2} - survive
-## regenerate. Each becomes a "platform" link; the drive waits, boards, and rides it.
+## Registered moving platforms, each a link the agent waits for, boards and rides.
 var _moving_platforms: Array = []
 # Follow mode (Find Path To Node): the tracked node + where the current path was aimed.
 ## The node the host keeps routing toward.

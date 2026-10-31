@@ -41,8 +41,7 @@ extends VectorShape2D
 		shape_changed()
 
 @export_group("Stroke")
-## How wide the stroke is. The dropdown at the field's right reads the number in pixels, world units
-## or screen units; the number stored here is always pixels, so nothing moves when you flip it.
+## Stroke width; the dropdown reads it in pixels, world units or screen units.
 ## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:kinds=px|world|screen,store=px") var thickness: float = 2.0:
 	set(value):
@@ -137,17 +136,14 @@ extends VectorShape2D
 
 # @inspector_show_if dashed
 @export_group("Dashed")
-## How a dash length is measured: in world pixels, in multiples of the stroke's own thickness, or
-## not at all - "count" fits a fixed number of dashes to the shape however long it is.
+## How dash length is measured: world units, thickness multiples, or count.
 ## @ace_hidden
 @export_enum("world", "relative", "count") var dash_space: String = "count":
 	set(value):
 		dash_space = value
 		notify_property_list_changed()
 		shape_changed()
-## How the pattern meets the ends: off leaves it wherever it falls, tiling makes it fit the shape a
-## whole number of times, end to end also centres a dash on each end - which is what puts a dash on
-## every corner of a rect and every vertex of a polygon.
+## How dashes meet the ends: off, tiling to fit whole, or end to end.
 ## @ace_hidden
 @export_enum("off", "tiling", "end to end") var dash_snap: String = "tiling":
 	set(value):
@@ -190,7 +186,7 @@ extends VectorShape2D
 # These are the five blends a canvas shader can be compiled
 # for; a shape that wants one of the screen-reading modes goes under a parent the Blend Modes pack
 # has blended, because a shape owns its own material.
-## How the shape meets what is behind it.
+## How the shape blends with what is behind it.
 ## @ace_hidden
 @export_enum("normal", "add", "subtract", "multiply", "premultiplied") var blend: String = "normal":
 	set(value):

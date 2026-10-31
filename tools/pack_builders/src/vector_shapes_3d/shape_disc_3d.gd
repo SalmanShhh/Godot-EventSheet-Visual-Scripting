@@ -18,8 +18,7 @@ extends "res://tools/pack_builders/src/vector_shapes_3d/vector_shape_3d.gd"
 	set(value):
 		inner_radius = value
 		shape_changed()
-## Where the sweep starts. The dropdown at the field's edge reads the number in degrees, turns or
-## radians; the number stored is always degrees, so nothing moves when you flip it.
+## Where the sweep starts; the dropdown reads it in degrees, turns or radians.
 ## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:kinds=deg|turn|rad,store=deg") var start_angle: float = 0.0:
 	set(value):
@@ -46,8 +45,7 @@ extends "res://tools/pack_builders/src/vector_shapes_3d/vector_shape_3d.gd"
 #endregion
 
 #region disc_3d_runtime
-## How many points the outline is sampled at when a row asks for its length, its area or whether a
-## click landed on it. The drawing itself is exact - it is a distance field, not these points.
+## Points the outline is sampled at for length, area and click tests.
 const OUTLINE_SAMPLES: int = 24
 
 ## @ace_hidden

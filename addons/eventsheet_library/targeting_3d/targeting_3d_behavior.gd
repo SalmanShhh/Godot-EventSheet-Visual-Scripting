@@ -29,8 +29,7 @@ signal target_lost(why: StringName)
 @export var lock_cone_degrees: float = 60.0
 ## The default reach in metres a lock searches within, and the distance a held lock is lost past.
 @export var lock_range: float = 40.0
-## Whether a wall breaks a lock and hides a target from the assist rows. Off by default, because
-## a raycast per frame is a cost an arena with no cover should not pay.
+## A wall breaks a lock and hides targets when on; costs a raycast per frame.
 @export var require_line_of_sight: bool = false
 ## The physics layers a wall lives on, for the sight ray this pack casts when no Line Of Sight 3D
 ## behaviour is attached to the host.

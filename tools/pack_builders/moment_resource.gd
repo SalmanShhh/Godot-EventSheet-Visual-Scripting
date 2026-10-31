@@ -31,10 +31,10 @@ static func build() -> bool:
 	sheet.class_description = "One felt beat of a game as a file: the steps a hit, a kill, a win, a danger or a calm is made of, each one a word plus how much and how long. Play it with the Juice pack's Moment row, which scales every amount by one number. It is your file - rename it, retune it in the Inspector, share it."
 	sheet.variables = {
 		"moment_name": {"type": "String", "default": "", "exported": true,
-			"attributes": {"tooltip": "What the moment answers to. The Moment row looks a name up among the moments a game has defined, and then among the files beside the Juice pack, so a file called impact.tres is played by Moment \"impact\" with nothing else set up.",
+			"attributes": {"tooltip": "Name this moment is played by.",
 				"header": "Moment", "header_color": "#e8a33d",
 				"info": "One entry in Steps per thing that happens, in order. The words are shake, hitstop, slowmo, flash, punch, zoom, shockwave, chromatic, pulse and hold; pulse and hold also take the name of a post effect."}},
 		"steps": {"type": "Array[Dictionary]", "default": [], "exported": true,
-			"attributes": {"tooltip": "One entry per step, in the order they fire. Each is {\"verb\": one of the step words, \"amount\": how much, \"effect\": the post-effect word for pulse and hold, \"seconds\": how long}."}}
+			"attributes": {"tooltip": "Steps in order: each has a step word, amount, effect and seconds."}}
 	}
 	return Lib.save_pack(sheet, "res://eventsheet_addons/moment_resource/moment_resource")

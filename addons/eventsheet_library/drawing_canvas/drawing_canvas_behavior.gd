@@ -20,20 +20,16 @@ func _enter_tree() -> void:
 @export var canvas_width: int = 512
 ## Canvas texture height in pixels.
 @export var canvas_height: int = 512
-## On: the canvas clears itself every frame - re-issue draw actions each tick (vision
-## cones, telegraphs). Off: strokes accumulate until Clear Canvas (paint, splats).
+## On clears the canvas every frame, so redraw each tick; off keeps strokes until cleared.
 @export var auto_clear: bool = false
-## How draw coordinates are read: world = scene positions (the canvas is centered on
-## the host and follows it); canvas = raw pixels on the texture (0,0 = top-left).
+## Whether draw positions are world scene positions or raw pixels on the canvas texture.
 @export_enum("world", "canvas") var coordinates: String = "world"
 ## Show the canvas on the host (a centered Sprite2D child). Off: the canvas renders
 ## offscreen and you place Canvas Texture wherever you want it.
 @export var display_on_host: bool = true
 
-## A prefab to preview in the 2D EDITOR viewport, drawn at this node so you can position a
-## formation before wiring Draw Prefab. Design aid only - the running game never draws it.
+## Prefab drawn at this node in the editor to place a formation; never drawn in game.
 @export_group("Editor Preview")
-## Prefab drawn as a ghost under the pointer before it is stamped.
 @export var preview_prefab: DrawingPrefabResource = null
 ## Scale of the editor preview.
 @export var preview_scale: float = 1.0

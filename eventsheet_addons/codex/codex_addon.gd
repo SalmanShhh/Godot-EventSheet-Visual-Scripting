@@ -13,16 +13,12 @@ extends Node
 ## @ace_name("On First Discovered")
 signal first_discovered(set_name: String, entry_id: String)
 
-## Where the sets live. A SET is a folder under this one and an ENTRY is a file in that folder, so
-## `res://codex/enemies/slime.tres` is the entry "slime" of the set "enemies". Adding a page means
-## dropping a file in a folder: there is no list anywhere, in this pack or in the editor.
+## Folder of codex sets; each subfolder is a set and each file an entry.
 @export_dir var codex_folder: String = "res://codex"
-## Warns about a Discover into a set with no folder, a discovered entry with no file behind it, and
-## an empty name handed to a row. On while you build, off for release.
+## Warn about codex mistakes such as a set with no folder; turn off for release.
 @export var debug_mode: bool = false
 
-## What has been found, as {set name: {entry id: true}}. A Dictionary per set rather than an array
-## because the only question ever asked of it is whether one entry is in there.
+## Entries found so far, by set name and entry id.
 var _found: Dictionary = {}
 ## One entry's resource, or null when no file answers to that id. Both resource extensions are
 ## tried, so a binary .res entry works exactly like a text .tres one.

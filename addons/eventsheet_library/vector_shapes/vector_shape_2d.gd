@@ -26,8 +26,7 @@ const BLEND_SHADERS: Dictionary = {
 	"premultiplied": "vector_shape_premul.gdshader"
 }
 
-## The dash styles, in the order the shader numbers them - the position in this list IS the number
-## written into the shader, so nothing keeps a second table in step with it.
+## Dash styles in the order the shader numbers them.
 const DASH_STYLES: PackedStringArray = ["plain", "angled", "rounded"]
 
 ## How a dash pattern meets the ends of the line it runs along, in the shader's own order.
@@ -43,8 +42,7 @@ const CAP_STYLES: PackedStringArray = ["none", "square", "round"]
 ## The colour modes, in the shader's own order.
 const COLOUR_MODES: PackedStringArray = ["single", "two", "radial", "angular", "gradient", "per corner"]
 
-## The most points the shader's uniform array holds. A longer outline is Godot's own Polygon2D's
-## job, and the guide says so rather than letting the extra points vanish silently.
+## Most points the shader can hold; longer outlines belong to Polygon2D.
 const MAX_POINTS: int = 32
 
 ## The unit words a thickness may be typed in. Pixels and world units are one to one in Godot's 2D;

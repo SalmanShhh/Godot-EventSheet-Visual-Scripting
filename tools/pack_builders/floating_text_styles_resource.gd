@@ -50,7 +50,7 @@ static func build() -> bool:
 		"lifetimes": {"type": "PackedFloat32Array", "default": [], "exported": true,
 			"attributes": {"tooltip": "How long each manner stays on screen, in seconds."}},
 		"colour_from_damage_type": {"type": "PackedStringArray", "default": [], "exported": true,
-			"attributes": {"tooltip": "The style names whose colour comes from the DAMAGE rather than from this file - the door a typed-damage game opens so a fire number is orange and an ice one blue. Leave it empty and every style keeps its own colour."}}
+			"attributes": {"tooltip": "Style names whose colour comes from the damage type, not this file."}}
 	}
 	var reading: RawCodeRow = RawCodeRow.new()
 	reading.code = "\n".join(PackedStringArray([

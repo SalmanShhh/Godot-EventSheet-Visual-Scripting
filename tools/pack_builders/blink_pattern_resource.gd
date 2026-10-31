@@ -35,6 +35,6 @@ static func build() -> bool:
 				"header": "Blink pattern", "header_color": "#e8a33d",
 				"info": "One entry in Phases per stretch of the rhythm, in order. A phase is on seconds, off seconds and how many times to repeat that pair before the next phase takes over."}},
 		"phases": {"type": "Array[Dictionary]", "default": [], "exported": true,
-			"attributes": {"tooltip": "One entry per stretch of the rhythm, in the order they play. Each is {\"on\": seconds visible, \"off\": seconds hidden, \"count\": how many times}. Six fast winks then two slow ones is two entries."}}
+			"attributes": {"tooltip": "Blink rhythm as steps of seconds visible, seconds hidden and repeat count."}}
 	}
 	return Lib.save_pack(sheet, "res://eventsheet_addons/flash/blink_pattern_resource")

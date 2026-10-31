@@ -17,7 +17,7 @@ static func build() -> bool:
 		"prefab_name": {"type": "String", "default": "marker", "exported": true,
 			"attributes": {"tooltip": "A label for your own reference (the canvas does not read it)."}},
 		"steps": {"type": "Array", "default": [], "exported": true,
-			"attributes": {"tooltip": "The shapes, drawn top to bottom. kind: circle / ring / rect / line / cone / stamp. x,y = the step's offset from the prefab origin. p1,p2,p3 by kind - circle: p1 radius; ring: p1 radius, p2 width; rect: p1 width, p2 height; line: p1,p2 = end offset, p3 width; cone: p1 facing deg, p2 fov deg, p3 radius; stamp: p1 scale, p2 rotation deg (texture = the image path). color: a name or hex like #ff8800.",
+			"attributes": {"tooltip": "The shapes drawn top to bottom: kind, offset and size values for each.",
 				"drawer": "table", "table_columns": [{"name": "kind", "type": "enum", "options": ["circle", "ring", "rect", "line", "cone", "stamp"]}, {"name": "x", "type": "float"}, {"name": "y", "type": "float"}, {"name": "p1", "type": "float"}, {"name": "p2", "type": "float"}, {"name": "p3", "type": "float"}, {"name": "color", "type": "color"}, {"name": "texture", "type": "String"}]}}
 	}
 	# Runtime compiled-steps cache: replaying a prefab across 1000+ stamps must not re-parse strings
@@ -30,8 +30,7 @@ static func build() -> bool:
 		"# Runtime only (not",
 		"# exported, so never serialized). Read ONLY on the main thread (the draw paths); the off-thread",
 		"# thumbnail rasterizer reads the raw steps instead and never calls this.",
-		"## The steps pre-parsed into typed draw entries, cached until the resource changes - so replaying",
-		"## this prefab across many stamps does not re-parse colors/kinds every draw.",
+		"## Steps pre-parsed for drawing, cached until the resource changes.",
 		"var _compiled: Array = []",
 		"## True when the compiled strokes match the current settings.",
 		"var _compiled_valid: bool = false",

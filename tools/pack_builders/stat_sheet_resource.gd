@@ -19,7 +19,7 @@ static func build() -> bool:
 			"attributes": {"tooltip": "The starting value of each stat before any buffs (speed 100, hp 50...).",
 				"drawer": "table", "table_columns": [{"name": "stat", "type": "String"}, {"name": "value", "type": "float"}]}},
 		"buffs": {"type": "Array", "default": [], "exported": true,
-			"attributes": {"tooltip": "One row per buff, applied top to bottom. mode: add / multiply / override (highest override wins). tags: comma-separated labels for bulk removal. source: who applied it. duration: seconds until it expires (0 = permanent).",
+			"attributes": {"tooltip": "One row per buff: mode, tags, source and duration in seconds; 0 is permanent.",
 				"drawer": "table", "table_columns": [{"name": "buff_id", "type": "String"}, {"name": "stat", "type": "String"}, {"name": "value", "type": "float"}, {"name": "mode", "type": "String"}, {"name": "tags", "type": "String"}, {"name": "source", "type": "String"}, {"name": "duration", "type": "float"}]}},
 		"sheet_name": {"type": "String", "default": "loadout", "exported": true,
 			"attributes": {"tooltip": "A label for your own reference (StatForge does not read it).",

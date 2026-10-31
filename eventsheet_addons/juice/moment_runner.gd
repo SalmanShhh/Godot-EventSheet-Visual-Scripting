@@ -25,8 +25,7 @@ extends RefCounted
 # maths is arithmetic - so a moment costs the same on a phone and in a browser as it does on a
 # desktop.
 
-## The clock a wait is measured on. "game" follows Engine.time_scale, so a moment stretches with a
-## slowmo; "real" ignores it, which is what a step after a hitstop wants.
+## Clock word that follows time scale, so slow motion stretches waits.
 const CLOCK_GAME: String = "game"
 ## Clock word: waits run on real time and ignore the time scale.
 const CLOCK_REAL: String = "real"

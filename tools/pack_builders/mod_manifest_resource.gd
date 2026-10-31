@@ -28,7 +28,7 @@ static func build() -> bool:
 	sheet.addon_tags = PackedStringArray(["mods", "resource", "files"])
 	sheet.variables = {
 		"mod_name": {"type": "String", "default": "", "exported": true,
-			"attributes": {"tooltip": "The name the mod is shown and addressed by - what a mod list prints and what Mod Is Loaded, Enable Mod and Unload Mod are given. Leave it blank and the folder's own name is used.",
+			"attributes": {"tooltip": "Name the mod is shown and addressed by; blank uses the folder name.",
 				"header": "Mod", "header_color": "#5f9ea0",
 				"info": "These five fields are the whole manifest. A modder outside Godot writes the same five into a mod.json instead."}},
 		"version": {"type": "String", "default": "1.0", "exported": true,
@@ -36,9 +36,9 @@ static func build() -> bool:
 		"author": {"type": "String", "default": "", "exported": true,
 			"attributes": {"tooltip": "Who made it - the credit line a mod list shows."}},
 		"replaces": {"type": "String", "default": "", "exported": true,
-			"attributes": {"tooltip": "What this mod replaces, in the author's own words (\"the sword icons\", \"res://data/items/sword.tres\"). Nothing reads it: it is the sentence a player reads before switching two mods on together."}},
+			"attributes": {"tooltip": "Plain-words note of what this mod replaces, shown to players; nothing reads it."}},
 		"scripts": {"type": "bool", "default": false, "exported": true,
-			"attributes": {"tooltip": "Tick this when the mod carries code. A data-only load refuses it, and a load that allows code says so in the row. Leaving it false does not hide code: the loader reads the mod's actual files as well."}}
+			"attributes": {"tooltip": "Tick when the mod carries code; a data-only load refuses it."}}
 	}
 	var reading: RawCodeRow = RawCodeRow.new()
 	reading.code = "\n".join(PackedStringArray([

@@ -32,11 +32,11 @@ var last_button_name: String = ""
 var ui_cache: Dictionary = {}
 ## Lag bars that trail behind a bar's value, by bar name.
 var bar_lags: Dictionary = {}
-## The DamageTypeSet this game uses, if it has one. Pop Floating Text As takes a number's colour from it, so a fire number is orange without a colour being typed into the row. Leave it empty and those numbers are drawn white.
+## Damage type set used to colour floating numbers by type; empty uses one colour.
 @export var damage_types: Resource = null
-## How much bigger a number popped with the style "crit" is drawn, when no styles file names that style. The whole language of a critical hit in one number.
+## How much bigger a crit number is drawn when no styles file sets it.
 @export_range(1, 4, 0.1) var crit_text_scale: float = 1.6
-## The FloatingTextStyles file this game uses, if it has one. Pop Floating Text As takes a number's size, colour, rise, shake and lifetime from it, so the manners a number is drawn in are one file you edit rather than five numbers repeated through the sheets. Leave it empty and the numbers are drawn the way they always were.
+## Floating text styles file that sets number size, colour, rise and lifetime.
 @export var text_styles: Resource = null
 
 ## Named-descendant lookup under the host, cached (freed nodes fall out on the next miss).

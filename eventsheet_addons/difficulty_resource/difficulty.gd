@@ -10,7 +10,7 @@ extends Resource
 @export var difficulty_name: String = ""
 ## The line the menu shows under the word - what this difficulty is for, in the player's terms.
 @export var description: String = ""
-## Factor name to the number this difficulty gives it. Any keys at all; a key no difficulty writes reads as 1.0. Each key also shows as its own field above.
+## Number each named factor takes at this difficulty; unlisted factors read 1.
 @export var factors: Dictionary = {}
 
 # Every key of `factors` shows in the Inspector as a field of its own, named and typed by

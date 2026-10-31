@@ -34,19 +34,19 @@ static func build() -> bool:
 	sheet.class_description = "Which picture stands for a control, per device: the keyboard, a generic pad, and the three console layouts. The Prompts director draws the right one automatically and the Glyph For row hands it to anything else. It is your file - draw your own buttons into it, rename it, share it."
 	sheet.variables = {
 		"sheet_name": {"type": "String", "default": "", "exported": true,
-			"attributes": {"tooltip": "What this sheet is called, for your own sake when a project holds more than one - a plain set and a large-print set, say. Nothing looks a sheet up by this name; it is a label.",
+			"attributes": {"tooltip": "Label for this glyph sheet; nothing looks it up by name.",
 				"header": "Sheet", "header_color": "#7c9cf5",
 				"info": "Each device below is a Dictionary of control name to texture: {\"ui_accept\": the picture of that button}. A control missing from the layout in hand falls back to the generic pad, then to the keyboard."}},
 		"keyboard": {"type": "Dictionary", "default": {}, "exported": true,
-			"attributes": {"tooltip": "The keyboard and mouse pictures, by control name: {\"ui_accept\": the Enter key picture}. This is the last fallback, so a control drawn only here still shows something on every device.",
+			"attributes": {"tooltip": "Keyboard and mouse pictures by control name; the last fallback.",
 				"header": "Devices", "header_color": "#5fb37a"}},
 		"pad": {"type": "Dictionary", "default": {}, "exported": true,
-			"attributes": {"tooltip": "The generic gamepad pictures, for a pad whose product name matches none of the three layouts below - and the fallback for a control one of them has not drawn."}},
+			"attributes": {"tooltip": "Generic gamepad pictures, used when a pad matches no layout below."}},
 		"xbox": {"type": "Dictionary", "default": {}, "exported": true,
 			"attributes": {"tooltip": "The pictures for a pad whose product name reads as this layout (A, B, X, Y). Leave it empty and such a pad uses the generic pad's pictures."}},
 		"playstation": {"type": "Dictionary", "default": {}, "exported": true,
-			"attributes": {"tooltip": "The pictures for a pad whose product name reads as this layout (cross, circle, square, triangle). Leave it empty and such a pad uses the generic pad's pictures."}},
+			"attributes": {"tooltip": "Pictures for PlayStation-style pads; empty uses the generic pad."}},
 		"nintendo": {"type": "Dictionary", "default": {}, "exported": true,
-			"attributes": {"tooltip": "The pictures for a pad whose product name reads as this layout (B, A, Y, X - the east-west pair swapped). Leave it empty and such a pad uses the generic pad's pictures."}}
+			"attributes": {"tooltip": "Pictures for Nintendo-style pads; empty uses the generic pad."}}
 	}
 	return Lib.save_pack(sheet, "res://eventsheet_addons/glyph_sheet_resource/glyph_sheet_resource")

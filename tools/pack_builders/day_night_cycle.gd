@@ -31,13 +31,13 @@ static func build() -> bool:
 	sheet.variables = {
 		"day_length_minutes": {"type": "float", "default": 20.0, "exported": true, "attributes": {"tooltip": "How long a whole game day takes in real minutes. 20 is a long exploration day; 2 is a level that races through dusk.", "range": {"min": "0.1", "max": "240", "step": "0.1", "suffix": "min"}}},
 		"sunrise_hour": {"type": "float", "default": 6.0, "exported": true, "attributes": {"tooltip": "The hour the sun reaches the horizon on its way up, on a 24 hour clock. On Sunrise fires as the clock passes it.", "range": {"min": "0", "max": "24", "step": "0.25", "suffix": "h"}}},
-		"sunset_hour": {"type": "float", "default": 19.0, "exported": true, "attributes": {"tooltip": "The hour the sun reaches the horizon on its way down, on a 24 hour clock. Daylight and night are stretched over their own halves of the sun's turn, so noon is overhead whatever these two are set to.", "range": {"min": "0", "max": "24", "step": "0.25", "suffix": "h"}}},
-		"time_of_day": {"type": "float", "default": 8.0, "exported": true, "attributes": {"tooltip": "What time it is now, on a 24 hour clock - 8.5 is half past eight in the morning. Set it here to choose the hour a scene opens on, or from a row with Set The Time.", "range": {"min": "0", "max": "24", "step": "0.01", "suffix": "h"}}},
+		"sunset_hour": {"type": "float", "default": 19.0, "exported": true, "attributes": {"tooltip": "Hour the sun sets on a 24 hour clock; noon stays overhead.", "range": {"min": "0", "max": "24", "step": "0.25", "suffix": "h"}}},
+		"time_of_day": {"type": "float", "default": 8.0, "exported": true, "attributes": {"tooltip": "Current time on a 24 hour clock; 8.5 is half past eight in the morning.", "range": {"min": "0", "max": "24", "step": "0.01", "suffix": "h"}}},
 		"clock_scale": {"type": "float", "default": 1.0, "exported": true, "attributes": {"tooltip": "How many times faster than Day Length Minutes the clock actually runs. 1 is that length exactly, 60 is a time-lapse, 0 stops it.", "range": {"min": "0", "max": "240", "step": "0.1"}}},
 		"sun_brightness": {"type": "Curve", "default": null, "exported": true, "attributes": {"tooltip": "How bright the sun light is through the day, drawn left to right from midnight to midnight. Leave it empty for a plain sunrise-to-sunset arc."}},
-		"ambient_brightness": {"type": "Curve", "default": null, "exported": true, "attributes": {"tooltip": "How bright the environment's ambient light is through the day, midnight to midnight. Leave it empty and night keeps a little ambient light rather than going pitch black."}},
-		"sky_tint_strength": {"type": "Curve", "default": null, "exported": true, "attributes": {"tooltip": "How much daylight the sky itself carries, midnight to midnight: it brightens a 3D background, and lifts a 2D CanvasModulate from the colour the scene was authored with toward full daylight. Leave it empty for the same arc the sun takes."}},
-		"sun_light": {"type": "NodePath", "default": "", "exported": true, "attributes": {"tooltip": "The light that plays the sun. A DirectionalLight3D also turns with the hour; any other light only changes brightness. Leave it empty to drive no light at all.", "node_path_types": ["Light2D", "Light3D"]}},
+		"ambient_brightness": {"type": "Curve", "default": null, "exported": true, "attributes": {"tooltip": "Curve of ambient light through the day; empty keeps a little light at night."}},
+		"sky_tint_strength": {"type": "Curve", "default": null, "exported": true, "attributes": {"tooltip": "Curve of how much daylight the sky carries across the day; empty follows the sun."}},
+		"sun_light": {"type": "NodePath", "default": "", "exported": true, "attributes": {"tooltip": "The light that acts as the sun; a 3D directional light also turns with the hour.", "node_path_types": ["Light2D", "Light3D"]}},
 		"world_lighting": {"type": "NodePath", "default": "", "exported": true, "attributes": {"tooltip": "What the sky is: a WorldEnvironment for a 3D scene, or the CanvasModulate that holds a 2D level's darkness. Leave it empty to drive neither.", "node_path_types": ["WorldEnvironment", "CanvasModulate"]}}
 	}
 	var about: CommentRow = CommentRow.new()
@@ -53,10 +53,11 @@ static func build() -> bool:
 
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
-		"## The whole hour last announced, so On The Hour rings once per hour rather than once per",
-		"## frame, and the colour the CanvasModulate was authored with, which is this level's NIGHT:",
-		"## the cycle lifts the scene's own darkness toward daylight rather than replacing it, so a",
-		"## designer's night colour survives.",
+		"# The whole hour last announced, so On The Hour rings once per hour rather than once per",
+		"# frame, and the colour the CanvasModulate was authored with, which is this level's NIGHT:",
+		"# the cycle lifts the scene's own darkness toward daylight rather than replacing it, so a",
+		"# designer's night colour survives.",
+		"## The whole hour last announced, so On The Hour fires once per hour.",
 		"var _last_hour: int = -1",
 		"## The darkness colour the host had before the cycle took over, restored when it stops.",
 		"var _authored_darkness: Color = Color.WHITE",

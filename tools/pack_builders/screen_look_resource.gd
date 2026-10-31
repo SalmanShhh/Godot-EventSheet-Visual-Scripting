@@ -29,6 +29,6 @@ static func build() -> bool:
 				"header": "Screen Look", "header_color": "#7bc96f",
 				"info": "One entry in Rows per post effect, in the order they are drawn: the first is applied to the screen first and the last one has the last word."}},
 		"rows": {"type": "Array[Dictionary]", "default": [], "exported": true,
-			"attributes": {"tooltip": "One entry per effect, in draw order. Each is {\"called\": a name, \"effect\": one of the effect words, \"strength\": 0 to 1, \"params\": that effect's own dials by uniform name}."}}
+			"attributes": {"tooltip": "One entry per effect, in draw order: name, effect, strength 0 to 1 and settings."}}
 	}
 	return Lib.save_pack(sheet, "res://eventsheet_addons/screen_look_resource/screen_look_resource")

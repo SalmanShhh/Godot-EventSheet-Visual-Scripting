@@ -19,6 +19,12 @@
   emit. A tooltip attribute on a private variable is still an Inspector setting and writes nothing.
 - `pack_variable_docs_test` pins both the compiler change and that no top-level variable or
   constant of a shipped pack script lacks a description.
+- Descriptions are brief: about three hundred that still ran to a paragraph (a design rationale
+  in place of what the variable controls) are one line now, the rationale kept as a plain `#`
+  comment where it was long. `pack_variable_descriptions_test` fails on a description over 160
+  characters, on an enum or enum member a pack declares without one (no shipped pack declares an
+  enum today), and reads six packs back through the importer to prove the note arrives on the row.
+  The state machine pack's `state` says that any name works and Go to state switches it.
 
 ### Fixed: Wave 16 review closure
 

@@ -54,11 +54,11 @@ signal generation_complete
 @export var origin_y: float = 0.0
 ## The value a fresh grid is filled with. It is also what an out-of-bounds Cell Value reads, and the only value Outline Cells is allowed to overwrite.
 @export var empty_value: int = 0
-## The seed the generator starts on. Left empty it derives one from the clock and remembers it, so Current Seed can still show the player a code - but the first run of a session is not reproducible until you call Set Seed.
+## Seed the generator starts on; empty picks one from the clock.
 @export var start_seed: String = ""
-## internal = this pack's own seeded generator. shared = the Advanced Random autoload, so one seed drives every procedural system at once. injected = the queue Inject Random fills, for one audited stream.
+## Where random numbers come from: internal, the shared Advanced Random autoload, or injected values.
 @export_enum("internal", "shared", "injected") var random_source: String = "internal"
-## Warns about walker lifecycles, clamped grid sizes, scatters that could not fit, an injected queue running dry, and the four common reasons a map comes out empty. On while you build, off for release.
+## Warn about walker mistakes and empty maps; turn off for release.
 @export var debug_mode: bool = false
 
 # A heading picks its neighbour by ROUNDING THE DEGREES into

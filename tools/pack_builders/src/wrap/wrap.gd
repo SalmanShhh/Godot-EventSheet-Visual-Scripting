@@ -10,8 +10,7 @@ var host: Node2D = null
 # --- Designer knobs (tune in the Inspector) ---
 ## What to wrap around: the camera's on-screen view, or the custom bounds rectangle.
 @export_enum("screen", "custom") var wrap_space: String = "screen"
-## The custom constraint's SHAPE: a rectangle (wrap across opposite edges) or a circle
-## (wrap to the antipode - leave one side of the arena, glide in from the other).
+## Shape of the custom wrap area: a rectangle or a circle.
 @export_enum("rect", "circle") var wrap_shape: String = "rect"
 ## Circle constraint: the center of the circular arena (world space).
 @export var wrap_circle_center: Vector2 = Vector2(576.0, 324.0)

@@ -8,16 +8,14 @@ extends VectorShape3D
 ## A line between two points in space, drawn as a strip that faces the camera or the node's own plane - the grapple rope, the laser sight, the tether. Caps, a colour at each end, and dashes that scroll.
 
 @export_group("Geometry")
-## How this shape lives in 3D: flat on its own plane, always turned to face the camera, or as real
-## geometry a light and a depth buffer treat like anything else in the scene.
+## How the shape lives in 3D: flat, facing the camera, or real geometry.
 ## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:flat,billboard,volumetric:segmented") var geometry: String = "billboard":
 	set(value):
 		geometry = value
 		notify_property_list_changed()
 		shape_changed()
-## How many sides the volumetric form is built from. Higher is rounder and costs more vertices; it
-## is read only when the shape is volumetric, because a flat one has no vertices to spend.
+## Sides of the volumetric form; higher is rounder and costs more.
 ## @ace_hidden
 @export_range(3, 64, 1) var detail: int = 16:
 	set(value):
@@ -41,16 +39,17 @@ extends VectorShape3D
 		shape_changed()
 
 @export_group("Stroke")
-## How wide the stroke is, in whichever unit the row below says.
+## Stroke width; the dropdown reads it in pixels, world units or screen units.
 ## @ace_hidden
 @export var thickness: float = 0.05:
 	set(value):
 		thickness = value
 		shape_changed()
-## What the number above means: world units are the node's own (a rope five centimetres thick is
-## 0.05), and screen units are PIXELS - the shape keeps that weight however far away the camera is,
-## which is what a range ring or a gizmo line wants. The unit is a mode rather than a view here,
-## because a distance is what turns one into the other and only the camera knows it.
+# What the number above means: world units are the node's own (a rope five centimetres thick is
+# 0.05), and screen units are PIXELS - the shape keeps that weight however far away the camera is,
+# which is what a range ring or a gizmo line wants. The unit is a mode rather than a view here,
+# because a distance is what turns one into the other and only the camera knows it.
+## Whether thickness is in world units or in screen pixels.
 ## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:world,screen:segmented") var thickness_unit: String = "world":
 	set(value):
@@ -117,17 +116,14 @@ extends VectorShape3D
 
 # @inspector_show_if dashed
 @export_group("Dashed")
-## How a dash length is measured: in the node's own units, in multiples of the stroke's own
-## thickness, or not at all - "count" fits a fixed number of dashes to the shape however long it is.
+## How dash length is measured: world units, thickness multiples, or count.
 ## @ace_hidden
 @export_enum("world", "relative", "count") var dash_space: String = "count":
 	set(value):
 		dash_space = value
 		notify_property_list_changed()
 		shape_changed()
-## How the pattern meets the ends: off leaves it wherever it falls, tiling makes it fit the shape a
-## whole number of times, end to end also centres a dash on each end - which is what puts a dash on
-## every corner of a rect and every vertex of a polygon.
+## How dashes meet the ends: off, tiling to fit whole, or end to end.
 ## @ace_hidden
 @export_enum("off", "tiling", "end to end") var dash_snap: String = "tiling":
 	set(value):
@@ -167,16 +163,13 @@ extends VectorShape3D
 		shape_changed()
 
 @export_group("Drawing")
-## How the shape meets what is behind it. These are the five blends the pack compiles a shader for;
-## a volumetric shape reads the same word off its own surface.
+## How the shape blends with what is behind it.
 ## @ace_hidden
 @export_enum("normal", "add", "subtract", "multiply", "premultiplied") var blend: String = "normal":
 	set(value):
 		blend = value
 		shape_changed()
-## Whether the shape is sorted against the world the ordinary way, or drawn over everything in front
-## of it - which is what a gizmo line or a range ring that has to read through a wall wants. Drawing
-## through walls is honest about its cost: it is a second shader, not a flag on the same one.
+## Sort with the world normally, or draw over everything in front.
 ## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:test,through walls:segmented") var depth: String = "test":
 	set(value):

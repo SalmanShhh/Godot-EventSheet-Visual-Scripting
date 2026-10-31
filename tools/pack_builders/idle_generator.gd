@@ -45,7 +45,7 @@ static func build() -> bool:
 		"# re-derives it the same way the Buy verbs do. Calling the refresh from here is safe before",
 		"# the node exists: both are typed, so one read before the other is initialized sees 0 and",
 		"# simply parks the clock, which the second write then corrects.",
-		"## 0 = continuous production (Output Per Second). Above 0 = a fill-and-collect cycle this many seconds long (AdVenture-Capitalist style); read Pending and call Collect.",
+		"## Seconds per fill-and-collect cycle; 0 produces continuously per second.",
 		"@export var cycle_time: float = 0.0:",
 		"\tset(value):",
 		"\t\tcycle_time = value",

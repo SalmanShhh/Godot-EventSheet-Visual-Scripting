@@ -25,17 +25,11 @@ signal chunk_unloading(chunk: Node, cell: Vector2i)
 signal streaming_idle
 
 # --- Designer knobs (tune in the Inspector) ---
-## How big one chunk is, in pixels. A point's cell is the point divided by this and floored,
-## so a world 1024 pixels wide is one cell across at the default and the scene for cell
-## (3, -2) is the file named chunk_3_-2.tscn.
+## Size of one chunk in pixels; cell 3,-2 loads chunk_3_-2.tscn.
 @export var cell_size: Vector2 = Vector2(1024.0, 1024.0)
-## How long one frame may spend taking finished chunks in, in milliseconds. When the budget
-## is spent the rest wait for the next frame, so a fast runner never hitches on the frame
-## three chunks happen to finish together.
+## Milliseconds a frame may spend taking in finished chunks; the rest wait.
 @export var budget_ms: float = 4.0
-## How many rings BEYOND the streaming radius a loaded chunk is kept before it is released.
-## 1 means a player walking back and forth across a cell border never reloads the chunk they
-## just left - the hysteresis a hand-written loader is usually missing.
+## Extra rings of cells beyond the radius kept loaded, so border crossings do not reload.
 @export var keep_radius_cells: int = 1
 ## What the chunk scenes are called: this word, then the cell numbers, joined with "_".
 ## chunk_3_-2.tscn at the default.
@@ -49,8 +43,7 @@ var _around: Node2D = null
 var _radius_cells: int = 0
 ## The folder the chunk scenes are read from, with exactly one trailing slash.
 var _folder: String = ""
-## Whether Stream Chunks Around is currently following anything. Requests already in flight
-## are still finished when this is false, which is what makes Stop Streaming instant.
+## True while Stream Chunks Around follows something.
 var _streaming: bool = false
 ## Cell -> the chunk node in the world. The loaded set, and what Loaded Chunk Count counts.
 var _loaded: Dictionary = {}
@@ -67,22 +60,17 @@ var _absent: Dictionary = {}
 # wanted again the very next frame, which is one engine error per frame for ever and a world
 # that never settles. Stream Chunks Around clears it, so fixing the file and starting again
 # is the way back.
-## Cell -> true for a cell whose scene is there and could not be made into a chunk: the
-## threaded load failed, the loader refused the request, or the file turned out not to be a
-## scene at all.
+## Cells whose scene failed to load, remembered so they are not retried.
 var _refused: Dictionary = {}
 ## Cells the radius wants, nearest ring first, rebuilt every frame from where the followed
 ## node is now.
 var _wanted: Array[Vector2i] = []
-## Cells a ROW asked for by name - Keep Chunk, Preload Chunks Around. They are drained before
-## the radius's own list and are never cleared by it, so a teleport's preload cannot be
-## thrown away by the player taking one step.
+## Cells a row asked for by name, drained before the radius's own list.
 var _asked: Array[Vector2i] = []
 ## Whether On Streaming Idle has already been told about this quiet moment, so it fires once
 ## when the world settles rather than every frame afterwards.
 var _idle_announced: bool = true
-## Whether the "asked before there was a folder" note has been said. Once per streamer: the
-## situation lasts until a row fixes it, and a warning per frame is not a warning.
+## True once the no-folder warning was shown, so it shows once.
 var _said_no_folder: bool = false
 
 
