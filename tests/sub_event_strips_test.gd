@@ -73,8 +73,39 @@ static func _test_strip_fill_and_cut_names() -> bool:
 			["and a point past the column is not the name", view.elided_object_name_at(0, row_data.spans.find(span),
 				Vector2(span.rect.end.x + 500.0, inside.y)), ""],
 		]) and ok
+		ok = _test_cut_name_agrees_with_the_drawn_ellipsis(view, row_data, span) and ok
 	view.free()
 	return ok
+
+
+## A chip cell starts its column after its padding, so a name only a few pixels too wide for the
+## column is drawn "CharacterBo…" - and the hover must read it whole too. Every length from short to
+## long: the hover answers exactly when the renderer's own elide (column less 6 px) cuts the name.
+static func _test_cut_name_agrees_with_the_drawn_ellipsis(view: EventSheetViewport, row_data: EventRowData, span: SemanticSpan) -> bool:
+	var metadata: Dictionary = span.metadata
+	metadata["chip"] = true
+	metadata["padding_x"] = 8.0
+	var column: float = float(metadata.get("object_column_px", 0.0))
+	var font: Font = view._get_font()
+	var draw_size: int = view._span_draw_font_size(span, view._get_font_size())
+	var inside: Vector2 = Vector2(span.rect.position.x + 12.0, span.rect.get_center().y)
+	var disagreements: PackedStringArray = PackedStringArray()
+	var cut_seen: int = 0
+	var name: String = ""
+	for letter: String in "CharacterBody2DWithAVeryLongTailIndeed".split(""):
+		name += letter
+		metadata["object_label"] = name
+		var drawn_cut: bool = EventRowRenderer._elide(name, column - 6.0, font, draw_size) != name
+		var hover: String = view.elided_object_name_at(0, row_data.spans.find(span), inside)
+		if drawn_cut:
+			cut_seen += 1
+		if (hover == name) != drawn_cut:
+			disagreements.append(name)
+	return SUPPORT.pins(TEST_NAME, [
+		["the column is stamped by the layout", column > 0.0, true],
+		["some of the names are cut by the column", cut_seen > 0, true],
+		["the hover reads a name whole exactly when the drawn name ends in an ellipsis", ", ".join(disagreements), ""],
+	])
 
 
 static func _test_token() -> bool:

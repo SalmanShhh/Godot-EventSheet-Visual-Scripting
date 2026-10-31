@@ -4725,9 +4725,17 @@ func elided_object_name_at(row_index: int, span_index: int, logical: Vector2) ->
 	var text_origin: float = _span_text_origin_x(span, font, font_size)
 	if logical.x < span.rect.position.x or logical.x >= text_origin:
 		return ""
-	var icon_room: float = EventRowRenderer.OBJECT_ICON_ADVANCE if (span.metadata as Dictionary).get("object_icon") is Texture2D else 0.0
-	var limit: float = text_origin - span.rect.position.x - icon_room - 6.0
-	if font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, _span_draw_font_size(span, font_size)).x <= limit:
+	# The column starts where the renderer starts it: after a chip's padding and the icon. Its limit is
+	# the column less 6 px, the very number the renderer elides to, so the hover and the "…" agree.
+	var metadata: Dictionary = span.metadata as Dictionary
+	var column_start: float = span.rect.position.x
+	if bool(metadata.get("chip", false)):
+		column_start += float(metadata.get("padding_x", 0.0))
+	if metadata.get("object_icon") is Texture2D:
+		column_start += EventRowRenderer.OBJECT_ICON_ADVANCE
+	var limit: float = text_origin - column_start - 6.0
+	var draw_size: int = _span_draw_font_size(span, font_size)
+	if EventRowRenderer._elide(label, limit, font, draw_size) == label:
 		return ""
 	return label
 
