@@ -4330,7 +4330,20 @@ static func _type_condition(text: String, context: Dictionary) -> Dictionary:
 		return {}
 	if subject == "self":
 		subject = script_object(context)
-	return _sentence(object_of_reference(subject), "is a {type}", {"type": [type_name, "chip"]})
+	return _sentence(object_of_reference(subject), "is %s {type}" % indefinite_article(type_name), {"type": [type_name, "chip"]})
+
+
+## "a" or "an" for a class name, by how it is SAID: Enemy and Area2D take "an", Node2D and Unit take "a"
+## (a leading U that sounds like "you" - Unit, User, UI, UV - keeps "a").
+static func indefinite_article(word: String) -> String:
+	if word.is_empty():
+		return "a"
+	var first: String = word.substr(0, 1).to_upper()
+	if first == "U":
+		# Uni, Use, UI, UV, Ur sound like "you"; Umbrella, Ugly sound like "uh".
+		var sound: String = word.substr(1, 1).to_lower()
+		return "a" if sound in "nsirv" or word.length() < 2 else "an"
+	return "an" if first in "AEIO" else "a"
 
 
 ## `in` asks three different questions in GDScript, and there is a different row for each. Which

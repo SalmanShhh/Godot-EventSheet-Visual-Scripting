@@ -257,7 +257,7 @@ static func _condition_values() -> bool:
 	for pair: Array in [
 		# What an object IS, what a table or a list HOLDS, what an object HAS
 		["body is Player", "body ▸ is a Player"],
-		["$Hurtbox is Area2D", "Hurtbox ▸ is a Area2D"],
+		["$Hurtbox is Area2D", "Hurtbox ▸ is an Area2D"],
 		["\"potion\" in inventory", "System ▸ inventory has key \"potion\""],
 		["x in [1, 2, 3]", "System ▸ x is one of 1, 2, 3"],
 		["x in wave", "System ▸ wave contains x"],

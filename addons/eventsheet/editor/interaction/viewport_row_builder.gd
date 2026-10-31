@@ -19816,6 +19816,11 @@ func grammar_condition_sentence(condition: ACECondition) -> Dictionary:
 		"IsSameObject":
 			return EventSheetSentence.condition("%s == %s" % [
 				str(params_dict.get("a", "")), str(params_dict.get("b", ""))], context)
+		# The type test reads on the value being asked about ("body | is an Enemy"), the same sentence a
+		# hand-written `body is Enemy` has, so an authored row and a reopened file are one reading.
+		"IsAKindOf":
+			return EventSheetSentence.condition("%s is %s" % [
+				str(params_dict.get("value", "")), str(params_dict.get("kind", ""))], context)
 		"CompareVar":
 			# Only the null comparisons have an event-sheet sentence ("host does not exist"); every other
 			# operator already reads as the comparison it is, so the grammar hands those straight back.

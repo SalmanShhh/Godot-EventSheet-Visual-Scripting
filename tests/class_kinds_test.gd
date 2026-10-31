@@ -47,6 +47,23 @@ static func run() -> bool:
 		if row is EventRow and not (row as EventRow).conditions.is_empty():
 			lifted = str((row as EventRow).conditions[0].ace_id)
 	ok = SUPPORT.check("class_kinds_test", "a reopened file keeps the type test in its own reading, not as this verb", lifted != "IsAKindOf", true) and ok
+	ok = SUPPORT.pins("class_kinds_test", [
+		["a class said with a vowel takes an", EventSheetSentence.indefinite_article("Enemy"), "an"],
+		["an engine class that starts with A takes an", EventSheetSentence.indefinite_article("Area2D"), "an"],
+		["a consonant takes a", EventSheetSentence.indefinite_article("Node2D"), "a"],
+		["a U said like you takes a", EventSheetSentence.indefinite_article("Unit"), "a"],
+		["a U said like uh takes an", EventSheetSentence.indefinite_article("Umbrella"), "an"],
+		["a typed test reads with the article of its class", EventSheetSentence.condition("body is Enemy", {}).get("segments", [])[0].get("text", ""), "is an "],
+	]) and ok
+	var kind_row: ACECondition = ACECondition.new()
+	kind_row.provider_id = "Core"
+	kind_row.ace_id = "IsAKindOf"
+	kind_row.params = {"value": "body", "kind": "Enemy"}
+	var shown: Dictionary = ViewportRowBuilder.new().grammar_condition_sentence(kind_row)
+	ok = SUPPORT.pins("class_kinds_test", [
+		["the authored row reads on the value", shown.get("object", ""), "body"],
+		["the authored row says is an", (shown.get("segments", [{}])[0] as Dictionary).get("text", ""), "is an "],
+	]) and ok
 	ok = run_kinds() and ok
 	ok = SUPPORT.pins("class_kinds_test", [
 		["an empty kind-of field is fine", EventSheetNewSheetDialog.kind_problem_text(""), ""],

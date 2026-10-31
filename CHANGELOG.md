@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Fixed: type tests read with the right article
+
+- "Is a kind of" reads on the value being asked about, `body | is an Enemy`, and says "an" before a
+  class said with a vowel (Enemy, Area2D) and "a" before the rest (Node2D, Unit). A row authored from
+  the picker and the same line reopened from a file are one reading; the bytes written are unchanged.
+
 ### Fixed: Wave 16 review closure
 
 - The vocabulary reference (`EVENTSHEETS-VOCABULARY.md`) lists every pack verb again. The
