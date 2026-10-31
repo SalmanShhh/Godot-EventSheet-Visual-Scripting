@@ -13,8 +13,7 @@ const RECT_NAME: String = "Screen"
 # A rectangle whose dials all read these draws the screen back exactly as it arrived,
 # which is the moment it is worth switching off. fade_color and shock_center are not here:
 # they say what an effect looks like rather than whether one is happening.
-## Every dial screen_fx.gdshader declares that can be RUNNING, with the value that means it is
-## not.
+## Every dial screen_fx.gdshader declares that can be RUNNING, with the value that means it is not.
 const AT_REST: Dictionary = {"blur": 0.0, "fade_amount": 0.0, "shock_strength": 0.0, "chromatic": 0.0}
 
 ## Seconds a shockwave ring takes to cross the screen.
@@ -125,8 +124,7 @@ const LOOK_SCRIPT: String = "res://eventsheet_addons/screen_look_resource/screen
 # enabled   whether it draws at all
 # params    the effect's own dials, by the uniform name the shader declares
 # rect      the full-screen ColorRect wearing it, once there is one
-## THE STACK, in the order the effects are drawn: the first entry is applied to the screen first and
-## the last one has the last word.
+## THE STACK, in the order the effects are drawn: the first entry is applied to the screen first and the last one has the last word.
 var _stack: Array[Dictionary] = []
 
 ## The shaders loaded so far, by effect word. A project that only ever uses a vignette loads one.

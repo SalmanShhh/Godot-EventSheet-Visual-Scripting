@@ -6,14 +6,12 @@ extends "res://tools/pack_builders/src/vector_shapes_3d/vector_shape_3d.gd"
 #region rect_3d_geometry
 # @inspector_preview
 @export_group("Rect")
-## How big the rectangle is, in the node's own units. It is centred on the node's origin, so
-## rotating the node turns it about its middle.
+## How big the rectangle is, in the node's own units. It is centred on the node's origin, so rotating the node turns it about its middle.
 @export var size: Vector2 = Vector2(1.0, 0.6):
 	set(value):
 		size = value
 		shape_changed()
-## How round the four corners are, clockwise from the top-left. One box while they agree, four when
-## they should not.
+## How round the four corners are, clockwise from the top-left. One box while they agree, four when they should not.
 ## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:corners") var corner_radius: Vector4 = Vector4.ZERO:
 	set(value):

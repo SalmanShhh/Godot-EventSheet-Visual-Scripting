@@ -140,8 +140,7 @@ const RASTER_ARC_SEGMENTS: int = 64
 # Both are small on purpose: a canvas that has finished with two hundred styles
 # must not go on paying for two hundred nodes, and a style that comes back a frame later must not
 # pay to rebuild one.
-## How many draws a batch may sit out before its node is shelved for re-use, and how many shelved
-## nodes are kept.
+## How many draws a batch may sit out before its node is shelved for re-use, and how many shelved nodes are kept.
 const BATCH_IDLE_DRAWS: int = 2
 ## How many idle batches are kept for reuse before the oldest is freed.
 const BATCH_SHELF_LIMIT: int = 8

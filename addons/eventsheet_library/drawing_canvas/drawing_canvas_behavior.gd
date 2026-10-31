@@ -24,8 +24,7 @@ func _enter_tree() -> void:
 @export var auto_clear: bool = false
 ## Whether draw positions are world scene positions or raw pixels on the canvas texture.
 @export_enum("world", "canvas") var coordinates: String = "world"
-## Show the canvas on the host (a centered Sprite2D child). Off: the canvas renders
-## offscreen and you place Canvas Texture wherever you want it.
+## Show the canvas on the host (a centered Sprite2D child). Off: the canvas renders offscreen and you place Canvas Texture wherever you want it.
 @export var display_on_host: bool = true
 
 ## Prefab drawn at this node in the editor to place a formation; never drawn in game.

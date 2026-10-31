@@ -37,14 +37,12 @@ const FALLOFF_SMOOTH: String = "smooth"
 ## Falloff word: full strength everywhere inside the range.
 const FALLOFF_NONE: String = "none"
 
-## The project-wide answer to "this player has asked for no flashing", spelled the same here as
-## everywhere else that reads it.
+## The project-wide answer to "this player has asked for no flashing", spelled the same here as everywhere else that reads it.
 const NO_FLASHING_META: StringName = &"no_flashing"
 
 # Same numbers the moment layer already holds itself to:
 # the hit still hits, it just cannot strobe.
-## The ceiling every amount a player SEES is held under while no flashing is on, and the floor
-## every one of those times is held over.
+## The ceiling every amount a player SEES is held under while no flashing is on, and the floor every one of those times is held over.
 const FLASH_CEILING: float = 0.3
 ## Shortest a flash may last while no-flashing is on, in seconds.
 const FLASH_FLOOR_SECONDS: float = 0.4
@@ -70,15 +68,13 @@ const ONE_WAY_VERBS: PackedStringArray = ["shake", "hitstop", "punch", "shockwav
 # ONE list, here, because a moment has three homes - a block of rows, a moment file, and the
 # list a feedback node holds - and a word held to the ceiling in one of them and not in another
 # would be a different beat depending on where somebody wrote it down.
-## The step words whose amount is an AMPLITUDE - how much of something a player SEES, from none
-## of it to all of it.
+## The step words whose amount is an AMPLITUDE - how much of something a player SEES, from none of it to all of it.
 const AMPLITUDE_VERBS: PackedStringArray = ["shake", "flash", "punch", "shockwave",
 	"chromatic", "pulse", "hold"]
 
 # A post effect's key carries the effect's own
 # name after the prefix, because a moment may hold several of them at once.
-## The names the values a moment writes are kept under, so the beat that recorded one and the row
-## that puts it back are spelling the same thing.
+## The names the values a moment writes are kept under, so the beat that recorded one and the row that puts it back are spelling the same thing.
 const TOUCH_HOST_TINT: String = "host tint"
 ## Touch word: the step changes the host's scale.
 const TOUCH_HOST_SCALE: String = "host scale"
@@ -150,8 +146,7 @@ static func _tree(host: Node) -> SceneTree:
 # count the same number: a beat counted as instant is over in the book while the flash it
 # started is still on the screen, which turns On Moment Finished into a lie and makes Revert
 # impossible for exactly as long as there is something to revert.
-## The shortest a step of these words really lasts when its card asks for 0 - "let it use its
-## own natural length".
+## The shortest a step of these words really lasts when its card asks for 0 - "let it use its own natural length".
 const NATURAL_SECONDS: float = 0.05
 ## Steps that already have a length of their own, so a moment does not stretch them.
 const NATURALLY_TIMED_VERBS: PackedStringArray = ["flash", "punch", "zoom", "chromatic", "pulse"]

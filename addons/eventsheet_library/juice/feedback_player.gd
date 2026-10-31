@@ -148,8 +148,7 @@ var _rolls: Dictionary = {}
 var _restore_to: Array = []
 # Without the handle the tween goes on writing over the restored value the very next frame,
 # which is a Restore that visibly does nothing.
-## The tweens this player started, so a Revert or a Restore can stop them before it puts a value
-## back.
+## The tweens this player started, so a Revert or a Restore can stop them before it puts a value back.
 var _tweens: Array[Tween] = []
 
 ## Players this play started through a Play Player card; they follow it.
@@ -224,8 +223,7 @@ var _held: bool = false
 ## Label of the card a Jump To Feedback asked to carry on from, or empty.
 var _jump_to: String = ""
 
-## When this play began, on the wall clock, so one card's own progress can be answered without a
-## tick running to count it.
+## When this play began, on the wall clock, so one card's own progress can be answered without a tick running to count it.
 var _started_at: float = 0.0
 
 ## @ace_action

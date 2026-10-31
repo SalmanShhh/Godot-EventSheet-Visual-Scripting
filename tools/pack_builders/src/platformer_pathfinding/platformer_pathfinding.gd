@@ -57,11 +57,9 @@ var _gravity_angle_warned: bool = false
 var _nodes: Dictionary = {}
 ## Links out of each cell: target, kind (walk, jump, fall, portal) and cost.
 var _edges: Dictionary = {}
-## The obstacle map the last build read: cell -> "solid" / "jump_thru" / "slope_left" /
-## "slope_right". Clear cells are simply absent.
+## The obstacle map the last build read: cell -> "solid" / "jump_thru" / "slope_left" / "slope_right". Clear cells are simply absent.
 var _states: Dictionary = {}
-## Hand-set tile states (Set Tile State, Load Obstacle Map JSON) layered over the scan; they
-## survive Regenerate. "clear" erases whatever the scan found.
+## Hand-set tile states (Set Tile State, Load Obstacle Map JSON) layered over the scan; they survive Regenerate. "clear" erases whatever the scan found.
 var _tile_overrides: Dictionary = {}
 ## Tile states scanned from collision bodies (Scan Collision Bodies); they survive Regenerate.
 var _body_states: Dictionary = {}
@@ -71,8 +69,7 @@ var _custom_grid: bool = false
 var _custom_size: Vector2i = Vector2i.ZERO
 ## Where the tile grid starts, in pixels.
 var _grid_origin: Vector2 = Vector2.ZERO
-## The active path: Array of {"world": Vector2, "action": String, "cell": Vector2i} (portal
-## waypoints also carry "portal_id").
+## The active path: Array of {"world": Vector2, "action": String, "cell": Vector2i} (portal waypoints also carry "portal_id").
 var _path: Array = []
 ## Which point of the route the host is heading for.
 var _path_index: int = 0
@@ -92,8 +89,7 @@ var _move_axis: float = 0.0
 var _debug_line: Line2D = null
 ## Node that draws the whole search graph when debug drawing is on.
 var _debug_graph: Node2D = null
-## Registered portals: {"id", "from", "to", "both", "type" ("instant"/"gradual"), "cost",
-## "speed", "tag", "ignore_hazards"} - they survive regenerate.
+## Registered portals: {"id", "from", "to", "both", "type" ("instant"/"gradual"), "cost", "speed", "tag", "ignore_hazards"} - they survive regenerate.
 var _portals: Array = []
 ## Id given to the next portal that is added.
 var _next_portal_id: int = 1
@@ -119,8 +115,7 @@ var _portal_to: Vector2 = Vector2.ZERO
 var _portal_progress: float = 0.0
 # Applied at ROUTING time (no rebuild needed when they change):
 # deadly blocks links outright, danger multiplies their cost.
-## World-space hazards: {"id", "kind" ("rect"/"circle"/"tracked"), "rect" or "center"/"radius"
-## or "node"/"radius", "deadly"}.
+## World-space hazards: {"id", "kind" ("rect"/"circle"/"tracked"), "rect" or "center"/"radius" or "node"/"radius", "deadly"}.
 var _hazards: Array = []
 ## Id given to the next hazard that is added.
 var _next_hazard_id: int = 1

@@ -21,16 +21,14 @@ extends VectorShape3D
 	set(value):
 		height = value
 		shape_changed()
-## Closes the wide end. An open cone is a funnel you can see up, which is what a spotlight volume
-## wants; a closed one is a solid.
+## Closes the wide end. An open cone is a funnel you can see up, which is what a spotlight volume wants; a closed one is a solid.
 @export var capped: bool = true:
 	set(value):
 		capped = value
 		shape_changed()
 
 @export_group("Surface")
-## The shape's colour. A solid wrapper is real geometry drawn unshaded, so this is the colour on
-## screen rather than a tint a light has an opinion about.
+## The shape's colour. A solid wrapper is real geometry drawn unshaded, so this is the colour on screen rather than a tint a light has an opinion about.
 ## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:swatch_row") var colour: Color = Color("#e6e6e6"):
 	set(value):

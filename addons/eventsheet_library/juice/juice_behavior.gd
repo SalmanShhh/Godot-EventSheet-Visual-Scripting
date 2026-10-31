@@ -346,8 +346,7 @@ var _chroma_shake_active: bool = false
 
 # They are ordinary files - retune them in the Inspector, rename them,
 # duplicate them, delete them, or leave them where they are and point Define Moment at your own.
-## Where the starter moments ship: beside the pack itself, so Moment "impact" finds impact.tres with
-## nothing set up at all.
+## Where the starter moments ship: beside the pack itself, so Moment "impact" finds impact.tres with nothing set up at all.
 const MOMENT_DIRECTORY: String = "res://eventsheet_addons/juice/"
 
 # Looked in FIRST, so a project moment called
@@ -409,8 +408,7 @@ var _moment_screen: CanvasLayer = null
 # Once per scene rather than once per step: a moment that plays on
 # every hit would otherwise write the same sentence sixty times a second, which is how a warning
 # stops being read at all.
-## Whether this behaviour has already said that a step wanted the post stack and this game has none,
-## and WHICH SCENE it said it in.
+## Whether this behaviour has already said that a step wanted the post stack and this game has none, and WHICH SCENE it said it in.
 var _moment_told_screen: bool = false
 ## Scene a moment was last announced for, so it is announced once.
 var _moment_told_scene: Node = null
@@ -474,8 +472,7 @@ var _moment_plays: Dictionary = {}
 
 # It outlives the play on purpose: Restore Moment Values is asked on the way out of a
 # level, long after the beat that moved something has ended.
-## What every moment this node has played found its values at, the FIRST time it touched each
-## one.
+## What every moment this node has played found its values at, the FIRST time it touched each one.
 var _moment_ledger: Dictionary = {}
 
 ## Whether the last play of each name finished or was ended early.

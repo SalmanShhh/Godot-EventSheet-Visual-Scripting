@@ -61,8 +61,7 @@ extends VectorShape3D
 		shape_changed()
 
 @export_group("Colour")
-## The shape's colour - the whole of it in single mode, and the first end of the blend in every
-## other mode.
+## The shape's colour - the whole of it in single mode, and the first end of the blend in every other mode.
 ## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:swatch_row") var colour: Color = Color("#e6e6e6"):
 	set(value):
@@ -86,16 +85,14 @@ extends VectorShape3D
 	set(value):
 		colour_d = value
 		shape_changed()
-## The ramp a gradient shape is coloured with - Godot's own Gradient resource, edited in Godot's own
-## gradient editor.
+## The ramp a gradient shape is coloured with - Godot's own Gradient resource, edited in Godot's own gradient editor.
 ## @ace_hidden
 @export var gradient: Gradient = null:
 	set(value):
 		gradient = value
 		shape_changed()
 
-## Fills the shape rather than drawing only its outline. A filled shape draws its BORDER instead of
-## its stroke, so the two can never sit a unit apart.
+## Fills the shape rather than drawing only its outline. A filled shape draws its BORDER instead of its stroke, so the two can never sit a unit apart.
 ## @ace_hidden
 @export var fill: bool = false:
 	set(value):
@@ -137,8 +134,7 @@ extends VectorShape3D
 	set(value):
 		depth = value
 		shape_changed()
-## How wide the fade at an edge is, in pixels. One pixel is a crisp edge at any distance; wider is a
-## deliberate glow; zero is a hard, aliased edge.
+## How wide the fade at an edge is, in pixels. One pixel is a crisp edge at any distance; wider is a deliberate glow; zero is a hard, aliased edge.
 ## @ace_hidden
 @export_range(0.0, 4.0, 0.1) var antialias_width: float = 1.0:
 	set(value):

@@ -153,8 +153,7 @@ static func build() -> bool:
 ## curves a game should have.
 static func _along_lines() -> PackedStringArray:
 	return PackedStringArray([
-		"## The curve tween in flight, kept so a second row on the same property replaces it rather",
-		"## than fighting it.",
+		"## The curve tween in flight, kept so a second row on the same property replaces it rather than fighting it.",
 		"var _along_tween: Tween = null",
 		"",
 		"# Only ever written once per property, which is what makes Tween Property Back exact however",

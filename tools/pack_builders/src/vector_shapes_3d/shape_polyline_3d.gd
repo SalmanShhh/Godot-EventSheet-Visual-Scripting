@@ -6,8 +6,7 @@ extends "res://tools/pack_builders/src/vector_shapes_3d/vector_shape_3d.gd"
 # @inspector_preview
 # @inspector_handle points points
 @export_group("Polyline")
-## The points the path runs through, in the node's own coordinates. Each one is a handle in the 3D
-## viewport while the node is selected.
+## The points the path runs through, in the node's own coordinates. Each one is a handle in the 3D viewport while the node is selected.
 ## @ace_hidden
 @export var points: PackedVector3Array = PackedVector3Array([
 	Vector3(-0.7, 0.25, 0.0), Vector3(-0.2, -0.35, 0.0), Vector3(0.35, 0.2, 0.0), Vector3(0.8, -0.25, 0.0)

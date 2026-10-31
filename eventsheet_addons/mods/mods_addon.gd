@@ -26,8 +26,7 @@ signal mods_changed
 @export var mods_folder: String = "user://mods"
 # A mod is ON unless its name is in that list, so a mod the
 # player has never seen arrives enabled.
-## The setting the switched-off mods are remembered under, when the project has the Game Settings
-## autoload registered as Settings.
+## The setting the switched-off mods are remembered under, when the project has the Game Settings autoload registered as Settings.
 @export var settings_key: String = "disabled_mods"
 ## Warn about missing folders, manifests and clashing names; turn off for release.
 @export var debug_mode: bool = false
@@ -86,8 +85,7 @@ const SHADER_INCLUDE_TYPE: String = "ShaderInclude"
 # comes from the resource loader itself, which means it is the list of the engine the game actually
 # ships with rather than the list of the engine this was written against. Asked once and kept,
 # because it cannot change while the game runs.
-## Every extension the engine reads as a RESOURCE TABLE: a scene or a resource, saved as text or in
-## the binary form.
+## Every extension the engine reads as a RESOURCE TABLE: a scene or a resource, saved as text or in the binary form.
 var _resource_extension_cache: PackedStringArray = PackedStringArray()
 
 # A file that begins with neither is
@@ -98,8 +96,7 @@ const RESOURCE_HEADS: Array[String] = ["[gd_scene", "[gd_resource"]
 
 # Read as a tail rather than as a list, because a
 # script type this reading has never heard of is exactly the one a crafted file would name.
-## The two tags a resource table names other resources with, and the tail every script type's name
-## ends in - `Script`, `GDScript`, `CSharpScript`.
+## The two tags a resource table names other resources with, and the tail every script type's name ends in - `Script`, `GDScript`, `CSharpScript`.
 const RESOURCE_TAGS: Array[String] = ["ext_resource", "sub_resource"]
 ## Ending of a resource type name that marks it as a script.
 const SCRIPT_TYPE_TAIL: String = "Script"
@@ -118,8 +115,7 @@ const BUILDING_MAKERS: Array[String] = ["Object(", "Resource("]
 # finds in one, so a type spelled with an escape in the middle of it is `GDScript` to the engine
 # and something else to a reading that compares the letters as written. And `res://../payload.gd`
 # begins with `res://` and names a file beside the project. Neither is second-guessed.
-## The one glyph a resource tag may not carry, and the one spelling a path may climb out of a
-## folder with.
+## The one glyph a resource tag may not carry, and the one spelling a path may climb out of a folder with.
 const ESCAPE_GLYPH: String = "\\"
 ## Path part that climbs out of a folder; refused so a mod cannot reach outside its own folder.
 const CLIMB_OUT: String = ".."
@@ -150,8 +146,7 @@ const PACK_ENTRY_ENCRYPTED: int = 1
 # Both are stated rather than felt: a mod is somebody else's folder, so the walk that decides
 # whether it may be taken needs an end - and a walk that ENDED EARLY has cleared nothing it did not
 # reach, which is why hitting either limit refuses the mod instead of passing it.
-## How deep a mod's own folders are walked, and how many of its files are listed, before the walk
-## stops.
+## How deep a mod's own folders are walked, and how many of its files are listed, before the walk stops.
 const MOST_FOLDER_DEPTH: int = 16
 ## Most files read from one mod folder before it is cut off.
 const MOST_FOLDER_FILES: int = 20000

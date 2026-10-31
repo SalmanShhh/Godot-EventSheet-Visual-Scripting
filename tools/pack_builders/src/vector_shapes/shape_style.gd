@@ -31,15 +31,13 @@ extends Resource
 	set(value):
 		thickness = value
 		emit_changed()
-## Whether the stroke follows the node's own scale, or keeps the weight it has on screen however far
-## the camera zooms.
+## Whether the stroke follows the node's own scale, or keeps the weight it has on screen however far the camera zooms.
 ## @ace_hidden
 @export_enum("with the node", "fixed on screen") var thickness_scale: String = "with the node":
 	set(value):
 		thickness_scale = value
 		emit_changed()
-## What the two ends of a stroke look like: cut off, squared off half a thickness past the end, or
-## rounded.
+## What the two ends of a stroke look like: cut off, squared off half a thickness past the end, or rounded.
 ## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:none,square,round:segmented") var caps: String = "round":
 	set(value):

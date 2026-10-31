@@ -31,14 +31,11 @@ static func build() -> bool:
 	# still open as variable rows - the importer lifts every `@export var` line into one.
 	var block: RawCodeRow = RawCodeRow.new()
 	var lines: PackedStringArray = PackedStringArray([
-		"## The dimmest and brightest the light gets, as a pair. The wave spends most of its time",
-		"## near the middle of the two and only touches the ends.",
+		"## The dimmest and brightest the light gets, as a pair. The wave spends most of its time near the middle of the two and only touches the ends.",
 		"@export var between: Vector2 = Vector2(0.6, 1.4)",
-		"## How long one whole breath takes - dim to bright and back again. Two seconds reads as calm;",
-		"## a quarter of a second reads as an alarm.",
+		"## How long one whole breath takes - dim to bright and back again. Two seconds reads as calm; a quarter of a second reads as an alarm.",
 		"@export_range(0.05, 60, 0.05) var period_seconds: float = 2.0",
-		"## Whether the pulse is running right now. On means it starts breathing the moment the scene",
-		"## does.",
+		"## Whether the pulse is running right now. On means it starts breathing the moment the scene does.",
 		"@export var running: bool = true:",
 		"\tset(value):",
 		"\t\trunning = value",

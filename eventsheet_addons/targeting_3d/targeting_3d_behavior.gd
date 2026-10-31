@@ -24,18 +24,15 @@ signal target_lost(why: StringName)
 # --- Designer knobs (tune in the Inspector) ---
 ## The group the assist rows search when a row names none - the hostiles this node aims at.
 @export var target_group: StringName = &"enemies"
-## The default cone width in degrees, centred on the camera's forward, that Lock On To Nearest
-## searches when a row leaves its own cone at 0.
+## The default cone width in degrees, centred on the camera's forward, that Lock On To Nearest searches when a row leaves its own cone at 0.
 @export var lock_cone_degrees: float = 60.0
 ## The default reach in metres a lock searches within, and the distance a held lock is lost past.
 @export var lock_range: float = 40.0
 ## A wall breaks a lock and hides targets when on; costs a raycast per frame.
 @export var require_line_of_sight: bool = false
-## The physics layers a wall lives on, for the sight ray this pack casts when no Line Of Sight 3D
-## behaviour is attached to the host.
+## The physics layers a wall lives on, for the sight ray this pack casts when no Line Of Sight 3D behaviour is attached to the host.
 @export_flags_3d_physics var blocker_mask: int = 1
-## How much Magnetism slows a turn while the aim is crossing a target: 1 is no slowing at all,
-## 0 stops the turn dead. Half is the usual gentle drag.
+## How much Magnetism slows a turn while the aim is crossing a target: 1 is no slowing at all, 0 stops the turn dead. Half is the usual gentle drag.
 @export var magnetism_slowdown: float = 0.5
 
 # --- Internal state ---

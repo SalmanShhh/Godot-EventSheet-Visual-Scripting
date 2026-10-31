@@ -37,8 +37,7 @@ extends RefCounted
 # packs, in the folder that is the project's own, so deleting the editor addon leaves every emitted
 # line that names it still parsing and still running. That is the whole reason the rows can call it.
 
-## How many points to roll before answering nothing. The rows offer their own field; this is what a
-## call that leaves it out uses.
+## How many points to roll before answering nothing. The rows offer their own field; this is what a call that leaves it out uses.
 const DEFAULT_TRIES: int = 24
 
 ## The ceiling on one clearance query. A point standing in a crowd is refused by the first hit, so

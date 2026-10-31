@@ -15,8 +15,7 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("GrayscaleBehavior behavior requires a CanvasItem parent.")
 
-## The dial grayscale.gdshader drains along, named once so a rename there is a one-line change
-## here. 0 is full colour, 1 is fully grey.
+## The dial grayscale.gdshader drains along, named once so a rename there is a one-line change here. 0 is full colour, 1 is fully grey.
 const GREY_DIAL: String = "grayscale"
 
 # Give this node its own copy of the material before anything turns a dial on it. A material

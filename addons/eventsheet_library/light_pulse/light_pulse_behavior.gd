@@ -15,14 +15,11 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("LightPulseBehavior behavior requires a Node parent.")
 
-## The dimmest and brightest the light gets, as a pair. The wave spends most of its time
-## near the middle of the two and only touches the ends.
+## The dimmest and brightest the light gets, as a pair. The wave spends most of its time near the middle of the two and only touches the ends.
 @export var between: Vector2 = Vector2(0.6, 1.4)
-## How long one whole breath takes - dim to bright and back again. Two seconds reads as calm;
-## a quarter of a second reads as an alarm.
+## How long one whole breath takes - dim to bright and back again. Two seconds reads as calm; a quarter of a second reads as an alarm.
 @export_range(0.05, 60, 0.05) var period_seconds: float = 2.0
-## Whether the pulse is running right now. On means it starts breathing the moment the scene
-## does.
+## Whether the pulse is running right now. On means it starts breathing the moment the scene does.
 @export var running: bool = true:
 	set(value):
 		running = value

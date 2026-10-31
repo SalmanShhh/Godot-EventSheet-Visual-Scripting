@@ -53,8 +53,7 @@ const NO_FLASHING_META: StringName = &"no_flashing"
 ## Metadata key a player sets to scale every effect.
 const EFFECT_STRENGTH_META: StringName = &"effect_strength"
 
-## The name the mask viewport takes under this node, so a reader who opens the remote tree during a
-## run can see what the outline is made of.
+## The name the mask viewport takes under this node, so a reader who opens the remote tree during a run can see what the outline is made of.
 const MASK_NODE_NAME: String = "PostKitMask"
 
 ## Visual layer the mask camera sees and outlined meshes use; 20 is rarely used.
@@ -70,8 +69,7 @@ const MASK_NODE_NAME: String = "PostKitMask"
 # a walk that moves this value cannot scale it a second time
 # enabled   whether it is applied at all
 # resource  the CompositorEffect wearing it
-## THE STACK, in the order the effects are applied: the first entry works on the frame first and the
-## last one has the last word.
+## THE STACK, in the order the effects are applied: the first entry works on the frame first and the last one has the last word.
 var _stack: Array[Dictionary] = []
 
 ## The Compositor this node hangs its effects on - the parent's own, when it had one already.
@@ -88,8 +86,7 @@ var _mask_camera: Camera3D = null
 ## Meshes outlined so far, so Stop Outlining switches off only their layer bit.
 var _marked: Array[VisualInstance3D] = []
 
-## Whether this run has already said out loud that there is no compositor here. Once is honest;
-## once a frame is noise.
+## Whether this run has already said out loud that there is no compositor here. Once is honest; once a frame is noise.
 var _said_no_compositor: bool = false
 ## The camera the effects hang on: the parent, when this behavior was put under one, and otherwise
 ## whichever camera the viewport is currently drawing through.

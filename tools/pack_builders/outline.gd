@@ -26,8 +26,7 @@ static func build() -> bool:
 
 	var block: RawCodeRow = RawCodeRow.new()
 	var lines: PackedStringArray = PackedStringArray([
-		"## The two dials outline.gdshader declares, named once so a rename there is a one-line change",
-		"## here.",
+		"## The two dials outline.gdshader declares, named once so a rename there is a one-line change here.",
 		"const COLOUR_DIAL: String = \"outline_color\"",
 		"## Name of the shader dial that sets the outline width.",
 		"const WIDTH_DIAL: String = \"outline_width\"",

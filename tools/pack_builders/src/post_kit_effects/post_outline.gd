@@ -20,8 +20,7 @@ extends "post_effect.gd"
 ## @ace_hidden
 @export_range(1.0, 16.0, 1.0) var width: float = 2.0
 
-## 0 draws the edge of the mask (an outline); 1 draws the whole mask (a silhouette). Between the
-## two, a silhouette with a brighter rim.
+## 0 draws the edge of the mask (an outline); 1 draws the whole mask (a silhouette). Between the two, a silhouette with a brighter rim.
 ## @ace_hidden
 @export_range(0.0, 1.0, 0.01) var fill: float = 0.0
 

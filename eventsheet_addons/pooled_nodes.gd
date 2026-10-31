@@ -38,8 +38,7 @@ extends RefCounted
 # line that names it still parsing and still running. The emitted line itself reads exactly like a
 # line somebody would have written by hand.
 
-## Where an object pool registers itself. An absolute path, which resolves from any node in the
-## tree, so the lookup needs nothing about where the caller sits.
+## Where an object pool registers itself. An absolute path, which resolves from any node in the tree, so the lookup needs nothing about where the caller sits.
 const POOL_AUTOLOAD_PATH: String = "/root/ObjectPool"
 
 ## The mark a pool leaves on every copy it hands out - the pool's own name. Reading it is how this

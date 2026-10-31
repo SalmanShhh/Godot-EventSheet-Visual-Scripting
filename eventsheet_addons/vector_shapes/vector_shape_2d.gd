@@ -32,8 +32,7 @@ const DASH_STYLES: PackedStringArray = ["plain", "angled", "rounded"]
 ## How a dash pattern meets the ends of the line it runs along, in the shader's own order.
 const DASH_SNAPS: PackedStringArray = ["off", "tiling", "end to end"]
 
-## How a dash length is measured, in the shader's own order: pixels, multiples of the thickness, or
-## a fixed number of dashes however long the line is.
+## How a dash length is measured, in the shader's own order: pixels, multiples of the thickness, or a fixed number of dashes however long the line is.
 const DASH_SPACES: PackedStringArray = ["world", "relative", "count"]
 
 ## The end of a stroke, in the shader's own order.
@@ -45,8 +44,7 @@ const COLOUR_MODES: PackedStringArray = ["single", "two", "radial", "angular", "
 ## Most points the shader can hold; longer outlines belong to Polygon2D.
 const MAX_POINTS: int = 32
 
-## The unit words a thickness may be typed in. Pixels and world units are one to one in Godot's 2D;
-## a screen unit is a whole viewport width.
+## The unit words a thickness may be typed in. Pixels and world units are one to one in Godot's 2D; a screen unit is a whole viewport width.
 const THICKNESS_UNITS: PackedStringArray = ["px", "world", "screen"]
 
 # One Shader resource per blend word, shared by every shape in the project - the material is per

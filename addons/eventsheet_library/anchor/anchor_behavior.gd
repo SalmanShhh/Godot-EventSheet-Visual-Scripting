@@ -19,17 +19,14 @@ func _enter_tree() -> void:
 signal anchored(corner: String)
 
 # --- Designer knobs (tune in the Inspector) ---
-## The corner this Control is anchored to. Anchor To Preset writes it; the host is
-## placed there again whenever its parent resizes.
+## The corner this Control is anchored to. Anchor To Preset writes it; the host is placed there again whenever its parent resizes.
 @export_enum("top left", "top right", "bottom left", "bottom right", "centre", "full rect", "top edge", "bottom edge", "left edge", "right edge") var anchored_to: String = "top left"
-## Keep the host's current size when it is anchored, instead of letting the preset
-## stretch it. Off is Godot's own behaviour for the wide presets.
+## Keep the host's current size when it is anchored, instead of letting the preset stretch it. Off is Godot's own behaviour for the wide presets.
 @export var keep_size: bool = true
 ## Re-apply the anchor whenever the parent changes size. Off pins it once and leaves it.
 @export var follow_resizes: bool = true
 
-## The Godot preset each corner word stands for. The words are the row's; the numbers are
-## the engine's, and this table is the one place the two meet.
+## The Godot preset each corner word stands for. The words are the row's; the numbers are the engine's, and this table is the one place the two meet.
 ## @ace_hidden
 const CORNER_PRESETS: Dictionary = {
 	"top left": Control.PRESET_TOP_LEFT,

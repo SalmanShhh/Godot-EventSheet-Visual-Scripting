@@ -71,14 +71,12 @@ const LAYOUT_WORDS: Dictionary = {
 
 # The same two numbers every effect in this project clamps to: the flash becomes a slow
 # fade rather than being taken away, because the prompt still has to say it was hit.
-## How far a flash may go, and the least time it may take, for a player who has asked for no
-## flashing.
+## How far a flash may go, and the least time it may take, for a player who has asked for no flashing.
 const FLASH_CEILING: float = 0.3
 ## Shortest a flash may last while no-flashing is on, in seconds.
 const FLASH_FLOOR_SECONDS: float = 0.4
 
-## The name the prompt layer takes under this node, so a reader who opens the remote tree during a
-## run can see where the prompts are being drawn.
+## The name the prompt layer takes under this node, so a reader who opens the remote tree during a run can see where the prompts are being drawn.
 const LAYER_NAME: String = "PromptLayer"
 
 ## Font size of the prompt label before the player's text-size setting applies.
@@ -114,14 +112,12 @@ var _mash_needed: int = 0
 ## Presses counted so far for a mash prompt.
 var _mash_count: int = 0
 
-## The last grade a prompt ended on, which is what Grade Is asks about and Last Grade answers with.
-## Empty until the first prompt ends.
+## The last grade a prompt ended on, which is what Grade Is asks about and Last Grade answers with. Empty until the first prompt ends.
 var _last_grade: String = ""
 
 # Total is kept rather than derived so Sequence
 # Progress still reads 1 after the last one is taken off the queue.
-## A sequence: the controls still to come, how many there were, how many have been answered, how
-## long each one gets, and where they are drawn.
+## A sequence: the controls still to come, how many there were, how many have been answered, how long each one gets, and where they are drawn.
 var _queue: PackedStringArray = PackedStringArray()
 ## How many prompts the current queue holds.
 var _queue_total: int = 0

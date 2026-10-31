@@ -15,17 +15,13 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("LightFlickerBehavior behavior requires a Node parent.")
 
-## The dimmest and brightest the light gets, as a pair. 0.8 and 1.2 is a candle; 0.2 and 1.4
-## is a failing bulb.
+## The dimmest and brightest the light gets, as a pair. 0.8 and 1.2 is a candle; 0.2 and 1.4 is a failing bulb.
 @export var between: Vector2 = Vector2(0.8, 1.2)
-## How fast the flame moves. About 12 reads as a torch; below 3 reads as a slow breathing
-## glow, and above 30 as an electrical fault.
+## How fast the flame moves. About 12 reads as a torch; below 3 reads as a slow breathing glow, and above 30 as an electrical fault.
 @export_range(0.1, 60, 0.1) var times_a_second: float = 12.0
-## Also breathe the light's reach in and out with its brightness, which is what a real flame
-## does. A directional light has no reach and ignores this.
+## Also breathe the light's reach in and out with its brightness, which is what a real flame does. A directional light has no reach and ignores this.
 @export var also_flicker_reach: bool = false
-## Whether the flicker is running right now. On means it starts flickering the moment the
-## scene does.
+## Whether the flicker is running right now. On means it starts flickering the moment the scene does.
 @export var running: bool = true:
 	set(value):
 		running = value

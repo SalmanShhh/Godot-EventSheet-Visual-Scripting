@@ -208,8 +208,7 @@ const LOADING_GROUP: StringName = &"scene_flow_loading"
 ## Word meaning no shape over a loading change.
 const LOADING_NO_TRANSITION: String = "none"
 
-## The line a tips file leaves out: a comment, so a file of tips can carry a note about itself
-## and a tip can be parked without being deleted.
+## The line a tips file leaves out: a comment, so a file of tips can carry a note about itself and a tip can be parked without being deleted.
 const LOADING_TIP_COMMENT: String = "#"
 ## The root-parented poller that holds one background load: it asks the loader how far it has
 ## got, tells the loading screen, and enters the new scene when the wait is over. Like the two

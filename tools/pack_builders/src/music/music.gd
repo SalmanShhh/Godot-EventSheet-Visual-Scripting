@@ -46,15 +46,13 @@ var _levels: Array[float] = [0.0, 0.0]
 ## Volume each of the two decks is fading toward, in decibels.
 var _level_targets: Array[float] = [0.0, 0.0]
 
-## How fast a level walks, as full range per second. 0 means the last change was instant and there
-## is nothing to walk.
+## How fast a level walks, as full range per second. 0 means the last change was instant and there is nothing to walk.
 var _fade_rate: float = 0.0
 
 ## Which deck holds the track that is playing now; the other one is whatever is fading out.
 var _front: int = 0
 
-## What each deck is playing, by name. Empty is an idle deck, which is what Is Playing and Current
-## Track read.
+## What each deck is playing, by name. Empty is an idle deck, which is what Is Playing and Current Track read.
 var _deck_tracks: Array[String] = ["", ""]
 
 # Typed Resource rather than
@@ -65,8 +63,7 @@ var _track: Resource = null
 
 # Read from the track when one starts, and overridable by Set Tempo
 # for a track whose file does not carry it.
-## The tempo the beat is counted at: beats per minute, and the offset in seconds from the start of
-## the stream to the first beat.
+## The tempo the beat is counted at: beats per minute, and the offset in seconds from the start of the stream to the first beat.
 var _bpm: float = 120.0
 ## Seconds the beat grid is shifted from the start of the track.
 var _beat_offset: float = 0.0
@@ -110,8 +107,7 @@ var _layer_rates: Dictionary = {}
 ## Layer names of the playing stream, in the order built.
 var _layer_order: PackedStringArray = PackedStringArray()
 
-## Whether the music is paused. Pause keeps the position, so Resume carries on rather than
-## restarting.
+## Whether the music is paused. Pause keeps the position, so Resume carries on rather than restarting.
 var _paused: bool = false
 #endregion
 

@@ -25,8 +25,7 @@ extends VectorShape3D
 # @inspector_preview
 # @inspector_handle points points
 @export_group("Polyline")
-## The points the path runs through, in the node's own coordinates. Each one is a handle in the 3D
-## viewport while the node is selected.
+## The points the path runs through, in the node's own coordinates. Each one is a handle in the 3D viewport while the node is selected.
 ## @ace_hidden
 @export var points: PackedVector3Array = PackedVector3Array([
 	Vector3(-0.7, 0.25, 0.0), Vector3(-0.2, -0.35, 0.0), Vector3(0.35, 0.2, 0.0), Vector3(0.8, -0.25, 0.0)
@@ -58,8 +57,7 @@ extends VectorShape3D
 		thickness_unit = value
 		shape_changed()
 
-## What the two ends of the stroke look like: cut off, squared off half a thickness past the end, or
-## rounded.
+## What the two ends of the stroke look like: cut off, squared off half a thickness past the end, or rounded.
 ## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:none,square,round:segmented") var caps: String = "round":
 	set(value):
@@ -83,8 +81,7 @@ extends VectorShape3D
 		shape_changed()
 
 @export_group("Colour")
-## The shape's colour - the whole of it in single mode, and the first end of the blend in every
-## other mode.
+## The shape's colour - the whole of it in single mode, and the first end of the blend in every other mode.
 ## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:swatch_row") var colour: Color = Color("#e6e6e6"):
 	set(value):
@@ -108,8 +105,7 @@ extends VectorShape3D
 	set(value):
 		colour_d = value
 		shape_changed()
-## The ramp a gradient shape is coloured with - Godot's own Gradient resource, edited in Godot's own
-## gradient editor.
+## The ramp a gradient shape is coloured with - Godot's own Gradient resource, edited in Godot's own gradient editor.
 ## @ace_hidden
 @export var gradient: Gradient = null:
 	set(value):
@@ -144,8 +140,7 @@ extends VectorShape3D
 	set(value):
 		dash_count = value
 		shape_changed()
-## The gap after each dash: a share of one dash period in count mode (0.5 is half dash, half gap),
-## and a length in the space above otherwise.
+## The gap after each dash: a share of one dash period in count mode (0.5 is half dash, half gap), and a length in the space above otherwise.
 ## @ace_hidden
 @export var dash_spacing: float = 0.5:
 	set(value):
@@ -177,8 +172,7 @@ extends VectorShape3D
 	set(value):
 		depth = value
 		shape_changed()
-## How wide the fade at an edge is, in pixels. One pixel is a crisp edge at any distance; wider is a
-## deliberate glow; zero is a hard, aliased edge.
+## How wide the fade at an edge is, in pixels. One pixel is a crisp edge at any distance; wider is a deliberate glow; zero is a hard, aliased edge.
 ## @ace_hidden
 @export_range(0.0, 4.0, 0.1) var antialias_width: float = 1.0:
 	set(value):

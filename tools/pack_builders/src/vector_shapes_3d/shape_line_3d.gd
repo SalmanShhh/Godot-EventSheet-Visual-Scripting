@@ -10,8 +10,7 @@ extends "res://tools/pack_builders/src/vector_shapes_3d/vector_shape_3d.gd"
 # @inspector_handle start_point point
 # @inspector_handle end_point point
 @export_group("Line")
-## Where the line starts, in the node's own coordinates. Both ends are handles in the 3D viewport
-## while the node is selected.
+## Where the line starts, in the node's own coordinates. Both ends are handles in the 3D viewport while the node is selected.
 @export var start_point: Vector3 = Vector3.ZERO:
 	set(value):
 		start_point = value

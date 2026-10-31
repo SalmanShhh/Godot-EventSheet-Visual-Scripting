@@ -25,8 +25,7 @@ static func build() -> bool:
 
 	var block: RawCodeRow = RawCodeRow.new()
 	var lines: PackedStringArray = PackedStringArray([
-		"## The dial grayscale.gdshader drains along, named once so a rename there is a one-line change",
-		"## here. 0 is full colour, 1 is fully grey.",
+		"## The dial grayscale.gdshader drains along, named once so a rename there is a one-line change here. 0 is full colour, 1 is fully grey.",
 		"const GREY_DIAL: String = \"grayscale\"",
 		""
 	])

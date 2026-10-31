@@ -27,8 +27,7 @@ static func build() -> bool:
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
 		"# --- Designer knobs (tune in the Inspector) ---",
-		"## Temporary buffs count down automatically every frame. Off: drive time yourself",
-		"## with Advance Timers (turn-based games advance per turn).",
+		"## Temporary buffs count down automatically every frame. Off: drive time yourself with Advance Timers (turn-based games advance per turn).",
 		"@export var auto_tick: bool = true:",
 		"\tset(value):",
 		"\t\tauto_tick = value",
@@ -38,8 +37,7 @@ static func build() -> bool:
 		"\t\t# because the buff table is a typed Dictionary and reads as an empty one until it is",
 		"\t\t# initialized, never as a null.",
 		"\t\tset_physics_process(value and _any_buff_timer_running())",
-		"## What happens when a computed total leaves the min/max range: clamp stops at the",
-		"## boundary, wrap loops around, none applies no limit.",
+		"## What happens when a computed total leaves the min/max range: clamp stops at the boundary, wrap loops around, none applies no limit.",
 		"@export_enum(\"clamp\", \"wrap\", \"none\") var overflow_mode: String = \"clamp\"",
 		"## The smallest allowed stat total (clamp/wrap modes).",
 		"@export var min_value: float = -99999.0",

@@ -20,8 +20,7 @@ func _enter_tree() -> void:
 ## @ace_category("Dissolve")
 signal dissolved
 
-## The dial dissolve.gdshader burns along, named once so a rename there is a one-line change
-## here. 0 is whole, 1 is gone.
+## The dial dissolve.gdshader burns along, named once so a rename there is a one-line change here. 0 is whole, 1 is gone.
 const BURN_DIAL: String = "dissolve"
 
 ## Hide the host once fully dissolved, saving the draw.

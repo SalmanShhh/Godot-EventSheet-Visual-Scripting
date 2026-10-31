@@ -85,8 +85,7 @@ const LOOK_SCRIPT: String = "res://eventsheet_addons/screen_look_resource/screen
 # enabled   whether it draws at all
 # params    the effect's own dials, by the uniform name the shader declares
 # rect      the full-screen ColorRect wearing it, once there is one
-## THE STACK, in the order the effects are drawn: the first entry is applied to the screen first and
-## the last one has the last word.
+## THE STACK, in the order the effects are drawn: the first entry is applied to the screen first and the last one has the last word.
 var _stack: Array[Dictionary] = []
 
 ## The shaders loaded so far, by effect word. A project that only ever uses a vignette loads one.

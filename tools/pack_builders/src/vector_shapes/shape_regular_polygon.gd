@@ -6,8 +6,7 @@ extends "res://tools/pack_builders/src/vector_shapes/vector_shape_2d.gd"
 # @inspector_preview
 # @inspector_handle radius length
 @export_group("Regular Polygon")
-## How many sides it has. Three is a triangle, six a hexagon; high numbers are a circle drawn the
-## expensive way, and a Disc is the cheap one.
+## How many sides it has. Three is a triangle, six a hexagon; high numbers are a circle drawn the expensive way, and a Disc is the cheap one.
 ## @ace_hidden
 @export_range(3, 32, 1) var sides: int = 6:
 	set(value):
@@ -19,8 +18,7 @@ extends "res://tools/pack_builders/src/vector_shapes/vector_shape_2d.gd"
 	set(value):
 		radius = value
 		shape_changed()
-## Turns the whole shape, in degrees - the difference between a hexagon standing on a point and one
-## standing on a side.
+## Turns the whole shape, in degrees - the difference between a hexagon standing on a point and one standing on a side.
 @export_range(-360.0, 360.0, 0.1) var angle: float = -90.0:
 	set(value):
 		angle = value

@@ -29,8 +29,7 @@ var host: Node2D = null
 @export var max_speed: float = 180.0
 ## Most a member may change its velocity, in pixels per second squared; low turns lazily.
 @export var max_force: float = 360.0
-## A group the flock keeps away from - a predator, the player, a wall of hazards. Empty avoids
-## nothing.
+## A group the flock keeps away from - a predator, the player, a wall of hazards. Empty avoids nothing.
 @export var avoid_group: StringName = &""
 ## How close a member of the avoid group has to be before the flock reacts, in pixels.
 @export var avoid_radius: float = 160.0

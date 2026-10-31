@@ -61,8 +61,7 @@ signal generation_complete()
 # A heading picks its neighbour by ROUNDING THE DEGREES into
 # this table rather than by taking a cosine, so the same heading picks the same neighbour on
 # every platform a game exports to - which is the whole determinism promise in one line.
-## The eight grid neighbours, clockwise from "right" (0 degrees right, 90 degrees down, which is
-## Godot's own y-down screen sense).
+## The eight grid neighbours, clockwise from "right" (0 degrees right, 90 degrees down, which is Godot's own y-down screen sense).
 const NEIGHBOUR_STEPS: Array[Vector2i] = [
 	Vector2i(1, 0), Vector2i(1, 1), Vector2i(0, 1), Vector2i(-1, 1),
 	Vector2i(-1, 0), Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1),
@@ -88,8 +87,7 @@ const PRESETS: Dictionary = {
 		"brush_size": 4, "weights": ""},
 }
 
-## The shape number Save State As Text stamps, so a state written by an older build is recognisable
-## rather than silently misread.
+## The shape number Save State As Text stamps, so a state written by an older build is recognisable rather than silently misread.
 const STATE_VERSION: int = 1
 
 # One walker: where it is, where it is pointing, what it stamps, and how much of its budget is

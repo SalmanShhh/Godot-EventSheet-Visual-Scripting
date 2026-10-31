@@ -54,8 +54,7 @@ const BLENDED_SIGNAL: StringName = &"world_look_blended"
 ## the sky, a colour-grade picture - has nothing in between, so it is cut at the halfway point.
 const CROSSED_TYPES: Array[int] = [TYPE_FLOAT, TYPE_VECTOR2, TYPE_VECTOR3, TYPE_COLOR]
 
-## The class the two calls read their property list from, so a look holds exactly what an Environment
-## holds and nothing else is copied across.
+## The class the two calls read their property list from, so a look holds exactly what an Environment holds and nothing else is copied across.
 const ENVIRONMENT_CLASS: StringName = &"Environment"
 
 ## The class whose own properties are NOT part of a look. A resource's name, its path and whether it

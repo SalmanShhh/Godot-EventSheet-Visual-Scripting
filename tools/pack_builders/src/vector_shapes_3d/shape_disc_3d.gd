@@ -24,8 +24,7 @@ extends "res://tools/pack_builders/src/vector_shapes_3d/vector_shape_3d.gd"
 	set(value):
 		start_angle = value
 		shape_changed()
-## Where the sweep ends. A full turn past the start is a whole disc; anything less is the pie or the
-## arc a cooldown or a scanning cone is drawn as.
+## Where the sweep ends. A full turn past the start is a whole disc; anything less is the pie or the arc a cooldown or a scanning cone is drawn as.
 ## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:kinds=deg|turn|rad,store=deg") var end_angle: float = 360.0:
 	set(value):
@@ -35,8 +34,7 @@ extends "res://tools/pack_builders/src/vector_shapes_3d/vector_shape_3d.gd"
 
 #region disc_3d_colour_mode
 @export_group("Colour")
-## One colour, out from the middle (radial), round the sweep (angular), inner to outer (two), or a
-## whole ramp.
+## One colour, out from the middle (radial), round the sweep (angular), inner to outer (two), or a whole ramp.
 @export_enum("single", "two", "radial", "angular", "gradient") var colour_mode: String = "single":
 	set(value):
 		colour_mode = value

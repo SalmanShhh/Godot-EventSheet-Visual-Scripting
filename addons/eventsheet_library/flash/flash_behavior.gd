@@ -49,8 +49,7 @@ const BLINK_NO_FLASHING_META: StringName = &"no_flashing"
 
 # A strobe is a medical problem rather than a
 # taste, which is why the ceiling is held here instead of trusted to each pattern file.
-## No part of a blink may be shorter than this once no flashing has been asked for: the pattern
-## still plays, at a rate nobody can be hurt by.
+## No part of a blink may be shorter than this once no flashing has been asked for: the pattern still plays, at a rate nobody can be hurt by.
 const BLINK_FLOOR_SECONDS: float = 0.4
 
 func _ready() -> void:

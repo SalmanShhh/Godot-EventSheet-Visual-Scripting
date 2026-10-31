@@ -29,8 +29,7 @@ signal buff_expired(buff_id: String, stat: String)
 signal threshold_crossed(rule_id: String, stat: String, total: float)
 
 # --- Designer knobs (tune in the Inspector) ---
-## Temporary buffs count down automatically every frame. Off: drive time yourself
-## with Advance Timers (turn-based games advance per turn).
+## Temporary buffs count down automatically every frame. Off: drive time yourself with Advance Timers (turn-based games advance per turn).
 @export var auto_tick: bool = true:
 	set(value):
 		auto_tick = value
@@ -40,8 +39,7 @@ signal threshold_crossed(rule_id: String, stat: String, total: float)
 		# because the buff table is a typed Dictionary and reads as an empty one until it is
 		# initialized, never as a null.
 		set_physics_process(value and _any_buff_timer_running())
-## What happens when a computed total leaves the min/max range: clamp stops at the
-## boundary, wrap loops around, none applies no limit.
+## What happens when a computed total leaves the min/max range: clamp stops at the boundary, wrap loops around, none applies no limit.
 @export_enum("clamp", "wrap", "none") var overflow_mode: String = "clamp"
 ## The smallest allowed stat total (clamp/wrap modes).
 @export var min_value: float = -99999.0

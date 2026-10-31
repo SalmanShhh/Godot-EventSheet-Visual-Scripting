@@ -18,8 +18,7 @@ extends "res://tools/pack_builders/src/vector_shapes_3d/vector_shape_3d.gd"
 	set(value):
 		height = value
 		shape_changed()
-## Closes the wide end. An open cone is a funnel you can see up, which is what a spotlight volume
-## wants; a closed one is a solid.
+## Closes the wide end. An open cone is a funnel you can see up, which is what a spotlight volume wants; a closed one is a solid.
 @export var capped: bool = true:
 	set(value):
 		capped = value

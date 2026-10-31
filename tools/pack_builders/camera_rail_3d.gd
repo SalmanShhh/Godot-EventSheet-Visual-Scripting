@@ -3,8 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## The four shot curves, as a dropdown on every verb that takes one. The keys are the words the
-## behaviour matches, the labels are what the picker shows.
+## The four shot curves, as a dropdown on every verb that takes one. The keys are the words the behaviour matches, the labels are what the picker shows.
 const _EASES := ["linear=Linear", "ease_in=Ease in", "ease_out=Ease out",
 	"ease_in_out=Ease in and out"]
 

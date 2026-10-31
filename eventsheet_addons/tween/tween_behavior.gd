@@ -29,8 +29,7 @@ signal tween_finished
 ## The tween that is running now, so a new one can stop it.
 var _active_tween: Tween = null
 
-## The curve tween in flight, kept so a second row on the same property replaces it rather
-## than fighting it.
+## The curve tween in flight, kept so a second row on the same property replaces it rather than fighting it.
 var _along_tween: Tween = null
 
 # Only ever written once per property, which is what makes Tween Property Back exact however

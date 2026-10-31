@@ -3,8 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## The class every shape extends, and the name a row's emitted call is written against before the
-## picker turns it into the node you picked.
+## The class every shape extends, and the name a row's emitted call is written against before the picker turns it into the node you picked.
 const PACK_CLASS := "VectorShape2D"
 
 ## Where the pack lands.

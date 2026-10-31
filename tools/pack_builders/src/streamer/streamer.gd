@@ -14,13 +14,11 @@ var host: Node2D = null
 @export var budget_ms: float = 4.0
 ## Extra rings of cells beyond the radius kept loaded, so border crossings do not reload.
 @export var keep_radius_cells: int = 1
-## What the chunk scenes are called: this word, then the cell numbers, joined with "_".
-## chunk_3_-2.tscn at the default.
+## What the chunk scenes are called: this word, then the cell numbers, joined with "_". chunk_3_-2.tscn at the default.
 @export var chunk_prefix: String = "chunk"
 
 # --- Internal state ---
-## The node the radius is measured around. Stream Chunks Around sets it; Stop Streaming
-## clears it.
+## The node the radius is measured around. Stream Chunks Around sets it; Stop Streaming clears it.
 var _around: Node2D = null
 ## The radius in cells the wanted set is built from.
 var _radius_cells: int = 0
@@ -45,13 +43,11 @@ var _absent: Dictionary = {}
 # is the way back.
 ## Cells whose scene failed to load, remembered so they are not retried.
 var _refused: Dictionary = {}
-## Cells the radius wants, nearest ring first, rebuilt every frame from where the followed
-## node is now.
+## Cells the radius wants, nearest ring first, rebuilt every frame from where the followed node is now.
 var _wanted: Array[Vector2i] = []
 ## Cells a row asked for by name, drained before the radius's own list.
 var _asked: Array[Vector2i] = []
-## Whether On Streaming Idle has already been told about this quiet moment, so it fires once
-## when the world settles rather than every frame afterwards.
+## Whether On Streaming Idle has already been told about this quiet moment, so it fires once when the world settles rather than every frame afterwards.
 var _idle_announced: bool = true
 ## True once the no-folder warning was shown, so it shows once.
 var _said_no_folder: bool = false

@@ -24,8 +24,7 @@ extends "res://tools/pack_builders/src/vector_shapes/vector_shape_2d.gd"
 	set(value):
 		start_angle = value
 		shape_changed()
-## Where the sweep ends. A full turn past the start is a whole disc; anything less is a pie or an
-## arc, which is what a cooldown or a vision cone is.
+## Where the sweep ends. A full turn past the start is a whole disc; anything less is a pie or an arc, which is what a cooldown or a vision cone is.
 ## @ace_hidden
 @export_range(-360.0, 720.0, 0.1) var end_angle: float = 360.0:
 	set(value):
@@ -35,8 +34,7 @@ extends "res://tools/pack_builders/src/vector_shapes/vector_shape_2d.gd"
 
 #region disc_colour_mode
 @export_group("Colour")
-## One colour, out from the middle (radial), round the sweep (angular), inner to outer (two), or a
-## whole ramp.
+## One colour, out from the middle (radial), round the sweep (angular), inner to outer (two), or a whole ramp.
 @export_enum("single", "two", "radial", "angular", "gradient") var colour_mode: String = "single":
 	set(value):
 		colour_mode = value

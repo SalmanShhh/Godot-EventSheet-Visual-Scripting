@@ -24,14 +24,12 @@ extends VectorShape3D
 
 # @inspector_preview
 @export_group("Rect")
-## How big the rectangle is, in the node's own units. It is centred on the node's origin, so
-## rotating the node turns it about its middle.
+## How big the rectangle is, in the node's own units. It is centred on the node's origin, so rotating the node turns it about its middle.
 @export var size: Vector2 = Vector2(1.0, 0.6):
 	set(value):
 		size = value
 		shape_changed()
-## How round the four corners are, clockwise from the top-left. One box while they agree, four when
-## they should not.
+## How round the four corners are, clockwise from the top-left. One box while they agree, four when they should not.
 ## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:corners") var corner_radius: Vector4 = Vector4.ZERO:
 	set(value):
@@ -73,8 +71,7 @@ extends VectorShape3D
 		shape_changed()
 
 @export_group("Colour")
-## The shape's colour - the whole of it in single mode, and the first end of the blend in every
-## other mode.
+## The shape's colour - the whole of it in single mode, and the first end of the blend in every other mode.
 ## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:swatch_row") var colour: Color = Color("#e6e6e6"):
 	set(value):
@@ -98,16 +95,14 @@ extends VectorShape3D
 	set(value):
 		colour_d = value
 		shape_changed()
-## The ramp a gradient shape is coloured with - Godot's own Gradient resource, edited in Godot's own
-## gradient editor.
+## The ramp a gradient shape is coloured with - Godot's own Gradient resource, edited in Godot's own gradient editor.
 ## @ace_hidden
 @export var gradient: Gradient = null:
 	set(value):
 		gradient = value
 		shape_changed()
 
-## Fills the shape rather than drawing only its outline. A filled shape draws its BORDER instead of
-## its stroke, so the two can never sit a unit apart.
+## Fills the shape rather than drawing only its outline. A filled shape draws its BORDER instead of its stroke, so the two can never sit a unit apart.
 ## @ace_hidden
 @export var fill: bool = false:
 	set(value):
@@ -164,8 +159,7 @@ extends VectorShape3D
 	set(value):
 		dash_count = value
 		shape_changed()
-## The gap after each dash: a share of one dash period in count mode (0.5 is half dash, half gap),
-## and a length in the space above otherwise.
+## The gap after each dash: a share of one dash period in count mode (0.5 is half dash, half gap), and a length in the space above otherwise.
 ## @ace_hidden
 @export var dash_spacing: float = 0.5:
 	set(value):
@@ -197,8 +191,7 @@ extends VectorShape3D
 	set(value):
 		depth = value
 		shape_changed()
-## How wide the fade at an edge is, in pixels. One pixel is a crisp edge at any distance; wider is a
-## deliberate glow; zero is a hard, aliased edge.
+## How wide the fade at an edge is, in pixels. One pixel is a crisp edge at any distance; wider is a deliberate glow; zero is a hard, aliased edge.
 ## @ace_hidden
 @export_range(0.0, 4.0, 0.1) var antialias_width: float = 1.0:
 	set(value):

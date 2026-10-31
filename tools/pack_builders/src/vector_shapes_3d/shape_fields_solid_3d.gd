@@ -6,8 +6,7 @@ extends "res://tools/pack_builders/src/vector_shapes_3d/vector_shape_3d.gd"
 
 #region fields_solid_3d
 @export_group("Surface")
-## The shape's colour. A solid wrapper is real geometry drawn unshaded, so this is the colour on
-## screen rather than a tint a light has an opinion about.
+## The shape's colour. A solid wrapper is real geometry drawn unshaded, so this is the colour on screen rather than a tint a light has an opinion about.
 ## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:swatch_row") var colour: Color = Color("#e6e6e6"):
 	set(value):

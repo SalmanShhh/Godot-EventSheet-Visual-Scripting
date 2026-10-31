@@ -28,8 +28,7 @@ static func build() -> bool:
 
 	var block: RawCodeRow = RawCodeRow.new()
 	var lines: PackedStringArray = PackedStringArray([
-		"## The name the two dials go by in hit_flash.gdshader. Named once here so a rename in the",
-		"## shader file is a one-line change in this one.",
+		"## The name the two dials go by in hit_flash.gdshader. Named once here so a rename in the shader file is a one-line change in this one.",
 		"const COLOUR_DIAL: String = \"flash_color\"",
 		"## Name of the shader dial that sets how strongly the flash shows.",
 		"const AMOUNT_DIAL: String = \"flash_amount\"",

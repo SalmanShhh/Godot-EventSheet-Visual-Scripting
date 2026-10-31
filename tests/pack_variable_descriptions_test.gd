@@ -46,7 +46,8 @@ static func _test_the_rule_on_small_sources() -> bool:
 	var beside_a_group: String = "## How fast it moves.\n@export_group(\"Motion\")\n@export var speed: float = 1.0\n"
 	var trailing: String = "const LIMIT: int = 3  ## Most it may hold.\n"
 	var too_long: String = "## %s\nvar _x: int = 0\n" % "word ".repeat(40)
-	var in_a_string: String = "const _CODE: String = \"\"\"\nconst float fade = 1.0;\n\"\"\"\n"
+	var two_lines: String = "## How fast it\n## moves.\nvar speed: float = 1.0\n"
+	var in_a_string: String ="const _CODE: String = \"\"\"\nconst float fade = 1.0;\n\"\"\"\n"
 	var one_machine: String = "enum State {\n\tIDLE,\n\tRUN,\n}\n"
 	var machine_described: String = "## What the object is doing.\nenum State {\n\t## Standing still.\n\tIDLE,\n\t## Moving.\n\tRUN,\n}\n"
 	var machine_half: String = "## What the object is doing.\nenum State {\n\t## Standing still.\n\tIDLE,\n\tRUN,\n}\n"
@@ -56,6 +57,7 @@ static func _test_the_rule_on_small_sources() -> bool:
 		["a note above an Inspector group line counts", _problems_in(beside_a_group), PackedStringArray()],
 		["a trailing note counts", _problems_in(trailing), PackedStringArray()],
 		["a paragraph is not brief", _problems_in(too_long), PackedStringArray(["_x description is %d characters, more than %d" % ["word ".repeat(40).strip_edges().length(), LONGEST]])],
+		["a description over two lines is named, a row shows only the first", _problems_in(two_lines), PackedStringArray(["speed description runs over 2 lines, so a row shows only the first"])],
 		["a line inside a triple-quoted string is not a declaration", _problems_in(in_a_string), PackedStringArray(["_CODE has no description"])],
 		["a machine with no notes is named, machine and every state", _problems_in(one_machine), PackedStringArray(["enum State has no description", "state IDLE has no description", "state RUN has no description"])],
 		["a machine with every note raises nothing", _problems_in(machine_described), PackedStringArray()],
@@ -125,6 +127,7 @@ static func _problems_in(source: String) -> PackedStringArray:
 	var declaration: RegEx = RegEx.create_from_string("^(?:@[^\\n]*?\\s)?(?:static\\s+)?(?:var|const)\\s+([A-Za-z_][A-Za-z0-9_]*)")
 	var enum_head: RegEx = RegEx.create_from_string("^enum\\s*([A-Za-z_][A-Za-z0-9_]*)?\\s*\\{")
 	var note: String = ""
+	var note_lines: int = 0
 	var in_string: bool = false
 	var index: int = 0
 	while index < lines.size():
@@ -139,6 +142,8 @@ static func _problems_in(source: String) -> PackedStringArray:
 			var text: String = line.substr(2).strip_edges()
 			if not text.begins_with("@ace_"):
 				note = (note + " " + text).strip_edges()
+				if not text.is_empty():
+					note_lines += 1
 			index += 1
 			continue
 		if line.begins_with("#"):
@@ -154,6 +159,7 @@ static func _problems_in(source: String) -> PackedStringArray:
 				problems.append("enum %s has no description" % enum_name)
 			index = _check_enum_members(lines, index, problems)
 			note = ""
+			note_lines = 0
 			index += 1
 			continue
 		var found: RegExMatch = declaration.search(line)
@@ -166,7 +172,10 @@ static func _problems_in(source: String) -> PackedStringArray:
 				problems.append("%s has no description" % variable_name)
 			elif described.length() > LONGEST:
 				problems.append("%s description is %d characters, more than %d" % [variable_name, described.length(), LONGEST])
+			elif note_lines > 1:
+				problems.append("%s description runs over %d lines, so a row shows only the first" % [variable_name, note_lines])
 		note = ""
+		note_lines = 0
 		index += 1
 	return problems
 

@@ -7,8 +7,7 @@ extends "res://tools/pack_builders/src/vector_shapes_3d/vector_shape_3d.gd"
 # @inspector_preview
 # @inspector_handle radius length
 @export_group("Regular Polygon")
-## How many sides it has. Three is a triangle, six a hexagon; high numbers are a circle drawn the
-## expensive way, and a Disc 3D is the cheap one.
+## How many sides it has. Three is a triangle, six a hexagon; high numbers are a circle drawn the expensive way, and a Disc 3D is the cheap one.
 ## @ace_hidden
 @export_range(3, 32, 1) var sides: int = 6:
 	set(value):
@@ -20,8 +19,7 @@ extends "res://tools/pack_builders/src/vector_shapes_3d/vector_shape_3d.gd"
 	set(value):
 		radius = value
 		shape_changed()
-## Turns the whole shape. The dropdown at the field's edge reads the number in degrees, turns or
-## radians; the number stored is always degrees.
+## Turns the whole shape. The dropdown at the field's edge reads the number in degrees, turns or radians; the number stored is always degrees.
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:kinds=deg|turn|rad,store=deg") var angle: float = 90.0:
 	set(value):
 		angle = value

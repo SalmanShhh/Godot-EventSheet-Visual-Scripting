@@ -24,8 +24,7 @@ static func build() -> bool:
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
 		"# --- Designer knobs (tune in the Inspector) ---",
-		"## The drawn route. Follow Path can hand over a different one at runtime; this is the",
-		"## starting route, and the one the editor gizmo draws.",
+		"## The drawn route. Follow Path can hand over a different one at runtime; this is the starting route, and the one the editor gizmo draws.",
 		"@export var route: Path2D = null",
 		"## Pixels per second along the curve. Arc-length paced, so corners do not speed it up.",
 		"@export var travel_speed: float = 120.0",

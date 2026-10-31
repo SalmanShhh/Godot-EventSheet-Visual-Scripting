@@ -8,8 +8,7 @@ extends "post_effect.gd"
 ## @ace_hidden
 @export var tint: Color = Color(1.0, 0.85, 0.7)
 
-## How much light is left after the tint. Below 1 the frame also darkens, which is what most tints
-## a game actually wants are made of.
+## How much light is left after the tint. Below 1 the frame also darkens, which is what most tints a game actually wants are made of.
 ## @ace_hidden
 @export_range(0.0, 2.0, 0.01) var gain: float = 1.0
 

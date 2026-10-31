@@ -25,8 +25,7 @@ extends VectorShape3D
 # @inspector_preview
 # @inspector_handle radius length
 @export_group("Regular Polygon")
-## How many sides it has. Three is a triangle, six a hexagon; high numbers are a circle drawn the
-## expensive way, and a Disc 3D is the cheap one.
+## How many sides it has. Three is a triangle, six a hexagon; high numbers are a circle drawn the expensive way, and a Disc 3D is the cheap one.
 ## @ace_hidden
 @export_range(3, 32, 1) var sides: int = 6:
 	set(value):
@@ -38,8 +37,7 @@ extends VectorShape3D
 	set(value):
 		radius = value
 		shape_changed()
-## Turns the whole shape. The dropdown at the field's edge reads the number in degrees, turns or
-## radians; the number stored is always degrees.
+## Turns the whole shape. The dropdown at the field's edge reads the number in degrees, turns or radians; the number stored is always degrees.
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:kinds=deg|turn|rad,store=deg") var angle: float = 90.0:
 	set(value):
 		angle = value
@@ -80,8 +78,7 @@ extends VectorShape3D
 		shape_changed()
 
 @export_group("Colour")
-## The shape's colour - the whole of it in single mode, and the first end of the blend in every
-## other mode.
+## The shape's colour - the whole of it in single mode, and the first end of the blend in every other mode.
 ## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:swatch_row") var colour: Color = Color("#e6e6e6"):
 	set(value):
@@ -105,16 +102,14 @@ extends VectorShape3D
 	set(value):
 		colour_d = value
 		shape_changed()
-## The ramp a gradient shape is coloured with - Godot's own Gradient resource, edited in Godot's own
-## gradient editor.
+## The ramp a gradient shape is coloured with - Godot's own Gradient resource, edited in Godot's own gradient editor.
 ## @ace_hidden
 @export var gradient: Gradient = null:
 	set(value):
 		gradient = value
 		shape_changed()
 
-## Fills the shape rather than drawing only its outline. A filled shape draws its BORDER instead of
-## its stroke, so the two can never sit a unit apart.
+## Fills the shape rather than drawing only its outline. A filled shape draws its BORDER instead of its stroke, so the two can never sit a unit apart.
 ## @ace_hidden
 @export var fill: bool = false:
 	set(value):
@@ -171,8 +166,7 @@ extends VectorShape3D
 	set(value):
 		dash_count = value
 		shape_changed()
-## The gap after each dash: a share of one dash period in count mode (0.5 is half dash, half gap),
-## and a length in the space above otherwise.
+## The gap after each dash: a share of one dash period in count mode (0.5 is half dash, half gap), and a length in the space above otherwise.
 ## @ace_hidden
 @export var dash_spacing: float = 0.5:
 	set(value):
@@ -204,8 +198,7 @@ extends VectorShape3D
 	set(value):
 		depth = value
 		shape_changed()
-## How wide the fade at an edge is, in pixels. One pixel is a crisp edge at any distance; wider is a
-## deliberate glow; zero is a hard, aliased edge.
+## How wide the fade at an edge is, in pixels. One pixel is a crisp edge at any distance; wider is a deliberate glow; zero is a hard, aliased edge.
 ## @ace_hidden
 @export_range(0.0, 4.0, 0.1) var antialias_width: float = 1.0:
 	set(value):

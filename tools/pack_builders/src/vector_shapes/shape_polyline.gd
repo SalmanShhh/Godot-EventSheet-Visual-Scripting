@@ -6,8 +6,7 @@ extends "res://tools/pack_builders/src/vector_shapes/vector_shape_2d.gd"
 # @inspector_preview
 # @inspector_handle points points
 @export_group("Polyline")
-## The points the line runs through, in the node's own coordinates. Each one is a handle in the 2D
-## viewport while the node is selected.
+## The points the line runs through, in the node's own coordinates. Each one is a handle in the 2D viewport while the node is selected.
 ## @ace_hidden
 @export var points: PackedVector2Array = PackedVector2Array([
 	Vector2(-64.0, 24.0), Vector2(-16.0, -32.0), Vector2(32.0, 16.0), Vector2(72.0, -24.0)
