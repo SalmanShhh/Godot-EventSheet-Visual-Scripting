@@ -89,9 +89,9 @@ var _kind: String = KIND_PRESS
 ## Input action the prompt asks for.
 var _action: String = ""
 
-## Engine time when the open prompt started and when it ends.
+## Engine time, in seconds, when the open prompt started.
 var _opened_at: float = 0.0
-## Seconds left to answer the prompt.
+## Engine time, in seconds, when the open prompt runs out.
 var _deadline: float = 0.0
 
 # A press stays "just pressed" for the whole of the frame it happened

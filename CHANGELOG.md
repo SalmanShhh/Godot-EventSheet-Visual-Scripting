@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Fixed: a name cut short in a chip cell is read whole on hover
+
+- In a cell drawn as a chip (Editor Native's condition and action cells) the hover measured the
+  object column from the cell's edge instead of after its padding, so a name only a few pixels too
+  wide ("CharacterBo…") drew its ellipsis but answered no hover. The hover now asks the same
+  elide, on the same column, the row draws with.
+
+### Fixed: the Prompts pack's two clock variables say what they hold
+
+- `_deadline` said it held the seconds left to answer; it holds the engine time the open prompt runs
+  out, and `_opened_at` no longer describes both variables in one sentence.
+
 ### Changed: states are project-wide, and every state variable is its own machine
 
 - Renaming a state in the States window renames it in every place the project says it: this sheet's
