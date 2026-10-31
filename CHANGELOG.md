@@ -36,7 +36,7 @@
 ### Changed: sub-events sit packed, with the fold arrow on the block's first line
 
 - The fold arrow of an event stays beside the block's FIRST line in every look (the strips look used to
-  move it to the block's foot). Events and sub-events in Editor Native sit 2 px apart instead of 8, so
+  move it to the block's foot). Events and sub-events in Editor Native sit 1 px apart instead of 8, so
   no empty band opens between two events. A nesting strip is filled with its parent's condition-lane
   colour (or the group's tint), so it reads as the parent's lane carried down beside its children. An
   object name the fixed column cuts short ("CharacterBo...") is read whole on hover. Drawing only: no
