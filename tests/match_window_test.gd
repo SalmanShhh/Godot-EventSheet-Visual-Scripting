@@ -107,8 +107,8 @@ static func _test_sheet_reading() -> bool:
 		# A branch's step reads as the same line reads in an event's action lane: the object it acts on
 		# in the column, and the property as written - not "Set x to 0" with no object at all.
 		["each branch is a sub-event holding its own actions, an empty one only its Add action", case_reading, [
-			"condition:state is IDLE | match_case:CharacterBody2D | Set velocity.x to 0 | add_action:+ Add action",
-			"condition:state is RUN | add_action:+ Add action",
+			"condition:is IDLE | match_case:CharacterBody2D | Set velocity.x to 0 | add_action:+ Add action",
+			"condition:is RUN | add_action:+ Add action",
 			"else_keyword:Else | add_action:+ Add action"]],
 		["a branch row knows its branch", case_rows.size() == 3 and case_rows[1].match_case == match_row.cases[1], true],
 		["the opened file re-emits byte for byte", SUPPORT.reemit(SOURCE, "user://match_window_player.gd"), SOURCE],

@@ -98,7 +98,7 @@ static func _test_a_proven_noun_is_a_door() -> bool:
 	}, func(line: String) -> Variant: return _read(line, table))
 	# And the door SAYS where it leads, which is the whole difference between an underline and a
 	# jump: a state's target is the enum member a declaration can be found by, never the word.
-	var doors: Array[Dictionary] = EventSheetCommentDoors.doors_in("back to Patrol", table)
+	var doors: Array[Dictionary] = EventSheetCommentDoors.doors_in("back to PATROL", table)
 	ok = SUPPORT.pin_value("comment_doors", "the state door carries the member it was declared as",
 		str(doors[0].get("target", "")), "PATROL") and ok
 	ok = SUPPORT.pin_value("comment_doors", "and the offsets are where the word really is",
@@ -201,7 +201,7 @@ static func _test_the_comment_and_the_line_it_writes_are_untouched() -> bool:
 	var scene_root: Node = _scene()
 	var sheet: EventSheetResource = _sheet()
 	var note: CommentRow = CommentRow.new()
-	note.text = "Patrol until %HealthBar drops, then begin_chase"
+	note.text = "PATROL until %HealthBar drops, then begin_chase"
 	sheet.events.append(note)
 	var before: String = note.text
 	var table: Dictionary = _live_table(sheet, scene_root)
@@ -213,7 +213,7 @@ static func _test_the_comment_and_the_line_it_writes_are_untouched() -> bool:
 	sheet.external_source_path = "user://comment_doors_rt.gd"
 	var emitted: String = str(SheetCompiler.compile(sheet, "user://comment_doors_rt.gd").get("output", ""))
 	ok = SUPPORT.pin_value("comment_doors", "the emitted line is the plain comment it always was",
-		emitted.contains("# Patrol until %HealthBar drops, then begin_chase"), true) and ok
+		emitted.contains("# PATROL until %HealthBar drops, then begin_chase"), true) and ok
 	EventSheetCompletions.scene_root_override = null
 	scene_root.free()
 	return ok

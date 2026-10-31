@@ -1685,7 +1685,8 @@ func _draw_spans(
 			continue
 		var color: Color = metadata.get("text_color", _get_span_color(span.type, event_style, reading))
 		# While the game runs, the state it is in lights up in the state row: its name sits on a plate.
-		if metadata.has("state_name") and EventSheetStateWatch.is_live() 				and EventSheetStateWatch.live_members().has(str(metadata["state_name"])):
+		if metadata.has("state_name") and EventSheetStateWatch.is_live() \
+				and EventSheetStateWatch.live_members().has(str(metadata["state_name"])):
 			control.draw_rect(span.rect.grow_individual(2.0, -3.0, 2.0, -3.0), Color(event_style.value_highlight_color, 0.22), true)
 			color = event_style.value_highlight_color
 		# The type word is the guide rail on a variable's value: while the field is being typed

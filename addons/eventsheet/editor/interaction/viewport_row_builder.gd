@@ -20807,7 +20807,9 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 						shifted.append([int(entry[0]) + at, int(entry[1])])
 					span.metadata["param_ranges"] = shifted
 	# The state variable wears the state glyph where an object wears its icon.
-	if str(span.metadata.get("object_label", "")) == EventSheetStateFacts.STATE_VARIABLE 			and str(span.metadata.get("kind", "")) in ["condition", "trigger", "action"] 			and not span.metadata.has("object_glyph"):
+	if str(span.metadata.get("object_label", "")) == EventSheetStateFacts.STATE_VARIABLE \
+			and str(span.metadata.get("kind", "")) in ["condition", "trigger", "action"] \
+			and not span.metadata.has("object_glyph"):
 		span.metadata["object_glyph"] = NativeRowMarks.OBJECT_GLYPH_STATE
 		if not (span.metadata.get("object_icon") is Texture2D):
 			span.metadata["object_icon"] = _glyph_icon_slot()

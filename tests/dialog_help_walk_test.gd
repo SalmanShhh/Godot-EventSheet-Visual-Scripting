@@ -120,7 +120,6 @@ static func _test_dialogs_are_found() -> bool:
 		"res://addons/eventsheet/editor/dock/sheet_map_panel.gd",
 		"res://addons/eventsheet/editor/dock/sheet_type_dialog.gd",
 		"res://addons/eventsheet/editor/dock/start_page.gd",
-		"res://addons/eventsheet/editor/dock/states_dialog.gd",
 		"res://addons/eventsheet/editor/dock/struct_row_dialogs.gd",
 		"res://addons/eventsheet/editor/dock/variable_retype_dialog.gd",
 		"res://addons/eventsheet/editor/dock/welcome_window.gd",

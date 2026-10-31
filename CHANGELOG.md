@@ -81,6 +81,12 @@
   states each with a name, a sentence and a default radio, add, remove (a state rows still use is refused
   with their count), reorder, and rename - which follows every row, trigger and line of kept code. Exactly
   one default always: a new machine takes its first state, removing the default moves it to the next.
+  The window explains itself with its own paragraph and its live code preview, as its board draws it,
+  rather than the help strip at the foot that the old one-field window wore.
+- Fixed with the wave's integration: four suite checks still pinned the old readings (a branch's test
+  led by the System gear and spelled "state is IDLE" in its condition cell, a comment naming the state as
+  "Patrol", and the States window among the dialogs with a help strip); they now pin the state variable
+  as the object with its glyph, the state as written, and the window as built.
 
 ### Fixed: Undo works inside the editor
 
