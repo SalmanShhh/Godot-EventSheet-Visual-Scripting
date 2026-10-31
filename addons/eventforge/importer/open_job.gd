@@ -143,26 +143,35 @@ func progress() -> Dictionary:
 	}
 
 
-## 0.0-1.0 for the bar. Falls back to an elapsed-time creep while the function count is still
-## unknown (the reading pass), so the bar never sits dead at zero.
+## 0.0-1.0 for the progress hairline. The reading pass creeps (the function count is not known
+## yet), lifting fills the long middle by functions done, and the two checks that follow sit at the
+## end, so the line never sits dead at zero and never reaches the end before the open does.
 func progress_ratio() -> float:
+	var phase: String = EventSheetACELifter.progress_phase
 	var total: int = EventSheetACELifter.progress_functions_total
+	if phase == "checking":
+		return 0.94
+	if phase == "verifying" or phase == "done":
+		return 0.88
 	if total <= 0:
-		return minf(float(Time.get_ticks_msec() - _started_msec) / 4000.0, 0.9)
-	return clampf(float(EventSheetACELifter.progress_functions_done) / float(total), 0.0, 1.0)
+		return minf(float(Time.get_ticks_msec() - _started_msec) / 4000.0, 0.9) * 0.08
+	return 0.08 + 0.8 * clampf(float(EventSheetACELifter.progress_functions_done) / float(total), 0.0, 1.0)
 
 
-## The one-line human status under the title: what pass is running, and how far in.
+## The pass the open is in, in the words the status line uses: what is happening and how far in,
+## with the seconds once the open has gone past half a second.
 func status_text() -> String:
 	var state: Dictionary = progress()
 	var phase: String = str(state["phase"])
-	var detail: String = "reading %d lines" % int(state["lines"])
+	var detail: String = EventSheetL10n.translate("reading the file")
 	if phase == "lifting" and int(state["functions_total"]) > 0:
-		detail = "lifting functions %d of %d" % [int(state["functions_done"]), int(state["functions_total"])]
+		detail = EventSheetL10n.translate("reading functions %d of %d") % [int(state["functions_done"]), int(state["functions_total"])]
 	elif phase == "verifying":
-		detail = "checking the code still matches"
+		detail = EventSheetL10n.translate("checking the code still matches")
 	elif phase == "checking":
-		detail = "checking the script compiles"
+		detail = EventSheetL10n.translate("checking the script compiles")
 	elif phase == "done":
-		detail = "finishing up"
-	return "%s · %.1f s" % [detail, float(state["elapsed_seconds"])]
+		detail = EventSheetL10n.translate("finishing up")
+	if float(state["elapsed_seconds"]) > 0.5:
+		return "%s · %.1f s" % [detail, float(state["elapsed_seconds"])]
+	return detail

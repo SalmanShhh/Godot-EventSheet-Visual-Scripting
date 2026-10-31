@@ -66,6 +66,9 @@ func build_ui() -> void:
 	_dock._tab_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_dock._tab_bar.tab_selected.connect(_dock._on_tab_selected)
 	_dock._tab_bar.tab_close_pressed.connect(_dock._on_tab_close_pressed)
+	# The open's hairline rides the foot of the tab strip (a child anchored to the bar's bottom edge,
+	# taking no layout room), so a .gd opening says so without anything pushing the sheet down.
+	_dock._tab_bar.add_child(_dock._open_progress.build_hairline())
 	root.add_child(_dock._tab_bar)
 	# The open tab's edge is a theme token; the strip was dressed before the tab bar existed.
 	_dock._menu_bar.apply_theme_chrome()
@@ -121,9 +124,6 @@ func build_ui() -> void:
 	# .gd included: the head bar's name card says what an opened file is.
 	_dock._preview_banner = _dock._preview_glue.build_preview_banner()
 	root.add_child(_dock._preview_banner)
-
-	# "Opening <file>" progress strip - visible only while a .gd's ACE lift runs on a worker thread.
-	root.add_child(_dock._open_progress.build())
 
 	# No Conditions | Actions band above the sheet: the two sides are told apart by their colour and
 	# their kind labels, and the line between them on any event is what resizes them.
@@ -398,6 +398,7 @@ func build_ui() -> void:
 	_dock._status_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_dock._status_label.clip_text = true
 	status_strip.add_child(_dock._status_label)
+	status_strip.add_child(_dock._open_progress.build_link())
 	_dock._row_address_label = Label.new()
 	_dock._row_address_label.name = "EventSheetRowAddress"
 	_dock._row_address_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT

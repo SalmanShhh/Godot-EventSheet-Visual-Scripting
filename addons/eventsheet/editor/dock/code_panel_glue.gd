@@ -401,6 +401,9 @@ func current_sheet_view() -> String:
 
 ## Shows the rows, the code, or both side by side. The code is the panel the View menu opens.
 func set_sheet_view(view: String) -> void:
+	# Code while a .gd is still being read as events is the other door to "show as code".
+	if view == EventSheetPopupUI.ViewSwitch.CODE and _dock._open_progress != null:
+		_dock._open_progress.request_code()
 	var wants_code: bool = view != EventSheetPopupUI.ViewSwitch.SHEET
 	if wants_code != _dock.is_code_panel_visible():
 		toggle_code_panel()

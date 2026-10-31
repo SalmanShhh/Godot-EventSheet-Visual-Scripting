@@ -1025,7 +1025,7 @@ func _init() -> void:
 	_beginner_toolbar.init(self)
 	_find_results.init(self)
 	_properties_bar.init(self)
-	# Same rule as _preview_glue: _ui_builder.build_ui() calls _open_progress.build(), so the back-reference
+	# Same rule as _preview_glue: _ui_builder.build_ui() calls _open_progress.build_hairline() and build_link(), so the back-reference
 	# has to be wired before it (init() only stores _dock - nothing tree-bound).
 	_open_progress.init(self)
 	# Theme-manager MUST be wired before _ui_builder.build_ui() too: _ui_builder.build_ui() calls
@@ -1440,6 +1440,9 @@ func _refresh_tab_bar() -> void:
 		var mark: Texture2D = _tab_icon(title)
 		if mark != null:
 			_tab_bar.set_tab_icon(tab_index, mark)
+		# A file that is still being read wears the spinner instead, so a refresh mid-open keeps it.
+		if _open_progress.is_opening(path):
+			_tab_bar.set_tab_icon(tab_index, _open_progress.spinner_texture())
 	if _active_tab_index >= 0 and _active_tab_index < _tab_bar.get_tab_count():
 		_tab_bar.current_tab = _active_tab_index
 	_tab_bar.visible = _open_tabs.size() >= 1

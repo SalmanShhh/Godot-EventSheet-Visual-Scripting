@@ -38,6 +38,22 @@
   an `is` test or a `super(...)` call keeps the words its rows have today (neither verb claims a
   hand-written line), so no opened file reads differently.
 
+### Fixed: Opening a .gd no longer puts a banner over the sheet
+
+- The "Opening <file>" strip is gone. It was a 72 px navy panel, drawn the same in every look and
+  both editor themes (its detail text was close to invisible in the light theme), that pushed the
+  sheet down while a .gd was read as events and let it jump back up when the read finished. A file
+  that is opening now says so in three places that take no room: its tab swaps its icon for a
+  small spinner in the look's accent, a 2 px hairline along the foot of the tab strip fills as the
+  read advances, and the status line reads "Opening player.gd · reading functions 6 of 14" (reading
+  the file, reading functions n of m, checking the code still matches, checking the script compiles,
+  with the seconds once a pass has gone past half a second). **Show as code** sits beside it in the
+  status line, and **Code** in the Events / Code / Both switch (ringed in the accent while the open
+  runs) is the other way out: either stops reading the rows and shows the file as code, as the
+  banner's button did. With reduced motion the spinner holds still and the hairline jumps instead
+  of sliding. Every colour comes from the editor theme, so dark and light need nothing of their
+  own.
+
 ### Fixed: Undo works inside the editor
 
 - In the editor, the sheet's Undo and Redo did nothing: Ctrl+Z after a drag-drop (or any other

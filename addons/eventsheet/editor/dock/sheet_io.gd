@@ -169,7 +169,6 @@ func _begin_async_gd_open(resolved_path: String) -> void:
 		_dock._set_status(EventSheetL10n.translate(
 			"%s is marked to stay code - showing it as code, and leaving it alone.") % resolved_path.get_file())
 		return
-	_dock._set_status("Opening %s - showing the code now, working out the events…" % resolved_path.get_file())
 	_open_job = load(OPEN_JOB_PATH).new()
 	_open_job_path = resolved_path
 	_open_job_raw = raw
@@ -208,7 +207,6 @@ func _open_scene_as_sheet(resolved_path: String) -> void:
 	_dock._dirty = false
 	_dock._refresh_title_strip()
 	_dock._preview_glue._refresh_preview_banner()
-	_dock._set_status("Opening %s - reading every script the scene uses…" % resolved_path.get_file())
 	if not _dock.is_inside_tree():
 		# No tree (a headless test driving the dock directly): there are no frames to spread over.
 		while load(SCENE_SHEET_PATH).load_next_member(sheet):
@@ -234,8 +232,7 @@ func _poll_scene_open() -> void:
 	var pending: int = load(SCENE_SHEET_PATH).pending_members(_scene_sheet)
 	if _dock._open_progress != null:
 		var total: int = load(SCENE_SHEET_PATH).members_of(_scene_sheet).size()
-		_dock._open_progress.update("Reading %s - script %d of %d" % [
-			load(SCENE_SHEET_PATH).scene_path_of(_scene_sheet).get_file(), total - pending, total],
+		_dock._open_progress.update(EventSheetL10n.translate("reading script %d of %d") % [total - pending, total],
 			float(total - pending) / float(maxi(total, 1)))
 	if more or pending > 0:
 		return
