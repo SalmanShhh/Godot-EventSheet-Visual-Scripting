@@ -1228,7 +1228,8 @@ static func nested_block_left_for(depth: int, indent_width: int) -> float:
 ## The x of the ONE line a nesting level draws: the centre of the fold arrow of the blocks at that
 ## level (just left of them), so the line runs straight down from under the arrow of its parent.
 static func nesting_line_x(level: int, indent_width: int) -> float:
-	return EventSheetPalette.ROW_HORIZONTAL_PADDING + float(EventSheetPalette.GUTTER_WIDTH) 		+ float(level * indent_width) - 2.0
+	return EventSheetPalette.ROW_HORIZONTAL_PADDING + float(EventSheetPalette.GUTTER_WIDTH) \
+		+ float(level * indent_width) - 2.0
 
 
 ## Nesting in the margin: ONE 1 px line per level, at the fold arrow's column of that level, running

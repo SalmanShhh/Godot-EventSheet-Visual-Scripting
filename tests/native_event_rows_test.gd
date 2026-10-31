@@ -129,9 +129,9 @@ static func _test_shooter_events() -> bool:
 	var blank_tick: EventRowData = _event_with(native_view, events, "Keep ")
 	var result: bool = SUPPORT.pins(TEST_NAME, [
 		["the text is the design's 12 px, on 24 px lines", [native_view._get_font_size(), line], [12, 24.0]],
-		["a one-condition, one-action event is one line at rest", at_rest, [24.0, 24.0]],
-		["hovered it gains its add line, and the event below moves down by it", hovered, [48.0, 24.0]],
-		["the pointer moving on gives the line to the next event", moved_on, [24.0, 48.0]],
+		["a one-condition, one-action event is its line and the add action line at rest", at_rest, [48.0, 48.0]],
+		["hovered it gains its add condition line, which the add action line already covers", hovered, [48.0, 0.0]],
+		["the pointer moving on changes no height", moved_on, [48.0, 48.0]],
 		["selected it keeps the line", selected, 48.0],
 		["the trigger keeps its badge in the lane, and the behaviour leads its words",
 			_texts(jump), "⌨ | On \"ui_up\" pressed | + Add condition | Platformer: Jump | + Add action"],
