@@ -240,6 +240,9 @@ var _drag_press_hit: Dictionary = {}
 ## A click on a row of a selection of several, held until the button comes up: a drag carries the
 ## whole selection, and only a click that never lifted narrows it to the one row. {} when none.
 var _pending_click_select: Dictionary = {}
+## A plain press on a state of the state row, waiting for the button to come up without a drag:
+## {row_index, row, metadata}. Empty otherwise.
+var _pending_state_pick: Dictionary = {}
 # The ROW-BUILDER layer: owns "model → SemanticSpans" construction (span assembly, per-ACE
 # descriptors, non-event row builders). See interaction/viewport_row_builder.gd. The methods
 # below keep one-line delegates so internal STAY callers and tests reach it by the original names.
@@ -3562,9 +3565,9 @@ func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
 	if (entry is LocalVariable or entry is SignalRow) and EventSheetStateFacts.hides_declaration(_sheet, entry):
 		return null
 	var row_data: EventRowData = null
-	if entry is EnumRow and (entry as EnumRow).enum_name.strip_edges() == EventSheetStateFacts.ENUM_NAME \
-			and EventSheetStateFacts.machine(_sheet).get("enum") == entry:
-		row_data = _row_builder.build_state_row(EventSheetStateFacts.machine(_sheet), indent)
+	var drawn_machine: Dictionary = EventSheetStateFacts.machine_for_enum(_sheet, entry) if entry is EnumRow else {}
+	if not drawn_machine.is_empty():
+		row_data = _row_builder.build_state_row(drawn_machine, indent)
 	elif entry is EventGroup:
 		row_data = _row_builder._build_group_row(entry as EventGroup, indent)
 	elif entry is CommentRow:
@@ -4630,7 +4633,7 @@ func update_badge_card(hit: Dictionary, logical_position: Vector2, at_once: bool
 	var shown: LocalVariable = badge_row.source_resource as LocalVariable
 	# The state row acts for its enum; its marks are the state variable's.
 	if shown == null and ViewportRowBuilder._is_state_machine_row(badge_row):
-		shown = EventSheetStateFacts.machine(_sheet as EventSheetResource).get("variable") as LocalVariable
+		shown = EventSheetStateFacts.machine_of_entry(_sheet as EventSheetResource, badge_row.source_resource).get("variable") as LocalVariable
 	var card: Dictionary = NativeVariableMarks.badge_card(badge, shown)
 	if card.is_empty():
 		return false

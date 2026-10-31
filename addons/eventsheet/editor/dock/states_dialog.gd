@@ -3,8 +3,10 @@
 # Double-click the state row (or choose Declare states) and this opens as "States of <variable>": what the
 # machine is for, then its states in order - each with a name, a sentence and a radio that says which one
 # the object starts in - and the doors to add, remove, reorder and rename them. A rename is a rename
-# EVERYWHERE: every row, trigger and hand-written line of the sheet that said the old name says the new
-# one in the same edit.
+# EVERYWHERE, across the whole project: every row, trigger and hand-written line of the sheet, and every
+# other script that names the state through the declaring class, says the new name in the same edit, and
+# the window lists those files first. Removing a state does the same with the state the rows move to - the
+# default - so nothing is ever left pointing at a state that is gone, and one Undo takes all of it back.
 #
 # What it writes is the whole point of it: ORDINARY DECLARATIONS the author could have typed, and which a
 # hand-written object usually has typed already -
@@ -50,6 +52,16 @@ var _list: VBoxContainer = null
 var _code: Label = null
 var _problem_label: EventSheetPopupUI.StateNote = null
 var _radio_group: ButtonGroup = null
+## The machine this window edits, as EventSheetStateFacts.machine hands it back ({} for a sheet with none
+## yet, which is the primary State machine about to be declared).
+var _found: Dictionary = {}
+## The state the window opened on, picked in the list; -1 when none was asked for.
+var _picked: int = -1
+## The list of what a rename or removal will change, rebuilt as the working copy changes.
+var _effects: VBoxContainer = null
+## Every project script as {path: text}, read once when a change first needs it and dropped on close.
+var _sources: Dictionary = {}
+var _sources_ready: bool = false
 
 
 func init(dock: Control) -> void:
@@ -58,16 +70,29 @@ func init(dock: Control) -> void:
 
 ## Opens the window on this sheet's machine, or on a first set for a sheet that has none - three states
 ## an object usually grows, which the author is free to rewrite before Apply.
-func open() -> void:
-	var sheet: EventSheetResource = _dock._current_sheet
-	if sheet == null:
+##
+## `variable_name` says which machine (the primary `state`, or another `<x>_state` variable typed by an
+## enum of its own) and `picked` which of its states is picked in the list when it opens.
+func open(variable_name: String = EventSheetStateFacts.STATE_VARIABLE, picked: String = "") -> void:
+	if _dock._current_sheet == null:
 		return
+	# A .gd opened as a preview holds only a skeleton of its rows. The window lists everything a rename or
+	# a removal reaches, so it works on the whole sheet from the start, the way any edit does.
+	_dock._ace_apply._unlock_preview_for_edit()
+	var sheet: EventSheetResource = _dock._current_sheet
 	_build()
-	var model: Dictionary = model_of(sheet)
+	_found = EventSheetStateFacts.machine(sheet, variable_name)
+	var model: Dictionary = model_of(sheet, _found)
 	_entries = model["states"]
 	_description = str(model["description"])
 	_default_index = int(model["default"])
-	_dialog.title = EventSheetL10n.translate("States of %s") % EventSheetStateFacts.STATE_VARIABLE
+	_picked = -1
+	for index: int in _entries.size():
+		if str((_entries[index] as Dictionary)["name"]) == picked:
+			_picked = index
+	_sources.clear()
+	_sources_ready = false
+	_dialog.title = EventSheetL10n.translate("States of %s") % variable_name
 	_description_edit.text = _description
 	_problem_label.say("")
 	_rebuild_list()
@@ -110,7 +135,11 @@ func _build() -> void:
 	_problem_label = EventSheetPopupUI.StateNote.new(520.0)
 	form.add_child(_problem_label)
 
-	form.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("There is always exactly one default: a new machine takes its first state, and removing the default moves it to the next. Each description is written as a ## line above the state in the enum, so Godot's own help shows it too. Renaming a state renames it in every row of the sheet; a state that rows still use cannot be removed until they stop.")))
+	# What a rename or a removal will change, listed before Apply writes any of it.
+	_effects = VBoxContainer.new()
+	_effects.name = "StatesEffects"
+	_effects.add_theme_constant_override("separation", 2)
+	form.add_child(_effects)
 
 	_code = Label.new()
 	_code.name = "StatesCode"
@@ -130,6 +159,7 @@ func _rebuild_list() -> void:
 	for index: int in _entries.size():
 		_list.add_child(_state_row(index, counts))
 	_show_code()
+	_refresh_effects()
 
 
 func _state_row(index: int, counts: Dictionary) -> Control:
@@ -137,7 +167,27 @@ func _state_row(index: int, counts: Dictionary) -> Control:
 	var row: HBoxContainer = HBoxContainer.new()
 	row.name = "State%d" % index
 	row.add_theme_constant_override("separation", 6)
+	if index == _picked:
+		# The state a click in the sheet's row asked for wears the editor's accent, so it is the one a
+		# reader's eye lands on; the colour comes from the theme, light or dark.
+		var plate: PanelContainer = PanelContainer.new()
+		plate.name = "State%dPicked" % index
+		var fill: StyleBoxFlat = StyleBoxFlat.new()
+		fill.bg_color = Color(EventSheetPopupUI.accent_color(), 0.28)
+		fill.set_corner_radius_all(4)
+		fill.content_margin_left = 4.0
+		fill.content_margin_right = 4.0
+		fill.content_margin_top = 2.0
+		fill.content_margin_bottom = 2.0
+		plate.add_theme_stylebox_override("panel", fill)
+		plate.add_child(row)
+		_fill_state_row(row, index, entry, counts)
+		return plate
+	_fill_state_row(row, index, entry, counts)
+	return row
 
+
+func _fill_state_row(row: HBoxContainer, index: int, entry: Dictionary, counts: Dictionary) -> void:
 	var up: Button = Button.new()
 	up.name = "Up"
 	up.flat = true
@@ -162,7 +212,8 @@ func _state_row(index: int, counts: Dictionary) -> Control:
 	name_edit.add_theme_font_override("font", EventSheetPopupUI.editor_font("source"))
 	name_edit.text_changed.connect(func(text: String) -> void:
 		(_entries[index] as Dictionary)["name"] = text.strip_edges()
-		_show_code())
+		_show_code()
+		_refresh_effects())
 	row.add_child(name_edit)
 	EventSheets.attach_completions(name_edit, EventSheetCompletions.FIELD_STATE_NAME)
 
@@ -185,7 +236,8 @@ func _state_row(index: int, counts: Dictionary) -> Control:
 	radio.toggled.connect(func(on: bool) -> void:
 		if on:
 			_default_index = index
-			_show_code())
+			_show_code()
+			_refresh_effects())
 	row.add_child(radio)
 
 	var used: int = int(counts.get(str(entry["orig"]), 0)) if not str(entry["orig"]).is_empty() else 0
@@ -205,7 +257,6 @@ func _state_row(index: int, counts: Dictionary) -> Control:
 	remove.disabled = _entries.size() <= 1
 	remove.pressed.connect(_remove.bind(index))
 	row.add_child(remove)
-	return row
 
 
 func _move(index: int, by: int) -> void:
@@ -225,13 +276,13 @@ func _move(index: int, by: int) -> void:
 func _remove(index: int) -> void:
 	if _entries.size() <= 1:
 		return
-	var gone: Dictionary = _entries[index]
-	var uses: int = int(EventSheetStateFacts.naming_counts(_dock._current_sheet).get(str(gone["orig"]), 0))
-	if uses > 0:
-		# The rows that still use it come FIRST: nothing is removed until they are pointed somewhere else.
-		_problem_label.say(left_list_note_for(_dock._current_sheet, str(gone["orig"])), EventSheetPopupUI.TONE_WARNING)
-		return
+	# A state some row still says is removed all the same: the list below says which rows, and Apply moves
+	# them to the default.
 	_entries.remove_at(index)
+	if _picked == index:
+		_picked = -1
+	elif _picked > index:
+		_picked -= 1
 	# Removing the default moves it to the next state, or to the one before when it was the last.
 	if _default_index == index:
 		_default_index = mini(index, _entries.size() - 1)
@@ -259,6 +310,43 @@ func _fresh_name() -> String:
 	return candidate
 
 
+## The working copy as the statics take it, with the original states that are gone from the list.
+func _working_model() -> Dictionary:
+	var model: Dictionary = {"states": _entries.duplicate(true), "description": _description, "default": _default_index}
+	model["removed"] = removed_members(_dock._current_sheet, model, _found)
+	return model
+
+
+## Every project script, read the first time a change needs them.
+func _project_sources() -> Dictionary:
+	if not _sources_ready:
+		_sources = EventSheetStateUses.read_project()
+		_sources_ready = true
+	return _sources
+
+
+## The list under the form: for each rename and each removal, where it reaches - this sheet's rows and
+## every other file - so Apply is never a surprise. Empty while nothing renames or goes.
+func _refresh_effects() -> void:
+	if _effects == null or _dock == null or _dock._current_sheet == null:
+		return
+	for child: Node in _effects.get_children():
+		_effects.remove_child(child)
+		child.queue_free()
+	var sheet: EventSheetResource = _dock._current_sheet
+	var model: Dictionary = _working_model()
+	if renames_of(model).is_empty() and (model["removed"] as PackedStringArray).is_empty():
+		return
+	var lines: PackedStringArray = effect_lines(sheet, model, _found, _project_sources())
+	for line: String in lines:
+		var label: Label = Label.new()
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		label.custom_minimum_size.x = 520.0
+		label.text = line
+		label.add_theme_color_override("font_color", EventSheetPopupUI.secondary_text_color())
+		_effects.add_child(label)
+
+
 func _show_code() -> void:
 	if _code != null:
 		_code.text = code_for({"states": _entries, "description": _description, "default": _default_index})
@@ -266,8 +354,8 @@ func _show_code() -> void:
 
 func _on_confirmed() -> void:
 	var sheet: EventSheetResource = _dock._current_sheet
-	var model: Dictionary = {"states": _entries.duplicate(true), "description": _description, "default": _default_index}
-	var problem: String = problem_with(sheet, model)
+	var model: Dictionary = _working_model()
+	var problem: String = problem_with(sheet, model, _found)
 	if not problem.is_empty():
 		# Said where the typing was, and the window stays open on it: the fix is one edit.
 		_problem_label.say(problem)
@@ -275,8 +363,11 @@ func _on_confirmed() -> void:
 		return
 	_problem_label.say("")
 	_dialog.hide()
+	# Every other script that names a renamed or removed state is rewritten in the same step, so ONE Undo
+	# puts the open sheet and those files back together.
+	var file_edits: Dictionary = project_file_edits(sheet, model, _found, _project_sources())
 	if not _dock._perform_undoable_sheet_edit(EventSheetL10n.translate("Edit states"), func() -> bool:
-			return apply_model(_dock._current_sheet, model)):
+			return apply_model(_dock._current_sheet, model, _found), file_edits):
 		return
 	_dock._refresh_after_edit()
 	_dock._set_status(EventSheetL10n.translate("%d state(s) declared - rows can now say which one this object is in.")
@@ -287,28 +378,29 @@ func _on_confirmed() -> void:
 ## The window's working copy of the sheet's machine: {"states": [{"orig", "name", "note"}], "description",
 ## "default"}. A sheet with no machine gets three states an object usually grows, which the author is free
 ## to rewrite before Apply.
-static func model_of(sheet: EventSheetResource) -> Dictionary:
+static func model_of(sheet: EventSheetResource, found: Dictionary = {}) -> Dictionary:
 	var states: Array = []
-	var declared: EnumRow = EventSheetStateFacts.enum_row(sheet)
+	var declared: EnumRow = EventSheetStateFacts.enum_row(sheet) if found.is_empty() else found["enum"] as EnumRow
 	if declared == null or declared.members.is_empty():
 		for first: String in ["IDLE", "CHASE", "HURT"]:
 			states.append({"orig": "", "name": first, "note": ""})
-		return {"states": states, "description": "", "default": 0}
+		return {"states": states, "description": "", "default": 0, "removed": PackedStringArray()}
 	for member: String in declared.members:
 		var bare: String = EnumRow.bare_name(member)
 		states.append({"orig": bare, "name": bare, "note": declared.note_for(bare)})
-	var default_name: String = EventSheetStateFacts.default_member(sheet)
+	var default_name: String = EventSheetStateFacts.default_member(sheet, found)
 	var default_at: int = 0
 	for index: int in states.size():
 		if str((states[index] as Dictionary)["name"]) == default_name:
 			default_at = index
-	return {"states": states, "description": declared.description, "default": default_at}
+	return {"states": states, "description": declared.description, "default": default_at, "removed": PackedStringArray()}
 
 
 ## What is wrong with applying this working copy, said as one sentence, or "" when nothing is. A rename is
 ## never a problem - it is followed everywhere - but a name that cannot be an identifier, two states of one
-## name, and a removed state some row still uses are.
-static func problem_with(sheet: EventSheetResource, model: Dictionary) -> String:
+## name, and two states of one name. A removal is no problem: the rows that used the state move to the
+## default, and the window lists them first.
+static func problem_with(sheet: EventSheetResource, model: Dictionary, _found: Dictionary = {}) -> String:
 	var states: Array = model["states"]
 	if states.is_empty():
 		return EventSheetL10n.translate("Name at least one state.")
@@ -320,22 +412,130 @@ static func problem_with(sheet: EventSheetResource, model: Dictionary) -> String
 		if seen.has(name):
 			return EventSheetL10n.translate("Two states are named %s. Each state needs a name of its own.") % name
 		seen.append(name)
+	return ""
+
+
+## The original members the working copy no longer lists - the states removed in the window.
+static func removed_members(sheet: EventSheetResource, model: Dictionary, found: Dictionary = {}) -> PackedStringArray:
 	var kept: PackedStringArray = PackedStringArray()
-	for entry: Dictionary in states:
+	for entry: Dictionary in model["states"]:
 		if not str(entry["orig"]).is_empty():
 			kept.append(str(entry["orig"]))
-	var counts: Dictionary = EventSheetStateFacts.naming_counts(sheet)
-	var blocked: PackedStringArray = PackedStringArray()
-	for member: String in EventSheetStateFacts.bare_members(sheet):
-		if not kept.has(member) and int(counts.get(member, 0)) > 0:
-			blocked.append(left_list_note_for(sheet, member))
-	return " ".join(blocked)
+	var gone: PackedStringArray = PackedStringArray()
+	for member: String in EventSheetStateFacts.bare_members(sheet, found):
+		if not kept.has(member):
+			gone.append(member)
+	return gone
+
+
+## The renames the working copy makes: [[from, to], ...], in list order.
+static func renames_of(model: Dictionary) -> Array:
+	var renames: Array = []
+	for entry: Dictionary in model["states"]:
+		var from: String = str(entry["orig"])
+		var to: String = str(entry["name"]).strip_edges()
+		if not from.is_empty() and from != to:
+			renames.append([from, to])
+	return renames
+
+
+## The state the rows of a removed state move to: the machine's new default, said by its new name.
+static func default_name_of(model: Dictionary) -> String:
+	var states: Array = model["states"]
+	if states.is_empty():
+		return ""
+	return str((states[clampi(int(model["default"]), 0, states.size() - 1)] as Dictionary)["name"]).strip_edges()
+
+
+## What Apply will change, one sentence per rename and per removal: this sheet's rows, then each other
+## file with its count. `sources` is {path: text} of the project's scripts. Empty when nothing changes.
+static func effect_lines(sheet: EventSheetResource, model: Dictionary, found: Dictionary, sources: Dictionary) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	var declaring: String = sheet.custom_class_name.strip_edges()
+	var enum_name: String = str(found.get("enum_name", EventSheetStateFacts.ENUM_NAME))
+	var skip: Dictionary = {}
+	if not sheet.external_source_path.is_empty():
+		skip[sheet.external_source_path] = true
+	var target: String = default_name_of(model)
+	var changes: Array = []
+	for pair: Array in renames_of(model):
+		changes.append([str(pair[0]), str(pair[1]), false])
+	for member: String in removed_members(sheet, model, found):
+		changes.append([member, target, true])
+	for change: Array in changes:
+		var member: String = str(change[0])
+		var places: PackedStringArray = PackedStringArray()
+		var here: int = rows_using(sheet, member, found)
+		if here > 0:
+			places.append(EventSheetL10n.translate("this sheet (1 row)") if here == 1 else EventSheetL10n.translate("this sheet (%d rows)") % here)
+		var uses: Array[Dictionary] = EventSheetStateUses.scan(sources, declaring, enum_name, PackedStringArray([member]), skip)
+		for entry: Dictionary in uses:
+			places.append("%s (%s)" % [str(entry["path"]).get_file(),
+				EventSheetL10n.translate("1 place") if int(entry["count"]) == 1 else EventSheetL10n.translate("%d places") % int(entry["count"])])
+		if bool(change[2]):
+			if places.is_empty():
+				lines.append(EventSheetL10n.translate("%s is removed. No row uses it.") % member)
+			else:
+				lines.append(EventSheetL10n.translate("%s is removed. These move to %s, the default: %s.") % [member, str(change[1]), ", ".join(places)])
+		else:
+			if places.is_empty():
+				lines.append(EventSheetL10n.translate("%s becomes %s. No row uses it.") % [member, str(change[1])])
+			else:
+				lines.append(EventSheetL10n.translate("%s becomes %s in: %s.") % [member, str(change[1]), ", ".join(places)])
+	return lines
+
+
+## How many places of this sheet a rename of `member` would change: asked of a copy by running the very
+## rename Apply runs, so the list the window shows and the edit it makes cannot disagree.
+static func rows_using(sheet: EventSheetResource, member: String, found: Dictionary = {}) -> int:
+	var copy: EventSheetResource = sheet.duplicate(true)
+	var machine_here: Dictionary = {}
+	if not found.is_empty():
+		machine_here = EventSheetStateFacts.machine(copy, str(found.get("variable_name", EventSheetStateFacts.STATE_VARIABLE)))
+	return rename_everywhere(copy, member, "__COUNTED__", machine_here)
+
+
+## The edits to the project's OTHER scripts that Apply makes: {path: {"before", "after"}} for every script
+## that names a renamed or removed state through the declaring class. A swap of two names goes through a
+## placeholder, like the sheet's own rows do. Empty when no other script is touched.
+static func project_file_edits(sheet: EventSheetResource, model: Dictionary, found: Dictionary, sources: Dictionary) -> Dictionary:
+	var edits: Dictionary = {}
+	var declaring: String = sheet.custom_class_name.strip_edges()
+	if declaring.is_empty() or sources.is_empty():
+		return edits
+	var enum_name: String = str(found.get("enum_name", EventSheetStateFacts.ENUM_NAME))
+	var skip: Dictionary = {}
+	if not sheet.external_source_path.is_empty():
+		skip[sheet.external_source_path] = true
+	var renames: Array = renames_of(model)
+	var removed: PackedStringArray = removed_members(sheet, model, found)
+	var target: String = default_name_of(model)
+	var touched: PackedStringArray = PackedStringArray()
+	for pair: Array in renames:
+		touched.append(str(pair[0]))
+	touched.append_array(removed)
+	for entry: Dictionary in EventSheetStateUses.scan(sources, declaring, enum_name, touched, skip):
+		var path: String = str(entry["path"])
+		var before: String = str(sources[path])
+		var text: String = before
+		var placeholders: Array = []
+		for index: int in renames.size():
+			var placeholder: String = "__STATE_RENAME_%d__" % index
+			text = str(EventSheetStateUses.rewrite(text, declaring, enum_name, str(renames[index][0]), placeholder)["text"])
+			placeholders.append([placeholder, str(renames[index][1])])
+		for pair: Array in placeholders:
+			text = str(EventSheetStateUses.rewrite(text, declaring, enum_name, str(pair[0]), str(pair[1]))["text"])
+		for member: String in removed:
+			text = str(EventSheetStateUses.rewrite(text, declaring, enum_name, member, target)["text"])
+		if text != before:
+			edits[path] = {"before": before, "after": text}
+	return edits
 
 
 ## Writes the working copy onto the sheet, every rename followed through every row. Returns whether it did;
 ## an unwritable copy (see problem_with) changes nothing.
-static func apply_model(sheet: EventSheetResource, model: Dictionary) -> bool:
-	if sheet == null or not problem_with(sheet, model).is_empty():
+static func apply_model(sheet: EventSheetResource, model: Dictionary, found: Dictionary = {}) -> bool:
+	if sheet == null or not problem_with(sheet, model, found).is_empty():
 		return false
 	var states: Array = model["states"]
 	var default_at: int = clampi(int(model["default"]), 0, states.size() - 1)
@@ -352,20 +552,28 @@ static func apply_model(sheet: EventSheetResource, model: Dictionary) -> bool:
 	var placeholders: Array = []
 	for index: int in renames.size():
 		var placeholder: String = "__STATE_RENAME_%d__" % index
-		rename_everywhere(sheet, str(renames[index][0]), placeholder)
+		rename_everywhere(sheet, str(renames[index][0]), placeholder, found)
 		placeholders.append([placeholder, str(renames[index][1])])
 	for pair: Array in placeholders:
-		rename_everywhere(sheet, str(pair[0]), str(pair[1]))
+		rename_everywhere(sheet, str(pair[0]), str(pair[1]), found)
+	# A removed state's rows move to the default, so nothing is left pointing at a state that is gone.
+	for gone: String in removed_members(sheet, model, found):
+		if gone != opening:
+			rename_everywhere(sheet, gone, opening, found)
 	# What each member says after its name ("HURT = 4") belongs to the member, so it travels with it.
 	var written: Dictionary = {}
-	var declared: EnumRow = EventSheetStateFacts.enum_row(sheet)
+	var declared: EnumRow = EventSheetStateFacts.enum_row(sheet) if found.is_empty() else found["enum"] as EnumRow
 	if declared != null:
 		for member: String in declared.members:
 			var suffix: String = member.substr(member.find("=")) if member.contains("=") else ""
 			written[EnumRow.bare_name(member)] = suffix
-	if not write(sheet, names, opening):
+	var own_machine: bool = not found.is_empty() and str(found.get("variable_name", "")) != EventSheetStateFacts.STATE_VARIABLE
+	if own_machine:
+		# A machine of its own has only its enum and its variable: no setter, no helpers to keep true.
+		(found["variable"] as LocalVariable).default_value = "%s.%s" % [found["enum_name"], opening]
+	elif not write(sheet, names, opening):
 		return false
-	var enum_row: EnumRow = EventSheetStateFacts.enum_row(sheet)
+	var enum_row: EnumRow = EventSheetStateFacts.enum_row(sheet) if not own_machine else found["enum"] as EnumRow
 	var members: PackedStringArray = PackedStringArray()
 	var notes: Dictionary = {}
 	for index: int in states.size():
@@ -386,28 +594,34 @@ static func apply_model(sheet: EventSheetResource, model: Dictionary) -> bool:
 ## Every place the sheet says one state, said with another name: the rows' own parameters (Is, Was, Go to,
 ## the timed question, the two triggers), the lines of a `match` and of any kept code, the way a
 ## hand-written machine spells it. Returns how many places changed.
-static func rename_everywhere(sheet: EventSheetResource, from: String, to: String) -> int:
+static func rename_everywhere(sheet: EventSheetResource, from: String, to: String, found: Dictionary = {}) -> int:
 	if sheet == null or from == to or from.is_empty() or to.is_empty():
 		return 0
 	var changed: int = 0
+	# A machine of its own is named by its own enum (`WeaponState.DRAWN`); only the primary machine has the
+	# vocabulary rows (Is, Was, Go to, the two triggers) whose parameter carries the bare member.
+	var own_machine: bool = not found.is_empty() and str(found.get("variable_name", "")) != EventSheetStateFacts.STATE_VARIABLE
+	var prefix: String = (str(found["enum_name"]) + ".") if not found.is_empty() else EventSheetStateFacts.MEMBER_PREFIX
 	var pattern: RegEx = RegEx.new()
-	pattern.compile("\\b%s%s\\b" % [EventSheetStateFacts.MEMBER_PREFIX.replace(".", "\\."), from])
-	var replacement: String = EventSheetStateFacts.MEMBER_PREFIX + to
-	changed += _rename_in(EventSheetStateFacts.rows_of(sheet), from, to, pattern, replacement)
+	pattern.compile("\\b%s%s\\b" % [prefix.replace(".", "\\."), from])
+	var replacement: String = prefix + to
+	changed += _rename_in(EventSheetStateFacts.rows_of(sheet), from, to, pattern, replacement, not own_machine)
 	# The variable may start in it.
-	for variable_name: String in [EventSheetStateFacts.STATE_VARIABLE, EventSheetStateFacts.PREVIOUS_VARIABLE]:
+	var variable_names: Array = [found["variable_name"]] if own_machine else [EventSheetStateFacts.STATE_VARIABLE, EventSheetStateFacts.PREVIOUS_VARIABLE]
+	for variable_name: String in variable_names:
 		var declared: LocalVariable = EventSheetStateFacts.variable_row(sheet, variable_name)
-		if declared != null and str(declared.default_value).strip_edges() == EventSheetStateFacts.MEMBER_PREFIX + from:
+		if declared != null and str(declared.default_value).strip_edges() == prefix + from:
 			declared.default_value = replacement
 			changed += 1
 	return changed
 
 
-static func _rename_in(items: Array, from: String, to: String, pattern: RegEx, replacement: String) -> int:
+static func _rename_in(items: Array, from: String, to: String, pattern: RegEx, replacement: String,
+		with_params: bool = true) -> int:
 	var changed: int = 0
 	for item: Variant in items:
 		if item is EventGroup:
-			changed += _rename_in(EventSheetGroupFacts.children(item as EventGroup), from, to, pattern, replacement)
+			changed += _rename_in(EventSheetGroupFacts.children(item as EventGroup), from, to, pattern, replacement, with_params)
 			continue
 		if item is RawCodeRow:
 			var code: String = (item as RawCodeRow).code
@@ -417,20 +631,20 @@ static func _rename_in(items: Array, from: String, to: String, pattern: RegEx, r
 				changed += 1
 			continue
 		if item is MatchRow:
-			changed += _rename_in_match(item as MatchRow, from, to, pattern, replacement)
+			changed += _rename_in_match(item as MatchRow, from, to, pattern, replacement, with_params)
 			continue
 		var event_row: EventRow = item as EventRow
 		if event_row == null:
 			continue
-		if str(event_row.trigger_params.get(EventSheetStateFacts.STATE_PARAM, "")).strip_edges() == from:
+		if with_params and str(event_row.trigger_params.get(EventSheetStateFacts.STATE_PARAM, "")).strip_edges() == from:
 			event_row.trigger_params[EventSheetStateFacts.STATE_PARAM] = to
 			changed += 1
-		if event_row.trigger != null and str(event_row.trigger.params.get(EventSheetStateFacts.STATE_PARAM, "")).strip_edges() == from:
+		if with_params and event_row.trigger != null and str(event_row.trigger.params.get(EventSheetStateFacts.STATE_PARAM, "")).strip_edges() == from:
 			event_row.trigger.params[EventSheetStateFacts.STATE_PARAM] = to
 		for is_action: bool in [false, true]:
 			for ace: Variant in (event_row.actions if is_action else event_row.conditions):
 				if ace is MatchRow:
-					changed += _rename_in_match(ace as MatchRow, from, to, pattern, replacement)
+					changed += _rename_in_match(ace as MatchRow, from, to, pattern, replacement, with_params)
 					continue
 				if ace is RawCodeRow:
 					var raw: String = (ace as RawCodeRow).code
@@ -439,17 +653,31 @@ static func _rename_in(items: Array, from: String, to: String, pattern: RegEx, r
 						(ace as RawCodeRow).code = raw_rewritten
 						changed += 1
 					continue
-				if not (ace is Resource) or not EventSheetStateFacts.STATE_ACE_IDS.has(str((ace as Resource).get("ace_id"))):
+				if ace is Resource and not EventSheetStateFacts.STATE_ACE_IDS.has(str((ace as Resource).get("ace_id"))):
+					# Any other row can name the state in a typed value (`weapon_state = WeaponState.FIRING`
+					# in a Set variable action, a Compare condition), so its text params follow too.
+					var other: Variant = (ace as Resource).get("params")
+					if other is Dictionary:
+						for key: Variant in (other as Dictionary).keys():
+							if (other as Dictionary)[key] is String:
+								var text_value: String = (other as Dictionary)[key]
+								var text_rewritten: String = pattern.sub(text_value, replacement, true)
+								if text_rewritten != text_value:
+									(other as Dictionary)[key] = text_rewritten
+									changed += 1
+					continue
+				if not with_params or not (ace is Resource):
 					continue
 				var params: Variant = (ace as Resource).get("params")
 				if params is Dictionary and str((params as Dictionary).get(EventSheetStateFacts.STATE_PARAM, "")).strip_edges() == from:
 					(params as Dictionary)[EventSheetStateFacts.STATE_PARAM] = to
 					changed += 1
-		changed += _rename_in(event_row.sub_events, from, to, pattern, replacement)
+		changed += _rename_in(event_row.sub_events, from, to, pattern, replacement, with_params)
 	return changed
 
 
-static func _rename_in_match(row: MatchRow, from: String, to: String, pattern: RegEx, replacement: String) -> int:
+static func _rename_in_match(row: MatchRow, from: String, to: String, pattern: RegEx, replacement: String,
+		with_params: bool = true) -> int:
 	var changed: int = 0
 	var text: String = pattern.sub(row.branches_text, replacement, true)
 	if text != row.branches_text:
@@ -462,7 +690,7 @@ static func _rename_in_match(row: MatchRow, from: String, to: String, pattern: R
 		if rewritten != case_row.pattern:
 			case_row.pattern = rewritten
 			changed += 1
-		changed += _rename_in(case_row.events, from, to, pattern, replacement)
+		changed += _rename_in(case_row.events, from, to, pattern, replacement, with_params)
 	return changed
 
 

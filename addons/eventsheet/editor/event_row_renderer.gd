@@ -1712,10 +1712,17 @@ func _draw_spans(
 			continue
 		var color: Color = metadata.get("text_color", _get_span_color(span.type, event_style, reading))
 		# While the game runs, the state it is in lights up in the state row: its name sits on a plate.
+		var live_token_text: String = ""
 		if metadata.has("state_name") and EventSheetStateWatch.is_live() \
 				and EventSheetStateWatch.live_members().has(str(metadata["state_name"])):
-			control.draw_rect(span.rect.grow_individual(2.0, -3.0, 2.0, -3.0), Color(event_style.value_highlight_color, 0.22), true)
 			color = event_style.value_highlight_color
+			# The time it has held rides inside the same token, in the room the row reserved for it; the
+			# plate is as wide as what it says, so the room held for a longer reading does not show.
+			live_token_text = EventSheetStateWatch.token_text(str(metadata["state_name"]))
+			var plate: Rect2 = span.rect.grow_individual(2.0, -3.0, 2.0, -3.0)
+			if not live_token_text.is_empty():
+				plate.size.x = minf(plate.size.x, font.get_string_size(live_token_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + 6.0)
+			control.draw_rect(plate, Color(event_style.value_highlight_color, 0.22), true)
 		# The type word is the guide rail on a variable's value: while the field is being typed
 		# into, a literal the declared type cannot hold turns amber with the reason on the row, never
 		# a modal. The value is still whatever the file says until Enter.
@@ -1739,6 +1746,8 @@ func _draw_spans(
 		if dimmed_group:
 			color = Color(color, color.a * DISABLED_GROUP_ALPHA)
 		var draw_text: String = editing_buffer if span_index == editing_span_index else span.text
+		if not live_token_text.is_empty():
+			draw_text = live_token_text
 		var draw_font_size: int = EventSheetPalette.resolve_font_size(
 			font_size,
 			int(metadata.get("font_size_delta", 0))

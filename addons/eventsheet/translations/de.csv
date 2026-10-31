@@ -9801,3 +9801,9 @@ the state it was in before this one,"der Zustand, in dem es vor diesem war"
 when the state it is in began,wann der aktuelle Zustand begann
 announced every time the state changes,wird bei jedem Zustandswechsel gemeldet
 "also keeps, out of sight","führt außerdem, unsichtbar"
+this sheet (1 row),dieses Blatt (1 Zeile)
+this sheet (%d rows),dieses Blatt (%d Zeilen)
+%s is removed. No row uses it.,%s wird entfernt. Keine Zeile verwendet es.
+"%s is removed. These move to %s, the default: %s.","%s wird entfernt. Diese wechseln zu %s, dem Standard: %s."
+%s becomes %s. No row uses it.,%s wird zu %s. Keine Zeile verwendet es.
+%s becomes %s in: %s.,%s wird zu %s in: %s.

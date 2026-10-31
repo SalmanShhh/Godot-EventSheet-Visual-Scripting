@@ -9801,3 +9801,9 @@ the state it was in before this one,"состояние, в котором он 
 when the state it is in began,когда началось текущее состояние
 announced every time the state changes,объявляется при каждой смене состояния
 "also keeps, out of sight","также хранит, скрыто"
+this sheet (1 row),этот лист (1 строка)
+this sheet (%d rows),этот лист (строк: %d)
+%s is removed. No row uses it.,%s будет удалено. Ни одна строка его не использует.
+"%s is removed. These move to %s, the default: %s.","%s будет удалено. Они перейдут на %s, состояние по умолчанию: %s."
+%s becomes %s. No row uses it.,%s станет %s. Ни одна строка его не использует.
+%s becomes %s in: %s.,%s станет %s в: %s.

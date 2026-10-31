@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Changed: states are project-wide, and every state variable is its own machine
+
+- Renaming a state in the States window renames it in every place the project says it: this sheet's
+  rows, triggers, hand-written lines and typed values, and every other script that names it through
+  the declaring class (`Player.State.RUN`) or extends that class and inherits the enum. The window
+  lists each sheet and file with its count before Apply writes anything, and one Undo puts the sheet
+  and all of those files back. A behaviour pack's script is never rewritten.
+- Removing a state is no longer refused when rows still use it: the window lists the rows and files
+  that use it, and Apply moves them to the machine's default state (the same single Undo).
+- Every `<x>_state` variable typed by an enum of its own (`weapon_state: WeaponState`) is a machine
+  and a state row of its own, with its own window, states, default and cards. The primary `state`
+  keeps its helpers and its live reading.
+- The state the running game is in lights up inside its token with the time it has held, RUN · 3.2 s,
+  instead of as text at the end of the row. The row holds room for the time, so nothing moves when
+  the seconds change.
+- Clicking a state in the row opens the States window with that state picked; a double-click on any
+  word of the row opens it too.
+- The States window keeps no help strip, as the board draws none.
+
 ### Fixed: type tests read with the right article
 
 - "Is a kind of" reads on the value being asked about, `body | is an Enemy`, and says "an" before a

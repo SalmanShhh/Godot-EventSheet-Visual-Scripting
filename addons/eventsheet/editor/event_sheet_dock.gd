@@ -3531,6 +3531,7 @@ func _on_debug_session_ended() -> void:
 	# the file declares and nothing more, and the timed row goes back to reading exactly as it reads
 	# with nothing running. Stop the game and the sheet is the document it always was.
 	EventSheetStateWatch.clear()
+	_refresh_state_rows()
 	# A game that is not running is not paused anywhere either.
 	_paused_row_uid = ""
 	_ensure_live_values_panel().clear_live_values()
@@ -3620,11 +3621,23 @@ func _ensure_live_values_window() -> void:
 	_ensure_live_values_panel().ensure_window()
 
 
+## Lays the open sheet's rows out again when its state row's live room changed. Only a sheet that has a
+## state machine pays for it.
+func _refresh_state_rows() -> void:
+	if _viewport != null and _current_sheet != null and not EventSheetStateFacts.machines(_current_sheet).is_empty():
+		_viewport.rebuild_rows()
+
+
 func update_live_values(values: Dictionary, instance: String = "") -> void:
 	# What state the object is in, out of the frame that was arriving anyway. Noted BEFORE the panel
 	# forwards the frame to the panes, because forwarding it is what repaints them - so the band and
 	# the timed row's progress are drawn from the frame that just landed rather than the one before.
+	var live_before: String = EventSheetStateWatch.live_signature()
 	EventSheetStateWatch.note_frame(values, instance)
+	# The state row holds room for the live state's time, so the rows are laid out again when the state
+	# the game is in changes (not at every frame: the seconds change inside the room already held).
+	if live_before != EventSheetStateWatch.live_signature():
+		_refresh_state_rows()
 	# …and what it just DID, out of the same frame. The trail may not reach a sheet at all, so what
 	# this sheet says about its own states is handed to it as a plain Dictionary.
 	load(STATE_TRAIL_PATH).note_frame(values, instance, _state_trail_index())
@@ -4038,11 +4051,14 @@ var _states_dialog: RefCounted = null
 ## The head's states band ▸ Declare states…: this object's own states, declared once, as ordinary
 ## rows. The same dialog family as Edit modes above, one level down - the game has a mode, and each
 ## object has a state.
-func open_states_dialog() -> void:
+##
+## `variable_name` is the machine (the primary `state`, or another `<x>_state` variable with an enum of its
+## own) and `picked` the state to land on: a click on a state of the sheet's row passes both.
+func open_states_dialog(variable_name: String = "state", picked: String = "") -> void:
 	if _states_dialog == null:
 		_states_dialog = load(STATES_DIALOG_PATH).new()
 		_states_dialog.init(self)
-	_states_dialog.open()
+	_states_dialog.open(variable_name, picked)
 
 
 ## The finding one note row is about, found again by asking the sheet. The note carries WHERE it was
@@ -8045,6 +8061,21 @@ func _capture_sheet_snapshot() -> EventSheetResource:
 	return _current_sheet.duplicate(true)
 
 
+## Writes the other project scripts one edit reached ({path: text}), each backed up first, and tells the
+## editor's file system so the files re-import. A file is only ever written back to a text it was read as.
+func _write_project_texts(texts: Dictionary) -> void:
+	for path: Variant in texts:
+		EventSheetBackups.backup_sheet(str(path))
+		var handle: FileAccess = FileAccess.open(str(path), FileAccess.WRITE)
+		if handle != null:
+			handle.store_string(str(texts[path]))
+			handle.close()
+		if Engine.is_editor_hint():
+			var file_system: EditorFileSystem = EditorInterface.get_resource_filesystem()
+			if file_system != null:
+				file_system.update_file(str(path))
+
+
 func _restore_sheet_snapshot(snapshot: EventSheetResource) -> void:
 	if snapshot == null:
 		return
@@ -8091,7 +8122,11 @@ func _restore_sheet_snapshot(snapshot: EventSheetResource) -> void:
 	_mark_dirty("Applied undo/redo.")
 
 
-func _perform_undoable_sheet_edit(action_name: String, operation: Callable) -> bool:
+##
+## `file_edits` is the edit's reach beyond the open sheet: {path: {"before", "after"}} of other project
+## scripts the same change rewrites (a state renamed in the States window, named by other files). They are
+## written with the edit and written back by its Undo, in the same step, so the project is one undo.
+func _perform_undoable_sheet_edit(action_name: String, operation: Callable, file_edits: Dictionary = {}) -> bool:
 	if _current_sheet == null or not operation.is_valid():
 		return false
 	# A file a merge has not finished with is blocked TOTALLY, and this is the funnel every edit in
@@ -8113,7 +8148,13 @@ func _perform_undoable_sheet_edit(action_name: String, operation: Callable) -> b
 	var after: EventSheetResource = _capture_sheet_snapshot()
 	if before == null or after == null:
 		return false
+	var texts_after: Dictionary = {}
+	var texts_before: Dictionary = {}
+	for edited: Variant in file_edits:
+		texts_after[edited] = str((file_edits[edited] as Dictionary)["after"])
+		texts_before[edited] = str((file_edits[edited] as Dictionary)["before"])
 	if not _undo_redo_adapter.has_manager():
+		_write_project_texts(texts_after)
 		_refresh_after_edit()
 		return true
 	# Both sides of the step are tagged with the tab they were made on, before the commit runs the
@@ -8124,6 +8165,9 @@ func _perform_undoable_sheet_edit(action_name: String, operation: Callable) -> b
 	_undo_redo_adapter.create_action(action_name)
 	_undo_redo_adapter.add_do_method(self, "_restore_sheet_snapshot", [after])
 	_undo_redo_adapter.add_undo_method(self, "_restore_sheet_snapshot", [before])
+	if not texts_after.is_empty():
+		_undo_redo_adapter.add_do_method(self, "_write_project_texts", [texts_after])
+		_undo_redo_adapter.add_undo_method(self, "_write_project_texts", [texts_before])
 	_undo_redo_adapter.commit_action()
 	# The toolbar's Undo/Redo icons follow the history, and this is the one place every edit passes
 	# through - so they are refreshed here rather than polled every frame.

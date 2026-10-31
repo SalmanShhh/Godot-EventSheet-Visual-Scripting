@@ -41,13 +41,21 @@ static func run() -> bool:
 	rows.append(["the variable starts in the chosen default", EventSheetStateFacts.default_member(sheet), "JUMP"])
 	rows.append(["...and the variable line says so", str(EventSheetStateFacts.variable_row(sheet, "state").default_value), "State.JUMP"])
 
-	# --- a state rows still use cannot be removed; one nothing uses can, and the default moves on ---
+	# --- a state rows still use CAN be removed: those rows move to the default, and the list says which ---
 	var removing: Dictionary = EventSheetStatesDialog.model_of(sheet)
 	(removing["states"] as Array).remove_at(1)
 	removing["default"] = 1
-	rows.append(["a state that rows still say cannot be removed", EventSheetStatesDialog.problem_with(sheet, removing).is_empty(), false])
-	rows.append(["...and nothing changes", EventSheetStatesDialog.apply_model(sheet, removing), false])
-	rows.append(["...the members are as they were", EventSheetStateFacts.bare_members(sheet), PackedStringArray(["IDLE", "SPRINT", "JUMP"])])
+	rows.append(["removing a state that rows say is not a problem", EventSheetStatesDialog.problem_with(sheet, removing), ""])
+	rows.append(["the removed state is named", EventSheetStatesDialog.removed_members(sheet, removing), PackedStringArray(["SPRINT"])])
+	rows.append(["the rows that would move are listed first", EventSheetStatesDialog.effect_lines(sheet, removing, {}, {}),
+		PackedStringArray(["SPRINT is removed. These move to JUMP, the default: this sheet (4 rows)."])])
+	rows.append(["applying it succeeds", EventSheetStatesDialog.apply_model(sheet, removing), true])
+	rows.append(["the members are the ones left", EventSheetStateFacts.bare_members(sheet), PackedStringArray(["IDLE", "JUMP"])])
+	rows.append(["the condition moved to the default", _param(sheet.events[_index_of_row(sheet, 0)], "conditions", 0), "JUMP"])
+	rows.append(["the trigger moved to the default", str((sheet.events[_index_of_row(sheet, 1)] as EventRow).trigger_params.get("state", "")), "JUMP"])
+	var restore: Dictionary = EventSheetStatesDialog.model_of(sheet)
+	(restore["states"] as Array).insert(1, {"orig": "", "name": "SPRINT", "note": ""})
+	EventSheetStatesDialog.apply_model(sheet, restore)
 
 	# --- sentences are ## lines, and read back ---
 	var noted: Dictionary = EventSheetStatesDialog.model_of(sheet)

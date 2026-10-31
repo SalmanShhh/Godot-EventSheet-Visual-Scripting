@@ -129,6 +129,30 @@ static func live_members() -> PackedStringArray:
 	return members
 
 
+## What the live state's token says inside the state row while the game runs: "RUN · 3.2 s", the state
+## and how long it has held, on the one plate. "" for a member no running game is in. With two games in
+## one run it is the first one that is in that state.
+static func token_text(member: String) -> String:
+	for instance: Variant in _frames:
+		var frame: Dictionary = _frames[instance]
+		if str(frame.get("state", "")).strip_edges() == member:
+			return compose_band(member, float(frame.get("seconds", 0.0)))
+	return ""
+
+
+## The widest a live token gets, which is the room the state row holds for it: the layout cannot move
+## every four-hundredth of a second, so the token reserves a hundred seconds' worth of digits and the
+## renderer fills as much of it as the reading needs.
+static func token_reserve(member: String) -> String:
+	return compose_band(member, 99.9)
+
+
+## One word that changes exactly when the row must be laid out again: which states the running games are
+## in. The seconds are not part of it - they change inside the room the token already holds.
+static func live_signature() -> String:
+	return "|".join(live_members())
+
+
 ## One game's band reading. The state arrives as the enum MEMBER the game sent (CHASE) and is said
 ## as the word the whole plugin says it with, so the band, the dropdown and the row cannot spell one
 ## state three ways. "" for a frame that named no state.

@@ -495,7 +495,24 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		else:
 			_viewport._select_from_click(row_index, int(press_target.get("span_index", -1)),
 				event.ctrl_pressed or event.meta_pressed)
+		# A plain press on a state of the state row asks for the States window with that state picked, once
+		# the button comes up without having dragged the row anywhere.
+		_viewport._pending_state_pick = {}
+		var pressed_meta: Dictionary = hit.get("span_metadata", {})
+		var plain_press: bool = not event.double_click and not event.ctrl_pressed \
+				and not event.meta_pressed and not event.shift_pressed
+		if plain_press and row_data != null and bool(pressed_meta.get("state_machine", false)) \
+				and pressed_meta.has("state_token"):
+			_viewport._pending_state_pick = {"row_index": row_index, "row": row_data, "metadata": pressed_meta.duplicate(true)}
 		if event.double_click:
+			# The state row is a machine, not an enum: its window is the States window, whichever word of
+			# the row was double-clicked, with that state picked when the word is one.
+			if row_data != null and ViewportRowBuilder._is_state_machine_row(row_data):
+				var machine_meta: Dictionary = hit.get("span_metadata", {}).duplicate(true)
+				machine_meta["state_machine"] = true
+				_viewport.variable_edit_requested.emit(row_data, machine_meta)
+				_viewport.accept_event()
+				return
 			# In-flow GDScript blocks (actions) open the code dialog, not the ACE editor.
 			var double_click_meta: Dictionary = hit.get("span_metadata", {})
 			if bool(double_click_meta.get("match_action", false)) and row_data != null and _viewport.ace_owner(row_data.source_resource) != null:
@@ -676,6 +693,11 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 	if _viewport.end_column_header_drag():
 		_viewport.accept_event()
 		return
+	if not _viewport._pending_state_pick.is_empty():
+		var state_pick: Dictionary = _viewport._pending_state_pick
+		_viewport._pending_state_pick = {}
+		if not _viewport._drag_motion.active:
+			_viewport.variable_edit_requested.emit(state_pick["row"], state_pick["metadata"])
 	# The press kept a selection of several for a drag that never lifted: it was a click after all.
 	if not _viewport._pending_click_select.is_empty():
 		var pending: Dictionary = _viewport._pending_click_select

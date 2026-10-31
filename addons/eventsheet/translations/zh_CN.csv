@@ -9801,3 +9801,9 @@ the state it was in before this one,进入此状态之前所处的状态
 when the state it is in began,当前状态开始的时刻
 announced every time the state changes,每次状态改变时发出
 "also keeps, out of sight",另外在幕后保存
+this sheet (1 row),此表(1 行)
+this sheet (%d rows),此表(%d 行)
+%s is removed. No row uses it.,将移除 %s。没有任何行使用它。
+"%s is removed. These move to %s, the default: %s.",将移除 %s。以下内容改用默认状态 %s:%s。
+%s becomes %s. No row uses it.,%s 将改为 %s。没有任何行使用它。
+%s becomes %s in: %s.,%s 将在以下位置改为 %s:%s。

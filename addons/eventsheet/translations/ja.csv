@@ -9801,3 +9801,9 @@ the state it was in before this one,この状態の前にいた状態
 when the state it is in began,今の状態が始まった時刻
 announced every time the state changes,状態が変わるたびに通知される
 "also keeps, out of sight",表示せずに保持しているもの
+this sheet (1 row),このシート(1行)
+this sheet (%d rows),このシート(%d行)
+%s is removed. No row uses it.,%s を削除します。これを使う行はありません。
+"%s is removed. These move to %s, the default: %s.",%s を削除します。次は既定の %s に移ります: %s。
+%s becomes %s. No row uses it.,%s は %s になります。これを使う行はありません。
+%s becomes %s in: %s.,%s は次で %s になります: %s。

@@ -4894,12 +4894,14 @@ func build_state_row(machine: Dictionary, indent: int) -> EventRowData:
 			"variable_resource": variable,
 			"row_uid": "state_row_%d" % enum_row.get_instance_id(),
 			"reading_scope": _member_scope_key(variable),
-			"description": EventSheetStateFacts.machine_description(sheet),
+			"description": EventSheetStateFacts.machine_description(sheet, machine),
 		})
 	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
 	var style: EventSheetEventStyle = _viewport._get_event_style()
-	var default_member: String = EventSheetStateFacts.default_member(sheet)
+	var default_member: String = EventSheetStateFacts.default_member(sheet, machine)
 	var row_meta: Dictionary = {"state_machine": true, "kind": "variable", "editable": false, "variable_name": variable.name}
+	# Only the primary machine streams its live state, so only its tokens carry a state_name to light up.
+	var primary_machine: bool = variable.name.strip_edges() == EventSheetStateFacts.STATE_VARIABLE
 	# The value goes: the states take its place, right after the name.
 	var at: int = -1
 	for index: int in row_data.spans.size():
@@ -4909,15 +4911,23 @@ func build_state_row(machine: Dictionary, indent: int) -> EventRowData:
 			break
 	var states: Array[SemanticSpan] = [_make_span(EventSheetL10n.translate("is one of"),
 		SemanticSpan.SpanType.COMMENT, row_meta.merged({"text_color": reading_style.muted_text_color}, true))]
-	var members: PackedStringArray = EventSheetStateFacts.bare_members(sheet)
+	var members: PackedStringArray = EventSheetStateFacts.bare_members(sheet, machine)
 	for member_index: int in members.size():
 		var member: String = members[member_index]
-		states.append(_make_span(member, SemanticSpan.SpanType.VALUE, row_meta.merged({
-			"state_name": member,
+		var token_meta: Dictionary = row_meta.merged({
+			"state_token": member,
 			"text_color": style.value_highlight_color,
 			"hover_card_mark": true,
-			"head_card": EventSheetStateFacts.state_card(sheet, member),
-		}, true)))
+			"head_card": EventSheetStateFacts.state_card(sheet, member, machine),
+		}, true)
+		var token_text: String = member
+		if primary_machine:
+			token_meta["state_name"] = member
+			# The state a running game is in holds room for its time ("RUN · 3.2 s"), drawn inside the
+			# token by the renderer; the rows are laid out again when the live state changes.
+			if EventSheetStateWatch.is_live() and EventSheetStateWatch.live_members().has(member):
+				token_text = EventSheetStateWatch.token_reserve(member)
+		states.append(_make_span(token_text, SemanticSpan.SpanType.VALUE, token_meta))
 		if member == default_member:
 			states.append(_make_span(EventSheetL10n.translate("(default)"), SemanticSpan.SpanType.COMMENT,
 				row_meta.merged({"text_color": reading_style.muted_text_color}, true)))
@@ -4941,7 +4951,7 @@ func build_state_row(machine: Dictionary, indent: int) -> EventRowData:
 				(span.metadata as Dictionary)["object_glyph"] = NativeRowMarks.OBJECT_GLYPH_STATE
 				(span.metadata as Dictionary)["object_icon"] = _glyph_icon_slot()
 			# The variable's name opens the card of the lines the row keeps out of sight.
-			if bool((span.metadata as Dictionary).get("variable_name_span", false)):
+			if bool((span.metadata as Dictionary).get("variable_name_span", false)) and primary_machine:
 				var hidden_card: Dictionary = EventSheetStateFacts.machine_card(sheet)
 				if not hidden_card.is_empty():
 					(span.metadata as Dictionary)["head_card"] = hidden_card

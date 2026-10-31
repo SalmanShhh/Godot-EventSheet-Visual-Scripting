@@ -248,7 +248,8 @@ static func _run_dialog() -> bool:
 
 
 ## The refusal is read where the typing was: the window stays open with the reason under its form,
-## instead of closing and saying it on the status bar behind it.
+## instead of closing and saying it on the status bar behind it. A removal is not refused any more: the rows
+## that name the removed state move to the default, under the same one edit.
 static func _run_dialog_refuses_in_place() -> bool:
 	var sheet: EventSheetResource = _states_sheet()
 	sheet.events.append(_row("OnReady", [], [_action_ace("GoToState", {"state": "CHASE"})]))
@@ -259,15 +260,23 @@ static func _run_dialog_refuses_in_place() -> bool:
 	dialog.init(dock)
 	dialog._build()
 	dialog._entries = EventSheetStatesDialog.model_of(sheet)["states"]
-	dialog._entries.remove_at(1)
+	(dialog._entries[0] as Dictionary)["name"] = "2fast"
 	dialog._default_index = 0
 	dialog._on_confirmed()
 	var all_passed: bool = SUPPORT.check("object_state_test",
 		"a refused Apply keeps the window open and says why under the form",
-		[dialog._problem_label.visible, dialog._problem_label.text,
+		[dialog._problem_label.visible, dialog._problem_label.text.contains("2fast"),
 			EventSheetStateFacts.names(dock._current_sheet)],
-		[true, "CHASE is still used by 1 row(s), so it was not removed. Point those rows at another state first, then remove it.",
-			PackedStringArray(["PATROL", "CHASE", "STAGGER"])])
+		[true, true, PackedStringArray(["PATROL", "CHASE", "STAGGER"])])
+	dialog._entries = EventSheetStatesDialog.model_of(sheet)["states"]
+	dialog._entries.remove_at(1)
+	dialog._default_index = 0
+	dialog._on_confirmed()
+	var moved_row: EventRow = dock._current_sheet.events[dock._current_sheet.events.size() - 1] as EventRow
+	all_passed = SUPPORT.check("object_state_test",
+		"removing a state a row goes to is applied: that row moves to the default",
+		[EventSheetStateFacts.names(dock._current_sheet), str((moved_row.actions[0] as Resource).get("params")["state"])],
+		[PackedStringArray(["PATROL", "STAGGER"]), "PATROL"]) and all_passed
 	dock.free()
 	return all_passed
 

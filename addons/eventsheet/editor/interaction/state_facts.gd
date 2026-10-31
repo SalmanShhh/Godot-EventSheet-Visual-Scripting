@@ -80,16 +80,23 @@ static func names(sheet: EventSheetResource) -> PackedStringArray:
 
 
 ## The enum's members exactly as it declares them, explicit values and all ("STAGGER = 3" stays that).
-static func members(sheet: EventSheetResource) -> PackedStringArray:
-	var row: EnumRow = enum_row(sheet)
+static func members(sheet: EventSheetResource, found: Dictionary = {}) -> PackedStringArray:
+	var row: EnumRow = _enum_of(sheet, found)
 	return PackedStringArray() if row == null else row.members
+
+
+## The enum a machine stands on: the machine's own when one is handed in, else the primary State enum.
+static func _enum_of(sheet: EventSheetResource, found: Dictionary) -> EnumRow:
+	if not found.is_empty():
+		return found.get("enum") as EnumRow
+	return enum_row(sheet)
 
 
 ## The bare member names, with any explicit value dropped - what a row's parameter carries and what
 ## the reachability checks compare.
-static func bare_members(sheet: EventSheetResource) -> PackedStringArray:
+static func bare_members(sheet: EventSheetResource, found: Dictionary = {}) -> PackedStringArray:
 	var bare: PackedStringArray = PackedStringArray()
-	for member: String in members(sheet):
+	for member: String in members(sheet, found):
 		bare.append(member.split("=")[0].strip_edges())
 	return bare
 
@@ -149,7 +156,9 @@ static func member_for(word: String) -> String:
 ## The machine this sheet declares: the State enum and the `state` variable typed by it, as
 ## {"enum": EnumRow, "variable": LocalVariable}, or {} when either is missing. An enum alone is only an
 ## enum, and a `state` variable that is not of this enum is only a variable.
-static func machine(sheet: EventSheetResource) -> Dictionary:
+static func machine(sheet: EventSheetResource, variable_name: String = STATE_VARIABLE) -> Dictionary:
+	if variable_name != STATE_VARIABLE:
+		return _own_machine(sheet, variable_name)
 	var declared_enum: EnumRow = enum_row(sheet)
 	if declared_enum == null:
 		return {}
@@ -164,7 +173,81 @@ static func machine(sheet: EventSheetResource) -> Dictionary:
 	var starts_unset: bool = declared.no_default and declared.type_name.strip_edges() == ENUM_NAME
 	if not starts_in_member and not starts_unset:
 		return {}
-	return {"enum": declared_enum, "variable": declared}
+	return {"enum": declared_enum, "variable": declared, "enum_name": ENUM_NAME, "variable_name": STATE_VARIABLE}
+
+
+## A machine of its own: any variable named `<something>_state` that an enum of the sheet types and that
+## starts in one of that enum's members (or starts unset). `weapon_state: WeaponState = WeaponState.DRAWN`
+## is a second machine with its own row, its own states and its own window - there is no "add machine"
+## concept, because a machine was never a thing here, only an enum and the variable it types. The primary
+## State enum, the helper `previous_state` and a variable that shares the primary enum are not machines
+## of their own. {} when `variable_name` is not one.
+static func _own_machine(sheet: EventSheetResource, variable_name: String) -> Dictionary:
+	if sheet == null or variable_name == PREVIOUS_VARIABLE or not variable_name.ends_with("_state"):
+		return {}
+	var declared: LocalVariable = variable_row(sheet, variable_name)
+	if declared == null or declared.is_constant:
+		return {}
+	var type_word: String = declared.type_name.strip_edges()
+	if type_word.is_empty() or type_word == ENUM_NAME:
+		return {}
+	var typing_enum: EnumRow = null
+	for entry: Variant in sheet.events:
+		var row: EnumRow = entry as EnumRow
+		if row != null and row.enabled and row.enum_name.strip_edges() == type_word:
+			typing_enum = row
+			break
+	if typing_enum == null or typing_enum.members.is_empty():
+		return {}
+	var written: String = str(declared.default_value).strip_edges()
+	var starts_in_member: bool = written.begins_with(type_word + ".")
+	if not starts_in_member and not declared.no_default:
+		return {}
+	return {"enum": typing_enum, "variable": declared, "enum_name": type_word, "variable_name": variable_name}
+
+
+## Every machine the sheet declares, in sheet order of its variable: the primary State machine (when
+## there is one) and each `<x>_state` variable typed by an enum of its own. Two variables typed by one
+## enum are one machine, the first variable's.
+static func machines(sheet: EventSheetResource) -> Array[Dictionary]:
+	var found: Array[Dictionary] = []
+	if sheet == null:
+		return found
+	var seen: Array = []
+	for entry: Variant in sheet.events:
+		var declared: LocalVariable = entry as LocalVariable
+		if declared == null:
+			continue
+		var found_machine: Dictionary = machine(sheet, declared.name.strip_edges())
+		if found_machine.is_empty() or seen.has(found_machine["enum"]):
+			continue
+		seen.append(found_machine["enum"])
+		found.append(found_machine)
+	return found
+
+
+## The machine whose enum row this is, {} for any other row: what decides that an enum row is drawn as a
+## state row.
+static func machine_for_enum(sheet: EventSheetResource, entry: Variant) -> Dictionary:
+	if not (entry is EnumRow):
+		return {}
+	for found: Dictionary in machines(sheet):
+		if found["enum"] == entry:
+			return found
+	return {}
+
+
+## The machine a row of the sheet belongs to - its enum, its variable or (for the primary one) a helper
+## it hides - or {}.
+static func machine_of_entry(sheet: EventSheetResource, entry: Variant) -> Dictionary:
+	for found: Dictionary in machines(sheet):
+		if found["enum"] == entry or found["variable"] == entry:
+			return found
+	if entry is LocalVariable or entry is SignalRow:
+		var primary: Dictionary = machine(sheet)
+		if not primary.is_empty() and hides_declaration(sheet, entry):
+			return primary
+	return {}
 
 
 ## True for a declaration the state row stands in for, so the sheet draws it as that one row and not as
@@ -176,7 +259,10 @@ static func hides_declaration(sheet: EventSheetResource, entry: Variant) -> bool
 	if declared != null:
 		var name: String = declared.name.strip_edges()
 		if name != STATE_VARIABLE and name != PREVIOUS_VARIABLE and name != SINCE_VARIABLE:
-			return false
+			# Another machine's own variable is drawn by its state row too.
+			var own: Dictionary = machine(sheet, name) if name.ends_with("_state") else {}
+			return not own.is_empty() and own["variable"] == declared and machines(sheet).any(
+				func(each: Dictionary) -> bool: return each["variable"] == declared)
 		if machine(sheet).is_empty():
 			return false
 		if name == STATE_VARIABLE:
@@ -205,11 +291,13 @@ static func hides_declaration(sheet: EventSheetResource, entry: Variant) -> bool
 ## variable and its helpers behind as loose rows, and deleting the variable alone broke the machine.
 static func machine_parts(sheet: EventSheetResource, entry: Variant) -> Array[Resource]:
 	var parts: Array[Resource] = []
-	var found: Dictionary = machine(sheet)
+	var found: Dictionary = machine_of_entry(sheet, entry)
 	if found.is_empty():
 		return parts
+	var primary: bool = str(found.get("variable_name", STATE_VARIABLE)) == STATE_VARIABLE
 	for declared: Variant in sheet.events:
-		if declared == found["enum"] or hides_declaration(sheet, declared):
+		if declared == found["enum"] or declared == found["variable"] \
+				or (primary and hides_declaration(sheet, declared) and machine_of_entry(sheet, declared) == found):
 			parts.append(declared as Resource)
 	if not parts.has(entry):
 		parts.clear()
@@ -217,8 +305,9 @@ static func machine_parts(sheet: EventSheetResource, entry: Variant) -> Array[Re
 
 
 ## What the machine is for, in one line: the `##` above its enum, its lines joined by a space.
-static func machine_description(sheet: EventSheetResource) -> String:
-	var found: Dictionary = machine(sheet)
+static func machine_description(sheet: EventSheetResource, found: Dictionary = {}) -> String:
+	if found.is_empty():
+		found = machine(sheet)
 	if found.is_empty():
 		return ""
 	return " ".join(str((found["enum"] as EnumRow).description).split("\n")).strip_edges()
@@ -226,21 +315,22 @@ static func machine_description(sheet: EventSheetResource) -> String:
 
 ## The member the machine starts in. Always one: the variable's own value when it names a member of the
 ## enum, else the first member - a machine with no default is not a state a reader can name.
-static func default_member(sheet: EventSheetResource) -> String:
-	var members_here: PackedStringArray = bare_members(sheet)
+static func default_member(sheet: EventSheetResource, found: Dictionary = {}) -> String:
+	var members_here: PackedStringArray = bare_members(sheet, found)
 	if members_here.is_empty():
 		return ""
-	var declared: LocalVariable = variable_row(sheet, STATE_VARIABLE)
+	var declared: LocalVariable = variable_row(sheet, STATE_VARIABLE) if found.is_empty() else found.get("variable") as LocalVariable
 	if declared != null:
-		var written: String = str(declared.default_value).strip_edges().trim_prefix(MEMBER_PREFIX).strip_edges()
+		var prefix: String = MEMBER_PREFIX if found.is_empty() else str(found["enum_name"]) + "."
+		var written: String = str(declared.default_value).strip_edges().trim_prefix(prefix).strip_edges()
 		if members_here.has(written):
 			return written
 	return members_here[0]
 
 
 ## The sentence written above one state in the enum, "" when it has none.
-static func state_note(sheet: EventSheetResource, member: String) -> String:
-	var row: EnumRow = enum_row(sheet)
+static func state_note(sheet: EventSheetResource, member: String, found: Dictionary = {}) -> String:
+	var row: EnumRow = _enum_of(sheet, found)
 	return "" if row == null else row.note_for(member)
 
 
@@ -281,18 +371,18 @@ static func machine_card(sheet: EventSheetResource) -> Dictionary:
 ## The card a state's name opens wherever the sheet says it: the name, "the default state" when it is,
 ## and what it is for - the same words in the state row, in is / was / go to, and in On entering /
 ## On leaving. {} for a word that is not one of this machine's states.
-static func state_card(sheet: EventSheetResource, member: String) -> Dictionary:
+static func state_card(sheet: EventSheetResource, member: String, found: Dictionary = {}) -> Dictionary:
 	var wanted: String = word_for(member)
-	if sheet == null or not bare_members(sheet).has(wanted):
+	if sheet == null or not bare_members(sheet, found).has(wanted):
 		return {}
-	var note: String = state_note(sheet, wanted)
+	var note: String = state_note(sheet, wanted, found)
 	var card: Dictionary = {
-		"id": "state:%s" % wanted,
+		"id": ("state:%s" % wanted) if found.is_empty() else ("state:%s:%s" % [found["variable_name"], wanted]),
 		"title": wanted,
 		"width": 260,
 		"anchor": "left",
 	}
-	if wanted == default_member(sheet):
+	if wanted == default_member(sheet, found):
 		card["subtitle"] = EventSheetL10n.translate("the default state")
 	if not note.is_empty():
 		card["lines"] = PackedStringArray([note])
