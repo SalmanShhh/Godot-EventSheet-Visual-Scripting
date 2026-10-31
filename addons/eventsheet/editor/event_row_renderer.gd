@@ -1163,6 +1163,12 @@ func _draw_gutter_markers(control: Control, gutter_rect: Rect2, breakpoint_enabl
 		]), reading.bookmark_color)
 
 
+## The fill of one nesting strip: the parent event's own condition-lane colour, or the group's tint
+## when the parent is a group, so a strip reads as the parent's lane carried down beside its children.
+static func strip_fill(event_style: EventSheetEventStyle, parent_is_group: bool) -> Color:
+	return event_style.group_background_color if parent_is_group else event_style.condition_lane_color
+
+
 ## One nesting level is one strip: `indent_width` wide, filled with the colour of the PARENT block it
 ## belongs to (an event's own, or its group's) and ruled by a 1 px line down its left side, so a branch
 ## is followed down the page by its strips. Strips run from the gutter's edge, one per ancestor, and
@@ -1176,7 +1182,7 @@ func _draw_indent_strips(control: Control, row_rect: Rect2, row_data: EventRowDa
 	for level: int in range(depth):
 		var strip_x: float = row_rect.position.x + float(EventSheetPalette.GUTTER_WIDTH) + float(level * indent_width)
 		var in_group: bool = level < 30 and (row_data.strip_groups >> level) & 1 == 1
-		var fill: Color = event_style.group_background_color if in_group else event_style.row_background_color
+		var fill: Color = strip_fill(event_style, in_group)
 		control.draw_rect(Rect2(strip_x, row_rect.position.y, float(indent_width), row_rect.size.y), fill, true)
 		control.draw_rect(Rect2(strip_x, row_rect.position.y, line_width, row_rect.size.y), event_style.row_border_color, true)
 

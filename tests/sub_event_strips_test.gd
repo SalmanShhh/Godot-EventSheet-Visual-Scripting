@@ -23,6 +23,57 @@ static func run() -> bool:
 	ok = _test_divider() and ok
 	ok = _test_strip_kinds() and ok
 	ok = _test_name_column_cap() and ok
+	ok = _test_strip_fill_and_cut_names() and ok
+	return ok
+
+
+## A strip is filled with the parent's condition lane (or its group's tint), and a name the fixed
+## column cut short is read whole by the hover.
+static func _test_strip_fill_and_cut_names() -> bool:
+	var style := EventSheetEventStyle.new()
+	style.condition_lane_color = Color("#112233")
+	style.group_background_color = Color("#445566")
+	style.row_background_color = Color("#778899")
+	var ok: bool = SUPPORT.pins(TEST_NAME, [
+		["an event parent fills its strip with its condition lane, never the row background",
+			EventRowRenderer.strip_fill(style, false).to_html(false), "112233"],
+		["a group parent fills it with the group tint", EventRowRenderer.strip_fill(style, true).to_html(false), "445566"],
+	])
+	var sheet := EventSheetResource.new()
+	var event := EventRow.new()
+	var condition := ACECondition.new()
+	condition.provider_id = "Core"
+	condition.ace_id = "Compare"
+	event.conditions.append(condition)
+	sheet.events.append(event)
+	var view := EventSheetViewport.new()
+	view.set_ace_registry(EventSheetACERegistry.new())
+	view.size = Vector2(1200.0, 600.0)
+	view.set_sheet(sheet)
+	view._layout_builder.get_or_build_row_layout(0, view._get_logical_canvas_width(), view._get_font(), view._get_font_size())
+	var row_data: EventRowData = view._row_at(0)
+	var span: SemanticSpan = null
+	for candidate: SemanticSpan in row_data.spans:
+		if candidate != null and candidate.metadata is Dictionary and (candidate.metadata as Dictionary).has("object_label") \
+				and str((candidate.metadata as Dictionary).get("lane", "")) == "condition":
+			span = candidate
+			break
+	if span == null:
+		ok = SUPPORT.check(TEST_NAME, "the sample event has a condition span with an object name", false, true) and ok
+	else:
+		var metadata: Dictionary = span.metadata
+		var short_name: String = str(metadata.get("object_label", ""))
+		var inside: Vector2 = Vector2(span.rect.position.x + 2.0, span.rect.get_center().y)
+		var whole: String = view.elided_object_name_at(0, row_data.spans.find(span), inside)
+		metadata["object_label"] = "AVeryLongObjectNameThatNoColumnCouldHold_" + short_name
+		var cut: String = view.elided_object_name_at(0, row_data.spans.find(span), inside)
+		ok = SUPPORT.pins(TEST_NAME, [
+			["a name that fits its column adds no hover", whole, ""],
+			["a name wider than the column is read whole on hover", cut, str(metadata.get("object_label", ""))],
+			["and a point past the column is not the name", view.elided_object_name_at(0, row_data.spans.find(span),
+				Vector2(span.rect.end.x + 500.0, inside.y)), ""],
+		]) and ok
+	view.free()
 	return ok
 
 

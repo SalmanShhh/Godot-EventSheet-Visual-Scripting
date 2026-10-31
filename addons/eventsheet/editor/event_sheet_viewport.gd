@@ -4706,6 +4706,30 @@ func head_card() -> Control:
 	return _head_card
 
 
+## The whole object name of the span at `span_index` when its fixed column drew it elided and
+## `logical` is over that column, else "". The same limit the renderer elides to, so the two agree.
+func elided_object_name_at(row_index: int, span_index: int, logical: Vector2) -> String:
+	var row_data: EventRowData = _row_at(row_index)
+	if row_data == null or span_index < 0 or span_index >= row_data.spans.size():
+		return ""
+	var span: SemanticSpan = row_data.spans[span_index]
+	if span == null or not span.metadata is Dictionary:
+		return ""
+	var label: String = str((span.metadata as Dictionary).get("object_label", ""))
+	if label.is_empty():
+		return ""
+	var font: Font = _get_font()
+	var font_size: int = _get_font_size()
+	var text_origin: float = _span_text_origin_x(span, font, font_size)
+	if logical.x < span.rect.position.x or logical.x >= text_origin:
+		return ""
+	var icon_room: float = EventRowRenderer.OBJECT_ICON_ADVANCE if (span.metadata as Dictionary).get("object_icon") is Texture2D else 0.0
+	var limit: float = text_origin - span.rect.position.x - icon_room - 6.0
+	if font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, _span_draw_font_size(span, font_size)).x <= limit:
+		return ""
+	return label
+
+
 func _get_tooltip(at_position: Vector2) -> String:
 	# While something is carried the ghost is the only thing that talks.
 	if _drag_motion.active:
@@ -4780,6 +4804,11 @@ func _get_tooltip(at_position: Vector2) -> String:
 	var glossary_help: String = _glossary_tooltip(hit)
 	if not glossary_help.is_empty():
 		return glossary_help
+	# An object name the fixed column cut short ("CharacterBo...") is read whole on hover.
+	var cut_name: String = elided_object_name_at(int(hit.get("row_index", -1)), int(hit.get("span_index", -1)),
+		_to_logical_position(at_position))
+	if not cut_name.is_empty():
+		return cut_name
 	# A sentence or chip view over a raw statement keeps the CODE one hover away - the flat exit
 	# ramp in miniature. Resolved through the action index so the tooltip always shows the very
 	# line the row is, not a reconstruction of it.

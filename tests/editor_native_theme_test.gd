@@ -132,8 +132,8 @@ static func _test_derived_greys_for_a_dark_and_a_light_editor() -> bool:
 		dark_style.get_chrome_style().active_tab_edge_color.to_html(false), light_style.get_chrome_style().active_tab_edge_color.to_html(false),
 		dark_style.get_chrome_style().status_ok_color.to_html(false), light_style.get_chrome_style().status_ok_color.to_html(false)],
 		["3a72b0", "3a72b0", "8fc27a", "204a15"]])
-	rows.append(["both hands: 8 px between two events, a 4 px group box corner",
-		[dark.event_block_gap, light.variable_group_corner_radius], [8, 4]])
+	rows.append(["both hands: 2 px between two events, a 4 px group box corner",
+		[dark.event_block_gap, light.variable_group_corner_radius], [2, 4]])
 	# A slightly darker dark editor and a brighter light one: the greys move with the editor, the
 	# colours do not.
 	var neutral_dark: EventSheetEditorStyle = EventSheetEditorThemeDeriver.native_style(Color("#252525"))

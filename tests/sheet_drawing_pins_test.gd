@@ -4,7 +4,7 @@ extends RefCounted
 #
 #   1. A sheet that never chose a look keeps Editor Native when a divider or name-column drag saves
 #      a number onto it (the drag once turned it into a Classic-like style).
-#   2. In a look that draws strips, an event's fold arrow sits at the foot of its block.
+#   2. An event's fold arrow sits beside its block's first line, strips or not.
 #   3. A word card is found by the rectangle its word drew in.
 #   4. The word cards' offsets are measured once per text and kept, and the running game's live
 #      states are worked out once per frame that arrives, not once per drawn name.
@@ -28,7 +28,7 @@ class FakeDock extends Control:
 static func run() -> bool:
 	var ok: bool = true
 	ok = _test_promoted_style() and ok
-	ok = _test_fold_at_foot() and ok
+	ok = _test_fold_at_head() and ok
 	ok = _test_word_cards() and ok
 	ok = _test_code_cancels_open() and ok
 	return ok
@@ -50,7 +50,7 @@ static func _test_promoted_style() -> bool:
 	])
 
 
-static func _test_fold_at_foot() -> bool:
+static func _test_fold_at_head() -> bool:
 	var sheet := EventSheetResource.new()
 	var parent := EventRow.new()
 	for index: int in 3:
@@ -73,11 +73,11 @@ static func _test_fold_at_foot() -> bool:
 		var fold: Rect2 = layout.get("fold_rect", Rect2())
 		var top: float = view._row_metrics_helper.row_top(0)
 		var height: float = view._row_metrics_helper.row_height(0)
-		results.append([fold.size != Vector2.ZERO, is_equal_approx(fold.end.y, top + height - 4.0), height > 40.0])
+		results.append([fold.size != Vector2.ZERO, is_equal_approx(fold.position.y, top + 6.0), height > 40.0])
 		view.free()
 	return SUPPORT.pins(TEST_NAME, [
-		["with strips, a tall event's fold arrow sits 4 px above the foot of its block", results[0], [true, true, true]],
-		["without strips it stays at the head", results[1][1], false],
+		["with strips, a tall event's fold arrow sits level with its first line, not at its foot", results[0], [true, true, true]],
+		["without strips it is the same", results[1][1], true],
 	])
 
 
