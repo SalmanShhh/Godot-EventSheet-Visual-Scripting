@@ -9797,3 +9797,7 @@ Also Run Parent Function,同时运行父函数
 Also run the parent's version ({args}),同时运行父类的版本 ({args})
 "Comma-separated argument expressions, normally this function's own parameters in order.",以逗号分隔的参数表达式，通常是此函数自己的参数，按顺序。
 reading the code,正在读取代码
+the state it was in before this one,进入此状态之前所处的状态
+when the state it is in began,当前状态开始的时刻
+announced every time the state changes,每次状态改变时发出
+"also keeps, out of sight",另外在幕后保存

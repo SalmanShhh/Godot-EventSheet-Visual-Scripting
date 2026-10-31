@@ -244,6 +244,40 @@ static func state_note(sheet: EventSheetResource, member: String) -> String:
 	return "" if row == null else row.note_for(member)
 
 
+## The card the state row's variable name opens: the lines the row keeps out of sight, each with what it
+## is for, so a reader learns they are there without them taking rows of their own. {} without a machine.
+static func machine_card(sheet: EventSheetResource) -> Dictionary:
+	if machine(sheet).is_empty():
+		return {}
+	var lines: PackedStringArray = PackedStringArray()
+	var code: PackedStringArray = PackedStringArray()
+	for declared: Variant in sheet.events:
+		if not hides_declaration(sheet, declared):
+			continue
+		var variable: LocalVariable = declared as LocalVariable
+		if variable != null and variable.name.strip_edges() == PREVIOUS_VARIABLE:
+			lines.append("%s - %s" % [PREVIOUS_VARIABLE, EventSheetL10n.translate("the state it was in before this one")])
+			code.append("var %s: %s" % [PREVIOUS_VARIABLE, ENUM_NAME])
+		elif variable != null and variable.name.strip_edges() == SINCE_VARIABLE:
+			lines.append("%s - %s" % [SINCE_VARIABLE, EventSheetL10n.translate("when the state it is in began")])
+			code.append("var %s: int" % SINCE_VARIABLE)
+		elif declared is SignalRow:
+			lines.append("%s - %s" % [CHANGED_SIGNAL, EventSheetL10n.translate("announced every time the state changes")])
+			code.append("signal %s" % CHANGED_SIGNAL)
+	if lines.is_empty():
+		return {}
+	return {
+		"id": "state_machine",
+		"title": STATE_VARIABLE,
+		"subtitle": EventSheetL10n.translate("also keeps, out of sight"),
+		"width": 300,
+		"anchor": "left",
+		"lines": lines,
+		"mono": "\n".join(code),
+		"code_last": true,
+	}
+
+
 ## The card a state's name opens wherever the sheet says it: the name, "the default state" when it is,
 ## and what it is for - the same words in the state row, in is / was / go to, and in On entering /
 ## On leaving. {} for a word that is not one of this machine's states.

@@ -9797,3 +9797,7 @@ Also Run Parent Function,親の関数も実行
 Also run the parent's version ({args}),親の版も実行 ({args})
 "Comma-separated argument expressions, normally this function's own parameters in order.",カンマ区切りの引数の式。普通はこの関数自身の引数を順番どおりに。
 reading the code,コードを読み込み中
+the state it was in before this one,この状態の前にいた状態
+when the state it is in began,今の状態が始まった時刻
+announced every time the state changes,状態が変わるたびに通知される
+"also keeps, out of sight",表示せずに保持しているもの

@@ -434,9 +434,11 @@ static func _mode_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 static func _state_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 	var entries: Array[Dictionary] = []
 	for member: String in EventSheetStateFacts.bare_members(sheet):
+		# The detail is the state's own sentence (the `##` line above it in the enum), so choosing a
+		# state for is / was / go to says what each one is for. The name is already the text.
 		entries.append({
 			"text": member,
-			"detail": EventSheetStateFacts.word_for(member),
+			"detail": EventSheetStateFacts.state_note(sheet, member),
 			"kind": KIND_ENUM,
 		})
 	return entries

@@ -9797,3 +9797,7 @@ Also Run Parent Function,부모 함수도 실행
 Also run the parent's version ({args}),부모의 버전도 실행 ({args})
 "Comma-separated argument expressions, normally this function's own parameters in order.",쉼표로 구분한 인수 식. 보통 이 함수의 매개변수를 순서대로 씁니다.
 reading the code,코드를 읽는 중
+the state it was in before this one,이 상태 전에 있던 상태
+when the state it is in began,지금 상태가 시작된 시각
+announced every time the state changes,상태가 바뀔 때마다 알림
+"also keeps, out of sight",보이지 않게 함께 두는 것

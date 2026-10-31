@@ -4940,6 +4940,12 @@ func build_state_row(machine: Dictionary, indent: int) -> EventRowData:
 			if bool((span.metadata as Dictionary).get("variable_type_span", false)):
 				(span.metadata as Dictionary)["object_glyph"] = NativeRowMarks.OBJECT_GLYPH_STATE
 				(span.metadata as Dictionary)["object_icon"] = _glyph_icon_slot()
+			# The variable's name opens the card of the lines the row keeps out of sight.
+			if bool((span.metadata as Dictionary).get("variable_name_span", false)):
+				var hidden_card: Dictionary = EventSheetStateFacts.machine_card(sheet)
+				if not hidden_card.is_empty():
+					(span.metadata as Dictionary)["head_card"] = hidden_card
+					(span.metadata as Dictionary)["hover_card_mark"] = true
 	return row_data
 
 

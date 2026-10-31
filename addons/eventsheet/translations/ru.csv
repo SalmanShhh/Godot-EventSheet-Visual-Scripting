@@ -9797,3 +9797,7 @@ Also Run Parent Function,Также выполнить родительскую 
 Also run the parent's version ({args}),Также выполнить версию родителя ({args})
 "Comma-separated argument expressions, normally this function's own parameters in order.","Выражения аргументов через запятую, обычно собственные параметры этой функции по порядку."
 reading the code,чтение кода
+the state it was in before this one,"состояние, в котором он был до этого"
+when the state it is in began,когда началось текущее состояние
+announced every time the state changes,объявляется при каждой смене состояния
+"also keeps, out of sight","также хранит, скрыто"

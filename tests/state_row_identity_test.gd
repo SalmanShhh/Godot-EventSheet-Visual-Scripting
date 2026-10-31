@@ -28,6 +28,14 @@ static func run() -> bool:
 	other.default_value = "200.0"
 	sheet.events.append(other)
 	var declared: int = sheet.events.size()
+	# Choosing a state for is / go to shows each state's own sentence beside its name.
+	var noted: Dictionary = EventSheetStatesDialog.model_of(sheet)
+	((noted["states"] as Array)[1] as Dictionary)["note"] = "Running flat out."
+	EventSheetStatesDialog.apply_model(sheet, noted)
+	var offered: Array = EventSheetCompletions.candidates(sheet, EventSheetCompletions.FIELD_STATE)
+	var details: Array = []
+	for entry: Variant in offered:
+		details.append([str((entry as Dictionary).get("text", "")), str((entry as Dictionary).get("detail", ""))])
 
 	var view := EventSheetViewport.new()
 	view.set_ace_registry(EventSheetACERegistry.new())
@@ -50,6 +58,13 @@ static func run() -> bool:
 	var widened: Array[Resource] = RowEditOps.with_machine_parts(sheet, [enum_row] as Array[Resource])
 	var ordinary: Array[Resource] = RowEditOps.with_machine_parts(sheet, [other] as Array[Resource])
 	var rows: Array = [
+		["the state field offers each state with its sentence", details,
+			[["IDLE", ""], ["RUN", "Running flat out."], ["JUMP", ""]]],
+		["the name of the state variable opens the card of the lines the row keeps out of sight",
+			_name_card_lines(state_row), PackedStringArray([
+				"state_entered_msec - when the state it is in began",
+				"previous_state - the state it was in before this one",
+				"state_changed - announced every time the state changes"])],
 		["the state row is drawn", state_row != null, true],
 		["it acts for the enum it is drawn at", state_row.source_resource == enum_row if state_row != null else false, true],
 		["the machine is the enum and every line the row hides",
@@ -68,3 +83,13 @@ static func run() -> bool:
 	rows.append(["the sheet declared six lines before", declared, 6])
 	view.free()
 	return SUPPORT.pins(P, rows)
+
+
+static func _name_card_lines(state_row: EventRowData) -> PackedStringArray:
+	if state_row == null:
+		return PackedStringArray()
+	for span: SemanticSpan in state_row.spans:
+		var meta: Dictionary = span.metadata if span.metadata is Dictionary else {}
+		if bool(meta.get("variable_name_span", false)):
+			return (meta.get("head_card", {}) as Dictionary).get("lines", PackedStringArray())
+	return PackedStringArray()

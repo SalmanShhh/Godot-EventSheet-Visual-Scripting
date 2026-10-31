@@ -33,6 +33,9 @@
   line the row hides (the `state` variable, the previous state, the entered time, `state_changed`)
   under one undo, instead of removing only `var state` and leaving the rest as loose rows; Add below,
   a drag and the jump to code anchor on the enum, where the row is drawn.
+- The state row's variable name opens a card naming the lines it keeps out of sight (the previous
+  state, when the current state began, `state_changed`), and choosing a state for is / was / go to
+  shows each state's own sentence beside its name.
 - Drawing: the words with a card behind them are measured once per text instead of every frame,
   and the running game's live states are worked out once per frame received.
 

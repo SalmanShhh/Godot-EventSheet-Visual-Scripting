@@ -9797,3 +9797,7 @@ Also Run Parent Function,Auch Elternfunktion ausführen
 Also run the parent's version ({args}),Auch die Version des Elternteils ausführen ({args})
 "Comma-separated argument expressions, normally this function's own parameters in order.","Durch Kommas getrennte Argumentausdrücke, normalerweise die eigenen Parameter dieser Funktion in Reihenfolge."
 reading the code,Code wird gelesen
+the state it was in before this one,"der Zustand, in dem es vor diesem war"
+when the state it is in began,wann der aktuelle Zustand begann
+announced every time the state changes,wird bei jedem Zustandswechsel gemeldet
+"also keeps, out of sight","führt außerdem, unsichtbar"
