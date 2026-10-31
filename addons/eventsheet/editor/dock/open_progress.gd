@@ -13,8 +13,9 @@ extends RefCounted
 # "Show as code" (and Code in the Events / Code / Both switch, which the dock routes here) cancels
 # the lift and keeps the raw sheet, exactly as the old banner's button did.
 #
-# Every colour comes from the editor theme the look rides on (accent, text, quieter text), so dark
-# and light need nothing of their own. With reduced motion the spinner holds still and the hairline
+# Every colour comes from the look: the spinner, the hairline, the link and the ring on Code take the
+# look's own link colour (each look states one per editor hand, Classic Sheet included), and the
+# status line keeps its text colours, so dark and light need nothing of their own. With reduced motion the spinner holds still and the hairline
 # jumps to each new ratio instead of sliding.
 #
 # WIDGETS LIVE HERE, not on the dock: the hairline and the link are built by this helper and handed
@@ -124,11 +125,12 @@ func show_for(path: String) -> void:
 	if is_instance_valid(_hairline):
 		_hairline.ratio = 0.0
 		_hairline.shown = 0.0
-		_hairline.accent = EventSheetPopupUI.accent_color()
+		_hairline.accent = look_accent()
 		_hairline.visible = true
 		_hairline.queue_redraw()
 	_ring_code_door(true)
-	update(EventSheetL10n.translate("reading the file"), 0.0)
+	_hug_status(true)
+	update(EventSheetL10n.translate("reading the code"), 0.0)
 
 
 ## One poll tick: advances the spinner and the hairline and republishes the pass in the status line.
@@ -169,13 +171,14 @@ func hide_strip() -> void:
 	if is_instance_valid(_link):
 		_link.visible = false
 	_ring_code_door(false)
+	_hug_status(false)
 	if _dock != null and _dock.has_method("_refresh_tab_bar"):
 		_dock._refresh_tab_bar()
 
 
 ## The spinner frame the tab wears now: still (frame 0) under reduced motion.
 func spinner_texture() -> Texture2D:
-	var accent: Color = EventSheetPopupUI.accent_color()
+	var accent: Color = look_accent()
 	var side: int = EventSheetPalette.scaled(14)
 	var key: String = "%s|%d" % [accent.to_html(), side]
 	if key != _spin_key or _spin_frames.is_empty():
@@ -225,11 +228,33 @@ static func _build_spin_frames(accent: Color, side: int) -> Array[Texture2D]:
 func _apply_link_colors() -> void:
 	if not is_instance_valid(_link):
 		return
-	var accent: Color = EventSheetPopupUI.accent_color()
+	var accent: Color = look_accent()
 	_link.add_theme_color_override("font_color", accent)
 	_link.add_theme_color_override("font_hover_color", accent.lightened(0.2))
 	_link.add_theme_color_override("font_pressed_color", accent)
 	_link.add_theme_color_override("font_disabled_color", EventSheetPopupUI.muted_text_color())
+
+
+## The look's accent: the link colour the sheet's own look states (dark or light hand), and the
+## editor's accent only when the look leaves it clear or no sheet is drawn yet.
+func look_accent() -> Color:
+	var fallback: Color = EventSheetPopupUI.accent_color()
+	if _dock == null or not ("_viewport" in _dock) or _dock._viewport == null:
+		return fallback
+	var style: EventSheetEventStyle = _dock._viewport.get_event_style()
+	if style == null:
+		return fallback
+	return EventSheetEventStyle.stated_or(style.link_color, fallback)
+
+
+## While an open runs the status line takes only the room its words need, so "Show as code" sits
+## straight after them instead of at the far end of the strip; afterwards it fills the strip again.
+func _hug_status(on: bool) -> void:
+	if _dock == null or not ("_status_label" in _dock) or _dock._status_label == null:
+		return
+	var label: Label = _dock._status_label
+	label.size_flags_horizontal = Control.SIZE_FILL if on else Control.SIZE_EXPAND_FILL
+	label.clip_text = not on
 
 
 ## Rings the Code button of the Events / Code / Both switch in the accent while the open runs: it is
@@ -246,15 +271,22 @@ func _ring_code_door(on: bool) -> void:
 	if not on:
 		button.remove_theme_stylebox_override("normal")
 		return
-	var base: StyleBox = button.get_theme_stylebox("normal")
-	var ring: StyleBoxFlat = StyleBoxFlat.new()
-	ring.draw_center = false
+	button.add_theme_stylebox_override("normal", ring_style(button.get_theme_stylebox("normal"), look_accent()))
+
+
+## The button's own normal box with a 1 px ring in `accent` added, so the button keeps its fill and its
+## margins during the open. A box that is not flat (a texture, an empty box) gets a ring-only box with
+## its margins, which is the most that can be added to it without replacing what it draws.
+static func ring_style(base: StyleBox, accent: Color) -> StyleBox:
+	var ring: StyleBoxFlat = (base as StyleBoxFlat).duplicate() as StyleBoxFlat if base is StyleBoxFlat else StyleBoxFlat.new()
+	if not (base is StyleBoxFlat):
+		ring.draw_center = false
+		ring.set_corner_radius_all(3)
+		if base != null:
+			ring.content_margin_left = base.get_margin(SIDE_LEFT)
+			ring.content_margin_right = base.get_margin(SIDE_RIGHT)
+			ring.content_margin_top = base.get_margin(SIDE_TOP)
+			ring.content_margin_bottom = base.get_margin(SIDE_BOTTOM)
 	ring.set_border_width_all(1)
-	ring.border_color = EventSheetPopupUI.accent_color()
-	ring.set_corner_radius_all(3)
-	if base != null:
-		ring.content_margin_left = base.get_margin(SIDE_LEFT)
-		ring.content_margin_right = base.get_margin(SIDE_RIGHT)
-		ring.content_margin_top = base.get_margin(SIDE_TOP)
-		ring.content_margin_bottom = base.get_margin(SIDE_BOTTOM)
-	button.add_theme_stylebox_override("normal", ring)
+	ring.border_color = accent
+	return ring

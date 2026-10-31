@@ -163,7 +163,7 @@ func progress_ratio() -> float:
 func status_text() -> String:
 	var state: Dictionary = progress()
 	var phase: String = str(state["phase"])
-	var detail: String = EventSheetL10n.translate("reading the file")
+	var detail: String = EventSheetL10n.translate("reading the code")
 	if phase == "lifting" and int(state["functions_total"]) > 0:
 		detail = EventSheetL10n.translate("reading functions %d of %d") % [int(state["functions_done"]), int(state["functions_total"])]
 	elif phase == "verifying":

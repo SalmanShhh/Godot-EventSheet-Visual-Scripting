@@ -9796,3 +9796,4 @@ Also Run Parent Function,Exécuter aussi la fonction parente
 "Runs the version of this function that the class this one is a kind of has, with the arguments given. A function that replaces its parent's keeps the parent's part by running it first; delete the action to skip it.","Exécute la version de cette fonction qu'a la classe dont celle-ci est une sorte, avec les arguments donnés. Une fonction qui remplace celle de son parent garde la part du parent en l'exécutant d'abord ; supprimez l'action pour la sauter."
 Also run the parent's version ({args}),Exécuter aussi la version du parent ({args})
 "Comma-separated argument expressions, normally this function's own parameters in order.","Expressions d'argument séparées par des virgules, normalement les paramètres de cette fonction dans l'ordre."
+reading the code,lecture du code

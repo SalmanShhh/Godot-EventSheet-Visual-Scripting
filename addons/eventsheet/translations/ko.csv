@@ -9796,3 +9796,4 @@ Also Run Parent Function,부모 함수도 실행
 "Runs the version of this function that the class this one is a kind of has, with the arguments given. A function that replaces its parent's keeps the parent's part by running it first; delete the action to skip it.",이 클래스가 한 종류로 속한 클래스가 가진 이 함수의 버전을 주어진 인수로 실행합니다. 부모의 함수를 대체하는 함수는 그것을 먼저 실행해 부모의 몫을 지킵니다. 건너뛰려면 액션을 삭제하세요.
 Also run the parent's version ({args}),부모의 버전도 실행 ({args})
 "Comma-separated argument expressions, normally this function's own parameters in order.",쉼표로 구분한 인수 식. 보통 이 함수의 매개변수를 순서대로 씁니다.
+reading the code,코드를 읽는 중

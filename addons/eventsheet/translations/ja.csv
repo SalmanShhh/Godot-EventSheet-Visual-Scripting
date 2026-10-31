@@ -9796,3 +9796,4 @@ Also Run Parent Function,親の関数も実行
 "Runs the version of this function that the class this one is a kind of has, with the arguments given. A function that replaces its parent's keeps the parent's part by running it first; delete the action to skip it.",このクラスの元になっているクラスが持つ、この関数の版を、指定した引数で実行します。親の関数を置き換える関数は、先にそれを実行して親の処理を残します。飛ばすにはアクションを削除します。
 Also run the parent's version ({args}),親の版も実行 ({args})
 "Comma-separated argument expressions, normally this function's own parameters in order.",カンマ区切りの引数の式。普通はこの関数自身の引数を順番どおりに。
+reading the code,コードを読み込み中
