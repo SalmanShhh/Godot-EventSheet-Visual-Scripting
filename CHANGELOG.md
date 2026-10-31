@@ -10,6 +10,12 @@
   twenty more) vanished from the reference while the pack went on shipping it. The committed
   doc is regenerated, and `tools/vocabulary_doc.gd -- --check` (a CI gate now) fails when the
   committed doc and the generator disagree.
+- The states words read in your language again. The 63 new state words (the state row's readings,
+  the States window, the type cards) had been filled with the English text in all eight languages,
+  so "is IDLE" read English where "Is in {state}" had been translated. They are translated now,
+  the readings carry their old translations over, and Is A Kind Of and Also Run Parent Function
+  are in all nine catalogs. The translation test now also fails when a language file gains cells
+  that read exactly like their English key.
 
 ### Changed: sub-events lined up (Editor Native)
 

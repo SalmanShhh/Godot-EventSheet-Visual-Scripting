@@ -204,6 +204,8 @@ const OWED_VERBS_IN_MODULE: Dictionary = {
 	"res://addons/eventforge/registration/modules/comparison_aces.gd": [
 		"TextIsANumber", "TextIsAWholeNumber", "ContainsAnyOf", "ContainsAllOf", "ContainsNoneOf",
 		"NumberFromText", "WholeNumberFromText", "IsNothing", "HasSomething",
+		# Classes: whether a value is the named class or a kind of it.
+		"IsAKindOf",
 	],
 	"res://addons/eventforge/registration/modules/collection_aces.gd": [
 		"NumberOr", "TextOr", "ListOr", "RecordOr", "ValueOr", "PartOf", "SetPartOf",
@@ -258,6 +260,8 @@ const OWED_VERBS_IN_MODULE: Dictionary = {
 		"OnControlInput", "OnChildEnteredTree", "OnChildExitingTree", "OnSomethingWentWrong",
 		# The reparent that says which of the two things should happen to where the node is.
 		"ReparentToChoosing",
+		# Classes: the line that keeps a replaced function from losing its parent's part.
+		"CallParentFunction",
 	],
 	# The data wave: watched data files and the data-folder validation verbs.
 	"res://addons/eventforge/registration/modules/resource_aces.gd": [

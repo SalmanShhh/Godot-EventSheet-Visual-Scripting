@@ -75,6 +75,7 @@ static func run() -> bool:
 	passed = _test_menu_commands_have_keys() and passed
 	passed = _test_the_catalog_actually_translates() and passed
 	passed = _test_two_words_stay_two_words() and passed
+	passed = _test_english_left_in_stays_bounded() and passed
 	return passed
 
 
@@ -388,6 +389,8 @@ const FULLY_KEYED_ACES: Array[String] = [
 	"ResetVariables", "DistanceTravelled",
 	# Pause requests, beside the pause switch.
 	"AskToPause", "StopAskingToPause", "PauseRequestedBy",
+	# Classes: whether a value is a kind of a class, and the line that also runs the parent's part.
+	"IsAKindOf", "CallParentFunction",
 ]
 
 
@@ -485,6 +488,40 @@ static func _test_the_catalog_actually_translates() -> bool:
 	EventSheetL10n.set_locale("en")
 	EventSheetL10n.rescan()
 	passed = _check("English is restored", EventSheetL10n.translate(PINNED_KEY), PINNED_KEY) and passed
+	return passed
+
+
+# ── 6. English left in a translated file ──
+
+
+## How many cells of each language file read exactly like their English key, MEASURED. Some of these
+## are right ("JSON", "Code" in German, a format string like "%s · %s s"), which is why this is a
+## ceiling rather than zero: the key-only checks above pass a row whose cell was filled with the
+## English text, and a wave once filled 63 state rows that way in all eight languages, turning
+## readings that had been translated ("Im Zustand {state}") back into English. A wave that adds
+## English-equal cells raises a number here and fails; one that translates them lowers the ceiling.
+const ENGLISH_EQUAL_CEILING: Dictionary = {
+	"de": 145, "es": 107, "fr": 200, "it": 121, "ja": 48, "ko": 52, "ru": 48, "zh_CN": 45,
+}
+
+
+static func _test_english_left_in_stays_bounded() -> bool:
+	var passed: bool = true
+	for locale: String in LOCALES:
+		var same: int = 0
+		for row: PackedStringArray in _read_rows("%s.csv" % locale):
+			if row.size() > 1 and row[0] == row[1]:
+				same += 1
+		var ceiling: int = int(ENGLISH_EQUAL_CEILING.get(locale, 0))
+		if same > ceiling:
+			print("  %s.csv has %d cells equal to their English key, ceiling %d" % [locale, same, ceiling])
+		passed = _check("%s.csv leaves no more cells in English than it did" % locale,
+			same <= ceiling, true) and passed
+	# The state readings carry the translations they had before they were respelled.
+	var german: Dictionary = _cells_by_key("de.csv")
+	passed = _check("the state reading is translated", str(german.get("is {state}", "")), "im Zustand {state}") and passed
+	passed = _check("the class reading is translated", str(german.get("{value} is a kind of {kind}", "")),
+		"{value} ist eine Art von {kind}") and passed
 	return passed
 
 

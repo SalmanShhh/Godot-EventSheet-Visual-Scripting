@@ -9725,66 +9725,74 @@ reading functions %d of %d,чтение функций %d из %d
 checking the code still matches,"проверка, что код по-прежнему совпадает"
 checking the script compiles,проверка компиляции скрипта
 finishing up,завершение
-States of %s,States of %s
-"What the player is doing: standing, running or in the air.","What the player is doing: standing, running or in the air."
-What it is for,What it is for
+States of %s,Состояния %s
+"What the player is doing: standing, running or in the air.","Что сейчас делает игрок: стоит, бежит или в воздухе."
+What it is for,Для чего она
 + Add a state,+ Add a state
-"There is always exactly one default: a new machine takes its first state, and removing the default moves it to the next. Each description is written as a ## line above the state in the enum, so Godot's own help shows it too. Renaming a state renames it in every row of the sheet; a state that rows still use cannot be removed until they stop.","There is always exactly one default: a new machine takes its first state, and removing the default moves it to the next. Each description is written as a ## line above the state in the enum, so Godot's own help shows it too. Renaming a state renames it in every row of the sheet; a state that rows still use cannot be removed until they stop."
-What this state is,What this state is
-Remove this state,Remove this state
-Edit states,Edit states
-"""%s"" can't be a state name: use letters, digits and underscores, not starting with a digit.","""%s"" can't be a state name: use letters, digits and underscores, not starting with a digit."
-Two states are named %s. Each state needs a name of its own.,Two states are named %s. Each state needs a name of its own.
-"%s is still used by %d row(s), so it was not removed. Point those rows at another state first, then remove it.","%s is still used by %d row(s), so it was not removed. Point those rows at another state first, then remove it."
-the default state,the default state
-%s · %s s,%s · %s s
-A list whose items are all %s. Items are numbered from 0 and the list grows and shrinks as you add and remove.,A list whose items are all %s. Items are numbered from 0 and the list grows and shrinks as you add and remove.
-Godot class reference: Array,Godot class reference: Array
-"A table of keys and values, with the key and value types written in the brackets.","A table of keys and values, with the key and value types written in the brackets."
-Godot class reference: Dictionary,Godot class reference: Dictionary
-Godot class reference: %s,Godot class reference: %s
-"An enum: one of a fixed set of named values, %s. Under the names they are whole numbers, but the sheet and the code use the names.","An enum: one of a fixed set of named values, %s. Under the names they are whole numbers, but the sheet and the code use the names."
-"Godot manual: GDScript, enums","Godot manual: GDScript, enums"
-"A class this project declares, one that extends %s.","A class this project declares, one that extends %s."
-This project's own script,This project's own script
-"A whole number, positive or negative, with no fraction (a 64-bit signed integer).","A whole number, positive or negative, with no fraction (a 64-bit signed integer)."
-"A number that can have a fraction, like 220.0 or 0.1 (a 64-bit floating-point number).","A number that can have a fraction, like 220.0 or 0.1 (a 64-bit floating-point number)."
-Either true or false.,Either true or false.
-"Text: any run of characters, written between quotes.","Text: any run of characters, written between quotes."
-"A name Godot compares very quickly, used for things like input actions and animation names.","A name Godot compares very quickly, used for things like input actions and animation names."
-"The path to a node in the scene tree, like Player/Sprite2D.","The path to a node in the scene tree, like Player/Sprite2D."
-"Two numbers, x and y: a position, a direction or a size on a 2D plane.","Two numbers, x and y: a position, a direction or a size on a 2D plane."
-"Two whole numbers, x and y: a cell or a pixel on a 2D grid.","Two whole numbers, x and y: a cell or a pixel on a 2D grid."
-"Three numbers, x, y and z: a position, a direction or a size in 3D space.","Three numbers, x, y and z: a position, a direction or a size in 3D space."
-"Three whole numbers, x, y and z: a cell on a 3D grid.","Three whole numbers, x, y and z: a cell on a 3D grid."
-"Four numbers, x, y, z and w, used for things like colours and shader values.","Four numbers, x, y, z and w, used for things like colours and shader values."
-"A colour: red, green, blue and alpha (see-through), each from 0 to 1.","A colour: red, green, blue and alpha (see-through), each from 0 to 1."
-"A rectangle on a 2D plane, made of a position and a size.","A rectangle on a 2D plane, made of a position and a size."
-"Where a 2D thing is, how it is turned and how it is scaled, all in one value.","Where a 2D thing is, how it is turned and how it is scaled, all in one value."
-"Where a 3D thing is, how it is turned and how it is scaled, all in one value.","Where a 3D thing is, how it is turned and how it is scaled, all in one value."
-"The turn and scale of a 3D thing, without its position.","The turn and scale of a 3D thing, without its position."
-A 3D rotation stored in a form that does not suffer gimbal lock.,A 3D rotation stored in a form that does not suffer gimbal lock.
-"A box in 3D space aligned to the axes, made of a position and a size.","A box in 3D space aligned to the axes, made of a position and a size."
-"A flat surface in 3D space, with a normal and a distance from the origin.","A flat surface in 3D space, with a normal and a distance from the origin."
-A list of values of any type. Items are numbered from 0 and the list grows and shrinks as you add and remove.,A list of values of any type. Items are numbered from 0 and the list grows and shrinks as you add and remove.
-A table of keys and values: look a value up by its key.,A table of keys and values: look a value up by its key.
-A function that can be stored in a variable and called later.,A function that can be stored in a variable and called later.
-"A message an object can send, which any other object can listen for.","A message an object can send, which any other object can listen for."
-A low-level handle Godot's servers use to refer to a resource they own.,A low-level handle Godot's servers use to refer to a resource they own.
-The base of everything Godot can hold in a variable and call functions on.,The base of everything Godot can hold in a variable and call functions on.
-A compact list of text values.,A compact list of text values.
-A compact list of whole numbers.,A compact list of whole numbers.
-A compact list of numbers with fractions.,A compact list of numbers with fractions.
-A compact list of Vector2 values.,A compact list of Vector2 values.
-A compact list of Vector3 values.,A compact list of Vector3 values.
-A compact list of colours.,A compact list of colours.
-"A %s: a node you place in the scene tree, one that extends %s.","A %s: a node you place in the scene tree, one that extends %s."
-"A %s: a resource, a piece of data Godot can save and load, one that extends %s.","A %s: a resource, a piece of data Godot can save and load, one that extends %s."
-A %s: an object that extends %s.,A %s: an object that extends %s.
-and more,and more
-(default),(default)
-"True while this object is in the given state. The states are declared once, in the state row of this sheet, and this row picks one of them.","True while this object is in the given state. The states are declared once, in the state row of this sheet, and this row picks one of them."
-is {state},is {state}
-is {state} for over {seconds} s,is {state} for over {seconds} s
-was {state},was {state}
-go to {state},go to {state}
+"There is always exactly one default: a new machine takes its first state, and removing the default moves it to the next. Each description is written as a ## line above the state in the enum, so Godot's own help shows it too. Renaming a state renames it in every row of the sheet; a state that rows still use cannot be removed until they stop.","Состояние по умолчанию всегда ровно одно: новая машина берёт своё первое состояние, а при удалении состояния по умолчанию им становится следующее. Каждое описание пишется строкой ## над состоянием в enum, поэтому его показывает и справка самого Godot. Переименование состояния меняет его во всех строках листа; состояние, которое ещё используют строки, нельзя удалить, пока они его используют."
+What this state is,Что это за состояние
+Remove this state,Удалить это состояние
+Edit states,Изменить состояния
+"""%s"" can't be a state name: use letters, digits and underscores, not starting with a digit.","«%s» не может быть именем состояния: используйте буквы, цифры и подчёркивания, не начиная с цифры."
+Two states are named %s. Each state needs a name of its own.,Два состояния называются %s. Каждому состоянию нужно своё имя.
+"%s is still used by %d row(s), so it was not removed. Point those rows at another state first, then remove it.","%s всё ещё используется в %d строк(ах), поэтому не удалено. Сначала направьте эти строки на другое состояние, затем удалите его."
+the default state,состояние по умолчанию
+%s · %s s,%s · %s с
+A list whose items are all %s. Items are numbered from 0 and the list grows and shrinks as you add and remove.,"Список, все элементы которого — %s. Элементы нумеруются с 0, а список растёт и сжимается при добавлении и удалении."
+Godot class reference: Array,Справочник классов Godot: Array
+"A table of keys and values, with the key and value types written in the brackets.",Таблица ключей и значений; типы ключа и значения записаны в скобках.
+Godot class reference: Dictionary,Справочник классов Godot: Dictionary
+Godot class reference: %s,Справочник классов Godot: %s
+"An enum: one of a fixed set of named values, %s. Under the names they are whole numbers, but the sheet and the code use the names.","Enum: одно из фиксированного набора именованных значений, %s. Под именами это целые числа, но лист и код используют имена."
+"Godot manual: GDScript, enums","Руководство Godot: GDScript, enum"
+"A class this project declares, one that extends %s.","Класс, объявленный в этом проекте и расширяющий %s."
+This project's own script,Собственный скрипт этого проекта
+"A whole number, positive or negative, with no fraction (a 64-bit signed integer).","Целое число, положительное или отрицательное, без дробной части (64-битное знаковое целое)."
+"A number that can have a fraction, like 220.0 or 0.1 (a 64-bit floating-point number).","Число, у которого может быть дробная часть, например 220.0 или 0.1 (64-битное число с плавающей точкой)."
+Either true or false.,"Либо true, либо false."
+"Text: any run of characters, written between quotes.","Текст: любая последовательность символов, записанная в кавычках."
+"A name Godot compares very quickly, used for things like input actions and animation names.","Имя, которое Godot сравнивает очень быстро; используется, например, для действий ввода и имён анимаций."
+"The path to a node in the scene tree, like Player/Sprite2D.","Путь к узлу в дереве сцены, например Player/Sprite2D."
+"Two numbers, x and y: a position, a direction or a size on a 2D plane.","Два числа, x и y: позиция, направление или размер на 2D-плоскости."
+"Two whole numbers, x and y: a cell or a pixel on a 2D grid.","Два целых числа, x и y: клетка или пиксель на 2D-сетке."
+"Three numbers, x, y and z: a position, a direction or a size in 3D space.","Три числа, x, y и z: позиция, направление или размер в 3D-пространстве."
+"Three whole numbers, x, y and z: a cell on a 3D grid.","Три целых числа, x, y и z: клетка на 3D-сетке."
+"Four numbers, x, y, z and w, used for things like colours and shader values.","Четыре числа, x, y, z и w; используются, например, для цветов и значений шейдеров."
+"A colour: red, green, blue and alpha (see-through), each from 0 to 1.","Цвет: красный, зелёный, синий и альфа (прозрачность), каждый от 0 до 1."
+"A rectangle on a 2D plane, made of a position and a size.",Прямоугольник на 2D-плоскости из позиции и размера.
+"Where a 2D thing is, how it is turned and how it is scaled, all in one value.","Где находится 2D-объект, как он повёрнут и масштабирован, всё в одном значении."
+"Where a 3D thing is, how it is turned and how it is scaled, all in one value.","Где находится 3D-объект, как он повёрнут и масштабирован, всё в одном значении."
+"The turn and scale of a 3D thing, without its position.",Поворот и масштаб 3D-объекта без его позиции.
+A 3D rotation stored in a form that does not suffer gimbal lock.,"3D-поворот, хранимый в форме, которая не страдает от блокировки осей."
+"A box in 3D space aligned to the axes, made of a position and a size.",Выровненный по осям параллелепипед в 3D-пространстве из позиции и размера.
+"A flat surface in 3D space, with a normal and a distance from the origin.",Плоская поверхность в 3D-пространстве с нормалью и расстоянием от начала координат.
+A list of values of any type. Items are numbered from 0 and the list grows and shrinks as you add and remove.,"Список значений любого типа. Элементы нумеруются с 0, а список растёт и сжимается при добавлении и удалении."
+A table of keys and values: look a value up by its key.,Таблица ключей и значений: значение ищется по его ключу.
+A function that can be stored in a variable and called later.,"Функция, которую можно сохранить в переменной и вызвать позже."
+"A message an object can send, which any other object can listen for.","Сообщение, которое объект может отправить, а любой другой объект — прослушивать."
+A low-level handle Godot's servers use to refer to a resource they own.,"Низкоуровневый дескриптор, которым серверы Godot ссылаются на принадлежащий им ресурс."
+The base of everything Godot can hold in a variable and call functions on.,"Основа всего, что Godot может хранить в переменной и у чего может вызывать функции."
+A compact list of text values.,Компактный список текстовых значений.
+A compact list of whole numbers.,Компактный список целых чисел.
+A compact list of numbers with fractions.,Компактный список дробных чисел.
+A compact list of Vector2 values.,Компактный список значений Vector2.
+A compact list of Vector3 values.,Компактный список значений Vector3.
+A compact list of colours.,Компактный список цветов.
+"A %s: a node you place in the scene tree, one that extends %s.","%s: узел, который вы помещаете в дерево сцены и который расширяет %s."
+"A %s: a resource, a piece of data Godot can save and load, one that extends %s.","%s: ресурс, фрагмент данных, который Godot может сохранить и загрузить; расширяет %s."
+A %s: an object that extends %s.,"%s: объект, расширяющий %s."
+and more,и другие
+(default),(по умолчанию)
+"True while this object is in the given state. The states are declared once, in the state row of this sheet, and this row picks one of them.","Истинно, пока этот объект находится в заданном состоянии. Состояния объявляются один раз, в строке состояний этого листа, а эта строка выбирает одно из них."
+is {state},в состоянии {state}
+is {state} for over {seconds} s,в состоянии {state} дольше {seconds} с
+was {state},был в состоянии {state}
+go to {state},перейти в состояние {state}
+Is A Kind Of,Является разновидностью
+"True when a value is the named class or a kind of it - a Slime that extends Enemy passes for Enemy. The class field completes from your own classes first, then Godot's.","Истинно, когда значение — названный класс или его разновидность: Slime, расширяющий Enemy, считается Enemy. Поле класса дополняет сначала ваши собственные классы, затем классы Godot."
+{value} is a kind of {kind},{value} является разновидностью {kind}
+A class of your project or of Godot. Your own classes complete first.,Класс вашего проекта или Godot. Ваши собственные классы дополняются первыми.
+Also Run Parent Function,Также выполнить родительскую функцию
+"Runs the version of this function that the class this one is a kind of has, with the arguments given. A function that replaces its parent's keeps the parent's part by running it first; delete the action to skip it.","Выполняет версию этой функции из класса, разновидностью которого является этот, с заданными аргументами. Функция, заменяющая родительскую, сохраняет часть родителя, сначала выполняя её; удалите действие, чтобы её пропустить."
+Also run the parent's version ({args}),Также выполнить версию родителя ({args})
+"Comma-separated argument expressions, normally this function's own parameters in order.","Выражения аргументов через запятую, обычно собственные параметры этой функции по порядку."
