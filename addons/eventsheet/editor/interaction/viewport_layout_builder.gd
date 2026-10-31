@@ -35,6 +35,41 @@ func init(viewport: Control) -> void:
 	_viewport = viewport
 
 
+## The height of the gap between row `index - 1` and this row (0 when none is opened).
+func _gap_above(index: int, row_top: float) -> float:
+	if index <= 0:
+		return 0.0
+	var above_end: float = _viewport._row_metrics_helper.row_top(index - 1) + _viewport._row_metrics_helper.row_height(index - 1)
+	return maxf(row_top - above_end, 0.0)
+
+
+## The bands the condition lines of an event occupy in its condition cell: one Vector2(y, height)
+## per logical line that holds a condition, trigger, parameter or other cell of the lane (an add
+## line is an invitation, not a line of the cell). Sorted top to bottom. Pure geometry from the
+## same extents the spans are placed with, so a strip can never drift from the words it holds.
+func _condition_line_bands(row_data: EventRowData, row_top: float, line_height: float,
+		line_tops: Dictionary, line_counts: Dictionary) -> Array:
+	var bands: Array = []
+	if row_data.row_type != EventRowData.RowType.EVENT:
+		return bands
+	var lines: Dictionary = {}
+	for span: SemanticSpan in row_data.spans:
+		if span == null or not (span.metadata is Dictionary):
+			continue
+		var metadata: Dictionary = span.metadata as Dictionary
+		if str(metadata.get("kind", "")) in ["add_condition", "add_action", "add_event"]:
+			continue
+		if _viewport._row_builder._resolve_span_lane(span) == "action":
+			continue
+		lines[int(metadata.get("line_index", 0))] = true
+	var ordered: Array = lines.keys()
+	ordered.sort()
+	for line: int in ordered:
+		bands.append(Vector2(row_top + float(line_tops.get(line, line)) * line_height,
+			float(maxi(int(line_counts.get(line, 1)), 1)) * line_height))
+	return bands
+
+
 func get_or_build_row_layout(index: int, width: float, font: Font, font_size: int) -> Dictionary:
 	var row_data: EventRowData = _viewport._row_at(index)
 	if row_data == null:
@@ -95,7 +130,11 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	)
 	var fold_rect: Rect2 = Rect2(x - 14.0, row_top + group_v_offset + 6.0, 12.0, 16.0) if not row_data.children.is_empty() else Rect2()
 	# The fold arrow sits beside its block's FIRST line in every look, strips included: in the margin
-	# left of the block, level with its first row.
+	# left of the block, level with its first row. Where nesting is drawn as lines it stands on the line
+	# of its own level, just left of the block, so the line runs down from under it.
+	if not fold_rect.size.is_zero_approx() and row_data.row_type == EventRowData.RowType.EVENT \
+			and event_style.sub_event_strips:
+		fold_rect.position.x = x - 8.0
 	# No row-type glyph: the old colored square here said nothing the row itself doesn't
 	# (tempo badges, chips and labels carry the type). The 18px advance stays so every
 	# row's geometry - and every cached span position - is untouched.
@@ -442,9 +481,19 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 			font,
 			font_size
 		)
+	# A nested event's condition cell begins where its block does (the slot its trigger mark sits in),
+	# so the cell is one panel from its left edge instead of leaving a bare strip before its words.
+	if lane_divider_x > 0.0 and row_data.indent > 0 and event_style.sub_event_strips:
+		var block_left: float = EventRowRenderer.nested_block_left_for(row_data.indent, _viewport.indent_width())
+		condition_lane_rect = Rect2(block_left, condition_lane_rect.position.y,
+			condition_lane_rect.end.x - block_left, condition_lane_rect.size.y)
 	var layout := {
 		"row_rect": row_rect,
 		"row_height": row_height,
+		# The air opened between this row and the one above it, so a margin line can cross it.
+		"gap_above": _gap_above(index, row_top),
+		# One band (y, height) per logical condition line, absolute to the canvas.
+		"condition_line_bands": _condition_line_bands(row_data, row_top, line_height, cond_line_tops, cond_line_counts),
 		# One line of an event, so a painter can place a mark on the first line rather than the middle.
 		"line_height": line_height,
 		"gutter_rect": gutter_rect,

@@ -375,7 +375,7 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	event_style.minimum_row_height = 24
 	event_style.group_row_height = 36
 	event_style.condition_object_column_width = 114
-	event_style.action_object_column_width = 114
+	event_style.action_object_column_width = 140
 	event_style.event_block_gap = 1
 	event_style.sub_event_indent = 16
 	event_style.sub_event_rail_line = false

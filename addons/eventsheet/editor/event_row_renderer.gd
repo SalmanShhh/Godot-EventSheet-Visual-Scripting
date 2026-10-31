@@ -689,12 +689,20 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	var gutter_band: Rect2 = NativeRowMarks.gutter_band_rect(gutter_rect, row_rect, row_data.indent,
 		row_indent_width) if gutter_in_band else gutter_rect
 	var row_fill_rect: Rect2 = Rect2(gutter_band.end.x, row_rect.position.y, maxf(row_rect.end.x - gutter_band.end.x, 0.0), row_rect.size.y) if is_event_row else row_rect
+	if is_event_row and row_data.indent > 0 and event_style != null and event_style.sub_event_strips:
+		# A nested event's block begins past the number column and its ancestors' lines; the margin
+		# between is the sheet's own, so the lines stand on it.
+		var block_left: float = row_rect.position.x + nested_block_left_for(row_data.indent, row_indent_width)
+		row_fill_rect = Rect2(block_left, row_rect.position.y, maxf(row_rect.end.x - block_left, 0.0), row_rect.size.y)
+	var local_on_sheet: bool = event_style != null and event_style.sub_event_strips and is_local_variable_row(row_data)
 	var gutter_number: int = int(layout.get("event_number", 0)) if show_event_numbers else line_number
 	# The hit-count lens: resolved ONCE per row here, so _draw_gutter stays a painter. Empty
 	# string = draw the gutter exactly as before (lens off, no traced run, or not an event row).
 	var hit_uid: String = hit_chip_uid(show_hit_counts or show_costs, is_event_row, str(layout.get("event_uid", "")))
-	_draw_gutter(control, gutter_rect, gutter_number, breakpoint_enabled, row_data.bookmark_enabled, font, font_size, event_style, hit_uid, reading_style,
-		is_event_row and row_data.selected, gutter_band, first_line_height)
+	# A local on the sheet leaves the number column bare: it is one line of its event, not an event.
+	if not local_on_sheet:
+		_draw_gutter(control, gutter_rect, gutter_number, breakpoint_enabled, row_data.bookmark_enabled, font, font_size, event_style, hit_uid, reading_style,
+			is_event_row and row_data.selected, gutter_band, first_line_height)
 	if row_data.row_type == EventRowData.RowType.GROUP:
 		var group_tint: Color = Color(0.0, 0.0, 0.0, 0.0)
 		if row_data.source_resource is EventGroup:
@@ -723,6 +731,9 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 			event_style.row_background_alt_color if alternating else event_style.row_background_color,
 			true
 		)
+	elif local_on_sheet:
+		# A local variable of an event stands on the sheet itself: no band, no wash, no gap.
+		pass
 	elif row_data.outline_radius > 0.0 and row_data.outline_color.a > 0.01:
 		# A rounded bar (the Include bar): the canvas shows at its corners, and its fill and its
 		# edge are one rounded box rather than a full-bleed band with a stripe.
@@ -749,7 +760,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		control.draw_rect(row_rect.grow(-1.0), row_data.outline_color, false, 2.0)
 	if row_data.variable_card and event_style != null:
 		_draw_variable_card(control, row_rect, event_style)
-	elif row_data.variable_row:
+	elif row_data.variable_row and not local_on_sheet:
 		_draw_variable_row_wash(control, row_rect, reading_style)
 	if row_data.rule_below:
 		# The hairline that closes a block (the globals this sheet only uses, above the ones it
@@ -772,7 +783,11 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	var block_radius_right: int = int(round(block_radius * 0.5))
 	if condition_lane_rect.size != Vector2.ZERO:
 		var lane_color: Color = event_style.condition_lane_color if event_style != null else EventSheetPalette.COLOR_LANE_CONDITIONS
-		_draw_rounded_rect(control, condition_lane_rect, lane_color, block_radius, 0, block_radius, 0)
+		if event_style != null and event_style.sub_event_strips:
+			_draw_condition_cell(control, condition_lane_rect, layout.get("condition_line_bands", []),
+				float(layout.get("line_height", 0.0)), event_style, block_radius)
+		else:
+			_draw_rounded_rect(control, condition_lane_rect, lane_color, block_radius, 0, block_radius, 0)
 	if action_lane_rect.size != Vector2.ZERO:
 		var action_color: Color = event_style.action_lane_color if event_style != null else EventSheetPalette.COLOR_LANE_ACTIONS
 		_draw_rounded_rect(control, action_lane_rect, action_color, 0, block_radius_right, 0, block_radius_right)
@@ -800,8 +815,9 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		control.draw_rect(Rect2(border_left, row_fill_rect.position.y, border_width, 1.0), block_border, true)
 		control.draw_rect(Rect2(border_left, row_fill_rect.end.y - 1.0, border_width, 1.0), block_border, true)
 	if event_style != null and event_style.sub_event_strips:
-		# Nesting as STRIPS, no connector: see _draw_indent_strips.
-		_draw_indent_strips(control, row_rect, row_data, event_style, row_indent_width)
+		# Nesting as one line per level in the margin: see _draw_indent_strips.
+		_draw_indent_strips(control, row_rect, row_data, event_style, row_indent_width,
+			float(layout.get("gap_above", 0.0)), reading_style.tree_guide_color)
 	else:
 		_draw_indent_guides(control, row_rect, row_data.indent, reading_style.indent_guide_color, row_indent_width)
 	# The RAIL: the tree connector from a parent event down to this sub-event, on top of the indent
@@ -1163,28 +1179,72 @@ func _draw_gutter_markers(control: Control, gutter_rect: Rect2, breakpoint_enabl
 		]), reading.bookmark_color)
 
 
-## The fill of one nesting strip: the parent event's own condition-lane colour, or the group's tint
-## when the parent is a group, so a strip reads as the parent's lane carried down beside its children.
-static func strip_fill(event_style: EventSheetEventStyle, parent_is_group: bool) -> Color:
-	return event_style.group_background_color if parent_is_group else event_style.condition_lane_color
+## The tone a condition cell keeps below its last condition line and beside nothing: the lane's own
+## colour drawn back toward the sheet, so the cell reads as one panel that goes on to the event's foot
+## while the lines above it stand out as lighter strips.
+static func condition_cell_rest(event_style: EventSheetEventStyle) -> Color:
+	return event_style.condition_lane_color.lerp(event_style.sheet_background_color, 0.5)
 
 
-## One nesting level is one strip: `indent_width` wide, filled with the colour of the PARENT block it
-## belongs to (an event's own, or its group's) and ruled by a 1 px line down its left side, so a branch
-## is followed down the page by its strips. Strips run from the gutter's edge, one per ancestor, and
-## every colour comes from the look. Draw-only: it reserves no width and moves no glyph.
+## The condition cell as ONE panel the full height of its event, however many actions the event has:
+## the quieter tone from top to foot, then each condition line as its own lighter strip with a 1 px
+## rule under it, so it is plain where one condition ends. An event with no condition draws one empty
+## strip of normal height and the quiet tone below it. `bands` holds one Vector2(y, height) per line.
+func _draw_condition_cell(control: Control, lane_rect: Rect2, bands: Array, line_height: float,
+		event_style: EventSheetEventStyle, radius: int) -> void:
+	_draw_rounded_rect(control, lane_rect, condition_cell_rest(event_style), radius, 0, radius, 0)
+	var strips: Array = bands
+	if strips.is_empty():
+		strips = [Vector2(lane_rect.position.y, minf(line_height, lane_rect.size.y))]
+	var rule: float = EventSheetPalette.scaled_f(1.0)
+	for band: Vector2 in strips:
+		var top: float = maxf(band.x, lane_rect.position.y)
+		var bottom: float = minf(band.x + band.y, lane_rect.end.y)
+		if bottom <= top:
+			continue
+		var strip := Rect2(lane_rect.position.x, top, lane_rect.size.x, bottom - top)
+		var at_top: bool = top <= lane_rect.position.y + 0.5
+		var at_foot: bool = bottom >= lane_rect.end.y - 0.5
+		_draw_rounded_rect(control, strip, event_style.condition_lane_color,
+			radius if at_top else 0, 0, radius if at_foot else 0, 0)
+		if not at_foot:
+			control.draw_rect(Rect2(strip.position.x, bottom - rule, strip.size.x, rule), event_style.row_border_color, true)
+
+
+## True for the declaration row of a local variable: a variable row (an event's own local, or a
+## declaration promoted out of its actions) that is a child of an event.
+static func is_local_variable_row(row_data: EventRowData) -> bool:
+	if row_data == null or not row_data.inside_event or row_data.row_type != EventRowData.RowType.SECTION:
+		return false
+	return row_data.variable_row or row_data.row_uid.begins_with("local_declaration_")
+
+
+## The x a nested event's block begins at when nesting is drawn as lines in the margin: past the
+## number column and the lines of its ancestors, at the slot its trigger mark sits in.
+static func nested_block_left_for(depth: int, indent_width: int) -> float:
+	return EventSheetPalette.ROW_HORIZONTAL_PADDING + float(EventSheetPalette.GUTTER_WIDTH) + float(depth * indent_width)
+
+
+## The x of the ONE line a nesting level draws: the centre of the fold arrow of the blocks at that
+## level (just left of them), so the line runs straight down from under the arrow of its parent.
+static func nesting_line_x(level: int, indent_width: int) -> float:
+	return EventSheetPalette.ROW_HORIZONTAL_PADDING + float(EventSheetPalette.GUTTER_WIDTH) 		+ float(level * indent_width) - 2.0
+
+
+## Nesting in the margin: ONE 1 px line per level, at the fold arrow's column of that level, running
+## the whole height of the parent block (every row below the parent down to its foot - `gap_above`
+## carries it across the air opened before a row, so a block's line is never broken between two
+## events). Nothing else is drawn in the margin: no fill, no second line, no fold column.
 func _draw_indent_strips(control: Control, row_rect: Rect2, row_data: EventRowData,
-		event_style: EventSheetEventStyle, indent_width: int) -> void:
+		event_style: EventSheetEventStyle, indent_width: int, gap_above: float, line_color: Color) -> void:
 	var depth: int = row_data.indent
 	if depth < 1 or indent_width < 1:
 		return
 	var line_width: float = EventSheetPalette.scaled_f(1.0)
+	var top: float = row_rect.position.y - gap_above
 	for level: int in range(depth):
-		var strip_x: float = row_rect.position.x + float(EventSheetPalette.GUTTER_WIDTH) + float(level * indent_width)
-		var in_group: bool = level < 30 and (row_data.strip_groups >> level) & 1 == 1
-		var fill: Color = strip_fill(event_style, in_group)
-		control.draw_rect(Rect2(strip_x, row_rect.position.y, float(indent_width), row_rect.size.y), fill, true)
-		control.draw_rect(Rect2(strip_x, row_rect.position.y, line_width, row_rect.size.y), event_style.row_border_color, true)
+		var line_x: float = row_rect.position.x + nesting_line_x(level, indent_width)
+		control.draw_rect(Rect2(line_x, top, line_width, row_rect.end.y - top), line_color, true)
 
 
 func _draw_indent_guides(control: Control, row_rect: Rect2, depth: int, guide_color: Color = EventSheetPalette.COLOR_GUIDE,
@@ -1615,7 +1675,8 @@ func _draw_spans(
 			# A trigger occupies the lane too: an "On Ready -> act" row is complete, so its add
 			# link can wait for hover like any populated lane.
 			row_has_condition = true
-	var reveal_add_action: bool = add_door_revealed(row_data.hovered, row_data.selected, row_has_action)
+	var reveal_add_action: bool = add_door_revealed(row_data.hovered, row_data.selected, row_has_action) \
+			or add_action_line_rests(event_style)
 	var reveal_add_condition: bool = add_door_revealed(row_data.hovered, row_data.selected, row_has_condition)
 	for span_index: int in range(row_data.spans.size()):
 		var span: SemanticSpan = row_data.spans[span_index]
@@ -2223,6 +2284,13 @@ func _draw_chip_span(control: Control, span: SemanticSpan, metadata: Dictionary,
 ## and for the pills; the toggle changes how the door is drawn, never where.
 static func add_door_revealed(hovered: bool, selected: bool, lane_filled: bool) -> bool:
 	return hovered or selected or not lane_filled
+
+
+## True when the look keeps "+ Add action" under every event's actions at rest, not only on hover: the
+## look that nests by lines closes every event with its add line (the lane's own foot). The add
+## CONDITION line stays a hover door.
+static func add_action_line_rests(event_style: EventSheetEventStyle) -> bool:
+	return event_style != null and event_style.sub_event_strips
 
 
 ## The words a hover link says for an add span's kind: "Add condition" or "Add action", without the

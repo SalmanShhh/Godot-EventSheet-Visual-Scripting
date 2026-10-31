@@ -13,6 +13,20 @@
 
 - `_deadline` said it held the seconds left to answer; it holds the engine time the open prompt runs
   out, and `_opened_at` no longer describes both variables in one sentence.
+### Changed: Editor Native lays an event out as one panel, with its nesting as lines in the margin
+
+- Nesting is ONE 1 px line per level down the margin, on each block's left edge and running the whole
+  height of the parent block (across the air between two events too), with the fold arrow beside the
+  block's first line. A nested block starts past the number column and its ancestors' lines; no fill,
+  no second line, no fold column.
+- A condition cell is one panel the full height of its event, however many actions it has: each
+  condition line is its own lighter strip ruled underneath, and the cell carries on in a quieter tone to
+  the event's foot (an event with no condition draws one empty strip and the quiet tone below it).
+- A local variable declared inside an event is one tight line on the sheet itself: no band, no card, no
+  gap, and no number in the margin.
+- `+ Add action` stays under every event's actions at rest (the add condition line still waits for the
+  hover). A test no object owns (`value > 0`) reads with System as its object, so the words of a lane
+  start at one x. The action lane's name column is 140 px wide.
 
 ### Changed: states are project-wide, and every state variable is its own machine
 

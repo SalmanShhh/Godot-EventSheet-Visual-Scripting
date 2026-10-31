@@ -3810,8 +3810,15 @@ func _flatten_row(row_data: EventRowData, parent_row: EventRowData) -> void:
 		if parent_row.row_type == EventRowData.RowType.GROUP and parent_row.indent < 30:
 			group_bit = 1 << parent_row.indent
 		row_data.strip_groups = parent_row.strip_groups | group_bit
+		row_data.inside_event = parent_row.row_type == EventRowData.RowType.EVENT
+		# A local declared in an event's body is one tight line at its step, never a card of its own: in
+		# a look that nests by lines it stands on the sheet with no band and no gap round it.
+		if row_data.inside_event and row_data.variable_card and _get_event_style().sub_event_strips:
+			row_data.variable_card = false
+			row_data.height_scale = 1.0
 	else:
 		row_data.strip_groups = 0
+		row_data.inside_event = false
 	if row_data.folded:
 		return
 	for child in row_data.children:
@@ -5089,6 +5096,19 @@ func press_target_at(local_position: Vector2) -> Dictionary:
 ## the number gutter to the end of the action lane. One event is one shape whether it reads as one
 ## row or several, so the frame the selection draws and the card a press lands in are this same
 ## rectangle, measured once.
+## Where a nested event's block begins when the look draws nesting as lines in the margin: the slot
+## its trigger mark sits in, one step in from its parent's. 0.0 for a top-level event, a row that is
+## not an event, or a look that nests by other means.
+func nested_block_left(row_index: int) -> float:
+	var row_data: EventRowData = _row_at(statement_lead_index(row_index))
+	var event_style: EventSheetEventStyle = _get_event_style()
+	if row_data == null or event_style == null or not event_style.sub_event_strips:
+		return 0.0
+	if row_data.row_type != EventRowData.RowType.EVENT or row_data.indent < 1:
+		return 0.0
+	return EventRowRenderer.nested_block_left_for(row_data.indent, event_style.sub_event_indent)
+
+
 func event_card_rect(row_index: int) -> Rect2:
 	if row_index < 0 or row_index >= _flat_rows.size():
 		return Rect2()
@@ -5114,6 +5134,11 @@ func event_card_border_rect(row_index: int) -> Rect2:
 	# column, so the number sits inside the event the way the Inspector's rows hold their labels.
 	if event_style != null and event_style.trigger_icon_in_gutter:
 		left = 0.0
+	# A look that draws nesting as lines in the margin frames a NESTED event from where its block
+	# starts, so the number column and the lines of its ancestors stand outside the card.
+	var nested_left: float = nested_block_left(row_index)
+	if nested_left > 0.0:
+		left = nested_left
 	return Rect2(left, card.position.y, maxf(card.size.x - left - 1.0, 0.0), card.size.y)
 
 

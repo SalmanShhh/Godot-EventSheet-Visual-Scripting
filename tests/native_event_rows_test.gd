@@ -75,7 +75,7 @@ static func _test_tokens() -> bool:
 				starter.action_object_column_width,
 				(load(NATIVE_THEME) as EventSheetEditorStyle).get_condition_style().vertical_padding,
 				rule.get_condition_style().vertical_padding, rule.get_action_style().vertical_padding],
-			[16, 114, 114, 1, 1, 1]],
+			[16, 114, 140, 1, 1, 1]],
 		["the action lane is the card tinted green, never toward yellow",
 			[starter.action_lane_color.to_html(false), rule.get_event_style().action_lane_color.to_html(false)],
 			["2f3a31", "2f3a31"]],

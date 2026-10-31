@@ -15707,7 +15707,7 @@ func _count_event_lines(event_row: EventRow) -> int:
 	if resting_style != null and resting_style.add_lines_on_hover and not _scaffolding_suppressed():
 		if condition_lines > 0:
 			max_condition_line = condition_lines - 1
-		if action_count > 0 and event_row.comment.is_empty():
+		if action_count > 0 and event_row.comment.is_empty() and not EventRowRenderer.add_action_line_rests(resting_style):
 			max_action_line = action_count - 1
 	return maxi(max_condition_line, max_action_line) + 1
 
@@ -16950,7 +16950,9 @@ func _append_one_condition_line(branch_row: EventRowData, condition_object: Stri
 		"editable": false,
 		"hoverable": false,
 		"line_index": line_index,
-		"object_label": condition_object,
+		# A test no object owns (an expression like `value > 0`) is System's, said in the object column
+		# like every other condition line, so the words of the lane start at one x.
+		"object_label": condition_object if not condition_object.strip_edges().is_empty() else _object_label_for("Core", ""),
 		"object_icon": EventSheetViewportReadingRows.autoload_icon() if global_object \
 			and _viewport.show_object_icons else null,
 		"bbcode_segments": condition_cell.get("segments", [])

@@ -2,8 +2,8 @@
 extends RefCounted
 # Godot EventSheets - sub-events lined up (the Editor Native nesting)
 #
-# Nesting is drawn as STRIPS: each level steps the whole block right by one 16 px step, filled with
-# the parent's colour, no connector line. The sheet keeps ONE condition/action divider for every
+# Nesting is drawn as ONE 1 px line per level in the margin (each level steps the block right by one
+# 16 px step), no fill and no connector. The sheet keeps ONE condition/action divider for every
 # depth; a nested event's condition lane is the divider minus its steps, never narrower than 150 px,
 # and only an event nested past that floor starts its own actions later. The pins hold:
 #   1. the token is off by default, on in the Editor Native starter and its rule, with a 16 px
@@ -27,18 +27,50 @@ static func run() -> bool:
 	return ok
 
 
-## A strip is filled with the parent's condition lane (or its group's tint), and a name the fixed
-## column cut short is read whole by the hover.
+## Nesting is one 1 px line per level at the fold arrow's column, a nested block begins past the lines
+## of its ancestors, the condition cell keeps a quieter tone below its strips, an event keeps its
+## add action line at rest, and a name the fixed column cut short is read whole by the hover.
 static func _test_strip_fill_and_cut_names() -> bool:
 	var style := EventSheetEventStyle.new()
-	style.condition_lane_color = Color("#112233")
-	style.group_background_color = Color("#445566")
-	style.row_background_color = Color("#778899")
+	style.condition_lane_color = Color("#404040")
+	style.sheet_background_color = Color("#202020")
+	var step: int = 16
+	var origin: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + float(EventSheetPalette.GUTTER_WIDTH)
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
-		["an event parent fills its strip with its condition lane, never the row background",
-			EventRowRenderer.strip_fill(style, false).to_html(false), "112233"],
-		["a group parent fills it with the group tint", EventRowRenderer.strip_fill(style, true).to_html(false), "445566"],
+		["level 0 draws its line two px left of the first nested block's slot",
+			EventRowRenderer.nesting_line_x(0, step), origin - 2.0],
+		["each level moves its line one step right", EventRowRenderer.nesting_line_x(2, step) - EventRowRenderer.nesting_line_x(1, step), float(step)],
+		["a nested block begins at its own slot, past every ancestor's line",
+			EventRowRenderer.nested_block_left_for(2, step), origin + 2.0 * float(step)],
+		["the line of a level is left of the block that level's arrow opens",
+			EventRowRenderer.nesting_line_x(1, step) < EventRowRenderer.nested_block_left_for(1, step), true],
+		["the cell below the last condition is the lane drawn halfway to the sheet",
+			EventRowRenderer.condition_cell_rest(style).to_html(false), "303030"],
+		["the add action line rests under every event in the Editor Native look and nowhere else",
+			[EventRowRenderer.add_action_line_rests(null), EventRowRenderer.add_action_line_rests(style)], [false, false]],
 	])
+	style.sub_event_strips = true
+	ok = SUPPORT.check(TEST_NAME, "the add action line rests with the strips look",
+		EventRowRenderer.add_action_line_rests(style), true) and ok
+	var kinds_at_rest: PackedStringArray = ViewportRowMetrics.resting_add_line_kinds(_filled_event_row(), _hover_style(true))
+	ok = SUPPORT.check(TEST_NAME, "only the add condition line waits for the hover under that look",
+		kinds_at_rest, PackedStringArray(["add_condition"])) and ok
+	var local := EventRowData.new()
+	local.row_type = EventRowData.RowType.SECTION
+	local.variable_row = true
+	var promoted := EventRowData.new()
+	promoted.row_type = EventRowData.RowType.SECTION
+	promoted.row_uid = "local_declaration_ev_3"
+	var global_row := EventRowData.new()
+	global_row.row_type = EventRowData.RowType.SECTION
+	global_row.variable_row = true
+	local.inside_event = true
+	promoted.inside_event = true
+	ok = SUPPORT.pins(TEST_NAME, [
+		["a variable row inside an event is a local on the sheet", EventRowRenderer.is_local_variable_row(local), true],
+		["so is a declaration promoted out of its actions", EventRowRenderer.is_local_variable_row(promoted), true],
+		["a variable row at the sheet's level is not", EventRowRenderer.is_local_variable_row(global_row), false],
+	]) and ok
 	var sheet := EventSheetResource.new()
 	var event := EventRow.new()
 	var condition := ACECondition.new()
@@ -50,8 +82,14 @@ static func _test_strip_fill_and_cut_names() -> bool:
 	view.set_ace_registry(EventSheetACERegistry.new())
 	view.size = Vector2(1200.0, 600.0)
 	view.set_sheet(sheet)
-	view._layout_builder.get_or_build_row_layout(0, view._get_logical_canvas_width(), view._get_font(), view._get_font_size())
+	var layout: Dictionary = view._layout_builder.get_or_build_row_layout(0, view._get_logical_canvas_width(), view._get_font(), view._get_font_size())
 	var row_data: EventRowData = view._row_at(0)
+	var bands: Array = layout.get("condition_line_bands", [])
+	ok = SUPPORT.pins(TEST_NAME, [
+		["an event with one condition has one condition strip, a line tall", bands.size(), 1],
+		["and the strip is exactly one line high", (bands[0] as Vector2).y if not bands.is_empty() else -1.0,
+			view._get_event_line_height(view._get_font_size())],
+	]) and ok
 	var span: SemanticSpan = null
 	for candidate: SemanticSpan in row_data.spans:
 		if candidate != null and candidate.metadata is Dictionary and (candidate.metadata as Dictionary).has("object_label") \
@@ -78,6 +116,7 @@ static func _test_strip_fill_and_cut_names() -> bool:
 	return ok
 
 
+<<<<<<< HEAD
 ## A chip cell starts its column after its padding, so a name only a few pixels too wide for the
 ## column is drawn "CharacterBo…" - and the hover must read it whole too. Every length from short to
 ## long: the hover answers exactly when the renderer's own elide (column less 6 px) cuts the name.
@@ -106,6 +145,23 @@ static func _test_cut_name_agrees_with_the_drawn_ellipsis(view: EventSheetViewpo
 		["some of the names are cut by the column", cut_seen > 0, true],
 		["the hover reads a name whole exactly when the drawn name ends in an ellipsis", ", ".join(disagreements), ""],
 	])
+=======
+static func _filled_event_row() -> EventRowData:
+	var row_data := EventRowData.new()
+	row_data.row_type = EventRowData.RowType.EVENT
+	for kind: String in ["condition", "action"]:
+		var span := SemanticSpan.new()
+		span.metadata = {"kind": kind}
+		row_data.spans.append(span)
+	return row_data
+
+
+static func _hover_style(strips: bool) -> EventSheetEventStyle:
+	var style := EventSheetEventStyle.new()
+	style.add_lines_on_hover = true
+	style.sub_event_strips = strips
+	return style
+>>>>>>> 69d89478 (feat(sheet): Editor Native lays an event out as one panel - nesting as one line per level, ruled condition strips, locals on the sheet, add action at rest, System for expression tests)
 
 
 static func _test_token() -> bool:
