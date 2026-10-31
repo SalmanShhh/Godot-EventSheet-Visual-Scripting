@@ -28,7 +28,10 @@
   no longer stops working once the completion list is open. The list was a popup window, and while
   a popup is open the keyboard goes to it, so Backspace and every letter after it were lost. It now
   floats in a window that never takes the keyboard, and closes when the field or its window loses
-  focus.
+  focus. Escape with the list open closes the list and leaves the dialog open.
+- A state row (and any enum or signal) carried over an event goes before or after it, never into it:
+  GDScript has no place for a class-level declaration inside an event, and the state machine came
+  apart when its enum landed there.
 - Nested events: each depth bounds its name column by its own lane, and the name column gives way at
   half of that lane (it was 45 percent of the sheet's top-level lane). On an event nested past the
   150 px floor, the divider it draws is the one that can be grabbed, and its actions lane is
