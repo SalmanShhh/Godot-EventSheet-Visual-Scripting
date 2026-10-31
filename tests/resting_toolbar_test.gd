@@ -35,7 +35,11 @@ extends RefCounted
 ## 555 measured headless, 640 budgeted: room for one more icon-sized control, so the next pass that
 ## puts something on the resting strip comes here, re-measures, and says why - rather than finding
 ## out by watching the row wrap. 723 measured once the Events | Code | Both switch rested at the end
-## (the reading door every open sheet carries), so 760 budgeted.
+## (the reading door every open sheet carries), so 760 budgeted. Held against a running editor: the
+## strip draws 771 px there, and the main screen it lives in is 873 px wide in a 1280x720 editor with
+## Godot's default docks open, so the resting row still fits on one line at the smallest common
+## editor layout. Narrower than that the strip is an HFlowContainer and wraps to a second row rather
+## than hiding anything.
 const RESTING_WIDTH_BUDGET: float = 760.0
 
 
@@ -267,8 +271,19 @@ static func _test_the_cascade() -> bool:
 	# hovered event's Add condition and Add action links. View ▸ Side Rail is the 66th: the side
 	# panel open or closed to its rail. View ▸ Open Sheets Panel left, back to 65: the tabs above the
 	# sheet are the open sheets. View ▸ Manual beside the sheet makes 66: the Manual as a dock.
-	ok = _check("View keeps its items, plus Full toolbar, Sheet theme, Panels and Text labels",
-		counts["EventSheetViewMenu"], 66) and ok
+	# 40, not 66: twenty-eight items moved into four submenus with their ids, so View fits a 1080p
+	# window - Sheet display (the seventeen ticks on how rows are drawn), Collapse and expand (the five
+	# sweeps), Split views (three) and Zoom (three). Each hanger is one item on View.
+	ok = _check("View keeps its items, with the drawing, sweeps, split and zoom items in submenus",
+		counts["EventSheetViewMenu"], 40) and ok
+	var view_submenu_counts: Dictionary = {}
+	for name: String in ["EventSheetSheetDisplayMenu", "EventSheetCollapseMenu", "EventSheetSplitViewsMenu",
+			"EventSheetZoomMenu"]:
+		var view_submenu: PopupMenu = popup.find_child(name, true, false) as PopupMenu
+		view_submenu_counts[name] = -1 if view_submenu == null else view_submenu.item_count
+	ok = _check("and its submenus hold what left it", view_submenu_counts, {
+		"EventSheetSheetDisplayMenu": 17, "EventSheetCollapseMenu": 5, "EventSheetSplitViewsMenu": 3,
+		"EventSheetZoomMenu": 3}) and ok
 	# The Addon manager left Tools: a pack is a folder, seen in the FileSystem dock.
 	ok = _check("Tools keeps its items, plus Words…, less the Addon manager", counts["EventSheetToolsMenu"], 41) and ok
 	# Words… moved menus rather than leaving: it is on Tools now, beside Keyboard Shortcuts.

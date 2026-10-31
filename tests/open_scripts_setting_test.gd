@@ -122,11 +122,37 @@ static func _hover_plugin_rows() -> bool:
 	return SUPPORT.pins(NAME, rows)
 
 
-## A click on a file in the FileSystem: only a script, and only with the tick on, goes to a sheet.
+## A click on a file in the FileSystem: only a script, and only with the tick on, goes to a sheet -
+## and only a script the sheet reads. An editor script, and a file that does not save back byte for
+## byte, still open in the Script editor, as the setting's hover says.
 static func _filesystem_clicks() -> bool:
+	var editor_script: String = "user://open_scripts_level_tools.gd"
+	var unreproducible: String = "user://open_scripts_no_round_trip.gd"
+	var game_script: String = "user://open_scripts_game_object.gd"
+	_write(editor_script, "@tool\nextends EditorScript\n\n\nfunc _run() -> void:\n\tprint(\"tidy\")\n")
+	_write(unreproducible, "extends Node\n\nvar a = 1")
+	_write(game_script, "extends Node2D\n\n\nfunc _ready() -> void:\n\tprint(\"ready\")\n")
+	var rows: Array = [
+		["an editor script goes to the Script editor", EventForgePlugin.opens_on_click(editor_script, true), false],
+		["so does a file that does not save back", EventForgePlugin.opens_on_click(unreproducible, true), false],
+		["a game script it reads opens as a sheet", EventForgePlugin.opens_on_click(game_script, true), true],
+		["an editor plugin is an editor script too",
+			EventSheetWorkflow.extends_editor_class("@tool\nextends EditorPlugin\n"), true],
+		["a class that only mentions one is not",
+			EventSheetWorkflow.extends_editor_class("extends Node\n# extends EditorScript\n"), false],
+	]
+	for path: String in [editor_script, unreproducible, game_script]:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	var read_rule: bool = SUPPORT.pins(NAME, rows)
 	return SUPPORT.pins(NAME, [
 		["with the tick on a script opens as a sheet", EventForgePlugin.opens_on_click("res://player.gd", true), true],
 		["with it off the click is Godot's", EventForgePlugin.opens_on_click("res://player.gd", false), false],
 		["a scene keeps opening in its own editor", EventForgePlugin.opens_on_click("res://main.tscn", true), false],
 		["a script the sheet does not open is left alone", EventForgePlugin.opens_on_click("res://tool.cs", true), false],
-	])
+	]) and read_rule
+
+
+static func _write(path: String, text: String) -> void:
+	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	file.store_string(text)
+	file.close()

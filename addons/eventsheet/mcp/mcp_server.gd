@@ -700,6 +700,14 @@ func _sheet_for_reading(path: String) -> EventSheetResource:
 ## refuses the edit and leaves the file exactly as it was.
 func _mutate(path: String, label: String, change: Callable) -> Dictionary:
 	if live_host != null:
+		# The tab is edited and the person's next save writes it, so a `.gd` must pass the same gates
+		# the file path does first: not mid-merge, not marked to stay code, and saving back byte for
+		# byte, or that save would change lines the edit never touched.
+		var refused: String = script_edit_refusal(path)
+		if refused.is_empty():
+			refused = round_trip_refusal(path)
+		if not refused.is_empty():
+			return {"error": refused}
 		var answer: Dictionary = {}
 		var done: Dictionary = live_host.call("edit_sheet", path, label, func(sheet: EventSheetResource) -> bool:
 			answer.merge(change.call(sheet) as Dictionary, true)
@@ -743,19 +751,33 @@ static func script_edit_refusal(path: String) -> String:
 	return ""
 
 
+## Why the `.gd` at `path` on disk may not be edited as a sheet because it does not open as one, or
+## does not save back byte for byte; "" when it does (and for anything not a `.gd`).
+static func round_trip_refusal(path: String) -> String:
+	if path.get_extension() != "gd" or not FileAccess.file_exists(path):
+		return ""
+	var source: String = FileAccess.get_file_as_string(path)
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source, true, path)
+	if sheet == null:
+		return "%s does not open as a sheet." % path
+	sheet.external_source_path = path
+	if str(SheetCompiler.echo(sheet).get("output", "")) != source:
+		return "%s does not save back byte for byte as a sheet, so editing it here could change lines the edit never touched. Nothing was written." % path
+	return ""
+
+
 func _mutate_script(path: String, change: Callable) -> Dictionary:
 	if not FileAccess.file_exists(path):
 		return {"error": "Not an event sheet: %s" % path}
 	var refused: String = script_edit_refusal(path)
+	if refused.is_empty():
+		refused = round_trip_refusal(path)
 	if not refused.is_empty():
 		return {"error": refused}
-	var source: String = FileAccess.get_file_as_string(path)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source, true, path)
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(FileAccess.get_file_as_string(path), true, path)
 	if sheet == null:
 		return {"error": "%s does not open as a sheet." % path}
 	sheet.external_source_path = path
-	if str(SheetCompiler.echo(sheet).get("output", "")) != source:
-		return {"error": "%s does not save back byte for byte as a sheet, so editing it here could change lines the edit never touched. Nothing was written." % path}
 	var outcome: Dictionary = change.call(sheet)
 	if outcome.has("error"):
 		return outcome

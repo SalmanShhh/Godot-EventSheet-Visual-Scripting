@@ -9706,3 +9706,8 @@ Every line of this event is ordinary Godot code the sheet reads as rows. Its sha
 Open in the Manual (F1),マニュアルで開く (F1)
 Conditions go on the left,条件は左側に置きます
 Actions go on the right,アクションは右側に置きます
+Sheet display,シートの表示
+"How the rows are drawn: add-event rows, icons, event numbers, hit counts and costs, glyphs and badges, density, names and patterns, the minimap.",行の描き方: イベント追加行、アイコン、イベント番号、実行回数とコスト、グリフとバッジ、密度、名前とパターン、ミニマップ。
+Collapse and expand,折りたたみと展開
+Split views,分割ビュー
+Zoom,ズーム

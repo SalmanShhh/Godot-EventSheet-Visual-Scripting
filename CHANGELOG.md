@@ -19,6 +19,43 @@
   in the sheet takes back that scene edit; the toolbar's Undo and Redo follow scene edits too. The
   Add behaviour window's Undo takes its step back the same way.
 
+### Fixed: Wave 15 review closure
+
+- **The MCP server finds the editor later, and never writes behind it.** A server started before
+  the EventSheets workspace opened, or one the editor dropped, served the files for the rest of its
+  session, `.gd` writes included, while the editor might hold the same sheet open in a tab. It now
+  looks for the editor's link again before every call, until it has one (a link file a closed
+  editor left behind costs one refused connection, not one per call). While an editor is listening
+  for the project but will not take the server, an edit is refused instead of written to the file;
+  a read is still answered. An edit that goes through the editor's tab now passes the same gates a
+  file write does first: a `.gd` mid-merge, marked to stay code, or one that does not save back
+  byte for byte is refused before the tab is touched, since the person's next save writes it.
+- **Open Scripts as Event Sheets keeps its word.** Its hover says a script the sheet cannot read
+  still opens in the Script editor, but every `.gd` opened as a sheet, an `@tool extends
+  EditorScript` included. A click (in the FileSystem or the Inspector) now leaves an editor script
+  (one that extends an Editor class, such as EditorScript or EditorPlugin) and a file that does not
+  save back byte for byte to the Script editor. Open as Event Sheet still opens any script.
+- **The plugin icon follows a live switch of the editor theme.** The EventSheet button and a sheet
+  resource's icon kept the old theme's ink until a restart; both are now drawn again in the new
+  ink when the editor's theme changes.
+- **Menu ▸ Manual… and Tools ▸ Manual… open the Manual where you left it**, or on its home page,
+  as the Manual board draws them; F1 is the door that explains the selection. **Alt+Left and
+  Alt+Right walk the Manual's trail** even while its contents tree has the keyboard, instead of
+  folding and moving through the tree.
+- **Closing the Manual hands the focus back to the picker.** After a section's "?" opened the
+  Manual over the picker and the Manual was closed, the focus went to the editor's main window, so
+  the picker took no hover: "Open the Platformer guide" needed a second click, and typing a new
+  search went nowhere. The Manual now gives the focus back to the window it opened over.
+- **The View menu fits a 1080p window.** It had grown to 66 items, 1392 px tall, so items near its
+  foot (MCP Server among them) ran off a laptop screen. The ticks for how rows are drawn now sit
+  under **View ▸ Sheet display**, and the sweeps, split views and zoom under **Collapse and
+  expand**, **Split views** and **Zoom**: 40 items, 868 px. Every item keeps its place in its group
+  and does what it did.
+- Measured, serial, in a real editor (`tools/measure_editor_boot.gd`, three runs each): enabling
+  the plugin 411 ms at 527cdff4 and 440 ms with this wave (medians, +29 ms for the settings hover
+  and the FileSystem click watch); the first sheet opened 22,426 ms and 21,578 ms, so the drag
+  motion and selection drawing added nothing measurable to the first open.
+
 ### Changed: Editor Native is the default look, in the boards' own colours
 
 - A sheet with no theme of its own now wears Editor Native, moved onto the running editor's greys,

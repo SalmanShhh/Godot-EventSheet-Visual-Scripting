@@ -8,6 +8,11 @@
 class_name EventSheetWorkflow
 extends RefCounted
 
+## The `extends` line of a script, at the start of a line: its class name, when it names one.
+static var _EXTENDS: RegEx = RegEx.create_from_string("(?m)^extends\\s+([A-Za-z_][A-Za-z0-9_]*)")
+## click_opens_as_sheet's answers: path -> [modified time, answer].
+static var _click_answers: Dictionary = {}
+
 
 ## The "Attach Script" reflex for sheets: creates a sheet whose host_class matches the node, writes it
 ## beside the scene as a single hand-editable .gd (the .gd IS the sheet - the default format, no .tres
@@ -53,6 +58,33 @@ static func is_openable_as_sheet(path: String) -> bool:
 	if extension.is_empty() and DirAccess.dir_exists_absolute(path):
 		return EventSheetDataTable.is_one_type_folder(path)
 	return false
+
+
+## Whether a click on the script at `path` opens it as a sheet while "Open Scripts as Event Sheets" is
+## ticked, or leaves it to the Script editor, as the setting's own hover says. The sheet opens any
+## `.gd` when asked to (Open as Event Sheet), but a click hands it only a script it reads: not an
+## editor script (one that extends an Editor class, such as an EditorScript run from the Script
+## editor's File menu, or an EditorPlugin), and not a file that does not save back byte for byte. A
+## path with no file yet is the sheet's. The answer is kept per file until the file changes, because
+## the Inspector asks again on every selection.
+static func click_opens_as_sheet(path: String) -> bool:
+	if not FileAccess.file_exists(path):
+		return true
+	var stamp: int = FileAccess.get_modified_time(path)
+	var known: Array = _click_answers.get(path, [])
+	if known.size() == 2 and int(known[0]) == stamp:
+		return bool(known[1])
+	var source: String = FileAccess.get_file_as_string(path)
+	var answer: bool = not extends_editor_class(source) and EventSheets.round_trips(source)
+	_click_answers[path] = [stamp, answer]
+	return answer
+
+
+## True when a script's `extends` names one of the editor's own classes (EditorScript, EditorPlugin,
+## EditorInspectorPlugin ...): code that runs the editor, not a game object a sheet describes.
+static func extends_editor_class(source: String) -> bool:
+	var found: RegExMatch = _EXTENDS.search(source)
+	return found != null and found.get_string(1).begins_with("Editor")
 
 
 ## The file a typed name becomes in `directory`, before any collision suffix: get_file() drops any

@@ -43,8 +43,13 @@ static func run() -> bool:
 	# The four ids the merge collided on, pinned by VALUE so a future append that reuses one of them
 	# fails here with the name of the item it would have killed.
 	var view_ids: Dictionary = _ids_by_label("res://addons/eventsheet/editor/dock/menu_bar.gd", "view_popup")
-	all_passed = _check("View ▸ Patterns keeps 27", view_ids.get("Patterns"), 27) and all_passed
-	all_passed = _check("View ▸ Minimap has its own id", view_ids.get("Minimap"), 46) and all_passed
+	# Patterns and Minimap moved into View ▸ Sheet display with their ids, and answer through View's
+	# own handler, so they are pinned in that submenu and must still be absent from View itself.
+	var display_ids: Dictionary = _ids_by_label("res://addons/eventsheet/editor/dock/menu_bar.gd", "display_menu")
+	all_passed = _check("View ▸ Sheet display ▸ Patterns keeps 27", display_ids.get("Patterns"), 27) and all_passed
+	all_passed = _check("View ▸ Sheet display ▸ Minimap has its own id", display_ids.get("Minimap"), 46) and all_passed
+	all_passed = _check("no id in Sheet display is also on View, since one handler answers both",
+		_shared_ids(view_ids, display_ids), PackedStringArray()) and all_passed
 	all_passed = _check("View ▸ Auto-apply while debugging keeps 9801",
 		view_ids.get("Auto-apply while debugging"), 9801) and all_passed
 	all_passed = _check("View ▸ Follow Scene Selection has its own id",
@@ -87,6 +92,18 @@ static func _collisions_in(path: String) -> PackedStringArray:
 	for key: Variant in keys:
 		if int(seen[key]) > 1:
 			out.append("%s: %s used %d times" % [path.get_file(), str(key), int(seen[key])])
+	return out
+
+
+## The ids two menus answered by one handler both carry, as "<id>" strings.
+static func _shared_ids(first: Dictionary, second: Dictionary) -> PackedStringArray:
+	var ids: Dictionary = {}
+	for id: Variant in first.values():
+		ids[int(id)] = true
+	var out: PackedStringArray = PackedStringArray()
+	for id: Variant in second.values():
+		if ids.has(int(id)):
+			out.append(str(id))
 	return out
 
 

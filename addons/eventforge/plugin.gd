@@ -100,8 +100,10 @@ var _sheet_edit_button_plugin: EventSheetEditButtonPlugin = null
 var _instance_variables_inspector: EditorInspectorPlugin = null
 # The Project Settings hover for the plugin's own settings (loaded by path, no class_name).
 var _settings_hover_plugin: EditorInspectorPlugin = null
-# The plugin icon in the editor's own ink, made once per load.
+# The plugin icon in the editor's own ink, and that ink: made again when the editor's ink changes (a
+# switch between a dark and a light editor theme, which Godot makes without a restart).
 var _plugin_icon: Texture2D = null
+var _plugin_icon_ink: Color = Color(0.0, 0.0, 0.0, 0.0)
 var _context_menus: Array[EventSheetContextMenu] = []
 var _new_sheet_dialog: RefCounted = null
 var _connect_signal_dialog: RefCounted = null
@@ -130,11 +132,15 @@ func _has_main_screen() -> bool:
 ## The very first time a project opens with the plugin in it, the editor asks for this icon before its
 ## first import has reached the svg, and a load() then printed "Failed loading resource" into the
 ## Output panel. Asking whether the imported texture exists first makes that one boot use the fallback.
+##
+## The editor asks again for every main-screen icon when its theme changes, so the icon is inked again
+## whenever the editor's ink is not the one it was made in.
 func _get_plugin_icon() -> Texture2D:
-	if _plugin_icon == null:
-		var theme: Theme = get_editor_interface().get_editor_theme()
+	var ink: Color = editor_icon_ink(get_editor_interface().get_editor_theme())
+	if icon_needs_inking(_plugin_icon, _plugin_icon_ink, ink):
+		_plugin_icon_ink = ink
 		_plugin_icon = inked_svg_texture(FileAccess.get_file_as_string(PLUGIN_ICON_PATH),
-				editor_icon_ink(theme), get_editor_interface().get_editor_scale())
+				ink, get_editor_interface().get_editor_scale())
 	if _plugin_icon != null:
 		return _plugin_icon
 	if ResourceLoader.exists(PLUGIN_ICON_PATH):
@@ -142,6 +148,12 @@ func _get_plugin_icon() -> Texture2D:
 		if icon is Texture2D:
 			return icon
 	return get_editor_interface().get_editor_theme().get_icon("Node", "EditorIcons")
+
+
+## True when the icon has to be made (again): there is none yet, or it was inked in another colour
+## than the editor draws its icons in now.
+static func icon_needs_inking(icon: Texture2D, made_in: Color, ink: Color) -> bool:
+	return icon == null or not made_in.is_equal_approx(ink)
 
 
 ## The svg text with the plugin icon's ink swapped for `ink` (either spelling of the hex).
@@ -174,6 +186,10 @@ func _refresh_plugin_icon_import() -> void:
 	var imported: Texture2D = load(PLUGIN_ICON_PATH) as Texture2D
 	if imported != null and not is_in_ink(imported, editor_icon_ink(get_editor_interface().get_editor_theme())):
 		file_system.reimport_files(PackedStringArray([PLUGIN_ICON_PATH]))
+
+
+func _on_editor_theme_changed() -> void:
+	_refresh_plugin_icon_import.call_deferred()
 
 
 ## True when the most opaque pixel of `texture` is `ink`, give or take rounding (2/255 per channel).
@@ -262,9 +278,13 @@ func _open_clicked_script() -> void:
 
 
 ## True when a click on `path` in the FileSystem opens it as a sheet: the setting is ticked and the
-## file is a script the sheet opens. Any other file keeps doing what Godot does with it.
+## file is a script the sheet reads (not an editor script, and one that saves back byte for byte).
+## Any other file keeps doing what Godot does with it, a script going to the Script editor.
 static func opens_on_click(path: String, enabled: bool) -> bool:
-	return enabled and path.get_extension().to_lower() == "gd" and load(WORKFLOW_PATH).is_openable_as_sheet(path)
+	if not enabled or path.get_extension().to_lower() != "gd":
+		return false
+	var workflow: Script = load(WORKFLOW_PATH)
+	return workflow.is_openable_as_sheet(path) and workflow.click_opens_as_sheet(path)
 
 
 ## Checks whether the selected object can be edited by this plugin.
@@ -274,7 +294,7 @@ func _handles(object: Object) -> bool:
 	# Open scripts as event sheets (off by default): when on, clicking a script the sheet can read routes
 	# here, so it opens as an editable sheet instead of in the Script editor. A script the sheet cannot
 	# read is not claimed, so Godot still opens it in the Script editor.
-	return _open_scripts_as_sheets_enabled() and object is Script and load(WORKFLOW_PATH).is_openable_as_sheet((object as Script).resource_path)
+	return object is Script and opens_on_click((object as Script).resource_path, _open_scripts_as_sheets_enabled())
 
 
 ## Loads the selected EventSheet (or, with the setting on, a .gd) into the workspace editor.
@@ -516,6 +536,10 @@ func _enter_tree() -> void:
 	# the editor's colours of the day it ran. After a switch between a dark and a light editor theme it
 	# is redrawn once, so it does not stay pale on the light theme.
 	_refresh_plugin_icon_import.call_deferred()
+	# A switch of the editor theme while the editor runs redraws the sheet resources' icon the same way.
+	var base: Control = get_editor_interface().get_base_control()
+	if base != null and not base.theme_changed.is_connected(_on_editor_theme_changed):
+		base.theme_changed.connect(_on_editor_theme_changed)
 	# Native entry points: right-click a node → Attach Event Sheet; right-click a
 	# sheet .tres / any .gd in the FileSystem or script editor → Open as Event Sheet;
 	# FileSystem "Create New >" submenu → Event Sheet... (a fresh sheet in that folder).
@@ -791,6 +815,9 @@ func _exit_tree() -> void:
 		remove_inspector_plugin(_settings_hover_plugin)
 		_settings_hover_plugin = null
 	_watch_file_system_clicks(false)
+	var base: Control = get_editor_interface().get_base_control()
+	if base != null and base.theme_changed.is_connected(_on_editor_theme_changed):
+		base.theme_changed.disconnect(_on_editor_theme_changed)
 	if _export_integrity_plugin != null:
 		remove_export_plugin(_export_integrity_plugin)
 		_export_integrity_plugin = null

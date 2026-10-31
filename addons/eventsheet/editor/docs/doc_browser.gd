@@ -503,6 +503,34 @@ func _refresh_chrome() -> void:
 	_refresh_page_foot()
 
 
+## Alt+Left / Alt+Right walk the Manual's trail even while its contents tree has the keyboard. The
+## tree reads them as plain Left / Right (fold a heading, move to its parent) before any unhandled
+## pass, so they are asked for here, ahead of the controls, and only while the keyboard is inside the
+## Manual. Anything else is left to the controls and to the unhandled pass below.
+func _input(event: InputEvent) -> void:
+	var step: int = trail_step(event)
+	if step == 0 or not is_visible_in_tree() or get_viewport() == null:
+		return
+	var focus: Control = get_viewport().gui_get_focus_owner()
+	if focus == null or not is_ancestor_of(focus):
+		return
+	if go_back() if step < 0 else go_forward():
+		get_viewport().set_input_as_handled()
+
+
+## -1 for Alt+Left (back along the trail), 1 for Alt+Right (forward), 0 for any other event.
+static func trail_step(event: InputEvent) -> int:
+	var key: InputEventKey = event as InputEventKey
+	if key == null or not key.pressed or not key.alt_pressed or key.ctrl_pressed or key.shift_pressed \
+			or key.meta_pressed:
+		return 0
+	if key.keycode == KEY_LEFT:
+		return -1
+	if key.keycode == KEY_RIGHT:
+		return 1
+	return 0
+
+
 ## The keys a reader reaches for inside a manual: Alt+Left / Alt+Right for the trail, "/" for the
 ## search box, and Esc to hand the focus back to the sheet.
 ##

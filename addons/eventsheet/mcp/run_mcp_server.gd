@@ -13,6 +13,12 @@
 # client sees the open tabs as they are and its edits land as undo steps in them. With no editor
 # answering - or after `-- --no-live`, which CI and scripted runs pass - it serves the files itself
 # through the same protocol core, EventSheetMCPServer (transport-free, unit-tested).
+#
+# The link is looked for again before every call while there is none, so a server started before the
+# editor's workspace opened, or one the editor dropped, finds the editor once it is back. And while an
+# editor is listening for this project but will not take this server (a link file whose port answers
+# and whose token does not), an edit is refused rather than written to a file that editor may hold
+# open in a tab: its next save would overwrite the edit, or the edit its unsaved work.
 @tool
 extends SceneTree
 
@@ -22,8 +28,18 @@ const SERVER_PATH := "res://addons/eventsheet/mcp/mcp_server.gd"
 const LINK_WAIT_MSEC := 3000
 ## How long one relayed call may take. An edit that opens a large `.gd` reads it into events first.
 const REPLY_WAIT_MSEC := 180000
+## The tools that change a sheet (EventSheetMCPServer.edits_sheet), spelled here so refusing one
+## costs no load of the protocol core.
+const EDITING_TOOLS: PackedStringArray = ["apply_snippet", "edit_row", "delete_row", "comment", "rename", "variable_properties"]
 
 var _link: StreamPeerTCP = null
+## Off after `-- --no-live`: the files serve every call and no editor is looked for.
+var _live: bool = true
+## The link file's text the last time joining it failed, and whether its port was listening then.
+## A failed link is tried again only once the file changes - an editor that starts again writes a new
+## port and token - so a file a closed editor left behind costs one refused connection, not one per call.
+var _failed_link_text: String = ""
+var _failed_link_listening: bool = false
 var _pending: String = ""
 ## The protocol core, loaded by path on first use: naming its class here would compile it (and the
 ## compiler and importer behind it) before the first line is read, even in a session the editor
@@ -34,7 +50,8 @@ var _server: RefCounted = null
 func _init() -> void:
 	if OS.get_cmdline_args().has("--quiet") or OS.get_cmdline_args().has("-q"):
 		printerr("[Godot EventSheets] The MCP server was launched with --quiet, which silences every answer it writes. Launch it with --no-header instead.")
-	if not OS.get_cmdline_user_args().has("--no-live"):
+	_live = not OS.get_cmdline_user_args().has("--no-live")
+	if _live:
 		_link = _connect_to_editor()
 	var unread: String = ""
 	while true:
@@ -77,9 +94,58 @@ func _answer(line: String, parsed: Variant) -> void:
 		printraw(JSON.stringify({"jsonrpc": "2.0", "id": null, "error": {"code": -32700, "message": "Parse error"}}) + "\n")
 		return
 	var message: Dictionary = parsed as Dictionary
-	var response: Variant = _relay(message, line) if _link != null else _serve(message)
+	if _link == null and _live:
+		_link = _connect_to_editor()
+	var response: Variant = null
+	if _link != null:
+		response = _relay(message, line)
+	else:
+		var refused: String = file_edit_refusal(message, _live and _editor_listening())
+		response = _serve(message) if refused.is_empty() else {"jsonrpc": "2.0",
+			"id": int(message.get("id")) if message.get("id") is float else message.get("id"),
+			"result": {"content": [{"type": "text", "text": refused}], "isError": true}}
 	if response is Dictionary:
 		printraw(JSON.stringify(response) + "\n")
+
+
+## Why an edit must not be served from the files, or "": when an editor is listening for this project
+## but did not take this server, a call that changes a sheet would write behind a tab it may hold.
+static func file_edit_refusal(message: Dictionary, editor_listening: bool) -> String:
+	if not editor_listening or str(message.get("method", "")) != "tools/call":
+		return ""
+	var params: Variant = message.get("params", {})
+	var tool_name: String = str((params as Dictionary).get("name", "")) if params is Dictionary else ""
+	if not (tool_name in EDITING_TOOLS):
+		return ""
+	return "The editor has this project open but did not accept this server's link, so this edit was not written to the file: the editor may hold the sheet in a tab, and the next save there would overwrite it. Turn the MCP switch off and on in the EventSheets dock, or restart this server, then retry."
+
+
+## Whether an editor whose link this server could not join is listening for this project, as against
+## a link file a closed editor left behind (or none at all).
+func _editor_listening() -> bool:
+	if not FileAccess.file_exists(LINK_FILE):
+		return false
+	return _failed_link_listening and FileAccess.get_file_as_string(LINK_FILE) == _failed_link_text
+
+
+## Whether something accepts a connection on the port a link file's text names.
+static func _listening(text: String) -> bool:
+	var details: Variant = JSON.parse_string(text)
+	if not (details is Dictionary) or int((details as Dictionary).get("port", 0)) <= 0:
+		return false
+	var peer: StreamPeerTCP = StreamPeerTCP.new()
+	if peer.connect_to_host("127.0.0.1", int((details as Dictionary).get("port"))) != OK:
+		return false
+	var started: int = Time.get_ticks_msec()
+	while Time.get_ticks_msec() - started < LINK_WAIT_MSEC:
+		peer.poll()
+		if peer.get_status() == StreamPeerTCP.STATUS_CONNECTED:
+			peer.disconnect_from_host()
+			return true
+		if peer.get_status() != StreamPeerTCP.STATUS_CONNECTING:
+			return false
+		OS.delay_msec(10)
+	return false
 
 
 ## The protocol core, answering from the files. Built on first use, so a session the editor answers
@@ -94,7 +160,18 @@ func _serve(message: Dictionary) -> Variant:
 func _connect_to_editor() -> StreamPeerTCP:
 	if not FileAccess.file_exists(LINK_FILE):
 		return null
-	var details: Variant = JSON.parse_string(FileAccess.get_file_as_string(LINK_FILE))
+	var text: String = FileAccess.get_file_as_string(LINK_FILE)
+	if text == _failed_link_text:
+		return null
+	var peer: StreamPeerTCP = _join(text)
+	if peer == null:
+		_failed_link_text = text
+		_failed_link_listening = _listening(text)
+	return peer
+
+
+func _join(text: String) -> StreamPeerTCP:
+	var details: Variant = JSON.parse_string(text)
 	if not (details is Dictionary) or int((details as Dictionary).get("port", 0)) <= 0:
 		return null
 	var peer: StreamPeerTCP = StreamPeerTCP.new()

@@ -4840,6 +4840,12 @@ func last_read_doc_id() -> String:
 	return "" if history == null else str(history.call("current"))
 
 
+## Menu > Manual... and Tools > Manual...: the Manual window on the page the reader was reading last,
+## or its home when they have not opened it yet. F1 is the door that explains the selection.
+func open_manual_where_left() -> void:
+	_docs.open(last_read_doc_id())
+
+
 ## The row menu's "What does this do?". The CLICKED SPAN decides: right-clicking the third
 ## condition explains that condition, not the row's trigger. The span metadata is the same
 ## context the row menu itself was built from, so the entry and the page can never disagree.
@@ -5410,10 +5416,15 @@ func _apply_editor_native_defaults() -> void:
 	# which would mark it unsaved and pin the old colours to it. A theme that does not follow the
 	# editor is left as it is. The active style lives on EventSheetThemeManager; read it through the
 	# getter.
-	var active: EventSheetEditorStyle = _theme_manager.get_active_theme_style()
-	if _current_sheet != null and (active == null or active.follow_editor_greys):
+	if reseats_on_editor_theme(_current_sheet, _theme_manager.get_active_theme_style()):
 		_viewport.set_sheet(_current_sheet)
 		_theme_manager._publish_active_style()
+
+
+## Whether a switch of the editor's theme re-seats the open sheet: a sheet is open, and it either has
+## no theme of its own or wears one that follows the editor's greys (the Editor Native starter).
+static func reseats_on_editor_theme(sheet: EventSheetResource, active: EventSheetEditorStyle) -> bool:
+	return sheet != null and (active == null or active.follow_editor_greys)
 
 
 # ── Quick-add bar ("type to insert", and to ASK) - bodies in EventSheetAuthorActions

@@ -141,6 +141,8 @@ static func run() -> bool:
 	all_passed = _check_script_writes(server) and all_passed
 	all_passed = _check_explain_and_verify(server) and all_passed
 	all_passed = _check_live_host(server, fixture_path) and all_passed
+	all_passed = _check_live_script_gates(server) and all_passed
+	all_passed = _check_relay_refusal() and all_passed
 	all_passed = _check_live_link_on_a_dock() and all_passed
 	all_passed = _check_live_link_socket(fixture_path) and all_passed
 	return all_passed
@@ -267,6 +269,43 @@ static func _check_live_host(server: EventSheetMCPServer, fixture_path: String) 
 		[{"path": fixture_path, "unsaved": true}]) and all_passed
 	server.live_host = null
 	return all_passed
+
+
+## Through a live host, a `.gd` passes the same gates a file write does before the tab is edited: the
+## person's next save writes what the edit left, so a file that does not save back byte for byte, or
+## one mid-merge, is refused and the tab is never handed the edit.
+static func _check_live_script_gates(server: EventSheetMCPServer) -> bool:
+	var editor: FakeEditor = FakeEditor.new()
+	editor.path = SCRIPT_PATH
+	editor.sheet = EventSheetResource.new()
+	server.live_host = editor
+	_write(SCRIPT_PATH, "extends Node\n\nvar a = 1")
+	var unreproducible: String = str(_call_raw(server, "comment", {"path": SCRIPT_PATH, "text": "x"}).get("content", [{}])[0].get("text", ""))
+	_write(SCRIPT_PATH, "extends Node\n<<<<<<< HEAD\nvar a = 1\n=======\nvar a = 2\n>>>>>>> other\n")
+	var conflicted: String = str(_call_raw(server, "comment", {"path": SCRIPT_PATH, "text": "x"}).get("content", [{}])[0].get("text", ""))
+	_write(SCRIPT_PATH, SCRIPT_SHEET)
+	_call_tool(server, "comment", {"path": SCRIPT_PATH, "text": "y"})
+	server.live_host = null
+	return SUPPORT.pins("mcp_server_test", [
+		["a tab whose file does not save back is not edited", unreproducible,
+			"%s does not save back byte for byte as a sheet, so editing it here could change lines the edit never touched. Nothing was written." % SCRIPT_PATH],
+		["nor one mid-merge", conflicted, "%s still holds merge conflict markers - finish the merge before editing it." % SCRIPT_PATH],
+		["only the file that saves back reached the tab", editor.edits, ["Add Comment"]],
+	])
+
+
+## The stdio relay with no link: an edit is refused while an editor it could not join is listening,
+## and served from the files otherwise; a read is always served.
+static func _check_relay_refusal() -> bool:
+	var relay: Script = load("res://addons/eventsheet/mcp/run_mcp_server.gd")
+	var edit: Dictionary = {"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "edit_row", "arguments": {}}}
+	var read: Dictionary = {"jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": {"name": "read_sheet", "arguments": {}}}
+	return SUPPORT.pins("mcp_server_test", [
+		["an edit beside a listening editor is refused", str(relay.call("file_edit_refusal", edit, true)).begins_with("The editor has this project open"), true],
+		["an edit with no editor listening is served", relay.call("file_edit_refusal", edit, false), ""],
+		["a read beside a listening editor is served", relay.call("file_edit_refusal", read, true), ""],
+		["the relay's list is the core's", Array(relay.get("EDITING_TOOLS")).all(func(name: String) -> bool: return EventSheetMCPServer.edits_sheet(name)), true],
+	])
 
 
 ## The live link against a real dock: reads its tab, edits through its undo funnel, and one undo takes

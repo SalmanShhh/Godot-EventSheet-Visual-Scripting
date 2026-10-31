@@ -23,6 +23,11 @@ extends RefCounted
 var _dock: Control = null
 var _dialog: AcceptDialog = null
 var _browser: EventSheetDocBrowser = null
+## The window the reader was working in when the Manual opened over it - the picker, say, when a
+## section "?" asked for a page - so closing the Manual hands the focus back to it. Without that the
+## OS gives it to the editor's main window, and the picker, still open, takes no hover and so no
+## click on its first press.
+var _opener: Window = null
 
 
 ## Wires the dock reference used to parent the dialog and to report into the status line.
@@ -54,8 +59,35 @@ func open(doc_id: String = "", anchor: String = "") -> bool:
 		return false
 	_dialog.title = _title_for(doc_id)
 	if not _dialog.visible:
+		_opener = focused_window()
 		_dialog.popup_centered(Vector2i(int(EventSheetPalette.scaled_f(900.0)), int(EventSheetPalette.scaled_f(640.0))))
 	return true
+
+
+## The window that holds the keyboard focus now, or null when none of this editor's windows does.
+static func focused_window() -> Window:
+	for window_id: int in DisplayServer.get_window_list():
+		var window: Window = instance_from_id(DisplayServer.window_get_attached_instance_id(window_id)) as Window
+		if window != null and window.has_focus():
+			return window
+	return null
+
+
+## Where the focus goes when the Manual closes: back to the window it opened over, when that window
+## is still showing and is not the Manual itself, else nowhere (the OS decides, as before).
+static func focus_after_close(opener: Window, manual: Window) -> Window:
+	if opener == null or opener == manual or not is_instance_valid(opener) or not opener.visible:
+		return null
+	return opener
+
+
+func _on_dialog_visibility_changed() -> void:
+	if _dialog == null or _dialog.visible:
+		return
+	var back: Window = focus_after_close(_opener, _dialog)
+	_opener = null
+	if back != null:
+		back.grab_focus.call_deferred()
 
 
 ## The whole reading surface, for a host that wants to drive it directly (and for the preview
@@ -107,6 +139,7 @@ func _ensure_built() -> void:
 	# no second one.
 	dialog.add_child(EventSheetPopupUI.margined(_browser))
 	EventSheetPopupUI.main_button(dialog.get_ok_button())
+	dialog.visibility_changed.connect(_on_dialog_visibility_changed)
 	_dock.add_child(dialog)
 	# Chrome translates for free once the dialog is in the plugin's translation domain.
 	EventSheetL10n.apply_to(dialog)

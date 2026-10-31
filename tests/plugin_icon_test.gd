@@ -48,6 +48,15 @@ static func run() -> bool:
 		["with no theme to ask the ink stays light grey", EventForgePlugin.editor_icon_ink(null), Color("#E0E0E0")],
 		["a theme's plain icon colour is the ink", _hex(EventForgePlugin.editor_icon_ink(_theme_inked(LIGHT_INK))), "5a5a5aff"],
 	]) and ok
+	# A switch between a dark and a light editor theme while it runs: the editor asks for the icon
+	# again, and an icon inked for the other theme is made again in the new ink.
+	var made: Texture2D = EventForgePlugin.inked_svg_texture(svg, Color("#E0E0E0"), 1.0)
+	ok = SUPPORT.pins(NAME, [
+		["no icon yet is made", EventForgePlugin.icon_needs_inking(null, Color("#E0E0E0"), Color("#E0E0E0")), true],
+		["one in the editor's ink is kept", EventForgePlugin.icon_needs_inking(made, Color("#E0E0E0"), Color("#E0E0E0")), false],
+		["one inked for the dark theme is made again on the light one",
+			EventForgePlugin.icon_needs_inking(made, Color("#E0E0E0"), LIGHT_INK), true],
+	]) and ok
 	var import_text: String = FileAccess.get_file_as_string(ICON_PATH + ".import")
 	ok = SUPPORT.pins(NAME, [
 		["the import draws the @icon in the editor's colours", import_text.contains("editor/convert_colors_with_editor_theme=true"), true],

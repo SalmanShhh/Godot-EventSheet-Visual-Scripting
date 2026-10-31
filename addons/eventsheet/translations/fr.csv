@@ -9706,3 +9706,8 @@ Every line of this event is ordinary Godot code the sheet reads as rows. Its sha
 Open in the Manual (F1),Ouvrir dans le Manuel (F1)
 Conditions go on the left,Les conditions vont à gauche
 Actions go on the right,Les actions vont à droite
+Sheet display,Affichage de la feuille
+"How the rows are drawn: add-event rows, icons, event numbers, hit counts and costs, glyphs and badges, density, names and patterns, the minimap.","Comment les lignes sont dessinées : lignes d'ajout d'événement, icônes, numéros d'événement, nombres d'exécutions et coûts, glyphes et badges, densité, noms et motifs, la mini-carte."
+Collapse and expand,Replier et déplier
+Split views,Vues partagées
+Zoom,Zoom

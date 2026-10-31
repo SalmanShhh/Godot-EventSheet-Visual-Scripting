@@ -88,6 +88,14 @@ const SIDE_RAIL_VIEW_ID: int = 9840
 ## the selection. Clear of every run above.
 const MANUAL_BESIDE_VIEW_ID: int = 9850
 
+## View's three groups, each a submenu so the menu fits a 1080p window: Sheet display (how the rows
+## are drawn), Collapse and expand (the sweeps) and Zoom. Every item inside keeps the id it had when
+## it sat on View itself, and answers through View's own handler. Clear of every run above.
+const SHEET_DISPLAY_VIEW_ID: int = 9860
+const COLLAPSE_VIEW_ID: int = 9861
+const ZOOM_VIEW_ID: int = 9862
+const SPLIT_VIEWS_VIEW_ID: int = 9863
+
 ## The Menu's foot: Manual… and What's new…, the two doors a reader looks for by name.
 const MENU_MANUAL_ID: int = 4
 const MENU_WHATS_NEW_ID: int = 5
@@ -641,56 +649,65 @@ func build(root: Node) -> void:
 	view_popup.id_pressed.connect(func(id: int) -> void:
 		if id == MANUAL_BESIDE_VIEW_ID:
 			_dock.toggle_manual_beside())
-	view_popup.add_check_item("Add-Event Rows", 9)
-	view_popup.set_item_checked(view_popup.get_item_index(9), true)
-	view_popup.add_check_item("Object Icons", 15)
-	view_popup.set_item_checked(view_popup.get_item_index(15), true)
-	view_popup.add_check_item(EventSheetL10n.translate("Trigger Icons"), TRIGGER_ICONS_VIEW_ID)
-	view_popup.set_item_checked(view_popup.get_item_index(TRIGGER_ICONS_VIEW_ID), _dock._trigger_icons_enabled())
-	view_popup.set_item_tooltip(view_popup.get_item_index(TRIGGER_ICONS_VIEW_ID), EventSheetL10n.translate(
+	# Sheet display ▸ - how the rows are drawn: the marks, the margin, the density and the reading
+	# lenses. One submenu, because twenty ticks on View itself ran the menu off a 1080p window. Each
+	# item keeps its id and answers through View's handler below.
+	var display_menu: PopupMenu = PopupMenu.new()
+	display_menu.name = "EventSheetSheetDisplayMenu"
+	view_popup.add_child(display_menu)
+	view_popup.add_submenu_item(EventSheetL10n.translate("Sheet display"), "EventSheetSheetDisplayMenu", SHEET_DISPLAY_VIEW_ID)
+	view_popup.set_item_tooltip(view_popup.get_item_index(SHEET_DISPLAY_VIEW_ID), EventSheetL10n.translate(
+		"How the rows are drawn: add-event rows, icons, event numbers, hit counts and costs, glyphs and badges, density, names and patterns, the minimap."))
+	display_menu.add_check_item("Add-Event Rows", 9)
+	display_menu.set_item_checked(display_menu.get_item_index(9), true)
+	display_menu.add_check_item("Object Icons", 15)
+	display_menu.set_item_checked(display_menu.get_item_index(15), true)
+	display_menu.add_check_item(EventSheetL10n.translate("Trigger Icons"), TRIGGER_ICONS_VIEW_ID)
+	display_menu.set_item_checked(display_menu.get_item_index(TRIGGER_ICONS_VIEW_ID), _dock._trigger_icons_enabled())
+	display_menu.set_item_tooltip(display_menu.get_item_index(TRIGGER_ICONS_VIEW_ID), EventSheetL10n.translate(
 		"A small mark beside each event's number that says how it is started: once when ready, every tick, every physics tick, on input or on a signal. Hover one to read it. Off keeps the margin quiet."))
-	view_popup.add_check_item(EventSheetL10n.translate("Add Links On Hover"), HOVER_ADD_LINKS_VIEW_ID)
-	view_popup.set_item_checked(view_popup.get_item_index(HOVER_ADD_LINKS_VIEW_ID), _dock._hover_add_links_enabled())
-	view_popup.set_item_tooltip(view_popup.get_item_index(HOVER_ADD_LINKS_VIEW_ID), EventSheetL10n.translate(
+	display_menu.add_check_item(EventSheetL10n.translate("Add Links On Hover"), HOVER_ADD_LINKS_VIEW_ID)
+	display_menu.set_item_checked(display_menu.get_item_index(HOVER_ADD_LINKS_VIEW_ID), _dock._hover_add_links_enabled())
+	display_menu.set_item_tooltip(display_menu.get_item_index(HOVER_ADD_LINKS_VIEW_ID), EventSheetL10n.translate(
 		"Add condition and Add action appear as links under the lanes of the event under the pointer, of the selected event and under an empty lane. Click one to pick what to add. Off draws them as pills in the same places."))
-	view_popup.add_check_item(EventSheetL10n.translate("Value Glyphs"), VALUE_GLYPHS_VIEW_ID)
-	view_popup.set_item_checked(view_popup.get_item_index(VALUE_GLYPHS_VIEW_ID), _dock._value_glyphs_enabled())
-	view_popup.set_item_tooltip(view_popup.get_item_index(VALUE_GLYPHS_VIEW_ID), EventSheetL10n.translate(
+	display_menu.add_check_item(EventSheetL10n.translate("Value Glyphs"), VALUE_GLYPHS_VIEW_ID)
+	display_menu.set_item_checked(display_menu.get_item_index(VALUE_GLYPHS_VIEW_ID), _dock._value_glyphs_enabled())
+	display_menu.set_item_tooltip(display_menu.get_item_index(VALUE_GLYPHS_VIEW_ID), EventSheetL10n.translate(
 		"Variable rows draw their value the way the Inspector does: a tick box for true or false, X and Y fields for a vector, a chip for a scene or resource. The type wears its colour and the ## note leans into italics. The words stay the same."))
-	view_popup.add_check_item(EventSheetL10n.translate("Variable Badges"), VARIABLE_BADGES_VIEW_ID)
-	view_popup.set_item_checked(view_popup.get_item_index(VARIABLE_BADGES_VIEW_ID), _dock._variable_badges_enabled())
-	view_popup.set_item_tooltip(view_popup.get_item_index(VARIABLE_BADGES_VIEW_ID), EventSheetL10n.translate(
+	display_menu.add_check_item(EventSheetL10n.translate("Variable Badges"), VARIABLE_BADGES_VIEW_ID)
+	display_menu.set_item_checked(display_menu.get_item_index(VARIABLE_BADGES_VIEW_ID), _dock._variable_badges_enabled())
+	display_menu.set_item_tooltip(display_menu.get_item_index(VARIABLE_BADGES_VIEW_ID), EventSheetL10n.translate(
 		"Small icon tiles at a variable row's right: shown in the Inspector, kept in a range, has a tooltip, kept by the Save System. Hover one to read it. Off keeps the one Inspector mark beside the name."))
-	view_popup.add_check_item(EventSheetL10n.translate("Included Variables"), INCLUDED_VARIABLES_VIEW_ID)
-	view_popup.set_item_checked(view_popup.get_item_index(INCLUDED_VARIABLES_VIEW_ID), _dock._included_variables_enabled())
-	view_popup.set_item_tooltip(view_popup.get_item_index(INCLUDED_VARIABLES_VIEW_ID), EventSheetL10n.translate(
+	display_menu.add_check_item(EventSheetL10n.translate("Included Variables"), INCLUDED_VARIABLES_VIEW_ID)
+	display_menu.set_item_checked(display_menu.get_item_index(INCLUDED_VARIABLES_VIEW_ID), _dock._included_variables_enabled())
+	display_menu.set_item_tooltip(display_menu.get_item_index(INCLUDED_VARIABLES_VIEW_ID), EventSheetL10n.translate(
 		"Under each Include bar, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the Include bars alone."))
-	view_popup.add_check_item("Event Numbers", 16)
-	view_popup.set_item_checked(view_popup.get_item_index(16), true)
-	view_popup.add_check_item("Aligned Object Columns", 18)
-	view_popup.set_item_checked(view_popup.get_item_index(18), _dock._object_columns_aligned())
-	view_popup.add_item(EventSheetL10n.translate("Reset Lane Split"), RESET_LANE_SPLIT_VIEW_ID)
-	view_popup.set_item_tooltip(view_popup.get_item_index(RESET_LANE_SPLIT_VIEW_ID), EventSheetL10n.translate(
+	display_menu.add_check_item("Event Numbers", 16)
+	display_menu.set_item_checked(display_menu.get_item_index(16), true)
+	display_menu.add_check_item("Aligned Object Columns", 18)
+	display_menu.set_item_checked(display_menu.get_item_index(18), _dock._object_columns_aligned())
+	display_menu.add_item(EventSheetL10n.translate("Reset Lane Split"), RESET_LANE_SPLIT_VIEW_ID)
+	display_menu.set_item_tooltip(display_menu.get_item_index(RESET_LANE_SPLIT_VIEW_ID), EventSheetL10n.translate(
 		"Put the conditions/actions boundary back where the theme has it. The boundary is dragged from the grabber in the Conditions | Actions band above the sheet."))
-	view_popup.add_check_item("Compact Rows", 19)
-	view_popup.set_item_checked(view_popup.get_item_index(19), _dock._compact_rows_enabled())
-	view_popup.set_item_tooltip(view_popup.get_item_index(19), "Tighter rows - more events on screen with the same text size. Off = the comfortable default.")
-	view_popup.add_check_item("Humanized Names", 20)
-	view_popup.set_item_checked(view_popup.get_item_index(20), _dock._humanized_names_enabled())
-	view_popup.set_item_tooltip(view_popup.get_item_index(20), "Read variable names as words: \"_coyote_timer\" becomes \"coyote timer\", and an exported knob reads with its Inspector name (\"Coyote Time\"). The raw name is always on hover. On by default while reading a sheet, off while authoring one.")
-	view_popup.add_check_item("Familiar Words", 21)
-	view_popup.set_item_checked(view_popup.get_item_index(21), _dock._familiar_words_enabled())
-	view_popup.set_item_tooltip(view_popup.get_item_index(21), "Read the few Godot nouns other event-sheet editors name differently in the familiar word: a scene is a layout, pausing is time scale 0, a CanvasLayer is a layer. The Godot word stays on hover. Off by default.")
-	view_popup.add_check_item("Patterns", 27)
-	view_popup.set_item_checked(view_popup.get_item_index(27), _dock._patterns_lens_enabled())
-	view_popup.set_item_tooltip(view_popup.get_item_index(27), "Name the shape an event is when a reading recognised one - a cooldown, an object pool, a wait sequence - with a marker chip whose hover shows the lines that were the evidence. On by default; off shows every event as its own plain sentences.")
-	view_popup.add_item("Outline…", 17)
-	view_popup.set_item_tooltip(view_popup.get_item_index(17), "Jump tree of the sheet's groups, regions, and published functions.")
+	display_menu.add_check_item("Compact Rows", 19)
+	display_menu.set_item_checked(display_menu.get_item_index(19), _dock._compact_rows_enabled())
+	display_menu.set_item_tooltip(display_menu.get_item_index(19), "Tighter rows - more events on screen with the same text size. Off = the comfortable default.")
+	display_menu.add_check_item("Humanized Names", 20)
+	display_menu.set_item_checked(display_menu.get_item_index(20), _dock._humanized_names_enabled())
+	display_menu.set_item_tooltip(display_menu.get_item_index(20), "Read variable names as words: \"_coyote_timer\" becomes \"coyote timer\", and an exported knob reads with its Inspector name (\"Coyote Time\"). The raw name is always on hover. On by default while reading a sheet, off while authoring one.")
+	display_menu.add_check_item("Familiar Words", 21)
+	display_menu.set_item_checked(display_menu.get_item_index(21), _dock._familiar_words_enabled())
+	display_menu.set_item_tooltip(display_menu.get_item_index(21), "Read the few Godot nouns other event-sheet editors name differently in the familiar word: a scene is a layout, pausing is time scale 0, a CanvasLayer is a layer. The Godot word stays on hover. Off by default.")
+	display_menu.add_check_item("Patterns", 27)
+	display_menu.set_item_checked(display_menu.get_item_index(27), _dock._patterns_lens_enabled())
+	display_menu.set_item_tooltip(display_menu.get_item_index(27), "Name the shape an event is when a reading recognised one - a cooldown, an object pool, a wait sequence - with a marker chip whose hover shows the lines that were the evidence. On by default; off shows every event as its own plain sentences.")
 	# Id 46, NOT 27: 27 is the Patterns lens four lines up. Sharing it left this item dead (a match
 	# takes its first arm) and wrote this tick and this tooltip onto Patterns instead.
-	view_popup.add_check_item("Minimap", 46)
-	view_popup.set_item_checked(view_popup.get_item_index(46), _dock._minimap_enabled())
-	view_popup.set_item_tooltip(view_popup.get_item_index(46), "A picture of the whole sheet down the right edge: one bar per event tinted by what it is, the part you are looking at as a box you can drag, and your bookmarks in the margin. On by default once a sheet passes 200 events.")
+	display_menu.add_check_item("Minimap", 46)
+	display_menu.set_item_checked(display_menu.get_item_index(46), _dock._minimap_enabled())
+	display_menu.set_item_tooltip(display_menu.get_item_index(46), "A picture of the whole sheet down the right edge: one bar per event tinted by what it is, the part you are looking at as a box you can drag, and your bookmarks in the margin. On by default once a sheet passes 200 events.")
+	view_popup.add_item("Outline…", 17)
+	view_popup.set_item_tooltip(view_popup.get_item_index(17), "Jump tree of the sheet's groups, regions, and published functions.")
 	view_popup.add_item("Sheet Map…", 28)
 	view_popup.set_item_tooltip(view_popup.get_item_index(28), "Which sheets, scenes and globals call, signal and include which - the shape of the project's logic on one page.")
 	view_popup.add_item("History…", 29)
@@ -708,25 +725,35 @@ func build(root: Node) -> void:
 	view_popup.add_separator()
 	# Collapsing IS how a long sheet is browsed, so the sweeps live in the menu beside the
 	# Outline, not only on their shortcuts.
-	view_popup.add_item("Collapse All", 22)
-	view_popup.set_item_tooltip(view_popup.get_item_index(22), "Collapse every event and function block down to its own line (Ctrl+Shift+[). A collapsed block keeps a muted one-line summary of what it holds.")
-	view_popup.add_item("Expand All", 23)
-	view_popup.set_item_tooltip(view_popup.get_item_index(23), "Expand every block again (Ctrl+Shift+]).")
-	view_popup.add_item("Expand To Level 1", 24)
-	view_popup.add_item("Expand To Level 2", 25)
-	view_popup.add_item("Expand To Level 3", 26)
+	var fold_menu: PopupMenu = PopupMenu.new()
+	fold_menu.name = "EventSheetCollapseMenu"
+	view_popup.add_child(fold_menu)
+	view_popup.add_submenu_item(EventSheetL10n.translate("Collapse and expand"), "EventSheetCollapseMenu", COLLAPSE_VIEW_ID)
+	fold_menu.add_item("Collapse All", 22)
+	fold_menu.set_item_tooltip(fold_menu.get_item_index(22), "Collapse every event and function block down to its own line (Ctrl+Shift+[). A collapsed block keeps a muted one-line summary of what it holds.")
+	fold_menu.add_item("Expand All", 23)
+	fold_menu.set_item_tooltip(fold_menu.get_item_index(23), "Expand every block again (Ctrl+Shift+]).")
+	fold_menu.add_item("Expand To Level 1", 24)
+	fold_menu.add_item("Expand To Level 2", 25)
+	fold_menu.add_item("Expand To Level 3", 26)
 	for level_id: int in [24, 25, 26]:
-		view_popup.set_item_tooltip(view_popup.get_item_index(level_id),
+		fold_menu.set_item_tooltip(fold_menu.get_item_index(level_id),
 			"Read the sheet down to this depth: everything shallower stays expanded, everything at this depth or deeper is collapsed. How deep you left a file is remembered for that file.")
-	view_popup.add_separator()
-	view_popup.add_item("Split View (toggle)", 1)
-	view_popup.add_item("Detached View (toggle)", 2)
-	view_popup.add_item("Link Views (toggle)", 3)
-	view_popup.add_separator()
-	view_popup.add_item("Zoom In", 4)
-	view_popup.add_item("Zoom Out", 5)
-	view_popup.add_item("Reset Zoom", 40)
-	view_popup.set_item_tooltip(view_popup.get_item_index(40), "Back to 100% (Ctrl + 0). The zoom is remembered for every sheet you open, not for one file.")
+	var split_menu: PopupMenu = PopupMenu.new()
+	split_menu.name = "EventSheetSplitViewsMenu"
+	view_popup.add_child(split_menu)
+	view_popup.add_submenu_item(EventSheetL10n.translate("Split views"), "EventSheetSplitViewsMenu", SPLIT_VIEWS_VIEW_ID)
+	split_menu.add_item("Split View (toggle)", 1)
+	split_menu.add_item("Detached View (toggle)", 2)
+	split_menu.add_item("Link Views (toggle)", 3)
+	var zoom_menu: PopupMenu = PopupMenu.new()
+	zoom_menu.name = "EventSheetZoomMenu"
+	view_popup.add_child(zoom_menu)
+	view_popup.add_submenu_item(EventSheetL10n.translate("Zoom"), "EventSheetZoomMenu", ZOOM_VIEW_ID)
+	zoom_menu.add_item("Zoom In", 4)
+	zoom_menu.add_item("Zoom Out", 5)
+	zoom_menu.add_item("Reset Zoom", 40)
+	zoom_menu.set_item_tooltip(zoom_menu.get_item_index(40), "Back to 100% (Ctrl + 0). The zoom is remembered for every sheet you open, not for one file.")
 	view_popup.add_check_item("Properties Bar", 41)
 	view_popup.set_item_tooltip(view_popup.get_item_index(41), "Show the selected condition, action, object or group beside the sheet, with its parameters editable in place. Hidden by default in Simple Mode.")
 	view_popup.set_item_checked(view_popup.get_item_index(41), not _dock._simple_mode)
@@ -797,7 +824,7 @@ func build(root: Node) -> void:
 	# looked at yet. Read on open, it also follows a marker file changed outside the editor.
 	view_popup.about_to_popup.connect(func() -> void:
 		view_popup.set_item_checked(view_popup.get_item_index(12), load(MCP_SERVER_PATH).is_enabled()))
-	view_popup.id_pressed.connect(func(id: int) -> void:
+	var on_view_id: Callable = func(id: int) -> void:
 		match id:
 			0: _dock._code_panel_glue.toggle_code_panel()
 			1: _dock._multi_view._toggle_split_view()
@@ -810,22 +837,22 @@ func build(root: Node) -> void:
 			6: _dock._on_load_theme_requested()
 			7: _dock._on_reload_theme_requested()
 			8: _dock._open_theme_editor()
-			9: _dock._toggle_add_event_rows(view_popup)
-			15: _dock._toggle_object_icons(view_popup)
-			TRIGGER_ICONS_VIEW_ID: _dock._toggle_trigger_icons(view_popup)
-			HOVER_ADD_LINKS_VIEW_ID: _dock._toggle_hover_add_links(view_popup)
-			VALUE_GLYPHS_VIEW_ID: _dock._toggle_value_glyphs(view_popup)
-			VARIABLE_BADGES_VIEW_ID: _dock._toggle_variable_badges(view_popup)
-			INCLUDED_VARIABLES_VIEW_ID: _dock._toggle_included_variables(view_popup)
-			16: _dock._toggle_event_numbers(view_popup)
-			18: _dock._toggle_object_column_alignment(view_popup)
+			9: _dock._toggle_add_event_rows(display_menu)
+			15: _dock._toggle_object_icons(display_menu)
+			TRIGGER_ICONS_VIEW_ID: _dock._toggle_trigger_icons(display_menu)
+			HOVER_ADD_LINKS_VIEW_ID: _dock._toggle_hover_add_links(display_menu)
+			VALUE_GLYPHS_VIEW_ID: _dock._toggle_value_glyphs(display_menu)
+			VARIABLE_BADGES_VIEW_ID: _dock._toggle_variable_badges(display_menu)
+			INCLUDED_VARIABLES_VIEW_ID: _dock._toggle_included_variables(display_menu)
+			16: _dock._toggle_event_numbers(display_menu)
+			18: _dock._toggle_object_column_alignment(display_menu)
 			RESET_LANE_SPLIT_VIEW_ID: _dock._reset_lane_split()
-			19: _dock._toggle_compact_rows(view_popup)
-			20: _dock._toggle_humanized_names(view_popup)
-			21: _dock._toggle_familiar_words(view_popup)
-			27: _dock._toggle_patterns_lens(view_popup)
+			19: _dock._toggle_compact_rows(display_menu)
+			20: _dock._toggle_humanized_names(display_menu)
+			21: _dock._toggle_familiar_words(display_menu)
+			27: _dock._toggle_patterns_lens(display_menu)
 			17: _dock._open_outline_panel()
-			46: _dock._toggle_minimap(view_popup)
+			46: _dock._toggle_minimap(display_menu)
 			28: _dock._open_sheet_map_panel()
 			29: _dock._open_history_panel()
 			42: _dock._ask.open()
@@ -839,17 +866,18 @@ func build(root: Node) -> void:
 			24: _collapse_sweep(1)
 			25: _collapse_sweep(2)
 			26: _collapse_sweep(3)
-	)
+	for answering: PopupMenu in [view_popup, display_menu, fold_menu, split_menu, zoom_menu]:
+		answering.id_pressed.connect(on_view_id)
 	# Toggles say what they toggle on hover (user call: hovering a toggle should
 	# explain it).
 	view_popup.set_item_tooltip(view_popup.get_item_index(0), "Show/hide the generated-GDScript panel beside the sheet.")
-	view_popup.set_item_tooltip(view_popup.get_item_index(9), "Show/hide the trailing \"+ Add event…\" rows. Turn off for a cleaner, calmer sheet.")
-	view_popup.set_item_tooltip(view_popup.get_item_index(18), "On: every row's condition/action text starts at the same edge, so the sheet scans as a table. Off: the text follows each object's name, starting at a different point on every row. Drag the gap after an object name to set the width by hand.")
+	display_menu.set_item_tooltip(display_menu.get_item_index(9), "Show/hide the trailing \"+ Add event…\" rows. Turn off for a cleaner, calmer sheet.")
+	display_menu.set_item_tooltip(display_menu.get_item_index(18), "On: every row's condition/action text starts at the same edge, so the sheet scans as a table. Off: the text follows each object's name, starting at a different point on every row. Drag the gap after an object name to set the width by hand.")
 	view_popup.set_item_tooltip(view_popup.get_item_index(11), "Hide the advanced/code entries (script blocks, sub-conditions, pick filters, match, signals/enums) from the right-click menus. Everything still works in Expert mode.")
 	view_popup.set_item_tooltip(view_popup.get_item_index(12), "Turn the MCP server (AI-assistant tools) on/off. When off, connected AI clients see no tools and can't read or change your sheets. Takes effect live - no reconnect needed.")
-	view_popup.set_item_tooltip(view_popup.get_item_index(1), "Show/hide a second synchronized view of this sheet, side by side.")
-	view_popup.set_item_tooltip(view_popup.get_item_index(2), "Pop the sheet view out into its own window / bring it back.")
-	view_popup.set_item_tooltip(view_popup.get_item_index(3), "Link/unlink scrolling between the split views.")
+	split_menu.set_item_tooltip(split_menu.get_item_index(1), "Show/hide a second synchronized view of this sheet, side by side.")
+	split_menu.set_item_tooltip(split_menu.get_item_index(2), "Pop the sheet view out into its own window / bring it back.")
+	split_menu.set_item_tooltip(split_menu.get_item_index(3), "Link/unlink scrolling between the split views.")
 	# Tools ▸ - debug + project workflow tools (the UX-audit consolidation).
 	var tools_popup: PopupMenu = PopupMenu.new()
 	tools_popup.name = "EventSheetToolsMenu"
@@ -918,7 +946,7 @@ func build(root: Node) -> void:
 			13: _dock.show_welcome()
 			17: _dock.start_tour()
 			16: _dock._shortcuts.open()
-			22: _dock.open_documentation()
+			22: _dock.open_manual_where_left()
 			20: _dock._report_issue()
 			21: _dock._translation_studio.open()
 			14: _dock._run_diagnostics_action()
@@ -948,7 +976,9 @@ func build(root: Node) -> void:
 	# unread. Re-asked every time the Menu opens, so reading the page clears it either way.
 	menu_popup.about_to_popup.connect(func() -> void: mark_unread(menu_popup, 4, "Manual…"))
 	menu_popup.id_pressed.connect(func(id: int) -> void:
-		if id == MENU_MANUAL_ID or id == MENU_WHATS_NEW_ID:
+		if id == MENU_MANUAL_ID:
+			_dock.open_manual_where_left()
+		elif id == MENU_WHATS_NEW_ID:
 			_dock.open_documentation(menu_doc_id(id))
 	)
 	_add_toolbar_separator(_toolbar)
@@ -1061,13 +1091,13 @@ func build(root: Node) -> void:
 	# so the counts are kept always and drawn only when asked for. Reset Hit Counts joins the Event
 	# Trace entry it belongs to. Ids 9601/9602 are clear of every block above; a third id_pressed
 	# handler is deliberate - each ignores the ids it does not own.
-	view_popup.add_check_item("Row Hit Counts", _dock.HIT_COUNTS_VIEW_ID)
-	view_popup.set_item_checked(view_popup.get_item_index(_dock.HIT_COUNTS_VIEW_ID), false)
-	view_popup.set_item_tooltip(view_popup.get_item_index(_dock.HIT_COUNTS_VIEW_ID),
+	display_menu.add_check_item("Row Hit Counts", _dock.HIT_COUNTS_VIEW_ID)
+	display_menu.set_item_checked(display_menu.get_item_index(_dock.HIT_COUNTS_VIEW_ID), false)
+	display_menu.set_item_tooltip(display_menu.get_item_index(_dock.HIT_COUNTS_VIEW_ID),
 		"Show how many times each event has fired since Run, as a small chip in the left margin - warm for the busiest rows, x0 and a dim rail for rows that never fired. Off by default; your rows are never touched. Needs Tools > Event Trace and a running game. You can also just hover an event number.")
-	view_popup.id_pressed.connect(func(id: int) -> void:
+	display_menu.id_pressed.connect(func(id: int) -> void:
 		if id == _dock.HIT_COUNTS_VIEW_ID:
-			_dock._toggle_row_hit_counts(view_popup))
+			_dock._toggle_row_hit_counts(display_menu))
 	tools_popup.add_item("Reset Hit Counts", 9602)
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(9602),
 		"Start the Event Trace's per-row tally over without restarting the game - reset, do the thing you are testing, and see exactly which rows moved.")
@@ -1078,13 +1108,13 @@ func build(root: Node) -> void:
 	# Counts say how OFTEN a row ran; costs say what one run of it took. One chip shows one of them,
 	# the tooltip both, and the toggle sits beside its sibling because it is the same margin and the
 	# same question asked the other way. Ids 9605/9606/9607 are clear of every block above.
-	view_popup.add_check_item("Costs In The Sheet", _dock.COSTS_VIEW_ID)
-	view_popup.set_item_checked(view_popup.get_item_index(_dock.COSTS_VIEW_ID), false)
-	view_popup.set_item_tooltip(view_popup.get_item_index(_dock.COSTS_VIEW_ID),
+	display_menu.add_check_item("Costs In The Sheet", _dock.COSTS_VIEW_ID)
+	display_menu.set_item_checked(display_menu.get_item_index(_dock.COSTS_VIEW_ID), false)
+	display_menu.set_item_tooltip(display_menu.get_item_index(_dock.COSTS_VIEW_ID),
 		"Show what one fire of each event costs, in milliseconds, in the left margin - amber over 1 ms, red over 4. The numbers come from the last profiled run (this session's or the one before it); nothing is ever measured in the editor.")
-	view_popup.id_pressed.connect(func(id: int) -> void:
+	display_menu.id_pressed.connect(func(id: int) -> void:
 		if id == _dock.COSTS_VIEW_ID:
-			_dock._toggle_row_costs(view_popup))
+			_dock._toggle_row_costs(display_menu))
 	tools_popup.add_item("Run With Profiler", 9606)
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(9606),
 		"Arm the Event Trace and play this layout. Play for a while, stop, and every row wears what it cost - kept until you clear it, and still there next time you open the editor.")

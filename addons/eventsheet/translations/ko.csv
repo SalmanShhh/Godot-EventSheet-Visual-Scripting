@@ -9706,3 +9706,8 @@ Every line of this event is ordinary Godot code the sheet reads as rows. Its sha
 Open in the Manual (F1),매뉴얼에서 열기 (F1)
 Conditions go on the left,조건은 왼쪽에 놓입니다
 Actions go on the right,액션은 오른쪽에 놓입니다
+Sheet display,시트 표시
+"How the rows are drawn: add-event rows, icons, event numbers, hit counts and costs, glyphs and badges, density, names and patterns, the minimap.","행을 그리는 방식: 이벤트 추가 행, 아이콘, 이벤트 번호, 실행 횟수와 비용, 글리프와 배지, 밀도, 이름과 패턴, 미니맵."
+Collapse and expand,접기와 펼치기
+Split views,분할 보기
+Zoom,확대/축소

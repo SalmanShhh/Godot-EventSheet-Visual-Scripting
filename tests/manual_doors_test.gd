@@ -20,6 +20,7 @@ static func run() -> bool:
 	all_passed = _test_said_where() and all_passed
 	all_passed = _test_doctor_learn_more() and all_passed
 	all_passed = _test_section_help() and all_passed
+	all_passed = _test_focus_after_close() and all_passed
 	all_passed = _test_read_the_guide() and all_passed
 	all_passed = _test_home_page() and all_passed
 	all_passed = _test_pictures() and all_passed
@@ -42,7 +43,11 @@ static func _test_whats_new() -> bool:
 	return SUPPORT.pins(NAME, [
 		["the What's new id", EventSheetDocReference.whats_new_id(), "reference:whatsnew"],
 		["Menu > What's new asks for it", EventSheetMenuBar.menu_doc_id(EventSheetMenuBar.MENU_WHATS_NEW_ID), "reference:whatsnew"],
-		["Menu > Manual asks for the selection", EventSheetMenuBar.menu_doc_id(EventSheetMenuBar.MENU_MANUAL_ID), ""],
+		["Menu > Manual names no page of its own (it opens the last page read)",
+			EventSheetMenuBar.menu_doc_id(EventSheetMenuBar.MENU_MANUAL_ID), ""],
+		["Alt+Left walks back along the Manual's trail", EventSheetDocBrowser.trail_step(_key(KEY_LEFT, true)), -1],
+		["Alt+Right walks forward", EventSheetDocBrowser.trail_step(_key(KEY_RIGHT, true)), 1],
+		["a plain Left is the tree's", EventSheetDocBrowser.trail_step(_key(KEY_LEFT, false)), 0],
 		["Start page > Learn > What's new asks for it", start_target, "reference:whatsnew"],
 		["the router draws it", bool(EventSheetDocExplain.resolve(start_target).get("valid", false)), true],
 		["as the What's new kind", str(EventSheetDocExplain.resolve(start_target).get("reference_kind", "")), "whatsnew"],
@@ -99,6 +104,26 @@ static func _test_section_help() -> bool:
 		["a heading with no page has no ?", ACEPickerDialog.section_doc_id("No Such Words"), ""],
 		["a behaviour's heading opens its guide", ACEPickerDialog.section_doc_id("FPS Controller"), "guide:Addons/FPS-Controller"],
 	])
+
+
+## Closing the Manual hands the focus back to the window it opened over (the picker, after a section
+## "?"), so the picker's next click lands; a window that has gone, or the Manual itself, gets nothing.
+static func _test_focus_after_close() -> bool:
+	var manual: Window = Window.new()
+	var picker: Window = Window.new()
+	picker.visible = true
+	var hidden: Window = Window.new()
+	hidden.visible = false
+	var rows: Array = [
+		["the picker it opened over gets the focus back", EventSheetDocWindow.focus_after_close(picker, manual) == picker, true],
+		["no opener, no hand-back", EventSheetDocWindow.focus_after_close(null, manual) == null, true],
+		["a closed opener gets nothing", EventSheetDocWindow.focus_after_close(hidden, manual) == null, true],
+		["the Manual never hands the focus to itself", EventSheetDocWindow.focus_after_close(manual, manual) == null, true],
+	]
+	manual.free()
+	picker.free()
+	hidden.free()
+	return SUPPORT.pins(NAME, rows)
 
 
 ## Add behaviour's Read the guide, for a pack in the project and one waiting in the library.
@@ -190,3 +215,11 @@ static func _test_manual_beside() -> bool:
 		["headless, the toggle opens nothing", EventSheetDocDock.toggle_beside("reference:whatsnew"), false],
 		["the View item's id is clear of the menu's other runs", EventSheetMenuBar.MANUAL_BESIDE_VIEW_ID, 9850],
 	])
+
+
+static func _key(code: Key, alt: bool) -> InputEventKey:
+	var key: InputEventKey = InputEventKey.new()
+	key.keycode = code
+	key.alt_pressed = alt
+	key.pressed = true
+	return key
