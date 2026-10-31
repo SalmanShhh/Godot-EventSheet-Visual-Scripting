@@ -4,9 +4,7 @@ extends Node2D
 
 ## How fast the hero paces back and forth, in pixels a second.
 @export var speed: float = 120.0
-## The pacing clock, in seconds.
 var t: float = 0.0
-## How fast the hero is moving right now. Its sign is the whole of which way it faces.
 var velocity: Vector2 = Vector2(0.0, 0.0)
 
 func _process(delta: float) -> void:

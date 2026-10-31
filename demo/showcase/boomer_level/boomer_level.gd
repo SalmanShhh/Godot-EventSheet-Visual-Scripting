@@ -2,21 +2,16 @@ class_name BoomerLevel
 extends Node3D
 ## A small shooter level: a red keycard, the door that wants it, two grunts that turn on each other, a respawning pickup, a secret and the exit tally.
 
-## Every keycard picked up so far, by name. The door rows read this list.
 var keys: Array = []
-## Every secret counted so far. Each one goes in once.
 var secrets_found: Array = []
 ## How many secrets this level hides.
 @export var secrets_total: int = 1
-## How many grunts have fallen.
 var kills: int = 0
 ## How many grunts the level started with.
 @export var enemies_total: int = 2
-## How long the level has been running.
 var level_seconds: float = 0.0
 ## The time to beat, shown beside your own.
 @export var par_seconds: float = 60.0
-## True once the exit is reached - the clock stops and the tally is written.
 var level_over: bool = false
 
 func _ready() -> void:

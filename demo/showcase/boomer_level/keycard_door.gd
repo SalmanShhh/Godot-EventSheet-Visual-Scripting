@@ -4,13 +4,11 @@ extends StaticBody3D
 
 ## The key this door wants. Try Door reads it off the door itself.
 @export var needs_key: String = "red_key"
-## True once the door has opened - what makes the slide happen once.
 var door_open: bool = false
 ## How far the door rises out of the way, in metres.
 @export var slide_height: float = 3.2
 ## How long the door takes to open.
 @export var slide_seconds: float = 0.6
-## What to tell the player when the door refuses. The level's HUD reads it.
 var locked_hint: String = ""
 
 func locked_door_tried(key: Variant) -> void:

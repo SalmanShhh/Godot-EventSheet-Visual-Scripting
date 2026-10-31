@@ -16,7 +16,7 @@
   it. A variable row, the Inspector tooltip and the emitted script all read the same line.
 - A variable that is not exported now writes its description above it in the generated script,
   as an exported one always did. Before, the description was kept on the row and dropped on
-  emit. Seven showcase scripts gained the lines their packs now carry.
+  emit. A tooltip attribute on a private variable is still an Inspector setting and writes nothing.
 - `pack_variable_docs_test` pins both the compiler change and that no top-level variable or
   constant of a shipped pack script lacks a description.
 

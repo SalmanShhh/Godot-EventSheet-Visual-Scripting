@@ -3,11 +3,8 @@ extends CharacterBody2D
 
 ## The speed before any skill touches it.
 @export var base_speed: float = 120.0
-## How many jumps are left before the ground is needed again.
 var jumps_left: int = 1
-## The StatForge stack the tree's grants are applied to.
 var stats: Node = null
-## The Upgrades node that answers which skills are unlocked.
 var upgrades: Node = null
 
 func _ready() -> void:

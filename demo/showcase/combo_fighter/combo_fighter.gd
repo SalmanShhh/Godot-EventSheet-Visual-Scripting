@@ -1,15 +1,10 @@
 class_name ComboFighter
 extends Node2D
 
-## The inputs pressed so far, oldest first. Emptied when the window runs out.
 var combo: Array = []
-## Seconds left to press the next input of a combo.
 var combo_timer: float = 0.0
-## The moment, in seconds since the game started, a buffered punch stops counting.
 var punch_input: float = -1.0
-## How many hit frames have landed this session.
 var hits: int = 0
-## How many moves were cancelled inside their window.
 var cancels: int = 0
 
 func _process(delta: float) -> void:
