@@ -6,11 +6,103 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
-### Changed: a fresh install draws Editor Native, in the boards' own colours
+### Changed: sub-events lined up (Editor Native)
+
+- Each nesting level now steps the whole block right by one 16 px strip, filled with the parent's
+  colour (an event's own, or its group's) and ruled by a 1 px line down its left side. No connector
+  line is drawn: the new `sub_event_strips` event-style token turns the strips on and the rail
+  off, and it is on in the Editor Native starter and its rule (step 16 px, was 18) and off
+  everywhere else, so every other look draws as before.
+- The fold arrow of an event sits at the foot of its block in a look that draws strips.
+- The sheet keeps ONE condition/action divider at every depth: a nested event's conditions lane is
+  the divider minus the steps it has taken, floored at 150 px, and only an event nested past that
+  floor starts its own actions further right.
+- Fixed: dragging the lane divider or the name column in a sheet that never chose a look turned it
+  into a Classic-like style (the lane ratio, badge column and action column all changed, and rows
+  ghosted). The sheet now keeps the look it was drawn in, and the dragged number saves onto a copy
+  of it.
+
+### New: classes and kinds of a class (first slice)
+
+- New condition **Is A Kind Of** (`body is Enemy`): the GDScript `is`, with a class field that
+  completes from your own classes first, then Godot's. A Slime that extends Enemy passes for Enemy.
+- New action **Also Run Parent Function** (`super(amount)`): the line that keeps a function a kind
+  replaces from losing what the class above it already did.
+- Right-click a script that names a class in the FileSystem: **New kind of Enemy...** (Familiar
+  words) or **New script extending Enemy...** (Godot words). The New Event Sheet window opens in
+  that folder with the class already in its new **A kind of** / **Extends** field; the field
+  completes from your own classes first, then Godot's, warns on a name that is no class, and the
+  window also warns when the file's class name is already taken. The new sheet reads \"Slime
+  extends Enemy\" and writes `class_name Slime` / `extends Enemy`.
+- A model of kinds (`dock/class_kinds.gd`): a project's classes as a tree of kinds, the variables
+  and functions a class hands down (nearest class first), the head in Familiar or Godot words,
+  starting an inherited variable at another value (written in `_init`), and replacing an inherited
+  function with the parent's version run first. Every line it writes is plain GDScript that opens
+  and saves byte for byte. The two new verbs author their lines; a file you open that already has
+  an `is` test or a `super(...)` call keeps the words its rows have today (neither verb claims a
+  hand-written line), so no opened file reads differently.
+
+### Fixed: Undo works inside the editor
+
+- In the editor, the sheet's Undo and Redo did nothing: Ctrl+Z after a drag-drop (or any other
+  edit), the toolbar's Undo and Redo, Scene ▸ Undo and the History panel all said \"Nothing to undo\".
+  The editor's undo manager keeps one history per scene and one for the editor, and the questions
+  \"is there a step\" and \"take it back\" belong to those histories, not to the manager. The sheet now
+  asks the history its own steps go into, so every one of those doors undoes and redoes the last
+  edit. Clearing the sheet's history now clears only its own, never the open scenes'.
+- The sheet's Undo and Redo (Ctrl+Z, Ctrl+Shift+Z, the toolbar, the History panel) are now the
+  editor's own Scene ▸ Undo and Scene ▸ Redo. Taking a step back by running the history directly
+  left the editor's undo manager behind: after a Ctrl+Z in the sheet, Scene ▸ Redo found nothing to
+  redo, the next Scene ▸ Undo took back one step too many, and Godot's History dock still showed
+  the undone step as current. Every door now moves exactly one step, in step with the History dock.
+  Like Scene ▸ Undo, it takes back the editor's newest step, so after a scene edit the first Ctrl+Z
+  in the sheet takes back that scene edit; the toolbar's Undo and Redo follow scene edits too. The
+  Add behaviour window's Undo takes its step back the same way.
+
+### Fixed: Wave 15 review closure
+
+- **The MCP server finds the editor later, and never writes behind it.** A server started before
+  the EventSheets workspace opened, or one the editor dropped, served the files for the rest of its
+  session, `.gd` writes included, while the editor might hold the same sheet open in a tab. It now
+  looks for the editor's link again before every call, until it has one (a link file a closed
+  editor left behind costs one refused connection, not one per call). While an editor is listening
+  for the project but will not take the server, an edit is refused instead of written to the file;
+  a read is still answered. An edit that goes through the editor's tab now passes the same gates a
+  file write does first: a `.gd` mid-merge, marked to stay code, or one that does not save back
+  byte for byte is refused before the tab is touched, since the person's next save writes it.
+- **Open Scripts as Event Sheets keeps its word.** Its hover says a script the sheet cannot read
+  still opens in the Script editor, but every `.gd` opened as a sheet, an `@tool extends
+  EditorScript` included. A click (in the FileSystem or the Inspector) now leaves an editor script
+  (one that extends an Editor class, such as EditorScript or EditorPlugin) and a file that does not
+  save back byte for byte to the Script editor. Open as Event Sheet still opens any script.
+- **The plugin icon follows a live switch of the editor theme.** The EventSheet button and a sheet
+  resource's icon kept the old theme's ink until a restart; both are now drawn again in the new
+  ink when the editor's theme changes.
+- **Menu ▸ Manual… and Tools ▸ Manual… open the Manual where you left it**, or on its home page,
+  as the Manual board draws them; F1 is the door that explains the selection. **Alt+Left and
+  Alt+Right walk the Manual's trail** even while its contents tree has the keyboard, instead of
+  folding and moving through the tree.
+- **Closing the Manual hands the focus back to the picker.** After a section's \"?\" opened the
+  Manual over the picker and the Manual was closed, the focus went to the editor's main window, so
+  the picker took no hover: \"Open the Platformer guide\" needed a second click, and typing a new
+  search went nowhere. The Manual now gives the focus back to the window it opened over.
+- **The View menu fits a 1080p window.** It had grown to 66 items, 1392 px tall, so items near its
+  foot (MCP Server among them) ran off a laptop screen. The ticks for how rows are drawn now sit
+  under **View ▸ Sheet display**, and the sweeps, split views and zoom under **Collapse and
+  expand**, **Split views** and **Zoom**: 40 items, 868 px. Every item keeps its place in its group
+  and does what it did.
+- Measured, serial, in a real editor (`tools/measure_editor_boot.gd`, three runs each): enabling
+  the plugin 411 ms at 527cdff4 and 440 ms with this wave (medians, +29 ms for the settings hover
+  and the FileSystem click watch); the first sheet opened 22,426 ms and 21,578 ms, so the drag
+  motion and selection drawing added nothing measurable to the first open.
+
+### Changed: Editor Native is the default look, in the boards' own colours
 
 - A sheet with no theme of its own now wears Editor Native, moved onto the running editor's greys,
-  instead of the older editor-derived look. That is what a fresh install, the Welcome's default
-  answer and View > Sheet theme > Match Editor (default) now draw. A sheet that chose a theme keeps
+  instead of the older editor-derived look. **This changes existing projects on update:** every
+  sheet that never chose a look (every `.gd` sheet, and every `.tres` sheet that never saved a
+  theme) draws Editor Native once the plugin is updated, as a fresh install, the Welcome's default
+  answer and View > Sheet theme > Match Editor (default) do. A sheet that chose a theme keeps
   it, and re-skinning on an editor theme change re-seats the sheet instead of writing a theme onto
   it, so opening a sheet or switching the editor's theme never marks it unsaved.
 - Editor Native's palette is now the design's, measured at Godot's own Default and Light presets
