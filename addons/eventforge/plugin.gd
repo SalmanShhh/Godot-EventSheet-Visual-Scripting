@@ -464,11 +464,13 @@ func _create_sheet_in_directory(directory: String, kind_of: String = "") -> void
 ## in the workspace (not the read-only preview a casual .gd Open gives - the user just authored it).
 func _finish_create_sheet(directory: String, sheet_name: String, starter_id: int) -> void:
 	var sheet: EventSheetResource = load(STARTER_TEMPLATES_PATH).build_starter(starter_id)
-	# A kind of another class extends it and names itself after the file; the starter's events stay.
+	# A kind of another class extends it; the starter's events stay. Only a kind of one of the
+	# project's OWN classes names itself after the file - extending a Godot class names nothing.
 	var kind_of: String = str(_new_sheet_dialog.call("kind_of")) if _new_sheet_dialog != null else ""
 	if not kind_of.is_empty():
 		sheet.host_class = kind_of
-		sheet.custom_class_name = load("res://addons/eventsheet/editor/dock/class_kinds.gd").class_name_from(sheet_name)
+		if bool(load(NEW_SHEET_DIALOG_PATH).names_new_class(kind_of)):
+			sheet.custom_class_name = load("res://addons/eventsheet/editor/dock/class_kinds.gd").class_name_from(sheet_name)
 	var result: Dictionary = load(WORKFLOW_PATH).write_sheet_file(sheet, directory, sheet_name)
 	if not bool(result.get("ok", false)):
 		push_warning("[Godot EventSheets] %s" % str(result.get("message")))

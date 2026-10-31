@@ -53,6 +53,15 @@ static func run() -> bool:
 		["a Godot class is fine", EventSheetNewSheetDialog.kind_problem_text("CharacterBody2D"), ""],
 		["a class of the project is fine", EventSheetNewSheetDialog.kind_problem_text("EventSheetResource"), ""],
 		["a name that is no class is warned", EventSheetNewSheetDialog.kind_problem_text("Nonsuch"), "No class or node by that name."],
+		# The warning waits while the field still completes what is typed: a prefix on its way to a
+		# class is not a mistake yet.
+		["a prefix of a project class still completes", EventSheetNewSheetDialog.kind_has_completion("EventSheetRes"), true],
+		["a prefix of a Godot class still completes, any case", EventSheetNewSheetDialog.kind_has_completion("characterbo"), true],
+		["a name nothing begins with completes nothing", EventSheetNewSheetDialog.kind_has_completion("Nonsuchxyz"), false],
+		# Only a kind of the project's own class is named as a class; extending a Godot class names nothing.
+		["a kind of a project class names the new sheet", EventSheetNewSheetDialog.names_new_class("EventSheetResource"), true],
+		["extending a Godot class names nothing", EventSheetNewSheetDialog.names_new_class("CharacterBody2D"), false],
+		["an empty field names nothing", EventSheetNewSheetDialog.names_new_class(""), false],
 		["right-clicking a script that names a class offers its kind", EventSheetContextMenu.class_declared_in(
 			PackedStringArray(["res://addons/eventforge/resources/event_sheet.gd"])), "EventSheetResource"],
 		["two scripts offer none", EventSheetContextMenu.class_declared_in(PackedStringArray(["res://a.gd", "res://b.gd"])), ""],

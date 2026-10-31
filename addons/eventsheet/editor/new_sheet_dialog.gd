@@ -118,19 +118,22 @@ func _refresh() -> void:
 	var taken: bool = FileAccess.file_exists(path)
 	_band.show_row("", path, EventSheetL10n.translate("written and opened on Create"))
 	var kind_problem: String = kind_problem_text(kind_of())
-	var class_taken: bool = not kind_of().is_empty() and load(KINDS_PATH).name_is_taken(
+	# The warning waits until nothing completes what is typed: "Ene" on the way to Enemy is not a
+	# mistake yet, and saying so in red while the popup offers Enemy contradicts the popup.
+	var kind_warning: String = kind_problem if not kind_has_completion(kind_of()) else ""
+	var class_taken: bool = names_new_class(kind_of()) and load(KINDS_PATH).name_is_taken(
 		load(KINDS_PATH).class_name_from(_name_edit.text), path)
 	var note: String = ""
 	if taken:
 		note = EventSheetL10n.translate("%s is already in this folder - pick another name.") % path.get_file()
 	elif class_taken:
 		note = EventSheetL10n.translate("Another class is already called %s.") % load(KINDS_PATH).class_name_from(_name_edit.text)
-	elif not kind_problem.is_empty():
-		note = kind_problem
+	elif not kind_warning.is_empty():
+		note = kind_warning
 	_taken_note.say(note)
 	EventSheetPopupUI.mark_field(_name_edit, taken or class_taken)
-	EventSheetPopupUI.mark_field(_kind_edit, not kind_problem.is_empty())
-	var nameless_kind: bool = not kind_of().is_empty() and _name_edit.text.strip_edges().is_empty()
+	EventSheetPopupUI.mark_field(_kind_edit, not kind_warning.is_empty())
+	var nameless_kind: bool = names_new_class(kind_of()) and _name_edit.text.strip_edges().is_empty()
 	_dialog.get_ok_button().disabled = taken or class_taken or nameless_kind or not kind_problem.is_empty()
 	var host: String = kind_of() if not kind_of().is_empty() else EventSheetStarterTemplates.build_starter(selected_starter_id()).host_class
 	_strip.set_reading("", "extends %s" % (host if not host.is_empty() else "Node"))
@@ -150,6 +153,34 @@ static func kind_problem_text(kind_text: String) -> String:
 		if str(info.get("class", "")) == kind_text:
 			return ""
 	return EventSheetL10n.translate("No class or node by that name.")
+
+
+## True while something the class field offers still begins with what is typed - a project class or
+## a Godot class, ignoring case. The warning is held back until this is false.
+static func kind_has_completion(kind_text: String) -> bool:
+	var typed: String = kind_text.strip_edges().to_lower()
+	if typed.is_empty():
+		return true
+	for info: Dictionary in ProjectSettings.get_global_class_list():
+		if str(info.get("class", "")).to_lower().begins_with(typed):
+			return true
+	for engine_class: String in ClassDB.get_class_list():
+		if engine_class.to_lower().begins_with(typed):
+			return true
+	return false
+
+
+## True when the new sheet becomes a KIND OF one of the project's own classes, and so is named as a
+## class too (`class_name` from its file name). Extending a Godot class such as CharacterBody2D is
+## what every script does, so it names nothing: naming is a separate step the author takes.
+static func names_new_class(kind_text: String) -> bool:
+	var wanted: String = kind_text.strip_edges()
+	if wanted.is_empty():
+		return false
+	for info: Dictionary in ProjectSettings.get_global_class_list():
+		if str(info.get("class", "")) == wanted:
+			return true
+	return false
 
 
 ## Whether the Familiar Words switch is on, read from the same stored choice the sheet reads.
