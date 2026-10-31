@@ -5536,11 +5536,11 @@ func _on_viewport_lane_ratio_changed(ratio: float) -> void:
 	if _current_sheet == null:
 		return
 	if _current_sheet.editor_style == null:
-		var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
-		style.ensure_defaults()
+		var style: EventSheetEditorStyle = EventSheetEditorThemeDeriver.promoted_default_style()
 		style.get_event_style().condition_lane_ratio = ratio
 		_current_sheet.editor_style = style
-		_viewport.apply_editor_style(style)
+		_viewport.apply_editor_style(EventSheetEditorThemeDeriver.sheet_look(
+			style, EventSheetEditorThemeDeriver.running_editor_base()))
 	else:
 		_current_sheet.editor_style.get_event_style().condition_lane_ratio = ratio
 	_mark_dirty("Resized conditions/actions lane to %d%%." % int(round(ratio * 100.0)))
@@ -5551,16 +5551,18 @@ func _on_viewport_lane_ratio_changed(ratio: float) -> void:
 func _on_viewport_object_column_width_changed(lane: String, width: int) -> void:
 	if _current_sheet == null:
 		return
+	var promoted: bool = false
 	if _current_sheet.editor_style == null:
-		var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
-		style.ensure_defaults()
-		_current_sheet.editor_style = style
-		_viewport.apply_editor_style(style)
+		_current_sheet.editor_style = EventSheetEditorThemeDeriver.promoted_default_style()
+		promoted = true
 	var event_style: EventSheetEventStyle = _current_sheet.editor_style.get_event_style()
 	if lane == "condition":
 		event_style.condition_object_column_width = width
 	else:
 		event_style.action_object_column_width = width
+	if promoted:
+		_viewport.apply_editor_style(EventSheetEditorThemeDeriver.sheet_look(
+			_current_sheet.editor_style, EventSheetEditorThemeDeriver.running_editor_base()))
 	_mark_dirty("Resized the %s lane's object column to %dpx." % [lane, width])
 
 

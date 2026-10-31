@@ -45,6 +45,10 @@ extends Resource
 ## Draw the nesting RAIL - the vertical line a sub-event hangs from, run down the parent's indent
 ## step for the full height of the child's card. Off leaves the older faint indent guides alone.
 @export var sub_event_rail_line: bool = true
+## Draw each nesting level as a STRIP: one indent step filled with the parent block's own colour and
+## ruled by a 1 px line down its left side, so a branch is followed down the page by its strips and
+## no connector line is needed. Off keeps the faint indent guides and the rail.
+@export var sub_event_strips: bool = false
 ## Thickness of the border drawn round a WHOLE event - both lanes, every row of an OR stack, the
 ## band under the shorter lane - so an event reads as one card. 0 keeps the older look, where each
 ## row carried its own top and bottom hairline and nothing said where an event ended.

@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Changed: sub-events lined up (Editor Native)
+
+- Each nesting level now steps the whole block right by one 16 px strip, filled with the parent's
+  colour (an event's own, or its group's) and ruled by a 1 px line down its left side. No connector
+  line is drawn: the new `sub_event_strips` event-style token turns the strips on and the rail
+  off, and it is on in the Editor Native starter and its rule (step 16 px, was 18) and off
+  everywhere else, so every other look draws as before.
+- The fold arrow of an event sits at the foot of its block in a look that draws strips.
+- The sheet keeps ONE condition/action divider at every depth: a nested event's conditions lane is
+  the divider minus the steps it has taken, floored at 150 px, and only an event nested past that
+  floor starts its own actions further right.
+- Fixed: dragging the lane divider or the name column in a sheet that never chose a look turned it
+  into a Classic-like style (the lane ratio, badge column and action column all changed, and rows
+  ghosted). The sheet now keeps the look it was drawn in, and the dragged number saves onto a copy
+  of it.
+
 ### Fixed: Undo works inside the editor
 
 - In the editor, the sheet's Undo and Redo did nothing: Ctrl+Z after a drag-drop (or any other

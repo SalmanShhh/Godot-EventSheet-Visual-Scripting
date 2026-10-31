@@ -15,6 +15,9 @@ REGION
 }
 
 var indent: int = 0
+## One bit per nesting level, set when the ancestor at that level is a GROUP (clear: an event). Stamped
+## by the canvas as it flattens the tree; the indent strips read it to paint each in its parent's colour.
+var strip_groups: int = 0
 var row_type: int = RowType.EVENT
 var folded: bool = false
 var selected: bool = false

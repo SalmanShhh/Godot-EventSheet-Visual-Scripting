@@ -828,6 +828,20 @@ func get_lane_divider_x(width: float) -> float:
 	)
 
 
+## The narrowest a NESTED event's conditions lane may be squeezed to by its own steps.
+const NESTED_LANE_FLOOR := 150.0
+
+
+## The divider x one ROW uses: the sheet's one divider, unless this event is nested so deep that its
+## condition lane (the divider minus the steps it has taken right) would be narrower than the floor -
+## only then does its own divider, and so its actions, move right. Every other depth shares the one x.
+func row_lane_divider_x(width: float, indent: int) -> float:
+	var divider_x: float = get_lane_divider_x(width)
+	var lane_start: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH \
+		+ float(indent * indent_width()) + 18.0
+	return maxf(divider_x, lane_start + NESTED_LANE_FLOOR)
+
+
 ## Logical (unzoomed) width of the sheet canvas.
 func get_canvas_logical_width() -> float:
 	return _get_logical_canvas_width()
@@ -3767,6 +3781,15 @@ func _get_condition_track_start(
 
 func _flatten_row(row_data: EventRowData, parent_row: EventRowData) -> void:
 	_flat_rows.append({"row": row_data, "parent": parent_row})
+	if parent_row != null:
+		# Which of this row's ancestors are groups, by nesting level: the indent strips take their
+		# parent's colour from it.
+		var group_bit: int = 0
+		if parent_row.row_type == EventRowData.RowType.GROUP and parent_row.indent < 30:
+			group_bit = 1 << parent_row.indent
+		row_data.strip_groups = parent_row.strip_groups | group_bit
+	else:
+		row_data.strip_groups = 0
 	if row_data.folded:
 		return
 	for child in row_data.children:

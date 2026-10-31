@@ -794,12 +794,16 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		var border_width: float = maxf(row_fill_rect.size.x - float(block_radius + block_radius_right), 0.0)
 		control.draw_rect(Rect2(border_left, row_fill_rect.position.y, border_width, 1.0), block_border, true)
 		control.draw_rect(Rect2(border_left, row_fill_rect.end.y - 1.0, border_width, 1.0), block_border, true)
-	_draw_indent_guides(control, row_rect, row_data.indent, reading_style.indent_guide_color, row_indent_width)
+	if event_style != null and event_style.sub_event_strips:
+		# Nesting as STRIPS, no connector: see _draw_indent_strips.
+		_draw_indent_strips(control, row_rect, row_data, event_style, row_indent_width)
+	else:
+		_draw_indent_guides(control, row_rect, row_data.indent, reading_style.indent_guide_color, row_indent_width)
 	# The RAIL: the tree connector from a parent event down to this sub-event, on top of the indent
 	# stops above. Draw-only - it reserves no width and is never measured, so it cannot move a
 	# glyph - and one of the density tokens, because a tight sheet that wants the pixels back is
 	# entitled to read its nesting off the indent alone. The geometry lives in its own helper.
-	if event_style == null or event_style.sub_event_rail_line:
+	if event_style == null or (event_style.sub_event_rail_line and not event_style.sub_event_strips):
 		EventSheetViewportGuideLines.draw_guides(control, row_rect, row_data.indent, reading_style.tree_guide_color, row_indent_width)
 	if row_data.language_block:
 		# A LANGUAGE block (a data-class holder, a methods-class, a host binding, a lifted switch case...)
@@ -1152,6 +1156,24 @@ func _draw_gutter_markers(control: Control, gutter_rect: Rect2, breakpoint_enabl
 			Vector2(flag_x + 7.0, flag_y),
 			Vector2(flag_x, flag_y + 4.0)
 		]), reading.bookmark_color)
+
+
+## One nesting level is one strip: `indent_width` wide, filled with the colour of the PARENT block it
+## belongs to (an event's own, or its group's) and ruled by a 1 px line down its left side, so a branch
+## is followed down the page by its strips. Strips run from the gutter's edge, one per ancestor, and
+## every colour comes from the look. Draw-only: it reserves no width and moves no glyph.
+func _draw_indent_strips(control: Control, row_rect: Rect2, row_data: EventRowData,
+		event_style: EventSheetEventStyle, indent_width: int) -> void:
+	var depth: int = row_data.indent
+	if depth < 1 or indent_width < 1:
+		return
+	var line_width: float = EventSheetPalette.scaled_f(1.0)
+	for level: int in range(depth):
+		var strip_x: float = row_rect.position.x + float(EventSheetPalette.GUTTER_WIDTH) + float(level * indent_width)
+		var in_group: bool = level < 30 and (row_data.strip_groups >> level) & 1 == 1
+		var fill: Color = event_style.group_background_color if in_group else event_style.row_background_color
+		control.draw_rect(Rect2(strip_x, row_rect.position.y, float(indent_width), row_rect.size.y), fill, true)
+		control.draw_rect(Rect2(strip_x, row_rect.position.y, line_width, row_rect.size.y), event_style.row_border_color, true)
 
 
 func _draw_indent_guides(control: Control, row_rect: Rect2, depth: int, guide_color: Color = EventSheetPalette.COLOR_GUIDE,

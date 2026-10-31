@@ -94,6 +94,11 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 		else 0.0
 	)
 	var fold_rect: Rect2 = Rect2(x - 14.0, row_top + group_v_offset + 6.0, 12.0, 16.0) if not row_data.children.is_empty() else Rect2()
+	# A look that draws nesting as strips seats an event's fold arrow at the FOOT of its block, inside
+	# its own step, so the arrow sits where the branch it opens begins.
+	if not fold_rect.size.is_zero_approx() and row_data.row_type == EventRowData.RowType.EVENT \
+			and event_style.sub_event_strips:
+		fold_rect.position.y = maxf(row_top + row_height - fold_rect.size.y - 4.0, row_top)
 	# No row-type glyph: the old colored square here said nothing the row itself doesn't
 	# (tempo badges, chips and labels carry the type). The 18px advance stays so every
 	# row's geometry - and every cached span position - is untouched.
@@ -104,7 +109,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	var lane_divider_x: float = -1.0
 	var row_right_limit: float = width - EventSheetPalette.ROW_HORIZONTAL_PADDING
 	if row_data.row_type == EventRowData.RowType.EVENT:
-		lane_divider_x = _viewport.get_lane_divider_x(width)
+		lane_divider_x = _viewport.row_lane_divider_x(width, row_data.indent)
 		condition_lane_rect = Rect2(x, row_top, max(lane_divider_x - x, 1.0), row_height)
 		lane_divider_rect = Rect2(lane_divider_x, row_top, float(event_style.lane_divider_width), row_height)
 		action_lane_rect = Rect2(lane_divider_x + float(event_style.lane_divider_width), row_top, max(width - lane_divider_x - float(event_style.lane_divider_width), 1.0), row_height)

@@ -223,6 +223,7 @@ const _TOKEN_DESCRIPTIONS := {
 	"event_block_gap": "Gap opened before an event or group that starts a new block, in pixels - the air between one event and the next.",
 	"sub_event_indent": "How far one nesting level steps a sub-event in, in pixels.",
 	"sub_event_rail_line": "Draw the rail a sub-event hangs from - a vertical line down its parent's indent step.",
+	"sub_event_strips": "Draw each nesting level as a strip filled with its parent block's colour and ruled down its left side, in place of connector lines.",
 	"event_card_border_width": "Thickness of the border round a whole event, in pixels. 0 draws no card and gives each row its own hairline instead.",
 	"event_card_gutter_gap": "Gap kept between the number gutter and the card's left edge, so the number reads as a margin mark outside the event.",
 	"trigger_badge_background_color": "Fill of the trigger arrow badge (On Ready, On Signal...).",

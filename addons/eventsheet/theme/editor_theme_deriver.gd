@@ -377,7 +377,9 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	event_style.condition_object_column_width = 114
 	event_style.action_object_column_width = 114
 	event_style.event_block_gap = 8
-	event_style.sub_event_indent = 18
+	event_style.sub_event_indent = 16
+	event_style.sub_event_rail_line = false
+	event_style.sub_event_strips = true
 	event_style.lane_divider_width = 7
 	event_style.event_card_border_width = 1
 	event_style.event_corner_radius = 3
@@ -557,6 +559,20 @@ static func sheet_look(chosen: EventSheetEditorStyle, base: Color) -> EventSheet
 		bare.ensure_defaults()
 		return bare
 	return default_style_for(base)
+
+
+## The style a sheet that never chose a look is given the moment one of its numbers is edited (a
+## dragged divider, a dragged name column), so the edit saves with the sheet WITHOUT changing the look
+## the sheet is drawn in: in the editor that is the Editor Native starter (which keeps following the
+## editor's greys), a copy of its own; outside the editor, the bare bundled style, as before.
+static func promoted_default_style() -> EventSheetEditorStyle:
+	var starter: EventSheetEditorStyle = load(NATIVE_STARTER_PATH) as EventSheetEditorStyle if running_editor_base().a > 0.0 else null
+	var style: EventSheetEditorStyle = starter.duplicate(true) as EventSheetEditorStyle if starter != null else EventSheetEditorStyle.new()
+	style.ensure_defaults()
+	# The drag that led here edited the SHARED no-theme look live; forget it so the next sheet that
+	# never chose a look is built fresh instead of inheriting this sheet's split.
+	_default_cache.clear()
+	return style
 
 
 ## The no-theme look for one editor base colour: the Editor Native starter followed onto it. Pure

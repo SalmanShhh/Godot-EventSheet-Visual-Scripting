@@ -200,7 +200,7 @@ func _resolve_row_height_natural(row_data: EventRowData) -> float:
 func event_line_extents(row_data: EventRowData, width: float, font: Font, font_size: int) -> Dictionary:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var x: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH + float(row_data.indent * _viewport.indent_width()) + 18.0
-	var lane_divider_x: float = _viewport.get_lane_divider_x(width)
+	var lane_divider_x: float = _viewport.row_lane_divider_x(width, row_data.indent)
 	var condition_lane_rect := Rect2(x, 0.0, maxf(lane_divider_x - x, 1.0), 1.0)
 	var action_lane_rect := Rect2(lane_divider_x + float(event_style.lane_divider_width), 0.0, maxf(width - lane_divider_x - float(event_style.lane_divider_width), 1.0), 1.0)
 	var condition_x: float = _viewport._get_condition_track_start(row_data, x, condition_lane_rect)
@@ -655,7 +655,7 @@ func _natural_lane_extents(row_data: EventRowData, width: float, font: Font, fon
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var x: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH \
 		+ float(row_data.indent * _viewport.indent_width()) + 18.0
-	var lane_divider_x: float = _viewport.get_lane_divider_x(width)
+	var lane_divider_x: float = _viewport.row_lane_divider_x(width, row_data.indent)
 	var condition_lane_rect := Rect2(x, 0.0, maxf(lane_divider_x - x, 1.0), 1.0)
 	var condition_x: float = _viewport._get_condition_track_start(row_data, x, condition_lane_rect)
 	var badge_column: float = maxf(float(event_style.condition_badge_column_width), 0.0)
