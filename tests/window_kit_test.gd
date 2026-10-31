@@ -220,6 +220,10 @@ static func _every_plain_window_paints() -> bool:
 	var paints_itself: Dictionary = {
 		# The detached sheet: the sheet canvas paints its own background over the whole rect.
 		"res://addons/eventsheet/editor/event_sheet_dock.gd": 1,
+		# The completion list: a PanelContainer in the editor's own PopupPanel box fills the window, so
+		# it reads as the floating list it is. The dialog toolkit already reaches into this file to stand
+		# its own Down-arrow aside, so the list does not call back into the toolkit for its body.
+		"res://addons/eventsheet/editor/autocomplete/completion_popup.gd": 1,
 	}
 	var rows: Array = []
 	for path: String in _editor_scripts("res://addons/eventsheet/editor"):

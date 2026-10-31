@@ -5143,7 +5143,11 @@ func _resolve_drop_mode(hit: Dictionary, position: Vector2) -> String:
 		if position.x >= _get_logical_canvas_width() * 0.5:
 			return "inside"
 		return "after" if relative_y > row_height * DROP_ZONE_AFTER_THRESHOLD else "before"
-	var supports_inside_drop: bool = row_data.row_type in [
+	# An enum or a signal is a class-level declaration: GDScript has no place for one inside an event's
+	# body, and the state row (which acts for its enum) dropped there would take the machine apart. It
+	# goes before or after the row it is carried over, never into it.
+	var class_level_only: bool = carried != null and (carried.source_resource is EnumRow or carried.source_resource is SignalRow)
+	var supports_inside_drop: bool = not class_level_only and row_data.row_type in [
 		EventRowData.RowType.EVENT,
 		EventRowData.RowType.GROUP,
 		EventRowData.RowType.REGION

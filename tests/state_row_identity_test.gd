@@ -28,6 +28,8 @@ static func run() -> bool:
 	other.default_value = "200.0"
 	sheet.events.append(other)
 	var declared: int = sheet.events.size()
+	var event: EventRow = EventRow.new()
+	sheet.events.append(event)
 	# Choosing a state for is / go to shows each state's own sentence beside its name.
 	var noted: Dictionary = EventSheetStatesDialog.model_of(sheet)
 	((noted["states"] as Array)[1] as Dictionary)["note"] = "Running flat out."
@@ -42,11 +44,16 @@ static func run() -> bool:
 	view.size = Vector2(1200.0, 900.0)
 	view.set_sheet(sheet)
 	var state_row: EventRowData = null
+	var state_index: int = -1
+	var event_index: int = -1
 	var drawn_rows: int = 0
 	for index: int in view.get_flat_rows().size():
 		var row_data: EventRowData = view._row_at(index)
 		if row_data != null and ViewportRowBuilder._is_state_machine_row(row_data):
 			state_row = row_data
+			state_index = index
+		if row_data != null and row_data.source_resource == event:
+			event_index = index
 		if row_data != null and row_data.source_resource != null:
 			drawn_rows += 1
 	var enum_row: EnumRow = EventSheetStateFacts.enum_row(sheet)
@@ -73,16 +80,32 @@ static func run() -> bool:
 		["an ordinary row has no machine", EventSheetStateFacts.machine_parts(sheet, other).size(), 0],
 		["a delete of the state row widens to the whole machine", widened.size(), parts.size()],
 		["a delete of an ordinary row stays that row", ordinary, [other] as Array[Resource]],
-		["the sheet draws one row for the machine plus the ordinary one", drawn_rows, 2],
+		["the sheet draws one row for the machine plus the ordinary ones", drawn_rows, 3],
+		["carried over the middle of an event, the state row goes beside it, never into it",
+			_drop_mode_over(view, state_index, event_index) in ["before", "after"], true],
 	]
 	for part: Resource in widened:
 		sheet.events.erase(part)
-	rows.append(["deleting the widened set takes the machine and leaves the rest", sheet.events, [other]])
+	rows.append(["deleting the widened set takes the machine and leaves the rest", sheet.events, [other, event]])
 	rows.append(["and nothing of the machine is left", EventSheetStateFacts.machine(sheet).is_empty()
 		and EventSheetStateFacts.variable_row(sheet, "previous_state") == null, true])
 	rows.append(["the sheet declared six lines before", declared, 6])
 	view.free()
 	return SUPPORT.pins(P, rows)
+
+
+## The drop mode the sheet resolves for the state row carried over the middle of the event row.
+static func _drop_mode_over(view: EventSheetViewport, carried_index: int, target_index: int) -> String:
+	if carried_index < 0 or target_index < 0:
+		return "<rows missing>"
+	view._drag_row_index = carried_index
+	view._drag_row_indices = [carried_index]
+	var middle: Vector2 = Vector2(40.0, view._row_metrics_helper.row_top(target_index)
+		+ view._row_metrics_helper.row_height(target_index) * 0.5)
+	var mode: String = view._resolve_drop_mode({"row_index": target_index}, middle)
+	view._drag_row_index = -1
+	view._drag_row_indices = []
+	return mode
 
 
 static func _name_card_lines(state_row: EventRowData) -> PackedStringArray:

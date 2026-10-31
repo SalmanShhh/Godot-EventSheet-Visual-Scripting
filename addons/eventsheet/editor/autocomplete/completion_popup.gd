@@ -53,6 +53,12 @@ var index: int = 0
 
 var _window: Window = null
 var _list: ItemList = null
+## The dialog the field sits in, while the list holds its Escape, and what its own Escape setting was.
+## A dialog takes Escape before any field inside it sees the key, so with the list open Escape would
+## close the whole dialog instead of the list; the dialog's Escape is held while the list is shown
+## and handed back when it closes.
+var _held_dialog: AcceptDialog = null
+var _dialog_escape_was: bool = true
 ## True while an accepted entry is being written into the field. The write announces itself as a
 ## change (a dialog watching the field has to hear it), and this is what stops that announcement
 ## from re-opening the popup on the value it has just finished choosing.
@@ -197,6 +203,23 @@ func close() -> void:
 	entries = []
 	if _window != null and _window.visible:
 		_window.hide()
+	release_dialog_escape()
+
+
+## While the list is open, Escape closes the list and not the dialog around the field.
+func hold_dialog_escape(dialog: AcceptDialog) -> void:
+	if dialog == null or _held_dialog != null:
+		return
+	_held_dialog = dialog
+	_dialog_escape_was = dialog.dialog_close_on_escape
+	dialog.dialog_close_on_escape = false
+
+
+## Hands the dialog its own Escape back. Safe to call when nothing is held.
+func release_dialog_escape() -> void:
+	if _held_dialog != null and is_instance_valid(_held_dialog):
+		_held_dialog.dialog_close_on_escape = _dialog_escape_was
+	_held_dialog = null
 
 
 ## What one keypress means, apart from any widget. Tab and Enter accept, Escape cancels, Up and
@@ -284,6 +307,7 @@ func _show() -> void:
 	var size: Vector2i = Vector2i(maxi(MIN_WIDTH, int(field.size.x)),
 		mini(entries.size(), VISIBLE_ROWS) * ROW_HEIGHT + 28)
 	_window.popup(Rect2i(Vector2i(field.get_screen_position() + Vector2(0.0, field.size.y)), size))
+	hold_dialog_escape(field.get_window() as AcceptDialog)
 	field.grab_focus()
 
 

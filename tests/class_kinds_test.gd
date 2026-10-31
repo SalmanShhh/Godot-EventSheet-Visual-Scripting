@@ -65,6 +65,7 @@ static func run() -> bool:
 		# The completion list floats in a window that is never a popup and never focused: while a popup
 		# window is open the keyboard goes to it, and Backspace and every letter after it were lost.
 		["the completion list is not a popup window and takes no focus", _list_window_facts(), [false, true, true]],
+		["while the list is open the dialog's Escape is held, and given back when it closes", _escape_facts(), [false, true]],
 		["right-clicking a script that names a class offers its kind", EventSheetContextMenu.class_declared_in(
 			PackedStringArray(["res://addons/eventforge/resources/event_sheet.gd"])), "EventSheetResource"],
 		["two scripts offer none", EventSheetContextMenu.class_declared_in(PackedStringArray(["res://a.gd", "res://b.gd"])), ""],
@@ -132,6 +133,19 @@ static func run_kinds() -> bool:
 	ok = SUPPORT.check("class_kinds_test", "a replaced function that answers hands the parent's answer on",
 		answering_source.contains("return super(kind, bonus)"), true) and ok
 	return ok
+
+
+## With the list open Escape closes the list, not the dialog around the field; closing the list hands
+## the dialog its Escape back.
+static func _escape_facts() -> Array:
+	var dialog: ConfirmationDialog = ConfirmationDialog.new()
+	var popup: EventSheetCompletionPopup = EventSheetCompletionPopup.new()
+	popup.hold_dialog_escape(dialog)
+	var held: bool = dialog.dialog_close_on_escape
+	popup.close()
+	var released: bool = dialog.dialog_close_on_escape
+	dialog.free()
+	return [held, released]
 
 
 static func _list_window_facts() -> Array:
