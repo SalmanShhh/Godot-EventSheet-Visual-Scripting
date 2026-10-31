@@ -121,6 +121,15 @@ jobs:
           ~/godot/godot --headless --path . --script tools/audit_addons.gd 2>&1 | tee audit.log
           grep -qE 'drifted=0' audit.log
 
+      # The vocabulary reference is generated too. Regenerating it with a generator that had
+      # stopped seeing some verbs once deleted two dozen shipping pack verbs from it, and nothing
+      # said so, so the committed file must equal what the generator writes today.
+      - name: Vocabulary reference must match the generator
+        shell: bash
+        run: |
+          ~/godot/godot --headless --path . --script tools/vocabulary_doc.gd -- --check 2>&1 | tee vocabulary.log
+          grep -qE 'vocabulary doc drifted=0' vocabulary.log
+
       # The nine translation CSVs are derived the same way, and the harvester APPENDS what is owed
       # rather than reporting it - so the proof is both halves: it said nothing was owed, and it
       # left the nine files untouched. A run that quietly appended a key would pass the first half.

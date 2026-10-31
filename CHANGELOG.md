@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Fixed: Wave 16 review closure
+
+- The vocabulary reference (`EVENTSHEETS-VOCABULARY.md`) lists every pack verb again. The
+  generator ended a verb at any code annotation between its `##` block and its `func`, so a
+  verb carrying `@warning_ignore(...)` (Fly Along, Blend To, Discover, Create Pool and about
+  twenty more) vanished from the reference while the pack went on shipping it. The committed
+  doc is regenerated, and `tools/vocabulary_doc.gd -- --check` (a CI gate now) fails when the
+  committed doc and the generator disagree.
+
 ### Changed: sub-events lined up (Editor Native)
 
 - Each nesting level now steps the whole block right by one 16 px strip, filled with the parent's

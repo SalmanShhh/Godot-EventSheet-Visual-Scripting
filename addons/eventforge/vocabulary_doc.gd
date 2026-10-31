@@ -273,6 +273,11 @@ static func script_pack_surface(source: String) -> Dictionary:
 			continue
 		if pending.is_empty():
 			continue
+		# A code annotation between the doc block and its declaration - `@warning_ignore(...)`,
+		# `@rpc` - belongs to the same member. Ending the chunk there dropped every verb that
+		# carries one from the reference while the pack went on shipping it.
+		if stripped.begins_with("@"):
+			continue
 		var chunk: String = "\n".join(pending)
 		pending = PackedStringArray()
 		var symbol_match: RegExMatch = symbol_regex.search(stripped)

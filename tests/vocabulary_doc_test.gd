@@ -55,6 +55,30 @@ static func run() -> bool:
 		str((prose_actions[0] as Dictionary).get("name")) if prose_actions.size() == 1 else "<no single action>",
 		"Anchor To") and all_passed
 
+	# A code annotation between the doc block and the declaration belongs to the same verb. The
+	# scanner once ended the member there, which dropped Fly Along, Blend To, Discover and about
+	# twenty more shipping pack verbs from the committed reference.
+	var annotated_source: String = "\n".join(PackedStringArray([
+		"## @ace_action",
+		"## @ace_name(\"Fly Along\")",
+		"## @ace_category(\"Camera Rail\")",
+		"## @ace_description(\"Flies the rail's camera along a path.\")",
+		"@warning_ignore(\"shadowed_global_identifier\")",
+		"func fly_along(path: Path2D, seconds: float, ease: String) -> void:",
+		"\tpass"
+	]))
+	var annotated_actions: Array = EventSheetVocabularyDoc.script_pack_surface(annotated_source).get("actions", []) as Array
+	all_passed = _check("a verb with a code annotation above its func is still listed",
+		str((annotated_actions[0] as Dictionary).get("name")) if annotated_actions.size() == 1 else "<%d actions>" % annotated_actions.size(),
+		"Fly Along") and all_passed
+	var camera_rail: Array = EventSheetVocabularyDoc.script_pack_surface(
+		FileAccess.get_file_as_string("res://eventsheet_addons/camera_rail/camera_rail_behavior.gd")).get("actions", []) as Array
+	var rail_names: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in camera_rail:
+		rail_names.append(str(entry.get("name")))
+	all_passed = _check("the camera rail's actions are all in the reference",
+		", ".join(rail_names), "Fly Along, Cut To, Blend To, Hold, Stop Rail") and all_passed
+
 	# Sheet sections: identity line + the publish surface, nested one heading deeper.
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.custom_class_name = "VocabFixture"
