@@ -1428,6 +1428,46 @@ func _draw_tune_marks(
 			Vector2(minf(from_x + run_width, limit), underline_y), mark_ink, 1.0, REGION_DASH_LENGTH)
 
 
+## The words of a sentence that have a card behind them: a dotted rule under each, and the rectangle
+## each one landed in stamped back onto the span (`word_card_rects`), so the pointer is hit-tested
+## against where the word really drew rather than against a second measurement. `word_cards` is a list
+## of {"start", "length", "card"} over the span's drawn text.
+func _draw_word_cards(
+	control: Control,
+	span: SemanticSpan,
+	metadata: Dictionary,
+	baseline: Vector2,
+	text: String,
+	max_width: float,
+	font: Font,
+	font_size: int,
+	ink: Color
+) -> void:
+	var limit: float = baseline.x + max_width
+	var underline_y: float = baseline.y + maxf(float(font_size) * TUNE_MARK_DROP_RATIO, 2.0)
+	var mark_ink: Color = Color(ink, ink.a * TUNE_MARK_ALPHA)
+	var stamped: Array = []
+	for entry: Variant in (metadata.get("word_cards", []) as Array):
+		if not (entry is Dictionary):
+			continue
+		var start: int = int((entry as Dictionary).get("start", -1))
+		var length: int = int((entry as Dictionary).get("length", 0))
+		if start < 0 or length <= 0 or start + length > text.length():
+			continue
+		var from_x: float = baseline.x + font.get_string_size(text.substr(0, start),
+			HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+		var run_width: float = font.get_string_size(text.substr(start, length),
+			HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+		if from_x >= limit or run_width <= 0.0:
+			continue
+		var to_x: float = minf(from_x + run_width, limit)
+		control.draw_dashed_line(Vector2(from_x, underline_y), Vector2(to_x, underline_y), mark_ink, 1.0,
+			HOVER_CARD_DOT_LENGTH)
+		stamped.append({"rect": Rect2(from_x, span.rect.position.y, to_x - from_x, span.rect.size.y),
+			"card": (entry as Dictionary).get("card", {})})
+	span.metadata["word_card_rects"] = stamped
+
+
 ## The doors of a comment span: a hairline under every noun the project could prove, and the
 ## rectangle each one landed in stamped back onto the span.
 ##
@@ -1644,6 +1684,10 @@ func _draw_spans(
 				and _draw_variable_word(control, span, metadata, font, font_size, event_style, reading):
 			continue
 		var color: Color = metadata.get("text_color", _get_span_color(span.type, event_style, reading))
+		# While the game runs, the state it is in lights up in the state row: its name sits on a plate.
+		if metadata.has("state_name") and EventSheetStateWatch.is_live() 				and EventSheetStateWatch.live_members().has(str(metadata["state_name"])):
+			control.draw_rect(span.rect.grow_individual(2.0, -3.0, 2.0, -3.0), Color(event_style.value_highlight_color, 0.22), true)
+			color = event_style.value_highlight_color
 		# The type word is the guide rail on a variable's value: while the field is being typed
 		# into, a literal the declared type cannot hold turns amber with the reason on the row, never
 		# a modal. The value is still whatever the file says until Enter.
@@ -1925,6 +1969,11 @@ func _draw_spans(
 			var mark_y: float = baseline_y + maxf(float(draw_font_size) * TUNE_MARK_DROP_RATIO, 2.0)
 			control.draw_dashed_line(Vector2(text_x, mark_y), Vector2(text_x + mark_run, mark_y),
 				Color(reading.muted_text_color, reading.muted_text_color.a * TUNE_MARK_ALPHA), 1.0, HOVER_CARD_DOT_LENGTH)
+		# Words inside the sentence that have a card behind them (a state's name in "is RUN"): each gets
+		# the same dotted rule, and the rectangle it landed in is stamped back for the hover to hit-test.
+		if not (metadata.get("word_cards", []) as Array).is_empty() and span_index != editing_span_index:
+			_draw_word_cards(control, span, metadata, Vector2(text_x, baseline_y), draw_text,
+				text_width, font, draw_font_size, reading.muted_text_color)
 		# Color params get a small swatch right after the text (event-sheet-style color preview).
 		var swatch: Variant = metadata.get("swatch_color")
 		if swatch is Color:
@@ -1998,8 +2047,27 @@ func _draw_variable_word(control: Control, span: SemanticSpan, metadata: Diction
 			ink = metadata.get("text_color", reading.secondary_text_color)
 		var type_size: int = NativeVariableMarks.type_font_size(draw_font_size)
 		var type_font: Font = NativeVariableMarks.mono_font(font)
-		_draw_text(control, Vector2(span.rect.position.x, centre_y + type_size * FONT_BASELINE_OFFSET_RATIO), span.text,
-			maxf(span.rect.size.x, 1.0), NativeVariableMarks.italic_font(type_font) if inferred else type_font, type_size, ink)
+		var type_x: float = span.rect.position.x
+		# A state machine's type word leads with the state glyph, on the same plate every object's icon
+		# sits on.
+		if metadata.get("object_icon") is Texture2D and not NativeRowMarks.line_glyph_for(metadata).is_empty():
+			var plate_y: float = span.rect.position.y + (span.rect.size.y - OBJECT_ICON_PLATE_SIZE) * 0.5
+			control.draw_style_box(_object_icon_plate_style(ink), Rect2(type_x, plate_y, OBJECT_ICON_PLATE_SIZE, OBJECT_ICON_PLATE_SIZE))
+			var inset: float = (OBJECT_ICON_PLATE_SIZE - OBJECT_ICON_SIZE) * 0.5
+			var glyph: String = NativeRowMarks.line_glyph_for(metadata)
+			NativeRowMarks.draw_object_glyph(control, Rect2(type_x + inset, plate_y + inset, OBJECT_ICON_SIZE, OBJECT_ICON_SIZE),
+				glyph, NativeRowMarks.glyph_ink(glyph, ink))
+			type_x += OBJECT_ICON_ADVANCE
+		var type_face: Font = NativeVariableMarks.italic_font(type_font) if inferred else type_font
+		_draw_text(control, Vector2(type_x, centre_y + type_size * FONT_BASELINE_OFFSET_RATIO), span.text,
+			maxf(span.rect.size.x - (type_x - span.rect.position.x), 1.0), type_face, type_size, ink)
+		# A type has a card behind it, and says so with the same dotted rule as every other word that has one.
+		if bool(metadata.get("hover_card_mark", false)):
+			var run: float = minf(type_face.get_string_size(span.text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, type_size).x,
+				maxf(span.rect.size.x - (type_x - span.rect.position.x), 1.0))
+			var rule_y: float = centre_y + type_size * FONT_BASELINE_OFFSET_RATIO + maxf(float(type_size) * TUNE_MARK_DROP_RATIO, 2.0)
+			control.draw_dashed_line(Vector2(type_x, rule_y), Vector2(type_x + run, rule_y),
+				Color(reading.muted_text_color, reading.muted_text_color.a * TUNE_MARK_ALPHA), 1.0, HOVER_CARD_DOT_LENGTH)
 		return true
 	if str(metadata.get("value_glyph", "")) == NativeVariableMarks.GLYPH_VECTOR:
 		var value_ink: Color = metadata.get("text_color", _get_span_color(span.type, event_style, reading))

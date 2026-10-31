@@ -20,11 +20,11 @@ static func run() -> bool:
 	return SUPPORT.pins(NAME, [
 		["the file still comes back byte for byte", output, source],
 		["the switch on its own line is a System line", _row_containing(rows, "match state"), "i1 [System> match state]"],
-		["a branch states its test", _row_containing(rows, "state is IDLE"), "i2 [System> state is IDLE]"],
+		["a branch states its test", _row_containing(rows, "is IDLE"), "i2 [state> is IDLE]"],
 		["a branch's question names its object and reads in the sheet's words, its step names System",
-			_row_containing(rows, "> 10"), "i3 [System> |velocity.x| > 10 | System> Go to Run]"],
+			_row_containing(rows, "> 10"), "i3 [System> |velocity.x| > 10 | state> go to RUN]"],
 		["a function the object answers reads as the object's own question, with no trigger arrow",
-			_row_containing(rows, "Is on floor | System> Go to Idle"), "i3 [match_branch_guards> Is on floor | System> Go to Idle]"],
+			_row_containing(rows, "Is on floor"), "i3 [match_branch_guards> Is on floor | state> go to IDLE]"],
 		["no line under the switch is left without an object", _bare_lines(rows), PackedStringArray()],
 	]) and _member_steps()
 

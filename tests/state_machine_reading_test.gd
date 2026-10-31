@@ -133,7 +133,7 @@ static func run() -> bool:
 	# writes it. The same guard under somebody else's machine keeps the plain assignment sentence,
 	# because there the leaf names no enum this sheet declares.
 	ok = _check("the transition reads as the Go to row it means",
-		transition.spans[1].text, "Go to Chase") and ok
+		transition.spans[1].text, "go to CHASE") and ok
 	lifted_match.match_expression = "machine.current_state"
 	var foreign_guarded: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
 	ok = _check("and elsewhere it reads as a sentence in the action cell",

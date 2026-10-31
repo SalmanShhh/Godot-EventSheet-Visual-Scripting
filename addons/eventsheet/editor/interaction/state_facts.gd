@@ -126,16 +126,127 @@ static func variable_row(sheet: EventSheetResource, wanted: String) -> LocalVari
 	return null
 
 
-## PATROL -> "Patrol", GAVE_UP -> "Gave Up". ONE spelling rule for the whole plugin: the game's modes
-## declared it first and states use that same one, so the band, the dropdown and the row can never
-## disagree about which word a member is.
+## A state said the way the code writes it: PATROL is "PATROL", never "Patrol", and an explicit value
+## ("STAGGER = 3") is dropped. The sheet is the code's own words, so a reader who knows the file knows
+## the sheet and the other way round - the old re-casing made the head say Patrol while the enum row
+## beside it said PATROL.
 static func word_for(member: String) -> String:
-	return EventSheetModeFacts.word_for(member)
+	return member.split("=")[0].strip_edges()
 
 
-## And back: "Gave Up" -> GAVE_UP, the identifier a row's parameter carries.
+## And back: what a state was typed as is the identifier a row's parameter carries. A name typed with
+## spaces ("Gave Up") is the one thing that cannot be an identifier as it stands, so it becomes
+## GAVE_UP; everything else is kept exactly as written.
 static func member_for(word: String) -> String:
-	return EventSheetModeFacts.member_for(word)
+	var trimmed: String = word.strip_edges()
+	if trimmed.contains(" "):
+		return trimmed.replace(" ", "_").to_upper()
+	return trimmed
+
+
+# -- The machine as ONE thing: the enum, the variable that holds it, and what the sheet draws ----
+## The machine this sheet declares: the State enum and the `state` variable typed by it, as
+## {"enum": EnumRow, "variable": LocalVariable}, or {} when either is missing. An enum alone is only an
+## enum, and a `state` variable that is not of this enum is only a variable.
+static func machine(sheet: EventSheetResource) -> Dictionary:
+	var declared_enum: EnumRow = enum_row(sheet)
+	if declared_enum == null:
+		return {}
+	var declared: LocalVariable = variable_row(sheet, STATE_VARIABLE)
+	if declared == null:
+		return {}
+	# The variable starts in one of the enum's members (`State.IDLE`), or declares no value at all and
+	# so starts in the first one. Anything else - `var state: State = 0` - is a variable that happens to
+	# be typed by an enum, and the enum stays the plain enum row it always was.
+	var written: String = str(declared.default_value).strip_edges()
+	var starts_in_member: bool = written.begins_with(MEMBER_PREFIX)
+	var starts_unset: bool = declared.no_default and declared.type_name.strip_edges() == ENUM_NAME
+	if not starts_in_member and not starts_unset:
+		return {}
+	return {"enum": declared_enum, "variable": declared}
+
+
+## True for a declaration the state row stands in for, so the sheet draws it as that one row and not as
+## a second spelling of the same fact: the `state` variable itself, the previous state and the entered
+## time written exactly as Declare states writes them, and the `state_changed` signal written the same
+## way. Anything written differently by hand is NOT hidden - it is somebody's own line, and it opens.
+static func hides_declaration(sheet: EventSheetResource, entry: Variant) -> bool:
+	var declared: LocalVariable = entry as LocalVariable
+	if declared != null:
+		var name: String = declared.name.strip_edges()
+		if name != STATE_VARIABLE and name != PREVIOUS_VARIABLE and name != SINCE_VARIABLE:
+			return false
+		if machine(sheet).is_empty():
+			return false
+		if name == STATE_VARIABLE:
+			return true
+		if declared.exported or declared.onready or declared.is_constant or declared.is_static \
+				or declared.has_property_accessors():
+			return false
+		if name == PREVIOUS_VARIABLE:
+			return declared.type_name.strip_edges() == ENUM_NAME
+		return declared.type_name.strip_edges() == "int" \
+			and str(declared.default_value).strip_edges() == SINCE_INITIAL
+	var announced: SignalRow = entry as SignalRow
+	if announced != null:
+		if announced.signal_name.strip_edges() != CHANGED_SIGNAL or announced.trigger:
+			return false
+		if Array(announced.params) != Array(CHANGED_SIGNAL_PARAMS):
+			return false
+		return not machine(sheet).is_empty()
+	return false
+
+
+## What the machine is for, in one line: the `##` above its enum, its lines joined by a space.
+static func machine_description(sheet: EventSheetResource) -> String:
+	var found: Dictionary = machine(sheet)
+	if found.is_empty():
+		return ""
+	return " ".join(str((found["enum"] as EnumRow).description).split("\n")).strip_edges()
+
+
+## The member the machine starts in. Always one: the variable's own value when it names a member of the
+## enum, else the first member - a machine with no default is not a state a reader can name.
+static func default_member(sheet: EventSheetResource) -> String:
+	var members_here: PackedStringArray = bare_members(sheet)
+	if members_here.is_empty():
+		return ""
+	var declared: LocalVariable = variable_row(sheet, STATE_VARIABLE)
+	if declared != null:
+		var written: String = str(declared.default_value).strip_edges().trim_prefix(MEMBER_PREFIX).strip_edges()
+		if members_here.has(written):
+			return written
+	return members_here[0]
+
+
+## The sentence written above one state in the enum, "" when it has none.
+static func state_note(sheet: EventSheetResource, member: String) -> String:
+	var row: EnumRow = enum_row(sheet)
+	return "" if row == null else row.note_for(member)
+
+
+## The card a state's name opens wherever the sheet says it: the name, "the default state" when it is,
+## and what it is for - the same words in the state row, in is / was / go to, and in On entering /
+## On leaving. {} for a word that is not one of this machine's states.
+static func state_card(sheet: EventSheetResource, member: String) -> Dictionary:
+	var wanted: String = word_for(member)
+	if sheet == null or not bare_members(sheet).has(wanted):
+		return {}
+	var note: String = state_note(sheet, wanted)
+	var card: Dictionary = {
+		"id": "state:%s" % wanted,
+		"title": wanted,
+		"width": 260,
+		"anchor": "left",
+	}
+	if wanted == default_member(sheet):
+		card["subtitle"] = EventSheetL10n.translate("the default state")
+	if not note.is_empty():
+		card["lines"] = PackedStringArray([note])
+		# How it is written, so a reader sees that Godot's own help shows the same sentence.
+		card["mono"] = "## %s" % note.get_slice("\n", 0)
+		card["code_last"] = true
+	return card
 
 
 ## The band's reading: the states this object has and the one it starts in, in one line, because that
@@ -168,6 +279,12 @@ const STATE_ACE_IDS: PackedStringArray = ["GoToState", "InState", "InStateForOve
 const ENTERING_TRIGGER_ID: String = "OnEnteringState"
 const LEAVING_TRIGGER_ID: String = "OnLeavingState"
 const STATE_PARAM: String = "state"
+
+
+## True for the ids of this family: the four rows and the two triggers. The object column of such a row
+## is the state variable.
+static func is_state_vocabulary(ace_id: String) -> bool:
+	return STATE_ACE_IDS.has(ace_id) or ace_id == ENTERING_TRIGGER_ID or ace_id == LEAVING_TRIGGER_ID
 
 
 ## Every state a row of this sheet NAMES, in encounter order - what Go to, Is in, Was in, On entering

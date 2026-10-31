@@ -92,7 +92,7 @@ static func _test_a_door_belongs_to_the_sheet_it_was_read_in() -> bool:
 	ok = _check("and takes it away rather than re-pointing it at another object's rows",
 		_first_door(body["sentences"]), "") and ok
 	ok = _check("the sentence itself is untouched either way",
-		_first_sentence(body["sentences"]).contains("Chase"), true) and ok
+		_first_sentence(body["sentences"]).contains("CHASE"), true) and ok
 	(body["root"] as Node).free()
 	EventSheetStateTrail.clear()
 	return ok
@@ -179,25 +179,25 @@ static func _test_the_sentences() -> bool:
 	var ok: bool = _check("a named move is the whole line",
 		EventSheetStateTrail.sentence({"at": 12.1, "from": "CHASE", "to": "STAGGER",
 			"cause_text": "On Hit"}),
-		"12.1 s · On Hit fired - went from Chase to Stagger")
+		"12.1 s · On Hit fired - went from CHASE to STAGGER")
 	ok = _check("an unnamed move says what happened and claims no cause",
 		EventSheetStateTrail.sentence({"at": 12.1, "from": "CHASE", "to": "STAGGER"}),
-		"12.1 s · went from Chase to Stagger") and ok
+		"12.1 s · went from CHASE to STAGGER") and ok
 	ok = _check("a re-entry says so rather than saying it went where it already was",
 		EventSheetStateTrail.sentence({"at": 12.4, "from": "STAGGER", "to": "STAGGER",
 			"re_entered": true, "cause_text": "On Hit"}),
-		"12.4 s · On Hit fired - re-entered Stagger") and ok
+		"12.4 s · On Hit fired - re-entered STAGGER") and ok
 	ok = _check("a whole second keeps no trailing zero, exactly as the band does",
 		EventSheetStateTrail.sentence({"at": 3.0, "from": "PATROL", "to": "CHASE"}),
-		"3 s · went from Patrol to Chase") and ok
+		"3 s · went from PATROL to CHASE") and ok
 	ok = _check("and while a run is two games each line says which window it is",
 		EventSheetStateTrail.sentence({"at": 1.5, "from": "PATROL", "to": "CHASE",
 			"instance": "host"}),
-		"host · 1.5 s · went from Patrol to Chase") and ok
+		"host · 1.5 s · went from PATROL to CHASE") and ok
 	# A member spelled with an underscore reads as the word the whole plugin says it with.
 	ok = _check("a state is said as the word the band and the dropdown say",
 		EventSheetStateTrail.sentence({"at": 0.0, "from": "CHASE", "to": "GAVE_UP"}),
-		"0 s · went from Chase to Gave Up") and ok
+		"0 s · went from CHASE to GAVE_UP") and ok
 	return ok
 
 
@@ -219,7 +219,7 @@ static func _test_the_row_is_named_only_when_it_fired() -> bool:
 		str(_last().get("cause_uid")), HIT_ROW) and ok
 
 	# With the Event Trace switched off no window ever arrives, so nothing is named - and the line
-	# still has a door, because this sheet has exactly one row that can go to Stagger.
+	# still has a door, because this sheet has exactly one row that can go to STAGGER.
 	EventSheetStateTrail.clear()
 	_frame("PATROL", 0.5, rows)
 	_frame("STAGGER", 0.02, rows)
@@ -254,7 +254,7 @@ static func _test_the_patterns() -> bool:
 	var notes: Array[Dictionary] = EventSheetStateTrail.notes_for(re_entry, rows)
 	var ok: bool = _check("a re-entry that restarts a waiting row is worth saying",
 		str(notes[0].get("text", "")),
-		"Re-entering Stagger restarted its hold, so Is in Stagger for over 6s starts counting from 0 again - and On leaving Stagger never ran, because the object never left.")
+		"Re-entering STAGGER restarted its hold, so is STAGGER for over 6 s starts counting from 0 again - and On leaving STAGGER never ran, because the object never left.")
 	ok = _check("and it lands the reader on the row that is now counting again",
 		str(notes[0].get("uid", "")), CALM_ROW) and ok
 	ok = _check("filed under the kind the tab addresses it by",
@@ -279,7 +279,7 @@ static func _test_the_patterns() -> bool:
 	var doubled: Array[Dictionary] = EventSheetStateTrail.notes_for(twice, rows)
 	ok = _check("a row that fired twice in one frame is said in words",
 		str(doubled[0].get("text", "")),
-		"On Hit fired 2 times in one frame and the state changed once: going to Stagger while already there does nothing, so On entering Stagger ran once.") and ok
+		"On Hit fired 2 times in one frame and the state changed once: going to STAGGER while already there does nothing, so On entering STAGGER ran once.") and ok
 	ok = _check("and the line lands on the row that fired",
 		str(doubled[0].get("uid", "")), HIT_ROW) and ok
 	ok = _check("filed under its own kind",
@@ -298,10 +298,10 @@ static func _test_the_patterns() -> bool:
 	var bare: Dictionary = EventSheetStateFacts.trail_rows(_timed_only_sheet())
 	ok = _check("with no On leaving row the note says the half it knows",
 		str(EventSheetStateTrail.notes_for(re_entry, bare)[0].get("text", "")),
-		"Re-entering Stagger restarted its hold, so Is in Stagger for over 6s starts counting from 0 again.") and ok
+		"Re-entering STAGGER restarted its hold, so is STAGGER for over 6 s starts counting from 0 again.") and ok
 	ok = _check("and with no On entering row so does the other one",
 		str(EventSheetStateTrail.notes_for(twice, bare)[0].get("text", "")),
-		"On Hit fired 2 times in one frame and the state changed once: going to Stagger while already there does nothing.") and ok
+		"On Hit fired 2 times in one frame and the state changed once: going to STAGGER while already there does nothing.") and ok
 	ok = _check("an empty trail points at nothing",
 		EventSheetStateTrail.notes_for([], rows).size(), 0) and ok
 	return ok
@@ -361,7 +361,7 @@ static func _test_two_copies_never_mix() -> bool:
 			EventSheetStateTrail.entries("client").size()], "1/1")
 	ok = _check("and the two read as one list, in the order they happened",
 		EventSheetStateTrail.sentence(EventSheetStateTrail.all_entries()[0] as Dictionary),
-		"client · 0.5 s · went from Patrol to Stagger") and ok
+		"client · 0.5 s · went from PATROL to STAGGER") and ok
 	# The fired-events message says WHICH rows fired and not which window they fired in, so a
 	# labelled run names nobody rather than tossing a coin between two games.
 	EventSheetStateTrail.note_fired(PackedStringArray([HIT_ROW]), PackedInt32Array([0]), rows)
@@ -391,12 +391,12 @@ static func _test_the_index_reads_the_sheet() -> bool:
 		str((causes[0] as Dictionary)["text"]), "On Hit") and ok
 	ok = _check("the timed question is indexed with BOTH its answers filled in",
 		str(((rows["timed"] as Dictionary)["STAGGER"] as Dictionary)["text"]),
-		"Is in Stagger for over 6s") and ok
+		"is STAGGER for over 6 s") and ok
 	ok = _check("the row that answers a leaving is indexed by the state it leaves",
 		str(((rows["leaving"] as Dictionary)["STAGGER"] as Dictionary)["uid"]), LEAVING_ROW) and ok
 	ok = _check("and the row that answers an entering, by the state it enters",
 		str(((rows["entering"] as Dictionary)["STAGGER"] as Dictionary)["text"]),
-		"On entering Stagger") and ok
+		"On entering STAGGER") and ok
 	# An object with no states declared has no index at all, and neither has nothing.
 	var stateless: EventSheetResource = EventSheetResource.new()
 	stateless.host_class = "Node"

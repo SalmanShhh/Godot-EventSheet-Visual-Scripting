@@ -54,6 +54,10 @@ const FIELD_MODE := "mode_reference"
 ## And ONE OBJECT's own declared states, read off the sheet being edited rather than off the
 ## project: an enemy's states are the enemy's, and a list mixing two objects' would be a guess.
 const FIELD_STATE := "state_reference"
+## The States window's own two kinds of field: the name of a state (offered the words rows already use and
+## a machine's usual ones) and the sentence for one (offered the sentences the sheet already wrote).
+const FIELD_STATE_NAME := "state_name_entry"
+const FIELD_STATE_NOTE := "state_note_entry"
 const FIELD_INPUT_ACTION := "input_action"
 const FIELD_NODE := "scene_node"
 const FIELD_SHADER_DIAL := "shader_dial"
@@ -280,6 +284,10 @@ static func _build(sheet: EventSheetResource, kind: String) -> Array[Dictionary]
 			return _mode_entries(sheet)
 		FIELD_STATE:
 			return _state_entries(sheet)
+		FIELD_STATE_NAME:
+			return _state_name_entries(sheet)
+		FIELD_STATE_NOTE:
+			return _state_note_entries(sheet)
 		FIELD_INPUT_ACTION:
 			return _input_action_entries()
 		FIELD_NODE:
@@ -431,6 +439,41 @@ static func _state_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 			"detail": EventSheetStateFacts.word_for(member),
 			"kind": KIND_ENUM,
 		})
+	return entries
+
+
+## What a state could be called: the states rows name that the enum does not declare yet (a state about to
+## be declared), then the names a machine usually has. Declared states are left out - a name already taken
+## is not a suggestion.
+static func _state_name_entries(sheet: EventSheetResource) -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	var declared: PackedStringArray = EventSheetStateFacts.bare_members(sheet)
+	var seen: Dictionary = {}
+	var pool: PackedStringArray = PackedStringArray(EventSheetStateFacts.named_states(sheet))
+	pool.append_array(PackedStringArray(["IDLE", "WALK", "RUN", "JUMP", "FALL", "ATTACK", "HURT", "DEAD", "PATROL", "CHASE"]))
+	for member: String in pool:
+		if declared.has(member) or seen.has(member):
+			continue
+		seen[member] = true
+		entries.append({"text": member, "detail": "", "kind": KIND_ENUM})
+	return entries
+
+
+## The sentences this sheet already wrote about its states and its machine, so a phrase said once is one
+## pick the next time.
+static func _state_note_entries(sheet: EventSheetResource) -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	var row: EnumRow = EventSheetStateFacts.enum_row(sheet)
+	if row == null:
+		return entries
+	var pool: PackedStringArray = PackedStringArray()
+	pool.append(row.description)
+	for member: String in row.members:
+		pool.append(row.note_for(member))
+	for line: String in pool:
+		var text: String = line.strip_edges()
+		if not text.is_empty():
+			entries.append({"text": text, "detail": "", "kind": KIND_ENUM})
 	return entries
 
 

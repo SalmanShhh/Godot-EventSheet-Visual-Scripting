@@ -93,7 +93,7 @@ static func _groups(page: Array[Dictionary]) -> PackedStringArray:
 static func _test_the_shelf_is_read_as_kinds() -> bool:
 	var page: Array[Dictionary] = EventSheetAskAnswers.answers("chase", _shelf(_sheet()))
 	var ok: bool = SUPPORT.pin_table("ask_field", {
-		EventSheetCompletions.KIND_STATE: PackedStringArray(["Chase"]),
+		EventSheetCompletions.KIND_STATE: PackedStringArray(["CHASE"]),
 		EventSheetCompletions.KIND_VARIABLE: PackedStringArray(["chase_speed"]),
 		EventSheetCompletions.KIND_FUNCTION: PackedStringArray(["begin_chase"]),
 		EventSheetCompletions.KIND_SIGNAL: PackedStringArray(),
@@ -104,7 +104,7 @@ static func _test_the_shelf_is_read_as_kinds() -> bool:
 		if not bool(entry.get("heading", false)):
 			labels[str(entry.get("text", ""))] = str(entry.get("detail", ""))
 	ok = SUPPORT.pin_value("ask_field", "the state says its kind and its home",
-		str(labels.get("Chase", "")), "State · Enemy") and ok
+		str(labels.get("CHASE", "")), "State · Enemy") and ok
 	ok = SUPPORT.pin_value("ask_field", "and so does the row",
 		str(labels.get("chase the player harder", "")), "Row · Enemy") and ok
 	return ok
@@ -270,7 +270,7 @@ static func _test_the_pools_are_built_once() -> bool:
 	var ok: bool = SUPPORT.pin_value("ask_field", "the second ask is the SAME list, not an equal one",
 		is_same(first, again), true)
 	ok = SUPPORT.pin_value("ask_field", "a symbol pool carries the states as words, then the names",
-		_symbol_texts(sheet), PackedStringArray(["Patrol", "Chase", "Stagger",
+		_symbol_texts(sheet), PackedStringArray(["PATROL", "CHASE", "STAGGER",
 			"begin_chase", "chase_speed", "gave_up"])) and ok
 	# Every entry carries its own lowered text, which is what keeps a keystroke off the allocator.
 	var lowered: bool = true

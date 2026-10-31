@@ -281,9 +281,7 @@ Node script extending `CharacterBody2D`.
 - **Is Flying** - True while a Fly Along run is actually travelling. A Hold and a blend are not flights, so this stays false through both - the gate for a skip prompt or a letterbox that only belongs on a dolly.
 
 #### Actions
-- **Fly Along** (`path: Path2D, seconds: float, ease: String`) - Flies the rail's camera along a drawn Path2D, start to end, over a number of seconds - the dolly shot. The rail's own camera takes the view as the flight starts, so a flight begun after a Cut To is seen rather than played off screen. Write null for the path to walk the route set in the Inspector, and 0 seconds to use the rail's default pace. On Shot Finished fires at the end of the run.
 - **Cut To** (`camera: Camera2D`) - Hands the view to another camera immediately - the hard cut. Whatever shot the rail was running stops where it stands, without firing On Shot Finished, because the cut is the ending.
-- **Blend To** (`camera: Camera2D, seconds: float, ease: String`) - Travels the rail's camera onto another camera - position, rotation and zoom together - over a number of seconds, then hands the view to it. The soft cut between two framed shots. The travel starts from whatever shot is on screen: if the rail had handed the view away, its own camera stands on that shot first and takes the view back, so the blend is continuous rather than a jump. On Blend Finished fires at the handover.
 - **Hold** (`seconds: float`) - Parks the rail for a number of seconds and then fires On Shot Finished - the beat between two moves. It leaves the view exactly where it is, so a hold after a Cut To is the beat on THAT camera. 0 seconds falls back to the rail's default pace.
 - **Stop Rail** - Halts the shot where it stands, WITHOUT firing On Shot Finished - a cutscene the player skipped, a chase that ended early. The next Fly Along, Hold or Blend To starts a fresh shot.
 
@@ -301,9 +299,7 @@ Node script extending `CharacterBody2D`.
 - **Is Flying** - True while a Fly Along run is actually travelling. A Hold and a blend are not flights, so this stays false through both - the gate for a skip prompt or a letterbox that only belongs on a dolly.
 
 #### Actions
-- **Fly Along** (`path: Path3D, seconds: float, ease: String, look_at: Node3D`) - Flies the rail's camera along a drawn Path3D, start to end, over a number of seconds - the dolly shot. Name a node to keep in frame and the camera turns to face it the whole way; write null and the camera keeps the heading it was left with. The rail's own camera takes the view as the flight starts, so a flight begun after a Cut To is seen rather than played off screen. Write null for the path to walk the route set in the Inspector, and 0 seconds to use the rail's default pace. On Shot Finished fires at the end of the run.
 - **Cut To** (`camera: Camera3D`) - Hands the view to another camera immediately - the hard cut. Whatever shot the rail was running stops where it stands, without firing On Shot Finished, because the cut is the ending.
-- **Blend To** (`camera: Camera3D, seconds: float, ease: String`) - Travels the rail's camera onto another camera - position, rotation and field of view together - over a number of seconds, then hands the view to it. The soft cut between two framed shots. The travel starts from whatever shot is on screen: if the rail had handed the view away, its own camera stands on that shot first and takes the view back, so the blend is continuous rather than a jump. On Blend Finished fires at the handover.
 - **Hold** (`seconds: float`) - Parks the rail for a number of seconds and then fires On Shot Finished - the beat between two moves. It leaves the view exactly where it is, so a hold after a Cut To is the beat on THAT camera. 0 seconds falls back to the rail's default pace.
 - **Stop Rail** - Halts the shot where it stands, WITHOUT firing On Shot Finished - a cutscene the player skipped, a chase that ended early. The next Fly Along, Hold or Blend To starts a fresh shot.
 
@@ -366,17 +362,7 @@ Node script extending `CharacterBody2D`.
 - **On First Discovered** (`set_name: String, entry_id: String`) - Fires the FIRST time an entry is discovered, and never again for that entry - the toast, the page-turn sound, the achievement. A second Discover of the same entry is silent, so the row that fills the codex and the row that celebrates it can be the same row.
 
 #### Conditions
-- **Has Discovered** (`set_name: String, entry_id: String`) - Whether that entry of that set has been found - show the page, unlock the recipe, grey the silhouette out.
 - **For Each Discovered** (`set_name: String`) - Runs this event's actions once per DISCOVERED entry of a set, in name order - the codex page itself, as one row. Read the current one as `entry`, then take its `entry_name`, `picture` and `text` straight off it. An entry that has been discovered but has no file behind it any more is skipped rather than arriving as null.
-
-#### Actions
-- **Discover** (`set_name: String, entry_id: String`) - Records that the player has found an entry of a set. The first Discover of an entry fires On First Discovered; every one after it is silent, so the row that fills the codex and the row that celebrates it can be the same row.
-- **Forget Entry** (`set_name: String, entry_id: String`) - Takes one entry back out of the set, so Has Discovered says no again and the page leaves For Each Discovered. The other half of Discover: a cheat menu that locks a page again, a chapter that takes its own notes back, a run-only discovery cleared between runs. An entry that was never found is left alone.
-- **Forget Set** (`set_name: String`) - Empties one whole set, so nothing in it counts as found any more and its count reads zero. What a New Game in the same session wants, and what a save that carries no codex of its own deliberately does NOT do by itself.
-
-#### Expressions
-- **Discovered Count** (`set_name: String`) - How many entries of a set have been found - the left-hand number of a 14-out-of-60 line.
-- **Total Entries** (`set_name: String`) - How many entries a set HOLDS, counted from the files in its folder - the right-hand number of a 14-out-of-60 line. A page added to the folder joins the total with no sheet edit.
 
 ### ComboBoxAddon (`res://eventsheet_addons/combo_box/combo_box_addon.gd`)
 @ace_tags(input, combo) @ace_category("ComboBox") @ace_version(1.0.0)
@@ -456,7 +442,6 @@ Node script extending `CharacterBody2D`.
 #### Actions
 - **Define Currency** (`id: String, starting_amount: float, max_amount: float`) - Creates (or resets) a currency with a starting amount and a max (-1 = no cap). Min is 0 and there's no daily cap until you set one.
 - **Set Max** (`id: String, max_amount: float`) - Changes the hard cap (-1 = no cap). If the current amount is above the new cap it clamps down.
-- **Set Daily Cap** (`id: String, daily_cap: float`) - Caps how much can be EARNED (added) per day (-1 = no daily cap). You decide when a day rolls over by calling Reset Daily Caps.
 - **Allow Debt** (`id: String, minimum: float`) - Lets a currency go negative down to this floor (e.g. -50). Use it for hunger, heat, or overdraft. Default floor is 0 (no debt).
 - **Set Offline Rate** (`id: String, rate_per_second: float`) - Passive income per real second, used by Apply Offline Gain (0 = off).
 - **Add** (`id: String, amount: float`) - Adds a SIGNED amount (negative subtracts) and clamps to the currency's min and max. Positive amounts also respect the daily cap. Fires On Amount Changed, plus On Cap Hit / On Daily Cap Hit if a limit bit.
@@ -609,7 +594,6 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Is Snapping**
 
 #### Actions
-- **Start Drag** (`drag_point_x: float, drag_point_y: float, grab_mode: int`) - Begins a drag at a point. grab_mode 0 = keep offset from the host; 1 = centre on the point.
 - **Start Drag At Object** (`target: Node2D, grab_mode: int`) - Begins a drag that follows the given object each tick.
 - **Drop** (`how: int`) - Ends the drag. how 0 = apply throw/snap; 1 = cancel silently.
 - **Set Drag Point** (`x: float, y: float`) - Updates the drag point (call each tick from your input source).
@@ -727,7 +711,6 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Run Walkers By Tag** (`tag: String`) - Runs only the walkers carrying a tag, in registration order, then fires On Walkers By Tag Complete. Staging generation in tagged passes is how a later pass reacts to what an earlier one carved. An empty tag is not a wildcard here: it runs the walkers that genuinely have no tag.
 - **Run Walker** (`id: String`) - Runs one walker by id to the end of its budget. It fires On Cell Carved and On Walker Finished but deliberately NOT On Generation Complete, because it is one pass of a bigger generation rather than the end of it.
 - **Step Walker** (`id: String, steps: int`) - Advances one walker by up to this many steps instead of running it out, firing On Walker Stepped per step - the row that makes the map draw itself in front of the player. The walk is identical to an instant run, just spread over time. The first call carves the start cell, so nothing has to place the walker first.
-- **Drop Marks Along Walk** (`walker_id: String, tag: String, every_steps: int, chance: float, min_spacing: float`) - Replays a walker's recorded path and considers a candidate every N steps, keeping each with the given chance and rejecting it if it lands too close to an existing mark of the same tag. The walker must have run already, because the path is recorded as it walks. Candidates start at step N, not at the start cell.
 - **Scatter Marks** (`count: int, tag: String, value: int, placement: String, min_spacing: float`) - Places up to this many tagged marks on cells holding a value, filtered by the placement rule and thinned by minimum spacing. The count is a maximum, not a promise: tight spacing or a rule that matches almost nothing places fewer, and Debug Mode says how many it managed.
 - **Clear Marks** (`tag: String`) - Removes every mark carrying a tag, an empty tag removing all of them. The grid is untouched, so clearing marks and re-scattering only re-rolls the placement.
 - **Dilate Cells** (`value: int, iterations: int`) - Grows every region of a value outward by one ring per iteration, which is how one-cell corridors become chambers. It converts ANY neighbouring cell, including ones holding other values, so dilate before you carve terrain you want to keep. Each iteration works from a snapshot, so one pass grows exactly one ring.
@@ -1448,7 +1431,6 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Count To** (`ticker_name: String, target: float, duration: float`) - Eases a named display value toward a target over a duration - scores and gold ROLL instead of snapping. Read it with the Ticker Value expression; emits On Ticker Finished (with the name) when it lands.
 - **Set Ticker** (`ticker_name: String, value: float`) - Sets a named display value INSTANTLY (cancelling any roll) - initialise a score at 0, or snap on a reset.
 - **Moment** (`moment_name: String, strength: float`) - Plays a moment - a whole beat of feedback written down as a file: a hit's shake and freeze and flash, a win's swell, danger draining the colour out. The strength scales every amount in it, so a light hit and a heavy one are one moment at two numbers. Six starters ship beside the pack (impact, kill, triumph, danger, calm, cut); edit them, or name your own with Define Moment.
-- **Define Moment** (`moment_name: String, moment: Resource`) - Points a name at a moment file, for the whole game: every Juice node's Moment row finds it afterwards. Use it to play a moment you keep somewhere else in the project, or to swap which file a name means (a boss fight that hits harder). An empty slot takes the name away again.
 - **Play Moment At** (`moment_name: String, strength: float, from: Node, within: float, falloff: String`) - Plays a moment WHERE it happened, so a far explosion is felt less than a near one. The strength falls off between that place and the edge of the range, and a moment that happened outside the range does not play at all. Leave the range at 0 and it plays everywhere at full strength, exactly as Moment does. Whatever is left is scaled by Set Moment Strength before anything is felt.
 - **Set Moment Strength** (`value: float`) - Turns down what Play Moment At feels, by one number - a quiet scene at 0.4, a boss fight at 1.5, an accessibility setting at whatever the player chose. It is the strength THAT row hands on, and only that row: a plain Moment row plays a beat at the strength written on it, and the moments themselves are untouched either way.
 - **Moment Step** (`verb: String, amount: float, effect: String, seconds: float, strength: float`) - Plays ONE step of a moment - a shake, a hitstop, a flash - with no file behind it. It is the same step a moment file holds, played by the same code, so a beat written as rows and a beat kept as a file do exactly the same thing. Use it to write a beat straight into a sheet, or as the step of a Moment block. The strength scales the amounts a player sees, exactly as it does inside a moment.
@@ -1791,7 +1773,6 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Has Pool** (`pool_name: String`) - Whether a pool with this name exists.
 
 #### Actions
-- **Create Pool** (`pool_name: String, scene_path: String, prewarm: int`) - The easy way: makes a pool that spawns copies of a scene (a .tscn path), optionally pre-making some now so the first spawns never hitch.
 - **Create Empty Pool** (`pool_name: String`) - The custom way: makes a pool with no scene of its own. Fill it with Add To Pool (your own nodes), and Spawn hands those back out.
 - **Add To Pool** (`pool_name: String, node: Node`) - Puts one of your own existing nodes into a pool as a ready-to-reuse instance (for custom pools). The node is hidden and parked until spawned.
 - **Prewarm** (`pool_name: String, count: int`) - Pre-makes more copies for a scene pool (so a burst of spawns stays smooth).
@@ -2123,7 +2104,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Add Tracked Hazard** (`target: Node, radius: float, deadly: bool`) - A circular hazard that FOLLOWS a node (a patrolling saw, a burning enemy) with no per-frame events, and removes itself when the node is freed. Last Hazard Id names it.
 - **Remove Hazard** (`hazard_id: int`) - Removes one hazard by the id Last Hazard Id gave you.
 - **Set Hazard Margin** (`pixels: float`) - Surrounds every hazard with a danger buffer this many pixels wide, so routes keep their distance.
-- **Add Instant Portal** (`from_x: float, from_y: float, to_x: float, to_y: float, bidirectional: bool, cost: float, tag: String`) - A portal that BLINKS the agent from entrance to exit (a door, a teleporter). Cost 1 is the normal price; raise it to make routes avoid the portal. Tags (comma-separated) group portals for the by-tag verbs. Last Portal Id names it.
+- **Add Instant Portal** (`from_x: float, from_y: float, to_x: float, to_y: float, bidirectional: bool, cost: float, tag: String`) - A portal that BLINKS the agent from entrance to exit (a door, a teleporter). Cost 1 is the normal price; raise it to make routes avoid the portal. Tags (comma-separated) group portals for the by-tag actions and expressions. Last Portal Id names it.
 - **Add Gradual Portal** (`from_x: float, from_y: float, to_x: float, to_y: float, bidirectional: bool, speed: float, cost: float, tag: String`) - A portal that MOVES the agent from entrance to exit in a straight line at Speed (a ladder, a lift, a zipline), with the movement sibling paused on the way. Cost 1 prices it by its travel time. Last Portal Id names it.
 - **Add Elevator Stop** (`group: String, x: float, y: float, speed: float, tag: String`) - Adds a stop to an elevator group: two-way gradual portals to every other stop of the group are created for you. One group name per elevator.
 - **Pause At Portal** - Inside On Portal Entered: holds the agent at the entrance so your events can play a door or lift animation first. Then Resume Portal (the portal moves it) or Complete Portal (your events moved it).
@@ -2234,7 +2215,6 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Can Prestige** - Whether prestiging now would bank at least one point.
 
 #### Actions
-- **Configure** (`requirement: float, exponent: float, bonus_per_point: float`) - Sets the requirement (run earnings before you gain a point), the exponent (curve; 0.5 = square-root, the usual), and the bonus each banked point adds to Prestige Multiplier.
 - **Track Earned** (`amount: float`) - Records earnings toward prestige - call it wherever the player earns the prestige currency. Feeds both the run total (drives the gain) and the all-time Total Earned.
 - **Do Prestige** - Banks the current Prestige Gain, raises the prestige level, and clears the run total. Does nothing if the gain is 0. Reset your currencies and generators in the same event, reading Prestige Gain first.
 - **Set Points** (`points: float`) - Forces banked prestige points to a value (for a load or a cheat menu).
@@ -2526,8 +2506,6 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Go To Scene** (`path: String`) - Changes to the scene immediately (no fade).
 - **Reload Scene** - Reloads the current scene immediately (no fade).
 - **Quit Game** - Quits the game (a no-op on platforms that forbid it, like web).
-- **Go To Scene With** (`path: String, transition: String, seconds: float, ease: String`) - Changes to the scene with a transition drawn over it: the shape walks on over the first half, the scene is swapped under the cover, and it walks off again over the second. The shapes are fade, wipe (following the Wipe Image knob), dissolve, iris, blinds, pixelate and page curl. The cover colour is the node's Fade Color. Ignored while a transition is already running; emits On Transition Finished when the new scene is up and the cover is off.
-- **Reload Scene With** (`transition: String, seconds: float, ease: String`) - Reloads the current scene with a transition drawn over it - the polished retry, in whichever shape the game uses everywhere else. Same shapes, same cover colour and same one-at-a-time rule as Go To Scene With; emits On Transition Finished when the fresh scene is up.
 - **Go To Scene With Loading** (`scene: String, min_seconds: float, wait_for_key: bool`) - Shows the node's Loading Scene while the next scene comes off the disk on a thread, then enters it. The wait is over when BOTH the load has finished and the minimum seconds have passed, so the screen cannot flash past on a fast machine; On Loading Progress moves a bar through Scene Load Progress, and Loading Tip answers with one line of the tips file. With Wait For Key on it stops there and waits for Enter Loaded Scene. The node's Loading Transition wraps both halves of the change.
 - **Enter Loaded Scene** - Enters the scene a loading screen has been holding. Does nothing at all while the wait is still on, so a bare "any key pressed" row is safe to leave on the loading screen; it is what Wait For Key waits for.
 
@@ -2720,7 +2698,6 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Is Pool Empty** (`tag: String`) - Whether there are no unowned skins left to roll (optional tag filter).
 
 #### Actions
-- **Register Rarity** (`name: String, weight: float, tier: int`) - Registers a rarity: a roll weight (higher = commoner) and a tier rank (higher = rarer; pity guarantees a tier at or above the pity rarity).
 - **Use Advanced Random** (`enabled: bool`) - When on, rolls draw from the shared AdvancedRandom autoload instead of this pack's own generator, so one seed drives your whole game's randomness. When off (the default) it uses its own generator. Needs the Advanced Random pack installed (it safely falls back to the local generator if not).
 - **Register Skin** (`id: String, display_name: String, rarity: String, cost: float, tags: String`) - Registers a skin: a unique id, a display name, its rarity (must be registered), a cost (0 = not purchasable), and comma-separated tags.
 - **Load Catalog** (`catalog: Resource`) - Registers a whole catalog (rarities + skins) from a Skin Catalog resource (a .tres you filled in the Inspector) in one step. The data-driven alternative to a string of Register Rarity + Register Skin actions.
@@ -2767,7 +2744,6 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Slide** (`direction: String`) - Starts a slide in a direction (left / right / up / down): the character glides until the tile ahead is a wall, then stops snapped to the grid. Ignored while already sliding; fires On Hit Wall immediately if the very next tile is a wall.
 - **Stop Slide** - Stops a slide immediately and snaps the character to the nearest tile.
 - **Snap To Grid** - Snaps the character to the nearest grid intersection right now.
-- **Teleport To Tile** (`tile_x: int, tile_y: int`) - Jumps instantly to a tile coordinate (multiplied by the grid size), cancelling any slide.
 - **Set Grid Size** (`pixels: float`) - Changes the tile size in pixels at runtime.
 
 #### Expressions
@@ -3118,14 +3094,10 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Conditions
 - **Swipe Was** (`direction: String`) - Whether the swipe that just fired went this way ("left", "right", "up", "down", and with eight-way on "up left", "up right", "down left", "down right").
-- **Shape Was** (`shape_name: String`) - Whether the shape that was just drawn is this one.
-- **Knows Shape** (`shape_name: String`) - Whether a shape has been taught under this name.
 
 #### Actions
 - **Set Swipe Thresholds** (`minimum_distance: float, maximum_seconds: float`) - Sets how far (pixels) and how fast (seconds) a drag has to be before it counts as a swipe. The defaults suit a phone held in one hand.
 - **Set Eight Way** (`on: bool`) - Turns the four diagonals on or off. Off, a diagonal swipe reports as whichever of left / right / up / down it leaned towards.
-- **Teach Shape From Stroke** (`shape_name: String`) - Records the stroke that was just drawn as a template under a name. Draw the shape in the running game, then call this - there is no coordinate list to type. The attached shape library is updated straight away and marked changed, so the editor's own Save writes it out; Save Shapes To Library is the explicit write for a running game.
-- **Forget Shape** (`shape_name: String`) - Removes a taught shape, so it stops being matched. The attached library is updated and marked changed the same way teaching updates it.
 - **Load Shapes From Library** - Reads every taught shape out of the attached shape library, replacing what is loaded. Called for you when the behaviour starts.
 - **Save Shapes To Library** - Writes the attached shape library out to its own file, so the shapes taught this run survive it. Teaching already put them in the library - this is the step that puts the library on disk. Says so when no library is attached, or when the one attached has never been saved as a file and so has nowhere to write.
 - **Clear Stroke** - Throws away the stroke gathered so far, so a gesture interrupted by a menu cannot finish afterwards.
@@ -3470,7 +3442,6 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Press Interact** (`id: String`) - Marks a named interact button held and fires On Interact Pressed.
 - **Release Interact** (`id: String`) - Marks a named interact button released and fires On Interact Released.
 - **Simulate Interact** (`id: String`) - Fires a press+release of a named button in one tick.
-- **Set Max Speed** (`speed: float`) - Sets the max cursor speed (px/s).
 - **Set Acceleration** (`rate: float`) - Sets the speed-up rate while an axis is held.
 - **Set Deceleration** (`rate: float`) - Sets the slow-down rate when the axis is released.
 - **Set Velocity** (`vel_x: float, vel_y: float`) - Sets the cursor velocity directly.
@@ -4021,6 +3992,7 @@ Collections (rich variables)
 - **Color From HSV** (`h: String, s: String, v: String, a: String`) - Builds a colour from hue, saturation, value and alpha components.
 - **Color From Hex** (`hex: String`) - Builds a colour from an HTML hex string like #ff8800.
 - **Invert Color** (`color: String`) - Returns the opposite colour, useful for highlight or negative effects.
+- **As Clock Time** (`seconds: String`) - Deprecated. Turns a number of seconds into minutes:seconds text - 90 seconds reads "01:30". For countdown timers, lap times and speedrun clocks.
 - **As Clock Time** (`seconds: String`) - Turns a number of seconds into minutes:seconds text - 90 seconds reads "01:30". For countdown timers, lap times and speedrun clocks.
 - **Progress Of** (`value: String, from: String, to: String`) - Gives how far a value has come through a range, as 0 to 1 - feed it straight into a bar's scale, an alpha, or a colour lerp. This is the inverse_lerp nobody finds, with the clamp already applied.
 - **Percent Of** (`value: String, from: String, to: String`) - The same reading as Progress Of, but as 0 to 100 - the number you show in text, like "73%" health.
@@ -4419,6 +4391,7 @@ Core vocabulary (the Phase-1 surface, fully migrated).
 - **Clipboard Text** - Returns whatever text is currently on the system clipboard.
 - **Performance Monitor** (`monitor: String`) - Returns a live engine performance reading, like FPS or memory, for debugging.
 - **Static Memory (bytes)** - Returns how much memory the game is currently using, in bytes.
+- **Format Time (mm:ss)** (`seconds: String`) - Deprecated. Turns a number of seconds into a tidy mm:ss string for timers and clocks.
 - **Format Time (mm:ss)** (`seconds: String`) - Turns a number of seconds into a tidy mm:ss string for timers and clocks.
 - **Date: Time Text** - Returns the player's current clock time as a text string.
 - **Date: Today** - Returns the player's current calendar date as a text string.
@@ -4933,6 +4906,7 @@ the game shapes every project writes by hand
 - **Add Mission Time** (`var_name: String, seconds: String`) - Puts time back on the mission clock - the pickup that buys you another half minute.
 
 #### Expressions
+- **Mission Time Left** (`var_name: String`) - Deprecated. Gives the time left as text a player can read - "2:41" - ready to drop into a HUD label.
 - **Mission Time Left** (`var_name: String`) - Gives the time left as text a player can read - "2:41" - ready to drop into a HUD label.
 
 ### Game State (`res://addons/eventforge/registration/modules/game_state_aces.gd`)
@@ -5524,7 +5498,7 @@ one object's own state: asking about it, going to it, and answering a change. Th
 - **On Leaving State** (`state: String`) - Runs the moment this object leaves the given state, before anything answering the state it is entering. Put back here whatever the state switched on - the alarm it raised, the shader it turned red.
 
 #### Conditions
-- **Is In State** (`state: String`) - True while this object is in the given state. The states are declared once, on the states band of this sheet's head, and this row picks one of them.
+- **Is In State** (`state: String`) - True while this object is in the given state. The states are declared once, in the state row of this sheet, and this row picks one of them.
 - **Is In State For Over** (`state: String, seconds: float`) - True while this object has been in the given state for longer than that many seconds - the timed half of Is in. The clock restarts every time the state changes, so a stagger that ends after a second is this row and nothing else.
 - **Was In State** (`state: String`) - True while the state this object was in BEFORE the current one is the given state. Answers "what did we come from" - the chase that began from patrolling is a different chase from the one that began from being staggered.
 

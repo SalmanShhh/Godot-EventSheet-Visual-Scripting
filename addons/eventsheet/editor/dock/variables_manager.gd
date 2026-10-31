@@ -156,6 +156,10 @@ func _collect_sheet_variable_names() -> PackedStringArray:
 
 
 func _on_viewport_variable_edit_requested(row_data: EventRowData, metadata: Dictionary) -> void:
+	# The state row is a machine, not a variable: what it edits is its states, in their own window.
+	if bool(metadata.get("state_machine", false)):
+		_dock.open_states_dialog()
+		return
 	# A "globals used here" row stands for a declaration in ANOTHER file. Editing it opens that
 	# file as a sheet, where the declaration can actually change; there is nothing here to edit.
 	var declared_in: String = str(metadata.get("include_path", "")).strip_edges()

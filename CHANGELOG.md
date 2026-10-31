@@ -54,6 +54,34 @@
   of sliding. Every colour comes from the editor theme, so dark and light need nothing of their
   own.
 
+### Changed: States on the sheet - one row, one spelling
+
+- **A state machine is one row.** The enum, the `state` variable and its default now read as a single row:
+  the state glyph, the type, the variable's own name, "is one of", the states exactly as the code writes them
+  with the default marked "(default)", and the machine's `##` description muted and italic like any
+  variable's note. The head's "states Idle · Run · Jump - starts in Idle" band is gone, and the declarations
+  that only serve the machine (`previous_state`, `state_entered_msec`, the `state_changed` signal, the
+  state variable's setter rows) stay in the code but are not drawn. A helper written differently by hand
+  still shows.
+- **Names as written, everywhere.** `IDLE` is never re-cased to "Idle": the row, the conditions and
+  actions, the triggers, the trail, the Doctor and the pickers all say what the code says.
+- **The state variable is the object of its rows.** "state is RUN", "state was JUMP", "state go to RUN",
+  "state is RUN for over 2 s" and the triggers "On entering X" / "On leaving X" lead with the state glyph
+  and the variable's name instead of borrowing the host or System. A lifted `match state:` reads as
+  "state is IDLE" sub-events whose assignments read "state go to RUN". (The reading text of the four rows
+  changed from "Is in X" / "Was in X" / "Go to X"; the ids and templates did not.)
+- **Cards.** Every state name on the sheet has a faint dotted rule and a card: its name, "the default
+  state" when it is, and its sentence. Every variable's type (int, float, bool, String, an enum, a node or
+  resource class) has the same rule and a card with one sentence and the page of Godot's documentation it
+  comes from.
+- **Sentences are `##` lines.** An enum row carries the machine's description (the `##` above the enum) and
+  one sentence per member (the `##` above each member); they lift back byte for byte and an enum without
+  them is written exactly as before.
+- **The States window.** Double-click the state row (or choose Declare states): what it is for, the ordered
+  states each with a name, a sentence and a default radio, add, remove (a state rows still use is refused
+  with their count), reorder, and rename - which follows every row, trigger and line of kept code. Exactly
+  one default always: a new machine takes its first state, removing the default moves it to the next.
+
 ### Fixed: Undo works inside the editor
 
 - In the editor, the sheet's Undo and Redo did nothing: Ctrl+Z after a drag-drop (or any other

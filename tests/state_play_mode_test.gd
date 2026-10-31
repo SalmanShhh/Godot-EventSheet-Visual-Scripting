@@ -21,8 +21,8 @@ class_name StatePlayModeTest
 extends RefCounted
 
 ## The states the sheet below declares, and the one it opens in.
-const DECLARED: PackedStringArray = ["Patrol", "Chase", "Stagger"]
-const STARTS_IN: String = "Patrol"
+const DECLARED: PackedStringArray = ["PATROL", "CHASE", "STAGGER"]
+const STARTS_IN: String = "PATROL"
 
 ## What the running game adds to its values frame when the object has states. Pinned as BYTES,
 ## because "the editor reads what the compiler writes" is exactly the pair of halves that drifts.
@@ -193,9 +193,9 @@ static func _test_the_band_reading() -> bool:
 	ok = _check("and a part of one keeps exactly one",
 		EventSheetStateWatch.seconds_text(3.24), "3.2") and ok
 	ok = _check("the enum member is said as the word the whole plugin says it with",
-		EventSheetStateWatch.compose_band("CHASE", 3.2), "current: Chase · 3.2 s") and ok
+		EventSheetStateWatch.compose_band("CHASE", 3.2), "CHASE · 3.2 s") and ok
 	ok = _check("a two-word state too",
-		EventSheetStateWatch.compose_band("GAVE_UP", 0.5), "current: Gave Up · 0.5 s") and ok
+		EventSheetStateWatch.compose_band("GAVE_UP", 0.5), "GAVE_UP · 0.5 s") and ok
 	ok = _check("the progress says the two numbers and nothing else",
 		EventSheetStateWatch.compose_progress(3.2, 6.0), "3.2 of 6") and ok
 
@@ -206,7 +206,7 @@ static func _test_the_band_reading() -> bool:
 		EventSheetStateWatch.progress_reading(6.0), "") and ok
 	EventSheetStateWatch.note_frame({"state": "CHASE", "state_seconds": 3.2})
 	ok = _check("one running game reads as one reading",
-		EventSheetStateWatch.band_reading(), "current: Chase · 3.2 s") and ok
+		EventSheetStateWatch.band_reading(), "CHASE · 3.2 s") and ok
 	ok = _check("and the timed row shows the progress it is waiting on",
 		EventSheetStateWatch.progress_reading(6.0), "3.2 of 6") and ok
 	# Two copies of the game: each says which window it is describing, exactly as the value chips do.
@@ -214,7 +214,7 @@ static func _test_the_band_reading() -> bool:
 	EventSheetStateWatch.note_frame({"state": "PATROL", "state_seconds": 0.5}, "client")
 	ok = _check("two copies of the game read as two labelled readings",
 		EventSheetStateWatch.band_reading(),
-		"host · current: Chase · 3.2 s   client · current: Patrol · 0.5 s") and ok
+		"host · CHASE · 3.2 s   client · PATROL · 0.5 s") and ok
 	EventSheetStateWatch.clear()
 	return ok
 

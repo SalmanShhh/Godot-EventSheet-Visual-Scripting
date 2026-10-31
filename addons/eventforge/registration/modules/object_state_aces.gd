@@ -3,7 +3,7 @@
 # An enemy is patrolling, or chasing, or staggered. That is a VARIABLE - the pattern every event
 # sheet already builds and every Godot project writes as an enum - so these rows are that enum's
 # vocabulary and nothing more. There is no new kind of row here, no group that only runs in a state,
-# and no diagram: the states band on the sheet head is the diagram.
+# and no diagram: the state row is the diagram.
 #
 # Every one of them compiles to the line a person would have written, in most cases the SAME line:
 #
@@ -66,13 +66,13 @@ const STATE_HINT: String = "state_reference"
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
-	descriptors.append(F.cond("InState", "Is In State", "state == State.{state}", CAT, "Is in {state}", "True while this object is in the given state. The states are declared once, on the states band of this sheet's head, and this row picks one of them.").param_built(_state_param()))
+	descriptors.append(F.cond("InState", "Is In State", "state == State.{state}", CAT, "is {state}", "True while this object is in the given state. The states are declared once, in the state row of this sheet, and this row picks one of them.").param_built(_state_param()))
 
-	descriptors.append(F.cond("InStateForOver", "Is In State For Over", "state == State.{state} and (Time.get_ticks_msec() - state_entered_msec) / 1000.0 > {seconds}", CAT, "Is in {state} for over {seconds}s", "True while this object has been in the given state for longer than that many seconds - the timed half of Is in. The clock restarts every time the state changes, so a stagger that ends after a second is this row and nothing else.").param_built(_state_param()).param_built(_seconds_param()))
+	descriptors.append(F.cond("InStateForOver", "Is In State For Over", "state == State.{state} and (Time.get_ticks_msec() - state_entered_msec) / 1000.0 > {seconds}", CAT, "is {state} for over {seconds} s", "True while this object has been in the given state for longer than that many seconds - the timed half of Is in. The clock restarts every time the state changes, so a stagger that ends after a second is this row and nothing else.").param_built(_state_param()).param_built(_seconds_param()))
 
-	descriptors.append(F.cond("WasInState", "Was In State", "previous_state == State.{state}", CAT, "Was in {state}", "True while the state this object was in BEFORE the current one is the given state. Answers \"what did we come from\" - the chase that began from patrolling is a different chase from the one that began from being staggered.").param_built(_state_param()))
+	descriptors.append(F.cond("WasInState", "Was In State", "previous_state == State.{state}", CAT, "was {state}", "True while the state this object was in BEFORE the current one is the given state. Answers \"what did we come from\" - the chase that began from patrolling is a different chase from the one that began from being staggered.").param_built(_state_param()))
 
-	descriptors.append(F.act("GoToState", "Go To State", "state = State.{state}", CAT, "Go to {state}", "Moves this object into another state and says so: On leaving the old one and On entering the new one both run, in that order. Going to the state it is already in changes nothing and announces nothing.").param_built(_state_param()))
+	descriptors.append(F.act("GoToState", "Go To State", "state = State.{state}", CAT, "go to {state}", "Moves this object into another state and says so: On leaving the old one and On entering the new one both run, in that order. Going to the state it is already in changes nothing and announces nothing.").param_built(_state_param()))
 
 	descriptors.append(F.trig("OnEnteringState", "On Entering State", "state_changed", CAT, "On entering {state}", "Runs the moment this object enters the given state, after every On leaving row of the state it came from, so what is being left has finished tidying up before the new one starts. A Go to written inside one of these rows is a second change announced straight away: its own rows run to the end first, and the rows left in this one then run for a state the object has already left.").param_built(_state_param()))
 

@@ -203,6 +203,7 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 			continue
 		var lifted_enum: EnumRow = _try_lift_enum(line)
 		if lifted_enum != null:
+			_absorb_enum_description(lifted_enum, pending)
 			_flush_pending(pending, sheet)
 			sheet.events.append(lifted_enum)
 			index += 1
@@ -216,6 +217,8 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 			continue
 		var lifted_block: Dictionary = _try_lift_custom_block(lines, index)
 		if not lifted_block.is_empty():
+			if lifted_block["row"] is EnumRow:
+				_absorb_enum_description(lifted_block["row"] as EnumRow, pending)
 			_flush_pending(pending, sheet)
 			sheet.events.append(lifted_block["row"])
 			index += int(lifted_block["consumed"])
@@ -938,6 +941,32 @@ func _extract_drawer_from_hint(lifted: LocalVariable, line: String) -> void:
 ## siblings are recovered elsewhere and are never tooltips.
 static func _is_variable_doc_line(line: String) -> bool:
 	return line.begins_with("## ") and not line.begins_with("## @")
+
+
+## An enum's own description: the `##` lines sitting directly above its `enum` line. They leave the
+## pending block and become the row's `description`, which writes them back as the same lines in the same
+## place, so the file reads back byte for byte. A line that would not be written back exactly as found
+## (a trailing-space `## `, an annotation) stops the absorb and stays where it was.
+static func _absorb_enum_description(enum_row: EnumRow, pending: PackedStringArray) -> void:
+	var taken: PackedStringArray = PackedStringArray()
+	var cursor: int = pending.size() - 1
+	while cursor >= 0:
+		var doc_line: String = pending[cursor]
+		if doc_line == "##":
+			taken.insert(0, "")
+		elif doc_line.begins_with("## ") and not doc_line.begins_with("## @") and not doc_line.substr(3).is_empty():
+			taken.insert(0, doc_line.substr(3))
+		else:
+			break
+		cursor -= 1
+	if taken.is_empty():
+		return
+	# A description that opens or closes on an empty line would not read back as one.
+	if taken[0].is_empty() or taken[taken.size() - 1].is_empty():
+		return
+	enum_row.description = "
+".join(taken)
+	pending.resize(pending.size() - taken.size())
 
 
 ## The `##` description written right above `pending[cursor]` and up: every line of it, read as one

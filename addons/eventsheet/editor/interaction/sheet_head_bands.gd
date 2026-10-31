@@ -209,8 +209,11 @@ static func facts(sheet: EventSheetResource, scaffold_code: String, attached: bo
 	head["modes_echo"] = EventSheetModeFacts.band_echo(sheet)
 	# And this OBJECT's own states, when this sheet is the one that declares them - the same fact one
 	# level down, read the same way, from the sheet's own declarations.
-	head["states"] = EventSheetStateFacts.band_reading(sheet)
-	head["states_echo"] = EventSheetStateFacts.band_echo(sheet)
+	# The machine is ONE row of the sheet (the state row), so no band says it a second time; the head only
+	# remembers whether states are declared, which is what decides whether to offer declaring them.
+	head["states"] = ""
+	head["states_declared"] = EventSheetStateFacts.declares_states(sheet)
+	head["states_echo"] = ""
 	return head
 
 
@@ -399,7 +402,7 @@ static func addable(head_facts: Dictionary) -> PackedStringArray:
 	# States are the mirror offer, one level down: an OBJECT's own machine, so they are offered on
 	# every sheet that is not the game's spine. A sheet that IS an autoload is the game, and what a
 	# game has is modes.
-	if str(head_facts.get("states", "")).strip_edges().is_empty() \
+	if not bool(head_facts.get("states_declared", false)) \
 			and str(head_facts.get("autoload", "")).strip_edges().is_empty():
 		offers.append(BAND_STATES)
 	return offers

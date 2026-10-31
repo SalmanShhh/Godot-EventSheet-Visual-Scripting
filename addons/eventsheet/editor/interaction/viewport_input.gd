@@ -153,7 +153,7 @@ func handle_mouse_motion(event: InputEventMouseMotion) -> void:
 	# is the only thing that talks then, and a card under the pointer would take the drop.
 	if not _viewport._drag_motion.active:
 		if not _viewport.update_badge_card(hit, local_position) and not _viewport.update_event_number_card(hit):
-			_viewport.update_head_card(hit)
+			_viewport.update_head_card(hit, false, local_position)
 	# Cursor affordance, in priority order: the empty non-cell area of an event row is the
 	# whole-event DRAG handle (✥ move cursor) - dragging there reorders the event or nests it as a
 	# sub-event, so the previously-dead space reads as grabbable; everything else is the arrow.

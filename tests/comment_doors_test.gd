@@ -89,8 +89,8 @@ static func _test_a_proven_noun_is_a_door() -> bool:
 	var scene_root: Node = _scene()
 	var table: Dictionary = _live_table(_sheet(), scene_root)
 	var ok: bool = SUPPORT.pin_table("comment_doors", {
-		"Patrol until %HealthBar drops, then begin_chase and hunt them down":
-			PackedStringArray(["state:Patrol", "node:%HealthBar", "function:begin_chase"]),
+		"PATROL until %HealthBar drops, then begin_chase and hunt them down":
+			PackedStringArray(["state:PATROL", "node:%HealthBar", "function:begin_chase"]),
 		"the $Sprite flips when it turns around":
 			PackedStringArray(["node:$Sprite"]),
 		"PATROL is the one it opens in":
@@ -131,16 +131,16 @@ static func _test_prose_that_proves_nothing_stays_prose() -> bool:
 	return ok
 
 
-## A declared state reads as WORDS ("Gave Up"), and a reader writes it that way in a note. So the
+## A declared state reads as written ("GAVE_UP"), and a reader writes it that way in a note. So the
 ## phrase is one door rather than two half-doors or none - and a phrase glued to a longer word is
 ## not the state at all.
 static func _test_a_state_spelled_as_two_words_is_one_door() -> bool:
 	var scene_root: Node = _scene()
 	var table: Dictionary = _live_table(_sheet(), scene_root)
 	var ok: bool = SUPPORT.pin_table("comment_doors", {
-		"it has Gave Up written all over it": PackedStringArray(["state:Gave Up"]),
+		"it has GAVE_UP written all over it": PackedStringArray(["state:GAVE_UP"]),
 		"GAVE_UP is the member behind it": PackedStringArray(["state:GAVE_UP"]),
-		"Gave Upwards is nothing at all": PackedStringArray(),
+		"GAVE_UPWARDS is nothing at all": PackedStringArray(),
 	}, func(line: String) -> Variant: return _read(line, table))
 	EventSheetCompletions.scene_root_override = null
 	scene_root.free()
@@ -173,7 +173,7 @@ static func _test_the_first_claim_on_a_name_wins() -> bool:
 	var table: Dictionary = EventSheetCommentDoors.build_table([[] as Array[Dictionary],
 		states, [] as Array[Dictionary], functions, [] as Array[Dictionary]])
 	return SUPPORT.pin_value("comment_doors", "the state's word beats the function of the same name",
-		_read("go back to Chase", table), PackedStringArray(["state:Chase"]))
+		_read("go back to CHASE", table), PackedStringArray(["state:CHASE"]))
 
 
 ## The performance contract, which is the reason this can run on every comment row of every rebuild:

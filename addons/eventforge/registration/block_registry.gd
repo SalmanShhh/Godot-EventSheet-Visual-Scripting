@@ -308,14 +308,27 @@ class EnumBlockKind extends EventSheetBlockKind:
 		var members: PackedStringArray = _clean_members(enum_row)
 		if members.is_empty():
 			return PackedStringArray()
-		if not enum_row.multiline:
-			return PackedStringArray(["enum %s { %s }" % [enum_row.enum_name.strip_edges(), ", ".join(members)]])
-		var out: PackedStringArray = PackedStringArray(["enum %s {" % enum_row.enum_name.strip_edges()])
+		var out: PackedStringArray = _doc_lines(enum_row.description, "")
+		# A sentence above a member needs a line of its own for that member.
+		if not enum_row.multiline and not enum_row.has_member_notes():
+			out.append("enum %s { %s }" % [enum_row.enum_name.strip_edges(), ", ".join(members)])
+			return out
+		out.append("enum %s {" % enum_row.enum_name.strip_edges())
 		for member_index: int in members.size():
 			var is_last: bool = member_index == members.size() - 1
+			out.append_array(_doc_lines(enum_row.note_for(members[member_index]), "\t"))
 			out.append("\t%s%s" % [members[member_index], "" if is_last and not enum_row.trailing_comma else ","])
 		out.append("}")
 		return out
+
+	## `text` as `##` lines (a bare `##` for an empty line), each behind `indent`; nothing for "".
+	func _doc_lines(text: String, indent: String) -> PackedStringArray:
+		var doc: PackedStringArray = PackedStringArray()
+		if text.strip_edges().is_empty():
+			return doc
+		for part: String in text.split("\n"):
+			doc.append("%s##" % indent if part.is_empty() else "%s## %s" % [indent, part])
+		return doc
 
 	func lift(lines: PackedStringArray, i: int) -> Dictionary:
 		var line: String = lines[i]
@@ -351,10 +364,16 @@ class EnumBlockKind extends EventSheetBlockKind:
 		multiline_row.multiline = true
 		multiline_row.members = PackedStringArray()
 		var scan: int = i + 1
+		var note_lines: PackedStringArray = PackedStringArray()
 		while scan < lines.size() and lines[scan] != "}":
 			var member_line: String = lines[scan]
 			if not member_line.begins_with("\t") or member_line.strip_edges().is_empty():
 				return {}
+			# A `##` line inside the block is the sentence for the member right under it.
+			if member_line == "\t##" or (member_line.begins_with("\t## ") and not member_line.begins_with("\t## @")):
+				note_lines.append("" if member_line == "\t##" else member_line.substr(4))
+				scan += 1
+				continue
 			var member_text: String = member_line.substr(1)
 			if member_text.ends_with(","):
 				member_text = member_text.substr(0, member_text.length() - 1)
@@ -364,7 +383,12 @@ class EnumBlockKind extends EventSheetBlockKind:
 			if member_text.strip_edges().is_empty() or member_text.contains("\t"):
 				return {}
 			multiline_row.members.append(member_text)
+			if not note_lines.is_empty():
+				multiline_row.member_notes[EnumRow.bare_name(member_text)] = "\n".join(note_lines)
+				note_lines = PackedStringArray()
 			scan += 1
+		if not note_lines.is_empty():
+			return {}
 		if scan >= lines.size() or multiline_row.members.is_empty():
 			return {}
 		var consumed: int = scan - i + 1

@@ -3547,8 +3547,16 @@ func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
 	if entry is RawCodeRow and not _row_diagnostics.has(str(entry.get_instance_id())) \
 			and not ViewportRowBuilder.host_binding_class((entry as RawCodeRow).code).is_empty():
 		return null
+	# A state machine is ONE row. The enum row stands for it, and the declarations that only serve it
+	# (the state variable, the previous state, the entered time, the state_changed signal) are not drawn:
+	# they stay in the code, and the state row's own card lists them.
+	if (entry is LocalVariable or entry is SignalRow) and EventSheetStateFacts.hides_declaration(_sheet, entry):
+		return null
 	var row_data: EventRowData = null
-	if entry is EventGroup:
+	if entry is EnumRow and (entry as EnumRow).enum_name.strip_edges() == EventSheetStateFacts.ENUM_NAME \
+			and EventSheetStateFacts.machine(_sheet).get("enum") == entry:
+		row_data = _row_builder.build_state_row(EventSheetStateFacts.machine(_sheet), indent)
+	elif entry is EventGroup:
 		row_data = _row_builder._build_group_row(entry as EventGroup, indent)
 	elif entry is CommentRow:
 		row_data = _row_builder._build_comment_row(entry as CommentRow, indent)
@@ -4561,9 +4569,18 @@ func _trigger_icon_tooltip(row_index: int, logical_position: Vector2) -> String:
 ## count (at once on a click, `at_once`), and let go when it leaves the word and the card both. The
 ## card is a Control floated over the canvas - the row only carries its words in the span's metadata
 ## (`head_card`) - and its doors come back as head actions, the same signal the bands' gestures use.
-func update_head_card(hit: Dictionary, at_once: bool = false) -> void:
+func update_head_card(hit: Dictionary, at_once: bool = false, logical_position: Vector2 = Vector2(-1.0, -1.0)) -> void:
 	var metadata: Variant = hit.get("span_metadata", {})
 	var card: Variant = (metadata as Dictionary).get("head_card") if metadata is Dictionary else null
+	# A word INSIDE a sentence (a state's name in "is RUN") carries its card in the rectangle it drew in,
+	# so the card is the one under the pointer, and the card hangs from that word and not from the cell.
+	var word_rect: Rect2 = Rect2()
+	if (not (card is Dictionary) or (card as Dictionary).is_empty()) and metadata is Dictionary:
+		for entry: Variant in ((metadata as Dictionary).get("word_card_rects", []) as Array):
+			if entry is Dictionary and ((entry as Dictionary).get("rect") as Rect2).has_point(logical_position):
+				card = (entry as Dictionary).get("card")
+				word_rect = (entry as Dictionary).get("rect") as Rect2
+				break
 	if not (card is Dictionary) or (card as Dictionary).is_empty():
 		if _head_card != null:
 			_head_card.call("leave_word")
@@ -4577,7 +4594,7 @@ func update_head_card(hit: Dictionary, at_once: bool = false) -> void:
 		_head_card.connect("door_pressed", func(action: String) -> void: sheet_head_action_requested.emit(action))
 		add_child(_head_card)
 	var zoom: float = maxf(_zoom_factor, 0.001)
-	var word: Rect2 = row_data.spans[span_index].rect
+	var word: Rect2 = row_data.spans[span_index].rect if word_rect.size == Vector2.ZERO else word_rect
 	var on_screen: Rect2 = get_global_transform() * Rect2(word.position * zoom, word.size * zoom)
 	_head_card.call("hover_word", card, on_screen, at_once)
 
@@ -4681,6 +4698,12 @@ func _get_tooltip(at_position: Vector2) -> String:
 	var card_meta: Variant = hit.get("span_metadata", {})
 	if card_meta is Dictionary and (card_meta as Dictionary).get("head_card") is Dictionary:
 		return ""
+	# And so does a word inside a sentence that has its own card (a state's name in "is RUN").
+	if card_meta is Dictionary:
+		var logical: Vector2 = _to_logical_position(at_position)
+		for word: Variant in ((card_meta as Dictionary).get("word_card_rects", []) as Array):
+			if word is Dictionary and ((word as Dictionary).get("rect") as Rect2).has_point(logical):
+				return ""
 	# Error → row deep-link: a flagged row leads its tooltip with the diagnostic (it matters
 	# more than the codegen preview).
 	var hovered_error_row: EventRowData = _row_at(int(hit.get("row_index", -1)))

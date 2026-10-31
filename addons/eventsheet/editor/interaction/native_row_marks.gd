@@ -75,6 +75,9 @@ const OBJECT_GLYPH_PARAMETER := "parameter"
 const OBJECT_GLYPH_LOCAL := "local"
 ## The head of a class written inside a script: a page with its lines, the icon its members fold under.
 const OBJECT_GLYPH_CLASS := "class"
+## A state machine: three states joined by transitions. The object a state row's conditions and
+## actions are about, and the tile of the state row itself.
+const OBJECT_GLYPH_STATE := "state"
 ## Each head glyph's own ink, [on a dark sheet, on a light sheet]: the function amber, a parameter
 ## blue and a local green, so the three kinds of line tell apart down the column.
 const HEAD_GLYPH_INKS: Dictionary = {
@@ -82,6 +85,7 @@ const HEAD_GLYPH_INKS: Dictionary = {
 	OBJECT_GLYPH_PARAMETER: EventSheetPalette.COLOR_GLYPH_PARAMETER,
 	OBJECT_GLYPH_LOCAL: EventSheetPalette.COLOR_GLYPH_LOCAL,
 	OBJECT_GLYPH_CLASS: EventSheetPalette.COLOR_GLYPH_CLASS,
+	OBJECT_GLYPH_STATE: EventSheetPalette.COLOR_GLYPH_STATE,
 }
 const OBJECT_GLYPHS: Dictionary = {
 	"System": OBJECT_GLYPH_SYSTEM,
@@ -430,6 +434,14 @@ static func draw_object_glyph(control: CanvasItem, rect: Rect2, glyph: String, c
 			control.draw_line(_at(rect, 5.5, 5.5), _at(rect, 10.5, 5.5), color, stroke, true)
 			control.draw_line(_at(rect, 5.5, 8.0), _at(rect, 10.5, 8.0), color, stroke, true)
 			control.draw_line(_at(rect, 5.5, 10.5), _at(rect, 8.5, 10.5), color, stroke, true)
+		OBJECT_GLYPH_STATE:
+			# Two states on top, one below, and the transitions between them.
+			control.draw_arc(_at(rect, 4.0, 5.0), _units(rect, 2.0), 0.0, TAU, 12, color, stroke, true)
+			control.draw_arc(_at(rect, 12.0, 5.0), _units(rect, 2.0), 0.0, TAU, 12, color, stroke, true)
+			control.draw_arc(_at(rect, 8.0, 12.0), _units(rect, 2.0), 0.0, TAU, 12, color, stroke, true)
+			control.draw_line(_at(rect, 6.0, 5.0), _at(rect, 10.0, 5.0), color, stroke, true)
+			control.draw_line(_at(rect, 5.0, 7.0), _at(rect, 7.0, 10.5), color, stroke, true)
+			control.draw_line(_at(rect, 11.0, 7.0), _at(rect, 9.0, 10.5), color, stroke, true)
 		OBJECT_GLYPH_LOCAL:
 			control.draw_rect(Rect2(_at(rect, 2.5, 2.5), Vector2(_units(rect, 11.0), _units(rect, 11.0))), color, false, stroke)
 			control.draw_line(_at(rect, 6.0, 6.0), _at(rect, 10.0, 10.0), color, stroke, true)

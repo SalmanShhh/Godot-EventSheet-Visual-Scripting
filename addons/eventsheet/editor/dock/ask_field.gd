@@ -157,7 +157,9 @@ func _open_declaration(answer: Dictionary) -> void:
 	var sheet: EventSheetResource = _dock._current_sheet
 	var wanted: Resource = null
 	if str(answer.get("kind", "")) == EventSheetCompletions.KIND_STATE:
-		wanted = EventSheetStateFacts.enum_row(sheet)
+		# The machine is the state row, which stands on its variable; a bare enum is its own row.
+		var machine: Dictionary = EventSheetStateFacts.machine(sheet)
+		wanted = machine.get("variable") if not machine.is_empty() else EventSheetStateFacts.enum_row(sheet)
 	else:
 		var name: String = str(answer.get("symbol", ""))
 		for entry: Variant in EventSheetCommandPalette.collect_symbols(sheet):

@@ -54,7 +54,7 @@ func chip_for(row_data: EventRowData) -> String:
 	# "now" is - the band's own words are the LINE of the file it stands for, and a reading that
 	# changes four times a second is not that line. Nothing is written: stop the game and the band is
 	# the declaration again.
-	if is_states_band(row_data):
+	if is_states_band(row_data) or ViewportRowBuilder._is_state_machine_row(row_data):
 		return EventSheetStateWatch.band_reading()
 	var variable_name: String = ""
 	if row_data.source_resource is LocalVariable:

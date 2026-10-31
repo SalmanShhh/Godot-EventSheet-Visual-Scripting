@@ -27,8 +27,8 @@ const ANNOUNCED: String = "res://tests/fixtures/handwritten_state_announced.gd"
 const WOVEN: String = "res://tests/fixtures/handwritten_state_woven.gd"
 
 ## The states the authored sheet below declares, and the one it opens in.
-const DECLARED: PackedStringArray = ["Patrol", "Chase", "Stagger"]
-const STARTS_IN: String = "Patrol"
+const DECLARED: PackedStringArray = ["PATROL", "CHASE", "STAGGER"]
+const STARTS_IN: String = "PATROL"
 
 ## What that sheet compiles to, to the byte. Every line of it is a line a person writes by hand: an
 ## enum, a signal, three variables, the setter that announces a change, and plain `if`s. There is no
@@ -218,11 +218,11 @@ static func _test_the_readings() -> bool:
 		for arm: MatchCase in machine.cases:
 			arms.append(EventSheetStateFacts.arm_reading(arm.pattern))
 		ok = _check("and every arm of it reads as the Is in row it means", arms,
-			PackedStringArray(["Is in Patrol", "Is in Chase", "Is in Stagger"])) and ok
+			PackedStringArray(["is PATROL", "is CHASE", "is STAGGER"])) and ok
 	# The lines INSIDE an arm are kept verbatim so the match re-emits to the byte, so the only thing
 	# that can be done for them is to read them as what they are.
 	ok = _check("a state assignment inside an arm reads as the Go to row it means",
-		EventSheetStateFacts.statement_reading("\t\t\tstate = State.CHASE"), "Go to Chase") and ok
+		EventSheetStateFacts.statement_reading("\t\t\tstate = State.CHASE"), "go to CHASE") and ok
 	ok = _check("and an ordinary line in an arm is not claimed",
 		EventSheetStateFacts.statement_reading("\t\t\tvelocity.x = speed"), "") and ok
 	ok = _check("the catch-all arm keeps its own pattern", EventSheetStateFacts.arm_reading("_"), "") and ok

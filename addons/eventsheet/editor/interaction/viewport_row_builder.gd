@@ -1283,7 +1283,7 @@ func _read_members_in_place(rows: Array[EventRowData]) -> Array[EventRowData]:
 	while index < rows.size():
 		var row_data: EventRowData = rows[index]
 		var source: Resource = row_data.source_resource
-		if row_data.indent == 0 and source is LocalVariable:
+		if row_data.indent == 0 and source is LocalVariable and not _is_state_machine_row(row_data):
 			var variable: LocalVariable = source as LocalVariable
 			output.append(_kept_marks(row_data, _build_reading_variable_row(variable,
 				str(variable.attributes.get("tooltip", "")).strip_edges(), 0)))
@@ -1301,6 +1301,15 @@ func _read_members_in_place(rows: Array[EventRowData]) -> Array[EventRowData]:
 		output.append(row_data)
 		index += 1
 	return output
+
+
+## True for the row that stands for a whole state machine: its spans carry the mark `build_state_row`
+## gives them, and a re-reading of "the variable" must leave it alone or the states would be lost.
+static func _is_state_machine_row(row_data: EventRowData) -> bool:
+	for span: SemanticSpan in row_data.spans:
+		if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("state_machine", false)):
+			return true
+	return false
 
 
 ## `rebuilt`, carrying what the row it replaces was told about itself: a compile error, and the quiet
@@ -3421,7 +3430,8 @@ func _build_knob_group_rows(sheet: EventSheetResource, all_knobs: Array) -> Arra
 	var knobs: Array = []
 	for entry: Variant in all_knobs:
 		var knob_variable: LocalVariable = (entry as Dictionary).get("variable") if entry is Dictionary else null
-		if knob_variable != null and hides_compiler_variable(knob_variable.name):
+		if knob_variable != null and (hides_compiler_variable(knob_variable.name)
+				or EventSheetStateFacts.hides_declaration(sheet, knob_variable)):
 			continue
 		knobs.append(entry)
 	# On an autoload every one of these IS a global variable, exported or not: the whole point
@@ -4833,6 +4843,100 @@ static func state_progress_metadata(condition: ACECondition) -> Dictionary:
 	if not written.is_valid_float():
 		return {}
 	return {ViewportLiveValuesHelper.STATE_PROGRESS_META: written.to_float()}
+
+
+## Where this machine's states are named inside one sentence of a row ("is RUN for over 2 s"): each is
+## a whole word of the text, and each carries the state's card. [] when the sheet has none or the text
+## names none - which is every sentence of every sheet that declares no states.
+func _state_word_cards(text: String) -> Array:
+	var found: Array = []
+	var sheet: EventSheetResource = _viewport._sheet as EventSheetResource
+	for member: String in EventSheetStateFacts.bare_members(sheet):
+		var card: Dictionary = EventSheetStateFacts.state_card(sheet, member)
+		var from: int = 0
+		while from < text.length():
+			var at: int = text.find(member, from)
+			if at < 0:
+				break
+			from = at + member.length()
+			var before_ok: bool = at == 0 or not _is_word_char(text.unicode_at(at - 1))
+			var after_ok: bool = from >= text.length() or not _is_word_char(text.unicode_at(from))
+			if before_ok and after_ok:
+				found.append({"start": at, "length": member.length(), "card": card})
+	return found
+
+
+static func _is_word_char(code: int) -> bool:
+	return code == 95 or (code >= 48 and code <= 57) or (code >= 65 and code <= 90) or (code >= 97 and code <= 122)
+
+
+## The state machine as ONE row: the state icon, the type, the variable's own name, "is one of", the
+## states exactly as the code writes them with the default marked, and what the machine is for - muted and
+## italic like any variable's note. It reads the enum and the variable together, so it stands where the
+## enum stood and stands in for both: the sheet says the machine once.
+##
+## The row is the variable's row (same keys, same selection, same gutter) with its value replaced by the
+## list of states, and every word of it that names a state carries the state's own card. Nothing here
+## writes anything: the declarations stay in the code, the helper ones among them.
+func build_state_row(machine: Dictionary, indent: int) -> EventRowData:
+	var variable: LocalVariable = machine["variable"] as LocalVariable
+	var enum_row: EnumRow = machine["enum"] as EnumRow
+	var sheet: EventSheetResource = _viewport._sheet as EventSheetResource
+	var row_data: EventRowData = _build_variable_row("tree", variable.name, variable.type_name,
+		variable.default_value, indent, {
+			"is_constant": false,
+			"exported": false,
+			"expression_default": true,
+			"source_resource": variable,
+			"row_uid": "variable_tree_%d" % variable.get_instance_id(),
+			"reading_scope": _member_scope_key(variable),
+			"description": EventSheetStateFacts.machine_description(sheet),
+		})
+	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
+	var style: EventSheetEventStyle = _viewport._get_event_style()
+	var default_member: String = EventSheetStateFacts.default_member(sheet)
+	var row_meta: Dictionary = {"state_machine": true, "kind": "variable", "editable": false, "variable_name": variable.name}
+	# The value goes: the states take its place, right after the name.
+	var at: int = -1
+	for index: int in row_data.spans.size():
+		var metadata: Variant = row_data.spans[index].metadata
+		if metadata is Dictionary and bool((metadata as Dictionary).get("variable_value_span", false)):
+			at = index
+			break
+	var states: Array[SemanticSpan] = [_make_span(EventSheetL10n.translate("is one of"),
+		SemanticSpan.SpanType.COMMENT, row_meta.merged({"text_color": reading_style.muted_text_color}, true))]
+	var members: PackedStringArray = EventSheetStateFacts.bare_members(sheet)
+	for member_index: int in members.size():
+		var member: String = members[member_index]
+		states.append(_make_span(member, SemanticSpan.SpanType.VALUE, row_meta.merged({
+			"state_name": member,
+			"text_color": style.value_highlight_color,
+			"hover_card_mark": true,
+			"head_card": EventSheetStateFacts.state_card(sheet, member),
+		}, true)))
+		if member == default_member:
+			states.append(_make_span(EventSheetL10n.translate("(default)"), SemanticSpan.SpanType.COMMENT,
+				row_meta.merged({"text_color": reading_style.muted_text_color}, true)))
+		if member_index < members.size() - 1:
+			states.append(_make_span("·", SemanticSpan.SpanType.COMMENT, row_meta.merged({
+				"text_color": reading_style.muted_text_color}, true)))
+	if at >= 0:
+		# The "=" before the value goes with it.
+		if at > 0 and row_data.spans[at - 1].text == "=":
+			row_data.spans.remove_at(at - 1)
+			at -= 1
+		row_data.spans.remove_at(at)
+		for added: int in states.size():
+			row_data.spans.insert(at + added, states[added])
+	# Every span of the row knows it stands for a machine, so a double-click anywhere on it opens the
+	# States window rather than the variable's own dialog. The type word wears the state glyph.
+	for span: SemanticSpan in row_data.spans:
+		if span.metadata is Dictionary:
+			(span.metadata as Dictionary)["state_machine"] = true
+			if bool((span.metadata as Dictionary).get("variable_type_span", false)):
+				(span.metadata as Dictionary)["object_glyph"] = NativeRowMarks.OBJECT_GLYPH_STATE
+				(span.metadata as Dictionary)["object_icon"] = _glyph_icon_slot()
+	return row_data
 
 
 ## An enum row: rendered like a variable declaration ("enum  State { IDLE, RUN }");
@@ -10777,6 +10881,24 @@ func _match_else_if_condition_spans(subject: String, pattern: String, chain_inde
 	for carried: SemanticSpan in carrier.spans:
 		_say_equals_once(carried, " %s " % EventSheetL10n.translate("is") if branch else " = ")
 		spans.append(carried)
+	# One arm of the object's own machine reads as the Is row does everywhere else: the state variable
+	# as the object, then "is IDLE" - not the host's or System's "state is IDLE".
+	if branch and tests.size() == 1 and EventSheetStateFacts.is_state_subject(subject):
+		var member: String = _sheet_enum_member(text)
+		if not EventSheetStateFacts.bare_members(_viewport._sheet as EventSheetResource).has(member):
+			return spans
+		for index: int in spans.size():
+			var read: SemanticSpan = spans[index]
+			if str(read.metadata.get("kind", "")) != "condition":
+				continue
+			read.text = "%s %s" % [EventSheetL10n.translate("is"), member]
+			for stale: String in ["bbcode_segments", "value_ranges", "param_ranges", "variable_ranges"]:
+				read.metadata.erase(stale)
+			read.metadata["object_label"] = EventSheetStateFacts.STATE_VARIABLE
+			read.metadata["object_glyph"] = NativeRowMarks.OBJECT_GLYPH_STATE
+			read.metadata["object_icon"] = _glyph_icon_slot()
+			read.metadata["word_cards"] = _state_word_cards(read.text)
+			break
 	return spans
 
 
@@ -10985,14 +11107,17 @@ func _transition_child_row(case_lines: PackedStringArray, indent: int, match_row
 
 
 ## A Go to step inside a switch on the object's own state is said by the state facts rather than the
-## sentence layer, so it is given the object an event's Go to row names: System.
+## sentence layer, so it is given the object an event's Go to row names: the state variable.
 func _name_stepped_objects(row: EventRowData, stepped_lines: Dictionary) -> void:
 	if stepped_lines.is_empty():
 		return
 	for span: SemanticSpan in row.spans:
 		if str(span.metadata.get("kind", "")) == "match_case" and str(span.metadata.get("lane", "")) == "action" \
 				and stepped_lines.has(int(span.metadata.get("line_index", -1))):
-			span.metadata["object_label"] = _object_label_for("Core", "")
+			span.metadata["object_label"] = EventSheetStateFacts.STATE_VARIABLE
+			span.metadata["object_glyph"] = NativeRowMarks.OBJECT_GLYPH_STATE
+			span.metadata["object_icon"] = _glyph_icon_slot()
+			span.metadata["word_cards"] = _state_word_cards(span.text)
 
 
 ## Whether a match subject is state-shaped: its trailing identifier (after any `.`/`(`) contains
@@ -12456,6 +12581,14 @@ func _build_variable_row(
 			var inferred: bool = bool(options.get("type_inferred", false))
 			var code_type: String = NativeVariableMarks.gdscript_type_word(type_name, default_value,
 				bool(options.get("expression_default", false)))
+			# Every type word has a dotted rule and a card: one sentence about the type, and the page of
+			# Godot's own documentation it comes from. The card says where the type came from too, so the
+			# old tooltip folds into it rather than saying the same thing beside it.
+			var type_card: Dictionary = EventSheetTypeCards.card_for(code_type, _viewport._sheet as EventSheetResource)
+			if not type_card.is_empty():
+				type_card["notes"] = (type_card["notes"] as PackedStringArray) + PackedStringArray([
+					EventSheetL10n.translate("%s (inferred) - no type is written in the code, so Godot takes it from the default value. Properties... can write it.") % code_type
+					if inferred else EventSheetL10n.translate("%s - the type written in the code.") % code_type])
 			row_data.spans.append(
 				_make_span(
 					type_word,
@@ -12469,8 +12602,11 @@ func _build_variable_row(
 						# Which colour family the type word paints in (View > Value Glyphs). A fact,
 						# not a colour: the painter asks the theme, so the reading never moves.
 						"variable_type_family": type_family,
-						"hover_note": EventSheetL10n.translate("%s (inferred) - no type is written in the code, so Godot takes it from the default value. Properties... can write it.") % code_type
-							if inferred else EventSheetL10n.translate("%s - the type written in the code.") % code_type
+						"hover_card_mark": not type_card.is_empty(),
+						"head_card": type_card,
+						"hover_note": "" if not type_card.is_empty() else (
+							EventSheetL10n.translate("%s (inferred) - no type is written in the code, so Godot takes it from the default value. Properties... can write it.") % code_type
+							if inferred else EventSheetL10n.translate("%s - the type written in the code.") % code_type)
 					}, true)
 				)
 			)
@@ -17008,6 +17144,9 @@ func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, f
 	if _viewport.show_value_glyphs:
 		if bool(metadata.get("variable_type_span", false)) and not str(metadata.get("variable_type_family", "")).is_empty():
 			span_width = NativeVariableMarks.type_word_width(display_text, font, draw_font_size)
+			# The state row's type word leads with the state glyph, in the room the painter gives it.
+			if metadata.get("object_icon") is Texture2D:
+				span_width += EventRowRenderer.OBJECT_ICON_ADVANCE
 		match str(metadata.get("value_glyph", "")):
 			NativeVariableMarks.GLYPH_VECTOR:
 				span_width = NativeVariableMarks.vector_width(
@@ -17188,6 +17327,10 @@ func _object_label_for(provider_id: String, ace_id: String, params: Dictionary =
 	if (provider_id.is_empty() or provider_id == "Core") and ace_id == "CallFunction":
 		var own_object: String = _script_object_name()
 		return own_object if not own_object.is_empty() else EventSheetL10n.translate("Functions")
+	# A state machine's rows are about the state VARIABLE: "state  is RUN", "state  go to JUMP". The
+	# variable is the object, the way a Node is, rather than the host or System borrowing the sentence.
+	if (provider_id.is_empty() or provider_id == "Core") and EventSheetStateFacts.is_state_vocabulary(ace_id):
+		return EventSheetStateFacts.STATE_VARIABLE
 	var definition: ACEDefinition = _viewport._find_definition(provider_id, ace_id)
 	if definition != null:
 		var node_type: String = str(definition.metadata.get("node_type", "")).strip_edges()
@@ -19982,6 +20125,11 @@ func _object_label_or_pending(provider_id: String, ace_id: String, params: Dicti
 	var pending: String = _pending_object_label
 	_pending_object_label = ""
 	var label: String = pending if not pending.is_empty() else _object_label_for(provider_id, ace_id, params)
+	# The state variable is the object of its own rows, named as written: it is not re-read as the class
+	# of its type ("State"), because the machine is the thing, and the variable is its name.
+	if label == EventSheetStateFacts.STATE_VARIABLE and EventSheetStateFacts.is_state_vocabulary(ace_id):
+		_pending_object_note = ""
+		return label
 	# A "__" copy of a scene is named by the scene it was made from, and a "__" loop name by what the
 	# loop walks (fold_compiler_helpers).
 	if _spawn_copy_names.has(label):
@@ -20658,6 +20806,15 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 					for entry: Variant in _pending_param_ranges.get("ranges", []):
 						shifted.append([int(entry[0]) + at, int(entry[1])])
 					span.metadata["param_ranges"] = shifted
+	# The state variable wears the state glyph where an object wears its icon.
+	if str(span.metadata.get("object_label", "")) == EventSheetStateFacts.STATE_VARIABLE 			and str(span.metadata.get("kind", "")) in ["condition", "trigger", "action"] 			and not span.metadata.has("object_glyph"):
+		span.metadata["object_glyph"] = NativeRowMarks.OBJECT_GLYPH_STATE
+		if not (span.metadata.get("object_icon") is Texture2D):
+			span.metadata["object_icon"] = _glyph_icon_slot()
+		# And every state named in the sentence is a word with a card behind it.
+		var state_words: Array = _state_word_cards(span.text)
+		if not state_words.is_empty():
+			span.metadata["word_cards"] = state_words
 	# The muted variable name that belongs to the object label this span was just given. Only
 	# a span that actually carries a label takes it; the flag is cleared either way, so it can never
 	# land on the next row.

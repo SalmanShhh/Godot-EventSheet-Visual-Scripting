@@ -152,7 +152,7 @@ const HINT_PARAGRAPHS: Dictionary = {
 	# dialog marks such a parameter (`reads_sheet_groups`) and the strip reads this row instead.
 	"sheet_group": "A group of this sheet, or of a sheet it includes. The row stores the name the code switches, so renaming the group later takes this row with it.",
 	"mode_reference": "One of the game's declared modes. They are declared once, on the modes band of the Game sheet's head - a mode that is not in this list has not been declared yet.",
-	"state_reference": "One of THIS object's declared states. They are declared once, on the states band of this sheet's head, and picking from this list is what makes a misspelled state impossible - a state that is not here has not been declared yet.",
+	"state_reference": "One of THIS object's declared states. They are declared once, in the state row of this sheet, and picking from this list is what makes a misspelled state impossible - a state that is not here has not been declared yet.",
 	"scene_node": "A node in the open scene - drag it in from the Scene dock or pick it from the list; the code uses its path.",
 	"scene_path": "A scene file from the project. Browse opens the file picker; the code loads the path.",
 	"audio_path": "A sound file from the project. The play button previews it without leaving the dialog.",

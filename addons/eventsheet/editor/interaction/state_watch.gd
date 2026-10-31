@@ -107,13 +107,23 @@ static func band_reading() -> String:
 	return "   ".join(readings)
 
 
+## The states the running games are in right now, as the members they sent - what the state row lights up.
+static func live_members() -> PackedStringArray:
+	var members: PackedStringArray = PackedStringArray()
+	for instance: Variant in _frames:
+		var member: String = str((_frames[instance] as Dictionary).get("state", "")).strip_edges()
+		if not member.is_empty() and not members.has(member):
+			members.append(member)
+	return members
+
+
 ## One game's band reading. The state arrives as the enum MEMBER the game sent (CHASE) and is said
 ## as the word the whole plugin says it with, so the band, the dropdown and the row cannot spell one
 ## state three ways. "" for a frame that named no state.
 static func compose_band(member: String, seconds: float) -> String:
 	if member.strip_edges().is_empty():
 		return ""
-	return EventSheetL10n.translate("current: %s · %s s") % [
+	return EventSheetL10n.translate("%s · %s s") % [
 		EventSheetStateFacts.word_for(member.strip_edges()), seconds_text(seconds)]
 
 

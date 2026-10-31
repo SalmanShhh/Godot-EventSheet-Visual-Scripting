@@ -163,7 +163,7 @@ static func _test_player() -> bool:
 			_line_with(lines, "Is on floor", 0),
 			"System: Every tick (physics) | [not] ReadingTestPlayer: Is on floor | ReadingTestPlayer: Apply gravity GRAVITY (per second)"],
 		["the same test inside a match branch reads the same words on the same object",
-			_line_with(lines, "Is on floor", 1), "ReadingTestPlayer: Is on floor | System: Go to Idle"],
+			_line_with(lines, "Is on floor", 1), "ReadingTestPlayer: Is on floor | state: go to IDLE"],
 		["a velocity verb leads with the script's own name, not its class",
 			_line_with(lines, "Set velocity Y", 0), "Keyboard: On \"ui_accept\" pressed | ReadingTestPlayer: Set velocity Y to -400"],
 		["a call to the script's own function leads with the script's own name",

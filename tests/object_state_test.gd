@@ -54,12 +54,12 @@ static func _run_reader() -> bool:
 	var sheet: EventSheetResource = _states_sheet()
 	all_passed = _check("the states are the enum's members, as words",
 		EventSheetStateFacts.names(sheet),
-		PackedStringArray(["Patrol", "Chase", "Stagger"])) and all_passed
+		PackedStringArray(["PATROL", "CHASE", "STAGGER"])) and all_passed
 	all_passed = _check("the state it starts in is the variable's own value",
-		EventSheetStateFacts.starts_in(sheet), "Patrol") and all_passed
+		EventSheetStateFacts.starts_in(sheet), "PATROL") and all_passed
 	all_passed = _check("the band is one fact: the states, and the one it starts in",
 		EventSheetStateFacts.band_reading(sheet),
-		"Patrol · Chase · Stagger - starts in Patrol") and all_passed
+		"PATROL · CHASE · STAGGER - starts in PATROL") and all_passed
 	all_passed = _check("and it echoes the line the compiler writes",
 		EventSheetStateFacts.band_echo(sheet),
 		"enum State { PATROL, CHASE, STAGGER }") and all_passed
@@ -67,10 +67,14 @@ static func _run_reader() -> bool:
 		EventSheetStateFacts.bare_members(sheet),
 		PackedStringArray(["PATROL", "CHASE", "STAGGER"])) and all_passed
 
-	# One spelling rule for the whole plugin: states say a member the way the game's modes do.
-	all_passed = _check("a member reads as a word",
-		EventSheetStateFacts.word_for("GAVE_UP"), "Gave Up") and all_passed
-	all_passed = _check("and the word writes back as the member",
+	# Names as written: a state is said the way the code writes it, never re-cased.
+	all_passed = _check("a member reads as written",
+		EventSheetStateFacts.word_for("GAVE_UP"), "GAVE_UP") and all_passed
+	all_passed = _check("an explicit value is dropped and nothing else changes",
+		EventSheetStateFacts.word_for("Stagger = 3"), "Stagger") and all_passed
+	all_passed = _check("a name typed as an identifier is kept exactly",
+		EventSheetStateFacts.member_for("Idle"), "Idle") and all_passed
+	all_passed = _check("a name typed with a space becomes the identifier it must be",
 		EventSheetStateFacts.member_for("Gave Up"), "GAVE_UP") and all_passed
 	return all_passed
 
@@ -142,7 +146,7 @@ static func _run_round_trip() -> bool:
 		return all_passed
 	all_passed = _check("its states are read back",
 		EventSheetStateFacts.names(opened),
-		PackedStringArray(["Patrol", "Chase", "Stagger"])) and all_passed
+		PackedStringArray(["PATROL", "CHASE", "STAGGER"])) and all_passed
 	all_passed = _check("re-emitting reproduces the file byte for byte",
 		str(SheetCompiler.compile(opened, OUT_PATH).get("output", "")), built) and all_passed
 	all_passed = _check("and the Go to line came back as the row it is",
@@ -168,9 +172,9 @@ static func _run_round_trip() -> bool:
 	_write(by_hand)
 	var hand_sheet: EventSheetResource = GDScriptImporter.new().import_external(OUT_PATH)
 	all_passed = _check("a hand-written machine opens with its states read",
-		EventSheetStateFacts.names(hand_sheet), PackedStringArray(["Patrol", "Chase"])) and all_passed
+		EventSheetStateFacts.names(hand_sheet), PackedStringArray(["PATROL", "CHASE"])) and all_passed
 	all_passed = _check("and starting where it says",
-		EventSheetStateFacts.starts_in(hand_sheet), "Patrol") and all_passed
+		EventSheetStateFacts.starts_in(hand_sheet), "PATROL") and all_passed
 	all_passed = _check("the state test came back as the Is in row",
 		_holds_ace(hand_sheet.events, "InState"), true) and all_passed
 	all_passed = _check("and saving it writes their own bytes back",
@@ -182,14 +186,14 @@ static func _run_round_trip() -> bool:
 static func _run_dialog() -> bool:
 	var all_passed: bool = true
 	all_passed = _check("the states field is not a syntax to learn",
-		EventSheetStatesDialog.words_of("Patrol · Chase, Stagger | Dead"),
-		PackedStringArray(["Patrol", "Chase", "Stagger", "Dead"])) and all_passed
+		EventSheetStatesDialog.words_of("PATROL · CHASE, STAGGER | DEAD"),
+		PackedStringArray(["PATROL", "CHASE", "STAGGER", "DEAD"])) and all_passed
 	all_passed = _check("and it says what it will write",
-		EventSheetStatesDialog.in_code(PackedStringArray(["Patrol", "Gave Up"]), "Patrol"),
+		EventSheetStatesDialog.in_code(PackedStringArray(["PATROL", "GAVE_UP"]), "PATROL"),
 		"enum State { PATROL, GAVE_UP } · var state: State = State.PATROL") and all_passed
 	all_passed = _check("as well as what the head will read as",
-		EventSheetStatesDialog.reads_as(PackedStringArray(["Patrol", "Chase"]), "Chase"),
-		"Patrol · Chase - starts in Chase") and all_passed
+		EventSheetStatesDialog.reads_as(PackedStringArray(["PATROL", "CHASE"]), "CHASE"),
+		"PATROL · CHASE - starts in CHASE") and all_passed
 	# ONE ASSEMBLY, so the strip cannot promise a line the head will not draw. Eight states are six
 	# and a count on the band, and the preview says the same - it used to list all eight.
 	var eight: PackedStringArray = PackedStringArray(["One", "Two", "Three", "Four", "Five", "Six",
@@ -204,12 +208,12 @@ static func _run_dialog() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "CharacterBody2D"
 	all_passed = _check("the dialog writes the declarations",
-		EventSheetStatesDialog.write(sheet, PackedStringArray(["Patrol", "Chase"]), "Chase"),
+		EventSheetStatesDialog.write(sheet, PackedStringArray(["PATROL", "CHASE"]), "CHASE"),
 		true) and all_passed
 	all_passed = _check("the sheet now declares states",
-		EventSheetStateFacts.names(sheet), PackedStringArray(["Patrol", "Chase"])) and all_passed
+		EventSheetStateFacts.names(sheet), PackedStringArray(["PATROL", "CHASE"])) and all_passed
 	all_passed = _check("starting in the one it was told",
-		EventSheetStateFacts.starts_in(sheet), "Chase") and all_passed
+		EventSheetStateFacts.starts_in(sheet), "CHASE") and all_passed
 	all_passed = _check("with the two the setter keeps true",
 		[EventSheetStateFacts.variable_row(sheet, EventSheetStateFacts.PREVIOUS_VARIABLE) != null,
 			EventSheetStateFacts.variable_row(sheet, EventSheetStateFacts.SINCE_VARIABLE) != null],
@@ -220,7 +224,7 @@ static func _run_dialog() -> bool:
 
 	# Writing again renames nothing and adds nothing: one declaration is one machine.
 	var before: int = sheet.events.size()
-	EventSheetStatesDialog.write(sheet, PackedStringArray(["Patrol", "Chase"]), "Chase")
+	EventSheetStatesDialog.write(sheet, PackedStringArray(["PATROL", "CHASE"]), "CHASE")
 	all_passed = _check("a second write adds no second copy of anything",
 		sheet.events.size(), before) and all_passed
 	all_passed = _check("and what it wrote compiles",
@@ -230,20 +234,20 @@ static func _run_dialog() -> bool:
 	# and the enum keeps it. One nothing names goes as asked.
 	sheet.events.append(_row("OnReady", [], [_action_ace("GoToState", {"state": "CHASE"})]))
 	all_passed = SUPPORT.check("object_state_test", "removing a state a row goes to is refused, naming it",
-		EventSheetStatesDialog.still_named_states(sheet, PackedStringArray(["Patrol", "Hunt"])),
+		EventSheetStatesDialog.still_named_states(sheet, PackedStringArray(["PATROL", "HUNT"])),
 		PackedStringArray(["CHASE"])) and all_passed
 	all_passed = SUPPORT.check("object_state_test", "and the write changes nothing",
-		[EventSheetStatesDialog.write(sheet, PackedStringArray(["Patrol", "Hunt"]), "Patrol"),
+		[EventSheetStatesDialog.write(sheet, PackedStringArray(["PATROL", "HUNT"]), "PATROL"),
 			EventSheetStateFacts.names(sheet)],
-		[false, PackedStringArray(["Patrol", "Chase"])]) and all_passed
+		[false, PackedStringArray(["PATROL", "CHASE"])]) and all_passed
 	all_passed = SUPPORT.check("object_state_test", "a state no row names can still be removed",
-		[EventSheetStatesDialog.write(sheet, PackedStringArray(["Chase"]), "Chase"),
+		[EventSheetStatesDialog.write(sheet, PackedStringArray(["CHASE"]), "CHASE"),
 			EventSheetStateFacts.names(sheet)],
-		[true, PackedStringArray(["Chase"])]) and all_passed
+		[true, PackedStringArray(["CHASE"])]) and all_passed
 	return all_passed
 
 
-## The refusal is read where the typing was: the dialog stays open with the reason under its form,
+## The refusal is read where the typing was: the window stays open with the reason under its form,
 ## instead of closing and saying it on the status bar behind it.
 static func _run_dialog_refuses_in_place() -> bool:
 	var sheet: EventSheetResource = _states_sheet()
@@ -254,42 +258,31 @@ static func _run_dialog_refuses_in_place() -> bool:
 	var dialog: EventSheetStatesDialog = EventSheetStatesDialog.new()
 	dialog.init(dock)
 	dialog._build()
-	dialog._states_edit.text = "Patrol · Hunt"
-	dialog._refill(EventSheetStatesDialog.words_of(dialog._states_edit.text), "Patrol")
+	dialog._entries = EventSheetStatesDialog.model_of(sheet)["states"]
+	dialog._entries.remove_at(1)
+	dialog._default_index = 0
 	dialog._on_confirmed()
 	var all_passed: bool = SUPPORT.check("object_state_test",
-		"a refused OK keeps the dialog open and says why under the form",
-		[dialog._dialog.dialog_hide_on_ok, dialog._problem_label.visible, dialog._problem_label.text,
+		"a refused Apply keeps the window open and says why under the form",
+		[dialog._problem_label.visible, dialog._problem_label.text,
 			EventSheetStateFacts.names(dock._current_sheet)],
-		[false, true, "Rows still name Chase, so the states were not changed. Point those rows at another state first, then remove or rename it.",
-			PackedStringArray(["Patrol", "Chase", "Stagger"])])
+		[true, "CHASE is still used by 1 row(s), so it was not removed. Point those rows at another state first, then remove it.",
+			PackedStringArray(["PATROL", "CHASE", "STAGGER"])])
 	dock.free()
 	return all_passed
 
 
-## A state leaving the list is named AS IT IS TYPED, with how many rows still say it, before OK is
-## ever pressed - and a list that keeps every named state says nothing.
+## A state leaving the list is named with how many rows still say it, and the plain list form says the same.
 static func _run_dialog_names_rows_as_typed() -> bool:
 	var sheet: EventSheetResource = _states_sheet()
 	sheet.events.append(_row("OnReady", [], [_action_ace("GoToState", {"state": "CHASE"})]))
 	sheet.events.append(_row("OnEnteringState", [], [], {"state": "CHASE"}))
 	sheet.events.append(_row("OnReady", [_condition("InState", {"state": "CHASE"})], []))
-	var dock: EventSheetDock = EventSheetDock.new()
-	dock.setup(sheet)
-	var dialog: EventSheetStatesDialog = EventSheetStatesDialog.new()
-	dialog.init(dock)
-	dialog._build()
-	dialog._states_edit.text = "Patrol · Stagger"
-	dialog._refill(EventSheetStatesDialog.words_of(dialog._states_edit.text), "Patrol")
-	var typed: Array = [dialog._problem_label.visible, dialog._problem_label.text, dialog._problem_label.tone]
-	dialog._states_edit.text = "Patrol · Chase"
-	dialog._refill(EventSheetStatesDialog.words_of(dialog._states_edit.text), "Patrol")
 	var all_passed: bool = SUPPORT.check("object_state_test",
-		"a state leaving the list names how many rows still say it, as it is typed",
-		[typed, dialog._problem_label.visible, dialog._dialog.title, dialog._dialog.ok_button_text],
-		[[true, "Chase left the list - 3 row(s) still say State.CHASE.", EventSheetPopupUI.TONE_WARNING], false,
-			"Declare this object's states", "Declare States"])
-	dock.free()
+		"a state leaving the list names how many rows still say it",
+		[EventSheetStatesDialog.left_list_note(sheet, PackedStringArray(["PATROL", "STAGGER"])),
+			EventSheetStatesDialog.left_list_note(sheet, PackedStringArray(["PATROL", "CHASE"]))],
+		["CHASE left the list - 3 row(s) still say State.CHASE.", ""])
 	return all_passed
 
 
@@ -300,17 +293,17 @@ static func _run_findings() -> bool:
 	var sheet: EventSheetResource = _states_sheet()
 	all_passed = _check("a state nothing goes to and nothing starts in is unreachable",
 		_subjects(EventSheetStateFacts.findings(sheet), EventSheetStateFacts.KIND_STATE_UNREACHABLE),
-		PackedStringArray(["Chase", "Stagger"])) and all_passed
+		PackedStringArray(["CHASE", "STAGGER"])) and all_passed
 	all_passed = _check("said in the words of what is wrong with it",
-		_message_for(EventSheetStateFacts.findings(sheet), "Chase"),
-		"Chase is declared and no row can reach it: nothing goes to it, and the object does not start in it.") and all_passed
+		_message_for(EventSheetStateFacts.findings(sheet), "CHASE"),
+		"CHASE is declared and no row can reach it: nothing goes to it, and the object does not start in it.") and all_passed
 
 	# A Go to clears it, and asking about a state is not a way into it.
 	sheet.events.append(_row("OnProcess", [], [_action_ace("GoToState", {"state": "CHASE"})]))
 	sheet.events.append(_row("OnProcess", [_condition("InState", {"state": "STAGGER"})], []))
 	all_passed = _check("a row that goes there clears it, and a row that only asks does not",
 		_subjects(EventSheetStateFacts.findings(sheet), EventSheetStateFacts.KIND_STATE_UNREACHABLE),
-		PackedStringArray(["Stagger"])) and all_passed
+		PackedStringArray(["STAGGER"])) and all_passed
 
 	# A state from somebody ELSE's family. The dropdown will not write one, so this is what
 	# hand-written code looks like when it is read back.
@@ -320,9 +313,9 @@ static func _run_findings() -> bool:
 	foreign.events.append(_row("OnProcess", [_condition("InState", {"state": "CUTSCENE"})], []))
 	var found: Array[Dictionary] = EventSheetStateFacts.findings(foreign)
 	all_passed = _check("a row naming a state this object does not declare is called out",
-		_kind_for(found, "Cutscene"), EventSheetStateFacts.KIND_STATE_NOT_DECLARED) and all_passed
+		_kind_for(found, "CUTSCENE"), EventSheetStateFacts.KIND_STATE_NOT_DECLARED) and all_passed
 	all_passed = _check("and the object's own states are not",
-		[_kind_for(found, "Patrol"), _kind_for(found, "Chase")], ["", ""]) and all_passed
+		[_kind_for(found, "PATROL"), _kind_for(found, "CHASE")], ["", ""]) and all_passed
 
 	# A sheet that declares no states says nothing at all, which is every object that has none.
 	all_passed = _check("and an object with no states grows no findings",
@@ -348,7 +341,7 @@ static func _run_findings() -> bool:
 	all_passed = _check("so only the arm nothing goes to is called unreachable",
 		_subjects(EventSheetStateFacts.findings(tutorial),
 			EventSheetStateFacts.KIND_STATE_UNREACHABLE),
-		PackedStringArray(["Stagger"])) and all_passed
+		PackedStringArray(["STAGGER"])) and all_passed
 	# A match on something ELSE is not this object's machine, whatever its arms assign.
 	arms.match_expression = "phase"
 	all_passed = _check("and a match on another subject reaches nothing here",
@@ -423,7 +416,7 @@ static func _run_starting_hold() -> bool:
 	var all_passed: bool = true
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Node"
-	EventSheetStatesDialog.write(sheet, PackedStringArray(["Patrol", "Chase"]), "Patrol")
+	EventSheetStatesDialog.write(sheet, PackedStringArray(["PATROL", "CHASE"]), "PATROL")
 	all_passed = _check("the dialog declares the clock as the clock, not as zero",
 		EventSheetStateFacts.variable_row(sheet, EventSheetStateFacts.SINCE_VARIABLE).default_value,
 		EventSheetStateFacts.SINCE_INITIAL) and all_passed
