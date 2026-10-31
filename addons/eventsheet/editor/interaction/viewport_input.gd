@@ -435,7 +435,7 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		# still renames the class.
 		if not event.double_click and bool(metadata.get("file_options", false)):
 			head_action = "file_options"
-		if not event.double_click and not head_action.is_empty() and head_action != EventSheetHeadBands.BAND_NAME:
+		if not event.double_click and not head_action.is_empty():
 			_viewport._select_from_click(row_index, span_index, false)
 			_viewport.sheet_head_action_requested.emit(head_action)
 			_viewport.accept_event()
@@ -626,6 +626,10 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 				return
 			# A double-click on the head's name band is the rename gesture the file's name
 			# deserves: it renames the class everywhere, with the count said first.
+			# The first click of the pair already opened the Class window, so the second asks for nothing.
+			if str(double_click_meta.get("head_action", "")) == EventSheetHeadBands.BAND_NAME:
+				_viewport.accept_event()
+				return
 			if not str(double_click_meta.get("head_action", "")).is_empty():
 				_viewport.sheet_head_action_requested.emit(str(double_click_meta.get("head_action", "")))
 				_viewport.accept_event()

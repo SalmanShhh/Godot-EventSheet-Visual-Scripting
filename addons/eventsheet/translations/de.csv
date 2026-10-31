@@ -9807,3 +9807,9 @@ this sheet (%d rows),dieses Blatt (%d Zeilen)
 "%s is removed. These move to %s, the default: %s.","%s wird entfernt. Diese wechseln zu %s, dem Standard: %s."
 %s becomes %s. No row uses it.,%s wird zu %s. Keine Zeile verwendet es.
 %s becomes %s in: %s.,%s wird zu %s in: %s.
+No picture there.,Dort ist kein Bild.
+"Each field writes one line of this file: class_name, extends, @icon and the ## description.","Jedes Feld schreibt eine Zeile dieser Datei: class_name, extends, @icon und die ##-Beschreibung."
+%s does not have it,%s hat das nicht
+"Rows use %s, which %s does not have.","Zeilen verwenden %s, was %s nicht hat."
+Class updated.,Klasse aktualisiert.
+Named this class %s.,Diese Klasse heißt jetzt %s.

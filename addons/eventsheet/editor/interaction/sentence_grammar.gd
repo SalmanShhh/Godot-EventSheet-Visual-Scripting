@@ -4333,6 +4333,16 @@ static func _type_condition(text: String, context: Dictionary) -> Dictionary:
 	return _sentence(object_of_reference(subject), "is %s {type}" % indefinite_article(type_name), {"type": [type_name, "chip"]})
 
 
+## The row that runs a parent's version of the function it sits in: "Also run Enemy's take_damage"
+## (Godot words: "Call super: take_damage"). It names the class and the function so the row says what
+## it runs, instead of "the parent's version".
+static func parent_call_sentence(parent_text: String, function_text: String, familiar: bool) -> Dictionary:
+	if familiar:
+		return _sentence(OBJECT_SYSTEM, "Also run {parent}'s {function}",
+			{"parent": [parent_text, "plain"], "function": [function_text, "plain"]})
+	return _sentence(OBJECT_SYSTEM, "Call super: {function}", {"function": [function_text, "plain"]})
+
+
 ## "a" or "an" for a class name, by how it is SAID: Enemy and Area2D take "an", Node2D and Unit take "a"
 ## (a leading U that sounds like "you" - Unit, User, UI, UV - keeps "a").
 static func indefinite_article(word: String) -> String:

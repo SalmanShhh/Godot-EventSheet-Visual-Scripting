@@ -16,6 +16,8 @@ extends RefCounted
 
 ## Loaded only when a class rename asks, so opening a sheet never reads it.
 const SAVE_CHOICES_PATH: String = "res://addons/eventforge/compiler/save_choices.gd"
+## The Class window a click on the head's name opens, loaded only when that click asks.
+const CLASS_WINDOW_PATH: String = "res://addons/eventsheet/editor/dock/class_window.gd"
 ## The Manual's patterns page, loaded only when an event number's card door asks for it.
 const PATTERN_MANUAL_PATH: String = "res://addons/eventsheet/editor/docs/doc_patterns.gd"
 
@@ -27,6 +29,7 @@ var _rename_dialog: ConfirmationDialog = null
 var _text_dialog: ConfirmationDialog = null
 var _text_edit: LineEdit = null
 var _text_band: String = ""
+var _class_window: RefCounted = null
 
 
 func init(dock: Control) -> void:
@@ -61,7 +64,7 @@ func handle(action: String) -> void:
 		return
 	match action:
 		EventSheetHeadBands.BAND_NAME:
-			open_class_rename()
+			open_class_window()
 		EventSheetHeadBands.BAND_EXTENDS:
 			_dock._open_sheet_type_dialog()
 		EventSheetHeadBands.BAND_ICON:
@@ -324,6 +327,16 @@ func open_class_rename(current: String = "", seed: String = "", on_rename: Calla
 		edit.select_all()
 
 
+## The Class window: a click on the head's name. Name, "A kind of" / "Extends", Icon and Description
+## in one window, each field one line of the file, Apply one undo step. Loaded by path the first time
+## a click asks, so opening a sheet never reads it.
+func open_class_window() -> void:
+	if _class_window == null:
+		_class_window = load(CLASS_WINDOW_PATH).new()
+		_class_window.init(_dock, self)
+	_class_window.open()
+
+
 ## The variables of `sheet` that load from the class's own section of user://remembered.cfg (Save choice
 ## Auto or Load only) - the ones whose players' values a class rename leaves under the old name.
 static func values_under_section(sheet: EventSheetResource) -> PackedStringArray:
@@ -443,8 +456,10 @@ func apply_class_rename_to(new_name_text: String, action_name: String = "Rename 
 	mark_open_tabs_unsaved(elsewhere)
 	_dock._refresh_after_edit()
 	_dock._refresh_title_strip()
-	_dock._mark_dirty(EventSheetL10n.translate("Renamed %s to %s.") % [old_name, new_name] \
-		+ class_rename_elsewhere_text(old_name, elsewhere))
+	var said: String = EventSheetL10n.translate("Named this class %s.") % new_name
+	if not old_name.is_empty():
+		said = EventSheetL10n.translate("Renamed %s to %s.") % [old_name, new_name]
+	_dock._mark_dirty(said + class_rename_elsewhere_text(old_name, elsewhere))
 	return true
 
 

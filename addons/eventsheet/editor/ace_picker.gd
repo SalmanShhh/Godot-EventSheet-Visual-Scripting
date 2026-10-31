@@ -2895,6 +2895,12 @@ func _bold_font() -> Font:
 	return variation
 
 
+## Whether the row being added to sits in a function that replaces one of the parent's.
+func _also_run_offered() -> bool:
+	return bool(load("res://addons/eventsheet/editor/dock/class_kinds.gd").also_run_offered(
+		_open_sheet(), _context.get("selected_resource") as Resource))
+
+
 func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only: bool) -> bool:
 	if definition == null:
 		return false
@@ -2903,6 +2909,10 @@ func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only:
 	# from the open scene instead, one per node, both halves already answered). Asked of the gates so
 	# there is one closed list of what may vanish, and the suite walks it.
 	if not EventSheetPickerGates.hidden_reason(definition).is_empty():
+		return false
+	# Running the parent's version only means something inside a function that replaces one of the
+	# parent's; anywhere else it would write a `super()` that does not compile.
+	if definition.id == "CallParentFunction" and str(definition.provider_id) == "Core" and not _also_run_offered():
 		return false
 	# The reader's own choice: an entry they hid, authored or derived.
 	if _readers_hidden.has(EventSheetVocabularyCatalog.key_for(definition.provider_id, definition.id)):

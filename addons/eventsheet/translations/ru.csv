@@ -9807,3 +9807,9 @@ this sheet (%d rows),этот лист (строк: %d)
 "%s is removed. These move to %s, the default: %s.","%s будет удалено. Они перейдут на %s, состояние по умолчанию: %s."
 %s becomes %s. No row uses it.,%s станет %s. Ни одна строка его не использует.
 %s becomes %s in: %s.,%s станет %s в: %s.
+No picture there.,Там нет изображения.
+"Each field writes one line of this file: class_name, extends, @icon and the ## description.","Каждое поле записывает одну строку этого файла: class_name, extends, @icon и описание ##."
+%s does not have it,В %s этого нет
+"Rows use %s, which %s does not have.","Строки используют %s, чего нет в %s."
+Class updated.,Класс обновлён.
+Named this class %s.,Этот класс теперь называется %s.

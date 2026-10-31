@@ -9807,3 +9807,9 @@ this sheet (%d rows),このシート(%d行)
 "%s is removed. These move to %s, the default: %s.",%s を削除します。次は既定の %s に移ります: %s。
 %s becomes %s. No row uses it.,%s は %s になります。これを使う行はありません。
 %s becomes %s in: %s.,%s は次で %s になります: %s。
+No picture there.,そこに画像はありません。
+"Each field writes one line of this file: class_name, extends, @icon and the ## description.",各フィールドはこのファイルの1行を書き込みます: class_name、extends、@icon、##の説明。
+%s does not have it,%s にはありません
+"Rows use %s, which %s does not have.",行が %s を使っていますが、%s にはありません。
+Class updated.,クラスを更新しました。
+Named this class %s.,このクラスを %s と名付けました。

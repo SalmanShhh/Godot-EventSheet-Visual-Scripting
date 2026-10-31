@@ -1,4 +1,4 @@
-# EventForge - class names and kinds of a class. A sheet that names itself (class_name Enemy) is an
+﻿# EventForge - class names and kinds of a class. A sheet that names itself (class_name Enemy) is an
 # object the whole project can pick; a sheet that extends it is a kind of it. This pins the System
 # condition "Is a kind of..." (the GDScript `is`), which must write the line a hand-written file
 # has, lift back from it, and re-emit it byte for byte.
@@ -65,6 +65,8 @@ static func run() -> bool:
 		["the authored row says is an", (shown.get("segments", [{}])[0] as Dictionary).get("text", ""), "is an "],
 	]) and ok
 	ok = run_kinds() and ok
+	ok = run_parent_call() and ok
+	ok = run_class_window() and ok
 	ok = SUPPORT.pins("class_kinds_test", [
 		["an empty kind-of field is fine", EventSheetNewSheetDialog.kind_problem_text(""), ""],
 		["a Godot class is fine", EventSheetNewSheetDialog.kind_problem_text("CharacterBody2D"), ""],
@@ -177,3 +179,79 @@ static func _classes() -> Dictionary:
 	file.store_string(ENEMY_SOURCE)
 	file.close()
 	return {"Enemy": {"path": "user://class_kinds_enemy.gd", "base": "CharacterBody2D"}}
+
+
+## The also-run row names the class and the function, and is only offered where it compiles.
+static func run_parent_call() -> bool:
+	var kinds: GDScript = load(KINDS_PATH)
+	var members: Dictionary = kinds.inherited("Enemy", _classes())
+	var slime: EventSheetResource = kinds.new_kind_sheet("Slime", "Enemy")
+	var replaced: EventFunction = kinds.replace_function(members["functions"][0])
+	slime.functions.append(replaced)
+	var also: ACEAction = ((replaced.events[0] as EventRow).actions[0]) as ACEAction
+	var outside: EventRow = EventRow.new()
+	var stray: ACEAction = ACEAction.new()
+	stray.provider_id = "Core"
+	stray.ace_id = "CallParentFunction"
+	outside.actions.append(stray)
+	slime.events.append(outside)
+	var view: EventSheetViewport = EventSheetViewport.new()
+	view.set_ace_registry(EventSheetACERegistry.new())
+	view.set_sheet(slime)
+	var godot_text: String = _words_of(view._row_builder.grammar_action_sentence(also))
+	view.familiar_words = true
+	var familiar_text: String = _words_of(view._row_builder.grammar_action_sentence(also))
+	view.familiar_words = false
+	var stray_text: String = _words_of(view._row_builder.grammar_action_sentence(stray))
+	view.free()
+	var classes: Dictionary = _classes()
+	var plain: EventSheetResource = kinds.new_kind_sheet("Rock", "Node2D")
+	var plain_function: EventFunction = EventFunction.new()
+	plain_function.function_name = "take_damage"
+	plain_function.events.append(EventRow.new())
+	plain.functions.append(plain_function)
+	return SUPPORT.pins("class_kinds_test", [
+		["Godot words call super by function", godot_text, "Call super: take_damage"],
+		["Familiar words name the class and the function", familiar_text, "Also run Enemy's take_damage"],
+		["outside a function the row keeps its old words", stray_text, ""],
+		["offered inside a function that replaces the parent's", kinds.also_run_offered(slime, replaced.events[0], classes), true],
+		["not offered outside every function", kinds.also_run_offered(slime, outside, classes), false],
+		["not offered in a function the parent lacks", kinds.also_run_offered(slime, EventRow.new(), classes), false],
+		["not offered on a sheet that is no kind of a project class", kinds.also_run_offered(plain, plain_function.events[0], classes), false],
+		["the parent's function is found by name", (kinds.parent_function_of(slime, "take_damage", classes) as Dictionary).get("owner", ""), "Enemy"],
+	])
+
+
+static func _words_of(sentence: Dictionary) -> String:
+	var text: String = ""
+	for segment: Variant in sentence.get("segments", []):
+		text += str((segment as Dictionary).get("text", ""))
+	return text
+
+
+const WINDOW_PATH := "res://addons/eventsheet/editor/dock/class_window.gd"
+
+
+## The Class window's questions, asked without a window: what is wrong with each field, which lines a
+## set of answers writes, and which members a rebase would leave dangling.
+static func run_class_window() -> bool:
+	var window: GDScript = load(WINDOW_PATH)
+	var current: Dictionary = {"name": "Enemy", "extends": "CharacterBody2D", "icon": "", "description": "Hurts."}
+	var used: String = "health -= amount\nvelocity = Vector2.ZERO\nspeed = 3"
+	return SUPPORT.pins("class_kinds_test", [
+		["a free name is fine", window.name_problem("Foe", "Enemy", PackedStringArray()), ""],
+		["a name that is no identifier is refused", window.name_problem("2 foes", "Enemy", PackedStringArray()), "\"2 foes\" cannot be a class name."],
+		["a Godot class takes the name", window.name_problem("Node2D", "Enemy", PackedStringArray()), "\"Node2D\" is already the name of another class."],
+		["the name it has is no clash", window.name_problem("Enemy", "Enemy", PackedStringArray()), ""],
+		["a Godot class is a fine base", window.base_problem("Node2D"), ""],
+		["a base nothing completes is warned", window.base_problem("Nonsuchxyz"), "No class or node by that name."],
+		["a picture of nowhere is warned", window.icon_problem("res://nowhere.svg"), "No picture there."],
+		["no icon is fine", window.icon_problem(""), ""],
+		["an unchanged window writes nothing", window.changes(current, current).size(), 0],
+		["a new name is one line", window.changes(current, {"name": "Foe"}), {"name": "Foe"}],
+		["an emptied base never removes extends", window.changes(current, {"extends": ""}).size(), 0],
+		["an emptied description removes its line", window.changes(current, {"description": ""}), {"description": ""}],
+		["two changes are two lines in file order", window.changes(current, {"name": "Foe", "extends": "Area2D"}).keys(), ["name", "extends"]],
+		["a rebase loses what only the old base has", window.lost_members(used, "CharacterBody2D", "Node"), PackedStringArray(["velocity"])],
+		["the same base loses nothing", window.lost_members(used, "Node2D", "Node2D").size(), 0],
+	])

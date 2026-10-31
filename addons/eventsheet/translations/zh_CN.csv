@@ -9807,3 +9807,9 @@ this sheet (%d rows),此表(%d 行)
 "%s is removed. These move to %s, the default: %s.",将移除 %s。以下内容改用默认状态 %s:%s。
 %s becomes %s. No row uses it.,%s 将改为 %s。没有任何行使用它。
 %s becomes %s in: %s.,%s 将在以下位置改为 %s:%s。
+No picture there.,那里没有图片。
+"Each field writes one line of this file: class_name, extends, @icon and the ## description.",每个字段写入此文件的一行：class_name、extends、@icon 和 ## 描述。
+%s does not have it,%s 没有它
+"Rows use %s, which %s does not have.",行使用了 %s，而 %s 没有它。
+Class updated.,类已更新。
+Named this class %s.,已将此类命名为 %s。

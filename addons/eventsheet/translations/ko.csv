@@ -9807,3 +9807,9 @@ this sheet (%d rows),이 시트(%d행)
 "%s is removed. These move to %s, the default: %s.",%s을(를) 제거합니다. 다음은 기본값인 %s(으)로 옮겨집니다: %s.
 %s becomes %s. No row uses it.,%s이(가) %s(으)로 바뀝니다. 이를 쓰는 행은 없습니다.
 %s becomes %s in: %s.,%s이(가) 다음에서 %s(으)로 바뀝니다: %s.
+No picture there.,그곳에 그림이 없습니다.
+"Each field writes one line of this file: class_name, extends, @icon and the ## description.","각 필드는 이 파일의 한 줄을 씁니다: class_name, extends, @icon, ## 설명."
+%s does not have it,%s에는 없습니다
+"Rows use %s, which %s does not have.",행이 %s을(를) 사용하지만 %s에는 없습니다.
+Class updated.,클래스를 업데이트했습니다.
+Named this class %s.,이 클래스의 이름을 %s(으)로 지정했습니다.

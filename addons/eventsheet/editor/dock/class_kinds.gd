@@ -306,3 +306,130 @@ static func replace_function(parent_function: Dictionary) -> EventFunction:
 	lane.actions.append(also)
 	replacement.events.append(lane)
 	return replacement
+
+
+## True when `rows` (events, at any depth) holds `target`.
+static func _rows_hold(rows: Array, target: Resource) -> bool:
+	for entry: Variant in rows:
+		if entry == target:
+			return true
+		if entry is EventRow:
+			var event: EventRow = entry as EventRow
+			if _holds_resource(event.actions, target) or _holds_resource(event.conditions, target):
+				return true
+			if _rows_hold(event.sub_events, target):
+				return true
+	return false
+
+
+## Whether `rows` (a typed array of actions or conditions) holds `target`; a typed array refuses a
+## `has` of a resource of another type, so the comparison is made by hand.
+static func _holds_resource(rows: Array, target: Resource) -> bool:
+	for entry: Variant in rows:
+		if entry == target:
+			return true
+	return false
+
+
+## The function of `sheet` that holds `target` - an action, a condition or one of its events, at any
+## depth - or null when the row lives outside every function.
+static func function_holding(sheet: EventSheetResource, target: Resource) -> EventFunction:
+	if sheet == null or target == null:
+		return null
+	for candidate: EventFunction in sheet.functions:
+		if candidate == target or _rows_hold(candidate.events, target):
+			return candidate
+	return null
+
+
+## The parent's function that `function_name` replaces on a sheet that is a kind of a class of the
+## project: the entry of `inherited()["functions"]`, or an empty Dictionary when the sheet is not a
+## kind of a project class or the parent has no function of that name.
+static func parent_function_of(sheet: EventSheetResource, function_name: String, classes: Dictionary = {}) -> Dictionary:
+	if sheet == null or function_name.is_empty():
+		return {}
+	var parent_text: String = sheet.host_class.strip_edges()
+	var table: Dictionary = classes if not classes.is_empty() else project_classes()
+	if parent_text.is_empty() or not table.has(parent_text):
+		return {}
+	for entry: Dictionary in (inherited(parent_text, table)["functions"] as Array):
+		if entry["name"] == function_name:
+			return entry
+	return {}
+
+
+## Whether "Also run the parent's version" is worth offering where `target` (the row an action is
+## being added to) sits: only inside a function that replaces one of the parent's.
+static func also_run_offered(sheet: EventSheetResource, target: Resource, classes: Dictionary = {}) -> bool:
+	var holder: EventFunction = function_holding(sheet, target)
+	return holder != null and not parent_function_of(sheet, holder.function_name, classes).is_empty()
+
+
+## The class a value was just asked to be, by the "Is a kind of" conditions above and on `event`
+## (`body is Enemy` narrows body to Enemy), or "" when nothing narrows it. The nearest test wins.
+static func narrowed_class(event: EventRow, value_text: String) -> String:
+	if event == null:
+		return ""
+	var found: String = ""
+	for condition: ACECondition in event.conditions:
+		var params: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
+		if condition.ace_id == "IsAKindOf" and str(params.get("value", "")).strip_edges() == value_text:
+			found = str(params.get("kind", "")).strip_edges()
+		elif condition.ace_id == "ExpressionIsTrue":
+			var expression: String = str(params.get("expr", "")).strip_edges()
+			var prefix: String = value_text + " is "
+			if expression.begins_with(prefix) and expression.substr(prefix.length()).is_valid_identifier():
+				found = expression.substr(prefix.length())
+	return found
+
+
+## The members a project class gives, in the words the picker lists them by: variable and function
+## names of the class and every class above it, nearest first.
+static func member_names(class_text: String, classes: Dictionary = {}) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	var have: Dictionary = inherited(class_text, classes)
+	for variable: Dictionary in (have["variables"] as Array):
+		names.append(str(variable["name"]))
+	for function: Dictionary in (have["functions"] as Array):
+		names.append(str(function["name"]))
+	return names
+
+
+## The members the old base gives that the new base does not, among the identifiers `used_text` (the
+## sheet's rows written out as text) mentions: what a rebase would leave dangling. Both bases may be
+## project classes or Godot classes.
+static func members_lost(used_text: String, old_base: String, new_base: String, classes: Dictionary = {}) -> PackedStringArray:
+	var table: Dictionary = classes if not classes.is_empty() else project_classes()
+	var old_have: PackedStringArray = _base_members(old_base, table)
+	var new_have: PackedStringArray = _base_members(new_base, table)
+	var lost: PackedStringArray = PackedStringArray()
+	var word: RegEx = RegEx.create_from_string("[A-Za-z_]\\w*")
+	var seen: Dictionary = {}
+	for hit: RegExMatch in word.search_all(used_text):
+		var token: String = hit.get_string()
+		if seen.has(token):
+			continue
+		seen[token] = true
+		if old_have.has(token) and not new_have.has(token):
+			lost.append(token)
+	lost.sort()
+	return lost
+
+
+static func _base_members(base_text: String, table: Dictionary) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	var walk: String = base_text
+	var guard: int = 0
+	while not walk.is_empty() and guard < 32:
+		guard += 1
+		if table.has(walk):
+			names.append_array(member_names(walk, table))
+			walk = declared_base(FileAccess.get_file_as_string(str((table[walk] as Dictionary).get("path", ""))))
+			continue
+		if ClassDB.class_exists(walk):
+			for entry: Dictionary in ClassDB.class_get_property_list(walk):
+				names.append(str(entry.get("name", "")))
+			for entry: Dictionary in ClassDB.class_get_method_list(walk):
+				names.append(str(entry.get("name", "")))
+		break
+	return names

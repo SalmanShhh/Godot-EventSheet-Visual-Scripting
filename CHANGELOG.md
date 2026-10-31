@@ -30,6 +30,22 @@
   object name the fixed column cuts short ("CharacterBo...") is read whole on hover. Drawing only: no
   reading, no emitted byte and no saved sheet changes.
 
+### Added: the Class window, and the also-run action that names what it runs
+
+- A click on the sheet head's name opens the Class window: Name, A kind of (Extends in Godot words),
+  Icon and Description in one window, each field one line of the file (`class_name`, `extends`,
+  `@icon`, `##`). Your classes complete first, then Godot's; Icon completes the project's pictures;
+  a name another class has, a base nothing completes and a picture that is not there are said in the
+  window before anything is written. Renaming lists every file and row first and goes through the
+  same walk as Rename Everywhere; changing what the class is built on lists the members the old base
+  gave that the new one does not, among those the sheet uses. Apply is one undo step, and a script
+  opened as a preview unlocks on it like any other first edit. The name used to answer only a
+  double-click; a script attached to a scene had no click on its name at all.
+- "Also run the parent's version" now reads "Also run Enemy's take_damage" (Godot words: "Call
+  super: take_damage"), naming the class and the function it sits in, and is offered only inside a
+  function that replaces one of the parent's. Anywhere else it would write a `super()` that does not
+  compile.
+
 ### Fixed: type tests read with the right article
 
 - "Is a kind of" reads on the value being asked about, `body | is an Enemy`, and says "an" before a

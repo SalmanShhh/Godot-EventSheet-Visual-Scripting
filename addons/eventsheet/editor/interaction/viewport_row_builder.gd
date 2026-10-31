@@ -66,6 +66,8 @@ const SYNC_BADGE_GLYPHS: Dictionary = {
 ## The head's band rows all share this uid prefix, so anything that has to find the head - the
 ## opened-pack reading, the fold guard, a test - asks one question instead of listing band kinds.
 const HEAD_BAND_UID_PREFIX := "sheet_head_"
+## The model of classes and their kinds, loaded only by a row that needs it.
+const CLASS_KINDS_PATH := "res://addons/eventsheet/editor/dock/class_kinds.gd"
 
 ## The Include bar's corner radius and height, where a theme states the Include edge: a rounded bar a
 ## little taller than a row.
@@ -1413,8 +1415,13 @@ func build_sheet_head_bar_row(sheet: EventSheetResource, head_facts: Dictionary 
 		name_text = str(object_bar.get("node", name_text))
 		name_meta["bbcode_segments"] = [{"text": name_text, "color": reading_style.primary_text_color,
 			"bold": true, "italic": false}]
-	elif editable:
-		# A double-click on the name renames the class everywhere, as it always has.
+	# A script opened as a read-only preview unlocks on the first intentional edit, and the Class window's
+	# Apply is one, so its name is clickable too.
+	var unlockable: bool = sheet.read_only and not sheet.blocked_by_conflict()
+	unlockable = unlockable and sheet.external_source_path.get_extension().to_lower() == "gd"
+	if (editable or unlockable) and (object_bar.is_empty() or not object_bar.has("node")):
+		# A click on the name opens the Class window, where the class is named and renamed everywhere.
+		# A bar that names a NODE of the scene is about the node, not the script, so it stays still.
 		name_meta["head_action"] = EventSheetHeadBands.BAND_NAME
 	spans.append(_make_span(name_text, SemanticSpan.SpanType.OBJECT, name_meta))
 	# What kind of script it is, and what it extends. A behaviour or a global says only which it is:
@@ -19430,6 +19437,14 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 				"get_tree().change_scene_to_file(%s)" % str(params_dict.get("path", "")), context)
 		"ReturnEarly":
 			return EventSheetSentence.return_sentence("", context)
+		# Names the class and the function it runs, found from where the row sits. A row outside a
+		# function that replaces one keeps the words it always had.
+		"CallParentFunction":
+			var holder: EventFunction = load(CLASS_KINDS_PATH).function_holding(_viewport._sheet if _viewport != null else null, action)
+			var parent_text: String = str(_viewport._sheet.get("host_class")).strip_edges() if _viewport != null and _viewport._sheet != null else ""
+			if holder != null and not parent_text.is_empty() and not holder.function_name.is_empty():
+				return EventSheetSentence.parent_call_sentence(parent_text, holder.function_name,
+					bool(context.get("familiar_words", false)))
 		"ReturnValue":
 			return _named_return_sentence(
 				EventSheetSentence.return_sentence(str(params_dict.get("value", "")), context),
