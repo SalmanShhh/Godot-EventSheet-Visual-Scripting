@@ -9715,3 +9715,13 @@ Zoom,Масштаб
 Another class is already called %s.,Другой класс уже называется %s.
 No class or node by that name.,Нет класса или узла с таким именем.
 A kind of,Разновидность
+Show as code,Показать как код
+Stop working out which events this code maps to and just show the file as script blocks. Nothing is changed on disk either way.,"Перестать выяснять, каким событиям соответствует этот код, и показать файл только блоками скрипта. В обоих случаях на диске ничего не меняется."
+Showing as code…,Показ в виде кода…
+reading the file,чтение файла
+Opening %s · %s,Открытие %s · %s
+reading script %d of %d,чтение скрипта %d из %d
+reading functions %d of %d,чтение функций %d из %d
+checking the code still matches,"проверка, что код по-прежнему совпадает"
+checking the script compiles,проверка компиляции скрипта
+finishing up,завершение

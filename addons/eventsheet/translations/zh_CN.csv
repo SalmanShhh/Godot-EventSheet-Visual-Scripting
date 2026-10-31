@@ -9715,3 +9715,13 @@ Zoom,缩放
 Another class is already called %s.,已有另一个类名为 %s。
 No class or node by that name.,没有该名称的类或节点。
 A kind of,的一种
+Show as code,显示为代码
+Stop working out which events this code maps to and just show the file as script blocks. Nothing is changed on disk either way.,停止分析这段代码对应哪些事件，直接把文件显示为脚本块。无论哪种方式，磁盘上都不会有任何改动。
+Showing as code…,正在显示为代码…
+reading the file,正在读取文件
+Opening %s · %s,正在打开 %s · %s
+reading script %d of %d,正在读取脚本 %d / %d
+reading functions %d of %d,正在读取函数 %d / %d
+checking the code still matches,正在检查代码是否仍然一致
+checking the script compiles,正在检查脚本能否编译
+finishing up,即将完成

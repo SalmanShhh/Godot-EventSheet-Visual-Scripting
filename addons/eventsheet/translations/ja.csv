@@ -9715,3 +9715,13 @@ Zoom,ズーム
 Another class is already called %s.,別のクラスがすでに %s という名前です。
 No class or node by that name.,その名前のクラスまたはノードはありません。
 A kind of,の一種
+Show as code,コードとして表示
+Stop working out which events this code maps to and just show the file as script blocks. Nothing is changed on disk either way.,このコードがどのイベントに対応するかの解析をやめて、ファイルをスクリプトブロックとして表示します。どちらの場合もディスク上のファイルは変更されません。
+Showing as code…,コードとして表示中…
+reading the file,ファイルを読み込み中
+Opening %s · %s,%s を開いています · %s
+reading script %d of %d,スクリプト %d / %d を読み込み中
+reading functions %d of %d,関数 %d / %d を読み込み中
+checking the code still matches,コードが一致しているか確認中
+checking the script compiles,スクリプトがコンパイルできるか確認中
+finishing up,仕上げ中

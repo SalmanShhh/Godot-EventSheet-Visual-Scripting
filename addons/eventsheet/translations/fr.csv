@@ -9715,3 +9715,13 @@ Zoom,Zoom
 Another class is already called %s.,Une autre classe s'appelle déjà %s.
 No class or node by that name.,Aucune classe ni nœud de ce nom.
 A kind of,Une sorte de
+Show as code,Afficher comme code
+Stop working out which events this code maps to and just show the file as script blocks. Nothing is changed on disk either way.,Arrêter de chercher à quels événements correspond ce code et afficher le fichier uniquement en blocs de script. Rien n'est modifié sur le disque dans les deux cas.
+Showing as code…,Affichage en code…
+reading the file,lecture du fichier
+Opening %s · %s,Ouverture de %s · %s
+reading script %d of %d,lecture du script %d sur %d
+reading functions %d of %d,lecture des fonctions %d sur %d
+checking the code still matches,vérification que le code correspond toujours
+checking the script compiles,vérification que le script compile
+finishing up,finalisation
