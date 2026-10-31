@@ -28,16 +28,26 @@ signal on_daily_cap_hit
 signal on_offline_gain
 
 # Live economy: id -> {amount, min, max (-1=none), daily_cap (-1=none), daily_earned, offline_rate}.
+## Balance of each currency, by id.
 var _wallet: Dictionary = {}
 # Last-event context, read via the getter expressions INSIDE the matching On-event handler.
+## Currency id of the change being announced.
 var _evt_id: String = ""
+## Balance after the change being announced.
 var _evt_new: float = 0.0
+## Balance before the change being announced.
 var _evt_prev: float = 0.0
+## Size of the change being announced; negative for a spend.
 var _evt_delta: float = 0.0
+## Currency id of the spend that was refused.
 var _fail_id: String = ""
+## Amount the refused spend asked for.
 var _fail_requested: float = 0.0
+## Balance that was available when the spend was refused.
 var _fail_current: float = 0.0
+## Currency id of the offline earnings being reported.
 var _offline_id: String = ""
+## Amount earned while the game was closed.
 var _offline_gain: float = 0.0
 
 ## @ace_action

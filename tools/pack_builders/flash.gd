@@ -23,16 +23,16 @@ static func build() -> bool:
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
 		"interval": {"type": "float", "default": 0.1, "exported": true, "description": "Seconds between visibility toggles - smaller values blink faster."},
-		"remaining": {"type": "float", "default": 0.0, "exported": false},
-		"accumulator": {"type": "float", "default": 0.0, "exported": false},
-		"flashing": {"type": "bool", "default": false, "exported": false},
-		"blink_pattern": {"type": "Resource", "default": null, "exported": false},
-		"blink_index": {"type": "int", "default": 0, "exported": false},
-		"blink_left": {"type": "int", "default": 0, "exported": false},
-		"blink_shown": {"type": "bool", "default": true, "exported": false},
-		"blink_timer": {"type": "float", "default": 0.0, "exported": false},
-		"blink_limit": {"type": "float", "default": 0.0, "exported": false},
-		"blinking": {"type": "bool", "default": false, "exported": false}
+		"remaining": {"type": "float", "default": 0.0, "exported": false, "description": "Seconds left on the current flash."},
+		"accumulator": {"type": "float", "default": 0.0, "exported": false, "description": "Time carried toward the next on/off switch."},
+		"flashing": {"type": "bool", "default": false, "exported": false, "description": "True while a flash is running."},
+		"blink_pattern": {"type": "Resource", "default": null, "exported": false, "description": "The pattern resource the current blink plays, if any."},
+		"blink_index": {"type": "int", "default": 0, "exported": false, "description": "Which step of the blink pattern is playing."},
+		"blink_left": {"type": "int", "default": 0, "exported": false, "description": "Switches left before the blink ends."},
+		"blink_shown": {"type": "bool", "default": true, "exported": false, "description": "True while the blink has the host visible."},
+		"blink_timer": {"type": "float", "default": 0.0, "exported": false, "description": "Seconds until the blink's next step."},
+		"blink_limit": {"type": "float", "default": 0.0, "exported": false, "description": "Total seconds the blink may run."},
+		"blinking": {"type": "bool", "default": false, "exported": false, "description": "True while a blink is running."}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Flash behavior (event-sheet-style): blinks the host's visibility for a duration, then restores it and fires On Flash Finished."
@@ -220,9 +220,10 @@ static func _blink_lines() -> PackedStringArray:
 		"## meta every other flashing thing here reads, so one row sets it for the whole game.",
 		"const BLINK_NO_FLASHING_META: StringName = &\"no_flashing\"",
 		"",
+		"# A strobe is a medical problem rather than a",
+		"# taste, which is why the ceiling is held here instead of trusted to each pattern file.",
 		"## No part of a blink may be shorter than this once no flashing has been asked for: the pattern",
-		"## still plays, at a rate nobody can be hurt by. A strobe is a medical problem rather than a",
-		"## taste, which is why the ceiling is held here instead of trusted to each pattern file.",
+		"## still plays, at a rate nobody can be hurt by.",
 		"const BLINK_FLOOR_SECONDS: float = 0.4",
 		"",
 		"## Whether the player has asked for no flashing at all.",

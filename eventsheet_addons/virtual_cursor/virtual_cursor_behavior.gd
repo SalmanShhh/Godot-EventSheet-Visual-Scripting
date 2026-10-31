@@ -54,32 +54,57 @@ signal bounce_triggered
 @export var default_controls: bool = true
 ## Clamp inside the viewport/constraint bounds.
 @export var constrain_to_layout: bool = false
+## How much the cursor lags behind the mouse, from 0 (none) to 1.
 var mouse_smoothing: float = 0.15
+## True while the cursor is heading for a mouse position.
 var has_mouse_target: bool = false
+## True while a movement input is being simulated by hand.
 var has_simulated_axis: bool = false
 ## AI drive: read ai_move_x/ai_move_y instead of the ui_* actions (a sheet or AI driver flips this on to steer the cursor).
 @export var ai_controlled: bool = false
+## Horizontal input from -1 to 1 when something other than the player drives the cursor.
 var ai_move_x: float = 0.0
+## Vertical input from -1 to 1 when something other than the player drives the cursor.
 var ai_move_y: float = 0.0
+## True while the cursor ignores the player's input.
 var ignoring_input: bool = false
+## Pull the cursor toward nearby targets.
 var homing_enabled: bool = false
+## How the cursor homes: 0 pulls gently, other values snap onto the target.
 var homing_mode: int = 0
+## How close a target must be to pull the cursor, in pixels.
 var homing_radius: float = 120.0
+## How strongly a target pulls the cursor, from 0 to 1.
 var homing_strength: float = 0.5
+## Nodes the cursor can be pulled toward.
 var homing_targets: Array = []
+## True while a target is close enough to pull the cursor.
 var in_homing_range: bool = false
+## Instance id of the nearest target; -1 for none.
 var nearest_homing_uid: int = -1
+## Distance to the nearest target in pixels; -1 for none.
 var nearest_homing_dist: float = -1.0
+## Instance id of the target the cursor has snapped onto; -1 for none.
 var homing_snapped_uid: int = -1
+## Nodes the cursor cannot move through.
 var solids: Array = []
+## Stop the cursor at solids.
 var solid_collision: bool = true
+## True if a solid stopped the cursor this frame.
 var blocked_this_tick: bool = false
+## Instance id of the solid that stopped the cursor; -1 for none.
 var solid_uid: int = -1
+## True while the cursor is kept inside a rectangle.
 var has_constraint_bounds: bool = false
+## Press state of each interaction input, by id.
 var interact_states: Dictionary = {}
+## Id of the input pressed most recently.
 var last_pressed_id: String = ""
+## Id of the input released most recently.
 var last_released_id: String = ""
+## Instance id of the node under the cursor; -1 for none.
 var hovered_uid: int = -1
+## True if the cursor was against the edge of its bounds on the previous frame.
 var edge_hit_prev: bool = false
 
 ## Master on/off.
@@ -101,11 +126,17 @@ var edge_hit_prev: bool = false
 @export_enum("point", "overlap") var hover_mode: int = 0
 ## Which surfaces reflect the cursor losslessly.
 @export_enum("none", "solids", "constraints", "both") var bounce_mode: int = 0
+## The cursor's velocity, in pixels per second.
 var vel: Vector2 = Vector2.ZERO
+## The velocity reported to rows, smoothed over recent frames.
 var report_vel: Vector2 = Vector2.ZERO
+## Movement input this frame, from -1 to 1 on each axis.
 var axis: Vector2 = Vector2.ZERO
+## Movement input set by hand.
 var simulated_axis: Vector2 = Vector2.ZERO
+## The mouse position the cursor is heading for.
 var mouse_target: Vector2 = Vector2.ZERO
+## The rectangle the cursor is kept inside.
 var constraint_bounds: Rect2 = Rect2()
 
 func _point_shape() -> Shape2D:

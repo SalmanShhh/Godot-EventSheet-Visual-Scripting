@@ -48,44 +48,76 @@ signal zoom_finished
 @export_range(0.05, 20.0, 0.05) var kick_recovery: float = 0.6
 
 # --- Internal state ---
+## Current shake strength from 0 to 1; it decays over time.
 var trauma: float = 0.0
+## Running time that drives the shake noise.
 var shake_time: float = 0.0
+## True while a shake is running.
 var _shaking: bool = false
+## Noise generator behind the shake.
 var _noise: FastNoiseLite = null
+## Camera the effects are told to use instead of the current one.
 var _camera_override: Camera3D = null
 # The camera the offsets were last applied to - offsets are pulled off it before anything
 # else, so a camera switch mid-effect can never corrupt the new camera's pose.
+## The camera the effects last worked on.
 var _last_camera: Camera3D = null
 # What we added to the camera last frame (subtracted again at the top of every tick).
+## Position offset the effects added to the camera this frame.
 var _applied_position: Vector3 = Vector3.ZERO
+## Rotation offset the effects added to the camera this frame.
 var _applied_rotation: Vector3 = Vector3.ZERO
+## Field of view change the effects added this frame.
 var _applied_fov: float = 0.0
+## Upward recoil kick, in radians.
 var _recoil_pitch: float = 0.0
+## Sideways recoil kick, in radians.
 var _recoil_yaw: float = 0.0
+## True while the walking bob is running.
 var _bob_active: bool = false
+## Running time that drives the bob.
 var _bob_time: float = 0.0
+## How far the bob moves, in metres.
 var _bob_amplitude: float = 0.06
+## How fast the bob cycles, in cycles per second.
 var _bob_frequency: float = 2.2
+## True while the jitter is running.
 var _jitter_active: bool = false
+## Running time that drives the jitter.
 var _jitter_time: float = 0.0
+## How far the jitter moves, in metres.
 var _jitter_offset: float = 0.02
+## How far the jitter rolls the camera, in degrees.
 var _jitter_roll: float = 0.5
+## Current lean angle of the camera, in radians.
 var _lean_roll: float = 0.0
+## The tween easing the lean.
 var _lean_tween: Tween = null
+## Field of view kick being applied, in degrees.
 var _fov_kick: float = 0.0
 # Positional camera kick (Kick Camera Away From Point) - recovers like recoil.
+## Current positional kick of the camera.
 var _kick_vec: Vector3 = Vector3.ZERO
 # Blink state (visibility strobe - the 3D take on invulnerability frames).
+## True while the host is blinking.
 var _blink_active: bool = false
+## Running time that drives the blink.
 var _blink_time: float = 0.0
+## Blinks per second.
 var _blink_rate: float = 8.0
 # Punch state (kick out, spring back; rest captured per gesture so repeats never drift).
+## The host's scale before any effect changed it.
 var _base_scale3: Vector3 = Vector3.ONE
+## The tween running the position punch.
 var _punch_pos_tween: Tween = null
+## Position to settle back to after the punch.
 var _punch_pos_rest: Vector3 = Vector3.ZERO
 # Eased tickers (Count To): name -> displayed value / target / driving tween.
+## Number tickers by name, showing a value that counts toward its target.
 var _tickers: Dictionary = {}
+## The value each ticker is counting toward.
 var _ticker_targets: Dictionary = {}
+## The tween driving each ticker.
 var _ticker_tweens: Dictionary = {}
 ## The camera the effects drive: an explicit override (Use Camera), else the active Camera3D.
 func _camera() -> Camera3D:
@@ -105,35 +137,50 @@ func _camera() -> Camera3D:
 ## What a listener moves when its channel speaks. The camera the player looks through, the node
 ## itself (a lamp, a sign, a prop), or the screen's own colour channels.
 const CHANNEL_SHAKE_CAMERA: String = "the camera"
+## Shake target word: shake the node itself.
 const CHANNEL_SHAKE_NODE: String = "this node"
+## Shake target word: shake the whole screen.
 const CHANNEL_SHAKE_SCREEN: String = "the screen"
 
-## This listener's answer, for every channel it is in. One answer per node rather than one per
-## channel: a lamp that rattles for the quake channel and the truck channel rattles the same way,
-## and a node that wants to do two different things is two nodes.
+# One answer per node rather than one per
+# channel: a lamp that rattles for the quake channel and the truck channel rattles the same way,
+# and a node that wants to do two different things is two nodes.
+## This listener's answer, for every channel it is in.
 var _channel_shakes: String = CHANNEL_SHAKE_CAMERA
 
 ## The shake a channel last asked this node for: how much, how long it lasts, how much is left,
 ## and the pose the node was found in so it can be handed back exactly as it was.
 var _channel_amount: float = 0.0
+## Total seconds of the channel effect in progress.
 var _channel_span: float = 0.0
+## Seconds left on the channel effect.
 var _channel_left: float = 0.0
+## Offset to settle back to when the channel effect ends.
 var _channel_rest: Vector3 = Vector3.ZERO
+## True while a channel effect is moving the host.
 var _channel_driving: bool = false
 
 # The tint overlay: a top CanvasLayer ColorRect built on first use - the screen
 # wash for damage reds, poison greens, night blues. Strength IS the opacity.
+## Screen layer that holds the tint.
 var _tint_overlay: CanvasLayer = null
+## Full-screen rectangle that shows the tint.
 var _tint_rect: ColorRect = null
 
 # The screen-FX overlay: one full-screen shader with four dials (vignette, chromatic
 # aberration, the chromatic shake's directional split, radial speed lines) built on first use,
 # hidden whenever every dial is 0.
+## Screen layer that holds the full-screen effects.
 var _fx_layer: CanvasLayer = null
+## Full-screen rectangle the effect shader draws on.
 var _fx_rect: ColorRect = null
+## Shader material that draws the vignette and colour fringing.
 var _fx_material: ShaderMaterial = null
+## The tween easing the vignette.
 var _vignette_tween: Tween = null
+## The tween easing the colour fringing.
 var _chroma_tween: Tween = null
+## Shader source for the vignette and colour fringing.
 const _FX_SHADER: String = """
 shader_type canvas_item;
 uniform sampler2D screen_texture: hint_screen_texture, filter_linear_mipmap;
@@ -178,9 +225,10 @@ void fragment() {
 
 # --- Chromatic shake: a directional channel split that moves while it lasts ---
 
-## How much of the peak a fixed-angle shake can lose to the wander. A shake told which way to
-## point keeps that direction, so the noise lands on the AMOUNT instead and the split breathes
-## along one line rather than swinging around the screen.
+# A shake told which way to
+# point keeps that direction, so the noise lands on the AMOUNT instead and the split breathes
+# along one line rather than swinging around the screen.
+## How much of the peak a fixed-angle shake can lose to the wander.
 const CHROMA_SHAKE_WANDER: float = 0.35
 
 ## The Engine meta the whole project keeps the no-flashing answer in - the one the built-in Set
@@ -190,21 +238,29 @@ const CHROMA_SHAKE_WANDER: float = 0.35
 const NO_FLASHING_META: StringName = &"no_flashing"
 
 # The magnitude the screen is showing right now, in pixels - what the expression answers with.
+## Current strength of the colour-fringe shake.
 var _chroma_shake_magnitude: float = 0.0
 # The magnitude the gesture was fired at, before falloff, wander and the no-flashing halving.
+## Strength the colour-fringe shake started at.
 var _chroma_shake_from: float = 0.0
+## Seconds the colour-fringe shake lasts.
 var _chroma_shake_duration: float = 0.3
+## Seconds the colour-fringe shake has run.
 var _chroma_shake_elapsed: float = 0.0
 # True for the "constant" mode: hold the amount flat for the duration, then stop dead.
+## True while the colour-fringe shake is held at full strength.
 var _chroma_shake_hold: bool = false
 # The direction in degrees, or below zero for a direction that wanders with the noise.
+## Direction of the fringe in radians; -1 picks a random one.
 var _chroma_shake_angle: float = -1.0
 # The noise clock, advanced by delta so the wander rides the game's own time - and advanced
 # ALREADY SCALED BY THE RATE, which is what lets the rate change mid-shake. Keeping a raw clock
 # and multiplying the whole of it by the rate at sampling time would move every past frame's
 # sample too, so turning no flashing on would teleport the split to an unrelated direction in
 # that one frame: a strobe delivered by the setting that exists to prevent strobing.
+## Running phase that drives the colour-fringe shake.
 var _chroma_shake_phase: float = 0.0
+## True while the colour-fringe shake is running.
 var _chroma_shake_active: bool = false
 
 func _ready() -> void:

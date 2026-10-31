@@ -23,7 +23,9 @@ signal timer_finished
 @export var duration: float = 1.0
 ## When on, the timer restarts after firing On Timer instead of stopping.
 @export var repeating: bool = false
+## Seconds left on the timer.
 var remaining: float = 0.0
+## True while the timer is counting down.
 var running: bool = false
 
 func _ready() -> void:

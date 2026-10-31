@@ -49,6 +49,7 @@ var _decks: Array[AudioStreamPlayer] = []
 ## How loud each deck is right now, and where it is walking to, as a 0-to-1 level. Levels rather
 ## than decibels because a crossfade is a straight line in loudness, not in decibels.
 var _levels: Array[float] = [0.0, 0.0]
+## Volume each of the two decks is fading toward, in decibels.
 var _level_targets: Array[float] = [0.0, 0.0]
 
 ## How fast a level walks, as full range per second. 0 means the last change was instant and there
@@ -62,45 +63,57 @@ var _front: int = 0
 ## Track read.
 var _deck_tracks: Array[String] = ["", ""]
 
-## The track resource the front deck is playing, or null. Typed Resource rather than
-## MusicTrackResource so this pack still parses in a project that installed it without the track
-## resource beside it - every field is read by name.
+# Typed Resource rather than
+# MusicTrackResource so this pack still parses in a project that installed it without the track
+# resource beside it - every field is read by name.
+## The track resource the front deck is playing, or null.
 var _track: Resource = null
 
+# Read from the track when one starts, and overridable by Set Tempo
+# for a track whose file does not carry it.
 ## The tempo the beat is counted at: beats per minute, and the offset in seconds from the start of
-## the stream to the first beat. Read from the track when one starts, and overridable by Set Tempo
-## for a track whose file does not carry it.
+## the stream to the first beat.
 var _bpm: float = 120.0
+## Seconds the beat grid is shifted from the start of the track.
 var _beat_offset: float = 0.0
 
 ## The last whole beat and bar a trigger fired for, so each fires once per beat rather than once
 ## per frame. Reset when a track starts, which is why the first beat of a new track always arrives.
 var _last_beat: int = -1
+## Bar number last announced, used to fire On Bar once per bar.
 var _last_bar: int = -1
 
 ## Ducking: where the music's decibel offset is, where it is walking to, how fast, and how long it
 ## holds down before it comes back up on its own (a stinger ducks for its own length).
 var _duck_db: float = 0.0
+## Volume the music is being ducked down to, in decibels.
 var _duck_target_db: float = 0.0
+## How fast the duck is applied, in decibels per second.
 var _duck_rate: float = 0.0
+## Seconds the duck is held before releasing.
 var _duck_hold: float = 0.0
+## Seconds the duck takes to fade back up.
 var _duck_release: float = 0.4
 
-## Where a HELD duck comes back up to when its hold runs out. Nothing, usually - but a stinger that
-## lands over a line of dialogue interrupted a duck that is still wanted, and coming back up to full
-## there would raise the music over the voice it was ducked under. So the stinger writes down what it
-## found and the hold hands the music back to it.
+# Nothing, usually - but a stinger that
+# lands over a line of dialogue interrupted a duck that is still wanted, and coming back up to full
+# there would raise the music over the voice it was ducked under. So the stinger writes down what it
+# found and the hold hands the music back to it.
+## Where a HELD duck comes back up to when its hold runs out.
 var _duck_return_db: float = 0.0
 
-## The tracks that have been started this session, by the name each answered to. A song is played from
-## its beginning the first time it is asked for and from its loop point every time after, which is the
-## whole of what an intro is: heard once, skipped on the way back in.
+# A song is played from
+# its beginning the first time it is asked for and from its loop point every time after, which is the
+# whole of what an intro is: heard once, skipped on the way back in.
+## The tracks that have been started this session, by the name each answered to.
 var _heard: Dictionary = {}
 
 ## Layer levels, by layer name: where each is, where it is walking to, and how fast. A layer nobody
 ## has faded is silent, so a track's layers all start under the base stream.
 var _layer_levels: Dictionary = {}
+## Volume each layer is fading toward, by layer name.
 var _layer_targets: Dictionary = {}
+## How fast each layer is fading, by layer name.
 var _layer_rates: Dictionary = {}
 
 ## The layer names of the stream now playing, in the order they were built into it - which is the

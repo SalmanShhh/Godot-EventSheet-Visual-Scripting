@@ -16,9 +16,12 @@ signal on_spawned
 signal on_despawned
 
 # pool name -> {scene:PackedScene (or null for a custom pool), free:Array[Node], active:Array[Node]}.
+## Pools by scene path, each holding its idle nodes.
 var _pools: Dictionary = {}
 # Last-event context, read via the getter expressions inside On Spawned / On Despawned.
+## The node spawned most recently.
 var _last_spawned: Node = null
+## The node returned to a pool most recently.
 var _last_despawned: Node = null
 
 # THE HANDING BACK WAITS FOR THE FRAME. A pool takes a node back by REPARENTING it - out of the
@@ -33,14 +36,18 @@ var _last_despawned: Node = null
 # in a free list is turned back, so Despawn stays safe to run twice.
 # The nodes whose handing back is booked and has not happened yet, by instance id. Kept here rather
 # than written on the node, because a node handed out again carries every mark it was parked with.
+## Nodes taken out of pools, by instance id, so they can be returned.
 var _booked: Dictionary = {}
 
 # The retire runtime, when the project ships it: the file the Retire rows call, which marks a node
 # as retiring for the length of the handing over so On Retired can tell a retirement from every
 # other exit from the tree. Found BY PATH rather than named, exactly as that file finds this pool
 # by path, so the pack still parses in a project that installed the pool and nothing else.
+## Path of the script that retires pooled nodes at run time.
 const RETIRE_RUNTIME_PATH: String = "res://eventsheet_addons/pooled_nodes.gd"
+## The retire script once loaded.
 var _retire_runtime: Script = null
+## True once the retire script has been looked for, so a miss is not retried.
 var _retire_runtime_looked_up: bool = false
 # Where a spawned copy belongs: the running scene when there is one, and this pool itself when
 # there is not - a headless run, or a pool used before the first scene is up.

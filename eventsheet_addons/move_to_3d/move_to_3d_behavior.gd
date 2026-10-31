@@ -31,7 +31,9 @@ signal path_blocked
 @export var step_hits_areas: bool = false
 ## Drop the waypoint queue and stop when the path is blocked. Turn off to keep pushing at the obstacle and just report it.
 @export var stop_on_step_hit: bool = true
+## The points the host is walking through, in order.
 var waypoints: Array = []
+## True while the host is travelling toward a point.
 var moving: bool = false
 
 func _ready() -> void:

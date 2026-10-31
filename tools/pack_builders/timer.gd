@@ -17,8 +17,8 @@ static func build() -> bool:
 	sheet.variables = {
 		"duration": {"type": "float", "default": 1.0, "exported": true, "description": "Length of the countdown in seconds; the timer resets to this each time it repeats."},
 		"repeating": {"type": "bool", "default": false, "exported": true, "description": "When on, the timer restarts after firing On Timer instead of stopping."},
-		"remaining": {"type": "float", "default": 0.0, "exported": false},
-		"running": {"type": "bool", "default": false, "exported": false}
+		"remaining": {"type": "float", "default": 0.0, "exported": false, "description": "Seconds left on the timer."},
+		"running": {"type": "bool", "default": false, "exported": false, "description": "True while the timer is counting down."}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Timer behavior (event-sheet-style): Start Timer / Stop Timer from any sheet; the On Timer trigger fires when it elapses (repeats when 'repeating')."

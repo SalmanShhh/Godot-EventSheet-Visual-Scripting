@@ -45,18 +45,29 @@ signal on_health_pool_depleted
 @export var invulnerable: bool = false
 ## queue_free the host the moment health reaches 0 (after On Death fires).
 @export var destroy_on_death: bool = false
+## Health the host has right now, from 0 up to its maximum.
 var current_health: float = 100.0
+## True once health has reached 0.
 var is_dead_flag: bool = false
+## Size of the most recent hit that landed.
 var last_damage: float = 0.0
+## Size of the most recent heal.
 var last_heal: float = 0.0
+## Share of each hit that health absorbs after any pools; 1 takes all of it.
 var health_absorption_rate: float = 1.0
+## Extra pools such as shield or armour, by type, which take damage before health.
 var health_pools: Dictionary = {}
+## Type of the pool that last triggered an event.
 var last_trigger_pool_type: String = ""
+## How much damage the most recent pool soaked up.
 var last_pool_damage_absorbed: float = 0.0
+## Time in milliseconds until which the host ignores damage.
 var _invincible_until: int = 0
 ## How long a hit still counts as an assist. Anyone who damaged this node within this many seconds of its death is listed by Assists Of.
 @export_range(0, 120, 0.5) var assist_seconds: float = 8.0
+## The node that dealt the most recent hit.
 var last_hit_from: Node = null
+## Hits taken so far this run, counted for the accessibility assists.
 var assist_hits: Dictionary = {}
 ## Flat damage taken off every typed hit, after the type resistance and before a critical. A hit that got past resistance never lands for less than Minimum Damage, so armour blunts hits rather than ending them.
 @export_range(0, 1000, 0.5) var armour: float = 0.0
@@ -66,10 +77,15 @@ var assist_hits: Dictionary = {}
 @export_range(0, 1, 0.01) var crit_chance: float = 0.0
 ## What a critical multiplies the damage by, after armour has come off.
 @export_range(1, 20, 0.1) var crit_multiplier: float = 2.0
+## Damage multiplier for each damage type; 0.5 halves it, 0 blocks it.
 var resistances: Dictionary = {}
+## Type of the most recent hit.
 var last_damage_type: String = ""
+## Damage the most recent hit actually did, after resistances and pools.
 var last_damage_dealt: float = 0.0
+## Damage of the most recent hit before resistances and pools.
 var last_damage_before_mitigation: float = 0.0
+## True if the most recent hit was a critical hit.
 var last_hit_was_crit: bool = false
 
 ## A named health pool (shield / armour) - typed so the absorption + decay hot paths read

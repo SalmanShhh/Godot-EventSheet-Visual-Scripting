@@ -11,15 +11,17 @@
 extends Node2D
 
 #region base_runtime
-## Where the pack's own shaders live once it is installed. One shader file per blend mode, all
-## including one body: a blend is a `render_mode`, decided when a shader compiles, so it cannot be a
-## uniform and "the same drawing, blended differently" is one file each.
+# One shader file per blend mode, all
+# including one body: a blend is a `render_mode`, decided when a shader compiles, so it cannot be a
+# uniform and "the same drawing, blended differently" is one file each.
+## Where the pack's own shaders live once it is installed.
 const SHADER_DIRECTORY: String = "res://eventsheet_addons/vector_shapes/"
 
-## The blend words a row and the Inspector offer, and the file each one is. These are the five
-## blends a canvas shader can express by itself. The ones that read the screen back belong to the
-## Blend Modes pack, which replaces an item's material - and a shape owns its material, so the guide
-## says to put such a shape under a blended parent instead of fighting over the slot.
+# These are the five
+# blends a canvas shader can express by itself. The ones that read the screen back belong to the
+# Blend Modes pack, which replaces an item's material - and a shape owns its material, so the guide
+# says to put such a shape under a blended parent instead of fighting over the slot.
+## The blend words a row and the Inspector offer, and the file each one is.
 const BLEND_SHADERS: Dictionary = {
 	"normal": "vector_shape_mix.gdshader",
 	"add": "vector_shape_add.gdshader",
@@ -55,45 +57,59 @@ const THICKNESS_UNITS: PackedStringArray = ["px", "world", "screen"]
 
 # One Shader resource per blend word, shared by every shape in the project - the material is per
 # node (its uniforms are that shape's own numbers), the compiled shader is not.
+## Shaders built for each kind of shape, shared by every shape.
 static var _shaders: Dictionary = {}
 
 # The three dash-style buttons draw their own pictures, and each is made once per session.
+## Icons for the dash styles, built once and shared.
 static var _dash_icons: Dictionary = {}
 
 # Whether the editor has been handed the dash-style icon renderer yet, this session.
+## True once the dash icons have been offered to the editor.
 static var _icons_offered: bool = false
 
 # How fast the dashes are scrolling, in patterns per second. Zero parks the tick entirely.
+## How fast the dashes slide along the line, in patterns per second.
 var _dash_scroll_speed: float = 0.0
 
 # The two nodes a tether runs between, and where they were when it last redrew. A tether whose ends
 # have not moved does no work at all, which is most frames of most tethers.
+## First node the shape is tied to, if any.
 var _tether_a: Node2D = null
+## Second node the shape is tied to, if any.
 var _tether_b: Node2D = null
+## Last positions of the tied nodes, used to redraw only when they move.
 var _tether_seen: PackedVector2Array = PackedVector2Array()
 
 # How far a followed cursor is snapped, in pixels, and -1 when the shape is not following one.
+## Distance along the line the cursor snaps to; -1 for none.
 var _cursor_snap: float = -1.0
 
 # What is left of a Show For, in seconds. Zero is nothing counting down.
+## Seconds left before a timed shape hides itself.
 var _show_seconds: float = 0.0
 
 # The material this shape wears, rebuilt when the blend word changes and never per frame.
+## Shader material that draws the shape.
 var _material: ShaderMaterial = null
 
 # The blend word the current material was built for.
+## Blend mode the material was built for.
 var _material_blend: String = ""
 
 # The strip a gradient fill is sampled from, baked when the gradient changes rather than per draw.
+## One-pixel-high texture that holds the shape's gradient.
 var _gradient_strip: GradientTexture1D = null
 
 # True only while the scroll tick is writing dash_offset. It is what tells shape_changed that this
 # write is one number moving rather than a shape that has changed, so a scrolling pattern costs one
 # uniform a frame instead of a whole rebuild.
+## True while the dashes are sliding.
 var _scrolling: bool = false
 
 # The fade a Fade Shape Over row started, kept so a second one takes the colour over instead of
 # fighting the first for it.
+## The tween fading the shape in or out.
 var _fade: Tween = null
 
 func _enter_tree() -> void:

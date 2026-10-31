@@ -30,10 +30,15 @@ signal on_bullet_hit(collider: Object, point: Vector3, normal: Vector3)
 @export var step_hits_areas: bool = false
 ## Park the bullet at the point it struck and stop it. Turn off to keep flying and just report the hit.
 @export var stop_on_step_hit: bool = true
+## How far the bullet has flown since it was launched, in metres.
 var distance_travelled: float = 0.0
+## The bullet's speed along X, in metres per second.
 var vel_x: float = 0.0
+## The bullet's speed along Y, in metres per second.
 var vel_y: float = 0.0
+## The bullet's speed along Z, in metres per second.
 var vel_z: float = 0.0
+## True once the bullet has been fired and is flying.
 var launched: bool = false
 
 # Which way gravity pulls (a Vector3 cannot emit from the variables dict, so it

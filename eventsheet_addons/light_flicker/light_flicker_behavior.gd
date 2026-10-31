@@ -46,10 +46,12 @@ var _reach_property: String = ""
 ## replaced, so a designer's own radius survives the effect - and a scale of 1 is the way
 ## back to it, which is what the light settles on when the effect stops.
 var _authored_reach: float = 0.0
-## The noise field the flame is sampled from, and how far along it we are. NOISE, not a fresh
-## random number per frame: consecutive samples of a noise field are RELATED, so the light
-## wanders the way a flame does. Independent random numbers read as static instead.
+# NOISE, not a fresh
+# random number per frame: consecutive samples of a noise field are RELATED, so the light
+# wanders the way a flame does. Independent random numbers read as static instead.
+## The noise field the flame is sampled from, and how far along it we are.
 var _flame: FastNoiseLite = null
+## Running time that drives the flicker pattern.
 var _walked: float = 0.0
 ## Seconds still to wait before Start Flickering takes effect, for the row that says "after".
 var _waiting: float = 0.0

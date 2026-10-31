@@ -8,10 +8,11 @@ extends VectorShape2D
 ## A shape of N equal sides at a radius: a triangle, a hexagon, a near-circle - filled, bordered and dashable, from two numbers.
 
 # @inspector_action save_as_style Save As Style
-## A Shape Style file this shape wears instead of its own look. Empty is the usual case - the fields
-## below are this shape's own. With one dropped in, every field the style speaks for is read from
-## the file and shown greyed here, so twenty lines share one thickness, one cap and one dash
-## pattern; the button above writes the current fields out as a new style file to reuse.
+# Empty is the usual case - the fields
+# below are this shape's own. With one dropped in, every field the style speaks for is read from
+# the file and shown greyed here, so twenty lines share one thickness, one cap and one dash
+# pattern; the button above writes the current fields out as a new style file to reuse.
+## A Shape Style file this shape wears instead of its own look.
 ## @ace_hidden
 @export var style: ShapeStyle = null:
 	set(value):
@@ -193,9 +194,10 @@ extends VectorShape2D
 		shape_changed()
 
 @export_group("Drawing")
-## How the shape meets what is behind it. These are the five blends a canvas shader can be compiled
-## for; a shape that wants one of the screen-reading modes goes under a parent the Blend Modes pack
-## has blended, because a shape owns its own material.
+# These are the five blends a canvas shader can be compiled
+# for; a shape that wants one of the screen-reading modes goes under a parent the Blend Modes pack
+# has blended, because a shape owns its own material.
+## How the shape meets what is behind it.
 ## @ace_hidden
 @export_enum("normal", "add", "subtract", "multiply", "premultiplied") var blend: String = "normal":
 	set(value):

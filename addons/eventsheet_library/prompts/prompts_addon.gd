@@ -46,21 +46,29 @@ signal sequence_finished(completed: bool)
 ## The three words a grade can be. They are the Timed Input module's own two plus the miss, so a
 ## sheet that already branches on "perfect" needs nothing rewritten to branch on a prompt.
 const GRADE_PERFECT: String = "perfect"
+## Grade word for a prompt answered in time.
 const GRADE_GOOD: String = "good"
+## Grade word for a prompt that was missed.
 const GRADE_MISS: String = "miss"
 
 ## What kind of answer the open prompt is waiting for. A press, a hold, or a count of presses -
 ## three shapes with one deadline, one grade and one pair of triggers between them.
 const KIND_PRESS: String = "press"
+## Prompt kind word: hold the input for a set time.
 const KIND_HOLD: String = "hold"
+## Prompt kind word: press the input over and over.
 const KIND_MASH: String = "mash"
 
 ## The five devices a glyph sheet draws for: the keyboard, a pad whose product name matches none of
 ## the layouts, and the three layouts told apart by that name.
 const DEVICE_KEYBOARD: String = "keyboard"
+## Device word for a generic gamepad.
 const DEVICE_PAD: String = "pad"
+## Device word for an Xbox-style gamepad.
 const DEVICE_XBOX: String = "xbox"
+## Device word for a PlayStation-style gamepad.
 const DEVICE_PLAYSTATION: String = "playstation"
+## Device word for a Nintendo-style gamepad.
 const DEVICE_NINTENDO: String = "nintendo"
 
 ## The product-name fragments each layout answers to, lower-cased. A pad naming none of them is the
@@ -71,10 +79,12 @@ const LAYOUT_WORDS: Dictionary = {
 	DEVICE_NINTENDO: ["nintendo", "switch", "joy-con", "joycon"]
 }
 
+# The same two numbers every effect in this project clamps to: the flash becomes a slow
+# fade rather than being taken away, because the prompt still has to say it was hit.
 ## How far a flash may go, and the least time it may take, for a player who has asked for no
-## flashing. The same two numbers every effect in this project clamps to: the flash becomes a slow
-## fade rather than being taken away, because the prompt still has to say it was hit.
+## flashing.
 const FLASH_CEILING: float = 0.3
+## Shortest a flash may last while no-flashing is on, in seconds.
 const FLASH_FLOOR_SECONDS: float = 0.4
 
 ## The name the prompt layer takes under this node, so a reader who opens the remote tree during a
@@ -88,47 +98,60 @@ const PROMPT_FONT_SIZE: int = 20
 ## Whether a prompt is waiting for an answer right now, and what it is waiting for. One at a time on
 ## purpose: two prompts on screen asking for two controls is a sequence, and Sequence is the row.
 var _open: bool = false
+## Kind of the prompt on screen: press, hold or mash.
 var _kind: String = KIND_PRESS
+## Input action the prompt asks for.
 var _action: String = ""
 
 ## The moment the prompt opened and the moment it closes, both on the engine clock - the same clock
 ## the Timed Input rows measure a press with, so a grade from either reads the same.
 var _opened_at: float = 0.0
+## Seconds left to answer the prompt.
 var _deadline: float = 0.0
 
-## The FRAME the prompt opened on. A press stays "just pressed" for the whole of the frame it happened
-## on, so a prompt opened BY that press - "on jump just pressed, prompt jump", which is how half of
-## these rows will be written - would find the press still down and grade itself perfect before the
-## player saw anything. The opening frame is skipped for that reason, and only for that reason: every
-## frame after it reads the controls as they are.
+# A press stays "just pressed" for the whole of the frame it happened
+# on, so a prompt opened BY that press - "on jump just pressed, prompt jump", which is how half of
+# these rows will be written - would find the press still down and grade itself perfect before the
+# player saw anything. The opening frame is skipped for that reason, and only for that reason: every
+# frame after it reads the controls as they are.
+## The FRAME the prompt opened on.
 var _opened_frame: int = -1
 
 ## A hold: how long the control has to be held down, and how long it has been held so far. Letting
 ## go resets the count, because a hold that survived being let go is not a hold.
 var _hold_needed: float = 0.0
+## Seconds the input has been held so far.
 var _held_for: float = 0.0
 
 ## A mash: how many presses it takes, and how many have arrived.
 var _mash_needed: int = 0
+## Presses counted so far for a mash prompt.
 var _mash_count: int = 0
 
 ## The last grade a prompt ended on, which is what Grade Is asks about and Last Grade answers with.
 ## Empty until the first prompt ends.
 var _last_grade: String = ""
 
+# Total is kept rather than derived so Sequence
+# Progress still reads 1 after the last one is taken off the queue.
 ## A sequence: the controls still to come, how many there were, how many have been answered, how
-## long each one gets, and where they are drawn. Total is kept rather than derived so Sequence
-## Progress still reads 1 after the last one is taken off the queue.
+## long each one gets, and where they are drawn.
 var _queue: PackedStringArray = PackedStringArray()
+## How many prompts the current queue holds.
 var _queue_total: int = 0
+## How many prompts of the queue have been answered.
 var _queue_done: int = 0
+## Seconds allowed for each prompt in the queue.
 var _queue_seconds: float = 0.0
+## The node the queued prompts are shown at.
 var _queue_at: Node = null
+## True while a queue of prompts is running.
 var _in_sequence: bool = false
 
 ## Which device the glyphs are drawn for: the one the last input event came from, unless a row has
 ## forced one for a menu that has to show a particular layout.
 var _device: String = DEVICE_KEYBOARD
+## Device word the icons are fixed to; empty follows the last device used.
 var _forced_device: String = ""
 
 ## The notes travelling down their lanes, each a small record rather than a node, because what a
@@ -143,7 +166,9 @@ var _notes: Array[Dictionary] = []
 
 ## The prompt being drawn now, the layer it is drawn on, and the node it is drawn at.
 var _node: Node = null
+## Screen layer that holds the prompt.
 var _layer: CanvasLayer = null
+## The node the current prompt is shown at.
 var _at: Node = null
 
 ## The picture a sheet holds for a control on a device, with the two fallbacks that make a

@@ -12,8 +12,10 @@ extends Node
 signal on_milestone_reached
 
 # id -> {threshold, reward, reached, value (last reported)}.
+## Registered milestones by id, each with its target and whether it has been reached.
 var _milestones: Dictionary = {}
 # The milestone that just latched (read inside On Milestone Reached).
+## Id of the milestone reached most recently.
 var _last_reached_id: String = ""
 
 ## @ace_action

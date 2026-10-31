@@ -40,11 +40,17 @@ signal on_hit_wall
 
 # --- Internal state ---
 # The AI seam's persistent intent axes - a driver holds them like held keys.
+## Horizontal input from -1 to 1 when something other than the player drives the host.
 var ai_move_x: float = 0.0
+## Vertical input from -1 to 1 when something other than the player drives the host.
 var ai_move_y: float = 0.0
+## True while the host is sliding to a stop.
 var _sliding: bool = false
+## Direction the host is sliding in.
 var _dir: Vector2 = Vector2.ZERO
+## The point the slide ends at.
 var _target: Vector2 = Vector2.ZERO
+## Name of the direction being slid in, such as left or up.
 var _dir_name: String = ""
 
 func _ready() -> void:

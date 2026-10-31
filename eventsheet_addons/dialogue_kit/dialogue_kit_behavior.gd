@@ -37,12 +37,19 @@ signal on_line_finished
 @export_range(1, 400, 1) var chars_per_second: float = 40.0
 ## Input action that advances the dialogue (blank = no built-in input; call Advance yourself).
 @export var advance_action: String = "ui_accept"
+## Lines waiting to be shown, in order.
 var line_queue: Array = []
+## True from the first line shown until the last is dismissed.
 var dialogue_active: bool = false
+## True while the current line is still being revealed letter by letter.
 var typing: bool = false
+## Name of whoever is speaking the current line.
 var current_speaker: String = ""
+## Full text of the current line.
 var current_text: String = ""
+## How many characters of the current line are showing so far.
 var revealed_chars: float = 0.0
+## The dialogue box controls once found, so they are looked up only once.
 var ui_cache: Dictionary = {}
 
 ## Named-descendant lookup under the host, cached (freed nodes fall out on the next miss).

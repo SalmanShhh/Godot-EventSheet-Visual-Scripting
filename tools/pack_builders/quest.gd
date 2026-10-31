@@ -56,12 +56,15 @@ static func build() -> bool:
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
 		"# quest_id -> {objective_name -> {done, needed}} - only quests being tracked right now.",
+		"## Quests in progress, by id, with their objectives.",
 		"var _active: Dictionary = {}",
 		"# The quest ids finished this run (or restored by Load Quests), in completion order.",
+		"## Ids of the quests that have been completed.",
 		"var _completed: Array[String] = []",
 		"# quest_id -> {title, next, reward, objectives: Array of {name, needed}} - every QuestResource",
 		"# the pack has seen (Start Quest and Register Quest both remember one). The chain reads it, so a",
 		"# quest can only auto-start a Next Quest that was registered or started at least once.",
+		"## Every quest that has been defined, by id.",
 		"var _library: Dictionary = {}",
 		"",
 		"# One field off a QuestResource as text. Object.get returns null for a property the resource does",

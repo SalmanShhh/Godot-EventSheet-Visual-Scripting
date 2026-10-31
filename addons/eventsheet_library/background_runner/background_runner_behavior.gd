@@ -20,9 +20,13 @@ func _enter_tree() -> void:
 signal done(result: Variant)
 
 # In-flight tasks as [task_id, call_id]; results keyed by call_id, written off-thread under _mutex.
+## Jobs queued or running on a worker thread.
 var _tasks: Array = []
+## Finished job results by id, waiting to be read.
 var _results: Dictionary = {}
+## The id handed to the next job that is started.
 var _next_id: int = 0
+## Lock that keeps the worker threads and the main thread from touching the results at once.
 var _mutex: Mutex = null
 
 func _ready() -> void:

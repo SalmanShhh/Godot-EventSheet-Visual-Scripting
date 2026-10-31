@@ -34,18 +34,28 @@ signal on_purchase_refused(entry_id: String, reason: String)
 # the SAME dictionaries (a Dictionary is a reference, so a write through either is seen by both).
 # A record is {id, label, price, currency, stock, initial_stock, unlocked, requires}, where a
 # stock of -1 means unlimited and 0 means sold out.
+## Items loaded from the price table, each with its price and stock.
 var _entries: Array = []
+## Items looked up by id.
 var _by_id: Dictionary = {}
+## Name of the price table that is loaded.
 var _table_name: String = ""
+## Currency used by an entry that does not name one.
 var _default_currency: String = "gold"
 # Last-transaction context, carried by the triggers and readable afterwards with the Last / Refused
 # expressions (for a receipt line that outlives the handler).
+## Id of the item looked up most recently.
 var _last_id: String = ""
+## Price of the item looked up most recently.
 var _last_price: float = 0.0
+## Currency of the item looked up most recently.
 var _last_currency: String = ""
+## Id of the item whose purchase was refused.
 var _refused_id: String = ""
+## Why that purchase was refused, as a word.
 var _refused_reason: String = ""
 # An explicit wallet handed over by Use Wallet Node, tried before any search.
+## The wallet node purchases are charged to.
 var _wallet_node: Node = null
 # The wallet seam. This pack owns no economy: it asks whatever is there, in this order - the node
 # Use Wallet Node handed it, then the wallet group, then the CurrencyLedger autoload - and any node

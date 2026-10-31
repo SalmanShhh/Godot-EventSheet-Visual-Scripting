@@ -3,6 +3,7 @@ extends Node2D
 
 ## How many sprites to spawn.
 @export_range(100, 2000, 50) var count: int = 800
+## Animation clock (seconds).
 var t: float = 0.0
 var __loop_cursor_7647f9_0: int = 0
 var __loop_items_7647f9_0: Array = []

@@ -33,6 +33,7 @@ func _enter_tree() -> void:
 ## A prefab to preview in the 2D EDITOR viewport, drawn at this node so you can position a
 ## formation before wiring Draw Prefab. Design aid only - the running game never draws it.
 @export_group("Editor Preview")
+## Prefab drawn as a ghost under the pointer before it is stamped.
 @export var preview_prefab: DrawingPrefabResource = null
 ## Scale of the editor preview.
 @export var preview_scale: float = 1.0

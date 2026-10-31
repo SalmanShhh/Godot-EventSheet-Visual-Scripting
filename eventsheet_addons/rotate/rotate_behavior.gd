@@ -32,7 +32,9 @@ func _enter_tree() -> void:
 
 # --- Internal state ---
 # The live speed (deg/s) - starts at the Speed knob, then Acceleration ramps it.
+## Rotation speed now, in degrees per second, easing toward the target speed.
 var _current_speed: float = 0.0
+## True once the current speed has been set from the Inspector.
 var _speed_primed: bool = false
 
 func _ready() -> void:

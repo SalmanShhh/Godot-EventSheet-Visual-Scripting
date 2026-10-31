@@ -36,9 +36,9 @@ static func build() -> bool:
 		"look_every_seconds": {"type": "float", "default": 2.0, "exported": true, "description": "Seconds between looks. Every look is one directory read plus one modified-time question per file, so a second or two is generous for a mods folder and far too often for a folder holding thousands of files. A tenth of a second is the shortest gap honoured: zero would be a directory read every single frame, which is not what anybody means by an interval."},
 		"only_names_like": {"type": "String", "default": "*", "exported": true, "description": "Which file names count, as a pattern with * and ? in it - \"*.json\" for data files, \"*\" for all of them. Names that do not match are invisible to this watcher: they raise nothing, and they are not looked up. Changing this while a watch is running is compared against a baseline read under the OLD pattern, so the next look raises On A File Removed for files that merely stopped matching and On A File Appeared for ones that just started. Stop Watching and Watch Folder again to change it cleanly."},
 		"watch_on_ready": {"type": "bool", "default": false, "exported": true, "description": "Start watching as soon as the node is ready, using the folder and interval above. Off by default, because a watcher is usually started by the sheet at the moment the game actually cares."},
-		"_seen": {"type": "Dictionary", "default": {}, "exported": false},
-		"_since_last_look": {"type": "float", "default": 0.0, "exported": false},
-		"_watching": {"type": "bool", "default": false, "exported": false}
+		"_seen": {"type": "Dictionary", "default": {}, "exported": false, "description": "Files seen at the last look, with their modified time."},
+		"_since_last_look": {"type": "float", "default": 0.0, "exported": false, "description": "Seconds since the folder was last checked."},
+		"_watching": {"type": "bool", "default": false, "exported": false, "description": "True while the folder is being watched."}
 	}
 
 	var about: CommentRow = CommentRow.new()

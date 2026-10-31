@@ -39,10 +39,15 @@ signal path_blocked
 @export var step_mask: int = 1
 ## Also stop the sweep on Area2D nodes, which it ignores by default.
 @export var step_hits_areas: bool = false
+## True while the host is following its target; turn it off to stop.
 var following: bool = true
+## Recent target positions with their times, used to follow with a delay.
 var history: Array = []
+## Seconds since following began, used to timestamp the history.
 var clock: float = 0.0
+## True once the host has arrived at its target.
 var _reached: bool = false
+## True while something blocks the host on its way to the target.
 var _blocked: bool = false
 
 func _ready() -> void:

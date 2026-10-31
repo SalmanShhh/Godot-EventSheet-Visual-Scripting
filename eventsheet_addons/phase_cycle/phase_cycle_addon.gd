@@ -13,10 +13,15 @@ signal on_phase_changed(previous: String, next: String)
 
 # The parsed phase names, which one is current, how long each lasts, and how far into the
 # current one we are. _running is false until Cycle Phases is called, and again after Stop Cycle.
+## The phase names, in the order they come round.
 var _phases: PackedStringArray = PackedStringArray()
+## Which phase the cycle is in now.
 var _index: int = 0
+## Seconds each phase lasts.
 var _seconds_per: float = 0.0
+## Seconds spent in the current phase.
 var _elapsed: float = 0.0
+## True while the cycle is advancing.
 var _running: bool = false
 
 func _ready() -> void:

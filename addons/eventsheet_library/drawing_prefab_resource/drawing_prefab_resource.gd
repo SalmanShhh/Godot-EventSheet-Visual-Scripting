@@ -9,12 +9,15 @@ extends Resource
 ## The shapes, drawn top to bottom. kind: circle / ring / rect / line / cone / stamp. x,y = the step's offset from the prefab origin. p1,p2,p3 by kind - circle: p1 radius; ring: p1 radius, p2 width; rect: p1 width, p2 height; line: p1,p2 = end offset, p3 width; cone: p1 facing deg, p2 fov deg, p3 radius; stamp: p1 scale, p2 rotation deg (texture = the image path). color: a name or hex like #ff8800.
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:table:kind=enum(circle|ring|rect|line|cone|stamp),x=float,y=float,p1=float,p2=float,p3=float,color=color,texture=String") var steps: Array = []
 
+# Runtime only (not
+# exported, so never serialized). Read ONLY on the main thread (the draw paths); the off-thread
+# thumbnail rasterizer reads the raw steps instead and never calls this.
 ## The steps pre-parsed into typed draw entries, cached until the resource changes - so replaying
-## this prefab across many stamps does not re-parse colors/kinds every draw. Runtime only (not
-## exported, so never serialized). Read ONLY on the main thread (the draw paths); the off-thread
-## thumbnail rasterizer reads the raw steps instead and never calls this.
+## this prefab across many stamps does not re-parse colors/kinds every draw.
 var _compiled: Array = []
+## True when the compiled strokes match the current settings.
 var _compiled_valid: bool = false
+## Size the strokes were last compiled for; -1 until compiled.
 var _compiled_size: int = -1
 
 ## Returns steps pre-parsed to typed entries {kind, x, y, p1, p2, p3, color: Color, tex: Texture2D},

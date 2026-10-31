@@ -13,14 +13,19 @@ signal scene_ready(scene_name: String)
 
 # scene name -> the res:// path of its .tscn. The whole point of the pack: one place that
 # knows where a level lives, so no row ever has to.
+## Scenes registered by name, with the path of each.
 var _registry: Dictionary = {}
 # scene name -> an already-loaded PackedScene, warmed by Preload Named Scene.
+## Scenes already loaded in the background, by name.
 var _preloaded: Dictionary = {}
 # The record Carry Into Next Scene left for the scene that has not opened yet.
+## Data waiting to be passed to the next scene when it loads.
 var _pending_handoff: Dictionary = {}
 # The record belonging to the scene running right now - what Scene Argument reads.
+## Data passed in by the previous scene, readable in the new one.
 var _handoff: Dictionary = {}
 # The name of the scene most recently announced ready, or "" before the first one.
+## Name of the scene that is showing now.
 var _current_name: String = ""
 
 ## @ace_action

@@ -40,7 +40,9 @@ signal on_max_stacks_reached
 @export_range(0, 10, 0.05) var cooldown_multiplier: float = 1.0
 ## Optional: drop an AbilitySetResource (.tres) here to auto-create its whole loadout on ready - the data-driven way to define abilities without events.
 @export var ability_set: Resource = null
+## Every ability the host has been granted, by id, with its cooldown, stacks and tags.
 var abilities: Dictionary = {}
+## The id of the ability that last fired a trigger - what the Current Ability ID expression reads.
 var current_ability_id: String = ""
 
 ## One ability's runtime state - typed so the cooldown / stack / expiration hot paths read

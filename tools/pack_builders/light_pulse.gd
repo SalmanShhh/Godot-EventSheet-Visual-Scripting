@@ -53,9 +53,10 @@ static func build() -> bool:
 	lines.append_array(Lib.light_binding_lines())
 	lines.append_array(PackedStringArray([
 		"",
-		"## How far into the current breath we are, in seconds. Kept rather than read off the game",
-		"## clock so that stopping and starting again resumes from where the wave was, and so that",
-		"## changing Period Seconds mid-breath does not snap the light.",
+		"# Kept rather than read off the game",
+		"# clock so that stopping and starting again resumes from where the wave was, and so that",
+		"# changing Period Seconds mid-breath does not snap the light.",
+		"## How far into the current breath we are, in seconds.",
 		"var _breath: float = 0.0",
 		"## Seconds still to wait before Start Pulsing takes effect, for the row that says \"after\".",
 		"var _waiting: float = 0.0",

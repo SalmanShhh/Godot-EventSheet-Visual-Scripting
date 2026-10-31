@@ -20,11 +20,11 @@ static func build() -> bool:
 		"step_mask": {"type": "int", "default": 1, "exported": true, "description": "Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5."},
 		"step_hits_areas": {"type": "bool", "default": false, "exported": true, "description": "Also stop the sweep on Area3D nodes, which it ignores by default."},
 		"stop_on_step_hit": {"type": "bool", "default": true, "exported": true, "description": "Park the bullet at the point it struck and stop it. Turn off to keep flying and just report the hit."},
-		"distance_travelled": {"type": "float", "default": 0.0, "exported": false},
-		"vel_x": {"type": "float", "default": 0.0, "exported": false},
-		"vel_y": {"type": "float", "default": 0.0, "exported": false},
-		"vel_z": {"type": "float", "default": 0.0, "exported": false},
-		"launched": {"type": "bool", "default": false, "exported": false}
+		"distance_travelled": {"type": "float", "default": 0.0, "exported": false, "description": "How far the bullet has flown since it was launched, in metres."},
+		"vel_x": {"type": "float", "default": 0.0, "exported": false, "description": "The bullet's speed along X, in metres per second."},
+		"vel_y": {"type": "float", "default": 0.0, "exported": false, "description": "The bullet's speed along Y, in metres per second."},
+		"vel_z": {"type": "float", "default": 0.0, "exported": false, "description": "The bullet's speed along Z, in metres per second."},
+		"launched": {"type": "bool", "default": false, "exported": false, "description": "True once the bullet has been fired and is flying."}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Bullet 3D behavior (event-sheet-style): launches along the host's forward (-Z) with speed and gravity; tracks distance travelled."

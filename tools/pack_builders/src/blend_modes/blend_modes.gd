@@ -9,9 +9,10 @@ extends Node
 ## the script, so a mode is a file on disk rather than a string compiled at run time.
 const SHADER_DIRECTORY: String = "res://eventsheet_addons/blend_modes/"
 
-## The five modes Godot draws WITHOUT a shader, by the word the row uses. These cost nothing extra:
-## the renderer already knows how to draw a quad this way, so a sprite set to one of them is exactly
-## as cheap as a sprite that is not.
+# These cost nothing extra:
+# the renderer already knows how to draw a quad this way, so a sprite set to one of them is exactly
+# as cheap as a sprite that is not.
+## The five modes Godot draws WITHOUT a shader, by the word the row uses.
 const NATIVE_MODES: Dictionary = {
 	"normal": CanvasItemMaterial.BLEND_MODE_MIX,
 	"add": CanvasItemMaterial.BLEND_MODE_ADD,
@@ -20,9 +21,10 @@ const NATIVE_MODES: Dictionary = {
 	"premultiplied": CanvasItemMaterial.BLEND_MODE_PREMULT_ALPHA
 }
 
-## The fifteen the pack draws with a shader of its own, one file per mode. Each one reads back what
-## is already on the screen under the item, which is the only way to blend against it - so these
-## cost one screen read per pixel the item covers, and the help words on the row say so.
+# Each one reads back what
+# is already on the screen under the item, which is the only way to blend against it - so these
+# cost one screen read per pixel the item covers, and the help words on the row say so.
+## The fifteen the pack draws with a shader of its own, one file per mode.
 const SHADER_MODES: PackedStringArray = ["screen", "overlay", "darken", "lighten",
 	"colour dodge", "colour burn", "hard light", "soft light", "difference", "exclusion", "hue",
 	"saturation", "colour", "luminosity", "copy"]
@@ -36,11 +38,14 @@ const MASK_MODES: PackedStringArray = ["inside", "outside", "atop", "behind", "x
 ## blend_colour_dodge.gdshader, and a mode word and its file can therefore never drift apart.
 const SHADER_PREFIX: String = "blend_"
 
+# Kept on the node so an item
+# freed mid-game takes its own record with it, and so two of these packs could never disagree.
 ## What the pack remembers ON THE ITEM rather than in a table of its own: the mode word it was last
-## asked for, and the material it was wearing before the pack touched it. Kept on the node so an item
-## freed mid-game takes its own record with it, and so two of these packs could never disagree.
+## asked for, and the material it was wearing before the pack touched it.
 const MODE_META: StringName = &"blend_modes_mode"
+## Metadata key that remembers which blend mode a node is wearing.
 const WORN_META: StringName = &"blend_modes_worn"
+## Metadata key that remembers the blend group a node belongs to.
 const GROUP_META: StringName = &"blend_modes_group"
 
 ## The mode an item is in when nobody has said otherwise - what Blend Mode reads back for an item no

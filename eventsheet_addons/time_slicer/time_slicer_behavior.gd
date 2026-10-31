@@ -28,8 +28,11 @@ signal drained
 @export var max_items_per_frame: int = 64
 ## Which per-frame budget stops the drain - both the ms fence and the item cap, ms only, or count only.
 @export_enum("both", "ms", "count") var mode: String = "both"
+## Jobs waiting for a share of frame time.
 var _queue: Array = []
+## How many jobs ran in the most recent frame.
 var _last_count: int = 0
+## True while the slicer is paused.
 var _paused: bool = false
 
 func _ready() -> void:

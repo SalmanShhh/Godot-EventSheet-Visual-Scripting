@@ -30,15 +30,21 @@ signal plan_loaded(plan_name: String)
 
 ## Mark Failed re-plans from the root instead of giving up.
 @export var auto_replan_on_fail: bool = true
+## Compound tasks by name, each with the ways it can be broken into smaller tasks.
 var compounds: Dictionary = {}
+## The list of primitive tasks the planner is working through.
 var plan: Array = []
+## Which task in the plan is running now.
 var plan_index: int = 0
 ## Optional: a UHTNPlanResource (.tres) holding the whole plan - tasks, methods, preconditions, and utility scorers - authored in Inspector grids. Loaded automatically on ready; leave empty to build the network with the Add ... actions instead.
 @export var plan_resource: Resource = null
+## Primitive tasks by name, each with its conditions and effects.
 var primitives: Dictionary = {}
 ## Goal to plan for - a compound or primitive task name. A loaded Plan Resource overrides this with its own root task.
 @export var root_task: String = ""
+## Scorers by name, which rate how good each choice is.
 var scorers: Dictionary = {}
+## What the planner believes about the world, as facts by name.
 var world_state: Dictionary = {}
 
 ## An HTN method - a way to accomplish a compound task: preconditions, an ordered subtask list,

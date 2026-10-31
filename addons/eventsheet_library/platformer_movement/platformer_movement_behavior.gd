@@ -28,17 +28,25 @@ signal double_jumped
 ## @ace_name("On Wall Jumped")
 signal wall_jumped
 
+## Seconds since the host left the ground.
 var _air_time: float = 0.0
+## Seconds left in which a jump pressed early is still remembered.
 var _buffer_timer: float = 0.0
+## Seconds left in which a jump still works after walking off a ledge.
 var _coyote_timer: float = 0.0
+## Which way the host faces: 1 right, -1 left.
 var _facing: int = 1
+## Jumps still available before touching the ground again.
 var _jumps_left: int = 0
+## True while the host is sliding down a wall.
 var _wall_sliding: bool = false
+## True if the host was on the floor on the previous frame, used to spot landings.
 var _was_on_floor: bool = false
 ## How fast you reach top speed when pressing a direction.
 @export var acceleration: float = 1500.0
 ## AI drive: read ai_move_axis instead of the keyboard (the Platformer Pathfinding behavior flips this on to steer).
 @export var ai_controlled: bool = false
+## Horizontal input from -1 to 1 when something other than the player drives the host.
 var ai_move_axis: float = 0.0
 ## Grace window (s) to still jump just after walking off a ledge.
 @export var coyote_time: float = 0.1

@@ -62,7 +62,9 @@ signal hour_struck(hour: int)
 ## the cycle lifts the scene's own darkness toward daylight rather than replacing it, so a
 ## designer's night colour survives.
 var _last_hour: int = -1
+## The darkness colour the host had before the cycle took over, restored when it stops.
 var _authored_darkness: Color = Color.WHITE
+## True while the clock is stopped.
 var _paused: bool = false
 
 func _ready() -> void:

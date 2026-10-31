@@ -20,15 +20,15 @@ static func build() -> bool:
 		"period": {"type": "float", "default": 4.0, "exported": true, "description": "Seconds for one full wave cycle."},
 		"magnitude": {"type": "float", "default": 50.0, "exported": true, "description": "Peak strength of the oscillation (pixels, degrees, or scale/opacity factor by movement)."},
 		"phase_degrees": {"type": "float", "default": 0.0, "exported": true, "description": "Phase offset in degrees - shifts where in the cycle the wave starts."},
-		"wave_value": {"type": "float", "default": 0.0, "exported": false},
-		"time": {"type": "float", "default": 0.0, "exported": false},
-		"base_x": {"type": "float", "default": 0.0, "exported": false},
-		"base_y": {"type": "float", "default": 0.0, "exported": false},
-		"base_rotation": {"type": "float", "default": 0.0, "exported": false},
-		"base_scale_x": {"type": "float", "default": 1.0, "exported": false},
-		"base_scale_y": {"type": "float", "default": 1.0, "exported": false},
-		"base_alpha": {"type": "float", "default": 1.0, "exported": false},
-		"base_captured": {"type": "bool", "default": false, "exported": false}
+		"wave_value": {"type": "float", "default": 0.0, "exported": false, "description": "Current value of the wave, from -1 to 1."},
+		"time": {"type": "float", "default": 0.0, "exported": false, "description": "Seconds the wave has been running."},
+		"base_x": {"type": "float", "default": 0.0, "exported": false, "description": "The host's X position before the wave moved it."},
+		"base_y": {"type": "float", "default": 0.0, "exported": false, "description": "The host's Y position before the wave moved it."},
+		"base_rotation": {"type": "float", "default": 0.0, "exported": false, "description": "The host's rotation before the wave turned it."},
+		"base_scale_x": {"type": "float", "default": 1.0, "exported": false, "description": "The host's horizontal scale before the wave changed it."},
+		"base_scale_y": {"type": "float", "default": 1.0, "exported": false, "description": "The host's vertical scale before the wave changed it."},
+		"base_alpha": {"type": "float", "default": 1.0, "exported": false, "description": "The host's opacity before the wave changed it."},
+		"base_captured": {"type": "bool", "default": false, "exported": false, "description": "True once the starting values have been recorded."}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Sine behavior (event-sheet parity): wave-driven oscillation. movement: horizontal, vertical, forwards-backwards, size, angle, opacity, value-only. wave: sine, triangle, sawtooth, reverse-sawtooth, square. Read the current wave via $SineBehavior.wave_value."

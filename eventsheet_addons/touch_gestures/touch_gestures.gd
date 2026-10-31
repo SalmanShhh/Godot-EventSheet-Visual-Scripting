@@ -44,26 +44,38 @@ signal on_stroke_started
 
 # How many points every stroke is smoothed to before it is compared. Fixed, because two
 # strokes can only be compared point for point when they have the same number of points.
+## How many points a drawn stroke is reduced to before it is compared with a shape.
 const SAMPLE_COUNT: int = 24
 
 # The eight directions by name, in the order their angle bands run from -180 to 180 degrees.
 # Screen coordinates count Y downwards, so "up" is the negative half.
+## Names of the eight swipe directions, starting from left.
 const EIGHT_WAY_NAMES: PackedStringArray = ["left", "up left", "up", "up right", "right", "down right", "down", "down left"]
 
 # Where the finger went down, and when. The whole swipe test is the difference between this
 # and where it came up.
+## Where the current touch began.
 var _touch_start: Vector2 = Vector2.ZERO
+## Time the current touch began, in seconds.
 var _touch_started_at: float = 0.0
 # Every point the drag gathered, oldest first. Cleared on each new touch.
+## Points of the stroke being drawn.
 var _stroke: PackedVector2Array = PackedVector2Array()
 # name -> the smoothed, centred, unit-scaled outline taught for it.
+## Shapes that can be recognised, by name, each with its sampled points.
 var _shapes: Dictionary = {}
 # Last-gesture context, read by the expressions inside the triggers.
+## Direction of the most recent swipe, as a word.
 var _swipe_direction: String = ""
+## Angle of the most recent swipe, in degrees.
 var _swipe_angle: float = 0.0
+## Length of the most recent swipe, in pixels.
 var _swipe_distance: float = 0.0
+## How long the most recent swipe took.
 var _swipe_seconds: float = 0.0
+## Name of the shape recognised most recently.
 var _shape_name: String = ""
+## How close the stroke came to the recognised shape, from 0 to 1.
 var _shape_closeness: float = 0.0
 
 ## @ace_action

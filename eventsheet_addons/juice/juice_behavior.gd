@@ -88,42 +88,72 @@ signal moment_finished(moment_name: String, cut_short: bool)
 @export_range(10.0, 2000.0, 5.0) var recoil_recovery: float = 140.0
 
 # --- Internal state ---
+## Current shake strength from 0 to 1; it decays over time.
 var trauma: float = 0.0
+## Running time that drives the shake noise.
 var shake_time: float = 0.0
+## True while a shake is running.
 var _shaking: bool = false
 # True while ANY camera effect is holding the camera away from its captured rest pose.
+## True while this node is the one moving the camera.
 var _cam_driving: bool = false
+## Current recoil kick, in pixels.
 var _recoil_vec: Vector2 = Vector2.ZERO
+## True while the walking bob is running.
 var _bob_active: bool = false
+## Running time that drives the bob.
 var _bob_time: float = 0.0
+## How far the bob moves, in pixels.
 var _bob_amplitude: float = 6.0
+## How fast the bob cycles, in cycles per second.
 var _bob_frequency: float = 2.2
+## True while the jitter is running.
 var _jitter_active: bool = false
+## Running time that drives the jitter.
 var _jitter_time: float = 0.0
+## How far the jitter moves, in pixels.
 var _jitter_amount: float = 3.0
+## Current tilt angle applied to the host, in radians.
 var _tilt_roll: float = 0.0
+## The tween easing the tilt.
 var _tilt_tween: Tween = null
+## The host's offset before any effect moved it.
 var _base_offset: Vector2 = Vector2.ZERO
+## The host's rotation before any effect turned it.
 var _base_rotation: float = 0.0
+## The host's scale before any effect changed it.
 var _base_scale: Vector2 = Vector2.ONE
+## Noise generator behind the shake.
 var _noise: FastNoiseLite = null
+## Camera the effects are told to use instead of the current one.
 var _camera_override: Camera2D = null
 # The camera the rest pose was captured from - if the active camera changes mid-effect, the old
 # one is handed back before the new one is driven (so it isn't left shaken, nor the new mis-based).
+## The camera the effects last worked on.
 var _last_camera: Camera2D = null
 # Anchored-zoom (Zoom Toward Point) interpolation state.
+## Camera zoom at the start of the current zoom.
 var _zoom_from: Vector2 = Vector2.ONE
+## Camera zoom the current zoom is heading for.
 var _zoom_to: Vector2 = Vector2.ONE
+## World point the zoom is centred on.
 var _zoom_anchor: Vector2 = Vector2.ZERO
+## Camera position at the start of the current zoom.
 var _zoom_cam_from: Vector2 = Vector2.ZERO
 # Slowmo state (single tween, kill-before-restart).
+## The tween easing the time scale back to normal.
 var _slowmo_tween: Tween = null
 # Hitstop state (a brief freeze; driven by a REALTIME timer so it un-freezes even at time_scale 0).
+## True while a hit stop is freezing time.
 var _hitstop_active: bool = false
+## Time scale to restore when the hit stop ends.
 var _hitstop_prev_scale: float = 1.0
 # Spring-squash state (per-frame integrator springing the scale back to rest).
+## True while the squash spring is settling.
 var _squash_spring_active: bool = false
+## Current squash scale of the host.
 var _squash_value: Vector2 = Vector2.ONE
+## How fast the squash scale is changing.
 var _squash_velocity: Vector2 = Vector2.ZERO
 ## The camera these effects drive: an explicit override (Use Camera), else the active Camera2D -
 ## auto-found, so Shake / Zoom just work from anywhere without wiring a path.
@@ -137,44 +167,71 @@ func _camera() -> Camera2D:
 
 # The tint overlay: a top CanvasLayer ColorRect built on first use - the screen
 # wash for damage reds, poison greens, flashback sepias. Strength IS the opacity.
+## Screen layer that holds the tint.
 var _tint_overlay: CanvasLayer = null
+## Full-screen rectangle that shows the tint.
 var _tint_rect: ColorRect = null
 
-## The tweens a MOMENT started, kept under the name of the value each one writes. A Restore or a
-## Revert that only writes a value back is written over again by the tween that was still walking
-## it, on the very next frame - so the beat's own tweens are stopped before the way home is
-## taken. Only a moment's are held here: a Flash row fired straight from a sheet is nobody's beat
-## to put back, and stopping it would be undoing something no moment did.
+# A Restore or a
+# Revert that only writes a value back is written over again by the tween that was still walking
+# it, on the very next frame - so the beat's own tweens are stopped before the way home is
+# taken. Only a moment's are held here: a Flash row fired straight from a sheet is nobody's beat
+# to put back, and stopping it would be undoing something no moment did.
+## The tweens a MOMENT started, kept under the name of the value each one writes.
 var _moment_tweens: Dictionary = {}
 # Flash / blink state (modulate-based, so both compose with Set Host Tint).
+## The tween fading the flash out.
 var _flash_tween: Tween = null
+## Colour to put back when the flash ends.
 var _flash_restore: Color = Color.WHITE
+## True while the host is blinking.
 var _blink_active: bool = false
+## Running time that drives the blink.
 var _blink_time: float = 0.0
+## Blinks per second.
 var _blink_rate: float = 8.0
+## Opacity at the dimmest point of a blink.
 var _blink_min_alpha: float = 0.15
+## Opacity the host had before blinking.
 var _blink_base_alpha: float = 1.0
 # Punch state (kick out, spring back; rest captured per gesture so repeats never drift).
+## The tween running the scale punch.
 var _punch_scale_tween: Tween = null
+## The tween running the camera zoom.
 var _zoom_tween: Tween = null
+## The tween running the rotation punch.
 var _punch_rot_tween: Tween = null
+## Rotation to settle back to after the punch.
 var _punch_rot_rest: float = 0.0
+## The tween running the position punch.
 var _punch_pos_tween: Tween = null
+## Position to settle back to after the punch.
 var _punch_pos_rest: Vector2 = Vector2.ZERO
 # Ghost-trail state (stamped fading sprite copies).
+## True while the afterimage trail is running.
 var _trail_active: bool = false
+## Seconds between afterimages.
 var _trail_interval: float = 0.05
+## Seconds each afterimage takes to fade out.
 var _trail_fade: float = 0.4
+## Colour of the afterimages.
 var _trail_tint: Color = Color.WHITE
+## Seconds until the next afterimage.
 var _trail_timer: float = 0.0
 # The sprite to copy, resolved ONCE at Start (not re-scanned every stamp), and the live ghosts,
 # capped so a high stamp rate with a long fade can't pile up thousands of nodes.
+## Template sprite copied for each afterimage.
 var _ghost_sprite: Node2D = null
+## Afterimages currently on screen.
 var _ghosts: Array = []
+## The most afterimages allowed on screen at once.
 const _MAX_GHOSTS: int = 48
 # Eased tickers (Count To): name -> displayed value / target / driving tween.
+## Number tickers by name, showing a value that counts toward its target.
 var _tickers: Dictionary = {}
+## The value each ticker is counting toward.
 var _ticker_targets: Dictionary = {}
+## The tween driving each ticker.
 var _ticker_tweens: Dictionary = {}
 ## Resolves the sprite the trail copies (host if it IS a sprite, else its first Sprite2D child),
 ## cached at Start so it is not re-scanned every stamp. Null when the host has no sprite to trail.
@@ -191,11 +248,17 @@ func _resolve_ghost_sprite() -> Node2D:
 # The screen-FX overlay: one full-screen shader with four dials (vignette, chromatic
 # aberration, the chromatic shake's directional split, radial speed lines) built on first use,
 # hidden whenever every dial is 0.
+## Screen layer that holds the full-screen effects.
 var _fx_layer: CanvasLayer = null
+## Full-screen rectangle the effect shader draws on.
 var _fx_rect: ColorRect = null
+## Shader material that draws the vignette and colour fringing.
 var _fx_material: ShaderMaterial = null
+## The tween easing the vignette.
 var _vignette_tween: Tween = null
+## The tween easing the colour fringing.
 var _chroma_tween: Tween = null
+## Shader source for the vignette and colour fringing.
 const _FX_SHADER: String = """
 shader_type canvas_item;
 uniform sampler2D screen_texture: hint_screen_texture, filter_linear_mipmap;
@@ -240,9 +303,10 @@ void fragment() {
 
 # --- Chromatic shake: a directional channel split that moves while it lasts ---
 
-## How much of the peak a fixed-angle shake can lose to the wander. A shake told which way to
-## point keeps that direction, so the noise lands on the AMOUNT instead and the split breathes
-## along one line rather than swinging around the screen.
+# A shake told which way to
+# point keeps that direction, so the noise lands on the AMOUNT instead and the split breathes
+# along one line rather than swinging around the screen.
+## How much of the peak a fixed-angle shake can lose to the wander.
 const CHROMA_SHAKE_WANDER: float = 0.35
 
 ## The Engine meta the whole project keeps the no-flashing answer in - the one the built-in Set
@@ -252,46 +316,58 @@ const CHROMA_SHAKE_WANDER: float = 0.35
 const NO_FLASHING_META: StringName = &"no_flashing"
 
 # The magnitude the screen is showing right now, in pixels - what the expression answers with.
+## Current strength of the colour-fringe shake.
 var _chroma_shake_magnitude: float = 0.0
 # The magnitude the gesture was fired at, before falloff, wander and the no-flashing halving.
+## Strength the colour-fringe shake started at.
 var _chroma_shake_from: float = 0.0
+## Seconds the colour-fringe shake lasts.
 var _chroma_shake_duration: float = 0.3
+## Seconds the colour-fringe shake has run.
 var _chroma_shake_elapsed: float = 0.0
 # True for the "constant" mode: hold the amount flat for the duration, then stop dead.
+## True while the colour-fringe shake is held at full strength.
 var _chroma_shake_hold: bool = false
 # The direction in degrees, or below zero for a direction that wanders with the noise.
+## Direction of the fringe in radians; -1 picks a random one.
 var _chroma_shake_angle: float = -1.0
 # The noise clock, advanced by delta so the wander rides the game's own time - and advanced
 # ALREADY SCALED BY THE RATE, which is what lets the rate change mid-shake. Keeping a raw clock
 # and multiplying the whole of it by the rate at sampling time would move every past frame's
 # sample too, so turning no flashing on would teleport the split to an unrelated direction in
 # that one frame: a strobe delivered by the setting that exists to prevent strobing.
+## Running phase that drives the colour-fringe shake.
 var _chroma_shake_phase: float = 0.0
+## True while the colour-fringe shake is running.
 var _chroma_shake_active: bool = false
 
 # --- Moments: one felt beat of the game, played from a file ---
 
+# They are ordinary files - retune them in the Inspector, rename them,
+# duplicate them, delete them, or leave them where they are and point Define Moment at your own.
 ## Where the starter moments ship: beside the pack itself, so Moment "impact" finds impact.tres with
-## nothing set up at all. They are ordinary files - retune them in the Inspector, rename them,
-## duplicate them, delete them, or leave them where they are and point Define Moment at your own.
+## nothing set up at all.
 const MOMENT_DIRECTORY: String = "res://eventsheet_addons/juice/"
 
-## And where a game keeps the beats it wrote ITSELF. Looked in FIRST, so a project moment called
-## impact is the one that plays, and the folder above stays what it is - a pack folder the
-## builders regenerate. A game with no such folder never notices it.
+# Looked in FIRST, so a project moment called
+# impact is the one that plays, and the folder above stays what it is - a pack folder the
+# builders regenerate. A game with no such folder never notices it.
+## And where a game keeps the beats it wrote ITSELF.
 const PROJECT_MOMENT_DIRECTORY: String = "res://moments/"
 
-## THE ACCESSIBILITY CEILING, the same one the post stack holds itself to. A player who has asked for
-## no flashing gets the SAME moments - the hit still hits, the win still lands - with every amount
-## they see held under this and every time held over the floor, so nothing a moment plays can strobe.
-## The clamp lives HERE, in the layer that was added, and never inside the verbs this pack shipped
-## first: their bytes are a promise.
-##
-## The two numbers are the moment runner's, beside this file, because a beat written as rows in a
-## sheet is held to the same ceiling as one kept in a file and a game that changes its mind about
-## the number should change it once. They are still named here so a game reading this pack finds
-## them where it always did.
+# A player who has asked for
+# no flashing gets the SAME moments - the hit still hits, the win still lands - with every amount
+# they see held under this and every time held over the floor, so nothing a moment plays can strobe.
+# The clamp lives HERE, in the layer that was added, and never inside the verbs this pack shipped
+# first: their bytes are a promise.
+#
+# The two numbers are the moment runner's, beside this file, because a beat written as rows in a
+# sheet is held to the same ceiling as one kept in a file and a game that changes its mind about
+# the number should change it once. They are still named here so a game reading this pack finds
+# them where it always did.
+## THE ACCESSIBILITY CEILING, the same one the post stack holds itself to.
 const MOMENT_FLASH_CEILING: float = MomentRunner.FLASH_CEILING
+## Shortest a flash in a moment may last, in seconds.
 const MOMENT_FLASH_FLOOR_SECONDS: float = MomentRunner.FLASH_FLOOR_SECONDS
 
 # The Engine meta the whole project keeps that answer in is NO_FLASHING_META, declared once with
@@ -302,45 +378,51 @@ const MOMENT_FLASH_FLOOR_SECONDS: float = MomentRunner.FLASH_FLOOR_SECONDS
 const MOMENT_VERBS: PackedStringArray = ["shake", "hitstop", "slowmo", "flash", "punch", "zoom",
 	"shockwave", "chromatic", "pulse", "hold"]
 
-## The step words whose amount is an AMPLITUDE - how much of something a player sees, 0 to 1. Only
-## these are scaled by the strength on the row and held under the ceiling: a hitstop's freeze scale,
-## a slowmo's time scale and a zoom's percentage are numbers of a different kind, and doubling one of
-## those would not mean twice as much of anything.
-##
-## The list itself lives in the moment runner beside this pack. A moment has three homes - a block
-## of rows, a moment file, and the list a feedback node holds - and a word held to the ceiling in
-## one of them and not in another would be a different beat depending on where somebody wrote it
-## down. The name stays here so a sheet that already reads it goes on reading it.
+# Only
+# these are scaled by the strength on the row and held under the ceiling: a hitstop's freeze scale,
+# a slowmo's time scale and a zoom's percentage are numbers of a different kind, and doubling one of
+# those would not mean twice as much of anything.
+#
+# The list itself lives in the moment runner beside this pack. A moment has three homes - a block
+# of rows, a moment file, and the list a feedback node holds - and a word held to the ceiling in
+# one of them and not in another would be a different beat depending on where somebody wrote it
+# down. The name stays here so a sheet that already reads it goes on reading it.
+## The step words whose amount is an AMPLITUDE - how much of something a player sees, 0 to 1.
 const MOMENT_AMPLITUDE_VERBS: PackedStringArray = MomentRunner.AMPLITUDE_VERBS
 
+# A name nothing was defined under falls through to the file of that name beside the pack.
 ## Moments defined by name, shared by every Juice node in the game, because a moment is a fact about
 ## the game rather than about one object: Define Moment once at startup and every node's Moment row
-## finds it. A name nothing was defined under falls through to the file of that name beside the pack.
+## finds it.
 static var _moments: Dictionary = {}
 
+# Asking a group is a
+# dictionary read, so a game that has no post stack at all pays nothing to be told so again.
 ## The group the Screen FX layer puts itself in, which is how a moment finds it: one name, spelled
-## the same in both packs and joined by that layer as it enters the tree. Asking a group is a
-## dictionary read, so a game that has no post stack at all pays nothing to be told so again.
+## the same in both packs and joined by that layer as it enters the tree.
 const POST_STACK_GROUP: StringName = &"screen_fx_post_stack"
 
-## The Screen FX layer this game has, once one has been FOUND. Only a found layer is remembered:
-## a game whose post stack arrives after the first beat has played - a level that adds its own
-## effects, a pause screen built on demand - would otherwise be missed for ever, and every later
-## moment would quietly fall back to this pack's own overlay.
+# Only a found layer is remembered:
+# a game whose post stack arrives after the first beat has played - a level that adds its own
+# effects, a pause screen built on demand - would otherwise be missed for ever, and every later
+# moment would quietly fall back to this pack's own overlay.
+## The Screen FX layer this game has, once one has been FOUND.
 var _moment_screen: CanvasLayer = null
 
+# Once per scene rather than once per step: a moment that plays on
+# every hit would otherwise write the same sentence sixty times a second, which is how a warning
+# stops being read at all.
 ## Whether this behaviour has already said that a step wanted the post stack and this game has none,
-## and WHICH SCENE it said it in. Once per scene rather than once per step: a moment that plays on
-## every hit would otherwise write the same sentence sixty times a second, which is how a warning
-## stops being read at all.
+## and WHICH SCENE it said it in.
 var _moment_told_screen: bool = false
+## Scene a moment was last announced for, so it is announced once.
 var _moment_told_scene: Node = null
 
+# Set Moment Strength writes it, and Play Moment At multiplies by it before the distance is paid
+# for - so a scene that wants its feel turned down, or a boss fight that wants it turned up, has
+# ONE number to set rather than a strength on every row. It starts at 1, which is the moment as
+# its file was written.
 ## The strength every moment this node plays is scaled by, and the one Moment Strength answers.
-## Set Moment Strength writes it, and Play Moment At multiplies by it before the distance is paid
-## for - so a scene that wants its feel turned down, or a boss fight that wants it turned up, has
-## ONE number to set rather than a strength on every row. It starts at 1, which is the moment as
-## its file was written.
 var _moment_strength: float = 1.0
 ## The moment a name stands for: one a row defined, or the starter file of that name beside the pack.
 ## A name that answers to neither plays nothing and says so.
@@ -386,24 +468,27 @@ func _moment_screen_fx() -> CanvasLayer:
 # over it, turn it around half way through, or put back everything it moved. Nothing here plays
 # a step - the steps are still the pack's own verbs, played by the one function above.
 
-## Every moment this node has IN THE AIR, by the name it was played under. A play is a small
-## dictionary: the steps it was made of, how long it has left, whether it is walking backwards,
-## the values it found and the values it will settle on. Empty for a node that has never played
-## one, which is what makes the tick free until a beat starts.
+# A play is a small
+# dictionary: the steps it was made of, how long it has left, whether it is walking backwards,
+# the values it found and the values it will settle on. Empty for a node that has never played
+# one, which is what makes the tick free until a beat starts.
+## Every moment this node has IN THE AIR, by the name it was played under.
 var _moment_plays: Dictionary = {}
 
+# It outlives the play on purpose: Restore Moment Values is asked on the way out of a
+# level, long after the beat that moved something has ended.
 ## What every moment this node has played found its values at, the FIRST time it touched each
-## one. It outlives the play on purpose: Restore Moment Values is asked on the way out of a
-## level, long after the beat that moved something has ended.
+## one.
 var _moment_ledger: Dictionary = {}
 
 ## Whether the LAST play of each name ran its course or was ended early, so a row inside On
 ## Moment Finished can tell the beat that landed from the beat somebody walked out of.
 var _moment_cut: Dictionary = {}
 
-## The names of the plays the frame just walked has ended. Kept between frames and cleared
-## rather than made again, so a tick allocates nothing, and filled during the walk rather than
-## acted on, because closing a play erases it from the book the walk is reading.
+# Kept between frames and cleared
+# rather than made again, so a tick allocates nothing, and filled during the walk rather than
+# acted on, because closing a play erases it from the book the walk is reading.
+## The names of the plays the frame just walked has ended.
 var _moment_ended: Array[String] = []
 # --- Channels: a shake said once, and heard by everything listening ---
 #
@@ -415,20 +500,27 @@ var _moment_ended: Array[String] = []
 ## What a listener moves when its channel speaks. The camera the player looks through, the node
 ## itself (a HUD panel, a lamp, a sign), or the screen's own colour channels.
 const CHANNEL_SHAKE_CAMERA: String = "the camera"
+## Shake target word: shake the node itself.
 const CHANNEL_SHAKE_NODE: String = "this node"
+## Shake target word: shake the whole screen.
 const CHANNEL_SHAKE_SCREEN: String = "the screen"
 
-## This listener's answer, for every channel it is in. One answer per node rather than one per
-## channel: a lamp that rattles for the quake channel and the truck channel rattles the same way,
-## and a node that wants to do two different things is two nodes.
+# One answer per node rather than one per
+# channel: a lamp that rattles for the quake channel and the truck channel rattles the same way,
+# and a node that wants to do two different things is two nodes.
+## This listener's answer, for every channel it is in.
 var _channel_shakes: String = CHANNEL_SHAKE_CAMERA
 
 ## The shake a channel last asked this node for: how much, how long it lasts, how much is left,
 ## and the pose the node was found in so it can be handed back exactly as it was.
 var _channel_amount: float = 0.0
+## Total seconds of the channel effect in progress.
 var _channel_span: float = 0.0
+## Seconds left on the channel effect.
 var _channel_left: float = 0.0
+## Offset to settle back to when the channel effect ends.
 var _channel_rest: Vector2 = Vector2.ZERO
+## True while a channel effect is moving the host.
 var _channel_driving: bool = false
 
 func _ready() -> void:

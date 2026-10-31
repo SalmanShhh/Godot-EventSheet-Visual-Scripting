@@ -36,9 +36,13 @@ signal on_bullet_hit(collider: Object, point: Vector2, normal: Vector2)
 @export var step_hits_areas: bool = false
 ## Park the bullet at the point it struck and stop it. Turn off to keep flying and just report the hit.
 @export var stop_on_step_hit: bool = true
+## How far the bullet has flown since it was launched, in pixels.
 var distance_travelled: float = 0.0
+## The bullet's horizontal speed, in pixels per second.
 var vel_x: float = 0.0
+## The bullet's vertical speed, in pixels per second.
 var vel_y: float = 0.0
+## True once the bullet has been fired and is flying.
 var launched: bool = false
 
 ## When off, the bullet stops moving.

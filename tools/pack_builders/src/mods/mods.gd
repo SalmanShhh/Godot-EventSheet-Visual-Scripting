@@ -9,20 +9,22 @@ extends Node
 ## Prefer user:// - a folder under res:// is packed into the export and a player cannot put
 ## anything in it once the game ships.
 @export var mods_folder: String = "user://mods"
+# A mod is ON unless its name is in that list, so a mod the
+# player has never seen arrives enabled.
 ## The setting the switched-off mods are remembered under, when the project has the Game Settings
-## autoload registered as Settings. A mod is ON unless its name is in that list, so a mod the
-## player has never seen arrives enabled.
+## autoload registered as Settings.
 @export var settings_key: String = "disabled_mods"
 ## Warns about a folder that is not there, a mod folder with no manifest in it, a pack file whose
 ## own file list could not be read, and a name two mods both claim. On while you build, off for
 ## release.
 @export var debug_mode: bool = false
 
-## The Game Settings autoload, when the project has one. Resolved the first time the enabled state
-## is written or read, and left null in a project that has no settings autoload - the enable rows
-## then still work, for the session, and simply remember nothing. It is a plain member rather than
-## a lookup buried in a function so a test (and a project with its settings under another name) can
-## hand this director the object it should talk to.
+# Resolved the first time the enabled state
+# is written or read, and left null in a project that has no settings autoload - the enable rows
+# then still work, for the session, and simply remember nothing. It is a plain member rather than
+# a lookup buried in a function so a test (and a project with its settings under another name) can
+# hand this director the object it should talk to.
+## The Game Settings autoload, when the project has one.
 var settings_node: Object = null
 
 ## Fires once per mod that loaded, in load order. Mod Name and Mod Version answer about it.
@@ -43,9 +45,10 @@ signal mod_refused(refused_name: String, reason: String)
 ## @ace_name("On Mods Changed")
 signal mods_changed()
 
+# Plain data, so it rides a loop, a print and a save unchanged.
 ## What a mod is made of, once its manifest has been read: name, version, author, replaces, whether
 ## it declares that it carries code, which kind it is ("folder" or "pack"), the path it came from
-## and the folder its files live in. Plain data, so it rides a loop, a print and a save unchanged.
+## and the folder its files live in.
 var _mods: Array[Dictionary] = []
 
 ## The names Set Load Order named, in the order it named them. Everything else follows in name
@@ -63,61 +66,71 @@ var _about: Dictionary = {"name": "", "version": "", "author": "", "reason": ""}
 const CODE_EXTENSIONS: Array[String] = [
 	"gd", "gdc", "gde", "cs", "gdextension", "gdnlib", "gdns", "dll", "so", "dylib", "wasm"]
 
-## The file extensions that are a SHADER, and the tail every shader type's name ends in. A shader is
-## code as well: it is compiled and it runs, on the graphics card rather than on the processor. What
-## it can do is spend the frame, wedge the driver and paint whatever it likes over the screen - not
-## the player's files and not their network, which is why it is refused in its own words rather than
-## reported as a script - and none of that is something a mod folder may do while the row that took
-## it says it loaded data only. So a data-only load refuses a shader, by its file name, by a type
-## written inside a resource, and by a type named beside one.
+# A shader is
+# code as well: it is compiled and it runs, on the graphics card rather than on the processor. What
+# it can do is spend the frame, wedge the driver and paint whatever it likes over the screen - not
+# the player's files and not their network, which is why it is refused in its own words rather than
+# reported as a script - and none of that is something a mod folder may do while the row that took
+# it says it loaded data only. So a data-only load refuses a shader, by its file name, by a type
+# written inside a resource, and by a type named beside one.
+## The file extensions that are a SHADER, and the tail every shader type's name ends in.
 const SHADER_EXTENSIONS: Array[String] = ["gdshader", "gdshaderinc"]
+## Ending of a resource type name that marks it as a shader.
 const SHADER_TYPE_TAIL: String = "Shader"
+## Resource type name of a shader include file.
 const SHADER_INCLUDE_TYPE: String = "ShaderInclude"
 
+# A file with one of these names is not code by its name, and it may carry code
+# all the same - a scene holding a script written inside it, a node property whose value the engine
+# resolves by loading a path or by compiling source carried in the file, a resource naming a
+# script beside it. Godot builds all of that the moment the file is loaded, so a mod carrying one
+# runs a stranger's code while every file in it is called data. These are therefore READ rather
+# than merely named, which is the difference between the tier's promise and its name.
+#
+# THE LIST IS THE ENGINE'S OWN, ASKED AT RUN TIME. Godot recognises a couple of dozen of these -
+# `.material`, `.mesh`, `.theme`, `.shape`, `.stylebox`, `.translation` beside the familiar four -
+# and a list typed out here is a hole shaped exactly like whichever ones it forgot: a
+# StandardMaterial3D saved as `evil.material` with a script set on it, named by a scene the mod
+# also ships, was cleared as data because nothing here had heard of that extension. So the answer
+# comes from the resource loader itself, which means it is the list of the engine the game actually
+# ships with rather than the list of the engine this was written against. Asked once and kept,
+# because it cannot change while the game runs.
 ## Every extension the engine reads as a RESOURCE TABLE: a scene or a resource, saved as text or in
-## the binary form. A file with one of these names is not code by its name, and it may carry code
-## all the same - a scene holding a script written inside it, a node property whose value the engine
-## resolves by loading a path or by compiling source carried in the file, a resource naming a
-## script beside it. Godot builds all of that the moment the file is loaded, so a mod carrying one
-## runs a stranger's code while every file in it is called data. These are therefore READ rather
-## than merely named, which is the difference between the tier's promise and its name.
-##
-## THE LIST IS THE ENGINE'S OWN, ASKED AT RUN TIME. Godot recognises a couple of dozen of these -
-## `.material`, `.mesh`, `.theme`, `.shape`, `.stylebox`, `.translation` beside the familiar four -
-## and a list typed out here is a hole shaped exactly like whichever ones it forgot: a
-## StandardMaterial3D saved as `evil.material` with a script set on it, named by a scene the mod
-## also ships, was cleared as data because nothing here had heard of that extension. So the answer
-## comes from the resource loader itself, which means it is the list of the engine the game actually
-## ships with rather than the list of the engine this was written against. Asked once and kept,
-## because it cannot change while the game runs.
+## the binary form.
 var _resource_extension_cache: PackedStringArray = PackedStringArray()
 
-## The two heads a resource table written as TEXT begins with. A file that begins with neither is
-## the binary form, or something else entirely, and its table cannot be read as text at all - an
-## unreadable file is not a file that has been cleared.
+# A file that begins with neither is
+# the binary form, or something else entirely, and its table cannot be read as text at all - an
+# unreadable file is not a file that has been cleared.
+## The two heads a resource table written as TEXT begins with.
 const RESOURCE_HEADS: Array[String] = ["[gd_scene", "[gd_resource"]
 
+# Read as a tail rather than as a list, because a
+# script type this reading has never heard of is exactly the one a crafted file would name.
 ## The two tags a resource table names other resources with, and the tail every script type's name
-## ends in - `Script`, `GDScript`, `CSharpScript`. Read as a tail rather than as a list, because a
-## script type this reading has never heard of is exactly the one a crafted file would name.
+## ends in - `Script`, `GDScript`, `CSharpScript`.
 const RESOURCE_TAGS: Array[String] = ["ext_resource", "sub_resource"]
+## Ending of a resource type name that marks it as a script.
 const SCRIPT_TYPE_TAIL: String = "Script"
 
-## The two constructors a resource file's own VALUES may be written with that BUILD something. A
-## body line carries no tag at all: `script = Resource("user://payload.gd")` is a property the
-## engine resolves by loading that path, and `script = Object(GDScript,"script/source":"...")` is
-## one it resolves by compiling the source carried in the line. `ExtResource(` and `SubResource(`
-## are the honest pair and are deliberately not here - each names an entry in the file's own table,
-## which the tag reading has already answered for. Both are matched on a WORD BOUNDARY, which is
-## exactly what keeps those two out: `ExtResource(` holds `Resource(` with a letter in front of it.
+# A
+# body line carries no tag at all: `script = Resource("user://payload.gd")` is a property the
+# engine resolves by loading that path, and `script = Object(GDScript,"script/source":"...")` is
+# one it resolves by compiling the source carried in the line. `ExtResource(` and `SubResource(`
+# are the honest pair and are deliberately not here - each names an entry in the file's own table,
+# which the tag reading has already answered for. Both are matched on a WORD BOUNDARY, which is
+# exactly what keeps those two out: `ExtResource(` holds `Resource(` with a letter in front of it.
+## The two constructors a resource file's own VALUES may be written with that BUILD something.
 const BUILDING_MAKERS: Array[String] = ["Object(", "Resource("]
 
+# Godot's saver writes no escape into a tag while its parser decodes every escape it
+# finds in one, so a type spelled with an escape in the middle of it is `GDScript` to the engine
+# and something else to a reading that compares the letters as written. And `res://../payload.gd`
+# begins with `res://` and names a file beside the project. Neither is second-guessed.
 ## The one glyph a resource tag may not carry, and the one spelling a path may climb out of a
-## folder with. Godot's saver writes no escape into a tag while its parser decodes every escape it
-## finds in one, so a type spelled with an escape in the middle of it is `GDScript` to the engine
-## and something else to a reading that compares the letters as written. And `res://../payload.gd`
-## begins with `res://` and names a file beside the project. Neither is second-guessed.
+## folder with.
 const ESCAPE_GLYPH: String = "\\"
+## Path part that climbs out of a folder; refused so a mod cannot reach outside its own folder.
 const CLIMB_OUT: String = ".."
 
 ## The four bytes a Godot pack file opens with, as one little-endian number - "GDPC".
@@ -127,17 +140,20 @@ const PACK_MAGIC: int = 0x43504447
 ## all, and a data-only row refuses it rather than guessing at its contents.
 const PACK_FORMAT_MAX: int = 4
 
-## The two bits a pack's own flags word may set. An encrypted DIRECTORY cannot be read without the
-## game's key, so its file list is not a list this row has. `relative` says every file's place is
-## measured from the base the header gives rather than from the front of the file - which is how
-## the engine writes a pack today, and taking the places as written finds the wrong bytes.
+# An encrypted DIRECTORY cannot be read without the
+# game's key, so its file list is not a list this row has. `relative` says every file's place is
+# measured from the base the header gives rather than from the front of the file - which is how
+# the engine writes a pack today, and taking the places as written finds the wrong bytes.
+## The two bits a pack's own flags word may set.
 const PACK_DIRECTORY_ENCRYPTED: int = 1
+## How many leading path parts mark a pack's places as relative to the pack.
 const PACK_PLACES_ARE_RELATIVE: int = 2
 
+# Both are read here, because a pack a player downloads was written by whichever engine
+# the game that made it shipped with.
 ## The format from which the file list is written at a place of its own near the END of the pack
 ## rather than straight after the header, and file paths inside it are written without their
-## `res://`. Both are read here, because a pack a player downloads was written by whichever engine
-## the game that made it shipped with.
+## `res://`.
 const PACK_FORMAT_WITH_DIRECTORY: int = 4
 
 ## The bit a pack entry's flags word sets when the exporter encrypted that file. Its bytes cannot
@@ -145,16 +161,19 @@ const PACK_FORMAT_WITH_DIRECTORY: int = 4
 ## cleared of code.
 const PACK_ENTRY_ENCRYPTED: int = 1
 
+# Both are stated rather than felt: a mod is somebody else's folder, so the walk that decides
+# whether it may be taken needs an end - and a walk that ENDED EARLY has cleared nothing it did not
+# reach, which is why hitting either limit refuses the mod instead of passing it.
 ## How deep a mod's own folders are walked, and how many of its files are listed, before the walk
-## stops. Both are stated rather than felt: a mod is somebody else's folder, so the walk that decides
-## whether it may be taken needs an end - and a walk that ENDED EARLY has cleared nothing it did not
-## reach, which is why hitting either limit refuses the mod instead of passing it.
+## stops.
 const MOST_FOLDER_DEPTH: int = 16
+## Most files read from one mod folder before it is cut off.
 const MOST_FOLDER_FILES: int = 20000
 
-## Whether the last folder walk stopped at one of those limits. Read by the caller immediately after
-## the walk, because "everything in the folder" and "as much of it as fits" are different answers to
-## the question the tier asks.
+# Read by the caller immediately after
+# the walk, because "everything in the folder" and "as much of it as fits" are different answers to
+# the question the tier asks.
+## Whether the last folder walk stopped at one of those limits.
 var _folder_was_truncated: bool = false
 
 ## The most bytes of one scene or resource this reading will take in at once. A table big enough to

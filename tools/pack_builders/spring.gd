@@ -27,26 +27,27 @@ static func build() -> bool:
 			"attributes": {"tooltip": "0 = oscillate forever, 1 = no overshoot.", "range": {"min": "0", "max": "1", "step": "0.01"}}},
 		"default_precision": {"type": "float", "default": 0.01, "exported": true,
 			"attributes": {"tooltip": "Distance + speed below which a spring counts as settled."}},
-		"springs": {"type": "Dictionary", "default": {}, "exported": false},
-		"color_springs": {"type": "Dictionary", "default": {}, "exported": false},
-		"property_springs": {"type": "Dictionary", "default": {}, "exported": false}
+		"springs": {"type": "Dictionary", "default": {}, "exported": false, "description": "Number springs by name, each with its value, target and speed."},
+		"color_springs": {"type": "Dictionary", "default": {}, "exported": false, "description": "Colour springs by name, each easing toward a target colour."},
+		"property_springs": {"type": "Dictionary", "default": {}, "exported": false, "description": "Springs that drive a node property, by property path."}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Numeric springing: snappy, physical motion for ANY number. Name a spring, set its target, read its value - or use the host helpers (x/y/angle/scale) for instant juice."
 	sheet.events.append(about)
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
+		"# One list made once and reused rather than a fresh one per frame, and it is what lets the",
+		"# banks be walked in place: a row answering On Spring Reached may start or remove a spring,",
+		"# and a book cannot be walked and written at the same time.",
 		"## The names of the springs that landed this frame, said once the banks have all been walked.",
-		"## One list made once and reused rather than a fresh one per frame, and it is what lets the",
-		"## banks be walked in place: a row answering On Spring Reached may start or remove a spring,",
-		"## and a book cannot be walked and written at the same time.",
 		"var _reached: PackedStringArray = PackedStringArray()",
 		"",
-		"## The most of a velocity a damping may take away in a second. The decay below is EXPONENTIAL,",
-		"## so a damping of exactly 1 leaves nothing of the velocity after any step at all: the spring",
-		"## stops dead where it stands, never reaches its target, and never settles - which means the",
-		"## per-frame tick never parks either. A thousandth of it left is still heavier damping than any",
-		"## motion needs, and it is a spring rather than a freeze.",
+		"# The decay below is EXPONENTIAL,",
+		"# so a damping of exactly 1 leaves nothing of the velocity after any step at all: the spring",
+		"# stops dead where it stands, never reaches its target, and never settles - which means the",
+		"# per-frame tick never parks either. A thousandth of it left is still heavier damping than any",
+		"# motion needs, and it is a spring rather than a freeze.",
+		"## The most of a velocity a damping may take away in a second.",
 		"const DAMPING_CEILING: float = 0.999",
 		"",
 		"## A single numeric spring's state, integrated each frame (typed - no dict casts in the hot loop).",

@@ -36,18 +36,31 @@ signal bailed
 ## @ace_category("Skateboard 3D")
 signal trick_done(trick: String, points: float)
 
+## How far off balance the board is while manualling or grinding, from -1 to 1.
 var _balance: float = 0.0
+## True while the player is balancing on a manual or a grind.
 var _balancing: bool = false
+## Score banked from combos that have ended.
 var _banked_score: float = 0.0
+## Multiplier the current trick chain is earning.
 var _chain_multiplier: int = 1
+## Score built up by the current trick chain.
 var _chain_score: float = 0.0
+## Which way along the rail the grind is going: 1 or -1.
 var _grind_direction: float = 1.0
+## True while the board is grinding a rail.
 var _grinding: bool = false
+## True while the board is riding a manual.
 var _manual: bool = false
+## How far along the rail the board is.
 var _rail_offset: float = 0.0
+## Turns spun in the air so far, counting full turns.
 var _spin_turns: float = 0.0
+## True if the board was on the floor on the previous frame, used to spot landings.
 var _was_on_floor: bool = false
+## Speed along the zipline.
 var _zip_speed: float = 0.0
+## True while the board is riding a zipline.
 var _zipline: bool = false
 ## How quickly the board swings flat onto the surface it is on. Higher is snappier, lower reads as suspension.
 @export var align_speed: float = 12.0
@@ -88,7 +101,9 @@ var _zipline: bool = false
 
 # The rail this board is riding, and the surface it last stood on. The surface is kept
 # because the lip test only has an answer the frame AFTER the board has left it.
+## The rail or zipline the board is on.
 var _rail: Node3D = null
+## Up direction of the surface the board last touched.
 var _last_surface: Vector3 = Vector3.UP
 # The rail's curve, or null when the remembered rail is gone, is not a Path3D, or carries
 # a curve too short to sample. Every grind row goes through this, so a rail deleted mid-ride

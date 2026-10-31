@@ -17,8 +17,8 @@ static func build() -> bool:
 	sheet.addon_category = "State Machine"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
-		"_state_entered_ticks": {"type": "int", "default": 0, "exported": false},
-		"previous_state": {"type": "String", "default": "", "exported": false},
+		"_state_entered_ticks": {"type": "int", "default": 0, "exported": false, "description": "Engine time in milliseconds at which the current state was entered, which Time In State reads."},
+		"previous_state": {"type": "String", "default": "", "exported": false, "description": "The state the machine was in before the current one; empty until it first changes."},
 		"state": {"type": "String", "default": "idle", "exported": true, "description": "The machine's current state name; change it with Go to state."}
 	}
 	var about: CommentRow = CommentRow.new()

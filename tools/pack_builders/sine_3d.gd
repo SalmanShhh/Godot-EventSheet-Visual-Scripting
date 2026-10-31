@@ -19,12 +19,12 @@ static func build() -> bool:
 		"period": {"type": "float", "default": 4.0, "exported": true, "description": "Seconds the wave takes to complete one full cycle."},
 		"magnitude": {"type": "float", "default": 2.0, "exported": true, "description": "Peak offset from the start position (degrees for rotation-y)."},
 		"phase_degrees": {"type": "float", "default": 0.0, "exported": true, "description": "Starting offset into the wave cycle, in degrees."},
-		"time": {"type": "float", "default": 0.0, "exported": false},
-		"base_x": {"type": "float", "default": 0.0, "exported": false},
-		"base_y": {"type": "float", "default": 0.0, "exported": false},
-		"base_z": {"type": "float", "default": 0.0, "exported": false},
-		"base_rot_y": {"type": "float", "default": 0.0, "exported": false},
-		"base_captured": {"type": "bool", "default": false, "exported": false}
+		"time": {"type": "float", "default": 0.0, "exported": false, "description": "Seconds the wave has been running."},
+		"base_x": {"type": "float", "default": 0.0, "exported": false, "description": "The host's X position before the wave moved it."},
+		"base_y": {"type": "float", "default": 0.0, "exported": false, "description": "The host's Y position before the wave moved it."},
+		"base_z": {"type": "float", "default": 0.0, "exported": false, "description": "The host's Z position before the wave moved it."},
+		"base_rot_y": {"type": "float", "default": 0.0, "exported": false, "description": "The host's turn around Y before the wave changed it."},
+		"base_captured": {"type": "bool", "default": false, "exported": false, "description": "True once the starting values have been recorded."}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Sine 3D behavior (event-sheet-style): oscillates the host along an axis (x, y, z) or around the Y axis (rotation-y), with the full wave set."

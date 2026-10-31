@@ -7,16 +7,19 @@ extends Node
 ## A second picture of the world you are already in, as the SecondView autoload singleton: name a view, give it a node to follow, and show it in a frame. Each view is a SubViewport sharing the running world with a camera of its own, so a minimap, a security monitor, a character portrait and a rear-view mirror are the same rows with different frames. Drawing surfaces belong to the Canvas Surface pack; this one owns world views.
 
 # The square a view renders at until a frame it is shown in gives it a size of its own.
+## Width in pixels a new view starts with.
 const STARTING_VIEW_PIXELS: int = 256
 
 # How far above a followed Node3D the view's camera sits at zoom 1, in metres. Zoom divides it,
 # so a bigger zoom is a closer look at less ground - the same direction zoom means for a Camera2D.
+## Height above the target of an overhead view, in metres.
 const OVERHEAD_METRES: float = 20.0
 
 # view name -> what that view is made of: the SubViewport it renders into, the camera inside it,
 # the instance id of the node it follows, its zoom, whether it has parked, and the frames it has
 # been handed to (frame instance id -> the resize callable connected to that frame, so Stop View
 # can take it off again).
+## Views that have been created, by name.
 var _views: Dictionary = {}
 
 ## The live handle on a view's picture. It is taken only once the viewport is really in the tree,

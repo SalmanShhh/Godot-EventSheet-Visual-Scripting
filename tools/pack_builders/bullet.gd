@@ -23,10 +23,10 @@ static func build() -> bool:
 		"step_mask": {"type": "int", "default": 1, "exported": true, "description": "Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5."},
 		"step_hits_areas": {"type": "bool", "default": false, "exported": true, "description": "Also stop the sweep on Area2D nodes, which it ignores by default."},
 		"stop_on_step_hit": {"type": "bool", "default": true, "exported": true, "description": "Park the bullet at the point it struck and stop it. Turn off to keep flying and just report the hit."},
-		"distance_travelled": {"type": "float", "default": 0.0, "exported": false},
-		"vel_x": {"type": "float", "default": 0.0, "exported": false},
-		"vel_y": {"type": "float", "default": 0.0, "exported": false},
-		"launched": {"type": "bool", "default": false, "exported": false}
+		"distance_travelled": {"type": "float", "default": 0.0, "exported": false, "description": "How far the bullet has flown since it was launched, in pixels."},
+		"vel_x": {"type": "float", "default": 0.0, "exported": false, "description": "The bullet's horizontal speed, in pixels per second."},
+		"vel_y": {"type": "float", "default": 0.0, "exported": false, "description": "The bullet's vertical speed, in pixels per second."},
+		"launched": {"type": "bool", "default": false, "exported": false, "description": "True once the bullet has been fired and is flying."}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Bullet behavior (event-sheet parity): angle-of-motion movement with acceleration and gravity; tracks distance travelled (read $BulletBehavior.distance_travelled)."

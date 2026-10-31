@@ -7,9 +7,10 @@ extends Node
 var host: Node = null
 
 #region block_1
-## Where the effect files live. An effect is a FILE in this folder, so `burn.tres` is the effect a
-## row calls "burn" and adding one is dropping a file in a folder. The six starters ship here; point
-## this at your own folder once you have copied and edited them.
+# An effect is a FILE in this folder, so `burn.tres` is the effect a
+# row calls "burn" and adding one is dropping a file in a folder. The six starters ship here; point
+# this at your own folder once you have copied and edited them.
+## Where the effect files live.
 @export_dir var effects_folder: String = "res://eventsheet_addons/status_effects"
 ## Effect files dropped straight onto this node, looked in BEFORE the folder - so one enemy can
 ## carry its own version of "burn" without the folder or any other enemy knowing about it.
@@ -47,24 +48,28 @@ var _active: Dictionary = {}
 ## What cannot land right now: the status word -> the seconds of immunity left.
 var _immune: Dictionary = {}
 
+# Both are kept because THIS IS NOT THE ONLY SCRIPT THAT WRITES modulate: an invincibility flash
+# blinking the alpha while a burn is on used to be captured as the host's "own" colour and then
+# written back for good, which left the sprite half transparent for the rest of the level. So the
+# colour underneath is worked out at every re-mix by asking, channel by channel, whether what is on
+# the sprite is still what this behaviour put there.
 ## The host's own colour under the tint, and the exact colour this behaviour last WROTE over it.
-## Both are kept because THIS IS NOT THE ONLY SCRIPT THAT WRITES modulate: an invincibility flash
-## blinking the alpha while a burn is on used to be captured as the host's "own" colour and then
-## written back for good, which left the sprite half transparent for the rest of the level. So the
-## colour underneath is worked out at every re-mix by asking, channel by channel, whether what is on
-## the sprite is still what this behaviour put there.
 var _base_modulate: Color = Color(1.0, 1.0, 1.0, 1.0)
+## The tint colour this behaviour last wrote to the host.
 var _tint_written: Color = Color(1.0, 1.0, 1.0, 1.0)
+## True while this behaviour has a tint on the host.
 var _tint_applied: bool = false
 
 ## The two Engine meta this project keeps its accessibility answers in - the same two the built-in
 ## Set No Flashing and Set Effect Strength rows write, and the same two the screen effects read.
 const NO_FLASHING_META: StringName = &"no_flashing"
+## Metadata key a player sets to scale every effect.
 const EFFECT_STRENGTH_META: StringName = &"effect_strength"
 
-## How far a tint may pull the host's colour while a player has asked for no flashing. A status
-## tint does not blink, but several arriving and leaving in a second is a flicker all the same, so
-## it is held to the same ceiling the screen effects use.
+# A status
+# tint does not blink, but several arriving and leaving in a second is a flicker all the same, so
+# it is held to the same ceiling the screen effects use.
+## How far a tint may pull the host's colour while a player has asked for no flashing.
 const TINT_CEILING: float = 0.3
 
 ## The tick this pack falls back to when an effect file asks for one of zero seconds, which would

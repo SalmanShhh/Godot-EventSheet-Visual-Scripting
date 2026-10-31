@@ -21,8 +21,11 @@ func _enter_tree() -> void:
 @export var fade_seconds: float = 0.5
 
 # --- Internal state ---
+## Decals placed so far, each with its position, texture and age.
 var _decals: Array = []
+## Soft blobs placed so far, each with its position, size and age.
 var _blobs: Array = []
+## Seconds since the painter started, used to age and fade decals.
 var _clock: float = 0.0
 ## The parent every spawned Decal goes under (the host, so decals live in the world).
 ## @ace_hidden

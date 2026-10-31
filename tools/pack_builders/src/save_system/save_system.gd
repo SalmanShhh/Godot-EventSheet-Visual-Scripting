@@ -14,6 +14,7 @@ var persist_group
 var save_directory
 var save_version
 var section
+## Save slot in use.
 var slot
 
 #region block_1
@@ -77,10 +78,15 @@ signal new_run_started(slot_index: int, run_number: int)
 # cannot collide with a game's own keys: __persist (the scene-tree snapshot), __card
 # (the load-menu header), __version (which build wrote the file), __addons (the
 # autoload snapshot) and __run (the New Game Plus counter).
+## Key under which a save file stores its slot card.
 const CARD_KEY: String = "__card"
+## Key under which a save file stores its format version.
 const VERSION_KEY: String = "__version"
+## Key under which a save file stores what each behaviour saved.
 const ADDONS_KEY: String = "__addons"
+## Key under which a save file stores the run state.
 const RUN_KEY: String = "__run"
+## Message given when a save file cannot be opened.
 const READ_OPEN_PROBLEM: String = "the file could not be opened (a wrong encryption key is the usual cause)"
 
 func _slot_path(target_slot: int = -1) -> String:
@@ -104,6 +110,7 @@ func _open_write(path: String) -> FileAccess:
 # through str_to_var, keeping their exact type. Floats/strings/bools stay bare so
 # the file is still readable. The key is long and namespaced so a real one-key user
 # dictionary is extremely unlikely to be mistaken for a wrapped value.
+## Key that marks a stored value as a wrapped variable.
 const VAR_WRAPPER_KEY: String = "__eventsheet_var"
 
 func _to_jsonable(value: Variant) -> Variant:
@@ -145,25 +152,34 @@ func _from_jsonable(value: Variant) -> Variant:
 # (bad decrypt key, corrupt JSON, truncated binary). Writers check the flag and
 # refuse to overwrite a slot they could not read, so a failed read never wipes a
 # good save on the next write or autosave. A genuinely absent file reads as OK.
+## True if the most recent read worked.
 var _last_read_ok: bool = true
 # Why the last read failed, as a plain sentence ("" when it worked). The triggers wrap
 # it into a player-facing line; Slot Problem hands it to a menu tile.
+## What went wrong with the most recent read, if anything.
 var _last_read_problem: String = ""
 # The last failure of ANY kind, kept for Last Save Problem.
+## What went wrong with the most recent save or load, if anything.
 var _last_problem: String = ""
 # Seconds counted since this slot's playtime was last banked into its card, so nobody has
 # to wire a timer for it. Playtime belongs to the SLOT, not to this object: the count
 # restarts whenever the ACTIVE SLOT changes, so a menu instance that never loaded a game
 # cannot stamp its own session onto a slot it merely wrote a card line to, and banking ADDS
 # the session to the card's own total instead of overwriting (or ratcheting) it.
+## Seconds played in the current slot.
 var _playtime: float = 0.0
+## Slot that the playtime belongs to; -1 for none.
 var _playtime_slot: int = -1
+## True while autosave is paused.
 var _autosave_paused: bool = false
 # Keys Never Save This Key has excluded, dropped on the way to the file whichever row
 # wrote them, and keys Carry Value Into Next Run keeps through Start New Run.
+## Names that are left out of every save.
 var _never_save: PackedStringArray = PackedStringArray()
+## Names that carry over from one slot to the next.
 var _carried: PackedStringArray = PackedStringArray()
 # Set by Use Upgraded Save so Load Game knows to pick the migrated record back up.
+## True once an old save has been brought up to the current format.
 var _upgrade_applied: bool = false
 
 func _read_failed(reason: String) -> Dictionary:
@@ -667,7 +683,9 @@ signal save_key_missing(key: String, slot_index: int)
 # (a .tmp, then a rename), so a window is short - but an On Before Save handler that saves
 # a key of its own opens a second one INSIDE it, and a plain bool would close the outer
 # window when the inner write finished. Is Saving and Is Loading read these.
+## How many saves are being written at once, so a save does not start another.
 var _write_depth: int = 0
+## How many loads are running at once, so a load does not start another.
 var _load_depth: int = 0
 
 # Every write goes through this door, so Is Saving covers the whole window - which is

@@ -24,14 +24,23 @@ func _enter_tree() -> void:
 @export var magnitude: float = 50.0
 ## Phase offset in degrees - shifts where in the cycle the wave starts.
 @export var phase_degrees: float = 0.0
+## Current value of the wave, from -1 to 1.
 var wave_value: float = 0.0
+## Seconds the wave has been running.
 var time: float = 0.0
+## The host's X position before the wave moved it.
 var base_x: float = 0.0
+## The host's Y position before the wave moved it.
 var base_y: float = 0.0
+## The host's rotation before the wave turned it.
 var base_rotation: float = 0.0
+## The host's horizontal scale before the wave changed it.
 var base_scale_x: float = 1.0
+## The host's vertical scale before the wave changed it.
 var base_scale_y: float = 1.0
+## The host's opacity before the wave changed it.
 var base_alpha: float = 1.0
+## True once the starting values have been recorded.
 var base_captured: bool = false
 ## When off, pauses the oscillation and leaves the host in place.
 @export var active: bool = true:

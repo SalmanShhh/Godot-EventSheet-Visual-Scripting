@@ -25,9 +25,9 @@ static func build() -> bool:
 		"max_items_per_frame": {"type": "int", "default": 64, "exported": true,
 			"attributes": {"tooltip": "Hard cap on items processed per frame (used when Mode includes count)."}},
 		"mode": {"type": "String", "default": "both", "exported": true, "options": ["both", "ms", "count"], "description": "Which per-frame budget stops the drain - both the ms fence and the item cap, ms only, or count only."},
-		"_queue": {"type": "Array", "default": [], "exported": false},
-		"_last_count": {"type": "int", "default": 0, "exported": false},
-		"_paused": {"type": "bool", "default": false, "exported": false}
+		"_queue": {"type": "Array", "default": [], "exported": false, "description": "Jobs waiting for a share of frame time."},
+		"_last_count": {"type": "int", "default": 0, "exported": false, "description": "How many jobs ran in the most recent frame."},
+		"_paused": {"type": "bool", "default": false, "exported": false, "description": "True while the slicer is paused."}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Time Slicer: a managed work queue that drains within a per-frame ms / count budget. Enqueue items, react to On Process Item(item) - heavy work self-spreads across frames with no loop, no await, no hitch."

@@ -35,9 +35,10 @@ func _enter_tree() -> void:
 ## a 3D one. Resolved once when the behaviour starts, because a light answers to exactly one
 ## of them and the answer cannot change while the game runs.
 var _brightness_property: String = ""
-## How far into the current breath we are, in seconds. Kept rather than read off the game
-## clock so that stopping and starting again resumes from where the wave was, and so that
-## changing Period Seconds mid-breath does not snap the light.
+# Kept rather than read off the game
+# clock so that stopping and starting again resumes from where the wave was, and so that
+# changing Period Seconds mid-breath does not snap the light.
+## How far into the current breath we are, in seconds.
 var _breath: float = 0.0
 ## Seconds still to wait before Start Pulsing takes effect, for the row that says "after".
 var _waiting: float = 0.0

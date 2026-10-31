@@ -4092,7 +4092,12 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 			var tooltip_text: String = str(attributes.get("tooltip", "")).strip_edges()
 			if tooltip_text.is_empty():
 				tooltip_text = str(descriptor.get("description", "")).strip_edges()
-			if exported and not tooltip_text.is_empty():
+			# A variable that is not exported has no Inspector line, but its description is still its `##`
+			# line, so it reads in the script and comes back on its row (the tree path writes it the same
+			# way). Only the plain description counts there: a tooltip attribute is an Inspector setting.
+			if not exported:
+				tooltip_text = str(descriptor.get("description", "")).strip_edges()
+			if not tooltip_text.is_empty():
 				lines.append("## %s" % tooltip_text.replace("\n", " "))
 			# Section headers, emitted only when they CHANGE from the previous exported variable
 			# (the sort clustered same-section vars together), so each header lands ONCE and the

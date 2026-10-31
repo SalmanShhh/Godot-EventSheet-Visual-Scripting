@@ -32,6 +32,7 @@ static func build() -> bool:
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
 		"# Short-scale suffixes: index i covers 10^(3i). Past Dc (1e33) the formatters fall to scientific.",
+		"## The short suffix for each power of a thousand, used when a big number is shown as text.",
 		"const SUFFIXES: Array = [\"\", \"K\", \"M\", \"B\", \"T\", \"Qa\", \"Qi\", \"Sx\", \"Sp\", \"Oc\", \"No\", \"Dc\"]",
 		"",
 		"# Order of magnitude (floor log10 of |value|). GDScript's log() is natural log and there is no",

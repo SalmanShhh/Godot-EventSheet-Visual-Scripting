@@ -27,12 +27,15 @@ static func build() -> bool:
 	# thread; the off-thread thumbnail rasterizer keeps reading the raw steps and never touches this.
 	var cache: RawCodeRow = RawCodeRow.new()
 	cache.code = "\n".join(PackedStringArray([
+		"# Runtime only (not",
+		"# exported, so never serialized). Read ONLY on the main thread (the draw paths); the off-thread",
+		"# thumbnail rasterizer reads the raw steps instead and never calls this.",
 		"## The steps pre-parsed into typed draw entries, cached until the resource changes - so replaying",
-		"## this prefab across many stamps does not re-parse colors/kinds every draw. Runtime only (not",
-		"## exported, so never serialized). Read ONLY on the main thread (the draw paths); the off-thread",
-		"## thumbnail rasterizer reads the raw steps instead and never calls this.",
+		"## this prefab across many stamps does not re-parse colors/kinds every draw.",
 		"var _compiled: Array = []",
+		"## True when the compiled strokes match the current settings.",
 		"var _compiled_valid: bool = false",
+		"## Size the strokes were last compiled for; -1 until compiled.",
 		"var _compiled_size: int = -1",
 		"",
 		"## Returns steps pre-parsed to typed entries {kind, x, y, p1, p2, p3, color: Color, tex: Texture2D},",

@@ -21,8 +21,8 @@ static func build() -> bool:
 	sheet.variables = {
 		"cooldown_multiplier": {"type": "float", "default": 1.0, "exported": true, "attributes": {"tooltip": "Global multiplier applied to every Set Cooldown (0.8 = 20% cooldown reduction).", "range": {"min": "0", "max": "10", "step": "0.05"}}},
 		"ability_set": {"type": "Resource", "default": null, "exported": true, "attributes": {"tooltip": "Optional: drop an AbilitySetResource (.tres) here to auto-create its whole loadout on ready - the data-driven way to define abilities without events."}},
-		"abilities": {"type": "Dictionary", "default": {}, "exported": false},
-		"current_ability_id": {"type": "String", "default": "", "exported": false}
+		"abilities": {"type": "Dictionary", "default": {}, "exported": false, "description": "Every ability the host has been granted, by id, with its cooldown, stacks and tags."},
+		"current_ability_id": {"type": "String", "default": "", "exported": false, "description": "The id of the ability that last fired a trigger - what the Current Ability ID expression reads."}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Simple Abilities (event-sheet parity + Godot extras): grant abilities by id, cooldowns, stack charges that auto-regen, temporary abilities that auto-expire, per-ability custom data, and tags for bulk operations. Triggers fire for ANY ability; read Current Ability ID (or the Current Ability Is condition) to tell which one fired."

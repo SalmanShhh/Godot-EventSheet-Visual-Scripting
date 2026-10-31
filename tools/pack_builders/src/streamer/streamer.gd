@@ -41,16 +41,18 @@ var _loaded: Dictionary = {}
 var _requested: Dictionary = {}
 ## Cell -> true for a chunk Keep Chunk pinned. A pinned chunk is never released by distance.
 var _pinned: Dictionary = {}
-## Cell -> true for a cell the folder has no scene for. A hole in the grid is a level-design
-## fact rather than an error, so it is remembered once and never asked for again - otherwise
-## the streamer would want it every frame and never call the world settled.
+# A hole in the grid is a level-design
+# fact rather than an error, so it is remembered once and never asked for again - otherwise
+# the streamer would want it every frame and never call the world settled.
+## Cell -> true for a cell the folder has no scene for.
 var _absent: Dictionary = {}
+# It is remembered for the same reason a hole is - a cell nothing recorded is
+# wanted again the very next frame, which is one engine error per frame for ever and a world
+# that never settles. Stream Chunks Around clears it, so fixing the file and starting again
+# is the way back.
 ## Cell -> true for a cell whose scene is there and could not be made into a chunk: the
 ## threaded load failed, the loader refused the request, or the file turned out not to be a
-## scene at all. It is remembered for the same reason a hole is - a cell nothing recorded is
-## wanted again the very next frame, which is one engine error per frame for ever and a world
-## that never settles. Stream Chunks Around clears it, so fixing the file and starting again
-## is the way back.
+## scene at all.
 var _refused: Dictionary = {}
 ## Cells the radius wants, nearest ring first, rebuilt every frame from where the followed
 ## node is now.

@@ -47,8 +47,11 @@ var debug_log: bool = false
 
 #region state
 # --- Internal state (the graph lives per agent, or per map tag when one is set) ---
+## The tile map the route is searched over.
 var _tilemap: TileMapLayer = null
+## The platformer movement behaviour that carries out the route.
 var _movement: Node = null
+## True once the warning about a tilted gravity has been printed.
 var _gravity_angle_warned: bool = false
 ## Standable cells (the cell the agent's feet occupy) -> true.
 var _nodes: Dictionary = {}
@@ -66,100 +69,163 @@ var _tile_overrides: Dictionary = {}
 var _body_states: Dictionary = {}
 ## A tilemap-less grid (Create Obstacle Map / Load Obstacle Map JSON): its size and origin.
 var _custom_grid: bool = false
+## Size of the agent in tiles when it is set by hand.
 var _custom_size: Vector2i = Vector2i.ZERO
+## Where the tile grid starts, in pixels.
 var _grid_origin: Vector2 = Vector2.ZERO
 ## The active path: Array of {"world": Vector2, "action": String, "cell": Vector2i} (portal
 ## waypoints also carry "portal_id").
 var _path: Array = []
+## Which point of the route the host is heading for.
 var _path_index: int = 0
+## True once the host has jumped on the current leg.
 var _jumped_this_segment: bool = false
+## True once the jump button has been let go to cut the jump short.
 var _jump_released: bool = false
+## Upward speed at which the jump is cut short.
 var _jump_release_velocity: float = 0.0
+## True once the double jump has been used on the current leg.
 var _second_jump_done: bool = false
+## True once the host has dropped through a platform on the current leg.
 var _dropped_this_segment: bool = false
+## Horizontal input the route asks for this frame, from -1 to 1.
 var _move_axis: float = 0.0
+## Line drawn along the route when debug drawing is on.
 var _debug_line: Line2D = null
+## Node that draws the whole search graph when debug drawing is on.
 var _debug_graph: Node2D = null
 ## Registered portals: {"id", "from", "to", "both", "type" ("instant"/"gradual"), "cost",
 ## "speed", "tag", "ignore_hazards"} - they survive regenerate.
 var _portals: Array = []
+## Id given to the next portal that is added.
 var _next_portal_id: int = 1
+## Id of the portal used most recently; -1 when none.
 var _last_portal_id: int = -1
 ## Elevator groups: group name -> Array of stop positions (Vector2).
 var _elevator_stops: Dictionary = {}
 ## Portal execution: the portal being taken, whether the sheet paused it, and the gradual move.
 var _current_portal: Dictionary = {}
+## Where the host comes out of the portal it is using.
 var _current_portal_exit: Vector2 = Vector2.ZERO
+## True while the host walks into a portal.
 var _portal_entering: bool = false
+## True while the host waits inside a portal.
 var _portal_paused: bool = false
+## True while the host is being carried through a portal.
 var _portal_traversing: bool = false
+## Where the current portal trip starts.
 var _portal_from: Vector2 = Vector2.ZERO
+## Where the current portal trip ends.
 var _portal_to: Vector2 = Vector2.ZERO
+## How far through the current portal trip the host is, from 0 to 1.
 var _portal_progress: float = 0.0
+# Applied at ROUTING time (no rebuild needed when they change):
+# deadly blocks links outright, danger multiplies their cost.
 ## World-space hazards: {"id", "kind" ("rect"/"circle"/"tracked"), "rect" or "center"/"radius"
-## or "node"/"radius", "deadly"}. Applied at ROUTING time (no rebuild needed when they change):
-## deadly blocks links outright, danger multiplies their cost.
+## or "node"/"radius", "deadly"}.
 var _hazards: Array = []
+## Id given to the next hazard that is added.
 var _next_hazard_id: int = 1
+## Id of the hazard touched most recently; 0 when none.
 var _last_hazard_id: int = 0
+## True if the host was inside a hazard on the previous frame.
 var _was_in_hazard: bool = false
 ## Registered moving platforms: {"node": Node2D, "a": Vector2, "b": Vector2} - survive
 ## regenerate. Each becomes a "platform" link; the drive waits, boards, and rides it.
 var _moving_platforms: Array = []
 # Follow mode (Find Path To Node): the tracked node + where the current path was aimed.
+## The node the host keeps routing toward.
 var _follow_target: Node = null
+## The point the current route leads to.
 var _path_goal: Vector2 = Vector2.ZERO
+## The tile the current route leads to.
 var _path_goal_cell: Vector2i = Vector2i.ZERO
+## Total cost of the current route.
 var _path_cost: float = 0.0
+## Why the most recent route failed, as a word.
 var _fail_reason: String = ""
+## Why the most recent search found no route.
 var _last_search_fail: String = ""
+## The legs of the most recent route, in order.
 var _last_route_edges: Array = []
+## How a goal that cannot be reached is handled: nearest point or fail.
 var _goal_mode: String = "nearest"
+## Seconds since the route was last worked out.
 var _repath_clock: float = 0.0
 ## A route whose last waypoint must land on an exact x (patrol ends, side-of-node, ledge offsets).
 var _exact_final: float = NAN
+## True when the host must reach the exact point, not just near it.
 var _exact_arrival: bool = false
 # Coyote grace: seconds since the host last stood on the floor.
+## Seconds left in which losing the floor is not counted as falling off the route.
 var _floor_grace: float = 0.0
 # Stuck watchdog: best distance seen toward the current waypoint + time without progress.
+## Closest the host has been to the current point, used to spot it getting stuck.
 var _best_waypoint_distance: float = INF
+## Seconds the host has made no progress toward the current point.
 var _stuck_clock: float = 0.0
+## True for a moment after the host is moved by hand, so it is not counted as stuck.
 var _teleport_grace: bool = false
 # Budget-deferred request (this agent is queued for a later tick).
+## True while a route is waiting for its turn to be searched.
 var _path_pending: bool = false
+## The point the waiting route leads to.
 var _pending_goal: Vector2 = Vector2.ZERO
+## How the waiting route treats an unreachable goal.
 var _pending_goal_mode: String = "nearest"
 # Patrol: the two ends of the platform, the walking direction, and the dwell at each end.
+## True while the host walks back and forth between two ends.
 var _patrolling: bool = false
+## The two points the host patrols between.
 var _patrol_ends: Array = []
+## Which end the host is heading for.
 var _patrol_dir: int = 0
+## Seconds the host rests at each end.
 var _patrol_dwell: float = 0.0
+## True while the host is resting at an end.
 var _patrol_dwelling: bool = false
+## Seconds spent resting at the current end.
 var _patrol_clock: float = 0.0
 # Jump Toward: a pathless full-strength leap at a point.
+## True while a Jump Toward is in progress.
 var _jump_toward_active: bool = false
+## True once the Jump Toward jump has left the ground.
 var _jump_toward_launched: bool = false
+## True while the Jump Toward jump is in the air.
 var _jump_toward_airborne: bool = false
+## The point a Jump Toward is aiming at.
 var _jump_toward_target: Vector2 = Vector2.ZERO
 # Find Path To Node Side: the node, the side and the spot the route was aimed at.
+## The pending request to stand on a given side of a target.
 var _side_request: Dictionary = {}
+## Which side of the target the host arrived on: -1 left, 1 right, 0 none.
 var _reached_side: int = 0
 # Idle separation: time spent trying, and the rest after giving up.
+## Seconds until the host next checks whether it crowds a neighbour.
 var _separation_clock: float = 0.0
+## Seconds to wait before nudging away again.
 var _separation_rest: float = 0.0
+## True while the host is stepping away from a neighbour.
 var _separating: bool = false
 # Crowd arrivals: the goal-claim key this agent holds.
+## Key of the goal spot this agent has claimed.
 var _claimed_key: String = ""
 # The SHARED path budget: statics are one value across every agent of this behavior, so
 # N chasers repathing at once spread their A* runs over frames instead of spiking one.
+## Most routes all agents together may search in one frame.
 static var _shared_max_paths_per_tick: int = 8
+## The frame the shared route count belongs to.
 static var _shared_tick_id: int = -1
+## Routes searched so far this frame by all agents.
 static var _shared_paths_this_tick: int = 0
 # Every agent that has routed or ticked (instance id -> true), for crowd, avoidance and spacing.
+## Ids handed out to agents, by instance, shared by all agents.
 static var _agent_ids: Dictionary = {}
 # Crowd arrivals: "<map key>|<cell>" -> the instance id of the agent that claimed that goal.
+## Goal spots claimed by agents, so two do not pick the same one.
 static var _goal_claims: Dictionary = {}
 # Map tags: tag -> the shared graph, obstacle edits, portals, hazards and platforms.
+## Search graphs built for each tile map, shared between agents.
 static var _shared_maps: Dictionary = {}
 #endregion
 

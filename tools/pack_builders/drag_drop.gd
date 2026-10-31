@@ -22,21 +22,21 @@ static func build() -> bool:
 		"follow_speed": {"type": "float", "default": 0.0, "exported": true, "attributes": {"tooltip": "Max catch-up speed (px/s); 0 = instant snap each tick."}},
 		"break_distance": {"type": "float", "default": 0.0, "exported": true, "attributes": {"tooltip": "Gap that auto-ends the drag; 0 disables."}},
 		"enabled": {"type": "bool", "default": true, "exported": true, "attributes": {"tooltip": "Active at start; disabling mid-drag cancels silently."}},
-		"dragging": {"type": "bool", "default": false, "exported": false},
-		"follow_uid": {"type": "int", "default": -1, "exported": false},
-		"distance_from_point": {"type": "float", "default": 0.0, "exported": false},
-		"throw_speed": {"type": "float", "default": 0.0, "exported": false},
-		"has_throw_override": {"type": "bool", "default": false, "exported": false},
-		"drop_reason": {"type": "String", "default": "manual", "exported": false},
-		"break_action": {"type": "int", "default": 0, "exported": false},
-		"snap_positions": {"type": "Array", "default": [], "exported": false},
-		"snap_uids": {"type": "Array[int]", "default": [], "exported": false},
-		"snap_radius": {"type": "float", "default": 0.0, "exported": false},
-		"snap_mode": {"type": "int", "default": 0, "exported": false},
-		"magnet_strength": {"type": "float", "default": 0.0, "exported": false},
-		"is_snapping_flag": {"type": "bool", "default": false, "exported": false},
-		"snapped_uid": {"type": "int", "default": -1, "exported": false},
-		"throw_cursor": {"type": "int", "default": 0, "exported": false}
+		"dragging": {"type": "bool", "default": false, "exported": false, "description": "True while the host is being dragged."},
+		"follow_uid": {"type": "int", "default": -1, "exported": false, "description": "Instance id of the node the host follows while dragged, or -1 when it follows the pointer."},
+		"distance_from_point": {"type": "float", "default": 0.0, "exported": false, "description": "Distance from the host to the drag point, in pixels."},
+		"throw_speed": {"type": "float", "default": 0.0, "exported": false, "description": "Speed of the throw at release, in pixels per second."},
+		"has_throw_override": {"type": "bool", "default": false, "exported": false, "description": "True when a throw velocity has been set by hand instead of measured."},
+		"drop_reason": {"type": "String", "default": "manual", "exported": false, "description": "Why the last drag ended, such as manual or broken."},
+		"break_action": {"type": "int", "default": 0, "exported": false, "description": "What happens when a drag breaks: 0 drops the host, other values are set by the Break actions."},
+		"snap_positions": {"type": "Array", "default": [], "exported": false, "description": "Positions the host can snap to."},
+		"snap_uids": {"type": "Array[int]", "default": [], "exported": false, "description": "Instance ids of nodes the host can snap to."},
+		"snap_radius": {"type": "float", "default": 0.0, "exported": false, "description": "How close the host must be to a snap point to be pulled in, in pixels."},
+		"snap_mode": {"type": "int", "default": 0, "exported": false, "description": "How snapping works: 0 off, other values pick positions or nodes."},
+		"magnet_strength": {"type": "float", "default": 0.0, "exported": false, "description": "How strongly a nearby snap point pulls the host, from 0 to 1."},
+		"is_snapping_flag": {"type": "bool", "default": false, "exported": false, "description": "True while the host is held on a snap point."},
+		"snapped_uid": {"type": "int", "default": -1, "exported": false, "description": "Instance id of the node the host is snapped to, or -1."},
+		"throw_cursor": {"type": "int", "default": 0, "exported": false, "description": "Position in the throw history where the next sample goes."}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Drag & Drop behavior (event-sheet parity, event-driven): the author feeds the drag point each tick (virtual cursor, gamepad, touch, AI) - never polls Input. Follow-speed lag, direction lock, break-distance auto-drop, snapping/magnetism, auto-measured throw velocity (routed by you in On Dropped). NOTE: overlap snap mode is a v1 radius-distance simplification (true shape-overlap is a follow-up)."
@@ -49,12 +49,19 @@ static func build() -> bool:
 	decls.code = "\n".join(PackedStringArray([
 		"## Per-tick movement lock (8Direction style).",
 		"@export_enum(\"free\", \"up_down\", \"left_right\", \"four_dir\", \"eight_dir\") var directions: int = 0",
+		"## Where the pointer is holding the host, in world pixels.",
 		"var drag_point: Vector2 = Vector2.ZERO",
+		"## Where the pointer held the host on the previous frame.",
 		"var prev_drag_point: Vector2 = Vector2.ZERO",
+		"## Distance from the host's origin to where it was grabbed.",
 		"var grab_offset: Vector2 = Vector2.ZERO",
+		"## Throw velocity measured from the recent pointer movement.",
 		"var throw_vel: Vector2 = Vector2.ZERO",
+		"## Throw velocity set by hand, used when it is switched on.",
 		"var override_throw: Vector2 = Vector2.ZERO",
+		"## The snap position the host is heading for.",
 		"var snap_target: Vector2 = Vector2.ZERO",
+		"## Recent pointer positions, used to work out the throw velocity.",
 		"var throw_history: PackedVector2Array = PackedVector2Array()"
 	]))
 	sheet.events.append(decls)

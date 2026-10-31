@@ -18,7 +18,7 @@ static func build() -> bool:
 		"Slot-based persistence as the SaveSystem autoload: every sheet saves and loads values by name, each slot is its own file, and the location, format, and encryption are set once in the Inspector. Save Game fires On Before Save so every sheet writes its own piece, and Load Game fires On After Load so every sheet reads it back.",
 		Lib.manifest().autoload("SaveSystem").verb_category("Save System").tags(["persistence"]))
 	src.sheet.variables = {
-		"autosave_accumulator": {"type": "float", "default": 0.0, "exported": false},
+		"autosave_accumulator": {"type": "float", "default": 0.0, "exported": false, "description": "Seconds since the last autosave."},
 		"autosave_interval": {"type": "float", "default": 0.0, "exported": true,
 			"attributes": {"tooltip": "Seconds between autosaves (0 = off). Fires On Before Save first.", "range": {"min": "0", "max": "600", "step": "1"}}},
 		"backup_count": {"type": "int", "default": 0, "exported": true,

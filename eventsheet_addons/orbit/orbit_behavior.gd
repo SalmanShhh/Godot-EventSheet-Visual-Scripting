@@ -14,9 +14,13 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("OrbitBehavior behavior requires a Node2D parent.")
 
+## Current angle around the centre, in degrees.
 var angle: float = 0.0
+## True once the centre has been taken from the host's position.
 var center_captured: bool = false
+## Horizontal position of the orbit centre, in pixels.
 var center_x: float = 0.0
+## Vertical position of the orbit centre, in pixels.
 var center_y: float = 0.0
 ## When on, the node rotates to face its direction of travel.
 @export var match_rotation: bool = false
@@ -28,6 +32,7 @@ var center_y: float = 0.0
 @export var secondary_radius: float = 0.0
 ## Degrees per second traveled around the orbit; negative reverses direction.
 @export var speed_degrees: float = 90.0
+## Total angle travelled since the orbit started, in degrees, counting full turns.
 var total_rotation: float = 0.0
 
 func _process(delta: float) -> void:

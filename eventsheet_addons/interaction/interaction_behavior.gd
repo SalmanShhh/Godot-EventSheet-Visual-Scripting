@@ -26,6 +26,7 @@ signal on_interacted(node: Node)
 
 # The interactable currently in focus, or null when nothing is in reach. Read it with the
 # Focused Node expression; every change goes through _set_focus so the trigger stays an edge.
+## The node the host is currently able to interact with.
 var _focus: Node = null
 
 ## @ace_action

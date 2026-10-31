@@ -18,6 +18,7 @@ func _enter_tree() -> void:
 ## The name the two dials go by in hit_flash.gdshader. Named once here so a rename in the
 ## shader file is a one-line change in this one.
 const COLOUR_DIAL: String = "flash_color"
+## Name of the shader dial that sets how strongly the flash shows.
 const AMOUNT_DIAL: String = "flash_amount"
 
 ## Give this node its own copy of the material before anything turns a dial on it. A material

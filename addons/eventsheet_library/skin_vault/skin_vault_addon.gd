@@ -40,19 +40,30 @@ signal on_pool_empty
 @export_range(1, 200, 1) var pity_threshold: int = 10
 
 # name -> {weight, tier}. Tier is an explicit rank so pity never depends on registration order.
+## Rarity tiers by name, with their weights.
 var _rarities: Dictionary = {}
 # id -> {name, rarity, cost, tags:PackedStringArray}.
+## Every skin that has been defined, by id.
 var _skins: Dictionary = {}
 # id -> true (the owned set).
+## Skins the player owns, by id.
 var _owned: Dictionary = {}
+## Misses in a row since the last rare skin.
 var _pity: int = 0
 # Last-event context (read via getter expressions inside the matching trigger).
+## Id of the skin rolled most recently.
 var _rolled_id: String = ""
+## Id of the skin unlocked most recently.
 var _unlocked_id: String = ""
+## How the most recent skin was unlocked, as a word.
 var _unlock_method: String = ""
+## Id of the skin whose requirement was just asked about.
 var _req_id: String = ""
+## Id of the skin taken away most recently.
 var _revoked_id: String = ""
+## Random source for every roll.
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
+## True when rolls use the shared random generator instead of this vault's own.
 var _use_shared: bool = false
 
 func _ready() -> void:

@@ -61,19 +61,21 @@ signal generation_complete
 ## Warns about walker lifecycles, clamped grid sizes, scatters that could not fit, an injected queue running dry, and the four common reasons a map comes out empty. On while you build, off for release.
 @export var debug_mode: bool = false
 
+# A heading picks its neighbour by ROUNDING THE DEGREES into
+# this table rather than by taking a cosine, so the same heading picks the same neighbour on
+# every platform a game exports to - which is the whole determinism promise in one line.
 ## The eight grid neighbours, clockwise from "right" (0 degrees right, 90 degrees down, which is
-## Godot's own y-down screen sense). A heading picks its neighbour by ROUNDING THE DEGREES into
-## this table rather than by taking a cosine, so the same heading picks the same neighbour on
-## every platform a game exports to - which is the whole determinism promise in one line.
+## Godot's own y-down screen sense).
 const NEIGHBOUR_STEPS: Array[Vector2i] = [
 	Vector2i(1, 0), Vector2i(1, 1), Vector2i(0, 1), Vector2i(-1, 1),
 	Vector2i(-1, 0), Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1),
 ]
 
-## The six shape recipes Add Walker From Preset registers, by the name you pass it. The numbers are
-## the recipe, not a suggestion: they are what the preset means, and every one of them is reachable
-## afterwards through the Set Walker actions. "blob" is the one recipe written as a band (30 to 50
-## steps), taken here at its midpoint so a preset is one concrete walker.
+# The numbers are
+# the recipe, not a suggestion: they are what the preset means, and every one of them is reachable
+# afterwards through the Set Walker actions. "blob" is the one recipe written as a band (30 to 50
+# steps), taken here at its midpoint so a preset is one concrete walker.
+## The six shape recipes Add Walker From Preset registers, by the name you pass it.
 const PRESETS: Dictionary = {
 	"cave": {"steps": 400, "directions": 8, "max_turn": 180.0, "turn_chance": 1.0,
 		"brush_size": 1, "weights": ""},
@@ -157,50 +159,75 @@ class Walker extends RefCounted:
 
 # The grid: one flat row-major buffer of integers plus its two dimensions. Every cell holds one
 # number and nothing else, which is what keeps this fast and lets any art pipeline read it.
+## The grid of cell values, row by row.
 var _cells: PackedInt32Array = PackedInt32Array()
+## Grid width in cells.
 var _width: int = 0
+## Grid height in cells.
 var _height: int = 0
 
 # The walkers, by id, plus the REGISTRATION ORDER they run in. Re-using an id replaces the walker
 # without moving it in that order, because the order is part of the seed.
+## Live walkers by id, each with its position, heading and steps left.
 var _walkers: Dictionary = {}
+## Walker ids in the order they were spawned, which is the order they step in.
 var _order: Array[String] = []
 
 # The marks, in placement order: {"x": int, "y": int, "tag": String}.
+## Marked cells, each with its position and tag.
 var _marks: Array[Dictionary] = []
 
 # The one seeded stream everything draws from, and the seed string it was last set with.
+## Random source for every walker's choices, seeded from the seed text.
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
+## The seed text the run was started with.
 var _seed_text: String = ""
 
 # The injected queue and how far into it generation has read. Injected values are consumed in
 # order; a head index rather than a pop keeps the queue cheap and makes the remaining count exact.
+## Fixed random values fed in by tests in place of real rolls.
 var _injected: Array[float] = []
+## Next injected value to be read.
 var _injected_head: int = 0
+## True if more rolls were asked for than values were injected.
 var _injected_underran: bool = false
 
 # The context the trigger expressions read. Each one is set immediately before its trigger emits
 # and put back afterwards, so Walker X outside a walker trigger is 0 rather than stale.
+## Id of the walker the running trigger is about.
 var _ctx_walker_id: String = ""
+## Tag of the walker the running trigger is about.
 var _ctx_walker_tag: String = ""
+## Column of the walker the running trigger is about.
 var _ctx_walker_x: int = 0
+## Row of the walker the running trigger is about.
 var _ctx_walker_y: int = 0
+## Heading of the walker the running trigger is about, in degrees.
 var _ctx_walker_angle: float = 0.0
+## Steps the walker the running trigger is about has left.
 var _ctx_walker_steps_left: int = 0
+## Column of the cell just carved.
 var _ctx_carved_x: int = 0
+## Row of the cell just carved.
 var _ctx_carved_y: int = 0
+## Value the cell was carved to.
 var _ctx_carved_value: int = 0
+## Column of the mark the running trigger is about.
 var _ctx_mark_x: int = 0
+## Row of the mark the running trigger is about.
 var _ctx_mark_y: int = 0
+## Tag of the mark the running trigger is about.
 var _ctx_mark_tag: String = ""
 
 # Cell lookups, cached per value and dropped the moment any cell changes. Count Cells plus the two
 # index expressions is the fast path for painting a map, and it is only fast if asking for the
 # hundredth cell does not walk the grid for the hundredth time.
+## Cell lookups already worked out, so repeated reads are cheap.
 var _index_cache: Dictionary = {}
 
 # The grid exists from the moment the object does, so Cell Value and the grid conditions answer
 # from the first frame. This flag is set by the one function that does the whole start-up.
+## True once a run has been started.
 var _started: bool = false
 ## The neighbour a heading resolves to. Degrees in, one of the eight grid neighbours out.
 ## @ace_hidden

@@ -31,32 +31,48 @@ signal on_buffer_cleared
 @export var debug_logging: bool = false
 
 # id -> {sequence:PackedStringArray, timing:float(-1 = use default), strict:bool, tags:PackedStringArray, priority:int, enabled:bool}.
+## Registered combos by id, each with its input sequence and timing.
 var _combos: Dictionary = {}
 # Rolling window of the recent inputs, oldest first: each is {token:String, time:float}.
+## Recent inputs with the time each arrived, newest last.
 var _buffer: Array = []
 # id -> {count:int, time:float}: how deep each combo is matched and when it last advanced (for partial UI + timeout).
+## How far each combo has got along its sequence.
 var _progress: Dictionary = {}
 # The partial matches from the last input (for the Partial Match expressions).
+## Combos that are partly entered and still waiting for their next input.
 var _partials: Array = []
 # A monotonic seconds clock, ticked in OnProcess, stamped onto each input.
+## Seconds since the box started, used to time inputs.
 var _clock: float = 0.0
 # Last-event context (read via getter expressions inside the matching trigger).
+## Id of the combo that matched most recently.
 var _matched_id: String = ""
+## Tags of the combo that matched most recently.
 var _matched_tags: String = ""
+## Clock time at which the last combo matched.
 var _match_time: float = 0.0
+## Id of the combo that most recently broke off.
 var _failed_id: String = ""
+## Step at which that combo broke off.
 var _fail_index: int = 0
+## How many combos have been completed in all.
 var _cleared_count: int = 0
 # The hit chain: what the run of moves landed so far is worth, what the next one will
 # be multiplied by, and the total that is already safe. The same three numbers a board's
 # trick chain keeps, in the same words.
+## Score built up by the current chain of combos.
 var _chain_score: float = 0.0
+## Multiplier the current chain is earning.
 var _chain_multiplier: int = 1
+## Score banked from chains that have finished.
 var _banked_score: float = 0.0
+## Id of the combo that most recently extended the chain.
 var _chain_last: String = ""
 # Combo id -> {player: AnimationPlayer, animation: String}: the move each combo PLAYS.
 # Wiring a sequence to an animation is what a fighter does twenty times over, and keeping it
 # here makes those twenty one table rather than twenty copies of the same event.
+## Animation to play for each combo, by id.
 var _animations: Dictionary = {}
 
 func _ready() -> void:

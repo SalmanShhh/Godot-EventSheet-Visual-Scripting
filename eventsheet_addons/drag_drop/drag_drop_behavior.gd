@@ -33,30 +33,52 @@ signal snapped
 @export var break_distance: float = 0.0
 ## Active at start; disabling mid-drag cancels silently.
 @export var enabled: bool = true
+## True while the host is being dragged.
 var dragging: bool = false
+## Instance id of the node the host follows while dragged, or -1 when it follows the pointer.
 var follow_uid: int = -1
+## Distance from the host to the drag point, in pixels.
 var distance_from_point: float = 0.0
+## Speed of the throw at release, in pixels per second.
 var throw_speed: float = 0.0
+## True when a throw velocity has been set by hand instead of measured.
 var has_throw_override: bool = false
+## Why the last drag ended, such as manual or broken.
 var drop_reason: String = "manual"
+## What happens when a drag breaks: 0 drops the host, other values are set by the Break actions.
 var break_action: int = 0
+## Positions the host can snap to.
 var snap_positions: Array = []
+## Instance ids of nodes the host can snap to.
 var snap_uids: Array[int] = []
+## How close the host must be to a snap point to be pulled in, in pixels.
 var snap_radius: float = 0.0
+## How snapping works: 0 off, other values pick positions or nodes.
 var snap_mode: int = 0
+## How strongly a nearby snap point pulls the host, from 0 to 1.
 var magnet_strength: float = 0.0
+## True while the host is held on a snap point.
 var is_snapping_flag: bool = false
+## Instance id of the node the host is snapped to, or -1.
 var snapped_uid: int = -1
+## Position in the throw history where the next sample goes.
 var throw_cursor: int = 0
 
 ## Per-tick movement lock (8Direction style).
 @export_enum("free", "up_down", "left_right", "four_dir", "eight_dir") var directions: int = 0
+## Where the pointer is holding the host, in world pixels.
 var drag_point: Vector2 = Vector2.ZERO
+## Where the pointer held the host on the previous frame.
 var prev_drag_point: Vector2 = Vector2.ZERO
+## Distance from the host's origin to where it was grabbed.
 var grab_offset: Vector2 = Vector2.ZERO
+## Throw velocity measured from the recent pointer movement.
 var throw_vel: Vector2 = Vector2.ZERO
+## Throw velocity set by hand, used when it is switched on.
 var override_throw: Vector2 = Vector2.ZERO
+## The snap position the host is heading for.
 var snap_target: Vector2 = Vector2.ZERO
+## Recent pointer positions, used to work out the throw velocity.
 var throw_history: PackedVector2Array = PackedVector2Array()
 
 func _ready() -> void:

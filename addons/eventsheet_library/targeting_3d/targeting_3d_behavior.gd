@@ -42,18 +42,22 @@ signal target_lost(why: StringName)
 # --- Internal state ---
 # The node this behaviour is holding, or null. Written only through _take and _drop, so every
 # lock and every loss announces itself exactly once.
+## The node currently targeted.
 var _target: Node3D = null
 # The candidates the last Lock On To Nearest found, ordered left to right by their angle from the
 # camera's forward. Cycle Target walks this ring; nothing else writes it.
+## Candidates in reach, nearest first, that Next Target steps through.
 var _ring: Array[Node3D] = []
 # Whether a target is being held right now. A separate flag rather than a test on _target,
 # because a node that has been freed reads as null in GDScript: asking _target for its nullness
 # would answer "nothing was ever held" for the one case this behaviour most has to announce,
 # and the death would park the loss check silently instead of saying so.
+## True while the target is held and not changed by newer candidates.
 var _holding: bool = false
 # The reach the current lock was taken at, so a lock made with a row's own range is lost at that
 # range rather than at the Inspector's. A lock made by NAMING a node is held at INF, because that
 # row's whole promise is that it keeps what it was pointed at whatever the range says.
+## Distance in metres beyond which a held target is let go.
 var _held_reach: float = 40.0
 ## Where a node stands, and which way it is turned. A node that has not entered the tree yet has
 ## no global transform to read - Godot answers the origin and complains - so its own transform is

@@ -12,19 +12,25 @@ extends Node
 signal event_raised(channel: String, payload: Dictionary)
 
 # channel -> the frame number (Engine.get_process_frames) of its most recent broadcast.
+## Frame on which each event was last sent.
 var _frames: Dictionary = {}
 # channel -> how many times it has been broadcast this run. Wait For Event watches this
 # counter rather than the signal, so a give-up time can interrupt the wait.
+## How many times each event has been sent.
 var _counts: Dictionary = {}
 # channel -> how the most recent Wait For Event on it ended: 0 (or missing) = one is still
 # waiting, 1 = the message arrived, 2 = it gave up. THREE states, not a bool: a wait that is
 # still in flight has not timed out, and a bool would have to answer one of the two anyway.
+## Results of waits that have finished, by wait id.
 var _wait_outcomes: Dictionary = {}
 # channel -> Array of {node, method}: one-shot listeners, run once and then dropped.
+## Listeners that remove themselves after their first event, by event name.
 var _once_listeners: Dictionary = {}
 # "channel  payload" lines for the report, newest last, capped so a long session cannot grow
 # without bound.
+## Recent events, newest last, kept for inspection.
 var _log: Array[String] = []
+## How many events the log keeps before dropping the oldest.
 const _LOG_LIMIT: int = 200
 
 ## @ace_action

@@ -18,12 +18,12 @@ static func build() -> bool:
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
 		"auto_connect_buttons": {"type": "bool", "default": true, "exported": true, "attributes": {"tooltip": "On Ready, wire every descendant Button's pressed signal into On Button Pressed. Re-run with Connect Buttons after spawning UI."}},
-		"last_button_name": {"type": "String", "default": "", "exported": false},
+		"last_button_name": {"type": "String", "default": "", "exported": false, "description": "Name of the button pressed most recently."},
 		"needle_colour": {"type": "Color", "default": Color(0.66, 0.80, 1.0, 1.0), "exported": true, "attributes": {"tooltip": "The colour a Set Needle needle is drawn in while the value is inside its warning mark."}},
 		"needle_warning_colour": {"type": "Color", "default": Color(1.0, 0.45, 0.38, 1.0), "exported": true, "attributes": {"tooltip": "The colour a Set Needle needle turns once the value has drifted past its warning mark."}},
 		"toast_seconds": {"type": "float", "default": 2.0, "exported": true, "attributes": {"tooltip": "How long a toast stays before fading (seconds).", "range": {"min": "0.2", "max": "10", "step": "0.1"}}},
-		"ui_cache": {"type": "Dictionary", "default": {}, "exported": false},
-		"bar_lags": {"type": "Dictionary", "default": {}, "exported": false},
+		"ui_cache": {"type": "Dictionary", "default": {}, "exported": false, "description": "HUD controls once found, so they are looked up only once."},
+		"bar_lags": {"type": "Dictionary", "default": {}, "exported": false, "description": "Lag bars that trail behind a bar's value, by bar name."},
 		"damage_types": {"type": "Resource", "default": null, "exported": true, "attributes": {"tooltip": "The DamageTypeSet this game uses, if it has one. Pop Floating Text As takes a number's colour from it, so a fire number is orange without a colour being typed into the row. Leave it empty and those numbers are drawn white."}},
 		"crit_text_scale": {"type": "float", "default": 1.6, "exported": true, "attributes": {"tooltip": "How much bigger a number popped with the style \"crit\" is drawn, when no styles file names that style. The whole language of a critical hit in one number.", "range": {"min": "1", "max": "4", "step": "0.1"}}},
 		"text_styles": {"type": "Resource", "default": null, "exported": true, "attributes": {"tooltip": "The FloatingTextStyles file this game uses, if it has one. Pop Floating Text As takes a number's size, colour, rise, shake and lifetime from it, so the manners a number is drawn in are one file you edit rather than five numbers repeated through the sheets. Leave it empty and the numbers are drawn the way they always were."}}
@@ -96,6 +96,7 @@ static func build() -> bool:
 		"",
 		"# The bars whose underlay is behind them right now, and the ones that turned out to be gone.",
 		"# Two lists made once and reused, because the tick below may not write the book it is walking.",
+		"## Names of lag bars currently showing recently lost value.",
 		"var _lag_lost: PackedStringArray = PackedStringArray()",
 		"",
 		"# The underlay's own tick, and the whole of its cost. It PARKS itself the moment every armed",

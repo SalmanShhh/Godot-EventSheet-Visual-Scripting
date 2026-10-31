@@ -58,10 +58,12 @@ static func build() -> bool:
 	lines.append_array(Lib.light_binding_lines("also_flicker_reach"))
 	lines.append_array(PackedStringArray([
 		"",
-		"## The noise field the flame is sampled from, and how far along it we are. NOISE, not a fresh",
-		"## random number per frame: consecutive samples of a noise field are RELATED, so the light",
-		"## wanders the way a flame does. Independent random numbers read as static instead.",
+		"# NOISE, not a fresh",
+		"# random number per frame: consecutive samples of a noise field are RELATED, so the light",
+		"# wanders the way a flame does. Independent random numbers read as static instead.",
+		"## The noise field the flame is sampled from, and how far along it we are.",
 		"var _flame: FastNoiseLite = null",
+		"## Running time that drives the flicker pattern.",
 		"var _walked: float = 0.0",
 		"## Seconds still to wait before Start Flickering takes effect, for the row that says \"after\".",
 		"var _waiting: float = 0.0",

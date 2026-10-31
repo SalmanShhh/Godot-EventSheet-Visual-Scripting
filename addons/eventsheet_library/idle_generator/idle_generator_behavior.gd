@@ -29,10 +29,15 @@ signal on_cycle_complete
 @export var base_output: float = 1.0
 ## A multiplier over the whole generator's output - feed it your composed prestige x upgrade x boost multiplier.
 @export var output_multiplier: float = 1.0
+## How far through the current production cycle the generator is, from 0 to 1.
 var _cycle_progress: float = 0.0
+## Output produced but not yet collected.
 var _pending: float = 0.0
+## Amount spent by the most recent purchase.
 var last_spent: float = 0.0
+## How many were bought in the most recent purchase.
 var last_bought: int = 0
+## Amount taken in the most recent collection.
 var last_collected: float = 0.0
 
 # The two facts the cycle clock is derived from. Both are properties, so a plain write to

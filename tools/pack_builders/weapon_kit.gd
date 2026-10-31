@@ -33,10 +33,10 @@ static func build() -> bool:
 		"infinite_reserve": {"type": "bool", "default": false, "exported": true,
 			"attributes": {"tooltip": "Reloads never spend reserve ammo."}},
 		# ── Internal state ───────────────────────────────────────────────────────────
-		"_cooldown": {"type": "float", "default": 0.0, "exported": false},
-		"_reloading": {"type": "bool", "default": false, "exported": false},
-		"_reload_timer": {"type": "float", "default": 0.0, "exported": false},
-		"_burst_left": {"type": "int", "default": 0, "exported": false}
+		"_cooldown": {"type": "float", "default": 0.0, "exported": false, "description": "Seconds until the weapon can fire again."},
+		"_reloading": {"type": "bool", "default": false, "exported": false, "description": "True while a reload is in progress."},
+		"_reload_timer": {"type": "float", "default": 0.0, "exported": false, "description": "Seconds left on the reload."},
+		"_burst_left": {"type": "int", "default": 0, "exported": false, "description": "Shots left in the current burst."}
 	}
 	src.note("Weapon Kit: ammo + reserve, fire-rate cooldown, single/auto/burst modes, and timed/instant reload. Call Fire (it manages ammo + cooldown and triggers On Fire - you spawn the bullet); call Reload. Read Ammo %, Reload Progress, etc. for HUD.")
 	src.block("block_1")

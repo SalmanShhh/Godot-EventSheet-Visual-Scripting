@@ -35,8 +35,11 @@ signal path_finished
 # How far along the curve the host is, in PIXELS of arc length (not a 0..1 fraction):
 # pacing by baked length is what keeps a tight corner from being crossed faster than a
 # straight. _travel_direction is +1 walking forward, -1 on the way back in ping-pong.
+## How far along the path the host is, in pixels.
 var _distance: float = 0.0
+## Which way along the path the host is going: 1 forward, -1 back.
 var _travel_direction: int = 1
+## True while the host is travelling along the path.
 var _following: bool = false
 
 func _process(delta: float) -> void:

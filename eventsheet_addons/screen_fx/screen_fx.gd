@@ -10,17 +10,20 @@ extends CanvasLayer
 ## The ColorRect the effects are drawn on, by the name the shipped scene gives it.
 const RECT_NAME: String = "Screen"
 
+# A rectangle whose dials all read these draws the screen back exactly as it arrived,
+# which is the moment it is worth switching off. fade_color and shock_center are not here:
+# they say what an effect looks like rather than whether one is happening.
 ## Every dial screen_fx.gdshader declares that can be RUNNING, with the value that means it is
-## not. A rectangle whose dials all read these draws the screen back exactly as it arrived,
-## which is the moment it is worth switching off. fade_color and shock_center are not here:
-## they say what an effect looks like rather than whether one is happening.
+## not.
 const AT_REST: Dictionary = {"blur": 0.0, "fade_amount": 0.0, "shock_strength": 0.0, "chromatic": 0.0}
 
 ## How long a shockwave ring takes to cross the screen. A ring is a moment rather than a state,
 ## so it times itself instead of asking every row how long it should last.
 @export_range(0.05, 3.0, 0.05) var ring_seconds: float = 0.55
 
+## Full-screen rectangle the effect is drawn on.
 var _rect: ColorRect = null
+## Shader material that draws the effect.
 var _screen: ShaderMaterial = null
 
 ## The walks running right now, keyed by the dial they move, so a second call on the same dial
@@ -52,27 +55,31 @@ const POST_DIRECTORY: String = "res://eventsheet_addons/screen_fx/"
 ## effect word and its file can therefore never drift apart.
 const POST_PREFIX: String = "post_"
 
-## The twelve effects the stack ships, by the word a row uses. Each is one full-screen shader with a
-## `strength` dial and a few of its own. Every one of them READS THE SCREEN BACK, which is one screen
-## read per pixel of the viewport per entry that is on - so a stack of twelve is a thing to be
-## deliberate about, and a stack of two costs two. Bloom is the dear one: it reads the screen nine
-## times over rather than once, which is what gathering a spill from around each pixel costs.
-##
-## The last three arrived with the moments, because a moment is made of these words: a win swells the
-## bloom and lifts the colour, and danger drains it away again.
+# Each is one full-screen shader with a
+# `strength` dial and a few of its own. Every one of them READS THE SCREEN BACK, which is one screen
+# read per pixel of the viewport per entry that is on - so a stack of twelve is a thing to be
+# deliberate about, and a stack of two costs two. Bloom is the dear one: it reads the screen nine
+# times over rather than once, which is what gathering a spill from around each pixel costs.
+#
+# The last three arrived with the moments, because a moment is made of these words: a win swells the
+# bloom and lifts the colour, and danger drains it away again.
+## The twelve effects the stack ships, by the word a row uses.
 const POST_EFFECTS: PackedStringArray = ["vignette", "film grain", "scanlines", "pixelate",
 	"colour grade", "dither", "fisheye", "glitch", "letterbox", "bloom", "saturate", "desaturate"]
 
-## And the two the colour-vision rows use. They are ordinary stack entries under reserved names, so
-## Save Look records them, Clear Look takes them away, and Move Post Effect Before can put the
-## correction last where it belongs - none of which needs a second mechanism.
+# They are ordinary stack entries under reserved names, so
+# Save Look records them, Clear Look takes them away, and Move Post Effect Before can put the
+# correction last where it belongs - none of which needs a second mechanism.
+## And the two the colour-vision rows use.
 const SEE_AS_EFFECT: String = "see as"
+## Effect word for the colour correction pass.
 const CORRECT_EFFECT: String = "correct colours"
 
-## And the two the accessibility dials do NOT touch. A colour-vision correction is not an amplitude
-## that can strobe - it is the thing that makes the screen readable at all - so the effect-strength
-## dial does not fade it away and the no-flashing ceiling does not hold it down. Every other entry
-## obeys both.
+# A colour-vision correction is not an amplitude
+# that can strobe - it is the thing that makes the screen readable at all - so the effect-strength
+# dial does not fade it away and the no-flashing ceiling does not hold it down. Every other entry
+# obeys both.
+## And the two the accessibility dials do NOT touch.
 const UNDIALLED_EFFECTS: PackedStringArray = [SEE_AS_EFFECT, CORRECT_EFFECT]
 
 ## The four kinds of colour vision, IN THE ORDER the two vision shaders number them: the position in
@@ -87,43 +94,49 @@ const STRENGTH_DIAL: String = "strength"
 ## The dial the two vision shaders take their kind of vision on.
 const VISION_DIAL: String = "vision"
 
-## THE ACCESSIBILITY CEILING. A player who has asked for no flashing gets the same rows - a pulse
-## still pulses, a look still lands - with the amplitude held under this and the time held over
-## FLASH_FLOOR_SECONDS, so nothing the stack draws can strobe. The six verbs this pack shipped first
-## are deliberately untouched by it: their bytes are a promise. The clamp lives in the new layer.
+# A player who has asked for no flashing gets the same rows - a pulse
+# still pulses, a look still lands - with the amplitude held under this and the time held over
+# FLASH_FLOOR_SECONDS, so nothing the stack draws can strobe. The six verbs this pack shipped first
+# are deliberately untouched by it: their bytes are a promise. The clamp lives in the new layer.
+## THE ACCESSIBILITY CEILING.
 const FLASH_CEILING: float = 0.3
+## Shortest a flash may last while no-flashing is on, in seconds.
 const FLASH_FLOOR_SECONDS: float = 0.4
 
+# A game that has those rows needs
+# nothing else for the stack to obey them.
 ## The two Engine meta this project already keeps its accessibility answers in - the same two the
-## built-in Set No Flashing and Set Effect Strength rows write. A game that has those rows needs
-## nothing else for the stack to obey them.
+## built-in Set No Flashing and Set Effect Strength rows write.
 const NO_FLASHING_META: StringName = &"no_flashing"
+## Metadata key a player sets to scale every effect.
 const EFFECT_STRENGTH_META: StringName = &"effect_strength"
 
+# The Juice pack's
+# moments ask for it by this name - one name, spelled the same in both packs - and a game that has
+# built its own post layer joins the group in one line to be found the same way.
 ## The group this layer joins as it enters the tree, so another pack can find the post stack without
-## walking the scene tree looking for something that answers to a method name. The Juice pack's
-## moments ask for it by this name - one name, spelled the same in both packs - and a game that has
-## built its own post layer joins the group in one line to be found the same way.
+## walking the scene tree looking for something that answers to a method name.
 const POST_STACK_GROUP: StringName = &"screen_fx_post_stack"
 
 ## The look resource's own script, loaded by path rather than named as a class, so this pack still
 ## runs (and says so) in a project that only installed Screen FX.
 const LOOK_SCRIPT: String = "res://eventsheet_addons/screen_look_resource/screen_look_resource.gd"
 
+# An entry is a small record rather than a node, because the order,
+# the names and the strengths are what rows ask about, and a rectangle is only how one reaches the
+# screen.
+#
+# called    the name rows address this entry by (its effect word, when nobody said otherwise)
+# effect    which of the shipped effects it is
+# strength  how far the row ASKED it to go, 0 to 1 - the request, not what reached the screen.
+# The two accessibility dials are applied once, on the way to the shader, so a walk
+# that moves this value cannot scale it a second time and a look saved from it holds
+# what the game asked for rather than what one player's settings allowed
+# enabled   whether it draws at all
+# params    the effect's own dials, by the uniform name the shader declares
+# rect      the full-screen ColorRect wearing it, once there is one
 ## THE STACK, in the order the effects are drawn: the first entry is applied to the screen first and
-## the last one has the last word. An entry is a small record rather than a node, because the order,
-## the names and the strengths are what rows ask about, and a rectangle is only how one reaches the
-## screen.
-##
-##   called    the name rows address this entry by (its effect word, when nobody said otherwise)
-##   effect    which of the shipped effects it is
-##   strength  how far the row ASKED it to go, 0 to 1 - the request, not what reached the screen.
-##             The two accessibility dials are applied once, on the way to the shader, so a walk
-##             that moves this value cannot scale it a second time and a look saved from it holds
-##             what the game asked for rather than what one player's settings allowed
-##   enabled   whether it draws at all
-##   params    the effect's own dials, by the uniform name the shader declares
-##   rect      the full-screen ColorRect wearing it, once there is one
+## the last one has the last word.
 var _stack: Array[Dictionary] = []
 
 ## The shaders loaded so far, by effect word. A project that only ever uses a vignette loads one.

@@ -51,12 +51,18 @@ signal threshold_crossed(rule_id: String, stat: String, total: float)
 # --- Internal state ---
 # buff id -> {stat, value, mode, tags: Array[String], source, active, time_left (-1 =
 # permanent), duration, paused}. Ids are unique per node: re-adding replaces.
+## Active buffs by id, each with its stat, amount and time left.
 var _buffs: Dictionary = {}
+## Base value of each stat before any buff.
 var _bases: Dictionary = {}
 # rule id -> {stat, value, direction, repeating, armed}
+## Rules that combine buffs into a stat, by stat name.
 var _rules: Dictionary = {}
+## Each stat's total as of the last change, used to spot what changed.
 var _last_totals: Dictionary = {}
+## Id of the buff that expired most recently.
 var _last_expired: String = ""
+## Name of the rule that was applied most recently.
 var _last_rule: String = ""
 
 func _ready() -> void:

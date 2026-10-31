@@ -9,10 +9,15 @@ extends Node
 @export_group("Advanced Random")
 @export var seed_on_start: int = 0
 
+## The random number generator behind every roll, seeded from the pack's seed.
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
+## Noise generator that backs the noise lookups.
 var _noise: FastNoiseLite = FastNoiseLite.new()
+## Shuffled lookup table used by the seeded permutation helpers.
 var _perm: PackedInt32Array = PackedInt32Array()
+## Shuffle-bag state by bag name, so each item comes out once before any repeats.
 var _bags: Dictionary = {}
+## Pity counters by roll name: how many misses in a row, so a long streak raises the next chance.
 var _pity: Dictionary = {}
 
 func _ready() -> void:

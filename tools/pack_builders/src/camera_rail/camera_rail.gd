@@ -20,27 +20,38 @@ var host: Camera2D = null
 # --- Internal state ---
 # Which shot is running: "" for none, or "fly", "hold", "blend". ONE at a time on purpose - a
 # rail is a shot list, and two shots driving one camera at once have no meaning.
+## Which shot is running: "fly", "hold" or "blend", or empty when none is.
 var _mode: String = ""
 # Seconds into the current shot, and how long it lasts. _progress is the fraction of the two,
 # kept rather than recomputed so it survives the shot ending.
+## Seconds spent on the current move.
 var _elapsed: float = 0.0
+## Seconds the current move takes in all.
 var _duration: float = 0.0
+## How far through the current move the camera is, from 0 to 1.
 var _progress: float = 0.0
 # The ease the current shot runs on - the row's word, or the Inspector's when the row named none.
+## The easing curve of the current move.
 var _ease: String = "linear"
 # The Fly Along run: the route being walked and its baked length in pixels. Length is read once
 # per run because baking a curve is not free and the curve does not change mid-shot.
+## The path the camera is flying along.
 var _flight_path: Path2D = null
+## Length of the flight path in pixels.
 var _flight_length: float = 0.0
 # The Blend To run: where the rail's camera stood when the blend started, and the camera it is
 # travelling onto. The start pose is captured once - reading it back each frame would blend the
 # camera toward a target it is already moving toward, and it would never arrive.
+## The camera being blended toward.
 var _blend_target: Camera2D = null
+## Where the camera stood when the blend began.
 var _blend_from_transform: Transform2D = Transform2D.IDENTITY
+## The zoom the camera had when the blend began.
 var _blend_from_zoom: Vector2 = Vector2.ONE
 # The camera this rail last handed the view to: Cut To writes it, and so does the end of a blend.
 # It is written whether or not the node is in a tree, because make_current only means anything
 # inside one - so this is the honest record of who the rail thinks is holding the view.
+## The camera this one handed control to, so it can be taken back.
 var _handed_to: Camera2D = null
 
 ## @ace_trigger

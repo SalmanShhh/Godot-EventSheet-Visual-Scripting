@@ -23,11 +23,11 @@ static func build() -> bool:
 		"stepping": {"type": "bool", "default": false, "exported": true, "description": "In SMOOTH mode, sweep the path each frame instead of lerping straight there, so a fast chase cannot pass through a thin wall between two frames. Delayed mode ignores it, since retracing the target's recorded path is the point of that mode."},
 		"step_mask": {"type": "int", "default": 1, "exported": true, "description": "Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5."},
 		"step_hits_areas": {"type": "bool", "default": false, "exported": true, "description": "Also stop the sweep on Area2D nodes, which it ignores by default."},
-		"following": {"type": "bool", "default": true, "exported": false},
-		"history": {"type": "Array", "default": [], "exported": false},
-		"clock": {"type": "float", "default": 0.0, "exported": false},
-		"_reached": {"type": "bool", "default": false, "exported": false},
-		"_blocked": {"type": "bool", "default": false, "exported": false}
+		"following": {"type": "bool", "default": true, "exported": false, "description": "True while the host is following its target; turn it off to stop."},
+		"history": {"type": "Array", "default": [], "exported": false, "description": "Recent target positions with their times, used to follow with a delay."},
+		"clock": {"type": "float", "default": 0.0, "exported": false, "description": "Seconds since following began, used to timestamp the history."},
+		"_reached": {"type": "bool", "default": false, "exported": false, "description": "True once the host has arrived at its target."},
+		"_blocked": {"type": "bool", "default": false, "exported": false, "description": "True while something blocks the host on its way to the target."}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Follow behavior (event-sheet parity): trails another node. mode smooth = lerp chase; mode delayed = replay the target's position history after a delay (the Follow behavior)."

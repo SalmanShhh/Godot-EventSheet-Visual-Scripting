@@ -23,8 +23,8 @@ static func build() -> bool:
 		"step_mask": {"type": "int", "default": 1, "exported": true, "description": "Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5."},
 		"step_hits_areas": {"type": "bool", "default": false, "exported": true, "description": "Also stop the sweep on Area2D nodes, which it ignores by default."},
 		"stop_on_step_hit": {"type": "bool", "default": true, "exported": true, "description": "Drop the waypoint queue and stop when the path is blocked. Turn off to keep pushing at the obstacle and just report it."},
-		"waypoints": {"type": "Array", "default": [], "exported": false},
-		"moving": {"type": "bool", "default": false, "exported": false}
+		"waypoints": {"type": "Array", "default": [], "exported": false, "description": "The points the host is walking through, in order."},
+		"moving": {"type": "bool", "default": false, "exported": false, "description": "True while the host is travelling toward a point."}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Move To behavior (event-sheet parity): glides through a waypoint queue (Move To Position replaces it, Add Waypoint appends) and fires On Arrived at the final stop. rotate_toward_motion faces the travel direction."

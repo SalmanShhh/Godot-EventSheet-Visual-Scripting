@@ -20,6 +20,7 @@ signal on_button_pressed
 
 ## On Ready, wire every descendant Button's pressed signal into On Button Pressed. Re-run with Connect Buttons after spawning UI.
 @export var auto_connect_buttons: bool = true
+## Name of the button pressed most recently.
 var last_button_name: String = ""
 ## The colour a Set Needle needle is drawn in while the value is inside its warning mark.
 @export var needle_colour: Color = Color(0.66000002622604, 0.80000001192093, 1.0, 1.0)
@@ -27,7 +28,9 @@ var last_button_name: String = ""
 @export var needle_warning_colour: Color = Color(1.0, 0.44999998807907, 0.37999999523163, 1.0)
 ## How long a toast stays before fading (seconds).
 @export_range(0.2, 10, 0.1) var toast_seconds: float = 2.0
+## HUD controls once found, so they are looked up only once.
 var ui_cache: Dictionary = {}
+## Lag bars that trail behind a bar's value, by bar name.
 var bar_lags: Dictionary = {}
 ## The DamageTypeSet this game uses, if it has one. Pop Floating Text As takes a number's colour from it, so a fire number is orange without a colour being typed into the row. Leave it empty and those numbers are drawn white.
 @export var damage_types: Resource = null
@@ -47,6 +50,7 @@ func _ui(control_name: String) -> Node:
 	return found
 # The bars whose underlay is behind them right now, and the ones that turned out to be gone.
 # Two lists made once and reused, because the tick below may not write the book it is walking.
+## Names of lag bars currently showing recently lost value.
 var _lag_lost: PackedStringArray = PackedStringArray()
 
 func _ready() -> void:

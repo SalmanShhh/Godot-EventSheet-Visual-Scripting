@@ -29,13 +29,13 @@ static func build() -> bool:
 	sheet.variables = {
 		"auto_replan_on_fail": {"type": "bool", "default": true, "exported": true,
 			"attributes": {"tooltip": "Mark Failed re-plans from the root instead of giving up."}},
-		"compounds": {"type": "Dictionary", "default": {}, "exported": false},
-		"plan": {"type": "Array", "default": [], "exported": false},
-		"plan_index": {"type": "int", "default": 0, "exported": false},
-		"primitives": {"type": "Dictionary", "default": {}, "exported": false},
+		"compounds": {"type": "Dictionary", "default": {}, "exported": false, "description": "Compound tasks by name, each with the ways it can be broken into smaller tasks."},
+		"plan": {"type": "Array", "default": [], "exported": false, "description": "The list of primitive tasks the agent is working through."},
+		"plan_index": {"type": "int", "default": 0, "exported": false, "description": "Which task in the plan is running now."},
+		"primitives": {"type": "Dictionary", "default": {}, "exported": false, "description": "Primitive tasks by name, each with its conditions and effects."},
 		"root_task": {"type": "String", "default": "", "exported": true,
 			"attributes": {"tooltip": "Goal to plan for - a compound or primitive task name."}},
-		"world_state": {"type": "Dictionary", "default": {}, "exported": false}
+		"world_state": {"type": "Dictionary", "default": {}, "exported": false, "description": "What the agent believes about the world, as facts by name."}
 	}
 
 	var about: CommentRow = CommentRow.new()

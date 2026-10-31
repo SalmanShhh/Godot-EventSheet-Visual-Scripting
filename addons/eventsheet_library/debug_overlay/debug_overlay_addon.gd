@@ -20,20 +20,31 @@ signal overlay_toggled(shown: bool)
 # The drawing surface is a plain Control child whose `draw` signal we paint from, so the
 # whole overlay stays one dependency-free script with no second file to ship. It is null
 # until a verb calls _ensure_surface(), which is what makes an unused overlay cost nothing.
+## The control that draws the overlay.
 var _surface: Control = null
+## True while the overlay is visible.
 var _shown: bool = true
 # Watches and bars are keyed by name (with a parallel order list so the list does not
 # reshuffle every frame). Marks, rays and labels are timed entries that age themselves out.
+## Watched values by label, shown as text lines.
 var _watches: Dictionary = {}
+## Labels of the watches in the order they were added.
 var _watch_order: PackedStringArray = PackedStringArray()
+## Bar gauges by label, with their value and range.
 var _bars: Dictionary = {}
+## Labels of the bars in the order they were added.
 var _bar_order: PackedStringArray = PackedStringArray()
+## Point markers to draw, each with its position, colour and time left.
 var _marks: Array = []
+## 2D lines to draw, each with its end points, colour and time left.
 var _rays: Array = []
 # Rects are world-space areas; 3D rays keep their two world points and are projected through
 # the active camera each time they are painted, so they stay put while the camera moves.
+## Rectangles to draw, each with its bounds, colour and time left.
 var _rects: Array = []
+## 3D lines to draw, each with its end points, colour and time left.
 var _rays_3d: Array = []
+## Text labels pinned to places in the world, with time left.
 var _labels: Array = []
 
 func _process(_delta: float) -> void:

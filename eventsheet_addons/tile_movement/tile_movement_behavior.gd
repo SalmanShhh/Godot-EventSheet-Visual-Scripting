@@ -20,21 +20,31 @@ signal step_finished
 
 ## AI drive: read ai_move_x/ai_move_y instead of the arrow keys (a sheet or AI driver flips this on to steer).
 @export var ai_controlled: bool = false
+## Horizontal input from -1 to 1 when something other than the player drives the host.
 var ai_move_x: float = 0.0
+## Vertical input from -1 to 1 when something other than the player drives the host.
 var ai_move_y: float = 0.0
 ## When on, the arrow keys step the host one tile at a time.
 @export var default_controls: bool = true
+## X position of the tile the current step started from, in pixels.
 var from_x: float = 0.0
+## Y position of the tile the current step started from, in pixels.
 var from_y: float = 0.0
 ## Seconds to slide across one tile.
 @export var move_time: float = 0.15
+## True while the host is stepping between tiles.
 var moving: bool = false
+## Horizontal step queued for when the current one ends.
 var pending_x: float = 0.0
+## Vertical step queued for when the current one ends.
 var pending_y: float = 0.0
+## How far through the current step the host is, from 0 to 1.
 var progress: float = 0.0
 ## Pixel size of one grid tile - each step moves the host this many pixels.
 @export var tile_size: float = 64.0
+## X position of the tile the current step is heading to, in pixels.
 var to_x: float = 0.0
+## Y position of the tile the current step is heading to, in pixels.
 var to_y: float = 0.0
 
 ## @ace_hidden

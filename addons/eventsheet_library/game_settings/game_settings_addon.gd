@@ -38,35 +38,45 @@ signal assist_changed(assist_name: String, on: bool)
 # Where settings live on disk: the same FILE the built-in Save Setting action writes to, in a
 # section named "settings". That action takes its section as a parameter (and offers "audio"),
 # so point it at "settings" if you want values saved that way picked up here.
+## File in the user folder where settings are saved.
 const SETTINGS_FILE: String = "user://settings.cfg"
+## Section of the settings file that holds the setting values.
 const SETTINGS_SECTION: String = "settings"
 
 # setting name -> {default, kind, choices} - what the game OFFERS. Declared once at startup.
+## Every setting that has been declared, by id, with its default and limits.
 var _declared: Dictionary = {}
 # setting name -> the value in force right now. A name missing here falls back to its default,
 # which is why a fresh install is already correct instead of empty.
+## Current value of each setting, by id.
 var _values: Dictionary = {}
 # The names being announced right now, innermost last. Changed Setting Is reads the last one,
 # so a reaction that changes a second setting cannot make the outer row answer about it.
+## Setting ids whose change is being announced right now, to stop a change announcing itself again.
 var _announcing: Array[String] = []
 # The name announced most recently, kept after the stack empties. An event that WAITS resumes
 # long after emit() returned and the stack was popped, and this is what lets its later rows
 # still answer Changed Setting Is instead of silently going false halfway through.
+## Id of the setting whose change was announced last.
 var _last_announced: String = ""
 
 # Where the quality words live. Each .tres in this folder IS one choice, so adding a preset is
 # adding a file - nothing registers it, and the dropdown, the options page and the label all
 # just list the folder.
+## Folder that holds the quality preset resources.
 const QUALITY_FOLDER: String = "res://settings/quality"
 
 # Setting name -> the controls showing it. Both directions run through Set Setting, which does
 # nothing when the value is already there - that is what stops a control and a setting echoing
 # each other forever, with no flag to remember and nothing to get stuck.
+## Nodes and properties bound to each setting, updated when it changes.
 var _bound: Dictionary = {}
 
 # The values as they stood before a risky change, and the seconds left to keep it. Both are empty
 # except between Apply With A Way Back and the answer.
+## Previous values kept so a risky change can be reverted.
 var _way_back: Dictionary = {}
+## Seconds left to confirm a change before it is reverted.
 var _keep_seconds: float = 0.0
 # The control one declared kind asks for, made and named after the setting so a hand-made control
 # of that name is found first and this is never built at all.
@@ -96,12 +106,16 @@ func _make_control(setting_name: String) -> Control:
 
 # Where rebindings are kept: the same file as the settings, in a section of its own, so a rebind
 # persists with everything else and one Save covers the lot.
+## Section of the settings file that holds the key bindings.
 const BINDINGS_SECTION: String = "bindings"
 
 # Which control is waiting for a key, which kind of device it wants, and the event a player gave
 # that something else already answers to. All three are empty except while a rebinding is open.
+## Input action waiting for its next key press to be rebound.
 var _listening_action: String = ""
+## Device the rebinding listens to: keyboard, mouse or gamepad.
 var _listening_device: String = ""
+## The input event captured for a rebind, waiting to be confirmed.
 var _pending_event: InputEvent = null
 # What one action answers to on one device right now, or nothing.
 func _binding_of(action: String, device: String) -> InputEvent:
@@ -116,15 +130,18 @@ func _binding_of(action: String, device: String) -> InputEvent:
 # set up at all, and so Use Difficulty "hard" finds hard.tres. They are ordinary files -
 # retune them, rename them, duplicate one into a fourth, delete the ones this game has no use
 # for, or point these rows at a folder of your own.
+## Folder that holds the difficulty resources.
 const DIFFICULTY_FOLDER: String = "res://eventsheet_addons/difficulty_resource"
 
 # The one place the factors in force are kept. Engine metadata rather than a member of this
 # node, so any script in the game reads a factor in one line without knowing this autoload is
 # there - and so a project that never chose a difficulty simply reads the 1.0 it asked for.
+## Metadata key under which a difficulty resource lists its factors.
 const DIFFICULTY_FACTORS_META: String = "difficulty_factors"
 
 # The difficulty file in force, kept so Difficulty Name and Difficulty Is have something to
 # answer from. Null until a row chose one.
+## The difficulty resource currently applied.
 var _difficulty: Resource = null
 # The difficulty a row named, in whichever of the three ways it named it: the resource itself,
 # a path to one, or the plain word it goes by - so the word a menu built from Difficulty Names
@@ -147,9 +164,11 @@ func _difficulty_named(named: Variant) -> Resource:
 # The options page an assist is declared for, so every one of them lands in the same group of
 # the menu Menu Rows From Declarations already builds. It is a page name and nothing more - a
 # project that wants them somewhere else declares those settings with Declare Setting.
+## Name of the settings page that holds the accessibility options.
 const ASSIST_PAGE: String = "Accessibility"
 
 # The names declared as assists, so the trigger below can tell one from an ordinary setting.
+## Accessibility options that are switched on, by id.
 var _assists: Dictionary = {}
 
 ## @ace_action

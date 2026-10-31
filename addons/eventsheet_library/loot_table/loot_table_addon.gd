@@ -20,21 +20,35 @@ signal on_roll_complete
 signal on_pity_triggered
 
 # id -> {entries: Array of {kind:"item"|"table", ref, weight, quantity, tags:PackedStringArray}, guarantees: Array of {tag, minimum}}.
+## Registered loot tables by name, each with its weighted items.
 var _tables: Dictionary = {}
 # table -> {tag -> {threshold, count}} - hard pity, guarantees a tag after N straight misses.
+## Misses in a row for each table and tag, which raise the chance of a rare drop.
 var _pity: Dictionary = {}
+## Random source for every roll.
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
+## The seed the random source was last set to.
 var _last_seed: int = 0
 # Last-roll context (read via the getter expressions inside On Roll Result / On Roll Complete).
+## Name of the table the latest roll came from.
 var _roll_table: String = ""
+## Item the latest roll produced.
 var _roll_item: String = ""
+## How many of the item the latest roll produced.
 var _roll_quantity: float = 0.0
+## Tags of the item the latest roll produced.
 var _roll_tags: String = ""
+## Which roll of the current batch this is, counting from 1.
 var _roll_index: int = 0
+## How many rolls the current batch holds.
 var _roll_total: int = 0
+## Table of the pity counter the running trigger is about.
 var _pity_ctx_table: String = ""
+## Tag of the pity counter the running trigger is about.
 var _pity_ctx_tag: String = ""
+## Value of the pity counter the running trigger is about.
 var _pity_ctx_count: int = 0
+## True when rolls use the shared random generator instead of this table's own.
 var _use_shared: bool = false
 
 func _ready() -> void:

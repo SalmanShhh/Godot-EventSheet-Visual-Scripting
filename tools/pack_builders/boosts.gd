@@ -36,8 +36,10 @@ static func build() -> bool:
 		"signal on_boost_expired",
 		"",
 		"# id -> {multiplier, remaining (seconds), tag}. Absent = inactive.",
+		"## Active boosts by id, each with its amount and time left.",
 		"var _boosts: Dictionary = {}",
 		"# The boost that just ran out (read inside On Boost Expired).",
+		"## The id of the boost that expired most recently.",
 		"var _last_expired_id: String = \"\""
 	]))
 	sheet.events.append(block)

@@ -3,7 +3,9 @@ extends Control
 
 ## The Skill Tree data asset this screen draws.
 @export var tree: Resource = null
+## The Upgrades node that answers every question about the tree.
 var upgrades: Node = null
+## Skill id to the button that stands for it.
 var buttons: Dictionary = {}
 ## A skill whose prerequisites are not met yet.
 @export var locked_tint: Color = Color(0.44999998807907, 0.44999998807907, 0.5, 1.0)

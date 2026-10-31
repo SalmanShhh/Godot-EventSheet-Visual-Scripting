@@ -19,7 +19,9 @@ func _enter_tree() -> void:
 ## @ace_category("Checkpoint")
 signal respawned
 
+## The position the host returns to on respawn.
 var _checkpoint: Vector2 = Vector2(0.0, 0.0)
+## True once a checkpoint has been set.
 var _has_checkpoint: bool = false
 ## Remember where the host starts as its first checkpoint, so Respawn At Checkpoint works before any flag is touched.
 @export var capture_on_ready: bool = true

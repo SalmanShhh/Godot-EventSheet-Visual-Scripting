@@ -15,9 +15,10 @@ func _enter_tree() -> void:
 		push_warning("Flock3DBehavior behavior requires a Node3D parent.")
 
 # --- Designer knobs (tune in the Inspector) ---
-## The group whose members fly together. The host joins it when it enters the scene, so every
-## node carrying this behaviour with the same group name is one flock - and anything else you put
-## in that group by hand counts as a neighbour too.
+# The host joins it when it enters the scene, so every
+# node carrying this behaviour with the same group name is one flock - and anything else you put
+# in that group by hand counts as a neighbour too.
+## The group whose members fly together.
 @export var flock_group: StringName = &"flock"
 ## How far a member looks for neighbours, in metres. Only members inside this sphere are steered
 ## by: a bird reacts to the birds around it, never to the whole sky.

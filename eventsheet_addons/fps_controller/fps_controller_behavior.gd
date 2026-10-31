@@ -59,32 +59,59 @@ signal wall_ride_ended
 ## @ace_category("FPS Controller")
 signal wall_jumped
 
+## Resting height of the head, which the walking bob moves around.
 var _bob_base_y: float = 0.0
+## True once the resting head height has been recorded.
 var _bob_captured: bool = false
+## Running time that drives the walking bob.
 var _bob_time: float = 0.0
+## Seconds left in which a jump still works after walking off a ledge.
 var _coyote_timer: float = 0.0
+## Seconds until the weapon can fire again.
 var _firing_timer: float = 0.0
+## Jumps still available before touching the ground again.
 var _jumps_left: int = 0
+## Sideways weapon sway from turning.
 var _sway_x: float = 0.0
+## Vertical weapon sway from turning.
 var _sway_y: float = 0.0
+## Sideways input from -1 to 1 when something other than the player drives the host.
 var ai_move_x: float = 0.0
+## Forward input from -1 to 1 when something other than the player drives the host.
 var ai_move_z: float = 0.0
+## True while the host is crouched.
 var crouching: bool = false
+## Standing height of the head, in metres.
 var head_base_y: float = 0.0
+## Up and down look angle, in radians.
 var pitch: float = 0.0
+## Extra sideways push from outside forces, in metres per second.
 var push_x: float = 0.0
+## Extra forward push from outside forces, in metres per second.
 var push_z: float = 0.0
+## Resting height of the collision shape, which crouching and sliding move.
 var shape_base_y: float = 0.0
+## Sideways part of the direction the current slide travels in.
 var slide_dir_x: float = 0.0
+## Forward part of the direction the current slide travels in.
 var slide_dir_z: float = 0.0
+## Seconds the current slide has been running.
 var slide_time: float = 0.0
+## True while the host is sliding.
 var sliding: bool = false
+## True while the sprint input is held.
 var sprint_held: bool = false
+## Height of the collision shape when standing, in metres.
 var standing_height: float = 0.0
+## Radius of the collision shape when standing, in metres.
 var standing_radius: float = 0.0
+## Seconds the current wall ride has lasted.
 var wall_ride_time: float = 0.0
+## True while the host is running along a wall.
 var wall_riding: bool = false
+## True if the host was on the floor on the previous frame, used to spot landings.
 var was_on_floor: bool = true
+## Left and right look angle, in radians.
 var yaw: float = 0.0
 ## Reads the ai_move_x/z intents instead of the keyboard when on (for AI or cutscene drivers).
 @export_group("AI Driver")

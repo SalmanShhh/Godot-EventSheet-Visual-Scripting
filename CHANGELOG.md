@@ -8,6 +8,18 @@
   class said with a vowel (Enemy, Area2D) and "a" before the rest (Node2D, Unit). A row authored from
   the picker and the same line reopened from a file are one reading; the bytes written are unchanged.
 
+### Changed: every behaviour variable has a brief description
+
+- Every variable and constant a shipped behaviour declares now carries a one-line `##`
+  description (about a thousand were bare, most of them internal state), and about a hundred
+  long design notes were cut to their first sentence, the rest kept as a plain `#` comment above
+  it. A variable row, the Inspector tooltip and the emitted script all read the same line.
+- A variable that is not exported now writes its description above it in the generated script,
+  as an exported one always did. Before, the description was kept on the row and dropped on
+  emit. Seven showcase scripts gained the lines their packs now carry.
+- `pack_variable_docs_test` pins both the compiler change and that no top-level variable or
+  constant of a shipped pack script lacks a description.
+
 ### Fixed: Wave 16 review closure
 
 - The vocabulary reference (`EVENTSHEETS-VOCABULARY.md`) lists every pack verb again. The

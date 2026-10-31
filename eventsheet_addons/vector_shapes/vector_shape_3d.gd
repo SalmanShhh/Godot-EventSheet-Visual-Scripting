@@ -53,48 +53,60 @@ const SCREEN_CULL_MARGIN: float = 1.0
 
 # One Shader resource per blend word and depth reading, shared by every 3D shape in the project.
 # The material is per node (its uniforms are that shape's own numbers); the compiled shader is not.
+## Shaders built for each blend word and depth reading, shared by every 3D shape.
 static var _shaders_3d: Dictionary = {}
 
 # The one quad every flat and billboard shape wears. Its own vertices are never used - the vertex
 # stage places them from the shape's box - so one mesh serves the whole project.
+## The quad that flat and billboard shapes are drawn on, shared by all.
 static var _quad: QuadMesh = null
 
 # How fast the dashes are scrolling, in patterns per second. Zero parks the tick entirely.
+## How fast the dashes slide along the line, in patterns per second.
 var _dash_scroll_speed: float = 0.0
 
 # The material this shape wears, rebuilt when the blend or the depth word changes, never per frame.
+## Shader material that draws this shape.
 var _material_3d: ShaderMaterial = null
 
 # The blend and depth words the current shader material was built for.
+## Description of the settings the material was built for, to spot when it needs rebuilding.
 var _material_key: String = ""
 
 # The material a volumetric shape wears - real geometry, so a real surface rather than a distance
 # field. Rebuilt when the blend word changes, never per frame.
+## Plain material used when the shape has a solid colour.
 var _solid_material: StandardMaterial3D = null
 
 # The strip a gradient fill is sampled from, baked when the gradient changes rather than per frame.
+## One-pixel-high texture that holds the shape's gradient.
 var _gradient_strip: GradientTexture1D = null
 
 # Whether a refresh is already waiting. A shape has thirty-odd fields and a scene load writes most
 # of them in a burst; coalescing them means one mesh build and one uniform pass, not thirty.
+## True once a redraw has been queued, so several changes redraw once.
 var _refresh_queued: bool = false
 
 # The mesh a volumetric shape last built, and the reading it was built for, so a field that does not
 # change the geometry (a colour, a dash offset) never rebuilds it.
+## Description of the volume the shape fills, to spot when it changed.
 var _volume_key: String = ""
 
 # True only while the scroll tick is writing dash_offset. It is what tells shape_changed that this
 # write is one number moving rather than a shape that has changed, so a scrolling pattern costs one
 # uniform a frame instead of an AABB, an outline array and forty uniforms.
+## True while the dashes are sliding.
 var _scrolling_3d: bool = false
 
 # The fade a Fade Shape Over row started, kept so a second one takes the colour over instead of
 # fighting the first for it.
+## The tween fading the shape in or out.
 var _fade_3d: Tween = null
 
 # Whether the editor has been handed the dash-style icon renderer yet, this session. The 2D twin
 # carries the same flag: without it every shape entering the tree reloads the API script and walks
 # its whole method list to register the provider that is already registered.
+## True once the dash icons have been offered to the editor.
 static var _icons_offered_3d: bool = false
 ## The rectangle the shape needs on its own plane, before its stroke is padded onto it.
 ## @ace_hidden

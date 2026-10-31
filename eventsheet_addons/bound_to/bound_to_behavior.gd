@@ -39,7 +39,9 @@ signal bound_hit(side: String)
 # --- Internal state ---
 # The custom rectangle (world space) used when bound_space is "custom" - Rect2 cannot
 # emit from the variables dict, so it lives here; Set Custom Bounds writes it.
+## The rectangle the host is kept inside when the bounds are custom, in pixels.
 var custom_bounds: Rect2 = Rect2(0.0, 0.0, 1152.0, 648.0)
+## Which sides of the bounds the host is touching right now.
 var _pressed_sides: Dictionary = {}
 ## The world-space rectangle being bound to: the camera's visible rect (the canvas
 ## transform inverted maps screen space to world space) or the custom rectangle.

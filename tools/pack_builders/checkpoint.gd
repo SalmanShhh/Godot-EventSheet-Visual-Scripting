@@ -16,8 +16,8 @@ static func build() -> bool:
 	sheet.addon_category = "Checkpoint"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
-		"_checkpoint": {"type": "Vector2", "default": Vector2.ZERO, "exported": false},
-		"_has_checkpoint": {"type": "bool", "default": false, "exported": false},
+		"_checkpoint": {"type": "Vector2", "default": Vector2.ZERO, "exported": false, "description": "The position the host returns to on respawn."},
+		"_has_checkpoint": {"type": "bool", "default": false, "exported": false, "description": "True once a checkpoint has been set."},
 		"capture_on_ready": {"type": "bool", "default": true, "exported": true, "description": "Remember where the host starts as its first checkpoint, so Respawn At Checkpoint works before any flag is touched."}
 	}
 

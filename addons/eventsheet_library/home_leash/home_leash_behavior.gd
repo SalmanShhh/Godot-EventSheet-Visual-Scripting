@@ -19,8 +19,11 @@ func _enter_tree() -> void:
 ## @ace_category("Home & Leash")
 signal arrived_home
 
+## True once a home position has been set.
 var _has_home: bool = false
+## The position the host is held to and returns to.
 var _home: Vector2 = Vector2(0.0, 0.0)
+## True while the host is walking back home.
 var _returning: bool = false
 ## Plant home where the host starts, so the leash works before you set one by hand.
 @export var capture_on_ready: bool = true

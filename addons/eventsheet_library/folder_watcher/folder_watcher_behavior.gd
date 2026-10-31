@@ -46,8 +46,11 @@ signal file_removed(path: String)
 @export var only_names_like: String = "*"
 ## Start watching as soon as the node is ready, using the folder and interval above. Off by default, because a watcher is usually started by the sheet at the moment the game actually cares.
 @export var watch_on_ready: bool = false
+## Files seen at the last look, with their modified time.
 var _seen: Dictionary = {}
+## Seconds since the folder was last checked.
 var _since_last_look: float = 0.0
+## True while the folder is being watched.
 var _watching: bool = false
 
 func _ready() -> void:

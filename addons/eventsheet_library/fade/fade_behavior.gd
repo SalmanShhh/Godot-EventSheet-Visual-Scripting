@@ -37,6 +37,7 @@ signal on_faded_out
 @export var start_on_ready: bool = false
 
 # Single tween, killed before each restart so overlapping fades never fight.
+## The tween running the current fade, so a new fade can stop it.
 var _tween: Tween = null
 
 func _ready() -> void:

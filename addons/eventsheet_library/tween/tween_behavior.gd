@@ -26,15 +26,16 @@ signal tween_finished
 ## Motion curve every tween uses (sine, bounce, elastic, and so on).
 @export_enum("linear", "sine", "quad", "cubic", "quart", "quint", "expo", "circ", "elastic", "back", "bounce", "spring") var transition: String = "sine"
 
+## The tween that is running now, so a new one can stop it.
 var _active_tween: Tween = null
 
 ## The curve tween in flight, kept so a second row on the same property replaces it rather
 ## than fighting it.
 var _along_tween: Tween = null
 
+# Only ever written once per property, which is what makes Tween Property Back exact however
+# many times the property has been tweened since.
 ## What a property held before the FIRST curve tween touched it, keyed by the property path.
-## Only ever written once per property, which is what makes Tween Property Back exact however
-## many times the property has been tweened since.
 var _tween_starts: Dictionary = {}
 ## The one implementation behind Tween Property Along Curve and its awaiting twin. Returns the
 ## tween so the awaiting row has something to wait on, and null when there is nothing to move.

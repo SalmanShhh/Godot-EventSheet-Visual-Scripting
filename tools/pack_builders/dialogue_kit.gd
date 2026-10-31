@@ -21,13 +21,13 @@ static func build() -> bool:
 		"text_label_name": {"type": "String", "default": "TextLabel", "exported": true, "attributes": {"tooltip": "The named Label the line types into."}},
 		"chars_per_second": {"type": "float", "default": 40.0, "exported": true, "attributes": {"tooltip": "Typewriter speed; Advance mid-line completes it instantly.", "range": {"min": "1", "max": "400", "step": "1"}}},
 		"advance_action": {"type": "String", "default": "ui_accept", "exported": true, "attributes": {"tooltip": "Input action that advances the dialogue (blank = no built-in input; call Advance yourself)."}},
-		"line_queue": {"type": "Array", "default": [], "exported": false},
-		"dialogue_active": {"type": "bool", "default": false, "exported": false},
-		"typing": {"type": "bool", "default": false, "exported": false},
-		"current_speaker": {"type": "String", "default": "", "exported": false},
-		"current_text": {"type": "String", "default": "", "exported": false},
-		"revealed_chars": {"type": "float", "default": 0.0, "exported": false},
-		"ui_cache": {"type": "Dictionary", "default": {}, "exported": false}
+		"line_queue": {"type": "Array", "default": [], "exported": false, "description": "Lines waiting to be shown, in order."},
+		"dialogue_active": {"type": "bool", "default": false, "exported": false, "description": "True from the first line shown until the last is dismissed."},
+		"typing": {"type": "bool", "default": false, "exported": false, "description": "True while the current line is still being revealed letter by letter."},
+		"current_speaker": {"type": "String", "default": "", "exported": false, "description": "Name of whoever is speaking the current line."},
+		"current_text": {"type": "String", "default": "", "exported": false, "description": "Full text of the current line."},
+		"revealed_chars": {"type": "float", "default": 0.0, "exported": false, "description": "How many characters of the current line are showing so far."},
+		"ui_cache": {"type": "Dictionary", "default": {}, "exported": false, "description": "The dialogue box controls once found, so they are looked up only once."}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Dialogue Kit behavior: queue lines (speaker + text), play them with a typewriter reveal into NAMED labels, advance on one input action (mid-line advance completes the line instantly). Triggers fire per line and per conversation, so portraits, sounds, and camera moves hang off the sheet - no dialogue system to write."

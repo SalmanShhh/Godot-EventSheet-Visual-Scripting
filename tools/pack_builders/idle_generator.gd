@@ -26,11 +26,11 @@ static func build() -> bool:
 		"cost_growth": {"type": "float", "default": 1.15, "exported": true, "attributes": {"tooltip": "How much each unit multiplies the price (1.15 = +15% each, the genre default). 1.0 = flat price."}},
 		"base_output": {"type": "float", "default": 1.0, "exported": true, "attributes": {"tooltip": "Output of ONE unit - per second in continuous mode, or per cycle when Cycle Time > 0."}},
 		"output_multiplier": {"type": "float", "default": 1.0, "exported": true, "attributes": {"tooltip": "A multiplier over the whole generator's output - feed it your composed prestige x upgrade x boost multiplier."}},
-		"_cycle_progress": {"type": "float", "default": 0.0, "exported": false},
-		"_pending": {"type": "float", "default": 0.0, "exported": false},
-		"last_spent": {"type": "float", "default": 0.0, "exported": false},
-		"last_bought": {"type": "int", "default": 0, "exported": false},
-		"last_collected": {"type": "float", "default": 0.0, "exported": false}
+		"_cycle_progress": {"type": "float", "default": 0.0, "exported": false, "description": "How far through the current production cycle the generator is, from 0 to 1."},
+		"_pending": {"type": "float", "default": 0.0, "exported": false, "description": "Output produced but not yet collected."},
+		"last_spent": {"type": "float", "default": 0.0, "exported": false, "description": "Amount spent by the most recent purchase."},
+		"last_bought": {"type": "int", "default": 0, "exported": false, "description": "How many were bought in the most recent purchase."},
+		"last_collected": {"type": "float", "default": 0.0, "exported": false, "description": "Amount taken in the most recent collection."}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Idle Generator: a buy-more-to-make-more building. Cost climbs geometrically (base_cost * cost_growth^owned); Buy One / Buy Amount / Buy Max compute the exact geometric-series price and record it as Last Cost for your sheet to Spend. Continuous mode gives Output Per Second; set Cycle Time > 0 for a fill-and-collect building that fires On Cycle Complete. This pack is an event sheet - extend it by editing it."

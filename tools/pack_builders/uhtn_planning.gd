@@ -35,16 +35,16 @@ static func build() -> bool:
 	sheet.variables = {
 		"auto_replan_on_fail": {"type": "bool", "default": true, "exported": true,
 			"attributes": {"tooltip": "Mark Failed re-plans from the root instead of giving up."}},
-		"compounds": {"type": "Dictionary", "default": {}, "exported": false},
-		"plan": {"type": "Array", "default": [], "exported": false},
-		"plan_index": {"type": "int", "default": 0, "exported": false},
+		"compounds": {"type": "Dictionary", "default": {}, "exported": false, "description": "Compound tasks by name, each with the ways it can be broken into smaller tasks."},
+		"plan": {"type": "Array", "default": [], "exported": false, "description": "The list of primitive tasks the planner is working through."},
+		"plan_index": {"type": "int", "default": 0, "exported": false, "description": "Which task in the plan is running now."},
 		"plan_resource": {"type": "Resource", "default": null, "exported": true,
 			"attributes": {"tooltip": "Optional: a UHTNPlanResource (.tres) holding the whole plan - tasks, methods, preconditions, and utility scorers - authored in Inspector grids. Loaded automatically on ready; leave empty to build the network with the Add ... actions instead."}},
-		"primitives": {"type": "Dictionary", "default": {}, "exported": false},
+		"primitives": {"type": "Dictionary", "default": {}, "exported": false, "description": "Primitive tasks by name, each with its conditions and effects."},
 		"root_task": {"type": "String", "default": "", "exported": true,
 			"attributes": {"tooltip": "Goal to plan for - a compound or primitive task name. A loaded Plan Resource overrides this with its own root task."}},
-		"scorers": {"type": "Dictionary", "default": {}, "exported": false},
-		"world_state": {"type": "Dictionary", "default": {}, "exported": false}
+		"scorers": {"type": "Dictionary", "default": {}, "exported": false, "description": "Scorers by name, which rate how good each choice is."},
+		"world_state": {"type": "Dictionary", "default": {}, "exported": false, "description": "What the planner believes about the world, as facts by name."}
 	}
 
 	var about: CommentRow = CommentRow.new()

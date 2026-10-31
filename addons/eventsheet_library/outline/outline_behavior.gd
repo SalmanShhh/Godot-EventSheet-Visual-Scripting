@@ -18,6 +18,7 @@ func _enter_tree() -> void:
 ## The two dials outline.gdshader declares, named once so a rename there is a one-line change
 ## here.
 const COLOUR_DIAL: String = "outline_color"
+## Name of the shader dial that sets the outline width.
 const WIDTH_DIAL: String = "outline_width"
 
 ## Give this node its own copy of the material before anything turns a dial on it. A material

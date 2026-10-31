@@ -38,16 +38,19 @@ static func build() -> bool:
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
 		"# The square a view renders at until a frame it is shown in gives it a size of its own.",
+		"## Width in pixels a new view starts with.",
 		"const STARTING_VIEW_PIXELS: int = 256",
 		"",
 		"# How far above a followed Node3D the view's camera sits at zoom 1, in metres. Zoom divides it,",
 		"# so a bigger zoom is a closer look at less ground - the same direction zoom means for a Camera2D.",
+		"## Height above the target of an overhead view, in metres.",
 		"const OVERHEAD_METRES: float = 20.0",
 		"",
 		"# view name -> what that view is made of: the SubViewport it renders into, the camera inside it,",
 		"# the instance id of the node it follows, its zoom, whether it has parked, and the frames it has",
 		"# been handed to (frame instance id -> the resize callable connected to that frame, so Stop View",
 		"# can take it off again).",
+		"## Views that have been created, by name.",
 		"var _views: Dictionary = {}"
 	]))
 	sheet.events.append(block)

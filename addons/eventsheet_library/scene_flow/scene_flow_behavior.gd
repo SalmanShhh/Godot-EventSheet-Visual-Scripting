@@ -81,11 +81,13 @@ class TransitionRunner:
 ## Where the transition shaders live once the pack is installed, and the name one takes: the word a
 ## row uses with its spaces closed up, under one prefix. A word and its file can never drift apart.
 const TRANSITION_DIRECTORY: String = "res://eventsheet_addons/scene_flow/"
+## Start of the file name of every transition scene.
 const TRANSITION_PREFIX: String = "transition_"
 
-## The seven shapes a transition can take, by the word a row uses. Each is one shader file with a
-## `progress` dial; the two that read the screen back - pixelate and page curl - say so in their own
-## first lines, and they only read it while a transition is actually running.
+# Each is one shader file with a
+# `progress` dial; the two that read the screen back - pixelate and page curl - say so in their own
+# first lines, and they only read it while a transition is actually running.
+## The seven shapes a transition can take, by the word a row uses.
 const TRANSITIONS: PackedStringArray = ["fade", "wipe", "dissolve", "iris", "blinds", "pixelate",
 	"page curl"]
 
@@ -98,15 +100,17 @@ const TRANSITION_GROUP: StringName = &"scene_flow_transition"
 ## in a tenth of a second is a flash whatever shape it is. This is the same floor the post stack
 ## holds its walks over, read off the same Engine meta the built-in Set No Flashing row writes.
 const TRANSITION_FLASH_FLOOR_SECONDS: float = 0.4
+## Metadata key a player sets to turn flashing transitions off.
 const TRANSITION_NO_FLASHING_META: StringName = &"no_flashing"
 
 ## And the shortest a transition may be when nobody has asked for anything: short enough to feel
 ## instant, long enough that the swap still happens under cover.
 const TRANSITION_FLOOR_SECONDS: float = 0.1
 
-## And the group every Scene Flow node joins, so a finished transition can tell somebody. The runner
-## outlives the scene it started in, so the node it tells is whichever one is standing in the NEW
-## scene - which is exactly where a row waiting on the arrival wants to be.
+# The runner
+# outlives the scene it started in, so the node it tells is whichever one is standing in the NEW
+# scene - which is exactly where a row waiting on the arrival wants to be.
+## And the group every Scene Flow node joins, so a finished transition can tell somebody.
 const TRANSITION_LISTENERS: StringName = &"scene_flow_listener"
 ## The root-parented runner that draws a transition and swaps the scene under it. Like the fade
 ## runner above, it parents itself to the TREE ROOT rather than to the scene being replaced, so the
@@ -198,10 +202,10 @@ static func transition_shader(shape: String) -> Shader:
 
 # --- Loading screens: a screen of your own while the next scene comes off the disk ---
 
+# It is a group rather than a member because the poller OUTLIVES the scene the row was in:
+# the node that started the load is replaced by the loading screen a moment later.
 ## The group the one running background load joins, so Scene Is Loading, Scene Load Progress and
 ## Loading Tip are ONE question with one answer rather than three fields that can disagree.
-## It is a group rather than a member because the poller OUTLIVES the scene the row was in:
-## the node that started the load is replaced by the loading screen a moment later.
 const LOADING_GROUP: StringName = &"scene_flow_loading"
 
 ## The word that means "no shape over the change" in the Loading Transition knob. Every other

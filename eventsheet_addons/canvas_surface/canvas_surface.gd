@@ -5,20 +5,33 @@ class_name CanvasSurface
 extends Node2D
 ## Shared 2D drawing runtime for the Drawing Canvas behaviour and the Draw ACEs: an offscreen render target, a command queue, and self-updating ribbons. One per host, cached on the host - call CanvasSurface.for_node(host).
 
+## Metadata key under which the surface is stored on its host node.
 const META_KEY: String = "__canvas_surface"
 
+## Width of the drawing surface in pixels.
 var canvas_width: int = 512
+## Height of the drawing surface in pixels.
 var canvas_height: int = 512
+## Wipe the surface at the start of every frame, so only what is drawn this frame shows.
 var auto_clear: bool = false
+## Where drawing positions are measured from: world (centred on the host) or canvas (raw texture pixels).
 var coordinates: String = "world"  # "world" (centered on the host) or "canvas" (raw texture pixels)
+## Show the surface as a sprite on the host. Off keeps it as a texture only.
 var display_on_host: bool = true
 
+## The node the surface is attached to.
 var _host: Node2D = null
+## The offscreen viewport the drawing is rendered into.
 var _viewport: SubViewport = null
+## The node inside the viewport that issues the draw commands.
 var _drawer: Node2D = null
+## The sprite that shows the viewport's picture on the host.
 var _display: Sprite2D = null
+## Draw commands queued for the next render.
 var _commands: Array = []
+## Ribbon strokes queued for the next render.
 var _ribbons: Array = []
+## Textures captured from pasted nodes, kept alive until they are drawn.
 var _paste_textures: Array = []  # keeps pasted node textures alive - a freed source node (bake decor then Destroy) must not leave the persistent canvas re-drawing a dangling texture as a white block
 ## Returns the host's canvas surface, creating (and attaching) one on first use. Cached on the host
 ## via metadata, so every "... on {node}" draw shares one surface. Null-safe.
@@ -85,14 +98,15 @@ func _enclosing_rect(xform: Transform2D, local_rect: Rect2) -> Rect2:
 ## absence is not a fault - it is the canvas drawing the same shapes the raster way.
 const BATCH_SHADER_PATH: String = "res://eventsheet_addons/vector_shapes/vector_shape_batch.gdshader"
 
+# A kind NOT in this list is always drawn the raster way: a polygon and a polyline are meshes
+# rather than a distance field, and text and a texture are neither.
 ## The shape kinds one MultiMesh each is filled with, in the order the batch shader numbers them.
-## A kind NOT in this list is always drawn the raster way: a polygon and a polyline are meshes
-## rather than a distance field, and text and a texture are neither.
 const BATCH_KINDS: PackedStringArray = ["arc", "pie", "rounded_rect", "regular_polygon", "grid", "cross", "arrow"]
 
-## What a draw style says, and what the canvas draws with before anything sets one. The keys are
-## spelled the way a Shape Style file spells them, so a style tuned on a placed shape is read here
-## unchanged and a resource that carries only some of them leaves the rest alone.
+# The keys are
+# spelled the way a Shape Style file spells them, so a style tuned on a placed shape is read here
+# unchanged and a resource that carries only some of them leaves the rest alone.
+## What a draw style says, and what the canvas draws with before anything sets one.
 const STYLE_DEFAULTS: Dictionary = {
 	"thickness": 2.0,
 	"caps": "round",
@@ -112,8 +126,11 @@ const STYLE_DEFAULTS: Dictionary = {
 ## The cap words, the colour modes, the dash snaps and the dash ends, each in the shader's own
 ## order - the position in the list IS the number the shader is handed.
 const CAP_WORDS: PackedStringArray = ["none", "square", "round"]
+## The colour modes a stroke can use, as the words a row picks from.
 const COLOUR_MODE_WORDS: PackedStringArray = ["single", "two", "radial", "angular", "gradient", "per corner"]
+## The ways a dashed line can fit its dashes to its length, as row words.
 const DASH_SNAP_WORDS: PackedStringArray = ["off", "tiling", "end to end"]
+## The dash end shapes a dashed line can use, as row words.
 const DASH_STYLE_WORDS: PackedStringArray = ["plain", "angled", "rounded"]
 
 ## How wide the fade at a drawn edge is, in pixels. One number on both sides of the wire: the quad a
@@ -123,31 +140,37 @@ const ANTIALIAS_WIDTH: float = 1.0
 ## How many segments a raster arc is drawn with when there is no shader to solve it per pixel.
 const RASTER_ARC_SEGMENTS: int = 64
 
+# Both are small on purpose: a canvas that has finished with two hundred styles
+# must not go on paying for two hundred nodes, and a style that comes back a frame later must not
+# pay to rebuild one.
 ## How many draws a batch may sit out before its node is shelved for re-use, and how many shelved
-## nodes are kept. Both are small on purpose: a canvas that has finished with two hundred styles
-## must not go on paying for two hundred nodes, and a style that comes back a frame later must not
-## pay to rebuild one.
+## nodes are kept.
 const BATCH_IDLE_DRAWS: int = 2
+## How many idle batches are kept for reuse before the oldest is freed.
 const BATCH_SHELF_LIMIT: int = 8
 
 # The style stack. The last entry is the style in force; an empty stack is the defaults above.
+## Stroke styles in use, indexed by style id.
 var _styles: Array = []
 
 # One MultiMeshInstance2D per kind-and-style being drawn, kept and re-filled rather than rebuilt.
 # A frame that draws two hundred arcs in one style builds no node and no material; what it does
 # build is the plan the fill reads, which is a list of small dictionaries and is deliberately data
 # so the batching decision can be checked without a canvas at all.
+## Batched draw groups by key, each drawn in one call.
 var _batches: Dictionary = {}
 
 # How many draws each batch has sat out. A STYLE IS PART OF THE KEY, and a style can be a colour
 # being tweened or a thickness that moves every frame, so the set of keys a canvas has ever drawn
 # is unbounded while the set it is drawing right now is not. A batch nothing has drawn for
 # BATCH_IDLE_DRAWS goes back on the shelf below instead of sitting in the SubViewport for ever.
+## Frames each batch has gone unused, so idle ones can be shelved.
 var _batch_idle: Dictionary = {}
 
 # Retired batch nodes, kept to be handed straight back out. A style that changes every frame gives
 # one back and claims one each draw, so the canvas settles at a handful of nodes rather than
 # growing one per frame for the life of the game.
+## Idle batches kept for reuse instead of being rebuilt.
 var _batch_shelf: Array = []
 
 # The style the cached keys below were worked out for, and one key per shape kind in it. The style
@@ -155,14 +178,19 @@ var _batch_shelf: Array = []
 # what keeps a frame of two hundred arcs from sorting the same thirteen field names two hundred
 # times. A shape that overrides a style field (a filled rounded rect) has a style of its own and
 # takes the plain path.
+## The style behind each batch key.
 var _key_style: Dictionary = {}
+## Batch keys grouped by the kind of shape they draw.
 var _keys_by_kind: Dictionary = {}
 
 # The shader every batch wears, loaded once per session, and whether we have looked for it yet.
+## Shared shader that draws every batch; loaded once for all surfaces.
 static var _batch_shader: Shader = null
+## True once the shared shader has been looked for, so a miss is not retried every frame.
 static var _batch_shader_sought: bool = false
 
 # The unit quad every batch instances, built once per session.
+## Shared mesh that every batch instances; built once for all surfaces.
 static var _batch_mesh: ArrayMesh = null
 ## The shader every batch wears, loaded once per session. Null when the Vector Shapes pack is not
 ## installed, which is what sends the same shapes down the raster path.

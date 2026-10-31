@@ -21,15 +21,25 @@ signal flash_finished
 
 ## Seconds between visibility toggles - smaller values blink faster.
 @export var interval: float = 0.1
+## Seconds left on the current flash.
 var remaining: float = 0.0
+## Time carried toward the next on/off switch.
 var accumulator: float = 0.0
+## True while a flash is running.
 var flashing: bool = false
+## The pattern resource the current blink plays, if any.
 var blink_pattern: Resource = null
+## Which step of the blink pattern is playing.
 var blink_index: int = 0
+## Switches left before the blink ends.
 var blink_left: int = 0
+## True while the blink has the host visible.
 var blink_shown: bool = true
+## Seconds until the blink's next step.
 var blink_timer: float = 0.0
+## Total seconds the blink may run.
 var blink_limit: float = 0.0
+## True while a blink is running.
 var blinking: bool = false
 
 # --- Blink patterns: a rhythm the game owns, played on the host ---
@@ -38,9 +48,10 @@ var blinking: bool = false
 ## meta every other flashing thing here reads, so one row sets it for the whole game.
 const BLINK_NO_FLASHING_META: StringName = &"no_flashing"
 
+# A strobe is a medical problem rather than a
+# taste, which is why the ceiling is held here instead of trusted to each pattern file.
 ## No part of a blink may be shorter than this once no flashing has been asked for: the pattern
-## still plays, at a rate nobody can be hurt by. A strobe is a medical problem rather than a
-## taste, which is why the ceiling is held here instead of trusted to each pattern file.
+## still plays, at a rate nobody can be hurt by.
 const BLINK_FLOOR_SECONDS: float = 0.4
 
 func _ready() -> void:

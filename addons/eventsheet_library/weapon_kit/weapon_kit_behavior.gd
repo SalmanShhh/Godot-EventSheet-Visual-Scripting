@@ -45,9 +45,13 @@ signal reload_completed
 @export var auto_reload: bool = true
 ## Reloads never spend reserve ammo.
 @export var infinite_reserve: bool = false
+## Seconds until the weapon can fire again.
 var _cooldown: float = 0.0
+## True while a reload is in progress.
 var _reloading: bool = false
+## Seconds left on the reload.
 var _reload_timer: float = 0.0
+## Shots left in the current burst.
 var _burst_left: int = 0
 
 func _ready() -> void:

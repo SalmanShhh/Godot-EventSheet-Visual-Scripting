@@ -14,10 +14,15 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Orbit3DBehavior behavior requires a Node3D parent.")
 
+## Current angle around the centre, in degrees.
 var angle: float = 0.0
+## True once the centre has been taken from the host's position.
 var center_captured: bool = false
+## X position of the orbit centre, in metres.
 var center_x: float = 0.0
+## Y position of the orbit centre, in metres.
 var center_y: float = 0.0
+## Z position of the orbit centre, in metres.
 var center_z: float = 0.0
 ## Distance in world units the host stays from the orbit center.
 @export var radius: float = 3.0

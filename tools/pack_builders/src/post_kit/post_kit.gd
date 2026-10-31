@@ -14,31 +14,38 @@ const EFFECT_DIRECTORY: String = "res://eventsheet_addons/post_kit/effects/"
 ## An effect word and its file can therefore never drift apart.
 const EFFECT_PREFIX: String = "post_"
 
-## The five effects a row adds by name. They are the words the 2D post stack uses for the same
-## looks, so a row reads alike whether it is on the screen or on the camera, and a project that
-## moves from one to the other keeps its sheet.
+# They are the words the 2D post stack uses for the same
+# looks, so a row reads alike whether it is on the screen or on the camera, and a project that
+# moves from one to the other keeps its sheet.
+## The five effects a row adds by name.
 const POST_EFFECTS: PackedStringArray = ["vignette", "desaturate", "pixelate", "tint", "fade"]
 
-## The reserved entry the outline rows wear. It is an ordinary stack entry under a name no Add Post
-## Effect row can mint, so Has Post Effect and Post Strength can see it with no second mechanism -
-## but it is not in the word list, because an outline with nothing marked has nothing to draw.
+# It is an ordinary stack entry under a name no Add Post
+# Effect row can mint, so Has Post Effect and Post Strength can see it with no second mechanism -
+# but it is not in the word list, because an outline with nothing marked has nothing to draw.
+## The reserved entry the outline rows wear.
 const OUTLINE_EFFECT: String = "outline"
 
-## The renderer that has a compositor at all. Mobile and Compatibility have no rendering device to
-## hand a compute shader to, so every row here does nothing on them rather than erroring, and the
-## ship-it check names it once with the 2D packs as the door.
+# Mobile and Compatibility have no rendering device to
+# hand a compute shader to, so every row here does nothing on them rather than erroring, and the
+# ship-it check names it once with the 2D packs as the door.
+## The renderer that has a compositor at all.
 const FORWARD_PLUS: String = "forward_plus"
 
-## THE ACCESSIBILITY CEILING. A player who has asked for no flashing gets the same rows - a pulse
-## still pulses, an outline still lands - with the amplitude held under this and the time held over
-## FLASH_FLOOR_SECONDS, so nothing the camera draws can strobe.
+# A player who has asked for no flashing gets the same rows - a pulse
+# still pulses, an outline still lands - with the amplitude held under this and the time held over
+# FLASH_FLOOR_SECONDS, so nothing the camera draws can strobe.
+## THE ACCESSIBILITY CEILING.
 const FLASH_CEILING: float = 0.3
+## Shortest a flash may last while no-flashing is on, in seconds.
 const FLASH_FLOOR_SECONDS: float = 0.4
 
+# A game that has those rows needs
+# nothing else for the camera to obey them.
 ## The two Engine meta this project already keeps its accessibility answers in - the same two the
-## built-in Set No Flashing and Set Effect Strength rows write. A game that has those rows needs
-## nothing else for the camera to obey them.
+## built-in Set No Flashing and Set Effect Strength rows write.
 const NO_FLASHING_META: StringName = &"no_flashing"
+## Metadata key a player sets to scale every effect.
 const EFFECT_STRENGTH_META: StringName = &"effect_strength"
 
 ## The name the mask viewport takes under this node, so a reader who opens the remote tree during a
@@ -49,17 +56,18 @@ const MASK_NODE_NAME: String = "PostKitMask"
 ## they mark. 20 is the last layer Godot has and the one a project is least likely to be using.
 @export_range(1, 20, 1) var mask_layer: int = 20
 
+# An entry is a small record rather than a node, because the order, the
+# names and the strengths are what rows ask about.
+#
+# called    the name rows address this entry by (its effect word, when nobody said otherwise)
+# effect    which of the shipped effects it is
+# strength  how far the row ASKED it to go, 0 to 1 - the request, not what reached the frame.
+# The two accessibility dials are applied once, on the way to the CompositorEffect, so
+# a walk that moves this value cannot scale it a second time
+# enabled   whether it is applied at all
+# resource  the CompositorEffect wearing it
 ## THE STACK, in the order the effects are applied: the first entry works on the frame first and the
-## last one has the last word. An entry is a small record rather than a node, because the order, the
-## names and the strengths are what rows ask about.
-##
-##   called    the name rows address this entry by (its effect word, when nobody said otherwise)
-##   effect    which of the shipped effects it is
-##   strength  how far the row ASKED it to go, 0 to 1 - the request, not what reached the frame.
-##             The two accessibility dials are applied once, on the way to the CompositorEffect, so
-##             a walk that moves this value cannot scale it a second time
-##   enabled   whether it is applied at all
-##   resource  the CompositorEffect wearing it
+## last one has the last word.
 var _stack: Array[Dictionary] = []
 
 ## The Compositor this node hangs its effects on - the parent's own, when it had one already.
@@ -72,6 +80,7 @@ var _stack_walks: Dictionary = {}
 ## The mask rig, built the first time something is outlined and freed when nothing is: a viewport
 ## with a transparent background and a camera that can see one visual layer and nothing else.
 var _mask: SubViewport = null
+## Camera that renders the mask used by effects limited to part of the screen.
 var _mask_camera: Camera3D = null
 
 ## Every visual instance an outline row switched the mask layer on for, so Stop Outlining can switch

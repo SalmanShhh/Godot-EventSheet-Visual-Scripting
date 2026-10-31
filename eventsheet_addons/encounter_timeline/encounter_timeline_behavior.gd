@@ -32,17 +32,27 @@ signal on_encounter_finished
 
 # The loaded plan, kept sorted by time: one record per beat, {at, scene, count, group, note}.
 # _next is the index of the beat that has not played yet, so the clock never re-reads the past.
+## The spawn rows of the loaded encounter, in time order.
 var _entries: Array = []
+## Seconds since the encounter started.
 var _clock: float = 0.0
+## Index of the next row waiting to fire.
 var _next: int = 0
+## True while the encounter is playing.
 var _running: bool = false
+## True once every row has fired.
 var _finished: bool = false
+## How many nodes the encounter has spawned so far.
 var _spawned: int = 0
+## Name of the encounter that is loaded.
 var _encounter_name: String = ""
 # Last-spawn context, readable outside the trigger (the trigger carries the same two values).
+## The node spawned most recently.
 var _last_spawned: Node = null
+## The group the most recent spawn was put in.
 var _last_group: String = ""
 # An explicit pool handed over by Use Object Pool Node, tried before the autoload.
+## The pooled-nodes helper used for spawning, if one is present.
 var _pool_node: Node = null
 # The pooling seam. Nothing here depends on the Object Pool pack: the node given to Use Object
 # Pool Node, else any autoload registered at /root/ObjectPool, qualifies as long as it answers

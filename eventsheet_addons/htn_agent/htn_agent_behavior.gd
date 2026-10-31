@@ -27,12 +27,17 @@ signal plan_failed
 
 ## Mark Failed re-plans from the root instead of giving up.
 @export var auto_replan_on_fail: bool = true
+## Compound tasks by name, each with the ways it can be broken into smaller tasks.
 var compounds: Dictionary = {}
+## The list of primitive tasks the agent is working through.
 var plan: Array = []
+## Which task in the plan is running now.
 var plan_index: int = 0
+## Primitive tasks by name, each with its conditions and effects.
 var primitives: Dictionary = {}
 ## Goal to plan for - a compound or primitive task name.
 @export var root_task: String = ""
+## What the agent believes about the world, as facts by name.
 var world_state: Dictionary = {}
 
 ## An HTN method - a way to accomplish a compound task, with preconditions + an ordered subtask list.

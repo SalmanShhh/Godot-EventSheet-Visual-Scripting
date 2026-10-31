@@ -28,21 +28,25 @@ signal spring_started(spring_name: String)
 @export_range(0, 1, 0.01) var default_damping: float = 0.85
 ## Distance + speed below which a spring counts as settled.
 @export var default_precision: float = 0.01
+## Number springs by name, each with its value, target and speed.
 var springs: Dictionary = {}
+## Colour springs by name, each easing toward a target colour.
 var color_springs: Dictionary = {}
+## Springs that drive a node property, by property path.
 var property_springs: Dictionary = {}
 
+# One list made once and reused rather than a fresh one per frame, and it is what lets the
+# banks be walked in place: a row answering On Spring Reached may start or remove a spring,
+# and a book cannot be walked and written at the same time.
 ## The names of the springs that landed this frame, said once the banks have all been walked.
-## One list made once and reused rather than a fresh one per frame, and it is what lets the
-## banks be walked in place: a row answering On Spring Reached may start or remove a spring,
-## and a book cannot be walked and written at the same time.
 var _reached: PackedStringArray = PackedStringArray()
 
-## The most of a velocity a damping may take away in a second. The decay below is EXPONENTIAL,
-## so a damping of exactly 1 leaves nothing of the velocity after any step at all: the spring
-## stops dead where it stands, never reaches its target, and never settles - which means the
-## per-frame tick never parks either. A thousandth of it left is still heavier damping than any
-## motion needs, and it is a spring rather than a freeze.
+# The decay below is EXPONENTIAL,
+# so a damping of exactly 1 leaves nothing of the velocity after any step at all: the spring
+# stops dead where it stands, never reaches its target, and never settles - which means the
+# per-frame tick never parks either. A thousandth of it left is still heavier damping than any
+# motion needs, and it is a spring rather than a freeze.
+## The most of a velocity a damping may take away in a second.
 const DAMPING_CEILING: float = 0.999
 
 ## A single numeric spring's state, integrated each frame (typed - no dict casts in the hot loop).

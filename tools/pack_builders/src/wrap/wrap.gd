@@ -36,6 +36,7 @@ var host: Node2D = null
 # --- Internal state ---
 # The custom rectangle (world space) used when wrap_space is "custom" - Rect2 cannot
 # emit from the variables dict, so it lives here; Set Custom Wrap Bounds writes it.
+## The rectangle the host wraps around, in pixels, used when the bounds are custom.
 var custom_bounds: Rect2 = Rect2(0.0, 0.0, 1152.0, 648.0)
 
 ## @ace_trigger

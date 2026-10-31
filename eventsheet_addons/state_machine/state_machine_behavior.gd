@@ -19,7 +19,9 @@ func _enter_tree() -> void:
 ## @ace_category("State Machine")
 signal state_changed(previous: String, next: String)
 
+## Engine time in milliseconds at which the current state was entered, which Time In State reads.
 var _state_entered_ticks: int = 0
+## The state the machine was in before the current one; empty until it first changes.
 var previous_state: String = ""
 ## The machine's current state name; change it with Go to state.
 @export var state: String = "idle"
