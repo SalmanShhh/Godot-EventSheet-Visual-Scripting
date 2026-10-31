@@ -51,7 +51,7 @@ var replaces_word: bool = false
 var entries: Array[Dictionary] = []
 var index: int = 0
 
-var _window: PopupPanel = null
+var _window: Window = null
 var _list: ItemList = null
 ## True while an accepted entry is being written into the field. The write announces itself as a
 ## change (a dialog watching the field has to hear it), and this is what stops that announcement
@@ -287,11 +287,38 @@ func _show() -> void:
 	field.grab_focus()
 
 
+## The window the list floats in: transient, borderless, never focused, and not a popup.
+static func new_list_window() -> Window:
+	var window: Window = Window.new()
+	window.transient = true
+	window.borderless = true
+	window.unresizable = true
+	window.wrap_controls = true
+	# No focus of its own: the reader is typing in the field, and a list that took the keyboard would
+	# end the sentence it is there to help finish.
+	window.set_flag(Window.FLAG_NO_FOCUS, true)
+	window.visible = false
+	return window
+
+
 func _build_window() -> void:
-	_window = PopupPanel.new()
-	# No focus of its own: the reader is typing in the field, and a popup that took the keyboard
-	# would end the sentence it is there to help finish.
-	_window.set_flag(Window.FLAG_NO_FOCUS, true)
+	# A plain transient Window, NOT a Popup. While a popup window is open the display server sends
+	# every key to it rather than to the window that has keyboard focus, and this list holds no
+	# focused control - so the moment it opened, Backspace and every letter after it were swallowed
+	# and the field stopped taking typing. A window without the popup flag leaves the keyboard with the
+	# dialog and the field the reader is typing in.
+	_window = new_list_window()
+	# The look a popup panel has in the editor theme, so it reads as the same kind of floating list.
+	var backdrop: PanelContainer = PanelContainer.new()
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var panel_style: StyleBox = field.get_theme_stylebox("panel", "PopupPanel")
+	if panel_style != null:
+		backdrop.add_theme_stylebox_override("panel", panel_style)
+	_window.add_child(backdrop)
+	# Not a popup, so a click elsewhere does not close it by itself: the field losing focus does, and
+	# so does its window losing focus (the reader moved to another window altogether).
+	if not field.get_window().focus_exited.is_connected(close):
+		field.get_window().focus_exited.connect(close)
 	var column: VBoxContainer = VBoxContainer.new()
 	column.add_theme_constant_override("separation", 2)
 	_list = ItemList.new()
@@ -311,5 +338,5 @@ func _build_window() -> void:
 	keys.modulate = Color(1.0, 1.0, 1.0, 0.65)
 	keys.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 	column.add_child(keys)
-	_window.add_child(column)
+	backdrop.add_child(column)
 	field.add_child(_window)

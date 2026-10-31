@@ -62,6 +62,9 @@ static func run() -> bool:
 		["a kind of a project class names the new sheet", EventSheetNewSheetDialog.names_new_class("EventSheetResource"), true],
 		["extending a Godot class names nothing", EventSheetNewSheetDialog.names_new_class("CharacterBody2D"), false],
 		["an empty field names nothing", EventSheetNewSheetDialog.names_new_class(""), false],
+		# The completion list floats in a window that is never a popup and never focused: while a popup
+		# window is open the keyboard goes to it, and Backspace and every letter after it were lost.
+		["the completion list is not a popup window and takes no focus", _list_window_facts(), [false, true, true]],
 		["right-clicking a script that names a class offers its kind", EventSheetContextMenu.class_declared_in(
 			PackedStringArray(["res://addons/eventforge/resources/event_sheet.gd"])), "EventSheetResource"],
 		["two scripts offer none", EventSheetContextMenu.class_declared_in(PackedStringArray(["res://a.gd", "res://b.gd"])), ""],
@@ -129,6 +132,13 @@ static func run_kinds() -> bool:
 	ok = SUPPORT.check("class_kinds_test", "a replaced function that answers hands the parent's answer on",
 		answering_source.contains("return super(kind, bonus)"), true) and ok
 	return ok
+
+
+static func _list_window_facts() -> Array:
+	var window: Window = EventSheetCompletionPopup.new_list_window()
+	var facts: Array = [window is Popup or window.get_flag(Window.FLAG_POPUP), window.get_flag(Window.FLAG_NO_FOCUS), window.transient]
+	window.free()
+	return facts
 
 
 static func _classes() -> Dictionary:

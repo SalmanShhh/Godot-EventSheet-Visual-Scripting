@@ -24,6 +24,11 @@
   is typed, so "Ene" on the way to Enemy is no longer red. A sheet made as a kind of one of your own
   classes is named as a class; extending a Godot class such as CharacterBody2D no longer adds a
   `class_name` to the new file.
+- Typing in any field that completes (the A kind of field, parameter fields, the States window)
+  no longer stops working once the completion list is open. The list was a popup window, and while
+  a popup is open the keyboard goes to it, so Backspace and every letter after it were lost. It now
+  floats in a window that never takes the keyboard, and closes when the field or its window loses
+  focus.
 - Nested events: each depth bounds its name column by its own lane, and the name column gives way at
   half of that lane (it was 45 percent of the sheet's top-level lane). On an event nested past the
   150 px floor, the divider it draws is the one that can be grabbed, and its actions lane is
