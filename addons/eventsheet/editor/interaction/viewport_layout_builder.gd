@@ -185,6 +185,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 			continue
 		var span_lane: String = _viewport._row_builder._resolve_span_lane(span)
 		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
+		metadata["row_indent"] = row_data.indent
 		if bool(metadata.get("code_echo", false)) and width < CODE_ECHO_MIN_ROW_WIDTH:
 			span.rect = Rect2()
 			continue
@@ -236,7 +237,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				# this still matches the live style, so a token change between layout builds
 				# falls back to the base width instead of drawing/measuring a stale stamp.
 				var stamp_lane: String = str(metadata.get("lane", ""))
-				metadata["object_column_base"] = EventRowRenderer.object_column_width_for(_viewport._get_event_style(), stamp_lane, _viewport.lane_width_for(stamp_lane))
+				metadata["object_column_base"] = EventRowRenderer.object_column_width_for(_viewport._get_event_style(), stamp_lane, _viewport.lane_width_for(stamp_lane, int(metadata.get("row_indent", 0))))
 			else:
 				metadata.erase("object_column_px")
 				metadata.erase("object_column_base")

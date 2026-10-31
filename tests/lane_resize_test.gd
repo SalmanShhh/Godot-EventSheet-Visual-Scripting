@@ -31,16 +31,16 @@ static func run() -> bool:
 	all_passed = _check("starts default-themed (no editor style)", sheet.editor_style == null, true) and all_passed
 
 	# The pointer says the line is a handle before the button goes down, and only on the line.
-	viewport._gui_input(_motion(initial_divider - 60.0, event_y))
+	viewport._gui_input(_motion(initial_divider - 30.0, event_y))
 	var inside_cursor: int = viewport.mouse_default_cursor_shape
 	viewport._gui_input(_motion(initial_divider, event_y))
 	all_passed = _check("the pointer shows ↔ on the line and nowhere else in the event",
 		[inside_cursor, viewport.mouse_default_cursor_shape], [Control.CURSOR_ARROW, Control.CURSOR_HSIZE]) and all_passed
 
 	# A press inside a lane is a press on the event, not a resize.
-	viewport._gui_input(_button(initial_divider - 60.0, event_y, true))
+	viewport._gui_input(_button(initial_divider - 30.0, event_y, true))
 	all_passed = _check("a press inside a lane starts no drag", viewport._dragging_lane_divider, false) and all_passed
-	viewport._gui_input(_button(initial_divider - 60.0, event_y, false))
+	viewport._gui_input(_button(initial_divider - 30.0, event_y, false))
 
 	# Press the line on the event.
 	viewport._gui_input(_button(initial_divider, event_y, true))

@@ -223,6 +223,9 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
+		# The row's depth rides on each span, so every reader of the name column bounds it by THIS
+		# row's lane rather than the sheet's top-level one.
+		metadata["row_indent"] = row_data.indent
 		if resting_add_kinds.has(str(metadata.get("kind", ""))):
 			continue
 		var line: int = int(metadata.get("line_index", 0))
@@ -346,7 +349,7 @@ func condition_trailing_width(row_data: EventRowData, line_index: int, font: Fon
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	if total > 0.0:
 		var share: float = LANE_CHIP_SHARE if event_style != null and event_style.lane_chips_yield else LANE_CHIP_LIMIT
-		total = minf(total, _viewport.lane_width_for("condition") * share)
+		total = minf(total, _viewport.lane_width_for("condition", row_data.indent) * share)
 	return total
 
 
@@ -383,7 +386,7 @@ func _fill_text_wrap_width(metadata: Dictionary, cell_rect_width: float, font: F
 	var object_label: String = str(metadata.get("object_label", ""))
 	if not object_label.is_empty():
 		var lane: String = str(metadata.get("lane", ""))
-		var column: float = EventRowRenderer.object_column_width_for(_viewport._get_event_style(), lane, _viewport.lane_width_for(lane))
+		var column: float = EventRowRenderer.object_column_width_for(_viewport._get_event_style(), lane, _viewport.lane_width_for(lane, int(metadata.get("row_indent", 0))))
 		if column_override >= 0.0:
 			lead += column_override
 		elif column > 0.0:
@@ -407,7 +410,7 @@ func object_column_override(metadata: Dictionary, lane_origin_x: float, span_x: 
 	if str(metadata.get("object_label", "")).is_empty():
 		return -1.0
 	var lane: String = str(metadata.get("lane", ""))
-	var column: float = EventRowRenderer.object_column_width_for(_viewport._get_event_style(), lane, _viewport.lane_width_for(lane))
+	var column: float = EventRowRenderer.object_column_width_for(_viewport._get_event_style(), lane, _viewport.lane_width_for(lane, int(metadata.get("row_indent", 0))))
 	if column <= 0.0:
 		return -1.0
 	var lead: float = float(metadata.get("padding_x", 0.0)) if bool(metadata.get("chip", false)) else 0.0

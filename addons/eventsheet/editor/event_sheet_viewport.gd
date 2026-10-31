@@ -1111,9 +1111,14 @@ func _has_event_rows() -> bool:
 ## dragged column can never grow wider than the lane it lives in. Every consumer of
 ## object_column_width_for goes through this, so draw, measure, hit-test and the drag boundary keep
 ## agreeing about where the column ends even as the window resizes.
-func lane_width_for(lane: String) -> float:
+##
+## `indent` is the depth of the row asking. A nested row's conditions lane starts one step further
+## right per level and ends at that row's own divider (the sheet's, until the row is nested past the
+## floor), and its actions lane starts at that divider - so each depth bounds its name column by the
+## lane it actually has.
+func lane_width_for(lane: String, indent: int = 0) -> float:
 	var width: float = _get_logical_canvas_width()
-	var divider_x: float = get_lane_divider_x(width)
+	var divider_x: float = row_lane_divider_x(width, indent)
 	var event_style: EventSheetEventStyle = _get_event_style()
 	if lane == "action":
 		return maxf(width - divider_x - float(event_style.action_lane_padding), 1.0)
@@ -1127,6 +1132,7 @@ func lane_width_for(lane: String) -> float:
 		+ 18.0
 		+ float(event_style.condition_badge_column_width)
 		+ EventSheetPalette.SPAN_GAP
+		+ float(maxi(indent, 0) * indent_width())
 	)
 	return maxf(divider_x - lead_in, 1.0)
 
@@ -1184,7 +1190,7 @@ func _object_column_boundary_of(span: SemanticSpan) -> Dictionary:
 	if metadata.get("object_icon") is Texture2D:
 		anchor_x += EventRowRenderer.OBJECT_ICON_ADVANCE
 	var boundary_x: float = anchor_x
-	var column_width: float = EventRowRenderer.object_column_width_for(_get_event_style(), lane, lane_width_for(lane))
+	var column_width: float = EventRowRenderer.object_column_width_for(_get_event_style(), lane, lane_width_for(lane, int(metadata.get("row_indent", 0))))
 	# The layout stamps the aligned per-span column (shared separator x); grab where it is
 	# actually drawn, not where the raw style width would put it.
 	var aligned_column: Variant = metadata.get("object_column_px")
@@ -1301,13 +1307,16 @@ func event_boundary_grab_at(local_position: Vector2) -> Dictionary:
 	var row_data: EventRowData = _row_at(_row_metrics_helper.row_index_at_y(local_position.y))
 	if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
 		return {}
-	if _is_near_lane_divider(local_position.x):
-		return {"kind": "lane_divider", "boundary_x": get_lane_divider_x(_get_logical_canvas_width())}
+	# The line this ROW draws is the handle: an event nested past the floor draws its divider further
+	# right than the sheet's, and a press at the sheet's x is then inside its conditions, not on a line.
+	var row_divider_x: float = row_lane_divider_x(_get_logical_canvas_width(), row_data.indent)
+	if absf(local_position.x - row_divider_x) <= LANE_DIVIDER_GRAB_TOLERANCE:
+		return {"kind": "lane_divider", "boundary_x": row_divider_x}
 	var boundary: Dictionary = object_column_boundary_hit(local_position)
 	if boundary.is_empty():
 		return {}
 	var lane: String = str(boundary.get("lane", ""))
-	if EventRowRenderer.object_column_width_for(_get_event_style(), lane, lane_width_for(lane)) <= 0.0:
+	if EventRowRenderer.object_column_width_for(_get_event_style(), lane, lane_width_for(lane, row_data.indent)) <= 0.0:
 		return {}
 	return boundary
 
@@ -1709,7 +1718,7 @@ func _span_text_origin_x(span: SemanticSpan, font: Font, font_size: int) -> floa
 		# Fixed object column (the event-sheet sub-lane) advances by the column width; flow mode by the
 		# label's own width - mirrors the renderer exactly.
 		var span_lane: String = str(metadata.get("lane", ""))
-		var object_column_width: float = EventRowRenderer.object_column_width_for(_get_event_style(), span_lane, lane_width_for(span_lane))
+		var object_column_width: float = EventRowRenderer.object_column_width_for(_get_event_style(), span_lane, lane_width_for(span_lane, int(metadata.get("row_indent", 0))))
 		if object_column_width > 0.0:
 			# The layout stamps the aligned per-span column (shared-separator rule); the
 			# hit-test origin must advance by the DRAWN column or value clicks drift.
@@ -4569,6 +4578,15 @@ func _trigger_icon_tooltip(row_index: int, logical_position: Vector2) -> String:
 ## count (at once on a click, `at_once`), and let go when it leaves the word and the card both. The
 ## card is a Control floated over the canvas - the row only carries its words in the span's metadata
 ## (`head_card`) - and its doors come back as head actions, the same signal the bands' gestures use.
+## The word card under a logical point, from the rectangles the renderer recorded for the words of
+## one span: {"card": Dictionary, "rect": Rect2}, or {} when the point is on no such word.
+static func word_card_at(metadata: Dictionary, logical_position: Vector2) -> Dictionary:
+	for entry: Variant in (metadata.get("word_card_rects", []) as Array):
+		if entry is Dictionary and ((entry as Dictionary).get("rect") as Rect2).has_point(logical_position):
+			return entry as Dictionary
+	return {}
+
+
 func update_head_card(hit: Dictionary, at_once: bool = false, logical_position: Vector2 = Vector2(-1.0, -1.0)) -> void:
 	var metadata: Variant = hit.get("span_metadata", {})
 	var card: Variant = (metadata as Dictionary).get("head_card") if metadata is Dictionary else null
@@ -4576,11 +4594,10 @@ func update_head_card(hit: Dictionary, at_once: bool = false, logical_position: 
 	# so the card is the one under the pointer, and the card hangs from that word and not from the cell.
 	var word_rect: Rect2 = Rect2()
 	if (not (card is Dictionary) or (card as Dictionary).is_empty()) and metadata is Dictionary:
-		for entry: Variant in ((metadata as Dictionary).get("word_card_rects", []) as Array):
-			if entry is Dictionary and ((entry as Dictionary).get("rect") as Rect2).has_point(logical_position):
-				card = (entry as Dictionary).get("card")
-				word_rect = (entry as Dictionary).get("rect") as Rect2
-				break
+		var word_entry: Dictionary = word_card_at(metadata as Dictionary, logical_position)
+		if not word_entry.is_empty():
+			card = word_entry.get("card")
+			word_rect = word_entry.get("rect") as Rect2
 	if not (card is Dictionary) or (card as Dictionary).is_empty():
 		if _head_card != null:
 			_head_card.call("leave_word")

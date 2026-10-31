@@ -77,7 +77,7 @@ static func run() -> bool:
 
 	# ── the header band is where the divider is grabbed ──
 	var header_grab: Dictionary = viewport.column_header_grab_at(divider_x)
-	var header_miss: Dictionary = viewport.column_header_grab_at(divider_x - 60.0)
+	var header_miss: Dictionary = viewport.column_header_grab_at(divider_x - 30.0)
 	all_passed = SUPPORT.pins(PREFIX, [
 		["the header band answers the divider", str(header_grab.get("kind", "")), "lane_divider"],
 		["it answers with the boundary it will drag",

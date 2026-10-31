@@ -221,9 +221,14 @@ static func _draw_object_column_separator(control: CanvasItem, span: SemanticSpa
 ## `lane_width` bounds it. A column is a themed/dragged number in logical pixels with no idea how much
 ## lane it is being asked to occupy: the shipped 130px default against the 160px minimum conditions
 ## lane pushed the display text 48px PAST the lane divider on a narrow sheet (measured at a 420px
-## canvas), so the text vanished on any docked panel or split view. The column may now take at most
-## 45% of its lane, leaving the majority for the text it is supposed to be labelling. Pass 0 (the
+## canvas), so the text vanished on any docked panel or split view. The column may take at most half
+## of its lane - the row's OWN lane, so a nested event's narrower lane gives way first - and the text
+## it is labelling keeps the other half. Pass 0 (the
 ## default) only where the lane is genuinely unknown - the bound is then skipped, as before.
+## The most of its lane a fixed name column may take: half, so the words beside it keep the rest.
+const OBJECT_COLUMN_LANE_SHARE := 0.5
+
+
 static func object_column_width_for(event_style: EventSheetEventStyle, lane: String, lane_width: float = 0.0) -> float:
 	if event_style == null:
 		return 0.0
@@ -235,7 +240,7 @@ static func object_column_width_for(event_style: EventSheetEventStyle, lane: Str
 			column = float(event_style.action_object_column_width)
 	if column <= 0.0:
 		return 0.0  # flow mode: text follows each label
-	return minf(column, lane_width * 0.45) if lane_width > 0.0 else column
+	return minf(column, lane_width * OBJECT_COLUMN_LANE_SHARE) if lane_width > 0.0 else column
 
 
 ## The side of the colour box drawn for a span carrying `swatch_color`, at the size that span's
@@ -1446,26 +1451,48 @@ func _draw_word_cards(
 	var limit: float = baseline.x + max_width
 	var underline_y: float = baseline.y + maxf(float(font_size) * TUNE_MARK_DROP_RATIO, 2.0)
 	var mark_ink: Color = Color(ink, ink.a * TUNE_MARK_ALPHA)
+	# The words' offsets depend only on the text, the font and its size, so they are measured once
+	# and kept on the span; a frame only re-measures after one of those changed.
+	var offsets: Array = word_card_offsets(metadata, text, font, font_size)
 	var stamped: Array = []
-	for entry: Variant in (metadata.get("word_cards", []) as Array):
-		if not (entry is Dictionary):
-			continue
-		var start: int = int((entry as Dictionary).get("start", -1))
-		var length: int = int((entry as Dictionary).get("length", 0))
-		if start < 0 or length <= 0 or start + length > text.length():
-			continue
-		var from_x: float = baseline.x + font.get_string_size(text.substr(0, start),
-			HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
-		var run_width: float = font.get_string_size(text.substr(start, length),
-			HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+	for measured: Variant in offsets:
+		var from_x: float = baseline.x + float((measured as Dictionary)["lead"])
+		var run_width: float = float((measured as Dictionary)["width"])
 		if from_x >= limit or run_width <= 0.0:
 			continue
 		var to_x: float = minf(from_x + run_width, limit)
 		control.draw_dashed_line(Vector2(from_x, underline_y), Vector2(to_x, underline_y), mark_ink, 1.0,
 			HOVER_CARD_DOT_LENGTH)
-		stamped.append({"rect": Rect2(from_x, span.rect.position.y, to_x - from_x, span.rect.size.y),
-			"card": (entry as Dictionary).get("card", {})})
-	span.metadata["word_card_rects"] = stamped
+		var rect: Rect2 = Rect2(from_x, span.rect.position.y, to_x - from_x, span.rect.size.y)
+		stamped.append({"rect": rect, "card": (measured as Dictionary)["card"]})
+	# The stamp is rewritten only when a word landed somewhere new, so a still frame allocates nothing.
+	if stamped != (metadata.get("word_card_rects", []) as Array):
+		span.metadata["word_card_rects"] = stamped
+
+
+## Each card word's offset from the start of the drawn text and its width, as
+## [{"lead", "width", "card"}], measured once per text, font and size and kept on the span's
+## metadata under `word_card_measure`.
+static func word_card_offsets(metadata: Dictionary, text: String, font: Font, font_size: int) -> Array:
+	var key: String = "%s|%d|%d" % [text, font.get_instance_id() if font != null else 0, font_size]
+	var kept: Variant = metadata.get("word_card_measure", null)
+	if kept is Dictionary and str((kept as Dictionary).get("key", "")) == key:
+		return (kept as Dictionary).get("offsets", []) as Array
+	var offsets: Array = []
+	for entry: Variant in (metadata.get("word_cards", []) as Array):
+		if not (entry is Dictionary) or font == null:
+			continue
+		var start: int = int((entry as Dictionary).get("start", -1))
+		var length: int = int((entry as Dictionary).get("length", 0))
+		if start < 0 or length <= 0 or start + length > text.length():
+			continue
+		offsets.append({
+			"lead": font.get_string_size(text.substr(0, start), HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x,
+			"width": font.get_string_size(text.substr(start, length), HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x,
+			"card": (entry as Dictionary).get("card", {}),
+		})
+	metadata["word_card_measure"] = {"key": key, "offsets": offsets}
+	return offsets
 
 
 ## The doors of a comment span: a hairline under every noun the project could prove, and the
@@ -1754,7 +1781,7 @@ func _draw_spans(
 			# does not receive the lane rects, and the column MUST be bounded by the same number the
 			# measure / hit-test twins use or draw and hit-test drift apart.
 			var drawn_lane: String = str(metadata.get("lane", ""))
-			var lane_bound: float = control.lane_width_for(drawn_lane) if control.has_method("lane_width_for") else 0.0
+			var lane_bound: float = control.lane_width_for(drawn_lane, int(metadata.get("row_indent", 0))) if control.has_method("lane_width_for") else 0.0
 			var object_column_width: float = object_column_width_for(event_style, drawn_lane, lane_bound)
 			# Sub-lane alignment: the layout stamps the per-span column width whose boundary
 			# lands on the lane's SHARED separator x (a badge shifts a cell's start; the fixed

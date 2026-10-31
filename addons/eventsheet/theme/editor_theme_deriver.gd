@@ -565,8 +565,12 @@ static func sheet_look(chosen: EventSheetEditorStyle, base: Color) -> EventSheet
 ## dragged divider, a dragged name column), so the edit saves with the sheet WITHOUT changing the look
 ## the sheet is drawn in: in the editor that is the Editor Native starter (which keeps following the
 ## editor's greys), a copy of its own; outside the editor, the bare bundled style, as before.
-static func promoted_default_style() -> EventSheetEditorStyle:
-	var starter: EventSheetEditorStyle = load(NATIVE_STARTER_PATH) as EventSheetEditorStyle if running_editor_base().a > 0.0 else null
+##
+## `base` is the editor's base colour the sheet is drawn on; left out it is read from the running
+## editor. A test passes one to ask the in-editor answer headless.
+static func promoted_default_style(base: Color = Color(0.0, 0.0, 0.0, -1.0)) -> EventSheetEditorStyle:
+	var editor_base: Color = running_editor_base() if base.a < 0.0 else base
+	var starter: EventSheetEditorStyle = load(NATIVE_STARTER_PATH) as EventSheetEditorStyle if editor_base.a > 0.0 else null
 	var style: EventSheetEditorStyle = starter.duplicate(true) as EventSheetEditorStyle if starter != null else EventSheetEditorStyle.new()
 	style.ensure_defaults()
 	# The drag that led here edited the SHARED no-theme look live; forget it so the next sheet that

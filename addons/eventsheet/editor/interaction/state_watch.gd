@@ -50,6 +50,9 @@ const CADENCE_SECONDS: float = 0.25
 ## values chips are keyed: "" for a lone run, and the feature tag ("host", "client") when a run is
 ## two games at once.
 static var _frames: Dictionary = {}
+## live_members() worked out once per change of _frames rather than once per drawn state name.
+static var _live_cache: PackedStringArray = PackedStringArray()
+static var _live_dirty: bool = true
 
 
 ## One streamed frame -> what this store knows. A frame WITHOUT the state entries drops whatever
@@ -57,6 +60,7 @@ static var _frames: Dictionary = {}
 ## streams no state, and a stale "current: Chase" over a game that is no longer in Chase - or no
 ## longer has states at all - is the one reading worse than none.
 static func note_frame(values: Dictionary, instance: String = "") -> void:
+	_live_dirty = true
 	if not values.has(STATE_KEY):
 		_frames.erase(instance)
 		return
@@ -78,6 +82,7 @@ static func note_frame(values: Dictionary, instance: String = "") -> void:
 ## reading is no longer true.
 static func clear() -> void:
 	_frames.clear()
+	_live_dirty = true
 
 
 ## True while a running game is saying what state it is in. Every readout is gated on this: with no
@@ -108,12 +113,19 @@ static func band_reading() -> String:
 
 
 ## The states the running games are in right now, as the members they sent - what the state row lights up.
+##
+## Asked once per state name the renderer draws, so it is worked out when a frame arrives or the run
+## ends and handed back as it stands between those, not rebuilt every time it is asked.
 static func live_members() -> PackedStringArray:
+	if not _live_dirty:
+		return _live_cache
 	var members: PackedStringArray = PackedStringArray()
 	for instance: Variant in _frames:
 		var member: String = str((_frames[instance] as Dictionary).get("state", "")).strip_edges()
 		if not member.is_empty() and not members.has(member):
 			members.append(member)
+	_live_cache = members
+	_live_dirty = false
 	return members
 
 

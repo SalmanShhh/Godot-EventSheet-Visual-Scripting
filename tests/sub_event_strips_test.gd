@@ -88,5 +88,26 @@ static func _test_name_column_cap() -> bool:
 	style.condition_object_column_width = 114
 	return SUPPORT.pins(TEST_NAME, [
 		["the name column keeps its width in a wide lane", EventRowRenderer.object_column_width_for(style, "condition", 600.0), 114.0],
-		["and gives way to under half of a narrowed lane", EventRowRenderer.object_column_width_for(style, "condition", 150.0), 67.5],
+		["and gives way at half of a narrowed lane", EventRowRenderer.object_column_width_for(style, "condition", 150.0), 75.0],
+	]) and _test_row_lanes()
+
+
+## Each depth bounds its name column by the lane it actually has: a nested event's conditions lane is
+## one step narrower per level (same divider, later start), and an event nested past the floor keeps a
+## 150 px conditions lane and an actions lane that starts at its own, later divider.
+static func _test_row_lanes() -> bool:
+	var viewport := EventSheetViewport.new()
+	var width: float = viewport._get_logical_canvas_width()
+	var step: float = float(viewport.indent_width())
+	var top_condition: float = viewport.lane_width_for("condition", 0)
+	var lane_start_at_zero: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH + 18.0
+	var deep: int = int(ceil((viewport.get_lane_divider_x(width) - lane_start_at_zero) / step)) + 2
+	var ok: bool = SUPPORT.pins(TEST_NAME, [
+		["two levels down, the conditions lane is two steps narrower",
+			top_condition - viewport.lane_width_for("condition", 2), 2.0 * step],
+		["past the floor, the actions lane starts at the row's own divider",
+			viewport.lane_width_for("action", 0) - viewport.lane_width_for("action", deep),
+			viewport.row_lane_divider_x(width, deep) - viewport.get_lane_divider_x(width)],
 	])
+	viewport.free()
+	return ok
