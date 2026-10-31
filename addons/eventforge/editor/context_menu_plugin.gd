@@ -79,7 +79,7 @@ static func kind_menu_text(parent_text: String) -> String:
 	var familiar: bool = false
 	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
 		familiar = bool(EditorInterface.get_editor_settings().get_project_metadata("eventsheets", "familiar_words", false))
-	return ("New kind of %s..." if familiar else "New script extending %s...") % parent_text
+	return ("New kind of %s…" if familiar else "New script extending %s…") % parent_text
 
 
 ## True when this slot + paths should offer "Open as Event Sheet". Pure + static so the decision is

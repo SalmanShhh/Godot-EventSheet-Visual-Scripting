@@ -66,6 +66,7 @@ func build_ui() -> void:
 	_dock._tab_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_dock._tab_bar.tab_selected.connect(_dock._on_tab_selected)
 	_dock._tab_bar.tab_close_pressed.connect(_dock._on_tab_close_pressed)
+	_dock._tab_bar.tab_rmb_clicked.connect(_dock._on_tab_rmb_clicked)
 	# The open's hairline rides the foot of the tab strip (a child anchored to the bar's bottom edge,
 	# taking no layout room), so a .gd opening says so without anything pushing the sheet down.
 	_dock._tab_bar.add_child(_dock._open_progress.build_hairline())

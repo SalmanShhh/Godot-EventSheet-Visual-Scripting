@@ -78,6 +78,8 @@ const FUNCTION_PREFIX := "function:"
 ## itself hands out. The rest of the string is `<name>|<class>`, which is everything the scope needs:
 ## the spelling the row will address the node by, and the class whose vocabulary it may take.
 const UNIQUE_PREFIX := "unique:"
+## A value an event already asked the type of ("body is an Enemy"): picking it offers that class's own members.
+const NARROW_PREFIX := "narrow:"
 ## Where a Functions entry stashes the function it targets, so the single commit path can pre-fill
 ## the Call Function parameters instead of needing a second dispatch table.
 const FUNCTION_META_KEY := "eventsheet_function_name"
@@ -242,6 +244,9 @@ const CATEGORY_EDITOR_ICONS: Dictionary = EventSheetACEIcons.CATEGORY_EDITOR_ICO
 # Group-header colours (by group kind).
 const GROUP_COLOR_NODE_TYPE := Color("#e0b070")  # amber - Godot class sections
 const PROJECT_HEADER_META := "__your_project__"
+## The head of the project's own classes, which lead every object list as a tree of kinds.
+const CLASSES_HEADER_META := "__your_classes__"
+const CLASS_KINDS_PATH := "res://addons/eventsheet/editor/dock/class_kinds.gd"
 const GROUP_COLOR_CUSTOM := Color("#c79bf0")      # purple - custom / runtime providers
 const GROUP_COLOR_NEUTRAL := Color("#9aa1ad")     # neutral muted - other categories
 # Used by the ƒx expression autocomplete (ace_params_dialog) to tint expression fragments. The ACE
@@ -968,6 +973,10 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 			]
 		_show_classic(true)
 	elif bool(_context.get("object_first", false)) and not signals_only and mode in ["new_event", "new_condition_event", "new_sub_condition_event"]:
+		_reveal_objects_page()
+	elif mode == "append_action" and not signals_only and event_narrows_a_class(selected_resource as Resource):
+		# An event that has asked "body is a Mob" opens an action's picker on the objects, where
+		# `body` is the first of them: the next row is most often about what it just proved.
 		_reveal_objects_page()
 	else:
 		_show_classic(false)
@@ -1754,6 +1763,49 @@ static func unique_names_page_content(sheet: EventSheetResource) -> Dictionary:
 
 ## The section drawn, one selectable row per marked node. The Godot class icon comes off the class
 ## the scene said, so the row looks like the node does in the scene tree.
+## Whether `event` asked the type of a value and the answer is a class of the project - an event whose
+## action picker should lead with that value.
+static func event_narrows_a_class(event: Resource) -> bool:
+	if not event is EventRow:
+		return false
+	var kinds: GDScript = load(CLASS_KINDS_PATH)
+	var narrowed: Array[Dictionary] = kinds.narrowings(event as EventRow)
+	if narrowed.is_empty():
+		return false
+	var classes: Dictionary = kinds.project_classes()
+	for narrowing: Dictionary in narrowed:
+		if classes.has(str(narrowing["kind"])):
+			return true
+	return false
+
+
+## A value the event this row joins already asked the type of ("body is an Enemy") is offered as an
+## object of its own, under that class: picking it offers the class's own members, then everything it is
+## a kind of, written on that value by name. Only a class of the project is offered.
+func _populate_narrowed_cards(root: TreeItem) -> void:
+	var selected: Resource = _context.get("selected_resource") as Resource
+	if not selected is EventRow:
+		return
+	var kinds: GDScript = load(CLASS_KINDS_PATH)
+	var classes: Dictionary = kinds.project_classes()
+	var seen: Dictionary = {}
+	for narrowing: Dictionary in kinds.narrowings(selected as EventRow):
+		var value_text: String = str(narrowing["value"])
+		var kind_text: String = str(narrowing["kind"])
+		if not classes.has(kind_text) or seen.has(value_text):
+			continue
+		seen[value_text] = true
+		var item: TreeItem = _objects_tree.create_item(root, 0)
+		item.set_text(0, "%s · %s" % [value_text, kind_text])
+		item.set_tooltip_text(0, EventSheetL10n.translate(
+			"Browse what %s can do. Rows you add here are written on it by name.") % value_text)
+		item.set_metadata(0, "%s%s|%s" % [NARROW_PREFIX, value_text, kind_text])
+		var kind_icon: Texture2D = editor_icon(str((classes[kind_text] as Dictionary).get("base", "")))
+		if kind_icon != null:
+			item.set_icon(0, kind_icon)
+			item.set_icon_max_width(0, 16)
+
+
 func _populate_unique_name_cards(root: TreeItem) -> void:
 	var content: Dictionary = unique_names_page_content(_open_sheet())
 	if content.is_empty():
@@ -1782,11 +1834,14 @@ func _populate_unique_name_cards(root: TreeItem) -> void:
 ##
 ## The "On node" parameter is the shipped node-scoped one, so the row a pick produces is the ordinary
 ## `{target.}member()` row with its target filled in, and emits `%HealthBar.member()` back.
-static func unique_node_definitions(node_name: String, node_class: String) -> Array[ACEDefinition]:
+static func unique_node_definitions(node_name: String, node_class: String, plain_reference: bool = false) -> Array[ACEDefinition]:
 	var offered: Array[ACEDefinition] = []
 	if node_name.strip_edges().is_empty() or node_class.strip_edges().is_empty():
 		return offered
-	var reference: String = EventSheetSceneUniqueNames.SIGIL + node_name.strip_edges()
+	# A `%name` is a node of the scene, reached by its unique name; a plain reference is a value the
+	# event already narrowed (`body` after `body is an Enemy`), written by its own name.
+	var reference: String = node_name.strip_edges() if plain_reference \
+		else EventSheetSceneUniqueNames.SIGIL + node_name.strip_edges()
 	for definition: ACEDefinition in EventSheetClassDBSource.definitions_for_class(node_class):
 		var entry: ACEDefinition = definition.copy()
 		var template: String = str(entry.metadata.get("codegen_template", ""))
@@ -1815,7 +1870,8 @@ static func unique_node_definitions(node_name: String, node_class: String) -> Ar
 func _unique_scope_definitions() -> Array[ACEDefinition]:
 	if _unique_scope.is_empty():
 		return []
-	return unique_node_definitions(str(_unique_scope.get("name", "")), str(_unique_scope.get("class", "")))
+	return unique_node_definitions(str(_unique_scope.get("name", "")), str(_unique_scope.get("class", "")),
+		bool(_unique_scope.get("plain", false)))
 
 
 func _populate_object_cards() -> void:
@@ -1824,6 +1880,7 @@ func _populate_object_cards() -> void:
 	_objects_tree.clear()
 	var root: TreeItem = _objects_tree.create_item()
 	_populate_unique_name_cards(root)
+	_populate_narrowed_cards(root)
 	_populate_function_cards(root)
 	var definitions: Array[ACEDefinition] = _registry.get_all_definitions()
 	# One pass for every card's icon rather than a scan of the whole vocabulary per card: the cards
@@ -1937,26 +1994,31 @@ func _populate_project_cards(root: TreeItem) -> void:
 		return str(entry.get("autoload", "")).is_empty())
 	if entries.is_empty():
 		return
-	var header: TreeItem = _project_header(root)
+	var header: TreeItem = _classes_header(root)
 	# Hidden classes are listed too, greyed and marked - hiding must not be a one-way door
 	# with no path back, and a card the user cannot see is a card they cannot restore.
 	var hidden_names: PackedStringArray = PackedStringArray()
+	var by_name: Dictionary = {}
 	for entry: Dictionary in entries:
-		var entry_name: String = str(entry.get("name", ""))
-		if EventSheetVocabularyCatalog.is_class_excluded(entry_name):
-			hidden_names.append(entry_name)
+		by_name[str(entry.get("name", ""))] = entry
+	# The classes as a tree of kinds: a kind sits under what it is a kind of, each with its own icon
+	# and its description on hover. A class the kinds model does not know (an opted-in folder's) is
+	# a root of its own.
+	var kinds: GDScript = load(CLASS_KINDS_PATH)
+	var familiar: bool = EventSheetWords.familiar_words_enabled()
+	var placed: Dictionary = {}
+	var items: Dictionary = {}
+	for node: Dictionary in kinds.kinds_tree():
+		var node_name: String = str(node["name"])
+		if not by_name.has(node_name):
 			continue
-		var item: TreeItem = _objects_tree.create_item(header)
-		item.set_text(0, entry_name)
-		item.set_tooltip_text(0, "Browse %s's methods, properties and signals - reflected from %s." % [
-			entry_name, str(entry.get("path", ""))])
-		# The metadata is the provider id the scoped tree filters on, which for a reflected
-		# class IS the class name (see EventSheetClassDBSource).
-		item.set_metadata(0, entry_name)
-		var project_icon: Texture2D = editor_icon("Script")
-		if project_icon != null:
-			item.set_icon(0, project_icon)
-			item.set_icon_max_width(0, 16)
+		var parent_item: TreeItem = items.get(str(node["base"]), header) as TreeItem
+		items[node_name] = _class_card(parent_item, by_name[node_name], str(node["base"]), kinds, familiar,
+			hidden_names)
+		placed[node_name] = true
+	for entry: Dictionary in entries:
+		if not placed.has(str(entry.get("name", ""))):
+			_class_card(header, entry, "", kinds, familiar, hidden_names)
 	for hidden_name: String in hidden_names:
 		var hidden_item: TreeItem = _objects_tree.create_item(header)
 		hidden_item.set_text(0, "%s (hidden)" % hidden_name)
@@ -1964,6 +2026,61 @@ func _populate_project_cards(root: TreeItem) -> void:
 		hidden_item.set_tooltip_text(0, "You hid %s. Select it to show it again." % hidden_name)
 		# The metadata carries the restore intent; selecting it un-hides rather than scoping.
 		hidden_item.set_metadata(0, "%s%s" % [UNHIDE_PREFIX, hidden_name])
+
+
+## The head of the project's classes, made at the very top the first time a class needs it.
+func _classes_header(root: TreeItem) -> TreeItem:
+	for child: TreeItem in root.get_children():
+		if str(child.get_metadata(0)) == CLASSES_HEADER_META:
+			return child
+	var header: TreeItem = _objects_tree.create_item(root, 0)
+	header.set_text(0, EventSheetL10n.translate("Your classes"))
+	header.set_metadata(0, CLASSES_HEADER_META)
+	header.set_custom_color(0, EventSheetPopupUI.readable_on_panel(GROUP_COLOR_CUSTOM))
+	header.set_selectable(0, false)
+	return header
+
+
+## One class of the project as a card under `parent_item`: its name, what it is a kind of, its own
+## icon (the `@icon` it declares, else the editor's icon for what it is built on) and its description
+## on hover. Returns the item so its kinds nest under it. A class the reader hid is only noted.
+func _class_card(parent_item: TreeItem, entry: Dictionary, base_text: String, kinds: GDScript, familiar: bool,
+		hidden_names: PackedStringArray) -> TreeItem:
+	var entry_name: String = str(entry.get("name", ""))
+	if EventSheetVocabularyCatalog.is_class_excluded(entry_name):
+		hidden_names.append(entry_name)
+		return parent_item
+	var item: TreeItem = _objects_tree.create_item(parent_item)
+	var engine_base: String = ""
+	var declared_base: String = base_text
+	for info: Dictionary in ProjectSettings.get_global_class_list():
+		if str(info.get("class", "")) == entry_name:
+			engine_base = str(info.get("base", ""))
+			declared_base = kinds.declared_base(FileAccess.get_file_as_string(str(entry.get("path", ""))))
+			item.set_text(0, entry_name)
+			var picture: String = str(info.get("icon", ""))
+			if picture.begins_with("res://") and ResourceLoader.exists(picture):
+				var texture: Texture2D = load(picture) as Texture2D
+				if texture != null:
+					item.set_icon(0, texture)
+	if declared_base.is_empty():
+		declared_base = engine_base
+	item.set_text(0, entry_name)
+	var summary: String = "%s %s" % [kinds.word("kind_of", familiar), declared_base]
+	var described: String = kinds.description_of(FileAccess.get_file_as_string(str(entry.get("path", ""))))
+	var tip: String = "%s - %s" % [entry_name, summary] if described.is_empty() else "%s - %s\n%s" % [entry_name, summary, described]
+	item.set_tooltip_text(0, tip + "\n" + EventSheetL10n.translate("Browse what %s offers - its own, then everything it is a kind of.") % entry_name)
+	# The metadata is the provider id the scoped tree filters on, which for a reflected class IS the
+	# class name (see EventSheetClassDBSource).
+	item.set_metadata(0, entry_name)
+	if item.get_icon(0) == null:
+		var project_icon: Texture2D = editor_icon(engine_base) if not engine_base.is_empty() else null
+		if project_icon == null:
+			project_icon = editor_icon("Script")
+		if project_icon != null:
+			item.set_icon(0, project_icon)
+	item.set_icon_max_width(0, 16)
+	return item
 
 
 ## Identity-safe membership: two reflected contributions of the SAME verb can be different
@@ -2057,10 +2174,11 @@ func _on_object_tree_selected() -> void:
 		return
 	# A `%name` entry scopes to the CLASS the scene said the node is, and remembers the node itself so
 	# every row picked under it is written on that node by name.
-	if chosen.begins_with(UNIQUE_PREFIX):
-		var parts: PackedStringArray = chosen.trim_prefix(UNIQUE_PREFIX).split("|")
+	if chosen.begins_with(UNIQUE_PREFIX) or chosen.begins_with(NARROW_PREFIX):
+		var plain: bool = chosen.begins_with(NARROW_PREFIX)
+		var parts: PackedStringArray = chosen.trim_prefix(NARROW_PREFIX if plain else UNIQUE_PREFIX).split("|")
 		if parts.size() == 2:
-			_unique_scope = {"name": parts[0], "class": parts[1]}
+			_unique_scope = {"name": parts[0], "class": parts[1], "plain": plain}
 			_object_filter_provider = parts[1]
 			_objects_back.text = "◂ %s · %s" % [EventSheetL10n.translate("All objects"), selected.get_text(0)]
 			_show_classic(true)

@@ -409,6 +409,8 @@ var humanize_names_override: int = -1
 ## ever on because somebody asked for it in View ▾. Span builds read it, so flipping it rebuilds via
 ## set_sheet, exactly like show_object_icons.
 var familiar_words: bool = false
+## Whether the "From <parent>" group of a kind of a project class is folded to its one bar.
+var inherited_folded: bool = false
 ## The Patterns lens: an event that a reading recognised as a known code pattern (a Cooldown,
 ## an Object pool, a Wait sequence) is named on its number's hover card and in the help strip -
 ## never as a chip inside the row - and the row's hover says what the evidence for that claim was.

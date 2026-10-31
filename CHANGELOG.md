@@ -41,6 +41,18 @@
   gave that the new one does not, among those the sheet uses. Apply is one undo step, and a script
   opened as a preview unlocks on it like any other first edit. The name used to answer only a
   double-click; a script attached to a scene had no click on its name at all.
+- A kind of one of your classes reads what it inherits right under its head: a "From Mob" bar (the
+  triangle folds it, the parent's name opens the parent's sheet) and the parent's variables and
+  functions as read-only dashed rows. Double-click a variable to start it at another value ("Slime
+  starts it at 60.0", written in `_init`, so the parent's own value is never touched); right-click a
+  function for "Replace in Slime" (Godot words: "Override in Slime"), which writes a function with the
+  same parameters that already runs the parent's version first. Both survive a save and reopen.
+- The head says "a kind of Mob" in Familiar words and "extends Mob" in Godot's, beside the class.
+- Right-clicking a sheet's tab on a sheet that names a class offers "New kind of <class>…", the same
+  door the FileSystem menu has.
+- Your classes lead the object list as a tree of kinds, each with its own icon and its description on
+  hover. After an event asks "body is a Mob", an action's picker opens on the objects with `body · Mob`
+  first: picking it offers Mob's own members, written on `body`.
 - "Also run the parent's version" now reads "Also run Enemy's take_damage" (Godot words: "Call
   super: take_damage"), naming the class and the function it sits in, and is offered only inside a
   function that replaces one of the parent's. Anywhere else it would write a `super()` that does not

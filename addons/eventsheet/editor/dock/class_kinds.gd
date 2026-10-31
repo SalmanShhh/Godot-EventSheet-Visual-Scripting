@@ -19,27 +19,25 @@ extends RefCounted
 # Loaded BY PATH from the dialogs that need it; it is not named as a class, so nothing on the boot
 # path pays for it.
 
-## The words of the head in each vocabulary, as [familiar, godot]. The sheet's Familiar Words
-## switch picks one; the GDScript under both is the same line.
-const HEAD_WORDS: Dictionary = {
-	"kind_of": ["a kind of", "extends"],
-	"kind_of_title": ["A kind of", "Extends"],
-	"from": ["From", "Inherited from"],
-	"replaces": ["Replaces", "Overrides"],
-	"also_run": ["Also run", "Call super:"],
-	"make_kinds": ["Make kinds of it", "Extend it"],
-	"starts_it_at": ["starts it at", "overrides the default"],
-}
-
 const _FUNC := "^func\\s+(\\w+)\\s*\\((.*)\\)\\s*(?:->\\s*([\\w\\.\\[\\]]+))?\\s*:"
 const _VAR := "^(?:@export\\w*(?:\\([^)]*\\))?\\s+)*var\\s+(\\w+)\\s*(?::\\s*([\\w\\.\\[\\]]+))?\\s*(?::?=\\s*(.+?))?\\s*(?:#.*)?$"
 const _EXTENDS := "^extends\\s+(\\w+)"
 
 
-## One word of the head, in the vocabulary asked for.
+## One word of the head, in the vocabulary asked for and the editor's language. The sheet's Familiar
+## Words switch picks the vocabulary; the GDScript under both is the same line. Each word is spelled
+## out as a literal so the translation harvest sees it.
 static func word(key: String, familiar: bool) -> String:
-	var pair: Array = HEAD_WORDS.get(key, [key, key])
-	return str(pair[0] if familiar else pair[1])
+	match key:
+		"kind_of":
+			return EventSheetL10n.translate("a kind of") if familiar else EventSheetL10n.translate("extends")
+		"from":
+			return EventSheetL10n.translate("From") if familiar else EventSheetL10n.translate("Inherited from")
+		"replaces":
+			return EventSheetL10n.translate("Replaces") if familiar else EventSheetL10n.translate("Overrides")
+		"starts_it_at":
+			return EventSheetL10n.translate("starts it at") if familiar else EventSheetL10n.translate("overrides the default")
+	return key
 
 
 ## The class_name -> {path, base} of every class the project declares, read from the editor's own
@@ -433,3 +431,99 @@ static func _base_members(base_text: String, table: Dictionary) -> PackedStringA
 				names.append(str(entry.get("name", "")))
 		break
 	return names
+
+
+## What a kind of a project class inherits, ready to draw: {parent, path, variables, functions}, or {}
+## when the sheet is not a kind of a class of the project. Each variable carries `owner`, each function
+## `owner` and `params`; the variables also carry what this sheet starts them at (`starts`, "" when it
+## leaves them as they are).
+static func inherited_for(sheet: EventSheetResource, classes: Dictionary = {}) -> Dictionary:
+	if sheet == null:
+		return {}
+	var parent_text: String = sheet.host_class.strip_edges()
+	var table: Dictionary = classes if not classes.is_empty() else project_classes()
+	if parent_text.is_empty() or not table.has(parent_text):
+		return {}
+	var have: Dictionary = inherited(parent_text, table)
+	var started: Dictionary = starts_at(sheet)
+	for variable: Dictionary in (have["variables"] as Array):
+		variable["starts"] = str(started.get(str(variable["name"]), ""))
+	return {"parent": parent_text, "path": str((table[parent_text] as Dictionary).get("path", "")),
+		"variables": have["variables"], "functions": have["functions"]}
+
+
+## The values this sheet starts its inherited variables at, {name: value text}: the `_init` function's
+## "Set variable" actions, which is where GDScript puts a subclass's starting values.
+static func starts_at(sheet: EventSheetResource) -> Dictionary:
+	var started: Dictionary = {}
+	if sheet == null:
+		return started
+	for candidate: EventFunction in sheet.functions:
+		if candidate.function_name != "_init":
+			continue
+		var rows: Array = [candidate.lane_event()] if candidate.lane_event() != null else candidate.events
+		for entry: Variant in rows:
+			if not entry is EventRow:
+				continue
+			for action: ACEAction in (entry as EventRow).actions:
+				if action.ace_id == "SetVar":
+					var params: Dictionary = action.params if not action.params.is_empty() else action.parameters
+					started[str(params.get("var_name", ""))] = str(params.get("value", ""))
+	return started
+
+
+## The function of `sheet` already named `function_name`, null when it has none: the replacement a
+## kind has written, so a second "Replace in" goes to it instead of adding a twin.
+static func own_function(sheet: EventSheetResource, function_name: String) -> EventFunction:
+	if sheet == null:
+		return null
+	for candidate: EventFunction in sheet.functions:
+		if candidate.function_name == function_name:
+			return candidate
+	return null
+
+
+## The description a class declares: the `##` lines above its `class_name` / `extends`, as one line of
+## prose. "" when it has none.
+static func description_of(source: String) -> String:
+	var found: PackedStringArray = PackedStringArray()
+	for raw_line: String in source.split("\n"):
+		var line: String = raw_line.strip_edges()
+		if line.begins_with("##"):
+			found.append(line.trim_prefix("##").strip_edges())
+			continue
+		if line.begins_with("class_name ") or line.begins_with("extends "):
+			break
+		if not line.is_empty() and not line.begins_with("@") and not line.begins_with("#"):
+			break
+	return " ".join(found).strip_edges()
+
+
+## The type a value written as GDScript has, for a variable declared with `:=` and so naming no type:
+## "float" for 120.0, "int" for 3, "String", "bool" and the engine's value types. "" when the value is an
+## expression whose type only the engine can say.
+static func type_of_value(value_text: String) -> String:
+	var parsed: Variant = str_to_var(value_text.strip_edges())
+	if parsed == null:
+		return ""
+	return type_string(typeof(parsed))
+
+
+## Every value an event asks the type of, as [{value, kind}] in the order asked: its "Is a kind of"
+## conditions and the same test typed as an expression (`body is Enemy`).
+static func narrowings(event: EventRow) -> Array[Dictionary]:
+	var found: Array[Dictionary] = []
+	if event == null:
+		return found
+	for condition: ACECondition in event.conditions:
+		var params: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
+		if condition.ace_id == "IsAKindOf":
+			var asked: String = str(params.get("kind", "")).strip_edges()
+			if not asked.is_empty():
+				found.append({"value": str(params.get("value", "")).strip_edges(), "kind": asked})
+		elif condition.ace_id == "ExpressionIsTrue":
+			var expression: String = str(params.get("expr", "")).strip_edges()
+			var at: int = expression.find(" is ")
+			if at > 0 and expression.substr(at + 4).is_valid_identifier() and expression.substr(0, at).is_valid_identifier():
+				found.append({"value": expression.substr(0, at), "kind": expression.substr(at + 4)})
+	return found

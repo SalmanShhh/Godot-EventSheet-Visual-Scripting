@@ -68,6 +68,11 @@ const SYNC_BADGE_GLYPHS: Dictionary = {
 const HEAD_BAND_UID_PREFIX := "sheet_head_"
 ## The model of classes and their kinds, loaded only by a row that needs it.
 const CLASS_KINDS_PATH := "res://addons/eventsheet/editor/dock/class_kinds.gd"
+## What the last kind of a project class inherited, and the parent files' versions it was read at.
+var _inherited_cache: Dictionary = {}
+## A test's own table of classes, asked before the project's.
+var kinds_table_override: Dictionary = {}
+var _inherited_stamp: String = ""
 
 ## The Include bar's corner radius and height, where a theme states the Include edge: a rounded bar a
 ## little taller than a row.
@@ -667,6 +672,8 @@ func build_head_band_rows(sheet: EventSheetResource, scaffold_rows: Array[EventR
 	# The shared sheets this script includes, one Include line each - where a reader from another
 	# event-sheet editor looks for them, instead of scattered through the forwarding rows they wrote.
 	rows.append_array(_build_include_line_rows(sheet, false))
+	# A kind of one of the project's classes reads what it inherits right under the head.
+	rows.append_array(_build_inherited_rows(sheet))
 	# The quiet head offers the same lines from the canvas's "+ Add…" menu instead of a row.
 	var add_text: String = EventSheetHeadBands.add_row_text(head_facts)
 	if not add_text.is_empty() and not sheet.read_only and not quiet_head:
@@ -1439,7 +1446,11 @@ func build_sheet_head_bar_row(sheet: EventSheetResource, head_facts: Dictionary 
 		kind_meta["hover_note"] = "%s %s" % [script_note, EventSheetL10n.translate("Click to change what kind of script it is.")] \
 			if plain_kind else EventSheetL10n.translate("Click to change what kind of script it is.")
 	if plain_kind and not extends_target.is_empty():
-		spans.append(_make_span("%s · %s" % [head_bar_kind_word(sheet), EventSheetL10n.translate("extends")],
+		# The same line in either vocabulary: "a kind of" in Familiar words, "extends" in Godot's.
+		var extends_word: String = EventSheetL10n.translate("extends")
+		if _familiar_words_enabled():
+			extends_word = EventSheetL10n.translate("a kind of")
+		spans.append(_make_span("%s · %s" % [head_bar_kind_word(sheet), extends_word],
 			SemanticSpan.SpanType.KEYWORD, kind_meta))
 		var base_meta: Dictionary = meta.merged({"text_color": reading_style.primary_text_color}, true)
 		# A base that is another SCRIPT of this project opens as its own sheet.
@@ -2934,6 +2945,157 @@ func _build_included_variable_rows(sheet: EventSheetResource, include: Dictionar
 			SemanticSpan.SpanType.COMMENT, meta.merged({"text_color": tag}, true)))
 		rows.append(row_data)
 	return rows
+
+
+## What a KIND of one of the project's classes inherits, under its head: a "From Enemy" bar (the
+## triangle folds it), then the parent's variables and functions, read-only and dashed, each one a
+## row. The parent's name opens the parent's sheet; a double-click on a variable starts it at another
+## value in `_init` ("Slime starts it at 60.0"); a right-click on a function offers to replace it.
+## Nothing here is a row of the sheet: it is read off the parent's file, so the sheet's own bytes
+## never change for it.
+func _build_inherited_rows(sheet: EventSheetResource) -> Array[EventRowData]:
+	var rows: Array[EventRowData] = []
+	if sheet == null or sheet.host_class.strip_edges().is_empty():
+		return rows
+	var kinds: GDScript = load(CLASS_KINDS_PATH)
+	var have: Dictionary = _inherited_of(sheet, kinds)
+	if have.is_empty():
+		return rows
+	var variables: Array = have["variables"]
+	var functions: Array = have["functions"]
+	if variables.is_empty() and functions.is_empty():
+		return rows
+	var familiar: bool = _familiar_words_enabled()
+	var parent_text: String = str(have["parent"])
+	var own_text: String = _own_class_text(sheet)
+	var folded: bool = _viewport.inherited_folded
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
+	var muted: Color = reading_style.muted_text_color
+	var edge: Color = EventSheetEventStyle.stated_or(event_style.include_border_color,
+		Color(muted.r, muted.g, muted.b, muted.a * 0.6))
+	var tag: Color = EventSheetEventStyle.stated_or(event_style.include_tag_color, muted)
+	var uid_tail: String = "%s_%d" % [parent_text, sheet.get_instance_id()]
+	# The bar.
+	var bar := EventRowData.new()
+	bar.indent = 0
+	bar.row_type = EventRowData.RowType.SECTION
+	bar.source_resource = null
+	bar.row_uid = "%sinherited_%s" % [HEAD_BAND_UID_PREFIX, uid_tail]
+	var inks: Dictionary = _include_line_inks(bar)
+	var fold_meta: Dictionary = {"editable": false, "kind": "inherited_bar", "line_index": 0,
+		"head_action": "inherited_fold",
+		"hover_note": EventSheetL10n.translate("Fold or unfold what this kind inherits.")}
+	var open_meta: Dictionary = {"editable": false, "kind": "include_open", "include_path": str(have["path"]),
+		"line_index": 0, "hover_note": EventSheetL10n.translate("Open the parent's sheet, where these are changed.")}
+	bar.spans = [
+		_make_span("▶" if folded else "▼", SemanticSpan.SpanType.KEYWORD, fold_meta.merged({"text_color": inks["arrow"]}, true)),
+		_make_span(kinds.word("from", familiar), SemanticSpan.SpanType.VALUE, fold_meta.merged({"text_color": inks["tag"]}, true)),
+		_make_span(parent_text, SemanticSpan.SpanType.KEYWORD, open_meta.merged({"text_color": inks["name"]}, true)),
+	]
+	var counts: String = EventSheetL10n.translate("%d variables · %d functions") % [variables.size(), functions.size()]
+	if folded:
+		bar.spans.append(_make_span(counts, SemanticSpan.SpanType.COMMENT, fold_meta.merged({"text_color": inks["note"]}, true)))
+	else:
+		bar.spans.append(_make_span(EventSheetL10n.translate("read here, changed on %s's sheet") % parent_text,
+			SemanticSpan.SpanType.COMMENT, fold_meta.merged({"text_color": inks["note"]}, true)))
+	rows.append(bar)
+	if folded:
+		return rows
+	for variable: Dictionary in variables:
+		var row_data := EventRowData.new()
+		row_data.indent = 1
+		row_data.row_type = EventRowData.RowType.SECTION
+		row_data.source_resource = null
+		row_data.row_uid = "%sinherited_var_%s_%s" % [HEAD_BAND_UID_PREFIX, str(variable["name"]), uid_tail]
+		row_data.variable_row = true
+		row_data.outline_color = edge
+		row_data.outline_dashed = true
+		var start_hint: String = EventSheetL10n.translate("Double-click to start it at another value.")
+		var meta: Dictionary = {"editable": false, "kind": "inherited_variable", "line_index": 0,
+			"double_head_action": "inherited_start:%s" % str(variable["name"]), "hover_note": start_hint}
+		var value_text: String = str(variable["value"])
+		var type_text: String = str(variable["type"]) if not str(variable["type"]).is_empty() else kinds.type_of_value(value_text)
+		if not type_text.is_empty():
+			row_data.spans.append(_make_span(type_text, SemanticSpan.SpanType.KEYWORD, meta.merged({
+				"variable_type_span": true,
+				"variable_type_family": NativeVariableMarks.type_family(type_text, value_text, true),
+				"text_color": reading_style.secondary_text_color}, true)))
+		row_data.spans.append(_make_span(str(variable["name"]), SemanticSpan.SpanType.OBJECT, meta.merged({
+			"text_color": event_style.object_label_color}, true)))
+		if not value_text.is_empty():
+			row_data.spans.append(_make_span("=", SemanticSpan.SpanType.OPERATOR, meta.merged({"text_color": muted}, true)))
+			row_data.spans.append(_make_span(value_text, SemanticSpan.SpanType.VALUE, meta.merged({
+				"text_color": event_style.value_highlight_color}, true)))
+		var started: String = str(variable.get("starts", ""))
+		if not started.is_empty():
+			row_data.spans.append(_make_span(kinds.starts_it_reading(own_text, started, familiar),
+				SemanticSpan.SpanType.COMMENT, meta.merged({"text_color": event_style.value_highlight_color}, true)))
+		rows.append(row_data)
+	for function: Dictionary in functions:
+		var row_data := EventRowData.new()
+		row_data.indent = 1
+		row_data.row_type = EventRowData.RowType.SECTION
+		row_data.source_resource = null
+		row_data.row_uid = "%sinherited_func_%s_%s" % [HEAD_BAND_UID_PREFIX, str(function["name"]), uid_tail]
+		row_data.outline_color = edge
+		row_data.outline_dashed = true
+		var replace_hint: String = EventSheetL10n.translate("Right-click to replace it in %s.") % own_text
+		var meta: Dictionary = {"editable": false, "kind": "inherited_function", "line_index": 0,
+			"context_action": "inherited_function:%s" % str(function["name"]), "hover_note": replace_hint}
+		var params: PackedStringArray = PackedStringArray()
+		for param: Variant in function.get("params", []):
+			var entry: Dictionary = param as Dictionary
+			params.append(str(entry["name"]) if str(entry.get("type", "")).is_empty() else "%s: %s" % [entry["name"], entry["type"]])
+		row_data.spans.append(_make_span("ƒ", SemanticSpan.SpanType.KEYWORD, meta.merged({"text_color": tag}, true)))
+		row_data.spans.append(_make_span("%s(%s)" % [function["name"], ", ".join(params)], SemanticSpan.SpanType.OBJECT,
+			meta.merged({"text_color": event_style.object_label_color}, true)))
+		var own: EventFunction = kinds.own_function(sheet, str(function["name"]))
+		if own != null:
+			row_data.spans.append(_make_span("%s %s" % [kinds.word("replaces", familiar), own_text],
+				SemanticSpan.SpanType.COMMENT, meta.merged({"text_color": tag}, true)))
+		rows.append(row_data)
+	return rows
+
+
+## What the open kind inherits, read off the parent's files once per version of them: running a
+## regex over every parent on each rebuild of the canvas would be a cost per keystroke.
+func _inherited_of(sheet: EventSheetResource, kinds: GDScript) -> Dictionary:
+	var classes: Dictionary = kinds_table_override if not kinds_table_override.is_empty() else kinds.project_classes()
+	var parent_text: String = sheet.host_class.strip_edges()
+	if not classes.has(parent_text):
+		return {}
+	var stamp: String = "%s|%s" % [parent_text, _parent_chain_stamp(parent_text, classes, kinds)]
+	if stamp != _inherited_stamp:
+		_inherited_stamp = stamp
+		_inherited_cache = kinds.inherited_for(sheet, classes)
+	var have: Dictionary = _inherited_cache.duplicate(true)
+	# What this sheet starts them at is read off the sheet itself, every time: it changes with an edit.
+	var started: Dictionary = kinds.starts_at(sheet)
+	for variable: Dictionary in (have.get("variables", []) as Array):
+		variable["starts"] = str(started.get(str(variable["name"]), ""))
+	return have
+
+
+func _parent_chain_stamp(parent_text: String, classes: Dictionary, kinds: GDScript) -> String:
+	var stamp: String = ""
+	var walk: String = parent_text
+	var guard: int = 0
+	while classes.has(walk) and guard < 32:
+		guard += 1
+		var path: String = str((classes[walk] as Dictionary).get("path", ""))
+		stamp += "%s@%d;" % [path, FileAccess.get_modified_time(path)]
+		walk = kinds.parent_of(walk, classes)
+	return stamp
+
+
+## The class this sheet is, in the words a row about it uses: its `class_name`, else its file's name
+## in the style GDScript gives a class.
+func _own_class_text(sheet: EventSheetResource) -> String:
+	var named: String = sheet.custom_class_name.strip_edges()
+	if not named.is_empty():
+		return named
+	return str(sheet.external_source_path).get_file().get_basename().to_pascal_case()
 
 
 ## A helper's forwarding call - `_pause_handling.on_tick(self, delta)` - read as what it is: the
@@ -13346,6 +13508,33 @@ func _cached_base_script_path() -> String:
 	return _base_script_path
 
 
+## The sentence of the action that runs the parent's version of the function it sits in - "Also run
+## Enemy's take_damage" - for either spelling of it: the action authored from the picker, and the
+## `super(...)` call a reopened file lifts as a plain function call. {} for any other row, and for one
+## outside a function of a kind of a class, which keeps the words it has always had.
+func also_run_sentence(action: ACEAction, context: Dictionary) -> Dictionary:
+	if action == null or not is_also_run_action(action):
+		return {}
+	var sheet: EventSheetResource = _viewport._sheet if _viewport != null else null
+	var holder: EventFunction = load(CLASS_KINDS_PATH).function_holding(sheet, action)
+	var parent_text: String = sheet.host_class.strip_edges() if sheet != null else ""
+	if holder == null or parent_text.is_empty() or holder.function_name.is_empty():
+		return {}
+	return EventSheetSentence.parent_call_sentence(parent_text, holder.function_name,
+		bool(context.get("familiar_words", false)))
+
+
+## True for the two spellings of "run the parent's version": the Core also-run action, and the plain
+## function call a reopened `super(...)` line lifts to.
+static func is_also_run_action(action: ACEAction) -> bool:
+	if action == null or not (action.provider_id.is_empty() or action.provider_id == "Core"):
+		return false
+	if action.ace_id == "CallParentFunction":
+		return true
+	var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
+	return action.ace_id == "CallFunction" and str(params_dict.get("function_name", "")) == "super"
+
+
 ## What a `super` statement SAYS, as {"file", "verb", "args"} - or {} when the action is not one, or
 ## when the base is an engine class (there is no sheet to name, so the line keeps its own reading).
 ##
@@ -13372,6 +13561,10 @@ func super_call_reading(action_resource: Variant, event_row: EventRow) -> Dictio
 	if call_match == null:
 		return {}
 	var method: String = call_match.get_string(1)
+	# The also-run action says which class and which function it runs ("Also run Mob's take_damage"),
+	# so a bare `super(...)` it wrote inside a function of this kind is read by its own sentence.
+	if method.is_empty() and action_resource is ACEAction and not also_run_sentence(action_resource as ACEAction, {}).is_empty():
+		return {}
 	var verb: String = ""
 	var runs_trigger: String = ""
 	if method.is_empty() or method.begins_with("_"):
@@ -19440,11 +19633,9 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 		# Names the class and the function it runs, found from where the row sits. A row outside a
 		# function that replaces one keeps the words it always had.
 		"CallParentFunction":
-			var holder: EventFunction = load(CLASS_KINDS_PATH).function_holding(_viewport._sheet if _viewport != null else null, action)
-			var parent_text: String = str(_viewport._sheet.get("host_class")).strip_edges() if _viewport != null and _viewport._sheet != null else ""
-			if holder != null and not parent_text.is_empty() and not holder.function_name.is_empty():
-				return EventSheetSentence.parent_call_sentence(parent_text, holder.function_name,
-					bool(context.get("familiar_words", false)))
+			var also_run: Dictionary = also_run_sentence(action, context)
+			if not also_run.is_empty():
+				return also_run
 		"ReturnValue":
 			return _named_return_sentence(
 				EventSheetSentence.return_sentence(str(params_dict.get("value", "")), context),
@@ -19552,6 +19743,9 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			return EventSheetSentence.statement("assert(%s, %s)" % [
 				str(params_dict.get("condition", "")), str(params_dict.get("message", ""))], context)
 		"CallFunction":
+			var also_run_super: Dictionary = also_run_sentence(action, context)
+			if not also_run_super.is_empty():
+				return also_run_super
 			# A receiver-less call the sheet has no verb of its own for. Only the settled shapes claim
 			# it (the debug verbs among them); a call to one of THIS sheet's functions is not one of
 			# them, so it falls straight through to its own Call reading.

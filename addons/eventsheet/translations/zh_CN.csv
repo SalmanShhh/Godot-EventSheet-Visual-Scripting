@@ -9813,3 +9813,25 @@ No picture there.,那里没有图片。
 "Rows use %s, which %s does not have.",行使用了 %s，而 %s 没有它。
 Class updated.,类已更新。
 Named this class %s.,已将此类命名为 %s。
+Your classes,你的类
+"Browse what %s offers - its own, then everything it is a kind of.",浏览 %s 提供的内容：先是它自己的，然后是它所继承的全部。
+a kind of,是一种
+Inherited from,继承自
+Overrides,覆盖
+starts it at,将其起始值设为
+overrides the default,覆盖默认值
+Start %s at another value,将 %s 的起始值改为其他值
+"Written in _init: %s starts it here, %s keeps its own value.",写入 _init：%s 从这里开始，%s 保持自己的值。
+%s now starts %s at %s.,%s 现在将 %s 的起始值设为 %s。
+New kind of %s…,新建 %s 的子类…
+New script extending %s…,新建继承 %s 的脚本…
+Replace in %s,在 %s 中替换
+Override in %s,在 %s 中覆盖
+%s already replaces %s.,%s 已经替换了 %s。
+%s now replaces %s and runs the parent's version first.,%s 现在替换了 %s，并先运行父类的版本。
+Fold or unfold what this kind inherits.,折叠或展开此类继承的内容。
+"Open the parent's sheet, where these are changed.",打开父类的表，在那里修改这些内容。
+%d variables · %d functions,%d 个变量 · %d 个函数
+"read here, changed on %s's sheet",在此只读，在 %s 的表中修改
+Double-click to start it at another value.,双击可将起始值改为其他值。
+Right-click to replace it in %s.,右键单击可在 %s 中替换它。

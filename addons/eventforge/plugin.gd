@@ -731,6 +731,8 @@ func _ensure_editor() -> void:
 		_live_values_debugger.runtime_error_received.connect(editor.report_runtime_error)
 	if _live_values_debugger != null and editor.has_method("set_live_values_debugger"):
 		editor.set_live_values_debugger(_live_values_debugger)
+	if editor.has_signal("new_kind_requested"):
+		editor.connect("new_kind_requested", _create_sheet_in_directory)
 	editor.name = MAIN_SCREEN_ROOT_NAME
 	get_editor_interface().get_editor_main_screen().add_child(editor)
 	# A main-screen Control defaults to visible and Godot never auto-hides unselected ones, so it

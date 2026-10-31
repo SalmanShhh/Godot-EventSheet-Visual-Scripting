@@ -16,6 +16,8 @@ extends RefCounted
 
 ## Loaded only when a class rename asks, so opening a sheet never reads it.
 const SAVE_CHOICES_PATH: String = "res://addons/eventforge/compiler/save_choices.gd"
+## The model of classes and their kinds, loaded when a gesture on one asks.
+const CLASS_KINDS_PATH: String = "res://addons/eventsheet/editor/dock/class_kinds.gd"
 ## The Class window a click on the head's name opens, loaded only when that click asks.
 const CLASS_WINDOW_PATH: String = "res://addons/eventsheet/editor/dock/class_window.gd"
 ## The Manual's patterns page, loaded only when an event number's card door asks for it.
@@ -30,6 +32,12 @@ var _text_dialog: ConfirmationDialog = null
 var _text_edit: LineEdit = null
 var _text_band: String = ""
 var _class_window: RefCounted = null
+var _start_dialog: ConfirmationDialog = null
+var _replace_menu: PopupMenu = null
+var _replace_name: String = ""
+var _tab_menu: PopupMenu = null
+var _tab_class: String = ""
+var _tab_folder: String = ""
 
 
 func init(dock: Control) -> void:
@@ -114,7 +122,11 @@ func handle(action: String) -> void:
 				_dock._current_sheet, str(_dock._current_sheet.external_source_path)).get("name", "")))
 		_:
 			# A behaviour's kind on the behaviours card opens that behaviour as a sheet of its own.
-			if action.begins_with("open_sheet:"):
+			if action == "inherited_fold":
+				toggle_inherited_fold()
+			elif action.begins_with("inherited_start:"):
+				open_start_prompt(action.trim_prefix("inherited_start:"))
+			elif action.begins_with("open_sheet:"):
 				_dock._navigate.record_current()
 				_dock._navigate.open_or_focus(action.trim_prefix("open_sheet:"))
 
@@ -335,6 +347,153 @@ func open_class_window() -> void:
 		_class_window = load(CLASS_WINDOW_PATH).new()
 		_class_window.init(_dock, self)
 	_class_window.open()
+
+
+## The "From <parent>" bar's triangle: folds the inherited group to its one bar, or unfolds it.
+func toggle_inherited_fold() -> void:
+	var view: EventSheetViewport = _dock._viewport
+	view.inherited_folded = not view.inherited_folded
+	view.rebuild_rows()
+
+
+## The class this sheet is, as the rows about it say it: its `class_name`, else its file's name the way
+## GDScript styles a class.
+func own_class_text() -> String:
+	var named: String = _current_class_name()
+	if not named.is_empty():
+		return named
+	return str(_dock._current_sheet.external_source_path).get_file().get_basename().to_pascal_case()
+
+
+## A double-click on an inherited variable: a one-field question for the value this kind starts it at.
+## It is written in `_init`, where GDScript puts a subclass's starting values, so the parent's own
+## value is never touched.
+func open_start_prompt(variable_name: String) -> void:
+	var kinds: GDScript = load(CLASS_KINDS_PATH)
+	var have: Dictionary = kinds.inherited_for(_dock._current_sheet)
+	var seed_text: String = ""
+	for variable: Dictionary in (have.get("variables", []) as Array):
+		if str(variable["name"]) == variable_name:
+			seed_text = str(variable["starts"]) if not str(variable["starts"]).is_empty() else str(variable["value"])
+	var edit: LineEdit = LineEdit.new()
+	edit.text = seed_text
+	var body: VBoxContainer = EventSheetPopupUI.form_box()
+	body.add_child(EventSheetPopupUI.form_row(variable_name, edit))
+	var kind_text: String = own_class_text()
+	_start_dialog = load(_dock.SMALL_PROMPT_PATH).open(_dock, {
+		"title": EventSheetL10n.translate("Start %s at another value") % variable_name,
+		"glyph": "i",
+		"say": EventSheetL10n.translate("Written in _init: %s starts it here, %s keeps its own value.") % [
+			kind_text, str(have.get("parent", ""))],
+		"body": body,
+		"main": EventSheetL10n.translate("Apply"),
+		"on_main": func() -> void: apply_start(variable_name, edit.text.strip_edges()),
+	})
+	if edit.is_inside_tree():
+		edit.grab_focus()
+		edit.select_all()
+
+
+## Writes the starting value, one undo step.
+func apply_start(variable_name: String, value_text: String) -> void:
+	if value_text.is_empty() or _dock._current_sheet == null:
+		return
+	var kinds: GDScript = load(CLASS_KINDS_PATH)
+	var done: bool = _dock._perform_undoable_sheet_edit("Start Variable", func() -> bool:
+		kinds.start_variable_at(_dock._current_sheet, variable_name, value_text)
+		return true)
+	if not done:
+		return
+	_dock._refresh_after_edit()
+	_dock._mark_dirty(EventSheetL10n.translate("%s now starts %s at %s.") % [own_class_text(), variable_name, value_text])
+
+
+## The class a sheet names, as the tab's menu reads it: its `class_name`, else the one its file
+## declares in the project's class list, "" for a sheet that names none.
+static func class_of_sheet(sheet: EventSheetResource) -> String:
+	if sheet == null:
+		return ""
+	var named: String = sheet.custom_class_name.strip_edges()
+	if not named.is_empty():
+		return named
+	var path: String = str(sheet.external_source_path)
+	for info: Dictionary in ProjectSettings.get_global_class_list():
+		if not path.is_empty() and str(info.get("path", "")) == path:
+			return str(info.get("class", ""))
+	return ""
+
+
+## The tab menu's one item in the words the sheet reads in.
+static func new_kind_text(class_text: String, familiar: bool) -> String:
+	if familiar:
+		return EventSheetL10n.translate("New kind of %s…") % class_text
+	return EventSheetL10n.translate("New script extending %s…") % class_text
+
+
+## A right-click on a sheet's tab: "New kind of <class>…" when the sheet names a class, so a kind can
+## be made from the sheet that is open as well as from the FileSystem.
+func open_tab_menu(tab_index: int) -> void:
+	if tab_index < 0 or tab_index >= _dock._open_tabs.size():
+		return
+	var sheet: EventSheetResource = _dock._open_tabs[tab_index].get("sheet") as EventSheetResource
+	var class_text: String = class_of_sheet(sheet)
+	if class_text.is_empty():
+		return
+	var folder: String = str(sheet.external_source_path).get_base_dir() if not str(sheet.external_source_path).is_empty() \
+		else str(_dock._open_tabs[tab_index].get("path", "res://")).get_base_dir()
+	if _tab_menu == null:
+		_tab_menu = PopupMenu.new()
+		_tab_menu.id_pressed.connect(func(_id: int) -> void: _dock.new_kind_requested.emit(_tab_folder, _tab_class))
+		_dock.add_child(_tab_menu)
+	_tab_class = class_text
+	_tab_folder = folder
+	_tab_menu.clear()
+	_tab_menu.add_item(new_kind_text(class_text, EventSheetWords.familiar_words_enabled()), 0)
+	_tab_menu.position = Vector2i(DisplayServer.mouse_get_position())
+	_tab_menu.reset_size()
+	_tab_menu.popup()
+
+
+## A right-click on a row that names its own menu: today the inherited function's "Replace in <kind>".
+func open_context_door(action: String, screen_position: Vector2) -> void:
+	if not action.begins_with("inherited_function:"):
+		return
+	_replace_name = action.trim_prefix("inherited_function:")
+	if _replace_menu == null:
+		_replace_menu = PopupMenu.new()
+		_replace_menu.id_pressed.connect(func(_id: int) -> void: replace_inherited_function(_replace_name))
+		_dock.add_child(_replace_menu)
+	_replace_menu.clear()
+	var familiar: bool = EventSheetWords.familiar_words_enabled()
+	var label: String = EventSheetL10n.translate("Replace in %s") if familiar else EventSheetL10n.translate("Override in %s")
+	_replace_menu.add_item(label % own_class_text(), 0)
+	_replace_menu.position = Vector2i(screen_position)
+	_replace_menu.reset_size()
+	_replace_menu.popup()
+
+
+## "Replace in <kind>": a function event with the parent's name and parameters that already runs the
+## parent's version first. A kind that has replaced it already is told so instead of getting a twin.
+func replace_inherited_function(function_name: String) -> void:
+	var kinds: GDScript = load(CLASS_KINDS_PATH)
+	if kinds.own_function(_dock._current_sheet, function_name) != null:
+		_dock._set_status(EventSheetL10n.translate("%s already replaces %s.") % [own_class_text(), function_name])
+		return
+	var have: Dictionary = kinds.inherited_for(_dock._current_sheet)
+	var entry: Dictionary = {}
+	for candidate: Dictionary in (have.get("functions", []) as Array):
+		if str(candidate["name"]) == function_name:
+			entry = candidate
+	if entry.is_empty():
+		return
+	var done: bool = _dock._perform_undoable_sheet_edit("Replace Function", func() -> bool:
+		_dock._current_sheet.functions.append(kinds.replace_function(entry))
+		return true)
+	if not done:
+		return
+	_dock._refresh_after_edit()
+	_dock._mark_dirty(EventSheetL10n.translate("%s now replaces %s and runs the parent's version first.") % [
+		own_class_text(), function_name])
 
 
 ## The variables of `sheet` that load from the class's own section of user://remembered.cfg (Save choice

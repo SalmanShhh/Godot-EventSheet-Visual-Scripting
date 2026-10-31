@@ -9813,3 +9813,25 @@ No picture there.,Там нет изображения.
 "Rows use %s, which %s does not have.","Строки используют %s, чего нет в %s."
 Class updated.,Класс обновлён.
 Named this class %s.,Этот класс теперь называется %s.
+Your classes,Ваши классы
+"Browse what %s offers - its own, then everything it is a kind of.","Просмотр того, что предлагает %s: сначала собственное, затем всё, от чего он унаследован."
+a kind of,разновидность
+Inherited from,Унаследовано от
+Overrides,Переопределяет
+starts it at,начинает с
+overrides the default,переопределяет значение по умолчанию
+Start %s at another value,Начать %s с другого значения
+"Written in _init: %s starts it here, %s keeps its own value.","Записывается в _init: %s начинает с этого значения, %s сохраняет своё."
+%s now starts %s at %s.,%s теперь начинает %s со значения %s.
+New kind of %s…,Новая разновидность %s…
+New script extending %s…,"Новый скрипт, расширяющий %s…"
+Replace in %s,Заменить в %s
+Override in %s,Переопределить в %s
+%s already replaces %s.,%s уже заменяет %s.
+%s now replaces %s and runs the parent's version first.,%s теперь заменяет %s и сначала запускает версию родителя.
+Fold or unfold what this kind inherits.,Свернуть или развернуть унаследованное.
+"Open the parent's sheet, where these are changed.","Открывает лист родителя, где это изменяется."
+%d variables · %d functions,переменных: %d · функций: %d
+"read here, changed on %s's sheet","читается здесь, меняется на листе %s"
+Double-click to start it at another value.,Двойной щелчок — начать с другого значения.
+Right-click to replace it in %s.,Правый щелчок — заменить в %s.

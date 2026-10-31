@@ -67,6 +67,8 @@ static func run() -> bool:
 	ok = run_kinds() and ok
 	ok = run_parent_call() and ok
 	ok = run_class_window() and ok
+	ok = run_inherited() and ok
+	ok = run_narrowing() and ok
 	ok = SUPPORT.pins("class_kinds_test", [
 		["an empty kind-of field is fine", EventSheetNewSheetDialog.kind_problem_text(""), ""],
 		["a Godot class is fine", EventSheetNewSheetDialog.kind_problem_text("CharacterBody2D"), ""],
@@ -89,7 +91,7 @@ static func run() -> bool:
 			PackedStringArray(["res://addons/eventforge/resources/event_sheet.gd"])), "EventSheetResource"],
 		["two scripts offer none", EventSheetContextMenu.class_declared_in(PackedStringArray(["res://a.gd", "res://b.gd"])), ""],
 		["a script naming no class offers none", EventSheetContextMenu.class_declared_in(PackedStringArray(["res://not_a_class_anywhere.gd"])), ""],
-		["the menu words in Godot's vocabulary", EventSheetContextMenu.kind_menu_text("Enemy"), "New script extending Enemy..."],
+		["the menu words in Godot's vocabulary", EventSheetContextMenu.kind_menu_text("Enemy"), "New script extending Enemy…"],
 	]) and ok
 	return ok
 
@@ -189,6 +191,12 @@ static func run_parent_call() -> bool:
 	var replaced: EventFunction = kinds.replace_function(members["functions"][0])
 	slime.functions.append(replaced)
 	var also: ACEAction = ((replaced.events[0] as EventRow).actions[0]) as ACEAction
+	# The same line reopened from a file lifts as a plain call of `super`, and reads the same.
+	var lifted: ACEAction = ACEAction.new()
+	lifted.provider_id = "Core"
+	lifted.ace_id = "CallFunction"
+	lifted.params = {"function_name": "super", "args": "amount"}
+	(replaced.events[0] as EventRow).actions.append(lifted)
 	var outside: EventRow = EventRow.new()
 	var stray: ACEAction = ACEAction.new()
 	stray.provider_id = "Core"
@@ -201,6 +209,7 @@ static func run_parent_call() -> bool:
 	var godot_text: String = _words_of(view._row_builder.grammar_action_sentence(also))
 	view.familiar_words = true
 	var familiar_text: String = _words_of(view._row_builder.grammar_action_sentence(also))
+	var lifted_text: String = _words_of(view._row_builder.grammar_action_sentence(lifted))
 	view.familiar_words = false
 	var stray_text: String = _words_of(view._row_builder.grammar_action_sentence(stray))
 	view.free()
@@ -213,6 +222,7 @@ static func run_parent_call() -> bool:
 	return SUPPORT.pins("class_kinds_test", [
 		["Godot words call super by function", godot_text, "Call super: take_damage"],
 		["Familiar words name the class and the function", familiar_text, "Also run Enemy's take_damage"],
+		["a reopened super call reads the same", lifted_text, "Also run Enemy's take_damage"],
 		["outside a function the row keeps its old words", stray_text, ""],
 		["offered inside a function that replaces the parent's", kinds.also_run_offered(slime, replaced.events[0], classes), true],
 		["not offered outside every function", kinds.also_run_offered(slime, outside, classes), false],
@@ -254,4 +264,89 @@ static func run_class_window() -> bool:
 		["two changes are two lines in file order", window.changes(current, {"name": "Foe", "extends": "Area2D"}).keys(), ["name", "extends"]],
 		["a rebase loses what only the old base has", window.lost_members(used, "CharacterBody2D", "Node"), PackedStringArray(["velocity"])],
 		["the same base loses nothing", window.lost_members(used, "Node2D", "Node2D").size(), 0],
+	])
+
+
+## What a kind reads under its head: the parent's variables and functions as rows, what the kind starts
+## them at, the replacement it has written, and the words of the menu on its tab.
+static func run_inherited() -> bool:
+	var kinds: GDScript = load(KINDS_PATH)
+	var classes: Dictionary = _classes()
+	var slime: EventSheetResource = kinds.new_kind_sheet("Slime", "Enemy")
+	kinds.start_variable_at(slime, "speed", "60.0")
+	var have: Dictionary = kinds.inherited_for(slime, classes)
+	var starts: Dictionary = {}
+	for variable: Dictionary in have["variables"]:
+		starts[variable["name"]] = variable["starts"]
+	var replaced: EventFunction = kinds.replace_function((have["functions"] as Array)[0])
+	slime.functions.append(replaced)
+	var view: EventSheetViewport = EventSheetViewport.new()
+	view.set_ace_registry(EventSheetACERegistry.new())
+	view.set_sheet(slime)
+	view.familiar_words = true
+	var builder: ViewportRowBuilder = view._row_builder
+	builder.kinds_table_override = classes
+	var rows: Array[EventRowData] = builder._build_inherited_rows(slime)
+	var words: Array = []
+	for row_data: EventRowData in rows:
+		var line: PackedStringArray = PackedStringArray()
+		for span: SemanticSpan in row_data.spans:
+			line.append(span.text)
+		words.append(" ".join(line))
+	view.familiar_words = false
+	var godot_bar: String = (builder._build_inherited_rows(slime)[0].spans[1] as SemanticSpan).text
+	view.inherited_folded = true
+	var folded_rows: Array[EventRowData] = builder._build_inherited_rows(slime)
+	view.free()
+	var plain: EventSheetResource = kinds.new_kind_sheet("Rock", "Node2D")
+	return SUPPORT.pins("class_kinds_test", [
+		["what the kind starts a variable at is read from _init", kinds.starts_at(slime), {"speed": "60.0"}],
+		["the inherited variables carry what the kind starts them at", starts, {"health": "", "speed": "60.0", "touch_damage": ""}],
+		["a sheet that is no kind of a project class inherits nothing", kinds.inherited_for(plain, classes), {}],
+		["the group is a bar, three variables and two functions", words.size(), 6],
+		["the bar names the parent and where it is changed", words[0], "▼ From Enemy read here, changed on Enemy's sheet"],
+		["a started variable says what the kind starts it at", words[2], "float speed = 120.0 Slime starts it at 60.0"],
+		["a variable left alone says nothing more", words[1], "int health = 3"],
+		["a replaced function says so", words[4], "ƒ take_damage(amount: int) Replaces Slime"],
+		["Godot words say inherited", godot_bar, "Inherited from"],
+		["a folded group is the one bar", folded_rows.size(), 1],
+		["the fold's bar counts what it holds", (folded_rows[0].spans[3] as SemanticSpan).text, "3 variables · 2 functions"],
+		["a variable row carries its own double-click", str((rows[2].spans[1] as SemanticSpan).metadata.get("double_head_action", "")), "inherited_start:speed"],
+		["a function row carries its own menu", str((rows[4].spans[1] as SemanticSpan).metadata.get("context_action", "")), "inherited_function:take_damage"],
+		["a value says what type it is", [kinds.type_of_value("120.0"), kinds.type_of_value("3"), kinds.type_of_value("\"hi\""), kinds.type_of_value("true"), kinds.type_of_value("Foo.new()")], ["float", "int", "String", "bool", ""]],
+		["a class is described by the lines above its name", kinds.description_of("## Hurts the player.\n@icon(\"x.svg\")\nclass_name Enemy\nextends Node\n"), "Hurts the player."],
+		["a class with no description has none", kinds.description_of("class_name Enemy\n"), ""],
+		["the tab menu reads in Familiar words", EventSheetHeadActions.new_kind_text("Enemy", true), "New kind of Enemy…"],
+		["the tab menu reads in Godot words", EventSheetHeadActions.new_kind_text("Enemy", false), "New script extending Enemy…"],
+		["a sheet that names itself is the class of its tab", EventSheetHeadActions.class_of_sheet(kinds.new_kind_sheet("Slime", "Enemy")), "Slime"],
+		["a sheet that names nothing has no tab menu", EventSheetHeadActions.class_of_sheet(EventSheetResource.new()), ""],
+	])
+
+
+## An event that asked the type of a value offers that class's own members on it.
+static func run_narrowing() -> bool:
+	var kinds: GDScript = load(KINDS_PATH)
+	var event: EventRow = EventRow.new()
+	var asks: ACECondition = ACECondition.new()
+	asks.provider_id = "Core"
+	asks.ace_id = "IsAKindOf"
+	asks.params = {"value": "body", "kind": "Enemy"}
+	event.conditions.append(asks)
+	var typed: ACECondition = ACECondition.new()
+	typed.provider_id = "Core"
+	typed.ace_id = "ExpressionIsTrue"
+	typed.params = {"expr": "other is Hazard"}
+	event.conditions.append(typed)
+	var offered: Array[ACEDefinition] = ACEPickerDialog.unique_node_definitions("body", "Node2D", true)
+	var aimed: Array = []
+	for definition: ACEDefinition in offered:
+		for parameter: Dictionary in definition.parameters:
+			if str(parameter.get("id", "")) == "target":
+				aimed.append(str(parameter.get("default_value", "")))
+	var first_aim: String = str(aimed[0]) if not aimed.is_empty() else "(none offered)"
+	return SUPPORT.pins("class_kinds_test", [
+		["the type test is read from the picker's condition", kinds.narrowings(event)[0], {"value": "body", "kind": "Enemy"}],
+		["and from the same test typed as an expression", kinds.narrowings(event)[1], {"value": "other", "kind": "Hazard"}],
+		["an event that asks nothing narrows nothing", kinds.narrowings(EventRow.new()).size(), 0],
+		["a narrowed value is written by its own name, not as a node of the scene", first_aim, "body"],
 	])

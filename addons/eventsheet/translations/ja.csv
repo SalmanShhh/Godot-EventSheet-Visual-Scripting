@@ -9813,3 +9813,25 @@ No picture there.,そこに画像はありません。
 "Rows use %s, which %s does not have.",行が %s を使っていますが、%s にはありません。
 Class updated.,クラスを更新しました。
 Named this class %s.,このクラスを %s と名付けました。
+Your classes,あなたのクラス
+"Browse what %s offers - its own, then everything it is a kind of.",%s が提供するものを見る: まず自身のもの、次に継承元のすべて。
+a kind of,の一種
+Inherited from,継承元
+Overrides,オーバーライド
+starts it at,の初期値は
+overrides the default,は既定値を上書きします
+Start %s at another value,%s を別の値で開始する
+"Written in _init: %s starts it here, %s keeps its own value.",_init に書き込まれます: %s はここから開始し、%s は自身の値のままです。
+%s now starts %s at %s.,%s は %s を %s で開始するようになりました。
+New kind of %s…,%s の新しい種類…
+New script extending %s…,%s を継承する新しいスクリプト…
+Replace in %s,%s で置き換える
+Override in %s,%s でオーバーライドする
+%s already replaces %s.,%s はすでに %s を置き換えています。
+%s now replaces %s and runs the parent's version first.,%s は %s を置き換え、まず親のバージョンを実行します。
+Fold or unfold what this kind inherits.,この種類が継承するものを折りたたむ/展開します。
+"Open the parent's sheet, where these are changed.",これらを変更する親のシートを開きます。
+%d variables · %d functions,変数 %d 個 · 関数 %d 個
+"read here, changed on %s's sheet",ここでは読み取り専用、変更は %s のシートで
+Double-click to start it at another value.,ダブルクリックで別の値で開始します。
+Right-click to replace it in %s.,右クリックで %s の中で置き換えます。

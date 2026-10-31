@@ -9813,3 +9813,25 @@ No picture there.,Il n'y a aucune image ici.
 "Rows use %s, which %s does not have.","Des lignes utilisent %s, que %s n'a pas."
 Class updated.,Classe mise à jour.
 Named this class %s.,Cette classe s'appelle maintenant %s.
+Your classes,Vos classes
+"Browse what %s offers - its own, then everything it is a kind of.","Parcourez ce que %s propose : d'abord ses propres éléments, puis tout ce dont il est une sorte."
+a kind of,une sorte de
+Inherited from,Hérité de
+Overrides,Redéfinit
+starts it at,le démarre à
+overrides the default,redéfinit la valeur par défaut
+Start %s at another value,Démarrer %s à une autre valeur
+"Written in _init: %s starts it here, %s keeps its own value.","Écrit dans _init : %s le démarre ici, %s garde sa propre valeur."
+%s now starts %s at %s.,%s démarre maintenant %s à %s.
+New kind of %s…,Nouvelle sorte de %s…
+New script extending %s…,Nouveau script étendant %s…
+Replace in %s,Remplacer dans %s
+Override in %s,Redéfinir dans %s
+%s already replaces %s.,%s remplace déjà %s.
+%s now replaces %s and runs the parent's version first.,%s remplace maintenant %s et exécute d'abord la version du parent.
+Fold or unfold what this kind inherits.,Replie ou déplie ce dont cette sorte hérite.
+"Open the parent's sheet, where these are changed.","Ouvre la feuille du parent, où ils se modifient."
+%d variables · %d functions,%d variables · %d fonctions
+"read here, changed on %s's sheet","lu ici, modifié sur la feuille de %s"
+Double-click to start it at another value.,Double-cliquez pour le démarrer à une autre valeur.
+Right-click to replace it in %s.,Clic droit pour la remplacer dans %s.

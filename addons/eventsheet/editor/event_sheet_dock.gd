@@ -364,6 +364,8 @@ var _dirty: bool = false                        # the ACTIVE tab's dirty flag
 ## Emitted whenever the open-tab set, the active tab, or a tab's dirty flag changes - the
 ## Open Sheets dock (a left editor dock) listens and re-renders its list.
 signal open_tabs_changed
+## "New kind of <class>..." was chosen: the plugin opens its New Event Sheet window in `directory`.
+signal new_kind_requested(directory: String, kind_of: String)
 
 var _open_tabs: Array[Dictionary] = []
 var _active_tab_index: int = -1
@@ -1549,6 +1551,11 @@ func _format_tab_title(sheet: EventSheetResource, path: String, dirty: bool) -> 
 func _on_tab_selected(index: int) -> void:
 	if not _suppress_tab_signal:
 		_activate_tab(index)
+
+
+## A right-click on a sheet's tab: for a sheet that names a class, "New kind of <class>...".
+func _on_tab_rmb_clicked(index: int) -> void:
+	_head_actions.open_tab_menu(index)
 
 
 func _on_tab_close_pressed(index: int) -> void:
@@ -5592,6 +5599,10 @@ func _on_viewport_context_menu_requested(row_data: EventRowData, hit: Dictionary
 	if row_data == null:
 		return
 	var metadata: Dictionary = hit.get("span_metadata", {})
+	# A row that names its own menu (an inherited function: replace it in this kind) opens that one.
+	if not str(metadata.get("context_action", "")).is_empty():
+		_head_actions.open_context_door(str(metadata.get("context_action", "")), global_position)
+		return
 	if str(metadata.get("kind", "")) == "variable":
 		_variables._context_variable = _variables._context_variable_entry_from_metadata(row_data, metadata)
 		if not _variables._context_variable.is_empty():

@@ -9813,3 +9813,25 @@ No picture there.,그곳에 그림이 없습니다.
 "Rows use %s, which %s does not have.",행이 %s을(를) 사용하지만 %s에는 없습니다.
 Class updated.,클래스를 업데이트했습니다.
 Named this class %s.,이 클래스의 이름을 %s(으)로 지정했습니다.
+Your classes,내 클래스
+"Browse what %s offers - its own, then everything it is a kind of.","%s이(가) 제공하는 것을 봅니다: 먼저 자체 항목, 그다음 상속받은 모든 것."
+a kind of,의 한 종류
+Inherited from,상속받은 곳
+Overrides,재정의
+starts it at,의 시작값은
+overrides the default,이(가) 기본값을 재정의합니다
+Start %s at another value,%s을(를) 다른 값으로 시작
+"Written in _init: %s starts it here, %s keeps its own value.",_init에 기록됩니다: %s은(는) 여기서 시작하고 %s은(는) 자체 값을 유지합니다.
+%s now starts %s at %s.,%s은(는) 이제 %s을(를) %s(으)로 시작합니다.
+New kind of %s…,%s의 새 종류…
+New script extending %s…,%s을(를) 확장하는 새 스크립트…
+Replace in %s,%s에서 대체
+Override in %s,%s에서 재정의
+%s already replaces %s.,%s은(는) 이미 %s을(를) 대체합니다.
+%s now replaces %s and runs the parent's version first.,%s은(는) 이제 %s을(를) 대체하고 먼저 부모의 버전을 실행합니다.
+Fold or unfold what this kind inherits.,이 종류가 상속받는 것을 접거나 펼칩니다.
+"Open the parent's sheet, where these are changed.",이것들을 변경하는 부모의 시트를 엽니다.
+%d variables · %d functions,변수 %d개 · 함수 %d개
+"read here, changed on %s's sheet","여기서는 읽기만, 변경은 %s의 시트에서"
+Double-click to start it at another value.,더블 클릭하여 다른 값으로 시작합니다.
+Right-click to replace it in %s.,오른쪽 클릭하여 %s에서 대체합니다.

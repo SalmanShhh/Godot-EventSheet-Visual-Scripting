@@ -9813,3 +9813,25 @@ No picture there.,Non c'è nessuna immagine lì.
 "Rows use %s, which %s does not have.","Le righe usano %s, che %s non ha."
 Class updated.,Classe aggiornata.
 Named this class %s.,Questa classe ora si chiama %s.
+Your classes,Le tue classi
+"Browse what %s offers - its own, then everything it is a kind of.","Sfoglia ciò che offre %s: prima il suo, poi tutto ciò di cui è una specie."
+a kind of,un tipo di
+Inherited from,Ereditato da
+Overrides,Sovrascrive
+starts it at,lo avvia a
+overrides the default,sovrascrive il valore predefinito
+Start %s at another value,Avvia %s con un altro valore
+"Written in _init: %s starts it here, %s keeps its own value.","Scritto in _init: %s lo avvia qui, %s mantiene il proprio valore."
+%s now starts %s at %s.,%s ora avvia %s a %s.
+New kind of %s…,Nuovo tipo di %s…
+New script extending %s…,Nuovo script che estende %s…
+Replace in %s,Sostituisci in %s
+Override in %s,Sovrascrivi in %s
+%s already replaces %s.,%s sostituisce già %s.
+%s now replaces %s and runs the parent's version first.,%s ora sostituisce %s ed esegue prima la versione del genitore.
+Fold or unfold what this kind inherits.,Comprimi o espandi ciò che questo tipo eredita.
+"Open the parent's sheet, where these are changed.","Apre il foglio del genitore, dove vengono modificati."
+%d variables · %d functions,%d variabili · %d funzioni
+"read here, changed on %s's sheet","letto qui, modificato nel foglio di %s"
+Double-click to start it at another value.,Doppio clic per avviarlo con un altro valore.
+Right-click to replace it in %s.,Clic destro per sostituirla in %s.
