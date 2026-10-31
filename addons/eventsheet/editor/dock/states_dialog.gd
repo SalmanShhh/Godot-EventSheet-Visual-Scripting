@@ -191,7 +191,8 @@ func _state_row(index: int, counts: Dictionary) -> Control:
 	var used: int = int(counts.get(str(entry["orig"]), 0)) if not str(entry["orig"]).is_empty() else 0
 	var uses: Label = Label.new()
 	uses.name = "Uses"
-	uses.modulate = Color(1.0, 1.0, 1.0, 0.6)
+	# The quieter text of the editor theme, so the count reads secondary in dark and light alike.
+	uses.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
 	uses.text = "" if used == 0 else (EventSheetL10n.translate("1 row") if used == 1 else EventSheetL10n.translate("%d rows") % used)
 	uses.custom_minimum_size.x = 50.0
 	row.add_child(uses)

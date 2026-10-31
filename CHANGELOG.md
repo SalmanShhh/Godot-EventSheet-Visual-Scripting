@@ -16,6 +16,21 @@
   the readings carry their old translations over, and Is A Kind Of and Also Run Parent Function
   are in all nine catalogs. The translation test now also fails when a language file gains cells
   that read exactly like their English key.
+- Opening a .gd: the spinner, the hairline, "Show as code" and the ring on Code take the look's own
+  link colour (Classic Sheet's too) instead of the editor's accent; the first pass reads "reading
+  the code"; "Show as code" sits straight after the status words; and the ring keeps the Code
+  button's own fill instead of replacing it with an empty box.
+- New Event Sheet: the A kind of / Extends field warns only when nothing it offers begins with what
+  is typed, so "Ene" on the way to Enemy is no longer red. A sheet made as a kind of one of your own
+  classes is named as a class; extending a Godot class such as CharacterBody2D no longer adds a
+  `class_name` to the new file.
+- Nested events: each depth bounds its name column by its own lane, and the name column gives way at
+  half of that lane (it was 45 percent of the sheet's top-level lane). On an event nested past the
+  150 px floor, the divider it draws is the one that can be grabbed, and its actions lane is
+  measured from it.
+- The States window's row counts use the editor's quieter text colour instead of a fixed alpha.
+- Drawing: the words with a card behind them are measured once per text instead of every frame,
+  and the running game's live states are worked out once per frame received.
 
 ### Changed: sub-events lined up (Editor Native)
 
