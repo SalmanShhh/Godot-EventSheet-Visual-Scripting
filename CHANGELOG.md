@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed: folding a row no longer rebuilds every row of the sheet
+
+- A fold changes what the rows show, not what they are. Folding or unfolding now flattens the rows already built and re-dresses the words of the rows whose fold flipped (a folded group names what it holds, a folded region counts its events) with the same builders a full build uses. A row of a kind that wears its fold state in other words (an enum's sentence, a moment's steps, a variable section) still goes through the full rebuild, so the answer is always the one a rebuild gives. Measured in the real editor, the longest frame of a fold click: boomer_level (32 rows) 360 - 420 ms -> 45 - 70 ms; juice pack (803 rows) 6.8 s -> 0.9 s. Pinned by `fold_reflow_test`, which folds and unfolds rows of real sheets both ways and compares every row's identity, indent, numbers, height, words and selection.
+
 ### Fixed: a drag slide asks for one draw a frame, not two
 
 - The pointer move that drives a drag queues a redraw and the per-frame slide step queued a second one that ran after it, so a slide drew the whole canvas twice in a frame. The slide is a function of the clock, so a frame that has already drawn skips the slide's own redraw while it is still moving; the frame the slide stops is never skipped, so the last picture drawn is the rest position. 327 -> 241 canvas draws per 240 drag frames. Pinned by `drag_redraw_coalesce_test`.

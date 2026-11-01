@@ -372,6 +372,39 @@ func _dress_region_fence_row(row_data: EventRowData, block: CustomBlockRow) -> v
 	_apply_region_opener_spans(row_data, "")
 
 
+## Whether a row's words can be brought up to date with its fold state without building it again.
+## An event (or a function's head) says nothing different folded; a group head names what it holds when folded; a region
+## opener counts its events when folded. Any other kind that wears its fold state (an enum's
+## sentence, a moment's steps) is built again in full.
+func can_redress_fold(row_data: EventRowData) -> bool:
+	if row_data.source_resource is EventRow or row_data.source_resource is EventFunction:
+		return row_data.row_type == EventRowData.RowType.EVENT
+	if row_data.source_resource is EventGroup:
+		return row_data.row_type == EventRowData.RowType.GROUP and not row_data.spans.is_empty() \
+			and row_data.spans[0].metadata is Dictionary and bool((row_data.spans[0].metadata as Dictionary).get("group_fold_mark", false))
+	if row_data.source_resource is CustomBlockRow:
+		return row_data.row_type == EventRowData.RowType.REGION and row_data.has_meta("region_fold_key") \
+			and not EventSheetRegionFacts.is_closing_fence(row_data.source_resource)
+	return false
+
+
+## Brings the words of a row that passed can_redress_fold up to date with its fold state, using the
+## very builders the full build uses, so the two cannot disagree.
+func redress_fold(row_data: EventRowData) -> void:
+	if row_data.source_resource is EventGroup:
+		# The status spans (what the head holds, the on/off mark) are the tail of the head and the only
+		# part that reads the fold; take them off and say them again.
+		while not row_data.spans.is_empty():
+			var tail: Variant = row_data.spans[row_data.spans.size() - 1].metadata
+			if not (tail is Dictionary) or not (bool((tail as Dictionary).get("group_counts", false)) 					or str((tail as Dictionary).get("group_action", "")) == "enabled"):
+				break
+			row_data.spans.pop_back()
+		row_data.spans.append_array(_group_head_status_spans(row_data.source_resource as EventGroup,
+			row_data.folded, _viewport._get_reading_style()))
+	elif row_data.source_resource is CustomBlockRow:
+		_apply_region_opener_spans(row_data, _region_member_count_text(row_data.children))
+
+
 ## The opening fence's spans, built from what the row knows right now. Called once while the row is
 ## made (open, no count yet) and again by the pairing pass once the fold state and the member count
 ## are known - one description of the row, never a second one bolted on.

@@ -39,7 +39,7 @@ func toggle_row_fold(row_index: int) -> void:
 		return
 	row_data.folded = not row_data.folded
 	_viewport._fold_state[row_data.row_uid] = row_data.folded
-	_viewport._refresh_rows()
+	commit_fold_change([row_data])
 	if _viewport._row_builder._is_region_row(row_data):
 		persist_region_folds()
 
@@ -61,15 +61,17 @@ func toggle_row_fold_by_uid(row_uid: String) -> bool:
 ## Regions / Unfold All Regions). include_groups extends the sweep to event
 ## groups for the whole-sheet Fold Everything command.
 func set_region_folds(folded: bool, include_groups: bool = false) -> void:
-	_set_folds_in(_viewport._root_rows, SWEEP_BOTH if include_groups else SWEEP_REGIONS, folded)
-	_viewport._refresh_rows()
+	var changed: Array[EventRowData] = []
+	_set_folds_in(_viewport._root_rows, SWEEP_BOTH if include_groups else SWEEP_REGIONS, folded, changed)
+	commit_fold_change(changed)
 	persist_region_folds()
 
 
 ## Folds or unfolds every event GROUP in one step, leaving regions and event blocks alone.
 func set_group_folds(folded: bool) -> void:
-	_set_folds_in(_viewport._root_rows, SWEEP_GROUPS, folded)
-	_viewport._refresh_rows()
+	var changed: Array[EventRowData] = []
+	_set_folds_in(_viewport._root_rows, SWEEP_GROUPS, folded, changed)
+	commit_fold_change(changed)
 	persist_region_folds()
 
 
@@ -112,12 +114,14 @@ func _any_open_in(rows: Array[EventRowData], sweep: String) -> bool:
 	return false
 
 
-func _set_folds_in(rows: Array[EventRowData], sweep: String, folded: bool) -> void:
+func _set_folds_in(rows: Array[EventRowData], sweep: String, folded: bool, changed: Array[EventRowData]) -> void:
 	for row_data: EventRowData in rows:
 		if _sweeps(row_data, sweep):
+			if row_data.folded != folded:
+				changed.append(row_data)
 			row_data.folded = folded
 			_viewport._fold_state[row_data.row_uid] = folded
-		_set_folds_in(row_data.children, sweep, folded)
+		_set_folds_in(row_data.children, sweep, folded, changed)
 
 
 ## Collapses or expands EVERY row that holds other rows - the whole-sheet Collapse All /
@@ -126,8 +130,9 @@ func _set_folds_in(rows: Array[EventRowData], sweep: String, folded: bool) -> vo
 ## region and a published verb all collapse, because "collapse the sheet" means the sheet.
 ## The level is remembered per file (collapse all is level 1; expand all forgets it).
 func set_all_folds(folded: bool) -> void:
-	_apply_level_to(_viewport._root_rows, 1 if folded else 0, 1)
-	_viewport._refresh_rows()
+	var changed: Array[EventRowData] = []
+	_apply_level_to(_viewport._root_rows, 1 if folded else 0, 1, changed)
+	commit_fold_change(changed)
 	persist_region_folds()
 	persist_collapse_level(1 if folded else 0)
 
@@ -137,8 +142,9 @@ func set_all_folds(folded: bool) -> void:
 ## Collapse All, and a level deeper than the sheet expands all of it.
 func expand_to_level(level: int) -> void:
 	var clamped: int = maxi(level, 1)
-	_apply_level_to(_viewport._root_rows, clamped, 1)
-	_viewport._refresh_rows()
+	var changed: Array[EventRowData] = []
+	_apply_level_to(_viewport._root_rows, clamped, 1, changed)
+	commit_fold_change(changed)
 	persist_region_folds()
 	persist_collapse_level(clamped)
 
@@ -149,19 +155,31 @@ func expand_to_level(level: int) -> void:
 func apply_collapse_level(level: int) -> void:
 	if level <= 0:
 		return
-	_apply_level_to(_viewport._root_rows, level, 1)
-	_viewport._refresh_rows()
+	var changed: Array[EventRowData] = []
+	_apply_level_to(_viewport._root_rows, level, 1, changed)
+	commit_fold_change(changed)
 
 
 ## `level` 0 expands everything; otherwise a row is collapsed exactly when its own depth
 ## reaches `level`. Rows without children are left alone (folding one means nothing).
-func _apply_level_to(rows: Array[EventRowData], level: int, depth: int) -> void:
+func _apply_level_to(rows: Array[EventRowData], level: int, depth: int, changed: Array[EventRowData]) -> void:
 	for row_data: EventRowData in rows:
 		if not row_data.children.is_empty():
 			var folded: bool = level > 0 and depth >= level
+			if row_data.folded != folded:
+				changed.append(row_data)
 			row_data.folded = folded
 			_viewport._fold_state[row_data.row_uid] = folded
-		_apply_level_to(row_data.children, level, depth + 1)
+		_apply_level_to(row_data.children, level, depth + 1, changed)
+
+
+## Puts a fold change on screen. The rows are the same ones, so when every row whose fold flipped
+## can be re-dressed in place the sheet is only flattened again (about a sixth of a rebuild's time
+## on a small sheet, and the gap widens with the sheet); a row whose kind says its fold state in
+## words this cannot re-dress sends the whole change through the full rebuild instead.
+func commit_fold_change(changed: Array[EventRowData]) -> void:
+	if not _viewport.reflow_after_fold(changed):
+		_viewport._refresh_rows()
 
 
 ## The flat index of the innermost paired region whose visible range contains

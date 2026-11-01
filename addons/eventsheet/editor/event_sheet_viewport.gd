@@ -3283,6 +3283,35 @@ func _refresh_rows() -> void:
 	_row_builder.invalidate_lens_caches()
 	_root_rows = _build_rows_from_sheet(_sheet)
 	_update_layout_style_signature(_get_font_size())
+	_reflow_flat_rows()
+
+
+## A fold changed what the rows SHOW, not what they ARE: the same built rows, flattened again. Skips
+## the sweep that reads the whole sheet back into rows (the sentence reading of every row, the
+## pattern registry, the lens caches), which is almost all of a rebuild's time. `changed` are the
+## rows whose fold just flipped; each is re-dressed where its own words say its fold state (a
+## folded group names what it holds, a folded region counts its events). Answers false, having
+## touched nothing, when a row's kind has words this cannot re-dress - the caller then rebuilds in
+## full, which is always correct.
+func reflow_after_fold(changed: Array[EventRowData]) -> bool:
+	for row_data: EventRowData in changed:
+		if not _row_builder.can_redress_fold(row_data):
+			return false
+	for row_data: EventRowData in changed:
+		_row_builder.redress_fold(row_data)
+	_param_cursor = {}
+	_rows_revision += 1
+	_figure_content_width = -1.0
+	if figure_mode:
+		_figure_logical_width = FIGURE_PROBE_WIDTH
+	_reflow_flat_rows()
+	return true
+
+
+## Everything a rebuild does once the rows exist: flatten them (honouring folds and the lens),
+## build the words of a small sheet, measure, number, restore the selection and hover flags, and
+## ask for a draw. The one place both a full rebuild and a fold's reflow end up.
+func _reflow_flat_rows() -> void:
 	_group_breadcrumb.invalidate()
 	_flat_rows.clear()
 	_flat_generation += 1
