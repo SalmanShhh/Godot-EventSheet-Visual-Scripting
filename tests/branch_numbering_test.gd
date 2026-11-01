@@ -10,7 +10,8 @@ extends RefCounted
 #   1. the numbers down the margin, branches and the run after one included;
 #   2. a fold never renumbers anything (the walk reads folded rows too);
 #   3. Classic Sheet keeps one number per event;
-#   4. it is a reading and nothing else - the file saves back byte for byte.
+#   4. it is a reading and nothing else - the file saves back byte for byte;
+#   5. a tab handed back without a rebuild answers with its own numbering, not the last sheet's.
 
 const SUPPORT := preload("res://tests/support.gd")
 const TEST_NAME := "branch_numbering_test"
@@ -39,6 +40,7 @@ static func run() -> bool:
 	ok = _test_fold() and ok
 	ok = _test_translation() and ok
 	ok = _test_round_trip() and ok
+	ok = _test_kept_tab() and ok
 	return ok
 
 
@@ -136,4 +138,29 @@ static func _test_translation() -> bool:
 	]
 	view.free()
 	classic.free()
+	return SUPPORT.pins(TEST_NAME, pins)
+
+
+static func _test_kept_tab() -> bool:
+	var view: EventSheetViewport = _view_of(NATIVE_THEME)
+	var first_sheet: EventSheetResource = view.get("_sheet") as EventSheetResource
+	var kept: Dictionary = view.capture_view_state()
+	var other: EventSheetResource = SUPPORT.reopen("extends Node
+
+
+func _ready() -> void:
+	print(1)
+")
+	other.read_only = false
+	other.editor_style = first_sheet.editor_style
+	view.set_sheet(other)
+	var growth_on_other: int = view.branch_growth()
+	var adopted: bool = view.adopt_view_state(first_sheet, kept)
+	var pins: Array = [
+		["the other sheet has no branches", growth_on_other, 0],
+		["the kept tab is seated back without a build", adopted, true],
+		["the kept tab counts its own four branches again", view.branch_growth(), 4],
+		["and translates its own margin numbers", view.model_event_number(5), 3],
+	]
+	view.free()
 	return SUPPORT.pins(TEST_NAME, pins)

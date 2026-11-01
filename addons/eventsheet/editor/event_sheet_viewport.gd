@@ -608,6 +608,8 @@ func capture_view_state() -> Dictionary:
 		"fold_state": _fold_state.duplicate(),
 		"editable_function_names": _editable_function_names.duplicate(),
 		"tunable_uids": _tunable_uids.duplicate(),
+		"display_by_model": _display_by_model.duplicate(),
+		"branch_growth": _branch_growth,
 		"scroll_vertical": get_scroll_offset(),
 		"scroll_horizontal": get_horizontal_scroll()
 	}
@@ -648,6 +650,10 @@ func adopt_view_state(sheet: EventSheetResource, state: Dictionary) -> bool:
 	_fold_state = (state.get("fold_state", {}) as Dictionary).duplicate()
 	_editable_function_names = (state.get("editable_function_names", {}) as Dictionary).duplicate()
 	_tunable_uids = (state.get("tunable_uids", {}) as Dictionary).duplicate()
+	# The branch numbering belongs to the sheet these rows were read from, not the last one built.
+	_display_by_model = (state.get("display_by_model", {}) as Dictionary).duplicate()
+	_branch_growth = int(state.get("branch_growth", 0))
+	_branch_focus_uid = ""
 	# Answers keyed to the rows that were on screen a moment ago, which these are not.
 	_param_cursor = {}
 	_hover_match_spans = {}

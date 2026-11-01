@@ -40,6 +40,45 @@ func heal(amount: int) -> void:
 	])
 
 
+## A function with no step beside its head: its "+ Add action" opens the picker and changes nothing
+## until an action is picked, and then the blank step and the action land together as one edit. A
+## picker closed without a pick used to leave a blank event (and an undo step that added nothing).
+static func _test_head_add_is_one_edit() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node"
+	var verb: EventFunction = EventFunction.new()
+	verb.function_name = "heal"
+	sheet.functions.append(verb)
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(sheet)
+	var head: EventRowData = null
+	for entry: Variant in dock._active_view().get_flat_rows():
+		var row: EventRowData = (entry as Dictionary).get("row") as EventRowData
+		if row != null and row.source_resource is EventFunction and head == null:
+			head = row
+	var rows: Array = [["the function's head row is on the sheet", head != null, true]]
+	if head == null:
+		dock.free()
+		return SUPPORT.pins("function_body_opt_in_test", rows)
+	dock._ace_apply._on_viewport_ace_picker_requested(head, "action")
+	var context: Dictionary = dock._ace_picker._context.duplicate()
+	var steps_while_picking: int = (dock._current_sheet.functions[0] as EventFunction).events.size()
+	var definition: ACEDefinition = dock._find_definition("Core", "ConsoleLog")
+	dock._ace_apply._apply_ace_definition(definition, {"message": "\"healed\"", "level": "print"}, context)
+	var live: EventFunction = dock._current_sheet.functions[0] as EventFunction
+	var first_actions: int = (live.events[0] as EventRow).actions.size() if not live.events.is_empty() else -1
+	rows.append_array([
+		["the picker opens on the function itself", [str(context.get("mode", "")), str(context.get("head_function", ""))],
+			["append_action", "heal"]],
+		["opening the picker adds no step", steps_while_picking, 0],
+		["the pick adds one step", live.events.size(), 1],
+		["holding the picked action", first_actions, 1],
+	])
+	dock.free()
+	return SUPPORT.pins("function_body_opt_in_test", rows)
+
+
 ## Whether the head row of verb `verb_name` carries a "+ Add action" door.
 static func _head_offers_add(view: EventSheetViewport, verb_name: String) -> bool:
 	for entry: Variant in view.get_flat_rows():
@@ -56,6 +95,7 @@ static func _head_offers_add(view: EventSheetViewport, verb_name: String) -> boo
 static func run() -> bool:
 	var ok: bool = true
 	ok = _test_head_add_door() and ok
+	ok = _test_head_add_is_one_edit() and ok
 
 	# An OPENED pack (external_source_path set) with two lifted verbs, each a one-line body.
 	var sheet: EventSheetResource = EventSheetResource.new()

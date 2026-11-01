@@ -18261,10 +18261,10 @@ func _format_action_descriptor(action: ACEAction) -> String:
 		row_note = attached if row_note.is_empty() else "%s · %s" % [attached, row_note]
 	var base_text: String = _reading_sentence(_humanized_input_event_text(_format_action_descriptor_base(action)))
 	# A line about a node named by its path reads like every other line of its object: "Set ...", never
-	# the vocabulary's lower-case sentence.
+	# the vocabulary's lower-case sentence. Only a sentence's opening WORD is raised: a line that opens on
+	# a name (`apply_impulse(...)`, `velocity = ...`) keeps it as written.
 	var path_target: String = str((action.params if not action.params.is_empty() else action.parameters).get("target", "")).strip_edges()
-	if (path_target.begins_with("$") or path_target.begins_with("%")) and not base_text.is_empty() \
-			and base_text[0] != base_text[0].to_upper():
+	if (path_target.begins_with("$") or path_target.begins_with("%")) and _opens_on_sentence_word(base_text):
 		base_text = base_text[0].to_upper() + base_text.substr(1)
 	if not row_note.is_empty():
 		base_text += "   💬 %s" % row_note
@@ -18276,6 +18276,13 @@ func _format_action_descriptor(action: ACEAction) -> String:
 	if not ace_note.is_empty():
 		return "%s   ⊳ %s" % [base_text, ace_note]
 	return base_text
+
+
+## Whether `text` opens on a lower-case sentence word ("set z_index to 4") rather than on a name: a
+## run of plain letters, a space, and then no operator, so `velocity = 3` and `apply_impulse(...)`
+## are names and stay as written.
+static func _opens_on_sentence_word(text: String) -> bool:
+	return RegEx.create_from_string("^[a-z]+ (?![=+\\-*/<>!%&|^])").search(text) != null
 
 
 ## The task notes an action lane carries, as {"consumed": {index: true}, "notes": {index: text}}.

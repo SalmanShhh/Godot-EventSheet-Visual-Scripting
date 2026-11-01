@@ -46,6 +46,10 @@ static var _sheet_cache: Dictionary = {}
 ## write would answer with the file that is no longer there.
 static var _run_in_progress: bool = false
 
+## Margin numbers by sheet instance id, held for one run like the sheets they were read from: the
+## margin's numbering is read off a whole throwaway canvas, and six sections ask it of every sheet.
+static var _margin_cache: Dictionary = {}
+
 
 ## Registers a project-health check. `check` receives (sheet_paths: PackedStringArray,
 ## findings: Array[Dictionary]) and appends findings shaped
@@ -273,6 +277,7 @@ static func run() -> Dictionary:
 	var importer_calls: int = GDScriptImporter.external_imports - importer_calls_before
 	_source_cache.clear()
 	_sheet_cache.clear()
+	_margin_cache.clear()
 	var counts: Dictionary = {"error": 0, "warning": 0, "info": 0}
 	for finding: Dictionary in findings:
 		var severity: String = str(finding.get("severity"))
@@ -1226,7 +1231,7 @@ static func check_unbounded_loops(sheet_paths: PackedStringArray, findings: Arra
 		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
 		if sheet == null:
 			continue
-		var numbers: Dictionary = EventSheetResource.margin_numbers(sheet)
+		var numbers: Dictionary = margin_numbers_of(sheet)
 		for entry: Variant in sheet.events:
 			if entry is EventRow and _is_per_frame_trigger((entry as EventRow).trigger_id):
 				_scan_unbounded_loops(entry as EventRow, sheet_path, threshold, findings, numbers)
@@ -1247,7 +1252,7 @@ static func check_every_tick_setup(sheet_paths: PackedStringArray, findings: Arr
 		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
 		if sheet == null:
 			continue
-		var numbers: Dictionary = EventSheetResource.margin_numbers(sheet)
+		var numbers: Dictionary = margin_numbers_of(sheet)
 		for entry: Variant in sheet.events:
 			if not (entry is EventRow):
 				continue
@@ -1323,7 +1328,7 @@ static func check_coroutine_in_per_frame_trigger(sheet_paths: PackedStringArray,
 		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
 		if sheet == null:
 			continue
-		var numbers: Dictionary = EventSheetResource.margin_numbers(sheet)
+		var numbers: Dictionary = margin_numbers_of(sheet)
 		for entry: Variant in sheet.events:
 			if entry is EventRow and _is_per_frame_trigger((entry as EventRow).trigger_id):
 				_scan_coroutine_misuse(entry as EventRow, sheet_path, findings, numbers)
@@ -3054,6 +3059,7 @@ static func clear_project_scripts() -> void:
 	ProjectFiles.clear()
 	_source_cache.clear()
 	_sheet_cache.clear()
+	_margin_cache.clear()
 
 
 ## One file's text, read once per audit and handed to every check that asks for it.
@@ -3106,6 +3112,20 @@ static func sheet_of(path: String) -> EventSheetResource:
 	if _run_in_progress and path.begins_with("res://"):
 		_sheet_cache[path] = sheet
 	return sheet
+
+
+## The numbers `sheet`'s margin draws (EventSheetResource.margin_numbers), read once per sheet per run
+## under the same guard as the sheets themselves: a section asked on its own reads them fresh.
+static func margin_numbers_of(sheet: EventSheetResource) -> Dictionary:
+	if sheet == null:
+		return {}
+	var key: int = sheet.get_instance_id()
+	if _margin_cache.has(key):
+		return _margin_cache[key]
+	var numbers: Dictionary = EventSheetResource.margin_numbers(sheet)
+	if _run_in_progress:
+		_margin_cache[key] = numbers
+	return numbers
 
 
 ## The audit's script walk with NOTHING HELD - a fresh listing that warms no cache.
@@ -3333,7 +3353,7 @@ static func scan_pattern_smells(sheet: EventSheetResource, sheet_path: String,
 	var claims: Array = EventSheetPatternFacts.claims(sheet)
 	if claims.is_empty():
 		return
-	var numbers: Dictionary = EventSheetResource.margin_numbers(sheet)
+	var numbers: Dictionary = margin_numbers_of(sheet)
 	var events: Dictionary = _events_by_uid(sheet)
 	for entry: Variant in claims:
 		var claim: Dictionary = entry as Dictionary

@@ -503,7 +503,7 @@ static func check_tidiness(sheet_paths: PackedStringArray, findings: Array[Dicti
 			_add(findings, "unused-behavior", sheet_path,
 				"Behavior \"%s\" is attached but no event uses it." % behavior)
 		_note_disabled_events(sheet, sheet_path, findings)
-		for pair: Array in identical_event_pairs(sheet.events, sheet.functions, EventSheetResource.margin_numbers(sheet)):
+		for pair: Array in identical_event_pairs(sheet.events, sheet.functions, EventSheetProjectDoctor.margin_numbers_of(sheet)):
 			_add(findings, "identical-events", sheet_path,
 				"Events %d and %d are identical - make one?" % [int(pair[0]), int(pair[1])], int(pair[0]))
 		var repeated: Dictionary = repeated_literals(sheet.events)
@@ -544,7 +544,7 @@ static func _note_unread_locals(sheet: EventSheetResource, sheet_path: String,
 
 static func _note_disabled_events(sheet: EventSheetResource, sheet_path: String,
 		findings: Array[Dictionary]) -> void:
-	var disabled: PackedInt32Array = disabled_event_numbers(sheet.events, sheet.functions, EventSheetResource.margin_numbers(sheet))
+	var disabled: PackedInt32Array = disabled_event_numbers(sheet.events, sheet.functions, EventSheetProjectDoctor.margin_numbers_of(sheet))
 	if disabled.is_empty():
 		return
 	var change: Dictionary = last_change(sheet_path)

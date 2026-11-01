@@ -155,7 +155,13 @@ func _on_viewport_ace_picker_requested(row_data: EventRowData, lane: String) -> 
 	# A function's head draws its own actions, so its Add action fills the step they belong to.
 	var event_row: EventRow = _dock._active_view().ace_owner(row_data.source_resource) if row_data != null else null
 	if event_row == null and lane == "action" and row_data != null and row_data.source_resource is EventFunction:
-		event_row = _first_step_for_head_action(row_data.source_resource as EventFunction)
+		# No step to show beside the head yet: the picker lands on the function, and the action it picks
+		# arrives in a blank step put first in the body, in the same edit (see head_step_for_action).
+		var head_function: EventFunction = row_data.source_resource as EventFunction
+		var view: EventSheetViewport = _dock._active_view()
+		if view != null and view._row_builder._function_body_editable(head_function):
+			_dock._ace_picker.open("append_action", false, head_function, {"head_function": head_function.function_name})
+		return
 	if event_row == null:
 		return
 	match lane:
@@ -167,27 +173,18 @@ func _on_viewport_ace_picker_requested(row_data: EventRowData, lane: String) -> 
 
 ## The step a function head's "+ Add action" fills when the function has no step of its own to show
 ## beside its head yet: a blank event put first in its body (a blank event runs whenever the function
-## does), which the picked action then makes the head's own action lane. Null when the body cannot be
-## edited. The new step is read back from the live sheet, because the undo funnel replaces resources.
-func _first_step_for_head_action(event_function: EventFunction) -> EventRow:
-	var view: EventSheetViewport = _dock._active_view()
-	if view == null or not view._row_builder._function_body_editable(event_function):
+## does), which the picked action makes the head's own action lane. Called inside the undo funnel by
+## the action's own edit, so the step and its action are one undo step and a picker closed without a
+## pick leaves the body untouched. The function is found by name on the live sheet, because the undo
+## funnel replaces resources. Null when the function is gone.
+func head_step_for_action(function_name: String) -> EventRow:
+	var live: EventFunction = _live_function_named(function_name)
+	if live == null:
 		return null
-	var function_name: String = event_function.function_name
-	var added: bool = _dock._perform_undoable_sheet_edit("Add Action", func() -> bool:
-		var live: EventFunction = _live_function_named(function_name)
-		if live == null:
-			return false
-		var body: Array = live.events if not live.events.is_empty() or live.rows.is_empty() else live.rows
-		body.insert(0, EventRow.new())
-		return true)
-	if not added:
-		return null
-	var live_function: EventFunction = _live_function_named(function_name)
-	if live_function == null:
-		return null
-	var live_body: Array = live_function.events if not live_function.events.is_empty() else live_function.rows
-	return live_body[0] as EventRow if not live_body.is_empty() else null
+	var body: Array = live.events if not live.events.is_empty() or live.rows.is_empty() else live.rows
+	var step: EventRow = EventRow.new()
+	body.insert(0, step)
+	return step
 
 
 func _live_function_named(function_name: String) -> EventFunction:
@@ -465,6 +462,13 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 					message["text"] = "Added condition."
 					return true
 			"append_action":
+				if selected_resource is EventFunction and context.has("head_function"):
+					var head_step: EventRow = head_step_for_action(str(context["head_function"]))
+					if head_step == null:
+						return false
+					head_step.actions.append(_create_action_from_definition(definition, params))
+					message["text"] = "Added action."
+					return true
 				if selected_resource is EventRow:
 					var action_entry: ACEAction = _create_action_from_definition(definition, params)
 					(selected_resource as EventRow).actions.append(action_entry)
