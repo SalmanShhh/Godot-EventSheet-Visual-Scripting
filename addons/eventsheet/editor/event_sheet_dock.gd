@@ -3653,9 +3653,11 @@ func _refresh_state_rows() -> void:
 
 func _rebuild_state_rows_now() -> void:
 	_state_rows_pending = false
-	_state_rows_rebuilt_at = Time.get_ticks_msec()
 	if _viewport != null:
 		_viewport.rebuild_rows()
+	# The window opens when the layout ENDS: stamped before it, a layout slower than the window (a big
+	# sheet, a loaded machine) left no window at all, and every flip after it laid the sheet out again.
+	_state_rows_rebuilt_at = Time.get_ticks_msec()
 
 
 func update_live_values(values: Dictionary, instance: String = "") -> void:

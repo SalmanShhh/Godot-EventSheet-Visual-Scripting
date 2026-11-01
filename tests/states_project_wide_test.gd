@@ -222,17 +222,29 @@ static func _flip_rows() -> Array:
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.setup(_machine_sheet())
 	EventSheetStateWatch.clear()
+	# The first frame also builds the live-values panel and compiles the state trail, once per editor
+	# session and AFTER the layout: 215 ms of the 250 ms window measured cold, and more than all of it
+	# on a loaded machine, which is what made the flips below land outside the window. Warmed here so
+	# the flips arrive as they do in a running game - milliseconds after the layout, not a cold start.
+	dock._ensure_live_values_panel()
+	load(EventSheetDock.STATE_TRAIL_PATH)
 	dock.update_live_values({"state": "RUN", "state_seconds": 0.5})
 	var first: Array = [_reserved_tokens(dock), dock._state_rows_pending]
 	dock.update_live_values({"state": "IDLE", "state_seconds": 0.0})
 	dock.update_live_values({"state": "RUN", "state_seconds": 0.0})
 	dock.update_live_values({"state": "IDLE", "state_seconds": 0.0})
 	var flipping: Array = [_reserved_tokens(dock), dock._state_rows_pending]
+	var layout_began: int = Time.get_ticks_msec()
 	dock._rebuild_state_rows_now()
+	var layout_ended: int = Time.get_ticks_msec()
+	# The window is counted from the END of a layout, so a layout slower than the window still leaves
+	# one after it instead of none.
+	var stamped_at_end: bool = dock._state_rows_rebuilt_at >= layout_ended - maxi((layout_ended - layout_began) / 2, 2)
 	var settled: Array = [_reserved_tokens(dock), dock._state_rows_pending]
 	EventSheetStateWatch.clear()
 	dock.free()
 	return [
+		["the window between two layouts opens when a layout ends, not when it starts", stamped_at_end, true],
 		["the first change of state is laid out at once", first, [PackedStringArray(["RUN · 99.9 s"]), false]],
 		["three more flips inside the window lay nothing out, and one layout waits", flipping, [PackedStringArray(["RUN · 99.9 s"]), true]],
 		["the waiting layout reads the state the game ended in", settled, [PackedStringArray(["IDLE · 99.9 s"]), false]],
