@@ -513,6 +513,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 		"drag_feedback_error": _viewport._drag_feedback_is_error and _viewport._drag_ace_target_row_index == index,
 		"line_number": row_data.line_number,
 		"event_number": row_data.event_number,
+		"branch_number": row_data.branch_number,
 		# The row's event uid, so the GUTTER can look its trace hit count up without the draw loop
 		# touching the sheet resources. Stable per row, which is why it is safe in a cached layout.
 		# Only the row a ternary pair leads with reports a uid: the hit count is the EVENT's, and a chip

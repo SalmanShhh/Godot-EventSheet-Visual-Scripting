@@ -133,7 +133,7 @@ func _find_step(direction: int) -> void:
 		_dock._current_sheet.events if _dock._current_sheet != null else [], match_resource,
 		_dock._current_sheet.functions if _dock._current_sheet != null else [])
 	if match_event > 0:
-		label += " · " + EventSheetL10n.translate("event %d") % match_event
+		label += " · " + EventSheetL10n.translate("event %d") % _dock._viewport.display_event_number(match_event)
 	_dock._find_count_label.text = label
 	_dock._viewport.reveal_resource(match_resource)
 

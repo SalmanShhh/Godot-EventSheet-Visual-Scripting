@@ -268,7 +268,8 @@ func _event_numbers_of(run: Dictionary) -> PackedStringArray:
 	var numbers: Dictionary = EventSheetResource.event_numbers(_dock._current_sheet.events, _dock._current_sheet.functions)
 	var named: PackedStringArray = PackedStringArray()
 	for occurrence: Dictionary in (run["occurrences"] as Array):
-		var number: String = str(int(numbers.get((occurrence["event"] as EventRow).get_instance_id(), 0)))
+		var model_number: int = int(numbers.get((occurrence["event"] as EventRow).get_instance_id(), 0))
+		var number: String = str(_dock._viewport.display_event_number(model_number) if _dock._viewport != null else model_number)
 		if not named.has(number):
 			named.append(number)
 	return named

@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Changed: Editor Native numbers the branches of a pair as events of their own
+
+- Where a statement hoists a ternary into two rows (`return "A" if c else "B"`, `var s = "-" if c else ""`), each branch is an event of its own in the margin: the rows of the pair take the next numbers (a guard 2 with two branches reads 2, 3, 4) and the events after them move down, as does the run of actions after a pair. Folding never renumbers anything (the walk reads folded rows too), and Classic Sheet keeps one number per event.
+- The editor's own "event N" words (Find's counter, Go to event, the repeated-run strip) follow the margin. The Project Doctor and Find in project name events by the sheet's own count, which is the margin's whenever nothing branches. The "neither of N" note an Else row carries cites the margin's number, so 40 such notes in the shipped packs now read a larger N in this look (no other reading moved).
+
 ### Changed: a function body that opens on a branch has no head row in Editor Native, and its locals stand at the body's level
 
 - A body event with no condition whose first action hoists a ternary into two rows (`var s = "-" if c else ""`) drew an "Always" head row that said nothing but its placeholder, which pushed its branches and the locals after them one level too deep. The head is no longer drawn: the branches, the locals and the run after them all stand on the level of the events round them.

@@ -3156,6 +3156,10 @@ func _refresh_rows() -> void:
 			_row_builder._ensure_event_spans(entry.get("row"))
 	_row_metrics_helper.rebuild()
 	var event_numbers: Dictionary = event_numbers_for(_sheet.events if _sheet != null else [], _sheet.functions if _sheet != null else [])
+	# The look that nests by lines numbers a pair's branches as events of their own, so the events after
+	# a pair move down by the branches before them. Read off the whole tree, folded rows included, so a
+	# fold never renumbers anything.
+	var branch_shifts: Dictionary = _branch_number_shifts(event_numbers)
 	for index in range(_flat_rows.size()):
 		var line_row: EventRowData = _flat_rows[index].get("row")
 		if line_row == null:
@@ -3170,6 +3174,12 @@ func _refresh_rows() -> void:
 		# they read from.
 		var numbered: Resource = line_row.source_resource if line_row.source_resource != null else line_row.reading_resource
 		line_row.event_number = int(event_numbers.get(numbered.get_instance_id(), 0)) if (gutter_owner and numbered != null) else 0
+		if branch_shifts.has(line_row.get_instance_id()):
+			var shift: Array = branch_shifts[line_row.get_instance_id()]
+			if gutter_owner:
+				line_row.event_number += int(shift[0]) if line_row.event_number > 0 else 0
+			else:
+				line_row.branch_number = int(shift[1])
 		if _breakpoint_rows.has(state_uid):
 			line_row.breakpoint_enabled = gutter_owner and bool(_breakpoint_rows[state_uid])
 		line_row.bookmark_enabled = gutter_owner and _bookmark_rows.has(state_uid)
@@ -3205,6 +3215,67 @@ func _refresh_rows() -> void:
 	_layout_cache.clear()
 	queue_redraw()
 	rows_rebuilt.emit()
+
+
+## In the look that nests by lines, a branch of a pair (and the run of actions after one) is an event
+## of its own: it takes the next number in the sequence and every event after it moves down one. Answers
+## {row instance id: [events before it that the sequence grew by, its own number]} for each row the
+## numbering touches - a numbered row after a branch carries the growth, a branch row carries its number
+## - and is empty when the look does not nest by lines or nothing branches. A walk of the whole tree in
+## drawing order, folded rows included, so folding never renumbers anything.
+func _branch_number_shifts(event_numbers: Dictionary) -> Dictionary:
+	var shifts: Dictionary = {}
+	_display_by_model = {}
+	var style: EventSheetEventStyle = _get_event_style()
+	if style == null or not style.sub_event_strips:
+		return shifts
+	var state: Dictionary = {"grown": 0, "last": 0, "by_model": {}}
+	_walk_branch_numbers(_root_rows, event_numbers, state, shifts)
+	if int(state["grown"]) > 0:
+		_display_by_model = state["by_model"]
+	return shifts
+
+
+## The number each real event wears in the margin, by the number the sheet itself gives it. Empty (every
+## event wears its own) unless the look nests by lines and a pair has branched.
+var _display_by_model: Dictionary = {}
+
+
+## The number the margin shows for the event the sheet numbers `model_number`: the same number, unless a
+## pair's branches before it have taken places in the sequence.
+func display_event_number(model_number: int) -> int:
+	return int(_display_by_model.get(model_number, model_number))
+
+
+## The number the sheet itself gives the event the margin shows as `display_number`: the inverse of
+## display_event_number, 0 when that margin number is a branch (which has no event of its own).
+func model_event_number(display_number: int) -> int:
+	if _display_by_model.is_empty():
+		return display_number
+	for model_number: Variant in _display_by_model:
+		if int(_display_by_model[model_number]) == display_number:
+			return int(model_number)
+	return 0
+
+
+func _walk_branch_numbers(rows: Array, event_numbers: Dictionary, state: Dictionary, shifts: Dictionary) -> void:
+	for row_data: EventRowData in rows:
+		if row_data == null:
+			continue
+		var is_owner: bool = row_data.ternary_anchor_uid.is_empty() or row_data.ternary_lead
+		var numbered: Resource = row_data.source_resource if row_data.source_resource != null else row_data.reading_resource
+		if row_data.row_type == EventRowData.RowType.EVENT:
+			var own: int = int(event_numbers.get(numbered.get_instance_id(), 0)) if (is_owner and numbered != null) else 0
+			if own > 0:
+				state["last"] = own + int(state["grown"])
+				(state["by_model"] as Dictionary)[own] = int(state["last"])
+				if int(state["grown"]) > 0:
+					shifts[row_data.get_instance_id()] = [int(state["grown"]), 0]
+			elif row_data.ternary_view and not is_owner:
+				state["grown"] = int(state["grown"]) + 1
+				state["last"] = int(state["last"]) + 1
+				shifts[row_data.get_instance_id()] = [int(state["grown"]), int(state["last"])]
+		_walk_branch_numbers(row_data.children, event_numbers, state, shifts)
 
 
 ## How many rows of this sheet are in the quiet amber state - the rows the Doctor's findings were

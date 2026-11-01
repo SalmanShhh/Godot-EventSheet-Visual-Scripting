@@ -2749,7 +2749,8 @@ func _open_go_to_event_dialog() -> void:
 		"body": EventSheetPopupUI.form_row(EventSheetL10n.translate("Event number"), number_edit),
 		"main": EventSheetL10n.translate("Go"),
 		"on_main": func() -> void:
-			var target: EventRow = EventSheetViewport.event_by_number(_current_sheet.events, int(number_edit.value), _current_sheet.functions)
+			var target: EventRow = EventSheetViewport.event_by_number(_current_sheet.events,
+				_viewport.model_event_number(int(number_edit.value)) if _viewport != null else int(number_edit.value), _current_sheet.functions)
 			if target == null:
 				_set_status(EventSheetL10n.translate("There is no event %d.") % int(number_edit.value), true)
 			elif _viewport != null:

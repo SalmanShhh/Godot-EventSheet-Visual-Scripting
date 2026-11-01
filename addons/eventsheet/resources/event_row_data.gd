@@ -105,6 +105,10 @@ var line_number: int = 0
 # The event-sheet stable event number (1-based, sheet order through groups and sub-events);
 # 0 for non-event rows. View-only, recomputed per rebuild - never serialized.
 var event_number: int = 0
+# The number a BRANCH or a run after one wears in the margin of the look that nests by lines: a branch
+# of a pair is an event of its own there, so it counts in the sequence (the event it branches from keeps
+# its place, the events after it move down). 0 on every other row; view-only, never serialized.
+var branch_number: int = 0
 var breakpoint_enabled: bool = false
 var bookmark_enabled: bool = false
 var disabled: bool = false

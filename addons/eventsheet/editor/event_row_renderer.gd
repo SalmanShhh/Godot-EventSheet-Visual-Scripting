@@ -695,7 +695,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		var block_left: float = row_rect.position.x + nested_block_left_for(row_data.indent, row_indent_width)
 		row_fill_rect = Rect2(block_left, row_rect.position.y, maxf(row_rect.end.x - block_left, 0.0), row_rect.size.y)
 	var local_on_sheet: bool = event_style != null and event_style.sub_event_strips and is_local_variable_row(row_data)
-	var gutter_number: int = int(layout.get("event_number", 0)) if show_event_numbers else line_number
+	var gutter_number: int = (int(layout.get("event_number", 0)) if int(layout.get("event_number", 0)) > 0 else int(layout.get("branch_number", 0))) if show_event_numbers else line_number
 	# The hit-count lens: resolved ONCE per row here, so _draw_gutter stays a painter. Empty
 	# string = draw the gutter exactly as before (lens off, no traced run, or not an event row).
 	var hit_uid: String = hit_chip_uid(show_hit_counts or show_costs, is_event_row, str(layout.get("event_uid", "")))
