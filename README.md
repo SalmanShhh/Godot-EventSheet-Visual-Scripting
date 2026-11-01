@@ -5,7 +5,7 @@
 The point is **speed-to-game**: whether you've never written code, want logic to pour out faster, or you're mid-jam - events get you from idea to *playing it* in minutes, and keep up when the project balloons to thousands of events.
 
 > [!NOTE]
-> **Early.** Every feature ships with tests (28,572 CI-gated assertions across 833 test files, byte-exact round-trip gates, performance-parity contracts), but the project hasn't yet earned real-world mileage and may see sweeping changes between releases. Pin a release tag and report what you hit - issues are read and acted on.
+> **Early.** Every feature ships with tests (a large CI-gated suite, byte-exact round-trip gates, performance-parity contracts), but the project hasn't yet earned real-world mileage and may see sweeping changes between releases. Pin a release tag and report what you hit - issues are read and acted on.
 
 Godot EventSheets (engine codename *EventForge*, the prefix on internal class names) brings the C3 event-sheet workflow into the Godot editor: a fast visual editor where events read like sentences, and a compiler that turns every sheet into **typed, idiomatic GDScript** - no runtime interpreter, no plugin dependency in your exported game, and **zero performance difference from hand-written code** (a tested contract).
 
@@ -41,7 +41,7 @@ func _on_body_entered(body: Node) -> void:
 		health += -10
 ```
 
-Delete the plugin and this script still runs. The reverse works too: **open *any* `.gd` as a sheet** - the round-trip is lossless and byte-identical, so you edit visually or in Godot's script editor with the two in sync. Measured over this repo's own 1,089 hand-written files, every code line but nine opens as structure in the sheet's own words; anything the vocabulary cannot match stays an honest, editable row rather than being reformatted behind your back.
+Delete the plugin and this script still runs. The reverse works too: **open *any* `.gd` as a sheet** - the round-trip is lossless and byte-identical, so you edit visually or in Godot's script editor with the two in sync. Nearly every code line of this repo's own hand-written scripts opens as structure in the sheet's own words; anything the vocabulary cannot match stays an honest, editable row rather than being reformatted behind your back.
 
 **View > Generated GDScript** puts the compiled output beside the sheet, refreshed live as you edit:
 
@@ -72,7 +72,7 @@ Everything else is in the **[documentation index](docs/README.md)** and inside t
 - **It's a bridge, not a wall.** Complex logic eventually pulls you toward GDScript by design; to *never* see code, C3 still hides it better.
 - **2D-first.** The 3D vocabularies, raycasts and movement packs are real, but deeper 3D still reaches for ƒx.
 - **Some C3 plugins have no equivalent** (XML) - routed to the native Godot feature.
-- **The first sheet tab of a session is slow** on a large project (tens of seconds while Godot compiles the editor). It is the current focus.
+- **The first sheet tab of a session is slow** on a large project (about 17 to 22 s on our test machine while Godot compiles the editor). Interaction speed and first-open work are in progress.
 - **Experimental.** A large CI suite stands in for mileage it hasn't earned.
 
 The deeper belief, in one line: the condition/action grid is the shape code already has - a trigger is a signal handler, conditions are the `if`, actions are its body, sub-events are nesting - so everything learned in a sheet transfers straight to scripting, and "graduating" to code is noticing you already understand the code your sheets have been writing.
@@ -82,7 +82,7 @@ The deeper belief, in one line: the condition/action grid is the shape code alre
 - **The editor** - two-lane rows, groups, regions, comments, drag/drop, batch edit, full undo/redo; Find & Replace, project-wide Find all references, Outline, Command Palette, type-a-sentence Ghost Row, Properties bar, Simple and Reading modes, themes, split views, session restore. The strip across the top rests as **seven controls** (one Menu over 137 commands, the Save / Undo / Redo icons, one play button holding all six ways to run, Quick add, and a chevron that brings every button back); adding lives in the sheet's own corners. ([guide](docs/GUIDE-THE-TOOLBAR.md))
 - **The language** - events, sub-events, Else / Else-if, the full loop and picking set, typed functions, enums, signals, match rows, setters/getters, Script blocks, `await`, autoload sheets, and the Custom Block API for your own row kinds.
 - **Any script opens as a sheet** - lifecycle handlers as triggers, input branches as Keyboard/Mouse events, signal wiring as triggers, whole `.tscn` files as composite sheets; a coverage chip says how much reads as events, and every lift is byte-gated.
-- **2,228 native ACEs** (108 triggers) across scenes, spawning, nodes, tweens, audio, cameras, lights, shaders, collisions, raycasts, files, multiplayer, UI, particles, tilemaps, input rebinding and more - plus a Helpers escape hatch so unmapped code stays an editable row.
+- **A large native vocabulary of ACEs** (triggers, conditions, actions, expressions) across scenes, spawning, nodes, tweens, audio, cameras, lights, shaders, collisions, raycasts, files, multiplayer, UI, particles, tilemaps, input rebinding and more - plus a Helpers escape hatch so unmapped code stays an editable row.
 - **140 behavior packs**, all authored as event sheets - movement and feel, AI, combat and stats, narrative, drawing and UI, lighting, shader effects, and system packs. See [docs/Addons/](docs/Addons/README.md).
 - **Your own code is vocabulary with zero setup** - the picker lists your classes and autoloads as Actions / Conditions / Expressions; curate with a project catalog or `## @ace_*` comments; the ACE Studio, Extract to Function and Teach a Verb publish your own; `EventSheets.publish_pack` ships it.
 - **The Manual, inside the editor** - Tools > Manual, F1 on anything, a reference page per object and behavior, tutorials you follow in your open sheet, and What's new.
@@ -101,7 +101,7 @@ The latest tagged release is **`v0.18.0` - "Refactor Anything, Render Anything &
 
 ### The next release: on `main`, not yet tagged
 
-**Where it stands (2026-10-19):** 350 commits on `main` since `v0.18.0`, every one listed in the [CHANGELOG](CHANGELOG.md) under `[Unreleased]`. The features are in, the full test suite and CI are green, and nothing in it is half-built. Two things stand between it and a tag:
+**Where it stands (2026-11-01):** 556 commits on `main` since `v0.18.0`, every one listed in the [CHANGELOG](CHANGELOG.md) under `[Unreleased]`. The features are in, the full test suite and CI are green, and nothing in it is half-built. Two things stand between it and a tag:
 
 1. **Four small `.gd` save details wait on a design call** - where a comment row is written in a `.gd` file (today it moves to the end), whether a comment's colour is saved there at all, whether a plain (non-exported) variable's description is saved, and a `#region` drawn around events at the top of a sheet (it reopens empty). Nothing else a `.gd` save could drop is left: eleven such losses were found and fixed for this release, each pinned by a test that saves and reopens a real file.
 2. **The release itself** - version bump, release notes, README milestones, tag.
@@ -109,19 +109,23 @@ The latest tagged release is **`v0.18.0` - "Refactor Anything, Render Anything &
 What it brings, in one screen:
 
 - **Editor Native, and names you already know** - a starter look that sits inside Godot like one of its own docks (variables listed the way the Inspector lists a property, blue condition and green action lanes, the compiler's `__` names kept out of sight); the picker answers to `GetComponentInParent`, `WaitForSeconds` and another event-sheet editor's verbs, and an expression field reads `Mathf.Lerp` and `Random.Range`.
+- **A sheet that lines up** - words, names and values sit in aligned columns, plain values share one text colour and weight, the parameter band hangs under the function line, branches of a pair are numbered as events of their own, and a function counts as one event in the head card and the status bar.
+- **States, class names and described behaviours** - an object's states work project-wide (one state row with a default, descriptions and hover), class names and kinds have authoring steps and autocomplete, and every behaviour variable, state machine and state ships a brief description.
+- **Positions say which space they mean** - Set X / Y / Z read relative to the parent, with a hover naming the parent. World twins sit beside them: Set World Position, world X / Y / Z readers, Spawn Scene In The World, and world versions of wrap, bound, glide, push and spawn. The older rows keep working in your sheets but are hidden from the picker (nothing is migrated behind your back). Control nodes get place rows of their own, readings name their space (world, own axes, screen pixels), and the importer maps positions to `global_position` and `angle()` to degrees.
 - **Variables say what the Inspector will show** - every export option opens as the variable it belongs to, export groups read as boxes, the variable window is four cards with every look a described choice, and **one Save choice per variable** (Never, Auto, Load only, Save only, Manual) replaces Add Save Support and Remember Between Runs. Values players already saved keep loading through a rename or an update.
 - **Making your own** - New behaviour and New global are forms you can reopen later (Behaviour settings…, Global settings…), Add behaviour is a shelf of tiles with yours first, New Data Table is filled in like a spreadsheet, and a script class is made like inserting an object.
 - **Functions read like events** - drawn as events on every sheet, edited in Godot's own Inspector, every choice described, and a name or default that would break the script is refused before it is written.
 - **The Inspector Designer shapes a field** - Look, Layout, Show when, Check, Help and Button: groups as tabs, two fields side by side, a dropdown filled by a function, picking a row of a data table by name, and search, sort and pages for big tables. All of it is plain GDScript that works without the plugin.
 - **Groups and regions** - one group head in every look, a group picked by name when an event switches it (a rename takes those rows along), its colour saved with the script, regions that fold, and a broken `#region` shown as a quiet amber row.
 - **Studios** - the Save studio's files, slots, look-inside and player-settings tabs; the Translation Studio as four steps, a table that stays fast at a million lines, and catalogs you wrote by hand never rewritten.
-- **Your code opens as rows, and so does the plugin's** - functions written inside a call, classes inside a script, values over several lines and statements continued with `\` now open as rows, byte-exact. Every one of the plugin's own 1,128 scripts opens the same way, with no block of code on screen.
+- **Your code opens as rows, and so does the plugin's** - functions written inside a call, classes inside a script, values over several lines and statements continued with `\` now open as rows, byte-exact, and the plugin's own scripts open the same way with no block of code on screen.
 - **New rows, each the Godot way** - Tell Children, First Parent Of Type, Next / Previous Sibling, Reset Variable(s), Pick First / Last Where, Has Been True For, **pause requests** (the game stays paused until everyone who asked lets go), and the **Flock** and **Flock 3D** packs.
-- **Faster** - the editor starts in about 11 s instead of 30, the picker lists every pack verb (it had shown 142 of 4,477), and CI answers in about four minutes instead of twenty.
+- **Truer error checking** - a property the host class really has (`global_position`, `position`, a Control's size) is no longer flagged as an unknown variable.
+- **Faster** - the editor starts in about 11 s instead of 30, the picker lists every pack verb (it had shown 142 of 4,477), and CI answers in about four minutes instead of twenty. A performance pass on the sheet itself, measured on the largest shipped pack (pathfinding): the saved-names badge went from 6.1 s to 9 ms, a save's diagnostics from 12.4 s to 0.8 s, the draw of a 1,516-row sheet from 44.6 to 24.4 ms, a full row rebuild from 13.7 to 9.4 s, and reopening an unchanged `.gd` skips the lift (10.6 s to 1.3 s, from a byte-checked cache in `.godot/`); rows now get their words as they scroll into view.
 
-**Measured** - on our test machine this week: enabling the plugin takes **310 to 450 ms**, and the first sheet tab of a session **17 to 22 s** (about 30 s at `v0.18.0`; it is still the slowest moment, most of it Godot compiling the editor's own scripts). The plugin's own source - **1,128 files** - opens as event sheets byte-exact on every run, with **no script blocks on screen** and **0.12% of rows** in generic words such as Call method (10.5% at the start of this release). On a fabricated project ten times this one, measured at `v0.18.0`, a keystroke in a completing field takes 2.2 ms and a 4,000-line script opens in 7.4 s; eleven such budgets are tests.
+**Measured** - on our test machine this week: enabling the plugin takes **310 to 450 ms**, and the first sheet tab of a session **17 to 22 s** (about 30 s at `v0.18.0`; it is still the slowest moment, most of it Godot compiling the editor's own scripts). More interaction and first-open work is in progress.
 
-**Quality** - 31,355 assertions across 885 test files, all green, CI-gated on every push; byte-exact golden round-trips guard the lossless rules; generated code never depends on the plugin and is performance-identical to hand-written GDScript - all test-enforced. **Verified on Godot 4.7 stable.**
+**Quality** - the full test suite and CI run on every push; byte-exact golden round-trips guard the lossless rules; generated code never depends on the plugin and is performance-identical to hand-written GDScript - all test-enforced. **Verified on Godot 4.7 stable.**
 
 ## Milestones
 
@@ -141,8 +145,8 @@ Every release has full notes in [CHANGELOG.md](CHANGELOG.md); the one-line theme
 | `v0.16.0` | Open anything, publish anything: nine editor languages, the Custom Resource wizard, `publish_pack`, the reads-like-code pass, 88 raycasting verbs + two labs, the curation pass |
 | `v0.17.0` | Adopt anything, read anything: real `.gd` files open as rows byte-exact, your classes as vocabulary, Construct-style reading, the pattern / dev-experience / i18n waves, docs inside the editor |
 | `v0.18.0` | Refactor anything, render anything, feel everything: the refactor contract, states and scenes as rows, the render vocabulary and shape nodes, the Feedback Player, the gameplay systems, the resting toolbar and the Manual |
-| _Unreleased on main_ | Feels native, reads familiar, saves everything: the Editor Native look, variables as the Inspector shows them, one Save choice per variable, behaviours and globals as forms, functions as events, the Inspector Designer shaping a field, groups and regions, the plugin's own code opening as rows, every `.gd` save loss fixed (🚧 feature-complete, four `.gd` save details and the tag to go) |
-| _Next_ | Saving a behaviour or global decided when you make it, a first sheet tab in seconds, then whatever you ask for |
+| _Unreleased on main_ | Feels native, reads familiar, saves everything: the Editor Native look, variables as the Inspector shows them, one Save choice per variable, behaviours and globals as forms, functions as events, the Inspector Designer shaping a field, groups and regions, an aligned sheet, states and class names, world and local positions, a performance pass, the plugin's own code opening as rows, every `.gd` save loss fixed (🚧 feature-complete, four `.gd` save details and the tag to go) |
+| _Next_ | Faster interaction and a first sheet tab in seconds, saving a behaviour or global decided when you make it, then whatever you ask for |
 
 ## Project layout
 
