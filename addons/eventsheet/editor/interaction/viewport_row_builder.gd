@@ -1111,7 +1111,7 @@ func _sheet_is_attached(sheet: EventSheetResource, declared_class: String) -> bo
 ## A clickable footer row that appends a new event into owner_resource (a group or the
 ## sheet). source_resource stays null on purpose so selection/delete/drag paths (which act on
 ## the source resource) treat it as inert; the owner travels in span metadata instead.
-func _build_add_event_footer_row(owner_resource: Resource, indent: int, label: String) -> EventRowData:
+func _build_add_event_footer_row(owner_resource: Resource, indent: int, label: String, group_name: String = "") -> EventRowData:
 	var row_data := EventRowData.new()
 	row_data.indent = indent
 	row_data.row_type = EventRowData.RowType.SECTION
@@ -1130,6 +1130,22 @@ func _build_add_event_footer_row(owner_resource: Resource, indent: int, label: S
 			}
 		)
 	]
+	# The look that nests by lines ends the block with a second door at the right: "+ Add to 'name'…",
+	# the menu of everything the block can gain, which is the block head's own menu.
+	if EventRowRenderer.add_menu_link_wanted(_viewport._get_event_style()) and not group_name.is_empty():
+		var muted: Color = _viewport._get_reading_style().muted_text_color
+		row_data.spans.append(
+			_make_span(
+				EventSheetL10n.translate("+ Add to '%s'…") % group_name,
+				SemanticSpan.SpanType.COMMENT,
+				{
+					"kind": "add_block_menu",
+					"editable": false,
+					"align_right": true,
+					"text_color": Color(muted.r, muted.g, muted.b, 0.8)
+				}
+			)
+		)
 	return row_data
 
 
@@ -4865,7 +4881,8 @@ func _append_verb_body_rows(row_data: EventRowData, event_function: EventFunctio
 	if body_editable and _viewport.add_event_footer_wanted(not body_entries.is_empty()):
 		row_data.children.append(_build_add_event_footer_row(
 			event_function, indent + 1,
-			"+ Add event to '%s'…" % event_function.function_name
+			"+ Add event to '%s'…" % event_function.function_name,
+			event_function.function_name
 		))
 	if not row_data.children.is_empty():
 		# A verb OPENS by default - its steps ARE the point, and a pack of collapsed rows reads as the spec
@@ -8651,10 +8668,11 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 			row_data.children.append(child_row)
 	# Event-sheet-style per-group footer: always the group's last child, one level deeper. A read-only
 	# preview grows none: nothing can be added to it.
-	if _viewport.add_event_footer_wanted(not group_children.is_empty()) and not _scaffolding_suppressed():
+	if _viewport.add_event_footer_wanted(not group_children.is_empty(), true) and not _scaffolding_suppressed():
 		row_data.children.append(
 			_build_add_event_footer_row(group, indent + 1,
-				EventSheetL10n.translate("+ Add event to '%s'…") % EventSheetGroupFacts.display_name(group))
+				EventSheetL10n.translate("+ Add event to '%s'…") % EventSheetGroupFacts.display_name(group),
+				EventSheetGroupFacts.display_name(group))
 		)
 	return row_data
 
@@ -8952,6 +8970,7 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 	# the whole sheet can be flattened and measured without building any spans.
 	row_data.line_count = _count_event_lines(event_row)
 	for local_variable_row in _build_local_variable_rows(event_row, indent + 1):
+		local_variable_row.event_local = true
 		row_data.children.append(local_variable_row)
 	# A name that is not a variable, and a verb handed the wrong kind of one, said UNDER the
 	# event that has the problem rather than in a panel somewhere else. Built here so the note sits
@@ -8966,6 +8985,7 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 	# A `var` line inside the body declares a local of this event, so it reads at the top of the
 	# event beside the ones the sheet itself owns, in file order among them.
 	for promoted_row: EventRowData in _build_promoted_local_rows(event_row, indent + 1):
+		promoted_row.event_local = true
 		row_data.children.append(promoted_row)
 	# The edit handed to the undo funnel hangs under the step it belongs to, which is where the
 	# file writes it: one undoable step, and the lines it is made of below it.
@@ -12554,6 +12574,7 @@ func _build_promoted_local_rows(event_row: EventRow, indent: int) -> Array[Event
 			action_index
 		]
 		row_data.line_count = 1
+		row_data.local_step = action_index
 		row_data.disabled = not action.enabled
 		var built: Array = []
 		append_local_declaration_spans(built, promotion.get("declaration", {}), {
@@ -15361,7 +15382,28 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 	# action lane, LEFT-aligned so it always stays visible. It used to be pinned to the lane's
 	# far-right edge, which scrolled off-screen unless the editor window was very wide.
 	var add_action_line_index: int = action_line_index
-	if not event_row.comment.is_empty():
+	if not event_row.comment.is_empty() and EventRowRenderer.event_note_on_top(_viewport._get_event_style()):
+		# The note about an event's actions heads its action lane, above the first action, the way a
+		# comment above a block of code reads: every action line steps down one to make the room.
+		for lane_span: SemanticSpan in spans:
+			if lane_span != null and lane_span.metadata is Dictionary and _resolve_span_lane(lane_span) == "action":
+				(lane_span.metadata as Dictionary)["line_index"] = int((lane_span.metadata as Dictionary).get("line_index", 0)) + 1
+		spans.append(
+			_make_span(
+				event_row.comment,
+				SemanticSpan.SpanType.COMMENT,
+				{
+					"editable": true,
+					"edit_kind": "event_comment",
+					"lane": "action",
+					"chip": true,
+					"line_index": 0
+				}.merged(action_style_meta, true)
+			)
+		)
+		action_line_index += 1
+		add_action_line_index = action_line_index
+	elif not event_row.comment.is_empty():
 		var comment_line_index: int = max(action_line_index, _viewport.COMMENT_DEFAULT_LINE_INDEX)
 		spans.append(
 			_make_span(
@@ -15388,6 +15430,24 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				{
 					"lane": "action",
 					"kind": "add_action",
+					"line_index": add_action_line_index,
+					"text_color": add_action_color,
+					"font_size_delta": action_style_meta.get("font_size_delta", 0)
+				}
+			)
+		)
+	# The look that closes every event with its add line also puts "+ Add..." at the far right of that
+	# line: the menu of everything an event can gain (event, sub-event, comment, group), the same menu
+	# a right-click on the event opens.
+	if not _scaffolding_suppressed() and EventRowRenderer.add_menu_link_wanted(_viewport._get_event_style()):
+		spans.append(
+			_make_span(
+				EventSheetL10n.translate("+ Add…"),
+				SemanticSpan.SpanType.ACTION,
+				{
+					"lane": "action",
+					"kind": "add_menu",
+					"align_right": true,
 					"line_index": add_action_line_index,
 					"text_color": add_action_color,
 					"font_size_delta": action_style_meta.get("font_size_delta", 0)
@@ -15698,7 +15758,9 @@ func _count_event_lines(event_row: EventRow) -> int:
 		elif action_resource is CommentRow:
 			action_count += maxi((action_resource as CommentRow).text.split("\n").size(), 1)
 	var max_action_line: int = action_count - 1 if _scaffolding_suppressed() else action_count
-	if not event_row.comment.is_empty():
+	if not event_row.comment.is_empty() and EventRowRenderer.event_note_on_top(_viewport._get_event_style()):
+		max_action_line = action_count if _scaffolding_suppressed() else action_count + 1
+	elif not event_row.comment.is_empty():
 		var comment_line: int = maxi(action_count, _viewport.COMMENT_DEFAULT_LINE_INDEX)
 		max_action_line = comment_line if _scaffolding_suppressed() else comment_line + 1
 	# A theme that shows the add lines on hover gives a filled lane's add line no room at rest
@@ -16446,15 +16508,91 @@ func _build_connect_call_row(event_row: EventRow, parts: Dictionary, anchor: Str
 func expand_ternary_rows(rows: Array[EventRowData]) -> Array[EventRowData]:
 	var out: Array[EventRowData] = []
 	for row: EventRowData in rows:
+		# Where the look nests by lines, a local stands at the step of the code that declares it: the
+		# declarations come off the event before its children are walked (a child event sets its own
+		# down among these children), the event reads as it always did, and each local is set down
+		# before the slice that carries it.
+		var declared: Array[EventRowData] = _take_declared_locals(row)
 		row.children = expand_ternary_rows(row.children)
 		# Runs first: it REPLACES a loop row with the event its body reads as, and that event may
 		# itself carry a ternary the pass below still has to see.
 		var picked: Array[EventRowData] = _expand_picking_row(row)
 		if not picked.is_empty():
+			if not declared.is_empty():
+				row.children.insert(0, declared[0])
+				for restored: int in range(1, declared.size()):
+					row.children.insert(restored, declared[restored])
 			out.append_array(picked)
 			continue
-		out.append_array(_expand_ternary_row(row))
+		out.append_array(_place_declared_locals(_expand_ternary_row(row), declared))
 	return out
+
+
+## The event-local rows of `row`, taken out of its children (in their order) when the look nests by
+## lines. A pure reordering of rows: the declarations are the very rows the builder made, still
+## addressing the same statements, so what is emitted and what is saved never moves.
+func _take_declared_locals(row: EventRowData) -> Array[EventRowData]:
+	var taken: Array[EventRowData] = []
+	if row.row_type != EventRowData.RowType.EVENT or row.children.is_empty():
+		return taken
+	var style: EventSheetEventStyle = _viewport._get_event_style()
+	if style == null or not style.sub_event_strips:
+		return taken
+	var kept: Array[EventRowData] = []
+	for child: EventRowData in row.children:
+		if child.event_local and not child.local_placed:
+			taken.append(child)
+		else:
+			kept.append(child)
+	if not taken.is_empty():
+		row.children = kept
+	return taken
+
+
+## Sets each declared local down before the slice of its event that holds its step, at that slice's
+## level: the head of a split event for a `var` line ahead of the branch, the run after it for one
+## below, the event itself when it is not split or the local is the event's own.
+func _place_declared_locals(expanded: Array[EventRowData], declared: Array[EventRowData]) -> Array[EventRowData]:
+	if declared.is_empty() or expanded.is_empty():
+		return expanded
+	var before_all: Array[EventRowData] = []
+	for local_row: EventRowData in declared:
+		local_row.local_placed = true
+		var found: Dictionary = {}
+		if local_row.local_step >= 0:
+			found = _find_slice_for_step(expanded, local_row.local_step)
+		if found.is_empty():
+			_shift_row_indent(local_row, expanded[0].indent - local_row.indent)
+			before_all.append(local_row)
+			continue
+		var holder: Array = found["list"]
+		var at: int = int(found["at"])
+		var slice_row: EventRowData = holder[at] as EventRowData
+		_shift_row_indent(local_row, slice_row.indent - local_row.indent)
+		holder.insert(at, local_row)
+	var result: Array[EventRowData] = []
+	result.append_array(before_all)
+	result.append_array(expanded)
+	return result
+
+
+## The slice of a split event whose actions hold `step`, as {list, at}: the array that holds it and
+## its position. Only slices are looked at (branch rows read one statement, not a run of actions), and
+## only inside rows that are views of the one event.
+func _find_slice_for_step(rows: Array, step: int) -> Dictionary:
+	for position: int in range(rows.size()):
+		var candidate: EventRowData = rows[position] as EventRowData
+		if candidate == null or candidate.row_type != EventRowData.RowType.EVENT:
+			continue
+		if candidate.event_slice:
+			var slice_end: int = candidate.action_slice_to if candidate.action_slice_to >= 0 else 1 << 30
+			if step >= candidate.action_slice_from and step < slice_end:
+				return {"list": rows, "at": position}
+		if candidate.ternary_view and not candidate.children.is_empty():
+			var deeper: Dictionary = _find_slice_for_step(candidate.children, step)
+			if not deeper.is_empty():
+				return deeper
+	return {}
 
 
 # ── a loop over a group with one `if` inside is event-sheet picking, and reads as one event ───────
@@ -17047,6 +17185,7 @@ func _build_event_slice_row(row: EventRowData, slice_from: int, slice_to: int,
 	slice_row.attention_findings = row.attention_findings
 	slice_row.successor_hint = row.successor_hint
 	slice_row.ternary_view = true
+	slice_row.event_slice = true
 	slice_row.ternary_anchor_uid = row.row_uid
 	slice_row.action_slice_from = slice_from
 	slice_row.action_slice_to = slice_to

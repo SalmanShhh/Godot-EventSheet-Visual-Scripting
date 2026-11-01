@@ -18,6 +18,19 @@ var indent: int = 0
 ## True when the row is a child of an EVENT (a local declared in its body, a sub-event, a comment above
 ## one), clear under a group or at the top. Stamped by the canvas as it flattens the tree.
 var inside_event: bool = false
+## True on a row that declares a local of an EVENT (the event's own Local Variable, or a `var` line
+## promoted out of its actions). The canvas draws it as a line of the event's own level, at the step
+## of the code that declares it, so it keeps the event-local look wherever it stands. View-only.
+var event_local: bool = false
+## Where an `event_local` row's declaration sits in its event: the index of the action that carries
+## the `var` line, or -1 for a local the event owns outright (read at the top of the event).
+var local_step: int = -1
+## True once the canvas has set an `event_local` row down at its step, so a second pass over the same
+## tree leaves it where it stands.
+var local_placed: bool = false
+## True on a slice of an event split at a branching line (the head before a branch, the run after
+## it) as opposed to a branch row. A declared local is placed before the slice that holds its step.
+var event_slice: bool = false
 var row_type: int = RowType.EVENT
 var folded: bool = false
 var selected: bool = false

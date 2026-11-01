@@ -149,6 +149,9 @@ signal object_column_width_changed(lane: String, width: int)
 ## Emitted when a footer "Add event…" row is clicked. owner_resource is the EventGroup the
 ## event should be appended into, or the EventSheetResource for the sheet-end footer.
 signal add_event_requested(owner_resource: Resource)
+## The "+ Add..." door at the right of an event or a block's foot was pressed: the row it belongs to, the
+## block it closes (null for an event) and where the pointer is.
+signal add_menu_requested(row_data: EventRowData, owner_resource: Resource, screen_position: Vector2)
 ## Emitted when a GDScript block is double-clicked for editing. in_flow is true for blocks
 ## living inside an event's actions (statements), false for class-level tree blocks.
 signal raw_code_edit_requested(raw_row: Resource, in_flow: bool)
@@ -3524,6 +3527,33 @@ func _row_is_add_event_footer(row_data: EventRowData) -> bool:
 	return row_data != null and row_data.row_uid.begins_with("add_event_footer_")
 
 
+## "+ Add..." at the right of an event's add line, or "+ Add to 'name'..." at the right of a block's
+## foot: selects the event (or the block the foot closes) and asks the dock for the small menu of what
+## it can gain, at the pointer. The links add no power the picker and the row menu lack - they put
+## the doors where the reader is looking.
+func open_add_menu_for(row_index: int) -> void:
+	var target_index: int = row_index
+	var row_data: EventRowData = _row_at(row_index)
+	var owner_resource: Resource = null
+	if _row_is_add_event_footer(row_data):
+		for span: SemanticSpan in row_data.spans:
+			if span != null and span.metadata is Dictionary and (span.metadata as Dictionary).get("add_event_owner") is Resource:
+				owner_resource = (span.metadata as Dictionary)["add_event_owner"] as Resource
+				break
+		var entry: Variant = _flat_rows[row_index] if row_index >= 0 and row_index < _flat_rows.size() else null
+		var head_row: Variant = (entry as Dictionary).get("parent", null) if entry is Dictionary else null
+		target_index = -1
+		for candidate: int in range(_flat_rows.size()):
+			if _row_at(candidate) == head_row:
+				target_index = candidate
+				break
+	var target: EventRowData = _row_at(target_index)
+	if target == null:
+		return
+	_select_from_click(target_index, -1, false)
+	add_menu_requested.emit(target, owner_resource, DisplayServer.mouse_get_position())
+
+
 ## The param KEY holding that first Color literal ("" when none) - needed to write a picked colour back.
 func _first_color_param_id(ace: Resource) -> String:
 	var params: Variant = ace.get("params")
@@ -3805,14 +3835,14 @@ func _get_condition_track_start(
 func _flatten_row(row_data: EventRowData, parent_row: EventRowData) -> void:
 	_flat_rows.append({"row": row_data, "parent": parent_row})
 	if parent_row != null:
-		row_data.inside_event = parent_row.row_type == EventRowData.RowType.EVENT
-		# A local declared in an event's body is one tight line at its step, never a card of its own: in
-		# a look that nests by lines it stands on the sheet with no band and no gap round it.
-		if row_data.inside_event and row_data.variable_card and _get_event_style().sub_event_strips:
-			row_data.variable_card = false
-			row_data.height_scale = 1.0
+		row_data.inside_event = parent_row.row_type == EventRowData.RowType.EVENT or row_data.event_local
 	else:
-		row_data.inside_event = false
+		row_data.inside_event = row_data.event_local
+	# A local declared in an event's body is one tight line at its step, never a card of its own: in
+	# a look that nests by lines it stands on the sheet with no band and no gap round it.
+	if row_data.inside_event and row_data.variable_card and _get_event_style().sub_event_strips:
+		row_data.variable_card = false
+		row_data.height_scale = 1.0
 	if row_data.folded:
 		return
 	for child in row_data.children:
@@ -4015,9 +4045,14 @@ func workspace_bands_folded() -> bool:
 ## not hold events yet. A theme that folds the workspace bands away (fold_workspace_bands) draws none
 ## under a body that already has events - its events offer Add on hover, so the sheet ends on its last
 ## row - and keeps it on an empty body, where it is the only way in.
-func add_event_footer_wanted(has_events: bool) -> bool:
+##
+## A GROUP is the exception in the look that nests by lines: it closes every time with its foot ("Add
+## event to 'name'" and "+ Add to 'name'..."), so the end of a block can always be found, whatever it holds.
+func add_event_footer_wanted(has_events: bool, closes_a_group: bool = false) -> bool:
 	if not show_add_event_footers:
 		return false
+	if closes_a_group and _get_event_style() != null and _get_event_style().sub_event_strips:
+		return true
 	return not has_events or not workspace_bands_folded()
 
 

@@ -291,5 +291,8 @@ static func _loop_lines(viewport: EventSheetViewport) -> Array:
 			break
 		started = true
 		var actions: Array = _lane_words(row, "action")
+		# A bare continuation row (only its add lines) says nothing about a loop.
+		if said.is_empty() and actions.is_empty():
+			continue
 		lines.append(said if actions.is_empty() else "%s || %s" % [said, " | ".join(actions)])
 	return lines
