@@ -191,6 +191,16 @@ static func _test_added_during_physics() -> bool:
 		"Use the safe spawn row") and passed
 	passed = _check("naming the deferred row it swaps to",
 		str(on_row[0].get("to", "")), "SpawnNewCopyDeferredWorld") and passed
+	# The 3D row has the same offer, pointing at its own 3D world twin.
+	var picked_3d: EventSheetResource = _sheet()
+	picked_3d.events.append(_event("OnAreaEntered", [_action("SpawnNewCopy3D", {
+		"scene": BULLET, "name": "shot", "at": "global_position", "parent": "self"})]))
+	var on_row_3d: Array[Dictionary] = EventSheetSpawnFindings.findings(picked_3d)
+	passed = _check("a picked 3D spawn row in a collision callback is offered the safe row",
+		_label_of(on_row_3d, EventSheetSpawnFindings.KIND_ADDED_DURING_PHYSICS),
+		"Use the safe spawn row") and passed
+	passed = _check("naming the 3D deferred world row it swaps to",
+		str(on_row_3d[0].get("to", "")), "SpawnNewCopyDeferredWorld3D") and passed
 	# And the deferred spawn row itself is the answer, so it is never reported.
 	var safe: EventSheetResource = _sheet()
 	safe.events.append(_event("OnAreaEntered", [_action("SpawnNewCopyDeferred", {
