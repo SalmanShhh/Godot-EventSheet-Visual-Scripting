@@ -136,7 +136,7 @@ static func _simulated_input(descriptors: Array[ACEDescriptor]) -> void:
 	descriptors.append(F.act("MouseCursorVisible", "Set Cursor Visible", "Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)", MOUSE, "Set cursor visible", "Gives the cursor back - pause menus, dialogs, quitting to the map."))
 	descriptors.append(F.act("MouseCursorInvisible", "Set Cursor Invisible", "Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)", MOUSE, "Set cursor invisible", "Hides the cursor while leaving it free to move - a game that draws its own crosshair."))
 	descriptors.append(F.act("MouseCursorConfined", "Keep Cursor Inside The Window", "Input.set_mouse_mode(Input.MOUSE_MODE_CONFINED)", MOUSE, "Keep cursor inside the window", "The cursor stays visible but cannot leave the window - strategy games on two monitors."))
-	descriptors.append(F.act("MouseMoveCursorTo", "Move Cursor To", "Input.warp_mouse({position})", MOUSE, "Move cursor to {position}", "Teleports the pointer - snap it to a menu item, re-centre it after a cutscene.").param("position", "Vector2(100, 100)", "Position", "Where in the window to put the pointer.", "expression"))
+	descriptors.append(F.act("MouseMoveCursorTo", "Move Cursor To", "Input.warp_mouse({position})", MOUSE, "Move cursor to {position}, in screen pixels", "Teleports the pointer - snap it to a menu item, re-centre it after a cutscene. The position is in window pixels, not a place in the level.").param("position", "Vector2(100, 100)", "Position", "Where in the window to put the pointer.", "expression"))
 
 
 ## Handheld sensors. The four Godot exposes, in the Touch object's words. They all report zero

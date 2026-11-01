@@ -252,7 +252,7 @@ static func _append_falloff(descriptors: Array[ACEDescriptor]) -> void:
 ## Moving and turning: one of six directions at a speed, the three turns in degrees a second, and
 ## turning toward a facing rather than snapping to it.
 static func _append_move(descriptors: Array[ACEDescriptor]) -> void:
-	descriptors.append(F.act("MoveInDirection3D", "Move In Direction", "global_position += {direction} * {speed} * {delta_t}", PAGE_MOVE, "Move [b]{direction}[/b] at [i]{speed}[/i]", "Moves a 3D node along one of its own directions - forward, back, right, left, up or down - at a speed a second.", "Node3D").param_choice("direction", "-basis.z", "Direction", "Which of its own six directions to move along.", DIRECTION_OPTIONS).param("speed", "6.0", "Speed", "Units a second.", "expression").param("delta_t", "delta", "Delta", "Frame time; defaults to `delta`.", "expression"))
+	descriptors.append(F.act("MoveInDirection3D", "Move In Direction", "global_position += {direction} * {speed} * {delta_t}", PAGE_MOVE, "Move [b]{direction}[/b] at [i]{speed}[/i] · in world space", "Moves a 3D node along one of its own directions - forward, back, right, left, up or down - at a speed a second. The step is added to its place in the level, so it moves in world space.", "Node3D").param_choice("direction", "-basis.z", "Direction", "Which of its own six directions to move along.", DIRECTION_OPTIONS).param("speed", "6.0", "Speed", "Units a second.", "expression").param("delta_t", "delta", "Delta", "Frame time; defaults to `delta`.", "expression"))
 	# The minus is the whole point of this row: a POSITIVE `rotate_y` turns an object to its own left,
 	# which is counter-clockwise seen from above, so a row that says clockwise has to write the turn
 	# the other way round or its words would be a lie. It sits outside `deg_to_rad` so a reader who
@@ -269,7 +269,7 @@ static func _append_move(descriptors: Array[ACEDescriptor]) -> void:
 
 ## Placing things in the world: on another object, and tilted onto the ground's slope.
 static func _append_place(descriptors: Array[ACEDescriptor]) -> void:
-	descriptors.append(F.act("SetPositionToObject3D", "Set Position To Another Object", "global_position = {other}.global_position", PAGE_PLACE, "Set position to [b]{other}[/b]", "Puts a 3D node exactly where another one is - how a spawn point, a socket or a respawn marker is used.", "Node3D").param("other", "self", "Other", "The object to stand where - a spawn marker, a socket, another character.", "expression"))
+	descriptors.append(F.act("SetPositionToObject3D", "Set Position To Another Object", "global_position = {other}.global_position", PAGE_PLACE, "Set world position to [b]{other}[/b]", "Puts a 3D node exactly where another one is in the level - how a spawn point, a socket or a respawn marker is used.", "Node3D").param("other", "self", "Other", "The object to stand where - a spawn marker, a socket, another character.", "expression"))
 	# The snap-to-floor run, written exactly as the reading recognises it - the ray straight down
 	# from where the object is, the cast, the is-empty guard and the hit taken back. Four lines,
 	# because that is what Godot needs; one row, because that is what it means.

@@ -6,6 +6,356 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Fixed: saving a sheet with nothing to report no longer rebuilds every row
+
+- `set_row_diagnostics` rebuilt the whole canvas on every save, even when the problem list was empty and had been empty before. It now rebuilds only when the list changed (a flag appears, moves, changes its words or clears); an equal list changes nothing on screen, because rows built since the last list already carry their marks.
+- Measured on the 1,492-row pathfinding pack in fresh processes, median of 3: `_run_diagnostics` after a save 21,095 ms (14,388 - 22,397) -> 6,659 ms (6,219 - 6,659) the first call of a session, and 12,439 ms (9,260 - 14,367) -> 797 ms (745 - 824) every call after it, with the row builds per call going 1 -> 0. The machine was shared and loaded, so read the before figures as a band; the 13 s rebuild is gone and the ~0.8 s that remains is the analysis. Pinned by `diagnostics_repaint_test` (row builds unchanged across a clean `_run_diagnostics`, an equal empty list and an equal non-empty list; a changed list still rebuilds; a 600 ms wall on a 346-row pack, measured 178 ms).
+### Fixed: a sheet that saves no longer compiles the Project Doctor to draw its \"saved\" badge
+
+- The first row build of any sheet whose source mentions `save_` asked the Project Doctor which names the Save System keeps, and loading the Doctor is a multi-second GDScript compile. The question is now answered by `addons/eventforge/save_key_scan.gd`, a small file with no dependencies that the Doctor itself delegates `save_key_usage` to, so a badge and a finding still read the same text the same way.
+- Measured on the health pack in a fresh process, median of 3: `saved_names` 6,136 ms (5,548 - 6,662) -> 9 ms (9 - 12), and the Doctor is no longer in the loaded set after the sheet opens. Pinned by `save_names_badge_test` (60 ms wall, value parity with the Doctor, the badge's source never names the Doctor) and by `cold_boot_probe.gd`, which now also opens the health pack and lists `project_doctor.gd` as compiled if it ever is.
+
+### Added: the world-space twins, the place readers and the Control rows
+
+- Eight verbs that wrote the node's place inside its parent where the thing they work with is a place in the level are deprecated (hidden from the picker, still compiling and reading byte for byte, their descriptions and hover pointing at the twin): Spawn A Copy Safely and its 3D twin (`SpawnNewCopyDeferred`, `SpawnNewCopyDeferred3D`), Wrap Inside The Screen (`WrapInsideScreen`), Wrap Around Layout Horizontally / Vertically (`WrapAroundLayoutX`, `WrapAroundLayoutY`), Bound To Layout (`BoundToLayout`), Move Toward Position (`GlideToward`) and Apply Pushes (`ApplyPushes`). Their twins keep the same names and sentences and write `global_position`: `SpawnNewCopyDeferredWorld`, `SpawnNewCopyDeferredWorld3D`, `WrapInsideScreenWorld`, `WrapAroundLayoutXWorld`, `WrapAroundLayoutYWorld`, `BoundToLayoutWorld`, `GlideTowardWorld`, `ApplyPushesWorld`. No shipped id or template moves, and no stored row is rewritten.
+- Set World Position (`SetWorldPosition2D`, `SetWorldPosition3D`) reads \"Set world position to ...\"; the local Set Position rows stay and now say in their description that they measure from the parent. Set Position To Another Object gets its 2D twin (`SetPositionToObject2D`), and both read \"Set world position to ...\".
+- The place read back: Get X / Get Y (and Z in 3D) for the place inside the parent, Get World X / Y / Z for the place in the level, and Get World Position, in 2D and 3D (`GetPositionX2D` ... `GetWorldPosition3D`). Place Of stays as it was.
+- UI Controls get Set Control Position (relative to the parent box), Set Control World Position and Set Control Size, and Set Anchors Preset now offers the whole LayoutPreset enum (the four missing presets are added).
+- Spawn Scene In The World (`SpawnSceneInWorld`) spawns a scene file into the current scene at a place in the level.
+- Readings that did not say their space now do: Move In Direction (3D) says \"in world space\", Move By (3D) says \"along its own axes\", Move Cursor To says \"in screen pixels\", and Spawn Scene At / Spawn Scene (Full) say \"as a child of this node\" (Spawn Scene As says \"placed from its parent\"), because the copy is measured from the spawner. A tween on `global_position` reads \"world position\". Words only: no template moves.
+- The axis hover is decided from the row's own data (the member path it writes) and not from the words on the row, so a script variable called X or Y gets no hint. The importer's `distance()` and `angle()` between two objects now measure `global_position`, like the imported X and Y. All new words are in all nine translation files.
+
+### Changed: a write to a node's place tells local from world
+
+- `$Tree.position.y = -8` reads \"Tree | Set Y to -8\" and `position.x = 5` reads \"Set X to 5\" (Z too, for 3D nodes; Controls read the same), instead of \"Set position.y to ...\". A place in the world reads \"Set world X / Y / Z\" for `global_position.x/.y/.z` and \"Set world position to ...\" for the whole `global_position`. A whole `position` and every other member keep the words they had. The words live in a small table of their own in the reading code.
+- Hovering one of these cells adds a line saying the axis is relative to the parent node and naming the world version (or the reverse for a world axis). New words are in all nine translation files. Readings only: no ace id, template or file byte moves.
+- Imported X and Y are world coordinates, so the importer now maps them to `global_position`: `Player.X` in an expression becomes `$Player.global_position.x`, Set Position writes `global_position = Vector2(...)` through the plain property row (the frozen Set Position template is untouched), and Set X / Set Y rows, which had no entry, write `global_position.x` / `.y`.
+- Set Position (3D) and Get Position (3D) no longer claim a \"world position\": both work on the position relative to the parent. Descriptions only.
+
+### Changed: Editor Native closes the event alignment board
+
+- A line's words stand where the board puts them: 118 px into the block in the conditions lane and 154 px into the actions lane (they stood at 145 and 171), the object's name 26 px in (it stood at 31) after the bare icon, and the divider between the lanes 6 px further right at the board's width.
+- Quoted text reads in the normal text colour like every other value (it was orange), and a condition or action line is drawn in one weight: the names and values inside it (\"Set magnitude to\", \"exponent < 3\") are no longer bold or brighter. Classic Sheet keeps its tints and emphasis.
+- A function's parameter lines sit on a band a shade darker than a condition line's strip, with no rule under them and no cell round their words, and its head leads with the trigger arrow in the words' ink instead of the function icon.
+- An inverted condition's cross is drawn at the board's size, and a local's value stands the typed name's own 7 px gap after its name.
+
+### Fixed: tabs, the head's Add action, the Doctor's numbers and capitalised names
+
+- Switching back to a tab kept without a rebuild no longer answers with the last sheet's numbering: Go to Event, the status bar's event N of M, Find and the repeated-rows numbers read the tab's own branches again.
+- A function head's \"+ Add action\" adds its blank first step and the picked action as one edit: closing the picker without a pick leaves the function untouched (it left an empty event and an undo step that added nothing).
+- The Doctor reads each sheet's margin numbers once per run instead of building a throwaway canvas for every section that names an event.
+- A line about a node named by its path (`$Body`) only raises a sentence's opening word: a line that opens on a name (`apply_impulse(...)`) keeps it as written.
+- The comment rewrites of the free spot, pooled nodes and world look runtime scripts now live in their pack builders, so a rebuild keeps them.
+
+### Changed: Editor Native lands the event alignment board's last measurements
+
+- A write to the behaviour's own variable (`Set magnitude`, `Add 1 to tier`, a Set value on a sheet variable) reads with the behaviour's name as its object (\"Big Numbers | Set magnitude to ...\"): the pack's picker name when a pack is being read, else the category the file's own header declares. The tests beside it keep reading with System, and a sheet with no category reads as it did. A reading only; Classic Sheet reads the same object.
+- A `z_index` write reads with the property as written: `$House3x3.z_index = 4` is \"House3x3 | Set z_index to 4\" (it read \"Set Z order to 4\", or \"set Z order\" under the class), through the shared grammar, with no shipped ace id or template renamed.
+- Values read in the normal text colour in Editor Native (numbers and expressions had a green tint); Classic Sheet keeps its tints.
+- A function's parameters are written type then bold name (\"float value\") with the type in the muted code face, under the trigger, and the resting \"+ Add parameter\" line is gone: the door is offered while the head is pointed at or selected, like the add-condition door. A local reads the same way on the canvas, its mark on a tile at its block's edge plus 10, with no cell round its type, name or value.
+- The trigger arrow no longer reserves a 16 px slot on every condition line: an object icon stands at the lane's own padding (8 px into the block), a trigger's arrow leads its line and its icon stands 17 px after it, and an action's icon stands 8 px into its lane. An Else line names System with no icon.
+- A group's number is drawn once in the margin (it drew twice, one over the other, as \"11\").
+
+### Fixed: a dialog bigger than its room keeps its text full size and scrolls its body
+
+- A dialog or window whose content is taller or wider than the editor window or screen it opens in is no longer scaled down (the Welcome dialog in a small editor drew its words at a few pixels). It is clamped to the room, its body sits in a scroll with a scroll bar, and its title bar and button row stay put and in reach; a dialog that fits is left exactly as it was, and one opened again in a bigger room gets its whole content back. The scaling path and its pins are gone.
+
+### Changed: Editor Native draws the event alignment board's sheet (neutral lanes, bare margin, one slot per level)
+
+- The lanes are the board's neutral greys, derived from the editor's own base colour so they follow the user's Godot theme (dark `#3a3a3a` condition line, `#323232` rest, `#363636` actions; light `#ffffff`, `#f0f0f0`, `#f7f7f7` at the default editor themes), with a 1 px lane divider, the board's canvas, and object names in the board's blue (`#8ec3f2` dark, `#124175` light) with no tile behind the icon. The starter theme is rebuilt from the same rule, and the condition cell's quieter tone below its lines is the lane drawn 0.4 (dark) or 0.48 (light) of the way back to the canvas.
+- The margin is bare: numbers stand straight on the canvas in a 34 px column, with no band, rail or fill (a selected event still fills it). Blocks step 18 px per level from 52 px (top level 52, sub-events 70, 88), each level's line stands in its slot, the fold arrow is a filled triangle wholly inside its slot on the first line, and events and sub-events are exactly 1 px apart with no card border round them.
+- A group is one flat bar from its own slot (fold triangle, bold name, nothing at the right but the on/off switch while it is off or pointed at), its body is marked by its slot's line instead of a bracket at the canvas edge, and its foot reads `Add event to \"Setup\"` and `+ Add to \"Setup\"...` (translated in all nine CSVs).
+- An inverted condition's cross leads its words, no line is drawn between the object and words columns, a line with an object name but no icon starts the name where the lane's other names start, and an inert function body offers none of the add doors (`+ Add...` included). Classic Sheet is unchanged.
+### Changed: the Editor Native readings the event-alignment board asks for
+
+- A branch of an if/else pair closes its action lane with the same \"+ Add action\" / \"+ Add...\" line an event does, and leads with its object's icon. The function head's action lane ends with that line too (a click on it on a body with no first step puts a blank step first and fills it).
+- A return reads \"Function | Return ...\" in an event and in a branch alike. A line about a node named by its path (`$House3x3`) reads under the node's name with a capitalised verb, and a name taken off a `$Path` never borrows the icon of an engine class that shares the word (`$Tree`).
+- A local declared by a ternary (`var sign_text = \"-\" if value < 0 else \"\"`) reads as its own Local row (type, name, the value when no branch ran) ahead of the pair, and each arm reads \"sign_text | Set to ...\". A reading only: the file is untouched and saves back byte for byte.
+- A condition-less event draws an empty condition cell in the rest tone: no \"Always\" or \"Every Tick\" word, no strip, and the add-condition door waits for the pointer.
+- A group takes a number in the margin ahead of what it holds; the events after it move down. Find in project and the Project Doctor name events by the margin's number (branches and groups counted), through `EventSheetResource.margin_numbers`.
+- A plain click on a branch marks that branch alone; ranges and toggles still address the whole statement.
+- `_ready` on a script that is not the scene's own reads \"System | On ready\" (it read \"<script> | On created\").
+
+### Fixed: the gap a carried event opens lines up with the blocks of its level, and opens after the whole event when carried over a branch
+
+- In Editor Native the dashed gap an event is carried into began at the wrong edge (10 px short for a nested level, inside the number column for a top-level one); it now begins at the left edge of the blocks of the level it opens at. Proven in the real editor, in both looks and both skins, over a 1-, 2- and 3-deep event.
+- Carried over a branch of a pair (`x = a if c else b`), the gap opened one level too deep and before the event's own sub-events, although the drop lands after the event the pair belongs to. It now opens at that event's level, below everything the event draws.
+
+### Changed: Editor Native numbers the branches of a pair as events of their own
+
+- Where a statement hoists a ternary into two rows (`return \"A\" if c else \"B\"`, `var s = \"-\" if c else \"\"`), each branch is an event of its own in the margin: the rows of the pair take the next numbers (a guard 2 with two branches reads 2, 3, 4) and the events after them move down, as does the run of actions after a pair. Folding never renumbers anything (the walk reads folded rows too), and Classic Sheet keeps one number per event.
+- The editor's own \"event N\" words (Find's counter, Go to event, the repeated-run strip, the status bar's \"event N of M\", whose M counts the branches too) follow the margin. The Project Doctor and Find in project name events by the sheet's own count, which is the margin's whenever nothing branches. The \"neither of N\" note an Else row carries cites the margin's number, so 40 such notes in the shipped packs now read a larger N in this look (no other reading moved).
+
+### Changed: a function body that opens on a branch has no head row in Editor Native, and its locals stand at the body's level
+
+- A body event with no condition whose first action hoists a ternary into two rows (`var s = \"-\" if c else \"\"`) drew an \"Always\" head row that said nothing but its placeholder, which pushed its branches and the locals after them one level too deep. The head is no longer drawn: the branches, the locals and the run after them all stand on the level of the events round them.
+
+### Fixed: no popup, dialog or window opens off screen or away from what opened it
+
+Every window the editor opens now goes through one helper, `EventSheetWindowPlacement`, that works against the usable rect (the screen less the task bar) of the screen the window belongs to. A dialog is centred on the visible part of the editor window it opens over (the engine centred it on the screen, far from a small or moved editor window), shrunk when it is larger than the room it has, and kept clear of the title bar's reserve. A menu, panel or list opened at the pointer or under a field flips above and left-aligns to its anchor when there is no room below or to the right, on the monitor the anchor is on. Pointer positions follow the editor's sub-window mode, so a menu is no longer placed by screen coordinates when the editor embeds its sub-windows. The blend-mode strip opened at the top-left of the editor window instead of under its field; it now opens under the field. A sweep test fails when a new opener calls an engine popup function directly.
+
+### Fixed: four Wave 16b decisions
+
+- The no-em-dash rule covers the translation catalogs: every em-dash in the Russian and Simplified
+  Chinese files is a plain \" - \" (or a comma in Chinese), and `translation_catalogs_test` fails the
+  suite on a new one in any shipped `.csv`.
+- A state rename or removal changes only the names it renames or removes. The setter, `state_changed`
+  and the two helper variables are written only when the States window DECLARES a machine the sheet does
+  not have yet; a hand-written `enum State` and `var state` is edited in place and nothing else in the
+  file moves (pinned in `states_project_wide_test`).
+- The sheet head's events count and the status bar agree: both count every event, the ones inside
+  functions included, and say \"1 event\" for one. 93 sheets' head cells move (10 gain a count they never
+  showed), and nothing else in the reading does.
+- The Wave 16 nested-divider check is rewritten to the Editor Native rule (one 1 px line per nesting
+  level at the block's left edge, the cell beginning at its own block) and still holds in Classic Sheet
+  (`sub_event_strips_test`).
+
+### Fixed: two Wave 16b leftovers
+
+- A string default written over two source lines shows its break in the row. The value read
+  `\"helloworld\"`; it now reads `\"hello\\nworld\"`, the escape a one-line spelling of the same string would
+  use (`ViewportRowBuilder.string_break_as_escape`). The file is untouched and saves back byte for byte.
+- The loose runtime scripts beside the pack folders (`bus_mix`, `haptics`, `sequencer`, `sequence`,
+  `world_look`, `free_spot`, `pooled_nodes`, `haptic_pattern`) give every declaration its own brief,
+  true `##` note instead of one note written for a group. `pack_variable_descriptions_test` now holds
+  these scripts to the same rule as the pack folders (described, one line, not a paragraph, no
+  neighbour named, not shouting, not cut off).
+
+### Fixed: a string default written over two source lines opens as one variable row
+
+- `var note := \"one` then `two\"` used to open as the variable plus a stray wordless `pass\"` row. The
+  declaration lift now takes the whole literal, keeps its lines exactly as written, and is gated by
+  byte-exact re-emission like every lift. Fixture `tests/fixtures/multiline_string_default.gd`.
+
+### Fixed: the inherited bar counts in the singular
+
+- \"1 variables / 2 functions\" now reads \"1 variable / 2 functions\". `EventSheetL10n.counted(one, many, count)`
+  picks the singular row for exactly one and the plural row otherwise; all nine translation files already
+  carry both rows, so each language words its own.
+
+### Fixed: behaviour variable descriptions say what the code does
+
+- A pack-wide fold had put notes written for a group of declarations onto the first one. Every pack
+  builder was read against its code and the wrong ones rewritten: units copied from a 2D twin into a 3D
+  one, a bool that claimed to hold a scene, a level stored as 0..1 described as decibels, notes that began
+  \"And ...\", a note in capitals, and plain comments whose first line had been cut. `ollie_speed` stays
+  exported and now says the Ollie action takes its own strength and this value is unused.
+- `pack_variable_descriptions_test` now fails a note that names another declaration of the same file, is
+  mostly upper case, begins with a conjunction or stops mid-sentence.
+
+### Added: the showcase state enums describe their machine and every state
+
+- Starfall's `State` and the quest showcase's `QuestState` carry a `##` line above the enum (what the
+  machine is for) and one above each member (what the object is doing in it), written in
+  `tools/build_examples.gd`. No shipped behaviour pack declares an enum machine today (the state
+  machine pack keeps its states as free strings), so the pack rule in
+  `pack_variable_descriptions_test` already fails any pack enum or state added without a line, and
+  the same rule now also covers every enum in `demo/showcase/`, with real values pinned.
+
+### Fixed: Wave 16b review closure
+
+- A state renamed or removed in the States window now SAVES the declaring sheet in the same step that
+  writes the other scripts naming it, so the project on disk compiles whether or not the tab is saved
+  again. Undo and Redo do the same, in that order.
+- Undo and Redo of such an edit never write over a file somebody changed after it (on disk, or open in
+  Godot's script editor with unsaved changes): the step then writes no file, leaves the sheet unsaved,
+  and says which file.
+- Removing a state names, before Apply, each file whose tests of that state (`== Player.State.JUMP`, a
+  `match` branch) will test the default instead, and each scene or resource that saved the state
+  variable as a number, whose meaning a removal from the middle of the list shifts.
+- \"Also run the parent's version\", picked into a function, is written with that function's own
+  parameters (`super(amount)`), and as `return super(...)` where the parent's function answers. Where
+  it may be offered is now part of the picker's one closed list of what may be hidden.
+- The live state row is laid out at most four times a second while a machine flips state, instead of
+  at every flip.
+- The \"From <parent>\" group a kind of a class inherits starts folded to its bar, as the class board
+  draws it.
+- A function body of an opened file that has not been made editable no longer shows a \"+ Add action\"
+  that does nothing when clicked (Editor Native draws the add line at rest, and a one-step function
+  draws its step's line in its head). \"Make Function Body Editable\" brings it back.
+- Renaming a state in a hand-written file wrote the state helpers (`state_changed`, `previous_state`,
+  `state_entered_msec`) between `class_name` and `extends`, so the saved file no longer parsed. They
+  now go under `extends` and the class description. The States window also grows to hold the list of
+  what a removal reaches, so its Apply button stays inside it.
+- The status bar counts the events inside functions too, so a behaviour pack's sheet no longer says
+  \"0 events\".
+### Changed: Editor Native lays out locals at their step, notes above the lines they are about, and adds the \"+ Add...\" doors
+
+- A local variable (an event's own, or a `var` line in its body) is one tight row at the step of the
+  code that declares it: before the event whose actions carry its value, on the level of the events
+  round it, no longer drawn under the event it was lifted out of. A body that splits at a branching
+  line puts each local before the slice that holds its line. It is a drawing order of rows only: the
+  file still opens and saves back byte for byte, and every other look keeps its locals where they were.
+- A comment row begins where the event it introduces does (its band starts at that event's block, so
+  the nesting lines of the levels round it run past), and a note written about an event's actions heads
+  its action lane instead of closing it.
+- \"+ Add...\" sits at the far right of every event's add line and \"+ Add to 'name'...\" at the right of
+  every group's foot, beside the left \"+ Add event to 'name'...\". Each selects what it belongs to and
+  opens a small menu: an event offers Add action, Add condition, Add sub-event and Add comment; a
+  group offers Add event (the picker, inserting into that group) and Add local variable. A group
+  now closes with its foot even when it holds events. The new foot text is translated in all nine
+  translation files.
+- Pins: `locals_at_their_step_test`, `native_add_doors_test`.
+
+### Fixed: the editor's own MatchRow script reads without a stray row
+
+- `match_row.gd` wrote its default branch text as a string running over two source lines, which
+  opened as the variable plus a wordless `pass\"` row and put the file over its group's wordless-row
+  ceiling the day the self-reading sample picked it. The default is the same text, written on one
+  line with `\\n\\t`.
+
+### Fixed: a name cut short in a chip cell is read whole on hover
+
+- In a cell drawn as a chip (Editor Native's condition and action cells) the hover measured the
+  object column from the cell's edge instead of after its padding, so a name only a few pixels too
+  wide (\"CharacterBo…\") drew its ellipsis but answered no hover. The hover now asks the same
+  elide, on the same column, the row draws with.
+
+### Fixed: the Prompts pack's two clock variables say what they hold
+
+- `_deadline` said it held the seconds left to answer; it holds the engine time the open prompt runs
+  out, and `_opened_at` no longer describes both variables in one sentence.
+
+### Changed: Editor Native lays an event out as one panel, with its nesting as lines in the margin
+
+- Nesting is ONE 1 px line per level down the margin, on each block's left edge and running the whole
+  height of the parent block (across the air between two events too), with the fold arrow beside the
+  block's first line. A nested block starts past the number column and its ancestors' lines; no fill,
+  no second line, no fold column.
+- A condition cell is one panel the full height of its event, however many actions it has: each
+  condition line is its own lighter strip ruled underneath, and the cell carries on in a quieter tone to
+  the event's foot (an event with no condition draws one empty strip and the quiet tone below it).
+- A local variable declared inside an event is one tight line on the sheet itself: no band, no card, no
+  gap, and no number in the margin.
+- `+ Add action` stays under every event's actions at rest (the add condition line still waits for the
+  hover). A test no object owns (`value > 0`) reads with System as its object, so the words of a lane
+  start at one x. The action lane's name column is 140 px wide.
+
+### Changed: states are project-wide, and every state variable is its own machine
+
+- Renaming a state in the States window renames it in every place the project says it: this sheet's
+  rows, triggers, hand-written lines and typed values, and every other script that names it through
+  the declaring class (`Player.State.RUN`) or extends that class and inherits the enum. The window
+  lists each sheet and file with its count before Apply writes anything, and one Undo puts the sheet
+  and all of those files back. A behaviour pack's script is never rewritten.
+- Removing a state is no longer refused when rows still use it: the window lists the rows and files
+  that use it, and Apply moves them to the machine's default state (the same single Undo).
+- Every `<x>_state` variable typed by an enum of its own (`weapon_state: WeaponState`) is a machine
+  and a state row of its own, with its own window, states, default and cards. The primary `state`
+  keeps its helpers and its live reading.
+- The state the running game is in lights up inside its token with the time it has held, RUN · 3.2 s,
+  instead of as text at the end of the row. The row holds room for the time, so nothing moves when
+  the seconds change.
+- Clicking a state in the row opens the States window with that state picked; a double-click on any
+  word of the row opens it too.
+- The States window keeps no help strip, as the board draws none.
+
+### Changed: sub-events sit packed, with the fold arrow on the block's first line
+
+- The fold arrow of an event stays beside the block's FIRST line in every look (the strips look used to
+  move it to the block's foot). Events and sub-events in Editor Native sit 1 px apart instead of 8, so
+  no empty band opens between two events. (The nesting strips this entry first filled with the parent's
+  lane colour are gone: nesting is now one line per level in the margin, as the entry above says.) An
+  object name the fixed column cuts short (\"CharacterBo...\") is read whole on hover. Drawing only: no
+  reading, no emitted byte and no saved sheet changes.
+
+### Added: the Class window, and the also-run action that names what it runs
+
+- A click on the sheet head's name opens the Class window: Name, A kind of (Extends in Godot words),
+  Icon and Description in one window, each field one line of the file (`class_name`, `extends`,
+  `@icon`, `##`). Your classes complete first, then Godot's; Icon completes the project's pictures;
+  a name another class has, a base nothing completes and a picture that is not there are said in the
+  window before anything is written. Renaming lists every file and row first and goes through the
+  same walk as Rename Everywhere; changing what the class is built on lists the members the old base
+  gave that the new one does not, among those the sheet uses. Apply is one undo step, and a script
+  opened as a preview unlocks on it like any other first edit. The name used to answer only a
+  double-click; a script attached to a scene had no click on its name at all.
+- A kind of one of your classes reads what it inherits right under its head: a \"From Mob\" bar (the
+  triangle folds it, the parent's name opens the parent's sheet) and the parent's variables and
+  functions as read-only dashed rows. Double-click a variable to start it at another value (\"Slime
+  starts it at 60.0\", written in `_init`, so the parent's own value is never touched); right-click a
+  function for \"Replace in Slime\" (Godot words: \"Override in Slime\"), which writes a function with the
+  same parameters that already runs the parent's version first. Both survive a save and reopen.
+- The head says \"a kind of Mob\" in Familiar words and \"extends Mob\" in Godot's, beside the class.
+- Right-clicking a sheet's tab on a sheet that names a class offers \"New kind of <class>…\", the same
+  door the FileSystem menu has.
+- Your classes lead the object list as a tree of kinds, each with its own icon and its description on
+  hover. After an event asks \"body is a Mob\", an action's picker opens on the objects with `body · Mob`
+  first: picking it offers Mob's own members, written on `body`.
+- \"Also run the parent's version\" now reads \"Also run Enemy's take_damage\" (Godot words: \"Call
+  super: take_damage\"), naming the class and the function it sits in, and is offered only inside a
+  function that replaces one of the parent's. Anywhere else it would write a `super()` that does not
+  compile.
+
+### Fixed: type tests read with the right article
+
+- \"Is a kind of\" reads on the value being asked about, `body | is an Enemy`, and says \"an\" before a
+  class said with a vowel (Enemy, Area2D) and \"a\" before the rest (Node2D, Unit). A row authored from
+  the picker and the same line reopened from a file are one reading; the bytes written are unchanged.
+
+### Changed: every behaviour variable has a brief description
+
+- Every variable and constant a shipped behaviour declares now carries a one-line `##`
+  description (about a thousand were bare, most of them internal state), and about a hundred
+  long design notes were cut to their first sentence, the rest kept as a plain `#` comment above
+  it. A variable row, the Inspector tooltip and the emitted script all read the same line.
+- A variable that is not exported now writes its description above it in the generated script,
+  as an exported one always did. Before, the description was kept on the row and dropped on
+  emit. A tooltip attribute on a private variable is still an Inspector setting and writes nothing.
+- `pack_variable_docs_test` pins both the compiler change and that no top-level variable or
+  constant of a shipped pack script lacks a description.
+- Descriptions are brief: about three hundred that still ran to a paragraph (a design rationale
+  in place of what the variable controls) are one line now, the rationale kept as a plain `#`
+  comment where it was long. `pack_variable_descriptions_test` fails on a description over 160
+  characters, on an enum or enum member a pack declares without one (no shipped pack declares an
+  enum today), and reads six packs back through the importer to prove the note arrives on the row.
+  The state machine pack's `state` says that any name works and Go to state switches it.
+
+### Fixed: Wave 16 review closure
+
+- The vocabulary reference (`EVENTSHEETS-VOCABULARY.md`) lists every pack verb again. The
+  generator ended a verb at any code annotation between its `##` block and its `func`, so a
+  verb carrying `@warning_ignore(...)` (Fly Along, Blend To, Discover, Create Pool and about
+  twenty more) vanished from the reference while the pack went on shipping it. The committed
+  doc is regenerated, and `tools/vocabulary_doc.gd -- --check` (a CI gate now) fails when the
+  committed doc and the generator disagree.
+- The states words read in your language again. The 63 new state words (the state row's readings,
+  the States window, the type cards) had been filled with the English text in all eight languages,
+  so \"is IDLE\" read English where \"Is in {state}\" had been translated. They are translated now,
+  the readings carry their old translations over, and Is A Kind Of and Also Run Parent Function
+  are in all nine catalogs. The translation test now also fails when a language file gains cells
+  that read exactly like their English key.
+- Opening a .gd: the spinner, the hairline, \"Show as code\" and the ring on Code take the look's own
+  link colour (Classic Sheet's too) instead of the editor's accent; the first pass reads \"reading
+  the code\"; \"Show as code\" sits straight after the status words; and the ring keeps the Code
+  button's own fill instead of replacing it with an empty box.
+- New Event Sheet: the A kind of / Extends field warns only when nothing it offers begins with what
+  is typed, so \"Ene\" on the way to Enemy is no longer red. A sheet made as a kind of one of your own
+  classes is named as a class; extending a Godot class such as CharacterBody2D no longer adds a
+  `class_name` to the new file.
+- Typing in any field that completes (the A kind of field, parameter fields, the States window)
+  no longer stops working once the completion list is open. The list was a popup window, and while
+  a popup is open the keyboard goes to it, so Backspace and every letter after it were lost. It now
+  floats in a window that never takes the keyboard, and closes when the field or its window loses
+  focus. Escape with the list open closes the list and leaves the dialog open.
+- A state row (and any enum or signal) carried over an event goes before or after it, never into it:
+  GDScript has no place for a class-level declaration inside an event, and the state machine came
+  apart when its enum landed there.
+- Nested events: each depth bounds its name column by its own lane, and the name column gives way at
+  half of that lane (it was 45 percent of the sheet's top-level lane). On an event nested past the
+  150 px floor, the divider it draws is the one that can be grabbed, and its actions lane is
+  measured from it.
+- The States window's row counts use the editor's quieter text colour instead of a fixed alpha.
+- The state row acts on the machine it stands for. Delete, Cut and Copy take the State enum and every
+  line the row hides (the `state` variable, the previous state, the entered time, `state_changed`)
+  under one undo, instead of removing only `var state` and leaving the rest as loose rows; Add below,
+  a drag and the jump to code anchor on the enum, where the row is drawn.
+- The state row's variable name opens a card naming the lines it keeps out of sight (the previous
+  state, when the current state began, `state_changed`), and choosing a state for is / was / go to
+  shows each state's own sentence beside its name.
+- Drawing: the words with a card behind them are measured once per text instead of every frame,
+  and the running game's live states are worked out once per frame received.
+
 ### Changed: sub-events lined up (Editor Native)
 
 - Each nesting level now steps the whole block right by one 16 px strip, filled with the parent's
@@ -41,6 +391,56 @@ What changed in the build you have installed (v0.18.0), in the words the release
   and saves byte for byte. The two new verbs author their lines; a file you open that already has
   an `is` test or a `super(...)` call keeps the words its rows have today (neither verb claims a
   hand-written line), so no opened file reads differently.
+
+### Fixed: Opening a .gd no longer puts a banner over the sheet
+
+- The \"Opening <file>\" strip is gone. It was a 72 px navy panel, drawn the same in every look and
+  both editor themes (its detail text was close to invisible in the light theme), that pushed the
+  sheet down while a .gd was read as events and let it jump back up when the read finished. A file
+  that is opening now says so in three places that take no room: its tab swaps its icon for a
+  small spinner in the look's accent, a 2 px hairline along the foot of the tab strip fills as the
+  read advances, and the status line reads \"Opening player.gd · reading functions 6 of 14\" (reading
+  the file, reading functions n of m, checking the code still matches, checking the script compiles,
+  with the seconds once a pass has gone past half a second). **Show as code** sits beside it in the
+  status line, and **Code** in the Events / Code / Both switch (ringed in the accent while the open
+  runs) is the other way out: either stops reading the rows and shows the file as code, as the
+  banner's button did. With reduced motion the spinner holds still and the hairline jumps instead
+  of sliding. Every colour comes from the editor theme, so dark and light need nothing of their
+  own.
+
+### Changed: States on the sheet - one row, one spelling
+
+- **A state machine is one row.** The enum, the `state` variable and its default now read as a single row:
+  the state glyph, the type, the variable's own name, \"is one of\", the states exactly as the code writes them
+  with the default marked \"(default)\", and the machine's `##` description muted and italic like any
+  variable's note. The head's \"states Idle · Run · Jump - starts in Idle\" band is gone, and the declarations
+  that only serve the machine (`previous_state`, `state_entered_msec`, the `state_changed` signal, the
+  state variable's setter rows) stay in the code but are not drawn. A helper written differently by hand
+  still shows.
+- **Names as written, everywhere.** `IDLE` is never re-cased to \"Idle\": the row, the conditions and
+  actions, the triggers, the trail, the Doctor and the pickers all say what the code says.
+- **The state variable is the object of its rows.** \"state is RUN\", \"state was JUMP\", \"state go to RUN\",
+  \"state is RUN for over 2 s\" and the triggers \"On entering X\" / \"On leaving X\" lead with the state glyph
+  and the variable's name instead of borrowing the host or System. A lifted `match state:` reads as
+  \"state is IDLE\" sub-events whose assignments read \"state go to RUN\". (The reading text of the four rows
+  changed from \"Is in X\" / \"Was in X\" / \"Go to X\"; the ids and templates did not.)
+- **Cards.** Every state name on the sheet has a faint dotted rule and a card: its name, \"the default
+  state\" when it is, and its sentence. Every variable's type (int, float, bool, String, an enum, a node or
+  resource class) has the same rule and a card with one sentence and the page of Godot's documentation it
+  comes from.
+- **Sentences are `##` lines.** An enum row carries the machine's description (the `##` above the enum) and
+  one sentence per member (the `##` above each member); they lift back byte for byte and an enum without
+  them is written exactly as before.
+- **The States window.** Double-click the state row (or choose Declare states): what it is for, the ordered
+  states each with a name, a sentence and a default radio, add, remove (a state rows still use is refused
+  with their count), reorder, and rename - which follows every row, trigger and line of kept code. Exactly
+  one default always: a new machine takes its first state, removing the default moves it to the next.
+  The window explains itself with its own paragraph and its live code preview, as its board draws it,
+  rather than the help strip at the foot that the old one-field window wore.
+- Fixed with the wave's integration: four suite checks still pinned the old readings (a branch's test
+  led by the System gear and spelled \"state is IDLE\" in its condition cell, a comment naming the state as
+  \"Patrol\", and the States window among the dialogs with a help strip); they now pin the state variable
+  as the object with its glyph, the state as written, and the window as built.
 
 ### Fixed: Undo works inside the editor
 

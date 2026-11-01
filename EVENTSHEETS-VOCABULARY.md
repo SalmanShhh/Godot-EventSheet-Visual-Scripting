@@ -3762,11 +3762,11 @@ the behavior SHAPES as free actions.
 - **Set Angle Of Motion** (`angle: String, speed: String`) - Sends the object flying along an angle at a speed - the one line a projectile's movement is.
 - **Move** (`delta_t: String`) - Takes this frame's step along the current velocity. The step a projectile makes every tick.
 - **Bounce Off Solids** (`normal: String`) - Reflects the current velocity off a surface, so the projectile ricochets instead of stopping.
-- **Move Toward Position** (`destination: String, speed: String, delta_t: String`) - Glides this frame's share of the way toward a point, never overshooting it.
+- **Move Toward Position** (`destination: String, speed: String, delta_t: String`) - Deprecated. Glides this frame's share of the way toward a point, never overshooting it. It moves the place inside the parent, so it lands wrong for a node under a moved parent; Move Toward Position (the world twin, GlideTowardWorld) moves the place in the level.
 - **Rotate Clockwise** (`degrees_per_second: String, delta_t: String`) - Spins the object at a steady rate - a coin, a fan, a saw blade.
-- **Wrap Around Layout Horizontally** (`low: String, high: String`) - Sends the object off one side of the layout and back in the other - the arcade wrap.
-- **Wrap Around Layout Vertically** (`low: String, high: String`) - Sends the object off the top of the layout and back in at the bottom, or the other way round.
-- **Bound To Layout** (`low: String, high: String`) - Holds the object inside the layout's edges instead of letting it leave - the arcade fence.
+- **Wrap Around Layout Horizontally** (`low: String, high: String`) - Deprecated. Sends the object off one side of the layout and back in the other - the arcade wrap. It wraps the place inside the parent against the layout's edges, which are places in the level; use WrapAroundLayoutXWorld, the world twin.
+- **Wrap Around Layout Vertically** (`low: String, high: String`) - Deprecated. Sends the object off the top of the layout and back in at the bottom, or the other way round. It wraps the place inside the parent against the layout's edges, which are places in the level; use WrapAroundLayoutYWorld, the world twin.
+- **Bound To Layout** (`low: String, high: String`) - Deprecated. Holds the object inside the layout's edges instead of letting it leave - the arcade fence. It holds the place inside the parent against the layout's edges, which are places in the level; use BoundToLayoutWorld, the world twin.
 - **Pin To** (`anchor: String, offset: String`) - Puts the object at another object's place, offset by however far apart you want them.  Pin or child? A pin follows at runtime and can let go; a child is structure and is destroyed with its parent. Reach for Add Child when the two are one thing that lives and dies together, and for a pin when one thing rides another for a while.
 - **Pin Angle To** (`anchor: String`) - Turns the object to match another object's angle, so the two stay aligned.
 - **Pin To (Rope)** (`anchor: String, length: String`) - Hangs the object off another on a rope: free to move inside the length, pulled back the moment the line goes taut. A lantern on a stick, a leash, a wrecking ball.  A pin follows at runtime and can let go; a child is structure and is destroyed with its parent.
@@ -4262,7 +4262,7 @@ Controls: analog, gamepads by number, touch and gestures,
 - **Set Cursor Visible** - Gives the cursor back - pause menus, dialogs, quitting to the map.
 - **Set Cursor Invisible** - Hides the cursor while leaving it free to move - a game that draws its own crosshair.
 - **Keep Cursor Inside The Window** - The cursor stays visible but cannot leave the window - strategy games on two monitors.
-- **Move Cursor To** (`position: String`) - Teleports the pointer - snap it to a menu item, re-centre it after a cutscene.
+- **Move Cursor To** (`position: String`) - Teleports the pointer - snap it to a menu item, re-centre it after a cutscene. The position is in window pixels, not a place in the level.
 - **Set Neutral Tilt** (`neutral: String`) - Remembers how the device is being held right now as "flat", so every tilt after this is measured from there. Offer it as a Calibrate button - it is the difference between a tilt game that works and one that does not.
 - **Steer By Tilt** (`tilt: String, sensor_axis: String, strength: String, motion_axis: String, target: String`) - Feeds one direction of the tilt into movement, so leaning the device steers. Measure the tilt from a neutral point first, or the game only plays flat on a table.
 - **Aim By Gyro** (`rate: String, camera: String`) - Turns the body and pitches the camera by how fast the device is being turned - mouse look with the phone itself. Reports 0 on desktop, so keep a mouse or stick path beside it.
@@ -4376,7 +4376,7 @@ Core vocabulary (the Phase-1 surface, fully migrated).
 - **Call Function** (`function_name: String, args: String`) - Calls one of your sheet functions with arguments, for reusing logic across events.
 - **Also Run Parent Function** (`args: String`) - Runs the version of this function that the class this one is a kind of has, with the arguments given. A function that replaces its parent's keeps the parent's part by running it first; delete the action to skip it.
 - **Emit Signal** (`signal_name: String, args: String`) - Fires a signal so other events or nodes can react, the way to broadcast custom events.
-- **Set Position** (`pos: String, target: String`) - Places a 2D node at an exact position, e.g. teleporting or snapping to a spot.
+- **Set Position** (`pos: String, target: String`) - Places a 2D node at an exact position relative to its parent, e.g. snapping a sword to a spot on the player. Set World Position places it in the level instead.
 - **Move By** (`offset: String, target: String`) - Shifts a 2D node by an offset from where it is, for simple step-based movement.
 - **Set Rotation (Degrees)** (`degrees: String, target: String`) - Sets a 2D node's rotation in degrees, e.g. aiming or facing a direction.
 - **Move And Slide** - Moves the character body using its velocity and slides along walls; call each physics frame.
@@ -5445,10 +5445,10 @@ Node manipulation + picking (build, rearrange, and select scene-tree nodes).
 - **Restart Animation (in object)** (`target: String, anim: String`) - Replays a named animation from the very start, e.g. retriggering an attack.
 - **Emit Particles (in object)** (`target: String, emitting: String`) - Turns the object's particle emitter on or off, found automatically.
 - **Turn Toward** (`target: String, degrees_per_second: String`) - Aims this node at another one, turning at a real speed instead of snapping - the turret and the chasing enemy. Frame-rate independent; for an instant snap, give it a huge turn speed.
-- **Wrap Inside The Screen** - The Asteroids rule: leave the right edge and come back on the left, off the top and back at the bottom. Nothing ever escapes the screen.
+- **Wrap Inside The Screen** - Deprecated. The Asteroids rule: leave the right edge and come back on the left, off the top and back at the bottom. Nothing ever escapes the screen. It wraps the place inside the parent against the screen's size, so a node under a moved parent wraps at the wrong edges; use WrapInsideScreenWorld, the world twin.
 - **Bob Up And Down** (`height: String, period: String`) - Floats the node gently up and down around wherever it was resting - pickups, idle hover, a breathing menu icon. No sin() to write; run it under a per-frame trigger.
 - **Push Away From** (`source: String, strength: String, target: String`) - Sets the impulse; pair with Apply Pushes under a per-frame trigger, which moves and decays it.
-- **Apply Pushes** (`friction: String`) - Knockback that decays honestly (the exp form, frame-rate independent) - one row under Every Frame.
+- **Apply Pushes** (`friction: String`) - Deprecated. Knockback that decays honestly (the exp form, frame-rate independent) - one row under Every Frame. The push is worked out in the level's directions but added to the place inside the parent, which is wrong under a rotated or scaled parent; use ApplyPushesWorld, the world twin.
 - **Pull Group Toward** (`group: String, radius: String, speed: String`) - The vacuum-pickup loop - coins fly to the player, one row.
 - **Orbit Around** (`center: String, radius: String, degrees_per_second: String`) - Circles this node around another one - a shield satellite, a moon, a spinning hazard. Run it under a per-frame trigger.
 - **Vanish, Respawn In** (`seconds: String`) - Hides this pickup (and pauses its Area sensing when it has any), waits, then brings it back - calling its reset() if it defines one. The health-pack-respawns-in-10s pattern as one row; it awaits, so it suspends like Wait.
@@ -5994,12 +5994,12 @@ Spatial vocabulary (screen/world, random geometry, surfaces, grids, falloff).
 - **Look At (flat)** (`target: Vector3`) - Turns a 3D node to face a point but only around the up axis, so a character looks at the player without tipping over to stare at their feet. The rotation every humanoid, turret base and standing NPC actually wants.
 - **Apply Radial Impulse** (`center: Vector2, strength: float, radius: float`) - Throws this physics body away from a blast, weaker the further it was - barrels, crates, ragdolls and debris flung by an explosion. One row on the body; the blast only has to say where it happened.
 - **Push Group Away From** (`group: String, center: Vector2, radius: float, strength: float`) - Shoves every member of a group away from a point, hardest at the centre and not at all past the radius - the mirror of Pull Group Toward. A shockwave clearing a crowd, a repulsor field, a dash that parts the enemies it passes through.
-- **Move In Direction** (`direction: String, speed: String, delta_t: String, target: String`) - Moves a 3D node along one of its own directions - forward, back, right, left, up or down - at a speed a second.
+- **Move In Direction** (`direction: String, speed: String, delta_t: String, target: String`) - Moves a 3D node along one of its own directions - forward, back, right, left, up or down - at a speed a second. The step is added to its place in the level, so it moves in world space.
 - **Rotate Clockwise** (`degrees_per_second: String, delta_t: String, target: String`) - Turns a 3D node about its up axis - the yaw a character or a turret turns with.
 - **Rotate Up Or Down** (`degrees_per_second: String, delta_t: String, target: String`) - Tilts a 3D node's nose up or down - the pitch a plane or a camera arm moves with.
 - **Roll** (`degrees_per_second: String, delta_t: String, target: String`) - Rolls a 3D node about the way it faces - the bank a plane or a ship leans with.
 - **Rotate Toward Facing** (`facing: String, rate: String, delta_t: String`) - Turns a 3D node smoothly toward a facing instead of snapping to it - the way a turret leads its target.
-- **Set Position To Another Object** (`other: String`) - Puts a 3D node exactly where another one is - how a spawn point, a socket or a respawn marker is used.
+- **Set Position To Another Object** (`other: String`) - Puts a 3D node exactly where another one is in the level - how a spawn point, a socket or a respawn marker is used.
 - **Place On The Ground** (`reach: String`) - Drops a 3D node straight down onto whatever is under it - the snap-to-floor every spawn, item drop and building placement ends with. Leaves it where it is when nothing is within reach.
 - **Align To The Ground's Slope** (`normal: String`) - Tilts a 3D node so its up points the way the ground does - the line that makes a dropped crate sit flat on a hill.
 - **Create Evenly Around A Circle** (`count: String, scene: String, centre: String, radius: String`) - Places a number of copies evenly around a circle - the bullet-hell ring, the radial menu, the circle of pillars.
@@ -6053,10 +6053,10 @@ Spawn (the spawn sentence, the name it leaves behind, and where it lands)
 
 #### Actions
 - **Spawn A Copy** (`scene: String, name: String, at: String, parent: String`) - Makes one copy of a scene, adds it under a parent and puts it where you say. The copy gets the name you choose, and every following row in this event can say that name - it is a real variable in the emitted code, not a lookup. Leave At as global_position to spawn where this node is, and Under as self to keep the copy under this one.
-- **Spawn A Copy Safely** (`scene: String, name: String, at: String, parent: String`) - The same spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is set before the copy is added, so it is a place relative to the parent rather than a world position.
+- **Spawn A Copy Safely** (`scene: String, name: String, at: String, parent: String`) - Deprecated. The same spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld, which lands the copy where the At field says.
 - **Make A Copy** (`scene: String, name: String`) - Makes one copy of a scene and gives it a name, without adding it to the scene tree yet. Following rows in this event can say the name to set the copy up, and an Add Child row puts it in the world when it is ready.
 - **Spawn A Copy (3D)** (`scene: String, name: String, at: String, parent: String`) - Makes one copy of a scene, adds it under a parent and puts it where you say, in three dimensions. The copy gets the name you choose, and every following row in this event can say that name - it is a real variable in the emitted code, not a lookup. Leave At as global_position to spawn where this node is, and Under as self to keep the copy under this one.
-- **Spawn A Copy Safely (3D)** (`scene: String, name: String, at: String, parent: String`) - The same 3D spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is set before the copy is added, so it is a place relative to the parent rather than a world position.
+- **Spawn A Copy Safely (3D)** (`scene: String, name: String, at: String, parent: String`) - Deprecated. The same 3D spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld3D, which lands the copy where the At field says.
 - **Spawn In A Formation** (`scene: String, name: String, formation: String, count: String, around: String, inside: String, size: String, to: String, start: String, sweep: String, across: String, crowd: String, parent: String, when: String`) - Spawns several copies at once and puts each one somewhere in a shape you pick - a ring, an arc, a line, a grid, or scattered inside a collision shape. Every copy joins the crowd you name, so the row underneath can address the whole formation with For Each In Group. The fields a shape does not use are left out of the code it writes: a ring reads Around and Size, an arc adds Start Angle and Sweep, a line reads Around and To, a grid reads Around, Size and Across, and scattering reads Inside.
 - **Spawn A Copy, Facing And Moving** (`scene: String, name: String, at: String, facing: String, toward: String, angle: String, speed: String, carry: bool, moves: String, parent: String`) - Spawns one copy the way Spawn A Copy does, then turns it to face something and gives it a speed along that facing - a bullet leaving a barrel, a spark thrown off a wheel, an enemy charging in. Where the speed is written depends on what the scene is: velocity for a character body, linear_velocity for a rigid body, or the Bullet behaviour's own speed for a scene wearing it. The dialog reads the scene file and says which one it found.
 - **Spawn In A Formation (3D)** (`scene: String, name: String, formation: String, count: String, around: String, inside: String, size: String, to: String, start: String, sweep: String, across: String, crowd: String, parent: String, when: String`) - Spawns several copies at once and puts each one somewhere in a shape you pick, in three dimensions - a ring, an arc, a line, a grid on the ground, or scattered inside a box. Every copy joins the crowd you name, so the row underneath can address the whole formation with For Each In Group. The ring, the arc and the grid all lie on the ground plane, level with the point you spawn around, and scattering reads Inside rather than Around.
@@ -6137,8 +6137,8 @@ System (event-sheet System parity)
 - **Start Cooldown** (`name: String, seconds: String`) - Starts (or restarts) a named cooldown that lasts the given number of seconds.
 - **Buffer Press** (`name: String, seconds: String`) - Remembers a press for a fraction of a second, so an input made slightly too early still counts. Record it when the button goes down, check Press Is Buffered where the act happens, then Clear Buffer.
 - **Clear Buffer** (`name: String`) - Forgets a buffered press. Consume the buffer right after acting on it so one press never fires twice.
-- **Spawn Scene At** (`path: String, position: String`) - Loads a scene and drops a copy into the world at a position.
-- **Spawn Scene (Full)** (`path: String, position: String, rotation: String, group: String`) - Spawns a scene copy with position, rotation and an optional group in one step.
+- **Spawn Scene At** (`path: String, position: String`) - Loads a scene and adds a copy as a child of this node. The position is measured from this node, so the copy moves with it; Spawn Scene In The World places it in the level instead.
+- **Spawn Scene (Full)** (`path: String, position: String, rotation: String, group: String`) - Spawns a scene copy as a child of this node with position, rotation and an optional group in one step. The position is measured from this node, so the copy moves with it.
 - **Set Group Active** (`group: String, active: String`) - Turns a runtime-toggleable group on or off to enable or disable its behaviour.
 - **Set Effect** (`material: String, target: String`) - Puts an effect on this object, changing how it draws.
 - **Remove Effect** (`target: String`) - Takes the effect off this object, returning it to how it normally draws.
@@ -6607,3 +6607,37 @@ LOOKS: a whole world's appearance, saved as a file and put on in one row.
 
 #### Expressions
 - **Current World Look** (`node: String`) - The path of the look file this node's world came from, or blank when it is wearing a world nobody named - one built in the scene rather than loaded. Reads what the last Use World Look or Blend To World Look wrote down, which is the only place the answer can come from: the copy a row put on is a copy, and a copy has no file of its own.
+
+### World Place (`res://addons/eventforge/registration/modules/world_place_aces.gd`)
+the world-space twins of the verbs that wrote the wrong place.
+
+#### Actions
+- **Set World Position** (`pos: String, target: String`) - Places a 2D node at an exact place in the level, whoever its parent is. Set Position measures from the parent instead.
+- **Set World Position (3D)** (`pos: String, target: String`) - Teleports a 3D node to an exact place in the level, whoever its parent is. Set Position (3D) measures from the parent instead.
+- **Set Position To Another Object** (`other: String`) - Puts a 2D node exactly where another one is in the level - how a spawn point, a socket or a respawn marker is used.
+- **Move Toward Position** (`destination: String, speed: String, delta_t: String`) - Glides this frame's share of the way toward a place in the level, never overshooting it. The place is measured in the level, so a node under a moved parent still arrives at it.
+- **Apply Pushes** (`friction: String`) - Knockback that decays honestly (the exp form, frame-rate independent) - one row under Every Frame. The push is worked out in the level's directions and added to the node's place in the level, so it is right under a rotated or scaled parent.
+- **Wrap Inside The Screen** - The Asteroids rule: leave the right edge and come back on the left, off the top and back at the bottom. Nothing ever escapes the screen. The node's place in the level is what wraps, so a node under a moved parent wraps at the screen's edges.
+- **Wrap Around Layout Horizontally** (`low: String, high: String`) - Sends the object off one side of the layout and back in the other - the arcade wrap. The layout's edges are places in the level, so the node's place in the level is what wraps.
+- **Wrap Around Layout Vertically** (`low: String, high: String`) - Sends the object off the top of the layout and back in at the bottom, or the other way round. The layout's edges are places in the level, so the node's place in the level is what wraps.
+- **Bound To Layout** (`low: String, high: String`) - Holds the object inside the layout's edges instead of letting it leave - the arcade fence. The layout's edges are places in the level, so the node's place in the level is what is held.
+- **Spawn A Copy Safely** (`scene: String, name: String, at: String, parent: String`) - The same spawn as Spawn A Copy, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.
+- **Spawn A Copy Safely (3D)** (`scene: String, name: String, at: String, parent: String`) - The same 3D spawn as Spawn A Copy (3D), added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.
+- **Spawn Scene In The World** (`path: String, position: String`) - Loads a scene and drops a copy into the current scene at a place in the level. Spawn Scene At adds the copy under this node and measures its place from this node instead.
+- **Set Control Position** (`pos: String, target: String`) - Places a control inside its parent box, measured from the box's top-left corner. A container or an anchors preset can move it again afterwards.
+- **Set Control World Position** (`pos: String, target: String`) - Places a control at an exact place on the screen's canvas, whatever box it sits in.
+- **Set Control Size** (`size: String, target: String`) - Sets how big a control is, in pixels. A container, or anchors that stretch it, can override the size afterwards.
+
+#### Expressions
+- **Get X** (`target: String`) - Returns the X of the node's place inside its parent, in pixels.
+- **Get World X** (`target: String`) - Returns the X of the node's place in the level, whoever its parent is.
+- **Get Y** (`target: String`) - Returns the Y of the node's place inside its parent, in pixels.
+- **Get World Y** (`target: String`) - Returns the Y of the node's place in the level, whoever its parent is.
+- **Get World Position** (`target: String`) - Returns the node's place in the level as a Vector2, whoever its parent is.
+- **Get X (3D)** (`target: String`) - Returns the X of the node's place inside its parent.
+- **Get World X (3D)** (`target: String`) - Returns the X of the node's place in the level, whoever its parent is.
+- **Get Y (3D)** (`target: String`) - Returns the Y of the node's place inside its parent.
+- **Get World Y (3D)** (`target: String`) - Returns the Y of the node's place in the level, whoever its parent is.
+- **Get Z (3D)** (`target: String`) - Returns the Z of the node's place inside its parent.
+- **Get World Z (3D)** (`target: String`) - Returns the Z of the node's place in the level, whoever its parent is.
+- **Get World Position (3D)** (`target: String`) - Returns the node's place in the level as a Vector3, whoever its parent is.

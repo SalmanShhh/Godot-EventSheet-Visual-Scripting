@@ -919,6 +919,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `set_draw_style` | [Set Draw Style](ace:Core/DrawSetStyle) | Drawing | Vocabulary |
 | `set_ease` | [Tween Property](ace:Core/TweenProperty) | Tween | Vocabulary |
 | `set_focus_neighbor` | [Set Focus Neighbor](ace:Core/SetFocusNeighbor) | UI | Vocabulary |
+| `set_global_position` | [Set World Position](ace:Core/SetWorldPosition2D) | General Actions | Vocabulary |
 | `set_glow_level` | [Set Glow Level](ace:Core/EnvSetGlowLevel) | Environment | Vocabulary |
 | `set_input_as_handled` | [Stop This Input Here](ace:Core/StopInputHere) | General Actions | Vocabulary |
 | `set_locale` | [Set Language](ace:Core/SetLocale) | Translation | Vocabulary |
@@ -937,6 +938,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `set_ribbon_texture` | [Set Ribbon Texture](ace:Core/DrawSetRibbonTexture) | Drawing | Vocabulary |
 | `set_setting` | [Set Setting](ace:Core/SetProjectSetting) | Editor Tools: Project & preferences | Vocabulary |
 | `set_shader_parameter` | [Set Effect Dial](ace:Core/EffectSetDial) | Effects | Vocabulary |
+| `set_size` | [Set Control Size](ace:Core/SetControlSize) | UI | Vocabulary |
 | `set_surface_override_material` | [Set Material Of Surface](ace:Core/MaterialSetSurfaceMaterial) | Material | Vocabulary |
 | `set_tempo` | [Set Sequence Tempo](ace:Core/SequenceSetTempo) | Sequencer | Vocabulary |
 | `set_trans` | [Tween Property](ace:Core/TweenProperty) | Tween | Vocabulary |
