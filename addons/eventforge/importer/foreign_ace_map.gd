@@ -313,7 +313,11 @@ const BUTTON_NAMES: Dictionary = {
 ## both vocabularies spell those the same, so there is nothing to rewrite.
 const EXPRESSION_PATTERNS: Array = [
 	["\\bdistance\\(([^(),]+),\\s*([^(),]+)\\)", "$1.global_position.distance_to($2.global_position)"],
-	["\\bangle\\(([^(),]+),\\s*([^(),]+)\\)", "$1.get_angle_to($2.global_position)"],
+	# The source engine's angle() is the angle from point 1 to point 2 in DEGREES (0 = right, clockwise
+	# on a y-down screen), the same unit its Angle property and rotation rows use here, so the result is
+	# degrees too. get_angle_to would be radians relative to the node's own rotation, wrong on both counts.
+	["\\bangle\\(([^(),]+),\\s*([^(),]+),\\s*([^(),]+),\\s*([^(),]+)\\)", "rad_to_deg(Vector2($1, $2).angle_to_point(Vector2($3, $4)))"],
+	["\\bangle\\(([^(),]+),\\s*([^(),]+)\\)", "rad_to_deg($1.global_position.angle_to_point($2.global_position))"],
 	["\\btokenat\\(([^(),]+),\\s*([^(),]+),\\s*([^(),]+)\\)", "$1.split($3)[$2]"],
 	["\\bzeropad\\(([^(),]+),\\s*([0-9]+)\\)", "\"%0$2d\" % $1"],
 	["\\bleft\\(([^(),]+),\\s*([^(),]+)\\)", "$1.substr(0, $2)"],

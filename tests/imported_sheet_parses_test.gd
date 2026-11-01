@@ -30,11 +30,24 @@ static func run() -> bool:
 ## knows the NAME of but met at an arity it does not, and a mouse button nobody can name.
 static func _values_only_the_other_editor_knows() -> bool:
 	var passed: bool = true
-	var four: Dictionary = EventSheetForeignACEMap.translate_expression("angle(1, 2, 3, 4)")
+	var four: Dictionary = EventSheetForeignACEMap.translate_expression("angle(1, 2, 3, 4, 5)")
 	passed = _check("a call at an arity nothing here spells is flagged", four["translated"], false) and passed
-	passed = _check("and it is kept exactly as written", str(four["text"]), "angle(1, 2, 3, 4)") and passed
+	passed = _check("and it is kept exactly as written", str(four["text"]), "angle(1, 2, 3, 4, 5)") and passed
 	passed = _check("the arity the table does know is still rewritten",
 		str(EventSheetForeignACEMap.translate_expression("random(1, 6)")["text"]), "randf_range(1, 6)") and passed
+	passed = _check("angle between two points is degrees from point 1 to point 2",
+		str(EventSheetForeignACEMap.translate_expression("angle(x1, y1, x2, y2)")["text"]),
+		"rad_to_deg(Vector2(x1, y1).angle_to_point(Vector2(x2, y2)))") and passed
+	passed = _check("angle between two objects is degrees between their places, not get_angle_to",
+		str(EventSheetForeignACEMap.translate_expression("angle(a, b)")["text"]),
+		"rad_to_deg(a.global_position.angle_to_point(b.global_position))") and passed
+	passed = _check("the 4-number form is no longer flagged",
+		EventSheetForeignACEMap.translate_expression("angle(1, 2, 3, 4)")["translated"], true) and passed
+	# Direction check against the engine itself: right is 0, down is +90 (clockwise on a y-down screen).
+	passed = _check("angle to a point on the right is 0",
+		snappedf(rad_to_deg(Vector2(0, 0).angle_to_point(Vector2(5, 0))), 0.01), 0.0) and passed
+	passed = _check("angle to a point below is 90",
+		snappedf(rad_to_deg(Vector2(0, 0).angle_to_point(Vector2(0, 5))), 0.01), 90.0) and passed
 	var button: Dictionary = EventSheetForeignACEMap.translate_button("3")
 	passed = _check("a mouse button nobody can name is not handed a key constant", str(button["text"]), "3") and passed
 	passed = _check("and it is flagged", button["translated"], false) and passed
