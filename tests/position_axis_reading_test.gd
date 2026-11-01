@@ -40,14 +40,44 @@ static func run() -> bool:
 		["the hover on a world axis names the local word",
 			EventSheetSentence.axis_hover("world X"),
 			"world X is the place in the world, whatever the parent node does. Set X to place it relative to the parent node instead."],
-		["a whole local cell carries the local hover", EventSheetSentence.axis_hover_of_cell("Set Z to 4"),
-			EventSheetSentence.axis_hover("Z")],
-		["a whole world cell carries the world hover", EventSheetSentence.axis_hover_of_cell("Set world Y to 1"),
-			EventSheetSentence.axis_hover("world Y")],
-		["a cell that is not an axis write has none", EventSheetSentence.axis_hover_of_cell("Set z_index to 4"), ""],
 		["other text has no axis hover", EventSheetSentence.axis_hover("Score"), ""],
 	])
-	return _imported_row_reads_world() and ok
+	return _hover_follows_the_row_data() and _imported_row_reads_world() and ok
+
+
+## The hover is decided from the action's own data (the member path it writes), never from the words on
+## its row: a script variable called X or Y reads "Set X to 5" too and must get no hint.
+static func _hover_follows_the_row_data() -> bool:
+	return SUPPORT.pins(NAME, [
+		["a raw local axis write carries the local hover", EventSheetSentence.axis_hover_of_action(_raw("$Tree.position.z = 4")),
+			EventSheetSentence.axis_hover("Z")],
+		["a raw world axis write carries the world hover", EventSheetSentence.axis_hover_of_action(_raw("global_position.y = 1")),
+			EventSheetSentence.axis_hover("world Y")],
+		["a Set Property row on position.x carries the local hover",
+			EventSheetSentence.axis_hover_of_action(_set_property("$Sword", "position.x", "3")), EventSheetSentence.axis_hover("X")],
+		["a script variable named X gets no hint", EventSheetSentence.axis_hover_of_action(_raw("X = 5")), ""],
+		["a script variable named Y gets no hint", EventSheetSentence.axis_hover_of_action(_raw("Y = 5")), ""],
+		["a variable named my_position.x style member gets no hint", EventSheetSentence.axis_hover_of_action(_raw("my_position.x = 5")), ""],
+		["a Set Property row on a variable named X gets no hint",
+			EventSheetSentence.axis_hover_of_action(_set_property("$Sword", "X", "3")), ""],
+		["a compound write does not read Set X, so it has no hint", EventSheetSentence.axis_hover_of_action(_raw("position.x += 3")), ""],
+		["z_index has no hint", EventSheetSentence.axis_hover_of_action(_raw("$Tree.z_index = 4")), ""],
+		["the whole position has no hint", EventSheetSentence.axis_hover_of_action(_raw("position = Vector2(1, 2)")), ""],
+		["no action has no hint", EventSheetSentence.axis_hover_of_action(null), ""],
+	])
+
+
+static func _raw(code: String) -> RawCodeRow:
+	var row: RawCodeRow = RawCodeRow.new()
+	row.code = code
+	return row
+
+
+static func _set_property(target: String, property: String, value: String) -> ACEAction:
+	var action: ACEAction = ACEAction.new()
+	action.ace_id = "SetProperty"
+	action.params = {"target": target, "property": property, "value": value}
+	return action
 
 
 ## An imported Set Position, compiled to its GDScript and read back through the grammar.
@@ -82,7 +112,30 @@ static func _imported_row_reads_world() -> bool:
 			"$Sword.global_position.y"],
 		["an imported Y round trips to a row that reads Set world Y", _read(axis_line, other),
 			"Player ▸ Set world Y to 20"],
+		["the importer reads a distance between two objects in the world",
+			str(EventSheetForeignACEMap.translate_expression("distance(Sword, Player)")["text"]),
+			"Sword.global_position.distance_to(Player.global_position)"],
+		["the importer reads an angle between two objects in the world",
+			str(EventSheetForeignACEMap.translate_expression("angle(Sword, Player)")["text"]),
+			"Sword.get_angle_to(Player.global_position)"],
+		["an imported lowercase set-y parameter (as the editor writes it) maps too", _imported_axis_emission("set-y", "y", "20"),
+			"$Player.global_position.y = 20"],
+		["an imported lowercase set-x parameter maps too", _imported_axis_emission("set-x", "x", "7"),
+			"$Player.global_position.x = 7"],
 	])
+
+
+## One imported Set X / Set Y action, compiled, returning the line it wrote ("" when it wrote none).
+static func _imported_axis_emission(row_id: String, parameter: String, value: String) -> String:
+	var imported: Dictionary = EventSheetForeignImporter.import_sheet({"name": "Fixture", "events": [
+		{"eventType": "block", "conditions": [], "children": [], "actions": [
+			{"objectClass": "Player", "id": row_id, "parameters": {parameter: value}}]}]},
+		{"Player": {"kind": "Sprite", "node": "$Player"}})
+	var emitted: String = str(SheetCompiler.compile(imported["sheet"] as EventSheetResource, "", true)["output"])
+	for line: String in emitted.split("\n"):
+		if line.strip_edges().begins_with("$Player."):
+			return line.strip_edges()
+	return ""
 
 
 static func _read(code: String, context: Dictionary) -> String:

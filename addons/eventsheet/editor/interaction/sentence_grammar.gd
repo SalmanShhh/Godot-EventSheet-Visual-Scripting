@@ -3625,7 +3625,7 @@ const TWEEN_PROPERTY_WORDS: Dictionary = {
 	"scale:y": "size Y",
 	"rotation": "angle",
 	"rotation_degrees": "angle",
-	"global_position": "position"
+	"global_position": "world position"
 }
 
 ## The curve shape a `set_trans` names, in plain words.
@@ -5323,13 +5323,40 @@ static func axis_hover(shown_text: String) -> String:
 	return ""
 
 
-## The axis hover for a whole action cell ("Set Y to -8", "Set world X to 3"): the word between "Set "
-## and " to " is looked up. "" for any cell that is not exactly one axis write.
-static func axis_hover_of_cell(cell_text: String) -> String:
-	var cell: String = cell_text.strip_edges()
-	if not cell.begins_with("Set ") or not cell.contains(" to "):
+## The matcher for a line that writes ONE axis of a node's place: `position.y = -8`, `$Tree.global_position.x = 3`.
+## It reads the line's own member path, so a script variable that merely READS "Set X to" on a row
+## (a variable called X or Y) never matches. Only a plain `=` write counts; `+=` reads differently.
+const AXIS_WRITE_PATTERN: String = "^\\s*(?:\\S+?\\.)?(global_position|position)\\.([xyz]) = "
+
+
+## The code line an action stands for, as far as an axis write is concerned: a raw statement is its
+## own first line, and a Set Property row is `target.property = value`. "" for anything else.
+static func action_axis_line(action: Resource) -> String:
+	if action == null:
 		return ""
-	return axis_hover(cell.substr(4, cell.find(" to ") - 4))
+	if action is RawCodeRow:
+		return str((action as RawCodeRow).code).split("\n")[0]
+	if action is ACEAction and str((action as ACEAction).ace_id) == "SetProperty":
+		var params: Dictionary = (action as ACEAction).params
+		var target: String = str(params.get("target", "")).strip_edges()
+		var property: String = str(params.get("property", "")).strip_edges()
+		return "%s%s = %s" % ["" if target.is_empty() else "%s." % target, property, str(params.get("value", ""))]
+	return ""
+
+
+## The axis hover for a whole action, decided from the action's own data and not from the words on its
+## row: the member path of the line it writes. "" for every action that is not a write to one axis of
+## `position` or `global_position`.
+static func axis_hover_of_action(action: Resource) -> String:
+	var line: String = action_axis_line(action)
+	if line.is_empty():
+		return ""
+	var matcher: RegEx = RegEx.create_from_string(AXIS_WRITE_PATTERN)
+	var found: RegExMatch = matcher.search(line)
+	if found == null:
+		return ""
+	var member: String = "%s.%s" % [found.get_string(1), found.get_string(2)]
+	return axis_hover(axis_word(member))
 
 
 ## The type a value plainly declares, for a `:=` local. Only the unmistakable forms are claimed.

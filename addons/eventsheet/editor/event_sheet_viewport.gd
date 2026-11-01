@@ -5167,10 +5167,11 @@ func _glossary_tooltip(hit: Dictionary) -> String:
 ## axis measures and the name of the other one. "" for every other cell.
 func _axis_note(hit: Dictionary) -> String:
 	var row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
-	var span_index: int = int(hit.get("span_index", -1))
-	if row_data == null or span_index < 0 or span_index >= row_data.spans.size():
+	var metadata: Dictionary = hit.get("span_metadata", {}) if hit.get("span_metadata", {}) is Dictionary else {}
+	if row_data == null:
 		return ""
-	return EventSheetSentence.axis_hover_of_cell(row_data.spans[span_index].text)
+	var action: Resource = _resolve_ace_resource(row_data.source_resource, "action", int(metadata.get("ace_index", -1)))
+	return EventSheetSentence.axis_hover_of_action(action)
 
 
 func _mark_tooltip(hit: Dictionary) -> String:

@@ -214,7 +214,7 @@ static func _expressions() -> bool:
 	passed = _check("random becomes randf_range", str(EventSheetForeignACEMap.translate_expression("random(1, 6)")["text"]), "randf_range(1, 6)") and passed
 	passed = _check("choose becomes pick_random", str(EventSheetForeignACEMap.translate_expression("choose(1, 2, 3)")["text"]), "[1, 2, 3].pick_random()") and passed
 	passed = _check("len becomes length", str(EventSheetForeignACEMap.translate_expression("len(word)")["text"]), "word.length()") and passed
-	passed = _check("distance becomes distance_to", str(EventSheetForeignACEMap.translate_expression("distance(a, b)")["text"]), "a.position.distance_to(b.position)") and passed
+	passed = _check("distance becomes distance_to", str(EventSheetForeignACEMap.translate_expression("distance(a, b)")["text"]), "a.global_position.distance_to(b.global_position)") and passed
 	passed = _check("clamp is spelled the same in both", str(EventSheetForeignACEMap.translate_expression("clamp(x, 0, 1)")["text"]), "clamp(x, 0, 1)") and passed
 	passed = _check("a shape only the other editor knows is not translated", EventSheetForeignACEMap.translate_expression("Sprite.BlendMode")["translated"], false) and passed
 	passed = _check("a key nobody here can name is flagged", EventSheetForeignACEMap.translate_key("Rocket")["translated"], false) and passed

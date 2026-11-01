@@ -310,8 +310,8 @@ const BUTTON_NAMES: Dictionary = {
 ## `lerp`, `clamp`, `abs`, `floor`, `ceil`, `round`, `sqrt`, `min` and `max` are absent on purpose:
 ## both vocabularies spell those the same, so there is nothing to rewrite.
 const EXPRESSION_PATTERNS: Array = [
-	["\\bdistance\\(([^(),]+),\\s*([^(),]+)\\)", "$1.position.distance_to($2.position)"],
-	["\\bangle\\(([^(),]+),\\s*([^(),]+)\\)", "$1.get_angle_to($2.position)"],
+	["\\bdistance\\(([^(),]+),\\s*([^(),]+)\\)", "$1.global_position.distance_to($2.global_position)"],
+	["\\bangle\\(([^(),]+),\\s*([^(),]+)\\)", "$1.get_angle_to($2.global_position)"],
 	["\\btokenat\\(([^(),]+),\\s*([^(),]+),\\s*([^(),]+)\\)", "$1.split($3)[$2]"],
 	["\\bzeropad\\(([^(),]+),\\s*([0-9]+)\\)", "\"%0$2d\" % $1"],
 	["\\bleft\\(([^(),]+),\\s*([^(),]+)\\)", "$1.substr(0, $2)"],
@@ -718,7 +718,7 @@ static func _is_decimal_literal(text: String) -> bool:
 
 ## What an expression FIELD writes when a reader types it the way another event-sheet editor spells
 ## it, or "" when there is nothing to rewrite. `object_paths` is {object name: its node path in the
-## open scene}, so `Player.X` becomes `$Player.position.x` only for an object that is really there;
+## open scene}, so `Player.X` becomes `$Player.global_position.x` only for an object that is really there;
 ## `Self.X` is the object the sheet is on. `&` joins text: `a & " px"` becomes `str(a) + " px"` -
 ## but only when a side is a text literal or the field takes text, because in GDScript `&` between
 ## two numbers is bitwise AND and must be left alone. The caller only asks this of text that does NOT
