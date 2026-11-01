@@ -9848,6 +9848,9 @@ world Y,Y monde
 world Z,Z monde
 %s is measured from the parent node. Set world %s to place it in the world instead.,%s se mesure depuis le noeud parent. Réglez %s monde pour le placer dans le monde.
 "world %s is the place in the world, whatever the parent node does. Set %s to place it relative to the parent node instead.","%s monde est la position dans le monde, quoi que fasse le noeud parent. Réglez %s pour le placer par rapport au noeud parent."
+"%s is measured from the parent node, %s. Set world %s to place it in the world instead.","%s se mesure depuis le noeud parent, %s. Réglez %s monde pour le placer dans le monde."
+"world %s is the place in the world, whatever the parent node, %s, does. Set %s to place it relative to %s instead.","%s monde est la position dans le monde, quoi que fasse le noeud parent, %s. Réglez %s pour le placer par rapport à %s."
+Set world position to {other},Définir la position dans le monde sur {other}
 world position,position monde
 Apply Pushes,Appliquer les poussées
 apply pushes ( friction {friction} ),appliquer les poussées ( frottement {friction} )

@@ -9848,6 +9848,9 @@ world Y,Y mundial
 world Z,Z mundial
 %s is measured from the parent node. Set world %s to place it in the world instead.,%s se mide desde el nodo padre. Establece %s mundial para colocarlo en el mundo.
 "world %s is the place in the world, whatever the parent node does. Set %s to place it relative to the parent node instead.","%s mundial es la posición en el mundo, sin importar el nodo padre. Establece %s para colocarlo relativo al nodo padre."
+"%s is measured from the parent node, %s. Set world %s to place it in the world instead.","%s se mide desde el nodo padre, %s. Establece %s mundial para colocarlo en el mundo."
+"world %s is the place in the world, whatever the parent node, %s, does. Set %s to place it relative to %s instead.","%s mundial es la posición en el mundo, sin importar el nodo padre, %s. Establece %s para colocarlo relativo a %s."
+Set world position to {other},Establecer posición del mundo en {other}
 world position,posición mundial
 Apply Pushes,Aplicar empujes
 apply pushes ( friction {friction} ),aplicar empujes ( fricción {friction} )

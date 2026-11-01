@@ -112,7 +112,9 @@ const ROWS: Dictionary = {
 	"Sprite/set-position": {"ace": "SetProperty", "kind": KIND_ACTION, "params": {"target": "@self", "property": "$global_position", "value": "%Vector2(%s, %s)|#X|#Y"}},
 	"Sprite/set-x": {"ace": "SetProperty", "kind": KIND_ACTION, "params": {"target": "@self", "property": "$global_position.x", "value": "#X"}},
 	"Sprite/set-y": {"ace": "SetProperty", "kind": KIND_ACTION, "params": {"target": "@self", "property": "$global_position.y", "value": "#Y"}},
-	"Sprite/move-at-angle": {"ace": "MoveBy2D", "kind": KIND_ACTION, "params": {"target": "@node", "offset": "%Vector2.RIGHT.rotated(deg_to_rad(%s)) * %s|#Angle|#Distance"}},
+	# The angle is a direction in the level, so the step is added to the world place: Move By adds it in
+	# the parent's axes, which turns it with a rotated parent and stretches it with a scaled one.
+	"Sprite/move-at-angle": {"ace": "AddToProperty", "kind": KIND_ACTION, "params": {"target": "@self", "property": "$global_position", "value": "%Vector2.RIGHT.rotated(deg_to_rad(%s)) * %s|#Angle|#Distance"}},
 	"Sprite/set-angle": {"ace": "SetRotationDeg", "kind": KIND_ACTION, "params": {"target": "@node", "degrees": "#Angle"}},
 	"Sprite/set-animation": {"ace": "PlaySpriteAnimation", "kind": KIND_ACTION, "params": {"target": "@node", "anim": "#Animation"}},
 	"Sprite/set-animation-frame": {"ace": "SetSpriteFrame", "kind": KIND_ACTION, "params": {"target": "@node", "frame": "#Frame number"}},

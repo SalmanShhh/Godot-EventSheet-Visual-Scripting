@@ -5147,6 +5147,12 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	# Nothing is lost by it: the sentence the file gets is the same sentence either way, and the
 	# emitted bytes are identical.
 	"PlaceAtNode3D",
+	# Set Position To Another Object (2D), for the same reason and one more: `global_position =
+	# {other}.global_position` is its 3D twin's line to the character, and that twin's page is kept out
+	# of this index above. Admitted, the 2D row would claim the line in EVERY script - a 3D one
+	# included, where a Node2D row has no business - and the reading would trade the line's own object
+	# for the row's. It authors; a hand-written copy keeps the reading the line already had.
+	"SetPositionToObject2D",
 	# The two view-and-layer rows whose template is a bare, very common property write. `size = {size}`
 	# is a Control's size, a box shape's size, a viewport's size and a dozen more, and `offset = {by}`
 	# is a line the shipped Set Offset row already speaks for. Admitted, the first would relabel every

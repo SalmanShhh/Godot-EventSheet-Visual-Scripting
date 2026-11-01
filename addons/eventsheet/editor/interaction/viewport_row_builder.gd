@@ -18789,7 +18789,7 @@ const PATTERN_VOCABULARY: Dictionary = {
 	"move_to": {
 		"words": "Gliding to a point until it arrives",
 		"adoptable": "move_to",
-		"ace_ids": ["Core/GlideToward", "Core/IsWithinDistance"]
+		"ace_ids": ["Core/GlideToward", "Core/GlideTowardWorld", "Core/IsWithinDistance"]
 	},
 	"rotate": {
 		"words": "A constant spin",
@@ -18799,12 +18799,13 @@ const PATTERN_VOCABULARY: Dictionary = {
 	"wrap": {
 		"words": "Wrapping around the layout edges",
 		"adoptable": "wrap",
-		"ace_ids": ["Core/WrapAroundLayoutX", "Core/WrapAroundLayoutY"]
+		"ace_ids": ["Core/WrapAroundLayoutX", "Core/WrapAroundLayoutY", "Core/WrapAroundLayoutXWorld",
+			"Core/WrapAroundLayoutYWorld"]
 	},
 	"bound": {
 		"words": "Held inside the layout edges",
 		"adoptable": "bound_to",
-		"ace_ids": ["Core/BoundToLayout"]
+		"ace_ids": ["Core/BoundToLayout", "Core/BoundToLayoutWorld"]
 	},
 	"pin": {
 		"words": "One object's place copied from another's",
@@ -19773,6 +19774,12 @@ const GRAMMAR_READ_ACE_IDS: PackedStringArray = [
 	"SetZOrder"
 ]
 
+## The world twins of the layout and glide verbs. Each writes one line the behaviour shapes read, and
+## when the shape does not claim it (the row moves another node) the line is read as written.
+const WORLD_TWIN_LINE_IDS: PackedStringArray = [
+	"GlideTowardWorld", "WrapAroundLayoutXWorld", "WrapAroundLayoutYWorld", "BoundToLayoutWorld"
+]
+
 
 ## The shared-grammar reading of an ACE ACTION whose shape a hand-written line can also have, or {}
 ## when this row has no such twin. The point is symmetry: `Destroy`, `Signal On Jumped`, `Set hp to 0`
@@ -19817,6 +19824,12 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 	var shaped: Dictionary = behavior_shape_action_sentence(action.ace_id, params_dict, context)
 	if not shaped.is_empty():
 		return shaped
+	# A world twin aimed at ANOTHER node (`host.global_position = host.global_position.clamp(...)`) is
+	# no shape of this one, so it reads as the line it writes, about that node - the same sentence the
+	# line has when it is typed by hand. A twin on this node that no shape claims keeps its own words.
+	if WORLD_TWIN_LINE_IDS.has(action.ace_id) and not shape_line.is_empty() \
+			and not str(params_dict.get("host", "")).strip_edges() in ["", "self"]:
+		return EventSheetSentence.statement(shape_line, context)
 	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# A board's push and its ollie are ordinary property writes, so the importer files them as
 	# Set rows before any reading gets a look - and "Set velocity Y to -ollie speed" is a true
@@ -20028,6 +20041,10 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 		"SetWorldPosition2D", "SetWorldPosition3D", "SetControlWorldPosition":
 			return EventSheetSentence.statement("%s.global_position = %s" % [
 				_ace_target(params_dict), str(params_dict.get("pos", ""))], context)
+		# And a control's size, in the words a typed `size = ...` line has.
+		"SetControlSize":
+			return EventSheetSentence.statement("%s.size = %s" % [
+				_ace_target(params_dict), str(params_dict.get("size", ""))], context)
 		"SetProperty":
 			return EventSheetSentence.statement("%s.%s = %s" % [
 				str(params_dict.get("target", "")), str(params_dict.get("property", "")),

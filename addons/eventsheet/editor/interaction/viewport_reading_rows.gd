@@ -71,6 +71,7 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 		"enum_names": enums.get("names", {}),
 		"enum_values": enums.get("values", {}),
 		"variable_types": declared.get("types", {}),
+		"variable_value_types": variable_value_types(sheet),
 		"variable_enum_types": declared.get("enum_types", {}),
 		"percent_members": declared.get("percent_members", {}),
 		"object_classes": object_class_map(sheet),
@@ -1667,6 +1668,28 @@ static func declared_type_map(sheet: EventSheetResource) -> Dictionary:
 		if _is_fraction_range(variable):
 			percent_members[variable.name] = true
 	return {"types": types, "enum_types": enum_types, "percent_members": percent_members}
+
+
+## {variable name: its type} for the sheet's own variables, as declared or as a constructor default
+## says it (`var area := Rect2()` is a Rect2). The place words ask it: a rectangle, a box and an input
+## event all have a `position`, and `area.position.x = 0` moves no node, so it must not read "Set X" or
+## carry the hover that talks about a parent node. A variable whose type nothing says is left out.
+static func variable_value_types(sheet: EventSheetResource) -> Dictionary:
+	var types: Dictionary = {}
+	if sheet == null:
+		return types
+	for entry: Variant in sheet.events:
+		var variable: LocalVariable = entry as LocalVariable
+		if variable == null or variable.name.strip_edges().is_empty():
+			continue
+		var type_name: String = variable.type_name.strip_edges()
+		if type_name.is_empty() or type_name == "Variant":
+			var default_text: String = str(variable.default_value).strip_edges() if variable.default_value is String else ""
+			var opening: int = default_text.find("(")
+			type_name = default_text.substr(0, opening) if opening > 0 else ""
+		if not type_name.is_empty() and EventSheetSentence.is_identifier(type_name):
+			types[variable.name] = type_name
+	return types
 
 
 ## Every name this file uses BOTH as a script-level member and as something narrower - a function

@@ -3,7 +3,7 @@ class_name MarkedPlaceIconTest
 extends RefCounted
 
 # A place copied off a MARKED spot wears the mark: `crate.global_position = spawn.global_position`
-# reads "crate ▸ Set position to spawn spawn point", and the value in it names the marker's own class
+# reads "crate ▸ Set world position to spawn spawn point", and the value in it names the marker's own class
 # so the canvas can draw that class's picture beside it - the picture the scene tree shows the node by.
 #
 # The class is named by the sentence layer, which had already resolved it for the note, so the canvas
@@ -75,10 +75,10 @@ static func _words_unmoved() -> bool:
 	var context: Dictionary = _context()
 	ok = _check("the marked place still reads the way it did",
 		_joined(EventSheetSentence.statement("crate.global_position = spawn.global_position", context)),
-		"crate ▸ Set position to spawn spawn point") and ok
+		"crate ▸ Set world position to spawn spawn point") and ok
 	ok = _check("and the plain one too",
 		_joined(EventSheetSentence.statement("crate.global_position = target.global_position", context)),
-		"crate ▸ Set position to target another object") and ok
+		"crate ▸ Set world position to target another object") and ok
 	ok = _check("the row still claims the placement pattern",
 		str(EventSheetSentence.statement(
 			"crate.global_position = spawn.global_position", context).get("pattern", "")),

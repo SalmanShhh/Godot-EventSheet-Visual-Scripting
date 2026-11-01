@@ -5238,7 +5238,8 @@ func _axis_note(hit: Dictionary) -> String:
 	if row_data == null:
 		return ""
 	var action: Resource = _resolve_ace_resource(row_data.source_resource, "action", int(metadata.get("ace_index", -1)))
-	return EventSheetSentence.axis_hover_of_action(action)
+	return EventSheetSentence.axis_hover_of_action(action,
+			EventSheetViewportReadingRows.variable_value_types(_sheet))
 
 
 func _mark_tooltip(hit: Dictionary) -> String:

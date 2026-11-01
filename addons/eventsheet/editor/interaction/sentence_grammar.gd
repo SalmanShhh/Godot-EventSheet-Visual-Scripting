@@ -2252,6 +2252,13 @@ static func _assignment_statement(text: String, context: Dictionary) -> Dictiona
 	# one, and landing a curated table later takes a row back off this path with the file untouched.
 	var member_text: String = str(split[1])
 	var axis_name: String = axis_word(member_text)
+	# A rectangle, a box or an input event has a `position` too, and its corner is no node's place:
+	# `area.position.x = 0` keeps its own spelling when the sheet says `area` is one of those.
+	if not axis_name.is_empty() and target.length() > member_text.length() + 1:
+		var receiver: String = target.substr(0, target.length() - member_text.length() - 1).strip_edges()
+		var value_types: Dictionary = context.get("variable_value_types", {})
+		if not _type_can_be_a_node(str(value_types.get(receiver, ""))):
+			axis_name = ""
 	var written: Dictionary = _sentence(object_name, "Set {name} to {value}", {
 		"name": [axis_name if not axis_name.is_empty() else member_text, "name"],
 		"value": [shown_value, "value"]
@@ -5311,14 +5318,19 @@ static func axis_word(member: String) -> String:
 
 
 ## What hovering an axis word says: which place it measures and the name of the other one. "" for any
-## other text, so a caller can ask this of every span's text.
-static func axis_hover(shown_text: String) -> String:
+## other text, so a caller can ask this of every span's text. `parent` is the parent node's name when
+## the line's own node path says it (`$Player/Sword` is under Player), and the hover then names it.
+static func axis_hover(shown_text: String, parent: String = "") -> String:
 	var wanted: String = shown_text.strip_edges()
 	var axes: PackedStringArray = PackedStringArray(["X", "Y", "Z"])
 	for axis: String in axes:
 		if wanted == axis:
+			if not parent.is_empty():
+				return translate("%s is measured from the parent node, %s. Set world %s to place it in the world instead.") % [axis, parent, axis]
 			return translate("%s is measured from the parent node. Set world %s to place it in the world instead.") % [axis, axis]
 		if wanted == axis_word("global_position.%s" % axis.to_lower()):
+			if not parent.is_empty():
+				return translate("world %s is the place in the world, whatever the parent node, %s, does. Set %s to place it relative to %s instead.") % [axis, parent, axis, parent]
 			return translate("world %s is the place in the world, whatever the parent node does. Set %s to place it relative to the parent node instead.") % [axis, axis]
 	return ""
 
@@ -5326,7 +5338,9 @@ static func axis_hover(shown_text: String) -> String:
 ## The matcher for a line that writes ONE axis of a node's place: `position.y = -8`, `$Tree.global_position.x = 3`.
 ## It reads the line's own member path, so a script variable that merely READS "Set X to" on a row
 ## (a variable called X or Y) never matches. Only a plain `=` write counts; `+=` reads differently.
-const AXIS_WRITE_PATTERN: String = "^\\s*(?:\\S+?\\.)?(global_position|position)\\.([xyz]) = "
+## The first group is the receiver (empty for the script's own node), the second the member, the third
+## the axis.
+const AXIS_WRITE_PATTERN: String = "^\\s*(?:(\\S+?)\\.)?(global_position|position)\\.([xyz]) = "
 
 
 ## The code line an action stands for, as far as an axis write is concerned: a raw statement is its
@@ -5347,7 +5361,12 @@ static func action_axis_line(action: Resource) -> String:
 ## The axis hover for a whole action, decided from the action's own data and not from the words on its
 ## row: the member path of the line it writes. "" for every action that is not a write to one axis of
 ## `position` or `global_position`.
-static func axis_hover_of_action(action: Resource) -> String:
+##
+## `receiver_types` is {variable name: the type the sheet declared for it}. A rectangle, a box or an
+## input event has a `position` too, and `rect.position.x = 0` moves no node, so a receiver the sheet
+## declared as one of those gets no hint. A receiver the sheet says nothing about keeps it: the member
+## path is the evidence, and a node is what writes it nearly every time.
+static func axis_hover_of_action(action: Resource, receiver_types: Dictionary = {}) -> String:
 	var line: String = action_axis_line(action)
 	if line.is_empty():
 		return ""
@@ -5355,8 +5374,40 @@ static func axis_hover_of_action(action: Resource) -> String:
 	var found: RegExMatch = matcher.search(line)
 	if found == null:
 		return ""
-	var member: String = "%s.%s" % [found.get_string(1), found.get_string(2)]
-	return axis_hover(axis_word(member))
+	var receiver: String = found.get_string(1)
+	if not _type_can_be_a_node(str(receiver_types.get(receiver, ""))):
+		return ""
+	var member: String = "%s.%s" % [found.get_string(2), found.get_string(3)]
+	return axis_hover(axis_word(member), parent_named_by(receiver))
+
+
+## Whether a declared type could be a node. "" (nothing declared) could; an engine class answers for
+## itself; a built-in value type (Rect2, AABB, Vector2...) never is; anything else is a class the
+## project declared, which may well be a node.
+static func _type_can_be_a_node(type_name: String) -> bool:
+	var wanted: String = type_name.strip_edges()
+	if wanted.is_empty() or wanted == "Variant":
+		return true
+	if ClassDB.class_exists(wanted):
+		return ClassDB.is_parent_class(wanted, "Node")
+	for type_id: int in range(TYPE_MAX):
+		if type_string(type_id) == wanted:
+			return false
+	return true
+
+
+## The parent a node path names, when it names one: `$Player/Sword` is under Player. "" for a path
+## that does not say (`$Sword`, `%Sword`, a variable, a path that climbs with `..`).
+static func parent_named_by(receiver: String) -> String:
+	var path: String = receiver.strip_edges()
+	if not path.begins_with("$"):
+		return ""
+	path = path.substr(1).trim_prefix("\"").trim_suffix("\"")
+	var parts: PackedStringArray = path.split("/", false)
+	if parts.size() < 2:
+		return ""
+	var parent: String = parts[parts.size() - 2]
+	return "" if parent == ".." or parent == "." else parent
 
 
 ## The type a value plainly declares, for a `:=` local. Only the unmistakable forms are claimed.
@@ -13047,7 +13098,7 @@ static func placement_statement(text: String, context: Dictionary) -> Dictionary
 	var value: String = text.substr(at + 3).strip_edges()
 	var member: String = _trailing_member(target)
 	if OWN_POSITION_NAMES.has(member):
-		return _place_at_object_statement(object_name, value, text, context)
+		return _place_at_object_statement(object_name, value, text, context, member == "global_position")
 	if BASIS_MEMBERS.has(member):
 		return _align_to_slope_statement(object_name, target, value, text)
 	return {}
@@ -13055,9 +13106,11 @@ static func placement_statement(text: String, context: Dictionary) -> Dictionary
 
 ## `crate.global_position = spawn.global_position` - the sheet's own 2D words, said in 3D. A place
 ## belongs to the object whose place it is, so the row names the object and folds what kind of thing
-## it was: a marker node is a spawn point, which is the word a reader is looking for.
+## it was: a marker node is a spawn point, which is the word a reader is looking for. `world` is a
+## write to `global_position`, the place in the level, which reads "Set world position" as every
+## other write to it does; a write to `position` is the place inside the parent and reads "Set position".
 static func _place_at_object_statement(object_name: String, value: String, text: String,
-		context: Dictionary) -> Dictionary:
+		context: Dictionary, world: bool = false) -> Dictionary:
 	if not OWN_POSITION_NAMES.has(_trailing_member(value)):
 		return {}
 	var other_text: String = _owner_of(value)
@@ -13071,7 +13124,8 @@ static func _place_at_object_statement(object_name: String, value: String, text:
 	# saying it was would name a thing the reader cannot find.
 	if not is_spatial_object(other_object, context):
 		return {}
-	var reading: Dictionary = _sentence(object_name, "Set position to {other}", {
+	var reading: Dictionary = _sentence(object_name,
+			"Set world position to {other}" if world else "Set position to {other}", {
 		"other": [other_object, "value"]})
 	var other_class: String = object_class_of(other_object, context)
 	var marked_place: bool = _class_is_any(other_class, SPAWN_MARKER_CLASSES)

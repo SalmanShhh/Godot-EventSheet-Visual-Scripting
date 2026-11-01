@@ -9848,6 +9848,9 @@ world Y,Welt-Y
 world Z,Welt-Z
 %s is measured from the parent node. Set world %s to place it in the world instead.,"%s wird vom übergeordneten Knoten aus gemessen. Setze Welt-%s, um es stattdessen in der Welt zu platzieren."
 "world %s is the place in the world, whatever the parent node does. Set %s to place it relative to the parent node instead.","Welt-%s ist die Position in der Welt, unabhängig vom übergeordneten Knoten. Setze %s, um es stattdessen relativ zum übergeordneten Knoten zu platzieren."
+"%s is measured from the parent node, %s. Set world %s to place it in the world instead.","%s wird vom übergeordneten Knoten %s aus gemessen. Setze Welt-%s, um es stattdessen in der Welt zu platzieren."
+"world %s is the place in the world, whatever the parent node, %s, does. Set %s to place it relative to %s instead.","Welt-%s ist die Position in der Welt, unabhängig vom übergeordneten Knoten %s. Setze %s, um es stattdessen relativ zu %s zu platzieren."
+Set world position to {other},Weltposition auf {other} setzen
 world position,Weltposition
 Apply Pushes,Stöße anwenden
 apply pushes ( friction {friction} ),Stöße anwenden ( Reibung {friction} )

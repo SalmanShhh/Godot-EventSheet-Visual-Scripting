@@ -84,6 +84,7 @@ static func run() -> bool:
 	ok = _control_set_is_complete(by_id) and ok
 	ok = _new_aces_compile(by_id) and ok
 	ok = _spawn_twin_lands_in_the_world() and ok
+	ok = _twins_read_like_their_lines() and ok
 	return ok
 
 
@@ -222,6 +223,27 @@ static func _spawn_twin_lands_in_the_world() -> bool:
 		["the world safe spawn books the add", add_at >= 0, true],
 		["the world safe spawn books the world place after the add", place_at > add_at and add_at >= 0, true],
 		["the world safe spawn never writes the local place", output.contains("b.position"), false],
+	])
+
+
+## The twins read in the same words as the lines they write. A glide or a fence that moves ANOTHER node
+## (a behaviour moving the node it rides on) is a line about that node, so its shape line keeps the
+## receiver; one that moves this node is the bare line the behaviour shapes read. And a hand-written
+## copy of another node's place is never claimed by the 2D Set Position To Another Object: its 3D twin
+## writes the same line, so the row would land on 3D scripts too.
+static func _twins_read_like_their_lines() -> bool:
+	var params: Dictionary = {"host": "host", "destination": "target", "speed": "5.0", "delta_t": "dt"}
+	var own: Dictionary = {"host": "", "low": "Vector2.ZERO", "high": "Vector2(10, 10)"}
+	var copied: Resource = EventSheetACELifter.lift_one_line("global_position = marker.global_position")
+	return SUPPORT.pins(NAME, [
+		["a glide on another node keeps its receiver", EventSheetBehaviorShapes.line_for("GlideTowardWorld", params),
+			"host.global_position = host.global_position.move_toward(target, 5.0 * dt)"],
+		["a fence on this node is the bare line", EventSheetBehaviorShapes.line_for("BoundToLayoutWorld", own),
+			"global_position = global_position.clamp(Vector2.ZERO, Vector2(10, 10))"],
+		["the local glide line is unchanged", EventSheetBehaviorShapes.line_for("GlideToward", params),
+			"position = position.move_toward(target, 5.0 * dt)"],
+		["a hand-written place copy is not claimed by the 2D row",
+			copied is ACEAction and str((copied as ACEAction).ace_id) == "SetPositionToObject2D", false],
 	])
 
 

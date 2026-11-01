@@ -9848,6 +9848,9 @@ world Y,世界Y
 world Z,世界Z
 %s is measured from the parent node. Set world %s to place it in the world instead.,%s 相对于父节点。设置世界%s 可将其放在世界坐标中。
 "world %s is the place in the world, whatever the parent node does. Set %s to place it relative to the parent node instead.",世界%s 是世界中的位置，不受父节点影响。设置 %s 可相对于父节点放置。
+"%s is measured from the parent node, %s. Set world %s to place it in the world instead.",%s 相对于父节点 %s。设置世界%s 可将其放在世界坐标中。
+"world %s is the place in the world, whatever the parent node, %s, does. Set %s to place it relative to %s instead.",世界%s 是世界中的位置，不受父节点 %s 影响。设置 %s 可相对于 %s 放置。
+Set world position to {other},将世界位置设为 {other}
 world position,世界位置
 Apply Pushes,应用推力
 apply pushes ( friction {friction} ),应用推力 ( 摩擦 {friction} )

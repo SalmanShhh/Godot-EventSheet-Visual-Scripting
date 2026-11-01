@@ -9848,6 +9848,9 @@ world Y,월드 Y
 world Z,월드 Z
 %s is measured from the parent node. Set world %s to place it in the world instead.,%s 는 부모 노드를 기준으로 측정됩니다. 월드 %s 를 설정하면 월드 좌표로 배치됩니다.
 "world %s is the place in the world, whatever the parent node does. Set %s to place it relative to the parent node instead.",월드 %s 는 부모 노드와 무관한 월드 상의 위치입니다. %s 를 설정하면 부모 노드 기준으로 배치됩니다.
+"%s is measured from the parent node, %s. Set world %s to place it in the world instead.",%s 는 부모 노드 %s 를 기준으로 측정됩니다. 월드 %s 를 설정하면 월드 좌표로 배치됩니다.
+"world %s is the place in the world, whatever the parent node, %s, does. Set %s to place it relative to %s instead.",월드 %s 는 부모 노드 %s 와 무관한 월드 상의 위치입니다. %s 를 설정하면 %s 기준으로 배치됩니다.
+Set world position to {other},월드 위치를 {other}(으)로 설정
 world position,월드 위치
 Apply Pushes,밀림 적용
 apply pushes ( friction {friction} ),밀림 적용 ( 마찰 {friction} )

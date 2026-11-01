@@ -64,6 +64,25 @@ static func _hover_follows_the_row_data() -> bool:
 		["z_index has no hint", EventSheetSentence.axis_hover_of_action(_raw("$Tree.z_index = 4")), ""],
 		["the whole position has no hint", EventSheetSentence.axis_hover_of_action(_raw("position = Vector2(1, 2)")), ""],
 		["no action has no hint", EventSheetSentence.axis_hover_of_action(null), ""],
+		["a rectangle's corner gets no hint", EventSheetSentence.axis_hover_of_action(
+			_raw("area.position.x = 0"), {"area": "Rect2"}), ""],
+		["an input event's place gets no hint", EventSheetSentence.axis_hover_of_action(
+			_raw("click.position.y = 0"), {"click": "InputEventMouseButton"}), ""],
+		["a variable typed as a node keeps the hint", EventSheetSentence.axis_hover_of_action(
+			_raw("sword.position.y = 0"), {"sword": "Node2D"}), EventSheetSentence.axis_hover("Y")],
+		["a variable typed with the project's own class keeps the hint", EventSheetSentence.axis_hover_of_action(
+			_raw("sword.position.y = 0"), {"sword": "SwordPickup"}), EventSheetSentence.axis_hover("Y")],
+		["a node path that names the parent names it in the hover",
+			EventSheetSentence.axis_hover_of_action(_raw("$Player/Sword.position.y = -8")),
+			"Y is measured from the parent node, Player. Set world Y to place it in the world instead."],
+		["the world hover names the parent too",
+			EventSheetSentence.axis_hover_of_action(_raw("$Player/Sword.global_position.y = 300")),
+			"world Y is the place in the world, whatever the parent node, Player, does. Set Y to place it relative to Player instead."],
+		["a path that climbs names no parent", EventSheetSentence.parent_named_by("$\"../Sword\""), ""],
+		["a bare node names no parent", EventSheetSentence.parent_named_by("$Sword"), ""],
+		["a rectangle's corner keeps its own words on the row",
+			_read("area.position.x = 0", {"self_object": "Player", "script_object": "Player",
+				"variable_value_types": {"area": "Rect2"}}), "area ▸ Set position.x to 0"],
 	])
 
 
@@ -122,6 +141,8 @@ static func _imported_row_reads_world() -> bool:
 			"$Player.global_position.y = 20"],
 		["an imported lowercase set-x parameter maps too", _imported_axis_emission("set-x", "x", "7"),
 			"$Player.global_position.x = 7"],
+		["an imported move at angle steps the world place", _imported_step_emission(),
+			"$Player.global_position += Vector2.RIGHT.rotated(deg_to_rad(90)) * 10"],
 	])
 
 
@@ -130,6 +151,20 @@ static func _imported_axis_emission(row_id: String, parameter: String, value: St
 	var imported: Dictionary = EventSheetForeignImporter.import_sheet({"name": "Fixture", "events": [
 		{"eventType": "block", "conditions": [], "children": [], "actions": [
 			{"objectClass": "Player", "id": row_id, "parameters": {parameter: value}}]}]},
+		{"Player": {"kind": "Sprite", "node": "$Player"}})
+	var emitted: String = str(SheetCompiler.compile(imported["sheet"] as EventSheetResource, "", true)["output"])
+	for line: String in emitted.split("\n"):
+		if line.strip_edges().begins_with("$Player."):
+			return line.strip_edges()
+	return ""
+
+
+## One imported Move At Angle, compiled, returning the line it wrote ("" when it wrote none). The angle
+## is a direction in the level, so the step lands on the world place whatever the parent is turned to.
+static func _imported_step_emission() -> String:
+	var imported: Dictionary = EventSheetForeignImporter.import_sheet({"name": "Fixture", "events": [
+		{"eventType": "block", "conditions": [], "children": [], "actions": [
+			{"objectClass": "Player", "id": "move-at-angle", "parameters": {"Angle": "90", "Distance": "10"}}]}]},
 		{"Player": {"kind": "Sprite", "node": "$Player"}})
 	var emitted: String = str(SheetCompiler.compile(imported["sheet"] as EventSheetResource, "", true)["output"])
 	for line: String in emitted.split("\n"):

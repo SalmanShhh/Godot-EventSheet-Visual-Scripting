@@ -94,6 +94,14 @@ const ACE_LINES: Dictionary = {
 	"WrapAroundLayoutX": "position.x = wrapf(position.x, {low}, {high})",
 	"WrapAroundLayoutY": "position.y = wrapf(position.y, {low}, {high})",
 	"BoundToLayout": "position = position.clamp({low}, {high})",
+	# Their world twins, which write the node's place in the level. These keep `{host.}`: a row that
+	# glides ANOTHER node (`host.global_position = host.global_position.move_toward(...)`, the way a
+	# behaviour moves the node it is attached to) is a line about that node, and saying it about this
+	# one would put the row on the wrong object.
+	"GlideTowardWorld": "{host.}global_position = {host.}global_position.move_toward({destination}, {speed} * {delta_t})",
+	"WrapAroundLayoutXWorld": "{host.}global_position.x = wrapf({host.}global_position.x, {low}, {high})",
+	"WrapAroundLayoutYWorld": "{host.}global_position.y = wrapf({host.}global_position.y, {low}, {high})",
+	"BoundToLayoutWorld": "{host.}global_position = {host.}global_position.clamp({low}, {high})",
 	"PinToObject": "global_position = {anchor}.global_position + {offset}",
 	"PinAngleToObject": "rotation = {anchor}.rotation",
 	# The two DISTANCE pin modes, which are still ONE line each, so the picker can author them
@@ -121,6 +129,10 @@ static func line_for(ace_id: String, params: Dictionary, conditions: bool = fals
 	if not table.has(ace_id):
 		return ""
 	var code: String = str(table[ace_id])
+	# The optional receiver a `{host.}` line carries: the host and a dot when the row names one,
+	# nothing when it is this node's own line.
+	var host: String = str(params.get("host", "")).strip_edges()
+	code = code.replace("{host.}", "" if host.is_empty() or host == "self" else host + ".")
 	var slots: PackedStringArray = PackedStringArray()
 	for key: Variant in params:
 		slots.append(str(key))

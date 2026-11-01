@@ -108,7 +108,9 @@ static func _append_spawn_twins(descriptors: Array[ACEDescriptor]) -> void:
 
 ## A UI Control's place and size. A Control sits inside a parent box: its position is measured from that
 ## box's top-left corner, and its anchors and offsets (or a container) can move it again after the
-## write. Set Anchors Preset ships beside these in ui_aces.gd. Set Control Size writes `set_size(...)`\n## rather than `size = ...` on purpose: the reverse lifter claims a line by its template, and `size = value`\n## belongs to every node that has a size (a viewport, a mesh, a camera), none of which is a Control.
+## write. Set Anchors Preset ships beside these in ui_aces.gd. Set Control Size writes `set_size(...)`
+## rather than `size = ...` on purpose: the reverse lifter claims a line by its template, and `size = value`
+## belongs to every node that has a size (a viewport, a mesh, a camera), none of which is a Control.
 static func _append_control_place(descriptors: Array[ACEDescriptor]) -> void:
 	descriptors.append(F.act("SetControlPosition", "Set Control Position", "position = {pos}", CAT_UI, "Set position to {pos}", "Places a control inside its parent box, measured from the box's top-left corner. A container or an anchors preset can move it again afterwards.", "Control").param("pos", "Vector2(0, 0)", "Position", "Where inside the parent box, from its top-left corner.", "expression"))
 	descriptors.append(F.act("SetControlWorldPosition", "Set Control World Position", "set_global_position({pos})", CAT_UI, "Set world position to {pos}", "Places a control at an exact place on the screen's canvas, whatever box it sits in.", "Control").param("pos", "Vector2(0, 0)", "Position", "Where on the canvas, from the top-left corner of the screen.", "expression"))

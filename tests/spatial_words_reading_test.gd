@@ -81,8 +81,9 @@ static var STATEMENT_READINGS: Dictionary = {
 	"look_at(target.global_position, Vector3.UP)": "Player ▸ Look at target",
 	"look_at(target.global_position, wall_normal)": "Player ▸ Look at target (up is wall_normal)",
 	# Standing where another object stands, and tilting onto a slope
-	"crate.global_position = spawn.global_position": "crate ▸ Set position to spawn spawn point",
-	"crate.global_position = target.global_position": "crate ▸ Set position to target another object",
+	"crate.global_position = spawn.global_position": "crate ▸ Set world position to spawn spawn point",
+	"crate.global_position = target.global_position": "crate ▸ Set world position to target another object",
+	"crate.position = target.position": "crate ▸ Set position to target another object",
 	"crate.basis = Basis(Quaternion(Vector3.UP, ground_normal)) * crate.basis":
 		"crate ▸ Align to the ground's slope"
 }

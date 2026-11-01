@@ -9848,6 +9848,9 @@ world Y,мировой Y
 world Z,мировой Z
 %s is measured from the parent node. Set world %s to place it in the world instead.,"%s отсчитывается от родительского узла. Задайте мировой %s, чтобы разместить в мире."
 "world %s is the place in the world, whatever the parent node does. Set %s to place it relative to the parent node instead.","Мировой %s - это положение в мире, независимо от родительского узла. Задайте %s, чтобы разместить относительно родительского узла."
+"%s is measured from the parent node, %s. Set world %s to place it in the world instead.","%s отсчитывается от родительского узла %s. Задайте мировой %s, чтобы разместить в мире."
+"world %s is the place in the world, whatever the parent node, %s, does. Set %s to place it relative to %s instead.","Мировой %s - это положение в мире, независимо от родительского узла %s. Задайте %s, чтобы разместить относительно %s."
+Set world position to {other},Задать мировую позицию {other}
 world position,мировая позиция
 Apply Pushes,Применить толчки
 apply pushes ( friction {friction} ),применить толчки ( трение {friction} )

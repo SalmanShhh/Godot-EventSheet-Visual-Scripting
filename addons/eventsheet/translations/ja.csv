@@ -9848,6 +9848,9 @@ world Y,ワールドY
 world Z,ワールドZ
 %s is measured from the parent node. Set world %s to place it in the world instead.,%s は親ノードからの相対位置です。ワールド%s を設定すると、ワールド上の位置に配置できます。
 "world %s is the place in the world, whatever the parent node does. Set %s to place it relative to the parent node instead.",ワールド%s はワールド上の位置で、親ノードの影響を受けません。%s を設定すると、親ノードからの相対位置に配置できます。
+"%s is measured from the parent node, %s. Set world %s to place it in the world instead.",%s は親ノード %s からの相対位置です。ワールド%s を設定すると、ワールド上の位置に配置できます。
+"world %s is the place in the world, whatever the parent node, %s, does. Set %s to place it relative to %s instead.",ワールド%s はワールド上の位置で、親ノード %s の影響を受けません。%s を設定すると、%s からの相対位置に配置できます。
+Set world position to {other},ワールド位置を {other} に設定
 world position,ワールド位置
 Apply Pushes,押し出しを適用
 apply pushes ( friction {friction} ),押し出しを適用 ( 摩擦 {friction} )
