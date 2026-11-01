@@ -102,6 +102,24 @@ func value_of(field: Control) -> String:
 	return str(_builder._extract_value(field))
 
 
+## Whether a value may be written into a row, asked of the same gate the Edit Parameter dialog
+## closes with - a required value left blank, a name that is not a variable, a malformed or
+## non-compiling expression - so the Properties bar and the sheet's inline value editor cannot commit
+## what the dialog would have refused. `is_expression` is true when the parameter takes GDScript;
+## `definition_id` is the verb's id, which settles what kind of value it needs. Returns {} when the
+## value may be written, else {message, reason}. Warnings never block.
+func blocking_problem(descriptor: Dictionary, value: String, is_expression: bool,
+		definition_id: String = "") -> Dictionary:
+	var takes: String = str(EventSheetVariableOwners.VARIABLE_VERB_TAKES.get(definition_id, ""))
+	return _builder.blocking_problem_for(descriptor, value, is_expression, takes)
+
+
+## True when a built widget holds GDScript (a code box, or a vector's axis boxes) rather than a
+## picked value, which is the part of the gate that compiles it.
+static func holds_expression(field: Control) -> bool:
+	return field is CodeEdit or (field != null and field.has_meta("vector_axis_edits"))
+
+
 ## Which signal on a built widget means "the user changed this", and "" for the widgets that have no
 ## such moment (a container, an unknown control). A bar connects to this; the dialog does not need it
 ## because OK is its moment.

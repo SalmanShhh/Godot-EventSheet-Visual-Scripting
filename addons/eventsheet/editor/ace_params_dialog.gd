@@ -321,6 +321,7 @@ func open_with_values(definition: ACEDefinition, context: Dictionary, initial_va
 	_build_form(definition, form_values)
 	_attach_recent_value_combos()
 	_fill_header()
+	_lint_paused_reason = _lint_unhealthy_reason()
 	_refresh_live_reading()
 	_dialog.get_ok_button().disabled = _apply_blocked
 	# Back returns to the picker - from the add flow OR a row edit (which opens in a replace_* mode),
@@ -3237,6 +3238,9 @@ var _variable_adder: Callable = Callable()
 ## its entry as it is typed (the lint runs there anyway); everything else is checked on demand. The
 ## strip and the reason beside OK both read from here, so one keystroke costs one check.
 var _field_notes: Dictionary = {}
+## Why the compile check cannot run for the sheet this window opened on ("" when it can), read once per
+## open. Said beside OK and under an expression field, so an unchecked field never looks checked.
+var _lint_paused_reason: String = ""
 
 
 ## The closest name the sheet already knows (variable / tree var / sheet function / host
@@ -3375,7 +3379,8 @@ func _populate_expression_completion(edit: CodeEdit) -> void:
 			EventSheetCompletions.FIELD_EXPRESSION, before_caret):
 		var text: String = str(entry.get("text", ""))
 		edit.add_code_completion_option(
-			EventSheetCompletions.code_edit_kind(str(entry.get("kind", ""))), text, text)
+			EventSheetCompletions.code_edit_kind(str(entry.get("kind", ""))),
+			completion_label(text, str(entry.get("detail", ""))), text)
 	# The expressions dictionary, while typing (an event-sheet reflex): every EXPRESSION verb the
 	# picker window lists also autocompletes right in the field - display name shown, the code
 	# FRAGMENT inserted. These stay beside the seam rather than inside it because what they insert
@@ -3386,11 +3391,32 @@ func _populate_expression_completion(edit: CodeEdit) -> void:
 			if expression_definition.ace_type == ACEDefinition.ACEType.EXPRESSION:
 				edit.add_code_completion_option(
 					CodeEdit.KIND_FUNCTION,
-					expression_definition.display_name,
+					completion_label(expression_definition.display_name,
+						first_sentence(expression_definition.description)),
 					_expression_picker._expression_template(expression_definition)
 				)
 	edit.update_code_completion_options(true)
 	edit.set_code_hint(EventSheetGDScriptLint.signature_hint(before_caret, sheet))
+
+
+## What a code box's completion popup SHOWS for a suggestion: the name, then its type or description
+## after a gap - the same "name    detail" line the sheet's other completion popup draws. CodeEdit's
+## popup has no detail column; the insert text (the third argument at the call site) stays the bare
+## name, so what lands in the field is exact. The label still begins with the name, so Godot's
+## prefix filter keeps matching what is typed.
+static func completion_label(text: String, detail: String) -> String:
+	var shown: String = detail.strip_edges()
+	return text if shown.is_empty() else "%s    %s" % [text, shown]
+
+
+## The first sentence of a description, capped, for the one line a popup row has room for.
+static func first_sentence(description: String) -> String:
+	var line: String = description.strip_edges().split("\n")[0]
+	var stop: int = line.find(". ")
+	if stop > 0:
+		line = line.substr(0, stop)
+	line = line.trim_suffix(".")
+	return line if line.length() <= 60 else line.substr(0, 57).strip_edges() + "..."
 
 
 ## True when the caret sits in member position (`token.`), where only that type's members
@@ -3440,11 +3466,30 @@ func _create_vector_field(key: String, parts: PackedStringArray) -> Control:
 		axis_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		if _dialog != null:
 			_dialog.register_text_enter(axis_edit)
+		axis_edit.text_changed.connect(func(_text: String) -> void: _tint_axis_box(axis_edit))
 		container.add_child(axis_edit)
 		axis_edits.append(axis_edit)
 	container.set_meta("vector_axis_edits", axis_edits)
 	_fields[key] = container
 	return container
+
+
+## An axis box wears the same red an expression field does while its text would not compile, so a bad
+## axis is seen where the eye is, not first at OK. Structural errors and a blank axis always tint; the
+## symbol-aware check tints when the lint context can answer.
+func _tint_axis_box(axis_edit: LineEdit) -> void:
+	if axis_edit == null or not is_instance_valid(axis_edit):
+		return
+	var box: Dictionary = {"field": axis_edit, "text": axis_edit.text}
+	var bad: bool = not _structural_problem_of(box).is_empty()
+	if not bad and _lint_context_provider.is_valid():
+		var sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
+		bad = not bool(EventSheetGDScriptLint.lint_expression(axis_edit.text, sheet,
+			_scope_names_for(sheet)).get("ok", true))
+	if bad:
+		axis_edit.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_ERROR))
+	else:
+		axis_edit.remove_theme_color_override("font_color")
 
 
 func _extract_value(field: Control) -> Variant:
@@ -3522,42 +3567,132 @@ func _scope_names_for(sheet: EventSheetResource) -> PackedStringArray:
 	return _scope_names
 
 
-## First expression field whose text fails the compile-check (null = all valid). The
-## commit guardrail: invalid GDScript never reaches the sheet.
+## Every box the commit gate reads: one entry per expression field (a code box) and one per vector axis,
+## as {field, text}. An axis box is a full GDScript expression like any other, so it is checked like one
+## rather than waved through for being a LineEdit.
+func _expression_boxes() -> Array[Dictionary]:
+	var boxes: Array[Dictionary] = []
+	for key: Variant in _fields.keys():
+		var field: Control = _fields[key]
+		if field == null or not is_instance_valid(field):
+			continue
+		if field is CodeEdit:
+			if not _holds_foreign_reading(field):
+				boxes.append({"field": field, "text": str(field.get("text"))})
+		elif field.has_meta("vector_axis_edits"):
+			for axis_edit: Variant in (field.get_meta("vector_axis_edits") as Array):
+				boxes.append({"field": axis_edit as Control, "text": str((axis_edit as LineEdit).text)})
+	return boxes
+
+
+## First expression field (or vector axis box) whose text fails the compile-check (null = all valid).
+## The commit guardrail: invalid GDScript never reaches the sheet.
 func _first_invalid_expression() -> Control:
 	if not _lint_context_provider.is_valid():
 		return null
 	var sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
-	for key: Variant in _fields.keys():
-		var field: Control = _fields[key]
-		if field is CodeEdit and not _holds_foreign_reading(field) \
-				and not bool(EventSheetGDScriptLint.lint_expression(str(field.get("text")), sheet,
-					_scope_names_for(sheet)).get("ok", true)):
-			return field
+	for box: Dictionary in _expression_boxes():
+		if not bool(EventSheetGDScriptLint.lint_expression(str(box["text"]), sheet,
+				_scope_names_for(sheet)).get("ok", true)):
+			return box["field"] as Control
 	return null
 
 
-## The first expression field with a STRUCTURAL syntax error (unbalanced brackets / unterminated string),
-## or null. Context-free, so it catches malformed code even when the symbol-aware lint can't run (an
-## unhealthy lint context) - the always-on backstop that closes _first_invalid_expression's skip path.
+## The first expression field (or vector axis box) with a STRUCTURAL syntax error (unbalanced brackets /
+## unterminated string) or an empty axis, or null. Context-free, so it catches malformed code even when
+## the symbol-aware lint can't run (an unhealthy lint context) - the always-on backstop that closes
+## _first_invalid_expression's skip path.
 func _first_structural_error_field() -> Control:
-	for key: Variant in _fields.keys():
-		var field: Control = _fields[key]
-		if field is CodeEdit and not _holds_foreign_reading(field) \
-				and not EventSheetGDScriptLint.structural_syntax_error(str(field.get("text"))).is_empty():
-			return field
+	for box: Dictionary in _expression_boxes():
+		if not _structural_problem_of(box).is_empty():
+			return box["field"] as Control
 	return null
 
 
-## The expression field that should block Apply, with its message, or {} when clear. Structural errors
-## (always wrong, no context needed) take priority over the symbol-aware lint and run unconditionally.
+## What is structurally wrong with one box, as a sentence, or "". A vector axis may not be blank: an
+## empty axis writes `Vector2(, 3)`, which no reading of it compiles.
+func _structural_problem_of(box: Dictionary) -> String:
+	var field: Control = box["field"] as Control
+	var text: String = str(box["text"])
+	if field is LineEdit and text.strip_edges().is_empty():
+		return EventSheetL10n.translate("An axis cannot be left blank.")
+	return EventSheetGDScriptLint.structural_syntax_error(text)
+
+
+## The field that should block Apply, with its message, or {} when clear. Three gates, strongest
+## first: a structural error (always wrong, no context needed), the symbol-aware compile check (when the
+## lint context is healthy), and the shared per-parameter check - a required field left blank, a name
+## that is not a variable - which is the SAME answer the reason beside OK is already showing.
 func _blocking_expression_field() -> Dictionary:
 	var structural_field: Control = _first_structural_error_field()
 	if structural_field != null:
-		return {"field": structural_field, "message": "✗ %s" % EventSheetGDScriptLint.structural_syntax_error(str(structural_field.get("text")))}
+		var structural_message: String = ""
+		for box: Dictionary in _expression_boxes():
+			if box["field"] == structural_field:
+				structural_message = _structural_problem_of(box)
+		return {"field": structural_field, "message": "✗ %s" % structural_message}
 	var invalid_field: Control = _first_invalid_expression() if _lint_context_healthy() else null
 	if invalid_field != null:
 		return {"field": invalid_field, "message": "✗ An expression doesn't compile - fix it before applying."}
+	return _blocking_param_note()
+
+
+## The first field the shared per-parameter check calls an ERROR (a required value left blank, a name
+## that is not a variable), as {field, message, reason}, or {}. Warnings never block - they compile and
+## only surprise. An expression field's own lint answer is not read here: that is the gate above, and it
+## must stay skippable when the probe is unhealthy.
+func _blocking_param_note() -> Dictionary:
+	if _definition == null:
+		return {}
+	for key: Variant in _fields.keys():
+		var field: Control = _fields[key]
+		var param: Dictionary = _param_dict(str(key))
+		if param.is_empty() or field == null or not is_instance_valid(field):
+			continue
+		var takes: String = str(EventSheetVariableOwners.VARIABLE_VERB_TAKES.get(_definition.id, ""))
+		var note: Dictionary = EventSheetParamFieldFactory.validate(param, str(_extract_value(field)),
+			_variable_entries, _row_owner, takes, _lint_sheet())
+		if str(note.get("level", "")) == EventSheetParamFieldFactory.LEVEL_ERROR:
+			return {"field": _focus_target_of(field), "message": "✗ %s" % str(note.get("body", "")),
+				"reason": str(note.get("reason", ""))}
+	return {}
+
+
+## The widget that should take focus for a field the gate refused: a vector's first axis box, the
+## field itself for everything else.
+func _focus_target_of(field: Control) -> Control:
+	if field.has_meta("vector_axis_edits"):
+		var axes: Array = field.get_meta("vector_axis_edits")
+		if not axes.is_empty():
+			return axes[0] as Control
+	return field
+
+
+## THE commit check for one value outside the dialog's own form - the sheet's inline value editor and
+## the Properties bar ask this before writing, so a value the dialog would refuse is refused there too.
+## `is_expression` is true when the parameter takes GDScript. Returns {} when the value may be written,
+## else {message, reason} - the sentence for the status line and the short reason for beside a field.
+## Warnings never block.
+func blocking_problem_for(param: Dictionary, value: String, is_expression: bool, takes: String = "") -> Dictionary:
+	var sheet: EventSheetResource = _lint_sheet()
+	if _variable_entries.is_empty() or _definition == null:
+		_read_variable_context()
+	var note: Dictionary = EventSheetParamFieldFactory.validate(param, value, _variable_entries, _row_owner,
+		takes, sheet)
+	if str(note.get("level", "")) == EventSheetParamFieldFactory.LEVEL_ERROR:
+		return {"message": str(note.get("body", "")), "reason": str(note.get("reason", ""))}
+	if not is_expression:
+		return {}
+	var structural: String = EventSheetGDScriptLint.structural_syntax_error(value)
+	if not structural.is_empty():
+		return {"message": structural, "reason": EventSheetL10n.translate("this will not compile")}
+	if sheet == null or not _lint_context_healthy():
+		return {}
+	if _definition == null:
+		_scope_names_sheet = null
+	if not bool(EventSheetGDScriptLint.lint_expression(value, sheet, _scope_names_for(sheet)).get("ok", true)):
+		return {"message": EventSheetL10n.translate("This is not an expression this sheet can compile."),
+			"reason": EventSheetL10n.translate("this will not compile")}
 	return {}
 
 
@@ -3569,6 +3704,33 @@ func _lint_context_healthy() -> bool:
 		return true
 	var baseline_sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
 	return bool(EventSheetGDScriptLint.lint_expression("0", baseline_sheet).get("ok", true))
+
+
+## Why the compile check cannot run for this sheet, as a sentence, or "" when it can. The usual cause is
+## a sheet variable named like a member of the host class (`position`, `name`): the probe declares it
+## beside the host's own and cannot parse. Named so the reader can fix the one thing, rather than every
+## expression silently going unchecked.
+func _lint_unhealthy_reason() -> String:
+	if _lint_context_healthy():
+		return ""
+	var sheet: EventSheetResource = _lint_sheet()
+	var host_class: String = sheet.host_class if sheet != null and ClassDB.class_exists(sheet.host_class) else "Node"
+	if sheet != null:
+		for variable_name: Variant in sheet.variables.keys():
+			var member: String = str(variable_name)
+			if ClassDB.class_has_method(host_class, member) or _host_has_property(host_class, member):
+				return EventSheetL10n.translate(
+					"Expressions are not being compile-checked: the sheet variable %s has the same name as a member of %s. Rename it to turn the check back on.") \
+					% [member, host_class]
+	return EventSheetL10n.translate(
+		"Expressions are not being compile-checked: this sheet's own code does not compile. Fix the sheet first to turn the check back on.")
+
+
+static func _host_has_property(host_class: String, member: String) -> bool:
+	for property: Dictionary in ClassDB.class_get_property_list(host_class):
+		if str(property.get("name")) == member:
+			return true
+	return false
 
 
 ## One committed value with its UNIT settled, for an angle field - and untouched for every other
@@ -3595,7 +3757,8 @@ func _on_confirmed() -> void:
 			_help_strip.show_note(EventSheetL10n.translate("Cannot be written"),
 				str(blocker.get("message", "")), EventSheetParamFieldFactory.LEVEL_ERROR)
 		if _ok_reason != null:
-			_ok_reason.text = EventSheetL10n.translate("this will not compile")
+			_ok_reason.text = str(blocker.get("reason", EventSheetL10n.translate("this will not compile")))
+			_ok_reason.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_ERROR))
 		(blocker.get("field") as Control).grab_focus()
 		if _dialog != null and is_instance_valid(_dialog) and _dialog.is_inside_tree():
 			_dialog.call_deferred("popup_centered", _window_size())
@@ -3702,6 +3865,9 @@ func _on_custom_action(action: StringName) -> void:
 			if _help_strip != null:
 				_help_strip.show_note(EventSheetL10n.translate("Cannot be written"),
 					str(blocker.get("message", "")), EventSheetParamFieldFactory.LEVEL_ERROR)
+			if _ok_reason != null:
+				_ok_reason.text = str(blocker.get("reason", EventSheetL10n.translate("this will not compile")))
+				_ok_reason.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_ERROR))
 			(blocker.get("field") as Control).grab_focus()
 			return
 		_commit(true)
@@ -3899,6 +4065,14 @@ func _refresh_notes() -> void:
 	if _ok_reason != null:
 		_ok_reason.text = str(strongest.get("reason", ""))
 		_ok_reason.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(str(strongest.get("level", ""))))
+		_ok_reason.tooltip_text = ""
+		_ok_reason.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		# The compile check could not run for this sheet: say so quietly beside OK rather than letting
+		# every expression look checked. Any real problem above it keeps the slot.
+		if strongest.is_empty() and not _lint_paused_reason.is_empty():
+			_ok_reason.text = EventSheetL10n.translate("compile check paused")
+			_ok_reason.tooltip_text = _lint_paused_reason
+			_ok_reason.mouse_filter = Control.MOUSE_FILTER_STOP
 
 
 ## The field itself wears its note's colour, so the trouble is visible from the field the eye is
@@ -3981,8 +4155,11 @@ func _describe_field(key: String) -> void:
 			return
 		# Nothing is wrong, but there may still be a plainer way to read what was typed - and, for a
 		# node reached by path, a shorter way to say WHICH node.
+		var paused: String = ""
+		if not _lint_paused_reason.is_empty() and _fields.get(key) is CodeEdit:
+			paused = "  " + _lint_paused_reason
 		_help_strip.show_note(EventSheetParamFieldFactory.strip_heading(param),
-			EventSheetParamFieldFactory.strip_body(param, _row_owner),
+			EventSheetParamFieldFactory.strip_body(param, _row_owner) + paused,
 			EventSheetPopupUI.HelpStrip.TONE_NORMAL,
 			reading_offers() + _unique_name_offers(key) + _canvas_group_offers(key))
 		return

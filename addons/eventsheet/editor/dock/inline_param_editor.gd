@@ -34,6 +34,12 @@ var _field_edit_part: String = ""
 ## completing for. Typing in the sheet is never blinder than typing in the dialog showing the same
 ## parameter, which is what this one line buys.
 var _param_edit_completions: EventSheetCompletionPopup = null
+## The sentence under the value field when the dialog's own gate refuses what was typed. The text is
+## kept so it can be fixed; Esc still closes the popup and cancels.
+var _param_edit_problem: Label = null
+## The gate the Edit Parameter dialog commits through, reached via the shared field factory, built the
+## first time a value is committed.
+var _check_factory: EventSheetParamFieldFactory = null
 var _param_edit_kind: String = ""
 
 
@@ -56,6 +62,14 @@ func on_param_value_edit_requested(ace: Resource, param_id: String, current_text
 		_param_edit_hint.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 		_param_edit_hint.modulate = Color(1.0, 1.0, 1.0, 0.65)
 		box.add_child(_param_edit_hint)
+		_param_edit_problem = Label.new()
+		_param_edit_problem.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+		_param_edit_problem.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_ERROR))
+		_param_edit_problem.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_param_edit_problem.custom_minimum_size = Vector2(220.0, 0.0)
+		_param_edit_problem.visible = false
+		box.add_child(_param_edit_problem)
+		_param_edit_field.text_changed.connect(func(_t: String) -> void: _clear_param_edit_problem())
 		_param_edit_popup.add_child(box)
 		_dock.add_child(_param_edit_popup)
 		# The one completion popup, on the sheet's own value editor - so typing in a row is never
@@ -72,6 +86,7 @@ func on_param_value_edit_requested(ace: Resource, param_id: String, current_text
 		# other field holds one value, so accepting replaces it whole.
 		_param_edit_completions.replaces_word = _param_edit_kind == EventSheetCompletions.FIELD_EXPRESSION
 	_param_edit_field.text = current_text
+	_clear_param_edit_problem()
 	# Name the param being edited (placeholder when empty + tooltip always), so a blind popup never
 	# leaves the user guessing which value they're typing - e.g. the ghost row's follow-up hop lands
 	# here on a param the sentence didn't fill.
@@ -137,12 +152,53 @@ func apply_param_value(target: Resource, key: String, new_text: String) -> bool:
 	)
 
 
+## What the dialog's gate says about `new_text` for one parameter of `ace`, or {} when it may be written.
+## One function, the dialog's own (blocking_problem_for), so the sheet and the dialog cannot disagree
+## about what a refusable value is. A value that is not changing is never judged - a bare Enter on a row
+## written before a check existed must stay a no-op rather than start complaining.
+func blocking_problem_of_edit(ace: Resource, key: String, new_text: String) -> Dictionary:
+	if ace == null or key.is_empty() or not (ace.get("params") is Dictionary):
+		return {}
+	if str((ace.get("params") as Dictionary).get(key, "")) == new_text:
+		return {}
+	var definition: ACEDefinition = _dock._ace_registry.find_definition(
+		str(ace.get("provider_id")), str(ace.get("ace_id"))) if _dock._ace_registry != null else null
+	if definition == null:
+		return {}
+	for parameter: Variant in definition.parameters:
+		if parameter is Dictionary and str((parameter as Dictionary).get("id", "")) == key:
+			if _check_factory == null:
+				_check_factory = EventSheetParamFieldFactory.new()
+				_check_factory.init(_dock)
+			var is_expression: bool = EventSheetCompletions.kind_for_param(
+				str((parameter as Dictionary).get("hint", "")), key) == EventSheetCompletions.FIELD_EXPRESSION
+			return _check_factory.blocking_problem(parameter as Dictionary, new_text, is_expression, definition.id)
+	return {}
+
+
+func _clear_param_edit_problem() -> void:
+	if _param_edit_problem != null:
+		_param_edit_problem.visible = false
+		_param_edit_problem.text = ""
+	if _param_edit_field != null:
+		_param_edit_field.remove_theme_color_override("font_color")
+
+
 func _commit_inline_param_edit(apply_to_all_selected: bool = false) -> void:
 	if _param_edit_target == null or _param_edit_key.is_empty():
 		return
 	var target: Resource = _param_edit_target
 	var key: String = _param_edit_key
 	var new_text: String = _param_edit_field.text
+	# The dialog's own gate runs first: a refused value keeps the popup open with the text intact and
+	# the reason under it (and on the status line), and nothing is written.
+	var problem: Dictionary = blocking_problem_of_edit(target, key, new_text)
+	if not problem.is_empty():
+		_param_edit_problem.text = str(problem.get("message", ""))
+		_param_edit_problem.visible = true
+		_param_edit_field.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_ERROR))
+		_dock._set_status(str(problem.get("message", "")), true)
+		return
 	var updated := {"count": 0}
 	var changed: bool
 	if apply_to_all_selected:

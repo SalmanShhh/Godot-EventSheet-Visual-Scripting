@@ -9970,3 +9970,7 @@ Top edge,Borde superior
 Bottom edge,Borde inferior
 Top left,Arriba a la izquierda
 Bottom right,Abajo a la derecha
+An axis cannot be left blank.,Un eje no puede quedar en blanco.
+Expressions are not being compile-checked: the sheet variable %s has the same name as a member of %s. Rename it to turn the check back on.,Las expresiones no se están comprobando: la variable de la hoja %s tiene el mismo nombre que un miembro de %s. Cámbiale el nombre para reactivar la comprobación.
+Expressions are not being compile-checked: this sheet's own code does not compile. Fix the sheet first to turn the check back on.,Las expresiones no se están comprobando: el propio código de esta hoja no compila. Arregla primero la hoja para reactivar la comprobación.
+compile check paused,comprobación en pausa

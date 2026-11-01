@@ -19,6 +19,14 @@
 
 - The live state row lays the sheet out at most once per 250 ms window, but the window was stamped when a layout STARTED, so a layout slower than the window (a big sheet, a loaded machine) left no window after it and every flip laid the sheet out again. The window now opens when the layout ends. `states_project_wide_test` pins it, and no longer lets the once-per-session cold start of the live-values panel and the state trail (215 ms of the 250 ms window measured cold, all of it under a parallel run) decide whether its three flips land inside the window - the red its "three more flips" check went in a loaded parallel run. The file also declares itself PARALLEL_UNSAFE, so its real-time window is measured in the serial tail.
 
+### Fixed: five checks that already existed in the parameter editors were skipped, hidden or never run
+
+- The Edit Parameter dialog's OK and Apply & Add Another now refuse a required value left blank (or a name that is not a variable) - the same error the reason beside OK was already showing - and say why there. Warning-level notes (a literal of the wrong kind) still never block.
+- When the compile-check probe cannot run for a sheet (a sheet variable named like a member of the host class), the dialog says so: "compile check paused" beside OK, the full reason (which variable, which class) on hover and under an expression field, instead of every field silently looking checked.
+- A vector's axis boxes get the same structural and compile check an expression field gets: a bad axis tints red as it is typed and blocks OK, and a blank axis (which wrote `Vector2(, 3)`) is refused.
+- The sheet's inline value editor and the Properties bar ask the dialog's own gate (`blocking_problem_for`) before writing: a refused value keeps its text, shows the reason under the field or on the status line, writes nothing, and Esc still cancels.
+- A code box's completion popup shows each suggestion's type or description after its name ("hp    int"), as the sheet's other completion popup does; the inserted text is still the exact name.
+
 ### Fixed: an Else row's "neither of N" note stayed blank until the row was scrolled to
 
 - With words built as rows come into view, an Else row that had not been drawn yet had no span to write its "neither of N" note into when the rows were numbered, so the note read blank (106 rows across the shipped packs) until it was scrolled to. Numbering now builds the words of an Else row first. Found by the reading gate: a dump of every shipped sheet's readings with the old eager limit and with the new one differed in exactly those cells, and is byte-identical (44,728 readings, same sha) with this fix. Pinned in `lazy_span_window_test`.

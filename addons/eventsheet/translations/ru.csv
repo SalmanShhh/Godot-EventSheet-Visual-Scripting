@@ -9970,3 +9970,7 @@ Top edge,Верхняя граница
 Bottom edge,Нижняя граница
 Top left,Верхний левый
 Bottom right,Нижний правый
+An axis cannot be left blank.,Ось не может оставаться пустой.
+Expressions are not being compile-checked: the sheet variable %s has the same name as a member of %s. Rename it to turn the check back on.,"Выражения не проверяются на компилируемость: переменная листа %s называется так же, как член класса %s. Переименуйте её, чтобы вернуть проверку."
+Expressions are not being compile-checked: this sheet's own code does not compile. Fix the sheet first to turn the check back on.,"Выражения не проверяются на компилируемость: собственный код этого листа не компилируется. Сначала исправьте лист, чтобы вернуть проверку."
+compile check paused,проверка приостановлена

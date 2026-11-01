@@ -9970,3 +9970,7 @@ Top edge,上端
 Bottom edge,下端
 Top left,左上
 Bottom right,右下
+An axis cannot be left blank.,軸を空欄にすることはできません。
+Expressions are not being compile-checked: the sheet variable %s has the same name as a member of %s. Rename it to turn the check back on.,式のコンパイルチェックが行われていません。シート変数 %s が %s のメンバーと同じ名前です。名前を変更するとチェックが再開されます。
+Expressions are not being compile-checked: this sheet's own code does not compile. Fix the sheet first to turn the check back on.,式のコンパイルチェックが行われていません。このシート自体のコードがコンパイルできません。先にシートを修正するとチェックが再開されます。
+compile check paused,コンパイルチェック停止中

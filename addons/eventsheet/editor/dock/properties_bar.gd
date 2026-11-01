@@ -260,20 +260,41 @@ func _build_field(ace: Resource, descriptor: Dictionary, value: String) -> Contr
 		# through the factory, so every field kind commits through one conversion instead of each
 		# signal's own idea of what it just handed over.
 		field.connect(change_signal, func(_a: Variant = null, _b: Variant = null) -> void:
-			_apply(ace, param_id, _field_factory.value_of(field)))
+			_apply(ace, param_id, _field_factory.value_of(field), descriptor, field))
 	return control
 
 
-func _apply(ace: Resource, param_id: String, text: String) -> void:
+func _apply(ace: Resource, param_id: String, text: String, descriptor: Dictionary = {}, field: Control = null) -> void:
 	# The funnel replaces every resource on commit, so the target is re-fetched from the live
 	# selection rather than held from when the field was built.
 	var view: EventSheetViewport = _dock._active_view()
 	var live: Resource = view.get_selected_ace_resource() if view != null else null
 	var target: Resource = live if live != null else ace
+	# The dialog's own gate, before anything is written: a refused value keeps its text in the field,
+	# tints it, and says why on the status line - and the bar is NOT rebuilt, so the text survives to
+	# be fixed. A value that is not changing is never judged.
+	if field != null and not descriptor.is_empty():
+		var problem: Dictionary = {}
+		var params: Variant = target.get("params")
+		if params is Dictionary and str((params as Dictionary).get(param_id, "")) != text:
+			problem = _field_factory.blocking_problem(descriptor, text,
+				EventSheetParamFieldFactory.holds_expression(field), _definition_id_of(target))
+		if not problem.is_empty():
+			field.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_ERROR))
+			_dock._set_status(str(problem.get("message", "")), true)
+			return
+		field.remove_theme_color_override("font_color")
 	if _dock._inline_params.apply_param_value(target, param_id, text):
 		_dock._refresh_after_edit()
 		_dock._mark_dirty("Parameter updated.")
 	refresh()
+
+
+func _definition_id_of(ace: Resource) -> String:
+	if ace == null:
+		return ""
+	var definition: ACEDefinition = _dock._find_definition(str(ace.get("provider_id")), str(ace.get("ace_id")))
+	return definition.id if definition != null else ""
 
 
 func _show_group(group: EventGroup) -> void:

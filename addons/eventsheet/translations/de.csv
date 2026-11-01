@@ -9970,3 +9970,7 @@ Top edge,Oberer Rand
 Bottom edge,Unterer Rand
 Top left,Oben links
 Bottom right,Unten rechts
+An axis cannot be left blank.,Eine Achse darf nicht leer bleiben.
+Expressions are not being compile-checked: the sheet variable %s has the same name as a member of %s. Rename it to turn the check back on.,"Ausdrücke werden nicht auf Kompilierbarkeit geprüft: Die Sheet-Variable %s hat denselben Namen wie ein Member von %s. Benenne sie um, um die Prüfung wieder zu aktivieren."
+Expressions are not being compile-checked: this sheet's own code does not compile. Fix the sheet first to turn the check back on.,"Ausdrücke werden nicht auf Kompilierbarkeit geprüft: Der eigene Code dieses Sheets lässt sich nicht kompilieren. Behebe zuerst das Sheet, um die Prüfung wieder zu aktivieren."
+compile check paused,Kompilierprüfung pausiert
