@@ -25,7 +25,10 @@
 #                              bare template is not browsable. The family is on screen either way,
 #                              which is why this is not a wall: hiding the template hides nothing a
 #                              reader could have picked.
-# None of the three is a fixable project state, which is the property that matters: nothing
+#   a row that compiles in     "Also run the parent's version" writes `super(...)`, which means
+#   one place only             something only inside a function that replaces one of the parent's;
+#                              offered there, never anywhere it would not compile
+# None of these is a fixable project state, which is the property that matters: nothing
 # disappears because of something a reader could put right and was never told about.
 #
 # Pure and static over its inputs: a definition and a context Dictionary in, a gate (or nothing)
@@ -131,6 +134,11 @@ static func context_for(sheet: EventSheetResource, is_behavior_sheet: bool,
 const HIDDEN_DEPRECATED := "deprecated"
 const HIDDEN_PROJECT_TEMPLATE := "project_scoped_template"
 const HIDDEN_READERS_CHOICE := "readers_choice"
+const HIDDEN_OUTSIDE_OVERRIDE := "outside_override"
+## The key of the context hidden_reason reads for a row that compiles in one place only: true when the row
+## being added to sits in a function that replaces one of the parent's. Asked only of such a row, so a
+## caller computes it only when is_parent_call says so.
+const IN_OVERRIDE_CONTEXT := "in_override_function"
 
 ## The metadata a definition wears for each: the deprecation mark, the mark that says a row's choices
 ## come from the project, and the scene node a COPY of such a row was built for.
@@ -145,15 +153,25 @@ const SCENE_TARGET_META := "eventsheet_light_target"
 ##
 ## `readers_choice` is not answered here - it is a live editor switch, not a fact about the
 ## definition - but it is named in the list so the three reasons are countable in one place.
-static func hidden_reason(definition: ACEDefinition) -> String:
+##
+## `where` says where the row is being added, for the one row whose answer depends on it (see
+## IN_OVERRIDE_CONTEXT); a caller that does not say is never told to hide it.
+static func hidden_reason(definition: ACEDefinition, where: Dictionary = {}) -> String:
 	if definition == null:
 		return ""
+	if is_parent_call(definition) and where.has(IN_OVERRIDE_CONTEXT) and not bool(where[IN_OVERRIDE_CONTEXT]):
+		return HIDDEN_OUTSIDE_OVERRIDE
 	if bool(definition.metadata.get(DEPRECATED_META, false)):
 		return HIDDEN_DEPRECATED
 	if bool(definition.metadata.get(PROJECT_SCOPED_META, false)) \
 			and str(definition.metadata.get(SCENE_TARGET_META, "")).is_empty():
 		return HIDDEN_PROJECT_TEMPLATE
 	return ""
+
+
+## True for "Also run the parent's version", the row hidden_reason asks `where` about.
+static func is_parent_call(definition: ACEDefinition) -> bool:
+	return definition != null and definition.id == "CallParentFunction" and str(definition.provider_id) == "Core"
 
 
 ## The one question the picker asks per entry: the gate this definition is behind in this context,

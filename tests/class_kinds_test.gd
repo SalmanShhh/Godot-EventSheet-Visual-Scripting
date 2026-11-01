@@ -219,7 +219,39 @@ static func run_parent_call() -> bool:
 	plain_function.function_name = "take_damage"
 	plain_function.events.append(EventRow.new())
 	plain.functions.append(plain_function)
+	# Picked from the picker into a function of its own: answered with the function's parameters, and with
+	# the return form where the parent's function answers.
+	var picked_into: EventFunction = EventFunction.new()
+	picked_into.function_name = "take_damage"
+	var amount: ACEParam = ACEParam.new()
+	amount.id = "amount"
+	amount.type_name = "int"
+	picked_into.params.append(amount)
+	picked_into.events.append(EventRow.new())
+	var scoring: EventFunction = EventFunction.new()
+	scoring.function_name = "score_for"
+	for name: String in ["kind", "bonus"]:
+		var param: ACEParam = ACEParam.new()
+		param.id = name
+		scoring.params.append(param)
+	scoring.events.append(EventRow.new())
+	var picking: EventSheetResource = kinds.new_kind_sheet("Bat", "Enemy")
+	picking.functions.append(picked_into)
+	picking.functions.append(scoring)
+	var answered: Dictionary = kinds.also_run_action(picking, picked_into.events[0], classes)
+	var picked_row: ACEAction = ACEAction.new()
+	picked_row.provider_id = "Core"
+	picked_row.ace_id = str(answered.get("ace_id", ""))
+	picked_row.params = answered.get("params", {})
+	(picked_into.events[0] as EventRow).actions.append(picked_row)
+	var emitted: String = SUPPORT.compile_output(picking)
 	return SUPPORT.pins("class_kinds_test", [
+		["picked into take_damage(amount), it runs the parent's with the same argument", answered,
+			{"ace_id": "CallParentFunction", "params": {"args": "amount"}}],
+		["...and compiles to a super call with that argument", emitted.contains("func take_damage(amount: int) -> void:\n\tsuper(amount)"), true],
+		["picked into a function whose parent answers, it hands the answer on",
+			kinds.also_run_action(picking, scoring.events[0], classes), {"ace_id": "ReturnValue", "params": {"value": "super(kind, bonus)"}}],
+		["nothing is answered outside a function that replaces the parent's", kinds.also_run_action(picking, EventRow.new(), classes), {}],
 		["Godot words call super by function", godot_text, "Call super: take_damage"],
 		["Familiar words name the class and the function", familiar_text, "Also run Enemy's take_damage"],
 		["a reopened super call reads the same", lifted_text, "Also run Enemy's take_damage"],
@@ -281,6 +313,8 @@ static func run_inherited() -> bool:
 	var replaced: EventFunction = kinds.replace_function((have["functions"] as Array)[0])
 	slime.functions.append(replaced)
 	var view: EventSheetViewport = EventSheetViewport.new()
+	var starts_folded: bool = view.inherited_folded
+	view.inherited_folded = false
 	view.set_ace_registry(EventSheetACERegistry.new())
 	view.set_sheet(slime)
 	view.familiar_words = true
@@ -309,6 +343,7 @@ static func run_inherited() -> bool:
 		["a variable left alone says nothing more", words[1], "int health = 3"],
 		["a replaced function says so", words[4], "ƒ take_damage(amount: int) Replaces Slime"],
 		["Godot words say inherited", godot_bar, "Inherited from"],
+		["a sheet opens with the inherited group folded to its bar", starts_folded, true],
 		["a folded group is the one bar", folded_rows.size(), 1],
 		["the fold's bar counts what it holds", (folded_rows[0].spans[3] as SemanticSpan).text, "3 variables · 2 functions"],
 		["a variable row carries its own double-click", str((rows[2].spans[1] as SemanticSpan).metadata.get("double_head_action", "")), "inherited_start:speed"],

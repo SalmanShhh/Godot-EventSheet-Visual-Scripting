@@ -228,6 +228,15 @@ static func _test_nothing_vanishes_for_another_reason(registry: EventSheetACEReg
 		})), "") and ok
 	ok = _check("and an ordinary row is hidden for nothing at all",
 		EventSheetPickerGates.hidden_reason(_marked({})), "") and ok
+	# The row that compiles in one place only is on the same list, answered by where it is going.
+	var parent_call: ACEDefinition = registry.find_definition("Core", "CallParentFunction")
+	ok = _check("the parent's version is hidden outside a function that replaces the parent's, [outside, inside, unasked]",
+		[EventSheetPickerGates.hidden_reason(parent_call, {EventSheetPickerGates.IN_OVERRIDE_CONTEXT: false}),
+			EventSheetPickerGates.hidden_reason(parent_call, {EventSheetPickerGates.IN_OVERRIDE_CONTEXT: true}),
+			EventSheetPickerGates.hidden_reason(parent_call)],
+		[EventSheetPickerGates.HIDDEN_OUTSIDE_OVERRIDE, "", ""]) and ok
+	ok = _check("and no other row is asked where it is going",
+		EventSheetPickerGates.hidden_reason(_marked({}), {EventSheetPickerGates.IN_OVERRIDE_CONTEXT: false}), "") and ok
 	return ok
 
 

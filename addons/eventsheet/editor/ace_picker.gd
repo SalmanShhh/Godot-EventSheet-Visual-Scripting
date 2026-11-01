@@ -3022,15 +3022,16 @@ func _also_run_offered() -> bool:
 func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only: bool) -> bool:
 	if definition == null:
 		return false
-	# The two hides that are facts about the definition - a deprecated row (still compiles where it
-	# is used, never offered for new work) and a project-scoped TEMPLATE (offered as the copies built
-	# from the open scene instead, one per node, both halves already answered). Asked of the gates so
-	# there is one closed list of what may vanish, and the suite walks it.
-	if not EventSheetPickerGates.hidden_reason(definition).is_empty():
-		return false
-	# Running the parent's version only means something inside a function that replaces one of the
-	# parent's; anywhere else it would write a `super()` that does not compile.
-	if definition.id == "CallParentFunction" and str(definition.provider_id) == "Core" and not _also_run_offered():
+	# The hides that are facts about the definition - a deprecated row (still compiles where it is
+	# used, never offered for new work), a project-scoped TEMPLATE (offered as the copies built from
+	# the open scene instead, one per node, both halves already answered) and a row that compiles in
+	# one place only (the parent's version, inside a function that replaces it). Asked of the gates
+	# so there is one closed list of what may vanish, and the suite walks it.
+	# Where the row is going is asked only for the one row whose answer depends on it.
+	var where: Dictionary = {}
+	if EventSheetPickerGates.is_parent_call(definition):
+		where[EventSheetPickerGates.IN_OVERRIDE_CONTEXT] = _also_run_offered()
+	if not EventSheetPickerGates.hidden_reason(definition, where).is_empty():
 		return false
 	# The reader's own choice: an entry they hid, authored or derived.
 	if _readers_hidden.has(EventSheetVocabularyCatalog.key_for(definition.provider_id, definition.id)):

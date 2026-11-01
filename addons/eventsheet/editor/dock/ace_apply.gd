@@ -38,6 +38,9 @@ const GROUP_ARRIVAL_ACES := preload("res://addons/eventforge/registration/module
 ## The eight EDGE triggers and the gate each one puts under itself, read through the one file every
 ## reader of them shares.
 const COLLISION_EDGES := preload("res://addons/eventforge/registration/collision_edges.gd")
+## The class facts "Also run the parent's version" is answered from, reached by path and only when that row
+## is picked, so nothing about classes loads with the dock.
+const CLASS_KINDS_PATH := "res://addons/eventsheet/editor/dock/class_kinds.gd"
 
 var _dock: Control = null
 
@@ -49,6 +52,15 @@ func init(dock: Control) -> void:
 
 
 func _on_ace_picker_selected(definition: ACEDefinition, context: Dictionary) -> void:
+	# "Also run the parent's version" is answered by where it is added: the holding function's own
+	# parameters, and the return form when the parent's function answers. Nothing is left to ask.
+	if definition.id == "CallParentFunction" and str(definition.provider_id) == "Core" \
+			and not str(context.get("mode", "")).begins_with("replace") and not context.has("existing_params"):
+		var answered: Dictionary = load(CLASS_KINDS_PATH).also_run_action(_dock._current_sheet, context.get("selected_resource") as Resource)
+		var chosen: ACEDefinition = null if answered.is_empty() else _dock._ace_registry.find_definition("Core", str(answered["ace_id"]))
+		if chosen != null:
+			_apply_ace_definition(chosen, answered["params"], context)
+			return
 	if definition.parameters.is_empty():
 		_apply_ace_definition(definition, {}, context)
 		return

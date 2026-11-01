@@ -363,6 +363,27 @@ static func also_run_offered(sheet: EventSheetResource, target: Resource, classe
 	return holder != null and not parent_function_of(sheet, holder.function_name, classes).is_empty()
 
 
+## The row "Also run the parent's version" writes where `target` sits, already answered: {"ace_id",
+## "params"}, or an empty Dictionary where it is not offered. The arguments are the holding function's own
+## parameters in order, so `take_damage(amount)` runs `super(amount)` rather than a `super()` that does
+## not compile; a parent's function that answers is run as `return super(...)`, the form replace_function
+## writes, so its answer is handed on rather than dropped.
+static func also_run_action(sheet: EventSheetResource, target: Resource, classes: Dictionary = {}) -> Dictionary:
+	var holder: EventFunction = function_holding(sheet, target)
+	if holder == null:
+		return {}
+	var parent: Dictionary = parent_function_of(sheet, holder.function_name, classes)
+	if parent.is_empty():
+		return {}
+	var names: PackedStringArray = PackedStringArray()
+	for param: ACEParam in holder.params:
+		names.append(param.id)
+	var returns: String = str(parent.get("returns", ""))
+	if returns.is_empty() or returns == "void":
+		return {"ace_id": "CallParentFunction", "params": {"args": ", ".join(names)}}
+	return {"ace_id": "ReturnValue", "params": {"value": "super(%s)" % ", ".join(names)}}
+
+
 ## The class a value was just asked to be, by the "Is a kind of" conditions above and on `event`
 ## (`body is Enemy` narrows body to Enemy), or "" when nothing narrows it. The nearest test wins.
 static func narrowed_class(event: EventRow, value_text: String) -> String:
