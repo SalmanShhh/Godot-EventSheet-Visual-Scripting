@@ -61,7 +61,7 @@ func _condition_line_bands(row_data: EventRowData, row_top: float, line_height: 
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
-		if str(metadata.get("kind", "")) in ["add_condition", "add_action", "add_event"]:
+		if str(metadata.get("kind", "")) in ["add_condition", "add_action", "add_event", "verb_param_add"]:
 			continue
 		if _viewport._row_builder._resolve_span_lane(span) == "action":
 			continue
@@ -158,6 +158,9 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 		x = EventRowRenderer.nested_block_left_for(row_data.indent, _viewport.indent_width()) + GROUP_TEXT_INSET
 		if row_data.row_type == EventRowData.RowType.GROUP and not row_data.children.is_empty():
 			fold_rect = Rect2(x, row_top, GROUP_FOLD_SLOT, row_height)
+	elif strips_look and EventRowRenderer.is_local_variable_row(row_data):
+		# A local stands on the sheet at its block's own left edge, its mark 10 px in as the board sets it.
+		x = EventRowRenderer.nested_block_left_for(row_data.indent, _viewport.indent_width()) + GROUP_TEXT_INSET
 	var condition_lane_rect := Rect2()
 	var action_lane_rect := Rect2()
 	var lane_divider_rect := Rect2()
@@ -314,6 +317,9 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 					else condition_badge_column_width
 				)
 				span_width = max(min(badge_width, max_condition_right - span_x), _viewport.MIN_SPAN_WIDTH)
+				# The look that nests by lines gives a mark its own cell and no reserved slot.
+				if ViewportRowMetrics.strip_mark_advance(span, event_style) >= 0.0:
+					span_width = ViewportRowMetrics.STRIP_MARK_CELL - 2.0
 			elif str(metadata.get("kind", "")) in ["condition", "trigger"]:
 				# Minus whatever the payload chips after this cell need: a trigger cell that took the
 				# whole lane left them drawn as a sliver against the divider.
@@ -446,6 +452,9 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				# at the same x as an unmarked line's (the twin of event_line_extents' badge step).
 				if not bool(metadata.get("badge_natural_width", false)) and condition_badge_column_width > 0.0:
 					condition_badge_next_x[condition_line_index] = span.rect.position.x + condition_badge_column_width + condition_badge_column_gap
+				var strip_advance: float = ViewportRowMetrics.strip_mark_advance(span, event_style)
+				if strip_advance >= 0.0:
+					condition_badge_next_x[condition_line_index] = span.rect.position.x + strip_advance
 			else:
 				condition_line_x[condition_line_index] = next_span_start_x
 	var drag_rect := Rect2()

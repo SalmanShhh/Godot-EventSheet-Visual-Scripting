@@ -96,7 +96,7 @@ const NATIVE_COLOURS_DARK := {
 	"trigger_mark_color": Color("#6ccb4e"),
 	"behaviour_name_color": Color("#f0b86e"),
 	"object_label_color": Color("#8ec3f2"),
-	"value_highlight_color": Color("#a6d18f"),
+	"value_highlight_color": Color("#d2d2d2"),
 	"behavior_accent_color": Color("#c2b4d6"),
 	"language_block_accent_color": Color("#5f566c"),
 	"ace_action_badge_background_color": EventSheetPalette.COLOR_ACE_ACTION_BADGE_BG,
@@ -117,7 +117,7 @@ const NATIVE_COLOURS_DARK := {
 	"type_class_color": Color("#d0d0d0"),
 	"word_variable_color": Color("#8ec3f2"),
 	"word_text_color": Color("#e3b47e"),
-	"word_number_color": Color("#a6d18f"),
+	"word_number_color": Color("#d2d2d2"),
 	"word_keyword_color": Color("#a8afba"),
 	"include_border_color": Color("#3f8f86"),
 	"include_fill_color": Color("#1f3b39"),
@@ -158,7 +158,7 @@ const NATIVE_COLOURS_LIGHT := {
 	"trigger_mark_color": Color("#22700e"),
 	"behaviour_name_color": Color("#7a4300"),
 	"object_label_color": Color("#124175"),
-	"value_highlight_color": Color("#1f4a14"),
+	"value_highlight_color": Color("#0f0f0f"),
 	"behavior_accent_color": Color("#584a70"),
 	"language_block_accent_color": Color("#afa6bd"),
 	"ace_action_badge_background_color": Color("#b9e2a8"),
@@ -179,7 +179,7 @@ const NATIVE_COLOURS_LIGHT := {
 	"type_class_color": Color("#2a2a2a"),
 	"word_variable_color": Color("#124175"),
 	"word_text_color": Color("#633508"),
-	"word_number_color": Color("#1f4a14"),
+	"word_number_color": Color("#0f0f0f"),
 	"word_keyword_color": Color("#4f555c"),
 	"include_border_color": Color("#3f9a8f"),
 	"include_fill_color": Color("#ddf4f0"),
@@ -408,13 +408,13 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	event_style.variable_row_cards = true
 	# The design's head: one class head card, no code echoes, no scene-fact or "+ add" rows.
 	event_style.inspector_class_head = true
-	# The design's events: 12 px text on 24 px lines, the number on the event's first line, a 16 px
-	# mark slot at the head of every condition line (the trigger arrow, the inverted cross), a
-	# behaviour named in the object column, and the add lines only on the hovered or selected event -
+	# The design's events: 12 px text on 24 px lines, the number on the event's first line, no
+	# reserved mark slot (a trigger's arrow leads its object on its own line, an inverted condition's
+	# cross leads its words), a behaviour named in the object column, and the add lines only on the hovered or selected event -
 	# a one-condition, one-action event is one line.
 	event_style.row_font_size = 12
 	event_style.trigger_icon_in_gutter = true
-	event_style.condition_badge_column_width = 16
+	event_style.condition_badge_column_width = 0
 	event_style.behaviour_in_object_column = false
 	event_style.lane_chips_yield = true
 	event_style.add_lines_on_hover = true
@@ -449,6 +449,9 @@ static func _native_cells(cells: EventSheetElementStyle, lane: Color, base_color
 	cells.corner_radius = 0
 	# One pixel above and below the text: with the 12 px text that is the design's 24 px line.
 	cells.vertical_padding = 1
+	# The lane's own padding is the only lead-in: the object icon stands at the lane padding, as the
+	# design's does, with no second inset from the cell.
+	cells.horizontal_padding = 0
 
 
 ## One lane's tint on a card: the card's brightness stepped by the hand's lane step, at `hue_degrees`,

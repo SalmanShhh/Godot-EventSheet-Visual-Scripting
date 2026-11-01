@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed: Editor Native lands the event alignment board's last measurements
+
+- A write to the behaviour's own variable (`Set magnitude`, `Add 1 to tier`, a Set value on a sheet variable) reads with the behaviour's name as its object ("Big Numbers | Set magnitude to ..."): the pack's picker name when a pack is being read, else the category the file's own header declares. The tests beside it keep reading with System, and a sheet with no category reads as it did. A reading only; Classic Sheet reads the same object.
+- A `z_index` write reads with the property as written: `$House3x3.z_index = 4` is "House3x3 | Set z_index to 4" (it read "Set Z order to 4", or "set Z order" under the class), through the shared grammar, with no shipped ace id or template renamed.
+- Values read in the normal text colour in Editor Native (numbers and expressions had a green tint); Classic Sheet keeps its tints.
+- A function's parameters are written type then bold name ("float value") with the type in the muted code face, under the trigger, and the resting "+ Add parameter" line is gone: the door is offered while the head is pointed at or selected, like the add-condition door. A local reads the same way on the canvas, its mark on a tile at its block's edge plus 10, with no cell round its type, name or value.
+- The trigger arrow no longer reserves a 16 px slot on every condition line: an object icon stands at the lane's own padding (8 px into the block), a trigger's arrow leads its line and its icon stands 17 px after it, and an action's icon stands 8 px into its lane. An Else line names System with no icon.
+- A group's number is drawn once in the margin (it drew twice, one over the other, as "11").
+
 ### Fixed: a dialog bigger than its room keeps its text full size and scrolls its body
 
 - A dialog or window whose content is taller or wider than the editor window or screen it opens in is no longer scaled down (the Welcome dialog in a small editor drew its words at a few pixels). It is clamped to the room, its body sits in a scroll with a scroll bar, and its title bar and button row stay put and in reach; a dialog that fits is left exactly as it was, and one opened again in a bigger room gets its whole content back. The scaling path and its pins are gone.

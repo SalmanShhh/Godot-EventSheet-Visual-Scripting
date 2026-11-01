@@ -726,7 +726,9 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 			nested_block_left_for(row_data.indent, row_indent_width) if strips_look else 0.0)
 		# The look that numbers groups in the margin: the bar's chrome has just covered the gutter, so
 		# the number is set down again over it, in the margin's own ink.
-		if show_event_numbers and int(layout.get("branch_number", 0)) > 0 and font != null and gutter_rect.size != Vector2.ZERO:
+		# (Where nesting is drawn as lines the bar starts past the number column, so the margin's own number
+		# is the only one.)
+		if show_event_numbers and not strips_look and int(layout.get("branch_number", 0)) > 0 and font != null and gutter_rect.size != Vector2.ZERO:
 			var group_text: String = str(int(layout.get("branch_number", 0)))
 			var group_box: Vector2 = gutter_number_box(gutter_rect,
 				font.get_string_size(group_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size - 1).x, false)
@@ -1259,6 +1261,71 @@ static func is_local_variable_row(row_data: EventRowData) -> bool:
 	return row_data.variable_row or row_data.row_uid.begins_with("local_declaration_")
 
 
+## The tile a local's mark sits on, and the glyph's box on it (the design's 16 px tile, 11 px mark).
+const TYPED_NAME_TILE := 16.0
+const TYPED_NAME_GLYPH := 11.0
+## The lead a parameter's mark stands in from its line's start, so it sits under the function's own
+## icon; and the gaps between the mark, the type and the name.
+const TYPED_PARAMETER_LEAD := 18.0
+const TYPED_LOCAL_GAP := 7.0
+const TYPED_PARAMETER_GAP := 6.0
+
+
+## Where the parts of a typed name stand, in the look that nests by lines: a function's parameter or an
+## event's local drawn as its mark, the type in the muted code face, then the name in bold - "float
+## value". `kind` is "parameter" or "local". Returns {"mark_x", "type_x", "name_x", "width"} measured
+## from the line's own start. One function, so the layout that reserves the room and the painter that
+## fills it can never disagree.
+static func typed_name_geometry(font: Font, font_size: int, kind: String, type_text: String,
+		name_text: String) -> Dictionary:
+	var type_width: float = 0.0
+	var name_width: float = 0.0
+	if font != null:
+		type_width = NativeVariableMarks.mono_font(font).get_string_size(type_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+		name_width = font.get_string_size(name_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x + float(BOLD_OUTLINE_SIZE)
+	var local: bool = kind == "local"
+	var mark_x: float = 0.0 if local else TYPED_PARAMETER_LEAD
+	var mark_side: float = TYPED_NAME_TILE if local else TYPED_NAME_GLYPH
+	var gap: float = TYPED_LOCAL_GAP if local else TYPED_PARAMETER_GAP
+	var type_x: float = mark_x + mark_side + gap
+	var name_x: float = type_x + type_width + gap
+	return {"mark_x": mark_x, "type_x": type_x, "name_x": name_x, "width": name_x + name_width}
+
+
+## True for a span the look that nests by lines draws as a typed name (see typed_name_geometry).
+static func is_typed_name_span(metadata: Dictionary) -> bool:
+	return not str(metadata.get("typed_name", "")).is_empty() and not str(metadata.get("object_label", "")).is_empty()
+
+
+## Paints a typed name: its mark (a local's on a tile), the type in the muted code face and the name in
+## bold, straight on whatever is behind the line - no cell, no object column.
+func _draw_typed_name(control: Control, span: SemanticSpan, metadata: Dictionary, font: Font, font_size: int,
+		event_style: EventSheetEventStyle, reading: EventSheetReadingStyle) -> void:
+	var kind: String = str(metadata.get("typed_name", ""))
+	var type_text: String = span.text
+	var name_text: String = str(metadata.get("object_label", ""))
+	var geometry: Dictionary = typed_name_geometry(font, font_size, kind, type_text, name_text)
+	var start_x: float = span.rect.position.x
+	var center_y: float = span.rect.get_center().y
+	var baseline_y: float = span.rect.position.y + (span.rect.size.y * ROW_VERTICAL_CENTER_RATIO) \
+		+ (font_size * FONT_BASELINE_OFFSET_RATIO)
+	var ink: Color = NativeRowMarks.glyph_ink(NativeRowMarks.OBJECT_GLYPH_LOCAL, reading.primary_text_color)
+	var mark_x: float = start_x + float(geometry["mark_x"])
+	var mark_side: float = TYPED_NAME_GLYPH
+	if kind == "local":
+		var tile := Rect2(mark_x, center_y - TYPED_NAME_TILE * 0.5, TYPED_NAME_TILE, TYPED_NAME_TILE)
+		_draw_rounded_rect(control, tile, event_style.condition_lane_color, 3, 3, 3, 3)
+		mark_x += (TYPED_NAME_TILE - TYPED_NAME_GLYPH) * 0.5
+	span.metadata["object_icon_x"] = mark_x
+	NativeRowMarks.draw_object_glyph(control, Rect2(mark_x, center_y - mark_side * 0.5, mark_side, mark_side),
+		NativeRowMarks.OBJECT_GLYPH_LOCAL, ink)
+	var room: float = maxf(span.rect.size.x, 1.0)
+	_draw_text(control, Vector2(start_x + float(geometry["type_x"]), baseline_y), type_text, room,
+		NativeVariableMarks.mono_font(font), font_size, reading.muted_text_color)
+	_draw_text(control, Vector2(start_x + float(geometry["name_x"]), baseline_y), name_text, room,
+		bold_font(font), font_size, event_style.group_title_color)
+
+
 ## The x a nested event's block begins at when nesting is drawn as lines in the margin: past the
 ## number column and the lines of its ancestors, at the slot its trigger mark sits in.
 static func nested_block_left_for(depth: int, indent_width: int) -> float:
@@ -1762,6 +1829,10 @@ func _draw_spans(
 			continue
 		if span_kind == "add_condition" and not reveal_add_condition:
 			continue
+		# A function head's "+ Add parameter" rests unseen where the add lines are offered on hover.
+		if span_kind == "verb_param_add" and event_style != null and event_style.add_lines_on_hover \
+				and not (row_data.hovered or row_data.selected):
+			continue
 		if strips_look and row_data.row_type == EventRowData.RowType.GROUP:
 			# The group bar of the look that nests by lines: a fold triangle, then the bold name, and
 			# nothing at the right - no count, and the on/off switch only while it is off or pointed at.
@@ -1787,6 +1858,9 @@ func _draw_spans(
 					_draw_block_cell(control, block_unions[span_index], metadata)
 			elif bool(metadata.get("code_cell", false)):
 				_draw_block_cell(control, span.rect, metadata)
+			elif strips_look and is_local_variable_row(row_data):
+				# A local on the sheet has no cell round its words: type, name and value stand on the canvas.
+				pass
 			elif not (row_data.in_selection_run and row_data.selected):
 				# Inside a selection run the cells lay no plate of their own: the run's one fill is
 				# the only colour behind the words, so the branch reads as one block.
@@ -1914,6 +1988,10 @@ func _draw_spans(
 		var text_x: float = span.rect.position.x + text_padding
 		var right_padding: float = text_padding if bool(metadata.get("chip", false)) else 2.0
 		var text_width: float = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
+		# A parameter or a local of the look that nests by lines is its mark, its type and its bold name.
+		if strips_look and is_typed_name_span(metadata) and span_index != editing_span_index:
+			_draw_typed_name(control, span, metadata, font, draw_font_size, event_style, reading)
+			continue
 		# Event-sheet-style object icon + label drawn before the ACE text
 		# (e.g. "[icon] System  Is on floor").
 		var object_icon: Variant = metadata.get("object_icon")
@@ -1925,13 +2003,25 @@ func _draw_spans(
 			# A look that nests by lines draws the icon bare, on the lane itself, with no tile behind it.
 			if not strips_look:
 				control.draw_style_box(_object_icon_plate_style(color), plate_rect)
-			var icon_inset: float = (OBJECT_ICON_PLATE_SIZE - OBJECT_ICON_SIZE) * 0.5
-			var icon_rect := Rect2(text_x + icon_inset, plate_y + icon_inset, OBJECT_ICON_SIZE, OBJECT_ICON_SIZE)
+			# Bare on the lane there is no tile to centre it on: the icon stands where the lane's padding ends.
+			var icon_inset: float = 0.0 if strips_look else (OBJECT_ICON_PLATE_SIZE - OBJECT_ICON_SIZE) * 0.5
+			var icon_rect := Rect2(text_x + icon_inset, plate_y + (OBJECT_ICON_PLATE_SIZE - OBJECT_ICON_SIZE) * 0.5, OBJECT_ICON_SIZE, OBJECT_ICON_SIZE)
 			# System and the input devices wear a glyph of their own (a gear, a keyboard, a mouse...)
 			# instead of their category's icon, in the object ink, so the catch-all object reads as one
 			# thing on every row. Same box, same advance: only what is painted in it changes.
 			var object_glyph: String = NativeRowMarks.line_glyph_for(metadata)
-			if object_glyph.is_empty():
+			# The icon's x, stamped for the one that measures it (the render harness asserts it).
+			span.metadata["object_icon_x"] = icon_rect.position.x
+			# An Else line in the look that nests by lines names its object with no icon: the room is
+			# kept, so the name still stands at the lane's one x.
+			var icon_hidden: bool = strips_look and span_kind == "else_keyword"
+			if icon_hidden:
+				pass
+			elif strips_look and bool(metadata.get("behaviour_write", false)):
+				# A write to the behaviour's own variable wears the one node icon, whichever verb wrote it.
+				var node_icon: Texture2D = EventSheetACEIcons.editor_icon("Node")
+				control.draw_texture_rect(node_icon if node_icon != null else object_icon as Texture2D, icon_rect, false)
+			elif object_glyph.is_empty():
 				control.draw_texture_rect(object_icon as Texture2D, icon_rect, false)
 			else:
 				NativeRowMarks.draw_object_glyph(control, icon_rect, object_glyph, NativeRowMarks.glyph_ink(object_glyph, color))

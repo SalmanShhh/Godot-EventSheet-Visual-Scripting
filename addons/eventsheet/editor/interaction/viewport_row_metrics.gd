@@ -264,6 +264,9 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 				# at the same x as an unmarked line's.
 				if not natural_badge and badge_column > 0.0:
 					cond_badge_x[line] = badge_start + badge_column + badge_gap
+				var strip_advance: float = strip_mark_advance(span, event_style)
+				if strip_advance >= 0.0:
+					cond_badge_x[line] = badge_start + strip_advance
 			else:
 				var text_start: float = float(cond_text_x.get(line, float(cond_badge_x.get(line, condition_text_start_x))))
 				if str(metadata.get("kind", "")) in ["condition", "trigger"]:
@@ -309,6 +312,10 @@ static func resting_add_line_kinds(row_data: EventRowData, event_style: EventShe
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
 		var kind: String = str(metadata.get("kind", ""))
+		# A function head's "+ Add parameter" is offered like the add-condition door: only while the head
+		# is pointed at or selected.
+		if kind == "verb_param_add":
+			kinds.append("verb_param_add")
 		if kind == "action":
 			has_action = true
 		elif kind == "trigger" or (kind == "condition" and not bool(metadata.get("placeholder", false))):
@@ -319,6 +326,30 @@ static func resting_add_line_kinds(row_data: EventRowData, event_style: EventShe
 			and not EventRowRenderer.add_action_line_rests(event_style):
 		kinds.append("add_action")
 	return kinds
+
+
+## The cell a trigger's arrow is drawn in, and the room it takes from the line's start before the line's
+## object, in the look that nests by lines: the 12 px arrow, a 5 px gap. Every other line of that look
+## has no mark slot at all - an inverted condition's cross leads its words instead - so its object
+## stands at the lane's own padding.
+const STRIP_MARK_CELL := 16.0
+const STRIP_MARK_ADVANCE := 17.0
+
+
+## How far a condition line's mark pushes the rest of the line right, in the look that nests by lines:
+## STRIP_MARK_ADVANCE for a trigger's arrow, 0 for any other mark; -1.0 when this span is not such a
+## mark (or the look is another), so the caller keeps the badge column rule it always had.
+static func strip_mark_advance(span: SemanticSpan, event_style: EventSheetEventStyle) -> float:
+	if span == null or event_style == null or not event_style.sub_event_strips \
+			or not (span.metadata is Dictionary):
+		return -1.0
+	var metadata: Dictionary = span.metadata as Dictionary
+	if not bool(metadata.get("badge", false)) or bool(metadata.get("badge_natural_width", false)) \
+			or metadata.get("badge_icon") is Texture2D:
+		return -1.0
+	if not str(metadata.get("badge_style", "")) in ["trigger", "negated"]:
+		return -1.0
+	return STRIP_MARK_ADVANCE if NativeRowMarks.kind_mark_for(metadata, span.text) == NativeRowMarks.KIND_MARK_TRIGGER else 0.0
 
 
 ## The chip kinds that sit AFTER a condition cell on its own line and must therefore be given room
@@ -714,6 +745,9 @@ func _natural_lane_extents(row_data: EventRowData, width: float, font: Font, fon
 			condition_cursor[line] = badge_start + maxf(badge_width, _viewport.MIN_SPAN_WIDTH) + 2.0 + gap
 			if not natural_badge and badge_column > 0.0:
 				condition_cursor[line] = badge_start + badge_column + badge_gap
+			var strip_advance: float = strip_mark_advance(span, event_style)
+			if strip_advance >= 0.0:
+				condition_cursor[line] = badge_start + strip_advance
 		else:
 			var text_start: float = float(condition_cursor.get(line, condition_text_start_x))
 			var condition_width_needed: float = measured
