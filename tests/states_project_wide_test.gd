@@ -11,6 +11,10 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 const P := "states_project_wide_test"
+## The live state row lays out at most once per 250 ms WINDOW, and the flips this file sends have to
+## land inside it: a real-time window, so the file runs in the serial tail rather than beside seven
+## other Godot processes (where a loaded run once measured the window gone before the flips arrived).
+const PARALLEL_UNSAFE: bool = true
 
 const OTHER_SCRIPT := "extends Node\n\nfunc check(p: Player) -> void:\n\tif p.state == Player.State.RUN:\n\t\tprint(\"running\")\n\tmatch p.state:\n\t\tPlayer.State.RUN:\n\t\t\tpass\n\t\tPlayer.State.JUMP:\n\t\t\tpass\n"
 const CHILD_SCRIPT := "extends Player\n\nfunc _ready() -> void:\n\tstate = State.RUN\n"

@@ -17,7 +17,7 @@
 
 ### Fixed: a state machine flipping every frame could lay the sheet out on every flip
 
-- The live state row lays the sheet out at most once per 250 ms window, but the window was stamped when a layout STARTED, so a layout slower than the window (a big sheet, a loaded machine) left no window after it and every flip laid the sheet out again. The window now opens when the layout ends. `states_project_wide_test` pins it, and no longer lets the once-per-session cold start of the live-values panel and the state trail (215 ms of the 250 ms window measured cold, all of it under a parallel run) decide whether its three flips land inside the window - the red its "three more flips" check went in a loaded parallel run.
+- The live state row lays the sheet out at most once per 250 ms window, but the window was stamped when a layout STARTED, so a layout slower than the window (a big sheet, a loaded machine) left no window after it and every flip laid the sheet out again. The window now opens when the layout ends. `states_project_wide_test` pins it, and no longer lets the once-per-session cold start of the live-values panel and the state trail (215 ms of the 250 ms window measured cold, all of it under a parallel run) decide whether its three flips land inside the window - the red its "three more flips" check went in a loaded parallel run. The file also declares itself PARALLEL_UNSAFE, so its real-time window is measured in the serial tail.
 
 ### Fixed: an Else row's "neither of N" note stayed blank until the row was scrolled to
 
