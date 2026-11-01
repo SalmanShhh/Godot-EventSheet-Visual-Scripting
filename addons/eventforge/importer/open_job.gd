@@ -25,6 +25,9 @@
 class_name EventSheetOpenJob
 extends RefCounted
 
+## The lifted-sheet memory, by path so the first open of a session compiles it only when a file is read.
+const LIFT_CACHE_PATH: String = "res://addons/eventforge/importer/lift_cache.gd"
+
 var _thread: Thread = null
 var _path: String = ""
 var _source_lines: int = 0
@@ -80,6 +83,15 @@ func start(path: String) -> bool:
 ## The worker body. Runs the raw import first, then the lift, so the phase the strip shows matches
 ## what is actually happening.
 func _run() -> void:
+	var source: String = FileAccess.get_file_as_string(_path)
+	# A file lifted before, unchanged, by the same code and vocabulary, comes back from `.godot/`
+	# instead of being lifted again - after it re-emits the source byte for byte (see lift_cache.gd).
+	var remembered: EventSheetResource = load(LIFT_CACHE_PATH).fetch(_path, source) as EventSheetResource
+	if remembered != null:
+		EventSheetACELifter.progress_phase = "checking"
+		EventSheetParseErrors.store_on_sheet(remembered, EventSheetParseErrors.check_file(_path))
+		_sheet = remembered
+		return
 	var importer: GDScriptImporter = GDScriptImporter.new()
 	var raw_sheet: EventSheetResource = importer.import_external(_path, false)
 	if raw_sheet == null:
@@ -87,7 +99,10 @@ func _run() -> void:
 		return
 	if not EventSheetACELifter.cancel_requested:
 		EventSheetACELifter.progress_phase = "lifting"
-		EventSheetACELifter.attempt_lift(raw_sheet, FileAccess.get_file_as_string(_path))
+		EventSheetACELifter.attempt_lift(raw_sheet, source)
+		# A lift that was cut short is the raw sheet and says nothing about the file: never remembered.
+		if not EventSheetACELifter.cancel_requested:
+			load(LIFT_CACHE_PATH).store(_path, source, raw_sheet)
 	if not EventSheetACELifter.cancel_requested:
 		# Whether the engine can actually parse this file, asked of the engine itself. It costs a few
 		# hundred milliseconds because it runs a second Godot, which is exactly why it belongs here on

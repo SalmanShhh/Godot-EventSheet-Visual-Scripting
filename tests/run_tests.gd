@@ -34,6 +34,10 @@ const DEFERRED_LAST: Array[String] = [
 
 
 func _init() -> void:
+	# The lifted-sheet memory in `.godot/` would hand a test the answer an earlier run lifted, and the
+	# tests of the lift itself need it lifted. Off for the run; lift_cache_test turns it on over a
+	# folder of its own.
+	load("res://addons/eventforge/importer/lift_cache.gd").enabled = false
 	var passed: bool = true
 	_start_progress()
 	var metadata_before: String = _read_project_metadata()

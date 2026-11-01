@@ -227,6 +227,9 @@ const INNER_CLASS_LIFT_PATH: String = "res://addons/eventforge/importer/inner_cl
 ## plain ints/strings written by the worker and read by the poller without a lock. A torn read
 ## shows a stale count for one frame and nothing else - no sheet data crosses this seam.
 static var progress_phase: String = ""
+## How many times a lift has been started in this process. Read by the test that holds the second open
+## of an unchanged file to none (see lift_cache.gd).
+static var lift_attempts: int = 0
 static var progress_functions_total: int = 0
 static var progress_functions_done: int = 0
 ## Set by the main thread to abandon the lift ("Show as code instead"). Checked before each
@@ -329,6 +332,7 @@ static func _lift_body_reading_comments(sheet: EventSheetResource, source: Strin
 ## if its byte-verify fails (e.g. annotations we can't regenerate), the event-only lift is
 ## retried so files keep at least the coverage older versions had.
 static func attempt_lift(sheet: EventSheetResource, source: String, lift_functions: bool = true) -> bool:
+	lift_attempts += 1
 	# Only the OUTER pass owns the progress counters - the event-only retry below re-enters this
 	# function and must not restart the bar the user is watching. The body has many early returns
 	# (GDScript has no try/finally), so the finalize lives here in the wrapper.
