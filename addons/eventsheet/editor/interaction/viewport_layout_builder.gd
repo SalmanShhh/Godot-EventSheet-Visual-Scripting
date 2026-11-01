@@ -74,6 +74,37 @@ func _condition_line_bands(row_data: EventRowData, row_top: float, line_height: 
 	return bands
 
 
+## Which of the bands _condition_line_bands answers are a function's parameter lines, by their index in
+## that list: the painter draws those in the parameter tone, with no rule under them.
+func _condition_param_bands(row_data: EventRowData) -> Array:
+	var indices: Array = []
+	if row_data.row_type != EventRowData.RowType.EVENT:
+		return indices
+	var lines: Dictionary = {}
+	var params: Dictionary = {}
+	for span: SemanticSpan in row_data.spans:
+		if span == null or not (span.metadata is Dictionary):
+			continue
+		var metadata: Dictionary = span.metadata as Dictionary
+		var kind: String = str(metadata.get("kind", ""))
+		if kind in ["add_condition", "add_action", "add_event", "verb_param_add"]:
+			continue
+		if _viewport._row_builder._resolve_span_lane(span) == "action":
+			continue
+		var line: int = int(metadata.get("line_index", 0))
+		lines[line] = true
+		if kind == "verb_param":
+			params[line] = params.get(line, true)
+		else:
+			params[line] = false
+	var ordered: Array = lines.keys()
+	ordered.sort()
+	for position: int in range(ordered.size()):
+		if bool(params.get(ordered[position], false)):
+			indices.append(position)
+	return indices
+
+
 func get_or_build_row_layout(index: int, width: float, font: Font, font_size: int) -> Dictionary:
 	var row_data: EventRowData = _viewport._row_at(index)
 	if row_data == null:
@@ -522,6 +553,8 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 		"gap_above": _gap_above(index, row_top),
 		# One band (y, height) per logical condition line, absolute to the canvas.
 		"condition_line_bands": _condition_line_bands(row_data, row_top, line_height, cond_line_tops, cond_line_counts),
+		# Which of those bands are a function's parameter lines (indices into the list above).
+		"condition_param_bands": _condition_param_bands(row_data),
 		# One line of an event, so a painter can place a mark on the first line rather than the middle.
 		"line_height": line_height,
 		"gutter_rect": gutter_rect,

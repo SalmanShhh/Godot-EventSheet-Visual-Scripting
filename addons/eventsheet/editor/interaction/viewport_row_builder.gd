@@ -17645,7 +17645,7 @@ func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, f
 		else:
 			span_width += font.get_string_size(object_label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 	if metadata.get("object_icon") is Texture2D:
-		span_width += EventRowRenderer.OBJECT_ICON_ADVANCE
+		span_width += EventRowRenderer.object_icon_advance(_viewport._get_event_style())
 	# The native look's variable marks (View > Value Glyphs, View > Variable Badges): the type word
 	# measured in the face it paints in, the room a value glyph takes, and the Inspector mark that
 	# stands among the badge tiles instead of beside the name. One source of sizes, shared with the

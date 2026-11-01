@@ -127,7 +127,7 @@ static func _test_derived_greys_for_a_dark_and_a_light_editor() -> bool:
 		light_style.get_condition_style().text_color.to_html(false), light.gutter_text_color.to_html(false),
 		light.type_number_color.to_html(false), light.object_label_color.to_html(false), light.word_number_color.to_html(false),
 		light.word_text_color.to_html(false), light.link_color.to_html(false)],
-		["0f0f0f", "404040", "2a2a2a", "124175", "0f0f0f", "633508", "1a3e80"]])
+		["0f0f0f", "404040", "2a2a2a", "124175", "0f0f0f", "0f0f0f", "1a3e80"]])
 	rows.append(["both hands: the open tab's edge and the No problems green", [
 		dark_style.get_chrome_style().active_tab_edge_color.to_html(false), light_style.get_chrome_style().active_tab_edge_color.to_html(false),
 		dark_style.get_chrome_style().status_ok_color.to_html(false), light_style.get_chrome_style().status_ok_color.to_html(false)],
@@ -209,7 +209,7 @@ static func _test_following_keeps_what_a_designer_changed() -> bool:
 		["an unchanged grey follows a light editor",
 			light.get_event_style().row_background_color.to_html(false), "ededed"],
 		["an unchanged colour takes its light partner",
-			light.get_event_style().word_text_color.to_html(false), "633508"],
+			light.get_event_style().object_label_color.to_html(false), "124175"],
 		["a changed colour stays the designer's",
 			light.get_event_style().value_highlight_color.to_html(false), "ff0000"],
 		["a changed grey stays the designer's",
@@ -256,7 +256,7 @@ static func _test_clear_means_as_before() -> bool:
 		adapted.get_event_style().gutter_background_color.to_html(false),
 		adapted.get_event_style().gutter_text_color.to_html(),
 		adapted.get_event_style().word_text_color.to_html(false), adapted.get_event_style().value_highlight_color.to_html(false)],
-		["202020", "202020", "d8d8d8", "20202099", "633508", "0f0f0f"]])
+		["202020", "202020", "d8d8d8", "20202099", "0f0f0f", "0f0f0f"]])
 	return SUPPORT.pins(TEST_NAME, rows)
 
 

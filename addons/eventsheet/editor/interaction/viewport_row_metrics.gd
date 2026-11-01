@@ -425,7 +425,7 @@ func _fill_text_wrap_width(metadata: Dictionary, cell_rect_width: float, font: F
 	var trail: float = pad if is_chip else 2.0
 	var lead: float = pad
 	if metadata.get("object_icon") is Texture2D:
-		lead += EventRowRenderer.OBJECT_ICON_ADVANCE
+		lead += EventRowRenderer.object_icon_advance(_viewport._get_event_style())
 	var object_label: String = str(metadata.get("object_label", ""))
 	if not object_label.is_empty():
 		var lane: String = str(metadata.get("lane", ""))
@@ -458,8 +458,8 @@ func object_column_override(metadata: Dictionary, lane_origin_x: float, span_x: 
 		return -1.0
 	var lead: float = float(metadata.get("padding_x", 0.0)) if bool(metadata.get("chip", false)) else 0.0
 	if metadata.get("object_icon") is Texture2D:
-		lead += EventRowRenderer.OBJECT_ICON_ADVANCE
-	return maxf(lane_origin_x + EventRowRenderer.OBJECT_ICON_ADVANCE + column - (span_x + lead), 24.0)
+		lead += EventRowRenderer.object_icon_advance(_viewport._get_event_style())
+	return maxf(lane_origin_x + EventRowRenderer.object_icon_advance(_viewport._get_event_style()) + column - (span_x + lead), 24.0)
 
 
 ## Greedy word-wrap break points for STYLED (bbcode-segment) cells: character offsets where

@@ -39,7 +39,9 @@ const OR_DIVIDER_WORD_GAP := 6.0
 const OBJECT_ICON_SIZE := 14.0
 const OBJECT_ICON_PLATE_SIZE := 18.0
 const OBJECT_ICON_ADVANCE := 23.0
-## The cross an inverted condition leads its words with, and the room it takes before them.
+## The advance after a line's icon in the look that nests by lines: the bare icon and a 4 px gap, so the
+## object's name stands 18 px past the lane's padding.
+const BARE_ICON_ADVANCE := 18.0
 ## The look that nests by lines gives the event number a column of its own, then one slot of the
 ## indent step per level; a level's line stands NESTING_LINE_INSET into its slot.
 const NATIVE_NUMBER_COLUMN := 34.0
@@ -47,8 +49,10 @@ const NESTING_LINE_INSET := 8.0
 const NUMBER_COLUMN_INSET := 8.0
 ## The fold arrow of the look that nests by lines: a filled triangle this wide, centred in its slot.
 const FOLD_TRIANGLE_SIDE := 9.0
-const INVERTED_MARK_SIDE := 10.0
-const INVERTED_MARK_ADVANCE := 14.0
+## The cross an inverted condition leads its words with (the square it is painted in, the X filling
+## its middle half), and the room it takes before them.
+const INVERTED_MARK_SIDE := 18.0
+const INVERTED_MARK_ADVANCE := 13.0
 ## The tile an object icon sits on: a neutral grey a step off the lane, lighter under pale ink (a
 ## dark sheet) and darker under dark ink (a light one), so the tile reads in both.
 const OBJECT_ICON_TILE_DARK := EventSheetPalette.COLOR_OBJECT_ICON_TILE_DARK
@@ -237,6 +241,13 @@ static func _draw_object_column_separator(control: CanvasItem, span: SemanticSpa
 ## default) only where the lane is genuinely unknown - the bound is then skipped, as before.
 ## The most of its lane a fixed name column may take: half, so the words beside it keep the rest.
 const OBJECT_COLUMN_LANE_SHARE := 0.5
+
+
+## How far a line's words move past its object icon: the plate's advance, or the bare icon's in the
+## look that nests by lines. The renderer, the layout and the hit-test all read it here, so the room
+## measured is the room drawn.
+static func object_icon_advance(event_style: EventSheetEventStyle) -> float:
+	return BARE_ICON_ADVANCE if event_style != null and event_style.sub_event_strips else OBJECT_ICON_ADVANCE
 
 
 static func object_column_width_for(event_style: EventSheetEventStyle, lane: String, lane_width: float = 0.0) -> float:
@@ -814,7 +825,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		var lane_color: Color = event_style.condition_lane_color if event_style != null else EventSheetPalette.COLOR_LANE_CONDITIONS
 		if event_style != null and event_style.sub_event_strips:
 			_draw_condition_cell(control, condition_lane_rect, layout.get("condition_line_bands", []),
-				float(layout.get("line_height", 0.0)), event_style, block_radius)
+				float(layout.get("line_height", 0.0)), event_style, block_radius, layout.get("condition_param_bands", []))
 		else:
 			_draw_rounded_rect(control, condition_lane_rect, lane_color, block_radius, 0, block_radius, 0)
 	if action_lane_rect.size != Vector2.ZERO:
@@ -1229,17 +1240,27 @@ static func condition_cell_rest(event_style: EventSheetEventStyle) -> Color:
 	return event_style.condition_lane_color.lerp(event_style.sheet_background_color, back)
 
 
+## The band a function's parameter lines sit on: a shade above the cell's resting tone and well below
+## a condition line's strip, the board's #333333 between #323232 and #3a3a3a (#f1f1f1 between #f0f0f0
+## and #ffffff on a light canvas), so the parameters read as part of the cell rather than as conditions.
+static func condition_parameter_tone(event_style: EventSheetEventStyle) -> Color:
+	var back: float = 0.35 if event_style.sheet_background_color.get_luminance() < 0.5 else 0.45
+	return event_style.condition_lane_color.lerp(event_style.sheet_background_color, back)
+
+
 ## The condition cell as ONE panel the full height of its event, however many actions the event has:
 ## the quieter tone from top to foot, then each condition line as its own lighter strip with a 1 px
 ## rule under it, so it is plain where one condition ends. An event with no condition draws no strip at all,
 ## only the quiet tone, empty. `bands` holds one Vector2(y, height) per line.
 func _draw_condition_cell(control: Control, lane_rect: Rect2, bands: Array, line_height: float,
-		event_style: EventSheetEventStyle, radius: int) -> void:
+		event_style: EventSheetEventStyle, radius: int, param_bands: Array = []) -> void:
 	_draw_rounded_rect(control, lane_rect, condition_cell_rest(event_style), radius, 0, radius, 0)
 	# An event with no condition draws NO strip: the whole cell stays in the quiet tone, empty.
 	var strips: Array = bands
 	var rule: float = EventSheetPalette.scaled_f(1.0)
-	for band: Vector2 in strips:
+	for band_index: int in range(strips.size()):
+		var band: Vector2 = strips[band_index]
+		var parameter_line: bool = param_bands.has(band_index)
 		var top: float = maxf(band.x, lane_rect.position.y)
 		var bottom: float = minf(band.x + band.y, lane_rect.end.y)
 		if bottom <= top:
@@ -1247,9 +1268,10 @@ func _draw_condition_cell(control: Control, lane_rect: Rect2, bands: Array, line
 		var strip := Rect2(lane_rect.position.x, top, lane_rect.size.x, bottom - top)
 		var at_top: bool = top <= lane_rect.position.y + 0.5
 		var at_foot: bool = bottom >= lane_rect.end.y - 0.5
-		_draw_rounded_rect(control, strip, event_style.condition_lane_color,
+		_draw_rounded_rect(control, strip, condition_parameter_tone(event_style) if parameter_line else event_style.condition_lane_color,
 			radius if at_top else 0, 0, radius if at_foot else 0, 0)
-		if not at_foot:
+		# A parameter line is a quieter band with no rule of its own: the rule ends a condition.
+		if not at_foot and not parameter_line:
 			control.draw_rect(Rect2(strip.position.x, bottom - rule, strip.size.x, rule), event_style.row_border_color, true)
 
 
@@ -1858,8 +1880,9 @@ func _draw_spans(
 					_draw_block_cell(control, block_unions[span_index], metadata)
 			elif bool(metadata.get("code_cell", false)):
 				_draw_block_cell(control, span.rect, metadata)
-			elif strips_look and is_local_variable_row(row_data):
+			elif strips_look and (is_local_variable_row(row_data) or is_typed_name_span(metadata)):
 				# A local on the sheet has no cell round its words: type, name and value stand on the canvas.
+				# A function's parameter stands on its own band of the condition cell the same way.
 				pass
 			elif not (row_data.in_selection_run and row_data.selected):
 				# Inside a selection run the cells lay no plate of their own: the run's one fill is
@@ -2021,16 +2044,20 @@ func _draw_spans(
 				# A write to the behaviour's own variable wears the one node icon, whichever verb wrote it.
 				var node_icon: Texture2D = EventSheetACEIcons.editor_icon("Node")
 				control.draw_texture_rect(node_icon if node_icon != null else object_icon as Texture2D, icon_rect, false)
+			elif strips_look and span_kind == "define_function":
+				# A function's head names no object: it leads with the arrow a line that fires wears, in
+				# the words' own ink, and its words follow at the lane's one x.
+				NativeRowMarks.draw_kind_mark(control, icon_rect, NativeRowMarks.KIND_MARK_TRIGGER, color)
 			elif object_glyph.is_empty():
 				control.draw_texture_rect(object_icon as Texture2D, icon_rect, false)
 			else:
 				NativeRowMarks.draw_object_glyph(control, icon_rect, object_glyph, NativeRowMarks.glyph_ink(object_glyph, color))
-			text_x += OBJECT_ICON_ADVANCE
+			text_x += object_icon_advance(event_style)
 			text_width = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
 		elif strips_look and not str(metadata.get("object_label", "")).is_empty() and bool(metadata.get("chip", false)):
 			# No icon on this line (a branch, a name with none): its object name still starts where the
 			# lane's other names do, in the room an icon would have held.
-			text_x += OBJECT_ICON_ADVANCE
+			text_x += object_icon_advance(event_style)
 			text_width = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
 		var object_label: String = str(metadata.get("object_label", ""))
 		if not object_label.is_empty():
@@ -2105,7 +2132,9 @@ func _draw_spans(
 		if strips_look and span_kind == "condition" and str(metadata.get("lane", "")) == "condition" \
 				and inverted_lines.has(int(metadata.get("line_index", -1))):
 			var cross_side: float = INVERTED_MARK_SIDE
-			var cross_rect := Rect2(text_x, span.rect.get_center().y - cross_side * 0.5, cross_side, cross_side)
+			# The X is painted in the middle half of its square, so the square starts a quarter before the
+			# words' x and the strokes start on it.
+			var cross_rect := Rect2(text_x - cross_side * 0.25, span.rect.get_center().y - cross_side * 0.5, cross_side, cross_side)
 			NativeRowMarks.draw_kind_mark(control, cross_rect, NativeRowMarks.KIND_MARK_INVERTED,
 				event_style.invert_marker_color)
 			text_x += INVERTED_MARK_ADVANCE
@@ -2133,6 +2162,7 @@ func _draw_spans(
 			painted_ranges = NativeRowMarks.merged_word_ranges(value_ranges, metadata.get("variable_ranges", []))
 		var param_ranges: Array = metadata.get("param_ranges", []) if span_index != editing_span_index else []
 		var bbcode_segments: Array = metadata.get("bbcode_segments", []) if span_index != editing_span_index else []
+		var plain_weight: bool = strips_look and span_kind in ["condition", "action"]
 		# The code echo rests at a fraction of its colour so the sentence leads, and comes up
 		# to full the moment the pointer is on the row it belongs to.
 		if row_data.hovered and bool(metadata.get("code_echo", false)) and not bbcode_segments.is_empty():
@@ -2188,8 +2218,13 @@ func _draw_spans(
 					var remaining: float = text_width - (segment_x - text_x)
 					if remaining <= 1.0:
 						break
+					# A line of the look that nests by lines reads in one weight: its object leads it, not
+					# its names or values.
+					var segment_bold: bool = bool(segment.get("bold", false)) and not plain_weight
+					if plain_weight and segment_tone == "name":
+						segment_color = color
 					if not tinted_by_ranges or painted_ranges.is_empty():
-						var segment_font: Font = bold_font(font) if bool(segment.get("bold", false)) else font
+						var segment_font: Font = bold_font(font) if segment_bold else font
 						_draw_text(control, Vector2(segment_x, line_baseline_y), segment_text, remaining, segment_font, draw_font_size, segment_color)
 					else:
 						var shifted_ranges: Array = []
@@ -2203,7 +2238,7 @@ func _draw_spans(
 										kept.append((value_range as Array)[2])
 									shifted_ranges.append(kept)
 						_draw_text_with_values(control, Vector2(segment_x, line_baseline_y), segment_text, shifted_ranges,
-							remaining, bold_font(font) if bool(segment.get("bold", false)) else font, draw_font_size,
+							remaining, bold_font(font) if segment_bold else font, draw_font_size,
 							segment_color, bbcode_value_color, word_text_color, word_keyword_color, TEXT_MUTED, word_variable_color)
 					segment_x += font.get_string_size(segment_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 		elif bool(metadata.get("comment_wrap", false)) and span_index != editing_span_index:
@@ -2232,7 +2267,9 @@ func _draw_spans(
 		# The event-sheet parameter emphasis: every substituted parameter value re-draws in the
 		# bold face the BBCode cells' bold uses, in whatever colour that run already has, so
 		# the typed value tints never wash out.
-		if not param_ranges.is_empty() and bbcode_segments.is_empty() and not bool(metadata.get("comment_wrap", false)):
+		# The look that nests by lines draws a line in one weight, so it has no such emphasis.
+		if not param_ranges.is_empty() and bbcode_segments.is_empty() and not bool(metadata.get("comment_wrap", false)) \
+				and not plain_weight:
 			_draw_param_emphasis(control, Vector2(text_x, baseline_y), draw_text, param_ranges, painted_ranges,
 				text_width, font, draw_font_size, color, word_number_color,
 				word_text_color, word_keyword_color, reading.muted_text_color, word_variable_color)

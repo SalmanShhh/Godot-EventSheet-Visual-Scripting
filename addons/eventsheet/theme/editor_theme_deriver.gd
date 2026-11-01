@@ -75,8 +75,9 @@ const NATIVE_GREYS_LIGHT := {
 	"verb_chip_background_color": Color("#e4e4e4"),
 }
 
-## The colours of the Editor Native look: fixed per hand, never shifted, because a string's orange
-## or a bool's blue is a meaning rather than a shade of the editor.
+## The colours of the Editor Native look: fixed per hand, never shifted, because a bool's blue or an
+## object's name colour is a meaning rather than a shade of the editor. Values and quoted text read in
+## the sentence's own ink: the look marks a line's object, not its literals.
 const NATIVE_COLOURS_DARK := {
 	"trigger_badge_background_color": Color("#70bafa"),
 	"trigger_badge_foreground_color": Color("#1d2128"),
@@ -116,7 +117,7 @@ const NATIVE_COLOURS_DARK := {
 	"type_collection_color": Color("#d0d0d0"),
 	"type_class_color": Color("#d0d0d0"),
 	"word_variable_color": Color("#8ec3f2"),
-	"word_text_color": Color("#e3b47e"),
+	"word_text_color": Color("#d2d2d2"),
 	"word_number_color": Color("#d2d2d2"),
 	"word_keyword_color": Color("#a8afba"),
 	"include_border_color": Color("#3f8f86"),
@@ -178,7 +179,7 @@ const NATIVE_COLOURS_LIGHT := {
 	"type_collection_color": Color("#2a2a2a"),
 	"type_class_color": Color("#2a2a2a"),
 	"word_variable_color": Color("#124175"),
-	"word_text_color": Color("#633508"),
+	"word_text_color": Color("#0f0f0f"),
 	"word_number_color": Color("#0f0f0f"),
 	"word_keyword_color": Color("#4f555c"),
 	"include_border_color": Color("#3f9a8f"),
@@ -372,15 +373,15 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	var colours: Dictionary = NATIVE_COLOURS_LIGHT if light else NATIVE_COLOURS_DARK
 	for token_name: String in colours:
 		event_style.set(token_name, colours[token_name])
-	# The density the design is drawn at: 24 px rows, a 92 px object name after its 14 px icon and the
-	# 8 px gap (114 px in all, the column counting the icon) in the conditions lane, a 140 px object column
-	# in the actions lane, 1 px between two events, an 18 px nesting step, a 1 px lane divider and
-	# square-ish cards with a one-pixel edge.
-	event_style.condition_lane_ratio = 0.42
+	# The density the design is drawn at: 24 px rows; a line's words 118 px past its lane's 8 px padding
+	# in the conditions lane (the bare icon's 18 px, then a 92 px object column) and 154 px in the actions
+	# lane (18 + 128); 1 px between two events, an 18 px nesting step, a 1 px lane divider and square-ish
+	# cards with a one-pixel edge.
+	event_style.condition_lane_ratio = 0.425
 	event_style.minimum_row_height = 24
 	event_style.group_row_height = 28
-	event_style.condition_object_column_width = 114
-	event_style.action_object_column_width = 140
+	event_style.condition_object_column_width = 92
+	event_style.action_object_column_width = 128
 	event_style.event_block_gap = 1
 	event_style.sub_event_indent = 18
 	event_style.sub_event_rail_line = false

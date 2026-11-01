@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Changed: Editor Native closes the event alignment board
+
+- A line's words stand where the board puts them: 118 px into the block in the conditions lane and 154 px into the actions lane (they stood at 145 and 171), the object's name 26 px in (it stood at 31) after the bare icon, and the divider between the lanes 6 px further right at the board's width.
+- Quoted text reads in the normal text colour like every other value (it was orange), and a condition or action line is drawn in one weight: the names and values inside it ("Set magnitude to", "exponent < 3") are no longer bold or brighter. Classic Sheet keeps its tints and emphasis.
+- A function's parameter lines sit on a band a shade darker than a condition line's strip, with no rule under them and no cell round their words, and its head leads with the trigger arrow in the words' ink instead of the function icon.
+- An inverted condition's cross is drawn at the board's size, and a local's value stands the typed name's own 7 px gap after its name.
+
+### Fixed: tabs, the head's Add action, the Doctor's numbers and capitalised names
+
+- Switching back to a tab kept without a rebuild no longer answers with the last sheet's numbering: Go to Event, the status bar's event N of M, Find and the repeated-rows numbers read the tab's own branches again.
+- A function head's "+ Add action" adds its blank first step and the picked action as one edit: closing the picker without a pick leaves the function untouched (it left an empty event and an undo step that added nothing).
+- The Doctor reads each sheet's margin numbers once per run instead of building a throwaway canvas for every section that names an event.
+- A line about a node named by its path (`$Body`) only raises a sentence's opening word: a line that opens on a name (`apply_impulse(...)`) keeps it as written.
+- The comment rewrites of the free spot, pooled nodes and world look runtime scripts now live in their pack builders, so a rebuild keeps them.
+
 ### Changed: Editor Native lands the event alignment board's last measurements
 
 - A write to the behaviour's own variable (`Set magnitude`, `Add 1 to tier`, a Set value on a sheet variable) reads with the behaviour's name as its object ("Big Numbers | Set magnitude to ..."): the pack's picker name when a pack is being read, else the category the file's own header declares. The tests beside it keep reading with System, and a sheet with no category reads as it did. A reading only; Classic Sheet reads the same object.

@@ -1213,7 +1213,7 @@ func _object_column_boundary_of(span: SemanticSpan) -> Dictionary:
 	if bool(metadata.get("chip", false)):
 		anchor_x += float(metadata.get("padding_x", 0.0))
 	if metadata.get("object_icon") is Texture2D:
-		anchor_x += EventRowRenderer.OBJECT_ICON_ADVANCE
+		anchor_x += EventRowRenderer.object_icon_advance(_get_event_style())
 	var boundary_x: float = anchor_x
 	var column_width: float = EventRowRenderer.object_column_width_for(_get_event_style(), lane, lane_width_for(lane, int(metadata.get("row_indent", 0))))
 	# The layout stamps the aligned per-span column (shared separator x); grab where it is
@@ -1489,6 +1489,10 @@ func _get_span_gap(span: SemanticSpan) -> float:
 	if show_variable_badges and bool(metadata.get("inspector_badge", false)):
 		return 0.0
 	var fallback_gap: float = CHIP_GAP if bool(metadata.get("chip", false)) else EventSheetPalette.SPAN_GAP
+	# A typed name of the look that nests by lines ends on its bold name, whose measured width already
+	# holds the bold stroke: the value after it keeps the typed name's own gap from there.
+	if EventRowRenderer.is_typed_name_span(metadata) and _get_event_style().sub_event_strips:
+		fallback_gap = EventRowRenderer.TYPED_LOCAL_GAP - float(EventRowRenderer.BOLD_OUTLINE_SIZE)
 	return max(float(metadata.get("gap_after", fallback_gap)), 0.0)
 
 
@@ -1737,7 +1741,7 @@ func _span_text_origin_x(span: SemanticSpan, font: Font, font_size: int) -> floa
 	if bool(metadata.get("chip", false)):
 		origin_x += float(metadata.get("padding_x", 0.0))
 	if metadata.get("object_icon") is Texture2D:
-		origin_x += EventRowRenderer.OBJECT_ICON_ADVANCE
+		origin_x += EventRowRenderer.object_icon_advance(_get_event_style())
 	var object_label: String = str(metadata.get("object_label", ""))
 	if not object_label.is_empty():
 		# Fixed object column (the event-sheet sub-lane) advances by the column width; flow mode by the
@@ -4903,7 +4907,7 @@ func elided_object_name_at(row_index: int, span_index: int, logical: Vector2) ->
 	if bool(metadata.get("chip", false)):
 		column_start += float(metadata.get("padding_x", 0.0))
 	if metadata.get("object_icon") is Texture2D:
-		column_start += EventRowRenderer.OBJECT_ICON_ADVANCE
+		column_start += EventRowRenderer.object_icon_advance(_get_event_style())
 	var limit: float = text_origin - column_start - 6.0
 	var draw_size: int = _span_draw_font_size(span, font_size)
 	if EventRowRenderer._elide(label, limit, font, draw_size) == label:
