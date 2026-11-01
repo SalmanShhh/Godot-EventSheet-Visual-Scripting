@@ -75,6 +75,9 @@ func _pattern_events(sheet: EventSheetResource) -> Array[EventRow]:
 	var found: Array[EventRow] = []
 	if sheet == null:
 		return found
+	# A reading claims its pattern when its row's words are built, and a row nobody has scrolled to may
+	# not have them yet: the walk asks for every row's words, or it would skip the events further down.
+	_viewport.get_row_tree()
 	EventSheetViewportReadingRows.ensure_claims(sheet)
 	var wanted: Dictionary = {}
 	for claim: Variant in EventSheetPatternFacts.claims(sheet):

@@ -104,8 +104,12 @@ func rebuild() -> void:
 		var height: float = _resolve_row_height(row_data)
 		# "open": whether the row was measured hovered or selected - the state a theme that shows the add
 		# lines on hover measures an event in (remeasure_open_rows reads it back).
+		# "lazy": whether the row was measured before its words were built, from the line count alone -
+		# which knows nothing of a cell that wraps, or of the add lines a resting or inert row does not
+		# show. settle_built_rows measures it again once its words exist.
 		_row_metrics.append({"top": top, "height": height,
-			"open": row_data != null and (row_data.hovered or row_data.selected)})
+			"open": row_data != null and (row_data.hovered or row_data.selected),
+			"lazy": _measured_lazily(row_data)})
 		top += height
 		if row_data != null:
 			previous_indent = row_data.indent
@@ -133,13 +137,62 @@ func remeasure_open_rows() -> bool:
 		if open == bool(metric.get("open", false)):
 			continue
 		metric["open"] = open
+		metric["lazy"] = _measured_lazily(row_data)
 		var height: float = _resolve_row_height(row_data)
 		var old_height: float = float(metric.get("height", height))
 		if not is_equal_approx(height, old_height):
 			shift += height - old_height
 			metric["height"] = height
 			changed = true
+	# The tops moved, so everything worked out from them (the margin brackets) is out of date.
+	if changed:
+		_generation += 1
 	return changed
+
+
+## Measures again every row from `from_index` to `to_index` that was measured before its words were
+## built, building them first, and moves the rows below by what they gained or lost. A row past the
+## first screenful is measured from its line count alone; its real height is known only once its words
+## exist, because a cell that wraps grows the row and a resting or inert row hides its add lines. The
+## canvas calls this for the rows it is about to draw, so a row is never drawn into a height that does
+## not fit it. Returns {changed, shift_above}: whether any height moved, and by how much the rows that
+## end at or above `anchor_y` grew in total (what a caller keeping its view still scrolls by).
+func settle_built_rows(from_index: int, to_index: int, anchor_y: float = -1.0) -> Dictionary:
+	var shift: float = 0.0
+	var shift_above: float = 0.0
+	var changed: bool = false
+	var last: int = mini(to_index, _row_metrics.size() - 1)
+	var start: int = maxi(from_index, 0)
+	if start > last:
+		return {"changed": false, "shift_above": 0.0}
+	for index: int in range(start, _row_metrics.size()):
+		var metric: Dictionary = _row_metrics[index]
+		if shift != 0.0:
+			metric["top"] = float(metric.get("top", 0.0)) + shift
+		if index > last or not bool(metric.get("lazy", false)):
+			continue
+		var row_data: EventRowData = _viewport._row_at(index)
+		_viewport._row_builder._ensure_event_spans(row_data)
+		# Asked once: a row that has no words to build (an event with nothing behind it) keeps the
+		# height its line count gave it.
+		metric["lazy"] = false
+		var height: float = _resolve_row_height(row_data)
+		var old_height: float = float(metric.get("height", height))
+		if is_equal_approx(height, old_height):
+			continue
+		if anchor_y >= 0.0 and float(metric.get("top", 0.0)) + old_height <= anchor_y:
+			shift_above += height - old_height
+		shift += height - old_height
+		metric["height"] = height
+		changed = true
+	if changed:
+		_generation += 1
+	return {"changed": changed, "shift_above": shift_above}
+
+
+## Whether a row's height can only be a guess until its words are built.
+static func _measured_lazily(row_data: EventRowData) -> bool:
+	return row_data != null and row_data.row_type == EventRowData.RowType.EVENT and row_data.spans.is_empty()
 
 
 func _resolve_row_height(row_data: EventRowData) -> float:

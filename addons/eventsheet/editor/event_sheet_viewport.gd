@@ -257,6 +257,8 @@ var _pending_state_pick: Dictionary = {}
 # descriptors, non-event row builders). See interaction/viewport_row_builder.gd. The methods
 # below keep one-line delegates so internal STAY callers and tests reach it by the original names.
 var _row_builder: ViewportRowBuilder = ViewportRowBuilder.new()
+## Builds the words of the rows not yet drawn while the editor is idle (see viewport_word_filler.gd).
+var _word_filler: RefCounted = preload("res://addons/eventsheet/editor/interaction/viewport_word_filler.gd").new()
 var _folding: ViewportFolding = ViewportFolding.new()
 var _layout_builder: ViewportLayoutBuilder = ViewportLayoutBuilder.new()
 var _drag: ViewportDragInteractions = ViewportDragInteractions.new()
@@ -470,6 +472,7 @@ func _init() -> void:
 	_drag_motion.init(self)
 	_input_handlers.init(self)
 	_row_metrics_helper.init(self)
+	_word_filler.init(self)
 	_group_breadcrumb.init(self)
 	_corner_links.init(self)
 	_live_values_helper.init(self)
@@ -667,6 +670,7 @@ func adopt_view_state(sheet: EventSheetResource, state: Dictionary) -> bool:
 		_editor_style = kept_style
 	_applied_collapse_sheet = state.get("applied_collapse_sheet") as EventSheetResource
 	_rows_revision = int(state.get("rows_revision", _rows_revision))
+	_word_filler.restart()
 	_layout_style_signature = str(state.get("layout_style_signature", _layout_style_signature))
 	_selected_row_index = int(state.get("selected_row_index", -1))
 	_selected_span_index = int(state.get("selected_span_index", -1))
@@ -938,13 +942,51 @@ func rows_for_resources(resources: Array) -> Dictionary:
 	var found: Array[EventRowData] = []
 	var shallowest: int = 0
 	var first: bool = true
-	for row_data: EventRowData in get_row_tree():
+	# The live roots, not get_row_tree(): that builds the words of EVERY row of the sheet (seconds on a
+	# long one) to answer which rows stand for a selection. A caller that reads the found rows' words
+	# asks for exactly those through ensure_words_in.
+	for row_data: EventRowData in _root_rows:
 		_collect_rows_for_resources(row_data, resources, found)
 	for row_data: EventRowData in found:
 		if first or row_data.indent < shallowest:
 			shallowest = row_data.indent
 			first = false
 	return {"rows": found, "indent": shallowest}
+
+
+## Gives the rows about to be drawn the heights their words need. A row past the first screenful was
+## measured from its line count before its words existed, and a cell that wraps (or the add lines a
+## resting row hides) makes the real height another; drawn into the guessed one, the words spilled
+## into the row below. Measured again here, the rows below move, and the window is asked again since
+## more or fewer rows may now fit. Returns the window to draw.
+func _settle_rows_in_view(visible_range: Vector2i) -> Vector2i:
+	for _pass: int in range(4):
+		var settled: Dictionary = _row_metrics_helper.settle_built_rows(visible_range.x, visible_range.y)
+		if not bool(settled.get("changed", false)):
+			return visible_range
+		_layout_cache.clear()
+		_update_canvas_min_size.call_deferred()
+		visible_range = get_visible_row_range()
+	return visible_range
+
+
+## Every row measured again with its words built, for a caller that is about to read the whole canvas
+## (the sheet as one picture) rather than a screenful. The view stays on the rows it was showing: what
+## the rows above the scroll position gained or lost is scrolled by.
+func settle_all_row_heights() -> void:
+	if _flat_rows.is_empty():
+		return
+	var zoom: float = max(_zoom_factor, 0.001)
+	var scroll: ScrollContainer = _get_scroll_container()
+	var anchor: float = float(scroll.scroll_vertical) / zoom if scroll != null else -1.0
+	var settled: Dictionary = _row_metrics_helper.settle_built_rows(0, _flat_rows.size() - 1, anchor)
+	if not bool(settled.get("changed", false)):
+		return
+	_layout_cache.clear()
+	_update_canvas_min_size()
+	if scroll != null:
+		scroll.scroll_vertical += int(round(float(settled.get("shift_above", 0.0)) * zoom))
+	queue_redraw()
 
 
 ## Builds the words of these rows and everything under them, for a window or an export that reads a
@@ -2440,6 +2482,8 @@ func _draw() -> void:
 	var visible_range: Vector2i = get_visible_row_range()
 	if visible_range.x < 0:
 		return
+	visible_range = _settle_rows_in_view(visible_range)
+	_word_filler.resume()
 	var font: Font = _get_font()
 	var font_size: int = _get_font_size()
 	# Read once per frame, not per row: the flag is constant across the frame and a
@@ -3254,6 +3298,7 @@ func _refresh_rows() -> void:
 		for entry in _flat_rows:
 			_row_builder._ensure_event_spans(entry.get("row"))
 	_row_metrics_helper.rebuild()
+	_word_filler.restart()
 	var event_numbers: Dictionary = event_numbers_for(_sheet.events if _sheet != null else [], _sheet.functions if _sheet != null else [])
 	# The look that nests by lines numbers a pair's branches as events of their own, so the events after
 	# a pair move down by the branches before them. Read off the whole tree, folded rows included, so a
@@ -4496,6 +4541,9 @@ func _compute_hover_matches(row_index: int, span_index: int) -> Dictionary:
 		var owner: EventRow = candidate.source_resource as EventRow
 		if owner == null or not scope_ids.has(owner.get_instance_id()):
 			continue
+		# A use in a row not drawn yet still lights up when it scrolls in: the answer is kept for as long
+		# as the pointer stays on this cell, so it is worked out from built words.
+		_row_builder._ensure_event_spans(candidate)
 		var span_indices: PackedInt32Array = PackedInt32Array()
 		for candidate_span in range(candidate.spans.size()):
 			var candidate_text: String = candidate.spans[candidate_span].text
@@ -6453,7 +6501,9 @@ func accessible_name_for_row(row_index: int) -> String:
 	var row_data: EventRowData = _row_at(row_index)
 	if row_data == null:
 		return ""
-	_row_builder._ensure_event_spans(row_data)
+	# The listing reads the row's sub-events too, so their words are built with its own: a row just
+	# past the window's edge would otherwise be spoken without the events under it.
+	ensure_words_in([row_data])
 	var parts: PackedStringArray = PackedStringArray()
 	for line: String in load(TEXT_LISTING_PATH).lines_for_rows([row_data]):
 		var trimmed: String = line.strip_edges()

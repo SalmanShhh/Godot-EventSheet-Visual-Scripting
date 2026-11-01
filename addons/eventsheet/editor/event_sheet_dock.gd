@@ -8826,6 +8826,11 @@ func capture_sheet_picture() -> Image:
 	var window: Viewport = get_viewport()
 	if scroll == null or window == null:
 		return null
+	# Every row at the height its words need BEFORE the total is read: a row first drawn half way down
+	# the capture would otherwise grow under it and push the bottom of the sheet out of the picture.
+	view.get_row_tree()
+	view.settle_all_row_heights()
+	await get_tree().process_frame
 	var band: Rect2i = Rect2i(scroll.get_global_rect())
 	var total_height: int = maxi(int(scroll.get_v_scroll_bar().max_value), band.size.y)
 	if band.size.x <= 0 or band.size.y <= 0:
