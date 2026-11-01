@@ -175,6 +175,17 @@ static func _collect_descriptor(descriptor: ACEDescriptor, seen: Dictionary, str
 ## a floor on a PERCENTAGE would not notice a new sentence added to a covered verb - which is the
 ## regression that actually happens. This is that gate.
 const FULLY_KEYED_ACES: Array[String] = [
+	# The positioning wave: the world-space twins, the place readers, the Control rows and the verbs
+	# whose reading now says which space they work in.
+	"GlideToward", "WrapAroundLayoutX", "WrapAroundLayoutY", "BoundToLayout", "MouseMoveCursorTo",
+	"SetPosition2D", "TranslateNode3D", "WrapInsideScreen", "ApplyPushes", "SpawnSceneAt",
+	"SpawnSceneFull", "SetWorldPosition2D", "SetWorldPosition3D", "SetPositionToObject2D",
+	"GetPositionX2D", "GetWorldX2D", "GetPositionY2D", "GetWorldY2D", "GetWorldPosition2D",
+	"GetPositionX3D", "GetWorldX3D", "GetPositionY3D", "GetWorldY3D", "GetPositionZ3D", "GetWorldZ3D",
+	"GetWorldPosition3D", "GlideTowardWorld", "ApplyPushesWorld", "WrapInsideScreenWorld",
+	"WrapAroundLayoutXWorld", "WrapAroundLayoutYWorld", "BoundToLayoutWorld",
+	"SpawnNewCopyDeferredWorld", "SpawnNewCopyDeferredWorld3D", "SpawnSceneInWorld",
+	"SetControlPosition", "SetControlWorldPosition", "SetControlSize",
 	"AcceptPlayer", "AddBottomPanel", "AddCommandPaletteCommand", "AddEditorWindow",
 	"AddLayoutOnTop", "AddMissionTime", "AddNodeUndoable", "AddVisibilityFilter",
 	"AimAtMovingTarget", "AimedFloorObject", "AimedFloorPoint", "AimedFloorSlope", "AlignLeft",
@@ -501,7 +512,9 @@ static func _test_the_catalog_actually_translates() -> bool:
 ## readings that had been translated ("Im Zustand {state}") back into English. A wave that adds
 ## English-equal cells raises a number here and fails; one that translates them lowers the ceiling.
 const ENGLISH_EQUAL_CEILING: Dictionary = {
-	"de": 145, "es": 107, "fr": 200, "it": 121, "ja": 48, "ko": 52, "ru": 48, "zh_CN": 45,
+	# The positioning wave added the axis letters X, Y and Z, which every language spells the same,
+	# and the words Position (German, French) and Destination (French), which are shared too.
+	"de": 149, "es": 110, "fr": 205, "it": 124, "ja": 51, "ko": 55, "ru": 51, "zh_CN": 48,
 }
 
 

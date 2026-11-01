@@ -932,6 +932,8 @@ static func _parameter_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 const SPAWN_NAME_PARAMS: Dictionary = {
 	"SpawnNewCopy": "name",
 	"SpawnNewCopyDeferred": "name",
+	"SpawnNewCopyDeferredWorld": "name",
+	"SpawnNewCopyDeferredWorld3D": "name",
 	"MakeNewCopy": "name",
 	"SpawnIntoCrowd": "name",
 	"SpawnIntoCrowdOldestFirst": "name",

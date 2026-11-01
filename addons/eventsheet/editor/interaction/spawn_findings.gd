@@ -77,7 +77,7 @@ const DEFERRED_ADD := "call_deferred(\"add_child\""
 ## beside it needs somebody to have said which spelling that is. Both sides take the same
 ## parameters, which is what makes the swap one click and nothing else.
 const DEFERRED_TWIN: Dictionary = {
-	"SpawnNewCopy": "SpawnNewCopyDeferred",
+	"SpawnNewCopy": "SpawnNewCopyDeferredWorld",
 }
 
 ## The calls that book something to happen LATER against a node - the second half of the fourth

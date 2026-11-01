@@ -9849,3 +9849,121 @@ world Z,월드 Z
 %s is measured from the parent node. Set world %s to place it in the world instead.,%s 는 부모 노드를 기준으로 측정됩니다. 월드 %s 를 설정하면 월드 좌표로 배치됩니다.
 "world %s is the place in the world, whatever the parent node does. Set %s to place it relative to the parent node instead.",월드 %s 는 부모 노드와 무관한 월드 상의 위치입니다. %s 를 설정하면 부모 노드 기준으로 배치됩니다.
 world position,월드 위치
+Apply Pushes,밀림 적용
+apply pushes ( friction {friction} ),밀림 적용 ( 마찰 {friction} )
+Friction,마찰
+How fast the push dies away; bigger stops sooner.,밀림이 잦아드는 속도입니다. 클수록 빨리 멈춥니다.
+"Knockback that decays honestly (the exp form, frame-rate independent) - one row under Every Frame. The push is worked out in the level's directions but added to the place inside the parent, which is wrong under a rotated or scaled parent; use ApplyPushesWorld, the world twin.","프레임 속도와 무관하게 정직하게 감쇠하는 넉백(지수 형태) - 매 프레임 아래에 한 줄을 둡니다. 밀림은 레벨의 방향으로 계산되지만 부모 안의 위치에 더해지므로, 회전하거나 크기가 바뀐 부모 아래에서는 틀립니다. 월드 쌍둥이인 ApplyPushesWorld를 사용하세요."
+"Knockback that decays honestly (the exp form, frame-rate independent) - one row under Every Frame. The push is worked out in the level's directions and added to the node's place in the level, so it is right under a rotated or scaled parent.","프레임 속도와 무관하게 정직하게 감쇠하는 넉백(지수 형태) - 매 프레임 아래에 한 줄을 둡니다. 밀림은 레벨의 방향으로 계산되어 노드의 레벨 내 위치에 더해지므로, 회전하거나 크기가 바뀐 부모 아래에서도 올바릅니다."
+Bound To Layout,레이아웃에 제한
+"Holds the object inside the layout's edges instead of letting it leave - the arcade fence. It holds the place inside the parent against the layout's edges, which are places in the level; use BoundToLayoutWorld, the world twin.","오브젝트가 레이아웃 가장자리 밖으로 나가지 못하게 안에 붙잡아 둡니다 - 아케이드 울타리입니다. 부모 안의 위치를 레벨 내 위치인 레이아웃 가장자리에 대해 제한하므로, 월드 쌍둥이인 BoundToLayoutWorld를 사용하세요."
+The top-left corner the object is kept inside.,오브젝트를 안에 붙잡아 두는 왼쪽 위 모서리입니다.
+The bottom-right corner the object is kept inside.,오브젝트를 안에 붙잡아 두는 오른쪽 아래 모서리입니다.
+"Holds the object inside the layout's edges instead of letting it leave - the arcade fence. The layout's edges are places in the level, so the node's place in the level is what is held.","오브젝트가 레이아웃 가장자리 밖으로 나가지 못하게 안에 붙잡아 둡니다 - 아케이드 울타리입니다. 레이아웃 가장자리는 레벨 내 위치이므로, 노드의 레벨 내 위치가 제한됩니다."
+The top-left corner of the level the object is kept inside.,오브젝트를 안에 붙잡아 두는 레벨의 왼쪽 위 모서리입니다.
+The bottom-right corner of the level the object is kept inside.,오브젝트를 안에 붙잡아 두는 레벨의 오른쪽 아래 모서리입니다.
+Get X,X 가져오기
+"Returns the X of the node's place inside its parent, in pixels.",부모 안에서 노드 위치의 X를 픽셀로 돌려줍니다.
+X,X
+Get X (3D),X 가져오기 (3D)
+Returns the X of the node's place inside its parent.,부모 안에서 노드 위치의 X를 돌려줍니다.
+Get Y,Y 가져오기
+"Returns the Y of the node's place inside its parent, in pixels.",부모 안에서 노드 위치의 Y를 픽셀로 돌려줍니다.
+Y,Y
+Get Y (3D),Y 가져오기 (3D)
+Returns the Y of the node's place inside its parent.,부모 안에서 노드 위치의 Y를 돌려줍니다.
+Get Z (3D),Z 가져오기 (3D)
+Returns the Z of the node's place inside its parent.,부모 안에서 노드 위치의 Z를 돌려줍니다.
+Z,Z
+Get World Position,월드 위치 가져오기
+"Returns the node's place in the level as a Vector2, whoever its parent is.",부모가 무엇이든 노드의 레벨 내 위치를 Vector2로 돌려줍니다.
+Get World Position (3D),월드 위치 가져오기 (3D)
+"Returns the node's place in the level as a Vector3, whoever its parent is.",부모가 무엇이든 노드의 레벨 내 위치를 Vector3로 돌려줍니다.
+Get World X,월드 X 가져오기
+"Returns the X of the node's place in the level, whoever its parent is.",부모가 무엇이든 노드의 레벨 내 위치의 X를 돌려줍니다.
+Get World X (3D),월드 X 가져오기 (3D)
+Get World Y,월드 Y 가져오기
+"Returns the Y of the node's place in the level, whoever its parent is.",부모가 무엇이든 노드의 레벨 내 위치의 Y를 돌려줍니다.
+Get World Y (3D),월드 Y 가져오기 (3D)
+Get World Z (3D),월드 Z 가져오기 (3D)
+"Returns the Z of the node's place in the level, whoever its parent is.",부모가 무엇이든 노드의 레벨 내 위치의 Z를 돌려줍니다.
+Move Toward Position,위치를 향해 이동
+"Glides this frame's share of the way toward a point, never overshooting it. It moves the place inside the parent, so it lands wrong for a node under a moved parent; Move Toward Position (the world twin, GlideTowardWorld) moves the place in the level.",이번 프레임 몫만큼 한 점을 향해 미끄러지듯 나아가며 절대 지나치지 않습니다. 부모 안의 위치를 움직이므로 이동한 부모 아래의 노드에서는 엉뚱한 곳에 도착합니다. 레벨 내 위치를 움직이는 월드 쌍둥이(GlideTowardWorld)를 사용하세요.
+Destination,목적지
+The point to glide toward.,미끄러지듯 향할 지점입니다.
+"Glides this frame's share of the way toward a place in the level, never overshooting it. The place is measured in the level, so a node under a moved parent still arrives at it.",이번 프레임 몫만큼 레벨 내 한 위치를 향해 미끄러지듯 나아가며 절대 지나치지 않습니다. 위치를 레벨에서 재므로 이동한 부모 아래의 노드도 도착합니다.
+The place in the level to glide toward.,미끄러지듯 향할 레벨 내 위치입니다.
+Move Cursor To,커서를 다음으로 이동
+"Teleports the pointer - snap it to a menu item, re-centre it after a cutscene. The position is in window pixels, not a place in the level.",포인터를 순간 이동시킵니다 - 메뉴 항목에 맞추거나 컷신 뒤에 다시 가운데로 옮길 때 씁니다. 위치는 창 픽셀 단위이며 레벨 내 위치가 아닙니다.
+"Move cursor to {position}, in screen pixels","커서를 {position}(으)로 이동, 화면 픽셀 단위"
+Where in the window to put the pointer.,창 안에서 포인터를 놓을 위치입니다.
+"Moves a 3D node along one of its own directions - forward, back, right, left, up or down - at a speed a second. The step is added to its place in the level, so it moves in world space.","3D 노드를 자신의 방향(앞, 뒤, 오른쪽, 왼쪽, 위, 아래) 중 하나로 초당 속도만큼 움직입니다. 이동량이 레벨 내 위치에 더해지므로 월드 공간에서 움직입니다."
+Move [b]{direction}[/b] at [i]{speed}[/i] · in world space,[b]{direction}[/b] 방향으로 [i]{speed}[/i] 속도로 이동 · 월드 공간
+Set Control Position,컨트롤 위치 설정
+"Places a control inside its parent box, measured from the box's top-left corner. A container or an anchors preset can move it again afterwards.","컨트롤을 부모 상자 안에, 상자의 왼쪽 위 모서리를 기준으로 배치합니다. 컨테이너나 앵커 프리셋이 나중에 다시 움직일 수 있습니다."
+Set position to {pos},위치를 {pos}(으)로 설정
+"Where inside the parent box, from its top-left corner.",부모 상자 안의 위치(왼쪽 위 모서리 기준)입니다.
+Set Control Size,컨트롤 크기 설정
+"Sets how big a control is, in pixels. A container, or anchors that stretch it, can override the size afterwards.",컨트롤의 크기를 픽셀로 설정합니다. 컨테이너나 늘이는 앵커가 나중에 크기를 덮어쓸 수 있습니다.
+Set size to {size},크기를 {size}(으)로 설정
+Set Control World Position,컨트롤 월드 위치 설정
+"Places a control at an exact place on the screen's canvas, whatever box it sits in.",어느 상자 안에 있든 화면 캔버스의 정확한 위치에 컨트롤을 배치합니다.
+Set world position to {pos},월드 위치를 {pos}(으)로 설정
+"Where on the canvas, from the top-left corner of the screen.",캔버스 위의 위치(화면 왼쪽 위 모서리 기준)입니다.
+Set Position,위치 설정
+"Places a 2D node at an exact position relative to its parent, e.g. snapping a sword to a spot on the player. Set World Position places it in the level instead.",2D 노드를 부모 기준의 정확한 위치에 배치합니다. 예: 칼을 플레이어의 한 지점에 붙이기. 레벨 안에 배치하려면 월드 위치 설정을 사용하세요.
+Target position as a Vector2 expression.,Vector2 식으로 나타낸 목표 위치입니다.
+"Puts a 2D node exactly where another one is in the level - how a spawn point, a socket or a respawn marker is used.","2D 노드를 레벨에서 다른 노드가 있는 바로 그 자리에 놓습니다 - 스폰 지점, 소켓, 리스폰 마커를 쓰는 방법입니다."
+Set world position to [b]{other}[/b],월드 위치를 [b]{other}[/b](으)로 설정
+"Puts a 3D node exactly where another one is in the level - how a spawn point, a socket or a respawn marker is used.","3D 노드를 레벨에서 다른 노드가 있는 바로 그 자리에 놓습니다 - 스폰 지점, 소켓, 리스폰 마커를 쓰는 방법입니다."
+Set World Position,월드 위치 설정
+"Places a 2D node at an exact place in the level, whoever its parent is. Set Position measures from the parent instead.",부모가 무엇이든 2D 노드를 레벨의 정확한 위치에 배치합니다. 위치 설정은 대신 부모를 기준으로 잽니다.
+Target place in the level as a Vector2 expression.,Vector2 식으로 나타낸 레벨 내 목표 위치입니다.
+Set World Position (3D),월드 위치 설정 (3D)
+"Teleports a 3D node to an exact place in the level, whoever its parent is. Set Position (3D) measures from the parent instead.",부모가 무엇이든 3D 노드를 레벨의 정확한 위치로 순간 이동시킵니다. 위치 설정 (3D)은 대신 부모를 기준으로 잽니다.
+Target place in the level as a Vector3 expression.,Vector3 식으로 나타낸 레벨 내 목표 위치입니다.
+"The same spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld, which lands the copy where the At field says.","같은 스폰이지만 지금 바로가 아니라 다음 유휴 시점에 추가됩니다. 충돌이나 바디 핸들러 안에서 쓰세요. 물리 서버가 바쁜 동안 Godot은 자식 추가를 거부하는데, 이 행은 오류를 내는 대신 끝날 때까지 기다립니다. 위치는 복사본을 추가하기 전에 설정되므로 레벨 내 위치가 아니라 부모 기준 위치입니다. 위치 칸이 말하는 곳에 복사본을 놓는 SpawnNewCopyDeferredWorld를 사용하세요."
+"The same 3D spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld3D, which lands the copy where the At field says.","같은 3D 스폰이지만 지금 바로가 아니라 다음 유휴 시점에 추가됩니다. 충돌이나 바디 핸들러 안에서 쓰세요. 물리 서버가 바쁜 동안 Godot은 자식 추가를 거부하는데, 이 행은 오류를 내는 대신 끝날 때까지 기다립니다. 위치는 복사본을 추가하기 전에 설정되므로 레벨 내 위치가 아니라 부모 기준 위치입니다. 위치 칸이 말하는 곳에 복사본을 놓는 SpawnNewCopyDeferredWorld3D를 사용하세요."
+"The same spawn as Spawn A Copy, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.","「복사본 생성」과 같은 스폰이지만 지금 바로가 아니라 다음 유휴 시점에 추가됩니다. 충돌이나 바디 핸들러 안에서 쓰세요. 물리 서버가 바쁜 동안 Godot은 자식 추가를 거부하는데, 이 행은 오류를 내는 대신 끝날 때까지 기다립니다. 위치는 복사본을 추가한 직후에 설정되는 레벨 내 위치이므로 부모가 무엇이든 그곳에 놓입니다."
+"The same 3D spawn as Spawn A Copy (3D), added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.","「복사본 생성 (3D)」과 같은 3D 스폰이지만 지금 바로가 아니라 다음 유휴 시점에 추가됩니다. 충돌이나 바디 핸들러 안에서 쓰세요. 물리 서버가 바쁜 동안 Godot은 자식 추가를 거부하는데, 이 행은 오류를 내는 대신 끝날 때까지 기다립니다. 위치는 복사본을 추가한 직후에 설정되는 레벨 내 위치이므로 부모가 무엇이든 그곳에 놓입니다."
+"Spawn [b]{path}[/b] as [b]{spawn_name}[/b] with [i]{values}[/i], placed from its parent","[b]{path}[/b]을(를) [b]{spawn_name}[/b](으)로 [i]{values}[/i]와 함께 생성, 부모 기준 위치"
+Spawn Scene At,장면을 위치에 생성
+"Loads a scene and adds a copy as a child of this node. The position is measured from this node, so the copy moves with it; Spawn Scene In The World places it in the level instead.",장면을 불러와 복사본을 이 노드의 자식으로 추가합니다. 위치는 이 노드를 기준으로 재므로 복사본은 이 노드와 함께 움직입니다. 레벨 안에 배치하려면 장면을 월드에 생성을 사용하세요.
+"Spawn {path} at {position}, as a child of this node","{path}을(를) {position}에 생성, 이 노드의 자식으로"
+Spawn Scene (Full),장면 생성 (전체)
+"Spawns a scene copy as a child of this node with position, rotation and an optional group in one step. The position is measured from this node, so the copy moves with it.","위치, 회전, 선택 그룹을 한 번에 지정해 장면 복사본을 이 노드의 자식으로 생성합니다. 위치는 이 노드를 기준으로 재므로 복사본은 이 노드와 함께 움직입니다."
+"Spawn {path} (rot {rotation}, group {group}), as a child of this node","{path} 생성 (회전 {rotation}, 그룹 {group}), 이 노드의 자식으로"
+Rotation in degrees.,회전(도)입니다.
+Optional group to add the spawned node to (blank = none).,생성된 노드를 추가할 선택 그룹입니다(비우면 없음).
+Spawn Scene In The World,장면을 월드에 생성
+Loads a scene and drops a copy into the current scene at a place in the level. Spawn Scene At adds the copy under this node and measures its place from this node instead.,장면을 불러와 복사본을 현재 장면의 레벨 내 위치에 놓습니다. 장면을 위치에 생성은 복사본을 이 노드 아래에 추가하고 위치를 이 노드 기준으로 잽니다.
+Spawn {path} in the level at {position},{path}을(를) 레벨의 {position}에 생성
+Place in the level to spawn at.,생성할 레벨 내 위치입니다.
+Move By (3D),이동량 (3D)
+Nudges a 3D node by an offset relative to its own facing (local space).,3D 노드를 자신의 방향 기준 오프셋(로컬 공간)만큼 움직입니다.
+"Move by {offset}, along its own axes","{offset}만큼 이동, 자신의 축을 따라"
+Offset,오프셋
+Local-space offset.,로컬 공간의 오프셋입니다.
+"Sends the object off one side of the layout and back in the other - the arcade wrap. It wraps the place inside the parent against the layout's edges, which are places in the level; use WrapAroundLayoutXWorld, the world twin.","오브젝트를 레이아웃 한쪽으로 내보내 반대쪽에서 다시 들어오게 합니다 - 아케이드 랩입니다. 부모 안의 위치를 레벨 내 위치인 레이아웃 가장자리에 대해 감싸므로, 월드 쌍둥이인 WrapAroundLayoutXWorld를 사용하세요."
+"The left edge of the layout, in pixels.",레이아웃의 왼쪽 가장자리(픽셀)입니다.
+"The right edge of the layout, in pixels.",레이아웃의 오른쪽 가장자리(픽셀)입니다.
+"Sends the object off one side of the layout and back in the other - the arcade wrap. The layout's edges are places in the level, so the node's place in the level is what wraps.","오브젝트를 레이아웃 한쪽으로 내보내 반대쪽에서 다시 들어오게 합니다 - 아케이드 랩입니다. 레이아웃 가장자리는 레벨 내 위치이므로, 노드의 레벨 내 위치가 감싸집니다."
+"Sends the object off the top of the layout and back in at the bottom, or the other way round. It wraps the place inside the parent against the layout's edges, which are places in the level; use WrapAroundLayoutYWorld, the world twin.","오브젝트를 레이아웃 위쪽으로 내보내 아래쪽에서 다시 들어오게 합니다(반대도 마찬가지). 부모 안의 위치를 레벨 내 위치인 레이아웃 가장자리에 대해 감싸므로, 월드 쌍둥이인 WrapAroundLayoutYWorld를 사용하세요."
+"The top edge of the layout, in pixels.",레이아웃의 위쪽 가장자리(픽셀)입니다.
+"The bottom edge of the layout, in pixels.",레이아웃의 아래쪽 가장자리(픽셀)입니다.
+"Sends the object off the top of the layout and back in at the bottom, or the other way round. The layout's edges are places in the level, so the node's place in the level is what wraps.","오브젝트를 레이아웃 위쪽으로 내보내 아래쪽에서 다시 들어오게 합니다(반대도 마찬가지). 레이아웃 가장자리는 레벨 내 위치이므로, 노드의 레벨 내 위치가 감싸집니다."
+Wrap Inside The Screen,화면 안에서 감싸기
+"The Asteroids rule: leave the right edge and come back on the left, off the top and back at the bottom. Nothing ever escapes the screen. It wraps the place inside the parent against the screen's size, so a node under a moved parent wraps at the wrong edges; use WrapInsideScreenWorld, the world twin.","아스테로이드 규칙: 오른쪽으로 나가면 왼쪽으로, 위로 나가면 아래로 돌아옵니다. 어떤 것도 화면을 벗어나지 못합니다. 부모 안의 위치를 화면 크기에 대해 감싸므로, 이동한 부모 아래의 노드는 엉뚱한 가장자리에서 감싸집니다. 월드 쌍둥이인 WrapInsideScreenWorld를 사용하세요."
+wrap inside the screen,화면 안에서 감싸기
+"The Asteroids rule: leave the right edge and come back on the left, off the top and back at the bottom. Nothing ever escapes the screen. The node's place in the level is what wraps, so a node under a moved parent wraps at the screen's edges.","아스테로이드 규칙: 오른쪽으로 나가면 왼쪽으로, 위로 나가면 아래로 돌아옵니다. 어떤 것도 화면을 벗어나지 못합니다. 노드의 레벨 내 위치가 감싸지므로, 이동한 부모 아래의 노드도 화면 가장자리에서 감싸집니다."
+General Actions,일반 액션
+Position,위치
+Wrap Around Layout Horizontally,레이아웃을 가로로 감싸기
+Layout Edges,레이아웃 가장자리
+Left edge,왼쪽 가장자리
+Right edge,오른쪽 가장자리
+Wrap Around Layout Vertically,레이아웃을 세로로 감싸기
+Top edge,위쪽 가장자리
+Bottom edge,아래쪽 가장자리
+Top left,왼쪽 위
+Bottom right,오른쪽 아래

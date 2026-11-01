@@ -9849,3 +9849,121 @@ world Z,ワールドZ
 %s is measured from the parent node. Set world %s to place it in the world instead.,%s は親ノードからの相対位置です。ワールド%s を設定すると、ワールド上の位置に配置できます。
 "world %s is the place in the world, whatever the parent node does. Set %s to place it relative to the parent node instead.",ワールド%s はワールド上の位置で、親ノードの影響を受けません。%s を設定すると、親ノードからの相対位置に配置できます。
 world position,ワールド位置
+Apply Pushes,押し出しを適用
+apply pushes ( friction {friction} ),押し出しを適用 ( 摩擦 {friction} )
+Friction,摩擦
+How fast the push dies away; bigger stops sooner.,押し出しが収まる速さ。大きいほど早く止まります。
+"Knockback that decays honestly (the exp form, frame-rate independent) - one row under Every Frame. The push is worked out in the level's directions but added to the place inside the parent, which is wrong under a rotated or scaled parent; use ApplyPushesWorld, the world twin.",正直に減衰するノックバック(指数形式、フレームレートに依存しません) - 毎フレームの下に1行置きます。押し出しはレベルの方向で計算されますが親内の位置に加算されるため、回転や拡大縮小された親の下では誤りになります。ワールド版の ApplyPushesWorld を使ってください。
+"Knockback that decays honestly (the exp form, frame-rate independent) - one row under Every Frame. The push is worked out in the level's directions and added to the node's place in the level, so it is right under a rotated or scaled parent.",正直に減衰するノックバック(指数形式、フレームレートに依存しません) - 毎フレームの下に1行置きます。押し出しはレベルの方向で計算され、ノードのレベル内の位置に加算されるため、回転や拡大縮小された親の下でも正しく動きます。
+Bound To Layout,レイアウトに制限
+"Holds the object inside the layout's edges instead of letting it leave - the arcade fence. It holds the place inside the parent against the layout's edges, which are places in the level; use BoundToLayoutWorld, the world twin.",オブジェクトをレイアウトの端の内側に留め、外へ出さないようにします - アーケードの柵です。親内の位置を、レベル内の位置であるレイアウトの端に対して制限するため、ワールド版の BoundToLayoutWorld を使ってください。
+The top-left corner the object is kept inside.,オブジェクトを内側に留める左上の角。
+The bottom-right corner the object is kept inside.,オブジェクトを内側に留める右下の角。
+"Holds the object inside the layout's edges instead of letting it leave - the arcade fence. The layout's edges are places in the level, so the node's place in the level is what is held.",オブジェクトをレイアウトの端の内側に留め、外へ出さないようにします - アーケードの柵です。レイアウトの端はレベル内の位置なので、制限されるのはノードのレベル内の位置です。
+The top-left corner of the level the object is kept inside.,オブジェクトを内側に留めるレベルの左上の角。
+The bottom-right corner of the level the object is kept inside.,オブジェクトを内側に留めるレベルの右下の角。
+Get X,Xを取得
+"Returns the X of the node's place inside its parent, in pixels.",親の中でのノードの位置のXをピクセルで返します。
+X,X
+Get X (3D),Xを取得 (3D)
+Returns the X of the node's place inside its parent.,親の中でのノードの位置のXを返します。
+Get Y,Yを取得
+"Returns the Y of the node's place inside its parent, in pixels.",親の中でのノードの位置のYをピクセルで返します。
+Y,Y
+Get Y (3D),Yを取得 (3D)
+Returns the Y of the node's place inside its parent.,親の中でのノードの位置のYを返します。
+Get Z (3D),Zを取得 (3D)
+Returns the Z of the node's place inside its parent.,親の中でのノードの位置のZを返します。
+Z,Z
+Get World Position,ワールド位置を取得
+"Returns the node's place in the level as a Vector2, whoever its parent is.",親が何であっても、ノードのレベル内の位置を Vector2 で返します。
+Get World Position (3D),ワールド位置を取得 (3D)
+"Returns the node's place in the level as a Vector3, whoever its parent is.",親が何であっても、ノードのレベル内の位置を Vector3 で返します。
+Get World X,ワールドXを取得
+"Returns the X of the node's place in the level, whoever its parent is.",親が何であっても、ノードのレベル内の位置のXを返します。
+Get World X (3D),ワールドXを取得 (3D)
+Get World Y,ワールドYを取得
+"Returns the Y of the node's place in the level, whoever its parent is.",親が何であっても、ノードのレベル内の位置のYを返します。
+Get World Y (3D),ワールドYを取得 (3D)
+Get World Z (3D),ワールドZを取得 (3D)
+"Returns the Z of the node's place in the level, whoever its parent is.",親が何であっても、ノードのレベル内の位置のZを返します。
+Move Toward Position,位置へ向かって移動
+"Glides this frame's share of the way toward a point, never overshooting it. It moves the place inside the parent, so it lands wrong for a node under a moved parent; Move Toward Position (the world twin, GlideTowardWorld) moves the place in the level.",このフレーム分だけ点へ向かって滑らかに進み、行き過ぎることはありません。親内の位置を動かすため、移動した親の下のノードでは誤った場所に着きます。レベル内の位置を動かすワールド版(GlideTowardWorld)を使ってください。
+Destination,目的地
+The point to glide toward.,滑らかに向かう点。
+"Glides this frame's share of the way toward a place in the level, never overshooting it. The place is measured in the level, so a node under a moved parent still arrives at it.",このフレーム分だけレベル内の位置へ向かって滑らかに進み、行き過ぎることはありません。位置はレベルで測るため、移動した親の下のノードでも到着します。
+The place in the level to glide toward.,滑らかに向かうレベル内の位置。
+Move Cursor To,カーソルを移動
+"Teleports the pointer - snap it to a menu item, re-centre it after a cutscene. The position is in window pixels, not a place in the level.",ポインターをテレポートします - メニュー項目に合わせたり、ムービーの後に中央へ戻したりします。位置はウィンドウのピクセルで、レベル内の位置ではありません。
+"Move cursor to {position}, in screen pixels",カーソルを {position} へ移動(画面ピクセル)
+Where in the window to put the pointer.,ウィンドウ内のポインターを置く場所。
+"Moves a 3D node along one of its own directions - forward, back, right, left, up or down - at a speed a second. The step is added to its place in the level, so it moves in world space.",3Dノード自身の方向(前、後ろ、右、左、上、下)のどれかに沿って、毎秒の速さで動かします。移動量はレベル内の位置に加算されるため、ワールド空間で動きます。
+Move [b]{direction}[/b] at [i]{speed}[/i] · in world space,[b]{direction}[/b] へ [i]{speed}[/i] で移動 · ワールド空間
+Set Control Position,コントロールの位置を設定
+"Places a control inside its parent box, measured from the box's top-left corner. A container or an anchors preset can move it again afterwards.",コントロールを親のボックス内に、ボックスの左上の角から測って配置します。コンテナやアンカープリセットが後で再び動かすことがあります。
+Set position to {pos},位置を {pos} に設定
+"Where inside the parent box, from its top-left corner.",親のボックス内のどこか(左上の角から)。
+Set Control Size,コントロールのサイズを設定
+"Sets how big a control is, in pixels. A container, or anchors that stretch it, can override the size afterwards.",コントロールの大きさをピクセルで設定します。コンテナや、引き伸ばすアンカーが後でサイズを上書きすることがあります。
+Set size to {size},サイズを {size} に設定
+Set Control World Position,コントロールのワールド位置を設定
+"Places a control at an exact place on the screen's canvas, whatever box it sits in.",どのボックスの中にあっても、画面のキャンバス上の正確な位置にコントロールを配置します。
+Set world position to {pos},ワールド位置を {pos} に設定
+"Where on the canvas, from the top-left corner of the screen.",キャンバス上のどこか(画面の左上の角から)。
+Set Position,位置を設定
+"Places a 2D node at an exact position relative to its parent, e.g. snapping a sword to a spot on the player. Set World Position places it in the level instead.",2Dノードを親からの相対位置の正確な場所に配置します。たとえば剣をプレイヤーの特定の場所に付けます。代わりにレベル内に置くには「ワールド位置を設定」を使います。
+Target position as a Vector2 expression.,Vector2 の式で表した目標位置。
+"Puts a 2D node exactly where another one is in the level - how a spawn point, a socket or a respawn marker is used.",2Dノードを、レベル内で別のノードがある場所にぴったり置きます - スポーン地点、ソケット、リスポーンマーカーの使い方です。
+Set world position to [b]{other}[/b],ワールド位置を [b]{other}[/b] に設定
+"Puts a 3D node exactly where another one is in the level - how a spawn point, a socket or a respawn marker is used.",3Dノードを、レベル内で別のノードがある場所にぴったり置きます - スポーン地点、ソケット、リスポーンマーカーの使い方です。
+Set World Position,ワールド位置を設定
+"Places a 2D node at an exact place in the level, whoever its parent is. Set Position measures from the parent instead.",親が何であっても、2Dノードをレベル内の正確な位置に配置します。「位置を設定」は代わりに親から測ります。
+Target place in the level as a Vector2 expression.,Vector2 の式で表したレベル内の目標位置。
+Set World Position (3D),ワールド位置を設定 (3D)
+"Teleports a 3D node to an exact place in the level, whoever its parent is. Set Position (3D) measures from the parent instead.",親が何であっても、3Dノードをレベル内の正確な位置にテレポートします。「位置を設定 (3D)」は代わりに親から測ります。
+Target place in the level as a Vector3 expression.,Vector3 の式で表したレベル内の目標位置。
+"The same spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld, which lands the copy where the At field says.",同じスポーンを、すぐではなく次のアイドル時に追加します。衝突やボディのハンドラー内で使ってください。物理サーバーが忙しい間 Godot は子の追加を拒否しますが、この行はエラーにせず終わるまで待ちます。位置はコピーを追加する前に設定されるため、レベル内の位置ではなく親からの相対位置です。「位置」欄どおりの場所に置く SpawnNewCopyDeferredWorld を使ってください。
+"The same 3D spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld3D, which lands the copy where the At field says.",同じ3Dスポーンを、すぐではなく次のアイドル時に追加します。衝突やボディのハンドラー内で使ってください。物理サーバーが忙しい間 Godot は子の追加を拒否しますが、この行はエラーにせず終わるまで待ちます。位置はコピーを追加する前に設定されるため、レベル内の位置ではなく親からの相対位置です。「位置」欄どおりの場所に置く SpawnNewCopyDeferredWorld3D を使ってください。
+"The same spawn as Spawn A Copy, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.",「コピーを生成」と同じスポーンを、すぐではなく次のアイドル時に追加します。衝突やボディのハンドラー内で使ってください。物理サーバーが忙しい間 Godot は子の追加を拒否しますが、この行はエラーにせず終わるまで待ちます。位置はコピー追加の直後に設定されるレベル内の位置なので、親が何であってもそこに置かれます。
+"The same 3D spawn as Spawn A Copy (3D), added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.",「コピーを生成 (3D)」と同じ3Dスポーンを、すぐではなく次のアイドル時に追加します。衝突やボディのハンドラー内で使ってください。物理サーバーが忙しい間 Godot は子の追加を拒否しますが、この行はエラーにせず終わるまで待ちます。位置はコピー追加の直後に設定されるレベル内の位置なので、親が何であってもそこに置かれます。
+"Spawn [b]{path}[/b] as [b]{spawn_name}[/b] with [i]{values}[/i], placed from its parent",[b]{path}[/b] を [b]{spawn_name}[/b] として [i]{values}[/i] 付きで生成(親から測った位置)
+Spawn Scene At,シーンを指定位置に生成
+"Loads a scene and adds a copy as a child of this node. The position is measured from this node, so the copy moves with it; Spawn Scene In The World places it in the level instead.",シーンを読み込み、そのコピーをこのノードの子として追加します。位置はこのノードから測るため、コピーはこのノードと一緒に動きます。レベル内に置くには「シーンをワールドに生成」を使います。
+"Spawn {path} at {position}, as a child of this node",{path} を {position} に生成(このノードの子として)
+Spawn Scene (Full),シーンを生成(詳細)
+"Spawns a scene copy as a child of this node with position, rotation and an optional group in one step. The position is measured from this node, so the copy moves with it.",位置、回転、任意のグループを一度に指定して、シーンのコピーをこのノードの子として生成します。位置はこのノードから測るため、コピーはこのノードと一緒に動きます。
+"Spawn {path} (rot {rotation}, group {group}), as a child of this node",{path} を生成(回転 {rotation}、グループ {group})、このノードの子として
+Rotation in degrees.,回転(度)。
+Optional group to add the spawned node to (blank = none).,生成したノードを追加する任意のグループ(空欄 = なし)。
+Spawn Scene In The World,シーンをワールドに生成
+Loads a scene and drops a copy into the current scene at a place in the level. Spawn Scene At adds the copy under this node and measures its place from this node instead.,シーンを読み込み、そのコピーを現在のシーンのレベル内の位置に置きます。「シーンを指定位置に生成」はコピーをこのノードの下に追加し、位置をこのノードから測ります。
+Spawn {path} in the level at {position},{path} をレベルの {position} に生成
+Place in the level to spawn at.,生成するレベル内の位置。
+Move By (3D),移動量 (3D)
+Nudges a 3D node by an offset relative to its own facing (local space).,3Dノードを自身の向きを基準にしたオフセット(ローカル空間)だけずらします。
+"Move by {offset}, along its own axes",{offset} だけ移動(自身の軸に沿って)
+Offset,オフセット
+Local-space offset.,ローカル空間のオフセット。
+"Sends the object off one side of the layout and back in the other - the arcade wrap. It wraps the place inside the parent against the layout's edges, which are places in the level; use WrapAroundLayoutXWorld, the world twin.",オブジェクトをレイアウトの片側から出し、反対側から戻します - アーケードのラップです。親内の位置を、レベル内の位置であるレイアウトの端に対して折り返すため、ワールド版の WrapAroundLayoutXWorld を使ってください。
+"The left edge of the layout, in pixels.",レイアウトの左端(ピクセル)。
+"The right edge of the layout, in pixels.",レイアウトの右端(ピクセル)。
+"Sends the object off one side of the layout and back in the other - the arcade wrap. The layout's edges are places in the level, so the node's place in the level is what wraps.",オブジェクトをレイアウトの片側から出し、反対側から戻します - アーケードのラップです。レイアウトの端はレベル内の位置なので、折り返されるのはノードのレベル内の位置です。
+"Sends the object off the top of the layout and back in at the bottom, or the other way round. It wraps the place inside the parent against the layout's edges, which are places in the level; use WrapAroundLayoutYWorld, the world twin.",オブジェクトをレイアウトの上から出して下から戻します(逆も同様)。親内の位置を、レベル内の位置であるレイアウトの端に対して折り返すため、ワールド版の WrapAroundLayoutYWorld を使ってください。
+"The top edge of the layout, in pixels.",レイアウトの上端(ピクセル)。
+"The bottom edge of the layout, in pixels.",レイアウトの下端(ピクセル)。
+"Sends the object off the top of the layout and back in at the bottom, or the other way round. The layout's edges are places in the level, so the node's place in the level is what wraps.",オブジェクトをレイアウトの上から出して下から戻します(逆も同様)。レイアウトの端はレベル内の位置なので、折り返されるのはノードのレベル内の位置です。
+Wrap Inside The Screen,画面内で折り返す
+"The Asteroids rule: leave the right edge and come back on the left, off the top and back at the bottom. Nothing ever escapes the screen. It wraps the place inside the parent against the screen's size, so a node under a moved parent wraps at the wrong edges; use WrapInsideScreenWorld, the world twin.",アステロイドのルール: 右端から出たら左端から戻り、上から出たら下から戻ります。画面から逃げるものはありません。親内の位置を画面サイズに対して折り返すため、移動した親の下のノードは誤った端で折り返します。ワールド版の WrapInsideScreenWorld を使ってください。
+wrap inside the screen,画面内で折り返す
+"The Asteroids rule: leave the right edge and come back on the left, off the top and back at the bottom. Nothing ever escapes the screen. The node's place in the level is what wraps, so a node under a moved parent wraps at the screen's edges.",アステロイドのルール: 右端から出たら左端から戻り、上から出たら下から戻ります。画面から逃げるものはありません。折り返されるのはノードのレベル内の位置なので、移動した親の下のノードも画面の端で折り返します。
+General Actions,一般アクション
+Position,位置
+Wrap Around Layout Horizontally,レイアウトを水平に折り返す
+Layout Edges,レイアウトの端
+Left edge,左端
+Right edge,右端
+Wrap Around Layout Vertically,レイアウトを垂直に折り返す
+Top edge,上端
+Bottom edge,下端
+Top left,左上
+Bottom right,右下

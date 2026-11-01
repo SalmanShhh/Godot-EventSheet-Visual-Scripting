@@ -81,6 +81,9 @@ const ACE_LINES: Dictionary = {
 	"SetPosition2D": "position = {pos}",
 	"ApplyGravitySimple": "velocity.y += {gravity} * {delta_t}",
 	"SetProperty": "{target}.{property} = {value}",
+	# Set Position To Another Object (2D) writes the same line a hand-written pin to a track does, so
+	# the fact walk has to know it as that line.
+	"SetPositionToObject2D": "global_position = {other}.global_position",
 	# The rows the picker writes each shape as, whose templates ARE these lines.
 	"SetAngleOfMotion": "velocity = Vector2.RIGHT.rotated({angle}) * {speed}",
 	"StepAlongVelocity": "position += velocity * {delta_t}",

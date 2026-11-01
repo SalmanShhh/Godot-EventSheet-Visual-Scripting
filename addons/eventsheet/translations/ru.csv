@@ -9849,3 +9849,121 @@ world Z,мировой Z
 %s is measured from the parent node. Set world %s to place it in the world instead.,"%s отсчитывается от родительского узла. Задайте мировой %s, чтобы разместить в мире."
 "world %s is the place in the world, whatever the parent node does. Set %s to place it relative to the parent node instead.","Мировой %s - это положение в мире, независимо от родительского узла. Задайте %s, чтобы разместить относительно родительского узла."
 world position,мировая позиция
+Apply Pushes,Применить толчки
+apply pushes ( friction {friction} ),применить толчки ( трение {friction} )
+Friction,Трение
+How fast the push dies away; bigger stops sooner.,"Как быстро затухает толчок; чем больше, тем раньше остановится."
+"Knockback that decays honestly (the exp form, frame-rate independent) - one row under Every Frame. The push is worked out in the level's directions but added to the place inside the parent, which is wrong under a rotated or scaled parent; use ApplyPushesWorld, the world twin.","Отбрасывание, которое затухает честно (экспоненциальная форма, не зависит от частоты кадров) - одна строка под «Каждый кадр». Толчок вычисляется в направлениях уровня, но прибавляется к месту внутри родителя, что неверно под повёрнутым или масштабированным родителем; используйте ApplyPushesWorld, мировой двойник."
+"Knockback that decays honestly (the exp form, frame-rate independent) - one row under Every Frame. The push is worked out in the level's directions and added to the node's place in the level, so it is right under a rotated or scaled parent.","Отбрасывание, которое затухает честно (экспоненциальная форма, не зависит от частоты кадров) - одна строка под «Каждый кадр». Толчок вычисляется в направлениях уровня и прибавляется к месту узла на уровне, поэтому верен и под повёрнутым или масштабированным родителем."
+Bound To Layout,Ограничить макетом
+"Holds the object inside the layout's edges instead of letting it leave - the arcade fence. It holds the place inside the parent against the layout's edges, which are places in the level; use BoundToLayoutWorld, the world twin.","Удерживает объект внутри границ макета, не давая ему уйти - аркадная ограда. Ограничивает место внутри родителя относительно границ макета, которые являются местами на уровне; используйте BoundToLayoutWorld, мировой двойник."
+The top-left corner the object is kept inside.,"Верхний левый угол, внутри которого удерживается объект."
+The bottom-right corner the object is kept inside.,"Нижний правый угол, внутри которого удерживается объект."
+"Holds the object inside the layout's edges instead of letting it leave - the arcade fence. The layout's edges are places in the level, so the node's place in the level is what is held.","Удерживает объект внутри границ макета, не давая ему уйти - аркадная ограда. Границы макета - это места на уровне, поэтому удерживается место узла на уровне."
+The top-left corner of the level the object is kept inside.,"Верхний левый угол уровня, внутри которого удерживается объект."
+The bottom-right corner of the level the object is kept inside.,"Нижний правый угол уровня, внутри которого удерживается объект."
+Get X,Получить X
+"Returns the X of the node's place inside its parent, in pixels.","Возвращает X места узла внутри родителя, в пикселях."
+X,X
+Get X (3D),Получить X (3D)
+Returns the X of the node's place inside its parent.,Возвращает X места узла внутри родителя.
+Get Y,Получить Y
+"Returns the Y of the node's place inside its parent, in pixels.","Возвращает Y места узла внутри родителя, в пикселях."
+Y,Y
+Get Y (3D),Получить Y (3D)
+Returns the Y of the node's place inside its parent.,Возвращает Y места узла внутри родителя.
+Get Z (3D),Получить Z (3D)
+Returns the Z of the node's place inside its parent.,Возвращает Z места узла внутри родителя.
+Z,Z
+Get World Position,Получить мировую позицию
+"Returns the node's place in the level as a Vector2, whoever its parent is.","Возвращает место узла на уровне как Vector2, кто бы ни был его родителем."
+Get World Position (3D),Получить мировую позицию (3D)
+"Returns the node's place in the level as a Vector3, whoever its parent is.","Возвращает место узла на уровне как Vector3, кто бы ни был его родителем."
+Get World X,Получить мировой X
+"Returns the X of the node's place in the level, whoever its parent is.","Возвращает X места узла на уровне, кто бы ни был его родителем."
+Get World X (3D),Получить мировой X (3D)
+Get World Y,Получить мировой Y
+"Returns the Y of the node's place in the level, whoever its parent is.","Возвращает Y места узла на уровне, кто бы ни был его родителем."
+Get World Y (3D),Получить мировой Y (3D)
+Get World Z (3D),Получить мировой Z (3D)
+"Returns the Z of the node's place in the level, whoever its parent is.","Возвращает Z места узла на уровне, кто бы ни был его родителем."
+Move Toward Position,Двигаться к позиции
+"Glides this frame's share of the way toward a point, never overshooting it. It moves the place inside the parent, so it lands wrong for a node under a moved parent; Move Toward Position (the world twin, GlideTowardWorld) moves the place in the level.","Скользит на долю текущего кадра к точке, никогда не перелетая её. Двигает место внутри родителя, поэтому для узла под смещённым родителем попадает не туда; мировой двойник (GlideTowardWorld) двигает место на уровне."
+Destination,Пункт назначения
+The point to glide toward.,"Точка, к которой скользить."
+"Glides this frame's share of the way toward a place in the level, never overshooting it. The place is measured in the level, so a node under a moved parent still arrives at it.","Скользит на долю текущего кадра к месту на уровне, никогда не перелетая его. Место измеряется на уровне, поэтому узел под смещённым родителем тоже до него доберётся."
+The place in the level to glide toward.,"Место на уровне, к которому скользить."
+Move Cursor To,Переместить курсор в
+"Teleports the pointer - snap it to a menu item, re-centre it after a cutscene. The position is in window pixels, not a place in the level.","Телепортирует указатель - привяжите его к пункту меню или верните в центр после ролика. Позиция задаётся в пикселях окна, а не местом на уровне."
+"Move cursor to {position}, in screen pixels","Переместить курсор в {position}, в пикселях экрана"
+Where in the window to put the pointer.,Где в окне разместить указатель.
+"Moves a 3D node along one of its own directions - forward, back, right, left, up or down - at a speed a second. The step is added to its place in the level, so it moves in world space.","Двигает 3D-узел вдоль одного из его собственных направлений - вперёд, назад, вправо, влево, вверх или вниз - с заданной скоростью в секунду. Шаг прибавляется к месту на уровне, так что движение идёт в мировом пространстве."
+Move [b]{direction}[/b] at [i]{speed}[/i] · in world space,Двигаться [b]{direction}[/b] со скоростью [i]{speed}[/i] · в мировом пространстве
+Set Control Position,Задать позицию контрола
+"Places a control inside its parent box, measured from the box's top-left corner. A container or an anchors preset can move it again afterwards.","Размещает контрол внутри родительского блока, считая от его верхнего левого угла. Контейнер или пресет якорей может потом снова его сдвинуть."
+Set position to {pos},Задать позицию {pos}
+"Where inside the parent box, from its top-left corner.","Где внутри родительского блока, от его верхнего левого угла."
+Set Control Size,Задать размер контрола
+"Sets how big a control is, in pixels. A container, or anchors that stretch it, can override the size afterwards.",Задаёт размер контрола в пикселях. Контейнер или растягивающие якоря могут потом переопределить размер.
+Set size to {size},Задать размер {size}
+Set Control World Position,Задать мировую позицию контрола
+"Places a control at an exact place on the screen's canvas, whatever box it sits in.","Размещает контрол в точном месте холста экрана, в каком бы блоке он ни находился."
+Set world position to {pos},Задать мировую позицию {pos}
+"Where on the canvas, from the top-left corner of the screen.","Где на холсте, от верхнего левого угла экрана."
+Set Position,Задать позицию
+"Places a 2D node at an exact position relative to its parent, e.g. snapping a sword to a spot on the player. Set World Position places it in the level instead.","Размещает 2D-узел в точной позиции относительно родителя, например приделывает меч к точке на игроке. «Задать мировую позицию» размещает его на уровне."
+Target position as a Vector2 expression.,Целевая позиция как выражение Vector2.
+"Puts a 2D node exactly where another one is in the level - how a spawn point, a socket or a respawn marker is used.","Ставит 2D-узел точно туда, где на уровне находится другой - так используются точка появления, гнездо или маркер возрождения."
+Set world position to [b]{other}[/b],Задать мировую позицию [b]{other}[/b]
+"Puts a 3D node exactly where another one is in the level - how a spawn point, a socket or a respawn marker is used.","Ставит 3D-узел точно туда, где на уровне находится другой - так используются точка появления, гнездо или маркер возрождения."
+Set World Position,Задать мировую позицию
+"Places a 2D node at an exact place in the level, whoever its parent is. Set Position measures from the parent instead.","Размещает 2D-узел в точном месте уровня, кто бы ни был его родителем. «Задать позицию» отсчитывает от родителя."
+Target place in the level as a Vector2 expression.,Целевое место на уровне как выражение Vector2.
+Set World Position (3D),Задать мировую позицию (3D)
+"Teleports a 3D node to an exact place in the level, whoever its parent is. Set Position (3D) measures from the parent instead.","Телепортирует 3D-узел в точное место уровня, кто бы ни был его родителем. «Задать позицию (3D)» отсчитывает от родителя."
+Target place in the level as a Vector3 expression.,Целевое место на уровне как выражение Vector3.
+"The same spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld, which lands the copy where the At field says.","Тот же спавн, добавленный в ближайший простой, а не сразу. Используйте его внутри обработчика столкновения или тела: Godot отказывается добавлять потомка, пока занят физический сервер, а эта строка ждёт его, вместо того чтобы выдать ошибку. Место задаётся до добавления копии, поэтому оно относительно родителя, а не место на уровне; используйте SpawnNewCopyDeferredWorld, который ставит копию туда, куда указывает поле «Где»."
+"The same 3D spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld3D, which lands the copy where the At field says.","Тот же 3D-спавн, добавленный в ближайший простой, а не сразу. Используйте его внутри обработчика столкновения или тела: Godot отказывается добавлять потомка, пока занят физический сервер, а эта строка ждёт его, вместо того чтобы выдать ошибку. Место задаётся до добавления копии, поэтому оно относительно родителя, а не место на уровне; используйте SpawnNewCopyDeferredWorld3D, который ставит копию туда, куда указывает поле «Где»."
+"The same spawn as Spawn A Copy, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.","Тот же спавн, что и «Создать копию», добавленный в ближайший простой, а не сразу. Используйте его внутри обработчика столкновения или тела: Godot отказывается добавлять потомка, пока занят физический сервер, а эта строка ждёт его, вместо того чтобы выдать ошибку. Место - это место на уровне, задаваемое сразу после добавления копии, поэтому копия окажется там, кто бы ни был родителем."
+"The same 3D spawn as Spawn A Copy (3D), added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.","Тот же 3D-спавн, что и «Создать копию (3D)», добавленный в ближайший простой, а не сразу. Используйте его внутри обработчика столкновения или тела: Godot отказывается добавлять потомка, пока занят физический сервер, а эта строка ждёт его, вместо того чтобы выдать ошибку. Место - это место на уровне, задаваемое сразу после добавления копии, поэтому копия окажется там, кто бы ни был родителем."
+"Spawn [b]{path}[/b] as [b]{spawn_name}[/b] with [i]{values}[/i], placed from its parent","Создать [b]{path}[/b] как [b]{spawn_name}[/b] со значениями [i]{values}[/i], место отсчитывается от родителя"
+Spawn Scene At,Создать сцену в
+"Loads a scene and adds a copy as a child of this node. The position is measured from this node, so the copy moves with it; Spawn Scene In The World places it in the level instead.","Загружает сцену и добавляет копию как потомка этого узла. Позиция отсчитывается от этого узла, поэтому копия движется вместе с ним; «Создать сцену в мире» размещает её на уровне."
+"Spawn {path} at {position}, as a child of this node","Создать {path} в {position}, как потомка этого узла"
+Spawn Scene (Full),Создать сцену (полностью)
+"Spawns a scene copy as a child of this node with position, rotation and an optional group in one step. The position is measured from this node, so the copy moves with it.","Создаёт копию сцены как потомка этого узла с позицией, поворотом и необязательной группой за один шаг. Позиция отсчитывается от этого узла, поэтому копия движется вместе с ним."
+"Spawn {path} (rot {rotation}, group {group}), as a child of this node","Создать {path} (поворот {rotation}, группа {group}), как потомка этого узла"
+Rotation in degrees.,Поворот в градусах.
+Optional group to add the spawned node to (blank = none).,"Необязательная группа, в которую добавляется созданный узел (пусто = нет)."
+Spawn Scene In The World,Создать сцену в мире
+Loads a scene and drops a copy into the current scene at a place in the level. Spawn Scene At adds the copy under this node and measures its place from this node instead.,Загружает сцену и помещает копию в текущую сцену в место на уровне. «Создать сцену в» добавляет копию под этим узлом и отсчитывает её место от этого узла.
+Spawn {path} in the level at {position},Создать {path} на уровне в {position}
+Place in the level to spawn at.,"Место на уровне, где создать."
+Move By (3D),Сместить на (3D)
+Nudges a 3D node by an offset relative to its own facing (local space).,Сдвигает 3D-узел на смещение относительно его собственного направления (локальное пространство).
+"Move by {offset}, along its own axes",Сместить на {offset} вдоль собственных осей
+Offset,Смещение
+Local-space offset.,Смещение в локальном пространстве.
+"Sends the object off one side of the layout and back in the other - the arcade wrap. It wraps the place inside the parent against the layout's edges, which are places in the level; use WrapAroundLayoutXWorld, the world twin.","Выводит объект за одну сторону макета и возвращает с другой - аркадная петля. Зацикливает место внутри родителя относительно границ макета, которые являются местами на уровне; используйте WrapAroundLayoutXWorld, мировой двойник."
+"The left edge of the layout, in pixels.",Левая граница макета в пикселях.
+"The right edge of the layout, in pixels.",Правая граница макета в пикселях.
+"Sends the object off one side of the layout and back in the other - the arcade wrap. The layout's edges are places in the level, so the node's place in the level is what wraps.","Выводит объект за одну сторону макета и возвращает с другой - аркадная петля. Границы макета - это места на уровне, поэтому зацикливается место узла на уровне."
+"Sends the object off the top of the layout and back in at the bottom, or the other way round. It wraps the place inside the parent against the layout's edges, which are places in the level; use WrapAroundLayoutYWorld, the world twin.","Выводит объект за верх макета и возвращает снизу, или наоборот. Зацикливает место внутри родителя относительно границ макета, которые являются местами на уровне; используйте WrapAroundLayoutYWorld, мировой двойник."
+"The top edge of the layout, in pixels.",Верхняя граница макета в пикселях.
+"The bottom edge of the layout, in pixels.",Нижняя граница макета в пикселях.
+"Sends the object off the top of the layout and back in at the bottom, or the other way round. The layout's edges are places in the level, so the node's place in the level is what wraps.","Выводит объект за верх макета и возвращает снизу, или наоборот. Границы макета - это места на уровне, поэтому зацикливается место узла на уровне."
+Wrap Inside The Screen,Зациклить в пределах экрана
+"The Asteroids rule: leave the right edge and come back on the left, off the top and back at the bottom. Nothing ever escapes the screen. It wraps the place inside the parent against the screen's size, so a node under a moved parent wraps at the wrong edges; use WrapInsideScreenWorld, the world twin.","Правило Asteroids: вышел справа - вернулся слева, вышел сверху - вернулся снизу. Ничто не покидает экран. Зацикливает место внутри родителя относительно размера экрана, поэтому узел под смещённым родителем зацикливается у неверных краёв; используйте WrapInsideScreenWorld, мировой двойник."
+wrap inside the screen,зациклить в пределах экрана
+"The Asteroids rule: leave the right edge and come back on the left, off the top and back at the bottom. Nothing ever escapes the screen. The node's place in the level is what wraps, so a node under a moved parent wraps at the screen's edges.","Правило Asteroids: вышел справа - вернулся слева, вышел сверху - вернулся снизу. Ничто не покидает экран. Зацикливается место узла на уровне, поэтому узел под смещённым родителем зацикливается у краёв экрана."
+General Actions,Общие действия
+Position,Позиция
+Wrap Around Layout Horizontally,Зациклить макет по горизонтали
+Layout Edges,Границы макета
+Left edge,Левая граница
+Right edge,Правая граница
+Wrap Around Layout Vertically,Зациклить макет по вертикали
+Top edge,Верхняя граница
+Bottom edge,Нижняя граница
+Top left,Верхний левый
+Bottom right,Нижний правый

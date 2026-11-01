@@ -9849,3 +9849,121 @@ world Z,世界Z
 %s is measured from the parent node. Set world %s to place it in the world instead.,%s 相对于父节点。设置世界%s 可将其放在世界坐标中。
 "world %s is the place in the world, whatever the parent node does. Set %s to place it relative to the parent node instead.",世界%s 是世界中的位置，不受父节点影响。设置 %s 可相对于父节点放置。
 world position,世界位置
+Apply Pushes,应用推力
+apply pushes ( friction {friction} ),应用推力 ( 摩擦 {friction} )
+Friction,摩擦
+How fast the push dies away; bigger stops sooner.,推力衰减的速度;数值越大停得越快。
+"Knockback that decays honestly (the exp form, frame-rate independent) - one row under Every Frame. The push is worked out in the level's directions but added to the place inside the parent, which is wrong under a rotated or scaled parent; use ApplyPushesWorld, the world twin.","诚实衰减的击退(指数形式,与帧率无关) - 放在“每帧”下的一行。推力按关卡的方向计算,却加到父节点内的位置上,在旋转或缩放的父节点下会出错;请使用世界版本 ApplyPushesWorld。"
+"Knockback that decays honestly (the exp form, frame-rate independent) - one row under Every Frame. The push is worked out in the level's directions and added to the node's place in the level, so it is right under a rotated or scaled parent.","诚实衰减的击退(指数形式,与帧率无关) - 放在“每帧”下的一行。推力按关卡的方向计算,并加到节点在关卡中的位置上,因此在旋转或缩放的父节点下也正确。"
+Bound To Layout,限制在布局内
+"Holds the object inside the layout's edges instead of letting it leave - the arcade fence. It holds the place inside the parent against the layout's edges, which are places in the level; use BoundToLayoutWorld, the world twin.",把对象留在布局边缘之内而不让它离开 - 街机式围栏。它用父节点内的位置去对照布局边缘(关卡中的位置);请使用世界版本 BoundToLayoutWorld。
+The top-left corner the object is kept inside.,对象被限制在其内的左上角。
+The bottom-right corner the object is kept inside.,对象被限制在其内的右下角。
+"Holds the object inside the layout's edges instead of letting it leave - the arcade fence. The layout's edges are places in the level, so the node's place in the level is what is held.","把对象留在布局边缘之内而不让它离开 - 街机式围栏。布局边缘是关卡中的位置,所以被限制的是节点在关卡中的位置。"
+The top-left corner of the level the object is kept inside.,对象被限制在其内的关卡左上角。
+The bottom-right corner of the level the object is kept inside.,对象被限制在其内的关卡右下角。
+Get X,获取 X
+"Returns the X of the node's place inside its parent, in pixels.","返回节点在其父节点内的位置的 X,单位为像素。"
+X,X
+Get X (3D),获取 X (3D)
+Returns the X of the node's place inside its parent.,返回节点在其父节点内的位置的 X。
+Get Y,获取 Y
+"Returns the Y of the node's place inside its parent, in pixels.","返回节点在其父节点内的位置的 Y,单位为像素。"
+Y,Y
+Get Y (3D),获取 Y (3D)
+Returns the Y of the node's place inside its parent.,返回节点在其父节点内的位置的 Y。
+Get Z (3D),获取 Z (3D)
+Returns the Z of the node's place inside its parent.,返回节点在其父节点内的位置的 Z。
+Z,Z
+Get World Position,获取世界位置
+"Returns the node's place in the level as a Vector2, whoever its parent is.","返回节点在关卡中的位置(Vector2),与父节点无关。"
+Get World Position (3D),获取世界位置 (3D)
+"Returns the node's place in the level as a Vector3, whoever its parent is.","返回节点在关卡中的位置(Vector3),与父节点无关。"
+Get World X,获取世界 X
+"Returns the X of the node's place in the level, whoever its parent is.","返回节点在关卡中的位置的 X,与父节点无关。"
+Get World X (3D),获取世界 X (3D)
+Get World Y,获取世界 Y
+"Returns the Y of the node's place in the level, whoever its parent is.","返回节点在关卡中的位置的 Y,与父节点无关。"
+Get World Y (3D),获取世界 Y (3D)
+Get World Z (3D),获取世界 Z (3D)
+"Returns the Z of the node's place in the level, whoever its parent is.","返回节点在关卡中的位置的 Z,与父节点无关。"
+Move Toward Position,向位置移动
+"Glides this frame's share of the way toward a point, never overshooting it. It moves the place inside the parent, so it lands wrong for a node under a moved parent; Move Toward Position (the world twin, GlideTowardWorld) moves the place in the level.","把这一帧应走的距离朝一个点滑行,绝不越过它。它移动的是父节点内的位置,对位于被移动父节点下的节点会落错地方;请使用移动关卡中位置的世界版本(GlideTowardWorld)。"
+Destination,目的地
+The point to glide toward.,要滑行前往的点。
+"Glides this frame's share of the way toward a place in the level, never overshooting it. The place is measured in the level, so a node under a moved parent still arrives at it.","把这一帧应走的距离朝关卡中的一个位置滑行,绝不越过它。该位置按关卡测量,所以位于被移动父节点下的节点也能到达。"
+The place in the level to glide toward.,要滑行前往的关卡中的位置。
+Move Cursor To,将光标移到
+"Teleports the pointer - snap it to a menu item, re-centre it after a cutscene. The position is in window pixels, not a place in the level.","瞬移指针 - 吸附到菜单项,或在过场动画后重新居中。位置以窗口像素为单位,而不是关卡中的位置。"
+"Move cursor to {position}, in screen pixels","将光标移到 {position},以屏幕像素计"
+Where in the window to put the pointer.,指针放在窗口中的哪个位置。
+"Moves a 3D node along one of its own directions - forward, back, right, left, up or down - at a speed a second. The step is added to its place in the level, so it moves in world space.","沿 3D 节点自身的某个方向(前、后、右、左、上、下)以每秒的速度移动。位移加到它在关卡中的位置上,因此在世界空间中移动。"
+Move [b]{direction}[/b] at [i]{speed}[/i] · in world space,以 [i]{speed}[/i] 向 [b]{direction}[/b] 移动 · 世界空间
+Set Control Position,设置控件位置
+"Places a control inside its parent box, measured from the box's top-left corner. A container or an anchors preset can move it again afterwards.","把控件放在其父容器内,从容器的左上角开始测量。容器或锚点预设之后可能再次移动它。"
+Set position to {pos},将位置设为 {pos}
+"Where inside the parent box, from its top-left corner.","在父容器内的位置,从其左上角算起。"
+Set Control Size,设置控件大小
+"Sets how big a control is, in pixels. A container, or anchors that stretch it, can override the size afterwards.",以像素设置控件的大小。容器或拉伸它的锚点之后可能覆盖该大小。
+Set size to {size},将大小设为 {size}
+Set Control World Position,设置控件世界位置
+"Places a control at an exact place on the screen's canvas, whatever box it sits in.","把控件放在屏幕画布上的精确位置,无论它位于哪个容器中。"
+Set world position to {pos},将世界位置设为 {pos}
+"Where on the canvas, from the top-left corner of the screen.","在画布上的位置,从屏幕左上角算起。"
+Set Position,设置位置
+"Places a 2D node at an exact position relative to its parent, e.g. snapping a sword to a spot on the player. Set World Position places it in the level instead.","把 2D 节点放在相对于其父节点的精确位置,例如把剑固定在玩家身上的某处。若要放在关卡中,请使用“设置世界位置”。"
+Target position as a Vector2 expression.,以 Vector2 表达式给出的目标位置。
+"Puts a 2D node exactly where another one is in the level - how a spawn point, a socket or a respawn marker is used.",把 2D 节点放到关卡中另一个节点所在的确切位置 - 用于出生点、插槽或重生标记。
+Set world position to [b]{other}[/b],将世界位置设为 [b]{other}[/b]
+"Puts a 3D node exactly where another one is in the level - how a spawn point, a socket or a respawn marker is used.",把 3D 节点放到关卡中另一个节点所在的确切位置 - 用于出生点、插槽或重生标记。
+Set World Position,设置世界位置
+"Places a 2D node at an exact place in the level, whoever its parent is. Set Position measures from the parent instead.","把 2D 节点放在关卡中的精确位置,与父节点无关。“设置位置”则从父节点开始测量。"
+Target place in the level as a Vector2 expression.,以 Vector2 表达式给出的关卡中的目标位置。
+Set World Position (3D),设置世界位置 (3D)
+"Teleports a 3D node to an exact place in the level, whoever its parent is. Set Position (3D) measures from the parent instead.","把 3D 节点瞬移到关卡中的精确位置,与父节点无关。“设置位置 (3D)”则从父节点开始测量。"
+Target place in the level as a Vector3 expression.,以 Vector3 表达式给出的关卡中的目标位置。
+"The same spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld, which lands the copy where the At field says.","同样的生成,但在下一个空闲时刻添加而不是立即添加。请在碰撞或物体处理器中使用:物理服务器忙碌时 Godot 拒绝添加子节点,这一行会等它结束而不是报错。位置在添加副本之前设置,所以它是相对于父节点的位置而非关卡中的位置;请使用 SpawnNewCopyDeferredWorld,它会把副本放在“位置”字段所指的地方。"
+"The same 3D spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld3D, which lands the copy where the At field says.","同样的 3D 生成,但在下一个空闲时刻添加而不是立即添加。请在碰撞或物体处理器中使用:物理服务器忙碌时 Godot 拒绝添加子节点,这一行会等它结束而不是报错。位置在添加副本之前设置,所以它是相对于父节点的位置而非关卡中的位置;请使用 SpawnNewCopyDeferredWorld3D,它会把副本放在“位置”字段所指的地方。"
+"The same spawn as Spawn A Copy, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.","与“生成副本”相同的生成,但在下一个空闲时刻添加而不是立即添加。请在碰撞或物体处理器中使用:物理服务器忙碌时 Godot 拒绝添加子节点,这一行会等它结束而不是报错。位置是关卡中的位置,在副本添加之后立即设置,所以无论父节点是谁,副本都会落在那里。"
+"The same 3D spawn as Spawn A Copy (3D), added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.","与“生成副本 (3D)”相同的 3D 生成,但在下一个空闲时刻添加而不是立即添加。请在碰撞或物体处理器中使用:物理服务器忙碌时 Godot 拒绝添加子节点,这一行会等它结束而不是报错。位置是关卡中的位置,在副本添加之后立即设置,所以无论父节点是谁,副本都会落在那里。"
+"Spawn [b]{path}[/b] as [b]{spawn_name}[/b] with [i]{values}[/i], placed from its parent","将 [b]{path}[/b] 生成为 [b]{spawn_name}[/b],带有 [i]{values}[/i],位置从其父节点算起"
+Spawn Scene At,在指定位置生成场景
+"Loads a scene and adds a copy as a child of this node. The position is measured from this node, so the copy moves with it; Spawn Scene In The World places it in the level instead.","加载场景并把副本作为此节点的子节点添加。位置从此节点开始测量,所以副本会随它移动;若要放在关卡中,请使用“在世界中生成场景”。"
+"Spawn {path} at {position}, as a child of this node","在 {position} 生成 {path},作为此节点的子节点"
+Spawn Scene (Full),生成场景(完整)
+"Spawns a scene copy as a child of this node with position, rotation and an optional group in one step. The position is measured from this node, so the copy moves with it.","一步到位地以位置、旋转和可选的分组生成场景副本,作为此节点的子节点。位置从此节点开始测量,所以副本会随它移动。"
+"Spawn {path} (rot {rotation}, group {group}), as a child of this node","生成 {path}(旋转 {rotation},分组 {group}),作为此节点的子节点"
+Rotation in degrees.,旋转角度(度)。
+Optional group to add the spawned node to (blank = none).,"可选分组,生成的节点将加入其中(留空 = 不加入)。"
+Spawn Scene In The World,在世界中生成场景
+Loads a scene and drops a copy into the current scene at a place in the level. Spawn Scene At adds the copy under this node and measures its place from this node instead.,"加载场景并把副本放入当前场景中关卡里的某个位置。“在指定位置生成场景”则把副本添加到此节点之下,并从此节点开始测量位置。"
+Spawn {path} in the level at {position},在关卡的 {position} 生成 {path}
+Place in the level to spawn at.,在关卡中的生成位置。
+Move By (3D),移动量 (3D)
+Nudges a 3D node by an offset relative to its own facing (local space).,按相对于自身朝向的偏移(局部空间)轻推 3D 节点。
+"Move by {offset}, along its own axes","按 {offset} 移动,沿自身的轴"
+Offset,偏移
+Local-space offset.,局部空间中的偏移。
+"Sends the object off one side of the layout and back in the other - the arcade wrap. It wraps the place inside the parent against the layout's edges, which are places in the level; use WrapAroundLayoutXWorld, the world twin.",让对象从布局的一侧出去、从另一侧回来 - 街机式环绕。它用父节点内的位置去对照布局边缘(关卡中的位置)进行环绕;请使用世界版本 WrapAroundLayoutXWorld。
+"The left edge of the layout, in pixels.","布局的左边缘,单位为像素。"
+"The right edge of the layout, in pixels.","布局的右边缘,单位为像素。"
+"Sends the object off one side of the layout and back in the other - the arcade wrap. The layout's edges are places in the level, so the node's place in the level is what wraps.","让对象从布局的一侧出去、从另一侧回来 - 街机式环绕。布局边缘是关卡中的位置,所以被环绕的是节点在关卡中的位置。"
+"Sends the object off the top of the layout and back in at the bottom, or the other way round. It wraps the place inside the parent against the layout's edges, which are places in the level; use WrapAroundLayoutYWorld, the world twin.","让对象从布局顶部出去、从底部回来,或反过来。它用父节点内的位置去对照布局边缘(关卡中的位置)进行环绕;请使用世界版本 WrapAroundLayoutYWorld。"
+"The top edge of the layout, in pixels.","布局的上边缘,单位为像素。"
+"The bottom edge of the layout, in pixels.","布局的下边缘,单位为像素。"
+"Sends the object off the top of the layout and back in at the bottom, or the other way round. The layout's edges are places in the level, so the node's place in the level is what wraps.","让对象从布局顶部出去、从底部回来,或反过来。布局边缘是关卡中的位置,所以被环绕的是节点在关卡中的位置。"
+Wrap Inside The Screen,在屏幕内环绕
+"The Asteroids rule: leave the right edge and come back on the left, off the top and back at the bottom. Nothing ever escapes the screen. It wraps the place inside the parent against the screen's size, so a node under a moved parent wraps at the wrong edges; use WrapInsideScreenWorld, the world twin.","小行星规则:从右边缘出去就从左边回来,从顶部出去就从底部回来,没有东西能逃出屏幕。它用父节点内的位置对照屏幕大小环绕,位于被移动父节点下的节点会在错误的边缘环绕;请使用世界版本 WrapInsideScreenWorld。"
+wrap inside the screen,在屏幕内环绕
+"The Asteroids rule: leave the right edge and come back on the left, off the top and back at the bottom. Nothing ever escapes the screen. The node's place in the level is what wraps, so a node under a moved parent wraps at the screen's edges.","小行星规则:从右边缘出去就从左边回来,从顶部出去就从底部回来,没有东西能逃出屏幕。被环绕的是节点在关卡中的位置,所以位于被移动父节点下的节点也会在屏幕边缘环绕。"
+General Actions,通用动作
+Position,位置
+Wrap Around Layout Horizontally,水平环绕布局
+Layout Edges,布局边缘
+Left edge,左边缘
+Right edge,右边缘
+Wrap Around Layout Vertically,垂直环绕布局
+Top edge,上边缘
+Bottom edge,下边缘
+Top left,左上
+Bottom right,右下

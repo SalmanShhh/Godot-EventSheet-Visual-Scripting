@@ -20021,8 +20021,12 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 		# so the row reads on THAT object, in the same words the typed `n.position = …` line reads.
 		# Without this the row wore the vocabulary's class name ("Node2D") no matter which node it
 		# actually set, which is the one thing the object column exists to answer.
-		"SetPosition2D", "SetPosition3D":
+		"SetPosition2D", "SetPosition3D", "SetControlPosition":
 			return EventSheetSentence.statement("%s.position = %s" % [
+				_ace_target(params_dict), str(params_dict.get("pos", ""))], context)
+		# The world twins read the same way, through the world place: "Set world position to ...".
+		"SetWorldPosition2D", "SetWorldPosition3D", "SetControlWorldPosition":
+			return EventSheetSentence.statement("%s.global_position = %s" % [
 				_ace_target(params_dict), str(params_dict.get("pos", ""))], context)
 		"SetProperty":
 			return EventSheetSentence.statement("%s.%s = %s" % [

@@ -190,7 +190,7 @@ static func _test_added_during_physics() -> bool:
 		_label_of(on_row, EventSheetSpawnFindings.KIND_ADDED_DURING_PHYSICS),
 		"Use the safe spawn row") and passed
 	passed = _check("naming the deferred row it swaps to",
-		str(on_row[0].get("to", "")), "SpawnNewCopyDeferred") and passed
+		str(on_row[0].get("to", "")), "SpawnNewCopyDeferredWorld") and passed
 	# And the deferred spawn row itself is the answer, so it is never reported.
 	var safe: EventSheetResource = _sheet()
 	safe.events.append(_event("OnAreaEntered", [_action("SpawnNewCopyDeferred", {

@@ -9849,3 +9849,121 @@ world Z,Z mundial
 %s is measured from the parent node. Set world %s to place it in the world instead.,%s se mide desde el nodo padre. Establece %s mundial para colocarlo en el mundo.
 "world %s is the place in the world, whatever the parent node does. Set %s to place it relative to the parent node instead.","%s mundial es la posición en el mundo, sin importar el nodo padre. Establece %s para colocarlo relativo al nodo padre."
 world position,posición mundial
+Apply Pushes,Aplicar empujes
+apply pushes ( friction {friction} ),aplicar empujes ( fricción {friction} )
+Friction,Fricción
+How fast the push dies away; bigger stops sooner.,Qué tan rápido se apaga el empuje; más alto se detiene antes.
+"Knockback that decays honestly (the exp form, frame-rate independent) - one row under Every Frame. The push is worked out in the level's directions but added to the place inside the parent, which is wrong under a rotated or scaled parent; use ApplyPushesWorld, the world twin.","Retroceso que decae de forma honesta (la forma exp, independiente de la tasa de fotogramas) - una fila bajo Cada fotograma. El empuje se calcula en las direcciones del nivel pero se suma a la posición dentro del padre, lo cual es incorrecto bajo un padre rotado o escalado; usa ApplyPushesWorld, el gemelo de mundo."
+"Knockback that decays honestly (the exp form, frame-rate independent) - one row under Every Frame. The push is worked out in the level's directions and added to the node's place in the level, so it is right under a rotated or scaled parent.","Retroceso que decae de forma honesta (la forma exp, independiente de la tasa de fotogramas) - una fila bajo Cada fotograma. El empuje se calcula en las direcciones del nivel y se suma a la posición del nodo en el nivel, así que es correcto incluso bajo un padre rotado o escalado."
+Bound To Layout,Limitar al diseño
+"Holds the object inside the layout's edges instead of letting it leave - the arcade fence. It holds the place inside the parent against the layout's edges, which are places in the level; use BoundToLayoutWorld, the world twin.","Mantiene el objeto dentro de los bordes del diseño en lugar de dejarlo salir - la valla arcade. Sujeta la posición dentro del padre contra los bordes del diseño, que son lugares del nivel; usa BoundToLayoutWorld, el gemelo de mundo."
+The top-left corner the object is kept inside.,La esquina superior izquierda dentro de la cual se mantiene el objeto.
+The bottom-right corner the object is kept inside.,La esquina inferior derecha dentro de la cual se mantiene el objeto.
+"Holds the object inside the layout's edges instead of letting it leave - the arcade fence. The layout's edges are places in the level, so the node's place in the level is what is held.","Mantiene el objeto dentro de los bordes del diseño en lugar de dejarlo salir - la valla arcade. Los bordes del diseño son lugares del nivel, así que lo que se sujeta es la posición del nodo en el nivel."
+The top-left corner of the level the object is kept inside.,La esquina superior izquierda del nivel dentro de la cual se mantiene el objeto.
+The bottom-right corner of the level the object is kept inside.,La esquina inferior derecha del nivel dentro de la cual se mantiene el objeto.
+Get X,Obtener X
+"Returns the X of the node's place inside its parent, in pixels.","Devuelve la X de la posición del nodo dentro de su padre, en píxeles."
+X,X
+Get X (3D),Obtener X (3D)
+Returns the X of the node's place inside its parent.,Devuelve la X de la posición del nodo dentro de su padre.
+Get Y,Obtener Y
+"Returns the Y of the node's place inside its parent, in pixels.","Devuelve la Y de la posición del nodo dentro de su padre, en píxeles."
+Y,Y
+Get Y (3D),Obtener Y (3D)
+Returns the Y of the node's place inside its parent.,Devuelve la Y de la posición del nodo dentro de su padre.
+Get Z (3D),Obtener Z (3D)
+Returns the Z of the node's place inside its parent.,Devuelve la Z de la posición del nodo dentro de su padre.
+Z,Z
+Get World Position,Obtener posición del mundo
+"Returns the node's place in the level as a Vector2, whoever its parent is.","Devuelve la posición del nodo en el nivel como un Vector2, sea quien sea su padre."
+Get World Position (3D),Obtener posición del mundo (3D)
+"Returns the node's place in the level as a Vector3, whoever its parent is.","Devuelve la posición del nodo en el nivel como un Vector3, sea quien sea su padre."
+Get World X,Obtener X del mundo
+"Returns the X of the node's place in the level, whoever its parent is.","Devuelve la X de la posición del nodo en el nivel, sea quien sea su padre."
+Get World X (3D),Obtener X del mundo (3D)
+Get World Y,Obtener Y del mundo
+"Returns the Y of the node's place in the level, whoever its parent is.","Devuelve la Y de la posición del nodo en el nivel, sea quien sea su padre."
+Get World Y (3D),Obtener Y del mundo (3D)
+Get World Z (3D),Obtener Z del mundo (3D)
+"Returns the Z of the node's place in the level, whoever its parent is.","Devuelve la Z de la posición del nodo en el nivel, sea quien sea su padre."
+Move Toward Position,Mover hacia la posición
+"Glides this frame's share of the way toward a point, never overshooting it. It moves the place inside the parent, so it lands wrong for a node under a moved parent; Move Toward Position (the world twin, GlideTowardWorld) moves the place in the level.","Desliza la parte de este fotograma del camino hacia un punto, sin pasarse nunca. Mueve la posición dentro del padre, así que llega mal para un nodo bajo un padre movido; Mover hacia la posición (el gemelo de mundo, GlideTowardWorld) mueve la posición en el nivel."
+Destination,Destino
+The point to glide toward.,El punto hacia el que deslizarse.
+"Glides this frame's share of the way toward a place in the level, never overshooting it. The place is measured in the level, so a node under a moved parent still arrives at it.","Desliza la parte de este fotograma del camino hacia un lugar del nivel, sin pasarse nunca. El lugar se mide en el nivel, así que un nodo bajo un padre movido también llega a él."
+The place in the level to glide toward.,El lugar del nivel hacia el que deslizarse.
+Move Cursor To,Mover el cursor a
+"Teleports the pointer - snap it to a menu item, re-centre it after a cutscene. The position is in window pixels, not a place in the level.","Teletransporta el puntero - fíjalo en un elemento del menú o vuelve a centrarlo tras una escena. La posición está en píxeles de ventana, no es un lugar del nivel."
+"Move cursor to {position}, in screen pixels","Mover el cursor a {position}, en píxeles de pantalla"
+Where in the window to put the pointer.,Dónde de la ventana poner el puntero.
+"Moves a 3D node along one of its own directions - forward, back, right, left, up or down - at a speed a second. The step is added to its place in the level, so it moves in world space.","Mueve un nodo 3D a lo largo de una de sus propias direcciones - adelante, atrás, derecha, izquierda, arriba o abajo - a una velocidad por segundo. El paso se suma a su posición en el nivel, así que se mueve en el espacio del mundo."
+Move [b]{direction}[/b] at [i]{speed}[/i] · in world space,Mover [b]{direction}[/b] a [i]{speed}[/i] · en el espacio del mundo
+Set Control Position,Establecer posición del control
+"Places a control inside its parent box, measured from the box's top-left corner. A container or an anchors preset can move it again afterwards.","Coloca un control dentro de su caja padre, medido desde la esquina superior izquierda de la caja. Un contenedor o un preajuste de anclas puede volver a moverlo después."
+Set position to {pos},Establecer posición en {pos}
+"Where inside the parent box, from its top-left corner.","Dónde dentro de la caja padre, desde su esquina superior izquierda."
+Set Control Size,Establecer tamaño del control
+"Sets how big a control is, in pixels. A container, or anchors that stretch it, can override the size afterwards.","Establece qué tan grande es un control, en píxeles. Un contenedor, o anclas que lo estiren, pueden anular el tamaño después."
+Set size to {size},Establecer tamaño en {size}
+Set Control World Position,Establecer posición del control en el mundo
+"Places a control at an exact place on the screen's canvas, whatever box it sits in.","Coloca un control en un lugar exacto del lienzo de la pantalla, sea cual sea la caja en la que esté."
+Set world position to {pos},Establecer posición del mundo en {pos}
+"Where on the canvas, from the top-left corner of the screen.","Dónde en el lienzo, desde la esquina superior izquierda de la pantalla."
+Set Position,Establecer posición
+"Places a 2D node at an exact position relative to its parent, e.g. snapping a sword to a spot on the player. Set World Position places it in the level instead.","Coloca un nodo 2D en una posición exacta relativa a su padre, p. ej. fijar una espada en un punto del jugador. Establecer posición del mundo lo coloca en el nivel en su lugar."
+Target position as a Vector2 expression.,Posición de destino como expresión Vector2.
+"Puts a 2D node exactly where another one is in the level - how a spawn point, a socket or a respawn marker is used.","Pone un nodo 2D exactamente donde está otro en el nivel - así se usa un punto de aparición, un enchufe o un marcador de reaparición."
+Set world position to [b]{other}[/b],Establecer posición del mundo en [b]{other}[/b]
+"Puts a 3D node exactly where another one is in the level - how a spawn point, a socket or a respawn marker is used.","Pone un nodo 3D exactamente donde está otro en el nivel - así se usa un punto de aparición, un enchufe o un marcador de reaparición."
+Set World Position,Establecer posición del mundo
+"Places a 2D node at an exact place in the level, whoever its parent is. Set Position measures from the parent instead.","Coloca un nodo 2D en un lugar exacto del nivel, sea quien sea su padre. Establecer posición mide desde el padre en su lugar."
+Target place in the level as a Vector2 expression.,Lugar de destino en el nivel como expresión Vector2.
+Set World Position (3D),Establecer posición del mundo (3D)
+"Teleports a 3D node to an exact place in the level, whoever its parent is. Set Position (3D) measures from the parent instead.","Teletransporta un nodo 3D a un lugar exacto del nivel, sea quien sea su padre. Establecer posición (3D) mide desde el padre en su lugar."
+Target place in the level as a Vector3 expression.,Lugar de destino en el nivel como expresión Vector3.
+"The same spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld, which lands the copy where the At field says.","El mismo spawn, añadido en el siguiente momento de reposo en lugar de ahora mismo. Úsalo dentro de un manejador de colisión o de cuerpo: Godot se niega a añadir un hijo mientras el servidor de física está ocupado, y esta fila espera a que termine en lugar de dar error. El lugar se fija antes de añadir la copia, así que es relativo al padre y no un lugar del nivel; usa SpawnNewCopyDeferredWorld, que deja la copia donde dice el campo En."
+"The same 3D spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld3D, which lands the copy where the At field says.","El mismo spawn 3D, añadido en el siguiente momento de reposo en lugar de ahora mismo. Úsalo dentro de un manejador de colisión o de cuerpo: Godot se niega a añadir un hijo mientras el servidor de física está ocupado, y esta fila espera a que termine en lugar de dar error. El lugar se fija antes de añadir la copia, así que es relativo al padre y no un lugar del nivel; usa SpawnNewCopyDeferredWorld3D, que deja la copia donde dice el campo En."
+"The same spawn as Spawn A Copy, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.","El mismo spawn que Crear una copia, añadido en el siguiente momento de reposo en lugar de ahora mismo. Úsalo dentro de un manejador de colisión o de cuerpo: Godot se niega a añadir un hijo mientras el servidor de física está ocupado, y esta fila espera a que termine en lugar de dar error. El lugar es un lugar del nivel, fijado justo después de añadir la copia, así que llega allí sea quien sea el padre."
+"The same 3D spawn as Spawn A Copy (3D), added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.","El mismo spawn 3D que Crear una copia (3D), añadido en el siguiente momento de reposo en lugar de ahora mismo. Úsalo dentro de un manejador de colisión o de cuerpo: Godot se niega a añadir un hijo mientras el servidor de física está ocupado, y esta fila espera a que termine en lugar de dar error. El lugar es un lugar del nivel, fijado justo después de añadir la copia, así que llega allí sea quien sea el padre."
+"Spawn [b]{path}[/b] as [b]{spawn_name}[/b] with [i]{values}[/i], placed from its parent","Crear [b]{path}[/b] como [b]{spawn_name}[/b] con [i]{values}[/i], colocado desde su padre"
+Spawn Scene At,Crear escena en
+"Loads a scene and adds a copy as a child of this node. The position is measured from this node, so the copy moves with it; Spawn Scene In The World places it in the level instead.","Carga una escena y añade una copia como hijo de este nodo. La posición se mide desde este nodo, así que la copia se mueve con él; Crear escena en el mundo la coloca en el nivel en su lugar."
+"Spawn {path} at {position}, as a child of this node","Crear {path} en {position}, como hijo de este nodo"
+Spawn Scene (Full),Crear escena (completo)
+"Spawns a scene copy as a child of this node with position, rotation and an optional group in one step. The position is measured from this node, so the copy moves with it.","Crea una copia de escena como hijo de este nodo con posición, rotación y un grupo opcional en un solo paso. La posición se mide desde este nodo, así que la copia se mueve con él."
+"Spawn {path} (rot {rotation}, group {group}), as a child of this node","Crear {path} (rot {rotation}, grupo {group}), como hijo de este nodo"
+Rotation in degrees.,Rotación en grados.
+Optional group to add the spawned node to (blank = none).,Grupo opcional al que añadir el nodo creado (vacío = ninguno).
+Spawn Scene In The World,Crear escena en el mundo
+Loads a scene and drops a copy into the current scene at a place in the level. Spawn Scene At adds the copy under this node and measures its place from this node instead.,Carga una escena y deja una copia en la escena actual en un lugar del nivel. Crear escena en añade la copia bajo este nodo y mide su posición desde este nodo en su lugar.
+Spawn {path} in the level at {position},Crear {path} en el nivel en {position}
+Place in the level to spawn at.,Lugar del nivel donde crear.
+Move By (3D),Mover en (3D)
+Nudges a 3D node by an offset relative to its own facing (local space).,Empuja un nodo 3D con un desplazamiento relativo a su propia orientación (espacio local).
+"Move by {offset}, along its own axes","Mover en {offset}, a lo largo de sus propios ejes"
+Offset,Desplazamiento
+Local-space offset.,Desplazamiento en espacio local.
+"Sends the object off one side of the layout and back in the other - the arcade wrap. It wraps the place inside the parent against the layout's edges, which are places in the level; use WrapAroundLayoutXWorld, the world twin.","Envía el objeto fuera por un lado del diseño y de vuelta por el otro - el envoltorio arcade. Envuelve la posición dentro del padre contra los bordes del diseño, que son lugares del nivel; usa WrapAroundLayoutXWorld, el gemelo de mundo."
+"The left edge of the layout, in pixels.","El borde izquierdo del diseño, en píxeles."
+"The right edge of the layout, in pixels.","El borde derecho del diseño, en píxeles."
+"Sends the object off one side of the layout and back in the other - the arcade wrap. The layout's edges are places in the level, so the node's place in the level is what wraps.","Envía el objeto fuera por un lado del diseño y de vuelta por el otro - el envoltorio arcade. Los bordes del diseño son lugares del nivel, así que lo que se envuelve es la posición del nodo en el nivel."
+"Sends the object off the top of the layout and back in at the bottom, or the other way round. It wraps the place inside the parent against the layout's edges, which are places in the level; use WrapAroundLayoutYWorld, the world twin.","Envía el objeto fuera por arriba del diseño y de vuelta por abajo, o al revés. Envuelve la posición dentro del padre contra los bordes del diseño, que son lugares del nivel; usa WrapAroundLayoutYWorld, el gemelo de mundo."
+"The top edge of the layout, in pixels.","El borde superior del diseño, en píxeles."
+"The bottom edge of the layout, in pixels.","El borde inferior del diseño, en píxeles."
+"Sends the object off the top of the layout and back in at the bottom, or the other way round. The layout's edges are places in the level, so the node's place in the level is what wraps.","Envía el objeto fuera por arriba del diseño y de vuelta por abajo, o al revés. Los bordes del diseño son lugares del nivel, así que lo que se envuelve es la posición del nodo en el nivel."
+Wrap Inside The Screen,Envolver dentro de la pantalla
+"The Asteroids rule: leave the right edge and come back on the left, off the top and back at the bottom. Nothing ever escapes the screen. It wraps the place inside the parent against the screen's size, so a node under a moved parent wraps at the wrong edges; use WrapInsideScreenWorld, the world twin.","La regla de Asteroids: sales por el borde derecho y vuelves por la izquierda, sales por arriba y vuelves por abajo. Nada escapa nunca de la pantalla. Envuelve la posición dentro del padre contra el tamaño de la pantalla, así que un nodo bajo un padre movido se envuelve en los bordes equivocados; usa WrapInsideScreenWorld, el gemelo de mundo."
+wrap inside the screen,envolver dentro de la pantalla
+"The Asteroids rule: leave the right edge and come back on the left, off the top and back at the bottom. Nothing ever escapes the screen. The node's place in the level is what wraps, so a node under a moved parent wraps at the screen's edges.","La regla de Asteroids: sales por el borde derecho y vuelves por la izquierda, sales por arriba y vuelves por abajo. Nada escapa nunca de la pantalla. Lo que se envuelve es la posición del nodo en el nivel, así que un nodo bajo un padre movido se envuelve en los bordes de la pantalla."
+General Actions,Acciones generales
+Position,Posición
+Wrap Around Layout Horizontally,Envolver el diseño horizontalmente
+Layout Edges,Bordes del diseño
+Left edge,Borde izquierdo
+Right edge,Borde derecho
+Wrap Around Layout Vertically,Envolver el diseño verticalmente
+Top edge,Borde superior
+Bottom edge,Borde inferior
+Top left,Arriba a la izquierda
+Bottom right,Abajo a la derecha

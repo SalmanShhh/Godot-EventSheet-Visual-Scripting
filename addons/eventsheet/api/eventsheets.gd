@@ -2288,6 +2288,9 @@ const MODULE_GUIDE_OVERRIDES := {
 	"movement": "Making-Things-Move-In-2D",
 	# The moves that name their space and the three turns are 2D movement, whatever else they say.
 	"space_words": "Making-Things-Move-In-2D",
+	# The world-space twins, the place readers and the Control place rows belong with the moves that
+	# name their space.
+	"world_place": "Making-Things-Move-In-2D",
 	"spawn": "Spawning-Copies-Of-Scenes",
 	# Removing is the other half of the same page: the rows that take a copy back out of the world
 	# read next to the rows that put it there, and the guard belongs beside the name it protects.

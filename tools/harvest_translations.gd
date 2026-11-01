@@ -176,6 +176,9 @@ const OWED_WHOLE_MODULES: Array[String] = [
 	# these say, so the words a player never sees are still the words an author reads all day. One
 	# module, shipped whole, so the whole of it is owed.
 	"res://addons/eventforge/registration/modules/ownership_aces.gd",
+	# The world-space twins of the verbs that wrote the wrong place, Set World Position, the X / Y / Z
+	# readers and the Control place rows. One module, shipped whole, so the whole of it is owed.
+	"res://addons/eventforge/registration/modules/world_place_aces.gd",
 ]
 
 ## The two doors content from outside the project comes in through. Added to the shipped Files
