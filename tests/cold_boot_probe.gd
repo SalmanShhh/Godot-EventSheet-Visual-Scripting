@@ -91,6 +91,12 @@ const MANUAL_FOLDER: String = "res://addons/eventsheet/editor/docs/"
 ## tab of a session costs when the sheet itself is ordinary.
 const FIRST_SHEET: String = "res://demo/showcase/boomer_level/boomer_level.gd"
 
+## A sheet that mentions `save_`: its first row build asks which variables the Save System keeps, to
+## draw the "saved" badge. That question once compiled the whole Project Doctor (about six seconds);
+## it is read from a small file of its own now, and opening this sheet is how the probe proves the
+## Doctor stays out of the loaded set.
+const SAVING_SHEET: String = "res://eventsheet_addons/health/health_behavior.gd"
+
 ## Everything `_enter_tree` reaches by path. Named here as strings for the same reason the plugin
 ## names them as strings: a class name in this file would compile its subtree before the clock
 ## starts, and the measurement would then miss the very thing it is measuring.
@@ -218,6 +224,7 @@ func _time_editor_build() -> String:
 		# rows - the script list the share index asks for, a variable's default value - and a blank
 		# sheet never asked either question.
 		(editor as Node).call("_load_sheet_from_path", FIRST_SHEET)
+		(editor as Node).call("_load_sheet_from_path", SAVING_SHEET)
 		(load(PICKER_WARMUP_SCRIPT) as Object).call("warm_now")
 		var cached: PackedStringArray = PackedStringArray()
 		for path: String in runtime_heavy_paths():

@@ -602,10 +602,11 @@ static func saved_names(source_path: String) -> Dictionary:
 	var names: Dictionary = {}
 	var source: String = FileAccess.get_file_as_string(source_path)
 	if source.contains("save_") or source.contains("__remember_cfg"):
-		# By path, so the editor half never compiles the Doctor until a sheet that saves is read.
-		var doctor: Script = load("res://addons/eventforge/project_doctor.gd") as Script
-		if doctor != null:
-			var usage: Dictionary = doctor.call("save_key_usage", source)
+		# By path, and from the small save-key reader rather than the Doctor: the Doctor is several
+		# seconds of GDScript to compile, and a badge must not pay that on a sheet's first row build.
+		var scan: Script = load("res://addons/eventforge/save_key_scan.gd") as Script
+		if scan != null:
+			var usage: Dictionary = scan.call("save_key_usage", source)
 			for key: String in usage.get("saved", PackedStringArray()):
 				names[key] = true
 			for key: String in usage.get("remembered", PackedStringArray()):

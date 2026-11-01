@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed: a sheet that saves no longer compiles the Project Doctor to draw its "saved" badge
+
+- The first row build of any sheet whose source mentions `save_` asked the Project Doctor which names the Save System keeps, and loading the Doctor is a multi-second GDScript compile. The question is now answered by `addons/eventforge/save_key_scan.gd`, a small file with no dependencies that the Doctor itself delegates `save_key_usage` to, so a badge and a finding still read the same text the same way.
+- Measured on the health pack in a fresh process, median of 3: `saved_names` 6,136 ms (5,548 - 6,662) -> 9 ms (9 - 12), and the Doctor is no longer in the loaded set after the sheet opens. Pinned by `save_names_badge_test` (60 ms wall, value parity with the Doctor, the badge's source never names the Doctor) and by `cold_boot_probe.gd`, which now also opens the health pack and lists `project_doctor.gd` as compiled if it ever is.
 ### Changed: a write to a node's place tells local from world
 
 - `$Tree.position.y = -8` reads "Tree | Set Y to -8" and `position.x = 5` reads "Set X to 5" (Z too, for 3D nodes; Controls read the same), instead of "Set position.y to ...". A place in the world reads "Set world X / Y / Z" for `global_position.x/.y/.z` and "Set world position to ..." for the whole `global_position`. A whole `position` and every other member keep the words they had. The words live in a small table of their own in the reading code.
