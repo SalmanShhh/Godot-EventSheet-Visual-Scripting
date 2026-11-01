@@ -623,7 +623,7 @@ class HierarchyChildChip:
 		_menu.set_item_disabled(_menu.get_item_index(EventSheetObjectHierarchy.MENU_FLAGS), scene_owned)
 		_menu.set_item_disabled(_menu.get_item_index(EventSheetObjectHierarchy.MENU_UNPARENT), scene_owned)
 		_menu.reset_size()
-		_menu.popup(Rect2i(Vector2i(at_position), Vector2i.ZERO))
+		EventSheetWindowPlacement.popup_at(_menu, Vector2i(at_position))
 
 	## The command dispatch, public so a headless test drives a menu choice without a display server.
 	func on_menu_id(id: int) -> void:

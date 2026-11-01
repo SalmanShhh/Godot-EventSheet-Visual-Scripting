@@ -35,7 +35,7 @@ func open(node: Node, sheet_path: String, parent: Node) -> void:
 	_build()
 	_apply_filter("")
 	if _parent.is_inside_tree():
-		_dialog.popup_centered(Vector2i(int(EventSheetPalette.scaled_f(480.0)), int(EventSheetPalette.scaled_f(500.0))))
+		EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(int(EventSheetPalette.scaled_f(480.0)), int(EventSheetPalette.scaled_f(500.0))))
 		_search.grab_focus()
 
 

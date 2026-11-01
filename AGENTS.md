@@ -88,6 +88,10 @@ from `tools/build_help_bundle.gd`).
 - Editor localisation: `res://addons/eventsheet/translations/` - `TEMPLATE.csv` plus eight locale
   CSVs, source-string-keyed, hand-maintained in LOCKSTEP (same keys, same order, no empty cells;
   suite-gated). Every new user-facing string lands in all nine files.
+- Every window the plugin opens goes through `EventSheetWindowPlacement` (`popup_centered`, `popup_below`,
+  `popup_at`, `show_at`, `move_within`, `keep_on_screen`), never the engine's `popup*` functions: it keeps
+  the window inside the usable rect of its own screen, centres on the editor window, and flips an anchored
+  popup above its anchor. `window_placement_test` sweeps the sources and names any direct call.
 - Dialogs build with `EventSheetPopupUI` helpers (`titled_card`, `panel_section`, `form_row`, the
   help strip family) - never raw flat controls. A field that is only what it says it is can be
   declared instead of built: `EventSheetFieldSpec` (a kind is a MAKER METHOD on `EventSheetPopupUI`,

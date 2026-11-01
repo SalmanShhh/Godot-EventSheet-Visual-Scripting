@@ -459,7 +459,7 @@ func _ask_before_saving_this_editor() -> void:
 		dialog.queue_free()
 		_dock._set_status("Not saved. The editor you are using is unchanged."))
 	_dock.add_child(dialog)
-	dialog.popup_centered()
+	EventSheetWindowPlacement.popup_centered(dialog)
 
 
 ## The save the question was about, and the reload that follows it.

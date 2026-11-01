@@ -208,7 +208,7 @@ func open() -> void:
 	_value_edit.text = "0"
 	_type_picker.selected = 0
 	_refresh_preview()
-	_dialog.popup_centered(Vector2i(int(EventSheetPalette.scaled_f(460.0)), int(EventSheetPalette.scaled_f(280.0))))
+	EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(int(EventSheetPalette.scaled_f(460.0)), int(EventSheetPalette.scaled_f(280.0))))
 	_name_edit.grab_focus()
 
 

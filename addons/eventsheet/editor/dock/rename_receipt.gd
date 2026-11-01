@@ -86,7 +86,7 @@ func open(function_name: String, typed: String = "") -> void:
 	_name_edit.text = typed if not typed.is_empty() else _old_name
 	_fill()
 	if _dock.is_inside_tree():
-		_dialog.popup_centered(Vector2i(int(EventSheetPalette.scaled_f(720.0)), int(EventSheetPalette.scaled_f(520.0))))
+		EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(int(EventSheetPalette.scaled_f(720.0)), int(EventSheetPalette.scaled_f(520.0))))
 		_name_edit.grab_focus()
 		_name_edit.select_all()
 
@@ -105,7 +105,7 @@ func open_for_finding(finding: Dictionary) -> void:
 	_name_edit.editable = false
 	_fill()
 	if _dock.is_inside_tree():
-		_dialog.popup_centered(Vector2i(int(EventSheetPalette.scaled_f(720.0)), int(EventSheetPalette.scaled_f(420.0))))
+		EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(int(EventSheetPalette.scaled_f(720.0)), int(EventSheetPalette.scaled_f(420.0))))
 
 
 ## Every row of one sheet that says `old_name`, as the words it says now beside the words it would

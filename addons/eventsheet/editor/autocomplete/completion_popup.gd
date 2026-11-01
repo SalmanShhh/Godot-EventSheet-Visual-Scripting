@@ -306,7 +306,7 @@ func _show() -> void:
 		_list.select(index)
 	var size: Vector2i = Vector2i(maxi(MIN_WIDTH, int(field.size.x)),
 		mini(entries.size(), VISIBLE_ROWS) * ROW_HEIGHT + 28)
-	_window.popup(Rect2i(Vector2i(field.get_screen_position() + Vector2(0.0, field.size.y)), size))
+	EventSheetWindowPlacement.popup_below(_window, Rect2i(Vector2i(field.get_screen_position()), Vector2i(field.size)), size)
 	hold_dialog_escape(field.get_window() as AcceptDialog)
 	field.grab_focus()
 

@@ -297,7 +297,7 @@ func open_rename_popup(group_name: String, is_subgroup: bool = false) -> void:
 		_rename_hint.text = "⏎ names the subgroup · empty un-nests" if is_subgroup else "⏎ names the group · empty ungroups"
 	if not _rename_popup.is_inside_tree():
 		return  # headless tests: state is set, there is no window to pop
-	_rename_popup.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), Vector2i(240, 40)))
+	EventSheetWindowPlacement.popup_at(_rename_popup, EventSheetWindowPlacement.pointer_for(_rename_popup), Vector2i(240, 40))
 	_rename_field.grab_focus()
 	_rename_field.select_all()
 

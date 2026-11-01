@@ -76,7 +76,7 @@ func toggle() -> void:
 	_dock._current_sheet.emit_live_values = not _dock._current_sheet.emit_live_values
 	if _dock._current_sheet.emit_live_values:
 		ensure_window()
-		window.popup_centered()
+		EventSheetWindowPlacement.popup_centered(window)
 		_dock._set_status("Live Values ON: recompile and run - variables stream every 0.25s while the debugger is attached.")
 	else:
 		if window != null:

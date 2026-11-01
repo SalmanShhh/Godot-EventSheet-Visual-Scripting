@@ -184,7 +184,7 @@ func build() -> void:
 func open() -> void:
 	build()
 	refresh()
-	window.popup_centered()
+	EventSheetWindowPlacement.popup_centered(window)
 
 
 ## Fills the list from the log (popup-free, so tests pin it headless). The lines are rewritten IN

@@ -96,7 +96,7 @@ func open_publish_preview() -> void:
 		_publish_preview_window.add_child(EventSheetPopupUI.window_body(card))
 		_dock.add_child(_publish_preview_window)
 	_publish_preview_text.text = publish_surface_text(collect_publish_surface(_dock._current_sheet))
-	_publish_preview_window.popup_centered()
+	EventSheetWindowPlacement.popup_centered(_publish_preview_window)
 
 
 ## Renders a publish surface as readable BBCode (also testable headless).

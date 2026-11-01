@@ -728,7 +728,7 @@ func _on_item_mouse_selected(_position: Vector2, mouse_button_index: int) -> voi
 	_menu_label = label
 	_ensure_menu()
 	_menu.reset_size()
-	_menu.popup(Rect2i(Vector2i(get_screen_transform() * get_local_mouse_position()), Vector2i.ZERO))
+	EventSheetWindowPlacement.popup_at(_menu, Vector2i(get_screen_transform() * get_local_mouse_position()))
 
 
 ## Folding a section is remembered for the session, so a reader who opens Also in the scene and works

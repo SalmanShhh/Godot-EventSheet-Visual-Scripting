@@ -676,7 +676,7 @@ func open_for(object_label: String) -> void:
 		_hierarchy_section_for(sheet, entry, label, source_path)
 	))
 	_popup.reset_size()
-	_popup.popup(Rect2i(Vector2i(_dock.get_screen_transform() * _dock.get_local_mouse_position()), Vector2i.ZERO))
+	EventSheetWindowPlacement.popup_at(_popup, Vector2i(_dock.get_screen_transform() * _dock.get_local_mouse_position()))
 
 
 ## The Hierarchy pane for this object, with every gesture wired to the dock operation that

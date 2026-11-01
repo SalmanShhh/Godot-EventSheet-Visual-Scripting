@@ -157,7 +157,7 @@ static func window_body(content: Control) -> Control:
 static func popup_fitted(window: Window, least: Vector2i = Vector2i.ZERO) -> void:
 	if window == null or not window.is_inside_tree():
 		return
-	window.popup_centered(fitted_size(window, least))
+	EventSheetWindowPlacement.popup_centered(window, fitted_size(window, least))
 	window.get_tree().create_timer(WindowBackdrop.SETTLE_SECONDS).timeout.connect(func() -> void:
 		if not is_instance_valid(window) or not window.visible:
 			return
@@ -166,6 +166,7 @@ static func popup_fitted(window: Window, least: Vector2i = Vector2i.ZERO) -> voi
 			var centre: Vector2i = window.position + window.size / 2
 			window.size = fitted.min(window.size)
 			window.position = centre - window.size / 2
+		EventSheetWindowPlacement.keep_on_screen(window)
 	)
 
 
@@ -248,9 +249,9 @@ static func browse_file(host: Node, filters: PackedStringArray, picked: Callable
 	browser.canceled.connect(browser.queue_free)
 	host.add_child(browser)
 	if options.has("size"):
-		browser.popup_centered(options["size"])
+		EventSheetWindowPlacement.popup_centered(browser, options["size"])
 	else:
-		browser.popup_centered_ratio(0.6)
+		EventSheetWindowPlacement.popup_centered_ratio(browser, 0.6)
 	return browser
 
 
@@ -1120,9 +1121,8 @@ static func autocomplete_combo(edit: LineEdit, suggestions_provider: Callable,
 			if popup.item_count == 1 and popup.is_item_disabled(0):
 				edit.accept_event()
 				return
-			popup.position = Vector2i(edit.get_screen_position() + Vector2(0.0, edit.size.y))
 			popup.reset_size()
-			popup.popup()
+			EventSheetWindowPlacement.popup_below(popup, Rect2i(Vector2i(edit.get_screen_position()), Vector2i(edit.size)))
 			edit.accept_event())
 	return picker
 

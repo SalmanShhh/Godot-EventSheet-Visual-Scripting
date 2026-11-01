@@ -30,7 +30,7 @@ func init(dock: Control) -> void:
 func open_new_shared_sheet() -> void:
 	_build_new_window()
 	_refresh_preview()
-	new_window.popup_centered(Vector2i(560, 320))
+	EventSheetWindowPlacement.popup_centered(new_window, Vector2i(560, 320))
 
 
 func _build_new_window() -> void:

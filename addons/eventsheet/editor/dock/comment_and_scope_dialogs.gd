@@ -229,7 +229,7 @@ func open_with_node_dialog(event_resource: Resource) -> void:
 	_ensure_with_node_dialog()
 	_with_node_dialog_target = event_row
 	_with_node_target_edit.text = event_row.with_node_target
-	_with_node_dialog.popup_centered(Vector2i(460, 160))
+	EventSheetWindowPlacement.popup_centered(_with_node_dialog, Vector2i(460, 160))
 	_with_node_target_edit.grab_focus()
 	_with_node_target_edit.select_all()
 

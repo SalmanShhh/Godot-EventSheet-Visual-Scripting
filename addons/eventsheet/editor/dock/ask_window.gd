@@ -36,7 +36,7 @@ func open() -> void:
 	if _window == null:
 		_build()
 	_refresh_mode()
-	_window.popup_centered(Vector2i(EventSheetPalette.scaled(620), EventSheetPalette.scaled(560)))
+	EventSheetWindowPlacement.popup_centered(_window, Vector2i(EventSheetPalette.scaled(620), EventSheetPalette.scaled(560)))
 	_prompt_edit.grab_focus()
 
 

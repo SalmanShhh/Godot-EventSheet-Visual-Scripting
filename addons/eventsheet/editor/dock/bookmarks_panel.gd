@@ -88,7 +88,7 @@ func build() -> void:
 func open() -> void:
 	build()
 	refresh()
-	window.popup_centered()
+	EventSheetWindowPlacement.popup_centered(window)
 
 
 ## Clear All asks first. Bookmarks live outside the undo stack, so a slip would cost every mark with

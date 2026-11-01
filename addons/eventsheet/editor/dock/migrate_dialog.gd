@@ -56,7 +56,7 @@ func open(vocabulary: Dictionary = {}) -> void:
 	_build_dialog()
 	_fill()
 	if _dock.is_inside_tree():
-		_dialog.popup_centered(Vector2i(760, 520))
+		EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(760, 520))
 
 
 ## The rewrite list, exactly as the dialog draws it: two lines per row, the sentence then the code.
@@ -147,7 +147,7 @@ func _redraw_on_what_the_sheet_says_now() -> void:
 	_planned = EventSheetMigrationPlan.plan(_dock._current_sheet, _vocabulary)
 	_fill()
 	if _dock.is_inside_tree():
-		_dialog.popup_centered(Vector2i(760, 520))
+		EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(760, 520))
 	_dock._set_status(EventSheetL10n.translate("This sheet changed while the receipt was open, so nothing was rewritten - here is what it says now."), true)
 
 

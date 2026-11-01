@@ -38,7 +38,7 @@ func init(dock: Control) -> void:
 func open() -> void:
 	build()
 	_refresh()
-	window.popup_centered(Vector2i(680, 520))
+	EventSheetWindowPlacement.popup_centered(window, Vector2i(680, 520))
 
 
 ## Builds the window without popping it, so a test drives the real widgets headlessly.

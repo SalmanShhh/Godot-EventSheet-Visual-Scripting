@@ -135,7 +135,7 @@ func open_for(object_label: String, host: Node = null, preselect: String = "") -
 	for pack: Dictionary in _packs:
 		if str(pack.get("dir", "")) == preselect:
 			_select_pack(pack)
-	popup_centered(Vector2i(int(EventSheetPalette.scaled_f(900.0)), int(EventSheetPalette.scaled_f(580.0))))
+	EventSheetWindowPlacement.popup_centered(self, Vector2i(int(EventSheetPalette.scaled_f(900.0)), int(EventSheetPalette.scaled_f(580.0))))
 
 
 ## The packs the window lists: the project's, and the library's beside them when there is a library.
@@ -491,7 +491,7 @@ func open_card_menu(path: String) -> void:
 		add_child(_card_menu)
 	_card_menu.set_item_disabled(_card_menu.get_item_index(2), not _on_remove.is_valid())
 	if is_inside_tree():
-		_card_menu.popup(Rect2i(Vector2i(get_mouse_position()) + position, Vector2i.ZERO))
+		EventSheetWindowPlacement.popup_at(_card_menu, Vector2i(get_mouse_position()) + position)
 
 
 func _remove_menu_pack() -> void:

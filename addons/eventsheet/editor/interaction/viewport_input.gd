@@ -264,11 +264,11 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 				_viewport.context_menu_requested.emit(
 					row_data,
 					menu_hit,
-					DisplayServer.mouse_get_position()
+					EventSheetWindowPlacement.pointer_over(_viewport)
 				)
 				_viewport.accept_event()
 		else:
-			_viewport.empty_space_context_menu_requested.emit(DisplayServer.mouse_get_position())
+			_viewport.empty_space_context_menu_requested.emit(EventSheetWindowPlacement.pointer_over(_viewport))
 			_viewport.accept_event()
 		return
 	if event.button_index != MOUSE_BUTTON_LEFT:

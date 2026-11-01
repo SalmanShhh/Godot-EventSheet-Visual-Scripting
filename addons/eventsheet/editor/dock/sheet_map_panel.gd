@@ -174,7 +174,7 @@ func build() -> void:
 func open() -> void:
 	build()
 	refresh()
-	window.popup_centered()
+	EventSheetWindowPlacement.popup_centered(window)
 
 
 ## Re-derives the graph and lays it out, keeping every box the reader has moved where they put it.

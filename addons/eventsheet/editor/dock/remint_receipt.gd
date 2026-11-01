@@ -48,7 +48,7 @@ func open(token: String) -> bool:
 	_build_dialog()
 	_fill()
 	if _dock.is_inside_tree():
-		_dialog.popup_centered(Vector2i(560, 320))
+		EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(560, 320))
 	return true
 
 

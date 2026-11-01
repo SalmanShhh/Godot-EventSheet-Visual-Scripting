@@ -42,7 +42,7 @@ func confirm_one(finding: Dictionary) -> void:
 	_dialog.title = EventSheetL10n.translate("Optimise this row")
 	_dialog.ok_button_text = EventSheetL10n.translate("Apply")
 	_fill_one(finding)
-	_dialog.popup_centered(Vector2i(560, 420))
+	EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(560, 420))
 
 
 ## The whole sheet: the safe fixes as ticks, the timing ones as a list with their reason.
@@ -54,7 +54,7 @@ func open_batch() -> void:
 	_dialog.title = EventSheetL10n.translate("Optimise this sheet")
 	_dialog.ok_button_text = EventSheetL10n.translate("Apply %d safe fixes") % _safe.size()
 	_fill_batch(found)
-	_dialog.popup_centered(Vector2i(600, 480))
+	EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(600, 480))
 
 
 func _build() -> void:

@@ -65,7 +65,7 @@ func _init(dock: Control) -> void:
 func open() -> void:
 	refresh()
 	if is_inside_tree():
-		popup_centered(Vector2i(int(EventSheetPalette.scaled_f(680.0)), int(EventSheetPalette.scaled_f(560.0))))
+		EventSheetWindowPlacement.popup_centered(self, Vector2i(int(EventSheetPalette.scaled_f(680.0)), int(EventSheetPalette.scaled_f(560.0))))
 
 
 func _sheet() -> EventSheetResource:

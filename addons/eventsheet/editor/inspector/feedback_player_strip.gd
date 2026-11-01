@@ -274,7 +274,7 @@ func _open_dialog(mode: int) -> void:
 		_dialog.file_selected.connect(_on_file_chosen)
 		add_child(_dialog)
 	_dialog.file_mode = mode as EditorFileDialog.FileMode
-	_dialog.popup_centered_ratio(0.6)
+	EventSheetWindowPlacement.popup_centered_ratio(_dialog, 0.6)
 
 
 ## Writing a list out, and reading one back in. Both are ordinary resource operations on a file the

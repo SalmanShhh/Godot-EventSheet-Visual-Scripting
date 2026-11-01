@@ -98,7 +98,7 @@ static func open(host: Node, ask: Dictionary) -> ConfirmationDialog:
 	_wire(dialog, ask)
 	host.add_child(dialog)
 	if dialog.is_inside_tree():
-		dialog.popup_centered()
+		EventSheetWindowPlacement.popup_centered(dialog)
 	return dialog
 
 

@@ -60,7 +60,7 @@ func open(doc_id: String = "", anchor: String = "") -> bool:
 	_dialog.title = _title_for(doc_id)
 	if not _dialog.visible:
 		_opener = focused_window()
-		_dialog.popup_centered(Vector2i(int(EventSheetPalette.scaled_f(900.0)), int(EventSheetPalette.scaled_f(640.0))))
+		EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(int(EventSheetPalette.scaled_f(900.0)), int(EventSheetPalette.scaled_f(640.0))))
 	return true
 
 

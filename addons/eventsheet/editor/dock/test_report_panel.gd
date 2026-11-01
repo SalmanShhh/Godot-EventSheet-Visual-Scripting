@@ -39,7 +39,7 @@ func init(dock: Control) -> void:
 func open() -> void:
 	_ensure_dialog()
 	if not _dialog.visible:
-		_dialog.popup_centered(Vector2i(EventSheetPalette.scaled(620), EventSheetPalette.scaled(460)))
+		EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(EventSheetPalette.scaled(620), EventSheetPalette.scaled(460)))
 	if _running:
 		return
 	_fill(_placeholder(EventSheetL10n.translate("Running every test sheet in the project…")))

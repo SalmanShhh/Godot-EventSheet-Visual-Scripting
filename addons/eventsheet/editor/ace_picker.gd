@@ -1025,7 +1025,7 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 	# editor, and a picker built in a test hangs off a bare Node, where each of them is an engine
 	# error rather than a no-op. Nothing else about the open changes.
 	if _window.is_inside_tree():
-		_window.popup_centered(Vector2i(720, 520))
+		EventSheetWindowPlacement.popup_centered(_window, Vector2i(720, 520))
 		_window.grab_focus()
 		_search.grab_focus()
 	_fill_token += 1
@@ -2153,7 +2153,7 @@ func open_global_menu(script_path: String) -> void:
 		global_settings_requested.emit(script_path))
 	menu.popup_hide.connect(menu.queue_free, CONNECT_DEFERRED)
 	_window.add_child(menu)
-	menu.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), Vector2i.ZERO))
+	EventSheetWindowPlacement.popup_at(menu, EventSheetWindowPlacement.pointer_for(menu))
 
 
 func _on_object_tree_selected() -> void:
@@ -3177,7 +3177,7 @@ func _open_tree_context_menu(definition: ACEDefinition) -> void:
 	_tree_context_menu.add_separator()
 	_tree_context_menu.add_item("Copy annotation stub", 1)
 	_tree_context_menu.add_item("Copy registrar snippet", 2)
-	_tree_context_menu.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), Vector2i.ZERO))
+	EventSheetWindowPlacement.popup_at(_tree_context_menu, EventSheetWindowPlacement.pointer_for(_tree_context_menu))
 
 
 ## A stub whose dialect cannot express everything this ACE does leads with plain `#` notes
@@ -3219,7 +3219,7 @@ func _prompt_override(definition: ACEDefinition, field: String, title: String, s
 	edit.text_submitted.connect(func(_text: String) -> void: commit.call(); window.hide())
 	window.canceled.connect(func() -> void: window.queue_free())
 	_window.add_child(window)
-	window.popup_centered()
+	EventSheetWindowPlacement.popup_centered(window)
 	edit.grab_focus()
 
 

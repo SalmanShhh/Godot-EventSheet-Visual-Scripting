@@ -405,7 +405,7 @@ static func shelves_without_a_showcase() -> PackedStringArray:
 func open() -> void:
 	_build()
 	_fill()
-	_window.popup_centered()
+	EventSheetWindowPlacement.popup_centered(_window)
 
 
 func _build() -> void:
@@ -599,7 +599,7 @@ func _pick_editor_tool() -> void:
 	menu.id_pressed.connect(func(id: int) -> void: activate({"kind": "template", "target": str(id)}))
 	menu.popup_hide.connect(menu.queue_free, CONNECT_DEFERRED)
 	_window.add_child(menu)
-	menu.popup(Rect2i(Vector2i(_window.get_mouse_position()) + _window.position, Vector2i.ZERO))
+	EventSheetWindowPlacement.popup_at(menu, Vector2i(_window.get_mouse_position()) + _window.position)
 
 
 ## The contributor's door: turn the Project bar on, open it, and open the plugin's own script

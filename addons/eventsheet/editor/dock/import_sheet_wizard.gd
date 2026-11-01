@@ -53,7 +53,7 @@ func open() -> void:
 	_sheet_picker.clear()
 	_refresh()
 	if _dialog.is_inside_tree():  # headless tests: the fields reset, there is no window to pop
-		_dialog.popup_centered(Vector2i(880, 760))
+		EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(880, 760))
 
 
 func _build_dialog() -> void:
@@ -309,7 +309,7 @@ func _open_browse_dialog() -> void:
 		_browse_dialog.title = "Pick the exported project or sheet"
 		_browse_dialog.file_selected.connect(func(path: String) -> void: load_source(path))
 		_dialog.add_child(_browse_dialog)
-	_browse_dialog.popup_centered(Vector2i(720, 520))
+	EventSheetWindowPlacement.popup_centered(_browse_dialog, Vector2i(720, 520))
 
 
 func _open_save_dialog() -> void:
@@ -322,7 +322,7 @@ func _open_save_dialog() -> void:
 		_save_dialog.file_selected.connect(_on_save_path_chosen)
 		_dialog.add_child(_save_dialog)
 	_save_dialog.current_file = "%s.gd" % str(selected_sheet_json().get("name", "imported_sheet")).to_snake_case()
-	_save_dialog.popup_centered(Vector2i(720, 520))
+	EventSheetWindowPlacement.popup_centered(_save_dialog, Vector2i(720, 520))
 
 
 ## The Save as… answer. A sheet that could not be written says why in the foot, beside the button;

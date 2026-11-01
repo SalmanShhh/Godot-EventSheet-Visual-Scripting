@@ -385,7 +385,7 @@ func open(context: Dictionary, ace_id: String = "", params: Dictionary = {}, neg
 	_dialog.title = EventSheetL10n.translate("Compare") if _owner_name().is_empty() \
 		else EventSheetL10n.translate("Compare a value on {object}").replace("{object}", _owner_name())
 	_refresh()
-	_dialog.popup_centered(Vector2i(int(EventSheetPalette.scaled_f(560.0)), int(EventSheetPalette.scaled_f(420.0))))
+	EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(int(EventSheetPalette.scaled_f(560.0)), int(EventSheetPalette.scaled_f(420.0))))
 
 
 func _ensure_dialog() -> void:

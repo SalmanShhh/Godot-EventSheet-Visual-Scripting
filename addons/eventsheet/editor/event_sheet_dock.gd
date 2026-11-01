@@ -3221,7 +3221,7 @@ func _toggle_detached_view() -> void:
 	add_child(_detached_window)
 	_detached_viewport.set_sheet(_current_sheet)
 	if is_inside_tree():
-		_detached_window.popup_centered(Vector2i(960, 640))
+		EventSheetWindowPlacement.popup_centered(_detached_window, Vector2i(960, 640))
 	_set_status("Detached view opened - drag it anywhere; both panes edit the same sheet.")
 
 
@@ -3331,7 +3331,7 @@ func _open_replace_object_dialog() -> void:
 			_set_status("Nothing matched %s in the selection." % from_ref, true))
 	EventSheetL10n.apply_to(_replace_object_dialog)
 	add_child(_replace_object_dialog)
-	_replace_object_dialog.popup_centered(Vector2i(480, 260))
+	EventSheetWindowPlacement.popup_centered(_replace_object_dialog, Vector2i(480, 260))
 	to_edit.grab_focus()
 
 
@@ -3399,7 +3399,7 @@ func _open_data_class_add_field() -> void:
 			_mark_dirty("Added field %s." % name_edit.text.strip_edges()))
 	EventSheetL10n.apply_to(_data_class_field_dialog)
 	add_child(_data_class_field_dialog)
-	_data_class_field_dialog.popup_centered(Vector2i(420, 240))
+	EventSheetWindowPlacement.popup_centered(_data_class_field_dialog, Vector2i(420, 240))
 	name_edit.grab_focus()
 
 
@@ -3447,7 +3447,7 @@ func _open_batch_param_edit() -> void:
 		if id >= 0 and id < groups.size():
 			_open_batch_param_group(groups[id]))
 	add_child(_batch_edit_menu)
-	_batch_edit_menu.popup(Rect2i(Vector2i(get_screen_transform() * get_local_mouse_position()), Vector2i.ONE))
+	EventSheetWindowPlacement.popup_at(_batch_edit_menu, Vector2i(get_screen_transform() * get_local_mouse_position()))
 
 
 func _open_batch_param_group(group: Dictionary) -> void:
@@ -4430,7 +4430,7 @@ func _open_group_color_picker() -> void:
 		add_child(_group_color_popup)
 	_group_color_target = target
 	_group_color_picker.color = _structure_color_of(target)
-	_group_color_popup.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), Vector2i(220, 42)))
+	EventSheetWindowPlacement.popup_at(_group_color_popup, EventSheetWindowPlacement.pointer_for(_group_color_popup), Vector2i(220, 42))
 
 
 ## What the picker opens on: the group's or fence's own colour, or the default tint when it carries
@@ -5189,7 +5189,7 @@ func _open_sheet_backups() -> void:
 	if _backups_list.item_count == 0:
 		_backups_list.add_item("(no backups yet - they appear from the second save on)")
 		_backups_list.set_item_disabled(0, true)
-	_backups_window.popup_centered()
+	EventSheetWindowPlacement.popup_centered(_backups_window)
 
 
 func _on_restore_backup_pressed() -> void:
@@ -8338,7 +8338,7 @@ func open_words_settings() -> void:
 		_words_settings_dialog.words_changed.connect(_on_words_changed)
 		add_child(_words_settings_dialog)
 	_words_settings_dialog.refresh()
-	_words_settings_dialog.popup_centered(Vector2i(680, 560))
+	EventSheetWindowPlacement.popup_centered(_words_settings_dialog, Vector2i(680, 560))
 
 
 func _on_words_changed() -> void:
@@ -8359,7 +8359,7 @@ func open_docs_housekeeping() -> void:
 		_docs_housekeeping_dialog = load(DOCS_HOUSEKEEPING_DIALOG_PATH).new()
 		_docs_housekeeping_dialog.configure(func() -> Dictionary: return _open_sheets_by_path())
 		add_child(_docs_housekeeping_dialog)
-	_docs_housekeeping_dialog.popup_centered(Vector2i(720, 560))
+	EventSheetWindowPlacement.popup_centered(_docs_housekeeping_dialog, Vector2i(720, 560))
 
 
 ## Object bar ▸ right-click an object ▸ Add behavior…: every pack, in one dialog. Its "+ New
@@ -8739,7 +8739,7 @@ func export_sheet_picture_requested(kind: String) -> void:
 			_export_picture_dialog.filters = PackedStringArray(["*.png ; PNG image"])
 			_export_picture_dialog.title = "Export the sheet as an image"
 	_export_picture_dialog.current_file = "%s.%s" % [_sheet_io._exported_script_basename(), kind]
-	_export_picture_dialog.popup_centered_ratio(0.6)
+	EventSheetWindowPlacement.popup_centered_ratio(_export_picture_dialog, 0.6)
 
 
 func _on_export_picture_path_chosen(path: String) -> void:
@@ -8900,7 +8900,7 @@ func open_sheet_health() -> void:
 		EventSheetPopupUI.titled_card(str(card.get("title", "")), lines)))
 	add_child(_health_dialog)
 	EventSheetL10n.apply_to(_health_dialog)
-	_health_dialog.popup_centered(Vector2i(EventSheetPalette.scaled(460), EventSheetPalette.scaled(240)))
+	EventSheetWindowPlacement.popup_centered(_health_dialog, Vector2i(EventSheetPalette.scaled(460), EventSheetPalette.scaled(240)))
 
 
 ## Clicking a line of the card opens the panel that owns that line.

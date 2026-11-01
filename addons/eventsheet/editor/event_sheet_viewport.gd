@@ -3063,7 +3063,7 @@ func _gui_input(event: InputEvent) -> void:
 		if mouse_button.pressed and mouse_button.button_index == MOUSE_BUTTON_LEFT:
 			var corner_link: String = _corner_links.link_at_control_position(mouse_button.position)
 			if not corner_link.is_empty():
-				corner_link_activated.emit(corner_link, DisplayServer.mouse_get_position())
+				corner_link_activated.emit(corner_link, EventSheetWindowPlacement.pointer_over(self))
 				accept_event()
 				return
 		_input_handlers.handle_mouse_button(mouse_button)

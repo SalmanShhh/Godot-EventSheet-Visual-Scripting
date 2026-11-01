@@ -210,7 +210,7 @@ func open() -> void:
 	build()
 	refresh()
 	if window.is_inside_tree():
-		window.popup_centered()
+		EventSheetWindowPlacement.popup_centered(window)
 
 
 ## Rescans the current sheet and rebuilds the list (popup-free, so tests drive it headlessly).

@@ -449,9 +449,8 @@ func open_tab_menu(tab_index: int) -> void:
 	_tab_folder = folder
 	_tab_menu.clear()
 	_tab_menu.add_item(new_kind_text(class_text, EventSheetWords.familiar_words_enabled()), 0)
-	_tab_menu.position = Vector2i(DisplayServer.mouse_get_position())
 	_tab_menu.reset_size()
-	_tab_menu.popup()
+	EventSheetWindowPlacement.popup_at(_tab_menu, EventSheetWindowPlacement.pointer_for(_tab_menu))
 
 
 ## A right-click on a row that names its own menu: today the inherited function's "Replace in <kind>".
@@ -467,9 +466,8 @@ func open_context_door(action: String, screen_position: Vector2) -> void:
 	var familiar: bool = EventSheetWords.familiar_words_enabled()
 	var label: String = EventSheetL10n.translate("Replace in %s") if familiar else EventSheetL10n.translate("Override in %s")
 	_replace_menu.add_item(label % own_class_text(), 0)
-	_replace_menu.position = Vector2i(screen_position)
 	_replace_menu.reset_size()
-	_replace_menu.popup()
+	EventSheetWindowPlacement.popup_at(_replace_menu, Vector2i(screen_position))
 
 
 ## "Replace in <kind>": a function event with the parent's name and parameters that already runs the
@@ -721,9 +719,8 @@ func open_add_menu() -> void:
 	_add_menu.clear()
 	for index: int in range(_add_offers.size()):
 		_add_menu.add_item(EventSheetHeadBands.add_label(_add_offers[index]), index)
-	_add_menu.position = Vector2i(_dock.get_screen_position() + _dock.size * 0.5)
 	_add_menu.reset_size()
-	_add_menu.popup()
+	EventSheetWindowPlacement.popup_at(_add_menu, Vector2i(_dock.get_screen_position() + _dock.size * 0.5))
 
 
 func _on_add_menu_pressed(index: int) -> void:
@@ -755,9 +752,8 @@ func open_file_options() -> void:
 	_file_menu.add_item(EventSheetL10n.translate("Open in the script editor"), 0)
 	_file_menu.add_item(EventSheetL10n.translate("Show in FileSystem"), 1)
 	if _dock.is_inside_tree():
-		_file_menu.position = Vector2i(_dock.get_screen_position() + _dock.get_local_mouse_position())
 		_file_menu.reset_size()
-		_file_menu.popup()
+		EventSheetWindowPlacement.popup_at(_file_menu, Vector2i(_dock.get_screen_position() + _dock.get_local_mouse_position()))
 
 
 ## A one-field prompt for a band whose value is free text (the description). Kept here rather than

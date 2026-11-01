@@ -306,4 +306,4 @@ func _open_lift_report() -> void:
 		item.set_text(1, str(entry.get("label")))
 		item.set_text(2, str(entry.get("reason")))
 	_dock._set_status("Lift Report: %s." % EventSheetLiftReport.summary(report))
-	_lift_report_window.popup_centered()
+	EventSheetWindowPlacement.popup_centered(_lift_report_window)

@@ -79,7 +79,7 @@ func open() -> void:
 	show_problem("")
 	_refresh()
 	if _dialog.is_inside_tree():  # headless tests: fields reset, no window to pop
-		_dialog.popup_centered(Vector2i(Vector2(EventSheetPalette.scaled_f(1040.0), EventSheetPalette.scaled_f(640.0))))
+		EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(Vector2(EventSheetPalette.scaled_f(1040.0), EventSheetPalette.scaled_f(640.0))))
 		_row_edit.grab_focus()
 
 

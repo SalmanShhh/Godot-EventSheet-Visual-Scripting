@@ -42,7 +42,7 @@ func open(origin: String) -> void:
 	_refresh("")
 	if not Engine.is_editor_hint() and DisplayServer.get_name() == "headless":
 		return
-	_popup.popup(Rect2i(_anchor_position(), Vector2i(0, 0)))
+	EventSheetWindowPlacement.popup_below(_popup, Rect2i(_anchor_position(), Vector2i.ZERO))
 	_edit.grab_focus()
 
 
@@ -409,4 +409,4 @@ func _anchor_position() -> Vector2i:
 		var zoom: float = view.get_zoom_factor()
 		var local_y: float = (view._row_metrics_helper.row_top(row_index) + view._row_metrics_helper.row_height(row_index)) * zoom
 		return Vector2i(view.get_screen_position() + Vector2(60.0, local_y))
-	return DisplayServer.mouse_get_position()
+	return EventSheetWindowPlacement.pointer_over(_dock)

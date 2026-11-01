@@ -2567,6 +2567,7 @@ func _browse_for_file(path_edit: LineEdit, filters: PackedStringArray, filter_la
 	_file_browse_target = path_edit
 	_file_browse_format = as_written
 	_file_browse_dialog.popup_file_dialog()
+	EventSheetWindowPlacement.keep_on_screen(_file_browse_dialog)
 
 
 ## A RESOURCE parameter, picked as a file. The row takes an actual Resource - a look, a moment, a

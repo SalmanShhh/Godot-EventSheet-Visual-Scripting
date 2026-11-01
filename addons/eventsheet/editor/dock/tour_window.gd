@@ -143,8 +143,9 @@ func start(custom_steps: Array[Dictionary] = []) -> void:
 	# Float at the dock's top-right so the sheet (where the doing happens) stays clear. Clamped left
 	# to the dock edge for narrow (or not-yet-laid-out) docks.
 	if _dock.is_inside_tree():
-		_window.position = Vector2i(_dock.get_screen_position()) + Vector2i(maxi(16, int(_dock.size.x) - 460), 72)
-	_window.show()
+		EventSheetWindowPlacement.show_at(_window, Vector2i(_dock.get_screen_position()) + Vector2i(maxi(16, int(_dock.size.x) - 460), 72))
+	else:
+		_window.show()
 	_poll_timer.start()
 
 

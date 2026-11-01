@@ -40,7 +40,7 @@ func open(claim: Dictionary) -> void:
 		else EventSheetL10n.translate("Adopt behavior")
 	_fill(current)
 	if _dock.is_inside_tree():
-		_dialog.popup_centered(Vector2i(720, 520))
+		EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(720, 520))
 
 
 ## The lines each half of the preview shows, and the "keeps working because" line under them - the

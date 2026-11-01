@@ -331,7 +331,7 @@ func _on_add_pressed() -> void:
 	_add_filter.text = ""
 	_fill_add_tree()
 	var below: Vector2i = Vector2i(_add_button.get_screen_position()) + Vector2i(0, int(_add_button.size.y))
-	_add_popup.popup(Rect2i(below, Vector2i.ZERO))
+	EventSheetWindowPlacement.popup_below(_add_popup, Rect2i(Vector2i(_add_button.get_screen_position()), Vector2i(_add_button.size)))
 	_add_filter.grab_focus()
 
 

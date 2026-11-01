@@ -221,7 +221,7 @@ static func open_description_editor(dock: Control, event_function: EventFunction
 	})
 	if dialog.is_inside_tree():
 		# Beside the row it describes, not in the middle of the screen: the name stays in view.
-		dialog.position = Vector2i(at) + Vector2i(roundi(EventSheetPalette.scaled_f(12.0)), roundi(EventSheetPalette.scaled_f(12.0)))
+		EventSheetWindowPlacement.move_within(dialog, Vector2i(at) + Vector2i(roundi(EventSheetPalette.scaled_f(12.0)), roundi(EventSheetPalette.scaled_f(12.0))))
 		text.grab_focus()
 	return dialog
 

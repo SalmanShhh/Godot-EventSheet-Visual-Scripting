@@ -50,7 +50,7 @@ func open(entry: Dictionary) -> void:
 	select_type(str(entry.get("type", "Variant")))
 	refresh_preview()
 	if _dock.is_inside_tree():
-		_dialog.popup_centered(Vector2i(int(EventSheetPalette.scaled_f(560.0)), int(EventSheetPalette.scaled_f(500.0))))
+		EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(int(EventSheetPalette.scaled_f(560.0)), int(EventSheetPalette.scaled_f(500.0))))
 
 
 func _build_dialog() -> void:

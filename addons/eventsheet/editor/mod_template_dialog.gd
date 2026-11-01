@@ -20,7 +20,7 @@ var _parent: Node = null
 func open(parent: Node, folder: String = "") -> void:
 	_parent = parent
 	_build(folder)
-	_dialog.popup_centered(Vector2i(560, 460))
+	EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(560, 460))
 
 
 func _build(folder: String) -> void:

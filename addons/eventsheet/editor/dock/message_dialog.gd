@@ -133,7 +133,7 @@ func open_message(event_function: EventFunction) -> void:
 		(_message_options[EventSheetMessageFacts.FIELD_SENDER] as OptionButton).selected)
 	_message_strip.show_note(str(opening.get("heading", "")), str(opening.get("body", "")))
 	_refresh_message_reading()
-	_message_dialog.popup_centered(Vector2i(
+	EventSheetWindowPlacement.popup_centered(_message_dialog, Vector2i(
 		int(EventSheetPalette.scaled_f(520.0)), int(EventSheetPalette.scaled_f(380.0))))
 
 
@@ -263,7 +263,7 @@ func open_send(context: Dictionary, ace_id: String = "", params: Dictionary = {}
 		else EventSheetL10n.translate("on {object}").replace("{object}", owner)
 	_rebuild_send_args(str(params.get("args", "")), false)
 	_refresh_send_reading()
-	_send_dialog.popup_centered(Vector2i(
+	EventSheetWindowPlacement.popup_centered(_send_dialog, Vector2i(
 		int(EventSheetPalette.scaled_f(560.0)), int(EventSheetPalette.scaled_f(400.0))))
 
 

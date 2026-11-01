@@ -107,7 +107,7 @@ func open(tab: String = "") -> void:
 	if index >= 0:
 		tabs.current_tab = index
 	refresh()
-	window.popup_centered(Vector2i(720, 620))
+	EventSheetWindowPlacement.popup_centered(window, Vector2i(720, 620))
 
 
 func ensure_window() -> void:

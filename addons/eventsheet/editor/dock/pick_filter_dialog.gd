@@ -52,7 +52,7 @@ func open(event_resource: Resource, pick_index: int = -1) -> void:
 	_pick_first_n_spin.value = pick.pick_first_n
 	_pick_delete_button.visible = editing
 	_pick_dialog.title = "Edit Pick Filter (For Each)" if editing else "Add Pick Filter (For Each)"
-	_pick_dialog.popup_centered(Vector2i(520, 300))
+	EventSheetWindowPlacement.popup_centered(_pick_dialog, Vector2i(520, 300))
 
 
 func _ensure_pick_dialog() -> void:
@@ -217,7 +217,7 @@ func _on_pick_filter_confirmed() -> void:
 	var __pick_err: String = _pick_dialog_first_error()
 	if not __pick_err.is_empty():
 		_dock._set_status(__pick_err, true)
-		_pick_dialog.popup_centered(Vector2i(520, 300))
+		EventSheetWindowPlacement.popup_centered(_pick_dialog, Vector2i(520, 300))
 		return
 	var event_row: EventRow = _pick_target_event
 	var target_index: int = _pick_target_index

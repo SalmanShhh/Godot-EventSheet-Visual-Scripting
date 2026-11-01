@@ -243,7 +243,7 @@ func _open_strip() -> void:
 	if _strip == null:
 		_strip = _build_strip()
 		add_child(_strip)
-	_strip.popup_on_parent(Rect2i(Vector2i(0, int(size.y)), Vector2i(1, 1)))
+	EventSheetWindowPlacement.popup_below(_strip, Rect2i(Vector2i(get_screen_position()), Vector2i(size)))
 
 
 ## The strip itself: five shelves, each a title and a row of pictures.

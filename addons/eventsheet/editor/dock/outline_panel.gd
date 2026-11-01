@@ -153,7 +153,7 @@ func build() -> void:
 func open() -> void:
 	build()
 	refresh()
-	window.popup_centered()
+	EventSheetWindowPlacement.popup_centered(window)
 
 
 ## Rebuilds the jump tree from the current sheet (popup-free; testable headless).

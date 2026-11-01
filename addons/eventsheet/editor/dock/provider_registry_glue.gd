@@ -145,7 +145,7 @@ func on_manage_ace_providers_requested() -> void:
 	_dock._ui_builder.build_provider_dialog()
 	refresh_provider_list()
 	# Roomier than the old list-only dialog: it now carries the "what it publishes" preview table too.
-	_dock._provider_dialog.popup_centered(Vector2i(760, 640))
+	EventSheetWindowPlacement.popup_centered(_dock._provider_dialog, Vector2i(760, 640))
 
 
 func refresh_provider_list() -> void:
@@ -164,7 +164,7 @@ func refresh_provider_list() -> void:
 
 func on_provider_add_pressed() -> void:
 	if _dock._provider_file_dialog != null:
-		_dock._provider_file_dialog.popup_centered(Vector2i(720, 520))
+		EventSheetWindowPlacement.popup_centered(_dock._provider_file_dialog, Vector2i(720, 520))
 
 
 ## Browsing a script PREVIEWS it rather than registering it: the whole point of the preview is to see
@@ -365,7 +365,7 @@ func _build_param_dialog(verb_label: String, param_ids: Array) -> void:
 		_param_rows.append({"id": id_text, "hint": hint_option, "options": options_edit, "default": default_edit})
 	_param_dialog.add_child(EventSheetPopupUI.margined(body))
 	_param_dialog.title = "Parameters of %s" % verb_label
-	_param_dialog.popup_centered(Vector2i(560, 520))
+	EventSheetWindowPlacement.popup_centered(_param_dialog, Vector2i(560, 520))
 
 
 func _collect_param_dialog() -> void:
@@ -559,7 +559,7 @@ func open_publish_version_dialog() -> void:
 	_version_note.text = ""
 	_refresh_version_preview()
 	_refresh_reading_check(sheet_path)
-	_version_dialog.popup_centered(Vector2i(520, 470))
+	EventSheetWindowPlacement.popup_centered(_version_dialog, Vector2i(520, 470))
 	_version_note.grab_focus()
 
 

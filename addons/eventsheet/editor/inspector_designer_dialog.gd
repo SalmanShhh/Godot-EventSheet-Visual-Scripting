@@ -409,7 +409,7 @@ func open_for_sheet(sheet: EventSheetResource, field: String = "", category: Str
 	_picked_category = category
 	rebuild_for_sheet(sheet)
 	if is_inside_tree():
-		popup_centered()
+		EventSheetWindowPlacement.popup_centered(self)
 
 
 ## Picks a field: its card is framed and the panel shows its choices on `category` (or the tab it was on).

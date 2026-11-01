@@ -266,7 +266,7 @@ func show_output() -> void:
 	dialog.confirmed.connect(dialog.queue_free)
 	dialog.canceled.connect(dialog.queue_free)
 	_dock.add_child(dialog)
-	dialog.popup_centered()
+	EventSheetWindowPlacement.popup_centered(dialog)
 
 
 ## plugin.cfg ▸: the five keys as setting rows. The version row is the one that matters - it is the
@@ -292,4 +292,4 @@ func show_cfg() -> void:
 	dialog.confirmed.connect(dialog.queue_free)
 	dialog.canceled.connect(dialog.queue_free)
 	_dock.add_child(dialog)
-	dialog.popup_centered()
+	EventSheetWindowPlacement.popup_centered(dialog)

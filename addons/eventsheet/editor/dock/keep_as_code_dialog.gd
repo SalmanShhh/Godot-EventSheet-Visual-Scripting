@@ -51,7 +51,7 @@ func open(finding: Dictionary) -> void:
 	_build_dialog()
 	_fill()
 	if _dock.is_inside_tree():
-		_dialog.popup_centered(Vector2i(680, 420))
+		EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(680, 420))
 
 
 ## The comment this row would carry: what it read as, and where its words went when the vocabulary

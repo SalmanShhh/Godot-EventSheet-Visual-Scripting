@@ -112,7 +112,7 @@ func open() -> void:
 	_refresh_what()
 	_refresh_slots()
 	_refresh_peek_sources()
-	_window.popup_centered(Vector2i(EventSheetPalette.scaled(900), EventSheetPalette.scaled(680)))
+	EventSheetWindowPlacement.popup_centered(_window, Vector2i(EventSheetPalette.scaled(900), EventSheetPalette.scaled(680)))
 
 
 # ── Window construction ─────────────────────────────────────────────────────────────

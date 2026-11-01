@@ -124,7 +124,7 @@ func open(resource: Resource) -> void:
 	refresh_locales()
 	_result_card.report([])
 	if _dock != null and _dock.is_inside_tree():
-		_dialog.popup_centered(Vector2i(620, 460))
+		EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(620, 460))
 
 
 func base_path() -> String:

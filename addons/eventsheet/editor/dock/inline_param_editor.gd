@@ -82,10 +82,10 @@ func on_param_value_edit_requested(ace: Resource, param_id: String, current_text
 	_param_edit_hint.text = "⏎ this row  ·  Ctrl+⏎ apply to all %d selected" % selected_count
 	if not _param_edit_popup.is_inside_tree():
 		return  # headless tests: state is set, there is no window to pop
-	var popup_at: Vector2i = Vector2i(DisplayServer.mouse_get_position())
+	var popup_at: Vector2i = EventSheetWindowPlacement.pointer_for(_param_edit_popup)
 	if anchor_screen is Rect2 and (anchor_screen as Rect2).size.x > 0.0:
 		popup_at = Vector2i((anchor_screen as Rect2).position + Vector2(0.0, (anchor_screen as Rect2).size.y + 2.0))
-	_param_edit_popup.popup(Rect2i(popup_at, Vector2i(200, 36)))
+	EventSheetWindowPlacement.popup_at(_param_edit_popup, popup_at, Vector2i(200, 36))
 	_param_edit_field.grab_focus()
 	_param_edit_field.select_all()
 
@@ -235,7 +235,7 @@ func on_data_class_field_edit_requested(raw_row: Resource, field_index: int, par
 	_field_edit_field.tooltip_text = "Editing field %s" % part
 	if not _field_edit_popup.is_inside_tree():
 		return  # headless tests: state is set, there is no window to pop
-	_field_edit_popup.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), Vector2i(200, 36)))
+	EventSheetWindowPlacement.popup_at(_field_edit_popup, EventSheetWindowPlacement.pointer_for(_field_edit_popup), Vector2i(200, 36))
 	_field_edit_field.grab_focus()
 	_field_edit_field.select_all()
 
@@ -316,7 +316,7 @@ func on_color_swatch_edit_requested(ace: Resource, param_id: String, current_col
 	if not Engine.is_editor_hint() and DisplayServer.get_name() == "headless":
 		return
 	_color_swatch_popup.reset_size()
-	_color_swatch_popup.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), _color_swatch_popup.size))
+	EventSheetWindowPlacement.popup_at(_color_swatch_popup, EventSheetWindowPlacement.pointer_for(_color_swatch_popup), _color_swatch_popup.size)
 
 
 func _commit_color_swatch_edit(new_color: Color) -> void:

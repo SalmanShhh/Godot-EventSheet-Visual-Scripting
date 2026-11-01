@@ -352,7 +352,7 @@ static func open_for_row(host: Control, event_row: EventRow, values: Dictionary,
 	var body: Control = build_body(report, event_number)
 	body.add_child(_buttons(host, report, event_row))
 	_window.add_child(EventSheetPopupUI.window_body(body))
-	_window.popup_centered()
+	EventSheetWindowPlacement.popup_centered(_window)
 
 
 ## The two ways out of the answer: go and look at the row, and watch the value the answer named.

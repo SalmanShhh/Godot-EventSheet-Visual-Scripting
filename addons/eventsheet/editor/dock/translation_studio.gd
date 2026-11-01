@@ -43,7 +43,7 @@ func open() -> void:
 	if _window == null:
 		_build_window()
 	refresh()
-	_window.popup_centered(Vector2i(EventSheetPalette.scaled(780), EventSheetPalette.scaled(760)))
+	EventSheetWindowPlacement.popup_centered(_window, Vector2i(EventSheetPalette.scaled(780), EventSheetPalette.scaled(760)))
 
 
 ## The catalog every step works on, so the window can never find text into one file and turn on
@@ -491,7 +491,7 @@ func open_line(row: int) -> void:
 		record[_table.table.columns[index]] = cells[index]
 	_fill_line(line_details(record))
 	if _line_window.is_inside_tree() and not _line_window.visible:
-		_line_window.popup_centered(Vector2i(EventSheetPalette.scaled(640), EventSheetPalette.scaled(480)))
+		EventSheetWindowPlacement.popup_centered(_line_window, Vector2i(EventSheetPalette.scaled(640), EventSheetPalette.scaled(480)))
 
 
 ## Where the swept folder first says catalog key `key`: [path, line] for a script (line from 1), [path,

@@ -34,7 +34,7 @@ func open(dock: Control, base_style: EventSheetEditorStyle) -> void:
 	_working_style = duplicate_style(base_style)
 	_ensure_dialog()
 	_preview_viewport.set_sheet(build_sample_sheet(_working_style))
-	_dialog.popup_centered(Vector2i(EventSheetPalette.scaled(1240), EventSheetPalette.scaled(640)))
+	EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(EventSheetPalette.scaled(1240), EventSheetPalette.scaled(640)))
 
 
 ## Deep-duplicates a style so live edits never touch the original resource.

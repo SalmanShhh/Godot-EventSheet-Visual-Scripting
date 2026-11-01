@@ -58,7 +58,7 @@ func _open_node_picker(key: String) -> void:
 	_populate_node_picker()
 	_node_picker_window.get_ok_button().disabled = true
 	_say_field(key)
-	_node_picker_window.popup_centered(Vector2i(520, 640))
+	EventSheetWindowPlacement.popup_centered(_node_picker_window, Vector2i(520, 640))
 	_node_picker_search.grab_focus()
 
 

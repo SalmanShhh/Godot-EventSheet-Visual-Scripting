@@ -1395,7 +1395,7 @@ func _on_ace_preview_requested(source_label: String, definitions: Array[ACEDefin
 		_dock._preview_list.add_item("[%s] %s" % [_ace_type_label(definition.ace_type), definition.format_display()])
 	if definitions.is_empty():
 		_dock._preview_list.add_item("No actions or conditions were found on the dropped node.")
-	_dock._preview_window.popup_centered(Vector2i(560, 320))
+	EventSheetWindowPlacement.popup_centered(_dock._preview_window, Vector2i(560, 320))
 
 
 func _ace_type_label(ace_type: int) -> String:

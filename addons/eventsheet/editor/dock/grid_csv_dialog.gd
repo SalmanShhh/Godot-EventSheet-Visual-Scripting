@@ -106,7 +106,7 @@ func open(mode: String, entry: Dictionary) -> void:
 		_key_columns_edit.text = ", ".join(key_columns(columns))
 	_result_card.report([])
 	if _dock.is_inside_tree():
-		_dialog.popup_centered(Vector2i(560, 420))
+		EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(560, 420))
 
 
 ## True when this variable really is a grid (the table drawer with columns) - the gate on both

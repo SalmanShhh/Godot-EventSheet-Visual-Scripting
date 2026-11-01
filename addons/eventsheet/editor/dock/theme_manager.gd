@@ -146,7 +146,7 @@ func _on_load_theme_requested() -> void:
 		_dock._set_status("Theme picker unavailable.", true)
 		return
 	_theme_file_dialog.current_dir = _dock._sheet_io._suggest_sheet_directory()
-	_theme_file_dialog.popup_centered(Vector2i(760, 520))
+	EventSheetWindowPlacement.popup_centered(_theme_file_dialog, Vector2i(760, 520))
 
 
 func _on_theme_file_selected(path: String) -> void:

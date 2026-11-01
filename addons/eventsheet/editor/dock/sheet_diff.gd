@@ -126,7 +126,7 @@ func open(host: Node = null) -> void:
 		_list.select(0)
 		_describe(0)
 	if _dialog.is_inside_tree():
-		_dialog.popup_centered(Vector2i(int(EventSheetPalette.scaled_f(560.0)), int(EventSheetPalette.scaled_f(400.0))))
+		EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(int(EventSheetPalette.scaled_f(560.0)), int(EventSheetPalette.scaled_f(400.0))))
 
 
 ## The sentence above the list: how many rows a save changes, and how many saved lines it removes.

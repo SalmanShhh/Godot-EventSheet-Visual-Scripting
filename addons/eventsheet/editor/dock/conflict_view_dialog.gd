@@ -54,7 +54,7 @@ func open_path(path: String) -> bool:
 		_choices.append(EventSheetConflictRegions.whole_side_choices(region, EventSheetConflictRegions.KEEP_OURS))
 	build()
 	_refresh()
-	window.popup_centered(Vector2i(920, 620))
+	EventSheetWindowPlacement.popup_centered(window, Vector2i(920, 620))
 	return true
 
 

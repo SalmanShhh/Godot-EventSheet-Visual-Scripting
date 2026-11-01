@@ -84,7 +84,7 @@ func open() -> void:
 	_policy = read_policy(sheet)
 	_refill(declared, EventSheetModeFacts.starts_in(sheet))
 	_applied_key = ""
-	_dialog.popup_centered(Vector2i(560, 460))
+	EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(560, 460))
 
 
 func _build() -> void:

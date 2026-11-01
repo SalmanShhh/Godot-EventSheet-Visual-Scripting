@@ -39,7 +39,7 @@ static func open_for(dock: Control, rows: Array) -> EventSheetDuplicateVariantDi
 	dialog.configure(dock, rows)
 	dock.add_child(dialog)
 	if dock.is_inside_tree():
-		dialog.popup_centered(Vector2i(EventSheetPalette.scaled(620), EventSheetPalette.scaled(520)))
+		EventSheetWindowPlacement.popup_centered(dialog, Vector2i(EventSheetPalette.scaled(620), EventSheetPalette.scaled(520)))
 	return dialog
 
 

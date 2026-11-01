@@ -54,7 +54,7 @@ static func offers_for(finding: Dictionary) -> Array[Dictionary]:
 func open() -> void:
 	if _doctor_window == null:
 		_build()
-	_doctor_window.popup_centered()
+	EventSheetWindowPlacement.popup_centered(_doctor_window)
 	_run_project_doctor()
 
 

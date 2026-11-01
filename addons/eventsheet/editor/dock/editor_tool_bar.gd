@@ -544,7 +544,7 @@ func show_output() -> void:
 	dialog.confirmed.connect(dialog.queue_free)
 	dialog.canceled.connect(dialog.queue_free)
 	_dock.add_child(dialog)
-	dialog.popup_centered()
+	EventSheetWindowPlacement.popup_centered(dialog)
 
 
 ## Enable plugin: writes the plugin.cfg Godot needs beside the compiled script and ticks the plugin

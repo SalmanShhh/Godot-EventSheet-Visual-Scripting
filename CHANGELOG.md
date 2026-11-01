@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed: no popup, dialog or window opens off screen or away from what opened it
+
+Every window the editor opens now goes through one helper, `EventSheetWindowPlacement`, that works against the usable rect (the screen less the task bar) of the screen the window belongs to. A dialog is centred on the visible part of the editor window it opens over (the engine centred it on the screen, far from a small or moved editor window), shrunk when it is larger than the room it has, and kept clear of the title bar's reserve. A menu, panel or list opened at the pointer or under a field flips above and left-aligns to its anchor when there is no room below or to the right, on the monitor the anchor is on. Pointer positions follow the editor's sub-window mode, so a menu is no longer placed by screen coordinates when the editor embeds its sub-windows. The blend-mode strip opened at the top-left of the editor window instead of under its field; it now opens under the field. A sweep test fails when a new opener calls an engine popup function directly.
+
 ### Added: the showcase state enums describe their machine and every state
 
 - Starfall's `State` and the quest showcase's `QuestState` carry a `##` line above the enum (what the

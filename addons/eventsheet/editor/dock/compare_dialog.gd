@@ -112,7 +112,7 @@ func open() -> void:
 	build()
 	refresh_targets()
 	if window.is_inside_tree():
-		window.popup_centered()
+		EventSheetWindowPlacement.popup_centered(window)
 
 
 ## Rebuilds the target dropdown from the shipped backup ring + the project's sheets. A browsed
@@ -155,7 +155,7 @@ func _open_browse_dialog() -> void:
 			target_picker.selected = 0
 			compare_with(path))
 		window.add_child(_browse_dialog)
-	_browse_dialog.popup_centered(Vector2i(640, 460))
+	EventSheetWindowPlacement.popup_centered(_browse_dialog, Vector2i(640, 460))
 
 
 ## Runs the comparison against `other_path` and fills both lists. Returns the raw two-sided

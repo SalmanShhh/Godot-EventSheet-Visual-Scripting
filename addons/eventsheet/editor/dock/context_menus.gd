@@ -708,7 +708,7 @@ func _show_popup_menu(menu: PopupMenu, global_position: Vector2) -> void:
 		return
 	_configure_context_menu(menu)
 	menu.reset_size()
-	menu.popup(Rect2i(Vector2i(global_position), Vector2i.ONE))
+	EventSheetWindowPlacement.popup_at(menu, Vector2i(global_position))
 
 
 func _configure_context_menu(menu: PopupMenu) -> void:

@@ -128,7 +128,7 @@ func on_functions_list_item_clicked(at_position: Vector2, mouse_button_index: in
 		return
 	_dock._functions_menu.position = Vector2i(_dock._functions_list.get_screen_position() + at_position)
 	_dock._functions_menu.reset_size()
-	_dock._functions_menu.popup()
+	EventSheetWindowPlacement.popup_at(_dock._functions_menu, _dock._functions_menu.position)
 
 
 func on_functions_menu_id_pressed(id: int) -> void:
@@ -259,7 +259,7 @@ func on_viewport_raw_code_edit_requested(raw_resource: Resource, in_flow: bool) 
 	)
 	_dock._raw_code_edit.text = raw_row.code
 	_dock._code_panel_glue.validate_raw_code()
-	_dock._raw_code_dialog.popup_centered(Vector2i(680, 460))
+	EventSheetWindowPlacement.popup_centered(_dock._raw_code_dialog, Vector2i(680, 460))
 	_dock._raw_code_edit.grab_focus()
 
 

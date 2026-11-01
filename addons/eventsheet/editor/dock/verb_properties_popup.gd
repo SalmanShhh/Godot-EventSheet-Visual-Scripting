@@ -287,7 +287,7 @@ func open_for(event_function: Resource) -> void:
 		func() -> void: _run_and_close(func() -> void: _dock.show_verb_in_code(_find_verb(verb_name)))
 	))
 	_popup.reset_size()
-	_popup.popup(Rect2i(Vector2i(_dock.get_screen_transform() * _dock.get_local_mouse_position()), Vector2i.ZERO))
+	EventSheetWindowPlacement.popup_at(_popup, Vector2i(_dock.get_screen_transform() * _dock.get_local_mouse_position()))
 
 
 ## The verb of this name on the LIVE sheet. Re-fetched at click time because the undo funnel replaces

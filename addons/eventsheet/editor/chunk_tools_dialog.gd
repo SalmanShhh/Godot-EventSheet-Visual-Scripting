@@ -39,7 +39,7 @@ func open_merge(parent: Node, scene_path: String = "") -> void:
 func _open(parent: Node, scene_path: String) -> void:
 	_parent = parent
 	_build(scene_path)
-	_dialog.popup_centered(Vector2i(520, 400))
+	EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(520, 400))
 
 
 func _build(scene_path: String) -> void:

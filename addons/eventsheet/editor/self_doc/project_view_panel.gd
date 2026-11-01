@@ -45,7 +45,7 @@ func open(sheets: Dictionary, findings: Array = [], timings: Dictionary = {}) ->
 	_ensure_window()
 	_fill_rows()
 	_fill_tasks()
-	_window.popup_centered()
+	EventSheetWindowPlacement.popup_centered(_window)
 
 
 ## Builds the window on first open and reuses it after, so reopening costs nothing but the join.

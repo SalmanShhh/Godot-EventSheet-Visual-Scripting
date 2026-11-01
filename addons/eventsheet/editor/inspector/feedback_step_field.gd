@@ -68,7 +68,7 @@ func _open_card() -> void:
 	_drawer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_window.add_child(EventSheetPopupUI.window_body(scroll))
 	add_child(_window)
-	_window.popup_centered()
+	EventSheetWindowPlacement.popup_centered(_window)
 
 
 ## Closing the card writes it back. The FIRST card is the step: a drawer that was emptied leaves the
