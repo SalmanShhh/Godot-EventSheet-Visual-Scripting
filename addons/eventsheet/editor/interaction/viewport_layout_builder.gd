@@ -105,6 +105,22 @@ func _condition_param_bands(row_data: EventRowData) -> Array:
 	return indices
 
 
+## The drag part of a row's layout cache key. Only the row the drop would land on (the row-drag
+## target) and the row an ACE drop would land in read the drag state when they lay out, so only
+## those carry the full signature; every other row carries just whether a drag is live (the gap
+## drawn between rows changes with that, and with nothing else).
+func drag_signature_for_row(index: int) -> String:
+	var viewport: Variant = _viewport
+	var active: String = str(viewport._drag_motion.active)
+	if index != viewport._drag_target_index and index != viewport._drag_ace_target_row_index:
+		return active
+	return "%s:%d:%s:%d:%s:%d:%s:%d:%s:%s:%s" % [
+		active, viewport._drag_target_index, viewport._drag_target_mode,
+		viewport._drag_ace_target_row_index, viewport._drag_ace_target_lane, viewport._drag_ace_target_ace_index, viewport._drag_ace_insert_mode,
+		viewport._drag_row_index, str(viewport._drag_ace_drop_valid), viewport._drag_feedback_text, str(viewport._drag_feedback_is_error)
+	]
+
+
 func get_or_build_row_layout(index: int, width: float, font: Font, font_size: int) -> Dictionary:
 	var row_data: EventRowData = _viewport._row_at(index)
 	if row_data == null:
@@ -115,14 +131,13 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	_viewport._row_builder._ensure_event_spans(row_data)
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var line_height: float = _viewport._get_event_line_height(font_size)
-	# Cache key components: row uid, visible row index, canvas width, active drag
-	# target index, and the current layout style signature.
+	# Cache key components: row uid, visible row index, canvas width, the drag signature, and the
+	# current layout style signature.
 	# Drag state is part of the key so the drop preview (row reorder + ACE drop line) updates
-	# as the drag target moves; it is constant when idle, so no churn outside a drag.
-	var drag_signature: String = "%s:%d:%s:%d:%s:%d:%s" % [
-		str(_viewport._drag_motion.active), _viewport._drag_target_index, _viewport._drag_target_mode,
-		_viewport._drag_ace_target_row_index, _viewport._drag_ace_target_lane, _viewport._drag_ace_target_ace_index, _viewport._drag_ace_insert_mode
-	]
+	# as the drag target moves - but ONLY for the row(s) that read it. Every other row's layout is
+	# the same wherever the drag is, so its key carries just whether a drag is live; keying all of
+	# them by the target would relayout every visible row on each target change.
+	var drag_signature: String = drag_signature_for_row(index)
 	var key: String = "%s:%d:%d:%s:%s" % [row_data.row_uid, index, int(width), drag_signature, _viewport._layout_style_signature]
 	if _viewport._layout_cache.has(key):
 		var cached_layout: Dictionary = _viewport._layout_cache.get_layout(key)

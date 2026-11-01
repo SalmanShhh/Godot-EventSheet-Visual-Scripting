@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Fixed: a drag no longer relays out every visible row on each move
+
+- The layout cache key carried the whole drag signature (target row, drop mode, ACE target lane and slot) in EVERY row's key, so each change of the drop target missed the cache for every visible row. Only the row the drop would land on and the row an ACE drop would land in read the drag state, so only those two carry it now; every other row's key holds just whether a drag is live. Measured in the real editor on the boomer_level showcase (32 rows), 240 drag frames: layout misses 1,215 -> 254. Pinned by `layout_drag_key_test`.
 ### Fixed: a sheet whose compile check cannot run no longer paints every expression red
 
 - When a sheet variable shadows a member of the host class, the compile check cannot run; the parameter window used to colour every expression field red and say "fix X first" for the probe's fault. It now leaves the fields alone and says "compile check paused" beside Done (the reason on hover). A save that finds both an engine error and compiler warnings keeps the warning count on the status line.
