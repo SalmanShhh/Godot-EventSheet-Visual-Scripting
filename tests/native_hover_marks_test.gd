@@ -27,6 +27,7 @@ static func run() -> bool:
 	ok = _test_selected_gutter() and ok
 	ok = _test_one_group_head() and ok
 	ok = _test_status_counts() and ok
+	ok = _test_event_count_agrees() and ok
 	return ok
 
 
@@ -131,6 +132,66 @@ static func _test_status_counts() -> bool:
 		["many", EventSheetDock.problem_count_text(4), "4 problems"],
 		["the events, as a group head counts them", [EventSheetDock.event_count_text(1),
 			EventSheetDock.event_count_text(4)], ["1 event", "4 events"]],
+	])
+
+
+## The sheet head's events count and the status bar's say the same number: both count every event, the
+## ones inside functions included, and both say "1 event" for one.
+static func _test_event_count_agrees() -> bool:
+	var source: String = "extends Node
+
+
+func _ready() -> void:
+	print(\"a\")
+
+
+func one() -> void:
+	print(\"b\")
+
+
+func two(x: int) -> void:
+	if x > 0:
+		print(\"c\")
+	else:
+		print(\"d\")
+"
+	var sheet: EventSheetResource = SUPPORT.reopen(source, true, "user://native_hover_marks_count.gd")
+	var all: int = EventSheetViewport.event_numbers_for(sheet.events, sheet.functions).size()
+	var inside: int = EventSheetViewport.event_numbers_for(sheet.events).size()
+	var editor: EventSheetEditor = EventSheetEditor.new()
+	editor.setup(sheet)
+	var head_said: String = ""
+	for entry: Variant in editor.get_viewport_control().get_flat_rows():
+		var row: EventRowData = (entry as Dictionary).get("row") as EventRowData
+		if row == null:
+			continue
+		for span: SemanticSpan in row.spans:
+			var card: Variant = (span.metadata as Dictionary).get("head_card", {})
+			if card is Dictionary and str((card as Dictionary).get("id", "")) == "events" and head_said.is_empty():
+				head_said = span.text
+	editor.free()
+	var one_event: EventSheetResource = SUPPORT.reopen("extends Node
+
+
+func _ready() -> void:
+	print(\"a\")
+", true, "user://native_hover_marks_one.gd")
+	var lone: EventSheetEditor = EventSheetEditor.new()
+	lone.setup(one_event)
+	var lone_said: String = ""
+	for entry: Variant in lone.get_viewport_control().get_flat_rows():
+		var row: EventRowData = (entry as Dictionary).get("row") as EventRowData
+		if row == null:
+			continue
+		for span: SemanticSpan in row.spans:
+			var card: Variant = (span.metadata as Dictionary).get("head_card", {})
+			if card is Dictionary and str((card as Dictionary).get("id", "")) == "events" and lone_said.is_empty():
+				lone_said = span.text
+	lone.free()
+	return SUPPORT.pins(TEST_NAME, [
+		["the events inside functions are events", all > inside, true],
+		["the head count and the status bar count say the same words", head_said, EventSheetDock.event_count_text(all)],
+		["one event is said in the singular", lone_said, "1 event"],
 	])
 
 

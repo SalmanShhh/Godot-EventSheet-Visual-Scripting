@@ -1604,7 +1604,7 @@ func _head_count_spans(sheet: EventSheetResource, meta: Dictionary) -> Array[Sem
 		cards.append({"text": EventSheetL10n.translate("1 variable") if shown.size() == 1 \
 			else EventSheetL10n.translate("%d variables") % shown.size(),
 			"card": _head_variables_card(variables)})
-	var events: int = _viewport.event_numbers_for(sheet.events).size()
+	var events: int = _viewport.event_numbers_for(sheet.events, sheet.functions).size()
 	if events > 0:
 		cards.append({"text": EventSheetL10n.translate("1 event") if events == 1 \
 			else EventSheetL10n.translate("%d events") % events,
@@ -1726,7 +1726,7 @@ func _head_name_card(sheet: EventSheetResource, facts: Dictionary, hovered_facts
 	if not identity.is_empty():
 		notes.append(identity)
 	var counted: PackedStringArray = PackedStringArray()
-	var events: int = _viewport.event_numbers_for(sheet.events).size()
+	var events: int = _viewport.event_numbers_for(sheet.events, sheet.functions).size()
 	counted.append(EventSheetL10n.translate("1 event") if events == 1 else EventSheetL10n.translate("%d events") % events)
 	var functions: int = 0
 	for entry: Variant in sheet.functions:
