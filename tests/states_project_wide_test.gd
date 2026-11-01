@@ -180,8 +180,9 @@ static func run() -> bool:
 	return SUPPORT.pins(P, rows)
 
 
-## A hand-written file opened as a sheet: the declarations a rename adds (the setter's helpers) go under
-## `extends` and the class description, never above them, so the saved file still parses.
+## A hand-written file opened as a sheet: a rename changes exactly the names it renames and nothing else
+## - no setter, no signal, no helper variables added to a file that had none. (The helpers are written
+## only when the States window DECLARES a machine the sheet does not have yet.)
 static func _opened_file_rows() -> Array:
 	var source: String = "class_name StatesPwMover\nextends Node\n\n## Moves about.\n\nenum State { IDLE, RUN }\n\nvar state: State = State.IDLE\n\n\nfunc _process(_delta: float) -> void:\n\tif state == State.RUN:\n\t\tprint(\"running\")\n"
 	var sheet: EventSheetResource = SUPPORT.reopen(source, true, "user://states_project_wide/mover.gd")
@@ -192,12 +193,27 @@ static func _opened_file_rows() -> Array:
 	var emitted: String = SUPPORT.compile_output(sheet)
 	var parsed: GDScript = GDScript.new()
 	parsed.source_code = emitted
+	var bare: EventSheetResource = SUPPORT.reopen("extends Node
+
+
+func _process(_delta: float) -> void:
+	pass
+", true, "user://states_project_wide/bare.gd")
+	var declared_ok: bool = EventSheetStatesDialog.apply_model(bare, EventSheetStatesDialog.model_of(bare))
+	var declared: String = SUPPORT.compile_output(bare)
 	return [
+		["declaring states on a file with none still writes the helpers",
+			[declared_ok, declared.contains("signal state_changed"), declared.contains("var previous_state"), declared.contains("var state_entered_msec")],
+			[true, true, true, true]],
 		["the rename applies to the opened file", applied, true],
 		["the file still opens with its class name, extends and description",
 			emitted.begins_with("class_name StatesPwMover\nextends Node\n\n## Moves about.\n"), true],
 		["the renamed file parses", parsed.reload(), OK],
 		["...and says the new name", emitted.contains("State.SPRINT"), true],
+		["a hand-written file without a setter gets exactly the rename and nothing else", emitted, source.replace("RUN", "SPRINT")],
+		["...so no setter and no helper variable was added",
+			[emitted.contains("set(value)"), emitted.contains("previous_state"), emitted.contains("state_entered_msec"), emitted.contains("state_changed")],
+			[false, false, false, false]],
 	]
 
 

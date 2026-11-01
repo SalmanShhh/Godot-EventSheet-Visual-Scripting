@@ -610,13 +610,20 @@ static func apply_model(sheet: EventSheetResource, model: Dictionary, found: Dic
 		for member: String in declared.members:
 			var suffix: String = member.substr(member.find("=")) if member.contains("=") else ""
 			written[EnumRow.bare_name(member)] = suffix
-	var own_machine: bool = not found.is_empty() and str(found.get("variable_name", "")) != EventSheetStateFacts.STATE_VARIABLE
-	if own_machine:
-		# A machine of its own has only its enum and its variable: no setter, no helpers to keep true.
-		(found["variable"] as LocalVariable).default_value = "%s.%s" % [found["enum_name"], opening]
-	elif not write(sheet, names, opening):
-		return false
-	var enum_row: EnumRow = EventSheetStateFacts.enum_row(sheet) if not own_machine else found["enum"] as EnumRow
+	# A machine that is already on the sheet - written by hand or declared earlier - gets exactly the
+	# names it renames or removes and the default it moves. The setter and the three helpers are written
+	# only when the machine is being DECLARED (the sheet has none yet): a rename must never add a
+	# setter, a signal or a variable to a file that did not ask for them.
+	var live: Dictionary = found if not found.is_empty() else EventSheetStateFacts.machine(sheet)
+	if live.is_empty():
+		if not write(sheet, names, opening):
+			return false
+		live = EventSheetStateFacts.machine(sheet)
+	elif EventSheetStateFacts.default_member(sheet, live) != opening:
+		var state_var: LocalVariable = live["variable"] as LocalVariable
+		state_var.default_value = "%s.%s" % [live["enum_name"], opening]
+		state_var.no_default = false
+	var enum_row: EnumRow = live["enum"] as EnumRow
 	var members: PackedStringArray = PackedStringArray()
 	var notes: Dictionary = {}
 	for index: int in states.size():
