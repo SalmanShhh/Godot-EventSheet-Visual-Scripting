@@ -327,8 +327,7 @@ func open_add_door_menu(row_data: EventRowData, owner_resource: Resource, screen
 		_door_menu.add_item(EventSheetL10n.translate(str(entry[0])), index)
 		_door_actions[index] = entry[1]
 	_door_menu.reset_size()
-	_door_menu.position = Vector2i(screen_position)
-	_door_menu.popup()
+	EventSheetWindowPlacement.popup_at(_door_menu, Vector2i(screen_position))
 
 
 func _on_door_menu_pressed(index: int) -> void:
