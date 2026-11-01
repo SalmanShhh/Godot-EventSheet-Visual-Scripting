@@ -9956,8 +9956,10 @@ static func _layers_assignment(object_name: String, member: String, assigned: St
 	var value: String = assigned.strip_edges()
 	match member:
 		"z_index":
-			var reading: Dictionary = _patterned(_sentence(object_name, "Set Z order to {value}",
-				{"value": [expression_text(value, context), "value"]}), "layers")
+			# The property reads as written, the way every other property write does: `z_index`, not a
+			# respelling of it.
+			var reading: Dictionary = _patterned(_sentence(object_name, "Set {name} to {value}",
+				{"name": [member, "name"], "value": [expression_text(value, context), "value"]}), "layers")
 			_append_note(reading, _z_order_note(object_name, context))
 			return reading
 		"z_as_relative":

@@ -64,7 +64,7 @@ func aim() -> void:
 ## The statements whose sentence this parcel settles, as "object ▸ sentence".
 static var STATEMENT_READINGS: Dictionary = {
 	# Where an object sits in the drawing order
-	"z_index = 5": "Player ▸ Set Z order to 5 (absolute)",
+	"z_index = 5": "Player ▸ Set z_index to 5 (absolute)",
 	"z_as_relative = false": "Player ▸ Set Z order absolute",
 	"move_to_front()": "Player ▸ Move to top of layer",
 	"move_to_back()": "Player ▸ Move to bottom of layer",
@@ -109,7 +109,6 @@ static var CONDITION_READINGS: Dictionary = {
 ## Readings the file must NOT contain: the words each new shape replaced. A reading that silently
 ## stops firing would otherwise pass the list above by never being asked about.
 static var FORBIDDEN_READINGS: PackedStringArray = PackedStringArray([
-	"Player ▸ Set z_index to 5",
 	"hud_layer ▸ Set layer to 10",
 	"OS ▸ Shell open \"https://example.com\""
 ])
@@ -122,7 +121,7 @@ static var FORBIDDEN_READINGS: PackedStringArray = PackedStringArray([
 ## from the picker are one row and one file. The grammar's own sentences for the same shapes are
 ## pinned value by value in the gate above, which is where a shape nothing lifts would land.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
-	"System ▸ set Z order to 5",
+	"eventforge_around_objects_reading ▸ Set z_index to 5",
 	"System ▸ set Z order absolute",
 	"System ▸ move to top of layer",
 	"FX ▸ Add child eventforge_around_objects_reading keeping its place",

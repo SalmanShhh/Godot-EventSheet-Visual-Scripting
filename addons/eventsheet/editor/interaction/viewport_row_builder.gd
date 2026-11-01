@@ -4444,6 +4444,7 @@ func _function_head_spans(event_function: EventFunction, role: String) -> Array[
 			"line_index": line,
 			"chip": true,
 			"object_label": param.id,
+			"typed_name": "parameter",
 			"object_glyph": NativeRowMarks.OBJECT_GLYPH_PARAMETER,
 			"object_icon": _glyph_icon_slot(),
 			"text_color": _viewport._get_event_style().object_label_color,
@@ -15161,6 +15162,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				var action_words: String = _format_action_descriptor(action_resource as ACEAction)
 				if _names_compiler_helpers():
 					action_words = _spawn_copy_text(action_resource as ACEAction, action_words)
+				var action_object: String = _object_label_or_pending((action_resource as ACEAction).provider_id,
+					(action_resource as ACEAction).ace_id, _row_params(action_resource))
 				spans.append(
 					_make_span(
 						action_words,
@@ -15172,9 +15175,12 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 							"ace_enabled": (action_resource as ACEAction).enabled,
 							"chip": true,
 							"line_index": action_line_index,
-							"object_label": _object_label_or_pending((action_resource as ACEAction).provider_id, (action_resource as ACEAction).ace_id,
-								_row_params(action_resource)),
+							"object_label": action_object,
 							"object_icon": _object_icon_for((action_resource as ACEAction).provider_id, (action_resource as ACEAction).ace_id),
+							# The line is a write to the behaviour's own variable and reads under its name: the
+							# look that nests by lines draws every such line with the one node icon.
+							"behaviour_write": not action_object.is_empty() \
+								and action_object == _behaviour_write_object((action_resource as ACEAction).ace_id, _row_params(action_resource)),
 							"swatch_color": _first_color_in_params(action_resource),
 							"compiled_lines": compiled_line_count(action_resource as ACEAction)
 						}.merged(action_style_meta, true)
@@ -17618,6 +17624,11 @@ func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, f
 			span_width += font.get_string_size(
 				str((segment as Dictionary).get("text", "")), HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size
 			).x
+	# A parameter or a local of the look that nests by lines is a line of its own making: its mark, its
+	# type and its bold name, with no object column.
+	if _viewport._get_event_style().sub_event_strips and EventRowRenderer.is_typed_name_span(metadata):
+		return float(EventRowRenderer.typed_name_geometry(font, draw_font_size,
+			str(metadata.get("typed_name", "")), display_text, str(metadata.get("object_label", "")))["width"])
 	var object_label: String = str(metadata.get("object_label", ""))
 	if not object_label.is_empty():
 		# Fixed object column (event-sheet sub-lane): the label occupies exactly the column width;
@@ -17867,8 +17878,58 @@ func _object_label_for(provider_id: String, ace_id: String, params: Dictionary =
 			return EDITOR_OBJECT
 		if WINDOW_ACE_IDS.has(ace_id):
 			return WINDOW_OBJECT
+		# A write to one of the behaviour's own variables is about the behaviour: "Big Numbers | Set
+		# magnitude to ...". The tests beside it keep reading with System.
+		# (An opened pack's own rows already read under its picker name further on, so only a sheet with a
+		# category of its own of the file's making is answered here.)
+		var behaviour_object: String = _behaviour_write_object(ace_id, params, false)
+		if not behaviour_object.is_empty():
+			return behaviour_object
 		return "System"
 	return provider_id
+
+
+## The behaviour's name when this row writes one of its own variables, else "". See OWN_VARIABLE_WRITE_ACE_IDS.
+func _behaviour_write_object(ace_id: String, params: Dictionary, with_pack_name: bool = true) -> String:
+	if not OWN_VARIABLE_WRITE_ACE_IDS.has(ace_id):
+		return ""
+	if not with_pack_name and not pack_object_name().is_empty():
+		return ""
+	var written: String = str(params.get("var_name", params.get("name", ""))).strip_edges()
+	if written.is_empty() or not written.is_valid_identifier():
+		return ""
+	return _behaviour_display_name()
+
+
+## True when a statement is a write to a bare variable of the sheet - `magnitude = x`, `tier += 1` - and
+## not to a member of another object, a declaration or a comparison.
+static func writes_own_variable(code: String) -> bool:
+	if _own_write_pattern == null:
+		_own_write_pattern = RegEx.new()
+		_own_write_pattern.compile("^\\s*[A-Za-z_][A-Za-z0-9_]*\\s*(=|\\+=|-=|\\*=|/=|%=)(?!=)")
+	return _own_write_pattern.search(code) != null
+
+
+static var _own_write_pattern: RegEx = null
+
+
+## The verbs that write a variable. Written against the sheet's own variable, they read with the
+## behaviour's name as their object (see _object_label_for).
+const OWN_VARIABLE_WRITE_ACE_IDS: PackedStringArray = [
+	"SetVar", "AddVar", "SubtractVar", "MultiplyVar", "DivideVar", "ModuloVar", "SetBool", "ToggleVar",
+	"SetLocalVarTyped"
+]
+
+
+## The name a behaviour or pack is known by - the word its picker page carries ("Big Numbers"): the
+## opened pack's picker name when the sheet is a pack being read, else the category the file's own
+## header declares. "" for every sheet that is neither, which leaves its rows reading as they did.
+func _behaviour_display_name() -> String:
+	var pack_name: String = pack_object_name()
+	if not pack_name.is_empty():
+		return pack_name
+	var sheet: EventSheetResource = _viewport._sheet if _viewport != null else null
+	return sheet.addon_category.strip_edges() if sheet != null else ""
 
 
 ## The word the script's own object reads under in the object column: an opened behaviour pack's
@@ -18401,6 +18462,13 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 			_note_pattern(claimed_pattern, ActionCodegen.generate_action(read_action))
 		grammar = _attributed_grammar(grammar, global_owner)
 		_pending_object_label = str(grammar.get("object", ""))
+		# A write to the behaviour's own variable reads under the behaviour, where the sentence layer
+		# left it with System.
+		if _pending_object_label == EventSheetSentence.OBJECT_SYSTEM \
+				and (action.provider_id.is_empty() or action.provider_id == "Core"):
+			var behaviour_object: String = _behaviour_write_object(action.ace_id, params_dict)
+			if not behaviour_object.is_empty():
+				_pending_object_label = behaviour_object
 		_pending_grammar_segments = grammar.get("segments", []) as Array
 		return _joined_segments(grammar)
 	_pending_object_label = global_owner
@@ -19048,6 +19116,12 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	if not sentence.is_empty():
 		indent = int(sentence.get("indent", 0))
 		object_label = str(sentence.get("object", ""))
+		# A write to the behaviour's own variable is about the behaviour, as its picked rows are (see
+		# _object_label_for): "Big Numbers | Set magnitude to ...".
+		if object_label == EventSheetSentence.OBJECT_SYSTEM and pack_object_name().is_empty() and writes_own_variable(raw.code):
+			var behaviour: String = _behaviour_display_name()
+			if not behaviour.is_empty():
+				object_label = behaviour
 		# ── lens hook ──────────────────────────────────────────────────────────────────────────
 		# A Check row that has been RUN says so, in front of what it checks: ✓ when the last headless
 		# run passed it, ✗ when it did not. A check that has never been run says nothing, which is the
@@ -19601,6 +19675,7 @@ func append_local_declaration_spans(spans: Array, declaration: Dictionary, base_
 	name_meta["natural_width"] = true
 	name_meta["object_label"] = str(declaration.get("name", ""))
 	name_meta["object_glyph"] = NativeRowMarks.OBJECT_GLYPH_LOCAL
+	name_meta["typed_name"] = "local"
 	name_meta["object_icon"] = _glyph_icon_slot()
 	name_meta["local_name"] = str(declaration.get("name", ""))
 	name_meta["text_color"] = _viewport._get_event_style().object_label_color
@@ -19687,7 +19762,8 @@ const GRAMMAR_READ_ACE_IDS: PackedStringArray = [
 	"SetFog", "SetFogDensity", "SetFogColour", "SetGlow", "SetGlowStrength",
 	"SetAmbientOcclusion", "SetSkyRotation",
 	"SetFaceTheCamera", "SetFaceTheCameraUpright", "SetShowThroughWalls", "SetWorldSize",
-	"SetBarWidth", "SendInputToSurface", "SetSurfaceRedraw"
+	"SetBarWidth", "SendInputToSurface", "SetSurfaceRedraw",
+	"SetZOrder"
 ]
 
 
@@ -19763,6 +19839,11 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 		if not compiled.is_empty() and not compiled.contains("\n"):
 			var read_as_typed: Dictionary = EventSheetSentence.statement(compiled.strip_edges(), context)
 			if not read_as_typed.is_empty():
+				# A picked Z order row was never evidence of the layers pattern, and still is not: only
+				# its words come from the grammar.
+				if action.ace_id == "SetZOrder":
+					read_as_typed = read_as_typed.duplicate()
+					read_as_typed.erase("pattern")
 				return read_as_typed
 	match action.ace_id:
 		"SetVar":
