@@ -118,21 +118,36 @@ func rebuild() -> void:
 			previous_attached = false
 
 
-## Re-measures every EVENT row whose hovered-or-selected state differs from the state it was measured
-## in, and moves the rows below by what it gained or lost. A theme that shows the add lines on hover
-## (add_lines_on_hover) gives an event its add lines only while it is hovered or selected, so moving
-## the pointer from one event to the next grows one and shrinks the other; nothing else is measured
-## again. Returns true when any height changed.
-func remeasure_open_rows() -> bool:
-	var shift: float = 0.0
-	var changed: bool = false
-	for index: int in range(_row_metrics.size()):
-		var metric: Dictionary = _row_metrics[index]
-		if shift != 0.0:
-			metric["top"] = float(metric.get("top", 0.0)) + shift
+## Re-measures the EVENT rows whose hovered-or-selected state differs from the state they were
+## measured in, and moves the rows below by what they gained or lost. A theme that shows the add lines
+## on hover (add_lines_on_hover) gives an event its add lines only while it is hovered or selected, so
+## moving the pointer from one event to the next grows one and shrinks the other; nothing else is
+## measured again.
+##
+## `candidates` are the row indices that may have changed (the row the pointer left and the one it
+## reached); null looks at every row, for a change of selection that is not known row by row. Rows
+## below a change shift only while the gains and losses above them do not cancel out: moving between
+## two neighbouring events they cancel straight away, so only those two rows and the ones between are
+## touched and the walk stops there.
+##
+## Answers the first and last row index whose top or height changed, or Vector2i(-1, -1) when none did
+## - the span a caller must lay out again; every row outside it keeps its place and its layout.
+func remeasure_open_rows(candidates: Variant = null) -> Vector2i:
+	var indices: Array = []
+	if candidates == null:
+		indices = range(_row_metrics.size())
+	else:
+		for candidate: Variant in candidates:
+			if int(candidate) >= 0 and int(candidate) < _row_metrics.size() and not indices.has(int(candidate)):
+				indices.append(int(candidate))
+		indices.sort()
+	# 1. Which rows changed height, and by how much.
+	var changes: Array = []
+	for index: int in indices:
 		var row_data: EventRowData = _viewport._row_at(index)
 		if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
 			continue
+		var metric: Dictionary = _row_metrics[index]
 		var open: bool = row_data.hovered or row_data.selected
 		if open == bool(metric.get("open", false)):
 			continue
@@ -141,13 +156,32 @@ func remeasure_open_rows() -> bool:
 		var height: float = _resolve_row_height(row_data)
 		var old_height: float = float(metric.get("height", height))
 		if not is_equal_approx(height, old_height):
-			shift += height - old_height
 			metric["height"] = height
-			changed = true
-	# The tops moved, so everything worked out from them (the margin brackets) is out of date.
-	if changed:
-		_generation += 1
-	return changed
+			changes.append([index, height - old_height])
+	if changes.is_empty():
+		return Vector2i(-1, -1)
+	# 2. Move the rows below each change by what the changes above them added, and stop once the gains
+	# and losses cancel out - nothing after that point moved.
+	var first: int = int(changes[0][0])
+	var last: int = first
+	var shift: float = 0.0
+	var next_change: int = 0
+	var index: int = first
+	while index < _row_metrics.size():
+		if shift != 0.0:
+			_row_metrics[index]["top"] = float(_row_metrics[index].get("top", 0.0)) + shift
+		last = index
+		if next_change < changes.size() and int(changes[next_change][0]) == index:
+			shift += float(changes[next_change][1])
+			next_change += 1
+			if is_zero_approx(shift):
+				shift = 0.0
+		index += 1
+		if shift == 0.0 and next_change >= changes.size():
+			break
+	# Tops moved, so everything that remembers where a row stands (the brackets) must ask again.
+	_generation += 1
+	return Vector2i(first, last)
 
 
 ## Measures again every row from `from_index` to `to_index` that was measured before its words were

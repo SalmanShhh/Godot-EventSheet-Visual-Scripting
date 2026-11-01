@@ -608,7 +608,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 		"match_span_indices": _viewport._hover_match_spans.get(index, PackedInt32Array()),
 		"drag_mode": _viewport._drag_target_mode if _viewport._drag_target_index == index else ""
 	}
-	_viewport._layout_cache.store(key, layout)
+	_viewport._layout_cache.store(key, layout, index)
 	return layout
 
 

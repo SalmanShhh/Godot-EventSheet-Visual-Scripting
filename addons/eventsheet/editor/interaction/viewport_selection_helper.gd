@@ -66,6 +66,20 @@ static func sync_row_selection_flags(flat_rows: Array, selected_row_uids: Dictio
 		row_data.selected = selected_row_uids.has(row_data.statement_uid())
 
 
+## The pointer moved from row `previous` to row `current`: only those two rows change their hovered
+## flag, so only those two are touched (apply_hover_state below walks every row, and stays for a
+## caller that does not know where the flag was last set).
+static func move_hover_state(flat_rows: Array, previous: int, current: int) -> void:
+	if previous >= 0 and previous < flat_rows.size():
+		var left: EventRowData = flat_rows[previous].get("row")
+		if left != null:
+			left.hovered = false
+	if current >= 0 and current < flat_rows.size():
+		var reached: EventRowData = flat_rows[current].get("row")
+		if reached != null:
+			reached.hovered = true
+
+
 static func apply_hover_state(flat_rows: Array, hovered_row_index: int) -> void:
 	for index in range(flat_rows.size()):
 		var row_data: EventRowData = flat_rows[index].get("row")

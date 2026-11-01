@@ -83,7 +83,7 @@ static func run() -> bool:
 	(metrics[hover_row] as Dictionary)["open"] = not bool((metrics[hover_row] as Dictionary).get("open", false))
 	(metrics[hover_row] as Dictionary)["height"] = 1.0
 	generation = viewport._row_metrics_helper.generation()
-	var moved: bool = viewport._row_metrics_helper.remeasure_open_rows()
+	var moved: bool = viewport._row_metrics_helper.remeasure_open_rows().x >= 0
 	passed = SUPPORT.check(P, "a hover re-measure that moves the tops moves the generation",
 		[moved, viewport._row_metrics_helper.generation() > generation], [true, true]) and passed
 

@@ -714,6 +714,7 @@ func adopt_view_state(sheet: EventSheetResource, state: Dictionary) -> bool:
 	_hover_match_spans = {}
 	_hover_match_key = Vector3i(-1, -1, -1)
 	_hovered_row_index = -1
+	_selection_helper.apply_hover_state(_flat_rows, -1)
 	_hovered_span_index = -1
 	_hover_is_drag_zone = false
 	_update_canvas_min_size()
@@ -4738,12 +4739,15 @@ func _sync_row_selection_flags() -> void:
 ## A theme that shows the add lines on hover (add_lines_on_hover) gives an event its add lines only
 ## while it is hovered or selected: when either changes, the events it changed are measured again and
 ## the canvas laid out afresh. Any other theme reserves the lines always, and this does nothing.
-func _refresh_resting_add_lines() -> void:
+func _refresh_resting_add_lines(candidates: Variant = null) -> void:
 	var event_style: EventSheetEventStyle = _get_event_style()
 	if event_style == null or not event_style.add_lines_on_hover or _row_metrics_helper.is_empty():
 		return
-	if _row_metrics_helper.remeasure_open_rows():
-		_layout_cache.clear()
+	# Only the rows the change moved are laid out again; the rest keep their layouts (a pointer moving
+	# between two neighbouring events grows one and shrinks the other, and nothing else moves).
+	var moved: Vector2i = _row_metrics_helper.remeasure_open_rows(candidates)
+	if moved.x >= 0:
+		_layout_cache.erase_rows(moved.x, moved.y)
 		_update_canvas_min_size()
 		queue_redraw()
 
@@ -4758,11 +4762,12 @@ func _set_hover_state(row_index: int, span_index: int) -> void:
 	if key == _hover_match_key:
 		return
 	_hover_match_key = key
+	var previous_row_index: int = _hovered_row_index
 	_hovered_row_index = row_index
 	_hovered_span_index = span_index
 	_hover_match_spans = _compute_hover_matches(row_index, span_index)
-	_selection_helper.apply_hover_state(_flat_rows, _hovered_row_index)
-	_refresh_resting_add_lines()
+	_selection_helper.move_hover_state(_flat_rows, previous_row_index, _hovered_row_index)
+	_refresh_resting_add_lines([previous_row_index, row_index])
 	queue_redraw()
 
 
