@@ -283,7 +283,7 @@ const _TOKEN_DESCRIPTIONS := {
 	"class_name_color": "The class's own name on its head line.",
 	"class_note_color": "The plain description of what the class is for.",
 	"comment_border_color": "The edge round a full-width comment, so it reads as a note card. Clear = no edge.",
-	"gutter_icon_color": "The small icon in the number gutter that says how an event starts (on ready, every tick).",
+	"gutter_icon_color": "The fold arrow in the margin of the look that nests by lines, and the small icon that says how an event starts.",
 	"selected_gutter_fill_color": "The number gutter of a selected event, filled. Clear = the gutter as it is.",
 	"object_hairline_color": "The hairline between an object's name and the sentence after it.",
 	"link_color": "Words drawn as links on the sheet (Add condition, Add action).",

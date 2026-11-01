@@ -846,9 +846,18 @@ const NESTED_LANE_FLOOR := 150.0
 ## only then does its own divider, and so its actions, move right. Every other depth shares the one x.
 func row_lane_divider_x(width: float, indent: int) -> float:
 	var divider_x: float = get_lane_divider_x(width)
-	var lane_start: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH \
-		+ float(indent * indent_width()) + 18.0
-	return maxf(divider_x, lane_start + NESTED_LANE_FLOOR)
+	return maxf(divider_x, event_lane_origin_x(indent) + NESTED_LANE_FLOOR)
+
+
+## The x an event's lane (its condition cell) begins at for a nesting depth: past the margin and the
+## lines of its ancestors, one step in for every level - the board's 52 px for a top-level event, 70
+## for its sub-events - in a look that nests by lines, and the classic row-type advance elsewhere.
+func event_lane_origin_x(indent: int) -> float:
+	var event_style: EventSheetEventStyle = _get_event_style()
+	if event_style != null and event_style.sub_event_strips:
+		return EventRowRenderer.nested_block_left_for(maxi(indent, 0), event_style.sub_event_indent)
+	return EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH \
+		+ float(maxi(indent, 0) * indent_width()) + 18.0
 
 
 ## Logical (unzoomed) width of the sheet canvas.
@@ -1136,12 +1145,9 @@ func lane_width_for(lane: String, indent: int = 0) -> float:
 	# instead, a 420px canvas still handed the column a share of room the text never had: the lead-in
 	# alone consumes most of the 160px minimum lane before the column starts.
 	var lead_in: float = (
-		EventSheetPalette.ROW_HORIZONTAL_PADDING
-		+ EventSheetPalette.GUTTER_WIDTH
-		+ 18.0
+		event_lane_origin_x(indent)
 		+ float(event_style.condition_badge_column_width)
 		+ EventSheetPalette.SPAN_GAP
-		+ float(maxi(indent, 0) * indent_width())
 	)
 	return maxf(divider_x - lead_in, 1.0)
 
@@ -2956,6 +2962,10 @@ func group_bracket_strokes(width: float) -> Array:
 		if row_data.row_type == EventRowData.RowType.REGION:
 			strokes.append({"kind": "dash", "part": "dash",
 				"rect": Rect2(left, top, EventSheetGroupFacts.BRACKET_WIDTH, height), "color": ink})
+			continue
+		# A look that nests by lines marks a group's body with its slot's line, drawn by the rows inside
+		# it, not with a bracket at the canvas edge.
+		if _get_event_style().sub_event_strips:
 			continue
 		strokes.append({"kind": "fill", "part": "bar",
 			"rect": Rect2(left, top, EventSheetGroupFacts.BRACKET_WIDTH, height), "color": ink})
@@ -5218,7 +5228,7 @@ func nested_block_left(row_index: int) -> float:
 	var event_style: EventSheetEventStyle = _get_event_style()
 	if row_data == null or event_style == null or not event_style.sub_event_strips:
 		return 0.0
-	if row_data.row_type != EventRowData.RowType.EVENT or row_data.indent < 1:
+	if row_data.row_type != EventRowData.RowType.EVENT:
 		return 0.0
 	return EventRowRenderer.nested_block_left_for(row_data.indent, event_style.sub_event_indent)
 

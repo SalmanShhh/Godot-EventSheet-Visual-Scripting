@@ -25,6 +25,10 @@ const CODE_ECHO_MIN_ROW_WIDTH := 440.0
 ## description echoes an equally long line, and without a floor that echo would claim the whole row
 ## and leave the words it stands for nowhere to draw - so the echo is the half that gets clipped.
 const FLOW_RIGHT_ANCHOR_MIN_SHARE := 0.5
+## Where a group bar's fold triangle and the foot that closes its block begin inside their slot, and
+## the room the fold hit-test claims at the bar's head.
+const GROUP_TEXT_INSET := 10.0
+const GROUP_FOLD_SLOT := 18.0
 
 const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
 
@@ -117,7 +121,11 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	# row's top when the look's line is taller than the bar.
 	if row_data.fixed_height > 0.0:
 		scale_pad = (row_height - line_height) * 0.5
+	var strips_look: bool = event_style.sub_event_strips
 	var gutter_rect := Rect2(0.0, row_top, EventSheetPalette.GUTTER_WIDTH, row_height)
+	# A look that nests by lines gives an event's number a column of its own, straight on the canvas.
+	if strips_look and row_data.row_type == EventRowData.RowType.EVENT:
+		gutter_rect.size.x = EventRowRenderer.NATIVE_NUMBER_COLUMN
 	var x: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH + float(row_data.indent * _viewport.indent_width())
 	# Group headers can be taller than a text line (group_row_height): centre the fold arrow and,
 	# below, the title spans in the bar instead of pinning them to its top edge. Centre the WHOLE text
@@ -130,15 +138,26 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	)
 	var fold_rect: Rect2 = Rect2(x - 14.0, row_top + group_v_offset + 6.0, 12.0, 16.0) if not row_data.children.is_empty() else Rect2()
 	# The fold arrow sits beside its block's FIRST line in every look, strips included: in the margin
-	# left of the block, level with its first row. Where nesting is drawn as lines it stands on the line
-	# of its own level, just left of the block, so the line runs down from under it.
+	# left of the block, level with its first row. Where nesting is drawn as lines it fills the slot of
+	# its own level (the one just left of the block), on the first line, so the level's line runs down
+	# from under it.
 	if not fold_rect.size.is_zero_approx() and row_data.row_type == EventRowData.RowType.EVENT \
 			and event_style.sub_event_strips:
-		fold_rect.position.x = x - 8.0
+		var slot_step: float = float(_viewport.indent_width())
+		fold_rect = Rect2(EventRowRenderer.nested_block_left_for(row_data.indent, _viewport.indent_width()) - slot_step,
+			row_top, slot_step, minf(line_height, row_height))
 	# No row-type glyph: the old colored square here said nothing the row itself doesn't
 	# (tempo badges, chips and labels carry the type). The 18px advance stays so every
 	# row's geometry - and every cached span position - is untouched.
 	x += 18.0
+	if strips_look and row_data.row_type == EventRowData.RowType.EVENT:
+		x = _viewport.event_lane_origin_x(row_data.indent)
+	elif strips_look and (row_data.row_type == EventRowData.RowType.GROUP or _is_block_foot_row(row_data)):
+		# A group bar and the foot that closes its block start inside their own slot, 10 px in, as
+		# the board sets them; a group's fold triangle is its first span.
+		x = EventRowRenderer.nested_block_left_for(row_data.indent, _viewport.indent_width()) + GROUP_TEXT_INSET
+		if row_data.row_type == EventRowData.RowType.GROUP and not row_data.children.is_empty():
+			fold_rect = Rect2(x, row_top, GROUP_FOLD_SLOT, row_height)
 	var condition_lane_rect := Rect2()
 	var action_lane_rect := Rect2()
 	var lane_divider_rect := Rect2()
@@ -534,6 +553,15 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	}
 	_viewport._layout_cache.store(key, layout)
 	return layout
+
+
+## True for the foot a block closes with ("Add event to ..."): a section row whose first span is the add
+## event door.
+static func _is_block_foot_row(row_data: EventRowData) -> bool:
+	if row_data == null or row_data.spans.is_empty() or row_data.spans[0] == null:
+		return false
+	var first: SemanticSpan = row_data.spans[0]
+	return first.metadata is Dictionary and str((first.metadata as Dictionary).get("kind", "")) == "add_event"
 
 
 ## Whether a span on a comment row is one of the note's own LINES rather than the chrome beside them.

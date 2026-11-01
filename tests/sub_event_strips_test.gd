@@ -3,10 +3,10 @@ extends RefCounted
 # Godot EventSheets - sub-events lined up (the Editor Native nesting)
 #
 # Nesting is drawn as ONE 1 px line per level in the margin (each level steps the block right by one
-# 16 px step), no fill and no connector. The sheet keeps ONE condition/action divider for every
+# 18 px step), no fill and no connector. The sheet keeps ONE condition/action divider for every
 # depth; a nested event's condition lane is the divider minus its steps, never narrower than 150 px,
 # and only an event nested past that floor starts its own actions later. The pins hold:
-#   1. the token is off by default, on in the Editor Native starter and its rule, with a 16 px
+#   1. the token is off by default, on in the Editor Native starter and its rule, with a 18 px
 #      step and no rail;
 #   2. one divider x for every depth until the floor, then the row's own;
 #   3. the strips' ancestor kinds are stamped by the flatten (group vs event);
@@ -64,16 +64,16 @@ static func _test_nested_block_starts_past_the_margin() -> bool:
 			for level: int in range(row_data.indent):
 				drawn.append(EventRowRenderer.nesting_line_x(level, step))
 			lines.append(drawn)
-		var origin: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + float(EventSheetPalette.GUTTER_WIDTH)
+		var origin: float = EventRowRenderer.NATIVE_NUMBER_COLUMN if native else EventSheetPalette.ROW_HORIZONTAL_PADDING + float(EventSheetPalette.GUTTER_WIDTH)
 		var label: String = "Editor Native" if native else "Classic Sheet"
 		rows.append(["%s: three events are laid out, one per depth" % label, lefts.size(), 3])
 		if native:
 			rows.append(["Editor Native: a nested event's cell begins at its own block, one step right per level",
-				[lefts[1], lefts[2]], [origin + float(step), origin + 2.0 * float(step)]])
+				[lefts[1], lefts[2]], [origin + 2.0 * float(step), origin + 3.0 * float(step)]])
 			rows.append(["Editor Native: it draws one line per level, each left of the block its level opens",
 				[(lines[0] as Array).size(), (lines[1] as Array).size(), (lines[2] as Array).size()], [0, 1, 2]])
 			rows.append(["Editor Native: the lines of a row are the ancestors' lines, one step apart",
-				lines[2], [origin - 2.0, origin - 2.0 + float(step)]])
+				lines[2], [origin + 8.0, origin + 8.0 + float(step)]])
 		else:
 			rows.append(["Classic Sheet: a nested cell does not start at the margin block",
 				[lefts[1] != origin + float(step), lefts[2] != origin + 2.0 * float(step)], [true, true]])
@@ -90,14 +90,14 @@ static func _test_strip_fill_and_cut_names() -> bool:
 	var style := EventSheetEventStyle.new()
 	style.condition_lane_color = Color("#404040")
 	style.sheet_background_color = Color("#202020")
-	var step: int = 16
-	var origin: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + float(EventSheetPalette.GUTTER_WIDTH)
+	var step: int = 18
+	var origin: float = EventRowRenderer.NATIVE_NUMBER_COLUMN
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
-		["level 0 draws its line two px left of the first nested block's slot",
-			EventRowRenderer.nesting_line_x(0, step), origin - 2.0],
+		["level 0 draws its line 8 px into the slot the first nested block's parent opens",
+			EventRowRenderer.nesting_line_x(0, step), origin + 8.0],
 		["each level moves its line one step right", EventRowRenderer.nesting_line_x(2, step) - EventRowRenderer.nesting_line_x(1, step), float(step)],
 		["a nested block begins at its own slot, past every ancestor's line",
-			EventRowRenderer.nested_block_left_for(2, step), origin + 2.0 * float(step)],
+			EventRowRenderer.nested_block_left_for(2, step), origin + 3.0 * float(step)],
 		["the line of a level is left of the block that level's arrow opens",
 			EventRowRenderer.nesting_line_x(1, step) < EventRowRenderer.nested_block_left_for(1, step), true],
 		["the cell below the last condition is the lane drawn halfway to the sheet",
@@ -226,10 +226,10 @@ static func _test_token() -> bool:
 		EventSheetEditorThemeDeriver.NATIVE_DARK_REFERENCE_BASE).get_event_style()
 	return SUPPORT.pins(TEST_NAME, [
 		["strips are off by default", defaults.sub_event_strips, false],
-		["the starter draws strips at a 16 px step with no rail",
-			[starter.sub_event_strips, starter.sub_event_indent, starter.sub_event_rail_line], [true, 16, false]],
+		["the starter draws strips at an 18 px step with no rail",
+			[starter.sub_event_strips, starter.sub_event_indent, starter.sub_event_rail_line], [true, 18, false]],
 		["and so does the rule it is built by",
-			[rule.sub_event_strips, rule.sub_event_indent, rule.sub_event_rail_line], [true, 16, false]],
+			[rule.sub_event_strips, rule.sub_event_indent, rule.sub_event_rail_line], [true, 18, false]],
 	])
 
 

@@ -9840,3 +9840,5 @@ Right-click to replace it in %s.,오른쪽 클릭하여 %s에서 대체합니다
 "In %s, %d tests of %s will test %s instead.","%s에서 %d개의 %s 테스트가 대신 %s을(를) 확인합니다."
 "%s saves %s as a number: after the removal, a saved number can name a different state.","%s은(는) %s을(를) 숫자로 저장합니다. 제거 후에는 저장된 숫자가 다른 상태를 가리킬 수 있습니다."
 + Add to '%s'…,+ '%s'에 추가…
+"+ Add to ""%s""…","+ ""%s""에 추가…"
+"Add event to ""%s""","""%s""에 이벤트 추가"

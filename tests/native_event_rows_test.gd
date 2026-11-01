@@ -76,9 +76,9 @@ static func _test_tokens() -> bool:
 				(load(NATIVE_THEME) as EventSheetEditorStyle).get_condition_style().vertical_padding,
 				rule.get_condition_style().vertical_padding, rule.get_action_style().vertical_padding],
 			[16, 114, 140, 1, 1, 1]],
-		["the action lane is the card tinted green, never toward yellow",
+		["the action lane is the board's neutral grey, never tinted",
 			[starter.action_lane_color.to_html(false), rule.get_event_style().action_lane_color.to_html(false)],
-			["2f3a31", "2f3a31"]],
+			["363636", "363636"]],
 		["every other shipped theme states them off", [others >= 11, all_off], [true, true]],
 	])
 

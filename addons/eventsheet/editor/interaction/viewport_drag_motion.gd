@@ -422,9 +422,7 @@ func gap_rects() -> Array:
 func _row_gap_left(indent: int) -> float:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	if event_style != null and event_style.sub_event_strips:
-		if indent <= 0:
-			return EventSheetPalette.ROW_HORIZONTAL_PADDING + float(EventSheetPalette.GUTTER_WIDTH) + 18.0
-		return EventRowRenderer.nested_block_left_for(indent, int(_indent_width()))
+		return EventRowRenderer.nested_block_left_for(maxi(indent, 0), int(_indent_width()))
 	return float(EventSheetPalette.GUTTER_WIDTH) + float(indent) * _indent_width()
 
 

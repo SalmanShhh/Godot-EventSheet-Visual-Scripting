@@ -101,11 +101,11 @@ static func _test_derived_greys_for_a_dark_and_a_light_editor() -> bool:
 	rows.append(["dark reference: canvas, card, edge, divider, lanes", [dark.sheet_background_color.to_html(false),
 		dark.row_background_color.to_html(false), dark.row_border_color.to_html(false), dark.lane_divider_color.to_html(false),
 		dark.condition_lane_color.to_html(false), dark.action_lane_color.to_html(false)],
-		["282828", "383838", "232323", "1e1e1e", "2f3742", "2f3a31"]])
+		["262626", "303030", "262626", "2a2a2a", "3a3a3a", "363636"]])
 	rows.append(["dark reference: head bar, variable card and edge, group box and edge", [dark.head_bar_color.to_html(false),
 		dark.variable_card_fill_color.to_html(false), dark.variable_card_border_color.to_html(false),
 		dark.variable_group_fill_color.to_html(false), dark.variable_group_border_color.to_html(false)],
-		["3e3e3e", "424242", "2a2a2a", "333333", "555555"]])
+		["3c3c3c", "424242", "2a2a2a", "4a4a4a", "555555"]])
 	rows.append(["dark reference: text, gutter numbers, type word, comment note", [
 		dark_style.get_condition_style().text_color.to_html(false), dark.gutter_text_color.to_html(false),
 		dark.type_number_color.to_html(false), dark.comment_row_background_color.to_html(false)],
@@ -113,11 +113,11 @@ static func _test_derived_greys_for_a_dark_and_a_light_editor() -> bool:
 	rows.append(["light reference: canvas, card, edge, divider, lanes", [light.sheet_background_color.to_html(false),
 		light.row_background_color.to_html(false), light.row_border_color.to_html(false), light.lane_divider_color.to_html(false),
 		light.condition_lane_color.to_html(false), light.action_lane_color.to_html(false)],
-		["e4e4e4", "ffffff", "bdbdbd", "d6d6d6", "e9f0f8", "eaf4e6"]])
+		["e0e0e0", "ededed", "d4d4d4", "cfcfcf", "ffffff", "f7f7f7"]])
 	rows.append(["light reference: head bar, variable card and edge, group box and edge", [light.head_bar_color.to_html(false),
 		light.variable_card_fill_color.to_html(false), light.variable_card_border_color.to_html(false),
 		light.variable_group_fill_color.to_html(false), light.variable_group_border_color.to_html(false)],
-		["d3d3d3", "eef7e8", "b7cdaa", "efefef", "a9a9a9"]])
+		["cfcfcf", "eef7e8", "b7cdaa", "c9c9c9", "a9a9a9"]])
 	rows.append(["the comment band, dark and light: fill, words, an edge that is the fill", [
 		dark.comment_row_background_color.to_html(false), dark.comment_text_color.to_html(false),
 		dark.comment_border_color.to_html(false), light.comment_row_background_color.to_html(false),
@@ -127,7 +127,7 @@ static func _test_derived_greys_for_a_dark_and_a_light_editor() -> bool:
 		light_style.get_condition_style().text_color.to_html(false), light.gutter_text_color.to_html(false),
 		light.type_number_color.to_html(false), light.object_label_color.to_html(false), light.word_number_color.to_html(false),
 		light.word_text_color.to_html(false), light.link_color.to_html(false)],
-		["0f0f0f", "404040", "2a2a2a", "1d4369", "1f4a14", "633508", "1a3e80"]])
+		["0f0f0f", "404040", "2a2a2a", "124175", "1f4a14", "633508", "1a3e80"]])
 	rows.append(["both hands: the open tab's edge and the No problems green", [
 		dark_style.get_chrome_style().active_tab_edge_color.to_html(false), light_style.get_chrome_style().active_tab_edge_color.to_html(false),
 		dark_style.get_chrome_style().status_ok_color.to_html(false), light_style.get_chrome_style().status_ok_color.to_html(false)],
@@ -140,14 +140,14 @@ static func _test_derived_greys_for_a_dark_and_a_light_editor() -> bool:
 	var bright_light: EventSheetEditorStyle = EventSheetEditorThemeDeriver.native_style(Color("#f5f5f5"))
 	var nd: EventSheetEventStyle = neutral_dark.get_event_style()
 	var bl: EventSheetEventStyle = bright_light.get_event_style()
-	rows.append(["a #252525 editor: canvas", nd.sheet_background_color.to_html(false), "252525"])
-	rows.append(["a #252525 editor: card", nd.row_background_color.to_html(false), "353535"])
+	rows.append(["a #252525 editor: canvas", nd.sheet_background_color.to_html(false), "232323"])
+	rows.append(["a #252525 editor: card", nd.row_background_color.to_html(false), "2d2d2d"])
 	rows.append(["a #252525 editor: gutter numbers", nd.gutter_text_color.to_html(false), "898989"])
 	rows.append(["a #252525 editor: the type word keeps its colour", nd.type_number_color.to_html(false), "d0d0d0"])
 	rows.append(["a #252525 editor: the sentence text is the dark hand's",
 		neutral_dark.get_condition_style().text_color.to_html(false), "d2d2d2"])
-	rows.append(["a #f5f5f5 editor: canvas", bl.sheet_background_color.to_html(false), "efefef"])
-	rows.append(["a #f5f5f5 editor: card", bl.row_background_color.to_html(false), "ffffff"])
+	rows.append(["a #f5f5f5 editor: canvas", bl.sheet_background_color.to_html(false), "ebebeb"])
+	rows.append(["a #f5f5f5 editor: card", bl.row_background_color.to_html(false), "f8f8f8"])
 	rows.append(["a #f5f5f5 editor: gutter numbers", bl.gutter_text_color.to_html(false), "4a4a4a"])
 	rows.append(["a #f5f5f5 editor: the type word is the light hand's", bl.type_number_color.to_html(false), "2a2a2a"])
 	rows.append(["a #f5f5f5 editor: the sentence text is the light hand's",
@@ -175,19 +175,25 @@ static func _test_lanes_read_blue_and_green_on_any_editor() -> bool:
 		var cond: Color = lanes.condition_lane_color
 		var act: Color = lanes.action_lane_color
 		var text: Color = style.get_condition_style().text_color
-		rows.append(["a #%s editor: the condition lane leans blue, the action lane green" % base_html,
-			[(cond.b8 - card.b8) - (cond.r8 - card.r8) >= 8, (act.g8 - card.g8) - (act.b8 - card.b8) >= 8],
-			[true, true]])
+		# A grey editor gets grey lanes; a tinted editor's lanes carry ITS tint and nothing the lane adds:
+		# the step from the canvas to each lane is the same in every channel.
+		var canvas: Color = lanes.sheet_background_color
+		var grey_editor: bool = is_equal_approx(Color(base_html).r, Color(base_html).g) and is_equal_approx(Color(base_html).g, Color(base_html).b)
+		rows.append(["a #%s editor: the lanes add no blue or green of their own" % base_html,
+			[is_equal_approx(cond.r - canvas.r, cond.b - canvas.b) and is_equal_approx(cond.r - canvas.r, cond.g - canvas.g),
+				is_equal_approx(act.r - canvas.r, act.b - canvas.b) and is_equal_approx(act.r - canvas.r, act.g - canvas.g)], [true, true]])
+		if grey_editor:
+			rows.append(["a #%s editor: both lanes are neutral greys" % base_html,
+				[cond.r8 == cond.g8 and cond.g8 == cond.b8, act.r8 == act.g8 and act.g8 == act.b8], [true, true]])
 		rows.append(["a #%s editor: the text keeps 4.5:1 on both lanes" % base_html,
 			[EventSheetEditorThemeDeriver.contrast_ratio(text, cond) >= 4.5,
 				EventSheetEditorThemeDeriver.contrast_ratio(text, act) >= 4.5], [true, true]])
-		rows.append(["a #%s editor: a hovered cell keeps its lane's lean" % base_html,
-			[(style.get_condition_style().chip_hover_color.b8 - card.b8) - (style.get_condition_style().chip_hover_color.r8 - card.r8) >= 8,
-				(style.get_action_style().chip_hover_color.g8 - card.g8) - (style.get_action_style().chip_hover_color.b8 - card.b8) >= 4],
+		rows.append(["a #%s editor: a hovered cell is told from its lane" % base_html,
+			[style.get_condition_style().chip_hover_color != cond, style.get_action_style().chip_hover_color != act],
 			[true, true]])
 	rows.append(["a #252525 editor's lanes", [EventSheetEditorThemeDeriver.native_style(Color("#252525"))
 		.get_event_style().condition_lane_color.to_html(false), EventSheetEditorThemeDeriver.native_style(
-		Color("#252525")).get_event_style().action_lane_color.to_html(false)], ["2c343f", "2c372e"]])
+		Color("#252525")).get_event_style().action_lane_color.to_html(false)], ["373737", "333333"]])
 	return SUPPORT.pins(TEST_NAME, rows)
 
 
@@ -201,7 +207,7 @@ static func _test_following_keeps_what_a_designer_changed() -> bool:
 	var classic: EventSheetEditorStyle = load("res://addons/eventsheet/themes/classic_sheet_theme.tres") as EventSheetEditorStyle
 	return SUPPORT.pins(TEST_NAME, [
 		["an unchanged grey follows a light editor",
-			light.get_event_style().row_background_color.to_html(false), "ffffff"],
+			light.get_event_style().row_background_color.to_html(false), "ededed"],
 		["an unchanged colour takes its light partner",
 			light.get_event_style().word_text_color.to_html(false), "633508"],
 		["a changed colour stays the designer's",
@@ -209,7 +215,7 @@ static func _test_following_keeps_what_a_designer_changed() -> bool:
 		["a changed grey stays the designer's",
 			light.get_event_style().sheet_background_color.to_html(false), "101010"],
 		["the shared file is never edited",
-			starter.get_event_style().row_background_color.to_html(false), "383838"],
+			starter.get_event_style().row_background_color.to_html(false), "303030"],
 		["a theme that does not ask comes back as itself",
 			EventSheetEditorThemeDeriver.follow_editor(classic, Color("#f5f5f5")) == classic, true],
 		["outside the editor nothing follows", EventSheetEditorThemeDeriver.follow_running_editor(starter) == starter, true],
@@ -268,10 +274,10 @@ static func _test_a_sheet_with_no_theme_wears_editor_native() -> bool:
 	return SUPPORT.pins(TEST_NAME, [
 		["on the Default preset: the board's canvas, card and lanes", [dark.get_event_style().sheet_background_color.to_html(false),
 			dark.get_event_style().row_background_color.to_html(false), dark.get_event_style().condition_lane_color.to_html(false),
-			dark.get_event_style().action_lane_color.to_html(false)], ["282828", "383838", "2f3742", "2f3a31"]],
+			dark.get_event_style().action_lane_color.to_html(false)], ["262626", "303030", "3a3a3a", "363636"]],
 		["on the Light preset: the board's canvas, card and lanes", [light.get_event_style().sheet_background_color.to_html(false),
 			light.get_event_style().row_background_color.to_html(false), light.get_event_style().condition_lane_color.to_html(false),
-			light.get_event_style().action_lane_color.to_html(false)], ["e4e4e4", "ffffff", "e9f0f8", "eaf4e6"]],
+			light.get_event_style().action_lane_color.to_html(false)], ["e0e0e0", "ededed", "ffffff", "f7f7f7"]],
 		["it is the Editor Native look: Inspector rows, cards, the class head, the ordinary strip", [
 			dark.get_event_style().inspector_variable_rows, dark.get_event_style().variable_row_cards,
 			dark.get_event_style().inspector_class_head, dark.toolbar_text_labels, dark.tabs_above_toolbar,

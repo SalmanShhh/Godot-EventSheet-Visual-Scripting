@@ -63,7 +63,7 @@ static func _test_gap_edges() -> bool:
 	classic_view.free()
 	return SUPPORT.pins(TEST_NAME, [
 		["Editor Native: a row gap opens at the left edge of the blocks of its level",
-			native_edges, [48.0, 46.0, 62.0, 78.0]],
+			native_edges, [52.0, 70.0, 88.0, 106.0]],
 		["Classic Sheet keeps the gutter plus a step per level",
 			classic_edges, [20.0, 20.0 + step, 20.0 + 2.0 * step, 20.0 + 3.0 * step]],
 	])
@@ -108,5 +108,5 @@ static func _test_pair_gap() -> bool:
 	return SUPPORT.pins(TEST_NAME, [
 		["the pair's own event stands at the top level", lead_indent, 0],
 		["a drop over a branch opens its gap at that event's level and at the top of the next event",
-			result, [48.0, true]],
+			result, [52.0, true]],
 	])

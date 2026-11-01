@@ -1136,7 +1136,8 @@ func _build_add_event_footer_row(owner_resource: Resource, indent: int, label: S
 		var muted: Color = _viewport._get_reading_style().muted_text_color
 		row_data.spans.append(
 			_make_span(
-				EventSheetL10n.translate("+ Add to '%s'…") % group_name,
+				EventSheetL10n.translate("+ Add to \"%s\"…") % group_name,
+				# (the quotes follow the board: double, where the classic look's door says 'name')
 				SemanticSpan.SpanType.COMMENT,
 				{
 					"kind": "add_block_menu",
@@ -8671,7 +8672,8 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 	if _viewport.add_event_footer_wanted(not group_children.is_empty(), true) and not _scaffolding_suppressed():
 		row_data.children.append(
 			_build_add_event_footer_row(group, indent + 1,
-				EventSheetL10n.translate("+ Add event to '%s'…") % EventSheetGroupFacts.display_name(group),
+				(EventSheetL10n.translate("Add event to \"%s\"") if EventRowRenderer.add_menu_link_wanted(event_style)
+					else EventSheetL10n.translate("+ Add event to '%s'…")) % EventSheetGroupFacts.display_name(group),
 				EventSheetGroupFacts.display_name(group))
 		)
 	return row_data
@@ -8697,6 +8699,8 @@ func _group_folder_span(reading_style: EventSheetReadingStyle) -> SemanticSpan:
 		"badge_natural_width": true,
 		"badge_fixed_width": KIND_BADGE_WIDTH,
 		"line_index": 0,
+		# The slot the look that nests by lines draws the group's fold triangle in.
+		"group_fold_mark": true,
 		"badge_bg": reading_style.plain_chip_background_color,
 		"badge_fg": reading_style.primary_text_color
 	}
@@ -17312,12 +17316,12 @@ func _slice_event_spans(spans: Array[SemanticSpan], event_row: EventRow, slice_f
 ## choke point and selection paths before any span data is read. Idempotent: built
 ## spans are never empty (a "+ Add" span is always present), so is_empty() reliably
 ## means "not yet built".
-## `spans` without the "+ Add action" and "+ Add condition" doors.
+## `spans` without the "+ Add action", "+ Add condition" and "+ Add..." doors: an inert body offers none.
 static func _without_add_doors(spans: Array[SemanticSpan]) -> Array[SemanticSpan]:
 	var kept: Array[SemanticSpan] = []
 	for span: SemanticSpan in spans:
 		if span != null and span.metadata is Dictionary \
-				and str((span.metadata as Dictionary).get("kind", "")) in ["add_action", "add_condition"]:
+				and str((span.metadata as Dictionary).get("kind", "")) in ["add_action", "add_condition", "add_menu"]:
 			continue
 		kept.append(span)
 	return kept

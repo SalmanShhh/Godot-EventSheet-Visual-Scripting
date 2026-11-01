@@ -3,7 +3,7 @@ extends RefCounted
 # Godot EventSheets - the "+ Add..." doors and the note over an event's actions (Editor Native)
 #
 # The look that closes every event with its add line puts "+ Add..." at the far right of that line,
-# and closes every group with its foot: "+ Add event to 'name'..." at the left and "+ Add to 'name'..."
+# and closes every group with its foot: Add event to "name" at the left and "+ Add to "name"..."
 # at the right. A note written about an event's actions heads its action lane. Every other look keeps
 # the lane as it was. The pins hold:
 #   1. the doors exist only in the look that nests by lines, on the add line, at the right;
@@ -132,7 +132,7 @@ static func _test_group_foot() -> bool:
 	classic_view.free()
 	return SUPPORT.pins(TEST_NAME, [
 		["every group of Editor Native ends with both doors, the one holding events and the empty one",
-			texts, ["+ Add event to 'Setup'… | + Add to 'Setup'…", "+ Add event to 'Later'… | + Add to 'Later'…"]],
+			texts, ["Add event to \"Setup\" | + Add to \"Setup\"…", "Add event to \"Later\" | + Add to \"Later\"…"]],
 		["another look draws its feet as it always did, with no second door", [classic_doors], [0]],
 	])
 

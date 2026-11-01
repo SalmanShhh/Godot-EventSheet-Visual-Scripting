@@ -80,6 +80,17 @@ func rebuild() -> void:
 			)
 		):
 			top += _viewport.event_block_gap() * EventSheetPalette.row_density()
+		elif (
+			index > 0
+			and row_data != null
+			and row_data.row_type == EventRowData.RowType.EVENT
+			and not previous_attached
+			and _viewport.get_event_style() != null
+			and _viewport.get_event_style().sub_event_strips
+		):
+			# A look that nests by lines packs a sub-event the same 1 px below its parent as it packs
+			# two siblings: every block stands off the one above by exactly the block gap.
+			top += _viewport.event_block_gap() * EventSheetPalette.row_density()
 		var height: float = _resolve_row_height(row_data)
 		# "open": whether the row was measured hovered or selected - the state a theme that shows the add
 		# lines on hover measures an event in (remeasure_open_rows reads it back).
@@ -199,7 +210,7 @@ func _resolve_row_height_natural(row_data: EventRowData) -> float:
 ## shared greedy break points (wrap_break_points), which the layout stamps for the renderer.
 func event_line_extents(row_data: EventRowData, width: float, font: Font, font_size: int) -> Dictionary:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
-	var x: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH + float(row_data.indent * _viewport.indent_width()) + 18.0
+	var x: float = _viewport.event_lane_origin_x(row_data.indent)
 	var lane_divider_x: float = _viewport.row_lane_divider_x(width, row_data.indent)
 	var condition_lane_rect := Rect2(x, 0.0, maxf(lane_divider_x - x, 1.0), 1.0)
 	var action_lane_rect := Rect2(lane_divider_x + float(event_style.lane_divider_width), 0.0, maxf(width - lane_divider_x - float(event_style.lane_divider_width), 1.0), 1.0)
@@ -657,8 +668,7 @@ func natural_content_width() -> float:
 ## advances every cell by its MEASURED width instead of the lane share a fill cell would claim.
 func _natural_lane_extents(row_data: EventRowData, width: float, font: Font, font_size: int) -> Dictionary:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
-	var x: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH \
-		+ float(row_data.indent * _viewport.indent_width()) + 18.0
+	var x: float = _viewport.event_lane_origin_x(row_data.indent)
 	var lane_divider_x: float = _viewport.row_lane_divider_x(width, row_data.indent)
 	var condition_lane_rect := Rect2(x, 0.0, maxf(lane_divider_x - x, 1.0), 1.0)
 	var condition_x: float = _viewport._get_condition_track_start(row_data, x, condition_lane_rect)

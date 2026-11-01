@@ -9840,3 +9840,5 @@ Right-click to replace it in %s.,Clic destro per sostituirla in %s.
 "In %s, %d tests of %s will test %s instead.","In %s, %d verifiche di %s verificheranno invece %s."
 "%s saves %s as a number: after the removal, a saved number can name a different state.","%s salva %s come numero: dopo la rimozione, un numero salvato può indicare uno stato diverso."
 + Add to '%s'…,+ Aggiungi a '%s'…
+"+ Add to ""%s""…","+ Aggiungi a ""%s""…"
+"Add event to ""%s""","Aggiungi evento a ""%s"""

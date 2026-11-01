@@ -73,7 +73,8 @@ static func _test_fold_at_head() -> bool:
 		var fold: Rect2 = layout.get("fold_rect", Rect2())
 		var top: float = view._row_metrics_helper.row_top(0)
 		var height: float = view._row_metrics_helper.row_height(0)
-		results.append([fold.size != Vector2.ZERO, is_equal_approx(fold.position.y, top + 6.0), height > 40.0])
+		results.append([fold.size != Vector2.ZERO, # Strips: the fold slot is the first line itself, so the arrow centred in it is level with that line.
+		is_equal_approx(fold.position.y, top + (0.0 if theme_path == NATIVE_THEME else 6.0)), height > 40.0])
 		view.free()
 	return SUPPORT.pins(TEST_NAME, [
 		["with strips, a tall event's fold arrow sits level with its first line, not at its foot", results[0], [true, true, true]],

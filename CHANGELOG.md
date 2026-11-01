@@ -6,6 +6,13 @@
 
 - A dialog or window whose content is taller or wider than the editor window or screen it opens in is no longer scaled down (the Welcome dialog in a small editor drew its words at a few pixels). It is clamped to the room, its body sits in a scroll with a scroll bar, and its title bar and button row stay put and in reach; a dialog that fits is left exactly as it was, and one opened again in a bigger room gets its whole content back. The scaling path and its pins are gone.
 
+### Changed: Editor Native draws the event alignment board's sheet (neutral lanes, bare margin, one slot per level)
+
+- The lanes are the board's neutral greys, derived from the editor's own base colour so they follow the user's Godot theme (dark `#3a3a3a` condition line, `#323232` rest, `#363636` actions; light `#ffffff`, `#f0f0f0`, `#f7f7f7` at the default editor themes), with a 1 px lane divider, the board's canvas, and object names in the board's blue (`#8ec3f2` dark, `#124175` light) with no tile behind the icon. The starter theme is rebuilt from the same rule, and the condition cell's quieter tone below its lines is the lane drawn 0.4 (dark) or 0.48 (light) of the way back to the canvas.
+- The margin is bare: numbers stand straight on the canvas in a 34 px column, with no band, rail or fill (a selected event still fills it). Blocks step 18 px per level from 52 px (top level 52, sub-events 70, 88), each level's line stands in its slot, the fold arrow is a filled triangle wholly inside its slot on the first line, and events and sub-events are exactly 1 px apart with no card border round them.
+- A group is one flat bar from its own slot (fold triangle, bold name, nothing at the right but the on/off switch while it is off or pointed at), its body is marked by its slot's line instead of a bracket at the canvas edge, and its foot reads `Add event to "Setup"` and `+ Add to "Setup"...` (translated in all nine CSVs).
+- An inverted condition's cross leads its words, no line is drawn between the object and words columns, a line with an object name but no icon starts the name where the lane's other names start, and an inert function body offers none of the add doors (`+ Add...` included). Classic Sheet is unchanged.
+
 ### Fixed: the gap a carried event opens lines up with the blocks of its level, and opens after the whole event when carried over a branch
 
 - In Editor Native the dashed gap an event is carried into began at the wrong edge (10 px short for a nested level, inside the number column for a top-level one); it now begins at the left edge of the blocks of the level it opens at. Proven in the real editor, in both looks and both skins, over a 1-, 2- and 3-deep event.

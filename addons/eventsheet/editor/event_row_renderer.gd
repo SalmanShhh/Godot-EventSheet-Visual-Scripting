@@ -39,6 +39,16 @@ const OR_DIVIDER_WORD_GAP := 6.0
 const OBJECT_ICON_SIZE := 14.0
 const OBJECT_ICON_PLATE_SIZE := 18.0
 const OBJECT_ICON_ADVANCE := 23.0
+## The cross an inverted condition leads its words with, and the room it takes before them.
+## The look that nests by lines gives the event number a column of its own, then one slot of the
+## indent step per level; a level's line stands NESTING_LINE_INSET into its slot.
+const NATIVE_NUMBER_COLUMN := 34.0
+const NESTING_LINE_INSET := 8.0
+const NUMBER_COLUMN_INSET := 8.0
+## The fold arrow of the look that nests by lines: a filled triangle this wide, centred in its slot.
+const FOLD_TRIANGLE_SIDE := 9.0
+const INVERTED_MARK_SIDE := 10.0
+const INVERTED_MARK_ADVANCE := 14.0
 ## The tile an object icon sits on: a neutral grey a step off the lane, lighter under pale ink (a
 ## dark sheet) and darker under dark ink (a light one), so the tile reads in both.
 const OBJECT_ICON_TILE_DARK := EventSheetPalette.COLOR_OBJECT_ICON_TILE_DARK
@@ -686,10 +696,11 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	# column, the number and the icon on the event's first line; the row's fills start after it.
 	var gutter_in_band: bool = is_event_row and event_style != null and event_style.trigger_icon_in_gutter
 	var first_line_height: float = float(layout.get("line_height", 0.0)) if gutter_in_band else 0.0
+	var strips_look: bool = event_style != null and event_style.sub_event_strips
 	var gutter_band: Rect2 = NativeRowMarks.gutter_band_rect(gutter_rect, row_rect, row_data.indent,
-		row_indent_width) if gutter_in_band else gutter_rect
+		row_indent_width) if gutter_in_band and not strips_look else gutter_rect
 	var row_fill_rect: Rect2 = Rect2(gutter_band.end.x, row_rect.position.y, maxf(row_rect.end.x - gutter_band.end.x, 0.0), row_rect.size.y) if is_event_row else row_rect
-	if is_event_row and row_data.indent > 0 and event_style != null and event_style.sub_event_strips:
+	if is_event_row and strips_look:
 		# A nested event's block begins past the number column and its ancestors' lines; the margin
 		# between is the sheet's own, so the lines stand on it.
 		var block_left: float = row_rect.position.x + nested_block_left_for(row_data.indent, row_indent_width)
@@ -711,7 +722,8 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 			# A `#region` bar is a group bar without an EventGroup behind it (the file stores two
 			# fence lines), so its accent arrives on the row itself.
 			group_tint = row_data.custom_color
-		_draw_group_row_chrome(control, row_rect, fold_rect, alternating, event_style, group_tint)
+		_draw_group_row_chrome(control, row_rect, fold_rect, alternating, event_style, group_tint,
+			nested_block_left_for(row_data.indent, row_indent_width) if strips_look else 0.0)
 	elif row_data.row_type == EventRowData.RowType.REGION:
 		# A region is a FOLD MARK, not a chapter bar: the faintest wash of its own colour and a
 		# solid 2px rule on the head, and nothing but that rule on the closing tick, so the fences
@@ -808,7 +820,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		if row_data.hovered and is_event_row:
 			NativeRowMarks.draw_grip(control, lane_divider_rect, reading_style.muted_text_color)
 	if row_data.row_type == EventRowData.RowType.EVENT and event_style != null \
-			and event_style.event_card_border_width <= 0:
+			and event_style.event_card_border_width <= 0 and not event_style.sub_event_strips:
 		# The per-ROW hairlines, drawn only when the theme asks for NO card. With a card border in
 		# force the event is framed once, round every row it is drawn on, by draw_event_card below -
 		# and a row hairline under that frame would rule a line through the middle of an OR stack.
@@ -930,12 +942,14 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		and event_style.selected_gutter_fill_color.a > 0.01
 	# How the event is started is said on its trigger LINE (the arrow in front of its object icon),
 	# never beside its number, so the margin holds the number alone.
-	if gutter_selected:
+	if gutter_selected and not strips_look:
 		var slot_fill: Rect2 = NativeRowMarks.selected_slot_rect(gutter_rect, row_rect, row_data.indent,
 			row_indent_width, false, event_style.selection_as_outline)
 		if slot_fill.size.x > 0.0:
 			control.draw_rect(slot_fill, event_style.selected_gutter_fill_color, true)
-	_draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
+	_draw_fold_arrow(control, fold_rect, row_data.folded,
+		not row_data.children.is_empty() and not (strips_look and row_data.row_type == EventRowData.RowType.GROUP),
+		event_style.gutter_icon_color if strips_look and is_event_row else Color(0.0, 0.0, 0.0, 0.0))
 	_draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, editing_select_anchor, selected_span_indices, hovered_span_index, total_selected_spans, event_style, selection_fill, hover_fill, match_span_indices, reading_style)
 	# What the open inline editor has to say before it is committed ("renames 6 uses in 2
 	# sheets · Enter to apply · Esc"). Drawn AFTER the spans and measured from the field's own rect,
@@ -1040,6 +1054,9 @@ func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakp
 		return
 	var fill_rect: Rect2 = band_rect if band_rect.size.x > gutter_rect.size.x else gutter_rect
 	var reading: EventSheetReadingStyle = reading_style if reading_style != null else _fallback_reading_style()
+	# A look that nests by lines leaves the margin bare: the number stands straight on the canvas, with
+	# no band behind it and no rail after it, filled only while its event is selected.
+	var margin_bare: bool = event_style != null and event_style.sub_event_strips
 	var gutter_bg: Color = event_style.gutter_background_color if event_style != null else EventSheetPalette.COLOR_GUTTER_BG
 	# A selected event's margin filled, so the selection reads from the number. Clear leaves it.
 	var gutter_text: Color = event_style.gutter_text_color if event_style != null else EventSheetPalette.COLOR_GUTTER_TEXT
@@ -1048,11 +1065,12 @@ func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakp
 		gutter_bg = event_style.selected_gutter_fill_color
 		# The number turns to the ink that reads on the fill (white on the design's blue).
 		gutter_text = NativeRowMarks.ink_on(gutter_bg)
-	control.draw_rect(fill_rect, gutter_bg, true)
+	if filled or not margin_bare:
+		control.draw_rect(fill_rect, gutter_bg, true)
 	# The rail between the margin and the lanes. One gutter column drawn as part of the card has
 	# none: the conditions lane's own tint is where the margin ends. Nor has a selected nested event
 	# under selection_as_outline, whose filled margin runs on unbroken to its trigger icon.
-	if fill_rect == gutter_rect and not (filled and event_style.selection_as_outline):
+	if fill_rect == gutter_rect and not margin_bare and not (filled and event_style.selection_as_outline):
 		control.draw_rect(Rect2(gutter_rect.end.x - 1.0, gutter_rect.position.y, 1.0, gutter_rect.size.y), reading.event_number_rail_color, true)
 	# The count chip stacks UNDER the number rather than beside it: this gutter is 20px wide, and a
 	# margin that grows when a debugger lens is switched on would reflow the whole sheet - the one
@@ -1070,6 +1088,9 @@ func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakp
 		# a frame or never fired at all.
 		var number_width: float = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size - 1).x if font != null else 0.0
 		var number_box: Vector2 = gutter_number_box(gutter_rect, number_width, first_line_height > 0.0 and font != null)
+		if margin_bare:
+			# The number starts 8 px in from the canvas edge in its 34 px column, as the board sets it.
+			number_box = Vector2(gutter_rect.position.x + NUMBER_COLUMN_INSET, maxf(gutter_rect.size.x - NUMBER_COLUMN_INSET, number_width))
 		_draw_text(control, Vector2(number_box.x, baseline_y), text, number_box.y, font, font_size - 1,
 			_gutter_number_color(hit_uid, gutter_text) if stacked else gutter_text)
 	if stacked:
@@ -1189,7 +1210,12 @@ func _draw_gutter_markers(control: Control, gutter_rect: Rect2, breakpoint_enabl
 ## colour drawn back toward the sheet, so the cell reads as one panel that goes on to the event's foot
 ## while the lines above it stand out as lighter strips.
 static func condition_cell_rest(event_style: EventSheetEventStyle) -> Color:
-	return event_style.condition_lane_color.lerp(event_style.sheet_background_color, 0.5)
+	# The look that nests by lines keeps the board's ratio of the way back to the canvas: 0.4 on a dark
+	# canvas (#3a3a3a to #323232 over #262626), 0.48 on a light one (#ffffff to #f0f0f0 over #e0e0e0).
+	var back: float = 0.5
+	if event_style.sub_event_strips:
+		back = 0.4 if event_style.sheet_background_color.get_luminance() < 0.5 else 0.48
+	return event_style.condition_lane_color.lerp(event_style.sheet_background_color, back)
 
 
 ## The condition cell as ONE panel the full height of its event, however many actions the event has:
@@ -1228,14 +1254,13 @@ static func is_local_variable_row(row_data: EventRowData) -> bool:
 ## The x a nested event's block begins at when nesting is drawn as lines in the margin: past the
 ## number column and the lines of its ancestors, at the slot its trigger mark sits in.
 static func nested_block_left_for(depth: int, indent_width: int) -> float:
-	return EventSheetPalette.ROW_HORIZONTAL_PADDING + float(EventSheetPalette.GUTTER_WIDTH) + float(depth * indent_width)
+	return NATIVE_NUMBER_COLUMN + float((depth + 1) * indent_width)
 
 
 ## The x of the ONE line a nesting level draws: the centre of the fold arrow of the blocks at that
 ## level (just left of them), so the line runs straight down from under the arrow of its parent.
 static func nesting_line_x(level: int, indent_width: int) -> float:
-	return EventSheetPalette.ROW_HORIZONTAL_PADDING + float(EventSheetPalette.GUTTER_WIDTH) \
-		+ float(level * indent_width) - 2.0
+	return NATIVE_NUMBER_COLUMN + float(level * indent_width) + NESTING_LINE_INSET
 
 
 ## Nesting in the margin: ONE 1 px line per level, at the fold arrow's column of that level, running
@@ -1267,10 +1292,26 @@ func _draw_indent_guides(control: Control, row_rect: Rect2, depth: int, guide_co
 		)
 
 
-func _draw_fold_arrow(control: Control, fold_rect: Rect2, folded: bool, visible: bool) -> void:
+## `filled_ink` above zero alpha asks for the filled triangle of the look that nests by lines: a
+## solid 9 px ▼ (▶ when folded) centred in the fold slot, wholly inside it.
+func _draw_fold_arrow(control: Control, fold_rect: Rect2, folded: bool, visible: bool, filled_ink: Color = Color(0.0, 0.0, 0.0, 0.0)) -> void:
 	if not visible or fold_rect.size == Vector2.ZERO:
 		return
 	var center: Vector2 = fold_rect.get_center()
+	if filled_ink.a > 0.01:
+		var half: float = FOLD_TRIANGLE_SIDE * 0.5
+		var depth: float = FOLD_TRIANGLE_SIDE * 0.55
+		if folded:
+			control.draw_colored_polygon(PackedVector2Array([
+				Vector2(center.x - depth * 0.5, center.y - half),
+				Vector2(center.x + depth * 0.5, center.y),
+				Vector2(center.x - depth * 0.5, center.y + half)]), filled_ink)
+		else:
+			control.draw_colored_polygon(PackedVector2Array([
+				Vector2(center.x - half, center.y - depth * 0.5),
+				Vector2(center.x + half, center.y - depth * 0.5),
+				Vector2(center.x, center.y + depth * 0.5)]), filled_ink)
+		return
 	var color: Color = TEXT_MUTED
 	if folded:
 		control.draw_polyline(
@@ -1405,10 +1446,19 @@ func draw_event_selection_outline(control: Control, rect: Rect2, event_style: Ev
 	box.draw(control.get_canvas_item(), rect.grow(-1.0))
 
 
-func _draw_group_row_chrome(control: Control, row_rect: Rect2, fold_rect: Rect2, alternating: bool, event_style: EventSheetEventStyle = null, group_tint: Color = Color(0.0, 0.0, 0.0, 0.0)) -> void:
+func _draw_group_row_chrome(control: Control, row_rect: Rect2, fold_rect: Rect2, alternating: bool, event_style: EventSheetEventStyle = null, group_tint: Color = Color(0.0, 0.0, 0.0, 0.0), bar_left: float = 0.0) -> void:
 	var bg: Color = EventSheetPalette.COLOR_GROUP_BG_ALT if alternating else EventSheetPalette.COLOR_GROUP_BG
 	if event_style != null:
 		bg = event_style.group_background_alt_color if alternating else event_style.group_background_color
+	if bar_left > 0.0:
+		# The look that nests by lines: one flat bar in the group colour from the group's own slot,
+		# with no accent stripe, no hairlines and no fold plate - the triangle and the name carry it.
+		if group_tint.a > 0.0:
+			bg = bg.lerp(Color(group_tint.r, group_tint.g, group_tint.b, bg.a), 0.22)
+		var bar := Rect2(bar_left, row_rect.position.y, maxf(row_rect.end.x - bar_left, 0.0), row_rect.size.y)
+		var bar_radius: int = event_style.group_corner_radius if event_style != null else 0
+		_draw_rounded_rect(control, bar, bg, bar_radius, bar_radius, bar_radius, bar_radius)
+		return
 	var accent: Color = event_style.group_accent_color if event_style != null else EventSheetPalette.COLOR_GROUP_ACCENT
 	# Per-group color tag wins over the theme (event-sheet parity, mirrors per-comment colors).
 	if group_tint.a > 0.0:
@@ -1685,6 +1735,15 @@ func _draw_spans(
 	var reveal_add_action: bool = add_door_revealed(row_data.hovered, row_data.selected, row_has_action) \
 			or add_action_line_rests(event_style)
 	var reveal_add_condition: bool = add_door_revealed(row_data.hovered, row_data.selected, row_has_condition)
+	# A look that nests by lines puts an inverted condition's cross at the head of its WORDS, after the
+	# object, so the cross and the sentence read as one thing: the lines that carry one are found here.
+	var strips_look: bool = event_style != null and event_style.sub_event_strips
+	var inverted_lines: Dictionary = {}
+	if strips_look:
+		for probe_span: SemanticSpan in row_data.spans:
+			if probe_span != null and probe_span.metadata is Dictionary \
+					and NativeRowMarks.kind_mark_for(probe_span.metadata, probe_span.text) == NativeRowMarks.KIND_MARK_INVERTED:
+				inverted_lines[int((probe_span.metadata as Dictionary).get("line_index", -1))] = true
 	for span_index: int in range(row_data.spans.size()):
 		var span: SemanticSpan = row_data.spans[span_index]
 		if span == null:
@@ -1695,6 +1754,16 @@ func _draw_spans(
 			continue
 		if span_kind == "add_condition" and not reveal_add_condition:
 			continue
+		if strips_look and row_data.row_type == EventRowData.RowType.GROUP:
+			# The group bar of the look that nests by lines: a fold triangle, then the bold name, and
+			# nothing at the right - no count, and the on/off switch only while it is off or pointed at.
+			if bool(metadata.get("group_counts", false)):
+				continue
+			if str(metadata.get("group_action", "")) == "enabled" and not row_data.hovered and not row_data.disabled:
+				continue
+			if bool(metadata.get("group_fold_mark", false)):
+				_draw_fold_arrow(control, span.rect, row_data.folded, true, event_style.gutter_icon_color)
+				continue
 		# The add affordances get button chrome (a faint pill) instead of the generic span hover
 		# box, so they read as clickable buttons rather than stray muted text.
 		var is_add_affordance: bool = span_kind == "add_action" or span_kind == "add_condition" or span_kind == "add_event" \
@@ -1845,7 +1914,9 @@ func _draw_spans(
 			# reads as one tidy framed column (the "{my}" look).
 			var plate_y: float = span.rect.position.y + (span.rect.size.y - OBJECT_ICON_PLATE_SIZE) * 0.5
 			var plate_rect := Rect2(text_x, plate_y, OBJECT_ICON_PLATE_SIZE, OBJECT_ICON_PLATE_SIZE)
-			control.draw_style_box(_object_icon_plate_style(color), plate_rect)
+			# A look that nests by lines draws the icon bare, on the lane itself, with no tile behind it.
+			if not strips_look:
+				control.draw_style_box(_object_icon_plate_style(color), plate_rect)
 			var icon_inset: float = (OBJECT_ICON_PLATE_SIZE - OBJECT_ICON_SIZE) * 0.5
 			var icon_rect := Rect2(text_x + icon_inset, plate_y + icon_inset, OBJECT_ICON_SIZE, OBJECT_ICON_SIZE)
 			# System and the input devices wear a glyph of their own (a gear, a keyboard, a mouse...)
@@ -1856,6 +1927,11 @@ func _draw_spans(
 				control.draw_texture_rect(object_icon as Texture2D, icon_rect, false)
 			else:
 				NativeRowMarks.draw_object_glyph(control, icon_rect, object_glyph, NativeRowMarks.glyph_ink(object_glyph, color))
+			text_x += OBJECT_ICON_ADVANCE
+			text_width = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
+		elif strips_look and not str(metadata.get("object_label", "")).is_empty() and bool(metadata.get("chip", false)):
+			# No icon on this line (a branch, a name with none): its object name still starts where the
+			# lane's other names do, in the room an icon would have held.
 			text_x += OBJECT_ICON_ADVANCE
 			text_width = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
 		var object_label: String = str(metadata.get("object_label", ""))
@@ -1916,7 +1992,7 @@ func _draw_spans(
 			# invisible until the cursor crossed it and the resize cursor appeared.
 			# ONLY in column mode: in flow mode there is no column, so a line after each label would
 			# just be a ragged staircase marking a boundary that does not exist.
-			if object_column_width > 0.0:
+			if object_column_width > 0.0 and not strips_look:
 				_draw_object_column_separator(control, span, text_x, event_style)
 			# The drawn bounds of the object column, so ONE click on the name can open the
 			# object popup. The label is not a span of its own (it is drawn inside the leading edge
@@ -1926,6 +2002,15 @@ func _draw_spans(
 			span.metadata["object_label_rect"] = Rect2(
 				span.rect.position.x, span.rect.position.y,
 				text_x - span.rect.position.x, span.rect.size.y)
+			text_width = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
+		# The cross of an inverted condition leads its words, the width of the room it asks for.
+		if strips_look and span_kind == "condition" and str(metadata.get("lane", "")) == "condition" \
+				and inverted_lines.has(int(metadata.get("line_index", -1))):
+			var cross_side: float = INVERTED_MARK_SIDE
+			var cross_rect := Rect2(text_x, span.rect.get_center().y - cross_side * 0.5, cross_side, cross_side)
+			NativeRowMarks.draw_kind_mark(control, cross_rect, NativeRowMarks.KIND_MARK_INVERTED,
+				event_style.invert_marker_color)
+			text_x += INVERTED_MARK_ADVANCE
 			text_width = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
 		# A bool's tick box and a resource's chip sit in front of the value's own text, in the room the
 		# layout measured for them; the text then draws as it always did, colours and all.
@@ -2043,6 +2128,9 @@ func _draw_spans(
 			_draw_text(control, Vector2(text_x, baseline_y), draw_text, text_width, font, draw_font_size, color)
 		else:
 			_draw_text_with_values(control, Vector2(text_x, baseline_y), draw_text, painted_ranges, text_width, font, draw_font_size, color, word_number_color, word_text_color, word_keyword_color, reading.muted_text_color, word_variable_color)
+		# A group's name in the look that nests by lines is bold: the same words once more in the bold face.
+		if strips_look and bool(metadata.get("group_title", false)) and span_index != editing_span_index:
+			_draw_text(control, Vector2(text_x, baseline_y), draw_text, text_width, bold_font(font), draw_font_size, color)
 		# The event-sheet parameter emphasis: every substituted parameter value re-draws in the
 		# bold face the BBCode cells' bold uses, in whatever colour that run already has, so
 		# the typed value tints never wash out.
@@ -2594,6 +2682,9 @@ func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_siz
 		if mark == NativeRowMarks.KIND_MARK_TRIGGER and not show_trigger_icons:
 			return
 		if mark.is_empty():
+			return
+		# A look that nests by lines draws the cross at the head of the words instead (see _draw_spans).
+		if mark == NativeRowMarks.KIND_MARK_INVERTED and event_style != null and event_style.sub_event_strips:
 			return
 		var mark_color: Color = badge_fg
 		if event_style != null:

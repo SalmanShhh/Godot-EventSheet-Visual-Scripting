@@ -27,50 +27,50 @@ const NATIVE_CANVAS_STEP := 0.3
 ## The greys of the Editor Native look, dark hand then light - the design's own values at the
 ## reference base. Each moves with the editor's canvas: an editor a little darker than the reference
 ## gets every one of these a little darker, so the steps between them - card on canvas, divider on
-## card - survive. The two lane tints ride along, so a lane keeps the blue or green it has on the
+## card - survive. The lanes are neutral greys that ride along, so a lane keeps its step from the
 ## card whatever grey the editor is; the variable cards are the design's own grey, a step lighter
 ## than an event card, with their own edge.
 const NATIVE_GREYS_DARK := {
-	"sheet_background_color": Color("#282828"),
-	"row_background_color": Color("#383838"),
-	"row_background_alt_color": Color("#383838"),
-	"row_border_color": Color("#232323"),
-	"lane_divider_color": Color("#1e1e1e"),
-	"condition_lane_color": Color("#2f3742"),
-	"action_lane_color": Color("#2f3a31"),
+	"sheet_background_color": Color("#262626"),
+	"row_background_color": Color("#303030"),
+	"row_background_alt_color": Color("#303030"),
+	"row_border_color": Color("#262626"),
+	"lane_divider_color": Color("#2a2a2a"),
+	"condition_lane_color": Color("#3a3a3a"),
+	"action_lane_color": Color("#363636"),
 	"variable_card_fill_color": Color("#424242"),
 	"variable_card_border_color": Color("#2a2a2a"),
-	"group_background_color": Color("#333333"),
-	"group_background_alt_color": Color("#333333"),
+	"group_background_color": Color("#4a4a4a"),
+	"group_background_alt_color": Color("#4a4a4a"),
 	"group_accent_color": Color("#555555"),
 	"group_badge_background_color": Color("#1e1e1e"),
 	"group_fold_background_color": Color("#383838"),
 	"column_header_background_color": Color("#383838"),
 	"gutter_background_color": Color("#383838"),
 	"gutter_text_color": Color("#8c8c8c"),
-	"gutter_icon_color": Color("#b0b0b0"),
+	"gutter_icon_color": Color("#a0a0a0"),
 	"object_hairline_color": Color("#4a4a4a"),
 	"verb_chip_background_color": Color("#3a3a3a"),
 }
 const NATIVE_GREYS_LIGHT := {
-	"sheet_background_color": Color("#e4e4e4"),
-	"row_background_color": Color("#ffffff"),
-	"row_background_alt_color": Color("#ffffff"),
-	"row_border_color": Color("#bdbdbd"),
-	"lane_divider_color": Color("#d6d6d6"),
-	"condition_lane_color": Color("#e9f0f8"),
-	"action_lane_color": Color("#eaf4e6"),
+	"sheet_background_color": Color("#e0e0e0"),
+	"row_background_color": Color("#ededed"),
+	"row_background_alt_color": Color("#ededed"),
+	"row_border_color": Color("#d4d4d4"),
+	"lane_divider_color": Color("#cfcfcf"),
+	"condition_lane_color": Color("#ffffff"),
+	"action_lane_color": Color("#f7f7f7"),
 	"variable_card_fill_color": Color("#eef7e8"),
 	"variable_card_border_color": Color("#b7cdaa"),
-	"group_background_color": Color("#efefef"),
-	"group_background_alt_color": Color("#efefef"),
+	"group_background_color": Color("#c9c9c9"),
+	"group_background_alt_color": Color("#c9c9c9"),
 	"group_accent_color": Color("#a9a9a9"),
 	"group_badge_background_color": Color("#d6d6d6"),
 	"group_fold_background_color": Color("#ffffff"),
 	"column_header_background_color": Color("#ffffff"),
 	"gutter_background_color": Color("#ffffff"),
 	"gutter_text_color": Color("#404040"),
-	"gutter_icon_color": Color("#414141"),
+	"gutter_icon_color": Color("#3f3f3f"),
 	"object_hairline_color": Color("#d6d6d6"),
 	"verb_chip_background_color": Color("#e4e4e4"),
 }
@@ -95,7 +95,7 @@ const NATIVE_COLOURS_DARK := {
 	"invert_marker_color": Color("#f07a7a"),
 	"trigger_mark_color": Color("#6ccb4e"),
 	"behaviour_name_color": Color("#f0b86e"),
-	"object_label_color": Color("#b9c9da"),
+	"object_label_color": Color("#8ec3f2"),
 	"value_highlight_color": Color("#a6d18f"),
 	"behavior_accent_color": Color("#c2b4d6"),
 	"language_block_accent_color": Color("#5f566c"),
@@ -157,7 +157,7 @@ const NATIVE_COLOURS_LIGHT := {
 	"invert_marker_color": Color("#b42318"),
 	"trigger_mark_color": Color("#22700e"),
 	"behaviour_name_color": Color("#7a4300"),
-	"object_label_color": Color("#1d4369"),
+	"object_label_color": Color("#124175"),
 	"value_highlight_color": Color("#1f4a14"),
 	"behavior_accent_color": Color("#584a70"),
 	"language_block_accent_color": Color("#afa6bd"),
@@ -203,6 +203,10 @@ const NATIVE_COLOURS_LIGHT := {
 	"saved_badge_background_color": Color("#c7ebcb"),
 }
 
+## The grey of the one line each nesting level draws down the margin, per hand.
+const NATIVE_SPINE_DARK := Color("#5a5a5a")
+const NATIVE_SPINE_LIGHT := Color("#9a9a9a")
+
 ## The marks that are NEW with the native look - drawn by nothing older - and so carry a colour in
 ## every theme rather than a clear "as before". A light editor gets the light hand of each.
 const NATIVE_NEW_MARK_TOKENS: Array[String] = [
@@ -224,7 +228,7 @@ const NATIVE_NEW_MARK_TOKENS: Array[String] = [
 const NATIVE_TEXT_DARK := Color("#d2d2d2")
 const NATIVE_TEXT_LIGHT := Color("#0f0f0f")
 
-## The two lanes' hues: the condition lane leans blue and the action lane green, on any editor base.
+## The two tinted lanes' hues, kept for a designer who wants native_lane(); the starter's lanes are the board's neutral greys (NATIVE_GREYS_*), so nothing in the rule reads these: the condition lane leans blue and the action lane green, on any editor base.
 ## A lane is the card's own brightness (a step lighter in a dark editor, a step darker in a light one)
 ## at that hue with a fixed amount of colour, so the tint stays the same size whatever grey the editor
 ## is - a neutral editor gets lanes exactly as blue and as green as the reference one does.
@@ -370,19 +374,19 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 		event_style.set(token_name, colours[token_name])
 	# The density the design is drawn at: 24 px rows, a 92 px object name after its 14 px icon and the
 	# 8 px gap (114 px in all, the column counting the icon) in the conditions lane, a 140 px object column
-	# in the actions lane, 1 px between two events, a 16 px nesting step, a 7 px lane divider and
+	# in the actions lane, 1 px between two events, an 18 px nesting step, a 1 px lane divider and
 	# square-ish cards with a one-pixel edge.
 	event_style.condition_lane_ratio = 0.42
 	event_style.minimum_row_height = 24
-	event_style.group_row_height = 36
+	event_style.group_row_height = 28
 	event_style.condition_object_column_width = 114
 	event_style.action_object_column_width = 140
 	event_style.event_block_gap = 1
-	event_style.sub_event_indent = 16
+	event_style.sub_event_indent = 18
 	event_style.sub_event_rail_line = false
 	event_style.sub_event_strips = true
-	event_style.lane_divider_width = 7
-	event_style.event_card_border_width = 1
+	event_style.lane_divider_width = 1
+	event_style.event_card_border_width = 0
 	event_style.event_corner_radius = 3
 	event_style.cell_corner_radius = 0
 	event_style.group_corner_radius = 3
@@ -423,7 +427,9 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	EventSheetThemeDerivation.fill_derived_tokens(style)
 	# The one bar colour the shared rule leaves clear on purpose (every other theme keeps the tab as
 	# the editor draws it), stated here because the design gives the open tab its accent edge.
-	style.get_chrome_style().active_tab_edge_color = NATIVE_TAB_EDGE_LIGHT if light else NATIVE_TAB_EDGE_DARK
+	# The lines of the nesting, one per level: the board's grey spine, a step off the canvas.
+	style.get_reading_style().tree_guide_color = native_grey(NATIVE_SPINE_LIGHT if light else NATIVE_SPINE_DARK, base_color)
+	style.get_chrome_style().active_tab_edge_color =NATIVE_TAB_EDGE_LIGHT if light else NATIVE_TAB_EDGE_DARK
 	style.get_chrome_style().status_ok_color = NATIVE_STATUS_OK_LIGHT if light else NATIVE_STATUS_OK_DARK
 	return style
 
