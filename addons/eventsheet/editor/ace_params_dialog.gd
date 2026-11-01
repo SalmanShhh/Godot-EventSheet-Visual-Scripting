@@ -3941,7 +3941,7 @@ func _note_for(key: String) -> Dictionary:
 		return {}
 	var takes: String = str(EventSheetVariableOwners.VARIABLE_VERB_TAKES.get(_definition.id, "")) if _definition != null else ""
 	return EventSheetParamFieldFactory.validate(param, str(_extract_value(_fields[key])),
-		_variable_entries, _row_owner, takes)
+		_variable_entries, _row_owner, takes, _lint_sheet())
 
 
 ## Points the strip at one parameter: its description and what its kind of field takes, or - when

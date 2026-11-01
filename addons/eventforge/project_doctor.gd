@@ -1459,15 +1459,15 @@ static func check_variable_notes(sheet_paths: PackedStringArray, findings: Array
 		if entries.is_empty():
 			continue
 		_scan_variable_notes(sheet.events, sheet_path, entries,
-			EventSheetVariableOwners.owner_of_sheet(sheet), findings)
+			EventSheetVariableOwners.owner_of_sheet(sheet), findings, sheet)
 
 
 static func _scan_variable_notes(rows: Array, sheet_path: String, entries: Array[Dictionary],
-		owner: String, findings: Array[Dictionary]) -> void:
+		owner: String, findings: Array[Dictionary], host_sheet: EventSheetResource = null) -> void:
 	for entry: Variant in rows:
 		if entry is EventGroup:
 			_scan_variable_notes(EventSheetGroupFacts.children(entry as EventGroup), sheet_path,
-				entries, owner, findings)
+				entries, owner, findings, host_sheet)
 			continue
 		if not (entry is EventRow):
 			continue
@@ -1485,7 +1485,7 @@ static func _scan_variable_notes(rows: Array, sheet_path: String, entries: Array
 				# own list is the wrong place to look for it - the same guard the row makes.
 				if not EventSheetIdentifierRules.is_valid(name_text):
 					continue
-				var unknown: Dictionary = EventSheetVariableOwners.unknown_note(entries, name_text, owner)
+				var unknown: Dictionary = EventSheetVariableOwners.unknown_note(entries, name_text, owner, host_sheet)
 				if not unknown.is_empty():
 					_add(findings, "error", "unknown-variable", sheet_path, str(unknown.get("note", "")))
 					continue
@@ -1493,7 +1493,7 @@ static func _scan_variable_notes(rows: Array, sheet_path: String, entries: Array
 					EventSheetVariableOwners.find(entries, name_text), ace_id)
 				if not mismatch.is_empty():
 					_add(findings, "warning", "variable-type-mismatch", sheet_path, str(mismatch.get("note", "")))
-		_scan_variable_notes(event.sub_events, sheet_path, entries, owner, findings)
+		_scan_variable_notes(event.sub_events, sheet_path, entries, owner, findings, host_sheet)
 
 
 ## A note row carrying Godot's own error text, pasted raw. The runtime-error strip already re-says

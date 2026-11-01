@@ -11980,7 +11980,7 @@ func _build_variable_note_rows(event_row: EventRow, event_uid: String, indent: i
 				if seen.has(name_text) or not EventSheetIdentifierRules.is_valid(name_text):
 					continue
 				seen[name_text] = true
-				var unknown: Dictionary = EventSheetVariableOwners.unknown_note(entries, name_text, owner)
+				var unknown: Dictionary = EventSheetVariableOwners.unknown_note(entries, name_text, owner, _viewport._sheet)
 				if not unknown.is_empty():
 					var suggestion: String = str(unknown.get("suggestion", ""))
 					rows.append(_build_variable_note_row(

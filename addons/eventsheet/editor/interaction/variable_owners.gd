@@ -368,15 +368,68 @@ static func variable_reference_values(parameters: Array, params: Dictionary) -> 
 ## The reason a name cannot be used, as the note the sheet shows under the row: "" when the name IS a
 ## variable of this sheet. The nearest spelled name rides in `suggestion` so the fix button can offer
 ## it - a typo is the usual cause, and the fix is one click when the sheet can guess.
-static func unknown_note(entries: Array[Dictionary], name_text: String, owner: String) -> Dictionary:
+##
+## `sheet` (optional) is the sheet the row lives in: a name the class it extends really has - a
+## property like `global_position`, a method, a signal, a constant, or a variable an inherited
+## script declares - is not unknown, so only a genuinely made-up name is reported.
+static func unknown_note(entries: Array[Dictionary], name_text: String, owner: String,
+		sheet: EventSheetResource = null) -> Dictionary:
 	var wanted: String = name_text.strip_edges()
 	if wanted.is_empty() or not find(entries, wanted).is_empty():
+		return {}
+	if sheet != null and host_has_member(sheet, wanted):
 		return {}
 	var suggestion: String = nearest_name(entries, wanted)
 	var note: String = EventSheetL10n.translate("%s is not a variable of %s.") % [wanted, owner]
 	if not suggestion.is_empty():
 		note += " " + EventSheetL10n.translate("Did you mean %s?") % suggestion
 	return {"name": wanted, "note": note, "suggestion": suggestion}
+
+
+## True when the class a sheet's script extends already has a member called `member`: a built-in
+## property, method, signal or constant (asked of ClassDB), or a variable or method a script class
+## in its ancestry declares. Behavior and autoload sheets compile to a plain Node, so only Node's
+## own members count there (the host's live behind `host.`).
+static func host_has_member(sheet: EventSheetResource, member: String) -> bool:
+	if sheet == null or member.is_empty():
+		return false
+	if sheet.behavior_mode or sheet.autoload_mode:
+		return host_has_member_in_builtin("Node", member)
+	var class_text: String = sheet.host_class
+	if ClassDB.class_exists(class_text):
+		return host_has_member_in_builtin(class_text, member)
+	# A script class (named in the project, not built in): walk its chain of script bases.
+	var guard: int = 0
+	while not class_text.is_empty() and guard < 32:
+		guard += 1
+		if ClassDB.class_exists(class_text):
+			return host_has_member_in_builtin(class_text, member)
+		var next_class: String = ""
+		for entry: Dictionary in ProjectSettings.get_global_class_list():
+			if str(entry.get("class")) != class_text:
+				continue
+			var script: Script = load(str(entry.get("path"))) as Script
+			if script != null:
+				for property: Dictionary in script.get_script_property_list():
+					if str(property.get("name")) == member:
+						return true
+				for method: Dictionary in script.get_script_method_list():
+					if str(method.get("name")) == member:
+						return true
+			next_class = str(entry.get("base"))
+			break
+		class_text = next_class
+	return false
+
+
+static func host_has_member_in_builtin(class_text: String, member: String) -> bool:
+	if ClassDB.class_has_method(class_text, member) or ClassDB.class_has_signal(class_text, member) \
+			or ClassDB.class_has_integer_constant(class_text, member):
+		return true
+	for property: Dictionary in ClassDB.class_get_property_list(class_text):
+		if str(property.get("name")) == member:
+			return true
+	return false
 
 
 ## The catalog name closest to a misspelling, or "" when nothing is close enough to offer. Similarity

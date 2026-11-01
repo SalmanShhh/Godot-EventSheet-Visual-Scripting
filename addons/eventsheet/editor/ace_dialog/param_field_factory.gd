@@ -454,7 +454,7 @@ const LEVEL_NOTE := "note"
 ## is the kind of value the VERB needs ("number" / "boolean" / ""), which a parameter's declared
 ## type cannot say for itself - every expression parameter declares String.
 static func validate(param: Dictionary, value: String, entries: Array[Dictionary],
-		owner: String, takes: String = "") -> Dictionary:
+		owner: String, takes: String = "", host_sheet: EventSheetResource = null) -> Dictionary:
 	var text: String = value.strip_edges()
 	var name_text: String = str(param.get("display_name", param.get("id", "")))
 	if text.is_empty() and _is_required(param):
@@ -466,7 +466,7 @@ static func validate(param: Dictionary, value: String, entries: Array[Dictionary
 			"fixes": [],
 		}
 	if _asks_for_a_variable(param) and text.is_valid_identifier() and not entries.is_empty():
-		var unknown: Dictionary = EventSheetVariableOwners.unknown_note(entries, text, owner)
+		var unknown: Dictionary = EventSheetVariableOwners.unknown_note(entries, text, owner, host_sheet)
 		if not unknown.is_empty():
 			var fixes: Array = []
 			var suggestion: String = str(unknown.get("suggestion", ""))

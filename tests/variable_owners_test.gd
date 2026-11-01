@@ -290,6 +290,25 @@ static func _test_catalog() -> bool:
 		str(unknown.get("suggestion", "")), "hp") and ok
 	ok = _check("a name that IS a variable grows no note",
 		EventSheetVariableOwners.unknown_note(entries, "hp", "Player").is_empty(), true) and ok
+	# A member the class the script extends really has is not unknown; a made-up name still is.
+	var node2d_sheet: EventSheetResource = EventSheetResource.new()
+	node2d_sheet.host_class = "Node2D"
+	for member: String in ["global_position", "position", "rotation", "visible"]:
+		ok = _check("a Node2D sheet knows %s" % member,
+			EventSheetVariableOwners.unknown_note(entries, member, "System", node2d_sheet).is_empty(), true) and ok
+	var control_sheet: EventSheetResource = EventSheetResource.new()
+	control_sheet.host_class = "Control"
+	ok = _check("a Control sheet knows size",
+		EventSheetVariableOwners.unknown_note(entries, "size", "System", control_sheet).is_empty(), true) and ok
+	ok = _check("a Node2D sheet does not know size",
+		EventSheetVariableOwners.unknown_note(entries, "size", "System", node2d_sheet).is_empty(), false) and ok
+	ok = _check("a made-up name stays red on a Node2D sheet",
+		EventSheetVariableOwners.unknown_note(entries, "flibber", "System", node2d_sheet).is_empty(), false) and ok
+	var behavior_sheet: EventSheetResource = EventSheetResource.new()
+	behavior_sheet.host_class = "Node2D"
+	behavior_sheet.behavior_mode = true
+	ok = _check("a behavior sheet is a plain Node, so global_position stays red there",
+		EventSheetVariableOwners.unknown_note(entries, "global_position", "System", behavior_sheet).is_empty(), false) and ok
 	return ok
 
 
