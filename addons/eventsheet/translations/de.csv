@@ -9839,3 +9839,4 @@ Right-click to replace it in %s.,"Rechtsklick, um es in %s zu ersetzen."
 "In %s, 1 test of %s will test %s instead.","In %s prüft 1 Test auf %s künftig stattdessen auf %s."
 "In %s, %d tests of %s will test %s instead.","In %s prüfen %d Tests auf %s künftig stattdessen auf %s."
 "%s saves %s as a number: after the removal, a saved number can name a different state.","%s speichert %s als Zahl: Nach dem Entfernen kann eine gespeicherte Zahl einen anderen Zustand bezeichnen."
++ Add to '%s'…,+ Zu '%s' hinzufügen…

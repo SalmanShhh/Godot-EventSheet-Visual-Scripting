@@ -9839,3 +9839,4 @@ Right-click to replace it in %s.,右键单击可在 %s 中替换它。
 "In %s, 1 test of %s will test %s instead.","在 %s 中，1 处对 %s 的判断将改为判断 %s。"
 "In %s, %d tests of %s will test %s instead.","在 %s 中，%d 处对 %s 的判断将改为判断 %s。"
 "%s saves %s as a number: after the removal, a saved number can name a different state.","%s 将 %s 保存为数字：移除后，保存的数字可能指向另一个状态。"
++ Add to '%s'…,+ 向 '%s' 添加…

@@ -118,6 +118,7 @@ func _connect_view_signals(view: EventSheetViewport) -> void:
 	view.find_requested.connect(_dock._show_find_bar)
 	view.find_step_requested.connect(_dock._find_step)
 	view.context_menu_requested.connect(_dock._on_viewport_context_menu_requested)
+	view.add_menu_requested.connect(_dock._ui_builder.later("_add_rows", "open_add_door_menu"))
 	view.raw_code_edit_requested.connect(_dock._code_panel_glue.on_viewport_raw_code_edit_requested)
 	view.data_class_field_edit_requested.connect(_dock._on_data_class_field_edit_requested)
 	# Zoom belongs to the layout: a pane opened later starts at the zoom already being read at,

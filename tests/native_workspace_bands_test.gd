@@ -215,7 +215,8 @@ static func _test_the_resting_ends() -> bool:
 	empty.free()
 	classic.free()
 	return SUPPORT.pins(TEST_NAME, [
-		["Editor Native ends the sheet on its last row", native_footers, PackedStringArray()],
+		["Editor Native ends the sheet on its last row and each group on its own foot", native_footers,
+			PackedStringArray(["+ Add event to 'Gate Movement'…"])],
 		["an empty sheet keeps its one way in", empty_footers, PackedStringArray(["+ Add event…"])],
 		["Classic Sheet keeps both footers", classic_footers,
 			PackedStringArray(["+ Add event to 'Gate Movement'…", "+ Add event…"])],

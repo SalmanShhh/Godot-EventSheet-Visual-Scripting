@@ -346,6 +346,10 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			_viewport.ace_picker_requested.emit(row_data, "condition")
 			_viewport.accept_event()
 			return
+		if row_data != null and str(metadata.get("kind", "")) in ["add_menu", "add_block_menu"]:
+			_viewport.open_add_menu_for(row_index)
+			_viewport.accept_event()
+			return
 		if row_data != null and str(metadata.get("kind", "")) == "add_event":
 			_viewport.add_event_requested.emit(metadata.get("add_event_owner", null))
 			_viewport.accept_event()

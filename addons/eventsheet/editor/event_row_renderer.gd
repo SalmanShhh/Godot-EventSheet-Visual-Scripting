@@ -721,10 +721,16 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	elif row_data.row_type == EventRowData.RowType.COMMENT and event_style != null:
 		# Per-comment colors (event-sheet parity): the row's custom tint wins over the theme token.
 		var comment_bg: Color = row_data.custom_color if row_data.custom_color.a > 0.01 else event_style.comment_row_background_color
-		control.draw_rect(row_rect, comment_bg, true)
+		# A note stands at the step of the event it introduces: where nesting is drawn as lines, its
+		# band begins where that event's block does, so the lines of the levels round it run past it.
+		var comment_rect: Rect2 = row_rect
+		if event_style.sub_event_strips and row_data.indent > 0:
+			var block_left: float = row_rect.position.x + nested_block_left_for(row_data.indent, row_indent_width)
+			comment_rect = Rect2(block_left, row_rect.position.y, maxf(row_rect.end.x - block_left, 0.0), row_rect.size.y)
+		control.draw_rect(comment_rect, comment_bg, true)
 		# The note card's edge. Clear (every theme saved before the token) draws none.
 		if event_style.comment_border_color.a > 0.01:
-			control.draw_rect(row_rect.grow(-0.5), event_style.comment_border_color, false, 1.0)
+			control.draw_rect(comment_rect.grow(-0.5), event_style.comment_border_color, false, 1.0)
 	elif is_event_row and event_style != null:
 		control.draw_rect(
 			row_fill_rect,
@@ -1685,13 +1691,17 @@ func _draw_spans(
 			continue
 		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 		var span_kind: String = str(metadata.get("kind", ""))
-		if span_kind == "add_action" and not reveal_add_action:
+		if span_kind in ["add_action", "add_menu"] and not reveal_add_action:
 			continue
 		if span_kind == "add_condition" and not reveal_add_condition:
 			continue
 		# The add affordances get button chrome (a faint pill) instead of the generic span hover
 		# box, so they read as clickable buttons rather than stray muted text.
-		var is_add_affordance: bool = span_kind == "add_action" or span_kind == "add_condition" or span_kind == "add_event"
+		var is_add_affordance: bool = span_kind == "add_action" or span_kind == "add_condition" or span_kind == "add_event" \
+			or span_kind == "add_block_menu"
+		# A foot in the look that nests by lines is quiet text, not a pill.
+		if add_menu_link_wanted(event_style) and span_kind in ["add_event", "add_block_menu"]:
+			is_add_affordance = false
 		var in_block: bool = block_heads.has(span_index)
 		var is_block_head: bool = in_block and int(block_heads[span_index]) == span_index
 		if bool(metadata.get("chip", false)):
@@ -1800,7 +1810,7 @@ func _draw_spans(
 		var ace_enabled: bool = bool(metadata.get("ace_enabled", true))
 		if not ace_enabled:
 			color = color.lerp(TEXT_MUTED, 0.6)
-		if show_hover_add_links and span_kind in ["add_condition", "add_action"]:
+		if show_hover_add_links and span_kind in ["add_condition", "add_action", "add_menu"]:
 			_draw_add_link(control, span, span_kind, font, font_size, metadata, event_style,
 				span_index == hovered_span_index)
 			continue
@@ -2294,9 +2304,23 @@ static func add_action_line_rests(event_style: EventSheetEventStyle) -> bool:
 	return event_style != null and event_style.sub_event_strips
 
 
+## True when the note written about an event's actions heads its action lane instead of closing it:
+## the look that nests by lines, where a note reads above the lines it is about.
+static func event_note_on_top(event_style: EventSheetEventStyle) -> bool:
+	return event_style != null and event_style.sub_event_strips
+
+
+## True when the look puts "+ Add..." at the right of an event's add line and of a block's foot: the
+## look that nests by lines, which closes every event with its add line and every block with its foot.
+static func add_menu_link_wanted(event_style: EventSheetEventStyle) -> bool:
+	return event_style != null and event_style.sub_event_strips
+
+
 ## The words a hover link says for an add span's kind: "Add condition" or "Add action", without the
 ## plus the pill wears - a link is read as a link by its colour.
 static func hover_link_label(span_kind: String) -> String:
+	if span_kind == "add_menu":
+		return EventSheetL10n.translate("+ Add…")
 	return EventSheetL10n.translate("Add action" if span_kind == "add_action" else "Add condition")
 
 
@@ -2312,6 +2336,14 @@ func _draw_add_link(control: Control, span: SemanticSpan, span_kind: String, fon
 	var ink: Color = EventSheetEventStyle.stated_or(event_style.link_color, fallback) if event_style != null else fallback
 	var draw_font_size: int = EventSheetPalette.resolve_font_size(font_size, int(metadata.get("font_size_delta", 0)))
 	var label: String = hover_link_label(span_kind)
+	# The look that closes every event with its add line draws the doors as quiet text with their plus,
+	# in the faded tone of the lane's own words (the span's colour, a theme token), brightening under
+	# the pointer; every other look keeps the link colour.
+	if add_menu_link_wanted(event_style):
+		label = span.text
+		ink = fallback
+		if hovered:
+			ink = Color(ink.r, ink.g, ink.b, minf(ink.a / 0.55, 1.0))
 	var baseline_y: float = span.rect.position.y + (span.rect.size.y * ROW_VERTICAL_CENTER_RATIO) \
 		+ (draw_font_size * FONT_BASELINE_OFFSET_RATIO)
 	var room: float = maxf(span.rect.size.x - 2.0, 1.0)

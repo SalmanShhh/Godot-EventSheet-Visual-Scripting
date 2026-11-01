@@ -42,6 +42,23 @@ Every window the editor opens now goes through one helper, `EventSheetWindowPlac
   what a removal reaches, so its Apply button stays inside it.
 - The status bar counts the events inside functions too, so a behaviour pack's sheet no longer says
   "0 events".
+### Changed: Editor Native lays out locals at their step, notes above the lines they are about, and adds the "+ Add..." doors
+
+- A local variable (an event's own, or a `var` line in its body) is one tight row at the step of the
+  code that declares it: before the event whose actions carry its value, on the level of the events
+  round it, no longer drawn under the event it was lifted out of. A body that splits at a branching
+  line puts each local before the slice that holds its line. It is a drawing order of rows only: the
+  file still opens and saves back byte for byte, and every other look keeps its locals where they were.
+- A comment row begins where the event it introduces does (its band starts at that event's block, so
+  the nesting lines of the levels round it run past), and a note written about an event's actions heads
+  its action lane instead of closing it.
+- "+ Add..." sits at the far right of every event's add line and "+ Add to 'name'..." at the right of
+  every group's foot, beside the left "+ Add event to 'name'...". Each selects what it belongs to and
+  opens a small menu: an event offers Add action, Add condition, Add sub-event and Add comment; a
+  group offers Add event (the picker, inserting into that group) and Add local variable. A group
+  now closes with its foot even when it holds events. The new foot text is translated in all nine
+  translation files.
+- Pins: `locals_at_their_step_test`, `native_add_doors_test`.
 
 ### Fixed: the editor's own MatchRow script reads without a stray row
 

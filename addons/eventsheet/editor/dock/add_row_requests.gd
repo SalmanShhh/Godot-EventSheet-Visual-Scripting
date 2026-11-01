@@ -8,6 +8,10 @@ extends RefCounted
 # funnel; bodies moved verbatim behind the `_dock.` back-reference.
 
 var _dock: Control = null
+## The small menu the "+ Add..." doors open, built once and refilled for every press.
+var _door_menu: PopupMenu = null
+## What each entry of the open door menu does, by id.
+var _door_actions: Dictionary = {}
 
 
 func init(dock: Control) -> void:
@@ -284,3 +288,50 @@ func assign_fresh_event_uids(row: EventRow) -> void:
 	for sub_event in row.sub_events:
 		if sub_event is EventRow:
 			_dock._add_rows.assign_fresh_event_uids(sub_event as EventRow)
+
+
+# ── The "+ Add..." doors ─────────────────────────────────────────────────────────────────────
+# The look that closes every event with an add line puts "+ Add..." at the right of that line, and
+# "+ Add to 'name'..." at the right of a block's foot. Neither is a power of its own: each entry
+# below runs the add path the toolbar, the keys and the picker already run, aimed at the event (or
+# the block) the door belongs to, which the viewport has just selected.
+
+
+## Opens the door menu for `row_data` at `screen_position`. `owner_resource` is the block a foot
+## closes (a group, a function) and null for an event's own door.
+func open_add_door_menu(row_data: EventRowData, owner_resource: Resource, screen_position: Vector2) -> void:
+	if row_data == null or not _dock._ensure_sheet_for_editing():
+		return
+	_dock._context_row = row_data
+	_door_actions.clear()
+	var entries: Array = []
+	if owner_resource == null:
+		entries = [
+			["Add action…", on_add_action_requested],
+			["Add condition…", on_add_condition_requested],
+			["Add sub-event", _dock._on_add_sub_condition_key],
+			["Add comment", on_add_comment_requested],
+		]
+	else:
+		entries = [["Add event…", _dock._on_viewport_add_event_requested.bind(owner_resource)]]
+		if owner_resource is EventGroup:
+			entries.append(["Add local variable…", _dock._add_group_local_variable_for.bind(owner_resource)])
+	if _door_menu == null:
+		_door_menu = PopupMenu.new()
+		_door_menu.name = "AddDoorMenu"
+		_door_menu.id_pressed.connect(_on_door_menu_pressed)
+		_dock.add_child(_door_menu)
+	_door_menu.clear()
+	for index: int in range(entries.size()):
+		var entry: Array = entries[index]
+		_door_menu.add_item(EventSheetL10n.translate(str(entry[0])), index)
+		_door_actions[index] = entry[1]
+	_door_menu.reset_size()
+	_door_menu.position = Vector2i(screen_position)
+	_door_menu.popup()
+
+
+func _on_door_menu_pressed(index: int) -> void:
+	var action: Variant = _door_actions.get(index, null)
+	if action is Callable and (action as Callable).is_valid():
+		(action as Callable).call()

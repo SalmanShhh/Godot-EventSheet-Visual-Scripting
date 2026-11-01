@@ -9839,3 +9839,4 @@ Right-click to replace it in %s.,Правый щелчок — заменить 
 "In %s, 1 test of %s will test %s instead.","В %s 1 проверка %s теперь будет проверять %s."
 "In %s, %d tests of %s will test %s instead.","В %s: проверок (%d) состояния %s теперь будут проверять %s."
 "%s saves %s as a number: after the removal, a saved number can name a different state.","%s хранит %s как число: после удаления сохранённое число может обозначать другое состояние."
++ Add to '%s'…,+ Добавить в '%s'…

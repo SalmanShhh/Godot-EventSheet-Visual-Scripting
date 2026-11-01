@@ -134,7 +134,7 @@ static func _test_shooter_events() -> bool:
 		["the pointer moving on changes no height", moved_on, [48.0, 48.0]],
 		["selected it keeps the line", selected, 48.0],
 		["the trigger keeps its badge in the lane, and the behaviour leads its words",
-			_texts(jump), "⌨ | On \"ui_up\" pressed | + Add condition | Platformer: Jump | + Add action"],
+			_texts(jump), "⌨ | On \"ui_up\" pressed | + Add condition | Platformer: Jump | + Add action | + Add…"],
 		["the action keeps the node the behaviour is mounted on", _object_of(jump, "Jump"), "PlatformerShooter"],
 		["the pattern chip yields to the trigger's words", shoot_trailing <= lane * 0.4 + 0.01, true],
 		["a physics tick with no condition reads as its neighbours' trigger cell",

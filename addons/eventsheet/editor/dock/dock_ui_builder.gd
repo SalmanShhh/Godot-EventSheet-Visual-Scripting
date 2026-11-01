@@ -329,6 +329,7 @@ func build_ui() -> void:
 	_dock._viewport.lane_ratio_changed.connect(_dock._on_viewport_lane_ratio_changed)
 	_dock._viewport.object_column_width_changed.connect(_dock._on_viewport_object_column_width_changed)
 	_dock._viewport.add_event_requested.connect(_dock._on_viewport_add_event_requested)
+	_dock._viewport.add_menu_requested.connect(later("_add_rows", "open_add_door_menu"))
 	_dock._viewport.raw_code_edit_requested.connect(_dock._code_panel_glue.on_viewport_raw_code_edit_requested)
 	_dock._viewport.data_class_field_edit_requested.connect(_dock._on_data_class_field_edit_requested)
 	_dock._viewport.context_menu_requested.connect(_dock._on_viewport_context_menu_requested)

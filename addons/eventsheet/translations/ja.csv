@@ -9839,3 +9839,4 @@ Right-click to replace it in %s.,右クリックで %s の中で置き換えま�
 "In %s, 1 test of %s will test %s instead.","%s では、%s を調べる 1 件のテストが代わりに %s を調べます。"
 "In %s, %d tests of %s will test %s instead.","%s では、%d 件の %s のテストが代わりに %s を調べます。"
 "%s saves %s as a number: after the removal, a saved number can name a different state.","%s は %s を数値として保存しています。削除後は、保存された数値が別の状態を指すことがあります。"
++ Add to '%s'…,+ '%s' に追加…
