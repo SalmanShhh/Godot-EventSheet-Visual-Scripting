@@ -22,6 +22,9 @@ var _row_metrics: Array[Dictionary] = []
 ## Logical canvas width the row metrics were last computed at. Comment rows wrap to this
 ## width, so when it changes on resize the metrics must be rebuilt (heights change).
 var _metrics_canvas_width: float = -1.0
+## Bumped whenever the layout is recomputed or a kept one is seated, so an answer derived from the
+## tops and heights can tell they moved.
+var _generation: int = 0
 
 
 func init(viewport: Control) -> void:
@@ -47,9 +50,16 @@ func adopt(state: Dictionary) -> void:
 		return
 	_row_metrics = kept
 	_metrics_canvas_width = float(state.get("width", -1.0))
+	_generation += 1
+
+
+## Which layout this is: it moves every time the tops and heights are recomputed or replaced.
+func generation() -> int:
+	return _generation
 
 
 func rebuild() -> void:
+	_generation += 1
 	_metrics_canvas_width = _viewport._get_logical_canvas_width()
 	_row_metrics.clear()
 	# The sheet starts BELOW the corner links' band where that band is drawn, so "Add event" and

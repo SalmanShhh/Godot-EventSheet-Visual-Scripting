@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed: scrolling a long sheet no longer walks every row of it on every frame
+
+- Each draw worked out the margin brackets (one dictionary per row of the whole sheet) and the variable-folder runs (two more walks of every row). They are held now, keyed to the rows' generation, the layout, the width, the font, the zoom and the look's colours, so a frame that changed none of those reuses them; a rebuild (an edit, a fold, a diagnostics change), a resize, a zoom or a look change computes them again.
+- Measured in the real editor on the 1,516-row pathfinding pack, 400 scroll frames per run, median of the per-run `_draw` medians over 3 fresh processes: 44.6 ms (38.4 - 56.2) -> 24.4 ms (21.0 - 24.5). Pinned by `group_memo_test` with call counters (30 unchanged asks compute once; a new width, a rebuild, a fold, a zoom and a look change each compute again).
 ### Fixed: saving a sheet with nothing to report no longer rebuilds every row
 
 - `set_row_diagnostics` rebuilt the whole canvas on every save, even when the problem list was empty and had been empty before. It now rebuilds only when the list changed (a flag appears, moves, changes its words or clears); an equal list changes nothing on screen, because rows built since the last list already carry their marks.

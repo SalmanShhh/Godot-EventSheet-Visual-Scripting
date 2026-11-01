@@ -278,6 +278,20 @@ var _rows_revision: int = 0
 ## How many row builds this view has ever done. Unlike _rows_revision it is never restored from a
 ## kept reading, so it answers "was anything built?" across a tab switch - see row_builds().
 var _row_builds: int = 0
+## Bumped whenever the flat row list is replaced or reseated (a rebuild, a kept reading adopted). Never
+## restored from a kept reading, so two readings can never share a number: it is what keys the two
+## whole-sheet answers a draw reuses below.
+var _flat_generation: int = 0
+## The margin brackets for the flat rows as they stand: {key, strokes}. Worked out once per
+## (rows, layout, width, look) instead of once per frame - a walk of EVERY row, 9 - 10 ms of a 40 ms
+## draw on the 1,500-row pathfinding pack.
+var _bracket_memo: Dictionary = {}
+## The variable-folder runs for the flat rows as they stand: {key, runs}. Two walks of every row per
+## frame before, 3 ms each.
+var _group_run_memo: Dictionary = {}
+## How many times each memo was recomputed, for the test that holds the memo to one per change.
+var _bracket_computes: int = 0
+var _group_run_computes: int = 0
 ## The (row, span, revision) the current _hover_match_spans was computed for.
 var _hover_match_key: Vector3i = Vector3i(-1, -1, -1)
 var _hover_is_drag_zone: bool = false  # pointer over an event's empty lane band (the move-cursor grab zone)
@@ -575,6 +589,12 @@ func row_builds() -> int:
 	return _row_builds
 
 
+## How many times the margin brackets and the variable-folder runs were worked out, in that order.
+## A draw that changed nothing leaves both alone.
+func group_memo_computes() -> Vector2i:
+	return Vector2i(_bracket_computes, _group_run_computes)
+
+
 ## Everything this view holds ABOUT the sheet on screen, as one dictionary its host can put away
 ## and hand back later: the built rows, their layout and metrics, the selection, the folds, the
 ## scroll and the style the lanes are split by. A host that keeps one per open tab pays for a
@@ -632,6 +652,7 @@ func adopt_view_state(sheet: EventSheetResource, state: Dictionary) -> bool:
 	_sheet = sheet
 	_root_rows = kept_rows
 	_flat_rows = kept_flat
+	_flat_generation += 1
 	_layout_cache = kept_cache
 	_row_metrics_helper.adopt(state.get("metrics", {}))
 	var kept_style: EventSheetEditorStyle = state.get("editor_style") as EventSheetEditorStyle
@@ -2870,7 +2891,7 @@ func _draw_divider_guide(width: float) -> void:
 ## Discord-folder look) instead of rows that merely repeat a chip. Drawn OVER the rows (their
 ## alternating backgrounds are opaque), so the tint stays faint enough to never fight the text.
 func _draw_variable_group_bubbles(width: float) -> void:
-	var runs: Array = ViewportRowBuilder.variable_group_runs(_flat_rows)
+	var runs: Array = variable_group_runs_cached()
 	if runs.is_empty():
 		return
 	var event_style: EventSheetEventStyle = _get_event_style()
@@ -2906,7 +2927,7 @@ func _draw_variable_group_fills(width: float) -> void:
 	var event_style: EventSheetEventStyle = _get_event_style()
 	if event_style.variable_group_fill_color.a <= 0.01:
 		return
-	var runs: Array = ViewportRowBuilder.variable_group_runs(_flat_rows)
+	var runs: Array = variable_group_runs_cached()
 	if runs.is_empty():
 		return
 	var box: StyleBoxFlat = StyleBoxFlat.new()
@@ -2938,11 +2959,37 @@ func _draw_group_brackets(width: float) -> void:
 			draw_rect(rect, stroke["color"] as Color, true)
 
 
+## The variable-folder runs of the rows as they stand, worked out once per change of the rows. A run
+## is a function of the flat rows alone, so the rows' generation is the whole key; a caller must not
+## edit the answer.
+func variable_group_runs_cached() -> Array:
+	var key: Array = [_flat_generation, _rows_revision, _flat_rows.size()]
+	if _group_run_memo.get("key") != key:
+		_group_run_computes += 1
+		_group_run_memo = {"key": key, "runs": ViewportRowBuilder.variable_group_runs(_flat_rows)}
+	return _group_run_memo["runs"]
+
+
 ## What the margin brackets paint, in paint order: per group or region {kind, part, rect, color} -
 ## an off group's faded backdrop ("backdrop"), then a group's solid bar ("bar") and the slim tick at
 ## its foot ("tick"), or a region's dashed rule ("dash"). Worked out apart from drawing so what the
 ## sheet paints can be read back without a screen.
+##
+## The answer is held while nothing it depends on moves: the rows (a rebuild, a fold, an edit all
+## replace them), the layout that gives each row its top and height, the width, the font and zoom,
+## and the look's colours. A caller must not edit the answer.
 func group_bracket_strokes(width: float) -> Array:
+	var event_style: EventSheetEventStyle = _get_event_style()
+	var key: Array = [_flat_generation, _rows_revision, _flat_rows.size(), _row_metrics_helper.generation(),
+		width, _get_font_size(), _zoom_factor, _editor_style.get_instance_id() if _editor_style != null else 0,
+		event_style.group_title_color, event_style.sub_event_strips, _get_reading_style().disabled_row_color]
+	if _bracket_memo.get("key") != key:
+		_bracket_computes += 1
+		_bracket_memo = {"key": key, "strokes": _compute_group_bracket_strokes(width)}
+	return _bracket_memo["strokes"]
+
+
+func _compute_group_bracket_strokes(width: float) -> Array:
 	var strokes: Array = []
 	var shape: Array = []
 	for index: int in range(_flat_rows.size()):
@@ -3161,6 +3208,7 @@ func _refresh_rows() -> void:
 	_update_layout_style_signature(_get_font_size())
 	_group_breadcrumb.invalidate()
 	_flat_rows.clear()
+	_flat_generation += 1
 	# Live filter lens (the event-sheet "show only matching events" view): a non-mutating view
 	# predicate - top-level rows whose subtree never mentions the term are skipped at
 	# flatten time (the sheet itself is untouched; clearing the lens restores everything).
