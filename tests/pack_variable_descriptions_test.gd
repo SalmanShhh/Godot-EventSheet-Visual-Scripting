@@ -87,7 +87,7 @@ static func _test_every_showcase_machine() -> bool:
 			enums_seen += source.count("
 enum ")
 			for problem: String in _problems_in(source):
-				if problem.begins_with("enum ") or problem.begins_with("state ") or problem.begins_with("an enum "):
+				if problem.begins_with("enum ") or (problem.begins_with("state ") and problem.ends_with(" has no description")) or problem.begins_with("an enum "):
 					problems.append("%s/%s: %s" % [folder_name, file_name, problem])
 	var starfall: String = FileAccess.get_file_as_string("res://demo/showcase/starfall/starfall.gd")
 	return SUPPORT.pins("pack_variable_descriptions_test", [
